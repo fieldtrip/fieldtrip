@@ -63,7 +63,7 @@ for ievent = 1:length(events_old.events)
 end % ievent
 
 
-% Send warning if no events are found for specified session
+% Send warning if no events are found for current session
 if isempty(event)
     warning(['no events found for session: ' sessionname ' of subject: ' subjname])
 end
