@@ -13,6 +13,10 @@ function [dat] = read_nmc_archive_k_data(datafile, hdr, begsample, endsample, ch
 % format.
 %
 %
+%
+%
+% $Log: read_nmc_archive_k_data.m,v $
+%
 % First version: 2009/09/31 - roevdmei
 %
 
