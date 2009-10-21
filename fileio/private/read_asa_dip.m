@@ -1,0 +1,119 @@
+function [pos, mom, ampl, time] = read_asa_dip(fn);
+
+% READ_ASA_DIP reads the dipole position, moment and amplitude
+% This importer is designed for fixed-dipole models and only supports 
+% a limited number of the options that ASA has.
+%
+% Use as
+%   [pos, mom, ampl, time] = read_asa_dip(filename)
+%
+% See also READ_ASA_VOL, READ_ASA_MRI
+
+% Copyright (C) 2000, Robert Oostenveld
+%
+% $Log: read_asa_dip.m,v $
+% Revision 1.1  2009/01/14 09:24:45  roboos
+% moved even more files from fileio to fileio/privtae, see previous log entry
+%
+% Revision 1.1  2005/04/18 13:47:05  roboos
+% added some old and infrequently used functions to the cvs repository
+%
+% Revision 1.1  2005/04/18 13:43:34  roboos
+% included some old functions in the cvs repository, this ensures consistency of the functions between the different network locations
+%
+% Revision 1.2  2003/03/11 15:24:51  roberto
+% updated help and copyrights
+%
+
+Npos = 0;
+Ntim = 0;
+pos  = [];
+mom  = [];
+ampl = [];
+time = [];
+fid1 = fopen(fn, 'r');
+
+while ~Npos
+  line = fgetl(fid1);
+  if strncmp('NumberPositions=', line, length('NumberPositions='))
+  	Npos = sscanf(line, 'NumberPositions=%d');
+  end
+end
+frewind(fid1);
+
+while ~Ntim
+  line = fgetl(fid1);
+  if strncmp('NumberTimeSteps=', line, length('NumberTimeSteps='))
+  	Ntim = sscanf(line, 'NumberTimeSteps=%d');
+  end
+end
+frewind(fid1);
+
+while isempty(time)
+  line = fgetl(fid1);
+  if strncmp('TimeSteps', line, length('TimeSteps'))
+  	t = sscanf(line, 'TimeSteps %f(%f)%f');
+        time = t(1):t(2):t(3);
+  end
+end
+frewind(fid1);
+
+if length(time)~=Ntim
+  error('incorrect timescale');
+end
+
+while isempty(pos)
+  line = fgetl(fid1);
+  if strncmp('Positions', line, length('Positions'))
+    pos = zeros(3, Npos);
+    pos(:) = fscanf(fid1, '%f');
+    pos = pos';
+  end
+end
+frewind(fid1);
+
+while isempty(mom)
+  line = fgetl(fid1);
+  if strncmp('MomentsFixed', line, length('MomentsFixed'))
+    mom = zeros(3, Npos);
+    mom(:) = fscanf(fid1, '%f');
+    mom = mom';
+  end
+end
+frewind(fid1);
+
+while isempty(ampl)
+  line = fgetl(fid1);
+  if strncmp('Magnitudes', line, length('Magnitudes'))
+    ampl = zeros(Ntim, Npos);
+    ampl(:) = fscanf(fid1, '%f');
+    ampl = ampl';
+  end
+end
+frewind(fid1);
+
+fclose(fid1);
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% old output format
+% 	pos = [x1 y1 z1 x2 y2 z2             ... ] and
+%
+%       mom = [Qx11 Qy11 Qz11 Qx21 Qy21 Qz21 ...
+%              Qx12 Qy12 Qz12 Qx22 Qy22 Qz22 ...
+%              ...
+%              Qx1t Qy1t Qz1t Qx2t Qy2t Qz2t ... ]
+%
+%	time = [T1 T2 T3 T4 .. Tt]
+%
+% was obtained by re-format the data according to
+%
+% pos = pos';
+% pos = pos(:)';
+% 
+% mom1 = [];
+% for j=1:Npos
+%   mom1 = [mom1 ampl(j,:)' * mom(j,:)];
+% end
+% mom = mom1;
+

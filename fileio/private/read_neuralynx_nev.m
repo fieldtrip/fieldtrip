@@ -1,0 +1,258 @@
+function [nev] = read_neuralynx_nev(filename, varargin);
+
+% READ_NEURALYNX_NEV reads the event information from the *.nev file in a
+% Neuralynx dataset directory
+%
+% Use as
+%   nev = read_neuralynx_hdr(datadir, ...)
+%   nev = read_neuralynx_hdr(eventfile, ...)
+%
+% Optional input arguments should be specified in key-value pairs and may include
+%   implementation  should be 1, 2 or 3 (default = 3)
+%   value           number or list of numbers
+%   mintimestamp    number
+%   maxtimestamp    number
+%   minnumber       number
+%   maxnumber       number
+%
+% The output structure contains all events and timestamps.
+
+% Copyright (C) 2005, Robert Oostenveld
+%
+% $Log: read_neuralynx_nev.m,v $
+% Revision 1.1  2009/01/14 09:12:15  roboos
+% The directory layout of fileio in cvs sofar did not include a
+% private directory, but for the release of fileio all the low-level
+% functions were moved to the private directory to make the distinction
+% between the public API and the private low level functions. To fix
+% this, I have created a private directory and moved all appropriate
+% files from fileio to fileio/private.
+%
+% Revision 1.6  2008/04/29 07:52:31  roboos
+% fixed windows related bug
+% be consistent with begin and end timestamp in header
+%
+% Revision 1.5  2008/03/04 11:17:48  roboos
+% read ttl value as uint16 instead of int16
+%
+% Revision 1.4  2007/12/20 19:05:31  roboos
+% implemented filtering of events based on number (minnumber and maxnumber), this speeds up the reading since the events are each exactly 184 bytes large
+%
+% Revision 1.3  2007/12/18 16:41:16  roboos
+% reimplemented the reading, now by buffering all data in memory and using typecasting and byte swapping (largely implemented in the cstructdecode function)
+% implemented filtering on timestamp and value
+%
+% Revision 1.2  2007/12/12 16:30:10  roboos
+% keep timestamps as uint64, fixed problem with case of filename (nev/Nev)
+%
+% Revision 1.1  2006/12/13 15:43:49  roboos
+% renamed read_neuralynx_event into xxx_nev, consistent with the file extension
+%
+% Revision 1.3  2005/09/05 13:08:52  roboos
+% implemented a faster way of reading all events, needed in the case of many triggers (e.g. each refresh)
+%
+% Revision 1.2  2005/06/24 06:57:32  roboos
+% added PktStart to the record header reading, this shifts all fields by two bytes (thanks to Thilo)
+%
+% Revision 1.1  2005/05/19 07:09:58  roboos
+% new implementation
+%
+
+% get the optional input arguments
+flt_value        = keyval('value', varargin);
+flt_mintimestamp = keyval('mintimestamp', varargin);
+flt_maxtimestamp = keyval('maxtimestamp', varargin);
+flt_minnumber    = keyval('minnumber', varargin);
+flt_maxnumber    = keyval('maxnumber', varargin);
+implementation   = keyval('implementation', varargin); if isempty(implementation), implementation = 3; end
+
+if filetype(filename, 'neuralynx_ds')
+  % replace the directory name by the filename
+  if     exist(fullfile(filename, 'Events.Nev'))
+    filename = fullfile(filename, 'Events.Nev');
+  elseif exist(fullfile(filename, 'Events.nev'))
+    filename = fullfile(filename, 'Events.nev');
+  elseif exist(fullfile(filename, 'events.Nev'))
+    filename = fullfile(filename, 'events.Nev');
+  elseif exist(fullfile(filename, 'events.nev'))
+    filename = fullfile(filename, 'events.nev');
+  end
+end
+
+% The file starts with a 16*1024 bytes header in ascii, followed by a
+% number of records (c.f. trials).
+%
+% The format of an event record is
+%   int16 PktId
+%   int16 PktDataSize
+%   int64 TimeStamp
+%   int16 EventId
+%   int16 TTLValue
+%   int16 CRC
+%   int32 Dummy
+%   int32 Extra[0]
+%   ...
+%   int32 Extra[7]
+%   char EventString[0]
+%   ...
+%   char EventString[127]
+% PktId is usually 0x1002.
+% PktDataSize is random data.
+% Dummy is random data.
+% CRC may contain random data.
+% Extra is user-defined data.
+% TTLValue is the value sent to the computer on a parallel input port.
+
+fid = fopen(filename, 'rb', 'ieee-le');
+
+headersize = 16384;
+offset     = headersize;
+if ~isempty(flt_minnumber)
+  offset = offset + (flt_minnumber-1)*184;
+end
+
+nev = [];
+
+if implementation==1
+  if ~isempty(flt_maxnumber)
+    warning('filtering on maximum number not yet implemneted');
+  end
+  % this is the slow way of reading it
+  % it also does not allow filtering
+  fseek(fid, offset, 'bof');
+  while ~feof(fid)
+    nev(end+1).PktStart     = fread(fid, 1, 'int16');
+    nev(end  ).PktId        = fread(fid, 1, 'int16');
+    nev(end  ).PktDataSize  = fread(fid, 1, 'int16');
+    nev(end  ).TimeStamp    = fread(fid, 1, 'uint64');
+    nev(end  ).EventId      = fread(fid, 1, 'int16');
+    nev(end  ).TTLValue     = fread(fid, 1, 'uint16');
+    nev(end  ).CRC          = fread(fid, 1, 'int16');
+    nev(end  ).Dummy        = fread(fid, 1, 'int32');
+    nev(end  ).Extra        = fread(fid, 8, 'int32');
+    nev(end  ).EventString  = fread(fid, 128, 'char');
+  end
+end
+
+if implementation==2
+  if ~isempty(flt_maxnumber)
+    warning('filtering on maximum number not yet implemneted');
+  end
+  % this is a faster way of reading it and it is still using the automatic type conversion from Matlab
+  fp = offset;
+  fseek(fid, fp+ 0, 'bof'); PktStart       = fread(fid, inf, 'uint16', 184-2);
+  num = length(PktStart);
+  fseek(fid, fp+ 2, 'bof'); PktId          = fread(fid, num, 'uint16', 184-2);
+  fseek(fid, fp+ 4, 'bof'); PktDataSize    = fread(fid, num, 'uint16', 184-2);
+  fseek(fid, fp+ 6, 'bof'); TimeStamp      = fread(fid, num, 'uint64=>uint64', 184-8);
+  fseek(fid, fp+14, 'bof'); EventId        = fread(fid, num, 'uint16', 184-2);
+  fseek(fid, fp+16, 'bof'); TTLValue       = fread(fid, num, 'uint16', 184-2);
+  fseek(fid, fp+18, 'bof'); CRC            = fread(fid, num, 'uint16', 184-2);
+  fseek(fid, fp+22, 'bof'); Dummy          = fread(fid, num, 'int32' , 184-4);
+  % read each of the individual extra int32 values and concatenate them
+  fseek(fid, fp+24+0*4, 'bof'); Extra1     = fread(fid, num, 'int32', 184-4);
+  fseek(fid, fp+24+1*4, 'bof'); Extra2     = fread(fid, num, 'int32', 184-4);
+  fseek(fid, fp+24+2*4, 'bof'); Extra3     = fread(fid, num, 'int32', 184-4);
+  fseek(fid, fp+24+3*4, 'bof'); Extra4     = fread(fid, num, 'int32', 184-4);
+  fseek(fid, fp+24+4*4, 'bof'); Extra5     = fread(fid, num, 'int32', 184-4);
+  fseek(fid, fp+24+5*4, 'bof'); Extra6     = fread(fid, num, 'int32', 184-4);
+  fseek(fid, fp+24+6*4, 'bof'); Extra7     = fread(fid, num, 'int32', 184-4);
+  fseek(fid, fp+24+7*4, 'bof'); Extra8     = fread(fid, num, 'int32', 184-4);
+  Extra = [Extra1 Extra2 Extra3 Extra4 Extra5 Extra6 Extra7 Extra8];
+  % read the complete data excluding header as char and cut out the piece with the EventString content
+  fseek(fid, fp, 'bof'); EventString        = fread(fid, [184 num], 'char');
+  EventString = char(EventString(57:184,:)');
+end
+
+if implementation==3
+  % this is an even faster way of reading it
+  if isempty(flt_minnumber)
+    flt_minnumber = 1;
+  end
+  if isempty(flt_maxnumber)
+    flt_maxnumber = inf;
+  end
+  if fseek(fid, offset, 'bof')~=0
+    error(ferror(fid));
+  end
+  buf = fread(fid, (flt_maxnumber-flt_minnumber+1)*184, 'uint8=>uint8');
+  [PktStart, PktId , PktDataSize , TimeStamp , EventId , TTLValue , CRC , Dummy , Extra1 , Extra2 , Extra3 , Extra4 , Extra5 , Extra6 , Extra7 , Extra8 , EventString] = ...
+    cstructdecode(buf, 'int16', 'int16', 'int16', 'uint64', 'int16', 'uint16', 'int16', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'char128');
+  % the cstructdecode function does not respect the byte order for other-endian numbers
+  if bigendian
+    PktStart     = swapbytes(PktStart);
+    PktId        = swapbytes(PktId);
+    PktDataSize  = swapbytes(PktDataSize);
+    TimeStamp    = swapbytes(TimeStamp);
+    EventId      = swapbytes(EventId);
+    TTLValue     = swapbytes(TTLValue);
+  % CRC          = swapbytes(CRC);
+  % Dummy        = swapbytes(Dummy);
+  % Extra1       = swapbytes(Extra1);
+  % Extra2       = swapbytes(Extra2);
+  % Extra3       = swapbytes(Extra3);
+  % Extra4       = swapbytes(Extra4);
+  % Extra5       = swapbytes(Extra5);
+  % Extra6       = swapbytes(Extra6);
+  % Extra7       = swapbytes(Extra7);
+  % Extra8       = swapbytes(Extra8);
+  end
+end
+
+fclose(fid);
+
+if implementation~=1
+  % make a selection of events
+  sel = true(size(TTLValue));
+  if ~isempty(flt_mintimestamp)
+    sel = sel & (TimeStamp>=flt_mintimestamp);
+  end
+  if ~isempty(flt_maxtimestamp)
+    sel = sel & (TimeStamp<=flt_maxtimestamp);
+  end
+  if ~isempty(flt_value)
+    tmp = false(size(sel));
+    for i=1:length(flt_value)
+      tmp = tmp | (TTLValue==flt_value(i));
+    end
+    sel = sel & tmp;
+  end
+
+  % restructure the data into a struct array, by first making cell-arrays out of it ...
+  numsel = sum(sel);
+  PktStart      = mat2cell(PktStart(sel)     , ones(1,numsel), 1);
+  PktId         = mat2cell(PktId(sel)        , ones(1,numsel), 1);
+  PktDataSize   = mat2cell(PktDataSize(sel)  , ones(1,numsel), 1);
+  TimeStamp     = mat2cell(TimeStamp(sel)    , ones(1,numsel), 1);
+  EventId       = mat2cell(EventId(sel)      , ones(1,numsel), 1);
+  TTLValue      = mat2cell(TTLValue(sel)     , ones(1,numsel), 1);
+  % CRC           = mat2cell(CRC(sel)          , ones(1,numsel), 1);
+  % Dummy         = mat2cell(Dummy(sel)        , ones(1,numsel), 1);
+  % Extra1        = mat2cell(Extra1(sel)       , ones(1,numsel), 1);
+  % Extra2        = mat2cell(Extra2(sel)       , ones(1,numsel), 1);
+  % Extra3        = mat2cell(Extra3(sel)       , ones(1,numsel), 1);
+  % Extra4        = mat2cell(Extra4(sel)       , ones(1,numsel), 1);
+  % Extra5        = mat2cell(Extra5(sel)       , ones(1,numsel), 1);
+  % Extra6        = mat2cell(Extra6(sel)       , ones(1,numsel), 1);
+  % Extra7        = mat2cell(Extra7(sel)       , ones(1,numsel), 1);
+  % Extra8        = mat2cell(Extra8(sel)       , ones(1,numsel), 1);
+  EventString   = mat2cell(EventString(sel,:), ones(1,numsel), 128);
+  EventNumber   = mat2cell(find(sel) + flt_minnumber - 1, ones(1,numsel), 1); % this helps in the external filtering for BCI
+  % ... and then convert the cell-arrays into a single structure
+  nev = struct(...
+    'PktStart'    , PktStart     , ...
+    'PktId'       , PktId        , ...
+    'PktDataSize' , PktDataSize  , ...
+    'TimeStamp'   , TimeStamp    , ...
+    'EventId'     , EventId      , ...
+    'TTLValue'    , TTLValue     , ...
+    'EventString' , EventString  , ...
+    'EventNumber' , EventNumber);
+end
+
+% remove null values and convert to strings
+for i=1:length(nev)
+  nev(i).EventString = nev(i).EventString(find(nev(i).EventString));
+  nev(i).EventString = char(nev(i).EventString(:)');
+end
+

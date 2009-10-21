@@ -1,0 +1,15 @@
+This is the FieldTrip PLOTTING module. It contains functions for
+visualising data and interacting with it. These functions form the
+building blocks for the FieldTrip data plotting functions and graphical
+user interfaces.
+
+For more information please visit http://www.ru.nl/neuroimaging/fieldtrip.
+
+The FieldTrip software is free but copyrighted software, distributed
+under the terms of the GNU General Public Licence as published by
+the Free Software Foundation (either version 2, or at your option
+any later version). See the file COPYING for more details.
+
+Copyright (C) 2009, Donders Institute for Brain, Cognition and Behaviour, The Netherlands (DCCN)
+Copyright (C) 2009, Netherlands Institute for Neuroscience (NIN)
+

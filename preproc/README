@@ -1,0 +1,16 @@
+This is the FieldTrip PREPROC module. It contains functions for the
+preprocessing of EEG and MEG data, such as filtering, baseline
+correction and re-referencing.
+
+For more information please visit http://www.ru.nl/fcdonders/fieldtrip.
+
+The FieldTrip software is free but copyrighted software, distributed
+under the terms of the GNU General Public Licence as published by
+the Free Software Foundation (either version 2, or at your option
+any later version). See the file COPYING for more details.
+
+Copyright (C) 2008-2009, Donders Institute for Brain, Cognition and Behaviour, The Netherlands (DCCN)
+Copyright (C) 2003-2008, F.C. Donders Centre for Cognitive Neuroimaging, Nijmegen, The Netherlands (FCDC)
+Copyright (C) 2003-2005, Center for Sensory-Motor Interaction, Aalborg University, Denmark (SMI)
+Copyright (C) 1999-2003, Department of Medical Physics, Radboud University Nijmegen, The Netherlands (MBFYS)
+

@@ -1,0 +1,1 @@
+../fileio/private/read_egis_data.m

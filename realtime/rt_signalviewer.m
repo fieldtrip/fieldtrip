@@ -1,0 +1,166 @@
+function rt_signalviewer(cfg)
+
+% RT_SIGNALVIEWER is an example realtime application for online
+% viewing of the data. It should work both for EEG and MEG.
+%
+% Use as
+%   rt_signalviewer(cfg)
+% with the following configuration options
+%   cfg.blocksize  = number, size of the blocks/chuncks that are processed (default = 1 second)
+%   cfg.channel    = cell-array, see CHANNELSELECTION (default = 'all')
+%   cfg.bufferdata = whether to start on the 'first or 'last' data that is available (default = 'last')
+%   cfg.readevent  = whether or not to copy events (default = 'no')
+%
+% The source of the data is configured as
+%   cfg.dataset       = string
+% or alternatively to obtain more low-level control as
+%   cfg.datafile      = string
+%   cfg.headerfile    = string
+%   cfg.eventfile     = string
+%   cfg.dataformat    = string, default is determined automatic
+%   cfg.headerformat  = string, default is determined automatic
+%   cfg.eventformat   = string, default is determined automatic
+%
+% To stop the realtime function, you have to press Ctrl-C
+
+% Copyright (C) 2008, Robert Oostenveld
+%
+% $Log: rt_signalviewer.m,v $
+% Revision 1.8  2009/07/20 09:45:54  roboos
+% added reading and displaying of evenns
+% added cfg.jumptoeof (c.f. fileproxy)
+%
+% Revision 1.7  2009/04/21 09:59:52  roboos
+% cleaned up cvs log comments
+%
+% Revision 1.6  2009/02/04 09:08:07  roboos
+% ensure that the persistent variables related to header caching are cleared
+% this is needed when switching the headerformat (from ctf_res4 to ctf_old) while continuing on the same file
+%
+
+% set the default configuration options
+if ~isfield(cfg, 'dataformat'),     cfg.dataformat = [];      end % default is detected automatically
+if ~isfield(cfg, 'headerformat'),   cfg.headerformat = [];    end % default is detected automatically
+if ~isfield(cfg, 'eventformat'),    cfg.eventformat = [];     end % default is detected automatically
+if ~isfield(cfg, 'blocksize'),      cfg.blocksize = 1;        end % in seconds
+if ~isfield(cfg, 'overlap'),        cfg.overlap = 0;          end % in seconds
+if ~isfield(cfg, 'channel'),        cfg.channel = 'all';      end
+if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'last';  end % first or last
+if ~isfield(cfg, 'readevent'),      cfg.readevent = 'no';     end % capture events?
+if ~isfield(cfg, 'jumptoeof'),      cfg.jumptoeof = 'no';     end % jump to end of file at initialization
+
+% translate dataset into datafile+headerfile
+cfg = checkconfig(cfg, 'dataset2files', 'yes');
+cfg = checkconfig(cfg, 'required', {'datafile' 'headerfile'});
+
+% ensure that the persistent variables related to caching are cleared
+clear read_header
+% start by reading the header from the realtime buffer
+hdr = read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', true, 'retry', true);
+
+% define a subset of channels for reading
+cfg.channel = channelselection(cfg.channel, hdr.label);
+chanindx    = match_str(hdr.label, cfg.channel);
+nchan       = length(chanindx);
+if nchan==0
+  error('no channels were selected');
+end
+
+% determine the size of blocks to process
+blocksize = round(cfg.blocksize * hdr.Fs);
+overlap   = round(cfg.overlap*hdr.Fs);
+
+if strcmp(cfg.jumptoeof, 'yes')
+  prevSample = hdr.nSamples * hdr.nTrials;
+else
+  prevSample  = 0;
+end
+count       = 0;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% this is the general BCI loop where realtime incoming data is handled
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+while true
+
+  % determine number of samples available in buffer
+  hdr = read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', true);
+
+  % see whether new samples are available
+  newsamples = (hdr.nSamples*hdr.nTrials-prevSample);
+
+  if newsamples>=blocksize
+
+    % determine the samples to process
+    if strcmp(cfg.bufferdata, 'last')
+      begsample  = hdr.nSamples*hdr.nTrials - blocksize + 1;
+      endsample  = hdr.nSamples*hdr.nTrials;
+    elseif strcmp(cfg.bufferdata, 'first')
+      begsample  = prevSample+1;
+      endsample  = prevSample+blocksize ;
+    else
+      error('unsupported value for cfg.bufferdata');
+    end
+
+    % this allows overlapping data segments
+    if overlap && (begsample>overlap)
+      begsample = begsample - overlap;
+      endsample = endsample - overlap;
+    end
+
+    % remember up to where the data was read
+    prevSample  = endsample;
+    count       = count + 1;
+    fprintf('processing segment %d from sample %d to %d\n', count, begsample, endsample);
+
+    % read data segment from buffer
+    dat = read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
+
+    % it only makes sense to read those events associated with the currently processed data
+    if strcmp(cfg.readevent, 'yes')
+      evt = read_event(cfg.eventfile, 'header', hdr, 'minsample', begsample, 'maxsample', endsample);
+    end
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % from here onward it is specific to the display of the data
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    % put the data in a fieldtrip-like raw structure
+    data.trial{1} = dat;
+    data.time{1}  = offset2time(begsample, hdr.Fs, endsample-begsample+1);
+    data.label    = hdr.label(chanindx);
+    data.hdr      = hdr;
+    data.fsample  = hdr.Fs;
+
+    % apply some preprocessing options
+    data.trial{1} = preproc_baselinecorrect(data.trial{1});
+
+    % plot the data just like a standard FieldTrip raw data strucute
+    plot(data.time{1}, data.trial{1});
+    xlim([data.time{1}(1) data.time{1}(end)]);
+
+    if strcmp(cfg.readevent, 'yes')
+      for i=1:length(evt)
+        % draw a line and some text to indicate the event
+        time = offset2time(evt(i).sample, hdr.Fs, 1);
+        if isstr(evt(i).type) && isempty(evt(i).type)
+          description = sprintf('%s', evt(i).type);
+        elseif isstr(evt(i).type) && isstr(evt(i).type)
+          description = sprintf('%s %s', evt(i).type, evt(i).value);
+        elseif isstr(evt(i).type) && isnumeric(evt(i).type)
+          description = sprintf('%s %s', evt(i).type, num2str(evt(i).value));
+        else
+          description = 'event';
+        end
+        
+        h = line([time time], ylim);
+        set(h, 'LineWidth', 2, 'LineStyle', ':', 'Color', 'k');
+        y = ylim; y = y(1);
+        h = text(time, y, description, 'VerticalAlignment', 'bottom');
+      end
+    end
+
+    % force Matlab to update the figure
+    drawnow
+
+  end % if enough new samples
+end % while true

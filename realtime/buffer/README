@@ -1,0 +1,28 @@
+The FieldTrip buffer implements a multi-threaded network transparent
+buffer in C/C++. This buffer source code can be integrated in any
+EEG/MEG acquisition system. The buffer is instantiated by the
+acquisition software simply by linking it into the code and by
+writing header, data and/or events to it. It can be accessed from
+another application (e.g. Matlab) using the same functions that are
+used in writing to it.
+
+The FieldTrip buffer software is licensed under the GNU General
+Public License (GPL) and the Berkeley Software Distribution License
+(BSD). You can choose the license that has the most advantages for
+you. See the file COPYING for details.
+
+The FieldTrip buffer is implemented using a Remote Procedure Call
+(RPC), an Inter-process communication technology that allows a
+computer program to cause a subroutine or procedure to execute in
+another address space (commonly on another computer on a shared
+network) without the programmer explicitly coding the details for
+this remote interaction.
+
+The RPC routines implemented by the buffer allow a computer program
+to put header, data or event information into the buffer, or to get
+that information from the buffer. The buffer dynamically maintains
+the memory in which the header, data and event information is
+represented.  Multiple programs can send requests to the buffer at
+the same time, which will be handled concurrently in different
+threads.
+

@@ -1,0 +1,136 @@
+function [eeg] = read_ns_eeg(filename, epoch)
+
+% READ_NS_EEG read a NeuroScan 3.x or 4.x EEG File
+%
+% [eeg] = read_ns_eeg(filename, epoch)
+%
+%   filename     input Neuroscan .eeg file (version 3.x)
+%   epoch        which epoch to read (default is all)
+% 
+% The output data structure eeg has the fields:
+%   eeg.data(..)    - epoch signal in uV (size: Nepoch x Nchan x Npnt)
+% and
+%   eeg.label       - electrode labels
+%   eeg.nchan       - number of channels
+%   eeg.npnt        - number of samplepoints in ERP waveform
+%   eeg.time        - time for each sample
+%   eeg.rate        - sample rate (Hz)
+%   eeg.xmin        - prestimulus epoch start (e.g., -100 msec)
+%   eeg.xmax        - poststimulus epoch end (e.g., 900 msec)
+%   eeg.nsweeps     - number of accepted trials/sweeps
+
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
+%
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+% Copyright (C) 2003, Robert Oostenveld
+%
+% $Log: read_ns_eeg.m,v $
+% Revision 1.1  2009/01/14 09:12:15  roboos
+% The directory layout of fileio in cvs sofar did not include a
+% private directory, but for the release of fileio all the low-level
+% functions were moved to the private directory to make the distinction
+% between the public API and the private low level functions. To fix
+% this, I have created a private directory and moved all appropriate
+% files from fileio to fileio/private.
+%
+% Revision 1.5  2005/11/24 12:25:16  roboos
+% fixed a bug in the calibration from bitvalues to physical values
+% added support for 32 bit files (previous only 16 bit), detercted automatically
+%
+% Revision 1.4  2004/08/27 15:54:25  roboos
+% changed obsolete private function vec2mat into reshape
+%
+% Revision 1.3  2004/06/28 07:36:53  roberto
+% changed from DOS to UNIX linefeeds, I am not completely sure whether I made other changes as well
+%
+% Revision 1.2  2003/03/11 15:24:52  roberto
+% updated help and copyrights
+%
+
+% read the neuroscan header 
+eeg = read_ns_hdr(filename);
+
+% clear the variance part which is empty anyway
+eeg = rmfield(eeg, 'variance');
+
+% create a time axis
+eeg.time = linspace(eeg.xmin, eeg.xmax, eeg.npnt);
+
+% open the file and seek towards the place where the raw data is
+fid = fopen(filename,'r','ieee-le');
+if fid<0
+  error(['cannot open ', filename]);
+end
+
+% the default is to read all epochs
+if nargin<2
+  epoch = 1:eeg.nsweeps;
+end
+
+% determine whether it is 16 or 32 bit data
+fseek(fid, 0, 'eof');
+header_size = 900 + 75*eeg.nchan;
+file_size   = ftell(fid);
+sample_size = (file_size-header_size)/(eeg.nchan*eeg.npnt*eeg.nsweeps);
+% note that the V4 format can have some extra information at the end of
+% the file, causing the sample size to be slightly larger than 2 or 4
+if floor(sample_size)==2
+  epoch_size = eeg.nchan*eeg.npnt*2 + 13;
+  datatype ='int16';
+elseif floor(sample_size)==4
+  datatype ='int32';
+  epoch_size = eeg.nchan*eeg.npnt*4 + 13;
+end
+
+% create empty storage for the data
+data = zeros(length(epoch), eeg.nchan, eeg.npnt);
+
+for i=1:length(epoch)
+  fseek(fid, 900, 'bof');				% skip general header
+  fseek(fid, 75*eeg.nchan, 'cof');			% skip channel headers
+  status = fseek(fid, (epoch(i)-1)*epoch_size, 'cof');	% skip first epochs
+  if status~=0
+    error('seek error while reading epoch data');
+  end
+
+  % fprintf('reading epoch %d at offset %d\n', epoch(i), ftell(fid));
+	
+  % read sweep header	
+  sweep(i).accept   = fread(fid, 1, 'uchar');
+  sweep(i).type     = fread(fid, 1, 'ushort');
+  sweep(i).correct  = fread(fid, 1, 'ushort');
+  sweep(i).rt       = fread(fid, 1, 'float32');
+  sweep(i).response = fread(fid, 1, 'ushort');
+  sweep(i).reserved = fread(fid, 1, 'ushort');
+
+  % read raw signal
+  raw = fread(fid, eeg.nchan*eeg.npnt, datatype);
+  if length(raw)~=eeg.nchan*eeg.npnt
+    error('fread error while reading epoch data');
+  end
+  data(i,:,:) = reshape(raw, [eeg.nchan, eeg.npnt]);
+
+end
+
+% convert raw signal to uV
+for chan=1:eeg.nchan
+  data(:,chan,:) = (data(:,chan,:) - eeg.baseline(chan)) * eeg.factor(chan);
+end
+
+% store the epoch information and data in the output structure
+eeg.data = squeeze(data);
+eeg.sweep = squeeze(sweep');
+
+fclose(fid);
+
