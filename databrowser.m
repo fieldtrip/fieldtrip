@@ -434,7 +434,7 @@ if nargout
   % wait until the user interface is closed, get the user data with the updated artifact details
   set(h, 'CloseRequestFcn', @cleanup_cb);
   
-  while ishandle(h)
+  while ishandle(h) 
     uiwait(h);
     opt = guidata(h);
     if opt.cleanup
@@ -473,9 +473,7 @@ function cleanup_cb(h, eventdata)
 opt = guidata(h);
 opt.cleanup = true;
 guidata(h, opt);
-try
-  close(gcf)
-end
+uiresume
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
