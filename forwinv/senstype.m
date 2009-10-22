@@ -152,6 +152,7 @@ if isequal(current_argin, previous_argin)
 end
 
 isdata   = isa(input, 'struct') && isfield(input, 'hdr')   && isfield(input.hdr, 'label');
+isdata   = isdata || (isa(input, 'struct') && (isfield(input, 'grad') || isfield( input, 'elec')));
 isheader = isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'Fs');
 isgrad   = isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'pnt')  &&  isfield(input, 'ori');
 iselec   = isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'pnt')  && ~isfield(input, 'ori');
@@ -159,14 +160,17 @@ islabel  = isa(input, 'cell')   && isa(input{1}, 'char');
 
 % the input may be a data structure which then contains a grad/elec structure
 if isdata
-  if isfield(input.hdr, 'grad')
-    sens = input.hdr.grad;
+  if isfield(input, 'hdr'),
+    input = input.hdr;
+  end  
+  if isfield(input, 'grad')
+    sens = input.grad;
     isgrad = true;
-  elseif isfield(input.hdr, 'elec')
-    sens = input.hdr.elec;
+  elseif isfield(input, 'elec')
+    sens = input.elec;
     iselec = true;
-  else
-    sens.label = input.hdr.label;
+  elseif isfield(input, 'label')
+    sens.label = input.label;
     islabel = true;
   end
 elseif isheader
