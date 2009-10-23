@@ -473,7 +473,7 @@ function cleanup_cb(h, eventdata)
 opt = guidata(h);
 opt.cleanup = true;
 guidata(h, opt);
-uiresume
+% uiresume
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
