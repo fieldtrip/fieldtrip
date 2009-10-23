@@ -254,8 +254,8 @@ stype         = keyval('senstype',      varargin); % senstype is a function name
 ismeg         = keyval('ismeg',         varargin);
 inside        = keyval('inside',        varargin); % can be logical or index
 hastrials     = keyval('hastrials',     varargin);
-hastrialdef   = keyval('hasoffset',     varargin); if isempty(hastrialdef), hastrialdef = 'no'; end
-hasoffset     = keyval('hastrialdef',   varargin); if isempty(hasoffset), hasoffset = 'no'; end
+hastrialdef   = keyval('hastrialdef',   varargin); if isempty(hastrialdef), hastrialdef = 'no'; end
+hasoffset     = keyval('hasoffset',     varargin); if isempty(hasoffset), hasoffset = 'no'; end
 hasdimord     = keyval('hasdimord',     varargin); if isempty(hasdimord), hasdimord = 'no'; end
 hascumtapcnt  = keyval('hascumtapcnt',  varargin);
 hasdof        = keyval('hasdof',        varargin); if isempty(hasdof), hasdof = 'no'; end
