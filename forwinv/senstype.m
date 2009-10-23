@@ -56,7 +56,7 @@ function [type] = senstype(input, desired)
 %   senstype(data.grad)
 %   senstype(data.grad.label)
 %
-% See also SENSLABEL, CHANTYPE, READ_SENS, COMPUTE_LEADFIELD 
+% See also SENSLABEL, CHANTYPE, READ_SENS, COMPUTE_LEADFIELD
 
 % Copyright (C) 2007-2009, Robert Oostenveld
 %
@@ -146,29 +146,43 @@ end
 
 current_argin = {input, desired};
 if isequal(current_argin, previous_argin)
-  % don't do the type detection again, but return the previous values from cache
+  % don't do the type detection again, but return the previous values from
+  % cache
   type = previous_argout{1};
   return
 end
 
-isdata   = isa(input, 'struct') && isfield(input, 'hdr')   && isfield(input.hdr, 'label');
-isdata   = isdata || (isa(input, 'struct') && (isfield(input, 'grad') || isfield( input, 'elec')));
+% FIXME the detection of the type of input structure should perhaps be done using the datatype function
+isdata   = isa(input, 'struct') && isfield(input, 'hdr');
 isheader = isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'Fs');
 isgrad   = isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'pnt')  &&  isfield(input, 'ori');
 iselec   = isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'pnt')  && ~isfield(input, 'ori');
-islabel  = isa(input, 'cell')   && isa(input{1}, 'char');
+islabel  = isa(input, 'cell')   && ~isempty(input) && isa(input{1}, 'char');
 
-% the input may be a data structure which then contains a grad/elec structure
+if ~isdata && ~isheader
+  % timelock or freq structures don't have the header structure
+  % the header is also removed from raw data after megrealign
+  % the gradiometer definition is lost after megplanar+combineplanar
+  isdata = isa(input, 'struct') && (isfield(input, 'grad') || isfield(input, 'elec') || isfield(input, 'label'));
+end
+
+% the input may be a data structure which then contains a grad/elec structure, a header or only the labels
 if isdata
-  if isfield(input, 'hdr'),
-    input = input.hdr;
-  end  
-  if isfield(input, 'grad')
+  if issubfield(input, 'hdr.grad')
+    sens = input.hdr.grad;
+    isgrad = true;
+  elseif issubfield(input, 'hdr.elec')
+    sens = input.hdr.elec;
+    iselec = true;
+  elseif isfield(input, 'grad')
     sens = input.grad;
     isgrad = true;
   elseif isfield(input, 'elec')
     sens = input.elec;
     iselec = true;
+  elseif issubfield(input, 'hdr.label')
+    sens.label = input.hdr.label;
+    islabel = true;
   elseif isfield(input, 'label')
     sens.label = input.label;
     islabel = true;
@@ -180,7 +194,7 @@ elseif isheader
   elseif isfield(input, 'elec')
     sens   = input.elec;
     iselec = true;
-  else
+  elseif isfield(input, 'label')
     sens.label = input.label;
     islabel = true;
   end
