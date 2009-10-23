@@ -224,7 +224,7 @@ elseif strcmp(cfg.method, 'openmeeg')
   hastoolbox('openmeeg', 1);
 
   % use the openmeeg wrapper function
-  vol = openmeeg(vol);
+  vol = openmeeg(vol,cfg.isolatedsource);
   vol.type = 'openmeeg';
   
 elseif strcmp(cfg.method, 'brainstorm')
