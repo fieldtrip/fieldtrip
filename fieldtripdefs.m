@@ -57,9 +57,11 @@ if ~isfield(ft_default, 'trackconfig'), ft_default.trackconfig = 'off';   end % 
 if ~isfield(ft_default, 'checkconfig'), ft_default.checkconfig = 'loose'; end % pedantic, loose, silent
 if ~isfield(ft_default, 'checksize'),   ft_default.checksize   = 1e5;     end % number in bytes, can be inf
 
-try
-  % this contains general usefull functions, that do not have to be private
-  hastoolbox('public', 1, 1);
+
+if isempty(which('hastoolbox'))
+  % the fieldtrip/public directory contains the hastoolbox function
+  % which is required for the remainder of this script
+  addpath(fullfile(fileparts(which('fieldtripdefs')), 'public'));
 end
 
 try
