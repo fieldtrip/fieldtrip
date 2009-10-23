@@ -126,7 +126,7 @@ function [cfg] = databrowser(cfg, data)
 fieldtripdefs
 
 if nargin>1
-  data = checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes');
+  data = checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hastrialdef', 'yes');
   if ~isfield(cfg, 'continuous') && length(data.trial) == 1 
     cfg.continuous = 'yes';           
   end 

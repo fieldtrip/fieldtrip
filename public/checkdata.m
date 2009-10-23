@@ -21,6 +21,7 @@ function [data] = checkdata(data, varargin)
 %   inside             = logical, index
 %   ismeg              = yes, no
 %   hastrials          = yes, no
+%   hastrialdef        = yes, no
 %   hasoffset          = yes, no (only applies to raw data)
 %   hascumtapcnt       = yes, no (only applies to freq data)
 %   hasdof             = yes, no
@@ -253,7 +254,8 @@ stype         = keyval('senstype',      varargin); % senstype is a function name
 ismeg         = keyval('ismeg',         varargin);
 inside        = keyval('inside',        varargin); % can be logical or index
 hastrials     = keyval('hastrials',     varargin);
-hasoffset     = keyval('hasoffset',     varargin); if isempty(hasoffset), hasoffset = 'no'; end
+hastrialdef   = keyval('hasoffset',     varargin); if isempty(hastrialdef), hastrialdef = 'no'; end
+hasoffset     = keyval('hastrialdef',   varargin); if isempty(hasoffset), hasoffset = 'no'; end
 hasdimord     = keyval('hasdimord',     varargin); if isempty(hasdimord), hasdimord = 'no'; end
 hascumtapcnt  = keyval('hascumtapcnt',  varargin);
 hasdof        = keyval('hasdof',        varargin); if isempty(hasdof), hasdof = 'no'; end
@@ -524,7 +526,7 @@ if issource || isvolume,
   if isfield(data, 'xgrid'),  data = rmfield(data, 'xgrid');  end
   if isfield(data, 'ygrid'),  data = rmfield(data, 'ygrid');  end
   if isfield(data, 'zgrid'),  data = rmfield(data, 'zgrid');  end
-  
+
   % the following section is to make a dimord-consistent representation of
   % volume and source data, taking trials, time and frequency into account
   if isequal(hasdimord, 'yes') && (~isfield(data, 'dimord') || ~strcmp(data.dimord,sourcedimord))
@@ -559,10 +561,10 @@ if issource || isvolume,
       data.mom = tmpmom;
       if isfield(data.avg, 'noise'),
         tmpnoise = data.avg.noise(:);
-	data.noise = tmpnoise(:,ones(1,size(tmpmom,2)));
+        data.noise = tmpnoise(:,ones(1,size(tmpmom,2)));
       end
       data = rmfield(data, 'avg');
-      Ntime = length(data.time);  
+      Ntime = length(data.time);
     elseif isfield(data, 'trial') && isfield(data.trial(1), 'mom') && isfield(data, 'time') && strcmp(sourcedimord, 'rpt_pos_time'),
       Npos   = size(data.pos,1);
       Nrpt   = length(data.trial);
@@ -578,7 +580,7 @@ if issource || isvolume,
     else
       Nrpt = 1;
     end
-    
+
     % start with an initial specification of the dimord and dim
     if (~isfield(data, 'dim') || ~isfield(data, 'dimord'))
       if issource
@@ -625,7 +627,7 @@ if issource || isvolume,
       data = rmfield(data, 'trial');
     end
   end
-  
+
   % ensure consistent dimensions of the source reconstructed data
   % reshape each of the source reconstructed parameters
   if isfield(data, 'dim'),
@@ -639,7 +641,7 @@ if issource || isvolume,
       elseif strcmp(dimtok(i),'rpt')
         dim(1,i) = nan;
       else
-        dim(1,i) = length(getsubfield(data,dimtok{i})); 
+        dim(1,i) = length(getsubfield(data,dimtok{i}));
       end
     end
     i = find(isnan(dim));
@@ -654,7 +656,7 @@ if issource || isvolume,
     end
     if numel(dim)==1, dim(1,2) = 1; end;
   end
- 
+
   if issource, exclude = {'inside' 'fwhm' 'leadfield' 'q' 'rough'}; end
   if isvolume, exclude = {         'fwhm' 'leadfield' 'q' 'rough'}; end
 
@@ -689,6 +691,11 @@ if isequal(hastrials,'yes')
     error('This function requires data with a ''trial'' field');
   end % if okflag
 end
+
+if isequal(hastrialdef,'yes')
+  data = fixtrialdef(data);
+end
+
 
 if isequal(hasoffset,'yes')
   okflag = isfield(data, 'offset');
