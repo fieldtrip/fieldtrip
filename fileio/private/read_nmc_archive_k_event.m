@@ -12,9 +12,12 @@ function [event] = read_nmc_archive_k_event(eventfile)
 % Nijmegen, the Netherlands. It should not be used for any other data
 % format.
 %
-
 %
-% First version: 2009/09/31 - roevdmei
+
+% Copyright (C) 2009, Roemer van der Meij
+%
+% $Log: read_nmc_archive_k_event.m,v $
+%
 %
 
 
