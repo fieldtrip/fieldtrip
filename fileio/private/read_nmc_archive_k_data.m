@@ -14,11 +14,12 @@ function [dat] = read_nmc_archive_k_data(datafile, hdr, begsample, endsample, ch
 %
 %
 %
+
+% Copyright (C) 2009, Roemer van der Meij
 %
 % $Log: read_nmc_archive_k_data.m,v $
 %
-% First version: 2009/09/31 - roevdmei
-%
+
 
 
 % Sanity checks (to be added)
