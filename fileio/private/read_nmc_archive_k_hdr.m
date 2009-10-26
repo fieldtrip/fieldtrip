@@ -13,7 +13,11 @@ function [hdr] = read_nmc_archive_k_hdr(paramfile)
 % format.
 %
 %
-% First version: 2009/09/30 - roevdmei
+
+% Copyright (C) 2009, Roemer van der Meij
+%
+% $Log: read_nmc_archive_k_hdr.m,v $
+% 
 %
 
 
