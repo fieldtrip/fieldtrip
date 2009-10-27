@@ -132,10 +132,8 @@ end
 
 % remember the current input and output arguments, so that they can be
 % reused on a subsequent call in case the same input argument is given
-if isempty(previous_argin)
-  previous_argin     = current_argin;
-  previous_maskimage = maskimage;
-end
+previous_argin     = current_argin;
+previous_maskimage = maskimage;
 
 if ~holdflag
   hold off
