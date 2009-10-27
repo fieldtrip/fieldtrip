@@ -97,8 +97,4 @@ else
 
 end % shortcut
 
-h = line(X, Y);
-set(h, 'Color', color);
-set(h, 'LineStyle', linestyle);
-set(h, 'LineWidth', linewidth);
-
+h = line(X, Y, 'Color', color, 'LineStyle', linestyle, 'LineWidth', linewidth);
