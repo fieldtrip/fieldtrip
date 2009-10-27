@@ -15,8 +15,12 @@ function [varargout] = plot_vector(varargin)
 %   'hlim'
 %   'vlim'
 %   'style'
+%   'label'
+%   'fontsize'
 %   'axis'          can be 'yes' or 'no'
 %   'box'           can be 'yes' or 'no'
+%   'color'
+%   'linewidth'
 %   'highlight'
 %   'highlightstyle'
 %
@@ -75,7 +79,7 @@ else
 end
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'style', 'label', 'fontsize', 'axis', 'box','highlight','highlightstyle','color'});
+keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'style', 'label', 'fontsize', 'axis', 'box','highlight','highlightstyle','color', 'linewidth'});
 hpos   = keyval('hpos',     varargin);
 vpos   = keyval('vpos',     varargin);
 width  = keyval('width',    varargin);
@@ -88,6 +92,7 @@ fontsize = keyval('fontsize', varargin);
 axis   = keyval('axis',     varargin); if isempty(axis),  axis = false; end
 box    = keyval('box',      varargin); if isempty(box),   box = false; end
 color  = keyval('color',    varargin);
+linewidth      = keyval('linewidth',       varargin); if isempty(linewidth), linewidth = 0.5; end
 highlight      = keyval('highlight',       varargin);
 highlightstyle = keyval('highlightstyle',  varargin); if isempty(highlightstyle), highlightstyle = 'box'; end
 
@@ -179,9 +184,9 @@ if ~isempty(highlight)
 end
 
 if isempty(color)
-  h = plot(hdat, vdat, style);
+  h = plot(hdat, vdat, style, 'LineWidth', linewidth);
 else
-  h = plot(hdat, vdat, style, 'Color', color);
+  h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'Color', color);
 end
 
 if ~isempty(label)
@@ -207,13 +212,13 @@ if box
   Y = [y1 y1 y2 y2 y1];
   line(X, Y);
 
-%   % this plots a box around the original hpos/vpos with appropriate width/height
-%   boxposition(1) = hpos - width/2;
-%   boxposition(2) = hpos + width/2;
-%   boxposition(3) = vpos - height/2;
-%   boxposition(4) = vpos + height/2;
-%   plot_box(boxposition, 'facecolor', 'none', 'edgecolor', 'k');
-  
+  %   % this plots a box around the original hpos/vpos with appropriate width/height
+  %   boxposition(1) = hpos - width/2;
+  %   boxposition(2) = hpos + width/2;
+  %   boxposition(3) = vpos - height/2;
+  %   boxposition(4) = vpos + height/2;
+  %   plot_box(boxposition, 'facecolor', 'none', 'edgecolor', 'k');
+
   % this plots a box around the complete data
   % boxposition(1) = hlim(1);
   % boxposition(2) = hlim(2);
@@ -226,13 +231,13 @@ if axis
   % determine where the original [0, 0] in the data is located in the scaled and shifted axes
   x0 = interp1(hlim, hpos + [-width/2  width/2 ], 0, 'linear', 'extrap');
   y0 = interp1(vlim, vpos + [-height/2 height/2], 0, 'linear', 'extrap');
-  
+
   X = [hpos-width/2  hpos+width/2];
   Y = [y0 y0];
   plot_line(X, Y);
   % str = sprintf('%g', hlim(1)); plot_text(X(1), Y(1), str);
   % str = sprintf('%g', hlim(2)); plot_text(X(2), Y(2), str);
-  
+
   X = [x0 x0];
   Y = [vpos-height/2 vpos+height/2];
   plot_line(X, Y);

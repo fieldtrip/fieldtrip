@@ -15,6 +15,7 @@ function plot_line(X, Y, varargin)
 %   vlim
 %   color
 %   linestyle
+%   linewidth
 
 % Copyrights (C) 2009, Robert Oostenveld
 %
@@ -33,7 +34,7 @@ function plot_line(X, Y, varargin)
 %
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'color', 'linestyle'});
+keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'color', 'linestyle', 'linewidth'});
 hpos        = keyval('hpos',      varargin);
 vpos        = keyval('vpos',      varargin);
 width       = keyval('width',     varargin);
@@ -42,6 +43,7 @@ hlim        = keyval('hlim',      varargin);
 vlim        = keyval('vlim',      varargin);
 color       = keyval('color',     varargin); if isempty(color), color = 'k'; end
 linestyle   = keyval('linestyle', varargin); if isempty(linestyle), linestyle = '-'; end
+linewidth   = keyval('linewidth', varargin); if isempty(linewidth), linewidth = 0.5; end
 
 if isempty(hlim) && isempty(vlim) && isempty(hpos) && isempty(vpos) && isempty(height) && isempty(width)
   % no scaling is needed, the input X and Y are already fine
@@ -98,5 +100,5 @@ end % shortcut
 h = line(X, Y);
 set(h, 'Color', color);
 set(h, 'LineStyle', linestyle);
-
+set(h, 'LineWidth', linewidth);
 
