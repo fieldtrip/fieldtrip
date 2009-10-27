@@ -51,22 +51,7 @@ function [output] = volumelookup(cfg, volume)
 
 % Copyright (C) 2008, Robert Oostenveld, Ingrid Nieuwenhuis
 %
-% $Log: volumelookup.m,v $
-% Revision 1.5  2009/08/03 15:20:19  ingnie
-% updated help
-%
-% Revision 1.4  2009/01/29 13:54:57  ingnie
-% changed help
-%
-% Revision 1.3  2009/01/27 10:09:49  ingnie
-% added mask2label functionality
-%
-% Revision 1.2  2008/12/16 20:42:33  roboos
-% converted from dos to unix text file
-%
-% Revision 1.1  2008/12/05 13:39:38  ingnie
-% new implementation based om atlas_mask, added possibility to make spherical and box masks.
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

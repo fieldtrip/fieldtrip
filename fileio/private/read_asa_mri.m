@@ -15,26 +15,7 @@ function [mri, seg, hdr] = read_asa_mri(fn);
 
 % Copyright (C) 2002, Robert Oostenveld
 % 
-% $Log: read_asa_mri.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.6  2008/11/12 17:02:03  roboos
-% explicitely specify ieee-le in fopen()
-%
-% Revision 1.5  2005/11/16 13:46:32  roboos
-% added segmentatino to output, changed from warpo3d to warp_apply
-%
-% Revision 1.4  2004/01/19 14:24:13  roberto
-% numerous changes, cannot remember the details
-%
-% Revision 1.3  2003/08/04 09:26:46  roberto
-% added homgenous coordinate transformation matrices to header
-% support for VoxelOn... instead of PointOn...
-%
-% Revision 1.2  2003/03/11 15:24:51  roberto
-% updated help and copyrights
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 hdr.Nrows     = read_asa(fn, 'NumberRows=', '%d');
 hdr.Ncolumns  = read_asa(fn, 'NumberColumns=', '%d');

@@ -29,16 +29,7 @@ function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx);
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% $Log: read_edf.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.2  2008/09/30 07:47:04  roboos
-% replaced all occurences of setstr() with char(), because setstr is deprecated by Matlab
-%
-% Revision 1.1  2006/02/01 08:18:48  roboos
-% new implementation, based on some EEGLAB code and a mex file for the binary part of the data
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin==1
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

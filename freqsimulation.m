@@ -130,56 +130,7 @@ function [data] = freqsimulation(cfg)
 
 % Copyright (C) 2007-2008, Ingrid Nieuwenhuis & Robert Oostenveld, F.C. Donders Centre
 %
-% $Log: freqsimulation.m,v $
-% Revision 1.15  2009/10/12 14:15:06  jansch
-% some typo fixes in comments
-%
-% Revision 1.14  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.13  2008/07/10 08:39:36  roboos
-% updated documentation
-%
-% Revision 1.12  2008/06/17 16:13:18  sashae
-% now using preproc_modules
-%
-% Revision 1.11  2008/02/26 14:39:25  roboos
-% fixed bug in cfg.time
-%
-% Revision 1.10  2008/01/31 09:21:54  roboos
-% look at length of timevec instead of cfg.numtrl
-%
-% Revision 1.9  2008/01/24 12:18:56  roboos
-% allow user to specify his own time axes
-%
-% Revision 1.8  2008/01/24 11:55:45  roboos
-% added method 'asymmetric'
-%
-% Revision 1.7  2007/11/08 12:57:26  roboos
-% renamed method amplow_amphigh_1chan into amplow_amphigh
-%
-% Revision 1.6  2007/11/07 09:14:28  ingnie
-% added method 'phalow_freqhigh'
-%
-% Revision 1.5  2007/11/06 14:47:53  ingnie
-% changed naming from power to amplitude, changed documentation methods phalow_amphigh and amplow_amphigh, changed some variable names to match documentation
-%
-% Revision 1.4  2007/11/05 11:29:54  roboos
-% added cfg.method=broadband
-% add version details to output cfg
-%
-% Revision 1.3  2007/11/05 10:36:32  roboos
-% added method superimposed, changed whitespace, moved some code out of for-loops
-%
-% Revision 1.2  2007/10/23 15:34:42  ingnie
-% added option powlow_powhigh_1chan
-%
-% Revision 1.1  2007/08/08 06:33:10  roboos
-% renamed simluatedata to freqsimuation
-%
-% Revision 1.1  2007/08/07 10:45:33  ingnie
-% first implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

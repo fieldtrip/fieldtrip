@@ -12,16 +12,7 @@ function s = spearman_binned(cfg, dat, design)
 % the last dimension should have length two, since this dimension contains the two variables 
 % that are to be rank-correlated
 
-%$Log: spearman_binned.m,v $
-%Revision 1.3  2006/10/04 06:59:58  roboos
-%renamed th eoption cfg.factor into ivar
-%
-%Revision 1.2  2006/04/12 12:48:38  roboos
-%renamed cfg.randomfactor=>cfg.factor
-%
-%Revision 1.1  2006/01/05 15:41:36  jansch
-%first implementation, to be called by statistics_random.m
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if ~isfield(cfg, 'factor') & prod(size(design)) ~= max(size(design)),
   error('cannot determine the labeling of the trials');

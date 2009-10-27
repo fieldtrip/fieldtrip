@@ -10,25 +10,7 @@ function write_neuralynx_nse(filename, nse);
 
 % Copyright (C) 2005-2007, Robert Oostenveld
 %
-% $Log: write_neuralynx_nse.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.5  2007/03/21 15:55:31  roboos
-% fixed typo in variable name
-%
-% Revision 1.4  2007/03/21 12:53:21  roboos
-% included the scaling to int16 AD values into this function, i.e. the input data should be uV (double)
-%
-% Revision 1.3  2007/03/19 16:56:21  roboos
-% changed representation of waveforms from cell array into nsample X nspikes numeric array
-%
-% Revision 1.2  2005/09/09 12:27:15  roboos
-% implemented the core functionality of the function
-%
-% Revision 1.1  2005/08/05 13:41:39  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if ~isa(nse.TimeStamp, 'uint64')
   error('timestamps should be uint64');

@@ -15,10 +15,7 @@ function unit = estimate_units(size)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% $Log: estimate_units.m,v $
-% Revision 1.1  2009/03/26 14:57:04  roboos
-% moved the unit estimation to a seperate function
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % do some magic based on the size
 unit = {'m', 'dm', 'cm', 'mm'};

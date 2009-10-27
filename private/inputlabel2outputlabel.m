@@ -10,16 +10,7 @@ function [outputlabel, outputindex] = inputlabel2outputlabel(cfg, freq)
 %                     'pseudomeg' one gradiometer versus the rest
 %   TODO: more flexible way of combining, e.g. by providing a cell-array 
 
-% $Log: inputlabel2outputlabel.m,v $
-% Revision 1.3  2009/10/01 12:43:36  jansch
-% allowing for single missing dV or dH channels
-%
-% Revision 1.2  2006/06/23 10:51:02  jansch
-% changed format of outputlabel
-%
-% Revision 1.1  2005/08/15 15:16:19  jansch
-% First implementation. Moved out of freqdescriptives.m
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if ~isfield(cfg, 'combinechan'), cfg.combinechan = 'no'; end;
 

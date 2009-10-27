@@ -20,19 +20,7 @@ function [num,dims]=dimnum(dimord, dim)
 
 % Copyright (C) 2005, Geerten Kramer
 %
-% $Log: dimnum.m,v $
-% Revision 1.4  2009/02/02 13:21:51  jansch
-% changed 'chancmb' into 'chan', added 'chan'
-%
-% Revision 1.3  2006/02/01 12:26:04  roboos
-% made all uses of dimord consistent with the common definition of data dimensions, see the fixdimord() function
-%
-% Revision 1.2  2005/10/04 12:19:26  geekra
-% Added comment and discription.
-%
-% Revision 1.1  2005/10/04 12:06:00  geekra
-% Initial implementation.
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if(~isstr(dimord)||~isstr(dim))error('Both dimord and dim must be strings');end;
 

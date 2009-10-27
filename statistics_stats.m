@@ -25,28 +25,7 @@ function [stat, cfg] = statistics_stats(cfg, dat, design);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: statistics_stats.m,v $
-% Revision 1.8  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.7  2006/06/07 12:59:09  roboos
-% fixed a bug in determining the size of the design matrix
-%
-% Revision 1.6  2006/04/20 09:58:34  roboos
-% updated documentation
-%
-% Revision 1.5  2006/04/10 12:13:15  roboos
-% besides prob, also return mask and stat when possible
-% return cfg as second output argument
-%
-% Revision 1.4  2006/03/30 12:24:34  roboos
-% Implemented private/fixinside, which facilitates consistent
-% handling of source/volume data. Improved documentation. Fixed some
-% bugs related to inconsistent handling of ROIs (i.e. inside/outside)
-%
-% Revision 1.3  2005/12/08 16:58:20  ingnie
-% fixed bug paired ttest, added log
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

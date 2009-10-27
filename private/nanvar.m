@@ -22,10 +22,7 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% $Log: nanvar.m,v $
-% Revision 1.1  2009/01/28 12:12:40  roboos
-% initial implementation, based on nanstd
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 function out = nanvar(in, varargin)
    

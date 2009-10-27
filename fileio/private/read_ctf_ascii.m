@@ -20,45 +20,7 @@ function [file] = read_ctf_ascii(filename);
 
 % Copyright (C) 2003, Robert Oostenveld
 % 
-% $Log: read_ctf_ascii.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.10  2008/11/14 07:49:19  roboos
-% use standard matlab strtrim function instead of deblank2
-%
-% Revision 1.9  2006/08/29 11:08:41  roboos
-% close file after reading from it
-%
-% Revision 1.8  2006/03/06 10:46:53  roboos
-% fixed bug (again) in shortcirquited ||
-%
-% Revision 1.7  2006/03/06 09:40:53  roboos
-% changed a | into a ||
-%
-% Revision 1.6  2006/02/24 15:43:43  roboos
-% fixed bug in shortcirquited || which was not boolean on both sides
-%
-% Revision 1.5  2006/02/09 08:36:33  roboos
-% changed single | into || since it is a boolean evaluation (thanks to Tom)
-%
-% Revision 1.4  2004/08/02 13:06:09  roboos
-% fixed bug that occurred for hdm files based on markers: structs cannot have fields that have a name which consists of a single number, so in that case use the fieldname "item_1" etc.
-%
-% Revision 1.3  2004/06/28 07:32:28  roberto
-% added warning off/on around text reading and conversion
-%
-% Revision 1.2  2003/04/17 12:38:08  roberto
-% *** empty log message ***
-%
-% Revision 1.1  2003/03/24 12:30:42  roberto
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fid = fopen(filename, 'r');
 if fid==-1

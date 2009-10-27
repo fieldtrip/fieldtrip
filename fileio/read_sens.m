@@ -31,57 +31,7 @@ function [sens] = read_sens(filename, varargin)
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 %
-% $Log: read_sens.m,v $
-% Revision 1.16  2009/10/16 07:32:08  roboos
-% renamed chieti into itab for consistency with other formats
-%
-% Revision 1.15  2009/10/13 10:12:51  roboos
-% added support for chieti_raw
-%
-% Revision 1.14  2009/07/02 10:34:21  vlalit
-% Added eeglab_set to the list of formats where electrode locations can be found in
-%  the header.
-%
-% Revision 1.13  2009/06/03 09:52:15  roboos
-% added zebris_sfp
-%
-% Revision 1.12  2009/02/02 16:10:15  vlalit
-% Provide the 'headertype' argument to the internal read_header call.
-%
-% Revision 1.11  2009/01/23 10:32:55  vlalit
-% New reader for Neuromag fif format using the MNE toolbox (http://www.nmr.mgh.harvard.edu/martinos/userInfo/data/sofMNE.php)  implemented by Laurence Hunt.
-%
-% Revision 1.10  2008/09/18 10:38:33  vlalit
-% Added 4D formats to be recognized by read_sens
-%
-% Revision 1.9  2008/05/22 14:33:18  vlalit
-% Changes related to generalization of fiducials'  handling in SPM.
-%
-% Revision 1.8  2008/04/14 20:51:36  roboos
-% added convert_units
-%
-% Revision 1.7  2008/04/11 16:17:22  roboos
-% added polhemus_fil
-%
-% Revision 1.6  2008/03/20 13:43:14  roboos
-% added support for besa_pos
-%
-% Revision 1.5  2008/03/18 12:34:30  roboos
-% fixed bug: added varargin to input arguments, thanks to Juan
-%
-% Revision 1.4  2008/03/06 09:27:54  roboos
-% updated documentation
-%
-% Revision 1.3  2008/03/05 11:06:11  roboos
-% test the presence of the fileio toolbox, needed when this function is included in forwinv
-%
-% Revision 1.2  2008/03/05 10:54:05  roboos
-% added optional argument for fileformat
-% some documentation changes
-%
-% Revision 1.1  2008/01/28 20:10:11  roboos
-% new functions based on existing fieldtrip code
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % test whether the file exists
 if ~exist(filename)

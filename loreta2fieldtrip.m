@@ -15,15 +15,7 @@ function [source] = loreta2fieldtrip(filename, varargin)
 
 % Copyright (C) 2006, Vladimir Litvak
 %
-% $Log: loreta2fieldtrip.m,v $
-% Revision 1.3  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.2  2006/08/29 20:50:21  roboos
-% major cleanup, added optional key-value inputs, implemented timeframe selection, implemented support for storing multiple timeframes in the source.avg.mom field (i.e. timecourses)
-%
-% Revision 1.1  2006/04/03 07:43:28  roboos
-% first version under CVS control
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

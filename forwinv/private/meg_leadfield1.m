@@ -20,34 +20,7 @@ function [varargout] = funname(varargin)
 
 % Copyright (C) 2002-2008, Robert Oostenveld
 %
-% $Log: meg_leadfield1.m,v $
-% Revision 1.3  2009/06/17 13:38:06  roboos
-% cleaned up documentation
-%
-% Revision 1.2  2009/03/12 11:05:04  roboos
-% implemented auto-compilation of the mex file in case it is missing
-%
-% Revision 1.1  2009/01/21 10:32:38  roboos
-% moved from forwinv/* and forwinv/mex/* directory to forwinv/private/* to make the CVS layout consistent with the release version
-%
-% Revision 1.8  2008/07/21 20:32:27  roboos
-% updated documentation
-%
-% Revision 1.7  2008/03/05 16:27:33  roboos
-% updated documentation
-%
-% Revision 1.5  2003/03/28 10:01:15  roberto
-% created mex implementation, updated help and comments
-%
-% Revision 1.4  2003/03/28 09:01:55  roberto
-% fixed important bug (incorrect use of a temporary variable)
-%
-% Revision 1.3  2003/03/12 08:19:45  roberto
-% improved help
-%
-% Revision 1.2  2003/03/11 14:45:37  roberto
-% updated help and copyrights
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % compile the missing mex file on the fly
 % remember the original working directory

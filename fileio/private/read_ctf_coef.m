@@ -11,13 +11,7 @@ function [coef] = read_ctf_coef
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% $Log: read_ctf_coef.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.1  2003/03/24 12:33:02  roberto
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin~=0
   error('this function does not accept input parameters')

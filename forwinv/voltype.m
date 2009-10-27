@@ -12,41 +12,7 @@ function [type] = voltype(vol, desired)
 
 % Copyright (C) 2007-2008, Robert Oostenveld
 %
-% $Log: voltype.m,v $
-% Revision 1.4  2009/04/01 06:51:43  roboos
-% implemented caching for the type detection in case the same input is given multiple times
-% this uses a persistent variable
-%
-% Revision 1.3  2009/02/02 13:05:22  roboos
-% small fix in cpbem->bemcp
-%
-% Revision 1.2  2009/02/02 12:58:27  roboos
-% added bemcp implementation
-%
-% Revision 1.1  2009/01/21 10:32:38  roboos
-% moved from forwinv/* and forwinv/mex/* directory to forwinv/private/* to make the CVS layout consistent with the release version
-%
-% Revision 1.7  2008/04/30 13:40:34  roboos
-% improved detection concentric eeg
-%
-% Revision 1.6  2008/04/16 08:04:33  roboos
-% be flexible in determining whether it is bem
-%
-% Revision 1.5  2008/04/14 19:31:05  roboos
-% return 'unknown' if the type cannot be determined
-%
-% Revision 1.4  2008/04/10 10:59:38  roboos
-% better detection of multisphere meg (after preparing)
-%
-% Revision 1.3  2008/03/18 12:39:24  roboos
-% change in comment, nothing functional
-%
-% Revision 1.2  2008/03/05 15:24:44  roboos
-% changed the detection of various spherical models, added infinite vacuum
-%
-% Revision 1.1  2007/07/25 08:31:12  roboos
-% implemented new helper function
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % these are for remembering the type on subsequent calls with the same input arguments
 persistent previous_argin previous_argout

@@ -8,19 +8,7 @@ function [nrm] = normals(pnt, dhk, opt);
 
 % Copyright (C) 2002-2007, Robert Oostenveld
 %
-% $Log: normals.m,v $
-% Revision 1.5  2008/10/21 09:00:34  roboos
-% use local version of "cross" function to speed it up
-%
-% Revision 1.4  2007/07/26 07:13:08  roboos
-% shift center of vertices to origin
-%
-% Revision 1.3  2003/03/11 15:35:20  roberto
-% converted all files from DOS to UNIX
-%
-% Revision 1.2  2003/03/04 21:46:19  roberto
-% added CVS log entry and synchronized all copyright labels
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<3
   opt='vertex';

@@ -21,30 +21,7 @@ function [header_array, CateNames, CatLengths, preBaseline] = read_sbin_header(f
 % Modified from EGI's readEGLY.m with permission 2008-03-31 Joseph Dien
 %
 
-% $Log: read_sbin_header.m,v $
-% Revision 1.5  2009/05/14 18:00:13  josdie
-% Added error message to read_sbin_header to handle case where version is an empty set.
-%
-% Revision 1.4  2009/04/29 10:55:16  jansch
-% incorporated handling of unsegmented files
-%
-% Revision 1.3  2009/03/11 16:12:09  josdie
-% Changed category names to cell variables to better support names with differing lengths.
-%
-% Revision 1.2  2009/03/05 01:03:13  josdie
-% Improved process of deducing what the stimulus onset latency is in files with multiple events.
-%
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.4  2008/12/08 09:36:49  roboos
-% added cvs log to the matlab files
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fid=fopen([filename],'r');
 if fid==-1

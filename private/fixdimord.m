@@ -23,43 +23,7 @@ function [data] = fixdimord(data);
 
 % Copyright (C) 2009, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
-% $Log: fixdimord.m,v $
-% Revision 1.4  2009/10/01 12:23:10  jansch
-% added {'pos'} as placeholder
-%
-% Revision 1.3  2009/08/03 15:53:32  ingnie
-% fixed bug introduced in last revision, thanks to Esther
-%
-% Revision 1.2  2009/08/03 15:07:51  ingnie
-% cut off dimord from source and volume data, dimord is not implemented in source and volume data yet, but some functions do add it which causes unexpected behavior
-%
-% Revision 1.1  2009/07/02 08:04:36  roboos
-% moved fixdimord and fixinside from private to public
-%
-% Revision 1.8  2006/04/12 09:11:23  roboos
-% added ; to the end of a line
-%
-% Revision 1.7  2006/04/10 12:13:52  roboos
-% improved documentation, added refchan as dimension
-%
-% Revision 1.6  2006/03/10 12:34:38  roboos
-% ensure that label cell-array is a column
-%
-% Revision 1.5  2006/02/28 11:22:11  roboos
-% changed chancmb into chan
-%
-% Revision 1.4  2006/02/23 10:28:17  roboos
-% changed dimord strings for consistency, changed toi and foi into time and freq, added fixdimord where neccessary
-%
-% Revision 1.3  2006/02/09 10:06:01  roboos
-% do not automatically add all unknown axes, that is too messy and currently not yet desired
-%
-% Revision 1.2  2006/02/01 12:26:04  roboos
-% made all uses of dimord consistent with the common definition of data dimensions, see the fixdimord() function
-%
-% Revision 1.1  2006/02/01 11:34:32  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if strcmp('volume', datatype(data)) || strcmp('source', datatype(data));
   if isfield(data, 'dimord')

@@ -23,10 +23,7 @@ function varargout = interp_ungridded(varargin);
 
 % Copyright (C) 2007, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
-% $Log: interp_ungridded.m,v $
-% Revision 1.1  2007/02/07 07:42:06  roboos
-% new implementation to be used in teh new sourceplot, mainly based on code from the old surfaceplot
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<3
   error('Not enough input arguments.');

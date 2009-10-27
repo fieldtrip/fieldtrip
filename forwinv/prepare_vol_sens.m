@@ -39,74 +39,7 @@ function [vol, sens] = prepare_vol_sens(vol, sens, varargin)
 
 % Copyright (C) 2004-2009, Robert Oostenveld
 %
-% $Log: prepare_vol_sens.m,v $
-% Revision 1.21  2009/09/27 19:12:38  crimic
-% 	wrapper adapted for openmeeg forward solution
-%
-% Revision 1.20  2009/09/21 11:12:51  roboos
-% added openmeeg as supported voltype, thanks to Cristiano
-%
-% Revision 1.19  2009/05/29 11:50:34  vlalit
-% Fixed a bug with wrong kind of brackets
-%
-% Revision 1.18  2009/05/25 11:50:40  roboos
-% consistent handling of multiple spheres in case of ctf localspheres.hdm and fieldtrip prepare_localspheres, also in case of synthetic gradients.
-%
-% Revision 1.17  2009/05/25 08:06:37  roboos
-% don't assign the channel labels to each coil for multisphere
-% handle the input situation of an already prepared vol and sens (for multisphere)
-%
-% Revision 1.16  2009/05/18 15:57:23  roboos
-% added the label of each coil to the multisphere model output
-%
-% Revision 1.15  2009/04/01 12:36:52  roboos
-% use Taubin's method for fitting the sphere instead of Guido's iterative sphfit function
-%
-% Revision 1.14  2009/03/26 16:44:03  roboos
-% allow 3rd order gradients iduring the construction of the localspheres model, requires that the hdm file contains a global sphere
-%
-% Revision 1.13  2009/03/23 21:15:18  roboos
-% fixed bug for empty vol (inf medium magnetic dipole)
-%
-% Revision 1.12  2009/03/11 11:29:26  roboos
-% ensure that the channel order in the sens and in the vol is consistent with  the user-specified channel-keyval argument
-%
-% Revision 1.11  2009/02/02 13:06:40  roboos
-% added bemcp
-% changed handling of vertex->electrode interpolation, now also possible if bem system matrix only describes the skin surface
-%
-% Revision 1.10  2009/01/19 12:13:49  roboos
-% added code at the end to determine the brain and the skin compartment
-%
-% Revision 1.9  2008/12/24 10:34:15  roboos
-% added two fprintf statements
-%
-% Revision 1.8  2008/09/29 09:56:04  release
-% some spelling fixes, thanks to Karl
-%
-% Revision 1.7  2008/07/22 10:17:15  roboos
-% replaced identical with strcmp
-%
-% Revision 1.6  2008/07/21 20:28:44  roboos
-% added check on units (mm/cm/m) of the sensor array and volume conductor, give error if inconsistent
-%
-% Revision 1.5  2008/04/30 13:47:59  roboos
-% project electrodes on scalp surface if sphere
-% always ensure that grad.tra exists (not yet for elec)
-%
-% Revision 1.4  2008/04/15 20:36:21  roboos
-% added explicit handling of various BEM implementations, i.e. for all voltype variants
-%
-% Revision 1.3  2008/04/10 11:00:29  roboos
-% fixed some small but obvious bugs
-%
-% Revision 1.2  2008/04/09 20:37:32  roboos
-% copied code over from ft version, not yet tested
-%
-% Revision 1.1  2008/03/06 09:30:36  roboos
-% Created skeleton implementation according to how it should be for the forwinv toolbox, i.e. fieldtrip independent, so that it can be included in spm8.
-% The functionality should be moved from the existing fieldtrip/private/prepare_vol_sens.m function into this new function.
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the options
 % fileformat = keyval('fileformat',  varargin);

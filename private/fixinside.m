@@ -11,24 +11,7 @@ function [source] = fixinside(source, opt);
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% $Log: fixinside.m,v $
-% Revision 1.2  2009/10/01 12:31:52  jansch
-% enforce inside vector to be column
-%
-% Revision 1.1  2009/07/02 08:04:36  roboos
-% moved fixdimord and fixinside from private to public
-%
-% Revision 1.3  2007/07/17 10:34:34  roboos
-% prevent display of source structure on screen by adding ;
-%
-% Revision 1.2  2007/05/29 16:08:13  ingnie
-% also automatic construction of inside from source.dim (with roboos)
-%
-% Revision 1.1  2006/03/30 12:24:34  roboos
-% Implemented private/fixinside, which facilitates consistent
-% handling of source/volume data. Improved documentation. Fixed some
-% bugs related to inconsistent handling of ROIs (i.e. inside/outside)
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 
 if nargin<2

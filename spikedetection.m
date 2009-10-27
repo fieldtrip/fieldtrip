@@ -60,46 +60,7 @@ function [cfg, spike] = spikedetection(cfg)
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 %
-% $Log: spikedetection.m,v $
-% Revision 1.11  2009/01/20 13:01:31  sashae
-% changed configtracking such that it is only enabled when BOTH explicitly allowed at start
-% of the fieldtrip function AND requested by the user
-% in all other cases configtracking is disabled
-%
-% Revision 1.10  2009/01/16 17:21:20  sashae
-% added config tracking
-%
-% Revision 1.9  2009/01/07 10:15:19  roboos
-% changed the read_data call to make consistent with the new (and now enforced) API of read_data instead of read_fcdc_data
-%
-% Revision 1.8  2008/10/02 15:32:21  sashae
-% replaced call to createsubcfg with checkconfig
-%
-% Revision 1.7  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.6  2008/05/13 15:37:24  roboos
-% switched to using read_data/header instead of the read_fcdc_data/header wrapper functions
-%
-% Revision 1.5  2008/02/04 17:17:34  roboos
-% fixed begsample for multiple segments, thanks to Thilo
-%
-% Revision 1.4  2008/01/30 10:50:41  roboos
-% added cfg.timestampdefinition
-%
-% Revision 1.3  2008/01/14 21:34:39  roboos
-% removed automatic output directory
-% added cfg.channelprefix, default is empty
-% icleaned up the defaults
-%
-% Revision 1.2  2008/01/14 20:12:30  roboos
-% fixed bug in call to createsubcfg for preproc
-%
-% Revision 1.1  2008/01/14 17:07:36  roboos
-% new version, based on functionality lifted from spikedownsample
-%
-% Revision 1.33  2007/03/21 17:27:30  roboos
-% updated documentation
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 cfg = checkconfig(cfg, 'trackconfig', 'on');

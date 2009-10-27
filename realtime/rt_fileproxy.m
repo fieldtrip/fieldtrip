@@ -37,69 +37,7 @@ function rt_fileproxy(cfg)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: rt_fileproxy.m,v $
-% Revision 1.20  2009/07/29 13:32:07  marvger
-% source->target
-%
-% Revision 1.19  2009/07/22 12:12:08  marvger
-% also changed cfg.target.eventfile and added defaults to keep our online
-% BCI from breaking
-%
-% Revision 1.18  2009/07/20 09:45:09  roboos
-% small change in comments, nothing functional
-%
-% Revision 1.17  2009/07/20 09:17:11  roboos
-% read events from cfg.source.eventfile and not datafile
-%
-% Revision 1.16  2009/05/01 15:41:21  roboos
-% consistent handling of cfg.speed
-%
-% Revision 1.15  2009/04/23 12:50:49  marvger
-% update of the BCI realtime code
-%
-% Revision 1.14  2009/02/10 12:42:54  marvger
-% maxblocksize = 1
-%
-% Revision 1.13  2009/02/10 10:52:58  marvger
-% default blocksize set to 0.1 (100 ms blocks as in the realtime protocol)
-%
-% Revision 1.12  2009/02/10 10:43:37  marvger
-% small changes
-%
-% Revision 1.11  2009/02/04 09:08:07  roboos
-% ensure that the persistent variables related to header caching are cleared
-% this is needed when switching the headerformat (from ctf_res4 to ctf_old) while continuing on the same file
-%
-% Revision 1.10  2009/02/03 20:25:06  marvger
-% renamed rt_timer to rt_packettimer
-%
-% Revision 1.9  2009/02/02 08:15:12  marvger
-% placed data reading/writing in a try-catch block
-%
-% Revision 1.8  2009/01/29 09:14:50  marvger
-% experienced problems with read/write event; needs fixing!
-%
-% Revision 1.7  2009/01/15 12:09:06  marvger
-% restored while loop
-%
-% Revision 1.6  2009/01/15 11:22:24  marvger
-% changed reading/writing of events
-%
-% Revision 1.5  2009/01/14 21:16:52  marvger
-% changes related to realtime processing
-%
-% Revision 1.4  2008/12/01 14:48:57  roboos
-% merged in the changes made in Lyon, general cleanup
-%
-% Revision 1.3  2008/11/14 16:23:41  roboos
-% numerous changes to make the rt_xxx functions more similar
-%
-% Revision 1.2  2008/10/28 14:05:16  roboos
-% updated documentation and defaults
-%
-% Revision 1.1  2008/10/24 08:51:38  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the defaults
 if ~isfield(cfg, 'source'),               cfg.source = [];                                  end

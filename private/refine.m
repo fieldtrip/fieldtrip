@@ -19,16 +19,7 @@ function [pntr, dhkr] = refine(pnt, dhk, method, varargin);
 
 % Copyright (C) 2002-2005, Robert Oostenveld
 %
-% $Log: refine.m,v $
-% Revision 1.4  2005/05/06 08:54:31  roboos
-% added 'updown method, using matlab reducepatch function
-%
-% Revision 1.3  2003/03/11 15:35:20  roberto
-% converted all files from DOS to UNIX
-%
-% Revision 1.2  2003/03/04 21:46:19  roberto
-% added CVS log entry and synchronized all copyright labels
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<3
   method = 'banks';

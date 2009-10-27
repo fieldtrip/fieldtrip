@@ -14,22 +14,7 @@ function [dat] = read_plexon_ddt(filename, begsample, endsample)
 
 % Copyright (C) 2005-2007, Robert Oostenveld
 %
-% $Log: read_plexon_ddt.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.3  2007/01/03 16:57:58  roboos
-% improved documentation
-%
-% Revision 1.2  2005/09/08 16:52:51  roboos
-% added support for subformat versions 101, 102 and 103
-%
-% Revision 1.1  2005/09/06 12:40:39  roboos
-% renamed plextor into plexon (i.e. it had an incorrect company name)
-%
-% Revision 1.1  2005/09/02 16:36:04  roboos
-% new implementation, only for version 100
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Version 100: Samples are assumed to be 12 bits.  All channels have the same NIDAQ gain, and preamp 

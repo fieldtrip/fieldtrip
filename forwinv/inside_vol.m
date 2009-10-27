@@ -18,51 +18,7 @@ function [inside] = inside_vol(pos, vol)
 
 % Copyright (C) 2003-2007, Robert Oostenveld
 %
-% $Log: inside_vol.m,v $
-% Revision 1.5  2009/02/05 10:20:35  roboos
-% added bemcp as volume type
-%
-% Revision 1.4  2009/01/21 11:15:57  roboos
-% moved function back from forwinv/private into public section, because it is part of the public API
-%
-% Revision 1.1  2009/01/21 10:46:10  roboos
-% moved from forwinv/* and forwinv/mex/* directory to forwinv/private/* to make the CVS layout consistent with the release version
-%
-% Revision 1.2  2008/09/29 12:04:41  roboos
-% use logical (built-in) instead of boolean (simulink)
-%
-% Revision 1.1  2008/09/20 13:41:35  roboos
-% moved content of find_inside_vol to new inside_vol function with slightly different interface
-% added wrapper for spm
-%
-%
-% %%%
-% Switch from find_inside_vol.m to inside_vol.m
-% 2008/09/09 chrisp
-% %%%
-%
-% Revision 1.7  2008/04/15 20:36:21  roboos
-% added explicit handling of various BEM implementations, i.e. for all
-% voltype variants
-%
-% Revision 1.6  2007/07/25 08:34:05  roboos
-% switched to using voltype helper function
-% also support N-shell concentric sphere model
-% changed detection for single and concentric sphere model, now explicitely
-% using distance and source compartment
-%
-% Revision 1.5  2004/09/06 08:46:27  roboos
-% moved reading of neuromag BEM boundary into fieldtrip's prepare_vol_sens
-%
-% Revision 1.4  2004/09/03 09:07:17  roboos
-% added support for finding dipoles in neuromag BEM model
-%
-% Revision 1.3  2003/08/04 09:19:30  roberto
-% fixed bug for dipole on BEM volume boundary
-%
-% Revision 1.2  2003/03/24 12:30:06  roberto
-% added support for multi-sphere volume conductor model
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % determine the type of volume conduction model
 switch voltype(vol)

@@ -13,74 +13,7 @@ function type = chantype(input, desired)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: chantype.m,v $
-% Revision 1.15  2009/10/16 12:27:53  roboos
-% some small changes pertaining to the itab/chieti format
-%
-% Revision 1.14  2009/10/13 10:39:03  roboos
-% added support for 153 channel itab system
-%
-% Revision 1.13  2009/09/22 11:15:47  vlalit
-% Changes by Laurence Hunt for distinguishing between analog and digital event channels for Neuromag.
-%
-% Revision 1.12  2009/03/30 17:53:38  vlalit
-% Fixed a bug in BTi handling code from the last update
-%
-% Revision 1.11  2009/03/26 19:17:21  vlalit
-% Some improvements for non-MEG channels in BTi
-%
-% Revision 1.10  2009/03/06 08:49:54  roboos
-% added handling of plexon header
-%
-% Revision 1.9  2009/02/05 18:30:44  vlalit
-% Updates by Laurence to recognize additional Neuromag sensor types
-%
-% Revision 1.8  2009/02/02 12:09:28  vlalit
-% Added back support of generic desired types 'meg' and 'ref'.
-%
-% Revision 1.7  2009/01/29 18:51:53  vlalit
-% Some cosmetic changes + detection of additional channel types based on label
-%
-% Revision 1.6  2009/01/29 16:42:31  vlalit
-% Standardized all the names of MEG-related types accross different MEG system.
-%
-% Revision 1.5  2009/01/29 16:09:06  jansch
-% added check for gradiometers in meg-sensors for bti
-%
-% Revision 1.4  2009/01/29 11:45:12  vlalit
-% Basic support for BTi based on code from channelselection
-%
-% Revision 1.3  2009/01/23 10:32:55  vlalit
-% New reader for Neuromag fif format using the MNE toolbox
-% (http://www.nmr.mgh.harvard.edu/martinos/userInfo/data/sofMNE.php)
-% implemented by Laurence Hunt.
-%
-% Revision 1.2  2009/01/21 16:42:41  vlalit
-% Added support for EEG systems.
-%
-% Revision 1.7  2008/11/12 20:32:31  roboos
-% refined ctf headloc channels
-%
-% Revision 1.6  2008/11/03 11:36:09  roboos
-% added work-around for unusual/spm5 ctf headers -> give warning and keep all at unknown
-% give error for weird input
-%
-% Revision 1.5  2008/10/22 07:22:46  roboos
-% also detect refmag and refgrad from ctf labels, use regexp and local subfunction
-%
-% Revision 1.4  2008/10/21 20:32:47  roboos
-% added second input argument (desired type)
-% besides hdr, also allow grad and label input (ctf only sofar)
-%
-% Revision 1.3  2008/10/20 15:14:06  roboos
-% added missing semicolon
-%
-% Revision 1.2  2008/09/10 10:06:07  roboos
-% added ctf headloc
-%
-% Revision 1.1  2008/09/10 10:04:22  roboos
-% new function
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % determine the type of input
 

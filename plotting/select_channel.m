@@ -41,20 +41,7 @@ function select_channel(handle, eventdata, varargin)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% $Log: select_channel.m,v $
-% Revision 1.4  2009/10/16 09:18:48  jansch
-% ensure column representation in select_channel_multiple to avoid crash when
-% called from multiplotER
-%
-% Revision 1.3  2009/07/14 13:18:33  roboos
-% updated channel selection, use select_range and two local helper functions, also support multiple selections
-%
-% Revision 1.2  2009/05/12 18:10:43  roboos
-% added handling of follow-up callback function
-%
-% Revision 1.1  2009/05/12 12:49:33  roboos
-% new implementation of helper function that can be used as callback in a figure
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get optional input arguments
 callback = keyval('callback', varargin);

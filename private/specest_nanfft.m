@@ -12,16 +12,7 @@ function [y, opt] = specest_nanfft(x, varargin)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: specest_nanfft.m,v $
-% Revision 1.4  2008/10/01 13:17:36  roboos
-% correct number of channels for zeros, deal with case when all data is nan (thanks to Thilo)
-%
-% Revision 1.3  2008/10/01 11:24:13  roboos
-% implemented spectral estimate for data with odd number of samples (sofar only an even number of samples would work)
-%
-% Revision 1.2  2008/10/01 08:19:45  roboos
-% complete update, variable nan-locations are supported, using pseudo-inverse
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the optional arguments
 basis     = keyval('basis',     varargin);

@@ -20,21 +20,7 @@ function [lut_t, cuf_t] = eeg_leadfield4_prepare(vol, Nmax);
 % which again is taken from
 %   B. N. Cuffin and D. Cohen. Comparion of the Magnetoencephalogram and the Electroencephalogram. Electroencephalogr Clin Neurophysiol, 47:131-146, 1979.
 %
-% $Log: eeg_leadfield4_prepare.m,v $
-% Revision 1.1  2009/01/21 10:46:10  roboos
-% moved from forwinv/* and forwinv/mex/* directory to forwinv/private/* to make the CVS layout consistent with the release version
-%
-% Revision 1.4  2003/07/29 16:02:07  roberto
-% minor cosmetic change in the constants
-%
-% Revision 1.3  2003/07/29 15:52:44  roberto
-% fixed a bug in the implementation of eeg_leadfield4, caused by mixing the constants of
-% lutkenhoner and cuffin
-% furthermore multiple cosmetic changes and default projection of electrodes to sphere
-%
-% Revision 1.2  2003/03/11 14:45:36  roberto
-% updated help and copyrights
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % sort the spheres from the smallest to the largest
 [vol.r, indx] = sort(vol.r);

@@ -18,13 +18,7 @@ function [dat, beta, x] = preproc_detrend(dat, begsample, endsample, order)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: preproc_detrend.m,v $
-% Revision 1.3  2008/06/10 16:03:40  roboos
-% fixed small bug and typ, thanks to Saskia
-%
-% Revision 1.2  2008/05/23 09:13:58  roboos
-% cleaned up code and documentation, ensure that all functions are consistent, added proper implementation to the scratch functions
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % determine the size of the data
 [Nchans, Nsamples] = size(dat);

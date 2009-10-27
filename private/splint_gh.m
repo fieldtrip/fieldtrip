@@ -5,12 +5,7 @@ function [varargout] = funname(varargin)
 
 % Copyright (C) 2004-2009, Robert Oostenveld
 %
-% $Log: splint_gh.m,v $
-% Revision 1.1  2009/03/12 11:03:23  roboos
-% first time commit to CVS, although the m-function already existed since 2004
-% somehow it was always excluded from CVS because the mex files would do the work
-% iin this version the original code is commented out and autocompilation of the mex file is attempted
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % compile the missing mex file on the fly
 % remember the original working directory

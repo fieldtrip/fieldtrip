@@ -11,21 +11,7 @@ function write_brainvision_eeg(filename, hdr, dat);
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% $Log: write_brainvision_eeg.m,v $
-% Revision 1.1  2009/01/14 09:12:16  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.2  2007/07/23 14:37:58  roboos
-% fixed channel count for multi-trial data
-%
-% Revision 1.1  2007/06/13 08:07:32  roboos
-% initial implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if length(size(dat))>2
   ntrl  = size(dat,1);

@@ -10,28 +10,7 @@ function [val] = keyval(key, varargin)
 
 % Copyright (C) 2005-2007, Robert Oostenveld
 %
-% $Log: keyval.m,v $
-% Revision 1.5  2009/08/04 11:58:28  roboos
-% perform a case-insensitive string comparison for keys
-%
-% Revision 1.4  2009/07/14 16:11:02  roboos
-% speed up the input checks
-%
-% Revision 1.3  2009/05/14 19:24:02  roboos
-% removed ; at end of function declaration
-%
-% Revision 1.2  2009/01/06 09:05:26  roboos
-% added additional check on optional input arguments: the 1st, 3rd, etc. should be strings (keys)
-%
-% Revision 1.1  2008/11/13 09:55:36  roboos
-% moved from fieldtrip/private, fileio or from roboos/misc to new location at fieldtrip/public
-%
-% Revision 1.2  2007/07/18 12:43:53  roboos
-% test for an even number of optional input arguments
-%
-% Revision 1.1  2005/11/04 10:24:46  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if length(varargin)==1 && iscell(varargin{1})
   varargin = varargin{1};

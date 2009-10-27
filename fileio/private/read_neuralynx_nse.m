@@ -8,50 +8,7 @@ function [nse] = read_neuralynx_nse(filename, begrecord, endrecord)
 
 % Copyright (C) 2005-2007, Robert Oostenveld
 %
-% $Log: read_neuralynx_nse.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.11  2008/04/29 07:52:31  roboos
-% fixed windows related bug
-% be consistent with begin and end timestamp in header
-%
-% Revision 1.10  2008/01/10 12:51:57  roboos
-% ensure that it is possible to read only the header, using beg/end = 0/0
-%
-% Revision 1.9  2007/12/12 16:29:20  roboos
-% add first and last timestamp to header, also when no records are read
-%
-% Revision 1.8  2007/03/21 17:06:57  roboos
-% updated the documentation
-%
-% Revision 1.7  2006/12/13 15:46:31  roboos
-% read and keep timestamps as uint64
-%
-% Revision 1.6  2006/12/12 11:31:31  roboos
-% cleaned up the code, made code more consistent with other neuralynx functions, moved subfunctions to seperate files, use numeric arrays instead of cell-arrays for storing the data
-%
-% Revision 1.5  2006/03/29 15:01:30  roboos
-% fix for previous update: only apply the scaling to uV if data has been read
-%
-% Revision 1.4  2006/03/29 14:43:26  roboos
-% scale the output data to uV, using ADBitVolts and an additional 1e6
-%
-% Revision 1.3  2006/03/23 18:02:44  roboos
-% change endrecord from inf into the actual number present
-% preallocate memory to hold the results
-%
-% Revision 1.2  2005/09/09 12:30:08  roboos
-% implemented the core functionality
-%
-% Revision 1.1  2005/08/05 13:41:39  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<2
   begrecord = 1;

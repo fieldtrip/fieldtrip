@@ -22,25 +22,7 @@ function hs = plot_headshape(headshape,varargin)
 
 % Copyright (C) 2009, Cristiano Micheli
 %
-% $Log: plot_headshape.m,v $
-% Revision 1.7  2009/04/21 14:14:22  crimic
-% fixed label plotting
-%
-% Revision 1.6  2009/04/21 14:09:16  crimic
-%  fixed fiducials plotting, added check on voxel to head coordinates
-%
-% Revision 1.5  2009/04/14 19:49:18  roboos
-% fixed the input argument parsing (incorrect keys were used)
-%
-% Revision 1.4  2009/04/14 10:19:16  crimic
-% updated help
-%
-% Revision 1.3  2009/04/14 10:16:09  crimic
-% updated help
-%
-% Revision 1.2  2009/04/14 08:57:57  crimic
-% added labeling of fiducials, integrated help
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the optional input arguments
 vertexcolor = keyval('vertexcolor', varargin); if isempty(vertexcolor), vertexcolor='r'; end

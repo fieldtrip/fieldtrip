@@ -11,33 +11,7 @@ function [sel1, sel2] = match_str(a, b);
 
 % Copyright (C) 2000, Robert Oostenveld
 %
-% $Log: match_str.m,v $
-% Revision 1.1  2008/11/13 09:55:36  roboos
-% moved from fieldtrip/private, fileio or from roboos/misc to new location at fieldtrip/public
-%
-% Revision 1.7  2008/07/17 10:26:11  roboos
-% cleaned up the code a little bit, no functional change
-%
-% Revision 1.6  2006/11/06 21:11:45  roboos
-% also deal with empty [] input
-%
-% Revision 1.5  2004/11/10 17:11:40  roboos
-% reverted to original implementation and reimplemented the speed up
-% from scratch. The previous two revisions both were incompatible
-% with the original implementation.
-%
-% Revision 1.4  2004/11/09 15:28:57  roboos
-% fixed incompatibility that was introduced by previous speed increase:
-% the original version gave back double occurences, and other fieldtrip
-% functions (sourceanalysis) rely on this. The previously commited
-% version only gave back one occurence of each hit, this is fixed by jansch
-% in this version
-%
-% Revision 1.3  2004/10/22 15:59:41  roboos
-% large speed increase by replacing 2 nested for loops by a standard matlab function (intersect)
-%
-% Revision 1.2  2003/03/17 10:37:28  roberto
-% improved general help comments and added copyrights
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % ensure that both are cell-arrays
 if isempty(a)

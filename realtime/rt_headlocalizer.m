@@ -24,28 +24,7 @@ function rt_headlocalizer(cfg)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: rt_headlocalizer.m,v $
-% Revision 1.6  2009/02/04 09:08:07  roboos
-% ensure that the persistent variables related to header caching are cleared
-% this is needed when switching the headerformat (from ctf_res4 to ctf_old) while continuing on the same file
-%
-% Revision 1.5  2008/12/01 14:48:57  roboos
-% merged in the changes made in Lyon, general cleanup
-%
-% Revision 1.4  2008/11/14 16:23:41  roboos
-% numerous changes to make the rt_xxx functions more similar
-%
-% Revision 1.3  2008/10/28 14:04:20  roboos
-% updated docu, use checkconfig for dataset2files
-%
-% Revision 1.2  2008/10/08 11:21:36  roboos
-% prevSample does not have to be persistent
-% force reading over trial boundaries
-%
-% Revision 1.1  2008/10/08 09:31:06  roboos
-% ifirst version of demo function for realtime processing according to biomag2008 poster
-% this has been tested offline for CTF275 data
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if ~isfield(cfg, 'template'),       cfg.template = [];        end
 if ~isfield(cfg, 'blocksize'),      cfg.blocksize = 1;        end % in seconds

@@ -5,34 +5,7 @@ function [hdr] = read_shm_header(filename)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% $Log: read_shm_header.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.5  2009/01/12 12:01:55  roboos
-% determine number of samples and trials from only the data blocks, not all blocks. It seems that memcpy has changed, which now sometimes seems to cause a block to be "corupt" for a small amount of time.
-%
-% Revision 1.4  2008/12/02 08:28:40  roboos
-% fixed typo, missing )
-%
-% Revision 1.3  2008/11/20 13:58:11  roboos
-% fixed hdr.nTrials and nSamples (ensure that it is read as blocks)
-% use caching when reading header from file
-%
-% Revision 1.2  2008/10/08 10:08:06  roboos
-% detect trigger channels also when header is read using ctf_new
-%
-% Revision 1.1  2007/08/01 12:12:06  roboos
-% moved the actual code from the normal functions into these helper functions
-% fixed some bugs related to reading the header from a user-specified res4 file and setting the trigger detection
-% use the new trigger detection in AcqBuffer when possible, use the old trigger detection if no setup buffer is present
-% implemented caching of the data packets (using global variable ctf_shm)
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % this global variable is used for caching in read_data, to improve the throughput when reading overlapping data segments
 global ctf_shm

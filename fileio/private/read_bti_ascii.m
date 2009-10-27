@@ -12,19 +12,7 @@ function [file] = read_bti_ascii(filename);
 
 % Copyright (C) 2004, Robert Oostenveld
 % 
-% $Log: read_bti_ascii.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.2  2008/11/14 07:49:19  roboos
-% use standard matlab strtrim function instead of deblank2
-%
-% Revision 1.1  2005/04/18 13:47:05  roboos
-% added some old and infrequently used functions to the cvs repository
-%
-% Revision 1.1  2005/04/18 13:43:34  roboos
-% included some old functions in the cvs repository, this ensures consistency of the functions between the different network locations
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fid = fopen(filename, 'r');
 if fid==-1

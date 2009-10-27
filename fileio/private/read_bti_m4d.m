@@ -7,26 +7,7 @@ function [msi] = read_bti_m4d(filename);
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% $Log: read_bti_m4d.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.3  2008/11/14 07:49:19  roboos
-% use standard matlab strtrim function instead of deblank2
-%
-% Revision 1.2  2008/08/12 12:56:08  jansch
-% fixed assignment of msi.grad. in original implementation only the references were
-% stored. in the future this part should be taken care of by bti2grad so that the
-% gradiometer references will be correctly handled in the tra-matrix
-%
-% Revision 1.1  2007/07/03 15:51:46  roboos
-% new implementation, only tested on two datasets
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 [p, f, x] = fileparts(filename);
 if ~strcmp(x, '.m4d')

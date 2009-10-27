@@ -13,22 +13,7 @@ function [grad] = nimh2grad(hdr);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: nimh2grad.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.3  2007/03/07 08:37:55  roboos
-% fixed typo
-%
-% Revision 1.2  2007/03/06 09:37:35  roboos
-% small change in determining the MEG channels, thanks to Nicolas Robitaille
-%
-% Revision 1.1  2006/08/31 13:32:11  roboos
-% moved from fieldtrip to fileio module
-%
-% Revision 1.1  2005/05/26 09:55:55  roboos
-% new implementation to complement the NIMH ctf reading routines
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % only work on the MEG channels
 if isfield(hdr.sensor.index, 'meg')

@@ -27,36 +27,7 @@ function [type] = sensortype(grad)
 
 % Copyright (C) 2004-2006, Robert Oostenveld
 %
-% $Log: sensortype.m,v $
-% Revision 1.6  2007/12/12 10:39:45  roboos
-% added try-end in case no pnt present, return 'unknown' as string instead of []
-%
-% Revision 1.5  2007/06/11 09:38:01  roboos
-% added some code for yokogawa160, not yet complete, since yokogawa2grad is not yet implemented fully
-%
-% Revision 1.4  2007/06/11 09:17:34  roboos
-% imporved detection for bti, better use of labels (start with 'A'), thanks to Nathan
-%
-% Revision 1.3  2007/05/06 09:08:20  roboos
-% return warning instead of error when type is not detected
-%
-% Revision 1.2  2006/10/04 12:08:31  jansch
-% changed variable name sens into grad consistently
-%
-% Revision 1.1  2006/10/04 08:00:29  roboos
-% renamed megsystem to sensortype, added support for bti148 and EEG electrodes, renamed 'simulated magnetometer' into 'magnetometer'
-%
-% Revision 1.7  2006/08/31 08:03:24  roboos
-% add explicit support for data as input (use data.grad), thanks to Floris
-%
-% Revision 1.6  2006/08/29 20:47:01  roboos
-% added support for a simple simulated magnetometer system
-%
-% Revision 1.5  2006/01/30 14:06:04  roboos
-% added square brackets around output variable in function definition
-% added copyrights and log
-% cleaned up help documentation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % the input may be a data structure which then contains a grad/elec structure
 if isfield(grad, 'grad')

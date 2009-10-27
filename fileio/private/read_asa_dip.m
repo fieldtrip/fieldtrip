@@ -11,19 +11,7 @@ function [pos, mom, ampl, time] = read_asa_dip(fn);
 
 % Copyright (C) 2000, Robert Oostenveld
 %
-% $Log: read_asa_dip.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.1  2005/04/18 13:47:05  roboos
-% added some old and infrequently used functions to the cvs repository
-%
-% Revision 1.1  2005/04/18 13:43:34  roboos
-% included some old functions in the cvs repository, this ensures consistency of the functions between the different network locations
-%
-% Revision 1.2  2003/03/11 15:24:51  roberto
-% updated help and copyrights
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 Npos = 0;
 Ntim = 0;

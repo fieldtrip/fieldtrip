@@ -5,13 +5,7 @@ function [grid] = patchsvd(cfg, grid);
 
 % Copyright (c) 2006, Jan-Mathijs Schoffelen & Robert Oostenveld, F.C. Donders Centre
 %
-% $Log: patchsvd.m,v $
-% Revision 1.2  2009/10/01 13:00:39  jansch
-% multiple changes
-%
-% Revision 1.1  2006/09/19 11:01:59  jansch
-% first implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the defaults
 if ~isfield(cfg, 'patchsvd'),    cfg.patchsvd    = 3;         end

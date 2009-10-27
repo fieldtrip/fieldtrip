@@ -25,47 +25,7 @@ function [cfg] = spikesplitting(cfg);
 
 % Copyright (C) 2007-2008, Robert Oostenveld
 %
-% $Log: spikesplitting.m,v $
-% Revision 1.12  2008/12/15 15:08:01  roboos
-% updated documentation
-%
-% Revision 1.11  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.10  2008/07/01 12:58:13  roboos
-% write the original 16384 byte header to a txt file in the output directory
-%
-% Revision 1.9  2008/05/28 06:51:40  roboos
-% add downsampling factor to file header, to ensure that scaling remains correct
-%
-% Revision 1.8  2008/02/26 15:26:16  roboos
-% fixed some bugs in channelselection, thanks to Thilo (see email 26 Jan)
-%
-% Revision 1.7  2008/02/25 09:48:20  roboos
-% added channel selection
-%
-% Revision 1.6  2008/02/04 10:16:45  roboos
-% fixed bug in cfg.format (unsigned should be signed), thanks to Thilo
-%
-% Revision 1.5  2008/02/04 08:31:45  roboos
-% added cfg.downscale
-%
-% Revision 1.4  2008/02/01 13:13:34  roboos
-% added cfg.format, can be int16 or int32
-%
-% Revision 1.3  2007/12/19 09:19:28  roboos
-% fixed bug in writing uint32 data in case the most significant a.k.a. sign bit was set, this influenced the tsl channel
-%
-% Revision 1.2  2007/12/17 16:42:01  roboos
-% This version incorpotares many small changes.  One important change
-% is that of the output file format: it now writes the status data
-% to uint32 and continuous data to int16 format files. Also the file
-% extension has  been changed, and now corresponds with
-% "dataset.chanlabel.bin".
-%
-% Revision 1.1  2007/02/19 16:16:05  roboos
-% new function, basically copy and paste from selected functionality from spikedownsample
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

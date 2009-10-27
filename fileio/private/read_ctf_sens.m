@@ -12,16 +12,7 @@ function [magn] = read_ctf_sens(filename);
 
 % Copyright (C) 2002, Robert Oostenveld
 %
-% $Log: read_ctf_sens.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.3  2008/11/14 07:42:13  roboos
-% use general tokenize function instead of local copy, removed tokenize as subfunction
-%
-% Revision 1.2  2003/03/11 15:24:51  roberto
-% updated help and copyrights
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fid = fopen(filename, 'r');
 if fid==-1

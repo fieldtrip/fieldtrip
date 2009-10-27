@@ -19,10 +19,7 @@ function [dat] = preproc_derivative(dat, order, padding)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: preproc_derivative.m,v $
-% Revision 1.2  2008/05/23 09:13:58  roboos
-% cleaned up code and documentation, ensure that all functions are consistent, added proper implementation to the scratch functions
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % determine the size of the data
 [Nchans, Nsamples] = size(dat);

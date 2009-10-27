@@ -19,13 +19,7 @@ function [bp, x] = binomialprob(pobs, alpha, subjratio);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: binomialprob.m,v $
-% Revision 1.2  2005/10/12 11:19:13  jansch
-% fixed bug in probability-computation
-%
-% Revision 1.1  2005/10/12 09:59:07  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % determine the number of subjects
 [M, N] = size(pobs);

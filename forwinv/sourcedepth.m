@@ -16,28 +16,7 @@ function [depth] = sourcedepth(pos, vol)
 
 % Copyright (C) 2007-2008, Robert Oostenveld
 %
-% $Log: sourcedepth.m,v $
-% Revision 1.5  2009/02/06 08:31:19  roboos
-% added bemcp as volume type
-%
-% Revision 1.4  2008/04/21 12:09:47  roboos
-% small change to documentation
-%
-% Revision 1.3  2008/04/15 20:36:21  roboos
-% added explicit handling of various BEM implementations, i.e. for all voltype variants
-%
-% Revision 1.2  2007/11/05 12:02:28  roboos
-% medged arno's changed into my copy
-%
-% Revision 1.2  2007/11/03 01:12:38  arno
-% copying functions inline
-%
-% Revision 1.1  2007/09/24 23:40:28  nima
-% Initial revision
-%
-% Revision 1.1  2007/07/25 08:34:48  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % determine the type of volume conduction model
 switch voltype(vol)

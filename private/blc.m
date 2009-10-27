@@ -10,13 +10,7 @@ function [data] = blc(data, interval, optional);
 
 % Copyright (C) 1998-2002, Robert Oostenveld 
 %
-% $Log: blc.m,v $
-% Revision 1.3  2003/03/14 10:17:28  roberto
-% fixed bug that was introduced by last change, changend from repmat to for-loop
-%
-% Revision 1.2  2003/03/13 16:44:45  roberto
-% fixed bug with multiple epochs and single channel data
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % determine the dimension of the data
 if length(size(data))==3

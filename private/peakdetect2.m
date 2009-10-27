@@ -11,13 +11,7 @@ function [p, v] = peakdetect2(dat, val, mindist);
 
 % Copyright (C) 2000, Robert Oostenveld
 %
-% $Log: peakdetect2.m,v $
-% Revision 1.3  2006/01/11 17:24:03  roboos
-% made peakdetect and peakdetect2 functions more consistent with peakdetect3, also improved documentation
-%
-% Revision 1.2  2003/03/17 10:37:29  roberto
-% improved general help comments and added copyrights
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<3
   mindist=1;

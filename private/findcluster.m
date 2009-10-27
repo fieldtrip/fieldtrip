@@ -27,41 +27,7 @@ function [cluster, num] = findcluster(onoff, spatdimneighbstructmat, varargin)
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% $Log: findcluster.m,v $
-% Revision 1.4  2006/06/12 08:22:03  erimar
-% Added changes to allow processing with cfg.minnbchan~=0.
-%
-% Revision 1.3  2006/03/21 15:02:42  roboos
-% restructured the help, no functional change
-%
-% Revision 1.2  2005/05/17 17:50:49  roboos
-% changed all "if" occurences of & and | into && and ||
-% this makes the code more compatible with Octave and also seems to be in closer correspondence with Matlab documentation on shortcircuited evaluation of sequential boolean constructs
-%
-% Revision 1.1  2004/11/04 15:30:26  erimar
-% Erimar's version of findcluster. Previously, findcluster was part of Roboos' misc.
-%
-% Revision 1.7 10/27/04  1:13 PM  erimar
-% allow for the minnbchan option, allow for different matrices for
-% selecting and clustering, some variable name changes
-%
-% Revision 1.6  2004/03/15 17:02:34  roberto
-% fixed stupid bug at end of code due to renaming of variable
-%
-% Revision 1.5  2004/03/10 16:50:15  roberto
-% added speed improvements of Eric (which accidentally were NOT in the previous revision)
-% updated help, some cosmetical changes
-%
-% Revision 1.3  2004/02/25 10:34:10  roberto
-% implemented smarter handling of real 3d data, improved help
-%
-% Revision 1.2  2004/02/23 15:41:03  roberto
-% added global fb flag to determine amount of online feedback
-% fixed bug in checking size of input matrices
-%
-% Revision 1.1  2004/02/17 14:30:37  roberto
-% new efficient implementation to find clusters according to Eric Maris
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 spatdimlength = size(onoff, 1);
 nfreq = size(onoff, 2);

@@ -13,13 +13,7 @@ function [atlas] = prepare_atlas(filename)
 
 % Copyright (C) 2005-2008, Robert Oostenveld, Ingrid Nieuwenhuis
 %
-% $Log: prepare_atlas.m,v $
-% Revision 1.2  2009/07/14 07:27:30  roboos
-% replaced read_fcdc_mri with read_mri to avoid warning
-%
-% Revision 1.1  2008/12/05 13:46:24  ingnie
-% this function replaces atlas_init
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

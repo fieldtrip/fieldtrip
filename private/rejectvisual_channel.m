@@ -4,19 +4,7 @@ function [chansel, trlsel, cfg] = rejectvisual_channel(cfg, data);
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% $Log: rejectvisual_channel.m,v $
-% Revision 1.4  2007/01/11 13:53:13  roboos
-% imlemented cfg.alim, which allows manual specificationh of the amplitude limits in the channel and trial display
-%
-% Revision 1.3  2007/01/10 11:46:01  roboos
-% implemented selection of time window using cfg.latency
-%
-% Revision 1.2  2006/12/11 10:53:43  roboos
-% corrected the internal name of the function (thanks to John Iversen)
-%
-% Revision 1.1  2006/11/30 13:57:21  roboos
-% new implementation, code moved to seperate subfunctions
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % determine the initial selection of trials and channels
 nchan = length(data.label);

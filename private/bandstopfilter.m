@@ -25,10 +25,7 @@ function [filt] = bandstopfilter(dat,Fs,Fbp,N,type,dir)
 
 % Copyright (c) 2007, Robert Oostenveld
 %
-% $Log: bandstopfilter.m,v $
-% Revision 1.1  2007/09/11 15:30:59  roboos
-% new implementation based on bandpassfilter
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the default filter order later
 if nargin<4

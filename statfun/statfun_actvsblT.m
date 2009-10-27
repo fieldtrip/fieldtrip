@@ -43,38 +43,7 @@ function [s,cfg] = statfun_actvsblT(cfg, dat, design);
 
 % Copyright (C) 2006, Eric Maris
 %
-% $Log: statfun_actvsblT.m,v $
-% Revision 1.1  2008/09/23 07:31:14  roboos
-% Moved all statfuns and trialfuns to their own directories, where they will be easier to find for the end-user. Also updated fieldtripdefs accordingly.
-%
-% Revision 1.7  2007/04/02 20:40:32  erimar
-% Corrected an error in the calculation of the time-average of the data.
-% Updated help.
-%
-% Revision 1.6  2007/03/27 15:30:17  erimar
-% Calculate the number of time samples on the basis of the information in
-% cfg.dim and size(dat).
-%
-% Revision 1.5  2006/09/12 12:13:07  roboos
-% removed default values for cfg.ivar and uvar, defaults should be specified elsewhere
-%
-% Revision 1.4  2006/06/07 12:51:18  roboos
-% renamed cfg.ivrownr into cfg.ivar
-% renamed cfg.uorownr into cfg.uvar
-% renamed pval into prob for consistency with other fieldtrip functions
-%
-% Revision 1.3  2006/05/17 11:59:55  erimar
-% Corrected bugs after extensive checking of the properties of this
-% statfun.
-%
-% Revision 1.2  2006/05/12 15:29:44  erimar
-% Added functionality to calculate one- and two-sided critical
-% values and p-values.
-%
-% Revision 1.1  2006/05/05 13:09:47  erimar
-% First version of statfun_actvsblT.
-%
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set defaults
 if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end;

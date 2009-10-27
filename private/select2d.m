@@ -11,10 +11,7 @@ function [x, y] = select2d;
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% $Log: select2d.m,v $
-% Revision 1.1  2006/05/17 14:38:09  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 k = waitforbuttonpress;
 point1 = get(gca,'CurrentPoint');    % button down detected

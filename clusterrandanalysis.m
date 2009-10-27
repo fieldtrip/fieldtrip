@@ -211,43 +211,7 @@ function [clusrand] = clusterrandanalysis(cfg,varargin);
 
 % Copyright (C) 2005-2006, Eric Maris, NICI, University Nijmegen
 %
-% $Log: clusterrandanalysis.m,v $
-% Revision 1.26  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.25  2008/03/05 10:46:35  roboos
-% moved electrode reading functionality from read_fcdc_elec to read_sens, switched to the use of the new function
-%
-% Revision 1.24  2007/04/03 15:37:07  roboos
-% renamed the checkinput function to checkdata
-%
-% Revision 1.23  2007/03/27 11:05:18  ingnie
-% changed call to fixdimord in call to checkinput
-%
-% Revision 1.22  2006/10/19 15:32:55  roboos
-% updated documentation
-%
-% Revision 1.21  2006/10/04 07:10:07  roboos
-% updated documentation
-%
-% Revision 1.20  2006/06/20 16:29:11  ingnie
-% updated documentation added default cfg.channelcmb
-%
-% Revision 1.19  2006/06/13 14:51:03  ingnie
-% updated documentation to increase consistency in help of cfg options, added
-% defaults cfg.channel ='all', cfg.latency = 'all'
-%
-% Revision 1.18  2006/04/10 16:33:46  ingnie
-% updated documentation
-%
-% Revision 1.17  2006/04/06 13:05:00  erimar
-% Added help wrt channel combinations.
-%
-% Revision 1.16  2006/02/28 11:56:23  erimar
-% Added functionality for channel combination data: test statistics indepsamplesZcoh (for coherence differences) and
-% indepsamplesTsqcrs (for cross-spectrum differences), routines for calculating the neighborhood geometry for channel
-% combinations, and the option to save the neighborhood geometry on file (cfg.geomfile, cfg.savegeom).
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % Revision 1.15  2006/02/23 10:28:16  roboos
 % changed dimord strings for consistency, changed toi and foi into time and freq, added fixdimord where neccessary

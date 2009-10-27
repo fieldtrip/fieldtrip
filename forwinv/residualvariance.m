@@ -8,25 +8,7 @@ function [dipout] = residualvariance(dip, grad, vol, dat, varargin);
 
 % Copyright (C) 2004-2006, Robert Oostenveld
 % 
-% $Log: residualvariance.m,v $
-% Revision 1.5  2006/05/10 08:18:21  roboos
-% swiched to using keyval() function for getting optional arguments instead of using eval()
-%
-% Revision 1.4  2005/10/25 08:55:24  roboos
-% added some feedback for subspace projection
-% changed indentation and some whitespace
-%
-% Revision 1.3  2004/10/27 16:16:37  roboos
-% renamed grid.lbex matrix for subspace projection into grid.subspace (in correspondence with precompute_leadfield)
-% transposed the subspace projection matrix
-% renamed all occurences of "lbex" (as part of variable names) into "subspace"
-%
-% Revision 1.2  2004/10/25 16:22:21  roboos
-% fixed parsing of optional arguments (key,value-pairs)
-%
-% Revision 1.1  2004/09/28 14:32:29  roboos
-% initial version, implements LBEX
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the optional settings, or use default value
 feedback      = keyval('feedback',      varargin); if isempty(feedback),      feedback = 'text';            end

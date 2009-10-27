@@ -30,21 +30,7 @@ function [hdr] = read_ns_hdr(filename)
 
 % Copyright (C) 2002, Robert Oostenveld
 %
-% $Log: read_ns_hdr.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.3  2004/06/28 07:36:53  roberto
-% changed from DOS to UNIX linefeeds, I am not completely sure whether I made other changes as well
-%
-% Revision 1.2  2003/03/11 15:24:52  roberto
-% updated help and copyrights
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fid = fopen(filename,'r','ieee-le');
 

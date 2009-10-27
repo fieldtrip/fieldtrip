@@ -8,17 +8,7 @@ function [nst] = read_neuralynx_nst(filename, begrecord, endrecord)
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: read_neuralynx_nst.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.2  2008/04/29 07:52:31  roboos
-% fixed windows related bug
-% be consistent with begin and end timestamp in header
-%
-% Revision 1.1  2008/03/04 11:15:15  roboos
-% new implementation, based on ntt but with only two subchannels
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<2
   begrecord = 1;

@@ -17,20 +17,7 @@ function [vol] = read_vol(filename, varargin)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: read_vol.m,v $
-% Revision 1.4  2008/04/14 20:51:19  roboos
-% fixed dependency for dipoli/ama
-% added convert_units
-%
-% Revision 1.3  2008/03/06 09:27:54  roboos
-% updated documentation
-%
-% Revision 1.2  2008/01/31 20:15:24  roboos
-% added optional fileformat argument
-%
-% Revision 1.1  2008/01/28 20:10:11  roboos
-% new functions based on existing fieldtrip code
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % test whether the file exists
 if ~exist(filename)

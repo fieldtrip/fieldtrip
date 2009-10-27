@@ -9,10 +9,7 @@ function [data] = avgref(data, sel);
 
 % Copyright (C) 1998-2002, Robert Oostenveld
 %
-% $Log: avgref.m,v $
-% Revision 1.2  2003/03/17 10:37:28  roberto
-% improved general help comments and added copyrights
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % determine the dimension of the data
 if length(size(data))==3

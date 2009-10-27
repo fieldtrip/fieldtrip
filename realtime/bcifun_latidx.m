@@ -17,13 +17,7 @@ function cmd = bcifun_latidx(cfg,data)
 %
 % Copyright (C) 2009, Marcel van Gerven
 %
-% $Log: bcifun_latidx.m,v $
-% Revision 1.2  2009/06/30 12:38:33  roboos
-% *** empty log message ***
-%
-% Revision 1.1  2009/04/23 12:50:49  marvger
-% update of the BCI realtime code
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the default configuration options
 if ~isfield(cfg, 'foilim'),  cfg.foilim = [8 14];     end

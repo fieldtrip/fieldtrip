@@ -20,33 +20,7 @@ function write_plexon_nex(filename, nex)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% $Log: write_plexon_nex.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.7  2009/01/08 13:03:09  roboos
-% fixed bug in scaling of data, causing it to be clipped (thanks to Conrado)
-% fixed bug in seperate scaling of data, the old code was not incorrect, but suboptimal
-%
-% Revision 1.6  2008/12/15 14:48:22  roboos
-% read and write the data in uV/microvolt instead of in mV/milivolt
-%
-% Revision 1.5  2008/02/04 14:59:00  roboos
-% do not rescale the input data if it is int16 already
-%
-% Revision 1.4  2007/10/08 13:00:24  roboos
-% fixed small bug in including cvs identifier as comment in file header
-%
-% Revision 1.3  2007/03/21 13:01:37  roboos
-% reimplemented the calibration and conversion into int16 values
-% fixed a bug in the padding of the channel name to 64 chars
-%
-% Revision 1.2  2007/03/19 17:10:38  roboos
-% implemented writing spike waveform data
-%
-% Revision 1.1  2007/02/21 09:50:51  roboos
-% initial implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the optional arguments, these are all required
 % FirstTimeStamp = keyval('FirstTimeStamp', varargin);

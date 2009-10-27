@@ -18,21 +18,7 @@ function [trialData] = read_sbin_data(filename, hdr, begtrial, endtrial, chanind
 % Modified from EGI's readEGLY.m with permission 2008-03-31 Joseph Dien
 %
 
-% $Log: read_sbin_data.m,v $
-% Revision 1.2  2009/04/29 10:55:16  jansch
-% incorporated handling of unsegmented files
-%
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.4  2008/12/08 09:36:49  roboos
-% added cvs log to the matlab files
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fh=fopen([filename],'r');
 if fh==-1

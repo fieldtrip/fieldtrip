@@ -13,69 +13,7 @@ function [source] = source2full(source);
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% $Log: source2full.m,v $
-% Revision 1.19  2009/10/12 14:20:19  jansch
-% removed necessity to have xgrid etc in the input
-%
-% Revision 1.18  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.17  2008/07/21 20:09:23  roboos
-% use islogical and iscell
-%
-% Revision 1.16  2006/07/12 08:25:59  roboos
-% added support for coherence-like matrices (Nvox X Nvox)
-%
-% Revision 1.15  2006/01/31 12:57:20  jansch
-% replaced explicit checking of all known parameters by parameterselection
-%
-% Revision 1.14  2005/09/09 17:08:21  jansch
-% support for ref as an input-field
-%
-% Revision 1.13  2005/09/08 06:50:21  jansch
-% admit stat as an input field
-%
-% Revision 1.12  2005/08/23 13:15:16  jansch
-% added source.avg.csd and noisecsd
-%
-% Revision 1.11  2005/06/29 12:46:29  roboos
-% the following changes were done on a large number of files at the same time, not all of them may apply to this specific file
-% - added try-catch around the inclusion of input data configuration
-% - moved cfg.version, cfg.previous and the assignment of the output cfg to the end
-% - changed help comments around the configuration handling
-% - some changes in whitespace
-%
-% Revision 1.10  2005/05/17 17:50:38  roboos
-% changed all "if" occurences of & and | into && and ||
-% this makes the code more compatible with Octave and also seems to be in closer correspondence with Matlab documentation on shortcircuited evaluation of sequential boolean constructs
-%
-% Revision 1.9  2005/03/13 13:03:39  jansch
-% added outside nans for var and sem.
-%
-% Revision 1.8  2005/02/09 13:03:09  roboos
-% fixed bug for matlab 70 (mask is logical)
-%
-% Revision 1.7  2005/01/31 13:49:15  roboos
-% fixed bug in sem.nai
-%
-% Revision 1.6  2005/01/25 11:08:44  roboos
-% added var and sem as fields containing source parameters
-%
-% Revision 1.5  2004/09/23 15:07:16  roboos
-% added support for lbex as cell-array in the source structure
-%
-% Revision 1.4  2004/09/08 08:56:17  jansch
-% included correct inside/outside for trialA/trialB, which is necessary for potential subsequent randcluster statistics.
-%
-% Revision 1.3  2004/08/26 12:14:49  roboos
-% *** empty log message ***
-%
-% Revision 1.2  2004/08/05 15:37:05  roboos
-% added support for statistical parameters, fixed bug in leadfield
-%
-% Revision 1.1  2004/08/03 09:06:19  roboos
-% initial implementation of these helper functions for beamformer sourceanalysis
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

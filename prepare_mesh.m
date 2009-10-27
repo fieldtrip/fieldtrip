@@ -26,38 +26,7 @@ function bnd = prepare_mesh(cfg, mri)
 
 % Copyrights (C) 2009, Cristiano Micheli & Robert Oostenveld
 %
-% $Log: prepare_mesh.m,v $
-% Revision 1.11  2009/07/29 06:43:16  roboos
-% fixed basedonseg for headshape input (thanks to Vladimir)
-%
-% Revision 1.10  2009/07/16 09:00:51  crimic
-% added choice of  multiple mesh methods and fixed a small typo
-%
-% Revision 1.9  2009/06/17 13:38:41  roboos
-% cleaned up handling of method=manual
-%
-% Revision 1.8  2009/06/15 14:01:08  roboos
-% minor updates in documentation and default cfg
-%
-% Revision 1.7  2009/06/03 12:07:11  crimic
-% changed help
-%
-% Revision 1.6  2009/06/03 12:05:06  crimic
-% added cfg.numcompartments option as input for automatic segmentation
-%
-% Revision 1.5  2009/06/02 10:18:39  crimic
-% minor changes
-%
-% Revision 1.4  2009/05/14 19:23:33  roboos
-% small cleanup, nothing functionally changed
-%
-% Revision 1.3  2009/05/06 16:09:17  roboos
-% renamed gui_mesh into prepare_mesh_manual and moved to private
-% some cleanup of the code
-%
-% Revision 1.2  2009/05/06 08:46:29  crimic
-% First implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 cfg = checkconfig(cfg, 'forbidden', 'numcompartments');
 

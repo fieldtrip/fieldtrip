@@ -63,76 +63,7 @@ function [cfg] = definetrial(cfg);
 
 % Copyright (c) 2003, Robert Oostenveld, F.C. Donders Centre
 %
-% $Log: definetrial.m,v $
-% Revision 1.57  2009/10/07 12:42:16  roevdmei
-% changed reference to older FCDC read functions
-%
-% Revision 1.56  2009/01/20 13:01:31  sashae
-% changed configtracking such that it is only enabled when BOTH explicitly allowed at start
-% of the fieldtrip function AND requested by the user
-% in all other cases configtracking is disabled
-%
-% Revision 1.55  2009/01/14 11:29:55  sashae
-% temporarily disabled previous revision
-%
-% Revision 1.54  2009/01/13 10:14:58  sashae
-% changed handling of the output cfg: now the cfg also has cfg.previous fields,
-% similar to data.cfg.previous. this way the output of definetrial and the
-% artifact functions is kept separately from subsequent preprocessing steps
-%
-% Revision 1.53  2008/10/10 14:41:22  sashae
-% replaced call to dataset2files with checkconfig
-%
-% Revision 1.52  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.51  2007/07/27 12:36:24  roboos
-% updated a comment in the code
-%
-% Revision 1.50  2007/05/06 08:54:11  roboos
-% do not add version info to cfg, will be done by preprocessing
-%
-% Revision 1.49  2006/09/18 07:41:50  roboos
-% in case of eventtype=? give a gentle information message (instead of error)
-%
-% Revision 1.48  2006/06/20 16:25:58  ingnie
-% updated documentation
-%
-% Revision 1.47  2006/05/30 20:57:15  roboos
-% updated documentation
-%
-% Revision 1.46  2006/04/20 09:58:33  roboos
-% updated documentation
-%
-% Revision 1.45  2006/03/29 10:34:02  ingnie
-% updated documentation
-%
-% Revision 1.44  2005/11/04 16:06:15  ingnie
-% fixed some typos in help
-%
-% Revision 1.43  2005/10/04 16:12:25  roboos
-% changed exception handling of nargout for matlab65 into try-catch
-%
-% Revision 1.42  2005/09/07 10:18:31  roboos
-% in matlab65 (R13) it does not find the functions in the private directory, whereas in matlab70 it does
-% hence, made the specific evaluation of the nargout function dependent on the matlab version using "which"
-%
-% Revision 1.41  2005/09/02 14:24:14  roboos
-% rigorously cleaned up the code
-% moved all dataformat specific code into separate subfunctions
-% added defaults for cfg.trialfun if not specified, depending on datatype and settings
-% removed old CVS log history
-%
-% Revision 1.40  2005/05/17 17:50:37  roboos
-% changed all "if" occurences of & and | into && and ||
-% this makes the code more compatible with Octave and also seems to be in closer correspondence with Matlab documentation on shortcircuited evaluation of sequential boolean constructs
-%
-% Revision 1.39  2005/02/16 15:18:25  roboos
-% cleaned up the documentation, removed cfg.trialfile as option (was not supported)
-% cleaned up the handling of events, retain event if already present in cfg (just like trl)
-% removed unclear warning about old v.s. new style of configuration
-% improved fprintf feedback on number of events and trials
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

@@ -5,10 +5,7 @@ function dip = fixdipole(dip)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% $Log: fixdipole.m,v $
-% Revision 1.1  2009/07/02 15:35:55  roboos
-% helper function for consistent dipole representation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 [m, n] = size(dip.pos);
 

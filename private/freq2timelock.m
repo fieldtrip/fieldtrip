@@ -12,22 +12,7 @@ function [timelock, cfg] = freq2timelock(cfg, freq);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: freq2timelock.m,v $
-% Revision 1.5  2009/02/02 13:22:27  jansch
-% changed 'chancmb' into 'chan' (line 32)
-%
-% Revision 1.4  2006/05/10 08:19:45  roboos
-% added dimord to the output
-%
-% Revision 1.3  2006/02/23 10:28:17  roboos
-% changed dimord strings for consistency, changed toi and foi into time and freq, added fixdimord where neccessary
-%
-% Revision 1.2  2006/02/01 12:26:04  roboos
-% made all uses of dimord consistent with the common definition of data dimensions, see the fixdimord() function
-%
-% Revision 1.1  2005/10/14 15:50:08  roboos
-% new implementation, used by dipolefitting in case of frequency or ICA data
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if isfield(freq, 'fourierspctrm')
   fprintf('constructing real/imag data representation from single trial fourier representation\n');

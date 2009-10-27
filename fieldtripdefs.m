@@ -6,49 +6,7 @@ function fieldtripdefs
 % Note that this should be a function and not a script, otherwise the
 % hastoolbox function appears not be found in fieldtrip/private.
 
-% $Log: fieldtripdefs.m,v $
-% Revision 1.14  2009/04/02 19:46:24  roboos
-% added plotting module
-%
-% Revision 1.13  2009/03/26 09:28:17  roboos
-% removed fixpath from the matlab path
-%
-% Revision 1.12  2008/11/12 11:41:54  sashae
-% changed trackconfig options
-%
-% Revision 1.11  2008/11/11 13:13:44  roboos
-% added/improved size checking
-%
-% Revision 1.10  2008/11/10 21:17:28  roboos
-% added public subdirectory
-%
-% Revision 1.9  2008/10/08 10:21:57  roboos
-% added realtime module for addpath
-%
-% Revision 1.8  2008/10/02 14:04:17  roboos
-% added global ft_default, see also checkconfig
-%
-% Revision 1.7  2008/10/01 10:18:30  roboos
-% changed from script into function to fix private path
-%
-% Revision 1.6  2008/10/01 08:22:40  roboos
-% added specest module
-%
-% Revision 1.5  2008/09/23 07:54:09  roboos
-% added template directory, moved all layouts and cortical meshes there
-%
-% Revision 1.4  2008/09/23 07:40:10  roboos
-% changed order of the path additioons, fixpath should be the first (i.e. lowest on the path)
-%
-% Revision 1.3  2008/09/23 07:31:13  roboos
-% Moved all statfuns and trialfuns to their own directories, where they will be easier to find for the end-user. Also updated fieldtripdefs accordingly.
-%
-% Revision 1.2  2008/09/22 20:58:57  roboos
-% added modules: fileio, forwinv, preproc
-%
-% Revision 1.1  2008/09/22 20:02:50  roboos
-% initial version, contains fixpath
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 
 % set the global defaults, the checkconfig function will copy these into the local configurations

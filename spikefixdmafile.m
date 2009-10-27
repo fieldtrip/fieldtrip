@@ -16,25 +16,7 @@ function spikefixdmafile(cfg)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: spikefixdmafile.m,v $
-% Revision 1.6  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.5  2008/08/13 14:20:59  roboos
-% fixed some bugs
-%
-% Revision 1.4  2008/08/13 10:38:50  roboos
-% fixed fprintf bug and number of additional channels to 18
-%
-% Revision 1.3  2008/08/13 10:22:40  roboos
-% changed the logic for jumping in the file
-%
-% Revision 1.2  2008/08/11 14:11:30  roboos
-% added option cfg.numchans
-%
-% Revision 1.1  2008/06/16 18:47:05  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

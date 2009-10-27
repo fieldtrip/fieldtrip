@@ -15,15 +15,6 @@ function [proj, dist] = ptriproj(v1, v2, v3, r, flag);
 
 % Copyright (C) 2002, Robert Oostenveld
 %
-% $Log: ptriproj.m,v $
-% Revision 1.4  2003/03/19 12:22:23  roberto
-% fixed bug in function definition (added flag input parameter)
-%
-% Revision 1.3  2003/03/11 15:35:20  roberto
-% converted all files from DOS to UNIX
-%
-% Revision 1.2  2003/03/04 21:46:19  roberto
-% added CVS log entry and synchronized all copyright labels
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 error(sprintf('could not locate MEX file for %s', mfilename))

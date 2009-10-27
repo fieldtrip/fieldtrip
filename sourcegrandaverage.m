@@ -39,64 +39,7 @@ function [grandavg] = sourcegrandaverage(cfg, varargin);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: sourcegrandaverage.m,v $
-% Revision 1.21  2009/01/20 13:01:31  sashae
-% changed configtracking such that it is only enabled when BOTH explicitly allowed at start
-% of the fieldtrip function AND requested by the user
-% in all other cases configtracking is disabled
-%
-% Revision 1.20  2008/11/21 13:21:35  sashae
-% added call to checkconfig at start and end of fucntion
-%
-% Revision 1.19  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.18  2008/09/17 15:02:36  roboos
-% removed call to fixvolume function, checkdata now takes care of it
-%
-% Revision 1.17  2007/07/31 13:02:05  jansch
-% built in option to concatenate sources, e.g. across frequency, with the option
-% cfg.concatenate
-%
-% Revision 1.16  2007/04/03 15:37:07  roboos
-% renamed the checkinput function to checkdata
-%
-% Revision 1.15  2007/04/03 10:04:20  roboos
-% allow both source and volume data as input
-%
-% Revision 1.14  2007/03/30 17:05:40  ingnie
-% checkinput; only proceed when input data is allowed datatype
-%
-% Revision 1.13  2006/09/04 15:41:11  roboos
-% quick fix for missing parameterselection in case data not in avg.something, it should be fixed in a better way
-%
-% Revision 1.12  2006/07/05 10:21:56  roboos
-% updaed documentation for consistency
-%
-% Revision 1.11  2006/05/23 14:03:27  roboos
-% removed the fixvolume, since th evolumetric description does not hold for sparse source representations
-%
-% Revision 1.10  2006/05/23 10:20:09  roboos
-% some changes to the help and comments, changed length(varargin) by Nsubject, added a fixvolume at the end
-%
-% Revision 1.9  2005/08/19 16:58:27  roboos
-% fixed bug, the inside of the brain was filled with nans, that should be the outside
-%
-% Revision 1.8  2005/07/18 10:21:44  roboos
-% corrected the inside/outside determination from all volumes
-%
-% Revision 1.7  2005/06/29 12:46:29  roboos
-% the following changes were done on a large number of files at the same time, not all of them may apply to this specific file
-% - added try-catch around the inclusion of input data configuration
-% - moved cfg.version, cfg.previous and the assignment of the output cfg to the end
-% - changed help comments around the configuration handling
-% - some changes in whitespace
-%
-% Revision 1.6  2005/06/09 11:04:45  roboos
-% replaced normal mean and std by their nan counterpart
-% explicitely set voxels that are outside of the brain volume to nan for each subject prior to averaging
-% added copyrights and cvs log statement
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

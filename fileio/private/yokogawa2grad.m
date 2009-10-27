@@ -8,32 +8,7 @@ function grad = yokogawa2grad(hdr)
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 %
-% $Log: yokogawa2grad.m,v $
-% Revision 1.1  2009/01/14 09:12:16  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.5  2008/12/24 13:49:25  roboos
-% added suggested changes by Kaoru Amano, see email 19 Dec 2008
-%
-% Revision 1.4  2008/12/18 11:53:20  roboos
-% changed some comments and some slight cleanups, no functional change
-%
-% Revision 1.3  2008/12/18 08:31:23  roboos
-% incorporated gradiometer, thanks to Kaoru Amano
-%
-% Revision 1.2  2008/05/15 13:20:36  roboos
-% updated documentation
-%
-% Revision 1.1  2006/08/31 13:32:11  roboos
-% moved from fieldtrip to fileio module
-%
-% Revision 1.1  2005/09/06 08:54:30  roboos
-% new implementations for the Yokogawa 160 channel MEG system
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 
 if isfield(hdr, 'orig')

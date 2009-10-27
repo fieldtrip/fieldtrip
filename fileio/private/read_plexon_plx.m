@@ -19,45 +19,7 @@ function [varargout] = read_plexon_plx(filename, varargin)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% $Log: read_plexon_plx.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.8  2008/09/30 08:01:04  roboos
-% replaced all fread(char=>char) into uint8=>char to ensure that the
-% chars are read as 8 bits and not as extended 16 bit characters. The
-% 16 bit handling causes problems on some internationalized OS/Matlab
-% combinations.
-%
-% the help of fread specifies "If the precision is 'char' or 'char*1', MATLAB
-% reads characters using the encoding scheme associated with the file.
-% See FOPEN for more information".
-%
-% Revision 1.7  2007/03/26 12:32:13  roboos
-% changed some documentation, whitespace and comments
-% output in multiple output arguments instead of a single cell-array (for consistency with nex reader)
-%
-% Revision 1.6  2007/03/19 17:11:54  roboos
-% made the datablock header reader the same for regular and memmapped files
-% fixed the timestamps for memmapped files
-%
-% Revision 1.5  2007/03/18 22:05:28  roboos
-% avoid one call to double()
-% fixed bug in variable name (mixed up spike and slow channel, only in feedback)
-% also deal with spike channels that do not contain any data
-%
-% Revision 1.4  2007/03/14 16:10:54  roboos
-% do re-allocation in larger chuncks
-%
-% Revision 1.3  2007/01/09 09:44:10  roboos
-% use multiple output arguments, made feedback optional, represent values in DataBlockHeader as int16 if possible (save some memory)
-%
-% Revision 1.2  2007/01/04 12:08:43  roboos
-% implemented memory mapped reading of block header info, implented direct reading of data, timestamps as uint16 and uint32
-%
-% Revision 1.1  2007/01/03 16:58:15  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % parse the optional input arguments
 hdr              = keyval('header', varargin);

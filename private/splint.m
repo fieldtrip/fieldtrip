@@ -27,28 +27,7 @@ function [V2, L2, L1] = splint(elc1, V1, elc2)
 
 % Copyright (C) 2003, Robert Oostenveld
 % 
-% $Log: splint.m,v $
-% Revision 1.7  2006/09/07 12:32:53  roboos
-% minor change in documentation
-%
-% Revision 1.6  2004/06/28 07:37:40  roberto
-% tested and improved computation of legendre polynomials
-%
-% Revision 1.5  2004/01/27 12:43:30  roberto
-% re-included splint_gh as subfunction and made it adaptive to the number of electrodes
-% added laplacian L1 on elc1 to outpu of function
-%
-% Revision 1.4  2003/06/03 08:29:39  roberto
-% *** empty log message ***
-%
-% Revision 1.3  2003/04/10 09:48:13  roberto
-% fixed bug in construction of matrix H (removes the need for avgref)
-% fixed minor bug in gh() subfunction (preallocation of space)
-% changed from SVD to Gaussian Elimination to solve for coefficients
-%
-% Revision 1.2  2003/03/11 14:45:37  roberto
-% updated help and copyrights
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 N = size(elc1,1);	% number of known electrodes
 M = size(elc2,1);	% number of unknown electrodes

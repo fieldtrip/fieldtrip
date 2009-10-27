@@ -32,26 +32,7 @@ function rt_signalproxy(cfg)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% $Log: rt_signalproxy.m,v $
-% Revision 1.6  2009/05/01 15:41:21  roboos
-% consistent handling of cfg.speed
-%
-% Revision 1.5  2009/05/01 14:08:30  roboos
-% updated documentation
-%
-% Revision 1.4  2009/03/30 11:59:45  roboos
-% fixed typo
-%
-% Revision 1.3  2009/03/30 11:59:26  roboos
-% fixed documentation, added elapsed and signal time to the fprintf statement
-%
-% Revision 1.2  2009/01/21 21:00:08  roboos
-% added more elaborate filter options
-% added cfg.speed to run slower/faster than realtime
-%
-% Revision 1.1  2009/01/20 15:43:24  roboos
-% new function meant for testing
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the defaults
 if ~isfield(cfg, 'target'),               cfg.target = [];                                  end

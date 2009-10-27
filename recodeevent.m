@@ -49,16 +49,7 @@ function [ev] = recodeevent(cfg, event, trl)
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-%  $Log: recodeevent.m,v $
-%  Revision 1.4  2008/09/22 20:17:44  roboos
-%  added call to fieldtripdefs to the begin of the function
-%
-%  Revision 1.3  2006/07/24 11:29:29  roboos
-%  use private/findcfg function for locating the trl and event in the nested (previous) cfgs
-%
-%  Revision 1.2  2005/07/01 13:11:18  roboos
-%  rewrite of initial version, using input from Markus, which makes it more intuitive to use
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

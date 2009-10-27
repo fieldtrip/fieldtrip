@@ -11,27 +11,7 @@ function grad = fif2grad(filename);
 
 % Copyright (C) 2004, Joachim Gross
 %
-% $Log: fif2grad.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.3  2008/05/15 13:20:35  roboos
-% updated documentation
-%
-% Revision 1.2  2007/03/15 12:44:42  roboos
-% added try-catch to deal with fif files that do not contain coil information (code by chrhes)
-%
-% Revision 1.1  2006/08/31 13:32:11  roboos
-% moved from fieldtrip to fileio module
-%
-% Revision 1.1  2004/09/20 13:53:04  roboos
-% moved gradiometer definition for Neuromag fif files into separate function
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % this try-catch construct ensures that missing gradiometer information is
 % handeled in a "graceful" way

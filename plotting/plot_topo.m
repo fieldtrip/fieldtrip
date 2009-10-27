@@ -18,33 +18,7 @@ function [varargout] = plot_topo(chanX, chanY, dat, varargin)
 
 % Copyrights (C) 2009, Giovanni Piantoni
 %
-% $Log: plot_topo.m,v $
-% Revision 1.9  2009/10/09 11:18:23  jansch
-% fixed some inappropriate behaviour
-%
-% Revision 1.8  2009/10/09 10:23:34  jansch
-% added interplim as option, according to topoplot (default = electrodes)
-%
-% Revision 1.7  2009/08/12 15:15:18  jansch
-% also changed the order of inputs on the first line of the function
-%
-% Revision 1.6  2009/08/05 08:58:54  roboos
-% changed the order of the input arguments to plot_topo from (val, x, y) into (x, y, val)
-%
-% Revision 1.5  2009/08/05 08:53:20  roboos
-% plot the outline of the head if specified
-% keep hold on/off the same
-%
-% Revision 1.4  2009/07/29 15:04:16  giopia
-% resolved ambiguity of var mask
-%
-% Revision 1.3  2009/07/29 10:24:24  roboos
-% construct the binary image for masking inside this function and reuse it as long as the relevant input does not change
-% this is achieved with a persistent variable and by checking the input arguments
-%
-% Revision 1.2  2009/06/02 15:36:25  giopia
-% first implementation based on topoplot.m
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % these are for speeding up the plotting on subsequent calls
 persistent previous_argin previous_maskimage

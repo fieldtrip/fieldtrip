@@ -7,24 +7,7 @@ function [output, firstIndexPoint] = read_hs_file( filename, outfile)
 %
 %   (C) 2007 by Thomas Hartmann
 
-% $Log: read_bti_hs.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.3  2008/05/11 16:29:57  vlalit
-% Changed the function to also output fiducials
-%
-% Revision 1.2  2007/08/06 09:23:57  roboos
-% removed debug output, transposed output to Nx3
-%
-% Revision 1.1  2007/08/06 09:03:42  roboos
-% version as obtained from Nathan Weisz on 1-Aug-2007
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin == 1
     outfile = [];

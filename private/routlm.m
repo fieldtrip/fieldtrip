@@ -11,13 +11,7 @@ function [proj] = routlm(v1, v2, v3, la, mu);
 
 % Copyright (C) 2002, Robert Oostenveld
 %
-% $Log: routlm.m,v $
-% Revision 1.4  2003/03/11 15:35:20  roberto
-% converted all files from DOS to UNIX
-%
-% Revision 1.3  2003/03/04 21:46:19  roberto
-% added CVS log entry and synchronized all copyright labels
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % determine the projection onto the plane of the triangle
 proj  = (1-la-mu)*v1 + la*v2 + mu*v3;

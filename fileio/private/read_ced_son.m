@@ -50,45 +50,7 @@ function [out] = read_ced_son(datafile,varargin);
 
 % Gijs van Elswijk - 2005 (v0.1)
 
-% $Log: read_ced_son.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.4  2008/11/14 07:36:24  roboos
-% use strcmpi instead of strcmp(lower())
-%
-% Revision 1.3  2006/12/04 13:56:02  roboos
-% incorporated modifications by Gijs van Elswijk:
-% evt.type will be set to event channel label (was always 'trigger')
-% evt.value will be set to event value (was event channel label)
-% Bug fix: Channel index of source and target channels for timestep sizes were incorrect (bug found by Vladimir Litvak)
-%
-% Revision 1.4  2006/12/04 11:25:08  gijsve
-% evt.type will be set to event channel label (was always 'trigger')
-% evt.value will be set to event value (was event channel label)
-%
-% Revision 1.3  2006/11/25 15:33:53  gijsve
-% - Bug fix: Channel index of source and target channels for timestep sizes were incorrect (bug found by Vladimir Litvak)
-%
-% Revision 1.2  2006/09/13 11:00:32  roboos
-% explicitely load the nsCedSon.dll plugin, converted from DOS to UNIX ascii
-%
-% Revision 1.1  2005/11/24 16:02:08  roboos
-% new implementation for Fieldtrip, thanks to Gijs van Elswijk
-%
-% Revision 1.2  2005/11/24 14:02:20  gijsve
-% Removed temporal realignment
-% Added analog timestamps as output
-% Updated help documentation
-%
-% Revision 1.1  2005/11/17 22:12:48  gijsve
-% First version in CVS: Helper function to read Spike2 data into fieldtrip
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 MODE = 'continuous';  % assume continuous now
 

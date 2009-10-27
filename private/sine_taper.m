@@ -6,10 +6,7 @@ function d = sine_taper(n, k)
 
 % Copyright (C) 2006, Tom Holroyd
 %
-% $Log: sine_taper.m,v $
-% Revision 1.1  2006/03/06 09:28:38  roboos
-% new implementation by Tom Holroyd
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin < 2
   error('usage: sine_taper(n, k)');

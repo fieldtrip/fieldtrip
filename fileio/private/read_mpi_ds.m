@@ -14,13 +14,7 @@ function [hdr, dat] = read_mpi_ds(dirname)
 
 % Copyright (C) 2005-2007, Robert Oostenveld
 %
-% $Log: read_mpi_ds.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.4  2007/03/19 16:53:49  roboos
-% allow for multiple spikes at the same sample (i.e. increment by 1 for each spike)
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 hdr = [];
 dat = [];

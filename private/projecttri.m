@@ -10,16 +10,7 @@ function [tri] = projecttri(pnt, method)
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% $Log: projecttri.m,v $
-% Revision 1.3  2009/09/23 09:05:39  roboos
-% added delaunay method
-%
-% Revision 1.2  2007/05/08 07:36:42  roboos
-% updated help
-%
-% Revision 1.1  2006/12/12 11:27:45  roboos
-% created subfunction into a seperate function
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<2
   method = 'convhull';

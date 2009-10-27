@@ -48,63 +48,7 @@ function [channel] = channelselection(channel, datachannel)
 
 % Copyright (C) 2003-2009, Robert Oostenveld
 %
-% $Log: channelselection.m,v $
-% Revision 1.39  2009/08/04 13:54:20  roboos
-% allow datachannel as single string
-%
-% Revision 1.38  2009/07/08 07:27:37  roboos
-% improved wildcard selection, now also in middle like "M*1"
-%
-% Revision 1.37  2009/06/19 16:51:30  vlalit
-% Added biosemi64 system of  Diane Whitmer, I don't know how generic it is.
-%
-% Revision 1.36  2009/02/18 07:57:07  roboos
-% added support for selection based on wildcards (like 'C*' and '*1')
-%
-% Revision 1.35  2009/01/21 16:59:08  jansch
-% added possibility to select (sets of) references for 4D data
-%
-% Revision 1.34  2008/11/10 15:16:22  roboos
-% added snippet of code to speed up the channel selection if there is a perfect match, no need to look for channel groups and immediately bail out
-%
-% Revision 1.33  2008/10/13 12:29:07  jansch
-% added plain 'bti' to known 4D senstypes
-%
-% Revision 1.32  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.31  2008/09/10 09:11:35  roboos
-% added definition of EEG for neuromag
-%
-% Revision 1.30  2008/09/10 08:39:33  roboos
-% make stronger use of senstype and senslabel helper functions
-% now also supports egi and biosemi systems for EEG (thanks to Vladimir)
-%
-% Revision 1.29  2008/08/13 14:03:52  roboos
-% added hEOG and vEOG
-%
-% Revision 1.28  2008/07/17 14:45:39  roboos
-% document megref, added megref for ctf
-%
-% Revision 1.27  2008/07/17 10:25:20  roboos
-% ensure that the output ordering is the same as in teh original list with channel names
-%
-% Revision 1.26  2008/05/21 09:47:14  jansch
-% added MEGREF (for 4d-systems) as a channel-group
-%
-% Revision 1.25  2008/04/21 14:38:26  jansch
-% added support 'MEG' for NM122 systems
-%
-% Revision 1.24  2008/02/27 17:03:02  roboos
-% use senstype to distinguish between ctf and bti
-%
-% Revision 1.23  2008/01/31 20:12:03  roboos
-% It is possible given the naming structure of the channels in the
-% 4D file that both the isctf and isbti flags can be set in the script
-% on lines 155 and 156.  An extra IF statement has been added to
-% detect and correct this situation in favour of the isbti flag.
-% [thanks to Gavin]
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

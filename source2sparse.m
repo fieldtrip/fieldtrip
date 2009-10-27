@@ -14,43 +14,7 @@ function [source] = source2sparse(source);
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% $Log: source2sparse.m,v $
-% Revision 1.10  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.9  2006/03/30 12:24:33  roboos
-% Implemented private/fixinside, which facilitates consistent
-% handling of source/volume data. Improved documentation. Fixed some
-% bugs related to inconsistent handling of ROIs (i.e. inside/outside)
-%
-% Revision 1.8  2006/01/31 12:57:20  jansch
-% replaced explicit checking of all known parameters by parameterselection
-%
-% Revision 1.7  2005/08/23 13:15:16  jansch
-% added source.avg.csd and noisecsd
-%
-% Revision 1.6  2005/06/29 12:46:29  roboos
-% the following changes were done on a large number of files at the same time, not all of them may apply to this specific file
-% - added try-catch around the inclusion of input data configuration
-% - moved cfg.version, cfg.previous and the assignment of the output cfg to the end
-% - changed help comments around the configuration handling
-% - some changes in whitespace
-%
-% Revision 1.5  2005/01/25 11:08:23  roboos
-% added var and sem as fields containing sourceparameters
-%
-% Revision 1.4  2004/09/23 15:07:16  roboos
-% added support for lbex as cell-array in the source structure
-%
-% Revision 1.3  2004/08/26 12:15:25  roboos
-% added some extra fprintf information
-%
-% Revision 1.2  2004/08/05 15:37:05  roboos
-% added support for statistical parameters, fixed bug in leadfield
-%
-% Revision 1.1  2004/08/03 09:06:19  roboos
-% initial implementation of these helper functions for beamformer sourceanalysis
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

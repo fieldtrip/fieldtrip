@@ -9,10 +9,7 @@ function channame = val2nearestchan(data,val)
 
 % Copyright (C) 2009, Ingrid Nieuwenhuis
 %
-% $Log: val2nearestchan.m,v $
-% Revision 1.1  2009/10/09 12:05:06  ingnie
-% first implementation, used by databrowser
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

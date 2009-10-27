@@ -16,27 +16,7 @@ function [EventCodes, segHdr, eventData] = read_sbin_events(filename)
 % Modified from EGI's readEGLY.m with permission 2008-03-31 Joseph Dien
 %
 
-% $Log: read_sbin_events.m,v $
-% Revision 1.4  2009/09/04 02:44:49  josdie
-% Fixed crash for segmented files due to typo in last revision.
-%
-% Revision 1.3  2009/04/29 10:55:16  jansch
-% incorporated handling of unsegmented files
-%
-% Revision 1.2  2009/03/11 16:12:34  josdie
-% Changed category names to cell variables to better support names with differing lengths.
-%
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.5  2008/12/08 09:36:49  roboos
-% added cvs log to the matlab files
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fid=fopen([filename],'r');
 if fid==-1

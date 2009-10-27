@@ -37,47 +37,7 @@ function [normalise] = volumenormalise(cfg, interp)
 
 % Copyright (C) 2004-2006, Jan-Mathijs Schoffelen
 %
-% $Log: volumenormalise.m,v $
-% Revision 1.21  2009/07/14 07:27:30  roboos
-% replaced read_fcdc_mri with read_mri to avoid warning
-%
-% Revision 1.20  2009/01/20 13:01:31  sashae
-% changed configtracking such that it is only enabled when BOTH explicitly allowed at start
-% of the fieldtrip function AND requested by the user
-% in all other cases configtracking is disabled
-%
-% Revision 1.19  2008/12/15 15:08:34  roboos
-% fixed bug in case of parameterselection with anatomy for config object
-%
-% Revision 1.18  2008/11/21 13:56:12  sashae
-% added call to checkconfig at start and end of function
-%
-% Revision 1.17  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.16  2008/09/17 14:53:35  roboos
-% removed fixvolume (and underlying grid2transform), not needed any more because checkdata has the possibility of converting a pos to a transform
-%
-% Revision 1.15  2007/04/03 15:37:07  roboos
-% renamed the checkinput function to checkdata
-%
-% Revision 1.14  2007/03/30 17:05:40  ingnie
-% checkinput; only proceed when input data is allowed datatype
-%
-% Revision 1.13  2006/07/27 08:29:09  roboos
-% updated documentation
-%
-% Revision 1.12  2006/07/25 10:07:06  roboos
-% Changed the method to check for spm2, add automatically to path if possible.
-% Moved the interactive questions regarding coordinate system to a subfunction.
-% Not only determine input source coordinates, but also template coordinates.
-% Start with a well defined "initial" transform, and end with a "final" transform, both are stored in the output cfg.
-% Use a hard-coded initial transform for ctf2spm instead of align_ctf2spm function.
-% Renamed the internal variable names for the volumes for consistency with SPM.
-% Removed old log comments.
-%
-% Revision 1.11  2006/07/19 12:22:52  jansch
-% implemented smoothing for functional volumes
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

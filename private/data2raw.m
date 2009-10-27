@@ -8,26 +8,7 @@ function [data, dimord] = data2raw(data);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: data2raw.m,v $
-% Revision 1.6  2007/05/16 12:43:31  roboos
-% changed a print statement
-%
-% Revision 1.5  2007/01/17 17:04:17  roboos
-% added support for lcmv beamed timecourses, only inside voxels after projectmom
-%
-% Revision 1.4  2006/02/01 12:26:04  roboos
-% made all uses of dimord consistent with the common definition of data dimensions, see the fixdimord() function
-%
-% Revision 1.3  2005/06/03 07:02:48  roboos
-% fixed error for empty dimord in case of raw input data (it should return immediately)
-%
-% Revision 1.2  2005/06/02 16:00:33  roboos
-% removed average from the output structure
-%
-% Revision 1.1  2005/06/02 12:14:10  roboos
-% new implementation for consistent conversion of averaged data (with either keepsubject or keepindividual) to raw trials as they come out of preprocessing
-% these two helper functions are from now on used in freqanalysis, megplanar, megrealign, megrepair and in combineplanar
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % determine the type of input data
 if isfield(data, 'label') && ~isfield(data, 'avg') && isfield(data, 'trial') && iscell(data.trial)

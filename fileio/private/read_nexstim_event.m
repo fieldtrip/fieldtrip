@@ -8,22 +8,7 @@ function [event] = read_nexstim_event(filename)
 %
 % Copyright (C) 2007, Vladimir Litvak
 %
-% $Log: read_nexstim_event.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.2  2007/12/17 13:03:52  roboos
-% Vladimir found and fixed some bugs pertaining to the nexstim_nxe format
-%
-% Revision 1.1  2007/12/17 08:24:28  roboos
-% added support for nexstim_nxe, thanks to Vladimir
-% the low-level code has not been tested by myself
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % trigLine - either 1(GATE), 2(TRIG1) or 3(TRIG2)
 % trigEdge - either 'rising' or 'falling'

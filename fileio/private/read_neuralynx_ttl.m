@@ -11,18 +11,7 @@ function [dat] = read_neuralynx_ttl(filename, begsample, endsample);
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% $Log: read_neuralynx_ttl.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.3  2006/12/12 11:32:22  roboos
-% read the data as uint32 instead of signed integers
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fid = fopen(filename, 'rb', 'ieee-le');
 

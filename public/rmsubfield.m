@@ -14,13 +14,7 @@ function [s] = rmsubfield(s, f, v);
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% $Log: rmsubfield.m,v $
-% Revision 1.1  2008/11/13 09:55:36  roboos
-% moved from fieldtrip/private, fileio or from roboos/misc to new location at fieldtrip/public
-%
-% Revision 1.1  2006/11/27 15:38:45  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if ~isstr(f)
   error('incorrect input argument for fieldname');

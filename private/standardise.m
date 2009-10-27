@@ -5,14 +5,7 @@ function [x,mx,sx] = standardise(x,dim)
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 %
-% $Log: standardise.m,v $
-% Revision 1.2  2009/06/16 15:44:29  jansch
-% added automatic dim detection (first non singular dimension) for nargin==1.
-% added mean and std to output
-%
-% Revision 1.1  2009/05/19 15:59:11  jansch
-% first commitment into cvs
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin == 1, dim = find(size(x)>1,1,'first'); end
 

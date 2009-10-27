@@ -16,20 +16,7 @@ function [dat, ref] = preproc_rereference(dat, refchan)
 
 % Copyright (C) 1998-2008, Robert Oostenveld
 %
-% $Log: preproc_rereference.m,v $
-% Revision 1.3  2009/01/07 12:44:18  roboos
-% also allow refchan='all'
-%
-% Revision 1.2  2008/05/23 09:13:58  roboos
-% cleaned up code and documentation, ensure that all functions are consistent, added proper implementation to the scratch functions
-%
-% Revision 1.1  2008/05/23 06:54:22  roboos
-% created initial scratch version of preprocessing module, to be used in fieldtrip or as stand-alone toolbox (e.g. in spm8 or braingain)
-% some functions are copies of existing roboos/misc versions, some just contain some example code for the implementation
-%
-% Revision 1.2  2003/03/17 10:37:28  roberto
-% improved general help comments and added copyrights
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % determine the size of the data
 [Nchans, Nsamples] = size(dat);

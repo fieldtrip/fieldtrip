@@ -28,31 +28,7 @@ function rt_brainampproxy(cfg)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% $Log: rt_brainampproxy.m,v $
-% Revision 1.6  2009/05/14 19:38:23  roboos
-% moved rdaread into stand-alone function, new name is tcpread
-% changed feedback handling
-% fixed bug in write_event (was accidentally write_data)
-%
-% Revision 1.5  2009/02/03 15:37:39  roboos
-% added an fprintf line
-%
-% Revision 1.4  2009/02/03 15:34:49  roboos
-% reimplemented the reading and parsing of the stream from the TCP socket to better keep up with the incoming data
-% this function has been tested succesfully on 64 channels and 500Hz (only for the 32 bit format)
-% the handling of events/markers is NOT YET IMPLEMENTED
-%
-% Revision 1.3  2009/02/03 11:14:17  roboos
-% work in progress, various changes
-%
-% Revision 1.2  2009/01/30 11:11:55  roboos
-% various fixes and improvements, does not yet fully work
-%
-% Revision 1.1  2009/01/29 22:07:44  roboos
-% first implementation
-% most functionality for reading is in place, but not yet fully tested
-% handling of events still needs to be added
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 cfg = checkconfig(cfg);
 

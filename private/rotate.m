@@ -30,18 +30,7 @@ function [H] = rotate(D);
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% $Log: rotate.m,v $
-% Revision 1.5  2006/09/12 13:35:28  roboos
-% convert input rotation from degrees (according to documentation) into radians (needed for computations)
-%
-% Revision 1.4  2005/08/15 08:15:33  roboos
-% reimplemented the rotate function, which contained an error (the error is in the AIR technical reference)
-% changed all functions to be dependent on the rotate, translate and scale function
-% all functions now behave consistenly, which also means that they are not compleetly backward compatible w.r.t. the order of the rotations
-%
-% Revision 1.3  2004/05/19 09:57:07  roberto
-% added GPL copyright statement, added CVS log item
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % convert degrees to radians
 R = D*pi/180;

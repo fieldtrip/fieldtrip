@@ -30,26 +30,7 @@ function [planar] = constructplanargrad(cfg, grad)
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% $Log: constructplanargrad.m,v $
-% Revision 1.1  2006/01/30 14:22:00  roboos
-% renamed axial2planar into constructplanargrad, updated help
-%
-% Revision 1.1  2004/06/28 08:59:38  roboos
-% moved files from fieldtrip to fieldtrip/private
-%
-% Revision 1.3  2004/04/13 16:31:08  roberto
-% fixed bug in dbstack selection of function filename for Matlab 6.1
-%
-% Revision 1.2  2004/04/13 14:25:24  roberto
-% wrapped code-snippet around mfilename to make it compatible with Matlab 6.1
-%
-% Revision 1.1  2004/04/06 20:25:04  roberto
-% new implementation, initially used only for testing of planar
-% gradient computation in MEGPLANAR and MEGINTERPOLATE with forward
-% simulated data, but now also in use as one of the methods in
-% MEGPLANAR to compute the planar gradient in real data using a
-% distributed source inward-outward projection.
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if ~isfield(cfg, 'planaraxial'),     cfg.planaraxial = 'yes';   end
 if ~isfield(cfg, 'baseline_axial'),  cfg.baseline_axial  = 5;   end

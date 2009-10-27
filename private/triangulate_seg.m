@@ -12,19 +12,7 @@ function [pnt, tri] = triangulate_seg(seg, npnt, ori);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: triangulate_seg.m,v $
-% Revision 1.4  2009/01/19 12:20:04  roboos
-% incorporated suggestion by Jon Iversen to fix bug in case sel=[]
-%
-% Revision 1.3  2006/07/26 11:05:58  roboos
-% use find('last') for matlab 7 and higher, and regular find for older matlab versions
-%
-% Revision 1.2  2006/04/03 10:39:24  roboos
-% added origin of the projection towards the surface as third (optional) input argument
-%
-% Revision 1.1  2005/11/03 11:12:32  roboos
-% new implementation, using a projection of a ksphere triangulation from the center of the volume
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 seg = (seg~=0);
 dim = size(seg);

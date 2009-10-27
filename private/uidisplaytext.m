@@ -8,10 +8,7 @@ function uidisplaytext(str, title)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% $Log: uidisplaytext.m,v $
-% Revision 1.1  2009/03/05 09:02:54  roboos
-% created helper function for cfg2script
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<2
   title = 'unknown';

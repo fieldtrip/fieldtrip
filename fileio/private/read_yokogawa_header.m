@@ -29,21 +29,7 @@ function hdr = read_yokogawa_header(filename);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: read_yokogawa_header.m,v $
-% Revision 1.1  2009/01/14 09:12:16  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.2  2005/09/29 00:48:57  roboos
-% fixed hdr.nSamplesPre, corrected error in help
-%
-% Revision 1.1  2005/09/06 08:54:01  roboos
-% new implementations for the Yokogawa 160 channel MEG syste,
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % FIXED
 %  txt -> m

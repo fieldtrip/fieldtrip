@@ -26,33 +26,7 @@ function cfg = interactiverealign(cfg)
 
 % Copyright (C) 2008, Vladimir Litvak
 %
-% $Log: interactiverealign.m,v $
-% Revision 1.8  2009/01/20 13:01:31  sashae
-% changed configtracking such that it is only enabled when BOTH explicitly allowed at start
-% of the fieldtrip function AND requested by the user
-% in all other cases configtracking is disabled
-%
-% Revision 1.7  2009/01/16 17:21:20  sashae
-% added config tracking
-%
-% Revision 1.6  2008/11/25 14:35:04  estmee
-% Documentation update
-%
-% Revision 1.5  2008/10/10 14:43:58  sashae
-% added call to checkconfig
-%
-% Revision 1.4  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.3  2008/07/01 19:05:23  roboos
-% Vladimir fixed some bugs
-%
-% Revision 1.2  2008/06/25 09:21:38  roboos
-% various changes
-%
-% Revision 1.1  2008/06/24 13:51:15  roboos
-% initial version from Vladimir with some minor changes
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

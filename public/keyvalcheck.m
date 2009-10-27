@@ -11,19 +11,7 @@ function keyvalcheck(arglist, varargin)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% $Log: keyvalcheck.m,v $
-% Revision 1.4  2009/08/05 08:50:50  roboos
-% allow different case in the option names, i.e. use case-insensitive comparisons
-%
-% Revision 1.3  2009/07/14 16:10:34  roboos
-% added caching for previous input
-%
-% Revision 1.2  2009/06/15 14:23:26  roboos
-% only check an option if specified (i.e. non-empty)
-%
-% Revision 1.1  2009/04/14 19:37:44  roboos
-% new helper function, used in plot_xxx functions
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % this is to speed up subsequent calls with the same input arguments
 persistent previous_argin

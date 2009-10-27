@@ -18,13 +18,7 @@ function [w] = solid_angle(r1, r2, r3);
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% $Log: solid_angle.m,v $
-% Revision 1.3  2003/03/21 13:32:53  roberto
-% created mex implementation
-%
-% Revision 1.2  2003/03/04 21:46:19  roberto
-% added CVS log entry and synchronized all copyright labels
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin==2
   % reassign the input arguments 

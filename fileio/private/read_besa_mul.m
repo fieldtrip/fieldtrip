@@ -7,16 +7,7 @@ function [dat] = read_besa_mul(filename)
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: read_besa_mul.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.2  2008/11/14 07:42:13  roboos
-% use general tokenize function instead of local copy, removed tokenize as subfunction
-%
-% Revision 1.1  2005/07/29 13:32:38  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 dat = [];
 fid = fopen(filename, 'rt');

@@ -9,13 +9,7 @@ function [nearest, distance] = find_nearest(pnt1, pnt2, npart);
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% $Log: find_nearest.m,v $
-% Revision 1.2  2007/02/08 14:43:14  roboos
-% handle case when points ly in an empty target partition (required for cortex in 3d volume)
-%
-% Revision 1.1  2007/02/07 07:38:34  roboos
-% new implementation, based on an idea of Theo
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 global fb;
 if isempty(fb)

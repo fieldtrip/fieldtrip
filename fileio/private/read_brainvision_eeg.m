@@ -11,36 +11,7 @@ function [dat] = read_brainvision_eeg(filename, hdr, begsample, endsample);
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% $Log: read_brainvision_eeg.m,v $
-% Revision 1.2  2009/03/13 07:13:28  roboos
-% added feedback to vectorized ascii subformat
-% fixed problem in vectorized ascii subformat when lines would start with the channel label
-%
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.5  2008/04/09 10:10:58  roboos
-% added support for int_32
-% renamed nChans into the original form
-%
-% Revision 1.4  2007/06/13 08:08:19  roboos
-% changed single & into &&
-%
-% Revision 1.3  2004/03/30 11:47:50  roberto
-% dos->unix, fixed bug in multiplexed binary
-%
-% Revision 1.2  2004/03/30 08:22:19  roberto
-% fixed bug due to renaming NumberOfChannels -> nChans
-%
-% Revision 1.1  2004/03/30 07:23:28  roberto
-% added to CVS repository, copyrights added and implemented multiple file
-% formats
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'multiplexed') && strcmpi(hdr.BinaryFormat, 'int_16')
   fid = fopen(filename, 'rb', 'ieee-le');

@@ -24,22 +24,7 @@ function [trl] = read_fcdc_trl(fn);
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% $Log: read_fcdc_trl.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.2  2008/11/12 16:59:09  roboos
-% open explicitely as text using fopen 'rt'
-%
-% Revision 1.1  2005/04/18 13:47:05  roboos
-% added some old and infrequently used functions to the cvs repository
-%
-% Revision 1.1  2005/04/18 13:43:34  roboos
-% included some old functions in the cvs repository, this ensures consistency of the functions between the different network locations
-%
-% Revision 1.1  2003/04/01 06:54:04  roberto
-% *** empty log message ***
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fid = fopen(fn, 'rt');
 if fid<0

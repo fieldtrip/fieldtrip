@@ -24,19 +24,7 @@ function plot_matrix(varargin)
 
 % Copyrights (C) 2009, Robert Oostenveld
 %
-% $Log: plot_matrix.m,v $
-% Revision 1.6  2009/07/14 16:13:53  roboos
-% added implementation for clim and highlight
-%
-% Revision 1.5  2009/06/16 07:51:51  crimic
-% small change
-%
-% Revision 1.4  2009/04/15 20:02:17  roboos
-% changed input parsing, fixed 1-pixel offset, added box option
-%
-% Revision 1.3  2009/04/14 14:31:08  roboos
-% many small changes to make it fully functional
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin>2 && all(cellfun(@isnumeric, varargin(1:3)))
   % the function was called like imagesc(x, y, c, ...)

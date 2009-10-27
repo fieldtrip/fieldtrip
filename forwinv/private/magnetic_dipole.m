@@ -11,14 +11,7 @@ function [lf] = magnetic_dipole(R, pos, ori)
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% $Log: magnetic_dipole.m,v $
-% Revision 1.1  2009/01/21 10:32:38  roboos
-% moved from forwinv/* and forwinv/mex/* directory to forwinv/private/* to make the CVS layout consistent with the release version
-%
-% Revision 1.1  2003/03/12 09:22:18  roberto
-% new implementation, optimized for speed
-% based on http://scienceworld.wolfram.com/physics/MagneticDipole.html
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 u0 = 1e-7;
 nchan = size(pos,1);

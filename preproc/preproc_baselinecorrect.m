@@ -17,20 +17,7 @@ function [dat, baseline] = preproc_baselinecorrect(dat, begsample, endsample)
 
 % Copyright (C) 1998-2008, Robert Oostenveld
 %
-% $Log: preproc_baselinecorrect.m,v $
-% Revision 1.2  2008/05/23 09:13:58  roboos
-% cleaned up code and documentation, ensure that all functions are consistent, added proper implementation to the scratch functions
-%
-% Revision 1.1  2008/05/23 06:54:21  roboos
-% created initial scratch version of preprocessing module, to be used in fieldtrip or as stand-alone toolbox (e.g. in spm8 or braingain)
-% some functions are copies of existing roboos/misc versions, some just contain some example code for the implementation
-%
-% Revision 1.3  2003/03/14 10:17:28  roberto
-% fixed bug that was introduced by last change, changend from repmat to for-loop
-%
-% Revision 1.2  2003/03/13 16:44:45  roberto
-% fixed bug with multiple epochs and single channel data
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % determine the size of the data
 [Nchans, Nsamples] = size(dat);

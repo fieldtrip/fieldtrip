@@ -16,10 +16,7 @@ function [pnt, tri] = msphere(N)
 % from the sci.math newsgroup. The full news message can be found
 % below. This Matlab implementation was made by Robert Oostenveld.
 %
-% $Log: msphere.m,v $
-% Revision 1.1  2004/06/04 08:08:24  roberto
-% *** empty log message ***
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % From: rusin@washington.math.niu.edu (Dave Rusin)
 % Newsgroups: sci.math

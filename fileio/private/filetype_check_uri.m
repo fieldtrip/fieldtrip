@@ -20,37 +20,7 @@ function varargout = filetype_check_uri(filename, ftyp)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% $Log: filetype_check_uri.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.7  2008/12/19 14:40:23  marvger
-% added support for udp, tcp and fifo
-%
-% Revision 1.6  2008/02/19 10:07:34  roboos
-% replaced tcpsocket with buffer
-%
-% Revision 1.5  2007/11/07 10:45:56  roboos
-% made port optional for mysql
-%
-% Revision 1.4  2007/10/15 16:02:46  roboos
-% added rfb://<password>@<host>:<port>
-%
-% Revision 1.3  2007/07/27 12:18:50  roboos
-% added ctf_shm
-%
-% Revision 1.2  2007/06/19 11:13:59  chrhes
-% small change in how the serial port case is processed to allow for the
-% possibility of no options being passed
-%
-% Revision 1.1  2007/06/06 07:10:36  roboos
-% initial implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 sep = find(filename==':');
 if ~isempty(sep)

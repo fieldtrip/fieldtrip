@@ -15,13 +15,7 @@ function plot_topo3d(pnt, val, varargin)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% $Log: plot_topo3d.m,v $
-% Revision 1.3  2009/06/03 09:55:10  roboos
-% prevent camera lighting of the interpolated helmet/scalp surface
-%
-% Revision 1.2  2009/06/03 08:55:55  roboos
-% first functional version
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the optional input arguments
 topostyle     = keyval('topostyle',     varargin); if isempty(topostyle),     topostyle = 'color';    end

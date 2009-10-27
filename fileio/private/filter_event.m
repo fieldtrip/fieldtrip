@@ -26,44 +26,7 @@ function event = filter_event(event, varargin)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% $Log: filter_event.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.8  2009/01/14 08:47:51  roboos
-% moved to fileio
-%
-% Revision 1.1  2008/11/13 09:55:36  roboos
-% moved from fieldtrip/private, fileio or from roboos/misc to new location at fieldtrip/public
-%
-% Revision 1.6  2007/12/20 19:04:12  roboos
-% added filtering for minnumber and maxnumber (in line with read_neuralyns_nev)
-%
-% Revision 1.5  2007/12/19 08:28:50  roboos
-% fixed bug for those filters which accept a numeric array (inserted any(..) around teh comparison)
-% added teh missing code for filtering on timestamp value
-%
-% Revision 1.4  2007/08/21 16:56:03  chrhes
-% fixed some logic (typo) bugs in relation to setting the testing flags
-%
-% Revision 1.3  2007/08/16 13:33:20  chrhes
-% fixed some typos in the if statements implementing the event selection
-%
-% Revision 1.2  2007/07/30 12:16:17  roboos
-% updated documentation
-% implemented min and max timestamp
-%
-% Revision 1.1  2007/06/13 14:47:35  roboos
-% moved filter_event from fieldtrip to fileio module
-%
-% Revision 1.1  2007/06/06 12:41:22  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the optional input arguments
 type         = keyval('type', varargin);

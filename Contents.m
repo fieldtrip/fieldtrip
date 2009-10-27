@@ -125,38 +125,5 @@
 %   sourceplot
 %   clusterplot
 
-% $Log: Contents.m,v $
-% Revision 1.11  2009/02/04 10:14:30  roboos
-% updated
-%
-% Revision 1.10  2009/02/04 10:10:17  roboos
-% updated copyrights, added list with main function names
-%
-% Revision 1.9  2007/05/30 06:53:29  roboos
-% added Eric and Ingrid
-%
-% Revision 1.8  2006/07/04 16:14:24  roboos
-% removed obsolete function list, clarified and cleaned up copyrights
-%
-% Revision 1.7  2005/06/02 12:23:20  roboos
-% updated some of the descriptions, it is still not complete
-%
-% Revision 1.6  2004/02/04 14:00:13  roberto
-% added Jens to authors and included his functions
-%
-% Revision 1.5  2004/01/27 10:20:08  roberto
-% added combineplanar
-%
-% Revision 1.4  2004/01/21 16:09:03  roberto
-% updated documentation
-%
-% Revision 1.3  2004/01/14 10:34:21  roberto
-% added Markus Siegels functions and listed him as author
-%
-% Revision 1.2  2003/11/28 21:37:26  roberto
-% updated help and function list
-%
-% Revision 1.1  2003/11/07 16:20:14  roberto
-% updated contents with new functions
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 

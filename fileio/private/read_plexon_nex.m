@@ -25,53 +25,7 @@ function [varargout] = read_plexon_nex(filename, varargin)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% $Log: read_plexon_nex.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.9  2008/12/15 14:48:22  roboos
-% read and write the data in uV/microvolt instead of in mV/milivolt
-%
-% Revision 1.8  2008/09/30 08:01:04  roboos
-% replaced all fread(char=>char) into uint8=>char to ensure that the
-% chars are read as 8 bits and not as extended 16 bit characters. The
-% 16 bit handling causes problems on some internationalized OS/Matlab
-% combinations.
-%
-% the help of fread specifies "If the precision is 'char' or 'char*1', MATLAB
-% reads characters using the encoding scheme associated with the file.
-% See FOPEN for more information".
-%
-% Revision 1.7  2007/10/08 12:59:51  roboos
-% give error if no channels present
-%
-% Revision 1.6  2007/07/19 14:41:56  roboos
-% changed indentation and whitespace
-%
-% Revision 1.5  2007/07/19 08:49:34  roboos
-% only give error for multiple continuous segments if specific samples were requested
-%
-% Revision 1.4  2007/03/26 12:42:20  roboos
-% implemented tsonly option to read only the timestamps
-% implemented the selection of begin and endsample for continuous channels
-%
-% Revision 1.3  2007/03/21 12:59:01  roboos
-% updated the documentation
-% keep timestamps as int32
-% convert the AD values to uV for type=3 and 5
-% give error instead of warning in case of multiple continuous segments
-%
-% Revision 1.2  2007/03/14 11:46:16  roboos
-% only some whitespace changed
-%
-% Revision 1.1  2007/01/10 17:28:23  roboos
-% new implementation, reusing the code from read_nex_xxx but now with complete support for all known data elements
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % parse the optional input arguments
 hdr       = keyval('header', varargin);

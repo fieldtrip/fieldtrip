@@ -6,13 +6,7 @@ function [timelock, cfg] = comp2timelock(cfg, comp);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: comp2timelock.m,v $
-% Revision 1.2  2006/05/10 08:19:45  roboos
-% added dimord to the output
-%
-% Revision 1.1  2005/10/14 15:50:08  roboos
-% new implementation, used by dipolefitting in case of frequency or ICA data
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % only convert, do not perform channel or component selection
 timelock        = [];

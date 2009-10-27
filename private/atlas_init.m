@@ -12,10 +12,7 @@ function [atlas] = atlas_init(filename)
 
 % Copyright (C) 2005-2008, Robert Oostenveld, Ingrid Nieuwenhuis
 %
-% $Log: atlas_init.m,v $
-% Revision 1.1  2008/07/31 11:47:39  ingnie
-% new implementation based on TTatlas_init, atlas can be specified by filename. AFNI and WFU atlas supported.
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 useafni = 0;
 usewfu  = 0;

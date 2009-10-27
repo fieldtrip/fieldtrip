@@ -9,22 +9,7 @@ function [newval, change] = smartinput(question, oldval);
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% $Log: smartinput.m,v $
-% Revision 1.1  2008/11/13 09:55:36  roboos
-% moved from fieldtrip/private, fileio or from roboos/misc to new location at fieldtrip/public
-%
-% Revision 1.4  2006/06/01 12:52:21  roboos
-% allow for vector and matrix input
-%
-% Revision 1.3  2006/05/02 19:13:14  roboos
-% allow empty oldvalue input
-%
-% Revision 1.2  2006/05/01 19:17:24  roboos
-% better support for string inputs
-%
-% Revision 1.1  2006/05/01 19:14:12  roboos
-% first implementation as stand-alone function
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if ischar(oldval)
   newval = input(question, 's');

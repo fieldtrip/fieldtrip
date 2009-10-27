@@ -8,22 +8,7 @@ function [mri, hdr] = read_ctf_mri(filename);
 
 % Copyright (C) 2003 Robert Oostenveld
 %
-% $Log: read_ctf_mri.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.4  2008/09/30 07:47:04  roboos
-% replaced all occurences of setstr() with char(), because setstr is deprecated by Matlab
-%
-% Revision 1.3  2005/08/26 13:49:03  roboos
-% changed warp3d into warp_apply
-%
-% Revision 1.2  2003/07/23 15:02:27  roberto
-% added check on valid input for read_ctf_meg4, other changes unknown
-%
-% Revision 1.1  2003/06/10 08:14:54  roberto
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fid = fopen(filename,'rb', 'ieee-be');
 

@@ -12,17 +12,7 @@ function [px, py, wx, wy, powx, powy] = cancorr(C,x,y,powflag,realflag,trunc)
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: cancorr.m,v $
-% Revision 1.3  2009/10/07 09:56:15  jansch
-% numerically stable reimplementation according to Borga 1992
-%
-% Revision 1.2  2007/07/17 09:55:41  jansch
-% added possibility to truncate the values on the diagonal, and to output the
-% rotated powers
-%
-% Revision 1.1  2005/05/09 14:17:36  roboos
-% new implementation, used in freqdescriptives
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<3,
   error('to compute canonical coherence, you need to specify the indices to the cross-spectral density making up the dependent and independent variable');

@@ -8,21 +8,7 @@ function [dap] = read_mpi_dap(filename)
 
 % Copyright (C) 2005-2007, Robert Oostenveld
 %
-% $Log: read_mpi_dap.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.3  2007/03/19 16:53:09  roboos
-% renamed local variable from dat into dap
-%
-% Revision 1.2  2005/10/06 11:01:24  roboos
-% added support for average mode
-% only read analogsweep+hdr+data if nanalog>0
-% only read spikesweep+hdr+data if nspike>0
-%
-% Revision 1.1  2005/10/04 16:53:21  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fid = fopen(filename, 'rb', 'ieee-le');
 

@@ -12,18 +12,7 @@ function [sens] = transform_sens(transform, sens)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: transform_sens.m,v $
-% Revision 1.4  2008/07/21 20:31:35  roboos
-% updated documentation
-%
-% Revision 1.3  2008/03/06 09:27:30  roboos
-% updated documentation
-%
-% Revision 1.2  2008/03/05 15:18:41  roboos
-% the previous version was still empty, I now made a proper implementation for the translation of various objects
-%
-% Revision 1.1  2008/01/28 20:31:28  roboos
-% initial implementation, empty stubs
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if any(transform(4,:) ~= [0 0 0 1])
   error('invalid transformation matrix');

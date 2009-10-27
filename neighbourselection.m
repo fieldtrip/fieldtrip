@@ -39,48 +39,7 @@ function neighbours = neighbourselection(cfg,data)
 
 % Copyright (C) 2006-2008, Eric Maris, Robert Oostenveld
 %
-% $Log: neighbourselection.m,v $
-% Revision 1.13  2009/04/07 15:49:40  ingnie
-% Only changed help -> fixed typo and mentioned layout possibility in description.
-%
-% Revision 1.12  2008/11/12 19:22:38  roboos
-% documented cfg.layout, added cfg.feedback
-%
-% Revision 1.11  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.10  2008/03/05 10:46:36  roboos
-% moved electrode reading functionality from read_fcdc_elec to read_sens, switched to the use of the new function
-%
-% Revision 1.9  2008/01/24 17:05:04  roboos
-% mention layout in the "undocumented options" section
-%
-% Revision 1.8  2007/05/14 08:26:31  roboos
-% added option to construct neighbours from 2-D layout
-%
-% Revision 1.7  2006/10/11 09:44:54  roboos
-% updated documentation
-%
-% Revision 1.6  2006/07/12 14:14:59  roboos
-% get sens from data.grad/elec
-%
-% Revision 1.5  2006/07/03 12:57:07  erimar
-% Improved help.
-%
-% Revision 1.4  2006/06/12 08:25:25  erimar
-% Added help concerning the structure of cfg.neighbour. Removed
-% subfunction involving the calculation of the channel (combination)
-% neighourhood geometry.
-%
-% Revision 1.3  2006/04/20 09:58:34  roboos
-% updated documentation
-%
-% Revision 1.2  2006/04/12 09:10:53  roboos
-% added a fprintf statement about the number of neighbours that was found
-%
-% Revision 1.1  2006/04/11 16:15:24  roboos
-% created seperate implementation for the construction of the neighbourhood structure, slightly comparable to channelselection
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

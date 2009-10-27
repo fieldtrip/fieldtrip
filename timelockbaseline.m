@@ -18,48 +18,7 @@ function [timelock] = timelockbaseline(cfg, timelock);
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% $Log: timelockbaseline.m,v $
-% Revision 1.13  2009/01/20 13:01:31  sashae
-% changed configtracking such that it is only enabled when BOTH explicitly allowed at start
-% of the fieldtrip function AND requested by the user
-% in all other cases configtracking is disabled
-%
-% Revision 1.12  2008/11/21 10:39:10  sashae
-% added call to checkconfig
-%
-% Revision 1.11  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.10  2008/06/10 16:45:05  sashae
-% replaced call to blc function with preproc_baselinecorrect
-%
-% Revision 1.9  2007/12/18 14:17:29  ingnie
-% Changed timelock.subj to timelock.individual (Thanks to Ian)
-%
-% Revision 1.8  2007/06/15 10:00:42  jansch
-% fixed typo thanks to Ian
-%
-% Revision 1.7  2007/05/01 09:19:04  roboos
-% fixed bug in removal of covariance (thanks to Marie)
-%
-% Revision 1.6  2007/04/03 15:37:07  roboos
-% renamed the checkinput function to checkdata
-%
-% Revision 1.5  2007/03/30 17:05:40  ingnie
-% checkinput; only proceed when input data is allowed datatype
-%
-% Revision 1.4  2007/03/27 11:05:19  ingnie
-% changed call to fixdimord in call to checkinput
-%
-% Revision 1.3  2006/05/09 12:22:41  ingnie
-% updated help
-%
-% Revision 1.2  2006/04/20 09:58:34  roboos
-% updated documentation
-%
-% Revision 1.1  2006/03/09 10:34:17  roboos
-% ne wimplementation, used for plotting functions (c.f. freqbaseline)
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

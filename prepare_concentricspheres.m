@@ -35,31 +35,7 @@ function [vol, cfg] = prepare_concentricspheres(cfg)
 
 % Copyright (C) 2009, Vladimir Litvak & Robert Oostenveld
 %
-% $Log: prepare_concentricspheres.m,v $
-% Revision 1.8  2009/07/16 09:14:52  crimic
-% part of code reimplemented in function prepare_mesh_headshape.m
-%
-% Revision 1.7  2009/06/23 14:59:28  crimic
-% use of plotting toolbox funtion: plot_mesh
-%
-% Revision 1.6  2009/05/29 11:40:07  roboos
-% only convert cfg.headshape from config to struct in case it is present
-%
-% Revision 1.5  2009/05/25 08:05:18  roboos
-% ensure that cfg.headshape is a sturct and not a config object (in case tracking is on)
-%
-% Revision 1.4  2009/05/14 19:21:36  roboos
-% consistent handling of cfg.headshape in code and documentation
-%
-% Revision 1.3  2009/04/01 12:28:58  roboos
-% use Taubin's method instead of nonlinear search (thanks to Jean and Guillaume)
-%
-% Revision 1.2  2009/02/05 10:22:55  roboos
-% don't open new figure, clear the existing one
-%
-% Revision 1.1  2009/01/05 13:06:39  roboos
-% initial version of Vladimir with some extensions/improvements
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

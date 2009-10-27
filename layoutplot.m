@@ -48,43 +48,7 @@ function layoutplot(cfg, data)
 
 % Copyright (C) 2006-2008, Robert Oostenveld
 %
-% $Log: layoutplot.m,v $
-% Revision 1.11  2009/09/10 12:30:00  roboos
-% added option for plotting an arrow for each of the bipolar electrode pairs, requires a montage and a layout
-%
-% Revision 1.10  2009/05/12 12:35:15  roboos
-% moved plotting to seperate function (plot_lay) where it can be reused
-%
-% Revision 1.9  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.8  2008/09/22 12:44:46  roboos
-% added support for cfg.image, some small changes to documentation and to plotting style
-%
-% Revision 1.7  2008/07/16 09:27:36  roboos
-% added support for creating a layout based on a figure, including mask and outline for topoplot
-%
-% Revision 1.6  2007/03/21 14:47:06  chrhes
-% updated some comments
-%
-% Revision 1.5  2007/03/20 10:44:37  roboos
-% updated documentation, change figure axis, changed whitespaces
-%
-% Revision 1.4  2007/03/20 09:46:31  chrhes
-% added some checks to determine whether the field cfg.layout already contains a
-% valid layout structure that can be used, thereby avoiding a redundant call to
-% the function PREPARE_LAYOUT
-%
-% Revision 1.3  2007/03/14 08:56:00  roboos
-% changed some documentation
-%
-% Revision 1.2  2007/03/14 08:53:29  roboos
-% changed from using private/createlayout to prepare_layout, changed the lay
-% structure, added some help to clarify the usefullness of this function
-%
-% Revision 1.1  2006/06/01 11:51:45  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

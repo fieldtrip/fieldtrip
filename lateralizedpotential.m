@@ -41,30 +41,7 @@ function lrp = lateralizedpotential(cfg, avgL, avgR);
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% $Log: lateralizedpotential.m,v $
-% Revision 1.6  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.5  2005/06/29 12:46:29  roboos
-% the following changes were done on a large number of files at the same time, not all of them may apply to this specific file
-% - added try-catch around the inclusion of input data configuration
-% - moved cfg.version, cfg.previous and the assignment of the output cfg to the end
-% - changed help comments around the configuration handling
-% - some changes in whitespace
-%
-% Revision 1.4  2005/06/24 08:26:43  roboos
-% restructured the help, changed some whitespace
-%
-% Revision 1.3  2005/05/17 17:50:37  roboos
-% changed all "if" occurences of & and | into && and ||
-% this makes the code more compatible with Octave and also seems to be in closer correspondence with Matlab documentation on shortcircuited evaluation of sequential boolean constructs
-%
-% Revision 1.2  2005/01/25 08:13:40  roboos
-% fixed small error with brackets
-%
-% Revision 1.1  2004/12/16 11:19:05  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

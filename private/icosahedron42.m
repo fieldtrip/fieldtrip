@@ -4,13 +4,7 @@ function [pnt, dhk] = icosahedron();
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% $Log: icosahedron42.m,v $
-% Revision 1.3  2003/11/28 09:40:12  roberto
-% added a single help line
-%
-% Revision 1.2  2003/03/04 21:46:18  roberto
-% added CVS log entry and synchronized all copyright labels
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 [pnt, dhk] = icosahedron;
 [pnt, dhk] = refine(pnt, dhk);

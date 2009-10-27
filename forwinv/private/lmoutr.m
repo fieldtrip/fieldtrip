@@ -11,16 +11,7 @@ function [la, mu, dist] = lmoutr(v1, v2, v3, r);
 
 % Copyright (C) 2002, Robert Oostenveld
 %
-% $Log: lmoutr.m,v $
-% Revision 1.4  2007/01/03 17:02:26  roboos
-% removed an incorrect statement from the help
-%
-% Revision 1.3  2003/03/11 15:35:20  roberto
-% converted all files from DOS to UNIX
-%
-% Revision 1.2  2003/03/04 21:46:19  roberto
-% added CVS log entry and synchronized all copyright labels
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % compute la/mu parameters
 vec0 = r  - v1;

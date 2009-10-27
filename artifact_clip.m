@@ -24,77 +24,7 @@ function [cfg, artifact] = artifact_clip(cfg,data)
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: artifact_clip.m,v $
-% Revision 1.22  2009/01/20 13:01:31  sashae
-% changed configtracking such that it is only enabled when BOTH explicitly allowed at start
-% of the fieldtrip function AND requested by the user
-% in all other cases configtracking is disabled
-%
-% Revision 1.21  2009/01/16 18:19:41  sashae
-% moved some lines of code, no functional change
-%
-% Revision 1.20  2009/01/14 11:47:07  sashae
-% changed handling of cfg.datatype
-% added call to checkconfig at start and end of function
-%
-% Revision 1.19  2008/12/02 16:29:42  estmee
-% Set default cfg.continuous/ checkconfig cfg.datatype = forbidden
-%
-% Revision 1.18  2008/11/25 13:12:48  estmee
-% Documentation update
-%
-% Revision 1.17  2008/11/18 16:11:42  estmee
-% Added cfg.continuous option to documentation.
-%
-% Revision 1.16  2008/10/13 14:37:46  estmee
-% Changed the checkboundary again when calling read_data.
-%
-% Revision 1.15  2008/10/13 13:57:23  estmee
-% Added checkboundary as input argument read_data.
-%
-% Revision 1.14  2008/10/13 11:39:34  sashae
-% added call to checkconfig (as discussed with estmee)
-%
-% Revision 1.13  2008/10/07 16:16:31  estmee
-% Added data as second input argument to artifact_clip.
-%
-% Revision 1.12  2008/10/07 08:58:51  roboos
-% committed the changes that Esther made recently, related to the support of data as input argument to the artifact detection functions. I hope that this does not break the functions too seriously.
-%
-% Revision 1.11  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.10  2008/05/13 15:37:24  roboos
-% switched to using read_data/header instead of the read_fcdc_data/header wrapper functions
-%
-% Revision 1.9  2006/11/29 09:06:36  roboos
-% renamed all cfg options with "sgn" into "channel", added backward compatibility when required
-% updated documentation, mainly in the artifact detection routines
-%
-% Revision 1.8  2006/06/14 12:43:48  roboos
-% removed the documentation for cfg.lnfilttype, since that option is not supported by preproc
-%
-% Revision 1.7  2006/04/20 09:58:33  roboos
-% updated documentation
-%
-% Revision 1.6  2006/04/12 08:38:01  ingnie
-% updated documentation
-%
-% Revision 1.5  2006/01/31 13:49:29  jansch
-% included dataset2files to ensure the presence of cfg.headerfile or cfg.datafile
-% whenever needed
-%
-% Revision 1.4  2005/12/20 08:36:47  roboos
-% add the artifact Nx2 matrix to the output configuration
-% changed some indentation and white space, renamed a few variables
-%
-% Revision 1.3  2005/10/06 14:28:20  roboos
-% added check for case when no artifacts are found
-%
-% Revision 1.2  2005/09/05 10:37:03  roboos
-% added pretim and psttim option for extending the detected artifacts
-% added copyright and log
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

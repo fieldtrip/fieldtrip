@@ -20,32 +20,7 @@ function [trl, event] = trialfun_general(cfg);
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 %
-% $Log: trialfun_general.m,v $
-% Revision 1.6  2008/11/10 20:32:00  roboos
-% reinserted trialfun that I accidentally removed
-%
-% Revision 1.4  2008/10/06 08:42:12  jansch
-% included check for specifying trials across the boundaries of the datafile.
-% Thanks to Joachim Gross.
-%
-% Revision 1.3  2008/10/01 11:00:06  ingnie
-% fixed bug in gui part which appeared when eventvalue is list
-%
-% Revision 1.2  2008/09/29 08:39:38  roboos
-% replaced read_fcdc_xxx with the new function names
-%
-% Revision 1.1  2008/09/23 07:31:15  roboos
-% Moved all statfuns and trialfuns to their own directories, where they will be easier to find for the end-user. Also updated fieldtripdefs accordingly.
-%
-% Revision 1.6  2007/02/07 16:30:12  roboos
-% do something with trials that overlap with teh beginning of the file (in case of gui)
-%
-% Revision 1.5  2007/02/07 07:30:30  roboos
-% added gui option, thanks to Vladimir
-%
-% Revision 1.4  2007/01/09 09:47:25  roboos
-% added warning about this function being deprecated, includes link to website documentation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % some events do not require the specification a type, pre or poststim period
 % in that case it is more convenient not to have them, instead of making them empty

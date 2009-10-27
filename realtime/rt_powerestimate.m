@@ -25,14 +25,7 @@ function rt_powerestimate(cfg)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: rt_powerestimate.m,v $
-% Revision 1.9  2009/04/21 09:59:52  roboos
-% cleaned up cvs log comments
-%
-% Revision 1.8  2009/02/04 09:08:07  roboos
-% ensure that the persistent variables related to header caching are cleared
-% this is needed when switching the headerformat (from ctf_res4 to ctf_old) while continuing on the same file
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the default configuration options
 if ~isfield(cfg, 'dataformat'),     cfg.dataformat = [];      end % default is detected automatically

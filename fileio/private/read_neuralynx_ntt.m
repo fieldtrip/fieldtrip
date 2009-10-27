@@ -8,33 +8,7 @@ function [ntt] = read_neuralynx_ntt(filename, begrecord, endrecord)
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: read_neuralynx_ntt.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.7  2008/04/29 07:52:31  roboos
-% fixed windows related bug
-% be consistent with begin and end timestamp in header
-%
-% Revision 1.6  2008/03/04 11:16:11  roboos
-% do not convert to uV, since ADBitVolts seems not always to be present in the header
-% fixed bug in output assignment of Nrecords
-%
-% Revision 1.5  2008/01/10 12:51:58  roboos
-% ensure that it is possible to read only the header, using beg/end = 0/0
-%
-% Revision 1.4  2006/12/13 15:46:31  roboos
-% read and keep timestamps as uint64
-%
-% Revision 1.3  2006/12/12 11:31:31  roboos
-% cleaned up the code, made code more consistent with other neuralynx functions, moved subfunctions to seperate files, use numeric arrays instead of cell-arrays for storing the data
-%
-% Revision 1.2  2006/03/29 15:00:46  roboos
-% changed some whitespace
-%
-% Revision 1.1  2005/05/20 06:39:35  roboos
-% new implementation of single file readers
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<2
   begrecord = 1;

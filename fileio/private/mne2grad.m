@@ -9,26 +9,7 @@ function [grad,elec] = mne2grad(hdr)
 
 % Laurence Hunt 03/12/2008 (with thanks to Joachim Gross's original script based on fiff_access). lhunt@fmrib.ox.ac.uk
 % 
-% $Log: mne2grad.m,v $
-% Revision 1.8  2009/04/22 14:55:41  vlalit
-% Major bug fix by Laurence who originally mixed up magnetometers and planar gradiometers
-%  while building the grad.
-%
-% Revision 1.7  2009/04/20 17:19:01  vlalit
-% Changed the MNE reader not to set hdr.elec when there are no EEG channels.
-%
-% Revision 1.6  2009/02/05 18:30:44  vlalit
-% Updates by Laurence to recognize additional Neuromag sensor types
-%
-% Revision 1.5  2009/01/23 18:56:54  vlalit
-% Another bug fix
-%
-% Revision 1.3  2009/01/23 16:29:40  roboos
-% convert label to column
-%
-% Revision 1.2  2009/01/23 16:16:55  roboos
-% changed the input to the function, removed unused fiff_setup_read_raw at begin of function, added cvs log
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 grad = [];
 

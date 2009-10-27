@@ -40,31 +40,7 @@ function [stat, cfg] = statistics_analytic(cfg, dat, design);
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% $Log: statistics_analytic.m,v $
-% Revision 1.8  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.7  2007/03/27 15:36:37  erimar
-% Updated help (replaced p-value by significance probability).
-%
-% Revision 1.6  2006/11/23 11:08:19  roboos
-% implemented Holms' correction method for multiple comparisons
-%
-% Revision 1.5  2006/07/27 07:58:12  roboos
-% improved documentation, added default for cfg.tail (default is two-sided)
-%
-% Revision 1.4  2006/07/20 15:03:11  roboos
-% documentation change
-%
-% Revision 1.3  2006/07/14 06:29:29  roboos
-% return cfg as output for later reference
-%
-% Revision 1.2  2006/06/07 12:58:05  roboos
-% added some defaults, implemented FDR and Bonferoni
-%
-% Revision 1.1  2006/05/31 13:04:31  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

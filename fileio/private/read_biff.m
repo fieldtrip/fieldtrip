@@ -20,13 +20,7 @@ function [this] = read_biff(filename, opt)
 
 % Copyright (C) 2000, Robert Oostenveld
 % 
-% $Log: read_biff.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.2  2003/03/11 15:24:51  roberto
-% updated help and copyrights
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 define_biff;
 this = [];

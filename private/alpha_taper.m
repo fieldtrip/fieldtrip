@@ -33,13 +33,7 @@ function [tap] = alpha_taper(n, f);
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% $Log: alpha_taper.m,v $
-% Revision 1.2  2007/08/06 15:00:03  roboos
-% transposed the output, updated documentation
-%
-% Revision 1.1  2007/08/01 16:20:27  roboos
-% first implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % time axis expressed in cycles of the desired wavelet frequency
 t   = ((-n+1):0) * f;

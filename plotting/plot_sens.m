@@ -17,22 +17,7 @@ function hs = plot_sens(sens, varargin)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% $Log: plot_sens.m,v $
-% Revision 1.6  2009/07/29 07:07:02  roboos
-% added option for plotting all coils
-%
-% Revision 1.5  2009/06/04 07:30:07  roboos
-% added example
-%
-% Revision 1.4  2009/05/12 18:12:26  roboos
-% added handling of hold on/off
-%
-% Revision 1.3  2009/04/14 19:48:28  roboos
-% added keyvalcheck
-%
-% Revision 1.2  2009/04/08 06:35:05  roboos
-% first implementation, covers the use in headmodelplot
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'style', 'coil'});

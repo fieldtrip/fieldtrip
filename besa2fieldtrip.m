@@ -30,56 +30,7 @@ function [data] = besa2fieldtrip(filename);
 
 % Copyright (C) 2005-2007, Robert Oostenveld
 %
-% $Log: besa2fieldtrip.m,v $
-% Revision 1.16  2008/10/21 09:34:12  roboos
-% fixed sampling frequency (factor 1000 wrgon), thanks to Stephan Moratti
-%
-% Revision 1.15  2008/09/22 21:23:11  roboos
-% always add besa path (now as external/besa)
-%
-% Revision 1.14  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.13  2007/04/24 09:45:56  roboos
-% added support for besa simple binary, requires besa toolbox
-%
-% Revision 1.12  2006/10/05 08:54:14  roboos
-% convert time to seconds for TFR data
-%
-% Revision 1.11  2006/06/27 13:26:51  roboos
-% use readBESAswf from besa toolbox if available, otherwise use fieldtrip/private function
-%
-% Revision 1.10  2006/06/07 09:34:19  roboos
-% changed checktoolbox into hastoolbox
-%
-% Revision 1.9  2006/05/15 13:18:23  roboos
-% implemented fixlabels subfunction, use it to convert between char and cell-array
-%
-% Revision 1.8  2006/04/26 11:36:52  roboos
-% detect the presence of the BESA toolbox and added support for reading
-% *.tfc using Karstens readBESAtfc function
-%
-% Revision 1.7  2006/04/20 09:58:33  roboos
-% updated documentation
-%
-% Revision 1.6  2006/03/16 17:36:13  roboos
-% added besa_swf
-%
-% Revision 1.5  2006/02/23 10:28:16  roboos
-% changed dimord strings for consistency, changed toi and foi into time and freq, added fixdimord where neccessary
-%
-% Revision 1.4  2006/02/01 12:26:00  roboos
-% made all uses of dimord consistent with the common definition of data dimensions, see the fixdimord() function
-%
-% Revision 1.3  2005/09/01 09:25:33  roboos
-% added beamformer source reconstruction
-%
-% Revision 1.2  2005/07/29 13:23:58  roboos
-% various improvements and fixes
-%
-% Revision 1.1  2005/07/28 15:08:58  roboos
-% new implementation, see documentation on website
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

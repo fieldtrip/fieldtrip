@@ -15,24 +15,7 @@ function [swf] = read_besa_swf(filename);
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% $Log: read_besa_swf.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.3  2006/06/22 15:03:07  roboos
-% fixed bug, data was transposed in case of row-formatted file
-%
-% Revision 1.2  2006/03/20 08:39:13  roboos
-% 2 small bug fixes, thanks to Vladimir
-%
-% Revision 1.1  2006/03/16 17:31:42  roboos
-% new implementation, supports both rows and columns
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fid = fopen(filename);
 line = fgetl(fid);

@@ -17,26 +17,7 @@ function app_neurofeedback(cfg)
 %
 % Copyright (C) 2009, Marcel van Gerven
 %
-% $Log: app_neurofeedback.m,v $
-% Revision 1.6  2009/06/09 13:56:53  marvger
-% added some documentation
-%
-% Revision 1.5  2009/05/19 15:16:35  marvger
-% update in checking of cmd
-%
-% Revision 1.4  2009/05/19 15:04:11  marvger
-% added check on event.value
-%
-% Revision 1.3  2009/05/14 12:13:18  marvger
-% added debug contraint since kbcheck is only defined for debug=false
-%
-% Revision 1.2  2009/05/06 12:34:45  marvger
-% application now suitable for both neurofeedback (continuous input) and
-% classification (discrete input; left linked to 1 and right linked to 2)
-%
-% Revision 1.1  2009/04/23 12:50:49  marvger
-% update of the BCI realtime code
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if ~isfield(cfg,'istream'),  cfg.istream = []; end
 if ~isfield(cfg,'debug'),    cfg.debug = false; end

@@ -24,29 +24,7 @@ function [dipout] = music(dip, grad, vol, dat, varargin);
 
 % Copyright (C) 2004-2008, Robert Oostenveld
 %
-% $Log: music.m,v $
-% Revision 1.6  2008/03/18 13:17:04  roboos
-% updated documentation
-%
-% Revision 1.5  2008/03/18 13:02:11  roboos
-% added all options for leadfield computation
-% use dip.mom as dipole orientation if present
-%
-% Revision 1.4  2008/03/18 12:30:46  roboos
-% renamed output metric to dipout.jr
-% fixed typo in literature reference
-% add explicit references to the equations and pages
-% some other changes that should not affect the functionality but that improve the readability of the code
-%
-% Revision 1.3  2006/06/22 12:17:57  roboos
-% function was broken, renamed some variables, added optinal inputs for numcomponents and covariance
-%
-% Revision 1.2  2006/05/10 08:18:21  roboos
-% swiched to using keyval() function for getting optional arguments instead of using eval()
-%
-% Revision 1.1  2005/09/29 00:56:19  roboos
-% new implementation, has not yet been tested
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the optional settings, or use the default value
 cov            = keyval('cov',            varargin);

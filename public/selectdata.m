@@ -28,45 +28,7 @@ function [data] = selectdata(varargin)
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 %
-% $Log: selectdata.m,v $
-% Revision 1.13  2009/10/17 18:06:43  jansch
-% built-in support to compute jackknife samples
-%
-% Revision 1.12  2009/10/17 17:50:25  jansch
-% allowed conversion back to raw datatype
-%
-% Revision 1.11  2009/10/01 12:14:05  jansch
-% some changes
-%
-% Revision 1.10  2009/08/18 09:55:46  jansch
-% included possibility to concatenate over grid positions, allowing for cutting
-% the dipole grid and glueing it together later on
-%
-% Revision 1.9  2009/08/17 08:41:19  jansch
-% multiple changes
-%
-% Revision 1.8  2009/07/15 12:11:57  jansch
-% fixed small bug
-%
-% Revision 1.7  2009/07/06 09:41:18  jansch
-% multiple changes. allowing for selection of rpt in frequency data when input
-% data has rpttap. allowing for grandaveraging functionality in the case of
-% multiple inputs with the same dimensionalities. this is equivalent to the
-% XXXgrandaverage functions with keepindividual = 'yes'.
-%
-% Revision 1.6  2009/04/14 18:29:32  roboos
-% deleted the subfunction istrue, since it now is a seperate function
-%
-% Revision 1.5  2009/03/18 19:49:54  roboos
-% use the smart xxxdim functions
-%
-% Revision 1.4  2009/01/26 20:53:11  roboos
-% ensure that some options are true|false
-% changes some whitespace
-%
-% Revision 1.3  2009/01/12 17:05:58  roboos
-% fixed some whitespace
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % check the input data and options
 isdata  = find(cellfun(@isstruct,varargin));

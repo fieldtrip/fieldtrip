@@ -5,16 +5,7 @@ function [grid] = mollify(cfg, grid);
 
 % Copyright (c) 2006, Jan-Mathijs Schoffelen & Robert Oostenveld, F.C. Donders Centre
 %
-% $Log: mollify.m,v $
-% Revision 1.3  2007/07/31 08:33:51  jansch
-% some changes, code is still experimental though
-%
-% Revision 1.2  2006/10/02 07:08:55  jansch
-% added support for reducing the rank of the mollified leadfield
-%
-% Revision 1.1  2006/09/19 11:01:59  jansch
-% first implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 
 % set the defaults

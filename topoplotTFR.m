@@ -56,43 +56,6 @@ function [cfg] = topoplotTFR(cfg, varargin)
 
 % Copyright (C) 2005-2006, F.C. Donders Centre
 %
-% $Log: topoplotTFR.m,v $
-% Revision 1.21  2009/06/17 13:44:52  roboos
-% cleaned up help
-%
-% Revision 1.20  2008/12/16 15:31:42  sashae
-% plot functions can now give cfg as output
-% added checkconfig to start and end of function, configtracking possible
-%
-% Revision 1.19  2008/01/29 19:43:33  sashae
-% added option for trial selection; plot functions now also accept data with
-% repetitions (either trials or subjects), the avg is computed and plotted
-% removed some old code
-%
-% Revision 1.18  2007/03/21 15:36:36  chrhes
-% updated documentation regarding the fact that cfg.layout can also contain a
-% layout structure obtained using the function prepare_layout.m
-%
-% Revision 1.17  2006/07/17 12:39:47  ingnie
-% updated documentation
-%
-% Revision 1.16  2006/05/30 14:21:00  ingnie
-% updated documentation
-%
-% Revision 1.15  2006/05/23 16:05:21  ingnie
-% updated documentation
-%
-% Revision 1.14  2006/05/09 12:21:41  ingnie
-% updated help
-%
-% Revision 1.13  2006/04/27 09:35:49  ingnie
-% updated documentation
-%
-% Revision 1.12  2006/03/14 14:55:16  roboos
-% changed from DOS into UNIX format
-%
-% Revision 1.11  2006/03/14 08:09:22  roboos
-% added copyrigth and cvs log statement
-% 
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 cfg=topoplotER(cfg, varargin{:});

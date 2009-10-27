@@ -8,13 +8,7 @@ function [volume] = normalisevolume(cfg, volume)
 
 % Copyright (C) 2005-2006, F.C. Donders Centre
 %
-% $Log: normalisevolume.m,v $
-% Revision 1.15  2007/01/09 09:52:07  roboos
-% changed the warning a bit
-%
-% Revision 1.14  2006/03/14 08:09:22  roboos
-% added copyrigth and cvs log statement
-% 
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 warning('This function is deprecated, it has been renamed to VOLUMENORMALISE');
 warning('backward compatibility will be removed in the future');

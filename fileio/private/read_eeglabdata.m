@@ -35,24 +35,7 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% $Log: read_eeglabdata.m,v $
-% Revision 1.3  2009/07/01 15:35:19  vlalit
-% Try several different ways of looking for the data file
-%  before giving up (fix suggested by Jakob Scherer)
-%
-% Revision 1.2  2009/02/27 12:03:09  vlalit
-% Arno's fix for a bug reported by Antanas Spokas
-%
-% Revision 1.1  2009/01/30 04:01:19  arno
-% *** empty log message ***
-%
-% Revision 1.2  2008/04/21 18:45:23  roboos
-% fixed bug due to sample/trial selection mixup
-% only read the selected trials
-%
-% Revision 1.1  2008/04/18 14:04:48  roboos
-% new implementation by Arno, shoudl be tested
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 function dat = read_eeglabdata(filename, varargin);
 

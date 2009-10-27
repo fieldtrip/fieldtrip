@@ -21,59 +21,7 @@ function [grandavg] = freqgrandaverage(cfg, varargin);
 
 % Copyright (C) 2005-2006, Robert Oostenveld
 %
-% $Log: freqgrandaverage.m,v $
-% Revision 1.15  2009/01/20 13:01:31  sashae
-% changed configtracking such that it is only enabled when BOTH explicitly allowed at start
-% of the fieldtrip function AND requested by the user
-% in all other cases configtracking is disabled
-%
-% Revision 1.14  2008/11/21 12:48:17  sashae
-% added call to checkconfig at start and end of function
-%
-% Revision 1.13  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.12  2007/09/24 10:26:48  roboos
-% implemented averaging of PLV, thanks to Joachim Gross
-%
-% Revision 1.11  2007/04/03 15:37:07  roboos
-% renamed the checkinput function to checkdata
-%
-% Revision 1.10  2007/03/30 17:05:40  ingnie
-% checkinput; only proceed when input data is allowed datatype
-%
-% Revision 1.9  2007/03/27 11:05:19  ingnie
-% changed call to fixdimord in call to checkinput
-%
-% Revision 1.8  2006/10/04 07:10:07  roboos
-% updated documentation
-%
-% Revision 1.7  2006/10/02 15:57:24  roboos
-% updated documentation
-%
-% Revision 1.6  2006/08/29 14:59:03  roboos
-% implemented channel/frequency/timeselection, selected data will be consistent over inputs
-%
-% Revision 1.5  2006/06/13 14:48:09  ingnie
-% updated documentation
-%
-% Revision 1.4  2006/02/23 10:28:16  roboos
-% changed dimord strings for consistency, changed toi and foi into time and freq, added fixdimord where neccessary
-%
-% Revision 1.3  2005/06/29 12:46:29  roboos
-% the following changes were done on a large number of files at the same time, not all of them may apply to this specific file
-% - added try-catch around the inclusion of input data configuration
-% - moved cfg.version, cfg.previous and the assignment of the output cfg to the end
-% - changed help comments around the configuration handling
-% - some changes in whitespace
-%
-% Revision 1.2  2005/05/17 17:50:37  roboos
-% changed all "if" occurences of & and | into && and ||
-% this makes the code more compatible with Octave and also seems to be in closer correspondence with Matlab documentation on shortcircuited evaluation of sequential boolean constructs
-%
-% Revision 1.1  2005/01/03 12:23:17  roboos
-% initial implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

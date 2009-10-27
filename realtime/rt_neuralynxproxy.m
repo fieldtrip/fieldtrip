@@ -23,37 +23,7 @@ function rt_neuralynxproxy(cfg)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: rt_neuralynxproxy.m,v $
-% Revision 1.8  2008/12/16 15:41:33  roboos
-% added channelselection and implemented selection of subset of channels
-% use channel names from neuralynx in the header
-% slightly less verbose when writing
-% changed method for collecting all data prior to writing (now explicit for loop)
-%
-% Revision 1.7  2008/11/03 16:09:03  roboos
-% added defaults for target.eventxxx
-% write all records data at once instead of using for-loop, this speeds the writing up because only one network connection has to be made
-%
-% Revision 1.6  2008/10/28 17:23:55  roboos
-% added support for writing events
-%
-% Revision 1.5  2008/10/28 14:21:52  roboos
-% first start with events
-%
-% Revision 1.4  2008/10/24 08:51:18  roboos
-% renamed some cfg options, extended documentation
-%
-% Revision 1.3  2008/10/23 09:11:30  roboos
-% also create and write header
-% more efficient method of keeping track of the timstamp and completeness of records
-% some other small improvements
-%
-% Revision 1.2  2008/10/21 07:26:04  roboos
-% changed to unix format, added some comments, some small cleanup
-%
-% Revision 1.1  2008/10/21 07:19:38  roboos
-% first implementation, not yet tested on streaming data
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the defaults
 if ~isfield(cfg, 'acquisition'),        cfg.acquisition = 'fcdc284';                      end

@@ -34,13 +34,7 @@ function vol = triangle4pt(vol)
 % written by Christophe Phillips, 2009/01/19
 % Cyclotron Research Centre, University of li?ge, belgium
 
-% $Log: triangle4pt.m,v $
-% Revision 1.4  2009/04/30 16:59:49  vlalit
-% Bug fix for the problem of too flat mesh surfaces as suggested by Christophe
-%
-% Revision 1.3  2009/04/01 13:26:05  roboos
-% use Taubin's method of sphere fitting (fitsphere) instead of the iterative implementation by Guido Nolte
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 Ns = length(vol.bnd);
 for ii=1:Ns % treat each mesh one at a time

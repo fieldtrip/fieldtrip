@@ -23,10 +23,7 @@ function rt_average(cfg)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% $Log: rt_average.m,v $
-% Revision 1.1  2009/04/21 09:50:29  roboos
-% first version, stripped down from selective average version
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the default configuration options
 if ~isfield(cfg, 'dataformat'),     cfg.dataformat = [];      end % default is detected automatically

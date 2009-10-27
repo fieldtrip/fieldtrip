@@ -8,16 +8,7 @@ function [header] = read_4d_hdr(datafile, configfile)
 
 % Copyright (C) 2008-2009, Centre for Cognitive Neuroimaging, Glasgow, Gavin Paterson & J.M.Schoffelen
 %
-% $Log: read_4d_hdr.m,v $
-% Revision 1.3  2009/04/03 07:56:46  jansch
-% changed reading of user_block B_weights_used. there's a version 1 and 2,
-% probably related to whether data were acquired with a 2500 or 3600 system
-%
-% Revision 1.2  2009/03/30 13:53:17  jansch
-% Change with respect to handling of user blocks. User block data will be stored
-% in a cell-array of structures, rather than the initial structure-array. Added
-% log in m-file
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 %read header
 if nargin ~= 2

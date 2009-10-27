@@ -18,31 +18,7 @@ function [selected] = select_point(pos, varargin)
 %   plot(pos(:,1), pos(:,2), '.')
 %   select_point(pos)
 
-% $Log: select_point.m,v $
-% Revision 1.2  2009/06/30 11:46:15  roboos
-% fixed docu
-%
-% Revision 1.1  2009/06/30 11:44:34  roboos
-% renamed select_pointd into select_point for consistency with plot_topo
-%
-% Revision 1.7  2009/06/22 12:33:11  crimic
-% minor change
-%
-% Revision 1.6  2009/06/16 08:17:40  crimic
-% added check on input
-%
-% Revision 1.5  2009/06/15 15:46:45  roboos
-% first implementation of point3d, multiple changes to point2d, still some work to be done to make them consistent
-%
-% Revision 1.4  2009/06/15 13:43:27  roboos
-% reimplemented from scratch
-%
-% Revision 1.3  2009/06/04 10:51:09  roboos
-% only whitespace
-%
-% Revision 1.2  2009/06/03 11:23:46  crimic
-% first implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 
 % get optional input arguments

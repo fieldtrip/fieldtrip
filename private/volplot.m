@@ -24,51 +24,7 @@ function [h, lpa, rpa] = volplot(x, y, z, dat, sel, cscale)
 
 % Copyright (C) 2003, Robert Oostenveld
 % 
-% $Log: volplot.m,v $
-% Revision 1.15  2007/01/04 12:26:11  roboos
-% added linear index of the voxel as selection method
-%
-% Revision 1.14  2006/05/02 19:14:19  roboos
-% default to interactive when only one 3D input
-%
-% Revision 1.13  2004/06/28 07:52:42  roberto
-% fixed some minor bugs, changed crosshair color from black to yello
-%
-% Revision 1.12  2004/01/29 09:14:03  roberto
-% added an interactive mode to localize nas/lpa/rpa
-%
-% Revision 1.11  2004/01/21 12:55:49  roberto
-% added voxel number to printed output, easy find back maximum source
-%
-% Revision 1.10  2004/01/19 14:50:13  roberto
-% added option 'center'
-%
-% Revision 1.9  2004/01/13 09:24:13  roberto
-% added input option for color axis
-%
-% Revision 1.8  2003/11/03 11:42:36  roberto
-% added SUMPROJECT (i.e. glassbrain type of projection)
-% fixed bug with fprintf of uint8
-%
-% Revision 1.7  2003/09/22 10:33:39  roberto
-% added fprintf statement indicating value and position
-%
-% Revision 1.6  2003/09/03 09:53:21  roberto
-% removed automatic scaling of montage display
-%
-% Revision 1.5  2003/04/23 10:20:49  roberto
-% fixed 2 bugs related to 1D input data
-%
-% Revision 1.4  2003/03/24 13:15:04  roberto
-% added support for 1D data (automatically converted to 3D)
-%
-% Revision 1.3  2003/03/21 14:04:31  roberto
-% added axis xy to montage plot
-%
-% Revision 1.2  2003/03/17 10:23:04  roberto
-% added montage display
-% added automatic min/max selection of intersection point
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<2
   dat = x;

@@ -20,14 +20,7 @@ function varargout = interp_gridded(transform, val, pnt, varargin)
 
 % Copyright (C) 2007, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
-% $Log: interp_gridded.m,v $
-% Revision 1.1  2007/05/06 12:07:26  roboos
-% new function, based on old surfaceplot and interp_ungridded
-% this implementation is much faster for sourceplot with method=surface
-%
-% Revision 1.1  2007/02/07 07:42:06  roboos
-% new implementation to be used in teh new sourceplot, mainly based on code from the old surfaceplot
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<3
   error('Not enough input arguments.');

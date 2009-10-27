@@ -8,16 +8,7 @@ function [mri, hdr, cpersist] = read_ctf_mri4(filename);
 
 % Copyright (C) 2008 Ivar Clemens
 %
-% $Log: read_ctf_mri4.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.1  2008/11/28 10:25:05  roboos
-% new implementation by Ivar, based on the version 2 reader
-%
-% Revision 1.1  2008/11/21 13:00:42  ivacle
-% Adapted read_ctf_mri to read the 'new' CTF MRI format
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fid = fopen(filename,'rb', 'ieee-be');
 

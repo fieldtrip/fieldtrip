@@ -16,9 +16,7 @@ function [event] = read_nmc_archive_k_event(eventfile)
 
 % Copyright (C) 2009, Roemer van der Meij
 %
-% $Log: read_nmc_archive_k_event.m,v $
-%
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 
 % Checking events-file:

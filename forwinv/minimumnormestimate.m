@@ -39,30 +39,7 @@ function [dipout] = minimumnormestimate(dip, grad, vol, dat, varargin);
 
 % Copyright (C) 2004-2008, Robert Oostenveld
 % 
-% $Log: minimumnormestimate.m,v $
-% Revision 1.7  2008/04/21 14:50:10  roboos
-% added full literature references to documentation
-%
-% Revision 1.6  2008/03/18 13:18:06  roboos
-% added optional settings for compute_leadfield
-% fixed typo in equation (would have cased Matlab error)
-% updated documentation
-%
-% Revision 1.5  2007/08/07 08:48:21  roboos
-% implemented regularized MNE according to the method described by Dale and Liu
-%
-% Revision 1.4  2006/06/22 12:05:54  roboos
-% changed a comment and a whitespace
-%
-% Revision 1.3  2006/05/10 08:17:30  roboos
-% some changes in comments and documentation
-%
-% Revision 1.2  2005/10/05 06:32:39  roboos
-% minor change in user feedback
-%
-% Revision 1.1  2004/09/21 13:26:49  roboos
-% initial implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % ensure that these are row-vectors
 dip.inside = dip.inside(:)';

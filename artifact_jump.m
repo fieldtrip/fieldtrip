@@ -41,69 +41,7 @@ function [cfg, artifact] = artifact_jump(cfg,data)
 
 % Copyright (c) 2003-2006, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
-% $Log: artifact_jump.m,v $
-% Revision 1.27  2009/10/12 14:26:47  jansch
-% added default for not taking cumulated z-value across channels for artifact
-% identification
-%
-% Revision 1.26  2009/03/10 14:25:59  roboos
-% fixed bug in copying of cfg.continuous to tmpcfg, also keek data and headerformat
-%
-% Revision 1.25  2009/01/20 13:01:31  sashae
-% changed configtracking such that it is only enabled when BOTH explicitly allowed at start
-% of the fieldtrip function AND requested by the user
-% in all other cases configtracking is disabled
-%
-% Revision 1.24  2009/01/14 11:47:07  sashae
-% changed handling of cfg.datatype
-% added call to checkconfig at start and end of function
-%
-% Revision 1.23  2008/12/02 16:35:32  estmee
-% Checkconfig cfg.datatype= forbidden
-%
-% Revision 1.22  2008/11/25 13:16:24  estmee
-% Documentation update
-%
-% Revision 1.21  2008/11/18 16:20:58  estmee
-% Added cfg.continuous
-%
-% Revision 1.20  2008/10/13 13:03:11  sashae
-% added call to checkconfig (as discussed with estmee)
-%
-% Revision 1.19  2008/10/10 15:01:13  estmee
-% Repaired determining artifacts with only cfg as input argument.
-%
-% Revision 1.18  2008/10/07 16:13:44  estmee
-% Added data as second intput argument to artifact_jump itself and the way it calls artifact_zvalue.
-%
-% Revision 1.17  2008/10/07 08:58:51  roboos
-% committed the changes that Esther made recently, related to the support of data as input argument to the artifact detection functions. I hope that this does not break the functions too seriously.
-%
-% Revision 1.16  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.15  2006/11/29 09:06:36  roboos
-% renamed all cfg options with "sgn" into "channel", added backward compatibility when required
-% updated documentation, mainly in the artifact detection routines
-%
-% Revision 1.14  2006/04/25 17:06:28  ingnie
-% updated documentation
-%
-% Revision 1.13  2006/04/20 09:58:33  roboos
-% updated documentation
-%
-% Revision 1.12  2006/02/27 17:01:07  roboos
-% added tmpcfg.dataset, added try-end around copying of headerfile, datafile and dataset
-%
-% Revision 1.11  2006/01/17 14:05:27  roboos
-% do preproc absdiff instead of rectify in combination with derivative, absdiff ensures the right order
-%
-% Revision 1.10  2006/01/12 13:51:38  roboos
-% completely new implementation, all based upon the same artifact_zvalue code
-% all preprocessing is now done consistently and the various paddings have been better defined
-% the functions do not have any explicit support any more for non-continuous data
-% the old artifact_xxx functions from JM have been renamed to xxx_old
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

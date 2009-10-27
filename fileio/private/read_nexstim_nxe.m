@@ -27,28 +27,7 @@ function [dat] = read_nexstim_nxe(filename, begsample, endsample, chanindx)
 %
 % Copyright (C) 2007, Vladimir Litvak
 %
-% $Log: read_nexstim_nxe.m,v $
-% Revision 1.2  2009/02/27 12:42:03  vlalit
-% Fix for a bug spotted by Miriam Klein
-%
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.3  2007/12/17 13:03:52  roboos
-% Vladimir found and fixed some bugs pertaining to the nexstim_nxe format
-%
-% Revision 1.2  2007/12/17 08:42:34  roboos
-% fixed typo
-%
-% Revision 1.1  2007/12/17 08:24:28  roboos
-% added support for nexstim_nxe, thanks to Vladimir
-% the low-level code has not been tested by myself
-% 
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin==1
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

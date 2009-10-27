@@ -22,39 +22,7 @@ function rt_packettimer(cfg)
 %
 % Copyright (C) 2009, Marcel van Gerven
 %
-% $Log: rt_packettimer.m,v $
-% Revision 1.8  2009/04/23 12:50:49  marvger
-% update of the BCI realtime code
-%
-% Revision 1.7  2009/02/27 15:00:57  marvger
-% update
-%
-% Revision 1.6  2009/02/10 12:45:27  marvger
-% changed help
-%
-% Revision 1.5  2009/02/10 12:42:04  marvger
-% showing absolute delay now. works well with maxblocksize = 1 in
-% rt_fileproxy and cfg.blocksize = [0 1] in trialfun_realtime...
-%
-% Revision 1.4  2009/02/04 14:47:30  marvger
-% move from relative to absolute packet timing
-%
-% Revision 1.3  2009/02/04 14:36:16  marvger
-% changed from cputime to tic-toc; save plot added as option
-%
-% Revision 1.2  2009/02/04 14:04:06  marvger
-% changed handling of global variable
-%
-% Revision 1.1  2009/02/03 20:25:37  marvger
-% timing of packets flow in an online setting
-%
-% Revision 1.2  2009/02/03 10:13:40  marvger
-% rt_timer_cpustart is global to force a reset when rt_timer restarts
-%
-% Revision 1.1  2009/02/03 09:28:37  marvger
-% realtime function for timing of packets
-%
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
   if ~isfield(cfg,'bcifun'),    cfg.bcifun = @bcifun_timer; end
   if ~isfield(cfg,'npackets'),  cfg.npackets = 10^2; end

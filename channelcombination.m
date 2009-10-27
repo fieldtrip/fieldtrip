@@ -26,57 +26,7 @@ function [collect] = channelcombination(channelcmb, datachannel, includeauto)
 
 % Copyright (C) 2003-2006, Robert Oostenveld
 %
-% $Log: channelcombination.m,v $
-% Revision 1.16  2009/10/19 13:22:38  jansch
-% added undocumented possibility to append auto-combinations to the list,
-% which is necessary for functionality in connectivityanalysis
-%
-% Revision 1.15  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.14  2006/06/06 16:57:51  ingnie
-% updated documentation
-%
-% Revision 1.13  2006/04/20 09:58:33  roboos
-% updated documentation
-%
-% Revision 1.12  2006/03/06 11:52:52  roboos
-% prevent memory allocation and copying in a for loop, this was the
-% reason for it being tremendously slow for a large number of channel
-% combinations
-%
-% Revision 1.11  2005/09/29 00:46:11  roboos
-% renamed the variable sgncmb into channelcmb, both in the help and code
-%
-% Revision 1.10  2005/05/17 17:50:36  roboos
-% changed all "if" occurences of & and | into && and ||
-% this makes the code more compatible with Octave and also seems to be in closer correspondence with Matlab documentation on shortcircuited evaluation of sequential boolean constructs
-%
-% Revision 1.9  2005/03/18 09:25:50  roboos
-% changed handling of multiple rows of the input selection, each row is now processed separately
-% removed (defunct) planar channel detection
-%
-% Revision 1.8  2004/10/19 10:44:43  roboos
-% fixed bug in planar-gradient channel detection if labels are shorter than 3 chars
-%
-% Revision 1.7  2004/08/26 07:16:11  jansch
-% re-added to CVS-repository.
-%
-% Revision 1.5  2004/01/16 08:28:50  roberto
-% fixed small bug for 'all'
-%
-% Revision 1.4  2004/01/06 12:43:47  roberto
-% redesign by JM
-%
-% Revision 1.3  2003/10/29 09:02:31  roberto
-% fixed bug in varible names, sgncmb vs channel
-%
-% Revision 1.2  2003/10/27 16:24:06  roberto
-% added check for double channel combinations
-%
-% Revision 1.1  2003/10/27 16:02:13  roberto
-% new implementation after an idea by JM
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

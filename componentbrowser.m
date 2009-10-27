@@ -21,28 +21,7 @@ function [varargout] = componentbrowser(cfg, comp)
 
 % Copyright (C) 2009, Giovanni Piantoni
 %
-% $Log: componentbrowser.m,v $
-% Revision 1.3  2009/08/05 08:58:54  roboos
-% changed the order of the input arguments to plot_topo from (val, x, y) into (x, y, val)
-%
-% Revision 1.2  2009/07/29 15:05:41  giopia
-% removed prepare_mask, added << >> buttons, updated help
-%
-% Revision 1.1  2009/07/17 14:25:39  giopia
-% moved to main directory
-%
-% Revision 1.4  2009/07/15 08:38:28  giopia
-% general cleanup, prepare_mask now standalone function
-%
-% Revision 1.3  2009/06/19 15:11:00  giopia
-% allows scroll through components
-%
-% Revision 1.2  2009/06/03 14:00:26  roboos
-% fixed cfg.lay, should be cfg.layout
-%
-% Revision 1.1  2009/06/02 15:48:58  giopia
-% first implementation, plot topoplot, activations and simple interactive
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

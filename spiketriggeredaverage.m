@@ -17,23 +17,7 @@ function [timelock] = spiketriggeredaverage(cfg, data)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: spiketriggeredaverage.m,v $
-% Revision 1.5  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.4  2008/04/09 14:39:22  roboos
-% remove trials without data (too close to trial border) from the output
-%
-% Revision 1.3  2008/04/09 14:20:31  roboos
-% replicate double spikes, for keeptrials
-% give error if spike count >5
-%
-% Revision 1.2  2008/03/18 21:56:56  roboos
-% fixed bug in keeptrials, nans were allocated at the wrong moment
-%
-% Revision 1.1  2008/03/17 15:08:16  roboos
-% new implementation, based on discussion with Thilo about desired functionality replication of spikeanalysis
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

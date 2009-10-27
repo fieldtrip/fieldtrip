@@ -53,51 +53,7 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% $Log: read_ns_cnt.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.10  2008/11/20 12:59:01  roboos
-% correct the number of samples in case of 32 bit file
-%
-% Revision 1.9  2008/11/13 21:20:08  roboos
-% read chars as uint8, this solves problem with i18n (2-byte unicode) and recent matlab versions
-%
-% Revision 1.8  2008/09/30 07:47:04  roboos
-% replaced all occurences of setstr() with char(), because setstr is deprecated by Matlab
-%
-% Revision 1.7  2007/10/31 16:46:13  roboos
-% revert to short format as default
-%
-% Revision 1.6  2007/07/03 16:10:48  roboos
-% added a hack for 32 bit neuroscan format (hdr.nsdf=16|32), this should actually be be done using autodetection
-%
-% Revision 1.5  2005/10/11 08:35:41  roboos
-% close file when only header was read (thanks to Durk)
-% fixed typo in help
-%
-% Revision 1.4  2004/06/28 07:36:53  roberto
-% changed from DOS to UNIX linefeeds, I am not completely sure whether I made other changes as well
-%
-% Revision 1.4  2003/04/10 17:56:09  arno
-% removing debuging message
-%
-% Revision 1.3  2003/04/10 17:50:11  arno
-% adding error message
-%
-% Revision 1.2  2002/10/22 23:53:23  arno
-% fopen ieee-le for Mac
-%
-% Revision 1.1  2002/04/05 17:39:45  jorn
-% Initial revision
-%
-% original function by a.c.james 2000-2001
-% 'blockread' by arno@salk.edu, Arnaud Delorme, CNL / Salk Institute, 2001
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 function r=read_ns_cnt(file, varargin)
 

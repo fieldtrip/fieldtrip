@@ -30,13 +30,7 @@ function [numA, numB, indA, indB] = spikesort(numA, numB, varargin);
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% $Log: spikesort.m,v $
-% Revision 1.2  2007/06/26 11:20:58  roboos
-% fixed bug, do not include trial index in distance computation (2x)
-%
-% Revision 1.1  2007/06/19 07:34:20  roboos
-% first implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 
 % use global flag for debugging

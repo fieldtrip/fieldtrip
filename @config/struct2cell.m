@@ -5,10 +5,7 @@ function c = struct2cell(s)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: struct2cell.m,v $
-% Revision 1.1  2008/12/09 08:49:02  roboos
-% new function
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 c = struct2cell(struct(s));
 

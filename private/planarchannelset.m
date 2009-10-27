@@ -11,28 +11,7 @@ function [planar] = planarchannelset(data);
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 %
-% $Log: planarchannelset.m,v $
-% Revision 1.10  2009/07/29 06:47:55  roboos
-% resolved conflict related to simultaneous changes to the neuromag306alt handling
-%
-% Revision 1.9  2009/07/21 11:55:56  roboos
-% added support for the alternative neuromag306 channel names, changed channel order for neuromag306
-%
-% Revision 1.8  2009/03/23 21:12:20  jansch
-% added support for bti148_planar
-%
-% Revision 1.7  2008/07/16 10:20:14  jansch
-% added support for bti248 system.
-%
-% Revision 1.6  2008/04/09 14:13:07  roboos
-% updated docu
-%
-% Revision 1.5  2006/10/04 15:42:14  roboos
-% renamed megsystem into sensortype, thanks to Juan
-%
-% Revision 1.4  2006/01/30 14:28:47  roboos
-% updated help and copyright
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 switch lower(senstype(data))
   case 'ctf151_planar'

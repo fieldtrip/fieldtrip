@@ -15,24 +15,7 @@ function [x, y] = select_box(handle, eventdata, varargin)
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% $Log: select_box.m,v $
-% Revision 1.6  2009/07/14 13:18:33  roboos
-% updated channel selection, use select_range and two local helper functions, also support multiple selections
-%
-% Revision 1.5  2009/06/04 10:50:50  roboos
-% changed handling of inputs
-%
-% Revision 1.4  2009/06/03 11:21:49  crimic
-% bug fixes
-%
-% Revision 1.3  2009/05/29 15:56:08  roboos
-% added input argument handling for 'multiple', the actual implementation does not support it yet
-%
-% Revision 1.2  2009/04/15 12:34:29  crimic
-% added code of original select2d.m function
-%
-% Revision 1.1  2006/05/17 14:38:09  roboos
-% new implementation
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the optional arguments
 multiple = keyval('multiple', varargin); if isempty(multiple), multiple = false; end

@@ -34,20 +34,7 @@ function [spike] = spikeanalysis(cfg, data);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: spikeanalysis.m,v $
-% Revision 1.4  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.3  2006/04/20 09:58:34  roboos
-% updated documentation
-%
-% Revision 1.2  2006/01/11 12:47:10  jansch
-% implemented option 'rate', which computes either the average rate within each
-% trial, or uses freqanalysis_mtmconvol to estimate a windowed spikerate.
-%
-% Revision 1.1  2005/12/05 10:33:38  roboos
-% new implementation after an idea of Thilo
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

@@ -18,31 +18,7 @@ function [stat, cfg] = clusterstat(cfg, statrnd, statobs);
 
 % Copyright (C) 2005-2007, Robert Oostenveld
 %
-% $Log: clusterstat.m,v $
-% Revision 1.23  2008/09/17 14:03:51  roboos
-% fixed bug for negative critval (thanks to Vladimir)
-% added error message if tail~=clustertail
-%
-% Revision 1.22  2008/05/26 09:23:56  roboos
-% fixed bug in neg and postailcritval concatenation when one was inf and the other a vector
-%
-% Revision 1.21  2008/01/15 09:48:04  roboos
-% added comment, no functional change
-%
-% Revision 1.20  2008/01/15 08:29:59  roboos
-% ensure that the critical values are column vectors
-%
-% Revision 1.19  2007/07/17 10:35:36  roboos
-% treat critical values the same for parametric, nonparametric_common and nonparametric_individual and always return them in the cfg
-%
-% Revision 1.18  2007/06/19 12:52:37  roboos
-% implemented seperate common and individual nonparametric thresholds
-% renamed the option cfg.clusterthreshold=nonparametric into nonparametric_individual, the new option is nonparametric_common
-% updated documentation
-%
-% Revision 1.17  2007/05/30 13:25:46  roboos
-% added log, changed some help
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the defaults
 if ~isfield(cfg,'orderedstats'),   cfg.orderedstats = 'no';    end

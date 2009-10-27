@@ -19,71 +19,7 @@ function [hdr] = read_ctf_res4(fname)
 % modifications Copyright (C) 2002, Ole Jensen
 % modifications Copyright (C) 2003, Robert Oostenveld
 %
-% $Log: read_ctf_res4.m,v $
-% Revision 1.2  2009/05/07 13:25:16  roboos
-% added support for old 64-channel CTF files
-%
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.17  2008/09/30 07:47:04  roboos
-% replaced all occurences of setstr() with char(), because setstr is deprecated by Matlab
-%
-% Revision 1.16  2008/07/24 08:51:43  roboos
-% added the function declaration to the top, which was accidentaly removed by the previous commit
-%
-% Revision 1.15  2008/07/24 07:22:49  roboos
-% replaced fread..char with uint8, solves problem with 16 bit wide characters (thanks to Erick Ortiz)
-%
-% Revision 1.14  2007/03/07 08:58:46  roboos
-% Do not determine the MEG, REF and EEG channels based on the first character of the channel label, removed rowMEG etc from the header. The relevant information is contained in hdr.sensType.
-%
-% Revision 1.13  2006/03/06 09:41:23  roboos
-% changed some |s into ||s
-%
-% Revision 1.12  2005/07/28 15:12:27  roboos
-% fixed bug in hdr.timeVec (thanks to Sanja Kovacevic)
-%
-% Revision 1.11  2005/05/26 09:58:08  roboos
-% removed the construction of grad, that is now done in a separate fieldtrip function (ctf2grad)
-%
-% Revision 1.10  2005/05/24 07:34:37  roboos
-% added sensType to the output header
-%
-% Revision 1.9  2005/05/23 11:20:17  roboos
-% fixed bug for run description which is longer than 256 characters, improved reading of filter information (thanks to Durk Talsma)
-%
-% Revision 1.8  2005/04/27 06:18:21  roboos
-% added support for MEG42RS format, which seems to work (only tested on a single dataset from MIND Institute in Albuquerque, NM, USA)
-%
-% Revision 1.7  2005/02/18 13:16:58  roboos
-% VSM MedTech Ltd. authorised the release of this code in the public domain
-% updated the copyrights, updated the help
-%
-% Revision 1.6  2004/07/02 11:43:32  roboos
-% typographic change in comment
-%
-% Revision 1.5  2004/06/28 07:34:41  roberto
-% added some extra low-level output fields to header, added cm units
-%
-% Revision 1.4  2003/04/01 07:51:53  roberto
-% fixed bug in gradiometer channel labels
-%
-% Revision 1.3  2003/03/28 17:27:27  roberto
-% renamed output gradiometer from gradHC to grad
-%
-% Revision 1.2  2003/03/24 12:34:33  roberto
-% minor changes
-%
-% Revision 1.1  2003/03/13 14:27:09  roberto
-% separated read_ctf_ds into res4-header part and data part
-% restructured the res4 part, using (incorrect) CTF documentation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % read header information

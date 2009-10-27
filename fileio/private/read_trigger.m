@@ -17,52 +17,7 @@ function [event] = read_trigger(filename, varargin)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: read_trigger.m,v $
-% Revision 1.7  2009/05/14 18:53:22  roboos
-% bail out immediately if the data is empty
-%
-% Revision 1.6  2009/02/24 14:25:52  jansch
-% added option fix4dglasgow to take the synchronization trigger with value 8192
-% out of the trigger-data, prior to flank detection
-%
-% Revision 1.5  2009/02/09 13:32:36  roboos
-% only whitespace
-%
-% Revision 1.4  2009/01/23 16:18:15  roboos
-% changed indentation
-%
-% Revision 1.3  2009/01/23 12:22:15  vlalit
-% A fix to avoid an 'almost infinite' loop in case of noisy event channels.
-%
-% Revision 1.2  2009/01/23 10:32:55  vlalit
-% New reader for Neuromag fif format using the MNE toolbox (http://www.nmr.mgh.harvard.edu/martinos/userInfo/data/sofMNE.php)  implemented by Laurence Hunt.
-%
-% Revision 1.1  2009/01/14 09:12:16  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.6  2008/05/20 15:12:50  vlalit
-% Added trigpadding option to handle channels with baseline different from zero
-%
-% Revision 1.5  2008/05/15 18:38:53  vlalit
-% Fixed the problems with discontinuous files and baseline different than zero
-%
-% Revision 1.4  2008/05/13 16:48:24  roboos
-% added option trigshift (default = 0) for cases where the trigger value should be assigned from a sample not directly after/before the upgoing/downgoing flank
-%
-% Revision 1.3  2008/05/08 18:32:45  vlalit
-% Fixed a bug
-%
-% Revision 1.2  2008/04/29 14:54:39  roboos
-% explicit specification of begsample and endsample, otherwise event.sample remains empty
-%
-% Revision 1.1  2008/04/29 13:53:50  roboos
-% new implementation, works for ctf, bti and neuromag
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 event = [];
 

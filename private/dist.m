@@ -11,10 +11,7 @@ function [d] = dist(x);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: dist.m,v $
-% Revision 1.1  2005/05/26 07:31:54  roboos
-% new implementation to replace Neural Networks version (required by createlayout)
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 n = size(x,2);
 d = zeros(n,n);

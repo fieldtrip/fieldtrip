@@ -15,41 +15,7 @@ function bnd = prepare_mesh_manual(cfg, mri)
 
 % Copyrights (C) 2009, Cristiano Micheli & Robert Oostenveld
 %
-% $Log: prepare_mesh_manual.m,v $
-% Revision 1.10  2009/08/31 11:13:45  crimic
-% minibug fix
-%
-% Revision 1.9  2009/08/27 16:12:13  crimic
-% minibug fix
-%
-% Revision 1.8  2009/07/13 14:43:05  crimic
-% inserted spherical harmonics sub-functions
-%
-% Revision 1.7  2009/06/30 11:45:38  roboos
-% renamed select_point2d function call
-%
-% Revision 1.6  2009/06/26 14:33:28  crimic
-% added mesh smoothing option and subfunctions
-%
-% Revision 1.5  2009/06/26 13:06:21  crimic
-% point delete function implemented
-%
-% Revision 1.4  2009/06/17 13:37:11  roboos
-% used autoindentation to clean up whitespace
-%
-% Revision 1.3  2009/06/03 11:29:59  crimic
-% small fixes
-%
-% Revision 1.2  2009/06/03 10:36:29  crimic
-% changes of layout and small fixes
-%
-% Revision 1.1  2009/05/06 16:09:17  roboos
-% renamed gui_mesh into prepare_mesh_manual and moved to private
-% some cleanup of the code
-%
-% Revision 1.1  2009/05/06 13:55:37  crimic
-% First implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % FIXME: control slice's cmap referred to abs values
 % FIXME: clean structure slicedata

@@ -6,10 +6,7 @@ function [vol] = yokogawa2vol(hdr);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: yokogawa2vol.m,v $
-% Revision 1.1  2005/09/06 08:54:30  roboos
-% new implementations for the Yokogawa 160 channel MEG system
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % hdr = read_yokogawa_header(filename);
 hdr = hdr.orig; % use the original Yokogawa header, not the FieldTrip header

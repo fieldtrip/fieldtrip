@@ -34,42 +34,7 @@ function [stat] = timelockstatistics(cfg, varargin)
 
 % Copyright (C) 2005-2006, Robert Oostenveld
 %
-% $Log: timelockstatistics.m,v $
-% Revision 1.25  2009/04/08 15:57:08  roboos
-% moved the handling of the output cfg (with all history details) from wrapper to main function
-%
-% Revision 1.24  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.23  2007/05/10 10:18:39  ingnie
-% disabled checkinput for the time being, since timelock data can contain stat/zvalue/tvalue instead of an avg
-%
-% Revision 1.22  2007/04/03 15:37:07  roboos
-% renamed the checkinput function to checkdata
-%
-% Revision 1.21  2007/03/30 17:05:40  ingnie
-% checkinput; only proceed when input data is allowed datatype
-%
-% Revision 1.20  2007/03/27 15:19:14  erimar
-% Updated help (replaced "p-value" by "significance probability".
-%
-% Revision 1.19  2006/11/27 15:38:20  roboos
-% implemented support for cfg.parameter, by locally renaming the field in the data structure
-%
-% Revision 1.18  2006/10/19 15:05:51  roboos
-% updated documentation
-%
-% Revision 1.17  2006/10/04 07:10:08  roboos
-% updated documentation
-%
-% Revision 1.16  2006/07/12 09:18:17  roboos
-% improved documentation
-%
-% Revision 1.15  2006/06/20 12:57:51  roboos
-% updated documentation, removed support for Jens' old options
-%
-% Revision 1.14  2006/06/13 14:48:12  ingnie
-% updated documentation
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

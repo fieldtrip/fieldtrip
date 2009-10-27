@@ -20,19 +20,7 @@ function [adfreq, n, ts, fn, d] = nex_cont(filename, varname)
 % original from Plexon, download from http://www.plexoninc.com (8/4/02)
 % modifications by Robert Oostenveld
 %
-% $Log: nex_cont.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.3  2008/09/30 07:47:04  roboos
-% replaced all occurences of setstr() with char(), because setstr is deprecated by Matlab
-%
-% Revision 1.2  2008/07/24 12:03:23  roboos
-% changed end of line to unix style
-%
-% Revision 1.1  2005/02/11 07:46:34  roboos
-% downloaded from Plexon website, added support for reading nex files on Solaris and Mac OS X (fopen ieee-le), added log-section to the comments after the help
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 n = 0;
 adfreq = 0;

@@ -21,49 +21,7 @@ function [dat] = read_neuralynx_sdma(dataset, begsample, endsample, chanindx);
 
 % Copyright (C) 2006-2008, Robert Oostenveld
 %
-% $Log: read_neuralynx_sdma.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.10  2008/12/15 15:07:04  roboos
-% updated documentation
-%
-% Revision 1.9  2008/07/01 13:36:41  roboos
-% only whitespace
-%
-% Revision 1.8  2008/07/01 13:02:33  roboos
-% optionally read the 16384 byte ascii header (if present as txt file)
-% remember channel specific header details in hdr.orig.chan and general details in hdr.orig.dataset
-%
-% Revision 1.7  2008/05/27 13:03:00  roboos
-% remember the original header details
-%
-% Revision 1.6  2007/12/17 16:29:43  roboos
-% switched to read_neuralynx_bin for reading the file content, thereby adding support for int16 etc.
-% changed handling fo files in directory, be more explicit on which file is used where
-% changed reading of timestamps
-%
-% Revision 1.5  2007/02/21 09:57:13  roboos
-% fixed bug in TimeStampsPerSample (should be divided by nsamples-1)
-% implemented re-ordering of channel names (i.e. not on ascii-order) to match the channel ordering to the original unspiltted DMA file
-%
-% Revision 1.4  2007/01/09 09:42:29  roboos
-% read low and high timestamp as uint32, use subfunction to combine them into a uint64
-%
-% Revision 1.3  2006/12/12 11:39:57  roboos
-% cleaned up code, changed handling of channel names (now based on file extension), directory listing determines channel ordering
-%
-% Revision 1.2  2006/12/04 20:26:02  roboos
-% change in whitespace
-%
-% Revision 1.1  2006/04/24 12:21:14  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 needhdr = (nargin==1);
 needdat = (nargin>=2);

@@ -41,49 +41,7 @@ function [mri] = volumerealign(cfg, mri);
 
 % Copyright (C) 2006-2009, Robert Oostenveld
 %
-% $Log: volumerealign.m,v $
-% Revision 1.12  2009/07/31 13:43:36  jansch
-% now really fixed a bug (unlike last time)
-%
-% Revision 1.11  2009/07/30 14:22:00  jansch
-% fixed bug in input arguments for volplot
-%
-% Revision 1.10  2009/07/29 13:53:49  roboos
-% added cfg.clim for color scaling, thanks to Hanneke
-%
-% Revision 2    2009/07/29 13:00:00 hanvdij
-% Added colorscaling option in the volplot function at the end of this
-% script.
-%
-% Revision 1.9  2009/01/20 13:01:31  sashae
-% changed configtracking such that it is only enabled when BOTH explicitly allowed at start
-% of the fieldtrip function AND requested by the user
-% in all other cases configtracking is disabled
-%
-% Revision 1.8  2008/11/21 13:56:12  sashae
-% added call to checkconfig at start and end of function
-%
-% Revision 1.7  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.6  2007/05/02 15:22:37  roboos
-% cfg.parameter should never be a cell
-%
-% Revision 1.5  2007/04/03 15:37:07  roboos
-% renamed the checkinput function to checkdata
-%
-% Revision 1.4  2007/03/30 17:05:40  ingnie
-% checkinput; only proceed when input data is allowed datatype
-%
-% Revision 1.3  2006/10/10 16:21:10  roboos
-% fixed bug in default setting for method
-%
-% Revision 1.2  2006/10/10 13:38:31  roboos
-% added some help, thanks to Till
-%
-% Revision 1.1  2006/10/10 10:25:59  roboos
-% new impementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

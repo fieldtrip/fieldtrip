@@ -5,16 +5,7 @@ function uilayout(h, varargin)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% $Log: uilayout.m,v $
-% Revision 1.3  2009/08/04 12:42:34  ingnie
-% fixed typo
-%
-% Revision 1.2  2009/08/04 12:29:29  ingnie
-% fixed small typo
-%
-% Revision 1.1  2009/08/04 11:57:47  roboos
-% implemented helper function for consistent setting of uicontrol details and for consistent and/or automatic layouting
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % these are used to make a selection of uicontrol elements
 tag    = keyval('tag', varargin{:});

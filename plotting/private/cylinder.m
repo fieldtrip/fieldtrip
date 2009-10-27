@@ -6,13 +6,7 @@ function [pnt, dhk] = cylinder(Naz, Nel);
 
 % Copyright (C) 2002, Robert Oostenveld
 %
-% $Log: cylinder.m,v $
-% Revision 1.3  2003/03/11 15:35:19  roberto
-% converted all files from DOS to UNIX
-%
-% Revision 1.2  2003/03/04 21:46:18  roberto
-% added CVS log entry and synchronized all copyright labels
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 az = (2*pi*(0:(Naz-1))/Naz)';
 el = (linspace(-1,1,Nel))';

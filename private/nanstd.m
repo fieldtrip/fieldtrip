@@ -22,22 +22,7 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% $Log: nanstd.m,v $
-% Revision 1.2  2006/08/19 12:27:02  marsie
-% fixed bug: crashed with empty flag
-%
-% Revision 1.1  2006/03/20 14:36:46  jansch
-% adjusted the nan_XXX functions in fieldtrip's private directory such that the
-% corresponding functions behave consistently with the identical matlab-functions,
-% not using the stats toolbox. original private functions are renamed from nan_XXX
-% into nanXXX (also consistent with matlab terminology)
-%
-% Revision 1.1  2005/04/08 06:53:00  roboos
-% originates from EEGLAB, goes together with nan_mean
-%
-% Revision 1.1  2003/09/04 00:57:11  arno
-% Initial revision
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 function out = nanstd(in, varargin)
    

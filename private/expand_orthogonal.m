@@ -33,15 +33,7 @@ function [B] = expand_orthogonal(A,flg,method)
 % Copyright (C) 2007, Christian Hesse
 % F.C. Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
-% $Log: expand_orthogonal.m,v $
-% Revision 1.2  2007/03/05 15:29:10  chrhes
-% added new (default) option to compute the orthogonal basis expansion using
-% singular value decomposition instead of the Gram-Schmidt method (which can
-% still be specified); updated the function declaration and documentation.
-%
-% Revision 1.1  2007/03/05 14:08:02  chrhes
-% initial version of this code added to FieldTrip
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 
 % References:

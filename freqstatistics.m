@@ -38,65 +38,7 @@ function [stat] = freqstatistics(cfg, varargin)
 
 % Copyright (C) 2005-2006, Robert Oostenveld
 %
-% $Log: freqstatistics.m,v $
-% Revision 1.23  2009/10/07 10:03:30  jansch
-% temporary workaround to work with private copy statistics_wrapperJM, in order
-% to develop some code. users whose (part of their) username contains 'jan'
-% will run into problems, and have to uncomment lines 140, 143-145
-%
-% Revision 1.22  2009/04/08 15:57:08  roboos
-% moved the handling of the output cfg (with all history details) from wrapper to main function
-%
-% Revision 1.21  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.20  2007/07/16 16:02:13  roboos
-% fixed small bug for cfg.parameter
-%
-% Revision 1.19  2007/07/04 08:21:02  roboos
-% remove cross/coherence spectrum in case cfg.parameter=powspctrm
-%
-% Revision 1.18  2007/06/13 06:19:40  roboos
-% fixed bug in strcmp(cfg.parameter, ...), thanks to Vladimir
-%
-% Revision 1.17  2007/05/14 08:28:05  roboos
-% changed handling of non-powspctrm input, also support cohspctrm
-%
-% Revision 1.16  2007/04/03 15:37:07  roboos
-% renamed the checkinput function to checkdata
-%
-% Revision 1.15  2007/04/02 14:33:44  roboos
-% disabled checkinput for the time being, since freq data can contain stat/zvalue/tvalue instead of powsptrm
-%
-% Revision 1.14  2007/03/30 17:05:40  ingnie
-% checkinput; only proceed when input data is allowed datatype
-%
-% Revision 1.13  2007/03/27 15:20:50  erimar
-% Updated help (replaced "p-value" by "significance probability").
-%
-% Revision 1.12  2007/01/17 13:23:35  roboos
-% added bug report, no functional change
-%
-% Revision 1.11  2006/11/27 15:38:20  roboos
-% implemented support for cfg.parameter, by locally renaming the field in the data structure
-%
-% Revision 1.10  2006/10/19 15:05:51  roboos
-% updated documentation
-%
-% Revision 1.9  2006/10/04 07:10:07  roboos
-% updated documentation
-%
-% Revision 1.8  2006/07/12 09:18:17  roboos
-% improved documentation
-%
-% Revision 1.7  2006/06/20 16:25:58  ingnie
-% updated documentation
-%
-% Revision 1.6  2006/06/20 12:57:26  roboos
-% updated documentation
-%
-% Revision 1.5  2006/06/13 14:48:09  ingnie
-% updated documentation
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

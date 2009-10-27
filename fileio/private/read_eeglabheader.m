@@ -29,36 +29,7 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% $Log: read_eeglabheader.m,v $
-% Revision 1.6  2009/08/08 04:07:02  josdie
-% Bug in Joe's brain fixed.  Change to header.nSamplesPre calculation changed back.
-%
-% Revision 1.5  2009/08/08 03:17:26  josdie
-% Fixed bug that was causing hdr.label to have as many labels as there are time points rather than matching the number of channels.
-%
-% Revision 1.4  2009/08/08 03:05:29  josdie
-% Fixed bug in calculation of header.nSamplesPre.
-%
-% Revision 1.3  2009/07/01 16:08:21  vlalit
-% Fixing a bug in converting channel locations to elec struct (reproted by Jakib Scherer)
-%
-% Revision 1.2  2009/01/23 15:35:46  roboos
-% create default channel names if EEG.chanlocs.labels is missing
-%
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.2  2008/04/21 18:45:59  roboos
-% fixed bug, ori should be orig
-%
-% Revision 1.1  2008/04/18 14:04:48  roboos
-% new implementation by Arno, shoudl be tested
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 function header = read_eeglabheader(filename)
 

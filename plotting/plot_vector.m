@@ -29,35 +29,7 @@ function [varargout] = plot_vector(varargin)
 
 % Copyrights (C) 2009, Robert Oostenveld
 %
-% $Log: plot_vector.m,v $
-% Revision 1.11  2009/10/18 11:43:27  ingnie
-% added option Color
-%
-% Revision 1.10  2009/07/30 09:13:58  ingnie
-% fixed bug in determining if function was called as plot(x,y,...) or plot(y,...)
-%
-% Revision 1.9  2009/07/14 16:14:45  roboos
-% fixed the plotting of the axes, which were not at [0, 0]
-% some general cleanup
-%
-% Revision 1.8  2009/06/04 13:11:54  crimic
-% added highlight option
-%
-% Revision 1.7  2009/06/02 15:42:52  giopia
-% correct error in first if-statement and added varargout for handle
-%
-% Revision 1.6  2009/04/15 20:00:45  roboos
-% small change in input parsing
-%
-% Revision 1.5  2009/04/14 19:48:28  roboos
-% added keyvalcheck
-%
-% Revision 1.4  2009/04/14 18:55:51  roboos
-% changed the handling of the input arguments for a closer resemblance to plot()
-%
-% Revision 1.3  2009/04/14 14:31:08  roboos
-% many small changes to make it fully functional
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 holdflag = ishold;
 hold on

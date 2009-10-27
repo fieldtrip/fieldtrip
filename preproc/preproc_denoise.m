@@ -18,10 +18,7 @@ function [dat, w] = preproc_denoise(dat, refdat, hilbertflag)
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 %
-% $Log: preproc_denoise.m,v $
-% Revision 1.1  2009/03/13 13:32:50  jansch
-% first commitment into cvs
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<3,
   hilbertflag = 0;

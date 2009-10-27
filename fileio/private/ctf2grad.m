@@ -13,52 +13,7 @@ function [grad] = ctf2grad(hdr, dewar);
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% $Log: ctf2grad.m,v $
-% Revision 1.4  2009/08/05 08:36:57  roboos
-% preallocate the memory that will hold the coil positions, orientations and weights -> significant speedup
-%
-% Revision 1.3  2009/03/23 21:16:03  roboos
-% don't give error if balancing fails, but only warning and remove the balancing information
-%
-% Revision 1.2  2009/02/04 13:29:03  roboos
-% deal with missing BalanceCoefs in the file using try-catch and isfield (e.g. ArtifactMEG.ds)
-%
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.6  2008/06/26 15:32:19  roboos
-% balancing shoudl be subtracted from orig channel, hence added minus sign
-%
-% Revision 1.5  2008/05/20 12:24:14  roboos
-% apply optional balancing to grad.tra
-%
-% Revision 1.4  2008/05/15 15:11:40  roboos
-% add balancing coefficients to the gradiometer definition
-%
-% Revision 1.3  2008/05/15 13:21:13  roboos
-% merged nihm impleemntation into this function
-% added new implementation based on CTF p-files
-%
-% Revision 1.2  2007/03/07 08:57:32  roboos
-% use the numeric sensor type for MEG and REF instead of hdr.rowMEG and hdr.rowREF
-%
-% Revision 1.1  2006/08/31 13:32:11  roboos
-% moved from fieldtrip to fileio module
-%
-% Revision 1.2  2005/06/01 07:59:37  roboos
-% added second argument which optionally causes the gradient information to be returend in dewar coordinates
-%
-% Revision 1.1  2005/05/26 09:55:17  roboos
-% renamed the fileio/ctf_grad function to ctf2grad and moved it into fieldtrip/private for consistency with other gradiometer construction functions (nimh2grad and fif2grad)
-%
-% Revision 1.1  2004/07/02 11:33:47  roboos
-% new function that creates a more complete gradiometer definition from the res4 header (compared to read_ctf_res4)
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % My preferred ordering in the grad structure is:
 %   1st 151 coils are bottom coils of MEG channels

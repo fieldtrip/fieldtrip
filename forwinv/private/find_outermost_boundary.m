@@ -12,10 +12,7 @@ function [outermost, inside] = find_outermost_boundary(bnd)
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% $Log: find_outermost_boundary.m,v $
-% Revision 1.2  2003/03/04 21:46:18  roberto
-% added CVS log entry and synchronized all copyright labels
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 ncmp = length(bnd);
 

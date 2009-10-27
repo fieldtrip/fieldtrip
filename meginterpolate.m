@@ -4,13 +4,7 @@ function [data] = meginterpolate(cfg, data)
 
 % Copyright (C) 2003-2006, Robert Oostenveld, F.C. Donders Centre
 %
-% $Log: meginterpolate.m,v $
-% Revision 1.22  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.21  2006/10/03 12:59:39  roboos
-% updated documentation, explicitely state that it is deprecated, give warnings
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

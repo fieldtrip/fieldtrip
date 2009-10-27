@@ -66,77 +66,7 @@ function [cfg, artifact] = artifact_zvalue(cfg,data)
 
 % Copyright (c) 2003-2005, Jan-Mathijs Schoffelen, Robert Oostenveld
 %
-% $Log: artifact_zvalue.m,v $
-% Revision 1.21  2009/09/30 12:46:11  jansch
-% Took out the loop over signals generally leading to a decent speed-up
-%
-% Revision 1.20  2009/03/19 10:53:51  roboos
-% some cocde cleanup and whitespace, no functional change
-%
-% Revision 1.19  2009/03/18 10:09:00  jansch
-% built in possibility to do thresholding based on the max across channels,
-% rather than on the accumulated value across channels. this is the default
-% for jump artifact detection, and more sensitive
-%
-% Revision 1.18  2008/12/02 16:34:20  estmee
-% Set default cfg.continuous (hdr needed)
-%
-% Revision 1.17  2008/11/18 16:16:49  estmee
-% Added cfg.continuous
-%
-% Revision 1.16  2008/10/13 13:03:11  sashae
-% added call to checkconfig (as discussed with estmee)
-%
-% Revision 1.15  2008/10/07 16:20:15  estmee
-% Added data as second input argument to artifact_zvalue, changed the output of preproc from data in dat and changed data in dat in the rest of the function.
-%
-% Revision 1.14  2008/10/07 08:58:51  roboos
-% committed the changes that Esther made recently, related to the support of data as input argument to the artifact detection functions. I hope that this does not break the functions too seriously.
-%
-% Revision 1.13  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.12  2008/05/13 15:37:24  roboos
-% switched to using read_data/header instead of the read_fcdc_data/header wrapper functions
-%
-% Revision 1.11  2006/11/29 16:14:15  roboos
-% fixed a bug introduced by the previous commit, hope that everything works now...
-%
-% Revision 1.10  2006/11/29 11:52:27  roboos
-% also fixed two forgotten references to sgn
-%
-% Revision 1.9  2006/11/29 11:51:29  roboos
-% fixed typo
-%
-% Revision 1.8  2006/11/29 09:06:36  roboos
-% renamed all cfg options with "sgn" into "channel", added backward compatibility when required
-% updated documentation, mainly in the artifact detection routines
-%
-% Revision 1.7  2006/06/14 12:43:53  roboos
-% removed the documentation for cfg.lnfilttype, since that option is not supported by preproc
-%
-% Revision 1.6  2006/05/02 19:21:57  roboos
-% removed smartinput subfunction, which is now a seperate function
-%
-% Revision 1.5  2006/04/25 17:06:28  ingnie
-% updated documentation
-%
-% Revision 1.4  2006/02/28 08:16:30  roboos
-% added fprintf statement with number of artifacts detected
-%
-% Revision 1.3  2006/01/30 14:08:08  jansch
-% added -inf to initialization of zmax-vector, for some obscure situations, in
-% which initialization with zeros would crash.
-%
-% Revision 1.2  2006/01/13 11:03:05  roboos
-% do not take absolute value of z-values prior to accumulating
-%
-% Revision 1.1  2006/01/12 13:51:38  roboos
-% completely new implementation, all based upon the same artifact_zvalue code
-% all preprocessing is now done consistently and the various paddings have been better defined
-% the functions do not have any explicit support any more for non-continuous data
-% the old artifact_xxx functions from JM have been renamed to xxx_old
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

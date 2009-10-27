@@ -14,34 +14,7 @@ function [x, ut] = svdfft(f, n, trltapcnt);
 
 % Copyright (C) 2005-2007, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
-% $Log: svdfft.m,v $
-% Revision 1.8  2008/04/21 14:32:38  jansch
-% added the option to output a variable number of components, explaining n%
-% of the variance.
-%
-% Revision 1.7  2007/01/17 17:04:43  roboos
-% added a space, changed year
-%
-% Revision 1.6  2007/01/04 15:27:38  roboos
-% updated documentation
-%
-% Revision 1.5  2006/05/08 09:00:19  roboos
-% also return the rotation that is applied to the data
-%
-% Revision 1.4  2006/04/11 13:05:08  jansch
-% fixed bug in loopvariable
-%
-% Revision 1.3  2006/03/24 14:56:41  jansch
-% fixed typo
-%
-% Revision 1.2  2006/03/24 14:37:22  jansch
-% included the option to equally weigh the trials in the case of unequal trial
-% lengths. this needs an optional input argument trltapcnt. note that the output
-% still contains the single taper estimates
-%
-% Revision 1.1  2005/09/09 08:20:47  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin == 1,
   n         = size(f,1);

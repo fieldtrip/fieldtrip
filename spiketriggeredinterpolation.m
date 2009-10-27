@@ -28,13 +28,7 @@ function [data] = spiketriggeredinterpolation(cfg, data)
 
 % Copyright (C) 2008, Thilo Womelsdorf
 %
-% $Log: spiketriggeredinterpolation.m,v $
-% Revision 1.2  2008/09/24 08:04:50  roboos
-% added example output, fixed some bugs
-%
-% Revision 1.1  2008/09/18 09:50:36  roboos
-% new implementation, thanks to Thilo
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the defaults
 if ~isfield(cfg, 'timwin'),         cfg.timwin = [-0.001 0.002];    end

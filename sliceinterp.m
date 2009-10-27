@@ -83,54 +83,7 @@ function [outim]=sliceinterp(cfg, ininterp)
 
 % Copyright (C) 2004, Markus Siegel, markus.siegel@fcdonders.kun.nl
 %
-% $Log: sliceinterp.m,v $
-% Revision 1.15  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.14  2007/04/03 15:37:07  roboos
-% renamed the checkinput function to checkdata
-%
-% Revision 1.13  2007/03/30 17:05:40  ingnie
-% checkinput; only proceed when input data is allowed datatype
-%
-% Revision 1.12  2006/09/13 06:46:13  roboos
-% ensure that functional and mask data are double (problem if one is logical)
-%
-% Revision 1.11  2006/05/31 07:07:15  roboos
-% updated documentation
-%
-% Revision 1.10  2006/01/05 13:28:43  roboos
-% changed parameterselection subfunction, select the first element from the cell-array
-%
-% Revision 1.9  2005/09/02 10:16:11  roboos
-% fixed 3D reshape of functional data, which accidentaly broke in yesterdays change
-% changed getfield to getsubfield for cfg.maskparameter
-%
-% Revision 1.8  2005/09/01 09:48:44  roboos
-% switched to using parameterselection subfunction
-%
-% Revision 1.7  2005/05/17 17:50:38  roboos
-% changed all "if" occurences of & and | into && and ||
-% this makes the code more compatible with Octave and also seems to be in closer correspondence with Matlab documentation on shortcircuited evaluation of sequential boolean constructs
-%
-% Revision 1.6  2005/02/08 13:54:11  roboos
-% added 3D reshape around functional, anatomical and mask volume
-%
-% Revision 1.5  2005/02/08 12:25:29  roboos
-% changed handling of subfields to obtain functional data
-%
-% Revision 1.4  2004/10/19 11:58:41  roboos
-% added support for a string as cfg.colormap
-%
-% Revision 1.3  2004/08/31 10:03:56  roboos
-% added support for new volume layout of source, with source.avg.pow etc.
-%
-% Revision 1.2  2004/08/25 16:31:41  marsie
-% initial CVS commit
-% - default of cfg.whitebg is set to 'yes'
-% - bugfix for cfg.colormap
-% - reformatted help
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

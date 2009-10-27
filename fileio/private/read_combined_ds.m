@@ -8,13 +8,7 @@ function [dat] = read_combined_ds(dirname, hdr, begsample, endsample, chanindx)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: read_combined_ds.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.1  2008/07/01 16:23:02  roboos
-% added read_combined_data (new implementation)
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 needhdr = nargin==1 || isempty(hdr);
 needdat = nargin>1;

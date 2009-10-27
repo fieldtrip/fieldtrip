@@ -16,10 +16,7 @@ function M=dimassign(A,dim,idx,B);
 
 % Copyright (C) 2005, Geerten Kramer
 %
-% $Log: dimassign.m,v $
-% Revision 1.1  2005/10/04 12:39:46  geekra
-% Initial implementation.
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if(~iscell(idx))
 	if(~any(size(dim)==1)||~any(size(idx)==1)||ndims(dim)>2||ndims(idx)>2||...

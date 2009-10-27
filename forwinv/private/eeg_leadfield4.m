@@ -22,33 +22,7 @@ function [lf, vol] = eeg_leadfield4(R, elc, vol)
 % the original reference is
 %  Cuffin BN, Cohen D. Comparison of the magnetoencephalogram and electroencephalogram. Electroencephalogr Clin Neurophysiol. 1979 Aug;47(2):132-46. 
 %
-% $Log: eeg_leadfield4.m,v $
-% Revision 1.1  2009/01/21 10:32:38  roboos
-% moved from forwinv/* and forwinv/mex/* directory to forwinv/private/* to make the CVS layout consistent with the release version
-%
-% Revision 1.8  2008/12/24 13:33:27  roboos
-% changed some & and | into && and ||
-%
-% Revision 1.7  2006/05/01 08:13:51  roboos
-% fixed literature reference
-%
-% Revision 1.6  2003/12/05 09:48:45  roberto
-% disabled error check for dipole outside brain [for EEGLAB]
-%
-% Revision 1.5  2003/12/04 10:43:51  roberto
-% added error when dipole is outside brain compartment
-%
-% Revision 1.4  2003/07/29 16:04:55  roberto
-% fixed bug in determining whether electrodes are lying on sphere surface
-%
-% Revision 1.3  2003/07/29 15:52:44  roberto
-% fixed a bug in the implementation of eeg_leadfield4, caused by mixing the constants of
-% lutkenhoner and cuffin
-% furthermore multiple cosmetic changes and default projection of electrodes to sphere
-%
-% Revision 1.2  2003/03/11 14:45:36  roberto
-% updated help and copyrights
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % sort the spheres from the smallest to the largest
 [vol.r, indx] = sort(vol.r);

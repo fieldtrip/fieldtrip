@@ -13,24 +13,7 @@ function [grid] = source2grid(source)
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% $Log: source2grid.m,v $
-% Revision 1.5  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.4  2008/07/25 07:03:15  roboos
-% xgrid/ygrid/zgrid and dim do not always have to be present, hence made them optional
-%
-% Revision 1.3  2006/05/17 08:41:18  roboos
-% also keep the filters if present
-%
-% Revision 1.2  2004/09/01 17:59:28  roboos
-% added copyright statements to all filed
-% added cfg.version to all functions that give configuration in their output
-% added cfg.previous to all functions with input data containing configuration details
-%
-% Revision 1.1  2004/08/03 09:06:19  roboos
-% initial implementation of these helper functions for beamformer sourceanalysis
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

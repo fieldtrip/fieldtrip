@@ -32,27 +32,7 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% $Log: read_eeglabevent.m,v $
-% Revision 1.4  2009/08/29 05:11:31  josdie
-% After consultation with Arno, changed so that value (when present) and type fields in EEGlab .set files are treated as being reversed from value and type fields in FieldTrip files.
-%
-% Revision 1.3  2009/08/09 01:45:24  josdie
-% Changed event value to equal EEGlab's event value rather than type.
-%
-% Revision 1.2  2009/02/02 20:45:34  josdie
-% FieldTrip's .value field now set to EEGlab's .type field.  FieldTrip's .type field set to 'trigger'.  FieldTrip's .duration field set to 0 rather than empty.
-%
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.1  2008/04/18 14:04:48  roboos
-% new implementation by Arno, shoudl be tested
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 function event = read_eeglabevent(filename, varargin)
 

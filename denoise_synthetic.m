@@ -14,33 +14,7 @@ function [data] = denoise_synthetic(cfg, data);
 
 % Copyright (C) 2004-2008, Robert Oostenveld
 %
-% $Log: denoise_synthetic.m,v $
-% Revision 1.8  2009/07/08 07:20:48  roboos
-% allow for arbitrary balancing and not only a small hardcoded list
-%
-% Revision 1.7  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.6  2008/06/26 16:09:15  roboos
-% added trial selection
-% added check on ctf input
-% try to keep channel ordering identical
-%
-% Revision 1.5  2008/05/21 19:39:56  roboos
-% small fix in documentation
-%
-% Revision 1.4  2008/05/21 10:24:41  roboos
-% fixed input error for checkdata
-%
-% Revision 1.3  2008/05/20 11:54:07  roboos
-% fixed typo, new should be data
-%
-% Revision 1.2  2008/05/15 15:07:46  roboos
-% complete rewrite, initial implementation using apply_montage helper function
-%
-% Revision 1.1  2008/05/15 09:52:05  roboos
-% renamed function syntheticgradient to denoise_synthetic
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

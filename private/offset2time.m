@@ -17,16 +17,7 @@ function time = offset2time(offset, fsample, nsamples);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: offset2time.m,v $
-% Revision 1.2  2009/02/06 10:10:47  roboos
-% convert nsamples and offset to double precision
-%
-% Revision 1.1  2008/11/20 13:48:47  roboos
-% moved from private to public
-%
-% Revision 1.2  2005/08/05 09:19:00  roboos
-% added copyright and cvs log
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % ensure that these are not integers
 offset   = double(offset);

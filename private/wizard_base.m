@@ -8,15 +8,7 @@ function h = wizard_gui(filename)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% $Log: wizard_base.m,v $
-% Revision 1.1  2007/05/14 08:31:51  roboos
-% renamed wizard_gui to wizard_base
-% added "skip to next step" function (only with key-press)
-% changed fonts
-%
-% Revision 1.1  2007/05/10 09:06:29  roboos
-% initial version
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % create a new figure
 h = figure('Name','Wizard',...

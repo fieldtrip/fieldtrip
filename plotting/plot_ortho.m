@@ -36,13 +36,7 @@ function fiducial=plot_ortho(data)
 %
 % Copyright (C) 2009, Cristiano Micheli 
 %
-% $Log: plot_ortho.m,v $
-% Revision 1.3  2009/04/21 13:24:13  crimic
-% modified help
-%
-% Revision 1.2  2009/04/20 11:22:51  crimic
-% first implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the optional input arguments
 location            = keyval('location',  varargin); if isempty(location),location='auto';end

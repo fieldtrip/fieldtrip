@@ -6,13 +6,7 @@ function bnd = prepare_mesh_headshape(cfg)
 
 % Copyrights (C) 2009, Robert Oostenveld
 %
-% $Log: prepare_mesh_headshape.m,v $
-% Revision 1.2  2009/09/09 14:34:55  roboos
-% fixed bug in case the input consisted of multiple boundaries
-%
-% Revision 1.1  2009/07/13 14:45:06  crimic
-% copy code of existin funtions into stand-alone functions for inclusion in the prepare_mesh helper function
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the surface describing the head shape
 if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')

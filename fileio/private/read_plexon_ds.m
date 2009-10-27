@@ -12,13 +12,7 @@ function [dat] = read_plexon_ds(dirname, hdr, begsample, endsample, chanindx)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% $Log: read_plexon_ds.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.1  2007/03/21 16:58:51  roboos
-% first implementation only for continuous plexon_nex, based on the skeleton from read_neuralynx_ds
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 needhdr = (nargin==1);
 needdat = (nargin>=2);

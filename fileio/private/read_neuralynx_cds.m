@@ -8,18 +8,7 @@ function [dat] = read_neuralynx_cds(filename, hdr, begsample, endsample, chanind
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% $Log: read_neuralynx_cds.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.1  2006/12/13 15:45:57  roboos
-% new implementation, partially based on the old read_neuralynx_data and header function, but now more strongly relying on the xxx_ds function that reads header and data information from all datasets that are combined
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 needhdr = (nargin==1);
 needdat = (nargin>=2);

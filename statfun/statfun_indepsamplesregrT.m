@@ -31,33 +31,7 @@ function [s,cfg] = statfun_indepsamplesregrT(cfg, dat, design);
 
 % Copyright (C) 2006, Eric Maris
 %
-% $Log: statfun_indepsamplesregrT.m,v $
-% Revision 1.1  2008/09/23 07:31:15  roboos
-% Moved all statfuns and trialfuns to their own directories, where they will be easier to find for the end-user. Also updated fieldtripdefs accordingly.
-%
-% Revision 1.6  2007/07/30 21:52:58  erimar
-% Changed calculations such that control variables (specified in cfg.cvar)
-% are also taken into account.
-%
-% Revision 1.5  2006/09/12 12:13:07  roboos
-% removed default values for cfg.ivar and uvar, defaults should be specified elsewhere
-%
-% Revision 1.4  2006/06/07 12:51:18  roboos
-% renamed cfg.ivrownr into cfg.ivar
-% renamed cfg.uorownr into cfg.uvar
-% renamed pval into prob for consistency with other fieldtrip functions
-%
-% Revision 1.3  2006/05/17 11:59:55  erimar
-% Corrected bugs after extensive checking of the properties of this
-% statfun.
-%
-% Revision 1.2  2006/05/12 15:32:40  erimar
-% Added functionality to calculate one- and two-sided critical values and
-% p-values.
-%
-% Revision 1.1  2006/05/05 13:05:24  erimar
-% First version of statfun_indepsamplesregrT.
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set defaults
 if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end;

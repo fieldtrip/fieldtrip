@@ -15,16 +15,7 @@ function plot_lay(lay, varargin)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% $Log: plot_lay.m,v $
-% Revision 1.3  2009/06/02 15:46:37  giopia
-% added vpos and hpos for position and verbose to control fprintf
-%
-% Revision 1.2  2009/05/12 12:34:27  roboos
-% updated docuemntation
-%
-% Revision 1.1  2009/05/12 12:30:19  roboos
-% first version, used by Chris for interactive cohrefchan picking
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 point   = keyval('point',   varargin{:}); if isempty(point),    point = true;   end
 box     = keyval('box',     varargin{:}); if isempty(box),      box = true;     end

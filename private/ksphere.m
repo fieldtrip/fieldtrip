@@ -15,10 +15,7 @@ function [pnt, tri] = ksphere(N);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: ksphere.m,v $
-% Revision 1.1  2005/11/01 09:56:00  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 for k=1:N
   h = -1 + 2*(k-1)/(N-1);

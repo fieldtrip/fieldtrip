@@ -10,10 +10,7 @@ function [h] = crosshair(pos, varargin)
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% $Log: crosshair.m,v $
-% Revision 1.2  2003/03/17 10:37:28  roberto
-% improved general help comments and added copyrights
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 border = axis;
 

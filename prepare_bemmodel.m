@@ -28,27 +28,7 @@ function [vol, cfg] = prepare_bemmodel(cfg, mri)
 
 % Copyright (C) 2005-2009, Robert Oostenveld
 %
-% $Log: prepare_bemmodel.m,v $
-% Revision 1.17  2009/07/16 09:11:19  crimic
-% added link to prepare_mesh.m and modified help
-%
-% Revision 1.16  2009/03/30 15:06:14  roboos
-% added the patch from Alexandre to support openmeeg
-%
-% Revision 1.15  2009/03/24 12:47:11  roboos
-% Christophe-> try to spare some memory
-%
-% Revision 1.14  2009/02/25 09:27:08  roboos
-% ensure that the vertices and triangles are double precision, otherwise the bemcp mex files will crash (thanks to Alexandre Gramfort)
-%
-% Revision 1.13  2009/02/11 11:03:42  roboos
-% changed naming of the functions of Chris in accordance with SPM8
-%
-% Revision 1.12  2009/02/02 13:15:04  roboos
-% added bemcp method, removed the incomplete implementation of brainstorm
-%
-% Revision 1.11  2008/12/24 10:47:13  roboos
-% moved the dipoli code to seperate helper function
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

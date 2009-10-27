@@ -33,10 +33,7 @@ function [h] = headcoordinates(nas, lpa, rpa, flag);
 
 % Copyright (C) 2003 Robert Oostenveld
 %
-% $Log: headcoordinates.m,v $
-% Revision 1.1  2004/09/27 16:00:04  roboos
-% initial submission
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<4
   flag=0;

@@ -4,10 +4,7 @@ function [hdr] = read_fcdc_header(filename)
 
 % Copyright (C) 2003-2009, Robert Oostenveld
 %
-% $Log: read_fcdc_header.m,v $
-% Revision 1.49  2009/05/07 14:21:29  roboos
-% deprecated the read_fcdc and write_fcdc functions, give warning and mention the correct function to be used
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

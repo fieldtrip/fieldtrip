@@ -12,32 +12,7 @@ function [type, dimord] = datatype(data, desired)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: datatype.m,v $
-% Revision 1.8  2009/08/17 08:41:00  jansch
-% added undocumented and experimental datatypes mvar and freqmvar
-%
-% Revision 1.7  2009/06/15 12:55:18  roboos
-% also recognize cohspctrm as type=freq
-%
-% Revision 1.6  2009/03/25 20:52:07  jansch
-% changed the conditional order to ensure correct behaviour for a comp-struct
-%
-% Revision 1.5  2009/01/28 15:00:45  roboos
-% fixed detection of timelock for covariance
-%
-% Revision 1.4  2009/01/28 14:08:30  roboos
-% added )
-%
-% Revision 1.3  2009/01/28 14:08:08  roboos
-% return 'unknown'
-% detect timelock in case of only data.trial or data.cov
-%
-% Revision 1.2  2008/12/19 09:12:54  roboos
-% added support for desired type, returning boolean
-%
-% Revision 1.1  2008/12/18 15:49:55  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % determine the type of input data, this can be raw, freq, timelock, comp, spike, source, volume, dip
 israw      = isfield(data, 'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell');

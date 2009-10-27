@@ -20,13 +20,7 @@ function [selected] = select_point3d(bnd, varargin)
 %   camlight
 %   ... do something here
 
-% $Log: select_point3d.m,v $
-% Revision 1.3  2009/06/30 07:09:18  roboos
-% print information about selected points
-%
-% Revision 1.2  2009/06/15 15:46:45  roboos
-% first implementation of point3d, multiple changes to point2d, still some work to be done to make them consistent
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get optional input arguments
 nearest  = keyval('nearest', varargin); if isempty(nearest), nearest = true; end

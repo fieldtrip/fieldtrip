@@ -18,16 +18,7 @@ function [mask] = atlas_mask(atlas, mri, label, varargin)
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 %
-% $Log: atlas_mask.m,v $
-% Revision 1.3  2008/07/31 20:34:05  roboos
-% changed fprintf output (percent -> %)
-%
-% Revision 1.2  2008/07/31 12:57:12  ingnie
-% changed inputcoords to inputcoord and atlas.coordinates to atlas.coord.
-%
-% Revision 1.1  2008/07/31 11:54:49  ingnie
-% new implementation based on TTatlas_mask. Converts between mni and tal coordinates, and works both on volume and on source data.
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the optional input arguments
 inputcoord = keyval('inputcoord', varargin); if isempty(inputcoord),  error('specify inputcoord');   end

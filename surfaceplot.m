@@ -37,28 +37,7 @@ function [cfg] = surfaceplot(cfg, vol, surf)
 % See also SOURCEPLOT, SLICEINTERP
 
 % Copyright (C) 2006, Jan-Mathijs Schoffelen
-% $Log: surfaceplot.m,v $
-% Revision 1.7  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.6  2006/07/13 08:48:46  ingnie
-% fixed typo's in documentation
-%
-% Revision 1.5  2006/05/31 10:12:39  roboos
-% fixed bug for inside voxels, renamed maxprojdist into sphereradius
-%
-% Revision 1.4  2006/05/31 07:00:39  roboos
-% cleaned up surfaceplot, added options for downsampling volume and surface data, reimplemented nearest neighbour interpolation using distance matrix, flipped dimensions of collin27 surface, added transformation matrix
-%
-% Revision 1.3  2006/05/29 08:22:28  jansch
-% made some changes
-%
-% Revision 1.2  2006/04/20 09:58:34  roboos
-% updated documentation
-%
-% Revision 1.1  2006/01/27 15:41:24  jansch
-% first implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

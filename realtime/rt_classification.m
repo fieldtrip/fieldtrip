@@ -39,13 +39,7 @@ function rt_classification(cfg)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% $Log: rt_classification.m,v $
-% Revision 1.2  2009/06/04 15:36:07  roboos
-% test for prtools
-%
-% Revision 1.1  2009/04/21 09:54:08  roboos
-% first version, seems to work on Subject01.ds
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % this makes use of an external classification toolbox
 hastoolbox('prtools', 1);

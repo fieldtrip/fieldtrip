@@ -10,14 +10,7 @@ function [inside, outside] = find_inside_vol(pos, vol);
 
 % Copyright (C) 2003-2007, Robert Oostenveld
 %
-% $Log: find_inside_vol.m,v $
-% Revision 1.1  2009/01/21 10:32:38  roboos
-% moved from forwinv/* and forwinv/mex/* directory to forwinv/private/* to make the CVS layout consistent with the release version
-%
-% Revision 1.8  2008/09/20 13:41:35  roboos
-% moved content of find_inside_vol to new inside_vol function with slightly different interface
-% added wrapper for spm
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 
 inside  = inside_vol(pos, vol);

@@ -10,27 +10,7 @@ function [dat] = fetch_data(data, varargin)
 
 % Copyright (C) 2008, Esther Meeuwissen
 %
-% $Log: fetch_data.m,v $
-% Revision 1.4  2009/08/05 08:23:25  roboos
-% use preallocated integet vectors for all indexing
-% skip the indexing of trials that are of no interest -> huge speedup
-%
-% Revision 1.3  2009/08/04 16:14:05  roboos
-% give error for multiple occurence
-% return nan for missing samples
-%
-% Revision 1.2  2009/07/06 09:41:18  jansch
-% multiple changes. allowing for selection of rpt in frequency data when input
-% data has rpttap. allowing for grandaveraging functionality in the case of
-% multiple inputs with the same dimensionalities. this is equivalent to the
-% XXXgrandaverage functions with keepindividual = 'yes'.
-%
-% Revision 1.1  2008/11/13 09:55:36  roboos
-% moved from fieldtrip/private, fileio or from roboos/misc to new location at fieldtrip/public
-%
-% Revision 1.2  2008/09/29 21:12:39  roboos
-% cleaned up the code from Esther, added copyrights, updated documentation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % check whether input is data
 data = checkdata(data, 'datatype', 'raw');

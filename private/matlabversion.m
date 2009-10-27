@@ -17,16 +17,7 @@ function [v] = matlabversion;
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% $Log: matlabversion.m,v $
-% Revision 1.3  2007/07/07 12:10:02  roboos
-% detect matlab version 7.0.1 and 7.0.4 and treat as 7.0
-%
-% Revision 1.2  2006/06/08 07:08:38  roboos
-% convert string into number
-%
-% Revision 1.1  2006/05/29 07:58:25  roboos
-% new helper function
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 s = ver('matlab');
 v = s.Version;

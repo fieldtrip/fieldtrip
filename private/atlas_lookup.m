@@ -18,10 +18,7 @@ function [label] = atlas_lookup(atlas, pos, varargin)
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 %
-% $Log: atlas_lookup.m,v $
-% Revision 1.1  2008/07/31 11:51:16  ingnie
-% new implementation based on TTatlas_lookup. now conversion between mni and tal coordinates possible depending on inputcoord and atlas.coord
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the optional input arguments
 queryrange  = keyval('queryrange', varargin);  if isempty(queryrange),  queryrange = 3;                end

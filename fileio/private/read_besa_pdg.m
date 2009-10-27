@@ -11,20 +11,7 @@ function [bad_flags, epochs, rejected, trial_pos_ms, trial_cond_ind, scanned_ran
 
 % Copyright (C) 2005, Vladimir Litvak 6/4/05
 %
-% $Log: read_besa_pdg.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.2  2005/07/28 14:08:06  roboos
-% converted from partially dos/unix into pure unix (i.e. removed CRs)
-%
-% Revision 1.1  2005/07/28 13:59:09  roboos
-% renamed read_pdg.m into read_besa_pdg.m
-%
-% Revision 1.2  2005/07/28 13:58:10  roboos
-% added copyrights, added log
-% updated to latest version from Vladimir (1/7/05)
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 data_type=1; % needs to be 1 for EEG, 2 for MEG
 

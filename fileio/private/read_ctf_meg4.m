@@ -27,62 +27,7 @@ function [meg] = read_ctf_meg4(fname, hdr, begsample, endsample, chanindx)
 % modifications Copyright (C) 2002, Ole Jensen
 % modifications Copyright (C) 2003, Robert Oostenveld
 %
-% $Log: read_ctf_meg4.m,v $
-% Revision 1.2  2009/05/07 13:25:16  roboos
-% added support for old 64-channel CTF files
-%
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.16  2008/09/30 07:47:04  roboos
-% replaced all occurences of setstr() with char(), because setstr is deprecated by Matlab
-%
-% Revision 1.15  2007/09/11 12:18:23  jansch
-% new clean implementation to account for very big datasets > 4GB
-%
-% Revision 1.14  2005/10/04 15:52:09  roboos
-% fixed bug that occured when data is split over more than two files (thanks to flodlan)
-%
-% Revision 1.13  2005/02/18 13:16:58  roboos
-% VSM MedTech Ltd. authorised the release of this code in the public domain
-% updated the copyrights, updated the help
-%
-% Revision 1.12  2004/06/21 19:33:08  roberto
-% made 2GB warning dependent on global fb flag
-%
-% Revision 1.11  2003/07/23 15:02:27  roberto
-% added check on valid input for read_ctf_meg4, other changes unknown
-%
-% Revision 1.10  2003/05/22 09:09:41  roberto
-% fixed another bug for >2GB files when selected data in within one trial
-%
-% Revision 1.7  2003/05/21 13:52:29  roberto
-% re-implemented support for >2GB files
-% improved checking of input arguments
-% fixed bug in chanindx indexing for raw data
-%
-% Revision 1.6  2003/05/19 15:18:50  roberto
-% fixed bugs in memory-efficient reading of continuous data
-%
-% Revision 1.4  2003/04/17 12:37:41  roberto
-% changed error for non-continuous files into warning
-%
-% Revision 1.3  2003/04/01 06:53:35  roberto
-% added support for channel selection
-% fixed bug with data allocation over multiple trials
-%
-% Revision 1.2  2003/03/27 08:30:54  roberto
-% fixed bug in reading non-multiplexed trial data
-% added error checking
-%
-% Revision 1.1  2003/03/26 13:34:05  roberto
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % use global flag for feedback
 global fb

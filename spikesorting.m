@@ -23,23 +23,7 @@ function [spike] = spikesorting(cfg, spike);
 
 % Copyright (C) 2006-2007, Robert Oostenveld
 %
-% $Log: spikesorting.m,v $
-% Revision 1.5  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.4  2007/05/02 16:04:30  roboos
-% added implementation of kmeans clustering, changed the function to reflect the updated data type
-%
-% Revision 1.3  2007/01/09 09:53:31  roboos
-% removed neuralynx_ds, added plexon_plx
-% the code currently is broken due to the changed behaviour of the reading functions
-%
-% Revision 1.2  2006/04/20 09:58:34  roboos
-% updated documentation
-%
-% Revision 1.1  2006/03/10 13:43:08  roboos
-% initial implementation, only ward clustering sofar
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

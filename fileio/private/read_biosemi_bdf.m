@@ -29,41 +29,7 @@ function dat = read_biosemi_bdf(filename, hdr, begsample, endsample, chanindx);
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% $Log: read_biosemi_bdf.m,v $
-% Revision 1.2  2009/10/12 12:14:23  roboos
-% fixed small typo in readLowLevel fnuction, thanks to Philip
-%
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.7  2008/10/06 08:42:17  roboos
-% added missing "end" in subfunction
-%
-% Revision 1.6  2008/10/03 12:20:57  roboos
-% use matlab reading instead of mex file in case file >2GB, thanks to Philip
-%
-% Revision 1.5  2008/09/30 07:47:04  roboos
-% replaced all occurences of setstr() with char(), because setstr is deprecated by Matlab
-%
-% Revision 1.4  2007/10/01 13:44:21  roboos
-% changed a detail in the calibration (in case of one channel the output would remain sparse)
-%
-% Revision 1.3  2007/09/13 09:52:20  roboos
-% removed section of code regarding idx1/2/3 which was slow but unneeded
-% avoid confusion between EDF and hdr.orig
-% implemented much faster reading for a single channel (efficient when reading status channel)
-%
-% Revision 1.2  2007/09/12 12:52:09  roboos
-% calibrate the data
-%
-% Revision 1.1  2006/02/01 08:18:48  roboos
-% new implementation, based on some EEGLAB code and a mex file for the binary part of the data
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin==1
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

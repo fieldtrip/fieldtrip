@@ -48,54 +48,7 @@ function [grid, cfg] = prepare_dipole_grid(cfg, vol, sens)
 
 % Copyright (C) 2004-2009, Robert Oostenveld
 %
-% $Log: prepare_dipole_grid.m,v $
-% Revision 1.49  2009/05/14 19:22:31  roboos
-% consistent handling of cfg.headshape in code and documentation
-%
-% Revision 1.48  2009/04/16 07:54:52  roboos
-% in case of basedonpos keep the dim if present
-%
-% Revision 1.47  2009/03/18 20:55:28  roboos
-% updated detection of infinite medium volume (for magnetic dipole)
-%
-% Revision 1.46  2008/09/17 14:57:24  roboos
-% removed call to fixvolume, it does not seem necessary any more
-%
-% Revision 1.45  2008/08/13 12:58:45  roboos
-% iadded backward compatibility support for tightgrid
-%
-% Revision 1.44  2008/08/04 09:40:18  jansch
-% added field tight to cfg.grid to prevent crash
-%
-% Revision 1.43  2008/07/31 15:57:16  roboos
-% prevent basedongrid if xgrid=auto
-%
-% Revision 1.42  2008/07/21 09:22:06  roboos
-% do not copy grid back into cfg.grid
-%
-% Revision 1.41  2008/07/17 14:56:38  roboos
-% fixed bug in basedonauto causing xgrid to be overwritten with 'auto' (thanks to Vladimir)
-%
-% Revision 1.40  2008/07/16 10:51:46  roboos
-% fixed bug: inwardshift is in cfg, not yet in cfg.grid
-%
-% Revision 1.39  2008/07/16 10:47:33  roboos
-% basedonpos overrides basedongrid
-%
-% Revision 1.38  2008/07/16 10:15:15  roboos
-% added two missing defaults for basedonpos, thanks to Jan-Mathijs
-%
-% Revision 1.37  2008/07/16 08:53:55  roboos
-% only fall back to default "basedonvol" in case none of the other methods was selected
-%
-% Revision 1.36  2008/07/15 19:52:21  roboos
-% cleaned up the handling of the different grid-generating methods
-% more output on screen, more rigid checking of conflicting cfgs
-% renamed cfg.tightgrid into cfg.grid.tight
-%
-% Revision 1.35  2007/12/11 11:12:44  roboos
-% remember dipole moment if specified
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the defaults
 if ~isfield(cfg, 'symmetry'),         cfg.symmetry    = [];       end

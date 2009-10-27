@@ -14,10 +14,7 @@ function [y] = randsample(x, k)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% $Log: randsample.m,v $
-% Revision 1.1  2007/07/04 16:06:10  roboos
-% first implementation, thanks to the shower in Toulouse
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin>2
   error('only two input variables are supported');

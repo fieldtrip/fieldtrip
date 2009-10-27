@@ -45,28 +45,7 @@ function [varargout] = buffer(varargin)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: buffer.m,v $
-% Revision 1.7  2009/01/21 19:58:07  roboos
-% also call the function after compilation
-%
-% Revision 1.6  2009/01/20 15:38:37  roboos
-% try to compile the mex file on the fly
-%
-% Revision 1.5  2008/10/24 07:32:05  roboos
-% should be a function, not a script
-%
-% Revision 1.4  2008/07/08 20:31:34  roboos
-% extended the list of acquisition threads in the mex file, also added all of them to thread stopping
-%
-% Revision 1.3  2008/05/22 09:23:09  roboos
-% updated documentation
-%
-% Revision 1.2  2008/03/10 10:41:58  roboos
-% updated documentation
-%
-% Revision 1.1  2008/03/09 22:53:04  roboos
-% new function, only placeholder for the documentation since the actual implementation is in a mex file
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % remember the original working directory
 pwdir = pwd;

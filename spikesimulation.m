@@ -10,25 +10,7 @@ function data = spikesimulation(cfg)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% $Log: spikesimulation.m,v $
-% Revision 1.7  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.6  2008/06/17 16:13:18  sashae
-% now using preproc_modules
-%
-% Revision 1.5  2007/12/12 10:03:31  roboos
-% fixed a cvs conflict, not sure whether this version is operational
-%
-% Revision 1.4  2007/11/05 09:43:54  roboos
-% some cleanup
-%
-% Revision 1.3  2007/11/01 16:33:57  roboos
-% added cfg to output
-%
-% Revision 1.2  2007/11/01 16:32:21  roboos
-% updated documentation, some small fixes
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

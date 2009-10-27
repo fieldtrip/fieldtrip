@@ -10,36 +10,7 @@ function write_neuralynx_ncs(filename, ncs);
 
 % Copyright (C) 2005-2007, Robert Oostenveld
 %
-% $Log: write_neuralynx_ncs.m,v $
-% Revision 1.1  2009/01/14 09:12:16  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.7  2007/03/21 12:51:20  roboos
-% included the scaling to int16 AD values into this function, i.e. the input data should be uV (double)
-%
-% Revision 1.6  2007/03/19 16:54:52  roboos
-% changed numeric representation of something in the ascii header
-%
-% Revision 1.5  2007/02/21 09:52:27  roboos
-% changed the writing of the data to reflect t he changed representation (2D numeric array instead of 1D cell array)
-%
-% Revision 1.4  2007/01/09 09:40:03  roboos
-% write timestamps as unsigned (uint64 instead of int64)
-%
-% Revision 1.3  2005/12/02 09:01:42  roboos
-% fixed a comment
-%
-% Revision 1.2  2005/09/09 12:27:02  roboos
-% cleaned up the code, changed the looping over records, added the number of records to the output
-%
-% Revision 1.1  2005/08/05 13:41:39  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if ~isa(ncs.TimeStamp, 'uint64')
   error('timestamps should be uint64');

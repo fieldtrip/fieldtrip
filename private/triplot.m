@@ -37,26 +37,7 @@ function [hs, hc, contour] = triplot(pnt, tri, val, mode, levels)
 
 % Copyright (C) 2001=2006, Robert Oostenveld
 %
-% $Log: triplot.m,v $
-% Revision 1.7  2008/06/24 13:37:51  roboos
-% added option faces_blue
-% always return handle to objects that were plotted
-%
-% Revision 1.6  2007/01/03 17:00:35  roboos
-% updated documentation, changed layout of code and comments
-%
-% Revision 1.5  2006/09/19 16:11:35  roboos
-% added support for line segments, removed "axis equal" at end
-%
-% Revision 1.4  2006/05/02 19:15:28  roboos
-% added 'faces_red' style
-%
-% Revision 1.3  2004/06/28 07:51:39  roberto
-% improved documentation, added faces_skin
-%
-% Revision 1.2  2003/03/17 10:37:29  roberto
-% improved general help comments and added copyrights
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % start with empty return values
 hs      = [];

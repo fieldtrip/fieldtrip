@@ -39,65 +39,7 @@ function [source] = sourcedescriptives(cfg, source)
 
 % Copyright (C) 2004-2007, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
-% $Log: sourcedescriptives.m,v $
-% Revision 1.45  2009/10/12 14:40:24  jansch
-% multiple changes, most important being to use cellfun rather than repeated
-% subfunction calls in a loop over voxels, and defining hasrefdip etc, to
-% avoid multiple isempty evaluations
-%
-% Revision 1.44  2009/04/08 08:35:50  roboos
-% ensure that the nai is based on the vectorised power and noise (otherwise the element-wise division fails)
-%
-% Revision 1.43  2009/01/20 13:01:31  sashae
-% changed configtracking such that it is only enabled when BOTH explicitly allowed at start
-% of the fieldtrip function AND requested by the user
-% in all other cases configtracking is disabled
-%
-% Revision 1.42  2008/11/21 13:21:35  sashae
-% added call to checkconfig at start and end of fucntion
-%
-% Revision 1.41  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.40  2008/09/11 13:21:13  jansch
-% included output of ori if cfg.eta = 'yes'
-%
-% Revision 1.39  2008/07/21 11:02:51  roboos
-% removed a try-catch whose purpose was unclear and that caused a problem with nai computation to remain invisible
-%
-% Revision 1.38  2008/04/09 14:14:30  roboos
-% updated docu
-%
-% Revision 1.37  2008/02/20 14:22:54  roboos
-% in allocating sumdip and sqrdip, only make the ourside voxels nan to start with
-%
-% Revision 1.36  2007/05/08 21:04:40  roboos
-% initialize all new elements with nans instead of with zeros, outside values will remain nan
-%
-% Revision 1.35  2007/05/08 20:53:35  roboos
-% added computation of kurtosis for lcmv dipole moments, default is off
-%
-% Revision 1.34  2007/04/19 17:14:11  roboos
-% adde th projectmom dipole otientation to the output for pcc
-% added temporary fix for nai in case of lcmv
-%
-% Revision 1.33  2007/04/03 15:37:07  roboos
-% renamed the checkinput function to checkdata
-%
-% Revision 1.32  2007/03/30 17:05:40  ingnie
-% checkinput; only proceed when input data is allowed datatype
-%
-% Revision 1.31  2007/01/17 17:07:41  roboos
-% implemented support for lcmv beamformer timecourses, added option for powmethod=none, added cfg.fixedori
-% when keeptrials=yes then do not output the average and variance (it is either/or)
-%
-% Revision 1.30  2007/01/17 13:19:14  roboos
-% Many changes, mainly a complete redesign of the pcc section, keeptrials/powmethod/submethod/projectmom stuff changed.
-% This is a bit a kamikaze commit, since I don't have a complete overview of al changes by jansch and me and not everything has been exhaustively tested.
-%
-% Revision 1.29  2006/07/04 16:04:50  roboos
-% renamed option 'jacknife' into 'jackknife' for consistency, maintain backward compatibility with cfgs and old data
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

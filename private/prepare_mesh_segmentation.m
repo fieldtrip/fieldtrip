@@ -6,19 +6,7 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 
 % Copyrights (C) 2009, Robert Oostenveld
 %
-% $Log: prepare_mesh_segmentation.m,v $
-% Revision 1.4  2009/08/11 12:47:20  jansch
-% fixed bug in assignment of default cfg.threshold
-%
-% Revision 1.3  2009/07/17 10:10:56  crimic
-% added initial checks and variables consinstency
-%
-% Revision 1.2  2009/07/16 15:30:55  crimic
-% fixed tiny error
-%
-% Revision 1.1  2009/07/13 14:45:06  crimic
-% copy code of existing functions into stand-alone functions for inclusion in the prepare_mesh helper function
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % some initial checks
 cfg = checkconfig(cfg, 'forbidden', 'numcompartments');

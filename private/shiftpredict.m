@@ -19,34 +19,7 @@ function [prb, cohobs, mcohrnd] = shiftpredict(cfg, dat, datindx, refindx, trlta
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: shiftpredict.m,v $
-% Revision 1.8  2009/10/01 12:55:19  jansch
-% some changes
-%
-% Revision 1.7  2006/04/10 12:15:31  roboos
-% added cfg options to the documentation
-%
-% Revision 1.6  2006/01/30 17:13:30  roboos
-% made fprintf feedback slightly more instructive about number of tapers
-% use single precision for probability for matlab r14 and later
-% make shallow copy of input data (instead of deep copy) if possible
-%
-% Revision 1.5  2005/08/31 07:48:13  jansch
-% included the output of the average shift-predicted coherence
-%
-% Revision 1.4  2005/08/25 14:41:55  jansch
-% robert gelooft het wel
-%
-% Revision 1.3  2005/08/25 10:41:32  roboos
-% added support for a third dimension, in which frequencies can be put
-% the coherence is computed between reference and target signals, for each frequency separately
-%
-% Revision 1.2  2005/08/25 08:10:13  jansch
-% many small changes, a.o. added support for multiple tapers, added blockshift subfunction
-%
-% Revision 1.1  2005/08/20 10:12:26  roboos
-% new implementations
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 nsgn = size(dat,1);
 ntap = size(dat,2); % total number of tapers over all trials

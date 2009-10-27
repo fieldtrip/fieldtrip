@@ -19,58 +19,7 @@ function [spike] = read_spike(filename, varargin);
 
 % Copyright (C) 2007-2008, Robert Oostenveld
 %
-% $Log: read_spike.m,v $
-% Revision 1.16  2009/03/04 07:49:43  roboos
-% moved from private to main fileio
-%
-% Revision 1.1  2009/01/14 09:33:10  roboos
-% moved even more files from fileio to fileio/private, see previous log entry
-%
-% Revision 1.14  2009/01/14 08:51:34  roboos
-% fixed *.nts extension (was *.nte), applies to filetype, name of low-level function and name of data structure
-%
-% Revision 1.13  2008/11/12 17:02:03  roboos
-% explicitely specify ieee-le in fopen()
-%
-% Revision 1.12  2008/07/09 12:16:38  roboos
-% added mclust_t
-%
-% Revision 1.11  2008/03/25 10:59:02  roboos
-% use either NLX_Base_Class_Name or AcqEntName, whichever is available
-%
-% Revision 1.10  2008/03/04 11:17:07  roboos
-% added support for neuralynx_nst (tested) and neuralynx_ntt (untested)
-%
-% Revision 1.9  2007/03/26 12:32:41  roboos
-% changed the API for plexon_plx
-%
-% Revision 1.8  2007/03/21 13:00:02  roboos
-% keep the original data header in the output structure
-%
-% Revision 1.7  2007/03/19 17:08:57  roboos
-% implemented neuralynx_nte
-% use timestamp_plexon as low level function instead of replicating the typecasting here
-%
-% Revision 1.6  2007/03/18 22:02:41  roboos
-% also deal with plexon plx spike channels that do not contain any data
-%
-% Revision 1.5  2007/03/13 14:32:47  roboos
-% removed header as optional argument, since read_header does not support spike-only files
-% in case of plexon_plx, read the header from the file using low-level importer
-% implemented support for plexon_nex, type 0 and 3
-%
-% Revision 1.4  2007/02/27 09:56:28  roboos
-% added some documentation
-%
-% Revision 1.3  2007/01/09 09:40:38  roboos
-% added neuralynx_nse
-%
-% Revision 1.2  2007/01/04 17:14:12  roboos
-% deblank channel labels, renamed data to waveform
-%
-% Revision 1.1  2007/01/04 12:10:14  roboos
-% new implementation, sofar only for plexon_plx
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the options
 spikeformat   = keyval('spikeformat',   varargin);

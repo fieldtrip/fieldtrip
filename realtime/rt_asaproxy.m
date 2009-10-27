@@ -23,26 +23,7 @@ function rt_asaproxy(cfg)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% $Log: rt_asaproxy.m,v $
-% Revision 1.6  2009/06/17 13:50:20  roboos
-% wait for the specified amount of time instead of !))ms
-%
-% Revision 1.5  2009/05/01 08:04:19  roboos
-% updated documentation
-%
-% Revision 1.4  2009/01/21 20:59:06  roboos
-% added cfg.blocksize, fixed sampling frequency
-%
-% Revision 1.3  2009/01/20 16:12:18  roboos
-% added correct sampling rate to header
-% fixed display error
-%
-% Revision 1.2  2009/01/20 15:43:49  roboos
-% first proper implementation
-%
-% Revision 1.1  2009/01/20 13:14:13  roboos
-% added two (still empty) proxy functions for ASA and Plexon
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the defaults
 if ~isfield(cfg, 'target'),               cfg.target = [];                                  end

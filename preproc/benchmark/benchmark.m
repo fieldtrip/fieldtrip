@@ -13,10 +13,7 @@ function benchmark(funname, argname, argval, m_array, n_array, niter, varargin)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% $Log: benchmark.m,v $
-% Revision 1.1  2009/01/07 12:56:48  roboos
-% first implementation of helper function for benchmarking the low-level functions that are relevant for real-time processing
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the optional input arguments
 feedback    = keyval('feedback',    varargin); % none, figure, text, table, all

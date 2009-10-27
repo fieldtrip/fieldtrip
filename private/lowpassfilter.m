@@ -25,25 +25,7 @@ function [filt] = lowpassfilter(dat,Fs,Flp,N,type,dir)
 
 % Copyright (c) 2003, Robert Oostenveld
 %
-% $Log: lowpassfilter.m,v $
-% Revision 1.5  2006/08/31 07:57:22  roboos
-% implemented onepass-reverse filter: usefull for stimulus artifacts, e.g. TMS or electrical stimulation
-%
-% Revision 1.4  2006/06/14 12:36:21  roboos
-% added the filter direction as additional option, default is 'twopass', i.e. using filtfilt
-%
-% Revision 1.3  2004/02/11 08:55:13  roberto
-% added optional fir1 filter (default still is butterworth), changed
-% layout of code for better support of multiple optional arguments,
-% extended documentation
-%
-% Revision 1.2  2003/06/12 08:40:44  roberto
-% added variable option to determine filter order
-% changed default order from 6 to 4 for notch and bandpass
-%
-% Revision 1.1  2003/04/04 09:53:37  roberto
-% new implementation, using 6th order Butterworth FIR filter
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the default filter order later
 if nargin<4

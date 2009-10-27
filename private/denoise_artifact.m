@@ -7,14 +7,7 @@ function [params, s_new] = denoise_artifact(params, s, state)
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: denoise_artifact.m,v $
-% Revision 1.2  2006/01/06 11:40:17  roboos
-% included the code to find the artifact samples in the concatedaned data
-% other unknown changes
-%
-% Revision 1.1  2005/11/04 17:23:30  roboos
-% new implementation, can be used together with cfg.method='dss' in componentanalysis
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<3 || ~isstruct(state)
   params.name = 'denoise_artifact';

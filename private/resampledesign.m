@@ -20,43 +20,7 @@ function [resample] = resampedesign(cfg, design);
 
 % Copyright (C) 2005-2007, Robert Oostenveld
 %
-% $Log: resampledesign.m,v $
-% Revision 1.5  2009/10/01 13:02:05  jansch
-% added check for double occurrences of bootstrap samples if the number of
-% replicates is <20
-%
-% Revision 1.4  2009/01/12 15:16:47  jansch
-% enabled  bootstrap-resampling for repeated measures
-%
-% Revision 1.3  2007/07/18 15:07:54  roboos
-% changed output, now also reindexing matrix for permutation (just like in case of bootstrap) instead of the permuted design itself
-% implemented control variable for constraining the resampling within blocks
-% changed the check for overlapping ivar/uvar/wvar/cvar
-% updated documentation
-%
-% Revision 1.2  2007/07/17 10:37:29  roboos
-% updated help
-%
-% Revision 1.1  2007/07/04 16:04:53  roboos
-% renamed randomizedesign to resampledesign
-% first implementation of bootstrapping, sofar only for unpaired data
-% added cfg.resampling=bootstrap/permutation
-%
-% Revision 1.7  2006/10/30 10:09:48  roboos
-% removed the check that each repeated measurement should have the same number of elements (for uvar)
-%
-% Revision 1.6  2006/07/14 07:10:26  roboos
-% do not treat uvar and wvar the same, wvar is not dealt with yet
-%
-% Revision 1.5  2006/06/13 11:36:11  roboos
-% renamed cfg.bvar into cfg.wvar (within-block variable)
-%
-% Revision 1.4  2006/06/07 12:55:14  roboos
-% changed a print statement
-%
-% Revision 1.3  2006/06/07 09:27:12  roboos
-% rewrote most of the function, added support for uvar and cvar (instead of unitfactor), added support for a block variable cfg.wvar (for keeping all tapers within a trial together)
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if ~isfield(cfg, 'ivar'), cfg.ivar = []; end
 if ~isfield(cfg, 'uvar'), cfg.uvar = []; end

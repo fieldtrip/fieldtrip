@@ -37,60 +37,7 @@ function [stat] = sourcestatistics_randomization(cfg, source)
 % Copyright (C) 2003, Robert Oostenveld
 % Copyright (C) 2004, Markus Siegel
 %
-% $Log: sourcestatistics_randomization.m,v $
-% Revision 1.14  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.13  2007/05/30 07:04:05  roboos
-% use the checkdata function to avlidate the input and to convert the inside vector to indices
-%
-% Revision 1.12  2006/07/05 10:21:56  roboos
-% updaed documentation for consistency
-%
-% Revision 1.11  2006/03/30 12:24:34  roboos
-% Implemented private/fixinside, which facilitates consistent
-% handling of source/volume data. Improved documentation. Fixed some
-% bugs related to inconsistent handling of ROIs (i.e. inside/outside)
-%
-% Revision 1.10  2006/01/30 12:51:38  roboos
-% fixed declaration of function name
-%
-% Revision 1.9  2005/06/29 12:46:29  roboos
-% the following changes were done on a large number of files at the same time, not all of them may apply to this specific file
-% - added try-catch around the inclusion of input data configuration
-% - moved cfg.version, cfg.previous and the assignment of the output cfg to the end
-% - changed help comments around the configuration handling
-% - some changes in whitespace
-%
-% Revision 1.8  2005/06/03 08:58:07  roboos
-% transfer homogenous transformation matrix from input to output (if present)
-% added an extra method of counting the number of dipoles/voxels in the input source structure
-%
-% Revision 1.7  2005/05/12 12:17:23  roboos
-% added a reshape around the source parameter to ensure that it is a row vector
-% if source.pos is not available, determine the number of dipoles from source.dim
-%
-% Revision 1.6  2005/05/09 14:14:46  roboos
-% made the assignment of the output stat fields that describe the grid (like pos, xgrid, dim ...) optional, so that it won't fail when one of these fields is not present
-%
-% Revision 1.5  2005/03/18 14:37:51  roboos
-% changed order of preprocessing: first z-transform, then relchange
-% fixed small bug due to latest update
-%
-% Revision 1.4  2005/03/18 11:16:21  roboos
-% fixed bug in two sided testing by replacing the relevant code by the RANDSTATPROB private subfunction
-%
-% Revision 1.3  2004/10/19 12:04:10  roboos
-% fixed  bug in relchange if average power was not row-vector
-%
-% Revision 1.2  2004/10/13 15:27:41  roboos
-% added version information to output cfg
-% added configuration of input object to output cfg
-% renamed single input argument from varargin to source
-%
-% Revision 1.1  2004/08/26 10:45:32  marsie
-% initial CVS release
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

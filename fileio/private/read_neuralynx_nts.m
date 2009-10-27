@@ -8,40 +8,7 @@ function [nts] = read_neuralynx_nts(filename, begrecord, endrecord);
 
 % Copyright (C) 2006-2007, Robert Oostenveld
 %
-% $Log: read_neuralynx_nts.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.4  2008/04/29 07:52:31  roboos
-% fixed windows related bug
-% be consistent with begin and end timestamp in header
-%
-% Revision 1.3  2008/01/10 12:51:58  roboos
-% ensure that it is possible to read only the header, using beg/end = 0/0
-%
-% Revision 1.2  2007/12/12 16:29:19  roboos
-% add first and last timestamp to header, also when no records are read
-%
-% Revision 1.1  2007/03/21 17:12:04  roboos
-% renamed NTE in NTS (filenames and function names)
-%
-% Revision 1.4  2007/03/21 17:06:57  roboos
-% updated the documentation
-%
-% Revision 1.3  2007/03/21 12:54:37  roboos
-% included the 2nd and 3rd input arguments in the function declaration
-%
-% Revision 1.2  2007/03/19 16:58:08  roboos
-% implemented the actual reading of the data from file
-%
-% Revision 1.1  2006/12/13 15:52:26  roboos
-% added empty function, only containing help but no usefull code yet
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<2
   begrecord = 1;

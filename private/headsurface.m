@@ -20,37 +20,7 @@ function [pnt, tri] = headsurface(vol, sens, varargin);
 
 % Copyright (C) 2005-2006, Robert Oostenveld
 %
-% $Log: headsurface.m,v $
-% Revision 1.9  2009/05/14 19:24:51  roboos
-% don't read the headshape from file, it should be externally read and passed as pnt/tri
-%
-% Revision 1.8  2009/03/10 14:25:03  roboos
-% use voltype function
-% fixed bug for multisphere model when shifting lower rim down
-%
-% Revision 1.7  2009/02/11 13:48:07  roboos
-% prevent double vertices in the triangulations
-% added a fixme comment for a particilar configuration that has problems
-%
-% Revision 1.6  2007/05/16 12:02:57  roboos
-% use a new subfunction for determining the surface orientation
-%
-% Revision 1.5  2007/05/08 07:35:24  roboos
-% try to automatically correct the surface orientation
-%
-% Revision 1.4  2007/02/13 15:39:02  roboos
-% fixed bug in inwardshift, it should be subtracted instead of added (the bug was causing an outwardshift for megrealign)
-%
-% Revision 1.3  2006/12/12 11:29:29  roboos
-% moved projecttri subfunction into seperate function
-% be flexible with headsurfaces specified as structure or filename/string
-%
-% Revision 1.2  2006/07/24 08:23:49  roboos
-% removed default for inwardshift, apply inwardshift irrespective of surface type, improved documentation, some other small changes
-%
-% Revision 1.1  2005/12/13 16:28:34  roboos
-% new implementation, should replace the head_surf function
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<1
   vol = [];

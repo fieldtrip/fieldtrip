@@ -8,10 +8,7 @@ function sourcewrite(cfg, volume)
 
 % Copyright (C) 2005-2006, F.C. Donders Centre
 %
-% $Log: sourcewrite.m,v $
-% Revision 1.10  2006/03/14 08:09:22  roboos
-% added copyrigth and cvs log statement
-% 
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 warning('SOURCEWRITE has been renamed to VOLUMEWRITE');
 warning('backward compatibility will be removed in the future');

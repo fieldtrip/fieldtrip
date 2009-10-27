@@ -26,23 +26,7 @@ function [dist] = warp_error(M, input, target, varargin);
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% $Log: warp_error.m,v $
-% Revision 1.4  2006/09/12 15:20:02  roboos
-% added support for warping the input points to a triangulated surface
-%
-% Revision 1.3  2006/04/13 10:50:34  roboos
-% renamed calls to warp3d into warp_apply
-%
-% Revision 1.2  2006/04/13 10:46:09  roboos
-% updated the documentation
-%
-% Revision 1.1  2005/08/15 08:11:20  roboos
-% Renamed warpfun into warp_error, which is a better description of
-% its use. This is a companion function for warp_optim.
-%
-% Revision 1.2  2004/05/19 09:57:08  roberto
-% added GPL copyright statement, added CVS log item
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if ~isempty(M)
   % apply the warp to the input positions

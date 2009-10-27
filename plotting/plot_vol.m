@@ -22,34 +22,7 @@ function plot_vol(vol, varargin)
 
 % Copyright (C) 2009, Cristiano Micheli
 %
-% $Log: plot_vol.m,v $
-% Revision 1.10  2009/09/04 09:26:28  crimic
-% made sphere mesh lighter, added plot_mesh options
-%
-% Revision 1.9  2009/06/25 16:03:06  crimic
-% function now compatible with toolbox guidelines
-%
-% Revision 1.8  2009/06/03 10:05:40  roboos
-% changed handling of mesh generation and teh actual plotting
-%
-% Revision 1.7  2009/04/22 11:45:02  crimic
-% updated help
-%
-% Revision 1.6  2009/04/22 11:43:57  crimic
-% fixed colormap feature
-%
-% Revision 1.5  2009/04/19 11:35:16  crimic
-% added colormap for all vol options
-%
-% Revision 1.4  2009/04/17 17:00:59  crimic
-% updated help
-%
-% Revision 1.3  2009/04/17 16:48:34  crimic
-% updated help
-%
-% Revision 1.2  2009/04/17 16:45:40  crimic
-% created function to plot forward model geometry
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 keyvalcheck(varargin, 'forbidden', {'faces', 'edges', 'vertices'});
 % get the optional input arguments

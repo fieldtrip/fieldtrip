@@ -13,50 +13,7 @@ function [select] = parameterselection(param, data);
 
 % Copyright (C) 2005-2008, Robert oostenveld
 %
-% $Log: parameterselection.m,v $
-% Revision 1.14  2008/07/30 07:41:39  roboos
-% also detect parameters in source.trial
-%
-% Revision 1.13  2008/07/25 09:05:02  roboos
-% not only check the parameter dimensions against source.dim, but optionally also against source.pos (required if it is an irregular grid)
-%
-% Revision 1.12  2007/07/31 08:36:27  jansch
-% added support for volume data with dimensionality > 3
-%
-% Revision 1.11  2006/10/02 13:54:14  roboos
-% replaced predefined list for 'all' by automatic generated list
-%
-% Revision 1.10  2006/05/16 10:41:13  roboos
-% removed trialA/trialB elements, since typically they cannot be dealt with automatically
-%
-% Revision 1.9  2006/03/30 07:41:15  roboos
-% added fields df and dof in case of selecting 'all'
-%
-% Revision 1.8  2006/03/29 08:25:57  roboos
-% Ensure that it is a cell array, also when empty. Remove empty fields (thanks to Vladimir).
-%
-% Revision 1.7  2006/02/13 07:45:16  jansch
-% added paramters such as lbex, leadfield, trialX.xxx so that this function
-% can also be used within source2sparse, and source2full
-%
-% Revision 1.6  2006/02/09 09:43:20  roboos
-% added 'leadfield' as a known volume
-%
-% Revision 1.5  2006/01/05 13:29:36  roboos
-% always return a cell-array (this function used to return a string if only
-% one parameter was selected and a cell-array if there were multiple)
-%
-% Revision 1.4  2005/09/29 00:37:57  roboos
-% if 'all' is specified, do not replace complete list, but only the 'all' element
-% prevent double occurences in parameter list
-%
-% Revision 1.3  2005/09/12 09:50:46  jansch
-% added ref as a parameter
-%
-% Revision 1.2  2005/08/19 17:26:27  roboos
-% added support for 'pow' ->  will be replaced by 'avg.pow' (similar for other volumes)
-% added help documentation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if ischar(param)
   param = {param};   % it should be a cell-array

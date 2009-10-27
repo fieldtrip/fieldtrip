@@ -17,35 +17,7 @@ function multiplotCC(cfg, data)
 
 % Copyright (C) 2005-2006, Jan-Mathijs Schoffelen, Robert Oostenveld
 %
-% $Log: multiplotCC.m,v $
-% Revision 1.12  2009/06/17 13:44:52  roboos
-% cleaned up help
-%
-% Revision 1.11  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.10  2008/09/22 12:53:27  roboos
-% ensure equal and tight axes
-%
-% Revision 1.9  2007/04/03 15:37:07  roboos
-% renamed the checkinput function to checkdata
-%
-% Revision 1.8  2007/03/27 11:05:19  ingnie
-% changed call to fixdimord in call to checkinput
-%
-% Revision 1.7  2007/03/21 16:24:13  chrhes
-% updated documentation regarding the fact that cfg.layout can also contain a
-% layout structure obtained using the function prepare_layout.m
-%
-% Revision 1.6  2006/04/20 09:58:34  roboos
-% updated documentation
-%
-% Revision 1.5  2006/04/10 12:21:14  roboos
-% improved documentation
-%
-% Revision 1.4  2006/03/14 08:09:22  roboos
-% added copyrigth and cvs log statement
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

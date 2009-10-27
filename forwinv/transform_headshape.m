@@ -10,16 +10,7 @@ function [shape] = transform_headshape(transform, shape)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: transform_headshape.m,v $
-% Revision 1.3  2008/07/21 20:31:00  roboos
-% also support gradiometer coil orientation (only rotate)
-%
-% Revision 1.2  2008/04/15 15:33:58  roboos
-% fixed small bug (thanks to Vladimir)
-%
-% Revision 1.1  2008/04/11 16:14:03  roboos
-% first implementation, simple helper function for spm integration and symmetry with vol and sens
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if any(transform(4,:) ~= [0 0 0 1])
   error('invalid transformation matrix');

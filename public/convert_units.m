@@ -22,35 +22,7 @@ function [obj] = convert_units(obj, target);
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 %
-% $Log: convert_units.m,v $
-% Revision 1.8  2009/03/26 14:57:04  roboos
-% moved the unit estimation to a seperate function
-%
-% Revision 1.7  2009/03/11 11:28:24  roboos
-% detect as mm for very wide anatomical MRIs (happens at the fcdc with the ctf MRIs)
-%
-% Revision 1.6  2009/02/05 10:20:35  roboos
-% added bemcp as volume type
-%
-% Revision 1.5  2009/01/08 17:18:45  roboos
-% fixed bug mom->pos for source structures
-% added unit detection for volumes with a transform and a dim
-%
-% Revision 1.4  2008/07/21 20:29:22  roboos
-% small change in output on screen
-%
-% Revision 1.3  2008/04/14 20:53:58  roboos
-% added detection for headshape and/or fiducials
-% fixed bug in scaling of fiducials
-%
-% Revision 1.2  2008/04/14 19:29:58  roboos
-% cleanded up code and added autodetection based on geometrical size of object
-% changed interface, no forced input type is possible
-% changed from dos to unix
-%
-% Revision 1.1  2005/03/03 11:01:39  roboos
-% already old (and unused) implementation, but sofar this function was not included in CVS
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % This function consists of three parts:
 %   1) determine the input units

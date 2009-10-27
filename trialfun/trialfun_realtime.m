@@ -13,25 +13,7 @@ function trl = trialfun_realtime(cfg)
 %
 % Copyright (C) 2009, Marcel van Gerven
 %
-% $Log: trialfun_realtime.m,v $
-% Revision 1.6  2009/02/10 10:53:29  marvger
-% default blocksize set to 0.1 (100 ms blocks as in the realtime protocol)
-%
-% Revision 1.5  2009/02/04 13:59:46  marvger
-% removed keyboard command
-%
-% Revision 1.4  2009/01/29 10:35:48  marvger
-% more error checking
-%
-% Revision 1.3  2009/01/28 20:46:44  marvger
-% samples are forced to be > 0
-%
-% Revision 1.2  2009/01/28 10:56:39  marvger
-% we do not consider samples before minsample+1 in asynchronous mode
-%
-% Revision 1.1  2009/01/28 09:52:01  marvger
-% generic trialfun for realtime processing
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
   if ~isfield(cfg,'minsample'),   cfg.minsample = 0;        end
   if ~isfield(cfg,'blocksize'),   cfg.blocksize = [0 0.1];  end

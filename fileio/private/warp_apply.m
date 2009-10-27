@@ -52,30 +52,7 @@ function [warped] = warp_apply(M, input, method);
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% $Log: warp_apply.m,v $
-% Revision 1.3  2009/04/16 12:58:37  roboos
-% allow for 2D input points, the output will also be 2D but the computations are done in 3D
-% allow for 2D homogenous transformation matrix
-%
-% Revision 1.2  2006/09/13 09:47:41  roboos
-% auto-detect homogeneous transformation if method not given
-%
-% Revision 1.1  2005/08/15 08:10:07  roboos
-% renamed warp3d into warp_apply
-%
-% Revision 1.5  2005/03/21 15:35:38  roboos
-% added support for nonlin0 up to nonlin5 as method-string (equivalent to nonlinear)
-% extended help, added some comments and error checks
-%
-% Revision 1.4  2004/05/19 09:57:07  roberto
-% added GPL copyright statement, added CVS log item
-%
-% Revision 1.3  2004/05/19 09:48:01  roberto
-% *** empty log message ***
-%
-% Revision 1.2  2003/03/12 16:07:18  roberto
-% improved help documentation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<3 && all(size(M)==4)
   % no specific transformation mode has been selected

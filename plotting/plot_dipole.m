@@ -19,22 +19,7 @@ function plot_dipole(pos, ori, varargin)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% $Log: plot_dipole.m,v $
-% Revision 1.5  2009/10/07 12:51:22  roboos
-% fixed typo in help
-%
-% Revision 1.4  2009/09/23 14:55:36  crimic
-% small fix
-%
-% Revision 1.3  2009/06/03 16:13:19  roboos
-% updated documentation
-%
-% Revision 1.2  2009/06/03 09:53:18  roboos
-% number of small changes, still work in progress
-%
-% Revision 1.1  2009/06/03 07:53:27  roboos
-% first version
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the optional input arguments
 units       = keyval('units', varargin);       if isempty(units),         units = 'cm';        end

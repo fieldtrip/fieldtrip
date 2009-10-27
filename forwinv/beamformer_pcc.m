@@ -8,63 +8,7 @@ function [dipout] = beamformer_pcc(dip, grad, vol, dat, Cf, varargin)
 %
 % Copyright (C) 2005-2008, Robert Oostenveld & Jan-Mathijs Schoffelen
 
-% $Log: beamformer_pcc.m,v $
-% Revision 1.18  2009/01/07 13:12:03  jansch
-% *** empty log message ***
-%
-% Revision 1.17  2009/01/06 10:25:50  roboos
-% changed & into &&
-%
-% Revision 1.16  2008/10/10 13:01:18  release
-% fixed bug: switched order of lambda processing (i.e. as "10%") and filter computation (thanks to Joachim).
-% removed double warning for rank deficient.
-%
-% Revision 1.15  2008/08/13 13:47:42  roboos
-% updated documentation
-%
-% Revision 1.14  2008/07/02 16:03:05  roboos
-% fixed bug in % lambda
-%
-% Revision 1.13  2008/07/02 07:57:33  roboos
-% allow specification of percentage noise in lambda, relative to trace(cov)/nchans
-%
-% Revision 1.12  2008/03/18 13:01:17  roboos
-% added optional argument normalizeparam, is passed onto compute_leadfield
-%
-% Revision 1.11  2007/12/11 11:17:49  roboos
-% fixed bug in handling of prespecified dipole moment
-%
-% Revision 1.10  2006/10/12 10:15:36  roboos
-% close the progress indicator
-%
-% Revision 1.9  2006/10/12 10:11:24  roboos
-% fixed bug in selecting dipoles on the inside positions only
-% output cell-arrays are [] for outside points
-% removed catch for mom, fixed dipoles should also work
-%
-% Revision 1.8  2006/10/12 09:05:11  roboos
-% restructured code to behave as a stand-alone function
-%
-% Revision 1.6  2006/05/04 08:03:37  roboos
-% fixed a bug in the concatenation of the filters, which applied when the channel order was EMG-MEG instead of the more usual MEG-EMG
-%
-% Revision 1.5  2006/03/01 10:47:06  roboos
-% test rank of meg part only instead of full CSD matrix
-%
-% Revision 1.4  2006/03/01 08:07:33  roboos
-% added support for realfilter option
-%
-% Revision 1.3  2005/11/21 09:33:49  roboos
-% added handling of optional reducerank/normalize/powmethod input arguments
-%
-% Revision 1.2  2005/11/08 11:04:36  roboos
-% implemented support for normalize and reducerank using compute_leadfield
-% changed from optarg structure to keyval function
-%
-% Revision 1.1  2005/06/08 16:36:27  roboos
-% new implementation, still in experimental stage
-% DO NOT DISTRIBUTE
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if mod(nargin-5,2)
   % the first 5 arguments are fixed, the other arguments should come in pairs

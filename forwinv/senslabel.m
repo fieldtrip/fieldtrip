@@ -42,34 +42,7 @@ function label = senslabel(type)
 % Copyright (C) 2007-2008, Robert Oostenveld
 % Copyright (C) 2008, Vladimir Litvak
 %
-% $Log: senslabel.m,v $
-% Revision 1.6  2009/10/16 12:27:53  roboos
-% some small changes pertaining to the itab/chieti format
-%
-% Revision 1.4  2009/07/29 07:07:59  roboos
-% use caching of input and output arguments to speed up the handling of multiple calls with the same input argument
-%
-% Revision 1.3  2009/06/19 16:51:50  vlalit
-% Added biosemi64 system of  Diane Whitmer, I don't know how generic it is.
-%
-% Revision 1.2  2009/05/07 13:34:09  roboos
-% added ctf64
-%
-% Revision 1.1  2009/01/21 10:32:38  roboos
-% moved from forwinv/* and forwinv/mex/* directory to forwinv/private/* to make the CVS layout consistent with the release version
-%
-% Revision 1.4  2008/09/17 19:35:07  roboos
-% ensure that it returns column array
-%
-% Revision 1.3  2008/09/10 09:12:11  roboos
-% added alternative definition of channel names without a space in the label for neuromag 122 and 306
-%
-% Revision 1.2  2008/09/10 08:33:36  roboos
-% speeded up with factor 5 by performing an initial check on the desired type and subsequently only defining the related variables
-%
-% Revision 1.1  2008/09/10 07:53:27  roboos
-% moved definition of channel label sets to seperate function
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % these are for remembering the type on subsequent calls with the same input arguments
 persistent previous_argin previous_argout

@@ -27,41 +27,7 @@ function [dat] = read_neuralynx_bin(filename, begsample, endsample);
 
 % Copyright (C) 2007-2008, Robert Oostenveld
 %
-% $Log: read_neuralynx_bin.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.5  2008/09/30 08:01:04  roboos
-% replaced all fread(char=>char) into uint8=>char to ensure that the
-% chars are read as 8 bits and not as extended 16 bit characters. The
-% 16 bit handling causes problems on some internationalized OS/Matlab
-% combinations.
-%
-% the help of fread specifies "If the precision is 'char' or 'char*1', MATLAB
-% reads characters using the encoding scheme associated with the file.
-% See FOPEN for more information".
-%
-% Revision 1.4  2008/07/01 13:00:58  roboos
-% optionally read the 16384 byte ascii header instead of hard-coded defaults
-%
-% Revision 1.3  2008/05/27 13:04:58  roboos
-% switched to the 3rd version of the file format, which includes the downscale/calibration value to recover from int32->int16 compression
-% added explicit support for version 1, 2 and 3 of the fileformat
-% added original details to the output header
-%
-% Revision 1.2  2007/12/17 16:23:44  roboos
-% fixed bug in jumping to correct begin sample
-% added support for determining channel name from filename like this "dataset.chanlabel.bin"
-% added support for old splitted dma files, which have an 8 byte header with the channel label and are always int32
-%
-% Revision 1.1  2007/12/12 16:28:42  roboos
-% first implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 needhdr = (nargin==1);
 needdat = (nargin>=2);

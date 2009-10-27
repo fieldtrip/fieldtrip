@@ -23,19 +23,7 @@ function p = randstatprob(randobs, realobs, tail, correctm);
 
 % Copyright (C) 2004-2005, Robert Oostenveld
 %
-% $Log: randstatprob.m,v $
-% Revision 1.4  2005/11/16 09:10:21  roboos
-% added support for multiple comparison correction using ordered statistics
-%
-% Revision 1.3  2005/03/18 15:27:25  roboos
-% renamed the first two input variable names to avoid confusion with the rand function
-%
-% Revision 1.2  2004/11/15 11:17:55  roboos
-% added multiple comparison correction
-%
-% Revision 1.1  2004/11/11 17:24:19  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<3
   tail = 0;

@@ -31,40 +31,7 @@ function rt_process(cfg)
 
 % Copyright (C) 2009, Marcel van Gerven, Robert Oostenveld 
 %
-% $Log: rt_process.m,v $
-% Revision 1.11  2009/07/15 11:52:25  marvger
-% suppressed some output
-%
-% Revision 1.10  2009/06/30 12:39:05  roboos
-% made consistent with other fieldtrip behaviour
-%
-% Revision 1.9  2009/06/09 13:57:08  marvger
-% added some documentation
-%
-% Revision 1.8  2009/04/29 10:29:14  marvger
-% cfg.event dummy representation unclear
-%
-% Revision 1.7  2009/04/22 16:20:57  marvger
-% simplifications and addition of write_event
-%
-% Revision 1.6  2009/02/27 15:01:31  marvger
-% update
-%
-% Revision 1.5  2009/02/03 08:13:57  marvger
-% data struct now also contains begsample and endsample
-%
-% Revision 1.4  2009/02/02 08:07:11  marvger
-% crucial change from hdr to cfg.hdr in read_data
-%
-% Revision 1.3  2009/01/29 10:15:10  marvger
-% extra condition for bug fix
-%
-% Revision 1.2  2009/01/29 10:02:48  marvger
-% better handling of the bugfix for fcdc_buffer channels
-%
-% Revision 1.1  2009/01/22 17:43:31  marvger
-% generic function for processing realtime data
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
   % to ensure clean output
   warning off all;

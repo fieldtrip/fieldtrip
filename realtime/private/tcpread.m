@@ -22,10 +22,7 @@ function a = tcpread(sock, siz, type)
 
 % Copyright (C0 2008-2009, Robert Oostenveld 
 %
-% $Log: tcpread.m,v $
-% Revision 1.1  2009/05/14 19:42:13  roboos
-% used to be part of rt_brainampproxy, some cleanup of the code
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 persistent offset buf bufnull
 

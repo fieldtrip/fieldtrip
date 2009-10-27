@@ -25,19 +25,7 @@ function [proj] = elproj(pos, method)
 
 % Copyright (C) 2000-2008, Robert Oostenveld
 %
-% $Log: elproj.m,v $
-% Revision 1.5  2009/10/14 15:27:40  roboos
-% give error on method that is not recognized
-%
-% Revision 1.4  2008/05/15 10:54:24  roboos
-% updated documentation
-%
-% Revision 1.3  2007/03/20 10:29:35  roboos
-% renamed method 'default' into 'polar'
-%
-% Revision 1.2  2003/03/17 10:37:28  roberto
-% improved general help comments and added copyrights
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 x = pos(:,1);
 y = pos(:,2);

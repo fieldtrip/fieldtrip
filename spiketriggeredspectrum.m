@@ -22,32 +22,7 @@ function [freq] = spiketriggeredspectrum(cfg, data)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: spiketriggeredspectrum.m,v $
-% Revision 1.8  2009/01/20 16:53:29  roboos
-% fixed problem with fft handle not expecting key-value input arguments (thanks to Thilo)
-%
-% Revision 1.7  2008/10/01 08:23:05  roboos
-% use specest_nanfft as default
-%
-% Revision 1.6  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.5  2008/07/15 18:17:57  roboos
-% fixed documentation
-%
-% Revision 1.4  2008/04/09 14:39:22  roboos
-% remove trials without data (too close to trial border) from the output
-%
-% Revision 1.3  2008/04/09 14:23:15  roboos
-% replicate double spikes, for keeptrials
-% give error if spike count >5
-%
-% Revision 1.2  2008/03/18 21:58:18  roboos
-% added normalization of the spectrum by the number of samples, and rotation of the phase to correct for t=0 being in the middle of the segment instead of at the begin
-%
-% Revision 1.1  2008/03/17 16:42:35  roboos
-% initial implementation, phase rotation still needs to be built in
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

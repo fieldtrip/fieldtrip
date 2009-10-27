@@ -17,51 +17,7 @@ function [grad] = bti2grad(hdr, balanceflag)
 
 % Copyright (C) 2008, Jan-Mathijs Schoffelen 
 %
-% $Log: bti2grad.m,v $
-% Revision 1.5  2009/10/07 09:45:50  jansch
-% restructured the handling of balancing; balancing for data in which the
-% weight table is of type 1 is still disabled, and balancing is applied for
-% data with weight tables of type ~= 1
-%
-% Revision 1.4  2009/04/02 10:13:15  jansch
-% disabled balancing for 148-sensor system (weight table version 1) since
-% channel order is not known
-%
-% Revision 1.3  2009/03/26 10:20:33  jansch
-% added balancing based on the weight table used during acquisition. note that
-% post acquisition computed weights using 4d software are not incorporated in
-% the balancing of the gradiometers
-%
-% Revision 1.2  2009/01/23 16:15:31  roboos
-% removed ; after function declaration
-%
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.8  2008/10/20 15:16:16  jansch
-% removed the explicit sorting of the channels, this could cause problems
-% later on. however, the sensors and references are block-wise sorted still
-%
-% Revision 1.7  2008/05/15 13:20:36  roboos
-% updated documentation
-%
-% Revision 1.6  2008/05/14 10:20:37  jansch
-% included tra-computation when inputting 'm4d' and 'xyz' headers
-%
-% Revision 1.5  2008/05/14 09:17:04  jansch
-% included check for orientation in the case of gradiometers
-%
-% Revision 1.4  2008/05/14 08:02:40  jansch
-% transposed grad.tra (was initially incorrect)
-%
-% Revision 1.3  2008/05/08 11:10:20  jansch
-% implementation in analogy with ctf2grad
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % for backward compatibility issues FIXME check whether anyone actually uses this code
 if isfield(hdr, 'Meg_pos'),

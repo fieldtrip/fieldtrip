@@ -19,19 +19,7 @@ function plot_line(X, Y, varargin)
 
 % Copyrights (C) 2009, Robert Oostenveld
 %
-% $Log: plot_line.m,v $
-% Revision 1.6  2009/10/07 13:52:03  roboos
-% updated documentation
-%
-% Revision 1.5  2009/07/14 16:13:14  roboos
-% speed up the plotting if no rescaling needs to be done
-%
-% Revision 1.4  2009/04/14 19:48:28  roboos
-% added keyvalcheck
-%
-% Revision 1.3  2009/04/14 14:31:08  roboos
-% many small changes to make it fully functional
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'color', 'linestyle', 'linewidth'});

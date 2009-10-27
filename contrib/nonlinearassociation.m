@@ -68,39 +68,7 @@ function [association] = nonlinearassociation(cfg, data)
 
 % Copyright (C) 2007, Inge Westmijse
 %
-% $Log: nonlinearassociation.m,v $
-% Revision 1.1  2008/11/14 12:19:13  roboos
-% moved to contrib directory
-%
-% Revision 1.11  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.10  2008/05/13 15:36:09  roboos
-% fixed potential bug in assessing the number of trials (when data.trial was column instead of row vector)a, now use numel instead of size
-%
-% Revision 1.9  2008/05/06 14:23:32  sashae
-% change in trial selection, cfg.trials can be a logical
-%
-% Revision 1.8  2008/02/20 16:07:48  roboos
-% added the documentation according to Pauly
-%
-% Revision 1.7  2008/02/20 15:38:39  roboos
-% removed saving to file, instead return to the command line
-% some other small changes to make it run through
-%
-% Revision 1.6  2008/02/20 14:57:45  roboos
-% this is the version that I received from Inge on cdrom
-% it was labeled nonlinearassociation_v170108.m
-%
-% Revision 1.3  2007/11/13 09:16:49  roboos
-% fixed bug due to debugging (fixed for-loop)
-%
-% Revision 1.2  2007/11/13 09:14:57  roboos
-% merged Inges contribution, included faster subfunctions for mean and hist
-%
-% Revision 1.1  2007/10/29 11:18:41  roboos
-% renamed function and moved to fieldtrip main, added normal data handling
-% and selection
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

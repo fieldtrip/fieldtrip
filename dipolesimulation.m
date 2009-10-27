@@ -58,47 +58,7 @@ function [simulated] = dipolesimulation(cfg)
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% $Log: dipolesimulation.m,v $
-% Revision 1.24  2009/07/02 15:37:32  roboos
-% use fixdipole for consistent dipole structure representation
-%
-% Revision 1.23  2009/03/23 21:19:51  roboos
-% allow different amplitudes for different dipoles
-%
-% Revision 1.22  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.21  2008/04/10 08:03:11  roboos
-% renamed the fieldtrip/private/prepare_vol_sens function into prepare_headmodel
-%
-% Revision 1.20  2008/03/18 12:27:22  roboos
-% use senstype helper function to determine whether output should contain grad or elec
-%
-% Revision 1.19  2007/03/21 12:43:41  roboos
-% replaced two "try" statements with if(isfield(..))
-%
-% Revision 1.18  2006/10/04 07:10:07  roboos
-% updated documentation
-%
-% Revision 1.17  2006/07/04 16:05:33  roboos
-% removed offset from output data
-%
-% Revision 1.16  2006/06/20 16:25:58  ingnie
-% updated documentation
-%
-% Revision 1.15  2006/06/13 14:51:38  ingnie
-% updated documentation to increase consistency in help of cfg options, added
-% default cfg.channel = 'all'
-%
-% Revision 1.14  2006/04/20 09:58:34  roboos
-% updated documentation
-%
-% Revision 1.13  2006/04/10 16:33:46  ingnie
-% updated documentation
-%
-% Revision 1.12  2005/11/10 10:02:14  roboos
-% minor change in whitespace and help
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

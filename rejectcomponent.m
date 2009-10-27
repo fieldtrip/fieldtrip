@@ -24,54 +24,7 @@ function [data] = rejectcomponent(cfg, comp, data)
 
 % Copyright (C) 2005-2009, Robert Oostenveld
 % 
-% $Log: rejectcomponent.m,v $
-% Revision 1.12  2009/08/14 09:30:20  jansch
-% also pass configuration of input data-structure to the output data.cfg in
-% case of nargin==3
-%
-% Revision 1.11  2009/03/26 13:21:50  jansch
-% ensure correct montage in the case of hasdata
-%
-% Revision 1.10  2009/03/26 10:53:34  jansch
-% added functionality to use a comp structure to remove components from a
-% data structure. in addition the function now relies on apply_montage and
-% it also attempts to balance the grad structure in the data, which is
-% required for the correct computation of the leadfields when sourceanalysis
-% is done on these data
-%
-% Revision 1.9  2009/03/23 20:03:50  roboos
-% removed obsolete and non-functional code
-%
-% Revision 1.8  2008/11/04 20:20:34  roboos
-% added optional baseline correction
-%
-% Revision 1.7  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.6  2007/03/04 14:45:28  chrhes
-% fixed a small bug by adding the third input argument 'data' to the function
-% interface (declaration) in the first line of the file. Also added an error
-% message as a reminder that component removal from incomplete decompositions
-% is not yet implemented: it is not clear how this should work, probably the
-% optimal approach is to estimate the component waveforms using MMSE, but the
-% question is whether to use a global cross-covariance estimate or a local
-% (trial based) estimate to compute the adaptive spatial filter.
-%
-% Revision 1.5  2006/04/20 09:58:34  roboos
-% updated documentation
-%
-% Revision 1.4  2006/01/30 17:00:46  roboos
-% added initial support for incomplete decompositions (requires input data)
-%
-% Revision 1.3  2005/10/27 09:37:55  jansch
-% fixed bug in assignment of labels
-%
-% Revision 1.2  2005/10/06 07:11:09  roboos
-% changed from DOS to UNIX ascii format
-%
-% Revision 1.1  2005/09/29 16:23:24  jansch
-% first implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

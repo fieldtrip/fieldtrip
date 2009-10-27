@@ -10,32 +10,7 @@ function [dat] = read_labview_dtlg(filename, datatype);
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% $Log: read_labview_dtlg.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.5  2008/09/30 08:01:04  roboos
-% replaced all fread(char=>char) into uint8=>char to ensure that the
-% chars are read as 8 bits and not as extended 16 bit characters. The
-% 16 bit handling causes problems on some internationalized OS/Matlab
-% combinations.
-%
-% the help of fread specifies "If the precision is 'char' or 'char*1', MATLAB
-% reads characters using the encoding scheme associated with the file.
-% See FOPEN for more information".
-%
-% Revision 1.4  2007/10/30 09:48:42  roboos
-% hopefully fixed problem for files with version [8 0 128 0], where the variable descriptor length could not be determined. Instead of relying on the variable descriptor length, determine whether there are additional offset blocks by looking at "nd"
-%
-% Revision 1.3  2007/10/08 12:59:32  roboos
-% fixed bug in ordering of dimensions (c/fortran)
-%
-% Revision 1.2  2007/10/04 11:54:45  roboos
-% fixed bug in estimating the number of dimensions
-%
-% Revision 1.1  2007/10/02 15:42:45  roboos
-% initial implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 
 fid     = fopen(filename, 'r', 'ieee-be');

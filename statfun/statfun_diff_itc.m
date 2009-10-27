@@ -19,13 +19,7 @@ function [s] = statfun_xxx(cfg, dat, design);
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: statfun_diff_itc.m,v $
-% Revision 1.1  2008/09/23 07:31:15  roboos
-% Moved all statfuns and trialfuns to their own directories, where they will be easier to find for the end-user. Also updated fieldtripdefs accordingly.
-%
-% Revision 1.3  2008/04/22 10:58:20  roboos
-% added option cfg.complex, to allow testing the phase (upon request by Arno)
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the defaults
 if ~isfield(cfg, 'complex'), cfg.complex = 'diffabs';   end

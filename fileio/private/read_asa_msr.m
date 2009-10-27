@@ -5,22 +5,7 @@ function data = read_asa_msr(fn);
 
 % Copyright (C) 2002, Robert Oostenveld
 % 
-% $Log: read_asa_msr.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.5  2008/11/14 07:41:17  roboos
-% only whitespace, no functional change
-%
-% Revision 1.4  2008/11/14 07:36:24  roboos
-% use strcmpi instead of strcmp(lower())
-%
-% Revision 1.3  2008/11/12 17:02:03  roboos
-% explicitely specify ieee-le in fopen()
-%
-% Revision 1.2  2003/03/11 15:24:51  roberto
-% updated help and copyrights
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 Npnt      = read_asa(fn, 'NumberPositions=', '%d');
 Ntime     = read_asa(fn, 'NumberTimesteps=', '%d');

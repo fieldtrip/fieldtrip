@@ -67,59 +67,7 @@ function [stat] = sourcestatistics_randcluster(cfg,source)
 
 % Copyright (C) 2004, Jan-Mathijs Schoffelen
 %
-% $Log: sourcestatistics_randcluster.m,v $
-% Revision 1.15  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.14  2007/05/30 07:04:05  roboos
-% use the checkdata function to avlidate the input and to convert the inside vector to indices
-%
-% Revision 1.13  2006/07/05 10:21:56  roboos
-% updaed documentation for consistency
-%
-% Revision 1.12  2006/03/30 12:24:33  roboos
-% Implemented private/fixinside, which facilitates consistent
-% handling of source/volume data. Improved documentation. Fixed some
-% bugs related to inconsistent handling of ROIs (i.e. inside/outside)
-%
-% Revision 1.11  2005/06/29 12:46:29  roboos
-% the following changes were done on a large number of files at the same time, not all of them may apply to this specific file
-% - added try-catch around the inclusion of input data configuration
-% - moved cfg.version, cfg.previous and the assignment of the output cfg to the end
-% - changed help comments around the configuration handling
-% - some changes in whitespace
-%
-% Revision 1.10  2005/06/03 08:58:07  roboos
-% transfer homogenous transformation matrix from input to output (if present)
-% added an extra method of counting the number of dipoles/voxels in the input source structure
-%
-% Revision 1.9  2005/05/17 17:50:39  roboos
-% changed all "if" occurences of & and | into && and ||
-% this makes the code more compatible with Octave and also seems to be in closer correspondence with Matlab documentation on shortcircuited evaluation of sequential boolean constructs
-%
-% Revision 1.8  2005/05/12 12:17:23  roboos
-% added a reshape around the source parameter to ensure that it is a row vector
-% if source.pos is not available, determine the number of dipoles from source.dim
-%
-% Revision 1.7  2005/05/09 14:14:46  roboos
-% made the assignment of the output stat fields that describe the grid (like pos, xgrid, dim ...) optional, so that it won't fail when one of these fields is not present
-%
-% Revision 1.6  2005/03/18 14:36:15  roboos
-% fixed bug in two sided testing by replacing the relevant code by the RANDSTATPROB private subfunction
-%
-% Revision 1.5  2004/11/09 15:23:10  jansch
-% fixed nasty bug which led to systematic underestimation of the max-cluster-
-% size in the randomized volumes.
-%
-% Revision 1.4  2004/10/20 10:37:55  roboos
-% fixed bug that occurred if avg.pow was not a row-vector
-%
-% Revision 1.3  2004/09/22 14:09:52  roboos
-% renamed method=randomized into method=randomization, with backward compatibility
-%
-% Revision 1.2  2004/09/08 13:31:56  jansch
-% changed some code. added version information
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

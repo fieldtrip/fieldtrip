@@ -21,33 +21,7 @@ function [lf] = eeg_leadfieldb(pos, elc, vol)
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% $Log: eeg_leadfieldb.m,v $
-% Revision 1.5  2009/04/23 15:06:14  roboos
-% added patch from Cristiano
-%
-% Revision 1.4  2009/03/30 15:06:14  roboos
-% added the patch from Alexandre to support openmeeg
-%
-% Revision 1.3  2009/02/02 13:12:53  roboos
-% small fix, cpbem->bemcp
-%
-% Revision 1.2  2009/02/02 12:59:26  roboos
-% added bemcp implementation, do not use vol.tra any more, made some changes to the checks on the input structures, use voltype in switch ladder
-%
-% Revision 1.1  2009/01/21 10:32:38  roboos
-% moved from forwinv/* and forwinv/mex/* directory to forwinv/private/* to make the CVS layout consistent with the release version
-%
-% Revision 1.3  2008/04/14 20:54:35  roboos
-% be more explicit about BEM type
-%
-% Revision 1.2  2005/12/06 11:41:07  roboos
-% added support for dipoli models
-% restructured the whole code
-% combine electrode transfer and system matrix in a single matrix to speed forward computations up
-%
-% Revision 1.1  2003/10/07 08:40:22  roberto
-% made separate function for BEM, based on part of eeg_leadfield.m
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 
 % do some sanity checks

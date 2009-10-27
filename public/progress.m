@@ -33,40 +33,7 @@ function progress(varargin)
 
 % Copyright (C) 2004-2008, Robert Oostenveld
 %
-% $Log: progress.m,v $
-% Revision 1.2  2008/11/13 10:59:19  roboos
-% added estimated time to finish (etf) and example
-%
-% Revision 1.1  2008/11/13 09:55:36  roboos
-% moved from fieldtrip/private, fileio or from roboos/misc to new location at fieldtrip/public
-%
-% Revision 1.8  2007/05/08 20:55:03  roboos
-% replaced all single & by double &&, hopefully resulting in a small speedup
-%
-% Revision 1.7  2006/12/11 10:52:32  roboos
-% removed "feature accel off", since it was not solving the problem.
-% The acceleration feature has to be disabled BEFORE this function
-% is called the first time.
-%
-% Revision 1.6  2006/10/26 10:44:00  roboos
-% fixed bug in double variable use
-%
-% Revision 1.5  2006/10/26 09:27:06  roboos
-% added "feature accel off" to prevent matlab 7.3 from crashing
-%
-% Revision 1.4  2006/06/12 11:07:39  roboos
-% modified the 1% update criterium, fixed a bug in the length of the textbar
-%
-% Revision 1.3  2005/03/31 12:22:38  roboos
-% added ascii-art "textbar" option using the full screen width
-%
-% Revision 1.2  2004/10/22 07:23:39  roboos
-% improved help, comments and code layout
-%
-% Revision 1.1  2004/10/21 17:37:17  roboos
-% new implementation, to be used to replace subfunction in  beamformer scan
-% and in other fieldtrip functions
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 persistent p        % the previous value of the progress
 persistent c        % counter for the number of updates that is done

@@ -18,19 +18,7 @@ function [data] = appendspike(cfg, varargin);
 
 % Copyright (C) 2007, Robert Osotenveld
 %
-% $Log: appendspike.m,v $
-% Revision 1.4  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.3  2008/04/25 12:30:22  roboos
-% enabled the checkdata call at the beginning
-%
-% Revision 1.2  2007/04/03 15:37:07  roboos
-% renamed the checkinput function to checkdata
-%
-% Revision 1.1  2007/03/14 13:57:04  roboos
-% initial implementation, tested on neuralynx data
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

@@ -8,16 +8,7 @@ function [pnt, tri, srf] = read_bv_srf(filename);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: read_bv_srf.m,v $
-% Revision 1.1  2009/01/14 09:24:45  roboos
-% moved even more files from fileio to fileio/privtae, see previous log entry
-%
-% Revision 1.2  2006/02/08 08:10:11  roboos
-% added srf to output arguments
-%
-% Revision 1.1  2005/12/23 13:23:44  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % This documentation originates from
 %   http://www.brainvoyager.com/BV2000OnlineHelp/BrainVoyagerWebHelp/mergedProjects/FileFormats/BrainVoyager_File_Formats.htm

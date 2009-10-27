@@ -44,53 +44,7 @@ function [dipout] = beamformer_lcmv(dip, grad, vol, dat, Cy, varargin)
 
 % Copyright (C) 2003-2008, Robert Oostenveld
 %
-% $Log: beamformer_lcmv.m,v $
-% Revision 1.14  2009/03/23 21:14:42  roboos
-% some whitespace changes, nothing functional
-%
-% Revision 1.13  2009/02/11 10:25:43  jansch
-% added some comments
-%
-% Revision 1.12  2009/02/10 10:51:02  jansch
-% implemented subspace projection (for eigenspace bf, sensor-array subsampling etc)
-%
-% Revision 1.11  2008/12/04 11:45:57  jansch
-% made minor change in fixedori for consistency of code with respect to
-% beamformer_dics (added real() and ctranspose)
-%
-% Revision 1.10  2008/08/13 16:13:38  roboos
-% added option fixedori, not yet fully tested
-%
-% Revision 1.9  2008/08/13 13:47:42  roboos
-% updated documentation
-%
-% Revision 1.8  2008/07/02 16:02:01  roboos
-% fixed bug in % lambda
-%
-% Revision 1.7  2008/07/02 07:57:33  roboos
-% allow specification of percentage noise in lambda, relative to trace(cov)/nchans
-%
-% Revision 1.6  2008/03/18 13:01:17  roboos
-% added optional argument normalizeparam, is passed onto compute_leadfield
-%
-% Revision 1.5  2008/03/05 16:28:26  roboos
-% added some dummy code for subspace projection, not yet finished
-%
-% Revision 1.4  2007/12/11 11:17:49  roboos
-% fixed bug in handling of prespecified dipole moment
-%
-% Revision 1.3  2006/10/16 15:19:44  roboos
-% added keepcov option, also in combination with projectnoise
-% fixed obvious bug for progress indicator
-%
-% Revision 1.2  2006/10/12 10:17:31  roboos
-% fixed bug in selecting dipoles on the inside positions only
-% output cell-arrays are [] for outside points
-% removed catch for mom, fixed dipoles should also work
-%
-% Revision 1.1  2006/10/12 09:07:07  roboos
-% moved code from beamformer into stand-alone functions, for easier use and maintenance
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if mod(nargin-5,2)
   % the first 5 arguments are fixed, the other arguments should come in pairs

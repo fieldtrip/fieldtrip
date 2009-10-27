@@ -4,10 +4,7 @@ function [grid] = precompute_leadfield(cfg, data)
 
 % Copyright (C) 2005-2006, F.C. Donders Centre
 %
-% $Log: precompute_leadfield.m,v $
-% Revision 1.9  2006/03/14 08:09:22  roboos
-% added copyrigth and cvs log statement
-% 
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 warning('PRECOMPUTE_LEADFIELD is deprecated, please use PREPARE_LEADFIELD');
 

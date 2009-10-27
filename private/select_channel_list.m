@@ -17,10 +17,7 @@ function [select] = select_channel_list(label, select, titlestr);
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% $Log: select_channel_list.m,v $
-% Revision 1.1  2007/01/22 10:18:24  roboos
-% this is a copy of select_multiple_dlg, fixed titlestr
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<3
   titlestr = 'Select';

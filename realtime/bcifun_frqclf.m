@@ -11,25 +11,7 @@ function cmd = bcifun_frqclf(cfg,data)
 %
 % Copyright (C) 2009, Marcel van Gerven
 %
-% $Log: bcifun_frqclf.m,v $
-% Revision 1.6  2009/07/01 09:48:52  marvger
-% changed allcmd back to cmd
-%
-% Revision 1.5  2009/06/30 12:38:50  roboos
-% made consistent with other fieldtrip behaviour
-%
-% Revision 1.4  2009/06/14 12:24:08  marvger
-% changed classify to predict
-%
-% Revision 1.3  2009/04/29 10:27:54  marvger
-% update
-%
-% Revision 1.2  2009/04/23 12:53:27  marvger
-% changed CLFPROC.test to CLFPROC.classify
-%
-% Revision 1.1  2009/04/23 12:50:49  marvger
-% update of the BCI realtime code
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 persistent DATA;
 persistent LABELS;

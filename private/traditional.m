@@ -38,21 +38,7 @@ function [H] = traditional(f);
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% $Log: traditional.m,v $
-% Revision 1.5  2005/08/15 08:15:33  roboos
-% reimplemented the rotate function, which contained an error (the error is in the AIR technical reference)
-% changed all functions to be dependent on the rotate, translate and scale function
-% all functions now behave consistenly, which also means that they are not compleetly backward compatible w.r.t. the order of the rotations
-%
-% Revision 1.4  2005/08/11 07:57:14  roboos
-% fixed bug in y-rotation
-%
-% Revision 1.3  2005/04/21 08:28:45  roboos
-% fixed bug in rotation matrix (thanks to Arno)
-%
-% Revision 1.2  2004/05/19 09:57:07  roberto
-% added GPL copyright statement, added CVS log item
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % compute the homogenous transformation matrix for the translation
 T = translate(f([1 2 3]));

@@ -19,20 +19,7 @@ function select_range(handle, eventdata, varargin)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% $Log: select_range.m,v $
-% Revision 1.5  2009/08/04 11:56:55  roboos
-% again a change in the handling user data
-% added explicit option for clearing the user data in the figure
-%
-% Revision 1.4  2009/08/03 20:39:16  roboos
-% reverted to revision 1.2 and changed the setappdata handling
-%
-% Revision 1.2  2009/07/30 19:10:25  ingnie
-% deleted disp(callback)
-%
-% Revision 1.1  2009/07/14 13:17:41  roboos
-% implemented new function, to be used as callback in interactive data selection
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the optional arguments
 event    = keyval('event',    varargin);

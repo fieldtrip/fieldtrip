@@ -13,10 +13,7 @@ function [freq] = freqinterpolate(cfg, freq)
 
 % Copyright (C) 2009, Aldemar Torres Valderama
 %
-% $Log: freqinterpolate.m,v $
-% Revision 1.1  2009/02/24 09:24:32  roboos
-% first implementation of new functino, can be used for plotting of powerspectra that contain line-noise and harmonic peaks
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

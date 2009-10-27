@@ -46,73 +46,7 @@ function [stat] = sourcestatistics(cfg, varargin)
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 %
-% $Log: sourcestatistics.m,v $
-% Revision 1.44  2009/10/07 10:06:21  jansch
-% temporary workaround to work with private copy statistics_wrapperJM, in order to develop some code (of coures with the eventual benefit for all). users whose (part of their) username contains 'jan' may run into problems, and have to uncomment lines 157, 161-163
-%
-% Revision 1.43  2009/04/08 15:57:08  roboos
-% moved the handling of the output cfg (with all history details) from wrapper to main function
-%
-% Revision 1.42  2008/12/05 14:47:05  ingnie
-% updated help on cfg.roi
-%
-% Revision 1.41  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.40  2008/07/31 16:22:52  roboos
-% added documentation pertaining to atlas ROIs and added check on input in case of ROI
-%
-% Revision 1.39  2007/05/30 07:08:08  roboos
-% use checkdata instead of fixinside
-%
-% Revision 1.38  2007/04/03 15:37:07  roboos
-% renamed the checkinput function to checkdata
-%
-% Revision 1.37  2007/04/03 10:04:20  roboos
-% allow both source and volume data as input
-%
-% Revision 1.36  2007/03/30 17:05:40  ingnie
-% checkinput; only proceed when input data is allowed datatype
-%
-% Revision 1.35  2006/10/19 15:05:51  roboos
-% updated documentation
-%
-% Revision 1.34  2006/07/12 09:17:58  roboos
-% improved documentation, fixed small bug in converting cfg option
-%
-% Revision 1.33  2006/07/05 10:21:56  roboos
-% updaed documentation for consistency
-%
-% Revision 1.32  2006/06/13 14:48:10  ingnie
-% updated documentation
-%
-% Revision 1.31  2006/04/20 09:58:34  roboos
-% updated documentation
-%
-% Revision 1.30  2006/03/30 12:24:33  roboos
-% Implemented private/fixinside, which facilitates consistent
-% handling of source/volume data. Improved documentation. Fixed some
-% bugs related to inconsistent handling of ROIs (i.e. inside/outside)
-%
-% Revision 1.29  2005/10/05 11:06:30  roboos
-% documentation change
-%
-% Revision 1.28  2005/05/17 17:50:39  roboos
-% changed all "if" occurences of & and | into && and ||
-% this makes the code more compatible with Octave and also seems to be in closer correspondence with Matlab documentation on shortcircuited evaluation of sequential boolean constructs
-%
-% Revision 1.27  2005/05/12 07:20:06  roboos
-% fixed backward compatibility approach/method translation for randcluster
-%
-% Revision 1.26  2005/05/09 14:20:02  roboos
-% made the check on cfg.method optional, so that it also works when only the approach is specified
-%
-% Revision 1.25  2005/04/07 17:12:21  roboos
-% improved the general help documentation, no code changes
-%
-% Revision 1.24  2005/04/06 14:29:41  roboos
-% added copyrights and a log message placeholder
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

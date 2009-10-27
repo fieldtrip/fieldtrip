@@ -47,34 +47,7 @@ function [script, details] = analysisprotocol(cfg, datacfg)
 
 % Copyright (C) 2006-2009, Robert Oostenveld
 %
-% $Log: analysisprotocol.m,v $
-% Revision 1.4  2009/05/07 07:58:35  roboos
-% some general cleanup, don't know the precise details
-%
-% Revision 1.3  2009/03/23 21:17:53  roboos
-% made font slightly larger
-%
-% Revision 1.2  2009/03/05 09:40:32  roboos
-% small change in text feedback
-%
-% Revision 1.1  2009/03/05 09:38:31  roboos
-% renamed cfg2script into analysisprotocol
-% created wrapper for deprecated function that gives a warning
-% updated documentation
-%
-% Revision 1.4  2009/03/05 09:07:40  roboos
-% added graphical display of the analysis protocol
-% changed some details of the recursion, now works with a few persistent variables
-%
-% Revision 1.3  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.2  2007/05/15 07:02:16  roboos
-% updated help
-%
-% Revision 1.1  2006/12/04 16:03:18  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 persistent depth   % this corresponds to the vertical   direction in the figure
 persistent branch  % this corresponds to the horizontal direction in the figure

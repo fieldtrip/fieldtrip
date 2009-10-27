@@ -30,69 +30,7 @@ function [sens] = apply_montage(sens, montage, varargin)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: apply_montage.m,v $
-% Revision 1.19  2009/07/02 16:14:15  roboos
-% allow to apply one montage on another one
-%
-% Revision 1.18  2009/07/02 09:18:41  vlalit
-% Fixing a bug in building an inverse montage (confusion between 'montage' and 'tra')
-%
-% Revision 1.17  2009/07/01 09:21:37  roboos
-% changed handling of rank-reduced montage for inversion, give warning
-% removed the modification by vladimir for the sequential application of montages
-%
-% Revision 1.16  2009/06/27 13:24:54  vlalit
-% Additional fixes to make custom balancing work.
-%
-% Revision 1.15  2009/06/26 17:39:17  vlalit
-% Added the possiblity to handle custom montages applied to MEG sensors (for removing
-%  spatial confounds). Hopefully there won't be major side effects.
-%
-% Revision 1.14  2009/06/17 10:13:05  roboos
-% improved documentation
-%
-% Revision 1.13  2009/03/26 11:07:40  roboos
-% start with an explicit check on the channel number
-%
-% Revision 1.12  2009/03/26 11:02:01  jansch
-% changed order of unused channels (was initially sorted alphabetically) into
-% how the appear in the input data
-%
-% Revision 1.11  2008/12/15 12:58:56  roboos
-% convert from sparse to full when data is single precision
-%
-% Revision 1.10  2008/09/10 08:42:23  roboos
-% fixed small bug, thanks to Vladimir
-%
-% Revision 1.9  2008/08/21 12:03:37  roboos
-% fixed small typo related to last commit
-%
-% Revision 1.8  2008/08/21 12:01:47  roboos
-% selection of rows and columns to be removed had to be inverted, thanks to Thilo
-%
-% Revision 1.7  2008/08/13 16:14:46  roboos
-% remove columns and rows for montage channels that are not present in the data
-%
-% Revision 1.6  2008/07/17 14:46:06  roboos
-% check on presence of channels required for montage was incorrect
-%
-% Revision 1.5  2008/05/15 15:08:51  roboos
-% added support for applying the inverse montage (i.e. undo a previous montage)
-% added support for applying the montage to preprocessed/raw data
-%
-% Revision 1.4  2008/05/13 11:43:27  roboos
-% fixed bug in selempty
-%
-% Revision 1.3  2008/05/13 09:08:19  roboos
-% fixed bug in assignment
-% added option keepunused=yes|no
-%
-% Revision 1.2  2008/04/28 14:14:29  roboos
-% added closing bracket
-%
-% Revision 1.1  2008/04/14 20:16:37  roboos
-% new implementation, required for spm integration
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get optional input arguments
 keepunused    = keyval('keepunused',    varargin{:}); if isempty(keepunused),    keepunused    = 'no';  end

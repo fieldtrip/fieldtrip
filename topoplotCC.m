@@ -22,45 +22,7 @@ function cfg = topoplotCC(cfg, freq)
 %
 % See also: PREPARE_LAYOUT, MULTIPLOTCC
 
-% $Log: topoplotCC.m,v $
-% Revision 1.11  2009/06/15 12:57:39  roboos
-% added checkdata and checkconfig calls
-% changed default colorparam into cohspctrm
-% changed default width into 1
-% updated documentation
-%
-% Revision 1.10  2009/04/15 13:07:14  roboos
-% largely rewritten the whole function to work with dimord=chan_chan_freq
-% now also with specification of the width, opacity and color for each line
-%
-% Revision 1.9  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.8  2007/03/21 15:44:05  chrhes
-% updated documentation regarding the fact that cfg.layout can also contain a
-% layout structure obtained using the function prepare_layout.m
-%
-% Revision 1.7  2007/03/14 08:43:12  roboos
-% replaced call to createlayout to prepare_layout, made some small changes to the lay structure
-%
-% Revision 1.6  2006/06/26 10:13:15  ingnie
-% now works also if no stat.freq present
-%
-% Revision 1.5  2006/04/20 09:58:34  roboos
-% updated documentation
-%
-% Revision 1.4  2006/03/09 08:20:54  roboos
-% changed freq.foi into freq.freq
-%
-% Revision 1.3  2005/10/01 16:19:04  jansch
-% added some help-information. have fun!
-%
-% Revision 1.2  2005/09/05 06:40:44  jansch
-% added defaults in configuration
-%
-% Revision 1.1  2005/08/25 10:59:37  jansch
-% New implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

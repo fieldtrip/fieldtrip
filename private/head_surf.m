@@ -20,31 +20,7 @@ function [pnt,tri]=head_surf(vol,grad,flag);
 
 % Copyright (C) Jan-Matthijs Schoffelen
 %
-% $Log: head_surf.m,v $
-% Revision 1.7  2005/11/01 09:53:17  roboos
-% added optional input argument 'flag', which determines whether the lower rim
-% will be shifted downward
-%
-% Revision 1.6  2005/09/29 00:37:33  roboos
-% made the code independent of the gradiometer and volume label
-% changed the shift of the lower rim, now with distance that is 1/4 of the radius
-% updated the help
-%
-% Revision 1.5  2004/01/26 09:03:12  roberto
-% replaced complex 2x2D delaunay with single 3D convex hull triangulation
-% better coverage of inferio-frontal region
-%
-% Revision 1.4  2003/11/03 14:43:25  roberto
-% included search for matching labels in volume and gradiometer
-%
-% Revision 1.3  2003/10/07 10:43:02  roberto
-% head surface is now only computed from M channels and not reference channels
-%
-% Revision 1.2  2003/06/03 08:30:32  roberto
-% *** empty log message ***
-%
-% Revision 1.1  2003/04/17 14:57:32  roberto
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<3
   flag = 1;

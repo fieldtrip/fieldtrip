@@ -13,10 +13,7 @@ function [val, status] = findcfg(cfg, var);
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% $Log: findcfg.m,v $
-% Revision 1.1  2006/07/24 11:24:39  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if var(1)~='.'
   var = ['.' var];

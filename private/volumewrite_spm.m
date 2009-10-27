@@ -8,20 +8,7 @@ function [Va] = volumewrite_spm(filename, data, transform)
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% $Log: volumewrite_spm.m,v $
-% Revision 1.4  2006/06/07 09:34:19  roboos
-% changed checktoolbox into hastoolbox
-%
-% Revision 1.3  2006/05/08 10:05:50  roboos
-% fixed writing of volumes of an unsupported datatype by converting them to double
-%
-% Revision 1.2  2006/05/03 15:08:12  jansch
-% temporary fix in the case of logical input; spm does not know how to handle this
-%
-% Revision 1.1  2006/01/05 13:43:02  roboos
-% New function, is used by all functions that write to hdr/img file
-% using SPM (volumenormalise, volumesegment and volumewrite).
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % check whether the required SPM2 toolbox is available
 hastoolbox('SPM2', 1);

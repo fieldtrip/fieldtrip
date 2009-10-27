@@ -12,13 +12,7 @@ function [h] = fdr(p, q);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: fdr.m,v $
-% Revision 1.2  2006/06/07 12:57:09  roboos
-% also support n-D input arrays
-%
-% Revision 1.1  2005/11/08 16:02:58  roboos
-% initial implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % convert the input into a row vector
 dim = size(p);

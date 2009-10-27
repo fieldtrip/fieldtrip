@@ -46,43 +46,7 @@ function [cfg, varargout] = prepare_resampled_data(cfg, varargin);
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% $Log: prepare_resampled_data.m,v $
-% Revision 1.11  2006/07/04 16:04:50  roboos
-% renamed option 'jacknife' into 'jackknife' for consistency, maintain backward compatibility with cfgs and old data
-%
-% Revision 1.10  2005/05/17 17:50:49  roboos
-% changed all "if" occurences of & and | into && and ||
-% this makes the code more compatible with Octave and also seems to be in closer correspondence with Matlab documentation on shortcircuited evaluation of sequential boolean constructs
-%
-% Revision 1.9  2005/03/03 13:57:35  roboos
-% implemented pseudovalue resampling, i.e. a combination of jackknife and the complete average
-%
-% Revision 1.8  2004/10/13 11:23:12  roboos
-% changed indentation, I am not sure whether code was changed
-%
-% Revision 1.7  2004/09/22 13:38:21  roboos
-% replaced personal fac function by prod(1:x) to compute x!
-%
-% Revision 1.6  2004/09/21 14:39:03  roboos
-% fixed bug related to previous fix
-%
-% Revision 1.5  2004/09/21 14:36:05  roboos
-% fixed bug in averaging when different conditions have different number of replications
-%
-% Revision 1.4  2004/09/21 12:26:23  roboos
-% added FIXME comment
-%
-% Revision 1.3  2004/09/20 09:18:56  roboos
-% fixed bug in permutation, the number of permutations was hardcoded to 10
-%
-% Revision 1.2  2004/09/13 08:27:08  roboos
-% implemented permutation for multiple conditions
-%
-% Revision 1.1  2004/09/08 16:37:48  roboos
-% new implementation based on the functionality that was already present in sourceanalysis
-% it facilitates updating the different resampling strategies for the different beamformers
-% and this separate subfunction can now also be used by other algorithms
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % for backward compatibility with misspelled configuration option
 if isfield(cfg, 'jacknife'), cfg.jackknife = cfg.jacknife; cfg = rmfield(cfg, 'jacknife'); end

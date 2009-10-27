@@ -33,25 +33,7 @@ function clusterplot(cfg, stat)
 
 % Copyright (C) 2007, Ingrid Nieuwenhuis, F.C. Donders Centre
 %
-% $Log: clusterplot.m,v $
-% Revision 1.8  2009/05/22 14:54:58  ingnie
-% added check of data, should be averged over frequencies
-%
-% Revision 1.7  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.6  2008/09/22 15:18:53  roboos
-% only prepare the layout once
-%
-% Revision 1.5  2008/06/12 12:22:36  ingnie
-% Now also works for 1D data (= avaraged over time), added some comma's in default setting for readability
-%
-% Revision 1.4  2007/11/07 16:28:08  ingnie
-% added option saveaspng
-%
-% Revision 1.3  2007/11/07 12:52:46  ingnie
-% add cvs log
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

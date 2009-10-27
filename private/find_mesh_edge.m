@@ -9,10 +9,7 @@ function [pnt, line] = find_mesh_edge(pnt, dhk);
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% $Log: find_mesh_edge.m,v $
-% Revision 1.2  2003/03/04 21:46:18  roberto
-% added CVS log entry and synchronized all copyright labels
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 npnt = size(pnt,1);
 ndhk = size(dhk,1);

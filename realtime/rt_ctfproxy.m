@@ -24,19 +24,7 @@ function rt_ctfproxy(cfg)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: rt_ctfproxy.m,v $
-% Revision 1.4  2009/08/05 11:36:40  roboos
-% added default cfg.jumptoeof=yes (requested by Ali and Yuka)
-%
-% Revision 1.3  2009/07/15 07:12:07  roboos
-% added readevent=yes as default
-%
-% Revision 1.2  2009/01/14 21:16:52  marvger
-% changes related to realtime processing
-%
-% Revision 1.1  2008/10/24 08:51:38  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the defaults
 if ~isfield(cfg, 'target'),             cfg.target = [];                                  end

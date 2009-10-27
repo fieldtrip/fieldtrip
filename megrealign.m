@@ -78,54 +78,7 @@ function [interp] = megrealign(cfg, data);
 
 % Copyright (C) 2004-2007, Robert Oostenveld
 %
-% $Log: megrealign.m,v $
-% Revision 1.62  2009/10/12 14:12:03  jansch
-% changed input from arbitrary coordinates and rotation to nas/lpa/rpa based for the per trial realignment
-%
-% Revision 1.61  2009/05/14 19:21:03  roboos
-% consistent handling of cfg.headshape in code and documentation
-%
-% Revision 1.60  2009/04/14 20:06:27  jansch
-% added functionality to do a per trial realignment, based on estimated
-% head position per trial. this is experimental code and depends on functionality
-% which is not in the release as of yet. jan-mathijs is working on this. if you
-% are interested in co-developing, get in touch with jm
-%
-% Revision 1.59  2009/04/08 09:05:28  roboos
-% fixed problem when interpolating data from one to the other meg system (i.e. ctf275->ctf151)
-%
-% Revision 1.58  2009/02/11 21:17:22  jansch
-% changed key-sensors from which to compute the transformation matrix between
-% template gradiometer array and original for 4d-248 system. fixed some minor
-% bugs when target and original grad do not contain the same sensors. built
-% in the possibility to prune the leadfield-matrix according to a number of
-% spatial components (i.e. if cfg.pruneratio>1 and integer).
-%
-% Revision 1.57  2009/01/20 13:01:31  sashae
-% changed configtracking such that it is only enabled when BOTH explicitly allowed at start
-% of the fieldtrip function AND requested by the user
-% in all other cases configtracking is disabled
-%
-% Revision 1.56  2008/12/02 12:22:00  roboos
-% allow data to be realigned AND simultaneously interpolated to another MEG sensor type, e.g. from ctf151 to ctf275
-%
-% Revision 1.55  2008/11/25 14:56:52  estmee
-% Documentation update
-%
-% Revision 1.54  2008/11/21 12:48:17  sashae
-% added call to checkconfig at start and end of function
-%
-% Revision 1.53  2008/10/02 15:32:21  sashae
-% replaced call to createsubcfg with checkconfig
-%
-% Revision 1.52  2008/09/30 16:45:55  sashae
-% checkconfig: checks if the input cfg is valid for this function
-%
-% Revision 1.51  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.50  2008/07/15 19:56:44  roboos
-% moved cfg details for dipole grid to subcfg (cfg.grid)subcfg (cfg.grid.xxx)
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

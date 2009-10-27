@@ -25,45 +25,7 @@ function [dat] = read_neuralynx_ds(dirname, hdr, begsample, endsample, chanindx)
 
 % Copyright (C) 2006-2007, Robert Oostenveld
 %
-% $Log: read_neuralynx_ds.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.9  2008/07/01 13:36:17  roboos
-% SubSamplingInterleave is not always present
-%
-% Revision 1.8  2008/01/24 19:54:40  roboos
-% fixed bug in begrecord, thanks to Thilo
-%
-% Revision 1.7  2008/01/10 12:53:11  roboos
-% small change in reading of the header of teh subfiles, use SubSamplingInterleave for downsampled fsample, implemented wortkaround for Matlab bug in comparing uint64 values
-%
-% Revision 1.6  2007/12/20 17:59:05  roboos
-% fixed bug in determining begin record for ncs
-%
-% Revision 1.5  2007/12/19 09:27:39  roboos
-% more explicit handling of the three different filetypes
-% give error if FirstTimestamp is not the same for ncs files
-%
-% Revision 1.4  2007/12/12 16:46:04  roboos
-% do not read records from files, get first and last timestamp from file headers
-%
-% Revision 1.3  2007/03/21 17:06:57  roboos
-% updated the documentation
-%
-% Revision 1.2  2006/12/13 15:49:33  roboos
-% many changes, cleaned up code, removed subfunctions, explicitely implement teh computation fo timestamp stuff using a mix of double and uint64 precision (using overloaded mex functions in @uint64 toolbox)
-%
-% Revision 1.1  2006/03/29 14:39:20  roboos
-% New implementation, replaces the previous seperate read_neuralynx_header
-% and read_neuralynx_data. Instead of reimplementing the reading code, this
-% function calls the specialized subfunctions.
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 needhdr = (nargin==1);
 needdat = (nargin>=2);

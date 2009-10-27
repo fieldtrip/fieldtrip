@@ -4,10 +4,7 @@ function [sens] = read_fcdc_elec(filename)
 
 % Copyright (C) 2005-200, Robert Oostenveld
 %
-% $Log: read_fcdc_elec.m,v $
-% Revision 1.12  2009/05/07 14:21:29  roboos
-% deprecated the read_fcdc and write_fcdc functions, give warning and mention the correct function to be used
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

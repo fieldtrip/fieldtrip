@@ -25,18 +25,7 @@ function [dat] = read_biosig_data(filename, hdr, begsample, endsample, chanindx)
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% $Log: read_biosig_data.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.1  2004/03/10 11:50:31  roberto
-% new implementation of wrapper functions around the BIOSIG toolbox (specifically section T200)
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % open the file, read the header
 % it should be the same as hdr.orig

@@ -22,26 +22,7 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% $Log: nanmean.m,v $
-% Revision 1.1  2006/03/20 14:36:46  jansch
-% adjusted the nan_XXX functions in fieldtrip's private directory such that the
-% corresponding functions behave consistently with the identical matlab-functions,
-% not using the stats toolbox. original private functions are renamed from nan_XXX
-% into nanXXX (also consistent with matlab terminology)
-%
-% Revision 1.2  2005/05/17 17:50:49  roboos
-% changed all "if" occurences of & and | into && and ||
-% this makes the code more compatible with Octave and also seems to be in closer correspondence with Matlab documentation on shortcircuited evaluation of sequential boolean constructs
-%
-% Revision 1.1  2004/09/27 15:20:08  roboos
-% subfunction required by multiplotTFR, singleplotTFR and topoplotTFR
-%
-% Revision 1.2  2002/10/17 18:43:16  arno
-% debugging dim
-%
-% Revision 1.1  2002/10/17 02:34:52  arno
-% Initial revision
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 function out = nanmean(in, dim)
 

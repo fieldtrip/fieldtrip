@@ -6,10 +6,7 @@ function [retval] = rv(d1, d2);
 
 % Copyright (C) 1999, Robert Oostenveld
 %
-% $Log: rv.m,v $
-% Revision 1.2  2003/03/11 14:45:37  roberto
-% updated help and copyrights
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 retval = sum((d1-d2).^2) ./ sum(d1.^2);
 

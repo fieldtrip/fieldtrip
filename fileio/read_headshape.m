@@ -11,48 +11,7 @@ function [shape] = read_headshape(filename, varargin)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: read_headshape.m,v $
-% Revision 1.13  2009/09/26 10:46:25  vlalit
-% Added 4d_pdf to the list of BTi formats
-%
-% Revision 1.12  2009/04/01 16:59:43  vlalit
-% Slight fix for JMs fix to assign unique names to the other BTi fiducials. Also make
-%  sure that fid.label is a column cell array.
-%
-% Revision 1.11  2009/03/31 12:18:48  jansch
-% added additional fiducials to shape.fid for 4D hs_files
-%
-% Revision 1.10  2009/03/23 12:09:07  vlalit
-% Minor changes to make the ctf_old option fully functional.
-%
-% Revision 1.9  2009/03/17 10:58:13  vlalit
-% Switched to MNE reader as default for Neuromag in read_headshape
-%
-% Revision 1.8  2009/01/28 18:29:07  vlalit
-% Added '4d' type to BTi case
-%
-% Revision 1.7  2009/01/23 10:32:55  vlalit
-% New reader for Neuromag fif format using the MNE toolbox (http://www.nmr.mgh.harvard.edu/martinos/userInfo/data/sofMNE.php)  implemented by Laurence Hunt.
-%
-% Revision 1.6  2008/10/07 16:22:32  roboos
-% added option to specify coordinates to be obtained from ctf hc file
-%
-% Revision 1.5  2008/05/22 14:33:18  vlalit
-% Changes related to generalization of fiducials'  handling in SPM.
-%
-% Revision 1.4  2008/05/11 16:30:30  vlalit
-% Improved the support of 4d and neuromag
-%
-% Revision 1.3  2008/04/16 08:04:03  roboos
-% allow headshape to be extracted from BEM volume conduction model
-%
-% Revision 1.2  2008/04/14 20:52:11  roboos
-% ensure consistent output for all  file formats (thanks to Vladimir)
-% added convert_units
-%
-% Revision 1.1  2008/04/11 12:04:55  roboos
-% new impoementation, required for clean interface towards SPM
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % test whether the file exists
 if ~exist(filename)

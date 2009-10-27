@@ -32,65 +32,7 @@ function [data] = appenddata(cfg, varargin);
 % Copyright (C) 2005-2008, Robert Oostenveld
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 %
-% $Log: appenddata.m,v $
-% Revision 1.17  2009/04/30 14:42:20  jansch
-% included explicit check on the channel order in the inputs. if the order is
-% not the same the channels will be reordered according to the first input.
-% included possibility to concatenate in the trial dimension when the number of
-% channels is not entirely consistent (missing channels). updated documentation
-%
-% Revision 1.16  2008/09/22 20:17:42  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.15  2007/11/13 15:25:07  roboos
-% removed handling of spike data, since that can be done in appendspike
-%
-% Revision 1.14  2007/04/03 15:37:07  roboos
-% renamed the checkinput function to checkdata
-%
-% Revision 1.13  2007/03/30 17:05:40  ingnie
-% checkinput; only proceed when input data is allowed datatype
-%
-% Revision 1.12  2007/01/09 09:50:39  roboos
-% some changes in whitespace
-%
-% Revision 1.11  2007/01/04 17:06:33  roboos
-% implemented support for appending spike data (i.e. timestamps) to a continuously sampled data set (i.e. one obtained from PREPROCESSING)
-%
-% Revision 1.10  2006/07/24 11:29:29  roboos
-% use private/findcfg function for locating the trl and event in the nested (previous) cfgs
-%
-% Revision 1.9  2006/05/02 19:17:04  roboos
-% search for th trl in cfg and cfg.previous etc., and also append it
-%
-% Revision 1.8  2006/04/20 09:58:33  roboos
-% updated documentation
-%
-% Revision 1.7  2006/01/30 12:15:01  roboos
-% ensure consistent function declaration: "function [x] = funname()"
-%
-% Revision 1.6  2005/08/05 09:16:22  roboos
-% removed the obsolete data.offset
-%
-% Revision 1.5  2005/06/29 12:46:29  roboos
-% the following changes were done on a large number of files at the same time, not all of them may apply to this specific file
-% - added try-catch around the inclusion of input data configuration
-% - moved cfg.version, cfg.previous and the assignment of the output cfg to the end
-% - changed help comments around the configuration handling
-% - some changes in whitespace
-%
-% Revision 1.4  2005/03/14 11:17:29  jansch
-% fixed small bug in handling of dimensions in the case of concatenating trials
-%
-% Revision 1.3  2005/02/16 17:07:13  roboos
-% fixed error that occurred when input data label was not a column-cell-array
-%
-% Revision 1.2  2005/01/27 12:06:33  roboos
-% fixed bug in checking of identical time axes
-%
-% Revision 1.1  2005/01/17 14:39:43  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

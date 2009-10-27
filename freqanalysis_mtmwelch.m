@@ -53,31 +53,7 @@ function [freq] = freqanalysis_mtmwelch(cfg, data);
 
 % Copyright (C) 2005-2006, F.C. Donders Centre
 %
-% $Log: freqanalysis_mtmwelch.m,v $
-% Revision 1.12  2008/09/22 20:17:43  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.11  2008/01/18 13:14:50  sashae
-% added option for trial selection, updated documentation
-%
-% Revision 1.10  2006/10/04 07:10:07  roboos
-% updated documentation
-%
-% Revision 1.9  2006/06/20 16:25:58  ingnie
-% updated documentation
-%
-% Revision 1.8  2006/06/06 16:57:51  ingnie
-% updated documentation
-%
-% Revision 1.7  2006/05/23 16:05:20  ingnie
-% updated documentation
-%
-% Revision 1.6  2006/05/04 14:26:35  roboos
-% added some real documentation
-%
-% Revision 1.5  2006/03/14 08:09:22  roboos
-% added copyrigth and cvs log statement
-% 
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

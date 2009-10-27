@@ -21,37 +21,7 @@ function dat = read_egis_data(filename, hdr, begtrial, endtrial, chanindx);
 %
 % Modified from EGI's EGI Toolbox with permission 2007-06-28 Joseph Dien
 
-% $Log: read_egis_data.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.6  2008/11/04 08:16:11  roboos
-% previous fix did not work, this one should work, thanks to Joe
-%
-%
-% Revision 1.6  2008/11/03 23:28:00  jdien
-% Fixed bug in workaround
-%
-% Revision 1.5  2008/11/03 10:51:00  jdien
-% Workaround for fileheader size field overflow for large files
-%
-% Revision 1.4  2008/04/21 11:44:58  roboos
-% preallocate space for the data (thanks to Joseph)
-%
-% Revision 1.3  2007/12/20 08:21:22  roboos
-% changed from returning a 2d to a 3d matrix, thanks to Joseph
-%
-% Revision 1.2  2007/07/16 07:24:40  roboos
-% only read the desired trials, updated documentation
-%
-% Revision 1.1  2007/07/04 13:22:06  roboos
-% initial implementation by Joseph Dien with some corrections by Robert
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fh=fopen([filename],'r');
 if fh==-1

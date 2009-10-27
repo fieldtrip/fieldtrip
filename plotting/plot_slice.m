@@ -25,34 +25,7 @@ function plot_slice(data,varargin)
 %
 % Copyright (C) 2009, Cristiano Micheli 
 %
-% $Log: plot_slice.m,v $
-% Revision 1.11  2009/06/21 19:47:09  crimic
-% added tag argument
-%
-% Revision 1.10  2009/06/21 19:01:31  crimic
-% minor changes
-%
-% Revision 1.9  2009/06/21 19:01:02  crimic
-% update help
-%
-% Revision 1.8  2009/06/21 12:22:58  crimic
-% 	introduced head coordinate transform slice dependency
-%
-% Revision 1.6  2009/06/16 12:17:55  crimic
-% inserted subfunction to plot slices in 3D
-%
-% Revision 1.5  2009/04/21 13:29:26  crimic
-% modified help
-%
-% Revision 1.4  2009/04/20 11:22:07  crimic
-% integrated help
-%
-% Revision 1.3  2009/04/20 11:16:49  crimic
-% minor changes and corrrections
-%
-% Revision 1.2  2009/04/20 09:51:50  crimic
-% implemented first version
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the optional input arguments
 slicerange    = keyval('slicerange',  varargin); if isempty(slicerange),slicerange='auto'; end

@@ -24,35 +24,7 @@ function [val] = read_asa(filename, elem, format, number, token)
 
 % Copyright (C) 2002, Robert Oostenveld
 %
-% $Log: read_asa.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.7  2008/11/17 17:38:43  roboos
-% replaced line==-1 with isequal, to work around && bug
-%
-% Revision 1.6  2008/11/14 07:49:19  roboos
-% use standard matlab strtrim function instead of deblank2
-%
-% Revision 1.5  2008/11/14 07:21:45  roboos
-% newer ASA versions write the labels in front of the positions, like "FPz: 10.4 1.3 -2"
-% added support for this, thanks to Thomas Hartmann
-% use strcmpi instead of strcmp(lower())
-%
-% Revision 1.4  2005/11/30 11:38:33  roboos
-% fixed bug: close file before returning to calling function (thanks to Gijs)
-%
-% Revision 1.3  2004/03/29 15:15:12  roberto
-% unknown change, seems related to handling of empty lines ?
-%
-% Revision 1.2  2003/03/11 15:24:51  roberto
-% updated help and copyrights
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fid = fopen(filename, 'rt');
 if fid==-1

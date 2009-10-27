@@ -65,56 +65,7 @@ function [cfg] = spikedownsample(cfg)
 
 % Copyright (C) 2005-2009, Robert Oostenveld
 %
-% $Log: spikedownsample.m,v $
-% Revision 1.46  2009/01/20 13:01:31  sashae
-% changed configtracking such that it is only enabled when BOTH explicitly allowed at start
-% of the fieldtrip function AND requested by the user
-% in all other cases configtracking is disabled
-%
-% Revision 1.45  2009/01/16 17:21:20  sashae
-% added config tracking
-%
-% Revision 1.44  2009/01/07 10:45:35  roboos
-% improved the documentation
-%
-% Revision 1.43  2009/01/07 10:37:19  roboos
-% replaced ADtoUV with cfg.calibration, added explaination to the help
-% added some configuration checking
-%
-% Revision 1.42  2008/12/15 15:07:42  roboos
-% give error if cfg.ADtoUV is missing in case of neuralynx_dma or neuralynx_sdma
-%
-% Revision 1.41  2008/12/15 14:57:06  roboos
-% added option cfg.ADtoUV, needed for neuralynx_dma and neuralynx_sdma input datasets
-%
-% Revision 1.40  2008/10/02 15:32:21  sashae
-% replaced call to createsubcfg with checkconfig
-%
-% Revision 1.39  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.38  2008/09/22 19:43:36  roboos
-% switched from write_fcdc_data to write_data
-%
-% Revision 1.37  2008/07/21 20:10:47  roboos
-% updated documentation
-%
-% Revision 1.36  2008/05/13 15:37:24  roboos
-% switched to using read_data/header instead of the read_fcdc_data/header wrapper functions
-%
-% Revision 1.35  2008/01/30 10:50:41  roboos
-% added cfg.timestampdefinition
-%
-% Revision 1.34  2008/01/14 21:38:01  roboos
-% the functionality of the downsampling should have remained the same, but the cfg is not backward compatible
-% removed all code related to spikes and mua, only downsampling once remains
-% moved all cfg.lfp options into cfg directly
-% removed automatic output directory generation
-% added cfg.channelprefix to distinguish the channels and the output files
-% the function will not return a data structure any more, only the cfg
-%
-% Revision 1.33  2007/03/21 17:27:30  roboos
-% updated documentation
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 cfg = checkconfig(cfg, 'trackconfig', 'on');

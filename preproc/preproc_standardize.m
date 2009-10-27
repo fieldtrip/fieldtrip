@@ -18,13 +18,7 @@ function x = preproc_standardize(x, begsample, endsample)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% $Log: preproc_standardize.m,v $
-% Revision 1.2  2009/09/30 13:02:03  jansch
-% fixed typo in comment
-%
-% Revision 1.1  2008/11/10 20:58:32  roboos
-% new function, original was used in trialfun_emg
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % determine the size of the input data: nChans X nSamples
 [m,n] = size(x);

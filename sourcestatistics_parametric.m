@@ -46,74 +46,7 @@ function [stat] = sourcestatistics_parametric(cfg, varargin)
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% $Log: sourcestatistics_parametric.m,v $
-% Revision 1.18  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
-%
-% Revision 1.17  2008/02/20 14:25:16  roboos
-% fixed prob for tscores, thanks to Nathan
-%
-% Revision 1.16  2007/05/30 07:04:05  roboos
-% use the checkdata function to avlidate the input and to convert the inside vector to indices
-%
-% Revision 1.15  2006/07/05 10:21:56  roboos
-% updaed documentation for consistency
-%
-% Revision 1.14  2006/04/20 09:58:34  roboos
-% updated documentation
-%
-% Revision 1.13  2006/03/30 12:24:33  roboos
-% Implemented private/fixinside, which facilitates consistent
-% handling of source/volume data. Improved documentation. Fixed some
-% bugs related to inconsistent handling of ROIs (i.e. inside/outside)
-%
-% Revision 1.12  2006/02/07 22:22:48  roboos
-% source.df can be vector as wel as single number, added support for that (element-wise * and /)
-%
-% Revision 1.11  2005/06/29 12:46:29  roboos
-% the following changes were done on a large number of files at the same time, not all of them may apply to this specific file
-% - added try-catch around the inclusion of input data configuration
-% - moved cfg.version, cfg.previous and the assignment of the output cfg to the end
-% - changed help comments around the configuration handling
-% - some changes in whitespace
-%
-% Revision 1.10  2005/06/03 08:57:28  roboos
-% transfer homogenous transformation matrix from input to output (if present)
-%
-% Revision 1.9  2005/05/17 17:50:39  roboos
-% changed all "if" occurences of & and | into && and ||
-% this makes the code more compatible with Octave and also seems to be in closer correspondence with Matlab documentation on shortcircuited evaluation of sequential boolean constructs
-%
-% Revision 1.8  2005/05/09 14:14:46  roboos
-% made the assignment of the output stat fields that describe the grid (like pos, xgrid, dim ...) optional, so that it won't fail when one of these fields is not present
-%
-% Revision 1.7  2005/04/05 08:30:35  roboos
-% fixed bug for counting the number of conditions and for krusakwallis
-%
-% Revision 1.6  2004/10/13 14:11:30  roboos
-% changed cfg.previous, now consistent over functions with try-statement
-% and will also work if the input already had a cfg.previous
-%
-% Revision 1.5  2004/08/19 07:10:31  roboos
-% removed nai and pseudo-t
-% changed interpretation of cfg.threshold for consistency with other functions
-% removed inconsistent and untested conversion from t- to z-score
-% added version information to the configuration
-%
-% Revision 1.4  2004/03/22 11:40:40  roberto
-% fixed typo in tHreshold
-%
-% Revision 1.3  2004/03/19 17:43:58  roberto
-% fixed two bugs: df is not always present, and a variable was named incorrectly
-%
-% Revision 1.2  2004/03/06 12:58:56  roberto
-% undo the name change from alpha-threshold back into threshold.
-% some cosmetic changes. funtion has not been tested yet.
-%
-% Revision 1.1  2004/03/06 12:19:15  roberto
-% new implementation based on code that was coppied out of sourecstatistics.m
-% some cosmetic and structure changes, no differences in actual computation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 

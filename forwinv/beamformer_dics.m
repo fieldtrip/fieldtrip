@@ -46,58 +46,7 @@ function [dipout] = beamformer_dics(dip, grad, vol, dat, Cf, varargin)
 
 % Copyright (C) 2003-2008, Robert Oostenveld
 %
-% $Log: beamformer_dics.m,v $
-% Revision 1.15  2009/06/17 13:40:37  roboos
-% small change in the order of the code for subspace projection
-%
-% Revision 1.14  2009/05/14 19:25:12  roboos
-% added a FIXME comment
-%
-% Revision 1.13  2009/03/24 13:13:33  roboos
-% fixed bug for coh_refchan in case trace was used for power estimate
-%
-% Revision 1.12  2009/01/06 10:25:32  roboos
-% fixed a bug for leadfield computation in case a pre-specified dipole
-% orientation is present. The bug would have caused a crash in case
-% the particular combination of options would have been used.
-%
-% Revision 1.11  2008/12/04 16:44:29  jansch
-% fixed typo in line 260 (thanks to Jurrian)
-%
-% Revision 1.10  2008/12/04 11:45:13  jansch
-% fixed bug in fixedori
-%
-% Revision 1.9  2008/08/13 16:13:38  roboos
-% added option fixedori, not yet fully tested
-%
-% Revision 1.8  2008/08/13 13:47:42  roboos
-% updated documentation
-%
-% Revision 1.7  2008/07/02 07:57:33  roboos
-% allow specification of percentage noise in lambda, relative to trace(cov)/nchans
-%
-% Revision 1.6  2008/03/18 13:01:17  roboos
-% added optional argument normalizeparam, is passed onto compute_leadfield
-%
-% Revision 1.5  2007/12/11 11:17:49  roboos
-% fixed bug in handling of prespecified dipole moment
-%
-% Revision 1.4  2006/10/16 15:18:35  roboos
-% small change in comment
-%
-% Revision 1.3  2006/10/16 15:17:24  roboos
-% fixed bug for powlambda/powtrace computation of noise (powlambda was hardcoded)
-% also keep noise csd matrix if requested (projectnoise & keepcsd)
-% fixed obvious bug in progress indicator
-%
-% Revision 1.2  2006/10/12 10:17:31  roboos
-% fixed bug in selecting dipoles on the inside positions only
-% output cell-arrays are [] for outside points
-% removed catch for mom, fixed dipoles should also work
-%
-% Revision 1.1  2006/10/12 09:07:07  roboos
-% moved code from beamformer into stand-alone functions, for easier use and maintenance
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if mod(nargin-5,2)
   % the first 5 arguments are fixed, the other arguments should come in pairs

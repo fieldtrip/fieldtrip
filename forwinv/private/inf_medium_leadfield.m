@@ -7,22 +7,7 @@ function [lf] = inf_medium_leadfield(rd, pnt, cond);
 
 % Copyright (C) 1998, Robert Oostenveld
 %
-% $Log: inf_medium_leadfield.m,v $
-% Revision 1.1  2009/01/21 10:32:38  roboos
-% moved from forwinv/* and forwinv/mex/* directory to forwinv/private/* to make the CVS layout consistent with the release version
-%
-% Revision 1.5  2005/02/23 14:31:19  roboos
-% changed the detection of Ndipoles, added reshaping of Nx3 input
-%
-% Revision 1.4  2003/08/04 09:12:32  roberto
-% added check for dipole on BEM model boundary, gives warning message
-%
-% Revision 1.3  2003/06/03 08:29:26  roberto
-% fixed error affecting multiple dipole computations
-%
-% Revision 1.2  2003/03/11 14:45:36  roberto
-% updated help and copyrights
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 siz = size(rd);
 if any(siz==1)

@@ -27,36 +27,7 @@ function [filt] = preproc_dftfilter(dat, Fs, Fl)
 % original      Copyright (C) 2003, Pascal Fries
 % modifications Copyright (C) 2003-2008, Robert Oostenveld
 %
-% $Log: preproc_dftfilter.m,v $
-% Revision 1.3  2009/09/30 13:01:10  jansch
-% included temporary mean subtraction to avoid leakage (with large DC-offsets) this could still be an issue
-%
-% Revision 1.2  2008/05/23 09:13:58  roboos
-% cleaned up code and documentation, ensure that all functions are consistent, added proper implementation to the scratch functions
-%
-% Revision 1.1  2008/05/23 06:54:21  roboos
-% created initial scratch version of preprocessing module, to be used in fieldtrip or as stand-alone toolbox (e.g. in spm8 or braingain)
-% some functions are copies of existing roboos/misc versions, some just contain some example code for the implementation
-%
-% Revision 1.6  2005/01/27 17:06:22  roboos
-% fixed bug in normalization of sine and cosine amplitude estimate in case number of samples in the data does not match with an integer number of cycles
-%
-% Revision 1.5  2004/11/17 09:00:01  roboos
-% added selection of data to ensure that the sine wave is estimated on an integer number of line-noise cycles
-% all data is filtered, only amplitude estimation is done on this selection
-%
-% Revision 1.4  2003/12/01 08:47:59  roberto
-% updated copyright statement
-%
-% Revision 1.3  2003/10/01 08:46:25  roberto
-% updated help
-%
-% Revision 1.2  2003/10/01 08:45:23  roberto
-% updated help
-%
-% Revision 1.1  2003/10/01 08:45:03  roberto
-% first implementation as separate function, used to be notchfilter
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % determine the size of the data
 [Nchans, Nsamples] = size(dat);

@@ -20,21 +20,7 @@ function [data] = swapmemfile(data);
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% $Log: swapmemfile.m,v $
-% Revision 1.4  2006/04/10 16:35:20  ingnie
-% updated documentation
-%
-% Revision 1.3  2005/05/17 17:50:50  roboos
-% changed all "if" occurences of & and | into && and ||
-% this makes the code more compatible with Octave and also seems to be in closer correspondence with Matlab documentation on shortcircuited evaluation of sequential boolean constructs
-%
-% Revision 1.2  2004/11/08 11:37:36  roboos
-% switched file detection from Matlab function "matfinfo" to own function "filetype"
-% since matfinfo caused troubles between different matlab versions
-%
-% Revision 1.1  2004/10/29 11:37:56  roboos
-% new implementation, required for prepare_timefreq_data on very large datasets that do not fit into memory simultaneously
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % this variable will be empty at the first call
 persistent file

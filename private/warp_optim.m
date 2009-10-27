@@ -33,40 +33,7 @@ function [result, M] = warp_pnt(input, target, method)
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% $Log: warp_optim.m,v $
-% Revision 1.8  2009/04/16 12:55:15  roboos
-% small change in handling of the optimizer function
-%
-% Revision 1.7  2006/11/23 11:34:51  roboos
-% use optimization toolbox if possible, othewise use the standard fminsearch function
-%
-% Revision 1.6  2006/09/13 09:55:58  roboos
-% fixed bug (typo) in rigidbody
-%
-% Revision 1.5  2006/04/13 12:55:45  roboos
-% added a str2func to solve a problem with feval and private
-%
-% Revision 1.4  2006/04/13 10:50:34  roboos
-% renamed calls to warp3d into warp_apply
-%
-% Revision 1.3  2006/04/13 10:47:39  roboos
-% renamed all calls to warpfun into warp_error
-%
-% Revision 1.2  2006/04/13 10:38:24  roboos
-% fixed a problem due to find/strmatch
-%
-% Revision 1.1  2005/08/15 08:12:40  roboos
-% Renamed warp_pnt into warp_optim for consistency with other functions.
-% Also changed the code, the subsequent ordering of the simple to
-% more complex warps is handled more clean.
-%
-% Revision 1.4  2005/03/21 15:43:42  roboos
-% fixed bug in output for nonlinear warping
-% added support for rigidbody or globalrescale warp
-%
-% Revision 1.3  2004/05/19 09:57:08  roberto
-% added GPL copyright statement, added CVS log item
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 global fb;
 

@@ -9,13 +9,7 @@ function [pindx, pval] = peakdetect3(dat, threshold, mindist)
 
 % Copyright (C) 2000-2005, Robert Oostenveld
 %
-% $Log: peakdetect3.m,v $
-% Revision 1.2  2005/11/22 16:12:28  roboos
-% fixed bug in mindist, did not work if no peaks were found
-%
-% Revision 1.1  2005/11/22 16:01:10  roboos
-% new version for cvs, based on old code
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % threshold the data
 tr = dat>threshold;

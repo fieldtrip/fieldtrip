@@ -27,24 +27,7 @@ function [hdr] = read_biosig_header(filename)
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% $Log: read_biosig_header.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.3  2008/04/10 09:36:14  roboos
-% biosig labels are already cell array
-%
-% Revision 1.2  2004/03/11 10:18:57  roberto
-% fixed bug in number of samples (should be the same in all channels)
-%
-% Revision 1.1  2004/03/10 11:50:31  roberto
-% new implementation of wrapper functions around the BIOSIG toolbox (specifically section T200)
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % open the file, read the header and close it again
 biosig = sopen(filename,'r');

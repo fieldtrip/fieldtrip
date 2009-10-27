@@ -11,10 +11,7 @@ function val = surfaceorientation(pnt, tri, ori)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% $Log: surfaceorientation.m,v $
-% Revision 1.1  2007/05/16 11:45:59  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<3
   ori = normals(pnt, tri, 'vertex');

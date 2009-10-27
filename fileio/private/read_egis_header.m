@@ -18,30 +18,7 @@ function [fhdr,chdr,ename,cnames,fcom,ftext] = read_egis_header(filename)
 %
 % Modified from EGI's EGI Toolbox with permission 2007-06-28 Joseph Dien
 
-% $Log: read_egis_header.m,v $
-% Revision 1.2  2009/01/22 19:54:32  josdie
-% Cell names were being truncated if they contained a space.  Fixed.
-%
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.3  2008/11/04 08:16:11  roboos
-% previous fix did not work, this one should work, thanks to Joe
-%
-% Revision 1.3  2008/11/03 21:31:00  jdien
-% Workaround for fileheader size field overflow for large files
-%
-% Revision 1.2  2008/09/30 07:47:04  roboos
-% replaced all occurences of setstr() with char(), because setstr is deprecated by Matlab
-%
-% Revision 1.1  2007/07/04 13:22:06  roboos
-% initial implementation by Joseph Dien with some corrections by Robert
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fh=fopen([filename],'r');
 if fh==-1

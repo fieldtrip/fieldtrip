@@ -6,22 +6,7 @@ function artifact_viewer(cfg, artcfg, zval, artval, zindx, inputdata);
 
 % Copyright (C) 2004-2006, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
-% $Log: artifact_viewer.m,v $
-% Revision 1.12  2008/11/18 16:22:42  estmee
-% Added cfg.continuous
-%
-% Revision 1.11  2008/10/07 16:22:12  estmee
-% Changed the output of fetch_data and read_data from dat to data.
-%
-% Revision 1.10  2008/10/07 08:58:51  roboos
-% committed the changes that Esther made recently, related to the support of data as input argument to the artifact detection functions. I hope that this does not break the functions too seriously.
-%
-% Revision 1.9  2006/08/28 08:10:24  jansch
-% fixed small bug in number of padding-samples when non-integer, thanks to Jasper
-%
-% Revision 1.8  2006/01/12 14:20:08  roboos
-% new implementation that belongs to artifact_zvalue
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 dat.cfg     = cfg;
 dat.artcfg  = artcfg;

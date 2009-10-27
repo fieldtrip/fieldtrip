@@ -19,44 +19,7 @@ function [nev] = read_neuralynx_nev(filename, varargin);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: read_neuralynx_nev.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.6  2008/04/29 07:52:31  roboos
-% fixed windows related bug
-% be consistent with begin and end timestamp in header
-%
-% Revision 1.5  2008/03/04 11:17:48  roboos
-% read ttl value as uint16 instead of int16
-%
-% Revision 1.4  2007/12/20 19:05:31  roboos
-% implemented filtering of events based on number (minnumber and maxnumber), this speeds up the reading since the events are each exactly 184 bytes large
-%
-% Revision 1.3  2007/12/18 16:41:16  roboos
-% reimplemented the reading, now by buffering all data in memory and using typecasting and byte swapping (largely implemented in the cstructdecode function)
-% implemented filtering on timestamp and value
-%
-% Revision 1.2  2007/12/12 16:30:10  roboos
-% keep timestamps as uint64, fixed problem with case of filename (nev/Nev)
-%
-% Revision 1.1  2006/12/13 15:43:49  roboos
-% renamed read_neuralynx_event into xxx_nev, consistent with the file extension
-%
-% Revision 1.3  2005/09/05 13:08:52  roboos
-% implemented a faster way of reading all events, needed in the case of many triggers (e.g. each refresh)
-%
-% Revision 1.2  2005/06/24 06:57:32  roboos
-% added PktStart to the record header reading, this shifts all fields by two bytes (thanks to Thilo)
-%
-% Revision 1.1  2005/05/19 07:09:58  roboos
-% new implementation
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the optional input arguments
 flt_value        = keyval('value', varargin);

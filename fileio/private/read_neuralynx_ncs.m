@@ -8,59 +8,7 @@ function [ncs] = read_neuralynx_ncs(filename, begrecord, endrecord)
 
 % Copyright (C) 2005-2007, Robert Oostenveld
 %
-% $Log: read_neuralynx_ncs.m,v $
-% Revision 1.1  2009/01/14 09:12:15  roboos
-% The directory layout of fileio in cvs sofar did not include a
-% private directory, but for the release of fileio all the low-level
-% functions were moved to the private directory to make the distinction
-% between the public API and the private low level functions. To fix
-% this, I have created a private directory and moved all appropriate
-% files from fileio to fileio/private.
-%
-% Revision 1.13  2008/04/29 07:52:31  roboos
-% fixed windows related bug
-% be consistent with begin and end timestamp in header
-%
-% Revision 1.12  2008/01/10 12:51:57  roboos
-% ensure that it is possible to read only the header, using beg/end = 0/0
-%
-% Revision 1.11  2007/03/21 17:06:57  roboos
-% updated the documentation
-%
-% Revision 1.10  2006/12/13 15:46:31  roboos
-% read and keep timestamps as uint64
-%
-% Revision 1.9  2006/12/12 11:31:31  roboos
-% cleaned up the code, made code more consistent with other neuralynx functions, moved subfunctions to seperate files, use numeric arrays instead of cell-arrays for storing the data
-%
-% Revision 1.8  2006/03/29 15:01:30  roboos
-% fix for previous update: only apply the scaling to uV if data has been read
-%
-% Revision 1.7  2006/03/29 14:43:26  roboos
-% scale the output data to uV, using ADBitVolts and an additional 1e6
-%
-% Revision 1.6  2006/03/23 18:02:13  roboos
-% change endrecord from inf into the actual number present
-%
-% Revision 1.5  2006/03/13 16:02:55  roboos
-% added first and last timestamp to the output header
-%
-% Revision 1.4  2006/03/10 12:32:24  roboos
-% preallocate enough memory for all elements (prevent repeated memory-reallocatoin and copying)
-%
-% Revision 1.3  2005/11/23 08:05:23  roboos
-% changed while into for-loop
-% added error check for end of file in fseek
-% check validity of selected begin and end record
-%
-% Revision 1.2  2005/09/09 12:29:38  roboos
-% changed from dox to unix ascii
-% changed the looping over the records
-% add the number of records in the output
-%
-% Revision 1.1  2005/05/20 06:39:35  roboos
-% new implementation of single file readers
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<2
   begrecord = 1;

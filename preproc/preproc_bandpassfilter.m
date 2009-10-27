@@ -27,32 +27,7 @@ function [filt] = preproc_bandpassfilter(dat, Fs, Fbp, N, type, dir)
 
 % Copyright (c) 2003-2008, Robert Oostenveld
 %
-% $Log: preproc_bandpassfilter.m,v $
-% Revision 1.2  2008/05/23 09:13:58  roboos
-% cleaned up code and documentation, ensure that all functions are consistent, added proper implementation to the scratch functions
-%
-% Revision 1.1  2008/05/23 06:54:21  roboos
-% created initial scratch version of preprocessing module, to be used in fieldtrip or as stand-alone toolbox (e.g. in spm8 or braingain)
-% some functions are copies of existing roboos/misc versions, some just contain some example code for the implementation
-%
-% Revision 1.5  2006/08/31 07:57:22  roboos
-% implemented onepass-reverse filter: usefull for stimulus artifacts, e.g. TMS or electrical stimulation
-%
-% Revision 1.4  2006/06/14 12:36:20  roboos
-% added the filter direction as additional option, default is 'twopass', i.e. using filtfilt
-%
-% Revision 1.3  2004/02/11 08:55:13  roberto
-% added optional fir1 filter (default still is butterworth), changed
-% layout of code for better support of multiple optional arguments,
-% extended documentation
-%
-% Revision 1.2  2003/06/12 08:40:44  roberto
-% added variable option to determine filter order
-% changed default order from 6 to 4 for notch and bandpass
-%
-% Revision 1.1  2003/04/04 09:53:36  roberto
-% new implementation, using 6th order Butterworth FIR filter
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the default filter order later
 if nargin<4 || isempty(N)
