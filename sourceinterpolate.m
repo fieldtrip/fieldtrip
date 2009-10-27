@@ -190,6 +190,9 @@ if ~isfield(cfg, 'interpmethod'); cfg.interpmethod = 'linear';  end
 if ~isfield(cfg, 'downsample');   cfg.downsample   = 1;         end
 if ~isfield(cfg, 'voxelcoord'),   cfg.voxelcoord   = 'yes';     end
 if ~isfield(cfg, 'feedback'),     cfg.feedback     = 'text';    end
+if ~isfield(cfg, 'sourceunits'),  cfg.sourceunits  = 'cm';      end
+if ~isfield(cfg, 'mriunits'),     cfg.mriunits     = 'mm';      end
+
 
 % if ~isfield(cfg, 'sourceunits');  cfg.sourceunits  = [];        end % this is deprecated, since now autodetermined
 % if ~isfield(cfg, 'mriunits');     cfg.mriunits     = [];        end % this is deprecated, since now autodetermined
@@ -204,6 +207,9 @@ end
 % check if the input data is valid for this function and ensure that the structures correctly describes a volume
 functional = checkdata(functional, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes');
 anatomical = checkdata(anatomical, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes');
+
+functional.unit = cfg.sourceunits;
+anatomical.unit = cfg.mriunits;
 
 % this ensures that the geometrical units of both functional and anatomical data are specified
 % FIMXE this probably should be moved into checkdata
