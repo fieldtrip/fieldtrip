@@ -106,26 +106,35 @@ testmaxtimestamp = ~isempty(maxtimestamp) && isfield(event, 'timestamp');
 testminnumber    = ~isempty(minnumber)    && isfield(event, 'number');
 testmaxnumber    = ~isempty(maxnumber)    && isfield(event, 'number');
 
+if (~isempty(minnumber) || ~isempty(maxnumber)) && ~isfield(event, 'number')
+  warning('the events are not numbered, assuming that the order corresponds to the original stream sequence');
+  for i=1:length(event)
+    event(i).number = i;
+  end
+  testminnumber    = ~isempty(minnumber);
+  testmaxnumber    = ~isempty(maxnumber);
+end
+
 % apply the filters
 sel = true(length(event),1);
 for i=1:length(event)
   % test whether they match with the selected arrays
-  if testvalue,    sel(i) = sel(i) && any(event(i).value == value); end
-  if testsample,   sel(i) = sel(i) && any(event(i).sample == sample); end
-  if testtimestamp,sel(i) = sel(i) && any(event(i).timestamp == timestamp); end
-  if testoffset,   sel(i) = sel(i) && any(event(i).offset == offset); end
-  if testduration, sel(i) = sel(i) && any(event(i).duration == duration); end
+  if testvalue,         sel(i) = sel(i) && any(event(i).value == value);          end
+  if testsample,        sel(i) = sel(i) && any(event(i).sample == sample);        end
+  if testtimestamp,     sel(i) = sel(i) && any(event(i).timestamp == timestamp);  end
+  if testoffset,        sel(i) = sel(i) && any(event(i).offset == offset);        end
+  if testduration,      sel(i) = sel(i) && any(event(i).duration == duration);    end
   % test whether they lie within the specified range
-  if testminsample,   sel(i) = sel(i) && (event(i).sample >= minsample); end
-  if testmaxsample,   sel(i) = sel(i) && (event(i).sample <= maxsample); end
-  if testminduration, sel(i) = sel(i) && (event(i).duration >= minduration); end
-  if testmaxduration, sel(i) = sel(i) && (event(i).duration <= maxduration); end
-  if testmintimestamp, sel(i) = sel(i) && (event(i).timestamp >= mintimestamp); end
-  if testmaxtimestamp, sel(i) = sel(i) && (event(i).timestamp <= maxtimestamp); end
-  if testminnumber,   sel(i) = sel(i) && (event(i).number >= minnumber); end
-  if testmaxnumber,   sel(i) = sel(i) && (event(i).number <= maxnumber); end
+  if testminsample,     sel(i) = sel(i) && (event(i).sample >= minsample);        end
+  if testmaxsample,     sel(i) = sel(i) && (event(i).sample <= maxsample);        end
+  if testminduration,   sel(i) = sel(i) && (event(i).duration >= minduration);    end
+  if testmaxduration,   sel(i) = sel(i) && (event(i).duration <= maxduration);    end
+  if testmintimestamp,  sel(i) = sel(i) && (event(i).timestamp >= mintimestamp);  end
+  if testmaxtimestamp,  sel(i) = sel(i) && (event(i).timestamp <= maxtimestamp);  end
+  if testminnumber,     sel(i) = sel(i) && (event(i).number >= minnumber);        end
+  if testmaxnumber,     sel(i) = sel(i) && (event(i).number <= maxnumber);        end
   % this is potentially the slowest test, hence do it the last
-  if testtype,     sel(i) = sel(i) && any(strcmp(event(i).type, type)); end
+  if testtype,          sel(i) = sel(i) && any(strcmp(event(i).type, type));      end
 end
 
 event = event(sel);
