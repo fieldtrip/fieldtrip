@@ -32,13 +32,13 @@ function [cfg] = singleplotER(cfg, varargin)
 %                     interactive plot when a selected area is clicked. Multiple areas 
 %                     can be selected by holding down the SHIFT key.
 % cfg.renderer      = 'painters', 'zbuffer',' opengl' or 'none' (default = 'opengl')
+% cfg.linestyle     = linestyle/marker type, see options of the matlab PLOT function (default = '-')
+% cfg.linewidth     = linewidth in points (default = 0.5)
+% cfg.graphcolor    = color(s) used for plotting the dataset(s) (default = 'brgkywrgbkywrgbkywrgbkyw')
 %
 % See also:
 %   singleplotTFR, multiplotER, multiplotTFR, topoplotER, topoplotTFR.
 
-% Undocumented local options:
-% cfg.GraphCol
-% cfg.graphcolor
 %
 % This function depends on TIMELOCKBASELINE which has the following options:
 % cfg.baseline, documented
@@ -72,10 +72,12 @@ if ~isfield(cfg,'trials'),        cfg.trials = 'all';                           
 if ~isfield(cfg,'xlim'),          cfg.xlim = 'maxmin';                          end
 if ~isfield(cfg,'ylim'),          cfg.ylim = 'maxmin';                          end
 if ~isfield(cfg,'fontsize'),      cfg.fontsize = 8;                             end
-if ~isfield(cfg,'graphcolor')     cfg.graphcolor = ['brgkywrgbkywrgbkywrgbkyw'];end
+if ~isfield(cfg,'graphcolor')     cfg.graphcolor = 'brgkywrgbkywrgbkywrgbkyw';  end
 if ~isfield(cfg,'interactive'),   cfg.interactive = 'no';                       end
 if ~isfield(cfg,'renderer'),      cfg.renderer = 'opengl';                      end
 if ~isfield(cfg,'maskparameter'), cfg.maskparameter = [];                       end
+if ~isfield(cfg,'linestyle'),     cfg.linestyle = '-';                          end
+if ~isfield(cfg,'linewidth'),     cfg.linewidth = 0.5;                          end
 
 GRAPHCOLOR = ['k' cfg.graphcolor ];
 
@@ -202,9 +204,6 @@ if ~isfield(cfg,'channel')
   cfg = checkconfig(cfg, 'renamed', {'channelname',   'channel'});
 end
 
-% Convert the layout to Ole's style of variable names:
-cfg.GraphCol = GRAPHCOLOR(1);
-
 hold on;
 colorLabels = [];
 ymin = [];
@@ -251,8 +250,8 @@ for k=2:nargin
     ymax = cfg.ylim(2);
   end
 
-  style = GRAPHCOLOR(k);
-  plot_vector(varargin{k-1}.(cfg.xparam), P, 'style', style, 'highlight', M);  
+  color = GRAPHCOLOR(k);
+  plot_vector(varargin{k-1}.(cfg.xparam), P, 'style', cfg.linestyle, 'color', color, 'highlight', M, 'linewidth', cfg.linewidth);  
 end
 
 % Set xlim and ylim:
