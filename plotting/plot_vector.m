@@ -68,6 +68,11 @@ linewidth      = keyval('linewidth',       varargin); if isempty(linewidth), lin
 highlight      = keyval('highlight',       varargin);
 highlightstyle = keyval('highlightstyle',  varargin); if isempty(highlightstyle), highlightstyle = 'box'; end
 
+% set default color
+if isempty(color)
+  color = 'b';
+end
+
 % convert the yes/no strings into boolean values
 axis = istrue(axis);
 box  = istrue(box);
