@@ -152,7 +152,18 @@ if ~isempty(highlight)
         plot_box([begx endx vpos-height/2 vpos+height/2], 'facecolor', [.6 .6 .6], 'edgecolor', 'none');
       end
     case 'thickness'
-      error('unsupported highlightstyle')
+      % find the sample number where the highligh begins and ends
+      if ~islogical(highlight)
+        highlight=logical(highlight);
+        warning('converting mask to logical values')
+      end
+      begsample = find(diff([0 highlight 0])== 1);
+      endsample = find(diff([0 highlight 0])==-1)-1;
+      for i=1:length(begsample)
+        hor = hdat(begsample(i):endsample(i));
+        ver = vdat(begsample(i):endsample(i));
+        plot(hor,ver,'linewidth',3,'linestyle','-','Color', color)
+      end  
     case 'opacity'
       error('unsupported highlightstyle')
     otherwise
@@ -160,11 +171,7 @@ if ~isempty(highlight)
   end % switch highlightstyle
 end
 
-if isempty(color)
-  h = plot(hdat, vdat, style, 'LineWidth', linewidth);
-else
-  h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'Color', color);
-end
+h = plot(hdat, vdat, style, 'Color', color,'LineWidth',linewidth);
 
 if ~isempty(label)
   boxposition(1) = hpos - width/2;
