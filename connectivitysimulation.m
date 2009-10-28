@@ -155,8 +155,7 @@ case {'ar'}
   end 
   for k = 1:cfg.ntrials
     tmp   = zeros(nsignal, nsmp+nlag);
-    %noise = [cfg.absnoise.*randn(nsignal, nsmp+nlag)];
-    noise  = mvnrand(zeros(nsignal,1), cfg.noisecov, nsmp+nlag);
+    noise  = mvnrnd(zeros(nsignal,1), cfg.noisecov, nsmp+nlag)';
     state0 = zeros(nsignal*nlag, 1);
     for m = 1:nlag
       indx = ((m-1)*nsignal+1):m*nsignal;
