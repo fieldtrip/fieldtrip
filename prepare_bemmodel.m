@@ -37,8 +37,10 @@ if ~isfield(cfg, 'numvertices'),    cfg.numvertices = [1 2 3] * 500;         end
 if ~isfield(cfg, 'hdmfile'),        cfg.hdmfile = [];                        end
 if ~isfield(cfg, 'isolatedsource'), cfg.isolatedsource = [];                 end
 if ~isfield(cfg, 'method'),         cfg.method = 'dipoli';                   end % dipoli, openmeeg, bemcp, brainstorm
-if ~isfield(cfg, 'conductivity') && isfield(mri, 'cond')
-  cfg.conductivity = mri.cond;
+if ~isfield(cfg, 'conductivity') || isfield(mri, 'cond')
+  if isfield(mri, 'cond')
+    cfg.conductivity = mri.cond;
+  end
 else
   cfg.conductivity = [1 1/80 1] * 0.33;
 end
