@@ -118,8 +118,9 @@ if ~isfield(data, inparam),
       end
     end
   otherwise
-    powindx = [];
   end
+else
+   powindx = [];
 end
 
 if normrpt && hasrpt,
@@ -190,6 +191,7 @@ case 'granger'
     %noisecov is defined and normalised?
     fs       = 1;
     datout   = coupling_granger(data.transfer, data.noisecov, data.crsspctrm, fs);
+    varout   = [];
     outparam = 'grangerspctrm';
   else
     error('granger for time domain data is not yet implemented');
@@ -322,7 +324,7 @@ if length(strfind(cfg.dimord, 'chan'))~=2 && isfield(cfg, 'powindx'),
   end
   progress('close');  
 
-elseif length(strfind(cfg.dimord, 'chan'))~=2,
+elseif length(strfind(cfg.dimord, 'chan'))==2,
   %crossterms are described by chan_chan_therest 
  
   siz = size(input);
@@ -403,7 +405,7 @@ if length(strfind(cfg.dimord, 'chan'))~=2 && isfield(cfg, 'powindx'),
   end
   progress('close');  
 
-elseif length(strfind(cfg.dimord, 'chan'))~=2,
+else %if length(strfind(cfg.dimord, 'chan'))~=2,
   %crossterms are described by chan_chan_therest 
  
   siz = size(input);
