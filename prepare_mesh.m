@@ -45,12 +45,15 @@ if nargin>1 && (~isfield(cfg,'headshape') || isempty(cfg.headshape))
   basedonseg        = isfield(mri, 'transform') && any(isfield(mri, {'seg', 'csf', 'white', 'gray'}));
   basedonmri        = isfield(mri, 'transform') && ~basedonseg;
   basedonvol        = isfield(mri, 'bnd');
+  basedonsphere     = isfield(mri,'r');
   basedonheadshape  = 0;
+  
 elseif nargin==1 && isfield(cfg,'headshape') && ~isempty(cfg.headshape)
   basedonseg        = 0;
   basedonmri        = 0;
   basedonvol        = 0;
-  basedonheadshape  = 1;
+  basedonsphere     = 0;
+  basedonheadshape  = 1; 
 else
   error('inconsistent configuration, cfg.headshape should not be used in combination with an mri input')
 end
@@ -77,6 +80,11 @@ elseif basedonheadshape
 elseif basedonvol
   fprintf('using the mesh specified in the input volume conductor\n');
   bnd = mri.bnd;
+  
+elseif basedonsphere
+  fprintf('using the mesh specified by icosaedron162\n');
+  [pnt,tri] = icosahedron162;
+  bnd = struct('pnt',pnt,'tri',tri);
   
 else
   error('unsupported cfg.method and/or input')
