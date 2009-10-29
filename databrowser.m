@@ -25,6 +25,8 @@ function [cfg] = databrowser(cfg, data)
 %                                  vector with length(data/hdr.label) defining groups (default = 'sequential') 
 %   cfg.channelcolormap         = COLORMAP (default = customized lines map with 15 colors)
 %
+% NOTE for debugging: in case the databrowser crashes, use delete(gcf) to kill the figure.
+%
 % See also PREPROCESSING
 
 % Copyright (C) 2009, Robert Oostenveld, Ingrid Niewenhuis
@@ -455,12 +457,17 @@ switch opt.cfg.viewmode
     endsample = opt.trlvis(opt.trlop,2);
     offset    = opt.trlvis(opt.trlop,3);
     % determine the selection
-    begsel = round(range(1)*opt.fsample+1);
-    endsel = round(range(2)*opt.fsample+1);
+    if strcmp(opt.trialname, 'trial')
+      begsel = round(range(1)*opt.fsample+begsample-offset-1);
+      endsel = round(range(2)*opt.fsample+begsample-offset);
+    elseif strcmp(opt.trialname, 'segment') %% FIXME - this assumes that offset=0 and begsample=1, which might not always be the case [sashae]
+      begsel = round(range(1)*opt.fsample+1);
+      endsel = round(range(2)*opt.fsample+1);
+    end
     % the selection should always be confined to the current trial
     begsel = max(begsample, begsel);
     endsel = min(endsample, endsel);
-    
+
   case {'vertical', 'component'}
     % the range should be in the displayed box
     range(1) = max(opt.hpos(1), range(1));
@@ -469,13 +476,18 @@ switch opt.cfg.viewmode
     range(2) = min(opt.hpos(2), range(2));
     range = (range - opt.hpos(1)) / (opt.hpos(2) - opt.hpos(1)); % left side of the box becomes 0, right side becomes 1
     range = range * (opt.hlim(2) - opt.hlim(1)) + opt.hlim(1);   % 0 becomes hlim(1), 1 becomes hlim(2)
-    
+
     begsample = opt.trlvis(opt.trlop,1);
     endsample = opt.trlvis(opt.trlop,2);
     offset    = opt.trlvis(opt.trlop,3);
     % determine the selection
-    begsel = round(range(1)*opt.fsample+1);
-    endsel = round(range(2)*opt.fsample+1);
+    if strcmp(opt.trialname, 'trial')
+      begsel = round(range(1)*opt.fsample+begsample-offset-1);
+      endsel = round(range(2)*opt.fsample+begsample-offset);
+    elseif strcmp(opt.trialname, 'segment') %% FIXME - this assumes that offset=0 and begsample=1, which might not always be the case [sashae]
+      begsel = round(range(1)*opt.fsample+1);
+      endsel = round(range(2)*opt.fsample+1);
+    end
     % the selection should always be confined to the current trial
     begsel = max(begsample, begsel);
     endsel = min(endsample, endsel);
@@ -515,7 +527,7 @@ elseif strcmp(opt.cfg.selectmode, 'individual')
 elseif strcmp(opt.cfg.selectmode, 'eval') 
   % cut out the requested data segment
   seldata.label    = opt.curdat.label;
-  seldata.time{1}  = offset2time(offset, opt.fsample, endsel-begsel+1);;
+  seldata.time{1}  = offset2time(offset, opt.fsample, endsel-begsel+1);
   seldata.trial{1} = fetch_data(opt.curdat, 'begsample', begsel, 'endsample', endsel);
   seldata.fsample  = opt.fsample;
   seldata.cfg.trl  = [begsel endsel offset];
