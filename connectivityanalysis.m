@@ -118,6 +118,7 @@ if ~isfield(data, inparam),
       end
     end
   otherwise
+    powindx = [];
   end
 end
 
