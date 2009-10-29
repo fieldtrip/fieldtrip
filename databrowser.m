@@ -22,7 +22,7 @@ function [cfg] = databrowser(cfg, data)
 %   cfg.selectfeature           = string, name of feature to be selected/added (default = 'visual')
 %   cfg.selectmode              = string, what to do with a selection, can be 'joint', 'individual', 'multiplot', 'topoplot-avg', 'topoplot-pow' (default = 'joint')
 %   cfg.colorgroups             = 'sequential' 'labelcharx' (x = xth character in label), 'chantype' or
-%                                  vector with lenght(data/hdr.label) defining groups (default = 'sequential') 
+%                                  vector with length(data/hdr.label) defining groups (default = 'sequential') 
 %   cfg.channelcolormap         = COLORMAP (default = customized lines map with 15 colors)
 %
 % See also PREPROCESSING
@@ -159,7 +159,7 @@ end
 if size(cfg.channelcolormap,2) ~= 3
   error('cfg.channelcolormap is not valid, size should be Nx3')
 end
-if isstruct(cfg.colorgroups) 
+if isnumeric(cfg.colorgroups) 
   % groups defined by user
   if length(labels_all) ~= length(cfg.colorgroups)
     error('length(cfg.colorgroups) should be length(data/hdr.label)')
