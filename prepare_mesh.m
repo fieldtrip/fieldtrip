@@ -82,6 +82,7 @@ elseif basedonvol
   bnd = mri.bnd;
   
 elseif basedonsphere
+  vol = mri;
   
   if isempty(cfg.numvertices)
     fprintf('using the mesh specified by icosaedron162\n');
@@ -93,7 +94,26 @@ elseif basedonsphere
     [pnt, tri] = msphere(cfg.numvertices);
     sprintf('using the mesh specified by msphere with %d vertices\n',size(pnt,1));
   end
-  bnd = struct('pnt',pnt,'tri',tri);
+  
+  switch voltype(vol)
+    case {'singlesphere' 'concentric'}
+      vol.r = sort(vol.r);
+      bnd = [];
+      for i=1:length(vol.r)
+        bnd(i).pnt(:,1) = pnt(:,1)*vol.r(i) + vol.o(1);
+        bnd(i).pnt(:,2) = pnt(:,2)*vol.r(i) + vol.o(2);
+        bnd(i).pnt(:,3) = pnt(:,3)*vol.r(i) + vol.o(3);
+        bnd(i).tri = tri;
+      end
+    case 'multisphere'
+      bnd = [];
+      for i=1:length(vol.label)
+        bnd(i).pnt(:,1) = pnt(:,1)*vol.r(i) + vol.o(i,1);
+        bnd(i).pnt(:,2) = pnt(:,2)*vol.r(i) + vol.o(i,2);
+        bnd(i).pnt(:,3) = pnt(:,3)*vol.r(i) + vol.o(i,3);
+        bnd(i).tri = tri;
+      end
+  end
   
 else
   error('unsupported cfg.method and/or input')
