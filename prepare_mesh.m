@@ -45,7 +45,7 @@ if nargin>1 && (~isfield(cfg,'headshape') || isempty(cfg.headshape))
   basedonseg        = isfield(mri, 'transform') && any(isfield(mri, {'seg', 'csf', 'white', 'gray'}));
   basedonmri        = isfield(mri, 'transform') && ~basedonseg;
   basedonvol        = isfield(mri, 'bnd');
-  basedonsphere     = isfield(mri,'r');
+  basedonsphere     = isfield(mri,'r') && isfield(mri,'o');
   basedonheadshape  = 0;
   
 elseif nargin==1 && isfield(cfg,'headshape') && ~isempty(cfg.headshape)
@@ -82,8 +82,17 @@ elseif basedonvol
   bnd = mri.bnd;
   
 elseif basedonsphere
-  fprintf('using the mesh specified by icosaedron162\n');
-  [pnt,tri] = icosahedron162;
+  
+  if isempty(cfg.numvertices)
+    fprintf('using the mesh specified by icosaedron162\n');
+    [pnt,tri] = icosahedron162;
+  elseif any(cfg.numvertices==[42 162 642 2562])
+    sprintf('using the mesh specified by icosaedron%d\n',cfg.numvertices);
+    eval(['[pnt,tri] = icosahedron' num2str(cfg.numvertices) ';']);
+  else
+    [pnt, tri] = msphere(cfg.numvertices);
+    sprintf('using the mesh specified by msphere with %d vertices\n',size(pnt,1));
+  end
   bnd = struct('pnt',pnt,'tri',tri);
   
 else
