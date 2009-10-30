@@ -27,16 +27,17 @@ holdflag = ishold;
 hold on
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'gridscale', 'shading', 'mask', 'outline', 'interplim'});
-hpos        = keyval('hpos',      varargin); if isempty(hpos);       hpos = 0;           end
-vpos        = keyval('vpos',      varargin); if isempty(vpos);       vpos = 0;           end
-width       = keyval('width',     varargin); if isempty(width);      width = 1;          end
-height      = keyval('height',    varargin); if isempty(height);     height = 1;         end
-gridscale   = keyval('gridscale', varargin); if isempty(gridscale);  gridscale = 67;     end; % 67 in original
-shading     = keyval('shading',   varargin); if isempty(shading);    shading = 'flat';   end;
-mask        = keyval('mask',      varargin);
-outline     = keyval('outline',   varargin);
-interplim   = keyval('interplim', varargin); if isempty(interplim);  interplim = 'electrodes'; end
+keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'gridscale', 'shading', 'mask', 'outline', 'interplim', 'interpmethod'});
+hpos          = keyval('hpos',      varargin);    if isempty(hpos);         hpos = 0;                 end
+vpos          = keyval('vpos',      varargin);    if isempty(vpos);         vpos = 0;                 end
+width         = keyval('width',     varargin);    if isempty(width);        width = 1;                end
+height        = keyval('height',    varargin);    if isempty(height);       height = 1;               end
+gridscale     = keyval('gridscale', varargin);    if isempty(gridscale);    gridscale = 67;           end; % 67 in original
+shading       = keyval('shading',   varargin);    if isempty(shading);      shading = 'flat';         end;
+mask          = keyval('mask',      varargin);
+outline       = keyval('outline',   varargin);
+interplim     = keyval('interplim', varargin);    if isempty(interplim);    interplim = 'electrodes'; end
+interpmethod  = keyval('interpmethod', varargin); if isempty(interpmethod); interpmethod = 'v4';      end
 
 chanX = chanX * width  + hpos;
 chanY = chanY * height + vpos;
@@ -81,7 +82,7 @@ end
 
 xi         = linspace(hlim(1), hlim(2), gridscale);       % x-axis for interpolation (row vector)
 yi         = linspace(vlim(1), vlim(2), gridscale);       % y-axis for interpolation (row vector)
-[Xi,Yi,Zi] = griddata(chanX', chanY, dat, xi', yi, 'v4'); % interpolate the topographic data
+[Xi,Yi,Zi] = griddata(chanX', chanY, dat, xi', yi, interpmethod); % interpolate the topographic data
 
 if ~isempty(maskimage)
   % apply anatomical mask to the data, i.e. that determines that the interpolated data outside the circle is not displayed
