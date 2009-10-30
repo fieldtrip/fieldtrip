@@ -157,7 +157,11 @@ if ~isempty(highlight)
       for i=1:length(begsample)
         hor = hdat(begsample(i):endsample(i));
         ver = vdat(begsample(i):endsample(i));
-        plot(hor,ver,'linewidth',3,'linestyle','-','Color', color)
+        if isempty(color)
+          plot(hor,ver,'linewidth',3*linewidth,'linestyle','-');
+        else
+          plot(hor,ver,'linewidth',3*linewidth,'linestyle','-','Color', color)
+        end
       end  
     case 'opacity'
       error('unsupported highlightstyle')
