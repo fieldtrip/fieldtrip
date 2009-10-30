@@ -416,7 +416,14 @@ else
   trlvis = [];
   trlvis(:,1) = begsamples';
   trlvis(:,2) = endsamples';
-  trlvis(:,3) = begsamples-1;
+  if size(opt.trlorg,1) > 1 || isempty(opt.orgdata)
+    % offset is now (re)defined that 1st sample is time 0
+    trlvis(:,3) = begsamples-1;
+  else
+    % offset according to original time axis
+    trlvis(:,3) = opt.orgdata.time{1}(begsamples-opt.trlorg(3))*opt.fsample;
+  end
+  
   if isfield(opt, 'trlvis')
     % update the current trial counter and try to keep the current sample the same
     % opt.trlop   = nearest(round((begsamples+endsamples)/2), thissample);
@@ -482,9 +489,13 @@ switch opt.cfg.viewmode
     offset    = opt.trlvis(opt.trlop,3);
     % determine the selection
     if strcmp(opt.trialname, 'trial')
+      % this is appropriate when the offset is defined according to a
+      % different trigger in each trial, which is usually the case in trial data
       begsel = round(range(1)*opt.fsample+begsample-offset-1);
       endsel = round(range(2)*opt.fsample+begsample-offset);
-    elseif strcmp(opt.trialname, 'segment') %% FIXME - this assumes that offset=0 and begsample=1, which might not always be the case [sashae]
+    elseif strcmp(opt.trialname, 'segment')
+      % this is appropriate when the offset is defined according to a
+      % one trigger, which is always the case in segment data [I think ingnie]
       begsel = round(range(1)*opt.fsample+1);
       endsel = round(range(2)*opt.fsample+1);
     end
