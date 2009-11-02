@@ -20,10 +20,14 @@ function [cfg] = databrowser(cfg, data)
 %   cfg.artfctdef.xxx.artifact  = Nx2 matrix with artifact segments
 %   cfg.viewmode                = string, 'butterfly', 'vertical', 'component' (default = 'butterfly')
 %   cfg.selectfeature           = string, name of feature to be selected/added (default = 'visual')
-%   cfg.selectmode              = string, what to do with a selection, can be 'joint', 'individual', 'multiplot', 'topoplot-avg', 'topoplot-pow' (default = 'joint')
+%   cfg.selectmode              = string, what to do with a selection, can be 'joint', 'individual', or 'eval' (default = 'joint')
 %   cfg.colorgroups             = 'sequential' 'labelcharx' (x = xth character in label), 'chantype' or
 %                                  vector with length(data/hdr.label) defining groups (default = 'sequential') 
 %   cfg.channelcolormap         = COLORMAP (default = customized lines map with 15 colors)
+%   cfg.selfun                  = string, name of function which is evaluated if selectmode is set to 'eval'.
+%                                  The selected data and the selcfg are passed on to this function.
+%   cfg.selcfg                  = configuration options for selfun
+
 %
 % NOTE for debugging: in case the databrowser crashes, use delete(gcf) to kill the figure.
 %
@@ -465,9 +469,13 @@ switch opt.cfg.viewmode
     offset    = opt.trlvis(opt.trlop,3);
     % determine the selection
     if strcmp(opt.trialname, 'trial')
+      % this is appropriate when the offset is defined according to a
+      % different trigger in each trial, which is usually the case in trial data
       begsel = round(range(1)*opt.fsample+begsample-offset-1);
       endsel = round(range(2)*opt.fsample+begsample-offset);
-    elseif strcmp(opt.trialname, 'segment') %% FIXME - this assumes that offset=0 and begsample=1, which might not always be the case [sashae]
+    elseif strcmp(opt.trialname, 'segment') 
+      % this is appropriate when the offset is defined according to a
+      % one trigger, which is always the case in segment data [I think ingnie]
       begsel = round(range(1)*opt.fsample+1);
       endsel = round(range(2)*opt.fsample+1);
     end
@@ -538,15 +546,11 @@ elseif strcmp(opt.cfg.selectmode, 'individual')
 elseif strcmp(opt.cfg.selectmode, 'eval') 
   % cut out the requested data segment
   seldata.label    = opt.curdat.label;
-  seldata.time{1}  = offset2time(offset, opt.fsample, endsel-begsel+1);
+  seldata.time{1}  = offset2time(offset+begsel-begsample, opt.fsample, endsel-begsel+1);
   seldata.trial{1} = fetch_data(opt.curdat, 'begsample', begsel, 'endsample', endsel);
   seldata.fsample  = opt.fsample;
   seldata.cfg.trl  = [begsel endsel offset];
 
-  % the selfun is a string or function handle, and can for example be
-  %   browse_multiplotER
-  %   browse_topoplotER
-  %   browse_topoplotVAR
   feval(opt.cfg.selfun, opt.cfg.selcfg, seldata);
   
 else
