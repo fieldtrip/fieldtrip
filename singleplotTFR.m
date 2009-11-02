@@ -15,6 +15,7 @@ function [cfg] = singleplotTFR(cfg, data)
 % cfg.zparam        = field to be plotted on y-axis, e.g. 'powspcrtrm' (default depends on data.dimord)
 % cfg.maskparameter = field in the data to be used for opacity masking of data
 %                     (not possible for mean over multiple channels)
+% cfg.maskstyle     = style used to mask the nans (default = 'opacity')
 % cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.ylim          = 'maxmin' or [ymin ymax] (default = 'maxmin')
 % cfg.zlim          = 'maxmin','absmax' or [zmin zmax] (default = 'maxmin')
@@ -67,6 +68,7 @@ if ~isfield(cfg,'interactive'),     cfg.interactive = 'no';            end
 if ~isfield(cfg,'renderer'),        cfg.renderer = [];                 end
 if ~isfield(cfg,'masknans'),        cfg.masknans = 'yes';              end
 if ~isfield(cfg,'maskparameter'),   cfg.maskparameter = [];            end
+if ~isfield(cfg,'maskstyle'),       cfg.maskstyle = 'opacity';         end
 
 % Set x/y/zparam defaults according to data.dimord value:
 if strcmp(data.dimord, 'chan_freq_time')
@@ -230,26 +232,23 @@ if ~isempty(cfg.maskparameter) && (~evenx || ~eveny)
   cfg.maskparameter = [];
 end
 
-% Draw plot:
-hold on;
-h = uimagesc(data.(cfg.xparam)(xidc), data.(cfg.yparam)(yidc), TFR, [zmin,zmax]);
-% Mask Nan's and maskfield
+% Draw plot (and mask NaN's if requested):
+hold on
 if isequal(cfg.masknans,'yes') && isempty(cfg.maskparameter)
   mask = ~isnan(TFR);
   mask = double(mask);
-  set(h,'AlphaData',mask, 'AlphaDataMapping', 'scaled');
-  alim([0 1]);
+  plot_matrix(data.(cfg.xparam)(xidc),data.(cfg.yparam)(yidc), TFR, 'clim',[zmin,zmax],'highlightstyle',cfg.maskstyle,'highlight', mask)
 elseif isequal(cfg.masknans,'yes') && ~isempty(cfg.maskparameter)
   mask = ~isnan(TFR);
   mask = mask .* mdata;
   mask = double(mask);
-  set(h,'AlphaData',mask, 'AlphaDataMapping', 'scaled');
-  alim([0 1]);
+  plot_matrix(data.(cfg.xparam)(xidc),data.(cfg.yparam)(yidc), TFR, 'clim',[zmin,zmax],'highlightstyle',cfg.maskstyle,'highlight', mask)
 elseif isequal(cfg.masknans,'no') && ~isempty(cfg.maskparameter)
   mask = mdata;
   mask = double(mask);
-  set(h,'AlphaData',mask, 'AlphaDataMapping', 'scaled');
-  alim([0 1]);
+  plot_matrix(data.(cfg.xparam)(xidc),data.(cfg.yparam)(yidc), TFR, 'clim',[zmin,zmax],'highlightstyle',cfg.maskstyle,'highlight', mask)
+else
+  plot_matrix(data.(cfg.xparam)(xidc),data.(cfg.yparam)(yidc), TFR, 'clim',[zmin,zmax])
 end
 axis xy;
 
