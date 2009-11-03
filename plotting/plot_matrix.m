@@ -156,14 +156,36 @@ vdat = vdat .* height;
 % then shift to the new vertical position
 vdat = vdat + vpos;
 
-h = uimagesc(hdat, vdat, cdat, clim);
+% the uimagesc-call needs to be here to avoid calling it several times in switch-highlight
+if isempty(highlight)
+  h = uimagesc(hdat, vdat, cdat, clim);
+end
 
+% the uimagesc-call needs to be inside switch-statement, otherwise 'saturation' will cause it to be called twice
 if ~isempty(highlight)
   switch highlightstyle
     case 'opacity'
+      h = uimagesc(hdat, vdat, cdat, clim);
       set(h,'AlphaData',highlight);
       set(h, 'AlphaDataMapping', 'scaled');
       alim([0 1]);
+    case 'saturation'
+      satmask = highlight;
+      
+      % Transform cdat-values to have a 0-64 range, dependent on clim
+      % (think of it as the data having an exact range of min=clim(1) to max=(clim2), convert this range to 0-64)
+      cdat = (cdat + -clim(1)) * (64 / (-clim(1) + clim(2))); 
+      
+      % Make sure NaNs are plotted as white pixels, even when using non-integer mask values
+      satmask(isnan(cdat)) = 0;
+      cdat(isnan(cdat)) = 32;
+           
+      % ind->rgb->hsv ||change saturation values||  hsv->rgb ->  plot
+      rgbcdat = ind2rgb(uint8(floor(cdat)), colormap);
+      hsvcdat = rgb2hsv(rgbcdat);
+      hsvcdat(:,:,2) = hsvcdat(:,:,2) .* satmask;
+      rgbcdatsat = hsv2rgb(hsvcdat);
+      h = uimagesc(hdat, vdat, rgbcdatsat,clim);
     case 'outline'
       % the significant voxels could be outlined with a black contour
       error('unsupported highlightstyle')
