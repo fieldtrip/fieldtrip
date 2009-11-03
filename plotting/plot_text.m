@@ -23,7 +23,8 @@ function [varargout] = plot_text(X, Y, str, varargin)
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'Color', 'FontSize', 'FontName', 'HorizontalAlignment'});
+keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'Color', ....
+  'FontSize', 'FontName', 'HorizontalAlignment','rotation','VerticalAlignment'});
 hpos        = keyval('hpos',      varargin);
 vpos        = keyval('vpos',      varargin);
 width       = keyval('width',     varargin);
@@ -34,6 +35,8 @@ Color       = keyval('Color',     varargin);  if isempty(Color), Color = 'k'; en
 FontSize    = keyval('FontSize',  varargin);
 FontName    = keyval('FontName',  varargin);
 HorizontalAlignment = keyval('HorizontalAlignment',  varargin); if isempty(HorizontalAlignment), HorizontalAlignment = 'center'; end
+rotation    = keyval('rotation',  varargin);  if isempty(rotation), rotation = 0; end
+VerticalAlignment = keyval('VerticalAlignment',  varargin); if isempty(VerticalAlignment), VerticalAlignment = 'middle'; end
 
 if isempty(hlim) && isempty(vlim) && isempty(hpos) && isempty(vpos) && isempty(height) && isempty(width)
   % no scaling is needed, the input X and Y are already fine
@@ -89,6 +92,8 @@ end % shortcut
 h = text(X, Y, str);
 set(h, 'HorizontalAlignment', HorizontalAlignment);
 set(h, 'Color', Color);
+set(h, 'rotation', rotation);
+set(h, 'VerticalAlignment',VerticalAlignment);
 if ~isempty(FontSize), set(h, 'FontSize', FontSize); end
 if ~isempty(FontName), set(h, 'FontName', FontName); end
 
