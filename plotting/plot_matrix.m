@@ -41,7 +41,7 @@ else
 end
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'clim', 'box','highlight','highlightstyle'});
+keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'clim', 'box','highlight','highlightstyle','tag'});
 hpos   = keyval('hpos',   varargin);
 vpos   = keyval('vpos',   varargin);
 width  = keyval('width',  varargin);
@@ -52,6 +52,8 @@ clim   = keyval('clim',   varargin);
 box    = keyval('box',    varargin); if isempty(box), box = false; end
 highlight      = keyval('highlight',       varargin);
 highlightstyle = keyval('highlightstyle',  varargin); if isempty(highlightstyle), highlightstyle = 'opacity'; end
+tag            = keyval('tag', varargin); if isempty(tag), tag=''; end
+
 % axis   = keyval('axis',   varargin); if isempty(axis), axis = false; end
 % label  = keyval('label',  varargin); % FIXME
 % style  = keyval('style',  varargin); % FIXME
@@ -159,6 +161,7 @@ vdat = vdat + vpos;
 % the uimagesc-call needs to be here to avoid calling it several times in switch-highlight
 if isempty(highlight)
   h = uimagesc(hdat, vdat, cdat, clim);
+  set(h,'tag',tag);
 end
 
 % the uimagesc-call needs to be inside switch-statement, otherwise 'saturation' will cause it to be called twice
@@ -166,6 +169,7 @@ if ~isempty(highlight)
   switch highlightstyle
     case 'opacity'
       h = uimagesc(hdat, vdat, cdat, clim);
+      set(h,'tag',tag);
       set(h,'AlphaData',highlight);
       set(h, 'AlphaDataMapping', 'scaled');
       alim([0 1]);
@@ -186,6 +190,7 @@ if ~isempty(highlight)
       hsvcdat(:,:,2) = hsvcdat(:,:,2) .* satmask;
       rgbcdatsat = hsv2rgb(hsvcdat);
       h = uimagesc(hdat, vdat, rgbcdatsat,clim);
+      set(h,'tag',tag);
     case 'outline'
       % the significant voxels could be outlined with a black contour
       error('unsupported highlightstyle')
