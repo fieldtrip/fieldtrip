@@ -15,7 +15,7 @@ function [cfg] = singleplotTFR(cfg, data)
 % cfg.zparam        = field to be plotted on y-axis, e.g. 'powspcrtrm' (default depends on data.dimord)
 % cfg.maskparameter = field in the data to be used for opacity masking of data
 %                     (not possible for mean over multiple channels)
-% cfg.maskstyle     = style used to mask nacdats, 'opacity' or 'saturation' (default = 'opacity')
+% cfg.maskstyle     = style used to mask nans, 'opacity' or 'saturation' (default = 'opacity')
 %                     use 'saturation' when saving to vector-format (like *.eps) to avoid all sorts of image-problems
 % cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.ylim          = 'maxmin' or [ymin ymax] (default = 'maxmin')
