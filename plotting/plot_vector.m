@@ -117,7 +117,11 @@ end
 % first shift the horizontal axis to zero
 hdat = hdat - (hlim(1)+hlim(2))/2;
 % then scale to length 1
-hdat = hdat ./ (hlim(2)-hlim(1));
+if hlim(2)-hlim(1)~=0
+  hdat = hdat ./ (hlim(2)-hlim(1));
+else
+  hdat = hdat /hlim(1);
+end
 % then scale to the new width
 hdat = hdat .* width;
 % then shift to the new horizontal position
@@ -125,7 +129,11 @@ hdat = hdat + hpos;
 % first shift the vertical axis to zero
 vdat = vdat - (vlim(1)+vlim(2))/2;
 % then scale to length 1
-vdat = vdat ./ (vlim(2)-vlim(1));
+if vlim(2)-vlim(1)~=0
+  vdat = vdat / (vlim(2)-vlim(1));
+else
+  vdat = vdat /vlim(1);
+end
 % then scale to the new width
 vdat = vdat .* height;
 % then shift to the new vertical position
