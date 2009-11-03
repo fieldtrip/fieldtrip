@@ -37,7 +37,7 @@ function [cfg] = singleplotTFR(cfg, data)
 % cfg.masknans      = 'yes' or 'no' (default = 'yes')
 %
 % See also:
-%   singleplotER, multiplotER, multiplotTFR, topoplotER, topoplotTFR.
+%   singleplotER, multiplotER, multiplotTFR, topoplotER, topoplotTFR
 
 % This function depends on FREQBASELINE which has the following options:
 % cfg.baseline, documented
