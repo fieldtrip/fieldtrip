@@ -15,7 +15,8 @@ function [cfg] = singleplotTFR(cfg, data)
 % cfg.zparam        = field to be plotted on y-axis, e.g. 'powspcrtrm' (default depends on data.dimord)
 % cfg.maskparameter = field in the data to be used for opacity masking of data
 %                     (not possible for mean over multiple channels)
-% cfg.maskstyle     = style used to mask the nans (default = 'opacity')
+% cfg.maskstyle     = style used to mask nacdats, 'opacity' or 'saturation' (default = 'opacity')
+%                     use 'saturation' when saving to vector-format (like *.eps) to avoid all sorts of image-problems
 % cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.ylim          = 'maxmin' or [ymin ymax] (default = 'maxmin')
 % cfg.zlim          = 'maxmin','absmax' or [zmin zmax] (default = 'maxmin')
@@ -233,7 +234,6 @@ if ~isempty(cfg.maskparameter) && (~evenx || ~eveny)
 end
 
 % Draw plot (and mask NaN's if requested):
-hold on
 if isequal(cfg.masknans,'yes') && isempty(cfg.maskparameter)
   mask = ~isnan(TFR);
   mask = double(mask);
@@ -250,6 +250,7 @@ elseif isequal(cfg.masknans,'no') && ~isempty(cfg.maskparameter)
 else
   plot_matrix(data.(cfg.xparam)(xidc),data.(cfg.yparam)(yidc), TFR, 'clim',[zmin,zmax])
 end
+hold on
 axis xy;
 
 % set colormap
