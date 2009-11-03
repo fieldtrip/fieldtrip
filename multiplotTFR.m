@@ -313,7 +313,7 @@ for k=1:length(seldat)
 
   % Draw channel labels:
   if strcmp(cfg.showlabels,'yes')
-    text(chanX(k)-chanWidth(k)/2, chanY(k)+chanHeight(k)/2, sprintf(' %0s\n ', chanLabels{k}), 'Fontsize', cfg.fontsize);
+    plot_text(chanX(k)-chanWidth(k)/2, chanY(k)+chanHeight(k)/2, sprintf(' %0s\n ', chanLabels{k}), 'Fontsize', cfg.fontsize);
   end
 end
 
@@ -324,7 +324,7 @@ if ~isempty(k)
   comment = sprintf('%0s\nxlim=[%.3g %.3g]', comment, xmin, xmax);
   comment = sprintf('%0s\nylim=[%.3g %.3g]', comment, ymin, ymax);
   comment = sprintf('%0s\nzlim=[%.3g %.3g]', comment, zmin, zmax);
-  text(lay.pos(k,1), lay.pos(k,2), sprintf(comment), 'Fontsize', cfg.fontsize);
+  plot_text(lay.pos(k,1), lay.pos(k,2), sprintf(comment), 'Fontsize', cfg.fontsize);
 end
 
 % plot scale:
