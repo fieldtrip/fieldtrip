@@ -47,7 +47,7 @@ if ~isfield(cfg, 'smooth');        cfg.smooth = 5;          end % in voxels
 if ~isfield(cfg, 'mriunits');      cfg.mriunits = 'mm';     end
 if ~isfield(cfg, 'sourceunits'),   cfg.sourceunits = 'cm';  end
 if ~isfield(cfg, 'threshold'),     cfg.threshold = 0.5;     end % relative
-if ~isfield(cfg, 'spheremesh'),    cfg.numvertices = 4000;  end % approximate number of vertices in sphere
+if ~isfield(cfg, 'numvertices'),   cfg.numvertices = 4000;  end % approximate number of vertices in sphere
 
 % construct the geometry of the volume conductor model, containing a single boundary
 % the initialization of the forward computation code is done later in prepare_headmodel
