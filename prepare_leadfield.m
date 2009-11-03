@@ -34,8 +34,8 @@ function [grid, cfg] = prepare_leadfield(cfg, data)
 %   cfg.hdmfile         = string, file containing the volume conduction model
 % or alternatively
 %   cfg.vol             = structure with volume conduction model
-% 
-% If the sensor information is not contained in the data itself you should 
+%
+% If the sensor information is not contained in the data itself you should
 % also specify the sensor information using
 %   cfg.gradfile        = string, file containing the gradiometer definition
 %   cfg.elecfile        = string, file containing the electrode definition
@@ -66,7 +66,7 @@ function [grid, cfg] = prepare_leadfield(cfg, data)
 % cfg.grid.dim, documented
 % cfg.grid.inside, documented
 % cfg.grid.outside, documented
-% cfg.mri 
+% cfg.mri
 % cfg.mriunits
 % cfg.smooth
 % cfg.sourceunits
@@ -130,19 +130,39 @@ end
 [grid, cfg] = prepare_dipole_grid(cfg, vol, sens);
 
 progress('init', cfg.feedback, 'computing leadfield');
-for i=1:length(grid.inside)
-  % compute the leadfield on all grid positions inside the brain
-  progress(i/length(grid.inside), 'computing leadfield %d/%d\n', i, length(grid.inside));
-  dipindx = grid.inside(i);
-  grid.leadfield{dipindx} = compute_leadfield(grid.pos(dipindx,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
 
-  if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
-    % multiply with the normalized dipole moment to get the leadfield in the desired orientation
-    grid.leadfield{dipindx} = grid.leadfield{dipindx} * grid.mom(:,dipindx);
-  end
+if strcmp(vol.type, 'openmeeg')
+  cfg.reducerank = 'no'; % FIXME: HACK
+  om_leadfield = compute_leadfield(grid.pos(grid.inside,:), sens, ...
+    vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, ...
+    'normalizeparam', cfg.normalizeparam);
+  for i=1:length(grid.inside)
+    % compute the leadfield on all grid positions inside the brain
+    progress(i/length(grid.inside), 'computing leadfield %d/%d\n',i, length(grid.inside));
+    dipindx = grid.inside(i);
+    grid.leadfield{dipindx} = om_leadfield(:,[(3*(i-1)):(3*(i-1)+2)]+1);
+    
+    if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
+      % multiply with the normalized dipole moment to get the leadfield in the desired orientation
+      grid.leadfield{dipindx} = grid.leadfield{dipindx} * grid.mom(:,dipindx);
+    end
+  end % for all grid locations inside the brain
+  progress('close');
+else
+  for i=1:length(grid.inside)
+    % compute the leadfield on all grid positions inside the brain
+    progress(i/length(grid.inside), 'computing leadfield %d/%d\n', i, length(grid.inside));
+    dipindx = grid.inside(i);
+    grid.leadfield{dipindx} = compute_leadfield(grid.pos(dipindx,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
+    
+    if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
+      % multiply with the normalized dipole moment to get the leadfield in the desired orientation
+      grid.leadfield{dipindx} = grid.leadfield{dipindx} * grid.mom(:,dipindx);
+    end
+  end % for all grid locations inside the brain
+  progress('close');
+end
 
-end % for all grid locations inside the brain
-progress('close');
 
 % fill the positions outside the brain with NaNs
 grid.leadfield(grid.outside) = {nan};
@@ -170,7 +190,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 try
@@ -184,6 +204,6 @@ end
 cfg.version.id = '$Id: prepare_leadfield.m,v 1.30 2009/04/09 16:28:40 crimic Exp $';
 % remember the configuration details of the input data
 try, cfg.previous = data.cfg; end
-% remember the exact configuration details in the output 
+% remember the exact configuration details in the output
 grid.cfg = cfg;
 
