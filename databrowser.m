@@ -286,7 +286,7 @@ opt.trlop    = 1;          % active trial being displayed
 opt.ftsel    = find(strcmp(artlabel,cfg.selectfeature)); % current artifact/feature being selected
 opt.trlorg   = trlorg;
 opt.fsample  = fsample;
-opt.artcol   = [0.9686 0.7608 0.7686; 0.7529 0.7098 0.9647; 0.7373 0.9725 0.6824;0.8118 0.8118 0.8118; 0.9725 0.6745 0.4784; 0.9765 0.9176 0.5686];
+opt.artcol   = [0.9686 0.7608 0.7686; 0.7529 0.7098 0.9647; 0.7373 0.9725 0.6824;0.8118 0.8118 0.8118; 0.9725 0.6745 0.4784; 0.9765 0.9176 0.5686; 0.6863 1 1; 1 0.4902 1];
 opt.chan_colors = chan_colors;
 opt.cleanup  = false;      % this is needed for a corrent handling if the figure is closed (either in the corner or by "q")
 if strcmp(cfg.continuous, 'yes')
