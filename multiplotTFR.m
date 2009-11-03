@@ -281,9 +281,10 @@ for k=1:length(seldat)
   yas = (chanY(k) + linspace(0,1,size(cdata,1))*chanHeight(k)) - chanHeight(k)/2;
   
   % Draw plot:
-  h = imagesc(xas, yas, cdata, [zmin zmax]);
+  plot_matrix(xas, yas, cdata,'tag','cip')
   
   % Mask Nan's and maskfield
+  h = findobj('tag','cip');
   if isequal(cfg.masknans,'yes') && isempty(cfg.maskparameter)
     mask = ~isnan(cdata);
     mask = double(mask);
@@ -307,9 +308,7 @@ for k=1:length(seldat)
     xstep = xas(2) - xas(1); ystep = yas(2) - yas(1);
     xvalmin(1:length(yas)+2) = min(xas)-(0.5*xstep); xvalmax(1:length(yas)+2) = max(xas)+(0.5*xstep); yvalmin(1:length(xas)+2) = min(yas)-(0.5*ystep); yvalmax(1:length(xas)+2) = max(yas)+(0.5*ystep);
     xas2 = [xvalmin(1) xas xvalmax(1)]; yas2 = [yvalmin(1) yas yvalmax(1)];
-    hold on
-    plot([xas2 xvalmax xas2],[yvalmin yas2 yvalmax],'k');
-    plot(xvalmin, yas2,'k');
+    plot_box([min(xas2) max(xas2) min(yas2) max(yas2)])
   end
 
   % Draw channel labels:
@@ -339,7 +338,7 @@ if ~isempty(k)
   yas = (lay.pos(k,2) + linspace(0,1,size(cdata,1))*lay.height(k));
   
   % Draw plot:
-  imagesc(xas, yas, cdata, [zmin zmax]);
+  plot_matrix(xas, yas, cdata,'clim',[zmin zmax],'tag','cip')
 end
 
 % set colormap
