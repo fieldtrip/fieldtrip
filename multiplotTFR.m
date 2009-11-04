@@ -18,6 +18,9 @@ function [cfg] = multiplotTFR(cfg, data)
 % cfg.zparam           = field to be represented as color (default depends on data.dimord)
 %                        'powspctrm' or 'cohspctrm' 
 % cfg.maskparameter    = field in the data to be used for opacity masking of data
+% cfg.maskstyle        = style used to mask nans, 'opacity' or 'saturation' (default = 'opacity')
+%                        use 'saturation' when saving to vector-format (like *.eps) to avoid all 
+%                        sorts of image-problems (currently only possible with a white backgroud)
 % cfg.xlim             = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.ylim             = 'maxmin' or [ymin ymax] (default = 'maxmin')
 % cfg.zlim             = 'maxmin','absmax' or [zmin zmax] (default = 'maxmin')
@@ -100,6 +103,7 @@ if ~isfield(cfg,'interactive'),     cfg.interactive = 'no';            end
 if ~isfield(cfg,'renderer'),        cfg.renderer = [];                 end % let matlab decide on default
 if ~isfield(cfg,'masknans'),        cfg.masknans = 'yes';              end
 if ~isfield(cfg,'maskparameter'),   cfg.maskparameter = [];            end
+if ~isfield(cfg,'maskstyle'),       cfg.maskstyle = 'opacity';         end
 if ~isfield(cfg,'box')             
   if ~isempty(cfg.maskparameter)
     cfg.box = 'yes';
@@ -280,30 +284,27 @@ for k=1:length(seldat)
   xas = (chanX(k) + linspace(0,1,size(cdata,2))*chanWidth(k)) - chanWidth(k)/2;
   yas = (chanY(k) + linspace(0,1,size(cdata,1))*chanHeight(k)) - chanHeight(k)/2;
   
-  % Draw plot:
-  plot_matrix(xas, yas, cdata,'tag','cip')
-  
-  % Mask Nan's and maskfield
-  h = findobj('tag','cip');
+  % Draw plot (and mask Nan's with maskfield if requested)
   if isequal(cfg.masknans,'yes') && isempty(cfg.maskparameter)
     mask = ~isnan(cdata);
     mask = double(mask);
-    set(h,'AlphaData',mask, 'AlphaDataMapping', 'scaled');
-    alim([0 1]);
+    plot_matrix(xas, yas, cdata,'clim',[zmin zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
   elseif isequal(cfg.masknans,'yes') && ~isempty(cfg.maskparameter)
     mask = ~isnan(cdata);
     mask = mask .* mdata;
     mask = double(mask);
-    set(h,'AlphaData',mask, 'AlphaDataMapping', 'scaled');
-    alim([0 1]);
+    plot_matrix(xas, yas, cdata,'clim',[zmin zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
   elseif isequal(cfg.masknans,'no') && ~isempty(cfg.maskparameter)
     mask = mdata;
     mask = double(mask);
-    set(h,'AlphaData',mask, 'AlphaDataMapping', 'scaled');
-    alim([0 1]);
+    plot_matrix(xas, yas, cdata,'clim',[zmin zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
+  else
+    plot_matrix(xas, yas, cdata,'clim',[zmin zmax],'tag','cip')
   end
+  % Currently the handle isn't being used below, this is here for possible use in the future
+  h = findobj('tag','cip');
   
-% Draw box around plot
+  % Draw box around plot
   if strcmp(cfg.box,'yes')
     xstep = xas(2) - xas(1); ystep = yas(2) - yas(1);
     xvalmin(1:length(yas)+2) = min(xas)-(0.5*xstep); xvalmax(1:length(yas)+2) = max(xas)+(0.5*xstep); yvalmin(1:length(xas)+2) = min(yas)-(0.5*ystep); yvalmax(1:length(xas)+2) = max(yas)+(0.5*ystep);
@@ -337,8 +338,26 @@ if ~isempty(k)
   xas = (lay.pos(k,1) + linspace(0,1,size(cdata,2))*lay.width(k));
   yas = (lay.pos(k,2) + linspace(0,1,size(cdata,1))*lay.height(k));
   
-  % Draw plot:
-  plot_matrix(xas, yas, cdata,'clim',[zmin zmax],'tag','cip')
+  % Draw plot (and mask Nan's with maskfield if requested)
+  if isequal(cfg.masknans,'yes') && isempty(cfg.maskparameter)
+    mask = ~isnan(cdata);
+    mask = double(mask);
+    plot_matrix(xas, yas, cdata,'clim',[zmin zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
+  elseif isequal(cfg.masknans,'yes') && ~isempty(cfg.maskparameter)
+    mask = ~isnan(cdata);
+    mask = mask .* mdata;
+    mask = double(mask);
+    plot_matrix(xas, yas, cdata,'clim',[zmin zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
+  elseif isequal(cfg.masknans,'no') && ~isempty(cfg.maskparameter)
+    mask = mdata;
+    mask = double(mask);
+    plot_matrix(xas, yas, cdata,'clim',[zmin zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
+  else
+    plot_matrix(xas, yas, cdata,'clim',[zmin zmax],'tag','cip')
+  end
+  % Currently the handle isn't being used below, this is here for possible use in the future
+  h = findobj('tag','cip');
+
 end
 
 % set colormap
