@@ -321,7 +321,7 @@ cfg.comment = [cfg.comment colorLabels];
 % Write comment text:
 l = cellstrmatch('COMNT',Lbl);
 if ~isempty(l)
-  text(X(l),Y(l),sprintf(cfg.comment),'Fontsize',cfg.fontsize);
+  plot_text(X(l),Y(l),sprintf(cfg.comment),'Fontsize',cfg.fontsize);
 end
 
 % Plot scales:
@@ -365,23 +365,24 @@ x1 =  xpos;
 x2 =  xpos+width;
 y1 =  ypos;
 y2 =  ypos+width;
-plot([xpos xpos+width xpos+width xpos xpos],[ypos ypos ypos+height ypos+height ypos],'b');
+plot_box([xpos xpos+width ypos ypos+height],'edgecolor','b')
+
 if xlim(1) <=  0 && xlim(2) >= 0
   xs =  xpos+width*([0 0]-xlim(1))/(xlim(2)-xlim(1));
   ys =  ypos+height*(ylim-ylim(1))/(ylim(2)-ylim(1));
-  plot(xs,ys,'b');
+  plot_vector(xs,ys,'color','b');
 end
 
 if ylim(1) <= 0 && ylim(2) >= 0
   xs =  xpos+width*(xlim-xlim(1))/(xlim(2)-xlim(1));
   ys =  ypos+height*([0 0]-ylim(1))/(ylim(2)-ylim(1));
-  plot(xs,ys,'b');
+  plot_vector(xs,ys,'color','b');
 end
 
-text( x1,y1,num2str(xlim(1),3),'rotation',90,'HorizontalAlignment','Right','VerticalAlignment','middle','Fontsize',cfg.fontsize);
-text( x2,y1,num2str(xlim(2),3),'rotation',90,'HorizontalAlignment','Right','VerticalAlignment','middle','Fontsize',cfg.fontsize);
-text( x2,y1,num2str(ylim(1),3),'HorizontalAlignment','Left','VerticalAlignment','bottom','Fontsize',cfg.fontsize);
-text( x2,y2,num2str(ylim(2),3),'HorizontalAlignment','Left','VerticalAlignment','bottom','Fontsize',cfg.fontsize);
+plot_text( x1,y1,num2str(xlim(1),3),'rotation',90,'HorizontalAlignment','Right','VerticalAlignment','middle','Fontsize',cfg.fontsize);
+plot_text( x2,y1,num2str(xlim(2),3),'rotation',90,'HorizontalAlignment','Right','VerticalAlignment','middle','Fontsize',cfg.fontsize);
+plot_text( x2,y1,num2str(ylim(1),3),'HorizontalAlignment','Left','VerticalAlignment','bottom','Fontsize',cfg.fontsize);
+plot_text( x2,y2,num2str(ylim(2),3),'HorizontalAlignment','Left','VerticalAlignment','bottom','Fontsize',cfg.fontsize);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -398,10 +399,10 @@ y(find(y < ylim(1))) = ylim(1);
 
 xs = xpos+width*(x-xlim(1))/(xlim(2)-xlim(1));
 ys = ypos+height*(y-ylim(1))/(ylim(2)-ylim(1));
-plot(xs,ys,style)
+plot_vector(xs,ys,'style',style)
 
 if strcmp(cfg.showlabels,'yes')
-  text(xpos,ypos+1.0*height,label,'Fontsize',cfg.fontsize)
+  plot_text(xpos,ypos+1.0*height,label,'Fontsize',cfg.fontsize)
 end
 
 % Draw axes:
@@ -409,26 +410,28 @@ if strcmp(cfg.axes,'yes') || strcmp(cfg.axes, 'xy')
   % Draw y axis
   xs =  xpos+width*([0 0]-xlim(1))/(xlim(2)-xlim(1));
   ys =  ypos+height*(ylim-ylim(1))/(ylim(2)-ylim(1));
-  plot(xs,ys,'k');
+  plot_vector(xs,ys,'color','k')
   % Draw x axis
   xs =  xpos+width*(xlim-xlim(1))/(xlim(2)-xlim(1));
   ys =  ypos+height*([0 0]-ylim(1))/(ylim(2)-ylim(1));
-  plot(xs,ys,'k');
+  plot_vector(xs,ys,'color','k')
+  
 elseif strcmp(cfg.axes,'x')
   % Draw x axis
   xs =  xpos+width*(xlim-xlim(1))/(xlim(2)-xlim(1));
   ys =  ypos+height*([0 0]-ylim(1))/(ylim(2)-ylim(1));
-  plot(xs,ys,'k');
+  plot_vector(xs,ys,'color','k')
+  
 elseif strcmp(cfg.axes,'y')
   % Draw y axis
   xs =  xpos+width*([0 0]-xlim(1))/(xlim(2)-xlim(1));
   ys =  ypos+height*(ylim-ylim(1))/(ylim(2)-ylim(1));
-  plot(xs,ys,'k');
+  plot_vector(xs,ys,'color','k')
 end
 
 % Draw box around plot:
 if strcmp(cfg.box,'yes')
-  plot([xpos xpos+width xpos+width xpos xpos],[ypos ypos ypos+height ypos+height ypos],'k');
+  plot_box([xpos xpos+width ypos ypos+height],'edgecolor','k')
 end
 
 % Add mask patch
