@@ -523,43 +523,46 @@ end
 % Plot electrodes:
 if strcmp(cfg.electrodes,'on') || strcmp(cfg.showlabels,'markers')
   if ischar(cfg.highlight)
-    plot(x,y,cfg.emarker,'Color',cfg.ecolor,'markersize',cfg.emarkersize);
+    plot_vector(x,y,'style',cfg.emarker,'Color',cfg.ecolor,'markersize',cfg.emarkersize);
   elseif isnumeric(cfg.highlight)
     normal = setdiff(1:length(x), cfg.highlight);
-    plot(x(normal),        y(normal),        cfg.emarker,  'Color', cfg.ecolor,  'markersize', cfg.emarkersize);
-    plot(x(cfg.highlight), y(cfg.highlight), cfg.hlmarker, 'Color', cfg.hlcolor, 'markersize', cfg.hlmarkersize, 'linewidth',  cfg.hllinewidth, 'markerfacecolor', cfg.hlfacecolor);
+    plot_vector(x(normal), y(normal), 'style', cfg.emarker, 'Color', cfg.ecolor, 'markersize', cfg.emarkersize);
+    plot_vector(x(cfg.highlight), y(cfg.highlight), 'style', cfg.hlmarker, 'Color', cfg.hlcolor, 'markersize', cfg.hlmarkersize, ...
+      'linewidth',  cfg.hllinewidth, 'markerfacecolor', cfg.hlfacecolor);    
   elseif iscell(cfg.highlight)
-    plot(x,y,cfg.emarker,'Color',cfg.ecolor,'markersize',cfg.emarkersize);
+    plot_vector(x,y,'style',cfg.emarker,'Color',cfg.ecolor,'markersize',cfg.emarkersize);
     for iCell = 1:length(cfg.highlight)
-      plot(x(cfg.highlight{iCell}), y(cfg.highlight{iCell}), cfg.hlmarker{iCell}, 'Color', cfg.hlcolor{iCell}, 'markersize', cfg.hlmarkersize{iCell},'linewidth',  cfg.hllinewidth{iCell}, 'markerfacecolor', cfg.hlfacecolor{iCell});
+      plot_vector(x(cfg.highlight{iCell}), y(cfg.highlight{iCell}), 'style', cfg.hlmarker{iCell}, 'Color', ...
+        cfg.hlcolor{iCell}, 'markersize', cfg.hlmarkersize{iCell}, ...
+      'linewidth',  cfg.hllinewidth{iCell}, 'markerfacecolor', cfg.hlfacecolor{iCell});  
     end
   else
     error('Unknown highlight type');
   end;
 elseif any(strcmp(cfg.electrodes,{'highlights','highlight'}))
   if isnumeric(cfg.highlight)
-    plot(x(cfg.highlight), y(cfg.highlight), cfg.hlmarker, 'Color', cfg.hlcolor, 'markersize', cfg.hlmarkersize, 'linewidth',cfg.hllinewidth, 'markerfacecolor', cfg.hlfacecolor);
+    plot_vector(x(cfg.highlight),y(cfg.highlight),'style',cfg.hlmarker,'Color',cfg.hlcolor,'markersize',cfg.hlmarkersize, 'linewidth',cfg.hllinewidth, 'markerfacecolor', cfg.hlfacecolor);
   else
     error('Unknown highlight type');
   end;
 elseif strcmp(cfg.electrodes,'labels') || strcmp(cfg.showlabels,'yes')
   for i = 1:numChan
-    text(x(i), y(i), chanLabels{i}, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Color', cfg.ecolor, 'FontSize', cfg.efontsize);
+    plot_text(x(i), y(i), chanLabels{i}, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Color', cfg.ecolor, 'FontSize', cfg.efontsize);
   end
 elseif strcmp(cfg.electrodes,'numbers') || strcmp(cfg.showlabels,'numbers')
   for i = 1:numChan
-    text(x(i), y(i), int2str(i), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Color', cfg.ecolor, 'FontSize',cfg.efontsize);
+    plot_text(x(i), y(i), int2str(i), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Color', cfg.ecolor, 'FontSize',cfg.efontsize);
   end
 elseif strcmp(cfg.electrodes,'dotnum')
   for i = 1:numChan
-    text(x(i), y(i), int2str(i), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'Color', cfg.ecolor, 'FontSize', cfg.efontsize);
+    plot_text(x(i), y(i), int2str(i), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'Color', cfg.ecolor, 'FontSize', cfg.efontsize);
   end
   if ischar(cfg.highlight)
-    plot(x, y, cfg.emarker, 'Color', cfg.ecolor, 'markersize', cfg.emarkersize);
+    plot_vector(x, y, 'style', cfg.emarker, 'Color', cfg.ecolor, 'markersize', cfg.emarkersize);
   elseif isnumeric(cfg.highlight)
     normal = setdiff(1:length(x), cfg.highlight);
-    plot(x(normal)       , y(normal),        cfg.emarker,  'Color', cfg.ecolor,  'markersize', cfg.emarkersize);
-    plot(x(cfg.highlight), y(cfg.highlight), cfg.hlmarker, 'Color', cfg.hlcolor, 'markersize', cfg.hlmarkersize, 'linewidth', cfg.hllinewidth, 'markerfacecolor', cfg.hlfacecolor);
+    plot_vector(x(normal), y(normal), 'style', cfg.emarker, 'Color', cfg.ecolor, 'markersize', cfg.emarkersize);
+    plot_vector(x(cfg.highlight), y(cfg.highlight), 'style', cfg.hlmarker, 'Color', cfg.hlcolor, 'markersize', cfg.hlmarkersize, 'linewidth', cfg.hllinewidth, 'markerfacecolor', cfg.hlfacecolor);
   else
     error('Unknown highlight type');
   end;
@@ -568,7 +571,7 @@ end
 if isfield(cfg.layout, 'outline')
   % plot the outline of the head, ears and nose
   for i=1:length(cfg.layout.outline)
-    plot(cfg.layout.outline{i}(:,1), cfg.layout.outline{i}(:,2), 'Color', cfg.headcolor, 'LineWidth', cfg.hlinewidth)
+    plot_vector(cfg.layout.outline{i}(:,1), cfg.layout.outline{i}(:,2), 'Color', cfg.headcolor, 'LineWidth', cfg.hlinewidth)
   end
 end
 
@@ -577,7 +580,7 @@ if isfield(cfg, 'comment')
   if strcmp(cfg.commentpos, 'title')
     title(cfg.comment, 'Fontsize', cfg.fontsize);
   else
-    text(x_COMNT, y_COMNT, cfg.comment, 'Fontsize', cfg.fontsize, 'HorizontalAlignment', HorAlign, 'VerticalAlignment', VerAlign);
+    plot_text(x_COMNT, y_COMNT, cfg.comment, 'Fontsize', cfg.fontsize, 'HorizontalAlignment', HorAlign, 'VerticalAlignment', VerAlign);
   end
 end
 
