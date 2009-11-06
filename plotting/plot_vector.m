@@ -51,7 +51,8 @@ else
 end
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'style', 'label', 'fontsize', 'axis', 'box','highlight','highlightstyle','color', 'linewidth'});
+keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'style', 'label', ...
+  'fontsize', 'axis', 'box','highlight','highlightstyle','color', 'linewidth','markersize'});
 hpos   = keyval('hpos',     varargin);
 vpos   = keyval('vpos',     varargin);
 width  = keyval('width',    varargin);
@@ -67,6 +68,7 @@ color  = keyval('color',    varargin);
 linewidth      = keyval('linewidth',       varargin); if isempty(linewidth), linewidth = 0.5; end
 highlight      = keyval('highlight',       varargin);
 highlightstyle = keyval('highlightstyle',  varargin); if isempty(highlightstyle), highlightstyle = 'box'; end
+markersize     = keyval('markersize',       varargin); if isempty(markersize), markersize = 6; end
 
 % convert the yes/no strings into boolean values
 axis = istrue(axis);
@@ -179,9 +181,9 @@ if ~isempty(highlight)
 end
 
 if isempty(color)
-  h = plot(hdat, vdat, style, 'LineWidth', linewidth);
+  h = plot(hdat, vdat, style, 'LineWidth', linewidth,'markersize',markersize);
 else
-  h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'Color', color);
+  h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'Color', color,'markersize',markersize);
 end
 
 if ~isempty(label)
