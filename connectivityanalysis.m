@@ -417,6 +417,8 @@ else %if length(strfind(cfg.dimord, 'chan'))~=2,
 
   outsum = zeros(siz(2:end));
   outssq = zeros(siz(2:end));
+  pvec   = [3 setdiff(1:numel(siz),3)];  
+  
   progress('init', cfg.feedback, 'computing metric...');
   for j = 1:siz(1)
     progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
@@ -426,10 +428,14 @@ else %if length(strfind(cfg.dimord, 'chan'))~=2,
       p1(k,1,:,:,:,:) = input(j,k,k,:,:,:,:);
       p2(1,k,:,:,:,:) = input(j,k,k,:,:,:,:);
     end
-    p1     = p1(:,ones(1,siz(3)),:,:,:,:);
-    p2     = p2(ones(1,siz(2)),:,:,:,:,:);
-    outsum = outsum + complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./sqrt(p1.*p2), cfg.complex);
-    outssq = outssq + complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./sqrt(p1.*p2), cfg.complex).^2;
+    c  = reshape(input(j,:,:,:,:,:,:), siz(2:end));
+    p1 = p1(:,ones(1,siz(3)),:,:,:,:);
+    p2 = p2(ones(1,siz(2)),:,:,:,:,:);
+    %outsum = outsum + complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./sqrt(p1.*p2), cfg.complex);
+    %outssq = outssq + complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./sqrt(p1.*p2), cfg.complex).^2;
+    
+    outsum = outsum + ipermute(phaseslope(permute(c./sqrt(p1.*p2),pvec),cfg.nbin),pvec);
+    outssq = outssq + ipermute(phaseslope(permute(c./sqrt(p1.*p2),pvec),cfg.nbin),pvec).^2;
   end
   progress('close');
 
