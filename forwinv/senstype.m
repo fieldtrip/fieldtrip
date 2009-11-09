@@ -65,6 +65,18 @@ function [type] = senstype(input, desired)
 % these are for remembering the type on subsequent calls with the same input arguments
 persistent previous_argin previous_argout
 
+if iscell(input)
+  % this might represents combined EEG and MEG
+  type = cell(size(input));
+  if nargin<2
+    desired = cell(size(input)); % empty elements
+  end
+  for i=1:numel(input)
+    type{i} = senstype(input{i}, desired{i});
+  end
+  return
+end
+
 if nargin<2
   % ensure that all input arguments are defined
   desired = [];

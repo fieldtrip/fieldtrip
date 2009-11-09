@@ -17,6 +17,18 @@ function [type] = voltype(vol, desired)
 % these are for remembering the type on subsequent calls with the same input arguments
 persistent previous_argin previous_argout
 
+if iscell(vol)
+  % this might represents combined EEG and MEG
+  type = cell(size(vol));
+  if nargin<2
+    desired = cell(size(vol)); % empty elements
+  end
+  for i=1:numel(vol)
+    type{i} = voltype(vol{i}, desired{i});
+  end
+  return
+end
+
 if nargin<2
   % ensure that all input arguments are defined
   desired = [];
