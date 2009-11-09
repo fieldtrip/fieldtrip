@@ -216,6 +216,7 @@ case 'pdc'
   % partial directed coherence
 
   tmpcfg = []; % for the time being
+  tmpcfg.feedback = cfg.feedback;
   hasrpt = ~isempty(strfind(data.dimord, 'rpt'));
   if hasrpt,
     nrpt  = size(data.transfer,1);
@@ -224,7 +225,7 @@ case 'pdc'
     nrpt  = 1;
     datin = reshape(data.transfer, [1 size(data.transfer)]);
   end
-  datout   = coupling_pdc(tmpcfg, datin);
+  [datout, varout, n] = coupling_pdc(tmpcfg, datin, hasrpt, hasjack);
   outparam = 'pdcspctrm';
 
 case 'pcd'
@@ -451,39 +452,67 @@ end
 
 
 %----------------------------------------
-function [pdc] = coupling_pdc(cfg, input)
+function [pdc, pdcvar, n] = coupling_pdc(cfg, input, hasrpt, hasjack)
 
-siz    = size(input);
-nrpt   = siz(1);
-sumpdc = zeros(siz(2:end));
-sqrpdc = zeros(siz(2:end));
+if nargin==2,
+  hasrpt   = 0;
+  hasjack  = 0;
+elseif nargin==3,
+  hasjack  = 0;
+end
+
+%crossterms are described by chan_chan_therest 
+ 
+siz = size(input);
+if ~hasrpt,
+  %siz   = [1 siz];
+  %input = reshape(input, siz);
+  %FIX THIS upstairs
+end
+n = siz(1);
+
+outsum = zeros(siz(2:end));
+outssq = zeros(siz(2:end));
 
 %computing pdc is easiest on the inverse of the transfer function
 pdim     = prod(siz(4:end));
 tmpinput = reshape(input, [siz(1:3) pdim]);
-for k = 1:nrpt
+progress('init', cfg.feedback, 'inverting the transfer function...');
+for k = 1:n
+  progress(k/n, 'inverting the transfer function for replicate %d from %d\n', k, n);
   tmp = reshape(tmpinput(k,:,:,:), [siz(2:3) pdim]);
   for m = 1:pdim
     tmp(:,:,m) = inv(tmp(:,:,m));
   end
   tmpinput(k,:,:,:) = tmp;
 end
+progress('close');
 input = reshape(tmpinput, siz);
 
-for n = 1:nrpt
-  invh   = reshape(input(n,:,:,:,:), siz(2:end));
+progress('init', cfg.feedback, 'computing metric...');
+for j = 1:n
+  progress(j/n, 'computing metric for replicate %d from %d\n', j, n);
+  invh   = reshape(input(j,:,:,:,:), siz(2:end));
   den    = sum(abs(invh).^2,1);
   tmppdc = abs(invh)./sqrt(repmat(den, [siz(2) 1 1 1 1]));
   %if ~isempty(cfg.submethod), tmppdc = baseline(tmppdc, cfg.submethod, baselineindx); end
-  sumpdc = sumpdc + tmppdc;
-  sqrpdc = sqrpdc + tmppdc.^2;
+  outsum = outsum + tmppdc;
+  outssq = outssq + tmppdc.^2;
 end
-pdc = sumpdc./nrpt;
+progress('close');
 
-if nrpt>1,
-  bias   = (nrpt - 1).^2;
-  pdcvar = bias.*(sqrpdc - (sumpdc.^2)/nrpt)./(nrpt-1);
-  pdcsem = sqrt(pdcvar./nrpt);
+pdc = outsum./n;
+
+if hasrpt,
+  if hasjack
+    bias = (n-1).^2;
+  else
+    bias = 1;
+  end
+  
+  pdcvar = bias*(outssq - (outsum.^2)./n)./(n - 1);
+else 
+  pdcvar = [];
 end
 
 %----------------------------------------
@@ -511,7 +540,7 @@ if nrpt>1, %FIXME this is strictly only true for jackknife, otherwise other bias
 end
 
 %--------------------------------------------------------------------
-function [granger] = coupling_granger(transfer,noisecov,crsspctrm,fs)
+function [granger, v, n] = coupling_granger(transfer,noisecov,crsspctrm,fs)
 
 %Usage: causality = hz2causality(H,S,Z,fs);
 %Inputs: transfer  = transfer function,
