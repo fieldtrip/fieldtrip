@@ -17,8 +17,8 @@ function [type] = voltype(vol, desired)
 % these are for remembering the type on subsequent calls with the same input arguments
 persistent previous_argin previous_argout
 
-if iscell(vol)
-  % this might represents combined EEG and MEG
+if iscell(vol) && numel(vol)<4
+  % this might represent combined EEG, ECoG and/or MEG
   type = cell(size(vol));
   if nargin<2
     desired = cell(size(vol)); % empty elements
