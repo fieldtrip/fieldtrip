@@ -75,7 +75,7 @@ varargout = {PLATFORM};
 case 'bigend'                      %-Return endian for this architecture
 %=======================================================================
 varargout = {PLATFORM.bigend};
-if ~finite(PLATFORM.bigend),
+if ~isfinite(PLATFORM.bigend),
 	if isnan(PLATFORM.bigend)
 		error(['I don''t know if "',computer,'" is big-endian.'])
 	else
