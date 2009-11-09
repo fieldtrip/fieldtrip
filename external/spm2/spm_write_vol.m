@@ -34,7 +34,7 @@ mns          = zeros(dim(3),1)+NaN;
 if ~isempty(s),
 	for p=1:dim(3),
 		tmp    = double(Y(:,:,p));
-		tmp    = tmp(finite(tmp));
+		tmp    = tmp(isfinite(tmp));
 		if ~isempty(tmp),
 			mxs(p) = max(tmp);
 			mns(p) = min(tmp);
@@ -45,8 +45,8 @@ if ~isempty(s),
 		for p=1:dim(3),
 			mx = mxs(p);
 			mn = mns(p);
-			if ~finite(mx), mx = 0; end;
-			if ~finite(mn), mn = 0; end;
+			if ~isfinite(mx), mx = 0; end;
+			if ~isfinite(mn), mn = 0; end;
 			if mx~=mn,
 				V.pinfo(1,p) = (mx-mn)/(dmnmx(2)-dmnmx(1));
 				V.pinfo(2,p) = ...
@@ -57,8 +57,8 @@ if ~isempty(s),
 			end;
 		end;
 	else,
-		mx = max(mxs(finite(mxs)));
-		mn = min(mns(finite(mns)));
+		mx = max(mxs(isfinite(mxs)));
+		mn = min(mns(isfinite(mns)));
 		if isempty(mx), mx = 0; end;
 		if isempty(mn), mn = 0; end;
 		if mx~=mn,

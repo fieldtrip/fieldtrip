@@ -469,7 +469,7 @@ for i=1:length(VF),
 	[Y1,Y2,Y3] = affine_transform(X1,X2,X3,VF(i).mat\VF(1).mat);
 	dat(:,:,i) = spm_sample_vol(VF(i),Y1,Y2,Y3,1);
 end;
-msk = all(dat,3) & all(finite(double(dat)),3);
+msk = all(dat,3) & all(isfinite(double(dat)),3);
 return;
 %=======================================================================
  
