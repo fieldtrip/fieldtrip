@@ -39,6 +39,9 @@ function [cfg] = multiplotER(cfg, varargin)
 %                     interactive plot when a selected area is clicked. Multiple areas 
 %                     can be selected by holding down the SHIFT key.
 % cfg.renderer      = 'painters', 'zbuffer',' opengl' or 'none' (default = 'opengl')
+% cfg.linestyle     = linestyle/marker type, see options of the matlab PLOT function (default = '-')
+% cfg.linewidth     = linewidth in points (default = 0.5)
+% cfg.graphcolor    = color(s) used for plotting the dataset(s) (default = 'brgkywrgbkywrgbkywrgbkyw')
 %
 % cfg.layout        = specify the channel layout for plotting using one of 
 %                     the following ways:
@@ -60,7 +63,6 @@ function [cfg] = multiplotER(cfg, varargin)
 %   prepare_layout.
 
 % Undocumented local options:
-% cfg.graphcolor
 % cfg.layoutname
 %
 % This function depends on TIMELOCKBASELINE which has the following options:
@@ -104,6 +106,8 @@ if ~isfield(cfg,'graphcolor')   cfg.graphcolor  = ['brgkywrgbkywrgbkywrgbkyw'];e
 if ~isfield(cfg,'interactive'), cfg.interactive = 'no';                        end
 if ~isfield(cfg,'renderer'),    cfg.renderer    = 'opengl';                    end
 if ~isfield(cfg,'maskparameter'),cfg.maskparameter = [];                       end
+if ~isfield(cfg,'linestyle'),   cfg.linestyle   = '-';                         end
+if ~isfield(cfg,'linewidth'),   cfg.linewidth   = 0.5;                         end
 
 GRAPHCOLOR = ['k' cfg.graphcolor ];
 
@@ -288,7 +292,7 @@ for k=1:length(varargin)
     colorLabels = [colorLabels inputname(k+1) '=' GRAPHCOLOR(k+1) '\n'];
   end
 
-  style = GRAPHCOLOR(k+1);
+  color = GRAPHCOLOR(k+1);
   
   for m=1:length(Lbl)
     l = cellstrmatch(Lbl(m),Labels);
@@ -305,7 +309,7 @@ for k=1:length(varargin)
         Width(m), ...
         Height(m), ...
         Lbl(m), ...
-        cfg,style, mask);
+        cfg, color, mask);
 
       % Keep ER plot coordinates (at centre of ER plot), and channel labels (will be stored in the figure's UserData struct):
       chanX(m) = X(m) + 0.5 * Width(m);
@@ -387,7 +391,7 @@ plot_text( x2,y2,num2str(ylim(2),3),'HorizontalAlignment','Left','VerticalAlignm
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plotWnd(x,y,xidc,xlim,ylim,xpos,ypos,width,height,label,cfg,style,mask)
+function plotWnd(x,y,xidc,xlim,ylim,xpos,ypos,width,height,label,cfg,color,mask)
 set(gca,'FontSize',cfg.fontsize);
 
 x = x(xidc);
@@ -399,7 +403,7 @@ y(find(y < ylim(1))) = ylim(1);
 
 xs = xpos+width*(x-xlim(1))/(xlim(2)-xlim(1));
 ys = ypos+height*(y-ylim(1))/(ylim(2)-ylim(1));
-plot_vector(xs,ys,'style',style)
+plot_vector(xs, ys, 'color', color, 'style', cfg.linestyle, 'linewidth', cfg.linewidth)
 
 if strcmp(cfg.showlabels,'yes')
   plot_text(xpos,ypos+1.0*height,label,'Fontsize',cfg.fontsize)
