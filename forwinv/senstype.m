@@ -65,7 +65,7 @@ function [type] = senstype(input, desired)
 % these are for remembering the type on subsequent calls with the same input arguments
 persistent previous_argin previous_argout
 
-if iscell(input) && numel(input)<4
+if iscell(input) && numel(input)<4 && ~all(cellfun(@ischar, input))
   % this might represent combined EEG, ECoG and/or MEG
   type = cell(size(input));
   if nargin<2
