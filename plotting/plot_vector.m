@@ -144,7 +144,7 @@ vdat = vdat + vpos;
 if ~isempty(highlight)
   switch highlightstyle
     case 'box'
-      % find the sample number where the highligh begins and ends
+      % find the sample number where the highlight begins and ends
       if ~islogical(highlight)
         highlight=logical(highlight);
         warning('converting mask to logical values')
@@ -174,6 +174,8 @@ if ~isempty(highlight)
         end
       end  
     case 'opacity'
+      error('unsupported highlightstyle')
+    case 'saturation'
       error('unsupported highlightstyle')
     otherwise
       error('unsupported highlightstyle')
