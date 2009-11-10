@@ -53,23 +53,23 @@ end
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'style', 'label', ...
   'fontsize', 'axis', 'box','highlight','highlightstyle','color', 'linewidth','markersize','markerfacecolor'});
-hpos   = keyval('hpos',     varargin);
-vpos   = keyval('vpos',     varargin);
-width  = keyval('width',    varargin);
-height = keyval('height',   varargin);
-hlim   = keyval('hlim',     varargin); if isempty(hlim),  hlim = 'maxmin'; end
-vlim   = keyval('vlim',     varargin); if isempty(vlim),  vlim = 'maxmin'; end
-style  = keyval('style',    varargin); if isempty(style), style = '-'; end
-label  = keyval('label',    varargin);
-fontsize = keyval('fontsize', varargin);
-axis   = keyval('axis',     varargin); if isempty(axis),  axis = false; end
-box    = keyval('box',      varargin); if isempty(box),   box = false; end
-color  = keyval('color',    varargin);
-linewidth      = keyval('linewidth',       varargin); if isempty(linewidth), linewidth = 0.5; end
-highlight      = keyval('highlight',       varargin);
-highlightstyle = keyval('highlightstyle',  varargin); if isempty(highlightstyle), highlightstyle = 'box'; end
-markersize     = keyval('markersize',       varargin); if isempty(markersize), markersize = 6; end
-markerfacecolor = keyval('markerfacecolor',       varargin); if isempty(markerfacecolor), markerfacecolor = 'none'; end
+hpos            = keyval('hpos',               varargin);
+vpos            = keyval('vpos',               varargin);
+width           = keyval('width',              varargin);
+height          = keyval('height',             varargin);
+hlim            = keyval('hlim',               varargin); if isempty(hlim),            hlim = 'maxmin';            end
+vlim            = keyval('vlim',               varargin); if isempty(vlim),            vlim = 'maxmin';            end
+style           = keyval('style',              varargin); if isempty(style),           style = '-';                end
+label           = keyval('label',              varargin);
+fontsize        = keyval('fontsize',           varargin);
+axis            = keyval('axis',               varargin); if isempty(axis),            axis = false;               end
+box             = keyval('box',                varargin); if isempty(box),             box = false;                end
+color           = keyval('color',              varargin);
+linewidth       = keyval('linewidth',          varargin); if isempty(linewidth),       linewidth = 0.5;            end
+highlight       = keyval('highlight',          varargin);
+highlightstyle  = keyval('highlightstyle',     varargin); if isempty(highlightstyle),  highlightstyle = 'box';     end
+markersize      = keyval('markersize',         varargin); if isempty(markersize),      markersize = 6;             end
+markerfacecolor = keyval('markerfacecolor',    varargin); if isempty(markerfacecolor), markerfacecolor = 'none';   end
 % convert the yes/no strings into boolean values
 axis = istrue(axis);
 box  = istrue(box);
