@@ -16,8 +16,9 @@ function [cfg] = singleplotER(cfg, varargin)
 %                     'time' or 'freq' 
 % cfg.zparam        = field to be plotted on y-axis (default depends on data.dimord)
 %                     'avg', 'powspctrm' or 'cohspctrm' 
-% cfg.maskparameter = field in the first dataset to be used for opacity masking of data 
+% cfg.maskparameter = field in the first dataset to be used for masking of data 
 %                     (not possible for mean over multiple channels)
+% cfg.maskstyle     = style used for masking of data, 'box' or 'thickness' (default = 'box')
 % cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.ylim          = 'maxmin' or [ymin ymax] (default = 'maxmin')
 % cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'),
@@ -31,7 +32,7 @@ function [cfg] = singleplotER(cfg, varargin)
 %                     In a interactive plot you can select areas and produce a new
 %                     interactive plot when a selected area is clicked. Multiple areas 
 %                     can be selected by holding down the SHIFT key.
-% cfg.renderer      = 'painters', 'zbuffer',' opengl' or 'none' (default = 'opengl')
+% cfg.renderer      = 'painters', 'zbuffer',' opengl' or 'none' (default = [])
 % cfg.linestyle     = linestyle/marker type, see options of the matlab PLOT function (default = '-')
 % cfg.linewidth     = linewidth in points (default = 0.5)
 % cfg.graphcolor    = color(s) used for plotting the dataset(s) (default = 'brgkywrgbkywrgbkywrgbkyw')
@@ -72,12 +73,13 @@ if ~isfield(cfg,'trials'),        cfg.trials = 'all';                           
 if ~isfield(cfg,'xlim'),          cfg.xlim = 'maxmin';                          end
 if ~isfield(cfg,'ylim'),          cfg.ylim = 'maxmin';                          end
 if ~isfield(cfg,'fontsize'),      cfg.fontsize = 8;                             end
-if ~isfield(cfg,'graphcolor')     cfg.graphcolor = 'brgkywrgbkywrgbkywrgbkyw';  end
+if ~isfield(cfg,'graphcolor'),    cfg.graphcolor = 'brgkywrgbkywrgbkywrgbkyw';  end
 if ~isfield(cfg,'interactive'),   cfg.interactive = 'no';                       end
-if ~isfield(cfg,'renderer'),      cfg.renderer = 'opengl';                      end
+if ~isfield(cfg,'renderer'),      cfg.renderer = [];                            end
 if ~isfield(cfg,'maskparameter'), cfg.maskparameter = [];                       end
 if ~isfield(cfg,'linestyle'),     cfg.linestyle = '-';                          end
 if ~isfield(cfg,'linewidth'),     cfg.linewidth = 0.5;                          end
+if ~isfield(cfg,'maskstyle'),     cfg.maskstyle = 'box';                        end
 
 GRAPHCOLOR = ['k' cfg.graphcolor ];
 
@@ -251,7 +253,7 @@ for k=2:nargin
   end
 
   color = GRAPHCOLOR(k);
-  plot_vector(varargin{k-1}.(cfg.xparam), P, 'style', cfg.linestyle, 'color', color, 'highlight', M, 'linewidth', cfg.linewidth);  
+  plot_vector(varargin{k-1}.(cfg.xparam), P, 'style', cfg.linestyle, 'color', color, 'highlight', M, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth);  
 end
 
 % Set xlim and ylim:
