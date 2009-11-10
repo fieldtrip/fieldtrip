@@ -69,7 +69,8 @@ if isfield(cfg, 'topo') && isfield(cfg, 'topolabel')
   end
 
   % ensure that all data channels not used in the unmixing should be removed from the channel selection
-  cfg.channel = intersect(cfg.channel, cfg.topolabel);
+  tmpchan = match_str(cfg.channel, cfg.topolabel);
+  cfg.channel = cfg.channel(tmpchan);
 
   % remove all cfg settings  that do not apply
   tmpcfg              = [];
