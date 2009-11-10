@@ -25,7 +25,7 @@ function [cfg] = singleplotER(cfg, varargin)
 % cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'),
 %                     see CHANNELSELECTION for details
 % cfg.cohrefchannel = name of reference channel for visualising coherence, can be 'gui'
-% cfg.baseline      = 'yes','no' or [time1 time2] (default = 'no'), see TIMELOCKBASELINE or FREQBASELINE
+% cfg.baseline      = 'yes','no' or [time1 time2] (default = 'no'), see TIMELOCKBASELINE 
 % cfg.baselinetype  = 'absolute' or 'relative' (default = 'absolute')
 % cfg.trials        = 'all' or a selection given as a 1xN vector (default = 'all')
 % cfg.fontsize      = font size of title (default = 8)
@@ -48,10 +48,8 @@ function [cfg] = singleplotER(cfg, varargin)
 % cfg.blcwindow
 % cfg.previous
 % cfg.version
-%
-% This function depends on FREQBASELINE which has the following options:
-% cfg.baseline, documented
-% cfg.baselinetype
+
+
 
 % Copyright (C) 2003-2006, Ole Jensen
 %
