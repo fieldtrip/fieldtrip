@@ -17,7 +17,8 @@ function [cfg] = singleplotER(cfg, varargin)
 % cfg.zparam        = field to be plotted on y-axis (default depends on data.dimord)
 %                     'avg', 'powspctrm' or 'cohspctrm' 
 % cfg.maskparameter = field in the first dataset to be used for masking of data 
-%                     (not possible for mean over multiple channels)
+%                     (not possible for mean over multiple channels, or when input contains multiple subjects
+%                     or trials)
 % cfg.maskstyle     = style used for masking of data, 'box' or 'thickness' (default = 'box')
 % cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.ylim          = 'maxmin' or [ymin ymax] (default = 'maxmin')
