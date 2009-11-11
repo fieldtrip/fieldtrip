@@ -254,7 +254,7 @@ elseif iseeg
       end
       sens.pnt = pnt;
 
-    case {'bem', 'dipoli', 'asa', 'avo', 'bemcp'}
+    case {'bem', 'dipoli', 'asa', 'avo', 'bemcp', 'openmeeg'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % do postprocessing of volume and electrodes in case of BEM model
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -280,6 +280,9 @@ elseif iseeg
           if size(vol.mat,1)==size(vol.bnd(vol.skin).pnt,1)
             % construct the transfer from only the skin vertices towards electrodes
             interp = tra;
+          elseif strcmp(voltype(vol), 'openmeeg')
+            nb_points_external_surface = size(vol.bnd(vol.skin).pnt,1);
+            vol.mat = vol.mat((end-nb_points_external_surface+1):end,:);
           else
             % construct the transfer from all vertices (also brain/skull) towards electrodes
             interp = [];
@@ -291,25 +294,26 @@ elseif iseeg
               end
             end
           end
-          % convert to sparse matrix to speed up the subsequent multiplication
-          interp    = sparse(interp);
+
           % incorporate the linear interpolation matrix and the system matrix into one matrix
           % this speeds up the subsequent repeated leadfield computations
           fprintf('combining electrode transfer and system matrix\n');
-          vol.mat = interp * vol.mat;
+          
+          if strcmp(voltype(vol), 'openmeeg')
+            vol.mat = interp * vol.mat;
+            fprintf('Calculating infinite medium solution for all positions\n Please Wait...\n');
+            vol.dsm = openmeeg_dsm(pos,vol);
+          else
+            % convert to sparse matrix to speed up the subsequent multiplication
+            interp  = sparse(interp);
+            vol.mat = interp * vol.mat;
+          end
           % FIXME should I also add the electrode labels to the volume definition?
         end
         % ensure that the model potential will be average referenced
         avg = mean(vol.mat, 1);
         vol.mat = vol.mat - repmat(avg, size(vol.mat,1), 1);
       end
-
-    case {'openmeeg'}
-      % do nothing
-      % in case of openmeeg do nothing because electrodes projection is
-      % already performed in command line INRIA routines
-      % FIXME: to be checked the average referencing of the openmeeg tool 
-      % vol.mat = vol.mat;
       
     otherwise
       error('unsupported volume conductor model for EEG');
