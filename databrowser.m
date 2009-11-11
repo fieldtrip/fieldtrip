@@ -665,9 +665,9 @@ switch key
     redraw_cb(h, eventdata);
   case 'v'
     % select the vertical scaling
-    response = inputdlg('vertical scale, number or ''maxmin'')', 'specify', 1, {num2str(opt.cfg.zscale)});
+    response = inputdlg('vertical scale, number or ''absmax'')', 'specify', 1, {num2str(opt.cfg.zscale)});
     if ~isempty(response)
-      if isnan(str2double(response)) && strcmp(response, 'maxmin')
+      if isnan(str2double(response)) && strcmp(response, 'absmax')
         minval = min(opt.curdat.trial{1}(:));
         maxval = max(opt.curdat.trial{1}(:));
         opt.cfg.zscale = max(abs([minval maxval]));
