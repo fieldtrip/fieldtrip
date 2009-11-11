@@ -814,7 +814,7 @@ switch headerformat
     if iscontinuous
       raw = fiff_setup_read_raw(filename);
       hdr.nSamples    = raw.last_samp - raw.first_samp + 1; % number of samples per trial
-      hdr.nSamplesPre = raw.first_samp;
+      hdr.nSamplesPre = -raw.first_samp;                    % represented as negative number in fif file
       hdr.nTrials     = 1;
       orig.raw        = raw; % keep all the details
 
@@ -839,10 +839,10 @@ switch headerformat
         % represent it as a file with multiple trials, each trial has the same length
         % all trial average details will be available through read_event
         hdr.nSamples    = evoked_data.evoked(1).last - evoked_data.evoked(1).first + 1;
-        hdr.nSamplesPre = evoked_data.evoked(1).first;
+        hdr.nSamplesPre = -evoked_data.evoked(1).first;   % represented as negative number in fif file
         hdr.nTrials     = length(evoked_data.evoked);
-        orig.evoked     = evoked_data.evoked; % this is used by read_data to get the actual data, i.e. to prevent re-reading
-        orig.info       = evoked_data.info;   % keep all the details
+        orig.evoked     = evoked_data.evoked;             % this is used by read_data to get the actual data, i.e. to prevent re-reading
+        orig.info       = evoked_data.info;               % keep all the details
         orig.vartriallength = 0;
       end
 
