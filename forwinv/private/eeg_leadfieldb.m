@@ -108,13 +108,14 @@ switch voltype(vol)
 
    case 'openmeeg'
      % the system matrix is computed using OpenMEEG (Symmetric BEM)
-     lf = openmeeg_lf_eeg(pos, elc, vol);
-
+     lf = openmeeg_lf_eeg(vol);
+     
   otherwise
     error('unsupported type of volume conductor (%s)\n', voltype(vol));
 end % switch voltype
 
 if isfield(vol, 'mat') && ~voltype(vol, 'openmeeg')
+  
   % compute the bounded medium potential on all vertices
   % this may include the bilinear interpolation from vertices towards electrodes
   lf = vol.mat * lf;
