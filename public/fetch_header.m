@@ -4,7 +4,7 @@ function [hdr] = fetch_header(data)
 % raw data structure instead of a file on disk.
 %
 % Use as
-%   [event] = fetch_header(data)
+%   [hdr] = fetch_header(data)
 %
 % See also READ_HEADER, FETCH_DATA, FETCH_EVENT
 

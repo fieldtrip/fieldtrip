@@ -4,7 +4,7 @@ function [dat] = fetch_data(data, varargin)
 % raw data structure instead of a file on disk.
 %
 % Use as
-%   [event] = fetch_data(data, ...)
+%   [dat] = fetch_data(data, ...)
 %
 % See also READ_DATA, FETCH_HEADER, FETCH_EVENT
 
