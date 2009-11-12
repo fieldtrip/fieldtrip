@@ -464,20 +464,24 @@ if hasmsk
   clear mskmin mskmax;
 end
 
-% prevent outside fun from being plotted in slice and orthoplot
-if hasfun && isfield(data,'inside') && ~hasmsk && ~isequal(cfg.method,'surface')
+% prevent outside fun from being plotted
+if hasfun && isfield(data,'inside') && ~hasmsk
   hasmsk = 1;
   msk = zeros(dim);
   cfg.opacitymap = 'rampup';
   opacmin = 0;
   opacmax = 1;
   % make intelligent mask
-  if hasana
-    msk(data.inside) = 0.5; %so anatomy is visible
-  else
+  if isequal(cfg.method,'surface')
     msk(data.inside) = 1;
-  end;
-end;
+  else
+    if hasana
+      msk(data.inside) = 0.5; %so anatomy is visible
+    else
+      msk(data.inside) = 1;
+    end
+  end
+end
 
 % if region of interest is specified, mask everything besides roi
 if hasfun && hasroi && ~hasmsk
@@ -490,7 +494,7 @@ elseif hasfun && hasroi && hasmsk
   msk = roi .* msk;
 elseif hasroi
   error('you can not have a roi without functional data')
-end;
+end
 
 %%% set color and opacity mapping for this figure
 if hasfun
