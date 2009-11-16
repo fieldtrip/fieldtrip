@@ -234,6 +234,12 @@ if ~isempty(cfg.maskparameter) && (~evenx || ~eveny)
   cfg.maskparameter = [];
 end
 
+% set colormap
+if isfield(cfg,'colormap')
+  if size(cfg.colormap,2)~=3, error('singleplotTFR(): Colormap must be a n x 3 matrix'); end
+  set(gcf,'colormap',cfg.colormap);
+end;
+
 % Draw plot (and mask NaN's if requested):
 if isequal(cfg.masknans,'yes') && isempty(cfg.maskparameter)
   mask = ~isnan(TFR);
@@ -254,11 +260,7 @@ end
 hold on
 axis xy;
 
-% set colormap
-if isfield(cfg,'colormap')
-  if size(cfg.colormap,2)~=3, error('singleplotTFR(): Colormap must be a n x 3 matrix'); end
-  colormap(cfg.colormap);
-end;
+
 
 if isequal(cfg.colorbar,'yes')
   colorbar;
