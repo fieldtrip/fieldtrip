@@ -38,7 +38,7 @@ function [cfg] = multiplotER(cfg, varargin)
 %                     In a interactive plot you can select areas and produce a new
 %                     interactive plot when a selected area is clicked. Multiple areas 
 %                     can be selected by holding down the SHIFT key.
-% cfg.renderer      = 'painters', 'zbuffer',' opengl' or 'none' (default = 'opengl')
+% cfg.renderer      = 'painters', 'zbuffer',' opengl' or 'none' (default = [])
 % cfg.linestyle     = linestyle/marker type, see options of the matlab PLOT function (default = '-')
 % cfg.linewidth     = linewidth in points (default = 0.5)
 % cfg.graphcolor    = color(s) used for plotting the dataset(s) (default = 'brgkywrgbkywrgbkywrgbkyw')
@@ -102,9 +102,9 @@ if ~isfield(cfg,'showlabels'),  cfg.showlabels  = 'no';                        e
 if ~isfield(cfg,'showoutline'), cfg.showoutline = 'no';                        end
 if ~isfield(cfg,'box'),         cfg.box         = 'no';                        end
 if ~isfield(cfg,'fontsize'),    cfg.fontsize    = 8;                           end
-if ~isfield(cfg,'graphcolor')   cfg.graphcolor  = ['brgkywrgbkywrgbkywrgbkyw'];end
+if ~isfield(cfg,'graphcolor'),  cfg.graphcolor  = 'brgkywrgbkywrgbkywrgbkyw'  ;end
 if ~isfield(cfg,'interactive'), cfg.interactive = 'no';                        end
-if ~isfield(cfg,'renderer'),    cfg.renderer    = 'opengl';                    end
+if ~isfield(cfg,'renderer'),    cfg.renderer    = [];                          end
 if ~isfield(cfg,'maskparameter'),cfg.maskparameter = [];                       end
 if ~isfield(cfg,'linestyle'),   cfg.linestyle   = '-';                         end
 if ~isfield(cfg,'linewidth'),   cfg.linewidth   = 0.5;                         end
@@ -357,6 +357,12 @@ if strcmp(cfg.box, 'yes')
 end
 orient landscape
 hold off
+
+% Set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
+end
+
 
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
