@@ -274,6 +274,11 @@ else
 end
 h = title(t,'fontsize', cfg.fontsize);
 
+% Set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
+end
+
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
 
