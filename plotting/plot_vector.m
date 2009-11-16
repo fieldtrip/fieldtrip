@@ -141,6 +141,15 @@ vdat = vdat .* height;
 % then shift to the new vertical position
 vdat = vdat + vpos;
 
+
+% plotting lines
+if isempty(color)
+  h = plot(hdat, vdat, style, 'LineWidth', linewidth,'markersize',markersize,'markerfacecolor',markerfacecolor);
+else
+  h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'Color', color,'markersize',markersize,'markerfacecolor',markerfacecolor);
+end
+
+
 if ~isempty(highlight)
   switch highlightstyle
     case 'box'
@@ -156,6 +165,12 @@ if ~isempty(highlight)
         endx = hdat(endsample(i));
         plot_box([begx endx vpos-height/2 vpos+height/2], 'facecolor', [.6 .6 .6], 'edgecolor', 'none');
       end
+      % plotting lines again, otherwise box will always be on top
+      if isempty(color)
+        h = plot(hdat, vdat, style, 'LineWidth', linewidth,'markersize',markersize,'markerfacecolor',markerfacecolor);
+      else
+        h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'Color', color,'markersize',markersize,'markerfacecolor',markerfacecolor);
+      end
     case 'thickness'
       % find the sample number where the highligh begins and ends
       if ~islogical(highlight)
@@ -164,29 +179,35 @@ if ~isempty(highlight)
       end
       begsample = find(diff([0 highlight 0])== 1);
       endsample = find(diff([0 highlight 0])==-1)-1;
+      linecolor = get(h,'Color'); % get current line color
       for i=1:length(begsample)
         hor = hdat(begsample(i):endsample(i));
         ver = vdat(begsample(i):endsample(i));
-        if isempty(color)
-          plot(hor,ver,'linewidth',3*linewidth,'linestyle','-');
-        else
-          plot(hor,ver,'linewidth',3*linewidth,'linestyle','-','Color', color)
-        end
+        plot(hor,ver,'linewidth',4*linewidth,'linestyle','-','Color', linecolor); % changed 3* to 4*, as 3* appeared to have no effect
+      end  
+    case 'saturation'
+      % find the sample number where the highligh begins and ends
+      if ~islogical(highlight)
+        highlight=logical(highlight);
+        warning('converting mask to logical values')
+      end
+      highlight = ~highlight; % invert the mask
+      begsample = find(diff([0 highlight 0])== 1);
+      endsample = find(diff([0 highlight 0])==-1)-1;
+      linecolor = get(h,'Color'); % get current line color
+      linecolor = (linecolor * 0.2) + 0.8; % change saturation of color
+      for i=1:length(begsample)
+        hor = hdat(begsample(i):endsample(i));
+        ver = vdat(begsample(i):endsample(i));
+        plot(hor,ver,'color',linecolor); 
       end  
     case 'opacity'
-      error('unsupported highlightstyle')
-    case 'saturation'
       error('unsupported highlightstyle')
     otherwise
       error('unsupported highlightstyle')
   end % switch highlightstyle
 end
 
-if isempty(color)
-  h = plot(hdat, vdat, style, 'LineWidth', linewidth,'markersize',markersize,'markerfacecolor',markerfacecolor);
-else
-  h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'Color', color,'markersize',markersize,'markerfacecolor',markerfacecolor);
-end
 
 if ~isempty(label)
   boxposition(1) = hpos - width/2;
