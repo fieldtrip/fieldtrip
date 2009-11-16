@@ -272,6 +272,12 @@ if isfield(lay, 'outline') && strcmp(cfg.showoutline, 'yes')
   end
 end
 
+% set colormap
+if isfield(cfg,'colormap')
+  if size(cfg.colormap,2)~=3, error('singleplotTFR(): Colormap must be a n x 3 matrix'); end
+  set(gcf,'colormap',cfg.colormap);
+end;
+
 % Plot channels:
 for k=1:length(seldat)
   % Get cdata:
@@ -360,11 +366,6 @@ if ~isempty(k)
 
 end
 
-% set colormap
-if isfield(cfg,'colormap')
-  if size(cfg.colormap,2)~=3, error('singleplotTFR(): Colormap must be a n x 3 matrix'); end
-  colormap(cfg.colormap);
-end;
 
 % plot colorbar:
 if isfield(cfg, 'colorbar') && (strcmp(cfg.colorbar, 'yes'))
