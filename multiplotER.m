@@ -19,6 +19,7 @@ function [cfg] = multiplotER(cfg, varargin)
 % cfg.zparam        = field to be plotted on y-axis (default depends on data.dimord)
 %                     'avg', 'powspctrm' or 'cohspctrm' 
 % cfg.maskparameter = field in the first dataset to be used for marking significant data
+% cfg.maskstyle     = style used for masking of data, 'box', 'thickness' or 'saturation' (default = 'box')
 % cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.ylim          = 'maxmin' or [ymin ymax] (default = 'maxmin')
 % cfg.cohrefchannel = name of reference channel for visualising coherence, can be 'gui'
@@ -92,22 +93,24 @@ for i=1:length(varargin)
 end
 
 % set the defaults:
-if ~isfield(cfg,'baseline'),    cfg.baseline    = 'no';                        end
-if ~isfield(cfg,'trials'),      cfg.trials      = 'all';                       end
-if ~isfield(cfg,'xlim'),        cfg.xlim        = 'maxmin';                    end
-if ~isfield(cfg,'ylim'),        cfg.ylim        = 'maxmin';                    end
-if ~isfield(cfg,'comment'),     cfg.comment     = strcat([date '\n']);         end
-if ~isfield(cfg,'axes'),        cfg.axes        = 'yes';                       end
-if ~isfield(cfg,'showlabels'),  cfg.showlabels  = 'no';                        end
-if ~isfield(cfg,'showoutline'), cfg.showoutline = 'no';                        end
-if ~isfield(cfg,'box'),         cfg.box         = 'no';                        end
-if ~isfield(cfg,'fontsize'),    cfg.fontsize    = 8;                           end
-if ~isfield(cfg,'graphcolor'),  cfg.graphcolor  = 'brgkywrgbkywrgbkywrgbkyw'  ;end
-if ~isfield(cfg,'interactive'), cfg.interactive = 'no';                        end
-if ~isfield(cfg,'renderer'),    cfg.renderer    = [];                          end
-if ~isfield(cfg,'maskparameter'),cfg.maskparameter = [];                       end
-if ~isfield(cfg,'linestyle'),   cfg.linestyle   = '-';                         end
-if ~isfield(cfg,'linewidth'),   cfg.linewidth   = 0.5;                         end
+if ~isfield(cfg,'baseline'),      cfg.baseline      = 'no';                        end
+if ~isfield(cfg,'trials'),        cfg.trials        = 'all';                       end
+if ~isfield(cfg,'xlim'),          cfg.xlim          = 'maxmin';                    end
+if ~isfield(cfg,'ylim'),          cfg.ylim          = 'maxmin';                    end
+if ~isfield(cfg,'comment'),       cfg.comment       = strcat([date '\n']);         end
+if ~isfield(cfg,'axes'),          cfg.axes          = 'yes';                       end
+if ~isfield(cfg,'showlabels'),    cfg.showlabels    = 'no';                        end
+if ~isfield(cfg,'showoutline'),   cfg.showoutline   = 'no';                        end
+if ~isfield(cfg,'box'),           cfg.box           = 'no';                        end
+if ~isfield(cfg,'fontsize'),      cfg.fontsize      = 8;                           end
+if ~isfield(cfg,'graphcolor'),    cfg.graphcolor    = 'brgkywrgbkywrgbkywrgbkyw';  end
+if ~isfield(cfg,'interactive'),   cfg.interactive   = 'no';                        end
+if ~isfield(cfg,'renderer'),      cfg.renderer      = [];                          end
+if ~isfield(cfg,'maskparameter'), cfg.maskparameter = [];                          end
+if ~isfield(cfg,'linestyle'),     cfg.linestyle     = '-';                         end
+if ~isfield(cfg,'linewidth'),     cfg.linewidth     = 0.5;                         end
+if ~isfield(cfg,'maskstyle'),     cfg.maskstyle     = 'box';                       end
+
 
 GRAPHCOLOR = ['k' cfg.graphcolor ];
 
@@ -309,7 +312,8 @@ for k=1:length(varargin)
         Width(m), ...
         Height(m), ...
         Lbl(m), ...
-        cfg, color, mask);
+        cfg, color, mask) ...
+        ;
 
       % Keep ER plot coordinates (at centre of ER plot), and channel labels (will be stored in the figure's UserData struct):
       chanX(m) = X(m) + 0.5 * Width(m);
@@ -409,7 +413,12 @@ y(find(y < ylim(1))) = ylim(1);
 
 xs = xpos+width*(x-xlim(1))/(xlim(2)-xlim(1));
 ys = ypos+height*(y-ylim(1))/(ylim(2)-ylim(1));
-plot_vector(xs, ys, 'color', color, 'style', cfg.linestyle, 'linewidth', cfg.linewidth)
+
+if isempty(mask) || (~isempty(mask) && strcmp(cfg.maskstyle,'box'))
+  plot_vector(xs, ys, 'color', color, 'style', cfg.linestyle, 'linewidth', cfg.linewidth)
+elseif ~isempty(mask) && ~strcmp(cfg.maskstyle,'box') % plot_vector doesnt support boxes higher than ydata yet, so a separate option remains below
+  plot_vector(xs, ys, 'color', color, 'style', cfg.linestyle, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth)
+end
 
 if strcmp(cfg.showlabels,'yes')
   plot_text(xpos,ypos+1.0*height,label,'Fontsize',cfg.fontsize)
@@ -439,13 +448,14 @@ elseif strcmp(cfg.axes,'y')
   plot_vector(xs,ys,'color','k')
 end
 
+
 % Draw box around plot:
 if strcmp(cfg.box,'yes')
   plot_box([xpos xpos+width ypos ypos+height],'edgecolor','k')
 end
 
-% Add mask patch
-if ~isempty(mask)
+% Add boxes when masktyle is box, plot_vector doesnt support boxes higher than ydata yet, so this code is left here
+if ~isempty(mask) && strcmp(cfg.maskstyle, 'box')
   % determine how many boxes
   foundbeg = 0;
   foundend = 0;
