@@ -388,7 +388,7 @@ elseif iseeg
       if isfield(vol,'mat')
         lf = vol.mat*dsm;
       else
-        error('No system matrix is present, BEM model not calculated yet')
+        error('No system matrix is present, BEM head model not calculated yet')
       end
     case 'infinite'
       % the conductivity of the medium is not known
