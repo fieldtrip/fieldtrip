@@ -54,6 +54,34 @@ if isempty(order),    order = 10;             end
 iseeg = senstype(sens, 'eeg');
 ismeg = senstype(sens, 'meg');
 
+% determine the skin compartment
+if ~isfield(vol, 'skin')
+  if isfield(vol, 'bnd')
+    vol.skin   = find_outermost_boundary(vol.bnd);
+  elseif isfield(vol, 'r') && length(vol.r)<=4
+    [dum, vol.skin] = max(vol.r);
+  end
+end
+
+% determine the brain compartment
+if ~isfield(vol, 'brain')
+  if isfield(vol, 'bnd')
+    vol.brain  = find_innermost_boundary(vol.bnd);
+  elseif isfield(vol, 'r') && length(vol.r)<=4
+    [dum, vol.brain] = min(vol.r);
+  end
+end
+
+% otherwise the voltype assignment to an empty struct below won't work
+if isempty(vol)
+  vol = [];
+end
+
+% this makes them easier to recognise
+sens.type = senstype(sens);
+vol.type  = voltype(vol);
+
+
 if isfield(vol, 'unit') && isfield(sens, 'unit') && ~strcmp(vol.unit, sens.unit)
   error('inconsistency in the units of the volume conductor and the sensor array');
 end
@@ -298,21 +326,17 @@ elseif iseeg
           % incorporate the linear interpolation matrix and the system matrix into one matrix
           % this speeds up the subsequent repeated leadfield computations
           fprintf('combining electrode transfer and system matrix\n');
-          
           if strcmp(voltype(vol), 'openmeeg')
             vol.mat = interp * vol.mat;
-            fprintf('Calculating infinite medium solution for all positions\n Please Wait...\n');
-            vol.dsm = openmeeg_dsm(pos,vol);
           else
             % convert to sparse matrix to speed up the subsequent multiplication
             interp  = sparse(interp);
             vol.mat = interp * vol.mat;
+            % ensure that the model potential will be average referenced
+            avg = mean(vol.mat, 1);
+            vol.mat = vol.mat - repmat(avg, size(vol.mat,1), 1);
           end
-          % FIXME should I also add the electrode labels to the volume definition?
         end
-        % ensure that the model potential will be average referenced
-        avg = mean(vol.mat, 1);
-        vol.mat = vol.mat - repmat(avg, size(vol.mat,1), 1);
       end
       
     otherwise
@@ -328,29 +352,3 @@ elseif iseeg
 
 end % if iseeg or ismeg
 
-% determine the skin compartment
-if ~isfield(vol, 'skin')
-  if isfield(vol, 'bnd')
-    vol.skin   = find_outermost_boundary(vol.bnd);
-  elseif isfield(vol, 'r') && length(vol.r)<=4
-    [dum, vol.skin] = max(vol.r);
-  end
-end
-
-% determine the brain compartment
-if ~isfield(vol, 'brain')
-  if isfield(vol, 'bnd')
-    vol.brain  = find_innermost_boundary(vol.bnd);
-  elseif isfield(vol, 'r') && length(vol.r)<=4
-    [dum, vol.brain] = min(vol.r);
-  end
-end
-
-% otherwise the voltype assignment to an empty struct below won't work
-if isempty(vol)
-  vol = [];
-end
-
-% this makes them easier to recognise
-sens.type = senstype(sens);
-vol.type  = voltype(vol);
