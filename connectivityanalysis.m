@@ -62,7 +62,7 @@ if ~isfield(cfg, 'trials'),     cfg.trials     = 'all'; end
 if ~isfield(cfg, 'complex'),    cfg.complex    = 'abs'; end
 if ~isfield(cfg, 'jackknife'),  cfg.jackknife  = 'no';  end
 
-hasjack = isfield(data, 'method') && strcmp(data.method, 'jackknife');
+hasjack = (isfield(data, 'method') && strcmp(data.method, 'jackknife')) || strcmp(data.dimord(1:6), 'rptjck');
 hasrpt  = ~isempty(strfind(data.dimord, 'rpt'));
 dojack  = strcmp(cfg.jackknife, 'yes');
 normrpt = 0; %default, has to be overruled e.g. in plv, because of single
@@ -184,14 +184,23 @@ case 'spearman'
 case 'granger'
   % granger causality
 
-  
-  %FIXME handle replicates, which should be averaged first, unless they contain jackknife samples
   if sum(datatype(data, {'freq' 'freqmvar'})),
+    hasrpt = ~isempty(strfind(data.dimord, 'rpt'));
+    if hasrpt,
+      nrpt = size(data.transfer,1);
+    else
+      nrpt = 1;
+      siz  = size(data.transfer);
+      data.transfer = reshape(data.transfer, [1 siz]);
+      siz  = size(data.noisecov);
+      data.noisecov = reshape(data.noisecov, [1 siz]);
+      siz  = size(data.crsspctrm);
+      data.crsspctrm = reshape(data.crsspctrm, [1 siz]);
+    end 
     %fs      = cfg.fsample; %FIXME do we really need this, or is this related to how
     %noisecov is defined and normalised?
     fs       = 1;
-    datout   = coupling_granger(data.transfer, data.noisecov, data.crsspctrm, fs);
-    varout   = [];
+    [datout, varout, n] = coupling_granger(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack);
     outparam = 'grangerspctrm';
   else
     error('granger for time domain data is not yet implemented');
@@ -209,7 +218,7 @@ case 'dtf'
     nrpt  = 1; 
     datin = reshape(data.transfer, [1 size(data.transfer)]);
   end
-  datout   = coupling_dtf(tmpcfg, datin);
+  [datout, varout, n] = coupling_dtf(tmpcfg, datin, hasjack);
   outparam = 'dtfspctrm';
 
 case 'pdc' 
@@ -225,7 +234,7 @@ case 'pdc'
     nrpt  = 1;
     datin = reshape(data.transfer, [1 size(data.transfer)]);
   end
-  [datout, varout, n] = coupling_pdc(tmpcfg, datin, hasrpt, hasjack);
+  [datout, varout, n] = coupling_pdc(tmpcfg, datin, hasjack);
   outparam = 'pdcspctrm';
 
 case 'pcd'
@@ -458,24 +467,15 @@ end
 
 
 %----------------------------------------
-function [pdc, pdcvar, n] = coupling_pdc(cfg, input, hasrpt, hasjack)
+function [pdc, pdcvar, n] = coupling_pdc(cfg, input, hasjack)
 
 if nargin==2,
-  hasrpt   = 0;
-  hasjack  = 0;
-elseif nargin==3,
   hasjack  = 0;
 end
 
 %crossterms are described by chan_chan_therest 
- 
 siz = size(input);
-if ~hasrpt,
-  %siz   = [1 siz];
-  %input = reshape(input, siz);
-  %FIX THIS upstairs
-end
-n = siz(1);
+n   = siz(1);
 
 outsum = zeros(siz(2:end));
 outssq = zeros(siz(2:end));
@@ -509,44 +509,44 @@ progress('close');
 
 pdc = outsum./n;
 
-if hasrpt,
+if n>1,
   if hasjack
     bias = (n-1).^2;
   else
     bias = 1;
   end
-  
   pdcvar = bias*(outssq - (outsum.^2)./n)./(n - 1);
 else 
   pdcvar = [];
 end
 
 %----------------------------------------
-function [dtf] = coupling_dtf(cfg, input)
+function [dtf, dtfvar, n] = coupling_dtf(cfg, input, hasjack)
 
 siz    = size(input);
-nrpt   = siz(1);
+n      = siz(1);
 sumdtf = zeros(siz(2:end));
 sqrdtf = zeros(siz(2:end));
 
-for n = 1:nrpt
-  tmph   = reshape(input(n,:,:,:,:), siz(2:end));
+for k = 1:n
+  tmph   = reshape(input(k,:,:,:,:), siz(2:end));
   den    = sum(abs(tmph).^2,2);
   tmpdtf = abs(tmph)./sqrt(repmat(den, [1 siz(2) 1 1 1]));
   %if ~isempty(cfg.submethod), tmpdtf = baseline(tmpdtf, cfg.submethod, baselineindx); end
   sumdtf = sumdtf + tmpdtf;
   sqrdtf = sqrdtf + tmpdtf.^2;
 end
-dtf = sumdtf./nrpt;
+dtf = sumdtf./n;
 
-if nrpt>1, %FIXME this is strictly only true for jackknife, otherwise other bias is needed
-  bias   = (nrpt - 1).^2;
-  dtfvar = bias.*(sqrdtf - (sumdtf.^2)/nrpt)./(nrpt-1);
-  dtfsem = sqrt(dtfvar./nrpt);
+if n>1, %FIXME this is strictly only true for jackknife, otherwise other bias is needed
+  bias   = (n - 1).^2;
+  dtfvar = bias.*(sqrdtf - (sumdtf.^2)/n)./(n-1);
+else
+  dtfvar = [];
 end
 
 %--------------------------------------------------------------------
-function [granger, v, n] = coupling_granger(transfer,noisecov,crsspctrm,fs)
+function [granger, v, n] = coupling_granger(H, Z, S, fs, hasjack)
 
 %Usage: causality = hz2causality(H,S,Z,fs);
 %Inputs: transfer  = transfer function,
@@ -559,23 +559,40 @@ function [granger, v, n] = coupling_granger(transfer,noisecov,crsspctrm,fs)
 %M. Dhamala, UF, August 2006.
 
 %FIXME speed up code and check
+siz = size(H);
+n   = siz(1);
+Nc  = siz(2);
 
-H  = transfer;
-Z  = noisecov;
-S  = crsspctrm;
+outsum = zeros(siz(2:end));
+outssq = zeros(siz(2:end));
 
-Nc = size(H,2);
 %clear S; for k = 1:size(H,3), h = squeeze(H(:,:,k)); S(:,:,k) = h*Z*h'/fs; end;
-for ii = 1: Nc,
-    for jj = 1: Nc,
-          if ii ~=jj,
-              zc = Z(jj,jj) - Z(ii,jj)^2/Z(ii,ii);
-              numer = abs(S(ii,ii,:));
-              denom = abs(S(ii,ii,:)-zc*abs(H(ii,jj,:)).^2/fs);
-              granger(jj,ii,:) = log(numer./denom);
-          end
+for kk = 1:n
+  for ii = 1:Nc
+    for jj = 1:Nc
+      if ii ~=jj,
+        zc     = Z(kk,jj,jj) - Z(kk,ii,jj)^2/Z(kk,ii,ii);
+        numer  = reshape(abs(S(kk,ii,ii,:)),[1 1 siz(4:end)]);
+        denom  = reshape(abs(S(kk,ii,ii,:)-zc*abs(H(kk,ii,jj,:)).^2/fs),[1 1 siz(4:end)]);
+        outsum(jj,ii,:) = outsum(jj,ii,:) + log(numer./denom);
+        outssq(jj,ii,:) = outssq(jj,ii,:) + (log(numer./denom)).^2;
+      end
     end
-    granger(ii,ii,:) = 0;%self-granger set to zero
+    outsum(ii,ii,:) = 0;%self-granger set to zero
+  end
+end
+
+granger = outsum./n;
+
+if n>1,
+  if hasjack
+    bias = (n-1).^2;
+  else
+    bias = 1;
+  end
+  v = bias*(outssq - (outsum.^2)./n)./(n - 1);
+else 
+  v = [];
 end
 
 %----------------------------------------
