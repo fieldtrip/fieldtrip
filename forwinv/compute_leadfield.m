@@ -385,8 +385,11 @@ elseif iseeg
     
     case 'openmeeg'
       dsm = openmeeg_dsm(pos,vol);
-      lf = vol.mat*dsm;
-      
+      if isfield(vol,'mat')
+        lf = vol.mat*dsm;
+      else
+        error('No system matrix is present, BEM model not calculated yet')
+      end
     case 'infinite'
       % the conductivity of the medium is not known
       if isempty(warning_issued)
