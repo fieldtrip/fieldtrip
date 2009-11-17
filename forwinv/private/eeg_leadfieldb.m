@@ -105,17 +105,7 @@ switch voltype(vol)
     end
     % concatenate the leadfields
     lf = cat(1, lf{:});
-
-  case 'openmeeg' 
-    if isfield(vol,'mat')
-      % the system matrix is already computed using OpenMEEG (Symmetric BEM)
-      lf  = openmeeg_lf_eeg(vol);
-      dsm = openmeeg_dsm(pos,vol); 
-      lf  = vol.mat*dsm;
-    else
-      error('No system matrix is present, BEM model not calculated yet')
-    end
-    
+   
   otherwise
     error('unsupported type of volume conductor (%s)\n', voltype(vol));
 end % switch voltype
