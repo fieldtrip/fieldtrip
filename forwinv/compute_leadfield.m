@@ -377,12 +377,16 @@ elseif iseeg
         error('more than 4 concentric spheres are not supported');
       end
 
-    case {'bem', 'dipoli', 'asa', 'avo', 'bemcp', 'openmeeg'}
+    case {'bem', 'dipoli', 'asa', 'avo', 'bemcp'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % EEG boundary element method volume conductor model
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       lf = eeg_leadfieldb(pos, sens.pnt, vol);
-
+    
+    case 'openmeeg'
+      dsm = openmeeg_dsm(pos,vol);
+      lf = vol.mat*dsm;
+      
     case 'infinite'
       % the conductivity of the medium is not known
       if isempty(warning_issued)
