@@ -308,9 +308,6 @@ elseif iseeg
           if size(vol.mat,1)==size(vol.bnd(vol.skin).pnt,1)
             % construct the transfer from only the skin vertices towards electrodes
             interp = tra;
-          elseif strcmp(voltype(vol), 'openmeeg')
-            nb_points_external_surface = size(vol.bnd(vol.skin).pnt,1);
-            vol.mat = vol.mat((end-nb_points_external_surface+1):end,:);
           else
             % construct the transfer from all vertices (also brain/skull) towards electrodes
             interp = [];
@@ -327,6 +324,8 @@ elseif iseeg
           % this speeds up the subsequent repeated leadfield computations
           fprintf('combining electrode transfer and system matrix\n');
           if strcmp(voltype(vol), 'openmeeg')
+            nb_points_external_surface = size(vol.bnd(vol.skin).pnt,1);
+            vol.mat = vol.mat((end-nb_points_external_surface+1):end,:);            
             vol.mat = interp * vol.mat;
           else
             % convert to sparse matrix to speed up the subsequent multiplication
