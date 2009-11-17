@@ -130,24 +130,22 @@ end
 [grid, cfg] = prepare_dipole_grid(cfg, vol, sens);
 
 progress('init', cfg.feedback, 'computing leadfield');
-
-if strcmp(vol.type, 'openmeeg')
-  cfg.reducerank = 'no'; % FIXME: HACK
-  om_leadfield = compute_leadfield(grid.pos(grid.inside,:), sens, ...
-    vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, ...
-    'normalizeparam', cfg.normalizeparam);
+if strcmp(vol.type, 'openmeeg') 
+  fprintf('Calculating infinite medium solution for all positions\n Please Wait...\n');
+  dsm = openmeeg_dsm(grid.pos,vol);
   for i=1:length(grid.inside)
     % compute the leadfield on all grid positions inside the brain
-    progress(i/length(grid.inside), 'computing leadfield %d/%d\n',i, length(grid.inside));
+    progress(i/length(grid.inside), 'computing leadfield %d/%d\n',i, length(grid.inside));    
     dipindx = grid.inside(i);
-    grid.leadfield{dipindx} = om_leadfield(:,[(3*(i-1)):(3*(i-1)+2)]+1);
-    
+    tmp = vol.mat*dsm(:,[(3*(i-1)):(3*(i-1)+2)]+1);
+    grid.leadfield{dipindx} = tmp - repmat(mean(tmp,1),size(tmp,1),1);
     if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
       % multiply with the normalized dipole moment to get the leadfield in the desired orientation
       grid.leadfield{dipindx} = grid.leadfield{dipindx} * grid.mom(:,dipindx);
-    end
-  end % for all grid locations inside the brain
+    end   
+  end
   progress('close');
+
 else
   for i=1:length(grid.inside)
     % compute the leadfield on all grid positions inside the brain
