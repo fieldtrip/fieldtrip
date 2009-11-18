@@ -52,7 +52,9 @@ function [freq] = freqanalysis_mtmconvol(cfg, data);
 % See also FREQANALYSIS
 
 % undocumented experimental options
-%   cfg.calcdof = 'yes'   calculate the degrees of freedom for every trial
+%   cfg.calcdof    = 'yes'   calculate the degrees of freedom for every trial
+%   cfg.phaseshift = 'yes' or 'no' shift the wavelets by pi to make the peak
+%                    of an oscillation angle(complex) = 0
 
 % Copyright (c) 2003,2004-2006 F.C. Donders Centre
 %
@@ -85,6 +87,7 @@ if ~isfield(cfg, 'output'),        cfg.output     = 'powandcsd';  end
 if ~isfield(cfg, 'pad'),           cfg.pad        = 'maxperlen';  end
 if ~isfield(cfg, 'taper'),         cfg.taper      = 'dpss';       end
 if ~isfield(cfg, 'channel'),       cfg.channel    = 'all';        end
+if ~isfield(cfg, 'phaseshift'),    cfg.channel    = 'no';         end
 if strcmp(cfg.output, 'fourier'),
   cfg.keeptrials = 'yes';
   cfg.keeptapers = 'yes';
@@ -240,8 +243,13 @@ for foilop = 1:numfoi
   for taplop = 1:numtap(foilop)
     try
       % construct the complex wavelet
-      coswav  = vertcat(prezer,tap(:,taplop).*cos(ind),pstzer);
-      sinwav  = vertcat(prezer,tap(:,taplop).*sin(ind),pstzer);
+      if strcmp(cfg.phaseshift,'yes') % shift wavelets with pi (see undocumented options)
+        coswav  = vertcat(prezer,tap(:,taplop).*-cos(ind),pstzer);
+        sinwav  = vertcat(prezer,tap(:,taplop).*-sin(ind),pstzer);
+      else
+        coswav  = vertcat(prezer,tap(:,taplop).*cos(ind),pstzer);
+        sinwav  = vertcat(prezer,tap(:,taplop).*sin(ind),pstzer);
+      end
       wavelet = complex(coswav, sinwav);
       % store the fft of the complex wavelet
       knlspctrmstr{foilop}(taplop,:) = fft(wavelet,[],1)';
