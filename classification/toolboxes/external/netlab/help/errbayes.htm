@@ -1,0 +1,48 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual errbayes
+</title>
+</head>
+<body>
+<H1> errbayes
+</H1>
+<h2>
+Purpose
+</h2>
+Evaluate Bayesian error function for network.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+e = errbayes(net, edata)
+[e, edata, eprior] = errbayes(net, edata)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>e = errbayes(net, edata)</CODE> takes a network data structure 
+<CODE>net</CODE> together 
+the data contribution to the error for a set of inputs and targets.
+It returns the regularised error using any zero mean Gaussian priors
+on the weights defined in
+<CODE>net</CODE>. 
+
+<p><CODE>[e, edata, eprior] = errbayes(net, x, t)</CODE> additionally returns the
+data and prior components of the error.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="glmerr.htm">glmerr</a></CODE>, <CODE><a href="mlperr.htm">mlperr</a></CODE>, <CODE><a href="rbferr.htm">rbferr</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

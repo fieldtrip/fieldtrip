@@ -1,0 +1,49 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual glmfwd
+</title>
+</head>
+<body>
+<H1> glmfwd
+</H1>
+<h2>
+Purpose
+</h2>
+Forward propagation through generalized linear model.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+y = glmfwd(net, x)
+[y, a] = glmfwd(net, x)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>y = glmfwd(net, x)</CODE> takes a generalized linear model
+data structure <CODE>net</CODE> together with
+a matrix <CODE>x</CODE> of input vectors, and forward propagates the inputs
+through the network to generate a matrix <CODE>y</CODE> of output
+vectors. Each row of <CODE>x</CODE> corresponds to one input vector and each
+row of <CODE>y</CODE> corresponds to one output vector.
+
+<p><CODE>[y, a] = glmfwd(net, x)</CODE> also returns a matrix <CODE>a</CODE> 
+giving the summed inputs to each output unit, where each row
+corresponds to one pattern.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="glm.htm">glm</a></CODE>, <CODE><a href="glmpak.htm">glmpak</a></CODE>, <CODE><a href="glmunpak.htm">glmunpak</a></CODE>, <CODE><a href="glmerr.htm">glmerr</a></CODE>, <CODE><a href="glmgrad.htm">glmgrad</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

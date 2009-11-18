@@ -1,0 +1,47 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual mdnprob
+</title>
+</head>
+<body>
+<H1> mdnprob
+</H1>
+<h2>
+Purpose
+</h2>
+Computes the data probability likelihood for an MDN mixture structure.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+prob = mdnprob(mixparams, t)
+[prob, a] = mdnprob(mixparams, t)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>prob = mdnprob(mixparams, t)</CODE> computes the probability <CODE>p(t)</CODE> of each
+data vector in <CODE>t</CODE> under the Gaussian mixture model represented by the
+corresponding entries in <CODE>mixparams</CODE>. Each row of <CODE>t</CODE> represents a
+single vector.
+
+<p><CODE>[prob, a] = mdnprob(mixparams, t)</CODE> also computes the activations
+<CODE>a</CODE> (i.e. the probability <CODE>p(t|j)</CODE> of the data conditioned on
+each component density) for a Gaussian mixture model.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="mdnerr.htm">mdnerr</a></CODE>, <CODE><a href="mdnpost.htm">mdnpost</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+<p>David J Evans (1998)
+
+</body>
+</html>

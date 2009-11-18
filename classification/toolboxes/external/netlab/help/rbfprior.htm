@@ -1,0 +1,59 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual rbfprior
+</title>
+</head>
+<body>
+<H1> rbfprior
+</H1>
+<h2>
+Purpose
+</h2>
+Create Gaussian prior and output layer mask for RBF.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+[mask, prior] = rbfprior(rbfunc, nin, nhidden, nout, aw2, ab2)</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>[mask, prior] = rbfprior(rbfunc, nin, nhidden, nout, aw2, ab2)</CODE> 
+generates a vector
+<CODE>mask</CODE>  that selects only the output
+layer weights.  This is because most uses of RBF networks in a Bayesian
+context have fixed basis functions with the output layer as the only
+adjustable parameters.  In particular, the Neuroscale output error function
+is designed to work only with this mask.
+
+<p>The return value
+<CODE>prior</CODE> is a data structure, 
+with fields <CODE>prior.alpha</CODE> and <CODE>prior.index</CODE>, which
+specifies a Gaussian prior distribution for the network weights in an
+RBF network. The parameters <CODE>aw2</CODE> and <CODE>ab2</CODE> are all
+scalars and represent the regularization coefficients for two groups
+of parameters in the network corresponding to
+ second-layer weights, and second-layer biases
+respectively. Then <CODE>prior.alpha</CODE> represents a column vector of
+length 2 containing the parameters, and <CODE>prior.index</CODE> is a matrix
+specifying which weights belong in each group. Each column has one
+element for each weight in the matrix, using the standard ordering as
+defined in <CODE>rbfpak</CODE>, and each element is 1 or 0 according to
+whether the weight is a member of the corresponding group or not. 
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="rbf.htm">rbf</a></CODE>, <CODE><a href="rbferr.htm">rbferr</a></CODE>, <CODE><a href="rbfgrad.htm">rbfgrad</a></CODE>, <CODE><a href="evidence.htm">evidence</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

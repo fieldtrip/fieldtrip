@@ -1,0 +1,50 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual mlphint
+</title>
+</head>
+<body>
+<H1> mlphint
+</H1>
+<h2>
+Purpose
+</h2>
+Plot Hinton diagram for 2-layer feed-forward network.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+mlphint(net)
+[h1, h2] = mlphint(net)</PRE>
+
+
+<p><h2>
+Description
+</h2>
+
+<p><CODE>mlphint(net)</CODE> takes a network structure <CODE>net</CODE>
+and plots the Hinton diagram comprised of two
+figure windows, one displaying the first-layer weights and biases, and
+one displaying the second-layer weights and biases.
+
+<p><CODE>[h1, h2] = mlphint(net)</CODE> also returns handles <CODE>h1</CODE> and 
+<CODE>h2</CODE> to the figures which can be used, for instance, to delete the 
+figures when they are no longer needed.
+
+<p>To print the figure correctly, you should call
+<CODE>set(h, 'InvertHardCopy', 'on')</CODE> before printing.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="demhint.htm">demhint</a></CODE>, <CODE><a href="hintmat.htm">hintmat</a></CODE>, <CODE><a href="mlp.htm">mlp</a></CODE>, <CODE><a href="mlppak.htm">mlppak</a></CODE>, <CODE><a href="mlpunpak.htm">mlpunpak</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

@@ -1,0 +1,108 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual metrop
+</title>
+</head>
+<body>
+<H1> metrop
+</H1>
+<h2>
+Purpose
+</h2>
+Markov Chain Monte Carlo sampling with Metropolis algorithm.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+
+samples = metrop(f, x, options)
+samples = metrop(f, x, options, [], P1, P2, ...)
+[samples, energies, diagn] = metrop(f, x, options)
+s = metrop('state')
+metrop('state', s)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+
+<CODE>samples = metrop(f, x, options)</CODE> uses
+the Metropolis algorithm to sample from the distribution
+<CODE>p ~ exp(-f)</CODE>, where <CODE>f</CODE> is the first argument to <CODE>metrop</CODE>.  
+The Markov chain starts at the point <CODE>x</CODE> and each 
+candidate state is picked from a Gaussian proposal distribution and
+accepted or rejected according to the Metropolis criterion.
+
+<p><CODE>samples = metrop(f, x, options, [], p1, p2, ...)</CODE> allows
+additional arguments to be passed to <CODE>f()</CODE>.  The fourth argument is
+ignored, but is included for compatibility with <CODE>hmc</CODE> and the
+optimisers.
+
+<p><CODE>[samples, energies, diagn] = metrop(f, x, options)</CODE> also returns
+a log of the energy values (i.e. negative log probabilities) for the
+samples in <CODE>energies</CODE> and <CODE>diagn</CODE>, a structure containing
+diagnostic information (position and
+acceptance threshold) for each step of the chain in <CODE>diagn.pos</CODE> and
+<CODE>diagn.acc</CODE> respectively.  All candidate states (including rejected
+ones) are stored in <CODE>diagn.pos</CODE>.
+
+<p><CODE>s = metrop('state')</CODE> returns a state structure that contains the
+state of the two random number generators <CODE>rand</CODE> and <CODE>randn</CODE>.
+These are contained in fields
+<CODE>randstate</CODE>, 
+<CODE>randnstate</CODE>.
+
+<p><CODE>metrop('state', s)</CODE> resets the state to <CODE>s</CODE>.  If <CODE>s</CODE> is an integer,
+then it is passed to <CODE>rand</CODE> and <CODE>randn</CODE>.
+If <CODE>s</CODE> is a structure returned by <CODE>metrop('state')</CODE> then
+it resets the generator to exactly the same state.
+
+<p>The optional parameters in the <CODE>options</CODE> vector have the following
+interpretations.
+
+<p><CODE>options(1)</CODE> is set to 1 to display the energy values and rejection
+threshold at each step of the Markov chain. If the value is 2, then the
+position vectors at each step are also displayed.
+
+<p><CODE>options(14)</CODE> is the number of samples retained from the Markov chain;
+default 100. 
+
+<p><CODE>options(15)</CODE> is the number of samples omitted from the start of the
+chain; default 0.
+
+<p><CODE>options(18)</CODE> is the variance of the proposal distribution; default 1.
+
+<p><h2>
+Examples
+</h2>
+The following code fragment samples from the posterior distribution of
+weights for a neural network.
+<PRE>
+
+w = mlppak(net);
+[samples, energies] = metrop('neterr', w, options, 'netgrad', net, x, t);
+</PRE>
+
+
+<p><h2>
+Algorithm
+</h2>
+
+The algorithm follows the procedure outlined in Radford Neal's technical
+report CRG-TR-93-1  from the University of Toronto.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="hmc.htm">hmc</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

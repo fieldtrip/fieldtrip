@@ -1,0 +1,57 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual dist2
+</title>
+</head>
+<body>
+<H1> dist2
+</H1>
+<h2>
+Purpose
+</h2>
+Calculates squared distance between two sets of points.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+d = dist2(x, c)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>d = dist2(x, c)</CODE> takes two matrices of vectors and calculates the
+squared Euclidean distance between them.  Both matrices must be of the
+same column dimension.  If <CODE>x</CODE> has <CODE>m</CODE> rows and <CODE>n</CODE> columns, and
+<CODE>c</CODE> has <CODE>l</CODE> rows and <CODE>n</CODE> columns, then the result has
+<CODE>m</CODE> rows and <CODE>l</CODE> columns.  The <CODE>i, j</CODE>th entry is the 
+squared distance from the <CODE>i</CODE>th row of <CODE>x</CODE> to the <CODE>j</CODE>th
+row of <CODE>c</CODE>.
+
+<p><h2>
+Example
+</h2>
+The following code is used in <CODE>rbffwd</CODE> to calculate the activation of
+a thin plate spline function.
+<PRE>
+
+n2 = dist2(x, c);
+z = log(n2.^(n2.^2));
+</PRE>
+
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="gmmactiv.htm">gmmactiv</a></CODE>, <CODE><a href="kmeans.htm">kmeans</a></CODE>, <CODE><a href="rbffwd.htm">rbffwd</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

@@ -1,0 +1,51 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual mlpgrad
+</title>
+</head>
+<body>
+<H1> mlpgrad
+</H1>
+<h2>
+Purpose
+</h2>
+Evaluate gradient of error function for 2-layer network.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+
+g = mlpgrad(net, x, t)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>g = mlpgrad(net, x, t)</CODE> takes a network data structure <CODE>net</CODE> 
+together with a matrix <CODE>x</CODE> of input vectors and a matrix <CODE>t</CODE>
+of target vectors, and evaluates the gradient <CODE>g</CODE> of the error
+function with respect to the network weights. The error funcion
+corresponds to the choice of output unit activation function. Each row
+of <CODE>x</CODE> corresponds to one input vector and each row of <CODE>t</CODE>
+corresponds to one target vector.
+
+<p><CODE>[g, gdata, gprior] = mlpgrad(net, x, t)</CODE> also returns separately 
+the data and prior contributions to the gradient. In the case of
+multiple groups in the prior, <CODE>gprior</CODE> is a matrix with a row
+for each group and a column for each weight parameter.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="mlp.htm">mlp</a></CODE>, <CODE><a href="mlppak.htm">mlppak</a></CODE>, <CODE><a href="mlpunpak.htm">mlpunpak</a></CODE>, <CODE><a href="mlpfwd.htm">mlpfwd</a></CODE>, <CODE><a href="mlperr.htm">mlperr</a></CODE>, <CODE><a href="mlpbkp.htm">mlpbkp</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

@@ -1,0 +1,50 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual conffig
+</title>
+</head>
+<body>
+<H1> conffig
+</H1>
+<h2>
+Purpose
+</h2>
+Display a confusion matrix.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+conffig(y, t)
+fh = conffig(y, t)</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>conffig(y, t)</CODE> displays the confusion matrix 
+and classification performance for the predictions mat{y}
+compared with the targets <CODE>t</CODE>.  The data is assumed to be in a
+1-of-N encoding, unless there is just one column, when it is assumed to
+be a 2 class problem with a 0-1 encoding.  Each row of <CODE>y</CODE> and <CODE>t</CODE>
+corresponds to a single example.
+
+<p>In the confusion matrix, the rows represent the true classes and the 
+columns the predicted classes.
+
+<p><CODE>fh = conffig(y, t)</CODE> also returns the figure handle <CODE>fh</CODE> which 
+can be used, for instance, to delete the figure when it is no longer needed.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="confmat.htm">confmat</a></CODE>, <CODE><a href="demtrain.htm">demtrain</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

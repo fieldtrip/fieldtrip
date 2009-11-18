@@ -1,0 +1,64 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual gpcovar
+</title>
+</head>
+<body>
+<H1> gpcovar
+</H1>
+<h2>
+Purpose
+</h2>
+Calculate the covariance for a Gaussian Process.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+cov = gpcovar(net, x)
+[cov, covf] = gpcovar(net, x)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+
+<p><CODE>cov = gpcovar(net, x)</CODE> takes 
+a Gaussian Process data structure <CODE>net</CODE> together with
+a matrix <CODE>x</CODE> of input vectors, and computes the covariance
+matrix <CODE>cov</CODE>.  The inverse of this matrix is used when calculating
+the mean and variance of the predictions made by <CODE>net</CODE>.
+
+<p><CODE>[cov, covf] = gpcovar(net, x)</CODE> also generates the covariance
+matrix due to the covariance function specified by <CODE>net.covarfn</CODE>
+as calculated by <CODE>gpcovarf</CODE>.
+
+<p><h2>
+Example
+</h2>
+In the following example, the inverse covariance matrix is calculated
+for a set of training inputs <CODE>x</CODE> and is then
+passed to <CODE>gpfwd</CODE> so that predictions (with mean <CODE>ytest</CODE> and
+variance <CODE>sigsq</CODE>) can be made for the test inputs
+<CODE>xtest</CODE>.
+<PRE>
+
+cninv = inv(gpcovar(net, x)); 
+[ytest, sigsq] = gpfwd(net, xtest, cninv);
+</PRE>
+
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="gp.htm">gp</a></CODE>, <CODE><a href="gppak.htm">gppak</a></CODE>, <CODE><a href="gpunpak.htm">gpunpak</a></CODE>, <CODE><a href="gpcovarp.htm">gpcovarp</a></CODE>, <CODE><a href="gpcovarf.htm">gpcovarf</a></CODE>, <CODE><a href="gpfwd.htm">gpfwd</a></CODE>, <CODE><a href="gperr.htm">gperr</a></CODE>, <CODE><a href="gpgrad.htm">gpgrad</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

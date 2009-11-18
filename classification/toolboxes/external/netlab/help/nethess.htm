@@ -1,0 +1,66 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual nethess
+</title>
+</head>
+<body>
+<H1> nethess
+</H1>
+<h2>
+Purpose
+</h2>
+Evaluate network Hessian
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+h = neterr(w, net, x, t)
+[h, varargout] = neterr(w, net, x, t, varargin)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+
+<p><CODE>h = nethess(w, net, x, t)</CODE> takes a weight vector <CODE>w</CODE> and a network
+data structure <CODE>net</CODE>, together with the matrix <CODE>x</CODE> of input
+vectors and the matrix <CODE>t</CODE> of target vectors, and returns the
+value of the Hessian evaluated at <CODE>w</CODE>.
+
+<p><CODE>[e, varargout] = nethess(w, net, x, t, varargin)</CODE> also returns any additional
+return values from the network Hessian function, and passes additional arguments
+to that function.
+
+<p><h2>
+Example
+</h2>
+
+<p>In <CODE>evidence</CODE>, this function is called once to compute the
+data contribution to the Hessian
+<PRE>
+
+[h, dh] = nethess(w, net, x, t, dh);
+</PRE>
+
+and again to update the Hessian for new values of the hyper-parameters
+<PRE>
+
+h = nethess(w, net, x, t, dh);
+</PRE>
+
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="neterr.htm">neterr</a></CODE>, <CODE><a href="netgrad.htm">netgrad</a></CODE>, <CODE><a href="netopt.htm">netopt</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

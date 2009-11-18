@@ -1,0 +1,88 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual gtmem
+</title>
+</head>
+<body>
+<H1> gtmem
+</H1>
+<h2>
+Purpose
+</h2>
+EM algorithm for Generative Topographic Mapping.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+
+[net, options, errlog] = gtmem(net, t, options)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>[net, options, errlog] = gtmem(net, t, options)</CODE> uses the Expectation
+Maximization algorithm to estimate the parameters of
+a GTM defined by a data structure <CODE>net</CODE>.
+The matrix <CODE>t</CODE> represents the data whose expectation
+is maximized, with each row corresponding to a vector.  It is assumed
+that the latent data <CODE>net.X</CODE> has been set following a call to
+<CODE>gtminit</CODE>, for example.
+  
+The optional parameters have the following interpretations.
+
+<p><CODE>options(1)</CODE> is set to 1 to display error values; also logs error 
+values in the return argument <CODE>errlog</CODE>.
+If <CODE>options(1)</CODE> is set to 0,
+then only warning messages are displayed.  If <CODE>options(1)</CODE> is -1,
+then nothing is displayed.
+
+<p><CODE>options(3)</CODE> is a measure of the absolute precision required of the error
+function at the solution. If the change in log likelihood between two steps of
+the EM algorithm is less than this value, then the function terminates.
+
+<p><CODE>options(14)</CODE> is the maximum number of iterations; default 100.
+
+<p>The optional return value <CODE>options</CODE> contains the final error value 
+(i.e. data log likelihood) in
+<CODE>options(8)</CODE>.  
+
+<p><h2>
+Examples
+</h2>
+The following code fragment sets up a GTM, initialises
+the latent data sample and RBF
+parameters from the data, sets the options and trains the model.
+<PRE>
+
+% Create and initialise GTM model
+net = gtm(latentdim, nlatent, datadim, numrbfcentres, ...
+   'gaussian', 0.1);
+
+<p>options = foptions;
+options(1) = -1;
+options(7) = 1;    % Set width factor of RBF
+net = gtminit(net, options, data, 'regular', latentshape, [4 4]);
+
+<p>options = foptions;
+options(14) = 30;
+options(1) = 1;
+[net, options] = gtmem(net, data, options);
+</PRE>
+
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="gtm.htm">gtm</a></CODE>, <CODE><a href="gtminit.htm">gtminit</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

@@ -1,0 +1,54 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual knn
+</title>
+</head>
+<body>
+<H1> knn
+</H1>
+<h2>
+Purpose
+</h2>
+Creates a K-nearest-neighbour classifier.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+
+net = knn(nin, nout, k, tr_in, tr_targets)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>net = knn(nin, nout, k, tr_in, tr_targets)</CODE> creates a KNN model <CODE>net</CODE>
+with input dimension <CODE>nin</CODE>, output dimension <CODE>nout</CODE> and <CODE>k</CODE>
+neighbours.  The training data is also stored in the data structure and the
+targets are assumed to be using a 1-of-N coding.
+
+<p>The fields in <CODE>net</CODE> are
+<PRE>
+
+  type = 'knn'
+  nin = number of inputs
+  nout = number of outputs
+  tr_in = training input data
+  tr_targets = training target data
+</PRE>
+
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="kmeans.htm">kmeans</a></CODE>, <CODE><a href="knnfwd.htm">knnfwd</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

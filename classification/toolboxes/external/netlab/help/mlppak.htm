@@ -1,0 +1,55 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual mlppak
+</title>
+</head>
+<body>
+<H1> mlppak
+</H1>
+<h2>
+Purpose
+</h2>
+Combines weights and biases into one weights vector.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+w = mlppak(net)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>w = mlppak(net)</CODE> takes a network data structure <CODE>net</CODE> and
+combines the component weight matrices bias vectors into a single row
+vector <CODE>w</CODE>. The facility to switch between these two
+representations for the network parameters is useful, for example, in
+training a network by error function minimization, since a single
+vector of parameters can be handled by general-purpose optimization
+routines.
+
+<p>The ordering of the paramters in <CODE>w</CODE> is defined by
+<PRE>
+
+  w = [net.w1(:)', net.b1, net.w2(:)', net.b2];
+</PRE>
+
+where <CODE>w1</CODE> is the first-layer weight matrix, <CODE>b1</CODE> is the
+first-layer bias vector, <CODE>w2</CODE> is the second-layer weight matrix,
+and <CODE>b2</CODE> is the second-layer bias vector.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="mlp.htm">mlp</a></CODE>, <CODE><a href="mlpunpak.htm">mlpunpak</a></CODE>, <CODE><a href="mlpfwd.htm">mlpfwd</a></CODE>, <CODE><a href="mlperr.htm">mlperr</a></CODE>, <CODE><a href="mlpbkp.htm">mlpbkp</a></CODE>, <CODE><a href="mlpgrad.htm">mlpgrad</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

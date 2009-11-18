@@ -1,0 +1,49 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual demtrain
+</title>
+</head>
+<body>
+<H1> demtrain
+</H1>
+<h2>
+Purpose
+</h2>
+Demonstrate training of MLP network.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+demtrain</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>demtrain</CODE> brings up a simple GUI to show the training of
+an MLP network on classification and regression problems.  The user
+should load in a dataset (which should be in Netlab format: see 
+<CODE>datread</CODE>), select the output activation function, the
+ number of cycles and hidden units and then
+train the network. The scaled conjugate gradient algorithm is used.
+A graph shows the evolution of the error: the value is shown 
+<CODE>max(ceil(iterations / 50), 5)</CODE> cycles.
+
+<p>Once the network is trained, it is saved to the file <CODE>mlptrain.net</CODE>.
+The results can then be viewed as a confusion matrix (for classification
+problems) or a plot of output versus target (for regression problems).
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="confmat.htm">confmat</a></CODE>, <CODE><a href="datread.htm">datread</a></CODE>, <CODE><a href="mlp.htm">mlp</a></CODE>, <CODE><a href="netopt.htm">netopt</a></CODE>, <CODE><a href="scg.htm">scg</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

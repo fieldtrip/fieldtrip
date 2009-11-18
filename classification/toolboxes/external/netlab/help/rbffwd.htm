@@ -1,0 +1,67 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual rbffwd
+</title>
+</head>
+<body>
+<H1> rbffwd
+</H1>
+<h2>
+Purpose
+</h2>
+Forward propagation through RBF network with linear outputs.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+a = rbffwd(net, x)
+function [a, z, n2] = rbffwd(net, x)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>a = rbffwd(net, x)</CODE> takes a network data structure
+<CODE>net</CODE> and a matrix <CODE>x</CODE> of input
+vectors and forward propagates the inputs through the network to generate
+a matrix <CODE>a</CODE> of output vectors. Each row of <CODE>x</CODE> corresponds to one
+input vector and each row of <CODE>a</CODE> contains the corresponding output vector.
+The activation function that is used is determined by <CODE>net.actfn</CODE>.
+
+<p><CODE>[a, z, n2] = rbffwd(net, x)</CODE> also generates a matrix <CODE>z</CODE> of
+the hidden unit activations where each row corresponds to one pattern.
+These hidden unit activations represent the <CODE>design matrix</CODE> for
+the RBF.  The matrix <CODE>n2</CODE> is the squared distances between each
+basis function centre and each pattern in which each row corresponds
+to a data point.
+
+<p><h2>
+Examples
+</h2>
+<PRE>
+
+[a, z] = rbffwd(net, x);
+
+<p>temp = pinv([z ones(size(x, 1), 1)]) * t;
+net.w2 = temp(1: nd(2), :);
+net.b2 = temp(size(x, nd(2)) + 1, :);
+</PRE>
+
+Here <CODE>x</CODE> is the input data, <CODE>t</CODE> are the target values, and we use the
+pseudo-inverse to find the output weights and biases.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="rbf.htm">rbf</a></CODE>, <CODE><a href="rbferr.htm">rbferr</a></CODE>, <CODE><a href="rbfgrad.htm">rbfgrad</a></CODE>, <CODE><a href="rbfpak.htm">rbfpak</a></CODE>, <CODE><a href="rbftrain.htm">rbftrain</a></CODE>, <CODE><a href="rbfunpak.htm">rbfunpak</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

@@ -1,0 +1,80 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual gp
+</title>
+</head>
+<body>
+<H1> gp
+</H1>
+<h2>
+Purpose
+</h2>
+Create a Gaussian Process.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+net = gp(nin, covarfn)
+net = gp(nin, covarfn, prior)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+
+<p><CODE>net = gp(nin, covarfn)</CODE> takes the number of inputs <CODE>nin</CODE> 
+for a Gaussian Process model with a single output, together
+with a string <CODE>covarfn</CODE> which specifies the type of the covariance function,
+and returns a data structure <CODE>net</CODE>. The parameters are set to zero.
+
+<p>The fields in <CODE>net</CODE> are
+<PRE>
+  type = 'gp'
+  nin = number of inputs
+  nout = number of outputs: always 1
+  nwts = total number of weights and covariance function parameters
+  bias = logarithm of constant offset in covariance function
+  noise = logarithm of output noise variance
+  inweights = logarithm of inverse length scale for each input 
+  covarfn = string describing the covariance function:
+      'sqexp'
+      'ratquad'
+  fpar = covariance function specific parameters (1 for squared exponential,
+   2 for rational quadratic)
+  trin = training input data (initially empty)
+  trtargets = training target data (initially empty)
+</PRE>
+
+
+<p><CODE>net = gp(nin, covarfn, prior)</CODE> sets a Gaussian prior on the
+parameters of the model. <CODE>prior</CODE> must contain the fields
+<CODE>pr_mean</CODE> and <CODE>pr_variance</CODE>.  If <CODE>pr_mean</CODE> is a scalar,
+then the Gaussian is assumed to be isotropic and the additional fields
+<CODE>net.pr_mean</CODE> and <CODE>pr_variance</CODE> are set.  Otherwise, 
+the Gaussian prior has a mean
+defined by a column vector of parameters <CODE>prior.pr_mean</CODE> and
+covariance defined by a column vector of parameters <CODE>prior.pr_variance</CODE>.
+Each element of <CODE>prmean</CODE> corresponds to a separate group of parameters, which
+need not be mutually exclusive. The membership of the groups is defined
+by the matrix <CODE>prior.index</CODE> in which the columns correspond to the elements of
+<CODE>prmean</CODE>. Each column has one element for each weight in the matrix,
+in the order defined by the function <CODE>gppak</CODE>, and each element
+is 1 or 0 according to whether the parameter is a member of the
+corresponding group or not.  The additional field <CODE>net.index</CODE> is set
+in this case.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="gppak.htm">gppak</a></CODE>, <CODE><a href="gpunpak.htm">gpunpak</a></CODE>, <CODE><a href="gpfwd.htm">gpfwd</a></CODE>, <CODE><a href="gperr.htm">gperr</a></CODE>, <CODE><a href="gpcovar.htm">gpcovar</a></CODE>, <CODE><a href="gpgrad.htm">gpgrad</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

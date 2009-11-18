@@ -1,0 +1,74 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual linemin
+</title>
+</head>
+<body>
+<H1> linemin
+</H1>
+<h2>
+Purpose
+</h2>
+One dimensional minimization.
+
+<p><h2>
+Description
+</h2>
+<CODE>[x, options] = linemin(f, pt, dir, fpt, options)</CODE> uses Brent's
+algorithm to find the minimum of the function <CODE>f(x)</CODE> along the
+line <CODE>dir</CODE> through the point <CODE>pt</CODE>.  The function value at the
+starting point is <CODE>fpt</CODE>.  The point at which <CODE>f</CODE> has a local minimum
+is returned as <CODE>x</CODE>.  The function value at that point is returned
+in <CODE>options(8)</CODE>.
+
+<p><CODE>linemin(f, pt, dir, fpt, options, p1, p2, ...)</CODE> allows 
+additional arguments to be passed to <CODE>f()</CODE>.
+
+<p>The optional parameters have the following interpretations.
+
+<p><CODE>options(1)</CODE> is set to 1 to display error values.
+
+<p><CODE>options(2)</CODE> is a measure of the absolute precision required for the value
+of <CODE>x</CODE> at the solution.
+
+<p><CODE>options(3)</CODE> is a measure of the precision required of the objective
+function at the solution.  Both this and the previous condition must be
+satisfied for termination.
+
+<p><CODE>options(14)</CODE> is the maximum number of iterations; default 100.
+
+<p><h2>
+Examples
+</h2>
+An example of the use of this function to find the minimum of a function
+<CODE>f</CODE> in the direction <CODE>sd</CODE> can be found in <CODE>conjgrad</CODE>
+<PRE>
+
+x = linemin(f, xold, sd, fold, lineoptions);
+</PRE>
+
+
+<p><h2>
+Algorithm
+</h2>
+
+Brent's algorithm uses a mixture of quadratic interpolation and golden
+section search to find the minimum of a function of a single variable once
+it has been bracketed (which is done with <CODE>minbrack</CODE>).  This is adapted
+to minimize a function along a line.
+This implementation
+is based on that in Numerical Recipes.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="conjgrad.htm">conjgrad</a></CODE>, <CODE><a href="minbrack.htm">minbrack</a></CODE>, <CODE><a href="quasinew.htm">quasinew</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

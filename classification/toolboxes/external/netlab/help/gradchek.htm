@@ -1,0 +1,58 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual gradchek
+</title>
+</head>
+<body>
+<H1> gradchek
+</H1>
+<h2>
+Purpose
+</h2>
+Checks a user-defined gradient function using finite differences.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+
+gradchek(w, func, grad)
+[gradient, delta] = gradchek(w, func, grad)
+gradchek(w, func, grad, p1, p2, ...)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+This function is intended as a utility for other netlab functions
+(particularly optimisation functions) to use.  It enables the user
+to check whether a gradient calculation has been correctly implmented
+for a given function.
+<CODE>gradchek(w, func, grad)</CODE> checks how accurate the gradient 
+<CODE>grad</CODE> of a function <CODE>func</CODE> is at a parameter vector <CODE>x</CODE>.  
+A central
+difference formula with step size 1.0e-6 is used, and the results
+for both gradient function and finite difference approximation are
+printed.
+The optional return value <CODE>gradient</CODE> is the gradient calculated
+using the function <CODE>grad</CODE> and the return value <CODE>delta</CODE> is the
+difference between the functional and finite difference methods of
+calculating the graident.
+
+<p><CODE>gradchek(x, func, grad, p1, p2, ...)</CODE> allows additional arguments
+to be passed to <CODE>func</CODE> and <CODE>grad</CODE>.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="conjgrad.htm">conjgrad</a></CODE>, <CODE><a href="graddesc.htm">graddesc</a></CODE>, <CODE><a href="hmc.htm">hmc</a></CODE>, <CODE><a href="olgd.htm">olgd</a></CODE>, <CODE><a href="quasinew.htm">quasinew</a></CODE>, <CODE><a href="scg.htm">scg</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

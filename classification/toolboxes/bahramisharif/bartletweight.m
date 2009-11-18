@@ -1,0 +1,21 @@
+function w1=bartletweight(data,design,w2,divnum,nclasses)
+dim=size(data,2)./divnum;
+data=reshape(data,size(data,1),dim,divnum);
+data=mean(data,3);
+nexamples = size(data,1);
+nfeatures = size(data,2)+1;
+classidxs = (1:nexamples)' + (design(:,1) - 1) .* nexamples;
+ptargets = zeros(nexamples,nclasses);
+ptargets(classidxs) = 1;
+targets = (1:nexamples)' + (design(:,1) - 1) * nexamples;
+w = zeros(nclasses,nfeatures);
+disp('calculating bartlet weights')
+options.Display='off';
+options.Method='lbfgs';
+options.MaxIter=5000;
+options.MaxFunEvals=15000;
+w = minFunc(@(w)logreg(w(:),[data ones(size(data,1),1)],targets,ptargets,nclasses),w(:),options);
+w = reshape(w,nclasses,nfeatures);
+w1=w2;
+w1(:,1:end-1)=repmat(w(:,1:end-1),[1 divnum])./divnum;
+w1(:,end)=w(:,end);

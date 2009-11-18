@@ -1,0 +1,129 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual hmc
+</title>
+</head>
+<body>
+<H1> hmc
+</H1>
+<h2>
+Purpose
+</h2>
+Hybrid Monte Carlo sampling.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+
+samples = hmc(f, x, options, gradf)
+samples = hmc(f, x, options, gradf, P1, P2, ...)
+[samples, energies, diagn] = hmc(f, x, options, gradf)
+s = hmc('state')
+hmc('state', s)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>samples = hmc(f, x, options, gradf)</CODE> uses a 
+hybrid Monte Carlo algorithm to sample from the distribution <CODE>p ~ exp(-f)</CODE>,
+where <CODE>f</CODE> is the first argument to <CODE>hmc</CODE>.
+The Markov chain starts at the point <CODE>x</CODE>, and the function <CODE>gradf</CODE>
+is the gradient of the `energy' function <CODE>f</CODE>.
+
+<p><CODE>hmc(f, x, options, gradf, p1, p2, ...)</CODE> allows
+additional arguments to be passed to <CODE>f()</CODE> and <CODE>gradf()</CODE>. 
+
+<p><CODE>[samples, energies, diagn] = hmc(f, x, options, gradf)</CODE> also returns
+a log of the energy values (i.e. negative log probabilities) for the
+samples in <CODE>energies</CODE> and <CODE>diagn</CODE>, a structure containing
+diagnostic information (position, momentum and
+acceptance threshold) for each step of the chain in <CODE>diagn.pos</CODE>,
+<CODE>diagn.mom</CODE> and
+<CODE>diagn.acc</CODE> respectively.  All candidate states (including rejected ones)
+are stored in <CODE>diagn.pos</CODE>.
+
+<p><CODE>[samples, energies, diagn] = hmc(f, x, options, gradf)</CODE> also returns the
+<CODE>energies</CODE> (i.e. negative log probabilities) corresponding to the samples. 
+The <CODE>diagn</CODE> structure contains three fields:
+
+<p><CODE>pos</CODE> the position vectors of the dynamic process.
+
+<p><CODE>mom</CODE> the momentum vectors of the dynamic process.
+
+<p><CODE>acc</CODE> the acceptance thresholds.
+
+<p><CODE>s = hmc('state')</CODE> returns a state structure that contains the state of the
+two random number generators <CODE>rand</CODE> and <CODE>randn</CODE> and the momentum of 
+the dynamic process.  These are contained in fields 
+<CODE>randstate</CODE>, <CODE>randnstate</CODE>
+and <CODE>mom</CODE> respectively.  The momentum state is
+only used for a persistent momentum update.
+
+<p><CODE>hmc('state', s)</CODE> resets the state to <CODE>s</CODE>.  If <CODE>s</CODE> is an integer,
+then it is passed to <CODE>rand</CODE> and <CODE>randn</CODE> and the momentum variable
+is randomised.  If <CODE>s</CODE> is a structure returned by <CODE>hmc('state')</CODE> then
+it resets the generator to exactly the same state.
+
+<p>The optional parameters in the <CODE>options</CODE> vector have the following
+interpretations.
+
+<p><CODE>options(1)</CODE> is set to 1 to display the energy values and rejection
+threshold at each step of the Markov chain. If the value is 2, then the
+position vectors at each step are also displayed.
+
+<p><CODE>options(5)</CODE> is set to 1 if momentum persistence is used; default 0, for
+complete replacement of momentum variables.
+
+<p><CODE>options(7)</CODE> defines the trajectory length (i.e. the number of leap-frog
+steps at each iteration).  Minimum value 1.
+
+<p><CODE>options(9)</CODE> is set to 1 to check the user defined gradient function.
+
+<p><CODE>options(14)</CODE> is the number of samples retained from the Markov chain;
+default 100.
+
+<p><CODE>options(15)</CODE> is the number of samples omitted from the start of the
+chain; default 0.
+
+<p><CODE>options(17)</CODE> defines the momentum used when a persistent update of
+(leap-frog) momentum is used.  This is bounded to the interval [0, 1).
+
+<p><CODE>options(18)</CODE> is the step size used in leap-frogs; default 1/trajectory
+length.
+
+<p><h2>
+Examples
+</h2>
+The following code fragment samples from the posterior distribution of
+weights for a neural network.
+<PRE>
+
+w = mlppak(net);
+[samples, energies] = hmc('neterr', w, options, 'netgrad', net, x, t);
+</PRE>
+
+
+<p><h2>
+Algorithm
+</h2>
+
+The algroithm follows the procedure outlined in Radford Neal's technical
+report CRG-TR-93-1  from the University of Toronto. The stochastic update of
+momenta samples from a zero mean unit covariance gaussian. 
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="metrop.htm">metrop</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

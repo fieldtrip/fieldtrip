@@ -1,0 +1,53 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual fevbayes
+</title>
+</head>
+<body>
+<H1> fevbayes
+</H1>
+<h2>
+Purpose
+</h2>
+Evaluate Bayesian regularisation for network forward propagation.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+extra = fevbayes(net, y, a, x, t, x_test)
+[extra, invhess] = fevbayes(net, y, a, x, t, x_test, invhess)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>extra = fevbayes(net, y, a, x, t, x_test)</CODE> takes a network data structure 
+<CODE>net</CODE> together with a set of hidden unit activations <CODE>a</CODE> from 
+test inputs <CODE>x_test</CODE>, training data inputs <CODE>x</CODE> and <CODE>t</CODE> and
+outputs a matrix of extra information <CODE>extra</CODE> that consists of
+error bars (variance)
+for a regression problem or moderated outputs for a classification problem.
+The optional argument (and return value) 
+<CODE>invhess</CODE> is the inverse of the network Hessian
+computed on the training data inputs and targets.  Passing it in avoids
+recomputing it, which can be a significant saving for large training sets.
+
+<p>This is called by network-specific functions such as <CODE>mlpevfwd</CODE> which
+are needed since the return values (predictions and hidden unit activations)
+for different network types are in different orders (for good reasons).
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="mlpevfwd.htm">mlpevfwd</a></CODE>, <CODE><a href="rbfevfwd.htm">rbfevfwd</a></CODE>, <CODE><a href="glmevfwd.htm">glmevfwd</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

@@ -1,0 +1,49 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual mlperr
+</title>
+</head>
+<body>
+<H1> mlperr
+</H1>
+<h2>
+Purpose
+</h2>
+Evaluate error function for 2-layer network.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+e = mlperr(net, x, t)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>e = mlperr(net, x, t)</CODE> takes a network data structure <CODE>net</CODE> together 
+with a matrix <CODE>x</CODE> of input vectors and a matrix <CODE>t</CODE> of target
+vectors, and evaluates the error function <CODE>e</CODE>. The choice of error
+function corresponds to the output unit activation function. Each row
+of <CODE>x</CODE> corresponds to one input vector and each row of <CODE>t</CODE>
+corresponds to one target vector.
+
+<p><CODE>[e, edata, eprior] = mlperr(net, x, t)</CODE> additionally returns the
+data and prior components of the error, assuming a zero mean Gaussian
+prior on the weights with inverse variance parameters <CODE>alpha</CODE> and
+<CODE>beta</CODE> taken from the network data structure <CODE>net</CODE>.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="mlp.htm">mlp</a></CODE>, <CODE><a href="mlppak.htm">mlppak</a></CODE>, <CODE><a href="mlpunpak.htm">mlpunpak</a></CODE>, <CODE><a href="mlpfwd.htm">mlpfwd</a></CODE>, <CODE><a href="mlpbkp.htm">mlpbkp</a></CODE>, <CODE><a href="mlpgrad.htm">mlpgrad</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

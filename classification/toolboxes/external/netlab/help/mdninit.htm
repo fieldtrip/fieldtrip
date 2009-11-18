@@ -1,0 +1,50 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual mdninit
+</title>
+</head>
+<body>
+<H1> mdninit
+</H1>
+<h2>
+Purpose
+</h2>
+Initialise the weights in a Mixture Density Network.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+net = mdninit(net, prior)
+net = mdninit(net, prior, t, options)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+
+<p><CODE>net = mdninit(net, prior)</CODE> takes a Mixture Density Network
+<CODE>net</CODE> and sets the weights and biases by sampling from a Gaussian
+distribution. It calls <CODE>mlpinit</CODE> for the MLP component of <CODE>net</CODE>.
+
+<p><CODE>net = mdninit(net, prior, t, options)</CODE> uses the target data <CODE>t</CODE> to
+initialise the biases for the output units after initialising the 
+other weights as above.  It calls <CODE>gmminit</CODE>, with <CODE>t</CODE> and <CODE>options</CODE>
+as arguments, to obtain a model of the unconditional density of <CODE>t</CODE>.  The
+biases are then set so that <CODE>net</CODE> will output the values in the Gaussian 
+mixture model.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="mdn.htm">mdn</a></CODE>, <CODE><a href="mlp.htm">mlp</a></CODE>, <CODE><a href="mlpinit.htm">mlpinit</a></CODE>, <CODE><a href="gmminit.htm">gmminit</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+<p>David J Evans (1998)
+
+</body>
+</html>

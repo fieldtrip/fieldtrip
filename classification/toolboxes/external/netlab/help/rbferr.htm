@@ -1,0 +1,50 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual rbferr
+</title>
+</head>
+<body>
+<H1> rbferr
+</H1>
+<h2>
+Purpose
+</h2>
+Evaluate error function for RBF network.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+e = rbferr(net, x, t)
+[e, edata, eprior] = rbferr(net, x, t)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>e = rbferr(net, x, t)</CODE> takes a network data structure <CODE>net</CODE> together 
+with a matrix <CODE>x</CODE> of input
+vectors and a matrix <CODE>t</CODE> of target vectors, and evaluates the
+appropriate error function <CODE>e</CODE> depending on <CODE>net.outfn</CODE>. 
+Each row of <CODE>x</CODE> corresponds to one
+input vector and each row of <CODE>t</CODE> contains the corresponding target vector.
+
+<p><CODE>[e, edata, eprior] = rbferr(net, x, t)</CODE> additionally returns the
+data and prior components of the error, assuming a zero mean Gaussian
+prior on the weights with inverse variance parameters <CODE>alpha</CODE> and
+<CODE>beta</CODE> taken from the network data structure <CODE>net</CODE>.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="rbf.htm">rbf</a></CODE>, <CODE><a href="rbffwd.htm">rbffwd</a></CODE>, <CODE><a href="rbfgrad.htm">rbfgrad</a></CODE>, <CODE><a href="rbfpak.htm">rbfpak</a></CODE>, <CODE><a href="rbftrain.htm">rbftrain</a></CODE>, <CODE><a href="rbfunpak.htm">rbfunpak</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

@@ -1,0 +1,48 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual hinton
+</title>
+</head>
+<body>
+<H1> hinton
+</H1>
+<h2>
+Purpose
+</h2>
+Plot Hinton diagram for a weight matrix.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+hinton(w)
+h = hinton(w)</PRE>
+
+
+<p><h2>
+Description
+</h2>
+
+<p><CODE>hinton(w)</CODE> takes a matrix <CODE>w</CODE>
+and plots the Hinton diagram.
+
+<p><CODE>h = hinton(net)</CODE> also returns the figure handle <CODE>h</CODE>
+which can be used, for instance, to delete the 
+figure when it is no longer needed.
+
+<p>To print the figure correctly in black and white, you should call
+<CODE>set(h, 'InvertHardCopy', 'off')</CODE> before printing.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="demhint.htm">demhint</a></CODE>, <CODE><a href="hintmat.htm">hintmat</a></CODE>, <CODE><a href="mlphint.htm">mlphint</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

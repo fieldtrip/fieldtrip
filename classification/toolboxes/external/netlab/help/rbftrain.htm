@@ -1,0 +1,90 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual rbftrain
+</title>
+</head>
+<body>
+<H1> rbftrain
+</H1>
+<h2>
+Purpose
+</h2>
+Two stage training of RBF network.
+
+<p><h2>
+Description
+</h2>
+<CODE>net = rbftrain(net, options, x, t)</CODE> uses a 
+two stage training
+algorithm to set the weights in the RBF model structure <CODE>net</CODE>.
+Each row of <CODE>x</CODE> corresponds to one
+input vector and each row of <CODE>t</CODE> contains the corresponding target vector.
+The centres are determined by fitting a Gaussian mixture model
+with circular covariances using the EM algorithm through a call to
+<CODE>rbfsetbf</CODE>.  (The mixture model is
+initialised using a small number of iterations of the K-means algorithm.)
+If the activation functions are Gaussians, then the basis function widths
+are then set to the maximum inter-centre squared distance.
+
+<p>For linear outputs, 
+the hidden to output
+weights that give rise to the least squares solution
+can then be determined using the pseudo-inverse. For neuroscale outputs,
+the hidden to output weights are determined using the iterative shadow
+targets algorithm.
+ Although this two stage
+procedure may not give solutions with as low an error as using general 
+purpose non-linear optimisers, it is much faster.
+
+<p>The options vector may have two rows: if this is the case, then the second row
+is passed to <CODE>rbfsetbf</CODE>, which allows the user to specify a different
+number iterations for RBF and GMM training.
+The optional parameters to <CODE>rbftrain</CODE> have the following interpretations.
+
+<p><CODE>options(1)</CODE> is set to 1 to display error values during EM training.
+
+<p><CODE>options(2)</CODE> is a measure of the precision required for the value
+of the weights <CODE>w</CODE> at the solution.
+
+<p><CODE>options(3)</CODE> is a measure of the precision required of the objective
+function at the solution.  Both this and the previous condition must be
+satisfied for termination.
+
+<p><CODE>options(5)</CODE> is set to 1 if the basis functions parameters should remain
+unchanged; default 0.
+
+<p><CODE>options(6)</CODE> is set to 1 if the output layer weights should be should 
+set using PCA. This is only relevant for Neuroscale outputs; default 0.
+
+<p><CODE>options(14)</CODE> is the maximum number of iterations for the shadow
+targets algorithm; 
+default 100.
+
+<p><h2>
+Example
+</h2>
+The following example creates an RBF network and then trains it:
+<PRE>
+
+net = rbf(1, 4, 1, 'gaussian');
+options(1, :) = foptions;
+options(2, :) = foptions;
+options(2, 14) = 10;  % 10 iterations of EM
+options(2, 5)  = 1;   % Check for covariance collapse in EM
+net = rbftrain(net, options, x, t);
+</PRE>
+
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="rbf.htm">rbf</a></CODE>, <CODE><a href="rbferr.htm">rbferr</a></CODE>, <CODE><a href="rbffwd.htm">rbffwd</a></CODE>, <CODE><a href="rbfgrad.htm">rbfgrad</a></CODE>, <CODE><a href="rbfpak.htm">rbfpak</a></CODE>, <CODE><a href="rbfunpak.htm">rbfunpak</a></CODE>, <CODE><a href="rbfsetbf.htm">rbfsetbf</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

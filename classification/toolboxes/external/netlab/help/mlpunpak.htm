@@ -1,0 +1,44 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual mlpunpak
+</title>
+</head>
+<body>
+<H1> mlpunpak
+</H1>
+<h2>
+Purpose
+</h2>
+Separates weights vector into weight and bias matrices. 
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+net = mlpunpak(net, w)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>net = mlpunpak(net, w)</CODE> takes an mlp network data structure <CODE>net</CODE> and 
+a weight vector <CODE>w</CODE>, and returns a network data structure identical to
+the input network, except that the first-layer weight matrix
+<CODE>w1</CODE>, the first-layer bias vector <CODE>b1</CODE>, the second-layer
+weight matrix <CODE>w2</CODE> and the second-layer bias vector <CODE>b2</CODE> have all
+been set to the corresponding elements of <CODE>w</CODE>.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="mlp.htm">mlp</a></CODE>, <CODE><a href="mlppak.htm">mlppak</a></CODE>, <CODE><a href="mlpfwd.htm">mlpfwd</a></CODE>, <CODE><a href="mlperr.htm">mlperr</a></CODE>, <CODE><a href="mlpbkp.htm">mlpbkp</a></CODE>, <CODE><a href="mlpgrad.htm">mlpgrad</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

@@ -1,0 +1,50 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual hbayes
+</title>
+</head>
+<body>
+<H1> hbayes
+</H1>
+<h2>
+Purpose
+</h2>
+Evaluate Hessian of Bayesian error function for network.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+h = hbayes(net, hdata)
+[h, hdata] = hbayes(net, hdata)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>h = hbayes(net, hdata)</CODE> takes a network data structure <CODE>net</CODE> together 
+the data contribution to the Hessian
+for a set of inputs and targets.
+It returns the regularised Hessian using any zero mean Gaussian priors
+on the weights defined in
+<CODE>net</CODE>.  In addition, if a <CODE>mask</CODE> is defined in <CODE>net</CODE>, then
+the entries in <CODE>h</CODE> that correspond to weights with a 0 in the
+mask are removed.
+
+<p><CODE>[h, hdata] = hbayes(net, hdata)</CODE> additionally returns the
+data  component of the Hessian.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="gbayes.htm">gbayes</a></CODE>, <CODE><a href="glmhess.htm">glmhess</a></CODE>, <CODE><a href="mlphess.htm">mlphess</a></CODE>, <CODE><a href="rbfhess.htm">rbfhess</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

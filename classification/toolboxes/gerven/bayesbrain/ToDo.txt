@@ -1,0 +1,18 @@
+Wish to adopt WinBugs style notation and add sampling engines.
+
+i.e., for a normal distribution:
+
+mu = dnorm(0,1);
+tau = dgamma(0.1,0.1);
+x = dnorm(mu,tau);
+
+would in this form require undesirable reference behaviour.
+
+mixture model on means:
+
+lambda = [1 10];
+T = dcat([0.4 0.6]);
+mu = lambda(T);
+x = dnorm(mu,1);
+
+....

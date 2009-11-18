@@ -1,0 +1,104 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual graddesc
+</title>
+</head>
+<body>
+<H1> graddesc
+</H1>
+<h2>
+Purpose
+</h2>
+Gradient descent optimization.
+
+<p><h2>
+Description
+</h2>
+<CODE>[x, options, flog, pointlog] = graddesc(f, x, options, gradf)</CODE> uses 
+batch gradient descent to find a local minimum of the function 
+<CODE>f(x)</CODE> whose gradient is given by <CODE>gradf(x)</CODE>. A log of the function values
+after each cycle is (optionally) returned in <CODE>errlog</CODE>, and a log
+of the points visited is (optionally) returned in <CODE>pointlog</CODE>.
+
+<p>Note that <CODE>x</CODE> is a row vector
+and <CODE>f</CODE> returns a scalar value. 
+The point at which <CODE>f</CODE> has a local minimum
+is returned as <CODE>x</CODE>.  The function value at that point is returned
+in <CODE>options(8)</CODE>.
+
+<p><CODE>graddesc(f, x, options, gradf, p1, p2, ...)</CODE> allows 
+additional arguments to be passed to <CODE>f()</CODE> and <CODE>gradf()</CODE>. 
+
+<p>The optional parameters have the following interpretations.
+
+<p><CODE>options(1)</CODE> is set to 1 to display error values; also logs error 
+values in the return argument <CODE>errlog</CODE>, and the points visited
+in the return argument <CODE>pointslog</CODE>. If <CODE>options(1)</CODE> is set to 0,
+then only warning messages are displayed.  If <CODE>options(1)</CODE> is -1,
+then nothing is displayed.
+
+<p><CODE>options(2)</CODE> is the absolute precision required for the value
+of <CODE>x</CODE> at the solution.  If the absolute difference between
+the values of <CODE>x</CODE> between two successive steps is less than
+<CODE>options(2)</CODE>, then this condition is satisfied.
+
+<p><CODE>options(3)</CODE> is a measure of the precision required of the objective
+function at the solution.  If the absolute difference between the
+objective function values between two successive steps is less than
+<CODE>options(3)</CODE>, then this condition is satisfied.
+Both this and the previous condition must be
+satisfied for termination.
+
+<p><CODE>options(7)</CODE> determines the line minimisation method used.  If it
+is set to 1 then a line minimiser is used (in the direction of the negative
+gradient).  If it is 0 (the default), then each parameter update
+is a fixed multiple (the learning rate)
+of the negative gradient added to a fixed multiple (the momentum) of
+the previous parameter update.
+
+<p><CODE>options(9)</CODE> should be set to 1 to check the user defined gradient 
+function <CODE>gradf</CODE> with <CODE>gradchek</CODE>.  This is carried out at
+the initial parameter vector <CODE>x</CODE>.
+
+<p><CODE>options(10)</CODE> returns the total number of function evaluations (including
+those in any line searches).
+
+<p><CODE>options(11)</CODE> returns the total number of gradient evaluations.
+
+<p><CODE>options(14)</CODE> is the maximum number of iterations; default 100.
+
+<p><CODE>options(15)</CODE> is the precision in parameter space of the line search;
+default <CODE>foptions(2)</CODE>.
+
+<p><CODE>options(17)</CODE> is the momentum; default 0.5.  It should be scaled by the
+inverse of the number of data points.
+
+<p><CODE>options(18)</CODE> is the learning rate; default 0.01.  It should be
+scaled by the inverse of the number of data points.
+
+<p><h2>
+Examples
+</h2>
+An example of how this function can be used to train a neural network is:
+<PRE>
+
+options = zeros(1, 18);
+options(17) = 0.1/size(x, 1);
+net = netopt(net, options, x, t, 'graddesc');
+</PRE>
+
+Note how the learning rate is scaled by the number of data points.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="conjgrad.htm">conjgrad</a></CODE>, <CODE><a href="linemin.htm">linemin</a></CODE>, <CODE><a href="olgd.htm">olgd</a></CODE>, <CODE><a href="minbrack.htm">minbrack</a></CODE>, <CODE><a href="quasinew.htm">quasinew</a></CODE>, <CODE><a href="scg.htm">scg</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

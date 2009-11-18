@@ -1,0 +1,49 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual gperr
+</title>
+</head>
+<body>
+<H1> gperr
+</H1>
+<h2>
+Purpose
+</h2>
+Evaluate error function for Gaussian Process.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+edata = gperr(net, x, t)
+[e, edata, eprior] = gperr(net, x, t)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>e = gperr(net, x, t)</CODE> takes a Gaussian Process data structure <CODE>net</CODE> together 
+with a matrix <CODE>x</CODE> of input vectors and a matrix <CODE>t</CODE> of target
+vectors, and evaluates the error function <CODE>e</CODE>. Each row
+of <CODE>x</CODE> corresponds to one input vector and each row of <CODE>t</CODE>
+corresponds to one target vector.
+
+<p><CODE>[e, edata, eprior] = gperr(net, x, t)</CODE> additionally returns the
+data and hyperprior components of the error, assuming a Gaussian
+prior on the weights with mean and variance parameters <CODE>prmean</CODE> and
+<CODE>prvariance</CODE> taken from the network data structure <CODE>net</CODE>.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="gp.htm">gp</a></CODE>, <CODE><a href="gpcovar.htm">gpcovar</a></CODE>, <CODE><a href="gpfwd.htm">gpfwd</a></CODE>, <CODE><a href="gpgrad.htm">gpgrad</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

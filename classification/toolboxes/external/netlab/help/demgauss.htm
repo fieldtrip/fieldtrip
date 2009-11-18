@@ -1,0 +1,50 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual demgauss
+</title>
+</head>
+<body>
+<H1> demgauss
+</H1>
+<h2>
+Purpose
+</h2>
+Demonstrate sampling from Gaussian distributions.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+demgauss
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+
+<p><CODE>demgauss</CODE> provides a simple illustration of the generation of
+data from Gaussian distributions. It first samples from a
+one-dimensional distribution using <CODE>randn</CODE>, and then plots a
+normalized histogram estimate of the distribution using <CODE>histp</CODE>
+together with the true density calculated using <CODE>gauss</CODE>.
+
+<p><CODE>demgauss</CODE> then demonstrates sampling from a Gaussian distribution
+in two dimensions. It creates a mean vector and a covariance matrix,
+and then plots contours of constant density using the function
+<CODE>gauss</CODE>. A sample of points drawn from this distribution, obtained
+using the function <CODE>gsamp</CODE>, is then superimposed on the contours.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="gauss.htm">gauss</a></CODE>, <CODE><a href="gsamp.htm">gsamp</a></CODE>, <CODE><a href="histp.htm">histp</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

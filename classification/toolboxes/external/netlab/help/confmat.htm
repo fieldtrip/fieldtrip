@@ -1,0 +1,48 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual confmat
+</title>
+</head>
+<body>
+<H1> confmat
+</H1>
+<h2>
+Purpose
+</h2>
+Compute a confusion matrix.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+[C, rate] = confmat(y, t)</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>[C, rate] = confmat(y, t)</CODE> computes the confusion matrix <CODE>C</CODE>
+and classification performance <CODE>rate</CODE> for the predictions mat{y}
+compared with the targets <CODE>t</CODE>.  The data is assumed to be in a
+1-of-N encoding, unless there is just one column, when it is assumed to
+be a 2 class problem with a 0-1 encoding.  Each row of <CODE>y</CODE> and <CODE>t</CODE>
+corresponds to a single example.
+
+<p>In the confusion matrix, the rows represent the true classes and the 
+columns the predicted classes.  The vector <CODE>rate</CODE> has two entries:
+the percentage of correct classifications and the total number of
+correct classifications.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="conffig.htm">conffig</a></CODE>, <CODE><a href="demtrain.htm">demtrain</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

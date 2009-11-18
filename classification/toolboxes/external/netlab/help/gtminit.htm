@@ -1,0 +1,66 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual gtminit
+</title>
+</head>
+<body>
+<H1> gtminit
+</H1>
+<h2>
+Purpose
+</h2>
+Initialise the weights and latent sample in a GTM.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+net = gtminit(net, options, data, samptype)
+net = gtminit(net, options, data, samptype, lsampsize, rbfsampsize)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>net = gtminit(net, options, data, samptype)</CODE> takes a GTM <CODE>net</CODE>
+and generates a sample of latent data points and sets the centres (and
+widths if appropriate) of
+<CODE>net.rbfnet</CODE>. 
+
+<p>If the <CODE>samptype</CODE> is <CODE>'regular'</CODE>, then regular grids of latent
+data points and RBF centres are created.  The dimension of the latent data 
+space must be
+1 or 2.  For one-dimensional latent space, the <CODE>lsampsize</CODE> parameter
+gives the number of latent points and the <CODE>rbfsampsize</CODE> parameter
+gives the number of RBF centres.  For a two-dimensional latent space,
+these parameters must be vectors of length 2 with the number of points
+in each of the x and y directions to create a rectangular grid.  The
+widths of the RBF basis functions are set by a call to <CODE>rbfsetfw</CODE>
+passing <CODE>options(7)</CODE> as the scaling parameter.
+
+<p>If the <CODE>samptype</CODE> is <CODE>'uniform'</CODE> or <CODE>'gaussian'</CODE> then the
+latent data is found by sampling from a uniform or
+Gaussian distribution correspondingly.  The RBF basis function parameters
+are set
+by a call to <CODE>rbfsetbf</CODE> with the <CODE>data</CODE> parameter
+as dataset and the <CODE>options</CODE> vector.
+
+<p>Finally, the output layer weights of the RBF are initialised by
+mapping the mean of the latent variable to the mean of the target variable,
+and the L-dimensional latent variale variance to the variance of the
+targets along the first L principal components.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="gtm.htm">gtm</a></CODE>, <CODE><a href="gtmem.htm">gtmem</a></CODE>, <CODE><a href="pca.htm">pca</a></CODE>, <CODE><a href="rbfsetbf.htm">rbfsetbf</a></CODE>, <CODE><a href="rbfsetfw.htm">rbfsetfw</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

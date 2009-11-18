@@ -1,0 +1,65 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual gmminit
+</title>
+</head>
+<body>
+<H1> gmminit
+</H1>
+<h2>
+Purpose
+</h2>
+Initialises Gaussian mixture model from data
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+
+mix = gmminit(mix, x, options)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>mix = gmminit(mix, x, options)</CODE> uses a dataset <CODE>x</CODE>
+to initialise the parameters of a Gaussian mixture
+model defined by the data structure <CODE>mix</CODE>.  The k-means algorithm
+is used to determine the centres. The priors are computed from the
+proportion of examples belonging to each cluster.
+The covariance matrices are calculated as the sample covariance of the
+points associated with (i.e. closest to) the corresponding centres.
+For a mixture of PPCA model, the PPCA decomposition is calculated
+for the points closest to a given centre.
+This initialisation can be used as the starting point for training the
+model using the EM algorithm.  
+
+<p><h2>
+Example
+</h2>
+<PRE>
+
+mix = gmm(3, 2);
+options = foptions;
+options(14) = 5;
+mix = gmminit(mix, data, options);
+</PRE>
+
+This code sets up a Gaussian mixture model with 3 centres in 2 dimensions, and
+then initialises the parameters from the data set <CODE>data</CODE> with 5 iterations
+of the k means algorithm.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="gmm.htm">gmm</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

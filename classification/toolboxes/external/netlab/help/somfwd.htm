@@ -1,0 +1,59 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual somfwd
+</title>
+</head>
+<body>
+<H1> somfwd
+</H1>
+<h2>
+Purpose
+</h2>
+Forward propagation through a Self-Organising Map.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+
+d2 = somfwd(net, x)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>d2 = somfwd(net, x)</CODE> propagates the data matrix <CODE>x</CODE> through
+ a SOM <CODE>net</CODE>, returning the squared distance matrix <CODE>d2</CODE> with
+dimension <CODE>nin</CODE> by <CODE>num_nodes</CODE>.  The $i$th row represents the
+squared Euclidean distance to each of the nodes of the SOM.
+
+<p><CODE>[d2, win_nodes] = somfwd(net, x)</CODE> also returns the indices of the
+winning nodes for each pattern.
+
+<p><h2>
+Example
+</h2>
+
+<p>The following code fragment creates a SOM with a $5times 5$ map for an
+8-dimensional data space.  It then applies the test data to the map.
+<PRE>
+
+net = som(8, [5, 5]);
+[d2, wn] = somfwd(net, test_data);
+</PRE>
+
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="som.htm">som</a></CODE>, <CODE><a href="somtrain.htm">somtrain</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

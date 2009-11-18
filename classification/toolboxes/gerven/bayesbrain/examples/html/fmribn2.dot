@@ -1,0 +1,7 @@
+digraph G{
+1 [label="HIP"]
+2 [label="FFA"]
+3 [label="condition"]
+2 -> 1 [color=red];
+3 -> 2;
+}

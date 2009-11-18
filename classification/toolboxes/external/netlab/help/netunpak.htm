@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual netunpak
+</title>
+</head>
+<body>
+<H1> netunpak
+</H1>
+<h2>
+Purpose
+</h2>
+Separates weights vector into weight and bias matrices. 
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+net = netunpak(net, w)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>net = netunpak(net, w)</CODE> takes an net network data structure <CODE>net</CODE> and 
+a weight vector <CODE>w</CODE>, and returns a network data structure identical to
+the input network, except that the componenet weight matrices have all
+been set to the corresponding elements of <CODE>w</CODE>.  If there is 
+a <CODE>mask</CODE> field in the <CODE>net</CODE> data structure, then the weights in
+<CODE>w</CODE> are placed in locations corresponding to non-zero entries in the
+mask (so <CODE>w</CODE> should have the same length as the number of non-zero
+entries in the <CODE>mask</CODE>).
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="netpak.htm">netpak</a></CODE>, <CODE><a href="netfwd.htm">netfwd</a></CODE>, <CODE><a href="neterr.htm">neterr</a></CODE>, <CODE><a href="netgrad.htm">netgrad</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

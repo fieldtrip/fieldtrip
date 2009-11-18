@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual hesschek
+</title>
+</head>
+<body>
+<H1> hesschek
+</H1>
+<h2>
+Purpose
+</h2>
+Use central differences to confirm correct evaluation of Hessian matrix.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+hesschek(net, x, t)
+h = hesschek(net, x, t)</PRE>
+
+
+<p><h2>
+Description
+</h2>
+
+<p><CODE>hesschek(net, x, t)</CODE> takes a network data structure <CODE>net</CODE>, together
+with input and target data matrices <CODE>x</CODE> and <CODE>t</CODE>, and compares
+the evaluation of the Hessian matrix using the function <CODE>nethess</CODE>
+and using central differences with the function <CODE>neterr</CODE>.
+
+<p>The optional return value <CODE>h</CODE> is the Hessian computed using
+<CODE>nethess</CODE>.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="nethess.htm">nethess</a></CODE>, <CODE><a href="neterr.htm">neterr</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

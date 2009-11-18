@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual mlpfwd
+</title>
+</head>
+<body>
+<H1> mlpfwd
+</H1>
+<h2>
+Purpose
+</h2>
+Forward propagation through 2-layer network.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+y = mlpfwd(net, x)
+[y, z] = mlpfwd(net, x)
+[y, z, a] = mlpfwd(net, x)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>y = mlpfwd(net, x)</CODE> takes a network data structure <CODE>net</CODE> together with
+a matrix <CODE>x</CODE> of input vectors, and forward propagates the inputs
+through the network to generate a matrix <CODE>y</CODE> of output
+vectors. Each row of <CODE>x</CODE> corresponds to one input vector and each
+row of <CODE>y</CODE> corresponds to one output vector.
+
+<p><CODE>[y, z] = mlpfwd(net, x)</CODE> also generates a matrix <CODE>z</CODE> of the hidden
+unit activations where each row corresponds to one pattern.
+
+<p><CODE>[y, z, a] = mlpfwd(net, x)</CODE> also returns a matrix <CODE>a</CODE> 
+giving the summed inputs to each output unit, where each row
+corresponds to one pattern.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="mlp.htm">mlp</a></CODE>, <CODE><a href="mlppak.htm">mlppak</a></CODE>, <CODE><a href="mlpunpak.htm">mlpunpak</a></CODE>, <CODE><a href="mlperr.htm">mlperr</a></CODE>, <CODE><a href="mlpbkp.htm">mlpbkp</a></CODE>, <CODE><a href="mlpgrad.htm">mlpgrad</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

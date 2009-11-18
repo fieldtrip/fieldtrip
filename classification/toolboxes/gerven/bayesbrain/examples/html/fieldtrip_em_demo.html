@@ -1,0 +1,342 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Using the EM algorithm together with FieldTrip data</title>
+      <meta name="generator" content="MATLAB 7.6">
+      <meta name="date" content="2008-10-01">
+      <meta name="m-file" content="fieldtrip_em_demo"><style>
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head>
+   <body>
+      <div class="content">
+         <h1>Using the EM algorithm together with FieldTrip data</h1>
+         <introduction>
+            <p>This example demonstrates how to use neuroimaging data obtained from FieldTrip together with the neurogm toolbox. In the example,
+               we make use of covert attention data of one subject that has already been frequency analyzed. Note that this is trial based
+               data so we can build finite size models that capture behaviour within a trial.
+            </p>
+            <p>The data consists of 7 different frequencies at 274 channels at time points [-0.5 0 0.5 1 1.5 2 2.5]. We can expect evoked
+               response after the cue and alpha modulation after about 1 second
+            </p>
+            <p>In this particular example, we will construct a standard Bayesian network and demonstrate the use of the EM algorithm to get
+               better estimates of the distributions.
+            </p>
+            <p>Copyright (C) 2008  Marcel van Gerven</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Compare log likelihood of a Bayesian network before/after learning</a></li>
+            </ul>
+         </div>
+         <h2>Compare log likelihood of a Bayesian network before/after learning<a name="1"></a></h2><pre class="codeinput"><span class="keyword">function</span> fieldtrip_em_demo()
+</pre><p>Load frequency data and convert the data to a format that can be used by NEUROGM. A Bayesian network is a static model, so
+            we will take out the time data and focus only on the 12 Hz band in two channels in left and right hemisphere.
+         </p><pre class="codeinput">load <span class="string">freqli</span>; <span class="comment">% left attention</span>
+load <span class="string">freqri</span>; <span class="comment">% right attention</span>
+
+<span class="comment">% left and right channels</span>
+l = find(ismember(freqLI.label,<span class="string">'MLO32'</span>));
+r = find(ismember(freqRI.label,<span class="string">'MRO32'</span>));
+
+<span class="comment">% We take the log and ztransform to make the data better behaved. Essential</span>
+<span class="comment">% for the EM algorithm!</span>
+datal = zscore(log((squeeze(nan_mean(freqLI.powspctrm(:,[l r],3,:),4)))));
+datar = zscore(log((squeeze(nan_mean(freqRI.powspctrm(:,[l r],3,:),4)))));
+clear <span class="string">freqli</span>; clear <span class="string">freqri</span>;
+</pre><p>Now we can create a very simple model that consists of one discrete parent (the attention condition) and two continuous children
+            who each have an extra discrete variable which allows more complex distributions to be estimated.
+         </p><pre class="codeinput">data = [[datal ones(size(datal,1),1) nan(size(datal,1),2) ]; [datar 2*ones(size(datar,1),1) nan(size(datar,1),2)]];
+</pre><pre>Create the random variables; they should follow the data ordering</pre><pre class="codeinput">factors = cell(1,5);
+factors{1} = gaussian_cpd(1,[],[3 4],zeros(2,2),cell(2,2),100*ones(2,2));
+factors{2} = gaussian_cpd(2,[],[3 5],zeros(2,2),cell(2,2),100*ones(2,2));
+factors{3} = multinomial_cpd(3,[],[0.5; 0.5]);
+factors{4} = multinomial_cpd(4,[],rand(2,1));
+factors{5} = multinomial_cpd(5,[],rand(2,1));
+
+<span class="comment">% optionally add names to the factors</span>
+factors{1}.name = <span class="string">'MLO32'</span>;
+factors{2}.name = <span class="string">'MRO32'</span>;
+factors{3}.name = <span class="string">'orientation'</span>;
+factors{3}.statenames = {<span class="string">'left attention'</span> <span class="string">'right attention'</span>};
+factors{4}.name = <span class="string">'latent1'</span>;
+factors{5}.name = <span class="string">'latent2'</span>;
+</pre><p>Create simple bayes net</p><pre class="codeinput">bn = bayesnet(factors);
+</pre><p>Write graph structure to .ps file (requires installation of GraphViz library)</p><pre class="codeinput">bn.write(<span class="string">'tmpem'</span>,<span class="string">'dot'</span>,<span class="string">'extension'</span>,<span class="string">'ps'</span>);
+</pre><p>This is what the plot would look like</p>
+         <p><img vspace="5" hspace="5" src="tmpem.jpg"> </p>
+         <p>Learn parameters from incomplete data (invoke EM algorithm)</p><pre class="codeinput">bn = bn.learn_parameters(data);
+</pre><pre class="codeoutput">triangulating model
+constructing potentials
+constructing junction tree
+computing messages
+EM iteration 1 of 10
+processing case 1 of 255
+processing case 2 of 255
+processing case 3 of 255
+processing case 4 of 255
+processing case 5 of 255
+processing case 6 of 255
+processing case 7 of 255
+processing case 8 of 255
+processing case 9 of 255
+processing case 10 of 255
+processing case 11 of 255
+processing case 12 of 255
+processing case 13 of 255
+processing case 14 of 255
+processing case 15 of 255
+processing case 16 of 255
+processing case 17 of 255
+processing case 18 of 255
+processing case 19 of 255
+processing case 20 of 255
+processing case 21 of 255
+processing case 22 of 255
+processing case 23 of 255
+processing case 24 of 255
+processing case 25 of 255
+processing case 26 of 255
+processing case 27 of 255
+processing case 28 of 255
+processing case 29 of 255
+processing case 30 of 255
+processing case 31 of 255
+processing case 32 of 255
+processing case 33 of 255
+processing case 34 of 255
+processing case 35 of 255
+processing case 36 of 255
+processing case 37 of 255
+processing case 38 of 255
+processing case 39 of 255
+processing case 40 of 255
+processing case 41 of 255
+processing case 42 of 255
+processing case 43 of 255
+processing case 44 of 255
+processing case 45 of 255
+processing case 46 of 255
+processing case 47 of 255
+processing case 48 of 255
+processing case 49 of 255
+processing case 50 of 255
+processing case 51 of 255
+processing case 52 of 255
+processing case 53 of 255
+processing case 54 of 255
+processing case 55 of 255
+processing case 56 of 255
+processing case 57 of 255
+processing case 58 of 255
+processing case 59 of 255
+processing case 60 of 255
+processing case 61 of 255
+processing case 62 of 255
+processing case 63 of 255
+processing case 64 of 255
+processing case 65 of 255
+processing case 66 of 255
+processing case 67 of 255
+processing case 68 of 255
+...</pre><p>Plot of the  mixture distributions</p><pre class="codeinput"><span class="comment">% variable of interest</span>
+obj = bn.factors{2};
+
+<span class="comment">% mixture components and histograms</span>
+mix = bn.factors{5};
+
+lim = [min(obj.mu(:)) - 3*sqrt(max(abs(obj.sigma2(:)))) max(obj.mu) + 3*sqrt(max(abs(obj.sigma2(:))))];
+subplot(1,2,1);
+h1 = histc(datal(:,2),-2:0.25:2);
+bar(-2:0.25:2,h1./(5*max(h1)),<span class="string">'histc'</span>);
+hold <span class="string">on</span>;
+fplot(@(x)(mix.p(1)*normpdf(x,obj.mu(1),sqrt(obj.sigma2(1))) + mix.p(2)*normpdf(x,obj.mu(3),sqrt(obj.sigma2(3)))),lim,<span class="string">'k'</span>);
+title(<span class="string">'MRO32 left attention'</span>);
+
+subplot(1,2,2);
+h2 = histc(datar(:,2),-2:0.25:2);
+bar(-2:0.25:2,h2./(5*max(h2)),<span class="string">'histc'</span>);
+hold <span class="string">on</span>;
+fplot(@(x)(mix.p(1)*normpdf(x,obj.mu(2),sqrt(obj.sigma2(2))) + mix.p(2)*normpdf(x,obj.mu(4),sqrt(obj.sigma2(4)))),lim,<span class="string">'k'</span>);
+title(<span class="string">'MRO32 right attention'</span>);
+</pre><img vspace="5" hspace="5" src="fieldtrip_em_demo_01.png"> <pre class="codeinput"><span class="keyword">end</span>
+</pre><p class="footer"><br>
+            Published with MATLAB&reg; 7.6<br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Using the EM algorithm together with FieldTrip data
+% This example demonstrates how to use neuroimaging data obtained from FieldTrip
+% together with the neurogm toolbox. In the example, we make use of covert
+% attention data of one subject that has already been frequency analyzed.
+% Note that this is trial based data so we can build finite size models
+% that capture behaviour within a trial.
+%
+% The data consists of 7 different frequencies at 274 channels at time
+% points [-0.5 0 0.5 1 1.5 2 2.5]. We can expect evoked response after the
+% cue and alpha modulation after about 1 second
+%
+% In this particular example, we will construct a standard Bayesian network and
+% demonstrate the use of the EM algorithm to get better estimates of the
+% distributions.
+%
+% Copyright (C) 2008  Marcel van Gerven
+%
+
+%% Compare log likelihood of a Bayesian network before/after learning
+function fieldtrip_em_demo()
+
+%%
+% Load frequency data and convert the data to a format that can be used by NEUROGM.
+% A Bayesian network is a static model, so we will take out the time data
+% and focus only on the 12 Hz band in two channels in left and right
+% hemisphere.
+
+load freqli; % left attention
+load freqri; % right attention
+
+% left and right channels
+l = find(ismember(freqLI.label,'MLO32'));
+r = find(ismember(freqRI.label,'MRO32'));
+
+% We take the log and ztransform to make the data better behaved. Essential
+% for the EM algorithm!
+datal = zscore(log((squeeze(nan_mean(freqLI.powspctrm(:,[l r],3,:),4)))));
+datar = zscore(log((squeeze(nan_mean(freqRI.powspctrm(:,[l r],3,:),4)))));
+clear freqli; clear freqri;
+
+%%
+% Now we can create a very simple model that consists of one discrete
+% parent (the attention condition) and two continuous children who each
+% have an extra discrete variable which allows more complex distributions
+% to be estimated.
+data = [[datal ones(size(datal,1),1) nan(size(datal,1),2) ]; [datar 2*ones(size(datar,1),1) nan(size(datar,1),2)]];
+
+%%
+%  Create the random variables; they should follow the data ordering
+factors = cell(1,5);
+factors{1} = gaussian_cpd(1,[],[3 4],zeros(2,2),cell(2,2),100*ones(2,2));
+factors{2} = gaussian_cpd(2,[],[3 5],zeros(2,2),cell(2,2),100*ones(2,2));
+factors{3} = multinomial_cpd(3,[],[0.5; 0.5]);
+factors{4} = multinomial_cpd(4,[],rand(2,1));
+factors{5} = multinomial_cpd(5,[],rand(2,1));
+
+% optionally add names to the factors
+factors{1}.name = 'MLO32';
+factors{2}.name = 'MRO32';
+factors{3}.name = 'orientation';
+factors{3}.statenames = {'left attention' 'right attention'};
+factors{4}.name = 'latent1';
+factors{5}.name = 'latent2';
+
+%%
+% Create simple bayes net
+bn = bayesnet(factors);
+
+%%
+% Write graph structure to .ps file (requires installation of GraphViz
+% library)
+bn.write('tmpem','dot','extension','ps');
+
+%% 
+% This is what the plot would look like
+%
+% <<tmpem.jpg>>
+
+%% 
+% Learn parameters from incomplete data (invoke EM algorithm)
+
+bn = bn.learn_parameters(data);
+
+%%
+% Plot of the  mixture distributions
+
+% variable of interest
+obj = bn.factors{2};
+
+% mixture components and histograms
+mix = bn.factors{5};
+
+lim = [min(obj.mu(:)) - 3*sqrt(max(abs(obj.sigma2(:)))) max(obj.mu) + 3*sqrt(max(abs(obj.sigma2(:))))];
+subplot(1,2,1);
+h1 = histc(datal(:,2),-2:0.25:2);
+bar(-2:0.25:2,h1./(5*max(h1)),'histc');
+hold on;
+fplot(@(x)(mix.p(1)*normpdf(x,obj.mu(1),sqrt(obj.sigma2(1))) + mix.p(2)*normpdf(x,obj.mu(3),sqrt(obj.sigma2(3)))),lim,'k');
+title('MRO32 left attention');
+
+subplot(1,2,2);
+h2 = histc(datar(:,2),-2:0.25:2);
+bar(-2:0.25:2,h2./(5*max(h2)),'histc');
+hold on;
+fplot(@(x)(mix.p(1)*normpdf(x,obj.mu(2),sqrt(obj.sigma2(2))) + mix.p(2)*normpdf(x,obj.mu(4),sqrt(obj.sigma2(4)))),lim,'k');
+title('MRO32 right attention');
+
+end
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

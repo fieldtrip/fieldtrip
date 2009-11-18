@@ -1,0 +1,44 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual gmmpost
+</title>
+</head>
+<body>
+<H1> gmmpost
+</H1>
+<h2>
+Purpose
+</h2>
+Computes the class posterior probabilities of a Gaussian mixture model.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+
+function post = gmmpost(mix, x)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+This function computes the posteriors <CODE>post</CODE> (i.e. the probability of each
+component conditioned on the data <CODE>p(j|x)</CODE>) for a Gaussian mixture model.  
+The data structure <CODE>mix</CODE> defines the mixture model, while the matrix
+<CODE>x</CODE> contains the data vectors.  Each row of <CODE>x</CODE> represents a single
+vector.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="gmm.htm">gmm</a></CODE>, <CODE><a href="gmmactiv.htm">gmmactiv</a></CODE>, <CODE><a href="gmmprob.htm">gmmprob</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

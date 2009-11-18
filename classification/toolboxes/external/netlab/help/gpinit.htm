@@ -1,0 +1,76 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual gpinit
+</title>
+</head>
+<body>
+<H1> gpinit
+</H1>
+<h2>
+Purpose
+</h2>
+Initialise Gaussian Process model.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+net = gpinit(net, trin, trtargets, prior)
+net = gpinit(net, trin, trtargets, prior)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>net = gpinit(net, trin, trtargets)</CODE> takes a Gaussian Process data structure <CODE>net</CODE> 
+together 
+with a matrix <CODE>trin</CODE> of training input vectors and a matrix <CODE>trtargets</CODE> of 
+training target
+vectors, and stores them in <CODE>net</CODE>. These datasets are required if
+the corresponding inverse covariance matrix is not supplied to <CODE>gpfwd</CODE>.
+This is important if the data structure is saved and then reloaded before
+calling <CODE>gpfwd</CODE>.
+Each row
+of <CODE>trin</CODE> corresponds to one input vector and each row of <CODE>trtargets</CODE>
+corresponds to one target vector.
+
+<p><CODE>net = gpinit(net, trin, trtargets, prior)</CODE> additionally initialises the
+parameters in <CODE>net</CODE> from the <CODE>prior</CODE> data structure which contains the
+mean and variance of the Gaussian distribution which is sampled from.
+
+<p><h2>
+Example
+</h2>
+Suppose that a Gaussian Process model is created and trained with input data <CODE>x</CODE>
+and targets <CODE>t</CODE>:
+<PRE>
+
+net = gp(2, 'sqexp');
+net = gpinit(net, x, t);
+% Train the network
+save 'gp.net' net;
+</PRE>
+
+Another Matlab program can now read in the network and make predictions on a data set
+<CODE>testin</CODE>:
+<PRE>
+
+load 'gp.net';
+pred = gpfwd(net, testin);
+</PRE>
+
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="gp.htm">gp</a></CODE>, <CODE><a href="gpfwd.htm">gpfwd</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

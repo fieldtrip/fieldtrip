@@ -1,0 +1,58 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual mdn2gmm
+</title>
+</head>
+<body>
+<H1> mdn2gmm
+</H1>
+<h2>
+Purpose
+</h2>
+Converts an MDN mixture data structure to array of GMMs.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+gmmmixes = mdn2gmm(mdnmixes)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>gmmmixes = mdn2gmm(mdnmixes)</CODE> takes an MDN mixture data structure
+<CODE>mdnmixes</CODE>
+containing three matrices (for priors, centres and variances) where each
+row represents the corresponding parameter values for a different mixture model 
+and creates an array of GMMs.  These can then be used with the standard
+Netlab Gaussian mixture model functions.
+
+<p><h2>
+Example
+</h2>
+<PRE>
+
+mdnmixes = mdnfwd(net, x);
+mixes = mdn2gmm(mdnmixes);
+p = gmmprob(mixes(1), y);
+</PRE>
+
+This creates an array GMM mixture models (one for each data point in
+<CODE>x</CODE>).  The vector <CODE>p</CODE> is then filled with the conditional
+probabilities of the values <CODE>y</CODE> given <CODE>x(1,:)</CODE>.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="gmm.htm">gmm</a></CODE>, <CODE><a href="mdn.htm">mdn</a></CODE>, <CODE><a href="mdnfwd.htm">mdnfwd</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+<p>David J Evans (1998)
+
+</body>
+</html>

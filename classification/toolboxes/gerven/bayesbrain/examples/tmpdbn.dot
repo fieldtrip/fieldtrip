@@ -1,0 +1,63 @@
+digraph G{
+rankdir=LR
+1 [label="MLO32(-0.5)"]
+2 [label="MRO32(-0.5)"]
+3 [label="orientation(-0.5)"]
+4 [label="MLO32(0)"]
+5 [label="MRO32(0)"]
+6 [label="orientation(0)"]
+7 [label="MLO32(0.5)"]
+8 [label="MRO32(0.5)"]
+9 [label="orientation(0.5)"]
+10 [label="MLO32(1)"]
+11 [label="MRO32(1)"]
+12 [label="orientation(1)"]
+13 [label="MLO32(1.5)"]
+14 [label="MRO32(1.5)"]
+15 [label="orientation(1.5)"]
+16 [label="MLO32(2)"]
+17 [label="MRO32(2)"]
+18 [label="orientation(2)"]
+19 [label="MLO32(2.5)"]
+20 [label="MRO32(2.5)"]
+21 [label="orientation(2.5)"]
+3 -> 1;
+3 -> 2;
+1 -> 4;
+6 -> 4;
+2 -> 5;
+6 -> 5;
+3 -> 6;
+4 -> 7;
+9 -> 7;
+5 -> 8;
+9 -> 8;
+6 -> 9;
+7 -> 10;
+12 -> 10;
+8 -> 11;
+12 -> 11;
+9 -> 12;
+10 -> 13;
+15 -> 13;
+11 -> 14;
+15 -> 14;
+12 -> 15;
+13 -> 16;
+18 -> 16;
+14 -> 17;
+18 -> 17;
+15 -> 18;
+16 -> 19;
+21 -> 19;
+17 -> 20;
+21 -> 20;
+18 -> 21;
+{ rank=same; 1 2 3 };
+{ rank=same; 4 5 6 };
+{ rank=same; 7 8 9 };
+{ rank=same; 10 11 12 };
+{ rank=same; 13 14 15 };
+{ rank=same; 16 17 18 };
+{ rank=same; 19 20 21 };
+}

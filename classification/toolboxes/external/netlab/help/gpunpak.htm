@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual gpunpak
+</title>
+</head>
+<body>
+<H1> gpunpak
+</H1>
+<h2>
+Purpose
+</h2>
+Separates hyperparameter vector into components. 
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+net = gpunpak(net, hp)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>net = gpunpak(net, hp)</CODE> takes an Gaussian Process data structure <CODE>net</CODE> and 
+a hyperparameter vector <CODE>hp</CODE>, and returns a Gaussian Process data structure 
+identical to
+the input model, except that the covariance bias
+<CODE>bias</CODE>, output noise <CODE>noise</CODE>, the input weight vector
+<CODE>inweights</CODE> and the vector of covariance function specific parameters
+ <CODE>fpar</CODE> have all
+been set to the corresponding elements of <CODE>hp</CODE>.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="gp.htm">gp</a></CODE>, <CODE><a href="gppak.htm">gppak</a></CODE>, <CODE><a href="gpfwd.htm">gpfwd</a></CODE>, <CODE><a href="gperr.htm">gperr</a></CODE>, <CODE><a href="gpgrad.htm">gpgrad</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

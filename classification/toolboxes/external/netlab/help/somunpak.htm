@@ -1,0 +1,44 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual somunpak
+</title>
+</head>
+<body>
+<H1> somunpak
+</H1>
+<h2>
+Purpose
+</h2>
+Replaces node weights in SOM.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+net = somunpak(net, w)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>net = somunpak(net, w)</CODE> takes a SOM data structure <CODE>net</CODE> and
+weight matrix <CODE>w</CODE> (each node represented by a row) and
+puts the nodes back into the multi-dimensional array <CODE>net.map</CODE>.
+
+<p>The ordering of the parameters in <CODE>w</CODE> is defined by the indexing of the
+multi-dimensional array <CODE>net.map</CODE>.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="som.htm">som</a></CODE>, <CODE><a href="sompak.htm">sompak</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

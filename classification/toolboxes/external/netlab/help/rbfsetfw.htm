@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual rbfsetfw
+</title>
+</head>
+<body>
+<H1> rbfsetfw
+</H1>
+<h2>
+Purpose
+</h2>
+Set basis function widths of RBF.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+net = rbfsetfw(net, scale)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>net = rbfsetfw(net, scale)</CODE> sets the widths of
+the basis functions of the
+RBF network <CODE>net</CODE>.
+If Gaussian basis functions are used, then the variances are set to
+the largest squared distance between centres if <CODE>scale</CODE> is non-positive
+and <CODE>scale</CODE> times the mean distance of each centre to its nearest
+neighbour if <CODE>scale</CODE> is positive.  Non-Gaussian basis functions do
+not have a width.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="rbftrain.htm">rbftrain</a></CODE>, <CODE><a href="rbfsetbf.htm">rbfsetbf</a></CODE>, <CODE><a href="gmmem.htm">gmmem</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

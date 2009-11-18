@@ -1,0 +1,43 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual glmunpak
+</title>
+</head>
+<body>
+<H1> glmunpak
+</H1>
+<h2>
+Purpose
+</h2>
+Separates weights vector into weight and bias matrices. 
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+net = glmunpak(net, w)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>net = glmunpak(net, w)</CODE> takes a glm network data structure <CODE>net</CODE> and 
+a weight vector <CODE>w</CODE>, and returns a network data structure identical to
+the input network, except that the first-layer weight matrix
+<CODE>w1</CODE> and the first-layer bias vector <CODE>b1</CODE> have
+been set to the corresponding elements of <CODE>w</CODE>.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="glm.htm">glm</a></CODE>, <CODE><a href="glmpak.htm">glmpak</a></CODE>, <CODE><a href="glmfwd.htm">glmfwd</a></CODE>, <CODE><a href="glmerr.htm">glmerr</a></CODE>, <CODE><a href="glmgrad.htm">glmgrad</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

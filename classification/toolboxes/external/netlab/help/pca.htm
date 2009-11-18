@@ -1,0 +1,51 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual pca
+</title>
+</head>
+<body>
+<H1> pca
+</H1>
+<h2>
+Purpose
+</h2>
+Principal Components Analysis
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+PCcoeff = pca(data)
+PCcoeff = pca(data, N)
+[PCcoeff, PCvec] = pca(data)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+
+<CODE>PCcoeff = pca(data)</CODE> computes the eigenvalues of the covariance
+matrix of the dataset <CODE>data</CODE> and returns them as <CODE>PCcoeff</CODE>.  These
+coefficients give the variance of <CODE>data</CODE> along the corresponding 
+principal components.  
+
+<p><CODE>PCcoeff = pca(data, N)</CODE> returns the largest <CODE>N</CODE> eigenvalues.
+
+<p><CODE>[PCcoeff, PCvec] = pca(data)</CODE> returns the principal components as
+well as the coefficients.  This is considerably more computationally
+demanding than just computing the eigenvalues.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="eigdec.htm">eigdec</a></CODE>, <CODE><a href="gtminit.htm">gtminit</a></CODE>, <CODE><a href="ppca.htm">ppca</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

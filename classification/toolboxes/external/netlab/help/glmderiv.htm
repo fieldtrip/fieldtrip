@@ -1,0 +1,49 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual glmderiv
+</title>
+</head>
+<body>
+<H1> glmderiv
+</H1>
+<h2>
+Purpose
+</h2>
+Evaluate derivatives of GLM outputs with respect to weights.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+
+g = glmderiv(net, x)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>g = glmderiv(net, x)</CODE> takes a network data structure <CODE>net</CODE> and a matrix
+of input vectors <CODE>x</CODE> and returns a three-index matrix mat{g} whose 
+<CODE>i</CODE>, <CODE>j</CODE>, <CODE>k</CODE>
+element contains the derivative of network output <CODE>k</CODE> with respect to
+weight or bias parameter <CODE>j</CODE> for input pattern <CODE>i</CODE>. The ordering of the
+weight and bias parameters is defined by <CODE>glmunpak</CODE>.
+
+<p><h2>
+See also
+</h2>
+<PRE>
+glm, glmunpak, glmgrad</PRE>
+
+
+<p><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

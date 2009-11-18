@@ -1,0 +1,14 @@
+List of changes to keep track of possible bugs:
+
+gaussian_cpd.updateEM	      made any(w) the criterion instead of chi(j)
+multinomial_cpd.updateEM      added pot.chi in pot.chi .* exp(pot.g); unsure about it
+
+
+
+
+Bugs:
+updateEM doesn't work well in combination with hmm mixture models
+seems to break down in case of low probability events. could be explained
+by the fact that a single gaussian models the behaviour best
+check this by defining a mixture naive bayes model for the static case
+and analyse if we can reproduce the failure

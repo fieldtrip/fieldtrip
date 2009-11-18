@@ -1,0 +1,104 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual somtrain
+</title>
+</head>
+<body>
+<H1> somtrain
+</H1>
+<h2>
+Purpose
+</h2>
+Kohonen training algorithm for SOM.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+
+net = somtrain{net, options, x)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>net = somtrain{net, options, x)</CODE> uses Kohonen's algorithm to
+train a SOM.  Both on-line and batch algorithms are implemented.
+The learning rate (for on-line) and neighbourhood size decay linearly.
+There is no error function minimised during training (so there is
+no termination criterion other than the number of epochs), but the 
+sum-of-squares is computed and returned in <CODE>options(8)</CODE>.
+
+<p>The optional parameters have the following interpretations.
+
+<p><CODE>options(1)</CODE> is set to 1 to display error values; also logs learning
+rate <CODE>alpha</CODE> and neighbourhood size <CODE>nsize</CODE>.
+Otherwise nothing is displayed.
+
+<p><CODE>options(5)</CODE> determines whether the patterns are sampled randomly
+with replacement. If it is 0 (the default), then patterns are sampled
+in order.  This is only relevant to the on-line algorithm.
+
+<p><CODE>options(6)</CODE> determines if the on-line or batch algorithm is
+used. If it is 1
+then the batch algorithm is used.  If it is 0
+(the default) then the on-line algorithm is used.
+
+<p><CODE>options(14)</CODE> is the maximum number of iterations (passes through
+the complete pattern set); default 100.
+
+<p><CODE>options(15)</CODE> is the final neighbourhood size; default value is the
+same as the initial neighbourhood size.
+
+<p><CODE>options(16)</CODE> is the final learning rate; default value is the same
+as the initial learning rate.
+
+<p><CODE>options(17)</CODE> is the initial neighbourhood size; default 0.5*maximum
+map size.
+
+<p><CODE>options(18)</CODE> is the initial learning rate; default 0.9.  This parameter
+must be positive.
+
+<p><h2>
+Examples
+</h2>
+The following example performs on-line training on a SOM in two stages:
+ordering and convergence.
+<PRE>
+
+net = som(nin, [8, 7]);
+options = foptions;
+
+<p>% Ordering phase
+options(1) = 1;
+options(14) = 50;
+options(18) = 0.9;  % Initial learning rate
+options(16) = 0.05; % Final learning rate
+options(17) = 8;    % Initial neighbourhood size
+options(15) = 1;    % Final neighbourhood size
+net2 = somtrain(net, options, x);
+
+<p>% Convergence phase
+options(14) = 400;
+options(18) = 0.05;
+options(16) = 0.01;
+options(17) = 0;
+options(15) = 0;
+net3 = somtrain(net2, options, x);
+</PRE>
+
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="kmeans.htm">kmeans</a></CODE>, <CODE><a href="som.htm">som</a></CODE>, <CODE><a href="somfwd.htm">somfwd</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

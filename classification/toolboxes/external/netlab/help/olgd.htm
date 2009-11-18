@@ -1,0 +1,101 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual olgd
+</title>
+</head>
+<body>
+<H1> olgd
+</H1>
+<h2>
+Purpose
+</h2>
+On-line gradient descent optimization.
+
+<p><h2>
+Description
+</h2>
+<CODE>[net, options, errlog, pointlog] = olgd(net, options, x, t)</CODE> uses 
+on-line gradient descent to find a local minimum of the error function for the
+network
+<CODE>net</CODE> computed on the input data <CODE>x</CODE> and target values
+<CODE>t</CODE>. A log of the error values
+after each cycle is (optionally) returned in <CODE>errlog</CODE>, and a log
+of the points visited is (optionally) returned in <CODE>pointlog</CODE>.
+Because the gradient is computed on-line (i.e. after each pattern)
+this can be quite inefficient in Matlab.
+
+<p>The error function value at final weight vector is returned
+in <CODE>options(8)</CODE>.
+
+<p>The optional parameters have the following interpretations.
+
+<p><CODE>options(1)</CODE> is set to 1 to display error values; also logs error 
+values in the return argument <CODE>errlog</CODE>, and the points visited
+in the return argument <CODE>pointslog</CODE>.  If <CODE>options(1)</CODE> is set to 0,
+then only warning messages are displayed.  If <CODE>options(1)</CODE> is -1,
+then nothing is displayed.
+
+<p><CODE>options(2)</CODE> is the precision required for the value
+of <CODE>x</CODE> at the solution. If the absolute difference between
+the values of <CODE>x</CODE> between two successive steps is less than
+<CODE>options(2)</CODE>, then this condition is satisfied.
+
+<p><CODE>options(3)</CODE> is the precision required of the objective
+function at the solution.  If the absolute difference between the
+error functions between two successive steps is less than
+<CODE>options(3)</CODE>, then this condition is satisfied.
+Both this and the previous condition must be
+satisfied for termination. Note that testing the function value at each
+iteration roughly halves the speed of the algorithm.
+
+<p><CODE>options(5)</CODE> determines whether the patterns are sampled randomly
+with replacement. If it is 0 (the default), then patterns are sampled
+in order.
+
+<p><CODE>options(6)</CODE> determines if the learning rate decays.  If it is 1
+then the learning rate decays at a rate of <CODE>1/t</CODE>.  If it is 0
+(the default) then the learning rate is constant.
+
+<p><CODE>options(9)</CODE> should be set to 1 to check the user defined gradient
+function.
+
+<p><CODE>options(10)</CODE> returns the total number of function evaluations (including
+those in any line searches).
+
+<p><CODE>options(11)</CODE> returns the total number of gradient evaluations.
+
+<p><CODE>options(14)</CODE> is the maximum number of iterations (passes through
+the complete pattern set); default 100.
+
+<p><CODE>options(17)</CODE> is the momentum; default 0.5.
+
+<p><CODE>options(18)</CODE> is the learning rate; default 0.01.
+
+<p><h2>
+Examples
+</h2>
+The following example performs on-line gradient descent on an MLP with
+random sampling from the pattern set.
+<PRE>
+
+net = mlp(5, 3, 1, 'linear');
+options = foptions;
+options(18) = 0.01;
+options(5) = 1;
+net = olgd(net, options, x, t);
+</PRE>
+
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="graddesc.htm">graddesc</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

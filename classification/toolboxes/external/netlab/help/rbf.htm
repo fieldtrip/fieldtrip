@@ -1,0 +1,114 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual rbf
+</title>
+</head>
+<body>
+<H1> rbf
+</H1>
+<h2>
+Purpose
+</h2>
+Creates an RBF network with specified architecture
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+
+net = rbf(nin, nhidden, nout, rbfunc)
+net = rbf(nin, nhidden, nout, rbfunc, outfunc)
+net = rbf(nin, nhidden, nout, rbfunc, outfunc, prior, beta)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>net = rbf(nin, nhidden, nout, rbfunc)</CODE> constructs and initialises
+a radial basis function network returning a data structure <CODE>net</CODE>.
+The weights are all initialised with a zero mean, unit variance normal
+distribution, with the exception of the variances, which are set to one.
+This makes use of the Matlab function
+<CODE>randn</CODE> and so the seed for the random weight initialization can be 
+set using <CODE>randn('state', s)</CODE> where <CODE>s</CODE> is the seed value. The
+activation functions are defined in terms of the distance between
+the data point and the corresponding centre.  Note that the functions are
+computed to a convenient constant multiple: for example, the Gaussian
+is not normalised.  (Normalisation is not needed as the function outputs
+are linearly combined in the next layer.)
+
+<p>The fields in <CODE>net</CODE> are
+<PRE>
+
+  type = 'rbf'
+  nin = number of inputs
+  nhidden = number of hidden units
+  nout = number of outputs
+  nwts = total number of weights and biases
+  actfn = string defining hidden unit activation function:
+    'gaussian' for a radially symmetric Gaussian function.
+    'tps' for r^2 log r, the thin plate spline function.
+    'r4logr' for r^4 log r.
+  outfn = string defining output error function:
+    'linear' for linear outputs (default) and SoS error.
+    'neuroscale' for Sammon stress measure.
+  c = centres
+  wi = squared widths (null for rlogr and tps)
+  w2 = second layer weight matrix
+  b2 = second layer bias vector
+</PRE>
+
+
+<p><CODE>net = rbf(nin, nhidden, nout, rbfund, outfunc)</CODE> allows the user to
+specify the type of error function to be used.  The field <CODE>outfn</CODE>
+is set to the value of this string.  Linear outputs (for regression problems)
+and Neuroscale outputs (for topographic mappings) are supported.
+
+<p><CODE>net = rbf(nin, nhidden, nout, rbfunc, outfunc, prior, beta)</CODE>,
+in which <CODE>prior</CODE> is
+a scalar, allows the field <CODE>net.alpha</CODE> in the data structure
+<CODE>net</CODE> to be set, corresponding to a zero-mean isotropic Gaussian
+prior with inverse variance with value <CODE>prior</CODE>. Alternatively,
+<CODE>prior</CODE> can consist of a data structure with fields <CODE>alpha</CODE>
+and <CODE>index</CODE>, allowing individual Gaussian priors to be set over
+groups of weights in the network. Here <CODE>alpha</CODE> is a column vector
+in which each element corresponds to a separate group of weights,
+which need not be mutually exclusive.  The membership of the groups is
+defined by the matrix <CODE>indx</CODE> in which the columns correspond to
+the elements of <CODE>alpha</CODE>. Each column has one element for each
+weight in the matrix, in the order defined by the function
+<CODE>rbfpak</CODE>, and each element is 1 or 0 according to whether the
+weight is a member of the corresponding group or not. A utility
+function <CODE>rbfprior</CODE> is provided to help in setting up the
+<CODE>prior</CODE> data structure.
+
+<p><CODE>net = rbf(nin, nhidden, nout, func, prior, beta)</CODE> also sets the 
+additional field <CODE>net.beta</CODE> in the data structure <CODE>net</CODE>, where
+beta corresponds to the inverse noise variance.
+
+<p><h2>
+Example
+</h2>
+The following code constructs an RBF network with 1 input and output node
+and 5 hidden nodes and then propagates some data <CODE>x</CODE> through it.
+<PRE>
+
+net = rbf(1, 5, 1, 'tps');
+[y, act] = rbffwd(net, x);
+</PRE>
+
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="rbferr.htm">rbferr</a></CODE>, <CODE><a href="rbffwd.htm">rbffwd</a></CODE>, <CODE><a href="rbfgrad.htm">rbfgrad</a></CODE>, <CODE><a href="rbfpak.htm">rbfpak</a></CODE>, <CODE><a href="rbftrain.htm">rbftrain</a></CODE>, <CODE><a href="rbfunpak.htm">rbfunpak</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

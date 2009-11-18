@@ -1,0 +1,42 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual rbfjacob
+</title>
+</head>
+<body>
+<H1> rbfjacob
+</H1>
+<h2>
+Purpose
+</h2>
+Evaluate derivatives of RBF network outputs with respect to inputs.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+g = rbfjacob(net, x)</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>g = rbfjacob(net, x)</CODE> takes a network data structure <CODE>net</CODE>
+and a matrix of input vectors <CODE>x</CODE> and returns a three-index matrix
+<CODE>g</CODE> whose <CODE>i</CODE>, <CODE>j</CODE>, <CODE>k</CODE> element contains the
+derivative of network output <CODE>k</CODE> with respect to input
+parameter <CODE>j</CODE> for input pattern <CODE>i</CODE>. 
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="rbf.htm">rbf</a></CODE>, <CODE><a href="rbfgrad.htm">rbfgrad</a></CODE>, <CODE><a href="rbfbkp.htm">rbfbkp</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

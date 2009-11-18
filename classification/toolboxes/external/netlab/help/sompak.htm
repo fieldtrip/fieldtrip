@@ -1,0 +1,44 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual sompak
+</title>
+</head>
+<body>
+<H1> sompak
+</H1>
+<h2>
+Purpose
+</h2>
+Combines node weights into one weights matrix.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+c = sompak(net)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>c = sompak(net)</CODE> takes a SOM data structure <CODE>net</CODE> and
+combines the node weights into a matrix of centres
+<CODE>c</CODE> where each row represents the node vector.
+
+<p>The ordering of the parameters in <CODE>w</CODE> is defined by the indexing of the
+multi-dimensional array <CODE>net.map</CODE>.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="som.htm">som</a></CODE>, <CODE><a href="somunpak.htm">somunpak</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

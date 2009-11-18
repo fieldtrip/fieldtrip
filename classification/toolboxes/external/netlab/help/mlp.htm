@@ -1,0 +1,94 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual mlp
+</title>
+</head>
+<body>
+<H1> mlp
+</H1>
+<h2>
+Purpose
+</h2>
+Create a 2-layer feedforward network.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+net = mlp(nin, nhidden, nout, func)
+net = mlp(nin, nhidden, nout, func, prior)
+net = mlp(nin, nhidden, nout, func, prior, beta)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>net = mlp(nin, nhidden, nout, func)</CODE> takes the number of inputs, 
+hidden units and output units for a 2-layer feed-forward network,
+together with a string <CODE>func</CODE> which specifies the output unit
+activation function, and returns a data structure <CODE>net</CODE>. The
+weights are drawn from a zero mean, unit variance isotropic Gaussian,
+with varianced scaled by the fan-in of the hidden or output units as
+appropriate. This makes use of the Matlab function
+<CODE>randn</CODE> and so the seed for the random weight initialization can be 
+set using <CODE>randn('state', s)</CODE> where <CODE>s</CODE> is the seed value. 
+The hidden units use the <CODE>tanh</CODE> activation function.
+
+<p>The fields in <CODE>net</CODE> are
+<PRE>
+
+  type = 'mlp'
+  nin = number of inputs
+  nhidden = number of hidden units
+  nout = number of outputs
+  nwts = total number of weights and biases
+  actfn = string describing the output unit activation function:
+      'linear'
+      'logistic
+      'softmax'
+  w1 = first-layer weight matrix
+  b1 = first-layer bias vector
+  w2 = second-layer weight matrix
+  b2 = second-layer bias vector
+</PRE>
+
+Here <CODE>w1</CODE> has dimensions <CODE>nin</CODE> times <CODE>nhidden</CODE>, <CODE>b1</CODE> has
+dimensions <CODE>1</CODE> times <CODE>nhidden</CODE>, <CODE>w2</CODE> has
+dimensions <CODE>nhidden</CODE> times <CODE>nout</CODE>, and <CODE>b2</CODE> has
+dimensions <CODE>1</CODE> times <CODE>nout</CODE>.
+
+<p><CODE>net = mlp(nin, nhidden, nout, func, prior)</CODE>, in which <CODE>prior</CODE> is
+a scalar, allows the field <CODE>net.alpha</CODE> in the data structure
+<CODE>net</CODE> to be set, corresponding to a zero-mean isotropic Gaussian
+prior with inverse variance with value <CODE>prior</CODE>. Alternatively,
+<CODE>prior</CODE> can consist of a data structure with fields <CODE>alpha</CODE>
+and <CODE>index</CODE>, allowing individual Gaussian priors to be set over
+groups of weights in the network. Here <CODE>alpha</CODE> is a column vector
+in which each element corresponds to a separate group of weights,
+which need not be mutually exclusive.  The membership of the groups is
+defined by the matrix <CODE>indx</CODE> in which the columns correspond to
+the elements of <CODE>alpha</CODE>. Each column has one element for each
+weight in the matrix, in the order defined by the function
+<CODE>mlppak</CODE>, and each element is 1 or 0 according to whether the
+weight is a member of the corresponding group or not. A utility
+function <CODE>mlpprior</CODE> is provided to help in setting up the
+<CODE>prior</CODE> data structure.
+
+<p><CODE>net = mlp(nin, nhidden, nout, func, prior, beta)</CODE> also sets the 
+additional field <CODE>net.beta</CODE> in the data structure <CODE>net</CODE>, where
+beta corresponds to the inverse noise variance.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="mlpprior.htm">mlpprior</a></CODE>, <CODE><a href="mlppak.htm">mlppak</a></CODE>, <CODE><a href="mlpunpak.htm">mlpunpak</a></CODE>, <CODE><a href="mlpfwd.htm">mlpfwd</a></CODE>, <CODE><a href="mlperr.htm">mlperr</a></CODE>, <CODE><a href="mlpbkp.htm">mlpbkp</a></CODE>, <CODE><a href="mlpgrad.htm">mlpgrad</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

@@ -1,0 +1,936 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>bayesnet</title>
+      <meta name="generator" content="MATLAB 7.6">
+      <meta name="date" content="2008-11-01">
+      <meta name="m-file" content="bayesnet"><style>
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head>
+   <body>
+      <div class="content"><pre class="codeinput"><span class="keyword">classdef</span> bayesnet &lt; graphicalmodel
+<span class="comment">%BAYESNET Bayesian network class</span>
+<span class="comment">%</span>
+<span class="comment">%   A Bayesian network is constructed using</span>
+<span class="comment">%</span>
+<span class="comment">%   bn = bayesnet(factors,varargin)</span>
+<span class="comment">%</span>
+<span class="comment">%   where the factors are conditional probability distributions.</span>
+<span class="comment">%</span>
+<span class="comment">%   SEE ALSO:</span>
+<span class="comment">%   graphicalmodel.m</span>
+<span class="comment">%   cpd.m</span>
+<span class="comment">%</span>
+<span class="comment">%   Copyright (C) 2008  Marcel van Gerven</span>
+<span class="comment">%</span>
+<span class="comment">%   $Log: bayesnet.m,v $</span>
+<span class="comment">%</span>
+
+   <span class="keyword">properties</span>
+       ec        <span class="comment">% equivalence class</span>
+   <span class="keyword">end</span>
+
+   <span class="keyword">methods</span>
+       <span class="keyword">function</span> obj = bayesnet(factors,varargin)
+
+           obj = obj@graphicalmodel(factors,varargin{:});
+
+           <span class="comment">% construct the graph from the factors</span>
+           obj.g = graph(sparse(obj.length(),obj.length()));
+           <span class="keyword">for</span> i=1:obj.length()
+               obj.g([factors{i}.parents],factors{i}.child) = true;
+           <span class="keyword">end</span>
+
+           <span class="comment">% deal with equivalence classes</span>
+           <span class="keyword">if</span> isempty(obj.ec), obj.ec = 1:obj.length(); <span class="keyword">end</span>
+
+           <span class="comment">% equate ess parameters with each other</span>
+           <span class="keyword">for</span> i=unique(obj.ec)
+
+               eclass = find(obj.ec == i);
+
+               ess = obj.factors{eclass(1)}.essclone();
+               <span class="keyword">for</span> j=eclass
+                   obj.factors{j}.ess = ess;
+               <span class="keyword">end</span>
+           <span class="keyword">end</span>
+
+       <span class="keyword">end</span>
+       <span class="keyword">function</span> write(obj,filename,type,varargin)
+           <span class="comment">% write a bn to file (hugin or dot format)</span>
+
+           <span class="keyword">switch</span> type
+
+               <span class="keyword">case</span> <span class="string">'hugin'</span>
+
+                   bn2hugin(obj,filename,varargin{:});
+
+               <span class="keyword">case</span> <span class="string">'dot'</span>
+
+                   bn2dot(obj, filename,varargin{:});
+
+               <span class="keyword">otherwise</span>
+                   error(<span class="string">'unrecognized format'</span>);
+           <span class="keyword">end</span>
+       <span class="keyword">end</span>
+       <span class="keyword">function</span> data = simulate(obj,nsamples)
+
+           sorted = obj.g.topological_sort();
+           M = numel(sorted);
+
+           data = nan(nsamples,M);
+
+           domains = cellfun(@(x)(x.domain),obj.factors,<span class="string">'UniformOutput'</span>,false);
+           <span class="keyword">for</span> i=1:nsamples
+
+               bevidence = false(M,1);
+
+               <span class="keyword">for</span> j=sorted
+
+                   <span class="comment">% observe evidence</span>
+                   dim = bevidence(domains{j});
+                   val = data(i,domains{j}); val = val(dim);
+
+                   <span class="comment">% sample from cpd</span>
+                   data(i,j) = obj.factors{j}.sample(val);
+                   bevidence(j) = true;
+
+               <span class="keyword">end</span>
+
+           <span class="keyword">end</span>
+
+       <span class="keyword">end</span>
+
+       <span class="keyword">function</span> l = loglik(obj,data)
+           <span class="comment">% compute the log likelihood of the model given the data</span>
+
+           l = 0;
+
+           <span class="comment">% iterate over data samples</span>
+           <span class="keyword">for</span> d=1:size(data,1)
+
+               <span class="comment">% iterate over model nodes</span>
+               <span class="keyword">for</span> i=1:obj.length()
+
+                   f = obj.factors{i};
+                   l = l + f.loglik(data(d,i),data(d,f.parents()));
+               <span class="keyword">end</span>
+           <span class="keyword">end</span>
+           l = l ./ size(data,1);
+       <span class="keyword">end</span>
+
+       <span class="keyword">function</span> d = dim(obj)
+           <span class="comment">% compute dimensionality (number of free parameters) of the Bayesian network</span>
+
+           d = 0;
+           <span class="keyword">for</span> i=1:length(obj)
+               d = d + dim(obj.factors{i});
+           <span class="keyword">end</span>
+       <span class="keyword">end</span>
+
+       <span class="keyword">function</span> s = bic(obj,data)
+           <span class="comment">% BIC score of the BN</span>
+
+           s = obj.loglik(data) - dim(obj)*log(length(obj))/2;
+       <span class="keyword">end</span>
+
+       <span class="keyword">function</span> s = aic(obj,data)
+           <span class="comment">% AIC score of the BN</span>
+           s = obj.loglik(data) - dim(obj);
+       <span class="keyword">end</span>
+
+   <span class="keyword">end</span>
+
+   <span class="keyword">methods</span> (Access = private)
+       <span class="keyword">function</span> bn2hugin(obj,filename,varargin)
+           <span class="comment">% write BN to hugin format</span>
+
+           fid = fopen(strcat(filename,<span class="string">'.net'</span>), <span class="string">'wt'</span>);
+           fprintf(fid, <span class="string">'net{}\n\n'</span>);
+
+           <span class="comment">% iterate over all nodes</span>
+           <span class="keyword">for</span> i=1:obj.length()
+
+               <span class="keyword">if</span> isa(obj.factors{i},<span class="string">'gaussian_cpd'</span>)
+
+                   fprintf(fid, <span class="string">'continuous node C%d {\n\tposition = (%d %d);\n'</span>,i,round(rand*1000),round(rand*500));
+
+                   <span class="keyword">if</span> obj.factors{i}.name
+                       fprintf(fid,<span class="string">'\tlabel = "%s";\n'</span>,obj.factors{i}.name);
+                   <span class="keyword">end</span>
+
+                   fprintf(fid,<span class="string">'}\n\n'</span>);
+
+               <span class="keyword">elseif</span> isa(obj.factors{i},<span class="string">'discrete_cpd'</span>) <span class="comment">% discrete node</span>
+
+                   fprintf(fid, <span class="string">'node C%d \n{\n\tposition = (%d %d);\n\tstates = ( '</span>,i,round(rand*1000),round(rand*500));
+                   <span class="keyword">if</span> ~isempty(obj.factors{i}.statenames)
+                       <span class="keyword">for</span> j=1:obj.size(i), fprintf(fid, <span class="string">'"%s" '</span>,obj.factors{i}.statenames{j}); <span class="keyword">end</span>
+                   <span class="keyword">else</span>
+                       <span class="keyword">for</span> j=1:obj.size(i), fprintf(fid, <span class="string">'"%d" '</span>,j); <span class="keyword">end</span>
+                   <span class="keyword">end</span>
+                   fprintf(fid, <span class="string">');\n'</span>);
+
+                   <span class="keyword">if</span> obj.factors{i}.name
+                       fprintf(fid,<span class="string">'\tlabel = "%s";\n'</span>,obj.factors{i}.name);
+                   <span class="keyword">end</span>
+
+                   fprintf(fid,<span class="string">'}\n\n'</span>);
+               <span class="keyword">else</span>
+                   class(obj.factors{i})
+                   error(<span class="string">'unsupported distribution'</span>);
+               <span class="keyword">end</span>
+           <span class="keyword">end</span>
+
+           <span class="comment">% write tables</span>
+           <span class="comment">% iterate over all nodes</span>
+           <span class="keyword">for</span> i=1:obj.length()
+
+               f = obj.factors{i};
+
+               fprintf(fid, <span class="string">'potential (C%d'</span>,i);
+               <span class="keyword">if</span> length(f.domain) &gt; 1, fprintf(fid,<span class="string">' |'</span>); <span class="keyword">end</span>
+
+               dparents = sort(f.dparents,<span class="string">'descend'</span>);
+               <span class="keyword">for</span> j=1:length(f.dparents)
+                   fprintf(fid, <span class="string">' C%d'</span>, dparents(j));
+               <span class="keyword">end</span>
+
+               cparents = sort(f.cparents,<span class="string">'descend'</span>);
+               <span class="keyword">for</span> j=1:length(f.cparents)
+                   fprintf(fid, <span class="string">' C%d'</span>, cparents(j));
+               <span class="keyword">end</span>
+
+               fprintf(fid,<span class="string">')\n{\n\tdata =\n   '</span>);
+
+               szc = cumprod(f.dsize);
+
+               <span class="comment">% write data</span>
+               <span class="keyword">if</span> isa(f,<span class="string">'continuous_cpd'</span>)
+
+                   mu = f.mu;
+                   beta = f.beta;
+                   sigma2 = f.sigma2;
+
+                   <span class="keyword">for</span> j=1:numel(mu)
+
+                       szc = szc(szc &gt; 1);
+
+                       <span class="keyword">for</span> k=1:length(szc)
+                           <span class="keyword">if</span> mod(j-1,szc(k)) == 0, fprintf(fid,<span class="string">'( '</span>); <span class="keyword">end</span>
+                       <span class="keyword">end</span>
+
+                       <span class="comment">% mean</span>
+                       fprintf(fid,<span class="string">'normal ( %f'</span>,mu(j));
+
+                       <span class="comment">% linear component</span>
+                       <span class="keyword">for</span> c = 1:length(beta{j})
+
+                           <span class="keyword">if</span> beta{j}(c) &gt;= 0, fprintf(fid,<span class="string">' + '</span>); <span class="keyword">else</span> fprintf(fid,<span class="string">' -'</span>); <span class="keyword">end</span>
+
+                           fprintf(fid,<span class="string">'%f * C%d'</span>,abs(beta{j}(c)),f.cparents(c));
+                       <span class="keyword">end</span>
+
+                       fprintf(fid,<span class="string">', %f ) '</span>,sigma2(j));
+
+                       <span class="keyword">for</span> k=1:length(szc)
+                           <span class="keyword">if</span> mod(j,szc(k)) == 0, fprintf(fid,<span class="string">') '</span>); <span class="keyword">end</span>
+                       <span class="keyword">end</span>
+
+                   <span class="keyword">end</span>
+
+               <span class="keyword">else</span> <span class="comment">% discrete node</span>
+
+                   data = f.p;
+
+                   <span class="keyword">for</span> j=1:numel(data)
+
+                       <span class="keyword">for</span> k=1:length(szc)
+                           <span class="keyword">if</span> mod(j-1,szc(k)) == 0, fprintf(fid,<span class="string">'('</span>); <span class="keyword">end</span>
+                       <span class="keyword">end</span>
+
+                       fprintf(fid,<span class="string">'%f '</span>,data(j));
+
+                       <span class="keyword">for</span> k=1:length(szc)
+                           <span class="keyword">if</span> mod(j,szc(k)) == 0, fprintf(fid,<span class="string">')'</span>); <span class="keyword">end</span>
+                       <span class="keyword">end</span>
+
+                   <span class="keyword">end</span>
+
+               <span class="keyword">end</span>
+
+               fprintf(fid,<span class="string">';\n}\n\n'</span>);
+
+
+           <span class="keyword">end</span>
+
+           fclose(fid);
+       <span class="keyword">end</span>
+       <span class="keyword">function</span> bn2dot(obj,filename,varargin)
+           <span class="comment">% write BN to GraphViz .dot format</span>
+
+           <span class="comment">% file type output</span>
+           ext = <span class="string">'ps'</span>;
+
+           <span class="comment">% get optional parameters</span>
+           v = varargin2struct(varargin);
+           <span class="keyword">if</span> isfield(v,<span class="string">'extension'</span>), ext = v.extension; <span class="keyword">end</span>
+
+           fid = fopen(strcat(filename,<span class="string">'.dot'</span>), <span class="string">'wt'</span>);
+
+           fprintf(fid, <span class="string">'digraph G{\n'</span>);
+
+           <span class="comment">% write nodes</span>
+           <span class="keyword">for</span> i=1:length(obj.factors)
+
+               <span class="keyword">if</span> ~isempty(obj.factors{i}.name)
+                   fprintf(fid,<span class="string">'%d [label="%s"]\n'</span>,i,obj.factors{i}.name);
+               <span class="keyword">else</span>
+                   fprintf(fid,<span class="string">'%d\n'</span>,i);
+               <span class="keyword">end</span>
+           <span class="keyword">end</span>
+
+           <span class="comment">% retrieve arcs</span>
+           <span class="keyword">for</span> i=1:length(obj.factors)
+
+               <span class="keyword">if</span> isa(obj.factors{i},<span class="string">'gaussian_cpd'</span>)
+                   <span class="comment">% for a gaussian cpd we check for continuous arcs if</span>
+                   <span class="comment">% the betas are consistently positive (red), negative</span>
+                   <span class="comment">% (blue), or mixed (black) given all parent</span>
+                   <span class="comment">% configurations.</span>
+
+                   b = obj.factors{i}.betas;
+                   <span class="keyword">for</span> j=1:length(obj.factors{i}.cparents)
+
+                       signs = zeros(1,numel(b));
+                       <span class="keyword">for</span> k=1:numel(b)
+                          signs(k) = sign(b{k}(j));
+                       <span class="keyword">end</span>
+
+                       <span class="keyword">if</span> all(signs == 1)
+                           fprintf(fid,<span class="string">'%d -&gt; %d [color=red];\n'</span>,j,i);
+                       <span class="keyword">elseif</span> all(signs == -1)
+                           fprintf(fid,<span class="string">'%d -&gt; %d [color=blue];\n'</span>,j,i);
+                       <span class="keyword">else</span>
+                           fprintf(fid,<span class="string">'%d -&gt; %d;\n'</span>,j,i);
+                       <span class="keyword">end</span>
+
+                   <span class="keyword">end</span>
+
+               <span class="keyword">else</span>
+                   <span class="keyword">for</span> j=obj.factors{i}.cparents
+                    fprintf(fid,<span class="string">'%d -&gt; %d;\n'</span>,j,i);
+                   <span class="keyword">end</span>
+               <span class="keyword">end</span>
+
+               <span class="keyword">for</span> j=obj.factors{i}.dparents
+                   fprintf(fid,<span class="string">'%d -&gt; %d;\n'</span>,j,i);
+               <span class="keyword">end</span>
+
+           <span class="keyword">end</span>
+
+           fprintf(fid, <span class="string">'}\n'</span>);
+
+           fclose(fid);
+
+           <span class="comment">% try to create and show the obj</span>
+
+           <span class="keyword">if</span> ispc, shell = <span class="string">'dos'</span>; <span class="keyword">else</span> shell = <span class="string">'unix'</span>; <span class="keyword">end</span>
+
+           cmdline = strcat([shell <span class="string">'(''dot -T'</span> ext <span class="string">' '</span> strcat(filename,<span class="string">'.dot'</span>) <span class="string">' -o '</span> strcat(filename,<span class="string">'.'</span>,ext) <span class="string">''')'</span>]); <span class="comment">% preserve trailing spaces</span>
+           r = eval(cmdline);
+       <span class="keyword">end</span>
+
+   <span class="keyword">end</span>
+
+   <span class="keyword">methods</span> (Static)
+       <span class="keyword">function</span> obj = random(N,varargin)
+           <span class="comment">% create a random Bayesian network</span>
+
+           sz = 2*ones(1,N);
+           continuous = [];
+           g = [];
+           <span class="keyword">for</span> i=1:2:length(varargin)
+               <span class="keyword">switch</span> varargin{i},
+                   <span class="keyword">case</span> <span class="string">'graph'</span>, g = varargin{i+1};
+                   <span class="keyword">case</span> <span class="string">'size'</span>, sz = varargin{i+1};
+                   <span class="keyword">case</span> <span class="string">'continuous'</span>, continuous = varargin{i+1};
+               <span class="keyword">end</span>
+           <span class="keyword">end</span>
+
+           sz(continuous) = 1;
+           <span class="keyword">if</span> isempty(continuous), continuous = find(sz == 1); <span class="keyword">end</span>
+
+           <span class="comment">% specify structure</span>
+
+           <span class="keyword">if</span> isempty(g) <span class="comment">% random graph</span>
+
+               g = sparse(N,N);
+
+               <span class="keyword">for</span> i=2:N
+
+                   parents = randperm(i-1);
+                   parents = parents(1:min(i-1,1+floor(2*rand))); <span class="comment">% min and max number of parents</span>
+
+                   <span class="comment">% discrete nodes cannot have continuous parents</span>
+                   <span class="keyword">if</span> ~ismember(i,continuous)
+                       parents = setdiff(parents,continuous);
+                   <span class="keyword">end</span>
+
+                   g(parents,i) = 1;
+               <span class="keyword">end</span>
+           <span class="keyword">end</span>
+
+           <span class="comment">% create CPDs</span>
+
+           factors = cell(1,N);
+           <span class="keyword">for</span> i=1:N
+
+               parents = find(g(:,i))';
+               <span class="keyword">if</span> isempty(parents)
+                   parents = [];
+               <span class="keyword">end</span>
+
+               <span class="keyword">if</span> ismember(i,continuous) <span class="comment">% gaussian rv</span>
+
+                   cparents = intersect(parents,continuous);
+                   <span class="keyword">if</span> isempty(cparents), cparents = []; <span class="keyword">end</span>
+                   dparents = setdiff(parents,continuous);
+                   <span class="keyword">if</span> isempty(dparents)
+                       dparents = [];
+                       szd = [1 1];
+                   <span class="keyword">else</span>
+                       szd = sz(dparents);
+                       <span class="keyword">if</span> length(szd) == 1, szd = [szd 1]; <span class="keyword">end</span>
+                   <span class="keyword">end</span>
+
+
+                   mu = randn(szd);
+                   beta = cell(szd);
+                   <span class="keyword">if</span> ~isempty(cparents)
+                       <span class="keyword">for</span> j=1:prod(szd)
+                           beta{j} = randn(numel(cparents),1);
+                       <span class="keyword">end</span>
+                   <span class="keyword">end</span>
+                   sigma1 = rand(szd);
+                   factors{i} = gaussian_cpd(i,cparents,dparents,mu,beta,sigma1);
+
+               <span class="keyword">else</span> <span class="comment">% discrete rv</span>
+
+                   <span class="keyword">if</span> isempty(parents)
+                       szd = [sz(i) 1];
+                   <span class="keyword">else</span>
+                       szd = sz([i parents]);
+                   <span class="keyword">end</span>
+
+                   factors{i} = multinomial_cpd(i,parents,rand(szd));
+               <span class="keyword">end</span>
+
+           <span class="keyword">end</span>
+
+           obj = bayesnet(factors);
+
+       <span class="keyword">end</span>
+   <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">Input argument "factors" is undefined.
+
+Error in ==&gt; bayesnet&gt;bayesnet.bayesnet at 26
+           obj = obj@graphicalmodel(factors,varargin{:});
+
+</pre><p class="footer"><br>
+            Published with MATLAB&reg; 7.6<br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+classdef bayesnet < graphicalmodel
+%BAYESNET Bayesian network class
+%
+%   A Bayesian network is constructed using
+%
+%   bn = bayesnet(factors,varargin)
+%
+%   where the factors are conditional probability distributions. 
+%
+%   SEE ALSO:
+%   graphicalmodel.m
+%   cpd.m
+%
+%   Copyright (C) 2008  Marcel van Gerven
+%
+%   $Log: bayesnet.m,v $
+%
+
+   properties
+       ec        % equivalence class          
+   end
+
+   methods
+       function obj = bayesnet(factors,varargin)
+          
+           obj = obj@graphicalmodel(factors,varargin{:});
+                           
+           % construct the graph from the factors
+           obj.g = graph(sparse(obj.length(),obj.length()));
+           for i=1:obj.length()
+               obj.g([factors{i}.parents],factors{i}.child) = true;
+           end
+               
+           % deal with equivalence classes
+           if isempty(obj.ec), obj.ec = 1:obj.length(); end
+             
+           % equate ess parameters with each other
+           for i=unique(obj.ec)
+               
+               eclass = find(obj.ec == i);
+               
+               ess = obj.factors{eclass(1)}.essclone();               
+               for j=eclass                  
+                   obj.factors{j}.ess = ess;                   
+               end              
+           end
+           
+       end
+       function write(obj,filename,type,varargin)
+           % write a bn to file (hugin or dot format)
+           
+           switch type
+
+               case 'hugin'
+
+                   bn2hugin(obj,filename,varargin{:});
+
+               case 'dot'
+
+                   bn2dot(obj, filename,varargin{:});
+
+               otherwise
+                   error('unrecognized format');
+           end
+       end
+       function data = simulate(obj,nsamples)
+          
+           sorted = obj.g.topological_sort();
+           M = numel(sorted);
+
+           data = nan(nsamples,M);
+
+           domains = cellfun(@(x)(x.domain),obj.factors,'UniformOutput',false);
+           for i=1:nsamples
+
+               bevidence = false(M,1);
+
+               for j=sorted
+
+                   % observe evidence
+                   dim = bevidence(domains{j});
+                   val = data(i,domains{j}); val = val(dim);
+
+                   % sample from cpd
+                   data(i,j) = obj.factors{j}.sample(val);
+                   bevidence(j) = true;
+
+               end
+
+           end
+           
+       end            
+       
+       function l = loglik(obj,data)
+           % compute the log likelihood of the model given the data
+           
+           l = 0;
+           
+           % iterate over data samples
+           for d=1:size(data,1)
+
+               % iterate over model nodes
+               for i=1:obj.length()
+               
+                   f = obj.factors{i};
+                   l = l + f.loglik(data(d,i),data(d,f.parents()));               
+               end
+           end
+           l = l ./ size(data,1);
+       end
+       
+       function d = dim(obj)
+           % compute dimensionality (number of free parameters) of the Bayesian network
+
+           d = 0;
+           for i=1:length(obj)
+               d = d + dim(obj.factors{i});
+           end
+       end
+
+       function s = bic(obj,data)
+           % BIC score of the BN
+
+           s = obj.loglik(data) - dim(obj)*log(length(obj))/2;
+       end
+       
+       function s = aic(obj,data)
+           % AIC score of the BN          
+           s = obj.loglik(data) - dim(obj);           
+       end
+       
+   end
+   
+   methods (Access = private)
+       function bn2hugin(obj,filename,varargin)
+           % write BN to hugin format
+
+           fid = fopen(strcat(filename,'.net'), 'wt');
+           fprintf(fid, 'net{}\n\n');
+
+           % iterate over all nodes
+           for i=1:obj.length()
+
+               if isa(obj.factors{i},'gaussian_cpd')
+
+                   fprintf(fid, 'continuous node C%d {\n\tposition = (%d %d);\n',i,round(rand*1000),round(rand*500));
+
+                   if obj.factors{i}.name
+                       fprintf(fid,'\tlabel = "%s";\n',obj.factors{i}.name);
+                   end
+                       
+                   fprintf(fid,'}\n\n');
+                   
+               elseif isa(obj.factors{i},'discrete_cpd') % discrete node
+
+                   fprintf(fid, 'node C%d \n{\n\tposition = (%d %d);\n\tstates = ( ',i,round(rand*1000),round(rand*500));
+                   if ~isempty(obj.factors{i}.statenames)
+                       for j=1:obj.size(i), fprintf(fid, '"%s" ',obj.factors{i}.statenames{j}); end
+                   else
+                       for j=1:obj.size(i), fprintf(fid, '"%d" ',j); end
+                   end
+                   fprintf(fid, ');\n');
+                   
+                   if obj.factors{i}.name
+                       fprintf(fid,'\tlabel = "%s";\n',obj.factors{i}.name);
+                   end
+                   
+                   fprintf(fid,'}\n\n');
+               else
+                   class(obj.factors{i})
+                   error('unsupported distribution');
+               end
+           end
+
+           % write tables
+           % iterate over all nodes
+           for i=1:obj.length()
+
+               f = obj.factors{i};
+
+               fprintf(fid, 'potential (C%d',i);
+               if length(f.domain) > 1, fprintf(fid,' |'); end
+
+               dparents = sort(f.dparents,'descend');
+               for j=1:length(f.dparents)
+                   fprintf(fid, ' C%d', dparents(j));
+               end
+
+               cparents = sort(f.cparents,'descend');
+               for j=1:length(f.cparents)
+                   fprintf(fid, ' C%d', cparents(j));
+               end
+
+               fprintf(fid,')\n{\n\tdata =\n   ');
+
+               szc = cumprod(f.dsize);
+
+               % write data
+               if isa(f,'continuous_cpd')
+
+                   mu = f.mu;
+                   beta = f.beta;
+                   sigma2 = f.sigma2;
+
+                   for j=1:numel(mu)
+
+                       szc = szc(szc > 1);
+
+                       for k=1:length(szc)
+                           if mod(j-1,szc(k)) == 0, fprintf(fid,'( '); end
+                       end
+
+                       % mean
+                       fprintf(fid,'normal ( %f',mu(j));
+
+                       % linear component
+                       for c = 1:length(beta{j})
+
+                           if beta{j}(c) >= 0, fprintf(fid,' + '); else fprintf(fid,' -'); end
+
+                           fprintf(fid,'%f * C%d',abs(beta{j}(c)),f.cparents(c));
+                       end
+
+                       fprintf(fid,', %f ) ',sigma2(j));
+
+                       for k=1:length(szc)
+                           if mod(j,szc(k)) == 0, fprintf(fid,') '); end
+                       end
+
+                   end
+
+               else % discrete node
+
+                   data = f.p;
+
+                   for j=1:numel(data)
+
+                       for k=1:length(szc)
+                           if mod(j-1,szc(k)) == 0, fprintf(fid,'('); end
+                       end
+
+                       fprintf(fid,'%f ',data(j));
+
+                       for k=1:length(szc)
+                           if mod(j,szc(k)) == 0, fprintf(fid,')'); end
+                       end
+
+                   end
+
+               end
+
+               fprintf(fid,';\n}\n\n');
+
+
+           end
+
+           fclose(fid);
+       end
+       function bn2dot(obj,filename,varargin)
+           % write BN to GraphViz .dot format
+                      
+           % file type output
+           ext = 'ps';
+           
+           % get optional parameters
+           v = varargin2struct(varargin);
+           if isfield(v,'extension'), ext = v.extension; end 
+                          
+           fid = fopen(strcat(filename,'.dot'), 'wt');
+
+           fprintf(fid, 'digraph G{\n');
+                   
+           % write nodes
+           for i=1:length(obj.factors)
+               
+               if ~isempty(obj.factors{i}.name)
+                   fprintf(fid,'%d [label="%s"]\n',i,obj.factors{i}.name);
+               else
+                   fprintf(fid,'%d\n',i);
+               end
+           end
+           
+           % retrieve arcs
+           for i=1:length(obj.factors)
+
+               if isa(obj.factors{i},'gaussian_cpd')
+                   % for a gaussian cpd we check for continuous arcs if
+                   % the betas are consistently positive (red), negative
+                   % (blue), or mixed (black) given all parent
+                   % configurations.
+
+                   b = obj.factors{i}.betas;
+                   for j=1:length(obj.factors{i}.cparents)
+
+                       signs = zeros(1,numel(b));
+                       for k=1:numel(b)
+                          signs(k) = sign(b{k}(j)); 
+                       end
+                       
+                       if all(signs == 1)
+                           fprintf(fid,'%d -> %d [color=red];\n',j,i);
+                       elseif all(signs == -1)
+                           fprintf(fid,'%d -> %d [color=blue];\n',j,i);
+                       else
+                           fprintf(fid,'%d -> %d;\n',j,i);
+                       end
+                                             
+                   end
+                   
+               else
+                   for j=obj.factors{i}.cparents
+                    fprintf(fid,'%d -> %d;\n',j,i);
+                   end
+               end
+               
+               for j=obj.factors{i}.dparents
+                   fprintf(fid,'%d -> %d;\n',j,i);
+               end
+               
+           end
+           
+           fprintf(fid, '}\n');
+
+           fclose(fid);
+
+           % try to create and show the obj
+
+           if ispc, shell = 'dos'; else shell = 'unix'; end
+
+           cmdline = strcat([shell '(''dot -T' ext ' ' strcat(filename,'.dot') ' -o ' strcat(filename,'.',ext) ''')']); % preserve trailing spaces
+           r = eval(cmdline);
+       end
+            
+   end
+   
+   methods (Static)
+       function obj = random(N,varargin)
+           % create a random Bayesian network
+
+           sz = 2*ones(1,N);
+           continuous = [];
+           g = [];
+           for i=1:2:length(varargin)
+               switch varargin{i},
+                   case 'graph', g = varargin{i+1};
+                   case 'size', sz = varargin{i+1};
+                   case 'continuous', continuous = varargin{i+1};
+               end
+           end
+           
+           sz(continuous) = 1;
+           if isempty(continuous), continuous = find(sz == 1); end
+
+           % specify structure
+
+           if isempty(g) % random graph
+
+               g = sparse(N,N);
+
+               for i=2:N
+
+                   parents = randperm(i-1);
+                   parents = parents(1:min(i-1,1+floor(2*rand))); % min and max number of parents
+
+                   % discrete nodes cannot have continuous parents
+                   if ~ismember(i,continuous)
+                       parents = setdiff(parents,continuous);
+                   end
+
+                   g(parents,i) = 1;
+               end
+           end
+
+           % create CPDs
+
+           factors = cell(1,N);
+           for i=1:N
+
+               parents = find(g(:,i))';
+               if isempty(parents)
+                   parents = []; 
+               end
+               
+               if ismember(i,continuous) % gaussian rv
+
+                   cparents = intersect(parents,continuous);
+                   if isempty(cparents), cparents = []; end
+                   dparents = setdiff(parents,continuous);
+                   if isempty(dparents)
+                       dparents = []; 
+                       szd = [1 1];
+                   else
+                       szd = sz(dparents);
+                       if length(szd) == 1, szd = [szd 1]; end            
+                   end
+                   
+                   
+                   mu = randn(szd);
+                   beta = cell(szd);
+                   if ~isempty(cparents)
+                       for j=1:prod(szd)
+                           beta{j} = randn(numel(cparents),1);
+                       end
+                   end
+                   sigma1 = rand(szd);
+                   factors{i} = gaussian_cpd(i,cparents,dparents,mu,beta,sigma1);
+
+               else % discrete rv
+    
+                   if isempty(parents)
+                       szd = [sz(i) 1];
+                   else
+                       szd = sz([i parents]);
+                   end
+    
+                   factors{i} = multinomial_cpd(i,parents,rand(szd));
+               end
+
+           end
+           
+           obj = bayesnet(factors);
+
+       end
+   end
+end
+##### SOURCE END #####
+-->
+   </body>
+</html>

@@ -1,0 +1,57 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual evidence
+</title>
+</head>
+<body>
+<H1> evidence
+</H1>
+<h2>
+Purpose
+</h2>
+Re-estimate hyperparameters using evidence approximation.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+[net] = evidence(net, x, t)
+[net, gamma, logev] = evidence(net, x, t, num)
+</PRE>
+
+
+<p><h2>
+Description
+</h2>
+<CODE>[net] = evidence(net, x, t)</CODE> re-estimates the
+hyperparameters <CODE>alpha</CODE> and <CODE>beta</CODE> by applying Bayesian
+re-estimation formulae for <CODE>num</CODE> iterations. The hyperparameter
+<CODE>alpha</CODE> can be a simple scalar associated with an isotropic prior
+on the weights, or can be a vector in which each component is
+associated with a group of weights as defined by the <CODE>index</CODE>
+matrix in the <CODE>net</CODE> data structure. These more complex priors can
+be set up for an MLP using <CODE>mlpprior</CODE>. Initial values for the iterative
+re-estimation are taken from the network data structure <CODE>net</CODE>
+passed as an input argument, while the return argument <CODE>net</CODE>
+contains the re-estimated values.
+
+<p><CODE>[net, gamma, logev] = evidence(net, x, t, num)</CODE> allows the re-estimation 
+formula to be applied for <CODE>num</CODE> cycles in which the re-estimated
+values for the hyperparameters from each cycle are used to re-evaluate
+the Hessian matrix for the next cycle.  The return value <CODE>gamma</CODE> is
+the number of well-determined parameters and <CODE>logev</CODE> is the log
+of the evidence.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="mlpprior.htm">mlpprior</a></CODE>, <CODE><a href="netgrad.htm">netgrad</a></CODE>, <CODE><a href="nethess.htm">nethess</a></CODE>, <CODE><a href="demev1.htm">demev1</a></CODE>, <CODE><a href="demard.htm">demard</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

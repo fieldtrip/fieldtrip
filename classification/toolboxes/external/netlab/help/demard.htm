@@ -1,0 +1,51 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual demard
+</title>
+</head>
+<body>
+<H1> demard
+</H1>
+<h2>
+Purpose
+</h2>
+Automatic relevance determination using the MLP.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+demmlp1</PRE>
+
+
+<p><h2>
+Description
+</h2>
+This script demonstrates the technique of automatic relevance
+determination (ARD) using a synthetic problem having three input
+variables: <CODE>x1</CODE> is sampled uniformly from the range (0,1) and has
+a low level of added Gaussian noise, <CODE>x2</CODE> is a copy of <CODE>x1</CODE>
+with a higher level of added noise, and <CODE>x3</CODE> is sampled randomly
+from a Gaussian distribution. The single target variable is determined
+by <CODE>sin(2*pi*x1)</CODE> with additive Gaussian noise. Thus <CODE>x1</CODE> is
+very relevant for determining the target value, <CODE>x2</CODE> is of some
+relevance, while <CODE>x3</CODE> is irrelevant. The prior over weights is
+given by the ARD Gaussian prior with a separate hyper-parameter for
+the group of weights associated with each input. A multi-layer
+perceptron is trained on this data, with re-estimation of the
+hyper-parameters using <CODE>evidence</CODE>. The final values for the
+hyper-parameters reflect the relative importance of the three inputs.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="demmlp1.htm">demmlp1</a></CODE>, <CODE><a href="demev1.htm">demev1</a></CODE>, <CODE><a href="mlp.htm">mlp</a></CODE>, <CODE><a href="evidence.htm">evidence</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>

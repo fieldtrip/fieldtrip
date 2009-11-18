@@ -1,0 +1,55 @@
+<html>
+<head>
+<title>
+Netlab Reference Manual demgmm5
+</title>
+</head>
+<body>
+<H1> demgmm5
+</H1>
+<h2>
+Purpose
+</h2>
+Demonstrate density modelling with a PPCA mixture model.
+
+<p><h2>
+Synopsis
+</h2>
+<PRE>
+demgmm5</PRE>
+
+
+<p><h2>
+Description
+</h2>
+
+The problem consists of modelling data generated
+by a mixture of three Gaussians in 2 dimensions with a mixture model
+using full covariance matrices.  The priors are 0.3, 0.5 and 0.2; the
+centres are (2, 3.5), (0, 0) and (0,2); the variances are (0.16, 0.64)
+axis aligned, (0.25, 1) rotated by 30 degrees and the identity
+matrix. The first figure contains a scatter plot of the data.
+
+<p>A mixture model with three one-dimensional PPCA components is trained
+using EM.  The parameter vector is printed before training and after
+training.  The parameter vector consists of priors (the column), and
+centres (given as (x, y) pairs as the next two columns).
+
+<p>The second figure is a 3 dimensional view of the density function,
+while the third shows the axes of the 1-standard deviation ellipses
+for the three components of the mixture model together with the one
+standard deviation along the principal component of each mixture
+model component.
+
+<p><h2>
+See Also
+</h2>
+<CODE><a href="gmm.htm">gmm</a></CODE>, <CODE><a href="gmminit.htm">gmminit</a></CODE>, <CODE><a href="gmmem.htm">gmmem</a></CODE>, <CODE><a href="gmmprob.htm">gmmprob</a></CODE>, <CODE><a href="ppca.htm">ppca</a></CODE><hr>
+<b>Pages:</b>
+<a href="index.htm">Index</a>
+<hr>
+<p>Copyright (c) Ian T Nabney (1996-9)
+
+
+</body>
+</html>
