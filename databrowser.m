@@ -1,37 +1,47 @@
 function [cfg] = databrowser(cfg, data)
 
-% DATABROWSER can be used for visual inspection of data. Artifacts detected
-% by FieldTrip artifact functions are marked. Data pieces can be marked as
-% artifact by manual selection as well.
+% DATABROWSER can be used for visual inspection of data. Artifacts that were detected
+% by artifact functions (see ARTIFACT_xxx functions where xxx is the type of artifact) 
+% are marked. Additionally data pieces can be marked and unmarked as artifact by 
+% manual selection. The output cfg contains the updated artifactdef field.
 %
 % Use as
 %   cfg = databrowser(cfg)
-% with the cfg as obtained from DEFINETRIAL, or as
+%   required configuration options: 
+%   cfg.dataset or both cfg.headerfile and cfg.datafile
+% or as
 %   cfg = databrowser(cfg, data)
 % with the data as obtained from PREPROCESSING
 %
 % The following configuration options are supported:
-%   cfg.dataset                 =
-%   cfg.trl                     =
-%   cfg.continuous              = 'yes' or 'no'
+%   cfg.trl                     = structure that defines the data segments of interest. See DEFINETRIAL
+%   cfg.continuous              = 'yes' or 'no' whether the file contains continuous data
 %   cfg.channel                 = cell-array with channel labels, see CHANNELSELECTION
 %   cfg.zscale                  = [zmin zmax] or 'auto' (default = 'auto')
 %   cfg.blocksize               = number (in seconds), only aplicable if data contains only 1 (long) trial
-%   cfg.artfctdef.xxx.artifact  = Nx2 matrix with artifact segments
 %   cfg.viewmode                = string, 'butterfly', 'vertical', 'component' (default = 'butterfly')
+%   cfg.artfctdef.xxx.artifact  = Nx2 matrix with artifact segments see ARTIFACT_xxx functions
 %   cfg.selectfeature           = string, name of feature to be selected/added (default = 'visual')
-%   cfg.selectmode              = string, what to do with a selection, can be 'joint', 'individual', or 'eval' (default = 'joint')
+%   cfg.selectmode              = string, what to do with a selection, can be 'mark', or 'eval' (default = 'mark')
+%                                 'mark': artfctdef field is updated, 'eval': the function defined in
+%                                 cfg.selfun is evaluated f.i. browse_movieplotER calls movieplotER which makes 
+%                                 a movie of the selected data
 %   cfg.colorgroups             = 'sequential' 'labelcharx' (x = xth character in label), 'chantype' or
 %                                  vector with length(data/hdr.label) defining groups (default = 'sequential') 
 %   cfg.channelcolormap         = COLORMAP (default = customized lines map with 15 colors)
 %   cfg.selfun                  = string, name of function which is evaluated if selectmode is set to 'eval'.
 %                                  The selected data and the selcfg are passed on to this function.
 %   cfg.selcfg                  = configuration options for selfun
-
+%
+% The "artifact" field in the output cfg is a Nx2 matrix comparable to the
+% "trl" matrix of DEFINETRIAL. The first column of which specifying the
+% beginsamples of an artifact period, the second column contains the
+% endsamples of the artifactperiods.
 %
 % NOTE for debugging: in case the databrowser crashes, use delete(gcf) to kill the figure.
 %
-% See also PREPROCESSING
+% See also PREPROCESSING, REJECTARTIFACT, ARTIFACT_EOG, ARTIFACT_MUSCLE,
+% ARTIFACT_JUMP, ARTIFACT_MANUAL, ARTIFACT_THRESHOLD, ARTIFACT_CLIP, ARTIFACT_ECG
 
 % Copyright (C) 2009, Robert Oostenveld, Ingrid Niewenhuis
 %
@@ -58,7 +68,7 @@ if ~isfield(cfg, 'continuous'),      cfg.continuous = 'no';           end % only
 if ~isfield(cfg, 'zscale'),          cfg.zscale = 'auto';             end
 if ~isfield(cfg, 'artfctdef'),       cfg.artfctdef = struct;          end
 if ~isfield(cfg, 'selectfeature'),   cfg.selectfeature = 'visual';    end % string or cell-array
-if ~isfield(cfg, 'selectmode'),      cfg.selectmode = 'joint';        end % joint or individual
+if ~isfield(cfg, 'selectmode'),      cfg.selectmode = 'mark';         end
 if ~isfield(cfg, 'viewmode'),        cfg.viewmode = 'butterfly';      end % butterfly, vertical, component, settings
 if ~isfield(cfg, 'blocksize'),       cfg.blocksize = 1;               end % only for segmenting continuous data, i.e. one long trial
 if ~isfield(cfg, 'preproc'),         cfg.preproc = [];                end % see preproc for options
@@ -519,27 +529,15 @@ if strcmp(opt.cfg.selectmode, 'disp')
   % FIXME this is only for debugging
   disp([begsel endsel])
   
-elseif strcmp(opt.cfg.selectmode, 'joint')
-  % consider all artifact channels
-  artval = opt.artdata.trial{1}(:, begsel:endsel);
-  artval = any(artval,1);
-  if any(artval)
-    fprintf('there is overlap with another artifact, disable all other artifacts\n');
-    opt.artdata.trial{1}(:, begsel:endsel) = 0;
-  else
-    fprintf('there is no overlap with another artifact, mark this as an artifact\n');
-    opt.artdata.trial{1}(opt.ftsel, begsel:endsel) = 1;
-  end
-  
-elseif strcmp(opt.cfg.selectmode, 'individual')
-  % ignore the other artifact channels
+elseif strcmp(opt.cfg.selectmode, 'mark')
+  % mark or unmark artifacts
   artval = opt.artdata.trial{1}(opt.ftsel, begsel:endsel);
   artval = any(artval,1);
   if any(artval)
-    fprintf('there is overlap with this particular artifact, disable this artifact\n');
+    fprintf('there is overlap with the arctive artifact (%s), disable this artifact\n',opt.artdata.label{opt.ftsel});
     opt.artdata.trial{1}(opt.ftsel, begsel:endsel) = 0;
   else
-    fprintf('there is no overlap with this particular artifact, mark this as a new artifact\n');
+    fprintf('there is no overlap with the arctive artifact (%s), mark this as a new artifact\n',opt.artdata.label{opt.ftsel});
     opt.artdata.trial{1}(opt.ftsel, begsel:endsel) = 1;
   end
   
