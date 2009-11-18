@@ -46,6 +46,8 @@ classdef classifier < predictor
 %   svmmethod.m
 %   transfer_classifier.m
 %   blogreg.m
+%   lrgauss_adf.m
+%   lrgauss_lap.m
 %
 % Copyright (c) 2008, Marcel van Gerven
 %
