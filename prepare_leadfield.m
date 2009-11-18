@@ -49,6 +49,9 @@ function [grid, cfg] = prepare_leadfield(cfg, data)
 %   cfg.normalize       = 'yes' or 'no' (default = 'no')
 %   cfg.normalizeparam  = depth normalization parameter (default = 0.5)
 %
+% Additionally you can only prepare the grid and not calculate the leadfield.
+%   cfg.leadfield       = 'yes' or 'no' (default = 'yes')
+%
 % See also SOURCEANALYSIS
 
 % Undocumented local options:
@@ -103,6 +106,7 @@ if ~isfield(cfg, 'sel50p'),           cfg.sel50p     = 'no';          end
 if ~isfield(cfg, 'feedback'),         cfg.feedback   = 'text';        end
 if ~isfield(cfg, 'mollify'),          cfg.mollify    = 'no';          end
 if ~isfield(cfg, 'patchsvd'),         cfg.patchsvd   = 'no';          end
+if ~isfield(cfg, 'leadfield'),        cfg.leadfield  = 'yes';         end
 % if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';          end  % the default for this depends on EEG/MEG and is set below
 
 % put the low-level options pertaining to the dipole grid in their own field
@@ -129,60 +133,62 @@ end
 % construct the grid on which the scanning will be done
 [grid, cfg] = prepare_dipole_grid(cfg, vol, sens);
 
-progress('init', cfg.feedback, 'computing leadfield');
-if strcmp(vol.type, 'openmeeg') 
-  fprintf('Calculating infinite medium solution for all positions\n Please Wait...\n');
-  dsm = openmeeg_dsm(grid.pos,vol);
-  for i=1:length(grid.inside)
-    % compute the leadfield on all grid positions inside the brain
-    progress(i/length(grid.inside), 'computing leadfield %d/%d\n',i, length(grid.inside));    
-    dipindx = grid.inside(i);
-    tmp = vol.mat*dsm(:,[(3*(i-1)):(3*(i-1)+2)]+1);
-    grid.leadfield{dipindx} = tmp - repmat(mean(tmp,1),size(tmp,1),1);
-    if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
-      % multiply with the normalized dipole moment to get the leadfield in the desired orientation
-      grid.leadfield{dipindx} = grid.leadfield{dipindx} * grid.mom(:,dipindx);
-    end   
-  end
-  progress('close');
-
-else
-  for i=1:length(grid.inside)
-    % compute the leadfield on all grid positions inside the brain
-    progress(i/length(grid.inside), 'computing leadfield %d/%d\n', i, length(grid.inside));
-    dipindx = grid.inside(i);
-    grid.leadfield{dipindx} = compute_leadfield(grid.pos(dipindx,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
-    
-    if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
-      % multiply with the normalized dipole moment to get the leadfield in the desired orientation
-      grid.leadfield{dipindx} = grid.leadfield{dipindx} * grid.mom(:,dipindx);
+if strcmp(cfg.leadfield, 'yes')
+  progress('init', cfg.feedback, 'computing leadfield');
+  if strcmp(vol.type, 'openmeeg')
+    fprintf('Calculating infinite medium solution for all positions\n Please Wait...\n');
+    dsm = openmeeg_dsm(grid.pos,vol);
+    for i=1:length(grid.inside)
+      % compute the leadfield on all grid positions inside the brain
+      progress(i/length(grid.inside), 'computing leadfield %d/%d\n',i, length(grid.inside));
+      dipindx = grid.inside(i);
+      tmp = vol.mat*dsm(:,[(3*(i-1)):(3*(i-1)+2)]+1);
+      grid.leadfield{dipindx} = tmp - repmat(mean(tmp,1),size(tmp,1),1);
+      if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
+        % multiply with the normalized dipole moment to get the leadfield in the desired orientation
+        grid.leadfield{dipindx} = grid.leadfield{dipindx} * grid.mom(:,dipindx);
+      end
     end
-  end % for all grid locations inside the brain
-  progress('close');
-end
-
-
-% fill the positions outside the brain with NaNs
-grid.leadfield(grid.outside) = {nan};
-
-% mollify the leadfields
-if ~strcmp(cfg.mollify, 'no')
-  grid = mollify(cfg, grid);
-end
-
-% combine leadfields in patches and do an SVD on them
-if ~strcmp(cfg.patchsvd, 'no')
-  grid = patchsvd(cfg, grid);
-end
-
-% compute the 50 percent channel selection subspace projection
-if ~strcmp(cfg.sel50p, 'no')
-  grid = sel50p(cfg, grid, sens);
-end
-
-% compute the local basis function expansion (LBEX) subspace projection
-if ~strcmp(cfg.lbex, 'no')
-  grid = lbex(cfg, grid);
+    progress('close');
+    
+  else
+    for i=1:length(grid.inside)
+      % compute the leadfield on all grid positions inside the brain
+      progress(i/length(grid.inside), 'computing leadfield %d/%d\n', i, length(grid.inside));
+      dipindx = grid.inside(i);
+      grid.leadfield{dipindx} = compute_leadfield(grid.pos(dipindx,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
+      
+      if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
+        % multiply with the normalized dipole moment to get the leadfield in the desired orientation
+        grid.leadfield{dipindx} = grid.leadfield{dipindx} * grid.mom(:,dipindx);
+      end
+    end % for all grid locations inside the brain
+    progress('close');
+  end
+  
+  
+  % fill the positions outside the brain with NaNs
+  grid.leadfield(grid.outside) = {nan};
+  
+  % mollify the leadfields
+  if ~strcmp(cfg.mollify, 'no')
+    grid = mollify(cfg, grid);
+  end
+  
+  % combine leadfields in patches and do an SVD on them
+  if ~strcmp(cfg.patchsvd, 'no')
+    grid = patchsvd(cfg, grid);
+  end
+  
+  % compute the 50 percent channel selection subspace projection
+  if ~strcmp(cfg.sel50p, 'no')
+    grid = sel50p(cfg, grid, sens);
+  end
+  
+  % compute the local basis function expansion (LBEX) subspace projection
+  if ~strcmp(cfg.lbex, 'no')
+    grid = lbex(cfg, grid);
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
