@@ -37,19 +37,17 @@ function [cfg] = singleplotER(cfg, varargin)
 % cfg.linestyle     = linestyle/marker type, see options of the matlab PLOT function (default = '-')
 % cfg.linewidth     = linewidth in points (default = 0.5)
 % cfg.graphcolor    = color(s) used for plotting the dataset(s) (default = 'brgkywrgbkywrgbkywrgbkyw')
+%                     alternatively, colors can be specified as Nx3 matrix of RGB values
 %
 % See also:
 %   singleplotTFR, multiplotER, multiplotTFR, topoplotER, topoplotTFR.
 
-%
 % This function depends on TIMELOCKBASELINE which has the following options:
 % cfg.baseline, documented
 % cfg.channel
 % cfg.blcwindow
 % cfg.previous
 % cfg.version
-
-
 
 % Copyright (C) 2003-2006, Ole Jensen
 %
@@ -80,7 +78,11 @@ if ~isfield(cfg,'linestyle'),     cfg.linestyle = '-';                          
 if ~isfield(cfg,'linewidth'),     cfg.linewidth = 0.5;                          end
 if ~isfield(cfg,'maskstyle'),     cfg.maskstyle = 'box';                        end
 
-GRAPHCOLOR = ['k' cfg.graphcolor ];
+if ischar(cfg.graphcolor)
+  GRAPHCOLOR = ['k' cfg.graphcolor];
+elseif isnumeric(cfg.graphcolor)
+  GRAPHCOLOR = [0 0 0; cfg.graphcolor];
+end
 
 % Set x/y/zparam defaults according to varargin{1}.dimord value:
 if strcmp(varargin{1}.dimord, 'chan_time')
@@ -217,9 +219,11 @@ for k=2:nargin
   labels = getfield(varargin{k-1}, 'label');
 
   % User colored labels if more than one data set is plotted:
-  if nargin > 2
-    colorLabels = [colorLabels inputname(k) '=' GRAPHCOLOR(k) ' '];
-  end
+  if nargin > 2 %% FIXME: variable colorLabels is not used ??? sashae
+    if ischar(GRAPHCOLOR);        colorLabels = [colorLabels inputname(k) '=' GRAPHCOLOR(k) ' '];
+    elseif isnumeric(GRAPHCOLOR); colorLabels = [colorLabels inputname(k) '=' num2str(GRAPHCOLOR(k,:)) ' '];
+    end
+ end
 
   % select channels
   cfg.channel = channelselection(cfg.channel, varargin{k-1}.label);
@@ -251,7 +255,9 @@ for k=2:nargin
     ymax = cfg.ylim(2);
   end
 
-  color = GRAPHCOLOR(k);
+  if ischar(GRAPHCOLOR);        color = GRAPHCOLOR(k);
+  elseif isnumeric(GRAPHCOLOR); color = GRAPHCOLOR(k,:);
+  end
   plot_vector(varargin{k-1}.(cfg.xparam), P, 'style', cfg.linestyle, 'color', color, 'highlight', M, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth);  
 end
 

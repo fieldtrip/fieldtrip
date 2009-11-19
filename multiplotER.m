@@ -43,6 +43,7 @@ function [cfg] = multiplotER(cfg, varargin)
 % cfg.linestyle     = linestyle/marker type, see options of the matlab PLOT function (default = '-')
 % cfg.linewidth     = linewidth in points (default = 0.5)
 % cfg.graphcolor    = color(s) used for plotting the dataset(s) (default = 'brgkywrgbkywrgbkywrgbkyw')
+%                     alternatively, colors can be specified as Nx3 matrix of RGB values
 %
 % cfg.layout        = specify the channel layout for plotting using one of 
 %                     the following ways:
@@ -111,8 +112,11 @@ if ~isfield(cfg,'linestyle'),     cfg.linestyle     = '-';                      
 if ~isfield(cfg,'linewidth'),     cfg.linewidth     = 0.5;                         end
 if ~isfield(cfg,'maskstyle'),     cfg.maskstyle     = 'box';                       end
 
-
-GRAPHCOLOR = ['k' cfg.graphcolor ];
+if ischar(cfg.graphcolor)
+  GRAPHCOLOR = ['k' cfg.graphcolor];
+elseif isnumeric(cfg.graphcolor)
+  GRAPHCOLOR = [0 0 0; cfg.graphcolor];
+end
 
 % Set x/y/zparam defaults according to varargin{1}.dimord value:
 if strcmp(varargin{1}.dimord, 'chan_time')
@@ -292,10 +296,14 @@ for k=1:length(varargin)
   Labels     = getfield(varargin{k}, 'label');
 
   if length(varargin) > 1
-    colorLabels = [colorLabels inputname(k+1) '=' GRAPHCOLOR(k+1) '\n'];
+    if ischar(GRAPHCOLOR);        colorLabels = [colorLabels inputname(k+1) '=' GRAPHCOLOR(k+1) '\n'];
+    elseif isnumeric(GRAPHCOLOR); colorLabels = [colorLabels inputname(k+1) '=' num2str(GRAPHCOLOR(k+1,:)) '\n'];
+    end
   end
 
-  color = GRAPHCOLOR(k+1);
+  if ischar(GRAPHCOLOR);        color = GRAPHCOLOR(k+1);
+  elseif isnumeric(GRAPHCOLOR); color = GRAPHCOLOR(k+1,:);
+  end
   
   for m=1:length(Lbl)
     l = cellstrmatch(Lbl(m),Labels);
