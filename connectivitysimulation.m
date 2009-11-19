@@ -21,44 +21,6 @@ function [data] = connectivitysimulation(cfg)
 % See also FREQSIMULATION, DIPOLESIMULATION, SPIKESIMULATION
 
 % Copyright (C) 2009, Donders Institute for Brain, Cognition and Behaviour
-%
-% $Log: connectivitysimulation.m,v $
-% Revision 1.11  2009/10/15 11:33:47  jansch
-% added noisecov for ar method
-%
-% Revision 1.10  2009/10/12 13:23:10  andbas
-% took out the bandpass etc for ar method
-%
-% Revision 1.9  2009/10/09 15:17:32  andbas
-% Added bandpass filtering and additional error terms to the AR method estimate.
-% Does not appear to be working...
-%
-% Revision 1.8  2009/10/08 07:03:52  jansch
-% changed initialization for ar-method. added scaling factor for noise
-%
-% Revision 1.7  2009/10/08 06:59:52  jansch
-% removed some duplicate code
-%
-% Revision 1.6  2009/10/07 18:58:17  jansch
-% added not yet functional ar method. updated linear_mix method, implemented
-% by andre
-%
-% Revision 1.5  2009/10/06 16:21:17  andbas
-% *** empty log message ***
-%
-% Revision 1.4  2009/10/02 13:50:31  andbas
-% replaced calls to blc with preproc_baselinecorrect
-%
-% Revision 1.3  2009/09/30 12:49:03  jansch
-% first working implementation
-%
-% Revision 1.2  2009/09/28 15:39:47  jansch
-% first working implementation (simple)
-%
-% Revision 1.1  2009/09/28 11:22:50  roboos
-% created initial framework, sofar only some documentation
-% the idea is that Andre and Jan-Mathijs start filling it with code
-%
 
 % check input configuration for the generally applicable options
 cfg = checkconfig(cfg, 'required', {'nsignal' 'ntrials' 'triallength' 'fsample' 'method'});
@@ -95,30 +57,47 @@ end
 
 switch cfg.method
 case {'linear_mix'}
-  fltpad = 100; %hard coded
-  delay = cfg.delay;
-  mix = cfg.mix;            
-  nmixsignal  = size(cfg.mix,2); %number of "mixing signals"
-  delay = delay - min(delay(:));
+
+  fltpad = 50; %hard coded to avoid filtering artifacts
+  delay  = cfg.delay;
+  delay  = delay - min(delay(:)); %make explicitly >= 0
+  maxdelay = max(delay(:));
+
+  mix        = cfg.mix;            
+  nmixsignal = size(mix, 2); %number of "mixing signals"
+  nsignal    = size(mix, 1);
+  
+  if numel(size(mix))==2,
+    %mix is static, no function of time
+    mix = mix(:,:,ones(1,nsmp+maxdelay));
+  elseif numel(size(mix))==3 && size(mix,3)==nsmp,
+    %mix changes with time
+    mix = cat(3,mix,mix(:,:,nsmp*ones(1,maxdelay))); 
+    %FIXME think about this
+    %due to the delay the mix cannot be defined instantaneously with respect to all signals
+  end
+    
   for tr = 1:cfg.ntrials
-    mixsignal = randn(nmixsignal, nsmp + 2*fltpad + max(delay(:)));
-    tmp   = zeros(cfg.nsignal, nsmp+2*fltpad);
+    mixsignal = randn(nmixsignal,  nsmp + 2*fltpad + maxdelay);
+    mixsignal = preproc(mixsignal, label, cfg.fsample, cfg, -fltpad, fltpad, fltpad);
+    tmp       = zeros(cfg.nsignal, nsmp);
     for i=1:cfg.nsignal
       for j=1:nmixsignal
-      begsmp = 1        + delay(i,j);
-      endsmp = nsmp     + delay(i,j) + 2*fltpad;
-      tmp(i,:) = tmp(i,:) + mix(i,j) * mixsignal(j,begsmp:endsmp);
+        begsmp   = 1    + delay(i,j);
+        endsmp   = nsmp + delay(i,j);
+        tmpmix   = reshape(mix(i,j,:),[1 nsmp+maxdelay]) .* mixsignal(j,:);
+        tmp(i,:) = tmp(i,:) + tmpmix(begsmp:endsmp);
       end
     end
-    % apply preproc
-    newtmp = preproc(tmp, label, cfg.fsample, cfg, -fltpad, fltpad, fltpad);
-    trial{tr} = newtmp;
+    trial{tr} = tmp;
+    
     % add some noise
     trial{tr} = preproc_baselinecorrect(trial{tr} + cfg.absnoise*randn(size(trial{tr})));
+    
     % define time axis for this trial
     time{tr}  = tim;
   end
-  
+
 case {'mvnrnd'}
   fltpad = 100; %hard coded
   
