@@ -87,7 +87,7 @@ if ~isfield(cfg, 'output'),        cfg.output     = 'powandcsd';  end
 if ~isfield(cfg, 'pad'),           cfg.pad        = 'maxperlen';  end
 if ~isfield(cfg, 'taper'),         cfg.taper      = 'dpss';       end
 if ~isfield(cfg, 'channel'),       cfg.channel    = 'all';        end
-if ~isfield(cfg, 'phaseshift'),    cfg.channel    = 'no';         end
+if ~isfield(cfg, 'phaseshift'),    cfg.phaseshift = 'no';         end
 if strcmp(cfg.output, 'fourier'),
   cfg.keeptrials = 'yes';
   cfg.keeptapers = 'yes';
