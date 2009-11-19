@@ -16,38 +16,7 @@ classdef classifier < predictor
 %   'nexamples' : number of examples (determined from data)
 %
 % SEE ALSO:
-%   combiner.m
-%   da.m
-%   dynamic_classifier.m
-%   ensemble.m
-%   gnb.m
-%   gp.m
-%   gslr.m
-%   gslr_transfer.m
-%   hgnb_transfer.m
-%   hmm.m
-%   kernelmethod.m
-%   libsvm.m
-%   lr.m
-%   lvq.m
-%   mixtureclassifier.m
-%   nb.m
-%   nearestneighbour.m
-%   one_against_one.m
-%   one_against_rest.m
-%   pnn.m
-%   randomclassifier.m
-%   regdif.m
-%   regressor.m
-%   rfda.m
-%   rlda.m
-%   rnb.m
-%   static_classifier.m
-%   svmmethod.m
-%   transfer_classifier.m
-%   blogreg.m
-%   lrgauss_adf.m
-%   lrgauss_lap.m
+% doc classifiers
 %
 % Copyright (c) 2008, Marcel van Gerven
 %

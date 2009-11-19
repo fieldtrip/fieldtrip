@@ -20,11 +20,7 @@ classdef preprocessor < clfmethod
 %     obj = preprocessor('function',@myfunction);
 %
 % SEE ALSO
-%   cspprocessor.m
-%   neighbourmerger.m
-%   pcanalyzer.m
-%   rbmhierarchy.m
-%   standardizer.m
+% doc preprocessors
 %
 % Copyright (c) 2008, Marcel van Gerven
 %

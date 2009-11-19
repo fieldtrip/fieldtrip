@@ -18,9 +18,7 @@ classdef featureselector < clfmethod
 % getmodel.
 %
 % SEE ALSO
-%   filterer.m
-%   wrapper.m
-%   gslr.m
+% doc featureselectors
 %
 %   Copyright (c) 2008, Marcel van Gerven
 %
