@@ -314,7 +314,8 @@ end
 
 if length(strfind(cfg.dimord, 'chan'))~=2 && isfield(cfg, 'powindx'),
   %crossterms are not described with chan_chan_therest, but are linearly indexed
-  
+ 
+ 
   siz = size(input);
   if ~hasrpt,
     siz   = [1 siz];
@@ -545,7 +546,7 @@ else
   dtfvar = [];
 end
 
-%--------------------------------------------------------------------
+%----------------------------------------------------------------
 function [granger, v, n] = coupling_granger(H, Z, S, fs, hasjack)
 
 %Usage: causality = hz2causality(H,S,Z,fs);
@@ -560,6 +561,9 @@ function [granger, v, n] = coupling_granger(H, Z, S, fs, hasjack)
 
 %FIXME speed up code and check
 siz = size(H);
+if numel(siz)==4,
+  siz(5) = 1;
+end
 n   = siz(1);
 Nc  = siz(2);
 
@@ -571,14 +575,15 @@ for kk = 1:n
   for ii = 1:Nc
     for jj = 1:Nc
       if ii ~=jj,
-        zc     = Z(kk,jj,jj) - Z(kk,ii,jj)^2/Z(kk,ii,ii);
-        numer  = reshape(abs(S(kk,ii,ii,:)),[1 1 siz(4:end)]);
-        denom  = reshape(abs(S(kk,ii,ii,:)-zc*abs(H(kk,ii,jj,:)).^2/fs),[1 1 siz(4:end)]);
-        outsum(jj,ii,:) = outsum(jj,ii,:) + log(numer./denom);
-        outssq(jj,ii,:) = outssq(jj,ii,:) + (log(numer./denom)).^2;
+        zc     = reshape(Z(kk,jj,jj,:) - Z(kk,ii,jj,:).^2./Z(kk,ii,ii,:),[1 1 1 1 siz(5)]);
+        zc     = repmat(zc,[1 1 1 siz(4) 1]);
+        numer  = reshape(abs(S(kk,ii,ii,:,:)),[1 1 siz(4:end)]);
+        denom  = reshape(abs(S(kk,ii,ii,:,:)-zc.*abs(H(kk,ii,jj,:,:)).^2./fs),[1 1 siz(4:end)]);
+        outsum(jj,ii,:,:) = outsum(jj,ii,:,:) + log(numer./denom);
+        outssq(jj,ii,:,:) = outssq(jj,ii,:,:) + (log(numer./denom)).^2;
       end
     end
-    outsum(ii,ii,:) = 0;%self-granger set to zero
+    outsum(ii,ii,:,:) = 0;%self-granger set to zero
   end
 end
 
