@@ -13,10 +13,7 @@ classdef regressor < predictor
 %   'nexamples' : number of examples (determined from data)
 %
 % SEE ALSO
-%   circreg.m
-%   linreg.m
-%   mulreg.m
-%   blinreg.m
+%   doc regressors
 %
 %   Copyright (c) 2008, Marcel van Gerven
 %
