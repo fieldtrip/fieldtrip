@@ -40,7 +40,7 @@ function [cfg] = singleplotER(cfg, varargin)
 %                     alternatively, colors can be specified as Nx3 matrix of RGB values
 %
 % See also:
-%   singleplotTFR, multiplotER, multiplotTFR, topoplotER, topoplotTFR.
+%   singleplotTFR, multiplotER, multiplotTFR, topoplotER, topoplotTFR
 
 % This function depends on TIMELOCKBASELINE which has the following options:
 % cfg.baseline, documented
