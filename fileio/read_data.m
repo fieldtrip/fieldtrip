@@ -74,7 +74,7 @@ if ~isempty(begsample) && mod(begsample, 1)
   warning('rounding "begsample" to the nearest integer');
   begsample = round(begsample);
 end
-if ~isempty(endsample) && mod(endsample, 1)
+if ~isempty(endsample) && ~isinf(endsample) && mod(endsample, 1)
   warning('rounding "endsample" to the nearest integer');
   endsample = round(endsample);
 end
