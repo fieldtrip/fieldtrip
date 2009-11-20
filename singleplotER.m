@@ -19,7 +19,7 @@ function [cfg] = singleplotER(cfg, varargin)
 % cfg.maskparameter = field in the first dataset to be used for masking of data 
 %                     (not possible for mean over multiple channels, or when input contains multiple subjects
 %                     or trials)
-% cfg.maskstyle     = style used for masking of data, 'box' or 'thicknes s' (default = 'box')
+% cfg.maskstyle     = style used for masking of data, 'box', 'thickness' or 'saturation' (default = 'box')
 % cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.ylim          = 'maxmin' or [ymin ymax] (default = 'maxmin')
 % cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'),
