@@ -197,7 +197,7 @@ else
       type = 'bti'; % it might be 148 or 248 channels
     elseif any(ismember(senslabel('ctfref'), sens.label))
       type = 'ctf'; % it might be 151 or 275 channels
-    elseif isfield(sens, 'pnt') && isfield(sens, 'ori') && numel(sens.label)==numel(sens.pnt)
+    elseif isfield(sens, 'pnt') && isfield(sens, 'ori') && numel(sens.label)==size(sens.pnt,1)
       type = 'magnetometer';
     else
       type = 'meg';
