@@ -8,13 +8,11 @@ function fieldtripdefs
 
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-
 % set the global defaults, the checkconfig function will copy these into the local configurations
 global ft_default
 if ~isfield(ft_default, 'trackconfig'), ft_default.trackconfig = 'off';   end % cleanup, report, off
 if ~isfield(ft_default, 'checkconfig'), ft_default.checkconfig = 'loose'; end % pedantic, loose, silent
 if ~isfield(ft_default, 'checksize'),   ft_default.checksize   = 1e5;     end % number in bytes, can be inf
-
 
 if isempty(which('hastoolbox'))
   % the fieldtrip/public directory contains the hastoolbox function
