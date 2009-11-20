@@ -41,9 +41,8 @@ if ~isfield(cfg.target, 'dataformat'),    cfg.target.dataformat = [];           
 if ~isfield(cfg.target, 'datafile'),      cfg.target.datafile = 'buffer://localhost:1972';  end
 if ~isfield(cfg, 'blocksize'),            cfg.blocksize = 1;                                end % in seconds
 if ~isfield(cfg, 'channel'),              cfg.channel = senslabel('eeg1020');               end
-if ~isfield(cfg, 'fsample'),              cfg.fsample = 250;                                end
-if ~isfield(cfg, 'bpfreq'),               cfg.bpfreq = [];                                  end
-if ~isfield(cfg, 'speed'),                cfg.speed = 1 ;                                   end
+if ~isfield(cfg, 'fsample'),              cfg.fsample = 250;                                end % in Hz
+if ~isfield(cfg, 'speed'),                cfg.speed = 1 ;                                   end % relative
 % set the defaults for filtering
 if ~isfield(cfg, 'lpfilter'),             cfg.lpfilter = 'no';                              end
 if ~isfield(cfg, 'hpfilter'),             cfg.hpfilter = 'no';                              end
