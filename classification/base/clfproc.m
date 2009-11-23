@@ -44,7 +44,7 @@ classdef clfproc
 
         clfmethods; % the methods that specify the classification procedure
         
-        verbose = true;
+        verbose = false;
         randomize = false;
     end
     

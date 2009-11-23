@@ -443,6 +443,42 @@ classdef validator
       
     end
     
+    function [ldat,ldes,udat,udes] = get_labeled_unlabeled(obj,data,design)
+      % return labeled and unlabeled parts; nan indicates missing label
+
+      if iscell(data)
+        
+        udat = cell(1,length(data));
+        ldat = cell(1,length(data));
+        udes = cell(1,length(data));
+        ldes = cell(1,length(data));
+        for c=1:length(data)
+          
+          udes{c} = isnan(design{c});
+          ldes{c} = ~isnan(design{c});
+          
+          udat{c} = data{c}(udes{c},:);
+          ldat{c} = data{c}(ldes{c},:);
+          
+          udes{c} = nan(nnz(udes{c}),1);
+          ldes{c} = design{c}(ldes{c});
+          
+        end
+        
+      else
+        
+        udes = isnan(design);
+        ldes = ~isnan(design);
+        
+        udat = data(udes,:);
+        ldat = data(ldes,:);
+        
+        udes = nan(nnz(udes),1);
+        ldes = design(ldes);        
+        
+      end
+        
+    end
     
   end 
     

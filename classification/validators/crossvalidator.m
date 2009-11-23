@@ -9,6 +9,9 @@ classdef crossvalidator < validator
 %       - cvfolds = N       : N-fold crossvalidation
 %       - cvfolds = { [1:n] [n+1:m] ... } : prespecified partitioning
 %
+%   if the design contains missing labels then it will become part of the 
+%   training data by default
+%
 %   SEE ALSO:
 %   loocrossvalidator.m
 %
@@ -49,10 +52,14 @@ classdef crossvalidator < validator
            design = d;
            
          end
-         
+                
          % make sure data is a (cell array of) matrix
          if ndims(data{1}) > 2, data = obj.collapse(data); end
          
+         % make data with missing labels part of training data by default
+         % this allows testing of adaptive methods
+         [data,design,unlab_data,unlab_design] = obj.get_labeled_unlabeled(data,design);
+    
          % report some properties
          if obj.verbose
          
@@ -130,7 +137,13 @@ classdef crossvalidator < validator
              end
                
              % this might happen if folds end up empty
-             assert(~isempty(traindata{1})  & ~isempty(testdata{1}));
+             assert(~isempty(traindata{1}) & ~isempty(testdata{1}));
+             
+             % add possible unlabeled data to train data
+             for uc=1:length(design)
+               traindata{uc} = [traindata{uc}; unlab_data{uc}];
+               traindesign{uc} = [traindesign{uc}; unlab_design{uc}];
+             end
              
              % use a separate procedure per fold
              % in order to save all produced results

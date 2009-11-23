@@ -32,6 +32,10 @@ classdef lr < classifier
            
             if iscell(data), error('LR does not take multiple datasets as input'); end
 
+            % remove unlabeled data
+            data = data(~isnan(design),:);
+            design = design(~isnan(design));
+            
             if isnan(obj.nclasses), obj.nclasses = max(design(:,1)); end
 
             if exist('minFunc','dir') % external code: minFunc
