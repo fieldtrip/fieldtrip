@@ -62,10 +62,7 @@ cfg = checkconfig(cfg, 'trackconfig', 'on');
 %% checkdata see below!!! %%
 
 % check if spm2 is in your path:
-hasspm = (exist('spm_vol') & exist('spm_write_vol') & exist('spm_segment'));
-if ~hasspm
-  error('the SPM2 toolbox is not installed, see: http://www.fil.ion.ucl.ac.uk/spm/');
-end
+hastoolbox('SPM2',1);
 
 % set the defaults
 if ~isfield(cfg,'segment'),         cfg.segment = 'yes';                                        end;
