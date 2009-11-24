@@ -1,0 +1,40 @@
+=====================
+= OpenMEEG software =
+=====================
+
+The OpenMEEG software is a C++ package for solving the forward
+problem of electroencephalography and magnetoencephalography.
+
+This software is governed by the CeCILL-B license under French law (See LICENSE file).
+
+Contact : openmeeg-info@lists.gforge.inria.fr
+
+Copyright INRIA and ENPC (contributors: Geoffray ADDE, Maureen CLERC, Alexandre
+GRAMFORT, Renaud KERIVEN, Jan KYBIC, Perrine LANDREAU, Theodore PAPADOPOULO,
+Maureen.Clerc.AT.sophia.inria.fr, keriven.AT.certis.enpc.fr,
+kybic.AT.fel.cvut.cz, papadop.AT.sophia.inria.fr, Alexandre.Gramfort.AT.inria.fr)
+
+Cite this software:
+
+@MISC{OpenMEEG,
+  author = {A Gramfort and T Papadopoulo and M Clerc},
+  title = {OpenMEEG},
+  month = {January},
+  year = {2009},
+  timestamp = {2009.01.01},
+  url = { http://www-sop.inria.fr/odyssee/software/OpenMEEG }
+}
+
+Related publications:
+
+@Article{	  kybic-clerc-etal:05,
+  author	= {J. Kybic and M. Clerc and T. Abboud and O. Faugeras and R. Keriven and T. Papadopoulo},
+  title		= {A Common Formalism for the Integral Formulations of the Forward {EEG} Problem},
+  journal	= {IEEE Transactions on Medical Imaging},
+  year		= {2005},
+  volume	= {24},
+  pages		= {12–28},
+  month		= {jan},
+  url		= {ftp://ftp-sop.inria.fr/odyssee/Publications/2005/kybic-clerc-etal:05.pdf},
+  keywords	= {EEG; Boundary Element Method; Symmetric BEM},
+}
