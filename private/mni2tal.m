@@ -7,6 +7,10 @@ function outpoints = mni2tal(inpoints)
 % outpoints is the coordinate matrix with Talairach points
 % Matthew Brett 10/8/99
 
+
+% check if SPM2 is in path and if not add
+hastoolbox('SPM2',1);
+
 dimdim = find(size(inpoints) == 3);
 if isempty(dimdim)
   error('input must be a N by 3 or 3 by N matrix')
