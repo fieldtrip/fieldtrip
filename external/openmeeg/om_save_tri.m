@@ -1,4 +1,4 @@
-function [] = om_save_tri(filename,points,faces,normals)
+function [] = om_save_tri(filename,points,faces,nrmls)
 
 % OM_SAVE_TRI   Save .tri file
 %
@@ -8,7 +8,7 @@ function [] = om_save_tri(filename,points,faces,normals)
 %   Created by Alexandre Gramfort on 2008-03-09.
 %   Copyright (c) 2007 Alexandre Gramfort. All rights reserved.
 
-if nargin<4 || isempty(normals)
+if nargin<4 || isempty(nrmls)
     nrmls = normals(points,faces);
 end
 
