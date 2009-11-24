@@ -450,7 +450,7 @@ end
 % apply the linear transformation for any of the neighbourhood methods
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~strcmp(cfg.planarmethod, 'sourceproject')
-    if ~isfield(cfg.onlineprocess, 'transform') || ~isfield(cfg.onlineprocess, 'interp')
+    if ~isfield(cfg,'onlineprocess')
         % these exist always, except in the sourceproject method
         transformH = zeros(Ngrad,Nchan);
         transformV = zeros(Ngrad,Nchan);
