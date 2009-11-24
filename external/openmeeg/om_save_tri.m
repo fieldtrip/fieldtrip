@@ -9,14 +9,13 @@ function [] = om_save_tri(filename,points,faces,normals)
 %   Copyright (c) 2007 Alexandre Gramfort. All rights reserved.
 
 if nargin<4 || isempty(normals)
-    normals = normals(points,faces);
-%     normals = om_mesh_normals(points,faces);
+    nrmls = normals(points,faces);
 end
 
 fid = fopen(filename,'w');
 npoints = size(points,1);
 fprintf(fid,'- %g\n',npoints);
-fprintf(fid,'%g %g %g %g %g %g\n',[points , normals]');
+fprintf(fid,'%g %g %g %g %g %g\n',[points , nrmls]');
 nfaces = size(faces,1);
 faces = faces-1;
 fprintf(fid,'- %g %g %g\n', [nfaces nfaces nfaces]);
