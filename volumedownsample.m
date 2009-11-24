@@ -18,6 +18,9 @@ function [down] = volumedownsample(cfg, source);
 
 fieldtripdefs
 
+% check if SPM2 is in path and if not add
+hastoolbox('SPM2',1);
+
 %% checkdata see below!!! %%
 
 % check if the input cfg is valid for this function
