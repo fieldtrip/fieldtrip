@@ -8,6 +8,9 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
+% check if SPM2 is in path and if not add
+hastoolbox('SPM2',1);
+
 % some initial checks
 cfg = checkconfig(cfg, 'forbidden', 'numcompartments');
 if ~isfield(mri, 'tissue') && isfield(mri, 'gray'), cfg.tissue = 1; end
