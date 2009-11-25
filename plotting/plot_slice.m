@@ -19,6 +19,10 @@ function plot_slice(data,varargin)
 %   'transform'     = transformation matrix from voxels to mm (default = eye(4))
 %   'flat2D'        = flat multi-slice representation (default=false)
 %   'tag'
+%   'funcolorlim'
+%   'funcolormap'
+%   'opacitylim'
+%   'opacitymap'
 %
 % Example
 %   mri = read_mri('Subject01.mri');
@@ -42,6 +46,10 @@ flat2D        = keyval('flat2D',  varargin); if isempty(flat2D),flat2D=false; en
 map           = keyval('map',  varargin); if isempty(map),map='gray'; end
 transform     = keyval('transform',  varargin); if isempty(transform),transform=eye(4); end
 tag           = keyval('tag',   varargin); if isempty(tag),tag=[]; end
+funcolorlim   = keyval('funcolorlim',   varargin); if isempty(funcolorlim),funcolorlim=[]; end
+funcolormap   = keyval('funcolormap',   varargin); if isempty(funcolormap),funcolormap=[]; end
+opacitylim    = keyval('opacitylim',   varargin); if isempty(opacitylim),opacitylim=[]; end
+opacitymap    = keyval('opacitymap',   varargin); if isempty(opacitymap),opacitymap=[]; end
 
 %%% funparameter
 % has fun?
@@ -58,7 +66,7 @@ else
   fun = [];
 end
 if hasfun
-  handle_fun(fun)
+  handle_fun(fun,funcolorlim,funcolormap)
 end
 %%% anaparameter
 if isequal(anaparameter,'anatomy')
@@ -106,7 +114,7 @@ else
   msk = [];
 end
 if hasmsk
-  handle_msk(msk);
+  handle_msk(msk,opacitylim,funparameter,maskparameter,funcolorlim,opacitymap)
 end
 
  
@@ -150,16 +158,16 @@ if flat2D
     plot_flatslice(hasana,hasfun,hasmsk,ana,fun,msk,slicedim,ind_allslice,colorbar1)
 else
   if isempty(sliceindex)
-    plot_slice_sub(ana,slicedim,ind_allslice,map,transform); 
+    plot_slice_sub(ana,fun,msk,slicedim,ind_allslice,map,transform); 
   else
-    plot_slice_sub(ana,slicedim,sliceindex,map,transform);
+    plot_slice_sub(ana,fun,msk,slicedim,sliceindex,map,transform);
   end 
 end
 if ~isempty(title_), title(title_); end
 
 
 
-function plot_slice_sub(data,slicedim,ind_allslice,map,transform) 
+function plot_slice_sub(data,fun,msk,slicedim,ind_allslice,map,transform) 
 if ~ishold, hold on, end
 ds = size(data); 
 
@@ -173,9 +181,13 @@ ijk = [I(:) J(:) K(:) ones(prod(ds),1)]';
 % determine location of each anatomical voxel in head coordinates
 xyz = transform * ijk;
 % xyz = permute(xyz,[2 1 3]);
-xdata = reshape(xyz(:,1), [ds(2) ds(1) ds(3)]);
-ydata = reshape(xyz(:,2), [ds(2) ds(1) ds(3)]);
-zdata = reshape(xyz(:,3), [ds(2) ds(1) ds(3)]);
+% xdata = reshape(xyz(:,1), [ds(2) ds(1) ds(3)]);
+% ydata = reshape(xyz(:,2), [ds(2) ds(1) ds(3)]);
+% zdata = reshape(xyz(:,3), [ds(2) ds(1) ds(3)]);
+xdata = reshape(xyz(1,:), [ds(1) ds(2) ds(3)]);
+ydata = reshape(xyz(2,:), [ds(1) ds(2) ds(3)]);
+zdata = reshape(xyz(3,:), [ds(1) ds(2) ds(3)]);
+
 
 if slicedim == 3 
   for i=1:length(ind_allslice)
@@ -257,50 +269,52 @@ axis equal
 axis tight
 axis xy
 
-function handle_fun(fun)
+function handle_fun(fun,funcolorlim,funcolormap)
   % determine scaling min and max (fcolmin fcolmax) and funcolormap
   funmin = min(fun(:));
   funmax = max(fun(:));
   % smart lims: make from auto other string
-  if isequal(cfg.funcolorlim,'auto') 
+  if isequal(funcolorlim,'auto') 
     if sign(funmin)>-1 && sign(funmax)>-1
-      cfg.funcolorlim = 'zeromax';
+      funcolorlim = 'zeromax';
     elseif sign(funmin)<1 && sign(funmax)<1
-      cfg.funcolorlim = 'minzero';
+      funcolorlim = 'minzero';
     else
-      cfg.funcolorlim = 'maxabs';
+      funcolorlim = 'maxabs';
     end
   end
-  if ischar(cfg.funcolorlim)
+  if ischar(funcolorlim)
     % limits are given as string
-    if isequal(cfg.funcolorlim,'maxabs')
+    if isequal(funcolorlim,'maxabs')
       fcolmin = -max(abs([funmin,funmax]));
       fcolmax =  max(abs([funmin,funmax]));
-      if isequal(cfg.funcolormap,'auto'); cfg.funcolormap = 'jet'; end;
-    elseif isequal(cfg.funcolorlim,'zeromax')
+      if isequal(funcolormap,'auto'); funcolormap = 'jet'; end;
+    elseif isequal(funcolorlim,'zeromax')
       fcolmin = 0;
       fcolmax = funmax;
-      if isequal(cfg.funcolormap,'auto'); cfg.funcolormap = 'hot'; end;
-    elseif isequal(cfg.funcolorlim,'minzero')
+      if isequal(funcolormap,'auto'); funcolormap = 'hot'; end;
+    elseif isequal(funcolorlim,'minzero')
       fcolmin = funmin;
       fcolmax = 0;
-      if isequal(cfg.funcolormap,'auto'); cfg.funcolormap = 'cool'; end;
+      if isequal(funcolormap,'auto'); funcolormap = 'cool'; end;
     else
       error('do not understand cfg.funcolorlim');
     end
   else
-    % limits are numeric
-    fcolmin = cfg.funcolorlim(1);
-    fcolmax = cfg.funcolorlim(2);
+    if ~isempty(funcolorlim)
+      % limits are numeric
+      fcolmin = funcolorlim(1);
+      fcolmax = funcolorlim(2);
+    end
     % smart colormap
-    if isequal(cfg.funcolormap,'auto') 
+    if isequal(funcolormap,'auto') 
       if sign(fcolmin) == -1 && sign(fcolmax) == 1
-        cfg.funcolormap = 'jet';
+        funcolormap = 'jet';
       else
         if fcolmin < 0
-          cfg.funcolormap = 'cool';
+          funcolormap = 'cool';
         else
-          cfg.funcolormap = 'hot';
+          funcolormap = 'hot';
         end
       end
     end
@@ -312,53 +326,55 @@ function handle_fun(fun)
     fun = abs(fun);
   end
 
-function handle_msk(msk)
+function handle_msk(msk,opacitylim,funparameter,maskparameter,funcolorlim,opacitymap)
   mskmin = min(msk(:));
   mskmax = max(msk(:));
   % determine the opacity limits and the opacity map
   % smart lims: make from auto other string, or equal to funcolorlim if funparameter == maskparameter
-  if isequal(cfg.opacitylim,'auto')
-    if isequal(cfg.funparameter,cfg.maskparameter)
-      cfg.opacitylim = cfg.funcolorlim;
+  if isequal(opacitylim,'auto')
+    if isequal(funparameter,maskparameter)
+      opacitylim = funcolorlim;
     else
       if sign(mskmin)>-1 && sign(mskmax)>-1
-        cfg.opacitylim = 'zeromax';
+        opacitylim = 'zeromax';
       elseif sign(mskmin)<1 && sign(mskmax)<1
-        cfg.opacitylim = 'minzero';
+        opacitylim = 'minzero';
       else
-        cfg.opacitylim = 'maxabs';
+        opacitylim = 'maxabs';
       end
     end
   end
-  if ischar(cfg.opacitylim)
+  if ischar(opacitylim)
     % limits are given as string
-    switch cfg.opacitylim
+    switch opacitylim
       case 'zeromax'
         opacmin = 0;
         opacmax = mskmax;
-        if isequal(cfg.opacitymap,'auto'), cfg.opacitymap = 'rampup'; end;
+        if isequal(opacitymap,'auto'), opacitymap = 'rampup'; end;
       case 'minzero'
         opacmin = mskmin;
         opacmax = 0;
-        if isequal(cfg.opacitymap,'auto'), cfg.opacitymap = 'rampdown'; end;
+        if isequal(opacitymap,'auto'), opacitymap = 'rampdown'; end;
       case 'maxabs'
         opacmin = -max(abs([mskmin, mskmax]));
         opacmax =  max(abs([mskmin, mskmax]));
-        if isequal(cfg.opacitymap,'auto'), cfg.opacitymap = 'vdown'; end;
+        if isequal(opacitymap,'auto'), opacitymap = 'vdown'; end;
       otherwise
         error('incorrect specification of cfg.opacitylim');
     end
   else
-    % limits are numeric
-    opacmin = cfg.opacitylim(1);
-    opacmax = cfg.opacitylim(2);
-    if isequal(cfg.opacitymap,'auto')
+    if ~isempty(opacitylim)
+      % limits are numeric
+      opacmin = opacitylim(1);
+      opacmax = opacitylim(2);
+    end
+    if isequal(opacitymap,'auto')
       if sign(opacmin)>-1 && sign(opacmax)>-1
-        cfg.opacitymap = 'rampup';
+        opacitymap = 'rampup';
       elseif sign(opacmin)<1 && sign(opacmax)<1
-        cfg.opacitymap = 'rampdown';
+        opacitymap = 'rampdown';
       else
-        cfg.opacitymap = 'vdown';
+        opacitymap = 'vdown';
       end
     end
   end % handling opacitylim and opacitymap
