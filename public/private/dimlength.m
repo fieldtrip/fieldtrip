@@ -23,6 +23,8 @@ switch seldim
       n = size(data.cov, 1);
     elseif strcmp(data.dimord, 'rpt_chan_freq_time') && isfield(data, 'powspctrm')
       n = size(data.powspctrm, 1);
+    elseif strcmp(data.dimord, 'rpt_chan_freq_time') && isfield(data, 'crsspctrm')
+      n = size(data.crsspctrm, 1); 
     elseif strcmp(data.dimord, 'rpt_chan_chan_freq') && isfield(data, 'crsspctrm')
       n = size(data.crsspctrm, 1);
     elseif strcmp(data.dimord, 'rpt_chan_chan_freq_time') && isfield(data, 'crsspctrm')
