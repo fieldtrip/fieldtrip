@@ -35,6 +35,7 @@ function [freq] = freqanalysis_mtmconvol(cfg, data);
 %   cfg.keeptrials = 'yes' or 'no', return individual trials or average (default = 'no')
 %   cfg.keeptapers = 'yes' or 'no', return individual tapers or average (default = 'no')
 %   cfg.pad        = number or 'maxperlen', length in seconds to which the data can be padded out (default = 'maxperlen')
+%   cfg.online     = 0 or 1, only set it in the online situation(default=0)
 %
 % The padding will determine your spectral resolution. If you want to
 % compare spectra from data pieces of different lengths, you should use
@@ -60,24 +61,28 @@ function [freq] = freqanalysis_mtmconvol(cfg, data);
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-fieldtripdefs
-
-% ensure that this function is started as a subfunction of the FREQANALYSIS wrapper
-if ~exist('OCTAVE_VERSION')
-  [s, i] = dbstack;
-  if length(s)>1
-    [caller_path, caller_name, caller_ext] = fileparts(s(2).name);
-  else
-    caller_path = '';
-    caller_name = '';
-    caller_ext  = '';
-  end
-  % evalin('caller', 'mfilename') does not work for Matlab 6.1 and 6.5
-  if ~strcmp(caller_name, 'freqanalysis')
-    error(['you should call FREQANALYSIS, instead of the ' upper(mfilename) ' subfunction']);
-  end
+if ~isfield(cfg,'online')
+    cfg.online=0;
 end
+if ~cfg.online
+    fieldtripdefs
 
+    % ensure that this function is started as a subfunction of the FREQANALYSIS wrapper
+    if ~exist('OCTAVE_VERSION')
+        [s, i] = dbstack;
+        if length(s)>1
+            [caller_path, caller_name, caller_ext] = fileparts(s(2).name);
+        else
+            caller_path = '';
+            caller_name = '';
+            caller_ext  = '';
+        end
+        % evalin('caller', 'mfilename') does not work for Matlab 6.1 and 6.5
+        if ~strcmp(caller_name, 'freqanalysis')
+            error(['you should call FREQANALYSIS, instead of the ' upper(mfilename) ' subfunction']);
+        end
+    end
+end
 % set all the defaults
 if ~isfield(cfg, 'method'),        cfg.method     = 'mtmconvol';  end
 if ~isfield(cfg, 'keeptapers'),    cfg.keeptapers = 'no';         end
@@ -119,15 +124,26 @@ elseif isfield(cfg, 'channelcmb') && ~csdflg
   cfg = rmfield(cfg, 'channelcmb');
 end
 
-% ensure that channelselection and selection of channelcombinations is
-% perfomed consistently
-cfg.channel = channelselection(cfg.channel, data.label);
+if ~cfg.online
+    % ensure that channelselection and selection of channelcombinations is
+    % perfomed consistently
+    cfg.channel = channelselection(cfg.channel, data.label);
+else
+    cfg.channel=data.label;
+end
 if isfield(cfg, 'channelcmb')
   cfg.channelcmb = channelcombination(cfg.channelcmb, data.label);
 end
 
-% determine the corresponding indices of all channels
-sgnindx     = match_str(data.label, cfg.channel);
+if ~cfg.online || ~isfield(cfg,'onlineprocess') || ~isfield(cfg.onlineprocess,'sgnindx')
+    % determine the corresponding indices of all channels
+    sgnindx     = match_str(data.label, cfg.channel);
+    if cfg.online
+        cfg.onlineprocess.sgnindx=sgnindx;
+    end
+else
+    sgnindx=cfg.onlineprocess.sgnindx;
+end
 numsgn      = size(sgnindx,1);
 if csdflg
   % determine the corresponding indices of all channel combinations
@@ -224,10 +240,17 @@ for foilop = 1:numfoi
     tap(:,2) = nan;
   else
     % create a single taper according to the window specification as a replacement for the DPSS (Slepian) sequence
-    tap = window(cfg.taper, acttapnumsmp);
-    tap = tap./norm(tap);
-    % freqanalysis_mtmconvol always throws away the last taper of the Slepian sequence, so add a dummy taper
-    tap(:,2) = nan;
+    if ~cfg.online || ~isfield(cfg,'onlineprocess') || ~isfield(cfg.onlineprocess,'tap')
+        tap = window(cfg.taper, acttapnumsmp);
+        tap = tap./norm(tap);
+        % freqanalysis_mtmconvol always throws away the last taper of the Slepian sequence, so add a dummy taper
+        tap(:,2) = nan;
+        if cfg.online
+            cfg.onlineprocess.tap=tap;
+        end
+    else
+        tap=cfg.onlineprocess.tap;
+    end
   end
   numtap(foilop) = size(tap,2)-1;
   if (numtap(foilop) < 1)
@@ -288,7 +311,9 @@ elseif keep == 4
 end
 
 for perlop = 1:numper
-  fprintf('processing trial %d: %d samples\n', perlop, numdatbnsarr(perlop,1));
+    if ~cfg.online
+      fprintf('processing trial %d: %d samples\n', perlop, numdatbnsarr(perlop,1));
+    end
   if keep == 2
     cnt = perlop;
   end
@@ -308,7 +333,9 @@ for perlop = 1:numper
   % use explicit transpose, to avoid complex conjugate transpose
   datspctra = transpose(fft(transpose(tmp)));
   for foilop = 1:numfoi
-    fprintf('processing frequency %d (%.2f Hz), %d tapers\n', foilop,cfg.foi(foilop),numtap(foilop));
+      if ~cfg.online
+          fprintf('processing frequency %d (%.2f Hz), %d tapers\n', foilop,cfg.foi(foilop),numtap(foilop));
+      end
     actfoinumsmp    = cfg.t_ftimwin(foilop) .* data.fsample;
     acttimboiind    = find(timboi >= (-minoffset + data.offset(perlop) + (actfoinumsmp ./ 2)) & timboi <  (-minoffset + data.offset(perlop) + numdatbns - (actfoinumsmp ./2)));
     nonacttimboiind = find(timboi <  (-minoffset + data.offset(perlop) + (actfoinumsmp ./ 2)) | timboi >= (-minoffset + data.offset(perlop) + numdatbns - (actfoinumsmp ./2)));
@@ -430,8 +457,10 @@ end
 try, freq.grad = data.grad; end   % remember the gradiometer array
 try, freq.elec = data.elec; end   % remember the electrode array
 
-% get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+if ~cfg.online
+    % get the output cfg
+    cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+end
 
 % add information about the version of this function to the configuration
 try
