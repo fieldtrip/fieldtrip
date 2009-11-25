@@ -54,7 +54,7 @@ function [freq] = freqanalysis_mtmconvol(cfg, data);
 % undocumented experimental options
 %   cfg.calcdof    = 'yes'   calculate the degrees of freedom for every trial
 %   cfg.phaseshift = 'yes' or 'no' shift the wavelets by pi to make the peak
-%                    of an oscillation angle(complex) = 0
+%                    of an oscillation angle(complex) = 0 (only with uneven cycle number in timwin)
 
 % Copyright (c) 2003,2004-2006 F.C. Donders Centre
 %
