@@ -104,7 +104,6 @@ if ~isfield(cfg, 'sel50p'),           cfg.sel50p     = 'no';          end
 if ~isfield(cfg, 'feedback'),         cfg.feedback   = 'text';        end
 if ~isfield(cfg, 'mollify'),          cfg.mollify    = 'no';          end
 if ~isfield(cfg, 'patchsvd'),         cfg.patchsvd   = 'no';          end
-if ~isfield(cfg, 'leadfield'),        cfg.leadfield  = 'yes';         end
 % if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';          end  % the default for this depends on EEG/MEG and is set below
 
 % put the low-level options pertaining to the dipole grid in their own field
@@ -130,9 +129,6 @@ end
 
 % construct the grid on which the scanning will be done
 [grid, cfg] = prepare_dipole_grid(cfg, vol, sens);
-
-
-
 
 if voltype(vol, 'openmeeg')
   % the system call to the openmeeg executable makes it rather slow
