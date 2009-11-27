@@ -6,17 +6,8 @@ function openmeeg_license
 % that the license is displayed at least once.
 
 % Copyright (C) 2009, Robert Oostenveld
-%
-% $Log: openmeeg_license.m,v $
-% Revision 1.3  2009/08/01 11:51:22  alegra
-% adding license and bibtex citation
-%
-% Revision 1.2  2009/03/30 15:16:39  roboos
-% show the content of the COPYING file
-%
-% Revision 1.1  2009/03/27 14:45:24  roboos
-% added first skeleton and license function
-%
+
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailed information
 
 persistent status
 
@@ -27,7 +18,12 @@ end
 
 if ~status
   % show the license
-  [p, f] = fileparts(mfilename);
+  try
+    tmp = which('openmeeg_license');
+  catch
+    tmp = mfilename; 
+  end
+  [p, f] = fileparts(tmp);
   clc
   fprintf('==============================================================================\n');
   type(fullfile(p, 'COPYING'));
