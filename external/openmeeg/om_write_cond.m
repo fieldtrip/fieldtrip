@@ -7,6 +7,9 @@ function om_write_cond(condfile,c)
 %   Created by Alexandre Gramfort on 2009-03-30.
 %   Copyright (c)  Alexandre Gramfort. All rights reserved.
 
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailed information
+
+
 if length(c) == 3
     cfid = fopen(condfile, 'w');
     fprintf(cfid,'# Properties Description 1.0 (Conductivities)\n');
