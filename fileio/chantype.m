@@ -238,6 +238,49 @@ elseif senstype(input, 'bti')
     end
   end
 
+% This is supposed to recognize Yokogawa header (at least as a temporary
+% solution)
+elseif isheader && issubfield(hdr, 'orig.channel_info')
+    
+  % This is from the original documentation
+  NullChannel         = 0;
+  MagnetoMeter        = 1;
+  AxialGradioMeter    = 2;
+  PlannerGradioMeter  = 3;
+  RefferenceChannelMark           = hex2dec('0100');
+  RefferenceMagnetoMeter          = bitor( RefferenceChannelMark, MagnetoMeter );
+  RefferenceAxialGradioMeter      = bitor( RefferenceChannelMark, AxialGradioMeter );
+  RefferencePlannerGradioMeter    = bitor( RefferenceChannelMark, PlannerGradioMeter);
+  TriggerChannel  = -1;
+  EegChannel      = -2;
+  EcgChannel      = -3;
+  EtcChannel      = -4;
+  % -------
+   
+  % FIXME for now commented out MEG type assignments other than meggrad because 
+  % there are no corresponding entries in the grad 
+  
+  sel = (hdr.orig.channel_info(:, 2) == NullChannel);
+  type(sel) = {'null'};
+  sel = (hdr.orig.channel_info(:, 2) == MagnetoMeter);
+  % type(sel) = {'megmag'};
+  sel = (hdr.orig.channel_info(:, 2) == AxialGradioMeter);
+  type(sel) = {'meggrad'};
+  sel = (hdr.orig.channel_info(:, 2) == PlannerGradioMeter);
+  % type(sel) = {'megplanar'};
+  sel = (hdr.orig.channel_info(:, 2) == RefferenceMagnetoMeter);
+  % type(sel) = {'refmag'};
+  sel = (hdr.orig.channel_info(:, 2) == RefferenceAxialGradioMeter);
+  % type(sel) = {'refgrad'};
+  sel = (hdr.orig.channel_info(:, 2) == RefferencePlannerGradioMeter);
+  % type(sel) = {'refplanar'};
+  sel = (hdr.orig.channel_info(:, 2) == TriggerChannel);
+  type(sel) = {'trigger'};
+  sel = (hdr.orig.channel_info(:, 2) == EegChannel);
+  type(sel) = {'eeg'};
+  sel = (hdr.orig.channel_info(:, 2) == EcgChannel);
+  type(sel) = {'ecg'};
+    
 elseif senstype(input, 'itab') && isheader
   sel = ([hdr.orig.ch.type]==0);
   type(sel) = {'unknown'};

@@ -21,12 +21,20 @@ handles = definehandles;
 hdr = read_yokogawa_header(filename);
 
 if hdr.orig.acq_type==handles.AcqTypeEvokedRaw
+  % read the trigger id from all trials
+  fid   = fopen(filename, 'r');
+  value = GetMeg160TriggerEventM(fid);
+  fclose(fid);
   % make an event for each trial as defined in the header
   for i=1:hdr.nTrials
     event(end+1).type     = 'trial';
     event(end  ).sample   = (i-1)*hdr.nSamples + 1;
     event(end  ).offset   = -hdr.nSamplesPre;
     event(end  ).duration =  hdr.nSamples;
+    
+    if ~isempty(value)
+        event(end  ).value    =  value(i);
+    end
   end
 
 elseif hdr.orig.acq_type==handles.AcqTypeEvokedAve
@@ -35,15 +43,11 @@ elseif hdr.orig.acq_type==handles.AcqTypeEvokedAve
   event(1).sample   = 1;
   event(1).offset   = -hdr.nSamplesPre;
   event(1).duration =  hdr.nSamples;
+
+elseif hdr.orig.acq_type==handles.AcqTypeContinuousRaw
+  trgindx = find(hdr.orig.channel_info(:,2)==handles.TriggerChannel);
+  event = read_trigger(filename, 'header', hdr, 'chanindx', trgindx, 'detectflank', 'both');
 end
-
-% continue with the original Yokogawa header, not the FieldTrip header
-hdr = hdr.orig;
-% these might contain usefull information
-sel_etc = find(hdr.channel_info(:,2)==handles.EtcChannel);
-sel_trg = find(hdr.channel_info(:,2)==handles.TriggerChannel);
-
-% FIXME, do something with the triggers...
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

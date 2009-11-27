@@ -1209,36 +1209,11 @@ switch eventformat
   case 'plexon_nex'
     event = read_nex_event(filename);
 
-  case 'yokogawa_ave'
+  case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
     % check that the required low-level toolbox is available
     hastoolbox('yokogawa', 1);
-    if isempty(hdr)
-      hdr = read_header(filename);
-    end
-    event(end+1).type     = 'average';
-    event(end  ).sample   = 1;
-    event(end  ).duration = hdr.nSamples;
-    event(end  ).offset   = -hdr.nSamplesPre;
-    event(end  ).value    = [];
-
-  case 'yokogawa_con'
-    % check that the required low-level toolbox is available
-    % hastoolbox('yokogawa', 1);
-    error('events still need to be implemented for the yokogawa_con format');
-
-  case 'yokogawa_raw'
-    % check that the required low-level toolbox is available
-    hastoolbox('yokogawa', 1);
-    % read the trigger id from all trials
-    value = GetMeg160TriggerEventM(filename);
-    % create a "trial" event for each trial and assign it the corresponding trigger value
-    for i=1:hdr.nTrials
-      event(end+1).type     = 'trial';
-      event(end  ).sample   = (i-1)*hdr.nSamples + 1;
-      event(end  ).offset   = -hdr.nSamplesPre;
-      event(end  ).duration =  hdr.nSamples;
-      event(end  ).value    = value(i);
-    end
+    
+    event = read_yokogawa_event(filename);
     
   case 'nmc_archive_k'
     event = read_nmc_archive_k_event(filename);

@@ -71,7 +71,7 @@ grad.tra = sparse(grad.tra);
 
 tmp = hdr.channel_info(isgrad,1);
 for i=1:size(tmp,1)
-  grad.label{i,1} = num2str(tmp(i)+1);
+  grad.label{i,1} = sprintf('%03d', tmp(i)+1);
 end
 grad.unit='cm';
 
