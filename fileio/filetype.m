@@ -246,7 +246,12 @@ elseif filetype_check_extension(filename, '.mri') && filetype_check_header(filen
   type = 'yokogawa_mri';
   manufacturer = 'Yokogawa';
   content = 'anatomical MRI';
-
+elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'-coregis')) == 1
+  type = 'yokogawa_fid';
+  manufacturer = 'Yokogawa';
+  content = 'exported fiducials';
+  
+  % known 4D/BTI file types
 elseif filetype_check_extension(filename, '.pdf') && filetype_check_header(filename, 'E|lk') % I am not sure whether this header always applies
   type = '4d_pdf';
   manufacturer = '4D/BTI';

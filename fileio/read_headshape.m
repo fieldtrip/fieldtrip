@@ -157,6 +157,32 @@ switch fileformat
                 error('Incorrect coordinates specified');
         end
         
+    case 'yokogawa_fid'
+        
+        in_str = textread(filename, '%s');
+        nr_items = size(in_str,1);
+        ind = 1;
+        coil_ind = 1;
+        while ind < nr_items
+            if strcmp(in_str{ind},'MEG:x=')
+                shape.fid.pnt = [shape.fid.pnt; str2num(strtok(in_str{ind+1},[',','['])) ...
+                    str2num(strtok(in_str{ind+3},[',','['])) str2num(strtok(in_str{ind+5},[',','[']))];
+                shape.fid.label = [shape.fid.label ; ['Marker',num2str(coil_ind)]];
+                coil_ind = coil_ind + 1;
+                ind = ind + 6;
+            else
+                ind = ind +1;
+            end
+        end
+        if size(shape.fid.label,1) ~= 5
+            error('Wrong number of coils');           
+        end        
+        
+        sw_ind = [3 1 2];
+        
+        shape.fid.pnt(1:3,:)= shape.fid.pnt(sw_ind, :);
+        shape.fid.label(1:3)= {'nas', 'lpa', 'rpa'};        
+        
     case 'polhemus_fil'
         [shape.fid.pnt, shape.pnt, shape.fid.label] = read_polhemus_fil(filename, 0);
         
