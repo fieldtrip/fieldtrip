@@ -205,11 +205,14 @@ elseif strcmp(cfg.method, 'openmeeg')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % this uses an implementation that was contributed by INRIA Odyssee Team
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  hastoolbox('openmeeg', 1);
-
-  % use the openmeeg wrapper function
-  vol = openmeeg(vol,cfg.isolatedsource);
-  vol.type = 'openmeeg';
+  if ~hastoolbox('openmeeg');
+    web('http://gforge.inria.fr/frs/?group_id=435')
+    error('OpenMEEG toolbox needs to be installed!')
+  else
+    % use the openmeeg wrapper function
+    vol = openmeeg(vol,cfg.isolatedsource);
+    vol.type = 'openmeeg';
+  end
   
 elseif strcmp(cfg.method, 'brainstorm')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
