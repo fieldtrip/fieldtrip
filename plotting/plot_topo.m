@@ -15,6 +15,9 @@ function [varargout] = plot_topo(chanX, chanY, dat, varargin)
 %   'gridscale'
 %   'mask'
 %   'outline'
+%   'isolines'
+
+
 
 % Copyrights (C) 2009, Giovanni Piantoni
 %
@@ -27,17 +30,18 @@ holdflag = ishold;
 hold on
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'gridscale', 'shading', 'mask', 'outline', 'interplim', 'interpmethod'});
-hpos          = keyval('hpos',      varargin);    if isempty(hpos);         hpos = 0;                 end
-vpos          = keyval('vpos',      varargin);    if isempty(vpos);         vpos = 0;                 end
-width         = keyval('width',     varargin);    if isempty(width);        width = 1;                end
-height        = keyval('height',    varargin);    if isempty(height);       height = 1;               end
-gridscale     = keyval('gridscale', varargin);    if isempty(gridscale);    gridscale = 67;           end; % 67 in original
-shading       = keyval('shading',   varargin);    if isempty(shading);      shading = 'flat';         end;
-mask          = keyval('mask',      varargin);
-outline       = keyval('outline',   varargin);
-interplim     = keyval('interplim', varargin);    if isempty(interplim);    interplim = 'electrodes'; end
-interpmethod  = keyval('interpmethod', varargin); if isempty(interpmethod); interpmethod = 'v4';      end
+keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'gridscale', 'shading', 'mask', 'outline', 'interplim', 'interpmethod','isolines'});
+hpos          = keyval('hpos',         varargin);    if isempty(hpos);         hpos = 0;                 end
+vpos          = keyval('vpos',         varargin);    if isempty(vpos);         vpos = 0;                 end
+width         = keyval('width',        varargin);    if isempty(width);        width = 1;                end
+height        = keyval('height',       varargin);    if isempty(height);       height = 1;               end
+gridscale     = keyval('gridscale',    varargin);    if isempty(gridscale);    gridscale = 67;           end; % 67 in original
+shading       = keyval('shading',      varargin);    if isempty(shading);      shading = 'flat';         end;
+isolines      = keyval('isolines',     varargin);    if isempty(isolines);     isolines = 6;             end;
+mask          = keyval('mask',         varargin);
+outline       = keyval('outline',      varargin);
+interplim     = keyval('interplim',    varargin);    if isempty(interplim);    interplim = 'electrodes'; end
+interpmethod  = keyval('interpmethod', varargin);    if isempty(interpmethod); interpmethod = 'v4';      end
 
 chanX = chanX * width  + hpos;
 chanY = chanY * height + vpos;
@@ -92,6 +96,9 @@ end
 deltax = xi(2)-xi(1); % length of grid entry
 deltay = yi(2)-yi(1); % length of grid entry
 h = surface(Xi-deltax/2,Yi-deltay/2,zeros(size(Zi)), Zi, 'EdgeColor', 'none', 'FaceColor', shading);
+
+% Create isolines
+contourf(Xi,Yi,Zi,isolines,'k');
 
 % plot the outline of the head, ears and nose
 for i=1:length(outline)
