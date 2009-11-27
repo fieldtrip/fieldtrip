@@ -12,7 +12,7 @@ function [vol] = openmeeg(vol, isolated)
 
 
 openmeeg_license
-sprintf('%s','Calculating BEM model...please wait')
+sprintf('%s','Calculating BEM model...please wait');
 
 skin   = find_outermost_boundary(vol.bnd);
 source = find_innermost_boundary(vol.bnd);
