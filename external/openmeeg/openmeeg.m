@@ -8,28 +8,8 @@ function [vol] = openmeeg(vol, isolated)
 % Copyright (C) 2009, Alexandre Gramfort
 % INRIA Odyssee Project Team
 
-%$Log: openmeeg.m,v $
-%Revision 1.11  2009/10/28 14:55:26  crimic
-%added wait message
-%
-%Revision 1.10  2009/09/24 13:40:52  crimic
-%added check to gcc version for linux
-%
-%Revision 1.9  2009/09/22 14:57:26  alegra
-%adding multicore option with env variable and fix windows pb when running exefile
-%
-%Revision 1.8  2009/08/01 11:51:22  alegra
-%adding license and bibtex citation
-%
-%Revision 1.7  2009/07/24 09:48:27  alegra
-%fix pb with tmp files and the change of directory when running the shell scripts
-%
-%Revision 1.6  2009/05/29 12:51:33  crimic
-%minor changes
-%
-%Revision 1.5  2009/05/11 17:30:11  crimic
-%upgraded to meet windows and linux compatibility
-%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailed information
+
 
 openmeeg_license
 sprintf('%s','Calculating BEM model...please wait')
