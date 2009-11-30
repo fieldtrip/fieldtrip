@@ -47,17 +47,17 @@ end
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'clim', 'box','highlight','highlightstyle','tag'});
-hpos   = keyval('hpos',   varargin);
-vpos   = keyval('vpos',   varargin);
-width  = keyval('width',  varargin);
-height = keyval('height', varargin);
-hlim   = keyval('hlim',   varargin);
-vlim   = keyval('vlim',   varargin);
-clim   = keyval('clim',   varargin);
-box    = keyval('box',    varargin); if isempty(box), box = false; end
+hpos           = keyval('hpos',   varargin);
+vpos           = keyval('vpos',   varargin);
+width          = keyval('width',  varargin);
+height         = keyval('height', varargin);
+hlim           = keyval('hlim',   varargin);
+vlim           = keyval('vlim',   varargin);
+clim           = keyval('clim',   varargin);
+box            = keyval('box',    varargin);              if isempty(box),               box = false;                    end
 highlight      = keyval('highlight',       varargin);
-highlightstyle = keyval('highlightstyle',  varargin); if isempty(highlightstyle), highlightstyle = 'opacity'; end
-tag            = keyval('tag', varargin); if isempty(tag), tag=''; end
+highlightstyle = keyval('highlightstyle',  varargin);     if isempty(highlightstyle),    highlightstyle = 'opacity';     end
+tag            = keyval('tag', varargin);                 if isempty(tag),               tag='';                         end
 
 % axis   = keyval('axis',   varargin); if isempty(axis), axis = false; end
 % label  = keyval('label',  varargin); % FIXME
