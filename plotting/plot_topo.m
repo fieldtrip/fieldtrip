@@ -98,13 +98,13 @@ deltay = yi(2)-yi(1); % length of grid entry
 h = surface(Xi-deltax/2,Yi-deltay/2,zeros(size(Zi)), Zi, 'EdgeColor', 'none', 'FaceColor', shading);
 
 % Create isolines
-contourf(Xi,Yi,Zi,isolines,'k');
+contour(Xi,Yi,Zi,isolines,'k');
 
 % plot the outline of the head, ears and nose
 for i=1:length(outline)
   xval = outline{i}(:,1) * width  + hpos;
   yval = outline{i}(:,2) * height + vpos;
-  plot(xval, yval, 'Color', 'k', 'LineWidth', 1)
+  plot_vector(xval, yval, 'Color','k', 'LineWidth',2)
 end
 
 % the (optional) output is the handle
