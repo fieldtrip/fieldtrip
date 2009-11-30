@@ -17,7 +17,7 @@ function [cfg, artifact] = artifact_threshold(cfg,data)
 %   cfg.continuous                    = 'yes' or 'no' whether the file contains continuous data
 %
 % The following configuration options can be specified
-%   cfg.artfctdef.threshold.channel	  = cell-array with channel labels
+%   cfg.artfctdef.threshold.channel   = cell-array with channel labels
 %   cfg.artfctdef.threshold.bpfilter  = 'no' or 'yes'
 %   cfg.artfctdef.threshold.bpfreq    = [0.3 30]
 %   cfg.artfctdef.threshold.bpfiltord = 4

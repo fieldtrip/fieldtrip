@@ -703,24 +703,24 @@ end
 %        crsspctrm    = abs(reshape(mean(freq.crsspctrm(n,:,:,:,:),5), [ncmb  nfoi ntoi]));
 %        tmppowspctrm = abs(reshape(mean(freq.powspctrm(n,:,:,:,:),5), [nchan nfoi ntoi]));
 %        
-%	if strcmp(cfg.cohmethod{m}, 'coh'),
-%	  tmpcohspctrm = crsspctrm./sqrt(abs(tmppowspctrm(cmbindx(:,1),:,:,:)).*abs(tmppowspctrm(cmbindx(:,2),:,:,:)));
+%   if strcmp(cfg.cohmethod{m}, 'coh'),
+%     tmpcohspctrm = crsspctrm./sqrt(abs(tmppowspctrm(cmbindx(:,1),:,:,:)).*abs(tmppowspctrm(cmbindx(:,2),:,:,:)));
 %        else
 %          tmph = reshape(freq.transfer(n,:,:,:,:), [nchan nchan nfoi ntoi ntap]);
-%	  for flop = 1:nfoi
-%	    for tlop = 1:ntoi
-%	      dum                       = tmph(:,:,flop,tlop)*tmph(:,:,flop,tlop)';
-%	      tmpcohspctrm(:,flop,tlop) = reshape(dum./sqrt(abs(diag(dum))*abs(diag(dum))'), [ncmb 1]);
-%	    end
-%	  end
-%	end
-%	
-%	if ~isempty(cfg.submethod), tmpcohspctrm = baseline(tmpcohspctrm, cfg.submethod, baselineindx); end
+%     for flop = 1:nfoi
+%       for tlop = 1:ntoi
+%         dum                       = tmph(:,:,flop,tlop)*tmph(:,:,flop,tlop)';
+%         tmpcohspctrm(:,flop,tlop) = reshape(dum./sqrt(abs(diag(dum))*abs(diag(dum))'), [ncmb 1]);
+%       end
+%     end
+%   end
+%   
+%   if ~isempty(cfg.submethod), tmpcohspctrm = baseline(tmpcohspctrm, cfg.submethod, baselineindx); end
 %        if ~isempty(cfg.submethod), tmppowspctrm = baseline(tmppowspctrm, cfg.submethod, baselineindx); end
-%	sumcohspctrm = tmpcohspctrm    + sumcohspctrm;
-%	sqrcohspctrm = tmpcohspctrm.^2 + sqrcohspctrm;
-%	sumpowspctrm = tmppowspctrm    + sumpowspctrm;
-%	sqrpowspctrm = tmppowspctrm.^2 + sqrpowspctrm;
+%   sumcohspctrm = tmpcohspctrm    + sumcohspctrm;
+%   sqrcohspctrm = tmpcohspctrm.^2 + sqrcohspctrm;
+%   sumpowspctrm = tmppowspctrm    + sumpowspctrm;
+%   sqrpowspctrm = tmppowspctrm.^2 + sqrpowspctrm;
 %      end
 %      warning on;
 %      cohspctrm = sumcohspctrm./nrpt;
@@ -743,14 +743,14 @@ end
 %        tmpdtf = reshape(tmpdtf, [ncmb nfoi ntoi ntap]);
 %        if ~isempty(cfg.submethod), tmpdtf = baseline(tmpdtf, cfg.submethod, baselineindx); end
 %        sumdtf = sumdtf + tmpdtf;
-%	sqrdtf = sqrdtf + tmpdtf.^2;
+%   sqrdtf = sqrdtf + tmpdtf.^2;
 %      end
 %      dtf = sumdtf./nrpt;
 %
 %      if nrpt>1,
 %        bias   = (nrpt - 1).^2;
-%	dtfvar = bias.*(sqrdtf - (sumdtf.^2)/nrpt)./(nrpt-1);
-%	dtfsem = sqrt(dtfvar./nrpt);
+%   dtfvar = bias.*(sqrdtf - (sumdtf.^2)/nrpt)./(nrpt-1);
+%   dtfsem = sqrt(dtfvar./nrpt);
 %      end
 %    case 'pdc'
 %      sumpdc = zeros(ncmb, nfoi, ntoi, ntap);
@@ -760,22 +760,22 @@ end
 %        %invh = zeros(size(h));
 %        %for j = 1:nfoi
 %        %  for k = 1:ntoi
-%	%    invh(:,:,j,k) = inv(h(:,:,j,k));
-%	%  end
+%   %    invh(:,:,j,k) = inv(h(:,:,j,k));
+%   %  end
 %        %end
 %        den    = sum(abs(invh).^2,1);
 %        tmp    = abs(invh)./sqrt(repmat(den, [nchan 1 1 1 1]));
 %        tmppdc = reshape(tmp, [ncmb nfoi ntoi ntap]);
 %        if ~isempty(cfg.submethod), tmppdc = baseline(tmppdc, cfg.submethod, baselineindx); end
-%	sumpdc = sumpdc + tmppdc;
-%	sqrpdc = sqrpdc + tmppdc.^2;
+%   sumpdc = sumpdc + tmppdc;
+%   sqrpdc = sqrpdc + tmppdc.^2;
 %      end
 %      pdc = sumpdc./nrpt;
 %      
 %      if nrpt>1,
 %        bias   = (nrpt - 1).^2;
-%	pdcvar = bias.*(sqrpdc - (sumpdc.^2)/nrpt)./(nrpt-1);
-%	pdcsem = sqrt(pdcvar./nrpt);
+%   pdcvar = bias.*(sqrpdc - (sumpdc.^2)/nrpt)./(nrpt-1);
+%   pdcsem = sqrt(pdcvar./nrpt);
 %      end
 %    otherwise
 %      error('unknown cohmethod specified in cfg.cohmethod');

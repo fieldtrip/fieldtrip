@@ -105,14 +105,14 @@ if isfreq
     case 'sum'
       if isfield(data, 'powspctrm'),
         % compute the power of each planar channel, by summing the horizontal and vertical gradients
-	dimtok = tokenize(dimord,'_');
-	catdim = strmatch('chan',dimtok);
-	if catdim==1,
-	  tmp1 = data.powspctrm(sel_dH,:,:,:) + data.powspctrm(sel_dV,:,:,:);
-	  tmp2 = data.powspctrm(sel_other,:,:,:);
-	elseif catdim==2,
-	  tmp1 = data.powspctrm(:,sel_dH,:,:,:) + data.powspctrm(:,sel_dV,:,:,:);
-	  tmp2 = data.powspctrm(:,sel_other,:,:,:);
+    dimtok = tokenize(dimord,'_');
+    catdim = strmatch('chan',dimtok);
+    if catdim==1,
+      tmp1 = data.powspctrm(sel_dH,:,:,:) + data.powspctrm(sel_dV,:,:,:);
+      tmp2 = data.powspctrm(sel_other,:,:,:);
+    elseif catdim==2,
+      tmp1 = data.powspctrm(:,sel_dH,:,:,:) + data.powspctrm(:,sel_dV,:,:,:);
+      tmp2 = data.powspctrm(:,sel_other,:,:,:);
         else
           error('unsupported dimension order of frequency data');
         end
@@ -125,7 +125,7 @@ if isfreq
         if isempty(cfg.foilim), cfg.foilim = [data.freq(1) data.freq(end)]; end;
         fbin = nearest(data.freq, cfg.foilim(1)):nearest(data.freq, cfg.foilim(2));
         
-	Nrpt   = size(data.fourierspctrm,1);
+    Nrpt   = size(data.fourierspctrm,1);
         Nsgn   = length(sel_dH);
         Nfrq   = length(fbin);
         Ntim   = size(data.fourierspctrm,4);
@@ -135,16 +135,16 @@ if isfreq
         for j = 1:Nsgn
           progress(j/Nsgn, 'computing the svd of signal %d/%d\n', j, Nsgn);
           for k = 1:Nfrq
-	    dum = reshape(data.fourierspctrm(:,[sel_dH(j) sel_dV(j)],fbin(k),:), [Nrpt 2 Ntim]);
-	    dum = permute(dum, [2 3 1]);
-	    dum = reshape(dum, [2 Ntim*Nrpt]);
-	    timbin = ~isnan(dum(1,:));
-	    dum2   = svdfft(dum(:,timbin),1,data.cumtapcnt);
+        dum = reshape(data.fourierspctrm(:,[sel_dH(j) sel_dV(j)],fbin(k),:), [Nrpt 2 Ntim]);
+        dum = permute(dum, [2 3 1]);
+        dum = reshape(dum, [2 Ntim*Nrpt]);
+        timbin = ~isnan(dum(1,:));
+        dum2   = svdfft(dum(:,timbin),1,data.cumtapcnt);
             dum(1,timbin) = dum2;
-	    dum = reshape(dum(1,:),[Ntim Nrpt]);
-	    fourier(:,j,k,:) = transpose(dum);
+        dum = reshape(dum(1,:),[Ntim Nrpt]);
+        fourier(:,j,k,:) = transpose(dum);
 
-	    %for m = 1:Ntim
+        %for m = 1:Ntim
             %  dum                     = data.fourierspctrm(:,[sel_dH(j) sel_dV(j)],fbin(k),m);
             %  timbin                  = find(~isnan(dum(:,1)));
             %  [fourier(timbin,j,k,m)] = svdfft(transpose(dum(timbin,:)),1);
@@ -171,8 +171,8 @@ else
       Nrpt = length(data.trial);
       for k = 1:Nrpt
         tmp1 = sqrt(data.trial{k}(sel_dH,:).^2 + data.trial{k}(sel_dV,:).^2);
-	tmp2 = data.trial{k}(sel_other,:);
-	data.trial{k} = [tmp1;tmp2];
+    tmp2 = data.trial{k}(sel_other,:);
+    data.trial{k} = [tmp1;tmp2];
       end
     case 'svd'
       Nrpt = length(data.trial);
@@ -184,19 +184,19 @@ else
       tmpdat = zeros(2, sum(Nsmp));
       for k = 1:Nsgn
         for m = 1:Nrpt
-	  tmpdat(:, (Csmp(m)+1):Csmp(m+1)) = data.trial{m}([sel_dH(k) sel_dV(k)],:);
-	end
+      tmpdat(:, (Csmp(m)+1):Csmp(m+1)) = data.trial{m}([sel_dH(k) sel_dV(k)],:);
+    end
         tmpdat2 = abs(svdfft(tmpdat,1));
-	tmpdat2 = mat2cell(tmpdat2, 1, Nsmp);
+    tmpdat2 = mat2cell(tmpdat2, 1, Nsmp);
         for m = 1:Nrpt
-	  if k==1, trial{m} = zeros(Nsgn, Nsmp(m)); end
-	  trial{m}(k,:) = tmpdat2{m};
-	end
+      if k==1, trial{m} = zeros(Nsgn, Nsmp(m)); end
+      trial{m}(k,:) = tmpdat2{m};
+    end
       end
       
       for m = 1:Nrpt
         other = data.trial{m}(sel_other,:);
-	trial{m} = [trial{m}; other];
+    trial{m} = [trial{m}; other];
       end
       data.trial = trial;
 

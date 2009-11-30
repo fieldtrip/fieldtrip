@@ -42,12 +42,12 @@ spikechan = (spikechan==ntrial);
 % determine the channels to be averaged
 cfg.channel = channelselection(cfg.channel, data.label);
 chansel     = match_str(data.label, cfg.channel);
-nchansel    = length(cfg.channel);	% number of channels
+nchansel    = length(cfg.channel);  % number of channels
 
 % determine the spike channel on which will be triggered
 cfg.spikechannel = channelselection(cfg.spikechannel, data.label);
 spikesel         = match_str(data.label, cfg.spikechannel);
-nspikesel        = length(cfg.spikechannel);	% number of channels
+nspikesel        = length(cfg.spikechannel);    % number of channels
 
 if nspikesel==0
   error('no spike channel selected');

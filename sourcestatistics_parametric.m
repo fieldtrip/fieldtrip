@@ -128,9 +128,9 @@ end
 % collect the data to perform the statistics on, the resulting array will contain
 %   source(i).df
 %   source(i).avg
-%   source(i).var		optionally
-%   source(i).sem		optionally
-%   source(i).trial		optionally
+%   source(i).var       optionally
+%   source(i).sem       optionally
+%   source(i).trial     optionally
 
 for condition=1:Nconditions
   % source.df contains the number of repetitions used in computing the average and variance
@@ -199,7 +199,7 @@ switch lower(cfg.statistic)
       value = [];
       group = [];
       for condition=1:Nconditions
-        N = size(source(condition).trial,2);	% number of resamplings or single trials
+        N = size(source(condition).trial,2);    % number of resamplings or single trials
         value = [value; source(condition).trial(voxel,:)];
         group = [group; condition * ones(N,1)];
       end

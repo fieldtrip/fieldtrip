@@ -46,125 +46,125 @@ if useafni
   % column 1 contains sub-brick
   % column 2 contains value
   % column 3 contains stucture name
-  %	1	68	Hippocampus
-  %	1	71	Amygdala
-  %	0	20	Posterior Cingulate
-  %	0	21	Anterior Cingulate
-  %	0	22	Subcallosal Gyrus
-  %	0	24	Transverse Temporal Gyrus
-  %	0	25	Uncus
-  %	0	26	Rectal Gyrus
-  %	0	27	Fusiform Gyrus
-  %	0	28	Inferior Occipital Gyrus
-  %	0	29	Inferior Temporal Gyrus
-  %	0	30	Insula
-  %	0	31	Parahippocampal Gyrus
-  %	0	32	Lingual Gyrus
-  %	0	33	Middle Occipital Gyrus
-  %	0	34	Orbital Gyrus
-  %	0	35	Middle Temporal Gyrus
-  %	0	36	Superior Temporal Gyrus
-  %	0	37	Superior Occipital Gyrus
-  %	0	39	Inferior Frontal Gyrus
-  %	0	40	Cuneus
-  %	0	41	Angular Gyrus
-  %	0	42	Supramarginal Gyrus
-  %	0	43	Cingulate Gyrus
-  %	0	44	Inferior Parietal Lobule
-  %	0	45	Precuneus
-  %	0	46	Superior Parietal Lobule
-  %	0	47	Middle Frontal Gyrus
-  %	0	48	Paracentral Lobule
-  %	0	49	Postcentral Gyrus
-  %	0	50	Precentral Gyrus
-  %	0	51	Superior Frontal Gyrus
-  %	0	52	Medial Frontal Gyrus
-  %	0	70	Lentiform Nucleus
-  %	1	72	Hypothalamus
-  %	1	73	Red Nucleus
-  %	1	74	Substantia Nigra
-  %	0	75	Claustrum
-  %	0	76	Thalamus
-  %	0	77	Caudate
-  %	1	124	Caudate Tail
-  %	1	125	Caudate Body
-  %	1	126	Caudate Head
-  %	1	128	Ventral Anterior Nucleus
-  %	1	129	Ventral Posterior Medial Nucleus
-  %	1	130	Ventral Posterior Lateral Nucleus
-  %	1	131	Medial Dorsal Nucleus
-  %	1	132	Lateral Dorsal Nucleus
-  %	1	133	Pulvinar
-  %	1	134	Lateral Posterior Nucleus
-  %	1	135	Ventral Lateral Nucleus
-  %	1	136	Midline Nucleus
-  %	1	137	Anterior Nucleus
-  %	1	138	Mammillary Body
-  %	1	144	Medial Globus Pallidus
-  %	1	145	Lateral Globus Pallidus
-  %	1	151	Putamen
-  %	1	146	Nucleus Accumbens
-  %	1	147	Medial Geniculum Body
-  %	1	148	Lateral Geniculum Body
-  %	1	149	Subthalamic Nucleus
-  %	1	81	Brodmann area 1
-  %	1	82	Brodmann area 2
-  %	1	83	Brodmann area 3
-  %	1	84	Brodmann area 4
-  %	1	85	Brodmann area 5
-  %	1	86	Brodmann area 6
-  %	1	87	Brodmann area 7
-  %	1	88	Brodmann area 8
-  %	1	89	Brodmann area 9
-  %	1	90	Brodmann area 10
-  %	1	91	Brodmann area 11
-  %	1	93	Brodmann area 13
-  %	1	94	Brodmann area 17
-  %	1	95	Brodmann area 18
-  %	1	96	Brodmann area 19
-  %	1	97	Brodmann area 20
-  %	1	98	Brodmann area 21
-  %	1	99	Brodmann area 22
-  %	1	100	Brodmann area 23
-  %	1	101	Brodmann area 24
-  %	1	102	Brodmann area 25
-  %	1	103	Brodmann area 27
-  %	1	104	Brodmann area 28
-  %	1	105	Brodmann area 29
-  %	1	106	Brodmann area 30
-  %	1	107	Brodmann area 31
-  %	1	108	Brodmann area 32
-  %	1	109	Brodmann area 33
-  %	1	110	Brodmann area 34
-  %	1	111	Brodmann area 35
-  %	1	112	Brodmann area 36
-  %	1	113	Brodmann area 37
-  %	1	114	Brodmann area 38
-  %	1	115	Brodmann area 39
-  %	1	116	Brodmann area 40
-  %	1	117	Brodmann area 41
-  %	1	118	Brodmann area 42
-  %	1	119	Brodmann area 43
-  %	1	120	Brodmann area 44
-  %	1	121	Brodmann area 45
-  %	1	122	Brodmann area 46
-  %	1	123	Brodmann area 47
-  %	0	53	Uvula of Vermis
-  %	0	54	Pyramis of Vermis
-  %	0	55	Tuber of Vermis
-  %	0	56	Declive of Vermis
-  %	0	57	Culmen of Vermis
-  %	0	58	Cerebellar Tonsil
-  %	0	59	Inferior Semi-Lunar Lobule
-  %	0	60	Fastigium
-  %	0	61	Nodule
-  %	0	62	Uvula
-  %	0	63	Pyramis
-  %	0	66	Culmen
-  %	0	65	Declive
-  %	1	127	Dentate
-  %	0	64	Tuber
-  %	0	67	Cerebellar Lingual
+  % 1   68  Hippocampus
+  % 1   71  Amygdala
+  % 0   20  Posterior Cingulate
+  % 0   21  Anterior Cingulate
+  % 0   22  Subcallosal Gyrus
+  % 0   24  Transverse Temporal Gyrus
+  % 0   25  Uncus
+  % 0   26  Rectal Gyrus
+  % 0   27  Fusiform Gyrus
+  % 0   28  Inferior Occipital Gyrus
+  % 0   29  Inferior Temporal Gyrus
+  % 0   30  Insula
+  % 0   31  Parahippocampal Gyrus
+  % 0   32  Lingual Gyrus
+  % 0   33  Middle Occipital Gyrus
+  % 0   34  Orbital Gyrus
+  % 0   35  Middle Temporal Gyrus
+  % 0   36  Superior Temporal Gyrus
+  % 0   37  Superior Occipital Gyrus
+  % 0   39  Inferior Frontal Gyrus
+  % 0   40  Cuneus
+  % 0   41  Angular Gyrus
+  % 0   42  Supramarginal Gyrus
+  % 0   43  Cingulate Gyrus
+  % 0   44  Inferior Parietal Lobule
+  % 0   45  Precuneus
+  % 0   46  Superior Parietal Lobule
+  % 0   47  Middle Frontal Gyrus
+  % 0   48  Paracentral Lobule
+  % 0   49  Postcentral Gyrus
+  % 0   50  Precentral Gyrus
+  % 0   51  Superior Frontal Gyrus
+  % 0   52  Medial Frontal Gyrus
+  % 0   70  Lentiform Nucleus
+  % 1   72  Hypothalamus
+  % 1   73  Red Nucleus
+  % 1   74  Substantia Nigra
+  % 0   75  Claustrum
+  % 0   76  Thalamus
+  % 0   77  Caudate
+  % 1   124 Caudate Tail
+  % 1   125 Caudate Body
+  % 1   126 Caudate Head
+  % 1   128 Ventral Anterior Nucleus
+  % 1   129 Ventral Posterior Medial Nucleus
+  % 1   130 Ventral Posterior Lateral Nucleus
+  % 1   131 Medial Dorsal Nucleus
+  % 1   132 Lateral Dorsal Nucleus
+  % 1   133 Pulvinar
+  % 1   134 Lateral Posterior Nucleus
+  % 1   135 Ventral Lateral Nucleus
+  % 1   136 Midline Nucleus
+  % 1   137 Anterior Nucleus
+  % 1   138 Mammillary Body
+  % 1   144 Medial Globus Pallidus
+  % 1   145 Lateral Globus Pallidus
+  % 1   151 Putamen
+  % 1   146 Nucleus Accumbens
+  % 1   147 Medial Geniculum Body
+  % 1   148 Lateral Geniculum Body
+  % 1   149 Subthalamic Nucleus
+  % 1   81  Brodmann area 1
+  % 1   82  Brodmann area 2
+  % 1   83  Brodmann area 3
+  % 1   84  Brodmann area 4
+  % 1   85  Brodmann area 5
+  % 1   86  Brodmann area 6
+  % 1   87  Brodmann area 7
+  % 1   88  Brodmann area 8
+  % 1   89  Brodmann area 9
+  % 1   90  Brodmann area 10
+  % 1   91  Brodmann area 11
+  % 1   93  Brodmann area 13
+  % 1   94  Brodmann area 17
+  % 1   95  Brodmann area 18
+  % 1   96  Brodmann area 19
+  % 1   97  Brodmann area 20
+  % 1   98  Brodmann area 21
+  % 1   99  Brodmann area 22
+  % 1   100 Brodmann area 23
+  % 1   101 Brodmann area 24
+  % 1   102 Brodmann area 25
+  % 1   103 Brodmann area 27
+  % 1   104 Brodmann area 28
+  % 1   105 Brodmann area 29
+  % 1   106 Brodmann area 30
+  % 1   107 Brodmann area 31
+  % 1   108 Brodmann area 32
+  % 1   109 Brodmann area 33
+  % 1   110 Brodmann area 34
+  % 1   111 Brodmann area 35
+  % 1   112 Brodmann area 36
+  % 1   113 Brodmann area 37
+  % 1   114 Brodmann area 38
+  % 1   115 Brodmann area 39
+  % 1   116 Brodmann area 40
+  % 1   117 Brodmann area 41
+  % 1   118 Brodmann area 42
+  % 1   119 Brodmann area 43
+  % 1   120 Brodmann area 44
+  % 1   121 Brodmann area 45
+  % 1   122 Brodmann area 46
+  % 1   123 Brodmann area 47
+  % 0   53  Uvula of Vermis
+  % 0   54  Pyramis of Vermis
+  % 0   55  Tuber of Vermis
+  % 0   56  Declive of Vermis
+  % 0   57  Culmen of Vermis
+  % 0   58  Cerebellar Tonsil
+  % 0   59  Inferior Semi-Lunar Lobule
+  % 0   60  Fastigium
+  % 0   61  Nodule
+  % 0   62  Uvula
+  % 0   63  Pyramis
+  % 0   66  Culmen
+  % 0   65  Declive
+  % 1   127 Dentate
+  % 0   64  Tuber
+  % 0   67  Cerebellar Lingual
 
   atlas.descr.brick = [
     1

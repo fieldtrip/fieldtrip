@@ -340,7 +340,7 @@ for i=chansel(:)'
 
       for j=1:length(peaks)
         begsmp = peaks(j);
-        endsmp = peaks(j) + 32 - 1;	  % FIXME implement a peak shift
+        endsmp = peaks(j) + 32 - 1;   % FIXME implement a peak shift
         spike.waveform{1}(:,j) = dat(begsmp:endsmp);
         spike.timestamp{1}(j)  = hdr.FirstTimeStamp + typecast((peaks(j)-1)*hdr.TimeStampPerSample, class(hdr.FirstTimeStamp));
       end

@@ -710,33 +710,33 @@ channeighbstructmat=channeighbstructmat | logical(eye(nchan));
 
 chancmbneighbstructmat = false(nchansqr);
 if original
-	% two channel pairs are neighbours if their first elements are
-	% neighbours
-	chancmbneighbstructmat = logical(kron(channeighbstructmat,ones(nchan)));
-	
-	% or if their second elements are neighbours
-	chancmbneighbstructmat = chancmbneighbstructmat | logical(kron(ones(nchan),channeighbstructmat));
+    % two channel pairs are neighbours if their first elements are
+    % neighbours
+    chancmbneighbstructmat = logical(kron(channeighbstructmat,ones(nchan)));
+    
+    % or if their second elements are neighbours
+    chancmbneighbstructmat = chancmbneighbstructmat | logical(kron(ones(nchan),channeighbstructmat));
 else    %  version that consumes less memory
-	for chanindx=1:nchan
+    for chanindx=1:nchan
         % two channel pairs are neighbours if their first elements are neighbours
         % or if their second elements are neighbours
         chancmbneighbstructmat(:,((chanindx-1)*nchan + 1):(chanindx*nchan)) = ...
             logical(kron(channeighbstructmat(:,chanindx),ones(nchan))) | ...
             logical(kron(ones(nchan,1),channeighbstructmat));
-	end;
+    end;
 end;
 
 if ~orderedchancmbs
     if original
-		% or if the first element of the row channel pair is a neighbour of the
-		% second element of the column channel pair
-		chancmbneighbstructmat = chancmbneighbstructmat | logical(repmat(kron(channeighbstructmat,ones(nchan,1)), [1 nchan]));
-		
-		% or if the first element of the column channel pair is a neighbour of the
-		% second element of the row channel pair
-		chancmbneighbstructmat = chancmbneighbstructmat | logical(repmat(kron(channeighbstructmat,ones(1,nchan)),[nchan 1]));
+        % or if the first element of the row channel pair is a neighbour of the
+        % second element of the column channel pair
+        chancmbneighbstructmat = chancmbneighbstructmat | logical(repmat(kron(channeighbstructmat,ones(nchan,1)), [1 nchan]));
+        
+        % or if the first element of the column channel pair is a neighbour of the
+        % second element of the row channel pair
+        chancmbneighbstructmat = chancmbneighbstructmat | logical(repmat(kron(channeighbstructmat,ones(1,nchan)),[nchan 1]));
     else
-		for chanindx=1:nchan
+        for chanindx=1:nchan
             % two channel pairs are neighbours if 
             % the first element of the row channel pair is a neighbour of the
             % second element of the column channel pair
@@ -746,7 +746,7 @@ if ~orderedchancmbs
                 chancmbneighbstructmat(:,((chanindx-1)*nchan + 1):(chanindx*nchan)) | ... 
                 logical(kron(channeighbstructmat,ones(nchan,1))) | ...
                 logical(repmat(kron(channeighbstructmat(:,chanindx),ones(1,nchan)),[nchan 1]));
-		end;
+        end;
     end;
 end;
 
@@ -768,85 +768,85 @@ channeighbstructmat = logical(channeighbstructmat.*(ones(nchan)-diag(ones(nchan,
 chancmbneighbselmat = false(nchansqr);
 if orderedchancmbs
     if original
-		% if the first element of the row pair is a neighbour of the
-		% first element of the column pair
-		chancmbneighbselmat = logical(kron(channeighbstructmat,ones(nchan)));
-		% and the second element of the row pair is a neighbour of the
-		% second element of the column pair
-		chancmbneighbselmat = chancmbneighbselmat & logical(kron(ones(nchan),channeighbstructmat));
+        % if the first element of the row pair is a neighbour of the
+        % first element of the column pair
+        chancmbneighbselmat = logical(kron(channeighbstructmat,ones(nchan)));
+        % and the second element of the row pair is a neighbour of the
+        % second element of the column pair
+        chancmbneighbselmat = chancmbneighbselmat & logical(kron(ones(nchan),channeighbstructmat));
     else    %  version that consumes less memory 
-		for chanindx=1:nchan
-			% if the first element of the row pair is a neighbour of the
-			% first element of the column pair
-			% and the second element of the row pair is a neighbour of the
-			% second element of the column pair
+        for chanindx=1:nchan
+            % if the first element of the row pair is a neighbour of the
+            % first element of the column pair
+            % and the second element of the row pair is a neighbour of the
+            % second element of the column pair
             chancmbneighbselmat(:,((chanindx-1)*nchan + 1):(chanindx*nchan)) = ...
-				logical(kron(channeighbstructmat(:,chanindx),ones(nchan))) & logical(kron(ones(nchan,1),channeighbstructmat));
-		end;
+                logical(kron(channeighbstructmat(:,chanindx),ones(nchan))) & logical(kron(ones(nchan,1),channeighbstructmat));
+        end;
     end;
 else  % unordered channel combinations
     if original
         % if the first element of the row pair is a neighbour of one of the
         % two elements of the column pair
         chancmbneighbselmat = logical(kron(channeighbstructmat,ones(nchan))) | logical(repmat(kron(channeighbstructmat,ones(nchan,1)), [1 nchan]));
-		% and the second element of the row pair is a neighbour of one of the
-		% two elements of the column pair
-		chancmbneighbselmat = chancmbneighbselmat & (logical(kron(ones(nchan),channeighbstructmat)) | ... 
+        % and the second element of the row pair is a neighbour of one of the
+        % two elements of the column pair
+        chancmbneighbselmat = chancmbneighbselmat & (logical(kron(ones(nchan),channeighbstructmat)) | ... 
             logical(repmat(kron(channeighbstructmat,ones(1,nchan)), [nchan 1])));
     else    %  version that consumes less memory 
-		for chanindx=1:nchan
-			% if the first element of the row pair is a neighbour of one of the
-			% two elements of the column pair
-			% and the second element of the row pair is a neighbour of one of the
-			% two elements of the column pair
+        for chanindx=1:nchan
+            % if the first element of the row pair is a neighbour of one of the
+            % two elements of the column pair
+            % and the second element of the row pair is a neighbour of one of the
+            % two elements of the column pair
             chancmbneighbselmat(:,((chanindx-1)*nchan + 1):(chanindx*nchan)) = ...
-			(logical(kron(channeighbstructmat(:,chanindx),ones(nchan))) | logical(kron(channeighbstructmat,ones(nchan,1)))) ...
-			& (logical(kron(ones(nchan,1),channeighbstructmat)) | ...
+            (logical(kron(channeighbstructmat(:,chanindx),ones(nchan))) | logical(kron(channeighbstructmat,ones(nchan,1)))) ...
+            & (logical(kron(ones(nchan,1),channeighbstructmat)) | ...
                 logical(repmat(kron(channeighbstructmat(:,chanindx),ones(1,nchan)), [nchan 1])));
-		end;
+        end;
     end;
 end;
 
 if original
-	% remove all pairs of channel combinations that have one channel in common.
-	% common channel in the first elements of the two pairs.
-	chancmbneighbselmat = chancmbneighbselmat & kron(~eye(nchan),ones(nchan));
-	
-	% common channel in the second elements of the two pairs.
-	chancmbneighbselmat = chancmbneighbselmat & kron(ones(nchan),~eye(nchan));
-	
-	% common channel in the first element of the row pair and the second
-	% element of the column pair.
-	tempselmat=logical(zeros(nchansqr));
-	tempselmat(:)= ~repmat([repmat([ones(nchan,1); zeros(nchansqr,1)],[(nchan-1) 1]); ones(nchan,1)],[nchan 1]);
-	chancmbneighbselmat = chancmbneighbselmat & tempselmat;
-	
-	% common channel in the second element of the row pair and the first 
-	% element of the column pair.
-	chancmbneighbselmat = chancmbneighbselmat & tempselmat';
+    % remove all pairs of channel combinations that have one channel in common.
+    % common channel in the first elements of the two pairs.
+    chancmbneighbselmat = chancmbneighbselmat & kron(~eye(nchan),ones(nchan));
+    
+    % common channel in the second elements of the two pairs.
+    chancmbneighbselmat = chancmbneighbselmat & kron(ones(nchan),~eye(nchan));
+    
+    % common channel in the first element of the row pair and the second
+    % element of the column pair.
+    tempselmat=logical(zeros(nchansqr));
+    tempselmat(:)= ~repmat([repmat([ones(nchan,1); zeros(nchansqr,1)],[(nchan-1) 1]); ones(nchan,1)],[nchan 1]);
+    chancmbneighbselmat = chancmbneighbselmat & tempselmat;
+    
+    % common channel in the second element of the row pair and the first 
+    % element of the column pair.
+    chancmbneighbselmat = chancmbneighbselmat & tempselmat';
 else
-	noteye=~eye(nchan);
-	tempselmat=logical(zeros(nchansqr,nchan));
-	tempselmat(:)= ~[repmat([ones(nchan,1); zeros(nchansqr,1)],[(nchan-1) 1]); ones(nchan,1)];
-	for chanindx=1:nchan
-		% remove all pairs of channel combinations that have one channel in common.
-		% common channel in the first elements of the two pairs.
-		% common channel in the second elements of the two pairs.
-		% common channel in the first element of the row pair and the second
-		% element of the column pair.
+    noteye=~eye(nchan);
+    tempselmat=logical(zeros(nchansqr,nchan));
+    tempselmat(:)= ~[repmat([ones(nchan,1); zeros(nchansqr,1)],[(nchan-1) 1]); ones(nchan,1)];
+    for chanindx=1:nchan
+        % remove all pairs of channel combinations that have one channel in common.
+        % common channel in the first elements of the two pairs.
+        % common channel in the second elements of the two pairs.
+        % common channel in the first element of the row pair and the second
+        % element of the column pair.
         chancmbneighbselmat(:,((chanindx-1)*nchan + 1):(chanindx*nchan)) = ...
             chancmbneighbselmat(:,((chanindx-1)*nchan + 1):(chanindx*nchan)) ...
-			& logical(kron(noteye(:,chanindx),ones(nchan))) ...
-			& logical(kron(ones(nchan,1),noteye)) ...
+            & logical(kron(noteye(:,chanindx),ones(nchan))) ...
+            & logical(kron(ones(nchan,1),noteye)) ...
             & tempselmat;
-	end;
-	for chanindx=1:nchan
-		% remove all pairs of channel combinations that have one 
+    end;
+    for chanindx=1:nchan
+        % remove all pairs of channel combinations that have one 
         % common channel in the second element of the row pair and the first 
-		% element of the column pair.
+        % element of the column pair.
         chancmbneighbselmat(((chanindx-1)*nchan + 1):(chanindx*nchan),:) = ...
             chancmbneighbselmat(((chanindx-1)*nchan + 1):(chanindx*nchan),:) & tempselmat';
-	end;
+    end;
 end;
 
 % reorder and select the entries in chancmbneighbselmat such that they correspond to labelcmb.

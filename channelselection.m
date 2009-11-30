@@ -151,9 +151,9 @@ switch senstype(datachannel)
     % Not sure whether this should be here or outside the switch or
     % whether these specifications should be supported for systems
     % other than CTF.
-    labelmz   = datachannel(strncmp('MZ' , datachannel, length('MZ' )));	% central MEG channels
-    labelml   = datachannel(strncmp('ML' , datachannel, length('ML' )));	% left    MEG channels
-    labelmr   = datachannel(strncmp('MR' , datachannel, length('MR' )));	% right   MEG channels
+    labelmz   = datachannel(strncmp('MZ' , datachannel, length('MZ' )));    % central MEG channels
+    labelml   = datachannel(strncmp('ML' , datachannel, length('ML' )));    % left    MEG channels
+    labelmr   = datachannel(strncmp('MR' , datachannel, length('MR' )));    % right   MEG channels
     labelmlc  = datachannel(strncmp('MLC', datachannel, length('MLC')));
     labelmlf  = datachannel(strncmp('MLF', datachannel, length('MLF')));
     labelmlo  = datachannel(strncmp('MLO', datachannel, length('MLO')));

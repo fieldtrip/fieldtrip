@@ -36,9 +36,9 @@ function volumewrite(cfg, volume)
 %
 % Optional configuration items are
 %   cfg.downsample    = integer number (default = 1, i.e. no downsampling)
-%   cfg.fiducial.nas  = [x y z]	position of nasion
-%   cfg.fiducial.lpa  = [x y z]	position of LPA
-%   cfg.fiducial.rpa  = [x y z]	position of RPA
+%   cfg.fiducial.nas  = [x y z] position of nasion
+%   cfg.fiducial.lpa  = [x y z] position of LPA
+%   cfg.fiducial.rpa  = [x y z] position of RPA
 %   cfg.markfiducial  = 'yes' or 'no', mark the fiducials
 %   cfg.markorigin    = 'yes' or 'no', mark the origin
 %   cfg.markcorner    = 'yes' or 'no', mark the first corner of the volume
@@ -148,9 +148,9 @@ end
 
 if strcmp(cfg.markcorner, 'yes')
   % set the voxel of the first corner to the maximum value
-  data(1:2, 1:1, 1:1) = maxval;		% length 2 along x-axis
-  data(1:1, 1:3, 1:1) = maxval;		% length 3 along y-axis
-  data(1:1, 1:1, 1:4) = maxval;		% length 4 along z-axis
+  data(1:2, 1:1, 1:1) = maxval;     % length 2 along x-axis
+  data(1:1, 1:3, 1:1) = maxval;     % length 3 along y-axis
+  data(1:1, 1:1, 1:4) = maxval;     % length 4 along z-axis
 end
 
 % set not-a-number voxels to zero

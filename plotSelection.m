@@ -13,9 +13,9 @@ function plotSelection(userData, buttonState)
 % outcome of a statistical function applied to the selected region(s),
 % based on the calling plot type (multi, single, or topo). The statistical
 % functions used by default are:
-%	    for multiplots   : mean of selected channels
-%	    for singleplots  : none
-%	    for topoplots    : none
+%       for multiplots   : mean of selected channels
+%       for singleplots  : none
+%       for topoplots    : none
 %
 % userData is a structure array linked to the 'UserData' property of the
 % figure that contains the interactive ER/TFR plot. It contains the
@@ -47,9 +47,9 @@ function plotSelection(userData, buttonState)
 %                        plotted channels
 %
 % buttonState can be one of the following values:
-%	    0: button is not going up or down (it may be HELD down, though)
-%	    1: button is going down
-%	    2: button is going up
+%       0: button is not going up or down (it may be HELD down, though)
+%       1: button is going down
+%       2: button is going up
 %
 
 % Undocumented local options:

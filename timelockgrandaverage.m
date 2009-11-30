@@ -32,9 +32,9 @@ for i=1:length(varargin)
 end
 
 % set the defaults
-if ~isfield(cfg, 'channel'),        cfg.channel = 'all';		   end
+if ~isfield(cfg, 'channel'),        cfg.channel = 'all';           end
 if ~isfield(cfg, 'keepindividual'), cfg.keepindividual = 'no'; end
-if ~isfield(cfg, 'latency'),        cfg.latency = 'all';	     end
+if ~isfield(cfg, 'latency'),        cfg.latency = 'all';         end
 if ~isfield(cfg, 'normalizevar'),   cfg.normalizevar = 'N-1';  end
 
 % varargin{1} ... varargin{end} contain the individual ERFs
@@ -122,8 +122,8 @@ ResultVar = reshape(ResultVar, [ResultNChannels, ResultsNTimePoints]);
 %SWITCH CHANNEL TO LABEL?
 grandavg.label     = cfg.channel;       % cell-array
 grandavg.fsample   = varargin{1}.fsample;
-grandavg.avg       = ResultGrandavg; 		% Nchan x Nsamples
-grandavg.var       = ResultVar;		      % Nchan x Nsamples
+grandavg.avg       = ResultGrandavg;        % Nchan x Nsamples
+grandavg.var       = ResultVar;           % Nchan x Nsamples
 grandavg.time      = ResultsTime;       % 1 x Nsamples
 
 %KEEP INDIVIDUAL MEANS?

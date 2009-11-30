@@ -161,7 +161,7 @@ if strcmp(cfg.method,'superimposed')
   if ~isfield(cfg, 's3'),           cfg.s3 = [];                          end
   if ~isfield(cfg.s3, 'freq'),      cfg.s3.freq  = 30;                    end
   if ~isfield(cfg.s3, 'phase'),     cfg.s3.phase = 0;                     end
-  if ~isfield(cfg.s3, 'ampl'),    	cfg.s3.ampl  = 0;                     end
+  if ~isfield(cfg.s3, 'ampl'),      cfg.s3.ampl  = 0;                     end
 end
 
 if strcmp(cfg.method,'broadband')
@@ -185,7 +185,7 @@ if strcmp(cfg.method,'phalow_amphigh')
   if ~isfield(cfg, 's3'),           cfg.s3 = [];                          end
   if ~isfield(cfg.s3, 'freq'),      cfg.s3.freq = 0;                      end
   if ~isfield(cfg.s3, 'phase'),     cfg.s3.phase = 0;                     end
-  if ~isfield(cfg.s3, 'ampl'),    	cfg.s3.ampl = cfg.s1.ampl;            end
+  if ~isfield(cfg.s3, 'ampl'),      cfg.s3.ampl = cfg.s1.ampl;            end
 end
 
 if strcmp(cfg.method,'amplow_amphigh')
@@ -204,7 +204,7 @@ if strcmp(cfg.method,'amplow_amphigh')
   if ~isfield(cfg, 's3'),           cfg.s3 = [];                          end
   if ~isfield(cfg.s3, 'freq'),      cfg.s3.freq = 0;                      end
   if ~isfield(cfg.s3, 'phase'),     cfg.s3.phase = 0;                     end
-  if ~isfield(cfg.s3, 'ampl'),    	cfg.s3.ampl = cfg.s4.ampl;            end
+  if ~isfield(cfg.s3, 'ampl'),      cfg.s3.ampl = cfg.s4.ampl;            end
 end
 
 if strcmp(cfg.method,'phalow_freqhigh')

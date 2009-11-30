@@ -18,7 +18,7 @@ function [cfg, artifact] = artifact_manual(cfg);
 % You can specify:
 %   cfg.artfctdef.manual.pretrialtime   = time shown before trialstart (default 0)
 %   cfg.artfctdef.manual.posttrialtime  = time shown after trialend    (default 0)
-%   cfg.artfctdef.manual.fft	        = 'no' (default) or 'yes' turns on FFT window
+%   cfg.artfctdef.manual.fft            = 'no' (default) or 'yes' turns on FFT window
 %   cfg.artfctdef.manual.padding        = 'no' (default) or FFT-padding in seconds
 %
 % The FFT will be executed on the complete time interval including pre and post

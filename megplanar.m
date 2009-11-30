@@ -501,8 +501,8 @@ if ~strcmp(cfg.planarmethod, 'sourceproject')
         % combine the new labels into a single cell-array
         interp.label = [labelH(:); labelV(:); labelC(:); labelO(:)];
         % construct the planar gradiometer definition
-        planar.grad.pnt = data.grad.pnt;		% coils are on the same location
-        planar.grad.ori = data.grad.ori;		% coils have the same orientation
+        planar.grad.pnt = data.grad.pnt;        % coils are on the same location
+        planar.grad.ori = data.grad.ori;        % coils have the same orientation
         planar.grad.tra = [gradH; gradV] * data.grad.tra(gradindx,:);
         planar.grad.label = [labelH(:); labelV(:)];
         try,

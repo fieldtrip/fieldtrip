@@ -781,7 +781,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'loreta', 'rv
       dip(i).mom     = cell(1,size(tmpdip.pos,1));
       for ii=1:length(tmpdip.inside)
         indx = tmpdip.inside(ii);
-	dip(i).mom{indx} = tmpdip.mom{indx}(i,:);
+    dip(i).mom{indx} = tmpdip.mom{indx}(i,:);
       end
     end
   elseif strcmp(cfg.method, 'sam')
@@ -960,7 +960,7 @@ end
 
 if (strcmp(cfg.jackknife, 'yes') || strcmp(cfg.bootstrap, 'yes') || strcmp(cfg.pseudovalue, 'yes') || strcmp(cfg.singletrial, 'yes') || strcmp(cfg.rawtrial, 'yes')) && strcmp(cfg.keeptrials, 'yes')
   % keep the source reconstruction for each repeated or resampled trial
-  source.trial	= dip;
+  source.trial  = dip;
 end
 
 % get the output cfg

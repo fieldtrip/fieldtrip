@@ -83,9 +83,9 @@ elseif strcmp(freq.dimord, 'rpt_chan_freq_time')
     % Reshape freq.powspctrm into 3D matrix
     % This relies on dimord being 'rpt_chan_freq_time'
     tfdata = reshape(freq.powspctrm(i,:,:,:), ...
-		     size(freq.powspctrm,2), ...
-		     size(freq.powspctrm,3), ...
-		     size(freq.powspctrm,4));
+             size(freq.powspctrm,2), ...
+             size(freq.powspctrm,3), ...
+             size(freq.powspctrm,4));
     
     if strcmp(cfg.baselinetype, 'absolute'),      
       freq.powspctrm(i,:,:,:) = TFabschange(freq.time, freq.freq, tfdata, cfg.baseline);
@@ -155,7 +155,7 @@ end
 for k=1:size(TFdata,2) % loop frequencies
   for l=1:size(TFdata,1) % loop channels
     TFbl(l,k) = nan_mean(TFdata(l,k,tidx),3);%compute average baseline power
-					      
+                          
     if TFbl(l,k) == 0,
       error('Average baseline power is zero');
     end

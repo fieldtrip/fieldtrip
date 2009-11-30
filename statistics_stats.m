@@ -12,7 +12,7 @@ function [stat, cfg] = statistics_stats(cfg, dat, design);
 %   cfg.feedback  = 'no', 'text', 'textbar', 'gui'
 %   cfg.method    = 'stats'
 %   cfg.statistic = 'ttest'        test against a mean of zero
-%                   'ttest2'	     compare the mean in two conditions
+%                   'ttest2'         compare the mean in two conditions
 %                   'paired-ttest'
 %                   'anova1'
 %                   'kruskalwallis'

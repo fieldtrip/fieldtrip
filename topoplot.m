@@ -281,7 +281,7 @@ if ~isfield(cfg,'highlight')    cfg.highlight = 'off'; end; % 'off' or the elect
 if ~isfield(cfg,'hlmarker')     cfg.hlmarker = 'o';    end;
 if ~isfield(cfg,'hlcolor')      cfg.hlcolor = [0 0 0]; end;
 if ~isfield(cfg,'hlmarkersize') cfg.hlmarkersize = 6;  end;
-if ~isfield(cfg,'hllinewidth')	cfg.hllinewidth = 3;   end;
+if ~isfield(cfg,'hllinewidth')  cfg.hllinewidth = 3;   end;
 if ~isfield(cfg,'hlfacecolor')  cfg.hlfacecolor = cfg.hlcolor; end;
 
 if isfield(cfg,'colormap')

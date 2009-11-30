@@ -141,8 +141,8 @@ if ~isempty(restindx)
   rest.label = data.label(restindx);    % first remember the rest
   data.label = data.label(dataindx);    % then reduce the data
   for i=1:Ntrials
-    rest.trial{i} = data.trial{i}(restindx,:);	% first remember the rest
-    data.trial{i} = data.trial{i}(dataindx,:);	% then reduce the data
+    rest.trial{i} = data.trial{i}(restindx,:);  % first remember the rest
+    data.trial{i} = data.trial{i}(dataindx,:);  % then reduce the data
   end
 else
   rest.label = {};
@@ -431,7 +431,7 @@ end
 
 % store the realigned data in a new structure
 interp.label   = template.grad.label;
-interp.grad    = template.grad;	  % replace with the template gradiometer array
+interp.grad    = template.grad;   % replace with the template gradiometer array
 interp.trial   = data.realign;    % remember the processed data
 interp.fsample = data.fsample;
 interp.time    = data.time;

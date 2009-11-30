@@ -10,7 +10,7 @@ function [varargout] = componentbrowser(cfg, comp)
 % cfg.comp   = a vector with the components to plot (ex. 1:10) (optional)
 % cfg.trial  = choose which trial to plot first (optional, only one trial)
 % cfg.layout = because the output of componentanalysis does not contain
-% 	information on the layout, you need to specify in a variety of ways:
+%   information on the layout, you need to specify in a variety of ways:
 %  - you can provide a pre-computed layout structure (see prepare_layout)
 %  - you can give the name of an ascii layout file with extension *.lay
 %  - you can give the name of an electrode file

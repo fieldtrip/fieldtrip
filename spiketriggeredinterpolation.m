@@ -62,7 +62,7 @@ chansel     = match_str(data.label, cfg.channel);
 % determine the spike channel on which will be triggered
 cfg.spikechannel = channelselection(cfg.spikechannel, data.label);
 spikesel         = match_str(data.label, cfg.spikechannel);
-nspikesel        = length(cfg.spikechannel);	% number of spike channels
+nspikesel        = length(cfg.spikechannel);    % number of spike channels
 
 if nspikesel==0
   error('no spike channel selected');

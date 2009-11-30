@@ -415,10 +415,10 @@ if ispccdata
       % compute eta
       if strcmp(cfg.eta, 'yes')
         [source.avg.eta(i), source.avg.ori{i}] = csd2eta(source.avg.csd{i}(dipsel,dipsel));
-	if ~isempty(refsel),
-	  %FIXME this only makes sense when only a reference signal OR a dipole is selected
-	  [source.avg.etacsd(i), source.avg.ucsd{i}] = csd2eta(source.avg.csd{i}(dipsel,refsel));
-	end
+    if ~isempty(refsel),
+      %FIXME this only makes sense when only a reference signal OR a dipole is selected
+      [source.avg.etacsd(i), source.avg.ucsd{i}] = csd2eta(source.avg.csd{i}(dipsel,refsel));
+    end
       end
 
       %compute fa
@@ -591,8 +591,8 @@ end
 
 if strcmp(source.method, 'pseudovalue')
   % compute the pseudovalues for the beamformer output
-  avg = source.trial(1);		% the first is the complete average
-  Ntrials = length(source.trial)-1;	% the remaining are the leave-one-out averages
+  avg = source.trial(1);        % the first is the complete average
+  Ntrials = length(source.trial)-1; % the remaining are the leave-one-out averages
   pseudoval = [];
   if isfield(source.trial, 'pow')
     allavg = getfield(avg, 'pow');

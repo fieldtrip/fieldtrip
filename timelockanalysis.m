@@ -133,8 +133,8 @@ end
 % determine the channels of interest
 cfg.channel = channelselection(cfg.channel, data.label);
 chansel     = match_str(data.label, cfg.channel);
-nchan       = length(cfg.channel);	% number of channels
-numsamples  = zeros(ntrial,1);		% number of selected samples in each trial, is determined later
+nchan       = length(cfg.channel);  % number of channels
+numsamples  = zeros(ntrial,1);      % number of selected samples in each trial, is determined later
 
 % determine the duration of each trial
 for i=1:ntrial
@@ -145,8 +145,8 @@ end
 % automatically determine the latency window which is possible in all trials
 minperlength = [max(begsamplatency) min(endsamplatency)];
 maxperlength = [min(begsamplatency) max(endsamplatency)];
-maxtrllength = round((max(endsamplatency)-min(begsamplatency))*data.fsample) + 1;		% in samples
-abstimvec    = ([1:maxtrllength] + min(data.offset) -1)./data.fsample;			      	% in seconds
+maxtrllength = round((max(endsamplatency)-min(begsamplatency))*data.fsample) + 1;       % in samples
+abstimvec    = ([1:maxtrllength] + min(data.offset) -1)./data.fsample;                  % in seconds
 
 % latency window for averaging and variance computation is given in seconds
 if (strcmp(cfg.latency, 'minperlength'))
