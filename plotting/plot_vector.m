@@ -19,10 +19,15 @@ function [varargout] = plot_vector(varargin)
 %   'fontsize'
 %   'axis'          can be 'yes' or 'no'
 %   'box'           can be 'yes' or 'no'
-%   'color'
-%   'linewidth'
 %   'highlight'
 %   'highlightstyle'
+%   'color'
+%   'linewidth'
+%   'markersize'
+%   'markerfacecolor'
+%
+%
+%
 %
 % Example use
 %   plot_vector(randn(1,100), 'width', 1, 'height', 1, 'hpos', 0, 'vpos', 0)
