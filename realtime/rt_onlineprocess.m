@@ -35,11 +35,11 @@ if ~isfield(cfg, 'readevent'),      cfg.readevent = 'no';     end % capture even
 if ~isfield(cfg, 'jumptoeof'),      cfg.jumptoeof = 'no';     end % jump to end of file at initialization
 if ~isfield(cfg, 'nexample'),       cfg.nexample = inf;       end
 if ~isfield(cfg, 'foi'),            cfg.foi = 10;             end % from alpha frequency
-if ~isfield(cfg, 'ntraining')       cfg.ntraining=inf;        end % the number of trials to be used in the training phase
+if ~isfield(cfg, 'ntraining'),      cfg.ntraining= inf;       end % the number of trials to be used in the training phase
+if ~isfield(cfg, 'verbose'),        cfg.verbose=0;            end % verbose
 if ~isfield(cfg, 'channel'),        cfg.channel = {'MLO' 'MRO'}';               end %channels to be used
 if ~isfield(cfg, 'datafile'),       cfg.datafile='shm://';                      end %input stream
 if ~isfield(cfg, 'ostream'),        cfg.ostream='tcp://presentation011:1976';   end %output stream
-
 % translate dataset into datafile+headerfile
 cfg = checkconfig(cfg, 'dataset2files', 'yes');
 cfg = checkconfig(cfg, 'required', {'datafile' 'headerfile'});
@@ -200,7 +200,9 @@ while cfg.count<cfg.nexample
         if cfg.count<cfg.ntraining
             %accumulative command is saving for updating mean and std.
             ac_cmd=[ac_cmd,cmd1];
-            sprintf('trainig sample %d',cfg.count);
+            if cfg.verbose
+                sprintf('trainig sample %d',cfg.count);
+            end
         end
         R_threshold=mean(ac_cmd)+1*std(ac_cmd);
         L_threshold=mean(ac_cmd)-1*std(ac_cmd);
