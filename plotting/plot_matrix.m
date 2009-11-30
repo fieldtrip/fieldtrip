@@ -18,6 +18,11 @@ function plot_matrix(varargin)
 %   'vlim'
 %   'clim'
 %   'box'     can be 'yes' or 'no'
+%   'highlight' 
+%   'highlightstlyle'    can be 'saturation' or 'opacity'
+%   'tag'
+%
+%
 %
 % Example use
 %   plot_matrix(randn(30,50), 'width', 1, 'height', 1, 'hpos', 0, 'vpos', 0)
