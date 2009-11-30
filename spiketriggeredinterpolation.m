@@ -157,7 +157,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: spiketriggeredinterpolation.m,v 1.2 2008/09/24 08:04:50 roboos Exp $';
+cfg.version.id = '$Id$';
 % remember the configuration details of the input data
 try, cfg.previous = data.cfg; end
 % remember the exact configuration details in the output

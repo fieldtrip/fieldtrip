@@ -823,7 +823,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: sourcedescriptives.m,v 1.45 2009/10/12 14:40:24 jansch Exp $';
+cfg.version.id = '$Id$';
 % remember the configuration details of the input data
 try, cfg.previous = source.cfg; end
 % remember the exact configuration details in the output

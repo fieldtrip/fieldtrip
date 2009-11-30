@@ -209,7 +209,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id   = '$Id: dipolesimulation.m,v 1.24 2009/07/02 15:37:32 roboos Exp $';
+cfg.version.id   = '$Id$';
 % remember the configuration details of the input data
 try, cfg.previous = data.cfg; end
 % remember the exact configuration details in the output 

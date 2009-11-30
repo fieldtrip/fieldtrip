@@ -430,7 +430,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i).name;
 end
-cfg.version.id = '$Id: prepare_timefreq_data.m,v 1.28 2009/01/26 12:44:38 marvger Exp $';
+cfg.version.id = '$Id$';
 
 cfg.previous = [];
 % remember the configuration details from the input data

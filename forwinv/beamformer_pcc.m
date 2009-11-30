@@ -231,7 +231,7 @@ end
 % standard Matlab function, except that the default tolerance is twice as
 % high. 
 %   Copyright 1984-2004 The MathWorks, Inc. 
-%   $Revision: 1.18 $  $Date: 2009/01/07 13:12:03 $
+%   $Revision$  $Date: 2009/01/07 13:12:03 $
 %   default tolerance increased by factor 2 (Robert Oostenveld, 7 Feb 2004)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function X = pinv(A,varargin)

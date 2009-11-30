@@ -53,4 +53,4 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: artifact_file.m,v 1.17 2009/01/20 13:01:31 sashae Exp $';
+cfg.version.id = '$Id$';

@@ -570,7 +570,7 @@ catch
     [st, i] = dbstack;
     cfg.version.name = st(i);
 end
-cfg.version.id   = '$Id: megplanar.m,v 1.45 2009/11/23 23:10:12 alibah Exp $';
+cfg.version.id   = '$Id$';
 % remember the configuration details of the input data
 try, cfg.previous = data.cfg; end
 % remember the exact configuration details in the output

@@ -499,7 +499,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id   = '$Id: freqsimulation.m,v 1.15 2009/10/12 14:15:06 jansch Exp $';
+cfg.version.id   = '$Id$';
 
 % remember the exact configuration details in the output
 data.cfg = cfg;

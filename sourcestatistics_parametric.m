@@ -259,7 +259,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: sourcestatistics_parametric.m,v 1.18 2008/09/22 20:17:44 roboos Exp $';
+cfg.version.id = '$Id$';
 % remember the configuration details of the input data
 cfg.previous = [];
 for i=1:length(varargin)

@@ -215,7 +215,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id   = '$Id: nonlinearassociation.m,v 1.1 2008/11/14 12:19:13 roboos Exp $';
+cfg.version.id   = '$Id$';
 % remember the configuration details of the input data
 try, cfg.previous = data.cfg; end
 % remember the exact configuration details in the output

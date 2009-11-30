@@ -246,5 +246,5 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id   = '$Id: spikesplitting.m,v 1.12 2008/12/15 15:08:01 roboos Exp $';
+cfg.version.id   = '$Id$';
 

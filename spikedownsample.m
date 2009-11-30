@@ -263,7 +263,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id   = '$Id: spikedownsample.m,v 1.46 2009/01/20 13:01:31 sashae Exp $';
+cfg.version.id   = '$Id$';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for the resampling

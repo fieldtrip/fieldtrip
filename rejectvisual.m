@@ -335,7 +335,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: rejectvisual.m,v 1.29 2009/07/21 08:33:15 crimic Exp $';
+cfg.version.id = '$Id$';
 % remember the configuration details of the input data
 try, cfg.previous = data.cfg; end
 % remember the exact configuration details in the output

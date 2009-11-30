@@ -121,7 +121,7 @@ return
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   function write_NexFileHeader
     % prepare the two char buffers
-    buf1 = padstr('$Id: write_plexon_nex.m,v 1.1 2009/01/14 09:24:45 roboos Exp $', 256);
+    buf1 = padstr('$Id$', 256);
     buf2 = char(zeros(1, 256));
     % write the stuff to the file
     fwrite(fid, 'NEX1' , 'char');           % NexFileHeader  = string NEX1

@@ -164,7 +164,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: volumerealign.m,v 1.12 2009/07/31 13:43:36 jansch Exp $';
+cfg.version.id = '$Id$';
 
 % remember the configuration
 mri.cfg = cfg;

@@ -159,6 +159,6 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id   = '$Id: constructplanargrad.m,v 1.1 2006/01/30 14:22:00 roboos Exp $';
+cfg.version.id   = '$Id$';
 planar.cfg = cfg;
 

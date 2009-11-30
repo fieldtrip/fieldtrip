@@ -208,7 +208,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: sourceinterpolate.m,v 1.54 2009/10/12 14:18:32 jansch Exp $';
+cfg.version.id = '$Id$';
 % remember the configuration details of the input data
 cfg.previous = [];
 try, cfg.previous{1} = functional.cfg; end

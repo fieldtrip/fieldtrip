@@ -464,7 +464,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id   = '$Id: preprocessing.m,v 1.111 2009/10/08 19:03:28 roboos Exp $';
+cfg.version.id   = '$Id$';
 % remember the exact configuration details in the output
 data.cfg = cfg;
 

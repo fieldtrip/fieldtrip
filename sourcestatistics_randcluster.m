@@ -247,7 +247,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: sourcestatistics_randcluster.m,v 1.15 2008/09/22 20:17:44 roboos Exp $';
+cfg.version.id = '$Id$';
 % remember the configuration details of the input data
 try, cfg.previous = source.cfg ; end
 % remember the exact configuration details in the output 

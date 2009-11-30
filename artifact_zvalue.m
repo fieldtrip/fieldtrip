@@ -338,6 +338,6 @@ catch
   [st, i] = dbstack;
   cfg.artfctdef.zvalue.version.name = st(i);
 end
-cfg.artfctdef.zvalue.version.id = '$Id: artifact_zvalue.m,v 1.21 2009/09/30 12:46:11 jansch Exp $';
+cfg.artfctdef.zvalue.version.id = '$Id$';
 
 

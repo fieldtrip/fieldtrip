@@ -92,7 +92,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id   = '$Id: spikesimulation.m,v 1.7 2008/09/22 20:17:44 roboos Exp $';
+cfg.version.id   = '$Id$';
 % remember the configuration details
 data.cfg = cfg;
 

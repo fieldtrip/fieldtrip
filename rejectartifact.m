@@ -371,7 +371,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: rejectartifact.m,v 1.48 2009/06/23 18:33:17 roboos Exp $';
+cfg.version.id = '$Id$';
 
 % % remember the exact configuration details in the output
 % cfgtmp = cfg;

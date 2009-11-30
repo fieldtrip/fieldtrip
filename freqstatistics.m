@@ -101,7 +101,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: freqstatistics.m,v 1.23 2009/10/07 10:03:30 jansch Exp $';
+cfg.version.id = '$Id$';
 
 % remember the configuration of the input data
 cfg.previous = [];

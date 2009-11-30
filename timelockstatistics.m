@@ -88,7 +88,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: timelockstatistics.m,v 1.25 2009/04/08 15:57:08 roboos Exp $';
+cfg.version.id = '$Id$';
 
 % remember the configuration of the input data
 cfg.previous = [];

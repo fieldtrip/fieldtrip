@@ -98,7 +98,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: interactiverealign.m,v 1.8 2009/01/20 13:01:31 sashae Exp $';
+cfg.version.id = '$Id$';
 
 % remember the transform
 cfg.m = norm.m;

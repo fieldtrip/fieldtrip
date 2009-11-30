@@ -218,7 +218,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: besa2fieldtrip.m,v 1.16 2008/10/21 09:34:12 roboos Exp $';
+cfg.version.id = '$Id$';
 data.cfg = cfg;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

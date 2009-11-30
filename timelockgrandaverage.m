@@ -146,7 +146,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: timelockgrandaverage.m,v 1.21 2009/01/20 13:01:31 sashae Exp $';
+cfg.version.id = '$Id$';
 % remember the configuration details of the input data
 cfg.previous = [];
 for i=1:length(varargin)

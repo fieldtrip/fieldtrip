@@ -291,4 +291,4 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: artifact_ecg.m,v 1.25 2009/09/30 12:40:11 jansch Exp $';
+cfg.version.id = '$Id$';

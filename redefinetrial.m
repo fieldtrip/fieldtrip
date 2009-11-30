@@ -236,7 +236,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: redefinetrial.m,v 1.25 2009/08/13 20:47:02 jansch Exp $';
+cfg.version.id = '$Id$';
 % remember the configuration details of the input data
 try, cfg.previous = data.cfg;    end
 try, cfg.previous = dataold.cfg; end % in case of ~isempty(cfg.trl)

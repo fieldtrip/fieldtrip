@@ -167,7 +167,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: appenddata.m,v 1.17 2009/04/30 14:42:20 jansch Exp $';
+cfg.version.id = '$Id$';
 % remember the configuration details of the input data
 cfg.previous = [];
 for i=1:Ndata

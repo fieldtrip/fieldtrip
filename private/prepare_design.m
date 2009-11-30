@@ -134,6 +134,6 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: prepare_design.m,v 1.2 2006/06/07 12:56:18 roboos Exp $';
+cfg.version.id = '$Id$';
 
 

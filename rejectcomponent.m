@@ -132,7 +132,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: rejectcomponent.m,v 1.12 2009/08/14 09:30:20 jansch Exp $';
+cfg.version.id = '$Id$';
 if nargin==2,
   % remember the configuration details of the input data 
   try, cfg.previous = comp.cfg; end

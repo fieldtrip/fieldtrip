@@ -476,7 +476,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: electroderealign.m,v 1.13 2009/06/30 07:10:11 roboos Exp $';
+cfg.version.id = '$Id$';
 
 % remember the configuration
 norm.cfg = cfg;

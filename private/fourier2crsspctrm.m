@@ -109,7 +109,7 @@ catch
   [st, i1] = dbstack;
   cfg.version.name = st(i1);
 end
-cfg.version.id = '$Id: fourier2crsspctrm.m,v 1.14 2008/11/27 09:04:48 kaigoe Exp $';
+cfg.version.id = '$Id$';
 % remember the configuration details of the input data
 try, cfg.previous = freq.cfg; end
 % remember the exact configuration details in the output 

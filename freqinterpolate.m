@@ -69,7 +69,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id   = '$Id: freqinterpolate.m,v 1.1 2009/02/24 09:24:32 roboos Exp $';
+cfg.version.id   = '$Id$';
 % remember the configuration details of the input data
 try, cfg.previous = freq.cfg; end
 % remember the exact configuration details in the output

@@ -99,7 +99,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: spikesorting.m,v 1.5 2008/09/22 20:17:44 roboos Exp $';
+cfg.version.id = '$Id$';
 % remember the configuration details of the input data
 try, cfg.previous    = spike.cfg;     end
 % remember the configuration

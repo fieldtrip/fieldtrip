@@ -167,7 +167,7 @@ catch
   [st, i1] = dbstack;
   cfg.version.name = st(i1);
 end
-cfg.version.id = '$Id: definetrial.m,v 1.57 2009/10/07 12:42:16 roevdmei Exp $';
+cfg.version.id = '$Id$';
 
 % % remember the exact configuration details in the output
 % cfgtmp = cfg;

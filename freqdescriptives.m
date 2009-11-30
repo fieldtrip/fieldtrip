@@ -578,7 +578,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: freqdescriptives.m,v 1.59 2009/06/12 11:48:22 jansch Exp $';
+cfg.version.id = '$Id$';
 try, cfg.previous = freq.cfg; end
 
 % remember the configuration details

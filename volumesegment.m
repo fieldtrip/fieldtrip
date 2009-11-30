@@ -244,7 +244,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i).name;
 end
-cfg.version.id = '$Id: volumesegment.m,v 1.14 2009/07/14 07:27:30 roboos Exp $';
+cfg.version.id = '$Id$';
 % remember the configuration details of the input data
 try, cfg.previous = mri.cfg; end
 % remember the exact configuration details in the output 

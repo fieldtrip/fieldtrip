@@ -211,7 +211,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id   = '$Id: scalpcurrentdensity.m,v 1.25 2008/11/12 19:26:17 roboos Exp $';
+cfg.version.id   = '$Id$';
 % remember the configuration details of the input data
 try, cfg.previous = data.cfg; end
 % remember the exact configuration details in the output

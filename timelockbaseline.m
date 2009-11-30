@@ -127,7 +127,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id = '$Id: timelockbaseline.m,v 1.13 2009/01/20 13:01:31 sashae Exp $';
+cfg.version.id = '$Id$';
 % remember the configuration details of the input data
 try, cfg.previous = timelock.cfg; end
 % remember the exact configuration details in the output 
