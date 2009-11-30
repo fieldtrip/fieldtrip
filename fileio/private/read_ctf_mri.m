@@ -102,7 +102,7 @@ fclose(fid);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % reorient the image data to obtain corresponding image data and transformation matrix
-mri = permute(mri, [3 1 2]);	% this was determined by trial and error
+mri = permute(mri, [3 1 2]);    % this was determined by trial and error
 
 % reorient the image data and the transformation matrix along the left-right direction
 % remember that the fiducials in voxel coordinates also have to be flipped (see down)

@@ -234,7 +234,7 @@ if ~isempty(createsubcfg)
           'bsfiltord'
           'bsfilttype'
           'bsfreq'
-	  'denoise'
+      'denoise'
           'dftfilter'
           'dftfreq'
           'hpfiltdir'
@@ -285,8 +285,8 @@ if ~isempty(createsubcfg)
           'reducerank'
           'keepcsd'
           'realfilter'
-	  'subspace'
-	  'keepsubspace'
+      'subspace'
+      'keepsubspace'
           };
 
       case 'lcmv'
@@ -303,8 +303,8 @@ if ~isempty(createsubcfg)
           'projectmom'
           'reducerank'
           'keepcov'
-	  'subspace'
-	  'keepsubspace'
+      'subspace'
+      'keepsubspace'
           };
 
       case 'pcc'

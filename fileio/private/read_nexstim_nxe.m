@@ -20,7 +20,7 @@ function [dat] = read_nexstim_nxe(filename, begsample, endsample, chanindx)
 %    filename        name of the datafile, including the .nxe extension
 %    begsample       index of the first sample to read
 %    endsample       index of the last sample to read
-%    chanindx	     index of channels to read (optional, default is all)
+%    chanindx        index of channels to read (optional, default is all)
 % This returns a Nchans X Nsamples data matrix
 
 % Written by Vladimir Litvak based on functions provided by Nexstim

@@ -52,11 +52,11 @@ fseek(fid,1288,'bof');
 % Read the general recording parameters
 no_samples  = fread(fid,1,'int32');
 no_channels = fread(fid,1,'int16');
-fseek(fid,2,'cof');			% hole of 2 bytes due to improper alignment
+fseek(fid,2,'cof');         % hole of 2 bytes due to improper alignment
 sample_rate = fread(fid,1,'double');
 epoch       = fread(fid,1,'double');
 no_trials   = fread(fid,1,'int16');
-fseek(fid,2,'cof');			% hole of 2 bytes due to improper alignment
+fseek(fid,2,'cof');         % hole of 2 bytes due to improper alignment
 preTrigpts=fread(fid,1,'int32');
 
 fseek(fid,1360,'bof');
@@ -95,12 +95,12 @@ end % for fi
 % Read in the channel names
 for i=1:no_channels,
   temp=fread(fid,32,'uint8')';
-  temp(find(temp<32 )) = ' ';		% remove non-printable characters
-  temp(find(temp>126)) = ' ';		% remove non-printable characters
-  endstr = findstr(temp, '-'); temp(endstr:end) = ' ';	% cut off at '-'
-  endstr = findstr(temp, ' '); temp(endstr:end) = ' ';	% cut off at ' '
-  chan_name(i,:) = char(temp);		% as char array
-  chan_label{i}  = deblank(char(temp));	% as cell array
+  temp(find(temp<32 )) = ' ';       % remove non-printable characters
+  temp(find(temp>126)) = ' ';       % remove non-printable characters
+  endstr = findstr(temp, '-'); temp(endstr:end) = ' ';  % cut off at '-'
+  endstr = findstr(temp, ' '); temp(endstr:end) = ' ';  % cut off at ' '
+  chan_name(i,:) = char(temp);      % as char array
+  chan_label{i}  = deblank(char(temp)); % as cell array
 end %for
 
 % pre-allocate some memory space
@@ -112,13 +112,13 @@ sensType = zeros([no_channels,1]);
 % Read in the sensor information
 fp = ftell(fid);
 for chan=1:no_channels,
-  fread(fid,1,'uint8');			% Read and ignore 1 byte from enum
-  sensType(chan)=fread(fid,1,'uint8');	% Read sensor type
-  fread(fid,2,'uint8');			% Read and ignore originalRunNum
-  fread(fid,4,'uint8');			% Read and ignore coilShape
-  sensGain(chan)=fread(fid,1,'double');	% Read sensor gain in Phi0/Tesla
-  qGain(chan)=fread(fid,1,'double');		% Read qxx gain (usually 2^20 for Q20)
-  ioGain(chan)=fread(fid,1,'double');		% Read i/o gain of special sensors (usually 1.0)
+  fread(fid,1,'uint8');         % Read and ignore 1 byte from enum
+  sensType(chan)=fread(fid,1,'uint8');  % Read sensor type
+  fread(fid,2,'uint8');         % Read and ignore originalRunNum
+  fread(fid,4,'uint8');         % Read and ignore coilShape
+  sensGain(chan)=fread(fid,1,'double'); % Read sensor gain in Phi0/Tesla
+  qGain(chan)=fread(fid,1,'double');        % Read qxx gain (usually 2^20 for Q20)
+  ioGain(chan)=fread(fid,1,'double');       % Read i/o gain of special sensors (usually 1.0)
   ioOffset(chan)=fread(fid,1,'double');
   numCoils(chan)=fread(fid,1,'int16');
   grad_order_no(chan)=fread(fid,1,'int16');

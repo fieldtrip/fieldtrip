@@ -16,7 +16,7 @@ markfile = {};
 while true
     l = fgetl(f);
     if ~isstr(l)
-	break
+    break
     end
     markfile{end + 1} = l;
 end
@@ -36,7 +36,7 @@ nsamples = str2num(char(markfile(i)));
 
 for i = 1:length(nsamples)
     if nsamples(i) == 0
-	warning('marker %s in %s has zero samples', names{i}, folder);
+    warning('marker %s in %s has zero samples', names{i}, folder);
     end
 end
 
@@ -47,10 +47,10 @@ for i = 1:nmarkers
 
     % Convert from index origin 0 to 1
     if nsamples(i) ~= 0
-	marks{i}(:, 1) = marks{i}(:, 1) + 1;
+    marks{i}(:, 1) = marks{i}(:, 1) + 1;
     end
 end
 
 data = struct('number_markers', {nmarkers}, 'number_samples', {nsamples}, ...
-	      'marker_names', {names}, 'trial_times', {marks});
+          'marker_names', {names}, 'trial_times', {marks});
 

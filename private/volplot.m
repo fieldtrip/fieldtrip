@@ -155,11 +155,11 @@ elseif strcmp(sel, 'montage')
 
 elseif strcmp(sel, 'sumproject')
   % make plot of integrated-value projection along the thee orthogonal directions
-  delete(subplot(2,2,4));	% delete the old colorbar
+  delete(subplot(2,2,4));   % delete the old colorbar
   h1 = subplot(2,2,1);
   h2 = subplot(2,2,2);
   h3 = subplot(2,2,3);
-  h4 = subplot(2,2,4);	% this will  be the new colorbar
+  h4 = subplot(2,2,4);  % this will  be the new colorbar
 
   % change not-a-number values to zero
   dat(find(isnan(dat(:)))) = 0;
@@ -188,11 +188,11 @@ elseif strcmp(sel, 'sumproject')
 
 elseif strcmp(sel, 'maxproject')
   % make plot of maximum-value projection along the thee orthogonal directions
-  delete(subplot(2,2,4));	% delete the old colorbar
+  delete(subplot(2,2,4));   % delete the old colorbar
   h1 = subplot(2,2,1);
   h2 = subplot(2,2,2);
   h3 = subplot(2,2,3);
-  h4 = subplot(2,2,4);	% this will  be the new colorbar
+  h4 = subplot(2,2,4);  % this will  be the new colorbar
 
   subplot(h1);
   imagesc(x, z, squeeze(max(dat, [], 2))'); set(gca, 'ydir', 'normal')
@@ -224,11 +224,11 @@ else
 
   fprintf('value of %f in voxel %d at [%.02f %.02f %.02f]\n', double(dat(xi, yi, zi)), sub2ind(dim, xi, yi, zi), x(xi), y(yi), z(zi));
 
-  delete(subplot(2,2,4));	% delete the old colorbar
+  delete(subplot(2,2,4));   % delete the old colorbar
   h1 = subplot(2,2,1);
   h2 = subplot(2,2,2);
   h3 = subplot(2,2,3);
-  h4 = subplot(2,2,4);	% this will  be the new colorbar
+  h4 = subplot(2,2,4);  % this will  be the new colorbar
 
   subplot(h1);
   imagesc(x, z, squeeze(dat(:,yi,:))'); set(gca, 'ydir', 'normal')

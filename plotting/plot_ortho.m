@@ -217,7 +217,7 @@ if isfield(data,'transform')
       elseif key=='r'
         rpa = [xi yi zi];
       elseif key=='n'
-        nas = [xi yi zi];			
+        nas = [xi yi zi];           
       elseif key=='i' || key=='j' || key=='k' || key=='m'
         % update the view to a new position
         if     l1=='i' && l2=='k' && key=='i', zi = zi+1; 
@@ -232,7 +232,7 @@ if isfield(data,'transform')
         elseif l1=='j' && l2=='k' && key=='j', yi = yi-1;
         elseif l1=='j' && l2=='k' && key=='k', yi = yi+1;
         elseif l1=='j' && l2=='k' && key=='m', zi = zi-1;
-	end;
+    end;
       else
         % update the view to a new position
         l1 = get(get(gca, 'xlabel'), 'string');
@@ -257,7 +257,7 @@ if isfield(data,'transform')
     end % if interactive_flag
     if ~isempty(nas), fprintf('nas = [%f %f %f]\n', nas); fiducial.nas = nas; else fprintf('nas = undefined\n'); end
     if ~isempty(lpa), fprintf('lpa = [%f %f %f]\n', lpa); fiducial.lpa = lpa; else fprintf('lpa = undefined\n'); end
-    if ~isempty(rpa), fprintf('rpa = [%f %f %f]\n', rpa); fiducial.rpa = rpa; else fprintf('rpa = undefined\n'); end	    
+    if ~isempty(rpa), fprintf('rpa = [%f %f %f]\n', rpa); fiducial.rpa = rpa; else fprintf('rpa = undefined\n'); end        
   end % while interactive_flag
 end
 

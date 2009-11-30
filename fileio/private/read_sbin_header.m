@@ -28,7 +28,7 @@ if fid==-1
     error('wrong filename')
 end
 
-version		= fread(fid,1,'int32');
+version     = fread(fid,1,'int32');
 if isempty(version)
     error('ERROR:  This is not a simple binary file.  Note that NetStation does not successfully directly convert EGIS files to simple binary format.');
 end;
@@ -64,19 +64,19 @@ if precision == 0
     error('File precision is not defined.');
 end;
 
-%		read header...
-year		= fread(fid,1,'int16',endian);
-month		= fread(fid,1,'int16',endian);
-day			= fread(fid,1,'int16',endian);
-hour		= fread(fid,1,'int16',endian);
-minute		= fread(fid,1,'int16',endian);
-second		= fread(fid,1,'int16',endian);
+%       read header...
+year        = fread(fid,1,'int16',endian);
+month       = fread(fid,1,'int16',endian);
+day         = fread(fid,1,'int16',endian);
+hour        = fread(fid,1,'int16',endian);
+minute      = fread(fid,1,'int16',endian);
+second      = fread(fid,1,'int16',endian);
 millisecond = fread(fid,1,'int32',endian);
-Samp_Rate	= fread(fid,1,'int16',endian);
-NChan		= fread(fid,1,'int16',endian);
-Gain 		= fread(fid,1,'int16',endian);
-Bits 		= fread(fid,1,'int16',endian);
-Range 		= fread(fid,1,'int16',endian);
+Samp_Rate   = fread(fid,1,'int16',endian);
+NChan       = fread(fid,1,'int16',endian);
+Gain        = fread(fid,1,'int16',endian);
+Bits        = fread(fid,1,'int16',endian);
+Range       = fread(fid,1,'int16',endian);
 
 if unsegmented,
     NumCategors = 0;
@@ -90,19 +90,19 @@ if unsegmented,
     CatLengths  = [];
     preBaseline = [];
 else
-    NumCategors	= fread(fid,1,'int16',endian);
+    NumCategors = fread(fid,1,'int16',endian);
     for j = 1:NumCategors
-        CatLengths(j)	= fread(fid,1,'int8',endian);
+        CatLengths(j)   = fread(fid,1,'int8',endian);
         for i = 1:CatLengths(j)
-            CateNames{j}(i)	= char(fread(fid,1,'char',endian));
+            CateNames{j}(i) = char(fread(fid,1,'char',endian));
         end
     end
-    NSegments	= fread(fid,1,'int16',endian);
-    NSamples	= fread(fid,1,'int32',endian);			% samples per segment
-    NEvent		= fread(fid,1,'int16',endian);			% num events per segment
+    NSegments   = fread(fid,1,'int16',endian);
+    NSamples    = fread(fid,1,'int32',endian);          % samples per segment
+    NEvent      = fread(fid,1,'int16',endian);          % num events per segment
     EventCodes = [];
     for j = 1:NEvent
-        EventCodes(j,1:4)	= char(fread(fid,[1,4],'char',endian));
+        EventCodes(j,1:4)   = char(fread(fid,[1,4],'char',endian));
     end
 
 
@@ -111,18 +111,18 @@ else
     if NEvent > 0
 
         for j = 1:NSegments
-            [segHdr(j,1), count]	= fread(fid, 1,'int16',endian);    %cell
-            [segHdr(j,2), count]	= fread(fid, 1,'int32',endian);    %time stamp
+            [segHdr(j,1), count]    = fread(fid, 1,'int16',endian);    %cell
+            [segHdr(j,2), count]    = fread(fid, 1,'int32',endian);    %time stamp
             switch precision
                 case 2
-                    [temp,count]	= fread(fid,[NChan+NEvent, NSamples],'int16',endian);
+                    [temp,count]    = fread(fid,[NChan+NEvent, NSamples],'int16',endian);
                 case 4
-                    [temp,count]	= fread(fid,[NChan+NEvent, NSamples],'single',endian);
+                    [temp,count]    = fread(fid,[NChan+NEvent, NSamples],'single',endian);
                 case 6
-                    [temp,count]	= fread(fid,[NChan+NEvent, NSamples],'double',endian);
+                    [temp,count]    = fread(fid,[NChan+NEvent, NSamples],'double',endian);
             end
             if (NEvent ~= 0)
-                eventData(:,((j-1)*NSamples+1):j*NSamples)	= temp( (NChan+1):(NChan+NEvent), 1:NSamples);
+                eventData(:,((j-1)*NSamples+1):j*NSamples)  = temp( (NChan+1):(NChan+NEvent), 1:NSamples);
             end
         end
 
@@ -153,6 +153,6 @@ end
 
 fclose(fid);
 
-header_array 	= double([version year month day hour minute second millisecond Samp_Rate NChan Gain Bits Range NumCategors, NSegments, NSamples, NEvent]);
+header_array    = double([version year month day hour minute second millisecond Samp_Rate NChan Gain Bits Range NumCategors, NSegments, NSamples, NEvent]);
 
 

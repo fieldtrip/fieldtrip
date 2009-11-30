@@ -161,7 +161,7 @@ if isfield(freq, 'powspctrm') && isfield(freq, 'crsspctrm')
       for trial=1:Ntrials
         Pr(trial) = freq.powspctrm(trial, refindx, fbin);
       end
-      Pr = Pr(:);	% ensure that the first dimension contains the trials
+      Pr = Pr(:);   % ensure that the first dimension contains the trials
     end
   end
 
@@ -195,8 +195,8 @@ else
       Cf(1,:,:) = (dat * ctranspose(dat)) ./ ntap;
       if ~isempty(refindx)
         ref = transpose(freq.fourierspctrm(:, refindx, fbin));
-	Cr(1,:,1) = dat * ctranspose(ref) ./ ntap;
-	Pr(1,1,1) = ref * ctranspose(ref) ./ ntap;
+    Cr(1,:,1) = dat * ctranspose(ref) ./ ntap;
+    Pr(1,1,1) = ref * ctranspose(ref) ./ ntap;
       end
     else
       freq.cumtapcnt = freq.cumtapcnt(:)';

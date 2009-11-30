@@ -147,17 +147,17 @@ return
 
 function header_key(fid,hk)
     
-	% Original header structures - ANALYZE 7.5
-	% struct header_key                      /* header key      */ 
-	%       {                                /* off + size      */
-	%       int sizeof_hdr                   /*  0 +  4         */
-	%       char data_type[10];              /*  4 + 10         */
-	%       char db_name[18];                /* 14 + 18         */
-	%       int extents;                     /* 32 +  4         */
-	%       short int session_error;         /* 36 +  2         */
-	%       char regular;                    /* 38 +  1         */
-	%       char hkey_un0;                   /* 39 +  1         */
-	%       };                               /* total=40 bytes  */
+    % Original header structures - ANALYZE 7.5
+    % struct header_key                      /* header key      */ 
+    %       {                                /* off + size      */
+    %       int sizeof_hdr                   /*  0 +  4         */
+    %       char data_type[10];              /*  4 + 10         */
+    %       char db_name[18];                /* 14 + 18         */
+    %       int extents;                     /* 32 +  4         */
+    %       short int session_error;         /* 36 +  2         */
+    %       char regular;                    /* 38 +  1         */
+    %       char hkey_un0;                   /* 39 +  1         */
+    %       };                               /* total=40 bytes  */
     
     fseek(fid,0,'bof');
     
@@ -192,87 +192,87 @@ return
 
 function image_dimension(fid,dime)
     
-	%struct image_dimension
-	%       {                                /* off + size      */
-	%       short int dim[8];                /* 0 + 16          */
-	%       char vox_units[4];               /* 16 + 4          */
-	%       char cal_units[8];               /* 20 + 8          */
-	%       short int unused1;               /* 28 + 2          */
-	%       short int datatype;              /* 30 + 2          */
-	%       short int bitpix;                /* 32 + 2          */
-	%       short int dim_un0;               /* 34 + 2          */
-	%       float pixdim[8];                 /* 36 + 32         */
-	%			/*
-	%				pixdim[] specifies the voxel dimensions:
-	%				pixdim[1] - voxel width
-	%				pixdim[2] - voxel height
-	%				pixdim[3] - interslice distance
-	%					..etc
-	%			*/
-	%       float vox_offset;                /* 68 + 4          */
-	%       float roi_scale;                 /* 72 + 4          */
-	%       float funused1;                  /* 76 + 4          */
-	%       float funused2;                  /* 80 + 4          */
-	%       float cal_max;                   /* 84 + 4          */
-	%       float cal_min;                   /* 88 + 4          */
-	%       int compressed;                  /* 92 + 4          */
-	%       int verified;                    /* 96 + 4          */
-	%       int glmax;                       /* 100 + 4         */
-	%       int glmin;                       /* 104 + 4         */
-	%       };                               /* total=108 bytes */
+    %struct image_dimension
+    %       {                                /* off + size      */
+    %       short int dim[8];                /* 0 + 16          */
+    %       char vox_units[4];               /* 16 + 4          */
+    %       char cal_units[8];               /* 20 + 8          */
+    %       short int unused1;               /* 28 + 2          */
+    %       short int datatype;              /* 30 + 2          */
+    %       short int bitpix;                /* 32 + 2          */
+    %       short int dim_un0;               /* 34 + 2          */
+    %       float pixdim[8];                 /* 36 + 32         */
+    %           /*
+    %               pixdim[] specifies the voxel dimensions:
+    %               pixdim[1] - voxel width
+    %               pixdim[2] - voxel height
+    %               pixdim[3] - interslice distance
+    %                   ..etc
+    %           */
+    %       float vox_offset;                /* 68 + 4          */
+    %       float roi_scale;                 /* 72 + 4          */
+    %       float funused1;                  /* 76 + 4          */
+    %       float funused2;                  /* 80 + 4          */
+    %       float cal_max;                   /* 84 + 4          */
+    %       float cal_min;                   /* 88 + 4          */
+    %       int compressed;                  /* 92 + 4          */
+    %       int verified;                    /* 96 + 4          */
+    %       int glmax;                       /* 100 + 4         */
+    %       int glmin;                       /* 104 + 4         */
+    %       };                               /* total=108 bytes */
     
-	fwrite(fid, dime.dim(1:8),      'int16');
-	fwrite(fid, dime.vox_units(1:4),'uchar');
-	fwrite(fid, dime.cal_units(1:8),'uchar');
-	fwrite(fid, dime.unused1(1),    'int16');
-	fwrite(fid, dime.datatype(1),   'int16');
-	fwrite(fid, dime.bitpix(1),     'int16');
-	fwrite(fid, dime.dim_un0(1),    'int16');
-	fwrite(fid, dime.pixdim(1:8),   'float32');
-	fwrite(fid, dime.vox_offset(1), 'float32');
+    fwrite(fid, dime.dim(1:8),      'int16');
+    fwrite(fid, dime.vox_units(1:4),'uchar');
+    fwrite(fid, dime.cal_units(1:8),'uchar');
+    fwrite(fid, dime.unused1(1),    'int16');
+    fwrite(fid, dime.datatype(1),   'int16');
+    fwrite(fid, dime.bitpix(1),     'int16');
+    fwrite(fid, dime.dim_un0(1),    'int16');
+    fwrite(fid, dime.pixdim(1:8),   'float32');
+    fwrite(fid, dime.vox_offset(1), 'float32');
     
     % Ensure compatibility with SPM (according to MRIcro)
     if dime.roi_scale == 0, dime.roi_scale = 0.00392157; end
-	fwrite(fid, dime.roi_scale(1),  'float32');
+    fwrite(fid, dime.roi_scale(1),  'float32');
     
-	fwrite(fid, dime.funused1(1),   'float32');
-	fwrite(fid, dime.funused2(1),   'float32');
-	fwrite(fid, dime.cal_max(1),    'float32');
-	fwrite(fid, dime.cal_min(1),    'float32');
-	fwrite(fid, dime.compressed(1), 'int32');
-	fwrite(fid, dime.verified(1),   'int32');
-	fwrite(fid, dime.glmax(1),      'int32');
-	fwrite(fid, dime.glmin(1),      'int32');
-	
+    fwrite(fid, dime.funused1(1),   'float32');
+    fwrite(fid, dime.funused2(1),   'float32');
+    fwrite(fid, dime.cal_max(1),    'float32');
+    fwrite(fid, dime.cal_min(1),    'float32');
+    fwrite(fid, dime.compressed(1), 'int32');
+    fwrite(fid, dime.verified(1),   'int32');
+    fwrite(fid, dime.glmax(1),      'int32');
+    fwrite(fid, dime.glmin(1),      'int32');
+    
 return
 
 %----------------------------------------------------------------------------
 
 function data_history(fid,hist)
     
-	% Original header structures - ANALYZE 7.5
-	%struct data_history       
-	%       {                                /* off + size      */
-	%       char descrip[80];                /* 0 + 80          */
-	%       char aux_file[24];               /* 80 + 24         */
-	%       char orient;                     /* 104 + 1         */
-	%       char originator[10];             /* 105 + 10        */
-	%       char generated[10];              /* 115 + 10        */
-	%       char scannum[10];                /* 125 + 10        */
-	%       char patient_id[10];             /* 135 + 10        */
-	%       char exp_date[10];               /* 145 + 10        */
-	%       char exp_time[10];               /* 155 + 10        */
-	%       char hist_un0[3];                /* 165 + 3         */
-	%       int views                        /* 168 + 4         */
-	%       int vols_added;                  /* 172 + 4         */
-	%       int start_field;                 /* 176 + 4         */
-	%       int field_skip;                  /* 180 + 4         */
-	%       int omax;                        /* 184 + 4         */
-	%       int omin;                        /* 188 + 4         */
-	%       int smax;                        /* 192 + 4         */
-	%       int smin;                        /* 196 + 4         */
-	%       };                               /* total=200 bytes */
-	
+    % Original header structures - ANALYZE 7.5
+    %struct data_history       
+    %       {                                /* off + size      */
+    %       char descrip[80];                /* 0 + 80          */
+    %       char aux_file[24];               /* 80 + 24         */
+    %       char orient;                     /* 104 + 1         */
+    %       char originator[10];             /* 105 + 10        */
+    %       char generated[10];              /* 115 + 10        */
+    %       char scannum[10];                /* 125 + 10        */
+    %       char patient_id[10];             /* 135 + 10        */
+    %       char exp_date[10];               /* 145 + 10        */
+    %       char exp_time[10];               /* 155 + 10        */
+    %       char hist_un0[3];                /* 165 + 3         */
+    %       int views                        /* 168 + 4         */
+    %       int vols_added;                  /* 172 + 4         */
+    %       int start_field;                 /* 176 + 4         */
+    %       int field_skip;                  /* 180 + 4         */
+    %       int omax;                        /* 184 + 4         */
+    %       int omin;                        /* 188 + 4         */
+    %       int smax;                        /* 192 + 4         */
+    %       int smin;                        /* 196 + 4         */
+    %       };                               /* total=200 bytes */
+    
     descrip     = sprintf('%-80s', hist.descrip);       % 80 chars
     aux_file    = sprintf('%-24s', hist.aux_file);      % 24 chars
     originator  = sprintf('%-10s', hist.originator);    % 10 chars

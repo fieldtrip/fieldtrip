@@ -12,11 +12,11 @@ function [this] = read_biff(filename, opt)
 %   [chunk] = read_biff(filename, chunkID)
 % 
 % known top-level chunk id's are
-%	data	: measured data			(matrix)
-%	dati	: information on data		(struct)
-%	expi	: information on experiment	(struct)
-%	pati	: information on patient	(struct)
-%	evnt	: event markers			(struct)
+%   data    : measured data         (matrix)
+%   dati    : information on data       (struct)
+%   expi    : information on experiment (struct)
+%   pati    : information on patient    (struct)
+%   evnt    : event markers         (struct)
 
 % Copyright (C) 2000, Robert Oostenveld
 % 
@@ -47,8 +47,8 @@ switch id
     fprintf('skipping unrecognized chunk id="%s" size=%4d\n', id, siz);
     fseek(fid, siz, 'cof');
 
-end							% switch
-fclose(fid);						% close file
+end                         % switch
+fclose(fid);                        % close file
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION read_biff_chunk
@@ -58,12 +58,12 @@ function this = read_biff_chunk(fid, id, siz, chunk);
 % start with empty structure
 this = [];
 
-if strcmp(id, 'null')				% this is an empty chunk
+if strcmp(id, 'null')               % this is an empty chunk
   fprintf('skipping empty chunk id="%s" size=%4d\n', id, siz);
   assert(~feof(fid));
   fseek(fid, siz, 'cof');
 
-elseif isempty(chunk)				% this is an unrecognized chunk
+elseif isempty(chunk)               % this is an unrecognized chunk
   fprintf('skipping unrecognized chunk id="%s" size=%4d\n', id, siz);
   assert(~feof(fid));
   fseek(fid, siz, 'cof');
@@ -79,8 +79,8 @@ else
       case 'group'
 
         while ~feof(fid) & ftell(fid)<eoc
-          % read all subchunks	
-  	  [id, siz] = chunk_header(fid);
+          % read all subchunks  
+      [id, siz] = chunk_header(fid);
           child     = subtree(chunk, id);
 
           if ~isempty(child)
@@ -92,32 +92,32 @@ else
             fprintf('skipping unrecognized chunk id="%s" size=%4d\n', id, siz);
             fseek(fid, siz, 'cof');
           end
-        end						% while
+        end                     % while
 
       case 'string'
-	this = char(fread(fid, siz, 'uchar')');
+    this = char(fread(fid, siz, 'uchar')');
 
       case {'char', 'uchar', 'int8', 'int16', 'int32', 'int64', 'uint8', 'uint16', 'uint32', 'float32', 'float64'}
-	this = fread(fid, 1, type);
+    this = fread(fid, 1, type);
   
       case {'char', 'uchar', 'int8', 'int16', 'int32', 'int64', 'uint8', 'uint16', 'uint32', 'float32', 'float64'}
-	this = fread(fid, 1, type);
+    this = fread(fid, 1, type);
   
       case {'int8vec', 'int16vec', 'int32vec', 'int64vec', 'uint8vec', 'uint16vec', 'uint32vec', 'float32vec', 'float64vec'}
-	ncol = fread(fid, 1, 'uint32');
-	this = fread(fid, ncol, type(1:(length(type)-3)));
+    ncol = fread(fid, 1, 'uint32');
+    this = fread(fid, ncol, type(1:(length(type)-3)));
   
       case {'int8mat', 'int16mat', 'int32mat', 'int64mat', 'uint8mat', 'uint16mat', 'uint32mat', 'float32mat', 'float64mat'}
-	nrow = fread(fid, 1, 'uint32');
-	ncol = fread(fid, 1, 'uint32');
-	this = fread(fid, [nrow, ncol], type(1:(length(type)-3)));
+    nrow = fread(fid, 1, 'uint32');
+    ncol = fread(fid, 1, 'uint32');
+    this = fread(fid, [nrow, ncol], type(1:(length(type)-3)));
    
       otherwise
-        fseek(fid, siz, 'cof');			% skip this chunk
+        fseek(fid, siz, 'cof');         % skip this chunk
         sprintf('unimplemented data type "%s" in chunk "%s"', type, id);
         % warning(ans);
-    end						% switch chunk type
-end						% else
+    end                     % switch chunk type
+end                     % else
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION subtree
@@ -140,9 +140,9 @@ function child = subtree(parent, id);
 % SUBFUNCTION chunk_header
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [id, siz] = chunk_header(fid);
-  id  = char(fread(fid, 4, 'uchar')');			% read chunk ID
-  siz = fread(fid, 1, 'uint32');			% read chunk size
+  id  = char(fread(fid, 4, 'uchar')');          % read chunk ID
+  siz = fread(fid, 1, 'uint32');            % read chunk size
   if strcmp(id, 'GRP ') | strcmp(id, 'BIFF')
-    id  = char(fread(fid, 4, 'uchar')');		% read real chunk ID
-    siz = siz - 4;					% reduce size by 4
+    id  = char(fread(fid, 4, 'uchar')');        % read real chunk ID
+    siz = siz - 4;                  % reduce size by 4
   end

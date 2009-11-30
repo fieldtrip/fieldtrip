@@ -42,7 +42,7 @@ end
 
 if(length(filename) == 0)
    [fname, pathname] = uigetfile('*.nex', 'Select a Nex file');
-	filename = strcat(pathname, fname);
+    filename = strcat(pathname, fname);
 end
 
 fid = fopen(filename, 'r', 'ieee-le');
@@ -62,38 +62,38 @@ fseek(fid, 260, 'cof');
 name = zeros(1, 64);
 found = 0;
 for i=1:nvar
-	type = fread(fid, 1, 'int32');
-	var_version = fread(fid, 1, 'int32');
-	name = fread(fid, [1 64], 'char');
-	offset = fread(fid, 1, 'int32');
-	nf = fread(fid, 1, 'int32');
-	dummy = fread(fid, 32, 'char');
-	adfreq = fread(fid, 1, 'double');
-	adtomv = fread(fid, 1, 'double');
-	n = fread(fid, 1, 'int32');
-	name = char(name);
-	name = deblank(name);
-	k = strcmp(name, deblank(varname));
-	if(k == 1)
-		if type ~= 3
-			disp(sprintf('%s is not a waveform variable', deblank(varname)));
-			return;
-		end
-		found = 1;
-		fseek(fid, offset, 'bof');
-		ts = fread(fid, [1 nf], 'int32');
-		w = fread(fid, [n nf], 'int16');
-		break
-	end
-	dummy = fread(fid, 76, 'char');
+    type = fread(fid, 1, 'int32');
+    var_version = fread(fid, 1, 'int32');
+    name = fread(fid, [1 64], 'char');
+    offset = fread(fid, 1, 'int32');
+    nf = fread(fid, 1, 'int32');
+    dummy = fread(fid, 32, 'char');
+    adfreq = fread(fid, 1, 'double');
+    adtomv = fread(fid, 1, 'double');
+    n = fread(fid, 1, 'int32');
+    name = char(name);
+    name = deblank(name);
+    k = strcmp(name, deblank(varname));
+    if(k == 1)
+        if type ~= 3
+            disp(sprintf('%s is not a waveform variable', deblank(varname)));
+            return;
+        end
+        found = 1;
+        fseek(fid, offset, 'bof');
+        ts = fread(fid, [1 nf], 'int32');
+        w = fread(fid, [n nf], 'int16');
+        break
+    end
+    dummy = fread(fid, 76, 'char');
 end
 
 fclose(fid);
 
 if found == 0
-	disp('did not find variable in the file');
+    disp('did not find variable in the file');
 else
-	ts = ts/freq;
-	w = w*adtomv;
-	disp(strcat('number of waveforms = ', num2str(nf)));
+    ts = ts/freq;
+    w = w*adtomv;
+    disp(strcat('number of waveforms = ', num2str(nf)));
 end

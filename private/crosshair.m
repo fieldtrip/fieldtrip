@@ -14,11 +14,11 @@ function [h] = crosshair(pos, varargin)
 
 border = axis;
 
-x = [ border(1)	pos(1)
-      border(2)	pos(1) ];
+x = [ border(1) pos(1)
+      border(2) pos(1) ];
 
-y = [ pos(2)	border(3)
-      pos(2)	border(4) ];
+y = [ pos(2)    border(3)
+      pos(2)    border(4) ];
 
 if (~ishold)
  hold on

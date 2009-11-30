@@ -4,9 +4,9 @@ function [num,dims]=dimnum(dimord, dim)
 % Syntax: [num,dims]=dimnum(dimord, dim)
 %
 % e.g. when dimord='rpt_chancmb_freq_time' and dim='time', dimnum returns num=4
-% 		and dims contains {'rpt','chancmb','freq','tim'}.
+%       and dims contains {'rpt','chancmb','freq','tim'}.
 % e.g. when dimord='rpt_chancmb_freq_time' and dim='chancmb', dimnum returns num=2
-% 		and dims again contains {'rpt','chancmb','freq','tim'}.
+%       and dims again contains {'rpt','chancmb','freq','tim'}.
 % 
 % For the known dimentiontypes dim can also be 'time' or 'frequency'.
 % The known types are:
@@ -29,14 +29,14 @@ dim=lower(dim); % makes the function case unsensitive.
 
 switch dim %convert some dimension names.
 case 'tim'
-	dim='time';
+    dim='time';
 case {'frq','frequency'}
-	dim='freq';
+    dim='freq';
 case {'channel','signal combination','channels','sgncmb','chan'}
-	%dim='chancmb';
-	dim='chan';
+    %dim='chancmb';
+    dim='chan';
 case {'trial','trials'}
-	dim='rpt';
+    dim='rpt';
 end;
 
 num=find(strcmp(dims,dim)); % find the number of the specified dimension.

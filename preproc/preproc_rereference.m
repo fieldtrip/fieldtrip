@@ -4,7 +4,7 @@ function [dat, ref] = preproc_rereference(dat, refchan)
 % or rereferences the data to the selected channeld
 %
 % Use as
-%  	[dat] = preproc_rereference(dat, refchan)
+%   [dat] = preproc_rereference(dat, refchan)
 % where
 %   dat        data matrix (Nchans X Ntime)
 %   refchan    vector with indices of the new reference channels

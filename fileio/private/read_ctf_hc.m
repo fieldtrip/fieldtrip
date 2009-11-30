@@ -13,20 +13,20 @@ function [hc] = read_ctf_hc(filename);
 % hc = read_ctf_hc(filename)
 %
 % returns a structure with the following fields
-%   hc.dewar.nas	marker positions relative to dewar 
+%   hc.dewar.nas    marker positions relative to dewar 
 %   hc.dewar.lpa
 %   hc.dewar.rpa
-%   hc.head.nas		marker positions relative to head (measured) 
+%   hc.head.nas     marker positions relative to head (measured) 
 %   hc.head.lpa
 %   hc.head.rpa
-%   hc.standard.nas	marker positions relative to head (expected)
+%   hc.standard.nas marker positions relative to head (expected)
 %   hc.standard.lpa
 %   hc.standard.rpa
 % and
-%   hc.affine		parameter for affine transformation (1x12)
-%   hc.homogenous	homogenous transformation matrix (4x4, see warp3d)
-%   hc.translation	translation vector (1x3)
-%   hc.rotation		rotation matrix (3x3)
+%   hc.affine       parameter for affine transformation (1x12)
+%   hc.homogenous   homogenous transformation matrix (4x4, see warp3d)
+%   hc.translation  translation vector (1x3)
+%   hc.rotation     rotation matrix (3x3)
 % 
 % Gradiometer positions can be transformed into head coordinates using the 
 % homogeneous transformation matrix, or using the affine parameters and

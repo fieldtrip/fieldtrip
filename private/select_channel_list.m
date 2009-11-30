@@ -7,11 +7,11 @@ function [select] = select_channel_list(label, select, titlestr);
 % select = select_channel_list(label, initial, titlestr)
 % 
 % with 
-%   initial	indices of channels that are initially selected 
-%   label	cell array with channel labels (strings)
-%   titlestr	title for dialog (optional)
+%   initial indices of channels that are initially selected 
+%   label   cell array with channel labels (strings)
+%   titlestr    title for dialog (optional)
 % and
-%   select	indices of selected channels
+%   select  indices of selected channels
 %
 % If the user presses cancel, the initial selection will be returned.
 
@@ -27,7 +27,7 @@ pos      = get(0,'DefaultFigurePosition');
 pos(3:4) = [290 300];
 dlg      = dialog('Name', titlestr, 'Position', pos);
 
-select            = select(:)';		% ensure that it is a row array
+select            = select(:)';     % ensure that it is a row array
 userdata.label    = label;
 userdata.select   = select;
 userdata.unselect = setdiff(1:length(label), select);

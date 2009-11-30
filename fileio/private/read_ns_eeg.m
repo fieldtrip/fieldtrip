@@ -76,16 +76,16 @@ end
 data = zeros(length(epoch), eeg.nchan, eeg.npnt);
 
 for i=1:length(epoch)
-  fseek(fid, 900, 'bof');				% skip general header
-  fseek(fid, 75*eeg.nchan, 'cof');			% skip channel headers
-  status = fseek(fid, (epoch(i)-1)*epoch_size, 'cof');	% skip first epochs
+  fseek(fid, 900, 'bof');               % skip general header
+  fseek(fid, 75*eeg.nchan, 'cof');          % skip channel headers
+  status = fseek(fid, (epoch(i)-1)*epoch_size, 'cof');  % skip first epochs
   if status~=0
     error('seek error while reading epoch data');
   end
 
   % fprintf('reading epoch %d at offset %d\n', epoch(i), ftell(fid));
-	
-  % read sweep header	
+    
+  % read sweep header   
   sweep(i).accept   = fread(fid, 1, 'uchar');
   sweep(i).type     = fread(fid, 1, 'ushort');
   sweep(i).correct  = fread(fid, 1, 'ushort');

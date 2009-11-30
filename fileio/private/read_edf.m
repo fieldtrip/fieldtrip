@@ -24,7 +24,7 @@ function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx);
 %    hdr             header structure, see above
 %    begsample       index of the first sample to read
 %    endsample       index of the last sample to read
-%    chanindx	     index of channels to read (optional, default is all)
+%    chanindx        index of channels to read (optional, default is all)
 % This returns a Nchans X Nsamples data matrix
 
 % Copyright (C) 2006, Robert Oostenveld
@@ -86,7 +86,7 @@ if nargin==1
   end;
 
   EDF.HeadLen = str2num(H1(185:192));  % 8 Byte  Length of Header
-  % reserved = H1(193:236);	           % 44 Byte
+  % reserved = H1(193:236);            % 44 Byte
   EDF.NRec = str2num(H1(237:244));     % 8 Byte  # of data records
   EDF.Dur = str2num(H1(245:252));      % 8 Byte  # duration of data record in sec
   EDF.NS = str2num(H1(253:256));       % 8 Byte  # of signals
@@ -126,9 +126,9 @@ if nargin==1
     EDF.PhysMin = EDF.DigMin;
     EDF.PhysMax = EDF.DigMax;
   end
-  EDF.PreFilt= char(fread(EDF.FILE.FID,[80,EDF.NS],'char')');	%
-  tmp = fread(EDF.FILE.FID,[8,EDF.NS],'char')';	%	samples per data record
-  EDF.SPR = str2num(char(tmp));               %	samples per data record
+  EDF.PreFilt= char(fread(EDF.FILE.FID,[80,EDF.NS],'char')');   %
+  tmp = fread(EDF.FILE.FID,[8,EDF.NS],'char')'; %   samples per data record
+  EDF.SPR = str2num(char(tmp));               % samples per data record
 
   fseek(EDF.FILE.FID,32*EDF.NS,0);
 
@@ -173,7 +173,7 @@ if nargin==1
     end;
   end;
 
-  EDF.AS.spb = sum(EDF.SPR);	% Samples per Block
+  EDF.AS.spb = sum(EDF.SPR);    % Samples per Block
   bi=[0;cumsum(EDF.SPR)];
 
   idx=[];idx2=[];

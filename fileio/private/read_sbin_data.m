@@ -25,7 +25,7 @@ if fh==-1
   error('wrong filename')
 end
 
-version	= fread(fh,1,'int32');
+version = fread(fh,1,'int32');
 
 %check byteorder
 [str,maxsize,cEndian]=computer;

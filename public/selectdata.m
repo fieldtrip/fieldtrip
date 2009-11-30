@@ -184,24 +184,24 @@ if length(data)>1,
     for k = 1:length(data)
       if k==1,
         tmp = getsubfield(data{k}, dimtok{catdim});
-	if strcmp(dimtok{catdim},'pos') && isfield(data{k},'inside'),
-	  tmpinside  = getfield(data{k}, 'inside');
-	  tmpoutside = getfield(data{k}, 'outside'); 
-	  tmpnvox    = numel(tmpinside)+numel(tmpoutside);
-	end
+    if strcmp(dimtok{catdim},'pos') && isfield(data{k},'inside'),
+      tmpinside  = getfield(data{k}, 'inside');
+      tmpoutside = getfield(data{k}, 'outside'); 
+      tmpnvox    = numel(tmpinside)+numel(tmpoutside);
+    end
       else
         if strcmp(dimtok{catdim},'pos'),
           tmp = [tmp; getsubfield(data{k}, dimtok{catdim})]; sortflag = 0;
-	  
-	  %FIXME make this robust, now inside as vector is assumed
-	  if exist('tmpinside', 'var')
-	    tmpx       = getfield(data{k}, 'inside');
-	    tmpx2      = getfield(data{k}, 'outside');
-	    tmpnvox    = numel(tmpinside)+numel(tmpoutside);
-	    tmpinside  = [tmpinside(:)'  tmpnvox(end)+tmpx(:)'];
-	    tmpoutside = [tmpoutside(:)' tmpnvox(end)+tmpx2(:)'];
-	  end
-	else
+      
+      %FIXME make this robust, now inside as vector is assumed
+      if exist('tmpinside', 'var')
+        tmpx       = getfield(data{k}, 'inside');
+        tmpx2      = getfield(data{k}, 'outside');
+        tmpnvox    = numel(tmpinside)+numel(tmpoutside);
+        tmpinside  = [tmpinside(:)'  tmpnvox(end)+tmpx(:)'];
+        tmpoutside = [tmpoutside(:)' tmpnvox(end)+tmpx2(:)'];
+      end
+    else
           tmp = [tmp  getsubfield(data{k}, dimtok{catdim})]; sortflag = 1;
         end
       end

@@ -420,7 +420,7 @@ switch dataformat
 
   case {'brainvision_eeg', 'brainvision_dat', 'brainvision_seg'}
     dat = read_brainvision_eeg(filename, hdr.orig, begsample, endsample);
-    dat = dat(chanindx,:);	% select the desired channels
+    dat = dat(chanindx,:);  % select the desired channels
 
   case 'ced_son'
     % chek the availability of the required low-level toolbox

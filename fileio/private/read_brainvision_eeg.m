@@ -59,8 +59,8 @@ elseif strcmpi(hdr.DataFormat, 'ascii') && strcmpi(hdr.DataOrientation, 'multipl
   end
   dat = zeros(endsample-begsample+1, hdr.NumberOfChannels);
   for line=1:(endsample-begsample+1)
-    str = fgets(fid);			% read a single line with Nchan samples
-    str(find(str==',')) = '.';		% replace comma with point
+    str = fgets(fid);           % read a single line with Nchan samples
+    str(find(str==',')) = '.';      % replace comma with point
     dat(line,:) = str2num(str);
   end
   fclose(fid);
@@ -77,7 +77,7 @@ elseif strcmpi(hdr.DataFormat, 'ascii') && strcmpi(hdr.DataOrientation, 'vectori
     fprintf('reading channel %d from ascii file to get data from sample %d to %d\n', chan, begsample, endsample);
 
     str = fgets(fid);             % read all samples of a single channel
-    str(find(str==',')) = '.';		% replace comma with point
+    str(find(str==',')) = '.';      % replace comma with point
 
     if ~isempty(regexp(str(1:10), '[a-zA-Z]', 'once'))
       % the line starts with letters, not numbers: probably it is a channel label

@@ -6,14 +6,14 @@ function [lf] = eeg_leadfieldb(pos, elc, vol)
 % [lf] = eeg_leadfieldb(pos, elc, vol)
 %
 % with the input arguments
-%   pos		position dipole (1x3 or Nx3)
-%   elc		position electrodes (optional, can be empty)
-%   vol		volume conductor model
+%   pos     position dipole (1x3 or Nx3)
+%   elc     position electrodes (optional, can be empty)
+%   vol     volume conductor model
 %
 % the volume conductor model is a structure and should have the fields
-%   vol.bnd	structure array with vertices and triangles of each boundary
-%   vol.cond	conductivity of all compartments
-%   vol.mat 	system matrix, which can include the electrode interpolation
+%   vol.bnd structure array with vertices and triangles of each boundary
+%   vol.cond    conductivity of all compartments
+%   vol.mat     system matrix, which can include the electrode interpolation
 %
 % the compartment boundaries are described by a structure array with
 %   vol.bnd(i).pnt

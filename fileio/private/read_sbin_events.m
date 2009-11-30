@@ -23,7 +23,7 @@ if fid==-1
     error('wrong filename')
 end
 
-version		= fread(fid,1,'int32');
+version     = fread(fid,1,'int32');
 
 %check byteorder
 [str,maxsize,cEndian]=computer;
@@ -56,19 +56,19 @@ if precision == 0
     error('File precision is not defined.');
 end;
 
-%		read header...
-year		= fread(fid,1,'int16',endian);
-month		= fread(fid,1,'int16',endian);
-day			= fread(fid,1,'int16',endian);
-hour		= fread(fid,1,'int16',endian);
-minute		= fread(fid,1,'int16',endian);
-second		= fread(fid,1,'int16',endian);
+%       read header...
+year        = fread(fid,1,'int16',endian);
+month       = fread(fid,1,'int16',endian);
+day         = fread(fid,1,'int16',endian);
+hour        = fread(fid,1,'int16',endian);
+minute      = fread(fid,1,'int16',endian);
+second      = fread(fid,1,'int16',endian);
 millisecond = fread(fid,1,'int32',endian);
-Samp_Rate	= fread(fid,1,'int16',endian);
-NChan		= fread(fid,1,'int16',endian);
-Gain 		= fread(fid,1,'int16',endian);
-Bits 		= fread(fid,1,'int16',endian);
-Range 		= fread(fid,1,'int16',endian);
+Samp_Rate   = fread(fid,1,'int16',endian);
+NChan       = fread(fid,1,'int16',endian);
+Gain        = fread(fid,1,'int16',endian);
+Bits        = fread(fid,1,'int16',endian);
+Range       = fread(fid,1,'int16',endian);
 if unsegmented,
     NumCategors = 0;
     NSegments   = 1;
@@ -81,19 +81,19 @@ if unsegmented,
     CatLengths  = [];
     preBaseline = [];
 else
-    NumCategors	= fread(fid,1,'int16',endian);
+    NumCategors = fread(fid,1,'int16',endian);
     for j = 1:NumCategors
-        CatLengths(j)	= fread(fid,1,'int8',endian);
+        CatLengths(j)   = fread(fid,1,'int8',endian);
         for i = 1:CatLengths(j)
-            CateNames{j}(i)	= char(fread(fid,1,'char',endian));
+            CateNames{j}(i) = char(fread(fid,1,'char',endian));
         end
     end
-    NSegments	= fread(fid,1,'int16',endian);
-    NSamples	= fread(fid,1,'int32',endian);			% samples per segment
-    NEvent		= fread(fid,1,'int16',endian);			% num events per segment
+    NSegments   = fread(fid,1,'int16',endian);
+    NSamples    = fread(fid,1,'int32',endian);          % samples per segment
+    NEvent      = fread(fid,1,'int16',endian);          % num events per segment
     EventCodes = [];
     for j = 1:NEvent
-        EventCodes(j,1:4)	= char(fread(fid,[1,4],'char',endian));
+        EventCodes(j,1:4)   = char(fread(fid,[1,4],'char',endian));
     end
 end
 
@@ -106,7 +106,7 @@ else
     nsmp = NSamples;
 end
 
-eventData	= zeros(NEvent,NSegments*NSamples);
+eventData   = zeros(NEvent,NSegments*NSamples);
 segHdr      = zeros(NSegments,2);
 
 for j = 1:NSegments*(NSamples/nsmp)
@@ -114,20 +114,20 @@ for j = 1:NSegments*(NSamples/nsmp)
         %don't know yet
     else
         %read miniheader per segment
-        [segHdr(j,1), count]	= fread(fid, 1,'int16',endian);    %cell
-        [segHdr(j,2), count]	= fread(fid, 1,'int32',endian);    %time stamp
+        [segHdr(j,1), count]    = fread(fid, 1,'int16',endian);    %cell
+        [segHdr(j,2), count]    = fread(fid, 1,'int32',endian);    %time stamp
     end
 
     switch precision
         case 2
-            [temp,count]	= fread(fid,[NChan+NEvent, nsmp],'int16',endian);
+            [temp,count]    = fread(fid,[NChan+NEvent, nsmp],'int16',endian);
         case 4
-            [temp,count]	= fread(fid,[NChan+NEvent, nsmp],'single',endian);
+            [temp,count]    = fread(fid,[NChan+NEvent, nsmp],'single',endian);
         case 6
-            [temp,count]	= fread(fid,[NChan+NEvent, nsmp],'double',endian);
+            [temp,count]    = fread(fid,[NChan+NEvent, nsmp],'double',endian);
     end
     if (NEvent ~= 0)
-        eventData(:,((j-1)*nsmp+1):j*nsmp)	= temp( (NChan+1):(NChan+NEvent), 1:nsmp);
+        eventData(:,((j-1)*nsmp+1):j*nsmp)  = temp( (NChan+1):(NChan+NEvent), 1:nsmp);
     end
 end
 fclose(fid);

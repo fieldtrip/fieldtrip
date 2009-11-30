@@ -6,8 +6,8 @@ function [H] = scale(S);
 % Use as
 %   [H] = translate(S)
 % where
-%   S		[sx, sy, sz] scaling along each of the axes
-%   H 	corresponding homogenous transformation matrix
+%   S       [sx, sy, sz] scaling along each of the axes
+%   H   corresponding homogenous transformation matrix
 
 % Copyright (C) 2000-2005, Robert Oostenveld
 %

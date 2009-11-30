@@ -19,38 +19,38 @@ function M=dimassign(A,dim,idx,B);
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if(~iscell(idx))
-	if(~any(size(dim)==1)||~any(size(idx)==1)||ndims(dim)>2||ndims(idx)>2||...
-		length(dim)~=length(idx))
-		error('dim and idx must be both scalars oor both must have the same length');
-	end;
-	dummi=[];
-	for(i=1:length(idx))
-		dummi{i}=idx(i);
-	end;
-	idx=dummi;
-	clear dummi;
+    if(~any(size(dim)==1)||~any(size(idx)==1)||ndims(dim)>2||ndims(idx)>2||...
+        length(dim)~=length(idx))
+        error('dim and idx must be both scalars oor both must have the same length');
+    end;
+    dummi=[];
+    for(i=1:length(idx))
+        dummi{i}=idx(i);
+    end;
+    idx=dummi;
+    clear dummi;
 end;
 if(~any(size(dim)==1)||~any(size(idx)==1)||ndims(dim)>2||ndims(idx)>2||...
-	length(dim)~=length(idx))
-	error('dim and idx must be both scalars or both must have the same length');
+    length(dim)~=length(idx))
+    error('dim and idx must be both scalars or both must have the same length');
 end;
 
 if(~isequal(unique(dim),sort(dim)))
-	error('dim must be unique, every dimention can be addressed only once');
+    error('dim must be unique, every dimention can be addressed only once');
 end;
 
 Na=ndims(A);
 for(i=1:max([max(dim),Na]))
-	ref=find(dim==i);
-	if(isempty(ref))
-		C{i}=':';
-	else
-		C{i}=idx{ref};
-	end;
+    ref=find(dim==i);
+    if(isempty(ref))
+        C{i}=':';
+    else
+        C{i}=idx{ref};
+    end;
 end;
-M=A;		
+M=A;        
 try
-	M(C{:})=B;
+    M(C{:})=B;
 catch
-	error('Subscripted assignment dimension mismatch.');
+    error('Subscripted assignment dimension mismatch.');
 end;

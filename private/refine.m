@@ -31,9 +31,9 @@ case 'banks'
   ndhk   = size(dhk,1);
   insert = spalloc(3*npnt,3*npnt,3*ndhk);
 
-  dhkr  = zeros(4*ndhk,3);		% allocate memory for the new triangles
-  pntr  = zeros(npnt+3*ndhk,3);		% allocate memory for the maximum number of new vertices
-  pntr(1:npnt,:) = pnt;			% insert the original vertices
+  dhkr  = zeros(4*ndhk,3);      % allocate memory for the new triangles
+  pntr  = zeros(npnt+3*ndhk,3);     % allocate memory for the maximum number of new vertices
+  pntr(1:npnt,:) = pnt;         % insert the original vertices
   current = npnt;
 
   for i=1:ndhk

@@ -1214,7 +1214,7 @@ end;
 if isfield(data,'time')
     clusrand.time=data.time;
 end;
-clusrand.cfg  = cfg;			% remember the configuration details
+clusrand.cfg  = cfg;            % remember the configuration details
 
 % Turn warnings on.
 warning on;

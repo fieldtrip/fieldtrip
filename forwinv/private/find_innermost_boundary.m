@@ -7,8 +7,8 @@ function [innermost, inside] = find_innermost_boundary(bnd)
 % [innermost] = find_innermost_boundary(bnd)
 %
 % with the boundaries described by a struct array bnd with
-%   bnd(i).pnt	vertices of boundary i (matrix of size Nx3)
-%   bnd(i).tri	triangles of boundary i (matrix of size Mx3)
+%   bnd(i).pnt  vertices of boundary i (matrix of size Nx3)
+%   bnd(i).tri  triangles of boundary i (matrix of size Mx3)
 
 % Copyright (C) 2003, Robert Oostenveld
 %
@@ -25,7 +25,7 @@ end
 for i=1:ncmp
 for j=1:ncmp
   % determine for a single vertex on each surface if it is inside or outside the other surfaces
-  curpos = bnd(i).pnt(1,:);	% any point on the boundary is ok
+  curpos = bnd(i).pnt(1,:); % any point on the boundary is ok
   curpnt = bnd(j).pnt;
   curtri = bnd(j).tri;
   if i==j

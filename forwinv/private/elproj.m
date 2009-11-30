@@ -7,11 +7,11 @@ function [proj] = elproj(pos, method)
 %  [proj] = elproj([x, y, z], 'method');
 %
 % Method should be one of these:
-%	  'gnomic'
-%	  'stereographic'
-%	  'ortographic'
-%	  'inverse'
-%	  'polar'
+%     'gnomic'
+%     'stereographic'
+%     'ortographic'
+%     'inverse'
+%     'polar'
 %
 % Imagine a plane being placed against (tangent to) a globe. If
 % a light source inside the globe projects the graticule onto

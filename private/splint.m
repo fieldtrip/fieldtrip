@@ -6,13 +6,13 @@ function [V2, L2, L1] = splint(elc1, V1, elc2)
 % Use as
 %   [V2, L2, L1] = splint(elc1, V1, elc2)
 % where
-%   elc1	electrode positions where potential is known
-%   elc2	electrode positions where potential is not known
-%   V1		known potential
+%   elc1    electrode positions where potential is known
+%   elc2    electrode positions where potential is not known
+%   V1      known potential
 % and
-%   V2		potential at electrode locations in elc2
-%   L2		laplacian of potential at electrode locations in elc2
-%   L1		laplacian of potential at electrode locations in elc1
+%   V2      potential at electrode locations in elc2
+%   L2      laplacian of potential at electrode locations in elc2
+%   L1      laplacian of potential at electrode locations in elc1
 %
 % See also LAPINT, LAPINTMAT, LAPCAL
 
@@ -29,10 +29,10 @@ function [V2, L2, L1] = splint(elc1, V1, elc2)
 % 
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-N = size(elc1,1);	% number of known electrodes
-M = size(elc2,1);	% number of unknown electrodes
-T = size(V1,2);		% number of timepoints in the potential
-Z = V1;			% potential on known electrodes, can be matrix
+N = size(elc1,1);   % number of known electrodes
+M = size(elc2,1);   % number of unknown electrodes
+T = size(V1,2);     % number of timepoints in the potential
+Z = V1;         % potential on known electrodes, can be matrix
 
 % remember the actual size of the sphere
 sphere1_scale = mean(sqrt(sum(elc1.^2,2)));

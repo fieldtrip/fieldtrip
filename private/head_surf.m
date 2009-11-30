@@ -7,8 +7,8 @@ function [pnt,tri]=head_surf(vol,grad,flag);
 % Use as
 %   [pnt, tri] = head_surf(vol, grad, flag) 
 % where
-%   grad	gradiometer definition
-%   vol		multisphere volume conductor definition
+%   grad    gradiometer definition
+%   vol     multisphere volume conductor definition
 %
 % If flag=1 the lower rim of the helmet-shaped head surface will
 % be shifted downward, if flag=0 it will not be shifted downward.

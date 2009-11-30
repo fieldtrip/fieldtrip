@@ -9,7 +9,7 @@ function [trl] = continuous_ns(cfg)
 % where the configuration should contain 
 %   cfg.trialdef.trigger  = number or list with triggers
 %   cfg.trialdef.prestim  = pre-stimulus in seconds
-%   cfg.trialdef.poststim = post-stimulus in seconds	
+%   cfg.trialdef.poststim = post-stimulus in seconds    
 %
 % See also SINGLETRIAL_NS
 

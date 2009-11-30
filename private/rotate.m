@@ -7,8 +7,8 @@ function [H] = rotate(D);
 % Use as
 %   [H] = rotate(R)
 % where
-%   R		[rx, ry, rz] in degrees
-%   H		corresponding homogenous transformation matrix
+%   R       [rx, ry, rz] in degrees
+%   H       corresponding homogenous transformation matrix
 %
 % Note that the order in which the rotations are performs matters. The
 % rotation is first done around the z-axis, then the y-axis and finally the

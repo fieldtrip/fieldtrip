@@ -5,9 +5,9 @@ function [varargout] = funname(varargin)
 % [lf] = meg_leadfield1(R, pos, ori)
 %
 % with input arguments
-%   R		  position dipole
-%   pos		position magnetometers
-%   ori		orientation magnetometers
+%   R         position dipole
+%   pos     position magnetometers
+%   ori     orientation magnetometers
 %
 % The center of the homogenous sphere is in the origin, the field
 % of the dipole is not dependent on the sphere radius.
@@ -75,7 +75,7 @@ end
 %   tmp4 = dot(r,R);
 %   tmp5 = dot(r,r-R);
 %   tmp6 = dot(R,r-R);
-%   tmp7 = (tmp1*tmp2)^2 - tmp4^2;	% cross(r,R)^2
+%   tmp7 = (tmp1*tmp2)^2 - tmp4^2;  % cross(r,R)^2
 %
 %   alpha = 1 / (-tmp3 * (tmp1*tmp3+tmp5));
 %   A = 1/tmp3 - 2*alpha*tmp2^2 - 1/tmp1;
@@ -90,7 +90,7 @@ end
 %
 %   lf(i,:) = cross(alpha*u  + beta*r, R);
 % end
-% lf = 1e-7*lf;	% multiply with u0/4pi
+% lf = 1e-7*lf; % multiply with u0/4pi
 %
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % % fast cross product

@@ -44,7 +44,7 @@ end
 
 % detect the different MEG sensor types
 description = {
-  'ctf151'                     % 1	    
+  'ctf151'                     % 1      
   'ctf275'                     % 2
   'ctf151_planar'              % 3
   'ctf275_planar'              % 4

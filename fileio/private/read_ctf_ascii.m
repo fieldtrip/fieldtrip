@@ -35,12 +35,12 @@ while ischar(line)
   end
 
   % the line is not empty, which means that we have encountered a chunck of information
-  subline = cleanline(fgetl(fid));	% read the {
-  subline = cleanline(fgetl(fid));	% read the first item
+  subline = cleanline(fgetl(fid));  % read the {
+  subline = cleanline(fgetl(fid));  % read the first item
   while isempty(findstr(subline, '}'))
     if ~isempty(subline)
       [item, value] = strtok(subline, ':');
-      value(1) = ' ';			% remove the :
+      value(1) = ' ';           % remove the :
       value  = strtrim(value);
       item   = strtrim(item);
       warning off
@@ -61,7 +61,7 @@ while ischar(line)
       end
       warning on
     end
-    subline = cleanline(fgetl(fid));	% read the first item
+    subline = cleanline(fgetl(fid));    % read the first item
   end
 end
 

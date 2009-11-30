@@ -5,8 +5,8 @@ function [lf, vol] = eeg_leadfield4(R, elc, vol)
 % [lf] = eeg_leadfield4(R, elc, vol)
 %
 % with input arguments
-%   R	         position of the dipole
-%   elc	       position of the electrodes
+%   R            position of the dipole
+%   elc        position of the electrodes
 % and vol being a structure with the elements
 %   vol.r      radius of the 4 spheres 
 %   vol.c      conductivity of the 4 spheres
@@ -79,9 +79,9 @@ Nchans = size(elc,1);
 lf     = zeros(Nchans,3);
 Nmax   = length(vol.t);
 n      = 1:Nmax;
-f      = norm(R)/r4;		% following cuffin1979
-% c      = r2/r4;		% following cuffin1979
-% d      = r3/r4;		% following cuffin1979
+f      = norm(R)/r4;        % following cuffin1979
+% c      = r2/r4;       % following cuffin1979
+% d      = r3/r4;       % following cuffin1979
 
 % this code is to cross-validate the lutkenhoner and cuffin implementations
 % [lut_t, cuf_t] = eeg_leadfield4_prepare(vol);
@@ -103,14 +103,14 @@ for i=1:Nchans
   s_z = 0;
 
   for n=1:Nmax
-    P0  = plgndr(n,0,cos_theta);		% zero'th order Legendre
-    P1  = plgndr(n,1,cos_theta);		% first order Legendre
-    s_x = s_x + const(n)*P1/n;			% s_y is identical
+    P0  = plgndr(n,0,cos_theta);        % zero'th order Legendre
+    P1  = plgndr(n,1,cos_theta);        % first order Legendre
+    s_x = s_x + const(n)*P1/n;          % s_y is identical
     s_z = s_z + const(n)*P0;
   end
 
   lf(i,1) = -cos(phi) * s_x;
-  lf(i,2) = -sin(phi) * s_x;			% s_y is identical to s_x
+  lf(i,2) = -sin(phi) * s_x;            % s_y is identical to s_x
   lf(i,3) = 1         * s_z;
 end
 

@@ -30,7 +30,7 @@ while ischar(line)
   % the line is not empty, which means that we have encountered a chunck of information
   if findstr(line, ':')~=length(line)
     [item, value] = strtok(line, ':');
-    value(1) = ' ';			% remove the :
+    value(1) = ' ';         % remove the :
     value  = strtrim(value);
     item   = strtrim(item);
     item(findstr(item, '.')) = '_';

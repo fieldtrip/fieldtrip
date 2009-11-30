@@ -170,7 +170,7 @@ try,
     if strcmp(pars.readevents,'yes')
         cnt = 0;
         for channr = eventlist(:)'
- 			[st,einfo]          = ns_GetEntityInfo(fhandle,channr);
+            [st,einfo]          = ns_GetEntityInfo(fhandle,channr);
             [st,evtime,evdata]  = ns_GetEventData(fhandle,channr,[1:einfo.ItemCount]);
 
             for trignr = 1:einfo.ItemCount,

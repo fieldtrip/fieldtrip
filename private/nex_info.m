@@ -24,12 +24,12 @@ end
 
 if(length(filename) == 0)
    [fname, pathname] = uigetfile('*.nex', 'Select a Nex file');
-	filename = strcat(pathname, fname);
+    filename = strcat(pathname, fname);
 end
 
 fid = fopen(filename, 'r', 'ieee-le');
 if(fid == -1)
-	disp('cannot open file');
+    disp('cannot open file');
    return
 end
 
@@ -48,10 +48,10 @@ disp(strcat('duration (sec) = ', num2str((tend - tbeg)/freq)));
 disp(strcat('number of variables = ', num2str(nvar)));
 names = zeros(1, 64);
 for i=1:nvar
-	types(i) = fread(fid, 1, 'int32');
-	var_version = fread(fid, 1, 'int32');
-	names(i, :) = fread(fid, [1 64], 'char');
-	dummy = fread(fid, 128+8, 'char');
+    types(i) = fread(fid, 1, 'int32');
+    var_version = fread(fid, 1, 'int32');
+    names(i, :) = fread(fid, [1 64], 'char');
+    dummy = fread(fid, 128+8, 'char');
 end
 names = char(names);
 fclose(fid);

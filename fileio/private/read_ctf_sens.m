@@ -5,10 +5,10 @@ function [magn] = read_ctf_sens(filename);
 % magn = read_ctf_sens(filename)
 %
 % where the returned structure meg has the fields
-%   magn.pnt	position first coil
-%   magn.ori	orientation first coil
-%   magn.pnt2	position second coil
-%   magn.ori2	orientation second coil
+%   magn.pnt    position first coil
+%   magn.ori    orientation first coil
+%   magn.pnt2   position second coil
+%   magn.ori2   orientation second coil
 
 % Copyright (C) 2002, Robert Oostenveld
 %
@@ -66,7 +66,7 @@ end
 indx = find(strcmp(type, 'GRAD1-SENS'));
 nchan = length(indx);
 label = name(indx);
-pnt1 = coil1.pnt(indx,:) * 10;	% convert from cm to mm
+pnt1 = coil1.pnt(indx,:) * 10;  % convert from cm to mm
 
 % shift offset to origin to make triangulation
 offset = [mean(pnt1(:,1)) mean(pnt1(:,2)) min(pnt1(:,3))];
@@ -98,9 +98,9 @@ b = baseline.dir(indx,2);
 oriB = [r1 r2 r3];
 pnt2 = pnt1 + oriB .* repmat(baseline.length(indx)', 1, 3);
 
-magn.pnt	= pnt1;
-magn.ori	= ori1;
-magn.pnt2	= pnt2;
-magn.ori2	= ori2;
-magn.tri	= tri;
-magn.label	= label;
+magn.pnt    = pnt1;
+magn.ori    = ori1;
+magn.pnt2   = pnt2;
+magn.ori2   = ori2;
+magn.tri    = tri;
+magn.label  = label;

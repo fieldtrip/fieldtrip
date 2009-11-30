@@ -18,7 +18,7 @@ hdr.DataFormat       = read_asa(filename, 'DataFormat=', '%s');
 hdr.DataOrientation  = read_asa(filename, 'DataOrientation=', '%s');
 hdr.BinaryFormat     = read_asa(filename, 'BinaryFormat=', '%s');
 hdr.NumberOfChannels = read_asa(filename, 'NumberOfChannels=', '%d');
-hdr.SamplingInterval = read_asa(filename, 'SamplingInterval=', '%f');	% microseconds
+hdr.SamplingInterval = read_asa(filename, 'SamplingInterval=', '%f');   % microseconds
 
 if ~isempty(hdr.NumberOfChannels)
   for i=1:hdr.NumberOfChannels

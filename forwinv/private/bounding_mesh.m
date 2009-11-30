@@ -6,9 +6,9 @@ function [inside] = bounding_mesh(pos, pnt, tri);
 % [inside] = bounding_mesh(pos, pnt, tri)
 %
 % where
-%   pos		position of point of interest (can be 1x3 or Nx3)
-%   pnt		bounding mesh vertices
-%   tri		bounding mesh triangles
+%   pos     position of point of interest (can be 1x3 or Nx3)
+%   pnt     bounding mesh vertices
+%   tri     bounding mesh triangles
 %
 % See also SOLID_ANGLE
 

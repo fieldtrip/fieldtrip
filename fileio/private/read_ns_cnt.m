@@ -58,14 +58,14 @@
 function r=read_ns_cnt(file, varargin)
 
 if nargin < 1
-	help read_ns_cnt;
-	return;
-end;	
+    help read_ns_cnt;
+    return;
+end;    
 
 % defaults
 [datdir,name,ext]=fileparts(file);
 if ~isempty(varargin)
-	r=struct(varargin{:});
+    r=struct(varargin{:});
 end;
 
 % add defaults
@@ -117,10 +117,10 @@ end
 % ----------------------
 %a = freadat(f, 0, 1, 'short');
 %for i=1:470
-%	a = freadat(f, [], 1, 'short');
-%	fprintf('offset %3d value %3d\n', i*2, a);
-%	%if mod(i, 10) == 0, fprintf('\n'); end;  	
-%end;	
+%   a = freadat(f, [], 1, 'short');
+%   fprintf('offset %3d value %3d\n', i*2, a);
+%   %if mod(i, 10) == 0, fprintf('\n'); end;    
+%end;   
 
 % channel parameters
 chandat=freadat(f, 900, [75 r.nchannels], 'char');
@@ -209,21 +209,21 @@ if ~isempty(ldchan)
    if length(ldchan)==r.nchannels
       % all channels
 
-	  if r.blockread == 1	
-      	  %dat=freadat(f, startpos, [r.nchannels ldnsamples], 'short');
+      if r.blockread == 1   
+          %dat=freadat(f, startpos, [r.nchannels ldnsamples], 'short');
           dat=freadat(f, startpos, [r.nchannels ldnsamples], df);
- 	  else
-     	  dat=zeros( length(ldchan), ldnsamples);
-      	  %dat(:, 1:r.blockread)=freadat(f, startpos, [r.blockread r.nchannels], 'short')';
+      else
+          dat=zeros( length(ldchan), ldnsamples);
+          %dat(:, 1:r.blockread)=freadat(f, startpos, [r.blockread r.nchannels], 'short')';
           dat(:, 1:r.blockread)=freadat(f, startpos, [r.blockread r.nchannels], df)';
 
-		  counter = 1;	
- 		  while counter*r.blockread < ldnsamples
-	      	%dat(:, counter*r.blockread+1:counter*r.blockread+r.blockread) = freadat(f, [], [40 r.nchannels], 'short')';
+          counter = 1;  
+          while counter*r.blockread < ldnsamples
+            %dat(:, counter*r.blockread+1:counter*r.blockread+r.blockread) = freadat(f, [], [40 r.nchannels], 'short')';
             dat(:, counter*r.blockread+1:counter*r.blockread+r.blockread) = freadat(f, [], [40 r.nchannels], df)';
-			counter = counter + 1;
-		  end;
-	  end;	
+            counter = counter + 1;
+          end;
+      end;  
 
       r.dat=zeros( size(dat,2), length(ldchan));
       if ldraw
@@ -270,8 +270,8 @@ r.dat = r.dat';
 % the reference electrode is equal to sum(r,1)/(elec+1)
 % -------------------
 switch lower(r.avgref)
-	case 'yes', 
-		r.dat = r.dat-ones(r.nchannels,1)*sum(r.dat,1)/(r.nchannels+1);
+    case 'yes', 
+        r.dat = r.dat-ones(r.nchannels,1)*sum(r.dat,1)/(r.nchannels+1);
 end;
 
 disp done
@@ -299,7 +299,7 @@ else
 end
 
 if ~isempty(byte)
-	fseek(f, byte, 'bof');
+    fseek(f, byte, 'bof');
 end;
 
 if ~strcmp(prec, 'text')

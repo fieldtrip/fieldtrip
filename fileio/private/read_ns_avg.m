@@ -41,9 +41,9 @@ avg = read_ns_hdr(filename);
 
 % create a time or frequency axis
 if avg.domain==1
-  avg.frequency = linspace(avg.xmin, avg.xmax, avg.npnt) / 1000;	% in Hz instead of mili-Hz
+  avg.frequency = linspace(avg.xmin, avg.xmax, avg.npnt) / 1000;    % in Hz instead of mili-Hz
 else
-  avg.time = linspace(avg.xmin, avg.xmax, avg.npnt);			% in ms
+  avg.time = linspace(avg.xmin, avg.xmax, avg.npnt);            % in ms
 end
 
 % open the file and seek towards the place where the raw data is
@@ -51,8 +51,8 @@ fid = fopen(filename,'r','ieee-le');
 if fid<0
   error(['cannot open ', filename]);
 else
-  fseek(fid, 900, 'cof');		% skip general header
-  fseek(fid, 75*avg.nchan, 'cof');	% skip channel headers
+  fseek(fid, 900, 'cof');       % skip general header
+  fseek(fid, 75*avg.nchan, 'cof');  % skip channel headers
 end;
 
 % read raw signal data and convert to uV

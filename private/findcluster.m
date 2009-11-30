@@ -47,9 +47,9 @@ if length(varargin)==2
 end;
 
 if minnbchan>0
-	% For every (time,frequency)-element, it is calculated how many significant
-	% neighbours this channel has. If a significant channel has less than minnbchan
-	% significant neighbours, then this channel is removed from onoff.
+    % For every (time,frequency)-element, it is calculated how many significant
+    % neighbours this channel has. If a significant channel has less than minnbchan
+    % significant neighbours, then this channel is removed from onoff.
     
     if length(varargin)==1
         selectmat = single(spatdimneighbstructmat | spatdimneighbstructmat');
@@ -58,12 +58,12 @@ if minnbchan>0
         selectmat = single(spatdimneighbselmat | spatdimneighbselmat');
     end;
     nremoved=1;
-	while nremoved>0
-		nsigneighb=reshape(selectmat*reshape(single(onoff),[spatdimlength (nfreq*ntime)]),[spatdimlength nfreq ntime]);
-		remove=(onoff.*nsigneighb)<minnbchan;
-		nremoved=length(find(remove.*onoff));
-		onoff(remove)=0;
-	end;
+    while nremoved>0
+        nsigneighb=reshape(selectmat*reshape(single(onoff),[spatdimlength (nfreq*ntime)]),[spatdimlength nfreq ntime]);
+        remove=(onoff.*nsigneighb)<minnbchan;
+        nremoved=length(find(remove.*onoff));
+        onoff(remove)=0;
+    end;
 end;
 
 % for each channel (combination), find the connected time-frequency clusters

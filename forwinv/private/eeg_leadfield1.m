@@ -5,11 +5,11 @@ function [lf, lforig] = eeg_leadfield1(R, elc, vol);
 % [lf] = eeg_leadfield1(R, elc, vol)
 %
 % with input arguments
-%   R		position dipole (vector of length 3)
-%   elc		position electrodes
+%   R       position dipole (vector of length 3)
+%   elc     position electrodes
 % and vol being a structure with the elements
-%   vol.r	radius of sphere
-%   vol.c	conductivity of sphere
+%   vol.r   radius of sphere
+%   vol.c   conductivity of sphere
 
 % Copyright (C) 2002, Robert Oostenveld
 %

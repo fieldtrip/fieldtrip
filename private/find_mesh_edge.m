@@ -4,8 +4,8 @@ function [pnt, line] = find_mesh_edge(pnt, dhk);
 %
 % [pnt, line] = find_mesh_edge(pnt, dhk), where
 %
-% pnt	contains the vertex locations and 
-% line	contains the indices of the linepieces connecting the vertices
+% pnt   contains the vertex locations and 
+% line  contains the indices of the linepieces connecting the vertices
 
 % Copyright (C) 2003, Robert Oostenveld
 %

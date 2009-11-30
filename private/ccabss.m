@@ -67,14 +67,14 @@ r = sqrt(real(r));      % Canonical correlations
 
 % --- Sort correlations ---
 
-V = fliplr(Wx);		% reverse order of eigenvectors
-r = flipud(diag(r));	% extract eigenvalues anr reverse their orrer
-[r,I]= sort((real(r)));	% sort reversed eigenvalues in ascending order
-r = flipud(r);		% restore sorted eigenvalues into descending order
+V = fliplr(Wx);     % reverse order of eigenvectors
+r = flipud(diag(r));    % extract eigenvalues anr reverse their orrer
+[r,I]= sort((real(r))); % sort reversed eigenvalues in ascending order
+r = flipud(r);      % restore sorted eigenvalues into descending order
 for j = 1:length(I)
   Wx(:,j) = V(:,I(j));  % sort reversed eigenvectors in ascending order
 end
-Wx = fliplr(Wx);	% restore sorted eigenvectors into descending order
+Wx = fliplr(Wx);    % restore sorted eigenvectors into descending order
 
 % --- Calcualte Wy  ---
 

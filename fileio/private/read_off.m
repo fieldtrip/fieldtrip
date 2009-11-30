@@ -16,8 +16,8 @@ if fid~=-1
   % scan the file type
   [s, count] = fscanf(fid, '%s\n', 1);
   if ~strcmp(s,'OFF')
-   	msg = sprintf('wrong file type %s', s);
-	error(msg);
+    msg = sprintf('wrong file type %s', s);
+    error(msg);
   end
 
   % read the number of vertex points and triangles

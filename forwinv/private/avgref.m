@@ -1,11 +1,11 @@
 function [data] = avgref(data, sel);
 
 % AVGREF computes the average reference in each column
-%	[data] = avgref(data)
+%   [data] = avgref(data)
 %
 % or it computes the re-referenced data relative to the
 % average over the selected channels
-%	[data] = avgref(data, sel)
+%   [data] = avgref(data, sel)
 
 % Copyright (C) 1998-2002, Robert Oostenveld
 %

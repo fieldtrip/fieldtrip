@@ -4,12 +4,12 @@ function [EDF]=closedf(EDF)
 % Opens an EDF File (European Data Format for Biosignals) into MATLAB
 % <A HREF="http://www.medfac.leidenuniv.nl/neurology/knf/kemp/edf.htm">About EDF</A> 
 %
-% EDF	struct of EDF-Header of a EDF-File
+% EDF   struct of EDF-Header of a EDF-File
 
-%	Version 2.0
-%	15.12.1997
-%	Copyright (c) 1997 by  Alois Schloegl
-%	a.schloegl@ieee.org	
+%   Version 2.0
+%   15.12.1997
+%   Copyright (c) 1997 by  Alois Schloegl
+%   a.schloegl@ieee.org 
 %
 % This program is free software; you can redistribute it and/or
 % modify it under the terms of the GNU General Public License

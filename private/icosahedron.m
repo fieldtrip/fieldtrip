@@ -39,7 +39,7 @@ pnt = zeros(12, 3);
 rho=0.4*sqrt(5);
 phi=2*pi*(0:4)/5;
 
-pnt( 1, :) = [0 0  1];			% top point
+pnt( 1, :) = [0 0  1];          % top point
 
 pnt(2:6, 1) = rho*cos(phi)';
 pnt(2:6, 2) = rho*sin(phi)';
@@ -49,5 +49,5 @@ pnt(7:11, 1) = rho*cos(phi - pi/5)';
 pnt(7:11, 2) = rho*sin(phi - pi/5)';
 pnt(7:11, 3) = -rho/2;
 
-pnt(12, :) = [0 0 -1];			% bottom point
+pnt(12, :) = [0 0 -1];          % bottom point
 

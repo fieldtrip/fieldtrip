@@ -176,7 +176,7 @@ if ~isempty(datafile),
         fseek(fid, 152, 'cof');
         for k = 1:Nchan
           name = fread(fid, 17, 'uchar');
-  	  header.process(np).step(ns).Chan{k,1}   = char(name(name>0))';
+      header.process(np).step(ns).Chan{k,1}   = char(name(name>0))';
         end
         %fseek(fid, 20, 'cof');
         %fseek(fid, 4216, 'cof');
@@ -194,7 +194,7 @@ if ~isempty(datafile),
         fseek(fid, fp, 'bof');
         for k = 1:Nchan
           header.process(np).step(ns).Weights(k,:) = fread(fid, 23, 'float32=>float32')';
-  	fseek(fid, 36, 'cof');
+    fseek(fid, 36, 'cof');
         end
       else
       end    

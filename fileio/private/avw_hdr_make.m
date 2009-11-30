@@ -55,7 +55,7 @@ return
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [hk] = header_key
-	
+    
     hk.sizeof_hdr       = int32(348);   % must be 348!
     hk.data_type(1:10)  = sprintf('%10s','');
     hk.db_name(1:18)    = sprintf('%18s','');
@@ -69,50 +69,50 @@ return
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [ dime ] = image_dimension
     
-	dime.dim(1:8)       = int16([4 256 256 256 1 0 0 0]);
-	dime.vox_units(1:4) = sprintf('%4s','mm');
-	dime.cal_units(1:8) = sprintf('%8s','');
-	dime.unused1        = int16(0);
-	dime.datatype       = int16(2);
-	dime.bitpix         = int16(8);
-	dime.dim_un0        = int16(0);
-	dime.pixdim(1:8)    = single([0 1 1 1 1000 0 0 0]);
-	dime.vox_offset     = single(0);
-	dime.funused1       = single(0);
-	dime.funused2       = single(0);
+    dime.dim(1:8)       = int16([4 256 256 256 1 0 0 0]);
+    dime.vox_units(1:4) = sprintf('%4s','mm');
+    dime.cal_units(1:8) = sprintf('%8s','');
+    dime.unused1        = int16(0);
+    dime.datatype       = int16(2);
+    dime.bitpix         = int16(8);
+    dime.dim_un0        = int16(0);
+    dime.pixdim(1:8)    = single([0 1 1 1 1000 0 0 0]);
+    dime.vox_offset     = single(0);
+    dime.funused1       = single(0);
+    dime.funused2       = single(0);
     % Set default 8bit intensity scale (from MRIcro), otherwise funused3
-	dime.roi_scale      = single(1);
-	dime.cal_max        = single(0);
-	dime.cal_min        = single(0);
-	dime.compressed     = int32(0);
-	dime.verified       = int32(0);
-	dime.glmax          = int32(255);
-	dime.glmin          = int32(0);
-	
+    dime.roi_scale      = single(1);
+    dime.cal_max        = single(0);
+    dime.cal_min        = single(0);
+    dime.compressed     = int32(0);
+    dime.verified       = int32(0);
+    dime.glmax          = int32(255);
+    dime.glmin          = int32(0);
+    
 return
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [ hist ] = data_history
-	
+    
     datime = clock;
     
-	hist.descrip(1:80)      = sprintf('%-80s','mri_toolbox @ http://eeg.sf.net/');
-	hist.aux_file(1:24)     = sprintf('%-24s','');
-	hist.orient             = uint8(0); % sprintf( '%1s',''); % see notes in avw_hdr_read
-	hist.originator(1:10)   = sprintf('%-10s','');
-	hist.generated(1:10)    = sprintf('%-10s','mri_toolbx');
-	hist.scannum(1:10)      = sprintf('%-10s','');
-	hist.patient_id(1:10)   = sprintf('%-10s','');
-	hist.exp_date(1:10)     = sprintf('%02d-%02d-%04d',datime(3),datime(2),datime(1));
-	hist.exp_time(1:10)     = sprintf('%02d-%02d-%04.1f',datime(4),datime(5),datime(6));
-	hist.hist_un0(1:3)      = sprintf( '%-3s','');
-	hist.views              = int32(0);
-	hist.vols_added         = int32(0);
-	hist.start_field        = int32(0);
-	hist.field_skip         = int32(0);
-	hist.omax               = int32(0);
-	hist.omin               = int32(0);
-	hist.smax               = int32(0);
-	hist.smin               = int32(0);
-	
+    hist.descrip(1:80)      = sprintf('%-80s','mri_toolbox @ http://eeg.sf.net/');
+    hist.aux_file(1:24)     = sprintf('%-24s','');
+    hist.orient             = uint8(0); % sprintf( '%1s',''); % see notes in avw_hdr_read
+    hist.originator(1:10)   = sprintf('%-10s','');
+    hist.generated(1:10)    = sprintf('%-10s','mri_toolbx');
+    hist.scannum(1:10)      = sprintf('%-10s','');
+    hist.patient_id(1:10)   = sprintf('%-10s','');
+    hist.exp_date(1:10)     = sprintf('%02d-%02d-%04d',datime(3),datime(2),datime(1));
+    hist.exp_time(1:10)     = sprintf('%02d-%02d-%04.1f',datime(4),datime(5),datime(6));
+    hist.hist_un0(1:3)      = sprintf( '%-3s','');
+    hist.views              = int32(0);
+    hist.vols_added         = int32(0);
+    hist.start_field        = int32(0);
+    hist.field_skip         = int32(0);
+    hist.omax               = int32(0);
+    hist.omin               = int32(0);
+    hist.smax               = int32(0);
+    hist.smin               = int32(0);
+    
 return

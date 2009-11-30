@@ -24,7 +24,7 @@ if isfield(ascii, 'MultiSphere_Data')
     vol.r(i) = tmp(4);
     vol.o(i, :) = tmp(1:3);
   end
-  vol.r = vol.r(:);	% ensure column vector
+  vol.r = vol.r(:); % ensure column vector
 elseif isfield(ascii, 'MEG_Sphere')
   vol.r    = ascii.MEG_Sphere.RADIUS;
   vol.o(1) = ascii.MEG_Sphere.ORIGIN_X;

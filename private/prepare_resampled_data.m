@@ -327,8 +327,8 @@ elseif resamplepermutation
     % into a selection array that can be used as indices into the concatenated data
     tmp = [];
     for r=1:cfg.numpermutation
-      sel1 = (1:Nreplication) + (permute(r,:)==0)*Nreplication;	% select the trials assigned to condition 1
-      sel2 = (1:Nreplication) + (permute(r,:)==1)*Nreplication;	% select the trials assigned to condition 2
+      sel1 = (1:Nreplication) + (permute(r,:)==0)*Nreplication; % select the trials assigned to condition 1
+      sel2 = (1:Nreplication) + (permute(r,:)==1)*Nreplication; % select the trials assigned to condition 2
       tmp(r,:) = [sel1 sel2];
     end 
     permute = tmp;
@@ -345,11 +345,11 @@ elseif resamplepermutation
       error('it is not possible to generate all possible permutations for more than two conditions');
     end
     allperms = sortrows(perms(1:Ncondition));
-    numperms = prod(1:Ncondition);		% equal to size(allperms,1)
+    numperms = prod(1:Ncondition);      % equal to size(allperms,1)
     permute = zeros(cfg.numpermutation, Ncondition*Nreplication);
     for r=1:cfg.numpermutation
       % select one of the possible permutations for every trial
-      sel = floor(rand(1,Nreplication)*numperms) + 1;	
+      sel = floor(rand(1,Nreplication)*numperms) + 1;   
       tmp = allperms(sel,:);
       % convert to a list that can be used as indices into the concatenated data
       tmp = (tmp-1)*Nreplication + repmat((1:Nreplication)', [1 Ncondition]);

@@ -24,7 +24,7 @@ fid1 = fopen(fn, 'r');
 while ~Npos
   line = fgetl(fid1);
   if strncmp('NumberPositions=', line, length('NumberPositions='))
-  	Npos = sscanf(line, 'NumberPositions=%d');
+    Npos = sscanf(line, 'NumberPositions=%d');
   end
 end
 frewind(fid1);
@@ -32,7 +32,7 @@ frewind(fid1);
 while ~Ntim
   line = fgetl(fid1);
   if strncmp('NumberTimeSteps=', line, length('NumberTimeSteps='))
-  	Ntim = sscanf(line, 'NumberTimeSteps=%d');
+    Ntim = sscanf(line, 'NumberTimeSteps=%d');
   end
 end
 frewind(fid1);
@@ -40,7 +40,7 @@ frewind(fid1);
 while isempty(time)
   line = fgetl(fid1);
   if strncmp('TimeSteps', line, length('TimeSteps'))
-  	t = sscanf(line, 'TimeSteps %f(%f)%f');
+    t = sscanf(line, 'TimeSteps %f(%f)%f');
         time = t(1):t(2):t(3);
   end
 end
@@ -85,14 +85,14 @@ fclose(fid1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % old output format
-% 	pos = [x1 y1 z1 x2 y2 z2             ... ] and
+%   pos = [x1 y1 z1 x2 y2 z2             ... ] and
 %
 %       mom = [Qx11 Qy11 Qz11 Qx21 Qy21 Qz21 ...
 %              Qx12 Qy12 Qz12 Qx22 Qy22 Qz22 ...
 %              ...
 %              Qx1t Qy1t Qz1t Qx2t Qy2t Qz2t ... ]
 %
-%	time = [T1 T2 T3 T4 .. Tt]
+%   time = [T1 T2 T3 T4 .. Tt]
 %
 % was obtained by re-format the data according to
 %

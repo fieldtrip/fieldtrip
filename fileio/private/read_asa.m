@@ -5,16 +5,16 @@ function [val] = read_asa(filename, elem, format, number, token)
 % val = read_asa(filename, element, type, number)
 %
 % where the element is a string such as
-%	NumberSlices
-%	NumberPositions
-%	Rows
-%	Columns
-%	etc.
+%   NumberSlices
+%   NumberPositions
+%   Rows
+%   Columns
+%   etc.
 %
 % and format specifies the datatype according to
-%	%d	(integer value)
-%	%f	(floating point value)
-%	%s	(string)
+%   %d  (integer value)
+%   %f  (floating point value)
+%   %s  (string)
 %
 % number is optional to specify how many lines of data should be read
 % The default is 1 for strings and Inf for numbers.

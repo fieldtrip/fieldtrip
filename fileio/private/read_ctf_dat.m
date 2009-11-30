@@ -5,10 +5,10 @@ function [meg] = read_ctf_dat(filename);
 % meg = read_ctf_dat(filename)
 % 
 % returns a structure with the following fields:
-%   meg.data		Nchans x Ntime
-%   meg.time		1xNtime	in miliseconds
-%   meg.trigger		1xNtime with trigger values
-%   meg.label		1xNchans cell array with channel labels (string)
+%   meg.data        Nchans x Ntime
+%   meg.time        1xNtime in miliseconds
+%   meg.trigger     1xNtime with trigger values
+%   meg.label       1xNchans cell array with channel labels (string)
 
 % Copyright (C) 2002, Robert Oostenveld
 % 

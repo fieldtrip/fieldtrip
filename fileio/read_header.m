@@ -531,7 +531,7 @@ switch headerformat
     hdr.nChans      = size(hdr.data,1);
     hdr.nSamples    = size(hdr.data,2);
     hdr.nSamplesPre = hdr.xmin*hdr.rate/1000;
-    hdr.nTrials     = 1;		% it can always be interpreted as continuous data
+    hdr.nTrials     = 1;        % it can always be interpreted as continuous data
     % remove the data and variance if present
     hdr = rmfield(hdr, 'data');
     try, hdr = rmfield(hdr, 'variance'); end
@@ -554,7 +554,7 @@ switch headerformat
     hdr.nSamples    = hdr.nsample;
     hdr.nSamplesPre = 0;
     hdr.nChans      = hdr.nchan;
-    hdr.nTrials     = 1;		% it can always be interpreted as continuous data
+    hdr.nTrials     = 1;        % it can always be interpreted as continuous data
 
   case 'egi_egia'
     [fhdr,chdr,ename,cnames,fcom,ftext] = read_egis_header(filename);

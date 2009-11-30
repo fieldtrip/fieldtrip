@@ -90,7 +90,7 @@ while ischar(line)
       % remember the line itself, and also cut it into pieces
       val{ind} = line;
       % the line is tab-separated and looks like this
-      % A68	0.0873437	-0.075789	0.0891512	0.471135	-0.815532	0.336098
+      % A68 0.0873437   -0.075789   0.0891512   0.471135    -0.815532   0.336098
       sep = find(line==9); % the ascii value of a tab is 9
       sep = sep(1);
       lab{ind} = line(1:(sep-1));

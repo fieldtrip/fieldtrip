@@ -7,11 +7,11 @@ function [meg] = read_ctf_meg4(fname, hdr, begsample, endsample, chanindx)
 % Use as
 %   [meg] = read_ctf_meg4(filename, hdr, begsample, endsample, chanindx)
 % where
-%   filename	name of the datafile, including the .meg4 extension
+%   filename    name of the datafile, including the .meg4 extension
 %   header      with all data information (from read_ctf_meg4)
 %   begsample   index of the first sample to read
 %   endsample   index of the last sample to read
-%   chanindx	index of channels to read (optional, default is all)
+%   chanindx    index of channels to read (optional, default is all)
 %
 % See also READ_CTF_MEG4
 
@@ -130,8 +130,8 @@ end
 fclose(fid);
 
 % multiply the dimensionless values with the calibration value
-gain = hdr.gainV(chanindx);	% only for selected channels
-meg  = raw';			% transpose the raw data
+gain = hdr.gainV(chanindx); % only for selected channels
+meg  = raw';            % transpose the raw data
 for i=1:size(meg,1)
   meg(i,:) = gain(i)*meg(i,:);
 end

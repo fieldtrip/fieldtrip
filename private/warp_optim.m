@@ -120,7 +120,7 @@ if level>=4
   % do a first order nonlinear transformation,
   if fb; disp('1st order nonlinear...'); end
   e1i = traditional(tf);
-  e1i = [e1i(1:3,4) e1i(1:3,1:3)];	% reshuffle from homogenous into nonlinear
+  e1i = [e1i(1:3,4) e1i(1:3,1:3)];  % reshuffle from homogenous into nonlinear
   e1f = optimfun(warp_error, e1i, options, pos1, pos2);
   if fb; fprintf('distance = %f\n', warp_error(e1f, pos1, pos2, 'nonlinear')); end
 end

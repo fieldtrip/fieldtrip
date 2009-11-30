@@ -111,9 +111,9 @@ if strcmp(mode, 'contour') || strcmp(mode, 'contour_bw') || strcmp(mode, 'contou
       v(1) = triangle_val(tri_indx,1);
       v(2) = triangle_val(tri_indx,2);
       v(3) = triangle_val(tri_indx,3);
-      la(1) = (cnt-v(1)) / (v(2)-v(1));	% abcissa between vertex 1 and 2
-      la(2) = (cnt-v(2)) / (v(3)-v(2));	% abcissa between vertex 2 and 3
-      la(3) = (cnt-v(3)) / (v(1)-v(3));	% abcissa between vertex 1 and 2
+      la(1) = (cnt-v(1)) / (v(2)-v(1)); % abcissa between vertex 1 and 2
+      la(2) = (cnt-v(2)) / (v(3)-v(2)); % abcissa between vertex 2 and 3
+      la(3) = (cnt-v(3)) / (v(1)-v(3)); % abcissa between vertex 1 and 2
       abc(1,:) = pos(1,:) + la(1) * (pos(2,:) - pos(1,:));
       abc(2,:) = pos(2,:) + la(2) * (pos(3,:) - pos(2,:));
       abc(3,:) = pos(3,:) + la(3) * (pos(1,:) - pos(3,:));
@@ -323,7 +323,7 @@ switch lower(mode)
       hc = [hc; h1];
     end
 
-end	% switch
+end % switch
 
 axis off
 axis vis3d

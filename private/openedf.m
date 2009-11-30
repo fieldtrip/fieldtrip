@@ -4,13 +4,13 @@ function [DAT,H1]=openedf(FILENAME)
 % Opens an EDF File (European Data Format for Biosignals) in MATLAB (R)
 % <A HREF="http://www.medfac.leidenuniv.nl/neurology/knf/kemp/edf.htm">About EDF</A> 
 
-%	Copyright (C) 1997-1998 by Alois Schloegl
-%	a.schloegl@ieee.org
-%	Ver 2.20 	18.Aug.1998
-%	Ver 2.21 	10.Oct.1998
-%	Ver 2.30 	 5.Nov.1998
+%   Copyright (C) 1997-1998 by Alois Schloegl
+%   a.schloegl@ieee.org
+%   Ver 2.20    18.Aug.1998
+%   Ver 2.21    10.Oct.1998
+%   Ver 2.30     5.Nov.1998
 %
-%	For use under Octave define the following function
+%   For use under Octave define the following function
 % function s=upper(s); s=toupper(s); end;
 
 % V2.12    Warning for missing Header information  
@@ -32,7 +32,7 @@ function [DAT,H1]=openedf(FILENAME)
 % Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 
-SLASH='/';		% defines Seperator for Subdirectories
+SLASH='/';      % defines Seperator for Subdirectories
 BSLASH=char(92);
 
 cname=computer;
@@ -40,8 +40,8 @@ if cname(1:2)=='PC' SLASH=BSLASH; end;
 
 fid=fopen(FILENAME,'r','ieee-le');          
 if fid<0 
-	fprintf(2,['Error LOADEDF: File ' FILENAME ' not found\n']);  
-	return;
+    fprintf(2,['Error LOADEDF: File ' FILENAME ' not found\n']);  
+    return;
 end;
 
 EDF.FILE.FID=fid;
@@ -53,9 +53,9 @@ SPos=max([0 find((FILENAME=='/') | (FILENAME==BSLASH))]);
 EDF.FILE.Ext = FILENAME(PPos+1:length(FILENAME));
 EDF.FILE.Name = FILENAME(SPos+1:PPos-1);
 if SPos==0
-	EDF.FILE.Path = pwd;
+    EDF.FILE.Path = pwd;
 else
-	EDF.FILE.Path = FILENAME(1:SPos-1);
+    EDF.FILE.Path = FILENAME(1:SPos-1);
 end;
 EDF.FileName = [EDF.FILE.Path SLASH EDF.FILE.Name '.' EDF.FILE.Ext];
 
@@ -64,8 +64,8 @@ EDF.VERSION=H1(1:8);                     % 8 Byte  Versionsnummer
 %if 0 fprintf(2,'LOADEDF: WARNING  Version EDF Format %i',ver); end;
 EDF.PID = deblank(H1(9:88));                  % 80 Byte local patient identification
 EDF.RID = deblank(H1(89:168));                % 80 Byte local recording identification
-%EDF.H.StartDate = H1(169:176);         % 8 Byte		
-%EDF.H.StartTime = H1(177:184);         % 8 Byte		
+%EDF.H.StartDate = H1(169:176);         % 8 Byte        
+%EDF.H.StartTime = H1(177:184);         % 8 Byte        
 EDF.T0=[str2num(H1(168+[7 8])) str2num(H1(168+[4 5])) str2num(H1(168+[1 2])) str2num(H1(168+[9 10])) str2num(H1(168+[12 13])) str2num(H1(168+[15 16])) ];
 
 % Y2K compatibility until year 2090
@@ -80,19 +80,19 @@ else ;
 end;
 
 EDF.HeadLen = str2num(H1(185:192));  % 8 Byte  Length of Header
-% reserved = H1(193:236);	         % 44 Byte		
+% reserved = H1(193:236);            % 44 Byte      
 EDF.NRec = str2num(H1(237:244));     % 8 Byte  # of data records
 EDF.Dur = str2num(H1(245:252));      % 8 Byte  # duration of data record in sec
 EDF.NS = str2num(H1(253:256));       % 8 Byte  # of signals
 
-EDF.Label = char(fread(EDF.FILE.FID,[16,EDF.NS],'char')');		
-EDF.Transducer = char(fread(EDF.FILE.FID,[80,EDF.NS],'char')');	
-EDF.PhysDim = char(fread(EDF.FILE.FID,[8,EDF.NS],'char')');	
+EDF.Label = char(fread(EDF.FILE.FID,[16,EDF.NS],'char')');      
+EDF.Transducer = char(fread(EDF.FILE.FID,[80,EDF.NS],'char')'); 
+EDF.PhysDim = char(fread(EDF.FILE.FID,[8,EDF.NS],'char')'); 
 
-EDF.PhysMin= str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')'));	
-EDF.PhysMax= str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')'));	
-EDF.DigMin = str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')'));	%	
-EDF.DigMax = str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')'));	%	
+EDF.PhysMin= str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')')); 
+EDF.PhysMax= str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')')); 
+EDF.DigMin = str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')')); %   
+EDF.DigMax = str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')')); %   
 
 % check validity of DigMin and DigMax
 if (length(EDF.DigMin) ~= EDF.NS)
@@ -120,9 +120,9 @@ if (any(EDF.PhysMin >= EDF.PhysMax))
         EDF.PhysMin = EDF.DigMin;
         EDF.PhysMax = EDF.DigMax;
 end  
-EDF.PreFilt= char(fread(EDF.FILE.FID,[80,EDF.NS],'char')');	%	
-tmp = fread(EDF.FILE.FID,[8,EDF.NS],'char')';	%	samples per data record
-EDF.SPR = str2num(char(tmp));	%	samples per data record
+EDF.PreFilt= char(fread(EDF.FILE.FID,[80,EDF.NS],'char')'); %   
+tmp = fread(EDF.FILE.FID,[8,EDF.NS],'char')';   %   samples per data record
+EDF.SPR = str2num(char(tmp));   %   samples per data record
 
 fseek(EDF.FILE.FID,32*EDF.NS,0);
 
@@ -150,30 +150,30 @@ end;
 
 EDF.Chan_Select=(EDF.SPR==max(EDF.SPR));
 for k=1:EDF.NS
-	if EDF.Chan_Select(k)
-	    EDF.ChanTyp(k)='N';
-	else
-	    EDF.ChanTyp(k)=' ';
-	end;         
-	if findstr(upper(EDF.Label(k,:)),'ECG')
-	    EDF.ChanTyp(k)='C';
-	elseif findstr(upper(EDF.Label(k,:)),'EKG')
-	    EDF.ChanTyp(k)='C';
-	elseif findstr(upper(EDF.Label(k,:)),'EEG')
-	    EDF.ChanTyp(k)='E';
-	elseif findstr(upper(EDF.Label(k,:)),'EOG')
-	    EDF.ChanTyp(k)='O';
-	elseif findstr(upper(EDF.Label(k,:)),'EMG')
-	    EDF.ChanTyp(k)='M';
-	end;
+    if EDF.Chan_Select(k)
+        EDF.ChanTyp(k)='N';
+    else
+        EDF.ChanTyp(k)=' ';
+    end;         
+    if findstr(upper(EDF.Label(k,:)),'ECG')
+        EDF.ChanTyp(k)='C';
+    elseif findstr(upper(EDF.Label(k,:)),'EKG')
+        EDF.ChanTyp(k)='C';
+    elseif findstr(upper(EDF.Label(k,:)),'EEG')
+        EDF.ChanTyp(k)='E';
+    elseif findstr(upper(EDF.Label(k,:)),'EOG')
+        EDF.ChanTyp(k)='O';
+    elseif findstr(upper(EDF.Label(k,:)),'EMG')
+        EDF.ChanTyp(k)='M';
+    end;
 end;
 
-EDF.AS.spb = sum(EDF.SPR);	% Samples per Block
+EDF.AS.spb = sum(EDF.SPR);  % Samples per Block
 bi=[0;cumsum(EDF.SPR)]; 
 
 idx=[];idx2=[];
 for k=1:EDF.NS, 
-	idx2=[idx2, (k-1)*max(EDF.SPR)+(1:EDF.SPR(k))];
+    idx2=[idx2, (k-1)*max(EDF.SPR)+(1:EDF.SPR(k))];
 end;
 maxspr=max(EDF.SPR);
 idx3=zeros(EDF.NS*maxspr,1);

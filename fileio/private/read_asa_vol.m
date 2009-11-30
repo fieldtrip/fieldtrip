@@ -3,8 +3,8 @@ function vol = read_asa_vol(fn);
 % READ_ASA_VOL reads an ASA volume conductor file
 %
 % all data is converted to the following units
-%   vertices		mm
-%   conductivities	S/m
+%   vertices        mm
+%   conductivities  S/m
 
 % Copyright (C) 2002, Robert Oostenveld
 % 

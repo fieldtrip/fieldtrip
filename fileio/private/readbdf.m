@@ -16,10 +16,10 @@
 %
 % See also: openbdf(), sdfopen(), sdfread(), eeglab()
 
-%	Version 2.11
-%	03.02.1998
-%	Copyright (c) 1997,98 by Alois Schloegl
-%	a.schloegl@ieee.org	
+%   Version 2.11
+%   03.02.1998
+%   Copyright (c) 1997,98 by Alois Schloegl
+%   a.schloegl@ieee.org 
                       
 % This program is free software; you can redistribute it and/or
 % modify it under the terms of the GNU General Public License
@@ -58,11 +58,11 @@ DAT.Idx=Records(:)';
         
 for nrec=1:length(Records),
 
-	NREC=(DAT.Idx(nrec)-1);
-	if NREC<0 fprintf(2,'Warning READEDF: invalid Record Number %i \n',NREC);end;
+    NREC=(DAT.Idx(nrec)-1);
+    if NREC<0 fprintf(2,'Warning READEDF: invalid Record Number %i \n',NREC);end;
 
-	fseek(EDF.FILE.FID,(EDF.HeadLen+NREC*EDF.AS.spb*3),'bof');
-	[s, count]=fread(EDF.FILE.FID,EDF.AS.spb,'bit24');
+    fseek(EDF.FILE.FID,(EDF.HeadLen+NREC*EDF.AS.spb*3),'bof');
+    [s, count]=fread(EDF.FILE.FID,EDF.AS.spb,'bit24');
 
     try, 
         S(EDF.AS.IDX2)=s;
@@ -70,25 +70,25 @@ for nrec=1:length(Records),
         error('File is incomplete (try reading begining of file)');
     end;
 
-	%%%%% Test on  Over- (Under-) Flow
-%	V=sum([(S'==EDF.DigMax(:,ones(RecLen,1))) + (S'==EDF.DigMin(:,ones(RecLen,1)))])==0;
-	V=sum([(S(:,EDF.Chan_Select)'>=EDF.DigMax(EDF.Chan_Select,ones(RecLen,1))) + ...
-	       (S(:,EDF.Chan_Select)'<=EDF.DigMin(EDF.Chan_Select,ones(RecLen,1)))])==0;
-	EDF.ERROR.DigMinMax_Warning(find(sum([(S'>EDF.DigMax(:,ones(RecLen,1))) + (S'<EDF.DigMin(:,ones(RecLen,1)))]')>0))=1;
-	%	invalid=[invalid; find(V==0)+l*k];
+    %%%%% Test on  Over- (Under-) Flow
+%   V=sum([(S'==EDF.DigMax(:,ones(RecLen,1))) + (S'==EDF.DigMin(:,ones(RecLen,1)))])==0;
+    V=sum([(S(:,EDF.Chan_Select)'>=EDF.DigMax(EDF.Chan_Select,ones(RecLen,1))) + ...
+           (S(:,EDF.Chan_Select)'<=EDF.DigMin(EDF.Chan_Select,ones(RecLen,1)))])==0;
+    EDF.ERROR.DigMinMax_Warning(find(sum([(S'>EDF.DigMax(:,ones(RecLen,1))) + (S'<EDF.DigMin(:,ones(RecLen,1)))]')>0))=1;
+    %   invalid=[invalid; find(V==0)+l*k];
                              
-	if floor(Mode/2)==1
-		for k=1:EDF.NS,
-			DAT.Record(nrec*EDF.SPR(k)+(1-EDF.SPR(k):0),k)=S(1:EDF.SPR(k),k);
-		end;
-	else
-		DAT.Record(nrec*RecLen+(1-RecLen:0),:)=S;
-	end;
+    if floor(Mode/2)==1
+        for k=1:EDF.NS,
+            DAT.Record(nrec*EDF.SPR(k)+(1-EDF.SPR(k):0),k)=S(1:EDF.SPR(k),k);
+        end;
+    else
+        DAT.Record(nrec*RecLen+(1-RecLen:0),:)=S;
+    end;
 
-	DAT.Valid(nrec*RecLen+(1-RecLen:0))=V;
+    DAT.Valid(nrec*RecLen+(1-RecLen:0))=V;
 end;
-if rem(Mode,2)==0	% Autocalib
-	DAT.Record=[ones(RecLen*length(Records),1) DAT.Record]*EDF.Calib;
+if rem(Mode,2)==0   % Autocalib
+    DAT.Record=[ones(RecLen*length(Records),1) DAT.Record]*EDF.Calib;
 end;                   
 
 DAT.Record=DAT.Record';

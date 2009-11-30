@@ -40,6 +40,6 @@ else
 end
 
 bnd.pnt = pnt;
-bnd.tri = dhk + 1;		% 1-offset instead of 0-offset
-% bnd.tri = fliplr(bnd.tri);	% invert order of triangle vertices
+bnd.tri = dhk + 1;      % 1-offset instead of 0-offset
+% bnd.tri = fliplr(bnd.tri);    % invert order of triangle vertices
 
