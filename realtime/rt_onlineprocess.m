@@ -204,9 +204,9 @@ while cfg.count<cfg.nexample
             if cfg.verbose
                 disp(sprintf('trainig sample %d',cfg.count));
             end
+            R_threshold=mean(ac_cmd)+1*std(ac_cmd);
+            L_threshold=mean(ac_cmd)-1*std(ac_cmd);
         end
-        R_threshold=mean(ac_cmd)+1*std(ac_cmd);
-        L_threshold=mean(ac_cmd)-1*std(ac_cmd);
         if cmd1 > R_threshold
             cmd=1;
         elseif cmd1 < L_threshold
@@ -227,7 +227,7 @@ while cfg.count<cfg.nexample
         if cfg.saveLI
             %for saving ac_cmd to check it.
             if (cfg.count/200)==floor(cfg.count/200)
-                save('ac_cmd','ac_cmd');
+                save('~/Desktop/ac_cmd','ac_cmd');
             end
         end
         cfg.first=0;
