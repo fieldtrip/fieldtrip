@@ -17,6 +17,7 @@ function rt_onlineprocess(cfg)
 %   cfg.dataformat    = string, default is determined automatic
 %   cfg.headerformat  = string, default is determined automatic
 %   cfg.eventformat   = string, default is determined automatic
+%   cfg.ntraining     = number, the number of trials to be used in the training phase (default=inf) 
 %
 % To stop the realtime function, you have to press Ctrl-C
 %  Copyright (C) 2009, Ali Bahramisharif, Marcel van Gerven, Robert Oostenveld
@@ -34,6 +35,7 @@ if ~isfield(cfg, 'readevent'),      cfg.readevent = 'no';     end % capture even
 if ~isfield(cfg, 'jumptoeof'),      cfg.jumptoeof = 'no';     end % jump to end of file at initialization
 if ~isfield(cfg, 'nexample'),       cfg.nexample = inf;       end
 if ~isfield(cfg, 'foi'),            cfg.foi = 10;             end % from alpha frequency
+if ~isfield(cfg, 'ntraining')       cfg.ntraining=inf;        end % the number of trials to be used in the training phase
 if ~isfield(cfg, 'channel'),        cfg.channel = {'MLO' 'MRO'}';               end %channels to be used
 if ~isfield(cfg, 'datafile'),       cfg.datafile='shm://';                      end %input stream
 if ~isfield(cfg, 'ostream'),        cfg.ostream='tcp://presentation011:1976';   end %output stream
@@ -195,8 +197,11 @@ while cfg.count<cfg.nexample
         cmd1=log10(mean(mean(comb.powspctrm(:,sel_L,:),2),3)./mean(mean(comb.powspctrm(:,sel_R,:),2),3));
 
         cfg.count=cfg.count+1;
-        %accumulative command is saving for updating mean and std.
-        ac_cmd=[ac_cmd,cmd1];
+        if cfg.count<cfg.ntraining
+            %accumulative command is saving for updating mean and std.
+            ac_cmd=[ac_cmd,cmd1];
+            sprintf('trainig sample %d',cfg.count);
+        end
         R_threshold=mean(ac_cmd)+1*std(ac_cmd);
         L_threshold=mean(ac_cmd)-1*std(ac_cmd);
         if cmd1 > R_threshold
