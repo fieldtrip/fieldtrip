@@ -1,4 +1,4 @@
-function [varargout] = plot_topo(chanX, chanY, dat, varargin)
+function Zi = plot_topo(chanX, chanY, dat, varargin)
 
 % PLOT_TOPO interpolates and plots the 2-D spatial topography of the
 % potential or field distribution over the head
@@ -16,6 +16,10 @@ function [varargout] = plot_topo(chanX, chanY, dat, varargin)
 %   'mask'
 %   'outline'
 %   'isolines'
+%   'interplim'
+%   'interpmethod'
+%   'style'
+
 
 
 
@@ -30,18 +34,21 @@ holdflag = ishold;
 hold on
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'gridscale', 'shading', 'mask', 'outline', 'interplim', 'interpmethod','isolines'});
+keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'gridscale', 'shading', 'mask', 'outline', 'interplim', 'interpmethod','isolines','style'});
 hpos          = keyval('hpos',         varargin);    if isempty(hpos);         hpos = 0;                 end
 vpos          = keyval('vpos',         varargin);    if isempty(vpos);         vpos = 0;                 end
 width         = keyval('width',        varargin);    if isempty(width);        width = 1;                end
 height        = keyval('height',       varargin);    if isempty(height);       height = 1;               end
 gridscale     = keyval('gridscale',    varargin);    if isempty(gridscale);    gridscale = 67;           end; % 67 in original
 shading       = keyval('shading',      varargin);    if isempty(shading);      shading = 'flat';         end;
-isolines      = keyval('isolines',     varargin);    if isempty(isolines);     isolines = 6;             end;
 mask          = keyval('mask',         varargin);
 outline       = keyval('outline',      varargin);
 interplim     = keyval('interplim',    varargin);    if isempty(interplim);    interplim = 'electrodes'; end
 interpmethod  = keyval('interpmethod', varargin);    if isempty(interpmethod); interpmethod = 'v4';      end
+isolines      = keyval('isolines',     varargin);      
+style         = keyval('style',        varargin);    if isempty(style);        style = 'surfcont';       end % can be 'surf', 'cont', 'contfill', 'surfcont'
+
+
 
 chanX = chanX * width  + hpos;
 chanY = chanY * height + vpos;
@@ -93,12 +100,6 @@ if ~isempty(maskimage)
   Zi(~maskimage) = NaN;
 end
 
-deltax = xi(2)-xi(1); % length of grid entry
-deltay = yi(2)-yi(1); % length of grid entry
-h = surface(Xi-deltax/2,Yi-deltay/2,zeros(size(Zi)), Zi, 'EdgeColor', 'none', 'FaceColor', shading);
-
-% Create isolines
-contour(Xi,Yi,Zi,isolines,'k');
 
 % plot the outline of the head, ears and nose
 for i=1:length(outline)
@@ -107,12 +108,29 @@ for i=1:length(outline)
   plot_vector(xval, yval, 'Color','k', 'LineWidth',2)
 end
 
-% the (optional) output is the handle
-if nargout == 1
-  varargout{1} = h;
+
+% Create isolines
+if strcmp(style,'cont') || strcmp(style,'surfcont')
+  if exist('isolines','var')
+    contour(Xi,Yi,Zi,isolines,'k');
+  end
 end
 
-% remember the current input and output arguments, so that they can be
+% Plot surface
+if strcmp(style,'surf') || strcmp(style,'surfcont')
+  deltax = xi(2)-xi(1); % length of grid entry
+  deltay = yi(2)-yi(1); % length of grid entry
+  h = surface(Xi-deltax/2,Yi-deltay/2,zeros(size(Zi)), Zi, 'EdgeColor', 'none', 'FaceColor', shading);
+end
+
+% Plot filled contours
+if strcmp(style,'contfill') && exist('isolines','var')
+  contourf(Xi,Yi,Zi,isolines,'k');
+end
+
+
+
+% remember the current input arguments, so that they can be
 % reused on a subsequent call in case the same input argument is given
 previous_argin     = current_argin;
 previous_maskimage = maskimage;
