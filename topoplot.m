@@ -589,7 +589,7 @@ if isfield(cfg, 'colorbar') && ~all(data == data(1))
   if strcmp(cfg.colorbar, 'yes')
     colorbar;
   elseif ~strcmp(cfg.colorbar, 'no')
-    colorbar(cfg.colorbar);
+    colorbar('location',cfg.colorbar);
   end
 end
 
