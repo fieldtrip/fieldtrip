@@ -24,12 +24,12 @@ function clusterplot(cfg, stat)
 % cfg.saveaspng          = string, path where figure has to be saved to (default = 'no')
 %                          When multiple figures figure gets extension with fignum
 %
-% It is also possible to specify other cfg options that apply to TOPOPLOTER
-% or TOPOPLOT. You CANNOT specify cfg.xlim, any of the TOPOPLOT highlight
+% It is also possible to specify other cfg options that apply to TOPOPLOTER.
+% You CANNOT specify cfg.xlim, any of the TOPOPLOTER highlight
 % options, cfg.comment and cfg.commentpos.
 %
 % See also:
-%   topoplot, singleplotER
+%   topoplotER, singleplotER
 
 % Copyright (C) 2007, Ingrid Nieuwenhuis, F.C. Donders Centre
 %
