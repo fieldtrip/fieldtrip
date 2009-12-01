@@ -46,7 +46,7 @@ outline       = keyval('outline',      varargin);
 interplim     = keyval('interplim',    varargin);    if isempty(interplim);    interplim = 'electrodes'; end
 interpmethod  = keyval('interpmethod', varargin);    if isempty(interpmethod); interpmethod = 'v4';      end
 isolines      = keyval('isolines',     varargin);      
-style         = keyval('style',        varargin);    if isempty(style);        style = 'surfcont';       end % can be 'surf', 'cont', 'contfill', 'surfcont'
+style         = keyval('style',        varargin);    if isempty(style);        style = 'surfiso';       end % can be 'surf', 'iso', 'isofill', 'surfiso'
 
 
 
@@ -110,21 +110,21 @@ end
 
 
 % Create isolines
-if strcmp(style,'cont') || strcmp(style,'surfcont')
+if strcmp(style,'iso') || strcmp(style,'surfiso')
   if exist('isolines','var')
     contour(Xi,Yi,Zi,isolines,'k');
   end
 end
 
 % Plot surface
-if strcmp(style,'surf') || strcmp(style,'surfcont')
+if strcmp(style,'surf') || strcmp(style,'surfiso')
   deltax = xi(2)-xi(1); % length of grid entry
   deltay = yi(2)-yi(1); % length of grid entry
   h = surface(Xi-deltax/2,Yi-deltay/2,zeros(size(Zi)), Zi, 'EdgeColor', 'none', 'FaceColor', shading);
 end
 
 % Plot filled contours
-if strcmp(style,'contfill') && exist('isolines','var')
+if strcmp(style,'isofill') && exist('isolines','var')
   contourf(Xi,Yi,Zi,isolines,'k');
 end
 
