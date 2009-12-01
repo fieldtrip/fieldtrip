@@ -2,7 +2,7 @@ function plotSelection(userData, buttonState)
 
 % PLOTSELECTION is the callback function for interactive ER or TFR plots.
 % The function can be called by one of the following functions:
-% multiplotER, multiplotTFR, singleplotER, singleplotTFR, and topoplot.
+% multiplotER, multiplotTFR, singleplotER, singleplotTFR.
 %
 % This function is only to be used as a callback function, i.e. you should
 % not call it directly.
