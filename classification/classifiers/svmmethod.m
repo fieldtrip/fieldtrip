@@ -77,6 +77,11 @@ classdef svmmethod < classifier
       function obj = train(obj,data,design)
         % simply stores input data and design
         
+        % remove missing data
+        data = data(~isnan(design),:);
+        design = design(~isnan(design));
+        
+        % check for consistency
         [data,design] = obj.check_input(data,design);
         
         if ~exist('platt_sigmoid','var')

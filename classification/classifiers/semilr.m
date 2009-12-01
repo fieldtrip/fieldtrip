@@ -4,10 +4,8 @@ classdef semilr < classifier
 % by the mean of 'nu' coefficient. The other parameter 'lambda', is for 
 % L2 regularization over logistic regressions.
 %
-%
 %   Copyright (c) 2009, Ali Bahramisharif, Marcel van Gerven
-%
-%   $Log: da.m,v $
+
 
     properties
         nu=0;       % coefficient for regularizer over posteriors of unlabeled data
@@ -67,10 +65,10 @@ classdef semilr < classifier
            obj.w = zeros(obj.nclasses,sum(psz));
          end
          
-         options.MaxIter=5000;
-         options.MaxFunEvals=10000;
          options.Display='off';
          options.Method='lbfgs';
+         %options.MaxIter=5000;
+         %options.MaxFunEvals=10000;
          %options.TolFun=1e-10;
          %options.TolX=1e-15;
          

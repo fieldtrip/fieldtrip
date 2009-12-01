@@ -39,11 +39,7 @@ classdef rbmstack < preprocessor
             obj = obj@preprocessor(varargin{:});
 
             obj.model = SRBM(varargin{:});
-                
-            if isempty(obj.inlayers)
-              obj.inlayers = 1:(length(obj.model.rbms)+1);
-            end
-            
+                                      
         end
         
         function obj = train(obj,data,design)
@@ -52,10 +48,14 @@ classdef rbmstack < preprocessor
             % default architecture
             if isempty(obj.model.rbms)
            
-              rbm1 = RBM('nvisible',size(data,2),'nhidden',100,'epsilon',0.01);
-              rbm2 = RBM('nvisible',100,'nhidden',20,'epsilon',0.01);
+              rbm1 = RBM('nvisible',size(data,2),'nhidden',30,'nconditional',1);
+              rbm2 = RBM('nvisible',30,'nhidden',30,'nconditional',1);
               obj.model = SRBM('rbms',{rbm1 rbm2});
             
+            end
+            
+            if isempty(obj.inlayers)
+              obj.inlayers = 1:(length(obj.model.rbms)+1);
             end
             
             obj.model = obj.model.train(data);
@@ -65,6 +65,10 @@ classdef rbmstack < preprocessor
         function data = test(obj,data)            
             % propagate activations and save features as examples
         
+            if isempty(obj.inlayers)
+              obj.inlayers = 1:(length(obj.model.rbms)+1);
+            end
+            
             R = cell(1,length(obj.model.rbms)+1);
             R{1} = data;
             for c=1:length(obj.model.rbms)

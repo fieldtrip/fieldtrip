@@ -17,21 +17,23 @@ function [fv,g] = semilogreg(w,data,targets,ptargets,pidx,psz,nclasses,unlabl,nu
     w1=weight{i};
     
     softmaxes = exp(data{i} * w1');
-    softmaxes = softmaxes./repmat(sum(softmaxes,2),[1 nclasses]);
+    softmaxes = bsxfun(@rdivide,softmaxes,sum(softmaxes,2));
   
-    fv = fv - sum(log(softmaxes(targets)))+lambda*sum(sum(w1.*w1));
+    fv = fv - sum(log(softmaxes(targets)))+lambda*sum(w1(:).^2);
     
     ggrad = - (ptargets-softmaxes)'*data{i}(:,1:size(w1,2))+2*lambda*w1;
     grad{i}=ggrad(:);
 
   end
   
-  if nu > 0
+  if nu > 0 && ~isempty(unlabl)
 
     for i=1:length(unlabl)
+      
+      softmaxes1 = (unlabl{i} * weight{i}');
+
       for j=(i+1):length(unlabl)
         
-        softmaxes1 = (unlabl{i} * weight{i}');
         softmaxes2 = (unlabl{j} * weight{j}');
 
         S = (softmaxes1-softmaxes2);
