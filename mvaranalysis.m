@@ -1,41 +1,102 @@
 function [mvardata] = mvaranalysis(cfg, data)
 
-% MVARANALYSIS performs multivariate autoregressive modeling on any
-% time series trial data.
+% MVARANALYSIS performs multivariate autoregressive modeling on
+% time series data over multiple trials.
 %
 % Use as
 %   [mvardata] = mvaranalysis(cfg, data)
 %
-%%% The bivariate quantities should be interpreted according to the
-%%% in which the labels occur in labelcmb. Here the second column
-%%% causes the first column
-
-% Copyright (C) 2009, Jan-Mathijs Schoffelen
-% $Log: mvaranalysis.m,v $
-% Revision 1.1  2009/10/02 13:55:23  jansch
-% first implementation in fieldtrip
+% The input data should be organised in a structure as obtained from 
+% the PREPROCESSING function. The configuration depends on the type 
+% of computation that you want to perform.
+% The output is a data structure of datatype 'mvar' which contains the
+% multivariate autoregressive coefficients in the field coeffs, and the
+% covariance of the residuals in the field noisecov. 
 %
+% The configuration should contain:
+%   cfg.toolbox    = the name of the toolbox containing the function for the
+%                     actual computation of the ar-coefficients
+%                     this can be 'biosig' (default) or 'bsmart'
+%                    you should have a copy of the specified toolbox in order
+%                     to use mvaranalysis (both can be downloaded directly).
+%   cfg.mvarmethod = scalar (only required when cfg.toolbox = 'biosig').
+%                     default is 2, relates to the algorithm used for the 
+%                     computation of the AR-coefficients by mvar.m
+%   cfg.order      = scalar, order of the autoregressive model (default=10)
+%   cfg.channel    = 'all' (default) or list of channels for which the model
+%                     is fitted.
+%   cfg.keeptrials = 'no' (default) or 'yes' specifies whether the coefficients
+%                     are estimated for each trial seperately, or on the 
+%                     concatenated data
+%   cfg.jackknife  = 'no' (default) or 'yes' specifies whether the coefficients
+%                     are estimated for all leave-one-out sets of trials 
+%   cfg.zscore     = 'no' (default) or 'yes' specifies whether the channel data
+%                      are z-transformed prior to the model fit. This may be
+%                      necessary if the magnitude of the signals is very different
+%                      e.g. when fitting a model to combined MEG/EMG data
+%   cfg.blc        = 'yes' (default) or 'no' explicit removal of DC-offset
+%
+% Mvaranalysis can be used to obtain one set of coefficients for 
+% the whole common time axis defined in the data. It will throw an error
+% if the trials are of variable length, or if the time axes of the trials
+% are not equal to one another.
+%
+% Mvaranalysis can be also used to obtain time-dependent sets of
+% coefficients based on a sliding window. In this case the input cfg 
+% should contain:
+%
+%   cfg.t_ftimwin = the width of the sliding window on which the coefficients 
+%                    are estimated
+%   cfg.toi       = [t1 t2 ... tx] the time points at which the windows are 
+%                    centered 
 
-if ~isfield(cfg, 'channel'),    cfg.channel    = 'all';          end
-if ~isfield(cfg, 'channelcmb'), cfg.channelcmb = {'all' 'all'};  end
-if ~isfield(cfg, 'toi'),        cfg.toi        = 'all';          end
-if ~isfield(cfg, 't_ftimwin'),  cfg.t_ftimwin  = [];             end
+% Undocumented local options: cfg.keeptapers, cfg.taper
+% Copyright (C) 2009, Jan-Mathijs Schoffelen
+
+if ~isfield(cfg, 'toolbox'),    cfg.toolbox    = 'biosig';       end
+if ~isfield(cfg, 'mvarmethod'), cfg.mvarmethod = 2;              end
 if ~isfield(cfg, 'order'),      cfg.order      = 10;             end
+if ~isfield(cfg, 'channel'),    cfg.channel    = 'all';          end
 if ~isfield(cfg, 'keeptrials'), cfg.keeptrials = 'no';           end
 if ~isfield(cfg, 'jackknife'),  cfg.jackknife  = 'no';           end
+if ~isfield(cfg, 'zscore'),     cfg.zscore     = 'no';           end
+if ~isfield(cfg, 'feedback'),   cfg.feedback   = 'textbar';      end
+if ~isfield(cfg, 'blc'),        cfg.blc        = 'yes';          end
+if ~isfield(cfg, 'toi'),        cfg.toi        = [];             end
+if ~isfield(cfg, 't_ftimwin'),  cfg.t_ftimwin  = [];             end
 if ~isfield(cfg, 'keeptapers'), cfg.keeptapers = 'yes';          end
 if ~isfield(cfg, 'taper'),      cfg.taper      = 'rectwin';      end
-if ~isfield(cfg, 'mvarmethod'), cfg.mvarmethod = 2;              end %is Mode==2 in biosig-toolbox
-if ~isfield(cfg, 'zscore'),     cfg.zscore     = 'no';           end
-if ~isfield(cfg, 'blc'),        cfg.blc        = 'yes';          end
-if ~isfield(cfg, 'feedback'),   cfg.feedback   = 'textbar';      end
+
+%check whether the requested toolbox is present
+switch cfg.toolbox
+  case 'biosig'
+    hastoolbox('biosig', 1); 
+    nnans  = cfg.order;
+  case 'bsmart'
+    hastoolbox('bsmart', 1);
+    nnans  = 0;
+  otherwise
+    error('toolbox %s is not yet supported', cfg.toolbox);
+end
+
+%check the input-data
+data = checkdata(data, 'datatype', 'raw');
+
+%check configurations
+switch cfg.toolbox
+  case 'biosig'
+    cfg = checkconfig(cfg, 'required', 'mvarmethod');
+  case 'bsmart'
+    %nothing extra required
+end
 
 if strcmp(cfg.toi,    'all'),
   %FIXME do something?
 end  
 
-cfg.channel    = channelselection(cfg.channel,      data.label);
-%cfg.channelcmb = channelcombination(cfg.channelcmb, data.label);
+%FIXME deal with time resolved versus non time resolved
+
+cfg.channel    = channelselection(cfg.channel, data.label);
 
 keeprpt  = strcmp(cfg.keeptrials, 'yes');
 keeptap  = strcmp(cfg.keeptapers, 'yes');
@@ -57,6 +118,7 @@ cmbindx1 = repmat(chanindx(:),  [1 nchan]);
 cmbindx2 = repmat(chanindx(:)', [nchan 1]);
 labelcmb = [data.label(cmbindx1(:)) data.label(cmbindx2(:))];
 
+%---think whether this makes sense at all
 if strcmp(cfg.taper, 'dpss')
   % create a sequence of DPSS (Slepian) tapers
   % ensure that the input arguments are double precision
@@ -66,17 +128,10 @@ elseif strcmp(cfg.taper, 'sine')
   tap = sine_taper(tfwin, tfwin*(cfg.tapsmofrq./data.fsample))';
   tap = tap(1,:);
 else
-  % create a single taper according to the window specification as a
-  % replacement for the DPSS (Slepian) sequence
   tap = window(cfg.taper, tfwin)';
   tap = tap./norm(tap);
-  % freqanalysis_mvar throws away the last taper of the Slepian sequence, add a dummy taper
 end
 ntap = size(tap,1);
-
-%---allocate memory
-coeffs   = zeros(nchan, nchan, cfg.order, ntoi, ntap);
-noisecov = zeros(nchan, nchan,            ntoi, ntap);
 
 %---preprocess data if necessary
 %---blc
@@ -129,6 +184,15 @@ for k = 1:ntrl
 end
 timeaxis = mintim:1./data.fsample:maxtim;
 
+%---allocate memory
+if keeprpt || dojack
+  coeffs   = zeros(length(data.trial), nchan, nchan, cfg.order, ntoi, ntap);
+  noisecov = zeros(length(data.trial), nchan, nchan,            ntoi, ntap);
+else
+  coeffs   = zeros(1, nchan, nchan, cfg.order, ntoi, ntap);
+  noisecov = zeros(1, nchan, nchan,            ntoi, ntap);
+end
+
 %---loop over the tois
 progress('init', cfg.feedback, 'computing MAR-model');
 for j = 1:ntoi
@@ -142,101 +206,58 @@ for j = 1:ntoi
   tmpcfg.minlength= 'maxperlen';
   tmpdata       = redefinetrial(tmpcfg, data);
   
-  cfg.toi(j)    = mean(tmpdata.time{1}([1 end]))+0.5./data.fsample;
-  
-  for m = 1:ntap
-    %---construct data-matrix
-    dat  = zeros(nchan, 0);
-    for k = 1:length(tmpdata.trial)
-      tmpdat  = tmpdata.trial{k}(chanindx, :).*tap(m.*ones(nchan,1),:);
-      tmptime = tmpdata.time{k};
-      dat     = [dat tmpdat nan*ones(nchan, cfg.order)];
-    end
+  cfg.toi(j)    = mean(tmpdata.time{1}([1 end]))+0.5./data.fsample; %FIXME think about this
 
-    tmpdat = dat';
-    
-    %---estimate autoregressive model
-    [ar,rc,pe] = mvar(tmpdat, cfg.order, cfg.mvarmethod);
-    coeffs(:,:,:,j,m) = reshape(ar, [nchan nchan cfg.order]);
-
-    %---compute noise covariance and rescale if necessary
-    tmpnoisecov     = pe(:,nchan*cfg.order+1:nchan*(cfg.order+1));
-    if dozscore,
-      noisecov(:,:,j,m) = diag(datstd)*tmpnoisecov*diag(datstd);
-    else
-      noisecov(:,:,j,m) = tmpnoisecov;
+  %---create cell-array indexing which original trials should go into each replicate
+  rpt  = {};
+  nrpt = numel(tmpdata.trial);
+  if dojack
+    for k = 1:nrpt
+      rpt{k,1} = setdiff(1:nrpt,k);
     end
-    dof(:,j)     = length(tmpdata.trial);
+  elseif keeprpt
+    for k = 1:nrpt
+      rpt{k,1} = k;
+    end
+  else
+    rpt{1} = 1:numel(tmpdata.trial);
+    nrpt   = 1;
   end
-
-end  
-progress('close');
-
-if dojack,
-  error('this has to be implemented still');
-  %---allocate memory
-  jh         = complex(zeros(ntrl, ncmb,  nfoi, ntoi)+nan, zeros(ntrl, ncmb,  nfoi, ntoi)+nan);
-  ja         = complex(zeros(ntrl, ncmb,  nfoi, ntoi)+nan, zeros(ntrl, ncmb,  nfoi, ntoi)+nan);
-  jcrsspctrm = complex(zeros(ntrl, ncmb,  nfoi, ntoi)+nan, zeros(ntrl, ncmb,  nfoi, ntoi)+nan);
-  jpowspctrm = zeros(ntrl, nchan, nfoi, ntoi)+nan;
-  jnoisecov  = zeros(ntrl, ncmb, ntoi)+nan;
     
-  %---loop over the tois
-  progress('init', cfg.feedback, 'computing jackknife estimate of MAR-model based TFR');
-  for j = 1:ntoi
-    tmpcfg        = [];
-    tmpcfg.toilim = [cfg.toi(j)-cfg.t_ftimwin/2 cfg.toi(j)+cfg.t_ftimwin/2-1./data.fsample];
-    tmpcfg.feedback = 'no';    
-    tmpdata       = redefinetrial(tmpcfg, data);
-    
-    %---construct data-matrix
-    dat = zeros(nchan, 0);
-    for k = 1:length(tmpdata.trial)
-      tmpdat  = tmpdata.trial{k};
-      tmptime = tmpdata.time{k};
-      dat     = [dat tmpdat(chanindx, :) nan*ones(nchan, cfg.order)];
-    end
-  
-    %---locate trial boundaries
-    tmp    = isnan(dat(1,:));
-    begsmp = [find(diff([1 tmp])==-1) size(dat,2)+1];
-    endsmp = find(diff([tmp 1])==1);
-    njtrl  = length(endsmp);
+  for rlop = 1:nrpt
+
+    for m = 1:ntap
+      %---construct data-matrix
+      dat = catnan(tmpdata.trial, chanindx, rpt{rlop}, tap(m,:), nnans);
+      
+      %---estimate autoregressive model
+      switch cfg.toolbox
+        case 'biosig'
+          [ar, rc, pe] = mvar(dat', cfg.order, cfg.mvarmethod);
    
-    %---perform jackknife
-    for k = 1:njtrl
-      jdat = dat;
-      jdat(:,begsmp(k):endsmp(k)) = nan;
+          %---compute noise covariance
+          tmpnoisecov     = pe(:,nchan*cfg.order+1:nchan*(cfg.order+1));
+        case 'bsmart'
+          [ar, tmpnoisecov] = armorf(dat, numel(rpt{rlop}), size(tmpdata.trial{1},2), cfg.order);      
+          ar = -ar; %convention is swapped sign with respect to biosig
+          %FIXME check which is which: X(t) = A1*X(t-1) + ... + An*X(t-n) + E
+          %the other is then X(t) + A1*X(t-1) + ... + An*X(t-n) = E 
+      end
+      coeffs(rlop,:,:,:,j,m) = reshape(ar, [nchan nchan cfg.order]);
       
-      jdat = jdat';
-      
-      [jar,jrc,jpe]     = mvar(jdat, cfg.order, cfg.mvarmethod);
-      tmpnoisecov       = jpe(:,nchan*cfg.order+1:nchan*(cfg.order+1));
+      %---rescale noisecov if necessary
       if dozscore,
-        jnoisecov(k,:,j)  = reshape(diag(datstd)*tmpnoisecov*diag(datstd), [ncmb 1]);
+        noisecov(rlop,:,:,j,m) = diag(datstd)*tmpnoisecov*diag(datstd);
       else
-        jnoisecov(k,:,j)  = reshape(tmpnoisecov, [ncmb 1]);
+        noisecov(rlop,:,:,j,m) = tmpnoisecov;
       end
-      [tmpjh, tmpja]    = ar2h(jar, cfg.foi, data.fsample);
-      jh(k,:,:,j)       = reshape(tmpjh, [ncmb nfoi]);
-      ja(k,:,:,j)       = reshape(tmpja, [ncmb nfoi]);
+      dof(rlop,:,j) = numel(rpt{rlop});
+    end %---tapers
+  
+  end %---replicates
 
-      %---compute cross-spectra
-      tmpnoisecov = reshape(jnoisecov(k,:,j), [nchan nchan]);
-      tmpjcrsspctrm = complex(zeros(ncmb, nfoi), zeros(ncmb, nfoi));
-      tmpjpowspctrm = complex(zeros(nchan, nfoi), zeros(nchan, nfoi));
-      for m = 1:nfoi
-        tmph               = reshape(jh(k,:,m,j), [nchan nchan]);
-        tmpcrsspctrm       = tmph*tmpnoisecov*tmph';
-        tmpjcrsspctrm(:,m) = tmpcrsspctrm(:);
-        tmpjpowspctrm(:,m) = abs(diag(tmpcrsspctrm));
-      end
-      jcrsspctrm(k, :, :, j) = tmpjcrsspctrm;
-      jpowspctrm(k, :, :, j) = tmpjpowspctrm;
-    end  
-  end
-  progress('close');
-end
+end %---tois 
+progress('close');
 
 %---create output-structure
 mvardata          = [];
@@ -245,24 +266,50 @@ mvardata.time     = cfg.toi;
 mvardata.fsampleorig = data.fsample;
 
 if dojack,
-  mvardata.dimord    = 'rpt_chan_chan_lag_time';
-  mvardata.coeffs    = jcoeffs;
-  mvardata.noisecov  = jnoisecov;
-  mvardata.method    = 'jackknife';
+  mvardata.dimord = 'rptjck_chan_chan_lag_time';
+elseif keeprpt
+  mvardata.dimord = 'rpt_chan_chan_lag_time';
 else
-  mvardata.dimord   = 'chan_chan_lag_time';
-  mvardata.coeffs   = coeffs;
-  mvardata.noisecov = noisecov;
-  mvardata.dof      = dof;
-  mvardata.method   = 'alltrial';
-end
+  mvardata.dimord = 'chan_chan_lag_time';
+  siz    = size(coeffs);
+  coeffs = reshape(coeffs, siz(2:end));
+  siz    = size(noisecov);
+  noisecov = reshape(noisecov, siz(2:end));
+end  
+mvardata.coeffs   = coeffs;
+mvardata.noisecov = noisecov;
+mvardata.dof      = dof;
 
 try,
   cfg.previous = data.cfg;
 end
 mvardata.cfg     = cfg; 
 
-%---SUBFUNCTION to ensure that the first two input arguments are of double
+%----------------------------------------------------
+%subfunction to concatenate data with nans in between
+function [datamatrix] = catnan(datacells, chanindx, trials, taper, nnans)
+
+nchan = numel(chanindx);
+nsmp  = size(datacells{1}, 2);
+nrpt  = numel(trials);
+
+%---initialize
+datamatrix = zeros(nchan, nsmp*nrpt + nnans*(nrpt-1)) + nan;
+
+%---fill the matrix
+for k = 1:nrpt
+  if k==1,
+    begsmp = (k-1)*nsmp + 1;
+    endsmp =  k   *nsmp    ;
+  else
+    begsmp = (k-1)*(nsmp+nnans) + 1;
+    endsmp =  k   *(nsmp+nnans) - nnans;
+  end
+  datamatrix(:,begsmp:endsmp) = datacells{trials(k)}(chanindx,:).*taper(ones(nchan,1),:);
+end
+
+%------------------------------------------------------
+%---subfunction to ensure that the first two input arguments are of double
 % precision this prevents an instability (bug) in the computation of the
 % tapers for Matlab 6.5 and 7.0
 function [tap] = double_dpss(a, b, varargin);
