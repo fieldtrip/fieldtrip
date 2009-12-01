@@ -90,13 +90,30 @@ switch cfg.toolbox
     %nothing extra required
 end
 
-if strcmp(cfg.toi,    'all'),
-  %FIXME do something?
+if isempty(cfg.toi) && isempty(cfg.t_ftimwin)
+  %fit model to entire data segment
+  ok = 1;
+  for k = 1:numel(data.trial)
+    if any(data.time{k}~=data.time{1}),
+      ok = 0;
+      break
+    end
+  end
+
+  if ~ok
+    error('time axes of all trials should be identical');
+  else
+    cfg.toi       = mean(data.time{1}([1 end]))       + 0.5/data.fsample;
+    cfg.t_ftimwin = data.time{1}(end)-data.time{1}(1) + 1/data.fsample;
+  end
+    
+elseif ~isempty(cfg.toi) && ~isempty(cfg.t_ftimwin)
+  %do sliding window approach
+else
+  error('cfg should contain both cfg.toi and cfg.t_ftimwin');
 end  
 
-%FIXME deal with time resolved versus non time resolved
-
-cfg.channel    = channelselection(cfg.channel, data.label);
+cfg.channel = channelselection(cfg.channel, data.label);
 
 keeprpt  = strcmp(cfg.keeptrials, 'yes');
 keeptap  = strcmp(cfg.keeptapers, 'yes');
