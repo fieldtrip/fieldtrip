@@ -13,17 +13,18 @@ function plot_lay(lay, varargin)
 %   'mask'     = yes/no
 %   'outline'  = yes/no
 
+
 % Copyright (C) 2009, Robert Oostenveld
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
-
+keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'point', 'box', 'label', 'mask', 'outline', 'verbose'});
+hpos    = keyval('hpos',    varargin{:}); if isempty(hpos),     hpos = 0;       end
+vpos    = keyval('vpos',    varargin{:}); if isempty(vpos),     vpos = 0;       end
 point   = keyval('point',   varargin{:}); if isempty(point),    point = true;   end
 box     = keyval('box',     varargin{:}); if isempty(box),      box = true;     end
 label   = keyval('label',   varargin{:}); if isempty(label),    label = true;   end
 mask    = keyval('mask',    varargin{:}); if isempty(mask),     mask = true;    end
 outline = keyval('outline', varargin{:}); if isempty(outline),  outline = true; end
-hpos    = keyval('hpos',    varargin{:}); if isempty(hpos),     hpos = 0;       end
-vpos    = keyval('vpos',    varargin{:}); if isempty(vpos),     vpos = 0;       end
 verbose = keyval('verbose', varargin{:}); if isempty(verbose),  verbose = true; end
 
 % convert between true/false/yes/no etc. statements
