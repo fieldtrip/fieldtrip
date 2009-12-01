@@ -36,12 +36,17 @@ classdef clfmethod
         obj.plot_data_distribution(data,design);
         
       end            
-     
-    end
-    
-    methods(Abstract)
-        obj = train(obj,data,design);
-        post = test(obj,data);
+ 
+      function obj = train(obj,data,design)
+      % do nothing by default
+      
+      end
+      
+      function post = test(obj,data)
+        % do nothing
+        post = data;
+      end
+   
     end
     
     methods(Access = protected,Static)

@@ -106,7 +106,7 @@ classdef one_against_one < classifier
           end
           
           % combine the result
-          post = combine_posteriors(cpost,obj.combination);
+          post = combiner.combine(cpost,obj.combination);
           
         end
         

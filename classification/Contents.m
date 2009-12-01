@@ -74,3 +74,4 @@
 % possible
 % rethink significance testing and also implement for regressor
 % return standard error of mean as second argument of evaluate
+%

@@ -65,12 +65,12 @@ classdef clfproc
         if ~iscell(clfmethods), clfmethods = { clfmethods }; end
 
         % check if this is a valid classification procedure:
-        if ~(all(cellfun(@(x)(isa(x,'clfmethod')),clfmethods)))
+        if ~(all(cellfun(@(x)(isa(x,'clfmethod') || iscell(x)),clfmethods)))
           error('invalid classification procedure; check contents of clfproc');
         end
         
         % at least one predictor at the end
-        if ~(isa(clfmethods{end},'predictor') || isa(clfmethods{end},'optimizer'))
+        if ~isa(clfmethods{end},'predictor')
           error('procedure should end with a predictor');
         end        
 
@@ -110,8 +110,15 @@ classdef clfproc
             end
                         
             for c=1:length(obj.clfmethods)      
+              
+              if iscell(obj.clfmethods{c})
+                % deal with ensemble methods (i.e., nested cell arrays)
+                obj.clfmethods{c} = cellfun(@(x)(x.train(data,design)),obj.clfmethods{c},'UniformOutput',false);
+                data = cellfun(@(x)(x.test(data)),obj.clfmethods{c},'UniformOutput',false);
+              else
                 obj.clfmethods{c} = obj.clfmethods{c}.train(data,design);
-                data = obj.clfmethods{c}.test(data);                
+                data = obj.clfmethods{c}.test(data);   
+              end
             end        
                    
        end
@@ -139,8 +146,13 @@ classdef clfproc
                data = obj.collapse(data);
            end
 
-           for c=1:length(obj.clfmethods)               
+           for c=1:length(obj.clfmethods)      
+             if iscell(obj.clfmethods{c})
+               % deal with ensemble methods
+               data = cellfun(@(x)(x.test(data)),obj.clfmethods{c},'UniformOutput',false);
+             else
                data = obj.clfmethods{c}.test(data);
+             end
            end
 
        end       

@@ -1,4 +1,4 @@
-classdef optimizer < clfmethod
+classdef optimizer < predictor
 %OPTIMIZER can be used to optimize certain parameters of a method
 %
 %   Usage:
