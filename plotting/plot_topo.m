@@ -111,7 +111,7 @@ end
 
 % Create isolines
 if strcmp(style,'iso') || strcmp(style,'surfiso')
-  if ~isempty('isolines')
+  if ~isempty(isolines)
     contour(Xi,Yi,Zi,isolines,'k');
   end
 end
@@ -124,7 +124,7 @@ if strcmp(style,'surf') || strcmp(style,'surfiso')
 end
 
 % Plot filled contours
-if strcmp(style,'isofill') && ~isempty('isolines')
+if strcmp(style,'isofill') && ~isempty(isolines)
   contourf(Xi,Yi,Zi,isolines,'k');
 end
 
