@@ -64,6 +64,7 @@ url = {
   'OPENMEEG'   'see http://gforge.inria.fr/projects/openmeeg'
   'PRTOOLS'    'see http://www.prtools.org'
   'LC-LIBS'    'contact Stefania Della Penna'
+  'BSMART'     'see http://www.brain-smart.org'
   };
 
 if nargin<2
@@ -163,6 +164,8 @@ switch toolbox
     status  = (exist('prversion', 'file') && exist('dataset', 'file') && exist('svc', 'file'));
   case 'LC-LIBS'
     status  = (exist('lcReadHeader', 'file') && exist('lcReadData', 'file'));
+  case 'BSMART' 
+    status  = exist('bsmart'); 
   otherwise
     if ~silent, warning(sprintf('cannot determine whether the %s toolbox is present', toolbox)); end
     status = 0;
