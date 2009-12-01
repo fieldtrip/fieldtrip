@@ -26,6 +26,15 @@ hpos    = keyval('hpos',    varargin{:}); if isempty(hpos),     hpos = 0;       
 vpos    = keyval('vpos',    varargin{:}); if isempty(vpos),     vpos = 0;       end
 verbose = keyval('verbose', varargin{:}); if isempty(verbose),  verbose = true; end
 
+% convert between true/false/yes/no etc. statements
+point   = istrue(point);
+box     = istrue(box);
+label   = istrue(label);
+mask    = istrue(mask);
+outline = istrue(outline);
+verbose = istrue(verbose);
+
+
 % everything is added to the current figure
 holdflag = ishold;
 hold on
