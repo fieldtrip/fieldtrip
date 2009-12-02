@@ -29,22 +29,22 @@ end
 cmd = nan(1,length(data.trial));
 
 for trllop=1:length(data.trial)
-
-  % set up the spectral estimator
-  specest = spectrum.welch('Hamming', min(data.fsample, size(data.trial{trllop},2)));
-
+ 
   nchan = length(data.label);
 
   if nchan < 2 || length(cfg.avgchan) ~= 2
     error('neurofeedback application expects exactly two channel groups');
   end
-
+  
+  % set up the spectral estimator; FIXME: this code should be replaced by native
+  % FieldTrip code
+  specest = spectrum.welch('Hamming', min(data.fsample, size(data.trial{trllop},2)));
   features = zeros(1,nchan);
   for i=1:nchan
     est = psd(specest, data.trial{trllop}(i,:), 'Fs', data.fsample);
     features(i) = mean(est.Data(est.Frequencies >= cfg.foilim(1) & est.Frequencies <= cfg.foilim(2)));
   end
-
+  
   % average over channel subsets
   if ~isempty(cfg.avgchan)
     cfeatures  = zeros(1,length(cfg.avgchan));

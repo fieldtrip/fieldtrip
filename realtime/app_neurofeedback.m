@@ -59,7 +59,7 @@ try
     % get command via input stream
     event = read_event(cfg.istream);    
     
-    if isfield(event,'value')
+    if isfield(event,'value') && ~isnan(event.value)
     
       cmd = event.value;
       fprintf('CMD: %s\n',num2str(cmd));

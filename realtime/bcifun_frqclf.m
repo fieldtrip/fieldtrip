@@ -25,11 +25,12 @@ if ~isfield(cfg, 'ntrain'),  cfg.ntrain = 20; end
 cmd = nan(1,length(data.trial));
 
 for trllop=1:length(data.trial)
-  
-  % set up the spectral estimator
-  specest = spectrum.welch('Hamming', min(data.fsample, size(data.trial{trllop},2)));
 
   nchan = length(data.label);
+
+  % set up the spectral estimator; FIXME: this code should be replaced by
+  % native FieldTrip code
+  specest = spectrum.welch('Hamming', min(data.fsample, size(data.trial{trllop},2)));
   features = zeros(1,nchan);
   for i=1:nchan
     est = psd(specest, data.trial{trllop}(i,:), 'Fs', data.fsample);
