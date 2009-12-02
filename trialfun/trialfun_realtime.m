@@ -4,10 +4,11 @@ function trl = trialfun_realtime(cfg)
 %
 % options:
 % cfg.minsample = the last sample number that was already considered (passed from rt_process)
-% cfg.blocksize = [offset length] in seconds. In case of events, offset is
-%                 wrt the trigger. In case of no events, offset is wrt
+% cfg.blocksize = in seconds. In case of events, offset is
+%                 wrt the trigger. 
+% cfg.offset = the offset wrt the 0 point. In case of no events, offset is wrt
 %                 prevSample. E.g., [-0.9 1] will read 1 second blocks with
-%                 0.9 second overlap (default = [0 1]).
+%                 0.9 second overlap
 % cfg.bufferdata = {'first' 'last'}. If 'last' then only the last block of
 %                 interest is read. Otherwise, all well-defined blocks are read (default = 'first')
 %
@@ -16,12 +17,14 @@ function trl = trialfun_realtime(cfg)
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
   if ~isfield(cfg,'minsample'),   cfg.minsample = 0;        end
-  if ~isfield(cfg,'blocksize'),   cfg.blocksize = [0 0.1];  end
+  if ~isfield(cfg,'blocksize'),   cfg.blocksize = 0.1;  end
+  if ~isfield(cfg,'offset'),      cfg.offset = 0; end
   if ~isfield(cfg,'bufferdata'),  cfg.bufferdata = 'first'; end
   if ~isfield(cfg,'triggers'),    cfg.triggers = [];        end
   
   % blocksize in terms of samples
   cfg.blocksize = round(cfg.blocksize * cfg.hdr.Fs);
+  cfg.offset = round(cfg.offset * cfg.hdr.Fs);
       
   % retrieve trials of interest
   if isempty(cfg.event) % asynchronous mode
@@ -40,10 +43,10 @@ function trl = trialfun_asynchronous(cfg)
   if strcmp(cfg.bufferdata, 'last') % only get last block
 
     % begsample starts blocksize(2) samples before the end
-    begsample  = cfg.hdr.nSamples*cfg.hdr.nTrials - cfg.blocksize(2);
+    begsample  = cfg.hdr.nSamples*cfg.hdr.nTrials - cfg.blocksize;
 
     % begsample should be blocksize(1) samples away from the previous read
-    if begsample >= (prevSample + cfg.blocksize(1))
+    if begsample >= (prevSample + cfg.offset)
       
       endsample  = cfg.hdr.nSamples*cfg.hdr.nTrials;
 
@@ -60,11 +63,11 @@ function trl = trialfun_asynchronous(cfg)
       newsamples = (cfg.hdr.nSamples*cfg.hdr.nTrials-prevSample);
 
       % if newsamples exceeds the offset plus length specified in blocksize
-      if newsamples>=sum(cfg.blocksize)
+      if newsamples >= (cfg.offset+cfg.blocksize)
 
         % we do not consider samples < 1
-        begsample  = max(1,prevSample+cfg.blocksize(1));
-        endsample  = max(1,prevSample+sum(cfg.blocksize));        
+        begsample  = max(1,prevSample+cfg.offset);
+        endsample  = max(1,prevSample+cfg.offset+cfg.blocksize);        
         
         if begsample < endsample && endsample <= cfg.hdr.nSamples*cfg.hdr.nTrials
           trl = [trl; [begsample endsample 0 nan]];
@@ -81,7 +84,7 @@ end
 function trl = trialfun_synchronous(cfg)
 
   trl = [];
-  offset = cfg.hdr.Fs * cfg.blocksize(1);
+  offset = cfg.hdr.Fs * cfg.offset;
 
   % process all events
   for j=1:length(cfg.event)
@@ -98,8 +101,8 @@ function trl = trialfun_synchronous(cfg)
       % catched a trigger of interest
 
       % we do not consider samples < 1
-      begsample = max(1,cfg.event(j).sample + cfg.blocksize(1));
-      endsample = max(1,begsample + cfg.blocksize(2));
+      begsample = max(1,cfg.event(j).sample + cfg.offset);
+      endsample = max(1,begsample + cfg.blocksize);
 
       trl = [trl; [begsample endsample begsample + offset curtrig]];
 
