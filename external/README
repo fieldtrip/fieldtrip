@@ -2,3 +2,15 @@ This directory contains toolboxes that are not maintained by the FieldTrip
 maintainers. These toolboxes are or can be used in combination with
 FieldTrip and are provided here with permission of the original toolbox
 authors as courtesy to the end-users.
+
+fieldtrip/external/bci2000
+fieldtrip/external/besa
+fieldtrip/external/ctf
+fieldtrip/external/dipoli
+fieldtrip/external/eeglab
+fieldtrip/external/eeprobe
+fieldtrip/external/fastica
+fieldtrip/external/openmeeg
+fieldtrip/external/spm2
+fieldtrip/external/yokogawa
+
