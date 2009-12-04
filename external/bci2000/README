@@ -1,0 +1,16 @@
+BCI2000 is a general-purpose system for brain-computer interface (BCI)
+research. It can also be used for data acquisition, stimulus
+presentation, and brain monitoring applications.
+
+The mission of the BCI2000 project is to facilitate research and
+applications in the areas described above. 
+
+Our vision is that BCI2000 will become a widely used software tool for
+diverse areas of real-time biosignal processing. 
+
+The BCI2000 system is available for free for non-profit research and
+educational purposes.  It has been provided to more than 240 laboratories
+around the world.
+
+More information about BCI2000, including instructions for getting access 
+to the source code, is available on http://www.bci2000.org/.

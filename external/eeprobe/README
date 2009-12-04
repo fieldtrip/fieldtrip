@@ -1,0 +1,5 @@
+This directory contains a subset of the eeprobe/asa data importer,
+which is available from http://www.ant-neuro.com/download/misc
+
+Please contact ANT in case the importer does not work for your
+combination of Matlab and operating system.

@@ -1,0 +1,13 @@
+EEGLAB is an interactive Matlab toolbox for processing continuous
+and event-related EEG, MEG and other electrophysiological data using
+independent component analysis (ICA), time/frequency analysis,
+artifact rejection, and several modes of data visualization. First
+developed on Matlab 5.3 under Linux, EEGLAB runs on Matlab v5-7
+under Linux, Unix, Windows, and Mac OS (current v7 recommended).
+
+See http://sccn.ucsd.edu/eeglab for details.
+
+This directory contains a very small subset of the EEGLAB functions
+that are used in FieldTrip. The fiunctions here correspond to the
+official EEGLAB release version 6.01b.
+

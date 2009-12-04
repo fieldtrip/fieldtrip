@@ -55,7 +55,7 @@ function varargout=spm_platform(varargin)
 % Copyright (C) 2005 Wellcome Department of Imaging Neuroscience
 
 % Matthew Brett
-% $Id$
+% $Id: spm_platform.m 204 2009-11-30 08:53:13Z roboos $
 
 
 

@@ -1,0 +1,22 @@
+This directory contains dipoli, which is a linux command line
+application for the computation of the EEG-BEM system matrix developed
+by Thom Oostendorp (http://www.mbfys.ru.nl/~thom).
+
+He has given me explicit permission to release the dipoli binary
+to the general public, under the restriction that he is not bothered
+by support requests. If you have questions about the dipoli
+application, please address them to the FieldTrip email discussion
+list.
+
+Besides the command line application for linux, this directory also
+contains a matlab function that acts as warpper around the command
+line application. The dipoli wrapper function writes the meshes to
+disk, creates a bash shell script and executes that script. In the
+script the dipoli command line application will be called. Once the
+command line application is finished, the resulting EEG-BEM system
+matrix will be read from disk and can subsequently be used by the
+FieldTrip forwinv toolbox.
+
+Copyright (C) 1996-2002, Thom Oostendorp
+Copyright (C) 2006-2008, Robert Oostenveld
+
