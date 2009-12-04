@@ -9,7 +9,7 @@ classdef ridge < regressor
     properties
         
       model     
-      lambda = 100;
+      lambda = 1;
       
     end
 
