@@ -12,6 +12,7 @@ function [vol] = openmeeg(vol, isolated)
 
 
 openmeeg_license
+checkombin;
 sprintf('%s','Calculating BEM model...please wait');
 
 skin   = find_outermost_boundary(vol.bnd);
@@ -139,7 +140,7 @@ function version = getgccversion
   tmp = deblank(vec{cnt-2});
   num = findstr('gcc version ',tmp);
   version = str2num(tmp(num+11:num+12));
-  
+
 function cleaner(vol,bndfile,condfile,geomfile,hmfile,hminvfile,exefile)
 
 % delete the temporary files
@@ -153,3 +154,9 @@ delete(hmfile);
 delete(hminvfile);
 delete(exefile);
 return
+
+function checkombin
+  [status,result] = system('om_assemble');
+  if status
+    error('OpenMEEG binaries are not correctly installed. See http://gforge.inria.fr/frs/?group_id=435')
+  end
