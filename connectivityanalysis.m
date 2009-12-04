@@ -84,10 +84,14 @@ case {'granger'}
   data    = checkdata(data, 'datatype', {'mvar' 'freqmvar' 'freq'});
   inparam = 'transfer';
   %FIXME could also work with time domain data
+case {'instantaneous_causality'}
+  data    = checkdata(data, 'datatype', {'mvar' 'freqmvar' 'freq'});
+  inparam = 'transfer';  
 case {'dtf' 'pdc'}
   data    = checkdata(data, 'datatype', {'freqmvar' 'freq'});
   inparam = 'transfer';
 case {'psi'}
+  if ~isfield(cfg, 'normalize'),  cfg.normalize  = 'no';  end
   data    = checkdata(data, 'datatype', {'freqmvar' 'freq'});
   inparam = 'crsspctrm';
 case {'di'}
@@ -205,6 +209,30 @@ case 'granger'
   else
     error('granger for time domain data is not yet implemented');
   end
+case 'instantaneous_causality'
+    %instantaneous coupling between the series, requires the same elements
+    %as granger
+  if sum(datatype(data, {'freq' 'freqmvar'})),
+    hasrpt = ~isempty(strfind(data.dimord, 'rpt'));
+    if hasrpt,
+      nrpt = size(data.transfer,1);
+    else
+      nrpt = 1;
+      siz  = size(data.transfer);
+      data.transfer = reshape(data.transfer, [1 siz]);
+      siz  = size(data.noisecov);
+      data.noisecov = reshape(data.noisecov, [1 siz]);
+      siz  = size(data.crsspctrm);
+      data.crsspctrm = reshape(data.crsspctrm, [1 siz]);
+    end 
+    %fs      = cfg.fsample; %FIXME do we really need this, or is this related to how
+    %noisecov is defined and normalised?
+    fs       = 1;
+    [datout, varout, n] = coupling_instantaneous(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack);
+    outparam = 'instantspctrm';
+  else
+    error('granger for time domain data is not yet implemented');
+  end      
 
 case 'dtf'
   % directed transfer function
@@ -248,7 +276,8 @@ case 'psi'
   tmpcfg.dimord    = data.dimord;
   tmpcfg.powindx   = powindx;
   tmpcfg.nbin      = nearest(data.freq, data.freq(1)+cfg.bandwidth)-1;
-  [datout, varout, nrpt] = coupling_psi(tmpcfg, data.(inparam), hasrpt, hasjack);
+  tmpcfg.normalize = cfg.normalize;
+  [datout, varout, nrpt, phasediff] = coupling_psi(tmpcfg, data.(inparam), hasrpt, hasjack);
   outparam         = 'psispctrm';
 
 case 'di'
@@ -277,6 +306,12 @@ stat.dimord = data.dimord; %FIXME adjust dimord (remove rpt in dojak && hasrpt c
 stat        = setfield(stat, outparam, datout);
 if ~isempty(varout),
   stat   = setfield(stat, [outparam,'sem'], (varout/nrpt).^0.5);
+end
+try 
+    if ~isempty(phasediff)
+        stat   = setfield(stat, 'angle', phasediff);
+    end
+catch
 end
 
 if isfield(data, 'freq'), stat.freq = data.freq; end
@@ -380,7 +415,7 @@ else
 end
 
 %-------------------------------------------------------------
-function [c, v, n] = coupling_psi(cfg, input, hasrpt, hasjack)
+function [c, v, n, phasediff] = coupling_psi(cfg, input, hasrpt, hasjack)
 
 if nargin==2,
   hasrpt   = 0;
@@ -409,10 +444,13 @@ if length(strfind(cfg.dimord, 'chan'))~=2 && isfield(cfg, 'powindx'),
     c      = reshape(input(j,:,:,:,:), siz(2:end));
     p1     = abs(reshape(input(j,cfg.powindx(:,1),:,:,:), siz(2:end)));
     p2     = abs(reshape(input(j,cfg.powindx(:,2),:,:,:), siz(2:end)));
-    p      = ipermute(phaseslope(permute(c./sqrt(p1.*p2), pvec), cfg.nbin), pvec);
+    
+    p      = ipermute(phaseslope(permute(c./sqrt(p1.*p2), pvec), cfg.nbin, cfg.normalize), pvec);
     
     outsum = outsum + p;
     outssq = outssq + p.^2;
+    avgcrsspctrm = squeeze(mean(input,1));
+    phasediff = unwrap(angle(avgcrsspctrm),[],2);    
   end
   progress('close');  
 
@@ -443,13 +481,17 @@ else %if length(strfind(cfg.dimord, 'chan'))~=2,
     p2 = p2(ones(1,siz(2)),:,:,:,:,:);
     %outsum = outsum + complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./sqrt(p1.*p2), cfg.complex);
     %outssq = outssq + complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./sqrt(p1.*p2), cfg.complex).^2;
-    
-    outsum = outsum + ipermute(phaseslope(permute(c./sqrt(p1.*p2),pvec),cfg.nbin),pvec);
-    outssq = outssq + ipermute(phaseslope(permute(c./sqrt(p1.*p2),pvec),cfg.nbin),pvec).^2;
+    p = ipermute(phaseslope(permute(c./sqrt(p1.*p2),pvec),cfg.nbin, cfg.normalize),pvec);
+    outsum = outsum + p;
+    outssq = outssq + p.^2;
+    avgcrsspctrm = squeeze(mean(input,1));
+    phasediff = unwrap(angle(avgcrsspctrm),[],3);    
   end
   progress('close');
 
 end
+
+
 
 n = siz(1);
 c = outsum./n;
@@ -465,6 +507,7 @@ if hasrpt,
 else 
   v = [];
 end
+
 
 
 %----------------------------------------
@@ -600,6 +643,67 @@ else
   v = [];
 end
 
+%----------------------------------------------------------------
+function [instc, v, n] = coupling_instantaneous(H, Z, S, fs, hasjack)
+
+%Usage: causality = hz2causality(H,S,Z,fs);
+%Inputs: transfer  = transfer function,
+%        crsspctrm = 3-D spectral matrix;
+%        noisecov  = noise covariance, 
+%        fs        = sampling rate
+%Outputs: instantaneous causality spectrum between the channels.
+%Total Interdependence = Granger (X->Y) + Granger (Y->X) + Instantaneous Causality
+%               : auto-causality spectra are set to zero
+% Reference: Brovelli, et. al., PNAS 101, 9849-9854 (2004), Rajagovindan
+% and Ding, PLoS One Vol. 3, 11, 1-8 (2008)
+%M. Dhamala, UF, August 2006.
+
+%FIXME speed up code and check
+siz = size(H);
+if numel(siz)==4,
+  siz(5) = 1;
+end
+n   = siz(1);
+Nc  = siz(2);
+
+outsum = zeros(siz(2:end));
+outssq = zeros(siz(2:end));
+
+%clear S; for k = 1:size(H,3), h = squeeze(H(:,:,k)); S(:,:,k) = h*Z*h'/fs; end;
+for kk = 1:n
+  for ii = 1:Nc
+    for jj = 1:Nc
+      if ii ~=jj,
+        zc1     = reshape(Z(kk,jj,jj,:) - Z(kk,ii,jj,:).^2./Z(kk,ii,ii,:),[1 1 1 1 siz(5)]);
+        zc1     = repmat(zc1,[1 1 1 siz(4) 1]);
+        zc2     = reshape(Z(kk,ii,ii,:) - Z(kk,jj,ii,:).^2./Z(kk,jj,jj,:),[1 1 1 1 siz(5)]);
+        zc2     = repmat(zc2,[1 1 1 siz(4) 1]);
+        CTH1    = reshape(ctranspose(squeeze(H(kk,ii,jj,:,:))),1,1,1,siz(4));
+        CTH2    = reshape(ctranspose(squeeze(H(kk,jj,ii,:,:))),1,1,1,siz(4));
+        term1   = (S(kk,ii,ii,:,:) - H(kk,ii,jj,:,:).*zc1.*CTH1);
+        term2   = (S(kk,jj,jj,:,:) - H(kk,jj,ii,:,:).*zc2.*CTH2);
+        Sdet      = (S(kk,ii,ii,:,:).*S(kk,jj,jj,:,:)) - (S(kk,ii,jj,:,:).*S(kk,jj,ii,:,:));
+        outsum(jj,ii,:) = outsum(jj,ii) + log((term1.*term2)./Sdet(kk,:,:,:));
+        outssq(jj,ii,:) = outssq(jj,ii) + log((term1.*term2)./Sdet(kk,:,:,:)).^2;
+      end
+    end
+    outsum(ii,ii,:,:) = 0;%self-granger set to zero
+  end
+end
+
+instc = outsum./n;
+
+if n>1,
+  if hasjack
+    bias = (n-1).^2;
+  else
+    bias = 1;
+  end
+  v = bias*(outssq - (outsum.^2)./n)./(n - 1);
+else 
+  v = [];
+end
+
 %----------------------------------------
 function [indx] = labelcmb2indx(labelcmb)
 
@@ -636,15 +740,26 @@ otherwise
 end
 
 %---------------------------------------
-function [y] = phaseslope(x, n)
+function [y] = phaseslope(x, n, norm)
 
 m = size(x, 1); %total number of frequency bins
 y = zeros(size(x));
+coh = zeros(size(x));
+coh(1:end-1,:,:,:,:) = (abs(x(1:end-1,:,:,:,:)) .* abs(x(2:end,:,:,:,:))) + 1; %get the coherence 
 x(1:end-1,:,:,:,:) = conj(x(1:end-1,:,:,:,:)).*x(2:end,:,:,:,:);
-for k = 1:m
-  begindx = max(1,k-n);
-  endindx = min(m,k+n);
-  y(k,:,:,:,:) = imag(sum(x(begindx:endindx,:,:,:,:)));
+%figure; plot(coh(:,1,2));
+if strmatch(norm,'yes')
+    for k = 1:m
+      begindx = max(1,k-n);
+      endindx = min(m,k+n);
+      y(k,:,:,:,:) = imag(sum(x(begindx:endindx,:,:,:,:)./coh(begindx:endindx,:,:,:,:)));
+    end    
+else
+    for k = 1:m
+      begindx = max(1,k-n);
+      endindx = min(m,k+n);
+      y(k,:,:,:,:) = imag(sum(x(begindx:endindx,:,:,:,:)));
+    end
 end
 
 
