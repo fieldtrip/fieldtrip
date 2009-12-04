@@ -14,7 +14,7 @@ function [dsm] = openmeeg_dsm(pos, vol)
 
 % store the current path and change folder to the temporary one
 tmpfolder = cd;
-
+checkombin;
 try
     cd(tempdir)
 
@@ -56,6 +56,7 @@ try
     efid = fopen(exefile, 'w');
     omp_num_threads = feature('numCores');
 
+    checkombin
     if ~ispc
       fprintf(efid,'#!/usr/bin/env bash\n');
       fprintf(efid,['export OMP_NUM_THREADS=',num2str(omp_num_threads),'\n']);
@@ -104,3 +105,8 @@ function cleaner(vol,bndfile,condfile,geomfile,exefile,dipfile,dsmfile)
   if exist(dipfile,'file'),delete(dipfile);end
   if exist(dsmfile,'file'),delete(dsmfile);end
 
+function checkombin
+  [status,result] = system('om_assemble');
+  if status
+    error('OpenMEEG binaries are not correctly installed. See http://gforge.inria.fr/frs/?group_id=435')
+  end
