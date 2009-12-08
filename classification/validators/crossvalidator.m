@@ -71,6 +71,11 @@ classdef crossvalidator < validator
              fprintf('performing crossvalidation for %d dataset(s) with %d examples and %d features\n',length(data),nex,size(data{1},2));
 
          end
+       
+         % randomize ordering of the data
+         if obj.randomize
+           [data,design] = obj.shuffle(data,design);
+         end
          
          if isscalar(obj.cvfolds) && obj.cvfolds==1 % test on training data
            
@@ -84,12 +89,7 @@ classdef crossvalidator < validator
            if ~obj.compact, obj.procedure = {tproc}; end
            
          else % create folds and run cross-validation
-       
-           % randomize ordering of the data before assigning folds
-           if obj.randomize
-             [data,design] = obj.shuffle(data,design);
-           end
-                           
+                            
            % folds{v}{d} specifies the test indices for dataset d in fold v
            [folds,nfolds] = obj.create_folds(design);
                  
