@@ -68,6 +68,7 @@ isext      = ~isempty(regexp(type, '^ext', 'once'));
 isegi      = ~isempty(regexp(type, '^egi', 'once'));
 isneuromag = ~isempty(regexp(type, '^neuromag', 'once'));
 isitab     = ~isempty(regexp(type, '^itab', 'once'));
+isyokogawa = ~isempty(regexp(type, '^yokogawa', 'once'));
 
 if isbti
   btiref = {
@@ -1972,6 +1973,15 @@ if isitab
     itab153_planar{i,2} = sprintf('MAG_%03d_dV', i-1);
   end
 end % if isitab
+
+if isyokogawa
+  for i=1:160
+    % this should be consistent with read_yokogawa_header, where channel names are defined
+    yokogawa160{i}          = sprintf('MEG%03d',    i);
+    yokogawa160_planar{i,1} = sprintf('MEG%03d_dH', i);
+    yokogawa160_planar{i,2} = sprintf('MEG%03d_dV', i);
+  end
+end
 
 % search for the requested definition of channel labels
 if exist(type, 'var')

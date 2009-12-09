@@ -185,6 +185,10 @@ else
       type = 'itab153';
     elseif (mean(ismember(senslabel('itab153_planar'), sens.label)) > 0.8)
       type = 'itab153_planar';
+    elseif (mean(ismember(senslabel('yokogawa160'),    sens.label)) > 0.8)
+      type = 'yokogawa160';
+    elseif (mean(ismember(senslabel('yokogawa160_planar'), sens.label)) > 0.8)
+      type = 'yokogawa160_planar';
     elseif (mean(ismember(senslabel('neuromag306'),   sens.label)) > 0.8)
       type = 'neuromag306';
     elseif (mean(ismember(senslabel('neuromag306alt'),sens.label)) > 0.8)  % an alternative set without spaces in the name
@@ -251,6 +255,10 @@ else
       type = 'itab153';
     elseif (mean(ismember(senslabel('itab153_planar'), sens.label)) > 0.8)
       type = 'itab153_planar';
+    elseif (mean(ismember(senslabel('yokogawa160'),    sens.label)) > 0.8)
+      type = 'yokogawa160';
+    elseif (mean(ismember(senslabel('yokogawa160_planar'), sens.label)) > 0.8)
+      type = 'yokogawa160_planar';
     elseif (mean(ismember(senslabel('neuromag306'),   sens.label)) > 0.8)
       type = 'neuromag306';
     elseif (mean(ismember(senslabel('neuromag306alt'),sens.label)) > 0.8)  % an alternative set without spaces in the name

@@ -186,7 +186,7 @@ elseif senstype(input, 'ctf') && isheader
 elseif senstype(input, 'ctf') && isgrad
   % in principle it is possible to look at the number of coils, but here the channels are identified based on their name
   sel = myregexp('^M[ZLR][A-Z][0-9][0-9]$', grad.label);
-  type(sel) = {'meggrad'};                % normal gradiometer channels
+  type(sel) = {'meggrad'};            % normal gradiometer channels
   sel = myregexp('^B[GPR][0-9]$', grad.label);
   type(sel) = {'refmag'};             % reference magnetometers
   sel = myregexp('^[GPQR][0-9][0-9]$', grad.label);
@@ -208,7 +208,6 @@ elseif senstype(input, 'bti')
   type(strncmp('A', label, 1)) = {'meg'};
   type(strncmp('M', label, 1)) = {'refmag'};
   type(strncmp('G', label, 1)) = {'refgrad'};
-
 
   if isfield(grad, 'tra')
     selchan = find(strcmp('mag', type));
@@ -238,44 +237,54 @@ elseif senstype(input, 'bti')
     end
   end
 
-elseif isheader && issubfield(hdr, 'orig.channel_info')
+elseif senstype(input, 'yokogawa') && isheader
   % This is to recognize Yokogawa channel types from the original header
-  % This is from the original documentation
-  NullChannel                   = 0;
-  MagnetoMeter                  = 1;
-  AxialGradioMeter              = 2;
-  PlannerGradioMeter            = 3;
-  RefferenceChannelMark         = hex2dec('0100');
-  RefferenceMagnetoMeter        = bitor( RefferenceChannelMark, MagnetoMeter      );
-  RefferenceAxialGradioMeter    = bitor( RefferenceChannelMark, AxialGradioMeter  );
-  RefferencePlannerGradioMeter  = bitor( RefferenceChannelMark, PlannerGradioMeter);
-  TriggerChannel                = -1;
-  EegChannel                    = -2;
-  EcgChannel                    = -3;
-  EtcChannel                    = -4;
+    % This is from the original documentation
+    NullChannel                   = 0;
+    MagnetoMeter                  = 1;
+    AxialGradioMeter              = 2;
+    PlannerGradioMeter            = 3;
+    RefferenceChannelMark         = hex2dec('0100');
+    RefferenceMagnetoMeter        = bitor( RefferenceChannelMark, MagnetoMeter      );
+    RefferenceAxialGradioMeter    = bitor( RefferenceChannelMark, AxialGradioMeter  );
+    RefferencePlannerGradioMeter  = bitor( RefferenceChannelMark, PlannerGradioMeter);
+    TriggerChannel                = -1;
+    EegChannel                    = -2;
+    EcgChannel                    = -3;
+    EtcChannel                    = -4;
+    sel = (hdr.orig.channel_info(:, 2) == NullChannel);
+    type(sel) = {'null'};
+    sel = (hdr.orig.channel_info(:, 2) == MagnetoMeter);
+    type(sel) = {'megmag'};
+    sel = (hdr.orig.channel_info(:, 2) == AxialGradioMeter);
+    type(sel) = {'meggrad'};
+    sel = (hdr.orig.channel_info(:, 2) == PlannerGradioMeter);
+    type(sel) = {'megplanar'};
+    sel = (hdr.orig.channel_info(:, 2) == RefferenceMagnetoMeter);
+    type(sel) = {'refmag'};
+    sel = (hdr.orig.channel_info(:, 2) == RefferenceAxialGradioMeter);
+    type(sel) = {'refgrad'};
+    sel = (hdr.orig.channel_info(:, 2) == RefferencePlannerGradioMeter);
+    type(sel) = {'refplanar'};
+    sel = (hdr.orig.channel_info(:, 2) == TriggerChannel);
+    type(sel) = {'trigger'};
+    sel = (hdr.orig.channel_info(:, 2) == EegChannel);
+    type(sel) = {'eeg'};
+    sel = (hdr.orig.channel_info(:, 2) == EcgChannel);
+    type(sel) = {'ecg'};
+    sel = (hdr.orig.channel_info(:, 2) == EtcChannel);
+    type(sel) = {'etc'};
 
-  sel = (hdr.orig.channel_info(:, 2) == NullChannel);
-  type(sel) = {'null'};
-  sel = (hdr.orig.channel_info(:, 2) == MagnetoMeter);
-  type(sel) = {'megmag'};
-  sel = (hdr.orig.channel_info(:, 2) == AxialGradioMeter);
+elseif senstype(input, 'yokogawa') && (isgrad || islabel)
+  % the channels have to be identified based on their name alone
+  sel = myregexp('^MEG[0-9][0-9][0-9]$', label);
   type(sel) = {'meggrad'};
-  sel = (hdr.orig.channel_info(:, 2) == PlannerGradioMeter);
-  type(sel) = {'megplanar'};
-  sel = (hdr.orig.channel_info(:, 2) == RefferenceMagnetoMeter);
-  type(sel) = {'refmag'};
-  sel = (hdr.orig.channel_info(:, 2) == RefferenceAxialGradioMeter);
-  type(sel) = {'refgrad'};
-  sel = (hdr.orig.channel_info(:, 2) == RefferencePlannerGradioMeter);
-  type(sel) = {'refplanar'};
-  sel = (hdr.orig.channel_info(:, 2) == TriggerChannel);
-  type(sel) = {'trigger'};
-  sel = (hdr.orig.channel_info(:, 2) == EegChannel);
+  sel = myregexp('^EEG[0-9][0-9][0-9]$', label);
   type(sel) = {'eeg'};
-  sel = (hdr.orig.channel_info(:, 2) == EcgChannel);
+  sel = myregexp('^ECG[0-9][0-9][0-9]$', label);
   type(sel) = {'ecg'};
-  sel = (hdr.orig.channel_info(:, 2) == EtcChannel);
-  type(sel) = {'etc'};
+  sel = myregexp('^TRIG[0-9][0-9][0-9]$', label);
+  type(sel) = {'trigger'};
 
 elseif senstype(input, 'itab') && isheader
   sel = ([hdr.orig.ch.type]==0);
