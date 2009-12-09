@@ -63,16 +63,31 @@ case {'linear_mix'}
   delay  = delay - min(delay(:)); %make explicitly >= 0
   maxdelay = max(delay(:));
 
-  mix        = cfg.mix;            
-  nmixsignal = size(mix, 2); %number of "mixing signals"
-  nsignal    = size(mix, 1);
+  if iscell(cfg.mix),
+    %each trial has different mix
+    mix = cfg.mix;            
+  else
+    %make cell-array out of mix
+    tmpmix = cfg.mix;
+    mix    = cell(1,cfg.ntrials);
+    for tr = 1:cfg.ntrials
+      mix{1,tr} = tmpmix;
+    end
+  end
   
-  if numel(size(mix))==2,
+  nmixsignal = size(mix{1}, 2); %number of "mixing signals"
+  nsignal    = size(mix{1}, 1);
+
+  if numel(size(mix{1}))==2,
     %mix is static, no function of time
-    mix = mix(:,:,ones(1,nsmp+maxdelay));
-  elseif numel(size(mix))==3 && size(mix,3)==nsmp,
+    for tr = 1:cfg.ntrials
+      mix{tr} = mix{tr}(:,:,ones(1,nsmp+maxdelay));
+    end
+  elseif numel(size(mix{1}))==3 && size(mix{1},3)==nsmp,
     %mix changes with time
-    mix = cat(3,mix,mix(:,:,nsmp*ones(1,maxdelay))); 
+    for tr = 1:cfg.ntrials
+      mix{tr} = cat(3,mix{tr},mix{tr}(:,:,nsmp*ones(1,maxdelay))); 
+    end
     %FIXME think about this
     %due to the delay the mix cannot be defined instantaneously with respect to all signals
   end
@@ -85,7 +100,7 @@ case {'linear_mix'}
       for j=1:nmixsignal
         begsmp   = 1    + delay(i,j);
         endsmp   = nsmp + delay(i,j);
-        tmpmix   = reshape(mix(i,j,:),[1 nsmp+maxdelay]) .* mixsignal(j,:);
+        tmpmix   = reshape(mix{tr}(i,j,:),[1 nsmp+maxdelay]) .* mixsignal(j,:);
         tmp(i,:) = tmp(i,:) + tmpmix(begsmp:endsmp);
       end
     end
