@@ -140,18 +140,49 @@ elseif isfield(sens, 'tra')
   sens.label = montage.labelnew;
 
 elseif isfield(sens, 'trial')
-  % apply the montage to the data that was preprocessed using fieldtrip
-  Ntrials = numel(sens.trial);
+  % apply the montage to the raw data that was preprocessed using fieldtrip
+  data = sens;
+
+  Ntrials = numel(data.trial);
   for i=1:Ntrials
     fprintf('processing trial %d from %d\n', i, Ntrials);
-    if isa(sens.trial{i}, 'single')
+    if isa(data.trial{i}, 'single')
       % sparse matrices and single precision do not match
-      sens.trial{i}   = full(montage.tra) * sens.trial{i};
+      data.trial{i}   = full(montage.tra) * data.trial{i};
     else
-      sens.trial{i}   = montage.tra * sens.trial{i};
+      data.trial{i}   = montage.tra * data.trial{i};
     end
   end
-  sens.label = montage.labelnew;
+  data.label = montage.labelnew;
+
+  % rename the output variable
+  sens = data;
+  clear data
+
+elseif isfield(sens, 'fourierspctrm')
+  % apply the montage to the spectrally decomposed data
+  freq = sens;
+
+  siz    = size(freq.fourierspctrm);
+  nrpt   = siz(1);
+  nchan  = siz(2);
+  nfreq  = siz(3);
+  ntime  = siz(4);
+  output = zeros(nrpt, size(montage.tra,1), nfreq, ntime);
+  for foilop=1:nfreq
+    for toilop = 1:ntime
+      output(:,:,foilop,toilop) = freq.fourierspctrm(:,:,foilop,toilop) * montage.tra';
+    end
+  end
+
+  % replace the Fourier spectrum
+  freq.fourierspctrm = output;
+  freq.label = montage.labelnew;
+
+  % rename the output variable
+  sens = freq;
+  clear freq
+
 else
   error('unrecognized input');
 end
