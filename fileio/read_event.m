@@ -83,6 +83,7 @@ eventformat      = keyval('eventformat',  varargin);
 hdr              = keyval('header',       varargin);
 detectflank      = keyval('detectflank',  varargin); % up, down or both
 trigshift        = keyval('trigshift',    varargin); % default is assigned in subfunction
+trigindx         = keyval('trigindx',     varargin); % default is based on chantype helper function
 headerformat     = keyval('headerformat', varargin);
 dataformat       = keyval('dataformat',   varargin);
 
@@ -1212,8 +1213,8 @@ switch eventformat
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
     % check that the required low-level toolbox is available
     hastoolbox('yokogawa', 1);
-    
-    event = read_yokogawa_event(filename);
+    % allow the user to specify custom trigger channels
+    event = read_yokogawa_event(filename, 'trigindx', trigindx);
     
   case 'nmc_archive_k'
     event = read_nmc_archive_k_event(filename);
