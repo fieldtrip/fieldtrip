@@ -238,18 +238,33 @@ elseif filetype_check_extension(filename, '.con')
   type = 'yokogawa_con';
   manufacturer = 'Yokogawa';
   content = 'continuous MEG data';
-elseif filetype_check_extension(filename, '.raw') && filetype_check_header(filename, [char(0) char(0) char(0) char(0)])
+elseif filetype_check_extension(filename, '.raw') && filetype_check_header(filename, char([0 0 0 0])) % FIXME, this detection should possibly be improved
   type = 'yokogawa_raw';
   manufacturer = 'Yokogawa';
   content = 'evoked/trialbased MEG data';
-elseif filetype_check_extension(filename, '.mri') && filetype_check_header(filename, '####')  % FIXME, not correct
+elseif filetype_check_extension(filename, '.mri') && filetype_check_header(filename, char([0 0 0 0])) % FIXME, this detection should possibly be improved
   type = 'yokogawa_mri';
   manufacturer = 'Yokogawa';
   content = 'anatomical MRI';
 elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'-coregis')) == 1
-  type = 'yokogawa_fid';
+  type = 'yokogawa_coregis';
   manufacturer = 'Yokogawa';
   content = 'exported fiducials';
+elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'-calib')) == 1
+  type = 'yokogawa_calib';
+  manufacturer = 'Yokogawa';
+elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'-channel')) == 1
+  type = 'yokogawa_channel';
+  manufacturer = 'Yokogawa';
+elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'-property')) == 1
+  type = 'yokogawa_property';
+  manufacturer = 'Yokogawa';
+elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'-TextData')) == 1
+  type = 'yokogawa_textdata';
+  manufacturer = 'Yokogawa';
+elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'-FLL')) == 1
+  type = 'yokogawa_fll';
+  manufacturer = 'Yokogawa';
   
   % known 4D/BTI file types
 elseif filetype_check_extension(filename, '.pdf') && filetype_check_header(filename, 'E|lk') % I am not sure whether this header always applies

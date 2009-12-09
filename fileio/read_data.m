@@ -688,7 +688,8 @@ switch dataformat
     % check that the required low-level toolbox is available
     hastoolbox('mne', 1);
     if (hdr.orig.iscontinuous)
-      dat = fiff_read_raw_segment(hdr.orig.raw,begsample+hdr.nSamplesPre-1,endsample+hdr.nSamplesPre-1,chanindx);
+      dat = fiff_read_raw_segment(hdr.orig.raw,begsample+hdr.orig.raw.first_samp-1,endsample+hdr.orig.raw.first_samp-1,chanindx);
+
       dimord = 'chans_samples';
     elseif (hdr.orig.isaverage)
       dat = cat(2, hdr.orig.evoked.epochs);            % concatenate all epochs, this works both when they are of constant or variable length

@@ -238,49 +238,45 @@ elseif senstype(input, 'bti')
     end
   end
 
-% This is supposed to recognize Yokogawa header (at least as a temporary
-% solution)
 elseif isheader && issubfield(hdr, 'orig.channel_info')
-    
+  % This is to recognize Yokogawa channel types from the original header
   % This is from the original documentation
-  NullChannel         = 0;
-  MagnetoMeter        = 1;
-  AxialGradioMeter    = 2;
-  PlannerGradioMeter  = 3;
-  RefferenceChannelMark           = hex2dec('0100');
-  RefferenceMagnetoMeter          = bitor( RefferenceChannelMark, MagnetoMeter );
-  RefferenceAxialGradioMeter      = bitor( RefferenceChannelMark, AxialGradioMeter );
-  RefferencePlannerGradioMeter    = bitor( RefferenceChannelMark, PlannerGradioMeter);
-  TriggerChannel  = -1;
-  EegChannel      = -2;
-  EcgChannel      = -3;
-  EtcChannel      = -4;
-  % -------
-   
-  % FIXME for now commented out MEG type assignments other than meggrad because 
-  % there are no corresponding entries in the grad 
-  
+  NullChannel                   = 0;
+  MagnetoMeter                  = 1;
+  AxialGradioMeter              = 2;
+  PlannerGradioMeter            = 3;
+  RefferenceChannelMark         = hex2dec('0100');
+  RefferenceMagnetoMeter        = bitor( RefferenceChannelMark, MagnetoMeter      );
+  RefferenceAxialGradioMeter    = bitor( RefferenceChannelMark, AxialGradioMeter  );
+  RefferencePlannerGradioMeter  = bitor( RefferenceChannelMark, PlannerGradioMeter);
+  TriggerChannel                = -1;
+  EegChannel                    = -2;
+  EcgChannel                    = -3;
+  EtcChannel                    = -4;
+
   sel = (hdr.orig.channel_info(:, 2) == NullChannel);
   type(sel) = {'null'};
   sel = (hdr.orig.channel_info(:, 2) == MagnetoMeter);
-  % type(sel) = {'megmag'};
+  type(sel) = {'megmag'};
   sel = (hdr.orig.channel_info(:, 2) == AxialGradioMeter);
   type(sel) = {'meggrad'};
   sel = (hdr.orig.channel_info(:, 2) == PlannerGradioMeter);
-  % type(sel) = {'megplanar'};
+  type(sel) = {'megplanar'};
   sel = (hdr.orig.channel_info(:, 2) == RefferenceMagnetoMeter);
-  % type(sel) = {'refmag'};
+  type(sel) = {'refmag'};
   sel = (hdr.orig.channel_info(:, 2) == RefferenceAxialGradioMeter);
-  % type(sel) = {'refgrad'};
+  type(sel) = {'refgrad'};
   sel = (hdr.orig.channel_info(:, 2) == RefferencePlannerGradioMeter);
-  % type(sel) = {'refplanar'};
+  type(sel) = {'refplanar'};
   sel = (hdr.orig.channel_info(:, 2) == TriggerChannel);
   type(sel) = {'trigger'};
   sel = (hdr.orig.channel_info(:, 2) == EegChannel);
   type(sel) = {'eeg'};
   sel = (hdr.orig.channel_info(:, 2) == EcgChannel);
   type(sel) = {'ecg'};
-    
+  sel = (hdr.orig.channel_info(:, 2) == EtcChannel);
+  type(sel) = {'etc'};
+
 elseif senstype(input, 'itab') && isheader
   sel = ([hdr.orig.ch.type]==0);
   type(sel) = {'unknown'};
@@ -306,7 +302,7 @@ elseif senstype(input, 'itab') && isgrad
   type(sel) = {'megref'};
   sel = myregexp('^AUX.*$', label);
   type(sel) = {'aux'};
-  
+
 elseif senstype(input, 'itab') && islabel
   % the channels have to be identified based on their name alone
   sel = myregexp('^MAG_[0-9][0-9][0-9]$', label);

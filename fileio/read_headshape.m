@@ -157,7 +157,7 @@ switch fileformat
                 error('Incorrect coordinates specified');
         end
         
-    case 'yokogawa_fid'
+    case 'yokogawa_coregis'
         
         in_str = textread(filename, '%s');
         nr_items = size(in_str,1);
