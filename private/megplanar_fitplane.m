@@ -1,0 +1,92 @@
+function montage = megplanar_fitplane(cfg, grad)
+
+% Fit a plane through the B=f(x,y) plane and compute its two gradients
+% The first point in the plane is the gradiometer itself,
+% the neighbours are the subsequent points. This method also returns the
+% offset of the B-plane at each sensor, which is appriximately equal to the
+% field itself.
+
+% Copyright (C) 2004-2009, Robert Oostenveld
+%
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
+
+[pnt, ori, lab] = channelposition(grad);
+Ngrad = length(lab);
+distance = zeros(Ngrad,Ngrad);
+
+for i=1:Ngrad
+  for j=(i+1):Ngrad  
+    distance(i,j) = norm(pnt(i,:)-pnt(j,:));
+    distance(j,i) = distance(i,j);
+  end
+end
+
+fprintf('minimum distance between gradiometers is %6.2f %s\n', min(distance(find(distance~=0))), grad.unit);
+fprintf('maximum distance between gradiometers is %6.2f %s\n', max(distance(find(distance~=0))), grad.unit);
+
+% select the channels that are neighbours, channel is not a neighbour of itself
+neighbsel = distance<cfg.neighbourdist;
+for i=1:Ngrad
+  neighbsel(i,i) = 0;
+end
+fprintf('average number of neighbours is %f\n', sum(neighbsel(:))./size(neighbsel,1));
+
+
+gradH = zeros(Ngrad, Ngrad);
+gradV = zeros(Ngrad, Ngrad);
+gradC = zeros(Ngrad, Ngrad);
+
+for chan=1:Ngrad
+  % Attach a local coordinate system to this gradiometer:
+  % the origin at the location of its bottom coil
+  % the z-axis pointing outwards from the head
+  % the x-axis pointing horizontal w.r.t. the head
+  % the y-axis pointing vertical, i.e. approximately towards the vertex
+  this_o = pnt(chan,:);
+  this_z = ori(chan,:);
+  this_z = this_z / norm(this_z);
+  this_x = cross([0 0 1], this_z);
+  if all(this_x==0)
+    this_x = [1 0 0];
+  else
+    this_x = this_x / norm(this_x);
+  end
+  this_y = cross(this_z, this_x);
+
+  % add the relative position in local coordinates to the list of points
+  % starting with the channel position itself (which is the local origin)
+  x = 0;
+  y = 0;
+  e = 1;
+  neighbindx = find(neighbsel(chan, :));
+  for neighb=neighbindx
+    vec = pnt(neighb,:) - this_o;          % vector from sensor to neighbour
+    x(end+1) = dot(vec, this_x);                % projection along x-axis (horizontal)
+    y(end+1) = dot(vec, this_y);                % projection along y-axiz (vertical)
+    e(end+1) = 1;                               % required to fit the constant
+  end
+  A = pinv([x(:) y(:) e(:)]);
+  gradH(chan,[chan neighbindx]) = A(1,:);
+  gradV(chan,[chan neighbindx]) = A(2,:);
+  gradC(chan,[chan neighbindx]) = A(3,:);
+end
+
+% rename the labels to match the new channel content
+labelH = cell(1, length(lab));
+labelV = cell(1, length(lab));
+labelC = cell(1, length(lab));
+for i=1:length(lab)
+  labelH{i} = sprintf('%s_dH', lab{i});
+end
+for i=1:length(lab)
+  labelV{i} = sprintf('%s_dV', lab{i});
+end
+for i=1:length(lab)
+  labelC{i} = sprintf('%s_dC', lab{i});
+end
+
+% construct a montage, i.e. a simple linear projection matrix
+montage = [];
+montage.labelnew = cat(1, labelH(:), labelV(:), labelC(:));   % describes the rows
+montage.labelorg = lab(:)';                                   % describes the columns
+montage.tra      = cat(1, gradH, gradV, gradC);               % this is the linear projection matrix
