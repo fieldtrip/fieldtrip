@@ -69,11 +69,13 @@ grad.tra = repmat(diag(ones(1,size(grad.pnt,1)/2),0),1,2);
 % computation with the coil-leadfield matrix to get the channel leadfield
 grad.tra = sparse(grad.tra);
 
-tmp = hdr.channel_info(isgrad,1);
-for i=1:size(tmp,1)
-  grad.label{i,1} = sprintf('%03d', tmp(i)+1);
+% the gradiometer labels should be consistent with the channel labels in the header
+label = cell(size(isgrad));
+for i=1:length(label)
+  label{i} = sprintf('%d', i);
 end
-grad.unit='cm';
+grad.label = label(isgrad);
+grad.unit  = 'cm';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this defines some usefull constants

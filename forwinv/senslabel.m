@@ -1977,9 +1977,9 @@ end % if isitab
 if isyokogawa
   for i=1:160
     % this should be consistent with read_yokogawa_header, where channel names are defined
-    yokogawa160{i}          = sprintf('MEG%03d',    i);
-    yokogawa160_planar{i,1} = sprintf('MEG%03d_dH', i);
-    yokogawa160_planar{i,2} = sprintf('MEG%03d_dV', i);
+    yokogawa160{i}          = sprintf('%d',    i);
+    yokogawa160_planar{i,1} = sprintf('%d_dH', i);
+    yokogawa160_planar{i,2} = sprintf('%d_dV', i);
   end
 end
 

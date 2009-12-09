@@ -126,30 +126,30 @@ end
 % construct a cell-array with labels of each channel
 % this should be consistent with senslabel, where the list of channel names is also defined
 for i=1:hdr.nChans
-  if     hdr.orig.channel_info(i, 2) == handles.NullChannel
-    prefix = '';
-  elseif hdr.orig.channel_info(i, 2) == handles.MagnetoMeter
-    prefix = '';
-  elseif hdr.orig.channel_info(i, 2) == handles.AxialGradioMeter
-    prefix = 'MEG';
-  elseif hdr.orig.channel_info(i, 2) == handles.PlannerGradioMeter
-    prefix = '';
-  elseif hdr.orig.channel_info(i, 2) == handles.RefferenceMagnetoMeter
-    prefix = '';
-  elseif hdr.orig.channel_info(i, 2) == handles.RefferenceAxialGradioMeter
-    prefix = '';
-  elseif hdr.orig.channel_info(i, 2) == handles.RefferencePlannerGradioMeter
-    prefix = '';
-  elseif hdr.orig.channel_info(i, 2) == handles.TriggerChannel
-    prefix = 'TRIG';
-  elseif hdr.orig.channel_info(i, 2) == handles.EegChannel
-    prefix = 'EEG';
-  elseif hdr.orig.channel_info(i, 2) == handles.EcgChannel
-    prefix = 'ECG';
-  elseif hdr.orig.channel_info(i, 2) == handles.EtcChannel
-    prefix = '';
-  end
-  hdr.label{i} = sprintf('%s%03d', prefix, i);
+  %   if     hdr.orig.channel_info(i, 2) == handles.NullChannel
+  %     prefix = '';
+  %   elseif hdr.orig.channel_info(i, 2) == handles.MagnetoMeter
+  %     prefix = '';
+  %   elseif hdr.orig.channel_info(i, 2) == handles.AxialGradioMeter
+  %     prefix = 'MEG';
+  %   elseif hdr.orig.channel_info(i, 2) == handles.PlannerGradioMeter
+  %     prefix = '';
+  %   elseif hdr.orig.channel_info(i, 2) == handles.RefferenceMagnetoMeter
+  %     prefix = '';
+  %   elseif hdr.orig.channel_info(i, 2) == handles.RefferenceAxialGradioMeter
+  %     prefix = '';
+  %   elseif hdr.orig.channel_info(i, 2) == handles.RefferencePlannerGradioMeter
+  %     prefix = '';
+  %   elseif hdr.orig.channel_info(i, 2) == handles.TriggerChannel
+  %     prefix = 'TRIG';
+  %   elseif hdr.orig.channel_info(i, 2) == handles.EegChannel
+  %     prefix = 'EEG';
+  %   elseif hdr.orig.channel_info(i, 2) == handles.EcgChannel
+  %     prefix = 'ECG';
+  %   elseif hdr.orig.channel_info(i, 2) == handles.EtcChannel
+  %     prefix = '';
+  %   end
+  hdr.label{i} = sprintf('%d', i);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

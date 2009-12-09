@@ -146,13 +146,21 @@ else
   sens = [];
 end
 
-if isfield(sens, 'type')
+if isfield(input, 'type')
+  % preferably the structure specifies its own type
+  type = input.type;
+
+elseif isfield(sens, 'type')
   % preferably the structure specifies its own type
   type = sens.type;
 
-elseif issubfield(sens, 'orig.FileHeader') &&  issubfield(sens, 'orig.VarHeader')
+elseif issubfield(input, 'orig.FileHeader') &&  issubfield(input, 'orig.VarHeader')
   % this is a complete header that was read from a Plexon *.nex file using read_plexon_nex
   type = 'plexon';
+
+elseif issubfield(input, 'orig.sys_name')
+  % this is a complete header that was read from a Yokogawa dataset
+  type = 'yokogawa160';
 
 else
   % start with unknown, then try to determine the proper type by looking at the labels

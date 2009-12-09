@@ -275,16 +275,13 @@ elseif senstype(input, 'yokogawa') && isheader
     sel = (hdr.orig.channel_info(:, 2) == EtcChannel);
     type(sel) = {'etc'};
 
-elseif senstype(input, 'yokogawa') && (isgrad || islabel)
-  % the channels have to be identified based on their name alone
-  sel = myregexp('^MEG[0-9][0-9][0-9]$', label);
-  type(sel) = {'meggrad'};
-  sel = myregexp('^EEG[0-9][0-9][0-9]$', label);
-  type(sel) = {'eeg'};
-  sel = myregexp('^ECG[0-9][0-9][0-9]$', label);
-  type(sel) = {'ecg'};
-  sel = myregexp('^TRIG[0-9][0-9][0-9]$', label);
-  type(sel) = {'trigger'};
+elseif senstype(input, 'yokogawa') && isgrad
+  % all channels in the gradiometer definition are meg
+  type(1:end) = {'meg'};
+  
+elseif senstype(input, 'yokogawa') && islabel
+  % the yokogawa channel labels are a mess, so autodetection is not possible
+  type(1:end) = {'meg'};
 
 elseif senstype(input, 'itab') && isheader
   sel = ([hdr.orig.ch.type]==0);

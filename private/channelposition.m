@@ -1,9 +1,11 @@
-function [pnt, lab] = channelposition(sens, varargin)
+function [pnt, ori, lab] = channelposition(sens, varargin)
 
 % CHANNELPOSITION
 %
-% Use as
-%   [pos, label] = channelposition(sens, ...)
+% Use either as
+%   [pos]           = channelposition(sens, ...)
+%   [pos, lab]      = channelposition(sens, ...)
+%   [pos, ori, lab] = channelposition(sens, ...)
 
 % Copyright (C) 2009, Robert Oostenveld & Vladimir Litvak
 %
@@ -12,7 +14,7 @@ function [pnt, lab] = channelposition(sens, varargin)
 if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')
   fnames = setdiff(fieldnames(sens.balance), 'current');
   indx   = find(ismember(fnames, sens.balance.current));
-  
+
   if length(indx)==1,
     %  undo the synthetic gradient balancing
     fprintf('undoing the %s balancing\n', sens.balance.current);
@@ -23,8 +25,9 @@ if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')
   end
 end
 
-switch senstype(sens)    
-  case {'ctf151', 'ctf275' 'bti148', 'bti248'}
+switch senstype(sens)
+  case {'ctf151', 'ctf275' 'bti148', 'bti248', 'chieti153', 'yokogawa160'}
+    keyboard
     % remove the non-MEG channels altogether
     sel = chantype(sens, 'meg');
     sens.label = sens.label(sel);
@@ -45,13 +48,14 @@ switch senstype(sens)
     % put nans instead of the zero entries
     dist(~dist) = inf;
 
-    % use the matrix to find coils with minimal distance
+    % use the matrix to find coils with minimal distance to the center, i.e. the bottom coil
     [junk, ind] = min(dist, [], 2);
 
     lab = sens.label;
     pnt = sens.pnt(ind, :);
+    ori = sens.ori(ind, :);
 
-  case {'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar'}
+  case {'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'chieti153_planar', 'yokogawa160_planar'}
     % create a list with planar channel names
     chan = {};
     for i=1:length(sens.label)
@@ -166,4 +170,20 @@ if n>1 && size(lab, 1)>1 %this is to prevent confusion when lab happens to be a 
   pnt = repmat(pnt, n, 1);
 end
 
+% ensure that it is a row vector
 lab = lab(:);
+
+% the function can be called with a different number of output arguments
+if nargout==1
+  pnt = pnt;
+  ori = [];
+  lab = [];
+elseif nargout==2
+  pnt = pnt;
+  ori = lab;  % second output argument
+  lab = [];   % third output argument
+elseif nargout==3
+  pnt = pnt;
+  ori = ori;  % second output argument
+  lab = lab;  % third output argument
+end
