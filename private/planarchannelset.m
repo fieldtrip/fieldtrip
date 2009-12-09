@@ -750,6 +750,34 @@ switch lower(senstype(data))
     end
 
   otherwise
-    error('unrecognized MEG system');
+
+    % try to define the horizontal, vertical and combined channel based on the input data 
+    islabel = isa(data, 'cell') && ~isempty(data) && isa(data{1}, 'char');
+    if islabel
+      if any(cellfun(@isempty, regexp(data, '_dV$')))
+        % assume that it is a nicely behaving set of planar channel pairs
+        selH = find(~cellfun(@isempty, regexp(data, '_dH$')));
+        selV = find(~cellfun(@isempty, regexp(data, '_dV$')));
+        if length(selH) ~= length(selV)
+          error('inconsistent number of horizontal and vertical planar channels');
+        end
+        for i=1:length(selH)
+          basename = data{selH(i)}(1:(end-3));
+          planar{i,1} = sprintf('%s_dH', basename);
+          planar{i,2} = sprintf('%s_dV', basename);
+          planar{i,3} = sprintf('%s',    basename);
+        end
+      else
+        % assume that it is a nicely behaving set of non-planar channels
+        for i=1:length(data)
+          planar{i,1} = sprintf('%s_dH', data{i});
+          planar{i,2} = sprintf('%s_dV', data{i});
+          planar{i,3} = sprintf('%s',    data{i});
+        end
+      end % if contains _dV
+
+    else % ~islabel
+      error('unrecognized MEG system');
+    end
 end
 
