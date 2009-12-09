@@ -73,13 +73,13 @@ if ischar(header.orig.data)
           fid = fopen(fullfile(header.orig.filepath, header.orig.data)); %
       end
 
-    if fid == -1, error('Cannot not find data file'); end;
+if fid == -1, error(['Cannot not find data file: ' header.orig.data]); end;
 
     % only read the desired trials
     if strcmpi(header.orig.data(end-2:end), 'dat')
         dat = fread(fid,[header.nSamples*header.nTrials header.nChans],'float32')';
     else
-        dat = fread(fid,[header.nChans header.nSamples*header.nTrials],'float32')';
+        dat = fread(fid,[header.nChans header.nSamples*header.nTrials],'float32');
     end;
     dat = reshape(dat, header.nChans, header.nSamples, header.nTrials);
     fclose(fid);
