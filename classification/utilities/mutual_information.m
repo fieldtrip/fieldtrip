@@ -37,7 +37,7 @@ function mi = mutual_information(data,design)
         % construct p(x) log p(x)  = (\sum_c p(c) p(x|c)) log (\sum_c p(c) p(x|c))
 
         % create \sum_c p(c) p(x|c) anonymous function
-        f = @(x,k)( pc(k) .*  mynormpdf(x,nanmean(data(di{k},m)),mynanstd(data(di{k},m))));
+        f = @(x,k)( pc(k) .*  mynormpdf(x,mynanmean(data(di{k},m)),mynanstd(data(di{k},m))));
         g = @(x)(sum(cell2mat(transpose(arrayfun(@(k)(f(x,k)),1:csize,'UniformOutput',false))),1));
         h = @(x)(pp(g(x)));
 

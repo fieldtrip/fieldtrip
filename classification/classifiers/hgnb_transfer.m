@@ -83,7 +83,7 @@ classdef hgnb_transfer < transfer_classifier
           % compute per subject sample means
           ys = zeros(1,ntasks);
           for c=1:ntasks
-            ys(c) = nanmean(data{c}(design{c}(:,1) == k,j));
+            ys(c) = mynanmean(data{c}(design{c}(:,1) == k,j));
           end
 
           % compute pooled estimate y..
@@ -142,7 +142,7 @@ classdef hgnb_transfer < transfer_classifier
             end
 
             % compute probability
-            post{c}(m,k) = log(obj.priors(k)) + nansum(log(conditional));
+            post{c}(m,k) = log(obj.priors(k)) + mynansum(log(conditional));
 
           end
 

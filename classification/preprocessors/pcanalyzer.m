@@ -61,9 +61,7 @@ classdef pcanalyzer < preprocessor
           else
 
 	    % ignore nans when taking the mean
-	    nisnan = sum(~isnan(data))
-	    data(find(isnan(data(:)))) = 0;
-	    obj.means = sum(data) ./ nisnan;
+	    obj.means = mynanmean(data);
 
             sz = ones(ndims(obj.means)); sz(1) = size(data,1);
             data = data - repmat(obj.means,sz);

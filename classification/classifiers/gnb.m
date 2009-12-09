@@ -114,7 +114,7 @@ classdef gnb < classifier
              end
              
              % compute probability
-             post(m,c) = log(obj.priors(c)) + nansum(log(conditional));
+             post(m,c) = log(obj.priors(c)) + mynansum(log(conditional));
              
            end
            

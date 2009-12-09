@@ -49,7 +49,7 @@ function mi = conditional_mutual_information(data,design,conditional,lim)
         mu = cell(1,csize);
         Sigma = cell(1,csize);
         for k=1:csize
-            mu{k} = [nanmean(data(di{k},m)); nanmean(conditional(di{k}))];
+            mu{k} = [mynanmean(data(di{k},m)); mynanmean(conditional(di{k}))];
             Sigma{k} = nancov([data(di{k},m) conditional(di{k})]);
         end
         

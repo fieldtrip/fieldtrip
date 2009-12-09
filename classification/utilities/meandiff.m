@@ -14,9 +14,9 @@ function dif = meandiff(data,design)
 
     dif = zeros(nclasses,nfeatures);
     for j=1:nclasses        
-        dif(j,:) = nanmean(data(design==j,:));
+        dif(j,:) = mynanmean(data(design==j,:));
     end
-    dif = dif - repmat(nanmean(data),[nclasses 1]);
+    dif = dif - repmat(mynanmean(data),[nclasses 1]);
     dif = sqrt(sum(dif.^2));
 
 end

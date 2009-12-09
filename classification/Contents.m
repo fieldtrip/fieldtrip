@@ -74,4 +74,6 @@
 % possible
 % rethink significance testing and also implement for regressor
 % return standard error of mean as second argument of evaluate
-%
+% rewrite feature selection stuff and add searchlight (also check blogreg)
+% remove dependence on fieldtrip by copying nanmean, ... and replace with
+% mynanmean etc (also check bayesbrain toolbox)

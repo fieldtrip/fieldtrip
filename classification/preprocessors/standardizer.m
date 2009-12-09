@@ -52,9 +52,7 @@ classdef standardizer < preprocessor
                 if obj.bmean
 		
 		  % ignore nans when taking the mean
-		  nisnan = sum(~isnan(data))
-		  data(find(isnan(data(:)))) = 0;
-		  obj.means = sum(data) ./ nisnan;
+		  obj.means = mynanmean(data);
 
                 end
                 

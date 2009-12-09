@@ -39,7 +39,7 @@ classdef nb < classifier
       obj.means = zeros(obj.nclasses,nfeatures);
       for j=1:nfeatures
         for k=1:obj.nclasses
-          obj.means(k,j) = nanmean(data(design(:,1) == k,j));
+          obj.means(k,j) = mynanmean(data(design(:,1) == k,j));
         end
       end
 
@@ -74,7 +74,7 @@ classdef nb < classifier
           end
 
           % compute probability
-          post(m,c) = log(obj.priors(c)) + nansum(log(conditional));
+          post(m,c) = log(obj.priors(c)) + mynansum(log(conditional));
 
         end
 

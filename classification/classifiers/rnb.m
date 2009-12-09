@@ -108,7 +108,7 @@ classdef rnb < nb
            for c=1:obj.nclasses
              
              % compute probability
-             post(m,c) = log(obj.priors(c)) + nansum(log(1./(sqrt(2*pi)*obj.stds(c,:)) .* exp(- (data(m,:) - obj.means(c,:)).^2./(2*obj.stds(c,:).^2))));
+             post(m,c) = log(obj.priors(c)) + mynansum(log(1./(sqrt(2*pi)*obj.stds(c,:)) .* exp(- (data(m,:) - obj.means(c,:)).^2./(2*obj.stds(c,:).^2))));
              
            end
            
