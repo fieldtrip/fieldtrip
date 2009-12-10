@@ -23,11 +23,6 @@ function [freq] = freqanalysis(cfg, data);
 %                    'tfr', implements wavelet time frequency transformation
 %                     (using Morlet wavelets) based on convolution in the time domain
 %
-% cfg.online = 0 or 1, only set it in the online case(default=0)
-% cfg.onlineprocess is to avoid repeating unnecessary calculation for the
-% online paradigm. you should copy onlineprocess each time that you want to
-% call the freqanalysis function by something like:
-% cfgf.onlineprocess=freq.cfg.onlineprocess;
 %
 % The other cfg options depend on the method that you select. You should
 % read the help of the respective subfunction FREQANALYSIS_XXX for the
@@ -46,64 +41,43 @@ function [freq] = freqanalysis(cfg, data);
 % Copyright (C) 2004-2006, F.C. Donders Centre, Markus Siegel
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
-if ~isfield(cfg,'online')
-    cfg.online=0;
-end
-if ~cfg.online || ~isfield(cfg,'onlineprocess')
 
-    fieldtripdefs
+fieldtripdefs
 
-    % check if the input data is valid for this function
-    data = checkdata(data, 'datatype', {'raw', 'comp', 'mvar'}, 'feedback', 'yes', 'hasoffset', 'yes');
-    if isfield(data,'offset')
-        cfg.onlineprocess.offset=data.offset;
-    end
-else
-    if isfield(cfg.onlineprocess,'offset')
-        data.offset=cfg.onlineprocess.offset;
-    end
-end
+% check if the input data is valid for this function
+data = checkdata(data, 'datatype', {'raw', 'comp', 'mvar'}, 'feedback', 'yes', 'hasoffset', 'yes');
 
-if ~cfg.online || ~isfield(cfg,'onlineprocess') || ~isfield(cfg.onlineprocess,'cfg')
-    
-    % check if the input cfg is valid for this function
-    cfg = checkconfig(cfg, 'trackconfig', 'on');
-    cfg = checkconfig(cfg, 'renamed',     {'label', 'channel'});
-    cfg = checkconfig(cfg, 'renamed',     {'sgn',   'channel'});
-    cfg = checkconfig(cfg, 'renamed',     {'labelcmb', 'channelcmb'});
-    cfg = checkconfig(cfg, 'renamed',     {'sgncmb',   'channelcmb'});
-    cfg = checkconfig(cfg, 'required',    {'method'});
-    cfg = checkconfig(cfg, 'renamedval',  {'method', 'fft',    'mtmfft'});
-    cfg = checkconfig(cfg, 'renamedval',  {'method', 'convol', 'mtmconvol'});
-    if cfg.online
-        cfg = checkconfig(cfg, 'trackconfig', 'off');
-        cfg.onlineprocess.cfg=cfg;
-    end
-else
-    cfg=cfg.onlineprocess.cfg;
-end
+% check if the input cfg is valid for this function
+cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = checkconfig(cfg, 'renamed',     {'label', 'channel'});
+cfg = checkconfig(cfg, 'renamed',     {'sgn',   'channel'});
+cfg = checkconfig(cfg, 'renamed',     {'labelcmb', 'channelcmb'});
+cfg = checkconfig(cfg, 'renamed',     {'sgncmb',   'channelcmb'});
+cfg = checkconfig(cfg, 'required',    {'method'});
+cfg = checkconfig(cfg, 'renamedval',  {'method', 'fft',    'mtmfft'});
+cfg = checkconfig(cfg, 'renamedval',  {'method', 'convol', 'mtmconvol'});
 
 % select trials of interest
 if ~isfield(cfg, 'trials'),   cfg.trials = 'all';  end % set the default
 if ~strcmp(cfg.trials, 'all')
-  if islogical(cfg.trials),  cfg.trials=find(cfg.trials);  end
-  fprintf('selecting %d trials\n', length(cfg.trials));
-  data.trial  = data.trial(cfg.trials);
-  data.time   = data.time(cfg.trials);
-  data.offset = data.offset(cfg.trials);
-  % update the trial definition (trl)
-  if isfield(data, 'cfg')
-    trl = findcfg(data.cfg, 'trl');
-  else
-    trl = [];
-  end
-  if isempty(trl)
-    % a trial definition is expected in each continuous data set
-    warning('could not locate the trial definition ''trl'' in the data structure');
-  else
-    cfg.trlold=trl;
-    cfg.trl=trl(cfg.trials,:);
-  end
+    if islogical(cfg.trials),  cfg.trials=find(cfg.trials);  end
+    fprintf('selecting %d trials\n', length(cfg.trials));
+    data.trial  = data.trial(cfg.trials);
+    data.time   = data.time(cfg.trials);
+    data.offset = data.offset(cfg.trials);
+    % update the trial definition (trl)
+    if isfield(data, 'cfg')
+        trl = findcfg(data.cfg, 'trl');
+    else
+        trl = [];
+    end
+    if isempty(trl)
+        % a trial definition is expected in each continuous data set
+        warning('could not locate the trial definition ''trl'' in the data structure');
+    else
+        cfg.trlold=trl;
+        cfg.trl=trl(cfg.trials,:);
+    end
 end
 
 % call the corresponding function
