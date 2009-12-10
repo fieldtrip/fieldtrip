@@ -28,7 +28,7 @@ keyvalcheck(varargin, 'forbidden', {'faces', 'edges', 'vertices'});
 % get the optional input arguments
 
 faceindex   = keyval('faceindex',   varargin);   if isempty(faceindex),faceindex = 'none';end
-vertexindex = keyval('vertexindex',   varargin); if isempty(faceindex),vertexindex ='none';end
+vertexindex = keyval('vertexindex',   varargin); if isempty(vertexindex),vertexindex ='none';end
 vertexsize  = keyval('vertexsize',    varargin); if isempty(vertexsize),  vertexsize = 10;    end
 facecolor   = keyval('facecolor',     varargin); if isempty(facecolor),facecolor = 'white'; end 
 vertexcolor = keyval('vertexcolor',   varargin); if isempty(vertexcolor),vertexcolor ='none';end
