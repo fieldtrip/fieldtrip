@@ -27,7 +27,6 @@ end
 
 switch senstype(sens)
   case {'ctf151', 'ctf275' 'bti148', 'bti248', 'chieti153', 'yokogawa160'}
-    keyboard
     % remove the non-MEG channels altogether
     sel = chantype(sens, 'meg');
     sens.label = sens.label(sel);
