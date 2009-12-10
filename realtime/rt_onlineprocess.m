@@ -116,73 +116,45 @@ while cfg.count<cfg.nexample
 
         % read data segment from buffer
         dat = read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
-
+        
+        %baseline correction by removing the average
+        dat=dat-repmat(mean(dat,2),1,size(dat,2));
 
         % put the data in a fieldtrip-like raw structure
         data.trial{1} = dat;
         data.hdr      = hdr;
         data.time{1}  = (begsample+(0:(endsample-begsample)))/hdr.Fs;
 
+
         if cfg.first
             data.label    = hdr.label(chanindx);
             data.fsample  = hdr.Fs;
             data.grad     =data.hdr.grad;
             data.cfg      =cfg;
-            % apply some preprocessing options
-        end
-        data.trial{1} = preproc_baselinecorrect(data.trial{1});
-        
-        % correct for timing
-        tt=data.time{1};
-        pt=tt;
-        tt=tt-min(tt);
-        tt=tt./max(tt);
-        tt=tt.*cfg.blocksize;
-        data.time{1}=tt-0.5*cfg.blocksize;
-        
-        if cfg.first
+            
             % planar gradiant
-            cfgpl = [];
-            cfgpl.channel      = 'all';
-            cfgpl.planarmethod = 'sincos';
-            data.grad=grad;
-            cfgpl.online=1;
+            tra=fasttransformplanar(data);
         end
-        plan = megplanar(cfgpl, data);
-        if cfg.first
-            cfgpl.onlineprocess=plan.cfg.onlineprocess;
-        end
-        
+
+
         if cfg.first
             % frequency analysis
             cfgf = [];
-            cfgf.output       = 'pow';
-            %the following can be changed for speeding up,it was 'all' for the demo
-            cfgf.channel      = 'all';%{'MLO33_dH','MLO33_dV','MRO33_dH','MRO33_dV'};
-            cfgf.keeptrials   = 'yes';
-            cfgf.method       = 'mtmconvol';
             cfgf.foi          = cfg.foi;
-            cfgf.toi          = 0;
+            cfgf.toi          = 0.5*cfg.blocksize;
             cfgf.t_ftimwin    = ones(1,length(cfgf.foi)) * (cfg.blocksize-0.001); % 0.5 s. timewindow
             cfgf.taper        = 'hanning';
-            cfgf.online=1;
         end
-        freq = freqanalysis(cfgf,plan);
-        if cfg.first || ~isfield(cfgf,'onlineprocess') || ~isfield(cfgf.onlineprocess,'cfg')
-            cfgf.onlineprocess=freq.cfg.onlineprocess;
-        end
+        freq=fastpower(cfgf,data);
+        freq.powspctrm=freq.powspctrm*tra;
         
         comb=freq;
-        clear freq
         if cfg.first
-            %planar gradient
-            comb.grad.type='ctf275_planar';
-            planar    = planarchannelset(comb);
-            sel_dH    = match_str(comb.label, planar(:,1));  % indices of the horizontal channels
-            sel_dV    = match_str(comb.label, planar(:,2));  % indices of the vertical  channels
-            [dum, sel_planar] = match_str(comb.label, planar(:,1));
-            comb.label=planar(sel_planar,3);
+            %combine planar
+            sel_dH=1:length(freq.label);
+            sel_dV=1+length(freq.label):size(freq.powspctrm,2);
         end
+        %combine planar
         comb.powspctrm=comb.powspctrm(:,sel_dH,:) + comb.powspctrm(:,sel_dV,:);
 
         if cfg.first
