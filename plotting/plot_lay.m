@@ -11,6 +11,7 @@ function plot_lay(lay, varargin)
 %   'box'           = yes/no
 %   'label'         = yes/no
 %   'labelsize'     = number indicating font size (e.g. 6)
+%   'labeloffset'   = offset of label from point (suggestion is 0.005)
 %   'mask'          = yes/no
 %   'outline'       = yes/no
 %   'verbose'       = yes/no
@@ -22,16 +23,17 @@ function plot_lay(lay, varargin)
 % Copyright (C) 2009, Robert Oostenveld
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'point', 'box', 'label','labelsize', 'mask', 'outline', 'verbose','pointsymbol','pointcolor','pointsize'});
-hpos         = keyval('hpos',        varargin{:}); if isempty(hpos),      hpos = 0;            end
-vpos         = keyval('vpos',        varargin{:}); if isempty(vpos),      vpos = 0;            end
-point        = keyval('point',       varargin{:}); if isempty(point),     point = true;        end
-box          = keyval('box',         varargin{:}); if isempty(box),       box = true;          end
-label        = keyval('label',       varargin{:}); if isempty(label),     label = true;        end
-labelsize    = keyval('labelsize',   varargin{:}); if isempty(labelsize), labelsize = 10;      end
-mask         = keyval('mask',        varargin{:}); if isempty(mask),      mask = true;         end
-outline      = keyval('outline',     varargin{:}); if isempty(outline),   outline = true;      end
-verbose      = keyval('verbose',     varargin{:}); if isempty(verbose),   verbose = false;     end
+keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'point', 'box', 'label','labelsize','labeloffset', 'mask', 'outline', 'verbose','pointsymbol','pointcolor','pointsize'});
+hpos         = keyval('hpos',        varargin{:}); if isempty(hpos),       hpos = 0;            end
+vpos         = keyval('vpos',        varargin{:}); if isempty(vpos),       vpos = 0;            end
+point        = keyval('point',       varargin{:}); if isempty(point),      point = true;        end
+box          = keyval('box',         varargin{:}); if isempty(box),        box = true;          end
+label        = keyval('label',       varargin{:}); if isempty(label),      label = true;        end
+labelsize    = keyval('labelsize',   varargin{:}); if isempty(labelsize),  labelsize = 10;      end
+labeloffset  = keyval('labeloffset', varargin{:}); if isempty(labeloffset),labeloffset = 0;     end
+mask         = keyval('mask',        varargin{:}); if isempty(mask),       mask = true;         end
+outline      = keyval('outline',     varargin{:}); if isempty(outline),    outline = true;      end
+verbose      = keyval('verbose',     varargin{:}); if isempty(verbose),    verbose = false;     end
 pointsymbol  = keyval('pointsymbol', varargin{:});
 pointcolor   = keyval('pointcolor',  varargin{:});
 pointsize    = keyval('pointsize',   varargin{:});
@@ -56,7 +58,7 @@ Height = lay.height;
 Lbl    = lay.label;
 
 if point
-  if ~isempty(pointsymbol) && ~isempty(pointcolor) && ~isempty(pointsize) % if they all non-empty, don't use the default
+  if ~isempty(pointsymbol) && ~isempty(pointcolor) && ~isempty(pointsize) % if they're all non-empty, don't use the default
     plot(X, Y, 'marker',pointsymbol,'color',pointcolor,'markersize',pointsize,'linestyle','none');
   else
     plot(X, Y, 'marker','.','color','b','linestyle','none');
@@ -65,7 +67,7 @@ if point
 end
 
 if label
-  text(X, Y, Lbl,'fontsize',labelsize);
+  text(X+labeloffset, Y+(labeloffset*1.5), Lbl,'fontsize',labelsize);
 end
 
 if box
