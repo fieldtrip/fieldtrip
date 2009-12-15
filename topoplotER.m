@@ -8,29 +8,64 @@ function [cfg] = topoplotER(cfg, varargin)
 % Use as:
 %   topoplotER(cfg, data)
 %
-% cfg.xparam        = first dimension in data in which a selection is made
-%                     'time' or 'freq' (default depends on data.dimord)
-% cfg.zparam        = field that contains the data to be plotted as color 
-%                     'avg', 'powspctrm' or 'cohspctrm' (default depends on data.dimord)
-% cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
-% cfg.zlim          = 'maxmin', 'absmax' or [zmin zmax] (default = 'maxmin')
-% cfg.cohrefchannel = name of reference channel for visualising coherence, can be 'gui'
-% cfg.baseline      = 'yes','no' or [time1 time2] (default = 'no'), see TIMELOCKBASELINE or FREQBASELINE
-% cfg.baselinetype  = 'absolute' or 'relative' (default = 'absolute')
-% cfg.trials        = 'all' or a selection given as a 1xN vector (default = 'all')
-% cfg.comment       = string 'no' 'auto' or 'xlim' (default = 'auto')
-%                     'auto': date, xparam and zparam limits are printed
-%                     'xlim': only xparam limits are printed
-% cfg.commentpos    = string or two numbers, position of comment (default 'leftbottom')
-%                     'lefttop' 'leftbottom' 'middletop' 'middlebottom' 'righttop' 'rightbottom'
-%                     'title' to place comment as title
-%                     'layout' to place comment as specified for COMNT in layout
-%                     [x y] coordinates
-% cfg.interactive   = Interactive plot 'yes' or 'no' (default = 'no')
-%                     In a interactive plot you can select areas and produce a new
-%                     interactive plot when a selected area is clicked. Multiple areas 
-%                     can be selected by holding down the SHIFT key.
-% cfg.layout        = specification of the layout, see below
+% cfg.xparam             = first dimension in data in which a selection is made
+%                         'time' or 'freq' (default depends on data.dimord)
+% cfg.zparam             = field that contains the data to be plotted as color 
+%                         'avg', 'powspctrm' or 'cohspctrm' (default depends on data.dimord)
+% cfg.xlim               = 'maxmin' or [xmin xmax] (default = 'maxmin')
+% cfg.zlim               = 'maxmin', 'absmax' or [zmin zmax] (default = 'maxmin')
+% cfg.cohrefchannel      = name of reference channel for visualising coherence, can be 'gui'
+% cfg.baseline           = 'yes','no' or [time1 time2] (default = 'no'), see TIMELOCKBASELINE or FREQBASELINE
+% cfg.baselinetype       = 'absolute' or 'relative' (default = 'absolute')
+% cfg.trials             = 'all' or a selection given as a 1xN vector (default = 'all')
+% cfg.colormap           = any sized colormap, see COLORMAP
+% cfg.marker             = 'on', 'labels', 'numbers', 'off'                    
+% cfg.markersymbol       = channel marker symbol (default = 'o')
+% cfg.markercolor        = channel marker color (default = [0 0 0] (black))
+% cfg.markersize         = channel marker size (default = 2)
+% cfg.markerfontsize     = font size of channel labels (default = 8 pt)                
+% cfg.highlight          = 'on', 'labels', 'numbers', 'off'                    
+% cfg.highlightchannel   =  Nx1 cell-array with selection of channels, or vector containing channel indices see CHANNELSELECTION 
+% cfg.highlightsymbol    = highlight marker symbol (default = 'o')
+% cfg.highlightcolor     = highlight marker color (default = [0 0 0] (black))
+% cfg.highlightsize      = highlight marker size (default = 6)
+% cfg.highlightfontsize  = highlight marker size (default = 8)
+% cfg.colorbar           = 'yes'
+%                          'no' (default)
+%                          'North'              inside plot box near top
+%                          'South'              inside bottom
+%                          'East'               inside right
+%                          'West'               inside left
+%                          'NorthOutside'       outside plot box near top
+%                          'SouthOutside'       outside bottom
+%                          'EastOutside'        outside right
+%                          'WestOutside'        outside left
+% cfg.interplimits       = limits for interpolation (default = 'head')
+%                          'electrodes' to furthest electrode
+%                          'head' to edge of head
+% cfg.interpolation      = 'linear','cubic','nearest','v4' (default = 'v4') see GRIDDATA
+% cfg.style              = plot style (default = 'both')
+%                          'straight' colormap only
+%                          'contour' contour lines only
+%                          'both' (default) both colormap and contour lines
+%                          'fill' constant color between lines
+%                          'blank' only the head shape
+% cfg.gridscale          = scaling grid size (default = 67)
+%                          determines resolution of figure
+% cfg.shading            = 'flat' 'interp' (default = 'flat')
+% cfg.comment            = string 'no' 'auto' or 'xlim' (default = 'auto')
+%                          'auto': date, xparam and zparam limits are printed
+%                          'xlim': only xparam limits are printed
+% cfg.commentpos         = string or two numbers, position of comment (default 'leftbottom')
+%                          'lefttop' 'leftbottom' 'middletop' 'middlebottom' 'righttop' 'rightbottom'
+%                          'title' to place comment as title
+%                          'layout' to place comment as specified for COMNT in layout
+%                          [x y] coordinates
+% cfg.interactive        = Interactive plot 'yes' or 'no' (default = 'no')
+%                          In a interactive plot you can select areas and produce a new
+%                          interactive plot when a selected area is clicked. Multiple areas 
+%                          can be selected by holding down the SHIFT key.
+% cfg.layout             = specification of the layout, see below
 %
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
@@ -44,25 +79,21 @@ function [cfg] = topoplotER(cfg, varargin)
 % layout. If you want to have more fine-grained control over the layout
 % of the subplots, you should create your own layout file.
 %
-% TOPOPLOTER calls the function TOPOPLOT to do the actual plotting. See
-% the help of that function for more configuration options.
 %
 % See also:
-%   topoplot, topoplotTFR, singleplotER, multiplotER, prepare_layout
+%  topoplotTFR, singleplotER, multiplotER, prepare_layout
 
 % Undocumented local options:
-% cfg.layoutname
 % The following additional cfg parameters are used when plotting 3-dimensional
 % data (i.e. when topoplotTFR calls topoplotER):
 % cfg.yparam          field to be plotted on y-axis
 % cfg.ylim            'maxmin' or [ymin ymax]         (default = 'maxmin')
+% cfg.labeloffset (offset of labels to their marker, default = 0.005)
 
 % This function depends on TIMELOCKBASELINE which has the following options:
 % cfg.baseline, documented
 % cfg.channel
 % cfg.blcwindow
-% cfg.previous
-% cfg.version
 %
 % This function depends on FREQBASELINE which has the following options:
 % cfg.baseline, documented
@@ -89,28 +120,123 @@ data = varargin{1};
 % For backward compatibility with old data structures:
 data = checkdata(data);
 
+% check for option-values to be renamed
+cfg = checkconfig(cfg, 'renamedval',     {'electrodes',   'dotnum',    'numbers'});
+% check for renamed options
+cfg = checkconfig(cfg, 'renamed',     {'electrodes',    'marker'});
+cfg = checkconfig(cfg, 'renamed',     {'emarker',       'markersymbol'});
+cfg = checkconfig(cfg, 'renamed',     {'ecolor',        'markercolor'});
+cfg = checkconfig(cfg, 'renamed',     {'emarkersize',   'markersize'});
+cfg = checkconfig(cfg, 'renamed',     {'efontsize',     'markerfontsize'});
+cfg = checkconfig(cfg, 'renamed',     {'hlmarker',      'highlightsymbol'});
+cfg = checkconfig(cfg, 'renamed',     {'hlcolor',       'highlightcolor'});
+cfg = checkconfig(cfg, 'renamed',     {'hlmarkersize',  'highlightsize'});
+% old checkconfig adapted partially from topoplot.m (backwards backwards compatability)
+cfg = checkconfig(cfg, 'renamed',     {'grid_scale',    'gridscale'});
+cfg = checkconfig(cfg, 'renamed',     {'interpolate',   'interpolation'});
+cfg = checkconfig(cfg, 'renamed',     {'numcontour',    'contournum'});
+cfg = checkconfig(cfg, 'renamed',     {'electrod',      'marker'});
+cfg = checkconfig(cfg, 'renamed',     {'electcolor',    'markercolor'});
+cfg = checkconfig(cfg, 'renamed',     {'emsize',        'markersize'});
+cfg = checkconfig(cfg, 'renamed',     {'efsize',        'markerfontsize'});
+cfg = checkconfig(cfg, 'renamed',     {'headlimits',    'interplimits'});
+
+% check for forbidden options 
+cfg = checkconfig(cfg, 'forbidden',  {'hllinewidth'});
+cfg = checkconfig(cfg, 'forbidden',  {'headcolor'});
+cfg = checkconfig(cfg, 'forbidden',  {'hcolor'});
+cfg = checkconfig(cfg, 'forbidden',  {'hlinewidth'});
+cfg = checkconfig(cfg, 'forbidden',  {'contcolor'});
+cfg = checkconfig(cfg, 'forbidden',  {'outline'});
+cfg = checkconfig(cfg, 'forbidden',  {'highlightfacecolor'});
+cfg = checkconfig(cfg, 'forbidden',  {'showlabels'});
+cfg = checkconfig(cfg, 'forbidden',  {'hllinewidth'});
+
 % Set other config defaults:
-if ~isfield(cfg, 'xlim'),          cfg.xlim = 'maxmin';           end
-if ~isfield(cfg, 'ylim'),          cfg.ylim = 'maxmin';           end
-if ~isfield(cfg, 'zlim'),          cfg.zlim = 'maxmin';           end
-if ~isfield(cfg, 'style'),         cfg.style = 'both';            end
-if ~isfield(cfg, 'gridscale'),     cfg.gridscale = 67;            end
-if ~isfield(cfg, 'interplimits'),  cfg.interplimits = 'head';     end
-if ~isfield(cfg, 'interpolation'), cfg.interpolation = 'v4';      end
-if ~isfield(cfg, 'contournum'),    cfg.contournum = 6;            end
-if ~isfield(cfg, 'shading'),       cfg.shading = 'flat';          end
-if ~isfield(cfg, 'comment'),       cfg.comment = 'auto';          end
-if ~isfield(cfg, 'commentpos'),    cfg.commentpos = 'leftbottom'; end
-if ~isfield(cfg, 'ecolor'),        cfg.ecolor = [0 0 0];          end
-if ~isfield(cfg, 'emarker'),       cfg.emarker = 'o';             end
-if ~isfield(cfg, 'emarkersize'),   cfg.emarkersize = 2;           end
-if ~isfield(cfg, 'fontsize'),      cfg.fontsize = 8;              end
-if ~isfield(cfg, 'headcolor'),     cfg.headcolor = [0 0 0];       end
-if ~isfield(cfg, 'hlinewidth'),    cfg.hlinewidth = 2;            end
-if ~isfield(cfg, 'baseline'),      cfg.baseline = 'no';           end   %to avoid warning in timelock/freqbaseline
-if ~isfield(cfg, 'trials'),        cfg.trials = 'all';            end
-if ~isfield(cfg, 'interactive'),   cfg.interactive = 'no';        end
-if ~isfield(cfg, 'renderer'),      cfg.renderer = 'opengl';       end
+if ~isfield(cfg, 'xlim'),                  cfg.xlim = 'maxmin';           end
+if ~isfield(cfg, 'ylim'),                  cfg.ylim = 'maxmin';           end
+if ~isfield(cfg, 'zlim'),                  cfg.zlim = 'maxmin';           end
+if ~isfield(cfg, 'style'),                 cfg.style = 'both';            end
+if ~isfield(cfg, 'gridscale'),             cfg.gridscale = 67;            end
+if ~isfield(cfg, 'interplimits'),          cfg.interplimits = 'head';     end
+if ~isfield(cfg, 'interpolation'),         cfg.interpolation = 'v4';      end
+if ~isfield(cfg, 'contournum'),            cfg.contournum = 6;            end
+if ~isfield(cfg, 'colorbar'),              cfg.colorbar = 'no';           end
+if ~isfield(cfg, 'shading'),               cfg.shading = 'flat';          end
+if ~isfield(cfg, 'comment'),               cfg.comment = 'auto';          end
+if ~isfield(cfg, 'commentpos'),            cfg.commentpos = 'leftbottom'; end
+if ~isfield(cfg, 'fontsize'),              cfg.fontsize = 8;              end
+if ~isfield(cfg, 'baseline'),              cfg.baseline = 'no';           end   %to avoid warning in timelock/freqbaseline
+if ~isfield(cfg, 'trials'),                cfg.trials = 'all';            end
+if ~isfield(cfg, 'interactive'),           cfg.interactive = 'no';        end
+if ~isfield(cfg, 'renderer'),              cfg.renderer = [];             end   % matlab sets the default
+if ~isfield(cfg, 'marker'),                cfg.marker = 'on';             end
+if ~isfield(cfg, 'markersymbol'),          cfg.markersymbol = 'o';        end
+if ~isfield(cfg, 'markercolor'),           cfg.markercolor = [0 0 0];     end
+if ~isfield(cfg, 'markersize'),            cfg.markersize = 2;            end
+if ~isfield(cfg, 'markerfontsize'),        cfg.markerfontsize = 8;        end
+if ~isfield(cfg, 'interplimits'),          cfg.interplimits = 'head';     end
+if ~isfield(cfg, 'highlight'),             cfg.highlight = 'off';         end 
+if ~isfield(cfg, 'highlightchannel'),      cfg.highlightchannel = 'all';  end
+if ~isfield(cfg, 'highlightsymbol'),       cfg.highlightsymbol = 'o';     end
+if ~isfield(cfg, 'highlightcolor'),        cfg.highlightcolor = [1 0 0];  end
+if ~isfield(cfg, 'highlightsize'),         cfg.highlightsize = 6;         end
+if ~isfield(cfg, 'highlightfontsize'),     cfg.highlightfontsize = 8;     end
+if ~isfield(cfg, 'labeloffset'),           cfg.labeloffset = 0.005;       end
+
+% compatability for previous highlighting option
+if isnumeric(cfg.highlight)
+  cfg.highlightchannel = cfg.highlight;
+  cfg.highlight = 'on';
+  warning('use cfg.highlightchannel instead of cfg.highlight for specifiying channels')
+elseif iscell(cfg.highlight)
+  for icell = 1:length(cfg.highlight)
+    if isnumeric(cfg.highlight{icell})
+      cfg.highlightchannel{icell} = cfg.highlight{icell};
+      cfg.highlight{icell} = 'on';
+      warning('use cfg.highlightchannel instead of cfg.highlight for specifiying channels')
+    end
+  end
+end
+
+% Converting all higlight options to cell-arrays if they're not cell-arrays, to make defaulting and checking for backwards compatability and error
+% checking much, much easier
+if ~iscell(cfg.highlight),          cfg.highlight         = {cfg.highlight};                     
+                                    cfg.highlightchannel  = {cfg.highlightchannel};     end % special case (takes care of most situations)
+if ~iscell(cfg.highlightchannel),   cfg.highlightchannel  = {cfg.highlightchannel};     end 
+if ~iscell(cfg.highlightsymbol),    cfg.highlightsymbol   = {cfg.highlightsymbol};      end
+if ~iscell(cfg.highlightcolor),     cfg.highlightcolor    = {cfg.highlightcolor};       end
+if ~iscell(cfg.highlightsize),      cfg.highlightsize     = {cfg.highlightsize};        end
+if ~iscell(cfg.highlightfontsize),  cfg.highlightfontsize = {cfg.highlightfontsize};    end
+% then make sure all cell-arrays for options have length ncellhigh and default the last element if not present
+ncellhigh = length(cfg.highlight);
+if length(cfg.highlightsymbol)    < ncellhigh,   cfg.highlightsymbol{ncellhigh}    = 'o';       end
+if length(cfg.highlightcolor)     < ncellhigh,   cfg.highlightcolor{ncellhigh}     = [0 0 0];   end
+if length(cfg.highlightsize)      < ncellhigh,   cfg.highlightsize{ncellhigh}      = 6;         end
+if length(cfg.highlightfontsize)  < ncellhigh,   cfg.highlightfontsize{ncellhigh}  = 8;         end
+% then default all empty cells
+for icell = 1:ncellhigh
+  if isempty(cfg.highlightsymbol{icell}),    cfg.highlightsymbol{icell} = 'o';     end
+  if isempty(cfg.highlightcolor{icell}),     cfg.highlightcolor{icell} = [0 0 0];  end
+  if isempty(cfg.highlightsize{icell}),      cfg.highlightsize{icell} = 6;         end
+  if isempty(cfg.highlightfontsize{icell}),  cfg.highlightfontsize{icell} = 8;     end
+end
+
+ 
+% for backwards compatability
+if strcmp(cfg.marker,'highlights')
+  warning('use cfg.marker options -highlights- is no longer used, please use cfg.highlight')
+  cfg.marker = 'off';
+end
+
+
+
+% check colormap is proper format and set it
+if isfield(cfg,'colormap')
+  if size(cfg.colormap,2)~=3, error('topoplot(): Colormap must be a n x 3 matrix'); end
+  colormap(cfg.colormap);
+end;
+
 
 % Set x/y/zparam defaults according to data.dimord value:
 if strcmp(data.dimord, 'chan_time')
@@ -323,18 +449,10 @@ else
   zmax = cfg.zlim(2);
 end
 
-% specify the x and y coordinates of the comment as stated in the layout
-if strcmp(cfg.commentpos,'layout') 
-  cfg.commentpos = [];
-  ind_COMNT = strmatch('COMNT', cfg.layout.label);
-  cfg.commentpos(1) = cfg.layout.pos(ind_COMNT,1);
-  cfg.commentpos(2) = cfg.layout.pos(ind_COMNT,2);
-end
 
-% make cfg.comment for topoplot.m
-if strcmp(cfg.comment, 'no')
-  cfg = rmfield(cfg,'comment');
-elseif strcmp(cfg.comment, 'auto')
+
+% make comment
+if strcmp(cfg.comment, 'auto')
   comment = date;
   if ~isempty(cfg.xparam)
     if strcmp(cfg.xlim,'maxmin')
@@ -365,10 +483,161 @@ elseif ~ischar(cfg.comment)
   error('cfg.comment must be string');
 end
 
-% Draw topoplot:
-topoplot(cfg,chanX,chanY,datavector,chanLabels);
+% Specify the x and y coordinates of the comment 
+if strcmp(cfg.commentpos,'layout')
+  ind_comment = strmatch('COMNT', cfg.layout.label);
+  x_comment = cfg.layout.pos(ind_comment,1);
+  y_comment = cfg.layout.pos(ind_comment,2);
+elseif strcmp(cfg.commentpos,'lefttop')
+  x_comment = -0.7;
+  y_comment =  0.6;
+  HorAlign = 'left';
+  VerAlign = 'top';
+elseif strcmp(cfg.commentpos,'leftbottom')
+  x_comment = -0.6;
+  y_comment = -0.6;
+  HorAlign = 'left';
+  VerAlign = 'bottom';
+elseif strcmp(cfg.commentpos,'middletop')
+  x_comment =  0;
+  y_comment =  0.75;
+  HorAlign = 'center';
+  VerAlign = 'top';
+elseif strcmp(cfg.commentpos,'middlebottom')
+  x_comment =  0;
+  y_comment = -0.7;
+  HorAlign = 'center';
+  VerAlign = 'bottom';
+elseif strcmp(cfg.commentpos,'righttop')
+  x_comment =  0.65;
+  y_comment =  0.6;
+  HorAlign = 'right';
+  VerAlign = 'top';
+elseif strcmp(cfg.commentpos,'rightbottom')
+  x_comment =  0.6;
+  y_comment = -0.6;
+  HorAlign = 'right';
+  VerAlign = 'bottom';
+elseif isnumeric(cfg.commentpos)
+  x_comment = cfg.commentpos(1);
+  y_comment = cfg.commentpos(2);
+  HorAlign = 'left';
+  VerAlign = 'middle';
+  x_comment = 0.9*((x_comment-min(x))/(max(x)-min(x))-0.5);
+  y_comment = 0.9*((y_comment-min(y))/(max(y)-min(y))-0.5);
+end
 
-% The remainder of the code is meant to make the figure interactive
+
+% Draw topoplot
+hold on
+% Set plot_topo specific options
+if strcmp(cfg.interplimits,'head'),  interplimits = 'mask'; 
+else interplimits = cfg.interplimits; end
+if strcmp(cfg.style,'both');        style = 'surfiso';     end
+if strcmp(cfg.style,'straight');    style = 'surf';         end
+if strcmp(cfg.style,'contour');     style = 'iso';         end
+if strcmp(cfg.style,'fill');        style = 'isofill';     end
+
+% Draw plot
+if ~strcmp(cfg.style,'blank')
+  plot_topo(chanX,chanY,datavector,'interpmethod',cfg.interpolation,...
+                                   'interplim',interplimits,...
+                                   'gridscale',cfg.gridscale,...
+                                   'outline',lay.outline,...
+                                   'shading',cfg.shading,...
+                                   'isolines',cfg.contournum,...
+                                   'mask',cfg.layout.mask,...
+                                   'style',style);
+elseif ~strcmp(cfg.style,'blank')
+  plot_lay(lay,'box','no','label','no','point','no')
+end
+
+
+% Plotting markers for channels and/or highlighting a selection of channels 
+highlightchansel = []; % used for remembering selection of channels
+templay.outline = lay.outline;
+templay.mask    = lay.mask;
+% For Highlight (channel-selection)
+for icell = 1:length(cfg.highlight)
+  if ~strcmp(cfg.highlight{icell},'off')
+    labelindex     = match_str(lay.label,channelselection(cfg.highlightchannel{icell}, data.label));
+    highlightchansel   = [highlightchansel; match_str(data.label,channelselection(cfg.highlightchannel{icell}, data.label))];
+    templay.pos    = lay.pos(labelindex,:);
+    templay.width  = lay.width(labelindex);
+    templay.height = lay.height(labelindex);
+    templay.label  = channelselection(cfg.highlightchannel{icell}, data.label);
+    if strcmp(cfg.highlight{icell}, 'labels') || strcmp(cfg.highlight{icell}, 'numbers')
+      labelflg = 1;
+    else
+      labelflg = 0;
+    end
+    if strcmp(cfg.highlight{icell}, 'numbers')
+      for ichan = 1:length(channelselection(cfg.highlightchannel{icell}, data.label))
+        templay.label{ichan} = num2str(match_str(data.label,templay.label{ichan}));
+      end
+    end
+    plot_lay(templay,'box','no','label',labelflg,'point','yes',...
+      'pointsymbol',cfg.highlightsymbol{icell},...
+      'pointcolor',cfg.highlightcolor{icell},...
+      'pointsize',cfg.highlightsize{icell},...
+      'labelsize',cfg.highlightfontsize{icell},...
+      'labeloffset',cfg.labeloffset)
+  end
+end % for icell
+% For Markers (all channels)
+if ~strcmp(cfg.marker,'off')
+  labelindex     = match_str(lay.label,channelselection(setdiff(1:length(data.label),highlightchansel), data.label));
+  templay.pos    = lay.pos(labelindex,:);
+  templay.width  = lay.width(labelindex);
+  templay.height = lay.height(labelindex);
+  templay.label  = channelselection(setdiff(1:length(data.label),highlightchansel), data.label);
+  if strcmp(cfg.marker, 'labels') || strcmp(cfg.marker, 'numbers')
+    labelflg = 1;
+  else
+    labelflg = 0;
+  end
+  if strcmp(cfg.marker, 'numbers')
+    for ichan = 1:length(chansel)
+      templay.label{ichan} = num2str(match_str(data.label,templay.label{ichan}));
+    end
+  end
+  plot_lay(templay,'box','no','label',labelflg,'point','yes',...
+    'pointsymbol',cfg.markersymbol,...
+    'pointcolor',cfg.markercolor,...
+    'pointsize',cfg.markersize,...
+    'labelsize',cfg.markerfontsize,...
+    'labeloffset',cfg.labeloffset)
+end
+
+% Set colour axis 
+caxis([zmin zmax]);
+
+% Write comment
+if ~strcmp(cfg.comment,'no')
+  if strcmp(cfg.commentpos, 'title')
+    title(cfg.comment, 'Fontsize', cfg.fontsize);
+  else
+    plot_text(x_comment,y_comment, cfg.comment, 'Fontsize', cfg.fontsize, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom');
+  end
+end
+
+% plot colorbar:
+if isfield(cfg, 'colorbar')
+  if strcmp(cfg.colorbar, 'yes')
+    colorbar;
+  elseif ~strcmp(cfg.colorbar, 'no')
+    colorbar('location',cfg.colorbar);
+  end
+end
+
+
+% Set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
+end
+
+
+% The remainder of the code is meant to make the figure interactive 
 hold on;
 
 % Make the figure interactive
@@ -393,11 +662,16 @@ if strcmp(cfg.interactive, 'yes')
   end
 end
 
+
 axis off;
 hold off;
+axis equal;
+
 
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting channels in case of cfg.cohrefchannel='gui'
