@@ -76,12 +76,9 @@ for k=1:length(chNum) - 2
   if exist('tmpdata'),
 
     config.style      = 'straight';
-    config.electrodes = 'off';
-    config.hlinewidth  = 0.5;
+    config.marker     = 'off';
     try, config.refmarker = strmatch(Lbl(k), data.reflabel);
     catch, config.refmarker  = strmatch(Lbl(k), data.label); end
-    config.maplimits  = [0 0.5];
-    config.ecolor     = [1 1 1];
     config.interplimits = 'electrodes';
     if isfield(cfg, 'xparam'),
       config.xparam = cfg.xparam;
@@ -92,8 +89,6 @@ for k=1:length(chNum) - 2
     end
     config.zparam = cfg.zparam;
     config.cohrefchannel = Lbl(k);
-    config.showxlim = 'no';
-    config.showzlim = 'no';
     config.colorbar = 'no';
     config.zlim     = scale;
     config.grid_scale = 30;
