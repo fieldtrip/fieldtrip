@@ -131,6 +131,7 @@ cfg = checkconfig(cfg, 'renamed',     {'efontsize',     'markerfontsize'});
 cfg = checkconfig(cfg, 'renamed',     {'hlmarker',      'highlightsymbol'});
 cfg = checkconfig(cfg, 'renamed',     {'hlcolor',       'highlightcolor'});
 cfg = checkconfig(cfg, 'renamed',     {'hlmarkersize',  'highlightsize'});
+cfg = checkconfig(cfg, 'renamed',     {'maplimits',     'zlim'});
 % old checkconfig adapted partially from topoplot.m (backwards backwards compatability)
 cfg = checkconfig(cfg, 'renamed',     {'grid_scale',    'gridscale'});
 cfg = checkconfig(cfg, 'renamed',     {'interpolate',   'interpolation'});
