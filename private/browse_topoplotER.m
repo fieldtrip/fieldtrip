@@ -14,8 +14,7 @@ timelock = timelockanalysis([], data);
 
 default             = [];
 default.xlim        = [min(timelock.time) max(timelock.time)];
-default.electrodes  = 'on';
-default.showlabels  = 'markers'; % FIXME
+default.marker      = 'labels';
 default.interactive = 'no';
 cfg = mergeconfig(cfg, default);
 
