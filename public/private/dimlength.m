@@ -96,6 +96,8 @@ switch seldim
       n = size(data.fourierspctrm, 1);
     elseif strcmp(data.dimord, 'rpttap_chan_chan_freq_time') && isfield(data, 'fourierspctrm')
       n = size(data.fourierspctrm, 1);
+    elseif strcmp(data.dimord, 'rpttap_pos') && isfield(data, 'crsspctrm')
+      n = size(data.crsspctrm, 1);
     else
       error('cannot determine number of repetitions for dim "%s"', seldim);
     end

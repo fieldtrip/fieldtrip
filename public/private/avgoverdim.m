@@ -2,8 +2,12 @@ function data = avgoverdim(data, avgdim)
 
 dimtok    = tokenize(data.dimord, '_');
 avgdimnum = find(strcmp(avgdim, dimtok)); % the selected dimension as number
+if length(avgdimnum)<1 && strcmp(avgdim, 'rpt'),
+  avgdimnum = find(strcmp('rpttap', dimtok));
+  avgdim    = 'rpttap';
+end
 
-if length(avgdimnum)<1
+if length(avgdimnum)<1 
   error('the "%s" dimension is not present in the data', avgdim)
 elseif length(avgdimnum)>1
   error('cannot average over multiple dimensions at the same time')
@@ -25,7 +29,7 @@ switch avgdim
     for i=1:length(param)
       fprintf('removing dimension %s from %s\n', avgdim, param{i});
       tmp = data.(param{i});
-      tmp = reshape(tmp, reduceddim(2:end));
+      tmp = reshape(tmp, [reduceddim(2:end) 1]);
       data.(param{i}) = tmp;
     end
     data.dimord = '';
@@ -34,7 +38,19 @@ switch avgdim
     end
     data.dimord = data.dimord(2:end);
   case 'rpttap'
-    % nothing to do
+    for i=1:length(param)
+      fprintf('removing dimension %s from %s\n', avgdim, param{i});
+      warning('this is only allowed for cross-spectra and power-spectra');
+      tmp = data.(param{i});
+      tmp = reshape(tmp, [reduceddim(2:end) 1]);
+      data.(param{i}) = tmp;
+    end
+    data.dimord = '';
+    for i=2:length(dimtok)
+      data.dimord = [data.dimord,'_',dimtok{i}];
+    end
+    data.dimord = data.dimord(2:end);
+  
   case 'chan'
     data.label = avgoverlabel(data.label);
   case 'freq'
