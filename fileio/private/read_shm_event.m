@@ -55,7 +55,7 @@ if any(msgType==0)
       trg = trg(:, trg(2,:)>=minsample);
     end
     if ~isempty(maxsample)
-      trg = trg(:, trg(2,:)<=maxsample)
+      trg = trg(:, trg(2,:)<=maxsample);
     end
     for i=1:size(trg,2)
       event(end+1).type   = hdr.label{trg(1,i)+1};  % zero-offset
