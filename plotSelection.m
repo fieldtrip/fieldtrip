@@ -56,7 +56,6 @@ function plotSelection(userData, buttonState)
 % cfg.channelname
 % cfg.interactive
 % cfg.layout
-% cfg.maplimits
 % cfg.xlim
 % cfg.xparam
 % cfg.ylim
@@ -224,7 +223,7 @@ elseif userData.selecting
             new_cfg.xparam = userData.cfg.xparam;
             new_cfg.zparam = userData.cfg.zparam;
             new_cfg.interactive = 'yes';
-            new_cfg.maplimits = 'maxmin';
+            new_cfg.zlim = 'maxmin';
             new_cfg.ylim = userData.cfg.ylim;
             new_cfg.renderer = userData.cfg.renderer;
             new_cfg.baseline = 'no'; %to prevent baseline correction to take place multiple times
@@ -270,7 +269,7 @@ elseif userData.selecting
          else
             % Launch TFR topoplot figure:
             new_cfg           = userData.cfg;
-            new_cfg.maplimits = 'maxmin';
+            new_cfg.zlim      = 'maxmin';
             new_cfg.xlim = userData.data.time([ ...
                nearest(userData.data.time, min((userData.range{1}([1 3])))) ...
                nearest(userData.data.time, max((userData.range{1}([1 3])))) ...
