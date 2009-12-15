@@ -87,6 +87,9 @@ case {'granger'}
 case {'instantaneous_causality'}
   data    = checkdata(data, 'datatype', {'mvar' 'freqmvar' 'freq'});
   inparam = 'transfer';  
+case {'total_interdependence'}
+  data    = checkdata(data, 'datatype', {'freqmvar' 'freq'});
+  inparam = 'crsspctrm';            
 case {'dtf' 'pdc'}
   data    = checkdata(data, 'datatype', {'freqmvar' 'freq'});
   inparam = 'transfer';
@@ -168,6 +171,14 @@ case 'coh'
   [datout, varout, nrpt] = coupling_corr(tmpcfg, data.(inparam), hasrpt, hasjack);
   outparam         = 'cohspctrm';
 
+case 'total_interdependence'
+  tmpcfg           = [];
+  tmpcfg.complex   = cfg.complex;
+  tmpcfg.feedback  = cfg.feedback;
+  tmpcfg.dimord    = data.dimord;
+  tmpcfg.powindx   = powindx;
+  [datout, varout, nrpt] = coupling_toti(tmpcfg, data.(inparam), hasrpt, hasjack);
+  outparam         = 'totispctrm';    
 case 'plv'
   %phase locking value
 
@@ -413,7 +424,11 @@ if hasrpt,
 else 
   v = [];
 end
-
+%-------------------------------------------------------------
+function [c, v, n] = coupling_toti(cfg, input, hasrpt, hasjack)
+[c, v, n] = coupling_corr(cfg, input, hasrpt, hasjack);
+c = -log(1-c.^2);
+v = -log(1-v.^2);
 %-------------------------------------------------------------
 function [c, v, n, phasediff] = coupling_psi(cfg, input, hasrpt, hasjack)
 
