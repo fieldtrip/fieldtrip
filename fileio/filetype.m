@@ -105,7 +105,8 @@ content      = 'unknown';
 
 [p, f, x] = fileparts(filename);
 
-if isdir(filename)
+% prevent this test if the filename resembles an URI, i.e. like "scheme://"
+if ~any(filename==':') && ~isany(filename=='/') && isdir(filename)
   % the directory listing is needed below
   ls = dir(filename);
   % remove the parent directory and the directory itself from the list

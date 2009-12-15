@@ -3,14 +3,15 @@ function varargout = filetype_check_uri(filename, ftyp)
 % FILETYPE_CHECK_URI
 %
 % Supported URIs are
-%   shm://<filename>
-%   fifo://<filename>
 %   buffer://<host>:<port>
-%   tcp://<host>:<port>
-%   udp://<host>:<port>
+%   fifo://<filename>
+%   global://<varname>
 %   mysql://<user>:<password>@<host>:<port>
 %   rfb://<password>@<host>:<port>
 %   serial:<port>?key1=value1&key2=value2&...
+%   shm://<filename>
+%   tcp://<host>:<port>
+%   udp://<host>:<port>
 %
 % The URI schemes supproted by these function are not the official schemes.
 % See the documentation included inside this function for more details.
@@ -47,6 +48,10 @@ else
     case 'fifo'
       % fifo://<filename>
       varargout{1} = filename(8:end);
+
+    case 'global'
+      % global://<varname>
+      varargout{1} = filename(10:end);
 
     case 'buffer'
       % buffer://<host>:<port>

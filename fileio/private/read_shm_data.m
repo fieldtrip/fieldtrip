@@ -3,7 +3,7 @@ function [dat, dimord] = read_shm_data(hdr, chanindx, begtrial, endtrial)
 % READ_SHM_DATA reads the data in real-time from shared memory
 % this is a helper function for READ_DATA
 
-% Copyright (C) 2007, Robert Oostenveld
+% Copyright (C) 2007-2009, Robert Oostenveld
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
@@ -29,7 +29,7 @@ end
 trlNum = nan(size(msgId));
 trlNum(msgType==1) = sampleNumber(msgType==1)./numSamples(msgType==1) + 1;
 
-% allocate memory for teh data, fill with NaNs
+% allocate memory for the data, fill with NaNs
 dat = nan(length(chanindx), hdr.nSamples, endtrial-begtrial+1);
 
 % determine which trials/packets to read   
@@ -41,7 +41,7 @@ if isfield(hdr, 'orig') && isfield(hdr.orig, 'gainV')
 elseif isfield(hdr, 'orig') && isfield(hdr.orig, 'res4')
   gain = sparse(diag([hdr.orig.res4.senres(chanindx).gain]));
 end
-  
+
 for i=1:length(sel)
   % nchan = numChannels(i);
   % nsmp  = numSamples(i);
