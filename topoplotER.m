@@ -207,8 +207,13 @@ if ~ischar(cfg.xlim) && length(cfg.xlim)>2
   return
 end
 
-% Check for unconverted coherence spectrum data:
-if (strcmp(cfg.zparam,'cohspctrm')) && isfield(data, 'labelcmb')
+% Check for unconverted coherence spectrum data or any other bivariate metric:
+dimtok  = tokenize(data.dimord, '_');
+selchan = strmatch('chan', dimtok); 
+isfull  = length(selchan)>1;
+if (strcmp(cfg.zparam,'cohspctrm') && isfield(data, 'labelcmb')) || ...
+   (isfull && isfield(data, cfg.zparam)),
+
   % A reference channel is required:
   if ~isfield(cfg,'cohrefchannel'),
     error('no reference channel specified');
@@ -229,14 +234,22 @@ if (strcmp(cfg.zparam,'cohspctrm')) && isfield(data, 'labelcmb')
     return
   end
 
-  % Convert 2-dimensional channel matrix to a single dimension:
-  sel1           = strmatch(cfg.cohrefchannel, data.labelcmb(:,2));
-  sel2           = strmatch(cfg.cohrefchannel, data.labelcmb(:,1));
-  fprintf('selected %d channels for coherence\n', length(sel1)+length(sel2));
-  data.cohspctrm = data.cohspctrm([sel1;sel2],:,:);
-  data.label     = [data.labelcmb(sel1,1);data.labelcmb(sel2,2)];
-  data.labelcmb  = data.labelcmb([sel1;sel2],:);
-  data           = rmfield(data, 'labelcmb');
+  if ~isfull,
+    % only works explicitly with coherence FIXME
+    % Convert 2-dimensional channel matrix to a single dimension:
+    sel1           = strmatch(cfg.cohrefchannel, data.labelcmb(:,2));
+    sel2           = strmatch(cfg.cohrefchannel, data.labelcmb(:,1));
+    fprintf('selected %d channels for coherence\n', length(sel1)+length(sel2));
+    data.cohspctrm = data.cohspctrm([sel1;sel2],:,:);
+    data.label     = [data.labelcmb(sel1,1);data.labelcmb(sel2,2)];
+    data.labelcmb  = data.labelcmb([sel1;sel2],:);
+    data           = rmfield(data, 'labelcmb');
+  else
+    % general solution
+    sel               = strmatch(cfg.cohrefchannel, data.label); 
+    siz               = [size(data.(cfg.zparam)) 1];
+    data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]); 
+  end
 end
 
 % Apply baseline correction:
@@ -390,6 +403,7 @@ cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 % SUBFUNCTION which is called after selecting channels in case of cfg.cohrefchannel='gui'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_topoplotER(label, cfg, varargin)
+
 cfg.cohrefchannel = label;
 fprintf('selected cfg.cohrefchannel = ''%s''\n', cfg.cohrefchannel);
 p = get(gcf, 'Position');
