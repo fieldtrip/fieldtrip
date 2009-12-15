@@ -17,8 +17,7 @@ timelock.avg    = sum(preproc_baselinecorrect(data.trial{1}).^2, 2);
 timelock.dimord = 'chan_time';
 
 default             = [];
-default.electrodes  = 'on';
-default.showlabels  = 'markers'; % FIXME
+default.markers     = 'labels';
 default.interactive = 'no';
 cfg = mergeconfig(cfg, default);
 
