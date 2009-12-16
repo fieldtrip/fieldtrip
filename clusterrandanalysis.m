@@ -248,7 +248,6 @@ function [clusrand] = clusterrandanalysis(cfg,varargin);
 fieldtripdefs
 
 warning off;
-pack;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set the defaults
