@@ -17,12 +17,10 @@ function plot_matrix(varargin)
 %   'hlim'
 %   'vlim'
 %   'clim'
-%   'box'     can be 'yes' or 'no'
+%   'box'                can be 'yes' or 'no'
 %   'highlight' 
 %   'highlightstlyle'    can be 'saturation' or 'opacity'
 %   'tag'
-%
-%
 %
 % Example use
 %   plot_matrix(randn(30,50), 'width', 1, 'height', 1, 'hpos', 0, 'vpos', 0)
@@ -65,6 +63,11 @@ tag            = keyval('tag', varargin);                 if isempty(tag),      
 
 % convert the yes/no strings into boolean values
 box  = istrue(box);
+
+% these must be floating point values and not integers, otherwise the scaling fails
+hdat = double(hdat);
+vdat = double(vdat);
+cdat = double(cdat);
 
 if isempty(hlim)
   hlim = 'maxmin';

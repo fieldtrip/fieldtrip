@@ -79,7 +79,9 @@ markerfacecolor = keyval('markerfacecolor',    varargin); if isempty(markerfacec
 axis = istrue(axis);
 box  = istrue(box);
 
-% label  = keyval('label', varargin); % FIXME
+% these must be floating point values and not integers, otherwise the scaling fails
+hdat = double(hdat);
+vdat = double(vdat);
 
 if ischar(hlim)
   switch hlim
