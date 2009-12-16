@@ -72,40 +72,11 @@ cfg = checkconfig(cfg, 'trackconfig', 'on');
 cfg = checkconfig(cfg, 'dataset2files', {'yes'});
 
 if ~isfield(cfg, 'trl') && (~isfield(cfg, 'trialfun') || isempty(cfg.trialfun))
-  % try to determine a standard trial function for the various data formats
-  % most of these trial functions are old-fashioned and do not use the
-  % event information that is returned by READ_FCDC_EVENT
-
-  % determine the trials from the general events structure
-  if isfield(cfg, 'trialdef') && isfield(cfg.trialdef, 'eventtype')
-    cfg.trialfun = 'trialfun_general';
-    % determine the trials from the events in the EEProbe file
-  elseif isfield(cfg, 'trialdef') && isfield(cfg.trialdef, 'trgfile') && filetype(cfg.trialdef.trgfile, 'eep_trg')
-    cfg.trialfun = 'trialfun_eeprobe_cnt';
-    % determine the trials from the average EEProbe file
-  elseif filetype(cfg.datafile, 'eep_avr')
-    cfg.trialfun = 'trialfun_eeprobe_avr';
-    % determine the trials from the events in the BrainVision file
-  elseif isfield(cfg, 'trialdef') && isfield(cfg.trialdef, 'trgfile') && filetype(cfg.trialdef.trgfile, 'brainvision_vmrk')
-    cfg.trialfun = 'trialfun_brainvision';
-    % determine the trials from the Neuromag file
-  elseif filetype(cfg.datafile, 'neuromag_fif')
-    cfg.trialfun = 'trialfun_neuromag';
-    % determine the trials from the triggers or class-definitions in the epoched CTF file
-  elseif filetype(cfg.dataset, 'ctf_ds') && isfield(cfg, 'trialdef') &&  (isfield(cfg.trialdef, 'includeTrigger') || isfield(cfg.trialdef, 'excludeTrigger') || isfield(cfg.trialdef, 'includeConditions') || isfield(cfg.trialdef, 'excludeConditions'))
-    cfg.trialfun = 'trialfun_ctf_epoched';
-    % determine the trials from the triggers in the continuous CTF file
-  elseif filetype(cfg.dataset, 'ctf_ds') && isfield(cfg, 'trialdef') && ~(isfield(cfg.trialdef, 'includeTrigger') || isfield(cfg.trialdef, 'excludeTrigger') || isfield(cfg.trialdef, 'includeConditions') || isfield(cfg.trialdef, 'excludeConditions') || isfield(cfg.trialdef, 'eventtype'))
-    cfg.trialfun = 'trialfun_ctf_continuous';
-    % determine the trials from the epoched NeuroScan file
-  elseif filetype(cfg.datafile, 'ns_eeg')
-    cfg.trialfun = 'trialfun_neuroscan_eeg';
-    % determine the trials from the events in the continuous NeuroScan file
-  elseif isfield(cfg, 'trialdef') && filetype(cfg.datafile, 'ns_cnt')
-    cfg.trialfun = 'trialfun_neuroscan_cnt';
-  else
-    error('no trialfunction specified, see DEFINETRIAL for help');
-  end
+  % there used to be other system specific trialfuns in previous versions
+  % of fieldtrip, but they are deprecated and not included in recent
+  % versions any more
+  cfg.trialfun = 'trialfun_general';
+  warning('no trialfun was specified, using trialfun_general');
 end
 
 % create the trial definition for this dataset and condition
