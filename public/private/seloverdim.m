@@ -85,7 +85,10 @@ switch seldim
   case 'time'
     data.time = data.time(sel);
   case 'pos'
+    data      = fixinside(data, 'logical');
     data.pos  = data.pos(sel,:);
+    data.inside = data.inside(sel);
+    data      = fixinside(data, 'index');
   otherwise
     error('unknown dimension "%s"', seldim);
 end
