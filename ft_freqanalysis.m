@@ -81,4 +81,4 @@ if ~strcmp(cfg.trials, 'all')
 end
 
 % call the corresponding function
-[freq] = feval(sprintf('freqanalysis_%s',lower(cfg.method)), cfg, data);
+[freq] = feval(sprintf('ft_freqanalysis_%s',lower(cfg.method)), cfg, data);
