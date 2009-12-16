@@ -64,11 +64,6 @@ tag            = keyval('tag', varargin);                 if isempty(tag),      
 % convert the yes/no strings into boolean values
 box  = istrue(box);
 
-% these must be floating point values and not integers, otherwise the scaling fails
-hdat = double(hdat);
-vdat = double(vdat);
-cdat = double(cdat);
-
 if isempty(hlim)
   hlim = 'maxmin';
 end
@@ -116,6 +111,14 @@ if ischar(clim)
       error('unsupported option for clim')
   end % switch
 end % if ischar
+
+% these must be floating point values and not integers, otherwise the scaling fails
+hdat = double(hdat);
+vdat = double(vdat);
+cdat = double(cdat);
+hlim = double(hlim);
+vlim = double(vlim);
+clim = double(clim);
 
 if isempty(hpos);
   hpos = (hlim(1)+hlim(2))/2;

@@ -79,10 +79,6 @@ markerfacecolor = keyval('markerfacecolor',    varargin); if isempty(markerfacec
 axis = istrue(axis);
 box  = istrue(box);
 
-% these must be floating point values and not integers, otherwise the scaling fails
-hdat = double(hdat);
-vdat = double(vdat);
-
 if ischar(hlim)
   switch hlim
     case 'maxmin'
@@ -107,6 +103,11 @@ if ischar(vlim)
   end % switch
 end % if ischar
 
+% these must be floating point values and not integers, otherwise the scaling fails
+hdat = double(hdat);
+vdat = double(vdat);
+hlim = double(hlim);
+vlim = double(vlim);
 
 if isempty(hpos) && ~isempty(hlim)
   hpos = (hlim(1)+hlim(2))/2;
