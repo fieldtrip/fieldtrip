@@ -1,4 +1,4 @@
-function x = preproc_standardize(x, begsample, endsample)
+function [x, state] = preproc_standardize(x, begsample, endsample, state)
 
 % PREPROC_STANDARDIZE performs a z-transformation or standardization
 % of the data. The standardized data will have a zero-mean and a unit
@@ -20,19 +20,43 @@ function x = preproc_standardize(x, begsample, endsample)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-% determine the size of the input data: nChans X nSamples
-[m,n] = size(x);
-
-% this function operates along the 2nd dimension
-dim   = 2;
-
-if nargin>1
-  mx = mean(x(:,begsample:endsample),dim);
-  sx = std(x(:,begsample:endsample),0,dim);
-else
-  mx = mean(x,dim);
-  sx = std(x,0,dim);
+if nargin<2 || isempty(begsample)
+  begsample = 1;
 end
 
-x     = (x - repmat(mx,[1 n]))./repmat(sx,[1 n]);
+if nargin<3 || isempty(endsample)
+  endsample = size(x,2);
+end
 
+if nargin<4
+  state = [];
+end
+
+% get the data selection
+y = x(:,begsample:endsample);
+
+% determine the size of the selected data: nChans X nSamples
+[m, n] = size(y);
+
+% compute the sum and sum of squares
+s  = sum(y,2);
+ss = sum(y.^2,2);
+
+% include the state information from the previous calls
+if ~isempty(state)
+  s  = s  + state.s;
+  ss = ss + state.ss;
+  n  = n  + state.n;
+end
+
+% compute the mean and standard deviation
+my = s ./ n;
+sy = sqrt((ss - (s.^2)./n) ./ (n-1));
+
+% standardize the complete input data
+x  = (x - repmat(my, 1, size(x, 2))) ./ repmat(sy, 1, size(x, 2));
+
+% remember the state
+state.s  = s;  % sum
+state.ss = ss; % sum of sqares
+state.n  = n;  % number of samples
