@@ -9,7 +9,7 @@ function [proj] = elproj(pos, method)
 % Method should be one of these:
 %     'gnomic'
 %     'stereographic'
-%     'ortographic'
+%     'orthographic'
 %     'inverse'
 %     'polar'
 %
