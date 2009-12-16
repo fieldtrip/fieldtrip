@@ -206,7 +206,6 @@ if strcmp(cfg.avgoverfreq, 'yes') && ~isempty(freqdim)
   avgdim = [avgdim freqdim];
 end
 
-pack;
 % this will hold the output data
 if strcmp(cfg.datarepresentation, 'cell-array')
   dat = {};
