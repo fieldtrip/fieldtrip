@@ -32,6 +32,7 @@ if ~isfield(cfg, 'headerformat'),   cfg.headerformat = [];    end % default is d
 if ~isfield(cfg, 'eventformat'),    cfg.eventformat = [];     end % default is detected automatically
 if ~isfield(cfg, 'blocksize'),      cfg.blocksize = 0.1;      end % in seconds
 if ~isfield(cfg, 'threshold'),      cfg.threshold = -4;       end % in seconds
+if ~isfield(cfg, 'mindist'),        cfg.mindist = 0.1;        end % in seconds
 if ~isfield(cfg, 'overlap'),        cfg.overlap = 0;          end % in seconds
 if ~isfield(cfg, 'channel'),        cfg.channel = 'all';      end
 if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'last';  end % first or last
@@ -83,6 +84,12 @@ n1 = n0;
 % these are for the feedback
 beat = [];
 beep = sin(1000*2*pi*(1:800)/8192);
+close all
+h1 = figure
+set(h1, 'Position', [010 300 560 420]);
+h2 = figure
+set(h2, 'Position', [580 300 560 420]);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the general BCI loop where realtime incoming data is handled
@@ -162,7 +169,8 @@ while true
     peakval(sel) = [];
     peakind(sel) = [];
 
-    if false
+    if true
+      figure(h1)
       % plot the data
       plot(time, dat);
       xlim([time(1) time(end)]);
@@ -174,6 +182,7 @@ while true
       soundsc(beep);
       % FIXME the beat vector growing is a bad idea
       beat(end+1) = time(peakind(i));
+      figure(h2)
       plot(beat(2:end), diff(beat)*60, 'b.');
       title('heartrate');
       xlabel('time (s)');
