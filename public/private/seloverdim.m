@@ -84,6 +84,8 @@ switch seldim
     data.freq = data.freq(sel);
   case 'time'
     data.time = data.time(sel);
+  case 'pos'
+    data.pos  = data.pos(sel,:);
   otherwise
     error('unknown dimension "%s"', seldim);
 end
