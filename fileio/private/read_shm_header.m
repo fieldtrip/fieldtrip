@@ -70,6 +70,7 @@ if isempty(previous_headerfile) || isempty(previous_header)
 
 else
   % don't read the header details again, only update the number of samples/trials
+  hdr = previous_header;
 end
 
 % the following information is determined from shared memory
