@@ -20,6 +20,7 @@ function [obj] = convert_event(obj, target, varargin)
 %
 % Additional options should be specified in key-value pairs and can be
 %   'endsample'
+%   'typenames'
 %
 % See READ_EVENT, DEFINETRIAL, REJECTARTIFACT, ARTIFACT_xxx
 
@@ -34,6 +35,7 @@ end
 
 % Get the options
 endsample = keyval('endsample',  varargin);
+typenames = keyval('typenames',  varargin);
 
 % Determine what the input object is
 if isstruct(obj)
@@ -80,6 +82,8 @@ elseif strcmp(input_obj, 'boolvec') && strcmp(target,'trl' )
   else
     obj(:,3) = 0;
   end
+elseif (strcmp(input_obj, 'trl') || strcmp(input_obj, 'artifact')) && strcmp(target, 'event')
+  obj = artifact2event(obj, typenames);
 else
   warning('conversion not supported yet') %FIXME
 end
@@ -151,3 +155,38 @@ if length(artifact) == 1
   artifact = artifact{1};
 end
 
+%%%%%%%%%%%%%%% SUBFUNCTION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function event = artifact2event(artifact, typenames)
+% ARTIFACT2EVENT makes event structure from artifact definition (or cell
+% array of artifact definitions). event.type is always 'artifact', but
+% incase of cellarays of artifacts is is also possible to hand 'typenames'
+% with length(artifact) 
+
+if ~iscell(artifact)
+  artifact = {artifact};
+end
+
+if ~isempty(typenames)
+  if length(artifact) ~= length(typenames)
+  error('length typenames should be the same as length artifact')
+  end
+end
+
+event = [];
+for i=1:length(artifact)
+  for j=1:size(artifact{i},1)
+    event(end+1).sample   = artifact{i}(j,1);
+    event(end  ).duration = artifact{i}(j,2)-artifact{i}(j,1)+1;
+    if ~isempty(typenames)
+      event(end).type     = typenames{i};
+    elseif size(artifact{i},2) == 2
+      event(end).type     = 'artifact';
+    elseif size(artifact{i},2) == 3
+      event(end).type     = 'trial';
+    end
+    event(end  ).value    = [];
+    event(end  ).offset   = [];
+  end
+end
+    
+      
