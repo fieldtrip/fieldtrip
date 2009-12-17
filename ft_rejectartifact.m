@@ -197,12 +197,9 @@ end
 cfg.artfctdef.type = dum(find(sel));
 
 % combine all trials into a single boolean vector
-trialall = zeros(1,max(trl(:,2)));
-for j=1:size(trl,1)
-  trialall(trl(j,1):trl(j,2)) = 1;
-end
+trialall = convert_event(trl, 'boolvec');
 
-% combine all artifacts into a single boolean vector
+% combine all artifacts into a single vector
 rejectall = zeros(1,max(trl(:,2)));
 for i=1:length(cfg.artfctdef.type)
   dum = artifact{i};
