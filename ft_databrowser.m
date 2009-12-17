@@ -237,18 +237,9 @@ for i=1:length(cfg.selectfeature)
   end
 end
 
-% make a artdata representing all artifacts in a "raw data" format
-datbegsample = min(trlorg(:,1));
+% make artdata representing all artifacts in a "raw data" format
 datendsample = max(trlorg(:,2));
-artdat = zeros(length(artifact), datendsample);
-for i=1:length(artifact)
-  for j=1:size(artifact{i},1)
-    artbegsample = artifact{i}(j,1);
-    artendsample = artifact{i}(j,2);
-    artendsample = min(artendsample, datendsample);
-    artdat(i, artbegsample:artendsample) = 1;
-  end
-end
+artdat = convert_event(artifact, 'boolvec', 'endsample', datendsample);
 
 artdata = [];
 artdata.trial{1}       = artdat; % every artifact is a "channel"
@@ -368,10 +359,7 @@ if nargout
   
   % add the updated artifact definitions to the output cfg
   for i=1:length(opt.artdata.label)
-    tmp = diff([0 opt.artdata.trial{1}(i,:) 0]);
-    artbeg = find(tmp==+1);
-    artend = find(tmp==-1) - 1;
-    cfg.artfctdef.(opt.artdata.label{i}).artifact = [artbeg' artend'];
+    cfg.artfctdef.(opt.artdata.label{i}).artifact = convert_event(opt.artdata.trial{1}(i,:), 'artifact');
   end
 end % if nargout
 
@@ -512,7 +500,7 @@ switch opt.cfg.viewmode
       begsel = round(range(1)*opt.fsample+begsample-offset-1);
       endsel = round(range(2)*opt.fsample+begsample-offset);
     elseif strcmp(opt.trialname, 'segment')
-      % this is appropriate when the offset is defined according to a
+      % this is appropriate when the offset is defined according to
       % one trigger, which is always the case in segment data [I think ingnie]
       begsel = round(range(1)*opt.fsample+1);
       endsel = round(range(2)*opt.fsample+1);
