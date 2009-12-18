@@ -38,10 +38,14 @@ endsample = keyval('endsample',  varargin);
 typenames = keyval('typenames',  varargin);
 
 % Determine what the input object is
-if isstruct(obj)
+if isempty(obj)
+  input_obj = 'empty';
+elseif isstruct(obj)
   input_obj = 'event';
 elseif iscell(obj)
-  if size(obj{1},2) == 3
+  if isempty(obj{1})
+    input_obj = 'empty';
+  elseif size(obj{1},2) == 3
     input_obj = 'trl';
   elseif size(obj{1},2) == 2
     input_obj = 'artifact';
@@ -65,7 +69,7 @@ else
 end
 
 % do conversion
-if (strcmp(input_obj, 'trl') || strcmp(input_obj, 'artifact')) && strcmp(target, 'boolvec')
+if (strcmp(input_obj, 'trl') || strcmp(input_obj, 'artifact') || strcmp(input_obj, 'empty')) && strcmp(target, 'boolvec')
   if ~isempty(endsample)
     obj = artifact2artvec(obj,endsample);
   else
@@ -84,6 +88,8 @@ elseif strcmp(input_obj, 'boolvec') && strcmp(target,'trl' )
   end
 elseif (strcmp(input_obj, 'trl') || strcmp(input_obj, 'artifact')) && strcmp(target, 'event')
   obj = artifact2event(obj, typenames);
+elseif strcmp(input_obj, 'empty')
+  obj = [];
 else
   warning('conversion not supported yet') %FIXME
 end
@@ -101,9 +107,17 @@ function artvec = artifact2artvec(varargin)
 artifact = varargin{1};
 if length(varargin) == 1
   if ~iscell(artifact) % assume only one artifact is given
-    endsample = max(artifact(:,2));
+    if isempty(artifact)
+      error('When input object is empty ''endsample'' must be specified to convert into boolvec')
+    else
+      endsample = max(artifact(:,2));
+    end
   elseif length(artifact) == 1
-    endsample = max(artifact{1}(:,2));
+    if isempty(artifact{1})
+      error('When input object is empty ''endsample'' must be specified to convert into boolvec')
+    else
+      endsample = max(artifact{1}(:,2));
+    end
   else
     error('when giving multiple artifact definitions, endsample should be specified to assure all output vectors are of the same length')
   end
