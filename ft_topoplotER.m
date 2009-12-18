@@ -193,6 +193,7 @@ if isnumeric(cfg.highlight)
 elseif iscell(cfg.highlight)
   for icell = 1:length(cfg.highlight)
     if isnumeric(cfg.highlight{icell})
+      cfg.highlightchannel = [];
       cfg.highlightchannel{icell} = cfg.highlight{icell};
       cfg.highlight{icell} = 'on';
       warning('cfg.highlight is now used for specifing highlighting-mode, use cfg.highlightchannel instead of cfg.highlight for specifiying channels')
