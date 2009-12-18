@@ -1,4 +1,4 @@
-function clusterplot(cfg, stat)
+function ft_clusterplot(cfg, stat)
 
 % CLUSTERPLOT plots a series of topoplots with found clusters highlighted.
 % stat is 2D or 1D data from TIMELOCKSTATISTICS or FREQSTATISTICS with 'cluster'
@@ -9,20 +9,20 @@ function clusterplot(cfg, stat)
 % use as: clusterplot(cfg,stat)
 %
 % configuration options
-% cfg.alpha              = number, highest cluster p-value to be plotted
-%                          max 0.3 (default = 0.05)
-% cfg.hlmarkerseries     = 1x5 vector, highlight marker symbol series
-%                          default ['*','x','+','o','.'] for p < [0.01 0.05 0.1 0.2 0.3]
-% cfg.hlmarkersizeseries = 1x5 vector, highlight marker size series
-%                          default [6 6 6 6 6] for p < [0.01 0.05 0.1 0.2 0.3]
-% cfg.hllinewidthseries  = 1x5 vector, highlight marker linewidth series
-%                          default [1 1 1 1 1] for p < [0.01 0.05 0.1 0.2 0.3]
-% cfg.hlcolorpos         = color of highlight marker for positive clusters
-%                          default = [0 0 0]
-% cfg.hlcolorneg         = color of highlight marker for negative clusters
-%                          default = [0 0 0]
-% cfg.saveaspng          = string, path where figure has to be saved to (default = 'no')
-%                          When multiple figures figure gets extension with fignum
+% cfg.alpha                     = number, highest cluster p-value to be plotted
+%                                 max 0.3 (default = 0.05)
+% cfg.highlightseries           = 1x5 cell-array, highlight option series ('on','labels','numbers')
+%                                 default {'on','on','on','on','on'} for p < [0.01 0.05 0.1 0.2 0.3]
+% cfg.highlightsymbolseries     = 1x5 vector, highlight marker symbol series
+%                                 default ['*','x','+','o','.'] for p < [0.01 0.05 0.1 0.2 0.3]
+% cfg.highlightsizeseries       = 1x5 vector, highlight marker size series
+%                                 default [6 6 6 6 6] for p < [0.01 0.05 0.1 0.2 0.3]
+% cfg.highlightcolorpos         = color of highlight marker for positive clusters
+%                                 default = [0 0 0]
+% cfg.highlightcolorneg         = color of highlight marker for negative clusters
+%                                 default = [0 0 0]
+% cfg.saveaspng                 = string, path where figure has to be saved to (default = 'no')
+%                                 When multiple figures figure gets extension with fignum
 %
 % It is also possible to specify other cfg options that apply to TOPOPLOTER.
 % You CANNOT specify cfg.xlim, any of the TOPOPLOTER highlight
@@ -42,18 +42,31 @@ if isfield(stat,'freq') && length(stat.freq) > 1
   error('stat contains multiple frequencies which is not allowed because it should be averaged over frequencies')
 end
 
+cfg = checkconfig(cfg, 'renamed',     {'hlmarkerseries',       'highlightsymbolseries'});
+cfg = checkconfig(cfg, 'renamed',     {'hlmarkersizeseries',   'highlightsizeseries'});
+cfg = checkconfig(cfg, 'renamed',     {'hlcolorpos',           'highlightcolorpos'});
+cfg = checkconfig(cfg, 'renamed',     {'hlcolorneg',           'highlightcolorneg'});
+cfg = checkconfig(cfg, 'deprecated',  {'hllinewidthseries'});
+
 % set the defaults
-if ~isfield(cfg,'alpha'),                  cfg.alpha = 0.05;                             end;
-if ~isfield(cfg,'hlmarkerseries'),         cfg.hlmarkerseries = ['*','x','+','o','.'];   end;
-if ~isfield(cfg,'hlmarkersizeseries'),     cfg.hlmarkersizeseries = [6 6 6 6 6];         end;
-if ~isfield(cfg,'hllinewidthseries'),      cfg.hllinewidthseries = [1 1 1 1 1];          end;
-if ~isfield(cfg,'hlcolorpos'),             cfg.hlcolorpos = [0 0 0];                     end;
-if ~isfield(cfg,'hlcolorneg'),             cfg.hlcolorneg = [0 0 0];                     end;
-if ~isfield(cfg,'zparam'),                 cfg.zparam = 'stat';                          end;
-if ~isfield(cfg,'saveaspng'),              cfg.saveaspng = 'no';                         end;
+if ~isfield(cfg,'alpha'),                  cfg.alpha = 0.05;                                    end;
+if ~isfield(cfg,'highlightseries'),        cfg.highlightseries = {'on','on','on','on','on'};    end;
+if ~isfield(cfg,'highlightsymbolseries'),  cfg.highlightsymbolseries = ['*','x','+','o','.'];   end;
+if ~isfield(cfg,'highlightsizeseries'),    cfg.highlightsizeseries = [6 6 6 6 6];               end;
+if ~isfield(cfg,'hllinewidthseries'),      cfg.hllinewidthseries = [1 1 1 1 1];                 end;
+if ~isfield(cfg,'highlightcolorpos'),      cfg.highlightcolorpos = [0 0 0];                     end;
+if ~isfield(cfg,'highlightcolorneg'),      cfg.highlightcolorneg = [0 0 0];                     end;
+if ~isfield(cfg,'zparam'),                 cfg.zparam = 'stat';                                 end;
+if ~isfield(cfg,'saveaspng'),              cfg.saveaspng = 'no';                                end;
+
+% error if cfg.highlightseries is not a cell, for possible confusion with cfg-options
+if ~iscell(cfg.highlightseries)
+  error('cfg.highlightseries should be a cell-array of strings')
+end
+
 
 % prepare the layout, this only has to be done once
-cfg.layout = prepare_layout(cfg, stat);
+cfgtopo.layout = prepare_layout(cfg, stat);
 
 % detect 2D or 1D
 is2D = isfield(stat,'time');
@@ -91,7 +104,7 @@ else
   for iPos = 1:length(sigpos)
     sigposCLM(:,:,iPos) = (posCLM == sigpos(iPos));
     probpos(iPos) = stat.posclusters(iPos).prob;
-    hlsignpos(iPos) = prob2hlsign(probpos(iPos), cfg.hlmarkerseries);
+    hlsignpos(iPos) = prob2hlsign(probpos(iPos), cfg.highlightsymbolseries);
   end
 
   negCLM = squeeze(stat.negclusterslabelmat);
@@ -100,7 +113,7 @@ else
   for iNeg = 1:length(signeg)
     signegCLM(:,:,iNeg) = (negCLM == signeg(iNeg));
     probneg(iNeg) = stat.negclusters(iNeg).prob;
-    hlsignneg(iNeg) = prob2hlsign(probneg(iNeg), cfg.hlmarkerseries);
+    hlsignneg(iNeg) = prob2hlsign(probneg(iNeg), cfg.highlightsymbolseries);
   end
 
   fprintf('%s%i%s%g%s\n','There are ',Nsigall,' clusters smaller than alpha (',cfg.alpha,')')
@@ -142,60 +155,60 @@ else
       fprintf('%s%s%s%s%s%s%s\n','Negative cluster: ',num2str(signeg(iNeg)),', pvalue: ',num2str(probneg(iNeg)),' (',hlsignneg(iNeg),')')
     end
   end
-
+  
   % setup highlight options for all clusters and make comment for 1D data
   compos = [];
   comneg = [];
   for iPos = 1:length(sigpos)
     if stat.posclusters(sigpos(iPos)).prob < 0.01
-      cfg.hlmarker{iPos}     = cfg.hlmarkerseries(1);
-      cfg.hlmarkersize{iPos} = cfg.hlmarkersizeseries(1);
-      cfg.hllinewidth{iPos}  = cfg.hllinewidthseries(1);
+      cfgtopo.highlight{iPos}         = cfg.highlightseries{1};
+      cfgtopo.highlightsymbol{iPos}   = cfg.highlightsymbolseries(1);
+      cfgtopo.highlightsize{iPos}     = cfg.highlightsizeseries(1);
     elseif stat.posclusters(sigpos(iPos)).prob < 0.05
-      cfg.hlmarker{iPos}     = cfg.hlmarkerseries(2);
-      cfg.hlmarkersize{iPos} = cfg.hlmarkersizeseries(2);
-      cfg.hllinewidth{iPos}  = cfg.hllinewidthseries(2);
+      cfgtopo.highlight{iPos}         = cfg.highlightseries{2};
+      cfgtopo.highlightsymbol{iPos}   = cfg.highlightsymbolseries(2);
+      cfgtopo.highlightsize{iPos}     = cfg.highlightsizeseries(2);
     elseif stat.posclusters(sigpos(iPos)).prob < 0.1
-      cfg.hlmarker{iPos}     = cfg.hlmarkerseries(3);
-      cfg.hlmarkersize{iPos} = cfg.hlmarkersizeseries(3);
-      cfg.hllinewidth{iPos}  = cfg.hllinewidthseries(3);
+      cfgtopo.highlight{iPos}         = cfg.highlightseries{3};
+      cfgtopo.highlightsymbol{iPos}   = cfg.highlightsymbolseries(3);
+      cfgtopo.highlightsize{iPos}     = cfg.highlightsizeseries(3);
     elseif stat.posclusters(sigpos(iPos)).prob < 0.2
-      cfg.hlmarker{iPos}     = cfg.hlmarkerseries(4);
-      cfg.hlmarkersize{iPos} = cfg.hlmarkersizeseries(4);
-      cfg.hllinewidth{iPos}  = cfg.hllinewidthseries(4);
+      cfgtopo.highlight{iPos}         = cfg.highlightseries{4};
+      cfgtopo.highlightsymbol{iPos}   = cfg.highlightsymbolseries(4);
+      cfgtopo.highlightsize{iPos}     = cfg.highlightsizeseries(4);
     elseif stat.posclusters(sigpos(iPos)).prob < 0.3
-      cfg.hlmarker{iPos}     = cfg.hlmarkerseries(5);
-      cfg.hlmarkersize{iPos} = cfg.hlmarkersizeseries(5);
-      cfg.hllinewidth{iPos}  = cfg.hllinewidthseries(5);
+      cfgtopo.highlight{iPos}         = cfg.highlightseries{5};
+      cfgtopo.highlightsymbol{iPos}   = cfg.highlightsymbolseries(5);
+      cfgtopo.highlightsize{iPos}     = cfg.highlightsizeseries(5);
     end
-    cfg.hlcolor{iPos}        = cfg.hlcolorpos;
-    compos = strcat(compos,cfg.hlmarker{iPos}, 'p=',num2str(probpos(iPos)),' '); % make comment, only used for 1D data
+    cfgtopo.highlightcolor{iPos}        = cfg.highlightcolorpos;
+    compos = strcat(compos,cfgtopo.highlightsymbol{iPos}, 'p=',num2str(probpos(iPos)),' '); % make comment, only used for 1D data
   end
-
+  
   for iNeg = 1:length(signeg)
     if stat.negclusters(signeg(iNeg)).prob < 0.01
-      cfg.hlmarker{length(sigpos)+iNeg}     = cfg.hlmarkerseries(1);
-      cfg.hlmarkersize{length(sigpos)+iNeg} = cfg.hlmarkersizeseries(1);
-      cfg.hllinewidth{length(sigpos)+iNeg}  = cfg.hllinewidthseries(1);
+      cfgtopo.highlight{length(sigpos)+iNeg}         = cfg.highlightseries{1};
+      cfgtopo.highlightsymbol{length(sigpos)+iNeg}   = cfg.highlightsymbolseries(1);
+      cfgtopo.highlightsize{length(sigpos)+iNeg}     = cfg.highlightsizeseries(1);
     elseif stat.negclusters(signeg(iNeg)).prob < 0.05
-      cfg.hlmarker{length(sigpos)+iNeg}     = cfg.hlmarkerseries(2);
-      cfg.hlmarkersize{length(sigpos)+iNeg} = cfg.hlmarkersizeseries(2);
-      cfg.hllinewidth{length(sigpos)+iNeg}  = cfg.hllinewidthseries(2);
+      cfgtopo.highlight{length(sigpos)+iNeg}         = cfg.highlightseries{2};
+      cfgtopo.highlightsymbol{length(sigpos)+iNeg}   = cfg.highlightsymbolseries(2);
+      cfgtopo.highlightsize{length(sigpos)+iNeg}     = cfg.highlightsizeseries(2);
     elseif stat.negclusters(signeg(iNeg)).prob < 0.1
-      cfg.hlmarker{length(sigpos)+iNeg}     = cfg.hlmarkerseries(3);
-      cfg.hlmarkersize{length(sigpos)+iNeg} = cfg.hlmarkersizeseries(3);
-      cfg.hllinewidth{length(sigpos)+iNeg}  = cfg.hllinewidthseries(3);
+      cfgtopo.highlight{length(sigpos)+iNeg}         = cfg.highlightseries{3};
+      cfgtopo.highlightsymbol{length(sigpos)+iNeg}   = cfg.highlightsymbolseries(3);
+      cfgtopo.highlightsize{length(sigpos)+iNeg}     = cfg.highlightsizeseries(3);
     elseif stat.negclusters(signeg(iNeg)).prob < 0.2
-      cfg.hlmarker{length(sigpos)+iNeg}     = cfg.hlmarkerseries(4);
-      cfg.hlmarkersize{length(sigpos)+iNeg} = cfg.hlmarkersizeseries(4);
-      cfg.hllinewidth{length(sigpos)+iNeg}  = cfg.hllinewidthseries(4);
+      cfgtopo.highlight{length(sigpos)+iNeg}         = cfg.highlightseries{4};
+      cfgtopo.highlightsymbol{length(sigpos)+iNeg}   = cfg.highlightsymbolseries(4);
+      cfgtopo.highlightsize{length(sigpos)+iNeg}     = cfg.highlightsizeseries(4);
     elseif stat.negclusters(signeg(iNeg)).prob < 0.3
-      cfg.hlmarker{length(sigpos)+iNeg}     = cfg.hlmarkerseries(5);
-      cfg.hlmarkersize{length(sigpos)+iNeg} = cfg.hlmarkersizeseries(5);
-      cfg.hllinewidth{length(sigpos)+iNeg}  = cfg.hllinewidthseries(5);
-    end
-    cfg.hlcolor{length(sigpos)+iNeg}        = cfg.hlcolorneg;
-    comneg = strcat(comneg,cfg.hlmarker{length(sigpos)+iNeg}, 'p=',num2str(probneg(iNeg)),' '); % make comment, only used for 1D data
+      cfgtopo.highlight{length(sigpos)+iNeg}         = cfg.highlightseries{5};
+      cfgtopo.highlightsymbol{length(sigpos)+iNeg}   = cfg.highlightsymbolseries(5);
+      cfgtopo.highlightsize{length(sigpos)+iNeg}     = cfg.highlightsizeseries(5);
+    end 
+    cfgtopo.highlightcolor{length(sigpos)+iNeg}        = cfg.highlightcolorneg;
+    comneg = strcat(comneg,cfgtopo.highlightsymbol{length(sigpos)+iNeg}, 'p=',num2str(probneg(iNeg)),' '); % make comment, only used for 1D data
   end
 
   if is2D
@@ -226,6 +239,10 @@ else
     end
   end
 
+  % turn of regular channel plotting and set zparam
+  cfgtopo.marker = 'off';
+  cfgtopo.zparam = cfg.zparam;
+        
   % make plots
   for iPl = 1:Nfig
     figure;
@@ -233,31 +250,31 @@ else
       if iPl < Nfig
         for iT = 1:15
           PlN = (iPl-1)*15 + iT; %plotnumber
-          cfg.xlim = [stat.time(ind_timewin_min+PlN-1) stat.time(ind_timewin_min+PlN-1)];
-          cfg.highlight = list{PlN};
-          cfg.comment = strcat('time: ',num2str(stat.time(ind_timewin_min+PlN-1)), ' s');
-          cfg.commentpos = 'title';
+          cfgtopo.xlim = [stat.time(ind_timewin_min+PlN-1) stat.time(ind_timewin_min+PlN-1)];
+          cfgtopo.highlight = list{PlN};
+          cfgtopo.comment = strcat('time: ',num2str(stat.time(ind_timewin_min+PlN-1)), ' s');
+          cfgtopo.commentpos = 'title';
           subplot(3,5,iT);
-          topoplotER(cfg, stat);
+          topoplotER(cfgtopo, stat);
         end
       elseif iPl == Nfig
         for iT = 1:Npl-(15*(Nfig-1))
           PlN = (iPl-1)*15 + iT; %plotnumber
-          cfg.xlim = [stat.time(ind_timewin_min+PlN-1) stat.time(ind_timewin_min+PlN-1)];
-          cfg.highlight   = list{PlN};
-          cfg.comment = strcat('time: ',num2str(stat.time(ind_timewin_min+PlN-1)), ' s');
-          cfg.commentpos = 'title';
+          cfgtopo.xlim = [stat.time(ind_timewin_min+PlN-1) stat.time(ind_timewin_min+PlN-1)];
+          cfgtopo.highlightchannel   = list{PlN};
+          cfgtopo.comment = strcat('time: ',num2str(stat.time(ind_timewin_min+PlN-1)), ' s');
+          cfgtopo.commentpos = 'title';
           subplot(3,5,iT);
-          topoplotER(cfg, stat);
+          topoplotER(cfgtopo, stat);
         end
       end
     else
-      cfg.highlight = list{1};
-      cfg.xparam = 'time';
-      cfg.yparam = '';
-      cfg.comment = strcat(compos,comneg);
-      cfg.commentpos = 'title';
-      topoplotER(cfg, stat);
+      cfgtopo.highlight = list{1};
+      cfgtopo.xparam = 'time';
+      cfgtopo.yparam = '';
+      cfgtopo.comment = strcat(compos,comneg);
+      cfgtopo.commentpos = 'title';
+      topoplotER(cfgtopo, stat);
     end
     % save figure
     if isequal(cfg.saveaspng,'no');
