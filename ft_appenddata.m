@@ -76,13 +76,20 @@ end
 % check the consistency of the labels across the input-structures
 [alllabel, indx1, indx2] = unique(label, 'first');
 order    = zeros(length(alllabel),Ndata);
-for i=1:length(alllabel)
-  for j=1:Ndata
-    tmp = strmatch(alllabel{i}, varargin{j}.label, 'exact');
-    if ~isempty(tmp)
-      order(i,j) = tmp;
-    end
-  end
+%for i=1:length(alllabel)
+%  for j=1:Ndata
+%    tmp = strmatch(alllabel{i}, varargin{j}.label, 'exact');
+%    if ~isempty(tmp)
+%      order(i,j) = tmp;
+%    end
+%  end
+%end
+
+%replace the nested for-loops with something faster
+for j=1:Ndata
+  tmplabel = varargin{j}.label;
+  [ix,iy]  = match_str(alllabel, tmplabel);
+  order(ix,j) = iy;
 end
 
 catlabel   = all(sum(order~=0,2)==1);
@@ -131,14 +138,26 @@ elseif catlabel
   else
     Ntrial = Ntrial(1);
   end
+  Nch(1) = numel(data.label);
   for i=2:Ndata
-    for j=1:Ntrial
+    Nch(i,1)   = numel(varargin{i}.label);
+    data.label = [data.label; varargin{i}.label];
+  end
+
+  for j=1:Ntrial
+    %pre-allocate memory for this trial
+    data.trial{j} = [data.trial{j}; zeros(sum(Nch(2:end)), size(data.trial{j},2))];
+    
+    %fill this trial with data
+    endchan = Nch(1);
+    for i=2:Ndata
       if ~all(data.time{j}==varargin{i}.time{j})
         error('there is a difference in the time axes of the input data');
       end
-      data.trial{j} = [data.trial{j}; varargin{i}.trial{j}];
+      begchan = endchan+1;
+      endchan = endchan+Nch(i);
+      data.trial{j}(begchan:endchan,:) = varargin{i}.trial{j};
     end
-    data.label = [data.label(:); varargin{i}.label(:)];
   end
 
 else
