@@ -239,11 +239,7 @@ end
 
 % make artdata representing all artifacts in a "raw data" format
 datendsample = max(trlorg(:,2));
-if ~isempty(artifact{1})
-  artdat = convert_event(artifact, 'boolvec', 'endsample', datendsample);
-else
-  artdat = zeros(1, datendsample);
-end
+artdat = convert_event(artifact, 'boolvec', 'endsample', datendsample);
 
 artdata = [];
 artdata.trial{1}       = artdat; % every artifact is a "channel"
