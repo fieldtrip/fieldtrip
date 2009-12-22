@@ -14,7 +14,7 @@ function [obj] = convert_event(obj, target, varargin)
 %   event structure
 %   trl (or cell array of multiple trl definitions)
 %   artifact (or cell array of multiple artifact definitions)
-%   boolian vector (or matrix of multiple vectors)
+%   boolean vector (or matrix of multiple vectors)
 %
 % Possible targets are 'event', 'trl', 'artifact', 'boolvec'
 %
@@ -63,6 +63,11 @@ elseif size(obj,2) > 3
   if length(tmp) == 2 && tmp(1) == 0 && tmp(2) == 1
     input_obj = 'boolvec';
     obj = logical(obj);
+  else
+    %it is at least not boolean but could be a strange
+    %trl-matrix with multiple columns
+    input_obj = 'trl';
+    obj = obj(:,1:3);
   end
 else
   error('incorrect input object, see help for what is allowed.')
