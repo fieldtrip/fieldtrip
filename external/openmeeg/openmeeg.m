@@ -158,5 +158,18 @@ return
 function checkombin
   [status,result] = system('om_assemble');
   if status
-    error('OpenMEEG binaries are not correctly installed. See http://gforge.inria.fr/frs/?group_id=435')
+    web('http://gforge.inria.fr/frs/?group_id=435')
+    clc
+    disp('---------------------------------------------')
+    disp('---------------------------------------------')
+    disp('OpenMEEG binaries are not correctly installed')
+    disp(' ')
+    disp('Download OpenMEEG from')
+    disp('http://gforge.inria.fr/frs/?group_id=435')
+    disp(' ')
+    disp('See wiki page for installation instructions:')
+    disp('http://fieldtrip.fcdonders.nl/development/openmeeg/testinginstallation')
+    disp('---------------------------------------------')
+    disp('---------------------------------------------')
+    error('OpenMEEG not found')
   end
