@@ -49,6 +49,12 @@ elseif iscell(obj)
     input_obj = 'trl';
   elseif size(obj{1},2) == 2
     input_obj = 'artifact';
+  elseif size(obj{1},2) > 3
+    % could be a strange trl-matrix with multiple columns
+    input_obj = 'trl';
+    for i = 1:length(obj)
+      obj{i} = obj{i}(:,1:3);
+    end
   else
     error('incorrect input object, see help for what is allowed.')
   end
