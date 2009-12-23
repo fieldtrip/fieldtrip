@@ -352,7 +352,10 @@ if issource || isvolume,
       Nfreq = 1;
       Ntime = 1;
     end
+    
+    %convert old style source representation into new style
     if isfield(data, 'avg') && isfield(data.avg, 'mom') && (isfield(data, 'freq') || isfield(data, 'frequency')) && strcmp(sourcedimord, 'rpt_pos'),
+      %frequency domain source representation convert to single trial power
       Npos   = size(data.pos,1);
       Nrpt   = length(data.cumtapcnt);
       tmpmom = zeros(Npos, size(data.avg.mom{data.inside(1)},2));
@@ -365,6 +368,13 @@ if issource || isvolume,
       end
       data.pow = tmppow';
       data     = rmfield(data, 'avg');
+    elseif isfield(data, 'avg') && isfield(data.avg, 'mom') && (isfield(data, 'freq') || isfield(data, 'frequency')) && strcmp(sourcedimord, 'rpttap_pos'),
+      %frequency domain source representation convert to single taper fourier coefficients
+      Npos   = size(data.pos,1);
+      Nrpt   = sum(data.cumtapcnt);
+      data.fourierspctrm = complex(zeros(Nrpt, Npos), zeros(Nrpt, Npos));
+      data.fourierspctrm(:, data.inside) = transpose(cat(1, data.avg.mom{data.inside}));
+      data   = rmfield(data, 'avg'); 
     elseif isfield(data, 'avg') && isfield(data.avg, 'mom') && isfield(data, 'time') && strcmp(sourcedimord, 'pos_time'),
       Npos   = size(data.pos,1);
       Nrpt   = 1;
@@ -415,8 +425,11 @@ if issource || isvolume,
       data.dimord = [data.dimord '_time'];
       data.dim    = [data.dim     Ntime];
     end
-    if Nrpt>1
+    if Nrpt>1 && strcmp(sourcedimord, 'rpt_pos'),
       data.dimord = ['rpt_' data.dimord];
+      data.dim    = [Nrpt   data.dim ];
+    elseif Nrpt>1 && strcmp(sourcedimord, 'rpttap_pos'),
+      data.dimord = ['rpttap_' data.dimord];
       data.dim    = [Nrpt   data.dim ];
     end
 
@@ -648,6 +661,8 @@ elseif isfield(data, 'crsspctrm')     &&  isfield(data, 'labelcmb')
   current = 'sparse';
 elseif isfield(data, 'fourierspctrm') && ~isfield(data, 'labelcmb')
   current = 'fourier';
+elseif isfield(data, 'powspctrm')
+  current = 'sparsewithpow';
 else
   error('Could not determine the current representation of the cross-spectrum matrix');
 end
