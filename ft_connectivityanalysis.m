@@ -1,53 +1,33 @@
 function [stat] = connectivityanalysis(cfg, data)
 
 % CONNECTIVITYANALYIS computes various measures of connectivity
-% between MEG/EEG channels or between source-level timecourse signals.
+% between MEG/EEG channels or between source-level signals.
 %
 % Use as
 %   stat = connectivityanalysis(cfg, data)
 %   stat = connectivityanalysis(cfg, timelock)
 %   stat = connectivityanalysis(cfg, freq)
+%   stat = connectivityanalysis(cfg, source)
 % where the first input argument is a configuration structure (see
 % below) and the second argument is the output of PREPROCESSING,
-% TIMELOCKANLAYSIS or FREQANALYSIS, depending on the connectivity
-% measure that you want to compute.
+% TIMELOCKANLAYSIS or FREQANALYSIS or MVARANALYSIS or SOURCEANALYSIS,
+% depending on the connectivity metric that you want to compute.
 %
 % The configuration structure can contain
-%   cfg.method  = 'coh', 'plv', 'corr', 'xcorr', 'dtf', 'pdc', 'granger', 'dplv', 'pli', 'psi', 'pcd', ...
-%
+%   cfg.method  = 'coh',       coherence, support for freq, freqmvar and source data
+%                 'plv',       phase-locking value, support for freq and freqmvar data
+%                 'corr',      correlation coefficient (Pearson)
+%                 'xcorr',     cross correlation function
+%                 'powcorr',   power correlation, support for freq and source data
+%                 'amplcorr',  amplitude correlation, support for freq and source data
+%                 'dtf',       directed transfer function, support for freq and freqmvar data
+%                 'pdc',       partial directed coherence, support for freq and freqmvar data
+%                 'granger',   granger causality, support for freq and freqmvar data
+%                 'psi',       phaseslope index, support for freq and freqmvar data
+%                 'pcd',       pairwise circular difference
+%                 'di',        directionality index
 
-% Copyright (C) 2009, Robert Oostenveld & Jan-Mathijs Schoffelen
-%
-% $Log: connectivityanalysis.m,v $
-% Revision 1.9  2009/10/28 09:05:03  jansch
-% added jackknife for phaseslope index
-%
-% Revision 1.8  2009/10/19 13:21:33  jansch
-% created working version of jackknife estimate for coherence and plv. allowed
-% for linear indexing by means of cfg.channelcmb. essentially, this replicates
-% the functionality of freqdescriptives
-%
-% Revision 1.7  2009/10/16 15:03:16  jansch
-% in the process of implementing jackknife for coherence (does not work yet)
-%
-% Revision 1.6  2009/10/12 13:20:27  andbas
-% fixed big bug in psi-computation. should be better now
-%
-% Revision 1.5  2009/10/08 07:35:07  jansch
-% added dtf and pdc as method
-%
-% Revision 1.4  2009/10/01 19:35:02  jansch
-% added some real code for 'coh' 'plv' 'granger' and 'psi'
-%
-% Revision 1.3  2009/09/30 12:48:47  jansch
-% some changes
-%
-% Revision 1.2  2009/08/06 08:30:57  roboos
-% added some methods
-%
-% Revision 1.1  2009/06/23 19:54:02  roboos
-% created initial skeleton
-%
+% Copyright (C) 2009, Robert Oostenveld, Jan-Mathijs Schoffelen, Andre Bastos
 
 fieldtripdefs
 
@@ -55,12 +35,16 @@ fieldtripdefs
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
 % set the defaults
+
+%FIXME do method specific calls to checkconfig
 if ~isfield(cfg, 'feedback'),   cfg.feedback   = 'none'; end
 if ~isfield(cfg, 'channel'),    cfg.channel    = 'all'; end
 if ~isfield(cfg, 'channelcmb'), cfg.channelcmb = {};    end
+if ~isfield(cfg, 'refindx'),    cfg.refindx    = [];    end
 if ~isfield(cfg, 'trials'),     cfg.trials     = 'all'; end
 if ~isfield(cfg, 'complex'),    cfg.complex    = 'abs'; end
 if ~isfield(cfg, 'jackknife'),  cfg.jackknife  = 'no';  end
+if ~isfield(cfg, 'removemean'), cfg.removemean = 'yes'; end
 
 hasjack = (isfield(data, 'method') && strcmp(data.method, 'jackknife')) || strcmp(data.dimord(1:6), 'rptjck');
 hasrpt  = ~isempty(strfind(data.dimord, 'rpt'));
@@ -68,10 +52,12 @@ dojack  = strcmp(cfg.jackknife, 'yes');
 normrpt = 0; %default, has to be overruled e.g. in plv, because of single
 %replicate normalisation
 
+%FIXME check which methods require hasrpt
+
 % ensure that the input data is appropriate for the method
 switch cfg.method
 case {'coh'}
-  data    = checkdata(data, 'datatype', {'freqmvar' 'freq'});
+  data    = checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
   inparam = 'crsspctrm';  
 case {'plv'}
   data    = checkdata(data, 'datatype', {'freqmvar' 'freq'});
@@ -79,7 +65,18 @@ case {'plv'}
   normrpt = 1;
 case {'corr' 'xcorr'}
   data = checkdata(data, 'datatype', 'raw');
-  %FIXME could also work with frequency domain data: amplitude correlations
+case {'amplcorr' 'powcorr'}
+  data    = checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
+  dtype   = datatype(data);
+  switch dtype
+  case {'freq' 'freqmvar'}
+    inparam = 'powcovspctrm';
+  case 'source'
+    inparam = 'powcov';
+    if isempty(cfg.refindx), error('indices of reference voxels need to be specified'); end
+    %if numel(cfg.refindx)>1, error('more than one reference voxel is not yet supported'); end
+  otherwise
+  end
 case {'granger'}
   data    = checkdata(data, 'datatype', {'mvar' 'freqmvar' 'freq'});
   inparam = 'transfer';
@@ -102,34 +99,42 @@ case {'di'}
 otherwise
   error('unknown method %s', cfg.method);
 end
+dtype = datatype(data);
 
 %FIXME throw an error if cfg.complex~='abs', and dojack==1
 %FIXME throw an error if no replicates and cfg.method='plv'
 
-cfg.channel    = channelselection(cfg.channel, data.label);
+if isfield(data, 'label'),   cfg.channel    = channelselection(cfg.channel, data.label);          end
 if ~isempty(cfg.channelcmb), cfg.channelcmb = channelcombination(cfg.channelcmb, cfg.channel, 1); end
 
+%check whether the required inparam is present in the data
 if ~isfield(data, inparam),
-  dtype = datatype(data);
   switch dtype
   case 'freq'
     if strcmp(inparam, 'crsspctrm')
-      if ~isempty(cfg.channelcmb),
-        data    = checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cfg.channelcmb);
-        
-        %use helper function to get linear index from labelcmb pointing to corresponding auto-combinations
-        powindx = labelcmb2indx(data.labelcmb); 
-      else
-        data    = checkdata(data, 'cmbrepresentation', 'full');
-        powindx = [];
+      [data, powindx, hasrpt] = univariate2bivariate(data, 'fourierspctrm', 'crsspctrm', dtype, 0, cfg.channelcmb);
+    elseif strcmp(inparam, 'powcovspctrm')
+      if isfield(data, 'powspctrm'),
+        [data, powindx] = univariate2bivariate(data, 'powspctrm', 'powcovspctrm', dtype, strcmp(cfg.removemean,'yes'), cfg.channelcmb, strcmp(cfg.method,'amplcorr'));    
+      elseif isfield(data, 'fourierspctrm'),
+        [data, powindx] = univariate2bivariate(data, 'fourierspctrm', 'powcovspctrm', dtype, strcmp(cfg.removemean,'yes'), cfg.channelcmb, strcmp(cfg.method,'amplcorr'));    
       end
+    end
+  case 'source'
+    if strcmp(inparam, 'crsspctrm')
+      [data, powindx, hasrpt] = univariate2bivariate(data, 'fourierspctrm', 'crsspctrm', dtype, 0, cfg.refindx, [], 0);
+      %[data, powindx, hasrpt] = univariate2bivariate(data, 'fourierspctrm', 'crsspctrm', dtype, 0, cfg.refindx, [], 1);
+    elseif strcmp(inparam, 'powcov')
+      [data, powindx] = univariate2bivariate(data, 'pow', 'powcov', dtype, strcmp(cfg.removemean,'yes'), cfg.refindx, strcmp(cfg.method,'amplcorr'), 0); 
     end
   otherwise
   end
 else
-   powindx = [];
+  powindx = [];
 end
+%FIXME input data can also still be old-fashioned freq, i.e. containing both crsspctrm and powspctrm.
 
+%do some additional work if single trial normalisation is required
 if normrpt && hasrpt,
   if strcmp(inparam, 'crsspctrm'),
     tmp  = getfield(data, inparam);
@@ -151,7 +156,7 @@ elseif hasrpt && dojack,
   %compute leave-one-outs
   data    = selectdata(data, 'jackknife', 'yes');
   hasjack = 1;
-elseif hasrpt
+elseif hasrpt 
   data   = selectdata(data, 'avgoverrpt', 'yes');
   hasrpt = 0;
 else
@@ -196,6 +201,28 @@ case 'xcorr'
   % cross-correlation function
 case 'spearman'
   % spearman's rank correlation
+case 'amplcorr'
+  % amplitude correlation
+
+  tmpcfg          = [];
+  tmpcfg.feedback = cfg.feedback;
+  tmpcfg.dimord   = data.dimord;
+  tmpcfg.complex  = 'real';
+  tmpcfg.powindx  = powindx;
+  [datout, varout, nrpt] = coupling_corr(tmpcfg, data.(inparam), hasrpt, hasjack);
+  outparam        = 'amplcorrspctrm';   
+
+case 'powcorr'
+  % power correlation
+
+  tmpcfg          = [];
+  tmpcfg.feedback = cfg.feedback;
+  tmpcfg.dimord   = data.dimord;
+  tmpcfg.complex  = 'real';
+  tmpcfg.powindx  = powindx;
+  [datout, varout, nrpt] = coupling_corr(tmpcfg, data.(inparam), hasrpt, hasjack);
+  outparam        = 'powcorrspctrm';   
+
 case 'granger'
   % granger causality
 
@@ -221,8 +248,8 @@ case 'granger'
     error('granger for time domain data is not yet implemented');
   end
 case 'instantaneous_causality'
-    %instantaneous coupling between the series, requires the same elements
-    %as granger
+  % instantaneous coupling between the series, requires the same elements as granger
+
   if sum(datatype(data, {'freq' 'freqmvar'})),
     hasrpt = ~isempty(strfind(data.dimord, 'rpt'));
     if hasrpt,
@@ -242,7 +269,7 @@ case 'instantaneous_causality'
     [datout, varout, n] = coupling_instantaneous(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack);
     outparam = 'instantspctrm';
   else
-    error('granger for time domain data is not yet implemented');
+    error('instantaneous causality for time domain data is not yet implemented');
   end      
 
 case 'dtf'
@@ -298,34 +325,67 @@ otherwise
 end
 
 %remove the auto combinations if necessary
-if strcmp(inparam, 'crsspctrm') && ~isempty(powindx),
-  keep   = powindx(:,1) ~= powindx(:,2);
-  datout = datout(keep,:,:,:,:);
-  if ~isempty(varout),
-    varout = varout(keep,:,:,:,:);
+if ~isempty(powindx),
+  switch dtype
+  case {'freq' 'freqmvar'}
+    keep   = powindx(:,1) ~= powindx(:,2);
+    datout = datout(keep,:,:,:,:);
+    if ~isempty(varout),
+      varout = varout(keep,:,:,:,:);
+    end
+    data.labelcmb = data.labelcmb(keep,:);
+  case 'source'
+    nvox   = size(unique(data.pos(:,1:3),'rows'),1);
+    ncmb   = size(data.pos,1)/nvox-1;
+    remove = (powindx(:,1) == powindx(:,2)) & ([1:size(powindx,1)]' > nvox*ncmb);
+    keep   = ~remove;
+    
+    datout = datout(keep,:,:,:,:);
+    if ~isempty(varout),
+      varout = varout(keep,:,:,:,:);
+    end
+    inside = logical(zeros(1,size(data.pos,1)));
+    inside(data.inside) = true;
+    inside = inside(keep);
+    data.inside  = find(inside)';
+    data.outside = find(inside==0)';
+    data.pos     = data.pos(keep,:);
   end
-  data.labelcmb = data.labelcmb(keep,:);
 end
 
 %create output structure
-stat        = [];
-stat.label  = data.label;
-if isfield(data, 'labelcmb'),
-  stat.labelcmb = data.labelcmb;
-end
-stat.dimord = data.dimord; %FIXME adjust dimord (remove rpt in dojak && hasrpt case)
-stat        = setfield(stat, outparam, datout);
-if ~isempty(varout),
-  stat   = setfield(stat, [outparam,'sem'], (varout/nrpt).^0.5);
-end
-try 
-    if ~isempty(phasediff)
-        stat   = setfield(stat, 'angle', phasediff);
-    end
-catch
+switch dtype
+case {'freq' 'freqmvar'},
+  stat        = [];
+  stat.label  = data.label;
+  if isfield(data, 'labelcmb'),
+    stat.labelcmb = data.labelcmb;
+  end
+  stat.dimord = data.dimord; %FIXME adjust dimord (remove rpt in dojak && hasrpt case)
+  stat        = setfield(stat, outparam, datout);
+  if ~isempty(varout),
+    stat   = setfield(stat, [outparam,'sem'], (varout/nrpt).^0.5);
+  end
+  try 
+      if ~isempty(phasediff)
+          stat   = setfield(stat, 'angle', phasediff);
+      end
+  catch
+  end  %FIXME remove this
+case 'source'
+  stat         = [];
+  stat.pos     = data.pos;
+  stat.dimord  = data.dimord;
+  stat.inside  = data.inside;
+  stat.outside = data.outside;
+  stat         = setfield(stat, outparam, datout);
+  if ~isempty(varout),
+    stat = setfield(stat, [outparam,'sem'], (varout/nrpt).^0.5);
+  end
 end
 
 if isfield(data, 'freq'), stat.freq = data.freq; end
+if isfield(data, 'frequency'), stat.frequency = data.frequency; end
 if isfield(data, 'time'), stat.time = data.time; end
 if isfield(data, 'grad'), stat.grad = data.grad; end
 if isfield(data, 'elec'), stat.elec = data.elec; end
@@ -358,9 +418,8 @@ elseif nargin==3,
   hasjack  = 0;
 end
 
-if length(strfind(cfg.dimord, 'chan'))~=2 && isfield(cfg, 'powindx'),
+if (length(strfind(cfg.dimord, 'chan'))~=2 || length(strfind(cfg.dimord, 'pos'))>0) && isfield(cfg, 'powindx') && ~isempty(cfg.powindx),
   %crossterms are not described with chan_chan_therest, but are linearly indexed
- 
  
   siz = size(input);
   if ~hasrpt,
@@ -381,7 +440,7 @@ if length(strfind(cfg.dimord, 'chan'))~=2 && isfield(cfg, 'powindx'),
   end
   progress('close');  
 
-elseif length(strfind(cfg.dimord, 'chan'))==2,
+elseif length(strfind(cfg.dimord, 'chan'))==2 || length(strfind(cfg.dimord, 'pos'))==2,
   %crossterms are described by chan_chan_therest 
  
   siz = size(input);
@@ -426,9 +485,11 @@ else
 end
 %-------------------------------------------------------------
 function [c, v, n] = coupling_toti(cfg, input, hasrpt, hasjack)
+
 [c, v, n] = coupling_corr(cfg, input, hasrpt, hasjack);
 c = -log(1-c.^2);
-v = -log(1-v.^2);
+v = -log(1-v.^2); %FIXME this is probably not correct
+
 %-------------------------------------------------------------
 function [c, v, n, phasediff] = coupling_psi(cfg, input, hasrpt, hasjack)
 
@@ -725,15 +786,17 @@ function [indx] = labelcmb2indx(labelcmb)
 %identify the auto-combinations
 ncmb = size(labelcmb,1);
 indx = zeros(ncmb,2);
-for k = 1:ncmb
-  chan = labelcmb{k,1};
-  hit  = strcmp(chan,labelcmb{k,2});
-  if ~isempty(hit)
-    sel1 = strmatch(chan, labelcmb(:,1), 'exact');
-    indx(sel1,1) = k;
-    sel2 = strmatch(chan, labelcmb(:,2), 'exact');
-    indx(sel2,2) = k;
-  end
+
+label = unique(labelcmb(:));
+nchan = numel(label);
+autoindx = zeros(nchan,1);
+for k = 1:nchan
+  sel1 = strcmp(label{k}, labelcmb(:,1));
+  sel2 = strcmp(label{k}, labelcmb(:,2));
+  autoindx = find(sel1 & sel2);
+  
+  indx(sel1,1) = autoindx;
+  indx(sel2,2) = autoindx;
 end
 
 %----------------------------------
@@ -777,7 +840,149 @@ else
     end
 end
 
+%------------------------------------------------------------------------------------------------------------------
+function [data, powindx, hasrpt] = univariate2bivariate(data, inparam, outparam, dtype, demeanflag, cmb, sqrtflag, keeprpt)
 
+if nargin<8, keeprpt    = 1;  end
+if nargin<7, sqrtflag   = 0;  end
+if nargin<6, cmb        = []; end
+if nargin<5, demeanflag = 0;  end
+
+if isempty(cmb),
+  cmbrepresentation = 'full';
+end
+
+switch dtype
+case 'freq'
+  if isempty(cmb), cmb = {}; end
+  
+  if strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'crsspctrm'),
+    %fourier coefficients -> cross-spectral density
+    if ~isempty(cmb),
+      data    = checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
+    else
+      data    = checkdata(data, 'cmbrepresentation', 'full');
+    end
+  elseif strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'powcovspctrm'),
+    %fourier coefficients -> power covariance
+    data = checkdata(data, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
+
+    if sqrtflag, data.powspctrm = sqrt(data.powspctrm); end 
+ 
+    %get covariance by using checkdata
+    if demeanflag,
+      nrpt = size(data.powspctrm,1);
+      mdat = nanmean(data.powspctrm,1);
+      data.powspctrm = data.powspctrm - mdat(ones(1,nrpt),:,:,:,:,:);
+    end
+    data.fourierspctrm = data.powspctrm; %this is necessary for checkdata to work
+    data.dimord        = ['rpttap',data.dimord(4:end)];
+    data               = rmfield(data, 'powspctrm');
+    data.cumtapcnt(:)  = 1;
+    data.cumsumcnt(:)  = 1;
+    ncmb               = size(cmb,1);
+    nchan              = length(data.label);
+    if ncmb < (nchan-1)*nchan*0.5,
+      data    = checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);  
+    else
+      data    = checkdata(data, 'cmbrepresentation', 'full');
+    end
+    data.powcovspctrm = data.crsspctrm; 
+    data              = rmfield(data, 'crsspctrm');
+  elseif strcmp(inparam, 'powspctrm') && strcmp(outparam, 'powcovspctrm'),
+    %power-spectral density -> power covariance
+
+    if sqrtflag, data.powspctrm = sqrt(data.powspctrm); end    
+
+    %get covariance by using checkdata
+    if demeanflag,
+      nrpt = size(data.powspctrm,1);
+      mdat = nanmean(data.powspctrm,1);
+      data.powspctrm = data.powspctrm - mdat(ones(1,nrpt),:,:,:,:,:);
+    end
+    data.fourierspctrm = data.powspctrm; %this is necessary for checkdata to work
+    data.dimord        = ['rpttap',data.dimord(4:end)];
+    data               = rmfield(data, 'powspctrm');
+    data.cumtapcnt(:)  = 1;
+    data.cumsumcnt(:)  = 1;
+    ncmb               = size(cmb,1);
+    nchan              = length(data.label);
+    if ncmb < (nchan-1)*nchan*0.5,
+      data    = checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);  
+    else
+      data    = checkdata(data, 'cmbrepresentation', 'full');
+    end
+    data.powcovspctrm = data.crsspctrm; 
+    data = rmfield(data, 'crsspctrm');
+  else
+    error('unknown conversion from univariate to bivariate representation');
+  end
+  
+  if ~isempty(cmb) && ncmb < (nchan-1)*nchan*0.5,
+    powindx = labelcmb2indx(data.labelcmb);
+  else
+    powindx = [];
+  end
+case 'source'
+  ncmb = numel(cmb);
+
+  if strcmp(inparam, 'pow') && strcmp(outparam, 'powcov'),
+    [nrpt,nvox] = size(data.pow);
+    if sqrtflag, data.pow = sqrt(data.pow); end
+    if demeanflag,
+      mdat = nanmean(data.pow,1); 
+      data.pow = data.pow - mdat(ones(1,nrpt),:); %FIXME only works for 1 frequency
+    end
+    
+    data.powcov = [data.pow .* data.pow(:,ones(1,nvox)*cmb) data.pow.*data.pow];  
+    data        = rmfield(data, 'pow');
+    powindx     = [nvox+[1:nvox] nvox+[1:nvox]; cmb*ones(1,nvox) nvox+[1:nvox]]';
+   
+    data.pos    = [data.pos repmat(data.pos(cmb,:),[nvox 1]);data.pos data.pos]; 
+    data.inside = [data.inside(:); data.inside(:)+nvox];
+    data.outside = [data.outside(:); data.outside(:)+nvox];
+  elseif strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'crsspctrm'),
+    if keeprpt,
+      [nrpt,nvox]    = size(data.fourierspctrm);
+      data.crsspctrm = [data.fourierspctrm.*conj(data.fourierspctrm(:,ones(1,nvox)*cmb)) abs(data.fourierspctrm).^2];
+      data           = rmfield(data, 'fourierspctrm');
+      powindx     = [nvox+[1:nvox] nvox+[1:nvox]; cmb*ones(1,nvox) nvox+[1:nvox]]';
+
+      data.pos    = [data.pos repmat(data.pos(cmb,:),[nvox 1]);data.pos data.pos]; 
+      data.inside = [data.inside(:); data.inside(:)+nvox];
+      data.outside = [data.outside(:); data.outside(:)+nvox];
+    elseif ncmb<size(data.fourierspctrm,2)
+      %do it computationally more efficient
+      [nrpt,nvox]    = size(data.fourierspctrm);
+
+      data.crsspctrm = reshape((transpose(data.fourierspctrm)*conj(data.fourierspctrm(:,cmb)))./nrpt, [nvox*ncmb 1]);
+      tmppow         = mean(abs(data.fourierspctrm).^2)';
+      data.crsspctrm = cat(1, data.crsspctrm, tmppow);
+      data           = rmfield(data, 'fourierspctrm');
+      tmpindx1       = transpose(ncmb*nvox + ones(ncmb+1,1)*[1:nvox]);
+      tmpindx2       = repmat(tmpindx1(cmb(:),end), [1 nvox])';
+      tmpindx3       = repmat(cmb(:), [1 nvox])'; %expressed in original voxel indices
+      powindx        = [tmpindx1(:) [tmpindx2(:);tmpindx1(:,end)]];
+
+      data.pos       = [repmat(data.pos, [ncmb 1]) data.pos(tmpindx3(:),:); data.pos data.pos];    
+      data.inside    = data.inside(:)*ones(1,ncmb+1) + (ones(length(data.inside),1)*nvox)*[0:ncmb];
+      data.inside    = data.inside(:);
+      data.outside   = setdiff([1:nvox*(ncmb+1)]', data.inside);
+      data.dimord    = data.dimord(8:end); %FIXME this assumes dimord to be 'rpttap_...'
+    else
+      [nrpt,nvox]    = size(data.fourierspctrm);
+      data.crsspctrm = (transpose(data.fourierspctrm)*conj(data.fourierspctrm))./nrpt;
+      data           = rmfield(data, 'fourierspctrm');
+      powindx        = [];
+      data.dimord    = 'pos_pos_freq'; %FIXME hard coded
+    end
+  else
+    error('unknown conversion from univariate to bivariate representation');
+  end
+otherwise
+end
+
+hasrpt  = ~isempty(strfind(data.dimord, 'rpt'));
 
 %if ~isfield(cfg, 'cohmethod'), cfg.cohmethod = 'coh';           end;
 %if ~iscell(cfg.cohmethod),     cfg.cohmethod = {cfg.cohmethod}; end;
