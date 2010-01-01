@@ -37,20 +37,22 @@ dat = transpose(hilbert(transpose(dat)));
 
 % do postprocessing of the complex representation
 switch option
-  case {'yes' 'abs'}
-    dat = abs(dat);   % this is the default if 'yes' is specified
-  case {'no' 'complex'}
-    dat = dat;        % this is the default if 'no' is specified
-  case 'real'
-    dat = real(dat);
-  case 'imag'
-    dat = imag(dat);
-  case 'absreal'
-    dat = abs(real(dat));
-  case 'absimag'
-    dat = abs(imag(dat));
-  case 'angle'
-    dat = unwrap(angle(dat));
-  otherwise
-    error('incorrect specification of the optional input argument');
+    case {'yes' 'abs'}
+        dat = abs(dat);   % this is the default if 'yes' is specified
+    case {'no' 'complex'}
+        dat = dat;        % this is the default if 'no' is specified
+    case 'real'
+        dat = real(dat);
+    case 'imag'
+        dat = imag(dat);
+    case 'absreal'
+        dat = abs(real(dat));
+    case 'absimag'
+        dat = abs(imag(dat));
+    case 'angle'
+        dat = (angle(dat./abs(dat)));
+    case 'unwrap_angle'
+        dat = unwrap(angle(dat./abs(dat)),[],2);
+    otherwise
+        error('incorrect specification of the optional input argument');
 end
