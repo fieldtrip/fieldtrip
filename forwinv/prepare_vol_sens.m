@@ -326,7 +326,7 @@ elseif iseeg
           if strcmp(voltype(vol), 'openmeeg')
             nb_points_external_surface = size(vol.bnd(vol.skin).pnt,1);
             vol.mat = vol.mat((end-nb_points_external_surface+1):end,:);            
-            vol.mat = interp * vol.mat;
+            vol.mat = interp(:,1:nb_points_external_surface) * vol.mat;
           else
             % convert to sparse matrix to speed up the subsequent multiplication
             interp  = sparse(interp);
