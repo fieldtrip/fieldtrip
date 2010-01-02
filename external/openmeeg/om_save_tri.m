@@ -11,7 +11,7 @@ function [] = om_save_tri(filename,points,faces,nrmls)
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailed information
 
 if nargin<4 || isempty(nrmls)
-    nrmls = normals(points,faces);
+    nrmls = om_normals(points,faces);
 end
 
 fid = fopen(filename,'w');

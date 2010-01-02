@@ -15,15 +15,9 @@ openmeeg_license
 checkombin;
 sprintf('%s','Calculating BEM model...please wait');
 
-skin   = find_outermost_boundary(vol.bnd);
-source = find_innermost_boundary(vol.bnd);
-
 % the first compartment should be the skin, the last the source
-if skin==1 && source==length(vol.bnd)
-    vol.skin   = 1;
-    vol.source = length(vol.bnd);
-elseif skin==length(vol.bnd) && source==1
-    % flip the order of the compartments
+% flip the order of the compartments if necessary
+if vol.skin==length(vol.bnd) && vol.source==1
     vol.bnd    = fliplr(vol.bnd(:)');
     vol.skin   = 1;
     vol.source = length(vol.bnd);

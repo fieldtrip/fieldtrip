@@ -5,9 +5,10 @@
 
 %% Set the radius and conductivities of each of the compartments
 
-addpath(cd) % Make sure current folder is in the path 
+addpath(cd) % Make sure current folder is in the path
 
 close all
+clear
 clc
 
 % 3 Layers
@@ -17,7 +18,7 @@ c = [1 1/80 1];
 % % 2 Layers
 % r = [100 92];
 % c = [1 1/4];
-
+% 
 % % 1 Layers
 % r = [100];
 % c = [1];
@@ -50,13 +51,15 @@ vol.cond = c;
 
 % choose BEM implementation (OpenMEEG, bemcp or dipoli)
 cfg.method = 'openmeeg';
-% cfg.method = 'bemcp';
 
-vol = prepare_bemmodel(cfg, vol);
+vol = ft_prepare_bemmodel(cfg, vol);
 
-% [vol, sens] = prepare_vol_sens(vol, sens); % does not work yet with OpenMEEG
+cfg.vol = vol;
+cfg.grid.pos = pos;
+cfg.elec = sens;
+grid = ft_prepare_leadfield(cfg);
 
-lf_openmeeg = compute_leadfield(pos, sens, vol);
+lf_openmeeg = grid.leadfield{1};
 
 %% Plot result
 figure; triplot(pnt, tri, lf_openmeeg(:,1), 'surface');
