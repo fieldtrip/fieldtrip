@@ -128,7 +128,7 @@ end % give feedback
 
 %HACK for jan to bypass source and volume data to enter fixdimord
 [st,result] = system('whoami');
-if isempty(strfind(result,'jan'))
+if isempty(strfind(result, 'jan'))
   if isfreq || istimelock || iscomp || issource || isvolume
     % ensure consistency between the dimord string and the axes that describe the data dimensions
     data = fixdimord(data);
@@ -297,15 +297,15 @@ if ~isempty(stype)
 end
 
 if ~isempty(ismeg)
-  if isequal(ismeg,'yes')
+  if isequal(ismeg, 'yes')
     okflag = isfield(data, 'grad');
-  elseif isequal(ismeg,'no')
+  elseif isequal(ismeg, 'no')
     okflag = ~isfield(data, 'grad');
   end
 
-  if ~okflag && isequal(ismeg,'yes')
+  if ~okflag && isequal(ismeg, 'yes')
     error('This function requires MEG data with a ''grad'' field');
-  elseif ~okflag && isequal(ismeg,'no')
+  elseif ~okflag && isequal(ismeg, 'no')
     error('This function should not be given MEG data with a ''grad'' field');
   end % if okflag
 end
@@ -352,7 +352,7 @@ if issource || isvolume,
       Nfreq = 1;
       Ntime = 1;
     end
-    
+
     %convert old style source representation into new style
     if isfield(data, 'avg') && isfield(data.avg, 'mom') && (isfield(data, 'freq') || isfield(data, 'frequency')) && strcmp(sourcedimord, 'rpt_pos'),
       %frequency domain source representation convert to single trial power
@@ -374,7 +374,7 @@ if issource || isvolume,
       Nrpt   = sum(data.cumtapcnt);
       data.fourierspctrm = complex(zeros(Nrpt, Npos), zeros(Nrpt, Npos));
       data.fourierspctrm(:, data.inside) = transpose(cat(1, data.avg.mom{data.inside}));
-      data   = rmfield(data, 'avg'); 
+      data   = rmfield(data, 'avg');
     elseif isfield(data, 'avg') && isfield(data.avg, 'mom') && isfield(data, 'time') && strcmp(sourcedimord, 'pos_time'),
       Npos   = size(data.pos,1);
       Nrpt   = 1;
@@ -461,9 +461,9 @@ if issource || isvolume,
     %HACK
     dimtok = tokenize(data.dimord, '_');
     for i=1:length(dimtok)
-      if strcmp(dimtok(i),'pos')
+      if strcmp(dimtok(i), 'pos')
         dim(1,i) = size(getsubfield(data,dimtok{i}),1);
-      elseif strcmp(dimtok(i),'rpt')
+      elseif strcmp(dimtok(i), 'rpt')
         dim(1,i) = nan;
       else
         dim(1,i) = length(getsubfield(data,dimtok{i}));
@@ -509,20 +509,18 @@ if issource || isvolume,
 
 end
 
-if isequal(hastrials,'yes')
+if isequal(hastrials, 'yes')
   okflag = isfield(data, 'trial');
-
   if ~okflag
     error('This function requires data with a ''trial'' field');
   end % if okflag
 end
 
-if isequal(hastrialdef,'yes')
+if isequal(hastrialdef, 'yes')
   data = fixtrialdef(data);
 end
 
-
-if isequal(hasoffset,'yes')
+if isequal(hasoffset, 'yes')
   okflag = isfield(data, 'offset');
 
   if ~okflag && isfield(data, 'time') && isa(data.time, 'cell')
@@ -542,19 +540,19 @@ if isequal(hasoffset,'yes')
     error('This function requires data with an ''offset'' field');
   end % if okflag
 
-elseif isequal(hasoffset,'no') && isfield(data, 'offset')
+elseif isequal(hasoffset, 'no') && isfield(data, 'offset')
   data = rmfield(data, 'offset');
 end % if hasoffset
 
-if isequal(hascumtapcnt,'yes') && ~isfield(data, 'cumtapcnt')
+if isequal(hascumtapcnt, 'yes') && ~isfield(data, 'cumtapcnt')
   error('This function requires data with a ''cumtapcnt'' field');
-elseif isequal(hascumtapcnt,'no') && isfield(data, 'cumtapcnt')
+elseif isequal(hascumtapcnt, 'no') && isfield(data, 'cumtapcnt')
   data = rmfield(data, 'cumtapcnt');
 end % if hascumtapcnt
 
-if isequal(hasdof,'yes') && ~isfield(data, 'hasdof')
+if isequal(hasdof, 'yes') && ~isfield(data, 'hasdof')
   error('This function requires data with a ''dof'' field');
-elseif isequal(hasdof,'no') && isfield(data, 'hasdof')
+elseif isequal(hasdof, 'no') && isfield(data, 'hasdof')
   data = rmfield(data, 'cumtapcnt');
 end % if hasdof
 
@@ -573,8 +571,17 @@ if ~isempty(cmbrepresentation)
 end % cmbrepresentation
 
 if issource && strcmp(keepoutside, 'no'),
-  data = source2sparse(data); % FIXME does this still exist?
+  % remove all grid points that are marked as outside
+  data = source2sparse(data);
 end
+
+if isfield(data, 'grad')
+  % ensure that the gradiometer balancing is specified
+  if ~isfield(data.grad, 'balance') || ~isfield(data.grad.balance, 'current')
+    data.grad.balance.current = 'none';
+  end
+end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % represent the covariance matrix in a particular manner
@@ -1043,14 +1050,14 @@ for i=1:nrpt
   data.trial{i} = reshape(dat(i,:,:,:), nchan*nfreq, ntime);
   if any(isnan(data.trial{i}(1,:))),
     tmp = data.trial{i}(1,:);
-    begsmp = find(isfinite(tmp),1,'first');
-    endsmp = find(isfinite(tmp),1,'last' );
+    begsmp = find(isfinite(tmp),1, 'first');
+    endsmp = find(isfinite(tmp),1, 'last' );
     data.trial{i} = data.trial{i}(:, begsmp:endsmp);
     data.time{i}  = data.time{i}(begsmp:endsmp);
   end
 end
 nsmp = cellfun('size',data.time,2);
-seln = find(nsmp>1,1,'first');
+seln = find(nsmp>1,1, 'first');
 data.fsample = 1/(data.time{seln}(2)-data.time{seln}(1));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
