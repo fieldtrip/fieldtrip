@@ -75,7 +75,7 @@ istlck = datatype(data, 'timelock');  % this will be temporary converted into ra
 data  = checkdata(data, 'datatype', {'raw' 'freq'}, 'feedback', 'yes', 'ismeg', 'yes', 'senstype', {'ctf151', 'ctf275', 'bti148', 'bti248'});
 
 if istlck
-  % the timelocked data has just been converted to a raw representation 
+  % the timelocked data has just been converted to a raw representation
   % and will be converted back to timelocked at the end of this function
   israw = true;
 end
@@ -225,7 +225,12 @@ if any(strcmp(cfg.planarmethod, {'orig', 'sincos', 'fitplane'}))
   interp  = apply_montage(data, montage, 'keepunused', 'yes');
   % also apply the linear transformation to the gradiometer definition
   interp.grad = apply_montage(data.grad, montage);
-  interp.grad.balance.planar  = montage;
+  interp.grad.balance.planar = montage;
+  % ensure that the old sensor type does not stick around, because it is now invalid
+  % the sensor type is added in PREPARE_VOL_SENS but is not used in external fieldtrip code
+  if isfield(interp.grad, 'type')
+    interp.grad = rmfield(interp.grad, 'type');
+  end
   % keep track of the linear transformations that have been applied
   if strcmp(interp.grad.balance.current, 'none')
     interp.grad.balance.current = 'planar';
