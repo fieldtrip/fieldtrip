@@ -1,12 +1,12 @@
 
 #if defined (__BORLANDC__)
   #include <windows.h>
-  #include "gettimeofday.h"
+  #include "win32/gettimeofday.h"
 
 #elif defined (_MSC_VER)
   #include <windows.h>
-  #include "gettimeofday.h"
-  #include "stdint.h"
+  #include "win32/gettimeofday.h"
+  #include "win32/stdint.h"
 
 #else
   #include <unistd.h>
