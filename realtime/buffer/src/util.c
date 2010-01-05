@@ -116,8 +116,6 @@
 #include "buffer.h"
 #include "message.h"
 
-extern int errno;
-
 /* these are for debugging */
 pthread_mutex_t mutexappendcount = PTHREAD_MUTEX_INITIALIZER;
 int appendcount = 0;

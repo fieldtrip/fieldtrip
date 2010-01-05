@@ -124,6 +124,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+#include "unix_includes.h"
 #include "message.h"
 
 #ifndef POLLRDNORM

@@ -72,7 +72,8 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
-#include <stdint.h>
+#include "unix_includes.h"
+
 #ifdef __cplusplus
 extern "C" {
 	
