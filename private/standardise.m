@@ -1,7 +1,7 @@
 function [x,mx,sx] = standardise(x,dim)
 
 % X = STANDARDISE(X, DIM) computes the zscore of a matrix along dimension dim
-% has extended functionality as compared to the stats-toolbox's zscore function
+% has similar functionality as the stats-toolbox's zscore function
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 %
