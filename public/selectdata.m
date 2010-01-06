@@ -72,6 +72,7 @@ selfoi   = keyval('foilim',  kvp); selectfoi  = ~isempty(selfoi);
 seltoi   = keyval('toilim',  kvp); selecttoi  = ~isempty(seltoi);
 selroi   = keyval('roi',     kvp); selectroi  = ~isempty(selroi);
 selrpt   = keyval('rpt',     kvp); selectrpt  = ~isempty(selrpt);
+selpos   = keyval('pos',     kvp); selectpos  = ~isempty(selpos);
 param    = keyval('param',   kvp); if isempty(param), param = 'all'; end
 
 avgoverchan  = keyval('avgoverchan',  kvp); if isempty(avgoverchan), avgoverchan = false; end
@@ -374,6 +375,7 @@ elseif issource,
   %FIXME fill in everything
   if selectrpt,  data = seloverdim(data, 'rpt',  selrpt);  end
   if selectfoi,  data = seloverdim(data, 'freq', selfoi);  end
+  if selectpos,  data = seloverdim(data, 'pos',  selpos);  end
   if avgoverrpt,  data = avgoverdim(data, 'rpt');  end
   if avgoverfreq, data = avgoverdim(data, 'freq'); end
 
