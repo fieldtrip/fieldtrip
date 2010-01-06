@@ -14,7 +14,7 @@ timelock = timelockanalysis([], data);
 
 default             = [];
 default.xlim        = [min(timelock.time) max(timelock.time)];
-default.marker      = 'labels';
+default.marker      = 'on';
 default.interactive = 'no';
 cfg = mergeconfig(cfg, default);
 
