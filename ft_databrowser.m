@@ -85,14 +85,6 @@ if ischar(cfg.selectfeature)
   cfg.selectfeature = {cfg.selectfeature};
 end
 
-if nargin>1
-  % read or create the layout that will be used for plotting
-  cfg.layout = prepare_layout(cfg, data);
-else
-  % read or create the layout that will be used for plotting
-  cfg.layout = prepare_layout(cfg);
-end
-
 % get some initial parameters from the data
 if nargin>1
   % fetch the header
@@ -109,6 +101,11 @@ if nargin>1
   % this is how the input data is segmented
   trlorg = findcfg(data.cfg, 'trl');
   Ntrials = size(trlorg, 1);
+  
+  if strcmp(cfg.viewmode, 'component')
+    % read or create the layout that will be used for the topoplots
+    cfg.layout = prepare_layout(cfg, data);
+  end
   
 else
   % read the header
@@ -156,6 +153,11 @@ else
   % this is how the data from file should be segmented
   trlorg = cfg.trl;
   Ntrials = size(trlorg, 1);
+  
+  if strcmp(cfg.viewmode, 'component')
+    % read or create the layout that will be used for the topoplots
+    cfg.layout = prepare_layout(cfg);
+  end
 end
 
 if Nchans == 0
