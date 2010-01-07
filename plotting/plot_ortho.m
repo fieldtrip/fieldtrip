@@ -33,10 +33,12 @@ function fiducial=plot_ortho(data)
 %
 % Example
 %   figure, plot_ortho(data,'colorbar','no','interactive','yes','axis','off')
-%
+
 % Copyright (C) 2009, Cristiano Micheli 
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
+
+warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 location            = keyval('location',  varargin); if isempty(location),location='auto';end

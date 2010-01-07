@@ -24,9 +24,10 @@ function plot_vol(vol, varargin)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-keyvalcheck(varargin, 'forbidden', {'faces', 'edges', 'vertices'});
-% get the optional input arguments
+warning('on', 'MATLAB:divideByZero');
 
+% get the optional input arguments
+keyvalcheck(varargin, 'forbidden', {'faces', 'edges', 'vertices'});
 faceindex   = keyval('faceindex',   varargin);   if isempty(faceindex),faceindex = 'none';end
 vertexindex = keyval('vertexindex',   varargin); if isempty(vertexindex),vertexindex ='none';end
 vertexsize  = keyval('vertexsize',    varargin); if isempty(vertexsize),  vertexsize = 10;    end
@@ -38,7 +39,6 @@ map         = keyval('colormap',      varargin);
 
 faceindex   = istrue(faceindex);
 vertexindex = istrue(vertexindex);
-  
 
 % we will probably need a sphere, so let's prepare one
 [pnt, tri] = icosahedron162;

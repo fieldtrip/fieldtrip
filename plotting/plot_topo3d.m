@@ -17,17 +17,19 @@ function plot_topo3d(pnt, val, varargin)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
+warning('on', 'MATLAB:divideByZero');
+
 % get the optional input arguments
 topostyle     = keyval('topostyle',     varargin); if isempty(topostyle),     topostyle = 'color';    end
 contourstyle  = keyval('contourstyle',  varargin); if isempty(contourstyle),  contourstyle = false;   end
 isocontour    = keyval('isocontour',    varargin); if isempty(isocontour),    isocontour = 'auto';    end
 
-% the interpolation requires a triangulation
-tri = projecttri(pnt, 'delaunay');
-
 % everything is added to the current figure
 holdflag = ishold;
 hold on
+
+% the interpolation requires a triangulation
+tri = projecttri(pnt, 'delaunay');
 
 if ~isequal(topostyle, false)
   switch topostyle

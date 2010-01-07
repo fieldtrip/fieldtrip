@@ -27,10 +27,12 @@ function plot_slice(data,varargin)
 % Example
 %   mri = read_mri('Subject01.mri');
 %   figure, plot_slice(mri,'title','3D volume','colorbar','yes','map','jet')
-%
+
 % Copyright (C) 2009, Cristiano Micheli 
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
+
+warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 slicerange    = keyval('slicerange',  varargin); if isempty(slicerange),slicerange='auto'; end

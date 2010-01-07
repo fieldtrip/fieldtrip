@@ -20,9 +20,6 @@ function Zi = plot_topo(chanX, chanY, dat, varargin)
 %   'interpmethod'
 %   'style'
 
-
-
-
 % Copyrights (C) 2009, Giovanni Piantoni
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
@@ -30,8 +27,7 @@ function Zi = plot_topo(chanX, chanY, dat, varargin)
 % these are for speeding up the plotting on subsequent calls
 persistent previous_argin previous_maskimage
 
-holdflag = ishold;
-hold on
+warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'gridscale', 'shading', 'mask', 'outline', 'interplim', 'interpmethod','isolines','style'});
@@ -48,7 +44,9 @@ interpmethod  = keyval('interpmethod', varargin);    if isempty(interpmethod); i
 isolines      = keyval('isolines',     varargin);      
 style         = keyval('style',        varargin);    if isempty(style);        style = 'surfiso';       end % can be 'surf', 'iso', 'isofill', 'surfiso'
 
-
+% everything is added to the current figure
+holdflag = ishold;
+hold on
 
 chanX = chanX * width  + hpos;
 chanY = chanY * height + vpos;

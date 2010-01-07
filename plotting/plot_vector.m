@@ -26,9 +26,6 @@ function [varargout] = plot_vector(varargin)
 %   'markersize'
 %   'markerfacecolor'
 %
-%
-%
-%
 % Example use
 %   plot_vector(randn(1,100), 'width', 1, 'height', 1, 'hpos', 0, 'vpos', 0)
 
@@ -36,8 +33,7 @@ function [varargout] = plot_vector(varargin)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-holdflag = ishold;
-hold on
+warning('on', 'MATLAB:divideByZero');
 
 if nargin>1 && all(cellfun(@isnumeric, varargin(1:2)))
   % the function was called like plot(x, y, ...)
@@ -79,6 +75,10 @@ markerfacecolor = keyval('markerfacecolor',    varargin); if isempty(markerfacec
 axis = istrue(axis);
 box  = istrue(box);
 
+% everything is added to the current figure
+holdflag = ishold;
+hold on
+
 if ischar(hlim)
   switch hlim
     case 'maxmin'
@@ -102,6 +102,11 @@ if ischar(vlim)
       error('unsupported option for vlim')
   end % switch
 end % if ischar
+
+if vlim(1)==vlim(2)
+  % vertical scaling cannot be determined, behave consistent to the plot() function
+  vlim = [-1 1];
+end
 
 % these must be floating point values and not integers, otherwise the scaling fails
 hdat = double(hdat);
@@ -139,11 +144,7 @@ hdat = hdat + hpos;
 % first shift the vertical axis to zero
 vdat = vdat - (vlim(1)+vlim(2))/2;
 % then scale to length 1
-if vlim(2)-vlim(1)~=0
-  vdat = vdat / (vlim(2)-vlim(1));
-else
-  vdat = vdat /vlim(1);
-end
+vdat = vdat / (vlim(2)-vlim(1));
 % then scale to the new width
 vdat = vdat .* height;
 % then shift to the new vertical position

@@ -19,10 +19,13 @@ function plot_lay(lay, varargin)
 %   'pointcolor'    = string with color (e.g. 'k')
 %   'pointsize'     = number indicating size (e.g. 8)
 
-
 % Copyright (C) 2009, Robert Oostenveld
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
+
+warning('on', 'MATLAB:divideByZero');
+
+% get the optional input arguments
 keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'point', 'box', 'label','labelsize','labeloffset', 'mask', 'outline', 'verbose','pointsymbol','pointcolor','pointsize'});
 hpos         = keyval('hpos',        varargin{:}); if isempty(hpos),       hpos = 0;            end
 vpos         = keyval('vpos',        varargin{:}); if isempty(vpos),       vpos = 0;            end

@@ -37,6 +37,8 @@ function plot_mesh(bnd, varargin)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
+warning('on', 'MATLAB:divideByZero');
+
 % FIXME: introduce option for color coding (see sourceplot)
 keyvalcheck(varargin, 'forbidden', {'faces', 'edges', 'vertices'});
 

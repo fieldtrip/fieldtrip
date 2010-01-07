@@ -29,6 +29,8 @@ function plot_matrix(varargin)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
+warning('on', 'MATLAB:divideByZero');
+
 if nargin>2 && all(cellfun(@isnumeric, varargin(1:3)))
   % the function was called like imagesc(x, y, c, ...)
   hdat = varargin{1};

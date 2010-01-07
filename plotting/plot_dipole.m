@@ -21,6 +21,8 @@ function plot_dipole(pos, ori, varargin)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
+warning('on', 'MATLAB:divideByZero');
+
 % get the optional input arguments
 units       = keyval('units', varargin);       if isempty(units),         units = 'cm';        end
 color       = keyval('color', varargin);       if isempty(color),         color = [1 0 0];     end

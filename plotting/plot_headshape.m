@@ -24,6 +24,8 @@ function hs = plot_headshape(headshape,varargin)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
+warning('on', 'MATLAB:divideByZero');
+
 % get the optional input arguments
 vertexcolor = keyval('vertexcolor', varargin); if isempty(vertexcolor), vertexcolor='r'; end
 fidcolor    = keyval('fidcolor',    varargin); if isempty(fidcolor), fidcolor='g'; end

@@ -22,6 +22,8 @@ function [varargout] = plot_text(X, Y, str, varargin)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
+warning('on', 'MATLAB:divideByZero');
+
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'Color', ....
   'FontSize', 'FontName', 'HorizontalAlignment','rotation','VerticalAlignment'});
