@@ -122,6 +122,12 @@ function [handle] = topoplot(varargin)
 
 fieldtripdefs
 
+
+% deprecation warning
+warning('this function is deprecated, please use the topoplotER/TFR function instead');
+
+
+
 % Try to detect EEGLAB-style input and give an informative error
 % message. The EEGLAB documentation describes the usage as
 %        >>  topoplot(datavector, EEG.chanlocs);   % plot a map using an EEG chanlocs structure
