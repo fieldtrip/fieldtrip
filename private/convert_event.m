@@ -66,7 +66,7 @@ elseif size(obj,2) == 2
   input_obj = 'artifact';
 elseif size(obj,2) > 3
   tmp = unique(obj);
-  if length(tmp) == 2 && tmp(1) == 0 && tmp(2) == 1
+  if isempty(find(tmp>2, 1))
     input_obj = 'boolvec';
     obj = logical(obj);
   else
