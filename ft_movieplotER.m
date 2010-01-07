@@ -2,7 +2,7 @@ function movieplotER(cfg, timelock)
 
 % MOVIEPLOTER makes a movie of the topographic distribution of timelock
 % datatypes over time.
-
+%
 % Use as: movieplotER(cfg, timelock)
 % 
 % cfg options:
@@ -31,7 +31,7 @@ function movieplotER(cfg, timelock)
 timelock = checkdata(timelock, 'datatype', 'timelock');
 
 % Defaults
-if ~isfield(cfg, 'xlim'),          cfg.zlim = 'maxmin';           end
+if ~isfield(cfg, 'xlim'),          cfg.xlim = 'maxmin';           end
 if ~isfield(cfg, 'zlim'),          cfg.zlim = 'maxmin';           end
 if ~isfield(cfg, 'samperframe'),   cfg.samperframe = 1;           end
 if ~isfield(cfg, 'framespersec'),  cfg.framespersec = 5;          end
