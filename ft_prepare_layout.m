@@ -513,8 +513,7 @@ elseif ~isempty(cfg.image) && isempty(cfg.layout)
   lay.outline = outline;
 
 else
-  fprintf('reverting to 151 channel CTF default\n');
-  lay = readlay('CTF151.lay');
+  error('no layout detected, please specify cfg.layout')
 end
 
 % FIXME there is a conflict between the use of cfg.style here and in topoplot
