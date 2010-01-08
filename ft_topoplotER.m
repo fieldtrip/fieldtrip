@@ -88,7 +88,24 @@ function [cfg] = topoplotER(cfg, varargin)
 % data (i.e. when topoplotTFR calls topoplotER):
 % cfg.yparam          field to be plotted on y-axis
 % cfg.ylim            'maxmin' or [ymin ymax]         (default = 'maxmin')
+%
+% It is possible to use multiple highlight-selections (e.g.: multiple statistical clusters of channels)
+% To do this, all the content of the highlight-options (including cfg.highlight) should be placed in a cell-array
+% (even if the normal content was already in a cell-array). Specific marker settings (e.g. color, size) are defaulted when
+% not present. 
+% Example (3 selections):
+% cfg.highlight          = {'labels', 'labels', 'numbers'}
+% cfg.highlightchannel   = {{'MZF03','MZC01','MRT54'}, [1:5], 'C*'}
+% cfg.highlightsymbol    = {'o','*','+'}
+% cfg.highlightcolor     = [];      % will be set to default
+% cfg.highlightsize      = {10,15}  % the missing third one will be defaulted, as will all the colors
+
+
+%
+%
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)
+
+
 
 % This function depends on TIMELOCKBASELINE which has the following options:
 % cfg.baseline, documented
@@ -207,7 +224,7 @@ end
 % checking much, much easier
 if ~iscell(cfg.highlight),            cfg.highlight         = {cfg.highlight};            end         
 if ~iscell(cfg.highlightchannel),     cfg.highlightchannel  = {cfg.highlightchannel};     end 
-if ischar(cfg.highlightchannel{1}),   cfg.highlightchannel  = {cfg.highlightchannel};     end 
+if ischar(cfg.highlightchannel{1}),   cfg.highlightchannel  = {cfg.highlightchannel};     end % {'all'} is valid input to channelselection, {1:5} isn't
 if ~iscell(cfg.highlightsymbol),      cfg.highlightsymbol   = {cfg.highlightsymbol};      end
 if ~iscell(cfg.highlightcolor),       cfg.highlightcolor    = {cfg.highlightcolor};       end
 if ~iscell(cfg.highlightsize),        cfg.highlightsize     = {cfg.highlightsize};        end
