@@ -281,6 +281,10 @@ end
 
 % determine the subselection in the data
 if selectrpt,
+  if islogical(selrpt),
+    selrpt = find(selrpt);
+  end
+
   dimtok = tokenize(data.dimord, '_');
   if strcmp(dimtok{1}, 'rpttap'),
     %account for the tapers
