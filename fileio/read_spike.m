@@ -168,6 +168,18 @@ switch spikeformat
       spike.waveform{i} = read_plexon_plx(filename, 'ChannelIndex', i, 'header', hdr);
     end
     spike.hdr = hdr;
+    
+  case 'neuroshare' % NOTE: still under development
+    % check that the required neuroshare toolbox is available
+    hastoolbox('neuroshare', 1);
+
+    tmp = read_neuroshare(filename, 'readspike', 'yes');
+    spike.label = {tmp.hdr.entityinfo(tmp.list.segment).EntityLabel};
+    for i=1:length(spike.label)
+      spike.waveform{i}  = tmp.spikew.data(:,:,i);
+      spike.timestamp{i} = tmp.spikew.timestamp(:,i)';
+      spike.unit{i}      = tmp.spikew.unitID(:,i)';
+    end
 
   otherwise
     error('unsupported data format');

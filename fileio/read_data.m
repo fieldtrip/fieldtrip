@@ -854,6 +854,12 @@ switch dataformat
   case 'nmc_archive_k'
     dat = read_nmc_archive_k_data(filename, hdr, begsample, endsample, chanindx);
 
+  case 'neuroshare' % NOTE: still under development
+    % check that the required neuroshare toolbox is available
+    hastoolbox('neuroshare', 1);
+
+    tmp = read_neuroshare(filename, 'readanalog', 'yes', 'chanindx', chanindx, 'begsample', begsample, 'endsample', endsample);
+    dat = tmp.analog.data';
     
   otherwise
     if strcmp(fallback, 'biosig') && hastoolbox('BIOSIG', 1)

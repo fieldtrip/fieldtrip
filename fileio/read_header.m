@@ -1103,6 +1103,19 @@ switch headerformat
   case 'nmc_archive_k'
     hdr = read_nmc_archive_k_hdr(filename);
     
+  case 'neuroshare' % NOTE: still under development
+    % check that the required neuroshare toolbox is available
+    hastoolbox('neuroshare', 1);
+    
+    tmp = read_neuroshare(filename);
+    hdr.Fs          = tmp.hdr.seginfo(1).SampleRate; % take the sampling freq from the first channel (assuming this is the same for all chans)
+    hdr.nChans      = tmp.hdr.fileinfo.EntityCount;
+    hdr.nSamples    = max([tmp.hdr.entityinfo.ItemCount]); % take the number of samples from the longest channel
+    hdr.nSamplesPre = 0; % continuous data
+    hdr.nTrials     = 1; % continuous data
+    hdr.label       = {tmp.hdr.entityinfo.EntityLabel}; %%% contains non-unique chans
+    hdr.orig        = tmp; % remember the original header
+        
   otherwise
     if strcmp(fallback, 'biosig') && hastoolbox('BIOSIG', 1)
       hdr = read_biosig_header(filename);

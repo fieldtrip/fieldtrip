@@ -1219,6 +1219,17 @@ switch eventformat
   case 'nmc_archive_k'
     event = read_nmc_archive_k_event(filename);
 
+  case 'neuroshare' % NOTE: still under development
+    % check that the required neuroshare toolbox is available
+    hastoolbox('neuroshare', 1);
+    
+    tmp = read_neuroshare(filename, 'readevent', 'yes');
+    for i=1:length(tmp.hdr.eventinfo)
+      event(i).type      = tmp.hdr.eventinfo(i).EventType;
+      event(i).value     = tmp.event.data(i);
+      event(i).timestamp = tmp.event.timestamp(i);
+      event(i).sample    = tmp.event.sample(i);
+    end
     
   otherwise
     error('unsupported event format');
