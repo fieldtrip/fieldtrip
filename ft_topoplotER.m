@@ -99,13 +99,9 @@ function [cfg] = topoplotER(cfg, varargin)
 % cfg.highlightsymbol    = {'o',[],'+'}        % the empty option will be defaulted
 % cfg.highlightcolor     = {'r',[0 0 1]};      % the missing option will be defaulted
 % cfg.highlightsize      = [];                 % will be set to default, as will the missing cfg.highlightfontsize
-
-
 %
-%
+% Other options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)
-
-
 
 % This function depends on TIMELOCKBASELINE which has the following options:
 % cfg.baseline, documented
