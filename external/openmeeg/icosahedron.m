@@ -1,0 +1,1 @@
+../../private/icosahedron.m
