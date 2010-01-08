@@ -99,6 +99,22 @@ elseif strcmp(input_obj, 'boolvec') && strcmp(target,'trl' )
   end
 elseif (strcmp(input_obj, 'trl') || strcmp(input_obj, 'artifact')) && strcmp(target, 'event')
   obj = artifact2event(obj, typenames);
+elseif strcmp(input_obj, 'artifact') && strcmp(target,'trl')
+  if iscell(obj)
+    for i=1:length(obj)
+      obj{i}(:,3) = 0;
+    end
+  else
+    obj(:,3) = 0;
+  end
+elseif strcmp(input_obj, 'trl') && strcmp(target,'artifact')
+  if iscell(obj)
+    for i=1:length(obj)
+      obj{i}(:,3:end) = [];
+    end
+  else
+    obj(:,3:end) = [];
+  end
 elseif strcmp(input_obj, 'empty')
   obj = [];
 else
@@ -140,7 +156,7 @@ end
 if ~iscell(artifact)
   artifact = {artifact};
 end
-  
+
 % make artvec
 artvec = zeros(length(artifact), endsample);
 breakflag = 0;
@@ -185,7 +201,7 @@ function event = artifact2event(artifact, typenames)
 % ARTIFACT2EVENT makes event structure from artifact definition (or cell
 % array of artifact definitions). event.type is always 'artifact', but
 % incase of cellarays of artifacts is is also possible to hand 'typenames'
-% with length(artifact) 
+% with length(artifact)
 
 if ~iscell(artifact)
   artifact = {artifact};
@@ -193,7 +209,7 @@ end
 
 if ~isempty(typenames)
   if length(artifact) ~= length(typenames)
-  error('length typenames should be the same as length artifact')
+    error('length typenames should be the same as length artifact')
   end
 end
 
@@ -213,5 +229,5 @@ for i=1:length(artifact)
     event(end  ).offset   = [];
   end
 end
-    
-      
+
+
