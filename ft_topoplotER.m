@@ -205,13 +205,13 @@ end
 
 % Converting all higlight options to cell-arrays if they're not cell-arrays, to make defaulting and checking for backwards compatability and error
 % checking much, much easier
-if ~iscell(cfg.highlight),          cfg.highlight         = {cfg.highlight};                     
-                                    cfg.highlightchannel  = {cfg.highlightchannel};     end % special case (takes care of most situations)
-if ~iscell(cfg.highlightchannel),   cfg.highlightchannel  = {cfg.highlightchannel};     end 
-if ~iscell(cfg.highlightsymbol),    cfg.highlightsymbol   = {cfg.highlightsymbol};      end
-if ~iscell(cfg.highlightcolor),     cfg.highlightcolor    = {cfg.highlightcolor};       end
-if ~iscell(cfg.highlightsize),      cfg.highlightsize     = {cfg.highlightsize};        end
-if ~iscell(cfg.highlightfontsize),  cfg.highlightfontsize = {cfg.highlightfontsize};    end
+if ~iscell(cfg.highlight),            cfg.highlight         = {cfg.highlight};            end         
+if ~iscell(cfg.highlightchannel),     cfg.highlightchannel  = {cfg.highlightchannel};     end 
+if ischar(cfg.highlightchannel{1}),   cfg.highlightchannel  = {cfg.highlightchannel};     end 
+if ~iscell(cfg.highlightsymbol),      cfg.highlightsymbol   = {cfg.highlightsymbol};      end
+if ~iscell(cfg.highlightcolor),       cfg.highlightcolor    = {cfg.highlightcolor};       end
+if ~iscell(cfg.highlightsize),        cfg.highlightsize     = {cfg.highlightsize};        end
+if ~iscell(cfg.highlightfontsize),    cfg.highlightfontsize = {cfg.highlightfontsize};    end
 % then make sure all cell-arrays for options have length ncellhigh and default the last element if not present
 ncellhigh = length(cfg.highlight);
 if length(cfg.highlightsymbol)    < ncellhigh,   cfg.highlightsymbol{ncellhigh}    = 'o';       end
