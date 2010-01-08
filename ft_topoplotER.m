@@ -96,9 +96,9 @@ function [cfg] = topoplotER(cfg, varargin)
 % Example (3 selections):
 % cfg.highlight          = {'labels', 'labels', 'numbers'}
 % cfg.highlightchannel   = {{'MZF03','MZC01','MRT54'}, [1:5], 'C*'}
-% cfg.highlightsymbol    = {'o','*','+'}
-% cfg.highlightcolor     = [];      % will be set to default
-% cfg.highlightsize      = {10,15}  % the missing third one will be defaulted, as will all the colors
+% cfg.highlightsymbol    = {'o',[],'+'}        % the empty option will be defaulted
+% cfg.highlightcolor     = {'r',[0 0 1]};      % the missing option will be defaulted
+% cfg.highlightsize      = [];                 % will be set to default, as will the missing cfg.highlightfontsize
 
 
 %
