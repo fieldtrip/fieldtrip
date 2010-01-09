@@ -215,8 +215,8 @@ switch eventformat
     % serial port on windows or linux platform
     s = [];
     [port, opt] = filetype_check_uri(filename);
-    % determine whether any serial port objects are already associated with the
-    % target serial port
+
+    % determine whether any serial port objects are already associated with the target serial port
     temp = instrfind;
     if isa(temp,'instrument')
       % find all serial ports
@@ -231,6 +231,7 @@ switch eventformat
         end
       end
     end
+
     % create, configure a serial port object if necessary and open the port
     if ~isa(s,'serial')
       s = serial(port);
@@ -247,16 +248,9 @@ switch eventformat
     %       msg = struct2msg(event);
     %     end
 
-    % write the contents of the field event.value to the serial port as a string
-    if isfield(event,'value') && ~isempty(event.value)
-      msg = char(event.value);
-    else
-      msg = [];
-    end
     % write the message to the serial port
-    if ~isempty(msg) && isa(s,'serial') && strcmp(s.Status,'open')
-      %fprintf(s,msg,'async');
-      fprintf(s,msg);
+    if isa(s,'serial') && strcmp(s.Status,'open')
+      fwrite(s,char(event.value));
     else
       error('could not write event to serial port');
     end
