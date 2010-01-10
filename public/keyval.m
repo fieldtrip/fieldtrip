@@ -1,4 +1,4 @@
-function [val] = keyval(key, varargin)
+function [val, remaining] = keyval(key, varargin)
 
 % KEYVAL returns the value that corresponds to the requested key in a
 % key-value pair list of variable input arguments
@@ -39,3 +39,10 @@ else
   error('multiple input arguments with the same name');
 end
 
+if nargout>1
+  % return the remaining input arguments with the key-value pair removed
+  keys(hit) = [];
+  vals(hit) = [];
+  remaining = cat(1, keys(:)', vals(:)');
+  remaining = remaining(:)';
+end
