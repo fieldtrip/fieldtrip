@@ -41,7 +41,7 @@ if ~exist('OCTAVE_VERSION')
     caller_ext  = '';
   end
   % evalin('caller', 'mfilename') does not work for Matlab 6.1 and 6.5
-  if ~strcmp(caller_name, 'freqanalysis')
+  if ~strcmp(caller_name, 'ft_freqanalysis')
     error(['you should call FREQANALYSIS, instead of the ' upper(mfilename) ' subfunction']);
   end
 end
