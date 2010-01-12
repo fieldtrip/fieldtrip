@@ -1,0 +1,47 @@
+
+
+Notes on the Plexon Neuroshare DLL implementation:
+
+
+- When returning Ext Events through the ns_GetEventInfo & ns_GetEventData Neuroshare APIs, each individual
+ event code is returned as an individual entity, and all strobed event codes are returned as a single entity.
+ For all events, a 2-byte data value is always returned.
+ For individual events, the data value is the event code.
+ For strobed events, the data value is the strobe value.
+
+- For Segment entities, the timestamp reported is the time of the first sample. However, for Neural entities,
+ the timestamp reported is the trigger time (including the prethreshold time). Note that this means that timestamps 
+ of Segment entities will not in general match the timestamp for the corresponding Neural entity.
+
+- Stereotrode/tetrode data is handled for PLX files with Version 103 or later. The Neuroshare DLL uses the
+ 'Data' trodalness and not the 'True' trodalness. This means that for stereotrode/tetrode files acquired
+ directly from the Plexon MAP system, the Neuroshare DLL will report the data as being single electrode
+ because the 'Data' trodalness is 1. This still allows full access to the stereotrode/tetrode data, except
+ it is delivered in a single-channel format. To convert a 'raw' stereotrode/tetrode PLX file to have a 'Data'
+ trodalness of 2 or 4 (corresponding to stereotrode/tetrode data), the PLX file can be opened and re-saved
+ in Offline Sorter.
+
+- ns_FILEINFO.dwTime_DayofWeek is not filled, as this item will be removed.
+
+- Months are filled assuming Jan == 1
+
+
+
+
+Release History:
+
+1.0 	Released 12/3/03
+	- initial release
+
+1.1	Released 7/26/04
+	- fix problems with GetTimeByIndex, GetIndexByTime for analog entries
+
+1.2	Released 1/17/05
+	- support for version 105 PLX file with changes in gain handling
+
+
+
+Limitations:
+
+The DLL only supports PLX files. DDT file support will follow shortly.
+The DLL only supports PLX files that are less than 2^32 bytes long.
