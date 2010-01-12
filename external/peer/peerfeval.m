@@ -19,6 +19,9 @@ function jobid = peerfeval(varargin)
 %
 % See also FEVAL, PEERMASTER, PEERGET, PEERCELLFUN
 
+% the peer must be running in master mode
+peer('status', 2);
+
 % convert the input arguments into something that strmatch can work with
 strargin = varargin;
 strargin(~cellfun(@ischar, strargin)) = {''};

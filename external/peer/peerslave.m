@@ -93,14 +93,21 @@ while true
       end
 
       % it can be difficult to determine the number of output arguments
-      numargout = nargout(fname);
+      try
+        numargout = nargout(fname);
+      catch me
+        if strcmp(me.identifier, 'MATLAB:narginout:doesNotApply')
+          % e.g. in case of nargin('plus')
+          numargout = 1;
+        else
+          rethrow(me);
+        end
+      end
+
       if numargout<0
         % the nargout function returns -1 in case of a variable number of output arguments
         numargout = 1;
       end
-
-      % FIXME in case of a MATLAB:narginout:doesNotApply error
-      % numargout = 1;
 
       argout  = cell(1, numargout);
       elapsed = toc(stopwatch);
@@ -110,14 +117,13 @@ while true
 
       % collect the output options
       options = {'elapsed', elapsed, 'lastwarn', lastwarn, 'lasterr', lasterr};
-      peer('put', joblist.hostid, argout, options, joblist.jobid);
 
     catch
+      argout  = {};
+      % the output options will include the error
+      options = {'elapsed', elapsed, 'lastwarn', lastwarn, 'lasterr', lasterr};
       % an error was detected while executing the job
       warning('an error was detected during job execution');
-      % the output options will include the error
-      argout  = {};
-      options = {'elapsed', elapsed, 'lastwarn', lastwarn, 'lasterr', lasterr};
     end
 
     peer('put', joblist.hostid, argout, options, joblist.jobid);

@@ -38,16 +38,26 @@ numargin = numel(varargin);
 numjob   = numel(varargin{1});
 jobid    = nan(1, numjob);
 
-try
-  % it can be difficult to determine the number of output arguments
-  numargout = nargout(fname);
-catch 
-  % this is most likely an MATLAB:narginout:doesNotApply error
-  numargout = 1;
+% there are potentially errors to catch from the which() function
+if isempty(which(fname))
+  error('Not a valid M-file (%s).', fname);
 end
+
+% it can be difficult to determine the number of output arguments
+try
+  numargout = nargout(fname);
+catch me
+  if strcmp(me.identifier, 'MATLAB:narginout:doesNotApply')
+    % e.g. in case of nargin('plus')
+    numargout = 1;
+  else
+    rethrow(me);
+  end
+end
+
 if numargout<0
   % the nargout function returns -1 in case of a variable number of output arguments
-  numargout=1;
+  numargout = 1;
 end
 
 % check the input arguments
