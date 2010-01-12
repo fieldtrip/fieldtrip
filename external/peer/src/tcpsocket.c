@@ -18,8 +18,7 @@ void cleanup_tcpsocket(void *arg) {
 		threadlocal_t *threadlocal;
         threadlocal = (threadlocal_t *)arg;
 		if (threadlocal && threadlocal->message) {
-				free(threadlocal->message);
-				threadlocal->message = NULL;
+				FREE(threadlocal->message);
 		}
 		if (threadlocal && threadlocal->fd>0) {
 				close(threadlocal->fd);
@@ -194,12 +193,13 @@ void *tcpsocket(void *arg) {
 
 		pthread_mutex_lock(&mutexjoblist);
 
-		/* add the new item to the list */
+		/* create a new list item */
 		job = (joblist_t *)malloc(sizeof(joblist_t));
 		job->job  = message->job;
 		job->host = message->host;
 		job->arg  = message->arg;
 		job->opt  = message->opt;
+		/* add the item to the beginning of the list */
 		job->next = joblist;
 		joblist = job;
 

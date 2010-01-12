@@ -20,7 +20,7 @@ int main() {
 		if (head && head->host.port==ITEM) {
 				/* delete the first item in the list */
 				curr = head->next;
-				free(head);
+				FREE(head);
 				head = curr;
 		}
 
@@ -32,7 +32,7 @@ int main() {
 				if (next && next->host.port==ITEM) {
 						/* delete the next item in the list */
 						curr->next = next->next;
-						free(next);
+						FREE(next);
 						break;
 				}
 				curr = curr->next;

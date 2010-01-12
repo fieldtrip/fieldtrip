@@ -119,18 +119,15 @@ void peerexit(void *arg) {
 				fprintf(stderr, "peerexit\n");
 
 		pthread_mutex_lock(&mutexhost);
-		if (host) {
-				free(host);
-				host = NULL;
-		}
+		FREE(host);
 		pthread_mutex_unlock(&mutexhost);
 
 		pthread_mutex_lock(&mutexpeerlist);
 		peerlist_t *peer = peerlist;
 		while (peer) {
 				peerlist = peer->next;
-				free(peer->host);
-				free(peer);
+				FREE(peer->host);
+				FREE(peer);
 				peer = peerlist;
 		}
 		pthread_mutex_unlock(&mutexpeerlist);
@@ -139,10 +136,11 @@ void peerexit(void *arg) {
 		joblist_t *job = joblist;
 		while (job) {
 				joblist = job->next;
-				free(job->job);
-				free(job->host);
-				free(job->arg);
-				free(job);
+				FREE(job->job);
+				FREE(job->host);
+				FREE(job->arg);
+				FREE(job->opt);
+				FREE(job);
 				job = joblist;
 		}
 		pthread_mutex_unlock(&mutexjoblist);
@@ -151,8 +149,8 @@ void peerexit(void *arg) {
 		userlist_t *user = userlist;
 		while (user) {
 				userlist = user->next;
-				free(user->name);
-				free(user);
+				FREE(user->name);
+				FREE(user);
 				user = userlist;
 		}
 		pthread_mutex_unlock(&mutexuserlist);
@@ -161,8 +159,8 @@ void peerexit(void *arg) {
 		grouplist_t *group = grouplist;
 		while (group) {
 				grouplist = group->next;
-				free(group->name);
-				free(group);
+				FREE(group->name);
+				FREE(group);
 				group = grouplist;
 		}
 		pthread_mutex_unlock(&mutexgrouplist);

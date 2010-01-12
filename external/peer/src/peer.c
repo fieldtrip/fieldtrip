@@ -385,8 +385,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				allowuser = userlist;
 				while (allowuser) {
 						userlist = allowuser->next;
-						free(allowuser->name);
-						free(allowuser);
+						FREE(allowuser->name);
+						FREE(allowuser);
 						allowuser = userlist;
 				}
 				/* add all elements to the list */
@@ -420,8 +420,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				allowgroup = grouplist;
 				while (allowgroup) {
 						grouplist = allowgroup->next;
-						free(allowgroup->name);
-						free(allowgroup);
+						FREE(allowgroup->name);
+						FREE(allowgroup);
 						allowgroup = grouplist;
 				}
 				/* add all elements to the list */
@@ -455,8 +455,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				allowhost = hostlist;
 				while (allowhost) {
 						hostlist = allowhost->next;
-						free(allowhost->name);
-						free(allowhost);
+						FREE(allowhost->name);
+						FREE(allowhost);
 						allowhost = hostlist;
 				}
 				/* add all elements to the list */
@@ -560,10 +560,10 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mxSetFieldByNumber(plhs[0], 0, 2, mxCreateDoubleScalar((UINT32_T)(def->hostsize)));
 						mxSetFieldByNumber(plhs[0], 0, 3, mxCreateDoubleScalar((UINT32_T)(def->argsize)));
 						mxSetFieldByNumber(plhs[0], 0, 4, mxCreateDoubleScalar((UINT32_T)(def->optsize)));
-						free(def);
+						FREE(def);
 				}
 				else {
-						free(def);
+						FREE(def);
 						mexErrMsgTxt ("failed to put job arguments");
 				}
 
@@ -641,8 +641,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						if (nextjob) {
 								if (nextjob->job->id==jobid) {
 										found = 1;
-										/* delete the next item in the list */
+										/* skip the next item in the list */
 										job->next = nextjob->next;
+										/* delete the next item in the list */
 										FREE(nextjob->job);
 										FREE(nextjob->host);
 										FREE(nextjob->arg);
@@ -655,7 +656,6 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				}
 
 				if (!found) {
-						pthread_mutex_unlock(&mutexjoblist);
 						mexWarnMsgTxt("failed to locate specified job\n");
 				}
 
@@ -713,8 +713,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mxSetFieldByNumber(plhs[0], i, 7, mxCreateString(job->host->addr));
 						mxSetFieldByNumber(plhs[0], i, 8, mxCreateDoubleScalar((UINT32_T)(job->host->port)));
 						mxSetFieldByNumber(plhs[0], i, 9, mxCreateDoubleScalar((UINT32_T)(job->host->status)));
-						i++;
 						job = job->next ;
+						i++;
 				}
 				pthread_mutex_unlock(&mutexjoblist);
 				return;

@@ -63,9 +63,8 @@ void *expire(void *arg) {
 								}
 								/* delete the first item in the list */
 								next = peerlist->next;
-								free(peerlist->host);
-								peerlist->host = NULL;
-								free(peerlist);
+								FREE(peerlist->host);
+								FREE(peerlist);
 								peerlist = next;
 						}
 				}
@@ -90,9 +89,8 @@ void *expire(void *arg) {
 										}
 										/* delete the next item in the list */
 										peer->next = next->next;
-										free(next->host);
-										next->host = NULL;
-										free(next);
+										FREE(next->host);
+										FREE(next);
 										break;
 								}
 						}

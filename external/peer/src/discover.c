@@ -19,8 +19,7 @@ void cleanup_discover(void *arg) {
 		threadlocal_t *threadlocal;
         threadlocal = (threadlocal_t *)arg;
 		if (threadlocal && threadlocal->host) {
-				free(threadlocal->host);
-				threadlocal->host = NULL;
+				FREE(threadlocal->host);
 		}
 		if (threadlocal && threadlocal->fd>0) {
 				close(threadlocal->fd);
@@ -31,8 +30,8 @@ void cleanup_discover(void *arg) {
 		peerlist_t *next = NULL;
 		while (peerlist) {
 				next = peerlist->next;
-				free(peerlist->host);
-				free(peerlist);
+				FREE(peerlist->host);
+				FREE(peerlist);
 				peerlist = next;
 		}
 		pthread_mutex_unlock(&mutexpeerlist);
@@ -160,8 +159,7 @@ void *discover(void *arg)
 				accept = (accept & ismember_hostlist (host->name));
 
 				if (!accept) {
-						free(host);
-						host = NULL;
+						FREE(host);
 						continue;
 				}
 
@@ -175,7 +173,7 @@ void *discover(void *arg)
 						if (found) {
 								/* delete the first item in the list */
 								next = peerlist->next;
-								free(peerlist);
+								FREE(peerlist);
 								peerlist = next;
 						}
 				}
@@ -191,7 +189,7 @@ void *discover(void *arg)
 								if (found) {
 										/* delete the next item in the list */
 										peer->next = next->next;
-										free(next);
+										FREE(next);
 										break;
 								}
 						}
@@ -202,8 +200,7 @@ void *discover(void *arg)
 				peer = (peerlist_t *)malloc(sizeof(peerlist_t));
 				peer->host = (hostdef_t *)malloc(sizeof(hostdef_t));
 				memcpy(peer->host, host, sizeof(hostdef_t));
-				free(host);
-				host = NULL;
+				FREE(host);
 
 				peer->time      = time(NULL);
 				peer->next      = peerlist;
@@ -228,6 +225,7 @@ void *discover(void *arg)
 
 				/* note that this is a thread cancelation point */
 				pthread_testcancel();
+
 
 		} /* while (1) */
 

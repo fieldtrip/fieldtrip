@@ -19,8 +19,7 @@ void cleanup_announce(void *arg) {
 		threadlocal_t *threadlocal;
         threadlocal = (threadlocal_t *)arg;
 		if (threadlocal && threadlocal->message) {
-				free(threadlocal->message);
-				threadlocal->message = NULL;
+				FREE(threadlocal->message);
 		}
 		if (threadlocal && threadlocal->fd>0) {
 				close(threadlocal->fd);
