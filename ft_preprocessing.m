@@ -186,11 +186,11 @@ if nargin>1
   
   % select trials of interest
   if ~strcmp(cfg.trials, 'all')
-    if islogical(cfg.trials),  cfg.trials=find(cfg.trials);  end
-    fprintf('selecting %d trials\n', length(cfg.trials));
-    data.trial  = data.trial(cfg.trials);
-    data.time   = data.time(cfg.trials);
-    data.offset = data.offset(cfg.trials);
+    data = selectdata(data, 'rpt', cfg.trials);
+    if isfield(data, 'cfg'),
+      cfg.trl    = findcfg(data.cfg, 'trl');
+      cfg.trlold = findcfg(data.cfg, 'trlold');
+    end
   end
   
   % translate the channel groups (like 'all' and 'MEG') into real labels
@@ -226,23 +226,6 @@ if nargin>1
   end % for all trials
   progress('close');
   
-  % update the trial definition (trl) in case of trial selection
-  if ~strcmp(cfg.trials, 'all')
-    % try to locate the trl in the nested configuration
-    if isfield(data, 'cfg')
-      trl = findcfg(data.cfg, 'trl');
-    else
-      trl = [];
-    end
-    if isempty(trl)
-      % a trial definition is expected in each continuous data set
-      warning('could not locate the trial definition ''trl'' in the data structure');
-    else
-      cfg.trlold=trl;
-      cfg.trl=trl(cfg.trials,:);
-    end
-  end
-  
   % get the output cfg
   cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
   
@@ -276,7 +259,7 @@ else
   
   % read the header
   hdr = read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
-  
+ 
   % this option relates to reading over trial boundaries in a pseudo-continuous dataset
   if ~isfield(cfg, 'continuous')
     if hdr.nTrials==1
@@ -411,7 +394,6 @@ else
     else
       hdr.nsdf=cfg.nsdf;
     end
-    
     % read the raw data with padding on both sides of the trial
     dat = read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', rawindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
     
