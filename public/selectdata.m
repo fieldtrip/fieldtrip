@@ -42,14 +42,10 @@ dimord = cell(1,length(data));
 for k = 1:length(data)
   data{k} = checkdata(data{k}, 'datatype', {'freq' 'timelock' 'source', 'volume', 'freqmvar', 'raw'});
   [dtype{k}, dimord{k}]  = datatype(data{k});
-  %if strcmp(dtype{k}, 'raw'),
-  %  %convert to timelock and keep track of this
-  %  israw = 1;
-  %  data{k} = checkdata(data{k}, 'datatype', 'timelock');
-  %  [dtype{k}, dimord{k}] = datatype(data{k});
-  %else
-  %  israw = 0;
-  %end
+  if strcmp(dtype{k}, 'raw'),
+    %ensure it to have an offset
+    data{k} = checkdata(data{k}, 'datatype', 'raw', 'hasoffset', 'yes');
+  end
 end
 
 if any(~strmatch(dtype{1},dtype))
@@ -414,8 +410,3 @@ elseif isfreqmvar,
   if avgovertime, data = avgoverdim(data, 'time');  end
   if dojack,      data = leaveoneout(data);         end    
 end
-
-%convert back to raw
-%if israw
-%  data = checkdata(data, 'datatype', 'raw');
-%end
