@@ -139,10 +139,8 @@ end
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
-  if islogical(cfg.trials),  cfg.trials=find(cfg.trials);  end
   fprintf('selecting %d trials\n', length(cfg.trials));
-  data.trial  = data.trial(cfg.trials);
-  data.time   = data.time(cfg.trials);
+  data = selectdata(data, 'rpt', cfg.trials);  
 end
 
 % determine the duration of each trial
