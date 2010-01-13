@@ -103,16 +103,20 @@ dtype = datatype(data);
 
 %FIXME throw an error if cfg.complex~='abs', and dojack==1
 %FIXME throw an error if no replicates and cfg.method='plv'
+%FIXME trial selection has to be implemented still
 
 if isfield(data, 'label'),   cfg.channel    = channelselection(cfg.channel, data.label);          end
 if ~isempty(cfg.channelcmb), cfg.channelcmb = channelcombination(cfg.channelcmb, cfg.channel, 1); end
 
 %check whether the required inparam is present in the data
-if ~isfield(data, inparam),
+if ~isfield(data, inparam) || (strcmp(inparam, 'crsspctrm') && isfield(data, 'crsspctrm') && isfield(data, 'powspctrm')),
   switch dtype
   case 'freq'
-    if strcmp(inparam, 'crsspctrm')
+    if strcmp(inparam, 'crsspctrm') && ~isfield(data, 'powspctrm')
       [data, powindx, hasrpt] = univariate2bivariate(data, 'fourierspctrm', 'crsspctrm', dtype, 0, cfg.channelcmb);
+    elseif strcmp(inparam, 'crsspctrm') && isfield(data, 'powspctrm')
+      %if input data is old-fashioned, i.e. contains powandcsd
+      [data, powindx, hasrpt] = univariate2bivariate(data, 'powandcsd', 'crsspctrm', dtype, 0, cfg.channelcmb);
     elseif strcmp(inparam, 'powcovspctrm')
       if isfield(data, 'powspctrm'),
         [data, powindx] = univariate2bivariate(data, 'powspctrm', 'powcovspctrm', dtype, strcmp(cfg.removemean,'yes'), cfg.channelcmb, strcmp(cfg.method,'amplcorr'));    
@@ -132,7 +136,6 @@ if ~isfield(data, inparam),
 else
   powindx = [];
 end
-%FIXME input data can also still be old-fashioned freq, i.e. containing both crsspctrm and powspctrm.
 
 %do some additional work if single trial normalisation is required
 if normrpt && hasrpt,
@@ -863,6 +866,14 @@ case 'freq'
     else
       data    = checkdata(data, 'cmbrepresentation', 'full');
     end
+  elseif strcmp(inparam, 'powandcsd') && strcmp(outparam, 'crsspctrm'),
+    if ~isempty(cmb),
+      data    = checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
+    else
+      %data    = checkdata(data, 'cmbrepresentation', 'full');
+      %this should not be possible
+      error('cannot convert to a full csd representation');
+    end
   elseif strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'powcovspctrm'),
     %fourier coefficients -> power covariance
     data = checkdata(data, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
@@ -918,6 +929,8 @@ case 'freq'
     error('unknown conversion from univariate to bivariate representation');
   end
   
+  ncmb  = size(cmb,1);
+  nchan = length(data.label);
   if ~isempty(cmb) && ncmb < (nchan-1)*nchan*0.5,
     powindx = labelcmb2indx(data.labelcmb);
   else
