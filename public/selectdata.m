@@ -42,14 +42,14 @@ dimord = cell(1,length(data));
 for k = 1:length(data)
   data{k} = checkdata(data{k}, 'datatype', {'freq' 'timelock' 'source', 'volume', 'freqmvar', 'raw'});
   [dtype{k}, dimord{k}]  = datatype(data{k});
-  if strcmp(dtype{k}, 'raw'),
-    %convert to timelock and keep track of this
-    israw = 1;
-    data{k} = checkdata(data{k}, 'datatype', 'timelock');
-    [dtype{k}, dimord{k}] = datatype(data{k});
-  else
-    israw = 0;
-  end
+  %if strcmp(dtype{k}, 'raw'),
+  %  %convert to timelock and keep track of this
+  %  israw = 1;
+  %  data{k} = checkdata(data{k}, 'datatype', 'timelock');
+  %  [dtype{k}, dimord{k}] = datatype(data{k});
+  %else
+  %  israw = 0;
+  %end
 end
 
 if any(~strmatch(dtype{1},dtype))
@@ -61,11 +61,12 @@ if any(~strmatch(dimord{1},dimord))
   error('a different dimord in the input data is not supported');
 end
 
-isfreq   = datatype(data{1},'freq');
-istlck   = datatype(data{1},'timelock');
-issource = datatype(data{1},'source');
-isvolume = datatype(data{1},'volume');
-isfreqmvar = datatype(data{1},'freqmvar');
+israw    = strcmp(dtype{1},'raw');
+isfreq   = strcmp(dtype{1},'freq');
+istlck   = strcmp(dtype{1},'timelock');
+issource = strcmp(dtype{1},'source');
+isvolume = strcmp(dtype{1},'volume');
+isfreqmvar = strcmp(dtype{1},'freqmvar');
 
 selchan  = keyval('channel', kvp); selectchan = ~isempty(selchan);
 selfoi   = keyval('foilim',  kvp); selectfoi  = ~isempty(selfoi);
@@ -105,7 +106,7 @@ end
 % concatenate the data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if length(data)>1,
+if length(data)>1 && ~israw,
   % determine the way to concatenate
 
   if issource || isvolume,
@@ -269,9 +270,11 @@ if length(data)>1,
     data.dim = size(data.(param{1}));
   end
 
+elseif length(data)>1 && israw
+  error('concatenation of several raw data-structures is done by ''ft_appenddata''');
 else
   % nothing to do
-  data = data{1};
+  data   = data{1};
   dimord = dimord{1};
 end
 
@@ -280,7 +283,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % determine the subselection in the data
-if selectrpt,
+if selectrpt && ~israw,
   if islogical(selrpt),
     selrpt = find(selrpt);
   end
@@ -300,6 +303,10 @@ if selectrpt,
     selrpt = find(tapers);
   else
     % do nothing
+  end
+elseif selectrpt && israw
+  if islogical(selrpt),
+    selrpt = find(selrpt);
   end
 end
 
@@ -330,7 +337,16 @@ if selectroi,
   error('not yet implemented');
 end
 
-if isfreq,
+if israw,
+  if selectrpt,
+    data = selfromraw(data, 'rpt', selrpt);
+  end
+
+  if selectchan,
+    data = selfromraw(data, 'chan', selchan); 
+  end
+
+elseif isfreq,
   if isfield(data, 'labelcmb'),
     %there is a crsspctrm field, this will only be selectdimmed
     %if we apply a trick
@@ -400,6 +416,6 @@ elseif isfreqmvar,
 end
 
 %convert back to raw
-if israw
-  data = checkdata(data, 'datatype', 'raw');
-end
+%if israw
+%  data = checkdata(data, 'datatype', 'raw');
+%end
