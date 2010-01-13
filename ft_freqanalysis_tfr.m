@@ -15,7 +15,6 @@ function [freq] = freqanalysis_tfr(cfg, data);
 %   cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'),
 %                       see CHANNELSELECTION for details
 %   cfg.downsample    = ratio for downsampling, which occurs after convolution (default = 1)
-%   cfg.trials        = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.keeptrials    = 'yes' or 'no', return individual trials or average (default = 'no')
 %
 % See also FREQANALYSIS
