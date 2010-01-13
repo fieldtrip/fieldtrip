@@ -81,18 +81,11 @@ end
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
-  if islogical(cfg.trials),  cfg.trials=find(cfg.trials);  end
   fprintf('selecting %d trials\n', length(cfg.trials));
-  data.trial  = data.trial(cfg.trials);
-  data.time   = data.time(cfg.trials);
-  % update the trial definition (trl)
-  if isempty(trl)
-    % a trial definition is expected in each continuous data set
-    warning('could not locate the trial definition ''trl'' in the data structure');
-  else
-    cfg.trlold=trl;
-    cfg.trl=trl(cfg.trials,:);
-  end
+  data       = selectdata(data, 'rpt', cfg.trials);
+  cfg.trlold = findcfg(data.cfg, 'trlold');
+  cfg.trl    = findcfg(data.cfg, 'trl');
+  trl        = cfg.trl;
 end
 
 usefsample = ~isempty(cfg.resamplefs);
