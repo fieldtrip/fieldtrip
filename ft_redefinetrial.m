@@ -72,11 +72,9 @@ trlold = trl;
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
-  if islogical(cfg.trials),  cfg.trials=find(cfg.trials);  end
   if fb, fprintf('selecting %d trials\n', length(cfg.trials)); end
-  data.trial  = data.trial(cfg.trials);
-  data.time   = data.time(cfg.trials);
-  trl         = trl(cfg.trials,:);
+  data = selectdata(data, 'rpt', cfg.trials);
+  trl  = findcfg(data.cfg, 'trl');
   if length(cfg.offset)>1 && length(cfg.offset)~=length(cfg.trials)
     cfg.offset=cfg.offset(cfg.trials);
   end
