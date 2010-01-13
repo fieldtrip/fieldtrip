@@ -106,28 +106,14 @@ cfg = checkconfig(cfg, 'createsubcfg',  {'grid'});
 cfg = checkconfig(cfg, 'renamedvalue',  {'headshape', 'headmodel', []});
 
 % select trials of interest
-if ~strcmp(cfg.trials, 'all') && israw
-  if islogical(cfg.trials),  cfg.trials=find(cfg.trials);  end
+if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
-  data.trial  = data.trial(cfg.trials);
-  data.time   = data.time(cfg.trials);
-  % update the trial definition (trl)
+  data = selectdata(data, 'rpt', cfg.trials);  
   if isfield(data, 'cfg') % try to locate the trl in the nested configuration
-    trl = findcfg(data.cfg, 'trl');
-  else
-    trl = [];
+    cfg.trlold = findcfg(data.cfg, 'trlold');
+    cfg.trl    = findcfg(data.cfg, 'trl');
   end
-  if isempty(trl)
-    % a trial definition is expected in each continuous data set
-    warning('could not locate the trial definition ''trl'' in the data structure');
-  else
-    cfg.trlold=trl;
-    cfg.trl=trl(cfg.trials,:);
-  end
-elseif ~strcmp(cfg.trials, 'all') && isfreq
-  error('subselection of trials is only supported for raw data as input');
 end
-
 
 if     strcmp(cfg.planarmethod, 'orig')
   montage = megplanar_orig(cfg, data.grad);
