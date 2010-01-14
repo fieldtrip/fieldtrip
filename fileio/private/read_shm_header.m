@@ -10,10 +10,6 @@ function [hdr] = read_shm_header(filename)
 % these are for remembering the header details to speed up subsequent calls
 persistent previous_headerfile previous_header
 
-% this global variable is used for caching in read_data, to improve the throughput when reading overlapping data segments
-global ctf_shm
-ctf_shm = [];
-
 % decode the filename, which looks like shm://<filename>
 headerfile = filetype_check_uri(filename);
 
@@ -29,11 +25,11 @@ else
   end
   buf = read_ctf_shm(sel);
   str = char(typecast(buf, 'uint8'));
-  pad = find(str==0);
-  headerfile = char(str(1:(pad(1)-1)));
+  pad = find(str==0, 1, 'first');
+  headerfile = char(str(1:(pad-1)));
 end
 
-if isempty(previous_headerfile) || isempty(previous_header)
+if isempty(previous_header) || isempty(previous_headerfile) || ~isequal(previous_headerfile, headerfile)
 
   % read the header details and remember for the subsequent calls
   hdr = read_header(headerfile, 'cache', true);

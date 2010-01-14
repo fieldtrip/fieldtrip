@@ -7,12 +7,10 @@ function [dat, dimord] = read_shm_data(hdr, chanindx, begtrial, endtrial)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-% read the data from shared memory, first the meta information only
-[msgType msgId sampleNumber numSamples numChannels] = read_ctf_shm;
+% this persistent variable is used for caching the 600 packets
+% which inproves the throughput when reading overlapping data segments
+persistent ctf_shm
 
-% this global variable is used for caching in read_data
-% which inproved the throughput when reading overlapping data segments
-global ctf_shm
 if isempty(ctf_shm)
   ctf_shm.msgType      = nan(size(msgType));
   ctf_shm.msgId        = nan(size(msgId));
@@ -23,6 +21,9 @@ if isempty(ctf_shm)
   ctf_shm.hit   = 0;
   ctf_shm.mis   = 0;
 end
+
+% read the data from shared memory, first the meta information only
+[msgType msgId sampleNumber numSamples numChannels] = read_ctf_shm;
 
 % there seems to be a bug in Acq, causing the messageId to wrap around
 % hence it cannot be used as index into the packets, so construct a new trial numbering vector 
