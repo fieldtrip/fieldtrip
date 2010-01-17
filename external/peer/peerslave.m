@@ -118,10 +118,10 @@ while true
       % collect the output options
       options = {'elapsed', elapsed, 'lastwarn', lastwarn, 'lasterr', lasterr};
 
-    catch
+    catch me
       argout  = {};
       % the output options will include the error
-      options = {'elapsed', elapsed, 'lastwarn', lastwarn, 'lasterr', lasterr};
+      options = {'elapsed', elapsed, 'lastwarn', lastwarn, 'lasterr', me};
       % an error was detected while executing the job
       warning('an error was detected during job execution');
     end

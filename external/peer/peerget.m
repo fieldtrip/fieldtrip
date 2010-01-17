@@ -14,8 +14,8 @@ function varargout = peerget(jobid, varargin)
 
 % get the optional arguments
 timeout = keyval('timeout', varargin); if isempty(timeout), timeout=1; end
-sleep   = keyval('sleep', varargin); if isempty(sleep), sleep=0.01; end
-output  = keyval('output', varargin); if isempty(output), output='varargout'; end
+sleep   = keyval('sleep',   varargin); if isempty(sleep),   sleep=0.01; end
+output  = keyval('output',  varargin); if isempty(output),  output='varargout'; end
 
 % keep track of the time
 stopwatch = tic;
@@ -40,19 +40,22 @@ while ~success && toc(stopwatch)<timeout
 end % while 
 
 if success
+
+  % look at the optional arguments
+  warn    = keyval('lastwarn', options);
+  err     = keyval('lasterr',  options);
+  elapsed = keyval('elapsed',  options);
+  if ~isempty(warn)
+    warning(warn);
+  end
+  if ~isempty(err)
+    rethrow(err);
+  end
+
   switch output
   case 'varargout'
-    % the options cannot be returned
+    % return the output arguments, the options cannot be returned
     varargout = argout;
-    warn    = keyval('lastwarn', options);
-    err     = keyval('lasterr', options);
-    elapsed = keyval('elapsed', options);
-    if ~isempty(warn)
-      warning(warn);
-    end
-    if ~isempty(err)
-      error(err);
-    end
   case 'cell'
     % return the output arguments and the options
     varargout{1} = argout;
@@ -75,4 +78,5 @@ else
     error('invalid output option');
   end
 end
+
 
