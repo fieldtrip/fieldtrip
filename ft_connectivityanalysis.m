@@ -318,7 +318,7 @@ case 'psi'
   tmpcfg.powindx   = powindx;
   tmpcfg.nbin      = nearest(data.freq, data.freq(1)+cfg.bandwidth)-1;
   tmpcfg.normalize = cfg.normalize;
-  [datout, varout, nrpt, phasediff] = coupling_psi(tmpcfg, data.(inparam), hasrpt, hasjack);
+  [datout, varout, nrpt] = coupling_psi(tmpcfg, data.(inparam), hasrpt, hasjack);
   outparam         = 'psispctrm';
 
 case 'di'
@@ -369,12 +369,6 @@ case {'freq' 'freqmvar'},
   if ~isempty(varout),
     stat   = setfield(stat, [outparam,'sem'], (varout/nrpt).^0.5);
   end
-  try 
-      if ~isempty(phasediff)
-          stat   = setfield(stat, 'angle', phasediff);
-      end
-  catch
-  end  %FIXME remove this
 case 'source'
   stat         = [];
   stat.pos     = data.pos;
@@ -494,7 +488,7 @@ c = -log(1-c.^2);
 v = -log(1-v.^2); %FIXME this is probably not correct
 
 %-------------------------------------------------------------
-function [c, v, n, phasediff] = coupling_psi(cfg, input, hasrpt, hasjack)
+function [c, v, n] = coupling_psi(cfg, input, hasrpt, hasjack)
 
 if nargin==2,
   hasrpt   = 0;
@@ -503,7 +497,7 @@ elseif nargin==3,
   hasjack  = 0;
 end
 
-if length(strfind(cfg.dimord, 'chan'))~=2 && isfield(cfg, 'powindx'),
+if (length(strfind(cfg.dimord, 'chan'))~=2 || length(strfind(cfg.dimord, 'pos'))>0) && isfield(cfg, 'powindx') && ~isempty(cfg.powindx),
   %crossterms are not described with chan_chan_therest, but are linearly indexed
   
   siz = size(input);
@@ -533,7 +527,7 @@ if length(strfind(cfg.dimord, 'chan'))~=2 && isfield(cfg, 'powindx'),
   end
   progress('close');  
 
-else %if length(strfind(cfg.dimord, 'chan'))~=2,
+elseif length(strfind(cfg.dimord, 'chan'))==2 || length(strfind(cfg.dimord, 'pos'))==2,
   %crossterms are described by chan_chan_therest 
  
   siz = size(input);
@@ -555,16 +549,12 @@ else %if length(strfind(cfg.dimord, 'chan'))~=2,
       p1(k,1,:,:,:,:) = input(j,k,k,:,:,:,:);
       p2(1,k,:,:,:,:) = input(j,k,k,:,:,:,:);
     end
-    c  = reshape(input(j,:,:,:,:,:,:), siz(2:end));
-    p1 = p1(:,ones(1,siz(3)),:,:,:,:);
-    p2 = p2(ones(1,siz(2)),:,:,:,:,:);
-    %outsum = outsum + complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./sqrt(p1.*p2), cfg.complex);
-    %outssq = outssq + complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./sqrt(p1.*p2), cfg.complex).^2;
-    p = ipermute(phaseslope(permute(c./sqrt(p1.*p2),pvec),cfg.nbin, cfg.normalize),pvec);
+    c      = reshape(input(j,:,:,:,:,:,:), siz(2:end));
+    p1     = p1(:,ones(1,siz(3)),:,:,:,:);
+    p2     = p2(ones(1,siz(2)),:,:,:,:,:);
+    p      = ipermute(phaseslope(permute(c./sqrt(p1.*p2),pvec),cfg.nbin, cfg.normalize),pvec);
     outsum = outsum + p;
     outssq = outssq + p.^2;
-    avgcrsspctrm = squeeze(mean(input,1));
-    phasediff = unwrap(angle(avgcrsspctrm),[],3);    
   end
   progress('close');
 
