@@ -99,7 +99,7 @@ if ~isequal(feedback, 'no')
   elseif isfreq
     nchan = length(data.label);
     nfreq = length(data.freq);
-    if isfield(data, 'time'), ntime = num2str(length(data.time));, else ntime = 'no'; end
+    if isfield(data, 'time'), ntime = num2str(length(data.time)); else ntime = 'no'; end
     fprintf('the input is freq data with %d channels, %d frequencybins and %s timebins\n', nchan, nfreq, ntime);
   elseif istimelock
     nchan = length(data.label);
@@ -481,9 +481,13 @@ if issource || isvolume,
     end
     if numel(dim)==1, dim(1,2) = 1; end;
   end
-
-  if issource, exclude = {'inside' 'fwhm' 'leadfield' 'q' 'rough'}; end
-  if isvolume, exclude = {         'fwhm' 'leadfield' 'q' 'rough'}; end
+  
+  % these fields should not be reshaped
+  exclude = {'fwhm' 'leadfield' 'q' 'rough'};
+  if strcmp(inside, 'index')
+    % also exclude the inside/outside from being reshaped
+    exclude = cat(2, exclude, {'inside' 'outside'});
+  end
 
   param = setdiff(parameterselection('all', data), exclude);
   for i=1:length(param)
