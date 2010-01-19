@@ -13,9 +13,12 @@ function [event] = read_event(filename, varargin)
 %   'header'        structure, see READ_HEADER
 %   'detectflank'   string, can be 'up', 'down' or 'both' (default = 'up')
 %   'trigshift'     integer, number of samples to shift from flank to detect trigger value (default = 0)
-% Furthermore, you can specify optional arguments as key-value pairs for
-% filtering the events, e.g. to select only events of a specific type. See
-% FILTER_EVENT for more details.
+%
+% Furthermore, you can specify optional arguments as key-value pairs
+% for filtering the events, e.g. to select only events of a specific
+% type, of a specific value, or events between a specific begin and
+% end sample. This event filtering is especially usefull for real-time
+% processing. See FILTER_EVENT for more details.
 %
 % Some data formats have trigger channels that are sampled continuously with
 % the same rate as the electrophysiological data. The default is to detect
