@@ -13,7 +13,7 @@ function [cfg] = topoplotER(cfg, varargin)
 % cfg.zparam             = field that contains the data to be plotted as color 
 %                         'avg', 'powspctrm' or 'cohspctrm' (default depends on data.dimord)
 % cfg.xlim               = 'maxmin' or [xmin xmax] (default = 'maxmin')
-% cfg.zlim               = 'maxmin', 'absmax' or [zmin zmax] (default = 'maxmin')
+% cfg.zlim               = 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
 % cfg.cohrefchannel      = name of reference channel for visualising coherence, can be 'gui'
 % cfg.baseline           = 'yes','no' or [time1 time2] (default = 'no'), see TIMELOCKBASELINE or FREQBASELINE
 % cfg.baselinetype       = 'absolute' or 'relative' (default = 'absolute')
@@ -135,6 +135,7 @@ data = checkdata(data);
 
 % check for option-values to be renamed
 cfg = checkconfig(cfg, 'renamedval',     {'electrodes',   'dotnum',    'numbers'});
+cfg = checkconfig(cfg, 'renamedval',     {'zlim',         'absmax',    'maxabs'});
 % check for renamed options
 cfg = checkconfig(cfg, 'renamed',     {'electrodes',    'marker'});
 cfg = checkconfig(cfg, 'renamed',     {'emarker',       'markersymbol'});
@@ -458,7 +459,7 @@ chanLabels = cfg.layout.label(sellay);
 if strcmp(cfg.zlim,'maxmin')
   zmin = min(datavector);
   zmax = max(datavector);
-elseif strcmp(cfg.zlim,'absmax')
+elseif strcmp(cfg.zlim,'maxabs')
   zmin = -max(max(abs(datavector)));
   zmax = max(max(abs(datavector)));
 else

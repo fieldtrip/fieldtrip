@@ -20,7 +20,7 @@ function [cfg] = singleplotTFR(cfg, data)
 %                     use 'saturation' when saving to vector-format (like *.eps) to avoid all sorts of image-problems
 % cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.ylim          = 'maxmin' or [ymin ymax] (default = 'maxmin')
-% cfg.zlim          = 'maxmin','absmax' or [zmin zmax] (default = 'maxmin')
+% cfg.zlim          = 'maxmin','maxabs' or [zmin zmax] (default = 'maxmin')
 % cfg.baseline      = 'yes','no' or [time1 time2] (default = 'no'), see FREQBASELINE
 % cfg.baselinetype  = 'absolute' or 'relative' (default = 'absolute')
 % cfg.trials        = 'all' or a selection given as a 1xN vector (default = 'all')
@@ -56,6 +56,9 @@ cla
 
 % For backward compatibility with old data structures:
 data = checkdata(data);
+
+% check if the input cfg is valid for this function
+cfg = checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});
 
 % Set the defaults:
 if ~isfield(cfg,'baseline'),        cfg.baseline = 'no';               end
@@ -208,7 +211,7 @@ end
 if strcmp(cfg.zlim,'maxmin')
   zmin = min(TFR(:));
   zmax = max(TFR(:));
-elseif strcmp(cfg.zlim,'absmax')
+elseif strcmp(cfg.zlim,'maxabs')
   zmin = -max(abs(TFR(:)));
   zmax = max(abs(TFR(:)));
 else

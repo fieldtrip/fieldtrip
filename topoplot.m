@@ -55,7 +55,7 @@ function [handle] = topoplot(varargin)
 %                       'head' to edge of head
 % cfg.gridscale       = scaling grid size (default = 67)
 %                       determines resolution of figure
-% cfg.maplimits       = 'absmax' +/- the absolute-max (default = 'absmax')
+% cfg.maplimits       = 'maxabs' +/- the absolute-max (default = 'maxabs')
 %                       'maxmin' scale to data range
 %                       [clim1, clim2] user-defined lo/hi
 % cfg.style           = topoplot style (default = 'both')
@@ -225,7 +225,7 @@ end
 
 % set the defaults
 if ~isfield(cfg, 'maxchans')      cfg.maxchans = 256;       end;
-if ~isfield(cfg, 'maplimits')     cfg.maplimits = 'absmax'; end; % absmax, maxmin, [values]
+if ~isfield(cfg, 'maplimits')     cfg.maplimits = 'maxabs'; end; % maxabs, maxmin, [values]
 if ~isfield(cfg, 'interplimits')  cfg.interplimits ='head'; end; % head, electrodes
 if ~isfield(cfg, 'gridscale')     cfg.gridscale = 67;       end; % 67 in original
 if ~isfield(cfg, 'contournum')    cfg.contournum = 6;       end;
@@ -296,6 +296,7 @@ if isfield(cfg,'colormap')
 end;
 
 % check if the input cfg is valid for this function
+cfg = checkconfig(cfg, 'renamedval',  {'maplimits',   'absmax',   'maxabs'});
 cfg = checkconfig(cfg, 'renamed',     {'grid_scale',  'gridscale'});
 cfg = checkconfig(cfg, 'renamed',     {'interpolate', 'interpolation'});
 cfg = checkconfig(cfg, 'renamed',     {'numcontour',  'contournum'});
@@ -464,7 +465,7 @@ if ~strcmp(cfg.style,'blank')
   % calculate colormap limits
   m = size(colormap,1);
   if ischar(cfg.maplimits)
-    if strcmp(cfg.maplimits,'absmax')
+    if strcmp(cfg.maplimits,'maxabs')
       amin = -max(max(abs(Zi)));
       amax = max(max(abs(Zi)));
     elseif strcmp(cfg.maplimits,'maxmin')

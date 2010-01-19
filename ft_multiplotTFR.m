@@ -23,7 +23,7 @@ function [cfg] = multiplotTFR(cfg, data)
 %                        sorts of image-problems (currently only possible with a white backgroud)
 % cfg.xlim             = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.ylim             = 'maxmin' or [ymin ymax] (default = 'maxmin')
-% cfg.zlim             = 'maxmin','absmax' or [zmin zmax] (default = 'maxmin')
+% cfg.zlim             = 'maxmin','maxabs' or [zmin zmax] (default = 'maxmin')
 % cfg.cohrefchannel    = name of reference channel for visualising coherence, can be 'gui'
 % cfg.baseline         = 'yes','no' or [time1 time2] (default = 'no'), see FREQBASELINE
 % cfg.baselinetype     = 'absolute' or 'relative' (default = 'absolute')
@@ -85,6 +85,9 @@ clf
 
 % for backward compatibility with old data structures
 data = checkdata(data);
+
+% check if the input cfg is valid for this function
+cfg = checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});
 
 % Set the defaults:
 if ~isfield(cfg,'baseline'),        cfg.baseline = 'no';               end
@@ -250,7 +253,7 @@ end
 if strcmp(cfg.zlim,'maxmin')
   zmin = min(datavector(:));
   zmax = max(datavector(:));
-elseif strcmp(cfg.zlim,'absmax')
+elseif strcmp(cfg.zlim,'maxabs')
   zmin = -max(abs(datavector(:)));
   zmax = max(abs(datavector(:)));
 else
