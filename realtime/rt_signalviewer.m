@@ -10,6 +10,7 @@ function rt_signalviewer(cfg)
 %   cfg.channel    = cell-array, see CHANNELSELECTION (default = 'all')
 %   cfg.bufferdata = whether to start on the 'first or 'last' data that is available (default = 'last')
 %   cfg.readevent  = whether or not to copy events (default = 'no')
+%   cfg.blc        = 'no' or 'yes', whether to apply baseline correction (default = 'yes')
 %
 % The source of the data is configured as
 %   cfg.dataset       = string
@@ -37,6 +38,7 @@ if ~isfield(cfg, 'channel'),        cfg.channel = 'all';      end
 if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'last';  end % first or last
 if ~isfield(cfg, 'readevent'),      cfg.readevent = 'no';     end % capture events?
 if ~isfield(cfg, 'jumptoeof'),      cfg.jumptoeof = 'no';     end % jump to end of file at initialization
+if ~isfield(cfg, 'blc'),            cfg.blc = 'yes';          end % baseline correction
 
 % translate dataset into datafile+headerfile
 cfg = checkconfig(cfg, 'dataset2files', 'yes');
@@ -121,7 +123,9 @@ while true
     data.fsample  = hdr.Fs;
 
     % apply some preprocessing options
-    data.trial{1} = preproc_baselinecorrect(data.trial{1});
+    if strcmp(cfg.blc, 'yes')
+      data.trial{1} = preproc_baselinecorrect(data.trial{1});
+    end
 
     % plot the data just like a standard FieldTrip raw data strucute
     plot(data.time{1}, data.trial{1});
