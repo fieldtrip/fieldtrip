@@ -39,7 +39,7 @@ for i=1:ntrl
       level(:,i) = min(dat, [], 2);
     case 'max'
       level(:,i) = max(dat, [], 2);
-    case 'absmax'
+    case 'maxabs'
       level(:,i) = max(abs(dat), [], 2);
     case 'range'
       level(:,i) = max(dat, [], 2) - min(dat, [], 2);

@@ -31,7 +31,7 @@ function [data] = rejectvisual(cfg, data);
 %                     'var'       variance within each channel (default)
 %                     'min'       minimum value in each channel
 %                     'max'       maximum value each channel
-%                     'absmax'    maximum absolute value in each channel
+%                     'maxabs'    maximum absolute value in each channel
 %                     'range'     range from min to max in each channel
 %                     'kurtosis'  kurtosis, i.e. measure of peakedness of the amplitude distribution
 %   cfg.alim        = value that determines the amplitude scaling for the
@@ -128,7 +128,9 @@ if ~isfield(cfg, 'ecgscale'),    cfg.ecgscale = [];            end
 if ~isfield(cfg, 'megscale'),    cfg.megscale = [];            end
 
 % for backward compatibility
-if ~isfield(cfg, 'metric') && any(strcmp(cfg.method, {'var', 'min', 'max', 'absmax', 'range'}))
+cfg = checkconfig(cfg, 'renamedval',  {'metric',  'absmax',  'maxabs'});
+cfg = checkconfig(cfg, 'renamedval',  {'method',  'absmax',  'maxabs'});
+if ~isfield(cfg, 'metric') && any(strcmp(cfg.method, {'var', 'min', 'max', 'maxabs', 'range'}))
   cfg.metric = cfg.method;
   cfg.method = 'summary';
 end

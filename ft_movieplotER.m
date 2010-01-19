@@ -9,7 +9,7 @@ function movieplotER(cfg, timelock)
 %   cfg.samperframe  = number, samples per fram (default = 1)
 %   cfg.framespersec = number, frames per second (default = 5)
 %   cfg.xlim         = 'maxmin' or [xmin xmax] (default = 'maxmin')
-%   cfg.zlim         = 'maxmin', 'absmax' or [zmin zmax] (default = 'maxmin')
+%   cfg.zlim         = 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
 %   cfg.framesfile   = 'no', no file saved, or 'sting', filename of saved frames.mat (default = 'no');
 %   cfg.layout        = specification of the layout, see below
 %
@@ -29,6 +29,9 @@ function movieplotER(cfg, timelock)
 
 % Checkdata
 timelock = checkdata(timelock, 'datatype', 'timelock');
+
+% check if the input cfg is valid for this function
+cfg = checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});
 
 % Defaults
 if ~isfield(cfg, 'xlim'),          cfg.xlim = 'maxmin';           end
@@ -76,7 +79,7 @@ end
 if strcmp(cfg.zlim,'maxmin')
   zmin = min(datavector(:));
   zmax = max(datavector(:));
-elseif strcmp(cfg.zlim,'absmax')
+elseif strcmp(cfg.zlim,'maxabs')
   zmin = -max(max(abs(datavector(:))));
   zmax = max(max(abs(datavector(:))));
 else
