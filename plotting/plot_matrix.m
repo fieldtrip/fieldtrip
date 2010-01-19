@@ -82,7 +82,7 @@ if ischar(hlim)
   switch hlim
     case 'maxmin'
       hlim = [min(hdat) max(hdat)];
-    case 'absmax'
+    case 'maxabs'
       hlim = max(abs(hdat));
       hlim = [-hlim hlim];
     otherwise
@@ -94,7 +94,7 @@ if ischar(vlim)
   switch vlim
     case 'maxmin'
       vlim = [min(vdat) max(vdat)];
-    case 'absmax'
+    case 'maxabs'
       vlim = max(abs(vdat));
       vlim = [-vlim vlim];
     otherwise
@@ -106,7 +106,7 @@ if ischar(clim)
   switch clim
     case 'maxmin'
       clim = [min(cdat(:)) max(cdat(:))];
-    case 'absmax'
+    case 'maxabs'
       clim = max(abs(cdat(:)));
       clim = [-clim clim];
     otherwise
