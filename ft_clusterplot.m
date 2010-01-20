@@ -77,6 +77,21 @@ if ~iscell(cfg.highlightseries)
   error('cfg.highlightseries should be a cell-array of strings')
 end
 
+% set additional options for topoplotting
+if isfield(cfg, 'marker'),                cfgtopo.marker         = cfg.marker ;         end
+if ~isfield(cfg,'marker'),                cfgtopo.marker         = 'off';               end
+if isfield(cfg, 'markersymbol'),          cfgtopo.markersymbol   = cfg.markersymbol;    end
+if isfield(cfg, 'markercolor'),           cfgtopo.markercolor    = cfg.markercolor;     end
+if isfield(cfg, 'markersize'),            cfgtopo.markersize     = cfg.markersize;      end
+if isfield(cfg, 'markerfontsize'),        cfgtopo.markerfontsize = cfg.markerfontsize;  end
+if isfield(cfg, 'style'),                 cfgtopo.style          = cfg.style ;          end
+if isfield(cfg, 'gridscale'),             cfgtopo.gridscale      = cfg.gridscale;       end
+if isfield(cfg, 'interplimits'),          cfgtopo.interplimits   = cfg.interplimits;    end
+if isfield(cfg, 'interpolation'),         cfgtopo.interpolation  = cfg.interpolation;   end
+if isfield(cfg, 'contournum'),            cfgtopo.contournum     = cfg.contournum;      end
+if isfield(cfg, 'colorbar'),              cfgtopo.colorbar       = cfg.colorbar;        end
+if isfield(cfg, 'shading'),               cfgtopo.shading        =  cfg.shading';       end
+cfgtopo.zparam = cfg.zparam;
 
 % prepare the layout, this only has to be done once
 cfgtopo.layout = prepare_layout(cfg, stat);
@@ -251,11 +266,8 @@ else
       end
     end
   end
-
-  % turn of regular channel plotting and set zparam
-  cfgtopo.marker = 'off';
-  cfgtopo.zparam = cfg.zparam;
-        
+  
+       
   % make plots
   for iPl = 1:Nfig
     figure;
