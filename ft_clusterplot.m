@@ -264,7 +264,7 @@ else
         for iT = 1:15
           PlN = (iPl-1)*15 + iT; %plotnumber
           cfgtopo.xlim = [stat.time(ind_timewin_min+PlN-1) stat.time(ind_timewin_min+PlN-1)];
-          cfgtopo.highlight = list{PlN};
+          cfgtopo.highlightchannel = list{PlN};
           cfgtopo.comment = strcat('time: ',num2str(stat.time(ind_timewin_min+PlN-1)), ' s');
           cfgtopo.commentpos = 'title';
           subplot(3,5,iT);
@@ -282,7 +282,7 @@ else
         end
       end
     else
-      cfgtopo.highlight = list{1};
+      cfgtopo.highlightchannel = list{1};
       cfgtopo.xparam = 'time';
       cfgtopo.yparam = '';
       cfgtopo.comment = strcat(compos,comneg);
