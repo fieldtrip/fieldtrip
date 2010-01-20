@@ -39,7 +39,7 @@ cfg = checkconfig(cfg, 'trackconfig', 'on');
 %FIXME do method specific calls to checkconfig
 if ~isfield(cfg, 'feedback'),   cfg.feedback   = 'none'; end
 if ~isfield(cfg, 'channel'),    cfg.channel    = 'all'; end
-if ~isfield(cfg, 'channelcmb'), cfg.channelcmb = {};    end
+if ~isfield(cfg, 'channelcmb'), cfg.channelcmb = {'all' 'all'};    end
 if ~isfield(cfg, 'refindx'),    cfg.refindx    = [];    end
 if ~isfield(cfg, 'trials'),     cfg.trials     = 'all'; end
 if ~isfield(cfg, 'complex'),    cfg.complex    = 'abs'; end
@@ -112,11 +112,13 @@ if ~isempty(cfg.channelcmb), cfg.channelcmb = channelcombination(cfg.channelcmb,
 if ~isfield(data, inparam) || (strcmp(inparam, 'crsspctrm') && isfield(data, 'crsspctrm') && isfield(data, 'powspctrm')),
   switch dtype
   case 'freq'
-    if strcmp(inparam, 'crsspctrm') && ~isfield(data, 'powspctrm')
-      [data, powindx, hasrpt] = univariate2bivariate(data, 'fourierspctrm', 'crsspctrm', dtype, 0, cfg.channelcmb);
-    elseif strcmp(inparam, 'crsspctrm') && isfield(data, 'powspctrm')
-      %if input data is old-fashioned, i.e. contains powandcsd
-      [data, powindx, hasrpt] = univariate2bivariate(data, 'powandcsd', 'crsspctrm', dtype, 0, cfg.channelcmb);
+    if strcmp(inparam, 'crsspctrm') 
+      if ~isfield(data, 'powspctrm')
+        [data, powindx, hasrpt] = univariate2bivariate(data, 'fourierspctrm', 'crsspctrm', dtype, 0, cfg.channelcmb);
+      elseif strcmp(inparam, 'crsspctrm') && isfield(data, 'powspctrm')
+        %if input data is old-fashioned, i.e. contains powandcsd
+        [data, powindx, hasrpt] = univariate2bivariate(data, 'powandcsd', 'crsspctrm', dtype, 0, cfg.channelcmb);
+      end
     elseif strcmp(inparam, 'powcovspctrm')
       if isfield(data, 'powspctrm'),
         [data, powindx] = univariate2bivariate(data, 'powspctrm', 'powcovspctrm', dtype, strcmp(cfg.removemean,'yes'), cfg.channelcmb, strcmp(cfg.method,'amplcorr'));    
@@ -133,6 +135,7 @@ if ~isfield(data, inparam) || (strcmp(inparam, 'crsspctrm') && isfield(data, 'cr
     end
   otherwise
   end
+
 else
   powindx = [];
 end
@@ -841,20 +844,25 @@ if nargin<7, sqrtflag   = 0;  end
 if nargin<6, cmb        = []; end
 if nargin<5, demeanflag = 0;  end
 
-if isempty(cmb),
-  cmbrepresentation = 'full';
-end
-
 switch dtype
 case 'freq'
-  if isempty(cmb), cmb = {}; end
+  
+  ncmb  = size(cmb,1);
+  nchan = numel(data.label);  
+  if ncmb==0,
+    error('no channel combinations are specified');
+  elseif ncmb==nchan.^2 || ncmb==(nchan+1)*nchan*0.5,
+    dofull = 1;
+  else
+    dofull = 0;
+  end
   
   if strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'crsspctrm'),
     %fourier coefficients -> cross-spectral density
-    if ~isempty(cmb),
-      data    = checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
-    else
+    if dofull 
       data    = checkdata(data, 'cmbrepresentation', 'full');
+    else
+      data    = checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
     end
   elseif strcmp(inparam, 'powandcsd') && strcmp(outparam, 'crsspctrm'),
     if ~isempty(cmb),
@@ -881,8 +889,6 @@ case 'freq'
     data               = rmfield(data, 'powspctrm');
     data.cumtapcnt(:)  = 1;
     data.cumsumcnt(:)  = 1;
-    ncmb               = size(cmb,1);
-    nchan              = length(data.label);
     if ncmb < (nchan-1)*nchan*0.5,
       data    = checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);  
     else
@@ -906,8 +912,6 @@ case 'freq'
     data               = rmfield(data, 'powspctrm');
     data.cumtapcnt(:)  = 1;
     data.cumsumcnt(:)  = 1;
-    ncmb               = size(cmb,1);
-    nchan              = length(data.label);
     if ncmb < (nchan-1)*nchan*0.5,
       data    = checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);  
     else
@@ -919,8 +923,6 @@ case 'freq'
     error('unknown conversion from univariate to bivariate representation');
   end
   
-  ncmb  = size(cmb,1);
-  nchan = length(data.label);
   if ~isempty(cmb) && ncmb < (nchan-1)*nchan*0.5,
     powindx = labelcmb2indx(data.labelcmb);
   else
