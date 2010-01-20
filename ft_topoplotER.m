@@ -190,7 +190,6 @@ if ~isfield(cfg, 'markersymbol'),          cfg.markersymbol = 'o';        end
 if ~isfield(cfg, 'markercolor'),           cfg.markercolor = [0 0 0];     end
 if ~isfield(cfg, 'markersize'),            cfg.markersize = 2;            end
 if ~isfield(cfg, 'markerfontsize'),        cfg.markerfontsize = 8;        end
-if ~isfield(cfg, 'interplimits'),          cfg.interplimits = 'head';     end
 if ~isfield(cfg, 'highlight'),             cfg.highlight = 'off';         end 
 if ~isfield(cfg, 'highlightchannel'),      cfg.highlightchannel = 'all';  end
 if ~isfield(cfg, 'highlightsymbol'),       cfg.highlightsymbol = '*';     end
