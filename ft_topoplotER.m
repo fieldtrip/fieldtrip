@@ -243,7 +243,7 @@ end
  
 % for backwards compatability
 if strcmp(cfg.marker,'highlights')
-  warning('use cfg.marker options -highlights- is no longer used, please use cfg.highlight')
+  warning('using cfg.marker option -highlights- is no longer used, please use cfg.highlight')
   cfg.marker = 'off';
 end
 
