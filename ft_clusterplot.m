@@ -42,11 +42,24 @@ if isfield(stat,'freq') && length(stat.freq) > 1
   error('stat contains multiple frequencies which is not allowed because it should be averaged over frequencies')
 end
 
+% old config options
 cfg = checkconfig(cfg, 'renamed',     {'hlmarkerseries',       'highlightsymbolseries'});
 cfg = checkconfig(cfg, 'renamed',     {'hlmarkersizeseries',   'highlightsizeseries'});
 cfg = checkconfig(cfg, 'renamed',     {'hlcolorpos',           'highlightcolorpos'});
 cfg = checkconfig(cfg, 'renamed',     {'hlcolorneg',           'highlightcolorneg'});
 cfg = checkconfig(cfg, 'deprecated',  {'hllinewidthseries'});
+
+% added several forbidden options  
+cfg = checkconfig(cfg, 'forbidden',  {'highlight'});
+cfg = checkconfig(cfg, 'forbidden',  {'highlightchannel'});
+cfg = checkconfig(cfg, 'forbidden',  {'highlightsymbol'});
+cfg = checkconfig(cfg, 'forbidden',  {'highlightcolor'});
+cfg = checkconfig(cfg, 'forbidden',  {'highlightsize'});
+cfg = checkconfig(cfg, 'forbidden',  {'highlightfontsize'});
+cfg = checkconfig(cfg, 'forbidden',  {'xlim'});
+cfg = checkconfig(cfg, 'forbidden',  {'comment'});
+cfg = checkconfig(cfg, 'forbidden',  {'commentpos'});
+
 
 % set the defaults
 if ~isfield(cfg,'alpha'),                  cfg.alpha = 0.05;                                    end;
