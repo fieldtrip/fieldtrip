@@ -104,7 +104,12 @@ end
 
 if length(data)>1 && ~israw,
   % determine the way to concatenate
-
+  if issource,
+    for k = 1:numel(data)
+      data{k} = fixinside(data{k}, 'logical');
+    end
+  end
+   
   if issource || isvolume,
     param = parameterselection(param, data{1}); % FIXME check consistency across input data of presence of specific parameters
   else
@@ -181,34 +186,23 @@ if length(data)>1 && ~israw,
   if ~strcmp(dimtok{catdim},'rpt') && ~strcmp(dimtok{catdim},'rpttap'),
     for k = 1:length(data)
       if k==1,
-        tmp = getsubfield(data{k}, dimtok{catdim});
-    if strcmp(dimtok{catdim},'pos') && isfield(data{k},'inside'),
-      tmpinside  = getfield(data{k}, 'inside');
-      tmpoutside = getfield(data{k}, 'outside'); 
-      tmpnvox    = numel(tmpinside)+numel(tmpoutside);
-    end
+        tmp       = getsubfield(data{k}, dimtok{catdim});
+	if isfield(data{1}, 'inside'), tmpinside = getfield(data{k}, 'inside'); end
       else
-        if strcmp(dimtok{catdim},'pos'),
-          tmp = [tmp; getsubfield(data{k}, dimtok{catdim})]; sortflag = 0;
-      
-      %FIXME make this robust, now inside as vector is assumed
-      if exist('tmpinside', 'var')
-        tmpx       = getfield(data{k}, 'inside');
-        tmpx2      = getfield(data{k}, 'outside');
-        tmpnvox    = numel(tmpinside)+numel(tmpoutside);
-        tmpinside  = [tmpinside(:)'  tmpnvox(end)+tmpx(:)'];
-        tmpoutside = [tmpoutside(:)' tmpnvox(end)+tmpx2(:)'];
-      end
-    else
-          tmp = [tmp  getsubfield(data{k}, dimtok{catdim})]; sortflag = 1;
-        end
+        if strcmp(dimtok{catdim},'pos')
+	  tmp       = [tmp;       getsubfield(data{k}, dimtok{catdim})];
+          if isfield(data{1}, 'inside'), tmpinside = [tmpinside; getfield(data{k}, 'inside')]; end
+	  sortflag  = 0;
+	else
+          tmp       = [tmp       getsubfield(data{k}, dimtok{catdim})];
+          if isfield(data{1}, 'inside'), tmpinside = [tmpinside getfield(data{k}, 'inside')]; end
+	  sortflag  = 1;
+	end
       end
     end
     data{1} = setsubfield(data{1}, dimtok{catdim}, tmp);
-    if exist('tmpinside', 'var')
-      data{1} = setfield(data{1}, 'inside',  tmpinside);
-      data{1} = setfield(data{1}, 'outside', tmpoutside);
-    end
+    if isfield(data{1}, 'inside'), data{1} = setsubfield(data{1}, 'inside',       tmpinside); end
+
     %FIXME think about this
     tryfields = {'dof'};
   else
@@ -231,6 +225,7 @@ if length(data)>1 && ~israw,
     catch
     end
   end
+  % FIXME handle inside in previous loop
 
   % FIXME this is ugly: solve it
   %if issource || isvolume,
