@@ -92,6 +92,22 @@ for j=1:Ndata
   order(ix,j) = iy;
 end
 
+%check consistency of sensor positions across inputs
+haselec = isfield(varargin{1}, 'elec');
+hasgrad = isfield(varargin{1}, 'grad');
+removesens = 0;
+for j=1:Ndata
+  if haselec, sens{j} = getfield(varargin{j}, 'elec'); end
+  if hasgrad, sens{j} = getfield(varargin{j}, 'grad'); end
+  if j>1,
+    if numel(sens{j}.pnt) ~= numel(sens{1}.pnt) || any(sens{j}.pnt(:) ~= sens{1}.pnt(:)),
+      removesens = 1;
+      warning('sensor information does not seem to be consistent across the input arguments');
+      break;
+    end
+  end
+end
+
 catlabel   = all(sum(order~=0,2)==1);
 cattrial   = any(sum(order~=0,2)==Ndata);
 shuflabel  = cattrial && ~all(all(order-repmat(order(:,1),[1 Ndata])==0));
@@ -176,6 +192,11 @@ if shuflabel
   data.label = data.label(reorder);
 end
 
+if removesens
+  fprintf('removing sensor information from output\n');
+  if haselec, data = rmfield(data, 'elec'); end
+  if hasgrad, data = rmfield(data, 'grad'); end
+end
 
 % add version information to the configuration
 try
