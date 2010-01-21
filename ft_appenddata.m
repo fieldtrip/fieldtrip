@@ -96,6 +96,7 @@ end
 haselec = isfield(varargin{1}, 'elec');
 hasgrad = isfield(varargin{1}, 'grad');
 removesens = 0;
+if haselec || hasgrad,
 for j=1:Ndata
   if haselec, sens{j} = getfield(varargin{j}, 'elec'); end
   if hasgrad, sens{j} = getfield(varargin{j}, 'grad'); end
@@ -106,6 +107,7 @@ for j=1:Ndata
       break;
     end
   end
+end
 end
 
 catlabel   = all(sum(order~=0,2)==1);
