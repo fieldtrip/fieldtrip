@@ -60,3 +60,7 @@ switch avgdim
   otherwise
     error('unknown dimension "%s"', avgdim);
 end
+
+if isfield(data, 'dim'),
+  data.dim(avgdimnum) = [];
+end
