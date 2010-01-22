@@ -89,38 +89,28 @@ stat.prob = mean(cell2mat(all),1);
 % is the statistic significant?
 stat.significance = cv.significance();
 
-% get the model wrt to each of the labels
+% get the models
 if ~cfg.compact  
 
-  m = cv.getmodel();
+  [m,desc] = cv.getmodel();
 
-  if iscell(m) % transfer learning
+  for c=1:size(m,1) % iterate over parameter types
     
-    nlabels = size(m{1},1);
-    
-    if nlabels > 1
-      for j=1:nlabels       
-        stat.(sprintf('model%d',j)) = cellfun(@(x)(reshape(x(j,:),cfg.dim)),m,'UniformOutput',false);
+    if size(m,2) > 1 % transfer learning
+      
+      for j=1:size(m,2)        
+        stat.(sprintf('model%d_%d',c,j)) = reshape(m{c,j},cfg.dim);
       end
-    else
-      stat.model = cellfun(@(x)(reshape(x,cfg.dim)),m,'UniformOutput',false);
+            
+    else      
+      stat.(sprintf('model%d',c)) = reshape(m{c},cfg.dim);
     end
-    
-  else
-    
-    nlabels = size(m,1);
-    
-    if nlabels > 1
-      for j=1:nlabels
-        stat.(sprintf('model%d',j)) = reshape(m(j,:),cfg.dim);
-      end
-    else
-      stat.model = reshape(m,cfg.dim);
-    end
+  end  
+  
+  for c=1:size(m,1) % iterate over parameter types
+    stat.(sprintf('desc%d',c)) = desc{c};
   end
   
-else % no model availabe 
-  stat.model = [];  
 end
 
 % save crossvalidator object
