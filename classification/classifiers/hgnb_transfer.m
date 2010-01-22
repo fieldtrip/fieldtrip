@@ -172,11 +172,12 @@ classdef hgnb_transfer < classifier & transfer_learner
     end
     
     function m = getmodel(obj)
-      % return the parameters wrt a class label in some shape
+      % return the parameters
 
         % return model for all classes; i.e., their means
-        m = obj.means;
-      
+        m = {obj.means}; % ignore bias term
+        desc = {'unknown'};
+           
     end
 
   end

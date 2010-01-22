@@ -75,6 +75,6 @@
 % - profiling
 % - rewrite handling of timeseries...
 % - allow arbitrary labels for the classifiers
-
-% repmatC/mcholC/lbfgsC.mexmaci (32bit) , reconstructors/ toevoegen aan svn
-% imputer verwijderen
+% - getmodel add descriptions and make sure they can be remapped (e.g.,
+%   featureselector)
+% - blogreg blinreg return used scale when using multiple updates

@@ -47,10 +47,11 @@ classdef lasso < regressor
 
        end
        
-       function m = getmodel(obj)
+       function [m,desc] = getmodel(obj)
          % return the parameters 
                     
-         m = full(obj.model(:,1:(end-1))); % ignore bias term
+         m = {full(obj.model(:,1:(end-1)))}; % ignore bias term
+         desc = {'unknown'};
          
        end
 

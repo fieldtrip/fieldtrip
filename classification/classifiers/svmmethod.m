@@ -197,11 +197,12 @@ classdef svmmethod < classifier
         
       end
       
-      function m = getmodel(obj)
-        % return the parameters wrt a class label in some shape
+      function [m,desc] = getmodel(obj)
+        % return the parameters
         
-        m = obj.wv; % only one vector for svmmethod
-                
+        m = {obj.wv}; % only one vector for svmmethod
+        desc = {'unknown'};
+        
       end
       
     end

@@ -19,14 +19,15 @@ classdef clfmethod
     
     methods                  
       
-      function m = getmodel(obj)
+      function [m,desc] = getmodel(obj)
         % default behaviour when we ask for a model (override in subclass)
         
         if obj.verbose
-          fprintf('don`t know how to return model for object of type %s; returning empty model\n',class(obj));
+          fprintf('don`t know how to return model for object of type %s; returning empty model and description\n',class(obj));
         end
         
-        m = [];
+        m = {};
+        desc = {};
         
       end
       

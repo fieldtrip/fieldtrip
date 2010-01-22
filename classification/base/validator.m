@@ -7,7 +7,7 @@ classdef validator
     post;   % posteriors
     design  % associated class labels
     
-    init        = 0;     % initialize RNG
+    init        = 5;    % initialize RNG
     balanced    = false; % balance classes
     compact     = false; % only retain necessary results
     verbose     = false; % verbose output
@@ -56,21 +56,24 @@ classdef validator
       
     end
     
-    function m = getmodel(obj)
+    function [m,desc] = getmodel(obj)
       % try to return the classifier parameters as a model
-      
-      if nargin < 2, label = 1; end
-      
+          
       if ~iscell(obj.procedure)
         obj.procedure = {obj.procedure};
       end
       
       if isempty(obj.procedure{1})
-        m = [];
+        
+        m = {};
+        desc = {};
         return;
+      
       end
       
       fm = cellfun(@(x)(x.getmodel()),obj.procedure,'UniformOutput', false);
+      
+      [tmp,desc] = obj.procedure{1}.getmodel();
       
       m = fm{1};
       for c=2:length(obj.procedure)

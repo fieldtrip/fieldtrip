@@ -141,11 +141,12 @@ methods
     
   end
   
-  function m = getmodel(obj)
+  function [m,desc] = getmodel(obj)
     % return the parameters wrt a class label in some shape
     
-    m = obj.primal; % only one vector for kernelmethod
-        
+    m = {obj.primal}; % only one vector for kernelmethod
+    desc = {'unknown'};
+    
   end
   
 end

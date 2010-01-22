@@ -61,10 +61,11 @@ classdef featureselector < clfmethod
         
       end
       
-      function model = getmodel(obj,label)
+      function [model,desc] = getmodel(obj,label)
         % return used subset
         
-        model = obj.subset;
+        model = {obj.subset};
+        desc = {'indices of the used features'};
         
       end
       

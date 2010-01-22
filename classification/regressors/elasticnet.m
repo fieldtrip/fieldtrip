@@ -55,11 +55,12 @@ classdef elasticnet < regressor
 
        end
        
-       function m = getmodel(obj)
+       function [m,desc] = getmodel(obj)
          % return the parameters wrt a class label in some shape 
                     
-         m = full(obj.model(1:(end-1))); % ignore bias term
-         
+         m = {obj.model(2:end)'}; % ignore bias term
+         desc = {'unknown'};
+                    
        end
 
     end

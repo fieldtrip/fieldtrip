@@ -97,10 +97,18 @@ classdef gslr < classifier
         
       end
       
-      function m = getmodel(obj)
+      function [m,desc] = getmodel(obj)
         % return the parameters wrt a class label in some shape
+        % and a description of what each model stands for 
         
-        m = full(obj.model(:,1:(end-1))); % ignore bias term
+        %m = full(obj.model(:,1:(end-1))); % ignore bias term
+        
+        m = cell(size(obj.model,1),1);
+        for c=1:size(obj.model,1)
+          m{c} = obj.model(c,1:(end-1));
+        end
+        
+        desc = {'unknown'};
         
       end
       

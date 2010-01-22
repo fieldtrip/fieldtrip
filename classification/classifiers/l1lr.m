@@ -62,11 +62,12 @@ classdef l1lr < classifier
          
        end              
        
-       function m = getmodel(obj)
+       function [m,desc] = getmodel(obj)
          % return the parameters wrt a class label in some shape 
          
-           m = obj.model(2:end)'; % ignore bias term
-         
+           m = {obj.model(2:end)'}; % ignore bias term
+           desc = {'unknown'};
+           
        end
        
     end

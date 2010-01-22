@@ -61,14 +61,18 @@ classdef gslr_transfer < classifier & transfer_learner
          
        end
        
-       function m = getmodel(obj)
+       function [m,desc] = getmodel(obj)
          % return the parameters wrt a class label in some shape 
+         % for multiple tasks, the rows represent the models and
+         % the columns represent datasets
         
            % return model for all classes           
            m = cell(1,length(obj.model));
            for c=1:length(obj.model)
              m{c} = full(obj.model{c}(:,1:(end-1))); % ignore bias term
            end          
+           
+           desc = {'unknown'};
                   
        end
 

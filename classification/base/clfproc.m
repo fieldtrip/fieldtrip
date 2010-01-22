@@ -196,11 +196,11 @@ classdef clfproc
          
        end
        
-       function m = getmodel(obj)
+       function [m,desc] = getmodel(obj)
          % return the model implied by this classification procedure
         
          % get the final model
-         m = obj.clfmethods{end}.getmodel();
+         [m,desc] = obj.clfmethods{end}.getmodel();
 
        end
                     

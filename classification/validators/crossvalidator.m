@@ -158,8 +158,8 @@ classdef crossvalidator < validator
               % use the same ordering for multiple datasets if possible
               % by reinitializing the random number generator
               if ~isempty(obj.init)                
-                 rand('twister',obj.init);
-                 randn('twister',obj.init);
+                 rand('state',obj.init);
+                 randn('state',obj.init);
                end
               
               % randomize labeled trials
@@ -244,8 +244,8 @@ classdef crossvalidator < validator
                 % use the same ordering for multiple datasets if possible
                 % by reinitializing the random number generator
                 if ~isempty(obj.init)
-                  rand('twister',obj.init);
-                  randn('twister',obj.init);
+                  rand('state',obj.init);
+                  randn('state',obj.init);
                 end
                 
                 trainfolds{f,d} =  setdiff(1:design{d}.nsamples,testfolds{f,d})';
@@ -299,8 +299,8 @@ classdef crossvalidator < validator
                 % use the same ordering for multiple datasets if possible
                 % by reinitializing the random number generator
                 if ~isempty(obj.init)
-                     rand('twister',obj.init);
-                     randn('twister',obj.init);
+                     rand('state',obj.init);
+                     randn('state',obj.init);
                 end
                 
                 testfolds{f,d} = setdiff(1:design{d}.nsamples,trainfolds{f,d})';

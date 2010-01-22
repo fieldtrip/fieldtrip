@@ -241,7 +241,7 @@ classdef blogreg < classifier
          post = dataset([y 1 - y]);
          
        end
-       function [m,varaux,varprior,meanbeta,varbeta] = getmodel(obj)
+       function [m,desc] = getmodel(obj)
          % return the variances of the auxiliary variables as the model; this
          % determines in turn the magnitude of the betas through: U = u^2 + v^2
          % we output variances relative to the prior variances
@@ -259,14 +259,27 @@ classdef blogreg < classifier
          varprior = full(diag(S*invA*S'));
          varprior = varprior(1:(end-1));
          
-         % model is posterior variance divided by prior variance of the
-         % auxiliary variables; chose minus because of interpretation
-         % problems...
-         m = (varaux - varprior);
-         
          % mean and variance of the regression coefficients
          meanbeta = obj.Gauss.m(1:(end-1));
          varbeta = obj.Gauss.diagC(1:(end-1));
+         
+         % model is posterior variance divided by prior variance of the
+         % auxiliary variables; chose minus because of interpretation
+         % problems...
+                
+         m = cell(5,1);
+         m{1} = (varaux - varprior);
+         m{2} = varaux;
+         m{3} = varprior;
+         m{4} = meanbeta;
+         m{5} = varbeta; 
+         
+         desc = { ...
+           'importance values (posterior  - prior variance of auxiliary variables' ...
+           'posterior variance of auxiliary variables' ...
+           'prior variance of auxiliary variables' ...
+           'means of the regression coefficients' ...
+           'variance of the regression coefficients' }';
          
        end
        

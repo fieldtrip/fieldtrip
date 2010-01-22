@@ -102,12 +102,13 @@ classdef nb < classifier
       
     end
 
-    function m = getmodel(obj)
+    function [m,desc] = getmodel(obj)
       % return the parameters wrt a class label in some shape
 
       % return model for all classes; i.e., their means
-        m = obj.means;
-
+        m = {obj.means};
+        desc = {'unknown'}
+        
     end
 
   end
