@@ -158,8 +158,9 @@ classdef crossvalidator < validator
               % use the same ordering for multiple datasets if possible
               % by reinitializing the random number generator
               if ~isempty(obj.init)                
-                RandStream.setDefaultStream(RandStream('mt19937ar','seed',obj.init));
-              end
+                 rand('twister',obj.init);
+                 randn('twister',obj.init);
+               end
               
               % randomize labeled trials
               nsamples = size(labeled{d},1);
@@ -243,7 +244,8 @@ classdef crossvalidator < validator
                 % use the same ordering for multiple datasets if possible
                 % by reinitializing the random number generator
                 if ~isempty(obj.init)
-                  RandStream.setDefaultStream(RandStream('mt19937ar','seed',obj.init));
+                  rand('twister',obj.init);
+                  randn('twister',obj.init);
                 end
                 
                 trainfolds{f,d} =  setdiff(1:design{d}.nsamples,testfolds{f,d})';
@@ -297,7 +299,8 @@ classdef crossvalidator < validator
                 % use the same ordering for multiple datasets if possible
                 % by reinitializing the random number generator
                 if ~isempty(obj.init)
-                  RandStream.setDefaultStream(RandStream('mt19937ar','seed',obj.init));
+                     rand('twister',obj.init);
+                     randn('twister',obj.init);
                 end
                 
                 testfolds{f,d} = setdiff(1:design{d}.nsamples,trainfolds{f,d})';
