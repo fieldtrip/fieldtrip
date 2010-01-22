@@ -43,57 +43,80 @@ else
      end
    end
    
-   if ~isfield(cfg,'cvfolds'), cfg.cvfolds = 10; end
-   if ~isfield(cfg,'randomize'), cfg.randomize = true; end
+   if ~isfield(cfg,'nfolds'), cfg.nfolds = 10; end
    if ~isfield(cfg,'compact'), cfg.compact = false; end
 
-   cv = crossvalidator('procedure',cfg.clfproc,'cvfolds',cfg.cvfolds,'randomize',cfg.randomize,'compact',cfg.compact,'verbose',true);
+   cv = crossvalidator('procedure',cfg.clfproc,'nfolds',cfg.nfolds,'compact',cfg.compact,'verbose',true);
 
 end
 
 % specify metric returned in stat.prob
 if ~isfield(cfg,'metric'), cfg.metric = 'accuracy'; end
 
-% check for transfer learning; this is implemented by a design matrix where
-% the second vector labels the subjects
+% check for transfer learning; this is implemented by cfg.dataset,
+% indicating the dataset number for each element in the design matrix
 
-if isa(cfg.clfproc.clfmethods{end},'transfer_learner') && size(design,1) == 2
+if isfield(cfg,'dataset') && ~isempty(cfg.dataset)
 
   % split up the datasets
+  
   tmpdat = dat';
   tmpdesign = design';
-  n = max(tmpdesign(:,2));
+  
+  n = max(cfg.dataset);
+  
   dat = cell(1,n);
   design = cell(1,n);
   for c=1:n
-    dat{c}    = tmpdat(tmpdesign(:,2) == c,:);
-    design{c} = tmpdesign(tmpdesign(:,2) == c,1);
+    dat{c}    = dataset(tmpdat(cfg.dataset == c,:));
+    design{c} = dataset(tmpdesign(cfg.dataset == c,:));
   end
   
-  % perform everything ;o)
-  cv = cv.validate(dat,design);
-
 else
+  
+  dat = dataset(dat');
+  design = dataset(design');
 
-  % perform everything ;o)
-  cv = cv.validate(dat',design');
 end
 
+% perform everything ;o)
+cv = cv.validate(dat,design);
+
 % the statistic of interest
-stat.prob = cv.evaluate('metric',cfg.metric);
+[res,all] = cv.evaluate('metric',cfg.metric);
+stat.prob = mean(cell2mat(all),1);
 
 % is the statistic significant?
 stat.significance = cv.significance();
 
-% get the model wrt to each of the class labels
-if ~cfg.compact
-  
-  if ~isnan(cv.nclasses())
-    for j=1:cv.nclasses()
-      stat.(sprintf('model%d',j)) = cv.getmodel(j,cfg.dim);
+% get the model wrt to each of the labels
+if ~cfg.compact  
+
+  m = cv.getmodel();
+
+  if iscell(m) % transfer learning
+    
+    nlabels = size(m{1},1);
+    
+    if nlabels > 1
+      for j=1:nlabels       
+        stat.(sprintf('model%d',j)) = cellfun(@(x)(reshape(x(j,:),cfg.dim)),m,'UniformOutput',false);
+      end
+    else
+      stat.model = cellfun(@(x)(reshape(x,cfg.dim)),m,'UniformOutput',false);
     end
+    
   else
-    stat.model = cv.getmodel(nan,cfg.dim);
+    
+    nlabels = size(m,1);
+    
+    if nlabels > 1
+      for j=1:nlabels
+        stat.(sprintf('model%d',j)) = reshape(m(j,:),cfg.dim);
+      end
+    else
+      stat.model = reshape(m,cfg.dim);
+    end
   end
   
 else % no model availabe 

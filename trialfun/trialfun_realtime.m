@@ -21,11 +21,11 @@ function trl = trialfun_realtime(cfg)
   if ~isfield(cfg,'offset'),      cfg.offset = 0; end
   if ~isfield(cfg,'bufferdata'),  cfg.bufferdata = 'first'; end
   if ~isfield(cfg,'triggers'),    cfg.triggers = [];        end
-  
-  % blocksize in terms of samples
+       
+  % blocksize and offset in terms of samples
   cfg.blocksize = round(cfg.blocksize * cfg.hdr.Fs);
   cfg.offset = round(cfg.offset * cfg.hdr.Fs);
-      
+    
   % retrieve trials of interest
   if isempty(cfg.event) % asynchronous mode
     trl = trialfun_asynchronous(cfg);
@@ -37,15 +37,15 @@ end
 function trl = trialfun_asynchronous(cfg)
   
   trl = [];
-  
+ 
   prevSample = cfg.minsample;
 
   if strcmp(cfg.bufferdata, 'last') % only get last block
 
-    % begsample starts blocksize(2) samples before the end
+    % begsample starts blocksize samples before the end
     begsample  = cfg.hdr.nSamples*cfg.hdr.nTrials - cfg.blocksize;
 
-    % begsample should be blocksize(1) samples away from the previous read
+    % begsample should be offset samples away from the previous read
     if begsample >= (prevSample + cfg.offset)
       
       endsample  = cfg.hdr.nSamples*cfg.hdr.nTrials;
@@ -84,8 +84,7 @@ end
 function trl = trialfun_synchronous(cfg)
 
   trl = [];
-  offset = cfg.hdr.Fs * cfg.offset;
-
+   
   % process all events
   for j=1:length(cfg.event)
 
@@ -104,7 +103,7 @@ function trl = trialfun_synchronous(cfg)
       begsample = max(1,cfg.event(j).sample + cfg.offset);
       endsample = max(1,begsample + cfg.blocksize);
 
-      trl = [trl; [begsample endsample begsample + offset curtrig]];
+      trl = [trl; [begsample endsample cfg.offset curtrig]];
 
     end
   end
