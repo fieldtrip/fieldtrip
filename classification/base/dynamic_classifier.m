@@ -40,6 +40,9 @@ classdef dynamic_classifier < classifier
         numvar; % number of variables per slice
         horizon = inf;  % must be <inf for synchronous (finite horizon) models
         coupled = true; % if false; we decouple all slices
+        
+        nclasses;
+        
     end
 
     methods
@@ -52,7 +55,10 @@ classdef dynamic_classifier < classifier
             
             if iscell(data), error('classifier does not take multiple datasets as input'); end
             
-            if isnan(obj.nclasses), obj.nclasses = max(design(:,1)); end
+            obj.nclasses = design.nunique;
+            
+            data = data.collapse();
+            design = design.collapse();
                 
             if isinf(obj.horizon)
                obj.numvar = 1 + size(data,2); 
@@ -158,6 +164,8 @@ classdef dynamic_classifier < classifier
            if iscell(data), error('classifier does not take multiple datasets as input'); end
 
            if obj.verbose, fprintf('computing marginals\n'); end
+           
+           data = data.collapse();
            
            post = zeros([size(data,1) obj.nclasses]);
 

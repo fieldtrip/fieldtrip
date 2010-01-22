@@ -16,6 +16,9 @@ classdef nearestneighbour < classifier
 
         k=1; % number of neighbours
         net; % the knn object        
+        
+        nclasses;
+        
     end
 
     methods
@@ -25,23 +28,24 @@ classdef nearestneighbour < classifier
                       
        end
        function obj = train(obj,data,design)
-            % create knn object
-           
-            [data,design] = obj.check_input(data,design);
-            
-            if isnan(obj.nclasses), obj.nclasses = max(design(:,1)); end
-
-            targets = zeros(size(data,1),obj.nclasses);
-            for j=1:size(data,1)
-                targets(j,design(j,1)) = 1;
-            end
-
-            obj.net = knn(size(data,2), obj.nclasses, obj.k, data, targets);
-
-       end
-       function post = test(obj,data)       
+         % create knn object
          
-         data = obj.check_input(data);
+         obj.nclasses = design.nunique;
+         
+         data = data.collapse();
+         design = design.collapse();
+         
+         targets = zeros(size(data,1),obj.nclasses);
+         for j=1:size(data,1)
+           targets(j,design(j,1)) = 1;
+         end
+         
+         obj.net = knn(size(data,2), obj.nclasses, obj.k, data, targets);
+         
+       end
+       function post = test(obj,data)
+         
+         data = data.collapse();
          
          [y, l] = knnfwd(obj.net, data);
          
@@ -50,7 +54,9 @@ classdef nearestneighbour < classifier
            post(j,l(j)) = 1;
          end
          
+         post = dataset(post);
+         
        end
-
+       
     end
-end 
+end

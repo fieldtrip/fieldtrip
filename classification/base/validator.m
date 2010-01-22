@@ -1,59 +1,23 @@
 classdef validator
-  %VALIDATOR abstract validator class
-  %
-  %   a validator takes a classification procedure
-  %
-  %   data is not randomized by default by a validator since it may have an inherent
-  %   temporal ordering (i.e, for dynamic models)
-  %
-  %   Options:
-  %   'init'      : initialize the random number generator with seed [1]
-  %   'randomize' : reshuffle if true [false]
-  %   'procedure' : the classification procedure
-  %   'verbose'   : output comment if true [false]
-  %   'balanced'  : balance data before training/testing a classifier (true,
-  %                   false,'train', 'test'); [false]
-  %   'compact'   : only retain posteriors and design (in case of memory issues)
-  %   'mode'      : 'classification' or 'regression' []
-  %   'transfer'  : transfer learning []
-  %
-  %   SEE ALSO:
-  %   crossvalidator.m
-  %   loocrossvalidator.m
-  %
-  %   Copyright (c) 2008, Marcel van Gerven
-  %
-  %   $Log: validator.m,v $
-  %
-  
+    
   properties
     
-    verbose = false;
+    procedure;
     
     post;   % posteriors
     design  % associated class labels
     
-    init        = 1;     % initialize RNG
-    randomize   = false; % randomize trials
+    init        = 0;     % initialize RNG
     balanced    = false; % balance classes
     compact     = false; % only retain necessary results
+    verbose     = false; % verbose output
     
-    % operating mode (classification/regression);
-    % for clf, classes are evenly distributed over folds
-    mode;
-    
-    % transfer learning
-    transfer; 
-    
-    procedure;
     
   end
   
   methods
     function obj = validator(varargin)
-      % a procedure is a clfproc or a cell array of clfprocs
-      % the latter is useful for retaining all results in a
-      % crossvalidation (although it takes up more space)
+      % a procedure is a clfproc
       
       % parse options
       for i=1:2:length(varargin)
@@ -68,42 +32,19 @@ classdef validator
       
       if ~isa(obj.procedure,'clfproc')
         % try to create procedure if input is a cell array or a predictor
-        if obj.verbose
-          fprintf('creating procedure\n');
-        end
         obj.procedure = clfproc(obj.procedure);
-      end
-      
-      % determine mode of operation
-      if isempty(obj.mode)
-        
-        m = obj.getpredictor();
-        
-        if isa(m,'classifier') || (isa(m,'optimizer') && isa(m.method,'classifier'))
-          obj.mode = 'classification';
-        elseif isa(m,'regressor') || (isa(m,'optimizer') && isa(m.method,'regressor'))
-          obj.mode = 'regression';
-        else
-          obj.mode = nan;
-        end
-        
-      end
-      
-      % determine transfer learning
-      if isempty(obj.transfer)
-        
-        m = obj.getpredictor();
-        
-        if isa(m,'transfer_learner') || (isa(m,'optimizer') && isa(m.method,'transfer_learner'))
-          obj.transfer = true;
-        else
-          obj.transfer = false;
-        end
-        
       end
       
       if obj.verbose
         fprintf('creating validator for clfproc %s\n',obj.procedure.name);
+      end
+      
+      % initialize random number generator
+      if ~isempty(obj.init)
+        if obj.verbose
+          fprintf('initializing random number generator with seed %d\n',obj.init)
+        end
+        RandStream.setDefaultStream(RandStream('mt19937ar','seed',obj.init));
       end
       
     end
@@ -112,16 +53,14 @@ classdef validator
       % return number of classes when known (called by statistics_crossvalidate)
       
       n = obj.getpredictor().nclasses;
-            
-    end        
-        
-    function m = getmodel(obj,label,dims)
-      % try to return the classifier parameters as a model
-      % wrt some class label and reshape into dims when specified
       
-      if nargin < 2, label = 1; end      
-      if nargin < 3, dims = []; end
-            
+    end
+    
+    function m = getmodel(obj)
+      % try to return the classifier parameters as a model
+      
+      if nargin < 2, label = 1; end
+      
       if ~iscell(obj.procedure)
         obj.procedure = {obj.procedure};
       end
@@ -131,7 +70,7 @@ classdef validator
         return;
       end
       
-      fm = cellfun(@(x)(x.getmodel(label,dims)),obj.procedure,'UniformOutput', false);
+      fm = cellfun(@(x)(x.getmodel()),obj.procedure,'UniformOutput', false);
       
       m = fm{1};
       for c=2:length(obj.procedure)
@@ -156,273 +95,82 @@ classdef validator
       else
         m = m./length(obj.procedure);
       end
-            
+      
     end
     
     
     function [result,all] = evaluate(obj,varargin)
-      % indirect call to evaluate to simplify the interface and handle
-      % transfer learned data
+      % indirect call to eval to simplify the interface
       
-      % check if we are dealing with transfer learning
-      if obj.transfer
-        
-        [res all] = validator.eval(obj.post,obj.design,varargin{:});
-        
-        % generate the result for all subjects
-        if iscell(obj.post) && iscell(obj.post{1})
-          % n-fold result
-          
-          result = zeros(1,length(obj.post{1}));
-          for k=1:length(obj.post{1})
-            for j=1:length(obj.post)
-              result(k) = result(k) + all{j}{k};
-            end
-          end
-          result = result./length(obj.post);
-          
-        else
-          % percentage
-          
-          result = zeros(1,length(obj.post));
-          for k=1:length(obj.post)
-            result(k) = all{k};
-          end
-          
-        end
-        
-      else        
-
-        [result all] = validator.eval(obj.post,obj.design,varargin{:});
-        
-      end
+      [result all] = validator.eval(obj.post,obj.design,varargin{:});
       
-    end    
+    end
     
-    function p = significance(obj)
+    function p = significance(obj,varargin)
       % Compute significance level that our result is different from
       % another classifier.
       %
-      % Comparison is based on a one-sided binomial test (McNemar)
-      % without Bonferroni correction
+      % tests:
       %
+      % 'binomial_test' (default)
+      % Comparison is based on a one-sided binomial test (McNemar)
+      % Bonferroni correction is applied for multiple datasets
+      %
+      options = varargin2struct(varargin);
       
-      % check if we are dealing with transfer learning
-     if obj.transfer
-     
-        tmppost = obj.post;
-        tmpdesign = obj.design;
-     
-        % generate the result for all subjects
-        if iscell(tmppost) && iscell(tmppost{1})
-          % n-fold result
-                     
-          p = zeros(1,length(tmppost{1}));
-          
-          for k=1:length(tmppost{1})
-            
-            tpost = cell(1,length(tmppost));
-            tdesign = cell(1,length(tmppost));
-            for j=1:length(tmppost)
-              tpost{j}   = tmppost{j}{k};
-              tdesign{j} = tmpdesign{j}{k};
-            end
-            
-            p(k) = obj.compute_significance(tpost,tdesign);
-            
-          end
-          
-          
-        else
-          % percentage                    
-          
-          p = zeros(1,length(tmppost));
-          
-          for k=1:length(tmppost)
-            
-            tpost   = tmppost{k};
-            tdesign = tmpdesign{k};
-            
-            p(k) = obj.compute_significance(tpost,tdesign);
-          end
-          
-        end
-                  
-      else
-        
-        p = obj.compute_significance(obj.post,obj.design);
-        
+      post = cellfun(@(x)(x.X),obj.post,'UniformOutput',false);
+      design = cellfun(@(x)(x.X),obj.design,'UniformOutput',false);
+      
+      % create the concatenation of all folds for each of the datasets
+      tpost = cell(1,size(post,2));
+      tdesign = cell(1,size(design,2));
+      for c=1:length(tpost)
+        tpost{c} = cat(1,post{:,c});
+        tdesign{c} = cat(1,design{:,c});
       end
       
-    end
-  end
-  
-  methods(Access = protected)
-    
-    function p = compute_significance(obj,tpost,tdesign)
-              
-      if iscell(tpost)
+      if ~isfield(options,'test') || strcmp(options.test,'binomial_test')
+        % one-sided binomial test with automatic bonferroni correction
         
-        % compute class with highest prior probability
-        nclasses = size(tpost{1},2);
-        priors = zeros(1,nclasses);
+        if obj.verbose
+          fprintf('performing one-sided biniomial test\n');
+        end
+        
+        p = zeros(1,length(tpost));          
         for c=1:length(tpost)
+          
+          % compute class with highest prior probability
+          nclasses = size(tpost{c},2);
+          priors = zeros(1,nclasses);
           for k=1:nclasses
             priors(k) = priors(k) + sum(tdesign{c}(:,1)==k);
           end
-        end
-        [mxx,class] = max(priors);
-        
-        rndpost = cell(1,length(tpost));
-        for c=1:length(tpost)
-          rndpost{c} = zeros(size(tpost{c}));
-          rndpost{c}(:,class) = 1;
-        end
-      else
-        
-        % compute class with highest prior probability
-        nclasses = size(tpost,2);
-        priors = zeros(1,nclasses);
-        for k=1:nclasses
-          priors(k) = sum(tdesign(:,1)==k);
-        end
-        [mxx,class] = max(priors);
-        
-        rndpost = zeros(size(tpost));
-        rndpost(:,class) = 1;
-      end
-      
-      if obj.verbose
-        fprintf('performing one-sided biniomial test (p=0.05)\n');
-      end
-      [r,p,level] = validator.significance_test(tpost,tdesign,rndpost,tdesign,'twosided',false);
-      
-      if obj.verbose
-        
-        if r
-          fprintf('null hypothesis rejected (%g<%g);\nsignificant difference from ',p,level);
-        else
-          fprintf('null hypothesis not rejected (%g>%g);\nno significant difference from ',p,level);
-        end
-        
-        if (nargin == 2 && random)
-          fprintf('random classification.\n');
-        else
-          fprintf('majority classification (class %d with prior of %g)\n',class,mxx/sum(priors));
-        end
-      end
-    end      
-    
-    function [newdata,newdesign] = balance(obj,data,design)
-      % balance data; make sure classes are evenly represented by
-      % resampling with replacement
-      
-      if iscell(data)
-        
-        newdata = cell(1,length(data));
-        newdesign = cell(1,length(design));
-        for c=1:length(data)
-            [newdata{c},newdesign{c}] = obj.balance(data{c},design{c});
-        end
-        
-      else
-        
-        nclasses = max(design(:,1));
-        maxsmp = 0;
-        for j=1:nclasses
-          summed = sum(design(:,1) == j);
-          if ~summed
-            fprintf('not all classes represented in data; refusing to balance\n');
-            newdata = data;
-            newdesign = design;
-            return;
-          end
-          maxsmp = max(maxsmp,summed);
-        end
-        newdata = zeros(nclasses*maxsmp,size(data,2));
-        for j=1:nclasses
-          cdata = data(design(:,1) == j,:);
-          if  size(cdata,1) ~= maxsmp
-            
-            % sample with replacement
-            newdata(((j-1)*maxsmp+1):(j*maxsmp),:) = cdata(ceil(size(cdata,1)*rand(maxsmp,1)),:);
+          [mxx,clss] = max(priors);
+          
+          rndpost = zeros(size(tpost{c}));
+          rndpost(:,clss) = 1;
+          
+          [r,p(c),level] = validator.binomial_test(tpost{c},tdesign{c},rndpost,tdesign{c},'twosided',false,'bonferroni',length(tpost));
+          
+          if r
+            fprintf('dataset %d: null hypothesis rejected (%g<%g);\nsignificant difference from ',c,p(c),level);
           else
-            newdata(((j-1)*maxsmp+1):(j*maxsmp),:) = cdata;
+            fprintf('dataset %d: null hypothesis not rejected (%g>%g);\nno significant difference from ',c,p(c),level);
           end
-        end
-        newdesign=ones(nclasses*maxsmp,1);
-        for j=2:nclasses
-          newdesign(((j-1)*maxsmp+1):(j*maxsmp)) = j;
-        end
-        
-        % shuffle data
-        [newdata,newdesign] = obj.shuffle(newdata,newdesign);
-        
-      end
-    end
-    
-    function data = collapse(obj,data)
-      % check dimensions of data
-      
-      if obj.verbose, fprintf('collapsing data\n'); end
-      
-      if iscell(data)
-        for c=1:length(data)
-          if ndims(data{c}) > 2
-            
-            sz = size(data{c});
-            data{c} = reshape(data{c},[sz(1) prod(sz(2:end))]);
-          end
-        end
-      else
-        if ndims(data) > 2
           
-          sz = size(data);
-          data = reshape(data,[sz(1) prod(sz(2:end))]);
+          if (nargin == 2 && random)
+            fprintf('random classification.\n');
+          else
+            fprintf('majority classification (class %d with prior of %g)\n',clss,mxx/sum(priors));
+          end
         end
       end
     end
     
-    function [data,design] = shuffle(obj,data,design)
-      % shuffle (randomize) examples
-      %
-      %   Copyright (c) 2008, Marcel van Gerven
-      %
-      %   $Log: shuffle.m,v $
-      %
-      
-      if obj.verbose, fprintf('shuffling data\n'); end
-      
-      if iscell(data)
-        
-        % try to keep the same permutation when possible
-        prm = randperm(size(data{1},1))';
-        
-        if ~iscell(design), design = design(prm,:); end
-        
-        for c=1:length(data)
-          
-          sz = size(data{c});
-          
-          if size(prm,1) ~= sz(1)
-            prm = randperm(sz(1));
-          end
-          
-          % first randomize the ordering of the data
-          data{c} = reshape(data{c}(prm,:),sz);
-          
-          if iscell(design)
-            design{c} = design{c}(prm,:);
-          end
-        end
-      else
-        sz = size(data);
-        
-        prm = randperm(sz(1));
-        data = reshape(data(prm,:),sz);
-        design = design(prm,:);
-      end
-    end
+  end
+  
+  methods(Access = protected)
+ 
     
     function p = getpredictor(obj)
    
@@ -438,46 +186,9 @@ classdef validator
       end
       
       if obj.verbose && isempty(p)
-        fprintf('could not determine classifier type\n');
+        fprintf('could not determine predictor type\n');
       end
       
-    end
-    
-    function [ldat,ldes,udat,udes] = get_labeled_unlabeled(obj,data,design)
-      % return labeled and unlabeled parts; nan indicates missing label
-
-      if iscell(data)
-        
-        udat = cell(1,length(data));
-        ldat = cell(1,length(data));
-        udes = cell(1,length(data));
-        ldes = cell(1,length(data));
-        for c=1:length(data)
-          
-          udes{c} = isnan(design{c});
-          ldes{c} = ~isnan(design{c});
-          
-          udat{c} = data{c}(udes{c},:);
-          ldat{c} = data{c}(ldes{c},:);
-          
-          udes{c} = nan(nnz(udes{c}),1);
-          ldes{c} = design{c}(ldes{c});
-          
-        end
-        
-      else
-        
-        udes = isnan(design);
-        ldes = ~isnan(design);
-        
-        udat = data(udes,:);
-        ldat = data(ldes,:);
-        
-        udes = nan(nnz(udes),1);
-        ldes = design(ldes);        
-        
-      end
-        
     end
     
   end
@@ -485,7 +196,7 @@ classdef validator
   methods(Static)
     
     function [metric,all] = eval(post,tcls,varargin)
-      %EVAL evaluation criterion for classifiers/regressors
+      %EVAL evaluation criterion for predictors
       %
       %   [metric,all] = evaluate(post,tcls,varargin)
       %
@@ -529,7 +240,7 @@ classdef validator
       %
       %   Copyright (c) 2008, Marcel van Gerven, Christian Hesse
       %
-      %   $Log: evaluate.m,v $
+      %   $Log: eval.m,v $
       %
       
       options = varargin2struct(varargin);
@@ -540,27 +251,31 @@ classdef validator
       if iscell(post)
         
         warning off all
-        all = cell(1,length(post));
-        metric = cell(1,length(post));
+        all = cell(size(post));
+        metric = cell(size(post));
         
-        for c=1:length(post)
-          [metric{c},all{c}] = validator.eval(post{c},tcls{c},varargin{:});
+        for c=1:numel(post)
+          [metric{c},all{c}] = validator.eval(post{c}.X,tcls{c}.X,varargin{:});
         end
         warning on all
         
         % concatenate all results and compute metric
         apost = [];
         atcls = [];
-        for c=1:length(post)
-          apost = cat(1,apost,post{c});
-          atcls = cat(1,atcls,tcls{c});
+        for c=1:numel(post)
+          apost = cat(1,apost,post{c}.X);
+          atcls = cat(1,atcls,tcls{c}.X);
         end
         
         metric = validator.eval(apost,atcls,varargin{:});
         
       else
         
-        metric = compute_metric(post,tcls(:,1),options);
+        if isa(post,'dataset')
+          metric = compute_metric(post.X,tcls.X(:,1),options);
+        else
+          metric = compute_metric(post,tcls(:,1),options);     
+        end
         all = metric;
       end
     
@@ -862,11 +577,11 @@ classdef validator
     end
     
     
-    function [reject,pvalue,level] = significance_test(cpost1, design1, cpost2, design2, varargin)
-      % SIGNIFICANCE_TEST makes a significance test whether two algorithms perform
+    function [reject,pvalue,level] = binomial_test(cpost1, cdesign1, cpost2, cdesign2, varargin)
+      % BINOMIAL_TEST makes a significance test whether two algorithms perform 
       % the same or differently
       %
-      % [reject,pvalue,level] = significance(cpost1, design1, cpost2, design2, varargin)
+      % [reject,pvalue,level] = significance_test(cpost1, design1, cpost2, design2, varargin)
       %
       % where typically design1 == design2
       %
@@ -905,7 +620,7 @@ classdef validator
       
       if iscell(cpost1)
         post1 = [];
-        for c=1:length(cpost1)
+        for c=1:numel(cpost1)
           post1 = [post1; cpost1{c}];
         end
         cpost1 = post1;
@@ -913,7 +628,7 @@ classdef validator
       
       if iscell(cpost2)
         post2 = [];
-        for c=1:length(cpost2)
+        for c=1:numel(cpost2)
           post2 = [post2; cpost2{c}];
         end
         cpost2 = post2;
@@ -921,24 +636,24 @@ classdef validator
       
       % true classes
       
-      if iscell(design1)
+      if iscell(cdesign1)
         tcls = [];
-        for c=1:length(design1)
-          tcls = [tcls; design1{c}];
+        for c=1:numel(cdesign1)
+          tcls = [tcls; cdesign1{c}];
         end
         ctcls1 = tcls;
       else
-        ctcls1 = design1;
+        ctcls1 = cdesign1;
       end
       
-      if iscell(design2)
+      if iscell(cdesign2)
         tcls = [];
-        for c=1:length(design2)
-          tcls = [tcls; design2{c}];
+        for c=1:numel(cdesign2)
+          tcls = [tcls; cdesign2{c}];
         end
         ctcls2 = tcls;
       else
-        ctcls2 = design2;
+        ctcls2 = cdesign2;
       end
       
       % optionally shuffle rows of the design matrices

@@ -8,14 +8,6 @@ classdef predictor < clfmethod
 %
 % $Log: predictor.m,v $
 %    
-
-  properties
-    
-    nclasses = nan;
-    nfeatures = nan;
-    nexamples = nan;
-    
-  end
     
   methods(Abstract)
     p = predict(obj,data);

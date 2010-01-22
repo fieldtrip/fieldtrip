@@ -1,7 +1,7 @@
-function [acc,sig,cv] = test_procedure(myproc,cvfolds,data,design)
+function [acc,sig,cv] = test_procedure(myproc,nfolds,X,Y)
 % test classification procedure
 %
-% [acc,sig,cv] = test_procedure(myproc,cvfolds,data,design)
+% [acc,sig,cv] = test_procedure(myproc,nfolds,data,design)
 %
 %   Copyright (c) 2009, Marcel van Gerven
 %
@@ -9,7 +9,7 @@ function [acc,sig,cv] = test_procedure(myproc,cvfolds,data,design)
 %
 
   if nargin == 1
-    cvfolds = 10;
+    nfolds = 10;
   end
 
   if nargin < 4
@@ -17,12 +17,12 @@ function [acc,sig,cv] = test_procedure(myproc,cvfolds,data,design)
     % load example data
     load covattfrq1
     
-    cvec = ismember(left.label,channelselection({'MLO' 'MRO'},left.label)); % subset of channels
+    cvec = ismember(left.label,ft_channelselection({'MLO' 'MRO'},left.label)); % subset of channels
     fvec = (left.freq >= 8 & left.freq <= 14); % subset of frequencies
     tvec = (left.time >= 1.5 & left.time <= 2.5); % subset of time segment
     
-    data    = [squeeze(mean(left.powspctrm(:,cvec,fvec,tvec),4)); squeeze(mean(right.powspctrm(:,cvec,fvec,tvec),4))];
-    design  = [ones(size(left.powspctrm,1),1); 2*ones(size(right.powspctrm,1),1)];
+    X  = dataset([squeeze(mean(left.powspctrm(:,cvec,fvec,tvec),4)); squeeze(mean(right.powspctrm(:,cvec,fvec,tvec),4))]);
+    Y  = dataset([ones(size(left.powspctrm,1),1); 2*ones(size(right.powspctrm,1),1)]);
   
     if isa(myproc{end},'transfer_learner')
       
@@ -32,23 +32,19 @@ function [acc,sig,cv] = test_procedure(myproc,cvfolds,data,design)
       fvec = (left.freq >= 8 & left.freq <= 14); % subset of frequencies
       tvec = (left.time >= 1.5 & left.time <= 2.5); % subset of time segment
       
-      data2    = [squeeze(mean(left.powspctrm(:,cvec,fvec,tvec),4)); squeeze(mean(right.powspctrm(:,cvec,fvec,tvec),4))];
-      design2  = [ones(size(left.powspctrm,1),1); 2*ones(size(right.powspctrm,1),1)];
+      X2  = dataset([squeeze(mean(left.powspctrm(:,cvec,fvec,tvec),4)); squeeze(mean(right.powspctrm(:,cvec,fvec,tvec),4))]);
+      Y2  = dataset([ones(size(left.powspctrm,1),1); 2*ones(size(right.powspctrm,1),1)]);
       
-      data = {data data2};
-      design = {design design2};
+      X = {X X2};
+      Y = {Y Y2};
       
     end    
     
   end
   
-  cv = crossvalidator('procedure',myproc,'cvfolds',cvfolds,'randomize',true,'verbose',true,'compact',false,'balanced',false);
+  cv = crossvalidator('procedure',myproc,'nfolds',nfolds,'verbose',true,'compact',false,'balanced',false);
 
-  if isa(myproc{end},'transfer_learner') && ~iscell(data)
-    cv = cv.validate({data data},{design design});
-  else
-    cv = cv.validate(data,design);
-  end
+  cv = cv.validate(X,Y);
   
   acc = cv.evaluate;
   sig = cv.significance;

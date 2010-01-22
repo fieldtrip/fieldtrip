@@ -19,11 +19,11 @@ classdef linreg < regressor
         
         function obj = train(obj,data,design)
             
-            obj.model = regress(design,[data ones(size(data,1),1)]);            
+            obj.model = regress(design.collapse(),[data.collapse() ones(data.nsamples,1)]);            
         end
         
         function res = test(obj,data)           
-            res = [data ones(size(data,1),1)] * obj.model;            
+            res = [data.collapse() ones(data.nsamples,1)] * obj.model;            
         end
  
     end

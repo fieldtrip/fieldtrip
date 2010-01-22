@@ -2,9 +2,7 @@ classdef l1lr < classifier
 %L1 regularized logistic regression using Mark Schmidt's L1General package
 %
 %   Copyright (c) 2009, Marcel van Gerven
-%
-%   $Log: l1lr.m,v $
-%
+
 
     properties
 
@@ -21,50 +19,53 @@ classdef l1lr < classifier
                       
        end
        function obj = train(obj,data,design)
-         
-         [data,design] = obj.check_input(data,design);
-         
-         if isnan(obj.nclasses), obj.nclasses = max(design(:,1)); end
-         if obj.nclasses ~= 2, error('L2LR expects binary class labels'); end
+                 
+         if design.nunique ~= 2, error('L1LR expects binary class labels'); end
 
-         data = [ones(size(data,1),1) data];
-
-         design = design - 1; % convert to -1 / + 1
-         
-         funObj = @(w)LogisticLoss(w,data,design);
-         w_init = zeros(size(data,2),1);
-         
          if obj.verbose
            fprintf('\nComputing L1-Regularized Logistic Regression Coefficients...\n');
          end
-           
-         lambdas = obj.lambda*ones(size(data,2),1);
-         lambdas(1) = 0; % Do not penalize bias variable
          
-         obj.model = L1GeneralProjection(funObj,w_init,lambdas);
-
+         design = design.collapse();
+        
+         % foolproof
+         if all(design(:,1) == 1)
+           obj.model = -inf;
+         elseif all(design(:,1) == 2)
+           obj.model = inf;
+         else
+           
+           X = [ones(data.nsamples,1) data.collapse()];
+           
+           design = 2*design - 3; % convert to -1 / + 1
+           
+           funObj = @(w)LogisticLoss(w,X,design);
+           w_init = zeros(data.nfeatures+1,1);
+            
+           obj.model = L1GeneralProjection(funObj,w_init,lambdas);
+         end
 
        end
 
        function post = test(obj,data)
 
-         data = obj.check_input(data);
-         
-         data = [ones(size(data,1),1) data];
-         
-         post = 1 ./ (1 + exp(data * obj.model));
-         post = [post 1 - post];
+         if isinf(obj.model(1)) 
+           if obj.model < 0
+            post = dataset([ones(data.nsamples,1) zeros(data.nsamples,1)]);
+           else
+             post = dataset([zeros(data.nsamples,1) ones(data.nsamples,1)]);
+           end
+         else
+           post = 1 ./ (1 + exp([ones(data.nsamples,1) data.collapse()] * obj.model));
+           post = dataset([post 1 - post]);
+         end
          
        end              
        
-       function m = getmodel(obj,label,dims)
+       function m = getmodel(obj)
          % return the parameters wrt a class label in some shape 
          
            m = obj.model(2:end)'; % ignore bias term
-         
-         if nargin == 3 && numel(m) == prod(dims)
-           m = reshape(m,dims);
-         end
          
        end
        

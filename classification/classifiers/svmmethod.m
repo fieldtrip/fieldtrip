@@ -5,7 +5,7 @@ classdef svmmethod < classifier
 % are referred to as @svm_l2_slow, @svm_l1_slow (alternatively, @svm_km_l2 and @svm_km_l1), 
 % and @rfda, respectively. Options include the type of kernel, 
 % kernel parameters and regularization constant C. If the latter is a vector then 
-% all values are tried using an optimizer that uses a validator and evaluation criterion.
+% all values are tried using an optimizer t§  hat uses a validator and evaluation criterion.
 % 
 % REMARK:
 %     1) l2 and l1 norms refer to the penalisation component
@@ -46,6 +46,7 @@ classdef svmmethod < classifier
 %
 
     properties
+      
       method = @svm_km_l2;
       kernel = 'linear'; % 'poly','rbf'('gaussian'),'htrbf' - see calc_kernel.m
       kerparam = 1;      % each kernel is associated with native parameters - see calc_kernel.m
@@ -76,14 +77,17 @@ classdef svmmethod < classifier
       end
       function obj = train(obj,data,design)
         % simply stores input data and design
+            
+        idx = data.labeled();
+       
+        % transform multidimensional array to matrix
+        data = data.collapse();
+        design = design.collapse();
         
         % remove missing data
-        data = data(~isnan(design),:);
-        design = design(~isnan(design));
-        
-        % check for consistency
-        [data,design] = obj.check_input(data,design);
-        
+        data = data(idx,:);
+        design = design(idx,:);
+                
         if ~exist('platt_sigmoid','var')
           obj.platt_sigmoid = [];
           obj.platt_sigmoid.A = [];
@@ -97,9 +101,10 @@ classdef svmmethod < classifier
         
         if iscell(data), error('svmmethod does not take multiple datasets as input'); end
         
-        if isnan(obj.nclasses), obj.nclasses = max(design(:,1)); end
+        [tmp,tmp,idx] = unique(design(1:size(design,1),:),'rows');
+        nclasses = max(idx);
         
-        if obj.nclasses ~= 2, error('svm only makes binary classifications'); end
+        if nclasses ~= 2, error('svm only makes binary classifications'); end
         
         % transform elements of the design matrix to class labels
         labels = design(:,1);
@@ -142,35 +147,37 @@ classdef svmmethod < classifier
         
       end
       function post = test(obj,data)
+    
+        % transform multidimensional array to matrix
+        X = data.collapse();
         
-        data = obj.check_input(data);
-        
-        % deal with empty data
-        if size(data,2) == 0
-          
-          % random assignment
-          post = rand([size(data,1) obj.nclasses]);
-          post = double(post == repmat(max(post,[],2),[1 obj.nclasses]));
-          
-          return
-        end
-        
-        probs = svm_eval(data,obj.sv_model.sv,obj.sv_model.weights,obj.sv_model.b,obj.kernel,obj.kerparam);
+        % remove missing data
+        X = X(data.labeled(),:);
+                
+        probs = svm_eval(X,obj.sv_model.sv,obj.sv_model.weights,obj.sv_model.b,obj.kernel,obj.kerparam);
         
         if ~isempty(obj.platt_sigmoid.A) && ~isempty(obj.platt_sigmoid.B)
+          
           % probabilistic outputs if platts sigmoid has been estimated
           probs = platt_svmproboutput(probs,obj.platt_sigmoid.A,obj.platt_sigmoid.B);
           post = [ 1-probs probs];
+          
         else
+          
           % probs is just the sign and does not have a probabilistic interpretation
           post = zeros(size(probs,1),2);
           post(:,1) = (probs < 0);
           post(:,2) = (probs > 0);
+        
         end
+        
+        post = dataset(post);
+          
         
       end
       
       function obj = estplatt(obj,data,design)
+        
         if iscell(data), error('classifier does not take multiple datasets as input'); end
         
         % transform elements of the design matrix to class labels
@@ -190,15 +197,11 @@ classdef svmmethod < classifier
         
       end
       
-      function m = getmodel(obj,label,dims)
+      function m = getmodel(obj)
         % return the parameters wrt a class label in some shape
         
         m = obj.wv; % only one vector for svmmethod
-        
-        if nargin > 2 && numel(m) == prod(dims)
-          m = reshape(m,dims);
-        end
-        
+                
       end
       
     end

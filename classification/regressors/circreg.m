@@ -55,6 +55,9 @@ classdef circreg < regressor
 
             if iscell(data), error('classifier does not take multiple datasets as input'); end
           
+            data = data.collapse();
+            design = design.collapse();
+            
             % restrict theta to range [-pi,...,pi]
             rtheta = mod(design(:,1),2*pi);
             rtheta(rtheta > pi) = rtheta(rtheta > pi) - 2*pi;
@@ -177,10 +180,15 @@ classdef circreg < regressor
         function theta = test(obj,data)
           % estimate the angle using intercept and link function
           
+          data = data.collapse();
+          
           theta = obj.mu*ones(size(data,1),1);
           if ~isempty(obj.beta)
             theta = theta + 2*atan(data * obj.beta);
           end
+          
+          theta = dataset(theta);
+          
         end
         
         function theta = sample(obj,X)

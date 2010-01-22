@@ -1,5 +1,5 @@
 classdef da < classifier
-%DA linear discriminant analysis
+% DA linear discriminant analysis
 %
 %   Options:
 %   'disfun' : type of discriminant function used
@@ -43,28 +43,15 @@ classdef da < classifier
        function obj = train(obj,data,design)
             % simply stores input data and design
             
-            [data,design] = obj.check_input(data,design);
-            
-            if isnan(obj.nclasses), obj.nclasses = max(design(:,1)); end
-            
-            obj.data = data;
-            obj.design = design(:,1);
+            obj.data = data.collapse();
+            obj.design = design.collapse();
                        
        end
        function post = test(obj,data)       
 
-         data = obj.check_input(data);
-            
-           % deal with empty data
-           if size(data,2) == 0
-               
-               % random assignment
-               post = rand([size(data,1) obj.nclasses]);               
-               post = double(post == repmat(max(post,[],2),[1 obj.nclasses]));
-               return
-           end
-
-           [class,err,post,logp,obj.coeff] = classify(data,obj.data,obj.design(:,1),obj.disfun);                    
+           [class,err,post,logp,obj.coeff] = classify(data.collapse(),obj.data,obj.design,obj.disfun);                    
+       
+           post = dataset(post);
        end
 
     end

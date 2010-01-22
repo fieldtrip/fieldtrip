@@ -41,15 +41,11 @@ classdef gslr_transfer < classifier & transfer_learner
        end
        function obj = train(obj,data,design)
            % simply stores input data and design
-
-           [data,design] = obj.check_input(data,design);
            
-           if isnan(obj.nclasses), obj.nclasses = max(design{1}(:,1)); end
-
            % transfer learning
            cdata = cell(1,length(data));
            for c=1:length(data)
-             cdata{c} = [design{c}(:,1) data{c}];
+             cdata{c} = [design{c}.collapse() data{c}.collapse()];
            end
 
            [obj.model,obj.diagnostics] = slr_learn_transfer(obj.options,cdata);
@@ -57,42 +53,23 @@ classdef gslr_transfer < classifier & transfer_learner
        end
        
        function post = test(obj,data)       
-         
-         data = obj.check_input(data);
-         
+                          
          post = cell(1,length(data));
          for j=1:length(data)
-           post{j} = slr_classify([data{j} ones(size(data{j},1),1)], obj.model{j});
+           post{j} = dataset(slr_classify([data{j}.collapse() ones(data{j}.nsamples,1)], obj.model{j}));
          end
          
        end
        
-       function m = getmodel(obj,label,dims)
+       function m = getmodel(obj)
          % return the parameters wrt a class label in some shape 
         
-         if nargin < 2 || isempty(label) || isnan(label)        
-
            % return model for all classes           
            m = cell(1,length(obj.model));
            for c=1:length(obj.model)
              m{c} = full(obj.model{c}(:,1:(end-1))); % ignore bias term
-           end
-           
-         else
-           m = cell(1,length(obj.model));
-           for c=1:length(obj.model)
-             m{c} = full(obj.model{c}(label,1:(end-1))); % ignore bias term             
-           end
-         end
-         
-         for c=1:length(obj.model)
-         
-           if nargin == 3 && numel(m{c}) == prod(dims)
-             m{c} = reshape(m{c},dims);
-           end
-           
-         end
-         
+           end          
+                  
        end
 
     end

@@ -12,6 +12,8 @@ classdef nb < classifier
     priors
     means
     stds
+    
+    nclasses
 
   end
 
@@ -23,10 +25,13 @@ classdef nb < classifier
     end
     function obj = train(obj,data,design)
 
-      [data,design] = obj.check_input(data,design);
+      % transform multidimensional array to matrix
+      data = data.collapse();
+      design = design.collapse();
+            
+      [tmp,tmp,idx] = unique(design(1:size(design,1),:),'rows');
+      obj.nclasses = max(idx);      
       
-      if isnan(obj.nclasses), obj.nclasses = max(design(:,1)); end
-
       nfeatures = size(data,2);
 
       % estimate class priors
@@ -57,7 +62,7 @@ classdef nb < classifier
     end
     function post = test(obj,data)
 
-      data = obj.check_input(data);
+      data =  data.collapse();
       
       post = nan(size(data,1),obj.nclasses);
 
@@ -92,25 +97,16 @@ classdef nb < classifier
         post(m,:) = exp(post(m,:) - nt);
 
       end
+      
+      post = dataset(post);
+      
     end
 
-    function m = getmodel(obj,label,dims)
+    function m = getmodel(obj)
       % return the parameters wrt a class label in some shape
 
-      if nargin < 2 || isempty(label) || isnan(label)
-
-        % return model for all classes; i.e., their means
+      % return model for all classes; i.e., their means
         m = obj.means;
-
-      else
-
-        m = obj.means(label,:);
-
-      end
-
-      if numel(m) == prod(dims)
-        m = reshape(m,dims);
-      end
 
     end
 

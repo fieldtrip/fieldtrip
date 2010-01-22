@@ -32,10 +32,11 @@ classdef rnb < nb
            
        end
        function obj = train(obj,data,design)
+ 
+         obj.nclasses = design.nunique;
          
-         [data,design] = obj.check_input(data,design);
-         
-         if isnan(obj.nclasses), obj.nclasses = max(design(:,1)); end
+         data = data.collapse();
+         design = design.collapse();
          
          % create hold-out set
          if ~isfield(obj.options,'cvfolds'), obj.options.cvfolds = 0.9; end
@@ -73,9 +74,9 @@ classdef rnb < nb
              end
            end
            
-           post = obj.test(data(testidx,:));
+           post = obj.test(dataset(data(testidx,:)));
            
-           obj.accuracies(i) = evaluate(post,design(testidx,1),'metric','accuracy');
+           obj.accuracies(i) = validator.eval(post.X,design(testidx,1),'metric','accuracy');
            
          end
          
@@ -99,7 +100,7 @@ classdef rnb < nb
        
        function post = test(obj,data)
          
-         data = obj.check_input(data);
+         data = data.collapse();
 
          post = zeros(size(data,1),obj.nclasses);
          
@@ -127,6 +128,7 @@ classdef rnb < nb
            
          end
          
+         post = dataset(post);
          
        end
        

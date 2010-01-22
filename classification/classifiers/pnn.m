@@ -21,33 +21,32 @@ classdef pnn < classifier
     end
 
     methods
-       function obj = pnn(varargin)
-                  
-           obj = obj@classifier(varargin{:});
-           
-            % check availability
-           if ~license('test','neural_network_toolbox')
-               error('requires Matlab neural network toolbox');
-           end
-           
-       end
-       
-       function obj = train(obj,data,design)
-                                  
-         [data,design] = obj.check_input(data,design);
-         
-         if isnan(obj.nclasses), obj.nclasses = max(design(:,1)); end
-         
-         obj.net = newpnn(data',design(:,1)',obj.spread);
-         
-       end
-       
-       function post = test(obj,data)
-         
-         data = obj.check_input(data);
-
-         post = sim(obj.net,data')';
-       end
-       
+      function obj = pnn(varargin)
+        
+        obj = obj@classifier(varargin{:});
+        
+        % check availability
+        if ~license('test','neural_network_toolbox')
+          error('requires Matlab neural network toolbox');
+        end
+        
+      end
+      
+      function obj = train(obj,data,design)
+        
+        data = data.collapse();
+        design = design.collapse();
+        
+        obj.net = newpnn(data',design(:,1)',obj.spread);
+        
+      end
+      
+      function post = test(obj,data)
+        
+        data = data.collapse();
+        
+        post = sim(obj.net,data')';
+      end
+      
     end
 end

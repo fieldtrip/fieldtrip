@@ -33,7 +33,6 @@ classdef clfproc
 %
 %   Options:
 %   'verbose' : verbose output [false]
-%   'randomize' : randomize trials before training [false]
 %
 %   Copyright (c) 2008, Marcel van Gerven
 %
@@ -43,9 +42,9 @@ classdef clfproc
     properties
 
         clfmethods; % the methods that specify the classification procedure
+        nmethods;   % the number of methods
         
         verbose = false;
-        randomize = false;
     end
     
     methods
@@ -61,7 +60,7 @@ classdef clfproc
           return;
         end
         
-        % cast to cell array if only a classifier/regressor is specified
+        % cast to cell array if only one method is specified
         if ~iscell(clfmethods), clfmethods = { clfmethods }; end
 
         % check if this is a valid classification procedure:
@@ -75,49 +74,64 @@ classdef clfproc
         end        
 
         obj.clfmethods = clfmethods;
+        obj.nmethods = length(clfmethods);
        
        end
-       
+              
        function obj = train(obj,data,design)
             % train just calls the methods' train functions in order to produce a posterior
-
-            % side effect; deals with cell array input of validator
-            if iscell(data) && length(data) == 1
-              data = data{1};
-            end            
-            if iscell(design) && length(design) == 1
-              design = design{1};
-            end
-            
-            % check for missing data
-            if obj.verbose && obj.missing(data)
-                fprintf('data contains missing values\n');
-            end
-            
-            % check for missing labels
-            if obj.verbose && obj.missing(design)
-              fprintf('design contains missing values\n');
-            end
-            
-            % make sure data is a (cell array of) matrix
-            if (iscell(data) && ndims(data{1}) > 2) || ndims(data) > 2
-                data = obj.collapse(data);
-            end
-
-            % randomize trials
-            if obj.randomize
-              [data,design] = obj.shuffle(data,design);
-            end
-                        
-            for c=1:length(obj.clfmethods)      
+                                     
+            for c=1:obj.nmethods   
               
               if iscell(obj.clfmethods{c})
-                % deal with ensemble methods (i.e., nested cell arrays)
-                obj.clfmethods{c} = cellfun(@(x)(x.train(data,design)),obj.clfmethods{c},'UniformOutput',false);
-                data = cellfun(@(x)(x.test(data)),obj.clfmethods{c},'UniformOutput',false);
+              
+                if iscell(data) && ~isa(obj.clfmethods{c}{1},'transfer_learner')
+                  
+                  if length(data) == length(obj.clfmethods{c})
+                    for d=1:length(data)
+                      obj.clfmethods{c}{d} = cellfun(@(x)(x.train(data{d},design{d})),obj.clfmethods{c}{d},'UniformOutput',false);
+                      if c<obj.nmethods
+                        data{d} = cellfun(@(x)(x.test(data{d})),obj.clfmethods{c}{d},'UniformOutput',false);
+                      end
+                    end
+                  else
+                    error('cannot handle multiple datasets');
+                  end
+                  
+                else
+                  
+                  % deal with ensemble methods (i.e., nested cell arrays)
+                  obj.clfmethods{c} = cellfun(@(x)(x.train(data,design)),obj.clfmethods{c},'UniformOutput',false);
+                  if c<obj.nmethods
+                      data = cellfun(@(x)(x.test(data)),obj.clfmethods{c},'UniformOutput',false);
+                  end
+                end
+                
               else
-                obj.clfmethods{c} = obj.clfmethods{c}.train(data,design);
-                data = obj.clfmethods{c}.test(data);   
+                
+                if iscell(data) && ~isa(obj.clfmethods{c},'transfer_learner')
+                  % if the method is not a transfer learner then we apply
+                  % the method to each dataset separately and convert
+                  % the method to a cell array
+                  
+                  m = cell(1,length(data));
+                  for d=1:length(data)
+                    m{d} = obj.clfmethods{c}.train(data{d},design{d});
+                   if c<obj.nmethods
+                       data{d} = m{d}.test(data{d});
+                   end
+                  end
+                  
+                  obj.clfmethods{c} = m;
+                  
+                else
+                  
+                  obj.clfmethods{c} = obj.clfmethods{c}.train(data,design);
+                  if c<obj.nmethods
+                      data = obj.clfmethods{c}.test(data);   
+                  end
+                end
+                
               end
             end        
                    
@@ -125,51 +139,50 @@ classdef clfproc
        
        function data = test(obj,data)
            % test just calls the methods' test functions in order to produce a posterior
-
-           % side effect; deals with cell array input of validator
-            if iscell(data) && length(data) == 1
-              data = data{1};
-            end            
-            
+ 
            if isempty(data)
              data = [];
              return;
            end
-
-           % check for missing data
-            if obj.verbose && obj.missing(data)
-                fprintf('data contains missing values\n');
-            end
-                       
-           % make sure data is a (cell array of) matrix
-           if (iscell(data) && ndims(data{1}) > 2) || ndims(data) > 2
-               data = obj.collapse(data);
-           end
-
-           for c=1:length(obj.clfmethods)      
-             if iscell(obj.clfmethods{c})
+                    
+            for c=1:obj.nmethods
+             
+              if iscell(obj.clfmethods{c})
                % deal with ensemble methods
-               data = cellfun(@(x)(x.test(data)),obj.clfmethods{c},'UniformOutput',false);
-             else
-               data = obj.clfmethods{c}.test(data);
-             end
+               
+               if iscell(data) && ~isa(obj.clfmethods{c}{1},'transfer_learner')
+                  
+                  if length(data) == length(obj.clfmethods{c})
+                    for d=1:length(data)
+                      data{d} = obj.clfmethods{c}{d}.test(data{d});
+                    end
+                  else
+                    error('cannot handle multiple datasets');
+                  end
+                  
+               else
+                 
+                 data = cellfun(@(x)(x.test(data)),obj.clfmethods{c},'UniformOutput',false);
+               end
+               
+              else
+                 
+                 data = obj.clfmethods{c}.test(data);
+              
+              end
+              
            end
 
        end       
        
        function p = predict(obj,data)
-           % calls test functions and converts posterior into classifications
-          
-           % side effect; deals with cell array input of validator
-            if iscell(data) && length(data) == 1
-              data = data{1};
-            end
-            
-            for c=1:(length(obj.clfmethods)-1)
-               data = obj.clfmethods{c}.test(data);
-            end
-           
-            p = obj.clfmethods{end}.predict(data);
+         % calls test functions and converts posterior into classifications
+                  
+         for c=1:(length(obj.clfmethods)-1)
+           data = obj.clfmethods{c}.test(data);
+         end
+         
+         p = obj.clfmethods{end}.predict(data);
        end
        
        function s = name(obj)
@@ -183,67 +196,14 @@ classdef clfproc
          
        end
        
-       function m = getmodel(obj,label,dims)
+       function m = getmodel(obj)
          % return the model implied by this classification procedure
-    
-         if nargin < 2, label = 1; end      
-         if nargin < 3, dims = []; end
-    
+        
          % get the final model
-         m = obj.clfmethods{end}.getmodel(label,dims);
-
-         % if not yet handled by the method itself
-         if ~isempty(dims) && length(m)==length(dims(dims > 1)) && ~all(size(m) == dims(dims > 1)) 
-           
-           if iscell(m) % multiple models for multiple datasets
-
-             for c=1:length(m)
-               if prod(dims) == numel(m{c});
-                 m{c} = reshape(m{c},dims);
-               else
-                 if obj.verbose
-                   fprintf('original dimensions and new dimensions do not match\n');
-                 end
-               end
-             end
-             
-           else
-             
-             if prod(dims) == numel(m)
-               m = reshape(m,dims);
-             else
-               if obj.verbose
-                 fprintf('original dimensions and new dimensions do not match\n');
-               end
-             end
-             
-           end
-           
-         end
+         m = obj.clfmethods{end}.getmodel();
 
        end
                     
     end
    
-    methods(Static)
-    
-    function b = missing(data)
-      % check if there are nans in the data
-      
-      if iscell(data)
-        b = false;
-        for c=1:length(data)
-          if any(isnan(data{c}(:)))
-            b = true;
-            return;
-          end
-        end
-      else
-        b = any(isnan(data(:)));
-      end
-    end
-    
-  end
-    
-end 
-
+end

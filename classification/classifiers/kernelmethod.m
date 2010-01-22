@@ -31,122 +31,122 @@ classdef kernelmethod < classifier
 % $Log: kernelmethod.m,v $
 %
 
-    properties
-        method = @l2svm_cg;
-        kernel = 'linear';
-        p1 = nan;
-        p2 = nan;
-        C = nan;
+properties
+  method = @l2svm_cg;
+  kernel = 'linear';
+  p1 = nan;
+  p2 = nan;
+  C = nan;
+  
+  weights;
+  f;
+  J;
+  traindata;
+  primal;
+  
+end
 
-        weights;
-        f;
-        J;
-        traindata;
-        primal;
-        
-    end
-
-    methods
-       function obj = kernelmethod(varargin)
-
-           obj = obj@classifier(varargin{:});
-           
-       end
-       function obj = train(obj,data,design)
-            % simply stores input data and design
-
-            [data,design] = obj.check_input(data,design);
-            
-            if isnan(obj.nclasses), obj.nclasses = max(design(:,1)); end
-
-            if obj.nclasses ~= 2, error('l2svm only makes binary classifications'); end
-            
-            % transform elements of the design matrix to class labels
-            targets = design(:,1);
-            targets(design == 1) = -1;
-            targets(design == 2) = 1;
+methods
+  
+  function obj = kernelmethod(varargin)
     
-            % set input for our classifier; compute kernel matrix
-
-            switch lower(obj.kernel)
-
-                case {'poly','npoly'};     % polynomial
-       
-                    if isnan(obj.p1), obj.p1 = 2/3; end
-                    if isnan(obj.p2), obj.p2 = 1; end
-       
-                    K = compKernel(data,data,obj.kernel,obj.p1,obj.p2);
-
-                case {'rbf','nrbf'};       % Radial basis function, a.k.a. gaussian
-
-                    if isnan(obj.p1), obj.p1 = .1*(mean(diag(data))-mean(data(:))); end
-       
-                    K = compKernel(data,data,obj.kernel,obj.p1);
-
-                otherwise
-                    K = compKernel(data,data,obj.kernel);
-            end
-
-            % regularization parameter
-            if isnan(obj.C), obj.C = .1*(mean(diag(K))-mean(K(:))); end
-            
-            if obj.verbose
-               fprintf('regularization parameter was set to %.2g\n',obj.C);
-            end
-            
-            [obj.weights,obj.f,obj.J] = obj.method(K,targets,obj.C,'verb',-1);
-            obj.traindata = data;
-
-            % weights in primal form
-            obj.primal = 0;
-            for j=1:size(data,1), obj.primal = obj.primal + obj.weights(j)*data(j,:); end
-           
-       end
-       function post = test(obj,data)       
-
-         data = obj.check_input(data);
-            
-           % deal with empty data
-           if size(data,2) == 0
-               
-               % random assignment
-               post = rand([size(data,1) obj.nclasses]);               
-               post = double(post == repmat(max(post,[],2),[1 obj.nclasses]));
-
-               return
-           end          
-           
-           switch lower(obj.kernel)
-
-               case {'poly','npoly'};     % polynomial
-                   K = compKernel(data,obj.traindata,obj.kernel,obj.p1,obj.p2);
-
-               case {'rbf','nrbf'};       % Radial basis function, a.k.a. gaussian
-                   K = compKernel(data,obj.traindata,obj.kernel,obj.p1);
-
-               otherwise
-                   K = compKernel(data,obj.traindata,obj.kernel);
-           end
-
-           probs = K * obj.weights(1:end-1) + obj.weights(end);
-
-           % post is just the sign and does not have a probabilistic interpretation
-           post = zeros(size(probs,1),2);
-           post(:,1) = (probs < 0);
-           post(:,2) = (probs > 0);
-
-       end
-       
-       function m = getmodel(obj,label,dims)
-         % return the parameters wrt a class label in some shape 
-         
-         m = obj.primal; % only one vector for kernelmethod
-         
-         if numel(m) == prod(dims)
-           m = reshape(m,dims);
-         end
-         
-       end
-
+    obj = obj@classifier(varargin{:});
+    
+  end
+  
+  function obj = train(obj,data,design)
+    % simply stores input data and design
+  
+    if design.nunique ~= 2, error('l2svm only makes binary classifications'); end
+    
+    data = data.collapse();
+    design = design.collapse();
+    
+    % transform elements of the design matrix to class labels
+    targets = design(:,1);
+    targets(design == 1) = -1;
+    targets(design == 2) = 1;
+    
+    % set input for our classifier; compute kernel matrix
+    
+    switch lower(obj.kernel)
+      
+      case {'poly','npoly'};     % polynomial
+        
+        if isnan(obj.p1), obj.p1 = 2/3; end
+        if isnan(obj.p2), obj.p2 = 1; end
+        
+        K = compKernel(data,data,obj.kernel,obj.p1,obj.p2);
+        
+      case {'rbf','nrbf'};       % Radial basis function, a.k.a. gaussian
+        
+        if isnan(obj.p1), obj.p1 = .1*(mean(diag(data))-mean(data(:))); end
+        
+        K = compKernel(data,data,obj.kernel,obj.p1);
+        
+      otherwise
+        K = compKernel(data,data,obj.kernel);
     end
-end 
+    
+    % regularization parameter
+    if isnan(obj.C), obj.C = .1*(mean(diag(K))-mean(K(:))); end
+    
+    if obj.verbose
+      fprintf('regularization parameter was set to %.2g\n',obj.C);
+    end
+    
+    [obj.weights,obj.f,obj.J] = obj.method(K,targets,obj.C,'verb',-1);
+    obj.traindata = data;
+    
+    % weights in primal form
+    obj.primal = 0;
+    for j=1:size(data,1), obj.primal = obj.primal + obj.weights(j)*data(j,:); end
+    
+  end
+  
+  function post = test(obj,data)
+    
+    data = data.collapse();
+    
+    % deal with empty data
+    if size(data,2) == 0
+      
+      % random assignment
+      post = rand([size(data,1) obj.nclasses]);
+      post = double(post == repmat(max(post,[],2),[1 obj.nclasses]));
+      
+      return
+    end
+    
+    switch lower(obj.kernel)
+      
+      case {'poly','npoly'};     % polynomial
+        K = compKernel(data,obj.traindata,obj.kernel,obj.p1,obj.p2);
+        
+      case {'rbf','nrbf'};       % Radial basis function, a.k.a. gaussian
+        K = compKernel(data,obj.traindata,obj.kernel,obj.p1);
+        
+      otherwise
+        K = compKernel(data,obj.traindata,obj.kernel);
+    end
+    
+    probs = K * obj.weights(1:end-1) + obj.weights(end);
+    
+    % post is just the sign and does not have a probabilistic interpretation
+    post = zeros(size(probs,1),2);
+    post(:,1) = (probs < 0);
+    post(:,2) = (probs > 0);
+    
+    post = dataset(post);
+    
+  end
+  
+  function m = getmodel(obj)
+    % return the parameters wrt a class label in some shape
+    
+    m = obj.primal; % only one vector for kernelmethod
+        
+  end
+  
+end
+end

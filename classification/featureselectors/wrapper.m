@@ -20,7 +20,7 @@ classdef wrapper < featureselector
 
     properties
        
-      validator = []; % e.g., crossvalidator('procedure',clfproc({nb()}),'cvfolds',0.9);
+      validator = crossvalidator('procedure',clfproc({nb()}),'cvfolds',0.9);
       metric = 'accuracy'; % evaluation metric
       criterion; % keeps track of the evaluation metric
       
@@ -41,6 +41,9 @@ classdef wrapper < featureselector
         end
         
         function obj = train(obj,data,design)
+          
+          data = data.collapse();
+          design = design.collapse();
           
           switch obj.search
             
@@ -63,8 +66,8 @@ classdef wrapper < featureselector
                   
                   tmp = [cur j];
                   
-                  cv = obj.validator.validate(data(:,tmp),design);
-                  m = evaluate(cv.post,cv.design,'metric',obj.metric);
+                  cv = obj.validator.validate(dataset(data(:,tmp)),dataset(design));
+                  m = validator.eval(cv.post,cv.design,'metric',obj.metric);
                   
                   if m > metric
                     subset = tmp;
@@ -123,8 +126,8 @@ classdef wrapper < featureselector
                 acc = zeros(1,length(candidates));
                 for j=1:length(candidates)
                   
-                  cv = obj.validator.validate(data(:,boolean(bitget(candidates(j),1:nfeat))),design);
-                  acc(j) = evaluate(cv.post,cv.design,'metric',obj.metric);
+                  cv = obj.validator.validate(dataset(data(:,boolean(bitget(candidates(j),1:nfeat)))),dataset(design));
+                  acc(j) = validator.eval(cv.post,cv.design,'metric',obj.metric);
                 end
                 
                 open = [open candidates];

@@ -3,9 +3,9 @@
  */
 /*
 mex -c mexutil.c
-mex repmat.c mexutil.obj
+mex myrepmat.c mexutil.o
 to check for warnings:
-gcc -Wall -I/cygdrive/c/MATLAB6p1/extern/include -c repmat.c
+gcc -Wall -I/Applications/MATLAB_R2009b.app/extern/include -c myrepmat.c
 */
 #include "mexutil.h"
 #include <string.h>

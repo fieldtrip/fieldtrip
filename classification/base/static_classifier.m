@@ -22,6 +22,7 @@ classdef static_classifier < classifier
         bn;         % save for info
         engine;     % this engine is used if specified
         numvar;     % number of variables
+        nclasses;   % number of classes
     end
 
     methods
@@ -33,8 +34,12 @@ classdef static_classifier < classifier
        function obj = train(obj,data,design)
             
             if iscell(data), error('classifier does not take multiple datasets as input'); end            
-            if isnan(obj.nclasses), obj.nclasses = max(design(:,1)); end
-                
+
+            obj.nclasses = design.nunique; 
+
+            data = data.collapse();
+            design = design.collapse();
+            
             if isempty(obj.numvar), obj.numvar = size(data,2)+1; end
             
             % construct factors (custom code)
@@ -60,6 +65,8 @@ classdef static_classifier < classifier
            
            if iscell(data), error('classifier does not take multiple datasets as input'); end
 
+           data = data.collapse();
+           
            post = zeros([size(data,1) obj.nclasses]);
            
            for j=1:size(post,1)
@@ -73,6 +80,8 @@ classdef static_classifier < classifier
                post(j,:) = m.p';
            end
 
+           post = dataset(post);
+           
        end
 
         function factors = construct_factors(obj)

@@ -25,39 +25,46 @@ classdef libsvm < classifier
     end
 
     methods
-       function obj = libsvm(varargin)
+      
+      function obj = libsvm(varargin)
+        
+        obj = obj@classifier(varargin{:});
+        
+      end
+      
+      function obj = train(obj,data,design)
+        
+        data = data.collapse();
+        design = design.collapse();
+        
+        % regularization parameter
+        if isempty(strfind(obj.trainparams,'-c'))
+          K = compKernel(data,data,'linear');
+          c = .1*(mean(diag(K))-mean(K(:)));
+          obj.trainparams = [obj.trainparams ' -c ' num2str(c)];
+        end
+        
+        if isempty(strfind(obj.trainparams,'-b'))
+          obj.trainparams = [obj.trainparams ' -b 1'];
+        end
+        
+        obj.model = svmtrain(design, data, obj.trainparams);
+        
+      end
+      
+      function post = test(obj,data)
+        
+        data = data.collapse();
+        
+        if isempty(strfind(obj.testparams,'-b'))
+          obj.testparams = [obj.testparams ' -b 1'];
+        end
+        
+        [a,b,post] = svmpredict(ones(size(data,1),1), data, obj.model, obj.testparams);
 
-           obj = obj@classifier(varargin{:});
-           
-       end
-       function obj = train(obj,data,design)
-             
-         [data,design] = obj.check_input(data,design);
-         
-           % regularization parameter
-           if isempty(strfind(obj.trainparams,'-c'))
-               K = compKernel(data,data,'linear');
-               c = .1*(mean(diag(K))-mean(K(:))); 
-               obj.trainparams = [obj.trainparams ' -c ' num2str(c)];
-           end
-
-           if isempty(strfind(obj.trainparams,'-b'))
-               obj.trainparams = [obj.trainparams ' -b 1'];
-           end
-            
-           obj.model = svmtrain(design, data, obj.trainparams);
-
-       end
-       function post = test(obj,data)       
-
-         data = obj.check_input(data);
-             
-           if isempty(strfind(obj.testparams,'-b'))
-               obj.testparams = [obj.testparams ' -b 1'];
-           end       
-           
-           [a,b,post] = svmpredict(ones(size(data,1),1), data, obj.model, obj.testparams);         
-       end
-
+        post = dataset(post);
+      
+      end
+      
     end
-end 
+end

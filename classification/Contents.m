@@ -1,4 +1,4 @@
-% The classification toolbox is a Matlab machine learning toolbox
+% NMLT is a Matlab machine learning toolbox
 % that is specifically tailored to offline and online
 % single-trial analysis in cognitive neuroscience.
 % 
@@ -21,7 +21,6 @@
 % Pawel Herman
 % Ali Bahramisharif
 % Jason Farquhar
-% Laurens van der Maaten
 % Adriana Birlutiu
 % 
 % Donders Institute for Brain, Cognition and Behaviour
@@ -56,24 +55,26 @@
 % featureselector.m
 % classifier.m
 % regressor.m
+% reconstructor.m
 % 
 % TO DO
 % 
-%
-% think about the handling of transfer learning; also implement transfer
-% learning using blogreg.
-% rewrite inner crossvalidation for parameter selection
-% check EM code for mixture models
-% rewrite examples
-% add more documentation
-% improve fieldtrip integration
-% add simple gui
-% integrate utility function in relevant classes
-% test dynamic_clf and also make dynamic_regr/static_regr
-% repeated calls to train should allow for online learning as much as
-% possible
-% rethink significance testing and also implement for regressor
-% return standard error of mean as second argument of evaluate
-% rewrite feature selection stuff and add searchlight (also check blogreg)
-% remove dependence on fieldtrip by copying nanmean, ... and replace with
-% mynanmean etc (also check bayesbrain toolbox)
+% - implement transfer learning using blogreg.
+% - implement reconstruction algorithm
+% - rewrite inner crossvalidation for parameter selection
+% - check EM code for mixture models
+% - add simple gui
+% - integrate utility functions in relevant classes
+% - test dynamic_clf and also make dynamic_regr/static_regr
+% - repeated calls to train should allow for online learning as much as possible
+% - rethink significance testing and also implement for regressor
+% - return standard error of mean as second argument of evaluate
+% - rewrite feature selection stuff and add searchlight (also check blogreg)
+% - check if NETLAB can be removed
+% - better handling of checking of datasets for each method
+% - profiling
+% - rewrite handling of timeseries...
+% - allow arbitrary labels for the classifiers
+
+% repmatC/mcholC/lbfgsC.mexmaci (32bit) , reconstructors/ toevoegen aan svn
+% imputer verwijderen

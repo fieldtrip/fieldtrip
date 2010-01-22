@@ -84,43 +84,49 @@ classdef cspprocessor < preprocessor
         end
         function obj = train(obj,data,design)
 
+          X = data.collapse();
+          
           if isempty(obj.numchan)
-            obj.numchan = size(data,2);
+            obj.numchan = size(X,2);
           end
 
-          if isnumeric(data) && length(size(data)) == 2  %just to make it explicit
-            data = reshape(data,size(data,1),obj.numchan,size(data,2)/obj.numchan);
-          elseif isnumeric(data) && length(size(data)) == 3   %only for simulating outside clfproc pipe
+          if isnumeric(X) && length(size(X)) == 2  %just to make it explicit
+            X = reshape(X,size(X,1),obj.numchan,size(X,2)/obj.numchan);
+          elseif isnumeric(data) && length(size(X)) == 3   %only for simulating outside clfproc pipe
             warning('The object used outside any CLFPROC pipe'); %#ok<WNTAG>
           else
             error('Unknown data format for training');
           end
 
-          [obj.filters,obj.eigenvalues] = csp_train(data,design,obj.numpatterns,obj.filttype);
+          [obj.filters,obj.eigenvalues] = csp_train(X,design,obj.numpatterns,obj.filttype);
         end
 
         function data = test(obj,data)
 
-          if isnumeric(data) && length(size(data)) == 2  %just to make it explicit
-            data = reshape(data,size(data,1),obj.numchan,size(data,2)/obj.numchan);
-          elseif isnumeric(data) && length(size(data)) == 3   %only for simulating outside clfproc pipe
+          X = data.collapse();
+          
+          if isnumeric(X) && length(size(X)) == 2  %just to make it explicit
+            X = reshape(X,size(X,1),obj.numchan,size(X,2)/obj.numchan);
+          elseif isnumeric(X) && length(size(X)) == 3   %only for simulating outside clfproc pipe
             warning('The object used outside any CLFPROC pipe'); %#ok<WNTAG>
           else
             error('Unknown data format for testing');
           end
 
           if strcmp(obj.outputdatatype,'rawcsp')
-            [data,obj.csp_pow] = csp_test(data,obj.filters);
+            [X,obj.csp_pow] = csp_test(X,obj.filters);
           elseif strcmp(obj.outputdatatype,'powcsp')
-            [aux,obj.csp_pow] = csp_test(data,obj.filters);
-            data = obj.csp_pow;
+            [aux,obj.csp_pow] = csp_test(X,obj.filters);
+            X = obj.csp_pow;
           elseif strcmp(obj.outputdatatype,'logpowcsp')
-            [aux,obj.csp_pow] = csp_test(data,obj.filters);
-            data = log10(obj.csp_pow);
+            [aux,obj.csp_pow] = csp_test(X,obj.filters);
+            X = log10(obj.csp_pow);
           else
             error('Output data type is not specified - it can be rawcsp,powcsp or logpowcsp');
           end
 
+          data = dataset(X);
+          
         end
 
     end

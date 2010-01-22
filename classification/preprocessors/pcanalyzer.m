@@ -60,13 +60,15 @@ classdef pcanalyzer < preprocessor
             
           else
 
-	    % ignore nans when taking the mean
-	    obj.means = mynanmean(data);
-
-            sz = ones(ndims(obj.means)); sz(1) = size(data,1);
-            data = data - repmat(obj.means,sz);
+            X = data.collapse();
             
-            [obj.pc,score,obj.ev] = princomp(data);
+            % ignore nans when taking the mean
+            obj.means = mynanmean(X);
+
+            sz = ones(ndims(obj.means)); sz(1) = size(X,1);
+            X = X - repmat(obj.means,sz);
+            
+            [obj.pc,score,obj.ev] = princomp(X);
             
             obj.ev = obj.ev';
 
@@ -102,17 +104,19 @@ classdef pcanalyzer < preprocessor
 
             for c=1:length(data)
 
-              sz = ones(ndims(obj.means{c})); sz(1) = size(data{c},1);
-              data{c} = data{c} - repmat(obj.means{c},sz);
-              data{c} = (obj.pc{c}' * data{c}')';        
+              X = data{c}.collapse();
+              sz = ones(ndims(obj.means{c})); sz(1) = size(X,1);
+              X = X - repmat(obj.means{c},sz);
+              data{c} = dataset((obj.pc{c}' * X')');        
               
             end
 
           else
 
-            sz = ones(ndims(obj.means)); sz(1) = size(data,1);
-            data = data - repmat(obj.means,sz);            
-            data = (obj.pc' * data')';
+            X = data.collapse();
+            sz = ones(ndims(obj.means)); sz(1) = size(X,1);
+            X = X - repmat(obj.means,sz);            
+            data = dataset((obj.pc' * X')');
 
           end
         end

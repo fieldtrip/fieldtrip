@@ -35,11 +35,11 @@ classdef rbmstack < preprocessor
 
     methods
         function obj = rbmstack(varargin)
-            
-            obj = obj@preprocessor(varargin{:});
-
-            obj.model = SRBM(varargin{:});
-                                      
+          
+          obj = obj@preprocessor(varargin{:});
+          
+          obj.model = SRBM(varargin{:});
+          
         end
         
         function obj = train(obj,data,design)
@@ -48,7 +48,7 @@ classdef rbmstack < preprocessor
             % default architecture
             if isempty(obj.model.rbms)
            
-              rbm1 = RBM('nvisible',size(data,2),'nhidden',30,'nconditional',1);
+              rbm1 = RBM('nvisible',data.nfeatures,'nhidden',30,'nconditional',1);
               rbm2 = RBM('nvisible',30,'nhidden',30,'nconditional',1);
               obj.model = SRBM('rbms',{rbm1 rbm2});
             
@@ -58,7 +58,7 @@ classdef rbmstack < preprocessor
               obj.inlayers = 1:(length(obj.model.rbms)+1);
             end
             
-            obj.model = obj.model.train(data);
+            obj.model = obj.model.train(data.collapse());
             
         end
         
@@ -70,7 +70,7 @@ classdef rbmstack < preprocessor
             end
             
             R = cell(1,length(obj.model.rbms)+1);
-            R{1} = data;
+            R{1} = data.collapse();
             for c=1:length(obj.model.rbms)
               
               obj.model.rbms{c}.meanfield = true;
@@ -79,7 +79,7 @@ classdef rbmstack < preprocessor
             end
                                 
             % concatenation of reconstruction probabilities
-            data = cat(2,R{obj.inlayers});
+            data = dataset(cat(2,R{obj.inlayers}));
             
         end
         

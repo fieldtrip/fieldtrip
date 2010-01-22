@@ -18,25 +18,21 @@ classdef mixtureclassifier < static_classifier
     methods
        function obj = mixtureclassifier(varargin)
                   
-           obj = obj@classifier(varargin{:});
+           obj = obj@static_classifier(varargin{:});
            
        end
        function obj = train(obj,data,design)
-
-         [data,design] = obj.check_input(data,design);
+  
+         if isempty(obj.mixture), obj.mixture = design.nunique; end
          
-           if isempty(obj.mixture), obj.mixture = max(design(:,1)); end
-
-           % data must accommodate hidden variable         
-           obj = obj.train@static_classifier([data nan(size(data,1),1)],design);
-            
+         % data must accommodate hidden variable
+         obj = obj.train@static_classifier(dataset([data.collapse() nan(data.nsamples,1)]),design);
+         
        end
        
        function post = test(obj,data)
 
-         data = obj.check_input(data);
-         
-         post = obj.test@static_classifier([data nan(size(data,1),1)]);
+         post = obj.test@static_classifier(dataset([data.collapse() nan(data.nsamples,1)]));
        
        end
 

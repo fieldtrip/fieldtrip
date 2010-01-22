@@ -40,13 +40,18 @@ classdef filterer < featureselector
     end
     function obj = train(obj,data,design)
       
-      obj.nfeatures = min(obj.nfeatures,size(data,2));
+      obj.nfeatures = min(obj.nfeatures,data.nfeatures);
+      
+      data = data.collapse();
+      design = design.collapse();
+      
+      sfilt = func2str(obj.filter);
       
       if obj.verbose
         if isempty(obj.validator)
-          fprintf('selecting %d features based on %s filter\n',obj.nfeatures,func2str(obj.filter));
+          fprintf('selecting %d features based on %s filter\n',obj.nfeatures,sfilt);
         else
-          fprintf('selecting optimal features based on %s filter\n',func2str(obj.filter));
+          fprintf('selecting optimal features based on %s filter\n',sfilt);
         end
       end
       
@@ -76,6 +81,9 @@ classdef filterer < featureselector
         nfeatures = size(data,2);
         obj.value = zeros(1,nfeatures);
         for j=1:nfeatures
+          
+          fprintf('computing %s filter for feature %d of %d\n',sfilt,j,nfeatures);
+          
           obj.value(j) = obj.filter(data(:,j),design);
         end
         

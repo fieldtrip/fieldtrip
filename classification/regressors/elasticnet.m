@@ -23,6 +23,9 @@ classdef elasticnet < regressor
        end
        function obj = train(obj,data,design)
         
+         data = data.collapse();
+         design = design.collapse();
+         
          % add bias term
          data = [data ones(size(data,1),1)];
         
@@ -47,20 +50,15 @@ classdef elasticnet < regressor
        function post = test(obj,data)       
        
          % add bias term
-         data = [data ones(size(data,1),1)];
-       
-         post = data * obj.model;
+         data = [data.collapse() ones(data.nsamples,1)];       
+         post = dataset(data * obj.model);
 
        end
        
-       function m = getmodel(obj,label,dims)
+       function m = getmodel(obj)
          % return the parameters wrt a class label in some shape 
                     
          m = full(obj.model(1:(end-1))); % ignore bias term
-
-         if nargin == 3 && numel(m) == prod(dims)
-           m = reshape(m,dims);
-         end
          
        end
 

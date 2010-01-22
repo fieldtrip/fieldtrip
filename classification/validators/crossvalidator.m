@@ -2,258 +2,311 @@ classdef crossvalidator < validator
 %CROSSVALIDATOR crossvalidation class
 %
 %   OPTIONS:
-%   cvfolds: the type of crossvalidation used [10] :
-%       - 1                 : test on training data
-%       - 0 <= cvfolds < 1  : proportion of training data
-%       - cvfolds = inf     : leave-one-out crossvalidation
-%       - cvfolds = N       : N-fold crossvalidation
-%       - cvfolds = { [1:n] [n+1:m] ... } : prespecified partitioning
+%   nfolds: the type of crossvalidation used [10] :
+%       - 1                : test on training data
+%       - 0 <= nfolds < 1  : proportion of training data
+%       - nfolds = inf     : leave-one-out crossvalidation
+%       - nfolds = N       : N-fold crossvalidation
+%
+%   alternatively the user can override this by explicitly
+%   speciyfing train and/or testfolds
+%   folds are of the form { [i11; .. i1k_1] ... [in1 .. ink_n] }
+%   or a cell-array of this form if multiple datasets/designs are given
+%   e.g. in case of multitask learning
+%
+%   multiple datasets are given the same train and test trials if they are
+%   qualitatively the same by reinitializing the (non-empty) RNG
+%
+%   data and design can both be multidimensional arrays
+%
+%   specification of multiple datasets and one design is allowed
 %
 %   if the design contains missing labels then it will become part of the 
-%   training data by default
+%   training data by default (useful for testing adaptive methods)
 %
-%   SEE ALSO:
-%   loocrossvalidator.m
-%
-%   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: crossvalidator.m,v $
-%
+%   Copyright (c) 2010, Marcel van Gerven
 
     properties
-        cvfolds = 10; % crossvalidation procedure
+      
+      nfolds = 10; % crossvalidation procedure
+      nsets;       % number of datasets
+      
+      trainfolds; % partitioning of the training examples 
+      testfolds;  % partitioning of the test examples
+      
     end
 
-   methods
-       function obj = crossvalidator(varargin)
-           
-           obj = obj@validator(varargin{:});
-                       
-       end
-       function obj = validate(obj,data,design)
+    methods
+      
+      function obj = crossvalidator(varargin)
+        
+        obj = obj@validator(varargin{:});
+        
+      end
+      
+      function obj = validate(obj,data,design)
 
-         % initialize random number generator
-         if ~isempty(obj.init)
-           if obj.verbose
-             fprintf('initializing random number generator with seed %d\n',obj.init)
-           end
-           RandStream.setDefaultStream(RandStream('mt19937ar','seed',obj.init));
-         end
-                                             
-         % make sure data and design are cell arrays to simplify further
-         % processing; we revert at the end of this function
-         if ~iscell(data)
-           data = {data};
-           
-           d = cell(1,length(data));
-           for c=1:length(data)
-             d{c} = design;
-           end
-           design = d;
-           
-         end
-                
-         % make sure data is a (cell array of) matrix
-         if ndims(data{1}) > 2, data = obj.collapse(data); end
-         
-         % make data with missing labels part of training data by default
-         % this allows testing of adaptive methods
-         [data,design,unlab_data,unlab_design] = obj.get_labeled_unlabeled(data,design);
-    
-         % report some properties
-         if obj.verbose
-         
-             nex = 0;
-             for c=1:length(data)
-               nex = nex + size(data{c},1);
-             end
+        % move to cell-array representation
+        if ~iscell(data)
+          data = {data};
+          design = {design};
+        end
+        
+        % replicate designs
+        if length(design)== 1 && length(data) > 1
+          design = repmat(design,[1 length(data)]);
+        end
+        
+        nsets = length(data);
+        obj.nsets = nsets;
+        
+        % report some properties
+        if obj.verbose          
+          fprintf('performing crossvalidation for %d dataset(s)\n',nsets);   
+          for d=1:nsets
+            sz = data{d}.dims;
+            fprintf('dataset %d consists of %d examples and %d',d,data{d}.nsamples,sz(1));
+            for dd=2:length(sz)
+              fprintf(' x %d',sz(dd));
+            end
+            fprintf(' features\n');
+          end
+        end
+        
+        % create train and test samples
+        [obj.trainfolds,obj.testfolds,nfolds] = obj.create_folds(design);
+                        
+        if ~obj.compact, proc = cell(nfolds,1); end
+        
+        obj.post = cell(nfolds,nsets);
+        obj.design = cell(nfolds,nsets);
+        
+        for f=1:nfolds % iterate over folds
+          
+          if obj.verbose, fprintf('validating fold %d of %d\n',f,nfolds); end
+          
+          traindata = cell(1,nsets);
+          traindesign = cell(1,nsets);
+          testdata  = cell(1,nsets);          
+          testdesign  = cell(1,nsets);
+          
+          for d=1:nsets % iterate over datasets            
+            
+            % construct data and design
+            
+            traindata{d} = dataset(data{d}.subsample(obj.trainfolds{f,d}));
+            traindesign{d} = dataset(design{d}.subsample(obj.trainfolds{f,d}));
+            
+            testdata{d} = dataset(data{d}.subsample(obj.testfolds{f,d}));
+            testdesign{d} = dataset(design{d}.subsample(obj.testfolds{f,d}));
+          
+          end
 
-             fprintf('performing crossvalidation for %d dataset(s) with %d examples and %d features\n',length(data),nex,size(data{1},2));
-
-         end
+          if nsets == 1
+            tproc = obj.procedure.train(traindata{1},traindesign{1});
+            obj.post{f} = tproc.test(testdata{1});
+            obj.design{f} = testdesign{1};
+          else
+            tproc = obj.procedure.train(traindata,traindesign);
+            obj.post(f,:) = tproc.test(testdata);
+            obj.design(f,:) = testdesign;           
+          end
+          
+          if ~obj.compact, proc{f} = tproc; end
+          
+        end
        
-         % randomize ordering of the data
-         if obj.randomize
-           [data,design] = obj.shuffle(data,design);
-         end
+        if ~obj.compact
+          obj.procedure = proc;
+        end      
+      end
+      
+    end
          
-         if isscalar(obj.cvfolds) && obj.cvfolds==1 % test on training data
-           
-           if obj.verbose, fprintf('validating using training data for testing\n'); end
-
-           tproc = obj.procedure.train(data,design);
-           obj.post = {tproc.test(data)};
-           obj.design = {design};
-           nfolds = 1;
-           
-           if ~obj.compact, obj.procedure = {tproc}; end
-           
-         else % create folds and run cross-validation
-                            
-           % folds{v}{d} specifies the test indices for dataset d in fold v
-           [folds,nfolds] = obj.create_folds(design);
-                 
-           if ~obj.compact, proc = cell(1,nfolds); end
-           
-           obj.post = cell(1,nfolds);
-           obj.design = cell(1,nfolds);
-           
-           for c=1:nfolds % iterate over folds
-                      
-             if obj.verbose, fprintf('validating fold %d of %d\n',c,nfolds); end
-           
-             traindata = cell(1,length(data));
-             testdata  = cell(1,length(data));
-             
-             traindesign = cell(1,length(data));
-             testdesign  = cell(1,length(data));
-             
-             for d=1:length(folds{c}) % iterate over datasets
-
-               % construct data and design
-               
-               testidx = folds{c}{d};
-               
-               trainidx = ones(1,size(data{d},1)); trainidx(testidx) = 0; trainidx = find(trainidx);
-               trainidx = trainidx(randperm(length(trainidx)));
-               testidx = testidx(randperm(length(testidx)));
-               
-               traindata{d} = data{d}(trainidx,:);
-               testdata{d}  = data{d}(testidx,:);
-               
-               traindesign{d} = design{d}(trainidx,:);
-               testdesign{d}  = design{d}(testidx,:);
-             
-             end
-             
-             if (islogical(obj.balanced) && obj.balanced) || strcmp(obj.balanced,'train')
-               if obj.verbose, fprintf('balancing training data\n'); end
-               [traindata,traindesign] = obj.balance(traindata,traindesign);
-             end
-             
-             if (islogical(obj.balanced) && obj.balanced) || strcmp(obj.balanced,'test')
-               if obj.verbose, fprintf('balancing test data\n'); end
-               [testdata,testdesign] = obj.balance(testdata,testdesign);
-             end
-               
-             % this might happen if folds end up empty
-             assert(~isempty(traindata{1}) & ~isempty(testdata{1}));
-             
-             % add possible unlabeled data to train data
-             for uc=1:length(design)
-               traindata{uc} = [traindata{uc}; unlab_data{uc}];
-               traindesign{uc} = [traindesign{uc}; unlab_design{uc}];
-             end
-             
-             % use a separate procedure per fold
-             % in order to save all produced results
-             tproc = obj.procedure.train(traindata,traindesign);
-             
-             obj.post{c} = tproc.test(testdata);
-             obj.design{c} = testdesign;
-             
-             if ~obj.compact, proc{c} = tproc; end
-             
-           end
-           
-           if ~obj.compact, obj.procedure = proc; end           
-                      
-         end          
-         
-         % revert situation for datasets
-         for c=1:nfolds
-           if length(obj.design{c})==1
-             obj.design{c} = obj.design{c}{1};
-           end
-         end
-                  
-       end
-   end
-   
    methods(Access=protected)
        
-       function [folds,nfolds] = create_folds(obj,design)
-        % helper function to create the folds in terms of trial indices
+       function [trainfolds,testfolds,nfolds] = create_folds(obj,design)
+        % workhorse helper function to create the folds in terms of trial indices
          
-          folds = obj.cvfolds;
-
-          if iscell(folds)
-            
-            % trial indices are already specified
-            
-            nfolds = length(folds);
-            
-            if ~iscell(folds{1})
-              for j=1:nfolds
-                folds{j} = {folds{j}}; 
-              end
+          trainfolds = obj.trainfolds;
+          testfolds = obj.testfolds;
+                              
+          nsets = length(design);
+          
+          if isempty(trainfolds) && isempty(testfolds) % samples are not prespecified so create the testfolds
+                    
+            nfolds = obj.nfolds;
+            if isinf(nfolds)
+              nfolds = min(cellfun(@(x)(x.nsamples),design));
             end
             
-            return;
-            
-          elseif folds > 0 && folds < 1 % percentage
-            
-            if obj.verbose, fprintf('validating using %.0f%% of the data for testing\n',100*(1-folds)); end
-            
-            folds = cell(1,length(design)); % test indices per dataset
-            
-            nclasses = max(design{1});
-            for c=1:length(design)
-              
-              % make sure classes are evenly represented
-              if strcmp(obj.mode,'classification') && ~isinf(obj.cvfolds)
-                testidx = [];
-                for k=1:nclasses
-                  tmpidx = find(design{c}(:,1) == k);
-                  testidx = [testidx; tmpidx(1:(numel(tmpidx) - floor(obj.cvfolds*numel(tmpidx))))];
-                end
-              else % regression
-                tmpidx = randperm(size(design{c},1));
-                testidx = tmpidx(1:(numel(tmpidx) - floor(obj.cvfolds*numel(tmpidx))));
-              end
-              
-              folds{c} = testidx;
-              
-            end
-            
-            folds = {folds}; % one cv fold at first level
-            nfolds = 1;
-            
-          elseif isinf(folds) || (folds > 1 && rem(folds,1) == 0) % n-fold crossvalidation
-            
-            nclasses = max(design{1});
-            
-            if isinf(folds) % leave-one-out; determine # folds              
-              nfolds = min(cellfun(@(x)(size(x,1)),design));
+            if (nfolds > 1 && rem(nfolds,1) == 0) % n-fold crossvalidation
+              testfolds  = cell(nfolds,nsets);
             else
-              nfolds = obj.cvfolds;
+              testfolds  = cell(1,nsets);
             end
             
-            folds = cell(1,nfolds);
+            labeled = cellfun(@(x)(x.labeled),design,'UniformOutput',false);
+            unlabeled = cellfun(@(x)(x.unlabeled),design,'UniformOutput',false);
             
-             for f=1:nfolds
+            for d=1:nsets
               
-              folds{f} = cell(1,length(design));
-              for c=1:length(design)
+              if obj.verbose && ~isempty(unlabeled{d})
+                fprintf('putting %d unlabeled samples into training set\n',length(unlabeled{d}))
+              end
+              
+              % use the same ordering for multiple datasets if possible
+              % by reinitializing the random number generator
+              if ~isempty(obj.init)                
+                RandStream.setDefaultStream(RandStream('mt19937ar','seed',obj.init));
+              end
+              
+              % randomize labeled trials
+              nsamples = size(labeled{d},1);
+              idxs = labeled{d}(randperm(nsamples));              
+
+              if nfolds == 1 % trainset is testset
                 
-                % make sure classes are evenly represented
-                if strcmp(obj.mode,'classification') && ~isinf(obj.cvfolds)
-                  testidx = [];
-                  for k=1:nclasses
-                    tmpidx = find(design{c}(:,1) == k);
-                    testidx = [testidx; tmpidx((floor((f-1)*(length(tmpidx)/nfolds))+1):floor(f*(length(tmpidx)/nfolds)))];
+                if obj.verbose, fprintf('validating using training data\n'); end
+          
+                trainfolds{1,d} = randperm(design{d}.nsamples);
+                testfolds{1,d}  = idxs;
+                              
+              elseif nfolds > 0 && nfolds < 1 % percentage
+                
+                if obj.verbose, fprintf('validating using %.0f%% of the data for testing\n',100*(1-nfolds)); end
+          
+                % make sure outcomes are evenly represented whenever possible
+                [unq,tmp,idx] = unique(design{d}.collapse,'rows');
+                                
+                if max(idx) == nsamples % unique samples
+                    testfolds{1,d} = idxs(1:(nsamples - floor(nfolds*nsamples)));
+                else
+                
+                  % take labeled indices
+                  idx = idx(idxs);
+                  
+                  for j=1:length(unq)                   
+                    iidx = find(idx == unq(j));
+                    testfolds{1,d} = [testfolds{1,d}; idxs(iidx(1:(numel(iidx) - floor(nfolds*numel(iidx)))))];
                   end
-                else % regression
-                  testidx = (floor((f-1)*(size(design{c},1)/nfolds))+1):floor(f*(size(design{c},1)/nfolds));
+                  
+                end
+                           
+              elseif nfolds > 1 && rem(nfolds,1) == 0 % n-fold crossvalidation
+                
+                if obj.verbose, fprintf('validating using %d-fold cross-validation\n',nfolds); end
+          
+                % make sure outcomes are evenly represented whenever possible
+                [unq,tmp,idx] = unique(design{d}.collapse,'rows');
+                
+                if max(idx) == nsamples % unique samples
+                 
+                  for f=1:nfolds
+                    testfolds{f,d} = idxs((floor((f-1)*(length(idxs)/nfolds))+1):floor(f*(length(idxs)/nfolds)));
+                  end
+                 
+                else
+               
+                  % take labeled indices
+                  idx = idx(idxs);               
+               
+                  f=1;
+                  for j=1:length(unq)
+                    iidx = find(idx == unq(j));
+                    for k=1:length(iidx)
+                      testfolds{f,d} = [testfolds{f,d}; idxs(iidx(k))];
+                      f = f+1; if f > nfolds, f=1; end
+                    end
+                  end
+                  
                 end
                 
-               folds{f}{c} = testidx;
-             end
+              end
               
+            end
+          
+            if nfolds > 0 && nfolds < 1 % percentage
+                nfolds = 1;
             end
             
           end
-       end
+                      
+          if isempty(trainfolds)
+            
+            nfolds = size(testfolds,1);
+            
+            trainfolds = cell(nfolds,nsets);            
+            for f=1:nfolds
+              for d=1:nsets
+                
+                % use the same ordering for multiple datasets if possible
+                % by reinitializing the random number generator
+                if ~isempty(obj.init)
+                  RandStream.setDefaultStream(RandStream('mt19937ar','seed',obj.init));
+                end
+                
+                trainfolds{f,d} =  setdiff(1:design{d}.nsamples,testfolds{f,d})';
+                trainfolds{f,d} = trainfolds{f,d}(randperm(size(trainfolds{f,d},1)));
+                
+                if obj.balanced
+                  % make sure all classes are represented equally in the
+                  % train samples by sampling with replacement
+                  
+                  if obj.verbose
+                    fprintf('balancing training samples by sampling with replacement\n');
+                  end
+                  
+                  [unq,tmp,idx] = unique(design{d}.collapse,'rows');
+
+                  idx = idx(trainfolds{f,d});
+                  
+                  maxsmp = max(arrayfun(@(x)(sum(idx == x)),unq));
+                  
+                  tmp = trainfolds{f,d};
+                  for j=1:length(unq)                   
+                    
+                    iidx = find(idx == unq(j));                    
+                    
+                    if obj.verbose
+                      fprintf('drawing %d additional samples for label %d\n',maxsmp - length(iidx),unq(j));
+                    end
+                    
+                    % nameclash with fieldtrip_private
+                    tmp = [tmp; randsample(trainfolds{f,d}(iidx),maxsmp - length(iidx),true)];
+                    
+                  end
+                  
+                  trainfolds{f,d} = tmp(randperm(length(tmp)));
+                  
+                end
+                               
+              end
+            end
+            
+          end
           
+          if isempty(testfolds)
+            
+            nfolds = size(trainfolds,1);
+            
+            testfolds = cell(nfolds,nsets);            
+            for f=1:nfolds
+              for d=1:nsets
+                
+                % use the same ordering for multiple datasets if possible
+                % by reinitializing the random number generator
+                if ~isempty(obj.init)
+                  RandStream.setDefaultStream(RandStream('mt19937ar','seed',obj.init));
+                end
+                
+                testfolds{f,d} = setdiff(1:design{d}.nsamples,trainfolds{f,d})';
+                testfolds{f,d} = testfolds{f,d}(randperm(size(testfolds{f,d},1)));
+              end
+            end
+            
+          end
+                    
+       end
    end
 end

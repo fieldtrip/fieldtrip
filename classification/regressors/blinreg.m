@@ -86,7 +86,10 @@ classdef blinreg < regressor
            
            % some checking
            if iscell(data), error('regressor does not take multiple datasets as input'); end
-          
+           
+           data = data.collapse();
+           design = design.collapse();
+           
            if isempty(obj.prior)
              obj.prior = obj.create_prior(size(data,2));
            else
@@ -169,12 +172,14 @@ classdef blinreg < regressor
            else
                fprintf('EP converged\n');
            end
-      
-          
+         
        end
+       
        function post = test(obj,data)       
                     
          if iscell(data), error('regressor does not take multiple datasets as input'); end
+         
+         data = data.collapse();
          
          data = [data ones(size(data,1),1)];
          
@@ -223,10 +228,11 @@ classdef blinreg < regressor
          
          y = exp(maxh) .* sum(exp(h - repmat(maxh,[1 size(h,2)])),2);         
          
-         post = [y C];
+         post = dataset([y C]);
             
        end
-       function [m,varaux,varprior,meanbeta,varbeta] = getmodel(obj,label,dims)
+       
+       function [m,varaux,varprior,meanbeta,varbeta] = getmodel(obj)
          % return the variances of the auxiliary variables as the model; this 
          % determines in turn the magnitude of the betas through: U = u^2 + v^2
          % we output variances relative to the prior variances
@@ -253,17 +259,6 @@ classdef blinreg < regressor
          % mean and variance of the regression coefficients
          meanbeta = obj.Gauss.m(1:(end-1));
          varbeta = obj.Gauss.diagC(1:(end-1));
-         
-         if nargin == 3 && numel(m) == prod(dims)
-           
-           varaux = reshape(varaux,dims);
-           varprior = reshape(varprior,dims);
-           m = reshape(m,dims);
-           
-           meanbeta = reshape(meanbeta,dims);
-           varbeta  = reshape(varbeta,dims);
-           
-         end
          
        end
        

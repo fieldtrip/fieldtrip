@@ -22,6 +22,7 @@ classdef optimizer < predictor
       variables             % the variables to optimize
       values                % the values used
       metric = 'accuracy';  % the evaluation metric  
+      
       methodidx = 1;        % index of the method in the validator procedure that is to be optimized (default = 1)
       
       configs               % variables configurations
@@ -51,10 +52,15 @@ classdef optimizer < predictor
          end
                                
        end
+       
        function obj = train(obj,data,design)
          
          if obj.verbose
-           fprintf('optimizing\n');
+           fprintf('optimizing variables');
+           for c=1:length(obj.variables)
+             fprintf(' %s',obj.variables{c});
+           end
+           fprintf('\n');
          end
          
          % the optimizer iterates over all values for the specified
@@ -77,14 +83,14 @@ classdef optimizer < predictor
 
            if obj.verbose
              fprintf('evaluating configuration ');
-             fprintf('%d ',obj.configs(i,:));
+             fprintf('%d\n',obj.configs(i,:));
            end
 
            v = vld.validate(data,design);
            obj.results(i) = v.evaluate('metric',obj.metric);
 
            if obj.verbose
-             fprintf(': %f\n',obj.results(i));
+             fprintf('%s : %f\n',obj.metric,obj.results(i));
            end
            
            if obj.results(i) > maxresult

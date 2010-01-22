@@ -43,7 +43,7 @@ classdef featureselector < clfmethod
       function data = test(obj,data)
         
         if obj.verbose
-          fprintf('using %d out of %d features\n',numel(obj.subset),size(data,2));
+          fprintf('using %d out of %d features\n',numel(obj.subset),data.nfeatures);
         end
         
         if iscell(data)
@@ -51,15 +51,17 @@ classdef featureselector < clfmethod
           for c=1:length(data)
             
             % return data for the subset
-            data{c} = data{c}(:,obj.subset{c});
+            data{c} = data{c}.collapse();
+            data{c} = dataset(data{c}(:,obj.subset{c}));
           end
         else
-          data = data(:,obj.subset);
+          data = data.collapse();
+          data = dataset(data(:,obj.subset));
         end
         
       end
       
-      function model = getmodel(obj)
+      function model = getmodel(obj,label)
         % return used subset
         
         model = obj.subset;

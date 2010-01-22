@@ -27,22 +27,24 @@ classdef whitener < preprocessor
         
         function obj = train(obj,data,design)
 
-          obj.means = mean(data);
+          X = data.collapse();
           
-          Z = bsxfun(@minus,data, obj.means);
+          obj.means = mean(X);
+          
+          Z = bsxfun(@minus,X, obj.means);
           [E, D] = eig(cov(Z,1));
           
           % Sort the eigenvalues - decending.
           eigenvalues = sort(diag(D),'descend');
 
           if isempty(obj.nc)
-            lastEig = size(data, 2);
+            lastEig = data.nfeatures;
           else
             lastEig = obj.nc;
           end
           
           firstEig = 1;
-          oldDimension = size (data, 2);
+          oldDimension = data.nfeatures;
 
           rankTolerance = 1e-7;
           maxLastEig = sum (diag (D) > rankTolerance);          
@@ -111,9 +113,9 @@ classdef whitener < preprocessor
                     
         end
         
-        function post = test(obj,data)
+        function data = test(obj,data)
 
-          post = obj.whiten(data);       
+          data.X = reshape(obj.whiten(data.collapse()),[data.nsamples data.dims]);
           
         end
         

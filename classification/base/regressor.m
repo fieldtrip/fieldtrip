@@ -16,9 +16,7 @@ classdef regressor < predictor
 %   doc regressors
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: regressor.m,v $
-%        
+     
     
     methods
         
@@ -34,9 +32,9 @@ classdef regressor < predictor
         end
         
         function reg = predict(obj,data)
-           % convert posteriors into predictions (mean value)
+           % convert posterior dataset into predictions (mean value)
            
-           reg = obj.test(data);
+           reg = obj.test(data).X;
            reg = reg(:,1);
            
         end

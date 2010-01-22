@@ -1,4 +1,4 @@
-classdef hgnb_transfer < transfer_classifier
+classdef hgnb_transfer < classifier & transfer_learner
   %HGNB hierarchical gaussian naive Bayes classifier
   %
   %   This classifier can be used for transfer learning:
@@ -19,6 +19,8 @@ classdef hgnb_transfer < transfer_classifier
     examples
     means
     stds
+    
+    nclasses
 
   end
 
@@ -30,18 +32,20 @@ classdef hgnb_transfer < transfer_classifier
     end
     function obj = train(obj,data,design)
 
-      [data,design] = obj.check_input(data,design);
+      obj.nclasses = data{1}.nunique;
       
       ntasks = length(data);
 
-      if isnan(obj.nclasses), obj.nclasses = max(design{1}(:,1)); end
-
-      nfeatures = size(data{1},2);
+      nfeatures = data{1}.nfeatures;
 
       obj.means = cell(1,ntasks);
       obj.stds  = cell(1,ntasks);
 
       for c=1:ntasks
+        
+        data{c} = data{c}.collapse();
+        design{c} = design{c}.collapse();
+        
         obj.means{c} = zeros(obj.nclasses,nfeatures);
         obj.stds{c} = zeros(obj.nclasses,nfeatures);
       end
@@ -119,13 +123,13 @@ classdef hgnb_transfer < transfer_classifier
 
     function post = test(obj,data)
 
-      data = obj.check_input(data);
-      
       ntasks = length(data);
 
       post = cell(1,ntasks);
       for c=1:ntasks
 
+        data{c} = data{c}.collapse();
+        
         post{c} = nan(size(data{c},1),obj.nclasses);
 
         for m=1:size(post{c},1) % iterate over examples
@@ -160,32 +164,18 @@ classdef hgnb_transfer < transfer_classifier
           post{c}(m,:) = exp(post{c}(m,:) - nt);
 
         end
+        
+        post{c} = dataset(post{c});
+        
       end
 
     end
     
-    function m = getmodel(obj,label,dims)
+    function m = getmodel(obj)
       % return the parameters wrt a class label in some shape
-
-      if nargin < 2 || isempty(label) || isnan(label)
 
         % return model for all classes; i.e., their means
         m = obj.means;
-
-      else
-
-        m = obj.means;
-        for c=1:length(m)
-          m{c} = m{c}(label,:);
-        end
-
-      end      
-
-      for c=1:length(m)
-        if numel(m) == prod(dims)
-          m{c} = reshape(m,dims);
-        end
-      end
       
     end
 

@@ -38,6 +38,9 @@ classdef gpregressor < regressor
                error('this code requires an external toolbox: http://www.gaussianprocess.org/gpml/code/matlab/doc/');
            end
            
+           data = data.collapse();
+           design = design.collapse();
+           
            targets = design(:,1);
            
            % center targets
@@ -55,15 +58,18 @@ classdef gpregressor < regressor
            end
                        
        end
+       
        function post = test(obj,data)       
            % returns mean and variance
            
            if iscell(data), error('GPREGRESSOR does not take multiple datasets as input'); end
 
+           data = data.collapse();
+           
            [avg,variance] = gpr(obj.loghyper, obj.covfunc, obj.data, obj.targets, data);
            avg = avg + obj.offset;  % add back offset to get true prediction
 
-           post = [avg variance];
+           post = dataset([avg variance]);
            
        end
 
