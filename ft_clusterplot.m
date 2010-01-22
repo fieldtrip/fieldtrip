@@ -124,6 +124,10 @@ else
   Nsigpos = length(sigpos);
   Nsigneg = length(signeg);
   Nsigall = Nsigpos + Nsigneg;
+  
+  if Nsigall == 0
+    error('no clusters present with a p-value lower than the specified alpha, nothing to plot')
+  end    
 
   % make clusterslabel matrix per significant cluster
   posCLM = squeeze(stat.posclusterslabelmat);
