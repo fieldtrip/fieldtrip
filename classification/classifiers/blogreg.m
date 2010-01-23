@@ -176,6 +176,7 @@ classdef blogreg < classifier
          
           
        end
+       
        function post = test(obj,data)       
          
          X = data.collapse();
@@ -241,6 +242,7 @@ classdef blogreg < classifier
          post = dataset([y 1 - y]);
          
        end
+       
        function [m,desc] = getmodel(obj)
          % return the variances of the auxiliary variables as the model; this
          % determines in turn the magnitude of the betas through: U = u^2 + v^2

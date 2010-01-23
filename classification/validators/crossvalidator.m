@@ -48,7 +48,7 @@ classdef crossvalidator < validator
 
         % move to cell-array representation
         if ~iscell(data)
-          design = {design};
+          data = {data};
         end
         
         if ~iscell(design)
