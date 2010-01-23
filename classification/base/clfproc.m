@@ -80,7 +80,29 @@ classdef clfproc
               
        function obj = train(obj,data,design)
             % train just calls the methods' train functions in order to produce a posterior
-                                     
+                             
+            % cast to datasets if necessary
+            
+            if iscell(data)
+              for c=1:length(data)
+                if ~isa(data{c},'dataset')
+                  data{c} = dataset(data{c});
+                end
+              end
+            elseif ~isa(data,'dataset')
+              data = dataset(data);
+            end
+              
+            if iscell(design)
+              for c=1:length(design)
+                if ~isa(design{c},'dataset')
+                  design{c} = dataset(design{c});
+                end
+              end
+            elseif ~isa(design,'dataset')
+              design = dataset(design);
+            end
+            
             for c=1:obj.nmethods   
               
               if iscell(obj.clfmethods{c})
@@ -145,6 +167,18 @@ classdef clfproc
              return;
            end
                     
+           % cast to datasets if necessary
+            
+            if iscell(data)
+              for c=1:length(data)
+                if ~isa(data{c},'dataset')
+                  data{c} = dataset(data{c});
+                end
+              end
+            elseif ~isa(data,'dataset')
+              data = dataset(data);
+            end
+           
             for c=1:obj.nmethods
              
               if iscell(obj.clfmethods{c})

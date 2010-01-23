@@ -48,8 +48,25 @@ classdef crossvalidator < validator
 
         % move to cell-array representation
         if ~iscell(data)
-          data = {data};
           design = {design};
+        end
+        
+        if ~iscell(design)
+          design = {design};
+        end
+        
+        % cast to datasets if necessary
+            
+        for c=1:length(data)
+          if ~isa(data{c},'dataset')
+            data{c} = dataset(data{c});
+          end
+        end
+        
+        for c=1:length(design)
+          if ~isa(design{c},'dataset')
+            design{c} = dataset(design{c});
+          end
         end
         
         % replicate designs

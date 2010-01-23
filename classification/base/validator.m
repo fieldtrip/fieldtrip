@@ -78,15 +78,8 @@ classdef validator
       m = fm{1};
       for c=2:length(obj.procedure)
         
-        if iscell(m)
-          % if we return multiple models
-          
-          for j=1:length(m)
-            m{j} = m{j} + fm{c}{j};
-          end
-          
-        else
-          m = m + fm{c};
+        for j=1:length(m)
+          m{j} = m{j} + fm{c}{j};
         end
       end
       

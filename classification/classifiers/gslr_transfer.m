@@ -67,9 +67,11 @@ classdef gslr_transfer < classifier & transfer_learner
          % the columns represent datasets
         
            % return model for all classes           
-           m = cell(1,length(obj.model));
-           for c=1:length(obj.model)
-             m{c} = full(obj.model{c}(:,1:(end-1))); % ignore bias term
+           m = cell(size(obj.model{1},1),length(obj.model));
+           for c=1:size(m,1)
+             for j=1:size(m,2)
+               m{c,j} = full(obj.model{j}(c,1:(end-1))); % ignore bias term
+             end
            end          
            
            desc = {'unknown'};
