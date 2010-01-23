@@ -107,7 +107,7 @@ if ~cfg.compact
     end
   end  
   
-  for c=1:size(m,1) % iterate over parameter types
+  for c=1:size(desc,1) % iterate over parameter types
     stat.(sprintf('desc%d',c)) = desc{c};
   end
   
