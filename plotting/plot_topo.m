@@ -19,6 +19,7 @@ function Zi = plot_topo(chanX, chanY, dat, varargin)
 %   'interplim'
 %   'interpmethod'
 %   'style'
+%   'datmask'
 
 % Copyrights (C) 2009, Giovanni Piantoni
 %
@@ -30,7 +31,7 @@ persistent previous_argin previous_maskimage
 warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'gridscale', 'shading', 'mask', 'outline', 'interplim', 'interpmethod','isolines','style'});
+keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'gridscale', 'shading', 'mask', 'outline', 'interplim', 'interpmethod','isolines','style', 'datmask'});
 hpos          = keyval('hpos',         varargin);    if isempty(hpos);         hpos = 0;                 end
 vpos          = keyval('vpos',         varargin);    if isempty(vpos);         vpos = 0;                 end
 width         = keyval('width',        varargin);    if isempty(width);        width = 1;                end
@@ -43,6 +44,7 @@ interplim     = keyval('interplim',    varargin);    if isempty(interplim);    i
 interpmethod  = keyval('interpmethod', varargin);    if isempty(interpmethod); interpmethod = 'v4';      end
 isolines      = keyval('isolines',     varargin);      
 style         = keyval('style',        varargin);    if isempty(style);        style = 'surfiso';       end % can be 'surf', 'iso', 'isofill', 'surfiso'
+datmask       = keyval('datmask',      varargin);
 
 % everything is added to the current figure
 holdflag = ishold;
@@ -89,6 +91,19 @@ else
   maskimage = [];
 end
 
+% adjust maskimage to also mask channels as specified in maskdat
+if ~isempty(datmask)
+  xi           = linspace(hlim(1), hlim(2), gridscale);   % x-axis for interpolation (row vector)
+  yi           = linspace(vlim(1), vlim(2), gridscale);   % y-axis for interpolation (row vector)
+  maskimagetmp = griddata(chanX', chanY, datmask, xi', yi, 'nearest'); % interpolate the mask data
+  if isempty(maskimage)
+    maskimage = maskimagetmp;
+  else
+    maskimagetmp = maskimage + maskimagetmp;
+    maskimage = maskimagetmp > 1;
+  end
+end
+  
 xi         = linspace(hlim(1), hlim(2), gridscale);       % x-axis for interpolation (row vector)
 yi         = linspace(vlim(1), vlim(2), gridscale);       % y-axis for interpolation (row vector)
 [Xi,Yi,Zi] = griddata(chanX', chanY, dat, xi', yi, interpmethod); % interpolate the topographic data
