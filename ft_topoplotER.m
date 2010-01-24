@@ -197,6 +197,7 @@ if ~isfield(cfg, 'highlightcolor'),        cfg.highlightcolor = [0 0 0];  end
 if ~isfield(cfg, 'highlightsize'),         cfg.highlightsize = 6;         end
 if ~isfield(cfg, 'highlightfontsize'),     cfg.highlightfontsize = 8;     end
 if ~isfield(cfg, 'labeloffset'),           cfg.labeloffset = 0.005;       end
+if ~isfield(cfg, 'maskparameter'),         cfg.maskparameter = [];        end
 
 % compatability for previous highlighting option
 if isnumeric(cfg.highlight)
@@ -239,21 +240,17 @@ for icell = 1:ncellhigh
   if isempty(cfg.highlightfontsize{icell}),  cfg.highlightfontsize{icell} = 8;     end
 end
 
- 
 % for backwards compatability
 if strcmp(cfg.marker,'highlights')
   warning('using cfg.marker option -highlights- is no longer used, please use cfg.highlight')
   cfg.marker = 'off';
 end
 
-
-
 % check colormap is proper format and set it
 if isfield(cfg,'colormap')
   if size(cfg.colormap,2)~=3, error('topoplot(): Colormap must be a n x 3 matrix'); end
   colormap(cfg.colormap);
 end;
-
 
 % Set x/y/zparam defaults according to data.dimord value:
 if strcmp(data.dimord, 'chan_time')
@@ -330,6 +327,11 @@ elseif strcmp(data.dimord, 'chan_comp')
   if ~isfield(cfg, 'xparam'),      cfg.xparam='comp';         end
   if ~isfield(cfg, 'yparam'),      cfg.yparam='';             end
   if ~isfield(cfg, 'zparam'),      cfg.zparam='topo';         end
+else
+  if isfield(cfg, 'xparam') && isfield(cfg, 'zparam') && ~isfield(cfg, 'yparam')
+    % user specified own fields, but no yparam (which is not asked in help)
+    cfg.yparam = '';
+  end
 end
 
 % Read or create the layout that will be used for plotting:
@@ -454,6 +456,17 @@ chanX = cfg.layout.pos(sellay,1);
 chanY = cfg.layout.pos(sellay,2);
 chanLabels = cfg.layout.label(sellay);
 
+% make datmask structure with one value for each channel
+if ~isempty(cfg.maskparameter)
+  datmask = getsubfield(data, cfg.maskparameter);
+  if min(size(datmask)) ~= 1 || max(size(datmask)) ~= length(data.label)
+    error('data in cfg.maskparameter should be vector with one value per channel')
+  end
+  datmask = datmask(:);
+  % Select the channels in the maskdata that match with the layout:
+  maskdatavector = datmask(seldat);
+end
+
 % Get physical min/max range of z:
 if strcmp(cfg.zlim,'maxmin')
   zmin = min(datavector);
@@ -465,8 +478,6 @@ else
   zmin = cfg.zlim(1);
   zmax = cfg.zlim(2);
 end
-
-
 
 % make comment
 if strcmp(cfg.comment, 'auto')
@@ -544,7 +555,6 @@ elseif isnumeric(cfg.commentpos)
   y_comment = 0.9*((y_comment-min(y))/(max(y)-min(y))-0.5);
 end
 
-
 % Draw topoplot
 hold on
 % Set plot_topo specific options
@@ -564,7 +574,8 @@ if ~strcmp(cfg.style,'blank')
                                    'shading',cfg.shading,...
                                    'isolines',cfg.contournum,...
                                    'mask',cfg.layout.mask,...
-                                   'style',style);
+                                   'style',style,...
+                                   'datmask', maskdatavector);
 elseif ~strcmp(cfg.style,'blank')
   plot_lay(lay,'box','no','label','no','point','no')
 end
