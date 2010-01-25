@@ -1,5 +1,7 @@
-function [trl] = trialfun_Subject01(cfg)
+function [trl] = trialfun_twoclass_classification(cfg)
 
+% TRIALFUN_TWOCLASS_CLASSIFICATION
+%
 % This trial function can be used to train and test a real-time
 % classifier in offline and online mode. It selects pieces of data
 % in the two classes based on two trigger values. The first N occurences

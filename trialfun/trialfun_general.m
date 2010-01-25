@@ -1,6 +1,6 @@
-function [trl, event] = trialfun_general(cfg);
+function [trl, event] = trialfun_general(cfg)
 
-% TRIALFUN_GENERAL  determines trials/segments in the data that are
+% TRIALFUN_GENERAL determines trials/segments in the data that are
 % interesting for analysis, using the general event structure returned
 % by read_event. This function is independent of the dataformat
 %
@@ -17,6 +17,8 @@ function [trl, event] = trialfun_general(cfg);
 % If you specify
 %   cfg.trialdef.eventtype  = '?'
 % a list with the events in your datafile will be displayed on screen.
+%
+% See also DEFINETRIAL, PREPROCESSING
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 %
