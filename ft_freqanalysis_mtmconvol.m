@@ -54,6 +54,7 @@ function [freq] = freqanalysis_mtmconvol(cfg, data);
 %   cfg.calcdof    = 'yes'   calculate the degrees of freedom for every trial
 %   cfg.phaseshift = 'yes' or 'no' shift the wavelets by pi to make the peak
 %                    of an oscillation angle(complex) = 0 when uneven cycle number in timwin
+%   cfg.precision  = 'single', 'double', or any other matlab class (default = 'double')
 
 % Copyright (c) 2003,2004-2006 F.C. Donders Centre
 %
@@ -86,6 +87,7 @@ if ~isfield(cfg, 'pad'),           cfg.pad        = 'maxperlen';  end
 if ~isfield(cfg, 'taper'),         cfg.taper      = 'dpss';       end
 if ~isfield(cfg, 'channel'),       cfg.channel    = 'all';        end
 if ~isfield(cfg, 'phaseshift'),    cfg.phaseshift = 'no';         end
+if ~isfield(cfg, 'precision'),     cfg.precision  = 'double';     end
 if strcmp(cfg.output, 'fourier'),
     cfg.keeptrials = 'yes';
     cfg.keeptapers = 'yes';
@@ -265,22 +267,23 @@ for foilop = 1:numfoi
     end
 end
 
+% added cfg.precision (undocumented) in below memory allocation
 if keep == 1
-    if powflg, powspctrm     = zeros(numsgn,numfoi,numtoi);             end
-    if csdflg, crsspctrm     = complex(zeros(numsgncmb,numfoi,numtoi)); end
-    if fftflg, fourierspctrm = complex(zeros(numsgn,numfoi,numtoi));    end
+    if powflg, powspctrm     = zeros(numsgn,numfoi,numtoi,cfg.precision);             end
+    if csdflg, crsspctrm     = complex(zeros(numsgncmb,numfoi,numtoi,cfg.precision)); end
+    if fftflg, fourierspctrm = complex(zeros(numsgn,numfoi,numtoi,cfg.precision));    end
     cntpertoi = zeros(numfoi,numtoi);
     dimord    = 'chan_freq_time';
 elseif keep == 2
-    if powflg, powspctrm     = zeros(numper,numsgn,numfoi,numtoi);             end
-    if csdflg, crsspctrm     = complex(zeros(numper,numsgncmb,numfoi,numtoi)); end
-    if fftflg, fourierspctrm = complex(zeros(numper,numsgn,numfoi,numtoi));    end
+    if powflg, powspctrm     = zeros(numper,numsgn,numfoi,numtoi,cfg.precision);             end
+    if csdflg, crsspctrm     = complex(zeros(numper,numsgncmb,numfoi,numtoi,cfg.precision)); end
+    if fftflg, fourierspctrm = complex(zeros(numper,numsgn,numfoi,numtoi,cfg.precision));    end
     dimord    = 'rpt_chan_freq_time';
 elseif keep == 4
     % FIXME this works only if all frequencies have the same number of tapers
-    if powflg, powspctrm     = zeros(numper*numtap(1),numsgn,numfoi,numtoi);             end
-    if csdflg, crsspctrm     = complex(zeros(numper*numtap(1),numsgncmb,numfoi,numtoi)); end
-    if fftflg, fourierspctrm = complex(zeros(numper*numtap(1),numsgn,numfoi,numtoi));    end
+    if powflg, powspctrm     = zeros(numper*numtap(1),numsgn,numfoi,numtoi,cfg.precision);             end
+    if csdflg, crsspctrm     = complex(zeros(numper*numtap(1),numsgncmb,numfoi,numtoi,cfg.precision)); end
+    if fftflg, fourierspctrm = complex(zeros(numper*numtap(1),numsgn,numfoi,numtoi,cfg.precision));    end
     cnt = 0;
     dimord    = 'rpttap_chan_freq_time';
 end
