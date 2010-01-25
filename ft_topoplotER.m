@@ -465,6 +465,8 @@ if ~isempty(cfg.maskparameter)
   datmask = datmask(:);
   % Select the channels in the maskdata that match with the layout:
   maskdatavector = datmask(seldat);
+else
+  maskdatavector = [];
 end
 
 % Get physical min/max range of z:
