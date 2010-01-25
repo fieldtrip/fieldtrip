@@ -1,16 +1,16 @@
 % read_eeglabevent() - import EEGLAB dataset events
 %
 % Usage:
-%   >> header = read_eeglabevent(filename);
+%     >> event = read_eeglabevent(filename, ...);
 %
 % Inputs:
-%   filename - [string] file name
+%     filename - [string] file name
 %
 % Optional inputs:
-%   'header' - FILEIO structure header
+%     'header' - FILEIO structure header
 %
 % Outputs:
-%   event    - FILEIO toolbox event structure
+%     event - FILEIO toolbox event structure
 %
 % Author: Arnaud Delorme, SCCN, INC, UCSD, 2008-
 
@@ -25,12 +25,12 @@
 %
 % This program is distributed in the hope that it will be useful,
 % but WITHOUT ANY WARRANTY; without even the implied warranty of
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 % GNU General Public License for more details.
 %
 % You should have received a copy of the GNU General Public License
 % along with this program; if not, write to the Free Software
-% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
@@ -41,33 +41,59 @@ if nargin < 1
   return;
 end;
 
-header    = keyval('header',     varargin);
+hdr = keyval('header', varargin);
 
-if isempty(header)
-  header = read_eeglabheader(filename);
+if isempty(hdr)
+  hdr = read_eeglabheader(filename);
 end;
 
-event = [];
-oldevent = header.orig.event;
+event    = [];                % these will be the output in FieldTrip format
+oldevent = hdr.orig.event;    % these are in EEGLAB format
+
 for index = 1:length(oldevent)
-    event(index).value   = num2str( oldevent(index).type );
-    if isfield(oldevent,'code')
-        event(index).type   = oldevent(index).code;
-    elseif isfield(oldevent,'value')
-        event(index).type   = oldevent(index).value;
-    else
-        event(index).type   = 'trigger';
-    end;
-if header.nTrials > 1
-    event(index).sample = oldevent(index).latency-header.nSamplesPre;
-    event(index).offset = header.nSamplesPre;
+
+  if isfield(oldevent,'code')
+    type = oldevent(index).code;
+  elseif isfield(oldevent,'value')
+    type = oldevent(index).value;
   else
-    event(index).sample = oldevent(index).latency;
-    event(index).offset = 0;
+    type = 'trigger';
   end;
+
+  % events can have a numeric or a string value
+  value  = oldevent(index).type;
+
+  % this is the sample number of the concatenated data to which the event corresponds
+  sample = oldevent(index).latency;
+
+  % a non-zero offset only applies to trial-events, i.e. in case the data is
+  % segmented and each data segment needs to be represented as event. In
+  % that case the offset corresponds to the baseline duration (times -1).
+  offset = 0;
+
   if isfield(oldevent, 'duration')
-    event(index).duration = oldevent(index).duration;
+    duration = oldevent(index).duration;
   else
-    event(index).duration = 0;
+    duration = 0;
   end;
+
+  % add the current event in fieldtrip format
+  event(index).type     = type;     % this is usually a string, e.g. 'trigger' or 'trial'
+  event(index).value    = value;    % in case of a trigger, this is the value
+  event(index).sample   = sample;   % this is the sample in the datafile at which the event happens
+  event(index).offset   = offset;   % some events should be represented with a shifted time-axix, e.g. a trial with a baseline period
+  event(index).duration = duration; % some events have a duration, such as a trial
+
 end;
+
+if hdr.nTrials>1
+  % add the trials to the event structure
+  for i=1:hdr.nTrials
+    event(end+1).type     = 'trial';
+    event(end  ).sample   = (i-1)*hdr.nSamples + 1;
+    event(end  ).value    = [];
+    event(end  ).offset   = -hdr.nSamplesPre;
+    event(end  ).duration =  hdr.nSamples;
+  end
+end
+
