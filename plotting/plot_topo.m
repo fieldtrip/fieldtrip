@@ -69,7 +69,7 @@ else
 end
 
 % try to speed up the preparation of the mask on subsequent calls
-current_argin = {chanX, chanY, gridscale, mask};
+current_argin = {chanX, chanY, gridscale, mask, datmask};
 if isequal(current_argin, previous_argin)
   % don't construct the binary image, but reuse it from the previous call
   maskimage = previous_maskimage;
