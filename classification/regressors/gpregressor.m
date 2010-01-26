@@ -38,23 +38,20 @@ classdef gpregressor < regressor
                error('this code requires an external toolbox: http://www.gaussianprocess.org/gpml/code/matlab/doc/');
            end
            
-           data = data.collapse();
-           design = design.collapse();
-           
-           targets = design(:,1);
+           targets = design.X(:,1);
            
            % center targets
            obj.offset = mean(targets);
            targets = targets - obj.offset;
            
-           obj.data = data;
+           obj.data = data.X;
            obj.targets = targets;
 
            % specify standard covariance function
            obj.covfunc = {'covSum', {'covSEard','covNoise'}};
 
            if obj.optimize % optimize hyperparameters
-             obj.loghyper = minimize([zeros(1,size(data,2)) 0 log(sqrt(0.1))]', 'gpr', -100, obj.covfunc, data, targets);
+             obj.loghyper = minimize([zeros(1,data.nfeatures) 0 log(sqrt(0.1))]', 'gpr', -100, obj.covfunc, data.X, targets);
            end
                        
        end
@@ -64,9 +61,7 @@ classdef gpregressor < regressor
            
            if iscell(data), error('GPREGRESSOR does not take multiple datasets as input'); end
 
-           data = data.collapse();
-           
-           [avg,variance] = gpr(obj.loghyper, obj.covfunc, obj.data, obj.targets, data);
+           [avg,variance] = gpr(obj.loghyper, obj.covfunc, obj.data, obj.targets, data.X);
            avg = avg + obj.offset;  % add back offset to get true prediction
 
            post = dataset([avg variance]);

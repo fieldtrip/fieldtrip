@@ -59,8 +59,8 @@ methods
   
     if design.nunique ~= 2, error('l2svm only makes binary classifications'); end
     
-    data = data.collapse();
-    design = design.collapse();
+    data = data.X;
+    design = design.X;
     
     % transform elements of the design matrix to class labels
     targets = design(:,1);
@@ -106,7 +106,7 @@ methods
   
   function post = test(obj,data)
     
-    data = data.collapse();
+    data = data.X;
     
     % deal with empty data
     if size(data,2) == 0

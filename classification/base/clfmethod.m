@@ -36,9 +36,9 @@ classdef clfmethod
       
       end
       
-      function post = test(obj,data)
+      function out = test(obj,data)
         % do nothing
-        post = data;
+        out = data;
       end
    
     end    

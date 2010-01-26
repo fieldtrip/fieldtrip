@@ -51,23 +51,15 @@ classdef standardizer < preprocessor
           
         else
           
-          data = data.collapse();
+          obj.means = mynanmean(data.X);
           
-          if obj.bmean
-            
-            % ignore nans when taking the mean
-            obj.means = mynanmean(data);
-            
-          end
-          
-          if obj.bstd
-            obj.stds = mynanstd(data);
-            obj.stds(obj.stds==0) = 1; % bug fix
-          end
+          obj.stds = mynanstd(data.X);
+          obj.stds(obj.stds==0) = 1; % bug fix
+        
         end
       end
       
-      function data = test(obj,data)
+      function out = test(obj,data)
         
         if iscell(data)
           
@@ -86,22 +78,13 @@ classdef standardizer < preprocessor
           
         else
           
-          X = data.collapse();
+          Y = bsxfun(@minus,data.X,obj.means);
+          Y = bsxfun(@rdivide,Y,obj.stds);
           
-          if size(X,2) > 1
-            
-            sz = ones(ndims(obj.means)); sz(1) = size(X,1);
-            
-            if obj.bmean
-              X = X - repmat(obj.means,sz);
-            end
-            
-            if obj.bstd
-              X = obj.bstd .* X ./ repmat(obj.stds,sz);
-            end
-          end
-          
-          data.X = reshape(X,data.dims);
+          out = dataset(Y);
+
+          out.dims = data.dims;
+          out.ndims = data.ndims;
           
         end
       end

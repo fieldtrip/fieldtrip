@@ -34,18 +34,13 @@ classdef pnn < classifier
       
       function obj = train(obj,data,design)
         
-        data = data.collapse();
-        design = design.collapse();
-        
-        obj.net = newpnn(data',design(:,1)',obj.spread);
+        obj.net = newpnn(data.X',design.X(:,1)',obj.spread);
         
       end
       
       function post = test(obj,data)
         
-        data = data.collapse();
-        
-        post = sim(obj.net,data')';
+        post = dataset(sim(obj.net,data.X')');
       end
       
     end

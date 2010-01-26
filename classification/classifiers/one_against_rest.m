@@ -43,8 +43,8 @@ classdef one_against_rest < classifier
         
          obj.nclasses = tdesign.nunique;
        
-         tdata = tdata.collapse();
-         tdesign = tdesign.collapse();
+         tdata = tdata.X;
+         tdesign = tdesign.X;
                 
         % transform the data such that we have a cell element for each
         % class label pair

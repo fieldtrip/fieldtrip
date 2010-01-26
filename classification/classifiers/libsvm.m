@@ -34,8 +34,8 @@ classdef libsvm < classifier
       
       function obj = train(obj,data,design)
         
-        data = data.collapse();
-        design = design.collapse();
+        data = data.X;
+        design = design.X;
         
         % regularization parameter
         if isempty(strfind(obj.trainparams,'-c'))
@@ -54,13 +54,11 @@ classdef libsvm < classifier
       
       function post = test(obj,data)
         
-        data = data.collapse();
-        
-        if isempty(strfind(obj.testparams,'-b'))
+       if isempty(strfind(obj.testparams,'-b'))
           obj.testparams = [obj.testparams ' -b 1'];
         end
         
-        [a,b,post] = svmpredict(ones(size(data,1),1), data, obj.model, obj.testparams);
+        [a,b,post] = svmpredict(ones(data.nsamples,1), data.X, obj.model, obj.testparams);
 
         post = dataset(post);
       

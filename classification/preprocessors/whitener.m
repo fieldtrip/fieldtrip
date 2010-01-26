@@ -27,7 +27,7 @@ classdef whitener < preprocessor
         
         function obj = train(obj,data,design)
 
-          X = data.collapse();
+          X = data.X;
           
           obj.means = mean(X);
           
@@ -115,7 +115,7 @@ classdef whitener < preprocessor
         
         function data = test(obj,data)
 
-          data.X = reshape(obj.whiten(data.collapse()),[data.nsamples data.dims]);
+          data.X = obj.whiten(data.X);
           
         end
         

@@ -42,8 +42,8 @@ classdef wrapper < featureselector
         
         function obj = train(obj,data,design)
           
-          data = data.collapse();
-          design = design.collapse();
+          data = data.X;
+          design = design.X;
           
           switch obj.search
             

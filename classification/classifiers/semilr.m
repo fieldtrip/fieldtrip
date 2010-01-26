@@ -20,6 +20,7 @@ classdef semilr < classifier
     end
     
     methods
+      
       function obj = semilr(varargin)
         
         obj = obj@classifier(varargin{:});
@@ -27,14 +28,15 @@ classdef semilr < classifier
         assert(~isempty(obj.partition));
         
       end
+      
       function obj = train(obj,data,design)
         
         assert(any(exist('minFunc','dir'))) % external code: minFunc
         
         obj.nclasses = design.nunique;
         
-        data = data.collapse();
-        design = design.collapse();
+        data = data.X;
+        design = design.X;
         
         nparts = length(obj.partition);
         
@@ -95,11 +97,9 @@ classdef semilr < classifier
       
       function post = test(obj,data)
         
-        data = data.collapse();
-        
         post=0;
         for i=1:length(obj.partition)
-          post = post+slr_classify([data(:,obj.partition{i}) ones(size(data,1),1)], obj.model{i});
+          post = post+slr_classify([data.X(:,obj.partition{i}) ones(data.nsamples,1)], obj.model{i});
         end
         post = dataset(bsxfun(@rdivide,post,sum(post,2)));
         

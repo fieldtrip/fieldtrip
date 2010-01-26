@@ -53,8 +53,8 @@ classdef gslr < classifier
       end
       function obj = train(obj,data,design)
         
-        data = data.collapse();
-        design = design.collapse();
+        data = data.X;
+        design = design.X;
         
         [obj.model,obj.diagnostics] = slr_learn(obj.options,[design(:,1) data]);
         
@@ -93,7 +93,7 @@ classdef gslr < classifier
       
       function post = test(obj,data)
         
-        post = dataset(slr_classify([data.collapse() ones(data.nsamples,1)], obj.model));
+        post = dataset(slr_classify([data.X ones(data.nsamples,1)], obj.model));
         
       end
       

@@ -41,7 +41,7 @@ classdef mulreg < regressor
             end                
             
             if isa(obj.prefun,'function_handle')
-                design = obj.prefun(design.collapse());
+                design = obj.prefun(design.X);
             end
             
             if isempty(obj.regressors)
@@ -52,13 +52,13 @@ classdef mulreg < regressor
             end
             
             for c=1:obj.ndep
-                obj.regressors{c} = obj.regressors{c}.train(data.collapse(),design(:,c));
+                obj.regressors{c} = obj.regressors{c}.train(data.X,dataset(design(:,c)));
             end
         end
         
         function res = test(obj,data)                 
           
-          data = data.collapse();
+          data = data.X;
           
           res = zeros(size(data,1),obj.ndep);
           for j=1:obj.ndep

@@ -35,7 +35,7 @@ classdef gp < classifier
         
         if design.nunique > 2, error('GP only accepts binary class problems'); end
         
-        design = design.collapse();
+        design = design.X;
         
         % make foolproof
         if all(design(:,1) == 1)
@@ -44,7 +44,7 @@ classdef gp < classifier
           obj.loghyper = inf;
         else
           
-          X = data.collapse();
+          X = data.X;
           
           if ~exist('gpml-matlab','dir')
             error('this code requires an external toolbox: http://www.gaussianprocess.org/gpml/code/matlab/doc/');
@@ -84,7 +84,7 @@ classdef gp < classifier
            end
         else
           
-          data = data.collapse();
+          data = data.X;
           
           if strcmp(obj.method,'laplace')
             

@@ -57,8 +57,8 @@ classdef dynamic_classifier < classifier
             
             obj.nclasses = design.nunique;
             
-            data = data.collapse();
-            design = design.collapse();
+            data = data.X;
+            design = design.X;
                 
             if isinf(obj.horizon)
                obj.numvar = 1 + size(data,2); 
@@ -165,7 +165,7 @@ classdef dynamic_classifier < classifier
 
            if obj.verbose, fprintf('computing marginals\n'); end
            
-           data = data.collapse();
+           data = data.X;
            
            post = zeros([size(data,1) obj.nclasses]);
 
@@ -204,7 +204,9 @@ classdef dynamic_classifier < classifier
                    post(j,:) = m.p';
                end
            end
-                      
+          
+           post = dataset(post);
+           
        end
 
        

@@ -79,15 +79,11 @@ classdef svmmethod < classifier
         % simply stores input data and design
             
         idx = data.labeled();
-       
-        % transform multidimensional array to matrix
-        data = data.collapse();
-        design = design.collapse();
-        
+         
         % remove missing data
-        data = data(idx,:);
-        design = design(idx,:);
-                
+        data = data.X(idx,:);
+        design = design.X(idx,:);
+        
         if ~exist('platt_sigmoid','var')
           obj.platt_sigmoid = [];
           obj.platt_sigmoid.A = [];
@@ -148,11 +144,8 @@ classdef svmmethod < classifier
       end
       function post = test(obj,data)
     
-        % transform multidimensional array to matrix
-        X = data.collapse();
-        
         % remove missing data
-        X = X(data.labeled(),:);
+        X = data.subsample(data.labeled()).X;
                 
         probs = svm_eval(X,obj.sv_model.sv,obj.sv_model.weights,obj.sv_model.b,obj.kernel,obj.kerparam);
         

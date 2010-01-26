@@ -58,7 +58,7 @@ classdef rbmstack < preprocessor
               obj.inlayers = 1:(length(obj.model.rbms)+1);
             end
             
-            obj.model = obj.model.train(data.collapse());
+            obj.model = obj.model.train(data.X);
             
         end
         
@@ -70,7 +70,7 @@ classdef rbmstack < preprocessor
             end
             
             R = cell(1,length(obj.model.rbms)+1);
-            R{1} = data.collapse();
+            R{1} = data.X;
             for c=1:length(obj.model.rbms)
               
               obj.model.rbms{c}.meanfield = true;

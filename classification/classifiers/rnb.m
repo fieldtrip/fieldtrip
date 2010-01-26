@@ -35,8 +35,8 @@ classdef rnb < nb
  
          obj.nclasses = design.nunique;
          
-         data = data.collapse();
-         design = design.collapse();
+         data = data.X;
+         design = design.X;
          
          % create hold-out set
          if ~isfield(obj.options,'cvfolds'), obj.options.cvfolds = 0.9; end
@@ -100,7 +100,7 @@ classdef rnb < nb
        
        function post = test(obj,data)
          
-         data = data.collapse();
+         data = data.X;
 
          post = zeros(size(data,1),obj.nclasses);
          

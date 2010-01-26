@@ -43,13 +43,13 @@ classdef da < classifier
        function obj = train(obj,data,design)
             % simply stores input data and design
             
-            obj.data = data.collapse();
-            obj.design = design.collapse();
+            obj.data = data;
+            obj.design = design;
                        
        end
        function post = test(obj,data)       
 
-           [class,err,post,logp,obj.coeff] = classify(data.collapse(),obj.data,obj.design,obj.disfun);                    
+           [class,err,post,logp,obj.coeff] = classify(data.X,obj.data.X,obj.design.X,obj.disfun);                    
        
            post = dataset(post);
        end

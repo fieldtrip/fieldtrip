@@ -84,7 +84,7 @@ classdef cspprocessor < preprocessor
         end
         function obj = train(obj,data,design)
 
-          X = data.collapse();
+          X = data.X;
           
           if isempty(obj.numchan)
             obj.numchan = size(X,2);
@@ -103,7 +103,7 @@ classdef cspprocessor < preprocessor
 
         function data = test(obj,data)
 
-          X = data.collapse();
+          X = data.X;
           
           if isnumeric(X) && length(size(X)) == 2  %just to make it explicit
             X = reshape(X,size(X,1),obj.numchan,size(X,2)/obj.numchan);

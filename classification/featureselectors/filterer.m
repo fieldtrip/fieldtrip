@@ -42,8 +42,8 @@ classdef filterer < featureselector
       
       obj.nfeatures = min(obj.nfeatures,data.nfeatures);
       
-      data = data.collapse();
-      design = design.collapse();
+      data = data.X;
+      design = design.X;
       
       sfilt = func2str(obj.filter);
       

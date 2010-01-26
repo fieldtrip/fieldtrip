@@ -26,13 +26,13 @@ classdef mixtureclassifier < static_classifier
          if isempty(obj.mixture), obj.mixture = design.nunique; end
          
          % data must accommodate hidden variable
-         obj = obj.train@static_classifier(dataset([data.collapse() nan(data.nsamples,1)]),design);
+         obj = obj.train@static_classifier(dataset([data.X nan(data.nsamples,1)]),design.X);
          
        end
        
        function post = test(obj,data)
 
-         post = obj.test@static_classifier(dataset([data.collapse() nan(data.nsamples,1)]));
+         post = obj.test@static_classifier(dataset([data.X nan(data.nsamples,1)]));
        
        end
 

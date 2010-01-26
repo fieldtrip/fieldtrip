@@ -31,8 +31,8 @@ classdef squasher < preprocessor
           
           for c=1:length(data)
             
-            obj.dmin{c} = min(data{c});
-            data{c} = bsxfun(@minus,data{c}, obj.dmin{c});
+            obj.dmin{c} = min(data{c}.X);
+            data{c} = bsxfun(@minus,data{c}.X, obj.dmin{c});
             obj.dmax{c} = max(data{c});
             obj.dmax{c}(obj.dmax{c} ==0) = 1;
             
@@ -41,8 +41,8 @@ classdef squasher < preprocessor
         end
       else
         
-        obj.dmin = min(data);
-        data = bsxfun(@minus,data, obj.dmin);
+        obj.dmin = min(data.X);
+        data = bsxfun(@minus,data.X, obj.dmin);
         obj.dmax = max(data);
         obj.dmax(obj.dmax ==0) = 1;
         
@@ -55,15 +55,15 @@ classdef squasher < preprocessor
         
         for c=1:length(data)
           
-          data{c} = bsxfun(@minus,data{c}, obj.dmin);
-          data{c} = bsxfun(@rdivide,data{c}, obj.dmax);
+          data{c} = bsxfun(@minus,data{c}.X, obj.dmin);
+          data{c} = dataset(bsxfun(@rdivide,data{c}, obj.dmax));
           
         end
         
       else
         
-        data = bsxfun(@minus,data, obj.dmin);
-        data = bsxfun(@rdivide,data, obj.dmax);
+        data = bsxfun(@minus,data.X, obj.dmin);
+        data = dataset(bsxfun(@rdivide,data, obj.dmax));
         
       end
     end

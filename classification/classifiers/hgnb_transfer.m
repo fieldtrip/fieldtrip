@@ -43,8 +43,8 @@ classdef hgnb_transfer < classifier & transfer_learner
 
       for c=1:ntasks
         
-        data{c} = data{c}.collapse();
-        design{c} = design{c}.collapse();
+        data{c} = data{c}.X;
+        design{c} = design{c}.X;
         
         obj.means{c} = zeros(obj.nclasses,nfeatures);
         obj.stds{c} = zeros(obj.nclasses,nfeatures);
@@ -128,7 +128,7 @@ classdef hgnb_transfer < classifier & transfer_learner
       post = cell(1,ntasks);
       for c=1:ntasks
 
-        data{c} = data{c}.collapse();
+        data{c} = data{c}.X;
         
         post{c} = nan(size(data{c},1),obj.nclasses);
 

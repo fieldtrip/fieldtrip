@@ -87,8 +87,8 @@ classdef blinreg < regressor
            % some checking
            if iscell(data), error('regressor does not take multiple datasets as input'); end
            
-           data = data.collapse();
-           design = design.collapse();
+           data = data.X;
+           design = design.X;
            
            if isempty(obj.prior)
              obj.prior = obj.create_prior(size(data,2));
@@ -179,9 +179,7 @@ classdef blinreg < regressor
                     
          if iscell(data), error('regressor does not take multiple datasets as input'); end
          
-         data = data.collapse();
-         
-         data = [data ones(size(data,1),1)];
+         data = [data.X ones(data.nsamples,1)];
          
          % compute univariate means
          M = data * obj.Gauss.m;

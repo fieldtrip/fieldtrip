@@ -25,9 +25,9 @@ classdef elasticlr < classifier
                
          if design.nunique ~= 2, error('elasticLR expects binary class labels'); end
 
-         design = design.collapse();
+         design = design.X;
          
-         X = [ones(data.nsamples,1) data.collapse()];
+         X = [ones(data.nsamples,1) data.X];
 
          design = 2*design - 3; % convert to -1 / + 1
          
@@ -52,7 +52,7 @@ classdef elasticlr < classifier
 
        function post = test(obj,data)
 
-         post = 1 ./ (1 + exp([ones(data.nsamples,1) data.collapse()] * obj.model));
+         post = 1 ./ (1 + exp([ones(data.nsamples,1) data.X] * obj.model));
          post = dataset([post 1 - post]);  
           
        end              

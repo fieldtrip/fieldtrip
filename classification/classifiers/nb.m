@@ -26,8 +26,8 @@ classdef nb < classifier
     function obj = train(obj,data,design)
 
       % transform multidimensional array to matrix
-      data = data.collapse();
-      design = design.collapse();
+      data = data.X;
+      design = design.X;
             
       [tmp,tmp,idx] = unique(design(1:size(design,1),:),'rows');
       obj.nclasses = max(idx);      
@@ -62,7 +62,7 @@ classdef nb < classifier
     end
     function post = test(obj,data)
 
-      data =  data.collapse();
+      data =  data.X;
       
       post = nan(size(data,1),obj.nclasses);
 

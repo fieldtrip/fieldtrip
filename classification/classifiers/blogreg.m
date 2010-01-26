@@ -86,11 +86,7 @@ classdef blogreg < classifier
        function obj = train(obj,data,design)
                   
          obj.dims = data.dims;
-        
-         % transform multidimensional array to matrix
-         X = data.collapse();
-         design = design.collapse();
-                  
+                        
          if isempty(obj.prior)
            obj.prior = obj.create_prior(data.nfeatures);
          else           
@@ -112,12 +108,12 @@ classdef blogreg < classifier
          end
                   
          % add bias term
-         X = [X ones(data.nsamples,1)];
+         X = [data.X ones(data.nsamples,1)];
          
          % run the algorithm
          
          % transform design to +1/-1 representation
-         design = 3-2*design(:,1);
+         design = 3-2*design.X(:,1);
          
          if isscalar(obj.scale)
            % learn model for fixed scale
@@ -179,9 +175,7 @@ classdef blogreg < classifier
        
        function post = test(obj,data)       
          
-         X = data.collapse();
-         
-         X = [X ones(data.nsamples,1)];
+         X = [data.X ones(data.nsamples,1)];
          
          % compute univariate means
          M = X * obj.Gauss.m;

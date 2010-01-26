@@ -22,8 +22,8 @@ classdef ridge < regressor
        function obj = train(obj,data,design)
         
          % add bias term
-         data = [data.collapse() ones(data.nsamples,1)];
-         design = design.collapse();
+         data = [data.X ones(data.nsamples,1)];
+         design = design.X;
          
          lambdas = obj.lambda*ones(size(data,2),1); % Penalize the absolute value of each element by the same amount
 
@@ -35,7 +35,7 @@ classdef ridge < regressor
        
        function post = test(obj,data)       
        
-         post = dataset([data.collapse() ones(data.nsamples,1)] * obj.model);
+         post = dataset([data.X ones(data.nsamples,1)] * obj.model);
 
        end
        

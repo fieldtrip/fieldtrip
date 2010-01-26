@@ -25,13 +25,14 @@ classdef regdif < classifier
       obj = obj@classifier(varargin{:});
       
     end
+    
     function obj = train(obj,data,design)
       % simply stores input data and design
       
       obj.nclasses = design.nunique;
       
-      data = data.collapse();
-      design = design.collapse();
+      data = data.X;
+      design = design.X;
       
       % proprietary code: minFunc
       if exist('minFunc','dir')
@@ -82,7 +83,7 @@ classdef regdif < classifier
     
     function post = test(obj,data)
       
-      data = data.collapse();
+      data = data.X;
       
       if iscell(data)
         post = cell(1,length(data));

@@ -45,7 +45,7 @@ classdef gslr_transfer < classifier & transfer_learner
            % transfer learning
            cdata = cell(1,length(data));
            for c=1:length(data)
-             cdata{c} = [design{c}.collapse() data{c}.collapse()];
+             cdata{c} = [design{c}.X data{c}.X];
            end
 
            [obj.model,obj.diagnostics] = slr_learn_transfer(obj.options,cdata);
@@ -56,7 +56,7 @@ classdef gslr_transfer < classifier & transfer_learner
                           
          post = cell(1,length(data));
          for j=1:length(data)
-           post{j} = dataset(slr_classify([data{j}.collapse() ones(data{j}.nsamples,1)], obj.model{j}));
+           post{j} = dataset(slr_classify([data{j}.X ones(data{j}.nsamples,1)], obj.model{j}));
          end
          
        end

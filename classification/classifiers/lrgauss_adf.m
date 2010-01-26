@@ -34,38 +34,33 @@ classdef lrgauss_adf < classifier
         
          if design.nunique ~= 2, error('LRGAUSS_ADF only accepts binary class problems'); end
 
-         data = data.collapse();
-         design = design.collapse();         
-         
-         targets = design(:,1);
-         targets(design == 1) = 1;
-         targets(design == 2) = -1;
+         targets = design.X(:,1);
+         targets(targets == 1) = -1;
+         targets(targets == 2) = 1;
          
          if isempty(obj.prior)
-           prior = priorstandard(size(data,2),1);
+           prior = priorstandard(data.nfeatures,1);
          else
            prior = obj.prior;
          end
          
          % training mode
-         prior = logisticgauss_adf(prior, data, targets);
-         obj.model = [ prior.mean' 0; -prior.mean' 0 ];
+         prior = logisticgauss_adf(prior, data.X, targets);
+         obj.model = [  -prior.mean' 0; prior.mean' 0];
          
-         obj.data = data;
+         obj.data = data.X;
          obj.targets = targets;
        end
        
        function post = test(obj,data)
          
-         data = data.collapse();
-         
          if iscell(data)
            post = cell(1,length(data));
            for j=1:length(data)
-             post{j} = slr_classify([data{j} ones(size(data{j},1),1)], obj.model{j});
+             post{j} = slr_classify([data{j}.X ones(data{j}.nsamples,1)], obj.model{j});
            end
          else
-           post = slr_classify([data ones(size(data,1),1)], obj.model);
+           post = slr_classify([data.X ones(data.nsamples,1)], obj.model);
          end
          
          post = dataset(post);

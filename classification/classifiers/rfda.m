@@ -23,19 +23,21 @@ classdef rfda < classifier
     end
     
     methods
+      
       function obj = rfda(varargin)
         
         obj = obj@classifier(varargin{:});
         
       end
+      
       function obj = train(obj,data,design)
         
         obj.nclasses = design.nunique;
         
         if design.nunique~=2, error ('only valid for two-class problems'); end
         
-        data = data.collapse();
-        design = design.collapse();
+        data = data.X;
+        design = design.X;
         
         design(design == 1) = -1;
         design(design == 2) = 1;
@@ -71,7 +73,7 @@ classdef rfda < classifier
       
       function post = test(obj,data)
         
-        data = data.collapse();
+        data = data.X;
         
         if strcmp(obj.kernel_type,'rbf')
           Ktest = rbf_prim(obj.SV,data,obj.kernel_parameter);

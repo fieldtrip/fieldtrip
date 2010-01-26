@@ -29,8 +29,8 @@ classdef hmm < dynamic_classifier
       
       function obj = train(obj,data,design)
         
-        data = data.collapse();
-        design = design.collapse();
+        data = data.X;
+        design = design.X;
         
         % data must accommodate hidden variables
         if obj.mixture > 1
@@ -53,7 +53,7 @@ classdef hmm < dynamic_classifier
       
       function post = test(obj,data)
         
-        data = data.collapse();
+        data = data.X;
         
         % data must accommodate hidden variables
         if obj.mixture > 1

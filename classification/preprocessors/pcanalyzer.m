@@ -60,7 +60,7 @@ classdef pcanalyzer < preprocessor
             
           else
 
-            X = data.collapse();
+            X = data.X;
             
             % ignore nans when taking the mean
             obj.means = mynanmean(X);
@@ -104,7 +104,7 @@ classdef pcanalyzer < preprocessor
 
             for c=1:length(data)
 
-              X = data{c}.collapse();
+              X = data{c}.X;
               sz = ones(ndims(obj.means{c})); sz(1) = size(X,1);
               X = X - repmat(obj.means{c},sz);
               data{c} = dataset((obj.pc{c}' * X')');        
@@ -113,7 +113,7 @@ classdef pcanalyzer < preprocessor
 
           else
 
-            X = data.collapse();
+            X = data.X;
             sz = ones(ndims(obj.means)); sz(1) = size(X,1);
             X = X - repmat(obj.means,sz);            
             data = dataset((obj.pc' * X')');

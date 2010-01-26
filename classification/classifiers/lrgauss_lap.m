@@ -31,31 +31,26 @@ classdef lrgauss_lap < classifier
        function obj = train(obj,data,design)
           
          if design.nunique ~= 2, error('LRGAUSS_LAP only accepts binary class problems'); end
-         
-         data = data.collapse();
-         design = design.collapse();
-         
-         targets = design(:,1);
-         targets(design == 1) = -1;
-         targets(design == 2) = 1;
+                  
+         targets = design.X(:,1);
+         targets(targets == 1) = -1;
+         targets(targets == 2) = 1;
          
          % training mode
-         x = logisticgauss_lap(obj.prior, data, targets);
+         x = logisticgauss_lap(obj.prior, data.X, targets);
          obj.model = [ [x' 0]; [-x' 0] ];
          
        end
        
        function post = test(obj,data)
          
-         data = data.collapse();
-         
          if iscell(data)
            post = cell(1,length(data));
            for j=1:length(data)
-             post{j} = slr_classify([data{j} ones(size(data{j},1),1)], obj.model{j});
+             post{j} = slr_classify([data{j}.X ones(data{j}.nsamples,1)], obj.model{j});
            end
          else
-           post = slr_classify([data ones(size(data,1),1)], obj.model);
+           post = slr_classify([data.X ones(data.nsamples,1)], obj.model);
          end
          
          post = dataset(post);

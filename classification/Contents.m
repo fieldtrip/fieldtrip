@@ -78,3 +78,5 @@
 % - getmodel add descriptions and make sure they can be remapped (e.g.,
 %   featureselector)
 % - blogreg blinreg return used scale when using multiple updates
+% - move mulreg to reconstructor
+% 

@@ -26,7 +26,7 @@ classdef l1lr < classifier
            fprintf('\nComputing L1-Regularized Logistic Regression Coefficients...\n');
          end
          
-         design = design.collapse();
+         design = design.X;
         
          % foolproof
          if all(design(:,1) == 1)
@@ -35,7 +35,7 @@ classdef l1lr < classifier
            obj.model = inf;
          else
            
-           X = [ones(data.nsamples,1) data.collapse()];
+           X = [ones(data.nsamples,1) data.X];
            
            design = 2*design - 3; % convert to -1 / + 1
            
@@ -56,7 +56,7 @@ classdef l1lr < classifier
              post = dataset([zeros(data.nsamples,1) ones(data.nsamples,1)]);
            end
          else
-           post = 1 ./ (1 + exp([ones(data.nsamples,1) data.collapse()] * obj.model));
+           post = 1 ./ (1 + exp([ones(data.nsamples,1) data.X] * obj.model));
            post = dataset([post 1 - post]);
          end
          

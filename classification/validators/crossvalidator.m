@@ -111,11 +111,11 @@ classdef crossvalidator < validator
             
             % construct data and design
             
-            traindata{d} = dataset(data{d}.subsample(obj.trainfolds{f,d}));
-            traindesign{d} = dataset(design{d}.subsample(obj.trainfolds{f,d}));
+            traindata{d} = data{d}.subsample(obj.trainfolds{f,d});
+            traindesign{d} = design{d}.subsample(obj.trainfolds{f,d});
             
-            testdata{d} = dataset(data{d}.subsample(obj.testfolds{f,d}));
-            testdesign{d} = dataset(design{d}.subsample(obj.testfolds{f,d}));
+            testdata{d} = data{d}.subsample(obj.testfolds{f,d});
+            testdesign{d} = design{d}.subsample(obj.testfolds{f,d});
           
           end
 
@@ -195,7 +195,7 @@ classdef crossvalidator < validator
                 if obj.verbose, fprintf('validating using %.0f%% of the data for testing\n',100*(1-nfolds)); end
           
                 % make sure outcomes are evenly represented whenever possible
-                [unq,tmp,idx] = unique(design{d}.collapse,'rows');
+                [unq,tmp,idx] = unique(design{d}.X,'rows');
                                 
                 if max(idx) == nsamples % unique samples
                     testfolds{1,d} = idxs(1:(nsamples - floor(nfolds*nsamples)));
@@ -216,7 +216,7 @@ classdef crossvalidator < validator
                 if obj.verbose, fprintf('validating using %d-fold cross-validation\n',nfolds); end
           
                 % make sure outcomes are evenly represented whenever possible
-                [unq,tmp,idx] = unique(design{d}.collapse,'rows');
+                [unq,tmp,idx] = unique(design{d}.X,'rows');
                 
                 if max(idx) == nsamples % unique samples
                  
@@ -276,7 +276,7 @@ classdef crossvalidator < validator
                     fprintf('balancing training samples by sampling with replacement\n');
                   end
                   
-                  [unq,tmp,idx] = unique(design{d}.collapse,'rows');
+                  [unq,tmp,idx] = unique(design{d}.X,'rows');
 
                   idx = idx(trainfolds{f,d});
                   

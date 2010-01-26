@@ -22,35 +22,33 @@ classdef nearestneighbour < classifier
     end
 
     methods
+      
        function obj = nearestneighbour(varargin)
                   
            obj = obj@classifier(varargin{:});
                       
        end
+       
        function obj = train(obj,data,design)
          % create knn object
          
          obj.nclasses = design.nunique;
          
-         data = data.collapse();
-         design = design.collapse();
-         
-         targets = zeros(size(data,1),obj.nclasses);
-         for j=1:size(data,1)
-           targets(j,design(j,1)) = 1;
+         targets = zeros(data.nsamples,obj.nclasses);
+         for j=1:data.nsamples
+           targets(j,design.X(j,1)) = 1;
          end
          
-         obj.net = knn(size(data,2), obj.nclasses, obj.k, data, targets);
+         obj.net = knn(data.nfeatures, obj.nclasses, obj.k, data.X, targets);
          
        end
+       
        function post = test(obj,data)
          
-         data = data.collapse();
-         
-         [y, l] = knnfwd(obj.net, data);
+        [y, l] = knnfwd(obj.net, data.X);
          
          post = zeros(size(data,1),obj.nclasses);
-         for j=1:size(data,1)
+         for j=1:data.nsamples
            post(j,l(j)) = 1;
          end
          

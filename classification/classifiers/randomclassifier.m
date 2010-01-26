@@ -24,10 +24,8 @@ classdef randomclassifier < classifier
     
     function post = test(obj,data)
       
-      data = data.collapse();
-      
       % random classification
-      post = rand(size(data,1),obj.nclasses);
+      post = rand(data.nsamples,obj.nclasses);
       post = post ./ repmat(sum(post,2),[1 size(post,2)]);
       
       post = dataset(post);

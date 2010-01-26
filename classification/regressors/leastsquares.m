@@ -20,13 +20,13 @@ classdef leastsquares < regressor
        end
        function obj = train(obj,data,design)
          
-         obj.model = [data.collapse() ones(data.nsamples,1)]\design.collapse();
+         obj.model = [data.X ones(data.nsamples,1)]\design.X;
          
        end
        
        function post = test(obj,data)       
            
-         post = dataset([data.collapse() ones(data.nsamples,1)]) * obj.model;
+         post = dataset([data.X ones(data.nsamples,1)]) * obj.model;
 
        end
        

@@ -8,16 +8,16 @@ classdef indep_recon < reconstructor
 % % regression
 % load dataset; X = dataset(response); Y = dataset(stimuli);
 % p = clfproc({indep_recon('procedure',{ridge},'verbose',true)});
-% p = p.train(dataset(X.subsample(1:100)),dataset(Y.subsample(1:100)));
-% r = p.test(dataset(X.subsample(101:111)));
+% p = p.train(X.subsample(1:100),Y.subsample(1:100));
+% r = p.test(X.subsample(101:111));
 % r.image(4);
 %
 % % probabilistic class labels
 % load dataset; X = dataset(response); 
 % stimuli = (stimuli > 128) + 1; Y = dataset(stimuli);
 % p = clfproc({standardizer indep_recon('procedure',{l2lr},'verbose',true,'prob',true)});
-% p = p.train(dataset(X.subsample(1:100)),dataset(Y.subsample(1:100)));
-% r = p.test(dataset(X.subsample(101:111)));
+% p = p.train(X.subsample(1:100),Y.subsample(1:100));
+% r = p.test(X.subsample(101:111));
 % r.image(1:10,[2 5]);
 %
 % Copyright (c) 2010, Marcel van Gerven
@@ -57,7 +57,7 @@ classdef indep_recon < reconstructor
               fprintf('training outcome %d of %d\n',c,length(proc));
             end
             proc{c} = obj.procedure;
-            proc{c} = proc{c}.train(data,dataset(design.subset(c)));
+            proc{c} = proc{c}.train(data,design.subset(c));
           end
           
           obj.procedure = proc;
@@ -76,7 +76,7 @@ classdef indep_recon < reconstructor
             if obj.prob && isa(proc{c}.clfmethods{end},'classifier')
               % output will be the probability of the last class
               pp = proc{c}.test(data);
-              out(:,c) = pp.subset(pp.nfeatures);
+              out(:,c) = pp.subset(pp.nfeatures).X;
             else
               out(:,c) = proc{c}.predict(data);
             end

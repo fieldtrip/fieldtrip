@@ -36,10 +36,6 @@ classdef featureselector < clfmethod
               
       end
       
-      function obj = train(obj,data,design)
-        
-      end
-      
       function data = test(obj,data)
         
         if obj.verbose
@@ -49,14 +45,10 @@ classdef featureselector < clfmethod
         if iscell(data)
           
           for c=1:length(data)
-            
-            % return data for the subset
-            data{c} = data{c}.collapse();
-            data{c} = dataset(data{c}(:,obj.subset{c}));
+            data{c} = data{c}.subset(obj.subset{c});
           end
         else
-          data = data.collapse();
-          data = dataset(data(:,obj.subset));
+          data = data.subset(obj.subset);
         end
         
       end

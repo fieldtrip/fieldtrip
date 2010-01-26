@@ -37,8 +37,8 @@ classdef static_classifier < classifier
 
             obj.nclasses = design.nunique; 
 
-            data = data.collapse();
-            design = design.collapse();
+            data = data.X;
+            design = design.X;
             
             if isempty(obj.numvar), obj.numvar = size(data,2)+1; end
             
@@ -65,7 +65,7 @@ classdef static_classifier < classifier
            
            if iscell(data), error('classifier does not take multiple datasets as input'); end
 
-           data = data.collapse();
+           data = data.X;
            
            post = zeros([size(data,1) obj.nclasses]);
            

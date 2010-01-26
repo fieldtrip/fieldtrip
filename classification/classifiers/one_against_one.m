@@ -36,6 +36,7 @@ classdef one_against_one < classifier
         
         assert(~isempty(obj.procedure));
         
+        % cast to clf procedure
         if ~isa(obj.procedure,'clfproc')
           obj.procedure = clfproc(obj.procedure);
         end
@@ -46,8 +47,8 @@ classdef one_against_one < classifier
           
         obj.nclasses = tdesign.nunique;
         
-        tdata = tdata.collapse();
-        tdesign = tdesign.collapse();
+        tdata = tdata.X;
+        tdesign = tdesign.X;
         
         % transform the data such that we have a cell element for each
         % class label pair

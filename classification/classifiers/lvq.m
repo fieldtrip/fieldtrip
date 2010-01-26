@@ -82,8 +82,8 @@ classdef lvq < classifier
         
         obj.nclasses = design.nunique;
         
-        data = data.collapse();
-        design = design.collapse();
+        data = data.X;
+        design = design.X;
         
         if strcmp(obj.initmethod,'none') && obj.verbose
           disp('option initmethod is set as none which implies omitting initialisation procedure.');
@@ -110,11 +110,9 @@ classdef lvq < classifier
       end
       function post = test(obj,data)
         
-        data = data.collapse();
-        
         if ~isempty(obj.cdb_vectors) && ~isempty(obj.cdb_labels)
           
-          output = lvq_test(data,obj.cdb_vectors,obj.cdb_labels,obj.fweights);
+          output = lvq_test(data.X,obj.cdb_vectors,obj.cdb_labels,obj.fweights);
           
           % post is just a hard class assignment (either 0 or 1) and does not have a probabilistic interpretation
           post = zeros(size(output,1),obj.nclasses);

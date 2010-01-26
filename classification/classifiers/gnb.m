@@ -31,8 +31,8 @@ classdef gnb < classifier
         obj.nclasses = design.nunique;
         nfeatures = data.nfeatures;
         
-        X = data.collapse();
-        design = design.collapse();
+        X = data.X;
+        design = design.X;
         
         % estimate class priors
         obj.priors = zeros(obj.nclasses,1);
@@ -75,7 +75,7 @@ classdef gnb < classifier
       
       function post = test(obj,data)
         
-        X = data.collapse();
+        X = data.X;
         
         post = nan(size(X,1),obj.nclasses);
         
