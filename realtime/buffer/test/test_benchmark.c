@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
   
   if (verbose>0) fprintf(stderr, "test_benchmark: host.name =  %s\n", host.name);
   if (verbose>0) fprintf(stderr, "test_benchmark: host.port =  %d\n", host.port);
-  
+
   /* allocate the elements that will be used in the communication */
   request      = malloc(sizeof(message_t));
   request->def = malloc(sizeof(messagedef_t));
@@ -186,7 +186,7 @@ int main(int argc, char *argv[]) {
     toc = time(NULL);
     elapsed = toc-tic;
     
-    fprintf(stderr, "samplecount = %d, elapsed = %d, samples/sec = %d\n", samplecount, elapsed, samplecount/elapsed);
+   fprintf(stderr, "samplecount = %d, elapsed = %d, samples/sec = %f\n", samplecount, elapsed, ((float)(samplecount))/((float)elapsed));
     
   } /* while(1) */
   
