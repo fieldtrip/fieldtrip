@@ -124,11 +124,6 @@ void *tcpsocket(void *arg) {
 				accept = 0;
 		}
 
-		if (message->job->hostsize!=sizeof(hostdef_t)) {
-				if (verbose>0) fprintf(stderr, "tcpsocket: incorrect hostsize\n");
-				goto cleanup;
-		}
-
 		if (message->job->argsize>MAXARGSIZE) {
 				if (verbose>0) fprintf(stderr, "tcpsocket: argsize too large\n");
 				accept = 0;
@@ -211,7 +206,6 @@ void *tcpsocket(void *arg) {
 		if (verbose>2) {
 				fprintf(stderr, "tcpsocket: job.version  = %d\n", job->job->version);
 				fprintf(stderr, "tcpsocket: job.id       = %d\n", job->job->id);
-				fprintf(stderr, "tcpsocket: job.hostsize = %d\n", job->job->hostsize);
 				fprintf(stderr, "tcpsocket: job.argsize  = %d\n", job->job->argsize);
 				fprintf(stderr, "tcpsocket: job.optsize  = %d\n", job->job->optsize);
 				fprintf(stderr, "tcpsocket: host.name    = %s\n", job->host->name);

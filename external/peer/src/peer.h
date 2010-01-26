@@ -31,7 +31,7 @@
 #define SO_REUSEPORT      SO_REUSEADDR
 #endif
 
-#define VERSION           0x0004
+#define VERSION           0x0005
 #define ANNOUNCE_GROUP    "225.0.0.88"
 #define ANNOUNCE_PORT 	  1700				/* it will auto-increment if the port is not available */
 #define DEFAULT_GROUP     "all"
@@ -120,7 +120,6 @@ typedef struct {
 typedef struct {
 		UINT32_T version;
 		UINT32_T id;
-		UINT32_T hostsize;  /* size of the host description in bytes */
 		UINT32_T argsize;   /* size of the job arguments in bytes */
 		UINT32_T optsize;   /* size of the job options in bytes */
 } jobdef_t;
@@ -166,10 +165,8 @@ typedef struct hostlist_s hostlist_t;
 typedef struct {
 		jobdef_t  *job;  /* this defines the job contents                 */
 		hostdef_t *host; /* this defines where it originates from         */
-		char      *pwd;
-		char      *path;
-		void      *arg;  /* this contains the input or output arguments */
-		void      *opt;  /* this contains the options for the job */
+		void      *arg;  /* this contains the input or output arguments   */
+		void      *opt;  /* this contains the options for the job         */
 } message_t;
 
 #ifdef __cplusplus

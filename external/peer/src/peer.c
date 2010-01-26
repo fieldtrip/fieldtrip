@@ -5,14 +5,14 @@
 #include "extern.h"
 #include "unix_includes.h"
 
+#define NUMJOBSTRUCTFIELDS 4
+const char* jobstructfieldnames[NUMJOBSTRUCTFIELDS] = {"version", "jobid", "argsize", "optsize"};
+
 #define NUMPEERSTRUCTFIELDS 5
 const char* peerstructfieldnames[NUMPEERSTRUCTFIELDS] = {"hostid", "hostname", "hostaddr", "hostport", "hoststatus"};
 
-#define NUMJOBSTRUCTFIELDS 5
-const char* jobstructfieldnames[NUMJOBSTRUCTFIELDS] = {"version", "jobid", "hostsize", "argsize", "optsize"};
-
-#define NUMJOBPEERSTRUCTFIELDS 10
-const char* jobpeerstructfieldnames[NUMJOBPEERSTRUCTFIELDS] = {"version", "jobid", "hostsize", "argsize", "optsize", "hostid", "hostname", "hostaddr", "hostport", "hoststatus"}; 
+#define NUMJOBPEERSTRUCTFIELDS 9
+const char* jobpeerstructfieldnames[NUMJOBPEERSTRUCTFIELDS] = {"version", "jobid", "argsize", "optsize", "hostid", "hostname", "hostaddr", "hostport", "hoststatus"}; 
 
 int peerInitialized = 0;
 
@@ -112,7 +112,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 
 		/****************************************************************************/
 		if (strcasecmp(command, "tcpserver")==0) {
-				/* the input arguments should be "tcpserver <start|stop>" */
+				/* the input arguments should be "tcpserver <start|stop|status>" */
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
 				if (!mxIsChar(prhs[1]))
@@ -140,6 +140,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						else
 								tcpserverThread = 0;
 				}
+				else if (strcasecmp(argument, "status")==0) {
+						plhs[0] = mxCreateDoubleScalar(tcpserverStatus);
+				}
 				else
 						mexErrMsgTxt ("invalid input argument #2");
 				return;
@@ -147,7 +150,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 
 		/****************************************************************************/
 		else if (strcasecmp(command, "announce")==0) {
-				/* the input arguments should be "tcpserver <start|stop>" */
+				/* the input arguments should be "tcpserver <start|stop|status>" */
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
 				if (!mxIsChar(prhs[1]))
@@ -175,6 +178,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						else
 								announceThread = 0;
 				}
+				else if (strcasecmp(argument, "status")==0) {
+						plhs[0] = mxCreateDoubleScalar(announceStatus);
+				}
 				else
 						mexErrMsgTxt ("invalid input argument #2");
 				return;
@@ -182,7 +188,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 
 		/****************************************************************************/
 		else if (strcasecmp(command, "discover")==0) {
-				/* the input arguments should be "discover <start|stop>" */
+				/* the input arguments should be "discover <start|stop|status>" */
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
 				if (!mxIsChar(prhs[1]))
@@ -210,6 +216,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						else
 								discoverThread = 0;
 				}
+				else if (strcasecmp(argument, "status")==0) {
+						plhs[0] = mxCreateDoubleScalar(discoverStatus);
+				}
 				else
 						mexErrMsgTxt ("invalid input argument #2");
 				return;
@@ -217,7 +226,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 
 		/****************************************************************************/
 		else if (strcasecmp(command, "expire")==0) {
-				/* the input arguments should be "expire <start|stop>" */
+				/* the input arguments should be "expire <start|stop|status>" */
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
 				if (!mxIsChar(prhs[1]))
@@ -244,6 +253,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 								mexErrMsgTxt("problem with return code from pthread_cancel()");
 						else
 								expireThread = 0;
+				}
+				else if (strcasecmp(argument, "status")==0) {
+						plhs[0] = mxCreateDoubleScalar(expireStatus);
 				}
 				else
 						mexErrMsgTxt ("invalid input argument #2");
@@ -528,7 +540,6 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				def = (jobdef_t *)malloc(sizeof(jobdef_t));
 				def->version  = VERSION;
 				def->id       = jobid;
-				def->hostsize = sizeof(hostdef_t);
 
 				arg = (mxArray *) mxSerialize(prhs[2]);
 				opt = (mxArray *) mxSerialize(prhs[3]);
@@ -557,9 +568,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						plhs[0] = mxCreateStructMatrix(1, 1, NUMJOBSTRUCTFIELDS, jobstructfieldnames);
 						mxSetFieldByNumber(plhs[0], 0, 0, mxCreateDoubleScalar((UINT32_T)(def->version)));
 						mxSetFieldByNumber(plhs[0], 0, 1, mxCreateDoubleScalar((UINT32_T)(def->id)));
-						mxSetFieldByNumber(plhs[0], 0, 2, mxCreateDoubleScalar((UINT32_T)(def->hostsize)));
-						mxSetFieldByNumber(plhs[0], 0, 3, mxCreateDoubleScalar((UINT32_T)(def->argsize)));
-						mxSetFieldByNumber(plhs[0], 0, 4, mxCreateDoubleScalar((UINT32_T)(def->optsize)));
+						mxSetFieldByNumber(plhs[0], 0, 2, mxCreateDoubleScalar((UINT32_T)(def->argsize)));
+						mxSetFieldByNumber(plhs[0], 0, 3, mxCreateDoubleScalar((UINT32_T)(def->optsize)));
 						FREE(def);
 				}
 				else {
@@ -705,14 +715,13 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				while(job) {
 						mxSetFieldByNumber(plhs[0], i, 0, mxCreateDoubleScalar((UINT32_T)(job->job->version)));
 						mxSetFieldByNumber(plhs[0], i, 1, mxCreateDoubleScalar((UINT32_T)(job->job->id)));
-						mxSetFieldByNumber(plhs[0], i, 2, mxCreateDoubleScalar((UINT32_T)(job->job->hostsize)));
-						mxSetFieldByNumber(plhs[0], i, 3, mxCreateDoubleScalar((UINT32_T)(job->job->argsize)));
-						mxSetFieldByNumber(plhs[0], i, 4, mxCreateDoubleScalar((UINT32_T)(job->job->optsize)));
-						mxSetFieldByNumber(plhs[0], i, 5, mxCreateDoubleScalar((UINT32_T)(job->host->id)));
-						mxSetFieldByNumber(plhs[0], i, 6, mxCreateString(job->host->name));
-						mxSetFieldByNumber(plhs[0], i, 7, mxCreateString(job->host->addr));
-						mxSetFieldByNumber(plhs[0], i, 8, mxCreateDoubleScalar((UINT32_T)(job->host->port)));
-						mxSetFieldByNumber(plhs[0], i, 9, mxCreateDoubleScalar((UINT32_T)(job->host->status)));
+						mxSetFieldByNumber(plhs[0], i, 2, mxCreateDoubleScalar((UINT32_T)(job->job->argsize)));
+						mxSetFieldByNumber(plhs[0], i, 3, mxCreateDoubleScalar((UINT32_T)(job->job->optsize)));
+						mxSetFieldByNumber(plhs[0], i, 4, mxCreateDoubleScalar((UINT32_T)(job->host->id)));
+						mxSetFieldByNumber(plhs[0], i, 5, mxCreateString(job->host->name));
+						mxSetFieldByNumber(plhs[0], i, 6, mxCreateString(job->host->addr));
+						mxSetFieldByNumber(plhs[0], i, 7, mxCreateDoubleScalar((UINT32_T)(job->host->port)));
+						mxSetFieldByNumber(plhs[0], i, 8, mxCreateDoubleScalar((UINT32_T)(job->host->status)));
 						job = job->next ;
 						i++;
 				}

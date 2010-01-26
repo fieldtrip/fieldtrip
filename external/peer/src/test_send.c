@@ -43,9 +43,9 @@ int main(int argc, char *argv[]) {
 
 		def = (jobdef_t *)malloc(sizeof(jobdef_t));
 		def->version = VERSION;
-		def->id = random();
-		def->hostsize = sizeof(hostdef_t);
+		def->id      = random();
 		def->argsize = 256;
+		def->optsize = 256;
 
 		buf = malloc(256);
 		for (i=0; i<256; i++)
@@ -73,7 +73,8 @@ int main(int argc, char *argv[]) {
 								pthread_mutex_lock(&mutexhost);
 								write(server, host, sizeof(hostdef_t));
 								pthread_mutex_unlock(&mutexhost);
-								write(server, buf, 256);
+								write(server, buf, 256); /* for the job arguments */
+								write(server, buf, 256); /* for the job options   */
 								close(server);
 						}
 
