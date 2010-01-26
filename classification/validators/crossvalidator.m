@@ -4,9 +4,9 @@ classdef crossvalidator < validator
 %   OPTIONS:
 %   nfolds: the type of crossvalidation used [10] :
 %       - 1                : test on training data
-%       - 0 <= nfolds < 1  : proportion of training data
+%       - 0 <= nfolds < 1  : stratified proportion of training data
 %       - nfolds = inf     : leave-one-out crossvalidation
-%       - nfolds = N       : N-fold crossvalidation
+%       - nfolds = N       : N-fold stratified crossvalidation
 %
 %   alternatively the user can override this by explicitly
 %   speciyfing train and/or testfolds
