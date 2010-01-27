@@ -1,6 +1,6 @@
-function [collect] = channelcombination(channelcmb, datachannel, includeauto)
+function [collect] = ft_channelcombination(channelcmb, datachannel, includeauto)
 
-% CHANNELCOMBINATION creates a cell-array with combinations of EEG/MEG
+% FT_CHANNELCOMBINATION creates a cell-array with combinations of EEG/MEG
 % channels for subsequent cross-spectral-density and coherence analysis
 %
 % You should specify channel combinations as a two-column cell array,
@@ -18,7 +18,7 @@ function [collect] = channelcombination(channelcmb, datachannel, includeauto)
 % channel labels. Channels that are not present in the raw datafile
 % are automatically removed from the channel list.
 %
-% See also CHANNELSELECTION
+% See also FT_CHANNELSELECTION
 
 % Undocumented local options:
 % optional third input argument includeauto, specifies to include the 
@@ -52,6 +52,12 @@ if isempty(setdiff(channelcmb(:), datachannel))
   % each element of the input therefore already contains a proper channel name
   collect = channelcmb;
 
+  if includeauto
+    for ch=1:numel(datachannel)
+      collect{end+1,1} = datachannel{ch};
+      collect{end,  2} = datachannel{ch};
+    end
+  end
 else
   % a combination is made for each row of the input selection after
   % translating the channel group (such as 'all') to the proper channel names
@@ -59,9 +65,9 @@ else
 
   for sel=1:size(channelcmb,1)
     % translate both columns and subsequently make all combinations
-    channelcmb1 = channelselection(channelcmb(sel,1), datachannel);
-    channelcmb2 = channelselection(channelcmb(sel,2), datachannel);
-
+    channelcmb1 = ft_channelselection(channelcmb(sel,1), datachannel);
+    channelcmb2 = ft_channelselection(channelcmb(sel,2), datachannel);
+    
     % compute indices of channelcmb1 and channelcmb2 relative to datachannel
     [dum,indx,indx1]=intersect(channelcmb1,datachannel);
     [dum,indx,indx2]=intersect(channelcmb2,datachannel);
