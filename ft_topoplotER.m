@@ -81,7 +81,7 @@ function [cfg] = topoplotER(cfg, varargin)
 %
 %
 % See also:
-%  topoplotTFR, singleplotER, multiplotER, prepare_layout
+%  ft_topoplotTFR, ft_topoplotIC, ft_singleplotER, ft_multiplotER, ft_prepare_layout
 
 % Undocumented local options:
 % The following additional cfg parameters are used when plotting 3-dimensional
@@ -321,7 +321,11 @@ elseif strcmp(data.dimord, 'subj_chan_freq_time') || strcmp(data.dimord, 'rpt_ch
   if ~isfield(cfg, 'zparam'),      cfg.zparam='powspctrm';    end
 elseif strcmp(data.dimord, 'chan_comp')
   % Add a pseudo-axis with the component numbers:
-  data.comp = 1:size(data.topo,2);
+  data.comp = cfg.component;   
+    % Specify the components 
+    if ~isempty(cfg.component)
+       data.topo = data.topo(:,cfg.component);     
+    end       
   % Rename the field with topographic label information:
   data.label = data.topolabel;
   if ~isfield(cfg, 'xparam'),      cfg.xparam='comp';         end
@@ -434,11 +438,13 @@ if ~isempty(cfg.yparam)
   ymax = nearest(getsubfield(data, cfg.yparam), ymax);
 end
 
+
 % make dat structure with one value for each channel
 dat = getsubfield(data, cfg.zparam);
 if ~isempty(cfg.yparam),
   dat = dat(:, ymin:ymax, xmin:xmax);
   dat = nanmean(nanmean(dat, 2), 3);
+elseif ~isempty(cfg.component),
 else
   dat = dat(:, xmin:xmax);
   dat = nanmean(dat, 2);
@@ -450,6 +456,7 @@ dat = dat(:);
 if isempty(seldat)
   error('labels in data and labels in layout do not match'); 
 end
+
 datavector = dat(seldat);
 % Select x and y coordinates and labels of the channels in the data
 chanX = cfg.layout.pos(sellay,1);
