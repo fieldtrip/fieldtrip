@@ -24,8 +24,9 @@ classdef one_against_one < classifier
     
       procedure = []; % clfproc({da()}); % the used classification procedures
       combination = 'product'; % how to combine classifier output (not how to combine data)
-      nclasses;
     
+      nclasses;
+      
     end
     
     methods
@@ -45,67 +46,64 @@ classdef one_against_one < classifier
       
       function obj = train(obj,tdata,tdesign)
           
-        obj.nclasses = tdesign.nunique;
-        
-        tdata = tdata.X;
-        tdesign = tdesign.X;
-        
         % transform the data such that we have a cell element for each
         % class label pair
-        nclasses = obj.nclasses;
-        
-        data = cell(1,nclasses*(nclasses-1)/2);
-        design = cell(size(data));
-        
-        % create new data representation
-        
-        idx = 1;
-        for i=1:nclasses
-          for j=(i+1):nclasses
-            
-            didx = (tdesign == i | tdesign == j);
-            
-            data{idx} = tdata(didx,:);
-            design{idx} = tdesign(didx,:);
-            design{idx}(design{idx} == i) = 1;
-            design{idx}(design{idx} == j) = 2;
-            
-            idx = idx+1;
-          end
-        end
-        
+        obj.nclasses = tdesign.nunique;
         
         % replicate the classifier
+        
+        ncomp = obj.nclasses*(obj.nclasses-1)/2;
+        
         if ~iscell(obj.procedure)
           procedure = obj.procedure;
-          obj.procedure = cell(1,length(data));
-          for j=1:length(data)
+          obj.procedure = cell(1,ncomp);
+          for j=1:ncomp
             obj.procedure{j} = procedure;
           end
         end
         
-        for j=1:length(data)
-          obj.procedure{j} = obj.procedure{j}.train(dataset(data{j}),dataset(design{j}));
+       
+        idx = 1;
+        for i=1:obj.nclasses
+          for j=(i+1):obj.nclasses
+           
+            if obj.verbose
+              fprintf('training class %d against class %d\n',i,j);
+            end
+            
+            didx = (tdesign.X == i | tdesign.X == j);
+            
+            design = tdesign.X(didx,:);
+            design(design == i) = 1;
+            design(design == j) = 2;
+            
+            obj.procedure{idx} = obj.procedure{idx}.train(tdata.subsample(didx),dataset(design));
+        
+            idx=idx+1;
+            
+          end
         end
         
       end
       
       function post = test(obj,data)
         
-        nclasses = obj.nclasses;
-        
-        cpost = cell(1,nclasses*(nclasses-1)/2);
+        cpost = cell(1,length(obj.procedure));
         
         % get posteriors for all pairs
         idx = 1;
-        for i=1:nclasses
-          for j=(i+1):nclasses
+        for i=1:obj.nclasses
+          for j=(i+1):obj.nclasses
             
             if strcmp(obj.combination,'product')
               % use ones to allow for products of probabilities            
               cpost{idx} = ones(data.nsamples,obj.nclasses);
             else
               cpost{idx} = zeros(data.nsamples,obj.nclasses);
+            end
+            
+            if obj.verbose
+              fprintf('testing class %d against class %d\n',i,j);
             end
             
             p = obj.procedure{idx}.test(data);

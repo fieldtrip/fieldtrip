@@ -42,10 +42,13 @@
 % libsvm:
 % libsvm toolbox (http://www.csie.ntu.edu.tw/~cjlin/libsvm/)
 % matlab interface (http://www.csie.ntu.edu.tw/~cjlin/libsvm/#matlab)
-% 
+%
+% SLR:
+% http://www.cns.atr.jp/~oyamashi/SLR_WEB.html 
+%
 % hugin (not included in this distribution):
 % http://www.hugin.com/Products_Services/Products/Demo/Lite/
-% 
+%
 % For various examples about the functionality of this toolbox, please check
 % out the examples folder or use the help function to the methods.
 % 

@@ -1,12 +1,24 @@
 classdef gnb < classifier
 %GNB generalized naive Bayes classifier
 %
-%   can use various conditional distributions
+% For instance, we can use exponential distributions
+%
+% gnb('conditional','exponential') 
+%
+% or truncated gaussians
+%
+% truncgauss = @(x,mu,sigma)(normpdf(x,mu,sigma)./(normcdf(500,mu,sigma)-normcdf(0,mu,sigma)));
+% truncmle = @(x)(mle(x,'pdf',truncgauss,'start', [nanmean(x) nanstd(x)],'lower', [0 0]));
+% 
+% gnb('conditional',truncgauss,'mle',truncmle)
+% 
+% In the former case, we can specify the conditional as a string (see code for more options). 
+% In the latter case, both the conditional and maximum likelihood estimates are functions that 
+% need to be specified. Check Matlab's mle function documentation for
+% options.
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: gnb.m,v $
-%
+
 
     properties
       

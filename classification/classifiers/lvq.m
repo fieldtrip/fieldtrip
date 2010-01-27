@@ -1,6 +1,6 @@
 classdef lvq < classifier
 %LVQ prototype-based supervised classification method (stems from Kohonen's learning vector
-%    quanitisation)
+%    quantisation)
 %
 % It is a wrapper for different variants of LVQ: LVQ1, LVQ3 and DSLVQ. They
 % are referred to as 'lvq1', 'lvq2' and 'dslvq', respectively. Options include 
@@ -24,7 +24,7 @@ classdef lvq < classifier
 % 
 % EXAMPLE:
 %
-% myproc = clfproc({ lvq('method','lvq3','initmethod','fcm','initparam',[10 1]) });
+% myproc = clfproc({ lvq('method','lvq3','initmethod','fcminit','initparam',[10 1]) });
 %
 %
 % SEE ALSO:
@@ -72,11 +72,13 @@ classdef lvq < classifier
     end
     
     methods
+      
       function obj = lvq(varargin)
         
         obj = obj@classifier(varargin{:});
         
       end
+      
       function obj = train(obj,data,design)
         % simply stores input data and design
         
@@ -88,7 +90,9 @@ classdef lvq < classifier
         if strcmp(obj.initmethod,'none') && obj.verbose
           disp('option initmethod is set as none which implies omitting initialisation procedure.');
         else
+          
           obj = initlvq(obj,data,design);
+          
           if obj.verbose, disp(sprintf('method %s was applied at the initialisation stage',obj.initmethod)); end
           
           if ~isempty(obj.cdb_vectors) && ~isempty(obj.cdb_labels)

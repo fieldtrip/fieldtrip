@@ -82,8 +82,8 @@ classdef crossvalidator < validator
           fprintf('performing crossvalidation for %d dataset(s)\n',nsets);   
           for d=1:nsets
             sz = data{d}.dims;
-            fprintf('dataset %d consists of %d examples and %d',d,data{d}.nsamples,sz(1));
-            for dd=2:length(sz)
+            fprintf('dataset %d consists of %d examples and %d',d,data{d}.nsamples,sz(2));
+            for dd=3:length(sz)
               fprintf(' x %d',sz(dd));
             end
             fprintf(' features\n');
@@ -129,13 +129,22 @@ classdef crossvalidator < validator
             obj.design(f,:) = testdesign;           
           end
           
-          if ~obj.compact, proc{f} = tproc; end
+          if ~obj.compact
+            proc{f} = tproc; 
+          else
+            clear tproc;
+            clear traindata;
+            clear testdata;
+            clear traindesign;
+            clear testdesign;
+          end
           
         end
        
         if ~obj.compact
           obj.procedure = proc;
-        end      
+        end
+        
       end
       
     end

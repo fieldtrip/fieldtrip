@@ -16,10 +16,7 @@ classdef dataset
       ndims;      % number of dimensions
       nsamples;   % number of examples
       nfeatures;  % number of features
-      
-      
-      nunique;    % number of unique trials
-    
+         
       % standardization parameters
       mu;     % means
       sigma;  % standard deviations
@@ -42,9 +39,6 @@ classdef dataset
         
         obj.nfeatures = prod(obj.dims(2:end));
         
-        [tmp,tmp,idx] = unique(D(1:obj.nsamples,:),'rows');
-        obj.nunique = max(idx);
-                
         if obj.ndims == 2
           obj.X = D;
         else
@@ -52,6 +46,21 @@ classdef dataset
         end
         
       end      
+      
+      function n = nunique(obj)
+        % return the number of unique trials
+        
+        [tmp,tmp,idx] = unique(obj.X,'rows');
+        n = max(idx);
+        
+      end
+      
+      function un = unique(obj)
+        % return the unique trials
+        
+        n = unique(obj.X,'rows');
+        
+      end
             
       function Y = subsample(obj,idx)
         % retrieve dataset as a subset of the examples indexed by idx

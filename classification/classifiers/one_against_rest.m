@@ -14,7 +14,6 @@ classdef one_against_rest < classifier
 %
 %   SEE ALSO:
 %   one_against_one
-%   ensemble.m
 %
 %   Copyright (c) 2008, Marcel van Gerven
 %
@@ -44,13 +43,13 @@ classdef one_against_rest < classifier
          obj.nclasses = tdesign.nunique;
        
          tdata = tdata.X;
-         tdesign = tdesign.X;
+         tdesign = tdesign.X(:,1);
                 
         % transform the data such that we have a cell element for each
         % class label pair
         
         data = cell(1,obj.nclasses);
-        design = cell(size(data));
+        design = cell(1,obj.nclasses);
         
         % create new data representation
         
@@ -75,6 +74,11 @@ classdef one_against_rest < classifier
         end
         
         for j=1:length(data)
+          
+          if obj.verbose
+            fprintf('training class %d against rest\n',j);
+          end
+          
           obj.procedure{j} = obj.procedure{j}.train(dataset(data{j}),dataset(design{j}));
         end
         
@@ -85,6 +89,10 @@ classdef one_against_rest < classifier
         % get posteriors for all pairs
         post = zeros(data.nsamples,obj.nclasses);
         for i=1:obj.nclasses
+          
+          if obj.verbose
+            fprintf('testing class %d against rest\n',i);
+          end
           
           tpost = obj.procedure{i}.test(data);
           post(:,i) = tpost.X(:,2);
