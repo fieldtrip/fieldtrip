@@ -321,9 +321,10 @@ elseif strcmp(data.dimord, 'subj_chan_freq_time') || strcmp(data.dimord, 'rpt_ch
   if ~isfield(cfg, 'zparam'),      cfg.zparam='powspctrm';    end
 elseif strcmp(data.dimord, 'chan_comp')
   % Add a pseudo-axis with the component numbers:
-  data.comp = cfg.component;   
+  data.comp = 1:size(data.topo,2);  
     % Specify the components 
     if ~isempty(cfg.component)
+       data.comp = cfg.component;
        data.topo = data.topo(:,cfg.component);     
     end       
   % Rename the field with topographic label information:
