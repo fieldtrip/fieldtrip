@@ -12,7 +12,7 @@ function [data] = selectdata(varargin)
 % Supported input data:
 %   freq
 %   timelock
-%   source   (not yet)
+%   source  
 %   volume   (not yet)
 %
 % supported options:
@@ -105,8 +105,13 @@ end
 if length(data)>1 && ~israw,
   % determine the way to concatenate
   if issource,
-    for k = 1:numel(data)
-      data{k} = fixinside(data{k}, 'logical');
+    if isfield(data{1}, 'inside')
+      isboolean = islogical(data{1}.inside); 
+      if isboolean,
+        for k = 1:numel(data)
+          data{k} = fixinside(data{k}, 'index');
+        end
+      end
     end
   end
    
@@ -187,21 +192,27 @@ if length(data)>1 && ~israw,
     for k = 1:length(data)
       if k==1,
         tmp       = getsubfield(data{k}, dimtok{catdim});
-	if isfield(data{1}, 'inside'), tmpinside = getfield(data{k}, 'inside'); end
+	if isfield(data{k}, 'inside'),
+	  tmpnvox   = numel(data{k}.inside)+numel(data{k}.outside);
+	  tmpinside = data{k}.inside(:);
+	end
       else
         if strcmp(dimtok{catdim},'pos')
 	  tmp       = [tmp;       getsubfield(data{k}, dimtok{catdim})];
-          if isfield(data{1}, 'inside'), tmpinside = [tmpinside; getfield(data{k}, 'inside')]; end
+	  tmpinside = [tmpinside; data{k}.inside(:)+tmpnvox];
+	  tmpnvox   = tmpnvox+numel(data{k}.inside)+numel(data{k}.outside);
 	  sortflag  = 0;
 	else
           tmp       = [tmp       getsubfield(data{k}, dimtok{catdim})];
-          if isfield(data{1}, 'inside'), tmpinside = [tmpinside getfield(data{k}, 'inside')]; end
 	  sortflag  = 1;
 	end
       end
     end
     data{1} = setsubfield(data{1}, dimtok{catdim}, tmp);
-    if isfield(data{1}, 'inside'), data{1} = setsubfield(data{1}, 'inside',       tmpinside); end
+    if isfield(data{1}, 'inside'),
+      data{1} = setsubfield(data{1}, 'inside',  tmpinside);
+      data{1} = setsubfield(data{1}, 'outside', setdiff(1:size(data{1}.pos,1)', tmpinside));  
+    end
 
     %FIXME think about this
     tryfields = {'dof'};
@@ -256,9 +267,13 @@ if length(data)>1 && ~israw,
   data        = data{1};
   dimord      = dimord{1};
   data.dimord = dimord;
-  if isfield(data, 'dim'),
+  if isfield(data, 'dim') & ~issource,
     %data.dim    = dim;
     data.dim = size(data.(param{1}));
+  else
+    data     = rmfield(data, 'dim'); %source data should not contain a dim
+    %FIXME this should be handled by checkdata once the source structure is
+    %unequivocally defined
   end
 
 elseif length(data)>1 && israw
