@@ -904,7 +904,12 @@ if requesttrials  && strcmp(dimord, 'chans_samples')
   nchans   = size(dat,1);
   nsamples = hdr.nSamples;
   ntrials  = size(dat,2)/hdr.nSamples;
-  dat = reshape(dat, [nchans nsamples ntrials]); % convert into a 3-D array
+  % in case of nchans=1 and ntrials=1, the reshaping into a 3D matrix results in the following warning
+  %   Warning: ND-array output is being reshaped to a sparse 2D matrix.
+  %          This behavior will change in a future release of MATLAB.
+  if ntrials>1
+    dat = reshape(dat, [nchans nsamples ntrials]); % convert into a 3-D array
+  end
 
 elseif requestsamples && strcmp(dimord, 'chans_samples_trials')
   % reformat the trials into a continuous representation
