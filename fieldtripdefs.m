@@ -14,6 +14,10 @@ if ~isfield(ft_default, 'trackconfig'), ft_default.trackconfig = 'off';    end %
 if ~isfield(ft_default, 'checkconfig'), ft_default.checkconfig = 'loose';  end % pedantic, loose, silent
 if ~isfield(ft_default, 'checksize'),   ft_default.checksize   = 1e5;      end % number in bytes, can be inf
 
+% this is for Matlab version specific backward compatibility support
+% the version specific path should only be added once in every session
+persistent versionpath
+
 if isempty(which('hastoolbox'))
   % the fieldtrip/public directory contains the hastoolbox function
   % which is required for the remainder of this script
@@ -64,4 +68,48 @@ try
   % this contains some examples for realtime processing
   hastoolbox('realtime', 1, 1);
 end
+
+if isempty(versionpath)
+  % fieldtrip/compat contains version specific subdirectories to facilitate in backward compatibility support
+  switch version('-release')
+    case '13'
+      % Version 6.5.1.199709 Release 13 (Service Pack 1)
+      versionpath = fullfile(fileparts(which('fieldtripdefs')), 'compat', 'R13');
+    case '14'
+      % Version 7.0.4.352 (R14) Service Pack 2
+      % Version 7.1.0.183 (R14) Service Pack 3
+      versionpath = fullfile(fileparts(which('fieldtripdefs')), 'compat', 'R14');
+    case '2006a'
+      % Version 7.2.0.283 (R2006a)
+      versionpath = fullfile(fileparts(which('fieldtripdefs')), 'compat', '2006a');
+    case '2006b'
+      % Version 7.3
+      versionpath = fullfile(fileparts(which('fieldtripdefs')), 'compat', '2006b');
+    case '2007a'
+      % Version 7.4
+      versionpath = fullfile(fileparts(which('fieldtripdefs')), 'compat', '2007a');
+    case '2007b'
+      % Version 7.5
+      versionpath = fullfile(fileparts(which('fieldtripdefs')), 'compat', '2007b');
+    case '2008a'
+      % Version 7.6
+      versionpath = fullfile(fileparts(which('fieldtripdefs')), 'compat', '2008a');
+    case '2008b'
+      % Version 7.7
+      versionpath = fullfile(fileparts(which('fieldtripdefs')), 'compat', '2008b');
+    case '2009a'
+      % Version 7.8
+      versionpath = fullfile(fileparts(which('fieldtripdefs')), 'compat', '2009a');
+    case '2009b'
+      % Version 7.9
+      versionpath = fullfile(fileparts(which('fieldtripdefs')), 'compat', '2009b');
+    otherwise
+      % unknown release number, do nothing
+      versionpath = 'unknown';
+  end % switch
+  if ~strcmp(versionpath, 'unknown') && isdir(versionpath) && ~isempty(strfind(path, versionpath))
+    % only add the directory if it exists and was not added to the path before
+    addpath(versionpath);
+  end
+end % if isempty(versionpath)
 
