@@ -440,12 +440,12 @@ if ~isempty(cfg.yparam)
   ymax = nearest(getsubfield(data, cfg.yparam), ymax);
 end
 
-
 % make dat structure with one value for each channel
 dat = getsubfield(data, cfg.zparam);
 if ~isempty(cfg.yparam),
   dat = dat(:, ymin:ymax, xmin:xmax);
   dat = nanmean(nanmean(dat, 2), 3);
+% if a component is specified, do nothing
 elseif ~isempty(cfg.component),
 else
   dat = dat(:, xmin:xmax);
@@ -591,7 +591,6 @@ elseif ~strcmp(cfg.style,'blank')
   plot_lay(lay,'box','no','label','no','point','no')
 end
 
-
 % Plotting markers for channels and/or highlighting a selection of channels 
 highlightchansel = []; % used for remembering selection of channels
 templay.outline = lay.outline;
@@ -669,12 +668,10 @@ if isfield(cfg, 'colorbar')
   end
 end
 
-
 % Set renderer if specified
 if ~isempty(cfg.renderer)
   set(gcf, 'renderer', cfg.renderer)
 end
-
 
 % The remainder of the code is meant to make the figure interactive 
 hold on;
@@ -701,15 +698,12 @@ if strcmp(cfg.interactive, 'yes')
   end
 end
 
-
 axis off;
 hold off;
 axis equal;
 
-
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
