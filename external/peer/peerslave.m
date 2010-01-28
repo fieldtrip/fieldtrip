@@ -7,24 +7,59 @@ function peerslave(varargin)
 %   peerslave(...)
 %
 % Optional input arguments should be passed as key-value pairs and can include
-%   maxnum   = number (default = inf)
-%   maxtime  = number (default = inf)
-%   sleep    = number in seconds (default = 0.01)
+%   maxnum     = number (default = inf)
+%   maxtime    = number (default = inf)
+%   sleep      = number in seconds (default = 0.01)
+%   memavail   = number, amount of memory available       (default = inf)
+%   cpuavail   = number, speed of the CPU                 (default = inf)
+%   timavail   = number, maximum duration of a single job (default = inf)
+%   allowhost  = {...}
+%   allowuser  = {...}
+%   allowgroup = {...}
 %
 % See also PEERMASTER, PEERRESET, PEERFEVAL, PEERCELLFUN
 
 % get the optional input arguments
-maxnum  = keyval('maxnum',  varargin); if isempty(maxnum), maxnum=inf; end
-maxtime = keyval('maxtime', varargin); if isempty(maxtime), maxtime=inf; end
-sleep   = keyval('sleep',   varargin); if isempty(sleep), sleep=0.01; end
+maxnum     = keyval('maxnum',     varargin); if isempty(maxnum),   maxnum=inf; end
+maxtime    = keyval('maxtime',    varargin); if isempty(maxtime),  maxtime=inf; end
+sleep      = keyval('sleep',      varargin); if isempty(sleep),    sleep=0.01; end
+memavail   = keyval('memavail',   varargin); if isempty(memavail), memavail=intmax('uint32'); end
+cpuavail   = keyval('cpuavail',   varargin); if isempty(cpuavail), cpuavail=intmax('uint32'); end
+timavail   = keyval('timavail',   varargin); if isempty(timavail), timavail=intmax('uint32'); end
+allowhost  = keyval('allowhost',  varargin); if isempty(allowhost), allowhost = {}; end
+allowuser  = keyval('allowuser',  varargin); if isempty(allowuser), allowuser = {}; end
+allowgroup = keyval('allowgroup', varargin); if isempty(allowgroup), allowgroup = {}; end
+
+% these should be cell arrays
+if ~iscell(allowhost) && ischar(allowhost)
+  allowhost = {allowhost};
+end
+if ~iscell(allowuser) && ischar(allowuser)
+  allowuser = {allowuser};
+end
+if ~iscell(allowgroup) && ischar(allowgroup)
+  allowgroup = {allowgroup};
+end
 
 warning off
+% start the peer server maintenance threads
 peer('tcpserver', 'start');
 peer('announce',  'start');
 peer('discover',  'start');
 peer('expire',    'start');
 warning on
 
+% impose access restrictions 
+peer('allowhost', allowhost);
+peer('allowuser', allowuser);
+peer('allowgroup', allowgroup);
+
+% the available resources will be announced and will be used to drop requests that are too large
+peer('memavail', memavail);
+peer('cpuavail', cpuavail);
+peer('timavail', timavail);
+
+% switch to slave mode
 peer('status', 1);
 
 % keep track of the time and number of jobs
@@ -109,24 +144,45 @@ while true
         numargout = 1;
       end
 
-      argout  = cell(1, numargout);
-      elapsed = toc(stopwatch);
-      [argout{:}] = feval(fname, argin{:});
-      elapsed = toc(stopwatch) - elapsed;
-      fprintf('executing job %d took %f seconds\n', jobnum, elapsed);
+	  % start measuring the time and memory requirements
+	  memprofile on
+	  timused = toc(stopwatch);
+
+      % evaluate the function and get the output arguments
+	  argout  = cell(1, numargout);
+	  [argout{:}] = feval(fname, argin{:});
+
+	  % determine the time and memory requirements
+      timused = toc(stopwatch) - timused;
+      memstat = memprofile('info');
+      memprofile off
+      memprofile clear
+
+      % determine the maximum amount of memory that was used during the function evaluation
+      memused = max([memstat.mem]) - min([memstat.mem]);
+
+      % Note that the estimated memory is inaccurate, because of
+      % the dynamic memory management of Matlab and the garbage
+      % collector. Especially on small jobs, the reported memory
+      % use does not replect the size of the variables involved in
+      % the computation. Matlab is able to squeeze these small jobs
+      % in some left-over memory fragment that was not yet deallocated.
+      % Larger memory jobs return more reliable measurements.
+
+      fprintf('executing job %d took %f seconds and %d bytes\n', jobnum, timused, memused);
 
       % collect the output options
-      options = {'elapsed', elapsed, 'lastwarn', lastwarn, 'lasterr', lasterr};
+      options = {'lastwarn', lastwarn, 'lasterr', lasterr, 'timused', timused, 'memused', memused};
 
     catch me
       argout  = {};
       % the output options will include the error
-      options = {'elapsed', elapsed, 'lastwarn', lastwarn, 'lasterr', me};
+      options = {'timused', timused, 'lastwarn', lastwarn, 'lasterr', me};
       % an error was detected while executing the job
       warning('an error was detected during job execution');
     end
 
-    peer('put', joblist.hostid, argout, options, joblist.jobid);
+    peer('put', joblist.hostid, argout, options, 'jobid', joblist.jobid);
     peer('clear', joblist.jobid);
     clear funname argin argout
 

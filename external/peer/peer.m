@@ -9,6 +9,9 @@ function peer
 % peer('discover',  'start|stop|status')
 % peer('expire',    'start|stop|status')
 % peer('tcpport',   number)
+% peer('memavail',  number)
+% peer('cpuavail',  number)
+% peer('timavail',  number)
 % peer('clear,      jobid)
 % peer('status',    0|1|2)
 % peer('group',     string)
@@ -17,8 +20,7 @@ function peer
 % peer('allowgroup',  {'group1', 'group2', ...})
 % joblist    = peer('joblist')
 % peerlist   = peer('peerlist')
-% job        = peer('put', peerid, arg, opt)
-% job        = peer('put', peerid, arg, opt, jobid)
+% job        = peer('put', peerid, arg, opt, ...)
 % [arg, opt] = peer('get', jobid)
 
 error('cannot locate mex file');

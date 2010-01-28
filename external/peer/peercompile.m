@@ -31,6 +31,9 @@ elseif isunix || ismac
     % link all the objects together into a mex file
     mex -I. -output ../peer peer.c tcpserver.o tcpsocket.o discover.o announce.o expire.o peerinit.o util.o extern.o -lpthread
 
+    % also compile the memory profiler
+    mex -I. -output ../memprofile memprofile.c
+
     % return to the original directory
     cd(olddir);
 

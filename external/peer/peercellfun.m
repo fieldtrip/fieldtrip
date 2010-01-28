@@ -26,7 +26,12 @@ optarg = varargin(optbeg:end);
 
 % get the optional input arguments
 UniformOutput = keyval('UniformOutput', optarg); if isempty(UniformOutput), UniformOutput = true; end
-UniformOutput = istrue(UniformOutput); % convert from 'yes'/'no' into boolean value
+memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=0; end
+cpureq  = keyval('cpureq',  optarg); if isempty(cpureq), cpureq=0; end
+timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=0; end
+
+% convert from 'yes'/'no' into boolean value
+UniformOutput = istrue(UniformOutput);
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -77,16 +82,16 @@ for i=1:numjob
     for j=1:numargin
       argin{j} = varargin{j}{i};
     end
-    jobid(i) = peerfeval(fname, argin{:}, 'timeout', inf);
+    jobid(i) = peerfeval(fname, argin{:}, 'timeout', inf, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq);
     clear argin
 end
 
 % get the results of all job
-for indx=1:numjob
-  [argout, options] = peerget(jobid(indx), 'timeout', inf, 'output', 'cell');
+for i=1:numjob
+  [argout, options] = peerget(jobid(i), 'timeout', inf, 'output', 'cell');
   % redistribute the output arguments
-  for i=1:numargout
-    varargout{i}{indx} = argout{i};
+  for j=1:numargout
+    varargout{j}{i} = argout{j};
   end 
 end
 

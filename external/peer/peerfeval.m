@@ -19,7 +19,18 @@ function jobid = peerfeval(varargin)
 %
 % See also FEVAL, PEERMASTER, PEERGET, PEERCELLFUN
 
-% the peer must be running in master mode
+% check that the required peer server threads are running
+status = true;
+status = status & peer('tcpserver', 'status');
+status = status & peer('announce',  'status');
+status = status & peer('discover',  'status');
+status = status & peer('expire',    'status');
+if ~status
+  warning('executing peermaster');
+  peermaster
+end
+
+% the peer server must be running in master mode
 peer('status', 2);
 
 % convert the input arguments into something that strmatch can work with
@@ -27,12 +38,15 @@ strargin = varargin;
 strargin(~cellfun(@ischar, strargin)) = {''};
 
 % locate the begin of the optional key-value arguments
-optbeg = min([strmatch('timeout', strargin) strmatch('sleep', strargin)]);
+optbeg = min([strmatch('timeout', strargin) strmatch('sleep', strargin) strmatch('memreq', strargin) strmatch('cpureq', strargin) strmatch('timreq', strargin)]);
 optarg = varargin(optbeg:end);
 
 % get the optional input arguments
 timeout = keyval('timeout', optarg); if isempty(timeout), timeout = inf; end
-sleep   = keyval('sleep', optarg); if isempty(sleep), sleep=0.01; end
+sleep   = keyval('sleep',   optarg); if isempty(sleep), sleep=0.01; end
+memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=0; end
+cpureq  = keyval('cpureq',  optarg); if isempty(cpureq), cpureq=0; end
+timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=0; end
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -54,6 +68,9 @@ jobid = [];
 % keep track of the time
 stopwatch = tic;
 
+% there are no options to write
+options = {};
+
 while isempty(jobid)
 
   if toc(stopwatch)>timeout
@@ -61,33 +78,76 @@ while isempty(jobid)
     break;
   end
 
-  % only the peers in slave mode are interesting
+  % get the full list of peers
   peerlist = peer('peerlist');
-  peerlist = peerlist([peerlist.hoststatus]==1);
 
+  % only peers in slave mode are interesting
+  peerlist = peerlist([peerlist.hoststatus]==1);
   if isempty(peerlist)
-    % FIXME it would be possible in this case to execute the command locally
     error('there is no peer available as slave');
   end
 
-  % select a random peer
-  sel = floor(rand(1)*numel(peerlist))+1;
-  slave = peerlist(sel);
+  % only peers with enough memory are interesting
+  peerlist = peerlist([peerlist.hostmemavail]>memreq);
+  if isempty(peerlist)
+    error('there are no slave peers available that meet the memory requirements');
+  end
 
-  % there are no options to write
-  options = {};
+  % only peers with enough CPU speed are interesting
+  peerlist = peerlist([peerlist.hostcpuavail]>cpureq);
+  if isempty(peerlist)
+    error('there are no slave peers available that meet the CPU requirements');
+  end
 
-  try
-    result  = peer('put', slave.hostid, varargin, options);
-    jobid   = result.jobid;
-  catch
-    % probably the selected peer is busy, try another peer
-    pause(0.01);
+  % only peers with enough time for a single job are interesting
+  peerlist = peerlist([peerlist.hosttimavail]>timreq);
+  if isempty(peerlist)
+    error('there are no slave peers available to execute a job of this duration');
+  end
+
+  % FIXME the heuristic rule for finding the best match needs to be improved
+  mempenalty = scale([peerlist.hostmemavail] - memreq);
+  cpupenalty = scale([peerlist.hostcpuavail] - cpureq);
+  timpenalty = scale([peerlist.hosttimavail] - timreq);
+  rndpenalty = rand(1, length(peerlist));
+
+  % select the slave peer that has the best match with the job requirements
+  [penalty, indx] = sort(mempenalty + cpupenalty + timpenalty + 0.1*rndpenalty);
+
+  % sort the peerlist according to the penalty
+  peerlist = peerlist(indx);
+
+  for i=1:length(peerlist)
+    try
+      jobid   = [];
+      result  = peer('put', peerlist(i).hostid, varargin, options, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq);
+      jobid   = result.jobid;
+      % the peer accepted the job, there is no need to continue with the for loop
+      break;
+    catch
+      % probably the selected peer is busy, try the next peer in line
+    end
+  end % for
+
+  if isempty(jobid)
+    % another attempt is needed, give the network some time to recover
+    pause(sleep);
   end
 
 end % while isempty(jobid)
 
 if isempty(jobid)
   warning('none of the slave peers was willing to accept the job');
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that scales the input values between 0 and 1
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function y = scale(x)
+z = max(x(:)) - min(x(:));
+if z>0
+  y = (x - min(x(:))) / z;
+else
+  y = (x - min(x(:)));
 end
 

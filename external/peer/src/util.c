@@ -166,18 +166,6 @@ int open_connection(const char *hostname, int port) {
 		   }
 		 */
 
-		int accept = 0, n;
-		if ((n = bufread(s, &accept, sizeof(int))) != sizeof(int)) {
-				accept = 0;
-		}
-		if (!accept) {
-				if (verbose>0)
-						fprintf(stderr, "open_connection: connection was not accepted\n");
-				/* FIXME smarter handling of the problem could be implemented if the handshake would return the reason as number (e.g. -1, -2, ...) */
-				close(s);
-				s = -1;
-		}
-
 		if (verbose>0)
 				fprintf(stderr, "open_connection: connected to %s:%d on socket %d\n", hostname, port, s);
 		return s;

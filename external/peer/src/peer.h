@@ -31,14 +31,17 @@
 #define SO_REUSEPORT      SO_REUSEADDR
 #endif
 
-#define VERSION           0x0005
+#define VERSION           0x0006
 #define ANNOUNCE_GROUP    "225.0.0.88"
 #define ANNOUNCE_PORT 	  1700				/* it will auto-increment if the port is not available */
-#define DEFAULT_GROUP     "all"
+#define DEFAULT_GROUP     "unknown"
 #define DEFAULT_USER      "unknown"
 #define DEFAULT_HOST      "localhost"
 #define DEFAULT_PORT      1701
 #define DEFAULT_STATUS    0
+#define DEFAULT_MEMAVAIL  UINT32_MAX
+#define DEFAULT_CPUAVAIL  UINT32_MAX
+#define DEFAULT_TIMAVAIL  UINT32_MAX
 #define EXPIRATION        5
 #define BACKLOG           16
 #define SO_RCVBUF_SIZE    16384
@@ -108,63 +111,64 @@ typedef uint64_t UINT64_T;
 #define WORDSIZE_FLOAT64 sizeof(FLOAT64_T)
 
 typedef struct {
+		UINT32_T version;
+		UINT32_T id;
 		char name[STRLEN];
 		char addr[STRLEN];
 		char user[STRLEN];
 		char group[STRLEN];
-		UINT32_T id;
 		UINT32_T port;
 		UINT32_T status;
+		UINT32_T timavail; 
+		UINT32_T memavail; 
+		UINT32_T cpuavail; 
 } hostdef_t;
 
 typedef struct {
 		UINT32_T version;
 		UINT32_T id;
-		UINT32_T argsize;   /* size of the job arguments in bytes */
-		UINT32_T optsize;   /* size of the job options in bytes */
+		UINT32_T timreq; 
+		UINT32_T memreq; 
+		UINT32_T cpureq; 
+		UINT32_T argsize;   	/* size of the job arguments in bytes */
+		UINT32_T optsize;   	/* size of the job options in bytes */
 } jobdef_t;
 
-struct joblist_s {
+typedef struct joblist_s {
 		jobdef_t  *job;
 		hostdef_t *host;
 		void      *arg;
 		void      *opt;
 		struct joblist_s *next;
-};
+} joblist_t;
 
-struct peerlist_s {
+typedef struct peerlist_s {
 		hostdef_t *host;
 		time_t time;        /* time in seconds since January 1, 1970, Coordinated Universal Time */
 		struct peerlist_s *next;
-};
+} peerlist_t;
 
 /* this is for restricting the access to a peer to one user or a list of users */
-struct userlist_s {
+typedef struct userlist_s {
   char *name;
   struct userlist_s *next;
-};
+} userlist_t;
 
 /* this is for restricting the access to a peer to one group or a list of groups */
-struct grouplist_s {
+typedef struct grouplist_s {
   char *name;
   struct grouplist_s *next;
-};
+} grouplist_t;
 
 /* this is for restricting the access to a peer to one host or a list of hosts */
-struct hostlist_s {
+typedef struct hostlist_s {
   char *name;
   struct hostlist_s *next;
-};
-
-typedef struct joblist_s joblist_t;
-typedef struct peerlist_s peerlist_t;
-typedef struct userlist_s userlist_t;
-typedef struct grouplist_s grouplist_t;
-typedef struct hostlist_s hostlist_t;
+} hostlist_t;
 
 typedef struct {
+		hostdef_t *host; /* this defines the host details                 */
 		jobdef_t  *job;  /* this defines the job contents                 */
-		hostdef_t *host; /* this defines where it originates from         */
 		void      *arg;  /* this contains the input or output arguments   */
 		void      *opt;  /* this contains the options for the job         */
 } message_t;
@@ -173,28 +177,28 @@ typedef struct {
 extern "C" {
 #endif
 
-		/* function definitions */
-		void *tcpserver (void *);
-		void *tcpsocket (void *);
-		void *announce  (void *);
-		void *discover  (void *);
-		void *expire    (void *);
-		void  peerinit (void *);
-		void  peerexit (void *);
+/* function definitions */
+void *tcpserver (void *);
+void *tcpsocket (void *);
+void *announce  (void *);
+void *discover  (void *);
+void *expire    (void *);
+void  peerinit (void *);
+void  peerexit (void *);
 
-		/* functions from util.c */
-		int bufread(int s, void *buf, int numel);
-		int bufwrite(int s, void *buf, int numel);
-		int append(void **buf1, int bufsize1, void *buf2, int bufsize2);
-		int close_connection(int s);
-		int open_connection(const char *hostname, int port);
-		void check_datatypes(void);
-		int jobcount(void);
-		int peercount(void);
-		int hoststatus(void);
-		int ismember_userlist(char *);
-		int ismember_grouplist(char *);
-		int ismember_hostlist(char *);
+/* functions from util.c */
+int bufread(int s, void *buf, int numel);
+int bufwrite(int s, void *buf, int numel);
+int append(void **buf1, int bufsize1, void *buf2, int bufsize2);
+int close_connection(int s);
+int open_connection(const char *hostname, int port);
+void check_datatypes(void);
+int jobcount(void);
+int peercount(void);
+int hoststatus(void);
+int ismember_userlist(char *);
+int ismember_grouplist(char *);
+int ismember_hostlist(char *);
 
 #ifdef __cplusplus
 }

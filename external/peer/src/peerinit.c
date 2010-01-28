@@ -45,9 +45,12 @@ void peerinit(void *arg) {
 		pwd = getpwuid(geteuid());
 
 		/* specify the host parameters */
-		host->port   = DEFAULT_PORT;
-		host->status = DEFAULT_STATUS;
-		host->id     = random();
+		host->port     = DEFAULT_PORT;
+		host->status   = DEFAULT_STATUS;
+		host->memavail = DEFAULT_MEMAVAIL;
+		host->cpuavail = DEFAULT_TIMAVAIL;
+		host->timavail = DEFAULT_CPUAVAIL;
+		host->id       = random();
 		strncpy(host->user, pwd->pw_name, STRLEN);
 		strncpy(host->group, DEFAULT_GROUP, STRLEN);
 

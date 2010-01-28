@@ -83,9 +83,28 @@ void memprofile_cleanup(void *arg) {
 		pthread_mutex_unlock(&mutexstatus);	
 }
 
+/* this function takes a sample of the memory use and adds it to the list */
+void memprofile_sample(void) {
+		unsigned int rss, vs;
+		memlist_t *memitem;
+		if (getmem(&rss, &vs)!=0) {
+				rss = 0;
+				vs = 0;
+		}
+
+		memitem = (memlist_t *)malloc(sizeof(memlist_t));
+		memitem->rss  = rss;
+		memitem->vs   = vs;
+		memitem->time = time(NULL) - reftime;
+
+		pthread_mutex_lock(&mutexmemlist);
+		memitem->next = memlist;
+		memlist       = memitem;
+		pthread_mutex_unlock(&mutexmemlist);
+}
+
 /* this is the thread that records the memory usage in a linked list */
 void *memprofile(void *arg) {
-		unsigned int rss, vs;
 		int count;
 		int pause = 1;
 		memlist_t *memitem, *next;
@@ -133,22 +152,7 @@ void *memprofile(void *arg) {
 						pause = pause*2;
 				}
 
-				/* sample the current memory use */
-				if (getmem(&rss, &vs)!=0) {
-						rss = 0;
-						vs = 0;
-				}
-
-				memitem = (memlist_t *)malloc(sizeof(memlist_t));
-				memitem->rss  = rss;
-				memitem->vs   = vs;
-				memitem->time = time(NULL) - reftime;
-
-				pthread_mutex_lock(&mutexmemlist);
-				memitem->next = memlist;
-				memlist       = memitem;
-				pthread_mutex_unlock(&mutexmemlist);
-
+				memprofile_sample();
 				pthread_testcancel();
 				sleep(pause);
 		}
@@ -167,8 +171,6 @@ void exitFun(void) {
 
 void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) {
 		char *command = NULL;
-		const char *fieldnames[3] = {"rss", "vs", "time"};
-		int numfields = 3;
 		int rc, i;
 		memlist_t *memitem = NULL;
 
@@ -197,6 +199,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 
 				/* set the reference time */
 				reftime = time(NULL);
+
+				/* include the current memory use in the list */
+				memprofile_sample();
 
 				pthread_mutex_lock(&mutexstatus);
 				if (memprofileStatus) {
@@ -268,6 +273,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		/****************************************************************************/
 		else if (strcasecmp(command, "info")==0) {
 
+				/* include the current memory use in the list */
+				memprofile_sample();
+
 				pthread_mutex_lock(&mutexmemlist);
 				/* count the number of items on the list */
 				i = 0;
@@ -276,19 +284,54 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						i++;
 						memitem = memitem->next ;
 				}
+
+				const char *fieldnames[3] = {"time", "mem"};
+				int numfields = 2;
 				plhs[0] = mxCreateStructMatrix(i, 1, numfields, fieldnames);
 
 				/* return the items in a Matlab structure array */
-				i = 0;
 				memitem = memlist;
 				while (memitem) {
-						mxSetFieldByNumber(plhs[0], i, 0, mxCreateDoubleScalar((uint64_t)(memitem->rss)));
-						mxSetFieldByNumber(plhs[0], i, 1, mxCreateDoubleScalar((uint64_t)(memitem->vs)));
-						mxSetFieldByNumber(plhs[0], i, 2, mxCreateDoubleScalar((uint64_t)(memitem->time)));
+						i--;
+						mxSetFieldByNumber(plhs[0], i, 0, mxCreateDoubleScalar((uint64_t)(memitem->time)));
+						mxSetFieldByNumber(plhs[0], i, 1, mxCreateDoubleScalar((uint64_t)(memitem->rss)));
 						memitem = memitem->next ;
-						i++;
 				}
 				pthread_mutex_unlock(&mutexmemlist);
+		}
+
+		/****************************************************************************/
+		else if (strcasecmp(command, "report")==0) {
+				unsigned int begmem, endmem, minmem, maxmem, num = 0;
+				float summem = 0;
+				memprofile_sample();
+
+				/* include the current memory use in the list */
+				memprofile_sample();
+
+				pthread_mutex_lock(&mutexmemlist);
+				if (memlist==NULL) {
+						pthread_mutex_unlock(&mutexmemlist);
+						mexErrMsgTxt ("memory profiling is disabled");
+				}
+				memitem = memlist;
+				endmem = memitem->rss;
+				minmem = memitem->rss;
+				maxmem = memitem->rss;
+				while (memitem) {
+						begmem = memitem->rss; /* this will eventually contain the latest value on the list */
+						minmem = (memitem->rss < minmem ? memitem->rss : minmem);
+						maxmem = (memitem->rss > maxmem ? memitem->rss : maxmem);
+						summem += memitem->rss;
+						num++;
+						memitem = memitem->next ;
+				}
+				pthread_mutex_unlock(&mutexmemlist);
+				mexPrintf("memory in use at the begin = %6u MB\n", begmem/1048576);
+				mexPrintf("memory in use at the end   = %6u MB\n", endmem/1048576);
+				mexPrintf("minimum memory in use      = %6u MB\n", minmem/1048576);
+				mexPrintf("maximum memory in use      = %6u MB\n", maxmem/1048576);
+				mexPrintf("average memory in use      = %6u MB\n", (int)(summem/num)/1048576);
 		}
 
 		/****************************************************************************/
