@@ -120,7 +120,6 @@ if length(data)>1 && ~israw,
   else
     param = {param};
   end
-
   dimtok                           = tokenize(dimord{1}, '_');
   dimtok(strmatch('chan', dimtok)) = {'label'}; % data.chan does not exist
 
@@ -172,7 +171,7 @@ if length(data)>1 && ~israw,
       data{1} = setsubfield(data{1}, param{k}, cat(catdim,tmp{:}));
     end
   end
-
+  
   if catdim==0,
     %a dimension has been prepended
     dimtok    = ['rpt' dimtok];
@@ -270,7 +269,7 @@ if length(data)>1 && ~israw,
   if isfield(data, 'dim') & ~issource,
     %data.dim    = dim;
     data.dim = size(data.(param{1}));
-  else
+  elseif isfield(data, 'dim')
     data     = rmfield(data, 'dim'); %source data should not contain a dim
     %FIXME this should be handled by checkdata once the source structure is
     %unequivocally defined
