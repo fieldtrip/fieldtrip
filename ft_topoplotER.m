@@ -198,6 +198,7 @@ if ~isfield(cfg, 'highlightsize'),         cfg.highlightsize = 6;         end
 if ~isfield(cfg, 'highlightfontsize'),     cfg.highlightfontsize = 8;     end
 if ~isfield(cfg, 'labeloffset'),           cfg.labeloffset = 0.005;       end
 if ~isfield(cfg, 'maskparameter'),         cfg.maskparameter = [];        end
+if ~isfield(cfg, 'component'),             cfg.component = [];            end
 
 % compatability for previous highlighting option
 if isnumeric(cfg.highlight)
