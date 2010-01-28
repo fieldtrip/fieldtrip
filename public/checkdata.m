@@ -368,6 +368,10 @@ if issource || isvolume,
       end
       data.pow = tmppow';
       data     = rmfield(data, 'avg');
+      if strcmp(inside, 'logical'), 
+        data     = fixinside(data, 'logical');
+        data.inside = repmat(data.inside(:)',[Nrpt 1]);
+      end
     elseif isfield(data, 'avg') && isfield(data.avg, 'mom') && (isfield(data, 'freq') || isfield(data, 'frequency')) && strcmp(sourcedimord, 'rpttap_pos'),
       %frequency domain source representation convert to single taper fourier coefficients
       Npos   = size(data.pos,1);
@@ -483,8 +487,8 @@ if issource || isvolume,
   end
   
   % these fields should not be reshaped
-  exclude = {'fwhm' 'leadfield' 'q' 'rough'};
-  if strcmp(inside, 'index')
+  exclude = {'cfg' 'fwhm' 'leadfield' 'q' 'rough'};
+  if ~strcmp(inside, 'logical')
     % also exclude the inside/outside from being reshaped
     exclude = cat(2, exclude, {'inside' 'outside'});
   end
