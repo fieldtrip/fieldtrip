@@ -87,8 +87,4 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 % -v log | less' to get detailled information
 
 varargin{:}.dimord = 'chan_comp';
-figure;topoplotER(cfg,varargin{:});
-
-
-
-
+figure;ft_topoplotER(cfg,varargin{:});
