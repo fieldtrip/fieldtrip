@@ -1,0 +1,33 @@
+The FieldTrip peer toolbox implements peer-to-peer distributed
+computing using MATLAB without the need for a centralized server/manager.
+
+The FieldTrip project is an initiative of the Donders Institute for
+Brain, Cognition and Behaviour. Together with collaborating institutes,
+we are developing and implementing methods for the analysis of MEG
+and EEG data.
+
+This software is free but copyrighted software, distributed
+under the terms of the GNU General Public Licence as published by
+the Free Software Foundation (either version 2, or at your option
+any later version). See the file COPYING for more details.
+
+Copyright (C) 2010, Robert Oostenveld, Nijmegen, The Netherlands
+
+------------------------------------------------------------------------
+
+TODO:
+  - improve the optimization for selecting the slave (peerfeval)
+  - collect the statistics from the returned jobs (peercellfun)
+  - do mixed seeding/harvesting (peercellfun)
+  - implement fair sharing (tcpsocket)
+  - memprofiling on linux and windows
+  - capture the text output from the diary (peerslave)
+  - implement fault tolerance (peercellfun)
+  - use IP addresses instead of hostnames to avoid DNS problems, e.g. manzana.local
+  - allow for networks restricted to localhost
+  - catch the exception that a slave finishes job and the master has disappeared (peerslave)
+  - check the version of the announcement messages (discover)
+
+------------------------------------------------------------------------
+
+
