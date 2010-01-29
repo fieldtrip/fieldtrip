@@ -598,12 +598,12 @@ templay.mask    = lay.mask;
 % For Highlight (channel-selection)
 for icell = 1:length(cfg.highlight)
   if ~strcmp(cfg.highlight{icell},'off')
-    labelindex     = match_str(lay.label,channelselection(cfg.highlightchannel{icell}, data.label));
+    [dum labelindex]   = match_str(channelselection(cfg.highlightchannel{icell}, data.label), lay.label);
     highlightchansel   = [highlightchansel; match_str(data.label,channelselection(cfg.highlightchannel{icell}, data.label))];
-    templay.pos    = lay.pos(labelindex,:);
-    templay.width  = lay.width(labelindex);
-    templay.height = lay.height(labelindex);
-    templay.label  = channelselection(cfg.highlightchannel{icell}, data.label);
+    templay.pos        = lay.pos(labelindex,:);
+    templay.width      = lay.width(labelindex);
+    templay.height     = lay.height(labelindex);
+    templay.label      = channelselection(cfg.highlightchannel{icell}, data.label);
     if strcmp(cfg.highlight{icell}, 'labels') || strcmp(cfg.highlight{icell}, 'numbers')
       labelflg = 1;
     else
@@ -624,11 +624,11 @@ for icell = 1:length(cfg.highlight)
 end % for icell
 % For Markers (all channels)
 if ~strcmp(cfg.marker,'off')
-  labelindex     = match_str(lay.label,channelselection(setdiff(1:length(data.label),highlightchansel), data.label));
-  templay.pos    = lay.pos(labelindex,:);
-  templay.width  = lay.width(labelindex);
-  templay.height = lay.height(labelindex);
-  templay.label  = channelselection(setdiff(1:length(data.label),highlightchansel), data.label);
+  [dum labelindex] = match_str(channelselection(setdiff(1:length(data.label),highlightchansel), data.label),lay.label);
+  templay.pos      = lay.pos(labelindex,:);
+  templay.width    = lay.width(labelindex);
+  templay.height   = lay.height(labelindex);
+  templay.label    = channelselection(setdiff(1:length(data.label),highlightchansel), data.label);
   if strcmp(cfg.marker, 'labels') || strcmp(cfg.marker, 'numbers')
     labelflg = 1;
   else
