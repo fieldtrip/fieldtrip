@@ -279,7 +279,8 @@ for i=1:size(dip.pos,1)
   end
   if keepfilter
     if ~isempty(subspace)
-      dipout.filter{i} = filt*subspace;
+      %dipout.filter{i} = filt*subspace;
+      dipout.filter{i} = filt*pinv(subspace);
     else
       dipout.filter{i} = filt;
     end
