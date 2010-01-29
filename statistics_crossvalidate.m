@@ -6,9 +6,10 @@ function stat = statistics_crossvalidate(cfg, dat, design)
 % cfg.metric        = the metric to report (default = 'accuracy')
 % cfg.cv            = crossvalidator object
 %  overloads the following
-%   cfg.classifier  = a classification procedure (default = myproc; below)
-%   cfg.cvfolds     = number of folds (default = 10)
-%   cfg.randomize   = permute the examples (default = true)
+%   cfg.clfproc     = a classification procedure (default = {standardizer svmmethod})
+%   cfg.nfolds      = number of folds (default = 10)
+%   cfg.compact     = whether or not to save the classification procedure (true)
+%   cfg.model       = whether or not to save the average model (true)
 %
 % Returns:
 % stat.prob         = computed using the specified metric
@@ -22,8 +23,6 @@ function stat = statistics_crossvalidate(cfg, dat, design)
 %
 % Copyright (c) 2007, Marcel van Gerven
 % F.C. Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
-%
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 fieldtripdefs
 
@@ -44,9 +43,10 @@ else
    end
    
    if ~isfield(cfg,'nfolds'), cfg.nfolds = 10; end
-   if ~isfield(cfg,'compact'), cfg.compact = false; end
+   if ~isfield(cfg,'compact'), cfg.compact = true; end
+   if ~isfield(cfg,'model'), cfg.model = true; end
 
-   cv = crossvalidator('procedure',cfg.clfproc,'nfolds',cfg.nfolds,'compact',cfg.compact,'verbose',true);
+   cv = crossvalidator('procedure',cfg.clfproc,'nfolds',cfg.nfolds,'compact',cfg.compact,'model',cfg.model,'verbose',true);
 
 end
 
@@ -83,8 +83,8 @@ end
 cv = cv.validate(dat,design);
 
 % the statistic of interest
-[res,all] = cv.evaluate('metric',cfg.metric);
-stat.prob = mean(cell2mat(all),1);
+res = cv.evaluate('metric',cfg.metric);
+stat.prob = res;
 
 % is the statistic significant?
 stat.significance = cv.significance();

@@ -76,7 +76,6 @@
 % - getmodel add descriptions and make sure they can be remapped (e.g.,
 %   featureselector)
 % - blogreg blinreg return used scale when using multiple updates
-% - move mulreg to reconstructor
 % - check imputation in dataset class using e.g. knnimpute
 % - clean up metric and significance stuff and split up into clf, regress,
 %   and reconstruct

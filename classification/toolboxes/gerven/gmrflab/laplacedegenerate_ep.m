@@ -344,13 +344,15 @@ CC = repmat(oldC,1,nlaguerre);
 % compute the partition function (integral over x) given U and turn this into weights required for computing the marginal moments
 
 g           = (1-fraction)*log(U)/2 - fraction*mm.^2./(U + fraction*CC)/2 - log(U+ fraction*CC)/2;
-g           = g + log(repmat(wlaguerre',nfeatures,1));
+
+g           = bsxfun(@plus,g,log(wlaguerre'));
 maxg        = max(g,[],2);
-g           = g-repmat(maxg,1,nlaguerre);
+g           = bsxfun(@minus,g,maxg);
 expg        = exp(g);
+
 denominator = sum(expg,2);
 
-neww        = expg./repmat(denominator,1,nlaguerre);
+neww        = bsxfun(@rdivide,expg,denominator);
 
 % compute the marginal moments through numerical integration
 
@@ -405,7 +407,7 @@ else
    % - apply Woodbury's formula to replace inverting an (nfeat x nfeat) matrix by an (nsample x nsample) alternative
    % - projections of the covariance matrix and the mean onto the feature matrix then follow immediately
    
-   scaledA     = Gauss.A./(repmat(Gauss.diagK',nsamples,1));
+   scaledA     = bsxfun(@rdivide,Gauss.A,Gauss.diagK');
    W           = Gauss.A*scaledA';
    W           = (W + W')/2;    % make symmetric
    [Q,logdet1] = invert_chol(diag(1./Gauss.hatK) + W);
@@ -417,12 +419,16 @@ else
 
    Gauss.m     = Gauss.h./Gauss.diagK - scaledA'*(Q*(scaledA*Gauss.h));
    Gauss.hatn  = Gauss.A*Gauss.m;
-
+ 
    Gauss.diagC = 1./Gauss.diagK;
-   for i=1:nfeatures,
-      Gauss.diagC(i) = Gauss.diagC(i) - scaledA(:,i)'*Q*scaledA(:,i);
-   end
 
+%     for i=1:nfeatures,
+%        Gauss.diagC(i) = Gauss.diagC(i) - scaledA(:,i)'*Q*scaledA(:,i);
+%     end
+
+   % adriana's recipe
+   z = scaledA' * Q; for i=1:size(z), Gauss.diagC(i) = Gauss.diagC(i) - z(i,:) * scaledA(:,i); end
+   
    logdet1 = logdet1 + sum(log(Gauss.diagK)) + sum(log(Gauss.hatK));       
    
 end
@@ -513,19 +519,32 @@ terms.h     = terms.h/temperature;
 
 function [invA,logdet] = invert_chol(A)
 
-[L,dummy,S] = chol(sparse(A),'lower');   % now A = S*(L*L')*S' and (L*L') = S'*A*S
+if issparse(A)
 
-if dummy
-  error('matrix is not p.d.');
+  [L,dummy,S] = chol(sparse(A),'lower');   % now A = S*(L*L')*S' and (L*L') = S'*A*S
+  
+  if dummy
+    error('matrix is not p.d.');
+  end
+  
+  invA = fastinvc(L);
+  invA = S*invA*S';  
+  
+else
+  
+  [L,dummy] = chol(A,'lower');
+  
+  if dummy
+    error('matrix is not p.d.');
+  end
+
+  invA = inv(A);
+  
 end
-
-invA = fastinvc(L);
-invA = S*invA*S';
 
 if nargout > 1,
-   logdet = 2*sum(log(full(diag(L))));
+  logdet = 2*sum(log(full(diag(L))));
 end
-
 
 %%%%%%%%%%
 %
