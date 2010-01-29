@@ -35,9 +35,6 @@
 % 
 % L1General:
 % http://people.cs.ubc.ca/~schmidtm/Software/L1General/L1General.html
-%
-% netlab:
-% http://www.ncrg.aston.ac.uk/netlab/
 % 
 % libsvm:
 % libsvm toolbox (http://www.csie.ntu.edu.tw/~cjlin/libsvm/)
@@ -72,7 +69,6 @@
 % - rethink significance testing and also implement for regressor
 % - return standard error of mean as second argument of evaluate
 % - rewrite feature selection stuff and add searchlight (also check blogreg)
-% - check if NETLAB can be removed
 % - better handling of checking of datasets for each method
 % - profiling
 % - rewrite handling of timeseries...
@@ -81,7 +77,6 @@
 %   featureselector)
 % - blogreg blinreg return used scale when using multiple updates
 % - move mulreg to reconstructor
-% - use knnclassify and remove Netlab toolbox
 % - check imputation in dataset class using e.g. knnimpute
 % - clean up metric and significance stuff and split up into clf, regress,
 %   and reconstruct

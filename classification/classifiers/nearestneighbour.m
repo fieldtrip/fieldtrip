@@ -1,23 +1,23 @@
 classdef nearestneighbour < classifier
 %nearest neighbour classifier
 %
-%  Requires Netlab
+% SEE ALSO:
+% knnclassify
 %
-%   SEE ALSO:
-%   knn
-%   knnfwd
+% REQUIRES:
+% bioinformatics toolbox
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: nearestneighbour.m,v $
 %
 
     properties
 
-        k=1; % number of neighbours
-        net; % the knn object        
-        
-        nclasses;
+      data
+      design
+      
+      k=1; % number of neighbours
+      distance = 'euclidean'; % distance function
+      rule = 'nearest'; % classification rule
         
     end
 
@@ -30,24 +30,18 @@ classdef nearestneighbour < classifier
        end
        
        function obj = train(obj,data,design)
-         % create knn object
+         % simply store training data
          
-         obj.nclasses = design.nunique;
-         
-         targets = zeros(data.nsamples,obj.nclasses);
-         for j=1:data.nsamples
-           targets(j,design.X(j,1)) = 1;
-         end
-         
-         obj.net = knn(data.nfeatures, obj.nclasses, obj.k, data.X, targets);
+         obj.data = data;
+         obj.design = design;
          
        end
        
        function post = test(obj,data)
          
-        [y, l] = knnfwd(obj.net, data.X);
+         l = knnclassify(data.X,obj.data.X,obj.design.X,obj.k,obj.distance,obj.rule);
          
-         post = zeros(size(data,1),obj.nclasses);
+         post = zeros(size(data,1),obj.design.nunique);
          for j=1:data.nsamples
            post(j,l(j)) = 1;
          end
