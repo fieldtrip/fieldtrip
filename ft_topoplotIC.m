@@ -8,7 +8,7 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 %   ft_topoplotIC(cfg, data)
 %
 % The configuration should have the following parameters:
-% cfg.component          = field that contains the independent component data to be plotted as color
+% cfg.component          = field that contains the independent component(s) to be plotted as color
 % cfg.layout             = specification of the layout, see below
 %
 % The configuration can have the following parameters:
@@ -72,7 +72,7 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 % layout. If you want to have more fine-grained control over the layout
 % of the subplots, you should create your own layout file.
 %
-% TOPOPLOTTFR calls the function TOPOPLOTER to do the plotting.
+% FT_TOPOPLOTIC calls the function FT_TOPOPLOTER to do the plotting.
 %
 % See also:
 %   ft_topoplotER, ft_singleplotTFR, ft_multiplotTFR, ft_prepare_layout
@@ -86,5 +86,16 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn
 % -v log | less' to get detailled information
 
+% add a dimord
 varargin{:}.dimord = 'chan_comp';
-figure;ft_topoplotER(cfg,varargin{:});
+
+% create temporary variable
+selcomp = cfg.component;
+
+% allow multiplotting
+for i = 1:length(selcomp)
+    subplot(ceil(sqrt(length(selcomp))), ceil(sqrt(length(selcomp))), i);
+    cfg.component = selcomp(i);
+    ft_topoplotER(cfg, varargin{:});
+    title(['component ' num2str(selcomp(i))]);
+end
