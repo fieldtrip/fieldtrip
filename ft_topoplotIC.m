@@ -86,6 +86,14 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn
 % -v log | less' to get detailled information
 
+% config default
+if ~isfield(cfg, 'component'),             cfg.component = [];            end
+
+% check whether cfg.component is speficied
+if isempty(cfg.component)
+        error('this function requires the cfg.component parameter for input')
+end
+
 % add a dimord
 varargin{:}.dimord = 'chan_comp';
 
