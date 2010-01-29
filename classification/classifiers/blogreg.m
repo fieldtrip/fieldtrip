@@ -43,7 +43,7 @@ classdef blogreg < classifier
       % is performed to select a scale
       % parameter for the scales in maxevid under the assumption of a
       % 1./scale prior (uniform in the log domain)      
-      scale  = 100; 
+      scale  = 1; 
       
       % mask that can be used to access only a subset of a volume of data
       % when specifying the coupling
@@ -150,6 +150,7 @@ classdef blogreg < classifier
                gauss = obj.Gauss;
                conv =  obj.convergence;
                mprior = tprior;
+               sc = obj.scale(j);
                
              end
              
@@ -159,6 +160,7 @@ classdef blogreg < classifier
            obj.convergence = conv;
            obj.prior = mprior;
            obj.logp = lgp;
+           obj.scale = sc;
            
          end
                            
