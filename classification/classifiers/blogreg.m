@@ -1,13 +1,11 @@
 classdef blogreg < classifier
-%BLR Bayesian logistic regression with spatiotemporal interactions
+%Bayesian logistic regression with spatiotemporal interactions
 %
 % Note: 
 %   a bias term is added to the model
 %
 % Copyright (c) 2009, Marcel van Gerven
-%
-% $Log: blogreg.m,v $
-%
+
 
     properties
 
@@ -333,7 +331,7 @@ classdef blogreg < classifier
           end
           
           prior = spalloc(nfeatures,nfeatures,nfeatures+1);
-          prior(1:(nfeatures+1):numel(obj.prior)) = 1;
+          prior(1:(nfeatures+1):numel(prior)) = 1;
           
         else
           

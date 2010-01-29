@@ -62,7 +62,6 @@
 % 
 % TO DO
 % 
-% - implement transfer learning using blogreg.
 % - implement reconstruction algorithm
 % - rewrite inner crossvalidation for parameter selection
 % - check EM code for mixture models
@@ -82,4 +81,10 @@
 %   featureselector)
 % - blogreg blinreg return used scale when using multiple updates
 % - move mulreg to reconstructor
-% 
+% - use knnclassify and remove Netlab toolbox
+% - check imputation in dataset class using e.g. knnimpute
+% - clean up metric and significance stuff and split up into clf, regress,
+%   and reconstruct
+% - what is positive and negative class? be consistent over datasets wrt
+%   getmodel
+% - test validator.getmodel for transfer learners

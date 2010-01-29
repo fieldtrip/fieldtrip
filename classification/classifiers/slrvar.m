@@ -10,6 +10,8 @@ classdef slrvar < classifier
 
         model; 
         
+        invhessian = 0; % 1 is faster but too expensive for many features
+        
     end
 
     methods
@@ -24,10 +26,10 @@ classdef slrvar < classifier
                  
          if design.nunique ~= 2, error('SLRLAP expects binary class labels'); end
 
-         design = design.X -1; % zero based
+         design = design.X-1; % zero based
          
          obj.model = slr_learning_var2(design, [data.X ones(data.nsamples,1)],...
-           'nlearn', 300, 'nstep', 100, 'amax', 1e8, 'invhessian', 1);
+           'nlearn', 300, 'nstep', 100, 'amax', 1e8, 'invhessian', obj.invhessian);
 
 
        end

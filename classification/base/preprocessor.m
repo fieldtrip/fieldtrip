@@ -53,8 +53,9 @@ classdef preprocessor < clfmethod
                for c=1:length(data)
                    data{c} = obj.test(data{c});
                end
+               
             else
-                data = obj.prefun(data);
+                data = dataset(obj.prefun(data.X));
             end
         end
         

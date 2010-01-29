@@ -1,5 +1,5 @@
 classdef nearestneighbour < classifier
-%NEAREST NEIGHBOUR classifier
+%nearest neighbour classifier
 %
 %  Requires Netlab
 %

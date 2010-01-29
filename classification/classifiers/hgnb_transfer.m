@@ -1,5 +1,5 @@
 classdef hgnb_transfer < classifier & transfer_learner
-  %HGNB hierarchical gaussian naive Bayes classifier
+  %hierarchical gaussian naive Bayes classifier
   %
   %   This classifier can be used for transfer learning:
   %

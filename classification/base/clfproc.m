@@ -48,6 +48,7 @@ classdef clfproc
     end
     
     methods
+      
        function obj = clfproc(clfmethods,varargin)
        % constructor expects classification methods
 

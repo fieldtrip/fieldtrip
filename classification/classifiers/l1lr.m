@@ -39,10 +39,13 @@ classdef l1lr < classifier
            
            design = 2*design - 3; % convert to -1 / + 1
            
+           lambdas = obj.lambda*ones(data.nfeatures+1,1);
+           lambdas(1) = 0; % Do not penalize bias variable
+           
            funObj = @(w)LogisticLoss(w,X,design);
            w_init = zeros(data.nfeatures+1,1);
             
-           obj.model = L1GeneralProjection(funObj,w_init,lambdas);
+           obj.model = L1GeneralProjection(funObj,w_init,lambdas,'verbose',0);
          end
 
        end

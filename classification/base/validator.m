@@ -95,10 +95,30 @@ classdef validator
     end
     
     
-    function [result,all] = evaluate(obj,varargin)
+    function result = evaluate(obj,varargin)
       % indirect call to eval to simplify the interface
       
-      [result all] = validator.eval(obj.post,obj.design,varargin{:});
+      % create the concatenation of all folds for each of the datasets
+     
+      post = cellfun(@(x)(x.X),obj.post,'UniformOutput',false);
+      design = cellfun(@(x)(x.X),obj.design,'UniformOutput',false);
+      
+      tpost = cell(1,size(post,2));
+      tdesign = cell(1,size(design,2));
+      for c=1:length(tpost)
+        tpost{c} = cat(1,post{:,c});
+        tdesign{c} = cat(1,design{:,c});
+      end
+      
+      result = cell(1,length(tpost));
+      
+      for c=1:length(tpost)
+        result{c} = validator.eval(tpost{c},tdesign{c},varargin{:});
+      end
+      
+      if length(result) == 1
+        result = result{1};
+      end
       
     end
     
@@ -124,16 +144,16 @@ classdef validator
         tpost{c} = cat(1,post{:,c});
         tdesign{c} = cat(1,design{:,c});
       end
-      
-      if ~isfield(options,'test') || strcmp(options.test,'binomial_test')
+    
+      p = cell(1,length(tpost));
+      for c=1:length(tpost)
+    
+        if ~isfield(options,'test') || strcmp(options.test,'binomial_test')
         % one-sided binomial test with automatic bonferroni correction
         
-        if obj.verbose
-          fprintf('performing one-sided biniomial test\n');
-        end
-        
-        p = zeros(1,length(tpost));          
-        for c=1:length(tpost)
+          if obj.verbose
+            fprintf('performing one-sided biniomial test with bonferroni correction\n');
+          end
           
           % compute class with highest prior probability
           nclasses = size(tpost{c},2);
@@ -146,12 +166,12 @@ classdef validator
           rndpost = zeros(size(tpost{c}));
           rndpost(:,clss) = 1;
           
-          [r,p(c),level] = validator.binomial_test(tpost{c},tdesign{c},rndpost,tdesign{c},'twosided',false,'bonferroni',length(tpost));
+          [r,p{c},level] = validator.binomial_test(tpost{c},tdesign{c},rndpost,tdesign{c},'twosided',false,'bonferroni',length(tpost));
           
           if r
-            fprintf('dataset %d: null hypothesis rejected (%g<%g);\nsignificant difference from ',c,p(c),level);
+            fprintf('dataset %d: null hypothesis rejected (%g<%g);\nsignificant difference from ',c,p{c},level);
           else
-            fprintf('dataset %d: null hypothesis not rejected (%g>%g);\nno significant difference from ',c,p(c),level);
+            fprintf('dataset %d: null hypothesis not rejected (%g>%g);\nno significant difference from ',c,p{c},level);
           end
           
           if (nargin == 2 && random)
@@ -159,8 +179,14 @@ classdef validator
           else
             fprintf('majority classification (class %d with prior of %g)\n',clss,mxx/sum(priors));
           end
+          
         end
       end
+      
+      if length(p) == 1
+        p = p{1};
+      end
+      
     end
     
   end
@@ -191,13 +217,10 @@ classdef validator
   
   methods(Static)
     
-    function [metric,all] = eval(post,tcls,varargin)
+    function metric = eval(post,tcls,varargin)
       %EVAL evaluation criterion for predictors
       %
-      %   [metric,all] = evaluate(post,tcls,varargin)
-      %
-      %   metric returns an average metric and all the metrics of all inputs if
-      %   the input is a cell array
+      %   metric = evaluate(post,tcls,varargin)
       %
       %   parameter 'metric' determines the evaluation criterion:
       %
@@ -242,37 +265,11 @@ classdef validator
       options = varargin2struct(varargin);
       
       if ~isfield(options,'metric'), options.metric = 'accuracy'; end
-      
-      % compute metric for all cell elements
-      if iscell(post)
         
-        warning off all
-        all = cell(size(post));
-        metric = cell(size(post));
-        
-        for c=1:numel(post)
-          [metric{c},all{c}] = validator.eval(post{c}.X,tcls{c}.X,varargin{:});
-        end
-        warning on all
-        
-        % concatenate all results and compute metric
-        apost = [];
-        atcls = [];
-        for c=1:numel(post)
-          apost = cat(1,apost,post{c}.X);
-          atcls = cat(1,atcls,tcls{c}.X);
-        end
-        
-        metric = validator.eval(apost,atcls,varargin{:});
-        
+      if isa(post,'dataset')
+        metric = compute_metric(post.X,tcls.X(:,1),options);
       else
-        
-        if isa(post,'dataset')
-          metric = compute_metric(post.X,tcls.X(:,1),options);
-        else
-          metric = compute_metric(post,tcls(:,1),options);     
-        end
-        all = metric;
+        metric = compute_metric(post,tcls(:,1),options);
       end
     
       function met = compute_metric(post,tcls,cfg)

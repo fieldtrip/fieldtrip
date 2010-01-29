@@ -34,6 +34,12 @@ classdef crossvalidator < validator
       trainfolds; % partitioning of the training examples 
       testfolds;  % partitioning of the test examples
       
+      % if true then the model averaged over folds will be saved here.
+      % useful in conjunction with compact=false (classifiers discarded;
+      % average model saved)
+      model = 0;  
+      desc;
+      
     end
 
     methods
@@ -93,14 +99,19 @@ classdef crossvalidator < validator
         % create train and test samples
         [obj.trainfolds,obj.testfolds,nfolds] = obj.create_folds(design);
                         
-        if ~obj.compact, proc = cell(nfolds,1); end
+        if ~obj.compact
+          proc = cell(nfolds,1); 
+        end
         
         obj.post = cell(nfolds,nsets);
         obj.design = cell(nfolds,nsets);
         
         for f=1:nfolds % iterate over folds
           
-          if obj.verbose, fprintf('validating fold %d of %d\n',f,nfolds); end
+          if obj.verbose
+            fprintf('validating fold %d of %d using %d training samples and %d test samples\n',...
+              f,nfolds,numel(obj.trainfolds{f}),numel(obj.testfolds{f})); 
+          end
           
           traindata = cell(1,nsets);
           traindesign = cell(1,nsets);
@@ -129,9 +140,22 @@ classdef crossvalidator < validator
             obj.design(f,:) = testdesign;           
           end
           
+          if iscell(obj.model) || obj.model
+            if f==1
+              [obj.model,obj.desc] = tproc.getmodel();
+            else
+              m = tproc.getmodel();
+              for mm=1:length(obj.model)
+                obj.model{mm} = obj.model{mm} + m{mm};
+              end
+              clear m;
+            end
+          end
+          
           if ~obj.compact
             proc{f} = tproc; 
-          else
+          else            
+            
             clear tproc;
             clear traindata;
             clear testdata;
@@ -143,6 +167,12 @@ classdef crossvalidator < validator
        
         if ~obj.compact
           obj.procedure = proc;
+        end
+        
+        if iscell(obj.model) || obj.model
+          for mm=1:length(obj.model)
+            obj.model{mm} = obj.model{mm}./nfolds;
+          end
         end
         
       end

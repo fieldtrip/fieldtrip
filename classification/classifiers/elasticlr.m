@@ -46,7 +46,7 @@ classdef elasticlr < classifier
 
          funObjL2 = @(w)penalizedL2(w,funObj,lambdasL2);
 
-         obj.model = L1GeneralProjection(funObjL2,w_init,lambdasL1);
+         obj.model = L1GeneralProjection(funObjL2,w_init,lambdasL1,'verbose',0);
 
        end
 

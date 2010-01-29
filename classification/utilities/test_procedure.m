@@ -28,7 +28,7 @@ function [acc,sig,cv] = test_procedure(myproc,nfolds,X,Y)
       
       load covattfrq2;
       
-      cvec = ismember(left.label,channelselection({'MLO' 'MRO'},left.label)); % subset of channels
+      cvec = ismember(left.label,ft_channelselection({'MLO' 'MRO'},left.label)); % subset of channels
       fvec = (left.freq >= 8 & left.freq <= 14); % subset of frequencies
       tvec = (left.time >= 1.5 & left.time <= 2.5); % subset of time segment
       

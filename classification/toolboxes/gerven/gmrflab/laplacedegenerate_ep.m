@@ -514,6 +514,11 @@ terms.h     = terms.h/temperature;
 function [invA,logdet] = invert_chol(A)
 
 [L,dummy,S] = chol(sparse(A),'lower');   % now A = S*(L*L')*S' and (L*L') = S'*A*S
+
+if dummy
+  error('matrix is not p.d.');
+end
+
 invA = fastinvc(L);
 invA = S*invA*S';
 
