@@ -16,7 +16,7 @@ classdef dataset
       ndims;      % number of dimensions
       nsamples;   % number of examples
       nfeatures;  % number of features
-         
+    
       % standardization parameters
       mu;     % means
       sigma;  % standard deviations
@@ -30,7 +30,7 @@ classdef dataset
     
     methods                  
       
-      function obj = dataset(D)
+      function obj = dataset(D,varargin)
                         
         obj.dims = size(D);        
         obj.ndims = length(obj.dims);
@@ -43,6 +43,13 @@ classdef dataset
           obj.X = D;
         else
           obj.X = D(1:obj.nsamples,:);
+        end
+        
+        % parse options
+        for i=1:2:length(varargin)
+          if ismember(varargin{i},fieldnames(obj))
+            obj.(varargin{i}) = varargin{i+1};
+          end
         end
         
       end      
@@ -80,20 +87,26 @@ classdef dataset
         % return standardized dataset (mean subtracted and SD of one)
         
         if ~isempty(obj.mu)
-          error('dataset has already been standardized');
+          warning('dataset has already been standardized');
+          Y = obj;
+          return
         end
               
-        Y = obj.X;
+        D = obj.X;
         
-        mu = mynanmean(Y);
-        
-        sigma = mynanstd(Y);
+        mu = mynanmean(D);        
+        sigma = mynanstd(D);
         sigma(sigma==0) = 1; % bug fix
         
-        Y = bsxfun(@minus,Y,mu);
-        Y = bsxfun(@rdivide,Y,sigma);
+        D = bsxfun(@minus,D,mu);
+        D = bsxfun(@rdivide,D,sigma);
         
-        Y = dataset(Y);
+        Y = obj;
+        Y.X = D;
+        Y.dims = size(Y.X);        
+        Y.ndims = length(Y.dims);
+        Y.nsamples = Y.dims(1);        
+        Y.nfeatures = prod(Y.dims(2:end));
         
         Y.mu = mu;
         Y.sigma = sigma;
@@ -104,41 +117,52 @@ classdef dataset
         % return dataset while undoing standardization
         
         if isempty(obj.mu)
-          error('cannot unstandardize when data is not standardized');
+          warning('data has already been unstandardized');
+          Y = obj;
+          return
         end
         
-        Y = obj.X;
+        D = obj.X;        
+        D = bsxfun(@times,D,obj.sigma);
+        D = bsxfun(@plus,D,obj.mu);
         
-        Y = bsxfun(@times,Y,obj.sigma);
-        Y = bsxfun(@plus,Y,obj.mu);
-        
-        Y = dataset(Y);
+        Y = obj;
+        Y.X = D;
+        Y.dims = size(Y.X);        
+        Y.ndims = length(Y.dims);
+        Y.nsamples = Y.dims(1);        
+        Y.nfeatures = prod(Y.dims(2:end));
+      
+        Y.mu = [];
+        Y.sigma = [];
         
       end
       
       function Y = whiten(obj,rdim)
         % Sort the eigenvalues and select subset, and whiten
         
+        % standardization required if not yet performed
+        obj = obj.standardize();
+        
         if ~isempty(obj.wmat)
-          error('dataset has already been whitened');
+          warning('dataset has already been whitened');
+          Y = obj;
+          return
         end
         
         if nargin < 2
           rdim = obj.nfeatures;
         end
         
-        [E, D] = eig(cov(obj.X,1));
-        [dummy,order] = sort(diag(-D));
+        [wmat,uwmat] = dataset.whitening_transform(obj.X,rdim);
         
-        E = E(:,order(1:rdim));
-        d = real(diag(D).^(-0.5));
-        D = diag(d(order(1:rdim)));
+        Y = obj;
+        Y.X = obj.X*wmat';
+        Y.dims = size(Y.X);
+        Y.ndims = length(Y.dims);
+        Y.nsamples = Y.dims(1);
+        Y.nfeatures = prod(Y.dims(2:end));
         
-        wmat = D*E';
-        uwmat = E*D^(-1);
-        
-        Y = dataset(obj.X*wmat');
-
         Y.wmat = wmat;
         Y.uwmat = uwmat;
         Y.rdim = rdim;
@@ -148,14 +172,23 @@ classdef dataset
       function Y = unwhiten(obj)
         
         if isempty(obj.wmat)
-          error('cannot unwhiten when data is not whitened');
+          warning('data has already been unwhitened');
+          Y = obj;
+          return;
         end
         
-        Y = dataset(obj.X*obj.uwmat');
+        Y = obj;
+        Y.X = obj.X*obj.uwmat';
+        Y.dims = size(Y.X);        
+        Y.ndims = length(Y.dims);
+        Y.nsamples = Y.dims(1);        
+        Y.nfeatures = prod(Y.dims(2:end));
         
         Y.wmat = [];
         Y.uwmat = [];
         Y.rdim = [];
+        
+        Y = Y.unstandardize();
         
       end
       
@@ -243,6 +276,56 @@ classdef dataset
         
       end
       
+      
+    end
+    
+    methods(Static=true)
+      
+       function [wmat,uwmat] = whitening_transform(X,rdim)
+        
+         [E, D] = eig(cov(X,1));
+         
+         firstEig = 1;
+         
+         maxLastEig = sum (diag (D) > 1e-7); % tolerance
+       
+         if rdim > maxLastEig % tolerance
+           error('dimension should be reduced to %d due to the singularity of covariance matrix\n',maxLastEig-firstEig+1);
+         end
+         
+         eigenvalues = sort(diag(D),'descend');
+         
+         oldDimension = size(X,2);
+         
+         if rdim < oldDimension
+           lowerLimitValue = (eigenvalues(rdim) + eigenvalues(rdim + 1)) / 2;
+         else
+           lowerLimitValue = eigenvalues(oldDimension) - 1;
+         end
+         
+         lcol = diag(D) > lowerLimitValue;
+         
+         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+         % Drop the larger eigenvalues
+         if firstEig > 1
+           higherLimitValue = (eigenvalues(firstEig - 1) + eigenvalues(firstEig)) / 2;
+         else
+           higherLimitValue = eigenvalues(1) + 1;
+         end
+         hcol = diag(D) < higherLimitValue;
+         
+         % Combine the results from above
+         sel = lcol & hcol;
+         
+         % Select the colums which correspond to the desired range
+         % of eigenvalues.
+         E = E(:,sel);
+         D = D(sel,sel);
+         
+         wmat = sqrt(D) \ E';
+         uwmat = E * sqrt(D);
+         
+      end
       
     end
     

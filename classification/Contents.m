@@ -82,3 +82,4 @@
 % - what is positive and negative class? be consistent over datasets wrt
 %   getmodel
 % - test validator.getmodel for transfer learners
+% - automate recompilation of mex files
