@@ -34,4 +34,13 @@ extern grouplist_t *grouplist;
 extern pthread_mutex_t mutexhostlist;
 extern hostlist_t *hostlist;
 
+extern pthread_mutex_t mutexfairshare;
+extern struct {
+  float a;
+  float b;
+  float c;
+  float d;
+  time_t t0;
+} param;
+
 #endif

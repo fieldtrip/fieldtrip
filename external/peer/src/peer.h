@@ -49,6 +49,7 @@
 #define ACCEPTSLEEP       10000    /* in usec */
 #define ANNOUNCESLEEP     1000000  /* in usec */
 #define EXPIRESLEEP       1000000  /* in usec */
+#define FAIRSHARE_TIMEOUT 5        /* in sec  */
 
 #define MAXPWDSIZE		  16384
 #define MAXPATHSIZE		  16384
@@ -185,6 +186,9 @@ void *discover  (void *);
 void *expire    (void *);
 void  peerinit (void *);
 void  peerexit (void *);
+void  fairshare_timer (void);
+int   fairshare_check (UINT32_T timreq);
+
 
 /* functions from util.c */
 int bufread(int s, void *buf, int numel);

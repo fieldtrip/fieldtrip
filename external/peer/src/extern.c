@@ -33,3 +33,12 @@ grouplist_t *grouplist = NULL;
 pthread_mutex_t mutexhostlist = PTHREAD_MUTEX_INITIALIZER;
 hostlist_t *hostlist = NULL;
 
+pthread_mutex_t mutexfairshare = PTHREAD_MUTEX_INITIALIZER;
+struct {
+  float a;
+  float b;
+  float c;
+  float d;
+  time_t t0;
+} param;
+

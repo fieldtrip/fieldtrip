@@ -17,7 +17,7 @@ elseif isunix || ismac
     % go into the directory containing the source code
     newdir = fullfile(fileparts(which(mfilename)), 'src');
     cd(newdir);
- 
+
     % these are general
     mex  -I. -c tcpserver.c
     mex  -I. -c tcpsocket.c
@@ -27,9 +27,10 @@ elseif isunix || ismac
     mex  -I. -c peerinit.c
     mex  -I. -c util.c
     mex  -I. -c extern.c
- 
+    mex  -I. -c fairshare.c
+
     % link all the objects together into a mex file
-    mex -I. -output ../peer peer.c tcpserver.o tcpsocket.o discover.o announce.o expire.o peerinit.o util.o extern.o -lpthread
+    mex -I. -output ../peer peer.c tcpserver.o tcpsocket.o discover.o announce.o expire.o peerinit.o util.o extern.o fairshare.o -lpthread
 
     % also compile the memory profiler
     mex -I. -output ../memprofile memprofile.c

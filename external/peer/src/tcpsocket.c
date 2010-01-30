@@ -179,6 +179,12 @@ void *tcpsocket(void *arg) {
 				handshake = 0;
 		}
 
+		/* use a probabilistic approach to determine whether the connection should be dropped */
+		if (!fairshare_check(message->job->timreq)) {
+				if (verbose>0) fprintf(stderr, "tcpsocket: fairshare_check returned zero\n");
+				handshake = 0;
+		}
+
 		/* give a handshake */
 		if ((n = bufwrite(fd, &handshake, sizeof(int))) != sizeof(int)) {
 				if (verbose>0) fprintf(stderr, "tcpsocket: could not write handshake, n = %d, should be %d\n", n, sizeof(int));

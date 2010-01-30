@@ -364,6 +364,40 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
+		else if (strcasecmp(command, "fairshare")==0) {
+				/* the input arguments should be "fairshare <a> <b> <c> <d>" */
+				if (nrhs<5)
+						mexErrMsgTxt ("invalid number of input arguments");
+
+				if (!mxIsNumeric(prhs[1]))
+						mexErrMsgTxt ("invalid input argument #2");
+				if (!mxIsScalar(prhs[1]))
+						mexErrMsgTxt ("invalid input argument #2");
+
+				if (!mxIsNumeric(prhs[2]))
+						mexErrMsgTxt ("invalid input argument #3");
+				if (!mxIsScalar(prhs[2]))
+						mexErrMsgTxt ("invalid input argument #3");
+
+				if (!mxIsNumeric(prhs[3]))
+						mexErrMsgTxt ("invalid input argument #4");
+				if (!mxIsScalar(prhs[3]))
+						mexErrMsgTxt ("invalid input argument #4");
+
+				if (!mxIsNumeric(prhs[4]))
+						mexErrMsgTxt ("invalid input argument #5");
+				if (!mxIsScalar(prhs[4]))
+						mexErrMsgTxt ("invalid input argument #5");
+
+				pthread_mutex_lock(&mutexfairshare);
+				param.a = mxGetScalar(prhs[1]);
+				param.b = mxGetScalar(prhs[2]);
+				param.c = mxGetScalar(prhs[3]);
+				param.d = mxGetScalar(prhs[4]);
+				pthread_mutex_unlock(&mutexfairshare);
+		}
+
+		/****************************************************************************/
 		else if (strcasecmp(command, "memavail")==0) {
 				/* the input arguments should be "memavail <number>" */
 				if (nrhs<2)
@@ -791,6 +825,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				if (!found) {
 						mexWarnMsgTxt("failed to locate specified job\n");
 				}
+
+fairshare_timer();
 
 				pthread_mutex_unlock(&mutexjoblist);
 				return;
