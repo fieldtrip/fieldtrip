@@ -132,8 +132,8 @@ elseif isequal(cfg.layout, 'butterfly')
 elseif isequal(cfg.layout, 'vertical')
   if nargin>1 && ~isempty(data)
     % look at the data to determine the overlapping channels
-    cfg.channel = channelselection(cfg.channel, data.label);
-    chanindx    = match_str(data.label, cfg.channel);
+    cfg.channel = channelselection(data.label, cfg.channel); % with this order order of channels stays the same
+    [dum chanindx] = match_str(cfg.channel, data.label); % order of channels according to cfg specified by user
     nchan       = length(data.label(chanindx));
     lay.label   = data.label(chanindx);
   else
