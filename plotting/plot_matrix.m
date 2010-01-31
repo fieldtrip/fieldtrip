@@ -182,6 +182,9 @@ if ~isempty(highlight)
   switch highlightstyle
     case 'opacity'
       h = uimagesc(hdat, vdat, cdat, clim);
+      
+      set(h,'CData',cdat); % quick fix
+      
       set(h,'tag',tag);
       set(h,'AlphaData',highlight);
       set(h, 'AlphaDataMapping', 'scaled');
