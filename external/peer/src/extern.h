@@ -40,6 +40,7 @@ extern struct {
   float b;
   float c;
   float d;
+  int   n;
   time_t t0;
 } param;
 
