@@ -589,8 +589,8 @@ switch eventformat
             for segment=1:hdr.nTrials
                 if any(eventData(theEvent,((segment-1)*hdr.nSamples +1):segment*hdr.nSamples))
                     eventCount=eventCount+1;
-                    event(eventCount).sample   = (segment-1)*hdr.nSamples + 1;
-                    event(eventCount).offset   = -min(find(eventData(theEvent,((segment-1)*hdr.nSamples +1):segment*hdr.nSamples)))+1;
+                    event(eventCount).sample   = min(find(eventData(theEvent,((segment-1)*hdr.nSamples +1):segment*hdr.nSamples))) +(segment-1)*hdr.nSamples;
+                    event(eventCount).offset   = -hdr.nSamplesPre;
                     event(eventCount).duration =  length(find(eventData(theEvent,((segment-1)*hdr.nSamples +1):segment*hdr.nSamples )>0))-1;
                     if event(eventCount).duration == 0
                         event(eventCount).type     = 'trigger';
