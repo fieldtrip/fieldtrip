@@ -135,8 +135,7 @@ else
             %if more than one, choose the earliest one
             baselineCandidates = unique(mod(find(eventData(:,:)'),NSamples));
             counters=zeros(1,length(baselineCandidates));
-            totalEventSamples=mod(find(eventData(:,:)'),NSamples);
-
+            totalEventSamples=mod(find(sum(eventData(:,:))'),NSamples); 
             for i = 1:length(totalEventSamples)
                 theMatch=find(ismember(baselineCandidates,totalEventSamples(i)));
                 counters(theMatch)=counters(theMatch)+1;
