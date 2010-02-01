@@ -11,6 +11,9 @@ function varargout = peercellfun(fname, varargin)
 % input arguments (including other key-value pairs) will be passed to the
 % function to be evaluated.
 %   UniformOutput  = boolean (default = false)
+%   memreq         = number
+%   timreq         = number
+%   sleep          = number
 %
 % Example
 %   fname = 'power';
@@ -27,8 +30,8 @@ optarg = varargin(optbeg:end);
 % get the optional input arguments
 UniformOutput = keyval('UniformOutput', optarg); if isempty(UniformOutput), UniformOutput = true; end
 memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=0; end
-cpureq  = keyval('cpureq',  optarg); if isempty(cpureq), cpureq=0; end
 timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=0; end
+sleep   = keyval('sleep',   optarg); if isempty(sleep),  sleep=0.01; end
 
 % convert from 'yes'/'no' into boolean value
 UniformOutput = istrue(UniformOutput);
@@ -38,15 +41,19 @@ if ~isempty(optbeg)
   varargin = varargin(1:(optbeg-1));
 end
 
-% determine the number of input arguments and the number of jobs
-numargin = numel(varargin);
-numjob   = numel(varargin{1});
-jobid    = nan(1, numjob);
+if isa(fname, 'function_handle')
+  % convert the function handle back into a string (e.g. @plus should be 'plus')
+  fname = func2str(fname);
+end
 
 % there are potentially errors to catch from the which() function
 if isempty(which(fname))
   error('Not a valid M-file (%s).', fname);
 end
+
+% determine the number of input arguments and the number of jobs
+numargin    = numel(varargin);
+numjob      = numel(varargin{1});
 
 % it can be difficult to determine the number of output arguments
 try
@@ -75,25 +82,82 @@ for i=1:numargin
   end
 end
 
-% post all jobs
-for i=1:numjob
-    argin = cell(1, numargin);
-    % redistribute the input arguments
-    for j=1:numargin
-      argin{j} = varargin{j}{i};
-    end
-    jobid(i) = peerfeval(fname, argin{:}, 'timeout', inf, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq);
-    clear argin
-end
+% prepare some arrays that are used for bookkeeping
+jobid       = nan(1, numjob);
+timused     = nan(1, numjob);
+memused     = nan(1, numjob);
+submitted   = false(1, numjob);
+collected   = false(1, numjob);
+submittime  = inf(1, numjob);
+collecttime = inf(1, numjob);
 
-% get the results of all job
-for i=1:numjob
-  [argout, options] = peerget(jobid(i), 'timeout', inf, 'output', 'cell');
-  % redistribute the output arguments
-  for j=1:numargout
-    varargout{j}{i} = argout{j};
-  end 
-end
+% start the timer
+stopwatch   = tic;
+
+% post all jobs and gather their results
+while ~all(submitted) || ~all(collected)
+
+  % select one of the jobs to be submitted
+  submit = find(~submitted);                % select all jobs that still need to be submitted
+  submit = submit(randperm(numel(submit))); % change into a random order
+
+  if ~isempty(submit)
+    % take the first job from the random list
+    submit = submit(1);
+
+    if any(collected)
+      % update the estimate of the time and memory that will be needed for the next job
+      timreq = max(timused(~isnan(timused)));
+      memreq = max(memused(~isnan(memused)));
+    end
+
+    % redistribute the input arguments
+    argin  = cell(1, numargin);
+    for j=1:numargin
+      argin{j} = varargin{j}{submit};
+    end
+
+    jobid(submit) = peerfeval(fname, argin{:}, 'timeout', inf, 'memreq', memreq, 'timreq', timreq);
+    % fprintf('submitted job %d\n', submit);
+    submitted(submit)  = true;
+    submittime(submit) = toc(stopwatch);
+    clear argin
+  end
+
+  joblist = peer('joblist');
+
+  % get the results of all jobs that have finished
+  for i=1:numel(joblist)
+    collect = find(jobid == joblist(i).jobid);
+    if isempty(collect)
+      % there must be some junk in the buffer from an aborted previous call
+      [argout, options] = peerget(joblist(i).jobid, 'timeout', inf, 'output', 'cell');
+    else
+      [argout, options] = peerget(joblist(i).jobid, 'timeout', inf, 'output', 'cell');
+      % fprintf('collected job %d\n', collect);
+      collected(collect)   = true;
+      collecttime(collect) = toc(stopwatch);
+
+      % redistribute the output arguments
+      for j=1:numargout
+        varargout{j}{collect} = argout{j};
+      end 
+
+      % gather the job statistics
+      timused(collect) = keyval('timused', options);
+      memused(collect) = keyval('memused', options);
+    end
+  end
+
+  if all(submitted) && ~all(collected)
+    % wait a little bit and try again
+    pause(sleep);
+  else
+    % give an update of the progress
+    fprintf('submitted %d/%d, collected %d/%d\n', sum(submitted), numel(submitted), sum(collected), numel(collected));
+  end
+
+end % while not all jobs have finished
 
 if numargout>0 && UniformOutput
   % check whether the output can be converted to a uniform one

@@ -40,6 +40,8 @@ struct {
   float c;
   float d;
   int   n;
+  int prevhostcount;
+  int prevhostid;
   time_t t0;
 } param;
 

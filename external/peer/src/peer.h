@@ -187,7 +187,7 @@ void *expire    (void *);
 void  peerinit (void *);
 void  peerexit (void *);
 void  fairshare_timer (void);
-int   fairshare_check (UINT32_T timreq);
+int   fairshare_check (float timreq, int hostid);
 
 
 /* functions from util.c */

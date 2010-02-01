@@ -16,6 +16,7 @@ function peerslave(varargin)
 %   allowhost  = {...}
 %   allowuser  = {...}
 %   allowgroup = {...}
+%   fairshare  = [a, b, c, d]
 %
 % See also PEERMASTER, PEERRESET, PEERFEVAL, PEERCELLFUN
 
@@ -23,9 +24,10 @@ function peerslave(varargin)
 maxnum     = keyval('maxnum',     varargin); if isempty(maxnum),   maxnum=inf; end
 maxtime    = keyval('maxtime',    varargin); if isempty(maxtime),  maxtime=inf; end
 sleep      = keyval('sleep',      varargin); if isempty(sleep),    sleep=0.01; end
-memavail   = keyval('memavail',   varargin); if isempty(memavail), memavail=intmax('uint32'); end
-cpuavail   = keyval('cpuavail',   varargin); if isempty(cpuavail), cpuavail=intmax('uint32'); end
-timavail   = keyval('timavail',   varargin); if isempty(timavail), timavail=intmax('uint32'); end
+memavail   = keyval('memavail',   varargin);
+cpuavail   = keyval('cpuavail',   varargin);
+timavail   = keyval('timavail',   varargin);
+fairshare  = keyval('fairshare',  varargin);
 allowhost  = keyval('allowhost',  varargin); if isempty(allowhost), allowhost = {}; end
 allowuser  = keyval('allowuser',  varargin); if isempty(allowuser), allowuser = {}; end
 allowgroup = keyval('allowgroup', varargin); if isempty(allowgroup), allowgroup = {}; end
@@ -54,10 +56,15 @@ peer('allowhost', allowhost);
 peer('allowuser', allowuser);
 peer('allowgroup', allowgroup);
 
-% the available resources will be announced and will be used to drop requests that are too large
-peer('memavail', memavail);
-peer('cpuavail', cpuavail);
-peer('timavail', timavail);
+% the available resources will be announced and are used to drop requests that are too large
+if ~isempty(memavail), peer('memavail', memavail); end
+if ~isempty(cpuavail), peer('cpuavail', cpuavail); end
+if ~isempty(timavail), peer('timavail', timavail); end
+
+% set up the fairshare algorithm parameters
+if ~isempty(fairshare)
+  peer('fairshare', fairshare(1), fairshare(2), fairshare(3), fairshare(4));
+end
 
 % switch to slave mode
 peer('status', 1);
@@ -65,7 +72,7 @@ peer('status', 1);
 % keep track of the time and number of jobs
 stopwatch = tic;
 prevtime  = toc(stopwatch);
-jobnum = 0;
+jobnum    = 0;
 
 while true
 

@@ -114,8 +114,8 @@ void peerinit(void *arg) {
 		pthread_mutex_lock(&mutexfairshare);
         param.a =  1;
         param.b = -1;
-        param.c =  0;
-        param.d =  5;
+        param.c =  3;
+        param.d =  3;
         param.t0 = time(NULL);
 		pthread_mutex_unlock(&mutexfairshare);
 

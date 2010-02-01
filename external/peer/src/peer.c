@@ -292,6 +292,13 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				mexPrintf("host.id         = %d\n", host->id);
 				pthread_mutex_unlock(&mutexhost);
 
+				pthread_mutex_lock(&mutexfairshare);
+				mexPrintf("fairshare.a    = %f\n", param.a);
+				mexPrintf("fairshare.b    = %f\n", param.b);
+				mexPrintf("fairshare.c    = %f\n", param.c);
+				mexPrintf("fairshare.a    = %f\n", param.d);
+				pthread_mutex_unlock(&mutexfairshare);
+
 				pthread_mutex_lock(&mutexuserlist);
 				allowuser = userlist;
 				while (allowuser) {
@@ -313,17 +320,17 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				peer = peerlist;
 				while(peer) {
 						mexPrintf("peerlist[%d] = \n", i);
-						mexPrintf("  host.id       = %d\n",   peer->host->id);
-						mexPrintf("  host.name     = %s\n",   peer->host->name);
-						mexPrintf("  host.addr     = %s\n",   peer->host->addr);
-						mexPrintf("  host.port     = %d\n",   peer->host->port);
-						mexPrintf("  host.user     = %s\n",   peer->host->user);
-						mexPrintf("  host.group    = %s\n",   peer->host->group);
-						mexPrintf("  host.status   = %d\n",   peer->host->status);
+						mexPrintf("  host.id       = %d\n", peer->host->id);
+						mexPrintf("  host.name     = %s\n", peer->host->name);
+						mexPrintf("  host.addr     = %s\n", peer->host->addr);
+						mexPrintf("  host.port     = %d\n", peer->host->port);
+						mexPrintf("  host.user     = %s\n", peer->host->user);
+						mexPrintf("  host.group    = %s\n", peer->host->group);
+						mexPrintf("  host.status   = %d\n", peer->host->status);
 						mexPrintf("  host.memavail = %u\n", peer->host->memavail);
 						mexPrintf("  host.cpuavail = %u\n", peer->host->cpuavail);
 						mexPrintf("  host.timavail = %u\n", peer->host->timavail);
-						mexPrintf("  time          = %s",     ctime(&(peer->time)));
+						mexPrintf("  time          = %s",   ctime(&(peer->time)));
 						peer = peer->next ;       
 						i++;
 				}
@@ -826,7 +833,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mexWarnMsgTxt("failed to locate specified job\n");
 				}
 
-fairshare_timer();
+				fairshare_timer();
 
 				pthread_mutex_unlock(&mutexjoblist);
 				return;

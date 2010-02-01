@@ -180,7 +180,7 @@ void *tcpsocket(void *arg) {
 		}
 
 		/* use a probabilistic approach to determine whether the connection should be dropped */
-		if (hoststatus()==1 && !fairshare_check(message->job->timreq)) {
+		if (hoststatus()==1 && !fairshare_check(message->job->timreq, message->host->id)) {
 				if (verbose>0) fprintf(stderr, "tcpsocket: fairshare_check returned zero\n");
 				handshake = 0;
 		}
