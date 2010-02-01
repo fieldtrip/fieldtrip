@@ -32,33 +32,37 @@ classdef libsvm < classifier
         
       end
       
-      function obj = train(obj,data,design)
+      function p = estimate(obj,data,design)
         
         data = data.X;
         design = design.X;
         
+        trainparams = obj.trainparams;
+        
         % regularization parameter
-        if isempty(strfind(obj.trainparams,'-c'))
+        if isempty(strfind(trainparams,'-c'))
           K = compKernel(data,data,'linear');
           c = .1*(mean(diag(K))-mean(K(:)));
-          obj.trainparams = [obj.trainparams ' -c ' num2str(c)];
+          trainparams = [trainparams ' -c ' num2str(c)];
         end
         
-        if isempty(strfind(obj.trainparams,'-b'))
-          obj.trainparams = [obj.trainparams ' -b 1'];
+        if isempty(strfind(trainparams,'-b'))
+          trainparams = [trainparams ' -b 1'];
         end
         
-        obj.model = svmtrain(design, data, obj.trainparams);
+        p.model = svmtrain(design, data, trainparams);
         
       end
       
-      function post = test(obj,data)
+      function post = map(obj,data)
         
-       if isempty(strfind(obj.testparams,'-b'))
-          obj.testparams = [obj.testparams ' -b 1'];
+        testparams = obj.testparams;
+        
+       if isempty(strfind(testparams,'-b'))
+          testparams = [testparams ' -b 1'];
         end
         
-        [a,b,post] = svmpredict(ones(data.nsamples,1), data.X, obj.model, obj.testparams);
+        [a,b,post] = svmpredict(ones(data.nsamples,1), data.X, obj.params.model, testparams);
 
         post = dataset(post);
       

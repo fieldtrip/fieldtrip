@@ -30,42 +30,37 @@ classdef dynamic_classifier < classifier
 %       hmm
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: dynamic_classifier.m,v $
-%
 
     properties
-        ie;
-        dbn; % save for info
-        numvar; % number of variables per slice
-        horizon = inf;  % must be <inf for synchronous (finite horizon) models
-        coupled = true; % if false; we decouple all slices
-        
-        nclasses;
+      
+      horizon = inf;  % must be <inf for synchronous (finite horizon) models
+      coupled = true; % if false; we decouple all slices
         
     end
 
     methods
+      
        function obj = dynamic_classifier(varargin)
                   
            obj = obj@classifier(varargin{:});
                       
        end
-       function obj = train(obj,data,design)
+       
+       function p = estimate(obj,data,design)
             
             if iscell(data), error('classifier does not take multiple datasets as input'); end
             
-            obj.nclasses = design.nunique;
+            p.nclasses = design.nunique;
             
             data = data.X;
             design = design.X;
                 
             if isinf(obj.horizon)
-               obj.numvar = 1 + size(data,2); 
+               p.numvar = 1 + size(data,2); 
             else
-                obj.numvar = 1 + (size(data,2)/obj.horizon);
+               p.numvar = 1 + (size(data,2)/obj.horizon);
             end
-            if mod(obj.numvar,1), error('inconsistent number of variables'); end
+            if mod(p.numvar,1), error('inconsistent number of variables'); end
 
             % construct factors (custom code)
             factors = obj.construct_factors();
@@ -80,7 +75,7 @@ classdef dynamic_classifier < classifier
                 dbn = dbn.learn_parameters([design(:,1) data]);
            
                 % create inference engine
-                obj.ie = filtering_ie(dbn);
+                p.ie = filtering_ie(dbn);
                 
             else % finite horizon                
                 
@@ -147,37 +142,36 @@ classdef dynamic_classifier < classifier
                 end
                 
                 % create inference engine
-                if isempty(obj.ie)
+                if isempty(p.ie)
                     if obj.verbose, fprintf('using Hugin inference engine\n'); end
-                    obj.ie = hugin_ie(dbn);
+                    p.ie = hugin_ie(dbn);
                 else
-                    obj.ie = obj.ie(dbn);
+                    p.ie = obj.ie(dbn);
                 end
                 
             end
                       
-            obj.dbn = dbn;
+            p.dbn = dbn;
             
        end
-       function post = test(obj,data)       
-           
-           if iscell(data), error('classifier does not take multiple datasets as input'); end
-
+       
+       function post = map(obj,data)       
+                      
            if obj.verbose, fprintf('computing marginals\n'); end
            
            data = data.X;
            
-           post = zeros([size(data,1) obj.nclasses]);
+           post = zeros([size(data,1) obj.params.nclasses]);
 
            if isinf(obj.horizon) % infinite horizon
 
                for j=1:size(post,1)
 
                    % add evidence to the inference engine
-                   obj.ie.enter_evidence([nan data(j,:)]);
+                   obj.params.ie.enter_evidence([nan data(j,:)]);
 
                    % compute marginal for first variable
-                   m = normalize(obj.ie.marginalize(1));
+                   m = normalize(obj.params.ie.marginalize(1));
 
                    post(j,:) = m.p';
                end
@@ -196,10 +190,10 @@ classdef dynamic_classifier < classifier
                for j=1:size(post,1)
 
                    % add evidence to the inference engine
-                   obj.ie.enter_evidence(dbndata(j,:));
+                   obj.params.ie.enter_evidence(dbndata(j,:));
 
                    % compute marginal for first variable
-                   m = normalize(obj.ie.marginalize(1));
+                   m = normalize(obj.params.ie.marginalize(1));
 
                    post(j,:) = m.p';
                end
@@ -214,11 +208,11 @@ classdef dynamic_classifier < classifier
         % This function should be overloaded. It is currently used 
         % to return the factors of a prespecified DBN.
         
-        if isempty(obj.dbn)
+        if isempty(obj.params.dbn)
           error('unspecified DBN');
         end
         
-        factors = obj.dbn.factors;
+        factors = obj.params.dbn.factors;
         
        end
        

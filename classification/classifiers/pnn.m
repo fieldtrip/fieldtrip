@@ -11,9 +11,6 @@ classdef pnn < classifier
 %   The FieldTrip replacement of dist.m does not work in this context!
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: pnn.m,v $
-%
 
     properties
         net; % the neural network
@@ -32,15 +29,15 @@ classdef pnn < classifier
         
       end
       
-      function obj = train(obj,data,design)
+      function p = estimate(obj,data,design)
         
-        obj.net = newpnn(data.X',design.X(:,1)',obj.spread);
+        p.net = newpnn(data.X',design.X(:,1)',obj.spread);
         
       end
       
-      function post = test(obj,data)
+      function post = map(obj,data)
         
-        post = dataset(sim(obj.net,data.X')');
+        post = dataset(sim(obj.params.net,data.X')');
       end
       
     end

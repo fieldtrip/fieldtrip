@@ -14,12 +14,9 @@ classdef gp < classifier
 
     properties
       
-      data;
-      targets;
       method = 'laplace';
       optimize = true;
       loghyper = [3.0; 0.0];
-      logmarglik;
       
     end
     
@@ -31,7 +28,7 @@ classdef gp < classifier
         
       end
       
-      function obj = train(obj,data,design)
+      function p = estimate(obj,data,design)
         
         if design.nunique > 2, error('GP only accepts binary class problems'); end
         
@@ -56,28 +53,28 @@ classdef gp < classifier
           
           % training mode
           
-          obj.data = X;
-          obj.targets = targets;
+          p.data = X;
+          p.targets = targets;
           
           if obj.optimize % optimize hyperparameters
             
             if strcmp(obj.method,'laplace')
               
-              [obj.loghyper obj.logmarglik] = minimize(obj.loghyper, 'binaryLaplaceGP', -20, 'covSEiso', 'cumGauss', obj.data, obj.targets);
+              [p.loghyper p.logmarglik] = minimize(obj.loghyper, 'binaryLaplaceGP', -20, 'covSEiso', 'cumGauss', p.data, p.targets);
               
             else % ep
               
-              [obj.loghyper obj.logmarglik] = minimize(obj.loghyper, 'binaryEPGP', -20, 'covSEiso', obj.data, obj.targets);
+              [p.loghyper p.logmarglik] = minimize(obj.loghyper, 'binaryEPGP', -20, 'covSEiso', p.data, p.targets);
               
             end
           end
          end
       end
       
-      function post = test(obj,data)
+      function post = map(obj,data)
         
-        if isinf(obj.loghyper(1)) 
-           if obj.loghyper < 0
+        if isinf(obj.params.loghyper(1)) 
+           if obj.params.loghyper < 0
             post = dataset([ones(data.nsamples,1) zeros(data.nsamples,1)]);
            else
              post = dataset([zeros(data.nsamples,1) ones(data.nsamples,1)]);
@@ -88,11 +85,11 @@ classdef gp < classifier
           
           if strcmp(obj.method,'laplace')
             
-            probs = binaryLaplaceGP(obj.loghyper, 'covSEiso', 'cumGauss', obj.data, obj.targets, data);
+            probs = binaryLaplaceGP(obj.params.loghyper, 'covSEiso', 'cumGauss', obj.params.data, obj.params.targets, data);
             
           else % ep
             
-            probs = binaryEPGP(obj.loghyper, 'covSEiso', obj.data, obj.targets, data);
+            probs = binaryEPGP(obj.params.loghyper, 'covSEiso', obj.params.data, obj.params.targets, data);
             
           end
           

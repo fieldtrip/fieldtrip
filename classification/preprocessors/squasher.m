@@ -1,18 +1,12 @@
 classdef squasher < preprocessor
 % SQUASHER squashes data between 0 and 1
 %
+% PARAMETERS:
+%  dmin; % minimum of training data
+%  dmax; % maximum of training data
+%    
 %   Copyright (c) 2009, Marcel van Gerven
-%
-%   $Log: squasher.m,v $
-%
 
-  properties
-
-    dmin; % minimum of training data
-    dmax; % maximum of training data
-    
-  end
-  
   methods
     
     function obj = squasher(varargin)
@@ -20,52 +14,28 @@ classdef squasher < preprocessor
       obj = obj@preprocessor(varargin{:});
       
     end
-    function obj = train(obj,data,design)
+    
+    function M = map(obj,U)
       
-      if iscell(data)
-        
-        for c=1:length(data)
-          
-          obj.dmax = cell(1,length(data));
-          obj.dmin = cell(1,length(data));
-          
-          for c=1:length(data)
-            
-            obj.dmin{c} = min(data{c}.X);
-            data{c} = bsxfun(@minus,data{c}.X, obj.dmin{c});
-            obj.dmax{c} = max(data{c});
-            obj.dmax{c}(obj.dmax{c} ==0) = 1;
-            
-          end
-          
-        end
-      else
-        
-        obj.dmin = min(data.X);
-        data = bsxfun(@minus,data.X, obj.dmin);
-        obj.dmax = max(data);
-        obj.dmax(obj.dmax ==0) = 1;
-        
-      end
+      M = bsxfun(@minus,U.X, obj.params.dmin);
+      M = dataset(bsxfun(@rdivide,M, obj.params.dmax));
+      
     end
     
-    function data = test(obj,data)
+    function U = unmap(obj,M)
       
-      if iscell(data)
-        
-        for c=1:length(data)
-          
-          data{c} = bsxfun(@minus,data{c}.X, obj.dmin);
-          data{c} = dataset(bsxfun(@rdivide,data{c}, obj.dmax));
-          
-        end
-        
-      else
-        
-        data = bsxfun(@minus,data.X, obj.dmin);
-        data = dataset(bsxfun(@rdivide,data, obj.dmax));
-        
-      end
+      U = bsxfun(@times,M.X, obj.params.dmax);
+      U = dataset(bsxfun(@plus,U, obj.params.dmin));
+      
+    end
+    
+    function p = estimate(obj,data,design)
+      
+      p.dmin = min(data.X);
+      X = bsxfun(@minus,data.X, obj.dmin);
+      p.dmax = max(X);
+      p.dmax(p.dmax == 0) = 1;
+      
     end
     
   end

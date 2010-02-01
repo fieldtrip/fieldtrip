@@ -20,7 +20,7 @@ classdef smlr < classifier
                       
        end
        
-       function obj = train(obj,data,design)
+       function p = estimate(obj,data,design)
                  
          nclasses = design.nunique;
          
@@ -28,13 +28,13 @@ classdef smlr < classifier
            'wdisplay', 'off', 'wmaxiter', 50', 'nlearn', 300, 'nstep', 100,...
            'amax', 1e8, 'isplot', 0, 'gamma0', 0);
 
-         obj.model = reshape(w, [data.nfeatures+1, nclasses]);
+         p.model = reshape(w, [data.nfeatures+1, nclasses]);
 
        end
 
-       function post = test(obj,data)
+       function post = map(obj,data)
 
-         [tmp, post] = calc_label([data.X ones(data.nsamples,1)], obj.model);
+         [tmp, post] = calc_label([data.X ones(data.nsamples,1)], obj.params.model);
          
          post = dataset(post);
          
@@ -43,8 +43,8 @@ classdef smlr < classifier
        function [m,desc] = getmodel(obj)
          % return the parameters wrt a class label in some shape 
          
-           m = {obj.model(2:end)'}; % ignore bias term
-           desc = {'unknown'};
+         m = mat2cell(obj.params.model(:,1:(end-1))',ones(1,size(obj.params.model(:,1:(end-1))',1)),size(obj.params.model(:,1:(end-1))',2));
+         desc = {'unknown'};
            
        end
        

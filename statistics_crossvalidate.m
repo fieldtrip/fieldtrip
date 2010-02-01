@@ -90,10 +90,15 @@ stat.prob = res;
 stat.significance = cv.significance();
 
 % get the models
-if ~cfg.compact  
+if ~cfg.compact || cfg.model
 
-  [m,desc] = cv.getmodel();
-
+  if cfg.model
+    m = cv.model;
+    desc = cv.desc;
+  else
+    [m,desc] = cv.getmodel();
+  end
+  
   for c=1:size(m,1) % iterate over parameter types
     
     if size(m,2) > 1 % transfer learning

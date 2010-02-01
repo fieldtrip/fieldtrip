@@ -69,11 +69,6 @@ classdef clfproc
           error('invalid classification procedure; check contents of clfproc');
         end
         
-        % at least one predictor at the end
-        if ~isa(clfmethods{end},'predictor')
-          error('procedure should end with a predictor');
-        end        
-
         obj.clfmethods = clfmethods;
         obj.nmethods = length(clfmethods);
        
@@ -81,7 +76,11 @@ classdef clfproc
               
        function obj = train(obj,data,design)
             % train just calls the methods' train functions in order to produce a posterior
-                             
+                           
+            if nargin<3
+              design = [];
+            end
+            
             % cast to datasets if necessary
             
             if iscell(data)
@@ -203,6 +202,58 @@ classdef clfproc
               else
                  
                  data = obj.clfmethods{c}.test(data);
+              
+              end
+              
+           end
+
+       end
+       
+       function data = untest(obj,data)
+           % test just calls the methods' untest functions in order to
+           % produce an output; note that method calling is in reversed
+           % order
+ 
+           if isempty(data)
+             data = [];
+             return;
+           end
+                    
+           % cast to datasets if necessary
+            
+            if iscell(data)
+              for c=1:length(data)
+                if ~isa(data{c},'dataset')
+                  data{c} = dataset(data{c});
+                end
+              end
+            elseif ~isa(data,'dataset')
+              data = dataset(data);
+            end
+           
+            for c=obj.nmethods:-1:1
+             
+              if iscell(obj.clfmethods{c})
+               % deal with ensemble methods
+               
+               if iscell(data) && ~isa(obj.clfmethods{c}{1},'transfer_learner')
+                  
+                  if length(data) == length(obj.clfmethods{c})
+                    for d=1:length(data)
+                      data{d} = obj.clfmethods{c}{d}.untest(data{d});
+                    end
+                  else
+                    error('cannot handle multiple datasets');
+                  end
+                  
+               else
+                 
+                 data = cellfun(@(x)(x.untest(data)),obj.clfmethods{c},'UniformOutput',false);
+               end
+               
+              else
+                 
+                 data = obj.clfmethods{c}.untest(data);
               
               end
               

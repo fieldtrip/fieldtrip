@@ -20,7 +20,7 @@ classdef rmlr < classifier
                       
        end
        
-       function obj = train(obj,data,design)
+       function p = estimate(obj,data,design)
                  
          nclasses = design.nunique;
          
@@ -28,13 +28,13 @@ classdef rmlr < classifier
            'wdisplay', 'off', 'wmaxiter', 50', 'nlearn', 300, 'nstep', 100,...
            'amax', 1e8, 'gamma0', 0);
      
-         obj.model = reshape(w, [data.nfeatures+1, nclasses]);
+         p.model = reshape(w, [data.nfeatures+1, nclasses]);
 
        end
 
-       function post = test(obj,data)
+       function post = map(obj,data)
 
-         [tmp, post] = calc_label([data.X ones(data.nsamples,1)], obj.model);
+         [tmp, post] = calc_label([data.X ones(data.nsamples,1)], obj.params.model);
          
          post = dataset(post);
          

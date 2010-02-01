@@ -26,14 +26,16 @@ classdef rnb < nb
     end
 
     methods
+      
        function obj = rnb(varargin)
                   
            obj.options = struct(varargin{:});
            
        end
-       function obj = train(obj,data,design)
+       
+       function p = estimate(obj,data,design)
  
-         obj.nclasses = design.nunique;
+         p.nclasses = design.nunique;
          
          data = data.X;
          design = design.X;
@@ -47,69 +49,71 @@ classdef rnb < nb
          testidx = prm((1+ceil(obj.options.cvfolds*size(data,1))):end);
          
          % estimate class priors
-         obj.priors = zeros(obj.nclasses,1);
-         for j=1:obj.nclasses
-           obj.priors(j) = sum(design(:,1)==j)/size(design,1);
+         p.priors = zeros(p.nclasses,1);
+         for j=1:p.nclasses
+           p.priors(j) = sum(design(:,1)==j)/size(design,1);
          end
          
-         [obj.path,obj.diagnostics] = regularize_nb(obj.options,[design(trainidx,1) data(trainidx,:)]);
+         [p.path,p.diagnostics] = regularize_nb(obj.options,[design(trainidx,1) data(trainidx,:)]);
          
          % evaluate performance of all models
          
          nfeatures = size(data,2);
-         obj.means = zeros(obj.nclasses,nfeatures);
-         obj.stds = zeros(obj.nclasses,nfeatures);
-         obj.accuracies = zeros(1,length(obj.diagnostics.activeset));
-         for i=1:length(obj.diagnostics.activeset)
+         p.means = zeros(obj.nclasses,nfeatures);
+         p.stds = zeros(obj.nclasses,nfeatures);
+         p.accuracies = zeros(1,length(p.diagnostics.activeset));
+         for i=1:length(p.diagnostics.activeset)
            
            for j=1:nfeatures
-             for k=1:obj.nclasses
-               obj.means(k,j) = obj.path{i}(k,j);
+             for k=1:p.nclasses
+               p.means(k,j) = p.path{i}(k,j);
              end
            end
            
            for j=1:nfeatures
-             for k=1:obj.nclasses
-               obj.stds(k,j) = obj.path{i}(k+obj.nclasses,j);
+             for k=1:p.nclasses
+               p.stds(k,j) = p.path{i}(k+p.nclasses,j);
              end
            end
            
-           post = obj.test(dataset(data(testidx,:)));
+           obj.params = p;
            
-           obj.accuracies(i) = validator.eval(post.X,design(testidx,1),'metric','accuracy');
+           post = obj.map(dataset(data(testidx,:)));
+           
+           p.accuracies(i) = validator.eval(post.X,design(testidx,1),'metric','accuracy');
            
          end
          
          % get best model
          
-         [a,midx] = max(obj.accuracies);
+         [a,midx] = max(p.accuracies);
          
          for j=1:nfeatures
-           for k=1:obj.nclasses
-             obj.means(k,j) = obj.path{midx}(k,j);
+           for k=1:p.nclasses
+             p.means(k,j) = p.path{midx}(k,j);
            end
          end
          
          for j=1:nfeatures
-           for k=1:obj.nclasses
-             obj.stds(k,j) = obj.path{midx}(k+obj.nclasses,j);
+           for k=1:p.nclasses
+             p.stds(k,j) = p.path{midx}(k+p.nclasses,j);
            end
          end
          
        end
        
-       function post = test(obj,data)
+       function post = map(obj,data)
          
          data = data.X;
 
-         post = zeros(size(data,1),obj.nclasses);
+         post = zeros(size(data,1),obj.params.nclasses);
          
          for m=1:size(post,1) % iterate over examples
            
-           for c=1:obj.nclasses
+           for c=1:obj.params.nclasses
              
              % compute probability
-             post(m,c) = log(obj.priors(c)) + mynansum(log(1./(sqrt(2*pi)*obj.stds(c,:)) .* exp(- (data(m,:) - obj.means(c,:)).^2./(2*obj.stds(c,:).^2))));
+             post(m,c) = log(obj.params.priors(c)) + mynansum(log(1./(sqrt(2*pi)*obj.params.stds(c,:)) .* exp(- (data(m,:) - obj.params.means(c,:)).^2./(2*obj.params.stds(c,:).^2))));
              
            end
            
@@ -118,7 +122,7 @@ classdef rnb < nb
            mx = max(post(m,:));
            
            nt = 0;
-           for c=1:obj.nclasses
+           for c=1:obj.params.nclasses
              nt = nt + exp(post(m,c) - mx);
            end
            nt = log(nt) + mx;

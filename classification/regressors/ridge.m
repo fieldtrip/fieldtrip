@@ -8,7 +8,6 @@ classdef ridge < regressor
 
     properties
         
-      model     
       lambda = 1;
       
     end
@@ -19,7 +18,7 @@ classdef ridge < regressor
          obj = obj@regressor(varargin{:});
          
        end
-       function obj = train(obj,data,design)
+       function p = estimate(obj,data,design)
         
          % add bias term
          data = [data.X ones(data.nsamples,1)];
@@ -29,20 +28,20 @@ classdef ridge < regressor
 
          R = chol(data'*data + diag(lambdas));
          
-         obj.model = R\(R'\(data'*design));
+         p.model = R\(R'\(data'*design));
          
        end
        
-       function post = test(obj,data)       
+       function post = map(obj,data)       
        
-         post = dataset([data.X ones(data.nsamples,1)] * obj.model);
+         post = dataset([data.X ones(data.nsamples,1)] * obj.params.model);
 
        end
        
        function [m,desc] = getmodel(obj)
          % return the parameters
                     
-         m = {full(obj.model(1:(end-1)))}; % ignore bias term
+         m = {full(obj.params.model(1:(end-1)))}; % ignore bias term
          desc = {'unknown'};
          
        end

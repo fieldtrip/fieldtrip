@@ -1,6 +1,7 @@
 classdef blinreg < regressor
 %BLR Bayesian linear regression with spatiotemporal interactions
 %
+% TO DO!!!!
 % TEST PROCEDURE STILL NEEDS TO BE IMPLEMENTED; CURRENTLY ALMOST CERTAINLY
 % WRONG!
 %
@@ -8,9 +9,7 @@ classdef blinreg < regressor
 %   a bias term is added to the model
 %
 % Copyright (c) 2009, Marcel van Gerven
-%
-% $Log: blinreg.m,v $
-%
+
 
     properties
 
@@ -82,6 +81,7 @@ classdef blinreg < regressor
            end                                                           
            
        end
+       
        function obj = train(obj,data,design)
            
            % some checking

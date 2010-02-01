@@ -2,26 +2,24 @@ classdef elasticnet < regressor
 %ELASTICNET using Mark Schmidt's L1General package
 %
 %   Copyright (c) 2009, Marcel van Gerven
-%
-%   $Log: elasticnet.m,v $
-%
+
 
     properties
         
-      model     
-      
       lambdaL1 = 100;
       lambdaL2 = 100;
 
     end
 
     methods
+      
        function obj = elasticnet(varargin)
           
          obj = obj@regressor(varargin{:});
          
        end
-       function obj = train(obj,data,design)
+       
+       function p = estimate(obj,data,design)
         
          data = [data.X ones(data.nsamples,1)];
         
@@ -39,20 +37,20 @@ classdef elasticnet < regressor
            fprintf('\nComputing Elastic Net Coefficients...\n');
          end
          
-         obj.model = L1GeneralProjection(penalizedFunObj,w_init,lambdasL1);
+         p.model = L1GeneralProjection(penalizedFunObj,w_init,lambdasL1);
 
        end
        
-       function post = test(obj,data)       
+       function post = map(obj,data)       
        
-         post = dataset([data.X ones(data.nsamples,1)] * obj.model);
+         post = dataset([data.X ones(data.nsamples,1)] * obj.params.model);
 
        end
        
        function [m,desc] = getmodel(obj)
          % return the parameters wrt a class label in some shape 
                     
-         m = {obj.model(2:end)'}; % ignore bias term
+         m = {obj.params.model(1:(end-1))'}; % ignore bias term
          desc = {'unknown'};
                     
        end

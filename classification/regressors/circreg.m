@@ -50,7 +50,7 @@ classdef circreg < regressor
             obj = obj@regressor(varargin{:});            
         end        
         
-        function obj = train(obj,data,design)
+        function p = estimate(obj,data,design)
             % determine intercept and regression coefficients                    
 
             if iscell(data), error('classifier does not take multiple datasets as input'); end
@@ -65,45 +65,45 @@ classdef circreg < regressor
             switch obj.mode
               
               case 'none'
-                obj = train_none(obj,data,rtheta);
+                p = train_none(obj,data,rtheta);
               case 'mean'
-                obj = train_mean(obj,data,rtheta);
+                p = train_mean(obj,data,rtheta);
               case 'concentration'
-                obj = train_concentration(obj,data,rtheta);
+                p = train_concentration(obj,data,rtheta);
               case 'mixed'
-                obj = train_mixed(obj,data,rtheta);
+                p = train_mixed(obj,data,rtheta);
               otherwise
                 error('unknown mode');
             end
             
         end
         
-        function obj = train_none(obj,X,theta)
+        function p = train_none(obj,X,theta)
           % don't regress; just estimate mean and concentration
 
           % calculate mean
           S = sum(sin(theta));
           C = sum(cos(theta));
           
-          obj.mu = angle(1i*S+C);
+          p.mu = angle(1i*S+C);
             
           % calculate concentration
           R = sqrt(C^2 + S^2)/length(theta);          
           if R < 0.53
-            obj.kappa = 2*R + R^3 + 5*R^5/6;
+            p.kappa = 2*R + R^3 + 5*R^5/6;
           elseif R >= 0.85
-            obj.kappa = 1/(R^3 - 4*R^2 + 3*R);
+            p.kappa = 1/(R^3 - 4*R^2 + 3*R);
           else
-            obj.kappa = -0.4 + 1.39*R + 0.43/(1-R);
+            p.kappa = -0.4 + 1.39*R + 0.43/(1-R);
           end
           
           if obj.verbose
-            disp(obj.loglik(X,theta));
+            disp(obj.loglik(X,theta,p));
           end
           
         end
         
-        function obj = train_mean(obj,X,theta)
+        function p = train_mean(obj,X,theta)
           % estimate mean using regressors
           
           if obj.verbose
@@ -111,16 +111,16 @@ classdef circreg < regressor
           end
           
           if isempty(obj.beta) % if not yet initialized
-            
-            obj.beta = zeros(size(X,2),1);
-            
+            p.beta = zeros(size(X,2),1);
+          else
+            p.beta = obj.beta;
           end
           
           options.Method='lbfgs';
-          b = obj.beta;
-          obj.beta = minFunc(@(b)regCreg(b(:),theta,X,obj.lambda),b(:),options);
+          b = p.beta;
+          p.beta = minFunc(@(b)regCreg(b(:),theta,X,obj.lambda),b(:),options);
           
-          u = X * obj.beta;
+          u = X * p.beta;
           lx = 2*atan(u); % link function
           S = mean(sin(theta - lx));
           C = mean(cos(theta - lx));
@@ -129,15 +129,15 @@ classdef circreg < regressor
           R = sqrt(S^2 + C^2);
           
           % set mean
-          obj.mu = angle(1i*S+C);
+          p.mu = angle(1i*S+C);
           
           % set dispersion using A inverse
           if R < 0.53
-            obj.kappa = 2*R + R^3 + 5*R^5/6;
+            p.kappa = 2*R + R^3 + 5*R^5/6;
           elseif R >= 0.85
-            obj.kappa = 1/(R^3 - 4*R^2 + 3*R);
+            p.kappa = 1/(R^3 - 4*R^2 + 3*R);
           else
-            obj.kappa = -0.4 + 1.39*R + 0.43/(1-R);
+            p.kappa = -0.4 + 1.39*R + 0.43/(1-R);
           end              
             
         end
@@ -159,32 +159,32 @@ classdef circreg < regressor
           
         end
         
-        function y = loglik(obj,X,theta)
+        function y = loglik(obj,X,theta,p)
           % log likelihood up to a constant
           
-          mus = obj.mu*ones(size(X,1),1);
-          if ~isempty(obj.beta)
-            mus = mus + 2*atan(X * obj.beta);
+          mus = p.mu*ones(size(X,1),1);
+          if ~isempty(p.beta)
+            mus = mus + 2*atan(X * p.beta);
           end
           
-          kappas = obj.kappa*ones(size(X,1),1);
+          kappas = p.kappa*ones(size(X,1),1);
           if ~isempty(obj.gamma)
             % now obj.kappa plays the role of the offset
             kappas = exp(kappas + X * obj.gamma);
           end
           
-         y = -size(X,1) * log(besseli(0,obj.kappa)) + kappas .* sum(cos(theta - mus));
+         y = -size(X,1) * log(besseli(0,p.kappa)) + kappas .* sum(cos(theta - mus));
           
         end
         
-        function theta = test(obj,data)
+        function theta = map(obj,data)
           % estimate the angle using intercept and link function
           
           data = data.X;
           
-          theta = obj.mu*ones(size(data,1),1);
-          if ~isempty(obj.beta)
-            theta = theta + 2*atan(data * obj.beta);
+          theta = obj.params.mu*ones(size(data,1),1);
+          if ~isempty(obj.params.beta)
+            theta = theta + 2*atan(data * obj.params.beta);
           end
           
           theta = dataset(theta);
@@ -194,15 +194,15 @@ classdef circreg < regressor
         function theta = sample(obj,X)
           % sample from a von Mises distribution (pp. 49 Fisher and Lee)
           
-          mus = obj.mu*ones(size(X,1),1);
-          if ~isempty(obj.beta)
-            mus = mus + 2*atan(X * obj.beta);
+          mus = obj.params.mu*ones(size(X,1),1);
+          if ~isempty(obj.params.beta)
+            mus = mus + 2*atan(X * obj.params.beta);
           end
           
-          kappas = obj.kappa*ones(size(X,1),1);
+          kappas = obj.params.kappa*ones(size(X,1),1);
           if ~isempty(obj.gamma)
             % now obj.kappa plays the role of the offset
-            kappas = exp(kappas + X * obj.gamma);
+            kappas = exp(kappas + X * obj.params.gamma);
           end
                     
           theta = zeros(size(X,1),1);

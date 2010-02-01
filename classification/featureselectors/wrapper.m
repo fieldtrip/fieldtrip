@@ -14,9 +14,6 @@ classdef wrapper < featureselector
 %   rewrite bestfirst strategy
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: wrapper.m,v $
-%
 
     properties
        
@@ -40,7 +37,7 @@ classdef wrapper < featureselector
           
         end
         
-        function obj = train(obj,data,design)
+        function p = estimate(obj,data,design)
           
           data = data.X;
           design = design.X;
@@ -87,7 +84,7 @@ classdef wrapper < featureselector
                 end
               end
               
-              obj.subset = cur;
+              p.subset = cur;
               
             case 'bestfirst'
               
@@ -151,7 +148,7 @@ classdef wrapper < featureselector
                 
               end
               
-              obj.subset = find(bitget(best,1:nfeat));
+              p.subset = find(bitget(best,1:nfeat));
               
             otherwise
               error('unknown search strategy');

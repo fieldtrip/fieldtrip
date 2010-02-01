@@ -27,7 +27,7 @@ classdef hmm < dynamic_classifier
         obj = obj@dynamic_classifier(varargin{:});
       end
       
-      function obj = train(obj,data,design)
+      function p = estimate(obj,data,design)
         
         data = data.X;
         design = design.X;
@@ -44,14 +44,14 @@ classdef hmm < dynamic_classifier
             hdata(:,((j-1)*numvar+1):((j-1)*numvar+ncont)) = data(:,((j-1)*ncont+1):(j*ncont));
           end
           
-          obj = obj.train@dynamic_classifier(dataset(hdata),dataset(design));
+          p = obj.estimate@dynamic_classifier(dataset(hdata),dataset(design));
           
         else
-          obj = obj.train@dynamic_classifier(dataset(data),dataset(design));
+          p = obj.estimate@dynamic_classifier(dataset(data),dataset(design));
         end
       end
       
-      function post = test(obj,data)
+      function post = map(obj,data)
         
         data = data.X;
         
@@ -67,10 +67,10 @@ classdef hmm < dynamic_classifier
             hdata(:,((j-1)*numvar+1):((j-1)*numvar+ncont)) = data(:,((j-1)*ncont+1):(j*ncont));
           end
           
-          post = obj.test@dynamic_classifier(dataset(hdata));
+          post = obj.map@dynamic_classifier(dataset(hdata));
           
         else
-          post = obj.test@dynamic_classifier(dataset(data));
+          post = obj.map@dynamic_classifier(dataset(data));
         end
         
         post = dataset(post);

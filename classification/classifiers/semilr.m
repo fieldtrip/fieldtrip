@@ -29,11 +29,11 @@ classdef semilr < classifier
         
       end
       
-      function obj = train(obj,data,design)
+      function p = estimate(obj,data,design)
         
         assert(any(exist('minFunc','dir'))) % external code: minFunc
         
-        obj.nclasses = design.nunique;
+        p.nclasses = design.nunique;
         
         data = data.X;
         design = design.X;
@@ -61,7 +61,7 @@ classdef semilr < classifier
         design=design(~isnan(design),:);
         
         classidxs = (1:nexamples)' + (design(:,1) - 1) .* nexamples;
-        ptargets = zeros(nexamples,obj.nclasses);
+        ptargets = zeros(nexamples,p.nclasses);
         ptargets(classidxs) = 1;
         targets = (1:nexamples)' + (design(:,1) - 1) * nexamples;
         
@@ -69,11 +69,13 @@ classdef semilr < classifier
         psz = cellfun(@length,obj.partition)+1;
         pidx = cell(1,nparts);
         for i=1:nparts
-          pidx{i}=(1+(obj.nclasses*sum(psz(1:(i-1))))):obj.nclasses*sum(psz(1:i));
+          pidx{i}=(1+(p.nclasses*sum(psz(1:(i-1))))):p.nclasses*sum(psz(1:i));
         end
         
         if isempty(obj.w)
-          obj.w = zeros(obj.nclasses,sum(psz));
+          p.w = zeros(p.nclasses,sum(psz));
+        else
+          p.w = obj.w;
         end
         
         options.Display='off';
@@ -83,23 +85,23 @@ classdef semilr < classifier
         %options.TolFun=1e-10;
         %options.TolX=1e-15;
         
-        obj.w = minFunc(@(x)semilogreg(x(:),data,targets,ptargets,pidx,psz,obj.nclasses,unlabel,obj.nu,obj.lambda),obj.w(:),options);
+        p.w = minFunc(@(x)semilogreg(x(:),data,targets,ptargets,pidx,psz,p.nclasses,unlabel,obj.nu,obj.lambda),p.w(:),options);
         
         weight=cell(1,nparts);
         for i=1:nparts
-          weight{i}=obj.w(pidx{i});
-          weight{i} = reshape(weight{i},[obj.nclasses psz(i)]);
+          weight{i}=p.w(pidx{i});
+          weight{i} = reshape(weight{i},[p.nclasses psz(i)]);
         end
         
-        obj.model = weight;
+        p.model = weight;
         
       end
       
-      function post = test(obj,data)
+      function post = map(obj,data)
         
         post=0;
         for i=1:length(obj.partition)
-          post = post+slr_classify([data.X(:,obj.partition{i}) ones(data.nsamples,1)], obj.model{i});
+          post = post+slr_classify([data.X(:,obj.partition{i}) ones(data.nsamples,1)], obj.params.model{i});
         end
         post = dataset(bsxfun(@rdivide,post,sum(post,2)));
         

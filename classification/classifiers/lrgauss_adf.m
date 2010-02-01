@@ -4,33 +4,32 @@ classdef lrgauss_adf < classifier
 %   Options:
 %   'prior' : the prior Gaussian distribution in the format
 %              prior = struct('mean',mean_vector,'cov',cov_matix)
-%           : if none uses as prior the standard Gaussian    
+%           : bias term should be added at the end of the prior
+%
+%   EXAMPLE:
+%    p=struct('mean',zeros(153,1),'cov',0.1*eye(153));
+%   [a,b,c] = test_procedure({standardizer lrgauss_adf('prior',p)},0.8);
 %
 %   SEE ALSO:
 %   lrgauss_lap
 %
-%   Copyright (c) 2008, Adriana Birlutiu
-%
-%   $Log: lrgauss_adf.m,v $
-%
+%   Copyright (c) 2010, Adriana Birlutiu
 
     properties
 
-      data;
-      targets;
-      
-      model; % the weight vector
       prior;
         
     end
 
     methods
+      
        function obj = lrgauss_adf(varargin)
                   
            obj = obj@classifier(varargin{:});
                       
        end
-       function obj = train(obj,data,design)
+       
+       function p = estimate(obj,data,design)
         
          if design.nunique ~= 2, error('LRGAUSS_ADF only accepts binary class problems'); end
 
@@ -39,31 +38,20 @@ classdef lrgauss_adf < classifier
          targets(targets == 2) = 1;
          
          if isempty(obj.prior)
-           prior = priorstandard(data.nfeatures,1);
+           pr = priorstandard(data.nfeatures+1,1);
          else
-           prior = obj.prior;
+           pr = obj.prior;
          end
          
          % training mode
-         prior = logisticgauss_adf(prior, data.X, targets);
-         obj.model = [  -prior.mean' 0; prior.mean' 0];
-         
-         obj.data = data.X;
-         obj.targets = targets;
+         pr = logisticgauss_adf(pr, [data.X ones(data.nsamples,1)], targets);
+         p.model = [  -pr.mean'; pr.mean'];
+
        end
        
-       function post = test(obj,data)
+       function post = map(obj,data)
          
-         if iscell(data)
-           post = cell(1,length(data));
-           for j=1:length(data)
-             post{j} = slr_classify([data{j}.X ones(data{j}.nsamples,1)], obj.model{j});
-           end
-         else
-           post = slr_classify([data.X ones(data.nsamples,1)], obj.model);
-         end
-         
-         post = dataset(post);
+         post = dataset(slr_classify([data.X ones(data.nsamples,1)], obj.params.model));
          
        end
        

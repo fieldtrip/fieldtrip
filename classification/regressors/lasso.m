@@ -2,25 +2,22 @@ classdef lasso < regressor
 %LASSO using Mark Schmidt's L1General package
 %
 %   Copyright (c) 2009, Marcel van Gerven
-%
-%   $Log: lasso.m,v $
-%
 
     properties
         
-      model     
-      
       lambda = 100;
       
     end
 
     methods
+      
        function obj = lasso(varargin)
           
          obj = obj@regressor(varargin{:});
          
        end
-       function obj = train(obj,data,design)
+       
+       function p = estimate(obj,data,design)
      
          data = [data.X ones(data.nsamples,1)];
          
@@ -36,20 +33,20 @@ classdef lasso < regressor
            fprintf('\nComputing LASSO Coefficients...\n');
          end
          
-         obj.model = L1GeneralProjection(funObj,w_init,lambdas);
+         p.model = L1GeneralProjection(funObj,w_init,lambdas);
 
        end
        
-       function post = test(obj,data)       
+       function post = map(obj,data)       
        
-         post = dataset([data.X ones(data.nsamples,1)] * obj.model);
+         post = dataset([data.X ones(data.nsamples,1)] * obj.params.model);
 
        end
        
        function [m,desc] = getmodel(obj)
          % return the parameters 
                     
-         m = {full(obj.model(:,1:(end-1)))}; % ignore bias term
+         m = {full(obj.params.model(:,1:(end-1)))}; % ignore bias term
          desc = {'unknown'};
          
        end

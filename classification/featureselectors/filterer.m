@@ -5,17 +5,18 @@ classdef filterer < featureselector
 %   and uses that ordering to greedily determine the 'optimal' feature set
 %   or to select the best m features.
 %
+%   PARAMETERS:
+%    criterion; % keeps track of the evaluation metric
+%    value; % filter function outputs
+%    order; % ordering of the variables
+%
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: filterer.m,v $
-%
 
   properties
   
     validator = []; % e.g., crossvalidator('procedure',clfproc({nb()}),'cvfolds',0.9);
     metric = 'accuracy'; % evaluation metric
-    criterion; % keeps track of the evaluation metric
-    
+   
     nfeatures = Inf; % maximum number of used features
         
     % filter is used to order the features
@@ -27,8 +28,6 @@ classdef filterer < featureselector
     % @anova : order according to anova test    
     filter = @mutual_information;
     
-    value; % filter function outputs
-    order; % ordering of the variables
     
   end
   
@@ -38,9 +37,10 @@ classdef filterer < featureselector
       obj = obj@featureselector(varargin{:});
       
     end
-    function obj = train(obj,data,design)
+    
+    function p = estimate(obj,data,design)
       
-      obj.nfeatures = min(obj.nfeatures,data.nfeatures);
+      maxfeatures = min(obj.nfeatures,data.nfeatures);
       
       data = data.X;
       design = design.X;
@@ -49,69 +49,43 @@ classdef filterer < featureselector
       
       if obj.verbose
         if isempty(obj.validator)
-          fprintf('selecting %d features based on %s filter\n',obj.nfeatures,sfilt);
+          fprintf('selecting %d features based on %s filter\n',maxfeatures,sfilt);
         else
           fprintf('selecting optimal features based on %s filter\n',sfilt);
         end
       end
+        
+      % compute function values
+      nfeatures = size(data,2);
+      p.value = zeros(1,nfeatures);
+      for j=1:nfeatures
+        
+        fprintf('computing %s filter for feature %d of %d\n',sfilt,j,nfeatures);
+        
+        p.value(j) = obj.filter(data(:,j),design);
+      end
       
-      if iscell(data)
-        
-        cvalue = cell(1,length(data));
-        corder = cell(1,length(data));
-        ccriterion = cell(1,length(data));
-        csubset = cell(1,length(data));
-        
-        for c=1:length(data)
-          obj = obj.train(data{c},design{c});
-          cvalue{c} = obj.value;
-          corder{c} = obj.order;
-          ccriterion{c} = obj.criterion;
-          csubset{c} = obj.subset;
-        end
-        
-        obj.value = cvalue;
-        obj.order = corder;
-        obj.criterion = ccriterion;
-        obj.subset = csubset;
-        
+      % get ordering of the features
+      [tmp,p.order] = sort(p.value,'descend');
+      
+      if isempty(obj.validator)
+        % select the best n features
+        p.subset = p.order(1:maxfeatures);
       else
-        
-        % compute function values
-        nfeatures = size(data,2);
-        obj.value = zeros(1,nfeatures);
-        for j=1:nfeatures
-          
-          fprintf('computing %s filter for feature %d of %d\n',sfilt,j,nfeatures);
-          
-          obj.value(j) = obj.filter(data(:,j),design);
-        end
-        
-        % get ordering of the features
-        [a,obj.order] = sort(obj.value,'descend');
-        
-        if isempty(obj.validator)
-          % select the best n features
-          obj.subset = obj.order(1:obj.nfeatures);
-        else
-          % use procedure to determine the best feature subset
-          [obj.subset,obj.criterion] = obj.select_features(data,design);
-        end
+        % use procedure to determine the best feature subset
+        [p.subset,p.criterion] = obj.select_features(data,design,p.order);
       end
       
     end
     
-    function [subset,criterion] = select_features(obj,data,design)
+    function [subset,criterion] = select_features(obj,data,design,features)
       % select features
       % assumes availability of evaluation function and feature
       % ordering
       
       subset = [];
       metric = -Inf;
-      
-      % use a more fancy procedure
-      features = obj.order;
-      
+            
       criterion = zeros(1,length(features));
       for f=1:min(obj.nfeatures,length(features))
         

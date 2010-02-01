@@ -19,6 +19,11 @@ classdef cspprocessor < preprocessor
 %      'powcsp' corresponds to power estimates evaluted as the sum of square of csp-filtered samples - the output is a feature matrix with observations in rows
 %      'logpowcsp' is log10(powcsp) - the output is a feature matrix with observations in rows
 %
+% 
+% PARAMETERS:
+%  filters;      % extracted filters
+%  eigenvalues;  % corresponding eigenvalues (or singular values)
+%
 %   REMARK
 %           Input data should be specified as 3-dimensional array,
 %           e.g. [observations(trials) x chan x time].In most applications,
@@ -58,10 +63,8 @@ classdef cspprocessor < preprocessor
 %                Sun S., The Extreme Energy Ratio Criterion for EEG Feature Extraction, Lecture Notes in Computer Science, vol. 5164/2008
 %
 %
-%   Copyright (c) 2008, Pawel Herman
-%
-%   $Log: cspprocessor.m,v $
-%
+%   Copyright (c) 2008, Pawel Herman, Marcel van Gerven
+
 
     properties        
 
@@ -70,64 +73,63 @@ classdef cspprocessor < preprocessor
        outputdatatype = 'powcsp';  %'rawcsp' or 'logpowcsp'
        numchan; 
        
-       filters;      % extracted filters
-       eigenvalues;  % corresponding eigenvalues (or singular values)
-       csp_pow;
-
     end
 
     methods
-        function obj = cspprocessor(varargin)
-            
-            obj = obj@preprocessor(varargin{:});                        
-            
+      
+      function obj = cspprocessor(varargin)
+        
+        obj = obj@preprocessor(varargin{:});
+        
+      end
+      
+      function p = estimate(obj,data,design)
+        
+        X = data.X;
+        
+        if isempty(obj.numchan)
+          obj.numchan = size(X,2);
         end
-        function obj = train(obj,data,design)
-
-          X = data.X;
-          
-          if isempty(obj.numchan)
-            obj.numchan = size(X,2);
-          end
-
-          if isnumeric(X) && length(size(X)) == 2  %just to make it explicit
-            X = reshape(X,size(X,1),obj.numchan,size(X,2)/obj.numchan);
-          elseif isnumeric(data) && length(size(X)) == 3   %only for simulating outside clfproc pipe
-            warning('The object used outside any CLFPROC pipe'); %#ok<WNTAG>
-          else
-            error('Unknown data format for training');
-          end
-
-          [obj.filters,obj.eigenvalues] = csp_train(X,design,obj.numpatterns,obj.filttype);
+        
+        if isnumeric(X) && length(size(X)) == 2  %just to make it explicit
+          X = reshape(X,size(X,1),obj.numchan,size(X,2)/obj.numchan);
+        elseif isnumeric(data) && length(size(X)) == 3   %only for simulating outside clfproc pipe
+          warning('The object used outside any CLFPROC pipe'); %#ok<WNTAG>
+        else
+          error('Unknown data format for training');
         end
-
-        function data = test(obj,data)
-
-          X = data.X;
-          
-          if isnumeric(X) && length(size(X)) == 2  %just to make it explicit
-            X = reshape(X,size(X,1),obj.numchan,size(X,2)/obj.numchan);
-          elseif isnumeric(X) && length(size(X)) == 3   %only for simulating outside clfproc pipe
-            warning('The object used outside any CLFPROC pipe'); %#ok<WNTAG>
-          else
-            error('Unknown data format for testing');
-          end
-
-          if strcmp(obj.outputdatatype,'rawcsp')
-            [X,obj.csp_pow] = csp_test(X,obj.filters);
-          elseif strcmp(obj.outputdatatype,'powcsp')
-            [aux,obj.csp_pow] = csp_test(X,obj.filters);
-            X = obj.csp_pow;
-          elseif strcmp(obj.outputdatatype,'logpowcsp')
-            [aux,obj.csp_pow] = csp_test(X,obj.filters);
-            X = log10(obj.csp_pow);
-          else
-            error('Output data type is not specified - it can be rawcsp,powcsp or logpowcsp');
-          end
-
-          data = dataset(X);
-          
+        
+        [p.filters,p.eigenvalues] = csp_train(X,design,obj.numpatterns,obj.filttype);
+      
+      end
+      
+      function M = map(obj,M)
+        
+        X = M.X;
+        
+        if isnumeric(X) && length(size(X)) == 2  %just to make it explicit
+          X = reshape(X,size(X,1),obj.numchan,size(X,2)/obj.numchan);
+        elseif isnumeric(X) && length(size(X)) == 3   %only for simulating outside clfproc pipe
+          warning('The object used outside any CLFPROC pipe'); %#ok<WNTAG>
+        else
+          error('Unknown data format for testing');
         end
-
+        
+        if strcmp(obj.outputdatatype,'rawcsp')
+          X = csp_test(X,obj.params.filters);
+        elseif strcmp(obj.outputdatatype,'powcsp')
+          [aux,csp_pow] = csp_test(X,obj.params.filters);
+          X = csp_pow;
+        elseif strcmp(obj.outputdatatype,'logpowcsp')
+          [aux,csp_pow] = csp_test(X,obj.params.filters);
+          X = log10(csp_pow);
+        else
+          error('Output data type is not specified - it can be rawcsp,powcsp or logpowcsp');
+        end
+        
+        M = dataset(X);
+        
+      end
+      
     end
 end

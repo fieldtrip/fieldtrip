@@ -15,6 +15,8 @@ classdef clfmethod
       
       verbose = false;
       
+      params; % the used parameters for the mapping/unmapping
+ 
     end
     
     methods                  
@@ -32,15 +34,120 @@ classdef clfmethod
       end
       
       function obj = train(obj,data,design)
-      % do nothing by default
-      
+        
+        if iscell(data) && ~isa(obj,'transfer_learner')
+          
+          params = cell(1,length(data));
+          
+          for c=1:length(data)
+            obj = obj.train(data{c},design{c});
+            params{c} = obj.params;
+          end
+          
+          obj.params = params;
+          
+        else
+          
+          obj.params = obj.estimate(data,design);
+          
+        end
       end
       
-      function out = test(obj,data)
-        % do nothing
-        out = data;
+      function data = test(obj,data)
+        
+        if iscell(data) && ~isa(obj,'transfer_learner')
+          
+          params = obj.params;
+          
+          for c=1:length(data)
+            
+            obj.params = params{c};
+            data{c} = obj.test(data{c});
+          end
+                    
+        else
+          
+          if iscell(data)
+            dims = cell(1,length(data));
+            for c=1:length(data)
+              dims{c} = data{c}.dims;
+            end
+          else
+            dims = data.dims;
+          end
+          
+          data = obj.map(data);
+          
+           if iscell(data)
+            dims = cell(1,length(data));
+            for c=1:length(data)
+              data{c}.dims = dims{c};
+              data{c}.ndims = length(dims{c});
+            end
+          else
+            data.dims = dims;
+            data.ndims = length(dims);
+          end
+          
+        end
       end
-   
-    end    
       
+      function data = untest(obj,data)
+        % invert the mapping
+        
+        dims = data.dims;
+        
+        if iscell(data) && ~isa(obj,'transfer_learner')
+          
+          params = obj.params;
+          
+          for c=1:length(data)
+            
+            obj.params = params{c};
+            data{c} = obj.test(data{c});
+          end
+          
+        else
+          
+         if iscell(data)
+            dims = cell(1,length(data));
+            for c=1:length(data)
+              dims{c} = data{c}.dims;
+            end
+          else
+            dims = data.dims;
+          end
+          
+          data = obj.unmap(data);
+          
+           if iscell(data)
+            dims = cell(1,length(data));
+            for c=1:length(data)
+              data{c}.dims = dims{c};
+              data{c}.ndims = length(dims{c});
+            end
+          else
+            data.dims = dims;
+            data.ndims = length(dims);
+          end
+          
+          
+        end
+      end
+      
+      function U = unmap(obj,M)
+        % sometimes the inverse mapping does not exist
+        
+        error('inverse mapping does not exist for class %s',class(obj));
+        
+      end
+      
+    end
+    
+    methods(Abstract)
+      
+      M = map(obj,U)   % mapping function
+      p = estimate(D); % parameter estimation
+    end
+    
 end

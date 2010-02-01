@@ -8,8 +8,6 @@ classdef l2lr < classifier
 
     properties
 
-        model; 
-        
         lambda = 1;
         
     end
@@ -20,7 +18,7 @@ classdef l2lr < classifier
            obj = obj@classifier(varargin{:});
                       
        end
-       function obj = train(obj,data,design)
+       function p = estimate(obj,data,design)
 
         if design.nunique > 2, error('L2LR expects binary class labels'); end
 
@@ -32,9 +30,9 @@ classdef l2lr < classifier
                
          % make foolproof
          if all(design(:,1) == 1)
-           obj.model = -inf;
+           p.model = -inf;
          elseif all(design(:,1) == 2)
-           obj.model = inf;
+           p.model = inf;
          else
            
            X = [ones(data.nsamples,1) data.X];
@@ -49,24 +47,24 @@ classdef l2lr < classifier
            
            funObjL2 = @(w)penalizedL2(w,funObj,lambdas);
            
-           mfOptions.Method = 'lbfgs';
-           mfOptions.display = 0;
-           obj.model = minFunc(funObjL2,w_init,mfOptions);
+           opt.Method = 'lbfgs';
+           opt.display = 0;
+           p.model = minFunc(funObjL2,w_init,opt);
        
          end
          
        end
 
-       function post = test(obj,data)
+       function post = map(obj,data)
 
-        if isinf(obj.model(1)) 
-           if obj.model < 0
+        if isinf(obj.params.model(1)) 
+           if obj.params.model < 0
             post = dataset([ones(data.nsamples,1) zeros(data.nsamples,1)]);
            else
              post = dataset([zeros(data.nsamples,1) ones(data.nsamples,1)]);
            end
          else
-           post = 1 ./ (1 + exp([ones(data.nsamples,1) data.X] * obj.model));
+           post = 1 ./ (1 + exp([ones(data.nsamples,1) data.X] * obj.params.model));
            post = dataset([post 1 - post]);
         end
          
@@ -75,7 +73,7 @@ classdef l2lr < classifier
        function [m,desc] = getmodel(obj)
          % return the parameters 
          
-         m = {obj.model(2:end)'}; % ignore bias term
+         m = {obj.params.model(2:end)'}; % ignore bias term
          desc = {'unknown'};
                     
        end

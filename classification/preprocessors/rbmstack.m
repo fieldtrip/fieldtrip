@@ -19,18 +19,15 @@ classdef rbmstack < preprocessor
 %   expectations for hidden units as outputs
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: rbmstack.m,v $
-%
 
     properties
-        model
         
-        % used to specify which layers are returned (all if empty); note
-        % that layer 1 is the visible layer!
-        
-        inlayers 
-        
+      model
+      
+      % used to specify which layers are returned (all if empty); note
+      % that layer 1 is the visible layer!
+      inlayers
+      
     end
 
     methods
@@ -42,46 +39,49 @@ classdef rbmstack < preprocessor
           
         end
         
-        function obj = train(obj,data,design)
-            % create hierarchy of rbms
-
-            % default architecture
-            if isempty(obj.model.rbms)
-           
-              rbm1 = RBM('nvisible',data.nfeatures,'nhidden',30,'nconditional',1);
-              rbm2 = RBM('nvisible',30,'nhidden',30,'nconditional',1);
-              obj.model = SRBM('rbms',{rbm1 rbm2});
+        function p = estimate(obj,data,design)
+          % create hierarchy of rbms
+          
+          % default architecture
+          if isempty(obj.model.rbms)
             
-            end
+            rbm1 = RBM('nvisible',data.nfeatures,'nhidden',30,'nconditional',1);
+            rbm2 = RBM('nvisible',30,'nhidden',30,'nconditional',1);
+            p.model = SRBM('rbms',{rbm1 rbm2});
             
-            if isempty(obj.inlayers)
-              obj.inlayers = 1:(length(obj.model.rbms)+1);
-            end
-            
-            obj.model = obj.model.train(data.X);
-            
+          end
+          
+          p.model = p.model.train(data.X);
+          
         end
         
-        function data = test(obj,data)            
+        function M = map(obj,U)            
             % propagate activations and save features as examples
         
             if isempty(obj.inlayers)
-              obj.inlayers = 1:(length(obj.model.rbms)+1);
+              obj.inlayers = 1:(length(obj.parameters.model.rbms)+1);
             end
             
-            R = cell(1,length(obj.model.rbms)+1);
-            R{1} = data.X;
-            for c=1:length(obj.model.rbms)
+            R = cell(1,length(obj.parameters.model.rbms)+1);
+            R{1} = U.X;
+            for c=1:length(obj.parameters.model.rbms)
               
-              obj.model.rbms{c}.meanfield = true;
-              R{c+1} = obj.model.rbms{c}.sample_hidden(R{c},ones(size(R{c},1),1));
+              obj.parameters.model.rbms{c}.meanfield = true;
+              R{c+1} = obj.parameters.model.rbms{c}.sample_hidden(R{c},ones(size(R{c},1),1));
               
             end
                                 
             % concatenation of reconstruction probabilities
-            data = dataset(cat(2,R{obj.inlayers}));
+            M = dataset(cat(2,R{obj.inlayers}));
             
         end
         
+        function U = unmap(obj,M)
+          
+          % move from feature activations in inlayers to the visible layer
+          error('not yet implemented');
+          
+        
+        end
     end
 end 

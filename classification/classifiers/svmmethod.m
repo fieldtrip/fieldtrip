@@ -41,9 +41,6 @@ classdef svmmethod < classifier
 %   rfda_svm.m
 % 
 % Copyright (c) 2008, Pawel Herman
-%
-% $Log: svmmethod.m,v $
-%
 
     properties
       
@@ -53,20 +50,8 @@ classdef svmmethod < classifier
       C = nan;
       validator;% = crossvalidator('procedure',clfproc({}));
       criterion = 'accuracy';
-      alpha;
-      bias;
-      wv;  %weight vector in primal form
-      margin;
-      traindata;
-      sv_model;   %struct
-      % .sv
-      % .weights
-      % .b
       ratio4estplatt = 0;     %>=0 && <=1 (0-default)
-      % if >0 then estimation is done on
-      % randomly selected subset of the data
-      platt_sigmoid = [];  %with fields .A and .B
-      
+ 
     end
     
     methods
@@ -75,30 +60,26 @@ classdef svmmethod < classifier
         obj = obj@classifier(varargin{:});
         
       end
-      function obj = train(obj,data,design)
+      function p = estimate(obj,data,design)
         % simply stores input data and design
             
         idx = data.labeled();
-         
+        
+        nclasses = design.nunique;
+        
         % remove missing data
         data = data.X(idx,:);
         design = design.X(idx,:);
         
-        if ~exist('platt_sigmoid','var')
-          obj.platt_sigmoid = [];
-          obj.platt_sigmoid.A = [];
-          obj.platt_sigmoid.B = [];
-        end
-        
-        if ~isnan(any(obj.C)) && ~isscalar(obj.C)
-          obj = optimize(obj,data,design,'variables','C','values',obj.C,'validator', ...
-            obj.validator,'criterion',obj.criterion);
-        end
-        
-        if iscell(data), error('svmmethod does not take multiple datasets as input'); end
-        
-        [tmp,tmp,idx] = unique(design(1:size(design,1),:),'rows');
-        nclasses = max(idx);
+        p.platt_sigmoid = [];
+        p.platt_sigmoid.A = [];
+        p.platt_sigmoid.B = [];
+      
+        % rewrite using optimizer
+%         if ~isnan(any(obj.C)) && ~isscalar(obj.C)
+%           obj = optimize(obj,data,design,'variables','C','values',obj.C,'validator', ...
+%             obj.validator,'criterion',obj.criterion);
+%         end
         
         if nclasses ~= 2, error('svm only makes binary classifications'); end
         
@@ -117,42 +98,46 @@ classdef svmmethod < classifier
           fprintf('regularisation parameter was set to %.2f\n',obj.C);
         end
         
-        [obj.alpha,obj.bias,obj.margin] = obj.method(data,labels,K,obj.C);
-        obj.traindata = data;
-        obj.alpha = obj.alpha.*labels;  %explicitly assign sign to alphas
+        [p.alpha,p.bias,p.margin] = obj.method(data,labels,K,obj.C);
+        p.traindata = data;
+        p.alpha = p.alpha.*labels;  %explicitly assign sign to alphas
         
         % weight vector in primal form - only for linear svm
-        obj.wv = 0;
+        p.wv = 0;
         if strcmp(obj.kernel,'linear') && ~strcmp(obj.method,'@rfda')
           for j=1:size(data,1)
-            obj.wv = obj.wv + obj.alpha(j)*data(j,:);
+            p.wv = p.wv + p.alpha(j)*data(j,:);
           end
         end
         
-        obj.sv_model.sv = obj.traindata(obj.alpha~=0,:);
-        obj.sv_model.weights = obj.alpha(obj.alpha~=0);
-        obj.sv_model.b = obj.bias;
+        p.sv_model.sv = p.traindata(p.alpha~=0,:);
+        p.sv_model.weights = p.alpha(p.alpha~=0);
+        p.sv_model.b = p.bias;
         
         % evaluation of sigmoid for platt's probabilistic outputs on a subset of training set
         if obj.ratio4estplatt > 0
+          
           [data_vld,labels_vld] = stratified_division(data,labels,obj.ratio4estplatt);
           
-          obj = estplatt(obj,data_vld,labels_vld);
+          svm_out = svm_eval(data,p.sv_model.sv,p.sv_model.weights,p.sv_model.b,obj.kernel,obj.kerparam);
+          
+          [p.platt_sigmoid.A,p.platt_sigmoid.B] = platt_sigmoidest(svm_out,labels);
+          
         end
         
-        
       end
-      function post = test(obj,data)
+      
+      function post = map(obj,data)
     
         % remove missing data
         X = data.subsample(data.labeled()).X;
                 
-        probs = svm_eval(X,obj.sv_model.sv,obj.sv_model.weights,obj.sv_model.b,obj.kernel,obj.kerparam);
+        probs = svm_eval(X,obj.params.sv_model.sv,obj.params.sv_model.weights,obj.params.sv_model.b,obj.kernel,obj.kerparam);
         
-        if ~isempty(obj.platt_sigmoid.A) && ~isempty(obj.platt_sigmoid.B)
+        if ~isempty(obj.params.platt_sigmoid.A) && ~isempty(obj.params.platt_sigmoid.B)
           
           % probabilistic outputs if platts sigmoid has been estimated
-          probs = platt_svmproboutput(probs,obj.platt_sigmoid.A,obj.platt_sigmoid.B);
+          probs = platt_svmproboutput(probs,obj.params.platt_sigmoid.A,obj.params.platt_sigmoid.B);
           post = [ 1-probs probs];
           
         else
@@ -168,32 +153,12 @@ classdef svmmethod < classifier
           
         
       end
-      
-      function obj = estplatt(obj,data,design)
-        
-        if iscell(data), error('classifier does not take multiple datasets as input'); end
-        
-        % transform elements of the design matrix to class labels
-        if unique(design(:,1))==[-1; 1]
-          labels = design(:,1);
-        elseif unique(design(:,1))==[1; 2]
-          labels = design(:,1);
-          labels(design(:,1) == 1) = -1;
-          labels(design(:,1) == 2) = 1;
-        else
-          error('Design matrix should contain labels -1,1 or 1,2');
-        end
-        
-        svm_out = svm_eval(data,obj.sv_model.sv,obj.sv_model.weights,obj.sv_model.b,obj.kernel,obj.kerparam);
-        
-        [obj.platt_sigmoid.A,obj.platt_sigmoid.B] = platt_sigmoidest(svm_out,labels);
-        
-      end
+     
       
       function [m,desc] = getmodel(obj)
         % return the parameters
         
-        m = {obj.wv}; % only one vector for svmmethod
+        m = {obj.params.wv}; % only one vector for svmmethod
         desc = {'unknown'};
         
       end

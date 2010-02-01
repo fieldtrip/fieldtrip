@@ -24,9 +24,7 @@ classdef one_against_one < classifier
     
       procedure = []; % clfproc({da()}); % the used classification procedures
       combination = 'product'; % how to combine classifier output (not how to combine data)
-    
-      nclasses;
-      
+   
     end
     
     methods
@@ -44,28 +42,29 @@ classdef one_against_one < classifier
             
       end
       
-      function obj = train(obj,tdata,tdesign)
+      function p = estimate(obj,tdata,tdesign)
           
         % transform the data such that we have a cell element for each
         % class label pair
-        obj.nclasses = tdesign.nunique;
+        p.nclasses = tdesign.nunique;
         
         % replicate the classifier
         
-        ncomp = obj.nclasses*(obj.nclasses-1)/2;
+        ncomp = p.nclasses*(p.nclasses-1)/2;
         
         if ~iscell(obj.procedure)
           procedure = obj.procedure;
-          obj.procedure = cell(1,ncomp);
+          p.procedure = cell(1,ncomp);
           for j=1:ncomp
-            obj.procedure{j} = procedure;
+            p.procedure{j} = procedure;
           end
+        else
+          p.procedure = obj.procedure;
         end
         
-       
         idx = 1;
-        for i=1:obj.nclasses
-          for j=(i+1):obj.nclasses
+        for i=1:p.nclasses
+          for j=(i+1):p.nclasses
            
             if obj.verbose
               fprintf('training class %d against class %d\n',i,j);
@@ -77,7 +76,7 @@ classdef one_against_one < classifier
             design(design == i) = 1;
             design(design == j) = 2;
             
-            obj.procedure{idx} = obj.procedure{idx}.train(tdata.subsample(didx),dataset(design));
+            p.procedure{idx} = p.procedure{idx}.train(tdata.subsample(didx),dataset(design));
         
             idx=idx+1;
             
@@ -86,27 +85,27 @@ classdef one_against_one < classifier
         
       end
       
-      function post = test(obj,data)
+      function post = map(obj,data)
         
-        cpost = cell(1,length(obj.procedure));
+        cpost = cell(1,length(obj.params.procedure));
         
         % get posteriors for all pairs
         idx = 1;
-        for i=1:obj.nclasses
-          for j=(i+1):obj.nclasses
+        for i=1:obj.params.nclasses
+          for j=(i+1):obj.params.nclasses
             
             if strcmp(obj.combination,'product')
               % use ones to allow for products of probabilities            
-              cpost{idx} = ones(data.nsamples,obj.nclasses);
+              cpost{idx} = ones(data.nsamples,obj.params.nclasses);
             else
-              cpost{idx} = zeros(data.nsamples,obj.nclasses);
+              cpost{idx} = zeros(data.nsamples,obj.params.nclasses);
             end
             
             if obj.verbose
               fprintf('testing class %d against class %d\n',i,j);
             end
             
-            p = obj.procedure{idx}.test(data);
+            p = obj.params.procedure{idx}.test(data);
             
             cpost{idx}(:,[i j]) = p.X;
             

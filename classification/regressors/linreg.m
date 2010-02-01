@@ -2,13 +2,7 @@ classdef linreg < regressor
 %LINREG linear regression method class
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: linreg.m,v $
-%
-    properties        
-        
-        model % regression coefficients        
-    end
+
     
     methods
         
@@ -17,13 +11,13 @@ classdef linreg < regressor
             obj = obj@regressor(varargin{:});            
         end        
         
-        function obj = train(obj,data,design)
+        function p = estimate(obj,data,design)
             
-            obj.model = regress(design.X,[data.X ones(data.nsamples,1)]);            
+            p.model = regress(design.X,[data.X ones(data.nsamples,1)]);            
         end
         
-        function res = test(obj,data)           
-            res = dataset([data.X ones(data.nsamples,1)] * obj.model);            
+        function res = map(obj,data)           
+            res = dataset([data.X ones(data.nsamples,1)] * obj.params.model);            
         end
  
     end

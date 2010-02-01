@@ -26,10 +26,10 @@ classdef regdif < classifier
       
     end
     
-    function obj = train(obj,data,design)
+    function p = estimate(obj,data,design)
       % simply stores input data and design
       
-      obj.nclasses = design.nunique;
+      p.nclasses = design.nunique;
       
       data = data.X;
       design = design.X;
@@ -41,7 +41,7 @@ classdef regdif < classifier
         nfeatures = size(data,2)+1;
         
         classidxs = (1:nexamples)' + (design(:,1) - 1) .* nexamples;
-        ptargets = zeros(nexamples,obj.nclasses);
+        ptargets = zeros(nexamples,p.nclasses);
         ptargets(classidxs) = 1;
         targets = (1:nexamples)' + (design(:,1) - 1) * nexamples;
         
@@ -52,13 +52,13 @@ classdef regdif < classifier
         options.MaxIter=obj.maxiter;
         options.MaxFunEvals=15000;
         
-        w =zeros(obj.nclasses,nfeatures);
+        w =zeros(p.nclasses,nfeatures);
         
         if strcmp(obj.method,'l2')
           if ~isnan(obj.model_p)
             w=obj.model_p;
           end
-          [w,obj.fx] = minFunc(@(w)logregr(w(:),[data ones(size(data,1),1)],targets,ptargets,obj.nclasses,obj.lambda),w(:),options);
+          [w,obj.fx] = minFunc(@(w)logregr(w(:),[data ones(size(data,1),1)],targets,ptargets,p.nclasses,obj.lambda),w(:),options);
         elseif strcmp(obj.method,'rov')
           %calculating the bartlett's weight as the start point
           if isnan(obj.model_p)
@@ -66,14 +66,14 @@ classdef regdif < classifier
           else
             w=obj.model_p;
           end
-          [w,obj.fx] = minFunc(@(w)regularizedlogreg(w(:),[data ones(size(data,1),1)],targets,ptargets,obj.nclasses,obj.lambda,obj.divnum),w(:),options);
+          [w,obj.fx] = minFunc(@(w)regularizedlogreg(w(:),[data ones(size(data,1),1)],targets,ptargets,p.nclasses,obj.lambda,obj.divnum),w(:),options);
         else
           if ~isnan(obj.model_p)
             w=obj.model_p;
           end
-          [w,obj.fx] = minFunc(@(w)logreg(w(:),[data ones(size(data,1),1)],targets,ptargets,obj.nclasses),w(:),options);
+          [w,obj.fx] = minFunc(@(w)logreg(w(:),[data ones(size(data,1),1)],targets,ptargets,p.nclasses),w(:),options);
         end
-        obj.model = reshape(w,obj.nclasses,nfeatures);
+        p.model = reshape(w,p.nclasses,nfeatures);
         
       else
         error('Please install the minFunc toolbox')
@@ -81,17 +81,17 @@ classdef regdif < classifier
       
     end
     
-    function post = test(obj,data)
+    function post = map(obj,data)
       
       data = data.X;
       
       if iscell(data)
         post = cell(1,length(data));
         for j=1:length(data)
-          post{j} = slr_classify([data{j} ones(size(data{j},1),1)], obj.model{j});
+          post{j} = slr_classify([data{j} ones(size(data{j},1),1)], obj.params.model{j});
         end
       else
-        post = slr_classify([data ones(size(data,1),1)], obj.model);
+        post = slr_classify([data ones(size(data,1),1)], obj.params.model);
       end
       
       post = dataset(post);

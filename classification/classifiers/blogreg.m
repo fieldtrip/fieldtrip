@@ -1,7 +1,15 @@
 classdef blogreg < classifier
 %Bayesian logistic regression with spatiotemporal interactions
 %
-% Note: 
+%
+% PARAMETERS:
+% p.prior; % the used prior
+% p.Gauss; % the EP estimate
+% p.convergence; % whether or not EP converged
+% p.logp; % approximate log model evidence
+% p.scale; % selected scale (in case of multiple scales)
+%
+% NOTE: 
 %   a bias term is added to the model
 %
 % Copyright (c) 2009, Marcel van Gerven
@@ -20,15 +28,6 @@ classdef blogreg < classifier
       
       % number of weights for gaussian quadrature
       nweights = 100;
-      
-      % approximation of the model evidence
-      logp
-
-      % estimated parameters
-      Gauss
-            
-      % whether or not EP converged
-      convergence      
       
       % dimensions of the data; can be used to generate prior
       dims = [];
@@ -81,22 +80,24 @@ classdef blogreg < classifier
            
        end
        
-       function obj = train(obj,data,design)
+       function p = estimate(obj,data,design)
                   
+         p = obj.params;
+         
          obj.dims = data.dims;
                         
          if isempty(obj.prior)
-           obj.prior = obj.create_prior(data.nfeatures);
+           p.prior = obj.create_prior(data.nfeatures);
          else           
            if obj.verbose
              fprintf('using prespecified prior\n');
-           end           
+           end      
+           p.prior = obj.prior;
          end
            
          if isempty(obj.degenerate)
            obj.degenerate = data.nsamples < data.nfeatures;
-         end
-         
+         end         
          if obj.verbose
            if obj.degenerate
              fprintf('running in degenerate mode\n');
@@ -116,39 +117,39 @@ classdef blogreg < classifier
          if isscalar(obj.scale)
            % learn model for fixed scale
            
-           obj.prior = scale_prior(obj.prior,'lambda',obj.scale);
+           p.prior = scale_prior(p.prior,'lambda',obj.scale);
            
-           if size(obj.prior,1)==data.nfeatures
+           if size(p.prior,1)==data.nfeatures
              % add bias term if not yet done
-             obj.prior(data.nfeatures+1,data.nfeatures+1) = obj.precbias;
+             p.prior(data.nfeatures+1,data.nfeatures+1) = obj.precbias;
            end
            
-           [obj.Gauss,terms,obj.logp,obj.convergence] = laplacedegenerate_ep(design,X,obj.prior, ...
+           [p.Gauss,terms,p.logp,p.convergence] = laplacedegenerate_ep(design,X,p.prior, ...
              'fraction',obj.fraction,'niter',obj.niter,'temperature',obj.temperature,'lambda',obj.scale,...
              'tol',obj.tolerance,'degenerate',obj.degenerate);
            
-         else
+          else
            
            lgp = -inf * ones(1,length(obj.scale));
            for j=1:length(obj.scale)
              
-             tprior = scale_prior(obj.prior,'lambda',obj.scale(j));
+             tprior = scale_prior(p.prior,'lambda',obj.scale(j));
              
              if size(tprior,1)==data.nfeatures
                % add bias term if not yet done
                tprior(data.nfeatures+1,data.nfeatures+1) = obj.precbias;
              end
              
-             [obj.Gauss,terms,obj.logp,obj.convergence] = laplacedegenerate_ep(design,X,tprior, ...
+             [p.Gauss,terms,p.logp,p.convergence] = laplacedegenerate_ep(design,X,tprior, ...
                'fraction',obj.fraction,'niter',obj.niter,'temperature',obj.temperature,'lambda',obj.scale(j),...
                'tol',obj.tolerance,'degenerate',obj.degenerate);
              
-             lgp(j) = obj.logp - log(obj.scale(j)); % uniform prior on log scale
+             lgp(j) = p.logp - log(obj.scale(j)); % uniform prior on log scale
              
              if lgp(j) == max(lgp)
                
-               gauss = obj.Gauss;
-               conv =  obj.convergence;
+               gauss = p.Gauss;
+               conv =  p.convergence;
                mprior = tprior;
                sc = obj.scale(j);
                
@@ -156,15 +157,15 @@ classdef blogreg < classifier
              
            end
            
-           obj.Gauss = gauss;
-           obj.convergence = conv;
-           obj.prior = mprior;
-           obj.logp = lgp;
-           obj.scale = sc;
+           p.Gauss = gauss;
+           p.convergence = conv;
+           p.prior = mprior;
+           p.logp = lgp;
+           p.scale = sc;
            
          end
                            
-         if ~obj.convergence && obj.verbose
+         if ~p.convergence && obj.verbose
            fprintf('EP did not converge\n');
          else
            fprintf('EP converged\n');
@@ -173,29 +174,31 @@ classdef blogreg < classifier
           
        end
        
-       function post = test(obj,data)       
+       function post = map(obj,data)       
          
          X = [data.X ones(data.nsamples,1)];
          
+         G = obj.params.Gauss;
+         
          % compute univariate means
-         M = X * obj.Gauss.m;
+         M = X * G.m;
          
          % compute univariate variances on the fly
          % also add the covariance for the betas to the output.
          
-         nsamples = size(obj.Gauss.A,1);
+         nsamples = size(G.A,1);
          
-         scaledA = obj.Gauss.A .* (repmat(1./obj.Gauss.diagK',nsamples,1));
-         W1 = obj.Gauss.A*scaledA';
+         scaledA = G.A .* (repmat(1./G.diagK',nsamples,1));
+         W1 = G.A*scaledA';
          % now W1 = A * diag(1./obj.Gauss.diagK) * A'
          
          % add Delta (aka hatK)
-         W1(1:(nsamples+1):numel(W1)) = W1(1:(nsamples+1):numel(W1)) + (1./obj.Gauss.hatK)';
+         W1(1:(nsamples+1):numel(W1)) = W1(1:(nsamples+1):numel(W1)) + (1./G.hatK)';
          
          W2 = X*scaledA';
          % now W2 = X * diag(1./obj.Gauss.diagK) * A'
          
-         scaledX = X .* (repmat(1./obj.Gauss.diagK',data.nsamples,1));
+         scaledX = X .* (repmat(1./G.diagK',data.nsamples,1));
          W3 = X*scaledX';
          % now W3 = X * diag(1./obj.Gauss.diagK) * X'
          
@@ -246,18 +249,19 @@ classdef blogreg < classifier
          % mean of the betas
          % variance of the betas
          %
+         
          % Note: bias term must be included in prior
-         varaux = obj.Gauss.auxC(1:(end-1)); % ignore bias term
+         varaux = obj.params.Gauss.auxC(1:(end-1)); % ignore bias term
          
          % compute variances of the auxiliary variables under the prior
-         [L,dummy,S] = chol(sparse(obj.prior),'lower');
+         [L,dummy,S] = chol(sparse(obj.params.prior),'lower');
          invA = fastinvc(L);
          varprior = full(diag(S*invA*S'));
          varprior = varprior(1:(end-1));
          
          % mean and variance of the regression coefficients
-         meanbeta = obj.Gauss.m(1:(end-1));
-         varbeta = obj.Gauss.diagC(1:(end-1));
+         meanbeta = obj.params.Gauss.m(1:(end-1));
+         varbeta = obj.params.Gauss.diagC(1:(end-1));
          
          % model is posterior variance divided by prior variance of the
          % auxiliary variables; chose minus because of interpretation
@@ -296,11 +300,11 @@ classdef blogreg < classifier
          end
          
          if nargin < 2, M = 1; end
-         n = size(obj.prior,1);
+         n = size(obj.params.prior,1);
          
          % get samples for auxiliary variables
-         u = sample_from_prior(zeros(n,1),obj.prior,M);
-         v = sample_from_prior(zeros(n,1),obj.prior,M);
+         u = sample_from_prior(zeros(n,1),obj.params.prior,M);
+         v = sample_from_prior(zeros(n,1),obj.params.prior,M);
          
          % get samples for betas
          B = normrnd(zeros(n,M),sqrt(u.^2 + v.^2));

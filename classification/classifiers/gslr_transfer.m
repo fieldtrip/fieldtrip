@@ -21,10 +21,8 @@ classdef gslr_transfer < classifier & transfer_learner
 
     properties
         
-        model
-        options
-        diagnostics
-      
+      options
+        
     end
 
     methods
@@ -39,7 +37,8 @@ classdef gslr_transfer < classifier & transfer_learner
 
         
        end
-       function obj = train(obj,data,design)
+       
+       function p = estimate(obj,data,design)
            % simply stores input data and design
            
            % transfer learning
@@ -48,15 +47,15 @@ classdef gslr_transfer < classifier & transfer_learner
              cdata{c} = [design{c}.X data{c}.X];
            end
 
-           [obj.model,obj.diagnostics] = slr_learn_transfer(obj.options,cdata);
+           [p.model,p.diagnostics] = slr_learn_transfer(obj.options,cdata);
               
        end
        
-       function post = test(obj,data)       
+       function post = map(obj,data)       
                           
          post = cell(1,length(data));
          for j=1:length(data)
-           post{j} = dataset(slr_classify([data{j}.X ones(data{j}.nsamples,1)], obj.model{j}));
+           post{j} = dataset(slr_classify([data{j}.X ones(data{j}.nsamples,1)], obj.params.model{j}));
          end
          
        end
@@ -67,10 +66,10 @@ classdef gslr_transfer < classifier & transfer_learner
          % the columns represent datasets
         
            % return model for all classes           
-           m = cell(size(obj.model{1},1),length(obj.model));
+           m = cell(size(obj.params.model{1},1),length(obj.params.model));
            for c=1:size(m,1)
              for j=1:size(m,2)
-               m{c,j} = full(obj.model{j}(c,1:(end-1))); % ignore bias term
+               m{c,j} = full(obj.params.model{j}(c,1:(end-1))); % ignore bias term
              end
            end          
            

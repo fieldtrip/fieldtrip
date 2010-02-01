@@ -26,16 +26,16 @@ classdef static_classifier < classifier
     end
 
     methods
+      
        function obj = static_classifier(varargin)
                   
            obj = obj@classifier(varargin{:});
                       
        end
-       function obj = train(obj,data,design)
+       
+       function p = estimate(obj,data,design)
             
-            if iscell(data), error('classifier does not take multiple datasets as input'); end            
-
-            obj.nclasses = design.nunique; 
+            p.nclasses = design.nunique; 
 
             data = data.X;
             design = design.X;
@@ -53,29 +53,28 @@ classdef static_classifier < classifier
                            
             % create inference engine
             if isempty(obj.engine)
-                obj.ie = hugin_ie(bn);
+                p.ie = hugin_ie(bn);
             else
-                obj.ie = obj.engine(bn);
+                p.ie = obj.engine(bn);
             end
                                       
-            obj.bn = bn;
+            p.bn = bn;
             
        end
-       function post = test(obj,data)       
+       
+       function post = map(obj,data)       
            
-           if iscell(data), error('classifier does not take multiple datasets as input'); end
-
            data = data.X;
            
-           post = zeros([size(data,1) obj.nclasses]);
+           post = zeros([size(data,1) obj.params.nclasses]);
            
            for j=1:size(post,1)
 
                % add evidence to the inference engine
-               obj.ie.enter_evidence([nan data(j,:)]);
+               obj.params.ie.enter_evidence([nan data(j,:)]);
 
                % compute marginal for first variable
-               m = normalize(obj.ie.marginalize(1));
+               m = normalize(obj.params.ie.marginalize(1));
 
                post(j,:) = m.p';
            end
@@ -88,11 +87,11 @@ classdef static_classifier < classifier
         % This function should be overloaded. It is currently used 
         % to return the factors of a prespecified DBN.
         
-        if isempty(obj.bn)
+        if isempty(obj.params.bn)
           error('unspecified BN');
         end
         
-        factors = obj.bn.factors;
+        factors = obj.params.bn.factors;
         
        end
        

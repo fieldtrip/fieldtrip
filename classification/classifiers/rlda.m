@@ -29,9 +29,9 @@ classdef rlda < classifier
         
       end
       
-      function obj = train(obj,data,design)
+      function p = estimate(obj,data,design)
         
-        obj.nclasses = design.nunique;
+        p.nclasses = design.nunique;
         
         if design.nunique~=2, error ('only valid for two-class problems'); end
         
@@ -42,7 +42,10 @@ classdef rlda < classifier
         design(design == 2) = 1;
         
         lambda = obj.C;
-        obj.SV = data;
+        p.SV = data;
+        
+        p.alpha = 0;
+        p.bias = 0;
         
         if strcmp(obj.kernel_type,'rbf')
           K = rbf_ker(data,obj.kernel_parameter);
@@ -50,8 +53,6 @@ classdef rlda < classifier
           K = data * data';
         else
           disp('Unknown kernel type');
-          obj.alpha = 0;
-          obj.bias = 0;
           return
         end
         
@@ -64,28 +65,28 @@ classdef rlda < classifier
         plusfactor = 2*ellminus/(ell*ellplus);
         minusfactor = 2*ellplus/(ell*ellminus);
         B = diag(rescale) - (plusfactor * yplus) * yplus' - (minusfactor * yminus) * yminus';
-        obj.alpha = (B*K + lambda*eye(ell,ell))\design;
-        obj.bias = 0.25*(obj.alpha'*K*rescale)/(ellplus*ellminus);
+        p.alpha = (B*K + lambda*eye(ell,ell))\design;
+        p.bias = 0.25*(p.alpha'*K*rescale)/(ellplus*ellminus);
         
         
       end
-      function post = test(obj,data)
+      function post = map(obj,data)
         
         data = data.X;
         
         if strcmp(obj.kernel_type,'rbf')
-          Ktest = rbf_prim(obj.SV,data,obj.kernel_parameter);
+          Ktest = rbf_prim(obj.params.SV,data,obj.kernel_parameter);
         elseif strcmp(obj.kernel_type,'linear')
-          Ktest = obj.SV * data';
+          Ktest = obj.params.SV * data';
         else
           disp('Unknown kernel type');
           post = [];
           return
         end
         
-        sgns = sign(Ktest'*obj.alpha - obj.bias);
+        sgns = sign(Ktest'*obj.params.alpha - obj.params.bias);
         
-        post = zeros(size(sgns,1),obj.nclasses);
+        post = zeros(size(sgns,1),obj.params.nclasses);
         post(sgns == -1,1) = 1;
         post(sgns == 1,2) = 1;
         

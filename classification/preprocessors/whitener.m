@@ -1,42 +1,43 @@
 classdef whitener < preprocessor
 %WHITENER whitens the data
 %
-%   data is assumed to be standardized
+% NOTE:
+% data is assumed to be standardized!
 %
-%   Copyright (c) 2009, Marcel van Gerven
+% Copyright (c) 2009, Marcel van Gerven
 %
-
-    properties
-      
-      rdim; % number of components
-      
-      wmat;
-           
-    end
-
+   
     methods
-    
-        function obj = whitener(varargin)
-           
-          obj = obj@preprocessor(varargin{:});
-          
-        end
+      
+      function obj = whitener(varargin)
         
-        function obj = train(obj,data,design)
-
-          if isempty(obj.rdim)
-            obj.rdim = data.nfeatures;
-          end
-          
-          obj.wmat = dataset.whitening_transform(data.X,obj.rdim);
-                    
-        end
+        obj = obj@preprocessor(varargin{:});
         
-        function data = test(obj,data)
-
-          data = dataset(data.X*obj.wmat');
-           
-        end
-       
+      end
+      
+      function M = map(obj,U)
+        % whiten
+        
+        M = dataset(U.X*obj.params.wmat');
+          
+      end
+      
+      function U = unmap(obj,M)
+        % unwhiten
+        
+        U = dataset(M.X*obj.params.uwmat');
+        
+      end
+      
+      function p = estimate(obj,data,design)
+        
+        [E, D] = eig(cov(data.X,1));
+        
+        p.wmat = sqrt(D) \ E';
+        p.uwmat = E * sqrt(D);
+        
+      end
+      
     end
+
 end

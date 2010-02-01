@@ -4,20 +4,15 @@ classdef lrgauss_lap < classifier
 %   Options:
 %   'prior' : the prior Gaussian distribution in the format
 %              prior = struct('mean',mean_vector,'cov',cov_matix)
-%           : if none maximizes only the likelihood    
 %
 %   SEE ALSO:
 %   lrgauss_adf
 %
-%   Copyright (c) 2008, Adriana Birlutiu
-%
-%   $Log: lrgauss_lap.m,v $
-%
+%   Copyright (c) 2010, Adriana Birlutiu
+
 
     properties
 
-      data;
-      model; % the weight vector
       prior;
         
     end
@@ -28,7 +23,7 @@ classdef lrgauss_lap < classifier
            obj = obj@classifier(varargin{:});
                       
        end
-       function obj = train(obj,data,design)
+       function p = estimate(obj,data,design)
           
          if design.nunique ~= 2, error('LRGAUSS_LAP only accepts binary class problems'); end
                   
@@ -36,24 +31,21 @@ classdef lrgauss_lap < classifier
          targets(targets == 1) = -1;
          targets(targets == 2) = 1;
          
+         if isempty(obj.prior)
+           pr = priorstandard(data.nfeatures+1,1);
+         else
+           pr = obj.prior;
+         end
+         
          % training mode
-         x = logisticgauss_lap(obj.prior, data.X, targets);
-         obj.model = [ [x' 0]; [-x' 0] ];
+         x = logisticgauss_lap(pr, [data.X ones(data.nsamples,1)], targets);
+         p.model = [ x'; -x' ];
          
        end
        
-       function post = test(obj,data)
-         
-         if iscell(data)
-           post = cell(1,length(data));
-           for j=1:length(data)
-             post{j} = slr_classify([data{j}.X ones(data{j}.nsamples,1)], obj.model{j});
-           end
-         else
-           post = slr_classify([data.X ones(data.nsamples,1)], obj.model);
-         end
-         
-         post = dataset(post);
+       function post = map(obj,data)
+        
+         post = dataset(slr_classify([data.X ones(data.nsamples,1)], obj.params.model));
          
        end
        

@@ -2,7 +2,12 @@ classdef dataset
 % DATASET data object to facilitate handling of input and output data
 % 
 % data is represented as a matrix but original dimensions are retained
-% through data.dims
+% through data.dims.
+%       
+% (un)whiten; create uncorrelated components with unity variance
+% whitening.wmat;   % whitening matrix
+% whitening.uwmat;  % dewhitening matrix
+% whitening.rdim;   % dimensionality reduction
 %
 % Copyright (c) 2010, Marcel van Gerven
 %
@@ -17,15 +22,8 @@ classdef dataset
       nsamples;   % number of examples
       nfeatures;  % number of features
     
-      % standardization parameters
-      mu;     % means
-      sigma;  % standard deviations
-      
-      % whitening parameters
-      wmat;   % whitening matrix
-      uwmat;  % dewhitening matrix
-      rdim;   % dimensionality reduction
-    
+      transforms; % transformation parameters
+                
     end
     
     methods                  
@@ -80,115 +78,6 @@ classdef dataset
         % retrieve dataset as a subset of the features indexed by linear idx
   
         Y = dataset(obj.X(:,idx));
-        
-      end
-      
-      function Y = standardize(obj)
-        % return standardized dataset (mean subtracted and SD of one)
-        
-        if ~isempty(obj.mu)
-          warning('dataset has already been standardized');
-          Y = obj;
-          return
-        end
-              
-        D = obj.X;
-        
-        mu = mynanmean(D);        
-        sigma = mynanstd(D);
-        sigma(sigma==0) = 1; % bug fix
-        
-        D = bsxfun(@minus,D,mu);
-        D = bsxfun(@rdivide,D,sigma);
-        
-        Y = obj;
-        Y.X = D;
-        Y.dims = size(Y.X);        
-        Y.ndims = length(Y.dims);
-        Y.nsamples = Y.dims(1);        
-        Y.nfeatures = prod(Y.dims(2:end));
-        
-        Y.mu = mu;
-        Y.sigma = sigma;
-      
-      end
-
-      function Y = unstandardize(obj)
-        % return dataset while undoing standardization
-        
-        if isempty(obj.mu)
-          warning('data has already been unstandardized');
-          Y = obj;
-          return
-        end
-        
-        D = obj.X;        
-        D = bsxfun(@times,D,obj.sigma);
-        D = bsxfun(@plus,D,obj.mu);
-        
-        Y = obj;
-        Y.X = D;
-        Y.dims = size(Y.X);        
-        Y.ndims = length(Y.dims);
-        Y.nsamples = Y.dims(1);        
-        Y.nfeatures = prod(Y.dims(2:end));
-      
-        Y.mu = [];
-        Y.sigma = [];
-        
-      end
-      
-      function Y = whiten(obj,rdim)
-        % Sort the eigenvalues and select subset, and whiten
-        
-        % standardization required if not yet performed
-        obj = obj.standardize();
-        
-        if ~isempty(obj.wmat)
-          warning('dataset has already been whitened');
-          Y = obj;
-          return
-        end
-        
-        if nargin < 2
-          rdim = obj.nfeatures;
-        end
-        
-        [wmat,uwmat] = dataset.whitening_transform(obj.X,rdim);
-        
-        Y = obj;
-        Y.X = obj.X*wmat';
-        Y.dims = size(Y.X);
-        Y.ndims = length(Y.dims);
-        Y.nsamples = Y.dims(1);
-        Y.nfeatures = prod(Y.dims(2:end));
-        
-        Y.wmat = wmat;
-        Y.uwmat = uwmat;
-        Y.rdim = rdim;
-        
-      end
-      
-      function Y = unwhiten(obj)
-        
-        if isempty(obj.wmat)
-          warning('data has already been unwhitened');
-          Y = obj;
-          return;
-        end
-        
-        Y = obj;
-        Y.X = obj.X*obj.uwmat';
-        Y.dims = size(Y.X);        
-        Y.ndims = length(Y.dims);
-        Y.nsamples = Y.dims(1);        
-        Y.nfeatures = prod(Y.dims(2:end));
-        
-        Y.wmat = [];
-        Y.uwmat = [];
-        Y.rdim = [];
-        
-        Y = Y.unstandardize();
         
       end
       
@@ -276,56 +165,6 @@ classdef dataset
         
       end
       
-      
-    end
-    
-    methods(Static=true)
-      
-       function [wmat,uwmat] = whitening_transform(X,rdim)
-        
-         [E, D] = eig(cov(X,1));
-         
-         firstEig = 1;
-         
-         maxLastEig = sum (diag (D) > 1e-7); % tolerance
-       
-         if rdim > maxLastEig % tolerance
-           error('dimension should be reduced to %d due to the singularity of covariance matrix\n',maxLastEig-firstEig+1);
-         end
-         
-         eigenvalues = sort(diag(D),'descend');
-         
-         oldDimension = size(X,2);
-         
-         if rdim < oldDimension
-           lowerLimitValue = (eigenvalues(rdim) + eigenvalues(rdim + 1)) / 2;
-         else
-           lowerLimitValue = eigenvalues(oldDimension) - 1;
-         end
-         
-         lcol = diag(D) > lowerLimitValue;
-         
-         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-         % Drop the larger eigenvalues
-         if firstEig > 1
-           higherLimitValue = (eigenvalues(firstEig - 1) + eigenvalues(firstEig)) / 2;
-         else
-           higherLimitValue = eigenvalues(1) + 1;
-         end
-         hcol = diag(D) < higherLimitValue;
-         
-         % Combine the results from above
-         sel = lcol & hcol;
-         
-         % Select the colums which correspond to the desired range
-         % of eigenvalues.
-         E = E(:,sel);
-         D = D(sel,sel);
-         
-         wmat = sqrt(D) \ E';
-         uwmat = E * sqrt(D);
-         
-      end
       
     end
     

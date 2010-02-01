@@ -15,6 +15,14 @@ classdef kernelmethod < classifier
 % REQUIRES:
 % Farquhar toolbox
 %
+% PARAMETERS:
+% weights
+% f
+% J
+% traindata
+% primal  
+%
+%
 % EXAMPLE:
 %
 % % definition of the classification procedure 
@@ -37,13 +45,7 @@ properties
   p1 = nan;
   p2 = nan;
   C = nan;
-  
-  weights;
-  f;
-  J;
-  traindata;
-  primal;
-  
+    
 end
 
 methods
@@ -54,7 +56,7 @@ methods
     
   end
   
-  function obj = train(obj,data,design)
+  function p = estimate(obj,data,design)
     % simply stores input data and design
   
     if design.nunique ~= 2, error('l2svm only makes binary classifications'); end
@@ -95,16 +97,16 @@ methods
       fprintf('regularization parameter was set to %.2g\n',obj.C);
     end
     
-    [obj.weights,obj.f,obj.J] = obj.method(K,targets,obj.C,'verb',-1);
-    obj.traindata = data;
+    [p.weights,p.f,p.J] = obj.method(K,targets,obj.C,'verb',-1);
+    p.traindata = data;
     
     % weights in primal form
-    obj.primal = 0;
-    for j=1:size(data,1), obj.primal = obj.primal + obj.weights(j)*data(j,:); end
+    p.primal = 0;
+    for j=1:size(data,1), p.primal = p.primal + p.weights(j)*data(j,:); end
     
   end
   
-  function post = test(obj,data)
+  function post = map(obj,data)
     
     data = data.X;
     
@@ -121,16 +123,16 @@ methods
     switch lower(obj.kernel)
       
       case {'poly','npoly'};     % polynomial
-        K = compKernel(data,obj.traindata,obj.kernel,obj.p1,obj.p2);
+        K = compKernel(data,obj.params.traindata,obj.kernel,obj.p1,obj.p2);
         
       case {'rbf','nrbf'};       % Radial basis function, a.k.a. gaussian
-        K = compKernel(data,obj.traindata,obj.kernel,obj.p1);
+        K = compKernel(data,obj.params.traindata,obj.kernel,obj.p1);
         
       otherwise
-        K = compKernel(data,obj.traindata,obj.kernel);
+        K = compKernel(data,obj.params.traindata,obj.kernel);
     end
     
-    probs = K * obj.weights(1:end-1) + obj.weights(end);
+    probs = K * obj.params.weights(1:end-1) + obj.params.weights(end);
     
     % post is just the sign and does not have a probabilistic interpretation
     post = zeros(size(probs,1),2);
@@ -144,7 +146,7 @@ methods
   function [m,desc] = getmodel(obj)
     % return the parameters wrt a class label in some shape
     
-    m = {obj.primal}; % only one vector for kernelmethod
+    m = {obj.params.primal}; % only one vector for kernelmethod
     desc = {'unknown'};
     
   end

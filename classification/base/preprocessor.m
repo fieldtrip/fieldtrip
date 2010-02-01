@@ -6,60 +6,28 @@ classdef preprocessor < clfmethod
 % this data to a new representation. E.g., it can construct novel features or
 % performs a principal components analysis, etc. 
 % 
-% Subclasses should implement the train and test functions 
-% (and possibly getmodel function) and must be able to act on 
-% cell arrays as well as normal data matrices.
-%
-% PROPERTIES
-%   'prefun'  : custom preprocessing function that can be added
-%   'verbose' : output comment if true
-%
-% EXAMPLE
-% A custom preprocessor can be constructed on the fly as follows:
-% 
-%     obj = preprocessor('function',@myfunction);
+% Subclasses should implement the estimate, map
+% and (possibly) unmap functions. These learn the parameters, 
+% apply the transform and (possibly) the inverse transform, respectively.
 %
 % SEE ALSO
 % doc preprocessors
 %
 % Copyright (c) 2008, Marcel van Gerven
-%
-% $Log: preprocessor.m,v $
-%
-    properties         
-        prefun;
-    end
 
-    methods
-        function obj = preprocessor(varargin)
-         % fun is a custom function
-         
-            % parse options 
-            for i=1:2:length(varargin)
-              if ismember(varargin{i},fieldnames(obj))
-                obj.(varargin{i}) = varargin{i+1};
-              end
-            end
-            
+  methods
+   
+    function obj = preprocessor(varargin)
+      
+      % parse options
+      for i=1:2:length(varargin)
+        if ismember(varargin{i},fieldnames(obj))
+          obj.(varargin{i}) = varargin{i+1};
         end
-        
-        function obj = train(obj,data,design)
-        end
-        
-        function data = test(obj,data)
-            
-            if iscell(data)
-                                
-               for c=1:length(data)
-                   data{c} = obj.test(data{c});
-               end
-               
-            else
-                data = dataset(obj.prefun(data.X));
-            end
-        end
-        
-        
-        
+      end
+      
     end
+    
+  end
+  
 end

@@ -23,15 +23,14 @@ classdef gslr < classifier
 
     properties
         
-      model
       options
-      diagnostics
       
       lcurve = false; % lcurve approach
       
     end
     
     methods
+      
       function obj = gslr(varargin)
         
         obj.options = [];
@@ -51,12 +50,13 @@ classdef gslr < classifier
         end
         
       end
-      function obj = train(obj,data,design)
+      
+      function p = estimate(obj,data,design)
         
         data = data.X;
         design = design.X;
         
-        [obj.model,obj.diagnostics] = slr_learn(obj.options,[design(:,1) data]);
+        [p.model,p.diagnostics] = slr_learn(obj.options,[design(:,1) data]);
         
         if isfield(obj.options,'lcurve') && obj.options.lcurve
           
@@ -67,15 +67,15 @@ classdef gslr < classifier
           if isinf(obj.diagnostics.lambdas(1))
             
             % ignore first lambda (inf)
-            lcurve = full(obj.diagnostics.lambdas(2:end));
+            lcurve = full(p.diagnostics.lambdas(2:end));
             [idx,fit,err] = lcurve_inflection(lcurve(lcurve ~= 0)); % ignore trailing zeros
-            obj.model = obj.diagnostics.path{idx+1};
+            p.model = p.diagnostics.path{idx+1};
             
           else
             
-            lcurve = full(obj.diagnostics.lambdas);
+            lcurve = full(p.diagnostics.lambdas);
             [idx,fit,err] = lcurve_inflection(lcurve(lcurve ~= 0)); % ignore trailing zeros
-            obj.model = obj.diagnostics.path{idx};
+            p.model = p.diagnostics.path{idx};
             
           end
           
@@ -91,9 +91,9 @@ classdef gslr < classifier
         
       end
       
-      function post = test(obj,data)
+      function post = map(obj,data)
         
-        post = dataset(slr_classify([data.X ones(data.nsamples,1)], obj.model));
+        post = dataset(slr_classify([data.X ones(data.nsamples,1)], obj.params.model));
         
       end
       
@@ -103,9 +103,9 @@ classdef gslr < classifier
         
         %m = full(obj.model(:,1:(end-1))); % ignore bias term
         
-        m = cell(size(obj.model,1),1);
-        for c=1:size(obj.model,1)
-          m{c} = obj.model(c,1:(end-1));
+        m = cell(size(obj.params.model,1),1);
+        for c=1:size(obj.params.model,1)
+          m{c} = obj.params.model(c,1:(end-1));
         end
         
         desc = {'unknown'};

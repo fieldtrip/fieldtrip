@@ -2,38 +2,32 @@ classdef leastsquares < regressor
 %LEASTSQUARES regressor
 %
 %   Copyright (c) 2009, Marcel van Gerven
-%
-%   $Log: leastsquares.m,v $
-%
 
-    properties
-        
-      model     
-      
-    end
 
     methods
-       function obj = leastsquares(varargin)
+       
+      function obj = leastsquares(varargin)
           
          obj = obj@regressor(varargin{:});
          
-       end
-       function obj = train(obj,data,design)
+      end
+      
+      function p = estimate(obj,data,design)
          
-         obj.model = [data.X ones(data.nsamples,1)]\design.X;
+         p.model = [data.X ones(data.nsamples,1)]\design.X;
          
        end
        
-       function post = test(obj,data)       
+       function post = map(obj,data)       
            
-         post = dataset([data.X ones(data.nsamples,1)]) * obj.model;
+         post = dataset([data.X ones(data.nsamples,1)] * obj.params.model);
 
        end
        
        function [m,desc] = getmodel(obj)
          % return the parameters 
                     
-         m = {full(obj.model(1:(end-1)))}; % ignore bias term
+         m = {full(obj.params.model(1:(end-1)))}; % ignore bias term
          desc = {'unknown'};
          
        end

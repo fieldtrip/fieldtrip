@@ -17,19 +17,13 @@ classdef da < classifier
 
     properties
 
-        % model
-        data;
-        design;
-        
         % options
-        disfun = 'diagLinear';
-        
-        % diagnostics
-        coeff;
+        disfun = 'diagLinear';        
         
     end
 
     methods
+      
        function obj = da(varargin)
        
            % check availability
@@ -40,16 +34,18 @@ classdef da < classifier
            obj = obj@classifier(varargin{:});
                       
        end
-       function obj = train(obj,data,design)
+       
+       function p = estimate(obj,data,design)
             % simply stores input data and design
             
-            obj.data = data;
-            obj.design = design;
+            p.data = data;
+            p.design = design;
                        
        end
-       function post = test(obj,data)       
+       
+       function post = map(obj,data)       
 
-           [class,err,post,logp,obj.coeff] = classify(data.X,obj.data.X,obj.design.X,obj.disfun);                    
+           [class,err,post] = classify(data.X,obj.params.data.X,obj.params.design.X,obj.disfun);                    
        
            post = dataset(post);
        end

@@ -4,6 +4,9 @@ classdef mulreg < regressor
 %   refers to linear regression with multiple responses. Other regressors
 %   can be used by overloading the regressors property
 %
+%   PARAMETERS: 
+%   regressors % regressor objects    
+%
 %   EXAMPLE:
 %   
 %   mulreg('regressors',{gpregressor() gpregressor()},'prefun',@(x)([sin(x) cos(x)]),'postfun',@(x)(angle(1i*x(:,1)+x(:,2))));
@@ -13,13 +16,11 @@ classdef mulreg < regressor
 %   angle.
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: mulreg.m,v $
-%
+
     properties        
         
-        regressors % regressor objects
-        
+        regressors % regressor objects    
+      
         ndep % number of dependent variables (relevant n columns of design matrix)
         
         prefun  % optional preprocessing of design matrix to create multiple inputs
@@ -33,36 +34,37 @@ classdef mulreg < regressor
             obj = obj@regressor(varargin{:});            
         end        
         
-        function obj = train(obj,data,design)
-            
-            
+        function p = estimate(obj,data,design)
+                        
             if isempty(obj.ndep)
-                obj.ndep = design.nfeatures;
-            end                
+              p.ndep = design.nfeatures;
+            else
+              p.ndep = obj.ndep;
+            end
             
             if isa(obj.prefun,'function_handle')
                 design = obj.prefun(design.X);
             end
             
             if isempty(obj.regressors)
-              obj.regressors = cell(1,obj.ndep);
+              p.regressors = cell(1,obj.ndep);
               for c=1:obj.ndep
-                obj.regressors{c} = linreg();
+                p.regressors{c} = linreg();
               end
+            else
+              p.regressors = obj.regressors;
             end
             
             for c=1:obj.ndep
-                obj.regressors{c} = obj.regressors{c}.train(data.X,dataset(design(:,c)));
+                p.regressors{c} = p.regressors{c}.train(data,dataset(design.X(:,c)));
             end
         end
         
-        function res = test(obj,data)                 
+        function res = map(obj,data)                 
           
-          data = data.X;
-          
-          res = zeros(size(data,1),obj.ndep);
+          res = zeros(data.nsamples,obj.params.ndep);
           for j=1:obj.ndep
-            res(:,j) = obj.regressors{j}.test(data);
+            res(:,j) = obj.params.regressors{j}.test(data);
           end
           
           if isa(obj.postfun,'function_handle')

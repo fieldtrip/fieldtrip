@@ -23,8 +23,7 @@ classdef one_against_rest < classifier
     properties        
       
       procedure = clfproc({da()}); % the used classification procedure
-      nclasses;
-      
+  
     end
     
     methods
@@ -38,9 +37,9 @@ classdef one_against_rest < classifier
         
       end
       
-      function obj = train(obj,tdata,tdesign)
+      function p = estimate(obj,tdata,tdesign)
         
-         obj.nclasses = tdesign.nunique;
+         p.nclasses = tdesign.nunique;
        
          tdata = tdata.X;
          tdesign = tdesign.X(:,1);
@@ -48,12 +47,12 @@ classdef one_against_rest < classifier
         % transform the data such that we have a cell element for each
         % class label pair
         
-        data = cell(1,obj.nclasses);
-        design = cell(1,obj.nclasses);
+        data = cell(1,p.nclasses);
+        design = cell(1,p.nclasses);
         
         % create new data representation
         
-        for i=1:obj.nclasses
+        for i=1:p.nclasses
           
           didx = (tdesign == i);
           
@@ -67,10 +66,12 @@ classdef one_against_rest < classifier
         % replicate the classifier
         if ~iscell(obj.procedure)
           procedure = obj.procedure;
-          obj.procedure = cell(1,length(data));
+          p.procedure = cell(1,length(data));
           for j=1:length(data)
-            obj.procedure{j} = procedure;
+            p.procedure{j} = procedure;
           end
+        else
+          p.procedure = obj.procedure;
         end
         
         for j=1:length(data)
@@ -79,22 +80,22 @@ classdef one_against_rest < classifier
             fprintf('training class %d against rest\n',j);
           end
           
-          obj.procedure{j} = obj.procedure{j}.train(dataset(data{j}),dataset(design{j}));
+          p.procedure{j} = p.procedure{j}.train(dataset(data{j}),dataset(design{j}));
         end
         
       end
       
-      function post = test(obj,data)
+      function post = map(obj,data)
              
         % get posteriors for all pairs
-        post = zeros(data.nsamples,obj.nclasses);
-        for i=1:obj.nclasses
+        post = zeros(data.nsamples,obj.params.nclasses);
+        for i=1:obj.params.nclasses
           
           if obj.verbose
             fprintf('testing class %d against rest\n',i);
           end
           
-          tpost = obj.procedure{i}.test(data);
+          tpost = obj.params.procedure{i}.test(data);
           post(:,i) = tpost.X(:,2);
         end
         

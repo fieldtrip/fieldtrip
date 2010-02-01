@@ -5,6 +5,7 @@
 % This code requires at least Matlab distribution 7.6.0.324 (R2008a)
 % 
 % Copyrights (C) 2008
+% Marcel van Gerven
 % Intelligent Systems (http://www.ru.is/ml)
 % FC Donders Centre (http://www.ru.nl/fcdonders/)
 % Radboud University Nijmegen, The Netherlands
@@ -50,12 +51,13 @@
 % out the examples folder or use the help function to the methods.
 % 
 % SEE ALSO:
-% validator.m
-% preprocessor.m
-% featureselector.m
-% classifier.m
-% regressor.m
-% reconstructor.m
+% base
+% validators
+% preprocessors
+% featureselectors
+% classifiers
+% regressors
+% reconstructors
 % 
 % TO DO
 % 
@@ -83,3 +85,13 @@
 %   getmodel
 % - test validator.getmodel for transfer learners
 % - automate recompilation of mex files
+% - create visualizer class
+% - IMPLEMENT BLINREG
+% - remove dataset overkill?
+% - use separate check_data procedure in clfproc?
+% - rewrite blogreg_transfer such that it calls blogreg immediately
+% - replace libsvm code by bioinformatics toolbox svm code
+% - check dynamic_classifier and static_classifier code and derivates
+% - removed lvq classifier
+% - can we do away with .params and operate on obj immediately? / change
+%   clfmethods to handle classes?

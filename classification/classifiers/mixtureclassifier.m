@@ -7,9 +7,7 @@ classdef mixtureclassifier < static_classifier
 %   components equals the number of classes
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: mixtureclassifier.m,v $
-%
+
 
     properties
         mixture; % number of mixture components
@@ -21,18 +19,19 @@ classdef mixtureclassifier < static_classifier
            obj = obj@static_classifier(varargin{:});
            
        end
-       function obj = train(obj,data,design)
+       
+       function p = estimate(obj,data,design)
   
          if isempty(obj.mixture), obj.mixture = design.nunique; end
          
          % data must accommodate hidden variable
-         obj = obj.train@static_classifier(dataset([data.X nan(data.nsamples,1)]),design.X);
+         p = obj.estimate@static_classifier(dataset([data.X nan(data.nsamples,1)]),design);
          
        end
        
-       function post = test(obj,data)
+       function post = map(obj,data)
 
-         post = obj.test@static_classifier(dataset([data.X nan(data.nsamples,1)]));
+         post = obj.map@static_classifier(dataset([data.X nan(data.nsamples,1)]));
        
        end
 

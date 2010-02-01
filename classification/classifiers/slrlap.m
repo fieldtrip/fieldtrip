@@ -20,22 +20,22 @@ classdef slrlap < classifier
                       
        end
        
-       function obj = train(obj,data,design)
+       function p = estimate(obj,data,design)
                  
          if design.nunique ~= 2, error('SLRLAP expects binary class labels'); end
 
          design = design.X -1; % zero based
          
-         obj.model = slr_learning(design, [data.X ones(data.nsamples,1)], @linfun,...
+         p.model = slr_learning(design, [data.X ones(data.nsamples,1)], @linfun,...
            'reweight', 'OFF', 'nlearn', 300, 'nstep', 100,...
            'wdisplay', 'off', 'wmaxiter', 50, 'amax', 1e8);
          
 
        end
 
-       function post = test(obj,data)
+       function post = map(obj,data)
 
-         [tmp, post] = calc_label([data.X ones(data.nsamples,1)], [zeros(data.nfeatures+1,1) obj.model]);
+         [tmp, post] = calc_label([data.X ones(data.nsamples,1)], [zeros(data.nfeatures+1,1) obj.params.model]);
          
          post = dataset(post);
          
@@ -44,7 +44,7 @@ classdef slrlap < classifier
        function [m,desc] = getmodel(obj)
          % return the parameters wrt a class label in some shape 
          
-           m = {obj.model(2:end)'}; % ignore bias term
+           m = {obj.params.model(1:(end-1))'}; % ignore bias term
            desc = {'unknown'};
            
        end

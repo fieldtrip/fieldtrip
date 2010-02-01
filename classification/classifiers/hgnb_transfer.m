@@ -25,39 +25,41 @@ classdef hgnb_transfer < classifier & transfer_learner
   end
 
   methods
+    
     function obj = hgnb_transfer(varargin)
 
       obj = obj@classifier(varargin{:});
 
     end
-    function obj = train(obj,data,design)
+    
+    function p = estimate(obj,data,design)
 
-      obj.nclasses = data{1}.nunique;
+      p.nclasses = design{1}.nunique;
       
       ntasks = length(data);
 
       nfeatures = data{1}.nfeatures;
 
-      obj.means = cell(1,ntasks);
-      obj.stds  = cell(1,ntasks);
+      p.means = cell(1,ntasks);
+      p.stds  = cell(1,ntasks);
 
       for c=1:ntasks
         
         data{c} = data{c}.X;
         design{c} = design{c}.X;
         
-        obj.means{c} = zeros(obj.nclasses,nfeatures);
-        obj.stds{c} = zeros(obj.nclasses,nfeatures);
+        p.means{c} = zeros(p.nclasses,nfeatures);
+        p.stds{c} = zeros(p.nclasses,nfeatures);
       end
 
       % estimate class priors by pooling over subjects
-      obj.priors = zeros(obj.nclasses,1);
-      for k=1:obj.nclasses
+      p.priors = zeros(p.nclasses,1);
+      for k=1:p.nclasses
         for c=1:ntasks
-          obj.priors(k) = obj.priors(k) + sum(design{c}(:,1)==k);
+          p.priors(k) = p.priors(k) + sum(design{c}(:,1)==k);
         end
       end
-      obj.priors = obj.priors ./ sum(obj.priors);
+      p.priors = p.priors ./ sum(p.priors);
 
       alldata   = cat(1,data{:});
       alldesign = cat(1,design{:});
@@ -65,7 +67,7 @@ classdef hgnb_transfer < classifier & transfer_learner
       % iterate over features and classes
       for j=1:nfeatures
 
-        for k=1:obj.nclasses
+        for k=1:p.nclasses
 
           % compute per subject examples
           ns = zeros(1,ntasks);
@@ -108,20 +110,20 @@ classdef hgnb_transfer < classifier & transfer_learner
 
           for c=1:ntasks
 
-            obj.means{c}(k,j) = (ys(c)./sigmas2(c) + y/tau2) / (1./sigmas2(c) + 1/tau2);
+            p.means{c}(k,j) = (ys(c)./sigmas2(c) + y/tau2) / (1./sigmas2(c) + 1/tau2);
 
 %             obj.stds{c}(k,j) = sqrt(sigmas2(c));
-            obj.stds{c}(k,j) = sqrt(sigma2);
+            p.stds{c}(k,j) = sqrt(sigma2);
 
             % BUGFIX: handle zero SD
-            obj.stds{c}(obj.stds{c} ==0) = 1e-20;
+            p.stds{c}(p.stds{c} ==0) = 1e-20;
           end
 
         end
       end
     end
 
-    function post = test(obj,data)
+    function post = map(obj,data)
 
       ntasks = length(data);
 
@@ -130,23 +132,23 @@ classdef hgnb_transfer < classifier & transfer_learner
 
         data{c} = data{c}.X;
         
-        post{c} = nan(size(data{c},1),obj.nclasses);
+        post{c} = nan(size(data{c},1),obj.params.nclasses);
 
         for m=1:size(post{c},1) % iterate over examples
 
-          for k=1:obj.nclasses
+          for k=1:obj.params.nclasses
 
-            conditional = 1./(sqrt(2*pi)*obj.stds{c}(k,:)) .* exp(- (data{c}(m,:) ...
-              - obj.means{c}(k,:)).^2./(2*obj.stds{c}(k,:).^2));
+            conditional = 1./(sqrt(2*pi)*obj.params.stds{c}(k,:)) .* exp(- (data{c}(m,:) ...
+              - obj.params.means{c}(k,:)).^2./(2*obj.params.stds{c}(k,:).^2));
 
             % degenerate cases
-            if ~obj.priors(k) || any(isinf(conditional)) || ~all(conditional)
+            if ~obj.params.priors(k) || any(isinf(conditional)) || ~all(conditional)
               post{c}(m,k) = 0;
               break
             end
 
             % compute probability
-            post{c}(m,k) = log(obj.priors(k)) + mynansum(log(conditional));
+            post{c}(m,k) = log(obj.params.priors(k)) + mynansum(log(conditional));
 
           end
 
@@ -171,11 +173,16 @@ classdef hgnb_transfer < classifier & transfer_learner
 
     end
     
-    function m = getmodel(obj)
+    function [m,desc] = getmodel(obj)
       % return the parameters
-
-        % return model for all classes; i.e., their means
-        m = {obj.means}; % ignore bias term
+        
+        m = cell(size(obj.params.means{1},1),length(obj.params.means));
+        for c=1:size(m,1)
+          for j=1:size(m,2)
+            m{c,j} = full(obj.params.means{j}(c,:)); % ignore bias term
+          end
+        end
+        
         desc = {'unknown'};
            
     end

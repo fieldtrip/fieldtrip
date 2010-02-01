@@ -4,24 +4,14 @@ classdef featureselector < clfmethod
 % During operation, the featureselector takes data and
 % produces a reduced dataset with (typically) a smaller number of features.
 %
-% OPTIONS
+% PARAMETERS:
 %   'subset'    : the subset which can be set manually using this class
-%
-% Subclasses should implement the train and/or test functions and possibly
-% getmodel.
 %
 % SEE ALSO
 % doc featureselectors
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: featureselector.m,v $
-%
-    properties
-      
-      subset = []; % the feature subset that is to be used
-      
-    end
+   
 
     methods
       
@@ -36,27 +26,20 @@ classdef featureselector < clfmethod
               
       end
       
-      function data = test(obj,data)
+      function data = map(obj,data)
         
         if obj.verbose
-          fprintf('using %d out of %d features\n',numel(obj.subset),data.nfeatures);
+          fprintf('using %d out of %d features\n',numel(obj.params.subset),data.nfeatures);
         end
         
-        if iscell(data)
-          
-          for c=1:length(data)
-            data{c} = data{c}.subset(obj.subset{c});
-          end
-        else
-          data = data.subset(obj.subset);
-        end
+        data = data.subset(obj.params.subset);
         
       end
       
-      function [model,desc] = getmodel(obj,label)
+      function [model,desc] = getmodel(obj)
         % return used subset
         
-        model = {obj.subset};
+        model = {obj.params.subset};
         desc = {'indices of the used features'};
         
       end
