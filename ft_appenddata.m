@@ -159,7 +159,7 @@ elseif catlabel
   Nch(1) = numel(data.label);
   for i=2:Ndata
     Nch(i,1)   = numel(varargin{i}.label);
-    data.label = [data.label; varargin{i}.label];
+    data.label = cat(1, data.label(:), varargin{i}.label(:));
   end
 
   for j=1:Ntrial
