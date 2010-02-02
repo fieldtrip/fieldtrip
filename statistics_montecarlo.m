@@ -23,8 +23,9 @@ function [stat, cfg] = statistics_montecarlo(cfg, dat, design)
 %   cfg.design           = design matrix
 %   cfg.numrandomization = number of randomizations, can be 'all'
 %   cfg.correctm         = apply multiple-comparison correction, 'no', 'max', cluster', 'bonferoni', 'holms', 'fdr' (default = 'no')
-%   cfg.alpha            = critical value for rejecting the null-hypothesis (default = 0.05)
+%   cfg.alpha            = critical value for rejecting the null-hypothesis per tail (default = 0.05) 
 %   cfg.tail             = -1, 1 or 0 (default = 0)
+%   cfg.correcttail      = correct p-values or alpha-values when doing a two-sided test, 'alpha','prob' or 'no' (default = 'no')
 %   cfg.ivar             = number or list with indices, independent variable(s)
 %   cfg.uvar             = number or list with indices, unit variable(s)
 %   cfg.wvar             = number or list with indices, within-cell variable(s)
@@ -38,7 +39,7 @@ function [stat, cfg] = statistics_montecarlo(cfg, dat, design)
 % value per cluster.
 %   cfg.clusterstatistic = how to combine the single samples that belong to a cluster, 'maxsum', 'maxsize', 'wcm' (default = 'maxsum')
 %   cfg.clusterthreshold = method for single-sample threshold, 'parametric', 'nonparametric_individual', 'nonparametric_common' (default = 'parametric')
-%   cfg.clusteralpha     = for either parametric or nonparametric thresholding (default = 0.05)
+%   cfg.clusteralpha     = for either parametric or nonparametric thresholding per tail (default = 0.05)
 %   cfg.clustercritval   = for parametric thresholding (default is determined by the statfun)
 %   cfg.clustertail      = -1, 1 or 0 (default = 0)
 %
@@ -104,7 +105,7 @@ if ~isfield(cfg, 'ivar'),                cfg.ivar     = 'all';           end
 if ~isfield(cfg, 'uvar'),                cfg.uvar     = [];              end
 if ~isfield(cfg, 'cvar'),                cfg.cvar     = [];              end
 if ~isfield(cfg, 'wvar'),                cfg.wvar     = [];              end
-if ~isfield(cfg, 'correctp'),            cfg.correctp = 'no';            end % for the number of tails in a two-sided test
+if ~isfield(cfg, 'correcttail'),         cfg.correcttail = 'no';         end % for the number of tails in a two-sided test
 if ~isfield(cfg, 'randomseed'),          cfg.randomseed = 'yes';         end
 if ~isfield(cfg, 'precondition'),        cfg.precondition = [];          end
 
@@ -118,6 +119,18 @@ if strcmp(cfg.correctm, 'cluster')
 else
   % these options only apply to clustering, to ensure appropriate configs they are forbidden when _not_ clustering
   cfg = checkconfig(cfg, 'unused', {'clusterstatistic', 'clusteralpha', 'clustercritval', 'clusterthreshold', 'clustertail', 'neighbours'});
+end
+
+% for backward compatibility and other warnings relating correcttail
+if isfield(cfg,'correctp') && strcmp(cfg.correctp,'yes')
+  warning('cfg.correctp has been renamed to cfg.correcttail and the options have been changed')
+  disp('setting cfg.correcttail to ''prob''')
+  cfg.correcttial = 'prob';
+  cfg = rmfield(cfg,'correctp');
+elseif isfield(cfg,'correctp') && strcmp(cfg.correctp,'no')
+  cfg = checkconfig(cfg, 'renamed', {'correctp', 'correcttail'});
+elseif strcmp(cfg.correctial,'no') && cfg.tail==0 && cfg.alpha==0.05
+  warning('doing a two-sided test without correcting p-values or alpha-level, p-values and alpha-level will reflect one-sided tests per tail')
 end
 
 % for backward compatibility
@@ -317,8 +330,11 @@ end
 % achieved by multiplying the probability with a factor of two, prior to
 % thresholding it wich cfg.alpha.  The advantage of this solution is that
 % it results in a p-value that corresponds with a parametric probability.
-if strcmp(cfg.correctp, 'yes') && cfg.tail==0
+% Below both options are realized
+if strcmp(cfg.correcttail, 'prob') && cfg.tail==0
   stat.prob = stat.prob .* 2;
+elseif strcmp(cfg.correcttail, 'alpha') && cfg.tail==0
+  cfg.alpha = cfg.alpha / 2;
 end
 
 switch lower(cfg.correctm)
