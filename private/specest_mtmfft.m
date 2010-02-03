@@ -1,7 +1,7 @@
+function [out, state] = specest_mtmfft(data, fsample, varargin) %maybe this should be called tapered fft as it can take any taper???
 
-%currently assumes that keep trials and keep tapers 
+%currently assumes that keep trials and keep tapers
 %data is in channels by samples
-function [out] = specest_mtmfft(data, fsample, varargin) %maybe this should be called tapered fft as it can take any taper???
 
 state         = keyval('state',         varargin);    if isempty(state),      state       = [];  end
 pad           = keyval('pad',           varargin);    if isempty(pad),        pad        = 'maxperlen'; end  %keep using maxperlen?
@@ -10,29 +10,54 @@ output        = keyval('output',        varargin);    if isempty(output),     ou
 taper         = keyval('taper',         varargin);    if isempty(taper),      taper      = 'dpss'; end
 tapsmofrq     = keyval('tapsmofrq',     varargin);    if isempty(tapsmofrq),  error('must specify number of tapers to use'); end
 
-%only power spectrum for now
-if isequal(output, 'pow')
-    powflg = 1;
-    fftflg = 0;
-elseif isequal(output, 'fourier') 
-    powflg = 0;
-    fftflg = 1;
+[nchan, numdatbns] = size(dat);
+
+% sheck whether the state can be reused
+options = varargin;
+if isfield(state.options) && ~isequal(state.options, options)
+  state = [];
 end
 
-%we only have a single trial!!! Check the state variable to see if the
-%current trial is the same length as the previous trial.
+% set up the state
+if isempty(state)
 
-numdatbns = size(data,2);
+  switch taper
+    case 'dpss'
+      % create a sequence of DPSS (Slepian) tapers
+      % ensure that the input arguments are double precision
+      tap = double_dpss(numdatbns,numdatbns*(tapsmofrq./fsample))';
+      % remove the last taper
+      tap = tap(1:(end-1), :);
 
-% if cfg.pad is 'maxperlen', this is realized here:
-if isequal(pad, 'maxperlen')
-  pad = numdatbns./ fsample;
+    case 'sine'
+      tap = sine_taper(numdatbns, numdatbns*(tapsmofrq./fsample))';
+
+    case 'alpha'
+      error('not yet implemented');
+
+    otherwise
+      % create the taper and ensure that it is normalized
+      tap = window(taper, nsample);
+      tap = tap ./ norm(tap);
+  end % switch taper
+
+  pad = zeros(nchan, padding-numdatbns);
+
 else
-  % check that the specified padding is not too short
-  if pad<(numdatbns/fsample)
-    error('the padding that you specified is shorter than the longest trial in the data');
-  end
+  tap = state.tap;
+  pad = state.pad;
+end % if previous state applies
+
+
+
+numtap = size(tap,1);
+
+if (numtap < 1)
+  error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz', numdatbns/fsample, tapsmofrq, fsample/numdatbns));
+elseif (numtap < 2) && strcmp(taper, 'dpss')
+  fprintf('WARNING: using only one taper for specified smoothing\n');
 end
+
 numsmp = pad * fsample; % this used to be "cfg.pad .* data.fsample"
 numsgn = size(data,1);
 % doing the computation
@@ -41,71 +66,45 @@ boi     = boilim(1):boilim(2);
 numboi  = size(boi,2);
 foi     = (boi-1) ./ pad;
 
-if isequal(output, 'pow'),    powspctrm     = zeros(numsgn,numboi);   end
-if isequal(output,'fourier'), fourierspctrm = complex(zeros(numsgn,numboi)); end
+% determine the time and frequency resolution
+dt = 1 ./ fsample;
+df = 1 ./ (nsample+npad)/fsample;
+
+time = ...;
+freq = (1:(nsample+npad)) * df - df;
 
 % trials are of equal length, compute the set of tapers only once . check
 % the current number of data bins against the state variable!!!
-
-if strcmp(taper, 'dpss')
-    % create a sequence of DPSS (Slepian) tapers
-    % ensure that the input arguments are double precision
-    tap = double_dpss(numdatbns,numdatbns*(tapsmofrq./fsample))';
-    elseif strcmp(taper, 'sine')
-    tap = sine_taper(numdatbns, numdatbns*(tapsmofrq./fsample))';
-    else
-    % create a single taper according to the window specification as a
-    % replacement for the DPSS (Slepian) sequence
-    tap = window(cfg.taper, numdatbns)';
-    tap = tap./norm(tap);
-    % this function always throws away the last taper of the Slepian sequence, so add a dummy taper
-    tap(2,:) = nan;
-end
-
-numtap = size(tap,1) - 1;
-
-if (numtap < 1)
-error(sprintf(...
-  'datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',...
-  numdatbns/fsample, tapsmofrq, fsample/numdatbns));
-elseif (numtap < 2) && strcmp(taper, 'dpss')
-fprintf('WARNING: using only one taper for specified smoothing\n');
-end
 
 pad = zeros(1,numsmp - numdatbns);
 cumsumcnt = numdatbns; %???
 numtap = size(tap,1) - 1;
 cumtapcnt = numtap;
 
+% pre-allocate memory that will contain the result
+spectrum = complex(zeros(numtap,numsgn,numboi));
 
 for taplop = 1:numtap
 
-    autspctrmacttap = complex(zeros(numsgn,numboi));
-    for sgnlop = 1:numsgn
-        dum = fft([data(sgnlop,:) .* tap(taplop,:) , pad],[],2);
-        autspctrmacttap(sgnlop,:) = dum(boi);
-    end
-    if taplop == 1
-        fprintf('nfft: %d samples, taper length: %d samples, %d tapers\n',length(dum),size(tap,2),numtap);
-    end
-    if powflg
-        powdum = 2 .* (autspctrmacttap .* conj(autspctrmacttap)) ./ numsmp; %cf Numercial Receipes 13.4.9
-        powspctrm(:,:) = powdum;
-    end
-    if fftflg
-        fourierdum = (autspctrmacttap) .* sqrt(2 ./ numsmp); %cf Numercial Receipes 13.4.9
-        fourierspctrm(:,:) = fourierdum;
-    end
+  for sgnlop = 1:numsgn
+    dum = fft([data(sgnlop,:) .* tap(taplop,:), pad], [], 2);
+    spectrum(taplop,sgnlop,:) = dum(boi);
+  end
+
+  if taplop == 1
+    fprintf('nfft: %d samples, taper length: %d samples, %d tapers\n',length(dum),size(tap,2),numtap);
+  end
 
 end % taplop
 
-if powflg, out = powspctrm; end
-if fftflg, out = fourierspctrm; end
-%add crsspctrm at later point
-
-state.cumsumcnt = cumsumcnt;
-state.cumtapcnt  = cumtapcnt;
-
+% remember the state for the next call
+if isempty(state)
+  state.options = options;
+  state.tap     = tap;
+  state.pad     = pad;
+  state.cumsumcnt = cumsumcnt;
+  state.cumtapcnt = cumtapcnt;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION ensure that the first two input arguments are of double
@@ -114,9 +113,6 @@ state.cumtapcnt  = cumtapcnt;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [tap] = double_dpss(a, b, varargin);
 tap = dpss(double(a), double(b), varargin{:});
-
-
-
 
 
 %     if csdflg

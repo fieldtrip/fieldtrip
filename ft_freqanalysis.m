@@ -60,13 +60,75 @@ cfg = checkconfig(cfg, 'renamedval',  {'method', 'convol', 'mtmconvol'});
 % select trials of interest
 if ~isfield(cfg, 'trials'),   cfg.trials = 'all';  end % set the default
 if ~strcmp(cfg.trials, 'all')
-    fprintf('selecting %d trials\n', length(cfg.trials));
-    data = selectdata(data, 'rpt', cfg.trials);  
-    if isfield(data, 'cfg') % try to locate the trl in the nested configuration
-      cfg.trlold = findcfg(data.cfg, 'trlold');
-      cfg.trl    = findcfg(data.cfg, 'trl');
-    end
+  fprintf('selecting %d trials\n', length(cfg.trials));
+  data = selectdata(data, 'rpt', cfg.trials);
+  if isfield(data, 'cfg') % try to locate the trl in the nested configuration
+    cfg.trlold = findcfg(data.cfg, 'trlold');
+    cfg.trl    = findcfg(data.cfg, 'trl');
+  end
 end
 
-% call the corresponding function
-[freq] = feval(sprintf('ft_freqanalysis_%s',lower(cfg.method)), cfg, data);
+if true
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % HERE THE OLD IMPLEMENTATION STARTS
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  [freq] = feval(sprintf('ft_freqanalysis_%s',lower(cfg.method)), cfg, data);
+
+else
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % HERE THE NEW IMPLEMENTATION STARTS
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  % do the bookkeeping that is required for the input data
+  % chansel = ...;
+
+  % do the bookkeeping that is required for the computation
+  offset    = data.offset;
+  trllength = zeros(1, ntrials);
+
+  for trllop=1:ntrials
+    trllength(i) = size(data.trial{trllop}, 2);
+  end
+
+  if strcmp(cfg.padding, 'maxperlen')
+    padding = max(trllength);
+    cfg.padding = padding/data.fsample;
+  else
+    padding = cfg.padding*data.fsample;
+    if padding<max(trllength)
+      error('the specified padding is too short');
+    end
+  end
+
+  % these don't change over trials
+  options = {'fsample', data.fsample, 'padding', padding};
+
+  % do the bookkeeping that is required for the output data
+  % ...
+
+  state = [];
+  for trllop=1:ntrials
+
+    dat = data.trial{trllop}(chansel,:);
+
+    % do the spectral decompisition of this trial
+    switch cfg.method
+      case 'mtmfft'
+        [spectrum, state] = specest_mtmfft(   dat, options{:}, 'state', state, 'offset', offset(trllop));
+      case 'mtmconvol'
+        [spectrum, state] = specest_mtmconvol(dat, options{:}, 'state', state, 'offset', offset(trllop));
+      case 'wltconvol'
+        [spectrum, state] = specest_wltconvol(dat, options{:}, 'state', state, 'offset', offset(trllop));
+      otherwise
+        error('method %s is unknown', cfg.method);
+    end % switch
+
+    % do the bookkeping to fit the spectral decomposition in the correct
+    % output representation
+
+    % ...
+
+  end % for ntrials
+
+end % if old or new implementation
+
