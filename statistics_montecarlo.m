@@ -125,11 +125,11 @@ end
 if isfield(cfg,'correctp') && strcmp(cfg.correctp,'yes')
   warning('cfg.correctp has been renamed to cfg.correcttail and the options have been changed')
   disp('setting cfg.correcttail to ''prob''')
-  cfg.correcttial = 'prob';
+  cfg.correcttail = 'prob';
   cfg = rmfield(cfg,'correctp');
 elseif isfield(cfg,'correctp') && strcmp(cfg.correctp,'no')
   cfg = checkconfig(cfg, 'renamed', {'correctp', 'correcttail'});
-elseif strcmp(cfg.correctial,'no') && cfg.tail==0 && cfg.alpha==0.05
+elseif strcmp(cfg.correcttail,'no') && cfg.tail==0 && cfg.alpha==0.05
   warning('doing a two-sided test without correcting p-values or alpha-level, p-values and alpha-level will reflect one-sided tests per tail')
 end
 
