@@ -3,7 +3,7 @@
 %data is in channels by samples
 function [out] = specest_mtmfft(data, fsample, varargin) %maybe this should be called tapered fft as it can take any taper???
 
-state         = keyval('state',         varargin);    if isempty(state),      stae       = [];  end
+state         = keyval('state',         varargin);    if isempty(state),      state       = [];  end
 pad           = keyval('pad',           varargin);    if isempty(pad),        pad        = 'maxperlen'; end  %keep using maxperlen?
 foilim        = keyval('foilim',        varargin);    if isempty(foilim),     foilim     = [0 fsample/2]; end
 output        = keyval('output',        varargin);    if isempty(output),     output     = 'pow'; end
@@ -104,7 +104,7 @@ if fftflg, out = fourierspctrm; end
 %add crsspctrm at later point
 
 state.cumsumcnt = cumsumcnt;
-stae.cumtapcnt  = cumtapcnt;
+state.cumtapcnt  = cumtapcnt;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
