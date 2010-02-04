@@ -21,7 +21,6 @@
  * 
  */
 
-#include <mach/task.h>
 #include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -33,6 +32,12 @@
 #include "mex.h"
 #include "matrix.h"
 #include "platform.h"
+
+#if defined (PLATFORM_OSX)
+#include <mach/task.h>
+#elif defined(PLATFORM_WIN32)
+#elif defined(PLATFORM_LINUX)
+#endif
 
 #define FREE(x) {if (x) {free(x); x=NULL;}}
 
@@ -68,12 +73,34 @@ int getmem (unsigned int *rss, unsigned int *vs) {
 #elif defined(PLATFORM_WIN32)
 int getmem (unsigned int *rss, unsigned int *vs) {
 		/* no idea how to get the memory information on a windows computer */
+		rss = 0;
+		vs = 0;
 		return -1;
 }
 #elif defined(PLATFORM_LINUX)
 int getmem (unsigned int *rss, unsigned int *vs) {
-		/* here it should read the information from /proc/self/memoinfo */
-		return -1;
+		FILE *fp;
+		if ((fp = fopen("/proc/self/statm", "r")) == NULL) {
+				mexErrMsgTxt("could not open /proc/self/statm");
+				return -1;
+		}
+		/* read the information from /proc/self/statm
+		   size       total program size
+		   resident   resident set size
+		   share      shared pages
+		   text       text (code)
+		   lib        library
+		   data       data/stack
+		   dt         dirty pages (unused in Linux 2.6)
+		 */
+		if (fscanf(fp, "%u%u", vs, rss )!=2) {
+				mexWarnMsgTxt("could not read all elements from /proc/self/statm");
+		}
+		/* these seem to be in 4096 byte blocks */
+		*vs  = (*vs)  * 4096; 
+		*rss = (*rss) * 4096; 
+		fclose(fp);
+		return 0;
 }
 #endif
 
