@@ -905,13 +905,6 @@ elseif strcmp(cfg.keepleadfield, 'no') && isfield(source, 'leadfield')
   source = rmfield(source, 'leadfield');
 end
 
-% % add filters to output, as cell-array containing cell-arrays (each cell being a dip(i).filter)
-% if strcmp(cfg.keepfilter, 'yes')
-%   for idip = 1:length(dip)
-%     source.filter{idip} = dip(idip).filter;
-%   end
-% end
-
   
 % remove the precomputed leadfields from the cfg regardless of what keepleadfield is saying
 % it should not be kept in cfg, since there it takes up too much space
