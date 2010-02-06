@@ -75,195 +75,195 @@ classdef clfproc
        end
               
        function obj = train(obj,data,design)
-            % train just calls the methods' train functions in order to produce a posterior
-                           
-            if nargin<3
-              design = [];
-            end
-            
-            % cast to datasets if necessary
-            
-            if iscell(data)
-              for c=1:length(data)
-                if ~isa(data{c},'dataset')
-                  data{c} = dataset(data{c});
-                end
-              end
-            elseif ~isa(data,'dataset')
-              data = dataset(data);
-            end
-              
-            if iscell(design)
-              for c=1:length(design)
-                if ~isa(design{c},'dataset')
-                  design{c} = dataset(design{c});
-                end
-              end
-            elseif ~isa(design,'dataset')
-              design = dataset(design);
-            end
-            
-            for c=1:obj.nmethods   
-              
-              if iscell(obj.clfmethods{c})
-              
-                if iscell(data) && ~isa(obj.clfmethods{c}{1},'transfer_learner')
-                  
-                  if length(data) == length(obj.clfmethods{c})
-                    for d=1:length(data)
-                      obj.clfmethods{c}{d} = cellfun(@(x)(x.train(data{d},design{d})),obj.clfmethods{c}{d},'UniformOutput',false);
-                      if c<obj.nmethods
-                        data{d} = cellfun(@(x)(x.test(data{d})),obj.clfmethods{c}{d},'UniformOutput',false);
-                      end
-                    end
-                  else
-                    error('cannot handle multiple datasets');
-                  end
-                  
-                else
-                  
-                  % deal with ensemble methods (i.e., nested cell arrays)
-                  obj.clfmethods{c} = cellfun(@(x)(x.train(data,design)),obj.clfmethods{c},'UniformOutput',false);
-                  if c<obj.nmethods
-                      data = cellfun(@(x)(x.test(data)),obj.clfmethods{c},'UniformOutput',false);
-                  end
-                end
-                
-              else
-                
-                if iscell(data) && ~isa(obj.clfmethods{c},'transfer_learner')
-                  % if the method is not a transfer learner then we apply
-                  % the method to each dataset separately and convert
-                  % the method to a cell array
-                  
-                  m = cell(1,length(data));
-                  for d=1:length(data)
-                    m{d} = obj.clfmethods{c}.train(data{d},design{d});
+         % train just calls the methods' train functions in order to produce a posterior
+         
+         if nargin<3
+           design = [];
+         end
+         
+         % cast to datasets if necessary
+         
+         if iscell(data)
+           for c=1:length(data)
+             if ~isa(data{c},'dataset')
+               data{c} = dataset(data{c});
+             end
+           end
+         elseif ~isa(data,'dataset')
+           data = dataset(data);
+         end
+         
+         if iscell(design)
+           for c=1:length(design)
+             if ~isa(design{c},'dataset')
+               design{c} = dataset(design{c});
+             end
+           end
+         elseif ~isa(design,'dataset')
+           design = dataset(design);
+         end
+         
+         for c=1:obj.nmethods
+           
+           if iscell(obj.clfmethods{c})
+             
+             if iscell(data) && ~isa(obj.clfmethods{c}{1},'transfer_learner')
+               
+               if length(data) == length(obj.clfmethods{c})
+                 for d=1:length(data)
+                   obj.clfmethods{c}{d} = cellfun(@(x)(x.train(data{d},design{d})),obj.clfmethods{c}{d},'UniformOutput',false);
                    if c<obj.nmethods
-                       data{d} = m{d}.test(data{d});
+                     data{d} = cellfun(@(x)(x.test(data{d})),obj.clfmethods{c}{d},'UniformOutput',false);
                    end
-                  end
-                  
-                  obj.clfmethods{c} = m;
-                  
-                else
-                  
-                  obj.clfmethods{c} = obj.clfmethods{c}.train(data,design);
-                  if c<obj.nmethods
-                      data = obj.clfmethods{c}.test(data);   
-                  end
-                end
-                
-              end
-            end        
-                   
+                 end
+               else
+                 error('cannot handle multiple datasets');
+               end
+               
+             else
+               
+               % deal with ensemble methods (i.e., nested cell arrays)
+               obj.clfmethods{c} = cellfun(@(x)(x.train(data,design)),obj.clfmethods{c},'UniformOutput',false);
+               if c<obj.nmethods
+                 data = cellfun(@(x)(x.test(data)),obj.clfmethods{c},'UniformOutput',false);
+               end
+             end
+             
+           else
+             
+             if iscell(data) && ~isa(obj.clfmethods{c},'transfer_learner')
+               % if the method is not a transfer learner then we apply
+               % the method to each dataset separately and convert
+               % the method to a cell array
+               
+               m = cell(1,length(data));
+               for d=1:length(data)
+                 m{d} = obj.clfmethods{c}.train(data{d},design{d});
+                 if c<obj.nmethods
+                   data{d} = m{d}.test(data{d});
+                 end
+               end
+               
+               obj.clfmethods{c} = m;
+               
+             else
+               
+               obj.clfmethods{c} = obj.clfmethods{c}.train(data,design);
+               if c<obj.nmethods
+                 data = obj.clfmethods{c}.test(data);
+               end
+             end
+             
+           end
+         end
+         
        end
        
        function data = test(obj,data)
-           % test just calls the methods' test functions in order to produce a posterior
- 
-           if isempty(data)
-             data = [];
-             return;
+         % test just calls the methods' test functions in order to produce a posterior
+         
+         if isempty(data)
+           data = [];
+           return;
+         end
+         
+         % cast to datasets if necessary
+         
+         if iscell(data)
+           for c=1:length(data)
+             if ~isa(data{c},'dataset')
+               data{c} = dataset(data{c});
+             end
            end
-                    
-           % cast to datasets if necessary
-            
-            if iscell(data)
-              for c=1:length(data)
-                if ~isa(data{c},'dataset')
-                  data{c} = dataset(data{c});
-                end
-              end
-            elseif ~isa(data,'dataset')
-              data = dataset(data);
-            end
+         elseif ~isa(data,'dataset')
+           data = dataset(data);
+         end
+         
+         for c=1:obj.nmethods
            
-            for c=1:obj.nmethods
+           if iscell(obj.clfmethods{c})
+             % deal with ensemble methods
              
-              if iscell(obj.clfmethods{c})
-               % deal with ensemble methods
+             if iscell(data) && ~isa(obj.clfmethods{c}{1},'transfer_learner')
                
-               if iscell(data) && ~isa(obj.clfmethods{c}{1},'transfer_learner')
-                  
-                  if length(data) == length(obj.clfmethods{c})
-                    for d=1:length(data)
-                      data{d} = obj.clfmethods{c}{d}.test(data{d});
-                    end
-                  else
-                    error('cannot handle multiple datasets');
-                  end
-                  
+               if length(data) == length(obj.clfmethods{c})
+                 for d=1:length(data)
+                   data{d} = obj.clfmethods{c}{d}.test(data{d});
+                 end
                else
-                 
-                 data = cellfun(@(x)(x.test(data)),obj.clfmethods{c},'UniformOutput',false);
+                 error('cannot handle multiple datasets');
                end
                
-              else
-                 
-                 data = obj.clfmethods{c}.test(data);
-              
-              end
-              
+             else
+               
+               data = cellfun(@(x)(x.test(data)),obj.clfmethods{c},'UniformOutput',false);
+             end
+             
+           else
+             
+             data = obj.clfmethods{c}.test(data);
+             
            end
-
+           
+         end
+         
        end
        
        function data = untest(obj,data)
-           % test just calls the methods' untest functions in order to
-           % produce an output; note that method calling is in reversed
-           % order
- 
-           if isempty(data)
-             data = [];
-             return;
+         % test just calls the methods' untest functions in order to
+         % produce an output; note that method calling is in reversed
+         % order
+         
+         if isempty(data)
+           data = [];
+           return;
+         end
+         
+         % cast to datasets if necessary
+         
+         if iscell(data)
+           for c=1:length(data)
+             if ~isa(data{c},'dataset')
+               data{c} = dataset(data{c});
+             end
            end
-                    
-           % cast to datasets if necessary
-            
-            if iscell(data)
-              for c=1:length(data)
-                if ~isa(data{c},'dataset')
-                  data{c} = dataset(data{c});
-                end
-              end
-            elseif ~isa(data,'dataset')
-              data = dataset(data);
-            end
+         elseif ~isa(data,'dataset')
+           data = dataset(data);
+         end
+         
+         for c=obj.nmethods:-1:1
            
-            for c=obj.nmethods:-1:1
+           if iscell(obj.clfmethods{c})
+             % deal with ensemble methods
              
-              if iscell(obj.clfmethods{c})
-               % deal with ensemble methods
+             if iscell(data) && ~isa(obj.clfmethods{c}{1},'transfer_learner')
                
-               if iscell(data) && ~isa(obj.clfmethods{c}{1},'transfer_learner')
-                  
-                  if length(data) == length(obj.clfmethods{c})
-                    for d=1:length(data)
-                      data{d} = obj.clfmethods{c}{d}.untest(data{d});
-                    end
-                  else
-                    error('cannot handle multiple datasets');
-                  end
-                  
+               if length(data) == length(obj.clfmethods{c})
+                 for d=1:length(data)
+                   data{d} = obj.clfmethods{c}{d}.untest(data{d});
+                 end
                else
-                 
-                 data = cellfun(@(x)(x.untest(data)),obj.clfmethods{c},'UniformOutput',false);
+                 error('cannot handle multiple datasets');
                end
                
-              else
-                 
-                 data = obj.clfmethods{c}.untest(data);
-              
-              end
-              
+             else
+               
+               data = cellfun(@(x)(x.untest(data)),obj.clfmethods{c},'UniformOutput',false);
+             end
+             
+           else
+             
+             data = obj.clfmethods{c}.untest(data);
+             
            end
-
-       end       
+           
+         end
+         
+       end
        
        function p = predict(obj,data)
          % calls test functions and converts posterior into classifications
-                  
+         
          for c=1:(length(obj.clfmethods)-1)
            data = obj.clfmethods{c}.test(data);
          end
@@ -284,12 +284,32 @@ classdef clfproc
        
        function [m,desc] = getmodel(obj)
          % return the model implied by this classification procedure
-        
+         
          % get the final model
-         [m,desc] = obj.clfmethods{end}.getmodel();
-
+         if iscell(obj.clfmethods{end})
+           
+           ntasks = length(obj.clfmethods{end});
+           
+           mm = cell(1,ntasks);
+           for c=1:ntasks
+             
+             [mm{c},desc] = obj.clfmethods{end}{c}.getmodel();
+             
+           end
+           
+           m = cell(size(mm{1},1),ntasks);
+           for c=1:ntasks
+             for i=1:size(mm{1},1)
+               m{i,c} = mm{c}{i};
+             end
+           end
+           
+         else
+           [m,desc] = obj.clfmethods{end}.getmodel();
+         end
+         
        end
-                    
+       
     end
-   
+    
 end

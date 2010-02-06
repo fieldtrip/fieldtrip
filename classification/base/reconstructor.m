@@ -31,6 +31,61 @@ classdef reconstructor < predictor
           rec = obj.test(data).X; 
         end
         
+  end
+    
+  methods(Static)
+      
+      function metric = evaluate(post,design,varargin)
+        %EVALUATE evaluation metrics for reconstructors
+        %
+        %   metric = evaluate(post,design,varargin)
+        %
+        %   parameter 'metric' determines the evaluation criterion:
+        %
+        %       'rss' : residual sum of squares
+        %       'mse' : mean squared error
+        %       'correlation' : correlation between real and predicted reconstructions
+      
+         options = varargin2struct(varargin);
+      
+         if ~isfield(options,'metric'), options.metric = 'accuracy'; end
+         
+         if isa(post,'dataset')
+           metric = compute_metric(post.X,design.X,options);
+         else
+           metric = compute_metric(post,design,options);
+         end
+      
+         function met = compute_metric(post,design,cfg)
+      
+           met = [];
+           switch lower(cfg.metric)
+             
+             case 'rss' % residual sum of squares
+               
+               met = sum((design - post).^2);
+             
+             case 'mse' % mean squared error
+               
+               met = sum((design - post).^2);
+              
+             case 'correlation' % correlation
+               
+               met = corrcoef(post(:),design(:));
+               met = met(2);
+               
+             case 'cityblock'
+               
+             case 'cosine'
+               
+               
+             otherwise
+                error(['unsupported option ',cfg.metric]);
+           
+           end
+           
+         end
+      end
     end
     
 end

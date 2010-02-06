@@ -126,7 +126,7 @@ classdef blogreg < classifier
            
            [p.Gauss,terms,p.logp,p.convergence] = laplacedegenerate_ep(design,X,p.prior, ...
              'fraction',obj.fraction,'niter',obj.niter,'temperature',obj.temperature,'lambda',obj.scale,...
-             'tol',obj.tolerance,'degenerate',obj.degenerate);
+             'tol',obj.tolerance,'degenerate',obj.degenerate,'verbose',obj.verbose);
            
           else
            
@@ -140,21 +140,25 @@ classdef blogreg < classifier
                tprior(data.nfeatures+1,data.nfeatures+1) = obj.precbias;
              end
              
-             [p.Gauss,terms,p.logp,p.convergence] = laplacedegenerate_ep(design,X,tprior, ...
-               'fraction',obj.fraction,'niter',obj.niter,'temperature',obj.temperature,'lambda',obj.scale(j),...
-               'tol',obj.tolerance,'degenerate',obj.degenerate);
-             
-             lgp(j) = p.logp - log(obj.scale(j)); % uniform prior on log scale
-             
-             if lgp(j) == max(lgp)
+             try 
+               [p.Gauss,terms,p.logp,p.convergence] = laplacedegenerate_ep(design,X,tprior, ...
+                 'fraction',obj.fraction,'niter',obj.niter,'temperature',obj.temperature,'lambda',obj.scale(j),...
+                 'tol',obj.tolerance,'degenerate',obj.degenerate,'verbose',obj.verbose);
                
-               gauss = p.Gauss;
-               conv =  p.convergence;
-               mprior = tprior;
-               sc = obj.scale(j);
+               lgp(j) = p.logp - log(obj.scale(j)); % uniform prior on log scale
                
+               if lgp(j) == max(lgp)
+                 
+                 gauss = p.Gauss;
+                 conv =  p.convergence;
+                 mprior = tprior;
+                 sc = obj.scale(j);
+                 
+               end
+               
+             catch
+              lgp(j) = -inf; % some error occurred
              end
-             
            end
            
            p.Gauss = gauss;
@@ -165,12 +169,13 @@ classdef blogreg < classifier
            
          end
                            
-         if ~p.convergence && obj.verbose
-           fprintf('EP did not converge\n');
-         else
-           fprintf('EP converged\n');
+         if obj.verbose
+           if ~p.convergence
+             fprintf('EP did not converge\n');
+           else
+             fprintf('EP converged\n');
+           end
          end
-         
           
        end
        

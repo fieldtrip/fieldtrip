@@ -41,7 +41,8 @@ classdef pcanalyzer < preprocessor
     
     function M = map(obj,U)
       
-      M = dataset((obj.params.pc' * U.X')');
+      %M = dataset((obj.params.pc' * U.X')');
+      M = dataset(U.X * obj.params.pc);
       
     end
     
@@ -54,28 +55,43 @@ classdef pcanalyzer < preprocessor
     
     function p = estimate(obj,data,design)
       
-      [p.pc,score,p.ev] = princomp(data.X);
-      p.ev = p.ev';
-      
-      % proportion of the variance that is accounted for
-      p.accvar = p.ev/sum(p.ev);
-      
-      % determine how many principal components to use
-      if ~isempty(obj.proportion)
-        
-        if obj.proportion >= 1
-          prop = 1:obj.proportion;
-        else
-          prop = 1:find(cumsum(p.accvar) > obj.proportion,1,'first');
-        end
+      if obj.proportion >= 1
+        % use specialized fast approximation
         
         if obj.verbose
-          fprintf('selected %d principal components\n',length(prop));
+          fprintf('fast selection of %d principal components\n',obj.proportion);
         end
+
+        [U,S,V] = pca(data.X,obj.proportion);
+        p.pc = V;
+                
+      else
+        % in terms of variance accounted for
         
-        p.pc = p.pc(:,prop);
-        p.ev = p.ev(prop);
-        p.accvar = p.accvar(prop);
+        [p.pc,score,p.ev] = princomp(data.X);
+        p.ev = p.ev';
+        
+        % proportion of the variance that is accounted for
+        p.accvar = p.ev/sum(p.ev);
+        
+        % determine how many principal components to use
+        if ~isempty(obj.proportion)
+          
+          if obj.proportion >= 1
+            prop = 1:obj.proportion;
+          else
+            prop = 1:find(cumsum(p.accvar) > obj.proportion,1,'first');
+          end
+          
+          if obj.verbose
+            fprintf('selected %d out of %d principal components\n',length(prop),size(p.pc,2));
+          end
+          
+          p.pc = p.pc(:,prop);
+          p.ev = p.ev(prop);
+          p.accvar = p.accvar(prop);
+          
+        end
         
       end
       

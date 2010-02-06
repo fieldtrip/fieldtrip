@@ -96,7 +96,7 @@ classdef nb < classifier
       % return the parameters wrt a class label in some shape
 
       % return model for all classes; i.e., their means
-        m = mat2cell(obj.params.means,[1 1],size(obj.params.means,2));
+        m = mat2cell(obj.params.means,ones(1,size(obj.params.means,1)),size(obj.params.means,2));
         desc = {'unknown'};
         
     end

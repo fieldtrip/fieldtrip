@@ -48,6 +48,12 @@ classdef clfmethod
           
         else
           
+          if iscell(data) && isa(obj,'transfer_learner') && ...
+              length(unique(cellfun(@(x)(x.nfeatures),data))) > 1
+            % check if datasets have the same number of features
+              error('datasets must have the same number of features for transfer learning');
+          end
+          
           obj.params = obj.estimate(data,design);
           
         end
@@ -67,35 +73,13 @@ classdef clfmethod
                     
         else
           
-          if iscell(data)
-            dims = cell(1,length(data));
-            for c=1:length(data)
-              dims{c} = data{c}.dims;
-            end
-          else
-            dims = data.dims;
-          end
-          
           data = obj.map(data);
-          
-           if iscell(data)
-            dims = cell(1,length(data));
-            for c=1:length(data)
-              data{c}.dims = dims{c};
-              data{c}.ndims = length(dims{c});
-            end
-          else
-            data.dims = dims;
-            data.ndims = length(dims);
-          end
           
         end
       end
       
       function data = untest(obj,data)
         % invert the mapping
-        
-        dims = data.dims;
         
         if iscell(data) && ~isa(obj,'transfer_learner')
           
@@ -109,28 +93,7 @@ classdef clfmethod
           
         else
           
-         if iscell(data)
-            dims = cell(1,length(data));
-            for c=1:length(data)
-              dims{c} = data{c}.dims;
-            end
-          else
-            dims = data.dims;
-          end
-          
           data = obj.unmap(data);
-          
-           if iscell(data)
-            dims = cell(1,length(data));
-            for c=1:length(data)
-              data{c}.dims = dims{c};
-              data{c}.ndims = length(dims{c});
-            end
-          else
-            data.dims = dims;
-            data.ndims = length(dims);
-          end
-          
           
         end
       end

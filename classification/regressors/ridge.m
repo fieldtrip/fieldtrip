@@ -2,9 +2,7 @@ classdef ridge < regressor
 %RIDGE regressor
 %
 %   Copyright (c) 2009, Marcel van Gerven
-%
-%   $Log: ridge.m,v $
-%
+
 
     properties
         

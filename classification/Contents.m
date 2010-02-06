@@ -86,12 +86,13 @@
 % - test validator.getmodel for transfer learners
 % - automate recompilation of mex files
 % - create visualizer class
-% - IMPLEMENT BLINREG
-% - remove dataset overkill?
+% - IMPLEMENT BLINREG / BLINREG_TRANSFER
+% - remove dataset overkill? add .dims .nfeatures .ntasks etc field to clfmethods;
+%   reshape getmodel whenever possible
 % - use separate check_data procedure in clfproc?
-% - rewrite blogreg_transfer such that it calls blogreg immediately
 % - replace libsvm code by bioinformatics toolbox svm code
 % - check dynamic_classifier and static_classifier code and derivates
 % - removed lvq classifier
 % - can we do away with .params and operate on obj immediately? / change
 %   clfmethods to handle classes?
+% - throw out redundant svm classifiers; check speed and accuracy

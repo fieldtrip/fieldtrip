@@ -55,6 +55,7 @@
 %     tol           convergence criterion [1e-5]
 %     nweights      number of points for numerical integration [20]
 %     temperature   temperature for simulated annealing [1]
+%     verbose       give output during run [1]
 %
 % Gauss: struct with fields as in priorGauss plus
 %
@@ -69,10 +70,6 @@
 % logp: estimated marginal loglikelihood (implementation doubtful...)
 %
 % comptime: computation time
-
-fprintf('starting EP\n');
-
-tic
 
 %% initialization
 
@@ -89,7 +86,13 @@ if ~isfield(opt,'tol'),         opt.tol         = 1e-5; end
 if ~isfield(opt,'nweights'),    opt.nweights    = 50;   end
 if ~isfield(opt,'temperature'), opt.temperature = 1;    end
 if ~isfield(opt,'lambda'),      opt.lambda      = 1;    end
+if ~isfield(opt,'verbose'),     opt.verbose      = 1;    end
 
+if opt.verbose
+  fprintf('starting EP\n');
+end
+
+tic
 
 [nsamples,nfeatures] = size(X);
 
@@ -216,8 +219,10 @@ while abs(logp-logpold) > stepsize*opt.tol && teller < opt.niter,
       
       logp      = (sum(crosslogz) + sum(logreglogz))./opt.fraction + logZappx + LogPriorRestAux2;  
       
-      fprintf('%d: %g (stepsize: %g)\n',teller,logp,stepsize);
-   
+      if opt.verbose
+        fprintf('%d: %g (stepsize: %g)\n',teller,logp,stepsize);
+      end
+      
       % check whether marginal loglikelihood is going up and down, if so, lower stepsize
       
       change = logp-logpold;
@@ -231,7 +236,9 @@ end
 
 comptime = toc;
 
-fprintf('EP finished in %s seconds\n',num2str(comptime));
+if opt.verbose
+  fprintf('EP finished in %s seconds\n',num2str(comptime));
+end
 
 %%% END MAIN
 

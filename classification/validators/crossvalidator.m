@@ -289,9 +289,15 @@ classdef crossvalidator < validator
             
           end
                       
-          if isempty(trainfolds)
-            
+          if ~isempty(trainfolds)
+            nfolds = size(trainfolds,1);
+          elseif ~isempty(testfolds)
             nfolds = size(testfolds,1);
+          else
+            nfolds = nan;
+          end
+          
+          if isempty(trainfolds)
             
             trainfolds = cell(nfolds,nsets);            
             for f=1:nfolds
@@ -345,8 +351,6 @@ classdef crossvalidator < validator
           end
           
           if isempty(testfolds)
-            
-            nfolds = size(trainfolds,1);
             
             testfolds = cell(nfolds,nsets);            
             for f=1:nfolds
