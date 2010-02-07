@@ -645,7 +645,17 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				arg = (mxArray *) mxSerialize(prhs[2]);
 				opt = (mxArray *) mxSerialize(prhs[3]);
 
+				if (!arg)
+						mexErrMsgTxt("could not serialize job arguments");
+
+				if (!opt)
+						mexErrMsgTxt("could not serialize job options");
+
 				def = (jobdef_t *)malloc(sizeof(jobdef_t));
+
+				if (!def)
+						mexErrMsgTxt("could not allocate memory");
+
 				def->version  = VERSION;
 				def->id       = jobid;
 				def->memreq   = memreq;
@@ -655,14 +665,16 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				def->optsize  = mxGetNumberOfElements(opt);
 
 				/* write the message  (hostdef, jobdef, arg, opt) with handshakes in between */
- 				/* the slave may close the connection between the message segments in case the job is refused */
+				/* the slave may close the connection between the message segments in case the job is refused */
 				success = 1;
 
+				pthread_mutex_lock(&mutexhost);
 				if (success) 
 						success = (bufwrite(server, host, sizeof(hostdef_t)) == sizeof(hostdef_t));
+				pthread_mutex_unlock(&mutexhost);
 
 				if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
-						mexErrMsgTxt("tcpsocket: could not write handshake");
+						mexErrMsgTxt("could not write handshake");
 				}
 				else if (!handshake) {
 						close_connection(server);
@@ -673,7 +685,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						success = (bufwrite(server, def, sizeof(jobdef_t)) == sizeof(jobdef_t));
 
 				if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
-						mexErrMsgTxt("tcpsocket: could not write handshake");
+						mexErrMsgTxt("could not write handshake");
 				}
 				else if (!handshake) {
 						close_connection(server);
@@ -684,7 +696,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						success = (bufwrite(server, (void *)mxGetData(arg), def->argsize) == def->argsize);
 
 				if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
-						mexErrMsgTxt("tcpsocket: could not write handshake");
+						mexErrMsgTxt("could not write handshake");
 				}
 				else if (!handshake) {
 						close_connection(server);
@@ -695,7 +707,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						success = (bufwrite(server, (void *)mxGetData(opt), def->optsize) == def->optsize);
 
 				if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
-						mexErrMsgTxt("tcpsocket: could not write handshake");
+						mexErrMsgTxt("could not write handshake");
 				}
 				else if (!handshake) {
 						close_connection(server);
