@@ -1,4 +1,4 @@
-function jobid = peerfeval(varargin)
+function [jobid, puttime] = peerfeval(varargin)
 
 % PEERFEVAL execute the specified function on another peer.
 %
@@ -29,6 +29,9 @@ if ~status
   warning('executing peermaster');
   peermaster
 end
+
+% keep track of the time
+stopwatch = tic;
 
 % the peer server must be running in master mode
 peer('status', 2);
@@ -65,9 +68,6 @@ end
 % start with an empty return value
 jobid = [];
 
-% keep track of the time
-stopwatch = tic;
-
 % there are no options to write
 options = {};
 
@@ -88,19 +88,19 @@ while isempty(jobid)
   end
 
   % only peers with enough memory are interesting
-  peerlist = peerlist([peerlist.hostmemavail]>memreq);
+  peerlist = peerlist([peerlist.hostmemavail] >= memreq);
   if isempty(peerlist)
     error('there are no slave peers available that meet the memory requirements');
   end
 
   % only peers with enough CPU speed are interesting
-  peerlist = peerlist([peerlist.hostcpuavail]>cpureq);
+  peerlist = peerlist([peerlist.hostcpuavail] >= cpureq);
   if isempty(peerlist)
     error('there are no slave peers available that meet the CPU requirements');
   end
 
   % only peers with enough time for a single job are interesting
-  peerlist = peerlist([peerlist.hosttimavail]>timreq);
+  peerlist = peerlist([peerlist.hosttimavail] >= timreq);
   if isempty(peerlist)
     error('there are no slave peers available to execute a job of this duration');
   end
@@ -109,10 +109,10 @@ while isempty(jobid)
   mempenalty = scale([peerlist.hostmemavail] - memreq);
   cpupenalty = scale([peerlist.hostcpuavail] - cpureq);
   timpenalty = scale([peerlist.hosttimavail] - timreq);
-  rndpenalty = rand(1, length(peerlist));
+  penalty    = mempenalty + 0.1* rand(1, length(peerlist));
 
   % select the slave peer that has the best match with the job requirements
-  [penalty, indx] = sort(mempenalty + cpupenalty + timpenalty + 0.1*rndpenalty);
+  [penalty, indx] = sort(penalty);
 
   % sort the peerlist according to the penalty
   peerlist = peerlist(indx);
@@ -120,7 +120,9 @@ while isempty(jobid)
   for i=1:length(peerlist)
     try
       jobid   = [];
+      puttime = toc(stopwatch);
       result  = peer('put', peerlist(i).hostid, varargin, options, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq);
+      puttime = toc(stopwatch) - puttime;
       jobid   = result.jobid;
       % the peer accepted the job, there is no need to continue with the for loop
       break;

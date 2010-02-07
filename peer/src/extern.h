@@ -36,14 +36,13 @@ extern hostlist_t *hostlist;
 
 extern pthread_mutex_t mutexfairshare;
 extern struct {
-  float a;
-  float b;
-  float c;
-  float d;
-  int   n;
+  int    n;
+  time_t t0;
   int prevhostcount;
   int prevhostid;
-  time_t t0;
-} param;
+  int enabled;
+} fairshare;
+
+extern fairsharelist_t *fairsharelist;
 
 #endif

@@ -35,13 +35,12 @@ hostlist_t *hostlist = NULL;
 
 pthread_mutex_t mutexfairshare = PTHREAD_MUTEX_INITIALIZER;
 struct {
-  float a;
-  float b;
-  float c;
-  float d;
-  int   n;
+  int    n;
+  time_t t0;
   int prevhostcount;
   int prevhostid;
-  time_t t0;
-} param;
+  int enabled;
+} fairshare;
+
+fairsharelist_t *fairsharelist = NULL;
 

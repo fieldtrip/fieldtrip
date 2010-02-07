@@ -45,6 +45,7 @@ void peerinit(void *arg) {
 		pwd = getpwuid(geteuid());
 
 		/* specify the host parameters */
+		host->version  = VERSION;
 		host->port     = DEFAULT_PORT;
 		host->status   = DEFAULT_STATUS;
 		host->memavail = DEFAULT_MEMAVAIL;
@@ -112,11 +113,11 @@ void peerinit(void *arg) {
 		pthread_mutex_unlock(&mutexhost);
 
 		pthread_mutex_lock(&mutexfairshare);
-        param.a =  1;
-        param.b = -1;
-        param.c =  3;
-        param.d =  3;
-        param.t0 = time(NULL);
+		fairshare.n             = 0;
+		fairshare.t0            = time(NULL);
+		fairshare.prevhostid    = 0;
+		fairshare.prevhostcount = 0;
+		fairshare.enabled       = 1;
 		pthread_mutex_unlock(&mutexfairshare);
 
 		return;
@@ -176,6 +177,15 @@ void peerexit(void *arg) {
 				group = grouplist;
 		}
 		pthread_mutex_unlock(&mutexgrouplist);
+
+		pthread_mutex_lock(&mutexfairshare);
+		fairsharelist_t *item = fairsharelist;
+		while (item) {
+				fairsharelist = item->next;
+				FREE(item);
+				item = fairsharelist;
+		}
+		pthread_mutex_unlock(&mutexfairshare);
 
 		return;
 }

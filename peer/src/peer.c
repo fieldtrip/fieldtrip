@@ -293,10 +293,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				pthread_mutex_unlock(&mutexhost);
 
 				pthread_mutex_lock(&mutexfairshare);
-				mexPrintf("fairshare.a    = %f\n", param.a);
-				mexPrintf("fairshare.b    = %f\n", param.b);
-				mexPrintf("fairshare.c    = %f\n", param.c);
-				mexPrintf("fairshare.a    = %f\n", param.d);
+				mexPrintf("fairshare.enabled = %d\n", fairshare.enabled);
 				pthread_mutex_unlock(&mutexfairshare);
 
 				pthread_mutex_lock(&mutexuserlist);
@@ -372,8 +369,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 
 		/****************************************************************************/
 		else if (strcasecmp(command, "fairshare")==0) {
-				/* the input arguments should be "fairshare <a> <b> <c> <d>" */
-				if (nrhs<5)
+				/* the input arguments should be "fairshare <0|1> */
+				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
 
 				if (!mxIsNumeric(prhs[1]))
@@ -381,26 +378,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				if (!mxIsScalar(prhs[1]))
 						mexErrMsgTxt ("invalid input argument #2");
 
-				if (!mxIsNumeric(prhs[2]))
-						mexErrMsgTxt ("invalid input argument #3");
-				if (!mxIsScalar(prhs[2]))
-						mexErrMsgTxt ("invalid input argument #3");
-
-				if (!mxIsNumeric(prhs[3]))
-						mexErrMsgTxt ("invalid input argument #4");
-				if (!mxIsScalar(prhs[3]))
-						mexErrMsgTxt ("invalid input argument #4");
-
-				if (!mxIsNumeric(prhs[4]))
-						mexErrMsgTxt ("invalid input argument #5");
-				if (!mxIsScalar(prhs[4]))
-						mexErrMsgTxt ("invalid input argument #5");
-
 				pthread_mutex_lock(&mutexfairshare);
-				param.a = mxGetScalar(prhs[1]);
-				param.b = mxGetScalar(prhs[2]);
-				param.c = mxGetScalar(prhs[3]);
-				param.d = mxGetScalar(prhs[4]);
+				fairshare.enabled = mxGetScalar(prhs[1]);
 				pthread_mutex_unlock(&mutexfairshare);
 		}
 
@@ -675,7 +654,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				def->argsize  = mxGetNumberOfElements(arg);
 				def->optsize  = mxGetNumberOfElements(opt);
 
-				/* write the message, the slave may close the connection between the message segments in case the job is refused */
+				/* write the message  (hostdef, jobdef, arg, opt) with handshakes in between */
+ 				/* the slave may close the connection between the message segments in case the job is refused */
 				success = 1;
 
 				if (success) 
@@ -833,7 +813,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mexWarnMsgTxt("failed to locate specified job\n");
 				}
 
-				fairshare_timer();
+				fairshare_reset();
 
 				pthread_mutex_unlock(&mutexjoblist);
 				return;

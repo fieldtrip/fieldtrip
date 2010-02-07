@@ -84,6 +84,7 @@ end
 
 % prepare some arrays that are used for bookkeeping
 jobid       = nan(1, numjob);
+puttime     = nan(1, numjob);
 timused     = nan(1, numjob);
 memused     = nan(1, numjob);
 submitted   = false(1, numjob);
@@ -93,6 +94,10 @@ collecttime = inf(1, numjob);
 
 % start the timer
 stopwatch   = tic;
+
+% these are used for printing feedback on screen
+prevnumsubmitted = 0;
+prevnumcollected = 0;
 
 % post all jobs and gather their results
 while ~all(submitted) || ~all(collected)
@@ -117,11 +122,16 @@ while ~all(submitted) || ~all(collected)
       argin{j} = varargin{j}{submit};
     end
 
-    jobid(submit) = peerfeval(fname, argin{:}, 'timeout', inf, 'memreq', memreq, 'timreq', timreq);
+    [jobid(submit) puttime(submit)]= peerfeval(fname, argin{:}, 'timeout', inf, 'memreq', memreq, 'timreq', timreq);
     % fprintf('submitted job %d\n', submit);
     submitted(submit)  = true;
     submittime(submit) = toc(stopwatch);
     clear argin
+  end
+
+  if sum(submitted)>prevnumsubmitted
+    % give an update of the progress
+    fprintf('submitted %d/%d, collected %d/%d\n', sum(submitted), numel(submitted), sum(collected), numel(collected));
   end
 
   joblist = peer('joblist');
@@ -149,13 +159,18 @@ while ~all(submitted) || ~all(collected)
     end
   end
 
-  if all(submitted) && ~all(collected)
-    % wait a little bit and try again
-    pause(sleep);
-  else
+  if sum(collected)>prevnumcollected
     % give an update of the progress
     fprintf('submitted %d/%d, collected %d/%d\n', sum(submitted), numel(submitted), sum(collected), numel(collected));
   end
+
+  if all(submitted) && ~all(collected)
+    % wait a little bit and try to collect another job
+    pause(sleep);
+  end
+
+  prevnumsubmitted = sum(submitted);
+  prevnumcollected = sum(collected);
 
 end % while not all jobs have finished
 
@@ -174,5 +189,11 @@ if numargout>0 && UniformOutput
   for i=1:numargout
     varargout{i} = [varargout{i}{:}];
   end
+end
+
+if all(puttime>timused)
+  % FIXME this could be detected in the loop above, and the strategy could automatically
+  % be adjusted from using the peers to local execution
+  warning('copying the jobs over the network took more time than their execution');
 end
 

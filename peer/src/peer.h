@@ -42,6 +42,9 @@
 #define DEFAULT_MEMAVAIL  UINT32_MAX
 #define DEFAULT_CPUAVAIL  UINT32_MAX
 #define DEFAULT_TIMAVAIL  UINT32_MAX
+#define FAIRSHARE_PREVHOSTCOUNT 3	/* number of times that a host has to "knock" */
+#define FAIRSHARE_TIMER         3	/* idle time in seconds after which fairshare is disabled */
+#define FAIRSHARE_HISTORY       2	/* number if history items peer peer */
 #define EXPIRATION        5
 #define BACKLOG           16
 #define SO_RCVBUF_SIZE    16384
@@ -149,6 +152,11 @@ typedef struct peerlist_s {
 		struct peerlist_s *next;
 } peerlist_t;
 
+typedef struct fairsharelist_s {
+		UINT32_T timreq; 
+        struct fairsharelist_s *next;
+} fairsharelist_t;
+
 /* this is for restricting the access to a peer to one user or a list of users */
 typedef struct userlist_s {
   char *name;
@@ -178,7 +186,7 @@ typedef struct {
 extern "C" {
 #endif
 
-/* function definitions */
+/* core function definitions */
 void *tcpserver (void *);
 void *tcpsocket (void *);
 void *announce  (void *);
@@ -186,9 +194,11 @@ void *discover  (void *);
 void *expire    (void *);
 void  peerinit (void *);
 void  peerexit (void *);
-void  fairshare_timer (void);
-int   fairshare_check (float timreq, int hostid);
 
+/* functions from fairshare.c */
+void  fairshare_reset   (void);
+int   fairshare_check   (float timreq, int hostid);
+void  fairshare_history (jobdef_t *job);
 
 /* functions from util.c */
 int bufread(int s, void *buf, int numel);
