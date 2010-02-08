@@ -1,1 +1,0 @@
-../../private/megplanar_sincos.m
