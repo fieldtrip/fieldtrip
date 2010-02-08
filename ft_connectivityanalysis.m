@@ -1,19 +1,20 @@
-function [stat] = connectivityanalysis(cfg, data)
+function [stat] = ft_connectivityanalysis(cfg, data)
 
-% CONNECTIVITYANALYIS computes various measures of connectivity
+% FT_CONNECTIVITYANALYIS computes various measures of connectivity
 % between MEG/EEG channels or between source-level signals.
 %
 % Use as
-%   stat = connectivityanalysis(cfg, data)
-%   stat = connectivityanalysis(cfg, timelock)
-%   stat = connectivityanalysis(cfg, freq)
-%   stat = connectivityanalysis(cfg, source)
+%   stat = ft_connectivityanalysis(cfg, data)
+%   stat = ft_connectivityanalysis(cfg, timelock)
+%   stat = ft_connectivityanalysis(cfg, freq)
+%   stat = ft_connectivityanalysis(cfg, source)
 % where the first input argument is a configuration structure (see
-% below) and the second argument is the output of PREPROCESSING,
-% TIMELOCKANLAYSIS or FREQANALYSIS or MVARANALYSIS or SOURCEANALYSIS,
-% depending on the connectivity metric that you want to compute.
+% below) and the second argument is the output of FT_PREPROCESSING,
+% FT_TIMELOCKANLAYSIS or FT_FREQANALYSIS or FT_MVARANALYSIS or
+% FT_SOURCEANALYSIS, depending on the connectivity metric that you
+% want to compute.
 %
-% The configuration structure can contain
+% The configuration structure has to contain
 %   cfg.method  = 'coh',       coherence, support for freq, freqmvar and source data
 %                 'plv',       phase-locking value, support for freq and freqmvar data
 %                 'corr',      correlation coefficient (Pearson)
@@ -105,8 +106,13 @@ dtype = datatype(data);
 %FIXME throw an error if no replicates and cfg.method='plv'
 %FIXME trial selection has to be implemented still
 
-if isfield(data, 'label'),   cfg.channel    = channelselection(cfg.channel, data.label);          end
-if ~isempty(cfg.channelcmb), cfg.channelcmb = channelcombination(cfg.channelcmb, cfg.channel, 1); end
+if isfield(data, 'label'), 
+  cfg.channel    = channelselection(cfg.channel, data.label);
+end
+
+if isfield(data, 'label') && ~isempty(cfg.channelcmb),
+  cfg.channelcmb = channelcombination(cfg.channelcmb, cfg.channel, 1); 
+end
 
 %check whether the required inparam is present in the data
 if ~isfield(data, inparam) || (strcmp(inparam, 'crsspctrm') && isfield(data, 'crsspctrm') && isfield(data, 'powspctrm')),
@@ -169,7 +175,7 @@ else
   %nothing required
 end
 
-% compute the desired connectivity
+% compute the desired connectivity metric
 switch cfg.method
 case 'coh'
   %coherency  
@@ -183,6 +189,8 @@ case 'coh'
   outparam         = 'cohspctrm';
 
 case 'total_interdependence'
+  %total interdependence  
+
   tmpcfg           = [];
   tmpcfg.complex   = cfg.complex;
   tmpcfg.feedback  = cfg.feedback;
@@ -190,6 +198,7 @@ case 'total_interdependence'
   tmpcfg.powindx   = powindx;
   [datout, varout, nrpt] = coupling_toti(tmpcfg, data.(inparam), hasrpt, hasjack);
   outparam         = 'totispctrm';    
+
 case 'plv'
   %phase locking value
 
@@ -253,6 +262,7 @@ case 'granger'
   else
     error('granger for time domain data is not yet implemented');
   end
+
 case 'instantaneous_causality'
   % instantaneous coupling between the series, requires the same elements as granger
 
@@ -284,11 +294,11 @@ case 'dtf'
   tmpcfg = []; % for the time being
   hasrpt = ~isempty(strfind(data.dimord, 'rpt'));
   if hasrpt,
-    nrpt  = size(data.transfer,1);
-    datin = data.transfer;
+    nrpt  = size(data.(inparam),1);
+    datin = data.(inparam);
   else
     nrpt  = 1; 
-    datin = reshape(data.transfer, [1 size(data.transfer)]);
+    datin = reshape(data.(inparam), [1 size(data.(inparam))]);
   end
   [datout, varout, n] = coupling_dtf(tmpcfg, datin, hasjack);
   outparam = 'dtfspctrm';
@@ -300,11 +310,11 @@ case 'pdc'
   tmpcfg.feedback = cfg.feedback;
   hasrpt = ~isempty(strfind(data.dimord, 'rpt'));
   if hasrpt,
-    nrpt  = size(data.transfer,1);
-    datin = data.transfer;
+    nrpt  = size(data.(inparam),1);
+    datin = data.(inparam);
   else
     nrpt  = 1;
-    datin = reshape(data.transfer, [1 size(data.transfer)]);
+    datin = reshape(data.(inparam), [1 size(data.(inparam))]);
   end
   [datout, varout, n] = coupling_pdc(tmpcfg, datin, hasjack);
   outparam = 'pdcspctrm';
@@ -389,6 +399,9 @@ if isfield(data, 'frequency'), stat.frequency = data.frequency; end
 if isfield(data, 'time'), stat.time = data.time; end
 if isfield(data, 'grad'), stat.grad = data.grad; end
 if isfield(data, 'elec'), stat.elec = data.elec; end
+if exist('nrpt', 'var'),  stat.dof  = nrpt;      end
+%FIXME this is not correct for TF-representations when trials have 
+%different lengths
 
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
@@ -816,24 +829,25 @@ end
 %---------------------------------------
 function [y] = phaseslope(x, n, norm)
 
-m = size(x, 1); %total number of frequency bins
-y = zeros(size(x));
-coh = zeros(size(x));
-coh(1:end-1,:,:,:,:) = (abs(x(1:end-1,:,:,:,:)) .* abs(x(2:end,:,:,:,:))) + 1; %get the coherence 
+m   = size(x, 1); %total number of frequency bins
+y   = zeros(size(x));
 x(1:end-1,:,:,:,:) = conj(x(1:end-1,:,:,:,:)).*x(2:end,:,:,:,:);
-%figure; plot(coh(:,1,2));
-if strmatch(norm,'yes')
-    for k = 1:m
-      begindx = max(1,k-n);
-      endindx = min(m,k+n);
-      y(k,:,:,:,:) = imag(sum(x(begindx:endindx,:,:,:,:)./coh(begindx:endindx,:,:,:,:)));
-    end    
+
+if strcmp(norm, 'yes')
+  coh = zeros(size(x));
+  coh(1:end-1,:,:,:,:) = (abs(x(1:end-1,:,:,:,:)) .* abs(x(2:end,:,:,:,:))) + 1;
+  %FIXME why the +1? get the coherence 
+  for k = 1:m
+    begindx = max(1,k-n);
+    endindx = min(m,k+n);
+    y(k,:,:,:,:) = imag(sum(x(begindx:endindx,:,:,:,:)./coh(begindx:endindx,:,:,:,:)));
+  end    
 else
-    for k = 1:m
-      begindx = max(1,k-n);
-      endindx = min(m,k+n);
-      y(k,:,:,:,:) = imag(sum(x(begindx:endindx,:,:,:,:)));
-    end
+  for k = 1:m
+    begindx = max(1,k-n);
+    endindx = min(m,k+n);
+    y(k,:,:,:,:) = imag(sum(x(begindx:endindx,:,:,:,:)));
+  end
 end
 
 %------------------------------------------------------------------------------------------------------------------
