@@ -11,7 +11,7 @@ function [pnt, ori, lab] = channelposition(sens, varargin)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')
+if isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(sens.balance.current, 'none')
   fnames = setdiff(fieldnames(sens.balance), 'current');
   indx   = find(ismember(fnames, sens.balance.current));
 
