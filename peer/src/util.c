@@ -5,8 +5,7 @@
 
 #include "peer.h"
 #include "extern.h"
-#include "socket_includes.h"
-#include "unix_includes.h"
+#include "platform_includes.h"
 
 int bufread(int s, void *buf, int numel) {
 		int numcall = 0, numthis = 0, numread = 0, verbose = 0;
@@ -104,7 +103,7 @@ int close_connection(int s) {
 
 int open_connection(const char *hostname, int port) {
 		int verbose = 0;
-		int s;
+		int s, retry;
 		struct sockaddr_in sa;
 		struct hostent *host = NULL;
 
@@ -141,7 +140,7 @@ int open_connection(const char *hostname, int port) {
 				return -1;
 		}
 
-		int retry = 1;
+		retry = 3;
 		while (retry>0) {
 				if (connect(s, (struct sockaddr *)&sa, sizeof sa)<0) {
 						/* wait 5 miliseconds and try again */
@@ -207,27 +206,29 @@ int hoststatus(void) {
 }
 
 int ismember_userlist(char *str) {
-		int ismember = 1; 
-		pthread_mutex_lock(&mutexuserlist);
-		if (userlist) {
-				ismember = 0;
-				userlist_t *user = userlist;
-				while (user) {
-						if (strncmp(user->name, str, STRLEN)==0)
-								ismember = 1;
-						user = user->next;
-				}
-		}
-		pthread_mutex_unlock(&mutexuserlist);
+  userlist_t *user = NULL;
+  int ismember = 1;
+  pthread_mutex_lock(&mutexuserlist);
+  if (userlist) {
+    ismember = 0;
+    user = userlist;
+    while (user) {
+      if (strncmp(user->name, str, STRLEN)==0)
+        ismember = 1;
+      user = user->next;
+    }
+  }
+  pthread_mutex_unlock(&mutexuserlist);
 		return ismember;
 }
 
 int ismember_grouplist(char *str) {
+		grouplist_t *group = NULL;
 		int ismember = 1; 
 		pthread_mutex_lock(&mutexgrouplist);
 		if (grouplist) {
 				ismember = 0;
-				grouplist_t *group = grouplist;
+				group = grouplist;
 				while (group) {
 						if (strncmp(group->name, str, STRLEN)==0)
 								ismember = 1;
@@ -239,11 +240,12 @@ int ismember_grouplist(char *str) {
 }
 
 int ismember_hostlist(char *str) {
+		hostlist_t *host = NULL;
 		int ismember = 1; 
 		pthread_mutex_lock(&mutexhostlist);
 		if (hostlist) {
 				ismember = 0;
-				hostlist_t *host = hostlist;
+				host = hostlist;
 				while (host) {
 						if (strncmp(host->name, str, STRLEN)==0)
 								ismember = 1;

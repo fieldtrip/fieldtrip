@@ -4,8 +4,7 @@
 
 #include "peer.h"
 #include "extern.h"
-#include "socket_includes.h"
-#include "unix_includes.h"
+#include "platform_includes.h"
 
 typedef struct {
 		int fd;
@@ -34,12 +33,16 @@ void cleanup_tcpserver(void *arg) {
  ***********************************************************************/
 void *tcpserver(void *arg) {
 		int verbose = 0;
-		int c, fd;
+		int c, fd, retry;
 
 		/* these variables are for the socket */
 		struct sockaddr_in sa;
 		unsigned int b;
 		int optval;
+
+    /* these variables are for the threading */
+		int rc;
+		pthread_t tid;
 
 #ifdef WIN32
 		unsigned long enable = 0;
@@ -48,10 +51,6 @@ void *tcpserver(void *arg) {
 
 		threadlocal_t threadlocal;
 		threadlocal.fd = -1;
-
-		/* these variables are for the threading */
-		int rc;
-		pthread_t tid;
 
 		/* this is for debugging */
 		pthread_mutex_lock(&mutexthreadcount);
@@ -153,7 +152,7 @@ void *tcpserver(void *arg) {
 		if (INADDR_ANY)
 				sa.sin_addr.s_addr = htonl(INADDR_ANY);
 
-		int retry = 1000;
+		retry = 1000;
 		while (retry>0) {
 				if (bind(fd, (struct sockaddr *)&sa, sizeof sa)<0) {
 						/* increment the port number and try again */

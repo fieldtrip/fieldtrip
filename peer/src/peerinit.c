@@ -1,25 +1,21 @@
-
-#include <arpa/inet.h>
-#include <ifaddrs.h>
-#include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/socket.h>
-#include <unistd.h>
 #include <sys/types.h>     /* for getpwuid and geteuid */
-#include <pwd.h>           /* for getpwuid and geteuid */
 
 #include "peer.h"
 #include "extern.h"
+#include "platform_includes.h"
 
 /******************************************************************************/
 void peerinit(void *arg) {
 		struct ifaddrs *ifaddr, *ifa;
 		struct passwd *pwd;
 		int family, s, verbose = 0;
+    #if defined (PLATFORM_LINUX) || defined (PLATFORM_LINUX)
 		char str[NI_MAXHOST];
-
-		if (verbose)
+    #endif
+		
+    if (verbose)
 				fprintf(stderr, "peerinit\n");
 
 		pthread_mutex_lock(&mutexhost);
@@ -41,8 +37,6 @@ void peerinit(void *arg) {
 				exit(1);
 		}
 
-		/* get the user name */
-		pwd = getpwuid(geteuid());
 
 		/* specify the host parameters */
 		host->version  = VERSION;
@@ -52,9 +46,14 @@ void peerinit(void *arg) {
 		host->cpuavail = DEFAULT_TIMAVAIL;
 		host->timavail = DEFAULT_CPUAVAIL;
 		host->id       = random();
-		strncpy(host->user, pwd->pw_name, STRLEN);
-		strncpy(host->group, DEFAULT_GROUP, STRLEN);
+    strncpy(host->group, DEFAULT_GROUP, STRLEN);
 
+    #if defined (PLATFORM_LINUX) || defined (PLATFORM_LINUX)
+
+    /* get the user name */
+		pwd = getpwuid(geteuid());
+		strncpy(host->user, pwd->pw_name, STRLEN);
+		
 		if (gethostname(host->name, STRLEN)) {
 				perror("announce gethostname");
 				exit(1);
@@ -65,8 +64,7 @@ void peerinit(void *arg) {
 				exit(1);
 		}
 
-		/* Walk through linked list, maintaining head pointer so we
-		   can free list later */
+		/* Walk through linked list, maintaining head pointer so we can free list later */
 
 		for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
 				family = ifa->ifa_addr->sa_family;
@@ -101,6 +99,8 @@ void peerinit(void *arg) {
 				}
 		}
 
+    #endif
+    
 		freeifaddrs(ifaddr);
 
 		if (verbose>0) {
@@ -127,6 +127,11 @@ void peerinit(void *arg) {
 /* free the dynamical memory that is shared between the threads               */
 void peerexit(void *arg) {
 		int verbose = 0;
+		peerlist_t *peer = NULL;
+		joblist_t *job = NULL;
+		userlist_t *user = NULL;
+		grouplist_t *group = NULL;
+		fairsharelist_t *item = NULL;
 
 		if (verbose)
 				fprintf(stderr, "peerexit\n");
@@ -136,7 +141,7 @@ void peerexit(void *arg) {
 		pthread_mutex_unlock(&mutexhost);
 
 		pthread_mutex_lock(&mutexpeerlist);
-		peerlist_t *peer = peerlist;
+		peer = peerlist;
 		while (peer) {
 				peerlist = peer->next;
 				FREE(peer->host);
@@ -146,7 +151,7 @@ void peerexit(void *arg) {
 		pthread_mutex_unlock(&mutexpeerlist);
 
 		pthread_mutex_lock(&mutexjoblist);
-		joblist_t *job = joblist;
+		job = joblist;
 		while (job) {
 				joblist = job->next;
 				FREE(job->job);
@@ -159,7 +164,7 @@ void peerexit(void *arg) {
 		pthread_mutex_unlock(&mutexjoblist);
 
 		pthread_mutex_lock(&mutexuserlist);
-		userlist_t *user = userlist;
+		user = userlist;
 		while (user) {
 				userlist = user->next;
 				FREE(user->name);
@@ -169,7 +174,7 @@ void peerexit(void *arg) {
 		pthread_mutex_unlock(&mutexuserlist);
 
 		pthread_mutex_lock(&mutexgrouplist);
-		grouplist_t *group = grouplist;
+		group = grouplist;
 		while (group) {
 				grouplist = group->next;
 				FREE(group->name);
@@ -179,7 +184,7 @@ void peerexit(void *arg) {
 		pthread_mutex_unlock(&mutexgrouplist);
 
 		pthread_mutex_lock(&mutexfairshare);
-		fairsharelist_t *item = fairsharelist;
+		item = fairsharelist;
 		while (item) {
 				fairsharelist = item->next;
 				FREE(item);

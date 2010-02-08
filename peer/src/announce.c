@@ -1,14 +1,12 @@
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <time.h>
 #include <string.h>
 #include <stdio.h>
-#include <unistd.h> /* for sleep */
+#include <pthread.h>
 
 #include "peer.h"
 #include "extern.h"
+#include "platform_includes.h"
 
 typedef struct {
 		void *message;

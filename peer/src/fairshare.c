@@ -3,6 +3,7 @@
 
 #include "peer.h"
 #include "extern.h"
+#include "platform_includes.h"
 
 /* reset the timer */
 void fairshare_reset(void) {
@@ -80,9 +81,9 @@ int fairshare_check(float t, int hostid) {
 		else
 				p = powf(t, -1);
 
-		r = (float)random() / (float)INT32_MAX;
+    r = (float)random() / (float)INT32_MAX;
 
-		if (verbose)
+    if (verbose)
 				fprintf(stderr, "fairshare: t = %f, p = %f, r = %f, n = %d\n", t, p, r, fairshare.n);
 
 		pthread_mutex_unlock(&mutexfairshare);

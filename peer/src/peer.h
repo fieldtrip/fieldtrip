@@ -1,4 +1,3 @@
-
 /* prevent double include */
 #ifndef PEER_H
 #define PEER_H

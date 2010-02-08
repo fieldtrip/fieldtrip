@@ -1,14 +1,11 @@
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <time.h>
 #include <string.h>
 #include <stdio.h>
-#include <unistd.h>
 
 #include "peer.h"
 #include "extern.h"
+#include "platform_includes.h"
 
 typedef struct {
 		void *host;
@@ -16,8 +13,10 @@ typedef struct {
 } threadlocal_t;
 
 void cleanup_discover(void *arg) {
-		threadlocal_t *threadlocal;
-        threadlocal = (threadlocal_t *)arg;
+		threadlocal_t *threadlocal = NULL;
+		peerlist_t *next = NULL;
+
+    threadlocal = (threadlocal_t *)arg;
 		if (threadlocal && threadlocal->host) {
 				FREE(threadlocal->host);
 		}
@@ -27,7 +26,6 @@ void cleanup_discover(void *arg) {
 		}
 
 		pthread_mutex_lock(&mutexpeerlist);
-		peerlist_t *next = NULL;
 		while (peerlist) {
 				next = peerlist->next;
 				FREE(peerlist->host);
@@ -47,13 +45,14 @@ void cleanup_discover(void *arg) {
 		return;
 }
 
-void *discover(void *arg)
-{
+void *discover(void *arg) {
+		int i = 0;
 		int fd = 0;
 		unsigned int addrlen;
 		int nbytes, verbose = 0, found = 0;
 		int one = 1;
-		peerlist_t *peer = NULL, *next = NULL;
+    int accept = 1;
+    peerlist_t *peer = NULL, *next = NULL;
 		hostdef_t *host = NULL;
 
 		/* these variables are for the socket */
@@ -153,7 +152,6 @@ void *discover(void *arg)
 				}
 
 				/* check whether the peer should be listed */
-				int accept = 1;
 				accept = (accept & ismember_userlist (host->user));
 				accept = (accept & ismember_grouplist(host->group));
 				accept = (accept & ismember_hostlist (host->name));
@@ -208,7 +206,6 @@ void *discover(void *arg)
 
 				if (verbose>1) {
 						peer = peerlist;
-						int i = 0;
 						while(peer) {
 								fprintf(stderr, "discover: peerlist[%d] =\n", i);
 								fprintf(stderr, "discover:   host.name = %s\n", peer->host->name);

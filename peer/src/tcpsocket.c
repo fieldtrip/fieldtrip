@@ -2,12 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <unistd.h>
 
 #include "peer.h"
 #include "extern.h"
-#include "socket_includes.h"
-#include "unix_includes.h"
+#include "platform_includes.h"
 
 typedef struct {
 		void *message;
@@ -40,13 +38,13 @@ void *tcpsocket(void *arg) {
 		int connect_accept = 1, connect_continue = 1, handshake;
 		joblist_t *job;
 
-		threadlocal_t threadlocal;
-		threadlocal.message = NULL;
-		threadlocal.fd = -1;
-
 		/* these are used for communication over the TCP socket */
 		int fd = 0;
 		message_t *message = NULL;
+
+		threadlocal_t threadlocal;
+		threadlocal.message = NULL;
+		threadlocal.fd = -1;
 
 		/* the connection to the client has been made by the server */
 		fd = ((int)arg);

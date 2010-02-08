@@ -1,9 +1,10 @@
 #include "mex.h"
 #include "matrix.h"
+#include <pthread.h>
 
 #include "peer.h"
 #include "extern.h"
-#include "unix_includes.h"
+#include "platform_includes.h"
 
 #define NUMJOBSTRUCTFIELDS 4
 const char* jobstructfieldnames[NUMJOBSTRUCTFIELDS] = {"version", "jobid", "argsize", "optsize"};
@@ -17,10 +18,10 @@ const char* jobpeerstructfieldnames[NUMJOBPEERSTRUCTFIELDS] = {"version", "jobid
 int peerInitialized = 0;
 
 /* the thread IDs are needed for cancelation at cleanup */
-pthread_t tcpserverThread = 0;
-pthread_t announceThread = 0;
-pthread_t discoverThread = 0;
-pthread_t expireThread = 0;
+pthread_t tcpserverThread;
+pthread_t announceThread;
+pthread_t discoverThread;
+pthread_t expireThread;
 
 /* this is called the first time that the mex-file is loaded */
 void initFun(void) {
@@ -142,8 +143,6 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						rc = pthread_cancel(tcpserverThread);
 						if (rc)
 								mexErrMsgTxt("problem with return code from pthread_cancel()");
-						else
-								tcpserverThread = 0;
 				}
 				else if (strcasecmp(argument, "status")==0) {
 						plhs[0] = mxCreateDoubleScalar(tcpserverStatus);
@@ -181,8 +180,6 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						rc = pthread_cancel(announceThread);
 						if (rc)
 								mexErrMsgTxt("problem with return code from pthread_cancel()");
-						else
-								announceThread = 0;
 				}
 				else if (strcasecmp(argument, "status")==0) {
 						plhs[0] = mxCreateDoubleScalar(announceStatus);
@@ -220,8 +217,6 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						rc = pthread_cancel(discoverThread);
 						if (rc)
 								mexErrMsgTxt("problem with return code from pthread_cancel()");
-						else
-								discoverThread = 0;
 				}
 				else if (strcasecmp(argument, "status")==0) {
 						plhs[0] = mxCreateDoubleScalar(discoverStatus);
@@ -259,8 +254,6 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						rc = pthread_cancel(expireThread);
 						if (rc)
 								mexErrMsgTxt("problem with return code from pthread_cancel()");
-						else
-								expireThread = 0;
 				}
 				else if (strcasecmp(argument, "status")==0) {
 						plhs[0] = mxCreateDoubleScalar(expireStatus);
@@ -428,7 +421,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		/****************************************************************************/
 		else if (strcasecmp(command, "tcpport")==0) {
 				/* the input arguments should be "tcpport <number>" */
-				if (tcpserverThread)
+				if (tcpserverStatus)
 						mexErrMsgTxt ("cannot change the port while the tcpserver is running");
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");

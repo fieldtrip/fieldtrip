@@ -1,14 +1,11 @@
-#include <arpa/inet.h>
-#include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/socket.h>
 #include <sys/types.h>
 #include <time.h>
-#include <unistd.h> /* for sleep */
 
 #include "peer.h"
 #include "extern.h"
+#include "platform_includes.h"
 
 void cleanup_expire(void *arg) {
 		pthread_mutex_lock(&mutexstatus);
