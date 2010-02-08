@@ -11,6 +11,9 @@
 #include <ifaddrs.h>
 #include <pwd.h>           /* for getpwuid and geteuid */
 
+/* closesocket exists on windows and is used in the code */
+#define closesocket(s) (close(s))
+
 #elif defined (PLATFORM_WIN32)
 
 /* there are various compiler options for windows */
@@ -25,7 +28,6 @@
 #include <windows.h>
 #define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
 #define usleep(x)    (Sleep((x)/1000))
-#define closesocket(s) (close(s))
 #include "win32/gettimeofday.h"
 
 #elif defined (COMPILER_MINGW)

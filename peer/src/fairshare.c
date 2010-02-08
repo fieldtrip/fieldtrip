@@ -17,7 +17,7 @@ void fairshare_reset(void) {
 
 /* use a probabilistic approach to determine whether the connection should be dropped */
 int fairshare_check(float t, int hostid) {
-		int verbose = 0, retval;
+		int verbose = 0;
 		float p, r, baseline = 1;
 
 		pthread_mutex_lock(&mutexfairshare);
@@ -98,7 +98,7 @@ void fairshare_history(jobdef_t *job) {
 		int verbose = 0;
 		int historycount = 0;
 		int peercount = 0;
-		fairsharelist_t *listitem, *next;
+		fairsharelist_t *listitem;
 		peerlist_t *peer;
 
 		listitem = malloc(sizeof(fairsharelist_t));

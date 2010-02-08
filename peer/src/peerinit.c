@@ -11,7 +11,7 @@ void peerinit(void *arg) {
 		struct ifaddrs *ifaddr, *ifa;
 		struct passwd *pwd;
 		int family, s, verbose = 0;
-    #if defined (PLATFORM_LINUX) || defined (PLATFORM_LINUX)
+    #if defined (PLATFORM_LINUX) || defined (PLATFORM_OSX)
 		char str[NI_MAXHOST];
     #endif
 		
@@ -48,7 +48,7 @@ void peerinit(void *arg) {
 		host->id       = random();
     strncpy(host->group, DEFAULT_GROUP, STRLEN);
 
-    #if defined (PLATFORM_LINUX) || defined (PLATFORM_LINUX)
+    #if defined (PLATFORM_LINUX) || defined (PLATFORM_OSX)
 
     /* get the user name */
 		pwd = getpwuid(geteuid());
@@ -131,7 +131,7 @@ void peerexit(void *arg) {
 		joblist_t *job = NULL;
 		userlist_t *user = NULL;
 		grouplist_t *group = NULL;
-		fairsharelist_t *item = NULL;
+		fairsharelist_t *listitem = NULL;
 
 		if (verbose)
 				fprintf(stderr, "peerexit\n");
@@ -184,11 +184,11 @@ void peerexit(void *arg) {
 		pthread_mutex_unlock(&mutexgrouplist);
 
 		pthread_mutex_lock(&mutexfairshare);
-		item = fairsharelist;
-		while (item) {
-				fairsharelist = item->next;
-				FREE(item);
-				item = fairsharelist;
+		listitem = fairsharelist;
+		while (listitem) {
+				fairsharelist = listitem->next;
+				FREE(listitem);
+				listitem = fairsharelist;
 		}
 		pthread_mutex_unlock(&mutexfairshare);
 

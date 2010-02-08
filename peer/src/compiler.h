@@ -14,9 +14,6 @@
 #elif defined (__MINGW32__)
 #define COMPILER_MINGW
 
-#else
-#error "Unknown compiler - please report the compiler details to http://fieldtrip.fcdonders.nl"
-
 #endif
 
 #endif /* COMPILER_H */
