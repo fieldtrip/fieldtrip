@@ -1,1 +1,0 @@
-../fileio/private/read_asa_bnd.m

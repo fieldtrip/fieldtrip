@@ -1,1 +1,0 @@
-../forwinv/private/triangle4pt.m

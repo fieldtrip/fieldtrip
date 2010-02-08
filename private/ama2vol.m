@@ -1,1 +1,0 @@
-../fileio/private/ama2vol.m

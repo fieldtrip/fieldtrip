@@ -1,1 +1,0 @@
-../fileio/private/littleendian.m

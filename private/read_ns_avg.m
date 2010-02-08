@@ -1,1 +1,0 @@
-../fileio/private/read_ns_avg.m
