@@ -88,7 +88,7 @@ if unsegmented,
     end
     CateNames   = [];
     CatLengths  = [];
-    preBaseline = [];
+    preBaseline = 0;
 else
     NumCategors = fread(fid,1,'int16',endian);
     for j = 1:NumCategors
