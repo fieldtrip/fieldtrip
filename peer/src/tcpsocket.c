@@ -136,10 +136,12 @@ void *tcpsocket(void *arg) {
 				connect_continue = 0;
 		}
 
-		/* test whether the request can be accepted based on the host characteristics */
-		connect_accept = (connect_accept & ismember_userlist (message->host->user));
-		connect_accept = (connect_accept & ismember_grouplist(message->host->group));
-		connect_accept = (connect_accept & ismember_hostlist (message->host->name));
+		/* determine whether the host, group and user is allowed to execute a job */
+		if (!security_check(message->host)) {
+				if (verbose>0)
+						fprintf(stderr, "tcpsocket: security_check returned zero\n");
+				connect_accept = 0;
+		}
 
 		/* give a handshake */
 		handshake = connect_accept | connect_continue;
@@ -299,8 +301,8 @@ void *tcpsocket(void *arg) {
 				fprintf(stderr, "tcpsocket: job.argsize  = %d\n", job->job->argsize);
 				fprintf(stderr, "tcpsocket: job.optsize  = %d\n", job->job->optsize);
 				fprintf(stderr, "tcpsocket: host.name    = %s\n", job->host->name);
-				fprintf(stderr, "tcpsocket: host.addr    = %s\n", job->host->addr);
 				fprintf(stderr, "tcpsocket: host.port    = %d\n", job->host->port);
+				fprintf(stderr, "tcpsocket: host.id      = %d\n", job->host->id);
 		}
 
 		pthread_mutex_unlock(&mutexjoblist);

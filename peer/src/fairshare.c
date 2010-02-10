@@ -19,6 +19,7 @@ void fairshare_reset(void) {
 int fairshare_check(float t, int hostid) {
 		int verbose = 0;
 		float p, r, baseline = 1;
+		fairsharelist_t *listitem;
 
 		pthread_mutex_lock(&mutexfairshare);
 
@@ -65,15 +66,19 @@ int fairshare_check(float t, int hostid) {
 
 		/* determine the baseline for the time, based on the recent job history */
 		if (fairsharelist) {
-				fairsharelist_t *listitem = fairsharelist;
+				listitem = fairsharelist;
 				baseline = listitem->timreq;
 				while (listitem) {
 						if (listitem->timreq < baseline)
 								baseline = listitem->timreq;
 						listitem = listitem->next;
 				}
+		}
+		else {
+				baseline = t;
 		}  
 
+		/* scale the time of this job request with the baseline */
 		t = t/baseline;
 
 		if (t<=1)
@@ -81,9 +86,9 @@ int fairshare_check(float t, int hostid) {
 		else
 				p = powf(t, -1);
 
-    r = (float)random() / (float)INT32_MAX;
+		r = (float)random() / (float)INT32_MAX;
 
-    if (verbose)
+		if (verbose)
 				fprintf(stderr, "fairshare: t = %f, p = %f, r = %f, n = %d\n", t, p, r, fairshare.n);
 
 		pthread_mutex_unlock(&mutexfairshare);

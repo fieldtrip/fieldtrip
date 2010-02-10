@@ -78,7 +78,6 @@ void *announce(void *arg) {
 		if (verbose>0) {
 				pthread_mutex_lock(&mutexhost);
 				fprintf(stderr, "announce: host.name = %s\n", host->name);
-				fprintf(stderr, "announce: host.addr = %s\n", host->addr);
 				fprintf(stderr, "announce: host.port = %d\n", host->port);
 				fprintf(stderr, "announce: host.id   = %d\n", host->id);
 				pthread_mutex_unlock(&mutexhost);

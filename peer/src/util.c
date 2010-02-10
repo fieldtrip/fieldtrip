@@ -205,57 +205,6 @@ int hoststatus(void) {
 		return status;
 }
 
-int ismember_userlist(char *str) {
-  userlist_t *user = NULL;
-  int ismember = 1;
-  pthread_mutex_lock(&mutexuserlist);
-  if (userlist) {
-    ismember = 0;
-    user = userlist;
-    while (user) {
-      if (strncmp(user->name, str, STRLEN)==0)
-        ismember = 1;
-      user = user->next;
-    }
-  }
-  pthread_mutex_unlock(&mutexuserlist);
-		return ismember;
-}
-
-int ismember_grouplist(char *str) {
-		grouplist_t *group = NULL;
-		int ismember = 1; 
-		pthread_mutex_lock(&mutexgrouplist);
-		if (grouplist) {
-				ismember = 0;
-				group = grouplist;
-				while (group) {
-						if (strncmp(group->name, str, STRLEN)==0)
-								ismember = 1;
-						group = group->next;
-				}
-		}
-		pthread_mutex_unlock(&mutexgrouplist);
-		return ismember;
-}
-
-int ismember_hostlist(char *str) {
-		hostlist_t *host = NULL;
-		int ismember = 1; 
-		pthread_mutex_lock(&mutexhostlist);
-		if (hostlist) {
-				ismember = 0;
-				host = hostlist;
-				while (host) {
-						if (strncmp(host->name, str, STRLEN)==0)
-								ismember = 1;
-						host = host->next;
-				}
-		}
-		pthread_mutex_unlock(&mutexhostlist);
-		return ismember;
-}
-
 void check_datatypes() {
 		/* check datatypes */
 		if (WORDSIZE_CHAR    !=1) { fprintf(stderr, "invalid size of CHAR    (%d)\n", WORDSIZE_CHAR   ); exit(-1); }

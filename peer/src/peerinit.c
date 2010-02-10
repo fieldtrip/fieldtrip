@@ -8,14 +8,10 @@
 
 /******************************************************************************/
 void peerinit(void *arg) {
-		struct ifaddrs *ifaddr, *ifa;
 		struct passwd *pwd;
 		int family, s, verbose = 0;
-    #if defined (PLATFORM_LINUX) || defined (PLATFORM_OSX)
-		char str[NI_MAXHOST];
-    #endif
-		
-    if (verbose)
+
+		if (verbose)
 				fprintf(stderr, "peerinit\n");
 
 		pthread_mutex_lock(&mutexhost);
@@ -37,7 +33,6 @@ void peerinit(void *arg) {
 				exit(1);
 		}
 
-
 		/* specify the host parameters */
 		host->version  = VERSION;
 		host->port     = DEFAULT_PORT;
@@ -46,66 +41,38 @@ void peerinit(void *arg) {
 		host->cpuavail = DEFAULT_TIMAVAIL;
 		host->timavail = DEFAULT_CPUAVAIL;
 		host->id       = random();
-    strncpy(host->group, DEFAULT_GROUP, STRLEN);
 
-    #if defined (PLATFORM_LINUX) || defined (PLATFORM_OSX)
+#if defined (PLATFORM_LINUX) || defined (PLATFORM_OSX)
 
-    /* get the user name */
+		/* get the user name */
 		pwd = getpwuid(geteuid());
 		strncpy(host->user, pwd->pw_name, STRLEN);
-		
+
+		/* set the default group name */
+		strncpy(host->group, DEFAULT_GROUP, STRLEN);
+
+		/* get the host name */
 		if (gethostname(host->name, STRLEN)) {
 				perror("announce gethostname");
 				exit(1);
 		}
 
-		if (getifaddrs(&ifaddr) == -1) {
-				perror("peerinit getifaddrs");
-				exit(1);
-		}
 
-		/* Walk through linked list, maintaining head pointer so we can free list later */
+#else
 
-		for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-				family = ifa->ifa_addr->sa_family;
+		/* set the default user name */
+		strncpy(host->group, DEFAULT_USER, STRLEN);
 
-				/* Display interface name and family (including symbolic
-				   form of the latter for the common families) */
+		/* set the default group name */
+		strncpy(host->group, DEFAULT_GROUP, STRLEN);
 
-				if (verbose>1)
-						printf("%s  address family: %d%s\n",
-										ifa->ifa_name, family,
-										(family == AF_INET) ?   " (AF_INET)" :
-										(family == AF_INET6) ?  " (AF_INET6)" : "");
+		/* set the default group name */
+		strncpy(host->group, DEFAULT_HOST, STRLEN);
 
-				/* For an AF_INET* interface address, display the address */
-
-				if (family == AF_INET || family == AF_INET6) {
-
-						s = getnameinfo(ifa->ifa_addr, (family == AF_INET) ? sizeof(struct sockaddr_in) :sizeof(struct sockaddr_in6),
-										str, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
-						if (s != 0) {
-								fprintf(stderr, "peerinfo: getnameinfo failed (%s)\n", gai_strerror(s));
-								exit(1);
-						}
-
-						if (verbose>1)
-								printf("\taddress: <%s>\n", str);
-
-						/* there is only one address that we are interested in */
-						if (strcmp(ifa->ifa_name, "lo0")!=0 && family==AF_INET)
-								strncpy(host->addr, str, STRLEN);
-
-				}
-		}
-
-    #endif
-    
-		freeifaddrs(ifaddr);
+#endif
 
 		if (verbose>0) {
 				fprintf(stderr, "peerinit: host.name =  %s\n", host->name);
-				fprintf(stderr, "peerinit: host.addr =  %s\n", host->addr);
 				fprintf(stderr, "peerinit: host.port =  %d\n", host->port);
 				fprintf(stderr, "peerinit: host.id   =  %d\n", host->id);
 		}

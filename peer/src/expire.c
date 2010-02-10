@@ -54,7 +54,6 @@ void *expire(void *arg) {
 						if (found) {
 								if (verbose>0) {
 										fprintf(stderr, "expire: name = %s\n", peerlist->host->name);
-										fprintf(stderr, "expire: addr = %s\n", peerlist->host->addr);
 										fprintf(stderr, "expire: port = %d\n", peerlist->host->port);
 										fprintf(stderr, "expire: time = %s", ctime(&(peerlist->time)));
 								}
@@ -80,7 +79,6 @@ void *expire(void *arg) {
 								if (found) {
 										if (verbose>0) {
 												fprintf(stderr, "expire: name = %s\n", next->host->name);
-												fprintf(stderr, "expire: addr = %s\n", next->host->addr);
 												fprintf(stderr, "expire: port = %d\n", next->host->port);
 												fprintf(stderr, "expire: time = %s", ctime(&(next->time)));
 										}

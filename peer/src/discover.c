@@ -146,7 +146,6 @@ void *discover(void *arg) {
 				if (verbose>0) {
 						fprintf(stderr, "\n");
 						fprintf(stderr, "discover: host->name = %s\n", host->name);
-						fprintf(stderr, "discover: host->addr = %s\n", host->addr);
 						fprintf(stderr, "discover: host->port = %d\n", host->port);
 						fprintf(stderr, "discover: host->id   = %d\n", host->id);
 				}
@@ -209,7 +208,6 @@ void *discover(void *arg) {
 						while(peer) {
 								fprintf(stderr, "discover: peerlist[%d] =\n", i);
 								fprintf(stderr, "discover:   host.name = %s\n", peer->host->name);
-								fprintf(stderr, "discover:   host.addr = %s\n", peer->host->addr);
 								fprintf(stderr, "discover:   host.port = %d\n", peer->host->port);
 								fprintf(stderr, "discover:   host.id   = %d\n", peer->host->id);
 								fprintf(stderr, "discover:   time      = %s",   ctime(&(peer->time)));

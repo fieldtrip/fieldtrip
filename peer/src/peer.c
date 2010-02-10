@@ -9,8 +9,8 @@
 #define NUMJOBSTRUCTFIELDS 4
 const char* jobstructfieldnames[NUMJOBSTRUCTFIELDS] = {"version", "jobid", "argsize", "optsize"};
 
-#define NUMPEERSTRUCTFIELDS 8
-const char* peerstructfieldnames[NUMPEERSTRUCTFIELDS] = {"hostid", "hostname", "hostaddr", "hostport", "hoststatus", "hostmemavail", "hostcpuavail", "hosttimavail"};
+#define NUMPEERSTRUCTFIELDS 7
+const char* peerstructfieldnames[NUMPEERSTRUCTFIELDS] = {"hostid", "hostname", "hostport", "hoststatus", "hostmemavail", "hostcpuavail", "hosttimavail"};
 
 #define NUMJOBPEERSTRUCTFIELDS 6
 const char* jobpeerstructfieldnames[NUMJOBPEERSTRUCTFIELDS] = {"version", "jobid", "argsize", "optsize", "hostid", "hostname"};
@@ -277,7 +277,6 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 
 				pthread_mutex_lock(&mutexhost);
 				mexPrintf("host.name       = %s\n", host->name);
-				mexPrintf("host.addr       = %s\n", host->addr);
 				mexPrintf("host.port       = %d\n", host->port);
 				mexPrintf("host.user       = %s\n", host->user);
 				mexPrintf("host.group      = %s\n", host->group);
@@ -312,7 +311,6 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mexPrintf("peerlist[%d] = \n", i);
 						mexPrintf("  host.id       = %d\n", peer->host->id);
 						mexPrintf("  host.name     = %s\n", peer->host->name);
-						mexPrintf("  host.addr     = %s\n", peer->host->addr);
 						mexPrintf("  host.port     = %d\n", peer->host->port);
 						mexPrintf("  host.user     = %s\n", peer->host->user);
 						mexPrintf("  host.group    = %s\n", peer->host->group);
@@ -840,12 +838,11 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				while(peer) {
 						mxSetFieldByNumber(plhs[0], i, 0, mxCreateDoubleScalar((UINT32_T)(peer->host->id)));
 						mxSetFieldByNumber(plhs[0], i, 1, mxCreateString(peer->host->name));
-						mxSetFieldByNumber(plhs[0], i, 2, mxCreateString(peer->host->addr));
-						mxSetFieldByNumber(plhs[0], i, 3, mxCreateDoubleScalar((UINT32_T)(peer->host->port)));
-						mxSetFieldByNumber(plhs[0], i, 4, mxCreateDoubleScalar((UINT32_T)(peer->host->status)));
-						mxSetFieldByNumber(plhs[0], i, 5, mxCreateDoubleScalar((UINT32_T)(peer->host->memavail)));
-						mxSetFieldByNumber(plhs[0], i, 6, mxCreateDoubleScalar((UINT32_T)(peer->host->cpuavail)));
-						mxSetFieldByNumber(plhs[0], i, 7, mxCreateDoubleScalar((UINT32_T)(peer->host->timavail)));
+						mxSetFieldByNumber(plhs[0], i, 2, mxCreateDoubleScalar((UINT32_T)(peer->host->port)));
+						mxSetFieldByNumber(plhs[0], i, 3, mxCreateDoubleScalar((UINT32_T)(peer->host->status)));
+						mxSetFieldByNumber(plhs[0], i, 4, mxCreateDoubleScalar((UINT32_T)(peer->host->memavail)));
+						mxSetFieldByNumber(plhs[0], i, 5, mxCreateDoubleScalar((UINT32_T)(peer->host->cpuavail)));
+						mxSetFieldByNumber(plhs[0], i, 6, mxCreateDoubleScalar((UINT32_T)(peer->host->timavail)));
 						i++;
 						peer = peer->next ;
 				}

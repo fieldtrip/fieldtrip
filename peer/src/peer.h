@@ -30,7 +30,7 @@
 #define SO_REUSEPORT      SO_REUSEADDR
 #endif
 
-#define VERSION           0x0006
+#define VERSION           0x0007
 #define ANNOUNCE_GROUP    "225.0.0.88"
 #define ANNOUNCE_PORT 	  1700				/* it will auto-increment if the port is not available */
 #define DEFAULT_GROUP     "unknown"
@@ -117,7 +117,6 @@ typedef struct {
 		UINT32_T version;
 		UINT32_T id;
 		char name[STRLEN];
-		char addr[STRLEN];
 		char user[STRLEN];
 		char group[STRLEN];
 		UINT32_T port;
@@ -199,6 +198,12 @@ void  fairshare_reset   (void);
 int   fairshare_check   (float timreq, int hostid);
 void  fairshare_history (jobdef_t *job);
 
+/* functions from security.c */
+int  security_check(hostdef_t *host);
+int ismember_userlist(char *);
+int ismember_grouplist(char *);
+int ismember_hostlist(char *);
+
 /* functions from util.c */
 int bufread(int s, void *buf, int numel);
 int bufwrite(int s, void *buf, int numel);
@@ -209,9 +214,6 @@ void check_datatypes(void);
 int jobcount(void);
 int peercount(void);
 int hoststatus(void);
-int ismember_userlist(char *);
-int ismember_grouplist(char *);
-int ismember_hostlist(char *);
 
 #ifdef __cplusplus
 }
