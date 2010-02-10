@@ -17,6 +17,7 @@ if ~isfield(ft_default, 'checksize'),   ft_default.checksize   = 1e5;      end %
 % this is for Matlab version specific backward compatibility support
 % the version specific path should only be added once in every session
 persistent versionpath
+persistent signalpath
 
 if isempty(which('hastoolbox'))
   % the fieldtrip/public directory contains the hastoolbox function
@@ -112,4 +113,18 @@ if isempty(versionpath)
     addpath(versionpath);
   end
 end % if isempty(versionpath)
+
+
+if isempty(signalpath)
+  % test whether the signal processing toolbox is available
+  if ~hastoolbox('signal')
+    % add the fieldtrip/compat/signal directory to the path, which contains
+    % some drop-in replacement code from the Octave project
+    signalpath = fullfile(fileparts(which('fieldtripdefs')), 'compat', 'signal');
+    addpath(signalpath);
+  else
+    % remember the location of the Mathworks signal processing toolbox
+    signalpath = fileparts(which('butter'));
+  end
+end
 
