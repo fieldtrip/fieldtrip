@@ -552,7 +552,7 @@ switch eventformat
         event(eventCount).sample   = (eventCount-1)*hdr.nSamples + 1;
         event(eventCount).offset   = -hdr.nSamplesPre;
         event(eventCount).duration =  hdr.nSamples;
-        event(eventCount).value    =  ['S' sprintf('%03d',subject) cnames{cell}];
+        event(eventCount).value    =  ['Sub' sprintf('%03d',subject) cnames{cell}];
       end
     end
 
@@ -571,18 +571,13 @@ switch eventformat
     
     eventCount=0;
     if unsegmented
-        tmp = zeros(1,size(eventData,2));
-        for k = 1:size(eventData,1)
-            sel = find(eventData(k,:)==1 & [0 eventData(k,1:end-1)==0]);
-            tmp(sel) = k;
-        end
-        sel = find(tmp);
-        for k = 1:length(sel)
-            event(k).sample   = sel(k);
+            [evType,sampNum] = find(eventData);
+        for k = 1:length(evType)
+            event(k).sample   = sampNum(k);
             event(k).offset   = [];
             event(k).duration = 0;
             event(k).type     = 'trigger';
-            event(k).value    = char(EventCodes(tmp(sel(k)),:));
+            event(k).value    = char(EventCodes(evType(k),:));
         end
     else
         for theEvent=1:size(eventData,1)
