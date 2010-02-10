@@ -145,7 +145,7 @@ void *tcpserver(void *arg) {
 	int s, c;
     unsigned int b;
 	int optval;
-	struct timeval timeout;
+	/* struct timeval timeout; */
 	int oldcancelstate, oldcanceltype;
 
 #ifdef WIN32

@@ -10,6 +10,8 @@
 #include <strings.h>
 #endif
 #ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
 #define usleep(x)    (Sleep((x)/1000))
 #endif

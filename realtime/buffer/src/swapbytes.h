@@ -2,7 +2,22 @@
 #define SWAP_BYTES_H
 
 #include <stdio.h>
+
+#if defined(_MSC_VER)
+#include <win32/stdint.h>
+#elif defined(__BORLANDC__)
+  /* without the following, compilation with the Borland command line tools fails -- SK */
+  typedef __int8            int8_t;
+  typedef __int16           int16_t;
+  typedef __int32           int32_t;
+  typedef __int64           int64_t;
+  typedef unsigned __int8           uint8_t;
+  typedef unsigned __int16          uint16_t;
+  typedef unsigned __int32          uint32_t;
+  typedef unsigned __int64          uint64_t;
+#else
 #include <stdint.h>
+#endif
 
 #define SwapTwoBytes(data)   ( (((data) >> 8) & 0x00FF) | (((data) << 8) & 0xFF00) )
 #define SwapFourBytes(data)  ( (((data) >> 24) & 0x000000FF) | (((data) >> 8) & 0x0000FF00) | \ (((data) << 8) & 0x00FF0000) | (((data) << 24) & 0xFF000000) )

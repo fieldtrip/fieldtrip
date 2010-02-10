@@ -2,14 +2,13 @@
     #include <windows.h>
 
 #elif defined (_MSC_VER)
-    #include <windows.h>
+    #include <winsock2.h>
 
 #elif defined (__CYGWIN32__)
-    #include <windows.h>
+    #include <winsock2.h>
 
 #elif defined (__MINGW32__)
     #include <winsock2.h>
-    #include <win32compat.h>
     #ifndef WIN32
       #define WIN32 1
     #endif

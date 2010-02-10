@@ -27,12 +27,23 @@
 ##############################################################################
 
 CC		 = gcc
+
+PLATFORM = $(shell gcc -dumpmachine)
+
+ifeq "$(PLATFORM)" "mingw32"
+	INCPATH	 = -I../src -I../pthreads-win32/include
+	LIBPATH  = -L../src -L../pthreads-win32/lib
+	LIBS 	 = -lbuffer -lm -lpthreadGC2 -lws2_32
+	CFLAGS	 = $(INCPATH) -Wunused -pedantic -O0 -fpack-struct -g 
+else
+	INCPATH	 = -I../src
+	LIBPATH  = -L../src
+	LIBS 	 = -lbuffer -lm -lpthread
+	CFLAGS	 = $(INCPATH) -Wunused -pedantic -O0 -fPIC -fpack-struct -g
+endif
+
 BINDIR	 = .
-INCPATH  = -I../src
-LIBPATH  = -L../src
-LIBS 	 = -lbuffer -lm -lpthread
-CFLAGS	 = $(INCPATH) -Wunused -pedantic -O1 -fPIC -fpack-struct
-CXXFLAGS = $(INCPATH) -Wunused -pedantic -O1
+CXXFLAGS = $(INCPATH) -Wunused -pedantic -O0
 
 ##############################################################################
 
@@ -85,9 +96,17 @@ test_benchmark: test_benchmark.o
 	$(CC) $(CFLAGS) $(INCPATH) -c $*.c
 
 clean:
+ifeq "$(PLATFORM)" "mingw32"
+	del *.o *.a
+else
 	rm -f core *.o *.obj *.a *~
+endif
 
 distclean:
+ifeq "$(PLATFORM)" "mingw32"
+	del test_gethdr.exe test_getdat.exe test_getevt.exe test_flushhdr.exe test_flushdat.exe test_flushevt.exe
+	del demo_sinewave.exe demo_event.exe demo_buffer.exe demo_combined.exe
+else
 	rm test_gethdr test_getdat test_getevt test_flushhdr test_flushdat test_flushevt
 	rm demo_sinewave demo_event demo_buffer demo_combined
-
+endif

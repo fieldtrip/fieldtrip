@@ -23,7 +23,7 @@
  *
  */
 
-#include <netdb.h>
+/*#include <netdb.h>  -- is this needed? SK */
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
