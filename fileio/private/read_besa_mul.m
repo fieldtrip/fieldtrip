@@ -33,7 +33,9 @@ fid = fopen(filename, 'rt');
 
 hdr1 = fgetl(fid);
 % split the first header line into separate elements
-tmp = tokenize(hdr1, ' ');
+%!!! 2009/09/25
+%tmp = tokenize(hdr1, ' ');
+tmp = tokenize(hdr1, ' ',1);
 for i=1:length(tmp)
   % extract the information from each element
   dum = tokenize(tmp{i}, '=');
@@ -74,7 +76,9 @@ end
 
 hdr2 = fgetl(fid);
 % split the second header line into channel/source labels
-dat.label = tokenize(hdr2, ' ');
+%!!! 2009/09/25
+%dat.label = tokenize(hdr2, ' ');
+dat.label = tokenize(hdr2, ' ',1);
 
 % read the actual data
 dat.data = fscanf(fid, '%g');
