@@ -23,7 +23,7 @@ fp = fopen(filename);
 
 % Read the file
 if (fp)
-  % Read header of .swf file
+  % Read header of .mul file
   headline=fscanf(fp,'TimePoints=%f  Channels=%f  BeginSweep[ms]=%f  SamplingInterval[ms]=%f  Bins/uV=%f');
   mul.Npts=headline(1);
   NChan=headline(2);

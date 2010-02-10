@@ -16,8 +16,10 @@ function [time,data,nEpochs] = readBESAsb(filename)
 %         where nChannels is the number of Channels and nSamples the number
 %         of samples within one epoch
 %   nEpochs (optional): The number of epochs contained in the file
-%
-% Last modified February 21, 2007 Karsten Hoechstetter
+
+% Modified February 21, 2007 Karsten Hoechstetter
+% Modified April 24, 2007 Robert Oostenveld
+% Modified September 24, 2009 Karsten Hoechstetter
 
 if isempty(findstr(filename,'.dat'))
   filename = [filename,'.dat'];
@@ -34,13 +36,9 @@ sRate = fscanf(fid,'sRate=%f\n');
 nSamples = fscanf(fid,'nSamples=%i\n');
 format = fscanf(fid,'format=%s');
 file = fscanf(fid,'\nfile=%s');
-prestimulus = fscanf(fid,'prestimulus=%f\n');
-epochs = fscanf(fid,'epochs=%i\n');
+prestimulus = fscanf(fid,'prestimulus=%f\n');   if isempty(prestimulus),prestimulus=0;end
+epochs = fscanf(fid,'epochs=%i\n');             if isempty(epochs),epochs=1;end
 fclose(fid);
-
-if isempty(epochs)
-  epochs=1;
-end
 
 time=[-prestimulus:1/sRate*1000:(nSamples/epochs-1)*1000/sRate-prestimulus];
 
