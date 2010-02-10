@@ -47,7 +47,6 @@ else
 end;
 
 if bitand(version,1) == 0
-    %error('ERROR:  This is an unsegmented file, which is not supported.\n');
     unsegmented = 1;
 else
     unsegmented = 0;
@@ -71,6 +70,7 @@ end
 if unsegmented
     %interpret begtrial and endtrial as sample indices
     fseek(fh, 36+Nevents*4, 'bof'); %skip over header
+    fseek(fh, ((begtrial-1)*(hdr.nChans+Nevents)*2), 'cof'); %skip previous trials
     nSamples  = endtrial-begtrial+1;
     trialData = fread(fh, [hdr.nChans+Nevents, nSamples],dataType,endian);
 else
