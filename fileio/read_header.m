@@ -36,7 +36,7 @@ function [hdr] = read_header(filename, varargin)
 %   ANT - Advanced Neuro Technology, EEProbe (*.avr, *.eeg, *.cnt)
 %   Biosemi (*.bdf)
 %   CED - Cambridge Electronic Design (*. smr)
-%   Electrical Geodesics, Inc. (*.egis, *.ave, *.gave, *.ses, *.raw)
+%   Electrical Geodesics, Inc. (*.egis, *.ave, *.gave, *.ses, *.raw, *.sbin)
 %   Megis/BESA (*.avr, *.swf)
 %   NeuroScan (*.eeg, *.cnt, *.avg)
 %   Nexstim (*.nxe)
@@ -567,7 +567,7 @@ switch headerformat
     hdr.Fs          = chdr(1,4); %making assumption that sample rate is same for all cells
     hdr.nChans      = fhdr(19);
     for i = 1:hdr.nChans
-      hdr.label{i}  = ['e' num2str(i)];
+      hdr.label{i,1}  = ['e' num2str(i)];
     end;
     %since NetStation does not properly set the fhdr(11) field, use the number of subjects from the chdr instead
     hdr.nTrials     = chdr(1,2)*fhdr(18); %number of trials is numSubjects * numCells
@@ -598,7 +598,7 @@ switch headerformat
     hdr.Fs          = chdr(1,4); %making assumption that sample rate is same for all cells
     hdr.nChans      = fhdr(19);
     for i = 1:hdr.nChans
-      hdr.label{i}  = ['e' num2str(i)];
+      hdr.label{i,1}  = ['e' num2str(i)];
     end;
     hdr.nTrials     = sum(chdr(:,2));
     hdr.nSamplesPre = ceil(fhdr(14)/(1000/hdr.Fs));
@@ -629,14 +629,10 @@ switch headerformat
     hdr.Fs          = header_array(9);
     hdr.nChans      = header_array(10);
     for i = 1:hdr.nChans
-      hdr.label{i}  = ['e' num2str(i)];
+      hdr.label{i,1}  = ['e' num2str(i)];
     end;
     hdr.nTrials     = header_array(15);
     hdr.nSamplesPre = preBaseline;
-
-    if hdr.nSamplesPre == 0
-      hdr.nSamplesPre = 1; % If baseline was left as zero, then change to "1" to avoid possible issues with software expecting a non-zero baseline.
-    end;
 
     hdr.nSamples    = header_array(16); % making assumption that number of samples is same for all cells
 
