@@ -79,7 +79,7 @@ if unsegmented,
     end
     CateNames   = [];
     CatLengths  = [];
-    preBaseline = [];
+    preBaseline = 0;
 else
     NumCategors = fread(fid,1,'int16',endian);
     for j = 1:NumCategors
@@ -106,29 +106,38 @@ else
     nsmp = NSamples;
 end
 
-eventData   = zeros(NEvent,NSegments*NSamples);
-segHdr      = zeros(NSegments,2);
+segHdr = zeros(NSegments,2);
 
-for j = 1:NSegments*(NSamples/nsmp)
-    if unsegmented
-        %don't know yet
-    else
+if unsegmented
+    eventData = logical(zeros(NEvent,NSegments*NSamples));
+    switch precision
+      case 2
+        dataType = 'int16';
+      case 4
+        dataType = 'single';
+      case 6
+        dataType = 'double';
+    end
+    allData = fread(fid,[NChan+NEvent,NSegments*NSamples],dataType,endian);
+    eventData = logical(allData(NChan+1:end,:));
+else
+    eventData = zeros(NEvent,NSegments*NSamples);
+    for j = 1:NSegments*(NSamples/nsmp)
         %read miniheader per segment
         [segHdr(j,1), count]    = fread(fid, 1,'int16',endian);    %cell
         [segHdr(j,2), count]    = fread(fid, 1,'int32',endian);    %time stamp
-    end
-
-    switch precision
-        case 2
-            [temp,count]    = fread(fid,[NChan+NEvent, nsmp],'int16',endian);
-        case 4
-            [temp,count]    = fread(fid,[NChan+NEvent, nsmp],'single',endian);
-        case 6
-            [temp,count]    = fread(fid,[NChan+NEvent, nsmp],'double',endian);
-    end
-    if (NEvent ~= 0)
-        eventData(:,((j-1)*nsmp+1):j*nsmp)  = temp( (NChan+1):(NChan+NEvent), 1:nsmp);
+        
+        switch precision
+            case 2
+                [temp,count]    = fread(fid,[NChan+NEvent, nsmp],'int16',endian);
+            case 4
+                [temp,count]    = fread(fid,[NChan+NEvent, nsmp],'single',endian);
+            case 6
+                [temp,count]    = fread(fid,[NChan+NEvent, nsmp],'double',endian);
+        end
+        if (NEvent ~= 0)
+            eventData(:,((j-1)*nsmp+1):j*nsmp)  = temp( (NChan+1):(NChan+NEvent), 1:nsmp);
+        end
     end
 end
 fclose(fid);
-
