@@ -15,8 +15,6 @@ function [status] = hastoolbox(toolbox, autoadd, silent)
 % use efficient handling if the same toolbox has been investigated before
 persistent previous previouspath
 
-keyboard
-
 if ~isequal(previouspath, matlabpath)
   previous = [];
 end
