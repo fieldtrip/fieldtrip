@@ -211,9 +211,12 @@ while true
     catch feval_error
       argout  = {};
       % the output options will include the error
-      options = {'timused', timused, 'memused', memused, 'lastwarn', lastwarn, 'lasterr', feval_error};
+      options = {'lastwarn', lastwarn, 'lasterr', feval_error};
       % an error was detected while executing the job
       warning('an error was detected during job execution');
+      % ensure that th ememory profiler is switched off
+      memprofile off
+      memprofile clear
     end
 
     try
