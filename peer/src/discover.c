@@ -16,7 +16,7 @@ void cleanup_discover(void *arg) {
 		threadlocal_t *threadlocal = NULL;
 		peerlist_t *next = NULL;
 
-    threadlocal = (threadlocal_t *)arg;
+		threadlocal = (threadlocal_t *)arg;
 		if (threadlocal && threadlocal->host) {
 				FREE(threadlocal->host);
 		}
@@ -51,8 +51,8 @@ void *discover(void *arg) {
 		unsigned int addrlen;
 		int nbytes, verbose = 0, found = 0;
 		int one = 1;
-    int accept = 1;
-    peerlist_t *peer = NULL, *next = NULL;
+		int accept = 1;
+		peerlist_t *peer = NULL, *next = NULL;
 		hostdef_t *host = NULL;
 
 		/* these variables are for the socket */
@@ -142,6 +142,9 @@ void *discover(void *arg) {
 						perror("discover recvfrom");
 						goto cleanup;
 				}
+
+				if (host->version!=VERSION)
+						continue;
 
 				if (verbose>0) {
 						fprintf(stderr, "\n");
