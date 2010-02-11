@@ -20,6 +20,10 @@ function peerslave(varargin)
 %
 % See also PEERMASTER, PEERRESET, PEERFEVAL, PEERCELLFUN
 
+% These need to be added
+%   group      = string (default = automatic)
+%   hostname   = string (default = automatic)
+
 % get the optional input arguments
 maxnum     = keyval('maxnum',     varargin); if isempty(maxnum),   maxnum=inf; end
 maxtime    = keyval('maxtime',    varargin); if isempty(maxtime),  maxtime=inf; end
@@ -43,8 +47,8 @@ if ~iscell(allowgroup) && ischar(allowgroup)
   allowgroup = {allowgroup};
 end
 
+% start the maintenance threads
 warning off
-% start the peer server maintenance threads
 peer('tcpserver', 'start');
 peer('announce',  'start');
 peer('discover',  'start');

@@ -21,9 +21,10 @@ if ispc
     mex -I. -ID:\pthreads-win32\include -c util.c
     mex -I. -ID:\pthreads-win32\include -c tcpserver.c
     mex -I. -ID:\pthreads-win32\include -c tcpsocket.c
+    mex -I. -ID:\pthreads-win32\include -c security.c
 
     % link all the objects together into a mex file
-    mex -I. -ID:\pthreads-win32\include -LD:\pthreads-win32\lib -output ../peer peer.c tcpserver.obj tcpsocket.obj discover.obj announce.obj expire.obj peerinit.obj util.obj extern.obj fairshare.obj -lpthreadVC2.bcb
+    mex -I. -ID:\pthreads-win32\include -LD:\pthreads-win32\lib -output ../peer peer.c tcpserver.obj tcpsocket.obj discover.obj announce.obj expire.obj peerinit.obj util.obj extern.obj fairshare.obj security.obj -lpthreadVC2.bcb
 
     % also compile the memory profiler
     mex -I. -output ../memprofile memprofile.c
@@ -57,9 +58,10 @@ elseif isunix || ismac
     mex  -I. -c util.c
     mex  -I. -c tcpserver.c
     mex  -I. -c tcpsocket.c
+    mex  -I. -c security.c
 
     % link all the objects together into a mex file
-    mex -I. -output ../peer peer.c tcpserver.o tcpsocket.o discover.o announce.o expire.o peerinit.o util.o extern.o fairshare.o -lpthread
+    mex -I. -output ../peer peer.c tcpserver.o tcpsocket.o discover.o announce.o expire.o peerinit.o util.o extern.o fairshare.o security.o -lpthread
 
     % also compile the memory profiler
     mex -I. -output ../memprofile memprofile.c

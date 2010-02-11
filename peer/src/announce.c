@@ -36,10 +36,11 @@ void cleanup_announce(void *arg) {
 void *announce(void *arg) {
 		int fd = 0;
 		int verbose = 0;
-		struct sockaddr_in addr;
+		struct sockaddr_in multicast, broadcast;
 		hostdef_t *message = NULL;
 		unsigned char ttl = 3;
 		unsigned char one = 1;
+		int use_broadcast, use_multicast;
 
 		threadlocal_t threadlocal;
 		threadlocal.message = NULL;
@@ -92,30 +93,50 @@ void *announce(void *arg) {
 		/* this will be closed at cleanup */
 		threadlocal.fd = fd;
 
-		/* set up destination address */
-		memset(&addr,0,sizeof(addr));
-		addr.sin_family=AF_INET;
-		addr.sin_addr.s_addr=inet_addr(ANNOUNCE_GROUP);
-		addr.sin_port=htons(ANNOUNCE_PORT);
+		/* set up destination address for multicasting */
+		memset(&multicast,0,sizeof(multicast));
+		multicast.sin_family      = AF_INET;
+		multicast.sin_addr.s_addr = inet_addr(ANNOUNCE_GROUP);
+		multicast.sin_port        = htons(ANNOUNCE_PORT);
+
+		/* set up destination address for broadcasting */
+		/* only broadcast to localhost on which multiple peers may be listening */
+		memset(&broadcast,0,sizeof(broadcast));
+		broadcast.sin_family      = AF_INET;
+		broadcast.sin_addr.s_addr = inet_addr("127.0.0.1");
+		broadcast.sin_port        = htons(ANNOUNCE_PORT);
 
 		/* now just sendto() our destination */
 		while (1) {
 				/* the host port and status are variable */
 				pthread_mutex_lock(&mutexhost);
 				memcpy(message, host, sizeof(hostdef_t));
+				use_broadcast = (strncasecmp(host->name, "localhost", STRLEN)==0);
+				use_multicast = (strncasecmp(host->name, "localhost", STRLEN)==1);
 				pthread_mutex_unlock(&mutexhost);
 
-				/* note that this is a thread cancelation point */
-				if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &addr,sizeof(addr)) < 0) {
-						perror("announce sendto");
-						goto cleanup;
-				}
+				if (verbose>1)
+						fprintf(stderr, "announce: use_broadcast = %d, use_multicast = %d\n", use_broadcast, use_multicast);
+
+				if (use_broadcast)
+						/* note that this is a thread cancelation point */
+						if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &multicast,sizeof(multicast)) < 0) {
+								perror("announce sendto");
+								goto cleanup;
+						}
+
+				if (use_multicast)
+						/* note that this is a thread cancelation point */
+						if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &multicast,sizeof(multicast)) < 0) {
+								perror("announce sendto");
+								goto cleanup;
+						}
 
 				if (verbose>1)
 						fprintf(stderr, "announce\n");
 
 				/* note that this is a thread cancelation point */
-                pthread_testcancel();
+				pthread_testcancel();
 				usleep(ANNOUNCESLEEP);
 		}
 

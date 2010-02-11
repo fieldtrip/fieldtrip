@@ -5,22 +5,17 @@ function peermaster(varargin)
 %
 % See also PEERSLAVE, PEERRESET
 
-memavail = keyval('memavail', varargin); if isempty(memavail), memavail=intmax('uint32'); end
-cpuavail = keyval('cpuavail', varargin); if isempty(cpuavail), cpuavail=intmax('uint32'); end
-timavail = keyval('timavail', varargin); if isempty(timavail), timavail=intmax('uint32'); end
+% These need to be added
+%   group      = string (default = automatic)
+%   hostname   = string (default = automatic)
 
+% start the maintenance threads
 warning off
-% start the peer server maintenance threads
 peer('tcpserver', 'start');
 peer('announce',  'start');
 peer('discover',  'start');
 peer('expire',    'start');
 warning on
-
-% these values will be announced
-peer('memavail', memavail);
-peer('cpuavail', cpuavail);
-peer('timavail', timavail);
 
 % switch to master mode
 peer('status', 2);
