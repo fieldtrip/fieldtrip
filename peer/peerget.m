@@ -48,8 +48,14 @@ if success
   if ~isempty(warn)
     warning(warn);
   end
-  if ~isempty(err)
-    rethrow(err);
+  if ~isempty(err) 
+    if ischar(err)
+      % it only contains the description
+      error(err);
+    else
+      % it contains the full details
+      rethrow(struct(err));
+    end
   end
 
   switch output

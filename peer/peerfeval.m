@@ -68,8 +68,8 @@ end
 % start with an empty return value
 jobid = [];
 
-% there are no options to write
-options = {};
+% pass some options that may influence remote execution
+options = {'pwd', pwd, 'path', custompath};
 
 while isempty(jobid)
 
@@ -152,4 +152,15 @@ if z>0
 else
   y = (x - min(x(:)));
 end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that determines the path, excluding all Matlab toolboxes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function p = custompath
+p = tokenize(path, ':');
+s = cellfun(@isempty, regexp(p, ['^' matlabroot]));
+p = p(s);
+p = sprintf('%s:', p{:});
+p = p(1:end-1); % remove the last ':'
 

@@ -112,17 +112,17 @@ while ~all(submitted) || ~all(collected)
 
     if any(collected)
       % update the estimate of the time and memory that will be needed for the next job
-      timreq = max(timused(~isnan(timused)));
-      memreq = max(memused(~isnan(memused)));
+      timreq = nanmax(timused);
+      memreq = nanmax(memused);
     end
 
     % redistribute the input arguments
-    argin  = cell(1, numargin);
+    argin = cell(1, numargin);
     for j=1:numargin
       argin{j} = varargin{j}{submit};
     end
 
-    [jobid(submit) puttime(submit)]= peerfeval(fname, argin{:}, 'timeout', inf, 'memreq', memreq, 'timreq', timreq);
+    [jobid(submit) puttime(submit)] = peerfeval(fname, argin{:}, 'timeout', inf, 'memreq', memreq, 'timreq', timreq);
     % fprintf('submitted job %d\n', submit);
     submitted(submit)  = true;
     submittime(submit) = toc(stopwatch);
@@ -196,4 +196,30 @@ if all(puttime>timused)
   % be adjusted from using the peers to local execution
   warning('copying the jobs over the network took more time than their execution');
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function y = nanmax(x)
+y = max(x(~isnan(x(:))));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function y = nanmin(x)
+y = min(x(~isnan(x(:))));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function y = nanmean(x)
+x = x(~isnan(x(:)));
+y = mean(x);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function y = nanstd(x)
+x = x(~isnan(x(:)));
+y = std(x);
 

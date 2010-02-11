@@ -34,7 +34,7 @@ void cleanup_tcpsocket(void *arg) {
 
 /* this function deals with the incoming message */
 void *tcpsocket(void *arg) {
-		int n, verbose = 1;
+		int n, verbose = 0;
 		int connect_accept = 1, connect_continue = 1, handshake;
 		joblist_t *job;
 

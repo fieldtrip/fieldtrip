@@ -76,6 +76,10 @@ if ~isempty(timavail), peer('timavail', timavail); end
 % switch to slave mode
 peer('status', 1);
 
+% remember the original working directory and the original path
+orig_pwd = pwd;
+orig_path = path;
+
 % keep track of the time and number of jobs
 stopwatch = tic;
 prevtime  = toc(stopwatch);
@@ -136,6 +140,22 @@ while true
       fname = argin{1};
       argin = argin(2:end);
 
+      if ~iscell(options)
+        error('input options should be a cell-array');
+      end
+
+      % try changing to the same working directory
+      option_pwd  = keyval('pwd', options);
+      if ~isempty(option_pwd)
+        cd(option_pwd);
+      end
+
+      % try setting the same path directory
+      option_path = keyval('path', options);
+      if ~isempty(option_path)
+        path(option_path, path);
+      end
+
       % there are potentially errors to catch from the which() function
       if isempty(which(fname))
         error('Not a valid M-file (%s).', fname);
@@ -144,12 +164,12 @@ while true
       % it can be difficult to determine the number of output arguments
       try
         numargout = nargout(fname);
-      catch me
-        if strcmp(me.identifier, 'MATLAB:narginout:doesNotApply')
+      catch nargout_error
+        if strcmp(nargout_error.identifier, 'MATLAB:narginout:doesNotApply')
           % e.g. in case of nargin('plus')
           numargout = 1;
         else
-          rethrow(me);
+          rethrow(nargout_error);
         end
       end
 
@@ -186,19 +206,35 @@ while true
       fprintf('executing job %d took %f seconds and %d bytes\n', jobnum, timused, memused);
 
       % collect the output options
-      options = {'lastwarn', lastwarn, 'lasterr', lasterr, 'timused', timused, 'memused', memused};
+      options = {'timused', timused, 'memused', memused, 'lastwarn', lastwarn, 'lasterr', ''};
 
-    catch me
+    catch feval_error
       argout  = {};
       % the output options will include the error
-      options = {'timused', timused, 'lastwarn', lastwarn, 'lasterr', me};
+      options = {'timused', timused, 'memused', memused, 'lastwarn', lastwarn, 'lasterr', feval_error};
       % an error was detected while executing the job
       warning('an error was detected during job execution');
     end
 
-    peer('put', joblist.hostid, argout, options, 'jobid', joblist.jobid);
+    try
+      peer('put', joblist.hostid, argout, options, 'jobid', joblist.jobid);
+    catch
+      warning('failed to return job results to the master');
+    end
+
     peer('clear', joblist.jobid);
-    clear funname argin argout
+
+    clear funname argin argout timused lastwarn feval_error
+
+    % revert to the original working directory
+    if ~isempty(option_pwd)
+      cd(orig_pwd);
+    end
+
+    % revert to the original path
+    if ~isempty(option_path)
+      path(orig_path);
+    end
 
   end % isempty(joblist)
 
