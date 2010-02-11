@@ -13,7 +13,14 @@ function [status] = hastoolbox(toolbox, autoadd, silent)
 
 % this function is called many times in FieldTrip and associated toolboxes
 % use efficient handling if the same toolbox has been investigated before
-persistent previous
+persistent previous previouspath
+
+keyboard
+
+if ~isequal(previouspath, matlabpath)
+  previous = [];
+end
+
 if isempty(previous)
   previous = struct;
 elseif isfield(previous, fixname(toolbox))
@@ -224,6 +231,10 @@ end
 if status
   previous.(fixname(toolbox)) = status;
 end
+
+% remember the previous path, allows us to determine on the next call
+% whether the path has been modified outise of this function
+previouspath = matlabpath;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function
