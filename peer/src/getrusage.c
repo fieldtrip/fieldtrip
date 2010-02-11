@@ -56,7 +56,7 @@ int main()
 
 		while (1) {
 				ret=getrusage(who,p);
-/*				process(p, "-------------"); */
+				/*				process(p, "-------------"); */
 				getmem(&rss, &vs);
 				printf(" getmem = %lu    %lu\n", rss, vs);
 				buf = malloc(1024);

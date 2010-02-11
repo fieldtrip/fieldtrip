@@ -40,12 +40,12 @@ main(int argc, char *argv[])
 				perror("Reusing PORT failed");
 				exit(1);
 		}
-/*
-		if (setsockopt(fd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(yes)) < 0) {
-				perror("Reusing ADDR failed");
-				exit(1);
-		}
-*/
+		/*
+		   if (setsockopt(fd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(yes)) < 0) {
+		   perror("Reusing ADDR failed");
+		   exit(1);
+		   }
+		 */
 
 		/* set up destination address */
 		memset(&addr,0,sizeof(addr));

@@ -15,19 +15,19 @@ int security_check(hostdef_t *host) {
 }
 
 int ismember_userlist(char *str) {
-  int ismember = 1;
-  userlist_t *user = NULL;
-  pthread_mutex_lock(&mutexuserlist);
-  if (userlist) {
-    ismember = 0;
-    user = userlist;
-    while (user) {
-      if (strncmp(user->name, str, STRLEN)==0)
-        ismember = 1;
-      user = user->next;
-    }
-  }
-  pthread_mutex_unlock(&mutexuserlist);
+		int ismember = 1;
+		userlist_t *user = NULL;
+		pthread_mutex_lock(&mutexuserlist);
+		if (userlist) {
+				ismember = 0;
+				user = userlist;
+				while (user) {
+						if (strncmp(user->name, str, STRLEN)==0)
+								ismember = 1;
+						user = user->next;
+				}
+		}
+		pthread_mutex_unlock(&mutexuserlist);
 		return ismember;
 }
 

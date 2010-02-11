@@ -437,11 +437,20 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				/* the input arguments should be "group <string>" */
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
-				if (!mxIsChar(prhs[1]))
-						mexErrMsgTxt ("invalid input argument #2");
+
 				pthread_mutex_lock(&mutexhost);
-				if (mxGetString(prhs[1], host->group, STRLEN))
-						mexErrMsgTxt("FIXME: unexpected error");
+				if (mxIsEmpty(prhs[1])) {
+						/* set the default group name */
+						strncpy(host->group, DEFAULT_GROUP, STRLEN);
+				}
+				else {
+						if (!mxIsChar(prhs[1]))
+								/* FIXME this causes a deadlock */
+								mexErrMsgTxt ("invalid input argument #2");
+						if (mxGetString(prhs[1], host->group, STRLEN))
+								/* FIXME this causes a deadlock */
+								mexErrMsgTxt("FIXME: unexpected error");
+				}
 				pthread_mutex_unlock(&mutexhost);
 		}
 
@@ -453,7 +462,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 
 				pthread_mutex_lock(&mutexhost);
 				if (mxIsEmpty(prhs[1])) {
-						/* use the hostname of this computer */
+						/* set the default, i.e. the hostname of this computer */
 						if (gethostname(host->name, STRLEN))
 								mexErrMsgTxt("FIXME: could not get hostname");
 				}

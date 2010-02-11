@@ -40,7 +40,7 @@ void *tcpserver(void *arg) {
 		unsigned int b;
 		int optval;
 
-    /* these variables are for the threading */
+		/* these variables are for the threading */
 		int rc;
 		pthread_t tid;
 

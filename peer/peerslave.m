@@ -17,12 +17,10 @@ function peerslave(varargin)
 %   allowuser  = {...}
 %   allowgroup = {...}
 %   fairshare  = [a, b, c, d]
+%   group      = string
+%   hostname   = string
 %
 % See also PEERMASTER, PEERRESET, PEERFEVAL, PEERCELLFUN
-
-% These need to be added
-%   group      = string (default = automatic)
-%   hostname   = string (default = automatic)
 
 % get the optional input arguments
 maxnum     = keyval('maxnum',     varargin); if isempty(maxnum),   maxnum=inf; end
@@ -35,6 +33,8 @@ fairshare  = keyval('fairshare',  varargin);
 allowhost  = keyval('allowhost',  varargin); if isempty(allowhost), allowhost = {}; end
 allowuser  = keyval('allowuser',  varargin); if isempty(allowuser), allowuser = {}; end
 allowgroup = keyval('allowgroup', varargin); if isempty(allowgroup), allowgroup = {}; end
+hostname   = keyval('hostname',   varargin);
+group      = keyval('group',      varargin);
 
 % these should be cell arrays
 if ~iscell(allowhost) && ischar(allowhost)
@@ -55,20 +55,23 @@ peer('discover',  'start');
 peer('expire',    'start');
 warning on
 
+if ~isempty(hostname)
+  peer('hostname', hostname);
+end
+
+if ~isempty(group)
+  peer('group', group);
+end
+
 % impose access restrictions 
-peer('allowhost', allowhost);
-peer('allowuser', allowuser);
+peer('allowhost',  allowhost);
+peer('allowuser',  allowuser);
 peer('allowgroup', allowgroup);
 
 % the available resources will be announced and are used to drop requests that are too large
 if ~isempty(memavail), peer('memavail', memavail); end
 if ~isempty(cpuavail), peer('cpuavail', cpuavail); end
 if ~isempty(timavail), peer('timavail', timavail); end
-
-% set up the fairshare algorithm parameters
-if ~isempty(fairshare)
-  peer('fairshare', fairshare(1), fairshare(2), fairshare(3), fairshare(4));
-end
 
 % switch to slave mode
 peer('status', 1);

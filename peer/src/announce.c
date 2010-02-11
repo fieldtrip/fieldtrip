@@ -1,4 +1,5 @@
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <time.h>
 #include <string.h>
 #include <stdio.h>
@@ -15,7 +16,7 @@ typedef struct {
 
 void cleanup_announce(void *arg) {
 		threadlocal_t *threadlocal;
-        threadlocal = (threadlocal_t *)arg;
+		threadlocal = (threadlocal_t *)arg;
 		if (threadlocal && threadlocal->message) {
 				FREE(threadlocal->message);
 		}
@@ -36,11 +37,10 @@ void cleanup_announce(void *arg) {
 void *announce(void *arg) {
 		int fd = 0;
 		int verbose = 0;
-		struct sockaddr_in multicast, broadcast;
+		struct sockaddr_in multicast;
 		hostdef_t *message = NULL;
 		unsigned char ttl = 3;
 		unsigned char one = 1;
-		int use_broadcast, use_multicast;
 
 		threadlocal_t threadlocal;
 		threadlocal.message = NULL;
@@ -85,7 +85,7 @@ void *announce(void *arg) {
 		}
 
 		/* create what looks like an ordinary UDP socket */
-		if ((fd=socket(AF_INET,SOCK_DGRAM,0)) < 0) {
+		if ((fd=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP)) < 0) {
 				perror("announce socket");
 				goto cleanup;
 		}
@@ -99,41 +99,42 @@ void *announce(void *arg) {
 		multicast.sin_addr.s_addr = inet_addr(ANNOUNCE_GROUP);
 		multicast.sin_port        = htons(ANNOUNCE_PORT);
 
-		/* set up destination address for broadcasting */
-		/* only broadcast to localhost on which multiple peers may be listening */
-		memset(&broadcast,0,sizeof(broadcast));
-		broadcast.sin_family      = AF_INET;
-		broadcast.sin_addr.s_addr = inet_addr("127.0.0.1");
-		broadcast.sin_port        = htons(ANNOUNCE_PORT);
-
 		/* now just sendto() our destination */
 		while (1) {
-				/* the host port and status are variable */
+
 				pthread_mutex_lock(&mutexhost);
+
+				/* the host details can change over time */
 				memcpy(message, host, sizeof(hostdef_t));
-				use_broadcast = (strncasecmp(host->name, "localhost", STRLEN)==0);
-				use_multicast = (strncasecmp(host->name, "localhost", STRLEN)==1);
+
+				if (strncasecmp(host->name, "localhost", STRLEN)==0)
+						ttl = 0;
+				else
+						ttl = 1;
+
+				/*  the TTL (time to live/hop count) for the send can be
+				 *  ----------------------------------------------------------------------
+				 *  0      Restricted to the same host. Won't be output by any interface.
+				 *  1      Restricted to the same subnet. Won't be forwarded by a router.
+				 *  <32    Restricted to the same site, organization or department.
+				 *  <64    Restricted to the same region.
+				 *  <128   Restricted to the same continent.
+				 *  <255   Unrestricted in scope. Global.
+				 */
+
+				if ((setsockopt(fd, IPPROTO_IP, IP_MULTICAST_TTL, (void*)&ttl, sizeof(ttl))) < 0)
+						perror("setsockopt() failed");
+
 				pthread_mutex_unlock(&mutexhost);
 
 				if (verbose>1)
-						fprintf(stderr, "announce: use_broadcast = %d, use_multicast = %d\n", use_broadcast, use_multicast);
-
-				if (use_broadcast)
-						/* note that this is a thread cancelation point */
-						if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &multicast,sizeof(multicast)) < 0) {
-								perror("announce sendto");
-								goto cleanup;
-						}
-
-				if (use_multicast)
-						/* note that this is a thread cancelation point */
-						if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &multicast,sizeof(multicast)) < 0) {
-								perror("announce sendto");
-								goto cleanup;
-						}
-
-				if (verbose>1)
 						fprintf(stderr, "announce\n");
+
+				/* note that this is a thread cancelation point */
+				if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &multicast,sizeof(multicast)) < 0) {
+						perror("announce sendto");
+						goto cleanup;
+				}
 
 				/* note that this is a thread cancelation point */
 				pthread_testcancel();

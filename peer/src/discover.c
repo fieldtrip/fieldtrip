@@ -154,6 +154,7 @@ void *discover(void *arg) {
 				}
 
 				/* check whether the peer should be listed */
+				accept = 1;
 				accept = (accept & ismember_userlist (host->user));
 				accept = (accept & ismember_grouplist(host->group));
 				accept = (accept & ismember_hostlist (host->name));
@@ -207,6 +208,7 @@ void *discover(void *arg) {
 				peerlist        = peer;
 
 				if (verbose>1) {
+						i = 0;
 						peer = peerlist;
 						while(peer) {
 								fprintf(stderr, "discover: peerlist[%d] =\n", i);
