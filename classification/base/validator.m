@@ -17,7 +17,7 @@ classdef validator
   
   methods
     function obj = validator(varargin)
-      % a procedure is a clfproc
+      % a procedure is a mva
       
       % parse options
       for i=1:2:length(varargin)
@@ -30,13 +30,13 @@ classdef validator
         error('procedure must be specified!');
       end
       
-      if ~isa(obj.procedure,'clfproc')
+      if ~isa(obj.procedure,'mva')
         % try to create procedure if input is a cell array or a predictor
-        obj.procedure = clfproc(obj.procedure);
+        obj.procedure = mva(obj.procedure);
       end
       
       if obj.verbose
-        fprintf('creating validator for clfproc %s\n',obj.procedure.name);
+        fprintf('creating validator for mva %s\n',obj.procedure.name);
       end
       
       % initialize random number generator
@@ -49,12 +49,12 @@ classdef validator
       
     end
     
-    function n = nclasses(obj)
-      % return number of classes when known (called by statistics_crossvalidate)
-      
-      n = obj.getpredictor().nclasses;
-      
-    end
+%     function n = nclasses(obj)
+%       % return number of classes when known (called by statistics_crossvalidate)
+%       
+%       n = obj.getpredictor().nclasses;
+%       
+%     end
     
     function [m,desc] = getmodel(obj)
       % try to return the classifier parameters as a model
@@ -98,25 +98,10 @@ classdef validator
     function result = evaluate(obj,varargin)
       % indirect call to eval to simplify the interface
       
-      % get the predictor clfmethod
-      if iscell(obj.procedure)
-        if iscell(obj.procedure{1}.clfmethods{end})
-          pred = obj.procedure{1}.clfmethods{end}{1};
-        else
-          pred = obj.procedure{1}.clfmethods{end};
-        end
-      else
-        if iscell(obj.procedure.clfmethods{end})
-          pred = obj.procedure.clfmethods{end}{1};
-        else
-          pred = obj.procedure.clfmethods{end};
-        end
-      end
-      
       % create the concatenation of all folds for each of the datasets
      
-      post = cellfun(@(x)(x.X),obj.post,'UniformOutput',false);
-      design = cellfun(@(x)(x.X),obj.design,'UniformOutput',false);
+      post = obj.post;
+      design = obj.design;
       
       tpost = cell(1,size(post,2));
       tdesign = cell(1,size(design,2));
@@ -128,7 +113,7 @@ classdef validator
       result = cell(1,length(tpost));
       
       for c=1:length(tpost)
-        result{c} = pred.evaluate(tpost{c},tdesign{c},varargin{:});   
+        result{c} = obj.getpredictor().evaluate(tpost{c},tdesign{c},varargin{:});   
       end
       
       if length(result) == 1
@@ -149,8 +134,8 @@ classdef validator
       %
       options = varargin2struct(varargin);
       
-      post = cellfun(@(x)(x.X),obj.post,'UniformOutput',false);
-      design = cellfun(@(x)(x.X),obj.design,'UniformOutput',false);
+      post = obj.post;
+      design = obj.design;
       
       % create the concatenation of all folds for each of the datasets
       tpost = cell(1,size(post,2));
@@ -210,21 +195,21 @@ classdef validator
  
     
     function p = getpredictor(obj)
-   
-      p = [];
-      if iscell(obj.procedure)
-        if ~isempty(obj.procedure{1})
-          p = obj.procedure{1}.clfmethods{end};
-        end
-      else
-        if ~isempty(obj.procedure)
-          p = obj.procedure.clfmethods{end};
-        end
-      end
-      
-      if obj.verbose && isempty(p)
-        fprintf('could not determine predictor type\n');
-      end
+       % get the predictor (ending) mvmethod
+
+       if iscell(obj.procedure)
+         if iscell(obj.procedure{1}.mvmethods{end})
+           p = obj.procedure{1}.mvmethods{end}{1};
+         else
+           p = obj.procedure{1}.mvmethods{end};
+         end
+       else
+         if iscell(obj.procedure.mvmethods{end})
+           p = obj.procedure.mvmethods{end}{1};
+         else
+           p = obj.procedure.mvmethods{end};
+         end
+       end
       
     end
     

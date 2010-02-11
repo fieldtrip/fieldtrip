@@ -30,34 +30,34 @@ classdef gpregressor < regressor
            
        end
        
-       function p = estimate(obj,data,design)
+       function p = estimate(obj,X,Y)
             
            if ~exist('gpml-matlab','dir')
                error('this code requires an external toolbox: http://www.gaussianprocess.org/gpml/code/matlab/doc/');
            end
            
-           targets = design.X(:,1);
+           targets = Y(:,1);
            
            % center targets
            p.offset = mean(targets);
            targets = targets - p.offset;
            
-           p.data = data.X;
+           p.data = X;
            p.targets = targets;
 
           if obj.optimize % optimize hyperparameters
-             p.loghyper = minimize([zeros(1,data.nfeatures) 0 log(sqrt(0.1))]', 'gpr', -100, obj.covfunc, data.X, targets);
+             p.loghyper = minimize([zeros(1,size(X,2)) 0 log(sqrt(0.1))]', 'gpr', -100, obj.covfunc, X, targets);
            end
                        
        end
        
-       function post = map(obj,data)       
+       function Y = map(obj,X)       
            % returns mean and variance
        
-           [avg,variance] = gpr(obj.params.loghyper, obj.covfunc, obj.params.data, obj.params.targets, data.X);
+           [avg,variance] = gpr(obj.params.loghyper, obj.covfunc, obj.params.data, obj.params.targets, X);
            avg = avg + obj.params.offset;  % add back offset to get true prediction
 
-           post = dataset([avg variance]);
+           Y = [avg variance];
            
        end
 

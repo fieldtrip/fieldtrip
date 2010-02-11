@@ -39,23 +39,23 @@ classdef rbmstack < preprocessor
           
         end
         
-        function p = estimate(obj,data,design)
+        function p = estimate(obj,X,Y)
           % create hierarchy of rbms
           
           % default architecture
           if isempty(obj.model.rbms)
             
-            rbm1 = RBM('nvisible',data.nfeatures,'nhidden',30,'nconditional',1);
+            rbm1 = RBM('nvisible',size(X,2),'nhidden',30,'nconditional',1);
             rbm2 = RBM('nvisible',30,'nhidden',30,'nconditional',1);
             p.model = SRBM('rbms',{rbm1 rbm2});
             
           end
           
-          p.model = p.model.train(data.X);
+          p.model = p.model.train(X);
           
         end
         
-        function M = map(obj,U)            
+        function Y = map(obj,X)            
             % propagate activations and save features as examples
         
             if isempty(obj.inlayers)
@@ -63,7 +63,7 @@ classdef rbmstack < preprocessor
             end
             
             R = cell(1,length(obj.parameters.model.rbms)+1);
-            R{1} = U.X;
+            R{1} = X;
             for c=1:length(obj.parameters.model.rbms)
               
               obj.parameters.model.rbms{c}.meanfield = true;
@@ -72,16 +72,9 @@ classdef rbmstack < preprocessor
             end
                                 
             % concatenation of reconstruction probabilities
-            M = dataset(cat(2,R{obj.inlayers}));
+            Y = cat(2,R{obj.inlayers});
             
         end
-        
-        function U = unmap(obj,M)
-          
-          % move from feature activations in inlayers to the visible layer
-          error('not yet implemented');
-          
-        
-        end
+       
     end
 end 

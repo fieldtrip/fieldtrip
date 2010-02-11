@@ -14,9 +14,7 @@ classdef regressor < predictor
 %
 % SEE ALSO
 %   doc regressors
-%
-%   Copyright (c) 2008, Marcel van Gerven
-     
+  
     
     methods
         
@@ -31,10 +29,10 @@ classdef regressor < predictor
 
         end
         
-        function reg = predict(obj,data)
+        function reg = predict(obj,X)
            % convert posterior dataset into predictions (mean value)
            
-           reg = obj.test(data).X;
+           reg = obj.test(X);
            reg = reg(:,1);
            
         end
@@ -57,11 +55,7 @@ classdef regressor < predictor
       
          if ~isfield(options,'metric'), options.metric = 'accuracy'; end
          
-         if isa(post,'dataset')
-           metric = compute_metric(post.X(:,1),design.X(:,1),options);
-         else
-           metric = compute_metric(post(:,1),design(:,1),options);
-         end
+         metric = compute_metric(post(:,1),design(:,1),options);
       
          function met = compute_metric(post,design,cfg)
       

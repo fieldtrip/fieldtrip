@@ -14,9 +14,7 @@ classdef classifier < predictor
 % doc classifiers
 %
 % Copyright (c) 2008, Marcel van Gerven
-%
-% $Log: classifier.m,v $
-%    
+ 
 
   methods
         
@@ -34,7 +32,7 @@ classdef classifier < predictor
         function clf = predict(obj,data)
            % convert posterior dataset into classifications
            
-           [tmp,clf] = max(obj.test(data).X,[],2);
+           [tmp,clf] = max(obj.test(data),[],2);
         end
         
   end
@@ -83,13 +81,9 @@ classdef classifier < predictor
       options = varargin2struct(varargin);
       
       if ~isfield(options,'metric'), options.metric = 'accuracy'; end
-        
-      if isa(post,'dataset')
-        metric = compute_metric(post.X,tcls.X(:,1),options);
-      else
-        metric = compute_metric(post,tcls(:,1),options);
-      end
-    
+     
+      metric = compute_metric(post,tcls(:,1),options);
+     
       function met = compute_metric(post,tcls,cfg)
       
         % precompute confusion matrix as it is often used

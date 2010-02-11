@@ -15,9 +15,6 @@ classdef gslr_transfer < classifier & transfer_learner
 %   slr_learn_transfer.m
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: gslr_transfer.m,v $
-%
 
     properties
         
@@ -38,24 +35,24 @@ classdef gslr_transfer < classifier & transfer_learner
         
        end
        
-       function p = estimate(obj,data,design)
+       function p = estimate(obj,X,Y)
            % simply stores input data and design
            
            % transfer learning
-           cdata = cell(1,length(data));
-           for c=1:length(data)
-             cdata{c} = [design{c}.X data{c}.X];
+           cdata = cell(1,length(X));
+           for c=1:length(X)
+             cdata{c} = [Y{c} X{c}];
            end
 
            [p.model,p.diagnostics] = slr_learn_transfer(obj.options,cdata);
               
        end
        
-       function post = map(obj,data)       
+       function Y = map(obj,X)       
                           
-         post = cell(1,length(data));
-         for j=1:length(data)
-           post{j} = dataset(slr_classify([data{j}.X ones(data{j}.nsamples,1)], obj.params.model{j}));
+         Y = cell(1,length(X));
+         for j=1:length(X)
+           Y{j} = slr_classify([X{j} ones(size(X{j},1),1)], obj.params.model{j});
          end
          
        end

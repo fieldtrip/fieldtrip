@@ -15,24 +15,24 @@ classdef squasher < preprocessor
       
     end
     
-    function M = map(obj,U)
+    function Y = map(obj,X)
       
-      M = bsxfun(@minus,U.X, obj.params.dmin);
-      M = dataset(bsxfun(@rdivide,M, obj.params.dmax));
-      
-    end
-    
-    function U = unmap(obj,M)
-      
-      U = bsxfun(@times,M.X, obj.params.dmax);
-      U = dataset(bsxfun(@plus,U, obj.params.dmin));
+      Y = bsxfun(@minus,X, obj.params.dmin);
+      Y = bsxfun(@rdivide,Y, obj.params.dmax);
       
     end
     
-    function p = estimate(obj,data,design)
+    function X = unmap(obj,Y)
       
-      p.dmin = min(data.X);
-      X = bsxfun(@minus,data.X, obj.dmin);
+      X = bsxfun(@times,Y, obj.params.dmax);
+      X = bsxfun(@plus,X, obj.params.dmin);
+      
+    end
+    
+    function p = estimate(obj,X,Y)
+      
+      p.dmin = min(X);
+      X = bsxfun(@minus,X, obj.dmin);
       p.dmax = max(X);
       p.dmax(p.dmax == 0) = 1;
       

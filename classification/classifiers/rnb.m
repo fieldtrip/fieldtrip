@@ -12,53 +12,49 @@ classdef rnb < nb
 %   regularize_nb.m
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: rnb.m,v $
-%
 
     properties
-
-        options % cfg parameter format
-        diagnostics
-        path % models in the regularization path
-        accuracies % accuracies of each model in the path
-        
+      
+      options % cfg parameter format
+      diagnostics
+      path % models in the regularization path
+      accuracies % accuracies of each model in the path
+      
+      nclasses
+      
     end
 
     methods
       
-       function obj = rnb(varargin)
-                  
-           obj.options = struct(varargin{:});
-           
-       end
-       
-       function p = estimate(obj,data,design)
+      function obj = rnb(varargin)
+        
+        obj.options = struct(varargin{:});
+        
+      end
+      
+       function p = estimate(obj,X,Y)
  
-         p.nclasses = design.nunique;
-         
-         data = data.X;
-         design = design.X;
-         
+         p.nclasses = obj.nunique(Y);
+       
          % create hold-out set
          if ~isfield(obj.options,'cvfolds'), obj.options.cvfolds = 0.9; end
          assert(obj.options.cvfolds > 0 && obj.options.cvfolds < 1);
          
-         prm = randperm(size(data,1));
-         trainidx = prm(1:ceil(obj.options.cvfolds*size(data,1)));
-         testidx = prm((1+ceil(obj.options.cvfolds*size(data,1))):end);
+         prm = randperm(size(X,1));
+         trainidx = prm(1:ceil(obj.options.cvfolds*size(X,1)));
+         testidx = prm((1+ceil(obj.options.cvfolds*size(X,1))):end);
          
          % estimate class priors
          p.priors = zeros(p.nclasses,1);
          for j=1:p.nclasses
-           p.priors(j) = sum(design(:,1)==j)/size(design,1);
+           p.priors(j) = sum(Y(:,1)==j)/size(Y,1);
          end
          
-         [p.path,p.diagnostics] = regularize_nb(obj.options,[design(trainidx,1) data(trainidx,:)]);
+         [p.path,p.diagnostics] = regularize_nb(obj.options,[Y(trainidx,1) X(trainidx,:)]);
          
          % evaluate performance of all models
          
-         nfeatures = size(data,2);
+         nfeatures = size(X,2);
          p.means = zeros(obj.nclasses,nfeatures);
          p.stds = zeros(obj.nclasses,nfeatures);
          p.accuracies = zeros(1,length(p.diagnostics.activeset));
@@ -78,9 +74,9 @@ classdef rnb < nb
            
            obj.params = p;
            
-           post = obj.map(dataset(data(testidx,:)));
+           Z = obj.map(X(testidx,:));
            
-           p.accuracies(i) = validator.eval(post.X,design(testidx,1),'metric','accuracy');
+           p.accuracies(i) = obj.evaluate(Z,Y(testidx,1),'metric','accuracy');
            
          end
          
@@ -102,37 +98,33 @@ classdef rnb < nb
          
        end
        
-       function post = map(obj,data)
+       function Y = map(obj,X)
          
-         data = data.X;
-
-         post = zeros(size(data,1),obj.params.nclasses);
+         Y = zeros(size(X,1),obj.params.nclasses);
          
-         for m=1:size(post,1) % iterate over examples
+         for m=1:size(Y,1) % iterate over examples
            
            for c=1:obj.params.nclasses
              
              % compute probability
-             post(m,c) = log(obj.params.priors(c)) + mynansum(log(1./(sqrt(2*pi)*obj.params.stds(c,:)) .* exp(- (data(m,:) - obj.params.means(c,:)).^2./(2*obj.params.stds(c,:).^2))));
+             Y(m,c) = log(obj.params.priors(c)) + mynansum(log(1./(sqrt(2*pi)*obj.params.stds(c,:)) .* exp(- (X(m,:) - obj.params.means(c,:)).^2./(2*obj.params.stds(c,:).^2))));
              
            end
            
            % compute normalizing term using log-sum-exp trick
            
-           mx = max(post(m,:));
+           mx = max(Y(m,:));
            
            nt = 0;
            for c=1:obj.params.nclasses
-             nt = nt + exp(post(m,c) - mx);
+             nt = nt + exp(Y(m,c) - mx);
            end
            nt = log(nt) + mx;
            
            % normalize
-           post(m,:) = exp(post(m,:) - nt);
+           Y(m,:) = exp(Y(m,:) - nt);
            
          end
-         
-         post = dataset(post);
          
        end
        

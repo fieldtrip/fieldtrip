@@ -27,7 +27,7 @@ classdef kernelmethod < classifier
 %
 % % definition of the classification procedure 
 %
-% myproc = clfproc({ kernelmethod('method',@l2svm_cg)});
+% myproc = mva({ kernelmethod('method',@l2svm_cg)});
 %
 % SEE ALSO:
 % l2svm_cg.m
@@ -35,121 +35,112 @@ classdef kernelmethod < classifier
 % klr_cg.m
 %
 % Copyright (c) 2008, Marcel van Gerven, Jason Farquhar
-%
-% $Log: kernelmethod.m,v $
-%
 
-properties
-  method = @l2svm_cg;
-  kernel = 'linear';
-  p1 = nan;
-  p2 = nan;
-  C = nan;
-    
-end
 
-methods
-  
-  function obj = kernelmethod(varargin)
-    
-    obj = obj@classifier(varargin{:});
-    
-  end
-  
-  function p = estimate(obj,data,design)
-    % simply stores input data and design
-  
-    if design.nunique ~= 2, error('l2svm only makes binary classifications'); end
-    
-    data = data.X;
-    design = design.X;
-    
-    % transform elements of the design matrix to class labels
-    targets = design(:,1);
-    targets(design == 1) = -1;
-    targets(design == 2) = 1;
-    
-    % set input for our classifier; compute kernel matrix
-    
-    switch lower(obj.kernel)
-      
-      case {'poly','npoly'};     % polynomial
-        
-        if isnan(obj.p1), obj.p1 = 2/3; end
-        if isnan(obj.p2), obj.p2 = 1; end
-        
-        K = compKernel(data,data,obj.kernel,obj.p1,obj.p2);
-        
-      case {'rbf','nrbf'};       % Radial basis function, a.k.a. gaussian
-        
-        if isnan(obj.p1), obj.p1 = .1*(mean(diag(data))-mean(data(:))); end
-        
-        K = compKernel(data,data,obj.kernel,obj.p1);
-        
-      otherwise
-        K = compKernel(data,data,obj.kernel);
-    end
-    
-    % regularization parameter
-    if isnan(obj.C), obj.C = .1*(mean(diag(K))-mean(K(:))); end
-    
-    if obj.verbose
-      fprintf('regularization parameter was set to %.2g\n',obj.C);
-    end
-    
-    [p.weights,p.f,p.J] = obj.method(K,targets,obj.C,'verb',-1);
-    p.traindata = data;
-    
-    % weights in primal form
-    p.primal = 0;
-    for j=1:size(data,1), p.primal = p.primal + p.weights(j)*data(j,:); end
+  properties
+    method = @l2svm_cg;
+    kernel = 'linear';
+    p1 = nan;
+    p2 = nan;
+    C = nan;
     
   end
   
-  function post = map(obj,data)
+  methods
     
-    data = data.X;
-    
-    % deal with empty data
-    if size(data,2) == 0
+    function obj = kernelmethod(varargin)
       
-      % random assignment
-      post = rand([size(data,1) obj.nclasses]);
-      post = double(post == repmat(max(post,[],2),[1 obj.nclasses]));
+      obj = obj@classifier(varargin{:});
       
-      return
     end
     
-    switch lower(obj.kernel)
+    function p = estimate(obj,X,Y)
+      % simply stores input data and design
       
-      case {'poly','npoly'};     % polynomial
-        K = compKernel(data,obj.params.traindata,obj.kernel,obj.p1,obj.p2);
+      if obj.nunique(Y) ~= 2, error('l2svm only makes binary classifications'); end
+      
+      % transform elements of the design matrix to class labels
+      targets = Y(:,1);
+      targets(Y == 1) = -1;
+      targets(Y == 2) = 1;
+      
+      % set input for our classifier; compute kernel matrix
+      
+      switch lower(obj.kernel)
         
-      case {'rbf','nrbf'};       % Radial basis function, a.k.a. gaussian
-        K = compKernel(data,obj.params.traindata,obj.kernel,obj.p1);
-        
-      otherwise
-        K = compKernel(data,obj.params.traindata,obj.kernel);
+        case {'poly','npoly'};     % polynomial
+          
+          if isnan(obj.p1), obj.p1 = 2/3; end
+          if isnan(obj.p2), obj.p2 = 1; end
+          
+          K = compKernel(X,X,obj.kernel,obj.p1,obj.p2);
+          
+        case {'rbf','nrbf'};       % Radial basis function, a.k.a. gaussian
+          
+          if isnan(obj.p1), obj.p1 = .1*(mean(diag(X))-mean(X(:))); end
+          
+          K = compKernel(X,X,obj.kernel,obj.p1);
+          
+        otherwise
+          K = compKernel(X,X,obj.kernel);
+      end
+      
+      % regularization parameter
+      if isnan(obj.C), obj.C = .1*(mean(diag(K))-mean(K(:))); end
+      
+      if obj.verbose
+        fprintf('regularization parameter was set to %.2g\n',obj.C);
+      end
+      
+      [p.weights,p.f,p.J] = obj.method(K,targets,obj.C,'verb',-1);
+      p.traindata = X;
+      
+      % weights in primal form
+      p.primal = 0;
+      for j=1:size(X,1), p.primal = p.primal + p.weights(j)*X(j,:); end
+      
     end
     
-    probs = K * obj.params.weights(1:end-1) + obj.params.weights(end);
+    function Y = map(obj,X)
+      
+      % deal with empty data
+      if size(X,2) == 0
+        
+        % random assignment
+        Y = rand([size(X,1) obj.nclasses]);
+        Y = double(Y == repmat(max(Y,[],2),[1 obj.nclasses]));
+        
+        return
+      end
+      
+      switch lower(obj.kernel)
+        
+        case {'poly','npoly'};     % polynomial
+          K = compKernel(X,obj.params.traindata,obj.kernel,obj.p1,obj.p2);
+          
+        case {'rbf','nrbf'};       % Radial basis function, a.k.a. gaussian
+          K = compKernel(X,obj.params.traindata,obj.kernel,obj.p1);
+          
+        otherwise
+          K = compKernel(X,obj.params.traindata,obj.kernel);
+      end
+      
+      probs = K * obj.params.weights(1:end-1) + obj.params.weights(end);
+      
+      % post is just the sign and does not have a probabilistic interpretation
+      Y = zeros(size(probs,1),2);
+      Y(:,1) = (probs < 0);
+      Y(:,2) = (probs > 0);
+      
+    end
     
-    % post is just the sign and does not have a probabilistic interpretation
-    post = zeros(size(probs,1),2);
-    post(:,1) = (probs < 0);
-    post(:,2) = (probs > 0);
-    
-    post = dataset(post);
+    function [m,desc] = getmodel(obj)
+      % return the parameters wrt a class label in some shape
+      
+      m = {obj.params.primal}; % only one vector for kernelmethod
+      desc = {'unknown'};
+      
+    end
     
   end
-  
-  function [m,desc] = getmodel(obj)
-    % return the parameters wrt a class label in some shape
-    
-    m = {obj.params.primal}; % only one vector for kernelmethod
-    desc = {'unknown'};
-    
-  end
-  
-end
 end

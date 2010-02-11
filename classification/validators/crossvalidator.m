@@ -61,20 +61,6 @@ classdef crossvalidator < validator
           design = {design};
         end
         
-        % cast to datasets if necessary
-            
-        for c=1:length(data)
-          if ~isa(data{c},'dataset')
-            data{c} = dataset(data{c});
-          end
-        end
-        
-        for c=1:length(design)
-          if ~isa(design{c},'dataset')
-            design{c} = dataset(design{c});
-          end
-        end
-        
         % replicate designs
         if length(design)== 1 && length(data) > 1
           design = repmat(design,[1 length(data)]);
@@ -87,8 +73,8 @@ classdef crossvalidator < validator
         if obj.verbose          
           fprintf('performing crossvalidation for %d dataset(s)\n',nsets);   
           for d=1:nsets
-            sz = data{d}.dims;
-            fprintf('dataset %d consists of %d examples and %d',d,data{d}.nsamples,sz(2));
+            sz = size(data{d});
+            fprintf('dataset %d consists of %d examples and %d',d,sz(1),sz(2));
             for dd=3:length(sz)
               fprintf(' x %d',sz(dd));
             end
@@ -120,17 +106,27 @@ classdef crossvalidator < validator
           
           for d=1:nsets % iterate over datasets            
             
-            % construct data and design
+            % construct data and design; reshape to original dimensions
             
-            traindata{d} = data{d}.subsample(obj.trainfolds{f,d});
-            traindesign{d} = design{d}.subsample(obj.trainfolds{f,d});
+            sz = size(data{d}); 
             
-            testdata{d} = data{d}.subsample(obj.testfolds{f,d});
-            testdesign{d} = design{d}.subsample(obj.testfolds{f,d});
+            sz(1) = numel(obj.trainfolds{f,d});
+            traindata{d} = reshape(data{d}(obj.trainfolds{f,d},:),sz);
+            
+            sz(1) = numel(obj.testfolds{f,d});
+            testdata{d} = reshape(data{d}(obj.testfolds{f,d},:),sz);
+            
+            sz = size(design{d});
+            
+            sz(1) = numel(obj.trainfolds{f,d});
+            traindesign{d} = reshape(design{d}(obj.trainfolds{f,d},:),sz);
+            
+            sz(1) = numel(obj.testfolds{f,d});
+            testdesign{d} = reshape(design{d}(obj.testfolds{f,d},:),sz);
           
           end
 
-          if nsets == 1
+          if nsets == 1 && ~obj.getpredictor().istransfer()
             tproc = obj.procedure.train(traindata{1},traindesign{1});
             obj.post{f} = tproc.test(testdata{1});
             obj.design{f} = testdesign{1};
@@ -164,7 +160,7 @@ classdef crossvalidator < validator
           end
           
         end
-       
+      
         if ~obj.compact
           obj.procedure = proc;
         end
@@ -202,8 +198,8 @@ classdef crossvalidator < validator
               testfolds  = cell(1,nsets);
             end
             
-            labeled = cellfun(@(x)(x.labeled),design,'UniformOutput',false);
-            unlabeled = cellfun(@(x)(x.unlabeled),design,'UniformOutput',false);
+            labeled = cellfun(@(x)(mvmethod.labeled(x)),design,'UniformOutput',false);
+            unlabeled = cellfun(@(x)(mvmethod.unlabeled(x)),design,'UniformOutput',false);
             
             for d=1:nsets
               
@@ -255,7 +251,7 @@ classdef crossvalidator < validator
                 if obj.verbose, fprintf('validating using %d-fold cross-validation\n',nfolds); end
           
                 % make sure outcomes are evenly represented whenever possible
-                [unq,tmp,idx] = unique(design{d}.X,'rows');
+                [unq,tmp,idx] = unique(design{d}(1:size(design{d}),:),'rows');
                 
                 if max(idx) == nsamples % unique samples
                  
@@ -310,7 +306,7 @@ classdef crossvalidator < validator
                   randn('state',obj.init);
                 end
                 
-                trainfolds{f,d} =  setdiff(1:design{d}.nsamples,testfolds{f,d})';
+                trainfolds{f,d} =  setdiff(1:size(design{d},1),testfolds{f,d})';
                 trainfolds{f,d} = trainfolds{f,d}(randperm(size(trainfolds{f,d},1)));
                 
                 if obj.balanced
@@ -321,7 +317,7 @@ classdef crossvalidator < validator
                     fprintf('balancing training samples by sampling with replacement\n');
                   end
                   
-                  [unq,tmp,idx] = unique(design{d}.X,'rows');
+                  [unq,tmp,idx] = unique(design{d}(1:size(design{d}),:),'rows');
 
                   idx = idx(trainfolds{f,d});
                   

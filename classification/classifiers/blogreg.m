@@ -80,14 +80,14 @@ classdef blogreg < classifier
            
        end
        
-       function p = estimate(obj,data,design)
+       function p = estimate(obj,X,Y)
                   
          p = obj.params;
          
-         obj.dims = data.dims;
+         obj.dims = obj.indims(2:end);
                         
          if isempty(obj.prior)
-           p.prior = obj.create_prior(data.nfeatures);
+           p.prior = obj.create_prior(size(X,2));
          else           
            if obj.verbose
              fprintf('using prespecified prior\n');
@@ -96,7 +96,7 @@ classdef blogreg < classifier
          end
            
          if isempty(obj.degenerate)
-           obj.degenerate = data.nsamples < data.nfeatures;
+           obj.degenerate = size(X,1) < size(X,2);
          end         
          if obj.verbose
            if obj.degenerate
@@ -107,26 +107,26 @@ classdef blogreg < classifier
          end
                   
          % add bias term
-         X = [data.X ones(data.nsamples,1)];
+         X = [X ones(size(X,1),1)];
          
          % run the algorithm
          
          % transform design to +1/-1 representation
-         design = 3-2*design.X(:,1);
+         design = 3-2*Y(:,1);
          
          if isscalar(obj.scale)
            % learn model for fixed scale
            
            p.prior = scale_prior(p.prior,'lambda',obj.scale);
            
-           if size(p.prior,1)==data.nfeatures
+           if size(p.prior,1)~=size(X,2)
              % add bias term if not yet done
-             p.prior(data.nfeatures+1,data.nfeatures+1) = obj.precbias;
+             p.prior(size(X,2),size(X,2)) = obj.precbias;
            end
            
            [p.Gauss,terms,p.logp,p.convergence] = laplacedegenerate_ep(design,X,p.prior, ...
              'fraction',obj.fraction,'niter',obj.niter,'temperature',obj.temperature,'lambda',obj.scale,...
-             'tol',obj.tolerance,'degenerate',obj.degenerate,'verbose',obj.verbose);
+             'tol',obj.tolerance,'degenerate',obj.degenerate,'verbose',false);
            
           else
            
@@ -135,15 +135,15 @@ classdef blogreg < classifier
              
              tprior = scale_prior(p.prior,'lambda',obj.scale(j));
              
-             if size(tprior,1)==data.nfeatures
+             if size(tprior,1)~=size(X,2)
                % add bias term if not yet done
-               tprior(data.nfeatures+1,data.nfeatures+1) = obj.precbias;
+               tprior(size(X,2),size(X,2)) = obj.precbias;
              end
              
              try 
                [p.Gauss,terms,p.logp,p.convergence] = laplacedegenerate_ep(design,X,tprior, ...
                  'fraction',obj.fraction,'niter',obj.niter,'temperature',obj.temperature,'lambda',obj.scale(j),...
-                 'tol',obj.tolerance,'degenerate',obj.degenerate,'verbose',obj.verbose);
+                 'tol',obj.tolerance,'degenerate',obj.degenerate,'verbose',false);
                
                lgp(j) = p.logp - log(obj.scale(j)); % uniform prior on log scale
                
@@ -167,6 +167,10 @@ classdef blogreg < classifier
            p.logp = lgp;
            p.scale = sc;
            
+           if obj.verbose
+             fprintf('selected scale %f\n',sc);
+           end
+           
          end
                            
          if obj.verbose
@@ -179,9 +183,9 @@ classdef blogreg < classifier
           
        end
        
-       function post = map(obj,data)       
+       function post = map(obj,X)       
          
-         X = [data.X ones(data.nsamples,1)];
+         X = [X ones(size(X,1),1)];
          
          G = obj.params.Gauss;
          
@@ -203,7 +207,7 @@ classdef blogreg < classifier
          W2 = X*scaledA';
          % now W2 = X * diag(1./obj.Gauss.diagK) * A'
          
-         scaledX = X .* (repmat(1./G.diagK',data.nsamples,1));
+         scaledX = X .* (repmat(1./G.diagK',size(X,1),1));
          W3 = X*scaledX';
          % now W3 = X * diag(1./obj.Gauss.diagK) * X'
          
@@ -234,14 +238,14 @@ classdef blogreg < classifier
            x = repmat(M,1,nhermite) + sqrt(C)*xhermite';
            g = logist(x);   % returns - log (1 + exp(-x)) with special attention for very small and very large x
            
-           h = g + log(repmat(whermite',data.nsamples,1));
+           h = g + log(repmat(whermite',size(X,1),1));
            maxh = max(h,[],2);
            
            y = exp(maxh) .* sum(exp(h - repmat(maxh,[1 size(h,2)])),2);
            
          end
          
-         post = dataset([y 1 - y]);
+         post = [y 1 - y];
          
        end
        
@@ -280,7 +284,7 @@ classdef blogreg < classifier
          m{5} = varbeta; 
          
          desc = { ...
-           'importance values (posterior  - prior variance of auxiliary variables' ...
+           'importance values (posterior  - prior variance of auxiliary variables)' ...
            'posterior variance of auxiliary variables' ...
            'prior variance of auxiliary variables' ...
            'means of the regression coefficients' ...
@@ -335,7 +339,7 @@ classdef blogreg < classifier
       
       function prior = create_prior(obj,nfeatures)
         
-        if isempty(obj.coupling) || isempty(obj.dims)
+        if isempty(obj.coupling) || isempty(obj.dims) || ~any(obj.coupling)
           
           if obj.verbose
             fprintf('using decoupled prior\n');

@@ -3,7 +3,7 @@ classdef blinreg < regressor
 %
 % TO DO!!!!
 % TEST PROCEDURE STILL NEEDS TO BE IMPLEMENTED; CURRENTLY ALMOST CERTAINLY
-% WRONG!
+% WRONG! LINREG LAPLACE MUST BE OPTIMIZED, DATA,DESIGN => X,Y
 %
 % Note: 
 %   a bias term is added to the model

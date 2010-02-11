@@ -15,23 +15,23 @@ classdef whitener < preprocessor
         
       end
       
-      function M = map(obj,U)
+      function Y = map(obj,X)
         % whiten
         
-        M = dataset(U.X*obj.params.wmat');
+        Y = X*obj.params.wmat';
           
       end
       
-      function U = unmap(obj,M)
+      function X = unmap(obj,Y)
         % unwhiten
         
-        U = dataset(M.X*obj.params.uwmat');
+        X = Y*obj.params.uwmat';
         
       end
       
-      function p = estimate(obj,data,design)
+      function p = estimate(obj,X,Y)
         
-        [E, D] = eig(cov(data.X,1));
+        [E, D] = eig(cov(X,1));
         
         p.wmat = sqrt(D) \ E';
         p.uwmat = E * sqrt(D);

@@ -14,7 +14,7 @@ classdef filterer < featureselector
 
   properties
   
-    validator = []; % e.g., crossvalidator('procedure',clfproc({nb()}),'cvfolds',0.9);
+    validator = []; % e.g., crossvalidator('procedure',mva({nb()}),'cvfolds',0.9);
     metric = 'accuracy'; % evaluation metric
    
     nfeatures = Inf; % maximum number of used features
@@ -38,12 +38,9 @@ classdef filterer < featureselector
       
     end
     
-    function p = estimate(obj,data,design)
+    function p = estimate(obj,X,Y)
       
-      maxfeatures = min(obj.nfeatures,data.nfeatures);
-      
-      data = data.X;
-      design = design.X;
+      maxfeatures = min(obj.nfeatures,size(X,2));
       
       sfilt = func2str(obj.filter);
       
@@ -56,13 +53,13 @@ classdef filterer < featureselector
       end
         
       % compute function values
-      nfeatures = size(data,2);
+      nfeatures = size(X,2);
       p.value = zeros(1,nfeatures);
       for j=1:nfeatures
         
         fprintf('computing %s filter for feature %d of %d\n',sfilt,j,nfeatures);
         
-        p.value(j) = obj.filter(data(:,j),design);
+        p.value(j) = obj.filter(X(:,j),Y);
       end
       
       % get ordering of the features
@@ -73,12 +70,12 @@ classdef filterer < featureselector
         p.subset = p.order(1:maxfeatures);
       else
         % use procedure to determine the best feature subset
-        [p.subset,p.criterion] = obj.select_features(data,design,p.order);
+        [p.subset,p.criterion] = obj.select_features(X,Y,p.order);
       end
       
     end
     
-    function [subset,criterion] = select_features(obj,data,design,features)
+    function [subset,criterion] = select_features(obj,X,Y,features)
       % select features
       % assumes availability of evaluation function and feature
       % ordering
@@ -93,9 +90,9 @@ classdef filterer < featureselector
           fprintf('evaluating %d out of %d features; ',f,length(features));
         end
         
-        cv = obj.validator.validate(data(:,features(1:f)),design);
+        cv = obj.validator.validate(X(:,features(1:f)),Y);
         
-        m = evaluate(cv.post,cv.design,'metric',obj.metric);
+        m = evaluate(cv.Y,cv.Y,'metric',obj.metric);
         
         if obj.verbose, fprintf('criterion: %.2g\n',m); end
         

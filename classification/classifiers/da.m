@@ -11,9 +11,7 @@ classdef da < classifier
 %   Matlab(R) Statistics Toolbox
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: da.m,v $
-%
+
 
     properties
 
@@ -35,19 +33,18 @@ classdef da < classifier
                       
        end
        
-       function p = estimate(obj,data,design)
+       function p = estimate(obj,X,Y)
             % simply stores input data and design
             
-            p.data = data;
-            p.design = design;
+            p.data = X;
+            p.design = Y;
                        
        end
        
-       function post = map(obj,data)       
+       function post = map(obj,X)       
 
-           [class,err,post] = classify(data.X,obj.params.data.X,obj.params.design.X,obj.disfun);                    
+           [class,err,post] = classify(X,obj.params.data,obj.params.design,obj.disfun);                    
        
-           post = dataset(post);
        end
 
     end

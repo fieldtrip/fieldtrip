@@ -29,41 +29,38 @@ classdef semilr < classifier
         
       end
       
-      function p = estimate(obj,data,design)
+      function p = estimate(obj,X,Y)
         
         assert(any(exist('minFunc','dir'))) % external code: minFunc
         
-        p.nclasses = design.nunique;
-        
-        data = data.X;
-        design = design.X;
+        p.nclasses = obj.nunique(Y);
         
         nparts = length(obj.partition);
         
-        dat = data;
-        data = cell(1,nparts);
+        dat = X;
+        X = cell(1,nparts);
         for c=1:nparts
-          data{c} = dat(:,obj.partition{c});
+          X{c} = dat(:,obj.partition{c});
         end
         
         unlabel=cell(1,nparts);
         for i=1:nparts
-          unlabel{i}=data{i}(isnan(design),:);
+          unlabel{i}=X{i}(isnan(Y),:);
           unlabel{i}=[unlabel{i} ones(size(unlabel{i},1),1)];
-          data{i}=data{i}(~isnan(design),:);
-          data{i}=[data{i} ones(size(data{i},1),1)];
+          X{i}=X{i}(~isnan(Y),:);
+          X{i}=[X{i} ones(size(X{i},1),1)];
         end
         
-        nexamples = size(data{1},1);
+        nexamples = size(X{1},1);
         
-        % this second is necessary for design.
+        % this second is necessary for Y.
         
-        design=design(~isnan(design),:);
+        Y=Y(~isnan(Y),:);
         
-        classidxs = (1:nexamples)' + (design(:,1) - 1) .* nexamples;
+        classidxs = (1:nexamples)' + (Y(:,1) - 1) .* nexamples;
         ptargets = zeros(nexamples,p.nclasses);
         ptargets(classidxs) = 1;
-        targets = (1:nexamples)' + (design(:,1) - 1) * nexamples;
+        targets = (1:nexamples)' + (Y(:,1) - 1) * nexamples;
         
         % numer of weight elements and their indices per partition
         psz = cellfun(@length,obj.partition)+1;
@@ -85,7 +82,7 @@ classdef semilr < classifier
         %options.TolFun=1e-10;
         %options.TolX=1e-15;
         
-        p.w = minFunc(@(x)semilogreg(x(:),data,targets,ptargets,pidx,psz,p.nclasses,unlabel,obj.nu,obj.lambda),p.w(:),options);
+        p.w = minFunc(@(x)semilogreg(x(:),X,targets,ptargets,pidx,psz,p.nclasses,unlabel,obj.nu,obj.lambda),p.w(:),options);
         
         weight=cell(1,nparts);
         for i=1:nparts
@@ -97,13 +94,13 @@ classdef semilr < classifier
         
       end
       
-      function post = map(obj,data)
+      function Y = map(obj,X)
         
-        post=0;
+        Y=0;
         for i=1:length(obj.partition)
-          post = post+slr_classify([data.X(:,obj.partition{i}) ones(data.nsamples,1)], obj.params.model{i});
+          Y = Y+slr_classify([X(:,obj.partition{i}) ones(size(X,1),1)], obj.params.model{i});
         end
-        post = dataset(bsxfun(@rdivide,post,sum(post,2)));
+        Y = bsxfun(@rdivide,Y,sum(Y,2));
         
       end
       

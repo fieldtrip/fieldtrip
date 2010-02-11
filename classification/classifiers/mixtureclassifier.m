@@ -20,18 +20,18 @@ classdef mixtureclassifier < static_classifier
            
        end
        
-       function p = estimate(obj,data,design)
+       function p = estimate(obj,X,Y)
   
-         if isempty(obj.mixture), obj.mixture = design.nunique; end
+         if isempty(obj.mixture), obj.mixture = obj.nunique(Y); end
          
          % data must accommodate hidden variable
-         p = obj.estimate@static_classifier(dataset([data.X nan(data.nsamples,1)]),design);
+         p = obj.estimate@static_classifier([X nan(size(X,1),1)],Y);
          
        end
        
-       function post = map(obj,data)
+       function Y = map(obj,X)
 
-         post = obj.map@static_classifier(dataset([data.X nan(data.nsamples,1)]));
+         Y = obj.map@static_classifier([X nan(size(X,1),1)]);
        
        end
 

@@ -1,4 +1,4 @@
-classdef preprocessor < clfmethod
+classdef preprocessor < mvmethod
 %PREPROCESSOR preprocessor method class
 %
 % A preprocessor is a handle class that takes a variable number of arguments 

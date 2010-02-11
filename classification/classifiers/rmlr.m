@@ -20,24 +20,22 @@ classdef rmlr < classifier
                       
        end
        
-       function p = estimate(obj,data,design)
+       function p = estimate(obj,X,Y)
                  
-         nclasses = design.nunique;
+         nclasses = obj.nunique(Y);
          
-         w = rmlr_learning(design.X, [data.X ones(data.nsamples,1)], data.nfeatures+1, ...
+         w = rmlr_learning(Y, [X ones(size(X,1),1)], size(X,2)+1, ...
            'wdisplay', 'off', 'wmaxiter', 50', 'nlearn', 300, 'nstep', 100,...
            'amax', 1e8, 'gamma0', 0);
      
-         p.model = reshape(w, [data.nfeatures+1, nclasses]);
+         p.model = reshape(w, [size(X,2)+1, nclasses]);
 
        end
 
-       function post = map(obj,data)
+       function post = map(obj,X)
 
-         [tmp, post] = calc_label([data.X ones(data.nsamples,1)], obj.params.model);
-         
-         post = dataset(post);
-         
+         [tmp, post] = calc_label([X ones(size(X,1),1)], obj.params.model);
+          
        end              
        
        function [m,desc] = getmodel(obj)

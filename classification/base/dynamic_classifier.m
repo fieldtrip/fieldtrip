@@ -46,19 +46,14 @@ classdef dynamic_classifier < classifier
                       
        end
        
-       function p = estimate(obj,data,design)
+       function p = estimate(obj,X,Y)
             
-            if iscell(data), error('classifier does not take multiple datasets as input'); end
+            p.nclasses = obj.nunique(Y);
             
-            p.nclasses = design.nunique;
-            
-            data = data.X;
-            design = design.X;
-                
             if isinf(obj.horizon)
-               p.numvar = 1 + size(data,2); 
+               p.numvar = 1 + size(X,2); 
             else
-               p.numvar = 1 + (size(data,2)/obj.horizon);
+               p.numvar = 1 + (size(X,2)/obj.horizon);
             end
             if mod(p.numvar,1), error('inconsistent number of variables'); end
 
@@ -72,7 +67,7 @@ classdef dynamic_classifier < classifier
             if isinf(obj.horizon) % infinite horizon              
                 
                 % learn parameters using the standard learner
-                dbn = dbn.learn_parameters([design(:,1) data]);
+                dbn = dbn.learn_parameters([Y(:,1) X]);
            
                 % create inference engine
                 p.ie = filtering_ie(dbn);
@@ -85,19 +80,19 @@ classdef dynamic_classifier < classifier
                     % two-slice model and unroll later (more efficient)
                     
                     % create two-slice data
-                    ncont = size(data,2)/obj.horizon;
+                    ncont = size(X,2)/obj.horizon;
                     idx = 1;
-                    dbndata = zeros(size(data,1)*(obj.horizon-1),obj.numvar*2);
-                    for i=1:size(data,1)
+                    dbndata = zeros(size(X,1)*(obj.horizon-1),obj.numvar*2);
+                    for i=1:size(X,1)
                         for h=1:(obj.horizon-1)
 
                             % slice 1
-                            dbndata(idx,1) = design(i,1);
-                            dbndata(idx,2:(1+ncont)) = data(i,(ncont*(h-1)+1):(ncont*h));
+                            dbndata(idx,1) = Y(i,1);
+                            dbndata(idx,2:(1+ncont)) = X(i,(ncont*(h-1)+1):(ncont*h));
                             
                             % slice 2
-                            dbndata(idx,2+ncont) = design(i,1);
-                            dbndata(idx,(3+ncont):end) = data(i,(ncont*h+1):(ncont*(h+1)));
+                            dbndata(idx,2+ncont) = Y(i,1);
+                            dbndata(idx,(3+ncont):end) = X(i,(ncont*h+1):(ncont*(h+1)));
 
                             idx = idx + 1;                            
                         
@@ -120,10 +115,10 @@ classdef dynamic_classifier < classifier
                     % parameters
                 
                     % reconstruct data to add class variables
-                    dbndata = repmat(design(:,1),[1 obj.numvar*obj.horizon]);
+                    dbndata = repmat(Y(:,1),[1 obj.numvar*obj.horizon]);
                     for h=1:obj.horizon
                         for f=2:obj.numvar
-                            dbndata(:,(h-1)*obj.numvar + f) = data(:,(h-1)*(obj.numvar-1) + (f-1));
+                            dbndata(:,(h-1)*obj.numvar + f) = X(:,(h-1)*(obj.numvar-1) + (f-1));
                         end
                     end
                 
@@ -155,39 +150,37 @@ classdef dynamic_classifier < classifier
             
        end
        
-       function post = map(obj,data)       
+       function Y = map(obj,X)       
                       
            if obj.verbose, fprintf('computing marginals\n'); end
            
-           data = data.X;
-           
-           post = zeros([size(data,1) obj.params.nclasses]);
+           Y = zeros([size(X,1) obj.params.nclasses]);
 
            if isinf(obj.horizon) % infinite horizon
 
-               for j=1:size(post,1)
+               for j=1:size(Y,1)
 
                    % add evidence to the inference engine
-                   obj.params.ie.enter_evidence([nan data(j,:)]);
+                   obj.params.ie.enter_evidence([nan X(j,:)]);
 
                    % compute marginal for first variable
                    m = normalize(obj.params.ie.marginalize(1));
 
-                   post(j,:) = m.p';
+                   Y(j,:) = m.p';
                end
                
                
            else % finite horizon
 
                % transform data to incorporate hidden variables
-               dbndata = nan([size(data,1) obj.numvar*obj.horizon]);
+               dbndata = nan([size(X,1) obj.numvar*obj.horizon]);
                for h=1:obj.horizon
                    for f=2:obj.numvar
                        dbndata(:,(h-1)*obj.numvar + f) = data(:,(h-1)*(obj.numvar-1) + (f-1));
                    end
                end
 
-               for j=1:size(post,1)
+               for j=1:size(Y,1)
 
                    % add evidence to the inference engine
                    obj.params.ie.enter_evidence(dbndata(j,:));
@@ -195,11 +188,9 @@ classdef dynamic_classifier < classifier
                    % compute marginal for first variable
                    m = normalize(obj.params.ie.marginalize(1));
 
-                   post(j,:) = m.p';
+                   Y(j,:) = m.p';
                end
            end
-          
-           post = dataset(post);
            
        end
 

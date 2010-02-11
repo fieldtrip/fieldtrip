@@ -1,4 +1,4 @@
-classdef featureselector < clfmethod
+classdef featureselector < mvmethod
 %FEATURESELECTOR featureselector method class
 %
 % During operation, the featureselector takes data and
@@ -26,13 +26,13 @@ classdef featureselector < clfmethod
               
       end
       
-      function data = map(obj,data)
+      function Y = map(obj,X)
         
         if obj.verbose
-          fprintf('using %d out of %d features\n',numel(obj.params.subset),data.nfeatures);
+          fprintf('using %d out of %d features\n',numel(obj.params.subset),size(X,2));
         end
         
-        data = data.subset(obj.params.subset);
+        Y = X(obj.params.subset,:);
         
       end
       

@@ -1,13 +1,13 @@
-classdef clfproc
-%CLFPROC classification procedure class
+classdef mva
+%MVA multivariate analysis
 %   
-%   A classification procedure is just a sequence of classification methods 
+%   A multivariate analysisis just a sequence of multivariate methods 
 %   {method1 method2 method3 ...} that are
 %   called in this order and where the output of the previous method acts
 %   as input to the next method.
 %
-%   A classification method always has a train and test function for the
-%   two different modes of operation. A classification procedure is
+%   An mvmethod always has a train and test function for the
+%   two different modes of operation. An mva is
 %   just a sequence of methods {method1 method2 method3 ...} that are
 %   called in this order and where the output of the previous method acts
 %   as input to the next method. Note that method derives from handle
@@ -35,13 +35,10 @@ classdef clfproc
 %   'verbose' : verbose output [false]
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: clfproc.m,v $
-%
 
     properties
 
-        clfmethods; % the methods that specify the classification procedure
+        mvmethods; % the methods that specify the classification procedure
         nmethods;   % the number of methods
         
         verbose = false;
@@ -49,28 +46,28 @@ classdef clfproc
     
     methods
       
-       function obj = clfproc(clfmethods,varargin)
-       % constructor expects classification methods
+       function obj = mva(mvmethods,varargin)
+       % constructor expects mva methods
 
         if ~nargin
             error('methods not specified');
         end
         
-        if isa(clfmethods,'clfproc')
-          obj = clfmethods;
+        if isa(mvmethods,'mva')
+          obj = mvmethods;
           return;
         end
         
         % cast to cell array if only one method is specified
-        if ~iscell(clfmethods), clfmethods = { clfmethods }; end
+        if ~iscell(mvmethods), mvmethods = { mvmethods }; end
 
         % check if this is a valid classification procedure:
-        if ~(all(cellfun(@(x)(isa(x,'clfmethod') || iscell(x)),clfmethods)))
-          error('invalid classification procedure; check contents of clfproc');
+        if ~(all(cellfun(@(x)(isa(x,'mvmethod') || iscell(x)),mvmethods)))
+          error('invalid multivariate analysis; check contents of mva');
         end
         
-        obj.clfmethods = clfmethods;
-        obj.nmethods = length(clfmethods);
+        obj.mvmethods = mvmethods;
+        obj.nmethods = length(mvmethods);
        
        end
               
@@ -81,39 +78,17 @@ classdef clfproc
            design = [];
          end
          
-         % cast to datasets if necessary
-         
-         if iscell(data)
-           for c=1:length(data)
-             if ~isa(data{c},'dataset')
-               data{c} = dataset(data{c});
-             end
-           end
-         elseif ~isa(data,'dataset')
-           data = dataset(data);
-         end
-         
-         if iscell(design)
-           for c=1:length(design)
-             if ~isa(design{c},'dataset')
-               design{c} = dataset(design{c});
-             end
-           end
-         elseif ~isa(design,'dataset')
-           design = dataset(design);
-         end
-         
          for c=1:obj.nmethods
            
-           if iscell(obj.clfmethods{c})
+           if iscell(obj.mvmethods{c})
              
-             if iscell(data) && ~isa(obj.clfmethods{c}{1},'transfer_learner')
+             if iscell(data) && ~obj.mvmethods{c}{1}.istransfer()
                
-               if length(data) == length(obj.clfmethods{c})
+               if length(data) == length(obj.mvmethods{c})
                  for d=1:length(data)
-                   obj.clfmethods{c}{d} = cellfun(@(x)(x.train(data{d},design{d})),obj.clfmethods{c}{d},'UniformOutput',false);
+                   obj.mvmethods{c}{d} = cellfun(@(x)(x.train(data{d},design{d})),obj.mvmethods{c}{d},'UniformOutput',false);
                    if c<obj.nmethods
-                     data{d} = cellfun(@(x)(x.test(data{d})),obj.clfmethods{c}{d},'UniformOutput',false);
+                     data{d} = cellfun(@(x)(x.test(data{d})),obj.mvmethods{c}{d},'UniformOutput',false);
                    end
                  end
                else
@@ -123,34 +98,34 @@ classdef clfproc
              else
                
                % deal with ensemble methods (i.e., nested cell arrays)
-               obj.clfmethods{c} = cellfun(@(x)(x.train(data,design)),obj.clfmethods{c},'UniformOutput',false);
+               obj.mvmethods{c} = cellfun(@(x)(x.train(data,design)),obj.mvmethods{c},'UniformOutput',false);
                if c<obj.nmethods
-                 data = cellfun(@(x)(x.test(data)),obj.clfmethods{c},'UniformOutput',false);
+                 data = cellfun(@(x)(x.test(data)),obj.mvmethods{c},'UniformOutput',false);
                end
              end
              
            else
              
-             if iscell(data) && ~isa(obj.clfmethods{c},'transfer_learner')
+             if iscell(data) && ~obj.mvmethods{c}.istransfer()
                % if the method is not a transfer learner then we apply
                % the method to each dataset separately and convert
                % the method to a cell array
                
                m = cell(1,length(data));
                for d=1:length(data)
-                 m{d} = obj.clfmethods{c}.train(data{d},design{d});
+                 m{d} = obj.mvmethods{c}.train(data{d},design{d});
                  if c<obj.nmethods
                    data{d} = m{d}.test(data{d});
                  end
                end
                
-               obj.clfmethods{c} = m;
+               obj.mvmethods{c} = m;
                
              else
                
-               obj.clfmethods{c} = obj.clfmethods{c}.train(data,design);
+               obj.mvmethods{c} = obj.mvmethods{c}.train(data,design);
                if c<obj.nmethods
-                 data = obj.clfmethods{c}.test(data);
+                 data = obj.mvmethods{c}.test(data);
                end
              end
              
@@ -167,28 +142,16 @@ classdef clfproc
            return;
          end
          
-         % cast to datasets if necessary
-         
-         if iscell(data)
-           for c=1:length(data)
-             if ~isa(data{c},'dataset')
-               data{c} = dataset(data{c});
-             end
-           end
-         elseif ~isa(data,'dataset')
-           data = dataset(data);
-         end
-         
          for c=1:obj.nmethods
            
-           if iscell(obj.clfmethods{c})
+           if iscell(obj.mvmethods{c})
              % deal with ensemble methods
              
-             if iscell(data) && ~isa(obj.clfmethods{c}{1},'transfer_learner')
+             if iscell(data) && ~obj.mvmethods{c}{1}.istransfer()
                
-               if length(data) == length(obj.clfmethods{c})
+               if length(data) == length(obj.mvmethods{c})
                  for d=1:length(data)
-                   data{d} = obj.clfmethods{c}{d}.test(data{d});
+                   data{d} = obj.mvmethods{c}{d}.test(data{d});
                  end
                else
                  error('cannot handle multiple datasets');
@@ -196,12 +159,12 @@ classdef clfproc
                
              else
                
-               data = cellfun(@(x)(x.test(data)),obj.clfmethods{c},'UniformOutput',false);
+               data = cellfun(@(x)(x.test(data)),obj.mvmethods{c},'UniformOutput',false);
              end
              
            else
              
-             data = obj.clfmethods{c}.test(data);
+             data = obj.mvmethods{c}.test(data);
              
            end
            
@@ -219,28 +182,16 @@ classdef clfproc
            return;
          end
          
-         % cast to datasets if necessary
-         
-         if iscell(data)
-           for c=1:length(data)
-             if ~isa(data{c},'dataset')
-               data{c} = dataset(data{c});
-             end
-           end
-         elseif ~isa(data,'dataset')
-           data = dataset(data);
-         end
-         
          for c=obj.nmethods:-1:1
            
-           if iscell(obj.clfmethods{c})
+           if iscell(obj.mvmethods{c})
              % deal with ensemble methods
              
-             if iscell(data) && ~isa(obj.clfmethods{c}{1},'transfer_learner')
+             if iscell(data) && ~obj.mvmethods{c}{1}.istransfer()
                
-               if length(data) == length(obj.clfmethods{c})
+               if length(data) == length(obj.mvmethods{c})
                  for d=1:length(data)
-                   data{d} = obj.clfmethods{c}{d}.untest(data{d});
+                   data{d} = obj.mvmethods{c}{d}.untest(data{d});
                  end
                else
                  error('cannot handle multiple datasets');
@@ -248,12 +199,12 @@ classdef clfproc
                
              else
                
-               data = cellfun(@(x)(x.untest(data)),obj.clfmethods{c},'UniformOutput',false);
+               data = cellfun(@(x)(x.untest(data)),obj.mvmethods{c},'UniformOutput',false);
              end
              
            else
              
-             data = obj.clfmethods{c}.untest(data);
+             data = obj.mvmethods{c}.untest(data);
              
            end
            
@@ -264,19 +215,19 @@ classdef clfproc
        function p = predict(obj,data)
          % calls test functions and converts posterior into classifications
          
-         for c=1:(length(obj.clfmethods)-1)
-           data = obj.clfmethods{c}.test(data);
+         for c=1:(length(obj.mvmethods)-1)
+           data = obj.mvmethods{c}.test(data);
          end
          
-         p = obj.clfmethods{end}.predict(data);
+         p = obj.mvmethods{end}.predict(data);
        end
        
        function s = name(obj)
          % returns classification procedure as a string
          
          s = '{ ';
-         for j=1:length(obj.clfmethods)
-           s = [s class(obj.clfmethods{j}) ' '];
+         for j=1:length(obj.mvmethods)
+           s = [s class(obj.mvmethods{j}) ' '];
          end
          s = strcat(s,' }');
          
@@ -286,14 +237,14 @@ classdef clfproc
          % return the model implied by this classification procedure
          
          % get the final model
-         if iscell(obj.clfmethods{end})
+         if iscell(obj.mvmethods{end})
            
-           ntasks = length(obj.clfmethods{end});
+           ntasks = length(obj.mvmethods{end});
            
            mm = cell(1,ntasks);
            for c=1:ntasks
              
-             [mm{c},desc] = obj.clfmethods{end}{c}.getmodel();
+             [mm{c},desc] = obj.mvmethods{end}{c}.getmodel();
              
            end
            
@@ -305,7 +256,7 @@ classdef clfproc
            end
            
          else
-           [m,desc] = obj.clfmethods{end}.getmodel();
+           [m,desc] = obj.mvmethods{end}.getmodel();
          end
          
        end

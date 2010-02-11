@@ -27,9 +27,7 @@ classdef circreg < regressor
 %    ylim([-pi pi]);
 %
 %   Copyright (c) 2009, Ali Bahramisharif, Marcel van Gerven
-%
-%   $Log: circreg.m,v $
-%
+
     properties        
         
         mu            % intercept of von Mises distribution
@@ -50,28 +48,23 @@ classdef circreg < regressor
             obj = obj@regressor(varargin{:});            
         end        
         
-        function p = estimate(obj,data,design)
+        function p = estimate(obj,X,Y)
             % determine intercept and regression coefficients                    
 
-            if iscell(data), error('classifier does not take multiple datasets as input'); end
-          
-            data = data.X;
-            design = design.X;
-            
             % restrict theta to range [-pi,...,pi]
-            rtheta = mod(design(:,1),2*pi);
+            rtheta = mod(Y(:,1),2*pi);
             rtheta(rtheta > pi) = rtheta(rtheta > pi) - 2*pi;
         
             switch obj.mode
               
               case 'none'
-                p = train_none(obj,data,rtheta);
+                p = train_none(obj,X,rtheta);
               case 'mean'
-                p = train_mean(obj,data,rtheta);
+                p = train_mean(obj,X,rtheta);
               case 'concentration'
-                p = train_concentration(obj,data,rtheta);
+                p = train_concentration(obj,X,rtheta);
               case 'mixed'
-                p = train_mixed(obj,data,rtheta);
+                p = train_mixed(obj,X,rtheta);
               otherwise
                 error('unknown mode');
             end
@@ -177,18 +170,14 @@ classdef circreg < regressor
           
         end
         
-        function theta = map(obj,data)
+        function theta = map(obj,X)
           % estimate the angle using intercept and link function
           
-          data = data.X;
-          
-          theta = obj.params.mu*ones(size(data,1),1);
+          theta = obj.params.mu*ones(size(X,1),1);
           if ~isempty(obj.params.beta)
-            theta = theta + 2*atan(data * obj.params.beta);
+            theta = theta + 2*atan(X * obj.params.beta);
           end
-          
-          theta = dataset(theta);
-          
+           
         end
         
         function theta = sample(obj,X)

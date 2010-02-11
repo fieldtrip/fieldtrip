@@ -17,17 +17,17 @@ classdef lasso < regressor
          
        end
        
-       function p = estimate(obj,data,design)
+       function p = estimate(obj,X,Y)
      
-         data = [data.X ones(data.nsamples,1)];
+         X = [X ones(size(X,1),1)];
          
-         lambdas = obj.lambda*ones(size(data,2),1); % Penalize the absolute value of each element by the same amount
+         lambdas = obj.lambda*ones(size(X,2),1); % Penalize the absolute value of each element by the same amount
 
-         R = chol(data'*data + diag(lambdas));
+         R = chol(X'*X + diag(lambdas));
 
-         funObj = @(w)GaussianLoss(w,data,design.X); % Loss function that L1 regularization is applied to
+         funObj = @(w)GaussianLoss(w,X,Y); % Loss function that L1 regularization is applied to
          
-         w_init = R\(R'\(data'*design.X)); % Initial value for iterative optimizer
+         w_init = R\(R'\(X'*Y)); % Initial value for iterative optimizer
          
          if obj.verbose
            fprintf('\nComputing LASSO Coefficients...\n');
@@ -37,9 +37,9 @@ classdef lasso < regressor
 
        end
        
-       function post = map(obj,data)       
+       function Y = map(obj,X)       
        
-         post = dataset([data.X ones(data.nsamples,1)] * obj.params.model);
+         Y = [X ones(size(X,1),1)] * obj.params.model;
 
        end
        

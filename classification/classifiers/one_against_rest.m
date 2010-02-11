@@ -6,23 +6,20 @@ classdef one_against_rest < classifier
 %
 %   EXAMPLE:
 %   
-%   myproc = clfproc({ ...
+%   myproc = mva({ ...
 %        preprocessor('prefun',@(x)(log10(x))) ...
 %        standardizer() ... 
-%        one_against_rest('procedures',clfproc({gp()})) ...
+%        one_against_rest('procedures',mva({gp()})) ...
 %        });
 %
 %   SEE ALSO:
 %   one_against_one
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: one_against_rest.m,v $
-%
 
     properties        
       
-      procedure = clfproc({da()}); % the used classification procedure
+      procedure = mva({da()}); % the used classification procedure
   
     end
     
@@ -31,18 +28,19 @@ classdef one_against_rest < classifier
         
         obj = obj@classifier(varargin{:});
         
-        if ~isa(obj.procedure,'clfproc')
-          obj.procedure = clfproc(obj.procedure);
+        if ~isa(obj.procedure,'mva')
+          obj.procedure = mva(obj.procedure);
         end
         
       end
       
-      function p = estimate(obj,tdata,tdesign)
+      function p = estimate(obj,X,Y)
         
-         p.nclasses = tdesign.nunique;
-       
-         tdata = tdata.X;
-         tdesign = tdesign.X(:,1);
+        if iscell(X)
+          error('transfer learning with one_against_rest not yet supported');
+        end
+        
+         p.nclasses = obj.nunique(Y);
                 
         % transform the data such that we have a cell element for each
         % class label pair
@@ -54,10 +52,10 @@ classdef one_against_rest < classifier
         
         for i=1:p.nclasses
           
-          didx = (tdesign == i);
+          didx = (Y == i);
           
-          data{i} = tdata;
-          design{i} = tdesign;
+          data{i} = X;
+          design{i} = Y;
           design{i}(~didx,:) = 1;
           design{i}(didx,:)  = 2;
           
@@ -80,28 +78,58 @@ classdef one_against_rest < classifier
             fprintf('training class %d against rest\n',j);
           end
           
-          p.procedure{j} = p.procedure{j}.train(dataset(data{j}),dataset(design{j}));
+          p.procedure{j} = p.procedure{j}.train(data{j},design{j});
         end
         
       end
       
-      function post = map(obj,data)
+      function Y = map(obj,X)
              
         % get posteriors for all pairs
-        post = zeros(data.nsamples,obj.params.nclasses);
+        Y = zeros(size(X,1),obj.params.nclasses);
         for i=1:obj.params.nclasses
           
           if obj.verbose
             fprintf('testing class %d against rest\n',i);
           end
           
-          tpost = obj.params.procedure{i}.test(data);
-          post(:,i) = tpost.X(:,2);
+          tpost = obj.params.procedure{i}.test(X);
+          Y(:,i) = tpost(:,2);
         end
         
         % normalize
-        post = dataset(post ./ repmat(sum(post,2),[1 size(post,2)]));
+        Y = bsxfun(@rdivide,Y,sum(Y,2));
         
+      end
+      
+       function [m,desc] = getmodel(obj)
+       
+        m=[];
+        desc=[];
+        for c=1:length(obj.params.procedure)
+          
+          mtd = obj.params.procedure{c}.mvmethods{end};
+          [mm,dd] = mtd.getmodel();
+          
+          if isempty(m)
+            m = cell(size(mm,1)*length(obj.params.procedure),1);
+            desc = cell(size(mm,1)*length(obj.params.procedure),1);
+          end
+          
+          m((c-1)*size(mm,1)+(1:size(mm,1))) = mm;
+          
+          for k=1:size(mm,1)
+            desc{(c-1)*size(mm,1)+k} = sprintf('class %d against rest; %s\n',c,dd{k});
+          end
+        end
+        
+       end
+      
+       function b = istransfer(obj)
+        % return whether or not this method is a transfer learner
+        % must be overloaded by e.g., one_against_one
+        
+        b =  obj.procedure.mvmethods{end}.istransfer();
       end
       
     end

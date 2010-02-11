@@ -10,21 +10,19 @@ classdef randomclassifier < classifier
       obj = obj@classifier(varargin{:});
     end
     
-    function p = estimate(obj,data,design)
+    function p = estimate(obj,X,Y)
       % does nothing
       
-      p.nclasses = design.nunique;
+      p.nclasses = obj.nunique(Y);
       
     end
     
-    function post = map(obj,data)
+    function Y = map(obj,X)
       
       % random classification
-      post = rand(data.nsamples,obj.params.nclasses);
-      post = post ./ repmat(sum(post,2),[1 size(post,2)]);
-      
-      post = dataset(post);
-      
+      Y = rand(size(X,1),obj.params.nclasses);
+      Y = bsxfun(@rdivide,Y,sum(Y,2));
+     
     end
     
   end

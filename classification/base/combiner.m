@@ -1,9 +1,9 @@
-classdef combiner < clfmethod
+classdef combiner < mvmethod
 % COMBINER combines multiple datasets into one dataset
 % this is useful for combining posteriors
 %
 % EXAMPLE:
-%  xx = clfproc({standardizer {{da} {svmmethod}} combiner classifier})
+%  xx = mva({standardizer {{da} {svmmethod}} combiner classifier})
 %
 %   Copyright (c) 2008, 2009, Marcel van Gerven
 %
@@ -57,9 +57,7 @@ classdef combiner < clfmethod
         %   'concatenate' : concatenate posteriors to be used as data
         %
         %   Copyright (c) 2008, Marcel van Gerven
-        %
-        %   $Log: combine_posteriors.m,v $
-        %
+        
         
         % return if cpost is just one posterior
         if iscell(cpost) && length(cpost) == 1
@@ -132,7 +130,7 @@ classdef combiner < clfmethod
         end
         
         % normalize
-        post = dataset(post ./repmat(sum(post,2),[1 size(post,2)]));
+        post = bsxfun(@rdivide,post,sum(post,2));
         
       end
       

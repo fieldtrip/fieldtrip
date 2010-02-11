@@ -13,9 +13,6 @@ classdef static_classifier < classifier
 %       
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: static_classifier.m,v $
-%
 
     properties
         ie;
@@ -33,14 +30,11 @@ classdef static_classifier < classifier
                       
        end
        
-       function p = estimate(obj,data,design)
+       function p = estimate(obj,X,Y)
             
-            p.nclasses = design.nunique; 
-
-            data = data.X;
-            design = design.X;
-            
-            if isempty(obj.numvar), obj.numvar = size(data,2)+1; end
+            p.nclasses = obj.nunique(Y); 
+    
+            if isempty(obj.numvar), obj.numvar = size(X,2)+1; end
             
             % construct factors (custom code)
             factors = obj.construct_factors();
@@ -49,7 +43,7 @@ classdef static_classifier < classifier
             bn = bayesnet(factors);
                         
             % learn parameters using the standard learner
-            bn = bn.learn_parameters([design(:,1) data]);
+            bn = bn.learn_parameters([Y(:,1) X]);
                            
             % create inference engine
             if isempty(obj.engine)
@@ -62,25 +56,21 @@ classdef static_classifier < classifier
             
        end
        
-       function post = map(obj,data)       
+       function Y = map(obj,X)       
            
-           data = data.X;
+           Y = zeros([size(X,1) obj.params.nclasses]);
            
-           post = zeros([size(data,1) obj.params.nclasses]);
-           
-           for j=1:size(post,1)
+           for j=1:size(Y,1)
 
                % add evidence to the inference engine
-               obj.params.ie.enter_evidence([nan data(j,:)]);
+               obj.params.ie.enter_evidence([nan X(j,:)]);
 
                % compute marginal for first variable
                m = normalize(obj.params.ie.marginalize(1));
 
-               post(j,:) = m.p';
+               Y(j,:) = m.p';
            end
 
-           post = dataset(post);
-           
        end
 
         function factors = construct_factors(obj)

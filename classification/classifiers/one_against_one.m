@@ -6,23 +6,21 @@ classdef one_against_one < classifier
 %
 %   EXAMPLE:
 %   
-%   myproc = clfproc({ ...
+%   myproc = mva({ ...
 %        preprocessor('prefun',@(x)(log10(x))) ...
 %        standardizer() ... 
-%        one_against_one('procedure',clfproc({gp()})) ...
+%        one_against_one('procedure',mva({gp()})) ...
 %        });
 %
 %   SEE ALSO:
 %   ensemble.m
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: one_against_one.m,v $
-%
+
 
     properties        
     
-      procedure = []; % clfproc({da()}); % the used classification procedures
+      procedure = []; % mva({da()}); % the used classification procedures
       combination = 'product'; % how to combine classifier output (not how to combine data)
    
     end
@@ -36,17 +34,21 @@ classdef one_against_one < classifier
         assert(~isempty(obj.procedure));
         
         % cast to clf procedure
-        if ~isa(obj.procedure,'clfproc')
-          obj.procedure = clfproc(obj.procedure);
+        if ~isa(obj.procedure,'mva')
+          obj.procedure = mva(obj.procedure);
         end
             
       end
       
-      function p = estimate(obj,tdata,tdesign)
+      function p = estimate(obj,X,Y)
           
+        if iscell(X)
+          error('transfer learning with one_against_one not yet supported');
+        end
+        
         % transform the data such that we have a cell element for each
         % class label pair
-        p.nclasses = tdesign.nunique;
+        p.nclasses = obj.nunique(Y);
         
         % replicate the classifier
         
@@ -70,13 +72,13 @@ classdef one_against_one < classifier
               fprintf('training class %d against class %d\n',i,j);
             end
             
-            didx = (tdesign.X == i | tdesign.X == j);
+            didx = (Y == i | Y == j);
             
-            design = tdesign.X(didx,:);
+            design = Y(didx,:);
             design(design == i) = 1;
             design(design == j) = 2;
             
-            p.procedure{idx} = p.procedure{idx}.train(tdata.subsample(didx),dataset(design));
+            p.procedure{idx} = p.procedure{idx}.train(X(didx,:),design);
         
             idx=idx+1;
             
@@ -85,9 +87,9 @@ classdef one_against_one < classifier
         
       end
       
-      function post = map(obj,data)
+      function Y = map(obj,X)
         
-        cpost = cell(1,length(obj.params.procedure));
+        Y = cell(1,length(obj.params.procedure));
         
         % get posteriors for all pairs
         idx = 1;
@@ -96,20 +98,18 @@ classdef one_against_one < classifier
             
             if strcmp(obj.combination,'product')
               % use ones to allow for products of probabilities            
-              cpost{idx} = ones(data.nsamples,obj.params.nclasses);
+              Y{idx} = ones(size(X,1),obj.params.nclasses);
             else
-              cpost{idx} = zeros(data.nsamples,obj.params.nclasses);
+              Y{idx} = zeros(size(X,1),obj.params.nclasses);
             end
             
             if obj.verbose
               fprintf('testing class %d against class %d\n',i,j);
             end
             
-            p = obj.params.procedure{idx}.test(data);
+            p = obj.params.procedure{idx}.test(X);
             
-            cpost{idx}(:,[i j]) = p.X;
-            
-            cpost{idx} = dataset(cpost{idx});
+            Y{idx}(:,[i j]) = p;
             
             idx = idx+1;
             
@@ -117,8 +117,45 @@ classdef one_against_one < classifier
         end
         
         % combine the result
-        post = combiner.combine(cpost,obj.combination);
+        Y = combiner.combine(Y,obj.combination);
         
+      end
+      
+      function [m,desc] = getmodel(obj)
+        
+        m=[];
+        desc=[];
+        c=1;
+        for i=1:obj.params.nclasses
+          for j=(i+1):obj.params.nclasses
+            
+            mtd = obj.params.procedure{c}.mvmethods{end};
+            [mm,dd] = mtd.getmodel();
+            
+            if isempty(m)
+              m = cell(size(mm,1)*length(obj.params.procedure),1);
+              desc = cell(size(mm,1)*length(obj.params.procedure),1);
+            end
+            
+            m((c-1)*size(mm,1)+(1:size(mm,1))) = mm;
+            
+            for k=1:size(mm,1)
+              desc{(c-1)*size(mm,1)+k} = sprintf('class %d against %d; %s\n',i,j,dd{k});
+            end
+            
+            c = c+1;
+          end
+          
+        end
+        
+        
+      end
+      
+      function b = istransfer(obj)
+        % return whether or not this method is a transfer learner
+        % must be overloaded by e.g., one_against_one
+        
+        b =  obj.procedure.mvmethods{end}.istransfer();
       end
       
     end

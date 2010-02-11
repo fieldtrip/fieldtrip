@@ -31,7 +31,7 @@ classdef svmmethod < classifier
 %
 % definition of the classification procedure while optimizing C
 %
-% myproc = clfproc({standardizer svmmethod('method',@svm_km_l2,'C',90:10:100,'validator',crossvalidator('cvfolds',0.8,'verbose',true,'procedure',{standardizer svmmethod('method',@svm_km_l2,'kernel','rbf','kerparam',1)}),'kernel','rbf','kerparam',1)});
+% myproc = mva({standardizer svmmethod('method',@svm_km_l2,'C',90:10:100,'validator',crossvalidator('cvfolds',0.8,'verbose',true,'procedure',{standardizer svmmethod('method',@svm_km_l2,'kernel','rbf','kerparam',1)}),'kernel','rbf','kerparam',1)});
 %
 % SEE ALSO:
 %   svm_l2_slow.m
@@ -48,28 +48,30 @@ classdef svmmethod < classifier
       kernel = 'linear'; % 'poly','rbf'('gaussian'),'htrbf' - see calc_kernel.m
       kerparam = 1;      % each kernel is associated with native parameters - see calc_kernel.m
       C = nan;
-      validator;% = crossvalidator('procedure',clfproc({}));
+      validator;% = crossvalidator('procedure',mva({}));
       criterion = 'accuracy';
       ratio4estplatt = 0;     %>=0 && <=1 (0-default)
  
     end
     
     methods
+      
       function obj = svmmethod(varargin)
         
         obj = obj@classifier(varargin{:});
         
       end
-      function p = estimate(obj,data,design)
+      
+      function p = estimate(obj,X,Y)
         % simply stores input data and design
             
-        idx = data.labeled();
+        idx = obj.labeled(X);
         
-        nclasses = design.nunique;
+        nclasses = obj.nunique(Y);
         
-        % remove missing data
-        data = data.X(idx,:);
-        design = design.X(idx,:);
+        % remove any missing data
+        data = X(idx,:);
+        design = Y(idx,:);
         
         p.platt_sigmoid = [];
         p.platt_sigmoid.A = [];
@@ -127,10 +129,10 @@ classdef svmmethod < classifier
         
       end
       
-      function post = map(obj,data)
+      function post = map(obj,X)
     
         % remove missing data
-        X = data.subsample(data.labeled()).X;
+        X = X(obj.labeled(X),:);
                 
         probs = svm_eval(X,obj.params.sv_model.sv,obj.params.sv_model.weights,obj.params.sv_model.b,obj.kernel,obj.kerparam);
         
@@ -148,9 +150,6 @@ classdef svmmethod < classifier
           post(:,2) = (probs > 0);
         
         end
-        
-        post = dataset(post);
-          
         
       end
      

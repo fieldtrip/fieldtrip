@@ -39,21 +39,21 @@ classdef pcanalyzer < preprocessor
       obj = obj@preprocessor(varargin{:});
     end
     
-    function M = map(obj,U)
+    function Y = map(obj,X)
       
       %M = dataset((obj.params.pc' * U.X')');
-      M = dataset(U.X * obj.params.pc);
+      Y = X * obj.params.pc;
       
     end
     
-    function U = unmap(obj,M)
+    function X = unmap(obj,Y)
       % CHECK!
       
-      U = dataset(M.X * obj.params.pc');
+      X = Y * obj.params.pc';
       
     end
     
-    function p = estimate(obj,data,design)
+    function p = estimate(obj,X,Y)
       
       if obj.proportion >= 1
         % use specialized fast approximation
@@ -62,13 +62,13 @@ classdef pcanalyzer < preprocessor
           fprintf('fast selection of %d principal components\n',obj.proportion);
         end
 
-        [U,S,V] = pca(data.X,obj.proportion);
+        [U,S,V] = pca(X,obj.proportion);
         p.pc = V;
                 
       else
         % in terms of variance accounted for
         
-        [p.pc,score,p.ev] = princomp(data.X);
+        [p.pc,score,p.ev] = princomp(X);
         p.ev = p.ev';
         
         % proportion of the variance that is accounted for

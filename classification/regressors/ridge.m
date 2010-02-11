@@ -16,23 +16,22 @@ classdef ridge < regressor
          obj = obj@regressor(varargin{:});
          
        end
-       function p = estimate(obj,data,design)
+       function p = estimate(obj,X,Y)
         
          % add bias term
-         data = [data.X ones(data.nsamples,1)];
-         design = design.X;
-         
-         lambdas = obj.lambda*ones(size(data,2),1); % Penalize the absolute value of each element by the same amount
+         X = [X ones(size(X,1),1)];
+          
+         lambdas = obj.lambda*ones(size(X,2),1); % Penalize the absolute value of each element by the same amount
 
-         R = chol(data'*data + diag(lambdas));
+         R = chol(X'*X + diag(lambdas));
          
-         p.model = R\(R'\(data'*design));
+         p.model = R\(R'\(X'*Y));
          
        end
        
-       function post = map(obj,data)       
+       function Y = map(obj,X)       
        
-         post = dataset([data.X ones(data.nsamples,1)] * obj.params.model);
+         Y = [X ones(size(X,1),1)] * obj.params.model;
 
        end
        

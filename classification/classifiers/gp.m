@@ -8,9 +8,7 @@ classdef gp < classifier
 %   gpml-matlab
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: gp.m,v $
-%
+
 
     properties
       
@@ -28,11 +26,11 @@ classdef gp < classifier
         
       end
       
-      function p = estimate(obj,data,design)
+      function p = estimate(obj,X,Y)
         
-        if design.nunique > 2, error('GP only accepts binary class problems'); end
+        if obj.nunique(Y) > 2, error('GP only accepts binary class problems'); end
         
-        design = design.X;
+        design = Y;
         
         % make foolproof
         if all(design(:,1) == 1)
@@ -40,8 +38,6 @@ classdef gp < classifier
         elseif all(design(:,1) == 2)
           obj.loghyper = inf;
         else
-          
-          X = data.X;
           
           if ~exist('gpml-matlab','dir')
             error('this code requires an external toolbox: http://www.gaussianprocess.org/gpml/code/matlab/doc/');
@@ -71,33 +67,29 @@ classdef gp < classifier
          end
       end
       
-      function post = map(obj,data)
+      function Y = map(obj,X)
         
         if isinf(obj.params.loghyper(1)) 
            if obj.params.loghyper < 0
-            post = dataset([ones(data.nsamples,1) zeros(data.nsamples,1)]);
+             Y = [ones(size(X,1),1) zeros(size(X,1),1)];
            else
-             post = dataset([zeros(data.nsamples,1) ones(data.nsamples,1)]);
+             Y = [zeros(size(X,1),1) ones(size(X,1),1)];
            end
         else
           
-          data = data.X;
-          
           if strcmp(obj.method,'laplace')
             
-            probs = binaryLaplaceGP(obj.params.loghyper, 'covSEiso', 'cumGauss', obj.params.data, obj.params.targets, data);
+            probs = binaryLaplaceGP(obj.params.loghyper, 'covSEiso', 'cumGauss', obj.params.data, obj.params.targets, X);
             
           else % ep
             
-            probs = binaryEPGP(obj.params.loghyper, 'covSEiso', obj.params.data, obj.params.targets, data);
+            probs = binaryEPGP(obj.params.loghyper, 'covSEiso', obj.params.data, obj.params.targets, X);
             
           end
           
-          post = zeros(size(probs,1),2);
-          post(:,1) = 1 - probs;
-          post(:,2) = probs;
-          
-          post = dataset(post);
+          Y = zeros(size(probs,1),2);
+          Y(:,1) = 1 - probs;
+          Y(:,2) = probs;
         
         end
         

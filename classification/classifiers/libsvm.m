@@ -2,7 +2,7 @@ classdef libsvm < classifier
 %LIBSVM wrapper for the libsvm toolbox 
 %
 % example:
-% myproc = clfproc({ ...
+% myproc = mva({ ...
 %    standardizer() ...
 %    libsvm('trainparams','-t 0 -c 1') ...
 %    });
@@ -12,9 +12,7 @@ classdef libsvm < classifier
 % matlab interface (http://www.csie.ntu.edu.tw/~cjlin/libsvm/#matlab)
 %
 % Copyright (c) 2008, Marcel van Gerven
-%
-% $Log: libsvm.m,v $
-%
+
 
     properties
          
@@ -32,16 +30,13 @@ classdef libsvm < classifier
         
       end
       
-      function p = estimate(obj,data,design)
-        
-        data = data.X;
-        design = design.X;
+      function p = estimate(obj,X,Y)
         
         trainparams = obj.trainparams;
         
         % regularization parameter
         if isempty(strfind(trainparams,'-c'))
-          K = compKernel(data,data,'linear');
+          K = compKernel(X,X,'linear');
           c = .1*(mean(diag(K))-mean(K(:)));
           trainparams = [trainparams ' -c ' num2str(c)];
         end
@@ -50,11 +45,13 @@ classdef libsvm < classifier
           trainparams = [trainparams ' -b 1'];
         end
         
-        p.model = svmtrain(design, data, trainparams);
+        % conflicts with bioinformatics toolbox
+        % and currently crashes
+        p.model = svmtrain(Y, X, trainparams);
         
       end
       
-      function post = map(obj,data)
+      function Y = map(obj,X)
         
         testparams = obj.testparams;
         
@@ -62,9 +59,7 @@ classdef libsvm < classifier
           testparams = [testparams ' -b 1'];
         end
         
-        [a,b,post] = svmpredict(ones(data.nsamples,1), data.X, obj.params.model, testparams);
-
-        post = dataset(post);
+        [a,b,Y] = svmpredict(ones(size(X,1),1), X, obj.params.model, testparams);
       
       end
       

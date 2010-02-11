@@ -19,17 +19,17 @@ classdef elasticnet < regressor
          
        end
        
-       function p = estimate(obj,data,design)
+       function p = estimate(obj,X,Y)
         
-         data = [data.X ones(data.nsamples,1)];
+         X = [X ones(size(X,1),1)];
         
-         lambdasL2 = obj.lambdaL2*ones(size(data,2),1);
-         lambdasL1 = obj.lambdaL1*ones(size(data,2),1);
+         lambdasL2 = obj.lambdaL2*ones(size(X,2),1);
+         lambdasL1 = obj.lambdaL1*ones(size(X,2),1);
 
-         funObj = @(w)GaussianLoss(w,data,design.X); % Loss function that L1 regularization is applied to
+         funObj = @(w)GaussianLoss(w,X,Y); % Loss function that L1 regularization is applied to
          
-         R = chol(data'*data + diag(lambdasL1));
-         w_init = R\(R'\(data'*design.X)); % Initial value for iterative optimizer
+         R = chol(X'*X + diag(lambdasL1));
+         w_init = R\(R'\(X'*Y)); % Initial value for iterative optimizer
          
          penalizedFunObj = @(w)penalizedL2(w,funObj,lambdasL2);
 
@@ -41,9 +41,9 @@ classdef elasticnet < regressor
 
        end
        
-       function post = map(obj,data)       
+       function Y = map(obj,X)       
        
-         post = dataset([data.X ones(data.nsamples,1)] * obj.params.model);
+         Y = [X ones(size(X,1),1)] * obj.params.model;
 
        end
        

@@ -78,7 +78,7 @@ classdef optimizer < predictor
            
            % set parameters
            for j=1:nv
-             vld.procedure.clfmethods{obj.methodidx}.(obj.variables{j}) = obj.configs(i,j);
+             vld.procedure.mvmethods{obj.methodidx}.(obj.variables{j}) = obj.configs(i,j);
            end
 
            if obj.verbose
@@ -110,7 +110,7 @@ classdef optimizer < predictor
          % we now know the optimal configuration. Now we retrieve the
          % method of interest with this configuration and retrain
       
-         obj.method = obj.validator.procedure.clfmethods{obj.methodidx};
+         obj.method = obj.validator.procedure.mvmethods{obj.methodidx};
 
          for j=1:nv
            obj.method.(obj.variables{j}) = obj.configs(obj.optimum,j);

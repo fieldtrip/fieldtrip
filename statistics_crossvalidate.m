@@ -1,14 +1,14 @@
 function stat = statistics_crossvalidate(cfg, dat, design)
 % STATISTICS_CROSSVALIDATE performs cross-validation using a prespecified
-% classifier as given by cfg.classifier.
+% multivariate analysis given by cfg.mva
 %
 % Options:
 % cfg.metric        = the metric to report (default = 'accuracy')
 % cfg.cv            = crossvalidator object
 %  overloads the following
-%   cfg.clfproc     = a classification procedure (default = {standardizer svmmethod})
+%   cfg.mva         = a multivariate analysis (default = {standardizer svmmethod})
 %   cfg.nfolds      = number of folds (default = 10)
-%   cfg.compact     = whether or not to save the classification procedure (true)
+%   cfg.compact     = whether or not to save the mva procedure (true)
 %   cfg.model       = whether or not to save the average model (true)
 %
 % Returns:
@@ -17,9 +17,9 @@ function stat = statistics_crossvalidate(cfg, dat, design)
 %                     majority classifier
 % stat.cv           = the trained crossvalidator
 %
-% See also: CROSSVALIDATE, CLFPROC, CLASSIFIER
+% See also: CROSSVALIDATE, MVA
 %
-% Requires: classification toolbox
+% Requires: multivariate analsysis toolbox
 %
 % Copyright (c) 2007, Marcel van Gerven
 % F.C. Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
@@ -31,14 +31,14 @@ if isfield(cfg,'cv')
   cv = cfg.cv;
 else
 
-  if ~isfield(cfg,'clfproc')
-     cfg.clfproc = clfproc({ ...
+  if ~isfield(cfg,'mva')
+     cfg.mva = mva({ ...
         standardizer('verbose',true) ...
         svmmethod('verbose',true) ...
         });
    else
-     if ~isa(cfg.clfproc,'clfproc')
-       cfg.clfproc = clfproc(cfg.clfproc,'verbose',true);
+     if ~isa(cfg.mva,'mva')
+       cfg.mva = mva(cfg.mva,'verbose',true);
      end
    end
    
@@ -46,7 +46,7 @@ else
    if ~isfield(cfg,'compact'), cfg.compact = true; end
    if ~isfield(cfg,'model'), cfg.model = true; end
 
-   cv = crossvalidator('procedure',cfg.clfproc,'nfolds',cfg.nfolds,'compact',cfg.compact,'model',cfg.model,'verbose',true);
+   cv = crossvalidator('procedure',cfg.mva,'nfolds',cfg.nfolds,'compact',cfg.compact,'model',cfg.model,'verbose',true);
 
 end
 

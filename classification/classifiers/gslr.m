@@ -17,9 +17,7 @@ classdef gslr < classifier
 %   slr_learn_transfer.m
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: gslr.m,v $
-%
+
 
     properties
         
@@ -51,12 +49,9 @@ classdef gslr < classifier
         
       end
       
-      function p = estimate(obj,data,design)
+      function p = estimate(obj,X,Y)
         
-        data = data.X;
-        design = design.X;
-        
-        [p.model,p.diagnostics] = slr_learn(obj.options,[design(:,1) data]);
+        [p.model,p.diagnostics] = slr_learn(obj.options,[Y(:,1) X]);
         
         if isfield(obj.options,'lcurve') && obj.options.lcurve
           
@@ -91,9 +86,9 @@ classdef gslr < classifier
         
       end
       
-      function post = map(obj,data)
+      function Y = map(obj,X)
         
-        post = dataset(slr_classify([data.X ones(data.nsamples,1)], obj.params.model));
+        Y = slr_classify([X ones(size(X,1),1)], obj.params.model);
         
       end
       

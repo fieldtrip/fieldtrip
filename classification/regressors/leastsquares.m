@@ -12,15 +12,15 @@ classdef leastsquares < regressor
          
       end
       
-      function p = estimate(obj,data,design)
+      function p = estimate(obj,X,Y)
          
-         p.model = [data.X ones(data.nsamples,1)]\design.X;
+         p.model = [X ones(size(X,1),1)]\Y;
          
        end
        
-       function post = map(obj,data)       
+       function Y = map(obj,X)       
            
-         post = dataset([data.X ones(data.nsamples,1)] * obj.params.model);
+         Y = [X ones(size(X,1),1)] * obj.params.model;
 
        end
        

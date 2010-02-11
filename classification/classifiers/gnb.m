@@ -40,18 +40,15 @@ classdef gnb < classifier
         obj = obj@classifier(varargin{:});
       end
       
-      function p = estimate(obj,data,design)
+      function p = estimate(obj,X,Y)
         
-        p.nclasses = design.nunique;
-        nfeatures = data.nfeatures;
-        
-        X = data.X;
-        design = design.X;
+        p.nclasses = obj.nunique(Y);
+        nfeatures = size(X,2);
         
         % estimate class priors
         p.priors = zeros(p.nclasses,1);
         for j=1:p.nclasses
-          p.priors(j) = sum(design(:,1)==j)/size(design,1);
+          p.priors(j) = sum(Y(:,1)==j)/size(Y,1);
         end
         
         % parameters per class/feature pair
@@ -62,7 +59,7 @@ classdef gnb < classifier
           % estimate class-conditional means
           for j=1:nfeatures
             for k=1:p.nclasses
-              p.params{k,j} = mle(X(design(:,1) == k,j),'distribution',lower(obj.conditional));
+              p.params{k,j} = mle(X(Y(:,1) == k,j),'distribution',lower(obj.conditional));
             end
           end
           
@@ -73,7 +70,7 @@ classdef gnb < classifier
             for j=1:nfeatures
               for k=1:p.nclasses
                 
-                p.params{k,j} = mle(X(design(:,1) == k,j),'pdf',obj.conditional);
+                p.params{k,j} = mle(X(Y(:,1) == k,j),'pdf',obj.conditional);
               end
             end
             
@@ -82,7 +79,7 @@ classdef gnb < classifier
             for j=1:nfeatures
               for k=1:p.nclasses
                 
-                p.params{k,j} = obj.mle(X(design(:,1) == k,j));
+                p.params{k,j} = obj.mle(X(Y(:,1) == k,j));
               end
             end
             
@@ -91,26 +88,24 @@ classdef gnb < classifier
         
       end
       
-      function post = map(obj,data)
+      function Y = map(obj,X)
         
         p = obj.params.params;
         
-        X = data.X;
-        
-        post = nan(size(X,1),obj.params.nclasses);
+        Y = nan(size(X,1),obj.params.nclasses);
         
         nparams = length(p{1,1});
         
-        for m=1:size(post,1) % iterate over examples
+        for m=1:size(Y,1) % iterate over examples
           
           for c=1:obj.params.nclasses
             
             % compute conditional
-            conditional = zeros(1,data.nfeatures);
+            conditional = zeros(1,size(X,2));
             
             if ~isa(obj.conditional,'function_handle')
               
-              for j=1:data.nfeatures
+              for j=1:size(X,2)
                 if nparams == 1
                   conditional(j) = pdf(obj.conditional,X(m,j),p{c,j}(1));
                 elseif nparams == 2
@@ -122,7 +117,7 @@ classdef gnb < classifier
               
             else
               
-              for j=1:data.nfeatures
+              for j=1:size(X,2)
                 if nparams == 1
                   conditional(j) = obj.conditional(X(m,j),p{c,j}(1));
                 elseif nparams == 2
@@ -136,31 +131,29 @@ classdef gnb < classifier
             
             % degenerate cases
             if ~obj.params.priors(c) || any(isinf(conditional)) || ~all(conditional)
-              post(m,c) = 0;
+              Y(m,c) = 0;
               break
             end
             
             % compute probability
-            post(m,c) = log(obj.params.priors(c)) + mynansum(log(conditional));
+            Y(m,c) = log(obj.params.priors(c)) + mynansum(log(conditional));
             
           end
           
           % compute normalizing term using log-sum-exp trick
           
-          mx = max(post(m,:));
+          mx = max(Y(m,:));
           
           nt = 0;
           for c=1:obj.params.nclasses
-            nt = nt + exp(post(m,c) - mx);
+            nt = nt + exp(Y(m,c) - mx);
           end
           nt = log(nt) + mx;
           
           % normalize
-          post(m,:) = exp(post(m,:) - nt);
+          Y(m,:) = exp(Y(m,:) - nt);
           
         end
-        
-        post = dataset(post);
         
       end
       

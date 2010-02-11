@@ -17,7 +17,7 @@ classdef wrapper < featureselector
 
     properties
        
-      validator = crossvalidator('procedure',clfproc({nb()}),'cvfolds',0.9);
+      validator = crossvalidator('procedure',mva({nb()}),'cvfolds',0.9);
       metric = 'accuracy'; % evaluation metric
       criterion; % keeps track of the evaluation metric
       
@@ -37,20 +37,17 @@ classdef wrapper < featureselector
           
         end
         
-        function p = estimate(obj,data,design)
-          
-          data = data.X;
-          design = design.X;
-          
+        function p = estimate(obj,X,Y)
+         
           switch obj.search
             
             case 'hillclimbing'
               
               cur = [];
               metric = -Inf;
-              nfeat = min(obj.maxfeatures,size(data,2));
+              nfeat = min(obj.maxfeatures,size(X,2));
               
-              candidates = 1:size(data,2);
+              candidates = 1:size(X,2);
               obj.criterion = zeros(1,nfeat);
               for f=1:nfeat
                 
@@ -63,8 +60,8 @@ classdef wrapper < featureselector
                   
                   tmp = [cur j];
                   
-                  cv = obj.validator.validate(dataset(data(:,tmp)),dataset(design));
-                  m = validator.eval(cv.post,cv.design,'metric',obj.metric);
+                  cv = obj.validator.validate(X(:,tmp),Y);
+                  m = validator.eval(cv.post,cv.Y,'metric',obj.metric);
                   
                   if m > metric
                     subset = tmp;
@@ -88,7 +85,7 @@ classdef wrapper < featureselector
               
             case 'bestfirst'
               
-              nfeat = size(data,2);
+              nfeat = size(X,2);
               
               % we represent features as binary numbers
               open = 0;
@@ -123,8 +120,8 @@ classdef wrapper < featureselector
                 acc = zeros(1,length(candidates));
                 for j=1:length(candidates)
                   
-                  cv = obj.validator.validate(dataset(data(:,boolean(bitget(candidates(j),1:nfeat)))),dataset(design));
-                  acc(j) = validator.eval(cv.post,cv.design,'metric',obj.metric);
+                  cv = obj.validator.validate(X(:,boolean(bitget(candidates(j),1:nfeat))),Y);
+                  acc(j) = validator.eval(cv.post,cv.Y,'metric',obj.metric);
                 end
                 
                 open = [open candidates];

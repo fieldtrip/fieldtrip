@@ -12,28 +12,23 @@ classdef nb < classifier
 
     end
     
-    function p = estimate(obj,data,design)
+    function p = estimate(obj,X,Y)
 
-      % transform multidimensional array to matrix
-      data = data.X;
-      design = design.X;
-            
-      [tmp,tmp,idx] = unique(design(1:size(design,1),:),'rows');
-      p.nclasses = max(idx);      
+      p.nclasses = obj.nunique(Y);     
       
-      nfeatures = size(data,2);
+      nfeatures = size(X,2);
 
       % estimate class priors
       p.priors = zeros(p.nclasses,1);
       for j=1:p.nclasses
-        p.priors(j) = sum(design(:,1)==j)/size(design,1);
+        p.priors(j) = sum(Y(:,1)==j)/size(Y,1);
       end
 
       % estimate class-conditional means
       p.means = zeros(p.nclasses,nfeatures);
       for j=1:nfeatures
         for k=1:p.nclasses
-          p.means(k,j) = mynanmean(data(design(:,1) == k,j));
+          p.means(k,j) = mynanmean(X(Y(:,1) == k,j));
         end
       end
 
@@ -41,7 +36,7 @@ classdef nb < classifier
       p.stds = zeros(p.nclasses,nfeatures);
       for j=1:nfeatures
         for k=1:p.nclasses
-          p.stds(k,j) = mynanstd(data(design(:,1) == k,j));
+          p.stds(k,j) = mynanstd(X(Y(:,1) == k,j));
         end
       end
 
@@ -50,45 +45,41 @@ classdef nb < classifier
 
     end
     
-    function post = map(obj,data)
+    function Y = map(obj,X)
 
-      data =  data.X;
-      
-      post = nan(size(data,1),obj.params.nclasses);
+       Y = nan(size(X,1),obj.params.nclasses);
 
-      for m=1:size(post,1) % iterate over examples
+      for m=1:size(Y,1) % iterate over examples
 
         for c=1:obj.params.nclasses
 
-          conditional = 1./(sqrt(2*pi)*obj.params.stds(c,:)) .* exp(- (data(m,:) - obj.params.means(c,:)).^2./(2*obj.params.stds(c,:).^2));
+          conditional = 1./(sqrt(2*pi)*obj.params.stds(c,:)) .* exp(- (X(m,:) - obj.params.means(c,:)).^2./(2*obj.params.stds(c,:).^2));
 
           % degenerate cases
           if ~obj.params.priors(c) || any(isinf(conditional)) || ~all(conditional)
-            post(m,c) = 0;
+            Y(m,c) = 0;
             break
           end
 
           % compute probability
-          post(m,c) = log(obj.params.priors(c)) + mynansum(log(conditional));
+          Y(m,c) = log(obj.params.priors(c)) + mynansum(log(conditional));
 
         end
 
         % compute normalizing term using log-sum-exp trick
 
-        mx = max(post(m,:));
+        mx = max(Y(m,:));
 
         nt = 0;
         for c=1:obj.params.nclasses
-          nt = nt + exp(post(m,c) - mx);
+          nt = nt + exp(Y(m,c) - mx);
         end
         nt = log(nt) + mx;
 
         % normalize
-        post(m,:) = exp(post(m,:) - nt);
+        Y(m,:) = exp(Y(m,:) - nt);
 
       end
-      
-      post = dataset(post);
       
     end
 
@@ -97,7 +88,7 @@ classdef nb < classifier
 
       % return model for all classes; i.e., their means
         m = mat2cell(obj.params.means,ones(1,size(obj.params.means,1)),size(obj.params.means,2));
-        desc = {'unknown'};
+        desc = repmat({'unknown'},size(m));
         
     end
 

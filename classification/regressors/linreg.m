@@ -11,13 +11,13 @@ classdef linreg < regressor
             obj = obj@regressor(varargin{:});            
         end        
         
-        function p = estimate(obj,data,design)
+        function p = estimate(obj,X,Y)
             
-            p.model = regress(design.X,[data.X ones(data.nsamples,1)]);            
+            p.model = regress(Y,[X ones(size(X,1),1)]);            
         end
         
-        function res = map(obj,data)           
-            res = dataset([data.X ones(data.nsamples,1)] * obj.params.model);            
+        function Y = map(obj,X)           
+            Y = [X ones(size(X,1),1)] * obj.params.model;            
         end
  
     end

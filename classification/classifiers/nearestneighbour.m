@@ -26,24 +26,22 @@ classdef nearestneighbour < classifier
                       
        end
        
-       function p = map(obj,data,design)
+       function p = estimate(obj,X,Y)
          % simply store training data
          
-         p.data = data;
-         p.design = design;
+         p.data = X;
+         p.design = Y;
          
        end
        
-       function post = estimate(obj,data)
+       function Y = map(obj,X)
          
-         l = knnclassify(data.X,obj.params.data.X,obj.params.design.X,obj.k,obj.distance,obj.rule);
+         l = knnclassify(X,obj.params.data,obj.params.design,obj.k,obj.distance,obj.rule);
          
-         post = zeros(size(data,1),obj.params.design.nunique);
-         for j=1:data.nsamples
-           post(j,l(j)) = 1;
+         Y = zeros(size(X,1),obj.nunique(obj.params.design));
+         for j=1:size(X,1)
+           Y(j,l(j)) = 1;
          end
-         
-         post = dataset(post);
          
        end
        

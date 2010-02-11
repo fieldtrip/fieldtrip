@@ -25,10 +25,10 @@ classdef reconstructor < predictor
 
         end        
         
-        function rec = predict(obj,data)
+        function rec = predict(obj,X)
           % convert outcome dataset into predictions
           
-          rec = obj.test(data).X; 
+          rec = obj.test(X);
         end
         
   end
@@ -50,12 +50,8 @@ classdef reconstructor < predictor
       
          if ~isfield(options,'metric'), options.metric = 'accuracy'; end
          
-         if isa(post,'dataset')
-           metric = compute_metric(post.X,design.X,options);
-         else
-           metric = compute_metric(post,design,options);
-         end
-      
+         metric = compute_metric(post,design,options);
+        
          function met = compute_metric(post,design,cfg)
       
            met = [];

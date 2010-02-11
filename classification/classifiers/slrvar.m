@@ -22,23 +22,19 @@ classdef slrvar < classifier
                       
        end
        
-       function p = estimate(obj,data,design)
+       function p = estimate(obj,X,Y)
                  
-         if design.nunique ~= 2, error('SLRLAP expects binary class labels'); end
+         if obj.nunique(Y) ~= 2, error('SLRLAP expects binary class labels'); end
 
-         design = design.X-1; % zero based
-         
-         p.model = slr_learning_var2(design, [data.X ones(data.nsamples,1)],...
+         p.model = slr_learning_var2(Y-1, [X ones(size(X,1),1)],...
            'nlearn', 300, 'nstep', 100, 'amax', 1e8, 'invhessian', obj.invhessian);
 
 
        end
 
-       function post = map(obj,data)
+       function Y = map(obj,X)
 
-         [tmp, post] = calc_label([data.X ones(data.nsamples,1)], [zeros(data.nfeatures+1,1) obj.params.model]);
-         
-         post = dataset(post);
+         [tmp, Y] = calc_label([X ones(size(X,1),1)], [zeros(size(X,2)+1,1) obj.params.model]);
          
        end              
        

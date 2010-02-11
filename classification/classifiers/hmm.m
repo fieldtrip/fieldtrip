@@ -11,9 +11,6 @@ classdef hmm < dynamic_classifier
 %   synchronous_hmm_example.m    
 %
 %   Copyright (c) 2008, Marcel van Gerven
-%
-%   $Log: hmm.m,v $
-%
 
     properties       
         mixture = 1; % increase to use mixtures of gaussians as features
@@ -27,10 +24,10 @@ classdef hmm < dynamic_classifier
         obj = obj@dynamic_classifier(varargin{:});
       end
       
-      function p = estimate(obj,data,design)
+      function p = estimate(obj,X,Y)
         
-        data = data.X;
-        design = design.X;
+        data = X;
+        design = Y;
         
         % data must accommodate hidden variables
         if obj.mixture > 1
@@ -51,29 +48,25 @@ classdef hmm < dynamic_classifier
         end
       end
       
-      function post = map(obj,data)
-        
-        data = data.X;
+      function Y = map(obj,X)
         
         % data must accommodate hidden variables
         if obj.mixture > 1
           
-          numvar = 2*(size(data,2)/obj.horizon);
+          numvar = 2*(size(X,2)/obj.horizon);
           ncont = (numvar)/2;
           
-          hdata = nan(size(data,1),obj.horizon*numvar);
+          hdata = nan(size(X,1),obj.horizon*numvar);
           
           for j=1:obj.horizon
-            hdata(:,((j-1)*numvar+1):((j-1)*numvar+ncont)) = data(:,((j-1)*ncont+1):(j*ncont));
+            hdata(:,((j-1)*numvar+1):((j-1)*numvar+ncont)) = X(:,((j-1)*ncont+1):(j*ncont));
           end
           
-          post = obj.map@dynamic_classifier(dataset(hdata));
+          Y = obj.map@dynamic_classifier(hdata);
           
         else
-          post = obj.map@dynamic_classifier(dataset(data));
+          Y = obj.map@dynamic_classifier(X);
         end
-        
-        post = dataset(post);
         
       end
       

@@ -34,16 +34,16 @@ classdef mulreg < regressor
             obj = obj@regressor(varargin{:});            
         end        
         
-        function p = estimate(obj,data,design)
+        function p = estimate(obj,X,Y)
                         
             if isempty(obj.ndep)
-              p.ndep = design.nfeatures;
+              p.ndep = size(Y,2);
             else
               p.ndep = obj.ndep;
             end
             
             if isa(obj.prefun,'function_handle')
-                design = obj.prefun(design.X);
+                Y = obj.prefun(Y);
             end
             
             if isempty(obj.regressors)
@@ -56,23 +56,21 @@ classdef mulreg < regressor
             end
             
             for c=1:obj.ndep
-                p.regressors{c} = p.regressors{c}.train(data,dataset(design.X(:,c)));
+                p.regressors{c} = p.regressors{c}.train(X,Y(:,c));
             end
         end
         
-        function res = map(obj,data)                 
+        function Y = map(obj,X)                 
           
-          res = zeros(data.nsamples,obj.params.ndep);
+          Y = zeros(size(X,1),obj.params.ndep);
           for j=1:obj.ndep
-            res(:,j) = obj.params.regressors{j}.test(data);
+            Y(:,j) = obj.params.regressors{j}.test(X);
           end
           
           if isa(obj.postfun,'function_handle')
-            res = obj.postfun(res);
+            Y = obj.postfun(Y);
           end
 
-          res = dataset(res);
-          
         end
  
     end
