@@ -57,7 +57,7 @@ for i=1:Ndata
   Nchan(i) = length(varargin{i}.label);
   Ntrial(i) = length(varargin{i}.trial);
   fprintf('input dataset %d, %d channels, %d trials\n', i, Nchan(i), Ntrial(i));
-  label = [label(:); varargin{i}.label(:)];
+  label = cat(1, label(:), varargin{i}.label(:));
 end
 
 % try to locate the trial definition (trl) in the nested configuration
