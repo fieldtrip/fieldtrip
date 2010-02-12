@@ -86,14 +86,9 @@
 % - automate recompilation of mex files
 % - create visualizer class
 % - IMPLEMENT BLINREG / BLINREG_TRANSFER
-% - remove dataset overkill? add .dims .nfeatures .ntasks etc field to mvmethods;
 %   reshape getmodel whenever possible
 % - use separate check_data procedure in mva?
-% - replace libsvm code by bioinformatics toolbox svm code
 % - check dynamic_classifier and static_classifier code and derivates
-% - removed lvq classifier
-% - can we do away with .params and operate on obj immediately? / change
-%   mvmethods to handle classes?
 % - throw out redundant svm classifiers; check speed and accuracy
 % - make one_against_one/rest estimate and map functions suitable for
 %   transfer_learning; currently not supported
@@ -104,4 +99,3 @@
 % - how to handle multiple regression vs regressors/classifiers that return mean + error estimates?
 % - clean up nclasses field
 % - check hgnb_transfer; not working correctly anymore
-% - libsvm not working correctly anymore
