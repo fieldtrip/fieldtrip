@@ -81,8 +81,10 @@ classdef mva
          for c=1:obj.nmethods
            
            if iscell(obj.mvmethods{c})
+            % deal with ensemble methods (i.e., nested cell arrays)
              
              if iscell(data) && ~obj.mvmethods{c}{1}.istransfer()
+               % apply each submethod to each of the datasets
                
                if length(data) == length(obj.mvmethods{c})
                  for d=1:length(data)
@@ -96,11 +98,12 @@ classdef mva
                end
                
              else
+               % apply each submethod to the replicated dataset
                
-               % deal with ensemble methods (i.e., nested cell arrays)
                obj.mvmethods{c} = cellfun(@(x)(x.train(data,design)),obj.mvmethods{c},'UniformOutput',false);
                if c<obj.nmethods
                  data = cellfun(@(x)(x.test(data)),obj.mvmethods{c},'UniformOutput',false);
+                 design = repmat({design},size(data));
                end
              end
              

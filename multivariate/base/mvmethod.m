@@ -120,6 +120,13 @@ classdef mvmethod
               end
             end
           else
+            
+            % this fix is needed when a combiner maps multiple datasets
+            % into one dataset
+            if iscell(obj.indims)
+              obj.indims = obj.indims{1};
+            end
+            
             if numel(data) == prod(obj.indims)
               data = reshape(data,obj.indims);
             end
@@ -172,10 +179,22 @@ classdef mvmethod
         end
       end
       
-      function X = unmap(obj,Y)
-        % sometimes the inverse mapping does not exist
+      function p = estimate(obj,X,Y)
+        % parameter estimation
+        p = [];
+      end
+    
+      function Y = map(obj,X)
+        % default identity mapping
         
-        error('inverse mapping does not exist for class %s',class(obj));
+        Y = X;
+        
+      end
+      
+      function X = unmap(obj,Y)
+        % default identity mapping
+        
+        X = Y;
         
       end
       
@@ -191,6 +210,8 @@ classdef mvmethod
       end
       
     end
+    
+    
     
     methods(Static=true)
       % some helper functions operating on datasets
@@ -216,12 +237,6 @@ classdef mvmethod
         n = max(idx);
       end
             
-    end
-    
-    methods(Abstract)
-      
-      Y = map(obj,X)   % mapping function
-      p = estimate(X,Y); % parameter estimation
     end
     
 end

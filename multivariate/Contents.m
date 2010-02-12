@@ -61,7 +61,6 @@
 % 
 % TO DO
 % 
-% - implement reconstruction algorithm
 % - rewrite inner crossvalidation for parameter selection
 % - check EM code for mixture models
 % - add simple gui
@@ -87,12 +86,22 @@
 % - automate recompilation of mex files
 % - create visualizer class
 % - IMPLEMENT BLINREG / BLINREG_TRANSFER
-% - remove dataset overkill? add .dims .nfeatures .ntasks etc field to clfmethods;
+% - remove dataset overkill? add .dims .nfeatures .ntasks etc field to mvmethods;
 %   reshape getmodel whenever possible
-% - use separate check_data procedure in clfproc?
+% - use separate check_data procedure in mva?
 % - replace libsvm code by bioinformatics toolbox svm code
 % - check dynamic_classifier and static_classifier code and derivates
 % - removed lvq classifier
 % - can we do away with .params and operate on obj immediately? / change
-%   clfmethods to handle classes?
+%   mvmethods to handle classes?
 % - throw out redundant svm classifiers; check speed and accuracy
+% - make one_against_one/rest estimate and map functions suitable for
+%   transfer_learning; currently not supported
+% - rewrite one_against_one, combiner etc such that transfer learning is
+%   used on the separate datasets. This simplifies code and allows for more complex designs 
+% - refactor using: perl -p -i -e 's/clfmethod/mvmethod/g' `grep -lr -e 'clfmethod' *`
+% - rewrite optimizer!
+% - how to handle multiple regression vs regressors/classifiers that return mean + error estimates?
+% - clean up nclasses field
+% - check hgnb_transfer; not working correctly anymore
+% - libsvm not working correctly anymore

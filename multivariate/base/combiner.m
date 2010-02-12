@@ -1,14 +1,11 @@
-classdef combiner < mvmethod
+classdef combiner < mvmethod & transfer_learner
 % COMBINER combines multiple datasets into one dataset
 % this is useful for combining posteriors
 %
 % EXAMPLE:
 %  xx = mva({standardizer {{da} {svmmethod}} combiner classifier})
 %
-%   Copyright (c) 2008, 2009, Marcel van Gerven
-%
-%   $Log: combiner.m,v $
-%
+%   Copyright (c) 2009, Marcel van Gerven
 
     properties
        
@@ -29,13 +26,14 @@ classdef combiner < mvmethod
          
        end
        
-       function post = test(obj,data)
-         
-         if ~iscell(data)
-           post = data;
-         else
-           post = combiner.combine(data,obj.combination);
-         end
+       function p = estimate(obj,X,Y)
+         % do nothing
+         p = [];
+       end
+       
+       function Y = map(obj,X)
+        
+         Y = combiner.combine(X,obj.combination);
          
        end
        
@@ -77,9 +75,9 @@ classdef combiner < mvmethod
           
           case 'majority' % majority vote
             
-            post = zeros(size(cpost{1}.X));
+            post = zeros(size(cpost{1}));
             for k=1:length(cpost)
-              [temp,pcls] = max(cpost{k}.X,[],2);
+              [temp,pcls] = max(cpost{k},[],2);
               for p=1:length(pcls)
                 post(p,pcls(p)) = post(p,pcls(p)) + 1;
               end
@@ -95,31 +93,29 @@ classdef combiner < mvmethod
               post(p,m) = 1;
             end
             
-            post = dataset(post);
-            
             return % no normalization required
             
           case 'product' % normalized product of probabilities
             
-            post = ones(size(cpost{1}.X));
+            post = ones(size(cpost{1}));
             for k=1:length(cpost)
-              post = post .* cpost{k}.X;
+              post = post .* cpost{k};
             end
             
           case 'mean' % normalized sum of probabilities
             
-            post = zeros(size(cpost{1}.X));
+            post = zeros(size(cpost{1}));
             for k=1:length(cpost)
-              post = post + cpost{k}.X;
+              post = post + cpost{k};
             end
             
           case 'concatenate' % concatenate nclasses-1 probabilities to act as input to another classifier
             
-            nclasses = size(cpost{1}.X,2) - 1;
+            nclasses = size(cpost{1},2) - 1;
             
-            post = zeros(size(cpost{1}.X,1),nclasses*length(cpost));
+            post = zeros(size(cpost{1},1),nclasses*length(cpost));
             for k=1:length(cpost)
-              post(:,(k-1)*nclasses + (1:nclasses)) = cpost{k}.X(:,1:nclasses);
+              post(:,(k-1)*nclasses + (1:nclasses)) = cpost{k}(:,1:nclasses);
             end
             
             return % no normalization required

@@ -46,7 +46,7 @@ function opt = optimize(obj,data,design,varargin)
             obj.(options.variables{j}) = configs(i,j);
         end
 
-        options.validator.procedure = clfproc({ obj });
+        options.validator.procedure = mva({ obj });
 
         v = options.validator.validate(data,design);
 
