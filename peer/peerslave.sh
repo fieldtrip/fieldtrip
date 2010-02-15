@@ -1,9 +1,9 @@
 #!/bin/sh
 #
 # shell script to start a peer in slave mode
-# it immediately restart if Matlab exits
+# it restarts if a problem is detected
 
 while [ true ] ; do 
-  /opt/matlab78/bin/matlab -nodesktop -r "cd /home/common/matlab/fieldtrip/peer; peerslave('threads', 1);"
+  /opt/matlab78/bin/matlab -nodesktop -r "try, cd /home/common/matlab/fieldtrip/peer; peerslave('threads', 1); end; exit"
 done
 

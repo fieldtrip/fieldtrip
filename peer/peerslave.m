@@ -147,6 +147,12 @@ while true
         error('input options should be a cell-array');
       end
 
+      % try setting the same path directory
+      option_path = keyval('path', options);
+      if ~isempty(option_path)
+        path(option_path, path);
+      end
+
       % try changing to the same working directory
       option_pwd = keyval('pwd', options);
       if ~isempty(option_pwd)
@@ -156,12 +162,6 @@ while true
           % don't throw an error, just give a warning (and hope for the best...)
           warning(error_cd.message);
         end
-      end
-
-      % try setting the same path directory
-      option_path = keyval('path', options);
-      if ~isempty(option_path)
-        path(option_path, path);
       end
 
       % there are potentially errors to catch from the which() function
@@ -237,14 +237,14 @@ while true
 
     clear funname argin argout timused lastwarn feval_error
 
-    % revert to the original working directory
-    if ~isempty(option_pwd)
-      cd(orig_pwd);
-    end
-
     % revert to the original path
     if ~isempty(option_path)
       path(orig_path);
+    end
+
+    % revert to the original working directory
+    if ~isempty(option_pwd)
+      cd(orig_pwd);
     end
 
   end % isempty(joblist)
