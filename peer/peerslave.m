@@ -158,9 +158,9 @@ while true
       if ~isempty(option_pwd)
         try
           cd(option_pwd);
-        catch error_cd
+        catch cd_error
           % don't throw an error, just give a warning (and hope for the best...)
-          warning(error_cd.message);
+          warning(cd_error.message);
         end
       end
 
@@ -233,9 +233,8 @@ while true
       warning('failed to return job results to the master');
     end
 
+    % remove the job from the tcpserver
     peer('clear', joblist.jobid);
-
-    clear funname argin argout timused lastwarn feval_error
 
     % revert to the original path
     if ~isempty(option_path)
@@ -246,6 +245,21 @@ while true
     if ~isempty(option_pwd)
       cd(orig_pwd);
     end
+
+    % clear the function and any persistent variables in it
+    clear(fname);
+
+    % clear all temporary variables
+    vars = whos;
+    % easier would be to use the clearvars function, but that is only available in matlab 2008a and later
+    vars = setdiff({vars.name}, {'stopwatch' 'prevtime' 'jobnum' 'maxnum' 'maxtime' 'sleep' 'orig_path' 'orig_pwd'});
+    for indx=1:numel(vars)
+      clear(vars{indx});
+    end
+    clear vars indx
+
+    % clear any global variables
+    clear global
 
   end % isempty(joblist)
 
