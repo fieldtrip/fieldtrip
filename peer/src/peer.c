@@ -6,6 +6,9 @@
 #include "extern.h"
 #include "platform_includes.h"
 
+mxArray *mxSerialize(const mxArray*);
+mxArray *mxDeserialize(const void*, size_t);
+
 #define NUMJOBSTRUCTFIELDS 4
 const char* jobstructfieldnames[NUMJOBSTRUCTFIELDS] = {"version", "jobid", "argsize", "optsize"};
 

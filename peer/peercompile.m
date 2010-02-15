@@ -3,7 +3,6 @@ function peercompile
 % PEERCOMPILE compile the low-level mex file implements that implements
 % the TCP/IP, announce and discover services.
 
-
 if ispc
 
   olddir = pwd;

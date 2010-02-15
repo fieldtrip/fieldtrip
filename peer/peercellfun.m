@@ -93,7 +93,7 @@ submittime  = inf(1, numjob);
 collecttime = inf(1, numjob);
 
 % start the timer
-stopwatch   = tic;
+stopwatch = tic;
 
 % these are used for printing feedback on screen
 prevnumsubmitted = 0;
@@ -172,6 +172,32 @@ while ~all(submitted) || ~all(collected)
   prevnumsubmitted = sum(submitted);
   prevnumcollected = sum(collected);
 
+  % check for jobs that are taking too long to finish
+  if all(submitted) && ~all(collected)
+    % test whether one of the jobs should be resubmitted
+    sel = find(~collected, 1);
+    elapsed = toc(stopwatch) - submittime(sel);
+    % estimate the time that it took the other jobs to finish
+    estimated_min = min(collecttime(collected) - submittime(collected));
+    estimated_max = max(collecttime(collected) - submittime(collected));
+    % the rationale for the estimate is the mean plus 2x the standard deviation
+    % except that instead of the mean the maximum is used and instead of the 
+    % standard deviation the min-max range is used
+    estimated     = estimated_max + (estimated_max - estimated_min);
+    if elapsed>estimated
+      warning('resubmitting job %d because it took too long to finish (estimated = %f, elapsed = %f)', sel, estimated, elapsed);
+      % reset all job information, this will cause it to be automatically resubmitted
+      jobid      (sel) = nan;
+      puttime    (sel) = nan;
+      timused    (sel) = nan;
+      memused    (sel) = nan;
+      submitted  (sel) = false;
+      collected  (sel) = false;
+      submittime (sel) = inf;
+      collecttime(sel) = inf;
+    end
+  end % resubmitting
+    
 end % while not all jobs have finished
 
 if numargout>0 && UniformOutput
@@ -190,6 +216,9 @@ if numargout>0 && UniformOutput
     varargout{i} = [varargout{i}{:}];
   end
 end
+
+% compare the time used inside this function with the total execution time
+fprintf('approximate speedup ratio %f\n', sum(timused)/toc(stopwatch));
 
 if all(puttime>timused)
   % FIXME this could be detected in the loop above, and the strategy could automatically

@@ -72,7 +72,6 @@ jobid = [];
 options = {'pwd', pwd, 'path', custompath};
 
 while isempty(jobid)
-
   if toc(stopwatch)>timeout
     % it took too long to find a peer that was willing to execute the job
     break;

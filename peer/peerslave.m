@@ -13,6 +13,7 @@ function peerslave(varargin)
 %   memavail   = number, amount of memory available       (default = inf)
 %   cpuavail   = number, speed of the CPU                 (default = inf)
 %   timavail   = number, maximum duration of a single job (default = inf)
+%   threads    = number, maximum number of threads to use (default = automatic)
 %   allowhost  = {...}
 %   allowuser  = {...}
 %   allowgroup = {...}
@@ -30,6 +31,7 @@ memavail   = keyval('memavail',   varargin);
 cpuavail   = keyval('cpuavail',   varargin);
 timavail   = keyval('timavail',   varargin);
 fairshare  = keyval('fairshare',  varargin);
+threads    = keyval('threads',    varargin);
 allowhost  = keyval('allowhost',  varargin); if isempty(allowhost), allowhost = {}; end
 allowuser  = keyval('allowuser',  varargin); if isempty(allowuser), allowuser = {}; end
 allowgroup = keyval('allowgroup', varargin); if isempty(allowgroup), allowgroup = {}; end
@@ -72,6 +74,7 @@ peer('allowgroup', allowgroup);
 if ~isempty(memavail), peer('memavail', memavail); end
 if ~isempty(cpuavail), peer('cpuavail', cpuavail); end
 if ~isempty(timavail), peer('timavail', timavail); end
+if ~isempty(threads),  maxNumCompThreads(threads); end
 
 % switch to slave mode
 peer('status', 1);
