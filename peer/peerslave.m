@@ -148,9 +148,14 @@ while true
       end
 
       % try changing to the same working directory
-      option_pwd  = keyval('pwd', options);
+      option_pwd = keyval('pwd', options);
       if ~isempty(option_pwd)
-        cd(option_pwd);
+        try
+          cd(option_pwd);
+        catch error_cd
+          % don't throw an error, just give a warning (and hope for the best...)
+          warning(error_cd.message);
+        end
       end
 
       % try setting the same path directory
