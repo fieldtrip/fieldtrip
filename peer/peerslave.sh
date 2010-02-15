@@ -4,6 +4,6 @@
 # it restarts if a problem is detected
 
 while [ true ] ; do 
-  /opt/matlab78/bin/matlab -nodesktop -r "try, cd /home/common/matlab/fieldtrip/peer; peerslave('threads', 1); end; exit"
+  /opt/matlab78/bin/matlab -nodesktop -r "cd /home/common/matlab/fieldtrip/peer; try, peerslave('threads', 1); end; exit"
 done
 
