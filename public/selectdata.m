@@ -2,7 +2,7 @@ function [data] = selectdata(varargin)
 
 % this function serves to concatenate the input data-structures along the
 % compatible dimensions and thus is a more general implementation of
-% appenddata, which only raw data. Moreover, it can be used to equate the
+% appenddata, which deals only with raw data. Moreover, it can be used to equate the
 % data of different conditions to match e.g. in channels time-axis etc
 % Moreover, it can be used as a generalization to ...average with 'keepindividual'
 %
