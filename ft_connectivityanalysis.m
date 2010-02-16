@@ -863,6 +863,7 @@ case 'freq'
   
   ncmb  = size(cmb,1);
   nchan = numel(data.label);  
+  getpowindx = 0;
   if ncmb==0,
     error('no channel combinations are specified');
   elseif ncmb==nchan.^2 || ncmb==(nchan+1)*nchan*0.5,
@@ -881,10 +882,15 @@ case 'freq'
   elseif strcmp(inparam, 'powandcsd') && strcmp(outparam, 'crsspctrm'),
     if ~isempty(cmb),
       data    = checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
+      
+      %ensure getting powindx later on to prevent crash
+      getpowindx = 1; 
     else
       %data    = checkdata(data, 'cmbrepresentation', 'full');
       %this should not be possible
       error('cannot convert to a full csd representation');
+    
+    
     end
   elseif strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'powcovspctrm'),
     %fourier coefficients -> power covariance
@@ -937,7 +943,7 @@ case 'freq'
     error('unknown conversion from univariate to bivariate representation');
   end
   
-  if ~isempty(cmb) && ncmb < (nchan-1)*nchan*0.5,
+  if ~isempty(cmb) && (ncmb < (nchan-1)*nchan*0.5 || getpowindx==1),
     powindx = labelcmb2indx(data.labelcmb);
   else
     powindx = [];
