@@ -1,4 +1,4 @@
-%% OpenMEEG from Fieldtrip demo script
+%% OpenMEEG for EEG from Fieldtrip demo script
 % This script provides an example of how to compute an EEG leadfield with OpenMEEG in the Fieldtrip toolbox.
 %
 % This demo uses spherical head models and compares the OpenMEEG result with the analytical solution.
