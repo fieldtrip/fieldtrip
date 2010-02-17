@@ -82,7 +82,7 @@ end
 begpad = round(cfg.timwin(1)*data.fsample);
 endpad = round(cfg.timwin(2)*data.fsample);
 numsmp = endpad - begpad + 1;
-taper  = window('hanning', numsmp);
+taper  = window(cfg.taper, numsmp);
 taper  = taper./norm(taper);
 taper  = sparse(diag(taper));
 
