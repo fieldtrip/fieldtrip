@@ -218,6 +218,25 @@ elseif ismeg
         lf = sens.tra * lf;
       end
 
+    case 'openmeeg'
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      % use code from OpenMEEG
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      hastoolbox('openmeeg', 1);
+
+      dsm = openmeeg_dsm(pos,vol);
+      [h2mm,s2mm]= openmeeg_megm(pos,vol,sens);
+      
+      if isfield(vol,'mat')
+        lf = s2mm+h2mm*(vol.mat*dsm);
+      else
+        error('No system matrix is present, BEM head model not calculated yet')
+      end
+      if isfield(sens, 'tra')
+        % compute the leadfield for each gradiometer (linear combination of coils)
+        lf = sens.tra * lf;
+      end
+      
     case 'infinite'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % magnetic dipole instead of electric (current) dipole in an infinite vacuum

@@ -233,13 +233,18 @@ elseif ismeg
         fprintf('computing surface normals\n');
         vol.bnd.nrm = normals(vol.bnd.pnt, vol.bnd.tri);
       end
+
       % estimate center and radius
       [center,radius] = fitsphere(vol.bnd.pnt);
+
       % initialize the forward calculation (only if gradiometer coils are available)
       if size(sens.pnt,1)>0
         vol.forwpar = meg_ini([vol.bnd.pnt vol.bnd.nrm], center', order, [sens.pnt sens.ori]);
       end
 
+    case 'openmeeg'
+        % nothing ?
+        
     otherwise
       error('unsupported volume conductor model for MEG');
   end

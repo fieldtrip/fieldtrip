@@ -16,7 +16,7 @@ function [vol, cfg] = prepare_bemmodel(cfg, mri)
 %   cfg.conductivity   = [Cskin Cskull Cbrain]
 %   cfg.hdmfile        = string, file containing the volume conduction model (can be empty)
 %   cfg.isolatedsource = compartment number, or 0
-%   cfg.method         = 'dipoli', 'brainstorm' or 'bemcp'
+%   cfg.method         = 'dipoli', 'openmeeg', 'brainstorm' or 'bemcp'
 %
 % Although the example configuration uses 3 compartments, you can use
 % an arbitrary number of compartments.
