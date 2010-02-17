@@ -152,14 +152,17 @@ else
   y = (x - min(x(:)));
 end
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that determines the path, excluding all Matlab toolboxes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function p = custompath
 p = tokenize(path, ':');
+% remove the matlab specific directories
 s = cellfun(@isempty, regexp(p, ['^' matlabroot]));
 p = p(s);
+% remove the directory containing the peer code, the slave should use its own
+p = setdiff(p, fileparts(mfilename('fullpath')));
+% concatenate the path, using a ':' as seperator
 p = sprintf('%s:', p{:});
 p = p(1:end-1); % remove the last ':'
 
