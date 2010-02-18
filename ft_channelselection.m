@@ -136,6 +136,10 @@ labeleeg   = [];
 
 switch senstype(datachannel)
 
+  case {'yokogawa', 'yokogawa160', 'yokogawa160_planar'}
+    % all Yokogawa axial gradiometer channels start with AG
+    labelmeg = datachannel(strncmp('AG', datachannel, length('AG')));
+    
   case {'ctf', 'ctf275', 'ctf151', 'ctf275_planar', 'ctf151_planar'}
     % all CTF MEG channels start with "M"
     % all CTF reference channels start with B, G, P, Q or R

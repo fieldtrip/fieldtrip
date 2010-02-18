@@ -69,10 +69,12 @@ grad.tra = repmat(diag(ones(1,size(grad.pnt,1)/2),0),1,2);
 % computation with the coil-leadfield matrix to get the channel leadfield
 grad.tra = sparse(grad.tra);
 
-% the gradiometer labels should be consistent with the channel labels in the header
+% the gradiometer labels should be consistent with the channel labels in
+% read_yokogawa_header, the predefined list of channel names in senslabel
+% and with ft_channelselection
 label = cell(size(isgrad));
 for i=1:length(label)
-  label{i} = sprintf('%d', i);
+  label{i} = sprintf('AG%03d', i);
 end
 grad.label = label(isgrad);
 grad.unit  = 'cm';

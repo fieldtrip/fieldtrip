@@ -1,4 +1,4 @@
-function hdr = read_yokogawa_header(filename);
+function hdr = read_yokogawa_header(filename)
 
 
 % READ_YOKOGAWA_HEADER reads the header information from continuous,
@@ -62,14 +62,14 @@ switch acq_type
     end
     pretrigger_length = 0;
     averaged_count = 1;
-    
+
   case handles.AcqTypeEvokedAve
     [sample_rate, sample_count, pretrigger_length, averaged_count] = GetMeg160EvokedAcqCondM( fid );
     if isempty(sample_rate) | isempty(sample_count) | isempty(pretrigger_length) | isempty(averaged_count)
       fclose(fid);
       return;
     end
-    
+
   case handles.AcqTypeEvokedRaw
     [sample_rate, sample_count, pretrigger_length, actual_epoch_count] = GetMeg160EvokedAcqCondM( fid );
     if isempty(sample_rate) | isempty(sample_count) | isempty(pretrigger_length) | isempty(actual_epoch_count)
@@ -124,32 +124,33 @@ switch orig.acq_type
 end
 
 % construct a cell-array with labels of each channel
-% this should be consistent with senslabel, where the list of channel names is also defined
 for i=1:hdr.nChans
-  %   if     hdr.orig.channel_info(i, 2) == handles.NullChannel
-  %     prefix = '';
-  %   elseif hdr.orig.channel_info(i, 2) == handles.MagnetoMeter
-  %     prefix = '';
-  %   elseif hdr.orig.channel_info(i, 2) == handles.AxialGradioMeter
-  %     prefix = 'MEG';
-  %   elseif hdr.orig.channel_info(i, 2) == handles.PlannerGradioMeter
-  %     prefix = '';
-  %   elseif hdr.orig.channel_info(i, 2) == handles.RefferenceMagnetoMeter
-  %     prefix = '';
-  %   elseif hdr.orig.channel_info(i, 2) == handles.RefferenceAxialGradioMeter
-  %     prefix = '';
-  %   elseif hdr.orig.channel_info(i, 2) == handles.RefferencePlannerGradioMeter
-  %     prefix = '';
-  %   elseif hdr.orig.channel_info(i, 2) == handles.TriggerChannel
-  %     prefix = 'TRIG';
-  %   elseif hdr.orig.channel_info(i, 2) == handles.EegChannel
-  %     prefix = 'EEG';
-  %   elseif hdr.orig.channel_info(i, 2) == handles.EcgChannel
-  %     prefix = 'ECG';
-  %   elseif hdr.orig.channel_info(i, 2) == handles.EtcChannel
-  %     prefix = '';
-  %   end
-  hdr.label{i} = sprintf('%d', i);
+% this should be consistent with the predefined list in senslabel,
+% with yokogawa2grad and with ft_channelselection
+  if     hdr.orig.channel_info(i, 2) == handles.NullChannel
+    prefix = '';
+  elseif hdr.orig.channel_info(i, 2) == handles.MagnetoMeter
+    prefix = 'M';
+  elseif hdr.orig.channel_info(i, 2) == handles.AxialGradioMeter
+    prefix = 'AG';
+  elseif hdr.orig.channel_info(i, 2) == handles.PlannerGradioMeter
+    prefix = 'PG';
+  elseif hdr.orig.channel_info(i, 2) == handles.RefferenceMagnetoMeter
+    prefix = 'RM';
+  elseif hdr.orig.channel_info(i, 2) == handles.RefferenceAxialGradioMeter
+    prefix = 'RAG';
+  elseif hdr.orig.channel_info(i, 2) == handles.RefferencePlannerGradioMeter
+    prefix = 'RPG';
+  elseif hdr.orig.channel_info(i, 2) == handles.TriggerChannel
+    prefix = 'TRIG';
+  elseif hdr.orig.channel_info(i, 2) == handles.EegChannel
+    prefix = 'EEG';
+  elseif hdr.orig.channel_info(i, 2) == handles.EcgChannel
+    prefix = 'ECG';
+  elseif hdr.orig.channel_info(i, 2) == handles.EtcChannel
+    prefix = 'ETC';
+  end
+  hdr.label{i} = sprintf('%s%03d', prefix, i);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
