@@ -84,8 +84,12 @@ classdef blogreg < classifier
                   
          p = obj.params;
          
-         obj.dims = obj.indims(2:end);
-                        
+         if iscell(obj.indims)
+           obj.dims = obj.indims{1};
+         else
+           obj.dims = obj.indims;
+         end
+         
          if isempty(obj.prior)
            p.prior = obj.create_prior(size(X,2));
          else           
@@ -124,9 +128,11 @@ classdef blogreg < classifier
              p.prior(size(X,2),size(X,2)) = obj.precbias;
            end
            
-           [p.Gauss,terms,p.logp,p.convergence] = laplacedegenerate_ep(design,X,p.prior, ...
-             'fraction',obj.fraction,'niter',obj.niter,'temperature',obj.temperature,'lambda',obj.scale,...
-             'tol',obj.tolerance,'degenerate',obj.degenerate,'verbose',false);
+           if obj.niter 
+             [p.Gauss,terms,p.logp,p.convergence] = laplacedegenerate_ep(design,X,p.prior, ...
+               'fraction',obj.fraction,'niter',obj.niter,'temperature',obj.temperature,'lambda',obj.scale,...
+               'tol',obj.tolerance,'degenerate',obj.degenerate,'verbose',obj.verbose);
+           end
            
           else
            
@@ -141,9 +147,12 @@ classdef blogreg < classifier
              end
              
              try 
-               [p.Gauss,terms,p.logp,p.convergence] = laplacedegenerate_ep(design,X,tprior, ...
-                 'fraction',obj.fraction,'niter',obj.niter,'temperature',obj.temperature,'lambda',obj.scale(j),...
-                 'tol',obj.tolerance,'degenerate',obj.degenerate,'verbose',false);
+               
+               if obj.niter
+                 [p.Gauss,terms,p.logp,p.convergence] = laplacedegenerate_ep(design,X,tprior, ...
+                   'fraction',obj.fraction,'niter',obj.niter,'temperature',obj.temperature,'lambda',obj.scale(j),...
+                   'tol',obj.tolerance,'degenerate',obj.degenerate,'verbose',obj.verbose);
+               end
                
                lgp(j) = p.logp - log(obj.scale(j)); % uniform prior on log scale
                

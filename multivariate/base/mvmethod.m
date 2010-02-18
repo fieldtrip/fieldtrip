@@ -50,6 +50,9 @@ classdef mvmethod
           obj.params = params;
           
         else
+
+          bindim = isempty(obj.indims);
+          boutdim = isempty(obj.outdims);
           
           % data and design are collapsed to matrices
           if iscell(data) && obj.istransfer()
@@ -59,24 +62,40 @@ classdef mvmethod
               error('datasets must have the same number of features for transfer learning');
             end
               
-            obj.indims = cell(1,length(data));
+            if bindim
+              obj.indims = cell(1,length(data));
+            end
             for c=1:length(data)
-              obj.indims{c} = size(data{c});
+              if bindim
+                obj.indims{c} = size(data{c});
+                obj.indims{c} = obj.indims{c}(2:end);
+              end
               data{c} = data{c}(1:size(data{c},1),:);
             end
             
-            obj.outdims = cell(1,length(design));
+            if boutdim
+              obj.outdims = cell(1,length(design));
+            end
             for c=1:length(design)
-              obj.outdims{c} = size(design{c});
+              if boutdim
+                obj.outdims{c} = size(design{c});
+                obj.outdims{c} = obj.outdims{c}(2:end);
+              end
               design{c} = design{c}(1:size(design{c},1),:);
             end
             
           else
            
-            obj.indims = size(data);
+            if bindim
+              obj.indims = size(data);
+              obj.indims = obj.indims(2:end);
+            end
             data = data(1:size(data,1),:);
             
-            obj.outdims = size(design);
+            if boutdim
+              obj.outdims = size(design);
+              obj.outdims = obj.outdims(2:end);
+            end
             design = design(1:size(design,1),:);
           
           end
@@ -115,8 +134,8 @@ classdef mvmethod
           
           if iscell(data)
             for c=1:length(data)
-              if numel(data{c}) == prod(obj.indims{c})
-                data{c} = reshape(data{c},obj.indims{c});
+              if numel(data{c}) == prod([size(data{c},1) obj.indims{c}])
+                data{c} = reshape(data{c},[size(data{c},1) obj.indims{c}]);
               end
             end
           else
@@ -127,8 +146,8 @@ classdef mvmethod
               obj.indims = obj.indims{1};
             end
             
-            if numel(data) == prod(obj.indims)
-              data = reshape(data,obj.indims);
+            if numel(data) == prod([size(data,1) obj.indims])
+              data = reshape(data,[size(data,1) obj.indims]);
             end
           end
           
@@ -166,13 +185,13 @@ classdef mvmethod
           
           if iscell(data)
             for c=1:length(data)
-              if numel(data{c}) == prod(obj.indims{c})
-                data{c} = reshape(data{c},obj.indims{c});
+              if numel(data{c}) == prod([size(data{c},1) obj.indims{c}])
+                data{c} = reshape(data{c},[size(data{c},1) obj.indims{c}]);
               end
             end
           else
-            if numel(data) == prod(obj.indims)
-              data = reshape(data,obj.indims);
+            if numel(data) == prod([size(data,1) obj.indims])
+              data = reshape(data,[size(data,1) obj.indims]);
             end
           end
           
@@ -182,6 +201,7 @@ classdef mvmethod
       function p = estimate(obj,X,Y)
         % parameter estimation
         p = [];
+        
       end
     
       function Y = map(obj,X)
@@ -236,7 +256,7 @@ classdef mvmethod
         [tmp,tmp,idx] = unique(X(1:size(X,1),:),'rows');
         n = max(idx);
       end
-            
+                  
     end
     
 end

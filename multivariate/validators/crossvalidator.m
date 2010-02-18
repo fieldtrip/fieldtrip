@@ -287,8 +287,19 @@ classdef crossvalidator < validator
                       
           if ~isempty(trainfolds)
             nfolds = size(trainfolds,1);
+            
+            % replicate sets for all datasets 
+            %(assuming all datasets have the same design matrix)
+            if size(trainfolds,2) == 1 && nsets > 1
+              trainfolds = repmat(trainfolds,[1 nsets]);
+            end
+            
           elseif ~isempty(testfolds)
-            nfolds = size(testfolds,1);
+            % replicate sets for all datasets 
+            %(assuming all datasets have the same design matrix)
+            if size(testfolds,2) == 1 && nsets > 1 nfolds = size(testfolds,1);
+              testfolds = repmat(testfolds,[1 nsets]);
+            end
           else
             nfolds = nan;
           end

@@ -52,7 +52,7 @@ classdef cspprocessor < preprocessor
 %                Ramoser H., Gerking J.M., Pfurtscheller G., Optimal spatial filtering of single trial EEG during 
 %                imagined hand movement. IEEE trans Rehab. Eng.,vol. 8, pp.441-446, 2000.    
 %                 
-%                Blankertz B., Curio G., M�ller  K.-R., Classifying Single Trial EEG:
+%                Blankertz B., Curio G., Muller  K.-R., Classifying Single Trial EEG:
 %                Towards Brain Computer Interfacing, in: T. G. Diettrich, S. Becker, and
 %                Z. Ghahramani, eds., Advances in Neural Inf. Proc. Systems (NIPS 01),vol. 14, 157�164, 2002.
 %
@@ -71,7 +71,6 @@ classdef cspprocessor < preprocessor
        numpatterns = 1; 
        filttype = 'CSP0';  
        outputdatatype = 'powcsp';  %'rawcsp' or 'logpowcsp'
-       numchan; 
        
     end
 
@@ -86,11 +85,11 @@ classdef cspprocessor < preprocessor
       function p = estimate(obj,X,Y)
         
         if isempty(obj.numchan)
-          obj.numchan = size(X,2);
+          p.numchan = obj.indims(1);
         end
         
         if isnumeric(X) && length(size(X)) == 2  %just to make it explicit
-          X = reshape(X,size(X,1),obj.numchan,size(X,2)/obj.numchan);
+          X = reshape(X,size(X,1),p.numchan,size(X,2)/p.numchan);
         elseif isnumeric(data) && length(size(X)) == 3   %only for simulating outside mva pipe
           warning('The object used outside any CLFPROC pipe'); %#ok<WNTAG>
         else
@@ -104,7 +103,7 @@ classdef cspprocessor < preprocessor
       function Y = map(obj,X)
         
         if isnumeric(X) && length(size(X)) == 2  %just to make it explicit
-          X = reshape(X,size(X,1),obj.numchan,size(X,2)/obj.numchan);
+          X = reshape(X,size(X,1),obj.params.numchan,size(X,2)/obj.params.numchan);
         elseif isnumeric(X) && length(size(X)) == 3   %only for simulating outside mva pipe
           warning('The object used outside any CLFPROC pipe'); %#ok<WNTAG>
         else

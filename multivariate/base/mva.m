@@ -226,13 +226,19 @@ classdef mva
        end
        
        function s = name(obj)
-         % returns classification procedure as a string
+         % returns multivariate analysis as a string
          
-         s = '{ ';
-         for j=1:length(obj.mvmethods)
-           s = [s class(obj.mvmethods{j}) ' '];
+         s = subname(obj.mvmethods);
+         
+         function ss = subname(m)
+            
+           if iscell(m)
+             ss = ['{ ' cell2mat(cellfun(@(x)([subname(x) ' ']),m,'UniformOutput',false)) '}'];
+           else
+             ss = class(m);
+           end
+           
          end
-         s = strcat(s,' }');
          
        end
        

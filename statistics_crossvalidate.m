@@ -19,7 +19,7 @@ function stat = statistics_crossvalidate(cfg, dat, design)
 %
 % See also: CROSSVALIDATE, MVA
 %
-% Requires: multivariate analsysis toolbox
+% Requires: multivariate analysis toolbox
 %
 % Copyright (c) 2007, Marcel van Gerven
 % F.C. Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
@@ -46,6 +46,10 @@ else
    if ~isfield(cfg,'compact'), cfg.compact = true; end
    if ~isfield(cfg,'model'), cfg.model = true; end
 
+   for j=1:length(cfg.mva.mvmethods)
+     cfg.mva.mvmethods{j}.indims = cfg.dim;
+   end
+   
    cv = crossvalidator('procedure',cfg.mva,'nfolds',cfg.nfolds,'compact',cfg.compact,'model',cfg.model,'verbose',true);
 
 end
@@ -68,14 +72,14 @@ if isfield(cfg,'dataset') && ~isempty(cfg.dataset)
   dat = cell(1,n);
   design = cell(1,n);
   for c=1:n
-    dat{c}    = dataset(tmpdat(cfg.dataset == c,:));
-    design{c} = dataset(tmpdesign(cfg.dataset == c,:));
+    dat{c}    = tmpdat(cfg.dataset == c,:);
+    design{c} = tmpdesign(cfg.dataset == c,:);
   end
   
 else
   
-  dat = dataset(dat');
-  design = dataset(design');
+  dat = dat';
+  design = design';
 
 end
 
@@ -104,11 +108,16 @@ if ~cfg.compact || cfg.model
     if size(m,2) > 1 % transfer learning
       
       for j=1:size(m,2)        
-        stat.(sprintf('model%d_%d',c,j)) = reshape(m{c,j},cfg.dim);
+        
+        if numel(m{c,j}) == prod(cfg.dim)
+          stat.(sprintf('model%d_%d',c,j)) = reshape(m{c,j},cfg.dim);
+        end
       end
             
     else      
-      stat.(sprintf('model%d',c)) = reshape(m{c},cfg.dim);
+      if numel(m{c}) == prod(cfg.dim)
+        stat.(sprintf('model%d',c)) = reshape(m{c},cfg.dim);
+      end
     end
   end  
   

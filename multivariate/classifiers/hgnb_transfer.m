@@ -10,18 +10,6 @@ classdef hgnb_transfer < classifier & transfer_learner
   %
   %   Copyright (c) 2009, Marcel van Gerven
   
-
-  properties
-
-    priors
-    examples
-    means
-    stds
-    
-    nclasses
-
-  end
-
   methods
     
     function obj = hgnb_transfer(varargin)
@@ -150,7 +138,7 @@ classdef hgnb_transfer < classifier & transfer_learner
           mx = max(Y{c}(m,:));
 
           nt = 0;
-          for k=1:obj.nclasses
+          for k=1:obj.params.nclasses
             nt = nt + exp(Y{c}(m,k) - mx);
           end
           nt = log(nt) + mx;

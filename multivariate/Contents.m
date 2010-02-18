@@ -98,4 +98,4 @@
 % - rewrite optimizer!
 % - how to handle multiple regression vs regressors/classifiers that return mean + error estimates?
 % - clean up nclasses field
-% - check hgnb_transfer; not working correctly anymore
+% - add wilcoxon test; add multiple outputs for evaluate/significance

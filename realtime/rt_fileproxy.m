@@ -16,7 +16,7 @@ function rt_fileproxy(cfg)
 %   cfg.maxblocksize         = number, in seconds (default = 1)
 %   cfg.channel              = cell-array, see CHANNELSELECTION (default = 'all')
 %   cfg.jumptoeof            = jump to end of file at initialization (default = 'no')
-%   cfg.readevent            = whether or not to copy events (default = 'no')
+%   cfg.readevent            = whether or not to copy events (default = 'no'; event type can also be specified; e.g., 'UPPT002')
 %   cfg.speed                = relative speed at which data is written (default = inf)
 %
 % The source of the data is configured as
@@ -61,11 +61,11 @@ checkconfig(cfg.source, 'required', {'datafile' 'headerfile'});
 checkconfig(cfg.target, 'required', {'datafile' 'headerfile'});
 
 if ~isfield(cfg.source,'eventfile') || isempty(cfg.source.eventfile)
-  cfg.source.eventfile = cfg.source.datafile;
+    cfg.source.eventfile = cfg.source.datafile;
 end
 
 if ~isfield(cfg.target,'eventfile') || isempty(cfg.target.eventfile)
-  cfg.target.eventfile = cfg.target.datafile;
+    cfg.target.eventfile = cfg.target.datafile;
 end
 
 % ensure that the persistent variables related to caching are cleared
@@ -79,7 +79,7 @@ cfg.channel = channelselection(cfg.channel, hdr.label);
 chanindx    = match_str(hdr.label, cfg.channel);
 nchan       = length(chanindx);
 if nchan==0
-  error('no channels were selected');
+    error('no channels were selected');
 end
 
 minblocksmp = round(cfg.minblocksize*hdr.Fs);
@@ -88,9 +88,9 @@ maxblocksmp = round(cfg.maxblocksize*hdr.Fs);
 count       = 0;
 
 if strcmp(cfg.jumptoeof, 'yes')
-  prevSample = hdr.nSamples * hdr.nTrials;
+    prevSample = hdr.nSamples * hdr.nTrials;
 else
-  prevSample  = 0;
+    prevSample  = 0;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -100,51 +100,64 @@ end
 evt = [];
 while true
 
-  % determine number of samples available in buffer
-  hdr = read_header(cfg.source.headerfile, 'cache', true);
+    % determine number of samples available in buffer
+    hdr = read_header(cfg.source.headerfile, 'cache', true);
 
-  % see whether new samples are available
-  newsamples = (hdr.nSamples*hdr.nTrials-prevSample);
+    % see whether new samples are available
+    newsamples = (hdr.nSamples*hdr.nTrials-prevSample);
 
-  if newsamples>=minblocksmp
+    if newsamples>=minblocksmp
 
-    begsample  = prevSample+1;
-    endsample  = prevSample+min(newsamples,maxblocksmp);
+        begsample  = prevSample+1;
+        endsample  = prevSample+min(newsamples,maxblocksmp);
 
-    % remember up to where the data was read
-    count       = count + 1;
-    fprintf('processing segment %d from sample %d to %d\n', count, begsample, endsample);
+        % remember up to where the data was read
+        count       = count + 1;
+        fprintf('processing segment %d from sample %d to %d\n', count, begsample, endsample);
 
-    % read data segment
-    dat = read_data(cfg.source.datafile,'header', hdr, 'dataformat', cfg.source.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
+        % read data segment
+        dat = read_data(cfg.source.datafile,'header', hdr, 'dataformat', cfg.source.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
 
-    % it only makes sense to read those events associated with the currently processed data
-    if strcmp(cfg.readevent,'yes')
-      evt = read_event(cfg.source.eventfile, 'header', hdr, 'minsample', begsample, 'maxsample', endsample);
-    end
+        % it only makes sense to read those events associated with the currently processed data
+        if ~strcmp(cfg.readevent,'no')
+          evt = read_event(cfg.source.eventfile, 'header', hdr, 'minsample', begsample, 'maxsample', endsample);
 
-    prevSample  = endsample;
+          if ~strcmp(cfg.readevent,'yes')
+            evt = filter_event(evt, 'type', cfg.readevent);
+          end
+          
+        end
 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % from here onward it is specific to writing the data to another stream
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        prevSample  = endsample;
 
-    if count==1
-      % flush the file, write the header and subsequently write the data segment
-      write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'chanindx', chanindx, 'append', false);
-      if strcmp(cfg.readevent,'yes')
-        write_event(cfg.target.eventfile,evt,'append',false);
-      end
-    else
-      % write the data segment
-      write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'chanindx', chanindx, 'append', true);
-      if strcmp(cfg.readevent,'yes')
-        write_event(cfg.target.eventfile,evt,'append',true);
-      end
-    end % if count==1
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % from here onward it is specific to writing the data to another stream
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % wait for a realistic amount of time
-    pause(((endsample-begsample+1)/hdr.Fs)/cfg.speed);
+        if count==1
+            % the input file may have a different offset than the output file
+            offset = begsample - 1;
+            % flush the file, write the header and subsequently write the data segment
+            write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'chanindx', chanindx, 'append', false);
+            if ~strcmp(cfg.readevent,'no')
+                for i=1:numel(evt)
+                    evt(i).sample = evt(i).sample - offset;
+                end
+                write_event(cfg.target.eventfile,evt,'append',false);
+            end
+        else
+            % write the data segment
+            write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'chanindx', chanindx, 'append', true);
+            if ~strcmp(cfg.readevent,'no')
+                for i=1:numel(evt)
+                    evt(i).sample = evt(i).sample - offset;
+                end
+                write_event(cfg.target.eventfile,evt,'append',true);
+            end
+        end % if count==1
 
-  end % if enough new samples
+        % wait for a realistic amount of time
+        pause(((endsample-begsample+1)/hdr.Fs)/cfg.speed);
+
+    end % if enough new samples
 end % while true
