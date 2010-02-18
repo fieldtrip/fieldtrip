@@ -56,8 +56,9 @@ function [hdr] = read_header(filename, varargin)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-persistent cacheheader   % for caching
-persistent db_blob       % for fcdc_mysql
+persistent cacheheader        % for caching
+persistent db_blob            % for fcdc_mysql
+persistent fakechannelwarning % this warning should be given only once
 
 if isempty(db_blob)
   db_blob = 0;
@@ -246,7 +247,11 @@ switch headerformat
     elseif isfield(parameters, 'ChannelNames') && isfield(parameters.ChannelNames, 'Values') && ~isempty(parameters.ChannelNames.Values)
       hdr.label       = parameters.ChannelNames.Values;
     else
-      warning('creating fake channel names');
+      if isempty(fakechannelwarning) || ~fakechannelwarning
+        % give this warning only once
+        warning('creating fake channel names');
+        fakechannelwarning = true;
+      end
       for i=1:hdr.nChans
         hdr.label{i} = sprintf('%d', i);
       end
@@ -273,7 +278,11 @@ switch headerformat
     elseif isfield(orig, 'label') && ischar(orig.label)
       hdr.label = tokenize(orig.label, ' ');
     else
-      warning('creating fake channel names');
+      if isempty(fakechannelwarning) || ~fakechannelwarning
+        % give this warning only once
+        warning('creating fake channel names');
+        fakechannelwarning = true;
+      end
       for i=1:hdr.nChans
         hdr.label{i} = sprintf('%d', i);
       end
@@ -365,7 +374,7 @@ switch headerformat
   case  'itab_raw'
     % check the presence of the required low-level toolbox
     hastoolbox('lc-libs', 1);
-    
+
     header_info = lcReadHeader(filename);
 
     % some channels don't have a label and are not supported by fieldtrip
@@ -664,7 +673,11 @@ switch headerformat
     hdr.nSamples    = orig.nsamples;
     hdr.nSamplesPre = 0; % since continuous
     hdr.nTrials     = 1; % since continuous
-    warning('creating fake channel names');
+    if isempty(fakechannelwarning) || ~fakechannelwarning
+      % give this warning only once
+      warning('creating fake channel names');
+      fakechannelwarning = true;
+    end
     for i=1:hdr.nChans
       hdr.label{i} = sprintf('%d', i);
     end
@@ -686,7 +699,7 @@ switch headerformat
       hdr = db_select('fieldtrip.header', {'nChans', 'nSamples', 'nSamplesPre', 'Fs', 'label'}, 1);
       hdr.label = mxDeserialize(hdr.label);
     end
-    
+
   case 'micromed_trc'
     orig = read_micromed_trc(filename);
     hdr             = [];
@@ -695,7 +708,11 @@ switch headerformat
     hdr.nSamples    = orig.Num_Samples;
     hdr.nSamplesPre = 0; % continuous
     hdr.nTrials     = 1; % continuous
-    warning('creating fake channel names');
+    if isempty(fakechannelwarning) || ~fakechannelwarning
+      % give this warning only once
+      warning('creating fake channel names');
+      fakechannelwarning = true;
+    end
     for i=1:hdr.nChans
       hdr.label{i} = sprintf('%3d', i);
     end
@@ -776,7 +793,7 @@ switch headerformat
     try
       [hdr.grad, elec] = mne2grad(orig);
       if ~isempty(elec)
-          hdr.elec     = elec;
+        hdr.elec     = elec;
       end
     catch
       disp(lasterr);
@@ -895,10 +912,10 @@ switch headerformat
     hdr.grad = fif2grad(filename);
     % remember the original header details
     hdr.orig = orig;
-        
-  case 'neuroprax_eeg' 
+
+  case 'neuroprax_eeg'
     orig = np_readfileinfo(filename);
-              
+
     hdr.Fs          = orig.fa;
     hdr.nChans      = orig.K;
     hdr.nSamples    = orig.N;
@@ -906,7 +923,7 @@ switch headerformat
     hdr.nTrials     = 1; % continuous
     hdr.label       = orig.channels(:);
     hdr.unit        = orig.units(:);
-    
+
     % remember the original header details
     hdr.orig = orig;
 
@@ -990,7 +1007,11 @@ switch headerformat
     hdr.nSamples    = orig.NSamples;
     hdr.nSamplesPre = 0;      % continuous
     hdr.nTrials     = 1;      % continuous
-    warning('creating fake channel names');
+    if isempty(fakechannelwarning) || ~fakechannelwarning
+      % give this warning only once
+      warning('creating fake channel names');
+      fakechannelwarning = true;
+    end
     for i=1:hdr.nChans
       hdr.label{i} = sprintf('%d', i);
     end
@@ -1098,11 +1119,11 @@ switch headerformat
 
   case 'nmc_archive_k'
     hdr = read_nmc_archive_k_hdr(filename);
-    
+
   case 'neuroshare' % NOTE: still under development
     % check that the required neuroshare toolbox is available
     hastoolbox('neuroshare', 1);
-    
+
     tmp = read_neuroshare(filename);
     hdr.Fs          = tmp.hdr.seginfo(1).SampleRate; % take the sampling freq from the first channel (assuming this is the same for all chans)
     hdr.nChans      = tmp.hdr.fileinfo.EntityCount;
@@ -1111,7 +1132,7 @@ switch headerformat
     hdr.nTrials     = 1; % continuous data
     hdr.label       = {tmp.hdr.entityinfo.EntityLabel}; %%% contains non-unique chans
     hdr.orig        = tmp; % remember the original header
-        
+
   otherwise
     if strcmp(fallback, 'biosig') && hastoolbox('BIOSIG', 1)
       hdr = read_biosig_header(filename);
