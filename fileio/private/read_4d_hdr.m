@@ -6,32 +6,32 @@ function [header] = read_4d_hdr(datafile, configfile)
 %
 % Adapted from the MSI>>Matlab code written by Eugene Kronberg
 
-% Copyright (C) 2008-2009, Centre for Cognitive Neuroimaging, Glasgow, Gavin Paterson & J.M.Schoffelen
+% Copyright (C) 2008-2009, Centre for Cognitive Neuroimaging, Glasgow, Gavin Paterson & J.M. Schoffelen
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 %read header
 if nargin ~= 2
-    error('Wrong number of input arguments');
+  error('Wrong number of input arguments');
 end
 
 if ~isempty(datafile),
-  %always big endian  
+  %always big endian
   fid = fopen(datafile, 'r', 'b');
-  
+
   if fid == -1
-      error('Cannot open file %s', datafile);
+    error('Cannot open file %s', datafile);
   end
-  
+
   fseek(fid, 0, 'eof');
   header_end = ftell(fid);
   %last 8 bytes of the pdf is header offset
   fseek(fid, -8, 'eof');
   header_offset = fread(fid,1,'uint64');
-  
+
   %first byte of the header
   fseek(fid, header_offset, 'bof');
-  
+
   % read header data
   align_file_pointer(fid)
   header.header_data.FileType  = fread(fid, 1, 'uint16=>uint16');
@@ -40,14 +40,14 @@ if ~isempty(datafile),
   fseek(fid, 1, 'cof');
   format = fread(fid, 1, 'int16=>int16');
   switch format
-      case 1
-          header.header_data.Format = 'SHORT';
-      case 2
-          header.header_data.Format = 'LONG';
-      case 3
-          header.header_data.Format = 'FLOAT';
-      case 4
-          header.header_data.Format ='DOUBLE';
+    case 1
+      header.header_data.Format = 'SHORT';
+    case 2
+      header.header_data.Format = 'LONG';
+    case 3
+      header.header_data.Format = 'FLOAT';
+    case 4
+      header.header_data.Format ='DOUBLE';
   end
   header.header_data.acq_mode           = fread(fid, 1,  'uint16=>uint16');
   header.header_data.TotalEpochs        = fread(fid, 1,  'uint32=>double');
@@ -68,11 +68,11 @@ if ~isempty(datafile),
   header.header_data.timestamp          = fread(fid, 1,  'uint32=>uint32');
   header.header_data.reserved           = fread(fid, 20, 'uchar')';
   fseek(fid, 4, 'cof');
-   
+
   %read epoch_data
   for epoch = 1:header.header_data.TotalEpochs;
     align_file_pointer(fid)
-  
+
     header.epoch_data(epoch).pts_in_epoch     = fread(fid, 1,  'uint32=>uint32');
     header.epoch_data(epoch).epoch_duration   = fread(fid, 1,  'float32=>float32');
     header.epoch_data(epoch).expected_iti     = fread(fid, 1,  'float32=>float32');
@@ -82,11 +82,11 @@ if ~isempty(datafile),
     header.epoch_data(epoch).epoch_timestamp  = fread(fid, 1,  'int32=>int32');
     header.epoch_data(epoch).reserved         = fread(fid, 28, 'uchar')';
     header.header_data.SlicesPerEpoch         = double(header.epoch_data(1).pts_in_epoch);
-  
+
     %read event data (var_events)
     for event = 1:header.epoch_data(epoch).total_var_events
       align_file_pointer(fid)
-  
+
       event_name = char(fread(fid, 16, 'uchar'))';
       header.epoch_data(epoch).var_event{event}.event_name  = event_name(event_name>0);
       header.epoch_data(epoch).var_event{event}.start_lat   = fread(fid, 1, 'float32=>float32');
@@ -99,11 +99,11 @@ if ~isempty(datafile),
       fseek(fid, 4, 'cof');
     end
   end
-  
+
   %read  channel ref data
   for channel = 1:header.header_data.TotalChannels
     align_file_pointer(fid)
- 
+
     chan_label                                 = (fread(fid, 16, 'uint8=>char'))';
     header.channel_data(channel).chan_label    = chan_label(chan_label>0);
     header.channel_data(channel).chan_no       = fread(fid, 1, 'uint16=>uint16');
@@ -120,7 +120,7 @@ if ~isempty(datafile),
     header.channel_data(channel).whatisit      = char(fread(fid, 4, 'uint8=>char'))';
     header.channel_data(channel).reserved      = fread(fid, 28, 'uint8')';
   end
-  
+
   %read event data
   for event = 1:header.header_data.total_fixed_events
     align_file_pointer(fid)
@@ -136,7 +136,7 @@ if ~isempty(datafile),
     fseek(fid, 4, 'cof');
   end
   header.header_data.FirstLatency = double(header.event_data(1).start_lat);
-  
+
   %experimental: read process information
   for np = 1:header.header_data.total_processes
     align_file_pointer(fid)
@@ -145,7 +145,7 @@ if ~isempty(datafile),
     header.process(np).hdr.nbytes   = nbytes;
     type                            = char(fread(fid, 20, 'uchar'))';
     header.process(np).hdr.type     = type(type>0);
-    header.process(np).hdr.checksum = fread(fid, 1,  'int32=>int32'); 
+    header.process(np).hdr.checksum = fread(fid, 1,  'int32=>int32');
     user                            = char(fread(fid, 32, 'uchar'))';
     header.process(np).user         = user(user>0);
     header.process(np).timestamp    = fread(fid, 1,  'uint32=>uint32');
@@ -154,7 +154,7 @@ if ~isempty(datafile),
     fseek(fid, 28*8, 'cof'); %dont know
     header.process(np).totalsteps   = fread(fid, 1,  'uint32=>uint32');
     header.process(np).checksum     = fread(fid, 1,  'int32=>int32');
-    header.process(np).reserved     = fread(fid, 32, 'uchar')'; 
+    header.process(np).reserved     = fread(fid, 32, 'uchar')';
     for ns = 1:header.process(np).totalsteps
       header.process(np).step(ns).hdr.nbytes    = fread(fid, 1, 'uint32=>uint32');
       type                                      = char(fread(fid, 20, 'uchar'))';
@@ -176,7 +176,7 @@ if ~isempty(datafile),
         fseek(fid, 152, 'cof');
         for k = 1:Nchan
           name = fread(fid, 17, 'uchar');
-      header.process(np).step(ns).Chan{k,1}   = char(name(name>0))';
+          header.process(np).step(ns).Chan{k,1}   = char(name(name>0))';
         end
         %fseek(fid, 20, 'cof');
         %fseek(fid, 4216, 'cof');
@@ -194,14 +194,14 @@ if ~isempty(datafile),
         fseek(fid, fp, 'bof');
         for k = 1:Nchan
           header.process(np).step(ns).Weights(k,:) = fread(fid, 23, 'float32=>float32')';
-    fseek(fid, 36, 'cof');
+          fseek(fid, 36, 'cof');
         end
       else
-      end    
+      end
     end
   end
   fclose(fid);
-end 
+end
 %end read header
 
 %read config file
@@ -245,7 +245,7 @@ for ub = 1:header.config_data.total_user_blocks
   header.user_block_data{ub}.reserved     = fread(fid, 32, 'uchar=>uchar')';
   fseek(fid, 4, 'cof');
   user_space_size                         = double(header.user_block_data{ub}.user_space_size);
-  if strcmp(type(type>0), 'B_weights_used'), 
+  if strcmp(type(type>0), 'B_weights_used'),
     %warning('reading in weight table: no warranty that this is correct. it seems to work for the Glasgow 248-magnetometer system. if you have some code yourself, and/or would like to test it on your own data, please contact Jan-Mathijs');
     tmpfp = ftell(fid);
     %read user_block_data weights
@@ -263,7 +263,7 @@ for ub = 1:header.config_data.total_user_blocks
       % how to know number of analog weights vs digital weights???
       for ch = 1:Nchan
         % for Konstanz -- comment for others?
-        header.user_block_data{ub}.aweights(ch,:) = fread(fid, [1 Nanalog],  'int16')'; 
+        header.user_block_data{ub}.aweights(ch,:) = fread(fid, [1 Nanalog],  'int16')';
         fseek(fid,2,'cof'); % alignment
         header.user_block_data{ub}.dweights(ch,:) = fread(fid, [1 Ndigital], 'single=>double')';
       end
@@ -295,7 +295,7 @@ for ub = 1:header.config_data.total_user_blocks
       end
 
       header.user_block_data{ub}.dweights = fread(fid, [Ndigital Nchan], 'single=>double')';
-      header.user_block_data{ub}.aweights = fread(fid, [Nanalog  Nchan],  'int16')'; 
+      header.user_block_data{ub}.aweights = fread(fid, [Nanalog  Nchan],  'int16')';
       fseek(fid, tmpfp, 'bof');
     end
   elseif strcmp(type(type>0), 'B_E_table_used'),
@@ -329,7 +329,7 @@ for ub = 1:header.config_data.total_user_blocks
     tmp1 = fread(fid, 1, 'uint32');
     %tmp = fread(fid, [4 4], 'double');
     %tmp = fread(fid, [4 4], 'double');
-    %the next part seems to be in little endian format (at least when I tried) 
+    %the next part seems to be in little endian format (at least when I tried)
     tmp = fread(fid, 128, 'uint8');
     tmp = uint8(reshape(tmp, [8 16])');
     xfm = zeros(4,4);
@@ -345,7 +345,7 @@ for ub = 1:header.config_data.total_user_blocks
     for k = 1:Npoints
       tmp      = fread(fid, 16, 'uchar');
       tmplabel = char(tmp(tmp>0)');
-      if strmatch('Coil', tmplabel), 
+      if strmatch('Coil', tmplabel),
         label{k} = tmplabel(1:5);
       elseif ismember(tmplabel(1), {'L' 'R' 'C' 'N' 'I'}),
         label{k} = tmplabel(1);
@@ -372,7 +372,7 @@ for ch = 1:header.config_data.total_chans
   %which I don't understand, but seems rather nonsensical.
   chan_no                                    = fread(fid, 1, 'uint16=>uint16');
   if chan_no > header.config_data.total_chans,
-    
+
     %FIXME fix the number in header.channel_data as well
     sel     = find([header.channel_data.chan_no]== chan_no);
     if ~isempty(sel),
@@ -468,6 +468,6 @@ end
 function align_file_pointer(fid)
 current_position = ftell(fid);
 if mod(current_position, 8) ~= 0
-    offset = 8 - mod(current_position,8);
-    fseek(fid, offset, 'cof');
+  offset = 8 - mod(current_position,8);
+  fseek(fid, offset, 'cof');
 end
