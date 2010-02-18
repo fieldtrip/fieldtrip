@@ -176,9 +176,8 @@ else
 
     ind_timewin_min = min(find(allsum~=0));
     ind_timewin_max = max(find(allsum~=0));
-
-    timestep = stat.time(2) - stat.time(1);
-    timewin = [stat.time(ind_timewin_min): timestep :stat.time(ind_timewin_max)];
+    timewin = stat.time(ind_timewin_min:ind_timewin_max);
+    
   else
     for iPos = 1:length(sigpos)
       fprintf('%s%s%s%s%s%s%s\n','Positive cluster: ',num2str(sigpos(iPos)),', pvalue: ',num2str(probpos(iPos)),' (',hlsignpos(iPos),')')
