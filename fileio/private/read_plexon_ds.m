@@ -28,11 +28,12 @@ if needhdr
 
   ftype = zeros(length(fname), 1);
   for i=1:length(fname)
-    if     filetype(fname{i}, 'plexon_nex')
+    % determine the filetype only based on the extension, not using the filetype function because that is much slower
+    if     filetype_check_extension(fname{i}, '.nex')
       ftype(i) = 1;
-    elseif filetype(fname{i}, 'plexon_plx')
+    elseif filetype_check_extension(fname{i}, '.plx')
       ftype(i) = 2;
-    elseif filetype(fname{i}, 'plexon_ddt')
+    elseif filetype_check_extension(fname{i}, '.ddt')
       ftype(i) = 3;
     end
   end
@@ -41,7 +42,7 @@ if needhdr
   fname = fname(ftype>0);
   ftype = ftype(ftype>0);
 
-  if length(fname)==0
+  if isempty(fname)
     error('the directory contains no supported files');
   elseif any(ftype~=1)
     error('only nex files are supported in a plexon dataset directory');
@@ -112,7 +113,13 @@ if needhdr
   hdr.LastTimeStamp       = End(1);                      % FIXME this is often not correct
   hdr.TimeStampPerSample  = Frequency(1)/WFrequency(1);
   hdr.filename            = fname;
-
+  
+  % remember the filename and filetype to speed up subsequent calls for reading the data
+  hdr.filetype            = cell(size(fname));
+  hdr.filetype(ftype==1)  = {'plexon_nex'};
+  hdr.filetype(ftype==2)  = {'plexon_plx'};
+  hdr.filetype(ftype==3)  = {'plexon_ddt'};
+  
   % remember the original header details
   hdr.orig = orig(:);
 
@@ -134,10 +141,12 @@ else
   for i=1:nchan
     thischan = chanindx(i);
     thisfile = hdr.filename{thischan};
-    switch filetype(thisfile)
+    thistype = hdr.filetype{thischan};
+    
+    switch thistype
       case 'plexon_nex'
-        buf = read_plexon_nex(thisfile, 'header', hdr.orig(thischan), 'channel', 1); % always read the first and only channel
-        dat(i,:) = buf.dat(begsample:endsample);
+        nex = read_plexon_nex(thisfile, 'header', hdr.orig(thischan), 'channel', 1, 'begsample', begsample, 'endsample', endsample); % always read the first and only channel
+        dat(i,:) = nex.dat;
       case 'plexon_plx'
         error('plx files are not supported in plexon dataset directory');
       case 'plexon_ddt'
