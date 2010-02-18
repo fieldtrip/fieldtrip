@@ -59,7 +59,7 @@ catch
 end
 ind = 1;
 for i = 1:length( EEG.chanlocs )
-    if ~isempty(EEG.chanlocs(i).X)
+    if isfield(EEG.chanlocs(i), 'X') && ~isempty(EEG.chanlocs(i).X)
         header.elec.label{ind, 1} = EEG.chanlocs(i).labels;
         % this channel has a position
         header.elec.pnt(ind,1) = EEG.chanlocs(i).X;
