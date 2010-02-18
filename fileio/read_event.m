@@ -615,8 +615,17 @@ switch eventformat
     % read from a networked buffer for realtime analysis
     [host, port] = filetype_check_uri(filename);
 
-    evt = buffer('get_evt', [], host, port);  % indices should be zero-offset
     % FIXME it should be possible to specify event numbers
+
+    try
+      evt = buffer('get_evt', [], host, port);  % indices should be zero-offset
+    catch
+      if strfind(lasterr, 'the buffer returned an error')
+        evt = [];
+      else
+        rethrow(lasterr);
+      end
+    end
 
     type = {
       'char'
