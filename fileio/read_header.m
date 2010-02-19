@@ -964,23 +964,24 @@ switch headerformat
     hdr.orig = orig;
 
   case {'ns_cnt' 'ns_cnt16', 'ns_cnt32'}
-    % read_ns_cnt originates from the EEGLAB package (loadcnt.m) but is
-    % an old version since the new version is not compatible any more
     if strcmp(headerformat, 'ns_cnt')
-      orig = read_ns_cnt(filename, 'ldheaderonly', 1);
+        orig = loadcnt(filename, 'ldnsamples', 1);
     elseif strcmp(headerformat, 'ns_cnt16')
-      orig = read_ns_cnt(filename, 'ldheaderonly', 1, 'format', 16);
+        orig = loadcnt(filename, 'ldnsamples', 1, 'dataformat', 'int16');
     elseif strcmp(headerformat, 'ns_cnt32')
-      orig = read_ns_cnt(filename, 'ldheaderonly', 1, 'format', 32);
+        orig = loadcnt(filename, 'ldnsamples', 1, 'dataformat', 'int32');
     end
+    
+    orig = rmfield(orig, {'data', 'ldnsamples'});
+    
     % do some reformatting/renaming of the header items
-    hdr.Fs          = orig.rate;
-    hdr.nChans      = orig.nchannels;
-    hdr.nSamples    = orig.nsamples;
+    hdr.Fs          = orig.header.rate;
+    hdr.nChans      = orig.header.nchannels;
+    hdr.nSamples    = orig.header.nums;
     hdr.nSamplesPre = 0;
     hdr.nTrials     = 1;
     for i=1:hdr.nChans
-      hdr.label{i} = deblank(orig.chan.names(i,:));
+      hdr.label{i} = deblank(orig.electloc(i).lab);
     end
     % remember the original header details
     hdr.orig = orig;

@@ -1184,10 +1184,10 @@ switch eventformat
       hdr = read_header(filename, 'headerformat', eventformat);
     end
     % translate the event table into known FieldTrip event types
-    for i=1:hdr.orig.nevent
+    for i=1:numel(hdr.orig.event)
       event(i).type     = 'trigger';
-      event(i).sample   = hdr.orig.event.frame(i);
-      event(i).value    = hdr.orig.event.stimtype(i);
+      event(i).sample   = hdr.orig.event(i).offset + 1; % +1 was in EEGLAB pop_loadcnt
+      event(i).value    = hdr.orig.event(i).stimtype;
       event(i).offset   = 0;
       event(i).duration = 0;
     end

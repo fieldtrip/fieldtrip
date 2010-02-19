@@ -652,8 +652,7 @@ switch dataformat
   case {'ns_cnt' 'ns_cnt16', 'ns_cnt32'}
     % Neuroscan continuous data
     sample1    = begsample-1;
-    ldnsamples = endsample-begsample+1; % number of samples to read
-    ldchan     = 1:hdr.nChans;          % must be row vector
+    ldnsamples = endsample-begsample+1; % number of samples to read   
     chanoi     = chanindx(:)';          % channels of interest
     if sample1<0
       error('begin sample cannot be for the beginning of the file');
@@ -664,17 +663,15 @@ switch dataformat
     elseif isfield(hdr, 'nsdf') && hdr.nsdf==32
       dataformat = 'ns_cnt32';
     end
-    % read_ns_cnt originates from the EEGLAB package (loadcnt.m) but is
-    % an old version since the new version is not compatible any more
-    % all data is read, and only the relevant data is kept.
+    
     if strcmp(dataformat, 'ns_cnt')
-      tmp = read_ns_cnt(filename, 'sample1', sample1, 'ldnsamples', ldnsamples, 'ldchan', ldchan, 'blockread', 1);
+      tmp = loadcnt(filename, 'sample1', sample1, 'ldnsamples', ldnsamples, 'blockread', 1);
     elseif strcmp(dataformat, 'ns_cnt16')
-      tmp = read_ns_cnt(filename, 'sample1', sample1, 'ldnsamples', ldnsamples, 'ldchan', ldchan, 'blockread', 1, 'format', 16);
+      tmp = loadcnt(filename, 'sample1', sample1, 'ldnsamples', ldnsamples, 'blockread', 1, 'dataformat', 'int16');
     elseif strcmp(dataformat, 'ns_cnt32')
-      tmp = read_ns_cnt(filename, 'sample1', sample1, 'ldnsamples', ldnsamples, 'ldchan', ldchan, 'blockread', 1, 'format', 32);
+      tmp = loadcnt(filename, 'sample1', sample1, 'ldnsamples', ldnsamples, 'blockread', 1, 'dataformat', 'int32');
     end
-    dat = tmp.dat(chanoi,:);
+    dat = tmp.data(chanoi,:);
 
   case 'ns_eeg'
     % Neuroscan epoched file
