@@ -60,6 +60,9 @@ switch cfg.method
 case {'coh'}
   data    = checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
   inparam = 'crsspctrm';  
+case {'pcoh'}
+  data    = checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'}, 'cmbrepresentation', 'full');
+  inparam = 'crsspctrm';      
 case {'plv'}
   data    = checkdata(data, 'datatype', {'freqmvar' 'freq'});
   inparam = 'crsspctrm';  
@@ -107,7 +110,15 @@ dtype = datatype(data);
 %FIXME trial selection has to be implemented still
 
 if isfield(data, 'label'), 
-  cfg.channel    = channelselection(cfg.channel, data.label);
+    if strcmp(cfg.method, 'pcoh')
+        %remove pchans from cfg.channel
+        cfg.channel     = channelselection(cfg.channel, data.label);
+        cfg.pchanindx   = match_str(cfg.channel,cfg.pchans);
+        cfg.allchanindx = setdiff(1:length(cfg.channel), cfg.pchanindx);
+        cfg.channel     = setdiff(cfg.channel, cfg.pchans);
+    else
+        cfg.channel     = channelselection(cfg.channel, data.label);
+    end
 end
 
 if isfield(data, 'label') && ~isempty(cfg.channelcmb),
@@ -188,6 +199,22 @@ case 'coh'
   [datout, varout, nrpt] = coupling_corr(tmpcfg, data.(inparam), hasrpt, hasjack);
   outparam         = 'cohspctrm';
 
+case 'pcoh'
+  %partial coherence, defined as in Rosenberg JR et al (1998) J.
+  %Neuroscience Methods, equation 38 - first the partial spectra are
+  %computed, then the normal coherence is computed on that.
+
+  tmpcfg             = [];
+  tmpcfg.complex     = cfg.complex;
+  tmpcfg.feedback    = cfg.feedback;
+  tmpcfg.dimord      = data.dimord;
+  tmpcfg.powindx     = powindx;
+  tmpcfg.pchanindx   = cfg.pchanindx;
+  tmpcfg.allchanindx = cfg.allchanindx;
+  [datout, varout, nrpt] = coupling_pcorr(tmpcfg, data.(inparam), hasrpt, hasjack);
+  data.label         = cfg.channel; %update labels to remove the partialed channels
+  outparam           = 'pcohspctrm';
+  
 case 'total_interdependence'
   %total interdependence  
 
@@ -496,6 +523,34 @@ if hasrpt,
 else 
   v = [];
 end
+%-------------------------------------------------------------
+function [c, v, n] = coupling_pcorr(cfg, input, hasrpt, hasjack)
+%takes in a square fourier coefficient matrix, calculates the patrial
+%spectra, then computes parital coherence via coupling_corr
+if hasrpt
+    A = zeros(size(input,1),length(cfg.allchanindx),length(cfg.allchanindx),size(input,3)); 
+    for j = 1:size(input,1) %rpt loop
+        for i = 1:size(input,3) %freq loop
+            AA = input(j,cfg.allchanindx,cfg.allchanindx,i);
+            BA = input(j,cfg.allchanindx,cfg.pchanindx,i);
+            AB = input(j,cfg.pchanindx,cfg.allchanindx,i);
+            BB = input(j,cfg.pchanindx,cfg.pchanindx,i);
+            A(j,:,:,i) = AA - BA*pinv(BB)*AB;
+        end    
+    end
+else
+    
+    A = zeros(length(cfg.allchanindx),length(cfg.allchanindx),size(input,3)); 
+    for i = 1:size(input,3) %freq loop
+        AA = input(cfg.allchanindx,cfg.allchanindx,i);
+        BA = input(cfg.allchanindx,cfg.pchanindx,i);
+        AB = input(cfg.pchanindx,cfg.allchanindx,i);
+        BB = input(cfg.pchanindx,cfg.pchanindx,i);
+        A(:,:,i) = AA - BA*pinv(BB)*AB;
+    end
+end
+[c, v, n] = coupling_corr(cfg, A, hasrpt, hasjack); %compute partial coherence 
+
 %-------------------------------------------------------------
 function [c, v, n] = coupling_toti(cfg, input, hasrpt, hasjack)
 
