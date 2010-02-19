@@ -18,7 +18,7 @@ classdef blogreg_transfer < blogreg & transfer_learner
 % p.Gauss; % the EP estimate
 % p.convergence; % whether or not EP converged
 % p.logp; % approximate log model evidence
-% p.scale; % selected scale (in case of multiple scales)
+% p.scale; % selected scale (in case of multiple scales); large scale is strong regularization!
 % p.ntasks; % number of used tasks
 %
 % EXAMPLE:
@@ -50,6 +50,13 @@ classdef blogreg_transfer < blogreg & transfer_learner
        
        function p = estimate(obj,X,Y)
                   
+         % take out missing data
+         for c=1:length(X)
+           lab = mvmethod.labeled(Y{c});
+           X{c} = X{c}(lab,:);
+           Y{c} = Y{c}(lab,:);
+         end
+         
          if iscell(obj.indims)
            obj.dims = obj.indims{1};
          else

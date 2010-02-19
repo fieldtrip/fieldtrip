@@ -1,13 +1,13 @@
 classdef elasticnet < regressor
-%ELASTICNET using Mark Schmidt's L1General package
+%ELASTICNET regressor
 %
-%   Copyright (c) 2009, Marcel van Gerven
+%   Copyright (c) 2010, Tom Heskes, Marcel van Gerven
 
 
     properties
         
-      lambdaL1 = 100;
-      lambdaL2 = 100;
+      lambda = 0.4; % ridge penalty
+      nu = 0.01; % L1 penalty
 
     end
 
@@ -19,26 +19,16 @@ classdef elasticnet < regressor
          
        end
        
-       function p = estimate(obj,X,Y)
-        
-         X = [X ones(size(X,1),1)];
-        
-         lambdasL2 = obj.lambdaL2*ones(size(X,2),1);
-         lambdasL1 = obj.lambdaL1*ones(size(X,2),1);
-
-         funObj = @(w)GaussianLoss(w,X,Y); % Loss function that L1 regularization is applied to
+       function p = estimate(obj,X,Y)        
          
-         R = chol(X'*X + diag(lambdasL1));
-         w_init = R\(R'\(X'*Y)); % Initial value for iterative optimizer
+         [beta,beta0] = elastic(X',Y',obj.nu,obj.lambda);
          
-         penalizedFunObj = @(w)penalizedL2(w,funObj,lambdasL2);
+         p.model = [beta; beta0];
 
-         if obj.verbose
-           fprintf('\nComputing Elastic Net Coefficients...\n');
+         if ~any(p.model)
+           warning('elasticnet returned zero vector as model; too strong regularization?');
          end
          
-         p.model = L1GeneralProjection(penalizedFunObj,w_init,lambdasL1);
-
        end
        
        function Y = map(obj,X)       

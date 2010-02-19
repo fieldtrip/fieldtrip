@@ -32,6 +32,7 @@ function KK = scale_prior(K,varargin)
     
   Csqrt = sqrt(C);
   
-  KK = (Csqrt*K*Csqrt)*opt.lambda^2;
+  % KK = (Csqrt*K*Csqrt)*opt.lambda^2; % old representation in terms of regularization
+  KK = (Csqrt*K*Csqrt)/opt.lambda; % new representation in terms of scale as suggested in the paper
   
 end

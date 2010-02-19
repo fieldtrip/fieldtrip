@@ -23,7 +23,8 @@
 % Ali Bahramisharif
 % Jason Farquhar
 % Adriana Birlutiu
-% 
+% Tom Heskes 
+%
 % Donders Institute for Brain, Cognition and Behaviour
 % 
 % The toolbox depends on functions from other toolboxes to

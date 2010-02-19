@@ -116,6 +116,7 @@ classdef mva
                
                m = cell(1,length(data));
                for d=1:length(data)
+                 
                  m{d} = obj.mvmethods{c}.train(data{d},design{d});
                  if c<obj.nmethods
                    data{d} = m{d}.test(data{d});

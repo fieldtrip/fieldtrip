@@ -116,7 +116,8 @@ LogPriorRestAux2 = (2*sum(log(full(diag(cholK))))); % -nfeatures*log(2*pi)); % r
 
 terms.hatK  = ones(nsamples,1)/10;
 terms.hath  = zeros(nsamples,1);
-terms.diagK = ones(nfeatures,1)*opt.lambda^2/10;
+%terms.diagK = ones(nfeatures,1)*opt.lambda^2/10; % using other scale representation
+terms.diagK = ones(nfeatures,1)/(10*opt.lambda);
 terms.auxK  = zeros(nfeatures,1);
 terms.h     = zeros(nfeatures,1);
 

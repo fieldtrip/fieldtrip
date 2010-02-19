@@ -7,7 +7,7 @@ classdef blogreg < classifier
 % p.Gauss; % the EP estimate
 % p.convergence; % whether or not EP converged
 % p.logp; % approximate log model evidence
-% p.scale; % selected scale (in case of multiple scales)
+% p.scale; % selected scale (in case of multiple scales); large scale is strong regularization!
 %
 % NOTE: 
 %   a bias term is added to the model
@@ -62,27 +62,30 @@ classdef blogreg < classifier
        
       function obj = blogreg(varargin)
       
-           % check availability
-           if ~exist('laplacedegenerate_ep','file')
-               error('not yet available...');
-           end
-
-           obj = obj@classifier(varargin{:});
-      
-           if isempty(obj.precbias)
-                              
-               % NOTE: EP doesnt seem to converge for low precisions 
-               % (i.e., large scales)
-               
-               % we choose the precision of the bias term to  equal the scale
-               obj.precbias = min(1e-2,1./obj.scale(1));
-           end                                                                
-           
-       end
+        % check availability
+        if ~exist('laplacedegenerate_ep','file')
+          error('not yet available...');
+        end
+        
+        obj = obj@classifier(varargin{:});
+        
+        if isempty(obj.precbias)
+          
+          % NOTE: EP doesnt seem to converge for low precisions
+          % (i.e., large scales)
+          
+          % we choose the precision of the bias term to equal the scale
+          obj.precbias = max(1e2,obj.scale(1));
+        end
+        
+      end
        
        function p = estimate(obj,X,Y)
                   
-         p = obj.params;
+         % take out missing data
+         lab = mvmethod.labeled(Y);
+         X = X(lab,:);
+         Y = Y(lab,:);
          
          if iscell(obj.indims)
            obj.dims = obj.indims{1};
@@ -312,17 +315,30 @@ classdef blogreg < classifier
          % P   : Bernoulli probabilities
          % u,v : auxiliary variables
          %
+         % e.g.,
+         %
+         % b = blogreg('scale',0.1)
+         % [Y,X,B,P,u,v] = sample(b,10000);
+         % a1 = histc(B(1,:),linspace(-1,1,20));
          
          if obj.verbose
            fprintf('sampling betas from auxiliary variables using scaled prior\n');
          end
          
+         if ~isfield(obj.params,'prior')
+           % create univariate prior with a given scale
+           pri = obj.create_prior(1);
+           pri = scale_prior(pri,'lambda',obj.scale);
+         else           
+           pri = obj.params.prior;
+         end
+         
          if nargin < 2, M = 1; end
-         n = size(obj.params.prior,1);
+         n = size(pri,1);
          
          % get samples for auxiliary variables
-         u = sample_from_prior(zeros(n,1),obj.params.prior,M);
-         v = sample_from_prior(zeros(n,1),obj.params.prior,M);
+         u = sample_from_prior(zeros(n,1),pri,M);
+         v = sample_from_prior(zeros(n,1),pri,M);
          
          % get samples for betas
          B = normrnd(zeros(n,M),sqrt(u.^2 + v.^2));

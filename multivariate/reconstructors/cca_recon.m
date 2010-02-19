@@ -1,20 +1,19 @@
 classdef cca_recon < reconstructor
 % CCA_RECON canonical correlation analysis reconstructor class
 %
-% both data and design will be whitened and reduce in dimensions such that
+% both data and design will be whitened and reduced in dimensions such that
 % they are not rank deficient; dimensions can be further reduced through
 % indim and outdim parameters
 %
 % EXAMPLES:
 %
-% load dataset; X = dataset(response); Y = dataset(stimuli);
-% 
+% load 69data; X = response; Y = stimuli;
 % p = mva({cca_recon('indim',50,'outdim',50,'verbose',true)});
-% p = p.train(X.subsample(1:100),Y.subsample(1:100));
-% r = p.test(X.subsample(101:111));
-% r.image(1:10,[2 5]);
+% p = p.train(X(1:100,:),Y(1:100,:));
+% r = p.test(X(101:111,:));
+% images(r,1:10,[2 5]);
 % figure
-% Y.image(101:110,[2 5]);
+% images(Y,101:110,[2 5]);
 %
 % Copyright (c) 2010, Marcel van Gerven
 
@@ -44,10 +43,8 @@ classdef cca_recon < reconstructor
     
     function p = estimate(obj,X,Y)
       
-      p.dims = obj.outdims;
-      
-      if isempty(obj.indim) || obj.indim > size(data,1)-1
-        p.indim = min(size(data,1)-1,size(data,2));
+      if isempty(obj.indim) || obj.indim > size(X,1)-1
+        p.indim = min(size(X,1)-1,size(X,2));
         if obj.verbose
           fprintf('reducing data dimensions to %d\n',p.indim);
         end
@@ -96,7 +93,7 @@ classdef cca_recon < reconstructor
       Y = obj.params.prepout.untest(Y);
       
       % reshape to old dimensions
-      Y = reshape(Y,[size(X,1) obj.params.dims(2:end)]);
+      Y = reshape(Y,[size(X,1) obj.outdims]);
             
     end
     

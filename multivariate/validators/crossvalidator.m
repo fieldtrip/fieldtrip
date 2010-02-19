@@ -61,7 +61,7 @@ classdef crossvalidator < validator
           design = {design};
         end
         
-        % replicate designs
+        % replicate designs (useful for transfer learning with the same designs)
         if length(design)== 1 && length(data) > 1
           design = repmat(design,[1 length(data)]);
         end
@@ -85,6 +85,11 @@ classdef crossvalidator < validator
         % create train and test samples
         [obj.trainfolds,obj.testfolds,nfolds] = obj.create_folds(design);
                         
+        if obj.verbose
+          fprintf('using %d folds for %d datasets\n',size(obj.trainfolds,1),size(obj.trainfolds,2));
+          assert(size(obj.trainfolds,2) == nsets);
+        end
+        
         if ~obj.compact
           proc = cell(nfolds,1); 
         end
@@ -141,7 +146,7 @@ classdef crossvalidator < validator
               [obj.model,obj.desc] = tproc.getmodel();
             else
               m = tproc.getmodel();
-              for mm=1:length(obj.model)
+              for mm=1:numel(obj.model)
                 obj.model{mm} = obj.model{mm} + m{mm};
               end
               clear m;
@@ -166,7 +171,7 @@ classdef crossvalidator < validator
         end
         
         if iscell(obj.model) || obj.model
-          for mm=1:length(obj.model)
+          for mm=1:numel(obj.model)
             obj.model{mm} = obj.model{mm}./nfolds;
           end
         end
@@ -185,7 +190,20 @@ classdef crossvalidator < validator
                               
           nsets = length(design);
           
-          if isempty(trainfolds) && isempty(testfolds) % samples are not prespecified so create the testfolds
+          if ~isempty(obj.trainfolds) && ~isempty(obj.testfolds) % fully specified already
+            
+            nfolds = size(trainfolds,1); 
+            
+            if size(trainfolds,2) == 1 && nsets > 1
+              trainfolds = repmat(trainfolds,[1 nsets]);
+            end
+            if size(testfolds,2) == 1 && nsets > 1
+              testfolds = repmat(testfolds,[1 nsets]);
+            end
+            
+            return;
+            
+          elseif isempty(trainfolds) && isempty(testfolds) % samples are not prespecified so create the testfolds
                     
             nfolds = obj.nfolds;
             if isinf(nfolds)
@@ -317,7 +335,7 @@ classdef crossvalidator < validator
                   randn('state',obj.init);
                 end
                 
-                trainfolds{f,d} =  setdiff(1:size(design{d},1),testfolds{f,d})';
+                trainfolds{f,d} = setdiff(1:size(design{d},1),testfolds{f,d})';
                 trainfolds{f,d} = trainfolds{f,d}(randperm(size(trainfolds{f,d},1)));
                 
                 if obj.balanced
@@ -366,8 +384,8 @@ classdef crossvalidator < validator
                 % use the same ordering for multiple datasets if possible
                 % by reinitializing the random number generator
                 if ~isempty(obj.init)
-                     rand('state',obj.init);
-                     randn('state',obj.init);
+                  rand('state',obj.init);
+                  randn('state',obj.init);
                 end
                 
                 testfolds{f,d} = setdiff(1:design{d}.nsamples,trainfolds{f,d})';

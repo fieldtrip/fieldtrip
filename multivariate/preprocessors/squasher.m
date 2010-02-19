@@ -32,7 +32,7 @@ classdef squasher < preprocessor
     function p = estimate(obj,X,Y)
       
       p.dmin = min(X);
-      X = bsxfun(@minus,X, obj.dmin);
+      X = bsxfun(@minus,X, p.dmin);
       p.dmax = max(X);
       p.dmax(p.dmax == 0) = 1;
       
