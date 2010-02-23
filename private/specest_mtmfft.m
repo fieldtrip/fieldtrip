@@ -34,7 +34,7 @@ tapsmofrq = keyval('tapsmofrq',   varargin);
 
 
 % zero padding
-zeropad = zeros(size(dat,1),pad-size(dat,2));
+zeropad = zeros(1,pad-size(dat,2));
 
 % set n's
 [nchan,nsample] = size(dat);
@@ -80,11 +80,13 @@ end % switch taper
 numtap = size(tap,1);
 
 
-% compute fft for all channels at the same time, keeping tapers automatically
+% compute fft per channel, keeping tapers automatically (per channel is about 40% faster than all channels at the same time)
 out = [];
 for itap = 1:numtap
-  dum = fft([dat .* repmat(tap(itap,:),[nchan 1]) zeropad],[],2); % would be much better if fft could take boi as input (muuuuuch less computation)
-  out(itap,:,:) = dum(:,boi);
+  for ichan = 1:nchan
+    dum = fft([dat(ichan,:) .* tap(itap,:) zeropad],[],2); % would be much better if fft could take boi as input (muuuuuch less computation)
+    out(itap,ichan,:) = dum(boi);
+  end
 end
 
 
