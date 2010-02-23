@@ -23,7 +23,13 @@ function [out,foi] = specest_mtmfft(dat, fsample, varargin)
 %
 %
 %
-
+%
+%  TO DO:
+%  - anchor phase to specific part of time-window (t=0 current suggestion), how to do it in the current format? need to do multiplication freq-domain (ala mtmconvol)?
+%  - implement computation reduction by keeping tapers and such one way or another
+%
+%
+%
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'dpss','pad','freq','tapsmofrq'});
@@ -81,14 +87,12 @@ numtap = size(tap,1);
 
 
 % compute fft per channel, keeping tapers automatically (per channel is about 40% faster than all channels at the same time)
-out = [];
 for itap = 1:numtap
   for ichan = 1:nchan
     dum = fft([dat(ichan,:) .* tap(itap,:) zeropad],[],2); % would be much better if fft could take boi as input (muuuuuch less computation)
     out(itap,ichan,:) = dum(boi);
   end
 end
-
 
 
 
