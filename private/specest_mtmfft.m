@@ -40,7 +40,7 @@ tapsmofrq = keyval('tapsmofrq',   varargin);
 
 
 % zero padding
-zeropad = zeros(1,pad-size(dat,2));
+postpad = zeros(1,pad-size(dat,2)); % 'postpad', so naming concurs with mtmconvol
 
 % set n's
 [nchan,nsample] = size(dat);
@@ -48,12 +48,12 @@ zeropad = zeros(1,pad-size(dat,2));
 % set fboi and foi 
 if isnumeric(foi) % if input is a vector
   fboi    = round(foi ./ (fsample ./ pad)) + 1;
-  fnumboi = size(fboi,2);
+  nfboi = size(fboi,2);
   foi    = (fboi-1) ./ (pad / fsample); % boi - 1 because 0 Hz is included in fourier output..... is this going correctly?
 elseif strcmp(foi,'max') % if input was 'max'
   fboilim = round([0 fsample/2] ./ (fsample ./ pad)) + 1;
   fboi    = fboilim(1):fboilim(2);
-  numboi = size(boi,2);
+  nfboi = size(boi,2);
   foi    = (fboi-1) ./ (pad / fsample);
 end
 
@@ -83,14 +83,14 @@ switch taper
     tap = window(taper, nsample)';
     tap = tap ./ norm(tap);
 end % switch taper
-numtap = size(tap,1);
+ntap = size(tap,1);
 
 
 % compute fft per channel, keeping tapers automatically (per channel is about 40% faster than all channels at the same time)
-out = [];
-for itap = 1:numtap
+out = complex(zeros(ntap,nchan,nfboi),zeros(ntap,nchan,nfboi));
+for itap = 1:ntap
   for ichan = 1:nchan
-    dum = fft([dat(ichan,:) .* tap(itap,:) zeropad],[],2); % would be much better if fft could take boi as input (muuuuuch less computation)
+    dum = fft([dat(ichan,:) .* tap(itap,:) postpad],[],2); % would be much better if fft could take boi as input (muuuuuch less computation)
     out(itap,ichan,:) = dum(fboi);
   end
 end
