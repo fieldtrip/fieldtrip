@@ -17,7 +17,7 @@ function [out,foi] = specest_mtmfft(dat, fsample, varargin)
 % Optional arguments should be specified in key-value pairs and can include:
 %   taper      = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
 %   pad        = number, total number of samples after zero padding               %%% COULD ALSO BE GIVEN IN SECONDS....
-%   freq       = vector, containing frequencies                                               
+%   foi        = vector, containing frequencies of interest                                           
 %   tapsmofrq  = the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
 %
 %
@@ -32,10 +32,10 @@ function [out,foi] = specest_mtmfft(dat, fsample, varargin)
 %
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'dpss','pad','freq','tapsmofrq'});
+keyvalcheck(varargin, 'optional', {'dpss','pad','foi','tapsmofrq'});
 taper     = keyval('dpss',        varargin); if isempty(taper),    taper   = 'dpss';     end
 pad       = keyval('pad',         varargin); if isempty(pad),      pad     = 0;          end
-freq      = keyval('freq',        varargin); if isempty(freq),     freq    = 'max';      end  
+foi       = keyval('foi',         varargin); if isempty(foi),      foi     = 'max';      end  
 tapsmofrq = keyval('tapsmofrq',   varargin);
 
 
@@ -45,16 +45,16 @@ zeropad = zeros(1,pad-size(dat,2));
 % set n's
 [nchan,nsample] = size(dat);
 
-% set boi and foi 
-if isnumeric(freq) % if input is a vector
-boi    = round(freq ./ (fsample ./ pad)) + 1;
-numboi = size(boi,2);
-foi    = (boi-1) ./ (pad / fsample); % boi - 1 because 0 Hz is included in fourier output..... is this going correctly?
-elseif strcmp(freq,'max') % if input was 'max'
-  boilim = round([0 fsample/2] ./ (fsample ./ pad)) + 1;
-  boi    = boilim(1):boilim(2);
+% set fboi and foi 
+if isnumeric(foi) % if input is a vector
+  fboi    = round(foi ./ (fsample ./ pad)) + 1;
+  fnumboi = size(fboi,2);
+  foi    = (fboi-1) ./ (pad / fsample); % boi - 1 because 0 Hz is included in fourier output..... is this going correctly?
+elseif strcmp(foi,'max') % if input was 'max'
+  fboilim = round([0 fsample/2] ./ (fsample ./ pad)) + 1;
+  fboi    = fboilim(1):fboilim(2);
   numboi = size(boi,2);
-  foi    = (boi-1) ./ (pad / fsample);
+  foi    = (fboi-1) ./ (pad / fsample);
 end
 
 % create tapers
@@ -91,7 +91,7 @@ out = [];
 for itap = 1:numtap
   for ichan = 1:nchan
     dum = fft([dat(ichan,:) .* tap(itap,:) zeropad],[],2); % would be much better if fft could take boi as input (muuuuuch less computation)
-    out(itap,ichan,:) = dum(boi);
+    out(itap,ichan,:) = dum(fboi);
   end
 end
 
