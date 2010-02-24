@@ -16,7 +16,7 @@ function [out,foi] = specest_mtmfft(dat, fsample, varargin)
 %
 % Optional arguments should be specified in key-value pairs and can include:
 %   taper      = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
-%   pad        = number, total number of samples after zero padding               %%% COULD ALSO BE GIVEN IN SECONDS....
+%   pad        = number, total number of samples after zero padding               %%% SHOULD BE GIVEN IN SECONDS....
 %   foi        = vector, containing frequencies of interest                                           
 %   tapsmofrq  = the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
 %
@@ -36,7 +36,7 @@ keyvalcheck(varargin, 'optional', {'dpss','pad','foi','tapsmofrq'});
 taper     = keyval('dpss',        varargin); if isempty(taper),    taper   = 'dpss';     end
 pad       = keyval('pad',         varargin); if isempty(pad),      pad     = 0;          end
 foi       = keyval('foi',         varargin); if isempty(foi),      foi     = 'max';      end  
-tapsmofrq = keyval('tapsmofrq',   varargin);
+tapsmofrq = keyval('tapsmofrq',   varargin); %%%% NOW CAN ONLY BE A NUMBER, IN MTMCONVOL IT SHOULD BE A VECTOR
 
 
 % zero padding
