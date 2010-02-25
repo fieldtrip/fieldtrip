@@ -21,8 +21,8 @@
     <USERDEFINES value="_DEBUG"/>
     <SYSDEFINES value="_RTLDLL;NO_STRICT"/>
     <MAINSOURCE value="libbuffer.bpf"/>
-    <INCLUDEPATH value="$(BCB)\include;$(BCB)\include\vcl;..\..\pthreads-win32\include"/>
-    <LIBPATH value="$(BCB)\lib\obj;$(BCB)\lib;..\..\pthreads-win32\lib"/>
+    <INCLUDEPATH value="$(BCB)\include;$(BCB)\include\vcl;..\pthreads-win32\include"/>
+    <LIBPATH value="$(BCB)\lib\obj;$(BCB)\lib;..\pthreads-win32\lib"/>
     <WARNINGS value="-w-par"/>
     <LISTFILE value=""/>
     <OTHERFILES value=""/>
@@ -86,15 +86,17 @@ ProductVersion=1.0.0.0
 Comments=
 
 [HistoryLists\hlIncludePath]
-Count=3
-Item0=$(BCB)\include;$(BCB)\include\vcl;..\..\pthreads-win32\include
-Item1=$(BCB)\include;$(BCB)\include\vcl
-Item2=contrib\SignalProcessing\FieldTripRealtime\buffer\src;$(BCB)\include;$(BCB)\include\vcl
+Count=4
+Item0=$(BCB)\include;$(BCB)\include\vcl;..\pthreads-win32\include
+Item1=$(BCB)\include;$(BCB)\include\vcl;..\..\pthreads-win32\include
+Item2=$(BCB)\include;$(BCB)\include\vcl
+Item3=contrib\SignalProcessing\FieldTripRealtime\buffer\src;$(BCB)\include;$(BCB)\include\vcl
 
 [HistoryLists\hlLibraryPath]
-Count=2
-Item0=$(BCB)\lib\obj;$(BCB)\lib;..\..\pthreads-win32\lib
-Item1=contrib\SignalProcessing\FieldTripRealtime\buffer\src;$(BCB)\lib\obj;$(BCB)\lib
+Count=3
+Item0=$(BCB)\lib\obj;$(BCB)\lib;..\pthreads-win32\lib
+Item1=$(BCB)\lib\obj;$(BCB)\lib;..\..\pthreads-win32\lib
+Item2=contrib\SignalProcessing\FieldTripRealtime\buffer\src;$(BCB)\lib\obj;$(BCB)\lib
 
 [HistoryLists\hlDebugSourcePath]
 Count=1
