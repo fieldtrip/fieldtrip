@@ -157,7 +157,8 @@ classdef blogreg < classifier
                    'tol',obj.tolerance,'degenerate',obj.degenerate,'verbose',obj.verbose);
                end
                
-               lgp(j) = p.logp - log(obj.scale(j)); % uniform prior on log scale
+               % uniform prior on log scale
+               lgp(j) = p.logp - log(obj.scale(j));
                
                if lgp(j) == max(lgp)
                  

@@ -13,7 +13,7 @@ function KK = scale_prior(K,varargin)
   end
   if ~isfield(opt,'lambda'), opt.lambda = 0.001; end
 
-  % fprintf('scaling precision matrix with lambda = %g\n', opt.lambda);
+  %fprintf('scaling precision matrix with lambda = %g\n', opt.lambda);
 
   nfeatures = size(K,1);
 
