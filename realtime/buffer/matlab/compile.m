@@ -17,7 +17,7 @@ mex -I../src -I../pthreads-win32/include -c ../test/event.c
 % link all the objects together into a mex file
 if ispc
   % this is needed for Borland on windows, but not for other platforms
-  mex -I../src -I../pthreads-win32/include -c ../src/gettimeofday.c -I../src -I../../pthreads-win32/include
+  mex -I../src -I../pthreads-win32/include -c ../src/win32/gettimeofday.c -I../src/win32 -I../../pthreads-win32/include
   % link all the objects together into a mex file
   mex -I../src -I../pthreads-win32/include -L../src -L../pthreads-win32/lib buffer.c event.obj sinewave.obj gettimeofday.obj buffer_gethdr.obj buffer_getdat.obj buffer_getevt.obj buffer_getprp.obj buffer_flushhdr.obj buffer_flushdat.obj buffer_flushevt.obj buffer_puthdr.obj buffer_putdat.obj buffer_putevt.obj buffer_putprp.obj -lbuffer -lpthreadVC2.bcb
 else

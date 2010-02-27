@@ -1,6 +1,10 @@
 #include "platform.h"
 #include "compiler.h"
 
+#if defined (COMPILER_BORLAND)
+
+#endif
+
 /* these platforms will always use a similar gcc compiler */
 #if defined (PLATFORM_LINUX) || defined (PLATFORM_OSX)
 	#include <sys/types.h>
@@ -15,11 +19,13 @@
 	#define closesocket(s) (close(s))
 
 #elif defined (PLATFORM_WIN32)
-
 /* there are various compiler options for windows */
 #if defined (COMPILER_BORLAND)
 	#include <windows.h>
 	#include "win32/gettimeofday.h"
+
+    #define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
+	#define usleep(x)    (Sleep((x)/1000))
 	#define strcasecmp(a,b) (strcmpi(a,b))
 
 	/* without the following, compilation with the Borland command line tools fails -- SK */

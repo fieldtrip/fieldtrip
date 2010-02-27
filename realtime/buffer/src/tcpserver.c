@@ -5,7 +5,7 @@
  *
  *
  */
- 
+
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -108,7 +108,6 @@ void *tcpserver(void *arg) {
 	}
 
 	bzero(&sa, sizeof sa);
-
 	sa.sin_family = AF_INET;
 	sa.sin_port   = htons(host->port);
 

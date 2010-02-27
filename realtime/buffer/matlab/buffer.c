@@ -3,46 +3,13 @@
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
- * $Log: buffer.c,v $
- * Revision 1.9  2008/10/22 10:45:43  roboos
- * added buffer_putdat
- *
- * Revision 1.8  2008/07/09 10:04:55  roboos
- * added event_thread, removed other acquisition devices (because sinewave and event are enough as examples)
- *
- * Revision 1.7  2008/07/08 20:31:34  roboos
- * extended the list of acquisition threads in the mex file, also added all of them to thread stopping
- *
- * Revision 1.6  2008/06/19 20:48:32  roboos
- * added support for flushing header, data and events
- *
- * Revision 1.5  2008/05/22 13:35:55  roboos
- * some small changes to make it compile on Matlab75 with borland, commented out putdat
- *
- * Revision 1.4  2008/05/22 09:25:53  roboos
- * fixed some minor issues with Borland compiler, added xxxThreadRunning variables instead of looking at thread value
- *
- * Revision 1.3  2008/03/23 17:08:25  roboos
- * improved thread accounting, implemented thread cancelation
- * added sleep_thread for testing the cancelation
- *
- * Revision 1.2  2008/03/23 12:50:10  roboos
- * multiple changes related to spawning and closing of threads
- *
- * Revision 1.1  2008/03/09 22:36:37  roboos
- * implemented new buffer mex-function, which acts as dispatcher for all functionality
- * changed buffer_xxx code from mex-function into c-function to be included in dispatcher
- *
  */
 
 #include <pthread.h>
 
 #include "mex.h"
 #include "matrix.h"
-
-#include "message.h"
 #include "buffer.h"
-#include "unix_includes.h"
 
 #define DEFAULT_HOST "localhost"
 #define DEFAULT_PORT 1972
