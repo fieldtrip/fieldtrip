@@ -6,14 +6,14 @@
     <PROJECT value="libbuffer.lib"/>
     <OBJFILES value="cleanup.obj clientrequest.obj property.obj tcprequest.obj tcpserver.obj 
       tcpsocket.obj util.obj dmarequest.obj swapbytes.obj printstruct.obj 
-      gettimeofday.obj"/>
+      win32\gettimeofday.obj"/>
     <RESFILES value=""/>
     <DEFFILE value=""/>
     <RESDEPEN value="$(RESFILES)"/>
     <LIBFILES value=""/>
     <LIBRARIES value=""/>
     <PACKAGES value=""/>
-    <PATHCPP value=".;"/>
+    <PATHCPP value=".;win32"/>
     <PATHPAS value=".;"/>
     <PATHRC value=".;"/>
     <PATHASM value=".;"/>
@@ -21,8 +21,8 @@
     <USERDEFINES value="_DEBUG"/>
     <SYSDEFINES value="_RTLDLL;NO_STRICT"/>
     <MAINSOURCE value="libbuffer.bpf"/>
-    <INCLUDEPATH value="$(BCB)\include;$(BCB)\include\vcl;..\pthreads-win32\include"/>
-    <LIBPATH value="$(BCB)\lib\obj;$(BCB)\lib;..\pthreads-win32\lib"/>
+    <INCLUDEPATH value="win32;$(BCB)\include;$(BCB)\include\vcl;..\pthreads-win32\include"/>
+    <LIBPATH value="win32;$(BCB)\lib\obj;$(BCB)\lib;..\pthreads-win32\lib"/>
     <WARNINGS value="-w-par"/>
     <LISTFILE value=""/>
     <OTHERFILES value=""/>
@@ -52,7 +52,7 @@
       <FILE FILENAME="dmarequest.c" FORMNAME="" UNITNAME="dmarequest.c" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="swapbytes.c" FORMNAME="" UNITNAME="swapbytes.c" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="printstruct.c" FORMNAME="" UNITNAME="printstruct.c" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
-      <FILE FILENAME="gettimeofday.c" FORMNAME="" UNITNAME="gettimeofday" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="win32\gettimeofday.c" FORMNAME="" UNITNAME="gettimeofday" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
   </FILELIST>
   <BUILDTOOLS>
   </BUILDTOOLS>
