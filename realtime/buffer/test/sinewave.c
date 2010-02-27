@@ -7,33 +7,6 @@
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
- * $Log: sinewave.c,v $
- * Revision 1.9  2009/01/23 19:48:32  roboos
- * changed verbosity
- *
- * Revision 1.8  2009/01/23 17:51:59  roboos
- * removed most of the threading code from within the sinewave function, it makes more sense to start it in a thread without the function knowing too much about it
- *
- * Revision 1.7  2008/10/29 20:53:13  roboos
- * fixed bug, had to insert some more close_connection calls
- *
- * Revision 1.6  2008/10/29 20:12:27  roboos
- * renamed open_remotehost into open_connection and added function close_connection
- * added some fprintf statements, no functional changes
- *
- * Revision 1.5  2008/10/29 19:39:11  roboos
- * display status after clientrequest
- *
- * Revision 1.4  2008/07/09 10:40:08  roboos
- * some minor cleanup
- *
- * Revision 1.3  2008/07/09 10:10:34  roboos
- * some cleanup
- *
- * Revision 1.2  2008/07/08 20:24:23  roboos
- * greatly simplified example code, removed runlevel, removed configurable options (properties), moved event-writing to another demo
- *
- *
  */
 
 #include <math.h>
@@ -41,10 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "message.h"
 #include "buffer.h"
-#include "socket_includes.h"
-#include "unix_includes.h"
 
 #define FREQ       1
 #define PI         3.1415926

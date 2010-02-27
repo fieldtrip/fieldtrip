@@ -3,32 +3,15 @@
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
- * $Log: test_flushhdr.c,v $
- * Revision 1.4  2008/10/29 20:12:27  roboos
- * renamed open_remotehost into open_connection and added function close_connection
- * added some fprintf statements, no functional changes
- *
- * Revision 1.3  2008/07/08 20:25:13  roboos
- * print a separator line between the output sections
- *
- * Revision 1.2  2008/07/08 16:12:05  roboos
- * A lot of small changes related to cleaning up the release version. No functional changes in the actual core code.
- *
- * Revision 1.1  2008/05/29 13:47:31  roboos
- * added command line executables for flushing the buffer
- *
  */
 
-/*#include <netdb.h>  -- is this needed? SK */
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <math.h>
-
 #include "buffer.h"
-#include "message.h"
 
 int main(int argc, char *argv[]) {
 	int server;

@@ -3,48 +3,15 @@
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
- * $Log: test_getdat.c,v $
- * Revision 1.7  2008/10/29 20:12:27  roboos
- * renamed open_remotehost into open_connection and added function close_connection
- * added some fprintf statements, no functional changes
- *
- * Revision 1.6  2008/07/08 20:25:13  roboos
- * print a separator line between the output sections
- *
- * Revision 1.5  2008/07/08 16:12:05  roboos
- * A lot of small changes related to cleaning up the release version. No functional changes in the actual core code.
- *
- * Revision 1.4  2008/03/26 14:38:59  thohar
- * portability again
- *
- * Revision 1.3  2008/02/26 21:43:26  roboos
- * renamed packet_t structure definition into messagedef_t, added message_t structure (contains def+buf)
- *
- * Revision 1.2  2008/02/20 13:48:49  roboos
- * specification of begsample and endsample on command line
- * correct printing of other datatypes
- *
- * Revision 1.1  2008/02/19 10:25:19  roboos
- * initial implementation, seems functional
- *
- *
  */
 
-#ifdef WIN32
-	#include <winsock2.h>
-	//#include <win32compat.h>
-#else
-	#include <netdb.h>
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <math.h>
-
 #include "buffer.h"
-#include "message.h"
 
 int main(int argc, char *argv[]) {
 	int server;

@@ -7,29 +7,13 @@
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
- * $Log: event.c,v $
- * Revision 1.3  2008/10/29 20:12:27  roboos
- * renamed open_remotehost into open_connection and added function close_connection
- * added some fprintf statements, no functional changes
- *
- * Revision 1.2  2008/07/09 10:10:17  roboos
- * write int32 events instead of strings, use append() helper function
- *
- * Revision 1.1  2008/07/08 20:23:23  roboos
- * new demo code: based on old code from sinewave demo, but more simple
- *
- *
  */
 
 #include <math.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "message.h"
 #include "buffer.h"
-#include "socket_includes.h"
-#include "unix_includes.h"
 
 #define FREQ       1
 #define PI         3.1415926

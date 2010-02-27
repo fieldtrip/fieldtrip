@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "../src/message.h"
+
+#include "message.h"
 
 int main(void) {
     printf("sizeof (CHAR        ) = %d, expected %d\n", WORDSIZE_CHAR        ,1);

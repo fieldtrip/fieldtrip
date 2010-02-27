@@ -6,27 +6,13 @@
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
- * $Log: test_benchmark.c,v $
- * Revision 1.3  2009/06/17 15:09:02  roboos
- * cleanup of indentation, moved random number generation outside while-loop
- *
- * Revision 1.2  2009/05/14 20:26:52  roboos
- * fixed bug in time keeping, it was using an incorretc clock (not in seconds)
- *
- * Revision 1.1  2009/05/13 20:46:05  roboos
- * added test application that writes as fast as it can
- *
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <pthread.h>
-
-#include "message.h"
 #include "buffer.h"
-#include "unix_includes.h"
-#include "socket_includes.h"
 
 int main(int argc, char *argv[]) {
   host_t host;

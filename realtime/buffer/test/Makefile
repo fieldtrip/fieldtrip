@@ -1,28 +1,8 @@
 ##############################################################################
 #
-# GNU'ish Makefile
-#
-# $Log: Makefile,v $
-# Revision 1.7  2009/05/13 20:46:07  roboos
-# added test application that writes as fast as it can
-#
-# Revision 1.6  2009/01/23 17:48:45  roboos
-# added some test applications, changed dependencies to improve compile behaviour
-#
-# Revision 1.5  2008/11/14 15:48:34  roboos
-# number of small changes, nothing significant
-#
-# Revision 1.4  2008/07/09 10:39:44  roboos
-# cleaned up, ensure that all dependencies are matched
-#
-# Revision 1.3  2008/07/09 10:09:40  roboos
-# renamed the various demo applications into demo_xxx
-#
-# Revision 1.2  2008/07/08 20:24:43  roboos
-# added event example
-#
-# Revision 1.1  2008/07/08 18:52:30  roboos
-# initial version, helps in compiling test and demo applications
+# Makefile for gcc   on Linux
+# Makefile for gcc   on OSX
+# Makefile for mingw on Windows
 #
 ##############################################################################
 
