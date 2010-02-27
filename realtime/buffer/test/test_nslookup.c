@@ -1,0 +1,56 @@
+/*
+ *
+ * Use as
+ *    ./test_nslookup <hostname>
+ *
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <sys/time.h>
+#include <pthread.h>
+#include "buffer.h"
+
+int main(int argc, char *argv[]) {
+		int server = -1;
+		struct hostent *host;
+
+		/* these variables are for writing the data */
+		int status = 0, verbose = 0, numlookup, numloop;
+		struct timeval tic, toc;
+		struct timezone tz;
+		float elapsed;
+
+		gettimeofday(&tic, &tz);
+
+		numlookup = 0;
+		numloop    = 0;
+
+		while (1) {
+				numlookup++;
+				numloop++;
+
+				if ((host = gethostbyname(argv[1])) == NULL) {
+						fprintf(stderr, "nslookup1 failed on '%s'\n", argv[1]);
+						return -1;
+				}
+
+				if (host->h_length == 0) {
+						fprintf(stderr, "nslookup2 failed on '%s'\n", argv[1]);
+						return -1;
+				}
+
+				if (numloop==10000) {
+						gettimeofday(&toc, &tz);
+						elapsed = 1.0 * (toc.tv_sec-tic.tv_sec) + 0.000001 * (toc.tv_usec-tic.tv_usec);
+						fprintf(stderr, "numlookup = %d, elapsed = %f, numlookup/sec = %f\n", numlookup, elapsed, ((float)(numlookup))/((float)elapsed));
+						numloop = 0;
+				}
+
+		} /* while(1) */
+
+		return 0;
+}
+
+

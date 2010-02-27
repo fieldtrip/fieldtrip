@@ -72,6 +72,12 @@ test_pthread: test_pthread.o
 test_benchmark: test_benchmark.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
 
+test_nslookup: test_nslookup.o
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
+
+test_connect: test_connect.o
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
+
 %.o: %.c message.h buffer.h
 	$(CC) $(CFLAGS) $(INCPATH) -c $*.c
 
