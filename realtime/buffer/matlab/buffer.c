@@ -20,13 +20,6 @@ pthread_t sleepThread;
 int tcpserverThreadRunning  = 0;
 int sleepThreadRunning      = 0;
 
-/* these threads can be used to perform the acquisition by this mex file */
-pthread_t sinewaveThread;
-pthread_t eventThread;
-int sinewaveThreadRunning   = 0;	/* usefull as demo implementation */
-int eventThreadRunning      = 0;	/* usefull as demo implementation */
-int acquisitionClient       = 0;	/* this counts the total number of acquisition clients, and should be 0 or 1 */
-
 /* these are for testing the threading using "do_thread" */
 #define MAX_NUM_THREADS 100
 pthread_t threads[MAX_NUM_THREADS];
@@ -84,16 +77,6 @@ void cleanupMex(void)
   if (sleepThreadRunning) {
     mexWarnMsgTxt("stopping sleep thread");
     sleepThreadRunning = 0;
-  }
-  if (sinewaveThreadRunning) {
-    mexWarnMsgTxt("stopping sinewave thread");
-    acquisitionClient--;
-    sinewaveThreadRunning = 0;
-  }
-  if (eventThreadRunning) {
-    mexWarnMsgTxt("stopping event thread");
-    acquisitionClient--;
-    eventThreadRunning = 0;
   }
   return;
 }
@@ -201,70 +184,6 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
         mexErrMsgTxt("problem with return code from pthread_cancel()");
       else
         sleepThreadRunning = 0;
-    }
-  }
-  
-  else if (strcasecmp(command, "sinewave")==0) {
-    argument = mxArrayToString(prhs[1]);
-    if (argument==NULL)
-      mexErrMsgTxt ("invalid input argument #2");
-    if (strcasecmp(argument, "init")==0) {
-      if (acquisitionClient>0)
-        mexErrMsgTxt("cannot create more than one acquisition client");
-      if (sinewaveThreadRunning)
-        mexErrMsgTxt("thread is already running");
-      mexPrintf("In main: spawning sinewave thread\n");
-      rc = pthread_create(&sinewaveThread, NULL, sinewave_thread, (void *)host);
-      if (rc)
-        mexErrMsgTxt("problem with return code from pthread_create()");
-      else {
-        sinewaveThreadRunning = 1;
-        acquisitionClient++;
-      }
-    }
-    else if (strcasecmp(argument, "exit")==0) {
-      if (!sinewaveThreadRunning)
-        mexErrMsgTxt("thread is not running");
-      mexPrintf("In main: requesting cancelation of sinewave thread\n");
-      rc = pthread_cancel(sinewaveThread);
-      if (rc)
-        mexErrMsgTxt("problem with return code from pthread_cancel()");
-      else {
-        sinewaveThreadRunning = 0;
-        acquisitionClient--;
-      }
-    }
-  }
-  
-  else if (strcasecmp(command, "event")==0) {
-    argument = mxArrayToString(prhs[1]);
-    if (argument==NULL)
-      mexErrMsgTxt ("invalid input argument #2");
-    if (strcasecmp(argument, "init")==0) {
-      if (acquisitionClient>0)
-        mexErrMsgTxt("cannot create more than one acquisition client");
-      if (eventThreadRunning)
-        mexErrMsgTxt("thread is already running");
-      mexPrintf("In main: spawning event thread\n");
-      rc = pthread_create(&eventThread, NULL, event_thread, (void *)host);
-      if (rc)
-        mexErrMsgTxt("problem with return code from pthread_create()");
-      else {
-        eventThreadRunning = 1;
-        acquisitionClient++;
-      }
-    }
-    else if (strcasecmp(argument, "exit")==0) {
-      if (!eventThreadRunning)
-        mexErrMsgTxt("thread is not running");
-      mexPrintf("In main: requesting cancelation of event thread\n");
-      rc = pthread_cancel(eventThread);
-      if (rc)
-        mexErrMsgTxt("problem with return code from pthread_cancel()");
-      else {
-        eventThreadRunning = 0;
-        acquisitionClient--;
-      }
     }
   }
   
