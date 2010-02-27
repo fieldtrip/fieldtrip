@@ -113,11 +113,15 @@ hasneg = isfield(stat,'negclusters');
 if haspos == 0 && hasneg == 0
   fprintf('%s\n','no significant clusters in data; nothing to plot')
 else
-  for iPos = 1:length(stat.posclusters)
-    sigpos(iPos) = stat.posclusters(iPos).prob < cfg.alpha;
+  if haspos
+    for iPos = 1:length(stat.posclusters)
+      sigpos(iPos) = stat.posclusters(iPos).prob < cfg.alpha;
+    end
   end
-  for iNeg = 1:length(stat.negclusters)
-    signeg(iNeg) = stat.negclusters(iNeg).prob < cfg.alpha;
+    if hasneg
+    for iNeg = 1:length(stat.negclusters)
+      signeg(iNeg) = stat.negclusters(iNeg).prob < cfg.alpha;
+    end
   end
   sigpos = find(sigpos == 1);
   signeg = find(signeg == 1);
