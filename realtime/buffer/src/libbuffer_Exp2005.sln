@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual C++ Express 2005
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbuffer", "libbuffer.vcproj", "{708A1C65-2405-4324-ACD8-DFC28C98563D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbuffer", "libbuffer_Exp2005.vcproj", "{708A1C65-2405-4324-ACD8-DFC28C98563D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
