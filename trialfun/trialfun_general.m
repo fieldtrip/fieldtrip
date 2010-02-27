@@ -46,12 +46,20 @@ if isfield(cfg.trialdef, 'triallength')
   end
 end
 
-% read the header and event information
+% read the header, contains the sampling frequency 
 hdr = read_header(cfg.headerfile);
-try
-  event = read_event(cfg.headerfile);
-catch
-  event = [];
+
+% read the events
+if isfield(cfg, 'event')
+  fprintf('using the events from the configuration structure\n');
+  event = cfg.event;
+else
+  try
+    fprintf('reading the events from ''%s''\n', cfg.headerfile);
+    event = read_event(cfg.headerfile);
+  catch
+    event = [];
+  end
 end
 
 % for the following, the trials do not depend on the events in the data
