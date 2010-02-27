@@ -32,7 +32,8 @@ int bufread(int s, void *buf, int numel) {
 				else if (numthis == 0)
 						break;
 
-				if (verbose>0) fprintf(stderr, "bufread: read %d bytes\n", numthis);
+				if (verbose>0)
+						fprintf(stderr, "bufread: read %d bytes\n", numthis);
 				numread += numthis;
 				numcall ++;
 				usleep(1000);
@@ -55,7 +56,8 @@ int bufwrite(int s, void *buf, int numel) {
 				else if(numthis == 0)
 						break;
 
-				if (verbose) fprintf(stderr, "bufwrite: wrote %d bytes\n", numthis);
+				if (verbose)
+						fprintf(stderr, "bufwrite: wrote %d bytes\n", numthis);
 				numwrite += numthis;
 				numcall ++;
 				usleep(1000);
@@ -75,29 +77,34 @@ int append(void **buf1, int bufsize1, void *buf2, int bufsize2) {
 				pthread_mutex_unlock(&mutexappendcount);
 		}
 
-		if (((*buf1)==NULL) && (!bufsize1)) {
-				if (verbose>0) fprintf(stderr, "append: allocating %d bytes\n", bufsize1+bufsize2);
-				(*buf1) = malloc(bufsize1+bufsize2);
+		if (((*buf1)!=NULL) && (bufsize1==0)) {
+				perror("append err1");
+				return -1;
 		}
-		else if (((*buf1)!=NULL) && (bufsize1)) {
-				if (verbose>0) fprintf(stderr, "append: reallocating from %d to %d bytes\n", bufsize1, bufsize1+bufsize2);
+		else if (((*buf1)==NULL) && (bufsize1!=0)) {
+				perror("append err2");
+				return -1;
+		}
+
+		if ((*buf1)==NULL) {
+				if (verbose>0)
+						fprintf(stderr, "append: allocating %d bytes\n", bufsize2);
+				(*buf1) = malloc(bufsize2);
+		}
+		else if ((*buf1)!=NULL) {
+				if (verbose>0)
+						fprintf(stderr, "append: reallocating from %d to %d bytes\n", bufsize1, bufsize1+bufsize2);
 				(*buf1) = realloc((*buf1), bufsize1+bufsize2);
 		}
-		else {
-				perror("append err1");
-				exit(1);
-		}
-		if ((*buf1)==NULL) {
-				perror("append err2");
-				exit(1);
-		}
+
 		memcpy((char*)(*buf1)+bufsize1, buf2, bufsize2);
 		return (bufsize1+bufsize2);
 }
 
 int close_connection(int s) {
 		int status = 0, verbose = 0;
-		if (verbose>0) fprintf(stderr, "close_connection: socket = %d\n", s);
+		if (verbose>0)
+				fprintf(stderr, "close_connection: socket = %d\n", s);
 		if (s>0)
 				status = closesocket(s);	/* it is a TCP connection */
 		if (status!=0)
@@ -107,8 +114,7 @@ int close_connection(int s) {
 
 int open_connection(const char *hostname, int port) {
 		int verbose = 0;
-        int retry = 10;
-		int s;
+		int s, retry;
 		struct sockaddr_in sa;
 		struct hostent *host;
 
@@ -117,11 +123,13 @@ int open_connection(const char *hostname, int port) {
 #endif
 
 		if (port==0) {
-				if (verbose>0) fprintf(stderr, "open_connection: using direct memory copy\n");
+				if (verbose>0)
+						fprintf(stderr, "open_connection: using direct memory copy\n");
 				return 0;
 		}
 		else {
-				if (verbose>0) fprintf(stderr, "open_connection: server = %s, port = %d\n", hostname, port);
+				if (verbose>0)
+						fprintf(stderr, "open_connection: server = %s, port = %d\n", hostname, port);
 		}
 
 #ifdef WIN32
@@ -130,12 +138,6 @@ int open_connection(const char *hostname, int port) {
 				/* FIXME should this exception be handled more explicitely?  */
 		}
 #endif
-
-		if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-				if (verbose>0) fprintf(stderr, "open_connection: socket = %d\n", s);
-				perror("open_connection");
-				return -1;
-		}
 
 		if ((host = gethostbyname(hostname)) == NULL) {
 				fprintf(stderr, "open_connection: nslookup1 failed on '%s'\n", hostname);
@@ -152,20 +154,29 @@ int open_connection(const char *hostname, int port) {
 		sa.sin_port = htons(port);
 		memcpy(&(sa.sin_addr.s_addr), host->h_addr_list[0], sizeof(sa.sin_addr.s_addr));
 
+		if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+				if (verbose>0)
+						fprintf(stderr, "open_connection: socket = %d\n", s);
+				perror("open_connection");
+				return -1;
+		}
+
+		retry = 10;
 		while (retry>0) {
-			if (connect(s, (struct sockaddr *)&sa, sizeof sa)<0) {
-					perror("open_connection");
-					usleep(5000); /* wait 5 miliseconds */
-					retry = retry--;
-			}
-			else {
-				/* this signals that the connection has been made */
-				retry = -1;
-			}
+				if (connect(s, (struct sockaddr *)&sa, sizeof sa)<0) {
+						/* wait 5 miliseconds and try again */
+						perror("open_connection");
+						usleep(5000);
+						retry = retry--;
+				}
+				else {
+						/* this signals that the connection has been made */
+						retry = -1;
+				}
 		}
 		if (retry==0) {
-			/* it failed on mutliple attempts, give up */
-			return -2;
+				/* it failed on mutliple attempts, give up */
+				return -2;
 		}
 
 		/*
@@ -175,7 +186,8 @@ int open_connection(const char *hostname, int port) {
 		   }
 		 */
 
-		if (verbose>0) fprintf(stderr, "open_connection: connected to %s:%d on socket %d\n", hostname, port, s);
+		if (verbose>0)
+				fprintf(stderr, "open_connection: connected to %s:%d on socket %d\n", hostname, port, s);
 		return s;
 }
 

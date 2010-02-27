@@ -65,7 +65,6 @@ int append(void **buf1, int bufsize1, void *buf2, int bufsize2) {
 				pthread_mutex_unlock(&mutexappendcount);
 		}
 
-
 		if (((*buf1)!=NULL) && (bufsize1==0)) {
 				perror("append err1");
 				return -1;
@@ -109,15 +108,24 @@ int open_connection(const char *hostname, int port) {
 
 #ifdef WIN32
 		WSADATA wsa;
+#endif
 
+        if (port==0) {
+                if (verbose>0)
+                        fprintf(stderr, "open_connection: using direct memory copy\n");
+                return 0;
+        }
+        else {
+                if (verbose>0)
+                        fprintf(stderr, "open_connection: server = %s, port = %d\n", hostname, port);
+        }
+
+#ifdef WIN32
 		if(WSAStartup(MAKEWORD(1, 1), &wsa)) {
 				fprintf(stderr, "open_connection: cannot start sockets\n");
 				/* FIXME should this exception be handled more explicitely?  */
 		}
 #endif
-
-		if (verbose>0)
-				fprintf(stderr, "open_connection: server = %s, port = %d\n", hostname, port);
 
 		if ((host = gethostbyname(hostname)) == NULL) {
 				fprintf(stderr, "open_connection: nslookup1 failed on '%s'\n", hostname);
@@ -135,7 +143,8 @@ int open_connection(const char *hostname, int port) {
 		memcpy(&(sa.sin_addr.s_addr), host->h_addr_list[0], sizeof(sa.sin_addr.s_addr));
 
 		if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-				if (verbose>0) fprintf(stderr, "open_connection: socket = %d\n", s);
+				if (verbose>0)
+						fprintf(stderr, "open_connection: socket = %d\n", s);
 				perror("open_connection");
 				return -1;
 		}
