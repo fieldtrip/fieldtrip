@@ -3,110 +3,6 @@
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
- * $Log: tcpserver.c,v $
- * Revision 1.15  2009/01/23 19:47:50  roboos
- * changed verbosity
- *
- * Revision 1.14  2009/01/23 08:26:44  roboos
- * fixed a serious bug that caused a lot of memory to leak (in fact all packets that were sent over the socket would eventually leack away), both on the client and server side
- *
- * Revision 1.13  2009/01/21 20:54:35  roboos
- * added some debugging code to keep track of number of sockets and threads (both seem ok)
- * cleaned up the debugging: more consistent use of verbose flag and function name in fprintf
- *
- * Revision 1.12  2009/01/21 08:47:22  roboos
- * fixed bug in thread counting
- *
- * Revision 1.11  2009/01/21 08:33:01  roboos
- * added some code for debugging the leaking of sockets and threads
- *
- * Revision 1.10  2008/05/22 13:40:06  roboos
- * moved declarations to top
- *
- * Revision 1.9  2008/05/22 10:00:31  roboos
- * some small changes related to compatibility with Borland, thanks to Jurgen
- *
- * Revision 1.8  2008/05/21 19:45:20  roboos
- * only some changes in perror/fprintf output
- *
- * Revision 1.7  2008/03/26 14:36:12  thohar
- * made new code to unblock sockets portable
- *
- * Revision 1.6  2008/03/23 16:59:21  roboos
- * added a cleanup label -> goto there in case something is wrong: the thread cancelation is handled there
- *
- * Revision 1.5  2008/03/23 16:43:56  roboos
- * implemented thread cancelation: first put socket in non-blocking
- * mode, when accept returns an error do pthread_testcancel and pause
- * 1 milisecond, then continue with next accept. The socket that is
- * opened by the client and passed to tcpsocket is put back into
- * blocking mode, otherwise tcpclient/bufread do not detect correctly
- * that it gets closed at a certain point.
- *
- * Revision 1.4  2008/03/13 13:38:31  roboos
- * added cancel options for thread
- *
- * Revision 1.3  2008/03/13 12:34:22  thohar
- * added headers for win32 build
- * added functions to start sockets on win32
- *
- * Revision 1.2  2008/03/10 10:03:47  roboos
- * use *host_t as input argument
- *
- * Revision 1.1  2008/03/08 09:41:02  roboos
- * renamed buffer_thread function to tcpserver, idem for the c-file
- * renamed socket_thread function to tcpsocket, idem for the c-file
- *
- * Revision 1.7  2008/02/27 10:13:15  roboos
- * disabled fprintf statement
- *
- * Revision 1.6  2008/02/20 13:36:52  roboos
- * added counter for incoming connections
- *
- * Revision 1.5  2008/02/20 07:10:25  roboos
- * tried out some low-level tcp specific details
- *
- * Revision 1.4  2008/02/19 10:24:42  roboos
- * removed some old documentation from the comments
- *
- * Revision 1.3  2008/02/19 10:22:55  roboos
- * added consistent copyrights and log message to each of the files
- *
- * Revision 1.2  2008/02/18 12:13:46  roboos
- * moved executable from buffer to demo
- * fixed bugs in sinewave and socket for events
- * stripped down the eventdef_t fields
- * many small changes
- *
- * Revision 1.1  2008/02/18 10:05:25  roboos
- * restructured the directory layout, copied all code into src, added directory for external code
- *
- * Revision 1.8  2008/02/13 13:07:56  roboos
- * fixed numerous bugs
- * implemented append function, which after all does not seem to be neccessary (since the problem is in the TCP buffer size)
- *
- * Revision 1.7  2008/02/11 21:12:22  roboos
- * added check for each datatype wordsize
- * deleted global numevents numsamples
- *
- * Revision 1.6  2008/02/10 20:26:25  roboos
- * only some small changes
- *
- * Revision 1.5  2008/02/10 10:48:43  roboos
- * removed init function, changed data from double into void, reindented the complete file
- *
- * Revision 1.4  2008/02/09 16:45:47  roboos
- * moved declarations that are shared between threads to seperate header file
- * moved code that deals with incoming socket connection to seperate file (socket.c)
- *
- * Revision 1.3  2008/02/08 10:32:25  roboos
- * replaced the time and date code by some real buffer handling
- * this version compiles, but may not work (untested)
- *
- * Revision 1.2  2008/02/05 20:32:04  roboos
- * First woring implementation, based on daytimed example code from
- * http://www.freebsd.org/doc/en_US.ISO8859-1/books/developers-handbook/sockets-essential-functions.html
- * and on threads example code from https://computing.llnl.gov/tutorials/pthreads/fork_vs_thread.txt
  *
  */
  
@@ -119,10 +15,7 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include "message.h"
 #include "buffer.h"
-#include "socket_includes.h"
-#include "unix_includes.h"
 
 #define ACCEPTSLEEP 1000
 

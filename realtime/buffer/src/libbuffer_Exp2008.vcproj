@@ -158,6 +158,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\compiler.h"
+				>
+			</File>
+			<File
 				RelativePath=".\gettimeofday.h"
 				>
 			</File>
@@ -166,15 +170,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\socket_includes.h"
+				RelativePath=".\platform.h"
+				>
+			</File>
+			<File
+				RelativePath=".\platform_includes.h"
 				>
 			</File>
 			<File
 				RelativePath=".\swapbytes.h"
-				>
-			</File>
-			<File
-				RelativePath=".\unix_includes.h"
 				>
 			</File>
 		</Filter>

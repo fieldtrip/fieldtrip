@@ -3,17 +3,11 @@
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
- * $Log: printstruct.c,v $
- * Revision 1.1  2008/07/09 10:37:52  roboos
- * moved some printing functions to seperate file
- *
- *
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include "buffer.h"
-#include "message.h"
 
 void print_request(messagedef_t *request) {
 	fprintf(stderr, "request.version = 0x%04x\n", request->version);

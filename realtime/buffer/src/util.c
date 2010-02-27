@@ -3,118 +3,13 @@
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
- * $Log: util.c,v $
- * Revision 1.33  2009/06/29 10:48:02  roboos
- * retry opening the connection 10 times
- *
- * Revision 1.32  2009/01/23 19:47:50  roboos
- * changed verbosity
- *
- * Revision 1.31  2009/01/23 08:26:44  roboos
- * fixed a serious bug that caused a lot of memory to leak (in fact all packets that were sent over the socket would eventually leack away), both on the client and server side
- *
- * Revision 1.30  2009/01/21 20:54:35  roboos
- * added some debugging code to keep track of number of sockets and threads (both seem ok)
- * cleaned up the debugging: more consistent use of verbose flag and function name in fprintf
- *
- * Revision 1.29  2008/12/16 20:38:23  roboos
- * removed message_t, header_t, data_t and event_t from check_datatypes()
- * function, because they contain a void pointer which varies on linux32
- * and linux64, and these types are not used themselves in the communication
- * (i.e. never sent over the network)
- *
- * Revision 1.28  2008/11/14 15:48:34  roboos
- * number of small changes, nothing significant
- *
- * Revision 1.27  2008/10/29 20:12:27  roboos
- * renamed open_remotehost into open_connection and added function close_connection
- * added some fprintf statements, no functional changes
- *
- * Revision 1.26  2008/07/09 10:37:52  roboos
- * moved some printing functions to seperate file
- *
- * Revision 1.25  2008/06/20 07:53:52  roboos
- * addec check on sizeof(xxx_t) to ensure correct packed representation of network transparent structures
- *
- * Revision 1.24  2008/05/29 11:55:52  roboos
- * small change in debugging feedback only
- *
- * Revision 1.23  2008/05/29 10:33:16  roboos
- * open_remotehost: moved WSA declaration to top, now also works on borland
- *
- * Revision 1.22  2008/05/29 07:55:00  roboos
- * moved checks for the packing of structs and wordsize to seperate function
- *
- * Revision 1.21  2008/05/22 09:55:16  roboos
- * some changes for compatibility wioth Borland, thanks to Jurgen
- *
- * Revision 1.19  2008/04/24 15:41:59  roboos
- * changed verbosity
- *
- * Revision 1.18  2008/04/14 14:13:37  thohar
- * moved win32 socket init code
- *
- * Revision 1.17  2008/03/26 14:37:37  thohar
- * bufread and bufwrite now also break when connection has been closed
- *
- * Revision 1.16  2008/03/23 17:01:12  roboos
- * removed polling code, which was already commented out
- *
- * Revision 1.15  2008/03/17 13:47:55  roboos
- * print_buf also detects NULL and prints debug info accordingly
- *
- * Revision 1.14  2008/03/13 13:45:55  roboos
- * removed open_localhost
- * some other small changes
- *
- * Revision 1.13  2008/03/13 12:38:01  thohar
- * added headers for win32 build
- * removed polling as it is not neccessary
- * replaced read with recv for portability
- * replaced write with send for portability
- * bufread does not exit app now when recv return < 0
- * open_remothost now starts the sockets on win32 build
- *
- * Revision 1.12  2008/03/10 09:44:27  roboos
- * added property functions
- *
- * Revision 1.11  2008/03/07 14:51:06  roboos
-* more strict input checks in append
-* added inteligence in open_remotehost so that "localhost:0" will result in direct memcpy
-*
-* Revision 1.10  2008/03/02 13:22:34  roboos
-* added polling for closed connection to bufread add write
-*
-* Revision 1.9  2008/02/27 10:13:46  roboos
-* added print_buf
-*
-* Revision 1.8  2008/02/26 21:43:26  roboos
-* renamed packet_t structure definition into messagedef_t, added message_t structure (contains def+buf)
-*
-* Revision 1.7  2008/02/20 13:39:45  roboos
-* modified append function
-* deleted append3 function
-* do a retry if no connection can be made (pause 1 sec)
-*
-* Revision 1.6  2008/02/19 17:24:47  roboos
-* also print fsample
-*
-* Revision 1.5  2008/02/19 10:22:56  roboos
-* added consistent copyrights and log message to each of the files
-*
-*
-*/
+ */
 
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>       /* for strerror */
-
-#include "socket_includes.h"
-#include "unix_includes.h"
-
 #include "buffer.h"
-#include "message.h"
 
 /* these are for debugging */
 pthread_mutex_t mutexappendcount = PTHREAD_MUTEX_INITIALIZER;

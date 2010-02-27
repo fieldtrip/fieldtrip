@@ -3,76 +3,13 @@
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
- * $Log: message.h,v $
- * Revision 1.11  2008/06/19 20:33:01  roboos
- * switched eventsel to signed integers, otherwise too difficult behaviour if they become negative
- *
- * Revision 1.10  2008/04/15 14:08:57  thohar
- * changed types of datasel_t.begsample and endsample to INT32_T to make it possible to set endsample=-1
- *
- * Revision 1.9  2008/04/14 14:11:54  thohar
- * added extern "C" statement for c++ builds
- *
- * Revision 1.8  2008/03/10 09:44:55  roboos
- * removed headersel, added property
- *
- * Revision 1.7  2008/02/26 21:43:26  roboos
- * renamed packet_t structure definition into messagedef_t, added message_t structure (contains def+buf)
- *
- * Revision 1.6  2008/02/20 13:36:03  roboos
- * changed comments to ansi style, needed for matlab
- *
- * Revision 1.5  2008/02/19 10:24:26  roboos
- * added copyright statement
- *
- * Revision 1.4  2008/02/18 17:04:08  roboos
- * lots of small changes, debugging for brainamp
- *
- * Revision 1.3  2008/02/18 12:57:44  roboos
- * fixed bug in typedefs for 32/64 bit linux versions
- *
- * Revision 1.2  2008/02/18 12:13:46  roboos
- * moved executable from buffer to demo
- * fixed bugs in sinewave and socket for events
- * stripped down the eventdef_t fields
- * many small changes
- *
- * Revision 1.1  2008/02/18 10:05:26  roboos
- * restructured the directory layout, copied all code into src, added directory for external code
- *
- * Revision 1.10  2008/02/14 16:57:46  roboos
- * removed old dcumentation
- * stripped down the content of eventdef_t
- * added propertydef_t
- * implemented eventsel_t with begin and endevent, c.f. datasel_t
- *
- * Revision 1.9  2008/02/11 21:40:53  roboos
- * fixed uint32 and 64, otherwise the wordsize check in buffer.c would fail on my powerbook
- *
- * Revision 1.8  2008/02/11 09:42:47  roboos
- * removed ; from end of line in WORDSIZE defines
- *
- * Revision 1.7  2008/02/11 09:32:22  roboos
- * removed all stuff that is not needed to get first implementation up and running
- * renamed structures (removed v1_)
- * added wrapper structures for headerdef+headerbuf instead of having a void * in headerdef
- * idem datadef and eventdef
- * be explicit about the uint16 type of version, command and datatypes
- *
- * Revision 1.6  2008/02/09 13:38:55  chrhes
- * corrected syntax errors in the definition of custom integer types that  had
- * caused UINT32_T and INT32_T to be defined as 64 bit integers
- *
- * Revision 1.5  2008/02/06 10:44:57  chrhes
- * added revision comment log
- *
  */
 
 /* prevent double include */
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
-#include "unix_includes.h"
+#include "platform_includes.h"
 
 #ifdef __cplusplus
 extern "C" {

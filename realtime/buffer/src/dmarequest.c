@@ -3,93 +3,13 @@
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
- * $Log: dmarequest.c,v $
- * Revision 1.20  2009/06/17 13:41:36  roboos
- * only print if verbose==1
- *
- * Revision 1.19  2009/05/13 20:45:11  roboos
- * switched off verbose mode
- *
- * Revision 1.18  2009/01/23 19:47:50  roboos
- * changed verbosity
- *
- * Revision 1.17  2009/01/23 08:26:44  roboos
- * fixed a serious bug that caused a lot of memory to leak (in fact all packets that were sent over the socket would eventually leack away), both on the client and server side
- *
- * Revision 1.16  2009/01/21 20:54:35  roboos
- * added some debugging code to keep track of number of sockets and threads (both seem ok)
- * cleaned up the debugging: more consistent use of verbose flag and function name in fprintf
- *
- * Revision 1.15  2008/07/09 11:16:17  roboos
- * removed winsock2 header, moved declaration of timespec and timeval to top
- *
- * Revision 1.14  2008/07/01 17:09:00  thohar
- * added cleanuo_buffer function
- * made pthread_cond_wait a timed_wait to avoid deadlocks
- *
- * Revision 1.13  2008/06/20 07:51:30  roboos
- * renamed property GET_DAT_Block into dmaBlockRequest for consistency with other properties
- *
- * Revision 1.12  2008/06/19 20:46:40  roboos
- * fixed bug in GET_EVT due to unsigned ints in combination with inappropriate wrapping
- * made GET_DAT consistent with the improved GET_EVT implementatoin (thanks to better wrapping)
- *
- * Revision 1.11  2008/06/02 15:31:21  roboos
- * fixed typo in fprintf feedback
- *
- * Revision 1.10  2008/05/22 09:55:15  roboos
- * some changes for compatibility wioth Borland, thanks to Jurgen
- *
- * Revision 1.9  2008/04/24 15:53:15  roboos
- * changed verbosity
- *
- * Revision 1.8  2008/04/15 14:08:07  thohar
- * added possibility do do a blocking GET_DAT by setting property "GET_DAT_Block" to 1
- * if datasel->ensample == -1 all data until the end of the buffer is read out
- *
- * Revision 1.7  2008/03/23 13:18:17  roboos
- * removed and disabled some fprintf debug info
- *
- * Revision 1.6  2008/03/19 09:27:46  thohar
- * added possibility of debug output on GET_DAT and PUT_DAT for DATATYPE_FLOAT32
- *
- * Revision 1.5  2008/03/17 13:47:12  roboos
- * fixed various problems with get/put property:
- * - unlock mutex
- * - init propertybuf at other place in code
- * - find property memcpy for various types
- * - allow get without propertysel, returns all properties
- *
- * Revision 1.4  2008/03/13 13:39:07  roboos
- * made the global variables static, not sure though
- *
- * Revision 1.3  2008/03/13 12:59:46  thohar
- * initialised thissample, thisevent and thisproperty to 0. Needed to build on MAC
- *
- * Revision 1.2  2008/03/10 09:39:32  roboos
- * added some property handling
- *
- * Revision 1.1  2008/03/08 10:31:50  roboos
- * renamed handle_request to dmarequest, this function can now be called by tcpsocket() in the buffer-server, and/or by clientrequest() in the client
- *
- * Revision 1.2  2008/03/07 14:51:54  roboos
- * added comment, no functional change
- *
- * Revision 1.1  2008/03/02 13:29:23  roboos
- * seperated socket and buffer-handing code
- * adde polling to the socket section
- * allow connections to remain open (i.e. multiple request/response pairs)
- *
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "unix_includes.h"
 #include <pthread.h>
-
 #include "buffer.h"
-#include "message.h"
 
 // FIXME should these be static?
 static header_t   *header   = NULL;

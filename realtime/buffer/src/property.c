@@ -3,30 +3,10 @@
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
- * $Log: property.c,v $
- * Revision 1.6  2009/01/21 20:28:54  roboos
- * changed error message
- *
- * Revision 1.5  2008/05/22 09:55:15  roboos
- * some changes for compatibility wioth Borland, thanks to Jurgen
- *
- * Revision 1.4  2008/04/24 15:48:04  roboos
- * changed to negative return values, changed verbosity
- *
- * Revision 1.3  2008/04/14 14:12:40  thohar
- * fixed bug that forgot to transmit trailing 0 in property names
- *
- * Revision 1.2  2008/03/23 17:00:15  roboos
- * disabled printing of debug info
- *
- * Revision 1.1  2008/03/18 13:44:37  roboos
- * new implementation, at the moment it contains helper functions for the clients
- *
  */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "message.h"
 #include "buffer.h"
 
 int set_property(int server, const char *name, INT32_T *value) {

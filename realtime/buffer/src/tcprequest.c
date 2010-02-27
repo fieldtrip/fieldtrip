@@ -3,30 +3,14 @@
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
- * $Log: tcprequest.c,v $
- * Revision 1.3  2008/05/22 09:49:32  roboos
- * some small changes by Jurgen Mellinger related to compatibility with Borland
- * moved linux and socket specific includes and defines into seperate header files
- *
- * Revision 1.2  2008/03/13 13:37:55  roboos
- * remove include pthread
- *
- * Revision 1.1  2008/03/08 10:38:56  roboos
- * moved code to standalone function, seperate from other ways of handling the request (e.g. dma and udp)
- * no functional changes
- *
- *
  */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "unix_includes.h"
-
 #include "buffer.h"
-#include "message.h"
 
 /*******************************************************************************
- * commnuicate with the buffer through TCP
+ * communicate with the buffer through TCP
  *******************************************************************************/
 int tcprequest(int server, message_t *request, message_t **response_ptr) {
 	int n;
