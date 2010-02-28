@@ -143,8 +143,10 @@ void *discover(void *arg) {
 						goto cleanup;
 				}
 
-				if (host->version!=VERSION)
+				if (host->version!=VERSION) {
+						FREE(host);
 						continue;
+				}
 
 				if (verbose>0) {
 						fprintf(stderr, "\n");
@@ -174,6 +176,7 @@ void *discover(void *arg) {
 						if (found) {
 								/* delete the first item in the list */
 								next = peerlist->next;
+								FREE(peerlist->host);
 								FREE(peerlist);
 								peerlist = next;
 						}
@@ -190,6 +193,7 @@ void *discover(void *arg) {
 								if (found) {
 										/* delete the next item in the list */
 										peer->next = next->next;
+										FREE(next->host);
 										FREE(next);
 										break;
 								}
@@ -198,7 +202,7 @@ void *discover(void *arg) {
 				}
 
 				/* add the new discovery to the list */
-				peer = (peerlist_t *)malloc(sizeof(peerlist_t));
+				peer       = (peerlist_t *)malloc(sizeof(peerlist_t));
 				peer->host = (hostdef_t *)malloc(sizeof(hostdef_t));
 				memcpy(peer->host, host, sizeof(hostdef_t));
 				FREE(host);
@@ -220,6 +224,7 @@ void *discover(void *arg) {
 								i++;
 						}
 				}
+
 
 				pthread_mutex_unlock(&mutexpeerlist);
 
