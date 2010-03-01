@@ -36,7 +36,10 @@ int bufread(int s, void *buf, int numel) {
 						fprintf(stderr, "bufread: read %d bytes\n", numthis);
 				numread += numthis;
 				numcall ++;
-				usleep(1000);
+#ifdef PLATFORM_WIN32
+				if (numread<numel)
+						usleep(1000);
+#endif
 		}
 		if (verbose>1)
 				fprintf(stderr, "bufread: reading the complete buffer required %d calls\n", numcall);
@@ -60,7 +63,10 @@ int bufwrite(int s, void *buf, int numel) {
 						fprintf(stderr, "bufwrite: wrote %d bytes\n", numthis);
 				numwrite += numthis;
 				numcall ++;
-				usleep(1000);
+#ifdef PLATFORM_WIN32
+				if (numread<numel)
+						usleep(1000);
+#endif
 		}
 		if (verbose>1)
 				fprintf(stderr, "bufwrite: writing the complete buffer required %d calls\n", numcall);
