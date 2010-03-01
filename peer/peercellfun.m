@@ -58,7 +58,8 @@ numjob      = numel(varargin{1});
 % it can be difficult to determine the number of output arguments
 try
   numargout = nargout(fname);
-catch me
+catch
+  me = lasterror;
   if strcmp(me.identifier, 'MATLAB:narginout:doesNotApply')
     % e.g. in case of nargin('plus')
     numargout = 1;

@@ -18,12 +18,12 @@ hostname = keyval('hostname', varargin);
 group    = keyval('group',    varargin);
 
 % start the maintenance threads
-warning off
+ws = warning('off');
 peer('tcpserver', 'start');
 peer('announce',  'start');
 peer('discover',  'start');
 peer('expire',    'start');
-warning on
+warning(ws)
 
 if ~isempty(hostname)
   peer('hostname', hostname);
