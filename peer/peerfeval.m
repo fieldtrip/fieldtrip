@@ -69,7 +69,7 @@ end
 jobid = [];
 
 % pass some options that may influence remote execution
-options = {'pwd', pwd, 'path', custompath};
+options = {'pwd', custompwd, 'path', custompath};
 
 while isempty(jobid)
   if toc(stopwatch)>timeout
@@ -150,6 +150,24 @@ if z>0
   y = (x - min(x(:))) / z;
 else
   y = (x - min(x(:)));
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that determines the present working directory
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function p = custompwd
+persistent previous_warn
+% don't use the present directory if it contains the peer code
+% it will confuse the slave with a potentially different mex file
+if strcmp(pwd, fileparts(mfilename('fullpath')))
+  if ~strcmp(previous_warn, pwd)
+    warning('the peer slave will not change directory to %s', pwd);
+    % warn only once
+    previous_warn = pwd;
+  end
+  p = [];
+else
+  p = pwd;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
