@@ -603,7 +603,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				if (nrhs<4)
 						mexErrMsgTxt("invalid argument #4");
 
-				jobid = random();	/* assign a random jobid by default */
+				jobid = rand();	/* assign a random jobid by default */
 				memreq = 0; 		/* default assumption */
 				cpureq = 0; 		/* default assumption */
 				timreq = 0; 		/* default assumption */

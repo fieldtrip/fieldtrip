@@ -4,6 +4,7 @@
 /* these platforms will always use a similar gcc compiler */
 #if defined (PLATFORM_LINUX) || defined (PLATFORM_OSX)
 #include <sys/socket.h>
+#include <sys/resource.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -20,19 +21,27 @@
 #if defined (COMPILER_BORLAND)
 #include <windows.h>
 #include "win32/gettimeofday.h"
-#define random()     (random(INT32_MAX))
-#define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
-#define usleep(x)    (Sleep((x)/1000))
+
+#define random()          (random(INT32_MAX))
+#define bzero(b,len)      (memset((b), '\0', (len)), (void) 0)
+#define usleep(x)         (Sleep((x)/1000))
+#define strcasecmp(a,b)   (strcmpi(a,b))
+#define strncasecmp(a,b,n)(strncmpi(a,b,n))
 
 #elif defined (COMPILER_MSVC)
 #include <windows.h>
+#include "win32/stdint.h"
+#include "win32/gettimeofday.h"
+
 #define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
 #define usleep(x)    (Sleep((x)/1000))
-#include "win32/gettimeofday.h"
+#define sleep(x)    (Sleep((x)*1000))
+#define strcasecmp(a,b) (strcmpi(a,b))
 
 #elif defined (COMPILER_MINGW)
 #include <windows.h>
 #include <win32compat.h>
+
 #define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
 #define usleep(x)    (Sleep((x)/1000))
 

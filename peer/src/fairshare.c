@@ -84,9 +84,9 @@ int fairshare_check(float t, int hostid) {
 		if (t<=1)
 				p = 1;
 		else
-				p = powf(t, -1);
+				p = 1.0 / t;
 
-		r = (float)random() / (float)INT32_MAX;
+		r = (float)rand() / (float)INT32_MAX;
 
 		if (verbose)
 				fprintf(stderr, "fairshare: t = %f, p = %f, r = %f, n = %d\n", t, p, r, fairshare.n);

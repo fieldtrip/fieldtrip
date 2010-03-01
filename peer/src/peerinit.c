@@ -26,7 +26,7 @@ void peerinit(void *arg) {
 
 		/* initialize the random number generator */
 		/* this is used for creating host and job IDs */
-		srandom(time(NULL));
+		srand(time(NULL));
 
 		if ((host = malloc(sizeof(hostdef_t)))==NULL) {
 				perror("announce malloc");
@@ -40,7 +40,7 @@ void peerinit(void *arg) {
 		host->memavail = DEFAULT_MEMAVAIL;
 		host->cpuavail = DEFAULT_TIMAVAIL;
 		host->timavail = DEFAULT_CPUAVAIL;
-		host->id       = random();
+		host->id       = rand();
 
 #if defined (PLATFORM_LINUX) || defined (PLATFORM_OSX)
 

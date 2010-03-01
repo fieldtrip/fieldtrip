@@ -22,20 +22,20 @@
  */
 
 #include <pthread.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/resource.h>
-#include <unistd.h>
 #include <time.h>
 
 #include "mex.h"
 #include "matrix.h"
 #include "platform.h"
+#include "platform_includes.h"
 
 #if defined (PLATFORM_OSX)
 #include <mach/task.h>
 #elif defined(PLATFORM_WIN32)
+#include <windows.h>
+#include <psapi.h>
 #elif defined(PLATFORM_LINUX)
 #endif
 
@@ -51,12 +51,12 @@ typedef struct memlist_s {
 		struct memlist_s *next;
 } memlist_t;
 
-int memprofileStatus = 0;
 time_t reftime = 0;
 memlist_t *memlist = NULL;
 pthread_mutex_t mutexmemlist = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutexstatus  = PTHREAD_MUTEX_INITIALIZER;
-pthread_t memprofileThread = 0;
+pthread_t memprofileThread;
+int memprofileStatus = 0;
 
 #if defined (PLATFORM_OSX)
 int getmem (unsigned int *rss, unsigned int *vs) {
@@ -190,7 +190,8 @@ void *memprofile(void *arg) {
 
 /* this function will be called upon unloading of the mex file */
 void exitFun(void) {
-		if (memprofileThread) {
+		if (memprofileStatus) {
+        memprofileStatus = 0;
 				pthread_cancel(memprofileThread);
 				pthread_join(memprofileThread, NULL);
 		}
@@ -198,8 +199,10 @@ void exitFun(void) {
 
 void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) {
 		char *command = NULL;
-		int rc, i;
-		memlist_t *memitem = NULL;
+    int rc, i;
+    memlist_t *memitem = NULL;
+    const char *fieldnames[3] = {"time", "mem"};
+    int numfields = 2;
 
 		/* this function will be called upon unloading of the mex file */
 		mexAtExit(exitFun);
@@ -243,6 +246,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				rc = pthread_create(&memprofileThread, NULL, memprofile, (void *)NULL);
 				if (rc)
 						mexErrMsgTxt("problem with return code from pthread_create()");
+        memprofileStatus = 1;
 		}
 
 		/****************************************************************************/
@@ -262,7 +266,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				if (rc)
 						mexErrMsgTxt("problem with return code from pthread_cancel()");
 				else
-						memprofileThread = 0;
+						memprofileStatus = 0;
 		}
 
 		/****************************************************************************/
@@ -312,8 +316,6 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						memitem = memitem->next ;
 				}
 
-				const char *fieldnames[3] = {"time", "mem"};
-				int numfields = 2;
 				plhs[0] = mxCreateStructMatrix(i, 1, numfields, fieldnames);
 
 				/* return the items in a Matlab structure array */
