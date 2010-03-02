@@ -19,9 +19,9 @@
 
 #define ACCEPTSLEEP 1000
 
-//extern int errno;
+/* extern int errno; */
 
-//pthread_attr_t attr; // this one would be passed to the thread
+/* pthread_attr_t attr; */ /* this one would be passed to the thread */
 
 extern pthread_mutex_t mutexthreadcount;
 extern int threadcount;
@@ -36,7 +36,7 @@ void *tcpserver(void *arg) {
 	/* these variables are for the socket */
 	struct sockaddr_in sa;
 	int s, c;
-    unsigned int b;
+    int b;
 	int optval;
 	/* struct timeval timeout; */
 	int oldcancelstate, oldcanceltype;
@@ -160,6 +160,19 @@ void *tcpserver(void *arg) {
 
 		else {
 			if (verbose>0) fprintf(stderr, "tcpserver: opened connection to client on socket %d\n", c);
+			
+			/* SK: we could set socket option "SO_LINGER" so resources are freed up immediately 
+			   but we leave this at the default for now 
+			*/
+			if (0) {
+				struct linger lg;
+				
+				lg.l_onoff = 1;
+				lg.l_linger = 0;
+			
+				setsockopt(s, SOL_SOCKET, SO_LINGER, (char *) &lg, sizeof(lg));
+			}
+
 
 			/* set larger buffer */
 			optval = SO_RCVBUF_SIZE;
@@ -221,7 +234,7 @@ cleanup:
 	pthread_setcancelstate(oldcancelstate, NULL);
 	pthread_setcanceltype(oldcanceltype, NULL);
 
-	pthread_cleanup_pop(1);  // socket
+	pthread_cleanup_pop(1);  /* socket */
 	pthread_exit(NULL);
 	return NULL;
 }

@@ -64,7 +64,7 @@ int bufwrite(int s, void *buf, int numel) {
 				numwrite += numthis;
 				numcall ++;
 #ifdef PLATFORM_WIN32
-				if (numread<numel)
+				if (numwrite<numel)
 						usleep(1000);
 #endif
 		}
