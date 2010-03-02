@@ -12,8 +12,8 @@ mxArray *mxDeserialize(const void*, size_t);
 #define NUMJOBSTRUCTFIELDS 4
 const char* jobstructfieldnames[NUMJOBSTRUCTFIELDS] = {"version", "jobid", "argsize", "optsize"};
 
-#define NUMPEERSTRUCTFIELDS 7
-const char* peerstructfieldnames[NUMPEERSTRUCTFIELDS] = {"hostid", "hostname", "hostport", "hoststatus", "hostmemavail", "hostcpuavail", "hosttimavail"};
+#define NUMPEERSTRUCTFIELDS 9
+const char* peerstructfieldnames[NUMPEERSTRUCTFIELDS] = {"hostid", "hostname", "user", "group", "hostport", "hoststatus", "hostmemavail", "hostcpuavail", "hosttimavail"};
 
 #define NUMJOBPEERSTRUCTFIELDS 6
 const char* jobpeerstructfieldnames[NUMJOBPEERSTRUCTFIELDS] = {"version", "jobid", "argsize", "optsize", "hostid", "hostname"};
@@ -874,11 +874,13 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				while(peer) {
 						mxSetFieldByNumber(plhs[0], i, 0, mxCreateDoubleScalar((UINT32_T)(peer->host->id)));
 						mxSetFieldByNumber(plhs[0], i, 1, mxCreateString(peer->host->name));
-						mxSetFieldByNumber(plhs[0], i, 2, mxCreateDoubleScalar((UINT32_T)(peer->host->port)));
-						mxSetFieldByNumber(plhs[0], i, 3, mxCreateDoubleScalar((UINT32_T)(peer->host->status)));
-						mxSetFieldByNumber(plhs[0], i, 4, mxCreateDoubleScalar((UINT32_T)(peer->host->memavail)));
-						mxSetFieldByNumber(plhs[0], i, 5, mxCreateDoubleScalar((UINT32_T)(peer->host->cpuavail)));
-						mxSetFieldByNumber(plhs[0], i, 6, mxCreateDoubleScalar((UINT32_T)(peer->host->timavail)));
+						mxSetFieldByNumber(plhs[0], i, 2, mxCreateString(peer->host->user));
+						mxSetFieldByNumber(plhs[0], i, 3, mxCreateString(peer->host->group));
+						mxSetFieldByNumber(plhs[0], i, 4, mxCreateDoubleScalar((UINT32_T)(peer->host->port)));
+						mxSetFieldByNumber(plhs[0], i, 5, mxCreateDoubleScalar((UINT32_T)(peer->host->status)));
+						mxSetFieldByNumber(plhs[0], i, 6, mxCreateDoubleScalar((UINT32_T)(peer->host->memavail)));
+						mxSetFieldByNumber(plhs[0], i, 7, mxCreateDoubleScalar((UINT32_T)(peer->host->cpuavail)));
+						mxSetFieldByNumber(plhs[0], i, 8, mxCreateDoubleScalar((UINT32_T)(peer->host->timavail)));
 						i++;
 						peer = peer->next ;
 				}

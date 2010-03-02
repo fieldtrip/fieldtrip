@@ -73,8 +73,8 @@ int getmem (unsigned int *rss, unsigned int *vs) {
 #elif defined(PLATFORM_WIN32)
 int getmem (unsigned int *rss, unsigned int *vs) {
 		/* no idea how to get the memory information on a windows computer */
-		rss = 0;
-		vs = 0;
+		*rss = 0;
+		*vs  = 0;
 		return -1;
 }
 #elif defined(PLATFORM_LINUX)
@@ -116,7 +116,7 @@ void memprofile_sample(void) {
 		memlist_t *memitem;
 		if (getmem(&rss, &vs)!=0) {
 				rss = 0;
-				vs = 0;
+				vs  = 0;
 		}
 
 		memitem = (memlist_t *)malloc(sizeof(memlist_t));

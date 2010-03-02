@@ -22,6 +22,16 @@
 #include <windows.h>
 #include "win32/gettimeofday.h"
 
+  /* without the following, compilation with the Borland command line tools fails -- SK */
+typedef __int8            int8_t;
+typedef __int16           int16_t;
+typedef __int32           int32_t;
+typedef __int64           int64_t;
+typedef unsigned __int8   uint8_t;
+typedef unsigned __int16  uint16_t;
+typedef unsigned __int32  uint32_t;
+typedef unsigned __int64  uint64_t;
+
 #define random()          (random(INT32_MAX))
 #define bzero(b,len)      (memset((b), '\0', (len)), (void) 0)
 #define usleep(x)         (Sleep((x)/1000))

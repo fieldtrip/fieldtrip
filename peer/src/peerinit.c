@@ -11,6 +11,10 @@ void peerinit(void *arg) {
 		struct passwd *pwd;
 		int family, s, verbose = 0;
 
+#ifdef PLATFORM_WIN32
+    DWORD nStrLen; 
+#endif
+
 		if (verbose)
 				fprintf(stderr, "peerinit\n");
 
@@ -59,15 +63,17 @@ void peerinit(void *arg) {
 
 
 #else
-
-		/* set the default user name */
-		strncpy(host->group, DEFAULT_USER, STRLEN);
+      
+		/* set the user name */
+    nStrLen = STRLEN;
+    GetUserName(host->user, &nStrLen);
 
 		/* set the default group name */
 		strncpy(host->group, DEFAULT_GROUP, STRLEN);
 
-		/* set the default group name */
-		strncpy(host->group, DEFAULT_HOST, STRLEN);
+    /* get the host name */
+		nStrLen = STRLEN;
+    GetComputerName(host->name, &nStrLen);
 
 #endif
 
