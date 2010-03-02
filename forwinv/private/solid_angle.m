@@ -6,8 +6,8 @@ function [varargout] = funname(varargin)
 % area W of a unit sphere covered by the surface's projection onto the
 % sphere. Solid angle is measured in steradians, and the solid angle
 % corresponding to all of space being subtended is 4*pi sterradians.
-% 
-% Use: 
+%
+% Use:
 %   [w] = solid_angle(v1, v2, v3)
 % or
 %   [w] = solid_angle(pnt, tri)
@@ -27,7 +27,7 @@ function [varargout] = funname(varargin)
 % function [w] = solid_angle(r1, r2, r3);
 %
 % if nargin==2
-%   % reassign the input arguments 
+%   % reassign the input arguments
 %   pnt = r1;
 %   tri = r2;
 %   npnt = size(pnt,1);
@@ -39,10 +39,10 @@ function [varargout] = funname(varargin)
 %     r2 = pnt(tri(i,2),:);
 %     r3 = pnt(tri(i,3),:);
 %     w(i) = solid_angle(r1, r2, r3);
-%   end 
+%   end
 %   return
 % elseif nargin==3
-%   % compute the solid angle for this triangle  
+%   % compute the solid angle for this triangle
 %   cp23_x = r2(2) * r3(3) - r2(3) * r3(2);
 %   cp23_y = r2(3) * r3(1) - r2(1) * r3(3);
 %   cp23_z = r2(1) * r3(2) - r2(2) * r3(1);
@@ -53,7 +53,7 @@ function [varargout] = funname(varargin)
 %   ip12 = r1(1) * r2(1) + r1(2) * r2(2) + r1(3) * r2(3);
 %   ip23 = r2(1) * r3(1) + r2(2) * r3(2) + r2(3) * r3(3);
 %   ip13 = r1(1) * r3(1) + r1(2) * r3(2) + r1(3) * r3(3);
-%   den = n1 * n2 * n3 + ip12 * n3 + ip23 * n1 + ip13 * n2; 
+%   den = n1 * n2 * n3 + ip12 * n3 + ip23 * n1 + ip13 * n2;
 %   if (nom == 0)
 %     if (den <= 0)
 %       w = nan;
@@ -79,7 +79,15 @@ try
   % try to compile the mex file on the fly
   warning('trying to compile MEX file from %s', mexsrc);
   cd(mexdir);
-  mex(mexsrc);
+
+  if ispc
+    mex -I. -c geometry.c
+    mex -I. -c solid_angle.c ; mex solid_angle.c solid_angle.obj geometry.obj
+  else
+    mex -I. -c geometry.c
+    mex -I. -c solid_angle.c ; mex -o solid_angle solid_angle.o geometry.o
+  end
+
   cd(pwdir);
   success = true;
 

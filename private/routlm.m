@@ -31,7 +31,15 @@ try
   % try to compile the mex file on the fly
   warning('trying to compile MEX file from %s', mexsrc);
   cd(mexdir);
-  mex(mexsrc);
+  
+  if ispc
+    mex -I. -c geometry.c
+    mex -I. -c routlm.c ; mex routlm.c routlm.obj geometry.obj
+  else
+    mex -I. -c geometry.c
+    mex -I. -c routlm.c ; mex -o routlm routlm.o geometry.o
+  end
+  
   cd(pwdir);
   success = true;
 
