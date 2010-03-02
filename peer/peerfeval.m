@@ -13,8 +13,8 @@ function [jobid, puttime] = peerfeval(varargin)
 %   sleep    = number, in seconds (default = 0.01)
 %
 % Example
-%   jobid = peerfeval('unique', randn(1,10)); 
-%   argout = peerget(jobid, 'timeout', inf); 
+%   jobid = peerfeval('unique', randn(1,10));
+%   argout = peerget(jobid, 'timeout', inf);
 %   disp(argout);
 %
 % See also FEVAL, PEERMASTER, PEERGET, PEERCELLFUN
@@ -172,15 +172,31 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that determines the path, excluding all Matlab toolboxes
+% the directories and the path on a windows computer look different than on unix
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function p = custompath
-p = tokenize(path, ':');
+if ispc
+  p = tokenize(path, ';');
+else
+  p = tokenize(path, ':');
+end
 % remove the matlab specific directories
-s = cellfun(@isempty, regexp(p, ['^' matlabroot]));
+if ispc
+  s = false(size(p));
+  for i=1:length(p)
+    s(i) = ~strncmp(p{i}, matlabroot, length(matlabroot));
+  end
+else
+  s = cellfun(@isempty, regexp(p, ['^' matlabroot]));
+end
 p = p(s);
 % remove the directory containing the peer code, the slave should use its own
 p = setdiff(p, fileparts(mfilename('fullpath')));
-% concatenate the path, using a ':' as seperator
-p = sprintf('%s:', p{:});
-p = p(1:end-1); % remove the last ':'
+% concatenate the path, using the platform specific seperator
+if ispc
+  p = sprintf('%s;', p{:});
+else
+  p = sprintf('%s:', p{:});
+end
+p = p(1:end-1); % remove the last separator
 

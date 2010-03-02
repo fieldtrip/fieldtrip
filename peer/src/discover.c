@@ -8,7 +8,7 @@
 #include "platform_includes.h"
 
 typedef struct {
-		void *host;
+		void *discovery;
 		int fd;
 } threadlocal_t;
 
@@ -17,8 +17,8 @@ void cleanup_discover(void *arg) {
 		peerlist_t *next = NULL;
 
 		threadlocal = (threadlocal_t *)arg;
-		if (threadlocal && threadlocal->host) {
-				FREE(threadlocal->host);
+		if (threadlocal && threadlocal->discovery) {
+				FREE(threadlocal->discovery);
 		}
 		if (threadlocal && threadlocal->fd>0) {
 				close(threadlocal->fd);
@@ -53,7 +53,7 @@ void *discover(void *arg) {
 		int one = 1;
 		int accept = 1;
 		peerlist_t *peer = NULL, *next = NULL;
-		hostdef_t *host = NULL;
+		hostdef_t  *discovery = NULL;
 
 		/* these variables are for the socket */
 		struct sockaddr_in addr;
@@ -61,7 +61,7 @@ void *discover(void *arg) {
 		int optval;
 
 		threadlocal_t threadlocal;
-		threadlocal.host = NULL;
+		threadlocal.discovery = NULL;
 		threadlocal.fd = -1;
 
 		/* this is for debugging */
@@ -129,50 +129,49 @@ void *discover(void *arg) {
 
 				addrlen=sizeof(addr);
 
-				if ((host = malloc(sizeof(hostdef_t)))==NULL) {
+				if ((discovery = malloc(sizeof(hostdef_t)))==NULL) {
 						perror("discover malloc");
 						goto cleanup;
 				}
 
 				/* this will be deallocated at cleanup */
-				threadlocal.host = host;
+				threadlocal.discovery = discovery;
 
 				/* note that this might be thread cancelation point, but I am not sure */
-				if ((nbytes=recvfrom(fd,host,sizeof(hostdef_t),0,(struct sockaddr *)&addr,&addrlen)) < 0) {
+				if ((nbytes=recvfrom(fd,discovery,sizeof(hostdef_t),0,(struct sockaddr *)&addr,&addrlen)) < 0) {
 						perror("discover recvfrom");
 						goto cleanup;
 				}
 
-				if (host->version!=VERSION) {
-						FREE(host);
+				if (discovery->version!=VERSION) {
+						FREE(discovery);
 						continue;
 				}
 
 				if (verbose>0) {
 						fprintf(stderr, "\n");
-						fprintf(stderr, "discover: host->name = %s\n", host->name);
-						fprintf(stderr, "discover: host->port = %d\n", host->port);
-						fprintf(stderr, "discover: host->id   = %d\n", host->id);
+						fprintf(stderr, "discover: host->name = %s\n", discovery->name);
+						fprintf(stderr, "discover: host->port = %d\n", discovery->port);
+						fprintf(stderr, "discover: host->id   = %d\n", discovery->id);
 				}
 
 				/* check whether the peer should be listed */
 				accept = 1;
-				accept = (accept & ismember_userlist (host->user));
-				accept = (accept & ismember_grouplist(host->group));
-				accept = (accept & ismember_hostlist (host->name));
+				accept = (accept & ismember_userlist (discovery->user));
+				accept = (accept & ismember_grouplist(discovery->group));
+				accept = (accept & ismember_hostlist (discovery->name));
 
 				if (!accept) {
-						FREE(host);
+						FREE(discovery);
 						continue;
 				}
 
 				pthread_mutex_lock(&mutexpeerlist);
 
-				/* remove previous observations of this host from the list */
+				/* remove previous observations of this discovery from the list */
 				/* test the first item on the list */
-				if (peerlist)
-				{
-						found = (peerlist->host->id==host->id);
+				if (peerlist)	{
+						found = (peerlist->host->id==discovery->id);
 						if (found) {
 								/* delete the first item in the list */
 								next = peerlist->next;
@@ -182,14 +181,14 @@ void *discover(void *arg) {
 						}
 				}
 
-				/* remove previous observations of this host from the list */
+				/* remove previous observations of this discovery from the list */
 				/* traverse the list */
 				peer = peerlist;
 				while(peer) {
 						/* test the next item on the list */
 						next = peer->next;
 						if (next) {
-								found = (next->host->id==host->id);
+								found = (next->host->id==discovery->id);
 								if (found) {
 										/* delete the next item in the list */
 										peer->next = next->next;
@@ -204,8 +203,8 @@ void *discover(void *arg) {
 				/* add the new discovery to the list */
 				peer       = (peerlist_t *)malloc(sizeof(peerlist_t));
 				peer->host = (hostdef_t *)malloc(sizeof(hostdef_t));
-				memcpy(peer->host, host, sizeof(hostdef_t));
-				FREE(host);
+				memcpy(peer->host, discovery, sizeof(hostdef_t));
+				FREE(discovery);
 
 				peer->time      = time(NULL);
 				peer->next      = peerlist;
@@ -224,7 +223,6 @@ void *discover(void *arg) {
 								i++;
 						}
 				}
-
 
 				pthread_mutex_unlock(&mutexpeerlist);
 
