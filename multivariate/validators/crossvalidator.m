@@ -240,7 +240,7 @@ classdef crossvalidator < validator
                 
                 if obj.verbose, fprintf('validating using training data\n'); end
           
-                trainfolds{1,d} = randperm(design{d}.nsamples);
+                trainfolds{1,d} = randperm(nsamples);
                 testfolds{1,d}  = idxs;
                               
               elseif nfolds > 0 && nfolds < 1 % percentage
@@ -248,7 +248,7 @@ classdef crossvalidator < validator
                 if obj.verbose, fprintf('validating using %.0f%% of the data for testing\n',100*(1-nfolds)); end
           
                 % make sure outcomes are evenly represented whenever possible
-                [unq,tmp,idx] = unique(design{d}.X,'rows');
+                [unq,tmp,idx] = unique(design{d},'rows');
                                 
                 if max(idx) == nsamples % unique samples
                     testfolds{1,d} = idxs(1:(nsamples - floor(nfolds*nsamples)));
