@@ -1,20 +1,20 @@
-function [data] = appendspike(cfg, varargin);
+function [data] = ft_appendspike(cfg, varargin);
 
-% APPENDSPIKE combines continuous data (i.e. LFP) with point-process data
+% FT_APPENDSPIKE combines continuous data (i.e. LFP) with point-process data
 % (i.e. spikes) into a single large dataset. For each spike channel an
-% additional continuuos channel is inserted in the data that contains
+% additional continuos channel is inserted in the data that contains
 % zeros most of the time, and an occasional one at the samples at which a
 % spike occurred. The continuous and spike data are linked together using
 % the timestamps.
 %
 % Use as
-%   [spike] = appendspike(cfg, spike1, spike2, spike3, ...)
-% where the input structures come from READ_FCDC_SPIKE, or as
-%   [data]  = appendspike(cfg, data, spike1, spike2, ...)
-% where the first data structure is the result of PREPROCESSING
-% and the subsequent ones come from READ_FCDC_SPIKE.
+%   [spike] = ft_appendspike(cfg, spike1, spike2, spike3, ...)
+% where the input structures come from FT_READ_FCDC_SPIKE, or as
+%   [data]  = ft_appendspike(cfg, data, spike1, spike2, ...)
+% where the first data structure is the result of FT_PREPROCESSING
+% and the subsequent ones come from FT_READ_FCDC_SPIKE.
 %
-% See also APPENDDATA, PREPROCESSING
+% See also FT_APPENDDATA, FT_PREPROCESSING
 
 % Copyright (C) 2007, Robert Osotenveld
 %
