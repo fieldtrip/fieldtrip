@@ -1,17 +1,17 @@
-function [data] = rejectcomponent(cfg, comp, data)
+function [data] = ft_rejectcomponent(cfg, comp, data)
 
-% REJECTCOMPONENT backprojects an ICA (or similar) decomposition to the 
+% FT_REJECTCOMPONENT backprojects an ICA (or similar) decomposition to the 
 % channel level after removing the independent components that contain
 % the artifacts. This function does not automatically detect the artifact
 % components, you will have to do that yourself.
 %
 % Use as
-%    [data] = rejectcomponent(cfg, comp)
+%    [data] = ft_rejectcomponent(cfg, comp)
 % or as
-%    [data] = rejectcomponent(cfg, comp, data)
+%    [data] = ft_rejectcomponent(cfg, comp, data)
 %
-% where the input comp is the result of COMPONENTANALYSIS. The output
-% data will have the same format as the output of PREFPROCESSING.
+% where the input comp is the result of FT_COMPONENTANALYSIS. The output
+% data will have the same format as the output of FT_PREFPROCESSING.
 % An optional input argument data can be provided. In that case 
 % componentanalysis will do a subspace projection of the input data
 % onto the space which is spanned by the topographies in the unmixing
@@ -20,7 +20,7 @@ function [data] = rejectcomponent(cfg, comp, data)
 % The configuration should contain
 %   cfg.component = list of components to remove, e.g. [1 4 7]
 % 
-% See also COMPONENTANALYSIS, PREFPROCESSING
+% See also FT_COMPONENTANALYSIS, FT_PREFPROCESSING
 
 % Copyright (C) 2005-2009, Robert Oostenveld
 % 

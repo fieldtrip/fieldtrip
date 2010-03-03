@@ -1,6 +1,6 @@
-function [data] = rejectvisual(cfg, data);
+function [data] = ft_rejectvisual(cfg, data);
 
-% REJECTVISUAL shows the preprocessed data in all channels and/or trials to
+% FT_REJECTVISUAL shows the preprocessed data in all channels and/or trials to
 % allow the user to make a visual selection of the data that should be
 % rejected. The data can be displayed in a "summary" mode, in which case
 % the variance (or another metric) in each channel and each trial is
@@ -9,11 +9,11 @@ function [data] = rejectvisual(cfg, data);
 % through the channels.
 %
 % Use as
-%   [data] = rejectvisual(cfg, data)
+%   [data] = ft_rejectvisual(cfg, data)
 %
 % The configuration can contain
 %   cfg.channel     = Nx1 cell-array with selection of channels (default = 'all'),
-%                     see CHANNELSELECTION for details
+%                     see FT_CHANNELSELECTION for details
 %   cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.latency     = [begin end] in seconds, or 'minperlength', 'maxperlength',
 %                     'prestim', 'poststim' (default = 'maxperlength')
@@ -45,7 +45,7 @@ function [data] = rejectvisual(cfg, data);
 % The scaling to the EEG, EOG, ECG and MEG channels is optional and can
 % be used to bring the absolute numbers of the different channel types in
 % the same range (e.g. fT and uV). The channel types are determined from
-% the input data using CHANNELSELECTION.
+% the input data using FT_CHANNELSELECTION.
 %
 % Optionally, the raw data is preprocessed (filtering etc.) prior to
 % displaying it or prior to computing the summary metric. The
@@ -67,12 +67,12 @@ function [data] = rejectvisual(cfg, data);
 %   cfg.rectify     = 'yes'
 %   cfg.boxcar      = 0.2
 %
-% See also REJECTARTIFACT, REJECTCOMPONENT
+% See also FT_REJECTARTIFACT, FT_REJECTCOMPONENT
 
 % Undocumented local options:
 % cfg.feedback
 %
-% This function depends on PREPROC which has the following options:
+% This function depends on FT_PREPROC which has the following options:
 % cfg.absdiff
 % cfg.blc
 % cfg.blcwindow
@@ -253,7 +253,7 @@ trlold=trl;
 % construct an artifact matrix from the trl matrix
 if ~isempty(trl)
   % remember the sample numbers (begin and end) of each trial and each artifact
-  % updating the trl and creating a trlold makes it compatible with REJECTARTIFACT
+  % updating the trl and creating a trlold makes it compatible with FT_REJECTARTIFACT
   if ~strcmp(cfg.trials, 'all')
     trl=trl(cfg.trials,:);
   end

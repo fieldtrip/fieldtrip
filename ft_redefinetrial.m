@@ -1,13 +1,13 @@
-function [data] = redefinetrial(cfg, data)
+function [data] = ft_redefinetrial(cfg, data)
 
-% REDEFINETRIAL allows you to adjust the time axis of your data, i.e. to
+% FT_REDEFINETRIAL allows you to adjust the time axis of your data, i.e. to
 % change from stimulus-locked to response-locked. Furthermore, it allows
 % you to select a time window of interest, or to resegment your long trials
 % into shorter fragments.
 %
 % Use as
-%   data = redefinetrial(cfg, data)
-% where the input data should correspond to the output of PREPROCESSING and
+%   data = ft_redefinetrial(cfg, data)
+% where the input data should correspond to the output of FT_PREPROCESSING and
 % the configuration should be specified as explained below. Note that some
 % options are mutually exclusive, and require two calls to this function to
 % avoid confucion about the order in which they are applied.
@@ -34,9 +34,9 @@ function [data] = redefinetrial(cfg, data)
 %
 % Alternatively you can specify a new trial definition, expressed in
 % samples relative to the original recording
-%   cfg.trl       = Nx3 matrix with the trial definition, see DEFINETRIAL
+%   cfg.trl       = Nx3 matrix with the trial definition, see FT_DEFINETRIAL
 %
-% See also DEFINETRIAL, RECODEEVENT, PREPROCESSING
+% See also FT_DEFINETRIAL, FT_RECODEEVENT, FT_PREPROCESSING
 
 % Copyright (C) 2006-2008, Robert Oostenveld
 %

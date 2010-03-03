@@ -1,28 +1,28 @@
-function [cfg] = rejectartifact(cfg,data)
+function [cfg] = ft_rejectartifact(cfg,data)
 
-% REJECTARTIFACT removes data segments containing artifacts. It returns a
+% FT_REJECTARTIFACT removes data segments containing artifacts. It returns a
 % configuration structure with a modified trial definition which can be
 % used for preprocessing of only the clean data.
 %
 % You should start by detecting the artifacts in the data using the
-% function ARTIFACT_xxx where xxx is the type of artifact. Subsequently
-% REJECTARTIFACT looks at the detected artifacts and removes them from
+% function FT_ARTIFACT_xxx where xxx is the type of artifact. Subsequently
+% FT_REJECTARTIFACT looks at the detected artifacts and removes them from
 % the trial definition or from the data.
 %
 % Use as
-%   cfg = rejectartifact(cfg)
-% with the cfg as obtained from DEFINETRIAL, or as
-%   data = rejectartifact(cfg, data)
-% with the data as obtained from PREPROCESSING
+%   cfg = ft_rejectartifact(cfg)
+% with the cfg as obtained from FT_DEFINETRIAL, or as
+%   data = ft_rejectartifact(cfg, data)
+% with the data as obtained from FT_PREPROCESSING
 %
 % The following configuration options are supported:
 %   cfg.artfctdef.reject          = 'none', 'partial' or 'complete' (default = 'complete')
 %   cfg.artfctdef.minaccepttim    = length in seconds (default = 0.1)
 %   cfg.artfctdef.feedback        = 'yes' or 'no' (default = 'no')
-%   cfg.artfctdef.eog.artifact    = Nx2 matrix with artifact segments, this is added to the cfg by using ARTIFACT_EOG
-%   cfg.artfctdef.jump.artifact   = Nx2 matrix with artifact segments, this is added to the cfg by using ARTIFACT_JUMP
-%   cfg.artfctdef.muscle.artifact = Nx2 matrix with artifact segments, this is added to the cfg by using ARTIFACT_MUSCLE
-%   cfg.artfctdef.zvalue.artifact = Nx2 matrix with artifact segments, this is added to the cfg by using ARTIFACT_ZVALUE
+%   cfg.artfctdef.eog.artifact    = Nx2 matrix with artifact segments, this is added to the cfg by using FT_ARTIFACT_EOG
+%   cfg.artfctdef.jump.artifact   = Nx2 matrix with artifact segments, this is added to the cfg by using FT_ARTIFACT_JUMP
+%   cfg.artfctdef.muscle.artifact = Nx2 matrix with artifact segments, this is added to the cfg by using FT_ARTIFACT_MUSCLE
+%   cfg.artfctdef.zvalue.artifact = Nx2 matrix with artifact segments, this is added to the cfg by using FT_ARTIFACT_ZVALUE
 %   cfg.artfctdef.xxx.artifact    = Nx2 matrix with artifact segments, this should be added by your own artifact detection function
 %
 % A trial that contains an artifact can be rejected completely or
@@ -33,7 +33,8 @@ function [cfg] = rejectartifact(cfg,data)
 %   If cfg is used as the only input parameter, a cfg with a new trl is the output.
 %   If cfg and data are both input parameters, a new raw data structure with only the clean data segments is the output.
 %
-% See also ARTIFACT_EOG, ARTIFACT_MUSCLE, ARTIFACT_JUMP, ARTIFACT_MANUAL, ARTIFACT_THRESHOLD, ARTIFACT_CLIP, ARTIFACT_ECG
+% See also FT_ARTIFACT_EOG, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_JUMP, FT_ARTIFACT_MANUAL, 
+% FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG
 
 % Undocumented local options:
 % cfg.headerfile

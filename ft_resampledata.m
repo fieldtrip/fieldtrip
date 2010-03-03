@@ -1,12 +1,12 @@
-function [data] = resampledata(cfg, data);
+function [data] = ft_resampledata(cfg, data);
 
-% RESAMPLEDATA performs a resampling or downsampling of the data
+% FT_RESAMPLEDATA performs a resampling or downsampling of the data
 %
 % Use as
-%   [data] = resampledata(cfg, data)
+%   [data] = ft_resampledata(cfg, data)
 %
 % The data should be organised in a structure as obtained from
-% the PREPROCESSING function. The configuration should contain
+% the FT_PREPROCESSING function. The configuration should contain
 %   cfg.resamplefs = frequency at which the data will be resampled (default = 256 Hz)
 %   cfg.detrend    = 'no' or 'yes', detrend the data prior to resampling (no default specified, see below)
 %   cfg.blc        = 'no' or 'yes', baseline correct the data prior to resampling (default = 'no')
@@ -38,7 +38,7 @@ function [data] = resampledata(cfg, data);
 %   data.trial
 %   data.time
 %
-% See also PREPROCESSING
+% See also FT_PREPROCESSING
 
 % Copyright (C) 2003-2006, FC Donders Centre, Markus Siegel
 % Copyright (C) 2004-2009, FC Donders Centre, Robert Oostenveld

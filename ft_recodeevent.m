@@ -1,6 +1,6 @@
-function [ev] = recodeevent(cfg, event, trl)
+function [ev] = ft_recodeevent(cfg, event, trl)
 
-% RECODEEVENT will recode the event structure, given the trial
+% FT_RECODEEVENT will recode the event structure, given the trial
 % definition that was analyzed
 %
 % In FieldTrip, you always start with defining a "trl" field containing
@@ -12,14 +12,14 @@ function [ev] = recodeevent(cfg, event, trl)
 % restores that match.
 %
 % Use as
-%   [ev] = recodeevent(cfg, data)
+%   [ev] = ft_recodeevent(cfg, data)
 % where cfg is a structure with configuration settings and data contains the
 % (nested) configuration that describes the original trial definition and
 % event structure.
 %
 % Alternatively, you can also specify the event structure and trial definition
 % yourself with
-%   [ev] = recodeevent(cfg, event, trl)
+%   [ev] = ft_recodeevent(cfg, event, trl)
 %
 % the configuration can contain
 %   cfg.eventtype   = empty, 'string' or cell-array with multiple strings
