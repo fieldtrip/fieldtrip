@@ -1,10 +1,10 @@
-function [data] = appenddata(cfg, varargin);
+function [data] = ft_appenddata(cfg, varargin);
 
-% APPENDDATA combines multiple datasets that have been preprocessed separately 
+% FT_APPENDDATA combines multiple datasets that have been preprocessed separately 
 % into a single large dataset.
 %
 % Use as
-%   data = appenddata(cfg, data1, data2, data3, ...)
+%   data = ft_appenddata(cfg, data1, data2, data3, ...)
 % where the configuration can be empty.
 %
 % If the input datasets all have the same channels, the trials will be
@@ -24,7 +24,7 @@ function [data] = appenddata(cfg, varargin);
 % there's a slight discrepancy in the channels in the input data (e.g. missing
 % channels in one of the data structures). The function will then return a data
 % structure containing only the channels which are present in all inputs.
-% See also PREPROCESSING
+% See also FT_PREPROCESSING
 
 % undocumented options:
 %   none
