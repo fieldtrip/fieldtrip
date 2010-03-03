@@ -1,4 +1,4 @@
-function [interp] = channelrepair(cfg, data);
+function [interp] = ft_channelrepair(cfg, data);
 
 % FT_CHANNELREPAIR repairs bad channels in MEG or EEG data by replacing them
 % with the average of its neighbours. It cannot be used reliably to

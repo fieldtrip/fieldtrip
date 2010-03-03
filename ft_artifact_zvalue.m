@@ -1,22 +1,22 @@
-function [cfg, artifact] = artifact_zvalue(cfg,data)
+function [cfg, artifact] = ft_artifact_zvalue(cfg,data)
 
-% ARTIFACT_ZVALUE reads the interesting segments of data from file and
+% FT_ARTIFACT_ZVALUE reads the interesting segments of data from file and
 % identifies artifacts by means of thresholding the z-transformed value
 % of the preprocessed raw data. Depending on the preprocessing options,
 % this method will be sensitive to EOG, muscle or jump artifacts.
 % This procedure only works on continuously recorded data.
 %
 % Use as
-%   [cfg, artifact] = artifact_zvalue(cfg)
+%   [cfg, artifact] = ft_artifact_zvalue(cfg)
 % or
-%   [cfg, artifact] = artifact_zvalue(cfg, data)
+%   [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %
 % The output argument "artifact" is a Nx2 matrix comparable to the
-% "trl" matrix of DEFINETRIAL. The first column of which specifying the
+% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
 % beginsamples of an artifact period, the second column contains the
 % endsamples of the artifactperiods.
 %
-% If you are calling ARTIFACT_ZVALUE with only the configuration as first
+% If you are calling FT_ARTIFACT_ZVALUE with only the configuration as first
 % input argument and the data still has to be read from file, you should
 % specify:
 %   cfg.headerfile
@@ -24,9 +24,9 @@ function [cfg, artifact] = artifact_zvalue(cfg,data)
 %   cfg.datafile
 %   cfg.datatype
 %
-% If you are calling ARTIFACT_ZVALUE with also the second input argument
+% If you are calling FT_ARTIFACT_ZVALUE with also the second input argument
 % "data", then that should contain data that was already read from file in
-% a call to PREPROCESSING.
+% a call to FT_PREPROCESSING.
 %
 % The required configuration settings are:
 %   cfg.trl
@@ -62,7 +62,7 @@ function [cfg, artifact] = artifact_zvalue(cfg,data)
 %   cfg.artfctdef.zvalue.hilbert       = 'no' or 'yes'
 %   cfg.artfctdef.zvalue.rectify       = 'no' or 'yes'
 %
-% See also REJECTARTIFACT
+% See also FT_REJECTARTIFACT
 
 % Copyright (c) 2003-2005, Jan-Mathijs Schoffelen, Robert Oostenveld
 %
@@ -188,11 +188,11 @@ end % for trlop
 %  for trlop = 1:numtrl
 %    fprintf('.');
 %    if isfetch
-%      dat{trlop} = fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous,'no'));
+%      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous,'no'));
 %    else
-%      dat{trlop} = read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous,'no'));
+%      dat{trlop} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous,'no'));
 %    end
-%    dat{trlop} = preproc(dat{trlop}, cfg.artfctdef.zvalue.channel(sgnlop), hdr.Fs, cfg.artfctdef.zvalue, [], fltpadding, fltpadding);
+%    dat{trlop} = ft_preproc(dat{trlop}, cfg.artfctdef.zvalue.channel(sgnlop), hdr.Fs, cfg.artfctdef.zvalue, [], fltpadding, fltpadding);
 %    % accumulate the sum and the sum-of-squares
 %    sumval = sumval + sum(dat{trlop},2);
 %    sumsqr = sumsqr + sum(dat{trlop}.^2,2);

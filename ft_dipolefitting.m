@@ -1,6 +1,6 @@
-function [source] = dipolefitting(cfg, data)
+function [source] = ft_dipolefitting(cfg, data)
 
-% DIPOLEFITTING perform grid search and non-linear fit with one or multiple
+% FT_DIPOLEFITTING perform grid search and non-linear fit with one or multiple
 % dipoles and try to find the location where the dipole model is best able
 % to explain the measured EEG or MEG topography.
 %
@@ -10,13 +10,13 @@ function [source] = dipolefitting(cfg, data)
 % location of the dipole(s) and the non-linear search will start from there.
 %
 % Use as
-%   [source] = dipolefitting(cfg, data)
+%   [source] = ft_dipolefitting(cfg, data)
 %
 % The configuration has the following general fields
 %   cfg.numdipoles  = number, default is 1
 %   cfg.symmetry    = 'x', 'y' or 'z' symmetry for two dipoles, can be empty (default = [])
 %   cfg.channel     = Nx1 cell-array with selection of channels (default = 'all'),
-%                     see CHANNELSELECTION for details
+%                     see FT_CHANNELSELECTION for details
 %   cfg.gridsearch  = 'yes' or 'no', perform global search for initial
 %                     guess for the dipole parameters (default = 'yes')
 %   cfg.nonlinear   = 'yes' or 'no', perform nonlinear search for optimal
@@ -44,7 +44,7 @@ function [source] = dipolefitting(cfg, data)
 %   cfg.grid.resolution = number (e.g. 1 cm) for automatic grid generation
 % Alternatively a complete grid with dipole positions and precomputed
 % leadfields can be specified
-%   cfg.grid            = structure, see PREPARE_LEADFIELD
+%   cfg.grid            = structure, see FT_PREPARE_LEADFIELD
 % or the position of a few dipoles at locations of interest can be
 % specified, for example obtained from an anatomical or functional MRI
 %   cfg.grid.pos        = Nx3 matrix with position of each source
@@ -57,8 +57,8 @@ function [source] = dipolefitting(cfg, data)
 %   cfg.dip.pos     = initial dipole position, matrix of Ndipoles x 3
 %
 % The conventional approach is to fit dipoles to event-related averages, which
-% within fieldtrip can be obtained from the TIMELOCKANALYSIS or from
-% the TIMELOCKGRANDAVERAGE function. This has the additional options
+% within fieldtrip can be obtained from the FT_TIMELOCKANALYSIS or from
+% the FT_TIMELOCKGRANDAVERAGE function. This has the additional options
 %   cfg.latency     = [begin end] in seconds or 'all' (default = 'all')
 %   cfg.model       = 'moving' or 'regional'
 % A moving dipole model has a different position (and orientation) for each
@@ -66,13 +66,13 @@ function [source] = dipolefitting(cfg, data)
 % position for each timepoint or component, and a different orientation.
 %
 % You can also fit dipoles to the spatial topographies of an independent
-% component analysis, obtained from the COMPONENTANALYSIS function.
+% component analysis, obtained from the FT_COMPONENTANALYSIS function.
 % This has the additional options
 %   cfg.component   = array with numbers (can be empty -> all)
 %
 % You can also fit dipoles to the spatial topographies that are present
 % in the data in the frequency domain, which can be obtained using the
-% FREQANALYSIS function. This has the additional options
+% FT_FREQANALYSIS function. This has the additional options
 %   cfg.frequency   = single number (in Hz)
 %
 % Low level details of the fitting can be specified in the cfg.dipfit structure
@@ -80,7 +80,7 @@ function [source] = dipolefitting(cfg, data)
 %   cfg.dipfit.optimfun = function to use, can be 'fminsearch' or 'fminunc' (default is determined automatic)
 %   cfg.dipfit.maxiter  = maximum number of function evaluations allowed (default depends on the optimfun)
 %
-% See also SOURCEANALYSIS, PREPARE_LEADFIELD
+% See also FT_SOURCEANALYSIS, FT_PREPARE_LEADFIELD
 
 % TODO change the output format, more suitable would be something like:
 % dip.label
@@ -94,10 +94,10 @@ function [source] = dipolefitting(cfg, data)
 % Undocumented local options:
 % cfg.dipfit.constr   = Source model constraints, depends on cfg.symmetry
 %
-% This function depends on PREPARE_DIPOLE_GRID which has the following options:
-% cfg.grid.xgrid (default set in PREPARE_DIPOLE_GRID: cfg.grid.xgrid = 'auto'), documented
-% cfg.grid.ygrid (default set in PREPARE_DIPOLE_GRID: cfg.grid.ygrid = 'auto'), documented
-% cfg.grid.zgrid (default set in PREPARE_DIPOLE_GRID: cfg.grid.zgrid = 'auto'), documented
+% This function depends on FT_PREPARE_DIPOLE_GRID which has the following options:
+% cfg.grid.xgrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.xgrid = 'auto'), documented
+% cfg.grid.ygrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.ygrid = 'auto'), documented
+% cfg.grid.zgrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.zgrid = 'auto'), documented
 % cfg.grid.resolution, documented
 % cfg.grid.pos, documented
 % cfg.grid.dim, documented
@@ -110,8 +110,8 @@ function [source] = dipolefitting(cfg, data)
 % cfg.sourceunits
 % cfg.threshold
 %
-% This function depends on PREPARE_VOL_SENS which has the following options:
-% cfg.channel (default set in DIPOLEFITTING: cfg.channel = 'all'), documented
+% This function depends on FT_PREPARE_VOL_SENS which has the following options:
+% cfg.channel (default set in FT_DIPOLEFITTING: cfg.channel = 'all'), documented
 % cfg.elec, documented
 % cfg.elecfile, documented
 % cfg.grad, documented
@@ -170,17 +170,17 @@ if ~isempty(cfg.symmetry)
   if cfg.numdipoles~=2
     error('symmetry constraints are only supported for two-dipole models');
   elseif strcmp(cfg.symmetry, 'x')
-    % this structure is passed onto the low-level dipole_fit function
+    % this structure is passed onto the low-level ft_dipole_fit function
     cfg.dipfit.constr.reduce = [1 2 3];         % select the parameters [x1 y1 z1]
     cfg.dipfit.constr.expand = [1 2 3 1 2 3];   % repeat them as [x1 y1 z1 x1 y1 z1]
     cfg.dipfit.constr.mirror = [1 1 1 -1 1 1];  % multiply each of them with 1 or -1, resulting in [x1 y1 z1 -x1 y1 z1]
   elseif strcmp(cfg.symmetry, 'y')
-    % this structure is passed onto the low-level dipole_fit function
+    % this structure is passed onto the low-level ft_dipole_fit function
     cfg.dipfit.constr.reduce = [1 2 3];         % select the parameters [x1 y1 z1]
     cfg.dipfit.constr.expand = [1 2 3 1 2 3];   % repeat them as [x1 y1 z1 x1 y1 z1]
     cfg.dipfit.constr.mirror = [1 1 1 1 -1 1];  % multiply each of them with 1 or -1, resulting in [x1 y1 z1 x1 -y1 z1]
   elseif strcmp(cfg.symmetry, 'z')
-    % this structure is passed onto the low-level dipole_fit function
+    % this structure is passed onto the low-level ft_dipole_fit function
     cfg.dipfit.constr.reduce = [1 2 3];         % select the parameters [x1 y1 z1]
     cfg.dipfit.constr.expand = [1 2 3 1 2 3];   % repeat them as [x1 y1 z1 x1 y1 z1]
     cfg.dipfit.constr.mirror = [1 1 1 1 1 -1];  % multiply each of them with 1 or -1, resulting in [x1 y1 z1 x1 y1 -z1]
@@ -406,7 +406,7 @@ if strcmp(cfg.nonlinear, 'yes')
       end
     case 'moving'
       % perform the non-linear dipole fit for each latency independently
-      % instead of using dip(t) =  dipole_fit(dip(t),...), I am using temporary variables dipin and dipout
+      % instead of using dip(t) =  ft_dipole_fit(dip(t),...), I am using temporary variables dipin and dipout
       % this is to prevent errors of the type "Subscripted assignment between dissimilar structures"
       dipin = dip;
       for t=1:ntime
@@ -485,7 +485,7 @@ switch cfg.model
     end
   case 'moving'
     if isfreq
-      % although this is technically possible sofar, it does not make any sense
+      % although this is technically possible so far, it does not make any sense
       warning('a moving dipole model in the frequency domain is not supported');
     end
   otherwise

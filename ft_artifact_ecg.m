@@ -1,16 +1,16 @@
-function [cfg, artifact] = artifact_ecg(cfg, data)
+function [cfg, artifact] = ft_artifact_ecg(cfg, data)
 
-% ARTIFACT_ECG performs a peak-detection on the ECG-channel. The
+% FT_ARTIFACT_ECG performs a peak-detection on the ECG-channel. The
 % heart activity can be seen in the MEG data as an MCG artifact and
 % can be removed using independent component analysis.
 %
 % Use as
-%   [cfg, artifact] = artifact_ecg(cfg)
+%   [cfg, artifact] = ft_artifact_ecg(cfg)
 %   required configuration options:
 %   cfg.dataset or both cfg.headerfile and cfg.datafile
 %
 % In both cases the configuration should also contain:
-%   cfg.artfctdef.ecg.channel = Nx1 cell-array with selection of channels, see CHANNELSELECTION for details
+%   cfg.artfctdef.ecg.channel = Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details
 %   cfg.artfctdef.ecg.pretim  = 0.05; pre-artifact rejection-interval in seconds
 %   cfg.artfctdef.ecg.psttim  = 0.3;  post-artifact rejection-interval in seconds
 %   cfg.artfctdef.ecg.method  = 'zvalue'; peak-detection method
@@ -21,7 +21,7 @@ function [cfg, artifact] = artifact_ecg(cfg, data)
 % The output artifact variable is an Nx2-matrix, containing the
 % begin and end samples of the QRST-complexes in the ECG.
 %
-% See also REJECTARTIFACT
+% See also FT_REJECTARTIFACT
 
 % Undocumented local options:
 % cfg.datatype

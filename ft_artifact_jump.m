@@ -1,19 +1,19 @@
-function [cfg, artifact] = artifact_jump(cfg,data)
+function [cfg, artifact] = ft_artifact_jump(cfg,data)
 
-% ARTIFACT_JUMP reads the data segments of interest from file and identifies 
+% FT_ARTIFACT_JUMP reads the data segments of interest from file and identifies 
 % SQUID jump artifacts.
 %
 % Use as
-%   [cfg, artifact] = artifact_jump(cfg)
+%   [cfg, artifact] = ft_artifact_jump(cfg)
 %   required configuration options: 
 %   cfg.dataset or both cfg.headerfile and cfg.datafile
 % or
-%   [cfg, artifact] = artifact_jump(cfg, data)
+%   [cfg, artifact] = ft_artifact_jump(cfg, data)
 %   forbidden configuration options: 
 %   cfg.dataset, cfg.headerfile and cfg.datafile
 %
 % In both cases the configuration should also contain:
-%   cfg.trl        = structure that defines the data segments of interest. See DEFINETRIAL
+%   cfg.trl        = structure that defines the data segments of interest. See FT_DEFINETRIAL
 %   cfg.continuous = 'yes' or 'no' whether the file contains continuous data
 %
 % The data is preprocessed (again) with the following configuration parameters,
@@ -24,7 +24,7 @@ function [cfg, artifact] = artifact_jump(cfg,data)
 %
 % Artifacts are identified by means of thresholding the z-transformed value
 % of the preprocessed data.
-%   cfg.artfctdef.jump.channel       = Nx1 cell-array with selection of channels, see CHANNELSELECTION for details
+%   cfg.artfctdef.jump.channel       = Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details
 %   cfg.artfctdef.jump.cutoff        = 20      z-value at which to threshold
 %   cfg.artfctdef.jump.trlpadding    = automatically determined based on the filter padding (cfg.padding)
 %   cfg.artfctdef.jump.artpadding    = automatically determined based on the filter padding (cfg.padding)
@@ -34,7 +34,7 @@ function [cfg, artifact] = artifact_jump(cfg,data)
 % beginsamples of an artifact period, the second column contains the
 % endsamples of the artifactperiods.
 %
-% See also ARTIFACT_ZVALUE, REJECTARTIFACT
+% See also FT_ARTIFACT_ZVALUE, FT_REJECTARTIFACT
 
 % Undocumented local options:
 % cfg.method

@@ -1,10 +1,10 @@
-function [simulated] = dipolesimulation(cfg)
+function [simulated] = ft_dipolesimulation(cfg)
 
-% DIPOLESIMULATION computes the field or potential of a simulated dipole
-% and returns a datastructure identical to the PREPROCESSING function.
+% FT_DIPOLESIMULATION computes the field or potential of a simulated dipole
+% and returns a datastructure identical to the FT_PREPROCESSING function.
 %
 % Use as
-%   data = dipolesimulation(cfg)
+%   data = ft_dipolesimulation(cfg)
 %
 % You should specify the volume conductor model with
 %   cfg.hdmfile       = string, file containing the volume conduction model
@@ -20,7 +20,7 @@ function [simulated] = dipolesimulation(cfg)
 %
 % optionally
 %   cfg.channel    = Nx1 cell-array with selection of channels (default = 'all'),
-%                    see CHANNELSELECTION for details
+%                    see FT_CHANNELSELECTION for details
 %
 % The dipoles position and orientation have to be specified with
 %   cfg.dip.pos     = [Rx Ry Rz]
@@ -46,7 +46,7 @@ function [simulated] = dipolesimulation(cfg)
 % cfg.previous
 % cfg.version
 %
-% This function depends on PREPARE_VOL_SENS which has the following options:
+% This function depends on FT_PREPARE_VOL_SENS which has the following options:
 % cfg.channel, documented
 % cfg.elec, documented
 % cfg.elecfile, documented

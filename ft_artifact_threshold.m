@@ -1,15 +1,15 @@
-function [cfg, artifact] = artifact_threshold(cfg,data)
+function [cfg, artifact] = ft_artifact_threshold(cfg,data)
 
-% ARTIFACT_THRESHOLD scans for trials in which the range, i.e. the minimum,
+% FT_ARTIFACT_THRESHOLD scans for trials in which the range, i.e. the minimum,
 % the maximum or the range (min-max difference) of the signal in any
 % channel exceeds a specified threshold.
 %
 % use as:
-%   [cfg, artifact] = artifact_threshold(cfg)
+%   [cfg, artifact] = ft_artifact_threshold(cfg)
 %   required configuration options: 
 %   cfg.dataset or both cfg.headerfile and cfg.datafile
 % or
-%   [cfg, artifact] = artifact_threshold(cfg, data)
+%   [cfg, artifact] = ft_artifact_threshold(cfg, data)
 %   forbidden configuration options: 
 %   cfg.dataset, cfg.headerfile and cfg.datafile
 %
@@ -32,7 +32,7 @@ function [cfg, artifact] = artifact_threshold(cfg,data)
 % is used to rate the minimum and maximum values. Furthermore, this
 % function does not support artifact- or filterpadding.
 %
-% See also REJECTARTIFACT
+% See also FT_REJECTARTIFACT
 
 % Copyright (c) 2003, Robert Oostenveld, SMI, FCDC
 %

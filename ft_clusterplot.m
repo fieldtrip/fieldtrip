@@ -1,12 +1,12 @@
 function ft_clusterplot(cfg, stat)
 
-% CLUSTERPLOT plots a series of topoplots with found clusters highlighted.
-% stat is 2D or 1D data from TIMELOCKSTATISTICS or FREQSTATISTICS with 'cluster'
+% FT_CLUSTERPLOT plots a series of topoplots with found clusters highlighted.
+% stat is 2D or 1D data from FT_TIMELOCKSTATISTICS or FT_FREQSTATISTICS with 'cluster'
 % as cfg.correctmc. 2D: stat from timelockstatistics not averaged over
 % time, or stat from freqstatistics averaged over frequency not averaged over
 % time. 1D: averaged over time as well.
 %
-% use as: clusterplot(cfg,stat)
+% use as: ft_clusterplot(cfg,stat)
 %
 % configuration options
 % cfg.alpha                     = number, highest cluster p-value to be plotted
@@ -24,12 +24,12 @@ function ft_clusterplot(cfg, stat)
 % cfg.saveaspng                 = string, path where figure has to be saved to (default = 'no')
 %                                 When multiple figures figure gets extension with fignum
 %
-% It is also possible to specify other cfg options that apply to TOPOPLOTER.
-% You CANNOT specify cfg.xlim, any of the TOPOPLOTER highlight
+% It is also possible to specify other cfg options that apply to FT_TOPOPLOTER.
+% You CANNOT specify cfg.xlim, any of the FT_TOPOPLOTER highlight
 % options, cfg.comment and cfg.commentpos.
 %
 % See also:
-%   topoplotER, singleplotER
+%   ft_topoplotER, ft_singleplotER
 
 % Copyright (C) 2007, Ingrid Nieuwenhuis, F.C. Donders Centre
 %

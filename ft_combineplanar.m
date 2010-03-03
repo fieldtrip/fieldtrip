@@ -1,4 +1,4 @@
-function [data] = combineplanar(cfg, data)
+function [data] = ft_combineplanar(cfg, data)
 
 % FT_COMBINEPLANAR computes the planar gradient magnitude over both directions
 % combining the two gradients at each sensor to a single positive-valued number.

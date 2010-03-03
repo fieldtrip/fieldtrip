@@ -1,9 +1,9 @@
-function [data] = connectivitysimulation(cfg)
+function [data] = ft_connectivitysimulation(cfg)
 
-% CONNECTIVITYSIMULATION
+% FT_CONNECTIVITYSIMULATION
 %
 % Use as
-%   data = connectivitysimulation(cfg)
+%   data = ft_connectivitysimulation(cfg)
 %
 % cfg.method = string, can be xxx
 %
@@ -18,7 +18,7 @@ function [data] = connectivitysimulation(cfg)
 % cfg.covmat      = covariance matrix between the signals
 % cfg.delay       = delay vector between the signals in samples
 %
-% See also FREQSIMULATION, DIPOLESIMULATION, SPIKESIMULATION
+% See also FT_FREQSIMULATION, FT_DIPOLESIMULATION, FT_SPIKESIMULATION
 
 % Copyright (C) 2009, Donders Institute for Brain, Cognition and Behaviour
 

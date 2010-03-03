@@ -1,4 +1,4 @@
-function [varargout] = componentbrowser(cfg, comp)
+function [varargout] = ft_componentbrowser(cfg, comp)
 
 % FT_COMPONENTBROWSER plots topography and activations of ICA components
 %

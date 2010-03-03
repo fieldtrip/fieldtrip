@@ -1,14 +1,14 @@
-function [source] = sourceanalysis(cfg, data, baseline);
+function [source] = ft_sourceanalysis(cfg, data, baseline);
 
-% SOURCEANALYSIS performs beamformer dipole analysis on EEG or MEG data
+% FT_SOURCEANALYSIS performs beamformer dipole analysis on EEG or MEG data
 % after preprocessing and a timelocked or frequency analysis
 %
 % Use as either
-%   [source] = sourceanalysis(cfg, freq)
-%   [source] = sourceanalysis(cfg, timelock)
+%   [source] = ft_sourceanalysis(cfg, freq)
+%   [source] = ft_sourceanalysis(cfg, timelock)
 %
 % where the data in freq or timelock should be organised in a structure
-% as obtained from the FREQANALYSIS or TIMELOCKANALYSIS function. The
+% as obtained from the FT_FREQANALYSIS or FT_TIMELOCKANALYSIS function. The
 % configuration "cfg" is a structure containing information about
 % source positions and other options.
 %
@@ -38,7 +38,7 @@ function [source] = sourceanalysis(cfg, data, baseline);
 %   cfg.grid.dim        = [Nx Ny Nz] vector with dimensions in case of 3-D grid (optional)
 %   cfg.grid.inside     = vector with indices of the sources inside the brain (optional)
 %   cfg.grid.outside    = vector with indices of the sources outside the brain (optional)
-% You can also use the PREPARE_LEADFIELD function to create a grid with
+% You can also use the FT_PREPARE_LEADFIELD function to create a grid with
 % dipole positions and with precomputed leadfields.
 %
 % The following strategies are supported to obtain statistics for the source parameters using
@@ -56,8 +56,8 @@ function [source] = sourceanalysis(cfg, data, baseline);
 % can also use a resampling procedure that reshuffles the trials over both
 % conditions. In that case, you should call the function with two datasets
 % containing single trial data like
-%   [source] = sourceanalysis(cfg, freqA, freqB)
-%   [source] = sourceanalysis(cfg, timelockA, timelockB)
+%   [source] = ft_sourceanalysis(cfg, freqA, freqB)
+%   [source] = ft_sourceanalysis(cfg, timelockA, timelockB)
 % and you should specify
 %   cfg.randomization      = 'no' or 'yes'
 %   cfg.permutation        = 'no' or 'yes'
@@ -87,7 +87,7 @@ function [source] = sourceanalysis(cfg, data, baseline);
 %
 % Other configuration options are
 %   cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'),
-%                       see CHANNELSELECTION for details
+%                       see FT_CHANNELSELECTION for details
 %   cfg.frequency     = single number (in Hz)
 %   cfg.latency       = single number in seconds, for time-frequency analysis
 %   cfg.lambda        = number or empty for automatic default
@@ -103,7 +103,7 @@ function [source] = sourceanalysis(cfg, data, baseline);
 %   cfg.keepmom       = 'no' or 'yes'
 %   cfg.feedback      = 'no', 'text', 'textbar', 'gui' (default = 'text')
 %
-% See also SOURCEDESCRIPTIVES, SOURCESTATISTICS, PREPARE_LEADFIELD
+% See also FT_SOURCEDESCRIPTIVES, FT_SOURCESTATISTICS, FT_PREPARE_LEADFIELD
 
 % Undocumented local options:
 % cfg.numcomponents
@@ -111,10 +111,10 @@ function [source] = sourceanalysis(cfg, data, baseline);
 % cfg.trialweight        = 'equal' or 'proportional'
 % cfg.powmethod          = 'lambda1' or 'trace'
 %
-% This function depends on PREPARE_DIPOLE_GRID which has the following options:
-% cfg.grid.xgrid (default set in PREPARE_DIPOLE_GRID: cfg.grid.xgrid = 'auto'), documented
-% cfg.grid.ygrid (default set in PREPARE_DIPOLE_GRID: cfg.grid.ygrid = 'auto'), documented
-% cfg.grid.zgrid (default set in PREPARE_DIPOLE_GRID: cfg.grid.zgrid = 'auto'), documented
+% This function depends on FT_PREPARE_DIPOLE_GRID which has the following options:
+% cfg.grid.xgrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.xgrid = 'auto'), documented
+% cfg.grid.ygrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.ygrid = 'auto'), documented
+% cfg.grid.zgrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.zgrid = 'auto'), documented
 % cfg.grid.resolution, documented
 % cfg.grid.pos, documented
 % cfg.grid.dim, documented
@@ -127,25 +127,25 @@ function [source] = sourceanalysis(cfg, data, baseline);
 % cfg.threshold
 % cfg.symmetry
 %
-% This function depends on PREPARE_FREQ_MATRICES which has the following options:
-% cfg.channel (default set in SOURCEANALYSIS: cfg.channel = 'all'), documented
+% This function depends on FT_PREPARE_FREQ_MATRICES which has the following options:
+% cfg.channel (default set in FT_SOURCEANALYSIS: cfg.channel = 'all'), documented
 % cfg.dicsfix
 % cfg.frequency, documented
 % cfg.latency, documented
 % cfg.refchan, documented
 %
-% This function depends on PREPARE_RESAMPLED_DATA which has the following options:
-% cfg.jackknife (default set in SOURCEANALYSIS: cfg.jackknife = 'no'), documented
+% This function depends on FT_PREPARE_RESAMPLED_DATA which has the following options:
+% cfg.jackknife (default set in FT_SOURCEANALYSIS: cfg.jackknife = 'no'), documented
 % cfg.numbootstrap, documented
-% cfg.numcondition (set in SOURCEANALYSIS: cfg.numcondition = 2)
-% cfg.numpermutation (default set in SOURCEANALYSIS: cfg.numpermutation = 100), documented
-% cfg.numrandomization (default set in SOURCEANALYSIS: cfg.numrandomization = 100), documented
-% cfg.permutation (default set in SOURCEANALYSIS: cfg.permutation = 'no'), documented
-% cfg.pseudovalue (default set in SOURCEANALYSIS: cfg.pseudovalue = 'no'), documented
-% cfg.randomization (default set in SOURCEANALYSIS: cfg.randomization = 'no'), documented
+% cfg.numcondition (set in FT_SOURCEANALYSIS: cfg.numcondition = 2)
+% cfg.numpermutation (default set in FT_SOURCEANALYSIS: cfg.numpermutation = 100), documented
+% cfg.numrandomization (default set in FT_SOURCEANALYSIS: cfg.numrandomization = 100), documented
+% cfg.permutation (default set in FT_SOURCEANALYSIS: cfg.permutation = 'no'), documented
+% cfg.pseudovalue (default set in FT_SOURCEANALYSIS: cfg.pseudovalue = 'no'), documented
+% cfg.randomization (default set in FT_SOURCEANALYSIS: cfg.randomization = 'no'), documented
 %
-% This function depends on PREPARE_VOL_SENS which has the following options:
-% cfg.channel, (default set in SOURCEANALYSIS: cfg.channel = 'all'), documented
+% This function depends on FT_PREPARE_VOL_SENS which has the following options:
+% cfg.channel, (default set in FT_SOURCEANALYSIS: cfg.channel = 'all'), documented
 % cfg.elec, documented
 % cfg.elecfile, documented
 % cfg.grad, documented
@@ -154,13 +154,13 @@ function [source] = sourceanalysis(cfg, data, baseline);
 % cfg.order
 % cfg.vol, documented
 %
-% This function depends on PREPARE_LEADFIELD which has the following options:
-% cfg.feedback, (default set in SOURCEANALYSIS: cfg.feedback = 'text'), documented
+% This function depends on FT_PREPARE_LEADFIELD which has the following options:
+% cfg.feedback, (default set in FT_SOURCEANALYSIS: cfg.feedback = 'text'), documented
 % cfg.grid, documented
 % cfg.lbex
-% cfg.normalize (default set in SOURCEANALYSIS), documented
+% cfg.normalize (default set in FT_SOURCEANALYSIS), documented
 % cfg.previous
-% cfg.reducerank (default set in SOURCEANALYSIS), documented
+% cfg.reducerank (default set in FT_SOURCEANALYSIS), documented
 % cfg.sel50p
 % cfg.version
 

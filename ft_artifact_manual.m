@@ -1,12 +1,12 @@
-function [cfg, artifact] = artifact_manual(cfg);
+function [cfg, artifact] = ft_artifact_manual(cfg);
 
-% THIS FUNCTION IS DEPRECIATED, USE REJECTVISUAL INSTEAD
+% THIS FUNCTION IS DEPRECIATED, USE FT_REJECTVISUAL INSTEAD
 %
-% ARTIFACT_MANUAL allows the user to detect artifacts manually using visual
+% FT_ARTIFACT_MANUAL allows the user to detect artifacts manually using visual
 % inspection.
 %
 % Use as:
-%   [cfg, artifact] = artifact_manual(cfg)
+%   [cfg, artifact] = ft_artifact_manual(cfg)
 %   required configuration options: 
 %   cfg.dataset or both cfg.headerfile and cfg.datafile
 %
@@ -34,7 +34,7 @@ function [cfg, artifact] = artifact_manual(cfg);
 %   cfg.artfctdef.manual.bpfreq    = [0.3 30] in Hz
 %   cfg.artfctdef.manual.bpfiltord = 2
 %
-% See also REJECTARTIFACT, REJECTVISUAL
+% See also FT_REJECTARTIFACT, FT_REJECTVISUAL
 
 % Undocumented local options:
 % cfg.artfctdef.manual.maxnumberofchannels = 20 (default)

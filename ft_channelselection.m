@@ -1,4 +1,4 @@
-function [channel] = channelselection(channel, datachannel)
+function [channel] = ft_channelselection(channel, datachannel)
 
 % FT_CHANNELSELECTION for EEG and MEG labels
 %

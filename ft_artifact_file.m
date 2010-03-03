@@ -1,13 +1,13 @@
-function [cfg, artifact] = artifact_file(cfg);
+function [cfg, artifact] = ft_artifact_file(cfg);
 
-% ARTIFACT_FILE reads rejection marks from a file
+% FT_ARTIFACT_FILE reads rejection marks from a file
 %
 % Use as
-%   [cfg, artifact] = arifact_file(cfg)
+%   [cfg, artifact] = ft_arifact_file(cfg)
 %   required configuration options: 
 %   cfg.dataset or cfg.headerfile
 %
-% See also REJECTARTIFACT
+% See also FT_REJECTARTIFACT
 
 % Copyright (C) 2003-2006, Robert Oostenveld
 %

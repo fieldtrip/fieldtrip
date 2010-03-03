@@ -1,26 +1,26 @@
-function [cfg] = databrowser(cfg, data)
+function [cfg] = ft_databrowser(cfg, data)
 
-% DATABROWSER can be used for visual inspection of data. Artifacts that were detected
-% by artifact functions (see ARTIFACT_xxx functions where xxx is the type of artifact) 
+% FT_DATABROWSER can be used for visual inspection of data. Artifacts that were detected
+% by artifact functions (see FT_ARTIFACT_xxx functions where xxx is the type of artifact) 
 % are marked. Additionally data pieces can be marked and unmarked as artifact by 
 % manual selection. The output cfg contains the updated artifactdef field.
 %
 % Use as
-%   cfg = databrowser(cfg)
+%   cfg = ft_databrowser(cfg)
 %   required configuration options: 
 %   cfg.dataset or both cfg.headerfile and cfg.datafile
 % or as
-%   cfg = databrowser(cfg, data)
-% with the data as obtained from PREPROCESSING
+%   cfg = ft_databrowser(cfg, data)
+% with the data as obtained from FT_PREPROCESSING
 %
 % The following configuration options are supported:
-%   cfg.trl                     = structure that defines the data segments of interest. See DEFINETRIAL
+%   cfg.trl                     = structure that defines the data segments of interest. See FT_DEFINETRIAL
 %   cfg.continuous              = 'yes' or 'no' whether the file contains continuous data
-%   cfg.channel                 = cell-array with channel labels, see CHANNELSELECTION
+%   cfg.channel                 = cell-array with channel labels, see FT_CHANNELSELECTION
 %   cfg.zscale                  = [zmin zmax] or 'auto' (default = 'auto')
 %   cfg.blocksize               = number (in seconds), only aplicable if data contains only 1 (long) trial
 %   cfg.viewmode                = string, 'butterfly', 'vertical', 'component' (default = 'butterfly')
-%   cfg.artfctdef.xxx.artifact  = Nx2 matrix with artifact segments see ARTIFACT_xxx functions
+%   cfg.artfctdef.xxx.artifact  = Nx2 matrix with artifact segments see FT_ARTIFACT_xxx functions
 %   cfg.selectfeature           = string, name of feature to be selected/added (default = 'visual')
 %   cfg.selectmode              = string, what to do with a selection, can be 'mark', or 'eval' (default = 'mark')
 %                                 'mark': artfctdef field is updated, 'eval': the function defined in
@@ -34,14 +34,14 @@ function [cfg] = databrowser(cfg, data)
 %   cfg.selcfg                  = configuration options for selfun
 %
 % The "artifact" field in the output cfg is a Nx2 matrix comparable to the
-% "trl" matrix of DEFINETRIAL. The first column of which specifying the
+% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
 % beginsamples of an artifact period, the second column contains the
 % endsamples of the artifactperiods.
 %
 % NOTE for debugging: in case the databrowser crashes, use delete(gcf) to kill the figure.
 %
-% See also PREPROCESSING, REJECTARTIFACT, ARTIFACT_EOG, ARTIFACT_MUSCLE,
-% ARTIFACT_JUMP, ARTIFACT_MANUAL, ARTIFACT_THRESHOLD, ARTIFACT_CLIP, ARTIFACT_ECG
+% See also FT_PREPROCESSING, FT_REJECTARTIFACT, FT_ARTIFACT_EOG, FT_ARTIFACT_MUSCLE,
+% FT_ARTIFACT_JUMP, FT_ARTIFACT_MANUAL, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG
 
 % Copyright (C) 2009, Robert Oostenveld, Ingrid Niewenhuis
 %

@@ -1,19 +1,19 @@
-function [cfg, artifact] = artifact_eog(cfg,data)
+function [cfg, artifact] = ft_artifact_eog(cfg,data)
 
-% ARTIFACT_EOG reads the data segments of interest from file and
+% FT_ARTIFACT_EOG reads the data segments of interest from file and
 % identifies EOG artifacts.
 %
 % Use as
-%   [cfg, artifact] = artifact_eog(cfg)
+%   [cfg, artifact] = ft_artifact_eog(cfg)
 %   required configuration options: 
 %   cfg.dataset or both cfg.headerfile and cfg.datafile
 % or
-%   [cfg, artifact] = artifact_eog(cfg, data)
+%   [cfg, artifact] = ft_artifact_eog(cfg, data)
 %   forbidden configuration options: 
 %   cfg.dataset, cfg.headerfile and cfg.datafile
 %
 % In both cases the configuration should also contain:
-%   cfg.trl        = structure that defines the data segments of interest. See DEFINETRIAL
+%   cfg.trl        = structure that defines the data segments of interest. See FT_DEFINETRIAL
 %   cfg.continuous = 'yes' or 'no' whether the file contains continuous data
 %
 % The data is preprocessed (again) with the following configuration parameters,
@@ -26,18 +26,18 @@ function [cfg, artifact] = artifact_eog(cfg,data)
 %
 % Artifacts are identified by means of thresholding the z-transformed value
 % of the preprocessed data.
-%   cfg.artfctdef.eog.channel      = Nx1 cell-array with selection of channels, see CHANNELSELECTION for details
+%   cfg.artfctdef.eog.channel      = Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details
 %   cfg.artfctdef.eog.cutoff       = 4       z-value at which to threshold
 %   cfg.artfctdef.eog.trlpadding   = 0.5
 %   cfg.artfctdef.eog.fltpadding   = 0.1
 %   cfg.artfctdef.eog.artpadding   = 0.1
 %
 % The output argument "artifact" is a Nx2 matrix comparable to the
-% "trl" matrix of DEFINETRIAL. The first column of which specifying the
+% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
 % beginsamples of an artifact period, the second column contains the
 % endsamples of the artifactperiods.
 %
-% See also ARTIFACT_ZVALUE, REJECTARTIFACT
+% See also FT_ARTIFACT_ZVALUE, FT_REJECTARTIFACT
 
 % Undocumented local options
 % cfg.method

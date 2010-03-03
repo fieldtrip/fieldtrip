@@ -1,26 +1,26 @@
-function [cfg, artifact] = artifact_clip(cfg,data)
+function [cfg, artifact] = ft_artifact_clip(cfg,data)
 
-% ARTIFACT_CLIP scans the data segments of interest for channels that
+% FT_ARTIFACT_CLIP scans the data segments of interest for channels that
 % clip. A clipping artifact is detected by the signal being completely
 % flat for some time.
 %
 % Use as
-%   [cfg, artifact] = artifact_clip(cfg)
+%   [cfg, artifact] = ft_artifact_clip(cfg)
 %   required configuration options:
 %   cfg.dataset or both cfg.headerfile and cfg.datafile
 % or
-%   [cfg, artifact] = artifact_clip(cfg, data)
+%   [cfg, artifact] = ft_artifact_clip(cfg, data)
 %   forbidden configuration options: 
 %   cfg.dataset, cfg.headerfile and cfg.datafile
 %
 % In both cases the configuration should also contain:
-%   cfg.artfctdef.clip.channel  = Nx1 cell-array with selection of channels, see CHANNELSELECTION for details
+%   cfg.artfctdef.clip.channel  = Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details
 %   cfg.artfctdef.clip.pretim   = 0.000;  pre-artifact rejection-interval in seconds
 %   cfg.artfctdef.clip.psttim   = 0.000;  post-artifact rejection-interval in seconds
 %   cfg.artfctdef.clip.thresh   = 0.010;  minimum duration in seconds of a datasegment with consecutive identical samples to be considered as 'clipped'
 %   cfg.continuous              = 'yes' or 'no' whether the file contains continuous data
 %   
-% See also REJECTARTIFACT
+% See also FT_REJECTARTIFACT
 
 % Copyright (C) 2005, Robert Oostenveld
 %
