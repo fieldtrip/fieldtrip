@@ -1,16 +1,17 @@
-function [script, details] = analysisprotocol(cfg, datacfg)
+function [script, details] = ft_analysisprotocol(cfg, datacfg)
 
-% ANALYSISPROTOCOL tries to reconstruct the complete analysis protocol that
+% FT_ANALYSISPROTOCOL tries to reconstruct the complete analysis protocol that
 % was used to create an arbitrary FieldTrip data structure. It will create
 % a Matlab script (as text file) and a flowchart with a graphical
 % representation.
 %
 % Use as
-%   ANALYSISPROTOCOL(cfg, data)
+%   ft_analysisprotocol(cfg, data)
+%
 % where the first cfg input contains the settings that apply to the
 % behaviour of this particular function and the second data input argument
-% can be the output of any FieldTrip function, e.g. PREPROCESSING,
-% TIMELOCKANALYSIS, SOURCEANALYSIS, FREQSTATISTICS or whatever you like.
+% can be the output of any FieldTrip function, e.g. FT_PREPROCESSING,
+% FT_TIMELOCKANALYSIS, FT_SOURCEANALYSIS, FT_FREQSTATISTICS or whatever you like.
 %
 % Alternatively, for the second input argument you can also only give the
 % configuration of the processed data (i.e. "data.cfg") instead of the full
