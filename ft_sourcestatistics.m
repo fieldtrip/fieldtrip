@@ -53,73 +53,89 @@ fieldtripdefs
 % this wrapper should be compatible with the already existing statistical
 % functions that only work for source input data
 
-% check if the input data is valid for this function
-for i=1:length(varargin)
-  if isfield(cfg, 'roi') && ~isempty(cfg.roi)
-    varargin{i} = checkdata(varargin{i}, 'datatype', 'source', 'feedback', 'no', 'inside', 'index');
-  else
-    varargin{i} = checkdata(varargin{i}, 'datatype', {'source', 'volume'}, 'feedback', 'no', 'inside', 'index');
-  end
-end
+if ~isfield(cfg, 'implementation'), cfg.implementation = 'old'; end
 
-if isfield(cfg, 'method')
-  % call the appropriate subfunction
-  if (strcmp(cfg.method, 'zero-baseline') || ...
-      strcmp(cfg.method, 'nai')           || ...
-      strcmp(cfg.method, 'pseudo-t')      || ...
-      strcmp(cfg.method, 'difference')    || ...
-      strcmp(cfg.method, 'anova1')        || ...
-      strcmp(cfg.method, 'kruskalwallis'))
-    % these are all statistical methods that are implemented in the old SOURCESTATISTICS_PARAMETRIC subfunction
-    cfg.statistic = cfg.method;
-    cfg.method    = 'parametric';
+  %-------------------------------
+  %use the original implementation
+  if strcmp(cfg.implementation, 'old'),
+  
+  % check if the input data is valid for this function
+  for i=1:length(varargin)
+    if isfield(cfg, 'roi') && ~isempty(cfg.roi)
+      varargin{i} = checkdata(varargin{i}, 'datatype', 'source', 'feedback', 'no', 'inside', 'index');
+    else
+      varargin{i} = checkdata(varargin{i}, 'datatype', {'source', 'volume'}, 'feedback', 'no', 'inside', 'index');
+    end
+  end
+  
+  if isfield(cfg, 'method')
+    % call the appropriate subfunction
+    if (strcmp(cfg.method, 'zero-baseline') || ...
+        strcmp(cfg.method, 'nai')           || ...
+        strcmp(cfg.method, 'pseudo-t')      || ...
+        strcmp(cfg.method, 'difference')    || ...
+        strcmp(cfg.method, 'anova1')        || ...
+        strcmp(cfg.method, 'kruskalwallis'))
+      % these are all statistical methods that are implemented in the old SOURCESTATISTICS_PARAMETRIC subfunction
+      cfg.statistic = cfg.method;
+      cfg.method    = 'parametric';
+    elseif strcmp(cfg.method, 'randomization')
+      cfg.method = 'randomization';
+    elseif strcmp(cfg.method, 'randcluster')
+      cfg.method = 'randcluster';
+    end
+  end
+  
+  if strcmp(cfg.method, 'parametric')
+    % use the source-specific statistical subfunction
+    stat = sourcestatistics_parametric(cfg, varargin{:});
   elseif strcmp(cfg.method, 'randomization')
-    cfg.method = 'randomization';
+    % use the source-specific statistical subfunction
+    stat = sourcestatistics_randomization(cfg, varargin{:});
   elseif strcmp(cfg.method, 'randcluster')
-    cfg.method = 'randcluster';
+    % use the source-specific statistical subfunction
+    stat = sourcestatistics_randcluster(cfg, varargin{:});
+  else
+    [status,output] = system('whoami');
+    if isempty(strfind(output,'jan')),
+      % use the data-indepentend statistical wrapper function
+      % this will collect the data and subsequently call STATISTICS_XXX
+      [stat, cfg] = statistics_wrapper(cfg, varargin{:});
+    else
+      [stat, cfg] = statistics_wrapperJM(cfg, varargin{:});
+    end
   end
-end
+  
+  % add version information to the configuration
+  try
+    % get the full name of the function
+    cfg.version.name = mfilename('fullpath');
+  catch
+    % required for compatibility with Matlab versions prior to release 13 (6.5)
+    [st, i] = dbstack;
+    cfg.version.name = st(i);
+  end
+  cfg.version.id = '$Id$';
+  
+  % remember the configuration of the input data
+  cfg.previous = [];
+  for i=1:length(varargin)
+    if isfield(varargin{i}, 'cfg')
+      cfg.previous{i} = varargin{i}.cfg;
+    else
+      cfg.previous{i} = [];
+    end
+  end
+  
+  % remember the exact configuration details
+  stat.cfg = cfg;
 
-if strcmp(cfg.method, 'parametric')
-  % use the source-specific statistical subfunction
-  stat = sourcestatistics_parametric(cfg, varargin{:});
-elseif strcmp(cfg.method, 'randomization')
-  % use the source-specific statistical subfunction
-  stat = sourcestatistics_randomization(cfg, varargin{:});
-elseif strcmp(cfg.method, 'randcluster')
-  % use the source-specific statistical subfunction
-  stat = sourcestatistics_randcluster(cfg, varargin{:});
+elseif strcmp(cfg.implementation, 'new')
+  
+  %--------------------------
+  %use the new implementation
+  warning('new implementation has to be made still');
+  stat = [];
 else
-  [status,output] = system('whoami');
-  if isempty(strfind(output,'jan')),
-    % use the data-indepentend statistical wrapper function
-    % this will collect the data and subsequently call STATISTICS_XXX
-    [stat, cfg] = statistics_wrapper(cfg, varargin{:});
-  else
-    [stat, cfg] = statistics_wrapperJM(cfg, varargin{:});
-  end
+  error('cfg.implementation can be only old or new');
 end
-
-% add version information to the configuration
-try
-  % get the full name of the function
-  cfg.version.name = mfilename('fullpath');
-catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
-  [st, i] = dbstack;
-  cfg.version.name = st(i);
-end
-cfg.version.id = '$Id$';
-
-% remember the configuration of the input data
-cfg.previous = [];
-for i=1:length(varargin)
-  if isfield(varargin{i}, 'cfg')
-    cfg.previous{i} = varargin{i}.cfg;
-  else
-    cfg.previous{i} = [];
-  end
-end
-
-% remember the exact configuration details
-stat.cfg = cfg;
