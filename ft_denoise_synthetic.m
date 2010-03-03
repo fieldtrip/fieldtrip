@@ -1,16 +1,16 @@
-function [data] = denoise_synthetic(cfg, data);
+function [data] = ft_denoise_synthetic(cfg, data);
 
-% DENOISE_SYNTHETIC computes CTF higher-order synthetic gradients for
+% FT_DENOISE_SYNTHETIC computes CTF higher-order synthetic gradients for
 % preprocessed data and for the corresponding gradiometer definition.
 %
 % Use as
-%   [data] = denoise_synthetic(cfg, data);
-% where data should come from PREPROCESSING and the configuration should contain
+%   [data] = ft_denoise_synthetic(cfg, data);
+% where data should come from FT_PREPROCESSING and the configuration should contain
 %   cfg.gradient = 'none', 'G1BR', 'G2BR' or 'G3BR' specifies the gradiometer
 %                  type to which the data should be changed
 %   cfg.trials   = 'all' or a selection given as a 1xN vector (default = 'all')
 %
-% See also PREPROCESSING, DENOISE_SNS, DENOISE_TSR, DENOISE_PCA
+% See also FT_PREPROCESSING, FT_DENOISE_SNS, FT_DENOISE_TSR, DENOISE_PCA
 
 % Copyright (C) 2004-2008, Robert Oostenveld
 %
