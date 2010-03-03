@@ -71,9 +71,11 @@ hasoffset     = keyval('hasoffset',     varargin); if isempty(hasoffset), hasoff
 hasdimord     = keyval('hasdimord',     varargin); if isempty(hasdimord), hasdimord = 'no'; end
 hascumtapcnt  = keyval('hascumtapcnt',  varargin);
 hasdof        = keyval('hasdof',        varargin); if isempty(hasdof), hasdof = 'no'; end
+haspow        = keyval('haspow',        varargin); if isempty(haspow), haspow = 'no'; end
 cmbrepresentation = keyval('cmbrepresentation',  varargin);
 channelcmb    = keyval('channelcmb',   varargin);
 sourcedimord  = keyval('sourcedimord', varargin);
+sourcerepresentation = keyval('sourcerepresentation', varargin);
 keepoutside   = keyval('keepoutside',  varargin);
 
 % determine the type of input data
@@ -583,6 +585,10 @@ end % cmbrepresentation
 if issource && strcmp(keepoutside, 'no'),
   % remove all grid points that are marked as outside
   data = source2sparse(data);
+end
+
+if issource && ~isempty(sourcerepresentation)
+  data = fixsource(data, 'type', sourcerepresentation, 'haspow', haspow);
 end
 
 if isfield(data, 'grad')
