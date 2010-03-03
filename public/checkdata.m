@@ -368,7 +368,7 @@ if issource || isvolume,
       end
       data.pow = tmppow';
       data     = rmfield(data, 'avg');
-      if strcmp(inside, 'logical'), 
+      if strcmp(inside, 'logical'),
         data     = fixinside(data, 'logical');
         data.inside = repmat(data.inside(:)',[Nrpt 1]);
       end
@@ -485,7 +485,7 @@ if issource || isvolume,
     end
     if numel(dim)==1, dim(1,2) = 1; end;
   end
-  
+
   % these fields should not be reshaped
   exclude = {'cfg' 'fwhm' 'leadfield' 'q' 'rough'};
   if ~strcmp(inside, 'logical')
@@ -623,45 +623,108 @@ elseif isfield(data, 'cohspctrm') &&  isfield(data, 'labelcmb')
 else
   error('Could not determine the current representation of the coherence');
 end
+
 if isequal(current, desired)
   % nothing to do
+
 elseif strcmp(current, 'full') && strcmp(desired, 'sparse')
-  % FIXME should be implemented
-  error('not yet implemented');
+  dimtok = tokenize(data.dimord, '_');
+  if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq);      else nfrq = 1; end
+  if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time);      else ntim = 1; end
+  nchan    = length(data.label);
+  ncmb     = nchan*nchan;
+  labelcmb = cell(ncmb, 2);
+  cmbindx  = zeros(nchan, nchan);
+  k = 1;
+  for j=1:nchan
+    for i=1:nchan
+      labelcmb{k, 1} = data.label{i};
+      labelcmb{k, 2} = data.label{j};
+      cmbindx(i,j)   = k;
+      k = k+1;
+    end
+  end
+  % reshape all possible fields
+  fn = fieldnames(data);
+  for i=1:numel(fn)
+    if numel(data.(fn{i})) == ncmb*nfrq*ntim;
+      data.(fn{i}) = reshape(data.(fn{i}), ncmb, nfrq, ntim);
+    end
+  end
+  % remove obsolete fields
+  data           = rmfield(data, 'label');
+  try, data      = rmfield(data, 'dof'); end
+  % replace updated fields
+  data.labelcmb  = labelcmb;
+  if ntim>1,
+    data.dimord = 'chancmb_freq_time';
+  else
+    data.dimord = 'chancmb_freq';
+  end
+
 
 elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
   dimtok = tokenize(data.dimord, '_');
   if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq);      else nfrq = 1; end
   if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time);      else ntim = 1; end
+
+  if ~isfield(data, 'label')
+    data.label = unique(data.labelcmb(:));
+  end
+
   nchan     = length(data.label);
-  cmbindx   = zeros(nchan);
+  ncmb      = size(data.labelcmb,1);
+  cmbindx   = zeros(nchan,nchan);
+
   for k = 1:size(data.labelcmb,1)
     ch1 = find(strcmp(data.label, data.labelcmb(k,1)));
     ch2 = find(strcmp(data.label, data.labelcmb(k,2)));
-    if ~isempty(ch1) && ~isempty(ch2), cmbindx(ch1,ch2) = k; end
-  end
-  cohspctrm = nan(nchan,nchan,nfrq,ntim);
-  for k = 1:ntim
-    for m = 1:nfrq
-      tmpdat = nan+zeros(nchan);
-      tmpdat(find(cmbindx)) = data.cohspctrm(cmbindx(find(cmbindx)),m,k);
-      tmpdat                = ctranspose(tmpdat);
-      tmpdat(find(cmbindx)) = data.cohspctrm(cmbindx(find(cmbindx)),m,k);
-      cohspctrm(:,:,m,k)    = tmpdat;
+    if ~isempty(ch1) && ~isempty(ch2),
+      cmbindx(ch1,ch2) = k;
     end
   end
+
+  complete = all(cmbindx(:)~=0);
+
+  fn = fieldnames(data);
+  for i=1:numel(fn)
+    if numel(data.(fn{i})) == ncmb*nfrq*ntim;
+
+      tmpall = nan(nchan,nchan,nfrq,ntim);
+
+      for k = 1:ntim
+        for m = 1:nfrq
+          tmpdat = nan(nchan,nchan);
+          if ~complete
+            % this realizes the missing combinations to be represented as the
+            % conjugate of the corresponding combination across the diagonal
+            tmpdat(find(cmbindx)) = data.(fn{i})(cmbindx(find(cmbindx)),m,k);
+            tmpdat                = ctranspose(tmpdat);
+          end
+          tmpdat(find(cmbindx)) = data.(fn{i})(cmbindx(find(cmbindx)),m,k);
+          tmpall(:,:,m,k)       = tmpdat;
+        end % for m
+      end % for k
+
+      % replace the data in the old representation with the new representation
+      data.(fn{i}) = tmpall;
+
+    end % if numel
+  end % for i
+
   % remove obsolete fields
-  data           = rmfield(data, 'powspctrm');
-  data           = rmfield(data, 'labelcmb');
-  % replace updated fields
-  data.cohspctrm = cohspctrm;
-  try, data      = rmfield(data, 'dof'); end
+  try, data      = rmfield(data, 'powspctrm');  end
+  try, data      = rmfield(data, 'labelcmb');   end
+  try, data      = rmfield(data, 'dof');        end
+
   if ntim>1,
     data.dimord = 'chan_chan_freq_time';
   else
     data.dimord = 'chan_chan_freq';
   end
 
+else
+  error('unsupported conversion');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
