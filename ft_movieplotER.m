@@ -1,9 +1,9 @@
-function movieplotER(cfg, timelock)
+function ft_movieplotER(cfg, timelock)
 
-% MOVIEPLOTER makes a movie of the topographic distribution of timelock
+% FT_MOVIEPLOTER makes a movie of the topographic distribution of timelock
 % datatypes over time.
 %
-% Use as: movieplotER(cfg, timelock)
+% Use as: ft_movieplotER(cfg, timelock)
 % 
 % cfg options:
 %   cfg.samperframe  = number, samples per fram (default = 1)

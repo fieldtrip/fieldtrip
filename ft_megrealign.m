@@ -1,12 +1,12 @@
-function [interp] = megrealign(cfg, data);
+function [interp] = ft_megrealign(cfg, data);
 
-% MEGREALIGN interpolates MEG data towards standard gradiometer locations 
+% FT_MEGREALIGN interpolates MEG data towards standard gradiometer locations 
 % by projecting the individual timelocked data towards a coarse source
 % reconstructed representation and computing the magnetic field on
 % the standard gradiometer locations.
 %
 % Use as
-%   [interp] = megrealign(cfg, data)
+%   [interp] = ft_megrealign(cfg, data)
 %   Required configuration options:
 %   cfg.template, cfg.inwardshift
 %
@@ -55,18 +55,18 @@ function [interp] = megrealign(cfg, data);
 %   cfg.verify      = 'yes' or 'no', show the percentage difference (default = 'yes')
 %   cfg.feedback    = 'yes' or 'no' (default = 'no')
 %   cfg.channel     =  Nx1 cell-array with selection of channels (default = 'MEG'),
-%                      see CHANNELSELECTION for details
+%                      see FT_CHANNELSELECTION for details
 %   cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
 % 
 % This implements the method described by T.R. Knosche, Transformation
 % of whole-head MEG recordings between different sensor positions.
 % Biomed Tech (Berl). 2002 Mar;47(3):59-62.
 % 
-% See also MEGINTERPOLATE, PREPARE_LOCALSPHERES, PREPARE_SINGLESHELL
+% See also FT_MEGINTERPOLATE, FT_PREPARE_LOCALSPHERES, FT_PREPARE_SINGLESHELL
 
-% This function depends on PREPARE_DIPOLE_GRID
+% This function depends on FT_PREPARE_DIPOLE_GRID
 %
-% This function depends on PREPARE_VOL_SENS which has the following options:
+% This function depends on FT_PREPARE_VOL_SENS which has the following options:
 % cfg.channel
 % cfg.elec
 % cfg.elecfile
@@ -260,7 +260,7 @@ template.grad.tra   = tmp_tra;
 template.grad.unit  = tmp_unit;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% PREPARE_VOL_SENS will match the data labels, the gradiometer labels and the 
+% FT_PREPARE_VOL_SENS will match the data labels, the gradiometer labels and the 
 % volume model labels (in case of a multisphere model) and result in a gradiometer 
 % definition that only contains the gradiometers that are present in the data.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

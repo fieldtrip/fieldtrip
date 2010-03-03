@@ -1,18 +1,18 @@
-function [interp] = megplanar(cfg, data)
+function [interp] = ft_megplanar(cfg, data)
 
-% MEGPLANAR computes planar MEG gradients gradients for raw data
-% obtained from PREPROCESSING or an average ERF that was computed using
-% TIMELOCKANALYSIS. It can also work on data in the frequency domain,
+% FT_MEGPLANAR computes planar MEG gradients gradients for raw data
+% obtained from FT_PREPROCESSING or an average ERF that was computed using
+% FT_TIMELOCKANALYSIS. It can also work on data in the frequency domain,
 % obtained with FREQANALYSIS. Prerequisite for this is that the data contain
 % complex-valued fourierspectra.
 %
 % Use as
-%    [interp] = megplanar(cfg, data)
+%    [interp] = ft_megplanar(cfg, data)
 %
 % The configuration should contain
 %   cfg.planarmethod   = 'orig' | 'sincos' | 'fitplane' | 'sourceproject'
 %   cfg.channel        =  Nx1 cell-array with selection of channels (default = 'MEG'),
-%                         see CHANNELSELECTION for details
+%                         see FT_CHANNELSELECTION for details
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
 %
 % The methods orig, sincos and fitplane are all based on a neighbourhood
@@ -42,14 +42,14 @@ function [interp] = megplanar(cfg, data)
 % If no headshape is specified, the dipole layer will be based on the inner compartment
 % of the volume conduction model.
 %
-% See also COMBINEPLANAR
+% See also FT_COMBINEPLANAR
 
-% This function depends on PREPARE_BRAIN_SURFACE which has the following options:
-% cfg.headshape  (default set in MEGPLANAR: cfg.headshape = 'headmodel'), documented
-% cfg.inwardshift (default set in MEGPLANAR: cfg.inwardshift = 2.5), documented
-% cfg.spheremesh (default set in MEGPLANAR: cfg.spheremesh = 642), documented
+% This function depends on FT_PREPARE_BRAIN_SURFACE which has the following options:
+% cfg.headshape  (default set in FT_MEGPLANAR: cfg.headshape = 'headmodel'), documented
+% cfg.inwardshift (default set in FT_MEGPLANAR: cfg.inwardshift = 2.5), documented
+% cfg.spheremesh (default set in FT_MEGPLANAR: cfg.spheremesh = 642), documented
 %
-% This function depends on PREPARE_VOL_SENS which has the following options:
+% This function depends on FT_PREPARE_VOL_SENS which has the following options:
 % cfg.channel
 % cfg.elec
 % cfg.elecfile
@@ -138,7 +138,7 @@ elseif strcmp(cfg.planarmethod, 'sourceproject')
   Nchan   = length(data.label);
   Ntrials = length(data.trial);
 
-  % PREPARE_VOL_SENS will match the data labels, the gradiometer labels and the
+  % FT_PREPARE_VOL_SENS will match the data labels, the gradiometer labels and the
   % volume model labels (in case of a multisphere model) and result in a gradiometer
   % definition that only contains the gradiometers that are present in the data.
   [vol, axial.grad, cfg] = prepare_headmodel(cfg, data);
@@ -213,7 +213,7 @@ if any(strcmp(cfg.planarmethod, {'orig', 'sincos', 'fitplane'}))
   interp.grad = apply_montage(data.grad, montage);
   interp.grad.balance.planar = montage;
   % ensure that the old sensor type does not stick around, because it is now invalid
-  % the sensor type is added in PREPARE_VOL_SENS but is not used in external fieldtrip code
+  % the sensor type is added in FT_PREPARE_VOL_SENS but is not used in external fieldtrip code
   if isfield(interp.grad, 'type')
     interp.grad = rmfield(interp.grad, 'type');
   end

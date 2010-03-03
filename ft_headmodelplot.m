@@ -1,12 +1,12 @@
-function [cfg] = headmodelplot(cfg, data)
+function [cfg] = ft_headmodelplot(cfg, data)
 
-% HEADMODELPLOT makes a 3D visualisation of the volume conductor model
+% FT_HEADMODELPLOT makes a 3D visualisation of the volume conductor model
 % and optionally of the gradiometer positions and headshape. It can
 % be used for example to check CTF multiple-sphere head models.
 %
 % Use as
-%   headmodelplot(cfg)
-%   headmodelplot(cfg, data)
+%   ft_headmodelplot(cfg)
+%   ft_headmodelplot(cfg, data)
 %
 % You should specify the volume conductor model with
 %   cfg.hdmfile       = string, file containing the volume conduction model
@@ -33,11 +33,11 @@ function [cfg] = headmodelplot(cfg, data)
 %   cfg.grid.dim        = [Nx Ny Nz] vector with dimensions in case of 3-D grid (optional)
 %   cfg.grid.inside     = vector with indices of the sources inside the brain (optional)
 %   cfg.grid.outside    = vector with indices of the sources outside the brain (optional)
-% You can also use the PREPARE_LEADFIELD or SOURCEANALYSIS functions
+% You can also use the FT_PREPARE_LEADFIELD or FT_SOURCEANALYSIS functions
 % to create a grid with dipole positions.
 %
 % Other options are
-%   cfg.channel          = cell-array, see CHANNELSELECTION
+%   cfg.channel          = cell-array, see FT_CHANNELSELECTION
 %   cfg.spheremesh       = number of vertices for spheres, either 42, 162 or 642
 %   cfg.plotheadsurface  = 'yes' or 'no', is constructed from head model
 %   cfg.plotbnd          = 'yes' or 'no'
@@ -59,7 +59,7 @@ function [cfg] = headmodelplot(cfg, data)
 % cfg.surface_edgecolor
 % cfg.surface_facealpha
 %
-% This function depends on PREPARE_VOL_SENS which has the following options:
+% This function depends on FT_PREPARE_VOL_SENS which has the following options:
 % cfg.channel, documented
 % cfg.elec, documented
 % cfg.elecfile, documented
@@ -67,7 +67,7 @@ function [cfg] = headmodelplot(cfg, data)
 % cfg.gradfile, documented
 % cfg.hdmfile, documented
 % cfg.order
-% cfg.vol, (default set in HEADMODELPLOT at cfg.vol =[]), documented
+% cfg.vol, (default set in FT_HEADMODELPLOT at cfg.vol =[]), documented
 
 % Copyright (C) 2004-2007, Robert Oostenveld
 %

@@ -5,7 +5,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 % in the EEG/MEG data.
 %
 % Use as
-%   [comp] = componentanalysis(cfg, data)
+%   [comp] =ft_componentanalysis(cfg, data)
 %
 % where the data comes from FT_PREPROCESING or FT_TIMELOCKANALYSIS and the
 % configuration structure can contain

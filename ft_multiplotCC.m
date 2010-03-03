@@ -1,18 +1,18 @@
-function multiplotCC(cfg, data)
+function ft_multiplotCC(cfg, data)
 
-% MULTIPLOTCC visualiuzes the coherence between channels by using multiple
+% FT_MULTIPLOTCC visualiuzes the coherence between channels by using multiple
 % topoplots. The topoplot at a given channel location shows the coherence
 % of that channel with all other channels.
 %
 % Use as
-%   multiplotCC(cfg, data)
+%   ft_multiplotCC(cfg, data)
 
 % Undocumented local options:
 % cfg.layout  = layout filename or a structure produced by prepare_layout
 % cfg.xlim
 % cfg.xparam
 % cfg.zparam
-% This function requires input from FREQSTATISTICS_SHIFTPREDICT
+% This function requires input from FT_FREQSTATISTICS_SHIFTPREDICT
 % This function should be rewritten, using the clean topoplot implementation
 
 % Copyright (C) 2005-2006, Jan-Mathijs Schoffelen, Robert Oostenveld
@@ -34,7 +34,7 @@ if strcmp(cfg.zparam, 'avg.icohspctrm') && ~issubfield(data, 'avg.icohspctrm'),
 end
 
 if strcmp(data.dimord, 'refchan_chan_freq'),
-  %reshape input-data, such that topoplotER will take it
+  %reshape input-data, such that ft_topoplotER will take it
   cnt = 1;
   siz = size(data.prob);
   data.labelcmb = cell(siz(1)*siz(2),2);

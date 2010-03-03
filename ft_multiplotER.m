@@ -1,16 +1,16 @@
-function [cfg] = multiplotER(cfg, varargin)
+function [cfg] = ft_multiplotER(cfg, varargin)
 
-% multiplotER plots the event-related fields or potentials versus time
+% ft_multiplotER plots the event-related fields or potentials versus time
 % or of oscillatory activity (power or coherence) versus frequency. Multiple
 % datasets can be overlayed.  The plots are arranged according to their
 % location specified in the layout.
 %
 % Use as:
-%   multiplotER(cfg, data)
-%   multiplotER(cfg, data, data2, ..., dataN)
+%   ft_multiplotER(cfg, data)
+%   ft_multiplotER(cfg, data, data2, ..., dataN)
 %
-% The data can be an ERP/ERF produced by TIMELOCKANALYSIS, a powerspectrum 
-% produced by FREQANALYSIS or a coherencespectrum produced by FREQDESCRIPTIVES. 
+% The data can be an ERP/ERF produced by FT_TIMELOCKANALYSIS, a powerspectrum 
+% produced by FT_FREQANALYSIS or a coherencespectrum produced by FT_FREQDESCRIPTIVES. 
 % If you specify multiple datasets they must contain the same channels, etc.
 %
 % The configuration can have the following parameters:
@@ -23,7 +23,7 @@ function [cfg] = multiplotER(cfg, varargin)
 % cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.ylim          = 'maxmin' or [ymin ymax] (default = 'maxmin')
 % cfg.cohrefchannel = name of reference channel for visualising coherence, can be 'gui'
-% cfg.baseline      = 'yes','no' or [time1 time2] (default = 'no'), see TIMELOCKBASELINE or FREQBASELINE
+% cfg.baseline      = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
 % cfg.baselinetype  = 'absolute' or 'relative' (default = 'absolute')
 % cfg.trials        = 'all' or a selection given as a 1xN vector (default = 'all')
 % cfg.axes          = 'yes', 'no' (default = 'yes')
@@ -61,20 +61,20 @@ function [cfg] = multiplotER(cfg, varargin)
 % of the subplots, you should create your own layout file.
 %
 % See also:
-%   multiplotTFR, singleplotER, singleplotTFR, topoplotER, topoplotTFR,
-%   prepare_layout.
+%   ft_multiplotTFR, ft_singleplotER, ft_singleplotTFR, ft_topoplotER, ft_topoplotTFR,
+%   ft_prepare_layout.
 
 % Undocumented local options:
 % cfg.layoutname
 %
-% This function depends on TIMELOCKBASELINE which has the following options:
+% This function depends on FT_TIMELOCKBASELINE which has the following options:
 % cfg.baseline, documented
 % cfg.channel
 % cfg.blcwindow
 % cfg.previous
 % cfg.version
 %
-% This function depends on FREQBASELINE which has the following options:
+% This function depends on FT_FREQBASELINE which has the following options:
 % cfg.baseline, documented
 % cfg.baselinetype
 

@@ -1,14 +1,14 @@
-function [cfg] = multiplotTFR(cfg, data)
+function [cfg] = ft_multiplotTFR(cfg, data)
 
-% multiplotTFR plots time-frequency representations of power or coherence in a 
+% ft_multiplotTFR plots time-frequency representations of power or coherence in a 
 % topographical layout. The plots of the indivual sensors are arranged according 
 % to their location specified in the layout.
 %
 % Use as:
-%   multiplotTFR(cfg, data)
+%   ft_multiplotTFR(cfg, data)
 %
 % The data can be a time-frequency representation of power or coherence that 
-% was computed using the FREQANALYSIS or FREQDESCRIPTIVES functions.
+% was computed using the FT_FREQANALYSIS or FT_FREQDESCRIPTIVES functions.
 %
 % The configuration can have the following parameters:
 % cfg.xparam           = field to be plotted on x-axis (default depends on data.dimord)
@@ -25,7 +25,7 @@ function [cfg] = multiplotTFR(cfg, data)
 % cfg.ylim             = 'maxmin' or [ymin ymax] (default = 'maxmin')
 % cfg.zlim             = 'maxmin','maxabs' or [zmin zmax] (default = 'maxmin')
 % cfg.cohrefchannel    = name of reference channel for visualising coherence, can be 'gui'
-% cfg.baseline         = 'yes','no' or [time1 time2] (default = 'no'), see FREQBASELINE
+% cfg.baseline         = 'yes','no' or [time1 time2] (default = 'no'), see FT_FREQBASELINE
 % cfg.baselinetype     = 'absolute' or 'relative' (default = 'absolute')
 % cfg.trials           = 'all' or a selection given as a 1xN vector (default = 'all')
 % cfg.box              = 'yes', 'no' (default = 'no' if maskparameter given default = 'yes')
@@ -48,7 +48,7 @@ function [cfg] = multiplotTFR(cfg, data)
 %
 % The layout defines how the channels are arranged and what the size of each
 % subplot is. You can specify the layout in a variety of ways:
-%  - you can provide a pre-computed layout structure (see prepare_layout)
+%  - you can provide a pre-computed layout structure (see ft_prepare_layout)
 %  - you can give the name of an ascii layout file with extension *.lay
 %  - you can give the name of an electrode file
 %  - you can give an electrode definition, i.e. "elec" structure
@@ -60,8 +60,8 @@ function [cfg] = multiplotTFR(cfg, data)
 % over the layout of the subplots, you should create your own layout file.
 %
 % See also:
-%   multiplotER, singleplotER, singleplotTFR, topoplotER, topoplotTFR,
-%   prepare_layout
+%   ft_multiplotER, ft_singleplotER, ft_singleplotTFR, ft_topoplotER, ft_topoplotTFR,
+%   ft_prepare_layout
 
 % Undocumented local options:
 % cfg.channel
@@ -69,7 +69,7 @@ function [cfg] = multiplotTFR(cfg, data)
 % cfg.xparam
 % cfg.zparam
 %
-% This function depends on FREQBASELINE which has the following options:
+% This function depends on FT_FREQBASELINE which has the following options:
 % cfg.baseline, documented
 % cfg.baselinetype, documented
 

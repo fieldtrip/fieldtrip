@@ -1,13 +1,13 @@
-function [mvardata] = mvaranalysis(cfg, data)
+function [mvardata] = ft_mvaranalysis(cfg, data)
 
-% MVARANALYSIS performs multivariate autoregressive modeling on
+% FT_MVARANALYSIS performs multivariate autoregressive modeling on
 % time series data over multiple trials.
 %
 % Use as
-%   [mvardata] = mvaranalysis(cfg, data)
+%   [mvardata] = ft_mvaranalysis(cfg, data)
 %
 % The input data should be organised in a structure as obtained from 
-% the PREPROCESSING function. The configuration depends on the type 
+% the FT_PREPROCESSING function. The configuration depends on the type 
 % of computation that you want to perform.
 % The output is a data structure of datatype 'mvar' which contains the
 % multivariate autoregressive coefficients in the field coeffs, and the
@@ -36,12 +36,12 @@ function [mvardata] = mvaranalysis(cfg, data)
 %                      e.g. when fitting a model to combined MEG/EMG data
 %   cfg.blc        = 'yes' (default) or 'no' explicit removal of DC-offset
 %
-% Mvaranalysis can be used to obtain one set of coefficients for 
+% ft_mvaranalysis can be used to obtain one set of coefficients for 
 % the whole common time axis defined in the data. It will throw an error
 % if the trials are of variable length, or if the time axes of the trials
 % are not equal to one another.
 %
-% Mvaranalysis can be also used to obtain time-dependent sets of
+% ft_mvaranalysis can be also used to obtain time-dependent sets of
 % coefficients based on a sliding window. In this case the input cfg 
 % should contain:
 %

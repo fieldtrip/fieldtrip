@@ -1,11 +1,11 @@
-function lrp = lateralizedpotential(cfg, avgL, avgR);
+function lrp = ft_lateralizedpotential(cfg, avgL, avgR);
 
-% LATERALIZEDPOTENTIAL computes lateralized potentials such as the LRP
+% FT_LATERALIZEDPOTENTIAL computes lateralized potentials such as the LRP
 %
 % Use as
-%   [lrp] = lateralizedpotential(cfg, avgL, avgR)
+%   [lrp] = ft_lateralizedpotential(cfg, avgL, avgR)
 %
-% where the input datasets should come from TIMELOCKANALYSIS
+% where the input datasets should come from FT_TIMELOCKANALYSIS
 % and the configuration should contain
 %   cfg.channelcmb = Nx2 cell array
 %
@@ -22,7 +22,7 @@ function lrp = lateralizedpotential(cfg, avgL, avgR);
 %
 % The lateralized potential is computed on combinations of channels and
 % not on indivudual channels. However, if you want to make a topographic
-% plot with e.g. MULTIPLOTER, you can replace the output lrp.label
+% plot with e.g. FT_MULTIPLOTER, you can replace the output lrp.label
 % with lrp.plotlabel.
 %
 % The concept for the LRP was introduced approximately simultaneously in the
@@ -37,7 +37,7 @@ function lrp = lateralizedpotential(cfg, avgL, avgR);
 %   Brain symmetry and topographic analysis of lateralized event-related
 %   potentials. Clin Neurophysiol. 114(7):1194-202, 2003.
 %
-% See also LATERALIZEDFIELD, TIMELOCKANALYSIS, MULTIPLOTER
+% See also FT_LATERALIZEDFIELD, FT_TIMELOCKANALYSIS, FT_MULTIPLOTER
 
 % Copyright (C) 2004, Robert Oostenveld
 %

@@ -1,11 +1,11 @@
-function cfg = interactiverealign(cfg)
+function cfg = ft_interactiverealign(cfg)
 
-% INTERACTIVEREALIGN interactively rotates, scales and translates
+% FT_INTERACTIVEREALIGN interactively rotates, scales and translates
 % electrode positions to template electrode positions or towards
 % the head surface.
 %
 % Use as
-%   [cfg] = interactiverealign(cfg)
+%   [cfg] = ft_interactiverealign(cfg)
 %
 % Required configuration options: 
 %  cfg.individual.vol
@@ -22,7 +22,7 @@ function cfg = interactiverealign(cfg)
 %  cfg.template.headshapestyle   = 'surface' (default), 'vertex' or 'both'
 %  cfg.individual.volstyle       = 'surface' (default), 'edge'   or 'both'
 %
-% See also VOLUMEREALIGN, ELECTRODEREALIGN, READ_SENS, READ_VOL, READ_HEADSHAPE
+% See also FT_VOLUMEREALIGN, FT_ELECTRODEREALIGN, FT_READ_SENS, FT_READ_VOL, FT_READ_HEADSHAPE
 
 % Copyright (C) 2008, Vladimir Litvak
 %

@@ -1,13 +1,13 @@
-function [norm] = electroderealign(cfg)
+function [norm] = ft_electroderealign(cfg)
 
-% ELECTRODEREALIGN rotates and translates electrode positions to
+% FT_ELECTRODEREALIGN rotates and translates electrode positions to
 % template electrode positions or towards the head surface. It can
 % either perform a rigid body transformation, in which only the
 % coordinate system is changed, or it can apply additional deformations
 % to the input electrodes.
 %
 % Use as
-%   [elec] = electroderealign(cfg)
+%   [elec] = ft_electroderealign(cfg)
 %
 % Three different methods for aligning the input electrodes are implemented:
 % based on a warping method, based on the fiducials or interactive with a
@@ -42,7 +42,7 @@ function [norm] = electroderealign(cfg)
 %                        'interactive'     realign manually using graphical user interface
 %                        'position'        position electrodes manually using graphical user interface
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
-%                        see CHANNELSELECTION for details
+%                        see  FT_CHANNELSELECTION for details
 %   cfg.fiducial       = cell-array with the name of three fiducials used for
 %                        realigning (default = {'nasion', 'lpa', 'rpa'})
 %   cfg.casesensitive  = 'yes' or 'no', determines whether string comparisons
@@ -77,7 +77,7 @@ function [norm] = electroderealign(cfg)
 %                        single triangulated boundary, or a Nx3 matrix with surface
 %                        points
 %
-% See also READ_ELEC, VOLUMEREALIGN
+% See also  FT_READ_ELEC,  FT_VOLUMEREALIGN
 
 % Copyright (C) 2005-2009, Robert Oostenveld
 %

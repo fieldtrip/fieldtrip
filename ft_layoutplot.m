@@ -1,6 +1,6 @@
-function layoutplot(cfg, data)
+function ft_layoutplot(cfg, data)
 
-% LAYOUTPLOT makes a figure with the 2-D layout of the channel positions
+% FT_LAYOUTPLOT makes a figure with the 2-D layout of the channel positions
 % for topoplotting and the individual channel axes (i.e. width and height
 % of the subfigures) for multiplotting. A correct 2-D layout is a
 % prerequisite  for plotting the topographical distribution of the
@@ -13,7 +13,7 @@ function layoutplot(cfg, data)
 % the validation of your 2-D layout.
 %
 % Use as
-%   layoutplot(cfg, data)
+%   ft_layoutplot(cfg, data)
 %
 % There are several ways in which a 2-D layout can be made: it can be read
 % directly from a *.lay file, it can be created based on 3-D electrode or
@@ -41,7 +41,7 @@ function layoutplot(cfg, data)
 % which will give you a 2-D ordered layout. Note that this is only suited
 % for multiplotting and not for topoplotting.
 %
-% See also prepare_layout, topoplotER, topoplotTFR, multiplotER, multiplotTFR
+% See also ft_prepare_layout, ft_topoplotER, ft_topoplotTFR, ft_multiplotER, ft_multiplotTFR
 
 % Undocumented options
 %   cfg.montage

@@ -1,6 +1,6 @@
-function neighbours = neighbourselection(cfg,data)
+function neighbours = ft_neighbourselection(cfg,data)
 
-% NEIGHBOURSELECTION finds the neighbours of the channels on the basis of a
+% FT_NEIGHBOURSELECTION finds the neighbours of the channels on the basis of a
 % minimum neighbourhood distance (in cfg.neighbourdist). The positions of
 % the channel are specified in a gradiometer or electrode configuration or 
 % from a layout.
@@ -10,7 +10,7 @@ function neighbours = neighbourselection(cfg,data)
 %  (3) in a data field. 
 %
 % Use as
-%   neighbours = neighbourselection(cfg, data)
+%   neighbours = ft_neighbourselection(cfg, data)
 %
 % The configuration can contain
 %   cfg.neighbourdist = number, maximum distance between neighbouring sensors
@@ -18,10 +18,10 @@ function neighbours = neighbourselection(cfg,data)
 %   cfg.grad          = structure with MEG gradiometer positions
 %   cfg.elecfile      = filename containing EEG electrode positions
 %   cfg.gradfile      = filename containing MEG gradiometer positions
-%   cfg.layout        = filename of the layout, see PREPARE_LAYOUT
+%   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
 %   cfg.feedback      = 'yes' or 'no' (default = 'no')
 %
-% The following data fields may also be used by NEIGHBOURSELECTION:
+% The following data fields may also be used by FT_NEIGHBOURSELECTION:
 %   data.elec     = structure with EEG electrode positions
 %   data.grad     = structure with MEG gradiometer positions
 %
