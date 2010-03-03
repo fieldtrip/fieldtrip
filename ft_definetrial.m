@@ -1,17 +1,17 @@
-function [cfg] = definetrial(cfg);
+function [cfg] = ft_definetrial(cfg);
 
-% DEFINETRIAL defines the trials, i.e. the pieces of data that will be read
+% FT_DEFINETRIAL defines the trials, i.e. the pieces of data that will be read
 % in for preprocessing. Trials are defined by their begin and end sample
 % in the data file and each trial has an offset that defines where the
 % relative t=0 point (usually the point of the trigger) is for that trial.
 %
 % Use as
-%   [cfg] = definetrial(cfg)
+%   [cfg] = ft_definetrial(cfg)
 % where the configuration structure should contain either
 %   cfg.trialdef   = structure with details of trial definition, see below
 %   cfg.trialfun   = function name, see below
 %
-% A call to DEFINETRIAL results in the trial definition "trl" being added
+% A call to FT_DEFINETRIAL results in the trial definition "trl" being added
 % to the output configuration structure. The trials are defined according
 % to the triggers, trials or other events in the data, or from a
 % user-specified Matlab function which returns "trl".
@@ -26,10 +26,10 @@ function [cfg] = definetrial(cfg);
 % a negative offset indicates that the trial begins before the trigger.
 %
 % Simple trial definitions (e.g. based on a trigger alone) are supported by
-% DEFINETRIAL itself. For this, the general and data format independent way
-% of handling trials is by relying on the READ_FCDC_EVENT function to
+% FT_DEFINETRIAL itself. For this, the general and data format independent way
+% of handling trials is by relying on the FT_READ_FCDC_EVENT function to
 % collect all event information (such as triggers) from your dataset and
-% select trials based on those events. This is implemented in DEFINETRIAL as
+% select trials based on those events. This is implemented in FT_DEFINETRIAL as
 %   cfg.trialdef.eventtype  = 'string'
 %   cfg.trialdef.eventvalue = number, string or list with numbers or strings
 %   cfg.trialdef.prestim    = number, latency in seconds (optional)
@@ -49,10 +49,10 @@ function [cfg] = definetrial(cfg);
 % input and should give a Nx3 matrix in the same format as "trl" as the
 % output. You can add extra custom fields to the configuration structure to
 % pass as arguments to your own trialfun. Furthermore, inside the trialfun
-% you can use the READ_EVENT function to get the event information
+% you can use the FT_READ_EVENT function to get the event information
 % from your data file.
 %
-% See also PREPROCESSING, READ_HEADER, READ_DATA, READ_EVENT
+% See also FT_PREPROCESSING, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT
 
 % Undocumented local options:
 % cfg.datafile
