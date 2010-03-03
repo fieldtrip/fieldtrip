@@ -1,12 +1,12 @@
-function [lay] = prepare_layout(cfg, data);
+function [lay] = ft_prepare_layout(cfg, data);
 
-% PREPARE_LAYOUT creates a 2-D layout of the channel locations. This layout
+% FT_PREPARE_LAYOUT creates a 2-D layout of the channel locations. This layout
 % is required for plotting the topographical distribution of the potential
 % or field distribution, or for plotting timecourses in a topographical
 % arrangement.
 %
 % Use as
-%   lay = prepare_layout(cfg, data)
+%   lay = ft_prepare_layout(cfg, data)
 %
 % There are several ways in which a 2-D layout can be made: it can be read
 % directly from a *.lay file, it can be created based on 3-D electrode or
@@ -37,7 +37,7 @@ function [lay] = prepare_layout(cfg, data);
 %   cfg.layout = 'vertical' will give you a Nx1 ordered layout
 %   cfg.layout = 'butterfly'  will give you a layout with all channels on top of each other
 %
-% See also layoutplot, topoplotER, topoplotTFR, multiplotER, multiplotTFR
+% See also ft_layoutplot, ft_topoplotER, ft_topoplotTFR, ft_multiplotER, ft_multiplotTFR
 
 % TODO switch to using planarchannelset function
 

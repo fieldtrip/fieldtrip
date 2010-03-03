@@ -1,10 +1,10 @@
-function [vol, cfg] = prepare_concentricspheres(cfg)
+function [vol, cfg] = ft_prepare_concentricspheres(cfg)
 
-% PREPARE_CONCENTRICSPHERES creates a EEG volume conductor model with
+% FT_PREPARE_CONCENTRICSPHERES creates a EEG volume conductor model with
 % multiple concentric spheres.
 %
 % Use as
-%   [vol, cfg] = prepare_concentricspheres(cfg)
+%   [vol, cfg] = ft_prepare_concentricspheres(cfg)
 %
 % The input configuration should contain
 %   cfg.headshape     = a filename containing headshape, a Nx3 matrix with surface 

@@ -1,15 +1,15 @@
-function [vol, cfg] = prepare_singleshell(cfg, mri)
+function [vol, cfg] = ft_prepare_singleshell(cfg, mri)
 
-% PREPARE_SINGLESHELL creates a simple and fast method for the MEG forward
+% FT_PREPARE_SINGLESHELL creates a simple and fast method for the MEG forward
 % calculation for one shell of arbitrary shape. This is based on a
 % correction of the lead field for a spherical volume conductor by a
 % superposition of basis functions, gradients of harmonic functions
 % constructed from spherical harmonics.
 %
 % Use as
-%   [vol, cfg] = prepare_singleshell(cfg, seg), or
-%   [vol, cfg] = prepare_singleshell(cfg, mri), or
-%   [vol, cfg] = prepare_singleshell(cfg)
+%   [vol, cfg] = ft_prepare_singleshell(cfg, seg), or
+%   [vol, cfg] = ft_prepare_singleshell(cfg, mri), or
+%   [vol, cfg] = ft_prepare_singleshell(cfg)
 %
 % If you do not use a segmented MRI, the configuration should contain
 %   cfg.headshape   = a filename containing headshape, a structure containing a

@@ -1,12 +1,12 @@
-function [data] = preprocessing(cfg, data);
+function [data] = ft_preprocessing(cfg, data);
 
-% PREPROCESSING reads MEG and/or EEG data according to user-specified trials
+% FT_PREPROCESSING reads MEG and/or EEG data according to user-specified trials
 % and applies several user-specified preprocessing steps to the signals.
 %
 % Use as
-%   [data] = preprocessing(cfg)
+%   [data] = ft_preprocessing(cfg)
 % or
-%   [data] = preprocessing(cfg, data)
+%   [data] = ft_preprocessing(cfg, data)
 %
 % The first input argument "cfg" is the configuration structure, which
 % contains all details for the dataset filenames, trials and the
@@ -14,11 +14,11 @@ function [data] = preprocessing(cfg, data);
 % segments of data to be read from the file (i.e. the trials), which is for
 % example done based on the occurence of a trigger in the data.
 %
-% If you are calling PREPROCESSING with only the configuration as first
+% If you are calling FT_PREPROCESSING with only the configuration as first
 % input argument and the data still has to be read from file, you should
 % specify
 %   cfg.dataset      = string with the filename
-%   cfg.trl          = Nx3 matrix with the trial definition, see DEFINETRIAL
+%   cfg.trl          = Nx3 matrix with the trial definition, see FT_DEFINETRIAL
 %   cfg.padding      = length to which the trials are padded for filtering
 %   cfg.continuous   = 'yes' or 'no' whether the file contains continuous data
 %                      (default is determined automatic)
@@ -29,14 +29,14 @@ function [data] = preprocessing(cfg, data);
 %   cfg.datafile     = string with the filename
 %   cfg.headerfile   = string with the filename
 %
-% If you are calling PREPROCESSING with also the second input argument
+% If you are calling FT_PREPROCESSING with also the second input argument
 % "data", then that should contain data that was already read from file in
-% a previous call to PREPROCESSING. In that case only the configuration
+% a previous call to FT_PREPROCESSING. In that case only the configuration
 % options below apply.
 %
 % The channels that will be read and/or preprocessed are specified with
 %   cfg.channel      = Nx1 cell-array with selection of channels (default = 'all'),
-%                      see CHANNELSELECTION for details
+%                      see FT_CHANNELSELECTION for details
 %
 % The preprocessing options for the selected channels are specified with
 %   cfg.lpfilter      = 'no' or 'yes'  lowpass filter
@@ -79,15 +79,15 @@ function [data] = preprocessing(cfg, data);
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure (default = 'no')
 %
-% Preprocessing options that you should only use when you are calling PREPROCESSING with
+% Preprocessing options that you should only use when you are calling FT_PREPROCESSING with
 % also the second input argument "data" are
 %   cfg.trials        = 'all' or a selection given as a 1xN vector (default = 'all')
 %
 % Preprocessing options that you should only use when you are calling
-% PREPROCESSING with a single cfg input argument are
+% FT_PREPROCESSING with a single cfg input argument are
 %   cfg.method        = 'trial' or 'channel', read data per trial or per channel (default = 'trial')
 %
-% See also DEFINETRIAL, REDEFINETRIAL, APPENDDATA, APPENDSPIKE
+% See also FT_DEFINETRIAL, FT_REDEFINETRIAL, FT_APPENDDATA, FT_APPENDSPIKE
 
 % Undocumented local options:
 % cfg.artfctdef
@@ -95,7 +95,7 @@ function [data] = preprocessing(cfg, data);
 % cfg.output.dataset
 % cfg.output.dataformat
 %
-% This function depends on PREPROC which has the following options:
+% This function depends on FT_PREPROC which has the following options:
 % cfg.absdiff
 % cfg.boxcar
 % cfg.polyremoval, documented

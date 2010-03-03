@@ -1,13 +1,13 @@
-function [vol, cfg] = prepare_localspheres(cfg, mri)
+function [vol, cfg] = ft_prepare_localspheres(cfg, mri)
 
-% PREPARE_LOCALSPHERES creates a MEG volume conductor model with a sphere
+% FT_PREPARE_LOCALSPHERES creates a MEG volume conductor model with a sphere
 % for every sensor. You can also use it to create a single sphere
 % model that is fitted to the MRI or to the head shape points.
 %
 % Use as
-%   [vol, cfg] = prepare_localspheres(cfg, seg), or
-%   [vol, cfg] = prepare_localspheres(cfg, mri), or
-%   [vol, cfg] = prepare_localspheres(cfg)
+%   [vol, cfg] = ft_prepare_localspheres(cfg, seg), or
+%   [vol, cfg] = ft_prepare_localspheres(cfg, mri), or
+%   [vol, cfg] = ft_prepare_localspheres(cfg)
 %
 % The input configuration should contain
 %   cfg.grad         = structure with gradiometer definition, or

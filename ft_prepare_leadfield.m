@@ -1,21 +1,21 @@
-function [grid, cfg] = prepare_leadfield(cfg, data)
+function [grid, cfg] = ft_prepare_leadfield(cfg, data)
 
-% PREPARE_LEADFIELD computes the forward model for many dipole locations
+% FT_PREPARE_LEADFIELD computes the forward model for many dipole locations
 % on a regular 2D or 3D grid and stores it for efficient inverse modelling
 %
 % Use as
-%   [grid] = prepare_leadfield(cfg, data);
+%   [grid] = ft_prepare_leadfield(cfg, data);
 %
 % It is neccessary to input the data on which you want to perform the
 % inverse computations, since that data generally contain the gradiometer
 % information and information about the channels that should be included in
 % the forward model computation. The data structure can be either obtained
-% from PREPROCESSING, FREQANALYSIS or TIMELOCKANALYSIS. If the data is empty,
+% from FT_PREPROCESSING, FT_FREQANALYSIS or FT_TIMELOCKANALYSIS. If the data is empty,
 % all channels will be included in the forward model.
 %
 % The configuration should contain
 %   cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'),
-%                            see CHANNELSELECTION for details
+%                            see FT_CHANNELSELECTION for details
 %
 % The positions of the sources can be specified as a regular 3-D
 % grid that is aligned with the axes of the head coordinate system
@@ -50,7 +50,7 @@ function [grid, cfg] = prepare_leadfield(cfg, data)
 %   cfg.normalizeparam  = depth normalization parameter (default = 0.5)
 %
 %
-% See also SOURCEANALYSIS
+% See also FT_SOURCEANALYSIS
 
 % Undocumented local options:
 % cfg.feedback
@@ -58,10 +58,10 @@ function [grid, cfg] = prepare_leadfield(cfg, data)
 % cfg.lbex        = 'no' (default) or a number that corresponds with the radius
 % cfg.mollify     = 'no' (default) or a number that corresponds with the FWHM
 
-% This function depends on PREPARE_DIPOLE_GRID which has the following options:
-% cfg.grid.xgrid (default set in PREPARE_DIPOLE_GRID: cfg.grid.xgrid = 'auto'), documented
-% cfg.grid.ygrid (default set in PREPARE_DIPOLE_GRID: cfg.grid.ygrid = 'auto'), documented
-% cfg.grid.zgrid (default set in PREPARE_DIPOLE_GRID: cfg.grid.zgrid = 'auto'), documented
+% This function depends on FT_PREPARE_DIPOLE_GRID which has the following options:
+% cfg.grid.xgrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.xgrid = 'auto'), documented
+% cfg.grid.ygrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.ygrid = 'auto'), documented
+% cfg.grid.zgrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.zgrid = 'auto'), documented
 % cfg.grid.resolution, documented
 % cfg.grid.pos, documented
 % cfg.grid.dim, documented
@@ -73,7 +73,7 @@ function [grid, cfg] = prepare_leadfield(cfg, data)
 % cfg.sourceunits
 % cfg.threshold
 %
-% This function depends on PREPARE_VOL_SENS which has the following options:
+% This function depends on FT_PREPARE_VOL_SENS which has the following options:
 % cfg.channel, documented
 % cfg.elec, documented
 % cfg.elecfile, documented

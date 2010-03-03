@@ -1,15 +1,15 @@
-function [atlas] = prepare_atlas(filename)
+function [atlas] = ft_prepare_atlas(filename)
 
-% PREPARE_ATLAS reads in a specified atlas with coordinates and anatomical
+% FT_PREPARE_ATLAS reads in a specified atlas with coordinates and anatomical
 % labels. It either uses the AFNI brik file that is available from
 % http://afni.nimh.nih.gov/afni/doc/misc/ttatlas_tlrc, or it uses one of
 % the WFU atlasses available from  http://fmri.wfubmc.edu. This function is
 % called by functions that make use of an atlas. 
 %
 % Use as:
-%   [atlas] = prepare_atlas(filename)
+%   [atlas] = ft_prepare_atlas(filename)
 %
-% See also VOLUMELOOKUP SOURCEPLOT
+% See also FT_VOLUMELOOKUP FT_SOURCEPLOT
 
 % Copyright (C) 2005-2008, Robert Oostenveld, Ingrid Nieuwenhuis
 %

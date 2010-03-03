@@ -1,14 +1,14 @@
-function [vol, cfg] = prepare_bemmodel(cfg, mri)
+function [vol, cfg] = ft_prepare_bemmodel(cfg, mri)
 
-% PREPARE_BEMMODEL constructs triangulations of the boundaries between
+% FT_PREPARE_BEMMODEL constructs triangulations of the boundaries between
 % multiple segmented tissue types in an anatomical MRI and subsequently
 % computes the BEM system matrix.
 %
 % Use as
-%   [vol, cfg] = prepare_bemmodel(cfg, mri), or
-%   [vol, cfg] = prepare_bemmodel(cfg, seg), or
-%   [vol, cfg] = prepare_bemmodel(cfg, vol), or
-%   [vol, cfg] = prepare_bemmodel(cfg)
+%   [vol, cfg] = ft_prepare_bemmodel(cfg, mri), or
+%   [vol, cfg] = ft_prepare_bemmodel(cfg, seg), or
+%   [vol, cfg] = ft_prepare_bemmodel(cfg, vol), or
+%   [vol, cfg] = ft_prepare_bemmodel(cfg)
 %
 % The configuration can contain
 %   cfg.tissue         = [1 2 3], segmentation value of each tissue type

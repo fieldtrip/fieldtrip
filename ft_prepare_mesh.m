@@ -1,6 +1,6 @@
-function bnd = prepare_mesh(cfg, mri)
+function bnd = ft_prepare_mesh(cfg, mri)
 
-% PREPARE_MESH creates a triangulated surface mesh for the volume
+% FT_PREPARE_MESH creates a triangulated surface mesh for the volume
 % conduction model. The mesh can either be selected manually from raw
 % mri data or can be generated starting from a segmented volume
 % information stored in the mri structure. The result is a bnd
@@ -8,7 +8,7 @@ function bnd = prepare_mesh(cfg, mri)
 % related to mri and are expressed in world coordinates.
 %
 % Use as
-%   bnd = prepare_mesh(cfg, mri)
+%   bnd = ft_prepare_mesh(cfg, mri)
 %
 % Configuration options:
 %   cfg.method          = 'segmentation' or 'manual'
