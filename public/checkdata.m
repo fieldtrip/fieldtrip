@@ -188,7 +188,7 @@ if ~isempty(dtype)
         okflag = okflag + isfreqmvar;
     end % switch dtype
   end % for dtype
-
+  
   if ~okflag
     % try to convert the data
     for iCell = 1:length(dtype)
@@ -459,7 +459,9 @@ if issource || isvolume,
 
   % ensure consistent dimensions of the source reconstructed data
   % reshape each of the source reconstructed parameters
-  if isfield(data, 'dim'),
+  if issource && prod(data.dim)==size(data.pos,1)
+    dim = [prod(data.dim) 1];
+  elseif isfield(data, 'dim'),
     dim = [data.dim 1];
   else
     %HACK
