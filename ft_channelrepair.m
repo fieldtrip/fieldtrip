@@ -1,21 +1,21 @@
 function [interp] = channelrepair(cfg, data);
 
-% CHANNELREPAIR repairs bad channels in MEG or EEG data by replacing them
+% FT_CHANNELREPAIR repairs bad channels in MEG or EEG data by replacing them
 % with the average of its neighbours. It cannot be used reliably to
 % repair multiple bad channels that ly next to each other.
 %
 % Use as
-%   [interp] = channelrepair(cfg, data)
+%   [interp] = ft_channelrepair(cfg, data)
 %
 % The configuration can contain
-%   cfg.badchannel     = cell-array, see CHANNELSELECTION for details
+%   cfg.badchannel     = cell-array, see FT_CHANNELSELECTION for details
 %   cfg.neighbourdist  = default is 4 cm 
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
 %
 % Since a nearest neighbour average is used, the input should contain
 % a gradiometer or electrode definition, i.e. data.grad or data.elec.
 %
-% See also MEGINTERPOLATE
+% See also FT_MEGINTERPOLATE
 
 % Copyright (C) 2004-2009, Robert Oostenveld
 %
