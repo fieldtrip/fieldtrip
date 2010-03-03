@@ -1,16 +1,16 @@
-function [comp] = componentanalysis(cfg, data)
+function [comp] = ft_componentanalysis(cfg, data)
 
-% COMPONENTANALYSIS principal or independent component analysis
+% FT_COMPONENTANALYSIS principal or independent component analysis
 % computes the topography and timecourses of the ICA/PCA components
 % in the EEG/MEG data.
 %
 % Use as
 %   [comp] = componentanalysis(cfg, data)
 %
-% where the data comes from PREPROCESING or TIMELOCKANALYSIS and the
+% where the data comes from FT_PREPROCESING or FT_TIMELOCKANALYSIS and the
 % configuration structure can contain
 %   cfg.method       = 'runica', 'fastica', 'binica', 'pca', 'jader', 'varimax', 'dss', 'cca' (default = 'runica')
-%   cfg.channel      = cell-array with channel selection (default = 'all'), see CHANNELSELECTION for details
+%   cfg.channel      = cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.numcomponent = 'all' or number (default = 'all')
 %   cfg.blc          = 'no' or 'yes' (default = 'yes')
