@@ -81,18 +81,25 @@ elseif strcmp(current, 'old') && strcmp(type, 'new'),
       %(or subjects FIXME not yet implemented, nor tested)
       tmp  = getfield(stuff(1), fnames{k});
       siz  = size(tmp);
-      if isfield(input, 'cumtapcnt') && strcmp(fnames{k}, 'mom'),
-        %pcc based mom is special case: rpttap rather than rpt
-        %and single voxel mom = ori x rpttap
+      if isfield(input, 'cumtapcnt') && strcmp(fnames{k}, 'mom')
+        %pcc based mom is orixrpttap
+        %tranpose to keep manageable
+        for kk = 1:numel(input.inside)
+          indx = input.inside(kk);
+          tmp{indx} = permute(tmp{indx}, [2 1 3]); 
+        end
         nrpttap = sum(input.cumtapcnt);
         sizvox  = [size(tmp{input.inside(1)}) 1];
-        sizvox  = [sizvox(1) nrpttap sizvox(3:end)];
-        rptstring = 'rpttap';
+        sizvox  = [nrpttap sizvox(2:end)];
+      elseif strcmp(fnames{k}, 'mom'),
+        %this is then probably not a frequency based mom
+        nrpttap = numel(stuff);
+        sizvox  = [size(tmp{input.inside(1)}) 1];
+        sizvox  = [nrpttap sizvox];
       elseif iscell(tmp)
         nrpttap = numel(stuff);
         sizvox  = [size(tmp{input.inside(1)}) 1];
-        sozvpx  = [sizvox(1) nrpttap sizvox(3:end)];
-        rptstring = 'rpt';
+        sizvox  = [nrpttap sizvox];
       end
       
       if siz(1) ~= npos && siz(2) ==npos,
@@ -129,7 +136,7 @@ elseif strcmp(current, 'old') && strcmp(type, 'new'),
             else
               if n==1, siz1 = 1; end
             end
-            tmpall{indx}(:,cnt+[1:siz1],:,:,:) = tmpdat;
+            tmpall{indx}(cnt+[1:siz1],:,:,:,:) = tmpdat;
             if n==numel(input.inside), cnt  = cnt + siz1;     end
           end
         end
@@ -143,6 +150,14 @@ elseif strcmp(current, 'old') && strcmp(type, 'new'),
     else
       tmp = getfield(stuff, fnames{k});
       siz = size(tmp);
+      if isfield(input, 'cumtapcnt') && strcmp(fnames{k}, 'mom')
+        %pcc based mom is orixrpttap
+        %tranpose to keep manageable
+        for kk = 1:numel(input.inside)
+          indx = input.inside(kk);
+          tmp{indx} = permute(tmp{indx}, [2 1 3]); 
+        end
+      end
       if siz(1) ~= npos && siz(2) ==npos,
         tmp = transpose(tmp);
       end
@@ -157,15 +172,28 @@ elseif strcmp(current, 'old') && strcmp(type, 'new'),
   %----------------------------------------------
   %convert mom into pow if requested and possible
   if strcmp(haspow, 'yes')
-    if isfield(output, 'mom') && ~isfield(output, 'pow') && isfield(output, 'cumtapcnt'),
+    convert = 0;
+    if isfield(output, 'mom') && size(output.mom{output.inside(1)},2)==1,
+      convert = 1;
+    else
+      warning('conversion from mom to pow is not possible, either because there is no mom in the data, or because the dimension of mom>1. in that case call ft_sourcedescriptives first with cfg.projectmom');
+    end
+     
+    if isfield(output, 'cumtapcnt')
+      convert = 1 & convert;
+    else
+      warning('conversion from mom to pow will not be done, because cumtapcnt is missing');
+    end
+      
+    if convert,  
       npos = size(output.pos,1);
       nrpt = numel(output.cumtapcnt);
-      tmpmom = cat(1,output.mom{output.inside});
+      tmpmom = cat(2,output.mom{output.inside});
       tmppow = zeros(npos, nrpt);
       tapcnt = [0;cumsum(output.cumtapcnt(:))];
       for k = 1:nrpt
         ntap = tapcnt(k+1)-tapcnt(k);  
-        tmppow(output.inside,k) = sum(abs(tmpmom(:,(tapcnt(k)+1):tapcnt(k+1))).^2,2)./ntap;
+        tmppow(output.inside,k) = sum(abs(tmpmom((tapcnt(k)+1):tapcnt(k+1),:)).^2,1)./ntap;
       end
       output.pow       = tmppow;
       output.powdimord = ['pos_rpt_freq']; 
@@ -186,7 +214,7 @@ end
 %-----------------------------------------------
 function [dimord] = createdimord(output, fname, rptflag);
 
-if nargin==2, rptflag = 1; end
+if nargin==2, rptflag = 0; end
 
 tmp = getfield(output, fname);
 
@@ -202,6 +230,8 @@ elseif ~iscell(tmp) && size(output.pos,1)==size(tmp,dimnum)
 end
 
 switch fname
+  case 'cov'
+    dimord = [dimord,'_ori_ori'];
   case 'csd'
     dimord = [dimord,'_ori_ori'];
   case 'csdlabel'
@@ -211,10 +241,16 @@ switch fname
   case 'leadfield'
     dimord = [dimord,'_chan_ori'];
   case 'mom'
-    if isfield(output, 'cumtapcnt') && sum(output.cumtapcnt)==size(tmp{output.inside(1)},2)
-      dimord = [dimord,'_ori_rpttap'];
-    elseif isfield(output, 'time') && numel(output.time)==size(tmp{output.inside(1)},2)
-      dimord = [dimord,'_ori_time'];
+    if isfield(output, 'cumtapcnt') && sum(output.cumtapcnt)==size(tmp{output.inside(1)},1)
+      dimord = [dimord,'_rpttap_ori'];
+    elseif isfield(output, 'time')
+      if rptflag,
+        dimord = [dimord,'_rpt'];
+        dimnum = dimnum + 1;
+      end
+      if numel(output.time)==size(tmp{output.inside(1)},dimnum)
+        dimord = [dimord,'_ori_time'];
+      end
     end
     
     if isfield(output, 'freq')
