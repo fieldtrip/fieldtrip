@@ -1,10 +1,10 @@
 function [varargout] = componentbrowser(cfg, comp)
 
-% COMPONENTBROWSER plots topography and activations of ICA components
+% FT_COMPONENTBROWSER plots topography and activations of ICA components
 %
 % Use as
-%   componentbrowser(cfg, comp)
-% where comp is a FieldTrip structure obtained from COMPONENTANALYSIS.
+%   ft_componentbrowser(cfg, comp)
+% where comp is a FieldTrip structure obtained from FT_COMPONENTANALYSIS.
 %
 % The configuration has the following parameters:
 % cfg.comp   = a vector with the components to plot (ex. 1:10) (optional)
@@ -17,7 +17,7 @@ function [varargout] = componentbrowser(cfg, comp)
 %  - you can give an electrode definition, i.e. "elec" structure
 %  - you can give a gradiometer definition, i.e. "grad" structure
 %
-% See also COMPONENTANALYSIS
+% See also FT_COMPONENTANALYSIS
 
 % Copyright (C) 2009, Giovanni Piantoni
 %
