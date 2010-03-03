@@ -1,13 +1,13 @@
-function [freq] = freqanalysis(cfg, data);
+function [freq] =ft_freqanalysis(cfg, data);
 
-% FREQANALYSIS performs frequency and time-frequency analysis
+% FT_FREQANALYSIS performs frequency and time-frequency analysis
 % on time series data over multiple trials
 %
 % Use as
-%   [freq] = freqanalysis(cfg, data)
+%   [freq] = ft_freqanalysis(cfg, data)
 %
 % The input data should be organised in a structure as obtained from
-% the PREPROCESSING function. The configuration depends on the type
+% the FT_PREPROCESSING function. The configuration depends on the type
 % of computation that you want to perform.
 %
 % The configuration should contain:
@@ -25,11 +25,11 @@ function [freq] = freqanalysis(cfg, data);
 %
 %
 % The other cfg options depend on the method that you select. You should
-% read the help of the respective subfunction FREQANALYSIS_XXX for the
+% read the help of the respective subfunction FT_FREQANALYSIS_XXX for the
 % corresponding parameter options and for a detailed explanation of each method.
 %
-% See also FREQANALYSIS_MTMFFT, FREQANALYSIS_MTMCONVOL, FREQANALYSIS_MTMWELCH
-% FREQANALYSIS_WLTCONVOL, FREQANALYSIS_TFR
+% See also FT_FREQANALYSIS_MTMFFT, FT_FREQANALYSIS_MTMCONVOL, FT_FREQANALYSIS_MTMWELCH
+% FT_FREQANALYSIS_WLTCONVOL, FT_FREQANALYSIS_TFR
 
 % Undocumented local options:
 % cfg.label

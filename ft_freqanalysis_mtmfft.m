@@ -1,17 +1,17 @@
-function [freq] = freqanalysis_mtmfft(cfg, data);
+function [freq] = ft_freqanalysis_mtmfft(cfg, data);
 
-% FREQANALYSIS_MTMFFT performs frequency analysis on any time series
+% FT_FREQANALYSIS_MTMFFT performs frequency analysis on any time series
 % trial data using the 'multitaper method' (MTM) based on discrete
 % prolate spheroidal sequences (Slepian sequences) as tapers. Alternatively,
 % you can use conventional tapers (e.g. Hanning).
 %
 % Use as
-%   [freq] = freqanalysis(cfg, data)
+%   [freq] = ft_freqanalysis(cfg, data)
 %
 % The data should be organised in a structure as obtained from
-% the PREPROCESSING function. The configuration should be according to
+% the FT_PREPROCESSING function. The configuration should be according to
 %   cfg.method     = method used for frequency or time-frequency decomposition
-%                    see FREQANALYSIS for details
+%                    see FT_FREQANALYSIS for details
 %   cfg.output     = 'pow'       return the power-spectra
 %                    'powandcsd' return the power and the cross-spectra
 %                    'fourier'   return the complex Fourier-spectra
@@ -22,9 +22,9 @@ function [freq] = freqanalysis_mtmfft(cfg, data);
 % you should specify only the channels in cfg.channel.
 %
 %   cfg.channel    = Nx1 cell-array with selection of channels (default = 'all'),
-%                    see CHANNELSELECTION for details
+%                    see FT_CHANNELSELECTION for details
 %   cfg.channelcmb = Mx2 cell-array with selection of channel pairs (default = {'all' 'all'}),
-%                    see CHANNELCOMBINATION for details
+%                    see FT_CHANNELCOMBINATION for details
 %   cfg.foilim     = [begin end], frequency band of interest
 %   cfg.tapsmofrq  = number, the amount of spectral smoothing through
 %                    multi-tapering. Note that 4 Hz smoothing means
@@ -41,7 +41,7 @@ function [freq] = freqanalysis_mtmfft(cfg, data);
 % a large prime factor sum. This is because the FFTs will then be computed
 % very inefficiently.
 %
-% See also FREQANALYSIS_MTMCONVOL, FREQANALYSIS_WLTCONVOL, FREQANALYSIS_TFR
+% See also FT_FREQANALYSIS_MTMCONVOL, FT_REQANALYSIS_WLTCONVOL, FT_FREQANALYSIS_TFR
 
 % Undocumented local options
 %   cfg.calcdof = 'yes'   calculate the degrees of freedom for every trial
@@ -52,7 +52,7 @@ function [freq] = freqanalysis_mtmfft(cfg, data);
 
 fieldtripdefs
 
-% ensure that this function is started as a subfunction of the FREQANALYSIS wrapper
+% ensure that this function is started as a subfunction of the FT_FREQANALYSIS wrapper
 if ~exist('OCTAVE_VERSION')
   [s, i] = dbstack;
   if length(s)>1

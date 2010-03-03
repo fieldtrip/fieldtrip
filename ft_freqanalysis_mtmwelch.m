@@ -1,6 +1,6 @@
-function [freq] = freqanalysis_mtmwelch(cfg, data);
+function [freq] = ft_freqanalysis_mtmwelch(cfg, data);
 
-% FREQANALYSIS_MTMWELCH performs frequency analysis on any time series
+% FT_FREQANALYSIS_MTMWELCH performs frequency analysis on any time series
 % trial data using the 'multitaper method' (MTM) based on discrete
 % prolate spheroidal sequences (Slepian sequences) as tapers. Alternatively,
 % you can use conventional tapers (e.g. Hanning).
@@ -11,12 +11,12 @@ function [freq] = freqanalysis_mtmwelch(cfg, data);
 % powerspectra are computed and averaged over the sections in each trial.
 %
 % Use as
-%   [freq] = freqanalysis(cfg, data)
+%   [freq] = ft_freqanalysis(cfg, data)
 %
 % The data should be organised in a structure as obtained from
-% the PREPROCESSING function. The configuration should be according to
+% the FT_PREPROCESSING function. The configuration should be according to
 %   cfg.method     = method used for frequency or time-frequency decomposition
-%                    see FREQANALYSIS for details
+%                    see FT_FREQANALYSIS for details
 %   cfg.output     = 'pow'       return the power-spectra
 %                    'powandcsd' return the power and the cross-spectra
 %   cfg.taper      = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
@@ -26,11 +26,11 @@ function [freq] = freqanalysis_mtmwelch(cfg, data);
 % you should specify only the channels in cfg.channel.
 % 
 %   cfg.channel    = Nx1 cell-array with selection of channels (default = 'all'),
-%                    see CHANNELSELECTION for details
+%                    see FT_CHANNELSELECTION for details
 %   cfg.channelcmb = Mx2 cell-array with selection of channel pairs (default = {'all' 'all'}),
-%                    see CHANNELCOMBINATION for details
+%                    see FT_CHANNELCOMBINATION for details
 %
-% This function uses FREQANALYSIS_MTMCONVOL for the low-level
+% This function uses FT_FREQANALYSIS_MTMCONVOL for the low-level
 % computations, and you can use the options of that function to specify
 % the length of the time windows, the amount of overlap, and the amount
 % of spectral smoothing (in case of dpss tapers) per window.
@@ -46,9 +46,9 @@ function [freq] = freqanalysis_mtmwelch(cfg, data);
 %   cfg.keeptapers = 'yes' or 'no', return individual tapers or average (default = 'no')
 %   cfg.pad        = number or 'maxperlen', length in seconds to which the data can be padded out (default = 'maxperlen')
 %
-% See also FREQANALYSIS_MTMCONVOL, FREQANALYSIS
+% See also FT_FREQANALYSIS_MTMCONVOL, FT_FREQANALYSIS
 
-% This function depends on FREQANALYSIS which uses cfg.method = 'mtmconvol'
+% This function depends on FT_FREQANALYSIS which uses cfg.method = 'mtmconvol'
 
 % Copyright (C) 2005-2006, F.C. Donders Centre
 %
@@ -56,7 +56,7 @@ function [freq] = freqanalysis_mtmwelch(cfg, data);
 
 fieldtripdefs
 
-% ensure that this function is started as a subfunction of the FREQANALYSIS wrapper
+% ensure that this function is started as a subfunction of the FT_FREQANALYSIS wrapper
 if ~exist('OCTAVE_VERSION')
   [s, i] = dbstack;
   if length(s)>1

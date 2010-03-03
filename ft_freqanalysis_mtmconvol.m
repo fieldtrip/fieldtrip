@@ -1,16 +1,16 @@
-function [freq] = freqanalysis_mtmconvol(cfg, data);
+function [freq] = ft_freqanalysis_mtmconvol(cfg, data);
 
-% FREQANALYSIS_MTMCONVOL performs time-frequency analysis on any time series trial data
+% FT_FREQANALYSIS_MTMCONVOL performs time-frequency analysis on any time series trial data
 % using the 'multitaper method' (MTM) based on Slepian sequences as tapers. Alternatively,
 % you can use conventional tapers (e.g. Hanning).
 %
 % Use as
-%   [freq] = freqanalysis(cfg, data)
+%   [freq] = ft_freqanalysis(cfg, data)
 %
 % The data should be organised in a structure as obtained from
-% the PREPROCESSING function. The configuration should be according to
+% the FT_PREPROCESSING function. The configuration should be according to
 %   cfg.method     = method used for frequency or time-frequency decomposition
-%                    see FREQANALYSIS for details
+%                    see FT_FREQANALYSIS for details
 %   cfg.output     = 'pow'       return the power-spectra
 %                    'powandcsd' return the power and the cross-spectra
 %                    'fourier'   return the complex Fourier-spectra
@@ -21,9 +21,9 @@ function [freq] = freqanalysis_mtmconvol(cfg, data);
 % you should specify only the channels in cfg.channel.
 %
 %   cfg.channel    = Nx1 cell-array with selection of channels (default = 'all'),
-%                    see CHANNELSELECTION for details
+%                    see FT_CHANNELSELECTION for details
 %   cfg.channelcmb = Mx2 cell-array with selection of channel pairs (default = {'all' 'all'}),
-%                    see CHANNELCOMBINATION for details
+%                    see FT_CHANNELCOMBINATION for details
 %   cfg.foi        = vector 1 x numfoi, frequencies of interest
 %   cfg.t_ftimwin  = vector 1 x numfoi, length of time window (in seconds)
 %   cfg.tapsmofrq  = vector 1 x numfoi, the amount of spectral smoothing through
@@ -48,7 +48,7 @@ function [freq] = freqanalysis_mtmconvol(cfg, data);
 %   Transcranial Stimulation Depend on Background Oscillatory Activity.
 %   published online Jul 12, 2007 J. Physiol.
 %
-% See also FREQANALYSIS
+% See also FT_FREQANALYSIS
 
 % undocumented experimental options
 %   cfg.calcdof    = 'yes'   calculate the degrees of freedom for every trial
@@ -62,7 +62,7 @@ function [freq] = freqanalysis_mtmconvol(cfg, data);
 
 fieldtripdefs
 
-% ensure that this function is started as a subfunction of the FREQANALYSIS wrapper
+% ensure that this function is started as a subfunction of the FT_FREQANALYSIS wrapper
 if ~exist('OCTAVE_VERSION')
     [s, i] = dbstack;
     if length(s)>1

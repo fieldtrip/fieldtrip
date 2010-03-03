@@ -1,16 +1,16 @@
-function [stat] = freqstatistics(cfg, varargin)
+function [stat] = ft_freqstatistics(cfg, varargin)
 
-% FREQSTATISTICS computes significance probabilities and/or critical values of a parametric statistical test 
+% FT_FREQSTATISTICS computes significance probabilities and/or critical values of a parametric statistical test 
 % or a non-parametric permutation test.
 %
 % Use as
-%   [stat] = freqstatistics(cfg, freq1, freq2, ...)
-% where the input data is the result from FREQANALYSIS, FREQDESCRIPTIVES
-% or from FREQGRANDAVERAGE.
+%   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
+% where the input data is the result from FT_FREQANALYSIS, FT_FREQDESCRIPTIVES
+% or from FT_FREQGRANDAVERAGE.
 %
 % The configuration can contain the following options for data selection
 %   cfg.channel     = Nx1 cell-array with selection of channels (default = 'all'),
-%                     see CHANNELSELECTION for details
+%                     see FT_CHANNELSELECTION for details
 %   cfg.latency     = [begin end] in seconds or 'all' (default = 'all')
 %   cfg.frequency   = [begin end], can be 'all'       (default = 'all')
 %   cfg.avgoverchan = 'yes' or 'no'                   (default = 'no')
@@ -26,13 +26,13 @@ function [stat] = freqstatistics(cfg, varargin)
 %                    'glm'        use a general linear model approach.
 %
 % The other cfg options depend on the method that you select. You
-% should read the help of the respective subfunction STATISTICS_XXX
+% should read the help of the respective subfunction FT_STATISTICS_XXX
 % for the corresponding configuration options and for a detailed
 % explanation of each method.
 %
-% See also FREQANALYSIS, FREQDESCRIPTIVES, FREQGRANDAVERAGE
+% See also FT_FREQANALYSIS, FT_FREQDESCRIPTIVES, FT_FREQGRANDAVERAGE
 
-% This function depends on STATISTICS_WRAPPER
+% This function depends on FT_STATISTICS_WRAPPER
 %
 % TODO change cfg.frequency in all functions to cfg.foi or cfg.foilim
 

@@ -1,11 +1,11 @@
-function [freq] = freqinterpolate(cfg, freq)
+function [freq] = ft_freqinterpolate(cfg, freq)
 
-% FREQINTERPOLATE interpolates frequencies by looking at neighbouring
+% FT_FREQINTERPOLATE interpolates frequencies by looking at neighbouring
 % values or simply replaces a piece in the spectrum by NaN.
 %
 % Use as
-%   freq = freqinterpolate(cfg, freq)
-% where freq is the output of FREQANALYSIS or FREQDESCRIPTIVES and the
+%   freq = ft_freqinterpolate(cfg, freq)
+% where freq is the output of FT_FREQANALYSIS or FT_FREQDESCRIPTIVES and the
 % configuration may contain
 %   cfg.method   = 'nan', 'linear' (default = 'nan')
 %   cfg.foilim   = Nx2 matrix with begin and end of each interval to be

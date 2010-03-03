@@ -1,10 +1,10 @@
-function [freq] = freqanalysis_mvar(cfg, data)
+function [freq] = ft_freqanalysis_mvar(cfg, data)
 
-% FREQANALYSIS_MVAR performs frequency analysis on
+% FT_FREQANALYSIS_MVAR performs frequency analysis on
 % mvar data.
 %
 % Use as
-%   [freq] = freqanalysis(cfg, data)
+%   [freq] = ft_freqanalysis(cfg, data)
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 % $Log: freqanalysis_mvar.m,v $

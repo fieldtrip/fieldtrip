@@ -1,15 +1,15 @@
-function [freq] = freqanalysis_wltconvol(cfg, data);
+function [freq] = ft_freqanalysis_wltconvol(cfg, data);
 
-% FREQANALYSIS_WLTCONVOL performs time-frequency analysis on any time series trial data
+% FT_FREQANALYSIS_WLTCONVOL performs time-frequency analysis on any time series trial data
 % using the 'wavelet method' based on Morlet wavelets.
 %
 % Use as
-%   [freq] = freqanalysis(cfg, data)
+%   [freq] = ft_freqanalysis(cfg, data)
 %
 % The data should be organised in a structure as obtained from
-% the PREPROCESSING function. The configuration should be according to
+% the FT_PREPROCESSING function. The configuration should be according to
 %   cfg.method     = method used for frequency or time-frequency decomposition
-%                    see FREQANALYSIS for details
+%                    see FT_FREQANALYSIS for details
 %   cfg.output     = 'pow'       return the power-spectra
 %                    'powandcsd' return the power and the cross-spectra
 %
@@ -18,9 +18,9 @@ function [freq] = freqanalysis_wltconvol(cfg, data);
 % you should specify only the channels in cfg.channel.
 %
 %   cfg.channel    = Nx1 cell-array with selection of channels (default = 'all'),
-%                    see CHANNELSELECTION for details
+%                    see FT_CHANNELSELECTION for details
 %   cfg.channelcmb = Mx2 cell-array with selection of channel pairs (default = {'all' 'all'}),
-%                    see CHANNELCOMBINATION for details
+%                    see FT_CHANNELCOMBINATION for details
 %   cfg.foi        = vector 1 x numfoi, frequencies of interest
 %   cfg.toi        = vector 1 x numtoi, the times on which the analysis windows
 %                    should be centered (in seconds)
@@ -38,7 +38,7 @@ function [freq] = freqanalysis_wltconvol(cfg, data);
 % The standard deviation in the temporal domain (st) at frequency f0 is
 % defined as: st = width/f0 = 1/sf
 %
-% See also FREQANALYSIS
+% See also FT_FREQANALYSIS
 
 % Copyright (C) 2003-2007, Markus Siegel, F.C. Donders Centre
 %
@@ -46,7 +46,7 @@ function [freq] = freqanalysis_wltconvol(cfg, data);
 
 fieldtripdefs
 
-% ensure that this function is started as a subfunction of the FREQANALYSIS wrapper
+% ensure that this function is started as a subfunction of the FT_FREQANALYSIS wrapper
 if ~exist('OCTAVE_VERSION')
   [s, i] = dbstack;
   if length(s)>1

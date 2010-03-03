@@ -17,7 +17,7 @@ function [output] = ft_freqdescriptives(cfg, freq)
 %   cfg.jackknife     = 'yes' or 'no', estimate standard error by means of the jack-knife (default = 'no')
 %   cfg.keeptrials    = 'yes' or 'no', estimate single trial power (useful for fourier data) (default = 'no')
 %   cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'),
-%                       see CHANNELSELECTION for details
+%                       see FT_CHANNELSELECTION for details
 %   cfg.trials        = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.foilim        = [fmin fmax] or 'all', to specify a subset of frequencies (default = 'all')
 %   cfg.toilim        = [tmin tmax] or 'all', to specify a subset of latencies (default = 'all')

@@ -1,15 +1,15 @@
-function [freq] = freqbaseline(cfg, freq);
+function [freq] = ft_freqbaseline(cfg, freq);
 
-% FREQBASELINE performs baseline normalization for time-frequency data
+% FT_FREQBASELINE performs baseline normalization for time-frequency data
 %
 % Use as
-%    [freq] = freqbaseline(cfg, freq)
-% where the freq data comes from FREQANALYSIS and the configuration
+%    [freq] = ft_freqbaseline(cfg, freq)
+% where the freq data comes from FT_FREQANALYSIS and the configuration
 % should contain
 %   cfg.baseline     = [begin end] (default = 'no')
 %   cfg.baselinetype = 'absolute' 'relchange' 'relative' (default = 'absolute')
 %
-% See also FREQANALYSIS, TIMELOCKBASELINE
+% See also FT_FREQANALYSIS, FT_TIMELOCKBASELINE
 
 % Copyright (C) 2004-2006, Marcel Bastiaansen
 % Copyright (C) 2005-2006, Robert Oostenveld

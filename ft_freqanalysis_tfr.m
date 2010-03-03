@@ -1,23 +1,23 @@
-function [freq] = freqanalysis_tfr(cfg, data);
+function [freq] = ft_freqanalysis_tfr(cfg, data);
 
-% FREQANALYSIS_TFR computes time-frequency representations of single-trial
+% FT_FREQANALYSIS_TFR computes time-frequency representations of single-trial
 % data using a convolution in the time-domain with Morlet's wavelets.
 %
 % Use as
-%   [freq] = freqanalysis(cfg, data)
+%   [freq] = ft_freqanalysis(cfg, data)
 %
 % The data should be organised in a structure as obtained from
-% the PREPROCESSING function. The configuration should be according to
+% the FT_PREPROCESSING function. The configuration should be according to
 %   cfg.method        = method used for frequency or time-frequency decomposition
-%                       see FREQANALYSIS for details
+%                       see FT_FREQANALYSIS for details
 %   cfg.foi           = vector 1 x numfoi, frequencies of interest
 %   cfg.waveletwidth  = 'width' of wavelets expressed in cycles (default = 7)
 %   cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'),
-%                       see CHANNELSELECTION for details
+%                       see FT_CHANNELSELECTION for details
 %   cfg.downsample    = ratio for downsampling, which occurs after convolution (default = 1)
 %   cfg.keeptrials    = 'yes' or 'no', return individual trials or average (default = 'no')
 %
-% See also FREQANALYSIS
+% See also FT_FREQANALYSIS
 
 % Undocumented local options:
 % cfg.latency
@@ -29,7 +29,7 @@ function [freq] = freqanalysis_tfr(cfg, data);
 
 fieldtripdefs
 
-% ensure that this function is started as a subfunction of the FREQANALYSIS wrapper
+% ensure that this function is started as a subfunction of the FT_FREQANALYSIS wrapper
 if ~exist('OCTAVE_VERSION')
   [s, i] = dbstack;
   if length(s)>1

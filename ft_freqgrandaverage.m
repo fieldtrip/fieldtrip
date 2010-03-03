@@ -1,21 +1,21 @@
-function [grandavg] = freqgrandaverage(cfg, varargin);
+function [grandavg] = ft_freqgrandaverage(cfg, varargin);
 
-% FREQGRANDAVERAGE computes the average powerspectrum or time-frequency spectrum
+% FT_FREQGRANDAVERAGE computes the average powerspectrum or time-frequency spectrum
 % over multiple subjects
 %
 % Use as
-%   [grandavg] = freqgrandaverage(cfg, freq1, freq2, freq3...)
+%   [grandavg] = ft_freqgrandaverage(cfg, freq1, freq2, freq3...)
 %
-% The input data freq1..N are obtained from either FREQANALYSIS with
-% keeptrials=no or from FREQDESCRIPTIVES. The configuration structure
+% The input data freq1..N are obtained from either FT_FREQANALYSIS with
+% keeptrials=no or from FT_FREQDESCRIPTIVES. The configuration structure
 % can contain
 %  cfg.keepindividual = 'yes' or 'no' (default = 'no')
 %  cfg.foilim         = [fmin fmax] or 'all', to specify a subset of frequencies (default = 'all')
 %  cfg.toilim         = [tmin tmax] or 'all', to specify a subset of latencies (default = 'all')
 %  cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
-%                       see CHANNELSELECTION for details
+%                       see FT_CHANNELSELECTION for details
 %
-% See also TIMELOCKGRANDAVERAGE, FREQANALYSIS, FREQDESCRIPTIVES
+% See also FT_TIMELOCKGRANDAVERAGE, FT_FREQANALYSIS, FT_FREQDESCRIPTIVES
 
 % FIXME averaging coherence is not possible if inputs contain different amounts of data (i.e. chan/freq/time)
 

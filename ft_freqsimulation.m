@@ -1,12 +1,12 @@
-function [data] = freqsimulation(cfg)
+function [data] = ft_freqsimulation(cfg)
 
-% FREQSIMULATION makes simulated data in FieldTrip format. The data is built
+% FT_FREQSIMULATION makes simulated data in FieldTrip format. The data is built
 % up from fifferent frequencies and can contain a signal in which the
 % different frequencies interact (i.e. cross-frequency coherent). Different
 % methods are possible to make data with special properties.
 %
 % Use as
-%   [data] = freqsimulation(cfg)
+%   [data] = ft_freqsimulation(cfg)
 %
 % The configuration options include
 %   cfg.method      = The methods are explained in more detail below, but they can be
