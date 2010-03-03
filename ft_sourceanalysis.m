@@ -765,11 +765,13 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'loreta', 'rv
     %don't loop over repetitions (slow), but reshape the input data to obtain single trial timecourses efficiently
     %in the presence of filters pre-computed on the average (or whatever)
     siz    = size(avg);
-    tmpavg = reshape(permute(avg,[2 3 1]),[siz(2) siz(3)*siz(1)]);
-    tmpdip = beamformer_lcmv(grid, sens, vol, tmpavg, squeeze(mean(Cy,1)), optarg{:});
+    tmpdat = reshape(permute(avg,[2 3 1]),[siz(2) siz(3)*siz(1)]);
+    tmpdip = beamformer_lcmv(grid, sens, vol, tmpdat, squeeze(mean(Cy,1)), optarg{:});
+    tmpmom = tmpdip.mom{tmpdip.inside(1)};
+    sizmom = size(tmpmom);
     for i=1:length(tmpdip.inside)
       indx = tmpdip.inside(i);
-      tmpdip.mom{indx} = reshape(tmpdip.mom{indx}, [siz(3) siz(1)])';
+      tmpdip.mom{indx} = permute(reshape(tmpdip.mom{indx}, [sizmom(1) siz(3) siz(1)]), [3 1 2]);
     end
     try, tmpdip = rmfield(tmpdip, 'pow'); end
     try, tmpdip = rmfield(tmpdip, 'cov'); end
@@ -780,8 +782,8 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'loreta', 'rv
       dip(i).outside = tmpdip.outside;
       dip(i).mom     = cell(1,size(tmpdip.pos,1));
       for ii=1:length(tmpdip.inside)
-        indx = tmpdip.inside(ii);
-    dip(i).mom{indx} = tmpdip.mom{indx}(i,:);
+        indx             = tmpdip.inside(ii);
+        dip(i).mom{indx} = reshape(tmpdip.mom{indx}(i,:,:),[sizmom(1) siz(3)]);
       end
     end
   elseif strcmp(cfg.method, 'sam')
