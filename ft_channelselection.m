@@ -1,6 +1,6 @@
 function [channel] = channelselection(channel, datachannel)
 
-% CHANNELSELECTION for EEG and MEG labels
+% FT_CHANNELSELECTION for EEG and MEG labels
 %
 % This function translates the user-specified list of channels into channel
 % labels as they occur in the data. This channel selection procedure can
