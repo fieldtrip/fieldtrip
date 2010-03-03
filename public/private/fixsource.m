@@ -169,49 +169,52 @@ elseif strcmp(current, 'old') && strcmp(type, 'new'),
     end
   end
   
-  %----------------------------------------------
-  %convert mom into pow if requested and possible
-  if strcmp(haspow, 'yes')
-    convert = 0;
-    if isfield(output, 'mom') && size(output.mom{output.inside(1)},2)==1,
-      convert = 1;
-    else
-      warning('conversion from mom to pow is not possible, either because there is no mom in the data, or because the dimension of mom>1. in that case call ft_sourcedescriptives first with cfg.projectmom');
-    end
-     
-    if isfield(output, 'cumtapcnt')
-      convert = 1 & convert;
-    else
-      warning('conversion from mom to pow will not be done, because cumtapcnt is missing');
-    end
-      
-    if convert,  
-      npos = size(output.pos,1);
-      nrpt = numel(output.cumtapcnt);
-      tmpmom = cat(2,output.mom{output.inside});
-      tmppow = zeros(npos, nrpt);
-      tapcnt = [0;cumsum(output.cumtapcnt(:))];
-      for k = 1:nrpt
-        ntap = tapcnt(k+1)-tapcnt(k);  
-        tmppow(output.inside,k) = sum(abs(tmpmom((tapcnt(k)+1):tapcnt(k+1),:)).^2,1)./ntap;
-      end
-      output.pow       = tmppow;
-      output.powdimord = ['pos_rpt_freq']; 
-    end  
-  end
- 
   if isfield(output, 'csdlabel')
     output = setfield(output, 'orilabel', getfield(output, 'csdlabel'));
     output = rmfield(output,  'csdlabel');
   end 
+  current = 'new';
  
 elseif strcmp(current, 'new') && strcmp(type, 'old')
   %go from new to old
   error('not implemented yet');
 end
 
+if strcmp(current, 'new') && strcmp(haspow, 'yes'), 
 
-%-----------------------------------------------
+  %----------------------------------------------
+  %convert mom into pow if requested and possible
+  convert = 0;
+  if isfield(output, 'mom') && size(output.mom{output.inside(1)},2)==1,
+    convert = 1;
+  else
+    warning('conversion from mom to pow is not possible, either because there is no mom in the data, or because the dimension of mom>1. in that case call ft_sourcedescriptives first with cfg.projectmom');
+  end
+   
+  if isfield(output, 'cumtapcnt')
+    convert = 1 & convert;
+  else
+    warning('conversion from mom to pow will not be done, because cumtapcnt is missing');
+  end
+    
+  if convert,  
+    npos = size(output.pos,1);
+    nrpt = numel(output.cumtapcnt);
+    tmpmom = cat(2,output.mom{output.inside});
+    tmppow = zeros(npos, nrpt);
+    tapcnt = [0;cumsum(output.cumtapcnt(:))];
+    for k = 1:nrpt
+      ntap = tapcnt(k+1)-tapcnt(k);  
+      tmppow(output.inside,k) = sum(abs(tmpmom((tapcnt(k)+1):tapcnt(k+1),:)).^2,1)./ntap;
+    end
+    output.pow       = tmppow;
+    output.powdimord = ['pos_rpt_freq']; 
+  end  
+
+end
+ 
+
+%--------------------------------------------------------
 function [dimord] = createdimord(output, fname, rptflag);
 
 if nargin==2, rptflag = 0; end
