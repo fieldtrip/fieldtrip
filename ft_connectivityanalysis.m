@@ -121,9 +121,9 @@ if isfield(data, 'label'),
   cfg.channel     = channelselection(cfg.channel, data.label);
 end
 
-% if isfield(data, 'label') && ~isempty(cfg.channelcmb),
-%   cfg.channelcmb = channelcombination(cfg.channelcmb, cfg.channel, 1); 
-% end
+if isfield(data, 'label') && ~isempty(cfg.channelcmb),
+  cfg.channelcmb = channelcombination(cfg.channelcmb, cfg.channel, 1); 
+end
 
 if strcmp(cfg.method, 'pcoh') && ~isempty(cfg.partchannel), %FIXME also for pcorr and ppowcorr and pamplcorr
   cfg.partchannel = channelselection(cfg.partchannel, data.label);
@@ -972,7 +972,6 @@ if nargin<5, demeanflag = 0;  end
 
 switch dtype
 case 'freq'
-  
   ncmb  = size(cmb,1);
   nchan = numel(data.label);  
   getpowindx = 0;
