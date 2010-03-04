@@ -121,9 +121,9 @@ if isfield(data, 'label'),
   cfg.channel     = channelselection(cfg.channel, data.label);
 end
 
-if isfield(data, 'label') && ~isempty(cfg.channelcmb),
-  cfg.channelcmb = channelcombination(cfg.channelcmb, cfg.channel, 1); 
-end
+% if isfield(data, 'label') && ~isempty(cfg.channelcmb),
+%   cfg.channelcmb = channelcombination(cfg.channelcmb, cfg.channel, 1); 
+% end
 
 if strcmp(cfg.method, 'pcoh') && ~isempty(cfg.partchannel), %FIXME also for pcorr and ppowcorr and pamplcorr
   cfg.partchannel = channelselection(cfg.partchannel, data.label);
@@ -335,11 +335,26 @@ case 'instantaneous_causality'
       siz  = size(data.crsspctrm);
       data.crsspctrm = reshape(data.crsspctrm, [1 siz]);
     end 
-    %fs      = cfg.fsample; %FIXME do we really need this, or is this related to how
-    %noisecov is defined and normalised?
-    fs       = 1;
-    [datout, varout, n] = coupling_instantaneous(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack);
+    
+    if ~isfield(data, 'label') && isfield(data, 'labelcmb'),
+      %multiple pairwise non-parametric transfer functions
+      fs = 1;
+      siznc = size(data.noisecov);
+      sizt  = size(data.transfer);
+      for k = 1:size(data.transfer,4)
+        tmptransfer  = reshape(data.transfer(:,:,:,k,:,:),sizt([1:3 5:end]));
+        tmpnoisecov  = reshape(data.noisecov(:,:,:,k,:,:),siznc([1:3]));
+        tmpcrsspctrm = reshape(data.crsspctrm(:,:,:,k,:,:),sizt([1:3 5:end]));
+        [datout(:,:,k,:,:), varout(:,:,k,:,:), n] = coupling_instantaneous(tmptransfer, tmpnoisecov, tmpcrsspctrm, fs, hasjack);
+      end
+    else 
+     %fs      = cfg.fsample; %FIXME do we really need this, or is this related to how
+      %noisecov is defined and normalised?
+      fs       = 1;
+      [datout, varout, n] = coupling_instantaneous(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack);
+    end
     outparam = 'instantspctrm';
+    
   else
     error('instantaneous causality for time domain data is not yet implemented');
   end      
@@ -580,12 +595,12 @@ A  = zeros(newsiz);
 
 %FIXME this only works for data without time dimension
 if numel(siz)>4, error('this only works for data without time'); end
-for j = 1:siz(1)
+for j = 1:siz(1) %rpt loop
   AA = reshape(input(j, chan,  chan, : ), [nchan  nchan  siz(4:end)]);
   AB = reshape(input(j, chan,  pchan,: ), [nchan  npchan siz(4:end)]);
   BA = reshape(input(j, pchan, chan, : ), [npchan nchan  siz(4:end)]);
   BB = reshape(input(j, pchan, pchan, :), [npchan npchan siz(4:end)]);
-  for k = 1:siz(4)
+  for k = 1:siz(4) %freq loop
     A(j,:,:,k) = AA(:,:,k) - AB(:,:,k)*pinv(BB(:,:,k))*BA(:,:,k); 
   end
 end
