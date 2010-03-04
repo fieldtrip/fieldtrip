@@ -40,7 +40,7 @@ if isstruct(input) && numel(input)>1
 end
 
 if isstruct(input)
-  fprintf('besa2fieldtrip: converting structure');
+  fprintf('besa2fieldtrip: converting structure\n');
 
   %---------------------TFC-------------------------------------------------%
   if strcmp(input.structtype, 'besa_tfc')
@@ -132,7 +132,7 @@ if isstruct(input)
   end
 
 elseif ischar(input)
-  fprintf('besa2fieldtrip: reading from file');
+  fprintf('besa2fieldtrip: reading from file\n');
 
   % This function can either use the reading functions included in FieldTrip
   % (with contributions from Karsten, Vladimir and Robert), or the official
@@ -215,9 +215,7 @@ elseif ischar(input)
     fprintf('reading time-frequency representation using BESA toolbox\n');
     % this should be similar to the output of FREQANALYSIS
     tfc = readBESAtfc(input);
-    temp_chan = char(tfc.ChannelLabels');
-    Nchan = size(temp_chan,1);
-    %Nchan = size(tfc.ChannelLabels,1)
+    Nchan = size(tfc.ChannelLabels,1);
     % convert into a FREQANALYSIS compatible data structure
     data = [];
     data.time = tfc.Time(:)';
@@ -226,8 +224,7 @@ elseif ischar(input)
       % it contains coherence between channel pairs
       fprintf('reading coherence between %d channel pairs\n', Nchan);
       for i=1:Nchan
-        tmp = tokenize(deblank(temp_chan(i,:)),'-');
-        %tmp = tokenize(deblank(tfc.ChannelLabels(i,:)), '-');
+        tmp = tokenize(deblank(tfc.ChannelLabels(i,:)), '-');
         data.labelcmb{i,1} = tmp{1};
         data.labelcmb{i,2} = tmp{2};
       end
@@ -236,8 +233,7 @@ elseif ischar(input)
       % it contains power on channels
       fprintf('reading power on %d channels\n', Nchan);
       for i=1:Nchan
-        %data.label{i,1} = deblank(tfc.ChannelLabels(i,:));
-        data.label{i,1} = deblank(temp_chan(i,:));
+        data.label{i,1} = deblank(tfc.ChannelLabels(i,:));
       end
       data.powspctrm = permute(tfc.Data, [1 3 2]);
     end
