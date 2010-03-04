@@ -60,7 +60,7 @@ postpad = zeros(1,pad);
 
 
 
-% Set fboi and foi
+% Set fboi and foi and default tapsmofrq
 % fboi = frequency bins of interest (index to be used in fft-output)
 % foi  = frequencies of interest (Hz)
 if isnumeric(foi) % if input is a vector
@@ -73,7 +73,10 @@ elseif strcmp(foi,'max') % if input was 'max'
   numboi = size(fboi,2);
   foi    = (fboi-1) ./ pad;
 end
-
+nfoi = length(foi);
+if isempty(tapsmofrq) % default tapsmofrq
+  tapsmofrq = ones(nfoi,1)*4;
+end
 
 
 % Set tboi and toi
@@ -86,12 +89,9 @@ elseif strcmp(toi,'max') % if input was 'max'
   toi  = time;
   tboi = 1:length(time);
 end
-nfoi = length(foi);
-if isempty(tapsmofrq)
-  tapsmofrq = ones(nfoi,1)*4;
-end
 
-% time-windows
+
+% time-windows %%% FIXME: IF 0 HZ IS REQUESTED, THIS BREAKS
 if isempty(timwin)
   timwin = (1 ./ foi) * 3; % default is 3 cycles of a frequency
 end
