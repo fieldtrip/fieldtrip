@@ -16,8 +16,10 @@
   #include <poll.h>
 #endif
 
-#define THREADSLEEP 1000000  // in microseconds
-#define POLLSLEEP   100     // in microseconds
+#define THREADSLEEP 1000000  /* in microseconds */
+#define POLLSLEEP   100      /* in microseconds */
+
+#define MERGE_THRESHOLD      4096    /* TODO: optimize this value? Maybe look at MTU size */
 
 extern pthread_mutex_t mutexsocketcount;
 extern int socketcount;
@@ -58,9 +60,9 @@ void *tcpsocket(void *arg) {
 	/* keep processing messages untill the connection is closed */
 	while (1) {
 
-	request       = (message_t*)malloc(sizeof(message_t));
-	request->def  = (messagedef_t*)malloc(sizeof(messagedef_t));
-	request->buf  = NULL;
+		request       = (message_t*)malloc(sizeof(message_t));
+		request->def  = (messagedef_t*)malloc(sizeof(messagedef_t));
+		request->buf  = NULL;
 
 #ifdef ENABLE_POLLING
 		/* wait for data to become available or until the connection is closed */
@@ -116,23 +118,44 @@ void *tcpsocket(void *arg) {
 		if (verbose>1) print_response(response->def);
 		if (verbose>1) print_buf(request->buf, request->def->bufsize);
 
-		if ((n = bufwrite(client, response->def, sizeof(messagedef_t)))!=sizeof(messagedef_t)) {
-			if (verbose>0) fprintf(stderr, "tcpsocket: write size = %d, should be %d\n", n, sizeof(messagedef_t));
-			goto cleanup;
-		}
-		if ((n = bufwrite(client, response->buf, response->def->bufsize))!=response->def->bufsize) {
-			if (verbose>0) fprintf(stderr, "tcpsocket: write size = %d, should be %d\n", n, response->def->bufsize);
-			goto cleanup;
+		/* we don't need the request anymore */
+		cleanup_message(&request);
+		request = NULL;
+		
+		/* merge response->def and response->buf if they are small, so we can send it in one go over TCP */
+		if (response->def->bufsize + sizeof(messagedef_t) <= MERGE_THRESHOLD) {
+			int msize = response->def->bufsize + sizeof(messagedef_t);
+			void *merged = NULL;
+			
+			append(&merged, 0, response->def, sizeof(messagedef_t));
+			append(&merged, sizeof(messagedef_t), response->buf, response->def->bufsize);
+						
+			if ((n=bufwrite(client, merged, msize) != msize)) {
+				if (verbose>0) fprintf(stderr, "tcpsocket: write size = %d, should be %d\n", n, msize);
+				FREE(merged);
+				goto cleanup;
+			}
+			FREE(merged);
+		} else {
+			if ((n = bufwrite(client, response->def, sizeof(messagedef_t)))!=sizeof(messagedef_t)) {
+				if (verbose>0) fprintf(stderr, "tcpsocket: write size = %d, should be %d\n", n, sizeof(messagedef_t));
+				goto cleanup;
+			}
+			if ((n = bufwrite(client, response->buf, response->def->bufsize))!=response->def->bufsize) {
+				if (verbose>0) fprintf(stderr, "tcpsocket: write size = %d, should be %d\n", n, response->def->bufsize);
+				goto cleanup;
+			}
 		}
 
-		cleanup_message(&request);
 		cleanup_message(&response);
-        request = NULL;
         response = NULL;
 
 	} /* while (1) */
 
 cleanup:
+	if (response!=NULL) 
+		cleanup_message(&response);
+
 	/* from now on it is safe to cancel the thread */
 	pthread_setcancelstate(oldcancelstate, NULL);
 	pthread_setcanceltype(oldcanceltype, NULL);

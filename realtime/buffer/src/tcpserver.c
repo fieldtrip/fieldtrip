@@ -201,14 +201,14 @@ void *tcpserver(void *arg) {
 			}
 #endif
 
+#ifdef DISABLE_NAGLE
 			/* disable the Nagle buffering algorithm */
-			/*
-			   optval = 1;
-			   if (setsockopt(c, IPPROTO_TCP, TCP_NODELAY, &optval, sizeof(optval)) < 0) {
-			   perror("tcpserver setsockopt");
-			   goto cleanup;
-			   }
-			 */
+			optval = 1;
+			if (setsockopt(c, IPPROTO_TCP, TCP_NODELAY, &optval, sizeof(optval)) < 0) {
+				perror("tcpserver setsockopt");
+				goto cleanup;
+			}
+#endif
 
 			/* deal with the incoming connection on the TCP socket in a seperate thread */
 			/* rc = pthread_create(&tid, &attr, tcpsocket, (void *)c); */

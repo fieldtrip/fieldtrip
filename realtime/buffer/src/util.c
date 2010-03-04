@@ -36,7 +36,7 @@ int bufread(int s, void *buf, int numel) {
 						fprintf(stderr, "bufread: read %d bytes\n", numthis);
 				numread += numthis;
 				numcall ++;
-#ifdef PLATFORM_WIN32
+#ifndef PLATFORM_WIN32			/* SK: I think this shouldn't be necessary on any platform: the sockets are blocking */
 				if (numread<numel)
 						usleep(1000);
 #endif
@@ -63,7 +63,7 @@ int bufwrite(int s, void *buf, int numel) {
 						fprintf(stderr, "bufwrite: wrote %d bytes\n", numthis);
 				numwrite += numthis;
 				numcall ++;
-#ifdef PLATFORM_WIN32
+#ifndef PLATFORM_WIN32			/* SK: I think this shouldn't be necessary on any platform: the sockets are blocking */				
 				if (numwrite<numel)
 						usleep(1000);
 #endif
@@ -166,7 +166,7 @@ int open_connection(const char *hostname, int port) {
 				perror("open_connection");
 				return -1;
 		}
-
+    
 		retry = 10;
 		while (retry>0) {
 				if (connect(s, (struct sockaddr *)&sa, sizeof sa)<0) {
@@ -194,6 +194,14 @@ int open_connection(const char *hostname, int port) {
 
 		if (verbose>0)
 				fprintf(stderr, "open_connection: connected to %s:%d on socket %d\n", hostname, port, s);
+
+#ifdef DISABLE_NAGLE
+		{
+			int optval = 1;
+			setsockopt(s, IPPROTO_TCP, TCP_NODELAY, &optval, sizeof(optval));
+		}
+#endif
+        
 		return s;
 }
 
