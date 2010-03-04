@@ -57,6 +57,23 @@ switch fileformat
   case 'polhemus_pos'
     sens = read_brainvision_pos(filename);
 
+  case 'besa_elp'
+    % the code below does not yet work
+    error('unknown fileformat for electrodes or gradiometers');
+    
+    fid = fopen(filename);
+    % the ascii file contains: type, label, angle, angle
+    tmp = textscan(fid, '%s%s%f%f');
+    fclose(fid);
+
+    sel = strcmpi(tmp{1}, 'EEG');  % type can be EEG or POS
+    sens.label = tmp{2}(sel);
+    az = tmp{3}(sel) * pi/180;
+    el = tmp{4}(sel) * pi/180;
+    r  = ones(size(el));
+    [x, y, z] = sph2cart(az, el, r);
+    sens.pnt  = [x y z];
+    
   case 'besa_pos'
     tmp = importdata(filename);
     if ~isnumeric(tmp)
