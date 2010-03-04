@@ -20,7 +20,14 @@ function cfg = topoplotCC(cfg, freq)
 % The alphaparam should be indicated as opacity between 0 (fully transparent)
 % and 1 (fully opaque).
 %
-% See also: PREPARE_LAYOUT, MULTIPLOTCC
+% The default is to plot the connections as lines, but you can also use
+% bidirectional arrows:
+%    cfg.arrowhead    = none, stop, start, both (default = 'none')
+%    cfg.arrowsize    = size of the arrow head (default = automatic)
+%    cfg.arrowoffset  = amount that the arrow is shifted to the side (default = automatic)
+%    cfg.arrowlength  = amount by which the length is reduced (default = 0.8)
+%
+% See also PREPARE_LAYOUT, MULTIPLOTCC
 
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
@@ -40,9 +47,10 @@ if ~isfield(cfg, 'widthparam'), cfg.widthparam = [];          end
 if ~isfield(cfg, 'colorparam'), cfg.colorparam = 'cohspctrm'; end
 if ~isfield(cfg, 'newfigure'),  cfg.newfigure = 'yes';        end
 
-if ~isfield(cfg, 'arrowhead'),   cfg.arrowhead = 'no';         end % no, stop, start, both
-if ~isfield(cfg, 'arrowlength'), cfg.arrowlength = 1;          end % relative to the complete line
-if ~isfield(cfg, 'arrowoffset'), cfg.arrowoffset = 0;          end % absolute, should be in the same units as the layout
+if ~isfield(cfg, 'arrowhead'),   cfg.arrowhead = 'none';       end % none, stop, start, both
+if ~isfield(cfg, 'arrowsize'),   cfg.arrowsize = nan;          end % length of the arrow head, should be in in figure units, i.e. the same units as the layout
+if ~isfield(cfg, 'arrowoffset'), cfg.arrowoffset = nan;        end % absolute, should be in in figure units, i.e. the same units as the layout
+if ~isfield(cfg, 'arrowlength'), cfg.arrowlength = 0.8;        end % relative to the complete line
 
 lay = prepare_layout(cfg, freq);
 
@@ -76,12 +84,29 @@ if strcmp(cfg.newfigure, 'yes')
 end
 
 hold on
+axis equal
+
+if isnan(cfg.arrowsize)
+  % use the size of the figure to estimate a decent number
+  siz = axis;
+  cfg.arrowsize = (siz(2) - siz(1))/50;
+  warning('using an arrowsize of %f', cfg.arrowsize);
+end
+
+if isnan(cfg.arrowoffset)
+  % use the size of the figure to estimate a decent number
+  siz = axis;
+  cfg.arrowoffset = (siz(2) - siz(1))/100;
+  warning('using an arrowoffset of %f', cfg.arrowoffset);
+end
 
 rgb  = colormap;
-cmin = min(colorparam(:));
-cmax = max(colorparam(:));
-colorparam = (colorparam - cmin)./(cmax-cmin);
-colorparam = round(colorparam * (size(rgb,1)-1) + 1);
+if ~isempty(colorparam)
+  cmin = min(colorparam(:));
+  cmax = max(colorparam(:));
+  colorparam = (colorparam - cmin)./(cmax-cmin);
+  colorparam = round(colorparam * (size(rgb,1)-1) + 1);
+end
 
 if strcmp(cfg.newfigure, 'yes')
   % also plot the position of the electrodes
@@ -136,8 +161,8 @@ for i=1:ncmb
     ybeg = lay.pos(begindx,2);
     xend = lay.pos(endindx,1);
     yend = lay.pos(endindx,2);
-    
-    if strcmp(cfg.arrowhead, 'no')
+
+    if strcmp(cfg.arrowhead, 'none')
       x = [xbeg xend]';
       y = [ybeg yend]';
       % h = line(x, y);
@@ -152,18 +177,8 @@ for i=1:ncmb
       arrowbeg  = cfg.arrowlength * (arrowbeg-center) + center + cfg.arrowoffset * offset;
       arrowend  = cfg.arrowlength * (arrowend-center) + center + cfg.arrowoffset * offset;
 
-      switch cfg.arrowhead
-        case {'yes' 'stop'}
-          h = arrow(arrowbeg, arrowend, 'Ends', 'stop');
-        case 'start'
-          h = arrow(arrowbeg, arrowend, 'Ends', 'start');
-        case 'both'
-          h = arrow(arrowbeg, arrowend, 'Ends', 'both');
-        case 'none'
-          h = arrow(arrowbeg, arrowend, 'Ends', 'none');
-        otherwise
-          error('unsupported value for cfg.arrowhead')
-      end % switch arrowhead
+      h = arrow(arrowbeg, arrowend, 'Ends', cfg.arrowhead, 'length', 0.05);
+
     end % if arrow
 
     if ~isempty(widthparam)
@@ -172,10 +187,12 @@ for i=1:ncmb
 
     if ~isempty(alphaparam)
       set(h, 'EdgeAlpha', alphaparam(i));
+      set(h, 'FaceAlpha', alphaparam(i)); % for arrowheads
     end
 
     if ~isempty(colorparam)
       set(h, 'EdgeColor', rgb(colorparam(i),:));
+      set(h, 'FaceColor', rgb(colorparam(i),:)); % for arrowheads
     end
 
   end
@@ -191,3 +208,50 @@ cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 if nargout<1
   clear cfg
 end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION for plotting arrows, see also fieldtrip/private/arrow
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function h = arrow(arrowbeg, arrowend, varargin)
+ends   = keyval('ends',   varargin);
+length = keyval('length', varargin); % the length of the arrow head, in figure units
+color  = [0 0 0]; % in RGB
+
+direction = (arrowend - arrowbeg);
+direction = direction/norm(direction);
+offset    = [direction(2) -direction(1)];
+
+pnt1 = arrowbeg;
+pnt2 = arrowend;
+h = patch([pnt1(1) pnt2(1)], [pnt1(2) pnt2(2)], color);
+
+switch ends
+  case 'stop'
+    pnt1 = arrowend - length*direction + 0.4*length*offset;
+    pnt2 = arrowend;
+    pnt3 = arrowend - length*direction - 0.4*length*offset;
+    h(end+1) = patch([pnt1(1) pnt2(1) pnt3(1)]', [pnt1(2) pnt2(2) pnt3(2)]', color);
+
+  case 'start'
+    pnt1 = arrowbeg + length*direction + 0.4*length*offset;
+    pnt2 = arrowbeg;
+    pnt3 = arrowbeg + length*direction - 0.4*length*offset;
+    h(end+1) = patch([pnt1(1) pnt2(1) pnt3(1)]', [pnt1(2) pnt2(2) pnt3(2)]', color);
+
+  case 'both'
+    pnt1 = arrowend - length*direction + 0.4*length*offset;
+    pnt2 = arrowend;
+    pnt3 = arrowend - length*direction - 0.4*length*offset;
+    h(end+1) = patch([pnt1(1) pnt2(1) pnt3(1)]', [pnt1(2) pnt2(2) pnt3(2)]', color);
+
+    pnt1 = arrowbeg + length*direction + 0.4*length*offset;
+    pnt2 = arrowbeg;
+    pnt3 = arrowbeg + length*direction - 0.4*length*offset;
+    h(end+1) = patch([pnt1(1) pnt2(1) pnt3(1)]', [pnt1(2) pnt2(2) pnt3(2)]', color);
+
+  case 'none'
+    % don't draw arrow heads
+end
+
