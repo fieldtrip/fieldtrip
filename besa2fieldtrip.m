@@ -226,7 +226,7 @@ elseif ischar(input)
       % it contains coherence between channel pairs
       fprintf('reading coherence between %d channel pairs\n', Nchan);
       for i=1:Nchan
-        tmp = tokenize(deblank(temp_chan(i,:)),'-')
+        tmp = tokenize(deblank(temp_chan(i,:)),'-');
         %tmp = tokenize(deblank(tfc.ChannelLabels(i,:)), '-');
         data.labelcmb{i,1} = tmp{1};
         data.labelcmb{i,2} = tmp{2};
@@ -343,7 +343,7 @@ cfg = [];
 
 if isstruct(input) && isfield(input,'datafile')
   cfg.filename = input.datafile;
-elseif isstruct(filename) && isfield(input,'datafile')
+elseif isstruct(input) && ~isfield(input,'datafile')
   cfg.filename = 'Unknown';
 elseif ischar(input)
   cfg.filename = input;
