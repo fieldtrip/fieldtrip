@@ -757,40 +757,8 @@ switch eventformat
     pnet(udp,'close');
 
   case 'fcdc_serial'
-    % serial port on windows or linux platform
-    [port, opt] = filetype_check_uri(filename);
-    % determine whether any serial port objects are already associated with the
-    % target serial port
-    s = [];
-    temp = instrfind;
-    if isa(temp,'instrument')
-      % find all serial ports
-      i1 = strcmpi({temp(:).Type},'serial');
-      if any(i1)
-        % find all serial ports whose name matches that of the specified port
-        i2 = strmatch(lower(port),lower({temp(find(i1)).Name}));
-        % set s to the (first) matching port if present (and open if necessary)
-        if ~isempty(i2)
-          s = temp(i2(1));
-          if ~strcmp(s.Status,'open'), fopen(s); end;
-        end
-      end
-    end
-    % create, configure a serial port object if necessary and open the port
-    if ~isa(s,'serial')
-      s = serial(port);
-      if ~isempty(opt) && iscell(opt), s = set(s,opt); end;
-      fopen(s);
-    end
-    % try to read a message from the serial port
-    msg = [];
-    % FIXME: this currently assumes that all messages are terminated by the
-    % "newline" character (ascii character 10)
-    try
-      msg = fscanf(s,'%s\n');
-    end;
-    % convert message to event structure
-    event = msg2struct(msg);
+    % this code is moved to a seperate file
+    event = read_serial_event(filename);
 
   case 'fcdc_mysql'
     % read from a MySQL server listening somewhere else on the network

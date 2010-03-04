@@ -212,48 +212,8 @@ switch eventformat
     end
 
   case 'fcdc_serial'
-    % serial port on windows or linux platform
-    s = [];
-    [port, opt] = filetype_check_uri(filename);
-
-    % determine whether any serial port objects are already associated with the target serial port
-    temp = instrfind;
-    if isa(temp,'instrument')
-      % find all serial ports
-      i1 = strcmp('serial',{temp(:).Type});
-      if any(i1)
-        % find all serial ports whose name matches that of the specified port
-        i2 = strmatch(lower(['Serial-',port]),lower({temp(find(i1)==1).Name}));
-        % set s to the (first) matching port if present (and open if necessary)
-        if ~isempty(i2)
-          s = temp(i2(1));
-          if ~strcmp(s.Status,'open'), fopen(s); end;
-        end
-      end
-    end
-
-    % create, configure a serial port object if necessary and open the port
-    if ~isa(s,'serial')
-      s = serial(port);
-      if ~isempty(opt) && iscell(opt), s = set(s,opt); end;
-      fopen(s);
-    end
-
-    %     % convert the event structure into an appropriate message
-    %     if isfield(event,'type') && strcmp(event.type,'ctrlchar')
-    %       % use only a single control character
-    %       msg = char(event.value(1));
-    %     else
-    %       % convert the entire event structure into a message
-    %       msg = struct2msg(event);
-    %     end
-
-    % write the message to the serial port
-    if isa(s,'serial') && strcmp(s.Status,'open')
-      fwrite(s,char(event.value));
-    else
-      error('could not write event to serial port');
-    end
+    % this code is moved to a seperate file
+    write_serial_event(filename, event);
 
   case 'fcdc_mysql'
     % write to a MySQL server listening somewhere else on the network

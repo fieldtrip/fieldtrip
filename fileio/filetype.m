@@ -844,7 +844,7 @@ return % filetype main()
 % (TRUE).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = most(x)
-x = x(find(~isnan(x(:))));
+x = x(~isnan(x(:)));
 y = sum(x==0)<ceil(length(x)/2);
 
 % SUBFUNCTION that always returns a true value
@@ -876,6 +876,9 @@ fnames = {
   'start'
   'length'
   'values'
-  'times'};
+  'times'
+};
 
 res = (numel(intersect(fieldnames(var{1}), fnames)) == 10);
+
+ 
