@@ -182,6 +182,9 @@ for i=1:ncmb
 end
 progress('close');
 
+% improve the fit in the axis
+axis tight
+
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
