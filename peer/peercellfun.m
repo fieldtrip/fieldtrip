@@ -29,9 +29,9 @@ optarg = varargin(optbeg:end);
 
 % get the optional input arguments
 UniformOutput = keyval('UniformOutput', optarg); if isempty(UniformOutput), UniformOutput = true; end
-memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=0; end
-timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=0; end
-sleep   = keyval('sleep',   optarg); if isempty(sleep),  sleep=0.01; end
+memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=0;    end
+timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=3600; end % assume that it will take one hour
+sleep   = keyval('sleep',   optarg); if isempty(sleep),  sleep=0.01;  end
 
 % convert from 'yes'/'no' into boolean value
 UniformOutput = istrue(UniformOutput);
@@ -115,6 +115,10 @@ while ~all(submitted) || ~all(collected)
       % update the estimate of the time and memory that will be needed for the next job
       timreq = nanmax(timused);
       memreq = nanmax(memused);
+    elseif ~any(collected) && any(submitted)
+      % update based on the time spent waiting sofar for the first job to return
+      elapsed = toc(stopwatch) - min(submittime(submitted));
+      timreq  = max(timreq, elapsed);
     end
 
     % redistribute the input arguments

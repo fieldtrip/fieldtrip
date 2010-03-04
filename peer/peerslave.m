@@ -65,7 +65,7 @@ if ~isempty(group)
   peer('group', group);
 end
 
-% impose access restrictions 
+% impose access restrictions
 peer('allowhost',  allowhost);
 peer('allowuser',  allowuser);
 peer('allowgroup', allowgroup);
@@ -186,15 +186,15 @@ while true
         numargout = 1;
       end
 
-	  % start measuring the time and memory requirements
-	  memprofile on
-	  timused = toc(stopwatch);
+      % start measuring the time and memory requirements
+      memprofile on
+      timused = toc(stopwatch);
 
       % evaluate the function and get the output arguments
-	  argout  = cell(1, numargout);
-	  [argout{:}] = feval(fname, argin{:});
+      argout  = cell(1, numargout);
+      [argout{:}] = feval(fname, argin{:});
 
-	  % determine the time and memory requirements
+      % determine the time and memory requirements
       timused = toc(stopwatch) - timused;
       memstat = memprofile('info');
       memprofile off
@@ -214,7 +214,7 @@ while true
       fprintf('executing job %d took %f seconds and %d bytes\n', jobnum, timused, memused);
 
       % collect the output options
-      options = {'timused', timused, 'memused', memused, 'lastwarn', lastwarn, 'lasterr', ''};
+      options = {'timused', timused, 'memused', memused, 'lastwarn', lastwarn, 'lasterr', '', 'release', version('-release')};
 
     catch feval_error
       argout  = {};
@@ -248,6 +248,11 @@ while true
 
     % clear the function and any persistent variables in it
     clear(fname);
+
+    % close all files and figures
+    fclose all
+    close all force
+    close all hidden
 
     % clear all temporary variables
     vars = whos;
