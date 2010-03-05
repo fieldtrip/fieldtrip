@@ -75,7 +75,7 @@ elseif strcmp(foi,'max') % if input was 'max'
 end
 nfoi = length(foi);
 if isempty(tapsmofrq) % default tapsmofrq
-  tapsmofrq = ones(nfoi,1)*4;
+  tapsmofrq = ones(nfoi,1)*4; % SHOULDNT BE DEFAULTED IN MY OPINION
 end
 
 
@@ -100,7 +100,7 @@ if foi(1)==0
   timwin(1) = pad; % timwin for foi = 0 is equal to entire data-length, not sure whether we should do this
 end
 % set number of samples per time-window (timwin is in seconds)
-timwinsmp = round(timwin * fsample);
+timwinsmp = round(timwin .* fsample);
 
 
 
@@ -114,7 +114,9 @@ for ifoi = 1:nfoi
       % create a sequence of DPSS tapers, ensure that the input arguments are double precision
       tap = double_dpss(timwinsmp(ifoi), timwinsmp(ifoi) .* (tapsmofrq(ifoi) ./ fsample))';
       % remove the last taper
-      tap = tap(1:(end-1), :);% WHY ON EARTH IS THIS NECESSARY?
+      
+      
+      %tap = tap(1:(end-1), :);% WHY ON EARTH IS THIS NECESSARY?
 
     case 'sine'
       tap = sine_taper(timwinsmp(ifoi), timwinsmp(ifoi) .* (tapsmofrq(ifoi) ./ fsample))';
@@ -133,7 +135,7 @@ for ifoi = 1:nfoi
   
   % give error/warning about number of tapers
   if isempty(tap)
-    error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',nsample/fsample,tapsmofrq,fsample/fsample);
+    error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',nsample/fsample,tapsmofrq(ifoi),fsample/fsample);
   elseif (ntaper(ifoi) == 1) && strcmp(taper,'dpss')
     warning('using only one taper for specified smoothing')
   end
@@ -153,40 +155,61 @@ for ifoi = 1:nfoi
       sinwav  = horzcat(prezero, tap(itap,:) .* sin(angle)', postzero);
       wavelet = complex(coswav, sinwav);
       % store the fft of the complex wavelet
-      wltspctrm{ifoi}(itap,:) = fft(wavelet,[],1);
+      wltspctrm{ifoi}(itap,:) = fft(wavelet,[],2);
     end
   end
 end
 
 
 % compute fft
+
 spectrum = complex(nan([sum(ntaper),nchan,nfoi,ntboi]));
 datspectrum = fft([repmat(prepad,[nchan, 1]) dat repmat(postpad,[nchan, 1])],[],2); % should really be done above, but since the chan versus whole dataset fft'ing is still unclear, repmat is used
-
+tic
 for ifoi = 1:nfoi
   for itap = 1:ntaper(ifoi)
     for ichan = 1:nchan
      
       % compute indices that will be used to extracted the requested fft output    
       nsamplefoi    = timwin(ifoi) .* fsample;
-      acttboiind    = find((tboi >=  (nsamplefoi ./ 2)) & (tboi <    nsample - (nsamplefoi ./2)));
-      nonacttboiind = find((tboi  <  (nsamplefoi ./ 2)) | (tboi >=   nsample - (nsamplefoi ./2)));
-      acttboi       = tboi(acttboiind);
+      reqtboiind    = find((tboi >=  (nsamplefoi ./ 2)) & (tboi <    nsample - (nsamplefoi ./2)));
+      nonreqtboiind = find((tboi  <  (nsamplefoi ./ 2)) | (tboi >=   nsample - (nsamplefoi ./2)));
+      reqtboi       = tboi(reqtboiind);
       
-      % compute datspectrum*wavelet, if there are acttboi's that have data
-      if ~isempty(acttboi)
-        dum = fftshift(ifft(datspectrum(ichan,:) .* wltspctrm{ifoi}(itap,:),[],2));
-        spectrum(itap,ichan,ifoi,acttboiind) = dum(acttboi);
+      % compute datspectrum*wavelet, if there are reqtboi's that have data
+      if ~isempty(reqtboi)
+        dum = (ifft(datspectrum(ichan,:) .* wltspctrm{ifoi}(itap,:),[],2));
+        spectrum(itap,ichan,ifoi,reqtboiind) = dum(reqtboi);
       end
     end
   end
 end
+toc
 
 
 
-
-
-
+% %%%%%% THE CODE BELOW IS A LITTLE BIT FASTER THAN ABOVE, WHICH COMPUTES THE FFT PER CHAN (BELOW IS ALL CHANS AT THE SAME TIME)
+% spectrum = complex(nan([sum(ntaper),nchan,nfoi,ntboi]));
+% datspectrum = fft([repmat(prepad,[nchan, 1]) dat repmat(postpad,[nchan, 1])],[],2); % should really be done above, but since the chan versus whole dataset fft'ing is still unclear, repmat is used
+% tic
+% for ifoi = 1:nfoi
+%   for itap = 1:ntaper(ifoi)
+% 
+%     % compute indices that will be used to extracted the requested fft output
+%     nsamplefoi    = timwin(ifoi) .* fsample;
+%     reqtboiind    = find((tboi >=  (nsamplefoi ./ 2)) & (tboi <    nsample - (nsamplefoi ./2)));
+%     nonreqtboiind = find((tboi  <  (nsamplefoi ./ 2)) | (tboi >=   nsample - (nsamplefoi ./2)));
+%     reqtboi       = tboi(reqtboiind);
+%     
+%     % compute datspectrum*wavelet, if there are reqtboi's that have data
+%     if ~isempty(reqtboi)
+%       dum = fftshift(ifft(datspectrum .* repmat(wltspctrm{ifoi}(itap,:),[nchan,1]),[],2));
+%       spectrum(itap,:,ifoi,reqtboiind) = dum(:,reqtboi);
+%     end
+%   end
+% end
+% toc
+% 
 
 
 
