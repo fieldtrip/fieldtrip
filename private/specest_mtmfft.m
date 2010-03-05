@@ -51,12 +51,10 @@ fsample = nsample / (time(end) - time(1));
 if pad < (time(end) - time(1))
   error('the padding that you specified is shorter than the data');
 end
-if isempty(pad) || (pad == (time(end) - time(1))) % if no padding is specified or if padding is equal to current data length
+if isempty(pad) % if no padding is specified padding is equal to current data length
   pad = (time(end)-time(1));
-else
-  pad = round((pad - (time(end) - time(1)))); 
 end
-postpad = zeros(1,(pad * fsample)/2); % 'postpad', so naming concurs with mtmconvol
+postpad = zeros(1,(round(pad - (time(end)-time(1))) * fsample)/2); % 'postpad', so naming concurs with mtmconvol
 
 
 
