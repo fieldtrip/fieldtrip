@@ -76,6 +76,8 @@ end
 
 % create tapers
 switch taper
+ 
+  
   case 'dpss'
     % create a sequence of DPSS tapers, ensure that the input arguments are double precision
     tap = double_dpss(nsample,nsample*(tapsmofrq./fsample))';
@@ -98,7 +100,8 @@ switch taper
   otherwise
     % create the taper and ensure that it is normalized
     tap = window(taper, nsample)';
-    tap = tap ./ norm(tap);
+    tap = tap ./ norm(tap,'fro');
+    
 end % switch taper
 ntap = size(tap,1);
 
