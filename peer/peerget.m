@@ -9,13 +9,15 @@ function varargout = peerget(jobid, varargin)
 %   timeout  = number, in seconds (default = 1)
 %   sleep    = number, in seconds (default = 0.01)
 %   output   = string, 'varargout' or 'cell' (default = 'varargout')
+%   diary    = string, can be 'always', 'warning', 'error' (default = 'error')
 %
 % See also PEERFEVAL, PEERCELLFUN
 
 % get the optional arguments
-timeout = keyval('timeout', varargin); if isempty(timeout), timeout=1; end
-sleep   = keyval('sleep',   varargin); if isempty(sleep),   sleep=0.01; end
+timeout = keyval('timeout', varargin); if isempty(timeout), timeout=1;          end
+sleep   = keyval('sleep',   varargin); if isempty(sleep),   sleep=0.01;         end
 output  = keyval('output',  varargin); if isempty(output),  output='varargout'; end
+diary   = keyval('diary',   varargin); if isempty(diary),   diary='error';      end
 
 % keep track of the time
 stopwatch = tic;
@@ -42,9 +44,32 @@ end % while
 if success
 
   % look at the optional arguments
-  warn    = keyval('lastwarn', options);
-  err     = keyval('lasterr',  options);
-  elapsed = keyval('elapsed',  options);
+  elapsed     = keyval('elapsed',  options);
+  warn        = keyval('lastwarn', options);
+  err         = keyval('lasterr',  options);
+  diarystring = keyval('diary',    options);
+
+  if strcmp(diary, 'error') && ~isempty(err)
+    fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
+    fprintf('%% an error was detected, the diary output of the remote execution follows \n');
+    fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
+    fprintf('%s', diarystring);
+    closeline = true;
+  elseif strcmp(diary, 'warning') && ~isempty(warn)
+    fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
+    fprintf('%% a warning was detected, the diary output of the remote execution follows\n');
+    fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
+    fprintf('%s', diarystring);
+    closeline = true;
+  elseif strcmp(diary, 'always')
+    fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
+    fprintf('%% the output of the remote execution follows\n');
+    fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
+    fprintf('%s', diarystring);
+    closeline = true;
+  else
+    closeline = false;
+  end
   if ~isempty(warn)
     warning(warn);
   end
@@ -54,8 +79,13 @@ if success
       error(err);
     else
       % it contains the full details
+      ws = warning('off', 'MATLAB:structOnObject');
       rethrow(struct(err));
+      warning(ws);
     end
+  end
+  if closeline
+    fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
   end
 
   switch output

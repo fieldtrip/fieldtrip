@@ -190,9 +190,19 @@ while true
       memprofile on
       timused = toc(stopwatch);
 
+      % switch on the diary
+      diaryfile = tempname;
+      diary(diaryfile);
+
       % evaluate the function and get the output arguments
       argout  = cell(1, numargout);
       [argout{:}] = feval(fname, argin{:});
+
+      % close the diary and read the contents
+      diary off
+      fid = fopen(diaryfile, 'r');
+      diarystring = fread(fid, [1, inf], 'char=>char');
+      fclose(fid);
 
       % determine the time and memory requirements
       timused = toc(stopwatch) - timused;
@@ -214,15 +224,20 @@ while true
       fprintf('executing job %d took %f seconds and %d bytes\n', jobnum, timused, memused);
 
       % collect the output options
-      options = {'timused', timused, 'memused', memused, 'lastwarn', lastwarn, 'lasterr', '', 'release', version('-release')};
+      options = {'timused', timused, 'memused', memused, 'lastwarn', lastwarn, 'lasterr', '', 'diary', diarystring, 'release', version('-release')};
 
     catch feval_error
       argout  = {};
+      % ensure that the diary file is closed
+      diary off
+      fid = fopen(diaryfile, 'r');
+      diarystring = fread(fid, [1, inf], 'char=>char');
+      fclose(fid);
       % the output options will include the error
-      options = {'lastwarn', lastwarn, 'lasterr', feval_error};
+      options = {'lastwarn', lastwarn, 'lasterr', feval_error, 'diary', diarystring};
       % an error was detected while executing the job
       warning('an error was detected during job execution');
-      % ensure that th ememory profiler is switched off
+      % ensure that the memory profiler is switched off
       memprofile off
       memprofile clear
     end

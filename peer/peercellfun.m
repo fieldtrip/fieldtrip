@@ -14,6 +14,7 @@ function varargout = peercellfun(fname, varargin)
 %   memreq         = number
 %   timreq         = number
 %   sleep          = number
+%   diary          = string, can be 'always', 'warning', 'error' (default = 'error')
 %
 % Example
 %   fname = 'power';
@@ -29,9 +30,10 @@ optarg = varargin(optbeg:end);
 
 % get the optional input arguments
 UniformOutput = keyval('UniformOutput', optarg); if isempty(UniformOutput), UniformOutput = true; end
-memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=0;    end
-timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=3600; end % assume that it will take one hour
-sleep   = keyval('sleep',   optarg); if isempty(sleep),  sleep=0.01;  end
+memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=0;       end
+timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=3600;    end % assume that it will take one hour
+sleep   = keyval('sleep',   optarg); if isempty(sleep),  sleep=0.01;     end
+diary   = keyval('diary',   optarg); if isempty(diary),  diary='error';  end
 
 % convert from 'yes'/'no' into boolean value
 UniformOutput = istrue(UniformOutput);
@@ -146,9 +148,9 @@ while ~all(submitted) || ~all(collected)
     collect = find(jobid == joblist(i).jobid);
     if isempty(collect)
       % there must be some junk in the buffer from an aborted previous call
-      [argout, options] = peerget(joblist(i).jobid, 'timeout', inf, 'output', 'cell');
+      [argout, options] = peerget(joblist(i).jobid, 'timeout', inf, 'output', 'cell', 'diary', diary);
     else
-      [argout, options] = peerget(joblist(i).jobid, 'timeout', inf, 'output', 'cell');
+      [argout, options] = peerget(joblist(i).jobid, 'timeout', inf, 'output', 'cell', 'diary', diary);
       % fprintf('collected job %d\n', collect);
       collected(collect)   = true;
       collecttime(collect) = toc(stopwatch);
