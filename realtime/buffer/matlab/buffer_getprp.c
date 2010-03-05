@@ -29,14 +29,12 @@
 
 #define NUMBER_OF_FIELDS 6
 
-void buffer_getprp(char *hostname, int port, mxArray *plhs[], const mxArray *prhs[])
+int buffer_getprp(int server, mxArray *plhs[], const mxArray *prhs[])
 {
-  int server;
   int verbose = 0;
   int i, nproperties;
   int offset;
-  double *val;
-  char msg[512];
+  int result;
   
   mxArray *bufptr;
   
@@ -66,6 +64,8 @@ void buffer_getprp(char *hostname, int port, mxArray *plhs[], const mxArray *prh
   /* properties are selected based on their type and not on number */
   /* this is realised at the moment by sending a propertysel that is equal to a propertydef+buf with value being ignored */
   if ((prhs[0]!=NULL) && (mxGetNumberOfElements(prhs[0])==2) && (mxIsDouble(prhs[0])) && (!mxIsComplex(prhs[0]))) {
+    double *val;
+
     /* fprintf(stderr, "args OK\n"); */
     val = (double *)mxGetData(prhs[0]);
     propertysel.begproperty = (UINT32_T)(val[0]);
@@ -75,55 +75,50 @@ void buffer_getprp(char *hostname, int port, mxArray *plhs[], const mxArray *prh
   }
   #endif
   
-  /* open the TCP socket */
-  if ((server = open_connection(hostname, port)) < 0) {
-    sprintf(msg, "ERROR: failed to create socket (%d)\n", server);
-		mexErrMsgTxt(msg);
-  }
-  
   if (verbose) print_request(request->def);
-  clientrequest(server, request, &response);
+  result = clientrequest(server, request, &response);
   if (verbose) print_response(response->def);
-  close_connection(server);
   
-  if (response->def->command==GET_OK) {
-    property = malloc(sizeof(property_t));
+  if (result == 0) {
     
-    /* first count the number of propertys */
-    nproperties = 0;
-    offset = 0;
-    while (offset<response->def->bufsize) {
-      property->def = (char *)response->buf + offset;
-      property->buf = (char *)response->buf + offset + sizeof(propertydef_t);
-      print_propertydef(property->def);
-      offset += sizeof(propertydef_t) + property->def->bufsize;
-      nproperties++;
-    }
-    
-    /* create a structure array that can hold all propertys */
-    plhs[0] = mxCreateStructMatrix(1, nproperties, NUMBER_OF_FIELDS, field_names);
-    
-    offset = 0;
-    for (i=0; i<nproperties; i++) {
-      property->def = (char *)response->buf + offset;
-      property->buf = (char *)response->buf + offset + sizeof(propertydef_t);
+    if (response->def->command==GET_OK) {
+      property = malloc(sizeof(property_t));
       
-      bufptr = mxCreateNumericMatrix(1, property->def->bufsize, mxUINT8_CLASS, mxREAL);
-      memcpy(mxGetPr(bufptr), property->buf, property->def->bufsize);
+      /* first count the number of propertys */
+      nproperties = 0;
+      offset = 0;
+      while (offset<response->def->bufsize) {
+        property->def = (propertydef_t *)((char *)response->buf + offset);
+        property->buf = (char *)response->buf + offset + sizeof(propertydef_t);
+        print_propertydef(property->def);
+        offset += sizeof(propertydef_t) + property->def->bufsize;
+        nproperties++;
+      }
       
-      mxSetFieldByNumber(plhs[0], i, 0, mxCreateDoubleScalar((double)property->def->type_type));
-      mxSetFieldByNumber(plhs[0], i, 1, mxCreateDoubleScalar((double)property->def->type_numel));
-      mxSetFieldByNumber(plhs[0], i, 2, mxCreateDoubleScalar((double)property->def->value_type));
-      mxSetFieldByNumber(plhs[0], i, 3, mxCreateDoubleScalar((double)property->def->value_numel));
-      mxSetFieldByNumber(plhs[0], i, 4, mxCreateDoubleScalar((double)property->def->bufsize));
-      mxSetFieldByNumber(plhs[0], i, 5, bufptr);
-      offset += sizeof(propertydef_t) + property->def->bufsize;
+      /* create a structure array that can hold all propertys */
+      plhs[0] = mxCreateStructMatrix(1, nproperties, NUMBER_OF_FIELDS, field_names);
+      
+      offset = 0;
+      for (i=0; i<nproperties; i++) {
+        property->def = (propertydef_t *)((char *)response->buf + offset);
+        property->buf = (char *)response->buf + offset + sizeof(propertydef_t);
+        
+        bufptr = mxCreateNumericMatrix(1, property->def->bufsize, mxUINT8_CLASS, mxREAL);
+        memcpy(mxGetPr(bufptr), property->buf, property->def->bufsize);
+        
+        mxSetFieldByNumber(plhs[0], i, 0, mxCreateDoubleScalar((double)property->def->type_type));
+        mxSetFieldByNumber(plhs[0], i, 1, mxCreateDoubleScalar((double)property->def->type_numel));
+        mxSetFieldByNumber(plhs[0], i, 2, mxCreateDoubleScalar((double)property->def->value_type));
+        mxSetFieldByNumber(plhs[0], i, 3, mxCreateDoubleScalar((double)property->def->value_numel));
+        mxSetFieldByNumber(plhs[0], i, 4, mxCreateDoubleScalar((double)property->def->bufsize));
+        mxSetFieldByNumber(plhs[0], i, 5, bufptr);
+        offset += sizeof(propertydef_t) + property->def->bufsize;
+      }
+      FREE(property);
     }
-    FREE(property);
-  }
-  else {
-    sprintf(msg, "ERROR: the buffer returned an error (%d)\n", response->def->command);
-		mexErrMsgTxt(msg);
+    else {
+      result = response->def->command;
+    }
   }
   
   if (request) {
@@ -137,6 +132,6 @@ void buffer_getprp(char *hostname, int port, mxArray *plhs[], const mxArray *prh
     FREE(response);
   }
   
-  return;
+  return result;
 }
 

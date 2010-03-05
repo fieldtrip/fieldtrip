@@ -42,23 +42,18 @@
 
 #define NUMBER_OF_FIELDS 5
 
-void buffer_getdat(char *hostname, int port, mxArray *plhs[], const mxArray *prhs[])
+int buffer_getdat(int server, mxArray *plhs[], const mxArray *prhs[])
 {
-  int server;
   int verbose = 0;
-  size_t n;
   double *val;
-  char msg[512];
+  int result = 0;
   
   message_t *request  = NULL;
   message_t *response = NULL;
-  header_t  *header   = NULL;
-  data_t    *data     = NULL;
   datasel_t datasel;
   
   /* this is for the Matlab specific output */
   const char *field_names[NUMBER_OF_FIELDS] = {"nchans", "nsamples", "data_type", "bufsize", "buf"};
-  mxArray *datp;
   
   /* allocate the elements that will be used in the communication */
   request      = malloc(sizeof(message_t));
@@ -76,66 +71,62 @@ void buffer_getdat(char *hostname, int port, mxArray *plhs[], const mxArray *prh
     if (verbose) print_datasel(&datasel);
     request->def->bufsize = append(&request->buf, request->def->bufsize, &datasel, sizeof(datasel_t));
   }
-  
-  /* open the TCP socket */
-  if ((server = open_connection(hostname, port)) < 0) {
-    sprintf(msg, "ERROR: failed to create socket (%d)\n", server);
-		mexErrMsgTxt(msg);
-  }
-  
+   
   if (verbose) print_request(request->def);
-  clientrequest(server, request, &response);
+  result = clientrequest(server, request, &response);
   if (verbose) print_response(response->def);
-  close_connection(server);
   
-  if (response->def->command==GET_OK) {
-    data      = malloc(sizeof(data_t));
-    data->def = response->buf;
-    data->buf = (char *)response->buf + sizeof(datadef_t);
-    if (verbose) print_datadef(data->def);
-    
-    switch (data->def->data_type) {
-      case DATATYPE_INT8:
-        datp = mxCreateNumericMatrix(data->def->nchans, data->def->nsamples, mxINT8_CLASS, mxREAL);
-        memcpy(mxGetPr(datp), data->buf, data->def->nchans*data->def->nsamples*WORDSIZE_INT8);
+  if (result == 0) {
+    if (response->def->command==GET_OK) {
+      mxArray *datp       = NULL;
+      datadef_t *data_def = (datadef_t *) response->buf;
+      void *data_buf      = (void *)((char *)response->buf + sizeof(datadef_t));
+      
+      if (verbose) print_datadef(data_def);
+
+      switch (data_def->data_type) {
+        case DATATYPE_INT8:
+        datp = mxCreateNumericMatrix(data_def->nchans, data_def->nsamples, mxINT8_CLASS, mxREAL);
+        memcpy(mxGetPr(datp), data_buf, data_def->nchans*data_def->nsamples*WORDSIZE_INT8);
         break;
-      case DATATYPE_INT16:
-        datp = mxCreateNumericMatrix(data->def->nchans, data->def->nsamples, mxINT16_CLASS, mxREAL);
-        memcpy(mxGetPr(datp), data->buf, data->def->nchans*data->def->nsamples*WORDSIZE_INT16);
+        case DATATYPE_INT16:
+        datp = mxCreateNumericMatrix(data_def->nchans, data_def->nsamples, mxINT16_CLASS, mxREAL);
+        memcpy(mxGetPr(datp), data_buf, data_def->nchans*data_def->nsamples*WORDSIZE_INT16);
         break;
-      case DATATYPE_INT32:
-        datp = mxCreateNumericMatrix(data->def->nchans, data->def->nsamples, mxINT32_CLASS, mxREAL);
-        memcpy(mxGetPr(datp), data->buf, data->def->nchans*data->def->nsamples*WORDSIZE_INT32);
+        case DATATYPE_INT32:
+        datp = mxCreateNumericMatrix(data_def->nchans, data_def->nsamples, mxINT32_CLASS, mxREAL);
+        memcpy(mxGetPr(datp), data_buf, data_def->nchans*data_def->nsamples*WORDSIZE_INT32);
         break;
-      case DATATYPE_INT64:
-        datp = mxCreateNumericMatrix(data->def->nchans, data->def->nsamples, mxINT64_CLASS, mxREAL);
-        memcpy(mxGetPr(datp), data->buf, data->def->nchans*data->def->nsamples*WORDSIZE_INT64);
+        case DATATYPE_INT64:
+        datp = mxCreateNumericMatrix(data_def->nchans, data_def->nsamples, mxINT64_CLASS, mxREAL);
+        memcpy(mxGetPr(datp), data_buf, data_def->nchans*data_def->nsamples*WORDSIZE_INT64);
         break;
-      case DATATYPE_FLOAT32:
-        datp = mxCreateNumericMatrix(data->def->nchans, data->def->nsamples, mxSINGLE_CLASS, mxREAL);
-        memcpy(mxGetPr(datp), data->buf, data->def->nchans*data->def->nsamples*WORDSIZE_FLOAT32);
+        case DATATYPE_FLOAT32:
+        datp = mxCreateNumericMatrix(data_def->nchans, data_def->nsamples, mxSINGLE_CLASS, mxREAL);
+        memcpy(mxGetPr(datp), data_buf, data_def->nchans*data_def->nsamples*WORDSIZE_FLOAT32);
         break;
-      case DATATYPE_FLOAT64:
-        datp = mxCreateNumericMatrix(data->def->nchans, data->def->nsamples, mxDOUBLE_CLASS, mxREAL);
-        memcpy(mxGetPr(datp), data->buf, data->def->nchans*data->def->nsamples*WORDSIZE_FLOAT64);
+        case DATATYPE_FLOAT64:
+        datp = mxCreateNumericMatrix(data_def->nchans, data_def->nsamples, mxDOUBLE_CLASS, mxREAL);
+        memcpy(mxGetPr(datp), data_buf, data_def->nchans*data_def->nsamples*WORDSIZE_FLOAT64);
         break;
         default:
-          mexErrMsgTxt("ERROR; unsupported data type\n");
+          result = -4;  /* mexErrMsgTxt("ERROR; unsupported data type\n"); */
+          goto cleanup;
+      }
+
+      plhs[0] = mxCreateStructMatrix(1, 1, NUMBER_OF_FIELDS, field_names);
+      mxSetFieldByNumber(plhs[0], 0, 0, mxCreateDoubleScalar((double)data_def->nchans));
+      mxSetFieldByNumber(plhs[0], 0, 1, mxCreateDoubleScalar((double)(data_def->nsamples)));
+      mxSetFieldByNumber(plhs[0], 0, 2, mxCreateDoubleScalar((double)(data_def->data_type)));
+      mxSetFieldByNumber(plhs[0], 0, 3, mxCreateDoubleScalar((double)(data_def->bufsize)));
+      mxSetFieldByNumber(plhs[0], 0, 4, datp);
     }
-    
-    plhs[0] = mxCreateStructMatrix(1, 1, NUMBER_OF_FIELDS, field_names);
-    mxSetFieldByNumber(plhs[0], 0, 0, mxCreateDoubleScalar((double)data->def->nchans));
-    mxSetFieldByNumber(plhs[0], 0, 1, mxCreateDoubleScalar((double)(data->def->nsamples)));
-    mxSetFieldByNumber(plhs[0], 0, 2, mxCreateDoubleScalar((double)(data->def->data_type)));
-    mxSetFieldByNumber(plhs[0], 0, 3, mxCreateDoubleScalar((double)(data->def->bufsize)));
-    mxSetFieldByNumber(plhs[0], 0, 4, datp);
-    FREE(data);
+    else {
+      result = response->def->command;
+    }
   }
-  else {
-    sprintf(msg, "ERROR: the buffer returned an error (%d)\n", response->def->command);
-		mexErrMsgTxt(msg);
-  }
-  
+	 
+cleanup:   
   if (request) {
     FREE(request->def);
     FREE(request->buf);
@@ -147,6 +138,6 @@ void buffer_getdat(char *hostname, int port, mxArray *plhs[], const mxArray *prh
     FREE(response);
   }
   
-  return;
+  return result;
 }
 

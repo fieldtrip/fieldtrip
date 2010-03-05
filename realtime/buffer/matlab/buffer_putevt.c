@@ -34,247 +34,141 @@
 #include "matrix.h"
 #include "buffer.h"
 
-void buffer_putevt(char *hostname, int port, mxArray * plhs[], const mxArray * prhs[])
+int buffer_putevt(int server, mxArray * plhs[], const mxArray * prhs[])
 {
-  size_t n;
-  int server, fieldnumber;
-  mxArray *field;
-  char msg[512];
+	int fieldnumber;
+	mxArray *field;
+	int result;
   
-  message_t   *request  = NULL;
-  message_t   *response = NULL;
-  event_t     *event   = NULL;
+	message_t    request;
+	messagedef_t request_def;
+	message_t   *response = NULL;
+	event_t      event;
+	eventdef_t   event_def;
   
   /* allocate the event */
-  event      = malloc(sizeof(event_t));
-  event->def = malloc(sizeof(eventdef_t));
-  event->buf = NULL;
-  event->def->bufsize   = 0;
+	event.def = &event_def;
+	event.buf = NULL;
+	event_def.bufsize = 0;
   
   /* allocate the request message */
-  request      = malloc(sizeof(message_t));
-  request->def = malloc(sizeof(messagedef_t));
-  request->buf = NULL;
-  request->def->version = VERSION;
-  request->def->command = PUT_EVT;
-  request->def->bufsize = 0;
+	request.buf = NULL;
+	request.def = &request_def;
+	request_def.version = VERSION;
+	request_def.command = PUT_EVT;
+	request_def.bufsize = 0;
   
   /* define the event, it has the fields type_type type_numel value_type value_numel sample offset duration */
   
-  /* FIXME loop over mutiple events in case of an event-array */
+	if (mxGetNumberOfElements(prhs[0])!=1)
+		mexErrMsgTxt("Only one event can be put into the buffer at a time.");
   
-  fieldnumber = mxGetFieldNumber(prhs[0], "type_type");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field 'type_type' is missing");
-    goto cleanup;
-  }
-  else
-  {
-    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
-      mexErrMsgTxt("invalid data type for 'type_type'");
-      goto cleanup;
-    }
-    else
-      event->def->type_type = (UINT32_T)mxGetScalar(field) ;
-  }
+	fieldnumber = mxGetFieldNumber(prhs[0], "type_type");
+	if (fieldnumber<0) 
+		mexErrMsgTxt("field 'type_type' is missing");
+	field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+	if (!mxIsNumeric(field) || mxIsEmpty(field)) 
+		mexErrMsgTxt("invalid data type for 'type_type'");
+	event_def.type_type = (UINT32_T)mxGetScalar(field) ;
+
+	fieldnumber = mxGetFieldNumber(prhs[0], "type_numel");
+	if (fieldnumber<0) 
+		mexErrMsgTxt("field 'type_numel' is missing");
+	field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+	if (!mxIsNumeric(field) || mxIsEmpty(field)) 
+		mexErrMsgTxt("invalid data type for 'type_numel'");
+	event_def.type_numel = (UINT32_T)mxGetScalar(field) ;
   
-  fieldnumber = mxGetFieldNumber(prhs[0], "type_numel");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field 'type_numel' is missing");
-    goto cleanup;
-  }
-  else
-  {
+	fieldnumber = mxGetFieldNumber(prhs[0], "value_type");
+	if (fieldnumber<0) 
+		mexErrMsgTxt("field 'value_type' is missing");
+		
     field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
-      mexErrMsgTxt("invalid data type for 'type_numel'");
-      goto cleanup;
-    }
-    else
-      event->def->type_numel = (UINT32_T)mxGetScalar(field) ;
-  }
+	if (!mxIsNumeric(field) || mxIsEmpty(field)) 
+		mexErrMsgTxt("invalid data type for 'value_type'");
+	event_def.value_type = (UINT32_T)mxGetScalar(field) ;
   
-  fieldnumber = mxGetFieldNumber(prhs[0], "value_type");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field 'value_type' is missing");
-    goto cleanup;
-  }
-  else
-  {
-    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
-      mexErrMsgTxt("invalid data type for 'value_type'");
-      goto cleanup;
-    }
-    else
-      event->def->value_type = (UINT32_T)mxGetScalar(field) ;
-  }
+	fieldnumber = mxGetFieldNumber(prhs[0], "value_numel");
+	if (fieldnumber<0) 
+		mexErrMsgTxt("field 'value_numel' is missing");
+	field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+	if (!mxIsNumeric(field) || mxIsEmpty(field)) 
+		mexErrMsgTxt("invalid data type for 'value_numel'");
+	event_def.value_numel = (UINT32_T)mxGetScalar(field) ;
   
-  fieldnumber = mxGetFieldNumber(prhs[0], "value_numel");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field 'value_numel' is missing");
-    goto cleanup;
-  }
-  else
-  {
+	fieldnumber = mxGetFieldNumber(prhs[0], "sample");
+	if (fieldnumber<0) 
+		mexErrMsgTxt("field 'sample' is missing");
+	field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+    if (!mxIsNumeric(field) || mxIsEmpty(field)) 
+		mexErrMsgTxt("invalid data type for 'sample'");
+	event_def.sample = (INT32_T)mxGetScalar(field) ;
+
+	fieldnumber = mxGetFieldNumber(prhs[0], "offset");
+	if (fieldnumber<0) 
+		mexErrMsgTxt("field 'offset' is missing");
     field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
-      mexErrMsgTxt("invalid data type for 'value_numel'");
-      goto cleanup;
-    }
-    else
-      event->def->value_numel = (UINT32_T)mxGetScalar(field) ;
-  }
-  
-  fieldnumber = mxGetFieldNumber(prhs[0], "sample");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field 'sample' is missing");
-    goto cleanup;
-  }
-  else
-  {
-    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
-      mexErrMsgTxt("invalid data type for 'sample'");
-      goto cleanup;
-    }
-    else
-      event->def->sample = (INT32_T)mxGetScalar(field) ;
-  }
-  
-  fieldnumber = mxGetFieldNumber(prhs[0], "offset");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field 'offset' is missing");
-    goto cleanup;
-  }
-  else
-  {
-    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
+	if (!mxIsNumeric(field) || mxIsEmpty(field)) 
       mexErrMsgTxt("invalid data type for 'offset'");
-      goto cleanup;
-    }
-    else
-      event->def->offset = (INT32_T)mxGetScalar(field) ;
-  }
+	event_def.offset = (INT32_T)mxGetScalar(field);
   
-  fieldnumber = mxGetFieldNumber(prhs[0], "duration");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field 'duration' is missing");
-    goto cleanup;
-  }
-  else
-  {
-    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
-      mexErrMsgTxt("invalid data type for 'duration'");
-      goto cleanup;
-    }
-    else
-      event->def->duration = (INT32_T)mxGetScalar(field) ;
-  }
+	fieldnumber = mxGetFieldNumber(prhs[0], "duration");
+	if (fieldnumber<0) 
+		mexErrMsgTxt("field 'duration' is missing");
+	field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+	if (!mxIsNumeric(field) || mxIsEmpty(field)) 
+		mexErrMsgTxt("invalid data type for 'duration'");
+	event_def.duration = (INT32_T)mxGetScalar(field) ;
   
-  fieldnumber = mxGetFieldNumber(prhs[0], "bufsize");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field 'bufsize' is missing");
-    goto cleanup;
-  }
-  else
-  {
-    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
-      mexErrMsgTxt("invalid data type for 'bufsize'");
-      goto cleanup;
-    }
-    else
-      event->def->bufsize = (INT32_T)mxGetScalar(field) ;
-  }
+	fieldnumber = mxGetFieldNumber(prhs[0], "bufsize");
+	if (fieldnumber<0) 
+		mexErrMsgTxt("field 'bufsize' is missing");
+	field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+	if (!mxIsNumeric(field) || mxIsEmpty(field)) 
+		mexErrMsgTxt("invalid data type for 'bufsize'");
+	event_def.bufsize = (INT32_T)mxGetScalar(field) ;
   
-  fieldnumber = mxGetFieldNumber(prhs[0], "buf");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field 'buf' is missing");
-    goto cleanup;
-  }
-  else
-  {
+	fieldnumber = mxGetFieldNumber(prhs[0], "buf");
+	if (fieldnumber<0) 
+		mexErrMsgTxt("field 'buf' is missing");
     field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsUint8(field)) {
+    if (!mxIsUint8(field)) 
       mexErrMsgTxt("invalid data type for 'buf'");
-      goto cleanup;
-    }
-    else if (mxGetNumberOfElements(field) != event->def->bufsize ) {
-      mexErrMsgTxt("invalid number of elements (buf)");
-      goto cleanup;
-    }
-    else {
-      /* FIXME check the allocation */
-      event->buf = malloc(event->def->bufsize);
-      memcpy(event->buf, mxGetPr(field), event->def->bufsize);
-    }
-  }
+	if (mxGetNumberOfElements(field) != event_def.bufsize ) 
+		mexErrMsgTxt("invalid number of elements (buf)");
+	event.buf = mxGetData(field);
   
   /* construct a PUT_EVT request */
-  request->def->bufsize = append(&request->buf, request->def->bufsize, event->def, sizeof(eventdef_t));
-  request->def->bufsize = append(&request->buf, request->def->bufsize, event->buf, event->def->bufsize);
+	request_def.bufsize = append(&request.buf, request_def.bufsize, event.def, sizeof(eventdef_t));
+	request_def.bufsize = append(&request.buf, request_def.bufsize, event.buf, event_def.bufsize);
   
-  /* the event structure is not needed any more */
-  FREE(event->def);
-  FREE(event->buf);
-  FREE(event);
-  
-  /* open the TCP socket */
-  if ((server = open_connection(hostname, port)) < 0) {
-    sprintf(msg, "ERROR: failed to create socket (%d)\n", server);
-		mexErrMsgTxt(msg);
-  }
+  /* the event structure is not needed any more, but everything's local, and .buf is from a Matlab array */
   
   /* write the request, read the response */
-  clientrequest(server, request, &response);
-  close_connection(server);
+	result = clientrequest(server, &request, &response);
   
-  /* the request structure is not needed any more */
-  if (request) {
-    FREE(request->def);
-    FREE(request->buf);
-    FREE(request);
-  }
-  
-  /* check that the response is PUT_OK */
-  if (!response)
-    mexErrMsgTxt("unknown error in response\n");
-  else if (!response->def)
-    mexErrMsgTxt("unknown error in response\n");
-  else if (response->def->command!=PUT_OK)
-  {
-    sprintf(msg, "ERROR: the buffer returned an error (%d)\n", response->def->command);
-		mexErrMsgTxt(msg);
-  }
-  
+  /* the request structure is not needed any more, everything apart from request.buf is local */
+    FREE(request.buf);
+	
+	if (result == 0) {	/* no communication errors */
+		/* check that the response is PUT_OK */
+		if (!response)
+			mexErrMsgTxt("unknown error in response\n");
+		if (!response->def) {
+			FREE(response->buf);
+			FREE(response);
+			mexErrMsgTxt("unknown error in response\n");
+		}
+		if (response->def->command!=PUT_OK) {
+			result = response->def->command;
+		}
+	}
   /* the response structure is not needed any more */
-  if (response) {
-    FREE(response->def);
-    FREE(response->buf);
-    FREE(response);
-  }
+	if (response) {
+		FREE(response->def);
+		FREE(response->buf);
+		FREE(response);
+	}
   
-  return;
-  
-  cleanup:
-    FREE(event->def);
-    FREE(event->buf);
-    FREE(event);
-    if (request) {
-      FREE(request->def);
-      FREE(request->buf);
-      FREE(request);
-    }
-    if (response) {
-      FREE(response->def);
-      FREE(response->buf);
-      FREE(response);
-    }
-    
-    return;
+	return result;
 }
-

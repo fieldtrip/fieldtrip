@@ -42,14 +42,13 @@
 
 #define NUMBER_OF_FIELDS 9
 
-void buffer_getevt(char *hostname, int port, mxArray *plhs[], const mxArray *prhs[])
+int buffer_getevt(int server, mxArray *plhs[], const mxArray *prhs[])
 {
-  int server;
   int verbose = 0;
   int i, nevents;
   int offset;
   double *val;
-  char msg[512];
+  int result;
   
   mxArray *bufptr;
   
@@ -89,58 +88,52 @@ void buffer_getevt(char *hostname, int port, mxArray *plhs[], const mxArray *prh
     request->def->bufsize = append(&request->buf, request->def->bufsize, &eventsel, sizeof(eventsel_t));
   }
   
-  /* open the TCP socket */
-  if ((server = open_connection(hostname, port)) < 0) {
-    sprintf(msg, "ERROR: failed to create socket (%d)\n", server);
-		mexErrMsgTxt(msg);
-  }
-  
   if (verbose) print_request(request->def);
-  clientrequest(server, request, &response);
+  result = clientrequest(server, request, &response);
   if (verbose) print_response(response->def);
-  close_connection(server);
   
-  if (response->def->command==GET_OK) {
-    event = malloc(sizeof(event_t));
-    
-    /* first count the number of events */
-    nevents = 0;
-    offset = 0;
-    while (offset<response->def->bufsize) {
-      event->def = (char *)response->buf + offset;
-      event->buf = (char *)response->buf + offset + sizeof(eventdef_t);
-      if (verbose) print_eventdef(event->def);
-      offset += sizeof(eventdef_t) + event->def->bufsize;
-      nevents++;
-    }
-    
-    /* create a structure array that can hold all events */
-    plhs[0] = mxCreateStructMatrix(1, nevents, NUMBER_OF_FIELDS, field_names);
-    
-    offset = 0;
-    for (i=0; i<nevents; i++) {
-      event->def = (char *)response->buf + offset;
-      event->buf = (char *)response->buf + offset + sizeof(eventdef_t);
+  if (result == 0) {
+    if (response->def->command==GET_OK) {
+      event = malloc(sizeof(event_t));
       
-      bufptr = mxCreateNumericMatrix(1, event->def->bufsize, mxUINT8_CLASS, mxREAL);
-      memcpy(mxGetPr(bufptr), event->buf, event->def->bufsize);
+      /* first count the number of events */
+      nevents = 0;
+      offset = 0;
+      while (offset<response->def->bufsize) {
+        event->def = (eventdef_t *)((char *)response->buf + offset);
+        event->buf = (char *)response->buf + offset + sizeof(eventdef_t);
+        if (verbose) print_eventdef(event->def);
+        offset += sizeof(eventdef_t) + event->def->bufsize;
+        nevents++;
+      }
       
-      mxSetFieldByNumber(plhs[0], i, 0, mxCreateDoubleScalar((double)event->def->type_type));
-      mxSetFieldByNumber(plhs[0], i, 1, mxCreateDoubleScalar((double)event->def->type_numel));
-      mxSetFieldByNumber(plhs[0], i, 2, mxCreateDoubleScalar((double)event->def->value_type));
-      mxSetFieldByNumber(plhs[0], i, 3, mxCreateDoubleScalar((double)event->def->value_numel));
-      mxSetFieldByNumber(plhs[0], i, 4, mxCreateDoubleScalar((double)event->def->sample));
-      mxSetFieldByNumber(plhs[0], i, 5, mxCreateDoubleScalar((double)event->def->offset));
-      mxSetFieldByNumber(plhs[0], i, 6, mxCreateDoubleScalar((double)event->def->duration));
-      mxSetFieldByNumber(plhs[0], i, 7, mxCreateDoubleScalar((double)event->def->bufsize));
-      mxSetFieldByNumber(plhs[0], i, 8, bufptr);
-      offset += sizeof(eventdef_t) + event->def->bufsize;
+      /* create a structure array that can hold all events */
+      plhs[0] = mxCreateStructMatrix(1, nevents, NUMBER_OF_FIELDS, field_names);
+      
+      offset = 0;
+      for (i=0; i<nevents; i++) {
+        event->def = (eventdef_t *) ((char *)response->buf + offset);
+        event->buf = (char *)response->buf + offset + sizeof(eventdef_t);
+        
+        bufptr = mxCreateNumericMatrix(1, event->def->bufsize, mxUINT8_CLASS, mxREAL);
+        memcpy(mxGetPr(bufptr), event->buf, event->def->bufsize);
+        
+        mxSetFieldByNumber(plhs[0], i, 0, mxCreateDoubleScalar((double)event->def->type_type));
+        mxSetFieldByNumber(plhs[0], i, 1, mxCreateDoubleScalar((double)event->def->type_numel));
+        mxSetFieldByNumber(plhs[0], i, 2, mxCreateDoubleScalar((double)event->def->value_type));
+        mxSetFieldByNumber(plhs[0], i, 3, mxCreateDoubleScalar((double)event->def->value_numel));
+        mxSetFieldByNumber(plhs[0], i, 4, mxCreateDoubleScalar((double)event->def->sample));
+        mxSetFieldByNumber(plhs[0], i, 5, mxCreateDoubleScalar((double)event->def->offset));
+        mxSetFieldByNumber(plhs[0], i, 6, mxCreateDoubleScalar((double)event->def->duration));
+        mxSetFieldByNumber(plhs[0], i, 7, mxCreateDoubleScalar((double)event->def->bufsize));
+        mxSetFieldByNumber(plhs[0], i, 8, bufptr);
+        offset += sizeof(eventdef_t) + event->def->bufsize;
+      }
+      FREE(event);
     }
-    FREE(event);
-  }
-  else {
-    sprintf(msg, "ERROR: the buffer returned an error (%d)\n", response->def->command);
-		mexErrMsgTxt(msg);
+    else {
+      result = response->def->command;
+    }
   }
   
   if (request) {
@@ -154,6 +147,6 @@ void buffer_getevt(char *hostname, int port, mxArray *plhs[], const mxArray *prh
     FREE(response);
   }
   
-  return;
+  return result;
 }
 

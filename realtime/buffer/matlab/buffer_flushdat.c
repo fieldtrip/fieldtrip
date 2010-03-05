@@ -21,14 +21,12 @@
 #include "matrix.h"
 #include "buffer.h"
 
-void buffer_flushdat(char *hostname, int port, mxArray *plhs[], const mxArray *prhs[])
+int buffer_flushdat(int server, mxArray *plhs[], const mxArray *prhs[])
 {
-	int server;
-    int verbose = 0;
-
+	int verbose = 0;
+	int result = 0;
 	message_t *request  = NULL;
 	message_t *response = NULL;
-	header_t  *header   = NULL;
 
 	/* allocate the elements that will be used in the communication */
 	request      = malloc(sizeof(message_t));
@@ -38,18 +36,14 @@ void buffer_flushdat(char *hostname, int port, mxArray *plhs[], const mxArray *p
 	request->def->command = FLUSH_DAT;
 	request->def->bufsize = 0;
 
-	/* open the TCP socket */
-	if ((server = open_connection(hostname, port)) < 0) {
-		mexErrMsgTxt("ERROR: failed to create socket\n");
-	}
-
 	if (verbose) print_request(request->def);
-	clientrequest(server, request, &response);
+	result = clientrequest(server, request, &response);
 	if (verbose) print_response(response->def);
-	close_connection(server);
 
-	if (response->def->command!=FLUSH_OK) {
-		mexErrMsgTxt("ERROR: the buffer returned an error\n");
+	if (result==0) {
+		if (response->def->command!=FLUSH_OK) {
+			result = response->def->command;
+		}
 	}
 
 	if (request) {
@@ -63,6 +57,6 @@ void buffer_flushdat(char *hostname, int port, mxArray *plhs[], const mxArray *p
 		FREE(response);
 	}
 
-	return;
+	return result;
 }
 

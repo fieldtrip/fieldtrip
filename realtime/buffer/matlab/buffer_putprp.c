@@ -21,196 +21,119 @@
 #include "matrix.h"
 #include "buffer.h"
 
-void buffer_putprp(char *hostname, int port, mxArray * plhs[], const mxArray * prhs[])
+int buffer_putprp(int server, mxArray * plhs[], const mxArray * prhs[])
 {
-  size_t n;
-  int server, fieldnumber, bufsize;
+  int fieldnumber, bufsize;
   mxArray *field;
-  char msg[512];
+  int result;
   
-  message_t   *request  = NULL;
   message_t   *response = NULL;
-  property_t  *property = NULL;
   
-  /* allocate the property */
-  property      = malloc(sizeof(property_t));
-  property->def = malloc(sizeof(propertydef_t));
-  property->buf = NULL;
-  property->def->bufsize   = 0;
+  /* Place the fixed-length property and request structures directly on the stack 
+     This avoids a lot of clean-up problems and allows us to leave early using mexErrMsgTxt
+  */
+  propertydef_t property_def;
+  property_t    property;
+  message_t     request;
+  messagedef_t  request_def;
   
-  /* allocate the request message */
-  request      = malloc(sizeof(message_t));
-  request->def = malloc(sizeof(messagedef_t));
-  request->buf = NULL;
-  request->def->version = VERSION;
-  request->def->command = PUT_PRP;
-  request->def->bufsize = 0;
+  property.def = &property_def;
+  property.buf = NULL;
+  property_def.bufsize = 0;
+
+  request.def  = &request_def;
+  request.buf = NULL;
+  request_def.version = VERSION;
+  request_def.command = PUT_PRP;
+  request_def.bufsize = 0;  
   
   /* define the property, it has the fields type_type type_numel value_type value_numel */
   
   /* FIXME loop over mutiple properties in case of a property-array */
   
   fieldnumber = mxGetFieldNumber(prhs[0], "type_type");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field is missing");
-    goto cleanup;
-  }
-  else
-  {
-    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
+  if (fieldnumber<0) 
+      mexErrMsgTxt("field is missing");
+
+  field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+  if (!mxIsNumeric(field) || mxIsEmpty(field))
       mexErrMsgTxt("invalid data type");
-      goto cleanup;
-    }
-    else
-      property->def->type_type = (UINT32_T)mxGetScalar(field) ;
-  }
+  property_def.type_type = (UINT32_T)mxGetScalar(field) ;
+
   
   fieldnumber = mxGetFieldNumber(prhs[0], "type_numel");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field is missing");
-    goto cleanup;
-  }
-  else
-  {
-    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
+  if (fieldnumber<0) 
+      mexErrMsgTxt("field is missing");
+  field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+  if (!mxIsNumeric(field) || mxIsEmpty(field))
       mexErrMsgTxt("invalid data type");
-      goto cleanup;
-    }
-    else
-      property->def->type_numel = (UINT32_T)mxGetScalar(field) ;
-  }
+  property_def.type_numel = (UINT32_T)mxGetScalar(field) ;
+
   
   fieldnumber = mxGetFieldNumber(prhs[0], "value_type");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field is missing");
-    goto cleanup;
-  }
-  else
-  {
-    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
+  if (fieldnumber<0) 
+      mexErrMsgTxt("field is missing");
+  field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+  if (!mxIsNumeric(field) || mxIsEmpty(field))
       mexErrMsgTxt("invalid data type");
-      goto cleanup;
-    }
-    else
-      property->def->value_type = (UINT32_T)mxGetScalar(field) ;
-  }
+  property_def.value_type = (UINT32_T)mxGetScalar(field) ;
+  
   
   fieldnumber = mxGetFieldNumber(prhs[0], "value_numel");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field is missing");
-    goto cleanup;
-  }
-  else
-  {
-    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
+  if (fieldnumber<0) 
+      mexErrMsgTxt("field is missing");
+  field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+  if (!mxIsNumeric(field) || mxIsEmpty(field)) 
       mexErrMsgTxt("invalid data type");
-      goto cleanup;
-    }
-    else
-      property->def->value_numel = (UINT32_T)mxGetScalar(field) ;
-  }
+  property_def.value_numel = (UINT32_T)mxGetScalar(field) ;
+  
   
   fieldnumber = mxGetFieldNumber(prhs[0], "bufsize");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field is missing");
-    goto cleanup;
-  }
-  else
-  {
-    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
+  if (fieldnumber<0) 
+      mexErrMsgTxt("field is missing");
+  field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+  if (!mxIsNumeric(field) || mxIsEmpty(field)) 
       mexErrMsgTxt("invalid data type");
-      goto cleanup;
-    }
-    else
-      bufsize = (UINT32_T)mxGetScalar(field) ;
-  }
+  bufsize = (UINT32_T)mxGetScalar(field) ;
   
   fieldnumber = mxGetFieldNumber(prhs[0], "buf");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field is missing");
-    goto cleanup;
-  }
-  else
-  {
-    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsUint8(field) || mxIsComplex(field)) {
+  if (fieldnumber<0) 
+      mexErrMsgTxt("field is missing");
+  field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+  if (!mxIsUint8(field) || mxIsComplex(field)) 
       mexErrMsgTxt("buffer should be real-valued uint8");
-      goto cleanup;
-    }
-    if (mxGetNumberOfElements(field)!=bufsize) {
+  if (mxGetNumberOfElements(field)!=bufsize) 
       mexErrMsgTxt("length of buffer does not correspond to bufsize");
-      goto cleanup;
-    }
-    else
-      property->def->bufsize = append(&property->buf, property->def->bufsize, mxGetData(field), bufsize);
-  }
+  property_def.bufsize = append(&property.buf, property_def.bufsize, mxGetData(field), bufsize);
   
   /* construct a PUT_PRP request */
-  request->def->bufsize = append(&request->buf, request->def->bufsize, property->def, sizeof(propertydef_t));
-  request->def->bufsize = append(&request->buf, request->def->bufsize, property->buf, property->def->bufsize);
-  
-  /* the property structure is not needed any more */
-  FREE(property->def);
-  FREE(property->buf);
-  FREE(property);
-  
-  /* open the TCP socket */
-  if ((server = open_connection(hostname, port)) < 0) {
-    sprintf(msg, "ERROR: failed to create socket (%d)\n", server);
-		mexErrMsgTxt(msg);
-  }
+  request_def.bufsize = append(&request.buf, request_def.bufsize, property.def, sizeof(propertydef_t));
+  request_def.bufsize = append(&request.buf, request_def.bufsize, property.buf, property_def.bufsize);
   
   /* write the request, read the response */
-  clientrequest(server, request, &response);
-  close_connection(server);
+  result = clientrequest(server, &request, &response);
   
   /* the request structure is not needed any more */
-  if (request) {
-    FREE(request->def);
-    FREE(request->buf);
-    FREE(request);
-  }
+  FREE(request.buf);
   
-  /* check that the response is PUT_OK */
-  if (!response)
-    mexErrMsgTxt("unknown error in response\n");
-  else if (!response->def)
-    mexErrMsgTxt("unknown error in response\n");
-  else if (response->def->command!=PUT_OK)
-  {
-    sprintf(msg, "ERROR: the buffer returned an error (%d)\n", response->def->command);
-		mexErrMsgTxt(msg);
-  }
-  
-  /* the response structure is not needed any more */
-  if (response) {
-    FREE(response->def);
-    FREE(response->buf);
-    FREE(response);
-  }
-  
-  return;
-  
-  cleanup:
-    FREE(property->def);
-    FREE(property->buf);
-    FREE(property);
-    if (request) {
-      FREE(request->def);
-      FREE(request->buf);
-      FREE(request);
-    }
-    if (response) {
-      FREE(response->def);
-      FREE(response->buf);
-      FREE(response);
-    }
-    
-    return;
+	if (result == 0) {
+		/* check that the response is PUT_OK */
+		if (!response) {
+			/* nothing to clean up */
+			mexErrMsgTxt("unknown error in response\n");
+		}
+		if (!response->def) {
+			FREE(response->buf);
+			FREE(response);
+			mexErrMsgTxt("unknown error in response\n");
+		}
+		if (response->def->command!=PUT_OK) {
+			result = response->def->command;
+		}
+	}
+	FREE(response->def);
+	FREE(response->buf);
+	FREE(response);
+	return result;
 }
 

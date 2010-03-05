@@ -31,174 +31,104 @@
 #include "matrix.h"
 #include "buffer.h"
 
-void buffer_puthdr(char *hostname, int port, mxArray * plhs[], const mxArray * prhs[])
+int buffer_puthdr(int server, mxArray * plhs[], const mxArray * prhs[])
 {
-  size_t n;
-  int server, fieldnumber;
-  mxArray *field;
-  char msg[512];
+	int fieldnumber;
+	mxArray *field;
+	int result;
   
-  message_t    *request  = NULL;
-  message_t    *response = NULL;
-  header_t     *header   = NULL;
+	message_t     request;
+	messagedef_t  request_def;
+	message_t    *response = NULL;
+	header_t      header;
+	headerdef_t   header_def;
   
   /* allocate the header */
-  header      = malloc(sizeof(header_t));
-  header->def = malloc(sizeof(headerdef_t));
-  header->buf = NULL;
-  header->def->bufsize   = 0;
+	header.def = &header_def;
+	header.buf = NULL;
+	header_def.bufsize   = 0;
   
   /* allocate the request message */
-  request      = malloc(sizeof(message_t));
-  request->def = malloc(sizeof(messagedef_t));
-  request->buf = NULL;
-  request->def->version = VERSION;
-  request->def->command = PUT_HDR;
-  request->def->bufsize = 0;
+	request.def = &request_def;
+	request.buf = NULL;
+	request_def.version = VERSION;
+	request_def.command = PUT_HDR;
+	request_def.bufsize = 0;
   
   /* define the header, it has the fields "nchans", "nsamples", "nevents", "fsample", "data_type" */
-  
-  fieldnumber = mxGetFieldNumber(prhs[0], "nchans");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field 'nchans' is missing");
-    goto cleanup; /* FIXME will not be reached */
-  }
-  else
-  {
+  	if (mxGetNumberOfElements(prhs[0])!=1)
+		mexErrMsgTxt("Only one header can be put into the buffer at a time.");
+
+	fieldnumber = mxGetFieldNumber(prhs[0], "nchans");
+	if (fieldnumber<0) 
+		mexErrMsgTxt("field 'nchans' is missing");
+	field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+	if (!mxIsNumeric(field) || mxIsEmpty(field)) 
+		mexErrMsgTxt("invalid data type for 'nchans'");
+	header_def.nchans    = (UINT32_T)mxGetScalar(field) ;
+	
+	fieldnumber = mxGetFieldNumber(prhs[0], "nsamples");
+	if (fieldnumber<0) 
+		mexErrMsgTxt("field 'nsamples' is missing");
     field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
-      mexErrMsgTxt("invalid data type for 'nchans'");
-      goto cleanup;
-    }
-    else
-      header->def->nchans    = (UINT32_T)mxGetScalar(field) ;
-  }
+    if (!mxIsNumeric(field) || mxIsEmpty(field)) 
+		mexErrMsgTxt("invalid data type for 'nsamples'");
+	header_def.nsamples    = (UINT32_T)mxGetScalar(field) ;
   
-  fieldnumber = mxGetFieldNumber(prhs[0], "nsamples");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field 'nsamples' is missing");
-    goto cleanup;
-  }
-  else
-  {
-    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
-      mexErrMsgTxt("invalid data type for 'nsamples'");
-      goto cleanup;
-    }
-    else
-      header->def->nsamples    = (UINT32_T)mxGetScalar(field) ;
-  }
+	fieldnumber = mxGetFieldNumber(prhs[0], "nevents");
+	if (fieldnumber<0) 
+		mexErrMsgTxt("field is missing 'nevents'");
+	field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+	if (!mxIsNumeric(field) || mxIsEmpty(field)) 
+		mexErrMsgTxt("invalid data type for 'nevents'");
+	header_def.nevents    = (UINT32_T)mxGetScalar(field) ;
   
-  fieldnumber = mxGetFieldNumber(prhs[0], "nevents");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field is missing 'nevents'");
-    goto cleanup;
-  }
-  else
-  {
+	fieldnumber = mxGetFieldNumber(prhs[0], "fsample");
+	if (fieldnumber<0) 
+		mexErrMsgTxt("field is missing 'fsample'");
     field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
-      mexErrMsgTxt("invalid data type for 'nevents'");
-      goto cleanup;
-    }
-    else
-      header->def->nevents    = (UINT32_T)mxGetScalar(field) ;
-  }
+    if (!mxIsNumeric(field) || mxIsEmpty(field)) 
+		mexErrMsgTxt("invalid data type for 'fsample'");
+	header_def.fsample    = (float)mxGetScalar(field) ;
   
-  fieldnumber = mxGetFieldNumber(prhs[0], "fsample");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field is missing 'fsample'");
-    goto cleanup;
-  }
-  else
-  {
-    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
-      mexErrMsgTxt("invalid data type for 'fsample'");
-      goto cleanup;
-    }
-    else
-      header->def->fsample    = (float)mxGetScalar(field) ;
-  }
-  
-  fieldnumber = mxGetFieldNumber(prhs[0], "data_type");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field 'data_type' is missing");
-    goto cleanup;
-  }
-  else
-  {
-    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
-      mexErrMsgTxt("invalid data type for 'data_type'");
-      goto cleanup;
-    }
-    else
-      header->def->data_type    = (UINT32_T)mxGetScalar(field) ;
-  }
+	fieldnumber = mxGetFieldNumber(prhs[0], "data_type");
+	if (fieldnumber<0) 
+		mexErrMsgTxt("field 'data_type' is missing");
+	field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+	if (!mxIsNumeric(field) || mxIsEmpty(field)) 
+		mexErrMsgTxt("invalid data type for 'data_type'");
+	header_def.data_type    = (UINT32_T)mxGetScalar(field) ;
   
   /* construct a PUT_HDR request */
-  request->def->bufsize = append(&request->buf, request->def->bufsize, header->def, sizeof(headerdef_t));
-  request->def->bufsize = append(&request->buf, request->def->bufsize, header->buf, header->def->bufsize);
+	request_def.bufsize = append(&request.buf, request_def.bufsize, header.def, sizeof(headerdef_t));
+	/* request_def.bufsize = append(&request.buf, request_def.bufsize, header.buf, header_def.bufsize);    -- this is empty */
   
-  /* the header structure is not needed any more */
-  FREE(header->def);
-  FREE(header->buf);
-  FREE(header);
-  
-  /* open the TCP socket */
-  if ((server = open_connection(hostname, port)) < 0) {
-    sprintf(msg, "ERROR: failed to create socket (%d)\n", server);
-		mexErrMsgTxt(msg);
-  }
+  /* the header structure is not needed any more, but everything's local */
   
   /* write the request, read the response */
-  clientrequest(server, request, &response);
-  close_connection(server);
+	result = clientrequest(server, &request, &response);
   
-  /* the request structure is not needed any more */
-  if (request) {
-    FREE(request->def);
-    FREE(request->buf);
-    FREE(request);
-  }
-  
-  /* check that the response is PUT_OK */
-  if (!response)
-    mexErrMsgTxt("unknown error in response\n");
-  else if (!response->def)
-    mexErrMsgTxt("unknown error in response\n");
-  else if (response->def->command!=PUT_OK)
-  {
-    sprintf(msg, "ERROR: the buffer returned an error (%d)\n", response->def->command);
-		mexErrMsgTxt(msg);
-  }
-  
+  /* the request structure is not needed any more, but only .buf needs to be free'd */
+    FREE(request.buf);
+	
+	if (result == 0) {
+		/* check that the response is PUT_OK */
+		if (!response)
+			mexErrMsgTxt("unknown error in response\n");
+		if (!response->def) {
+			FREE(response->buf);
+			FREE(response);
+			mexErrMsgTxt("unknown error in response\n");
+		}
+		if (response->def->command!=PUT_OK) {
+			result = response->def->command;
+		}
+	}
   /* the response structure is not needed any more */
-  if (response) {
-    FREE(response->def);
-    FREE(response->buf);
-    FREE(response);
-  }
-  
-  return;
-  
-  cleanup:
-    FREE(header->def);
-    FREE(header->buf);
-    FREE(header);
-    if (request) {
-      FREE(request->def);
-      FREE(request->buf);
-      FREE(request);
-    }
-    if (response) {
-      FREE(response->def);
-      FREE(response->buf);
-      FREE(response);
-    }
-    
-    return;
+	if (response) {
+		FREE(response->def);
+		FREE(response->buf);
+		FREE(response);
+	}
+	return result;
 }
-

@@ -21,179 +21,130 @@
 #include "matrix.h"
 #include "buffer.h"
 
-void buffer_putdat(char *hostname, int port, mxArray * plhs[], const mxArray * prhs[])
+int buffer_putdat(int server, mxArray * plhs[], const mxArray * prhs[])
 {
-  size_t n;
-  int server, fieldnumber;
-  mxArray *field;
-  char msg[512];
+	int fieldnumber;
+	mxArray *field;
+	int result;
   
-  message_t    *request  = NULL;
-  message_t    *response = NULL;
-  data_t       *data     = NULL;
-  
-    /* allocate the data  */
-  data      = malloc(sizeof(data_t));
-  data->def = malloc(sizeof(datadef_t));
-  
-  /* allocate the request message */
-  request      = malloc(sizeof(message_t));
-  request->def = malloc(sizeof(messagedef_t));
-  request->buf = NULL;
-  request->def->version = VERSION;
-  request->def->command = PUT_DAT;
-  request->def->bufsize = 0;
+	messagedef_t  request_def;
+	message_t     request;
+	datadef_t     data_def;
+	data_t        data;  
+	message_t    *response = NULL;
+
+	data.def = &data_def;
+	request.def = &request_def;
+	request.buf = NULL;
+	request_def.version = VERSION;	/* this is the same as request.def->version etc.*/
+	request_def.command = PUT_DAT;
+	request_def.bufsize = 0;
   
   /* define the data, it has the fields "nchans", "nsamples", "data_type" */
   
-  fieldnumber = mxGetFieldNumber(prhs[0], "nchans");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field 'nchans' is missing");
-    goto cleanup; /* FIXME will not be reached */
-  }
-  else
-  {
-    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
-      mexErrMsgTxt("invalid data type for 'nchans'");
-      goto cleanup;
-    }
-    else
-      data->def->nchans    = (UINT32_T)mxGetScalar(field) ;
-  }
+	fieldnumber = mxGetFieldNumber(prhs[0], "nchans");
+	if (fieldnumber<0) 
+		mexErrMsgTxt("field 'nchans' is missing");
+
+	field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+	if (!mxIsNumeric(field) || mxIsEmpty(field)) 
+		mexErrMsgTxt("invalid data type for 'nchans'");
+    data_def.nchans = (UINT32_T)mxGetScalar(field) ;
+
+	fieldnumber = mxGetFieldNumber(prhs[0], "nsamples");
+	if (fieldnumber<0) 
+		mexErrMsgTxt("field 'nsamples' is missing");
+	field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+	if (!mxIsNumeric(field) || mxIsEmpty(field)) 
+		mexErrMsgTxt("invalid data type for 'nsamples'");
+	data_def.nsamples = (UINT32_T)mxGetScalar(field) ;
   
-  fieldnumber = mxGetFieldNumber(prhs[0], "nsamples");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field 'nsamples' is missing");
-    goto cleanup;
-  }
-  else
-  {
-    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
-      mexErrMsgTxt("invalid data type for 'nsamples'");
-      goto cleanup;
-    }
-    else
-      data->def->nsamples    = (UINT32_T)mxGetScalar(field) ;
-  }
+	fieldnumber = mxGetFieldNumber(prhs[0], "data_type");
+	if (fieldnumber<0)
+		mexErrMsgTxt("field 'data_type' is missing");
+
+	field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+    if (!mxIsNumeric(field) || mxIsEmpty(field)) 
+		mexErrMsgTxt("invalid data type for 'data_type'");
+	data_def.data_type = (UINT32_T)mxGetScalar(field) ;
   
-  fieldnumber = mxGetFieldNumber(prhs[0], "data_type");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field 'data_type' is missing");
-    goto cleanup;
-  }
-  else
-  {
-    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
-      mexErrMsgTxt("invalid data type for 'data_type'");
-      goto cleanup;
-    }
-    else
-      data->def->data_type    = (UINT32_T)mxGetScalar(field) ;
-  }
-  
-  fieldnumber = mxGetFieldNumber(prhs[0], "buf");
-  if (fieldnumber<0) {
-    mexErrMsgTxt("field 'buf' is missing");
-    goto cleanup;
-  }
-  else
-  {
-    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-    if (!mxIsNumeric(field) || mxIsEmpty(field)) {
-      mexErrMsgTxt("invalid data type for 'buf'");
-      goto cleanup;
-    }
-    else
-    {
-      if (data->def->data_type == DATATYPE_CHAR)
-        data->def->bufsize = data->def->nchans * data->def->nsamples * WORDSIZE_CHAR;
-      else if (data->def->data_type == DATATYPE_UINT8)
-        data->def->bufsize = data->def->nchans * data->def->nsamples * WORDSIZE_UINT8;
-      else if (data->def->data_type == DATATYPE_UINT16)
-        data->def->bufsize = data->def->nchans * data->def->nsamples * WORDSIZE_UINT16;
-      else if (data->def->data_type == DATATYPE_UINT32)
-        data->def->bufsize = data->def->nchans * data->def->nsamples * WORDSIZE_UINT32;
-      else if (data->def->data_type == DATATYPE_UINT64)
-        data->def->bufsize = data->def->nchans * data->def->nsamples * WORDSIZE_UINT64;
-      else if (data->def->data_type == DATATYPE_INT8)
-        data->def->bufsize = data->def->nchans * data->def->nsamples * WORDSIZE_INT8;
-      else if (data->def->data_type == DATATYPE_INT16)
-        data->def->bufsize = data->def->nchans * data->def->nsamples * WORDSIZE_INT16;
-      else if (data->def->data_type == DATATYPE_INT32)
-        data->def->bufsize = data->def->nchans * data->def->nsamples * WORDSIZE_INT32;
-      else if (data->def->data_type == DATATYPE_INT64)
-        data->def->bufsize = data->def->nchans * data->def->nsamples * WORDSIZE_INT64;
-      else if (data->def->data_type == DATATYPE_FLOAT32)
-        data->def->bufsize = data->def->nchans * data->def->nsamples * WORDSIZE_FLOAT32;
-      else if (data->def->data_type == DATATYPE_FLOAT64)
-        data->def->bufsize = data->def->nchans * data->def->nsamples * WORDSIZE_FLOAT64;
-      data->buf = (void *)mxGetPr(field); /* directly point to the memory that is managed by Matlab */
-    }
-  }
+	fieldnumber = mxGetFieldNumber(prhs[0], "buf");
+	if (fieldnumber<0)
+		mexErrMsgTxt("field 'buf' is missing");
+	field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+	if (!mxIsNumeric(field) || mxIsEmpty(field))
+		mexErrMsgTxt("invalid data type for 'buf'");
+
+	switch(data_def.data_type) {
+		case DATATYPE_CHAR:
+			data_def.bufsize = data_def.nchans * data_def.nsamples * WORDSIZE_CHAR;
+			break;
+		case DATATYPE_UINT8:
+			data_def.bufsize = data_def.nchans * data_def.nsamples * WORDSIZE_UINT8;
+			break;
+		case DATATYPE_UINT16:
+			data_def.bufsize = data_def.nchans * data_def.nsamples * WORDSIZE_UINT16;
+			break;
+		case DATATYPE_UINT32:
+			data_def.bufsize = data_def.nchans * data_def.nsamples * WORDSIZE_UINT32;
+			break;
+		case DATATYPE_UINT64:
+			data_def.bufsize = data_def.nchans * data_def.nsamples * WORDSIZE_UINT64;
+			break;
+		case DATATYPE_INT8:
+			data_def.bufsize = data_def.nchans * data_def.nsamples * WORDSIZE_INT8;
+			break;
+		case DATATYPE_INT16:
+			data_def.bufsize = data_def.nchans * data_def.nsamples * WORDSIZE_INT16;
+			break;
+		case DATATYPE_INT32:
+			data_def.bufsize = data_def.nchans * data_def.nsamples * WORDSIZE_INT32;
+			break;
+		case DATATYPE_INT64:
+			data_def.bufsize = data_def.nchans * data_def.nsamples * WORDSIZE_INT64;
+			break;
+		case DATATYPE_FLOAT32:
+			data_def.bufsize = data_def.nchans * data_def.nsamples * WORDSIZE_FLOAT32;
+			break;
+		case DATATYPE_FLOAT64:
+			data_def.bufsize = data_def.nchans * data_def.nsamples * WORDSIZE_FLOAT64;
+			break;
+		default:
+			mexErrMsgTxt("Unrecognised data type");
+	}
+    data.buf = (void *)mxGetPr(field); /* directly point to the memory that is managed by Matlab */
   
   /* construct a PUT_DAT request */
-  request->def->bufsize = append(&request->buf, request->def->bufsize, data->def, sizeof(datadef_t));
-  request->def->bufsize = append(&request->buf, request->def->bufsize, data->buf, data->def->bufsize);
-  
-  /* the data structure is not needed any more */
-  FREE(data->def);
-  /* FREE(data->buf); this should not be freed, since it points to a piece of memory that is managed by Matlab */
-  FREE(data);
-  
-  /* open the TCP socket */
-  if ((server = open_connection(hostname, port)) < 0) {
-    sprintf(msg, "ERROR: failed to create socket (%d)\n", server);
-		mexErrMsgTxt(msg);
-  }
+	request_def.bufsize = append(&request.buf, request_def.bufsize, data.def, sizeof(datadef_t));
+	request_def.bufsize = append(&request.buf, request_def.bufsize, data.buf, data_def.bufsize);
   
   /* write the request, read the response */
-  clientrequest(server, request, &response);
-  close_connection(server);
+	result = clientrequest(server, &request, &response);
   
-  /* the request structure is not needed any more */
-  if (request) {
-    FREE(request->def);
-    FREE(request->buf);
-    FREE(request);
-  }
-  
-  /* check that the response is PUT_OK */
-  if (!response)
-    mexErrMsgTxt("unknown error in response\n");
-  else if (!response->def)
-    mexErrMsgTxt("unknown error in response\n");
-  else if (response->def->command!=PUT_OK)
-  {
-    sprintf(msg, "ERROR: the buffer returned an error (%d)\n", response->def->command);
-		mexErrMsgTxt(msg);
-  }
+  /* the request structure is not needed any more, we free ->buf, the rest is local */
+	if (request.buf) {
+		FREE(request.buf);
+	}
+	
+	if (result == 0) {
+		/* check that the response is PUT_OK */
+		if (!response)
+			mexErrMsgTxt("unknown error in response\n");
+		else if (!response->def) {
+			FREE(response->buf);
+			FREE(response);
+			mexErrMsgTxt("unknown error in response\n");
+		}
+		else if (response->def->command!=PUT_OK) {
+			result = response->def->command;
+		}
+	}
   
   /* the response structure is not needed any more */
-  if (response) {
-    FREE(response->def);
-    FREE(response->buf);
-    FREE(response);
-  }
-  
-  return;
-  
-  cleanup:
-    FREE(data->def);
-  /* FREE(data->buf); this should not be freed, since it points to a piece of memory that is managed by Matlab */
-    FREE(data);
-    if (request) {
-      FREE(request->def);
-      FREE(request->buf);
-      FREE(request);
-    }
-    if (response) {
-      FREE(response->def);
-      FREE(response->buf);
-      FREE(response);
-    }
-    
-    return;
+	if (response) {
+		FREE(response->def);
+		FREE(response->buf);
+		FREE(response);
+	}
+	return result;
 }

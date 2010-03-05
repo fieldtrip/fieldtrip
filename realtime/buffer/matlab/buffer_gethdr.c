@@ -39,16 +39,13 @@
 
 #define NUMBER_OF_FIELDS 6
 
-void buffer_gethdr(char *hostname, int port, mxArray *plhs[], const mxArray *prhs[])
+int buffer_gethdr(int server, mxArray *plhs[], const mxArray *prhs[])
 {
-	int server;
 	int verbose = 0;
-	size_t n;
-  char msg[512];
+	int result  = 0;
 
 	message_t *request  = NULL;
 	message_t *response = NULL;
-	header_t  *header   = NULL;
 
 	/* this is for the Matlab specific output */
 	const char *field_names[NUMBER_OF_FIELDS] = {"nchans", "nsamples", "nevents", "fsample", "data_type", "bufsize"};
@@ -60,36 +57,37 @@ void buffer_gethdr(char *hostname, int port, mxArray *plhs[], const mxArray *prh
 	request->def->version = VERSION;
 	request->def->command = GET_HDR;
 	request->def->bufsize = 0;
-
-	/* open the TCP socket */
-	if ((server = open_connection(hostname, port)) < 0) {
-    sprintf(msg, "ERROR: failed to create socket (%d)\n", server);
-		mexErrMsgTxt(msg);
-	}
-
+	
 	if (verbose) print_request(request->def);
-	clientrequest(server, request, &response);
-	if (verbose) print_response(response->def);
-  close_connection(server);
+	result = clientrequest(server, request, &response);
+	
+	if (result == 0) {
+		if (verbose) print_response(response->def);
 
-	if (response->def->command==GET_OK) {
-		header      = malloc(sizeof(header_t));
-		header->def = response->buf;
-		header->buf = (char *)response->buf + sizeof(headerdef_t);
-		if (verbose) print_headerdef(header->def);
+		if (response->def->command==GET_OK) {
+			header_t header;
+			
+			header.def = response->buf;
+			header.buf = (char *)response->buf + sizeof(headerdef_t);   /* not used currently */
+			if (verbose) print_headerdef(header.def);
 
-		plhs[0] = mxCreateStructMatrix(1, 1, NUMBER_OF_FIELDS, field_names);
-		mxSetFieldByNumber(plhs[0], 0, 0, mxCreateDoubleScalar((double)(header->def->nchans)));
-		mxSetFieldByNumber(plhs[0], 0, 1, mxCreateDoubleScalar((double)(header->def->nsamples)));
-		mxSetFieldByNumber(plhs[0], 0, 2, mxCreateDoubleScalar((double)(header->def->nevents)));
-		mxSetFieldByNumber(plhs[0], 0, 3, mxCreateDoubleScalar((double)(header->def->fsample)));
-		mxSetFieldByNumber(plhs[0], 0, 4, mxCreateDoubleScalar((double)(header->def->data_type)));
-		mxSetFieldByNumber(plhs[0], 0, 5, mxCreateDoubleScalar((double)(header->def->bufsize)));
-		FREE(header);
+			plhs[0] = mxCreateStructMatrix(1, 1, NUMBER_OF_FIELDS, field_names);
+			mxSetFieldByNumber(plhs[0], 0, 0, mxCreateDoubleScalar((double)(header.def->nchans)));
+			mxSetFieldByNumber(plhs[0], 0, 1, mxCreateDoubleScalar((double)(header.def->nsamples)));
+			mxSetFieldByNumber(plhs[0], 0, 2, mxCreateDoubleScalar((double)(header.def->nevents)));
+			mxSetFieldByNumber(plhs[0], 0, 3, mxCreateDoubleScalar((double)(header.def->fsample)));
+			mxSetFieldByNumber(plhs[0], 0, 4, mxCreateDoubleScalar((double)(header.def->data_type)));
+			mxSetFieldByNumber(plhs[0], 0, 5, mxCreateDoubleScalar((double)(header.def->bufsize)));
+		}
+		else {
+			result = response->def->command;
+		}
 	}
-	else {
-    sprintf(msg, "ERROR: the buffer returned an error (%d)\n", response->def->command);
-		mexErrMsgTxt(msg);
+
+	if (response) {
+		FREE(response->def);
+		FREE(response->buf);
+		FREE(response);
 	}
 
 	if (request) {
@@ -97,12 +95,7 @@ void buffer_gethdr(char *hostname, int port, mxArray *plhs[], const mxArray *prh
 		FREE(request->buf);
 		FREE(request);
 	}
-	if (response) {
-		FREE(response->def);
-		FREE(response->buf);
-		FREE(response);
-	}
 
-	return;
+	return result;
 }
 
