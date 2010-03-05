@@ -1,13 +1,13 @@
-function [out,foi] = specest_mtmfft(dat, fsample, varargin) 
+function [out,foi] = specest_mtmfft(dat, time, varargin) 
 
 % SPECEST_MTMFFT computes a fast Fourier transform using many possible tapers
 %
 %
 % Use as
-%   [out,foi] = specest_mtmfft(dat,fsample...)       %%%% EITHER FSAMPLE OR TIME
+%   [out,foi] = specest_mtmfft(dat,time...)   
 %
 %   dat      = matrix of chan*sample 
-%   fsample  = number indicating sampling rate
+%   time     = vector, containing time in seconds for each sample
 %   out      = matrix of taper*chan*sample of fourier coefficients
 %   foi      = vector of frequencies in out
 %
@@ -16,7 +16,7 @@ function [out,foi] = specest_mtmfft(dat, fsample, varargin)
 %
 % Optional arguments should be specified in key-value pairs and can include:
 %   taper      = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
-%   pad        = number, total number of samples after zero padding               %%% SHOULD BE GIVEN IN SECONDS....
+%   pad        = number, total length of data after zero padding (in seconds)
 %   foi        = vector, containing frequencies of interest                                           
 %   tapsmofrq  = the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
 %
@@ -34,28 +34,47 @@ function [out,foi] = specest_mtmfft(dat, fsample, varargin)
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'dpss','pad','foi','tapsmofrq'});
 taper     = keyval('dpss',        varargin); if isempty(taper),    taper   = 'dpss';     end
-pad       = keyval('pad',         varargin); if isempty(pad),      pad     = 0;          end
+pad       = keyval('pad',         varargin);
 foi       = keyval('foi',         varargin); if isempty(foi),      foi     = 'max';      end  
-tapsmofrq = keyval('tapsmofrq',   varargin); %%%% NOW CAN ONLY BE A NUMBER, IN MTMCONVOL IT SHOULD BE A VECTOR
+tapsmofrq = keyval('tapsmofrq',   varargin); %%%% NOW CAN ONLY BE A NUMBER, IN MTMCONVOL IT CAN BE A VECTOR
 
 
-% zero padding
-postpad = zeros(1,pad-size(dat,2)); % 'postpad', so naming concurs with mtmconvol
-
-% set n's
+% Set n's
 [nchan,nsample] = size(dat);
 
-% set fboi and foi 
-if isnumeric(foi) % if input is a vector
-  fboi    = round(foi ./ (fsample ./ pad)) + 1;
-  nfboi = size(fboi,2);
-  foi    = (fboi-1) ./ (pad / fsample); % boi - 1 because 0 Hz is included in fourier output..... is this going correctly?
-elseif strcmp(foi,'max') % if input was 'max'
-  fboilim = round([0 fsample/2] ./ (fsample ./ pad)) + 1;
-  fboi    = fboilim(1):fboilim(2);
-  nfboi = size(boi,2);
-  foi    = (fboi-1) ./ (pad / fsample);
+
+% Determine fsample
+fsample = nsample / (time(end) - time(1));
+
+
+% Zero padding
+if pad < (time(end) - time(1))
+  error('the padding that you specified is shorter than the data');
 end
+if isempty(pad) || (pad == (time(end) - time(1))) % if no padding is specified or if padding is equal to current data length
+  pad = (time(end)-time(1));
+else
+  pad = round((pad - (time(end) - time(1)))); 
+end
+postpad = zeros(1,(pad * fsample)/2); % 'postpad', so naming concurs with mtmconvol
+
+
+
+% Set fboi and foi 
+if isnumeric(foi) % if input is a vector
+  fboi    = round(foi ./ (fsample ./ (pad * fsample))) + 1;
+  nfboi   = size(fboi,2);
+  foi     = (fboi-1) ./ pad; % boi - 1 because 0 Hz is included in fourier output..... is this going correctly?
+elseif strcmp(foi,'max') % if input was 'max'
+  fboilim = round([0 fsample/2] ./ (fsample ./ (pad * fsample))) + 1;
+  fboi    = fboilim(1):fboilim(2);
+  nfboi   = size(fboi,2);
+  foi     = (fboi-1) ./ pad;
+end
+if isempty(tapsmofrq) % default tapsmofrq
+  tapsmofrq = 4;
+end
+
 
 % create tapers
 switch taper
