@@ -300,6 +300,8 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 				response->def->command = PUT_ERR;
 			else {
 				response->def->command = PUT_OK;
+				/* SK: we don't really need to branch inside the loop. Let's use a variable that get's assigned the wordsize instead.
+					Then we only need one of these horrible memcpy(...) lines */
 				for (i=0; i<datadef->nsamples; i++) {
 					switch (datadef->data_type) {
 						case DATATYPE_INT8:
@@ -568,6 +570,13 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 
 				// determine the number of samples to return
 				n = datasel->endsample - datasel->begsample + 1;
+				
+				/* SK: Again, I propose to clean this up and use a variable that get's assigned the wordsize instead.
+					That would remove a lot of code duplication. Also, response->buf can easily be preallocated to
+					the correct size and filled by simple memcpy's. Two reasons:
+						- this code runs with an acquired mutex and we should aim to be as fast as possible here.
+						- we can check once if the destination buffer could be allocated
+				*/
 
 				switch (data->def->data_type) {
 					case DATATYPE_INT8:
