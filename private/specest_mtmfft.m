@@ -32,8 +32,8 @@ function [spectrum,foi] = specest_mtmfft(dat, time, varargin)
 %
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'dpss','pad','foi','tapsmofrq'});
-taper     = keyval('dpss',        varargin); if isempty(taper),    taper   = 'dpss';     end
+keyvalcheck(varargin, 'optional', {'taper','pad','foi','tapsmofrq'});
+taper     = keyval('taper',       varargin); if isempty(taper),    taper   = 'dpss';     end
 pad       = keyval('pad',         varargin);
 foi       = keyval('foi',         varargin); if isempty(foi),      foi     = 'max';      end  
 tapsmofrq = keyval('tapsmofrq',   varargin); %%%% NOW CAN ONLY BE A NUMBER, IN MTMCONVOL IT CAN BE A VECTOR
