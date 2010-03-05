@@ -114,6 +114,7 @@ void memprofile_cleanup(void *arg) {
 void memprofile_sample(void) {
 		unsigned int rss, vs;
 		memlist_t *memitem;
+    
 		if (getmem(&rss, &vs)!=0) {
 				rss = 0;
 				vs  = 0;
@@ -123,7 +124,7 @@ void memprofile_sample(void) {
 		memitem->rss  = rss;
 		memitem->vs   = vs;
 		memitem->time = time(NULL) - reftime;
-
+    
 		pthread_mutex_lock(&mutexmemlist);
 		memitem->next = memlist;
 		memlist       = memitem;
@@ -135,7 +136,7 @@ void *memprofile(void *arg) {
 		int count;
 		int pause = 1;
 		memlist_t *memitem, *next;
-
+    
 		pthread_mutex_lock(&mutexstatus);	
 		if (memprofileStatus) {
 				/* only a single instance should be running */
@@ -150,7 +151,6 @@ void *memprofile(void *arg) {
 		pthread_cleanup_push(memprofile_cleanup, NULL);
 
 		while (1) {
-
 				/* count the number of items on the list */
 				pthread_mutex_lock(&mutexmemlist);
 				count = 0;
@@ -246,7 +246,6 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				rc = pthread_create(&memprofileThread, NULL, memprofile, (void *)NULL);
 				if (rc)
 						mexErrMsgTxt("problem with return code from pthread_create()");
-        memprofileStatus = 1;
 		}
 
 		/****************************************************************************/

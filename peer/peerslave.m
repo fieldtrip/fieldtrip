@@ -250,9 +250,9 @@ while true
     clear(fname);
 
     % close all files and figures
-    fclose all
-    close all force
-    close all hidden
+    fclose all;
+    close all force;
+    close all hidden;
 
     % clear all temporary variables
     vars = whos;

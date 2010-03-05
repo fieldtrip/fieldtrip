@@ -19,6 +19,9 @@ function [jobid, puttime] = peerfeval(varargin)
 %
 % See also FEVAL, PEERMASTER, PEERGET, PEERCELLFUN
 
+% Undocumented
+%   hostid   = number, only evaluate on a particular host
+
 % check that the required peer server threads are running
 status = true;
 status = status & peer('tcpserver', 'status');
@@ -41,7 +44,14 @@ strargin = varargin;
 strargin(~cellfun(@ischar, strargin)) = {''};
 
 % locate the begin of the optional key-value arguments
-optbeg = min([strmatch('timeout', strargin) strmatch('sleep', strargin) strmatch('memreq', strargin) strmatch('cpureq', strargin) strmatch('timreq', strargin)]);
+optbeg = false(size(strargin));
+optbeg = optbeg | strcmp('timeout', strargin);
+optbeg = optbeg | strcmp('sleep', strargin);
+optbeg = optbeg | strcmp('memreq', strargin);
+optbeg = optbeg | strcmp('cpureq', strargin);
+optbeg = optbeg | strcmp('timreq', strargin);
+optbeg = optbeg | strcmp('hostid', strargin);
+optbeg = find(optbeg);
 optarg = varargin(optbeg:end);
 
 % get the optional input arguments
@@ -50,6 +60,7 @@ sleep   = keyval('sleep',   optarg); if isempty(sleep), sleep=0.01; end
 memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=0; end
 cpureq  = keyval('cpureq',  optarg); if isempty(cpureq), cpureq=0; end
 timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=0; end
+hostid  = keyval('hostid',  optarg);
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -80,6 +91,11 @@ while isempty(jobid)
   % get the full list of peers
   peerlist = peer('peerlist');
 
+  if ~isempty(hostid)
+    % only consider peers in the user specified list
+    peerlist = peerlist(ismember([peerlist.hostid], hostid));
+  end
+  
   % only peers in slave mode are interesting
   peerlist = peerlist([peerlist.hoststatus]==1);
   if isempty(peerlist)

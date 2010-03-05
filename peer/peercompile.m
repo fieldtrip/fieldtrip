@@ -11,19 +11,19 @@ if ispc
     newdir = fullfile(fileparts(which(mfilename)), 'src');
     cd(newdir);
 
-    mex -I. -I../pthreads-win32/include -c announce.c
-    mex -I. -I../pthreads-win32/include -c discover.c
-    mex -I. -I../pthreads-win32/include -c expire.c
-    mex -I. -I../pthreads-win32/include -c extern.c
-    mex -I. -I../pthreads-win32/include -c fairshare.c
-    mex -I. -I../pthreads-win32/include -c peerinit.c
-    mex -I. -I../pthreads-win32/include -c util.c
-    mex -I. -I../pthreads-win32/include -c tcpserver.c
-    mex -I. -I../pthreads-win32/include -c tcpsocket.c
-    mex -I. -I../pthreads-win32/include -c security.c
-
-    % link all the objects together into a mex file
-    mex -I. -I../pthreads-win32/include -L../pthreads-win32/lib -output ../peer peer.c tcpserver.obj tcpsocket.obj discover.obj announce.obj expire.obj peerinit.obj util.obj extern.obj fairshare.obj security.obj -lpthreadVC2.bcb
+%     mex -I. -I../pthreads-win32/include -c announce.c
+%     mex -I. -I../pthreads-win32/include -c discover.c
+%     mex -I. -I../pthreads-win32/include -c expire.c
+%     mex -I. -I../pthreads-win32/include -c extern.c
+%     mex -I. -I../pthreads-win32/include -c fairshare.c
+%     mex -I. -I../pthreads-win32/include -c peerinit.c
+%     mex -I. -I../pthreads-win32/include -c util.c
+%     mex -I. -I../pthreads-win32/include -c tcpserver.c
+%     mex -I. -I../pthreads-win32/include -c tcpsocket.c
+%     mex -I. -I../pthreads-win32/include -c security.c
+% 
+%     % link all the objects together into a mex file
+%     mex -I. -I../pthreads-win32/include -L../pthreads-win32/lib -output ../peer peer.c tcpserver.obj tcpsocket.obj discover.obj announce.obj expire.obj peerinit.obj util.obj extern.obj fairshare.obj security.obj -lpthreadVC2.bcb
 
     % also compile the memory profiler
     mex -I. -I../pthreads-win32/include -L../pthreads-win32/lib -output ../memprofile memprofile.c -lpthreadVC2.bcb
