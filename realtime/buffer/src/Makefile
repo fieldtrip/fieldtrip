@@ -31,12 +31,12 @@ ifeq "$(PLATFORM)" "mingw32"
 	INCPATH	 = -I. -I../pthreads-win32/include
 	LIBPATH  = -L. -L../pthreads-win32/lib
 	LIBS 	 = -lbuffer -lm -lpthreadGC2
-	CFLAGS	 = $(INCPATH) -Wunused -pedantic -O0 -fpack-struct -g 
+	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -fpack-struct -g 
 else
 	INCPATH	 = -I.
 	LIBPATH  = -L.
 	LIBS 	 = -lbuffer -lm -lpthread
-	CFLAGS	 = $(INCPATH) -Wunused -pedantic -O0 -fPIC -fpack-struct -g
+	CFLAGS	 = $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -fpack-struct -g
 endif
 
 BINDIR	 = .

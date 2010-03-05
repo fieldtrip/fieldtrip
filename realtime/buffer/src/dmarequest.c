@@ -17,7 +17,7 @@ static data_t     *data     = NULL;
 static event_t    *event    = NULL;
 static property_t *property = NULL;
 
-static int current_max_num_sample = 0;
+static unsigned int current_max_num_sample = 0;
 
 static int thissample = 0;    // points at the buffer
 static int thisevent = 0;     // points at the buffer
@@ -203,7 +203,8 @@ int find_property(property_t *desired) {
  * and copies objects to and from memory
  *****************************************************************************/
 int dmarequest(const message_t *request, message_t **response_ptr) {
-	int i, j, n, offset;
+	int numprop;
+	unsigned int offset;
     int blockrequest = 0;
 	int verbose = 0;
 
@@ -299,6 +300,8 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			else if (datadef->nsamples > current_max_num_sample)
 				response->def->command = PUT_ERR;
 			else {
+				unsigned int i;
+				
 				response->def->command = PUT_OK;
 				/* SK: we don't really need to branch inside the loop. Let's use a variable that get's assigned the wordsize instead.
 					Then we only need one of these horrible memcpy(...) lines */
@@ -413,25 +416,25 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 				desired->buf = (char*)request->buf+sizeof(propertydef_t);
 			else
 				desired->buf = NULL;
-			n = find_property(desired);
+			numprop = find_property(desired);
 			FREE(desired);
 
-			if (n<0 && (thisproperty<MAXNUMPROPERTY)) {
+			if (numprop<0 && (thisproperty<MAXNUMPROPERTY)) {
 				// insert as new property
-				n = thisproperty;
+				numprop = thisproperty;
 				thisproperty++;
 			}
 
-			if (n>=0) {
+			if (numprop>=0) {
 				// clear the old property information (if any)
-				FREE(property[n].def);
-				FREE(property[n].buf);
+				FREE(property[numprop].def);
+				FREE(property[numprop].buf);
 
 				// insert the new property information
-				property[n].def = (propertydef_t*)malloc(sizeof(propertydef_t));
-				memcpy(property[n].def, request->buf, sizeof(propertydef_t));
-				property[n].buf = malloc(property[n].def->bufsize);
-				memcpy(property[n].buf, (char*)request->buf+sizeof(propertydef_t), property[n].def->bufsize);
+				property[numprop].def = (propertydef_t*)malloc(sizeof(propertydef_t));
+				memcpy(property[numprop].def, request->buf, sizeof(propertydef_t));
+				property[numprop].buf = malloc(property[numprop].def->bufsize);
+				memcpy(property[numprop].buf, (char*)request->buf+sizeof(propertydef_t), property[numprop].def->bufsize);
 
 				response->def->version = VERSION;
 				response->def->command = PUT_OK;
@@ -562,6 +565,8 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 				response->def->bufsize = 0;
 			}
 			else {
+				unsigned int j,n;
+				
 				// assume for the moment that it will be ok
 				// the only problem might be an unsupported datatype, which is dealt with below
 				response->def->version = VERSION;
@@ -717,6 +722,8 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 				response->def->bufsize = 0;
 			}
 			else {
+				unsigned int j,n;
+				
 				response->def->version = VERSION;
 				response->def->command = GET_OK;
 				response->def->bufsize = 0;
@@ -757,15 +764,15 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 					desired->buf = (char*)request->buf+sizeof(propertydef_t);
 				else
 					desired->buf = NULL;
-				n = find_property(desired);
+				numprop = find_property(desired);
 				FREE(desired);
 
-				if (n>=0) {
+				if (numprop>=0) {
 					response->def->version = VERSION;
 					response->def->command = GET_OK;
 					response->def->bufsize = 0;
-					response->def->bufsize = append(&response->buf, response->def->bufsize, property[n].def, sizeof(propertydef_t));
-					response->def->bufsize = append(&response->buf, response->def->bufsize, property[n].buf, property[n].def->bufsize);
+					response->def->bufsize = append(&response->buf, response->def->bufsize, property[numprop].def, sizeof(propertydef_t));
+					response->def->bufsize = append(&response->buf, response->def->bufsize, property[numprop].buf, property[numprop].def->bufsize);
 				}
 				else {
 					response->def->version = VERSION;
@@ -774,6 +781,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 				}
 			}
 			else {
+				unsigned int n;
 				// send all properties
 				response->def->version = VERSION;
 				response->def->command = GET_OK;
@@ -833,6 +841,8 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			pthread_mutex_lock(&mutexheader);
 			pthread_mutex_lock(&mutexevent);
 			if (header && event) {
+				unsigned int i;
+				
 				header->def->nevents = thisevent = 0;
 				for (i=0; i<MAXNUMEVENT; i++) {
 					FREE(event[i].def);
@@ -854,6 +864,8 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 		case FLUSH_PRP:
 			pthread_mutex_lock(&mutexproperty);
 			if (property) {
+				unsigned int i;
+				
 				thisproperty = 0;
 				for (i=0; i<MAXNUMPROPERTY; i++) {
 					FREE(property[i].def);

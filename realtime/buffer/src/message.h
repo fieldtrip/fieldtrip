@@ -185,13 +185,13 @@ typedef struct {
 } property_t;
 
 typedef struct {
-	INT32_T begsample; /* indexing starts with 0, should be >=0 */
-	INT32_T endsample; /* indexing starts with 0, should be <header.nsamples */
+	UINT32_T begsample; /* indexing starts with 0, should be >=0 */
+	UINT32_T endsample; /* indexing starts with 0, should be <header.nsamples */
 } datasel_t;
 
 typedef struct {
-	INT32_T begevent;
-	INT32_T endevent;
+	UINT32_T begevent;
+	UINT32_T endevent;
 } eventsel_t;
 
 #ifdef __cplusplus

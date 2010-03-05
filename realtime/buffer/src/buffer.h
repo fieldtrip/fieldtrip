@@ -100,9 +100,9 @@ void print_buf(void *, int);
 /* definition of even more helper functions, see util.c */
 int open_connection(const char*, int);
 int close_connection(int);
-int append(void **, int, void *, int);
-int bufread(int, void *, int);
-int bufwrite(int, const void *, int);
+unsigned int append(void **, unsigned int, void *, unsigned int);
+unsigned int bufread(int, void *, unsigned int);
+unsigned int bufwrite(int, const void *, unsigned int);
 int clientrequest(int, message_t *, message_t**);
 int dmarequest(const message_t *, message_t**);
 int tcprequest(int, const message_t *, message_t**);

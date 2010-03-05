@@ -19,8 +19,8 @@ int threadcount = 0;
 pthread_mutex_t mutexsocketcount = PTHREAD_MUTEX_INITIALIZER;
 int socketcount = 0;
 
-int bufread(int s, void *buf, int numel) {
-		int numcall = 0, numthis = 0, numread = 0, verbose = 0;
+unsigned int bufread(int s, void *buf, unsigned int numel) {
+		unsigned int numcall = 0, numthis = 0, numread = 0, verbose = 0;
 
 		while (numread<numel) {
 
@@ -46,8 +46,8 @@ int bufread(int s, void *buf, int numel) {
 		return numread;
 }
 
-int bufwrite(int s, const void *buf, int numel) {
-		int numcall = 0, numthis = 0, numwrite = 0, verbose = 0;
+unsigned int bufwrite(int s, const void *buf, unsigned int numel) {
+		unsigned int numcall = 0, numthis = 0, numwrite = 0, verbose = 0;
 
 		while (numwrite<numel) {
 
@@ -73,7 +73,7 @@ int bufwrite(int s, const void *buf, int numel) {
 		return numwrite;
 }
 
-int append(void **buf1, int bufsize1, void *buf2, int bufsize2) {
+unsigned int append(void **buf1, unsigned int bufsize1, void *buf2, unsigned int bufsize2) {
 		int verbose = 0;
 
 		if (verbose>1) {
@@ -85,11 +85,11 @@ int append(void **buf1, int bufsize1, void *buf2, int bufsize2) {
 
 		if (((*buf1)!=NULL) && (bufsize1==0)) {
 				perror("append err1");
-				return -1;
+				return 0;	/* was -1, but this is never checked anyway */
 		}
 		else if (((*buf1)==NULL) && (bufsize1!=0)) {
 				perror("append err2");
-				return -1;
+				return 0;	/* was -1, but this is never checked anyway */
 		}
 
 		if ((*buf1)==NULL) {

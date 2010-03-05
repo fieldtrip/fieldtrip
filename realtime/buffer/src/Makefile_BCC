@@ -7,7 +7,7 @@ BCCDIR = C:/BCC55
 CC = $(BCCDIR)/BIN/BCC32.EXE
 AR = $(BCCDIR)/BIN/TLIB.EXE
 
-INCPATH	 = -I. -I../pthreads-win32/include -I$(BCCDIR)/INCLUDE
+INCPATH	 = -I. -I../pthreads-win32/include 
 LIBPATH  = -L. -L../pthreads-win32/lib
 LIBS 	 = -lbuffer -lm -lpthreadGC2
 BINDIR	 = .
@@ -18,12 +18,15 @@ CFLAGS	 = $(INCPATH)
 
 all: libbuffer.lib
 
-libbuffer.lib: tcpserver.obj tcpsocket.obj tcprequest.obj clientrequest.obj dmarequest.obj cleanup.obj util.obj printstruct.obj swapbytes.obj property.obj
+libbuffer.lib: tcpserver.obj tcpsocket.obj tcprequest.obj clientrequest.obj dmarequest.obj cleanup.obj util.obj printstruct.obj swapbytes.obj property.obj gettimeofday.obj
 	del libbuffer.lib
-	 $(AR) libbuffer.lib -+tcpserver -+tcpsocket -+tcprequest -+clientrequest -+dmarequest -+cleanup -+util -+printstruct -+swapbytes -+property
+	 $(AR) libbuffer.lib -+tcpserver -+tcpsocket -+tcprequest -+clientrequest -+dmarequest -+cleanup -+util -+printstruct -+swapbytes -+property -+gettimeofday
 
 libclient.lib: tcprequest.obj util.obj
 	 $(AR) libclient.lib -+tcprequest.obj -+util.obj
+	 
+gettimeofday.obj: win32/gettimeofday.c
+	$(CC) $(CFLAGS) -c $*.c
 
 %.obj: %.c buffer.h message.h swapbytes.h socket_includes.h unix_includes.h
 	$(CC) $(CFLAGS) -c $*.c

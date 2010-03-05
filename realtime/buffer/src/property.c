@@ -20,7 +20,7 @@ int set_property(int server, const char *name, INT32_T *value) {
 	property->def              = (propertydef_t*)malloc(sizeof(propertydef_t));
 	property->buf              = NULL;
 	property->def->type_type   = DATATYPE_CHAR;
-	property->def->type_numel  = strlen(name)+1;
+	property->def->type_numel  = (UINT32_T) strlen(name)+1;
 	property->def->value_type  = DATATYPE_INT32;
 	property->def->value_numel = 1;
 	property->def->bufsize     = 0;
@@ -41,7 +41,7 @@ int set_property(int server, const char *name, INT32_T *value) {
 	if (verbose>0) print_request(request->def);
 	if (verbose>0) print_buf(request->buf, request->def->bufsize);
 
-	if (status = clientrequest(server, request, &response))
+	if ((status = clientrequest(server, request, &response)))
       exit(1);
     
 	if (verbose>0) print_response(response->def);
@@ -76,7 +76,7 @@ int set_property(int server, const char *name, INT32_T *value) {
 
 int get_property(int server, const char *name, INT32_T *value) {
 	int status = 0, verbose = 0;
-	int offset;
+	unsigned int offset;
 	void *ptr_type, *ptr_value;
 
 	message_t *request  = NULL;
@@ -94,7 +94,7 @@ int get_property(int server, const char *name, INT32_T *value) {
 	if (verbose>0) print_request(request->def);
 	if (verbose>0) print_buf(request->buf, request->def->bufsize);
 
-	if (status = clientrequest(server, request, &response))
+	if ((status = clientrequest(server, request, &response)))
       exit(1);
 
 	if (verbose>0) print_response(response->def);
@@ -103,8 +103,8 @@ int get_property(int server, const char *name, INT32_T *value) {
 	if (response) {
 		if (response->def->command == GET_OK) {
 
-			status = -1; // requested property has not (yet) been found
-			offset = 0;  // this represents the offset of the property in the buffer
+			status = -1; /* requested property has not (yet) been found */
+			offset = 0;  /* this represents the offset of the property in the buffer */
 
 			while (status && (offset<response->def->bufsize)) {
 
@@ -119,7 +119,7 @@ int get_property(int server, const char *name, INT32_T *value) {
 					ptr_type  = (char*)response->buf+offset+sizeof(propertydef_t);
 					ptr_value = (char*)response->buf+offset+sizeof(propertydef_t) + propertydef->type_numel;
 					if (strcmp((char *)ptr_type, name)==0) {
-						// property has been found
+						/* property has been found */
 						(*value) = *((INT32_T *)ptr_value);
 						status = 0;
 					}
