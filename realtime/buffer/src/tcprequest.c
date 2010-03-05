@@ -12,15 +12,15 @@
 /*******************************************************************************
  * communicate with the buffer through TCP
  *******************************************************************************/
-int tcprequest(int server, message_t *request, message_t **response_ptr) {
+int tcprequest(int server, const message_t *request, message_t **response_ptr) {
 	int n;
 
-	// this will hold the response
+	/* this will hold the response */
 	message_t *response;
 	response      = (message_t*)malloc(sizeof(message_t));
 	response->def = (messagedef_t*)malloc(sizeof(messagedef_t));
 	response->buf = NULL;
-	// the response should be passed to the calling function, where it should be freed
+	/* the response should be passed to the calling function, where it should be freed */
 	*response_ptr = response;
 
 	/* send the request to the server, first the message definition */
@@ -56,7 +56,7 @@ int tcprequest(int server, message_t *request, message_t **response_ptr) {
 	}
 
 	/* everything went fine, return with the response */
-	//print_response(response->def);
+	/* print_response(response->def); */
 	return 0;
 
 cleanup:

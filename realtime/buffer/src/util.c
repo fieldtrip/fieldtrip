@@ -46,7 +46,7 @@ int bufread(int s, void *buf, int numel) {
 		return numread;
 }
 
-int bufwrite(int s, void *buf, int numel) {
+int bufwrite(int s, const void *buf, int numel) {
 		int numcall = 0, numthis = 0, numwrite = 0, verbose = 0;
 
 		while (numwrite<numel) {

@@ -17,6 +17,8 @@ static data_t     *data     = NULL;
 static event_t    *event    = NULL;
 static property_t *property = NULL;
 
+static int current_max_num_sample = 0;
+
 static int thissample = 0;    // points at the buffer
 static int thisevent = 0;     // points at the buffer
 static int thisproperty = 0;  // points at the buffer
@@ -88,40 +90,52 @@ void init_data(void) {
 	int verbose = 0;
 	if (verbose>0) fprintf(stderr, "init_data: creating data buffer\n");
 	if (header) {
+		int wordsize = 0;
+		switch (header->def->data_type) {
+			case DATATYPE_CHAR:
+				wordsize = WORDSIZE_CHAR;
+				break;
+			case DATATYPE_UINT8:		
+			case DATATYPE_INT8:
+				wordsize = WORDSIZE_INT8;
+				break;
+			case DATATYPE_UINT16:
+			case DATATYPE_INT16:
+				wordsize = WORDSIZE_INT16;
+				break;
+			case DATATYPE_UINT32:				
+			case DATATYPE_INT32:
+				wordsize = WORDSIZE_INT32;
+				break;
+			case DATATYPE_UINT64:
+			case DATATYPE_INT64:
+				wordsize = WORDSIZE_INT64;
+				break;
+			case DATATYPE_FLOAT32:
+				wordsize = WORDSIZE_FLOAT32;
+				break;
+			case DATATYPE_FLOAT64:
+				wordsize = WORDSIZE_FLOAT64;
+				break;
+			default:
+				fprintf(stderr, "init_data: unsupported data type (%u)\n", header->def->data_type);
+				return;
+		}
+		/* heuristic of choosing size of buffer:
+			set current_max_num_sample to MAXNUMSAMPLE if nchans <= 256
+			otherwise, allocate about MAXNUMBYTE and calculate current_max_num_sample from nchans + wordsize
+		*/
+		if (header->def->nchans <= 256) {
+			current_max_num_sample = MAXNUMSAMPLE;
+		} else {
+			current_max_num_sample = MAXNUMBYTE / (wordsize * header->def->nchans);
+		}
 		data = (data_t*)malloc(sizeof(data_t));
 		data->def = (datadef_t*)malloc(sizeof(datadef_t));
 		data->def->nchans    = header->def->nchans;
-		data->def->nsamples  = MAXNUMSAMPLE;
+		data->def->nsamples  = current_max_num_sample;
 		data->def->data_type = header->def->data_type;
-		switch (header->def->data_type) {
-			case DATATYPE_INT8:
-				data->buf = malloc(header->def->nchans*MAXNUMSAMPLE*WORDSIZE_INT8);
-				break;
-
-			case DATATYPE_INT16:
-				data->buf = malloc(header->def->nchans*MAXNUMSAMPLE*WORDSIZE_INT16);
-				break;
-
-			case DATATYPE_INT32:
-				data->buf = malloc(header->def->nchans*MAXNUMSAMPLE*WORDSIZE_INT32);
-				break;
-
-			case DATATYPE_INT64:
-				data->buf = malloc(header->def->nchans*MAXNUMSAMPLE*WORDSIZE_INT64);
-				break;
-
-			case DATATYPE_FLOAT32:
-				data->buf = malloc(header->def->nchans*MAXNUMSAMPLE*WORDSIZE_FLOAT32);
-				break;
-
-			case DATATYPE_FLOAT64:
-				data->buf = malloc(header->def->nchans*MAXNUMSAMPLE*WORDSIZE_FLOAT64);
-				break;
-
-			default:
-				fprintf(stderr, "init_data: unsupported data type (%u)\n", header->def->data_type);
-				free_data();
-		}
+		data->buf = malloc(header->def->nchans*current_max_num_sample*wordsize);
 	}
 }
 
@@ -188,7 +202,7 @@ int find_property(property_t *desired) {
  * this function handles the direct memory access to the buffer
  * and copies objects to and from memory
  *****************************************************************************/
-int dmarequest(message_t *request, message_t **response_ptr) {
+int dmarequest(const message_t *request, message_t **response_ptr) {
 	int i, j, n, offset;
     int blockrequest = 0;
 	int verbose = 0;
@@ -248,8 +262,14 @@ int dmarequest(message_t *request, message_t **response_ptr) {
 			init_event();
 
 			response->def->version = VERSION;
-			response->def->command = PUT_OK;
 			response->def->bufsize = 0;
+			/* check whether memory could indeed be allocated */
+			if (data!= NULL && data->buf != NULL && data->def != NULL) {
+				response->def->command = PUT_OK;
+			} else {
+				/* let's at least tell the client that something's wrong */
+				response->def->command = PUT_ERR;	
+			}
 
 			pthread_mutex_unlock(&mutexheader);
 			pthread_mutex_unlock(&mutexdata);
@@ -276,7 +296,7 @@ int dmarequest(message_t *request, message_t **response_ptr) {
 				response->def->command = PUT_ERR;
 			else if (header->def->data_type != datadef->data_type)
 				response->def->command = PUT_ERR;
-			else if (datadef->nsamples > MAXNUMSAMPLE)
+			else if (datadef->nsamples > current_max_num_sample)
 				response->def->command = PUT_ERR;
 			else {
 				response->def->command = PUT_OK;
@@ -313,7 +333,7 @@ int dmarequest(message_t *request, message_t **response_ptr) {
 					}
 					header->def->nsamples++;
 					thissample++;
-					thissample = WRAP(thissample, MAXNUMSAMPLE);
+					thissample = WRAP(thissample, current_max_num_sample);
 				}
 				// Signal possibly waiting threads that we have received data
 				pthread_cond_broadcast(&getData_cond);
@@ -473,9 +493,9 @@ int dmarequest(message_t *request, message_t **response_ptr) {
 			}
 			else {
 				// determine a valid selection
-				if (header->def->nsamples>MAXNUMSAMPLE) {
+				if (header->def->nsamples>current_max_num_sample) {
 					// the ringbuffer is completely full
-					datasel->begsample = header->def->nsamples - MAXNUMSAMPLE;
+					datasel->begsample = header->def->nsamples - current_max_num_sample;
 					datasel->endsample = header->def->nsamples - 1;
 				}
 				else {
@@ -533,7 +553,7 @@ int dmarequest(message_t *request, message_t **response_ptr) {
 				response->def->command = GET_ERR;
 				response->def->bufsize = 0;
 			}
-			else if ((header->def->nsamples - datasel->begsample) > MAXNUMSAMPLE) {
+			else if ((header->def->nsamples - datasel->begsample) > current_max_num_sample) {
 				fprintf(stderr, "dmarequest: err3\n");
 				response->def->version = VERSION;
 				response->def->command = GET_ERR;
@@ -554,10 +574,10 @@ int dmarequest(message_t *request, message_t **response_ptr) {
 						data->def->nsamples = n;
 						data->def->bufsize  = n*data->def->nchans*sizeof(INT8_T);
 						response->def->bufsize = append(&response->buf, response->def->bufsize, data->def, sizeof(datadef_t));
-						data->def->nsamples = MAXNUMSAMPLE;
+						data->def->nsamples = current_max_num_sample;
 						data->def->bufsize  = 0;
 						for (j=0; j<n; j++) {
-							response->def->bufsize = append(&response->buf, response->def->bufsize, (char*)(data->buf)+WRAP(datasel->begsample+j,MAXNUMSAMPLE)*(data->def->nchans)*sizeof(INT8_T), (data->def->nchans)*sizeof(INT8_T));
+							response->def->bufsize = append(&response->buf, response->def->bufsize, (char*)(data->buf)+WRAP(datasel->begsample+j,current_max_num_sample)*(data->def->nchans)*sizeof(INT8_T), (data->def->nchans)*sizeof(INT8_T));
 						}
 						break;
 
@@ -565,10 +585,10 @@ int dmarequest(message_t *request, message_t **response_ptr) {
 						data->def->nsamples = n;
 						data->def->bufsize  = n*data->def->nchans*sizeof(INT16_T);
 						response->def->bufsize = append(&response->buf, response->def->bufsize, data->def, sizeof(datadef_t));
-						data->def->nsamples = MAXNUMSAMPLE;
+						data->def->nsamples = current_max_num_sample;
 						data->def->bufsize  = 0;
 						for (j=0; j<n; j++) {
-							response->def->bufsize = append(&response->buf, response->def->bufsize, (char*)(data->buf)+WRAP(datasel->begsample+j,MAXNUMSAMPLE)*(data->def->nchans)*sizeof(INT16_T), (data->def->nchans)*sizeof(INT16_T));
+							response->def->bufsize = append(&response->buf, response->def->bufsize, (char*)(data->buf)+WRAP(datasel->begsample+j,current_max_num_sample)*(data->def->nchans)*sizeof(INT16_T), (data->def->nchans)*sizeof(INT16_T));
 						}
 						break;
 
@@ -576,10 +596,10 @@ int dmarequest(message_t *request, message_t **response_ptr) {
 						data->def->nsamples = n;
 						data->def->bufsize  = n*data->def->nchans*sizeof(INT32_T);
 						response->def->bufsize = append(&response->buf, response->def->bufsize, data->def, sizeof(datadef_t));
-						data->def->nsamples = MAXNUMSAMPLE;
+						data->def->nsamples = current_max_num_sample;
 						data->def->bufsize  = 0;
 						for (j=0; j<n; j++) {
-							response->def->bufsize = append(&response->buf, response->def->bufsize, (char*)(data->buf)+WRAP(datasel->begsample+j,MAXNUMSAMPLE)*(data->def->nchans)*sizeof(INT32_T), (data->def->nchans)*sizeof(INT32_T));
+							response->def->bufsize = append(&response->buf, response->def->bufsize, (char*)(data->buf)+WRAP(datasel->begsample+j,current_max_num_sample)*(data->def->nchans)*sizeof(INT32_T), (data->def->nchans)*sizeof(INT32_T));
 						}
 						break;
 
@@ -587,10 +607,10 @@ int dmarequest(message_t *request, message_t **response_ptr) {
 						data->def->nsamples = n;
 						data->def->bufsize  = n*data->def->nchans*sizeof(INT64_T);
 						response->def->bufsize = append(&response->buf, response->def->bufsize, data->def, sizeof(datadef_t));
-						data->def->nsamples = MAXNUMSAMPLE;
+						data->def->nsamples = current_max_num_sample;
 						data->def->bufsize  = 0;
 						for (j=0; j<n; j++) {
-							response->def->bufsize = append(&response->buf, response->def->bufsize, (char*)(data->buf)+WRAP(datasel->begsample+j,MAXNUMSAMPLE)*(data->def->nchans)*sizeof(INT64_T), (data->def->nchans)*sizeof(INT64_T));
+							response->def->bufsize = append(&response->buf, response->def->bufsize, (char*)(data->buf)+WRAP(datasel->begsample+j,current_max_num_sample)*(data->def->nchans)*sizeof(INT64_T), (data->def->nchans)*sizeof(INT64_T));
 						}
 						break;
 
@@ -598,10 +618,10 @@ int dmarequest(message_t *request, message_t **response_ptr) {
 						data->def->nsamples = n;
 						data->def->bufsize  = n*data->def->nchans*sizeof(FLOAT32_T);
 						response->def->bufsize = append(&response->buf, response->def->bufsize, data->def, sizeof(datadef_t));
-						data->def->nsamples = MAXNUMSAMPLE;
+						data->def->nsamples = current_max_num_sample;
 						data->def->bufsize  = 0;
 						for (j=0; j<n; j++) {
-							response->def->bufsize = append(&response->buf, response->def->bufsize, (char*)(data->buf)+WRAP(datasel->begsample+j,MAXNUMSAMPLE)*(data->def->nchans)*sizeof(FLOAT32_T), (data->def->nchans)*sizeof(FLOAT32_T));
+							response->def->bufsize = append(&response->buf, response->def->bufsize, (char*)(data->buf)+WRAP(datasel->begsample+j,current_max_num_sample)*(data->def->nchans)*sizeof(FLOAT32_T), (data->def->nchans)*sizeof(FLOAT32_T));
 						}
 						break;
 
@@ -609,10 +629,10 @@ int dmarequest(message_t *request, message_t **response_ptr) {
 						data->def->nsamples = n;
 						data->def->bufsize  = n*data->def->nchans*sizeof(FLOAT64_T);
 						response->def->bufsize = append(&response->buf, response->def->bufsize, data->def, sizeof(datadef_t));
-						data->def->nsamples = MAXNUMSAMPLE;
+						data->def->nsamples = current_max_num_sample;
 						data->def->bufsize  = 0;
 						for (j=0; j<n; j++) {
-							response->def->bufsize = append(&response->buf, response->def->bufsize, (char*)(data->buf)+WRAP(datasel->begsample+j,MAXNUMSAMPLE)*(data->def->nchans)*sizeof(FLOAT64_T), (data->def->nchans)*sizeof(FLOAT64_T));
+							response->def->bufsize = append(&response->buf, response->def->bufsize, (char*)(data->buf)+WRAP(datasel->begsample+j,current_max_num_sample)*(data->def->nchans)*sizeof(FLOAT64_T), (data->def->nchans)*sizeof(FLOAT64_T));
 						}
 						break;
 

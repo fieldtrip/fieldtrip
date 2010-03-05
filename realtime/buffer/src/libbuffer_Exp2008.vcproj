@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="libbuffer_Exp2008"
 	ProjectGUID="{708A1C65-2405-4324-ACD8-DFC28C98563D}"
 	Keyword="Win32Proj"
@@ -104,7 +104,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;..\pthreads-win32\include&quot;"
+				AdditionalIncludeDirectories="..\src;&quot;..\pthreads-win32\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"

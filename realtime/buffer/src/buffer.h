@@ -43,6 +43,7 @@
 #define open_remotehost open_connection
 
 /* FIXME these should be variable */
+#define MAXNUMBYTE      (512*1024*1024)
 #define MAXNUMSAMPLE    600000
 #define MAXNUMEVENT     100
 #define MAXNUMPROPERTY  100
@@ -101,10 +102,10 @@ int open_connection(const char*, int);
 int close_connection(int);
 int append(void **, int, void *, int);
 int bufread(int, void *, int);
-int bufwrite(int, void *, int);
+int bufwrite(int, const void *, int);
 int clientrequest(int, message_t *, message_t**);
-int dmarequest(message_t *, message_t**);
-int tcprequest(int, message_t *, message_t**);
+int dmarequest(const message_t *, message_t**);
+int tcprequest(int, const message_t *, message_t**);
 int find_property(property_t *);
 int get_property(int, const char *, INT32_T *);
 int set_property(int, const char *, INT32_T *);
