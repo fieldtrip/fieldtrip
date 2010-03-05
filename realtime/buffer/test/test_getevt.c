@@ -7,9 +7,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <strings.h>
-#include <unistd.h>
-#include <pthread.h>
 #include <math.h>
 #include "buffer.h"
 
@@ -41,10 +38,10 @@ int main(int argc, char *argv[]) {
 
 	fprintf(stderr, "------------------------------\n");
 	print_request(&request);
-	write(server, &request, sizeof(messagedef_t));
+	bufwrite(server, &request, sizeof(messagedef_t));
 	// write(server, &eventsel, sizeof(eventsel_t));
 
-	read(server, &response, sizeof(messagedef_t));
+	bufread(server, &response, sizeof(messagedef_t));
 	fprintf(stderr, "------------------------------\n");
 	print_response(&response);
 	fprintf(stderr, "------------------------------\n");
@@ -58,8 +55,8 @@ int main(int argc, char *argv[]) {
 			n = 0;
 			offset = 0;
 			while (offset<response.bufsize) {
-				event.def = buf+offset;
-				event.buf = buf+offset+sizeof(eventdef_t);
+				event.def = (char*)buf+offset;
+				event.buf = (char*)buf+offset+sizeof(eventdef_t);
 				fprintf(stderr, "\n");
 				print_eventdef(event.def);
 				offset += sizeof(eventdef_t) + event.def->bufsize;

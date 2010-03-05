@@ -1,0 +1,75 @@
+##############################################################################
+# BORLAND FreeCommandLineTools (BCC 5.5) Makefile
+##############################################################################
+
+BCCDIR = C:/BCC55
+
+CC = BCC32.EXE
+LD = ILINK32.EXE
+
+INCPATH	 = -I../src -I../pthreads-win32/include -I$(BCCDIR)/INCLUDE
+LIBS 	 = "../src/libbuffer.lib" "../pthreads-win32/lib/pthreadVC2_Borland.lib" -lm -lpthreadVC2 /ap /Tpe 
+CFLAGS	 = $(INCPATH) 
+
+##############################################################################
+
+all: demo
+
+test: test_gethdr test_getdat.exe test_getevt.exe test_flushhdr.exe test_flushdat.exe test_flushevt.exe test_connect.exe test_nslookup.exe test_benchmark.exe
+
+demo: demo_sinewave.exe demo_event.exe demo_buffer.exe demo_combined.exe
+
+demo_combined.exe: demo_combined.obj sinewave.obj 
+	$(CC) $** $(LIBS) 
+
+demo_sinewave.exe: demo_sinewave.obj sinewave.obj
+	$(CC) $** $(LIBS) 
+
+demo_event.exe: demo_event.obj event.obj
+	$(CC) $** $(LIBS) 
+
+demo_buffer.exe: demo_buffer.obj 
+	$(CC) $** $(LIBS) 
+
+test_gethdr: test_gethdr.obj
+	$(CC) $** $(LIBS) 
+
+test_getdat.exe: test_getdat.obj
+	$(CC) $** $(LIBS) 
+
+test_getevt.exe: test_getevt.obj
+	$(CC) $** $(LIBS) 
+
+test_flushhdr.exe: test_flushhdr.obj
+	$(CC) $** $(LIBS) 
+
+test_flushdat.exe: test_flushdat.obj
+	$(CC) $** $(LIBS) 
+
+test_flushevt.exe: test_flushevt.obj
+	$(CC) $** $(LIBS) 
+
+test_append.exe: test_append.obj
+	$(CC) $** $(LIBS) 
+
+test_pthread.exe: test_pthread.obj
+	$(CC) $** $(LIBS) 
+
+test_benchmark.exe: test_benchmark.obj
+	$(CC) $** $(LIBS) 
+	
+test_nslookup.exe: test_nslookup.obj
+	$(CC) $** $(LIBS) 
+
+test_connect.exe: test_connect.obj
+	$(CC) $** $(LIBS) ../src/gettimeofday.obj
+
+%.obj: %.c 
+	$(CC) $(CFLAGS) $(INCPATH) -c $*.c
+	
+clean:
+	del *.obj *.exe
+
+distclean:
+	del test_gethdr.exe test_getdat.exe test_getevt.exe test_flushhdr.exe test_flushdat.exe test_flushevt.exe
+	del demo_sinewave.exe demo_event.exe demo_buffer.exe demo_combined.exe

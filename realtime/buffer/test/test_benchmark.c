@@ -30,7 +30,16 @@ int main(int argc, char *argv[]) {
   int fsample        = 512; /* this is just for the header */
   int nchans         = 32;
   int nsamples       = 64;
-  int stateless      = 1;	  /* boolean */
+  int stateless      = 0;	  /* boolean */
+  
+  /* these are used in the communication and represent statefull information */
+  int server             = -1;
+  message_t    *request  = NULL;
+  message_t    *response = NULL;
+  header_t     *header   = NULL;
+  data_t       *data     = NULL;
+  event_t      *event    = NULL;
+    
   
     /* start with defaults */
   sprintf(host.name, DEFAULT_HOSTNAME);
@@ -51,14 +60,7 @@ int main(int argc, char *argv[]) {
   if (argc>5)
     stateless = atoi(argv[5]);
   
-  /* these are used in the communication and represent statefull information */
-  int server             = -1;
-  message_t    *request  = NULL;
-  message_t    *response = NULL;
-  header_t     *header   = NULL;
-  data_t       *data     = NULL;
-  event_t      *event    = NULL;
-  
+
   check_datatypes();
   
   if (verbose>0) fprintf(stderr, "test_benchmark: host.name =  %s\n", host.name);
@@ -154,7 +156,7 @@ int main(int argc, char *argv[]) {
       fprintf(stderr, "random: err3\n");
       goto cleanup;
     }
-    
+
     if (stateless) {
       status = close_connection(server);
       if (status) {
@@ -162,7 +164,7 @@ int main(int argc, char *argv[]) {
         goto cleanup;
       }
     }
-    
+
     cleanup_message(&request);
     cleanup_message(&response);
     request = NULL;

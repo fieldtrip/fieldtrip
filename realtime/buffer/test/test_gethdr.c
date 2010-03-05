@@ -7,9 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <strings.h>
-#include <unistd.h>
-#include <pthread.h>
+#include <string.h>
 #include <math.h>
 #include "buffer.h"
 
@@ -37,9 +35,9 @@ int main(int argc, char *argv[]) {
 
 	fprintf(stderr, "------------------------------\n");
 	print_request(&request);
-	write(server, &request, sizeof(messagedef_t));
+	bufwrite(server, &request, sizeof(messagedef_t));
 
-	read(server, &response, sizeof(messagedef_t));
+	bufread(server, &response, sizeof(messagedef_t));
 	fprintf(stderr, "------------------------------\n");
 	print_response(&response);
 	fprintf(stderr, "------------------------------\n");
@@ -51,7 +49,7 @@ int main(int argc, char *argv[]) {
 		}
 		else {
 			header.def = (headerdef_t *)buf;
-			header.buf = buf+sizeof(headerdef_t);
+			header.buf = (char *) buf+sizeof(headerdef_t);
 			print_headerdef(header.def);
 		}
 		FREE(buf);

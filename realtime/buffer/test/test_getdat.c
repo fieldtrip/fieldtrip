@@ -7,8 +7,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <strings.h>
-#include <unistd.h>
+#include <string.h>
+/* #include <unistd.h> */
 #include <pthread.h>
 #include <math.h>
 #include "buffer.h"
@@ -48,11 +48,11 @@ int main(int argc, char *argv[]) {
 
 	fprintf(stderr, "------------------------------\n");
 	print_request(&request);
-	write(server, &request, sizeof(messagedef_t));
+	bufwrite(server, &request, sizeof(messagedef_t));
 	if (argc>4)
-		write(server, &datasel, sizeof(datasel_t));
+		bufwrite(server, &datasel, sizeof(datasel_t));
 
-	read(server, &response, sizeof(messagedef_t));
+	bufread(server, &response, sizeof(messagedef_t));
 	fprintf(stderr, "------------------------------\n");
 	print_response(&response);
 	fprintf(stderr, "------------------------------\n");
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
 		}
 		else {
 			data.def = (datadef_t *)buf;
-			data.buf = buf+sizeof(datadef_t);
+			data.buf = (char *) buf+sizeof(datadef_t);
 			print_datadef(data.def);
 			for (j=0; j<data.def->nsamples; j++) {
 				for (i=0; i<data.def->nchans; i++) {

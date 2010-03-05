@@ -10,9 +10,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-#include <sys/time.h>
-#include <pthread.h>
 #include "buffer.h"
 
 int main(int argc, char *argv[]) {
@@ -22,7 +19,6 @@ int main(int argc, char *argv[]) {
 		/* these variables are for writing the data */
 		int status = 0, verbose = 0, numconnect, numloop;
 		struct timeval tic, toc;
-		struct timezone tz;
 		float elapsed;
 
 		/* start with defaults */
@@ -35,7 +31,7 @@ int main(int argc, char *argv[]) {
 		if (argc>2)
 				host.port = atoi(argv[2]);
 
-		gettimeofday(&tic, &tz);
+		gettimeofday(&tic, NULL);
 
 		numconnect = 0;
 		numloop    = 0;
@@ -48,7 +44,7 @@ int main(int argc, char *argv[]) {
 				status = close_connection(server);
 
 				if (numloop==1000) {
-						gettimeofday(&toc, &tz);
+						gettimeofday(&toc, NULL);
 						elapsed = 1.0 * (toc.tv_sec-tic.tv_sec) + 0.000001 * (toc.tv_usec-tic.tv_usec);
 						fprintf(stderr, "numconnect = %d, elapsed = %f, numconnect/sec = %f\n", numconnect, elapsed, ((float)(numconnect))/((float)elapsed));
 						numloop = 0;

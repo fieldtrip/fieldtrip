@@ -7,9 +7,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-#include <sys/time.h>
-#include <pthread.h>
 #include "buffer.h"
 
 int main(int argc, char *argv[]) {
@@ -21,6 +18,14 @@ int main(int argc, char *argv[]) {
 		struct timeval tic, toc;
 		struct timezone tz;
 		float elapsed;
+		
+		#ifdef WIN32
+		WSADATA wsaData;
+		if(WSAStartup(MAKEWORD(1, 1), &wsaData)) {
+			fprintf(stderr, "Cannot start Windows sockets.\n");
+			return 1;
+		}
+		#endif
 
 		gettimeofday(&tic, &tz);
 
