@@ -11,6 +11,8 @@ function [data] = fixcsd(data, desired, channelcmb)
 
 if isfield(data, 'crsspctrm') && isfield(data, 'powspctrm')
   current = 'sparsewithpow';
+elseif isfield(data, 'powspctrm')
+  current = 'sparsewithpow';
 elseif isfield(data, 'fourierspctrm') && ~isfield(data, 'labelcmb')
   current = 'fourier';
 elseif ~isfield(data, 'labelcmb')
