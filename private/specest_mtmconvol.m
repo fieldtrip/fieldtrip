@@ -33,8 +33,8 @@ function [spectrum,ntaper,foi,toi] = specest_mtmconvol(dat, time, varargin)
 %
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'dpss','pad','toi','timwin','foi','tapsmofrq'});
-taper     = keyval('dpss',        varargin); if isempty(taper),    taper   = 'dpss';     end
+keyvalcheck(varargin, 'optional', {'taper','pad','toi','timwin','foi','tapsmofrq'});
+taper     = keyval('taper',       varargin); if isempty(taper),    taper   = 'dpss';     end
 pad       = keyval('pad',         varargin); 
 toi       = keyval('toi',         varargin); if isempty(toi),      toi     = 'max';      end
 timwin    = keyval('timwin',      varargin); % will be defaulted below
@@ -57,20 +57,20 @@ end
 if isempty(pad) % if no padding is specified padding is equal to current data length
   pad = (time(end)-time(1));
 end
-prepad  = zeros(1,round(((pad - (time(end)-time(1))) * fsample) ./ 2));
-postpad = zeros(1,round(((pad - (time(end)-time(1))) * fsample) ./ 2));
+prepad  = zeros(1,floor(((pad - (time(end)-time(1))) * fsample) ./ 2));
+postpad = zeros(1,ceil(((pad - (time(end)-time(1))) * fsample) ./ 2));
 
 
 
 % Set fboi and foi and default tapsmofrq
 if isnumeric(foi) % if input is a vector
   fboi   = round(foi ./ (fsample ./ (pad * fsample))) + 1;
-  nfboi  = size(fboi,2);
+  nfboi  = length(fboi);
   foi    = (fboi-1) ./ pad; % boi - 1 because 0 Hz is included in fourier output..... is this going correctly?
 elseif strcmp(foi,'max') % if input was 'max'
   fboilim = round([0 fsample/2] ./ (fsample ./ (pad * fsample))) + 1;
   fboi    = fboilim(1):1:fboilim(2);
-  nfboi   = size(fboi,2);
+  nfboi   = length(fboi);
   foi     = (fboi-1) ./ pad;
 end
 nfoi = length(foi);
@@ -81,11 +81,13 @@ end
 
 % Set tboi and toi
 if isnumeric(toi) % if input is a vector
-  tboi = round(toi .* fsample) + 1;
-  toi  = round(toi .* fsample) ./ fsample;
+  tboi  = round(toi .* fsample) + 1;
+  ntboi = length(tboi);
+  toi   = round(toi .* fsample) ./ fsample;
 elseif strcmp(toi,'max') % if input was 'max'
-  toi  = time;
-  tboi = 1:length(time);
+  tboi  = 1:length(time);
+  ntboi = length(tboi);
+  toi   = time;
 end
 
 
@@ -140,31 +142,43 @@ for ifoi = 1:nfoi
   % Wavelet construction
   tappad   = ceil(round((pad * fsample) ./ 2)) - floor(timwinsmp(ifoi) ./ 2);
   prezero  = zeros(1,tappad);
-  postzero = zeros(1,round((pad * fsample) ./ 2) - ((tappad-1) + timwinsmp(ifoi))-1);
+  postzero = zeros(1,round(pad * fsample) - ((tappad-1) + timwinsmp(ifoi))-1);
   angle    = (0:timwinsmp(ifoi)-1)' .* ((2.*pi./fsample) .* foi(ifoi));
   wltspctrm{ifoi} = complex(zeros(size(tap,1),round(pad * fsample)));
-  for itaper = 1:ntaper(ifoi)
+  for itap = 1:ntaper(ifoi)
     try % this try loop tries to fit the wavelet into wltspctrm, when it's length is smaller than nsample, it the rest is 'filled' with zeros because of above code
       % if a wavelet is longer than nsample, it doesn't fit and it is kept at zeros, which is translated to NaN's in the output
       % construct the complex wavelet
-      coswav  = horzcat(prezero, tap(itaper,:) .* cos(angle)', postzero);
-      sinwav  = horzcat(prezero, tap(itaper,:) .* sin(angle)', postzero);
+      coswav  = horzcat(prezero, tap(itap,:) .* cos(angle)', postzero);
+      sinwav  = horzcat(prezero, tap(itap,:) .* sin(angle)', postzero);
       wavelet = complex(coswav, sinwav);
       % store the fft of the complex wavelet
-      wltspctrm{ifoi}(itaper,:) = fft(wavelet,[],1);
+      wltspctrm{ifoi}(itap,:) = fft(wavelet,[],1);
     end
   end
 end
 
 
 % compute fft
-%datfft = 
-spectrum = complex(zeros(ntap,nchan,nfboi),zeros(ntap,nchan,nfboi));
+spectrum = complex(nan([sum(ntaper),nchan,nfoi,ntboi]));
+datspectrum = fft([repmat(prepad,[nchan, 1]) dat repmat(postpad,[nchan, 1])],[],2); % should really be done above, but since the chan versus whole dataset fft'ing is still unclear, repmat is used
 
-for itap = 1:ntaper
-  for ichan = 1:nchan
-    dum = fft([dat(ichan,:) .* tap(itap,:) postpad],[],2); % would be much better if fft could take boi as input (muuuuuch less computation)
-    out(itap,ichan,:) = dum(fboi);
+for ifoi = 1:nfoi
+  for itap = 1:ntaper(ifoi)
+    for ichan = 1:nchan
+     
+      % compute indices that will be used to extracted the requested fft output    
+      nsamplefoi    = timwin(ifoi) .* fsample;
+      acttboiind    = find((tboi >=  (nsamplefoi ./ 2)) & (tboi <    nsample - (nsamplefoi ./2)));
+      nonacttboiind = find((tboi  <  (nsamplefoi ./ 2)) | (tboi >=   nsample - (nsamplefoi ./2)));
+      acttboi       = tboi(acttboiind);
+      
+      % compute datspectrum*wavelet, if there are acttboi's that have data
+      if ~isempty(acttboi)
+        dum = fftshift(ifft(datspectrum(ichan,:) .* wltspctrm{ifoi}(itap,:),[],2));
+        spectrum(itap,ichan,ifoi,acttboiind) = dum(acttboi);
+      end
+    end
   end
 end
 
