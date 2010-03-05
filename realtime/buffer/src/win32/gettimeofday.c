@@ -33,11 +33,6 @@
 #define EPOCHFILETIME (116444736000000000LL)
 #endif
 
-struct timezone {
-    int tz_minuteswest; /* minutes W of Greenwich */
-    int tz_dsttime;     /* type of dst correction */
-};
-
 /*!
     \brief A Windows gettimeofday implementation.
  */
