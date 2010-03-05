@@ -57,8 +57,8 @@ end
 if isempty(pad) % if no padding is specified padding is equal to current data length
   pad = (time(end)-time(1));
 end
-prepad  = zeros(1,(round(pad - (time(end)-time(1))) * fsample)/2);
-postpad = zeros(1,(round(pad - (time(end)-time(1))) * fsample)/2);
+prepad  = zeros(1,round(((pad - (time(end)-time(1))) * fsample) ./ 2));
+postpad = zeros(1,round(((pad - (time(end)-time(1))) * fsample) ./ 2));
 
 
 
@@ -138,11 +138,11 @@ for ifoi = 1:nfoi
   
   
   % Wavelet construction
-  tappad   = ceil(nsample ./ 2) - floor(timwinsmp(ifoi) ./ 2);
+  tappad   = ceil(round((pad * fsample) ./ 2)) - floor(timwinsmp(ifoi) ./ 2);
   prezero  = zeros(1,tappad);
-  postzero = zeros(1,nsample - ((tappad-1) + timwinsmp(ifoi))-1);
+  postzero = zeros(1,round((pad * fsample) ./ 2) - ((tappad-1) + timwinsmp(ifoi))-1);
   angle    = (0:timwinsmp(ifoi)-1)' .* ((2.*pi./fsample) .* foi(ifoi));
-  wltspctrm{ifoi} = complex(zeros(size(tap,1),nsample));
+  wltspctrm{ifoi} = complex(zeros(size(tap,1),round(pad * fsample)));
   for itaper = 1:ntaper(ifoi)
     try % this try loop tries to fit the wavelet into wltspctrm, when it's length is smaller than nsample, it the rest is 'filled' with zeros because of above code
       % if a wavelet is longer than nsample, it doesn't fit and it is kept at zeros, which is translated to NaN's in the output
@@ -156,6 +156,17 @@ for ifoi = 1:nfoi
   end
 end
 
+
+% compute fft
+%datfft = 
+spectrum = complex(zeros(ntap,nchan,nfboi),zeros(ntap,nchan,nfboi));
+
+for itap = 1:ntaper
+  for ichan = 1:nchan
+    dum = fft([dat(ichan,:) .* tap(itap,:) postpad],[],2); % would be much better if fft could take boi as input (muuuuuch less computation)
+    out(itap,ichan,:) = dum(fboi);
+  end
+end
 
 
 
