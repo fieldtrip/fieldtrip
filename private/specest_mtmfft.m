@@ -54,7 +54,7 @@ end
 if isempty(pad) % if no padding is specified padding is equal to current data length
   pad = (time(end)-time(1));
 end
-postpad = zeros(1,(round(pad - (time(end)-time(1))) * fsample)/2); % 'postpad', so naming concurs with mtmconvol
+postpad = zeros(1,(round((pad - (time(end)-time(1))) * fsample))/2); % 'postpad', so naming concurs with mtmconvol
 
 
 
