@@ -2,6 +2,7 @@
  * sender.c -- multicasts "hello, world!" to a multicast group once a second
  *
  * Antony Courtney,	25/11/94
+ *
  */
 
 #include <sys/types.h>
