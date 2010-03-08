@@ -262,11 +262,20 @@ catch
   num = 1;
 end
 
-% perform the statistical test
-if num>1
-  [stat, cfg] = statmethod(cfg, dat, cfg.design);
+% perform the statistical test 
+if strcmp(statmethod,'@statistics_montecarlo') % because statistics_montecarlo (or to be precise, clusterstat) requires to know whether it is getting source data, 
+                                               % the following (ugly) work around is necessary                                             
+  if num>1
+    [stat, cfg] = statmethod(cfg, dat, cfg.design, 'issource',issource);
+  else
+    [stat] = statmethod(cfg, dat, cfg.design, 'issource', issource);
+  end
 else
-  [stat] = statmethod(cfg, dat, cfg.design);
+  if num>1
+    [stat, cfg] = statmethod(cfg, dat, cfg.design);
+  else
+    [stat] = statmethod(cfg, dat, cfg.design);
+  end
 end
 
 if isstruct(stat)
