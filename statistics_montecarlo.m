@@ -297,8 +297,11 @@ end
 progress('close');
 
 if strcmp(cfg.correctm, 'cluster')
+  % check of data is source data
+  issource = datatype(data,'source');
+  
   % do the cluster postprocessing
-  [stat, cfg] = clusterstat(cfg, statrand, statobs);
+  [stat, cfg] = clusterstat(cfg, statrand, statobs,'issource',issource);
 else
   switch cfg.tail
   case 1
