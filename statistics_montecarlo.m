@@ -1,4 +1,4 @@
-function [stat, cfg] = statistics_montecarlo(cfg, dat, design)
+function [stat, cfg] = statistics_montecarlo(cfg, dat, design, varargin)
 
 % STATISTICS_MONTECARLO performs a nonparametric statistical test by calculating 
 % Monte-Carlo estimates of the significance probabilities and/or critical values from the 
@@ -132,6 +132,10 @@ elseif isfield(cfg,'correctp') && strcmp(cfg.correctp,'no')
 elseif strcmp(cfg.correcttail,'no') && cfg.tail==0 && cfg.alpha==0.05
   warning('doing a two-sided test without correcting p-values or alpha-level, p-values and alpha-level will reflect one-sided tests per tail')
 end
+
+% get the single keyval for issource out
+issource = keyval('issource', varargin); if isempty(issource), issource = 0; end
+
 
 % for backward compatibility
 if size(design,2)~=size(dat,2)
@@ -297,11 +301,8 @@ end
 progress('close');
 
 if strcmp(cfg.correctm, 'cluster')
-  % check of data is source data
-  %issource = datatype(data,'source');
-  
   % do the cluster postprocessing
-  [stat, cfg] = clusterstat(cfg, statrand, statobs);%,'issource',issource);
+  [stat, cfg] = clusterstat(cfg, statrand, statobs,'issource',issource);
 else
   switch cfg.tail
   case 1
