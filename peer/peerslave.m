@@ -91,7 +91,14 @@ peer('allowgroup', allowgroup);
 if ~isempty(memavail), peer('memavail', memavail); end
 if ~isempty(cpuavail), peer('cpuavail', cpuavail); end
 if ~isempty(timavail), peer('timavail', timavail); end
-if ~isempty(threads),  maxNumCompThreads(threads); end
+
+if ~isempty(threads) && exist('maxNumCompThreads')
+  % this function is only available from Matlab version 7.5 (R2007b) upward
+  % and has become deprecated in Matlab version 7.9 (R2009b)
+  ws = warning('off', 'MATLAB:maxNumCompThreads:Deprecated');
+  maxNumCompThreads(threads); 
+  warning(ws);
+end
 
 % switch to slave mode
 peer('status', 1);
