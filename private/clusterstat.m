@@ -32,22 +32,36 @@ if ~isfield(cfg,'minnbchan'),      cfg.minnbchan=0;            end
 % (cfg.neighbours was previously used in determining wheter source-data was source data or not) set to zero by default
 % note, this may cause problems when functions call clusterstat without giving issource, as issource was previously
 % set in clusterstat.m but has now been transfered to the function that calls clusterstat.m (but only implemented in statistics_montecarlo)
-issource = keyval('issource', varargin); if isempty(issource), issource = 0; end
+%issource = keyval('issource', varargin); if isempty(issource), issource = 0; end
 
 if cfg.tail~=cfg.clustertail
   error('cfg.tail and cfg.clustertail should be identical')
 end
 
-% if cfg.neighbours = [], create a proper 'no neighbours' neighbour structure (but only when not using source data)
-if isfield(cfg, 'neighbours') && isempty(cfg.neighbours) && ~isource
+% determine whether the input represents N-D volumetric data or channel-freq-time data
+% and provide the appropriate details
+% TODO this detection should be more robust
+if isfield(cfg, 'neighbours') && ~isempty(cfg.neighbours)
   channeighbstructmat = makechanneighbstructmat(cfg);
-end
-  
-% perform fixinside fix if input data is source data
-if issource
- % cfg contains dim and inside that are needed for reshaping the data to a volume, and inside should behave as a index vector
+  issource = 0;
+else
+  issource = 1;
+  % cfg contains dim and inside that are needed for reshaping the data to a volume, and inside should behave as a index vector
   cfg = fixinside(cfg, 'index');
 end
+
+
+% % if cfg.neighbours = [], create a proper 'no neighbours' neighbour structure (but only when not using source data)
+% if isfield(cfg, 'neighbours') && isempty(cfg.neighbours) && ~isource
+%   channeighbstructmat = makechanneighbstructmat(cfg);
+% end
+%   
+% % perform fixinside fix if input data is source data
+% if issource
+%  % cfg contains dim and inside that are needed for reshaping the data to a volume, and inside should behave as a index vector
+%   cfg = fixinside(cfg, 'index');
+% end
+
 
 needpos = cfg.tail==0 || cfg.tail== 1;
 needneg = cfg.tail==0 || cfg.tail==-1;
