@@ -21,6 +21,7 @@ function [data] = checkdata(data, varargin)
 %   inside             = logical, index
 %   ismeg              = yes, no
 %   hastrials          = yes, no
+%   hasunits           = yes, no
 %   hastrialdef        = yes, no
 %   hasoffset          = yes, no (only applies to raw data)
 %   hascumtapcnt       = yes, no (only applies to freq data)
@@ -66,6 +67,7 @@ stype         = keyval('senstype',      varargin); % senstype is a function name
 ismeg         = keyval('ismeg',         varargin);
 inside        = keyval('inside',        varargin); % can be logical or index
 hastrials     = keyval('hastrials',     varargin);
+hasunits      = keyval('hasunits',      varargin);
 hastrialdef   = keyval('hastrialdef',   varargin); if isempty(hastrialdef), hastrialdef = 'no'; end
 hasoffset     = keyval('hasoffset',     varargin); if isempty(hasoffset), hasoffset = 'no'; end
 hasdimord     = keyval('hasdimord',     varargin); if isempty(hasdimord), hasdimord = 'no'; end
@@ -341,6 +343,11 @@ if issource || isvolume,
   if isfield(data, 'ygrid'),  data = rmfield(data, 'ygrid');  end
   if isfield(data, 'zgrid'),  data = rmfield(data, 'zgrid');  end
 
+  if isequal(hasunits, 'yes') && ~isfield(data, 'units')
+    % calling convert_units with only the input data adds the units without converting
+    data = convert_units(data);
+  end
+  
   % the following section is to make a dimord-consistent representation of
   % volume and source data, taking trials, time and frequency into account
   if isequal(hasdimord, 'yes') && (~isfield(data, 'dimord') || ~strcmp(data.dimord,sourcedimord))
