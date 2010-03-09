@@ -76,12 +76,11 @@ end
 
 % create tapers
 switch taper
- 
-  
+   
   case 'dpss'
     % create a sequence of DPSS tapers, ensure that the input arguments are double precision
     tap = double_dpss(nsample,nsample*(tapsmofrq./fsample))';
-    % remove the last taper
+    % remove the last taper because the last slepian taper is always messy
     tap = tap(1:(end-1), :);
     
     % give error/warning about number of tapers
