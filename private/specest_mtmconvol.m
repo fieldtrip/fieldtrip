@@ -113,11 +113,17 @@ for ifoi = 1:nfoi
     case 'dpss'
       % create a sequence of DPSS tapers, ensure that the input arguments are double precision
       tap = double_dpss(timwinsmp(ifoi), timwinsmp(ifoi) .* (tapsmofrq(ifoi) ./ fsample))';
-      % remove the last taper
-      
-      
-      %tap = tap(1:(end-1), :);% WHY ON EARTH IS THIS NECESSARY?
+      % remove the last taper because the last slepian taper is always messy
+      tap = tap(1:(end-1), :);
 
+      % give error/warning about number of tapers
+      if isempty(tap)
+        error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',nsample/fsample,tapsmofrq(ifoi),fsample/fsample);
+      elseif (ntaper(ifoi) == 1)
+        warning('using only one taper for specified smoothing')
+      end
+      
+      
     case 'sine'
       tap = sine_taper(timwinsmp(ifoi), timwinsmp(ifoi) .* (tapsmofrq(ifoi) ./ fsample))';
       
@@ -131,15 +137,8 @@ for ifoi = 1:nfoi
       tap = tap ./ norm(tap,'fro'); % make it explicit that the frobenius norm is being used
   end
   
+  % set number of tapers
   ntaper(ifoi) = size(tap,1);
-  
-  % give error/warning about number of tapers
-  if isempty(tap)
-    error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',nsample/fsample,tapsmofrq(ifoi),fsample/fsample);
-  elseif (ntaper(ifoi) == 1) && strcmp(taper,'dpss')
-    warning('using only one taper for specified smoothing')
-  end
-  
   
   % Wavelet construction
   tappad   = ceil(round((pad * fsample) ./ 2)) - floor(timwinsmp(ifoi) ./ 2);
