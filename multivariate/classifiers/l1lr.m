@@ -41,8 +41,14 @@ classdef l1lr < classifier
            lambdas(1) = 0; % Do not penalize bias variable
            
            funObj = @(w)LogisticLoss(w,X,Y);
-           w_init = zeros(size(X,2),1);
-            
+           
+           if ~isempty(obj.params) && isfield(obj.params,'model') && ~isempty(obj.params.model) 
+             % initial model has been specified
+             w_init = obj.params.model;
+           else
+             w_init = zeros(size(X,2),1);
+           end
+           
            opt.verbose = 0;
            p.model = L1GeneralProjection(funObj,w_init,lambdas,opt);
          end

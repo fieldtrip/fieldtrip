@@ -23,11 +23,10 @@ classdef filterer < featureselector
     %
     % options:
     % [10 100 2 ...] : uses the ordering specified
-    % @meandiff : order according to the norm of differences of means
-    % @mutual_information : order according to the mutual information (default)
-    % @anova : order according to anova test    
-    filter = @mutual_information;
-    
+    % meandiff : order according to the norm of differences of means
+    % mutual_information : order according to the mutual information (default)
+    % anova : order according to anova test    
+    filter = 'mutual_information';    
     
   end
   
@@ -42,24 +41,36 @@ classdef filterer < featureselector
       
       maxfeatures = min(obj.nfeatures,size(X,2));
       
-      sfilt = func2str(obj.filter);
-      
       if obj.verbose
         if isempty(obj.validator)
-          fprintf('selecting %d features based on %s filter\n',maxfeatures,sfilt);
+          fprintf('selecting %d features based on %s filter\n',maxfeatures,obj.filter);
         else
-          fprintf('selecting optimal features based on %s filter\n',sfilt);
+          fprintf('selecting optimal features based on %s filter\n',obj.filter);
         end
       end
         
       % compute function values
-      nfeatures = size(X,2);
-      p.value = zeros(1,nfeatures);
-      for j=1:nfeatures
+      nf = size(X,2);
+      p.value = zeros(1,nf);
+      for j=1:nf
         
-        fprintf('computing %s filter for feature %d of %d\n',sfilt,j,nfeatures);
+        fprintf('computing %s filter for feature %d of %d\n',obj.filter,j,nf);
         
-        p.value(j) = obj.filter(X(:,j),Y);
+        switch(obj.filter)
+          
+          case 'meandiff'
+            p.value(j) = filterer.meandiff(X(:,j),Y);
+            
+          case 'mutual_information'
+            filterer.mutual_information(X(:,j),Y);
+            
+          case 'anova'
+            filterer.anova(X(:,j),Y);
+            
+          otherwise
+            error('unrecognized filter');
+        end
+            
       end
       
       % get ordering of the features
@@ -109,6 +120,114 @@ classdef filterer < featureselector
     
   end
   
+  methods(Static=true)
+    
+    function dif = meandiff(data,design)
+      % MEANDIFF computes the l2 norm of the difference between the means of the data of
+      % different classes w.r.t. the global mean per feature
+      %
+      %   dif = meandiff(data,design)
+      %
+      %   Copyright (c) 2008, Marcel van Gerven
+      
+      nclasses = max(design(:,1));
+
+      dif = zeros(nclasses,size(data,2));
+      for j=1:nclasses
+        dif(j,:) = mynanmean(data(design==j,:));
+      end
+      dif = dif - repmat(mynanmean(data),[nclasses 1]);
+      dif = sqrt(sum(dif.^2));
+      
+    end
+    
+    function ip = anova(data,design)
+      % ANOVA computes 1-pvalues that data in different classes belong to the
+      % same group. I.e., the closer to one, the better.
+      %
+      %   ip = anova(data,design)
+      %
+      %   ip = 1 - pvalue
+      %
+      %   Copyright (c) 2008, Marcel van Gerven
+      %
+      
+      ip = zeros(1,size(data,2));
+      for j=1:size(data,2)
+        ip(j) = 1 - anova1(data(:,j),design(:,1),'off');
+      end
+      
+    end
+    
+    function mi = mutual_information(data,design)
+      % MUTUAL_INFORMATION compute mutual information between features and class,
+      % assuming that feature values are normally distributed conditional on the class
+      %
+      %   mi = mutual_information(data,design)
+      %
+      %   Copyright (c) 2008, Marcel van Gerven
+      
+      % number of class labels
+      csize = max(design(:,1));
+      
+      % compute prior for class variable
+      pc = zeros(1,csize);
+      for k=1:csize
+        pc(k) = sum(design(:,1) == k);
+      end
+      pc = pc ./ size(data,1);
+      
+      % precompute indices
+      di = cell(1,csize);
+      for k=1:csize, di{k} = (design(:,1) == k); end
+      
+      mi = zeros(1,size(data,2));
+      
+      for m=1:size(data,2)
+        
+        % use numerical integration to approximate p(x) log p(x)
+        
+        for k=1:csize
+          mi(m) = mi(m) - 0.5 * pc(k) * log2(var(data(di{k},m)));
+        end
+        
+        mi(m) = mi(m) - 0.5 * log2(2*pi*exp(1));
+        
+        % construct p(x) log p(x)  = (\sum_c p(c) p(x|c)) log (\sum_c p(c) p(x|c))
+        
+        % create \sum_c p(c) p(x|c) anonymous function
+        f = @(x,k)( pc(k) .*  mynormpdf(x,mynanmean(data(di{k},m)),mynanstd(data(di{k},m))));
+        g = @(x)(sum(cell2mat(transpose(arrayfun(@(k)(f(x,k)),1:csize,'UniformOutput',false))),1));
+        h = @(x)(pp(g(x)));
+        
+        mi(m) = mi(m) - quadgk(h,-Inf,Inf);
+      end
+      
+      function p = mynormpdf(x,mu,sigma)
+        % MYNORMPDF implements the normal distribution with mean mu and standard
+        % deviation sigma evaluated at x
+        %
+        % p = mynormpdf(x,mu,sigma)
+        %
+        
+        if sigma
+          p = 1./(sqrt(2.*pi).*sigma) .* exp(- (x-mu).^2/(2*sigma.^2));
+        else
+          p = zeros(1,length(x));
+          p(x==mu) = 1;
+        end
+      end
+      
+      function y = pp(x)
+        
+        x(~x(:)) = 1;
+        y = x .* log2(x);
+        y(isnan(y(:))) = 0;
+      end
+      
+    end
+    
+    
+  end
   
 end
-

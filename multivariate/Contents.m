@@ -96,7 +96,6 @@
 % - rewrite one_against_one, combiner etc such that transfer learning is
 %   used on the separate datasets. This simplifies code and allows for more complex designs 
 % - refactor using: perl -p -i -e 's/clfmethod/mvmethod/g' `grep -lr -e 'clfmethod' *`
-% - rewrite optimizer!
 % - how to handle multiple regression vs regressors/classifiers that return mean + error estimates?
 % - clean up nclasses field
 % - add wilcoxon test; add multiple outputs for evaluate/significance

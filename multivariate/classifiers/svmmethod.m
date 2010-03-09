@@ -77,12 +77,6 @@ classdef svmmethod < classifier
         p.platt_sigmoid.A = [];
         p.platt_sigmoid.B = [];
       
-        % rewrite using optimizer
-%         if ~isnan(any(obj.C)) && ~isscalar(obj.C)
-%           obj = optimize(obj,data,design,'variables','C','values',obj.C,'validator', ...
-%             obj.validator,'criterion',obj.criterion);
-%         end
-        
         if nclasses ~= 2, error('svm only makes binary classifications'); end
         
         % transform elements of the design matrix to class labels

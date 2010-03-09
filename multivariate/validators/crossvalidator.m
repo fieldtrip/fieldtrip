@@ -90,18 +90,26 @@ classdef crossvalidator < validator
           assert(size(obj.trainfolds,2) == nsets);
         end
         
-        if ~obj.compact
-          proc = cell(nfolds,1); 
-        end
-        
         obj.post = cell(nfolds,nsets);
         obj.design = cell(nfolds,nsets);
+        
+        % this can happen if the validator has already been validated
+        % e.g., in case of the optimizer
+        if ~iscell(obj.procedure)
+          tproc = obj.procedure;
+          obj.procedure = cell(nfolds,1);
+          for c=1:numel(obj.procedure)
+            obj.procedure{c} = tproc;
+          end
+        end
         
         for f=1:nfolds % iterate over folds
           
           if obj.verbose
-            fprintf('validating fold %d of %d using %d training samples and %d test samples\n',...
-              f,nfolds,numel(obj.trainfolds{f}),numel(obj.testfolds{f})); 
+            for j=1:size(obj.trainfolds,2)
+              fprintf('dataset %d: validating fold %d of %d using %d training samples and %d test samples\n',...
+                j,f,nfolds,numel(obj.trainfolds{f,j}),numel(obj.testfolds{f,j}));
+            end
           end
           
           traindata = cell(1,nsets);
@@ -132,11 +140,11 @@ classdef crossvalidator < validator
           end
 
           if nsets == 1 && ~obj.getpredictor().istransfer()
-            tproc = obj.procedure.train(traindata{1},traindesign{1});
+            tproc = obj.procedure{f}.train(traindata{1},traindesign{1});
             obj.post{f} = tproc.test(testdata{1});
             obj.design{f} = testdesign{1};
           else
-            tproc = obj.procedure.train(traindata,traindesign);
+            tproc = obj.procedure{f}.train(traindata,traindesign);
             obj.post(f,:) = tproc.test(testdata);
             obj.design(f,:) = testdesign;           
           end
@@ -154,7 +162,7 @@ classdef crossvalidator < validator
           end
           
           if ~obj.compact
-            proc{f} = tproc; 
+            obj.procedure{f} = tproc; 
           else            
             
             clear tproc;
@@ -165,11 +173,7 @@ classdef crossvalidator < validator
           end
           
         end
-      
-        if ~obj.compact
-          obj.procedure = proc;
-        end
-        
+       
         if iscell(obj.model) || obj.model
           for mm=1:numel(obj.model)
             obj.model{mm} = obj.model{mm}./nfolds;

@@ -1,6 +1,10 @@
 classdef gnb < classifier
 %GNB generalized naive Bayes classifier
 %
+% If no distribution is specified then we assume a gaussian distribution
+% and invoke specialized code. In all other cases we use the approach
+% described below.
+%
 % For instance, we can use exponential distributions
 %
 % gnb('conditional','exponential') 

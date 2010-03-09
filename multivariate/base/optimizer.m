@@ -2,63 +2,71 @@ classdef optimizer < predictor
 %OPTIMIZER can be used to optimize certain parameters of a method
 %
 %   Usage:
-%   optimizer('validator',crossvalidator('procedure',
-%     {kernelmethod()}),'variables','C','values',1:10,'metric','accuracy')
 %
-%     will act as if it is a kernelmethod but will optimize the variable C
-%     in the range 1:10 using the specified validator and metric.
+%    optimizer('mvmethod',l1lr,'validator',crossvalidator(),'vars','lambda','vals',[1 10 100],'metric','accuracy')
+%
+%     will act as if it is l1lr method but will optimize the variable
+%     lambda in the range [1 10 100] using the specified validator and metric.
+%
+%   parameters:
+%    configs               % variables configurations
+%    results               % configuration results
+%    optimum               % optimal configuration
 %
 %   Remarks:
 %     this replaces the obsolete optimize.m function
+%     mvmethods are supposed to handle optimization efficiently by starting
+%     at previous solutions specified in the .params field; l1lr provides
+%     an example
 %
 %   Copyright (c) 2009, Marcel van Gerven
-%
-%   $Log: optimizer.m,v $
-%
+
 
     properties
 
+      mvmethod              % the method for which to optimize
+      
       validator             % the used validator
-      variables             % the variables to optimize
-      values                % the values used
+      
+      vars                  % the variables to optimize
+      vals                  % the values used
       metric = 'accuracy';  % the evaluation metric  
-      
-      methodidx = 1;        % index of the method in the validator procedure that is to be optimized (default = 1)
-      
-      configs               % variables configurations
-      results               % configuration results
-      optimum               % optimal configuration
-      
-      method                % the method of interest
-      
+                  
     end
 
     methods
+      
        function obj = optimizer(varargin)
-       
-          % parse options
-          for i=1:2:length(varargin)
-            obj.(varargin{i}) = varargin{i+1};
-          end
-
-         assert(isa(obj.validator,'validator'));
-
-         assert(~isempty(obj.variables));
-         assert(~isempty(obj.values));
-
-         if ~iscell(obj.variables)
-           obj.variables = { obj.variables };
-           obj.values = { obj.values };
+         
+         % parse options
+         for i=1:2:length(varargin)
+           obj.(varargin{i}) = varargin{i+1};
          end
-                               
+         
+         if isempty(obj.validator)
+           obj.validator = crossvalidator('verbose',true);
+         end
+         assert(isa(obj.validator,'validator'));
+         
+         assert(~isempty(obj.mvmethod));
+         assert(~isempty(obj.vars));
+         assert(~isempty(obj.vals));
+         
+         if ~iscell(obj.vars)
+           obj.vars = { obj.vars };
+           obj.vals = { obj.vals };
+         end
+         
+         obj.validator.procedure = mva({obj.mvmethod});
+         
        end
        
-       function obj = train(obj,data,design)
+       function p = estimate(obj,data,design)
          
          if obj.verbose
            fprintf('optimizing variables');
-           for c=1:length(obj.variables)
-             fprintf(' %s',obj.variables{c});
+           for c=1:length(obj.vars)
+             fprintf(' %s',obj.vars{c});
            end
            fprintf('\n');
          end
@@ -66,63 +74,75 @@ classdef optimizer < predictor
          % the optimizer iterates over all values for the specified
          % variables and returns the best result
 
-         nv = length(obj.variables);
+         nv = length(obj.vars);
 
          maxresult = -Inf;
 
+         vld = obj.validator; % the procedure used by the validator
+      
          % iterate over configurations
-         obj.configs = cartprod(obj.values{:});
-         for i=1:size(obj.configs,1)
+         p.configs = cartprod(obj.vals{:});
+         for i=1:size(p.configs,1)
 
-           vld = obj.validator; % the procedure used by the validator
-           
            % set parameters
-           for j=1:nv
-             vld.procedure.mvmethods{obj.methodidx}.(obj.variables{j}) = obj.configs(i,j);
+           if iscell(vld.procedure)
+           % happens when the vld has already been validated
+             for c=1:numel(vld.procedure)
+               for j=1:nv
+                vld.procedure{c}.mvmethods{1}.(obj.vars{j}) = p.configs(i,j);
+               end
+             end
+           else
+             for j=1:nv
+               vld.procedure.mvmethods{1}.(obj.vars{j}) = p.configs(i,j);
+             end
            end
-
+           
            if obj.verbose
              fprintf('evaluating configuration ');
-             fprintf('%d\n',obj.configs(i,:));
+             for j=1:size(p.configs,2)
+               fprintf(' %d',p.configs(i,j));
+             end
+             fprintf('\n');
            end
 
-           v = vld.validate(data,design);
-           obj.results(i) = v.evaluate('metric',obj.metric);
+           vld = vld.validate(data,design);
+           p.results(i) = vld.evaluate('metric',obj.metric);
 
            if obj.verbose
-             fprintf('%s : %f\n',obj.metric,obj.results(i));
+             fprintf('%s : %f\n',obj.metric,p.results(i));
            end
            
-           if obj.results(i) > maxresult
+           if p.results(i) > maxresult
 
-             maxresult = obj.results(i);
-             obj.optimum = i; % optimal configuration
+             maxresult = p.results(i);
+             p.optimum = i; % optimal configuration
            end
 
          end
          
          if obj.verbose
            fprintf('optimum configuration ');
-           fprintf('%d ',obj.configs(obj.optimum,:));
-           fprintf(': %f\n',obj.results(obj.optimum));
+           for j=1:size(p.configs,2)
+             fprintf(' %d',p.configs(p.optimum,j));
+           end
+           fprintf(' : %f\n',p.results(p.optimum));
          end
          
          % we now know the optimal configuration. Now we retrieve the
          % method of interest with this configuration and retrain
       
-         obj.method = obj.validator.procedure.mvmethods{obj.methodidx};
-
+         p.mvmethod = obj.mvmethod;
          for j=1:nv
-           obj.method.(obj.variables{j}) = obj.configs(obj.optimum,j);
+           p.mvmethod.(obj.vars{j}) = p.configs(p.optimum,j);
          end
-           
-         obj = obj.method.train(data,design);
+         p.mvmethod = p.mvmethod.train(data,design);
          
        end
        
-       function post = test(obj,data)       
+       function post = map(obj,data)       
            
-         post = obj.method.test(data);
+         post = obj.params.mvmethod.map(data);
          
        end
        
@@ -130,23 +150,31 @@ classdef optimizer < predictor
         % relevant in case the optimizer acts as a predictor
         
         if isa(obj.method,'predictor')
-          p = obj.method.predict(data);
+          p = obj.mvmethod.predict(data);
         else
-          if obj.verbose, fprintf('%s cannot predict\n',class(obj.method)); end
+          if obj.verbose, fprintf('%s cannot predict\n',class(obj.mvmethod)); end
           p = nan(size(data,1),1);
         end
          
        end
        
-       function n = nclasses(obj)
-        % relevant in case the optimizer acts as a predictor
-        
-        if isa(obj.method,'predictor')
-          n = obj.method.nclasses;
-        else
-          n = nan;
-        end
-        
+       function metric = evaluate(obj,X,Y,varargin)
+         
+         metric = obj.mvmethod.evaluate(X,Y,varargin{:});
+         
+       end
+       
+       function  p = significance(obj,X,Y,varargin)
+         
+         p = obj.mvmethod.significance(X,Y,varargin{:});
+         
+       end
+       
+       function [m,desc] = getmodel(obj)
+         % call the enclosing method
+         
+         [m,desc] = obj.params.mvmethod.getmodel();
+           
        end
 
     end

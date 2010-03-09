@@ -2,9 +2,7 @@ classdef elasticlr < classifier
 %ELASTICLR elastic net logistic regression using Mark Schmidt's L1General package
 %
 %   Copyright (c) 2009, Marcel van Gerven
-%
-%   $Log: elasticlr.m,v $
-%
+
 
     properties
 
@@ -30,8 +28,14 @@ classdef elasticlr < classifier
          design = 2*Y - 3; % convert to -1 / + 1
          
          funObj = @(w)LogisticLoss(w,X,design);
-         w_init = zeros(size(X,2),1);
-
+         
+         if ~isempty(obj.params) && isfield(obj.params,'model') && ~isempty(obj.params.model) 
+             % initial model has been specified
+             w_init = obj.params.model;
+         else
+             w_init = zeros(size(X,2),1);
+         end
+         
          if obj.verbose
            fprintf('\nComputing Elastic-Net Logistic Regression Coefficients...\n');
          end
