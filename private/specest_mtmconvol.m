@@ -119,7 +119,7 @@ for ifoi = 1:nfoi
       % give error/warning about number of tapers
       if isempty(tap)
         error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',nsample/fsample,tapsmofrq(ifoi),fsample/fsample);
-      elseif (ntaper(ifoi) == 1)
+      elseif size(tap,1) == 1
         warning('using only one taper for specified smoothing')
       end
       
