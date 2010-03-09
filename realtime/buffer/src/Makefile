@@ -51,7 +51,7 @@ libbuffer.a: tcpserver.o tcpsocket.o tcprequest.o clientrequest.o dmarequest.o c
 
 libclient.a: tcprequest.o util.o
 	 ar rv $@ $^
-
+	 
 %.o: %.c buffer.h message.h swapbytes.h socket_includes.h unix_includes.h
 	$(CC) $(CFLAGS) -c $*.c
 

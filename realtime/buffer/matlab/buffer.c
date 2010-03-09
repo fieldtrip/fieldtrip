@@ -30,10 +30,10 @@
    will trigger closing the connection and removing the corresponding list item.
 */
 typedef struct host_port_sock_list_item {
-	char hostname[256];
+	char *hostname;
 	int port;
 	int sock; 	 							
-	struct host_port_sock_list_item *next;	/* NULL if last element */
+	struct host_port_sock_list_item *next;	/* NULL if last elemenent  */
 } host_port_sock_list_item_t;
 
 /* This is the head of the list */
@@ -132,12 +132,12 @@ void cleanupMex(void) {
 			if (verbose) {
 				printf("Closing socket and ");
 			}
-			closesocket(hpsli->sock);
+			close_connection(hpsli->sock);
 		}
 		if (verbose) {
 			printf("cleaning up list entry %s:%i\n",hpsli->hostname, hpsli->port);
 		}
-		/* FREE(hpsli->hostname); */
+		FREE(hpsli->hostname);
 
 		firstHostPortSock = hpsli->next;
 		free(hpsli);
@@ -175,7 +175,13 @@ int add_hps_item(const char *hostname, int port, int sock) {
 	hpsli = (host_port_sock_list_item_t *) malloc(sizeof(host_port_sock_list_item_t));
 	if (hpsli == NULL) return 0;	/* out of memory - probably never */
 	
-	strncpy(hpsli->hostname, hostname, 256);
+	hpsli->hostname = (char *) malloc(n+1);
+	if (hpsli->hostname == NULL) {
+		/* out of memory - probably never */
+		free(hpsli);
+		return 0;    
+	}
+	memcpy(hpsli->hostname, hostname, n+1);
 	
 	hpsli->port = port;
 	hpsli->sock = sock;
@@ -217,7 +223,7 @@ int open_connection_with_list(const char *hostname, int port) {
 			printf("open_connection: connected to %s:%d on socket %d\n", hostname, port, sock);
 		if (!add_hps_item(hostname, port, sock)) {
 			/* out of memory for creating a list entry - IF this ever happens, we better close the socket right away */
-			closesocket(sock);
+			close_connection(sock);
 			/* return with an error further down */
 		} else {
 			return sock;
@@ -238,6 +244,7 @@ void remove_hps_item(int sock) {
 	while (hpsli != NULL) {
 		if (hpsli->sock == sock) {
 			*prev_next = hpsli->next;
+			free(hpsli->hostname);			
 			free(hpsli);
 			return;
 		}
@@ -455,7 +462,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
 	int sock = lookup_hps_item(hostname, port);
 	/* Note that we ignore request to close the dma "connection" */
 	if (sock > 0) {
-		closesocket(sock);
+		close_connection(sock);
 		remove_hps_item(sock);
 	}
 	dump_hps_list();

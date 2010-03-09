@@ -46,6 +46,7 @@ while true
 
     % force Matlab to update the figure
 	drawnow
-
+  else
+    pause(0.01);
   end % if enough new samples
 end % while true
