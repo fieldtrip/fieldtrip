@@ -64,7 +64,7 @@ cleanup:
 	FREE(response->def);
 	FREE(response->buf);
 	FREE(response);
-	response_ptr = NULL;
+	*response_ptr = NULL;  /* SK: this was missing a "*", effectively never really returning 0 */
 	return -1;
 }
 

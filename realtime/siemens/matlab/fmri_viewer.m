@@ -30,8 +30,7 @@ while true
 	endsample  = hdr.nSamples;
 
     prevSample  = endsample;
-    count       = count + 1;
-    fprintf('processing scan %d', begsample);
+    fprintf('processing scan %d\n', begsample);
 
     % read data segment from buffer
     dat = read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample, 'endsample', endsample);
@@ -40,11 +39,13 @@ while true
 	%if strcmp(cfg.readevent, 'yes')
     %  evt = read_event(cfg.eventfile, 'header', hdr, 'minsample', begsample, 'maxsample', endsample);
     %end
-
-	disp(data);
+	
+	W = sqrt(hdr.nChans);
+    imagesc(reshape(dat,W,W)',[0 2048]);
+	colormap(gray);
 
     % force Matlab to update the figure
-	% drawnow
+	drawnow
 
   end % if enough new samples
 end % while true

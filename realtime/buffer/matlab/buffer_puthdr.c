@@ -106,7 +106,7 @@ int buffer_puthdr(int server, mxArray * plhs[], const mxArray * prhs[])
   /* the header structure is not needed any more, but everything's local */
   
   /* write the request, read the response */
-	result = clientrequest(ftbSock, &request, &response);
+	result = clientrequest(server, &request, &response);
   
   /* the request structure is not needed any more, but only .buf needs to be free'd */
     FREE(request.buf);

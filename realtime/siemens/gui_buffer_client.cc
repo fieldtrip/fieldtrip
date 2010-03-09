@@ -131,6 +131,7 @@ void idleCall(void *dummy) {
 	}
 	if (response->def->command!=GET_OK) {
 		fprintf(stderr, "GET_HDR: Buffer returned an error (%d)\n", response->def->command);
+		Sleep(50);
 		goto cleanup;
 	}
 	

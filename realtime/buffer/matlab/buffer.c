@@ -30,10 +30,10 @@
    will trigger closing the connection and removing the corresponding list item.
 */
 typedef struct host_port_sock_list_item {
-	char *hostname;
+	char hostname[256];
 	int port;
 	int sock; 	 							
-	struct host_port_sock_list_item *next;	/* NULL if last element 	      */
+	struct host_port_sock_list_item *next;	/* NULL if last element */
 } host_port_sock_list_item_t;
 
 /* This is the head of the list */
@@ -137,7 +137,7 @@ void cleanupMex(void) {
 		if (verbose) {
 			printf("cleaning up list entry %s:%i\n",hpsli->hostname, hpsli->port);
 		}
-		FREE(hpsli->hostname);
+		/* FREE(hpsli->hostname); */
 
 		firstHostPortSock = hpsli->next;
 		free(hpsli);
@@ -175,13 +175,7 @@ int add_hps_item(const char *hostname, int port, int sock) {
 	hpsli = (host_port_sock_list_item_t *) malloc(sizeof(host_port_sock_list_item_t));
 	if (hpsli == NULL) return 0;	/* out of memory - probably never */
 	
-	hpsli->hostname = (char *) malloc(n+1);
-	if (hpsli->hostname == NULL) {
-		/* out of memory - probably never */
-		free(hpsli);
-		return 0;    
-	}
-	memcpy(hpsli->hostname, hostname, n+1);
+	strncpy(hpsli->hostname, hostname, 256);
 	
 	hpsli->port = port;
 	hpsli->sock = sock;
@@ -244,7 +238,6 @@ void remove_hps_item(int sock) {
 	while (hpsli != NULL) {
 		if (hpsli->sock == sock) {
 			*prev_next = hpsli->next;
-			free(hpsli->hostname);			
 			free(hpsli);
 			return;
 		}
@@ -488,7 +481,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
   else if (errorCode == -3) {
     /* valid connection, but invalid request, we'll close the socket and remove the list item */
     printf("Trying to close socket %i\n", server);
-	closesocket(server);
+	close_connection(server);
 	remove_hps_item(server);
     mexErrMsgTxt("ERROR: tcp connection to buffer failed.");
   }

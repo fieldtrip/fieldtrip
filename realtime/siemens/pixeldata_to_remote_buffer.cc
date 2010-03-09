@@ -112,9 +112,9 @@ class PixelDataReader {
 		request_def.command = PUT_HDR;
 		request_def.bufsize = sizeof(headerdef_t);
 		
-		print_headerdef(&header_def);
+		// print_headerdef(&header_def);
 		
-		print_request(request.def);
+		// print_request(request.def);
 
 		/* write the request, read the response */
 		int result = tcprequest(ftbSocket, &request, &response);		
@@ -152,7 +152,7 @@ class PixelDataReader {
 		data_def.data_type = DATATYPE_INT16;  // it's UINT16 actually, but the buffer can't do that yet
 		data_def.bufsize = sizeof(UINT16_T)*thisNumPixels;
 		
-		print_datadef(&data_def);
+		// print_datadef(&data_def);
 		
 		request.def = &request_def;
 		request_def.version = VERSION;
@@ -176,7 +176,7 @@ class PixelDataReader {
 			fprintf(stderr, "Out of memory for merging data.def and data.buf\n");
 		} else {
 		
-			print_request(request.def);
+			// print_request(request.def);
 		
 			/* write the request, read the response */
 			int result = tcprequest(ftbSocket, &request, &response);
