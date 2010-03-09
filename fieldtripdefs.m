@@ -108,12 +108,11 @@ if isempty(versionpath)
       % unknown release number, do nothing
       versionpath = 'unknown';
   end % switch
-  if ~strcmp(versionpath, 'unknown') && isdir(versionpath) && ~isempty(strfind(path, versionpath))
+  if ~strcmp(versionpath, 'unknown') && isdir(versionpath) && isempty(strfind(path, versionpath))
     % only add the directory if it exists and was not added to the path before
     addpath(versionpath);
   end
 end % if isempty(versionpath)
-
 
 if isempty(signalpath)
   % test whether the signal processing toolbox is available
@@ -127,4 +126,39 @@ if isempty(signalpath)
     signalpath = fileparts(which('butter'));
   end
 end
+
+% test whether compat directories have been added corresponding to another
+% matlab version
+p = path;
+r = version('-release');
+v = {
+  'R13'
+  'R14'
+  '2006a'
+  '2006b'
+  '2007a'
+  '2007b'
+  '2008a'
+  '2008b'
+  '2009a'
+  '2009b'
+  };
+for i=1:length(v)
+  versionpath = fullfile(fileparts(which('fieldtripdefs')), 'compat', v{i});
+  if ~isempty(strfind(p, versionpath)) && ~strcmp(r, v{i})
+    warning('The directory %s was found on your path, whereas you are running Matlab version %s.', versionpath, r)
+    pause(0.5); % ensure that the user has time to read it
+    warning('You should NOT add all subdirectories of fieldtrip to your path using addpath(genpath(...)).');
+    pause(0.2); % ensure that the user has time to read it
+    warning('You should ONLY add the fieldtrip main directory to your path and then call ''fieldtripdefs''.');
+    pause(1.7); % ensure that the user has time to read it
+    fprintf('Trying to remove incompatible directory from path...\n');
+    pause(2.3); % ensure that the user has time to read it
+    t = strfind(p, versionpath);
+    p(t:t+length(versionpath)) = []; % don't use rmpath, because it may be broken due to the incorrect "fieldtrip/compat/release" version 
+    path(p);
+  end
+end
+
+        
 
