@@ -40,7 +40,7 @@ end
 
 
 % if cfg.neighbours = [], create a proper 'no neighbours' neighbour structure (but only when not using source data)
-if isfield(cfg, 'neighbours') && isempty(cfg.neighbours) && ~issource
+if isfield(cfg, 'neighbours') && ~issource
   channeighbstructmat = makechanneighbstructmat(cfg);
 end
   
