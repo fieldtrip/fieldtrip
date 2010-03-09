@@ -151,10 +151,6 @@ if isfield(input, 'type')
   % preferably the structure specifies its own type
   type = input.type;
 
-elseif isfield(sens, 'type')
-  % preferably the structure specifies its own type
-  type = sens.type;
-
 elseif issubfield(input, 'orig.FileHeader') &&  issubfield(input, 'orig.VarHeader')
   % this is a complete header that was read from a Plexon *.nex file using read_plexon_nex
   type = 'plexon';
