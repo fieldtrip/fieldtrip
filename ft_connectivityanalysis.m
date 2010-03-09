@@ -1,4 +1,4 @@
-function [stat] = ft_connectivityanalysis(cfg, data)
+function [stat] = ft_connectivityanalysistmp(cfg, data)
 
 % FT_CONNECTIVITYANALYIS computes various measures of connectivity
 % between MEG/EEG channels or between source-level signals.
@@ -15,9 +15,11 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 % want to compute.
 %
 % The configuration structure has to contain
-%   cfg.method  = 'coh',       coherence, support for freq, freqmvar and source data
-%                 'pcoh',      partial coherence, support for freq and freqmvar data
-%                               additional cfg.partchannel has to be specified
+%   cfg.method  = 'coh',       coherence, support for freq, freqmvar and
+%                               source data. For partial coherence also
+%                               specify cfg.partchannel
+%                 'csd',       cross-spectral density matrix, can also calculate partial csds - 
+%                               if cfg.partchannel is specified 
 %                 'plv',       phase-locking value, support for freq and freqmvar data
 %                 'corr',      correlation coefficient (Pearson)
 %                 'xcorr',     cross correlation function
@@ -60,17 +62,19 @@ normrpt = 0; %default, has to be overruled e.g. in plv, because of single
 
 % ensure that the input data is appropriate for the method
 switch cfg.method
-case {'coh'}
-  data    = checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
-  inparam = 'crsspctrm';  
-case {'pcoh'}
-  try,
-    data    = checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbrepresentation', 'full');
-    inparam = 'crsspctrm';      
-  catch
-    error('partial coherence is only supported for input allowing for a all-to-all csd representation');
-  end
-  %FIXME think of accommodating this for source data with only a few references
+case {'coh' 'csd'}
+    if ~isempty(cfg.partchannel)
+        try,
+            data    = checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbrepresentation', 'full');
+            inparam = 'crsspctrm';      
+        catch
+            error('partial coherence/csd is only supported for input allowing for a all-to-all csd representation');
+        end
+    else
+        data    = checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
+        inparam = 'crsspctrm';  
+    end
+  %FIXME think of accommodating partial coherence for source data with only a few references
 case {'plv'}
   data    = checkdata(data, 'datatype', {'freqmvar' 'freq'});
   inparam = 'crsspctrm';  
@@ -118,16 +122,16 @@ dtype = datatype(data);
 %FIXME trial selection has to be implemented still
 
 if isfield(data, 'label'), 
-  cfg.channel     = channelselection(cfg.channel, data.label);
+    cfg.channel     = channelselection(cfg.channel, data.label);
+    if ~isempty(cfg.partchannel)
+        cfg.partchannel = channelselection(cfg.partchannel, data.label);
+    end     
 end
 
 if isfield(data, 'label') && ~isempty(cfg.channelcmb),
-  cfg.channelcmb = channelcombination(cfg.channelcmb, cfg.channel, 1); 
+    cfg.channelcmb = channelcombination(cfg.channelcmb, cfg.channel, 1); 
 end
 
-if strcmp(cfg.method, 'pcoh') && ~isempty(cfg.partchannel), %FIXME also for pcorr and ppowcorr and pamplcorr
-  cfg.partchannel = channelselection(cfg.partchannel, data.label);
-end
 
 %check whether the required inparam is present in the data
 if ~isfield(data, inparam) || (strcmp(inparam, 'crsspctrm') && isfield(data, 'crsspctrm') && isfield(data, 'powspctrm')),
@@ -192,42 +196,46 @@ end
 
 % compute the desired connectivity metric
 switch cfg.method
-case 'coh'
-  %coherency  
-
-  tmpcfg           = [];
-  tmpcfg.complex   = cfg.complex;
-  tmpcfg.feedback  = cfg.feedback;
-  tmpcfg.dimord    = data.dimord;
-  tmpcfg.powindx   = powindx;
-  [datout, varout, nrpt] = coupling_corr(tmpcfg, data.(inparam), hasrpt, hasjack);
-  outparam         = 'cohspctrm';
-
-case 'pcoh'
-  %partial coherence, defined as in Rosenberg JR et al (1998) J.
-  %Neuroscience Methods, equation 38 - first the partial spectra are
-  %computed, then the normal coherence is computed on that.
-  if hasrpt && ~hasjack, 
-    error('partialisation on single trial observations is not supported'); 
+case {'coh' 'csd'}
+  %coherency, partial coherency, csd, and partial csd
+  if isequal(cfg.method, 'coh')
+      normpow = 1;
+      outparam = 'cohspctrm';
+  else
+      normpow = 0;
+      outparam = 'crsspctrm';
   end
-
-  allchannel = channelselection(cfg.channel, data.label);
-  pchanindx  = match_str(allchannel,cfg.partchannel);
-  kchanindx  = setdiff(1:numel(allchannel), pchanindx);
-  keep       = allchannel(kchanindx);
-
+  
   tmpcfg             = [];
   tmpcfg.complex     = cfg.complex;
   tmpcfg.feedback    = cfg.feedback;
   tmpcfg.dimord      = data.dimord;
   tmpcfg.powindx     = powindx;
-  tmpcfg.pchanindx   = pchanindx;
-  tmpcfg.allchanindx = kchanindx;
-  [datout, varout, nrpt] = coupling_pcorr(tmpcfg, data.(inparam), hasrpt, hasjack);
-  outparam           = 'pcohspctrm';
+  tmpcfg.normpow     = normpow;  
+  if ~isempty(cfg.partchannel)
+      %partial spectra are computed as in Rosenberg JR et al (1998) J.
+      %Neuroscience Methods, equation 38 
+      if hasrpt && ~hasjack, 
+        error('partialisation on single trial observations is not supported'); 
+      end
+
+      allchannel = channelselection(cfg.channel, data.label);
+      pchanindx  = match_str(allchannel,cfg.partchannel);
+      kchanindx  = setdiff(1:numel(allchannel), pchanindx);
+      keep       = allchannel(kchanindx);
+
+      tmpcfg.pchanindx   = pchanindx;
+      tmpcfg.allchanindx = kchanindx;
+      tmpcfg.pflag       = 1;
+      data.label         = keep; %update labels to remove the partialed channels
+      %FIXME consider keeping track of which channels have been partialised      
+      outparam = ['p' outparam]; %add tp to the outparam name to signify that either the coherence or csd has been partialized
+
+  else %calculate normal coherence or csd
+      tmpcfg.pflag     = 0;
+  end
   
-  data.label         = keep; %update labels to remove the partialed channels
-  %FIXME consider keeping track of which channels have been partialised
+  [datout, varout, nrpt] = coupling_corr(tmpcfg, data.(inparam), hasrpt, hasjack);
  
 case 'total_interdependence'
   %total interdependence  
@@ -497,6 +505,14 @@ stat.cfg = cfg;
 %--------------------------------------------------------------
 function [c, v, n] = coupling_corr(cfg, input, hasrpt, hasjack)
 
+%takes in a square csd or cov matrix, calculates the partialised
+%csd, or partialised cov, if specified, then either normalizes by power (in
+%the case of coherence) or returns the partialized csd (if the goal is to
+%calculate conditional granger, for example.
+
+partflag = cfg.pflag;
+cohflag =  cfg.normpow;
+
 if nargin==2,
   hasrpt   = 0;
   hasjack  = 0;
@@ -504,71 +520,96 @@ elseif nargin==3,
   hasjack  = 0;
 end
 
-if (length(strfind(cfg.dimord, 'chan'))~=2 || length(strfind(cfg.dimord, 'pos'))>0) && isfield(cfg, 'powindx') && ~isempty(cfg.powindx),
-  %crossterms are not described with chan_chan_therest, but are linearly indexed
- 
-  siz = size(input);
-  if ~hasrpt,
-    siz   = [1 siz];
-    input = reshape(input, siz);
-  end
-  
-  outsum = zeros(siz(2:end));
-  outssq = zeros(siz(2:end));
-  
-  progress('init', cfg.feedback, 'computing metric...');
-  for j = 1:siz(1)
-    progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
-    p1     = reshape(input(j,cfg.powindx(:,1),:,:,:), siz(2:end));
-    p2     = reshape(input(j,cfg.powindx(:,2),:,:,:), siz(2:end));
-    outsum = outsum + complexeval(reshape(input(j,:,:,:,:), siz(2:end))./sqrt(p1.*p2), cfg.complex);
-    outssq = outssq + complexeval(reshape(input(j,:,:,:,:), siz(2:end))./sqrt(p1.*p2), cfg.complex).^2;
-  end
-  progress('close');  
+siz = size(input);
+if ~hasrpt,
+siz   = [1 siz];
+input = reshape(input, siz);
+end
 
-elseif length(strfind(cfg.dimord, 'chan'))==2 || length(strfind(cfg.dimord, 'pos'))==2,
-  %crossterms are described by chan_chan_therest 
- 
-  siz = size(input);
-  if ~hasrpt,
-    siz   = [1 siz];
-    input = reshape(input, siz);
-  end
+if partflag
+    chan   = cfg.allchanindx;
+    nchan  = numel(chan);
+    pchan  = cfg.pchanindx;
+    npchan = numel(pchan);
+    newsiz = siz;
+    newsiz(2:3) = numel(chan); %size of partialised csd
 
-  outsum = zeros(siz(2:end));
-  outssq = zeros(siz(2:end));
-  progress('init', cfg.feedback, 'computing metric...');
-  for j = 1:siz(1)
-    progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
-    p1  = zeros([siz(2) 1 siz(4:end)]);
-    p2  = zeros([1 siz(3) siz(4:end)]);
-    for k = 1:siz(2)
-      p1(k,1,:,:,:,:) = input(j,k,k,:,:,:,:);
-      p2(1,k,:,:,:,:) = input(j,k,k,:,:,:,:);
+    A  = zeros(newsiz);
+
+    %FIXME this only works for data without time dimension
+    if numel(siz)>4, error('this only works for data without time'); end
+    for j = 1:siz(1) %rpt loop
+      AA = reshape(input(j, chan,  chan, : ), [nchan  nchan  siz(4:end)]);
+      AB = reshape(input(j, chan,  pchan,: ), [nchan  npchan siz(4:end)]);
+      BA = reshape(input(j, pchan, chan, : ), [npchan nchan  siz(4:end)]);
+      BB = reshape(input(j, pchan, pchan, :), [npchan npchan siz(4:end)]);
+      for k = 1:siz(4) %freq loop
+        A(j,:,:,k) = AA(:,:,k) - AB(:,:,k)*pinv(BB(:,:,k))*BA(:,:,k); 
+      end
     end
-    p1     = p1(:,ones(1,siz(3)),:,:,:,:);
-    p2     = p2(ones(1,siz(2)),:,:,:,:,:);
-    outsum = outsum + complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./sqrt(p1.*p2), cfg.complex);
-    outssq = outssq + complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./sqrt(p1.*p2), cfg.complex).^2;
-  end
-  progress('close');
-
+    input = A;
+    siz = size(input);
 end
 
-n = siz(1);
-c = outsum./n;
+if cohflag
+    
+    if (length(strfind(cfg.dimord, 'chan'))~=2 || length(strfind(cfg.dimord, 'pos'))>0) && isfield(cfg, 'powindx') && ~isempty(cfg.powindx),
+      %crossterms are not described with chan_chan_therest, but are linearly indexed
+      outsum = zeros(siz(2:end));
+      outssq = zeros(siz(2:end));
 
-if hasrpt,
-  if hasjack
-    bias = (n-1).^2;
-  else
-    bias = 1;
-  end
-  
-  v = bias*(outssq - (outsum.^2)./n)./(n - 1);
-else 
-  v = [];
+      progress('init', cfg.feedback, 'computing metric...');
+      for j = 1:siz(1)
+        progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
+        p1     = reshape(input(j,cfg.powindx(:,1),:,:,:), siz(2:end));
+        p2     = reshape(input(j,cfg.powindx(:,2),:,:,:), siz(2:end));
+        outsum = outsum + complexeval(reshape(input(j,:,:,:,:), siz(2:end))./sqrt(p1.*p2), cfg.complex);
+        outssq = outssq + complexeval(reshape(input(j,:,:,:,:), siz(2:end))./sqrt(p1.*p2), cfg.complex).^2;
+      end
+      progress('close');  
+
+    elseif length(strfind(cfg.dimord, 'chan'))==2 || length(strfind(cfg.dimord, 'pos'))==2,
+      %crossterms are described by chan_chan_therest 
+
+      outsum = zeros(siz(2:end));
+      outssq = zeros(siz(2:end));
+      progress('init', cfg.feedback, 'computing metric...');
+      for j = 1:siz(1)
+        progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
+        p1  = zeros([siz(2) 1 siz(4:end)]);
+        p2  = zeros([1 siz(3) siz(4:end)]);
+        for k = 1:siz(2)
+          p1(k,1,:,:,:,:) = input(j,k,k,:,:,:,:);
+          p2(1,k,:,:,:,:) = input(j,k,k,:,:,:,:);
+        end
+        p1     = p1(:,ones(1,siz(3)),:,:,:,:);
+        p2     = p2(ones(1,siz(2)),:,:,:,:,:);
+        outsum = outsum + complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./sqrt(p1.*p2), cfg.complex);
+        outssq = outssq + complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./sqrt(p1.*p2), cfg.complex).^2;
+      end
+      progress('close');
+
+    end
+    n = siz(1);
+    c = outsum./n;
+
+    if hasrpt,
+      if hasjack
+        bias = (n-1).^2;
+      else
+        bias = 1;
+      end
+
+      v = bias*(outssq - (outsum.^2)./n)./(n - 1);
+    else 
+      v = [];
+    end
+else %no coh flag
+    n = siz(1);
+    v = [];
+    c = squeeze(input); %if ~hasrpt, this will eliminate the first (trial) dimension, otherwise will preserve
 end
+
 
 %---------------------------------------------------------------
 function [c, v, n] = coupling_pcorr(cfg, input, hasrpt, hasjack)
