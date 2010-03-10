@@ -13,6 +13,7 @@ class PixelDataReader {
 	HANDLE fwEventHandle;
 	int ftbSocket;
 	int thisNumPixels;
+	int lastWrittenSample;
 	std::string sourceDir;
 	FolderWatcher *FW;
 	bool isValid;
@@ -132,6 +133,7 @@ class PixelDataReader {
 		}
 		
 		thisNumPixels = numPixels;
+		lastWrittenSample = -1;
 		
 		// cleanup_message(response); -- can't even call this in C++ 
 		if (response) {
@@ -175,14 +177,12 @@ class PixelDataReader {
 		if (request_def.bufsize != data_def.bufsize + sizeof(data_def)) {
 			fprintf(stderr, "Out of memory for merging data.def and data.buf\n");
 		} else {
-		
 			// print_request(request.def);
 		
 			/* write the request, read the response */
 			int result = tcprequest(ftbSocket, &request, &response);
-		
 			if (result < 0) {
-				fprintf(stderr, "Communication error when sending header to fieldtrip buffer\n");
+				fprintf(stderr, "Communication error when sending pixel data to fieldtrip buffer\n");
 			}
 		
 			if (!response || !response->def) {
@@ -190,12 +190,11 @@ class PixelDataReader {
 			} else {
 				if (response->def->command!=PUT_OK) {
 					fprintf(stderr, "PUT_DAT: Buffer returned an error (%d)\n", response->def->command);
+				} else {
+					lastWrittenSample++;
 				}
 			}
 		}
-		
-		free(reqbuf);
-	
 		// cleanup_message(response); -- can't even call this in C++ 
 		if (response) {
 			if (response->def) free(response->def);
@@ -204,19 +203,67 @@ class PixelDataReader {
 		}
 	}	
 	
-	void sendToBuffer(void *pixelData, int sizeInBytes) {
+	void writeTimestampEvent(const struct timeval &tv) {
+		struct {
+			eventdef_t def;
+			char buf[40];
+		} event;
+			
+		message_t request;
+		messagedef_t request_def;
+		message_t *response = NULL;
+				
+		event.def.type_type = DATATYPE_CHAR;
+		event.def.type_numel = 8;
+		event.def.value_type = DATATYPE_CHAR;
+		event.def.value_numel = 11+1+6;
+		event.def.sample = lastWrittenSample;
+		event.def.offset = 0;
+		event.def.duration = 0;
+		event.def.bufsize = event.def.type_numel + event.def.value_numel;
+		sprintf(event.buf, "unixtime%11li.%06li", tv.tv_sec, tv.tv_usec);
+				
+		request.def = &request_def;
+		request_def.version = VERSION;
+		request_def.command = PUT_EVT;
+		request_def.bufsize = sizeof(eventdef_t) + event.def.bufsize;
+		request.buf = &event;
+
+		int result = tcprequest(ftbSocket, &request, &response);
+		
+		if (result < 0) {
+			fprintf(stderr, "Communication error when sending event to fieldtrip buffer\n");
+		}
+		
+		if (!response || !response->def) {
+			fprintf(stderr, "PUT_EVT: unknown error in response\n");
+		} else {
+			if (response->def->command!=PUT_OK) {
+				fprintf(stderr, "PUT_EVT: Buffer returned an error (%d)\n", response->def->command);
+			}
+		}
+		// cleanup_message(response); -- can't even call this in C++ 
+		if (response) {
+			if (response->def) free(response->def);
+			if (response->buf) free(response->buf);
+			free(response);
+		}
+	}
+	
+	void sendToBuffer(void *pixelData, int sizeInBytes, const struct timeval &tv) {
 		int numPixels = sizeInBytes / 2;
 		
 		if (thisNumPixels != numPixels) {
 			writeHeader(numPixels);
 		}
 		writePixelData(pixelData);
+		writeTimestampEvent(tv);
 	}
 	
 	void tryFolderToBuffer() {
 		const std::vector<std::string>& vfn = FW->getFilenames();
 		
-		for (int i=0;i<vfn.size();i++) {
+		for (unsigned int i=0;i<vfn.size();i++) {
 			if ((vfn[i].size() > 9) && 	(vfn[i].compare(vfn[i].size()-9,9, "PixelData") == 0)) {
 				std::string fullName = sourceDir + vfn[i];
 			
@@ -224,8 +271,9 @@ class PixelDataReader {
 				if (fHandle != INVALID_HANDLE_VALUE) {
 					DWORD read, size;
 					void *pixelData;
+					struct timeval tv;
 					
-					double timestamp = getUnixTimeAsDouble();
+					gettimeofday(&tv, NULL);
 					
 					size = GetFileSize(fHandle, NULL);  // ignore higher DWORD - images are not that big
 					
@@ -237,7 +285,7 @@ class PixelDataReader {
 				
 					ReadFile(fHandle, pixelData, size, &read, NULL);
 					if (size == read) {
-						sendToBuffer(pixelData, size);
+						sendToBuffer(pixelData, size, tv);
 					} else {
 						fprintf(stderr, "Error reading pixel data from disk.\n");
 					}

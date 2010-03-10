@@ -1,7 +1,8 @@
 function fmri_viewer(cfg)
 
 if ~isfield(cfg, 'headerfile'),    	cfg.headerfile = 'buffer://localhost:1972'; end
-if ~isfield(cfg, 'datafile'),    	cfg.datafile = 'buffer://localhost:1972'; end
+if ~isfield(cfg, 'datafile'),    	cfg.datafile   = cfg.headerfile; end
+if ~isfield(cfg, 'eventfile'),    	cfg.eventfile  = cfg.headerfile; end
 if ~isfield(cfg, 'headerformat'),   cfg.headerformat = []; end
 if ~isfield(cfg, 'dataformat'),   	cfg.dataformat = []; end
 
@@ -30,16 +31,23 @@ while true
 	endsample  = hdr.nSamples;
 
     prevSample  = endsample;
-    fprintf('processing scan %d\n', begsample);
-
-    % read data segment from buffer
+    fprintf('\nprocessing scan %d\n', begsample);
+    
+    % read data from buffer (only the last scan)
     dat = read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample, 'endsample', endsample);
 
-    % it only makes sense to read those events associated with the currently processed data
-	%if strcmp(cfg.readevent, 'yes')
-    %  evt = read_event(cfg.eventfile, 'header', hdr, 'minsample', begsample, 'maxsample', endsample);
-    %end
-	
+    % read events from buffer
+    ev = read_event(cfg.eventfile, 'header', hdr);
+    ev_sam = [ev.sample];
+    ind = find(ev_sam==begsample-1);
+    
+    if ~isempty(ind)
+        disp([ev(ind).type ev(ind).value])
+    end
+    	
+    % this is a bit of a hack right now
+    % information about number of slices etc. should go into the header
+    % right now, pixeldata is transmitted as it's in the files
 	W = sqrt(hdr.nChans);
     imagesc(reshape(dat,W,W)',[0 2048]);
 	colormap(gray);

@@ -1,5 +1,5 @@
 LDFLAGS=pthreadGC2.dll ../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
-CXXFLAGS=-IC:/msys/1.0/local/include -I../buffer/src -I. -g
+CXXFLAGS=-IC:/msys/1.0/local/include -I../buffer/src -I. -g -Wall
 LDFL=-lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32
 
 all: pixeldata_to_remote_buffer.exe gui_buffer_client.exe
