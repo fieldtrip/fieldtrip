@@ -56,6 +56,7 @@ if ~isfield(cfg, 'bpfilttype'),           cfg.bpfilttype = 'but';               
 if ~isfield(cfg, 'lpfiltdir'),            cfg.lpfiltdir = 'twopass';                        end
 if ~isfield(cfg, 'hpfiltdir'),            cfg.hpfiltdir = 'twopass';                        end
 if ~isfield(cfg, 'bpfiltdir'),            cfg.bpfiltdir = 'twopass';                        end
+if ~isfield(cfg, 'debug'),                cfg.debug = 'no';                                 end
 
 % translate dataset into datafile+headerfile
 cfg.target = checkconfig(cfg.target, 'dataset2files', 'yes');
@@ -72,7 +73,7 @@ hdr.nTrials = 1;
 blocksmp   = round(cfg.blocksize*hdr.Fs);
 count      = 0;
 prevSample = 0;
-t0         = clock;
+stopwatch  = tic;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the general BCI loop where realtime incoming data is handled
@@ -83,41 +84,39 @@ while true
   % increment the number of samples
   hdr.nSamples = hdr.nSamples + blocksmp;
 
-  % see whether new samples are available
-  newsamples = (hdr.nSamples*hdr.nTrials-prevSample);
+  begsample  = prevSample+1;
+  endsample  = prevSample+blocksmp;
 
-  if newsamples>=blocksmp
+  % remember up to where the data was read
+  prevSample  = endsample;
+  count       = count + 1;
+  fprintf('processing segment %d from sample %d to %d\n', count, begsample, endsample);
 
-    begsample  = prevSample+1;
-    endsample  = prevSample+blocksmp;
+  % create a random data segment
+  dat = randn(hdr.nChans, blocksmp);
 
-    % remember up to where the data was read
-    prevSample  = endsample;
-    count       = count + 1;
-    fprintf('processing segment %d from sample %d to %d, stime = %f, etime = %f\n', count, begsample, endsample, hdr.nSamples/hdr.Fs, etime(clock, t0));
+  % wait for a realistic amount of time
+  pause(((endsample-begsample+1)/hdr.Fs)/cfg.speed);
 
-    % create a random data segment
-    dat = randn(hdr.nChans, blocksmp);
+  % apply some filters
+  if strcmp(cfg.lpfilter, 'yes'),     dat = preproc_lowpassfilter (dat, hdr.Fs, cfg.lpfreq, cfg.lpfiltord, cfg.lpfilttype, cfg.lpfiltdir); end
+  if strcmp(cfg.hpfilter, 'yes'),     dat = preproc_highpassfilter(dat, hdr.Fs, cfg.hpfreq, cfg.hpfiltord, cfg.hpfilttype, cfg.hpfiltdir); end
+  if strcmp(cfg.bpfilter, 'yes'),     dat = preproc_bandpassfilter(dat, hdr.Fs, cfg.bpfreq, cfg.bpfiltord, cfg.bpfilttype, cfg.bpfiltdir); end
 
-    % apply some filters
-    if strcmp(cfg.lpfilter, 'yes'),     dat = preproc_lowpassfilter (dat, hdr.Fs, cfg.lpfreq, cfg.lpfiltord, cfg.lpfilttype, cfg.lpfiltdir); end
-    if strcmp(cfg.hpfilter, 'yes'),     dat = preproc_highpassfilter(dat, hdr.Fs, cfg.hpfreq, cfg.hpfiltord, cfg.hpfilttype, cfg.hpfiltdir); end
-    if strcmp(cfg.bpfilter, 'yes'),     dat = preproc_bandpassfilter(dat, hdr.Fs, cfg.bpfreq, cfg.bpfiltord, cfg.bpfilttype, cfg.bpfiltdir); end
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % from here onward it is specific to writing the data to another stream
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % from here onward it is specific to writing the data to another stream
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  if strcmp(cfg.debug, 'yes')
+    fprintf('sample time = %f, clock time = %f\n', endsample/hdr.Fs, toc(stopwatch));
+  end
 
-    if count==1
-      % flush the file, write the header and subsequently write the data segment
-      write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'append', false);
-    else
-      % write the data segment
-      write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'append', true);
-    end % if count==1
+  if count==1
+    % flush the file, write the header and subsequently write the data segment
+    write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'append', false);
+  else
+    % write the data segment
+    write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'append', true);
+  end % if count==1
 
-    % wait for a realistic amount of time
-    pause(((endsample-begsample+1)/hdr.Fs)/cfg.speed);
-
-  end % if enough new samples
 end % while true
