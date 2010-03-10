@@ -194,12 +194,6 @@ if autoadd && ~status
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
 
-  % for dropin replacement toolboxes instead of the Mathworks version (e.g. signal, stats, image)
-  prefix = fullfile(fileparts(which('fieldtripdefs')), 'compat');
-  if ~status
-    status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
-  end
-
   % for linux computers in the F.C. Donders Centre
   prefix = '/home/common/matlab';
   if ~status && (strcmp(computer, 'GLNX86') || strcmp(computer, 'GLNXA64'))
