@@ -114,19 +114,6 @@ if isempty(versionpath)
   end
 end % if isempty(versionpath)
 
-if isempty(signalpath)
-  % test whether the signal processing toolbox is available
-  if ~hastoolbox('signal')
-    % add the fieldtrip/compat/signal directory to the path, which contains
-    % some drop-in replacement code from the Octave project
-    signalpath = fullfile(fileparts(which('fieldtripdefs')), 'compat', 'signal');
-    addpath(signalpath);
-  else
-    % remember the location of the Mathworks signal processing toolbox
-    signalpath = fileparts(which('butter'));
-  end
-end
-
 % test whether compat directories have been added corresponding to another
 % matlab version
 p = path;
