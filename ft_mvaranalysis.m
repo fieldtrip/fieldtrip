@@ -80,7 +80,7 @@ switch cfg.toolbox
 end
 
 %check the input-data
-data = checkdata(data, 'datatype', 'raw');
+data = checkdata(data, 'datatype', 'raw', 'hastrialdef', 'yes');
 
 %check configurations
 switch cfg.toolbox
