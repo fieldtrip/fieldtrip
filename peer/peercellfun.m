@@ -199,7 +199,7 @@ while ~all(submitted) || ~all(collected)
   prevnumcollected = sum(collected);
 
   % check for jobs that are taking too long to finish
-  if all(submitted) && ~all(collected)
+  if all(submitted) && any(collected) && ~all(collected)
     % test whether one of the jobs should be resubmitted
     sel = find(~collected, 1);
     elapsed = toc(stopwatch) - submittime(sel);
