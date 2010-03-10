@@ -26,7 +26,7 @@ function write_data(filename, dat, varargin)
 %   neuralynx_ncs
 %   neuralynx_sdma
 %
-% See also READ_HEADER, READ_DATA, READ_EVEN, WRITE_EVENT
+% See also READ_HEADER, READ_DATA, READ_EVENT, WRITE_EVENT
 
 % Copyright (C) 2007-2008, Robert Oostenveld
 %
