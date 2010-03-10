@@ -3,9 +3,9 @@ function [ts] = timestamp_neuralynx(tsl, tsh);
 % TIMESTAMP_NEURALYNX merge the low and high part of Neuralynx timestamps
 % into a single uint64 value
 
-if ~isa(tsl, 'uint32')
+if ~isa(tsl, 'uint32') && ~isa(tsl, 'int32')
   error('invalid input');
-elseif ~isa(tsh, 'uint32')
+elseif ~isa(tsh, 'uint32') && ~isa(tsl, 'int32')
   error('invalid input');
 end
 
