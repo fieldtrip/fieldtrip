@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <unixtime.h>
 #include <buffer.h>
 
 class PixelData2Image {
@@ -99,7 +98,7 @@ class ImageWidget : public Fl_Widget {
 Fl_Window *window;
 ImageWidget *IW;
 PixelData2Image px2i;
-int prevSamples = -1;
+unsigned int prevSamples = 0;
 int ftbSocket = -1;
 
 

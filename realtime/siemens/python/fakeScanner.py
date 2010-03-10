@@ -40,7 +40,7 @@ idxDest = 1
 logFile = file(destdir + '-logging.txt','w')
 
 while 1:
-	time.sleep(0.5)
+	time.sleep(2)
 	T = time.time()
 	shutil.copy(srcdir + PixFN[idxSrc], '%s/Scan%04i.PixelData'%(destdir,idxDest))
 	info = '%16.4f  %04i  %s\n'%(T,idxDest,PixFN[idxSrc])

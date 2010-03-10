@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <FolderWatcher.h>
-#include <unixtime.h>
 #include <math.h>
 
 #include <message.h>
@@ -177,10 +176,15 @@ class PixelDataReader {
 		if (request_def.bufsize != data_def.bufsize + sizeof(data_def)) {
 			fprintf(stderr, "Out of memory for merging data.def and data.buf\n");
 		} else {
+			DWORD t0, t1;
 			// print_request(request.def);
 		
 			/* write the request, read the response */
+			t0 = timeGetTime();
 			int result = tcprequest(ftbSocket, &request, &response);
+			t1 = timeGetTime();	
+			printf("Time lapsed while writing data: %li ms\n", t1-t0);
+			
 			if (result < 0) {
 				fprintf(stderr, "Communication error when sending pixel data to fieldtrip buffer\n");
 			}
@@ -204,6 +208,7 @@ class PixelDataReader {
 	}	
 	
 	void writeTimestampEvent(const struct timeval &tv) {
+		DWORD t0, t1;
 		struct {
 			eventdef_t def;
 			char buf[40];
@@ -229,7 +234,10 @@ class PixelDataReader {
 		request_def.bufsize = sizeof(eventdef_t) + event.def.bufsize;
 		request.buf = &event;
 
+		t0 = timeGetTime();
 		int result = tcprequest(ftbSocket, &request, &response);
+		t1 = timeGetTime();
+		printf("Time lapsed while writing event: %li ms\n", t1-t0);
 		
 		if (result < 0) {
 			fprintf(stderr, "Communication error when sending event to fieldtrip buffer\n");
@@ -296,7 +304,6 @@ class PixelDataReader {
 				} else {
 					// Can't open without sharing: this means the scanner is still writing
 					// Do nothing until the next notification
-					// printf("\n- %16.4f\n", getUnixTimeAsDouble());
 				}
 			}
 		}
@@ -311,7 +318,7 @@ int main(int argc, char *argv[]) {
 	int port;
 	char directory[256];
 	
-	// timeBeginPeriod(1);
+	timeBeginPeriod(1);
 	
 	if (argc>=2) {
 		strncpy(hostname, argv[1], 256);
