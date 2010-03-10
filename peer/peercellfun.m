@@ -15,6 +15,7 @@ function varargout = peercellfun(fname, varargin)
 %   timreq         = number
 %   sleep          = number
 %   diary          = string, can be 'always', 'warning', 'error' (default = 'error')
+%   timcv          = coefficient of variation of the time required for the jobs (default is automatic)
 %
 % Example
 %   fname = 'power';
@@ -51,6 +52,7 @@ memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=0;       end
 timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=3600;    end % assume that it will take one hour
 sleep   = keyval('sleep',   optarg); if isempty(sleep),  sleep=0.01;     end
 diary   = keyval('diary',   optarg); if isempty(diary),  diary='error';  end
+timcv   = keyval('timcv',   optarg); % default is empty, which will cause the range to be estimated
 
 % convert from 'yes'/'no' into boolean value
 UniformOutput = istrue(UniformOutput);
@@ -201,13 +203,22 @@ while ~all(submitted) || ~all(collected)
     % test whether one of the jobs should be resubmitted
     sel = find(~collected, 1);
     elapsed = toc(stopwatch) - submittime(sel);
+
     % estimate the time that it took the other jobs to finish
     estimated_min = min(collecttime(collected) - submittime(collected));
     estimated_max = max(collecttime(collected) - submittime(collected));
+    estimated_avg = estimated_max; % the maximum is used instead of the mean
+
     % the rationale for the estimate is the mean plus 2x the standard deviation
-    % except that instead of the mean the maximum is used and instead of the 
-    % standard deviation the min-max range is used
-    estimated     = estimated_max + (estimated_max - estimated_min);
+    if isempty(timcv)
+      % instead of the standard deviation the min-max range (divided by two) is used
+      estimated = estimated_avg + (estimated_max - estimated_min);
+    else
+      % the coefficient of variation (CV) is a normalized measure of dispersion of a distribution
+      % it is defined as the ratio of the standard deviation to the mean
+      estimated = estimated_avg + 2*timcv*estimated_avg;
+    end
+
     if elapsed>estimated
       warning('resubmitting job %d because it took too long to finish (estimated = %f, elapsed = %f)', sel, estimated, elapsed);
       % reset all job information, this will cause it to be automatically resubmitted
