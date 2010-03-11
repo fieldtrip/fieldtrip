@@ -12,7 +12,7 @@ function varargout = memprofile(varargin)
 % 
 %  STATS = MEMPROFILE('INFO') suspends the profiler and returns
 %  a structure containing the current profiler statistics.
-%
+
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
 %

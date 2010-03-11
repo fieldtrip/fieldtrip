@@ -15,7 +15,7 @@ function peermaster(varargin)
 %   allowgroup = {...}
 %
 % See also PEERSLAVE, PEERRESET
-%
+
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
 %

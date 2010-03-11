@@ -4,7 +4,7 @@ function peerreset
 % zombie mode.
 %
 % See also PEERMASTER, PEERSLAVE
-%
+
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
 %

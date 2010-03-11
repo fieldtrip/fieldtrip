@@ -1,7 +1,10 @@
 function list = peerlist
 
-% PEERLIST returns the list of peers and/or displ
+% PEERLIST returns the list of peers as a structure or prints it
+% to screen
 %
+% See also PEERINFO
+
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
 %

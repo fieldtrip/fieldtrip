@@ -18,7 +18,7 @@ function [jobid, puttime] = peerfeval(varargin)
 %   disp(argout);
 %
 % See also FEVAL, PEERMASTER, PEERGET, PEERCELLFUN
-%
+
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
 %
@@ -68,6 +68,7 @@ optbeg = optbeg | strcmp('memreq', strargin);
 optbeg = optbeg | strcmp('cpureq', strargin);
 optbeg = optbeg | strcmp('timreq', strargin);
 optbeg = optbeg | strcmp('hostid', strargin);
+optbeg = optbeg | strcmp('diary',  strargin);
 optbeg = find(optbeg);
 optarg = varargin(optbeg:end);
 
@@ -78,6 +79,7 @@ memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=0; end
 cpureq  = keyval('cpureq',  optarg); if isempty(cpureq), cpureq=0; end
 timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=0; end
 hostid  = keyval('hostid',  optarg);
+diary   = keyval('diary',   optarg);
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -97,7 +99,7 @@ end
 jobid = [];
 
 % pass some options that may influence remote execution
-options = {'pwd', custompwd, 'path', custompath};
+options = {'pwd', custompwd, 'path', custompath, 'diary', diary};
 
 while isempty(jobid)
   if toc(stopwatch)>timeout

@@ -12,7 +12,7 @@ function varargout = peerget(jobid, varargin)
 %   diary    = string, can be 'always', 'warning', 'error' (default = 'error')
 %
 % See also PEERFEVAL, PEERCELLFUN
-%
+
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
 %

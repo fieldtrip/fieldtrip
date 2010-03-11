@@ -11,7 +11,7 @@ function varargout = delayedexit(varargin)
 %   clear delayedexit;  % to cancel the previous delayed exit
 %
 % Note that the timer will also be canceled if you do "clear all".
-%
+
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
 %

@@ -4,7 +4,7 @@ function peerinfo
 % the jobs that are present in this peer
 %
 % See also PEERLIST
-%
+
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
 %

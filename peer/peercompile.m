@@ -2,7 +2,7 @@ function peercompile
 
 % PEERCOMPILE compile the low-level mex file implements that implements
 % the TCP/IP, announce and discover services.
-%
+
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
 %

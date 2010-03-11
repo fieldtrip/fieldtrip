@@ -24,7 +24,7 @@ function peer
 % peerlist   = peer('peerlist')
 % job        = peer('put', peerid, arg, opt, ...)
 % [arg, opt] = peer('get', jobid)
-%
+
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
 %

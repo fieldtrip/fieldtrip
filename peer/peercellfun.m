@@ -14,7 +14,7 @@ function varargout = peercellfun(fname, varargin)
 %   memreq         = number
 %   timreq         = number
 %   sleep          = number
-%   diary          = string, can be 'always', 'warning', 'error' (default = 'error')
+%   diary          = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
 %   timcv          = coefficient of variation of the time required for the jobs (default is automatic)
 %
 % Example
@@ -24,7 +24,7 @@ function varargout = peercellfun(fname, varargin)
 %   y     = peercellfun(fname, x1, x2);
 %
 % See also CELLFUN, PEERMASTER, PEERFEVAL, PEERGET
-%
+
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
 %
@@ -113,6 +113,7 @@ submitted   = false(1, numjob);
 collected   = false(1, numjob);
 submittime  = inf(1, numjob);
 collecttime = inf(1, numjob);
+resubmitted = [];    % this will contain a growing list with structures
 
 % start the timer
 stopwatch = tic;
@@ -148,7 +149,9 @@ while ~all(submitted) || ~all(collected)
       argin{j} = varargin{j}{submit};
     end
 
-    [jobid(submit) puttime(submit)] = peerfeval(fname, argin{:}, 'timeout', inf, 'memreq', memreq, 'timreq', timreq);
+    % submit the job for execution
+    [jobid(submit) puttime(submit)] = peerfeval(fname, argin{:}, 'timeout', inf, 'memreq', memreq, 'timreq', timreq, 'diary', diary);
+
     % fprintf('submitted job %d\n', submit);
     submitted(submit)  = true;
     submittime(submit) = toc(stopwatch);
@@ -164,25 +167,41 @@ while ~all(submitted) || ~all(collected)
 
   % get the results of all jobs that have finished
   for i=1:numel(joblist)
+
+    % figure out to which job these results belong
     collect = find(jobid == joblist(i).jobid);
-    if isempty(collect)
-      % there must be some junk in the buffer from an aborted previous call
-      [argout, options] = peerget(joblist(i).jobid, 'timeout', inf, 'output', 'cell', 'diary', diary);
-    else
-      [argout, options] = peerget(joblist(i).jobid, 'timeout', inf, 'output', 'cell', 'diary', diary);
-      % fprintf('collected job %d\n', collect);
-      collected(collect)   = true;
-      collecttime(collect) = toc(stopwatch);
 
-      % redistribute the output arguments
-      for j=1:numargout
-        varargout{j}{collect} = argout{j};
-      end 
-
-      % gather the job statistics
-      timused(collect) = keyval('timused', options);
-      memused(collect) = keyval('memused', options);
+    if isempty(collect) && ~isempty(resubmitted)
+      % it might be that these results are from a previously resubmitted job
+      collect = [resubmitted([resubmitted.jobid] == joblist(i).jobid).jobnum];
+      if ~isempty(collect)
+        % forget the resubmitted job, take these results instead
+        warning('the original job %d did return, reverting to its original results', collect);
+      end
     end
+
+    if isempty(collect)
+      % this job is not interesting to collect, probably it reflects some junk
+      % from a previous call or a failed resubmission
+      peer('clear', joblist(i).jobid);
+      continue;
+    end
+
+    % collect the output arguments
+    [argout, options] = peerget(joblist(i).jobid, 'timeout', inf, 'output', 'cell', 'diary', diary);
+
+    % fprintf('collected job %d\n', collect);
+    collected(collect)   = true;
+    collecttime(collect) = toc(stopwatch);
+
+    % redistribute the output arguments
+    for j=1:numargout
+      varargout{j}{collect} = argout{j};
+    end 
+
+    % gather the job statistics
+    timused(collect) = keyval('timused', options);
+    memused(collect) = keyval('memused', options);
   end
 
   if sum(collected)>prevnumcollected
@@ -220,7 +239,10 @@ while ~all(submitted) || ~all(collected)
     end
 
     if elapsed>estimated
-      warning('resubmitting job %d because it took too long to finish (estimated = %f, elapsed = %f)', sel, estimated, elapsed);
+      warning('resubmitting job %d because it takes too long to finish (estimated = %f, elapsed = %f)', sel, estimated, elapsed);
+      % remember the job that will be resubmitted, it still might return its results
+      resubmitted(end+1).jobnum = sel;
+      resubmitted(end  ).jobid  = jobid(sel);
       % reset all job information, this will cause it to be automatically resubmitted
       jobid      (sel) = nan;
       puttime    (sel) = nan;
@@ -232,7 +254,7 @@ while ~all(submitted) || ~all(collected)
       collecttime(sel) = inf;
     end
   end % resubmitting
-    
+
 end % while not all jobs have finished
 
 if numargout>0 && UniformOutput

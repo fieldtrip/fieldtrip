@@ -7,22 +7,23 @@ function peerslave(varargin)
 %   peerslave(...)
 %
 % Optional input arguments should be passed as key-value pairs and can include
-%   maxnum     = number (default = inf)
-%   maxtime    = number (default = inf)
-%   sleep      = number in seconds (default = 0.01)
-%   memavail   = number, amount of memory available       (default = inf)
-%   cpuavail   = number, speed of the CPU                 (default = inf)
-%   timavail   = number, maximum duration of a single job (default = inf)
-%   threads    = number, maximum number of threads to use (default = automatic)
-%   allowhost  = {...}
-%   allowuser  = {...}
-%   allowgroup = {...}
-%   fairshare  = [a, b, c, d]
-%   group      = string
-%   hostname   = string
+%   maxnum      = number (default = inf)
+%   maxtime     = number (default = inf)
+%   maxidle     = number (default = inf) 
+%   sleep       = number in seconds (default = 0.01)
+%   memavail    = number, amount of memory available       (default = inf)
+%   cpuavail    = number, speed of the CPU                 (default = inf)
+%   timavail    = number, maximum duration of a single job (default = inf)
+%   threads     = number, maximum number of threads to use (default = automatic)
+%   allowhost   = {...}
+%   allowuser   = {...}
+%   allowgroup  = {...}
+%   fairshare   = [a, b, c, d]
+%   group       = string
+%   hostname    = string
 %
 % See also PEERMASTER, PEERRESET, PEERFEVAL, PEERCELLFUN
-%
+
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
 %
@@ -43,6 +44,7 @@ function peerslave(varargin)
 % get the optional input arguments
 maxnum     = keyval('maxnum',     varargin); if isempty(maxnum),   maxnum=inf; end
 maxtime    = keyval('maxtime',    varargin); if isempty(maxtime),  maxtime=inf; end
+maxidle    = keyval('maxidle',    varargin); if isempty(maxidle),  maxidle=inf; end
 sleep      = keyval('sleep',      varargin); if isempty(sleep),    sleep=0.01; end
 memavail   = keyval('memavail',   varargin);
 cpuavail   = keyval('cpuavail',   varargin);
@@ -54,6 +56,10 @@ allowuser  = keyval('allowuser',  varargin); if isempty(allowuser), allowuser = 
 allowgroup = keyval('allowgroup', varargin); if isempty(allowgroup), allowgroup = {}; end
 hostname   = keyval('hostname',   varargin);
 group      = keyval('group',      varargin);
+usediary   = keyval('diary',      varargin);  % don't use the variable name diary, because it would interfere with the diary function
+
+% convert into a boolean value
+usediary = any(strcmp(usediary, {'always', 'warning', 'error'}));
 
 % these should be cell arrays
 if ~iscell(allowhost) && ischar(allowhost)
@@ -110,9 +116,15 @@ orig_path = path;
 % keep track of the time and number of jobs
 stopwatch = tic;
 prevtime  = toc(stopwatch);
+idlestart = toc(stopwatch);
 jobnum    = 0;
 
 while true
+
+  if (toc(stopwatch)-idlestart) >= maxidle
+    fprintf('maxidle exceeded, stopping as slave\n');
+    break;
+  end
 
   if toc(stopwatch)>=maxtime
     fprintf('maxtime exceeded, stopping as slave\n');
@@ -214,19 +226,26 @@ while true
       memprofile on
       timused = toc(stopwatch);
 
-      % switch on the diary
-      diaryfile = tempname;
-      diary(diaryfile);
+      if usediary
+        % switch on the diary
+        diaryfile = tempname;
+        diary(diaryfile);
+      end
 
       % evaluate the function and get the output arguments
       argout  = cell(1, numargout);
       [argout{:}] = feval(fname, argin{:});
 
-      % close the diary and read the contents
-      diary off
-      fid = fopen(diaryfile, 'r');
-      diarystring = fread(fid, [1, inf], 'char=>char');
-      fclose(fid);
+      if usediary
+        % close the diary and read the contents
+        diary off
+        fid = fopen(diaryfile, 'r');
+        diarystring = fread(fid, [1, inf], 'char=>char');
+        fclose(fid);
+      else
+        % return an empty diary
+        diarystring = [];
+      end
 
       % determine the time and memory requirements
       timused = toc(stopwatch) - timused;
@@ -252,11 +271,18 @@ while true
 
     catch feval_error
       argout  = {};
-      % ensure that the diary file is closed
-      diary off
-      fid = fopen(diaryfile, 'r');
-      diarystring = fread(fid, [1, inf], 'char=>char');
-      fclose(fid);
+
+      if usediary
+        % close the diary and read the contents
+        diary off
+        fid = fopen(diaryfile, 'r');
+        diarystring = fread(fid, [1, inf], 'char=>char');
+        fclose(fid);
+      else
+        % return an empty diary
+        diarystring = [];
+      end
+
       % the output options will include the error
       options = {'lastwarn', lastwarn, 'lasterr', feval_error, 'diary', diarystring};
       % an error was detected while executing the job
@@ -264,7 +290,7 @@ while true
       % ensure that the memory profiler is switched off
       memprofile off
       memprofile clear
-    end
+    end % try-catch
 
     try
       peer('put', joblist.hostid, argout, options, 'jobid', joblist.jobid);
@@ -296,7 +322,7 @@ while true
     % clear all temporary variables
     vars = whos;
     % easier would be to use the clearvars function, but that is only available in matlab 2008a and later
-    vars = setdiff({vars.name}, {'stopwatch' 'prevtime' 'jobnum' 'maxnum' 'maxtime' 'sleep' 'orig_path' 'orig_pwd'});
+    vars = setdiff({vars.name}, {'stopwatch' 'prevtime' 'jobnum' 'maxnum' 'maxtime' 'maxidle' 'idlestart' 'sleep' 'orig_path' 'orig_pwd' 'usediary'});
     for indx=1:numel(vars)
       clear(vars{indx});
     end
@@ -304,6 +330,9 @@ while true
 
     % clear any global variables
     clear global
+
+    % remember when the slave becomes idle
+    idlestart = toc(stopwatch);
 
   end % isempty(joblist)
 
