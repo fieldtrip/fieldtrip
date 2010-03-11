@@ -53,7 +53,7 @@ if ispc
 else
 	% On POSIX systems such as MacOS X and Linux, the following should work without tweaking
 	ldflags = '-lbuffer -L../src';
-	extra_includes = '';
+	extra_cflags = '';
 	suffix = 'o';
 end
 
