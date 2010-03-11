@@ -172,31 +172,25 @@ class PixelDataReader {
 		memcpy(reqbuf + sizeof(data_def), pixelData, data_def.bufsize);
 		
 		request.buf = reqbuf;
+		// print_request(request.def);
+	
+		/* write the request, read the response */
+		DWORD t0 = timeGetTime();
+		int result = tcprequest(ftbSocket, &request, &response);
+		DWORD t1 = timeGetTime();	
+		printf("Time lapsed while writing data: %li ms\n", t1-t0);
 		
-		if (request_def.bufsize != data_def.bufsize + sizeof(data_def)) {
-			fprintf(stderr, "Out of memory for merging data.def and data.buf\n");
+		if (result < 0) {
+			fprintf(stderr, "Communication error when sending pixel data to fieldtrip buffer\n");
+		}
+	
+		if (!response || !response->def) {
+			fprintf(stderr, "PUT_DAT: unknown error in response\n");
 		} else {
-			DWORD t0, t1;
-			// print_request(request.def);
-		
-			/* write the request, read the response */
-			t0 = timeGetTime();
-			int result = tcprequest(ftbSocket, &request, &response);
-			t1 = timeGetTime();	
-			printf("Time lapsed while writing data: %li ms\n", t1-t0);
-			
-			if (result < 0) {
-				fprintf(stderr, "Communication error when sending pixel data to fieldtrip buffer\n");
-			}
-		
-			if (!response || !response->def) {
-				fprintf(stderr, "PUT_DAT: unknown error in response\n");
+			if (response->def->command!=PUT_OK) {
+				fprintf(stderr, "PUT_DAT: Buffer returned an error (%d)\n", response->def->command);
 			} else {
-				if (response->def->command!=PUT_OK) {
-					fprintf(stderr, "PUT_DAT: Buffer returned an error (%d)\n", response->def->command);
-				} else {
-					lastWrittenSample++;
-				}
+				lastWrittenSample++;
 			}
 		}
 		// cleanup_message(response); -- can't even call this in C++ 
@@ -205,6 +199,7 @@ class PixelDataReader {
 			if (response->buf) free(response->buf);
 			free(response);
 		}
+		free(reqbuf);
 	}	
 	
 	void writeTimestampEvent(const struct timeval &tv) {
