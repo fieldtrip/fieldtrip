@@ -111,6 +111,7 @@ void *do_thread(void *threadid) {
 /* this function is called upon unloading of the mex-file */
 void cleanupMex(void) {
 	int verbose = 1;
+	int rc;
   
 	if (verbose) {
 		printf("Entering cleanupMex() routine\n");
@@ -118,10 +119,24 @@ void cleanupMex(void) {
   
 	if (tcpserverThreadRunning) {
 		mexWarnMsgTxt("stopping tcpserver thread");
+		rc = pthread_cancel(tcpserverThread);
+		if (rc)	mexWarnMsgTxt("problem with return code from pthread_cancel()");
+		/* this blocks forever */
+		/*
+		rc = pthread_join(tcpserverThread, NULL);
+		if (rc)	mexWarnMsgTxt("problem with return code from pthread_join()");
+		*/
+		
 		tcpserverThreadRunning = 0;
 	}
 	if (sleepThreadRunning) {
 		mexWarnMsgTxt("stopping sleep thread");
+		rc = pthread_cancel(sleepThread);
+		if (rc)	mexWarnMsgTxt("problem with return code from pthread_cancel()");
+		/*
+		rc = pthread_join(sleepThread, NULL);
+		if (rc)	mexWarnMsgTxt("problem with return code from pthread_join()");
+		*/
 		sleepThreadRunning = 0;
 	}
 	/* clean up host/address/socket list and close open sockets */
