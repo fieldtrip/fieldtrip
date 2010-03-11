@@ -71,11 +71,12 @@ while true
     
     % read events from buffer
     ev = read_event(cfg.eventfile, 'header', hdr);
-    ev_sam = [ev.sample];
-    ind = find(ev_sam==begsample-1);
-    
-    if ~isempty(ind)
-      disp([ev(ind).type ev(ind).value])
+    if ~isempty(ev)
+      ev_sam = [ev.sample];
+      ind = find(ev_sam==begsample-1);
+      if ~isempty(ind)
+        disp([ev(ind).type ev(ind).value])
+      end
     end
     
     % go to the correct figure
