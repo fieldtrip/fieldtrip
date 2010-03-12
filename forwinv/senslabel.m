@@ -34,6 +34,8 @@ function label = senslabel(type)
 %   'neuromag306alt'
 %   'itab153'
 %   'itab153_planar'
+%   'yokogawa160'
+%   'yokogawa160_planar'
 %
 % See also SENSTYPE, CHANNELSELECTION
 
