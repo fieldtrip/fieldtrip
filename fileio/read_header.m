@@ -678,13 +678,16 @@ switch headerformat
       warning('creating fake channel names');
       fakechannelwarning = true;
     end
-    for i=1:hdr.nChans
-      hdr.label{i} = sprintf('%d', i);
+    hdr.label = cell(hdr.nChans,1);
+    if hdr.nChans < 2000  % it takes 3.6s to attach 140000 labels to fMRI data... 
+      for i=1:hdr.nChans
+	    hdr.label{i} = sprintf('%d', i);
+      end
+      % this should be a column vector
+      hdr.label = hdr.label(:);
     end
-    % this should be a column vector
-    hdr.label = hdr.label(:);
-    % remember the original header details
-    hdr.orig = orig;
+    % remember the original header details      
+	hdr.orig = orig;
 
   case 'fcdc_matbin'
     % this is multiplexed data in a *.bin file, accompanied by a matlab file containing the header

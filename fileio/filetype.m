@@ -159,6 +159,10 @@ elseif filetype_check_uri(filename, 'shm')
   type        = 'ctf_shm';
   manufacturer = 'CTF';
   content      = 'real-time shared memory buffer';
+elseif filetype_check_uri(filename, 'empty')
+  type        = 'empty';
+  manufacturer = 'F.C. Donders Centre';
+  content      = '/dev/null';
 
   % known CTF file types
 elseif isdir(filename) && filetype_check_extension(filename, '.ds') && exist(fullfile(filename, [f '.res4']))

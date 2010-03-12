@@ -50,9 +50,14 @@ hdr           = keyval('header',        varargin);
 [nchans, nsamples] = size(dat);
 
 switch dataformat
-  case 'disp'
-    % display it on screen, this is only for debugging
-    disp('new data arived');
+   
+  case 'empty'
+    [numC, numS] = size(dat);
+    fprintf(1,'Pretending to write %i samples from %i channes...\n',numS,numC);
+    % Insert a small delay to make this more realitic for testing purposes
+    % The time for writing to an actual location will differ and depend on
+    % the amount of data
+    pause(0.001);
     
   case 'fcdc_global'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

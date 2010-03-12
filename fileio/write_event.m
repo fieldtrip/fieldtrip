@@ -57,9 +57,9 @@ append      = keyval('append',      varargin); if isempty(append),      append =
 maxqlength  = keyval('maxqlength',  varargin); if isempty(maxqlength),  maxqlength = Inf;                 end
 
 switch eventformat
-  case 'disp'
-    % display it on screen, this is only for debugging
-    disp(event);
+
+  case 'empty'
+    fprintf(1,'Pretending to write %i events...\n', length(event));
 
   case 'fcdc_global'
     % store it in a global variable, this is only for debugging
