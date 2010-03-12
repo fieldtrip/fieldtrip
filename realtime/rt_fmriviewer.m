@@ -73,7 +73,7 @@ while true
     ev = read_event(cfg.eventfile, 'header', hdr);
     if ~isempty(ev)
       ev_sam = [ev.sample];
-      ind = find(ev_sam==begsample-1);
+      ind = find(ev_sam==begsample);
       if ~isempty(ind)
         disp([ev(ind).type ev(ind).value])
       end
