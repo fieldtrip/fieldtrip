@@ -143,7 +143,18 @@ elseif ischar(input)
   type = filetype(input);
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  if strcmp(type, 'besa_avr')
+  if strcmp(type, 'besa_avr') && hasbesa
+    fprintf('reading ERP/ERF\n');
+    % this should be similar to the output of TIMELOCKANALYSIS
+    tmp = readBESAavr(input);
+    % convert into a TIMELOCKANALYSIS compatible data structure
+    data = [];
+    data.label   = fixlabels(tmp.ChannelLabels);
+    data.avg     = tmp.Data;
+    data.time    = tmp.Time / 1000; % convert to seconds
+    data.fsample = 1000/tmp.DI;
+    data.dimord  = 'chan_time';
+  elseif strcmp(type, 'besa_avr') && ~hasbesa
     fprintf('reading ERP/ERF\n');
     % this should be similar to the output of TIMELOCKANALYSIS
     tmp = read_besa_avr(input);
