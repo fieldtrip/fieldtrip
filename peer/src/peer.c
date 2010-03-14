@@ -377,6 +377,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				pthread_mutex_lock(&mutexhost);
 				host->status = (UINT32_T)mxGetScalar(prhs[1]);
 				pthread_mutex_unlock(&mutexhost);
+				announce_once();
 		}
 
 		/****************************************************************************/

@@ -192,6 +192,7 @@ void *discover  (void *);
 void *expire    (void *);
 void  peerinit (void *);
 void  peerexit (void *);
+int   announce_once(void);
 
 /* functions from fairshare.c */
 void  fairshare_reset   (void);

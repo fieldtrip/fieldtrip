@@ -163,3 +163,59 @@ cleanup:
 		pthread_cleanup_pop(1);
 		return NULL;
 }
+
+
+/* the following is a subset of the announce function, with the
+   difference that it does not loop, does not sleep, and does not use
+   a local copy of the host structure */
+
+int announce_once(void) {
+		int fd = 0;
+		int verbose = 1;
+		struct sockaddr_in multicast;
+		hostdef_t *message = NULL;
+		unsigned char ttl = 3;
+		unsigned char one = 1;
+
+		/* create what looks like an ordinary UDP socket */
+		if ((fd=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP)) < 0) {
+				perror("announce socket");
+				goto cleanup;
+		}
+
+		/* set up destination address for multicasting */
+		memset(&multicast,0,sizeof(multicast));
+		multicast.sin_family      = AF_INET;
+		multicast.sin_addr.s_addr = inet_addr(ANNOUNCE_GROUP);
+		multicast.sin_port        = htons(ANNOUNCE_PORT);
+
+		pthread_mutex_lock(&mutexhost);
+
+		if (strncasecmp(host->name, "localhost", STRLEN)==0)
+				ttl = 0;
+		else
+				ttl = 1;
+
+		/*  the TTL (time to live/hop count) for the send can be
+		 *  ----------------------------------------------------------------------
+		 *  0      Restricted to the same host. Won't be output by any interface.
+		 *  1      Restricted to the same subnet. Won't be forwarded by a router.
+		 *  <32    Restricted to the same site, organization or department.
+		 *  <64    Restricted to the same region.
+		 *  <128   Restricted to the same continent.
+		 *  <255   Unrestricted in scope. Global.
+		 */
+
+		if ((setsockopt(fd, IPPROTO_IP, IP_MULTICAST_TTL, (void*)&ttl, sizeof(ttl))) < 0)
+				perror("setsockopt() failed");
+
+		if (sendto(fd,host,sizeof(hostdef_t),0,(struct sockaddr *) &multicast,sizeof(multicast)) < 0) {
+				perror("announce_once sendto");
+				goto cleanup;
+		}
+
+cleanup:
+		pthread_mutex_unlock(&mutexhost);
+		return 0;
+}
+

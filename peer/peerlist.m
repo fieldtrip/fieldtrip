@@ -28,14 +28,19 @@ if nargout==0
   % display the hosts on screen, sort them by the hostid
   [dum, indx] = sort([list.hostid]);
   list = list(indx);
+  % also sort them by status
+  [dum, indx] = sort([list.hoststatus]);
+  list = list(indx);
   for i=1:numel(list)
     switch list(i).hoststatus
       case 0
-        status = 'zombie';
+        status = 'zombie     ';
       case 1
-        status = 'slave ';
+        status = 'idle slave ';
       case 2
-        status = 'master';
+        status = 'master     ';
+      case 3
+        status = 'busy slave ';
       otherwise
         error('unknown status');
     end

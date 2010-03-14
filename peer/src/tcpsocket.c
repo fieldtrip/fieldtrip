@@ -99,6 +99,7 @@ void *tcpsocket(void *arg) {
 		/* status = 0 means zombie mode, don't accept anything   */
 		/* status = 1 means slave mode, accept only a single job */
 		/* status = 2 means master mode, accept everything       */
+		/* any other status is interpreted as zombie mode        */
 
 		if (hoststatus()==1 && jobcount()==0) {
 				connect_accept   = 1;
