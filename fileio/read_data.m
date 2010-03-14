@@ -377,12 +377,12 @@ switch dataformat
 
   case 'besa_avr'
     % BESA average data
-    orig = read_besa_avr(filename);
-    dat  = orig.data(chanindx, begsample:endsample);
+    orig = readBESAavr(filename);
+    dat  = orig.Data(chanindx, begsample:endsample);
 
   case 'besa_swf'
     % BESA source waveform
-    orig = read_besa_swf(filename);
+    orig = readBESAswf(filename);
     dat  = orig.data(chanindx, begsample:endsample);
 
   case {'biosemi_bdf', 'bham_bdf'}
