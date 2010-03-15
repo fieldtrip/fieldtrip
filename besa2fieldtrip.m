@@ -149,7 +149,10 @@ elseif ischar(input)
     tmp = readBESAavr(input);
     % convert into a TIMELOCKANALYSIS compatible data structure
     data = [];
-    data.label   = fixlabels(tmp.ChannelLabels);
+    data.label = [];
+    if isfield(tmp, 'ChannelLabels'),
+        data.label = fixlabels(tmp.ChannelLabels); 
+    end;
     data.avg     = tmp.Data;
     data.time    = tmp.Time / 1000; % convert to seconds
     data.fsample = 1000/tmp.DI;
