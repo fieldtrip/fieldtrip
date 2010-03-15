@@ -263,8 +263,8 @@ catch
 end
 
 % perform the statistical test 
-if strcmp(statmethod,'@statistics_montecarlo') % because statistics_montecarlo (or to be precise, clusterstat) requires to know whether it is getting source data, 
-                                               % the following (ugly) work around is necessary                                             
+if strcmp(func2str(statmethod),'statistics_montecarlo') % because statistics_montecarlo (or to be precise, clusterstat) requires to know whether it is getting source data, 
+                                                        % the following (ugly) work around is necessary                                             
   if num>1
     [stat, cfg] = statmethod(cfg, dat, cfg.design, 'issource',issource);
   else
