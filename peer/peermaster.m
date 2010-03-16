@@ -73,7 +73,7 @@ peer('allowuser',  allowuser);
 peer('allowgroup', allowgroup);
 
 % switch to master mode
-peer('status', 2);
+peer('status', 1);
 
 % wait some time to ensure that all current peers have been found
 pause(1.5);

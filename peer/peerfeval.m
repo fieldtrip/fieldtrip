@@ -54,7 +54,7 @@ end
 stopwatch = tic;
 
 % the peer server must be running in master mode
-peer('status', 2);
+peer('status', 1);
 
 % convert the input arguments into something that strmatch can work with
 strargin = varargin;
@@ -116,7 +116,7 @@ while isempty(jobid)
   end
   
   % only peers in slave mode are interesting
-  peerlist = peerlist([peerlist.hoststatus]==1 | [peerlist.hoststatus]==3);
+  peerlist = peerlist([peerlist.hoststatus]==2 | [peerlist.hoststatus]==3);
   if isempty(peerlist)
     error('there is no peer available as slave');
   end

@@ -22,6 +22,23 @@ function peerinfo
 % along with this program.  If not, see <http://www.gnu.org/licenses/
 % -----------------------------------------------------------------------
 
+% check that the required peer server threads are running
+status = true;
+status = status & peer('tcpserver', 'status');
+status = status & peer('announce',  'status');
+status = status & peer('discover',  'status');
+status = status & peer('expire',    'status');
+if ~status
+  % start the maintenance threads
+  ws = warning('off');
+  peer('tcpserver', 'start');
+  peer('announce',  'start');
+  peer('discover',  'start');
+  peer('expire',    'start');
+  peer('status',    0); % zombie mode
+  warning(ws)
+end
+
 list = peer('peerlist');
 jobs = peer('joblist');
 

@@ -171,7 +171,7 @@ cleanup:
 
 int announce_once(void) {
 		int fd = 0;
-		int verbose = 1;
+		int verbose = 0;
 		struct sockaddr_in multicast;
 		hostdef_t *message = NULL;
 		unsigned char ttl = 3;

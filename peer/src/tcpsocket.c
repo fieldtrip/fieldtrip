@@ -97,18 +97,19 @@ void *tcpsocket(void *arg) {
 				fprintf(stderr, "tcpsocket: fd = %d, socketcount = %d, threadcount = %d\n", fd, socketcount, threadcount);
 
 		/* status = 0 means zombie mode, don't accept anything   */
-		/* status = 1 means slave mode, accept only a single job */
-		/* status = 2 means master mode, accept everything       */
+		/* status = 1 means master mode, accept everything       */
+		/* status = 2 means idle slave, accept only a single job */
+		/* status = 3 means busy slave, don't accept a new job   */
 		/* any other status is interpreted as zombie mode        */
 
-		if (hoststatus()==1 && jobcount()==0) {
-				connect_accept   = 1;
+		if (hoststatus()==1) {
+				connect_accept = 1;
 		}
-		else if (hoststatus()==2) {
-				connect_accept   = 1;
+		else if (hoststatus()==2 && jobcount()==0) {
+				connect_accept = 1;
 		}
 		else {
-				connect_accept   = 0;
+				connect_accept = 0;
 		}
 
 		/* give a handshake */

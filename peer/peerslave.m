@@ -106,8 +106,8 @@ if ~isempty(threads) && exist('maxNumCompThreads')
   warning(ws);
 end
 
-% switch to slave mode
-peer('status', 1);
+% switch to idle slave mode
+peer('status', 2);
 
 % remember the original working directory and the original path
 orig_pwd = pwd;
@@ -338,7 +338,7 @@ while true
     idlestart = toc(stopwatch);
     
     % set the status to "idle slave"
-    peer('status', 1);
+    peer('status', 2);
     
   end % isempty(joblist)
   

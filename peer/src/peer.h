@@ -30,7 +30,7 @@
 #define SO_REUSEPORT      SO_REUSEADDR
 #endif
 
-#define VERSION           0x0007
+#define VERSION           0x0008
 #define ANNOUNCE_GROUP    "225.0.0.88"
 #define ANNOUNCE_PORT 	  1700				/* it will auto-increment if the port is not available */
 #define DEFAULT_GROUP     "unknown"
