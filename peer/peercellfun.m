@@ -233,7 +233,7 @@ while ~all(submitted) || ~all(collected)
       % instead of the standard deviation the min-max range (divided by two) is used
       estimated = estimated_avg + (estimated_max - estimated_min);
       % take into account that the estimate is inaccurate in case of few collected jobs
-      estimated = (1 + 2^(-sum(collected)));
+      estimated = (1 + 2^(-sum(collected))) * estimated;
     else
       % the coefficient of variation (CV) is a normalized measure of dispersion of a distribution
       % it is defined as the ratio of the standard deviation to the mean
