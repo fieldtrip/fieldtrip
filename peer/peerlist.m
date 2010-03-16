@@ -35,8 +35,9 @@ if ~status
   peer('announce',  'start');
   peer('discover',  'start');
   peer('expire',    'start');
-  peer('status',    0); % zombie mode
   warning(ws)
+  peer('status',0);     % switch to zombie mode
+  pause(1.5);           % give the announce and discover some time
 end
 
 list = peer('peerlist');
