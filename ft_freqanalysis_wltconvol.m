@@ -249,12 +249,13 @@ if strcmp(cfg.method,'wltconvol')
     end% of foilop
   end%of perlop
   if keep == 1
-    warning off
+    ws = warning('off');
     powspctrm(:,:,:) = powspctrm(:,:,:) ./ repmat(permute(cntpertoi,[3,1,2]),[numsgn,1,1]);
     if csdflg
       crsspctrm(:,:,:) = crsspctrm(:,:,:) ./ repmat(permute(cntpertoi,[3,1,2]),[numsgncmb,1,1]);
     end
-    warning on
+    % return to previous warning state
+    warning(ws);
   end
 end
 

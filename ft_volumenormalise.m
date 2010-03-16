@@ -154,7 +154,7 @@ end
 % apply the approximate transformatino prior to passing it to SPM
 interp.transform = initial * interp.transform;
 
-warning off;
+ws = warning('off');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % here the normalisation starts

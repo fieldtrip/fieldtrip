@@ -247,7 +247,7 @@ function [clusrand] = clusterrandanalysis(cfg,varargin);
 
 fieldtripdefs
 
-warning off;
+ws = warning('off');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set the defaults
@@ -461,8 +461,8 @@ fprintf('Calculating the neighbourhood structure of the channels.\n');
 
 [clusrand] = clusterrandstatistics(cfg, data);
 
-warning on;
-
+% return to previous warning state
+warning(ws);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BEGIN SUBFUNCTION GETNEIGHBGEOMETRY
