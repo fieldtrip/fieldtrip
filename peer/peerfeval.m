@@ -143,7 +143,7 @@ while isempty(jobid)
   mempenalty = scale([peerlist.hostmemavail] - memreq);
   cpupenalty = scale([peerlist.hostcpuavail] - cpureq);
   timpenalty = scale([peerlist.hosttimavail] - timreq);
-  penalty    = mempenalty + 0.1* rand(1, length(peerlist)) + (peerlist.hoststatus==3);
+  penalty    = mempenalty + 0.1* rand(1, length(peerlist)) + ([peerlist.hoststatus]==3);
 
   % select the slave peer that has the best match with the job requirements
   [penalty, indx] = sort(penalty);
