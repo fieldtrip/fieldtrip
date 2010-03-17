@@ -3,7 +3,7 @@ function [hdr] = read_shm_header(filename)
 % READ_SHM_HEADER reads the header in real-time from shared memory
 % this is a helper function for READ_HEADER
 
-% Copyright (C) 2007-2009, Robert Oostenveld
+% Copyright (C) 2007-2010, Robert Oostenveld
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
@@ -13,18 +13,20 @@ persistent previous_headerfile previous_header
 % decode the filename, which looks like shm://<filename>
 headerfile = filetype_check_uri(filename);
 
+% determine the content of all chared memory packets
+[msgType msgId sampleNumber numSamples numChannels] = read_ctf_shm;
+
 if ~isempty(headerfile)
   % the headerfile has been specified by the user
   buf = [];
 else
   % get the name of the headerfile from shared memory
-  [msgType msgId sampleNumber numSamples numChannels] = read_ctf_shm;
   sel = find(msgType==0);
   if isempty(sel)
     error('could not determine header file location from shared memory');
   end
-  buf = read_ctf_shm(sel);
-  str = char(typecast(buf, 'uint8'));
+  buf = read_ctf_shm(sel); % this includes the headerfile as string, and the trigger information from AcqBuffer
+  str = char(typecast(buf(1:256), 'uint8')); % assume that the filename will not exceed 256 characters in length
   pad = find(str==0, 1, 'first');
   headerfile = char(str(1:(pad-1)));
 end
@@ -59,7 +61,7 @@ if isempty(previous_header) || isempty(previous_headerfile) || ~isequal(previous
     [msgType msgId sampleNumber numSamples numChannels] = read_ctf_shm;
     sel = find(msgType==0);
     % write the updated setup packet, this should cause AcqBuffer to do online trigger detection
-    write_ctf_shm(sel, 0, 0, 0, 0, 0, buf); 
+    write_ctf_shm(sel, 0, 0, 0, 0, 0, buf);
   else
     warning('no setup in shared memory, could not enable trigger detection');
   end
