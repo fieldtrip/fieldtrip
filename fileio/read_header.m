@@ -673,6 +673,7 @@ switch headerformat
     hdr.nSamples    = orig.nsamples;
     hdr.nSamplesPre = 0; % since continuous
     hdr.nTrials     = 1; % since continuous
+    hdr.label       = cell(1,hdr.nChans);
     if isempty(fakechannelwarning) || ~fakechannelwarning
       % give this warning only once
       warning('creating fake channel names');
@@ -711,6 +712,7 @@ switch headerformat
     hdr.nSamples    = orig.Num_Samples;
     hdr.nSamplesPre = 0; % continuous
     hdr.nTrials     = 1; % continuous
+    hdr.label       = cell(1,hdr.nChans);
     if isempty(fakechannelwarning) || ~fakechannelwarning
       % give this warning only once
       warning('creating fake channel names');
@@ -1011,6 +1013,7 @@ switch headerformat
     hdr.nSamples    = orig.NSamples;
     hdr.nSamplesPre = 0;      % continuous
     hdr.nTrials     = 1;      % continuous
+    hdr.label       = cell(1,hdr.nChans);
     if isempty(fakechannelwarning) || ~fakechannelwarning
       % give this warning only once
       warning('creating fake channel names');
