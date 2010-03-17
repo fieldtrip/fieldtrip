@@ -316,6 +316,13 @@ case 'granger'
       % multiple pairwise non-parametric transfer functions
       % linearly indexed
       powindx = labelcmb2indx(data.labelcmb);
+    elseif isfield(cfg, 'block') && ~isempty(cfg.block)
+      % blockwise granger
+      powindx = cfg.block;
+      for k = 1:2
+        newlabel{k,1} = cat(2,powindx{k});
+      end      
+      data.label = newlabel;
     else
       % do nothing
     end
@@ -456,12 +463,14 @@ end
 if ~isempty(powindx),
   switch dtype
   case {'freq' 'freqmvar'}
-    keep   = powindx(:,1) ~= powindx(:,2);
-    datout = datout(keep,:,:,:,:);
-    if ~isempty(varout),
-      varout = varout(keep,:,:,:,:);
+    if isfield(data, 'labelcmb'),
+      keep   = powindx(:,1) ~= powindx(:,2);
+      datout = datout(keep,:,:,:,:);
+      if ~isempty(varout),
+        varout = varout(keep,:,:,:,:);
+      end
+      data.labelcmb = data.labelcmb(keep,:);
     end
-    data.labelcmb = data.labelcmb(keep,:);
   case 'source'
     nvox   = size(unique(data.pos(:,1:3),'rows'),1);
     ncmb   = size(data.pos,1)/nvox-1;
@@ -880,7 +889,6 @@ outssq = zeros(siz(2:end));
 
 if isempty(powindx),
   % data are chan_chan_therest
-  % clear S; for k = 1:size(H,3), h = squeeze(H(:,:,k)); S(:,:,k) = h*Z*h'/fs; end;
   for kk = 1:n
     for ii = 1:Nc
       for jj = 1:Nc
@@ -896,7 +904,7 @@ if isempty(powindx),
       outsum(ii,ii,:,:) = 0;%self-granger set to zero
     end
   end
-else
+elseif ~iscell(powindx)
   % data are linearly indexed
   for k = 1:Nc
     for j = 1:n
@@ -909,6 +917,66 @@ else
       denom   = abs(S(j,iauto1,:)-zc.*abs(H(j,icross1,:)).^2./fs);
       outsum(icross2,:) = outsum(icross2,:) + reshape(log(numer./denom), [1 siz(3:end)]);
       outssq(icross2,:) = outssq(icross2,:) + reshape((log(numer./denom)).^2, [1 siz(3:end)]);
+    end
+  end
+elseif iscell(powindx)
+  % blockwise granger
+  % H = transfer function nchanxnchanxnfreq
+  % Z = noise covariance nchanxnchan
+  % S = crosspectrum nchanxnchanxnfreq
+  % powindx{1} is a list of indices for block1 
+  % powindx{2} is a list of indices for block2
+  
+  block1 = powindx{1}(:);
+  block2 = powindx{2}(:);
+  
+  n     = size(H,1); 
+  nchan = size(H,2);
+  nfreq = size(H,4);
+  
+  n1 = numel(block1);
+  n2 = numel(block2);
+  
+  % reorder
+  S = S(:,[block1;block2],[block1;block2],:);
+  H = H(:,[block1;block2],[block1;block2],:);
+  Z = Z(:,[block1;block2],[block1;block2]);
+  
+  indx1 = 1:n1;
+  indx2 = (n1+1):(n1+n2);
+ 
+  outsum = zeros(2,2,nfreq);
+  outssq = zeros(2,2,nfreq); 
+  for k = 1:n
+    tmpZ = reshape(Z(k,:,:), [nchan nchan]);
+
+    % projection matrix for block2 -> block1
+    P1 = [eye(n1)                                      zeros(n1,n2);
+          -tmpZ(indx2,indx1)*pinv(tmpZ(indx1,indx1))     eye(n2)];
+    
+    % projection matrix for block1 -> block2
+    P2 = [  eye(n1)    -tmpZ(indx1,indx2)*pinv(tmpZ(indx2,indx2));
+          zeros(n2,n1) eye(n2)];
+    
+    % invert only once
+    invP1 = pinv(P1);
+    invP2 = pinv(P2);
+    
+    for jj = 1:nfreq
+      % post multiply transfer matrix with the inverse of the projection matrix  
+      % this is equivalent to time domain pre multiplication with P
+      Sj = reshape(S(k,:,:,jj), [nchan nchan]);
+      Zj = tmpZ(:,:);
+      H1 = reshape(H(k,:,:,jj), [nchan nchan])*invP1;
+      H2 = reshape(H(k,:,:,jj), [nchan nchan])*invP2;
+      num1 = abs(det(Sj(indx1,indx1))); % numerical round off leads to tiny imaginary components
+      num2 = abs(det(Sj(indx2,indx2))); % numerical round off leads to tiny imaginary components
+      denom1 = abs(det(H1(indx1,indx1)*Zj(indx1,indx1)*H1(indx1,indx1)'));
+      denom2 = abs(det(H2(indx2,indx2)*Zj(indx2,indx2)*H2(indx2,indx2)'));
+      outsum(2,1,jj) = log( num1./denom1 )    + outsum(2,1,jj);
+      outsum(1,2,jj) = log( num2./denom2 )       + outsum(1,2,jj);
+      outssq(2,1,jj) = log( num1./denom1 ).^2 + outssq(2,1,jj);
+      outssq(1,2,jj) = log( num2./denom2 ).^2 + outssq(1,2,jj);
     end
   end
 end
