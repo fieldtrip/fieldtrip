@@ -610,7 +610,7 @@ for icell = 1:length(cfg.highlight)
       labelflg = 0;
     end
     if strcmp(cfg.highlight{icell}, 'numbers')
-      for ichan = 1:length(channelselection(cfg.highlightchannel{icell}, data.label))
+      for ichan = 1:length(labelindex)
         templay.label{ichan} = num2str(match_str(data.label,templay.label{ichan}));
       end
     end
@@ -635,7 +635,7 @@ if ~strcmp(cfg.marker,'off')
     labelflg = 0;
   end
   if strcmp(cfg.marker, 'numbers')
-    for ichan = 1:length(chansel)
+    for ichan = 1:length(labelindex)
       templay.label{ichan} = num2str(match_str(data.label,templay.label{ichan}));
     end
   end
