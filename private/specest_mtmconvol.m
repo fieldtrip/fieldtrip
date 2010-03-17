@@ -4,7 +4,7 @@ function [spectrum,ntaper,foi,toi] = specest_mtmconvol(dat, time, varargin)
 %
 %
 % Use as
-%   [spectrum,foi,toi] = specest_mtmfft(dat,time,...)  %%% DECIDE: WHICH INPUT IS REQUIRED AND WHICH WILL BE DEFAULTED?
+%   [spectrum,ntaper,foi,toi] = specest_mtmfft(dat,time,...)  %%% DECIDE: WHICH INPUT IS REQUIRED AND WHICH WILL BE DEFAULTED?
 %
 %   dat      = matrix of chan*sample
 %   time     = vector, containing time in seconds for each sample
