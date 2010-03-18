@@ -19,8 +19,6 @@ function [interp] = sourceinterpolate(cfg, functional, anatomical);
 % and cfg is a structure with any of the following fields
 %   cfg.parameter     = string, default is 'all'
 %   cfg.interpmethod  = 'linear', 'cubic', 'nearest' or 'spline'
-%   cfg.sourceunits   = 'mm' or 'cm' (default is 'cm')
-%   cfg.mriunits      = 'mm' or 'cm' (default is 'mm')
 %   cfg.downsample    = integer number (default = 1, i.e. no downsampling)
 %
 % See also SOURCEANALYSIS, SOURCESTATISTICS, READ_FCDC_MRI
@@ -87,11 +85,13 @@ end
 cfg.parameter = parameterselection(cfg.parameter, functional);
 cfg.parameter = setdiff(cfg.parameter, 'inside'); % inside is handled seperately
 
-% downsample the anatomical volume
-tmpcfg = [];
-tmpcfg.downsample = cfg.downsample;
-tmpcfg.parameter  = 'anatomy';
-anatomical = volumedownsample(tmpcfg, anatomical);
+if ~isequal(cfg.downsample, 1)
+  % downsample the anatomical volume
+  tmpcfg = [];
+  tmpcfg.downsample = cfg.downsample;
+  tmpcfg.parameter  = 'anatomy';
+  anatomical = volumedownsample(tmpcfg, anatomical);
+end
 
 % collect the functional volumes that should be converted
 vol_name = {};
@@ -105,16 +105,16 @@ for i=1:length(cfg.parameter)
   end
 end
 
-% compute the position of each voxel in both volumes, expressed in headcoordinates
+% remember the coordinate trandsformation for both
+transform_ana = anatomical.transform;
+transform_fun = functional.transform;
+
+% convert the anatomical voxel positions into voxel indices into the functional volume
+anatomical.transform = functional.transform \ anatomical.transform;
+functional.transform = eye(4);
+
 [fx, fy, fz] = voxelcoords(functional);
 [ax, ay, az] = voxelcoords(anatomical);
-% convert the anatomical voxel positions into voxel indices into the functional volume
-pos = [ax(:) ay(:) az(:)];
-pos = warp_apply(inv(functional.transform), pos);
-ax = reshape(pos(:,1), anatomical.dim);
-ay = reshape(pos(:,2), anatomical.dim);
-az = reshape(pos(:,3), anatomical.dim);
-clear pos
 
 % estimate the subvolume of the anatomy that is spanned by the functional volume
 minfx = 1;
@@ -138,19 +138,32 @@ dimf  = [functional.dim 1 1];
 allav = zeros([anatomical.dim dimf(4:end)]);
 functional.inside = functional.inside(:,:,:,1,1);
 
-% reslice and interpolate inside
-interp.inside = zeros(anatomical.dim);
-% interpolate with method nearest
-interp.inside( sel) = my_interpn(double(functional.inside), ax(sel), ay(sel), az(sel), 'nearest', cfg.feedback);
-interp.inside(~sel) = 0;
-interp.inside = logical(interp.inside);
+if all(functional.inside(:))
+  % keep all voxels marked as inside
+  interp.inside = true(anatomical.dim);
+else
+  % reslice and interpolate inside
+  interp.inside = zeros(anatomical.dim);
+  % interpolate with method nearest
+  interp.inside( sel) = my_interpn(double(functional.inside), ax(sel), ay(sel), az(sel), 'nearest', cfg.feedback);
+  interp.inside(~sel) = 0;
+  interp.inside = logical(interp.inside);
+end
+
+% prepare the grid that is used in the interpolation
+fg = [fx(:) fy(:) fz(:)];
+clear fx fy fz
 
 % reslice and interpolate all functional volumes
 for i=1:length(vol_name)
   fprintf('reslicing and interpolating %s\n', vol_name{i});
   for k=1:dimf(4)
     for m=1:dimf(5)
-      fv = double(vol_data{i}(:,:,:,k,m));
+      fv = vol_data{i}(:,:,:,k,m);
+      if ~isa(fv, 'double')
+        % only convert if needed, this saves memory
+        fv = double(fv);
+      end
       av = zeros(anatomical.dim);
       % av( sel) = my_interpn(fx, fy, fz, fv, ax(sel), ay(sel), az(sel), cfg.interpmethod, cfg.feedback);
       if islogical(vol_data{i})
@@ -158,19 +171,18 @@ for i=1:length(vol_name)
         av( sel) = my_interpn(fv, ax(sel), ay(sel), az(sel), 'nearest', cfg.feedback);
         av = logical(av);
       else
-        % extrapolate the outside of the functional volumes for better interpolation at the edges
-        [xi, yi, zi] = ndgrid(1:functional.dim(1), 1:functional.dim(2),1:functional.dim(3));
-        X = [xi(functional.inside(:)) yi(functional.inside(:)) zi(functional.inside(:))];
-        Y = fv(functional.inside(:));
-        XI = [xi(~functional.inside(:)) yi(~functional.inside(:)) zi(~functional.inside(:))];
-        YI = griddatan(X, Y, XI, 'nearest');
-        fv(~functional.inside) = YI;
+        if ~all(functional.inside(:))
+          % extrapolate the outside of the functional volumes for better interpolation at the edges
+          fv(~functional.inside) = griddatan(fg(functional.inside(:), :), fv(functional.inside(:)), fg(~functional.inside(:), :), 'nearest');
+        end
         % interpolate functional onto anatomical grid
         av( sel) = my_interpn(fv, ax(sel), ay(sel), az(sel), cfg.interpmethod, cfg.feedback);
+        clear fv
         av(~sel) = nan;
         av(~interp.inside) = nan;
       end
       allav(:,:,:,k,m) = av;
+      clear av
     end
   end
   interp = setsubfield(interp, vol_name{i}, allav);
@@ -178,7 +190,7 @@ end
 
 % add the other parameters to the output
 interp.dim       = anatomical.dim;
-interp.transform = anatomical.transform;
+interp.transform = transform_ana; % the original coordinate system
 if ~any(strcmp(cfg.parameter, 'anatomy'))
   % copy the anatomy into the functional data
   interp.anatomy   = anatomical.anatomy;
