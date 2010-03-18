@@ -21,10 +21,6 @@ function probs = slr_classify(data,model)
 %
 % - the bias term is assumed to be part of the data
 %
-% $Log: slr_classify.m,v $
-% Revision 1.1.1.1  2008/02/27 14:42:55  roboos
-% Marcel van Gerven, version 27 Feb 2008
-%
 
 probs = exp(data * model');
 

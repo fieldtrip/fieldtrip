@@ -107,3 +107,5 @@
 %   sparse inputs where the zero inputs are disregarded
 % - crossvalidator 276: roundoff error changes the actual number of used
 %   samples; can go wrong with skewed unique samples; also for ten-fold
+% - check logreg performance, remove lr,l1lr,l2lr,elasticlr if it works;
+%   rewrite linreg etc in the same fashion
