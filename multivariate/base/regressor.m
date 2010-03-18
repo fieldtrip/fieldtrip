@@ -50,10 +50,11 @@ classdef regressor < predictor
         %       'rss' : residual sum of squares
         %       'mse' : mean squared error
         %       'circrss' : circular residual sum of squares
+        %       'correlation' : correlation between real and predicted regressions
       
          options = varargin2struct(varargin);
       
-         if ~isfield(options,'metric'), options.metric = 'accuracy'; end
+         if ~isfield(options,'metric'), options.metric = 'correlation'; end
          
          metric = compute_metric(post(:,1),design(:,1),options);
       
@@ -75,6 +76,11 @@ classdef regressor < predictor
                met = mod(mod(design,2*pi) - mod(post,2*pi),2*pi);
                met = min(met,2*pi - met);
                met = sum(met.^2);
+               
+             case 'correlation' % correlation
+               
+               met = corrcoef(post(:),design(:));
+               met = met(2);
            
              otherwise
                 error(['unsupported option ',cfg.metric]);

@@ -1,6 +1,9 @@
 classdef lasso < regressor
 %LASSO using Mark Schmidt's L1General package
 %
+% NOTE: 
+% using elasticnet with lambda = 0 and nu ~= 0 can be faster
+%
 %   Copyright (c) 2009, Marcel van Gerven
 
     properties

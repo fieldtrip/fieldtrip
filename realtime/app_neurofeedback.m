@@ -16,8 +16,6 @@ function app_neurofeedback(cfg)
 % cfg.debug   = in debug mode we only give command line output (default = false)
 %
 % Copyright (C) 2009, Marcel van Gerven
-%
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if ~isfield(cfg,'istream'),  cfg.istream = []; end
 if ~isfield(cfg,'debug'),    cfg.debug = false; end

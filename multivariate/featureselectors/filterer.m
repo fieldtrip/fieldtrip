@@ -13,10 +13,7 @@ classdef filterer < featureselector
 %   Copyright (c) 2008, Marcel van Gerven
 
   properties
-  
-    validator = []; % e.g., crossvalidator('procedure',mva({nb()}),'cvfolds',0.9);
-    metric = 'accuracy'; % evaluation metric
-   
+    
     nfeatures = Inf; % maximum number of used features
         
     % filter is used to order the features
@@ -25,7 +22,8 @@ classdef filterer < featureselector
     % [10 100 2 ...] : uses the ordering specified
     % meandiff : order according to the norm of differences of means
     % mutual_information : order according to the mutual information (default)
-    % anova : order according to anova test    
+    % anova : order according to anova test  
+    % regression : linearly regress input on output and compute residual
     filter = 'mutual_information';    
     
   end
@@ -54,7 +52,9 @@ classdef filterer < featureselector
       p.value = zeros(1,nf);
       for j=1:nf
         
-        fprintf('computing %s filter for feature %d of %d\n',obj.filter,j,nf);
+        if obj.verbose
+          fprintf('computing %s filter for feature %d of %d\n',obj.filter,j,nf);
+        end
         
         switch(obj.filter)
           
@@ -66,6 +66,9 @@ classdef filterer < featureselector
             
           case 'anova'
             filterer.anova(X(:,j),Y);
+            
+          case 'regress'
+            filterer.regress(X(:,j),Y);
             
           otherwise
             error('unrecognized filter');
@@ -103,7 +106,7 @@ classdef filterer < featureselector
         
         cv = obj.validator.validate(X(:,features(1:f)),Y);
         
-        m = evaluate(cv.Y,cv.Y,'metric',obj.metric);
+        m = cv.evaluate('metric',obj.metric);
         
         if obj.verbose, fprintf('criterion: %.2g\n',m); end
         
@@ -127,8 +130,6 @@ classdef filterer < featureselector
       % different classes w.r.t. the global mean per feature
       %
       %   dif = meandiff(data,design)
-      %
-      %   Copyright (c) 2008, Marcel van Gerven
       
       nclasses = max(design(:,1));
 
@@ -148,14 +149,20 @@ classdef filterer < featureselector
       %   ip = anova(data,design)
       %
       %   ip = 1 - pvalue
-      %
-      %   Copyright (c) 2008, Marcel van Gerven
-      %
       
       ip = zeros(1,size(data,2));
       for j=1:size(data,2)
         ip(j) = 1 - anova1(data(:,j),design(:,1),'off');
       end
+      
+    end
+    
+    function res = regress(X,Y)
+      % linearly regress input on output and compute residual
+      
+      [a,b,res] = regress(Y,[X ones(size(X,1),1)]);
+      
+      res = 1./res;
       
     end
     

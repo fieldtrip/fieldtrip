@@ -76,8 +76,6 @@ classdef basis_recon < reconstructor
     
     function p = estimate(obj,X,Y)
       
-      p.dims = obj.outdims;
-      
       % standardize design
       if obj.standardize
         % standardize the design
@@ -118,7 +116,7 @@ classdef basis_recon < reconstructor
       % changes source estimate back to native space
       Y = obj.predict_sources(X) * obj.params.A';
       
-      Y = reshape(Y,[size(X,1) obj.params.dims(2:end)]);
+      Y = reshape(Y,[size(X,1) obj.outdims]);
       
       % invert the standardization
       if obj.standardize
@@ -155,8 +153,8 @@ classdef basis_recon < reconstructor
       % return the identity (giving independent pixel reconstruction)
       % child classes may override this behaviour
       
-      W = eye(design.nfeatures);
-      A = eye(design.nfeatures);
+      W = eye(size(design,2));
+      A = eye(size(design,2));
       
     end
     

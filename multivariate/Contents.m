@@ -96,6 +96,14 @@
 % - rewrite one_against_one, combiner etc such that transfer learning is
 %   used on the separate datasets. This simplifies code and allows for more complex designs 
 % - refactor using: perl -p -i -e 's/clfmethod/mvmethod/g' `grep -lr -e 'clfmethod' *`
-% - how to handle multiple regression vs regressors/classifiers that return mean + error estimates?
+% - how to handle multiple regression vs regressors/classifiers that return
+%   mean + error estimates? see e.g. the kalman filter
 % - clean up nclasses field
 % - add wilcoxon test; add multiple outputs for evaluate/significance
+% - feature selection methods should return sparse matrices instead of
+%   reduced matrices in order to keep dimensions consistent. This also allows
+%   models for different folds to be combined (currently fails due to
+%   incompatible dimensions). This requires that all methods can deal with
+%   sparse inputs where the zero inputs are disregarded
+% - crossvalidator 276: roundoff error changes the actual number of used
+%   samples; can go wrong with skewed unique samples; also for ten-fold

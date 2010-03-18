@@ -73,10 +73,6 @@ classdef classifier < predictor
       %       'specificity' : TN/(TN + FP)
       %       'f1' : 2*TP/(2*TP + FN + FP)
       %       'hfdiff' : hitrate - missrate (or sensitivity + precision - 1)
-      %
-      %   
-      %
-      %   Copyright (c) 2008, Marcel van Gerven, Christian Hesse
       
       options = varargin2struct(varargin);
       
@@ -436,10 +432,6 @@ classdef classifier < predictor
       %
       % if inputs are cell arrays then all experiments are
       % concatenated (e.g., folds)
-      %
-      % Copyright (C) 2008, Marcel van Gerven
-      % F.C. Donders Centre for Cognitive Neuroscience, Nijmegen, NL
-      %
       
       % initialization
       

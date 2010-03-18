@@ -57,7 +57,7 @@ classdef optimizer < predictor
            obj.vals = { obj.vals };
          end
          
-         obj.validator.procedure = mva({obj.mvmethod});
+         obj.validator.procedure = mva(obj.mvmethod);
          
        end
        

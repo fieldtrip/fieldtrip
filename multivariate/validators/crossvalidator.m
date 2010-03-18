@@ -51,7 +51,14 @@ classdef crossvalidator < validator
       end
       
       function obj = validate(obj,data,design)
-
+      
+        assert(~isempty(obj.procedure));
+      
+        if ~isa(obj.procedure,'mva')
+          % try to create procedure if input is a cell array or a predictor
+          obj.procedure = mva(obj.procedure);
+        end
+      
         % move to cell-array representation
         if ~iscell(data)
           data = {data};
@@ -153,11 +160,15 @@ classdef crossvalidator < validator
             if f==1
               [obj.model,obj.desc] = tproc.getmodel();
             else
-              m = tproc.getmodel();
-              for mm=1:numel(obj.model)
-                obj.model{mm} = obj.model{mm} + m{mm};
+              try % fails for incompatible models in each fold
+                m = tproc.getmodel();
+                for mm=1:numel(obj.model)
+                  obj.model{mm} = obj.model{mm} + m{mm};
+                end
+                clear m;
+              catch
+                obj.model = {};
               end
-              clear m;
             end
           end
           
@@ -211,7 +222,7 @@ classdef crossvalidator < validator
                     
             nfolds = obj.nfolds;
             if isinf(nfolds)
-              nfolds = min(cellfun(@(x)(x.nsamples),design));
+              nfolds = min(cellfun(@(x)(size(x,1)),design));
             end
             
             if (nfolds > 1 && rem(nfolds,1) == 0) % n-fold crossvalidation
@@ -253,19 +264,29 @@ classdef crossvalidator < validator
           
                 % make sure outcomes are evenly represented whenever possible
                 [unq,tmp,idx] = unique(design{d},'rows');
-                                
-                if max(idx) == nsamples % unique samples
-                    testfolds{1,d} = idxs(1:(nsamples - floor(nfolds*nsamples)));
+                         
+                mx = max(idx);
+                if mx == nsamples % unique labeled samples
+                    testfolds{1,d} = idxs(1:round((1-nfolds)*nsamples));
                 else
                 
                   % take labeled indices
                   idx = idx(idxs);
                   
-                  for j=1:length(unq)                   
-                    iidx = find(idx == unq(j));
-                    testfolds{1,d} = [testfolds{1,d}; idxs(iidx(1:(numel(iidx) - floor(nfolds*numel(iidx)))))];
+                  for j=1:mx                 
+                    iidx = find(idx == j);
+                    % use conservative ceil operation
+                    testfolds{1,d} = [testfolds{1,d}; idxs(iidx(1:floor((1-nfolds)*numel(iidx))))];
                   end
                   
+                  % add random instances to complete the number
+                  if numel(testfolds{1,d}) < floor((1-nfolds) * numel(idxs))
+                    n = floor((1-nfolds) * numel(idxs)) - numel(testfolds{1,d}); 
+                    x = setdiff(idxs,testfolds{1,d});
+                    x = x(randperm(numel(x)));
+                    testfolds{1,d} = [testfolds{1,d}; x(1:n)];
+                  end
+                      
                 end
                            
               elseif nfolds > 1 && rem(nfolds,1) == 0 % n-fold crossvalidation
@@ -275,10 +296,11 @@ classdef crossvalidator < validator
                 % make sure outcomes are evenly represented whenever possible
                 [unq,tmp,idx] = unique(design{d}(1:size(design{d}),:),'rows');
                 
-                if max(idx) == nsamples % unique samples
+                mx = max(idx);
+                if mx == nsamples % unique samples
                  
                   for f=1:nfolds
-                    testfolds{f,d} = idxs((floor((f-1)*(length(idxs)/nfolds))+1):floor(f*(length(idxs)/nfolds)));
+                    testfolds{f,d} = idxs((floor((f-1)*(length(idxs)/nfolds))+1):round(f*(length(idxs)/nfolds)));
                   end
                  
                 else
@@ -287,8 +309,8 @@ classdef crossvalidator < validator
                   idx = idx(idxs);               
                
                   f=1;
-                  for j=1:length(unq)
-                    iidx = find(idx == unq(j));
+                  for j=1:mx
+                    iidx = find(idx == j);
                     for k=1:length(iidx)
                       testfolds{f,d} = [testfolds{f,d}; idxs(iidx(k))];
                       f = f+1; if f > nfolds, f=1; end

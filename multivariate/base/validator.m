@@ -25,20 +25,7 @@ classdef validator
           obj.(varargin{i}) = varargin{i+1};
         end
       end
-      
-      if ~isempty(obj.procedure)
-      
-        if ~isa(obj.procedure,'mva')
-          % try to create procedure if input is a cell array or a predictor
-          obj.procedure = mva(obj.procedure);
-        end
-      
-        if obj.verbose
-          fprintf('creating validator for mva %s\n',obj.procedure.name);
-        end
-      
-      end
-        
+                    
       % initialize random number generator
       if ~isempty(obj.init)
         if obj.verbose

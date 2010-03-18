@@ -17,8 +17,6 @@ classdef wrapper < featureselector
 
     properties
        
-      validator = crossvalidator('procedure',mva({nb()}),'cvfolds',0.9);
-      metric = 'accuracy'; % evaluation metric
       criterion; % keeps track of the evaluation metric
       
       maxfeatures = Inf; % maximum number of used features
@@ -35,6 +33,8 @@ classdef wrapper < featureselector
           
           obj = obj@featureselector(varargin{:});
           
+          assert(~isempty(obj.procedure));
+
         end
         
         function p = estimate(obj,X,Y)
