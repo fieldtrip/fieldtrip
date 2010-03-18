@@ -30,7 +30,7 @@ classdef logreg < classifier
       nclasses = numel(unique(Y(:,1)));
       
       if nclasses == 2
-        Y = 2*Y - 3; % convert to -1 / + 1
+        Y = 3 - 2*Y; % convert to -1 / + 1
         funObj = @(w)LogisticLoss(w,X,Y);
       else
         funObj = @(w)SoftmaxLoss2(w,X,Y,nclasses);
@@ -90,7 +90,7 @@ classdef logreg < classifier
     
     function Y = map(obj,X)
       
-      Y = exp([ones(size(X,1),1) X] * [zeros(size(X,2)+1,1) obj.params.model]);
+      Y = exp([ones(size(X,1),1) X] * [obj.params.model zeros(size(X,2)+1,1)]);
       Y = bsxfun(@rdivide,Y,sum(Y,2));
       
     end
@@ -98,8 +98,14 @@ classdef logreg < classifier
     function [m,desc] = getmodel(obj)
       % return the parameters wrt a class label in some shape
       
+      % weight-vector for class 1 is always zero
       m =  mat2cell(obj.params.model(2:end,:)',ones(1,size(obj.params.model,2)),size(obj.params.model,1)-1);
-      desc = {'unknown'};
+      m{length(m)+1,1} = zeros(size(m{1}));
+      
+      desc = cell(length(m),1);
+      for j=1:length(m)
+        desc{j} = sprintf('regression coefficients for class %d',j);
+      end
       
     end
     
