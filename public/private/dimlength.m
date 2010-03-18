@@ -41,6 +41,8 @@ switch seldim
       n = size(data.powcovspctrm, 1);
     elseif strcmp(data.dimord, 'rpt_chan_chan_freq_time') && isfield(data, 'fourierspctrm')
       n = size(data.fourierspctrm, 1);
+    elseif strcmp(data.dimord, 'rpt_chan_chan_freq_time') && isfield(data, 'powcovspctrm')
+      n = size(data.powcovspctrm, 1);
     elseif strcmp(data.dimord, 'rpt_pos')
       %HACK to be fixed
       x = setdiff(fieldnames(data),'inside');
