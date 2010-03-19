@@ -2,7 +2,10 @@ LDFLAGS=pthreadGC2.dll ../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_3
 CXXFLAGS=-IC:/msys/1.0/local/include -I../buffer/src -I. -g -Wall
 LDFL=-lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32
 
-all: pixeldata_to_remote_buffer.exe gui_buffer_client.exe
+all: pixeldata_to_remote_buffer.exe gui_buffer_client.exe gui_streamer.exe
+
+gui_streamer.exe: gui_streamer.cc FolderWatcher.o
+	g++ -o gui_streamer gui_streamer.cc FolderWatcher.o $(LDFLAGS) $(CXXFLAGS) $(LDFL)
 
 pixeldata_to_remote_buffer.exe: pixeldata_to_remote_buffer.cc FolderWatcher.o
 	g++ -o pixeldata_to_remote_buffer pixeldata_to_remote_buffer.cc FolderWatcher.o $(LDFLAGS) $(CXXFLAGS)
@@ -15,3 +18,6 @@ FolderWatcher.o: FolderWatcher.cc FolderWatcher.h
 	
 gui_buffer_client.exe: gui_buffer_client.cc 
 	g++ -o gui_buffer_client.exe gui_buffer_client.cc $(CXXFLAGS) $(LDFLAGS) $(LDFL)
+
+siemensap.o: siemensap.c siemensap.h
+	gcc -c siemensap.c -I.
