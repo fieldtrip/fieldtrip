@@ -23,11 +23,12 @@ sap_item_t *sap_alloc_field(int len_name, const char *name, int size_value) {
 		return NULL;
 	}
 	memcpy(F->fieldname, name, len_name);
-	F->num_elements = 0;
 	F->fieldname[len_name]=0;
 	if (size_value == 0) {
+		F->num_elements = 0;
 		F->value = NULL;
 	} else {
+		F->num_elements = 1;
 		F->value = calloc(size_value,1);
 		if (F->value == NULL) {
 			free(F->fieldname);
@@ -95,9 +96,7 @@ int sap_handle_line(sap_item_t **first, const char *line, const char *line_end) 
 	}
 	/* length of the fieldname is given by difference between pointers */
 	len_name = name_end - name;
-	
-	printf("(%.*s)\n",len_name,name);
-	
+		
 	if (isArray) {
 		/* try to parse the index */
 		char *end_index;
@@ -114,6 +113,7 @@ int sap_handle_line(sap_item_t **first, const char *line, const char *line_end) 
 	} else {
 		arrayIndex = 0;
 	}
+	
 	
 	for (aux = name_end; aux != line_end; aux++) {
 		if (*aux == '=') break;
@@ -189,7 +189,7 @@ int sap_handle_line(sap_item_t **first, const char *line, const char *line_end) 
 			return 0;
 		}
 	} else {
-		size_value = sizeof(void *); /* values are pointers */
+		size_value = sizeof(void *); /* values are pointers for SAP_STRUCT */
 	}
 					
 	item = sap_search_field(*first, len_name, name);
@@ -206,25 +206,22 @@ int sap_handle_line(sap_item_t **first, const char *line, const char *line_end) 
 		item->type = typ;
 		*first = item;
 		/* printf("New field: %.*s  %i, %i\n",len_name,name, isArray, typ); */
-	} else {
-		if (isArray) {
-			if (arrayIndex >= item->num_elements) { 
-				int newSize = (arrayIndex+1)*size_value;
-				int oldSize = item->num_elements*size_value;
-				/* 	need to reallocate */
-				char *newBuf = (char *) realloc(item->value, newSize);
+	} 
+	if (isArray && (arrayIndex >= item->num_elements)) { 
+		int newSize = (arrayIndex+1)*size_value;
+		int oldSize = item->num_elements*size_value;
+		/* 	need to reallocate */
+		char *newBuf = (char *) realloc(item->value, newSize);
 				
-				if (newBuf == NULL) {
-					/* No harm done so far, we just can't add this value to the buffer */
-					fprintf(stderr, "Could not allocate memory for value array: Out of memory\n");
-					return 0;
-				}
-				/* zero-out the new memory */
-				memset(newBuf + oldSize, 0, newSize - oldSize);
-				item->value = (void *) newBuf;
-				item->num_elements = arrayIndex+1;
-			}
+		if (newBuf == NULL) {
+			/* No harm done so far, we just can't add this value to the buffer */
+			fprintf(stderr, "Could not allocate memory for value array: Out of memory\n");
+			return 0;
 		}
+		/* zero-out the new memory */
+		memset(newBuf + oldSize, 0, newSize - oldSize);
+		item->value = (void *) newBuf;
+		item->num_elements = arrayIndex+1;
 	}
 	
 	
