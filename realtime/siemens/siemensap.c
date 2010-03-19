@@ -3,6 +3,8 @@
  * Donders Institute for Donders Institute for Brain, Cognition and Behaviour,
  * Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
+ *
+ * For API documentation see siemensap.h
  */
 
 #include <siemensap.h>
@@ -13,8 +15,13 @@
 
 
 sap_item_t *sap_alloc_field(int len_name, const char *name, int size_value) {
-	sap_item_t *F = malloc(sizeof(sap_item_t));
-	F->fieldname = malloc(len_name+1);
+	sap_item_t *F = (sap_item_t *) malloc(sizeof(sap_item_t));
+	if (F==NULL) return NULL;
+	
+	if ((F->fieldname = (char *) malloc(len_name+1)) == NULL) {
+		free(F);
+		return NULL;
+	}
 	memcpy(F->fieldname, name, len_name);
 	F->num_elements = 0;
 	F->fieldname[len_name]=0;
@@ -22,6 +29,11 @@ sap_item_t *sap_alloc_field(int len_name, const char *name, int size_value) {
 		F->value = NULL;
 	} else {
 		F->value = calloc(size_value,1);
+		if (F->value == NULL) {
+			free(F->fieldname);
+			free(F);
+			return NULL;
+		}
 	}
 	return F;
 }
@@ -35,68 +47,82 @@ sap_item_t *sap_search_field(sap_item_t *first, int len_name, const char *name) 
 	return NULL;
 }
 
-/* parse one line and add to the list pointed to by "*first" */
+/* parse one line and add to the list pointed to by "*first" 
+	returns 0 on errors, empty lines, or comments
+	returns 1 if line was parsed and added to the list
+*/
 int sap_handle_line(sap_item_t **first, const char *line, const char *line_end) {
-	const char *name, *end_name;
-	sap_field_type_t typ = SAP_LONG;
+	/* looked-up or newly created item */
 	sap_item_t *item;
-	int len_name, size_value;
+	/* used during parsing for storing the determined type */
+	sap_field_type_t typ = SAP_LONG;
+	/* for detecting arrays and parsing their indicies */
 	long arrayIndex = 0;
 	int isArray=0;
-	
+	/* these are for storing numeric values during parsing, before a new item is created */
 	long longVal;
 	double doubleVal;
-	const char *val_start,*val_end,*aux;
-	
+	/* these are for storing noteworthy positions inside the line */
+	const char *val_start,*val_end,*aux; 
+	const char *name, *name_end;
+	/* length of field name and size of current value type (LONG / DOUBLE / VOID * / TEXT) */
+	int len_name, size_value;
+
 	name = line;
-	while (*name == ' ') name++;
+	/* skip whitespace at the beginning */
+	while (*name == ' ' || *name == '\t') name++;
 	/* check for comments and empty lines */
 	if (name[0]=='#' || name[0]=='\r' || name[0]=='\n') return 0;
 	
-	end_name = name;
-	/* detect field name */
-	while (1) {	
-		if (*end_name == '[') {
+	/* detect end of field name */
+	for (name_end = name; name_end != line_end; name_end++) {
+		if (*name_end == '[') {
 			isArray = 1;
 			break;
 		}
-		if (*end_name == '.') {
+		if (*name_end == '.') {
 			typ = SAP_STRUCT;
 			break;
 		}
-		/* otherwise, name is finished at the first space or = sign */
-		if (*end_name == ' ') break;
-		if (*end_name == '=') break;
-		if (*end_name == 0) {
+		/* otherwise, name is finished at the first space, tab, or = sign */
+		if (*name_end == ' ') break;
+		if (*name_end == '\t') break;
+		if (*name_end == '=') break;
+		if (*name_end == 0) {
 			fprintf(stderr,"Something went wrong in sap_parse -- this should not happen.\n");
 			return -1; 
 		}
-		end_name++;
 	}
+	/* length of the fieldname is given by difference between pointers */
+	len_name = name_end - name;
 	
-	len_name = end_name - name;
+	printf("(%.*s)\n",len_name,name);
 	
 	if (isArray) {
+		/* try to parse the index */
 		char *end_index;
-		arrayIndex = strtol(end_name+1, (char **) &end_index, 10);
-		if (arrayIndex < 0 || end_index[0]!=']' ) { /* this LONG_MIN in case of parse error */
+		arrayIndex = strtol(name_end+1, (char **) &end_index, 10);
+		if (arrayIndex < 0 || end_index[0]!=']' ) { /* this includes LONG_MIN in case of parse error */
 			fprintf(stderr, "Invalid array index description.\n");
 			return 0;
 		}
+		/* we can also have an array of structs */
 		if (end_index[1]=='.') {
 			typ = SAP_STRUCT;
-			end_name = end_index + 1;
+			name_end = end_index + 1;
 		}
 	} else {
 		arrayIndex = 0;
 	}
 	
-	val_start = strchr(end_name, '=');
-	if (val_start == NULL) {
+	for (aux = name_end; aux != line_end; aux++) {
+		if (*aux == '=') break;
+	}
+	if (aux == line_end) {
 		fprintf(stderr, "Invalid definition: No = sign\n");
 		return 0;
 	}
-	val_start++; /* now points just behind the = sign */
+	val_start = aux+1; /* now points just behind the = sign */
 
 	/* If it's not a struct, try to parse the value */
 	if (typ != SAP_STRUCT) {
@@ -138,7 +164,7 @@ int sap_handle_line(sap_item_t **first, const char *line, const char *line_end) 
 			}
 			typ = SAP_TEXT;
 			size_value = val_end - val_start + 1; /* +1 for trailing 0 */
-		} else if (*aux=='x') {
+		} else if (aux[0]=='x' && aux[-1]=='0') {
 			/* must be hexadecimal */
 			val_start = aux+1;
 			longVal = strtol(val_start, (char **) &val_end, 16);
@@ -170,6 +196,10 @@ int sap_handle_line(sap_item_t **first, const char *line, const char *line_end) 
 	if (item == NULL) {
 		/* create new field */
 		item = sap_alloc_field(len_name, name, size_value);
+		if (item == NULL) {
+			fprintf(stderr, "Could not allocate sap_item: Out of memory\n");
+			return 0;
+		}
 		item->next = *first;
 		item->num_elements = 1;
 		item->is_array = isArray;
@@ -178,11 +208,20 @@ int sap_handle_line(sap_item_t **first, const char *line, const char *line_end) 
 		/* printf("New field: %.*s  %i, %i\n",len_name,name, isArray, typ); */
 	} else {
 		if (isArray) {
-			if (arrayIndex >= item->num_elements) { /* need to reallocate, but we don't use realloc since we need to initialize to zero in case we jump over an index */
-				void *newBuf = calloc(arrayIndex+1, size_value);
-				memcpy(newBuf, item->value, item->num_elements*size_value);
-				free(item->value);
-				item->value = newBuf;
+			if (arrayIndex >= item->num_elements) { 
+				int newSize = (arrayIndex+1)*size_value;
+				int oldSize = item->num_elements*size_value;
+				/* 	need to reallocate */
+				char *newBuf = (char *) realloc(item->value, newSize);
+				
+				if (newBuf == NULL) {
+					/* No harm done so far, we just can't add this value to the buffer */
+					fprintf(stderr, "Could not allocate memory for value array: Out of memory\n");
+					return 0;
+				}
+				/* zero-out the new memory */
+				memset(newBuf + oldSize, 0, newSize - oldSize);
+				item->value = (void *) newBuf;
 				item->num_elements = arrayIndex+1;
 			}
 		}
@@ -191,8 +230,12 @@ int sap_handle_line(sap_item_t **first, const char *line, const char *line_end) 
 	
 	switch(typ) {
 		case SAP_STRUCT:
-			sap_handle_line(((sap_item_t **) item->value)+arrayIndex, end_name +1, line_end);
-			break;
+			/* If there is an error further back in this line, this call will return 0, so we do as well
+				Regarding clean-up, we could think of removing this item, e.g., if it was newly created
+				But the default value will be filled with zeros, corresponding to an empty structure,
+				so this won't cause problems.
+			*/
+			return sap_handle_line(((sap_item_t **) item->value)+arrayIndex, name_end +1, line_end);
 		case SAP_DOUBLE:
 			((double *) item->value)[arrayIndex]=doubleVal;
 			break;
@@ -204,7 +247,7 @@ int sap_handle_line(sap_item_t **first, const char *line, const char *line_end) 
 			((char *)item->value)[size_value-1]=0;			/* we allocated one more for the trailing 0 */
 			break;
 	} 
-	return 0;
+	return 1;
 }
 	
 	
@@ -212,6 +255,8 @@ sap_item_t *sap_parse(const char *buffer, int length) {
 	const char *curLine = buffer;
 	const char *nextLine;
 	sap_item_t *first = NULL;
+	
+	if (buffer==NULL || length==0) return NULL;
 	
 	while (length>0) {
 		for (nextLine = curLine; *nextLine!='\n'; nextLine++) {
