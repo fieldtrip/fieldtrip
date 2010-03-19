@@ -37,7 +37,7 @@
 #include "matrix.h"
 #include "buffer.h"
 
-#define NUMBER_OF_FIELDS 6
+#define NUMBER_OF_FIELDS 7
 
 int buffer_gethdr(int server, mxArray *plhs[], const mxArray *prhs[])
 {
@@ -48,7 +48,7 @@ int buffer_gethdr(int server, mxArray *plhs[], const mxArray *prhs[])
 	message_t *response = NULL;
 
 	/* this is for the Matlab specific output */
-	const char *field_names[NUMBER_OF_FIELDS] = {"nchans", "nsamples", "nevents", "fsample", "data_type", "bufsize"};
+	const char *field_names[NUMBER_OF_FIELDS] = {"nchans", "nsamples", "nevents", "fsample", "data_type", "bufsize", "blob"};
 
 	/* allocate the elements that will be used in the communication */
 	request      = malloc(sizeof(message_t));
@@ -65,10 +65,11 @@ int buffer_gethdr(int server, mxArray *plhs[], const mxArray *prhs[])
 		if (verbose) print_response(response->def);
 
 		if (response->def->command==GET_OK) {
+			mxArray *blob;
 			header_t header;
 			
 			header.def = response->buf;
-			header.buf = (char *)response->buf + sizeof(headerdef_t);   /* not used currently */
+			header.buf = (char *)response->buf + sizeof(headerdef_t); 
 			if (verbose) print_headerdef(header.def);
 
 			plhs[0] = mxCreateStructMatrix(1, 1, NUMBER_OF_FIELDS, field_names);
@@ -78,6 +79,11 @@ int buffer_gethdr(int server, mxArray *plhs[], const mxArray *prhs[])
 			mxSetFieldByNumber(plhs[0], 0, 3, mxCreateDoubleScalar((double)(header.def->fsample)));
 			mxSetFieldByNumber(plhs[0], 0, 4, mxCreateDoubleScalar((double)(header.def->data_type)));
 			mxSetFieldByNumber(plhs[0], 0, 5, mxCreateDoubleScalar((double)(header.def->bufsize)));
+			
+			/* pass on the binary(?) blob as an uint8 matrix */
+			blob = mxCreateNumericMatrix(header.def->bufsize, (header.def->bufsize>0)?1:0, mxUINT8_CLASS, mxREAL);
+			memcpy(mxGetData(blob), header.buf, header.def->bufsize);
+			mxSetFieldByNumber(plhs[0], 0, 6, blob);
 		}
 		else {
 			result = response->def->command;

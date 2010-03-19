@@ -77,6 +77,14 @@ void sap_print_items(int indent, sap_item_t *item);
 */
 sap_item_t *sap_parse(const char *buffer, int length);
 
+/** Recursively reverses the list in place, and changes 'first' pointer accordingly.
+	This function does not re-allocate any memory but only changes the pointers. Pointers
+	to items retrieved previously (e.g., using sap_search_field) will still be valid,
+	but the 'next' element will be different.
+	@param first	Pointer to pointer to first list item
+*/
+void sap_reverse_in_place(sap_item_t **first);
+
 /** Recursively destroys the linked list pointed to by 'item' and frees memory.
 	@param item 	First element of list to be destroyed (can also be NULL)
 	You cannot use the list or any of its elements after this call.

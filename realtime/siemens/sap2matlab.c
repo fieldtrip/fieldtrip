@@ -73,18 +73,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	int size;
 	sap_item_t *L = NULL;
 	
-	if (nrhs!=1 || !mxIsChar(prhs[0])) mexErrMsgTxt("This function needs exactly one (string) argument.");
+	if (nrhs!=1) mexErrMsgTxt("This function needs exactly one (string) argument.");
 	
 	size = mxGetNumberOfElements(prhs[0]);
 	
-	if (sizeof(char) == sizeof(mxChar))  {
+	if ((sizeof(char) == sizeof(mxChar) && mxIsChar(prhs[0])) || mxIsUint8(prhs[0]))  {
 		buffer = (char *) mxGetData(prhs[0]);
 		L = sap_parse(buffer, size);
-	} else {
+	} else if (mxIsChar(prhs[0])) {
 		buffer = mxArrayToString(prhs[0]);
 		L = sap_parse(buffer, size);
 		mxFree(buffer);
+	} else {
+		mexErrMsgTxt("Argument must be either of type 'char' or 'uint8'.");
 	}
+	
+	sap_reverse_in_place(L);
 	
 	plhs[0] = createStructFromSAP(L);
 	

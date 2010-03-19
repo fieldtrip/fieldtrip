@@ -251,6 +251,32 @@ int sap_handle_line(sap_item_t **first, const char *line, const char *line_end) 
 }
 	
 	
+void sap_reverse_in_place(sap_item_t **first) {
+	sap_item_t *prev = NULL, *next;
+	sap_item_t *item;
+	
+	if (first == NULL || *first == NULL) return;
+	
+	item = *first;
+	while (1) {
+		if (item->type == SAP_STRUCT) {
+			sap_item_t **children = (sap_item_t **) item->value;
+			int i;
+			/* the array itself will of course not be reversed */
+			for (i=0;i<item->num_elements;i++) {
+				sap_reverse_in_place(children + i);
+			}
+		}
+		
+		next = item->next;
+		item->next = prev;
+		prev = item;
+		if (next == NULL) break;
+		item = next;
+	}
+	*first = item;
+}	
+	
 sap_item_t *sap_parse(const char *buffer, int length) {
 	const char *curLine = buffer;
 	const char *nextLine;
@@ -269,7 +295,7 @@ sap_item_t *sap_parse(const char *buffer, int length) {
 		curLine=nextLine+1;
 		length--;
 	} 
-	
+		
 	return first;
 }
 
@@ -326,8 +352,7 @@ void sap_print_items(int indent, sap_item_t *item) {
 }
 
 void sap_print(sap_item_t *list) {
-	printf("----------------------------------------------\r\n");
 	sap_print_items(0, list);
-	printf("----------------------------------------------\r\n");
 }
+
 
