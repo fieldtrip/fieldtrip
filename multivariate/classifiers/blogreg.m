@@ -1,7 +1,6 @@
 classdef blogreg < classifier
 %Bayesian logistic regression with spatiotemporal interactions
 %
-%
 % PARAMETERS:
 % p.prior; % the used prior
 % p.Gauss; % the EP estimate
@@ -71,7 +70,7 @@ classdef blogreg < classifier
         
         if isempty(obj.precbias)
           
-          % NOTE: EP doesnt seem to converge for low precisions
+          % NOTE: EP doesn't seem to converge for low precisions
           % (i.e., large scales)
           
           % we choose the precision of the bias term to equal the scale

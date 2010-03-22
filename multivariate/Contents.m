@@ -107,5 +107,10 @@
 %   sparse inputs where the zero inputs are disregarded
 % - crossvalidator 276: roundoff error changes the actual number of used
 %   samples; can go wrong with skewed unique samples; also for ten-fold
-% - check logreg performance, remove lr,l1lr,l2lr,elasticlr if it works;
-%   rewrite linreg etc in the same fashion
+% - rewrite linreg etc in the same fashion as logreg by removing
+%   l1,l2,elasticnet
+% - implement time bars for long operations
+% - remove reconstructors; everything is a classifier or a regressor
+% depending on discrete/continuous univariate or multivariate output
+% - timeseries: implementation for infinite horizon; finite horizon always
+% represented as a static classifier/regressor

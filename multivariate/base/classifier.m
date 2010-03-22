@@ -14,29 +14,29 @@ classdef classifier < predictor
 % doc classifiers
 %
 % Copyright (c) 2008, Marcel van Gerven
- 
+
 
   methods
-        
-        function obj = classifier(varargin)
-     
-          % parse options
-          for i=1:2:length(varargin)
-            if ismember(varargin{i},fieldnames(obj))
-              obj.(varargin{i}) = varargin{i+1};
-            end
-          end
-
-        end        
-        
-        function clf = predict(obj,data)
-           % convert posterior dataset into classifications
-           
-           [tmp,clf] = max(obj.test(data),[],2);
+  
+    function obj = classifier(varargin)
+      
+      % parse options
+      for i=1:2:length(varargin)
+        if ismember(varargin{i},fieldnames(obj))
+          obj.(varargin{i}) = varargin{i+1};
         end
-        
-  end
+      end
+      
+    end
     
+    function clf = predict(obj,data)
+      % convert posterior dataset into classifications
+      
+      [tmp,clf] = max(obj.test(data),[],2);
+    end
+    
+  end
+  
   methods(Static)
     
     function metric = evaluate(post,tcls,varargin)
@@ -77,13 +77,13 @@ classdef classifier < predictor
       options = varargin2struct(varargin);
       
       if ~isfield(options,'metric'), options.metric = 'accuracy'; end
-     
-      metric = compute_metric(post,tcls(:,1),options);
-     
-      function met = compute_metric(post,tcls,cfg)
       
+      metric = compute_metric(post,tcls(:,1),options);
+      
+      function met = compute_metric(post,tcls,cfg)
+        
         % precompute confusion matrix as it is often used
-        [cobs,cexp] = contingency(post,tcls);        
+        [cobs,cexp] = contingency(post,tcls);
         nclasses = size(post,2);
         
         met = [];
@@ -327,7 +327,7 @@ classdef classifier < predictor
           case 'hfdiff'
             
             met = (tp/(tp+fn)) - (fp/(tp+fp));
-                     
+            
           otherwise
             error(['unsupported option ',cfg.metric]);
             
@@ -359,7 +359,7 @@ classdef classifier < predictor
           
         end
       end
-    
+      
     end
     
     function p = significance(post,design,varargin)
@@ -377,10 +377,10 @@ classdef classifier < predictor
       
       p = cell(1,length(post));
       for c=1:length(post)
-    
-        if ~isfield(options,'test') || strcmp(options.test,'binomial_test')
-        % one-sided binomial test with automatic bonferroni correction
         
+        if ~isfield(options,'test') || strcmp(options.test,'binomial_test')
+          % one-sided binomial test with automatic bonferroni correction
+          
           % compute class with highest prior probability
           nclasses = size(post{c},2);
           priors = zeros(1,nclasses);
@@ -410,8 +410,8 @@ classdef classifier < predictor
       
     end
     
-     function [reject,pvalue,level] = binomial_test(cpost1, cdesign1, cpost2, cdesign2, varargin)
-      % BINOMIAL_TEST makes a significance test whether two algorithms perform 
+    function [reject,pvalue,level] = binomial_test(cpost1, cdesign1, cpost2, cdesign2, varargin)
+      % BINOMIAL_TEST makes a significance test whether two algorithms perform
       % the same or differently
       %
       % [reject,pvalue,level] = significance_test(cpost1, design1, cpost2, design2, varargin)
@@ -551,7 +551,7 @@ classdef classifier < predictor
         
       end
       
-     end
+    end
     
   end
   

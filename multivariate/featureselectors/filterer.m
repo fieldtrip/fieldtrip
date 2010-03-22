@@ -24,6 +24,7 @@ classdef filterer < featureselector
     % mutual_information : order according to the mutual information (default)
     % anova : order according to anova test  
     % regression : linearly regress input on output and compute residual
+    % correlation : correlation between input and output
     filter = 'mutual_information';    
     
   end
@@ -62,13 +63,16 @@ classdef filterer < featureselector
             p.value(j) = filterer.meandiff(X(:,j),Y);
             
           case 'mutual_information'
-            filterer.mutual_information(X(:,j),Y);
+            p.value(j) = filterer.mutual_information(X(:,j),Y);
             
           case 'anova'
-            filterer.anova(X(:,j),Y);
+            p.value(j) = filterer.anova(X(:,j),Y);
             
-          case 'regress'
-            filterer.regress(X(:,j),Y);
+          case 'regression'
+            p.value(j) = filterer.regress(X(:,j),Y);
+            
+          case 'correlation'
+            p.value(j) = filterer.correlation(X(:,j),Y);
             
           otherwise
             error('unrecognized filter');
@@ -159,11 +163,18 @@ classdef filterer < featureselector
     
     function res = regress(X,Y)
       % linearly regress input on output and compute residual
-      
+
       [a,b,res] = regress(Y,[X ones(size(X,1),1)]);
       
-      res = 1./res;
+      res = 1./mean(abs(res));
       
+    end
+    
+    function res = correlation(X,Y)
+      % compute correlation between input and output
+
+      res = corr(X,Y);
+    
     end
     
     function mi = mutual_information(data,design)

@@ -39,6 +39,7 @@ classdef mvmethod
     function obj = train(obj,data,design)
       
       if iscell(data) && ~obj.istransfer()
+        % compute result for each individual dataset
         
         params = cell(1,length(data));
         
@@ -115,11 +116,10 @@ classdef mvmethod
       
       if iscell(data) && ~obj.istransfer()
         
-        params = obj.params;
-        
+        p = obj.params;        
         for c=1:length(data)
           
-          obj.params = params{c};
+          obj.params = p{c};
           data{c} = obj.test(data{c});
         end
         
@@ -170,11 +170,11 @@ classdef mvmethod
       
       if iscell(data) && ~obj.istransfer()
         
-        params = obj.params;
+        p = obj.params;
         
         for c=1:length(data)
           
-          obj.params = params{c};
+          obj.params = p{c};
           data{c} = obj.untest(data{c});
         end
         
@@ -210,7 +210,7 @@ classdef mvmethod
         end
         
       end
-    end
+    end    
     
     function p = estimate(obj,X,Y)
       % parameter estimation

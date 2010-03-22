@@ -25,26 +25,26 @@ classdef basis_recon < reconstructor
 % Y = dataset(Y);
 % 
 % % ridge regression on individual elements of the design matrix (i.e., pixel level reconstructions)
-% p = mva({standardizer basis_recon('A',[],'W',[],'procedure',{ridge},'verbose',true)});
-% p = p.train(X.subsample(1:100),Y.subsample(1:100));
-% r = p.test(X.subsample(101:111));
+% p = mva({standardizer basis_recon('procedure',{ridge},'verbose',true)});
+% p = p.train(X(1:100,:),Y(1:100,:));
+% r = p.test(X(101:111,:));
 % 
 % % class label probabilities using l2 regularized logistic regression
 % Y = dataset((Y.X > 128) + 1); % threshold data
 % p = mva({standardizer basis_recon('procedure',{l2lr},'verbose',true,'standardize',false)});
-% p = p.train(X.subsample(1:100),Y.subsample(1:100));
-% r = p.test(X.subsample(101:111));
+% p = p.train(X(1:100,:),Y(1:100,:));
+% r = p.test(X(101:111,:));
 % 
 % % prelearned ICA basis functions
 % load ica; 
 % p = mva({standardizer basis_recon('A',A,'W',W,'procedure',{ridge},'verbose',true)});
-% p = p.train(X.subsample(1:100),Y.subsample(1:100));
-% r = p.test(X.subsample(101:111));
+% p = p.train(X(1:100),Y(1:100));
+% r = p.test(X(101:111));
 % 
 % % visualization
-% r.image(1:10,[2 5]);
+% images(r,1:10,[2 5]);
 % figure
-% Y.image(101:110,[2 5]);
+% images(Y,101:110,[2 5]);
 %
 % Copyright (c) 2010, Marcel van Gerven
 
@@ -139,7 +139,7 @@ classdef basis_recon < reconstructor
           fprintf('testing source %d of %d\n',c,length(proc));
         end
         pp = proc{c}.test(data);
-        S(:,c) = pp(:,1);
+        S(:,c) = pp(:,1); % return the first column only (in case of classification)
       end
       
     end

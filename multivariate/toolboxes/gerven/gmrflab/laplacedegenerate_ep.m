@@ -528,15 +528,35 @@ terms.h     = terms.h/temperature;
 function [invA,logdet] = invert_chol(A)
 
 if issparse(A)
-
-  [L,dummy,S] = chol(sparse(A),'lower');   % now A = S*(L*L')*S' and (L*L') = S'*A*S
   
-  if dummy
-    error('matrix is not p.d.');
+  if 0 % matlab version; slower but useful in case of mex problems
+   
+    [L,dummy,S] = chol(sparse(A),'lower');   % now A = S*(L*L')*S' and (L*L') = S'*A*S
+   
+    n           = length(L);
+    invdiagL2   = 1./spdiags(L,0).^2;
+    
+    invA = A;
+    for i=n:-1:1,
+      I      = i+find(L(i+1:n,i));
+      invA(I,i) = -(invA(I,I)*L(I,i))/L(i,i);
+      invA(i,I) = invA(I,i)';
+      invA(i,i) = invdiagL2(i) - (invA(i,I)*L(I,i))/L(i,i);
+    end
+    
+    invA = S*invA*S';
+    
+  else
+    
+    [L,dummy,S] = chol(sparse(A),'lower');   % now A = S*(L*L')*S' and (L*L') = S'*A*S
+    
+    if dummy
+      error('matrix is not p.d.');
+    end
+    
+    invA = fastinvc(L);
+    invA = S*invA*S';
   end
-  
-  invA = fastinvc(L);
-  invA = S*invA*S';  
   
 else
   

@@ -6,8 +6,8 @@ classdef logreg < classifier
 
   properties
     
-    lambda = 0; % L1 regularization parameter
-    nu = 0;     % L2 regularization parameter
+    L1 = 0; % L1 regularization parameter
+    L2 = 0; % L2 regularization parameter
     
   end
 
@@ -44,43 +44,43 @@ classdef logreg < classifier
       end
       w_init = w_init(:);
       
-      if obj.lambda == 0 && obj.nu == 0
+      if obj.L1 == 0 && obj.L2 == 0
         % unregularized logistic regression
         
         opt.Method = 'newton';
         p.model = minFunc(funObj,w_init,opt);
         
-      elseif obj.lambda == 0 && obj.nu ~= 0
+      elseif obj.L1 == 0 && obj.L2 ~= 0
         % L2 regularized logistic regression
         
-        nu = obj.nu*ones(nvars,nclasses-1);
-        nu(1,:) = 0; % Don't regularize bias elements
+        L2 = obj.L2*ones(nvars,nclasses-1);
+        L2(1,:) = 0; % Don't regularize bias elements
         
-        funObjL2 = @(w)penalizedL2(w,funObj,nu(:));
+        funObjL2 = @(w)penalizedL2(w,funObj,L2(:));
         
         opt.Method = 'newton';
         p.model = minFunc(funObjL2,w_init,opt);
         
-      elseif obj.lambda ~= 0 && obj.nu == 0
+      elseif obj.L1 ~= 0 && obj.L2 == 0
         % L1 regularized logistic regression
         
-        lambda = obj.lambda*ones(nvars,nclasses-1);
-        lambda(1,:) = 0; % Don't regularize bias elements
+        L1 = obj.L1*ones(nvars,nclasses-1);
+        L1(1,:) = 0; % Don't regularize bias elements
         
-        p.model = L1GeneralProjection(funObj,w_init,lambda(:));
+        p.model = L1GeneralProjection(funObj,w_init,L1(:));
         
       else
         % elastic net logistic regression
         
-        nu = obj.nu*ones(nvars,nclasses-1);
-        nu(1,:) = 0; % Don't regularize bias elements
-        funObjL2 = @(w)penalizedL2(w,funObj,nu(:));
+        L2 = obj.L2*ones(nvars,nclasses-1);
+        L2(1,:) = 0; % Don't regularize bias elements
+        funObjL2 = @(w)penalizedL2(w,funObj,L2(:));
         
         % Set up regularizer
-        lambda = obj.lambda*ones(nvars,nclasses-1);
-        lambda(1,:) = 0; % Don't regularize bias elements
+        L1 = obj.L1*ones(nvars,nclasses-1);
+        L1(1,:) = 0; % Don't regularize bias elements
         
-        p.model = L1GeneralProjection(funObjL2,w_init,lambda(:));
+        p.model = L1GeneralProjection(funObjL2,w_init,L1(:));
         
       end
       
