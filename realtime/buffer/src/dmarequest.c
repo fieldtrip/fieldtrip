@@ -90,36 +90,11 @@ void init_data(void) {
 	int verbose = 0;
 	if (verbose>0) fprintf(stderr, "init_data: creating data buffer\n");
 	if (header) {
-		int wordsize = 0;
-		switch (header->def->data_type) {
-			case DATATYPE_CHAR:
-				wordsize = WORDSIZE_CHAR;
-				break;
-			case DATATYPE_UINT8:		
-			case DATATYPE_INT8:
-				wordsize = WORDSIZE_INT8;
-				break;
-			case DATATYPE_UINT16:
-			case DATATYPE_INT16:
-				wordsize = WORDSIZE_INT16;
-				break;
-			case DATATYPE_UINT32:				
-			case DATATYPE_INT32:
-				wordsize = WORDSIZE_INT32;
-				break;
-			case DATATYPE_UINT64:
-			case DATATYPE_INT64:
-				wordsize = WORDSIZE_INT64;
-				break;
-			case DATATYPE_FLOAT32:
-				wordsize = WORDSIZE_FLOAT32;
-				break;
-			case DATATYPE_FLOAT64:
-				wordsize = WORDSIZE_FLOAT64;
-				break;
-			default:
-				fprintf(stderr, "init_data: unsupported data type (%u)\n", header->def->data_type);
-				return;
+		unsigned int wordsize = wordsize_from_type(header->def->data_type);
+		
+		if (wordsize==0) {
+			fprintf(stderr, "init_data: unsupported data type (%u)\n", header->def->data_type);
+			return;
 		}
 		/* heuristic of choosing size of buffer:
 			set current_max_num_sample to MAXNUMSAMPLE if nchans <= 256
@@ -212,10 +187,12 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
     struct timeval tp;
 	struct timespec ts;
 
+	/* use a local variable for datasel (in GET_DAT) */
+	datasel_t datasel;
+	
 	// these are for typecasting
 	headerdef_t    *headerdef;
 	datadef_t      *datadef;
-	datasel_t      *datasel;
 	eventdef_t     *eventdef;
 	eventsel_t     *eventsel;
 	propertydef_t  *propertydef;
@@ -301,44 +278,26 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 				response->def->command = PUT_ERR;
 			else {
 				unsigned int i;
+				unsigned int wordsize = wordsize_from_type(header->def->data_type);
 				
 				response->def->command = PUT_OK;
-				/* SK: we don't really need to branch inside the loop. Let's use a variable that get's assigned the wordsize instead.
-					Then we only need one of these horrible memcpy(...) lines */
-				for (i=0; i<datadef->nsamples; i++) {
-					switch (datadef->data_type) {
-						case DATATYPE_INT8:
-							memcpy((char*)(data->buf)+(thissample*data->def->nchans)*sizeof(INT8_T), (char*)request->buf+sizeof(datadef_t)+(i*data->def->nchans)*sizeof(INT8_T), sizeof(INT8_T)*data->def->nchans);
-							break;
-
-						case DATATYPE_INT16:
-							memcpy((char*)(data->buf)+(thissample*data->def->nchans)*sizeof(INT16_T), (char*)request->buf+sizeof(datadef_t)+(i*data->def->nchans)*sizeof(INT16_T), sizeof(INT16_T)*data->def->nchans);
-							break;
-
-						case DATATYPE_INT32:
-							memcpy((char*)(data->buf)+(thissample*data->def->nchans)*sizeof(INT32_T), (char*)request->buf+sizeof(datadef_t)+(i*data->def->nchans)*sizeof(INT32_T), sizeof(INT32_T)*data->def->nchans);
-							break;
-
-						case DATATYPE_INT64:
-							memcpy((char*)(data->buf)+(thissample*data->def->nchans)*sizeof(INT64_T), (char*)request->buf+sizeof(datadef_t)+(i*data->def->nchans)*sizeof(INT64_T), sizeof(INT64_T)*data->def->nchans);
-							break;
-
-						case DATATYPE_FLOAT32:
-							memcpy((char*)(data->buf)+(thissample*data->def->nchans)*sizeof(FLOAT32_T), (char*)request->buf+sizeof(datadef_t)+(i*data->def->nchans)*sizeof(FLOAT32_T), sizeof(FLOAT32_T)*data->def->nchans);
-							break;
-
-						case DATATYPE_FLOAT64:
-							memcpy((char*)(data->buf)+(thissample*data->def->nchans)*sizeof(FLOAT64_T), (char*)request->buf+sizeof(datadef_t)+(i*data->def->nchans)*sizeof(FLOAT64_T), sizeof(FLOAT64_T)*data->def->nchans);
-							break;
-
-						default:
-							fprintf(stderr, "dmarequest: unsupported data type (%d)\n", datadef->data_type);
-							response->def->command = PUT_ERR;
-							continue; // thissample and header->def->nsamples will not be incremented
+				
+				if (wordsize == 0) {
+					fprintf(stderr, "dmarequest: unsupported data type (%d)\n", datadef->data_type);
+					response->def->command = PUT_ERR;
+				} else {
+					/* number of bytes per sample (all channels) is given by wordsize x number of channels */
+					unsigned int chansize = wordsize * data->def->nchans;
+					/* request_data points to actual data samples within the request, use char* for convenience */
+					const char *request_data = (const char *) request->buf + sizeof(datadef_t);
+					char *buffer_data = (char *)data->buf;
+					
+					for (i=0; i<datadef->nsamples; i++) {
+						memcpy(buffer_data+(thissample*chansize), request_data+(i*chansize), chansize);
+						header->def->nsamples++;
+						thissample++;
+						thissample = WRAP(thissample, current_max_num_sample);
 					}
-					header->def->nsamples++;
-					thissample++;
-					thissample = WRAP(thissample, current_max_num_sample);
 				}
 				// Signal possibly waiting threads that we have received data
 				pthread_cond_broadcast(&getData_cond);
@@ -486,27 +445,26 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			pthread_mutex_lock(&mutexdata);
 			pthread_mutex_lock(&mutexheader);
 
-			datasel = (datasel_t*)malloc(sizeof(datasel_t));
 			if (request->def->bufsize) {
 				// the selection has been specified
-				memcpy(datasel, request->buf, sizeof(datasel_t));
+				memcpy(&datasel, request->buf, sizeof(datasel_t));
 				// If endsample is -1 read the buffer to the end
-				if(datasel->endsample == -1)
+				if(datasel.endsample == -1)
 				{
-					datasel->endsample = header->def->nsamples - 1;
+					datasel.endsample = header->def->nsamples - 1;
 				}
 			}
 			else {
 				// determine a valid selection
 				if (header->def->nsamples>current_max_num_sample) {
 					// the ringbuffer is completely full
-					datasel->begsample = header->def->nsamples - current_max_num_sample;
-					datasel->endsample = header->def->nsamples - 1;
+					datasel.begsample = header->def->nsamples - current_max_num_sample;
+					datasel.endsample = header->def->nsamples - 1;
 				}
 				else {
 					// the ringbuffer is not yet completely full
-					datasel->begsample = 0;
-					datasel->endsample = header->def->nsamples - 1;
+					datasel.begsample = 0;
+					datasel.endsample = header->def->nsamples - 1;
 				}
 			}
 			
@@ -514,7 +472,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			if(blockrequest == 1)
 			{
 				// check whether data is available
-				while((datasel->begsample >= (datasel->endsample+1)) || (datasel->endsample > header->def->nsamples - 1))
+				while((datasel.begsample >= (datasel.endsample+1)) || (datasel.endsample > header->def->nsamples - 1))
 				{
 					// if not unlock all mutexes
 					pthread_mutex_unlock(&mutexdata);
@@ -532,133 +490,89 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 					// Lock the mutexes again
 					pthread_mutex_lock(&mutexdata);
 					pthread_mutex_lock(&mutexheader);
-					if(datasel->begsample == (datasel->endsample+1))
-						datasel->endsample = header->def->nsamples - 1;
+					if(datasel.begsample == (datasel.endsample+1))
+						datasel.endsample = header->def->nsamples - 1;
 				}
 			}
 
 			if (verbose>1) print_headerdef(header->def);
-			if (verbose>1) print_datasel(datasel);
+			if (verbose>1) print_datasel(&datasel);
 
-			if (datasel==NULL) {
-				fprintf(stderr, "dmarequest: err0\n");
-				response->def->version = VERSION;
-				response->def->command = GET_ERR;
-				response->def->bufsize = 0;
-			}
-			else if (datasel->begsample < 0 || datasel->endsample < 0) {
+			if (datasel.begsample < 0 || datasel.endsample < 0) {
 				fprintf(stderr, "dmarequest: err1\n");
 				response->def->version = VERSION;
 				response->def->command = GET_ERR;
 				response->def->bufsize = 0;
 			}
-			else if (datasel->begsample >= header->def->nsamples || datasel->endsample >= header->def->nsamples) {
+			else if (datasel.begsample >= header->def->nsamples || datasel.endsample >= header->def->nsamples) {
 				fprintf(stderr, "dmarequest: err2\n");
 				response->def->version = VERSION;
 				response->def->command = GET_ERR;
 				response->def->bufsize = 0;
 			}
-			else if ((header->def->nsamples - datasel->begsample) > current_max_num_sample) {
+			else if ((header->def->nsamples - datasel.begsample) > current_max_num_sample) {
 				fprintf(stderr, "dmarequest: err3\n");
 				response->def->version = VERSION;
 				response->def->command = GET_ERR;
 				response->def->bufsize = 0;
 			}
 			else {
-				unsigned int j,n;
+				unsigned int wordsize = wordsize_from_type(data->def->data_type);
+				if (wordsize==0) {
+					fprintf(stderr, "dmarequest: unsupported data type (%d)\n", data->def->data_type);
+					response->def->version = VERSION;
+					response->def->command = GET_ERR;
+					response->def->bufsize = 0;
+				}  else {
+					unsigned int n;
+					response->def->version = VERSION;
+					response->def->command = GET_OK;
+					response->def->bufsize = 0;
 				
-				// assume for the moment that it will be ok
-				// the only problem might be an unsupported datatype, which is dealt with below
-				response->def->version = VERSION;
-				response->def->command = GET_OK;
-				response->def->bufsize = 0;
-
-				// determine the number of samples to return
-				n = datasel->endsample - datasel->begsample + 1;
+					// determine the number of samples to return
+					n = datasel.endsample - datasel.begsample + 1;
 				
-				/* SK: Again, I propose to clean this up and use a variable that get's assigned the wordsize instead.
-					That would remove a lot of code duplication. Also, response->buf can easily be preallocated to
-					the correct size and filled by simple memcpy's. Two reasons:
-						- this code runs with an acquired mutex and we should aim to be as fast as possible here.
-						- we can check once if the destination buffer could be allocated
-				*/
-
-				switch (data->def->data_type) {
-					case DATATYPE_INT8:
-						data->def->nsamples = n;
-						data->def->bufsize  = n*data->def->nchans*sizeof(INT8_T);
-						response->def->bufsize = append(&response->buf, response->def->bufsize, data->def, sizeof(datadef_t));
-						data->def->nsamples = current_max_num_sample;
-						data->def->bufsize  = 0;
-						for (j=0; j<n; j++) {
-							response->def->bufsize = append(&response->buf, response->def->bufsize, (char*)(data->buf)+WRAP(datasel->begsample+j,current_max_num_sample)*(data->def->nchans)*sizeof(INT8_T), (data->def->nchans)*sizeof(INT8_T));
-						}
-						break;
-
-					case DATATYPE_INT16:
-						data->def->nsamples = n;
-						data->def->bufsize  = n*data->def->nchans*sizeof(INT16_T);
-						response->def->bufsize = append(&response->buf, response->def->bufsize, data->def, sizeof(datadef_t));
-						data->def->nsamples = current_max_num_sample;
-						data->def->bufsize  = 0;
-						for (j=0; j<n; j++) {
-							response->def->bufsize = append(&response->buf, response->def->bufsize, (char*)(data->buf)+WRAP(datasel->begsample+j,current_max_num_sample)*(data->def->nchans)*sizeof(INT16_T), (data->def->nchans)*sizeof(INT16_T));
-						}
-						break;
-
-					case DATATYPE_INT32:
-						data->def->nsamples = n;
-						data->def->bufsize  = n*data->def->nchans*sizeof(INT32_T);
-						response->def->bufsize = append(&response->buf, response->def->bufsize, data->def, sizeof(datadef_t));
-						data->def->nsamples = current_max_num_sample;
-						data->def->bufsize  = 0;
-						for (j=0; j<n; j++) {
-							response->def->bufsize = append(&response->buf, response->def->bufsize, (char*)(data->buf)+WRAP(datasel->begsample+j,current_max_num_sample)*(data->def->nchans)*sizeof(INT32_T), (data->def->nchans)*sizeof(INT32_T));
-						}
-						break;
-
-					case DATATYPE_INT64:
-						data->def->nsamples = n;
-						data->def->bufsize  = n*data->def->nchans*sizeof(INT64_T);
-						response->def->bufsize = append(&response->buf, response->def->bufsize, data->def, sizeof(datadef_t));
-						data->def->nsamples = current_max_num_sample;
-						data->def->bufsize  = 0;
-						for (j=0; j<n; j++) {
-							response->def->bufsize = append(&response->buf, response->def->bufsize, (char*)(data->buf)+WRAP(datasel->begsample+j,current_max_num_sample)*(data->def->nchans)*sizeof(INT64_T), (data->def->nchans)*sizeof(INT64_T));
-						}
-						break;
-
-					case DATATYPE_FLOAT32:
-						data->def->nsamples = n;
-						data->def->bufsize  = n*data->def->nchans*sizeof(FLOAT32_T);
-						response->def->bufsize = append(&response->buf, response->def->bufsize, data->def, sizeof(datadef_t));
-						data->def->nsamples = current_max_num_sample;
-						data->def->bufsize  = 0;
-						for (j=0; j<n; j++) {
-							response->def->bufsize = append(&response->buf, response->def->bufsize, (char*)(data->buf)+WRAP(datasel->begsample+j,current_max_num_sample)*(data->def->nchans)*sizeof(FLOAT32_T), (data->def->nchans)*sizeof(FLOAT32_T));
-						}
-						break;
-
-					case DATATYPE_FLOAT64:
-						data->def->nsamples = n;
-						data->def->bufsize  = n*data->def->nchans*sizeof(FLOAT64_T);
-						response->def->bufsize = append(&response->buf, response->def->bufsize, data->def, sizeof(datadef_t));
-						data->def->nsamples = current_max_num_sample;
-						data->def->bufsize  = 0;
-						for (j=0; j<n; j++) {
-							response->def->bufsize = append(&response->buf, response->def->bufsize, (char*)(data->buf)+WRAP(datasel->begsample+j,current_max_num_sample)*(data->def->nchans)*sizeof(FLOAT64_T), (data->def->nchans)*sizeof(FLOAT64_T));
-						}
-						break;
-
-					default:
-						fprintf(stderr, "dmarequest: unsupported data type (%d)\n", data->def->data_type);
-						response->def->version = VERSION;
+					response->buf = malloc(sizeof(datadef_t) + n*data->def->nchans*wordsize);
+					if (response->buf == NULL) {
+						/* not enough space for copying data into response */
+						fprintf(stderr, "dmarequest: out of memory\n");
 						response->def->command = GET_ERR;
-						response->def->bufsize = 0;
+					} 
+					else {
+						/* number of bytes per sample (all channels) */
+						unsigned int chansize = data->def->nchans * wordsize;
+						
+						/* convenience pointer to start of actual data in response */
+						char *resp_data = ((char *) response->buf) + sizeof(datadef_t);
+						
+						/* this is the location of begsample within the ringbuffer */
+						unsigned int start_index = 	WRAP(datasel.begsample, current_max_num_sample);
+						
+						/* have datadef point into the freshly allocated response buffer and directly
+							fill in the information */
+						datadef = (datadef_t *) response->buf;
+						datadef->nchans    = data->def->nchans;
+						datadef->data_type = data->def->data_type;
+						datadef->nsamples  = n;
+						datadef->bufsize   = n*chansize;
+					
+						response->def->bufsize = sizeof(datadef_t) + datadef->bufsize;
+						
+						if (start_index + n <= current_max_num_sample) {
+							/* we can copy everything in one go */
+							memcpy(resp_data, (char*)(data->buf) + start_index*chansize, n*chansize);
+						} else {
+							/* need to wrap around at current_max_num_sample */
+							unsigned int na = current_max_num_sample - start_index;
+							unsigned int nb = n - na;
+							
+							memcpy(resp_data, (char*)(data->buf) + start_index*chansize, na*chansize);
+							memcpy(resp_data + na*chansize, (char*)(data->buf), nb*chansize);
+						}
+					}
 				}
 			}
 
-			FREE(datasel);
 			pthread_mutex_unlock(&mutexdata);
 			pthread_mutex_unlock(&mutexheader);
 			break;

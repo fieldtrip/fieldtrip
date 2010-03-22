@@ -109,6 +109,7 @@ int tcprequest(int, const message_t *, message_t**);
 int find_property(property_t *);
 int get_property(int, const char *, INT32_T *);
 int set_property(int, const char *, INT32_T *);
+unsigned int wordsize_from_type(UINT32_T data_type);
 void check_datatypes(void);
 
 typedef struct {
