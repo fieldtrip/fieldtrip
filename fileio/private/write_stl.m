@@ -5,6 +5,7 @@ function write_stl(filename, pnt, tri, nrm);
 %
 % Use as
 %   write_stl(filename, pnt, tri, nrm)
+% where nrm refers to the triangle normals.
 %
 % See also READ_STL
   
