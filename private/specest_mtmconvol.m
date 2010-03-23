@@ -19,7 +19,7 @@ function [spectrum,ntaper,foi,toi] = specest_mtmconvol(dat, time, varargin)
 % Optional arguments should be specified in key-value pairs and can include:
 %   taper     = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
 %   pad       = number, indicating time-length of data to be padded out to          %%% IS IN SECONDS
-%   toi       = vector, containing time points of interest (in seconds, analysis window will be centered around these time points)
+%   toi       = vector, containing time points of interest (in seconds)
 %   timwin    = vector, containing length of time windows (in seconds)
 %   foi       = vector, containing frequencies (in Hz)
 %   tapsmofrq = vector, the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
