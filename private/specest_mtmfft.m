@@ -8,7 +8,7 @@ function [spectrum,foi] = specest_mtmfft(dat, time, varargin)
 %
 %   dat      = matrix of chan*sample 
 %   time     = vector, containing time in seconds for each sample
-%   spectrum = matrix of taper*chan*sample of fourier coefficients
+%   spectrum = matrix of taper*chan*foi of fourier coefficients
 %   foi      = vector of frequencies in spectrum
 %
 %
