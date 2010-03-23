@@ -85,6 +85,22 @@ int buffer_getdat(int server, mxArray *plhs[], const mxArray *prhs[])
       if (verbose) print_datadef(data_def);
 
       switch (data_def->data_type) {
+        case DATATYPE_UINT8:
+        datp = mxCreateNumericMatrix(data_def->nchans, data_def->nsamples, mxUINT8_CLASS, mxREAL);
+        memcpy(mxGetPr(datp), data_buf, data_def->nchans*data_def->nsamples*WORDSIZE_UINT8);
+        break;
+        case DATATYPE_UINT16:
+        datp = mxCreateNumericMatrix(data_def->nchans, data_def->nsamples, mxUINT16_CLASS, mxREAL);
+        memcpy(mxGetPr(datp), data_buf, data_def->nchans*data_def->nsamples*WORDSIZE_UINT16);
+        break;
+        case DATATYPE_UINT32:
+        datp = mxCreateNumericMatrix(data_def->nchans, data_def->nsamples, mxUINT32_CLASS, mxREAL);
+        memcpy(mxGetPr(datp), data_buf, data_def->nchans*data_def->nsamples*WORDSIZE_UINT32);
+        break;
+        case DATATYPE_UINT64:
+        datp = mxCreateNumericMatrix(data_def->nchans, data_def->nsamples, mxUINT64_CLASS, mxREAL);
+        memcpy(mxGetPr(datp), data_buf, data_def->nchans*data_def->nsamples*WORDSIZE_UINT64);
+        break;	  
         case DATATYPE_INT8:
         datp = mxCreateNumericMatrix(data_def->nchans, data_def->nsamples, mxINT8_CLASS, mxREAL);
         memcpy(mxGetPr(datp), data_buf, data_def->nchans*data_def->nsamples*WORDSIZE_INT8);

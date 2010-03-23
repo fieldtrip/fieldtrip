@@ -48,7 +48,7 @@ sap_item_t *sap_alloc_field(int len_name, const char *name, int size_value);
 	@param name		Fieldname, must not be NULL, does not need to be 0-terminated
 	@return 	Pointer to corresponding list item, or NULL in case no matching item has been found.
 */
-sap_item_t *sap_search_field(sap_item_t *first, int len_name, const char *name);
+const sap_item_t *sap_search_field(const sap_item_t *first, int len_name, const char *name);
 
 /** This function is used internally for parsing a single line and adding the results to the
 	linked list pointed to by 'first'. It will call itself recursively to deal with substructures.
@@ -67,7 +67,7 @@ int sap_handle_line(sap_item_t **first, const char *line, const char *line_end);
 	If the 'item' contains a substructure, this will be printed recursively at
 	an increased indentation.
 */
-void sap_print_items(int indent, sap_item_t *item);
+void sap_print_items(int indent, const sap_item_t *item);
 
 /** This function parses the string representation pointed to by 'buffer' and creates
 	a nested linked list of (fieldname, value) pairs.
@@ -75,7 +75,7 @@ void sap_print_items(int indent, sap_item_t *item);
 	@param length	Length of 'buffer'
 	@return 	Pointer to first element of linked list, or NULL if nothing could be parsed
 */
-sap_item_t *sap_parse(const char *buffer, int length);
+sap_item_t *sap_parse(const char *buffer, unsigned int length);
 
 /** Recursively reverses the list in place, and changes 'first' pointer accordingly.
 	This function does not re-allocate any memory but only changes the pointers. Pointers
@@ -95,7 +95,16 @@ void sap_destroy(sap_item_t *item);
 	inspection and debugging.
 	@param	list	First element of list (can also be NULL).
 */
-void sap_print(sap_item_t *list);
+void sap_print(const sap_item_t *list);
+
+/** Recursively search for a field such as "foo[13].bar[3].element". Array indices
+    are only meaningful here if another subfield follows, that is, searching for
+	"foo[12]", "foo[5]", and "foo" will return the same item.
+	@param  list		Linked list of fieldname/value items
+	@param  fieldname  	0-terminated string describing the desired field (as found in Siemens .pro files)
+	@return 	The corresponding item within 'list', or NULL if not found
+*/
+const sap_item_t *sap_search_deep(const sap_item_t *list, const char *fieldname);
 
 #ifdef __cplusplus
 }

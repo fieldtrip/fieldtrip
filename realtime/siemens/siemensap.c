@@ -40,7 +40,7 @@ sap_item_t *sap_alloc_field(int len_name, const char *name, int size_value) {
 }
 
 
-sap_item_t *sap_search_field(sap_item_t *first, int len_name, const char *name) {
+const sap_item_t *sap_search_field(const sap_item_t *first, int len_name, const char *name) {
 	while (first!=NULL) {
 		if (0==strncmp(first->fieldname, name, len_name)) return first;
 		first = first->next;
@@ -192,7 +192,8 @@ int sap_handle_line(sap_item_t **first, const char *line, const char *line_end) 
 		size_value = sizeof(void *); /* values are pointers for SAP_STRUCT */
 	}
 					
-	item = sap_search_field(*first, len_name, name);
+	/* the following cast is for removing the constness warning */
+	item = (sap_item_t *) sap_search_field(*first, len_name, name);
 	if (item == NULL) {
 		/* create new field */
 		item = sap_alloc_field(len_name, name, size_value);
@@ -274,7 +275,7 @@ void sap_reverse_in_place(sap_item_t **first) {
 	*first = item;
 }	
 	
-sap_item_t *sap_parse(const char *buffer, int length) {
+sap_item_t *sap_parse(const char *buffer, unsigned int length) {
 	const char *curLine = buffer;
 	const char *nextLine;
 	sap_item_t *first = NULL;
@@ -319,7 +320,7 @@ void sap_destroy(sap_item_t *item) {
 	}
 }
 
-void sap_print_items(int indent, sap_item_t *item) {
+void sap_print_items(int indent, const sap_item_t *item) {
 	while (item!=NULL) {
 		int i;
 		for (i=0;i<item->num_elements;i++) {
@@ -348,8 +349,42 @@ void sap_print_items(int indent, sap_item_t *item) {
 
 }
 
-void sap_print(sap_item_t *list) {
+void sap_print(const sap_item_t *list) {
 	sap_print_items(0, list);
 }
 
 
+const sap_item_t *sap_search_deep(const sap_item_t *list, const char *fieldname) {
+	const char *dotPos, *brkPos;
+	int len, dotLen, brkLen, slen, index;
+	const sap_item_t *item;
+	
+	if (fieldname == NULL) return NULL;
+	
+	len = strlen(fieldname);
+	
+	dotPos = strchr(fieldname, '.');
+	dotLen = (dotPos==NULL) ? len : (dotPos - fieldname);
+	
+	brkPos = strchr(fieldname, '[');
+	brkLen = (brkPos==NULL) ? len : (brkPos - fieldname);
+	
+	slen = (dotLen<brkLen) ? dotLen : brkLen;
+	item = sap_search_field(list, slen, fieldname);
+
+	if (item == NULL) return NULL; 	/* not found */
+	if (dotLen == len) return item; /* user did not search for a sub-struct */
+	
+	if (brkLen < len) { 
+		/* user is looking for sub-struct of an array */
+		long val = strtol(brkPos+1, NULL, 10);
+		if (val < 0) return NULL;
+		index = (int) val;
+	} else {
+		index = 0;
+	}
+	
+	item = ((sap_item_t **) item->value)[index];
+	
+	return sap_search_deep(item, dotPos+1);
+}

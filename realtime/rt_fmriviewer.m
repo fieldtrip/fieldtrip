@@ -35,6 +35,21 @@ hdr = read_header(cfg.headerfile);
 
 disp(hdr);
 
+if isfield(hdr.orig,'blob')
+  SP = sap2matlab(hdr.orig.blob);
+  width = SP.sKSpace.lBaseResolution;
+  phaseFOV = SP.sSliceArray.asSlice{1}.dPhaseFOV;
+  readoutFOV = SP.sSliceArray.asSlice{1}.dReadoutFOV;
+  height = width * phaseFOV / readoutFOV;
+  numSlices = SP.sSliceArray.lSize;
+else
+  warning('No protocol information found!')
+  width = sqrt(hdr.nChans);
+  height = width;
+  numSlices = 1;
+end
+  
+
 % open the figure and set the colormap
 h = figure;
 colormap(gray);
@@ -82,11 +97,10 @@ while true
     % go to the correct figure
     figure(h);
     
-    % this is a bit of a hack right now
-    % information about number of slices etc. should go into the header
-    % right now, pixeldata is transmitted as it's in the files
-    W = sqrt(hdr.nChans);
-    imagesc(reshape(dat,W,W)',[0 2048]);
+    % actually, you should reshape with to 3D (remove the *)
+    S = reshape(dat, [width  height*numSlices]);
+    
+    imagesc(S(:,:)',[0 2048]);
     
     % force Matlab to update the figure
     drawnow

@@ -39,6 +39,8 @@ idxDest = 1
 
 logFile = file(destdir + '-logging.txt','w')
 
+shutil.copy(srcdir + 'mrprot.txt', 'D:/watch/image/mrprot.txt')
+
 while 1:
 	time.sleep(2)
 	T = time.time()

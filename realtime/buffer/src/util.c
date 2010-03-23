@@ -173,7 +173,7 @@ int open_connection(const char *hostname, int port) {
 						/* wait 5 miliseconds and try again */
 						perror("open_connection");
 						usleep(5000);
-						retry = retry--;
+						retry--;
 				}
 				else {
 						/* this signals that the connection has been made */
