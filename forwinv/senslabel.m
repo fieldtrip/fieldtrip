@@ -1989,6 +1989,8 @@ end
 if exist(type, 'var')
   label = eval(type);
   label = label(:);
+elseif ismember(type, {'electrode'}) % there might be others in the future
+  label = {};
 else
   error('the requested sensor type is not supported');
 end
