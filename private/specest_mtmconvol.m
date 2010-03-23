@@ -18,7 +18,7 @@ function [spectrum,ntaper,foi,toi] = specest_mtmconvol(dat, time, varargin)
 %
 % Optional arguments should be specified in key-value pairs and can include:
 %   taper     = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
-%   pad       = number, indicating time-length of data to be padded out to          %%% IS IN SECONDS, MTMFFT HAS IT SAMPLES ATM
+%   pad       = number, indicating time-length of data to be padded out to          %%% IS IN SECONDS
 %   toi       = vector, containing time points of interest (in seconds, analysis window will be centered around these time points)
 %   timwin    = vector, containing length of time windows (in seconds)
 %   foi       = vector, containing frequencies (in Hz)
@@ -161,10 +161,8 @@ end
 
 
 % compute fft
-
 spectrum = complex(nan([sum(ntaper),nchan,nfoi,ntboi]));
 datspectrum = fft([repmat(prepad,[nchan, 1]) dat repmat(postpad,[nchan, 1])],[],2); % should really be done above, but since the chan versus whole dataset fft'ing is still unclear, repmat is used
-tic
 for ifoi = 1:nfoi
   for itap = 1:ntaper(ifoi)
     for ichan = 1:nchan
@@ -177,14 +175,12 @@ for ifoi = 1:nfoi
       
       % compute datspectrum*wavelet, if there are reqtboi's that have data
       if ~isempty(reqtboi)
-        dum = (ifft(datspectrum(ichan,:) .* wltspctrm{ifoi}(itap,:),[],2));
+        dum = fftshift(ifft(datspectrum(ichan,:) .* wltspctrm{ifoi}(itap,:),[],2)); % why is this fftshift necessary?
         spectrum(itap,ichan,ifoi,reqtboiind) = dum(reqtboi);
       end
     end
   end
 end
-toc
-
 
 
 % %%%%%% THE CODE BELOW IS A LITTLE BIT FASTER THAN ABOVE, WHICH COMPUTES THE FFT PER CHAN (BELOW IS ALL CHANS AT THE SAME TIME)
