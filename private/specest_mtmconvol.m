@@ -160,7 +160,7 @@ for ifoi = 1:nfoi
 end
 
 
-% compute fft
+% compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
 spectrum = complex(nan([sum(ntaper),nchan,nfoi,ntboi]));
 datspectrum = fft([repmat(prepad,[nchan, 1]) dat repmat(postpad,[nchan, 1])],[],2); % should really be done above, but since the chan versus whole dataset fft'ing is still unclear, repmat is used
 for ifoi = 1:nfoi
