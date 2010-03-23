@@ -8,7 +8,7 @@ function [spectrum,ntaper,foi,toi] = specest_mtmconvol(dat, time, varargin)
 %
 %   dat      = matrix of chan*sample
 %   time     = vector, containing time in seconds for each sample
-%   spectrum = matrix of taper*chan*sample of fourier coefficients
+%   spectrum = matrix of taper*chan*foi*sample of fourier coefficients
 %   ntaper   = vector containing number of tapers per element of foi
 %   foi      = vector of frequencies in spectrum
 %   toi      = vector of timebins in spectrum
