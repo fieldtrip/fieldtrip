@@ -170,7 +170,6 @@ for ifoi = 1:nfoi
       % compute indices that will be used to extracted the requested fft output    
       nsamplefoi    = timwin(ifoi) .* fsample;
       reqtboiind    = find((tboi >=  (nsamplefoi ./ 2)) & (tboi <    nsample - (nsamplefoi ./2)));
-      nonreqtboiind = find((tboi  <  (nsamplefoi ./ 2)) | (tboi >=   nsample - (nsamplefoi ./2)));
       reqtboi       = tboi(reqtboiind);
       
       % compute datspectrum*wavelet, if there are reqtboi's that have data
@@ -193,7 +192,6 @@ end
 %     % compute indices that will be used to extracted the requested fft output
 %     nsamplefoi    = timwin(ifoi) .* fsample;
 %     reqtboiind    = find((tboi >=  (nsamplefoi ./ 2)) & (tboi <    nsample - (nsamplefoi ./2)));
-%     nonreqtboiind = find((tboi  <  (nsamplefoi ./ 2)) | (tboi >=   nsample - (nsamplefoi ./2)));
 %     reqtboi       = tboi(reqtboiind);
 %     
 %     % compute datspectrum*wavelet, if there are reqtboi's that have data
