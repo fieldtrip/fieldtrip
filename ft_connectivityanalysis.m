@@ -1,4 +1,4 @@
-function [stat] = ft_connectivityanalysistmp(cfg, data)
+function [stat] = ft_connectivityanalysis(cfg, data)
 
 % FT_CONNECTIVITYANALYIS computes various measures of connectivity
 % between MEG/EEG channels or between source-level signals.
@@ -18,7 +18,8 @@ function [stat] = ft_connectivityanalysistmp(cfg, data)
 %   cfg.method  = 'coh',       coherence, support for freq, freqmvar and
 %                               source data. For partial coherence also
 %                               specify cfg.partchannel
-%                 'csd',       cross-spectral density matrix, can also calculate partial csds - 
+%                 'csd',       cross-spectral density matrix, can also
+%                 calculate partial csds - 
 %                               if cfg.partchannel is specified 
 %                 'plv',       phase-locking value, support for freq and freqmvar data
 %                 'corr',      correlation coefficient (Pearson)
@@ -337,8 +338,7 @@ case 'granger'
 
 case 'instantaneous_causality'
   % instantaneous coupling between the series, requires the same elements as granger
-
-  if sum(datatype(data, {'freq' 'freqmvar'})),
+ if sum(datatype(data, {'freq' 'freqmvar'})),
     hasrpt = ~isempty(strfind(data.dimord, 'rpt'));
     if hasrpt,
       nrpt = size(data.transfer,1);
@@ -350,30 +350,30 @@ case 'instantaneous_causality'
       data.noisecov = reshape(data.noisecov, [1 siz]);
       siz  = size(data.crsspctrm);
       data.crsspctrm = reshape(data.crsspctrm, [1 siz]);
-    end 
-    
-    if ~isfield(data, 'label') && isfield(data, 'labelcmb'),
-      %multiple pairwise non-parametric transfer functions
-      fs = 1;
-      siznc = size(data.noisecov);
-      sizt  = size(data.transfer);
-      for k = 1:size(data.transfer,4)
-        tmptransfer  = reshape(data.transfer(:,:,:,k,:,:),sizt([1:3 5:end]));
-        tmpnoisecov  = reshape(data.noisecov(:,:,:,k,:,:),siznc([1:3]));
-        tmpcrsspctrm = reshape(data.crsspctrm(:,:,:,k,:,:),sizt([1:3 5:end]));
-        [datout(:,:,k,:,:), varout(:,:,k,:,:), n] = coupling_instantaneous(tmptransfer, tmpnoisecov, tmpcrsspctrm, fs, hasjack);
-      end
-    else 
-     %fs      = cfg.fsample; %FIXME do we really need this, or is this related to how
-      %noisecov is defined and normalised?
-      fs       = 1;
-      [datout, varout, n] = coupling_instantaneous(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack);
     end
+
+    if isfield(data, 'labelcmb'),
+      % multiple pairwise non-parametric transfer functions
+      % linearly indexed
+      powindx = labelcmb2indx(data.labelcmb);
+    elseif isfield(cfg, 'block') && ~isempty(cfg.block)
+      % blockwise granger
+      powindx = cfg.block;
+      for k = 1:2
+        newlabel{k,1} = cat(2,powindx{k});
+      end      
+      data.label = newlabel;
+    else
+      % do nothing
+    end
+    %fs = cfg.fsample; %FIXME do we really need this, or is this related to how
+    %noisecov is defined and normalised?
+    fs = 1;
+    [datout, varout, n] = coupling_instantaneous(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack, powindx);
     outparam = 'instantspctrm';
-    
   else
     error('instantaneous causality for time domain data is not yet implemented');
-  end      
+  end
 
 case 'total_interdependence'
   %total interdependence  
@@ -921,9 +921,9 @@ elseif ~iscell(powindx)
   end
 elseif iscell(powindx)
   % blockwise granger
-  % H = transfer function nchanxnchanxnfreq
-  % Z = noise covariance nchanxnchan
-  % S = crosspectrum nchanxnchanxnfreq
+  % H = transfer function nchan x nchan x nfreq
+  % Z = noise covariance  nchan x nchan
+  % S = crosspectrum      nchan x nchan x nfreq
   % powindx{1} is a list of indices for block1 
   % powindx{2} is a list of indices for block2
   
@@ -994,7 +994,7 @@ else
 end
 
 %----------------------------------------------------------------
-function [instc, v, n] = coupling_instantaneous(H, Z, S, fs, hasjack)
+function [instc, v, n] = coupling_instantaneous(H, Z, S, fs, hasjack,powindx)
 
 %Usage: causality = hz2causality(H,S,Z,fs);
 %Inputs: transfer  = transfer function,
@@ -1018,7 +1018,8 @@ Nc  = siz(2);
 
 outsum = zeros(siz(2:end));
 outssq = zeros(siz(2:end));
-
+if isempty(powindx)
+    
 %clear S; for k = 1:size(H,3), h = squeeze(H(:,:,k)); S(:,:,k) = h*Z*h'/fs; end;
 for kk = 1:n
   for ii = 1:Nc
@@ -1040,7 +1041,32 @@ for kk = 1:n
     outsum(ii,ii,:,:) = 0;%self-granger set to zero
   end
 end
+elseif ~iscell(powindx)
+ % data are linearly indexed
+  for k = 1:Nc
+    for j = 1:n 
+      iauto1  = find(sum(powindx==powindx(k,1),2)==2);
+      iauto2  = find(sum(powindx==powindx(k,2),2)==2);
+      icross1 = k;
+      icross2 = find(sum(powindx==powindx(ones(Nc,1)*k,[2 1]),2)==2);
+      if iauto1 ~= iauto2
+          zc1     = Z(j,iauto1) - Z(j,icross2).^2./Z(j,iauto2);
+          zc1     = repmat(zc1,[1 1 siz(3)]);
+          zc2     = Z(j,iauto2) - Z(j,icross1).^2./Z(j,iauto1);
+          zc2     = repmat(zc2,[1 1 siz(3)]);
+          CTH1    = reshape(ctranspose(squeeze(H(j,icross2,:))),1,1,siz(3));
+          CTH2    = reshape(ctranspose(squeeze(H(j,icross1,:))),1,1,siz(3));
+          term1   = (S(j,iauto2,:) - H(j,icross2,:).*zc1.*CTH1);
+          term2   = (S(j,iauto1,:) - H(j,icross1,:).*zc2.*CTH2);
+          Sdet      = (S(j,iauto2,:).*S(j,iauto1,:)) - (S(j,icross2,:).*S(j,icross1,:));
+          outsum(k,:) = outsum(k) + log((term1.*term2)./Sdet(j,:,:));
+          outssq(k,:) = outssq(k) + log((term1.*term2)./Sdet(j,:,:)).^2;      
+      end
+    end
+  end
 
+    
+end
 instc = outsum./n;
 
 if n>1,
