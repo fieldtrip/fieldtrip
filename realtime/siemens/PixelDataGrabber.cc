@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2010, Stefan Klanke
+ * Donders Institute for Donders Institute for Brain, Cognition and Behaviour,
+ * Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
+ * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
+ */
 #include <PixelDataGrabber.h>
 #include <stdio.h>
 #include <math.h>
@@ -17,6 +23,9 @@ PixelDataGrabber::PixelDataGrabber() {
 	numSlices = 0;
 	lastAction = Nothing;
 	protInfo = NULL;
+	fwActive = false;
+	headerWritten = false;
+	verbosity = 1;
 }
 
 PixelDataGrabber::~PixelDataGrabber() {
@@ -28,49 +37,58 @@ PixelDataGrabber::~PixelDataGrabber() {
 }
 	
 bool PixelDataGrabber::monitorDirectory(const char *directory) {
-	if (directory == 0) return false;
-
 	if (fwEventHandle == INVALID_HANDLE_VALUE) {
 		fwEventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
 		if (fwEventHandle == INVALID_HANDLE_VALUE) return false;
 	}
 	
+	if (protInfo) {
+		sap_destroy(protInfo);
+		protInfo = NULL;
+	}
+	
 	if (FW) {
 		FW->stopListenForChanges();
 		delete FW;
+		FW = NULL;
+		fwActive = false;
 	}
+	if (directory == NULL) return false;
+
 	sourceDir = directory;
 	int n = sourceDir.size();
 	if (n>0) {
 		if (sourceDir[n-1]!='\\' && sourceDir[n-1]!='/') sourceDir += '\\';
 
 		FW = new FolderWatcher(directory);
-		FW->startListenForChanges(fwEventHandle);
+		fwActive = FW->startListenForChanges(fwEventHandle);
 	}
 
-	return FW->isValid();
+	return fwActive;
 }
 
 bool PixelDataGrabber::connectToFieldTrip(const char *hostname, int port) {
 	if (ftbSocket > 0) close_connection(ftbSocket);
-	ftbSocket = open_connection(hostname, port);
+	if (hostname != NULL) {
+		ftbSocket = open_connection(hostname, port);
+	} else {
+		ftbSocket = -1;
+	}
+	headerWritten = false;
 	return (ftbSocket > 0);
 }
 	
 int PixelDataGrabber::run(unsigned int ms) {
-	if (ftbSocket <= 0) {
-		fprintf(stderr, "No fieldtrip buffer has been connected to.\n");
-		return -1;
-	}
+	lastAction = Nothing;
 	if (FW==NULL || !FW->isValid()) {
-		fprintf(stderr, "No directory is being monitored.\n");
+		if (verbosity>3) fprintf(stderr, "No directory is being monitored.\n");
 		return -1;
 	}
 
 	DWORD waitResult = WaitForSingleObject(fwEventHandle, ms);
 
 	if (waitResult == WAIT_FAILED) {
-		fprintf(stderr, "Error in WaitForSingleObject(...) !\n");
+		if (verbosity>0) fprintf(stderr, "Error in WaitForSingleObject(...) !\n");
 		// TODO: proper error handling
 		return -1;
 	}
@@ -80,18 +98,19 @@ int PixelDataGrabber::run(unsigned int ms) {
 	if (FW->processChanges() > 0) {
 		tryFolderToBuffer();
 		FW->startListenForChanges(fwEventHandle);
-		return 1;
 	}
-	return 0;
+	return 1;
 }
 
 	
-void PixelDataGrabber::writeHeader() {
+bool PixelDataGrabber::writeHeader() {
 	headerdef_t header_def;
 
 	message_t request;
 	messagedef_t request_def;
 	message_t *response = NULL;
+	
+	headerWritten = false;
 			
 	header_def.nchans = (UINT32_T) numSlices*readResolution*phaseResolution;
 	header_def.nsamples = 0;
@@ -111,14 +130,17 @@ void PixelDataGrabber::writeHeader() {
 	int result = tcprequest(ftbSocket, &request, &response);		
 	
 	if (result < 0) {
-		fprintf(stderr, "Communication error when sending header to fieldtrip buffer\n");
-	}
-	
-	if (!response || !response->def) {
-		fprintf(stderr, "PUT_HDR: unknown error in response\n");
+		if (verbosity>0) fprintf(stderr, "Communication error when sending header to fieldtrip buffer\n");
+		lastAction = TransmissionError;
+	} else if (!response || !response->def) {
+		if (verbosity>0) fprintf(stderr, "PUT_HDR: unknown error in response\n");
+		lastAction = TransmissionError;
 	} else {
 		if (response->def->command!=PUT_OK) {
-			fprintf(stderr, "PUT_HDR: Buffer returned an error (%d)\n", response->def->command);
+			if (verbosity>0) fprintf(stderr, "PUT_HDR: Buffer returned an error (%d)\n", response->def->command);
+			lastAction = TransmissionError;
+		} else {
+			headerWritten = true;
 		}
 	}
 	
@@ -130,6 +152,7 @@ void PixelDataGrabber::writeHeader() {
 		if (response->buf) free(response->buf);
 		free(response);
 	}
+	return (headerWritten == true);
 }
 	
 bool PixelDataGrabber::writePixelData() {
@@ -137,7 +160,6 @@ bool PixelDataGrabber::writePixelData() {
 	message_t request;
 	messagedef_t request_def;
 	message_t *response = NULL;
-	bool done = false;
 
 	data_def.nchans = (UINT32_T) readResolution*phaseResolution*numSlices;
 	data_def.nsamples = 1;
@@ -155,8 +177,8 @@ bool PixelDataGrabber::writePixelData() {
 	
 	char *reqbuf = (char *) malloc(request_def.bufsize);
 	if (reqbuf == NULL) {
-		fprintf(stderr, "Out of memory\n");
-		exit(1);
+		lastAction = OutOfMemory;
+		return false;
 	}
 	
 	memcpy(reqbuf, &data_def, sizeof(data_def));
@@ -169,19 +191,19 @@ bool PixelDataGrabber::writePixelData() {
 	DWORD t0 = timeGetTime();
 	int result = tcprequest(ftbSocket, &request, &response);
 	DWORD t1 = timeGetTime();	
-	printf("Time lapsed while writing data: %li ms\n", t1-t0);
+	if (verbosity>2) printf("Time lapsed while writing data: %li ms\n", t1-t0);
 	
+	lastAction = TransmissionError;
 	if (result < 0) {
-		fprintf(stderr, "Communication error when sending pixel data to fieldtrip buffer\n");
-	}
-
-	if (!response || !response->def) {
-		fprintf(stderr, "PUT_DAT: unknown error in response\n");
+		if (verbosity>0) fprintf(stderr, "Communication error when sending pixel data to fieldtrip buffer\n");
+	} else if (!response || !response->def) {
+		if (verbosity>0) fprintf(stderr, "PUT_DAT: unknown error in response\n");
 	} else {
 		if (response->def->command!=PUT_OK) {
-			fprintf(stderr, "PUT_DAT: Buffer returned an error (%d)\n", response->def->command);
+			if (verbosity>0) fprintf(stderr, "PUT_DAT: Buffer returned an error (%d)\n", response->def->command);
 		} else {
-			done = true;
+			samplesWritten++;
+			lastAction = PixelsTransmitted;
 		}
 	}
 	// cleanup_message(response); -- can't even call this in C++ 
@@ -191,10 +213,10 @@ bool PixelDataGrabber::writePixelData() {
 		free(response);
 	}
 	free(reqbuf);
-	return done;
+	return lastAction == PixelsTransmitted;
 }	
 	
-void PixelDataGrabber::writeTimestampEvent(const struct timeval &tv) {
+bool PixelDataGrabber::writeTimestampEvent(const struct timeval &tv) {
 	DWORD t0, t1;
 	struct {
 		eventdef_t def;
@@ -224,17 +246,18 @@ void PixelDataGrabber::writeTimestampEvent(const struct timeval &tv) {
 	t0 = timeGetTime();
 	int result = tcprequest(ftbSocket, &request, &response);
 	t1 = timeGetTime();
-	printf("Time lapsed while writing event: %li ms\n", t1-t0);
+	if (verbosity>2) printf("Time lapsed while writing event: %li ms\n", t1-t0);
 	
 	if (result < 0) {
-		fprintf(stderr, "Communication error when sending event to fieldtrip buffer\n");
-	}
-	
-	if (!response || !response->def) {
+		if (verbosity>0) fprintf(stderr, "Communication error when sending event to fieldtrip buffer\n");
+		lastAction = TransmissionError;
+	} else if (!response || !response->def) {
 		fprintf(stderr, "PUT_EVT: unknown error in response\n");
+		lastAction = TransmissionError;
 	} else {
 		if (response->def->command!=PUT_OK) {
 			fprintf(stderr, "PUT_EVT: Buffer returned an error (%d)\n", response->def->command);
+			lastAction = TransmissionError;
 		}
 	}
 	// cleanup_message(response); -- can't even call this in C++ 
@@ -243,19 +266,17 @@ void PixelDataGrabber::writeTimestampEvent(const struct timeval &tv) {
 		if (response->buf) free(response->buf);
 		free(response);
 	}
+	return (lastAction != TransmissionError);
 }
 
 
-void PixelDataGrabber::sendFrameToBuffer(const struct timeval &tv) {
-	if (protInfo == NULL) tryReadProtocol(); // look for <WATCH_FOLDER>/mrprot.txt
-	
-	if (samplesWritten == 0) {
-		writeHeader();
+bool PixelDataGrabber::sendFrameToBuffer(const struct timeval &tv) {
+	if (!headerWritten) {
+		if (!writeHeader()) return false;
 	}
-	if (writePixelData()) {
-		writeTimestampEvent(tv);
-		samplesWritten++;
-	}
+	if (!writePixelData()) return false;
+	if (!writeTimestampEvent(tv)) return false;
+	return true;
 }
 
 
@@ -285,13 +306,13 @@ void PixelDataGrabber::handleProtocol(const char *info, unsigned int sizeInBytes
 	item = sap_search_deep(PI, "sSliceArray.asSlice[0].dPhaseFOV");
 	if (item!=NULL && item->type == SAP_DOUBLE) {
 		phaseFOV = *((double *) item->value);
-		printf("PhaseFOV: %f\n", phaseFOV);
+		if (verbosity>2) printf("PhaseFOV: %f\n", phaseFOV);
 	}
 	
 	item = sap_search_deep(PI, "sSliceArray.asSlice[0].dReadoutFOV");
 	if (item!=NULL && item->type == SAP_DOUBLE) {
 		readoutFOV = *((double *) item->value);
-		printf("ReadoutFOV: %f\n", readoutFOV);
+		if (verbosity>2) printf("ReadoutFOV: %f\n", readoutFOV);
 	}
 	
 	if (phaseFOV > 0.0 && readoutFOV > 0.0) {
@@ -299,7 +320,7 @@ void PixelDataGrabber::handleProtocol(const char *info, unsigned int sizeInBytes
 	} else {
 		phaseResolution = 0;
 	}
-	printf("Resolution: %i x %i x %i\n", readResolution, phaseResolution, numSlices);
+	if (verbosity>2) printf("Resolution: %i x %i x %i\n", readResolution, phaseResolution, numSlices);
 		
 	protInfo = PI;
 }
@@ -315,30 +336,29 @@ bool PixelDataGrabber::tryReadFile(const char *filename, SimpleBuffer &sBuf) {
 		size = GetFileSize(fHandle, NULL);  // ignore higher DWORD - our files are not that big
 		
 		if (!sBuf.resize(size)) {
-			fprintf(stderr, "Out of memory!\n");
+			if (verbosity>0) fprintf(stderr, "Out of memory in tryReadFile !!!\n");
 			CloseHandle(fHandle);
 			return false;
 		}
 			
 		ReadFile(fHandle, sBuf.data(), size, &read, NULL);
 		CloseHandle(fHandle);
-		if (size!=read) {
-			fprintf(stderr, "Error reading file contents from disk.\n");
-			sBuf.resize(read);
-			return false;
-		} 
-		return true;
+		if (size==read) return true;
+
+		if (verbosity>0) fprintf(stderr, "Error reading file contents from disk.\n");
+		sBuf.resize(read);
 	}
 	return false;
 }
 
 
-void PixelDataGrabber::tryReadProtocol() {
+bool PixelDataGrabber::tryReadProtocol() {
 	std::string defProtFile = sourceDir + "mrprot.txt";
 	
-	if (!tryReadFile(defProtFile.c_str(), protBuffer)) return;
+	if (!tryReadFile(defProtFile.c_str(), protBuffer)) return false;
 	
 	handleProtocol((char *) protBuffer.data(), protBuffer.size());
+	return true;
 }
 
 
@@ -356,15 +376,18 @@ void PixelDataGrabber::tryFolderToBuffer() {
 			
 			gettimeofday(&tv, NULL);
 			if (!tryReadFile(fullName.c_str(), pixBuffer)) continue;
+			
+			if (protInfo == NULL) tryReadProtocol();
 			reshapeToSlices();
 			if (sliceBuffer.size()==0) continue;
+			if (ftbSocket == -1) continue;
 			sendFrameToBuffer(tv);
 		} 
 		else if (vfn[i].compare(vfn[i].size()-10,10, "mrprot.txt") == 0) {
 			if (!tryReadFile(fullName.c_str(), protBuffer)) return;
 	
 			handleProtocol((char *) protBuffer.data(), protBuffer.size());
-			
+			if (ftbSocket != -1) writeHeader();
 			lastAction = ProtocolRead;
 		} 
 		else {
@@ -387,11 +410,10 @@ void PixelDataGrabber::reshapeToSlices() {
 		} else	{
 			readResolution = phaseResolution = root;
 			numSlices = 1;
-			if (sliceBuffer.resize(pixels*2)) {
-				memcpy(sliceBuffer.data(), pixBuffer.data(), pixels*2);
-				lastAction = PixelsTransmitted;
+			if (sliceBuffer.resize(pixels*sizeof(UINT16_T))) {
+				memcpy(sliceBuffer.data(), pixBuffer.data(), pixels*sizeof(UINT16_T));
 			} else {
-				fprintf(stderr, "Out of memory!!!\n");
+				if (verbosity>0) fprintf(stderr, "Out of memory in reshapeToSlices !!!\n");
 				sliceBuffer.resize(0);
 				lastAction = OutOfMemory;
 			}
@@ -402,11 +424,11 @@ void PixelDataGrabber::reshapeToSlices() {
 		
 		if ((pixels != readResolution * phaseResolution * tiles) || (mosw*mosw != tiles) || (numSlices > tiles)) {
 			// mosaic does not match readResolution, or is too small - do nothing...
-			fprintf(stderr, "PixelData (%i) does not match protocol information (%i x %i x %i)\n",pixels,readResolution,phaseResolution,numSlices);
+			if (verbosity>0) fprintf(stderr, "PixelData (%i) does not match protocol information (%i x %i x %i)\n",pixels,readResolution,phaseResolution,numSlices);
 			sliceBuffer.resize(0);
 			lastAction = BadPixelData;
-		} else if (!sliceBuffer.resize(readResolution*phaseResolution*numSlices*2)) {
-			fprintf(stderr, "Out of memory!!!\n");
+		} else if (!sliceBuffer.resize(readResolution*phaseResolution*numSlices*sizeof(UINT16_T))) {
+			if (verbosity>0) fprintf(stderr, "Out of memory in reshapeToSlices !!!\n");
 			sliceBuffer.resize(0);
 			lastAction = OutOfMemory;
 		} else {
@@ -422,7 +444,7 @@ void PixelDataGrabber::reshapeToSlices() {
 				
 				// copy one line (=readResolution pixels) at a time
 				for (unsigned int m=0; m<phaseResolution; m++) {
-					memcpy(dest_n + readResolution*m, src_n + mosw*readResolution*m, 2 * readResolution);
+					memcpy(dest_n + readResolution*m, src_n + mosw*readResolution*m, sizeof(UINT16_T) * readResolution);
 				}
 				
 				// increase source column index
@@ -432,7 +454,6 @@ void PixelDataGrabber::reshapeToSlices() {
 					j = 0;
 				}
 			}
-			lastAction = PixelsTransmitted;
 		}
 	}
 }

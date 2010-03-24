@@ -6,7 +6,8 @@
  */
 
 
-/* small library for parsing Siemens Protocol information as produced by their pMrProt->fwrite command */
+/** This is a small library for parsing Siemens Protocol information as produced by their pMrProt->fwrite command 
+*/
  
 #ifndef _SIEMENSAP_H
 #define _SIEMENSAP_H
@@ -23,13 +24,13 @@ typedef enum { SAP_LONG, SAP_DOUBLE, SAP_STRUCT, SAP_TEXT } sap_field_type_t;
 	Values can also be arrays, sub-structs, or arrays of sub-structs 
 */
 typedef struct sap_item {
-	char *fieldname;			/* Name of the field, 0-terminated */
-	void *value;				/* Pointer to value(s), or pointer to pointer(s) in case of SAP_STRUCT */
-	sap_field_type_t type;		/* see above */
-	int is_array;               /* flag */
-	int num_elements;			/* must be 1 for scalar, >=0 for arrays */
+	char *fieldname;			/**< Name of the field, 0-terminated */
+	void *value;				/**< Pointer to value(s), or pointer to pointer(s) in case of SAP_STRUCT */
+	sap_field_type_t type;		/**< Type of this field */
+	int is_array;               /**< Flag that determines whether this field is an array */
+	int num_elements;			/**< This must be 1 for scalar, >=0 for arrays */
 	
-	struct sap_item *next;	/* next element in list, NULL if last */
+	struct sap_item *next;		/**< next element in list, NULL if last */
 } sap_item_t;
 
 /** This function allocates a new list item including space for the fieldname and the value.
