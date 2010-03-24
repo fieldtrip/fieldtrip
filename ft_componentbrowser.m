@@ -153,7 +153,8 @@ for k = cfg.comp
   h_text(cnt) = plot_text(-2.5, -cnt*cfg.shift, ['n. ' num2str(cfg.comp(cnt))]);
 
   % plot only topography (no layout)
-  plot_topo(cfg.layout.pos(cfg.chanidx.lay,1), cfg.layout.pos(cfg.chanidx.lay,2), comp.topo(cfg.chanidx.comp, k), ...
+  plot_topo(cfg.layout.pos(cfg.chanidx.lay,1), cfg.layout.pos(cfg.chanidx.lay,2), ...
+    comp.topo(cfg.chanidx.comp, k)./max(abs(comp.topo(cfg.chanidx.comp, k))), ... % for proper scaling
     'hpos', -1, 'vpos', -cnt*cfg.shift, 'mask', cfg.layout.mask);
   % plot layout
   plot_lay(cfg.layout, 'hpos', -1, 'vpos', -cnt*cfg.shift, 'point', false, 'box', false, 'label', false, 'mask', true, 'verbose', false);
@@ -165,8 +166,7 @@ set(h_text, 'tag', 'comptopo')
 set(h_topo, 'tag', 'comptopo')
 
 % in the colorbar, green should be zero
-colorlimits = get(cfg.axis, 'clim');
-set(cfg.axis, 'clim', [-1 1] * max(abs(colorlimits)))
+set(cfg.axis, 'clim', [-1 1])
 
 plotactivation([], cfg, comp)
 
