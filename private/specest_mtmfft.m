@@ -29,7 +29,8 @@ function [spectrum,foi] = specest_mtmfft(dat, time, varargin)
 %  - implement computation reduction by keeping tapers and such one way or another
 %
 %
-%
+% See also SPECEST_MTMCONVOL, SPECEST_HILBERT, SPECEST_TFR, SPECEST_NANFFT
+
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'taper','pad','foi','tapsmofrq'});
