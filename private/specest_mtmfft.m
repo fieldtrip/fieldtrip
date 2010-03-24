@@ -44,7 +44,7 @@ tapsmofrq = keyval('tapsmofrq',   varargin); %%%% NOW CAN ONLY BE A NUMBER, IN M
 
 
 % Determine fsample
-fsample = nsample / (time(end) - time(1));
+fsample = 1/(time(2)-time(1));
 
 
 % Zero padding
