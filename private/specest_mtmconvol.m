@@ -30,7 +30,8 @@ function [spectrum,ntaper,foi,toi] = specest_mtmconvol(dat, time, varargin)
 %
 %
 %
-%
+% See also SPECEST_MTMFFT, SPECEST_HILBERT, SPECEST_TFR, SPECEST_NANFFT
+
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'taper','pad','toi','timwin','foi','tapsmofrq'});
