@@ -94,6 +94,10 @@ typedef uint64_t UINT64_T;
 #define FLUSH_ERR  (UINT16_T)0x0305
 #define FLUSH_PRP  (UINT16_T)0x0306
 
+#define WAIT_DAT   (UINT16_T)0x0402
+#define WAIT_OK    (UINT16_T)0x0404
+#define WAIT_ERR   (UINT16_T)0x0405
+
 /* these are used in the data_t and event_t structure */
 #define DATATYPE_CHAR    (UINT32_T)0
 #define DATATYPE_UINT8   (UINT32_T)1
@@ -193,6 +197,11 @@ typedef struct {
 	UINT32_T begevent;
 	UINT32_T endevent;
 } eventsel_t;
+
+typedef struct {
+	UINT32_T threshold;
+	UINT32_T milliseconds;
+} waitdef_t;
 
 #ifdef __cplusplus
 }

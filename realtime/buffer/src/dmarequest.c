@@ -796,7 +796,69 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			}
 			pthread_mutex_unlock(&mutexproperty);
 			break;
+			
+		case WAIT_DAT:
+			/* SK: This request means that the client wants to wait until
+					MORE than waitdef_t.threshold samples are in the buffer, but only
+					for the time given in waitdef_t.milliseconds. The response
+					is just the number of samples in the buffer as an UINT32_T.
+					In theory we could have the same functionality for events.
+			*/
+			response->def->version = VERSION;
+			if (header==NULL) {
+				response->def->command = WAIT_ERR;
+				response->def->bufsize = 0;
+			} else {
+				int waiterr;
+				waitdef_t *wd = (waitdef_t *) request->buf;
+				UINT32_T *nret = malloc(sizeof(UINT32_T));
+				UINT32_T nsmp;
+				
+				if (nret == NULL) {
+					/* highly unlikely, but we cannot allocate an UINT32_T - return an error */
+					response->def->command = WAIT_ERR;
+					response->def->bufsize = 0;
+					break;
+				}
+				/* let response->buf point to our new UINT32_T */
+				response->def->command = WAIT_OK;
+				response->def->bufsize = sizeof(UINT32_T);
+				response->buf = nret;
 
+				/* get current number of samples */
+				pthread_mutex_lock(&mutexheader);
+				nsmp = header->def->nsamples;
+				pthread_mutex_unlock(&mutexheader);
+
+				if (wd->milliseconds == 0 || nsmp > wd->threshold) {
+					/* the client doesn't want to wait, or
+					   we're already above the threshold: 
+					   return immediately */
+					*nret = nsmp;
+					break;
+				}
+				gettimeofday(&tp, NULL);
+				ts.tv_sec = tp.tv_sec + (wd->milliseconds/1000);
+				ts.tv_nsec = 1000 * (tp.tv_usec + (wd->milliseconds % 1000)*1000);
+				while (ts.tv_nsec >= 1000000000) {
+					ts.tv_sec++;
+					ts.tv_nsec-=1000000000;
+				}
+				
+				do {
+					pthread_mutex_lock(&getData_mutex);
+					waiterr = pthread_cond_timedwait(&getData_cond, &getData_mutex, &ts);
+					pthread_mutex_unlock(&getData_mutex);
+					
+					/* get current number of samples */
+					pthread_mutex_lock(&mutexheader);
+					nsmp = header->def->nsamples;
+					pthread_mutex_unlock(&mutexheader);
+				} while (nsmp <= wd->threshold && waiterr==0);
+				printf("waiterr = %i\n", waiterr);
+				*nret = nsmp;
+			}
+			break;
 		default:
 			fprintf(stderr, "dmarequest: unknown command\n");
 	}

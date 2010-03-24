@@ -29,7 +29,7 @@ CXXFLAGS = $(INCPATH) -Wunused -pedantic -O0
 
 all: demo
 
-test: test_gethdr test_getdat test_getevt test_flushhdr test_flushdat test_flushevt test_connect test_nslookup test_benchmark
+test: test_gethdr test_getdat test_getevt test_flushhdr test_flushdat test_flushevt test_connect test_nslookup test_benchmark test_waitdat
 
 demo: demo_sinewave demo_event demo_buffer demo_combined
 
@@ -73,6 +73,9 @@ test_benchmark: test_benchmark.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
 
 test_nslookup: test_nslookup.o
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
+	
+test_waitdat: test_waitdat.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
 
 test_connect: test_connect.o
