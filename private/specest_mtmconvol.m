@@ -73,6 +73,10 @@ elseif strcmp(foi,'max') % if input was 'max'
   nfboi   = length(fboi);
   foi     = (fboi-1) ./ pad;
 end
+% check for foi = 0 and remove it, there is no wavelet for foi = 0
+if any(foi==0)
+  foi(foi==0) = [];
+end
 nfoi = length(foi);
 if isempty(tapsmofrq) % default tapsmofrq
   tapsmofrq = ones(nfoi,1)*4; % SHOULDNT BE DEFAULTED IN MY OPINION
