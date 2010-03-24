@@ -47,7 +47,7 @@ tapsmofrq = keyval('tapsmofrq',   varargin);
 
 
 % Determine fsample
-fsample = nsample / (time(end) - time(1));
+fsample = 1/(time(2)-time(1));
 
 
 % Zero padding (if pad is empty, no padding wil be performed in the end)
