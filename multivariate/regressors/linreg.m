@@ -3,6 +3,7 @@ classdef linreg < regressor
 %
 % Note:
 % ridge regression allows multiple outputs
+% elastic net allows L2 to be a structure matrix
 %
 % Copyright (c) 2008, Marcel van Gerven
 
@@ -10,8 +11,6 @@ classdef linreg < regressor
     
     L1 = 0; % L1 regularization parameter
     L2 = 0; % L2 regularization parameter
-      
-    tikmat  % Tikhonov matrix (allows regularization of differences)
   
   end
     
@@ -24,7 +23,7 @@ classdef linreg < regressor
         
         function p = estimate(obj,X,Y)
                     
-          if obj.L1 == 0 && obj.L2 == 0
+          if obj.L1 == 0 && all(obj.L2(:) == 0)
             % unregularized 
             
             if obj.verbose
@@ -33,7 +32,7 @@ classdef linreg < regressor
             
             p.model = regress(Y,[X ones(size(X,1),1)]); % X \ Y
           
-          elseif obj.L1 == 0 && obj.L2 ~= 0
+          elseif obj.L1 == 0 && all(obj.L2(:) ~= 0)
             % ridge regression
             
             if obj.verbose
@@ -49,7 +48,7 @@ classdef linreg < regressor
             
             p.model = R\(R'\(X'*Y));
             
-          elseif obj.L1 ~= 0 && obj.L2 == 0
+          elseif 0 && obj.L1 ~= 0 && all(obj.L2(:) == 0)
             
             if obj.verbose
               fprintf('computing lasso with L1 parameter %g\n',obj.L1);
@@ -76,14 +75,12 @@ classdef linreg < regressor
             
           else % elastic net
             
-            opt.tikmat = obj.tikmat;
-            
             if ~isempty(obj.params) && isfield(obj.params,'model') && ~isempty(obj.params.model)
               % warm start
               w_init = obj.params.model;
-              [beta,beta0] = elastic(X',Y',obj.L1,obj.L2,opt,w_init(1:(end-1)),w_init(end));
+              [beta,beta0] = elastic(X',Y',obj.L1,obj.L2,[],w_init(1:(end-1)),w_init(end));
             else
-              [beta,beta0] = elastic(X',Y',obj.L1,obj.L2,opt);
+              [beta,beta0] = elastic(X',Y',obj.L1,obj.L2);
             end
             
             p.model = [beta; beta0];

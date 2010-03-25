@@ -19,9 +19,9 @@ classdef blogreg < classifier
       % prior precision matrix of the auxiliary variables
       prior
             
-      % precision of the bias term (will be added to the model)
-      precbias = []; % small precision translates into high variance
-      
+      % scale of the bias term (will be added to the model)
+      precbias = []; 
+
       % (either 'probit' or gaussian 'quadrature' to approximate posterior) 
       approximation = 'quadrature'      
       
@@ -70,11 +70,9 @@ classdef blogreg < classifier
         
         if isempty(obj.precbias)
           
-          % NOTE: EP doesn't seem to converge for low precisions
-          % (i.e., large scales)
+          % NOTE: EP doesn't seem to converge for too large scales
           
-          % we choose the precision of the bias term to equal the scale
-          obj.precbias = max(1e2,obj.scale(1));
+          obj.precbias = max([1e2 obj.scale]);
         end
         
       end
@@ -123,6 +121,10 @@ classdef blogreg < classifier
          if isscalar(obj.scale)
            % learn model for fixed scale
            
+           if obj.verbose
+               fprintf('scaling prior with scale %g and bias scale %g\n',obj.scale,obj.precbias);
+           end
+           
            p.prior = scale_prior(p.prior,'lambda',obj.scale);
            
            if size(p.prior,1)~=size(X,2)
@@ -141,6 +143,9 @@ classdef blogreg < classifier
            lgp = -inf * ones(1,length(obj.scale));
            for j=1:length(obj.scale)
              
+             if obj.verbose
+               fprintf('scaling prior with scale %g and bias scale %g\n',obj.scale(j),obj.precbias);
+             end
              tprior = scale_prior(p.prior,'lambda',obj.scale(j));
              
              if size(tprior,1)~=size(X,2)
@@ -170,6 +175,7 @@ classdef blogreg < classifier
                
              catch
               lgp(j) = -inf; % some error occurred
+              fprintf(lasterr)
              end
            end
            
@@ -383,8 +389,7 @@ classdef blogreg < classifier
           
           if obj.verbose
             fprintf('using prior with coupling [ ');
-            fprintf('%g ',obj.coupling);
-            fprintf('], scale %g, and bias precision %g\n',obj.scale,obj.precbias);
+            fprintf('%g]\n',obj.coupling);
           end
           
           prior = construct_prior(obj.dims,obj.coupling,'mask',obj.mask,'circulant',[0 0 0 0]);

@@ -51,7 +51,7 @@ classdef basis_recon < reconstructor
 
   properties
   
-    procedure={ridge}; % the procedure used for prediction of each source
+    procedure={linreg('L2',1)}; % the procedure used for prediction of each source
     
     W; % mapping from input to sources; nsources * nfeatures; whitening included in W
     A; % mapping from sources to outputs; nfeatures * nsources; unwhitening included in A

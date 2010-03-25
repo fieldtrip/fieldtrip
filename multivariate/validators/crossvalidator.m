@@ -91,10 +91,13 @@ classdef crossvalidator < validator
         
         % create train and test samples
         [obj.trainfolds,obj.testfolds,nfolds] = obj.create_folds(design);
-                        
+        
+        assert(iscell(obj.trainfolds));
+        assert(iscell(obj.testfolds));
+        assert(size(obj.trainfolds,2) == nsets);
+        
         if obj.verbose
           fprintf('using %d folds for %d datasets\n',size(obj.trainfolds,1),size(obj.trainfolds,2));
-          assert(size(obj.trainfolds,2) == nsets);
         end
         
         obj.post = cell(nfolds,nsets);
@@ -339,9 +342,12 @@ classdef crossvalidator < validator
             end
             
           elseif ~isempty(testfolds)
-            % replicate sets for all datasets 
+              
+            nfolds = size(testfolds,1);
+          
+            % replicate sets for all datasets
             %(assuming all datasets have the same design matrix)
-            if size(testfolds,2) == 1 && nsets > 1 nfolds = size(testfolds,1);
+            if size(testfolds,2) == 1 && nsets > 1 
               testfolds = repmat(testfolds,[1 nsets]);
             end
           else
@@ -387,7 +393,7 @@ classdef crossvalidator < validator
                       fprintf('drawing %d additional samples for label %d\n',maxsmp - length(iidx),unq(j));
                     end
                     
-                    % nameclash with fieldtrip_private
+                    % nameclash with fieldtrip_private!
                     tmp = [tmp; randsample(trainfolds{f,d}(iidx),maxsmp - length(iidx),true)];
                     
                   end

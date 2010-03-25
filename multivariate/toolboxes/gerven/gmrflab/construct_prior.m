@@ -4,7 +4,7 @@ function K = construct_prior(dims,strength,varargin)
 %
 % input:
 % dims = the dimensions [D1 ... DN] of the measured space (e.g., X x Y x Z x T)
-% strength = n vector [I1 ... IN] specifying the strengths of the strengthions within dimensions
+% strength = n vector [I1 ... IN] specifying the strengths of the strengths within dimensions
 %
 % options:
 % 'mask' is an optional vector specifying which index elements 
