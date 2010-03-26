@@ -18,7 +18,12 @@ extern "C" {
 
 /** Possible types we can deal with. 
 */
-typedef enum { SAP_LONG, SAP_DOUBLE, SAP_STRUCT, SAP_TEXT } sap_field_type_t;
+typedef enum { 
+	SAP_LONG, 			/**< Integer values */
+	SAP_DOUBLE, 		/**< Real numbers 	*/
+	SAP_STRUCT, 		/**< Substructures  */
+	SAP_TEXT 			/**< Strings		*/
+} sap_field_type_t;
 
 /** Elements of the linked list of name/value pairs. 
 	Values can also be arrays, sub-structs, or arrays of sub-structs 
@@ -45,6 +50,9 @@ typedef struct sap_essentials {
 	double phaseFOV;					/**< Image size (mm) in phase (Y) direction */
 	double sliceThickness;				/**< Slice thickness (mm) */
 } sap_essentials_t;
+
+/** This constant must be equal to the number of fields in sap_essentials_t */
+#define SAP_NUM_ESSENTIALS        8
 
 /** This function allocates a new list item including space for the fieldname and the value.
 	@param len_name     Length of the field name, must not be negative

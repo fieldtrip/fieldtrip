@@ -46,6 +46,8 @@ class PixelData2Texture {
 		uint16_t *pixels;
 		int numPixels = w*h*ns;
 		
+		if (numPixels < 1) return;
+		
 		if (NT < ns) {
 			for (int i=NT;i<ns;i++) {
 				glGenTextures(1, &texture[i]);
@@ -55,10 +57,7 @@ class PixelData2Texture {
 			}
 			NT = ns;
 		}
-		
-		printf("To tonvert: %i\n", numPixels);
-		if (numPixels < 1) return;
-		
+			
 		pixels = (uint16_t *) pixelData;
 				
 		if (numPixels > numAlloc) {
@@ -95,8 +94,6 @@ class PixelData2Texture {
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);	// Linear Filtering
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);	// Linear Filtering
 		}
-		
-		printf("Converted: %i\n", numPixels);
 	}
 			
 	const unsigned char *getImage() const {	return image; }
@@ -121,46 +118,9 @@ Fl_Value_Slider *sliFactor, *sliOffset;
 PixelData2Texture px2tex;
 unsigned int prevSamples = 0;
 int ftbSocket = -1;
-int readoutResolution = 0, phaseResolution = 0, numSlices = 0;
-double phaseFOV = 0.0, readoutFOV = 0.0;
 
+sap_essentials_t essProtInfo;
 
-void getProtInfo(const char *ap, unsigned int length) {
-	const sap_item_t *item;
-	sap_item_t *PI = sap_parse(ap, length);
-	
-	item = sap_search_deep(PI, "sKSpace.lBaseResolution");
-	if (item!=NULL && item->type == SAP_LONG) {
-		long res = *((long *) item->value);
-		readoutResolution = (res > 0) ? res : 0;
-	}
-	
-	item = sap_search_deep(PI, "sSliceArray.lSize");
-	if (item!=NULL && item->type == SAP_LONG) {
-		long slices = *((long *) item->value);
-		numSlices = (slices > 0) ? slices : 0;
-	}
-	
-	item = sap_search_deep(PI, "sSliceArray.asSlice[0].dPhaseFOV");
-	if (item!=NULL && item->type == SAP_DOUBLE) {
-		phaseFOV = *((double *) item->value);
-		printf("PhaseFOV: %f\n", phaseFOV);
-	}
-	
-	item = sap_search_deep(PI, "sSliceArray.asSlice[0].dReadoutFOV");
-	if (item!=NULL && item->type == SAP_DOUBLE) {
-		readoutFOV = *((double *) item->value);
-		printf("ReadoutFOV: %f\n", readoutFOV);
-	}
-	
-	if (phaseFOV > 0.0 && readoutFOV > 0.0) {
-		phaseResolution = (unsigned int) round(readoutResolution * phaseFOV / readoutFOV);
-	} else {
-		phaseResolution = 0;
-	}
-	printf("Resolution: %i x %i x %i\n", readoutResolution, phaseResolution, numSlices);
-	sap_destroy(PI);
-}
 
 bool readHeader() {
 	SimpleStorage protBuffer;
@@ -179,19 +139,29 @@ bool readHeader() {
 		fprintf(stderr, "Error in received packet.\n");
 		return false;
 	}
-	
-	getProtInfo((char *) protBuffer.data(), protBuffer.size());
 		
 	if (header_def.data_type != DATATYPE_UINT16) {
 		fprintf(stderr, "Data type != uint16\n");
 		return false;
 	}
 	
-	printf("GET_HDR: samples / channels: %i / %i\n", header_def.nsamples, header_def.nchans);
+	printf("\nHeader information: %i samples / %i channels\n\n", header_def.nsamples, header_def.nchans);
+	
+	sap_item_t *PI = sap_parse((char *) protBuffer.data(), protBuffer.size());
+	
+	if (sap_get_essentials(PI, &essProtInfo) != SAP_NUM_ESSENTIALS) {
+		printf("Not all information could be parsed :-(\n");
+	}
+	printf("Resolution (px)...: %i x %i x %i\n", essProtInfo.readoutPixels, essProtInfo.phasePixels, essProtInfo.numberOfSlices);
+	printf("FOV (mm)..........: %f x %f\n", essProtInfo.readoutFOV, essProtInfo.phaseFOV);
+	printf("Slice thickness...: %f\n", essProtInfo.sliceThickness);
+	printf("TR (microsec.)....: %li\n", essProtInfo.TR);
+	printf("#Contrasts........: %i\n", essProtInfo.numberOfContrasts);
+	sap_destroy(PI);
 	return true;
 }
 
-
+// this will get called repeatedly from the GUI loop, use this to poll for new data
 void idleCall(void *dummy) {
 	SimpleStorage pixBuffer;
 	datadef_t data_def;
@@ -199,7 +169,7 @@ void idleCall(void *dummy) {
 	FtBufferResponse response;
 	unsigned newSamples;
 	
-	if (numSlices == 0) {
+	if (essProtInfo.numberOfSlices == 0) {
 		if (!readHeader()) return;
 	}
 	
@@ -234,7 +204,7 @@ void idleCall(void *dummy) {
 		return;
 	}
 	
-	px2tex.getFromBuffer(pixBuffer.data(), readoutResolution, phaseResolution, numSlices);
+	px2tex.getFromBuffer(pixBuffer.data(), essProtInfo.readoutPixels, essProtInfo.phasePixels, essProtInfo.numberOfSlices);
 	BW->setSliceTextures(px2tex.getNumSlices(), px2tex.getTextures());
 	BW->redraw();
 }
@@ -252,6 +222,9 @@ int main(int argc, char *argv[]) {
 	if (argc>1) hostname = argv[1];
 	if (argc>2) port = atoi(argv[2]);
 	
+	// this will trigger reading the header during the idleCall
+	essProtInfo.numberOfSlices = 0;
+	
 	printf("Trying to connect to fieldtrip buffer at %s:%d\n",hostname,port);
 	
 	ftbSocket = open_connection(hostname, port);
@@ -259,8 +232,6 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr,"Failed\n");
 		exit(1);
 	}
-   
-   printf("Ok.\n");
 		
 	Fl::visual(FL_RGB);
 	Fl_Window *window = new Fl_Window(100,100,600,700,"fMRI 3D client");
@@ -289,7 +260,9 @@ int main(int argc, char *argv[]) {
 	BW->show();
 	BW->setFanSize(0);
 	
-	Fl::wait(0);
+	// "Run" the FLTK message loop once: This is needed to create 
+	// an OpenGL context before trying to generate textures etc.
+	Fl::wait(0);		
 	
 	Fl::add_idle(idleCall);
 	

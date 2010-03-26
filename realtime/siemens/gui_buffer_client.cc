@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <buffer.h>
+#include <FtBuffer.h>
 #include <siemensap.h>
 
 class PixelData2Image {
@@ -30,7 +30,6 @@ class PixelData2Image {
 		uint16_t *pixels;
 		int numPixels = w*h*ns;
 		
-		printf("To tonvert: %i\n", numPixels);
 		if (numPixels < 1) return;
 		
 		pixels = (uint16_t *) pixelData;
@@ -53,7 +52,6 @@ class PixelData2Image {
 			int v32 = pixels[i]*255;
 			image[i] = v32 / 1500; /* use proper scaling sometime */
 		}
-		printf("Converted: %i\n", numPixels);
 	}
 			
 	const unsigned char *getImage() const {
@@ -117,138 +115,93 @@ ImageWidget *IW;
 PixelData2Image px2i;
 unsigned int prevSamples = 0;
 int ftbSocket = -1;
-int readoutResolution = 0, phaseResolution = 0, numSlices = 0;
-double phaseFOV = 0.0, readoutFOV = 0.0;
+sap_essentials_t essProtInfo;
 
 
-void getProtInfo(const char *ap, unsigned int length) {
-	const sap_item_t *item;
-	sap_item_t *PI = sap_parse(ap, length);
-	
-	item = sap_search_deep(PI, "sKSpace.lBaseResolution");
-	if (item!=NULL && item->type == SAP_LONG) {
-		long res = *((long *) item->value);
-		readoutResolution = (res > 0) ? res : 0;
-	}
-	
-	item = sap_search_deep(PI, "sSliceArray.lSize");
-	if (item!=NULL && item->type == SAP_LONG) {
-		long slices = *((long *) item->value);
-		numSlices = (slices > 0) ? slices : 0;
-	}
-	
-	item = sap_search_deep(PI, "sSliceArray.asSlice[0].dPhaseFOV");
-	if (item!=NULL && item->type == SAP_DOUBLE) {
-		phaseFOV = *((double *) item->value);
-		printf("PhaseFOV: %f\n", phaseFOV);
-	}
-	
-	item = sap_search_deep(PI, "sSliceArray.asSlice[0].dReadoutFOV");
-	if (item!=NULL && item->type == SAP_DOUBLE) {
-		readoutFOV = *((double *) item->value);
-		printf("ReadoutFOV: %f\n", readoutFOV);
-	}
-	
-	if (phaseFOV > 0.0 && readoutFOV > 0.0) {
-		phaseResolution = (unsigned int) round(readoutResolution * phaseFOV / readoutFOV);
-	} else {
-		phaseResolution = 0;
-	}
-	printf("Resolution: %i x %i x %i\n", readoutResolution, phaseResolution, numSlices);
-	sap_destroy(PI);
-}
-
-
-
-void idleCall(void *dummy) {
-	const char *protocol;
-	message_t request;
-	messagedef_t request_def;
-	message_t *response = NULL;
+bool readHeader() {
+	SimpleStorage protBuffer;
 	headerdef_t header_def;
-	datasel_t datasel;
-		
-	request.def = &request_def;
-	request.buf = NULL;
-	request_def.version = VERSION;
-	request_def.command = GET_HDR;
-	request_def.bufsize = 0;
+	FtBufferRequest request;
+	FtBufferResponse response;
 	
-	if (tcprequest(ftbSocket, &request, &response) < 0) {
+	request.prepGetHeader();
+	
+	if (tcprequest(ftbSocket, request.out(), response.in()) < 0) {
 		fprintf(stderr, "Error in communication. Buffer server aborted??\n");
-		return;
+		return false;
 	}
 	
-	if (!response) {
-		fprintf(stderr, "GET_HDR: unknown error in response\n");
-		return;
+	if (!response.checkGetHeader(header_def, &protBuffer)) {
+		fprintf(stderr, "Error in received packet.\n");
+		return false;
 	}
-	if (!response->def) {
-		fprintf(stderr, "GET_HDR: unknown error in response\n");
-		goto cleanup;
-	}
-	if (response->def->command!=GET_OK) {
-		fprintf(stderr, "GET_HDR: Buffer returned an error (%d)\n", response->def->command);
-		goto cleanup;
-	}
-	
-	memcpy(&header_def, response->buf, sizeof(header_def));
-	
-	protocol = (const char *)response->buf + sizeof(header_def);
-	getProtInfo(protocol, header_def.bufsize);
-	
-	free(response->buf);
-	free(response->def);
-	free(response);
 		
 	if (header_def.data_type != DATATYPE_UINT16) {
 		fprintf(stderr, "Data type != uint16\n");
-		return;
+		return false;
 	}
 	
-	printf("GET_HDR: samples / channels: %i / %i\n", header_def.nsamples, header_def.nchans);
-	if (header_def.nsamples == prevSamples) {
-		return;
-	} 
-	prevSamples = header_def.nsamples;
+	printf("\nHeader information: %i samples / %i channels\n\n", header_def.nsamples, header_def.nchans);
+	
+	sap_item_t *PI = sap_parse((char *) protBuffer.data(), protBuffer.size());
+	
+	if (sap_get_essentials(PI, &essProtInfo) != SAP_NUM_ESSENTIALS) {
+		printf("Not all information could be parsed :-(\n");
+	}
+	printf("Resolution (px)...: %i x %i x %i\n", essProtInfo.readoutPixels, essProtInfo.phasePixels, essProtInfo.numberOfSlices);
+	printf("FOV (mm)..........: %f x %f\n", essProtInfo.readoutFOV, essProtInfo.phaseFOV);
+	printf("Slice thickness...: %f\n", essProtInfo.sliceThickness);
+	printf("TR (microsec.)....: %li\n", essProtInfo.TR);
+	printf("#Contrasts........: %i\n", essProtInfo.numberOfContrasts);
+	sap_destroy(PI);
+	return true;
+}
 
-    datasel.begsample = prevSamples-1;
-    datasel.endsample = prevSamples-1;
+// this will get called repeatedly from the GUI loop, use this to poll for new data
+void idleCall(void *dummy) {
+	SimpleStorage pixBuffer;
+	datadef_t data_def;
+	FtBufferRequest request;
+	FtBufferResponse response;
+	unsigned newSamples;
 	
-	request_def.version = VERSION;
-	request_def.command = GET_DAT;
-	request_def.bufsize = sizeof(datasel_t);
-	request.buf = &datasel;
+	if (essProtInfo.numberOfSlices == 0) {
+		if (!readHeader()) return;
+	}
 	
-	if (tcprequest(ftbSocket, &request, &response) < 0) {
+	request.prepWaitData(prevSamples, 50);
+	
+	if (tcprequest(ftbSocket, request.out(), response.in()) < 0) {
 		fprintf(stderr, "Error in communication. Buffer server aborted??\n");
 		return;
 	}
-	
-	if (!response) {
-		fprintf(stderr, "GET_DAT: unknown error in response\n");
+	if (!response.checkWait(newSamples)) {
+		fprintf(stderr, "Error in received packet.\n");
 		return;
 	}
-	if (!response->def) {
-		fprintf(stderr, "GET_DAT: unknown error in response\n");
-		goto cleanup;
+	
+	if (newSamples == prevSamples) return; // nothing new
+	if (newSamples < prevSamples) {
+		// oops ? do we have a new header?
+		if (!readHeader()) return;
 	}
-	if (response->def->command!=GET_OK) {
-		fprintf(stderr, "GET_DAT: Buffer returned an error (%d)\n", response->def->command);
-		goto cleanup;
+	prevSamples = newSamples;
+	
+	if (prevSamples == 0) return;
+	
+	request.prepGetData(prevSamples-1, prevSamples-1);
+	
+	if (tcprequest(ftbSocket, request.out(), response.in()) < 0) {
+		fprintf(stderr, "Error in communication. Buffer server aborted??\n");
+		return;
+	}
+	if (!response.checkGetData(data_def, &pixBuffer)) {
+		fprintf(stderr, "Error in received packet.\n");
+		return;
 	}
 	
-	void *data_buf = (void *)((char *)response->buf + sizeof(datadef_t));
-	
-	px2i.getFromBuffer(data_buf, readoutResolution, phaseResolution, numSlices);
+	px2i.getFromBuffer(pixBuffer.data(), essProtInfo.readoutPixels, essProtInfo.phasePixels, essProtInfo.numberOfSlices);
 	IW->redraw();
-	
-cleanup:
-	if (response) {
-		if (response->buf) free(response->buf);
-		if (response->def) free(response->def);
-		free(response);
-	}
 }
 
 
@@ -268,7 +221,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	Fl::visual(FL_RGB);
-	window = new Fl_Window(800,100,454,454,"FMRI buffer client");
+	window = new Fl_Window(200,100,454,454,"FMRI buffer client");
 	IW = new ImageWidget(0,0,454,454, &px2i);
 	window->resizable(IW);
 	window->end();

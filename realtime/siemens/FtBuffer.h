@@ -27,8 +27,35 @@ class FtBufferRequest {
 		m_def.bufsize = 0;
 		m_msg.buf = NULL;		
 	}
+
+	bool prepPutData(UINT32_T numChannels, UINT32_T numSamples, UINT32_T dataType, const void *data) {
+		// This is for safety: If a user ignores this function returning false,
+		// and just sends this request to the buffer server, we need to make sure
+		// no harm is done - so we sent a small invalid packet
+		m_def.command = GET_ERR; 
+		m_def.bufsize = 0;
+		
+		UINT32_T  wordSize = wordsize_from_type(dataType);
+		if (wordSize == 0) return false;
+		
+		UINT32_T  dataSize = wordSize * numSamples * numChannels;
+		UINT32_T  totalSize = dataSize + sizeof(datadef_t);
+		datadef_t *dd;
+		
+		if (!m_buf.resize(totalSize)) return false;
+		dd = (datadef_t *) m_buf.data();
+		dd->nchans = numChannels;
+		dd->nsamples = numSamples;
+		dd->data_type = dataType;
+		dd->bufsize = dataSize;
+		// dd+1 points to the next byte after the data_def
+		memcpy(dd+1, data, dataSize);
+		m_def.command = PUT_DAT;
+		m_def.bufsize = totalSize;
+		return true;
+	}
 	
-	void prepGetData(unsigned int begsample, unsigned int endsample) {
+	void prepGetData(UINT32_T begsample, UINT32_T endsample) {
 		m_def.command = GET_DAT;
 		m_msg.buf = &m_extras.ds;
 		m_def.bufsize = sizeof(datasel_t);
@@ -36,7 +63,7 @@ class FtBufferRequest {
 		m_extras.ds.endsample = endsample;
 	}
 		
-	void prepWaitData(unsigned int threshold, unsigned int milliseconds) {
+	void prepWaitData(UINT32_T threshold, UINT32_T milliseconds) {
 		m_def.command = WAIT_DAT;
 		m_msg.buf = &m_extras.wd;
 		m_def.bufsize = sizeof(waitdef_t);
@@ -129,6 +156,13 @@ class FtBufferResponse {
 		if (m_response->def->version != VERSION) return false;
 		return m_response->def->command == PUT_OK;
 	}
+	
+	bool checkFlush() {
+		if (m_response == NULL) return false;
+		if (m_response->def == NULL) return false;
+		if (m_response->def->version != VERSION) return false;
+		return m_response->def->command == FLUSH_OK;
+	}	
 	
 	~FtBufferResponse() {
 		if (m_response != NULL) clearResponse();

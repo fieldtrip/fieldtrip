@@ -298,9 +298,9 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 						thissample++;
 						thissample = WRAP(thissample, current_max_num_sample);
 					}
+					/* Signal possibly waiting threads that we have received data */
+					pthread_cond_broadcast(&getData_cond);
 				}
-				// Signal possibly waiting threads that we have received data
-				pthread_cond_broadcast(&getData_cond);
 			}
 
 			pthread_mutex_unlock(&mutexdata);
