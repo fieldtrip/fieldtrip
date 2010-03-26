@@ -316,7 +316,10 @@ elseif selectrpt && israw
 end
 
 if selectchan,
-  selchan = match_str(data.label, channelselection(selchan, data.label));
+  %FIXME give selchan according to the order requested in selchan
+  %this does not work 
+  tmp            = channelselection(selchan, data.label);
+  [dum, selchan] = match_str(tmp, data.label);
 end
 
 if selectfoi,
@@ -353,7 +356,8 @@ if israw,
 
 elseif isfreq,
   if isfield(data, 'labelcmb'),
-    %there is a crsspctrm field, this will only be selectdimmed
+    %there is a crsspctrm or powcovspctrm field, 
+    %this will only be selectdimmed
     %if we apply a trick
     tmpdata = data;
     tmpdata.label = data.labelcmb;
@@ -366,8 +370,11 @@ elseif isfreq,
     if avgoverfreq, tmpdata = avgoverdim(tmpdata, 'freq');  end
     if avgovertime, tmpdata = avgoverdim(tmpdata, 'time');  end
     if dojack,      tmpdata = leaveoneout(tmpdata);         end    
-    crsspctrm = tmpdata.crsspctrm; clear tmpdata;
-  else
+
+    if isfield(tmpdata, 'crsspctrm'),    crsspctrm = tmpdata.crsspctrm;    end
+    if isfield(tmpdata, 'powcovspctrm'), crsspctrm = tmpdata.powcovspctrm; end
+    if isfield(tmpdata, 'crsspctrm') || isfield(tmpdata, 'powcovspctrm'), clear tmpdata; end 
+ else
     crsspctrm = [];
   end
   % make the subselection
@@ -381,7 +388,11 @@ elseif isfreq,
   if avgoverfreq, data = avgoverdim(data, 'freq');  end
   if avgovertime, data = avgoverdim(data, 'time');  end
   if dojack,      data = leaveoneout(data);         end    
-  if ~isempty(crsspctrm), data.crsspctrm = crsspctrm; end
+  
+  if ~isempty(crsspctrm),
+    if isfield(data, 'crsspctrm'),    data.crsspctrm    = crsspctrm; end
+    if isfield(data, 'powcovspctrm'), data.powcovspctrm = crsspctrm; end
+  end
 
 elseif istlck,
   % make the subselection
