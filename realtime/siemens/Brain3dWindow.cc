@@ -33,7 +33,6 @@ Brain3dWindow::Brain3dWindow(int X, int Y, int W, int H, const char *L) : Fl_Gl_
 	calcEyeUpRight();
 
 	mode(FL_DOUBLE|FL_DEPTH|FL_ALPHA);
-	glEnable(GL_COLOR_MATERIAL);
 	resizable(this);
 	
 	numSlices = 0;

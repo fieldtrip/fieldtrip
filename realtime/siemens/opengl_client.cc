@@ -259,9 +259,12 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr,"Failed\n");
 		exit(1);
 	}
+   
+   printf("Ok.\n");
 		
 	Fl::visual(FL_RGB);
 	Fl_Window *window = new Fl_Window(100,100,600,700,"fMRI 3D client");
+
 	BW = new Brain3dWindow(0,0,600,600);
 	
 	sliFactor = new Fl_Value_Slider(20,615,280,25);

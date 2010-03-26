@@ -189,7 +189,6 @@ void idleCall(void *dummy) {
 	}
 	if (response->def->command!=GET_OK) {
 		fprintf(stderr, "GET_HDR: Buffer returned an error (%d)\n", response->def->command);
-		Sleep(50);
 		goto cleanup;
 	}
 	
@@ -209,7 +208,6 @@ void idleCall(void *dummy) {
 	
 	printf("GET_HDR: samples / channels: %i / %i\n", header_def.nsamples, header_def.nchans);
 	if (header_def.nsamples == prevSamples) {
-		Sleep(50);
 		return;
 	} 
 	prevSamples = header_def.nsamples;
