@@ -16,7 +16,7 @@ ifeq "$(PLATFORM)" "mingw32"
    SUFFIX = .exe
    WINONLY = gui_streamer.exe pixeldata_to_remote_buffer.exe gui_buffer_client$(SUFFIX)
 else
-	LDFLAGS = -lpthread ../buffer/src/libbuffer.a
+   LDFLAGS = -lpthread ../buffer/src/libbuffer.a
    FLFLAGS = `fltk-config --cxxflags`
    LDFL = `fltk-config --ldflags`
    LDGL = `fltk-config --ldflags --use-gl`
@@ -24,7 +24,7 @@ else
    WINONLY = 
 endif
 
-CXXFLAGS = $(FLPATH) -I../buffer/src -I. -Wunused -Wall -pedantic
+CXXFLAGS = $(FLFLAGS) -I../buffer/src -I. -Wunused -Wall -pedantic
  
 
 all:  opengl_client$(SUFFIX) $(WINONLY)
