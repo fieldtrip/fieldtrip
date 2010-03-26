@@ -388,3 +388,71 @@ const sap_item_t *sap_search_deep(const sap_item_t *list, const char *fieldname)
 	
 	return sap_search_deep(item, dotPos+1);
 }
+
+
+int sap_get_essentials(const sap_item_t *list, sap_essentials_t *E) {
+	const sap_item_t *item;
+	int numFound = 0;
+	
+	if (list == NULL || E == NULL) return -1;
+	
+	memset(E, 0, sizeof(sap_essentials_t));
+	
+	item = sap_search_deep(list, "alTR");
+	if (item!=NULL && item->type == SAP_LONG) {
+		E->TR = ((long *) item->value)[0];
+		numFound++;
+	}
+	
+	item = sap_search_deep(list, "lContrasts");
+	if (item!=NULL && item->type == SAP_LONG) {
+		long cs = *((long *) item->value);
+		if (cs>=0) {
+			E->numberOfContrasts = (unsigned int) cs;
+			numFound++;
+		}
+	}
+	
+	item = sap_search_deep(list, "sKSpace.lBaseResolution");
+	if (item!=NULL && item->type == SAP_LONG) {
+		long res = *((long *) item->value);
+		if (res>0) {
+			E->readoutPixels = res;
+			numFound++;
+		}
+	}
+	
+	item = sap_search_deep(list, "sSliceArray.lSize");
+	if (item!=NULL && item->type == SAP_LONG) {
+		long slices = *((long *) item->value);
+		if (slices > 0) {
+			E->numberOfSlices = slices;
+			numFound++;
+		}
+	}
+	
+	item = sap_search_deep(list, "sSliceArray.asSlice[0].dPhaseFOV");
+	if (item!=NULL && item->type == SAP_DOUBLE) {
+		E->phaseFOV = *((double *) item->value);
+		numFound++;
+	}
+	
+	item = sap_search_deep(list, "sSliceArray.asSlice[0].dReadoutFOV");
+	if (item!=NULL && item->type == SAP_DOUBLE) {
+		E->readoutFOV = *((double *) item->value);
+		numFound++;
+	}
+	
+	if (E->phaseFOV > 0.0 && E->readoutFOV > 0.0) {
+		E->phasePixels = (unsigned int) round(E->readoutPixels * E->phaseFOV / E->readoutFOV);
+		numFound++;
+	}
+	
+	item = sap_search_deep(list, "sSliceArray.asSlice[0].dThickness");
+	if (item!=NULL && item->type == SAP_DOUBLE) {
+		E->sliceThickness = *((double *) item->value);
+		numFound++;
+	}
+	
+	return numFound;
+}

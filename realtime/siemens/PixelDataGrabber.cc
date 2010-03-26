@@ -325,7 +325,7 @@ void PixelDataGrabber::handleProtocol(const char *info, unsigned int sizeInBytes
 	protInfo = PI;
 }
 
-bool PixelDataGrabber::tryReadFile(const char *filename, SimpleBuffer &sBuf) {
+bool PixelDataGrabber::tryReadFile(const char *filename, SimpleStorage &sBuf) {
 	HANDLE fHandle;
 
 	fHandle = CreateFile(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);

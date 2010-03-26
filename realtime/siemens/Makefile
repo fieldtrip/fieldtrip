@@ -5,9 +5,10 @@
  
 LDFLAGS=pthreadGC2.dll ../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
 CXXFLAGS=-IC:/msys/1.0/local/include -I../buffer/src -I. -g -Wall
-LDFL=-lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32
+LDFL=-mno-cygwin -lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32
+LDGL=-lfltk_gl -lopengl32 -lglu32
 
-all: pixeldata_to_remote_buffer.exe gui_buffer_client.exe gui_streamer.exe
+all: pixeldata_to_remote_buffer.exe gui_buffer_client.exe gui_streamer.exe opengl_client.exe
 
 gui_streamer.exe: gui_streamer.o FolderWatcher.o PixelDataGrabber.o siemensap.o
 	g++ -o gui_streamer gui_streamer.o FolderWatcher.o PixelDataGrabber.o siemensap.o $(LDFLAGS) $(LDFL)
@@ -32,6 +33,15 @@ gui_buffer_client.o: gui_buffer_client.cc siemensap.h
 	
 gui_buffer_client.exe: gui_buffer_client.o siemensap.o 
 	g++ -o gui_buffer_client.exe gui_buffer_client.o siemensap.o $(LDFLAGS) $(LDFL)
+
+opengl_client.o: opengl_client.cc siemensap.h FtBuffer.h
+	g++ -c opengl_client.cc $(CXXFLAGS)
+	
+Brain3dWindow.o: Brain3dWindow.cc Brain3dWindow.h
+	g++ -c Brain3dWindow.cc $(CXXFLAGS)
+	
+opengl_client.exe: opengl_client.o siemensap.o Brain3dWindow.o
+	g++ -o opengl_client.exe opengl_client.o siemensap.o Brain3dWindow.o $(LDFLAGS) $(LDGL) $(LDFL)	
 
 siemensap.o: siemensap.c siemensap.h
 	gcc -c siemensap.c -I.

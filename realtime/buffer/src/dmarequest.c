@@ -855,7 +855,6 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 					nsmp = header->def->nsamples;
 					pthread_mutex_unlock(&mutexheader);
 				} while (nsmp <= wd->threshold && waiterr==0);
-				printf("waiterr = %i\n", waiterr);
 				*nret = nsmp;
 			}
 			break;

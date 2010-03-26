@@ -33,6 +33,19 @@ typedef struct sap_item {
 	struct sap_item *next;		/**< next element in list, NULL if last */
 } sap_item_t;
 
+/** Essential information about the MR protocol provided for convenience.
+*/
+typedef struct sap_essentials {
+	long TR;							/**< TR[0] */
+	unsigned int readoutPixels;			/**< Image size (pixels) in readout (X) direction */
+	unsigned int phasePixels;			/**< Image size (pixels) in phase (Y) direction */
+	unsigned int numberOfSlices;		/**< Number of slices */
+	unsigned int numberOfContrasts;		/**< Number of contrasts */
+	double readoutFOV;					/**< Image size (mm) in readout (X) direction */
+	double phaseFOV;					/**< Image size (mm) in phase (Y) direction */
+	double sliceThickness;				/**< Slice thickness (mm) */
+} sap_essentials_t;
+
 /** This function allocates a new list item including space for the fieldname and the value.
 	@param len_name     Length of the field name, must not be negative
 	@param name  		Fieldname, must not be NULL, does not need to be 0-terminated
@@ -106,6 +119,13 @@ void sap_print(const sap_item_t *list);
 	@return 	The corresponding item within 'list', or NULL if not found
 */
 const sap_item_t *sap_search_deep(const sap_item_t *list, const char *fieldname);
+
+/** Try to retrieve "essential" protocol information from a given linked list.
+	@param list		Linked list of protocol definition key/value pairs
+	@param E		Pointer to essential information data structure
+	@return 	The number of detected parameters, or -1 if one of the parameters is NULL
+*/
+int sap_get_essentials(const sap_item_t *list, sap_essentials_t *E);
 
 #ifdef __cplusplus
 }
