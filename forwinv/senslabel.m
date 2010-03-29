@@ -36,6 +36,7 @@ function label = senslabel(type)
 %   'itab153_planar'
 %   'yokogawa160'
 %   'yokogawa160_planar'
+%   'electrode'
 %
 % See also SENSTYPE, CHANNELSELECTION
 
@@ -65,7 +66,7 @@ end
 isbiosemi  = ~isempty(regexp(type, '^biosemi', 'once'));
 isbti      = ~isempty(regexp(type, '^bti', 'once'));
 isctf      = ~isempty(regexp(type, '^ctf', 'once'));
-iseeg      = ~isempty(regexp(type, '^eeg', 'once'));
+iseeg      = ~isempty(regexp(type, '^eeg', 'once')) || ismember(type, {'electrode'});
 isext      = ~isempty(regexp(type, '^ext', 'once'));
 isegi      = ~isempty(regexp(type, '^egi', 'once'));
 isneuromag = ~isempty(regexp(type, '^neuromag', 'once'));
@@ -1037,6 +1038,10 @@ if isneuromag
 end % if isneuromag
 
 if iseeg || isext
+
+  % the default list of EEG electrode labels is empty
+  electrode = {};
+
   eeg1020 = {
     'Fp1'
     'Fpz'
@@ -1989,8 +1994,6 @@ end
 if exist(type, 'var')
   label = eval(type);
   label = label(:);
-elseif ismember(type, {'electrode'}) % there might be others in the future
-  label = {};
 else
   error('the requested sensor type is not supported');
 end
