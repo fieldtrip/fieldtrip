@@ -1,16 +1,16 @@
-function [down] = volumedownsample(cfg, source);
+function [down] = ft_volumedownsample(cfg, source);
 
-% VOLUMEDOWNSAMPLE downsamples an anatomical MRI or source reconstruction
+% FT_VOLUMEDOWNSAMPLE downsamples an anatomical MRI or source reconstruction
 % and optionally normalizes its coordinate axes, keeping the homogenous
 % transformation matrix correct.
 %
 % Use as
-%   [volume] = volumedownsample(cfg, volume)
+%   [volume] = ft_volumedownsample(cfg, volume)
 % where the cconfiguration can contain
 %   cfg.downsample = integer number (default = 1, i.e. no downsampling)
 %   cfg.smooth     = 'no' or the FWHM of the gaussian kernel in voxels (default = 'no')
 %
-% This function is used by SOUREINTERPOLATE, SOURCEREAD and SOURCENORMALIZE.
+% This function is used by FT_SOUREINTERPOLATE, FT_SOURCEREAD and FT_SOURCENORMALIZE.
 
 % Copyright (C) 2004, Robert Oostenveld
 %

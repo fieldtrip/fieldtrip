@@ -1,22 +1,22 @@
-function [grandavg] = timelockgrandaverage(cfg, varargin)
+function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 
-% TIMELOCKGRANDAVERAGE computes ERF/ERP average and variance
+% FT_TIMELOCKGRANDAVERAGE computes ERF/ERP average and variance
 % over multiple subjects
 %
 % Use as
-%   [grandavg] = timelockgrandaverage(cfg, avg1, avg2, avg3, ...)
+%   [grandavg] = ft_timelockgrandaverage(cfg, avg1, avg2, avg3, ...)
 %
 % where
-%   avg1..N are the ERF/ERP averages as obtained from TIMELOCKANALYSIS
+%   avg1..N are the ERF/ERP averages as obtained from FT_TIMELOCKANALYSIS
 %
 % and cfg is a configuration structure with
 %  cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
-%                       see CHANNELSELECTION for details
+%                       see FT_CHANNELSELECTION for details
 %  cfg.latency        = [begin end] in seconds or 'all' (default = 'all')
 %  cfg.keepindividual = 'yes' or 'no' (default = 'no')
 %  cfg.normalizevar   = 'N' or 'N-1' (default = 'N-1')
 %
-% See also TIMELOCKANALYSIS, TIMELOCKSTATISTICS
+% See also FT_TIMELOCKANALYSIS, FT_TIMELOCKSTATISTICS
 
 % Copyright (C) 2003-2006, Jens Schwarzbach
 %

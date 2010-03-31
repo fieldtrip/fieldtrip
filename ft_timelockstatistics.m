@@ -1,16 +1,16 @@
-function [stat] = timelockstatistics(cfg, varargin)
+function [stat] = ft_timelockstatistics(cfg, varargin)
 
-% TIMELOCKSTATISTICS  computes significance probabilities and/or critical values of a parametric statistical test
+% FT_TIMELOCKSTATISTICS  computes significance probabilities and/or critical values of a parametric statistical test
 % or a non-parametric permutation test.
 %
 % Use as
-%   [stat] = timelockstatistics(cfg, timelock1, timelock2, ...)
-% where the input data is the result from either TIMELOCKANALYSIS or
-% TIMELOCKGRANDAVERAGE.
+%   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
+% where the input data is the result from either FT_TIMELOCKANALYSIS or
+% FT_TIMELOCKGRANDAVERAGE.
 %
 % The configuration can contain the following options for data selection
 %   cfg.channel     = Nx1 cell-array with selection of channels (default = 'all'),
-%                     see CHANNELSELECTION for details
+%                     see FT_CHANNELSELECTION for details
 %   cfg.latency     = [begin end] in seconds or 'all' (default = 'all')
 %   cfg.avgoverchan = 'yes' or 'no'                   (default = 'no')
 %   cfg.avgovertime = 'yes' or 'no'                   (default = 'no')
@@ -28,7 +28,7 @@ function [stat] = timelockstatistics(cfg, varargin)
 % for the corresponding configuration options and for a detailed
 % explanation of each method.
 %
-% See also TIMELOCKANALYSIS, TIMELOCKGRANDAVERAGE
+% See also FT_TIMELOCKANALYSIS, FT_TIMELOCKGRANDAVERAGE
 
 % This function depends on STATISTICS_WRAPPER
 

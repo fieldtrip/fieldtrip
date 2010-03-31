@@ -1,25 +1,25 @@
-function [output] = volumelookup(cfg, volume)
+function [output] = ft_volumelookup(cfg, volume)
 
-% VOLUMELOOKUP can be used in two directions. (1) It creates a mask
+% FT_VOLUMELOOKUP can be used in two directions. (1) It creates a mask
 % according to a label from a given atlas, or a sphere or box around a
 % point of interest. (2) It gives the labels from a given atlas according
 % to a given mask.
 %
 % Use as
-%   (1) [mask]  = volumelookup(cfg, volume)
+%   (1) [mask]  = ft_volumelookup(cfg, volume)
 % or
-%   (2) [labels] = volumelookup(cfg, volume)
+%   (2) [labels] = ft_volumelookup(cfg, volume)
 %
 % where volume can be:
 %   mri    is the output of READ_FCDC_MRI
-%   source is the output of SOURCEANALYSIS
-%   stat   is the output of SOURCESTATISTICS
+%   source is the output of FT_SOURCEANALYSIS
+%   stat   is the output of FT_SOURCESTATISTICS
 %
 % configuration options for a mask according to an atlas:
 %   cfg.inputcoord = 'mni' or 'tal', coordinate system of the mri/source/stat
 %   cfg.atlas      = string, filename of atlas to use, either the AFNI
 %                     brik file that is available from http://afni.nimh.nih.gov/afni/doc/misc/ttatlas_tlrc,
-%                     or the WFU atlasses available from  http://fmri.wfubmc.edu. see PREPARE_ATLAS
+%                     or the WFU atlasses available from  http://fmri.wfubmc.edu. see FT_PREPARE_ATLAS
 %   cfg.roi        = string or cell of strings, region(s) of interest from anatomical atlas
 % configuration options for a spherical/box mask around a point of interest:
 %   cfg.roi                = Nx3 vector, coordinates of the points of interest
@@ -31,7 +31,7 @@ function [output] = volumelookup(cfg, volume)
 %   cfg.inputcoord    = 'mni' or 'tal', coordinate system of the mri/source/stat
 %   cfg.atlas         = string, filename of atlas to use, either the AFNI
 %                        brik file that is available from http://afni.nimh.nih.gov/afni/doc/misc/ttatlas_tlrc,
-%                        or the WFU atlasses available from http://fmri.wfubmc.edu. see PREPARE_ATLAS
+%                        or the WFU atlasses available from http://fmri.wfubmc.edu. see FT_PREPARE_ATLAS
 %   cfg.maskparameter = string, field in volume to be lookedup, data in field should be logical
 %   cfg.maxqueryrange = number, should be 1, 3, 5 (default = 1)
 %

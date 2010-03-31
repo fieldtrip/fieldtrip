@@ -1,15 +1,15 @@
-function [timelock] = timelockbaseline(cfg, timelock);
+function [timelock] = ft_timelockbaseline(cfg, timelock);
 
-% TIMELOCKBASELINE performs baseline correction for ERF and ERP data
+% FT_TIMELOCKBASELINE performs baseline correction for ERF and ERP data
 %
 % Use as
-%    [timelock] = timelockbaseline(cfg, timelock)
-% where the timelock data comes from TIMELOCKANALYSIS and the
+%    [timelock] = ft_timelockbaseline(cfg, timelock)
+% where the timelock data comes from FT_TIMELOCKANALYSIS and the
 % configuration should contain
 %   cfg.baseline     = [begin end] (default = 'no')
-%   cfg.channel      = cell-array, see CHANNELSELECTION
+%   cfg.channel      = cell-array, see FT_CHANNELSELECTION
 %
-% See also TIMELOCKANALYSIS, FREQBASELINE
+% See also FT_TIMELOCKANALYSIS, FT_FREQBASELINE
 
 % Undocumented local options:
 % cfg.blcwindow
@@ -28,7 +28,7 @@ cfg = checkconfig(cfg, 'trackconfig', 'on');
 timelock = checkdata(timelock, 'datatype', 'timelock', 'feedback', 'yes');
 
 % the cfg.blc/blcwindow options are used in preprocessing and in
-% timelockanalysis (i.e. in private/preproc), hence make sure that
+% ft_timelockanalysis (i.e. in private/preproc), hence make sure that
 % they can also be used here for consistency
 if isfield(cfg, 'baseline') && (isfield(cfg, 'blc') || isfield(cfg, 'blcwindow'))
   error('conflicting configuration options, you should use cfg.baseline');

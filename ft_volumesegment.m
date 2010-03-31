@@ -1,12 +1,12 @@
-function [segment] = volumesegment(cfg, mri)
+function [segment] = ft_volumesegment(cfg, mri)
 
-% VOLUMESEGMENT segments an anatomical MRI into gray matter, white matter,
+% FT_VOLUMESEGMENT segments an anatomical MRI into gray matter, white matter,
 % and cerebro-spinal fluid compartments.
 %
 % This function the SPM2 toolbox, see http://www.fil.ion.ucl.ac.uk/spm/
 %
 % Use as
-%   [segment] = volumesegment(cfg, mri)
+%   [segment] = ft_volumesegment(cfg, mri)
 %
 % The input arguments are a configuration structure (see below) and an
 % anatomical MRI structure. Instead of an MRI structure, you can also

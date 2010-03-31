@@ -1,6 +1,6 @@
-function [mri] = volumerealign(cfg, mri);
+function [mri] = ft_volumerealign(cfg, mri);
 
-% VOLUMEREALIGN spatially aligns an anatomical MRI with head coordinates based on
+% FT_VOLUMEREALIGN spatially aligns an anatomical MRI with head coordinates based on
 % external fiducials. This function does not change the volume
 % itself, but adjusts the homogenous transformation matrix that
 % describes the coordinate system.
@@ -8,10 +8,10 @@ function [mri] = volumerealign(cfg, mri);
 % This function only changes the coordinate system of an anatomical
 % MRI, it does not change the MRI as such. For spatial normalisation
 % (warping) of an MRI to a template brain you should use the
-% VOLUMENORMALISE function.
+% FT_VOLUMENORMALISE function.
 %
 % Use as
-%   [mri] = volumerealign(cfg, mri)
+%   [mri] = ft_volumerealign(cfg, mri)
 % where mri is an anatomical volume (i.e. MRI) or a functional
 % volume (i.e. source recunstruction that has been interpolated on
 % an MRI).
@@ -37,7 +37,7 @@ function [mri] = volumerealign(cfg, mri);
 % - the Z-axis goes approximately towards the vertex, orthogonal to X and Y
 %
 %
-% See also READ_MRI, ELECTRODEREALIGN
+% See also READ_MRI, FT_ELECTRODEREALIGN
 
 % Copyright (C) 2006-2009, Robert Oostenveld
 %

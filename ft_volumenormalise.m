@@ -1,12 +1,12 @@
-function [normalise] = volumenormalise(cfg, interp)
+function [normalise] = ft_volumenormalise(cfg, interp)
 
-% VOLUMENORMALISE normalises anatomical and functional volume data
+% FT_VOLUMENORMALISE normalises anatomical and functional volume data
 % to a template anatomical MRI.
 %
 % Use as
-%   [volume] = volumenormalise(cfg, volume)
+%   [volume] = ft_volumenormalise(cfg, volume)
 %
-% The input volume should be the result from SOURCEINTERPOLATE.
+% The input volume should be the result from FT_SOURCEINTERPOLATE.
 % Alternatively, the input can contain a single anatomical MRI that
 % was read with READ_FCDC_MRI, or you can specify a filename of an
 % anatomical MRI.
@@ -20,19 +20,19 @@ function [normalise] = volumenormalise(cfg, interp)
 %   cfg.name        = string for output filename
 %   cfg.write       = 'no' (default) or 'yes', writes the segmented volumes to SPM2
 %                     compatible analyze-file, with the suffix
-%                     _anatomy for the anatomical MRI volume
+%                     _anatomy for the anatomical MRI volumeFT_
 %                     _param   for each of the functional volumes
 %   cfg.nonlinear   = 'yes' (default) or 'no', estimates a nonlinear transformation
-%                     in addition to the linear affine registration. If a reasonably
+%                     in addition to the linear affine registratFT_ion. If a reasonably
 %                     accurate normalisation is sufficient, a purely linearly transformed
 %                     image allows for 'reverse-normalisation', which might come in handy
-%                     when for example a region of interest is defined on the normalised
+%                     when for example a region of interest is dFT_efined on the normalised
 %                     group-average.
 
-% Undocumented local options:
+% Undocumented local options:FT_
 %   cfg.keepintermediate = 'yes' or 'no'
 %   cfg.intermediatename = prefix of the the coregistered images and of the
-%                          original images in the original headcoordinate system
+%                          original images in the original headcFT_oordinate system
 %   cfg.spmparams        = one can feed in parameters from a prior normalisation
 
 % Copyright (C) 2004-2006, Jan-Mathijs Schoffelen

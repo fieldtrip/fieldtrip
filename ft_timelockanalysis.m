@@ -1,15 +1,15 @@
-function [timelock] = timelockanalysis(cfg, data)
+function [timelock] = ft_timelockanalysis(cfg, data)
 
-% TIMELOCKANALYSIS performs timelocked analysis such as averaging
+% FT_TIMELOCKANALYSIS performs timelocked analysis such as averaging
 % and covariance computation
 %
-% [timelock] = timelockanalysis(cfg, data)
+% [timelock] = ft_timelockanalysis(cfg, data)
 %
 % The data should be organised in a structure as obtained from the
-% PREPROCESSING function. The configuration should be according to
+% FT_PREPROCESSING function. The configuration should be according to
 %
 %   cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'),
-%                            see CHANNELSELECTION for details
+%                            see FT_CHANNELSELECTION for details
 %   cfg.trials             = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.latency            = [begin end] in seconds, or 'minperlength', 'maxperlength', 
 %                            'prestim', 'poststim' (default = 'maxperlength')
@@ -39,7 +39,7 @@ function [timelock] = timelockanalysis(cfg, data)
 % cfg.normalizecov
 % cfg.preproc
 %
-% This function depends on PREPROC which has the following options:
+% This function depends on FT_PREPROC which has the following options:
 % cfg.absdiff
 % cfg.blc
 % cfg.blcwindow

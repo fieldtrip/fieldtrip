@@ -1,17 +1,17 @@
-function volumewrite(cfg, volume)
+function ft_volumewrite(cfg, volume)
 
-% VOLUMEWRITE exports anatomical or functional volume data to a Analyze
+% FT_VOLUMEWRITE exports anatomical or functional volume data to a Analyze
 % or BrainVoyager file. The data in the resulting file(s) can be
 % further analyzed and/or visualized in MRIcro, SPM, BrainVoyager,
 % AFNI or similar packages.
 %
 % Use as
-%   volumewrite(cfg, volume)
+%   ft_volumewrite(cfg, volume)
 %
 % The volume structure should contain a source reconstruction that originates
-% from SOURCANALYSIS, a statistical parameter from SOURCESTATISTICS or an
+% from SOURCANALYSIS, a statistical parameter from FT_SOURCESTATISTICS or an
 % interpolated and re-aligned anatomical MRI  source reconstruction
-% from SOURCEINTERPOLATE.
+% from FT_SOURCEINTERPOLATE.
 %
 % The configuration structure should contain the following elements
 %   cfg.parameter     = string, describing the functional data to be processed, e.g. 'pow', 'coh' or 'nai'
@@ -43,7 +43,7 @@ function volumewrite(cfg, volume)
 %   cfg.markorigin    = 'yes' or 'no', mark the origin
 %   cfg.markcorner    = 'yes' or 'no', mark the first corner of the volume
 %
-% See also SOURCEANALYSIS, SOURCESTATISTICS, SOURCEINTERPOLATE
+% See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS, FT_SOURCEINTERPOLATE
 
 % Undocumented local options:
 % cfg.parameter
