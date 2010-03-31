@@ -27,6 +27,32 @@ class FtBufferRequest {
 		m_def.bufsize = 0;
 		m_msg.buf = NULL;		
 	}
+	
+	bool prepPutHeader(UINT32_T numChannels, UINT32_T dataType, float fsample, UINT32_T sizeOfBlob, const void *blob) {
+		// This is for safety: If a user ignores this function returning false,
+		// and just sends this request to the buffer server, we need to make sure
+		// no harm is done - so we sent a small invalid packet
+		m_def.command = GET_ERR; 
+		m_def.bufsize = 0;
+		
+		UINT32_T  totalSize = sizeOfBlob + sizeof(headerdef_t);
+		headerdef_t *hd;
+		
+		if (!m_buf.resize(totalSize)) return false;
+		m_msg.buf = m_buf.data();
+		hd = (headerdef_t *) m_buf.data();
+		hd->nchans    = numChannels;
+		hd->nsamples  = 0;
+		hd->nevents   = 0;
+		hd->data_type = dataType;
+		hd->fsample   = fsample;
+		hd->bufsize   = sizeOfBlob;
+		// hd+1 points to the next byte after the header_def
+		memcpy(hd+1, blob, sizeOfBlob);
+		m_def.command = PUT_HDR;
+		m_def.bufsize = totalSize;
+		return true;
+	}	
 
 	bool prepPutData(UINT32_T numChannels, UINT32_T numSamples, UINT32_T dataType, const void *data) {
 		// This is for safety: If a user ignores this function returning false,
@@ -43,6 +69,7 @@ class FtBufferRequest {
 		datadef_t *dd;
 		
 		if (!m_buf.resize(totalSize)) return false;
+		m_msg.buf = m_buf.data();
 		dd = (datadef_t *) m_buf.data();
 		dd->nchans = numChannels;
 		dd->nsamples = numSamples;
@@ -55,6 +82,44 @@ class FtBufferRequest {
 		return true;
 	}
 	
+	bool prepPutEvent(INT32_T sample, INT32_T offset, INT32_T duration, const char *type=NULL, const char *value=NULL) {
+		// This is for safety: If a user ignores this function returning false,
+		// and just sends this request to the buffer server, we need to make sure
+		// no harm is done - so we sent a small invalid packet
+		m_def.command = GET_ERR; 
+		m_def.bufsize = 0;
+		
+		int len_type  = (type == NULL) ? 0 : strlen(type);
+		int len_value = (value == NULL) ? 0 : strlen(value);
+		
+		UINT32_T  totalSize = sizeof(eventdef_t) + len_type + len_value;
+		eventdef_t *ed;
+		
+		if (!m_buf.resize(totalSize)) return false;
+		m_msg.buf = m_buf.data();
+		
+		ed = (eventdef_t *) m_buf.data();
+		ed->type_type = DATATYPE_CHAR;
+		ed->type_numel = len_type;
+		ed->value_type = DATATYPE_CHAR;
+		ed->value_numel = len_value;
+		ed->sample = sample;
+		ed->offset = offset;
+		ed->duration = duration;
+		ed->bufsize  = ed->type_numel + ed->value_numel;
+		
+		if (len_type>0) {
+			char *dest = (char *) m_buf.data() + sizeof(eventdef_t);
+			memcpy(dest, type, len_type);
+			if (len_value>0) {
+				memcpy(dest + len_type, value, len_value);
+			}
+		}
+		m_def.command = PUT_EVT;
+		m_def.bufsize = totalSize;
+		return true;
+	}
+		
 	void prepGetData(UINT32_T begsample, UINT32_T endsample) {
 		m_def.command = GET_DAT;
 		m_msg.buf = &m_extras.ds;

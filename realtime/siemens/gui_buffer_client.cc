@@ -13,6 +13,7 @@
 #include <math.h>
 #include <FtBuffer.h>
 #include <siemensap.h>
+#include <nifti1.h>
 
 class PixelData2Image {
 	public:
@@ -27,12 +28,12 @@ class PixelData2Image {
 	}
 	
 	void getFromBuffer(void *pixelData, int w, int h, int ns) {
-		uint16_t *pixels;
+		int16_t *pixels;
 		int numPixels = w*h*ns;
 		
 		if (numPixels < 1) return;
 		
-		pixels = (uint16_t *) pixelData;
+		pixels = (int16_t *) pixelData;
 				
 		if (numPixels > numAlloc) {
 			if (image != 0) free(image);
@@ -136,12 +137,24 @@ bool readHeader() {
 		return false;
 	}
 		
-	if (header_def.data_type != DATATYPE_UINT16) {
-		fprintf(stderr, "Data type != uint16\n");
+	if (header_def.data_type != DATATYPE_INT16) {
+		fprintf(stderr, "Data type != int16\n");
 		return false;
 	}
 	
 	printf("\nHeader information: %i samples / %i channels\n\n", header_def.nsamples, header_def.nchans);
+	
+	if (protBuffer.size() == sizeof(nifti_1_header)) {
+		nifti_1_header *NH = (nifti_1_header *) protBuffer.data();
+		if (!strcmp(NH->magic, "ni1") || !strcmp(NH->magic,"n+1")) {
+			essProtInfo.readoutPixels  = NH->dim[1];
+			essProtInfo.phasePixels    = NH->dim[2];
+			essProtInfo.numberOfSlices = NH->dim[3];
+			printf("Resolution (px)...: %i x %i x %i\n", essProtInfo.readoutPixels, essProtInfo.phasePixels, essProtInfo.numberOfSlices);
+			printf("Voxel size (mm) ..: %f x %f x %f\n", NH->pixdim[1], NH->pixdim[2], NH->pixdim[2]);
+			return true;
+		}
+	}
 	
 	sap_item_t *PI = sap_parse((char *) protBuffer.data(), protBuffer.size());
 	

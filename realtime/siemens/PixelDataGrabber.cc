@@ -116,7 +116,7 @@ bool PixelDataGrabber::writeHeader() {
 	header_def.nsamples = 0;
 	header_def.nevents = 0;
 	header_def.fsample = 0.5; /* TODO: is this always correct ? */
-	header_def.data_type = DATATYPE_UINT16;
+	header_def.data_type = DATATYPE_INT16;
 	header_def.bufsize = protBuffer.size();
 	
 	request.def = &request_def;
@@ -163,7 +163,7 @@ bool PixelDataGrabber::writePixelData() {
 
 	data_def.nchans = (UINT32_T) readResolution*phaseResolution*numSlices;
 	data_def.nsamples = 1;
-	data_def.data_type = DATATYPE_UINT16; 
+	data_def.data_type = DATATYPE_INT16; 
 	data_def.bufsize = sliceBuffer.size();
 	
 	// print_datadef(&data_def);
@@ -410,8 +410,8 @@ void PixelDataGrabber::reshapeToSlices() {
 		} else	{
 			readResolution = phaseResolution = root;
 			numSlices = 1;
-			if (sliceBuffer.resize(pixels*sizeof(UINT16_T))) {
-				memcpy(sliceBuffer.data(), pixBuffer.data(), pixels*sizeof(UINT16_T));
+			if (sliceBuffer.resize(pixels*sizeof(INT16_T))) {
+				memcpy(sliceBuffer.data(), pixBuffer.data(), pixels*sizeof(INT16_T));
 			} else {
 				if (verbosity>0) fprintf(stderr, "Out of memory in reshapeToSlices !!!\n");
 				sliceBuffer.resize(0);
@@ -427,24 +427,24 @@ void PixelDataGrabber::reshapeToSlices() {
 			if (verbosity>0) fprintf(stderr, "PixelData (%i) does not match protocol information (%i x %i x %i)\n",pixels,readResolution,phaseResolution,numSlices);
 			sliceBuffer.resize(0);
 			lastAction = BadPixelData;
-		} else if (!sliceBuffer.resize(readResolution*phaseResolution*numSlices*sizeof(UINT16_T))) {
+		} else if (!sliceBuffer.resize(readResolution*phaseResolution*numSlices*sizeof(INT16_T))) {
 			if (verbosity>0) fprintf(stderr, "Out of memory in reshapeToSlices !!!\n");
 			sliceBuffer.resize(0);
 			lastAction = OutOfMemory;
 		} else {
-			const uint16_t *src	= (const uint16_t *) pixBuffer.data();
-			uint16_t *dest   	= (uint16_t *) sliceBuffer.data();
+			const int16_t *src	= (const int16_t *) pixBuffer.data();
+			int16_t *dest   	= (int16_t *) sliceBuffer.data();
 			
 			// row and column in source mosaic
 			unsigned int i = 0, j = 0;
 			
 			for (unsigned int n=0; n<numSlices; n++) {
-				uint16_t *dest_n = dest + readResolution*phaseResolution*n;
-				const uint16_t *src_n = src + readResolution*(phaseResolution*mosw*i + j);
+				int16_t *dest_n = dest + readResolution*phaseResolution*n;
+				const int16_t *src_n = src + readResolution*(phaseResolution*mosw*i + j);
 				
 				// copy one line (=readResolution pixels) at a time
 				for (unsigned int m=0; m<phaseResolution; m++) {
-					memcpy(dest_n + readResolution*m, src_n + mosw*readResolution*m, sizeof(UINT16_T) * readResolution);
+					memcpy(dest_n + readResolution*m, src_n + mosw*readResolution*m, sizeof(INT16_T) * readResolution);
 				}
 				
 				// increase source column index

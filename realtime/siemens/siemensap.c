@@ -12,7 +12,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
-
+#include <math.h>
 
 sap_item_t *sap_alloc_field(int len_name, const char *name, int size_value) {
 	sap_item_t *F = (sap_item_t *) malloc(sizeof(sap_item_t));

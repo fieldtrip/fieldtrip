@@ -27,7 +27,7 @@ endif
 CXXFLAGS = $(FLFLAGS) -I../buffer/src -I. -Wunused -Wall -pedantic
  
 
-all:  opengl_client$(SUFFIX) gui_buffer_client$(SUFFIX) $(WINONLY)
+all: nii_to_buffer$(SUFFIX) opengl_client$(SUFFIX) gui_buffer_client$(SUFFIX) $(WINONLY)
 
 ###############################################################################
 # Platform-independent C libraries / utilities
@@ -55,6 +55,12 @@ Brain3dWindow.o: Brain3dWindow.cc Brain3dWindow.h
 	
 opengl_client$(SUFFIX): opengl_client.o siemensap.o Brain3dWindow.o
 	g++ -o opengl_client$(SUFFIX) opengl_client.o siemensap.o Brain3dWindow.o $(LDFLAGS) $(LDGL)
+	
+nii_to_buffer.o: nii_to_buffer.cc FtBuffer.h
+	g++ -c nii_to_buffer.cc $(CXXFLAGS)
+
+nii_to_buffer$(SUFFIX): nii_to_buffer.o
+	g++ -o nii_to_buffer$(SUFFIX) nii_to_buffer.o $(LDFLAGS)
 
 ###############################################################################
 # Windows specific components / acquisition software
