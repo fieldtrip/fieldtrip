@@ -36,12 +36,19 @@ hdr = read_header(cfg.headerfile);
 disp(hdr);
 
 if isfield(hdr.orig,'blob')
-  SP = sap2matlab(hdr.orig.blob);
-  width = SP.sKSpace.lBaseResolution;
-  phaseFOV = SP.sSliceArray.asSlice{1}.dPhaseFOV;
-  readoutFOV = SP.sSliceArray.asSlice{1}.dReadoutFOV;
-  height = width * phaseFOV / readoutFOV;
-  numSlices = SP.sSliceArray.lSize;
+  NH = nifti2matlab(hdr.orig.blob);
+  if ~isempty(NH)
+    width  = NH.dim(1)
+    height = NH.dim(2)
+    numSlices = NH.dim(3)
+  else 
+    SP = sap2matlab(hdr.orig.blob);
+    width = SP.sKSpace.lBaseResolution;
+    phaseFOV = SP.sSliceArray.asSlice{1}.dPhaseFOV;
+    readoutFOV = SP.sSliceArray.asSlice{1}.dReadoutFOV;
+    height = width * phaseFOV / readoutFOV;
+    numSlices = SP.sSliceArray.lSize;
+  end
 else
   warning('No protocol information found!')
   width = sqrt(hdr.nChans);
@@ -88,7 +95,7 @@ while true
     ev = read_event(cfg.eventfile, 'header', hdr);
     if ~isempty(ev)
       ev_sam = [ev.sample];
-      ind = find(ev_sam==begsample);
+      ind = find(ev_sam==begsample-1);
       if ~isempty(ind)
         disp([ev(ind).type ev(ind).value])
       end
@@ -97,7 +104,7 @@ while true
     % go to the correct figure
     figure(h);
     
-    % actually, you should reshape with to 3D (remove the *)
+    % actually, you should reshape to 3D (remove the *)
     S = reshape(dat, [width  height*numSlices]);
     
     imagesc(S(:,:)',[0 2048]);

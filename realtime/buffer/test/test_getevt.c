@@ -59,6 +59,13 @@ int main(int argc, char *argv[]) {
 				event.buf = (char*)buf+offset+sizeof(eventdef_t);
 				fprintf(stderr, "\n");
 				print_eventdef(event.def);
+				
+				if (event.def->type_type == DATATYPE_CHAR && event.def->value_type == DATATYPE_CHAR) {
+					printf("Type: %.*s  Value: %.*s\n", 
+								event.def->type_numel, (char *) event.buf, 
+								event.def->value_numel, (char *) event.buf + event.def->type_numel);
+				}
+				
 				offset += sizeof(eventdef_t) + event.def->bufsize;
 				n++;
 			}

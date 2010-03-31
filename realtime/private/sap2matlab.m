@@ -15,7 +15,8 @@ warning('Trying to compile MEX file')
 oldDir = pwd;
 [srcDir, srcName] = fileparts(mfilename('fullpath'));
 try
-  cd(srcDir);
+  cd(srcDir);			% we're now in private
+  cd('../siemens');
   mex -outdir ../private sap2matlab.c siemensap.c -I.
   cd(oldDir);
   SP = sap2matlab(blob);

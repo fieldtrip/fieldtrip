@@ -98,17 +98,26 @@ int buffer_puthdr(int server, mxArray * plhs[], const mxArray * prhs[])
 	if (!mxIsNumeric(field) || mxIsEmpty(field)) 
 		mexErrMsgTxt("invalid data type for 'data_type'");
 	header_def.data_type    = (UINT32_T)mxGetScalar(field) ;
+	
+	fieldnumber = mxGetFieldNumber(prhs[0], "blob");
+	if (fieldnumber>=0) {
+		field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+		if (!mxIsUint8(field) || mxIsEmpty(field)) 
+			mexErrMsgTxt("invalid data type for 'blob'");
+		header_def.bufsize = mxGetNumberOfElements(field);
+		header.buf = mxGetData(field);
+	}
   
-  /* construct a PUT_HDR request */
+	/* construct a PUT_HDR request */
 	request_def.bufsize = append(&request.buf, request_def.bufsize, header.def, sizeof(headerdef_t));
-	/* request_def.bufsize = append(&request.buf, request_def.bufsize, header.buf, header_def.bufsize);    -- this is empty */
+	request_def.bufsize = append(&request.buf, request_def.bufsize, header.buf, header_def.bufsize);
   
-  /* the header structure is not needed any more, but everything's local */
+	/* the header structure is not needed any more, but everything's local */
   
-  /* write the request, read the response */
+	/* write the request, read the response */
 	result = clientrequest(server, &request, &response);
   
-  /* the request structure is not needed any more, but only .buf needs to be free'd */
+	/* the request structure is not needed any more, but only .buf needs to be free'd */
     FREE(request.buf);
 	
 	if (result == 0) {
@@ -124,7 +133,7 @@ int buffer_puthdr(int server, mxArray * plhs[], const mxArray * prhs[])
 			result = response->def->command;
 		}
 	}
-  /* the response structure is not needed any more */
+	/* the response structure is not needed any more */
 	if (response) {
 		FREE(response->def);
 		FREE(response->buf);

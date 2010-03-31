@@ -73,7 +73,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	int size;
 	sap_item_t *L = NULL;
 	
-	if (nrhs!=1) mexErrMsgTxt("This function needs exactly one (string) argument.");
+	if (nrhs!=1) mexErrMsgTxt("This function needs exactly one (string or uint8) argument.");
 	
 	size = mxGetNumberOfElements(prhs[0]);
 	
