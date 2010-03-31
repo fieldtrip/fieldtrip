@@ -1,27 +1,27 @@
-function [interp] = sourceinterpolate(cfg, functional, anatomical);
+function [interp] = ft_sourceinterpolate(cfg, functional, anatomical);
 
-% SOURCEINTERPOLATE reslices and interpolates a source reconstruction
+% FT_SOURCEINTERPOLATE reslices and interpolates a source reconstruction
 % or a statistical distribution as an overlay onto an anatomical MRI.
 %
 % The source volume and the anatomical volume should be expressed in the
 % same coordinate sytem, i.e. either both in CTF coordinates (NAS/LPA/RPA)
 % or both in SPM coordinates (AC/PC). The output volume will contain a
 % resliced source and anatomical volume that can be plotted together with
-% SOURCEPLOT or SLICEINTERP, or that can be written to file using SOURCEWRITE.
+% FT_SOURCEPLOT or FT_SLICEINTERP, or that can be written to file using FT_SOURCEWRITE.
 %
 % Use as
-%   [interp] = sourceinterpolate(cfg, source, mri)   or
-%   [interp] = sourceinterpolate(cfg, stat, mri)
+%   [interp] = ft_sourceinterpolate(cfg, source, mri)   or
+%   [interp] = ft_sourceinterpolate(cfg, stat, mri)
 % where
-%   source is the output of SOURCEANALYSIS
-%   stat   is the output of SOURCESTATISTICS
-%   mri    is the output of READ_FCDC_MRI or the filename of a MRI
+%   source is the output of FT_SOURCEANALYSIS
+%   stat   is the output of FT_SOURCESTATISTICS
+%   mri    is the output of FT_READ_FCDC_MRI or the filename of a MRI
 % and cfg is a structure with any of the following fields
 %   cfg.parameter     = string, default is 'all'
 %   cfg.interpmethod  = 'linear', 'cubic', 'nearest' or 'spline'
 %   cfg.downsample    = integer number (default = 1, i.e. no downsampling)
 %
-% See also SOURCEANALYSIS, SOURCESTATISTICS, READ_FCDC_MRI
+% See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS, FT_READ_FCDC_MRI
 
 % Undocumented options
 %   cfg.voxelcoord = 'yes' (default) or 'no' determines whether the

@@ -1,17 +1,17 @@
-function [scd] = scalpcurrentdensity(cfg, data);
+function [scd] = ft_scalpcurrentdensity(cfg, data);
 
-% SCALPCURRENTDENSITY computes an estimate of the SCD using the
+% FT_SCALPCURRENTDENSITY computes an estimate of the SCD using the
 % second-order derivative (the surface Laplacian) of the EEG potential
 % distribution
 %
 % Use as
-%   [data] = scalpcurrentdensity(cfg, data)
+%   [data] = ft_scalpcurrentdensity(cfg, data)
 % or
-%   [timelock] = scalpcurrentdensity(cfg, timelock)
-% where the input data is obtained from PREPROCESSING or from
-% TIMELOCKANALYSIS. The output data has the same format as the input
+%   [timelock] = ft_scalpcurrentdensity(cfg, timelock)
+% where the input data is obtained from FT_PREPROCESSING or from
+% FT_TIMELOCKANALYSIS. The output data has the same format as the input
 % and can be used in combination with most other FieldTrip functions
-% (e.g. FREQNALYSIS or TOPOPLOTER).
+% (e.g. FT_FREQNALYSIS or FT_TOPOPLOTER).
 %
 % The configuration can contain
 %   cfg.method       = 'finite' for finite-difference method or

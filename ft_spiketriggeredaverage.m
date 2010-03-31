@@ -1,17 +1,17 @@
-function [timelock] = spiketriggeredaverage(cfg, data)
+function [timelock] = ft_spiketriggeredaverage(cfg, data)
 
-% SPIKETRIGGEREDAVERAGE computes the avererage of teh LFP around the spikes.
+% FT_SPIKETRIGGEREDAVERAGE computes the avererage of teh LFP around the spikes.
 %
 % Use as
-%   [timelock] = spiketriggeredaverage(cfg, data)
+%   [timelock] = ft_spiketriggeredaverage(cfg, data)
 %
 % The input data should be organised in a structure as obtained from
-% the PREPROCESSING function. The configuration should be according to
+% the FT_PREPROCESSING function. The configuration should be according to
 %
 %   cfg.timwin       = [begin end], time around each spike (default = [-0.1 0.1])
 %   cfg.spikechannel = string, name of single spike channel to trigger on
 %   cfg.channel      = Nx1 cell-array with selection of channels (default = 'all'),
-%                      see CHANNELSELECTION for details
+%                      see FT_CHANNELSELECTION for details
 %   cfg.keeptrials   = 'yes' or 'no', return individual trials or average (default = 'no')
 %   cfg.feedback     = 'no', 'text', 'textbar', 'gui' (default = 'no')
 

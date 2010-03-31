@@ -1,35 +1,35 @@
-function [grandavg] = sourcegrandaverage(cfg, varargin);
+function [grandavg] = ft_sourcegrandaverage(cfg, varargin);
 
-% SOUREGRANDAVERAGE averages source reconstructions over either multiple
+% FT_SOUREGRANDAVERAGE averages source reconstructions over either multiple
 % subjects or conditions. It computes the average and variance for all
-% known source parameters. The output can be used in SOURCESTATISTICS
+% known source parameters. The output can be used in FT_SOURCESTATISTICS
 % with the method 'parametric'.
 % 
 % Alternatively, it can construct an average for multiple input source
 % reconstructions in two conditions after randomly reassigning the
 % input data over the two conditions. The output then can be used in
-% SOURCESTATISTICS with the method 'randomization' or 'randcluster'.
+% FT_SOURCESTATISTICS with the method 'randomization' or 'randcluster'.
 %
 % The input source structures should be spatially alligned to each other
 % and should have the same positions for the source grid.
 % 
 % Use as 
-%  [grandavg] = SOUREGRANDAVERAGE(cfg, source1, source2, ...) 
+%  [grandavg] = ft_sourcegrandaverage(cfg, source1, source2, ...) 
 %
-% where the source structures are obtained from SOURCEANALYSIS or
-% from VOLUMENORMALISE, and the configuration can contain the
+% where the source structures are obtained from FT_SOURCEANALYSIS or
+% from FT_VOLUMENORMALISE, and the configuration can contain the
 % following fields:
 %   cfg.parameter          = string, describing the functional data to be processed, e.g. 'pow', 'nai' or 'coh'
 %   cfg.keepindividual     = 'no' or 'yes'  
 %
-% See also SOURCEANALYSIS, VOLUMENORMALISE, SOURCESTATISTICS
+% See also FT_SOURCEANALYSIS, FT_VOLUMENORMALISE, FT_SOURCESTATISTICS
 
 % Undocumented local options
-%  You can also use SOURCEGRANDAVERAGE to compute averages after
+%  You can also use FT_SOURCEGRANDAVERAGE to compute averages after
 % randomizing the assignment of the functional data over two conditions.
 % The resulting output can then be used in a statistical test just like
 % the randomized single-subject source reconstruction that results from 
-% randomization in SOURCEANALYSIS. This involves the following options
+% randomization in FT_SOURCEANALYSIS. This involves the following options
 %   cfg.randomization      = 'no' or 'yes'
 %   cfg.permutation        = 'no' or 'yes'
 %   cfg.numrandomization   = number, e.g. 500

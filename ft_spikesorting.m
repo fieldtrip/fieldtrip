@@ -1,12 +1,12 @@
-function [spike] = spikesorting(cfg, spike);
+function [spike] = ft_spikesorting(cfg, spike);
 
-% SPIKESORTING performs clustering of spike-waveforms and returns the unit number to which each spike belongs.
+% FT_SPIKESORTING performs clustering of spike-waveforms and returns the unit number to which each spike belongs.
 %
 % Use as
-%   [spike] = spikesorting(cfg, spike)
+%   [spike] = ft_spikesorting(cfg, spike)
 %
 % The configuration can contain
-%   cfg.channel         cell-array with channel selection (default = 'all'), see CHANNELSELECTION for details
+%   cfg.channel         cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.method          'kmeans', 'ward'
 %   cfg.feedback        'no', 'text', 'textbar', 'gui' (default = 'textbar')
 %   cfg.kmeans          substructure with additional low-level options for this method
@@ -19,7 +19,7 @@ function [spike] = spikesorting(cfg, spike);
 %   spike.timestamp = 1 x Nchans cell-array, each element contains a vector (1 x Nspikes)
 %   spike.unit      = 1 x Nchans cell-array, each element contains a vector (1 x Nspikes)
 %
-% See also READ_FCDC_SPIKE, SPIKEDOWNSAMPLE
+% See also READ_FCDC_SPIKE, FT_SPIKEDOWNSAMPLE
 
 % Copyright (C) 2006-2007, Robert Oostenveld
 %

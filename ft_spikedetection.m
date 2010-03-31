@@ -1,9 +1,9 @@
-function [cfg, spike] = spikedetection(cfg)
+function [cfg, spike] = ft_spikedetection(cfg)
 
-% SPIKEDETECTION
+% FT_SPIKEDETECTION
 %
 % Use as
-%   cfg = spikedetection(cfg)
+%   cfg = ft_spikedetection(cfg)
 %
 % The configuration options can contain
 %   cfg.dataset             = string with the input dataset

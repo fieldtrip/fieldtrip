@@ -1,18 +1,18 @@
-function [cfg] = spikedownsample(cfg)
+function [cfg] = ft_spikedownsample(cfg)
 
-% SPIKEDOWNSAMPLE takes electrophysiological data that was continuoudly
+% FT_SPIKEDOWNSAMPLE takes electrophysiological data that was continuoudly
 % sampled at 32KHz and preprocesses and downsamples it to obtain the LFP
 % data, which can subsequently be processed in more detail.
 %
 % Use as
-%   [cfg] = spikedownsample(cfg)
+%   [cfg] = ft_spikedownsample(cfg)
 %
 % The configuration should contain
 %   cfg.dataset             = string with the input dataset
 %   cfg.output              = string with the output dataset (default is determined automatic)
 %   cfg.dataformat          = string with the output dataset format, see WRITE_DATA
 %   cfg.channel             = Nx1 cell-array with selection of channels (default = 'all'),
-%                             see CHANNELSELECTION for details
+%                             see FT_CHANNELSELECTION for details
 %   cfg.fsample             = desired sampling frequency in Hz (default = 1000)
 %   cfg.method              = resampling method, can be 'resample', 'decimate' or 'downsample'
 %   cfg.timestampdefinition = 'orig' or 'sample'
@@ -22,11 +22,11 @@ function [cfg] = spikedownsample(cfg)
 % The Neuralynx acquisition system at the FCDC in Nijmegen makes use of
 % Plexon headstages which have a amplification of 20x. The data that is
 % written by the Neuralynx acquisition software therefore is 20x larger
-% than the true microvolt values. When operating SPIKEDOWNSAMPLE on the
+% than the true microvolt values. When operating FT_SPIKEDOWNSAMPLE on the
 % *.ncs files that are recorded with the Neuralynx Cheetah software, the
 % calibration should be set to 1/20. The raw dma file (*.nrd) and the
 % splitted DMA files contains AD values that are not scaled in uV and
-% require an additional factor of 64x. If you operate SPIKEDOWNSAMPLE  on
+% require an additional factor of 64x. If you operate FT_SPIKEDOWNSAMPLE  on
 % raw dma files or on splitted DMA files, the calibration should be set to
 % 1/(64*20).
 %

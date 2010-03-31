@@ -1,9 +1,9 @@
-function [spike] = spikeanalysis(cfg, data);
+function [spike] = ft_spikeanalysis(cfg, data);
 
-% SPIKEANALYSIS performs analysis on spike data
+% FT_SPIKEANALYSIS performs analysis on spike data
 %
 % Use as
-%   [spike] = spikeanalysis(cfg, data);
+%   [spike] = ft_spikeanalysis(cfg, data);
 %
 % The following configuration options are supported
 %   cfg.method        = 'rate' (default), or 'spikephase'
@@ -15,7 +15,7 @@ function [spike] = spikeanalysis(cfg, data);
 %     if cfg.toi and cfg.timwin are not specified, the average rate across each trial is computed.
 %  
 %   in combination with cfg.method = 'spikephase' 
-%     cfg.channelcmb    = cell-array, see CHANNELCOMBINATION
+%     cfg.channelcmb    = cell-array, see FT_CHANNELCOMBINATION
 %     cfg.bpfilter      = 'no' or 'yes'  bandpass filter
 %     cfg.bpfreq        = bandpass frequency range, specified as [low high] in Hz
 %     cfg.bpfiltord     = bandpass filter order

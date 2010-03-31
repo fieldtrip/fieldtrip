@@ -1,12 +1,12 @@
-function data = spikesimulation(cfg)
+function data = ft_spikesimulation(cfg)
 
-% SPIKESIMULATION
+% FT_SPIKESIMULATION
 %
 % Use as
-%   data = spikesimulation(cfg)
+%   data = ft_spikesimulation(cfg)
 % and please look in the code for the cfg details.
 %
-% See also DIPOLESIMULATION, FREQSIMULATION
+% See also FT_DIPOLESIMULATION, FT_FREQSIMULATION
 
 % Copyright (C) 2007, Robert Oostenveld
 %

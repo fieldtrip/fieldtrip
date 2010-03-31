@@ -1,14 +1,14 @@
-function [cfg] = spikesplitting(cfg);
+function [cfg] = ft_spikesplitting(cfg);
 
-% SPIKESPLITTING reads a single Neuralynx DMA log file and writes each
+% FT_SPIKESPLITTING reads a single Neuralynx DMA log file and writes each
 % individual channel to a seperate file.
 %
 % Use as
-%   [cfg] = spikesplitting(cfg)
+%   [cfg] = ft_spikesplitting(cfg)
 %
 % The configuration should contain
 %   cfg.dataset   = string with the name of the DMA log file
-%   cfg.channel   = Nx1 cell-array with selection of channels (default = 'all'), see CHANNELSELECTION for details
+%   cfg.channel   = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.output    = string with the name of the splitted DMA dataset directory, (default is determined automatic)
 %   cfg.latency   = [begin end], (default = 'all')
 %   cfg.feedback  = string, (default = 'textbar')
@@ -21,7 +21,7 @@ function [cfg] = spikesplitting(cfg);
 % details of the headstage amplification and the Neuralynx amplifier and
 % scale the values accordingly.
 %
-% See also SPIKEDOWNSAMPLE, SPIKEANALYSIS
+% See also FT_SPIKEDOWNSAMPLE, FT_SPIKEANALYSIS
 
 % Copyright (C) 2007-2008, Robert Oostenveld
 %

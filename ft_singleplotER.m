@@ -1,14 +1,14 @@
-function [cfg] = singleplotER(cfg, varargin)
+function [cfg] = ft_singleplotER(cfg, varargin)
 
-% singleplotER plots the event-related fields or potentials of a single channel
+% ft_singleplotER plots the event-related fields or potentials of a single channel
 % or the average over multiple channels. Multiple datasets can be overlayed.
 %
 % Use as:
-%   sinlgeplotER(cfg, data)
-%   singleplotER(cfg, data1, data2, ..., dataN)
+%   ft_sinlgeplotER(cfg, data)
+%   ft_singleplotER(cfg, data1, data2, ..., dataN)
 %
-% The data can be an ERP/ERF produced by TIMELOCKANALYSIS, a powerspectrum 
-% produced by FREQANALYSIS or a coherencespectrum produced by FREQDESCRIPTIVES. 
+% The data can be an ERP/ERF produced by FT_TIMELOCKANALYSIS, a powerspectrum 
+% produced by FT_FREQANALYSIS or a coherencespectrum produced by FT_FREQDESCRIPTIVES. 
 % If you specify multiple datasets they must contain the same channels, etc.
 %
 % The configuration can have the following parameters:
@@ -23,9 +23,9 @@ function [cfg] = singleplotER(cfg, varargin)
 % cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.ylim          = 'maxmin' or [ymin ymax] (default = 'maxmin')
 % cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'),
-%                     see CHANNELSELECTION for details
+%                     see FT_CHANNELSELECTION for details
 % cfg.cohrefchannel = name of reference channel for visualising coherence, can be 'gui'
-% cfg.baseline      = 'yes','no' or [time1 time2] (default = 'no'), see TIMELOCKBASELINE 
+% cfg.baseline      = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE 
 % cfg.baselinetype  = 'absolute' or 'relative' (default = 'absolute')
 % cfg.trials        = 'all' or a selection given as a 1xN vector (default = 'all')
 % cfg.fontsize      = font size of title (default = 8)
@@ -40,9 +40,9 @@ function [cfg] = singleplotER(cfg, varargin)
 %                     alternatively, colors can be specified as Nx3 matrix of RGB values
 %
 % See also:
-%   singleplotTFR, multiplotER, multiplotTFR, topoplotER, topoplotTFR
+%   ft_singleplotTFR, ft_multiplotER, ft_multiplotTFR, ft_topoplotER, ft_topoplotTFR
 
-% This function depends on TIMELOCKBASELINE which has the following options:
+% This function depends on FT_TIMELOCKBASELINE which has the following options:
 % cfg.baseline, documented
 % cfg.channel
 % cfg.blcwindow

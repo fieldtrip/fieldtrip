@@ -19,7 +19,7 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 % cfg.markersize         = channel marker size (default = 2)
 % cfg.markerfontsize     = font size of channel labels (default = 8 pt)                
 % cfg.highlight          = 'on', 'labels', 'numbers', 'off'                    
-% cfg.highlightchannel   =  Nx1 cell-array with selection of channels, or vector containing channel indices see CHANNELSELECTION 
+% cfg.highlightchannel   =  Nx1 cell-array with selection of channels, or vector containing channel indices see FT_CHANNELSELECTION 
 % cfg.highlightsymbol    = highlight marker symbol (default = 'o')
 % cfg.highlightcolor     = highlight marker color (default = [0 0 0] (black))
 % cfg.highlightsize      = highlight marker size (default = 6)

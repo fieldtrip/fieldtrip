@@ -1,12 +1,12 @@
-function [cfg] = topoplotER(cfg, varargin)
+function [cfg] = ft_topoplotER(cfg, varargin)
 
-% TOPOPLOTER plots the topographic distribution of 2-Dimensional datatypes as
+% FT_TOPOPLOTER plots the topographic distribution of 2-Dimensional datatypes as
 % event-related fields (ERF), potentials (ERP), the powerspectrum or coherence spectum 
-% that was computed using the TIMELOCKALYSIS, TIMELOCKGRANDAVERAGE, FREQANALYSIS or 
-% FREQDESCRIPTIVES functions, as a 2-D circular view (looking down at the top of the head).
+% that was computed using the FT_TIMELOCKALYSIS, FT_TIMELOCKGRANDAVERAGE, FT_FREQANALYSIS or 
+% FT_FREQDESCRIPTIVES functions, as a 2-D circular view (looking down at the top of the head).
 %
 % Use as:
-%   topoplotER(cfg, data)
+%   ft_topoplotER(cfg, data)
 %
 % cfg.xparam             = first dimension in data in which a selection is made
 %                         'time' or 'freq' (default depends on data.dimord)
@@ -15,7 +15,7 @@ function [cfg] = topoplotER(cfg, varargin)
 % cfg.xlim               = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.zlim               = 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
 % cfg.cohrefchannel      = name of reference channel for visualising coherence, can be 'gui'
-% cfg.baseline           = 'yes','no' or [time1 time2] (default = 'no'), see TIMELOCKBASELINE or FREQBASELINE
+% cfg.baseline           = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
 % cfg.baselinetype       = 'absolute' or 'relative' (default = 'absolute')
 % cfg.trials             = 'all' or a selection given as a 1xN vector (default = 'all')
 % cfg.colormap           = any sized colormap, see COLORMAP
@@ -25,7 +25,7 @@ function [cfg] = topoplotER(cfg, varargin)
 % cfg.markersize         = channel marker size (default = 2)
 % cfg.markerfontsize     = font size of channel labels (default = 8 pt)                
 % cfg.highlight          = 'on', 'labels', 'numbers', 'off'                    
-% cfg.highlightchannel   =  Nx1 cell-array with selection of channels, or vector containing channel indices see CHANNELSELECTION 
+% cfg.highlightchannel   =  Nx1 cell-array with selection of channels, or vector containing channel indices see FT_CHANNELSELECTION 
 % cfg.highlightsymbol    = highlight marker symbol (default = 'o')
 % cfg.highlightcolor     = highlight marker color (default = [0 0 0] (black))
 % cfg.highlightsize      = highlight marker size (default = 6)
@@ -85,7 +85,7 @@ function [cfg] = topoplotER(cfg, varargin)
 
 % Undocumented local options:
 % The following additional cfg parameters are used when plotting 3-dimensional
-% data (i.e. when topoplotTFR calls topoplotER):
+% data (i.e. when ft_topoplotTFR calls ft_topoplotER):
 % cfg.yparam          field to be plotted on y-axis
 % cfg.ylim            'maxmin' or [ymin ymax]         (default = 'maxmin')
 %
@@ -103,12 +103,12 @@ function [cfg] = topoplotER(cfg, varargin)
 % Other options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)
 
-% This function depends on TIMELOCKBASELINE which has the following options:
+% This function depends on FT_TIMELOCKBASELINE which has the following options:
 % cfg.baseline, documented
 % cfg.channel
 % cfg.blcwindow
 %
-% This function depends on FREQBASELINE which has the following options:
+% This function depends on FT_FREQBASELINE which has the following options:
 % cfg.baseline, documented
 % cfg.baselinetype
 

@@ -1,12 +1,12 @@
-function [stat] = sourcestatistics(cfg, varargin)
+function [stat] = ft_sourcestatistics(cfg, varargin)
 
-% SOURCESTATISTICS computes the probability for a given null-hypothesis using
+% FT_SOURCESTATISTICS computes the probability for a given null-hypothesis using
 % a parametric statistical test or using a non-parametric randomization test.
 % 
 % Use as
-%   [stat] = sourcestatistics(cfg, source1, source2, ...)
-% where the input data is the result from SOURCEANALYSIS, SOURCEDESCRIPTIVES
-% or SOURCEGRANDAVERAGE.  The source structures should be spatially alligned
+%   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
+% where the input data is the result from FT_SOURCEANALYSIS, FT_SOURCEDESCRIPTIVES
+% or FT_SOURCEGRANDAVERAGE.  The source structures should be spatially alligned
 % to each other and should have the same positions for the source grid.
 %
 % The configuration should contain the following option for data selection
@@ -39,7 +39,7 @@ function [stat] = sourcestatistics(cfg, varargin)
 % explanation of each method.
 %
 %
-% See also SOURCEANALYSIS, SOURCEDESCRIPTIVES, SOURCEGRANDAVERAGE
+% See also FT_SOURCEANALYSIS, FT_SOURCEDESCRIPTIVES, FT_SOURCEGRANDAVERAGE
 
 % Undocumented local options:
 %   cfg.statistic

@@ -1,14 +1,14 @@
-function [data] = spiketriggeredinterpolation(cfg, data)
+function [data] = ft_spiketriggeredinterpolation(cfg, data)
 
-% SPIKETRIGGEREDINTERPOLATION interpolates the data in the LFP channels
+% FT_SPIKETRIGGEREDINTERPOLATION interpolates the data in the LFP channels
 % around the spikes that are detected in the spike channels, or replaces
 % the LFP around the spike with NaNs.
 %
 % Use as
-%   [data] = spiketriggeredinterpolation(cfg, data)
+%   [data] = ft_spiketriggeredinterpolation(cfg, data)
 %
 % The input data should be organised in a structure as obtained from the
-% PREPROCESSING function. The configuration should be according to
+% FT_PREPROCESSING function. The configuration should be according to
 %
 %   cfg.method       = string, The interpolation method can be 'nan',
 %                     'cubic', 'linear', 'nearest', spline', 'pchip'
@@ -18,13 +18,13 @@ function [data] = spiketriggeredinterpolation(cfg, data)
 %                      must be larger than timwin (default = 0.01)
 %   cfg.spikechannel = string, name of single spike channel to trigger on
 %   cfg.channel      = Nx1 cell-array with selection of channels (default = 'all'),
-%                      see CHANNELSELECTION for details
+%                      see FT_CHANNELSELECTION for details
 %   cfg.feedback     = 'no', 'text', 'textbar', 'gui' (default = 'no')
 %
 % The output will contain all channels of the input, only the data in the
 % selected channels will be interpolated or replaced with NaNs.
 %
-% See also SPIKETRIGGEREDSPECTRUM, SPIKETRIGGEREDAVERAGE
+% See also FT_SPIKETRIGGEREDSPECTRUM, FT_SPIKETRIGGEREDAVERAGE
 
 % Copyright (C) 2008, Thilo Womelsdorf
 %

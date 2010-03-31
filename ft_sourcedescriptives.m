@@ -1,10 +1,10 @@
-function [source] = sourcedescriptives(cfg, source)
+function [source] = ft_sourcedescriptives(cfg, source)
 
-% SOURCEDESCRIPTIVES computes descriptive parameters of the beamformer source
+% FT_SOURCEDESCRIPTIVES computes descriptive parameters of the beamformer source
 % analysis results.
 %
 % Use as:
-%   [source] = sourcedescriptives(cfg, source)
+%   [source] = ft_sourcedescriptives(cfg, source)
 %
 % where cfg is a structure with the configuration details and source is the
 % result from a beamformer source estimation. The configuration can contain
@@ -35,7 +35,7 @@ function [source] = sourcedescriptives(cfg, source)
 % parameters. This is done after applying the optional transformation
 % on the power and projected noise.
 %
-% See also SOURCEANALYSIS, SOURCESTATISTICS
+% See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS
 
 % Copyright (C) 2004-2007, Robert Oostenveld & Jan-Mathijs Schoffelen
 %

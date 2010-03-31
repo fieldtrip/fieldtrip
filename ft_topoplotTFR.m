@@ -1,12 +1,12 @@
-function [cfg] = topoplotTFR(cfg, varargin)
+function [cfg] = ft_topoplotTFR(cfg, varargin)
 
-% TOPOPLOTTFR plots the topographic distribution of 3-Dimensional datatypes as 
+% FT_TOPOPLOTTFR plots the topographic distribution of 3-Dimensional datatypes as 
 % the time-frequency representation of power or coherence that was computed
-% using the FREQANALYSIS or FREQDESCRIPTIVES functions, as a 2-D circular
+% using the FT_FREQANALYSIS or FT_FREQDESCRIPTIVES functions, as a 2-D circular
 % view (looking down at the top of the head).
 %
 % Use as:
-%   topoplotTFR(cfg, data)
+%   ft_topoplotTFR(cfg, data)
 %
 % The configuration can have the following parameters:
 % cfg.xparam             = first dimension in data in which a selection is made
@@ -19,7 +19,7 @@ function [cfg] = topoplotTFR(cfg, varargin)
 % cfg.ylim               = 'maxmin' or [ymin ymax] (default = 'maxmin')
 % cfg.zlim               = 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
 % cfg.cohrefchannel      = name of reference channel for visualising coherence, can be 'gui'
-% cfg.baseline           = 'yes','no' or [time1 time2] (default = 'no'), see TIMELOCKBASELINE or FREQBASELINE
+% cfg.baseline           = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
 % cfg.baselinetype       = 'absolute' or 'relative' (default = 'absolute')
 % cfg.trials             = 'all' or a selection given as a 1xN vector (default = 'all')
 % cfg.colormap           = any sized colormap, see COLORMAP
@@ -29,7 +29,7 @@ function [cfg] = topoplotTFR(cfg, varargin)
 % cfg.markersize         = channel marker size (default = 2)
 % cfg.markerfontsize     = font size of channel labels (default = 8 pt)                
 % cfg.highlight          = 'on', 'labels', 'numbers', 'off'                    
-% cfg.highlightchannel   =  Nx1 cell-array with selection of channels, or vector containing channel indices see CHANNELSELECTION 
+% cfg.highlightchannel   =  Nx1 cell-array with selection of channels, or vector containing channel indices see FT_CHANNELSELECTION 
 % cfg.highlightsymbol    = highlight marker symbol (default = 'o')
 % cfg.highlightcolor     = highlight marker color (default = [0 0 0] (black))
 % cfg.highlightsize      = highlight marker size (default = 6)
@@ -83,10 +83,10 @@ function [cfg] = topoplotTFR(cfg, varargin)
 % layout. If you want to have more fine-grained control over the layout
 % of the subplots, you should create your own layout file.
 %
-% TOPOPLOTTFR calls the function TOPOPLOTER to do the plotting.
+% FT_TOPOPLOTTFR calls the function FT_TOPOPLOTER to do the plotting.
 %
 % See also:
-%   topoplotER, singleplotTFR, multiplotTFR, prepare_layout
+%   ft_topoplotER, ft_singleplotTFR, ft_multiplotTFR, ft_prepare_layout
 
 % Undocumented local options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)

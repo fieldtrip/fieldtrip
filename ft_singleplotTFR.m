@@ -1,13 +1,13 @@
-function [cfg] = singleplotTFR(cfg, data)
+function [cfg] = ft_singleplotTFR(cfg, data)
 
-% singleplotTFR plots the time-frequency representations of power of a
+% ft_singleplotTFR plots the time-frequency representations of power of a
 % single channel or the average over multiple channels.
 %
 % Use as:
-%   singleplotTFR(cfg,data)
+%   ft_singleplotTFR(cfg,data)
 %
 % The data can be a time-frequency representation of power that was
-% computed using the FREQANALYSIS function.
+% computed using the FT_FREQANALYSIS function.
 %
 % The configuration can have the following parameters:
 % cfg.xparam        = field to be plotted on x-axis, e.g. 'time' (default depends on data.dimord)
@@ -21,11 +21,11 @@ function [cfg] = singleplotTFR(cfg, data)
 % cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.ylim          = 'maxmin' or [ymin ymax] (default = 'maxmin')
 % cfg.zlim          = 'maxmin','maxabs' or [zmin zmax] (default = 'maxmin')
-% cfg.baseline      = 'yes','no' or [time1 time2] (default = 'no'), see FREQBASELINE
+% cfg.baseline      = 'yes','no' or [time1 time2] (default = 'no'), see FT_FREQBASELINE
 % cfg.baselinetype  = 'absolute' or 'relative' (default = 'absolute')
 % cfg.trials        = 'all' or a selection given as a 1xN vector (default = 'all')
 % cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'),
-%                     see CHANNELSELECTION for details
+%                     see FT_CHANNELSELECTION for details
 % cfg.cohrefchannel = name of reference channel for visualising coherence, can be 'gui'
 % cfg.fontsize      = font size of title (default = 8)
 % cfg.colormap      = any sized colormap, see COLORMAP
@@ -38,9 +38,9 @@ function [cfg] = singleplotTFR(cfg, data)
 % cfg.masknans      = 'yes' or 'no' (default = 'yes')
 %
 % See also:
-%   singleplotER, multiplotER, multiplotTFR, topoplotER, topoplotTFR
+%   ft_singleplotER, ft_multiplotER, ft_multiplotTFR, ft_topoplotER, ft_topoplotTFR
 
-% This function depends on FREQBASELINE which has the following options:
+% This function depends on FT_FREQBASELINE which has the following options:
 % cfg.baseline, documented
 % cfg.baselinetype, documented
 

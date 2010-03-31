@@ -1,19 +1,19 @@
-function [freq] = spiketriggeredspectrum(cfg, data)
+function [freq] = ft_spiketriggeredspectrum(cfg, data)
 
-% SPIKETRIGGEREDSPECTRUM computes the Fourier spectrup of the LFP around the spikes.
+% FT_SPIKETRIGGEREDSPECTRUM computes the Fourier spectrup of the LFP around the spikes.
 %
 % Use as
-%   [freq] = spiketriggeredspectrum(cfg, data)
+%   [freq] = ft_spiketriggeredspectrum(cfg, data)
 %
 % The input data should be organised in a structure as obtained from
-% the APPENDSPIKE function. The configuration should be according to
+% the FT_APPENDSPIKE function. The configuration should be according to
 %
 %   cfg.timwin       = [begin end], time around each spike (default = [-0.1 0.1])
 %   cfg.foilim       = [begin end], frequency band of interest (default = [0 150])
 %   cfg.taper        = 'dpss', 'hanning' or many others, see WINDOW (default = 'hanning')
 %   cfg.spikechannel = string, name of single spike channel to trigger on
 %   cfg.channel      = Nx1 cell-array with selection of channels (default = 'all'),
-%                      see CHANNELSELECTION for details
+%                      see FT_CHANNELSELECTION for details
 %   cfg.feedback     = 'no', 'text', 'textbar', 'gui' (default = 'no')
 %
 % If the triggered spike leads a spike in another channel, then the angle

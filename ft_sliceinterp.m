@@ -1,12 +1,12 @@
-function [outim]=sliceinterp(cfg, ininterp)
+function [outim]=ft_sliceinterp(cfg, ininterp)
 
-% SLICEINTERP plots a 2D-montage of source reconstruction and anatomical MRI
+% FT_SLICEINTERP plots a 2D-montage of source reconstruction and anatomical MRI
 % after these have been interpolated onto the same grid.
 %
 % Use as
-%   sliceinterp(cfg, interp)
+%   ft_sliceinterp(cfg, interp)
 %      or
-%   [rgbimage] = sliceinterp(cfg, interp), rgbimage is the monatage image
+%   [rgbimage] = ft_sliceinterp(cfg, interp), rgbimage is the monatage image
 %
 % where interp is the output of sourceinterpolate and cfg is a structure
 % with any of the following fields:

@@ -1,11 +1,11 @@
-function [cfg] = sourceplot(cfg, data)
+function [cfg] = ft_sourceplot(cfg, data)
 
-% SOURCEPLOT plots functional source reconstruction data on slices or on a
+% FT_SOURCEPLOT plots functional source reconstruction data on slices or on a
 % surface, optionally as an overlay on anatomical MRI data, where
 % statistical data can be used to determine the opacity of the mask.
 %
 % Use as:
-%   sourceplot(cfg, data)
+%   ft_sourceplot(cfg, data)
 %
 % The data can contain functional data, anatomical MRI data and statistical data,
 % interpolated onto the same grid.
@@ -30,7 +30,7 @@ function [cfg] = sourceplot(cfg, data)
 %
 % The following parameters can be used in all methods:
 %   cfg.downsample    = downsampling for resolution reduction, integer value (default = 1) (orig: from surface)
-%   cfg.atlas         = string, filename of atlas to use (default = []) SEE PREPARE_ATLAS
+%   cfg.atlas         = string, filename of atlas to use (default = []) SEE FT_PREPARE_ATLAS
 %                        for ROI masking (see "masking" below) or in interactive mode (see "ortho-plotting" below)
 %   cfg.inputcoord    = 'mni' or 'tal', coordinate system of data used to lookup the label from the atlas
 %

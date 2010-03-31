@@ -1,14 +1,14 @@
-function cfg = topoplotCC(cfg, freq)
+function cfg = ft_topoplotCC(cfg, freq)
 
-% TOPOPLOTCC plots the connections between significantly coherent
+% FT_TOPOPLOTCC plots the connections between significantly coherent
 % sensor pairs
 %
 % Use as
-%  topoplotCC(cfg, freq)
+%  ft_topoplotCC(cfg, freq)
 %
 % The configuration should contain:
 %   cfg.feedback    = string (default = 'textbar')
-%   cfg.layout      = specification of the layout, see PREPARE_LAYOUT
+%   cfg.layout      = specification of the layout, see FT_PREPARE_LAYOUT
 %   cfg.foi         = the frequency of interest which is to be plotted (default is the first frequency bin)
 %   cfg.widthparam  = string, parameter to be used to control the line width
 %   cfg.alphaparam  = string, parameter to be used to control the opacity
@@ -27,7 +27,7 @@ function cfg = topoplotCC(cfg, freq)
 %    cfg.arrowoffset  = amount that the arrow is shifted to the side (default = automatic)
 %    cfg.arrowlength  = amount by which the length is reduced (default = 0.8)
 %
-% See also PREPARE_LAYOUT, MULTIPLOTCC
+% See also FT_PREPARE_LAYOUT, FT_MULTIPLOTCC
 
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
