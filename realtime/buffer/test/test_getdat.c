@@ -66,7 +66,10 @@ int main(int argc, char *argv[]) {
 			data.def = (datadef_t *)buf;
 			data.buf = (char *) buf+sizeof(datadef_t);
 			print_datadef(data.def);
-			for (j=0; j<data.def->nsamples; j++) {
+			if (data.def->nsamples * data.def->nchans > 200) {
+				printf("Lots of data - not printing...\n");
+			} 
+			else for (j=0; j<data.def->nsamples; j++) {
 				for (i=0; i<data.def->nchans; i++) {
 					//k = i*data.def->nsamples + j;
 					k = j*data.def->nchans + i;

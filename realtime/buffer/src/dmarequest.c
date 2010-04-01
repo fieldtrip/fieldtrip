@@ -31,6 +31,8 @@ pthread_mutex_t mutexproperty = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t getData_cond   = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t getData_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+#define DIE_BAD_MALLOC(ptr)   if ((ptr)==NULL) { fprintf(stderr,"Out of memory with unchecked malloc in line %d",__LINE__); exit(1); }
+
 /*****************************************************************************/
 
 void free_header() {
@@ -106,11 +108,19 @@ void init_data(void) {
 			current_max_num_sample = MAXNUMBYTE / (wordsize * header->def->nchans);
 		}
 		data = (data_t*)malloc(sizeof(data_t));
+		
+		DIE_BAD_MALLOC(data);
+		
 		data->def = (datadef_t*)malloc(sizeof(datadef_t));
+		
+		DIE_BAD_MALLOC(data->def);
+		
 		data->def->nchans    = header->def->nchans;
 		data->def->nsamples  = current_max_num_sample;
 		data->def->data_type = header->def->data_type;
 		data->buf = malloc(header->def->nchans*current_max_num_sample*wordsize);
+		
+		DIE_BAD_MALLOC(data->buf);
 	}
 }
 
@@ -120,6 +130,7 @@ void init_event(void) {
 	if (verbose>0) fprintf(stderr, "init_event: creating event buffer\n");
 	if (header) {
 		event = (event_t*)malloc(MAXNUMEVENT*sizeof(event_t));
+		DIE_BAD_MALLOC(event);
 		for (i=0; i<MAXNUMEVENT; i++) {
 			event[i].def = NULL;
 			event[i].buf = NULL;
@@ -132,6 +143,7 @@ void init_property(void) {
 	int i;
 	if (verbose>0) fprintf(stderr, "init_event: creating property buffer\n");
 	property = (property_t*)malloc(MAXNUMPROPERTY*sizeof(property_t));
+	DIE_BAD_MALLOC(property);
 	for (i=0; i<MAXNUMPROPERTY; i++) {
 		property[i].def = NULL;
 		property[i].buf = NULL;
@@ -203,7 +215,20 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 	// this will hold the response
 	message_t *response;
 	response      = (message_t*)malloc(sizeof(message_t));
+	
+	/* check for "out of memory" problems */
+	if (response == NULL) {
+		*response_ptr = NULL;
+		return -1;
+	}
 	response->def = (messagedef_t*)malloc(sizeof(messagedef_t));
+	
+	/* check for "out of memory" problems */
+	if (response->def == NULL) {
+		*response_ptr = NULL;
+		free(response);
+		return -1;
+	}
 	response->buf = NULL;
 	// the response should be passed to the calling function, where it should be freed
 	*response_ptr = response;
@@ -229,8 +254,11 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 
 			// store the header and re-initialize
 			header      = (header_t*)malloc(sizeof(header_t));
+			DIE_BAD_MALLOC(header);
 			header->def = (headerdef_t*)malloc(sizeof(headerdef_t));
+			DIE_BAD_MALLOC(header->def);
 			header->buf = malloc(headerdef->bufsize);
+			DIE_BAD_MALLOC(header->buf);
 			memcpy(header->def, request->buf, sizeof(headerdef_t));
 			memcpy(header->buf, (char*)request->buf+sizeof(headerdef_t), headerdef->bufsize);
 			header->def->nsamples = 0;
@@ -332,9 +360,11 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 					if (verbose>1) print_eventdef(eventdef);
 
 					event[thisevent].def = (eventdef_t*)malloc(sizeof(eventdef_t));
+					DIE_BAD_MALLOC(event[thisevent].def);
 					memcpy(event[thisevent].def, (char*)request->buf+offset, sizeof(eventdef_t));
 					offset += sizeof(eventdef_t);
 					event[thisevent].buf = malloc(eventdef->bufsize);
+					DIE_BAD_MALLOC(event[thisevent].buf);
 					memcpy(event[thisevent].buf, (char*)request->buf+offset, eventdef->bufsize);
 					offset += eventdef->bufsize;
 					if (verbose>1) print_eventdef(event[thisevent].def);
@@ -370,6 +400,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			// if it already exists, then it should be updated
 			// otherwise it should be inserted as new property
 			desired = (property_t*)malloc(sizeof(property_t));
+			DIE_BAD_MALLOC(desired);
 			desired->def = (propertydef_t*)request->buf;
 			if (desired->def->bufsize)
 				desired->buf = (char*)request->buf+sizeof(propertydef_t);
@@ -391,8 +422,10 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 
 				// insert the new property information
 				property[numprop].def = (propertydef_t*)malloc(sizeof(propertydef_t));
+				DIE_BAD_MALLOC(property[numprop].def);
 				memcpy(property[numprop].def, request->buf, sizeof(propertydef_t));
 				property[numprop].buf = malloc(property[numprop].def->bufsize);
+				DIE_BAD_MALLOC(property[numprop].buf);
 				memcpy(property[numprop].buf, (char*)request->buf+sizeof(propertydef_t), property[numprop].def->bufsize);
 
 				response->def->version = VERSION;
@@ -439,7 +472,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			
 			// Check whether the read-request should block...
 			blockrequest = 0;
-			get_property(0, "dmaBlockRequest", &blockrequest);
+			// get_property(0, "dmaBlockRequest", &blockrequest);
 			if (verbose>1) fprintf(stderr, "dmarequest: blockrequest = %d\n", blockrequest);
 
 			pthread_mutex_lock(&mutexdata);
@@ -565,9 +598,11 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 							/* need to wrap around at current_max_num_sample */
 							unsigned int na = current_max_num_sample - start_index;
 							unsigned int nb = n - na;
-							
+
 							memcpy(resp_data, (char*)(data->buf) + start_index*chansize, na*chansize);
 							memcpy(resp_data + na*chansize, (char*)(data->buf), nb*chansize);
+							
+							/* printf("Wrapped around!\n"); */
 						}
 					}
 				}
@@ -590,6 +625,8 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			pthread_mutex_lock(&mutexevent);
 
 			eventsel = (eventsel_t*)malloc(sizeof(eventsel_t));
+			DIE_BAD_MALLOC(eventsel);
+						
 			// determine the selection
 			if (request->def->bufsize) {
 				// the selection has been specified
@@ -673,6 +710,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 				// the message payload should include a full property def and buf 
 				// although the value_type and value_value will not be used here
 				desired = (property_t*)malloc(sizeof(property));
+				DIE_BAD_MALLOC(desired);
 				desired->def = (propertydef_t*)request->buf;
 				if (desired->def->bufsize)
 					desired->buf = (char*)request->buf+sizeof(propertydef_t);

@@ -21,6 +21,9 @@
 
 #define MERGE_THRESHOLD      4096    /* TODO: optimize this value? Maybe look at MTU size */
 
+
+#define DIE_BAD_MALLOC(ptr)   if ((ptr)==NULL) { fprintf(stderr,"Out of memory in line %d",__LINE__); exit(1); }
+
 extern pthread_mutex_t mutexsocketcount;
 extern int socketcount;
 extern pthread_mutex_t mutexthreadcount;
@@ -61,7 +64,10 @@ void *tcpsocket(void *arg) {
 	while (1) {
 
 		request       = (message_t*)malloc(sizeof(message_t));
+		DIE_BAD_MALLOC(request);
+		
 		request->def  = (messagedef_t*)malloc(sizeof(messagedef_t));
+		DIE_BAD_MALLOC(request->def);
 		request->buf  = NULL;
 
 #ifdef ENABLE_POLLING
@@ -101,6 +107,7 @@ void *tcpsocket(void *arg) {
 
 		if (request->def->bufsize>0) {
 			request->buf = malloc(request->def->bufsize);
+			DIE_BAD_MALLOC(request->buf);
 			if ((n = bufread(client, request->buf, request->def->bufsize)) != request->def->bufsize) {
 				if (verbose>0) fprintf(stderr, "tcpsocket: read size = %d, should be %d\n", n, request->def->bufsize);
 				goto cleanup;
@@ -114,6 +121,9 @@ void *tcpsocket(void *arg) {
 			if (verbose>0) fprintf(stderr, "tcpsocket: an unexpected error occurred\n");
 			goto cleanup;
 		}
+		
+		DIE_BAD_MALLOC(response);
+		DIE_BAD_MALLOC(response->def);
 
 		if (verbose>1) print_response(response->def);
 		if (verbose>1) print_buf(request->buf, request->def->bufsize);
@@ -128,7 +138,9 @@ void *tcpsocket(void *arg) {
 			void *merged = NULL;
 			
 			append(&merged, 0, response->def, sizeof(messagedef_t));
+			DIE_BAD_MALLOC(merged);
 			append(&merged, sizeof(messagedef_t), response->buf, response->def->bufsize);
+			DIE_BAD_MALLOC(merged);
 						
 			if ((n=bufwrite(client, merged, msize) != msize)) {
 				if (verbose>0) fprintf(stderr, "tcpsocket: write size = %d, should be %d\n", n, msize);
@@ -155,6 +167,7 @@ void *tcpsocket(void *arg) {
 cleanup:
 	if (response!=NULL) 
 		cleanup_message(&response);
+	response = NULL;	// SK: prevent double free in following pthread_cleanup_pop
 
 	/* from now on it is safe to cancel the thread */
 	pthread_setcancelstate(oldcancelstate, NULL);

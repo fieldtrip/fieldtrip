@@ -134,7 +134,7 @@ automatically to a large extend (e.g. a dot implies a double), but
 some special rules are added. For example, a field name that starts
 with "d" will always be parsed as a double precision value.
 
-If you need to write you own protocol file (E:\image\mrprot.txt),
+If you need to write your own protocol file (E:\image\mrprot.txt),
 the most important ingedrients are the following lines:
 alTR = 2900000
 lContrasts = 5
