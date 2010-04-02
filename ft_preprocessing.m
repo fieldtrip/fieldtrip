@@ -1,4 +1,4 @@
-function [data] = ft_preprocessing(cfg, data);
+function [dataout] = ft_preprocessing(cfg, data)
 
 % FT_PREPROCESSING reads MEG and/or EEG data according to user-specified trials
 % and applies several user-specified preprocessing steps to the signals.
@@ -143,6 +143,8 @@ if ~isfield(cfg, 'method'),       cfg.method = 'trial';         end
 if ~isfield(cfg, 'channel'),      cfg.channel = {'all'};        end
 if ~isfield(cfg, 'removemcg'),    cfg.removemcg = 'no';         end
 if ~isfield(cfg, 'removeeog'),    cfg.removeeog = 'no';         end
+if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];           end
+if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end
 
 if ~isfield(cfg, 'feedback'),
   if strcmp(cfg.method, 'channel')
@@ -181,9 +183,21 @@ if isfield(cfg, 'lnfilter') && strcmp(cfg.lnfilter, 'yes')
   error('line noise filtering using the option cfg.lnfilter is not supported any more, use cfg.bsfilter instead')
 end
 
-if nargin>1
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    fprintf('reading input data from "%s"\n', cfg.inputfile);
+    load(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+if hasdata
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % do preprocessing of data that has already been read
+  % do preprocessing of data that has already been read into memory
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   % the input data must be raw
@@ -241,21 +255,11 @@ if nargin>1
   end % for all trials
   progress('close');
 
-  % get the output cfg
-  cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-  % remember the configuration details of the input data
-  if isfield(data, 'cfg'); cfg.previous = data.cfg; end
-
   % take along relevant fields of input data to output data
   if isfield(data, 'hdr'),      dataout.hdr     = data.hdr;         end
   if isfield(data, 'fsample'),  dataout.fsample = data.fsample;     end
   if isfield(data, 'grad'),     dataout.grad    = data.grad;        end
   if isfield(data, 'elec'),     dataout.elec    = data.elec;        end
-  if isfield(data, 'offset'),   dataout.offset  = data.offset;      end
-
-  % replace the input data with the output data
-  data = dataout;
 
 else
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -387,7 +391,7 @@ else
   else
     error('unsupported option for cfg.method');
   end
-  
+
 
   for j=1:length(chnloop)
     % read one channel group at a time, this speeds up combined datasets
@@ -464,19 +468,23 @@ else
   end % for all channel groups
 
   % collect the results
-  data.hdr                = hdr;                  % header details of the datafile
-  data.label              = label;                % labels of channels that have been read, can be different from labels in file due to montage
-  data.trial              = cutdat;               % cell-array with TIMExCHAN
-  data.time               = time;                 % vector with the timeaxis for each individual trial
-  data.fsample            = hdr.Fs;
+  dataout.hdr                = hdr;                  % header details of the datafile
+  dataout.label              = label;                % labels of channels that have been read, can be different from labels in file due to montage
+  dataout.trial              = cutdat;               % cell-array with TIMExCHAN
+  dataout.time               = time;                 % vector with the timeaxis for each individual trial
+  dataout.fsample            = hdr.Fs;
   if isfield(hdr, 'grad')
-    data.grad             = hdr.grad;             % gradiometer system in head coordinates
+    dataout.grad             = hdr.grad;             % gradiometer system in head coordinates
   end
 
-  % get the output cfg
-  cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+end % if hasdata
 
-end % if nargin>1
+% accessing this field here is needed for the configuration tracking
+% by accessing it once, it will not be removed from the output cfg
+cfg.outputfile;
+
+% get the output cfg
+cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add the version details of this function call to the configuration
 try
@@ -488,6 +496,20 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id   = '$Id$';
+
+if hasdata && isfield(data, 'cfg')
+  % remember the configuration details of the input data
+  cfg.previous = data.cfg;
+end
+
 % remember the exact configuration details in the output
-data.cfg = cfg;
+dataout.cfg = cfg;
+
+% the output data should be saved to file
+if ~isempty(cfg.outputfile)
+  fprintf('writing output data to "%s"\n', cfg.outputfile);
+  data = dataout; % use the variable name "data" in the output file
+  save(cfg.outputfile, 'data');
+end
+
 
