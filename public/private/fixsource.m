@@ -36,6 +36,7 @@ end
 
 if strcmp(current, type),
   %do nothing
+  output = input;
   return
 elseif strcmp(current, 'old') && strcmp(type, 'new'),
   %go from old to new
