@@ -92,10 +92,15 @@ function [dataout] = ft_preprocessing(cfg, data)
 % Undocumented local options:
 % cfg.artfctdef
 % cfg.removemcg
-% cfg.output.dataset
-% cfg.output.dataformat
-%
-% This function depends on FT_PREPROC which has the following options:
+% cfg.inputfile
+% cfg.outputfile
+% You can use this function to read data from one format, filter it, and
+% write it to disk in another format. The reading is done either as one
+% long continuous segment or in multiple trials. This is achieved by
+%   cfg.export.dataset    = string with the output file name
+%   cfg.export.dataformat = string describing the output file format, see WRITE_DATA
+
+% This function depends on PREPROC which has the following options:
 % cfg.absdiff
 % cfg.boxcar
 % cfg.polyremoval, documented
@@ -144,7 +149,7 @@ if ~isfield(cfg, 'channel'),      cfg.channel = {'all'};        end
 if ~isfield(cfg, 'removemcg'),    cfg.removemcg = 'no';         end
 if ~isfield(cfg, 'removeeog'),    cfg.removeeog = 'no';         end
 if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];           end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end
+if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end % this is for exporting to another file format
 
 if ~isfield(cfg, 'feedback'),
   if strcmp(cfg.method, 'channel')
@@ -181,6 +186,16 @@ if isfield(cfg, 'resamplefs'), error('resampling is not supported any more, see 
 
 if isfield(cfg, 'lnfilter') && strcmp(cfg.lnfilter, 'yes')
   error('line noise filtering using the option cfg.lnfilter is not supported any more, use cfg.bsfilter instead')
+end
+
+% this option has been renamed?
+cfg = checkconfig(cfg, 'renamed', {'output', 'export'});
+
+if isfield(cfg, 'export') && ~isempty(cfg.export)
+  % export the data to an output file
+  if ~strcmp(cfg.method, 'trial')
+    error('exporting to an output file is only possible when processing all channels at once')
+  end
 end
 
 hasdata = (nargin>1);
@@ -228,6 +243,11 @@ if hasdata
 
   % this will contain the newly processed data
   dataout = [];
+  % take along relevant fields of input data to output data
+  if isfield(data, 'hdr'),      dataout.hdr     = data.hdr;         end
+  if isfield(data, 'fsample'),  dataout.fsample = data.fsample;     end
+  if isfield(data, 'grad'),     dataout.grad    = data.grad;        end
+  if isfield(data, 'elec'),     dataout.elec    = data.elec;        end
 
   progress('init', cfg.feedback, 'preprocessing');
   ntrl = length(data.trial);
@@ -235,31 +255,8 @@ if hasdata
     progress(i/ntrl, 'preprocessing trial %d from %d\n', i, ntrl);
     % do the preprocessing on the selected channels
     [dataout.trial{i}, dataout.label, dataout.time{i}, cfg] = preproc(data.trial{i}(rawindx,:), data.label(rawindx), data.fsample, cfg, data.offset(i));
-
-    if isfield(cfg, 'output') && ~isempty(cfg.output)
-      % write the processed data to file
-      newhdr        = [];
-      newhdr.Fs     = hdr.Fs;
-      newhdr.label  = label;
-      newhdr.nChans = length(newhdr.label);
-
-      % only append for the second and consecutive trials
-      write_data(cfg.output.dataset, dataout.trial{i}, 'dataformat', cfg.output.dataformat, 'header', newhdr, 'append', i~=1);
-
-      if nargout==0
-        % don't keep the data in memory
-        dataout.trial{i} = [];
-      end
-    end
-
   end % for all trials
   progress('close');
-
-  % take along relevant fields of input data to output data
-  if isfield(data, 'hdr'),      dataout.hdr     = data.hdr;         end
-  if isfield(data, 'fsample'),  dataout.fsample = data.fsample;     end
-  if isfield(data, 'grad'),     dataout.grad    = data.grad;        end
-  if isfield(data, 'elec'),     dataout.elec    = data.elec;        end
 
 else
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -392,7 +389,6 @@ else
     error('unsupported option for cfg.method');
   end
 
-
   for j=1:length(chnloop)
     % read one channel group at a time, this speeds up combined datasets
     % a multiplexed dataformat is faster if you read all channels, one trial at a time
@@ -443,19 +439,17 @@ else
       % do the preprocessing on the padded trial data and remove the padding after filtering
       [cutdat{i}, label, time{i}, cfg] = preproc(dat, hdr.label(rawindx), hdr.Fs, cfg, cfg.trl(i,3), begpadding, endpadding);
 
-      if isfield(cfg, 'output') && ~isempty(cfg.output)
-        % write the processed data to file
+      if isfield(cfg, 'export') && ~isempty(cfg.export)
+        % write the processed data to an original manufacturer format file
         newhdr        = [];
         newhdr.Fs     = hdr.Fs;
         newhdr.label  = label;
         newhdr.nChans = length(newhdr.label);
-
         % only append for the second and consecutive trials
-        write_data(cfg.output.dataset, cutdat{i}, 'dataformat', cfg.output.dataformat, 'header', newhdr, 'append', i~=1);
-
+        write_data(cfg.export.dataset, cutdat{i}, 'dataformat', cfg.export.dataformat, 'header', newhdr, 'append', i~=1);
         if nargout==0
-          % don't keep the data in memory
-          cutdat{i} = [];
+          % don't keep th eprocessed data in memory
+          cutdat(i) = [];
         end
       end
 
@@ -465,17 +459,17 @@ else
     end % for all trials
     progress('close');
 
-  end % for all channel groups
+    dataout                    = [];
+    dataout.hdr                = hdr;                  % header details of the datafile
+    dataout.label              = label;                % labels of channels that have been read, can be different from labels in file due to montage
+    dataout.time               = time;                 % vector with the timeaxis for each individual trial
+    dataout.trial              = cutdat;
+    dataout.fsample            = hdr.Fs;
+    if isfield(hdr, 'grad')
+      dataout.grad             = hdr.grad;             % gradiometer system in head coordinates
+    end
 
-  % collect the results
-  dataout.hdr                = hdr;                  % header details of the datafile
-  dataout.label              = label;                % labels of channels that have been read, can be different from labels in file due to montage
-  dataout.trial              = cutdat;               % cell-array with TIMExCHAN
-  dataout.time               = time;                 % vector with the timeaxis for each individual trial
-  dataout.fsample            = hdr.Fs;
-  if isfield(hdr, 'grad')
-    dataout.grad             = hdr.grad;             % gradiometer system in head coordinates
-  end
+  end % for all channel groups
 
 end % if hasdata
 
@@ -505,7 +499,7 @@ end
 % remember the exact configuration details in the output
 dataout.cfg = cfg;
 
-% the output data should be saved to file
+% the output data should be saved to a MATLAB file
 if ~isempty(cfg.outputfile)
   fprintf('writing output data to "%s"\n', cfg.outputfile);
   data = dataout; % use the variable name "data" in the output file
