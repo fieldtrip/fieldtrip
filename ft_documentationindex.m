@@ -2,81 +2,21 @@ function index = documentationindex(filename)
 
 fieldtripdefs
 
-funname = {
-  'definetrial'
-  'artifact_eog'
-  'artifact_jump'
-  'artifact_muscle'
-  'rejectartifact'
-  'preprocessing'
-  'rejectvisual'
-  'appenddata'
-  'resampledata'
-  'channelrepair'
-  'recodeevent'
-  'redefinetrial'
-  'read_header'
-  'read_data'
-  'read_event'
-  'read_mri'
-  'read_spike'
-  'write_data'
-  'write_event'
+p = fileparts(which(mfilename));
 
-  'timelockanalysis'
-  'timelockgrandaverage'
+f1 = dir(fullfile(p, 'ft_*.m'));
+f1 = {f1.name}';
 
-  'freqanalysis'
-  'freqanalysis_mtmfft'
-  'freqanalysis_mtmwelch'
-  'freqanalysis_mtmconvol'
-  'freqanalysis_wltconvol'
-  'freqanalysis_tfr'
-  'freqbaseline'
-  'freqgrandaverage'
-  'freqdescriptives'
+f2 = dir(fullfile(p, 'preproc', '*.m'));
+f2 = {f2.name}';
 
-  'dipolefitting'
-  'dipolesimulation'
-  'sourceanalysis'
-  'sourcegrandaverage'
-  'sourcedescriptives'
-  'sourceinterpolate'
-  'prepare_localspheres'
-  'prepare_singleshell'
-  'prepare_bemmodel'
-  'prepare_leadfield'
-  'prepare_atlas'
-  'volumelookup'
-  'volumenormalise'
-  'volumesegment'
+f3 = dir(fullfile(p, 'fileio', '*.m'));
+f3 = {f3.name}';
 
-  'timelockstatistics'
-  'freqstatistics'
-  'sourcestatistics'
+f4 = dir(fullfile(p, 'forwinv', '*.m'));
+f4 = {f4.name}';
 
-  'spikedownsample'
-  'spikesplitting'
-
-  'rt_asaproxy'
-  'rt_brainampproxy'
-  'rt_ctfproxy'
-  'rt_fileproxy'
-  'rt_neuralynxproxy'
-  'rt_plexonproxy'
-  'rt_signalproxy'
-
-  'prepare_layout'
-  'layoutplot'
-  'topoplot'
-  'singleplotER'
-  'singleplotTFR'
-  'topoplotER'
-  'topoplotTFR'
-  'multiplotER'
-  'multiplotTFR'
-  'sourceplot'
-  };
+funname = cat(1, f1, f2, f3, f4);
 
 ncfg  = 0;
 index = {};
