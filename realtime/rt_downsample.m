@@ -107,7 +107,7 @@ while true
     % apply preprocessing options
     dat = preproc(data.trial{1}, data.label, data.fsample, cfg);
     % do the downsampling
-    dat = myresample(dat, hdr.Fs, cfg.fsample, cfg.method);
+    dat = preproc_resample(dat, hdr.Fs, cfg.fsample, cfg.method);
 
     if count==1
       % flush the file, write the header and subsequently write the data segment
@@ -119,39 +119,4 @@ while true
 
   end % if enough new samples
 end % while true
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION for the resampling
-% this is taken from spikedownsample
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function dat = myresample(dat, Fold, Fnew, method)
-if Fold==Fnew
-  return
-end
-switch method
-  case 'resample'
-    if ~isa(dat, 'double')
-      typ = class(dat);
-      dat = typecast(dat, 'double');
-      dat = resample(dat, Fnew, Fold);     % this requires a double array
-      dat = typecast(dat, typ);
-    else
-      dat = resample(dat, Fnew, Fold);
-    end
-  case 'decimate'
-    fac = round(Fold/Fnew);
-    if ~isa(dat, 'double')
-      typ = class(dat);
-      dat = typecast(dat, 'double');
-      dat = decimate(dat, fac);    % this requires a double array
-      dat = typecast(dat, typ);
-    else
-      dat = decimate(dat, fac);    % this requires a double array
-    end
-  case 'downsample'
-    fac = Fold/Fnew;
-    dat = downsample(dat, fac);
-  otherwise
-    error('unsupported resampling method');
-end
 
