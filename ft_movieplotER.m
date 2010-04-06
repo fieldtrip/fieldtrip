@@ -1,11 +1,12 @@
 function ft_movieplotER(cfg, timelock)
 
-% FT_MOVIEPLOTER makes a movie of the topographic distribution of timelock
-% datatypes over time.
+% FT_MOVIEPLOTER makes a movie of the topographic distribution of the
+% time-locked average.
 %
-% Use as: ft_movieplotER(cfg, timelock)
-% 
-% cfg options:
+% Use as
+%   FT_MOVIEPLOTER(cfg, timelock)
+% where the input data is from FT_TIMELOCKANALYSIS and the configuration
+% can contain
 %   cfg.samperframe  = number, samples per fram (default = 1)
 %   cfg.framespersec = number, frames per second (default = 5)
 %   cfg.xlim         = 'maxmin' or [xmin xmax] (default = 'maxmin')
