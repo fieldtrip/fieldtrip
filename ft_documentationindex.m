@@ -18,6 +18,10 @@ f4 = {f4.name}';
 
 funname = cat(1, f1, f2, f3, f4);
 
+for i=1:length(funname)
+  [p, funname{i}, x] = fileparts(funname{i});
+end
+
 ncfg  = 0;
 index = {};
 

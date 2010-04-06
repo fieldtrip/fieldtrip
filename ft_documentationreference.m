@@ -7,7 +7,20 @@ p = fileparts(which(mfilename));
 f1 = dir(fullfile(p, 'ft_*.m'));
 f1 = {f1.name}';
 
-funname = cat(1, f1);
+f2 = dir(fullfile(p, 'preproc', '*.m'));
+f2 = {f2.name}';
+
+f3 = dir(fullfile(p, 'fileio', '*.m'));
+f3 = {f3.name}';
+
+f4 = dir(fullfile(p, 'forwinv', '*.m'));
+f4 = {f4.name}';
+
+funname = cat(1, f1, f2, f3, f4);
+
+for i=1:length(funname)
+  [p, funname{i}, x] = fileparts(funname{i});
+end
 
 % create the desired output directory
 if ~isdir(outdir)
