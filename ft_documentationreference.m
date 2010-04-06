@@ -7,14 +7,20 @@ p = fileparts(which(mfilename));
 f1 = dir(fullfile(p, 'ft_*.m'));
 f1 = {f1.name}';
 
-f2 = dir(fullfile(p, 'preproc', '*.m'));
+f2 = dir(fullfile(p, 'public', '*.m'));
 f2 = {f2.name}';
 
-f3 = dir(fullfile(p, 'fileio', '*.m'));
+f3 = dir(fullfile(p, 'preproc', '*.m'));
 f3 = {f3.name}';
 
-f4 = dir(fullfile(p, 'forwinv', '*.m'));
+f4 = dir(fullfile(p, 'fileio', '*.m'));
 f4 = {f4.name}';
+
+f5 = dir(fullfile(p, 'forwinv', '*.m'));
+f5 = {f5.name}';
+
+f6 = dir(fullfile(p, 'realtime', 'rt_*.m'));
+f6 = {f6.name}';
 
 funname = cat(1, f1, f2, f3, f4);
 
