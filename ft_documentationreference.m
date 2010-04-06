@@ -22,7 +22,7 @@ f5 = {f5.name}';
 f6 = dir(fullfile(p, 'realtime', 'rt_*.m'));
 f6 = {f6.name}';
 
-funname = cat(1, f1, f2, f3, f4);
+funname = cat(1, f1, f2, f3, f4, f5, f6);
 
 for i=1:length(funname)
   [p, funname{i}, x] = fileparts(funname{i});
