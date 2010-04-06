@@ -214,7 +214,7 @@ for i=chansel(:)'
   % apply preprocessing and downsample
   fprintf('preprocessing\n');
   dat = preproc(org, label, hdr.Fs, cfg.preproc);
-  dat = myresample(dat, hdr.Fs, cfg.fsample, cfg.method);
+  dat = preproc_resample(dat, hdr.Fs, cfg.fsample, cfg.method);
 
   chanhdr             = [];
   chanhdr.nChans      = 1;
@@ -264,38 +264,4 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id   = '$Id$';
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION for the resampling
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function dat = myresample(dat, Fold, Fnew, method);
-if Fold==Fnew
-  return
-end
-switch method
-  case 'resample'
-    if ~isa(dat, 'double')
-      typ = class(dat);
-      dat = typecast(dat, 'double');
-      dat = resample(dat, Fnew, Fold);     % this requires a double array
-      dat = typecast(dat, typ);
-    else
-      dat = resample(dat, Fnew, Fold);
-    end
-  case 'decimate'
-    fac = round(Fold/Fnew);
-    if ~isa(dat, 'double')
-      typ = class(dat);
-      dat = typecast(dat, 'double');
-      dat = decimate(dat, fac);    % this requires a double array
-      dat = typecast(dat, typ);
-    else
-      dat = decimate(dat, fac);    % this requires a double array
-    end
-  case 'downsample'
-    fac = Fold/Fnew;
-    dat = decimate(dat, fac);
-  otherwise
-    error('unsupported resampling method');
-end
 
