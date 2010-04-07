@@ -6,6 +6,8 @@ function ft_multiplotCC(cfg, data)
 %
 % Use as
 %   ft_multiplotCC(cfg, data)
+%
+% See also topoplotCC
 
 % Undocumented local options:
 % cfg.layout  = layout filename or a structure produced by prepare_layout
