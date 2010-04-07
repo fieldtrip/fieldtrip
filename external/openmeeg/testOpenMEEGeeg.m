@@ -70,13 +70,13 @@ function rdms = run_bem_computation(r,c,pos)
 
     lf_openmeeg = grid.leadfield{1};
 
-    % Rq : compute_leadfield centers the forward fields by default (average reference)
+    % Rq : ft_compute_leadfield centers the forward fields by default (average reference)
     % lf_openmeeg = lf_openmeeg - repmat(mean(lf_openmeeg),size(lf_openmeeg,1),1);
 
     %% Compute the analytic leadfield
     vol_sphere.r = r;
     vol_sphere.c = c;
-    lf_sphere = compute_leadfield(pos, sens, vol_sphere);
+    lf_sphere = ft_compute_leadfield(pos, sens, vol_sphere);
 
     %% Evaluate the quality of the result using RDM and MAG
     rdms = zeros(1,size(lf_openmeeg,2));
