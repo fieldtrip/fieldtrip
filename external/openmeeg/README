@@ -1,14 +1,13 @@
-This Fieldtrip plugin is an integration of OpenMEEG in order to compute
-EEG leadfields with the Symmetric BEM.
-
 The OpenMEEG software is a C++ package for solving the forward
 problem of electroencephalography (EEG) and magnetoencephalography (MEG).
 
-See COPYING and LICENSE
+This directory contains code to integrate OpenMEEG with FieldTrip.
+It alllows you to compute EEG leadfields with the symmetric boundary
+element method.
 
-See and run:
+See COPYING and LICENSE for further details on the license under which 
+you can use and redistribute this software.
 
-openmeeg_eeg_leadfield_example.m
-
-to compute an EEG Leadfield with OpenMEEG
+See and try the openmeeg_eeg_leadfield_example.m example script to
+compute an EEG Leadfield with OpenMEEG
 
