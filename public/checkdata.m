@@ -130,17 +130,9 @@ if ~isequal(feedback, 'no')
   end
 end % give feedback
 
-%HACK for jan to bypass source and volume data to enter fixdimord
-[st,result] = system('whoami');
-if isempty(strfind(result, 'jan'))
-  if isfreq || istimelock || iscomp || issource || isvolume
-    % ensure consistency between the dimord string and the axes that describe the data dimensions
-    data = fixdimord(data);
-  end
-else
-  if isfreq || istimelock || iscomp
-    data = fixdimord(data);
-  end
+if isfreq || istimelock || iscomp || issource || isvolume
+  % ensure consistency between the dimord string and the axes that describe the data dimensions
+  data = fixdimord(data);
 end
 
 if istimelock
