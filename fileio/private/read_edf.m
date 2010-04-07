@@ -210,26 +210,37 @@ else
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % read the data
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  if nargin<5
-    chanindx = 1:hdr.nChans;
-  end
+  % retrieve the original header
+  EDF = hdr.orig;
 
   % determine the trial containing the begin and end sample
-  epochlength = hdr.nSamples;
+  epochlength = EDF.Dur * EDF.SampleRate(1);
   begepoch    = floor((begsample-1)/epochlength) + 1;
   endepoch    = floor((endsample-1)/epochlength) + 1;
   nepochs     = endepoch - begepoch + 1;
-  dat         = zeros(length(chanindx),nepochs*epochlength);
+  nchans      = EDF.NS;
+
+  if nargin<5
+    chanindx = 1:nchans;
+  end
+
+  % allocate memory to hold the data
+  dat = zeros(length(chanindx),nepochs*epochlength);
 
   % read and concatenate all required data epochs
   for i=begepoch:endepoch
-    % FIXME: this can be implemented more efficient if only one channel has to be read
-    offset = hdr.orig.HeadLen + (i-1)*hdr.nSamples*hdr.nChans*3;
-    % NOTE: this is the only difference between the bdf and edf implementation
-    % buf  = read_24bit(filename, offset, hdr.nSamples*hdr.nChans);
-    buf    = read_16bit(filename, offset, hdr.nSamples*hdr.nChans);
-    buf    = reshape(buf, hdr.nSamples, hdr.nChans);
-    dat(:,((i-begepoch)*epochlength+1):((i-begepoch+1)*epochlength)) = buf(:,chanindx)';
+    offset = EDF.HeadLen + (i-1)*epochlength*nchans*2;
+    if length(chanindx)==1
+      % this is more efficient if only one channel has to be read, e.g. the status channel
+      offset = offset + (chanindx-1)*epochlength*2;
+      buf = readLowLevel(filename, offset, epochlength); % see below in subfunction
+      dat(:,((i-begepoch)*epochlength+1):((i-begepoch+1)*epochlength)) = buf;
+    else
+      % read the data from all channels and then select the desired channels
+      buf = readLowLevel(filename, offset, epochlength*nchans); % see below in subfunction
+      buf = reshape(buf, epochlength, nchans);
+      dat(:,((i-begepoch)*epochlength+1):((i-begepoch+1)*epochlength)) = buf(:,chanindx)';
+    end
   end
 
   % select the desired samples
@@ -237,5 +248,36 @@ else
   endsample = endsample - (begepoch-1)*epochlength;  % correct for the number of bytes that were skipped
   dat = dat(:, begsample:endsample);
 
-  % FIXME: calibrate the data
+  % Calibrate the data
+  if length(chanindx)>1
+    % using a sparse matrix speeds up the multiplication
+    calib = sparse(diag(EDF.Cal(chanindx,:)));
+    dat   = calib * dat;
+  else
+    % in case of one channel the calibration would result in a sparse array
+    calib = diag(EDF.Cal(chanindx,:));
+    dat   = calib * dat;
+  end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION for reading the 16 bit values
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function buf = readLowLevel(filename, offset, numwords)
+if offset < 2*1024^2
+  % use the external mex file, only works for <2GB
+  buf = read_16bit(filename, offset, numwords);
+else
+  % use plain matlab, thanks to Philip van der Broek
+  fp = fopen(filename,'r','ieee-le');
+  status = fseek(fp, offset, 'bof');
+  if status
+    error(['failed seeking ' filename]);
+  end
+  [buf,num] = fread(fp,numwords,'bit16=>double');
+  fclose(fp);
+  if (num<numwords)
+    error(['failed opening ' filename]);
+    return
+  end
 end
