@@ -1983,10 +1983,11 @@ end % if isitab
 
 if isyokogawa
   for i=1:160
-    % this should be consistent with read_yokogawa_header, where channel names are defined
-    yokogawa160{i}          = sprintf('%d',    i);
-    yokogawa160_planar{i,1} = sprintf('%d_dH', i);
-    yokogawa160_planar{i,2} = sprintf('%d_dV', i);
+    % this should be consistent with read_yokogawa_header, with 
+    % ft_channelselection and with yokogawa2grad
+    yokogawa160{i}          = sprintf('AG%03d',    i);
+    yokogawa160_planar{i,1} = sprintf('AG%03d_dH', i);
+    yokogawa160_planar{i,2} = sprintf('AG%03d_dV', i);
   end
 end
 
