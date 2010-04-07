@@ -164,6 +164,10 @@ switch dataformat
     [path, file, ext] = fileparts(filename);
     headerfile = fullfile(path, [file '.mat']);
     datafile   = fullfile(path, [file '.bin']);
+  case {'tdt_tsq' 'tdt_tev'}
+    [path, file, ext] = fileparts(filename);
+    headerfile = fullfile(path, [file '.tsq']);
+    datafile   = fullfile(path, [file '.tev']);
   case 'nmc_archive_k'
     [path, file, ext] = fileparts(filename);
     headerfile = [path '/' file 'newparams.txt'];
@@ -413,7 +417,7 @@ switch dataformat
     % close the file between seperate read operations
     fclose(orig.Head.FILE.FID);
 
-  case {'biosig', 'edf'}
+  case {'biosig'}
     % use the biosig toolbox if available
     hastoolbox('BIOSIG', 1);
     dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
@@ -495,6 +499,11 @@ switch dataformat
 
   case 'ced_spike6mat'
     dat = read_spike6mat_data(filename, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx);
+
+  case {'edf'}
+    % this reader is largely similar to the one for bdf
+    % it uses a mex file for reading the 16 bit data
+    dat = read_edf(filename, hdr, begsample, endsample, chanindx);
 
   case 'eep_avr'
     % check that the required low-level toolbos ix available
@@ -641,9 +650,6 @@ switch dataformat
   case 'nexstim_nxe'
     dat = read_nexstim_nxe(filename, begsample, endsample, chanindx);
 
-  case 'nimh_cortex'
-    keyboard
-
   case 'ns_avg'
     % NeuroScan average data
     orig = read_ns_avg(filename);
@@ -686,7 +692,6 @@ switch dataformat
     hastoolbox('mne', 1);
     if (hdr.orig.iscontinuous)
       dat = fiff_read_raw_segment(hdr.orig.raw,begsample+hdr.orig.raw.first_samp-1,endsample+hdr.orig.raw.first_samp-1,chanindx);
-
       dimord = 'chans_samples';
     elseif (hdr.orig.isaverage)
       dat = cat(2, hdr.orig.evoked.epochs);            % concatenate all epochs, this works both when they are of constant or variable length

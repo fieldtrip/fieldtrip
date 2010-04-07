@@ -160,6 +160,10 @@ switch headerformat
     [path, file, ext] = fileparts(filename);
     headerfile = fullfile(path, [file '.mat']);
     datafile   = fullfile(path, [file '.bin']);
+  case {'tdt_tsq' 'tdt_tev'}
+    [path, file, ext] = fileparts(filename);
+    headerfile = fullfile(path, [file '.tsq']);
+    datafile   = fullfile(path, [file '.tev']);
   case 'nmc_archive_k'
     headerfile = filename;
   otherwise
@@ -297,7 +301,7 @@ switch headerformat
     hdr.nTrials     = 1;
     hdr.label       = orig.label;
 
-  case {'biosig', 'edf'}
+  case 'biosig'
     % use the biosig toolbox if available
     hastoolbox('BIOSIG', 1);
     hdr = read_biosig_header(filename);
@@ -370,39 +374,6 @@ switch headerformat
       hdr.nTrials = 1;
     end;
     hdr.label = {orig.label};
-
-  case  'itab_raw'
-    % check the presence of the required low-level toolbox
-    hastoolbox('lc-libs', 1);
-
-    header_info = lcReadHeader(filename);
-
-    % some channels don't have a label and are not supported by fieldtrip
-    chansel = true(size(header_info.ch));
-    for i=1:length(chansel)
-      chansel(i) = ~isempty(header_info.ch(i).label);
-    end
-    % convert into numeric array with indices
-    chansel = find(chansel);
-
-    % convert the header information into a fieldtrip compatible format
-    hdr.nChans      = length(chansel);
-    hdr.label       = {header_info.ch(chansel).label};
-    hdr.label       = hdr.label(:);  % should be column vector
-    hdr.Fs          = header_info.smpfq;
-    if header_info.nsmpl==0
-      % for continuous data
-      hdr.nSamples    = header_info.ntpdata;
-      hdr.nSamplesPre = 0; % it is a single continuous trial
-      hdr.nTrials     = 1; % it is a single continuous trial
-    else
-      error('epoched data in a itab_raw file is not yet supported (but should be easy to add)');
-    end
-    % keep the original details AND the list of channels as used by fieldtrip
-    hdr.orig         = header_info;
-    hdr.orig.chansel = chansel;
-    % add the gradiometer definition
-    hdr.grad         = itab2grad(header_info);
 
   case  'combined_ds'
     hdr = read_combined_ds(filename);
@@ -530,6 +501,10 @@ switch headerformat
     % contact Robert Oostenveld if you are interested in real-time acquisition on the CTF system
     % read the header information from shared memory
     hdr = read_shm_header(filename);
+
+  case 'edf'
+    % this reader is largely similar to the bdf reader
+    hdr = read_edf(filename);
 
   case 'eep_avr'
     % check that the required low-level toolbox is available
@@ -703,6 +678,36 @@ switch headerformat
       hdr = db_select('fieldtrip.header', {'nChans', 'nSamples', 'nSamplesPre', 'Fs', 'label'}, 1);
       hdr.label = mxDeserialize(hdr.label);
     end
+
+  case  'itab_raw'
+    % check the presence of the required low-level toolbox
+    hastoolbox('lc-libs', 1);
+    header_info = lcReadHeader(filename);
+    % some channels don't have a label and are not supported by fieldtrip
+    chansel = true(size(header_info.ch));
+    for i=1:length(chansel)
+      chansel(i) = ~isempty(header_info.ch(i).label);
+    end
+    % convert into numeric array with indices
+    chansel = find(chansel);
+    % convert the header information into a fieldtrip compatible format
+    hdr.nChans      = length(chansel);
+    hdr.label       = {header_info.ch(chansel).label};
+    hdr.label       = hdr.label(:);  % should be column vector
+    hdr.Fs          = header_info.smpfq;
+    if header_info.nsmpl==0
+      % for continuous data
+      hdr.nSamples    = header_info.ntpdata;
+      hdr.nSamplesPre = 0; % it is a single continuous trial
+      hdr.nTrials     = 1; % it is a single continuous trial
+    else
+      error('epoched data in a itab_raw file is not yet supported (but should be easy to add)');
+    end
+    % keep the original details AND the list of channels as used by fieldtrip
+    hdr.orig         = header_info;
+    hdr.orig.chansel = chansel;
+    % add the gradiometer definition
+    hdr.grad         = itab2grad(header_info);
 
   case 'micromed_trc'
     orig = read_micromed_trc(filename);
@@ -1116,6 +1121,29 @@ switch headerformat
     end
     hdr.label = hdr.label(:);
     hdr.nChans = length(hdr.label);
+
+  case {'tdt_tsq', 'tdt_tev'}
+    tsq = read_tdt_tsq(headerfile);
+    k = 0;
+    chan = unique([tsq.channel]);
+    % loop over the physical channels
+    for i=1:length(chan)
+      chansel = [tsq.channel]==chan(i);
+      code = unique([tsq(chansel).code]);
+      % loop over the logical channels
+      for j=1:length(code)
+        codesel = [tsq.code]==code(j);
+        % find the first instance of this logical channel
+        this = find(chansel & codesel, 1);
+        % add it to the list of channels
+        k = k + 1;
+        frequency(k) = tsq(this).frequency;
+        label{k}     = [char(typecast(tsq(this).code, 'uint8')) num2str(tsq(this).channel)];
+        tsqorig(k)   = tsq(this);
+      end
+    end
+    % the above code is not complete
+    error('not yet implemented');
 
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
     % chek that the required low-level toolbox is available

@@ -666,6 +666,24 @@ elseif filetype_check_extension(filename, '.nxe')
   manufacturer = 'Nexstim';
   content = 'electrophysiological data';
 
+  % known Tucker-Davis-Technology file types
+elseif filetype_check_extension(filename, '.tbk')
+  type = 'tdt_tbk';
+  manufacturer = 'Tucker-Davis-Technology';
+  content = 'database/tank meta-information';
+elseif filetype_check_extension(filename, '.tdx')
+  type = 'tdt_tdx';
+  manufacturer = 'Tucker-Davis-Technology';
+  content = 'database/tank meta-information';
+elseif filetype_check_extension(filename, '.tsq')
+  type = 'tdt_tsq';
+  manufacturer = 'Tucker-Davis-Technology';
+  content = 'block header information';
+elseif filetype_check_extension(filename, '.tev')
+  type = 'tdt_tev';
+  manufacturer = 'Tucker-Davis-Technology';
+  content = 'electrophysiological data';
+
   % known Curry V4 file types
 elseif filetype_check_extension(filename, '.dap')
   type = 'curry_dap';   % FIXME, can also be MPI Frankfurt electrophysiological data
