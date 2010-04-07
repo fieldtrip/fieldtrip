@@ -3,7 +3,15 @@ Mathworks signal processing toolbox. These functions are modified
 from the corresponding Octave package (see below). The modifications
 that were needed had to do with the slight differences in the MATLAB
 and Octave syntax.
+------------------------------------------------------------------------------
 
+butter.m	this replaces BUTTER from the signal processing toolbox
+
+bilinear.m	helper function for BUTTER
+postpad.m	helper function for BUTTER
+sftrans.m	helper function for BUTTER
+
+------------------------------------------------------------------------------
 Name: Signal
 Version: 1.0.10
 Date: 2009-05-03
