@@ -3,7 +3,7 @@ function [varargout] = funname(varargin)
 % PLINPROJ projects a point onto a line or linepiece
 %
 % Use as
-%   [proj, dist] = ptriproj(l1, l2, r, flag)
+%   [proj, dist] = plinproj(l1, l2, r, flag)
 % where l1 and l2 are the begin and endpoint of the linepiece, and r is 
 % the point that is projected onto the line
 %
