@@ -1,9 +1,9 @@
 function [filt] = preproc_bandpassfilter(dat, Fs, Fbp, N, type, dir)
 
 % PREPROC_BANDPASSFILTER applies a band-pass filter to the data and thereby
-% removes the spectral components in the data except for the ones in the 
+% removes the spectral components in the data except for the ones in the
 % specified frequency band
-% 
+%
 % Use as
 %   [filt] = preproc_bandpassfilter(dat, Fsample, Fbp, N, type, dir)
 % where
@@ -13,7 +13,7 @@ function [filt] = preproc_bandpassfilter(dat, Fs, Fbp, N, type, dir)
 %   N          optional filter order, default is 4 (but) or 25 (fir)
 %   type       optional filter type, can be
 %                'but' Butterworth IIR filter (default)
-%                'fir' FIR filter using Matlab fir1 function 
+%                'fir' FIR filter using Matlab fir1 function
 %   dir        optional filter direction, can be
 %                'onepass'         forward filter only
 %                'onepass-reverse' reverse filter only, i.e. backward in time
@@ -31,7 +31,7 @@ function [filt] = preproc_bandpassfilter(dat, Fs, Fbp, N, type, dir)
 
 % set the default filter order later
 if nargin<4 || isempty(N)
-    N = [];
+  N = [];
 end
 
 % set the default filter type
@@ -47,7 +47,7 @@ end
 % Nyquist frequency
 Fn = Fs/2;
 
-% compute filter coefficients 
+% compute filter coefficients
 switch type
   case 'but'
     if isempty(N)
