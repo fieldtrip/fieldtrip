@@ -19,6 +19,10 @@ if ~isfield(ft_default, 'checksize'),   ft_default.checksize   = 1e5;      end %
 persistent versionpath
 persistent signalpath
 
+% don't use path caching with the persistent variable, this makes it slower
+% but ensures that during the transition the subdirectories are added smoothly
+clear hastoolbox
+
 if isempty(which('hastoolbox'))
   % the fieldtrip/public directory contains the hastoolbox function
   % which is required for the remainder of this script
@@ -46,8 +50,21 @@ try
 end
 
 try
-  % numerous functions depend on this module
+  % this contains the low-level reading functions
   hastoolbox('fileio', 1, 1);
+  hastoolbox('fileio/compat', 1, 1);
+end
+
+try
+  % this is for filtering time-series data
+  hastoolbox('preproc', 1, 1);
+  hastoolbox('preproc/compat', 1, 1);
+end
+
+try
+  % this contains forward models for the EEG and MEG volume conduction problem
+  hastoolbox('forward', 1, 1);
+  hastoolbox('forward/compat', 1, 1);
 end
 
 try
@@ -57,16 +74,16 @@ end
 
 try
   % numerous functions depend on this module
-  hastoolbox('preproc', 1, 1);
+  hastoolbox('inverse', 1, 1);
 end
 
 try
-  % numerous functions depend on this module
+  % this contains intermediate-level plotting functions, e.g. multiplots and 3-d objects
   hastoolbox('plotting', 1, 1);
 end
 
 try
-  % this contains some examples for realtime processing
+  % this contains specific code and examples for realtime processing
   hastoolbox('realtime', 1, 1);
 end
 
@@ -114,8 +131,7 @@ if isempty(versionpath)
   end
 end % if isempty(versionpath)
 
-% test whether compat directories have been added corresponding to another
-% matlab version
+% test whether compat directories have been added corresponding to another matlab version
 p = path;
 r = version('-release');
 v = {
@@ -142,10 +158,8 @@ for i=1:length(v)
     fprintf('Trying to remove incompatible directory from path...\n');
     pause(2.3); % ensure that the user has time to read it
     t = strfind(p, versionpath);
-    p(t:t+length(versionpath)) = []; % don't use rmpath, because it may be broken due to the incorrect "fieldtrip/compat/release" version 
+    p(t:t+length(versionpath)) = []; % don't use rmpath, because it may be broken due to the incorrect "fieldtrip/compat/release" version
     path(p);
   end
 end
-
-        
 
