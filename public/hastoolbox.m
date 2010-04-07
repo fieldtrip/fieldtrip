@@ -130,13 +130,13 @@ switch toolbox
   case '4D-VERSION'
     status  = (exist('read4d') && exist('read4dhdr'));
   case 'SIGNAL'
-    status = hasfunction('medfilt1', toolbox); % also check the availability of a toolbox license
+    status = hasfunction('medfilt1', toolbox) && exist('butter', 'file');   % also check the availability of a toolbox license
   case 'OPTIM'
-    status  = hasfunction('fmincon', toolbox) && hasfunction('fminunc', toolbox); % also check the availability of a toolbox license
+    status  = hasfunction('fmincon', toolbox) && exist('fminunc', 'file');  % also check the availability of a toolbox license
   case 'SPLINES'
-    status  = hasfunction('bspline', toolbox) && hasfunction('csape', toolbox); % also check the availability of a toolbox license
+    status  = hasfunction('bspline', toolbox) && exist('csape', 'file');    % also check the availability of a toolbox license
   case 'IMAGE'
-    status = hasfunction('bwlabeln', toolbox); % also check the availability of a toolbox license
+    status = hasfunction('bwlabeln', toolbox);                              % also check the availability of a toolbox license
   case 'FASTICA'
     status  = exist('fastica', 'file');
   case 'BRAINSTORM'
@@ -253,6 +253,8 @@ function out = fixname(toolbox)
 out = lower(toolbox);
 out(out=='-') = '_'; % fix dashes
 out(out==' ') = '_'; % fix spaces
+out(out=='/') = '_'; % fix forward slashes
+out(out=='\') = '_'; % fix backward slashes
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function
