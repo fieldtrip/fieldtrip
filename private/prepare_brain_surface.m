@@ -48,12 +48,8 @@ if strcmp(cfg.headshape, 'headmodel')
 else
   fprintf('constructing brain surface from headshape file\n');
   % read the headshape from file
-  if filetype(cfg.headshape, 'ctf_shape')
-    shape = read_ctf_shape(cfg.headshape);
-    pnt = shape.pnt;
-  elseif filetype(cfg.headshape, '4d_hs')
-    pnt = read_bti_hs(cfg.headshape);
-  end
+  shape = read_headshape(cfg.headshape);
+  pnt = shape.pnt;
   prj = elproj(pnt);
   tri = delaunay(prj(:,1), prj(:,2));
   % the number of triangles is approximately twice the number of vertices
