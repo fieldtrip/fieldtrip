@@ -40,8 +40,8 @@ end
 
 if ~isfield(data, 'dimord')
   if ~isfield(data, 'trial') || ~iscell(data.trial) || ...
-      ~isfield(data, 'time')  || ~iscell(data.time)  || ...
-      ~isfield(data, 'label') || ~iscell(data.label)
+     ~isfield(data, 'time')  || ~iscell(data.time)  || ...
+     ~isfield(data, 'label') || ~iscell(data.label)
     error('The data does not contain a dimord, but it also does not resemble raw data');
   elseif isfield(data, 'topo')
     % the data resembles a component decomposition
