@@ -8,5 +8,5 @@ function [norm] = electrodenormalize(cfg);
 
 warning('ELECTRODENORMALIZE is deprecated, please use ELECTRODEREALIGN');
 
-[norm] = rejectvisual(cfg);
+[norm] = electroderealign(cfg);
 
