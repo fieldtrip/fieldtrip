@@ -22,9 +22,10 @@ function hs = plot_sens(sens, varargin)
 warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'style', 'coil'});
+keyvalcheck(varargin, 'optional', {'style', 'coil', 'label'});
 style = keyval('style', varargin); if isempty(style), style = 'k.'; end
 coil  = keyval('coil',  varargin); if isempty(coil), coil = false; end
+label = keyval('label', varargin); if isempty(coil), coil = false; end
 
 % convert yes/no string into boolean value
 coil = istrue(coil);
@@ -41,6 +42,25 @@ else
   % two bipolar electrodes, or the bottom coil of a axial gradiometer
   [chan.pnt, chan.label] = channelposition(sens);
   hs = plot3(chan.pnt(:,1), chan.pnt(:,2), chan.pnt(:,3), style);
+  
+  if ~isempty(label)
+    for i=1:length(chan.label)
+      switch label
+        case {'on', 'yes'}
+          str = chan.label{i};
+        case {'off', 'no'}
+          str = '';
+        case {'label' 'labels'}
+          str = chan.label{i};
+        case {'number' 'numbers'}
+          str = num2str(i);
+        otherwise
+          error('unsupported value for option ''label''');
+      end % switch
+      text(chan.pnt(i,1), chan.pnt(i,2), chan.pnt(i,3), str);
+    end % for
+  end % if     
+  
 end
 
 axis vis3d
