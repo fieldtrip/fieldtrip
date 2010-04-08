@@ -47,10 +47,12 @@ classdef featureselector < mvmethod
     end
     
     function [model,desc] = getmodel(obj)
-      % return used subset
+      % return logical array with ones indicating selected features
       
-      model = {obj.params.subset};
-      desc = {'indices of the used features'};
+      model = zeros(obj.indims);
+      model(obj.params.subset) = 1;      
+      model = {model};
+      desc = {'logical array with ones indicating selected features'};
       
     end
     

@@ -89,6 +89,14 @@ classdef regressor < predictor
            
          end
       end
+      
+      function p = significance(post,design,varargin)
+        % TO DO
+        
+        p = 0;
+      
+      end
+      
     end
       
 end

@@ -68,9 +68,10 @@ classdef cspprocessor < preprocessor
 
     properties        
 
-       numpatterns = 1; 
-       filttype = 'CSP0';  
-       outputdatatype = 'powcsp';  %'rawcsp' or 'logpowcsp'
+      numchan
+      numpatterns = 1;
+      filttype = 'CSP0';
+      outputdatatype = 'powcsp';  %'rawcsp' or 'logpowcsp'
        
     end
 

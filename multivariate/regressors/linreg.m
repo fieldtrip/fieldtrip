@@ -93,17 +93,17 @@ classdef linreg < regressor
           
         end
         
-        function Y = map(obj,X)           
-            Y = [X ones(size(X,1),1)] * obj.params.model;            
+        function Y = map(obj,X)
+          Y = [X ones(size(X,1),1)] * obj.params.model;
         end
- 
-         function [m,desc] = getmodel(obj)
-         % return the parameters wrt a class label in some shape 
-                    
-         m = {obj.params.model(1:(end-1))'}; % ignore bias term
-         desc = {'unknown'};
-                    
-       end
+        
+        function [m,desc] = getmodel(obj)
+          % return the parameters wrt a class label in some shape
+          
+          m = {obj.params.model(1:(end-1))'}; % ignore bias term
+          desc = {'unknown'};
+          
+        end
 
     end
 end 

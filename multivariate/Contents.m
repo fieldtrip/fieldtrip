@@ -62,55 +62,37 @@
 % 
 % TO DO
 % 
-% - rewrite inner crossvalidation for parameter selection
 % - check EM code for mixture models
-% - add simple gui
 % - integrate utility functions in relevant classes
 % - test dynamic_clf and also make dynamic_regr/static_regr
 % - repeated calls to train should allow for online learning as much as possible
-% - rethink significance testing and also implement for regressor
+% - rethink significance testing (binomial,wilcoxon,permutation) and also implement for regressor
 % - return standard error of mean as second argument of evaluate
 % - rewrite feature selection stuff and add searchlight (also check blogreg)
 % - better handling of checking of datasets for each method
-% - profiling
 % - rewrite handling of timeseries...
 % - allow arbitrary labels for the classifiers
 % - getmodel add descriptions and make sure they can be remapped (e.g.,
 %   featureselector)
 % - blogreg blinreg return used scale when using multiple updates
-% - check imputation in dataset class using e.g. knnimpute
 % - clean up metric and significance stuff and split up into clf, regress,
 %   and reconstruct
 % - what is positive and negative class? be consistent over datasets wrt
 %   getmodel
 % - test validator.getmodel for transfer learners
 % - automate recompilation of mex files
-% - create visualizer class
 % - IMPLEMENT BLINREG / BLINREG_TRANSFER
-%   reshape getmodel whenever possible
-% - use separate check_data procedure in mva?
 % - check dynamic_classifier and static_classifier code and derivates
 % - throw out redundant svm classifiers; check speed and accuracy
 % - make one_against_one/rest estimate and map functions suitable for
 %   transfer_learning; currently not supported
 % - rewrite one_against_one, combiner etc such that transfer learning is
 %   used on the separate datasets. This simplifies code and allows for more complex designs 
-% - refactor using: perl -p -i -e 's/clfmethod/mvmethod/g' `grep -lr -e 'clfmethod' *`
 % - how to handle multiple regression vs regressors/classifiers that return
 %   mean + error estimates? see e.g. the kalman filter
 % - clean up nclasses field
 % - add wilcoxon test; add multiple outputs for evaluate/significance
-% - feature selection methods should return sparse matrices instead of
-%   reduced matrices in order to keep dimensions consistent. This also allows
-%   models for different folds to be combined (currently fails due to
-%   incompatible dimensions). This requires that all methods can deal with
-%   sparse inputs where the zero inputs are disregarded
 % - crossvalidator 276: roundoff error changes the actual number of used
 %   samples; can go wrong with skewed unique samples; also for ten-fold
-% - rewrite linreg etc in the same fashion as logreg by removing
-%   l1,l2,elasticnet
-% - implement time bars for long operations
-% - remove reconstructors; everything is a classifier or a regressor
-% depending on discrete/continuous univariate or multivariate output
 % - timeseries: implementation for infinite horizon; finite horizon always
 % represented as a static classifier/regressor

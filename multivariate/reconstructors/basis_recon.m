@@ -25,19 +25,21 @@ classdef basis_recon < reconstructor
 % Y = dataset(Y);
 % 
 % % ridge regression on individual elements of the design matrix (i.e., pixel level reconstructions)
-% p = mva({standardizer basis_recon('procedure',{ridge},'verbose',true)});
+% % note however that the ridge regressor already can handle multiple
+% % outputs
+% p = mva({standardizer basis_recon('procedure',{linreg('L2',1e-2)},'verbose',true)});
 % p = p.train(X(1:100,:),Y(1:100,:));
 % r = p.test(X(101:111,:));
 % 
 % % class label probabilities using l2 regularized logistic regression
 % Y = dataset((Y.X > 128) + 1); % threshold data
-% p = mva({standardizer basis_recon('procedure',{l2lr},'verbose',true,'standardize',false)});
+% p = mva({standardizer basis_recon('procedure',{logreg('L2',1e-2)},'verbose',true,'standardize',false)});
 % p = p.train(X(1:100,:),Y(1:100,:));
 % r = p.test(X(101:111,:));
 % 
 % % prelearned ICA basis functions
 % load ica; 
-% p = mva({standardizer basis_recon('A',A,'W',W,'procedure',{ridge},'verbose',true)});
+% p = mva({standardizer basis_recon('A',A,'W',W,'procedure',{linreg('L2',1e-2)},'verbose',true)});
 % p = p.train(X(1:100),Y(1:100));
 % r = p.test(X(101:111));
 % 
@@ -51,7 +53,7 @@ classdef basis_recon < reconstructor
 
   properties
   
-    procedure={linreg('L2',1)}; % the procedure used for prediction of each source
+    procedure={linreg('L2',1e-2)}; % the procedure used for prediction of each source
     
     W; % mapping from input to sources; nsources * nfeatures; whitening included in W
     A; % mapping from sources to outputs; nfeatures * nsources; unwhitening included in A

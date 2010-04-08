@@ -15,18 +15,21 @@ function [acc,sig,cv] = test_procedure(myproc,nfolds,X,Y)
     % load example data
     load covattfrq1
     
-    cvec = ismember(left.label,ft_channelselection({'MLO' 'MRO'},left.label)); % subset of channels
-    fvec = (left.freq >= 8 & left.freq <= 14); % subset of frequencies
+    %cvec = ismember(left.label,ft_channelselection({'MLO' 'MRO'},left.label)); % subset of channels
+    cvec = 1:length(left.label);
+    fvec = (left.freq >= 8 & left.freq <= 100); % subset of frequencies
     tvec = (left.time >= 1.5 & left.time <= 2.5); % subset of time segment
     
     X  = [squeeze(mean(left.powspctrm(:,cvec,fvec,tvec),4)); squeeze(mean(right.powspctrm(:,cvec,fvec,tvec),4))];
     Y  = [ones(size(left.powspctrm,1),1); 2*ones(size(right.powspctrm,1),1)];
-  
+    Y(1:40) = 3;
+    
     if isa(myproc{end},'transfer_learner')
       
       load covattfrq2;
       
-      cvec = ismember(left.label,ft_channelselection({'MLO' 'MRO'},left.label)); % subset of channels
+      %cvec = ismember(left.label,ft_channelselection({'MLO' 'MRO'},left.label)); % subset of channels
+      cvec = 1:length(left.label);
       fvec = (left.freq >= 8 & left.freq <= 14); % subset of frequencies
       tvec = (left.time >= 1.5 & left.time <= 2.5); % subset of time segment
       
