@@ -1,11 +1,11 @@
-function write_event(filename, event, varargin)
+function ft_write_event(filename, event, varargin)
 
-% WRITE_EVENT writes an event structure to a file, a message daemon
+% FT_WRITE_EVENT writes an event structure to a file, a message daemon
 % listening on a network socked, or to another computer connected through
 % the serial port.
 %
 % Use as
-%   write_event(filename, event, ...)
+%   ft_write_event(filename, event, ...)
 %
 % The first argument is a string containing the filename. The second
 % argument is a structure with the event. Multiple events can be
@@ -30,7 +30,7 @@ function write_event(filename, event, varargin)
 %   serial:<port>?key1=value1&key2=value2&...
 %   rfb://<password>@<host>:<port>
 %
-% See also READ_HEADER, READ_DATA, READ_EVENT, WRITE_DATA
+% See also FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA
 
 % Copyright (C) 2007, Robert Oostenveld
 %
@@ -51,7 +51,7 @@ if iscell(filename)
 end
 
 % set the defaults
-eventformat = keyval('eventformat', varargin); if isempty(eventformat), eventformat = filetype(filename); end
+eventformat = keyval('eventformat', varargin); if isempty(eventformat), eventformat = ft_filetype(filename); end
 swapping    = keyval('swapping',    varargin); if isempty(swapping),    swapping = 'native';              end
 append      = keyval('append',      varargin); if isempty(append),      append = 'yes';                   end
 maxqlength  = keyval('maxqlength',  varargin); if isempty(maxqlength),  maxqlength = Inf;                 end

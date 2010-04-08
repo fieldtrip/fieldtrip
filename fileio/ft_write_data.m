@@ -1,10 +1,10 @@
-function write_data(filename, dat, varargin)
+function ft_write_data(filename, dat, varargin)
 
-% WRITE_DATA exports electrophysiological data to a file. The input data is
+% FT_WRITE_DATA exports electrophysiological data to a file. The input data is
 % assumed to be scaled in microVolt.
 %
 % Use as
-%   write_data(filename, dat, ...)
+%   ft_write_data(filename, dat, ...)
 %
 % The specified filename can already contain the filename extention,
 % but that is not required since it will be added automatically.
@@ -26,7 +26,7 @@ function write_data(filename, dat, varargin)
 %   neuralynx_ncs
 %   neuralynx_sdma
 %
-% See also READ_HEADER, READ_DATA, READ_EVENT, WRITE_EVENT
+% See also FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, FT_WRITE_EVENT
 
 % Copyright (C) 2007-2008, Robert Oostenveld
 %
@@ -40,7 +40,7 @@ if isempty(db_blob)
 end
 
 % get the options
-dataformat    = keyval('dataformat',    varargin); if isempty(dataformat), dataformat = filetype(filename); end
+dataformat    = keyval('dataformat',    varargin); if isempty(dataformat), dataformat = ft_filetype(filename); end
 append        = keyval('append',        varargin); if isempty(append), append = false; end
 nbits         = keyval('nbits',         varargin); % for riff_wave
 chanindx      = keyval('chanindx',      varargin);
@@ -175,7 +175,7 @@ switch dataformat
             indx = [indx indx+1];                  % remove the key and the value
             varargin(indx) = [];
           end
-          write_data(filename, dat(:,begsample:endsample), varargin{:}, 'append', false);
+          ft_write_data(filename, dat(:,begsample:endsample), varargin{:}, 'append', false);
           begsample = endsample + 1;
         end
       else

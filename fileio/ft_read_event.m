@@ -1,16 +1,16 @@
-function [event] = read_event(filename, varargin)
+function [event] = ft_read_event(filename, varargin)
 
-% READ_EVENT reads all events from an EEG/MEG dataset and returns
+% FT_READ_EVENT reads all events from an EEG/MEG dataset and returns
 % them in a well defined structure. It is a wrapper around different
 % EEG/MEG file importers, directly supported formats are CTF, Neuromag,
 % EEP, BrainVision, Neuroscan and Neuralynx.
 %
 % Use as
-%   [event] = read_event(filename, ...)
+%   [event] = ft_read_event(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can be
 %   'eventformat'   string
-%   'header'        structure, see READ_HEADER
+%   'header'        structure, see FT_READ_HEADER
 %   'detectflank'   string, can be 'up', 'down' or 'both' (default = 'up')
 %   'trigshift'     integer, number of samples to shift from flank to detect trigger value (default = 0)
 %
@@ -18,7 +18,7 @@ function [event] = read_event(filename, varargin)
 % for filtering the events, e.g. to select only events of a specific
 % type, of a specific value, or events between a specific begin and
 % end sample. This event filtering is especially usefull for real-time
-% processing. See FILTER_EVENT for more details.
+% processing. See FT_FILTER_EVENT for more details.
 %
 % Some data formats have trigger channels that are sampled continuously with
 % the same rate as the electrophysiological data. The default is to detect
@@ -57,7 +57,7 @@ function [event] = read_event(filename, varargin)
 %   t=26; samples_trials = [event(find(strcmp('trial', {event.type}))).sample];
 %   find([event.sample]>samples_trials(t) & [event.sample]<samples_trials(t+1))
 %
-% See also READ_HEADER, READ_DATA, WRITE_DATA, WRITE_EVENT, FILTER_EVENT
+% See also FT_READ_HEADER, FT_READ_DATA, FT_WRITE_DATA, FT_WRITE_EVENT, FT_FILTER_EVENT
 
 % Copyright (C) 2004-2008, Robert Oostenveld
 %
@@ -75,7 +75,7 @@ if iscell(filename)
   % use recursion to read from multiple event sources
   event = [];
   for i=1:numel(filename)
-    tmp   = read_event(filename{i}, varargin{:});
+    tmp   = ft_read_event(filename{i}, varargin{:});
     event = appendevent(event(:), tmp(:));
   end
   return
@@ -103,7 +103,7 @@ flt_maxnumber    = keyval('maxnumber', varargin);
 
 % determine the filetype
 if isempty(eventformat)
-  eventformat = filetype(filename);
+  eventformat = ft_filetype(filename);
 end
 
 % default is to search only for rising or up-going flanks
@@ -138,7 +138,7 @@ switch eventformat
 
   case {'4d' '4d_pdf', '4d_m4d', '4d_xyz'}
     if isempty(hdr)
-      hdr = read_header(filename);
+      hdr = ft_read_header(filename);
     end
     % add the trials to the event structure
     for i=1:hdr.nTrials
@@ -220,7 +220,7 @@ switch eventformat
 
   case {'besa_avr', 'besa_swf'}
     if isempty(hdr)
-      hdr = read_header(filename);
+      hdr = ft_read_header(filename);
     end
     event(end+1).type     = 'average';
     event(end  ).sample   = 1;
@@ -231,7 +231,7 @@ switch eventformat
   case {'biosemi_bdf', 'bham_bdf'}
     % read the header, required to determine the stimulus channels and trial specification
     if isempty(hdr)
-      hdr = read_header(filename);
+      hdr = ft_read_header(filename);
     end
 
     % specify the range to search for triggers, default is the complete file
@@ -260,7 +260,7 @@ switch eventformat
 
     % find the STATUS channel and read the values from it
     schan = find(strcmpi(hdr.label,'STATUS'));
-    sdata = read_data(filename, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', schan);
+    sdata = ft_read_data(filename, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', schan);
 
     % find indices of negative numbers
     bit24i = find(sdata < 0);
@@ -364,7 +364,7 @@ switch eventformat
 
   case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf_old'}
     % obtain the dataset name
-    if filetype(filename, 'ctf_meg4') ||  filetype(filename, 'ctf_res4')
+    if ft_filetype(filename, 'ctf_meg4') ||  ft_filetype(filename, 'ctf_res4')
       filename = fileparts(filename);
     end
     [path, name, ext] = fileparts(filename);
@@ -381,7 +381,7 @@ switch eventformat
 
     % read the header, required to determine the stimulus channels and trial specification
     if isempty(hdr)
-      hdr = read_header(headerfile, 'headerformat', headerformat);
+      hdr = ft_read_header(headerfile, 'headerformat', headerformat);
     end
 
     try
@@ -482,7 +482,7 @@ switch eventformat
     hastoolbox('eeprobe', 1);
     % the headerfile and datafile are the same
     if isempty(hdr)
-      hdr = read_header(filename);
+      hdr = ft_read_header(filename);
     end
     event(end+1).type     = 'average';
     event(end  ).sample   = 1;
@@ -497,7 +497,7 @@ switch eventformat
     trgfile = [filename(1:(end-3)), 'trg'];
     if exist(trgfile, 'file')
       if isempty(hdr)
-        hdr = read_header(filename);
+        hdr = ft_read_header(filename);
       end
       tmp = read_eep_trg(trgfile);
       % translate the EEProbe trigger codes to events
@@ -514,7 +514,7 @@ switch eventformat
 
   case 'egi_egis'
     if isempty(hdr)
-      hdr = read_header(filename);
+      hdr = ft_read_header(filename);
     end
     fhdr   = hdr.orig.fhdr;
     chdr   = hdr.orig.chdr;
@@ -536,7 +536,7 @@ switch eventformat
 
   case 'egi_egia'
     if isempty(hdr)
-      hdr = read_header(filename);
+      hdr = ft_read_header(filename);
     end
     fhdr   = hdr.orig.fhdr;
     chdr   = hdr.orig.chdr;
@@ -564,7 +564,7 @@ switch eventformat
       [header_array, CateNames, CatLengths, preBaseline] = read_sbin_header(filename);
     end
     if isempty(hdr)
-      hdr = read_header(filename,'headerformat','egi_sbin');
+      hdr = ft_read_header(filename,'headerformat','egi_sbin');
     end
     version     = header_array(1);
     unsegmented = ~mod(version, 2);
@@ -779,7 +779,7 @@ switch eventformat
 
   case {'mpi_ds', 'mpi_dap'}
     if isempty(hdr)
-      hdr = read_header(filename);
+      hdr = ft_read_header(filename);
     end
     % determine the DAP files that compromise this dataset
     if isdir(filename)
@@ -831,7 +831,7 @@ switch eventformat
     end
 
     if isempty(hdr)
-      hdr = read_header(filename, 'headerformat', headerformat);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
 
     % note below we've had to include some chunks of code that are only
@@ -853,8 +853,8 @@ switch eventformat
 
     
     if iscontinuous
-      analogindx = find(strcmp(chantype(hdr), 'analog trigger'));
-      binaryindx = find(strcmp(chantype(hdr), 'digital trigger'));
+      analogindx = find(strcmp(ft_chantype(hdr), 'analog trigger'));
+      binaryindx = find(strcmp(ft_chantype(hdr), 'digital trigger'));
       
       
       if isempty(binaryindx)&&isempty(analogindx) 
@@ -910,7 +910,7 @@ switch eventformat
 
   case {'neuralynx_ttl' 'neuralynx_bin' 'neuralynx_dma' 'neuralynx_sdma'}
     if isempty(hdr)
-      hdr = read_header(filename);
+      hdr = ft_read_header(filename);
     end
 
     % specify the range to search for triggers, default is the complete file
@@ -1019,7 +1019,7 @@ switch eventformat
   case 'neuralynx_ds'
     % read the header of the dataset
     if isempty(hdr)
-      hdr = read_header(filename);
+      hdr = ft_read_header(filename);
     end
     % the event file is contained in the dataset directory
     if     exist(fullfile(filename, 'Events.Nev'))
@@ -1060,10 +1060,10 @@ switch eventformat
       eventfile = fullfile(filename, dirlist(find(filetype_check_extension({dirlist.name}, 'ttl'))).name);
       % read the header from the combined dataset
       if isempty(hdr)
-        hdr = read_header(filename);
+        hdr = ft_read_header(filename);
       end
       % read the events from the *.ttl file
-      event = read_event(eventfile);
+      event = ft_read_event(eventfile);
       % convert the sample numbers from the dma or ttl file to the downsampled dataset
       % assume that the *.ttl file is sampled at 32556Hz and is aligned with the rest of the data
       for i=1:length(event)
@@ -1117,7 +1117,7 @@ switch eventformat
 
   case 'nimh_cortex'
     if isempty(hdr)
-      hdr = read_header(filename);
+      hdr = ft_read_header(filename);
     end
     cortex = hdr.orig.trial;
     for i=1:length(cortex)
@@ -1138,7 +1138,7 @@ switch eventformat
 
   case 'ns_avg'
     if isempty(hdr)
-      hdr = read_header(filename);
+      hdr = ft_read_header(filename);
     end
     event(end+1).type     = 'average';
     event(end  ).sample   = 1;
@@ -1149,7 +1149,7 @@ switch eventformat
   case {'ns_cnt', 'ns_cnt16', 'ns_cnt32'}
     % read the header, the original header includes the event table
     if isempty(hdr)
-      hdr = read_header(filename, 'headerformat', eventformat);
+      hdr = ft_read_header(filename, 'headerformat', eventformat);
     end
     % translate the event table into known FieldTrip event types
     for i=1:numel(hdr.orig.event)
@@ -1162,7 +1162,7 @@ switch eventformat
 
   case 'ns_eeg'
     if isempty(hdr)
-      hdr = read_header(filename);
+      hdr = ft_read_header(filename);
     end
     for i=1:hdr.nTrials
       % the *.eeg file has a fixed trigger value for each trial
@@ -1241,6 +1241,6 @@ if ~isempty(event)
 end
 
 % apply the optional filters
-event = filter_event(event, varargin{:});
+event = ft_filter_event(event, varargin{:});
 
 

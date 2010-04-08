@@ -1,13 +1,13 @@
-function [shape] = read_headshape(filename, varargin)
+function [shape] = ft_read_headshape(filename, varargin)
 
-% READ_HEADSHAPE reads the fiducials and/or the measured headshape
+% FT_READ_HEADSHAPE reads the fiducials and/or the measured headshape
 % from a variety of files (like CTF and Polhemus). The headshape and
 % fiducials can for example be used for coregistration.
 %
 % Use as
-%   [shape] = read_headshape(filename)
+%   [shape] = ft_read_headshape(filename)
 %
-% See also READ_VOL, READ_SENS
+% See also FT_READ_VOL, FT_READ_SENS
 
 % Copyright (C) 2008, Robert Oostenveld
 %
@@ -23,7 +23,7 @@ fileformat = keyval('fileformat',  varargin);
 coordinates = keyval('coordinates',  varargin); if isempty(coordinates), coordinates = 'head'; end
 
 if isempty(fileformat)
-    fileformat = filetype(filename);
+    fileformat = ft_filetype(filename);
 end
 
 % start with an empty structure
@@ -37,7 +37,7 @@ switch fileformat
         [p, f, x] = fileparts(filename);
         
         if strcmp(fileformat, 'ctf_old')
-            fileformat = filetype(filename);
+            fileformat = ft_filetype(filename);
         end
         
         if strcmp(fileformat, 'ctf_ds')
@@ -105,7 +105,7 @@ switch fileformat
         shape.fid.label = {'NZ', 'L', 'R'};
         
     case {'neuromag_mne', 'neuromag_fif'}
-        hdr = read_header(filename,'headerformat','neuromag_mne');
+        hdr = ft_read_header(filename,'headerformat','neuromag_mne');
         nFid = size(hdr.orig.dig,2); %work out number of fiducials
         switch coordinates
             case 'head' % digitiser points should be stored in head coordinates by default
@@ -212,7 +212,7 @@ switch fileformat
             % try reading it as electrode positions
             % and treat those as fiducials
             try
-                elec = read_sens(filename);
+                elec = ft_read_sens(filename);
                 if ~senstype(elec, 'eeg')
                     error('headshape information can not be read from MEG gradiometer file');
                 else
@@ -227,7 +227,7 @@ switch fileformat
             % try reading it as volume conductor
             % and treat the skin surface as headshape
             try
-                vol = read_vol(filename);
+                vol = ft_read_vol(filename);
                 if ~voltype(vol, 'bem')
                     error('skin surface can only be extracted from boundary element model');
                 else

@@ -1,6 +1,6 @@
-function [type] = filetype(filename, desired, varargin)
+function [type] = ft_filetype(filename, desired, varargin)
 
-% FILETYPE determines the filetype of many EEG/MEG/MRI data files by
+% FT_FILETYPE determines the filetype of many EEG/MEG/MRI data files by
 % looking at the name, extension and optionally (part of) its contents.
 % It tries to determine the global type of file (which usually
 % corresponds to the manufacturer, the recording system or to the
@@ -8,8 +8,8 @@ function [type] = filetype(filename, desired, varargin)
 % continuous, average).
 %
 % Use as
-%   type = filetype(filename)
-%   type = filetype(dirname)
+%   type = ft_filetype(filename)
+%   type = ft_filetype(dirname)
 %
 % This gives you a descriptive string with the data type, and can be
 % used in a switch-statement. The descriptive string that is returned
@@ -17,14 +17,14 @@ function [type] = filetype(filename, desired, varargin)
 % manufacturer and YYY to the type of the data.
 %
 % Alternatively, use as
-%   flag = filetype(filename, type)
-%   flag = filetype(dirname, type)
+%   flag = ft_filetype(filename, type)
+%   flag = ft_filetype(dirname, type)
 % This gives you a boolean flag (0 or 1) indicating whether the file
 % is of the desired type, and can be used to check whether the
 % user-supplied file is what your subsequent code expects.
 %
 % Alternatively, use as
-%   flag = filetype(dirlist, type)
+%   flag = ft_filetype(dirlist, type)
 % where the dirlist contains a list of files contained within one
 % directory. This gives you a boolean vector indicating for each file
 % whether it is of the desired type.
@@ -92,7 +92,7 @@ if iscell(filename)
       % do not recurse into this directory or the parent directory
       continue
     else
-      type(i) = filetype(filename{i}, desired);
+      type(i) = ft_filetype(filename{i}, desired);
     end
   end
   return
@@ -515,7 +515,7 @@ elseif isdir(filename) && most(filetype_check_extension({ls.name}, '.nte'))
   content = 'spike timestamps';
 
   % these are formally not Neuralynx file formats, but at the FCDC we use them together with Neuralynx
-elseif isdir(filename) && any(filetype({ls.name}, 'neuralynx_ds'))
+elseif isdir(filename) && any(ft_filetype({ls.name}, 'neuralynx_ds'))
   % a downsampled Neuralynx DMA file can be split into three seperate lfp/mua/spike directories
   % treat them as one combined dataset
   type = 'neuralynx_cds';

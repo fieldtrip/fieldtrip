@@ -1,11 +1,11 @@
-function [vol] = read_vol(filename, varargin)
+function [vol] = ft_read_vol(filename, varargin)
 
 % READ_VOL reads a volume conduction model from various manufacturer
 % specific files. Currently supported are ASA, CTF, Neuromag, MBFYS
 % and Matlab.
 %
 % Use as
-%   vol = read_vol(filename, ...)
+%   vol = ft_read_vol(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can be
 %   'fileformat'   string
@@ -13,7 +13,7 @@ function [vol] = read_vol(filename, varargin)
 % The volume conduction model is represented as a structure, and its
 % contents depend on the type of model.
 %
-% See also TRANSFORM_VOL, PREPARE_VOL_SENS, COMPUTE_LEADFIELD
+% See also FT_TRANSFORM_VOL, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2008, Robert Oostenveld
 %
@@ -29,7 +29,7 @@ fileformat = keyval('fileformat',  varargin);
 
 % determine the filetype
 if isempty(fileformat)
-  fileformat = filetype(filename);
+  fileformat = ft_filetype(filename);
 end
 
 switch fileformat

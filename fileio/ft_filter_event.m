@@ -1,9 +1,9 @@
-function event = filter_event(event, varargin)
+function event = ft_filter_event(event, varargin)
 
-% FILTER_EVENT does what its name implies
+% FT_FILTER_EVENT does what its name implies
 %
 % Use as
-%   event = filter_event(event, ...)
+%   event = ft_filter_event(event, ...)
 %
 % The optional arguments should come in key-value pairs and determine the
 % filter characteristics:
@@ -22,7 +22,7 @@ function event = filter_event(event, varargin)
 %   minnumber    = value, applies only if event.number is present
 %   maxnmumber   = value, applies only if event.number is present
 %
-% See also READ_EVEN, WRITE_EVENT
+% See also FT_READ_EVENT, FT_WRITE_EVENT
 
 % Copyright (C) 2007, Robert Oostenveld
 %

@@ -1,10 +1,10 @@
-function [spike] = read_spike(filename, varargin);
+function [spike] = ft_read_spike(filename, varargin);
 
 % READ_SPIKE reads spike timestamps and waveforms from various data
 % formats.
 %
 % Use as
-%  [spike] = read_spike(filename, ...)
+%  [spike] = ft_read_spike(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can be
 %   'spikeformat'
@@ -15,7 +15,7 @@ function [spike] = read_spike(filename, varargin);
 %   spike.timestamp = 1xNchans cell-array, each element contains a vector (1 X Nspikes)
 %   spike.unit      = 1xNchans cell-array, each element contains a vector (1 X Nspikes)
 %
-% See also READ_HEADER, READ_DATA, READ_EVENT
+% See also FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT
 
 % Copyright (C) 2007-2008, Robert Oostenveld
 %
@@ -26,7 +26,7 @@ spikeformat   = keyval('spikeformat',   varargin);
 
 % determine the filetype
 if isempty(spikeformat)
-  spikeformat = filetype(filename);
+  spikeformat = ft_filetype(filename);
 end
 
 switch spikeformat

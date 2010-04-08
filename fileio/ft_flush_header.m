@@ -1,19 +1,19 @@
-function flush_header(filename, varargin)
+function ft_flush_header(filename, varargin)
 
-% FLUSH_HEADER removes the header information from the data queue
+% FT_FLUSH_HEADER removes the header information from the data queue
 % this also removes all data associated with the specific header.
 %
 % Use as
-%   flush_header(filename, ...)
+%   ft_flush_header(filename, ...)
 %
-% See also FLUSH_DATA, FLUSH_EVENT
+% See also FT_FLUSH_DATA, FT_FLUSH_EVENT
 
 % Copyright (C) 2007, Robert Oostenveld
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the defaults
-headerformat = keyval('headerformat', varargin); if isempty(headerformat), headerformat = filetype(filename); end
+headerformat = keyval('headerformat', varargin); if isempty(headerformat), headerformat = ft_filetype(filename); end
 
 switch headerformat
   case 'disp'

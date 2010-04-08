@@ -1,12 +1,12 @@
-function [dat] = read_data(filename, varargin);
+function [dat] = ft_read_data(filename, varargin);
 
-% READ_DATA reads electrophysiological data from a variety of EEG,
+% FT_READ_DATA reads electrophysiological data from a variety of EEG,
 % MEG and LFP files and represents it in a common data-independent
 % format. The supported formats are listed in the accompanying
-% READ_HEADER function.
+% FT_READ_HEADER function.
 %
 % Use as
-%   dat = read_data(filename, ...)
+%   dat = ft_read_data(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can be
 %   'header'         header structure, see READ_HEADER
@@ -26,7 +26,7 @@ function [dat] = read_data(filename, varargin);
 % matrix of size Nchans*Nsamples*Ntrials for epoched or trial-based
 % data when begtrial and endtrial are specified.
 %
-% See also READ_HEADER, READ_EVENT, WRITE_DATA, WRITE_EVENT
+% See also FT_READ_HEADER, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT
 
 % Copyright (C) 2003-2007, Robert Oostenveld, F.C. Donders Centre
 %
@@ -54,7 +54,7 @@ cache         = keyval('cache',         varargin); if isempty(cache), cache = 0;
 
 % determine the filetype
 if isempty(dataformat)
-  dataformat = filetype(filename);
+  dataformat = ft_filetype(filename);
 end
 
 % test whether the file or directory exists
@@ -175,7 +175,7 @@ switch dataformat
         headerformat = 'nmc_archive_k';
     end
     if isempty(hdr)
-        hdr = read_header(headerfile, 'headerformat', headerformat);
+        hdr = ft_read_header(headerfile, 'headerformat', headerformat);
     end
     datafile = filename;
   otherwise
@@ -186,7 +186,7 @@ end
 
 if ~strcmp(filename, datafile) && ~ismember(dataformat, {'ctf_ds', 'ctf_old'})
   filename   = datafile;                % this function will read the data
-  dataformat = filetype(filename);      % update the filetype
+  dataformat = ft_filetype(filename);      % update the filetype
 end
 
 % for backward compatibility, default is to check when it is not continous
@@ -196,7 +196,7 @@ end
 
 % read the header if it is not provided
 if isempty(hdr)
-  hdr = read_header(filename, 'headerformat', headerformat);
+  hdr = ft_read_header(filename, 'headerformat', headerformat);
 end
 
 % set the default channel selection, which is all channels

@@ -1,15 +1,15 @@
-function type = chantype(input, desired)
+function type = ft_chantype(input, desired)
 
-% CHANTYPE determines for each channel what type it is, e.g. planar/axial gradiometer or magnetometer
+% FT_CHANTYPE determines for each channel what type it is, e.g. planar/axial gradiometer or magnetometer
 %
 % Use as
-%   type = chantype(hdr)
-%   type = chantype(sens)
-%   type = chantype(label)
+%   type = ft_chantype(hdr)
+%   type = ft_chantype(sens)
+%   type = ft_chantype(label)
 % or as
-%   type = chantype(hdr, desired)
-%   type = chantype(sens, desired)
-%   type = chantype(label, desired)
+%   type = ft_chantype(hdr, desired)
+%   type = ft_chantype(sens, desired)
+%   type = ft_chantype(label, desired)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
@@ -230,7 +230,7 @@ elseif senstype(input, 'bti')
   end
   sel      = strmatch('unknown', type, 'exact');
   if ~isempty(sel)
-    type(sel)= chantype(tmplabel(sel));
+    type(sel)= ft_chantype(tmplabel(sel));
     sel      = strmatch('unknown', type, 'exact');
     if ~isempty(sel)
       type(sel(strncmp('E', label(sel), 1))) = {'eeg'};

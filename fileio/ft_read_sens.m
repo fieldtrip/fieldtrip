@@ -1,12 +1,12 @@
-function [sens] = read_sens(filename, varargin)
+function [sens] = ft_read_sens(filename, varargin)
 
-% READ_SENS read sensor positions from various manufacturer specific files. 
+% FT_READ_SENS read sensor positions from various manufacturer specific files. 
 % Currently supported are ASA, BESA, Polhemus and Matlab for EEG 
 % electrodes and CTF and Neuromag for MEG gradiometers.
 %
 % Use as
-%   grad = read_sens(filename, ...)  % for gradiometers
-%   elec = read_sens(filename, ...)  % for electrodes
+%   grad = ft_read_sens(filename, ...)  % for gradiometers
+%   elec = ft_read_sens(filename, ...)  % for electrodes
 %
 % Additional options should be specified in key-value pairs and can be
 %   'fileformat'   string
@@ -27,7 +27,7 @@ function [sens] = read_sens(filename, varargin)
 %   grad.tra     NxM matrix with the weight of each coil into each channel
 %   grad.label   cell-array of length N with the label of each of the channels
 %
-% See also TRANSFORM_SENS, PREPARE_VOL_SENS, COMPUTE_LEADFIELD
+% See also FT_TRANSFORM_SENS, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 %
@@ -43,7 +43,7 @@ fileformat = keyval('fileformat',  varargin);
 
 % determine the filetype
 if isempty(fileformat)
-  fileformat = filetype(filename);
+  fileformat = ft_filetype(filename);
 end
 
 switch fileformat
@@ -124,12 +124,12 @@ switch fileformat
    
   case 'itab_raw'
     hastoolbox('fileio');
-    hdr = read_header(filename);
+    hdr = ft_read_header(filename);
     sens = hdr.grad;
     
   case 'neuromag_mne'
     hastoolbox('fileio');
-    hdr = read_header(filename,'headerformat','neuromag_mne');
+    hdr = ft_read_header(filename,'headerformat','neuromag_mne');
     sens = hdr.elec;    
     
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -141,13 +141,13 @@ switch fileformat
     % check the availability of the required low-level toolbox
     % this is required because the read_sens function is also on itself included in the forwinv toolbox
     hastoolbox('fileio');
-    hdr = read_header(filename, 'headerformat', fileformat);
+    hdr = ft_read_header(filename, 'headerformat', fileformat);
     sens = hdr.grad;
     
     
   case 'neuromag_mne_grad'
     hastoolbox('fileio');
-    hdr = read_header(filename,'headerformat','neuromag_mne');
+    hdr = ft_read_header(filename,'headerformat','neuromag_mne');
     sens = hdr.grad;
     
     
@@ -159,7 +159,7 @@ switch fileformat
     % check the availability of the required low-level toolbox
     % this is required because the read_sens function is also on itself included in the forwinv toolbox
     hastoolbox('fileio');
-    hdr = read_header(filename);
+    hdr = ft_read_header(filename);
     
     if isfield(hdr, 'grad')
          sens = hdr.grad;

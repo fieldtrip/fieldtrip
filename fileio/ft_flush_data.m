@@ -1,18 +1,18 @@
-function flush_data(filename, varargin)
+function ft_flush_data(filename, varargin)
 
-% FLUSH_DATA removes all data from the data queue
+% FT_FLUSH_DATA removes all data from the data queue
 %
 % Use as
-%   flush_data(filename, ...)
+%   ft_flush_data(filename, ...)
 %
-% See also FLUSH_HEADER, FLUSH_EVENT
+% See also FT_FLUSH_HEADER, FT_FLUSH_EVENT
 
 % Copyright (C) 2007, Robert Oostenveld
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the defaults
-dataformat = keyval('dataformat', varargin); if isempty(dataformat), dataformat = filetype(filename); end
+dataformat = keyval('dataformat', varargin); if isempty(dataformat), dataformat = ft_filetype(filename); end
 
 switch dataformat
   case 'disp'

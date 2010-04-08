@@ -1,11 +1,11 @@
-function [hdr] = read_header(filename, varargin)
+function [hdr] = ft_read_header(filename, varargin)
 
-% READ_HEADER reads header information from a variety of EEG, MEG and LFP
+% FT_READ_HEADER reads header information from a variety of EEG, MEG and LFP
 % files and represents the header information in a common data-indepentend
 % format. The supported formats are listed below.
 %
 % Use as
-%   hdr = read_header(filename, ...)
+%   hdr = ft_read_header(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can be
 %   'headerformat'   string
@@ -65,7 +65,7 @@ if isempty(db_blob)
 end
 
 % test whether the file or directory exists
-if ~exist(filename, 'file') && ~strcmp(filetype(filename), 'ctf_shm') && ~strcmp(filetype(filename), 'fcdc_mysql') && ~strcmp(filetype(filename), 'fcdc_buffer')
+if ~exist(filename, 'file') && ~strcmp(ft_filetype(filename), 'ctf_shm') && ~strcmp(ft_filetype(filename), 'fcdc_mysql') && ~strcmp(ft_filetype(filename), 'fcdc_buffer')
   error('FILEIO:InvalidFileName', 'file or directory ''%s'' does not exist', filename);
 end
 
@@ -77,7 +77,7 @@ retry        = keyval('retry',        varargin); if isempty(retry), retry = fals
 
 % determine the filetype
 if isempty(headerformat)
-  headerformat = filetype(filename);
+  headerformat = ft_filetype(filename);
 end
 
 % start with an empty header
@@ -172,9 +172,9 @@ switch headerformat
     headerfile = filename;
 end
 
-if ~strcmp(filename, headerfile) && ~filetype(filename, 'ctf_ds')
+if ~strcmp(filename, headerfile) && ~ft_filetype(filename, 'ctf_ds')
   filename     = headerfile;                % this function will read the header
-  headerformat = filetype(filename);        % update the filetype
+  headerformat = ft_filetype(filename);        % update the filetype
 end
 
 
@@ -187,7 +187,7 @@ if cache && exist(headerfile, 'file') && ~isempty(cacheheader)
     % fprintf('got header from cache\n');
     hdr = rmfield(cacheheader, 'details');
 
-    switch filetype(datafile)
+    switch ft_filetype(datafile)
       case {'ctf_ds' 'ctf_meg4' 'ctf_old' 'read_ctf_res4'}
         % for realtime analysis EOF chasing the res4 does not correctly
         % estimate the number of samples, so we compute it on the fly
@@ -311,7 +311,7 @@ switch headerformat
     if any(diff(hdr.orig.SampleRate))
       error('channels with different sampling rate not supported');
     end
-    if filetype(filename, 'bham_bdf')
+    if ft_filetype(filename, 'bham_bdf')
       % TODO channel renaming should be made a general option
       % this is for the Biosemi system used at the University of Birmingham
       labelold = { 'A1' 'A2' 'A3' 'A4' 'A5' 'A6' 'A7' 'A8' 'A9' 'A10' 'A11' 'A12' 'A13' 'A14' 'A15' 'A16' 'A17' 'A18' 'A19' 'A20' 'A21' 'A22' 'A23' 'A24' 'A25' 'A26' 'A27' 'A28' 'A29' 'A30' 'A31' 'A32' 'B1' 'B2' 'B3' 'B4' 'B5' 'B6' 'B7' 'B8' 'B9' 'B10' 'B11' 'B12' 'B13' 'B14' 'B15' 'B16' 'B17' 'B18' 'B19' 'B20' 'B21' 'B22' 'B23' 'B24' 'B25' 'B26' 'B27' 'B28' 'B29' 'B30' 'B31' 'B32' 'C1' 'C2' 'C3' 'C4' 'C5' 'C6' 'C7' 'C8' 'C9' 'C10' 'C11' 'C12' 'C13' 'C14' 'C15' 'C16' 'C17' 'C18' 'C19' 'C20' 'C21' 'C22' 'C23' 'C24' 'C25' 'C26' 'C27' 'C28' 'C29' 'C30' 'C31' 'C32' 'D1' 'D2' 'D3' 'D4' 'D5' 'D6' 'D7' 'D8' 'D9' 'D10' 'D11' 'D12' 'D13' 'D14' 'D15' 'D16' 'D17' 'D18' 'D19' 'D20' 'D21' 'D22' 'D23' 'D24' 'D25' 'D26' 'D27' 'D28' 'D29' 'D30' 'D31' 'D32' 'EXG1' 'EXG2' 'EXG3' 'EXG4' 'EXG5' 'EXG6' 'EXG7' 'EXG8' 'Status'};
@@ -1220,7 +1220,7 @@ sel = zeros(size(lst));
 for i=1:length(lst)
   % read the header of each individual file
   try
-    thishdr = read_header(lst{i});
+    thishdr = ft_read_header(lst{i});
     if isstruct(thishdr)
       thishdr.filename = lst{i};
     end

@@ -1,11 +1,11 @@
-function flush_event(filename, varargin)
+function ft_flush_event(filename, varargin)
 
-% FLUSH_EVENT removes all events from the event queue
+% FT_FLUSH_EVENT removes all events from the event queue
 %
 % Use as
-%   flush_event(filename, ...)
+%   ft_flush_event(filename, ...)
 %
-% See also FLUSH_HEADER, FLUSH_DATA
+% See also FT_FLUSH_HEADER, FT_FLUSH_DATA
 
 % Copyright (C) 2007, Robert Oostenveld
 %
@@ -14,7 +14,7 @@ function flush_event(filename, varargin)
 % TODO implement filtering
 
 % set the defaults
-eventformat = keyval('eventformat', varargin); if isempty(eventformat), eventformat = filetype(filename); end
+eventformat = keyval('eventformat', varargin); if isempty(eventformat), eventformat = ft_filetype(filename); end
 
 switch eventformat
   case 'disp'

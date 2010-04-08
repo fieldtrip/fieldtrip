@@ -1,12 +1,12 @@
-function destroy_buffer
+function ft_destroy_buffer
 
-% DESTROY_BUFFER stops the thread with the TCP server attached to
+% FT_DESTROY_BUFFER stops the thread with the TCP server attached to
 % the local Matlab instance and removes all data from memory.
 %
 % Use as
-%   destroy_buffer
+%   ft_destroy_buffer
 %
-% See also CREATE_BUFFER
+% See also FT_CREATE_BUFFER
 
 % clearing the mex file from memory will cause the function registered with
 % mexAtExit to be executed. This function will then stop the threads and
