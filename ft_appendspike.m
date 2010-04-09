@@ -55,7 +55,7 @@ if all(isspike)
 else
   % this checks the validity of the input data and simultaneously renames it for convenience
   data  = varargin{1}; % checkdata(varargin{1}, 'datatype', 'raw');
-  spike = appendspike([], varargin{2:end}); 
+  spike = ft_appendspike([], varargin{2:end}); 
 
   % check the validity of the channel labels
   label = cat(1, data.label(:), spike.label(:));

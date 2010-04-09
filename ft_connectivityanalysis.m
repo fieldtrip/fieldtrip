@@ -131,14 +131,14 @@ dtype = datatype(data);
 % FIXME trial selection has to be implemented still
 
 if isfield(data, 'label'), 
-    cfg.channel     = channelselection(cfg.channel, data.label);
+    cfg.channel     = ft_channelselection(cfg.channel, data.label);
     if ~isempty(cfg.partchannel)
-        cfg.partchannel = channelselection(cfg.partchannel, data.label);
+        cfg.partchannel = ft_channelselection(cfg.partchannel, data.label);
     end     
 end
 
 if isfield(data, 'label') && ~isempty(cfg.channelcmb),
-    cfg.channelcmb = channelcombination(cfg.channelcmb, cfg.channel, 1); 
+    cfg.channelcmb = ft_channelcombination(cfg.channelcmb, cfg.channel, 1); 
 end
 
 % check whether the required inparam is present in the data
@@ -189,7 +189,7 @@ if normrpt && hasrpt,
 end
 
 if ~isempty(cfg.partchannel)
-    allchannel = channelselection(cfg.channel, data.label);
+    allchannel = ft_channelselection(cfg.channel, data.label);
     pchanindx  = match_str(allchannel,cfg.partchannel);
     kchanindx  = setdiff(1:numel(allchannel), pchanindx);
     keep       = allchannel(kchanindx);

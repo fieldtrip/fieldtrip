@@ -55,7 +55,7 @@ if nargin == 1
   isfetch = 0;
   cfg = checkconfig(cfg, 'dataset2files', {'yes'});
   cfg = checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-  hdr = read_header(cfg.headerfile);
+  hdr = ft_read_header(cfg.headerfile);
 elseif nargin == 2
   isfetch = 1;
   cfg = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
@@ -72,7 +72,7 @@ if ~isfield(cfg, 'continuous')
 end
 
 % find the channel labels present in the data and their indices
-label = channelselection(cfg.artfctdef.clip.channel, hdr.label);
+label = ft_channelselection(cfg.artfctdef.clip.channel, hdr.label);
 sgnindx = match_str(hdr.label, label);
 
 % make a local copy for convenience
@@ -86,7 +86,7 @@ for trlop=1:ntrl
   if isfetch
     dat = fetch_data(data,        'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', sgnindx);
   else
-    dat = read_data(cfg.datafile, 'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', sgnindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
+    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', sgnindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
   end
   % apply filtering etc to the data
   datflt = preproc(dat, label, hdr.Fs, artfctdef, cfg.trl(trlop,3));

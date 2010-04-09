@@ -57,7 +57,7 @@ if ~isfield(cfg, 'channel'),       cfg.channel = 'all';        end
 if ~isfield(cfg, 'numcomponent'),  cfg.numcomponent = 'all';   end
 
 % select channels, has to be done prior to handling of previous (un)mixing matrix
-cfg.channel = channelselection(cfg.channel, data.label);
+cfg.channel = ft_channelselection(cfg.channel, data.label);
 
 if isfield(cfg, 'topo') && isfield(cfg, 'topolabel')
   % use the previously determined unmixing matrix on this dataset
@@ -144,7 +144,7 @@ if strcmp(cfg.blc, 'yes')
   % optionally perform baseline correction on each trial
   fprintf('baseline correcting data \n');
   for trial=1:Ntrials
-    data.trial{trial} = preproc_baselinecorrect(data.trial{trial});
+    data.trial{trial} = ft_preproc_baselinecorrect(data.trial{trial});
   end
 end
 

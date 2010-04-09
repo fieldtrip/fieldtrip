@@ -177,7 +177,7 @@ if isfield(datacfg, 'previous')
     % increment the depth counter
     depth = depth + 1;
     % use recursion to parse the previous section of the tree
-    analysisprotocol(cfg, datacfg.previous);
+    ft_analysisprotocol(cfg, datacfg.previous);
   elseif iscell(datacfg.previous)
     for i=1:length(datacfg.previous(:))
       % increment the branch counter
@@ -185,7 +185,7 @@ if isfield(datacfg, 'previous')
       % increment the depth counter
       depth = depth + 1;
       % use recursion to parse each previous section of the tree
-      analysisprotocol(cfg, datacfg.previous{i});
+      ft_analysisprotocol(cfg, datacfg.previous{i});
     end
   end
   % revert to the orignal parent

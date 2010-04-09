@@ -93,9 +93,9 @@ end
 
 % define the known groups with channel labels
 labelall  = datachannel;
-label1020 = senslabel('eeg1020'); % use external helper function
-label1010 = senslabel('eeg1010'); % use external helper function
-label1005 = senslabel('eeg1005'); % use external helper function
+label1020 = ft_senslabel('eeg1020'); % use external helper function
+label1010 = ft_senslabel('eeg1010'); % use external helper function
+label1005 = ft_senslabel('eeg1005'); % use external helper function
 labelchwilla = {'Fz', 'Cz', 'Pz', 'F7', 'F8', 'LAT', 'RAT', 'LT', 'RT', 'LTP', 'RTP', 'OL', 'OR', 'FzA', 'Oz', 'F7A', 'F8A', 'F3A', 'F4A', 'F3', 'F4', 'P3', 'P4', 'T5', 'T6', 'P3P', 'P4P'}';
 labelbham = {'P9', 'PPO9h', 'PO7', 'PPO5h', 'PPO3h', 'PO5h', 'POO9h', 'PO9', 'I1', 'OI1h', 'O1', 'POO1', 'PO3h', 'PPO1h', 'PPO2h', 'POz', 'Oz', 'Iz', 'I2', 'OI2h', 'O2', 'POO2', 'PO4h', 'PPO4h', 'PO6h', 'POO10h', 'PO10', 'PO8', 'PPO6h', 'PPO10h', 'P10', 'P8', 'TPP9h', 'TP7', 'TTP7h', 'CP5', 'TPP7h', 'P7', 'P5', 'CPP5h', 'CCP5h', 'CP3', 'P3', 'CPP3h', 'CCP3h', 'CP1', 'P1', 'Pz', 'CPP1h', 'CPz', 'CPP2h', 'P2', 'CPP4h', 'CP2', 'CCP4h', 'CP4', 'P4', 'P6', 'CPP6h', 'CCP6h', 'CP6', 'TPP8h', 'TP8', 'TPP10h', 'T7', 'FTT7h', 'FT7', 'FC5', 'FCC5h', 'C5', 'C3', 'FCC3h', 'FC3', 'FC1', 'C1', 'CCP1h', 'Cz', 'FCC1h', 'FCz', 'FFC1h', 'Fz', 'FFC2h', 'FC2', 'FCC2h', 'CCP2h', 'C2', 'C4', 'FCC4h', 'FC4', 'FC6', 'FCC6h', 'C6', 'TTP8h', 'T8', 'FTT8h', 'FT8', 'FT9', 'FFT9h', 'F7', 'FFT7h', 'FFC5h', 'F5', 'AFF7h', 'AF7', 'AF5h', 'AFF5h', 'F3', 'FFC3h', 'F1', 'AF3h', 'Fp1', 'Fpz', 'Fp2', 'AFz', 'AF4h', 'F2', 'FFC4h', 'F4', 'AFF6h', 'AF6h', 'AF8', 'AFF8h', 'F6', 'FFC6h', 'FFT8h', 'F8', 'FFT10h', 'FT10'};
 labelref  = {'M1', 'M2', 'LM', 'RM', 'A1', 'A2'}';
@@ -134,7 +134,7 @@ labelmeg   = [];
 labelmref  = [];
 labeleeg   = [];
 
-switch senstype(datachannel)
+switch ft_senstype(datachannel)
 
   case {'yokogawa', 'yokogawa160', 'yokogawa160_planar'}
     % all Yokogawa axial gradiometer channels start with AG
@@ -204,7 +204,7 @@ if ~isempty(badchannel)
   for i=1:length(badchannel)
     badchannel{i} = badchannel{i}(2:end);                 % remove the '-' from the channel label
   end
-  badchannel = channelselection(badchannel, datachannel); % support exclusion of channel groups
+  badchannel = ft_channelselection(badchannel, datachannel); % support exclusion of channel groups
   channel(findbadchannel) = [];                           % remove them from the channels to be processed
 end
 

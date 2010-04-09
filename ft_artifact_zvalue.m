@@ -102,7 +102,7 @@ if nargin > 1
 elseif nargin == 1
   % only cfg given
   isfetch = 0;
-  hdr = read_header(cfg.headerfile);
+  hdr = ft_read_header(cfg.headerfile);
 end
 
 % set default cfg.continuous
@@ -124,7 +124,7 @@ trl(:,3)      = nan;                         % the offset is not correct any mor
 trllength     = trl(:,2) - trl(:,1) + 1;     % length of each trial
 numtrl        = size(trl,1);
 cfg.artfctdef.zvalue.trl = trl;              % remember where we are going to look for artifacts
-cfg.artfctdef.zvalue.channel = channelselection(cfg.artfctdef.zvalue.channel, hdr.label);
+cfg.artfctdef.zvalue.channel = ft_channelselection(cfg.artfctdef.zvalue.channel, hdr.label);
 sgnind        = match_str(hdr.label, cfg.artfctdef.zvalue.channel);
 numsgn        = length(sgnind);
 
@@ -144,7 +144,7 @@ for trlop = 1:numtrl
   if isfetch
     dat{trlop} = fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
   else
-    dat{trlop} = read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
+    dat{trlop} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
   end
   dat{trlop} = preproc(dat{trlop}, cfg.artfctdef.zvalue.channel, hdr.Fs, cfg.artfctdef.zvalue, [], fltpadding, fltpadding);
   % accumulate the sum and the sum-of-squares

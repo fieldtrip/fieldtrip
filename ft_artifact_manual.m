@@ -76,8 +76,8 @@ end
 fprintf('Reading raw data...');
 cfg = checkconfig(cfg, 'dataset2files', {'yes'});
 cfg = checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-hdr = read_header(cfg.headerfile);
-cfg.artfctdef.manual.channel=channelselection(cfg.artfctdef.manual.channel, hdr.label);
+hdr = ft_read_header(cfg.headerfile);
+cfg.artfctdef.manual.channel=ft_channelselection(cfg.artfctdef.manual.channel, hdr.label);
 cfg.artfctdef.manual.trl=cfg.trl;
 if(isempty(cfg.artfctdef.manual.channel))
   error(sprintf('\nNo channels selected for artifact_manual!\nSelect at least one channel in cfg.artfctdef.manual.channel'));
@@ -100,7 +100,7 @@ if ~isfield(cfg, 'continuous')
     end
 end
 
-show=read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', hdr.nTrials*hdr.nSamples, 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
+show=ft_read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', hdr.nTrials*hdr.nSamples, 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
 show=show';
 
 N=length(show);

@@ -45,8 +45,8 @@ if ~strcmp(cfg.trials, 'all')
 end
 
 % determine the type of data
-iseeg = senstype(data, 'eeg');
-ismeg = senstype(data, 'meg');
+iseeg = ft_senstype(data, 'eeg');
+ismeg = ft_senstype(data, 'meg');
 
 if iseeg
   sens = data.elec;
@@ -57,7 +57,7 @@ else
 end
 
 % get the selection of channels that are bad
-cfg.badchannel = channelselection(cfg.badchannel, data.label);
+cfg.badchannel = ft_channelselection(cfg.badchannel, data.label);
 [goodchanlabels,goodchanindcs] = setdiff(data.label,cfg.badchannel);
 [goodsenslabels,goodsensindcs] = intersect(sens.label,goodchanlabels);
 

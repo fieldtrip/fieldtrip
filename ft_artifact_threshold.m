@@ -76,7 +76,7 @@ if nargin == 1
   isfetch = 0;
   cfg = checkconfig(cfg, 'dataset2files', {'yes'});
   cfg = checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-  hdr = read_header(cfg.headerfile);
+  hdr = ft_read_header(cfg.headerfile);
 elseif nargin == 2
   isfetch = 1;
   cfg = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
@@ -94,7 +94,7 @@ end
 
 % get the remaining settings
 numtrl      = size(cfg.trl,1);
-channel     = channelselection(artfctdef.channel, hdr.label);
+channel     = ft_channelselection(artfctdef.channel, hdr.label);
 channelindx = match_str(hdr.label,channel);
 artifact    = [];
 
@@ -102,7 +102,7 @@ for trlop = 1:numtrl
   if isfetch
     dat = fetch_data(data,        'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
   else
-    dat = read_data(cfg.datafile, 'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
+    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
   end
   dat = preproc(dat, channel, hdr.Fs, artfctdef, cfg.trl(trlop,3));
   % compute the min, max and range over all channels and samples

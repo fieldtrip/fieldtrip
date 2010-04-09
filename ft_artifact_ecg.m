@@ -62,7 +62,7 @@ end
 if nargin == 1,
   cfg = checkconfig(cfg, 'dataset2files', {'yes'});
   cfg = checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-  hdr = read_header(cfg.headerfile);
+  hdr = ft_read_header(cfg.headerfile);
   trl = cfg.trl;
 elseif nargin == 2,
   cfg = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
@@ -73,7 +73,7 @@ artfctdef     = cfg.artfctdef.ecg;
 padsmp        = round(artfctdef.padding*hdr.Fs);
 ntrl          = size(trl,1);
 artfctdef.trl = trl;
-artfctdef.channel = channelselection(artfctdef.channel, hdr.label);
+artfctdef.channel = ft_channelselection(artfctdef.channel, hdr.label);
 artfctdef.blc = 'yes';
 sgnind        = match_str(hdr.label, artfctdef.channel);
 numecgsgn     = length(sgnind);
@@ -98,13 +98,13 @@ end
 if nargin==2,
   tmpcfg = [];
   tmpcfg.channel = artfctdef.channel;
-  ecgdata = preprocessing(tmpcfg, data);
+  ecgdata = ft_preprocessing(tmpcfg, data);
   ecg     = ecgdata.trial;
 end
 
 for j = 1:ntrl
   if nargin==1,
-    ecg{j} = read_data(cfg.datafile, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
+    ecg{j} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
   end
   ecg{j} = preproc(ecg{j}, artfctdef.channel, hdr.Fs, artfctdef, [], fltpadding, fltpadding);
   ecg{j} = ecg{j}.^2;
@@ -193,7 +193,7 @@ trl(trl(:,2)>hdr.nSamples.*hdr.nTrials,:) = [];
 % qrs-triggered average
 % FIXME, at present this only works for continuous data: the assumption can
 % be made that all trials are equally long.
-sgn    = channelselection(artfctdef.inspect, hdr.label);
+sgn    = ft_channelselection(artfctdef.inspect, hdr.label);
 megind = match_str(hdr.label, sgn);
 sgnind = [megind(:); sgnind];
 dat    = zeros(length(sgnind), trl(1,2)-trl(1,1)+1);
@@ -204,15 +204,15 @@ if ~isempty(sgnind)
   for j = 1:ntrl
     fprintf('reading and preprocessing trial %d of %d\n', j, ntrl);
     if nargin==1,
-      dum = read_data(cfg.datafile, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
-      dat = dat + preproc_baselinecorrect(dum);
+      dum = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
+      dat = dat + ft_preproc_baselinecorrect(dum);
       ntrlok = ntrlok + 1;
     elseif nargin==2,
       dum = fetch_data(data, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'docheck', 0);
       if any(~isfinite(dum(:))),
       else
         ntrlok = ntrlok + 1;
-        dat    = dat + preproc_baselinecorrect(dum);
+        dat    = dat + ft_preproc_baselinecorrect(dum);
       end
     end
   end

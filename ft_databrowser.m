@@ -93,7 +93,7 @@ if nargin>1
   % fetch the events
   event = fetch_event(data);
   
-  cfg.channel = channelselection(cfg.channel, data.label);
+  cfg.channel = ft_channelselection(cfg.channel, data.label);
   chansel = match_str(data.label, cfg.channel);
   fsample = 1/(data.time{1}(2)-data.time{1}(1));
   Nchans  = length(chansel);
@@ -104,16 +104,16 @@ if nargin>1
   
   if strcmp(cfg.viewmode, 'component')
     % read or create the layout that will be used for the topoplots
-    cfg.layout = prepare_layout(cfg, data);
+    cfg.layout = ft_prepare_layout(cfg, data);
   end
   
 else
   % read the header
-  hdr = read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
   
   % read the events
   if ~isempty(cfg.eventfile)
-    event = read_event(cfg.eventfile);
+    event = ft_read_event(cfg.eventfile);
   else
     event = [];
   end
@@ -145,7 +145,7 @@ else
     cfg.trl = trl;
   end
   
-  cfg.channel = channelselection(cfg.channel, hdr.label);
+  cfg.channel = ft_channelselection(cfg.channel, hdr.label);
   chansel = match_str(hdr.label, cfg.channel);
   fsample = hdr.Fs;
   Nchans  = length(chansel);
@@ -156,7 +156,7 @@ else
   
   if strcmp(cfg.viewmode, 'component')
     % read or create the layout that will be used for the topoplots
-    cfg.layout = prepare_layout(cfg);
+    cfg.layout = ft_prepare_layout(cfg);
   end
 end
 
@@ -187,7 +187,7 @@ if isnumeric(cfg.colorgroups)
   B = cfg.channelcolormap(:,3);
   chan_colors = [R(cfg.colorgroups(:)) G(cfg.colorgroups(:)) B(cfg.colorgroups(:))]; 
 elseif strcmp(cfg.colorgroups, 'chantype')
-  type = chantype(labels_all);
+  type = ft_chantype(labels_all);
   [tmp1 tmp2 cfg.colorgroups] = unique(type);
   fprintf('%3d colorgroups were identified\n',length(tmp1))
   R = cfg.channelcolormap(:,1);
@@ -747,7 +747,7 @@ end
 
 if isempty(opt.orgdata)
   fprintf('reading data... ');
-  dat = read_data(opt.cfg.datafile, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', strcmp(opt.cfg.continuous, 'no'), 'dataformat', opt.cfg.dataformat, 'headerformat', opt.cfg.headerformat);
+  dat = ft_read_data(opt.cfg.datafile, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', strcmp(opt.cfg.continuous, 'no'), 'dataformat', opt.cfg.dataformat, 'headerformat', opt.cfg.headerformat);
 else
   fprintf('fetching data... ');
   dat = fetch_data(opt.orgdata, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx);
@@ -814,7 +814,7 @@ switch opt.cfg.viewmode
     tmpcfg.channel = opt.cfg.channel;
     tmpcfg.skipcomnt = 'yes';
     tmpcfg.skipscale = 'yes';
-    laytime = prepare_layout(tmpcfg, opt.orgdata);
+    laytime = ft_prepare_layout(tmpcfg, opt.orgdata);
     
     hlim = [tim(1) tim(end)];
     vlim = [-opt.cfg.zscale +opt.cfg.zscale];
@@ -878,11 +878,11 @@ switch opt.cfg.viewmode
     tmpcfg.channel = opt.cfg.channel;
     tmpcfg.skipcomnt = 'yes';
     tmpcfg.skipscale = 'yes';
-    laytime = prepare_layout(tmpcfg, opt.orgdata);
+    laytime = ft_prepare_layout(tmpcfg, opt.orgdata);
     
     tmpcfg = [];
     tmpcfg.layout = opt.cfg.layout;
-    laychan = prepare_layout(tmpcfg, opt.orgdata);
+    laychan = ft_prepare_layout(tmpcfg, opt.orgdata);
     
     % determine the position of each of the topographies
     laytopo.pos(:,1)  = laytime.pos(:,1) - laytime.width/2 - laytime.height*2;

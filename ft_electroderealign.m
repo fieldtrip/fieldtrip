@@ -145,7 +145,7 @@ if useheadshape
     headshape.pnt = cfg.headshape;
   elseif ischar(cfg.headshape)
     % read the headshape from file
-    headshape = read_headshape(cfg.headshape);
+    headshape = ft_read_headshape(cfg.headshape);
   else
     error('cfg.headshape is not specified correctly')
   end
@@ -160,7 +160,7 @@ end
 if isfield(cfg, 'elec')
   elec = cfg.elec;
 elseif isfield(cfg, 'elecfile')
-  elec = read_sens(cfg.elecfile);
+  elec = ft_read_sens(cfg.elecfile);
 else
   % start with an empty set of electrodes (usefull for manual positioning)
   elec = [];
@@ -200,9 +200,9 @@ if usetemplate && any(strcmp(cfg.method, {'rigidbody', 'globalrescale', 'traditi
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   % determine electrode selection and overlapping subset for warping
-  cfg.channel = channelselection(cfg.channel, elec.label);
+  cfg.channel = ft_channelselection(cfg.channel, elec.label);
   for i=1:Ntemplate
-    cfg.channel = channelselection(cfg.channel, template(i).label);
+    cfg.channel = ft_channelselection(cfg.channel, template(i).label);
   end
 
   % make subselection of electrodes
@@ -269,7 +269,7 @@ elseif useheadshape && any(strcmp(cfg.method, {'rigidbody', 'globalrescale', 'tr
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   % determine electrode selection and overlapping subset for warping
-  cfg.channel = channelselection(cfg.channel, elec.label);
+  cfg.channel = ft_channelselection(cfg.channel, elec.label);
 
   % make subselection of electrodes
   [cfgsel, datsel] = match_str(cfg.channel, elec.label);
@@ -306,7 +306,7 @@ elseif strcmp(cfg.method, 'realignfiducial')
   fprintf('using fiducials {''%s'', ''%s'', ''%s''}\n', cfg.fiducial{1}, cfg.fiducial{2}, cfg.fiducial{3});
 
   % determine electrode selection
-  cfg.channel = channelselection(cfg.channel, elec.label);
+  cfg.channel = ft_channelselection(cfg.channel, elec.label);
   [cfgsel, datsel] = match_str(cfg.channel, elec.label);
   elec.label = elec.label(datsel);
   elec.pnt   = elec.pnt(datsel,:);
@@ -630,7 +630,7 @@ R = rotate   ([rx ry rz]);
 T = translate([tx ty tz]);
 S = scale    ([sx sy sz]);
 H = S * T * R;
-elec = transform_sens(H, elec);
+elec = ft_transform_sens(H, elec);
 axis vis3d; cla
 xlabel('x')
 ylabel('y')
@@ -679,7 +679,7 @@ R = rotate   ([rx ry rz]);
 T = translate([tx ty tz]);
 S = scale    ([sx sy sz]);
 H = S * T * R;
-elec = transform_headshape(H, elec);
+elec = ft_transform_headshape(H, elec);
 transform = H * transform;
 set(findobj(fig, 'tag', 'rx'), 'string', 0);
 set(findobj(fig, 'tag', 'ry'), 'string', 0);
