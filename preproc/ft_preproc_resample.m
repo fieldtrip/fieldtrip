@@ -1,9 +1,9 @@
-function [dat, tim] = preproc_resample(dat, Fold, Fnew, method)
+function [dat, tim] = ft_preproc_resample(dat, Fold, Fnew, method)
 
-% PREPROC_RESAMPLE resamples all channels in the data matrix
+% FT_PREPROC_RESAMPLE resamples all channels in the data matrix
 %
 % Use as
-%   dat = preproc_resample(dat, Fold, Fnew, method)
+%   dat = ft_preproc_resample(dat, Fold, Fnew, method)
 % where
 %   dat    = matrix with the input data (Nchans X Nsamples)
 %   Fold   = scalar, original sampling frequency in Hz
@@ -14,7 +14,7 @@ function [dat, tim] = preproc_resample(dat, Fold, Fnew, method)
 
 if nargout==2
   tim = 1:size(dat,2);
-  tim = preproc_resample(tim, Fold, Fnew, method);
+  tim = ft_preproc_resample(tim, Fold, Fnew, method);
 end
 
 if Fold==Fnew

@@ -1,10 +1,10 @@
-function [dat] = preproc_derivative(dat, order, padding)
+function [dat] = ft_preproc_derivative(dat, order, padding)
 
-% PREPROC_DERIVATIVE computes the temporal Nth order derivative of the
+% FT_PREPROC_DERIVATIVE computes the temporal Nth order derivative of the
 % data
 %
 % Use as
-%   [dat] = preproc_derivative(dat, order, padding)
+%   [dat] = ft_preproc_derivative(dat, order, padding)
 % where
 %   dat        data matrix (Nchans X Ntime)
 %   order      number representing the Nth derivative (default = 1)

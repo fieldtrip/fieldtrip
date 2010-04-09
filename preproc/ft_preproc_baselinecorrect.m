@@ -1,10 +1,10 @@
-function [dat, baseline] = preproc_baselinecorrect(dat, begsample, endsample)
+function [dat, baseline] = ft_preproc_baselinecorrect(dat, begsample, endsample)
 
-% PREPROC_BASELINECORRECT performs a baseline correction, e.g. using the
+% FT_PREPROC_BASELINECORRECT performs a baseline correction, e.g. using the
 % prestimulus interval of the data or using the complete data
 %
 % Use as
-%   [dat] = preproc_baselinecorrect(dat, begin, end)
+%   [dat] = ft_preproc_baselinecorrect(dat, begin, end)
 % where
 %   dat        data matrix (Nchans X Ntime)
 %   begsample  index of the begin sample for the baseline estimate

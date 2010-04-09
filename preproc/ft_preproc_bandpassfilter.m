@@ -1,11 +1,11 @@
-function [filt] = preproc_bandpassfilter(dat, Fs, Fbp, N, type, dir)
+function [filt] = ft_preproc_bandpassfilter(dat, Fs, Fbp, N, type, dir)
 
-% PREPROC_BANDPASSFILTER applies a band-pass filter to the data and thereby
+% FT_PREPROC_BANDPASSFILTER applies a band-pass filter to the data and thereby
 % removes the spectral components in the data except for the ones in the
 % specified frequency band
 %
 % Use as
-%   [filt] = preproc_bandpassfilter(dat, Fsample, Fbp, N, type, dir)
+%   [filt] = ft_preproc_bandpassfilter(dat, Fsample, Fbp, N, type, dir)
 % where
 %   dat        data matrix (Nchans X Ntime)
 %   Fsample    sampling frequency in Hz

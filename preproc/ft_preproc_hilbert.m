@@ -1,12 +1,12 @@
-function [dat] = preproc_hilbert(dat, option)
+function [dat] = ft_preproc_hilbert(dat, option)
 
-% PREPROC_HILBERT computes the Hilbert transpose of the data and optionally
+% FT_PREPROC_HILBERT computes the Hilbert transpose of the data and optionally
 % performs post-processing on the complex representation, e.g. the absolute
 % value of the Hilbert transform of a band-pass filtered signal corresponds
 % with the amplitude envelope.
 %
 % Use as
-%   [dat] = preproc_hilbert(dat, option)
+%   [dat] = ft_preproc_hilbert(dat, option)
 % where
 %   dat        data matrix (Nchans X Ntime)
 %   option     string that determines whether and how the Hilbert transform

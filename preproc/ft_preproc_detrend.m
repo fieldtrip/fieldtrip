@@ -1,10 +1,10 @@
-function [dat, beta, x] = preproc_detrend(dat, begsample, endsample, order)
+function [dat, beta, x] = ft_preproc_detrend(dat, begsample, endsample, order)
 
-% PREPROC_DETREND removes linear or higher order polynomial trends from the
+% FT_PREPROC_DETREND removes linear or higher order polynomial trends from the
 % data using using General Linear Modeling
 %
 % Use as
-%   [dat] = preproc_detrend(dat, begin, end, order)
+%   [dat] = ft_preproc_detrend(dat, begin, end, order)
 % where
 %   dat        data matrix (Nchans X Ntime)
 %   begsample  index of the begin sample for the trend estimate

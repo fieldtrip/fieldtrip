@@ -45,7 +45,7 @@ end
 if iscell(filename)
   % use recursion to write to multiple event targets
   for i=1:numel(filename)
-    write_event(filename{i}, event, varargin);
+    ft_write_event(filename{i}, event, varargin);
   end
   return
 end

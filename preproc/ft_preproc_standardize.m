@@ -1,11 +1,11 @@
-function [x, state] = preproc_standardize(x, begsample, endsample, state)
+function [x, state] = ft_preproc_standardize(x, begsample, endsample, state)
 
-% PREPROC_STANDARDIZE performs a z-transformation or standardization
+% FT_PREPROC_STANDARDIZE performs a z-transformation or standardization
 % of the data. The standardized data will have a zero-mean and a unit
 % standard deviation.
 %
 % Use as
-%   [dat] = preproc_standardize(dat, begsample, endsample)
+%   [dat] = ft_preproc_standardize(dat, begsample, endsample)
 % where
 %   dat        data matrix (Nchans X Ntime)
 %   begsample  index of the begin sample for the mean and stdev estimate

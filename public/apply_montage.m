@@ -1,6 +1,6 @@
-function [sens] = apply_montage(sens, montage, varargin)
+function [sens] = ft_apply_montage(sens, montage, varargin)
 
-% APPLY_MONTAGE changes the montage of an electrode or gradiometer array. A
+% FT_APPLY_MONTAGE changes the montage of an electrode or gradiometer array. A
 % montage can be used for EEG rereferencing, MEG synthetic gradients, MEG
 % planar gradients or unmixing using ICA. This function applies the montage
 % to the sensor array. The sensor array can subsequently be used for
@@ -10,8 +10,8 @@ function [sens] = apply_montage(sens, montage, varargin)
 %   [sens]    = apply_montage(sens,     montage,  ...)
 %   [data]    = apply_montage(data,     montage,  ...)
 %   [montage] = apply_montage(montage1, montage2, ...)
-% where the input is a FieldTrip sensor definition as obtained from READ_SENS
-% or a FieldTrip raw data structure as obtained from PREPROCESSING.
+% where the input is a FieldTrip sensor definition as obtained from FT_READ_SENS
+% or a FieldTrip raw data structure as obtained from FT_PREPROCESSING.
 %
 % A montage is specified as a structure with the fields
 %   montage.tra      = MxN matrix
@@ -26,7 +26,7 @@ function [sens] = apply_montage(sens, montage, varargin)
 % applied to the first. In effect the resulting montage will first do
 % montage1, then montage2.
 %
-% See also READ_SENS, TRANSFORM_SENS
+% See also FT_READ_SENS, FT_TRANSFORM_SENS
 
 % Copyright (C) 2008, Robert Oostenveld
 %

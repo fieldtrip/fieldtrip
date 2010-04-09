@@ -1,11 +1,11 @@
-function [filt] = preproc_bandstopfilter(dat,Fs,Fbp,N,type,dir)
+function [filt] = ft_preproc_bandstopfilter(dat,Fs,Fbp,N,type,dir)
 
-% PREPROC_BANDSTOPFILTER applies a band-stop filter to the data and thereby
+% FT_PREPROC_BANDSTOPFILTER applies a band-stop filter to the data and thereby
 % removes the spectral components in the specified frequency band 
 % 
 % 
 % Use as
-%   [filt] = preproc_bandstopfilter(dat, Fsample, Fbp, N, type, dir)
+%   [filt] = ft_preproc_bandstopfilter(dat, Fsample, Fbp, N, type, dir)
 % where
 %   dat        data matrix (Nchans X Ntime)
 %   Fsample    sampling frequency in Hz

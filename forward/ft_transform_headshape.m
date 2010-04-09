@@ -1,12 +1,12 @@
-function [shape] = transform_headshape(transform, shape)
+function [shape] = ft_transform_headshape(transform, shape)
 
-% TRANSFORM_HEADSHAPE applies a homogenous coordinate transformation to a
+% FT_TRANSFORM_HEADSHAPE applies a homogenous coordinate transformation to a
 % structure with headshape and fiducial information.
 %
 % Use as
-%   shape = transform_headshape(transform, shape)
+%   shape = ft_transform_headshape(transform, shape)
 %
-% See also READ_HEADSHAPE
+% See also FT_READ_HEADSHAPE
 
 % Copyright (C) 2008, Robert Oostenveld
 %

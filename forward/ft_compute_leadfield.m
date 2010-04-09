@@ -1,13 +1,13 @@
-function [lf] = compute_leadfield(pos, sens, vol, varargin)
+function [lf] = ft_compute_leadfield(pos, sens, vol, varargin)
 
-% COMPUTE_LEADFIELD computes a forward solution for a dipole in a a volume
+% FT_COMPUTE_LEADFIELD computes a forward solution for a dipole in a a volume
 % conductor model. The forward solution is expressed as the leadfield
 % matrix (Nchan*3), where each column corresponds with the potential or field
 % distributions on all sensors for one of the x,y,z-orientations of the
 % dipole.
 %
 % Use as
-%   [lf] = compute_leadfield(pos, sens, vol, ...)
+%   [lf] = ft_compute_leadfield(pos, sens, vol, ...)
 % with input arguments
 %   pos    position dipole (1x3 or Nx3)
 %   sens   structure with gradiometer or electrode definition
@@ -73,7 +73,7 @@ if iscell(sens) && iscell(vol) && numel(sens)==numel(vol)
   % this represents combined EEG and MEG sensors, where each modality has its own volume conduction model
   lf = cell(1,numel(sens));
   for i=1:length(sens)
-    lf{i} = compute_leadfield(pos, sens{i}, vol{i}, varargin{:});
+    lf{i} = ft_compute_leadfield(pos, sens{i}, vol{i}, varargin{:});
   end
   lf = cat(1, lf{:});
   return;
@@ -85,8 +85,8 @@ if ~isstruct(sens) && size(sens,2)==3
 end
 
 % determine whether it is EEG or MEG
-iseeg = senstype(sens, 'eeg');
-ismeg = senstype(sens, 'meg');
+iseeg = ft_senstype(sens, 'eeg');
+ismeg = ft_senstype(sens, 'meg');
 
 % get the optional input arguments
 reducerank     = keyval('reducerank', varargin); if isempty(reducerank), reducerank = 'no'; end
@@ -112,7 +112,7 @@ elseif ~ismeg && ~iseeg
   error('the input does not look like EEG, nor like MEG');
 
 elseif ismeg
-  switch voltype(vol)
+  switch ft_voltype(vol)
 
     case 'singlesphere'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -271,7 +271,7 @@ elseif ismeg
   end % switch voltype for MEG
 
 elseif iseeg
-  switch voltype(vol)
+  switch ft_voltype(vol)
 
     case 'multisphere'
       % Based on the approximation of the potential due to a single dipole in
@@ -429,7 +429,7 @@ elseif iseeg
 end % iseeg or ismeg
 
 % optionally apply leadfield rank reduction
-if ~strcmp(reducerank, 'no') && reducerank<size(lf,2) && ~strcmp(voltype(vol),'openmeeg')
+if ~strcmp(reducerank, 'no') && reducerank<size(lf,2) && ~strcmp(ft_voltype(vol),'openmeeg')
   % decompose the leadfield
   [u, s, v] = svd(lf);
   r = diag(s);

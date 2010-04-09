@@ -1,10 +1,10 @@
-function [depth] = sourcedepth(pos, vol)
+function [depth] = ft_sourcedepth(pos, vol)
 
-% SOURCEDEPTH computes the distance from the source to the surface of
+% FT_SOURCEDEPTH computes the distance from the source to the surface of
 % the source compartment (usually the brain).
 %
 % Use as
-%   depth = sourcedepth(pos, vol);
+%   depth = ft_sourcedepth(pos, vol);
 % where
 %   pos     Nx3 matrix with the position of N sources
 %   vol     structure describing volume condition model
@@ -19,7 +19,7 @@ function [depth] = sourcedepth(pos, vol)
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % determine the type of volume conduction model
-switch voltype(vol)
+switch ft_voltype(vol)
 
 % single-sphere or multiple concentric spheres
 case {'singlesphere', 'concentric'}

@@ -1,9 +1,9 @@
-function label = senslabel(type)
+function label = ft_senslabel(type)
 
-% SENLABEL returns a list of sensor labels given the MEEG system type
+% FT_SENSLABEL returns a list of sensor labels given the MEEG system type
 %
 % Use as
-%    label = senslabel(type)
+%    label = ft_senslabel(type)
 %
 % The input type can be any of the following
 %   'biosemi64'
@@ -38,7 +38,7 @@ function label = senslabel(type)
 %   'yokogawa160_planar'
 %   'electrode'
 %
-% See also SENSTYPE, CHANNELSELECTION
+% See also FT_SENSTYPE, FT_CHANNELSELECTION
 
 % FIXME one channel is missing for ctf275
 

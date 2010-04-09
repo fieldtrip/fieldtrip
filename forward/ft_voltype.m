@@ -1,14 +1,14 @@
-function [type] = voltype(vol, desired)
+function [type] = ft_voltype(vol, desired)
 
-% VOLTYPE determines the type of volume conduction model
+% FT_VOLTYPE determines the type of volume conduction model
 %
 % Use as
-%   [type] = voltype(vol)
+%   [type] = ft_voltype(vol)
 % to get a string describing the type, or
-%   [flag] = voltype(vol, desired)
+%   [flag] = ft_voltype(vol, desired)
 % to get a boolean value.
 %
-% See also READ_VOL, COMPUTE_LEADFIELD
+% See also FT_READ_VOL, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2007-2008, Robert Oostenveld
 %
@@ -24,7 +24,7 @@ if iscell(vol) && numel(vol)<4
     desired = cell(size(vol)); % empty elements
   end
   for i=1:numel(vol)
-    type{i} = voltype(vol{i}, desired{i});
+    type{i} = ft_voltype(vol{i}, desired{i});
   end
   return
 end

@@ -1,12 +1,12 @@
-function [vol, sens] = prepare_vol_sens(vol, sens, varargin)
+function [vol, sens] = ft_prepare_vol_sens(vol, sens, varargin)
 
-% PREPARE_VOL_SENS does some bookkeeping to ensure that the volume
+% FT_PREPARE_VOL_SENS does some bookkeeping to ensure that the volume
 % conductor model and the sensor array are ready for subsequent forward
 % leadfield computations. It takes care of some pre-computations that can
 % be done efficiently prior to the leadfield calculations.
 %
 % Use as
-%   [vol, sens] = prepare_vol_sens(vol, sens, ...)
+%   [vol, sens] = ft_prepare_vol_sens(vol, sens, ...)
 % with input arguments
 %   sens   structure with gradiometer or electrode definition
 %   vol    structure with volume conductor definition
@@ -35,7 +35,7 @@ function [vol, sens] = prepare_vol_sens(vol, sens, varargin)
 % order returned by this function corresponds to the order in the 'channel'
 % option, or if not specified, to the order in the input sensor array.
 %
-% See also READ_VOL, READ_SENS, TRANSFORM_VOL, TRANSFORM_SENS, COMPUTE_LEADFIELD
+% See also FT_READ_VOL, FT_READ_SENS, FT_TRANSFORM_VOL, FT_TRANSFORM_SENS, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2004-2009, Robert Oostenveld
 %
@@ -51,8 +51,8 @@ if isempty(channel),  channel = sens.label;   end
 if isempty(order),    order = 10;             end
 
 % determine whether the input contains EEG or MEG sensors
-iseeg = senstype(sens, 'eeg');
-ismeg = senstype(sens, 'meg');
+iseeg = ft_senstype(sens, 'eeg');
+ismeg = ft_senstype(sens, 'meg');
 
 % determine the skin compartment
 if ~isfield(vol, 'skin')
@@ -78,8 +78,8 @@ if isempty(vol)
 end
 
 % this makes them easier to recognise
-sens.type = senstype(sens);
-vol.type  = voltype(vol);
+sens.type = ft_senstype(sens);
+vol.type  = ft_voltype(vol);
 
 
 if isfield(vol, 'unit') && isfield(sens, 'unit') && ~strcmp(vol.unit, sens.unit)
@@ -112,7 +112,7 @@ elseif ismeg
   sens.ori = sens.ori(selcoil,:);
   sens.tra = sens.tra(:,selcoil);
 
-  switch voltype(vol)
+  switch ft_voltype(vol)
     case 'infinite'
       % nothing to do
 
@@ -185,7 +185,7 @@ elseif ismeg
         singlesphere.o(1,3) = vol.orig.MEG_Sphere.ORIGIN_Z;
         singlesphere.r      = vol.orig.MEG_Sphere.RADIUS;
         % ensure consistent units
-        singlesphere = convert_units(singlesphere, vol.unit);
+        singlesphere = ft_convert_units(singlesphere, vol.unit);
       else
         singlesphere = [];
       end
@@ -260,7 +260,7 @@ elseif iseeg
   sens.prj   = elproj(sens.pnt);
   sens.tri   = delaunay(sens.prj(:,1), sens.prj(:,2));
 
-  switch voltype(vol)
+  switch ft_voltype(vol)
     case 'infinite'
       % nothing to do
 
@@ -328,7 +328,7 @@ elseif iseeg
           % incorporate the linear interpolation matrix and the system matrix into one matrix
           % this speeds up the subsequent repeated leadfield computations
           fprintf('combining electrode transfer and system matrix\n');
-          if strcmp(voltype(vol), 'openmeeg')
+          if strcmp(ft_voltype(vol), 'openmeeg')
             nb_points_external_surface = size(vol.bnd(vol.skin).pnt,1);
             vol.mat = vol.mat((end-nb_points_external_surface+1):end,:);            
             vol.mat = interp(:,1:nb_points_external_surface) * vol.mat;

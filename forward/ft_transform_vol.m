@@ -1,14 +1,14 @@
-function [vol] = transform_vol(transform, vol)
+function [vol] = ft_transform_vol(transform, vol)
 
-% TRANSFORM_VOL applies a homogenous coordinate transformation to
+% FT_TRANSFORM_VOL applies a homogenous coordinate transformation to
 % a structure with an EEG or MEG colume conduction model. The homogenous
 % transformation matrix should be limited to a rigid-body translation
 % plus rotation and a global rescaling.
 %
 % Use as
-%   vol = transform_vol(transform, vol)
+%   vol = ft_transform_vol(transform, vol)
 %
-% See also READ_VOL, PREPARE_VOL_SENS, COMPUTE_LEADFIELD
+% See also FT_READ_VOL, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2008, Robert Oostenveld
 %
@@ -28,7 +28,7 @@ rotation(1:3,1:3) = transform(1:3,1:3);
 %   error('only a rigid body transformation without rescaling is allowed');
 % end
 
-switch voltype(vol)
+switch ft_voltype(vol)
   
   case {'singlesphere' 'multisphere' 'concentric'}
     if isfield(vol, 'o')

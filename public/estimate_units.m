@@ -1,11 +1,11 @@
-function unit = estimate_units(size)
+function unit = ft_estimate_units(size)
 
-% ESTIMATE_UNITS tries to determine the units of a geometrical object by
+% FT_ESTIMATE_UNITS tries to determine the units of a geometrical object by
 % looking at its size and by relating this to the size of the human
 % brain.
 %
 % Use as
-%   unit = estimate_units(size)
+%   unit = ft_estimate_units(size)
 %
 % This function will return one of the following strings
 %   'm'

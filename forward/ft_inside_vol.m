@@ -1,9 +1,9 @@
-function [inside] = inside_vol(pos, vol)
+function [inside] = ft_inside_vol(pos, vol)
 
-% INSIDE_VOL locates dipole locations inside/outside the source
+% FT_INSIDE_VOL locates dipole locations inside/outside the source
 % compartment of a volume conductor model.
 %
-% [inside] = inside_vol(pos, vol, ...)
+% [inside] = ft_inside_vol(pos, vol, ...)
 %
 % where the input should be
 %   pos      Nx3 matrix with dipole positions
@@ -21,7 +21,7 @@ function [inside] = inside_vol(pos, vol)
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % determine the type of volume conduction model
-switch voltype(vol)
+switch ft_voltype(vol)
 
   % single-sphere or multiple concentric spheres
   case {'singlesphere' 'concentric'}

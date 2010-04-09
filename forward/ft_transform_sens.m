@@ -1,14 +1,14 @@
-function [sens] = transform_sens(transform, sens)
+function [sens] = ft_transform_sens(transform, sens)
 
-% TRANSFORM_SENS applies a homogenous coordinate transformation to a
+% FT_TRANSFORM_SENS applies a homogenous coordinate transformation to a
 % structure with EEG electrodes or MEG gradiometers. For MEG gradiometers
 % the homogenous transformation matrix should be limited to a rigid-body
 % translation plus rotation.
 %
 % Use as
-%   sens = transform_sens(transform, sens)
+%   sens = ft_transform_sens(transform, sens)
 %
-% See also READ_SENS, PREPARE_VOL_SENS, COMPUTE_LEADFIELD
+% See also FT_READ_SENS, FT_PREPARE_VOL_SENS, FT_OMPUTE_LEADFIELD
 
 % Copyright (C) 2008, Robert Oostenveld
 %
@@ -18,13 +18,13 @@ if any(transform(4,:) ~= [0 0 0 1])
   error('invalid transformation matrix');
 end
 
-if senstype(sens, 'eeg')
+if ft_senstype(sens, 'eeg')
 
   % any normal coordinate transformation is in principle fine
   % apply the translation, rotation and possibly scaling to the electrode positions
   sens.pnt = apply(transform, sens.pnt);
 
-elseif senstype(sens, 'meg')
+elseif ft_senstype(sens, 'meg')
 
   % only a rigid body transformation (translation+rotation) without rescaling is allowed
   rotation = eye(4);

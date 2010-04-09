@@ -1,12 +1,12 @@
-function [obj] = convert_units(obj, target);
+function [obj] = ft_convert_units(obj, target);
 
-% CONVERT_UNITS changes the geometrical dimension to the specified SI unit.
+% FT_CONVERT_UNITS changes the geometrical dimension to the specified SI unit.
 % The units of the input object is determined from the structure field
 % object.unit, or is estimated based on the spatial extend of the structure, 
 % e.g. a volume conduction model of the head should be approximately 20 cm large.
 %
 % Use as
-%   [object] = convert_units(object, target)
+%   [object] = ft_convert_units(object, target)
 %
 % The following input objects are supported
 %   simple dipole position
@@ -18,7 +18,7 @@ function [obj] = convert_units(obj, target);
 %
 % Possible target units are 'm', 'dm', 'cm ' or 'mm'.
 %
-% See READ_VOL, READ_SENS
+% See FT_READ_VOL, FT_READ_SENS
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 %
@@ -35,7 +35,7 @@ if isfield(obj, 'unit')
   unit = obj.unit;
 else
   % try to estimate the units from the object
-  type = voltype(obj);
+  type = ft_voltype(obj);
   if ~strcmp(type, 'unknown')
     switch type
       case 'infinite'
@@ -62,23 +62,23 @@ else
     end % switch
     
     % determine the units by looking at the size
-    unit = estimate_units(size);
+    unit = ft_estimate_units(size);
 
-  elseif senstype(obj, 'meg')
+  elseif ft_senstype(obj, 'meg')
     size = norm(range(obj.pnt));
-    unit = estimate_units(size);
+    unit = ft_estimate_units(size);
 
-  elseif senstype(obj, 'eeg')
+  elseif ft_senstype(obj, 'eeg')
     size = norm(range(obj.pnt));
-    unit = estimate_units(size);
+    unit = ft_estimate_units(size);
 
   elseif isfield(obj, 'pnt') && ~isempty(obj.pnt)
     size = norm(range(obj.pnt));
-    unit = estimate_units(size);
+    unit = ft_estimate_units(size);
     
   elseif isfield(obj, 'pos') && ~isempty(obj.pos)
     size = norm(range(obj.pos));
-    unit = estimate_units(size);
+    unit = ft_estimate_units(size);
 
   elseif isfield(obj, 'transform') && ~isempty(obj.transform)
     % construct the corner points of the voxel grid in head coordinates
@@ -97,11 +97,11 @@ else
       ];
     pos = warp_apply(obj.transform, pos);
     size = norm(range(pos));
-    unit = estimate_units(size);
+    unit = ft_estimate_units(size);
     
   elseif isfield(obj, 'fid') && isfield(obj.fid, 'pnt') && ~isempty(obj.fid.pnt)
     size = norm(range(obj.fid.pnt));
-    unit = estimate_units(size);
+    unit = ft_estimate_units(size);
     
   else
     error('cannot determine geometrical units');

@@ -1,10 +1,10 @@
-function [filt] = preproc_lowpassfilter(dat,Fs,Flp,N,type,dir)
+function [filt] = ft_preproc_lowpassfilter(dat,Fs,Flp,N,type,dir)
 
-% PREPROC_LOWPASSFILTER applies a low-pass filter to the data and thereby
+% FT_PREPROC_LOWPASSFILTER applies a low-pass filter to the data and thereby
 % removes all high frequency components in the data
 % 
 % Use as
-%   [filt] = preproc_lowpassfilter(dat, Fsample, Flp, N, type, dir)
+%   [filt] = ft_preproc_lowpassfilter(dat, Fsample, Flp, N, type, dir)
 % where
 %   dat        data matrix (Nchans X Ntime)
 %   Fsample    sampling frequency in Hz

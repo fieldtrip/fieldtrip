@@ -1,10 +1,10 @@
-function [filt] = preproc_highpassfilter(dat,Fs,Fhp,N,type,dir)
+function [filt] = ft_preproc_highpassfilter(dat,Fs,Fhp,N,type,dir)
 
-% PREPROC_HIGHPASSFILTER applies a high-pass filter to the data and thereby
+% FT_PREPROC_HIGHPASSFILTER applies a high-pass filter to the data and thereby
 % removes the low frequency components in the data
 % 
 % Use as
-%   [filt] = preproc_highpassfilter(dat, Fsample, Fhp, N, type, dir)
+%   [filt] = ft_preproc_highpassfilter(dat, Fsample, Fhp, N, type, dir)
 % where
 %   dat        data matrix (Nchans X Ntime)
 %   Fsample    sampling frequency in Hz

@@ -1,10 +1,10 @@
-function [dat, ref] = preproc_rereference(dat, refchan)
+function [dat, ref] = ft_preproc_rereference(dat, refchan)
 
-% PREPROC_REREFERENCE computes the average reference over all EEG channels
+% FT_PREPROC_REREFERENCE computes the average reference over all EEG channels
 % or rereferences the data to the selected channeld
 %
 % Use as
-%   [dat] = preproc_rereference(dat, refchan)
+%   [dat] = ft_preproc_rereference(dat, refchan)
 % where
 %   dat        data matrix (Nchans X Ntime)
 %   refchan    vector with indices of the new reference channels
