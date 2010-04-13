@@ -33,7 +33,7 @@
 
 #if defined (PLATFORM_OSX)
 #include <mach/task.h>
-#elif defined(PLATFORM_WIN32)
+#elif defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64)
 #include <windows.h>
 #include <psapi.h>
 #elif defined(PLATFORM_LINUX)
@@ -70,7 +70,7 @@ int getmem (unsigned int *rss, unsigned int *vs) {
 		*vs  = t_info.virtual_size;
 		return 0;
 }
-#elif defined(PLATFORM_WIN32)
+#elif defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64)
 int getmem (unsigned int *rss, unsigned int *vs) {
 		/* no idea how to get the memory information on a windows computer */
 		*rss = 0;

@@ -3,7 +3,12 @@
 #define PEER_H
 
 #include <pthread.h>
+#include "platform_includes.h"
+#if defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64)
+#include "win32/stdint.h"
+#else
 #include <stdint.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

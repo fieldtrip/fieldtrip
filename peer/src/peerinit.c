@@ -29,7 +29,7 @@ void peerinit(void *arg) {
 		struct passwd *pwd;
 		int family, s, verbose = 0;
 
-#ifdef PLATFORM_WIN32
+#if defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64)
     DWORD nStrLen; 
 #endif
 

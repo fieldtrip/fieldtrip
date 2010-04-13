@@ -1,4 +1,4 @@
-function peercompile
+function peercompile(action)
 
 % PEERCOMPILE compile the low-level mex file implements that implements
 % the TCP/IP, announce and discover services.
@@ -20,83 +20,81 @@ function peercompile
 % along with this program.  If not, see <http://www.gnu.org/licenses/
 % -----------------------------------------------------------------------
 
-if ispc
+if ~nargin, action = 'all'; end
 
-  olddir = pwd;
-  try
-    % go into the directory containing the source code
-    newdir = fullfile(fileparts(which(mfilename)), 'src');
-    cd(newdir);
+cwd = pwd;
+src = fullfile(fileparts(which(mfilename)),'src');
 
-     mex -I. -I../pthreads-win32/include -c announce.c
-     mex -I. -I../pthreads-win32/include -c discover.c
-     mex -I. -I../pthreads-win32/include -c expire.c
-     mex -I. -I../pthreads-win32/include -c extern.c
-     mex -I. -I../pthreads-win32/include -c fairshare.c
-     mex -I. -I../pthreads-win32/include -c peerinit.c
-     mex -I. -I../pthreads-win32/include -c util.c
-     mex -I. -I../pthreads-win32/include -c tcpserver.c
-     mex -I. -I../pthreads-win32/include -c tcpsocket.c
-     mex -I. -I../pthreads-win32/include -c security.c
-
-     % link all the objects together into a mex file
-     mex -I. -I../pthreads-win32/include -L../pthreads-win32/lib -output ../peer peer.c tcpserver.obj tcpsocket.obj discover.obj announce.obj expire.obj peerinit.obj util.obj extern.obj fairshare.obj security.obj -lpthreadVC2.bcb
-
-    % also compile the memory profiler
-    mex -I. -I../pthreads-win32/include -L../pthreads-win32/lib -output ../memprofile memprofile.c -lpthreadVC2.bcb
-
-    % also compile the delayed exit
-    mex -I. -I../pthreads-win32/include -L../pthreads-win32/lib -output ../delayedexit delayedexit.c -lpthreadVC2.bcb
-
-    % return to the original directory
-    cd(olddir);
-
-  catch
-    % return to the original directory
-    cd(olddir);
-    % report the error
-    rethrow(lasterror);
-  end
-
-
-elseif isunix || ismac
-
-  olddir = pwd;
-  try
-    % go into the directory containing the source code
-    newdir = fullfile(fileparts(which(mfilename)), 'src');
-    cd(newdir);
-
-    % these are general
-    mex  -I. -c announce.c
-    mex  -I. -c discover.c
-    mex  -I. -c expire.c
-    mex  -I. -c extern.c
-    mex  -I. -c fairshare.c
-    mex  -I. -c peerinit.c
-    mex  -I. -c util.c
-    mex  -I. -c tcpserver.c
-    mex  -I. -c tcpsocket.c
-    mex  -I. -c security.c
-
-    % link all the objects together into a mex file
-    mex -I. -output ../peer peer.c tcpserver.o tcpsocket.o discover.o announce.o expire.o peerinit.o util.o extern.o fairshare.o security.o -lpthread
-
-    % also compile the memory profiler
-    mex -I. -output ../memprofile memprofile.c
-
-    % also compile the delayed exit
-    mex -I. -output ../delayedexit delayedexit.c
-
-    % return to the original directory
-    cd(olddir);
-
-  catch
-    % return to the original directory
-    cd(olddir);
-    % report the error
-    rethrow(lasterror);
-  end
-
+switch action
+    
+    case 'all'
+        try
+            cd(src);
+            
+            if ispc
+                includes     = '-I..\pthreads-win32\include';
+                libdirs      = '-L..\pthreads-win32\lib';
+                switch upper(computer)
+                    case 'PCWIN32'
+                        libs = '-lpthreadVC2';
+                    case 'PCWIN64'
+                        libs = '-lpthreadGC2';
+                end
+                objext       = '.obj';
+            else
+                includes     = '-I.';
+                libdirs      = '-L.';
+                libs         = '-lpthread';
+                objext       = '.o';
+            end
+            
+            % create object files
+            cfiles = {'announce.c' 'discover.c' 'expire.c' 'extern.c' ...
+                'fairshare.c' 'peerinit.c' 'util.c' 'tcpserver.c' 'tcpsocket.c' ...
+                'security.c'};
+            ofiles = cell(1,numel(cfiles));
+            for i=1:numel(cfiles)
+                mex(includes,'-c',cfiles{i});
+                [p, n]    = fileparts(cfiles{i});
+                ofiles{i} = [n objext];
+            end
+            
+            % compile the peer gateway
+            mex(includes, libdirs, '-outdir', '..', 'peer.c', ofiles{:}, libs);
+            
+            % compile the memory profiler
+            mex(includes, libdirs, '-outdir', '..', 'memprofile.c', libs);
+            
+            % compile the delayed exit
+            mex(includes, libdirs, '-outdir', '..', 'delayedexit.c', libs);
+            
+            cd(cwd);
+        catch
+            cd(cwd);
+            rethrow(lasterror);
+        end
+        
+    case 'clean'
+        try
+            cd(src);
+            delete('*.o*');
+            cd(cwd);
+        catch
+            cd(cwd);
+            rethrow(lasterror);
+        end
+        
+    case 'distclean'
+        peercompile('clean');
+        try
+            cd(fullfile(src,'..'));
+            delete(['*.' mexext]);
+            cd(cwd);
+        catch
+            cd(cwd);
+            rethrow(lasterror);
+        end
+        
+    otherwise
+        error('Unknown action.');
 end
-

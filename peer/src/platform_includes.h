@@ -15,7 +15,7 @@
 /* closesocket exists on windows and is used in the code */
 #define closesocket(s) (close(s))
 
-#elif defined (PLATFORM_WIN32)
+#elif defined (PLATFORM_WIN32) || defined(PLATFORM_WIN64)
 
 /* there are various compiler options for windows */
 #if defined (COMPILER_BORLAND)
@@ -43,10 +43,13 @@ typedef unsigned __int64  uint64_t;
 #include "win32/stdint.h"
 #include "win32/gettimeofday.h"
 
+#pragma comment (lib, "Ws2_32.lib")
+
 #define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
 #define usleep(x)    (Sleep((x)/1000))
 #define sleep(x)    (Sleep((x)*1000))
-#define strcasecmp(a,b) (strcmpi(a,b))
+#define strcasecmp strcmpi
+#define strncasecmp strnicmp
 
 #elif defined (COMPILER_MINGW)
 #include <windows.h>
