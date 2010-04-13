@@ -1,27 +1,27 @@
-function [spectrum,ntaper,foi,toi] = specest_mtmconvol(dat, time, varargin)
+function [spectrum,ntaper,freqoi,timeoi] = specest_mtmconvol(dat, time, varargin)
 
 % SPECEST_MTMCONVOL performs wavelet convolution in the time domain by multiplication in the frequency domain
 %
 %
 % Use as
-%   [spectrum,ntaper,foi,toi] = specest_mtmfft(dat,time,...)  %%% DECIDE: WHICH INPUT IS REQUIRED AND WHICH WILL BE DEFAULTED?
+%   [spectrum,ntaper,freqoi,timeoi] = specest_mtmfft(dat,time,...) 
 %
 %   dat      = matrix of chan*sample
 %   time     = vector, containing time in seconds for each sample
-%   spectrum = matrix of taper*chan*foi*toi of fourier coefficients
-%   ntaper   = vector containing number of tapers per element of foi
-%   foi      = vector of frequencies in spectrum
-%   toi      = vector of timebins in spectrum
+%   spectrum = matrix of taper*chan*freqoi*timeoi of fourier coefficients
+%   ntaper   = vector containing number of tapers per element of freqoi
+%   freqoi   = vector of frequencies in spectrum
+%   timeoi   = vector of timebins in spectrum
 %
 %
 %
 %
 % Optional arguments should be specified in key-value pairs and can include:
 %   taper     = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
-%   pad       = number, indicating time-length of data to be padded out to          %%% IS IN SECONDS
-%   toi       = vector, containing time points of interest (in seconds)
+%   pad       = number, indicating time-length of data to be padded out to in seconds         
+%   timeoi    = vector, containing time points of interest (in seconds)
 %   timwin    = vector, containing length of time windows (in seconds)
-%   foi       = vector, containing frequencies (in Hz)
+%   freqoi    = vector, containing frequencies (in Hz)
 %   tapsmofrq = vector, the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
 %
 %
@@ -34,180 +34,162 @@ function [spectrum,ntaper,foi,toi] = specest_mtmconvol(dat, time, varargin)
 
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'taper','pad','toi','timwin','foi','tapsmofrq'});
+keyvalcheck(varargin, 'optional', {'taper','pad','timeoi','timwin','freqoi','tapsmofrq'});
 taper     = keyval('taper',       varargin); if isempty(taper),    taper   = 'dpss';     end
 pad       = keyval('pad',         varargin); 
-toi       = keyval('toi',         varargin); if isempty(toi),      toi     = 'max';      end
-timwin    = keyval('timwin',      varargin); % will be defaulted below
-foi       = keyval('foi',         varargin); if isempty(foi),      foi     = 'max';      end
+timeoi    = keyval('timeoi',      varargin); if isempty(timeoi),   timeoi  = 'max';      end
+timwin    = keyval('timwin',      varargin); 
+freqoi    = keyval('freqoi',      varargin); if isempty(freqoi),   freqoi  = 'max';      end
 tapsmofrq = keyval('tapsmofrq',   varargin);
+
+% throw errors for required input
+if isempty(tapsmofrq) && strcmp(taper, 'dpss')
+  error('you need to specify tapsmofrq when using dpss tapers')
+end
+if isempty(timwin)
+  error('you need to specify timwin')
+end
 
 
 % Set n's
-[nchan,nsample] = size(dat);
+[nchan,ndatsample] = size(dat);
 
 
-% Determine fsample
+% Determine fsample and set total time-length of data
 fsample = 1/(time(2)-time(1));
+dattime = ndatsample / fsample; % total time in seconds of input data
 
-
-% Zero padding (if pad is empty, no padding wil be performed in the end)
-if pad < (time(end) - time(1))
+% Zero padding
+if pad < dattime
   error('the padding that you specified is shorter than the data');
 end
 if isempty(pad) % if no padding is specified padding is equal to current data length
-  pad = (time(end)-time(1));
+  pad = dattime;
 end
-prepad  = zeros(1,floor(((pad - (time(end)-time(1))) * fsample) ./ 2));
-postpad = zeros(1,ceil(((pad - (time(end)-time(1))) * fsample) ./ 2));
+prepad  = zeros(1,floor((pad - dattime) * fsample ./ 2));
+postpad = zeros(1,ceil((pad - dattime) * fsample ./ 2));
+endnsample = pad * fsample;  % total number of samples of padded data
+endtime    = pad;            % total time in seconds of padded data
 
 
 
-% Set fboi and foi and default tapsmofrq
-if isnumeric(foi) % if input is a vector
-  fboi   = round(foi ./ (fsample ./ (pad * fsample))) + 1;
-  nfboi  = length(fboi);
-  foi    = (fboi-1) ./ pad; % boi - 1 because 0 Hz is included in fourier output..... is this going correctly?
-elseif strcmp(foi,'max') % if input was 'max'
-  fboilim = round([0 fsample/2] ./ (fsample ./ (pad * fsample))) + 1;
-  fboi    = fboilim(1):1:fboilim(2);
-  nfboi   = length(fboi);
-  foi     = (fboi-1) ./ pad;
+
+% Set freqboi and freqoi
+if isnumeric(freqoi) % if input is a vector
+  freqboi   = round(freqoi ./ (fsample ./ endnsample)) + 1;
+  freqoi    = (freqboi-1) ./ endtime; % boi - 1 because 0 Hz is included in fourier output..... is this going correctly?
+elseif strcmp(freqoi,'max') % if input was 'max' THIS IS IRRELEVANT, BECAUSE TIMWIN IS A REQUIRED INPUT NOW
+  freqboilim = round([0 fsample/2] ./ (fsample ./ endnsample)) + 1;
+  freqboi    = freqboilim(1):1:freqboilim(2);
+  freqoi     = (freqboi-1) ./ endtime;
 end
-% check for foi = 0 and remove it, there is no wavelet for foi = 0
-if any(foi==0)
-  foi(foi==0) = [];
-end
-nfoi = length(foi);
-if isempty(tapsmofrq) % default tapsmofrq
-  tapsmofrq = ones(nfoi,1)*4; % SHOULDNT BE DEFAULTED IN MY OPINION
+nfreqboi   = length(freqboi);
+nfreqoi = length(freqoi);
+% check for freqoi = 0 and remove it, there is no wavelet for freqoi = 0
+if freqoi(1)==0
+  freqoi(1)  = [];
+  freqboi(1) = [];
+  nfreqboi   = length(freqboi);
+  nfreqoi    = length(freqoi);
+  if length(timwin) ~= nfreqoi
+    timwin(1) = [];
+  end
 end
 
 
-% Set tboi and toi
-if isnumeric(toi) % if input is a vector
-  tboi  = round(toi .* fsample) + 1;
-  ntboi = length(tboi);
-  toi   = round(toi .* fsample) ./ fsample;
-elseif strcmp(toi,'max') % if input was 'max'
-  tboi  = 1:length(time);
-  ntboi = length(tboi);
-  toi   = time;
+% Set timeboi and timeoi
+if isnumeric(timeoi) % if input is a vector
+  timeboi  = round(timeoi .* fsample) + 1;
+  ntimeboi = length(timeboi);
+  timeoi   = round(timeoi .* fsample) ./ fsample;
+elseif strcmp(timeoi,'max') % if input was 'max'
+  timeboi  = 1:length(time);
+  ntimeboi = length(timeboi);
+  timeoi   = time;
 end
 
 
-% Time-windows
-if isempty(timwin)
-  timwin = (1 ./ foi) * 3; % default is 3 cycles of a frequency
-end
-% exception for foi = 0
-if foi(1)==0
-  timwin(1) = pad; % timwin for foi = 0 is equal to entire data-length, not sure whether we should do this
-end
 % set number of samples per time-window (timwin is in seconds)
-timwinsmp = round(timwin .* fsample);
+timwinsample = round(timwin .* fsample);
 
 
 
 % Compute tapers per frequency, multiply with wavelets and compute their fft
-wltspctrm = cell(nfoi,1);
-ntaper    = zeros(nfoi,1);
-for ifoi = 1:nfoi
+wltspctrm = cell(nfreqoi,1);
+ntaper    = zeros(nfreqoi,1);
+for ifreqoi = 1:nfreqoi
   
   switch taper
     case 'dpss'
       % create a sequence of DPSS tapers, ensure that the input arguments are double precision
-      tap = double_dpss(timwinsmp(ifoi), timwinsmp(ifoi) .* (tapsmofrq(ifoi) ./ fsample))';
+      tap = double_dpss(timwinsample(ifreqoi), timwinsample(ifreqoi) .* (tapsmofrq(ifreqoi) ./ fsample))';
       % remove the last taper because the last slepian taper is always messy
       tap = tap(1:(end-1), :);
 
       % give error/warning about number of tapers
       if isempty(tap)
-        error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',nsample/fsample,tapsmofrq(ifoi),fsample/fsample);
+        error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',ndatsample/fsample,tapsmofrq(ifreqoi),fsample/fsample);
       elseif size(tap,1) == 1
         warning('using only one taper for specified smoothing')
       end
       
       
     case 'sine'
-      tap = sine_taper(timwinsmp(ifoi), timwinsmp(ifoi) .* (tapsmofrq(ifoi) ./ fsample))';
+      tap = sine_taper(timwinsample(ifreqoi), timwinsample(ifreqoi) .* (tapsmofrq(ifreqoi) ./ fsample))';
       
     case 'alpha'
-      tap = alpha_taper(timwinsmp(ifoi), foi(ifoi)./ fsample)';
+      tap = alpha_taper(timwinsample(ifreqoi), freqoi(ifreqoi)./ fsample)';
       tap = tap./norm(tap)';
       
     otherwise
       % create a single taper according to the window specification as a replacement for the DPSS (Slepian) sequence
-      tap = window(taper, timwinsmp(ifoi))';
+      tap = window(taper, timwinsample(ifreqoi))';
       tap = tap ./ norm(tap,'fro'); % make it explicit that the frobenius norm is being used
   end
   
   % set number of tapers
-  ntaper(ifoi) = size(tap,1);
+  ntaper(ifreqoi) = size(tap,1);
   
   % Wavelet construction
-  tappad   = ceil(round((pad * fsample) ./ 2)) - floor(timwinsmp(ifoi) ./ 2);
+  tappad   = ceil(round(endnsample ./ 2)) - floor(timwinsample(ifreqoi) ./ 2);
   prezero  = zeros(1,tappad);
-  postzero = zeros(1,round(pad * fsample) - ((tappad-1) + timwinsmp(ifoi))-1);
-  angle    = (0:timwinsmp(ifoi)-1)' .* ((2.*pi./fsample) .* foi(ifoi));
-  wltspctrm{ifoi} = complex(zeros(size(tap,1),round(pad * fsample)));
-  for itap = 1:ntaper(ifoi)
-    try % this try loop tries to fit the wavelet into wltspctrm, when it's length is smaller than nsample, it the rest is 'filled' with zeros because of above code
-      % if a wavelet is longer than nsample, it doesn't fit and it is kept at zeros, which is translated to NaN's in the output
+  postzero = zeros(1,round(endnsample) - ((tappad-1) + timwinsample(ifreqoi))-1);
+  angle    = (0:timwinsample(ifreqoi)-1)' .* ((2.*pi./fsample) .* freqoi(ifreqoi));
+  wltspctrm{ifreqoi} = complex(zeros(size(tap,1),round(endnsample)));
+  for itap = 1:ntaper(ifreqoi)
+    try % this try loop tries to fit the wavelet into wltspctrm, when its length is smaller than ndatsample, the rest is 'filled' with zeros because of above code
+      % if a wavelet is longer than ndatsample, it doesn't fit and it is kept at zeros, which is translated to NaN's in the output
       % construct the complex wavelet
       coswav  = horzcat(prezero, tap(itap,:) .* cos(angle)', postzero);
       sinwav  = horzcat(prezero, tap(itap,:) .* sin(angle)', postzero);
       wavelet = complex(coswav, sinwav);
       % store the fft of the complex wavelet
-      wltspctrm{ifoi}(itap,:) = fft(wavelet,[],2);
+      wltspctrm{ifreqoi}(itap,:) = fft(wavelet,[],2);
     end
   end
 end
 
 
 % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
-spectrum = complex(nan([sum(ntaper),nchan,nfoi,ntboi]));
+spectrum = complex(nan([sum(ntaper),nchan,nfreqoi,ntimeboi]));
 datspectrum = fft([repmat(prepad,[nchan, 1]) dat repmat(postpad,[nchan, 1])],[],2); % should really be done above, but since the chan versus whole dataset fft'ing is still unclear, repmat is used
-for ifoi = 1:nfoi
-  for itap = 1:ntaper(ifoi)
+for ifreqoi = 1:nfreqoi
+  fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
+  for itap = 1:ntaper(ifreqoi)
     for ichan = 1:nchan
-     
       % compute indices that will be used to extracted the requested fft output    
-      nsamplefoi    = timwin(ifoi) .* fsample;
-      reqtboiind    = find((tboi >=  (nsamplefoi ./ 2)) & (tboi <    nsample - (nsamplefoi ./2)));
-      reqtboi       = tboi(reqtboiind);
+      nsamplefreqoi    = timwin(ifreqoi) .* fsample;
+      reqtimeboiind    = find((timeboi >=  (nsamplefreqoi ./ 2)) & (timeboi <    ndatsample - (nsamplefreqoi ./2)));
+      reqtimeboi       = timeboi(reqtimeboiind);
       
-      % compute datspectrum*wavelet, if there are reqtboi's that have data
-      if ~isempty(reqtboi)
-        dum = fftshift(ifft(datspectrum(ichan,:) .* wltspctrm{ifoi}(itap,:),[],2)); % why is this fftshift necessary?
-        spectrum(itap,ichan,ifoi,reqtboiind) = dum(reqtboi);
+      % compute datspectrum*wavelet, if there are reqtimeboi's that have data
+      if ~isempty(reqtimeboi)
+        dum = fftshift(ifft(datspectrum(ichan,:) .* wltspctrm{ifreqoi}(itap,:),[],2)); % why is this fftshift necessary?
+        spectrum(itap,ichan,ifreqoi,reqtimeboiind) = dum(reqtimeboi);
       end
     end
   end
 end
-
-
-% %%%%%% THE CODE BELOW IS A LITTLE BIT FASTER THAN ABOVE, WHICH COMPUTES THE FFT PER CHAN (BELOW IS ALL CHANS AT THE SAME TIME)
-% spectrum = complex(nan([sum(ntaper),nchan,nfoi,ntboi]));
-% datspectrum = fft([repmat(prepad,[nchan, 1]) dat repmat(postpad,[nchan, 1])],[],2); % should really be done above, but since the chan versus whole dataset fft'ing is still unclear, repmat is used
-% tic
-% for ifoi = 1:nfoi
-%   for itap = 1:ntaper(ifoi)
-% 
-%     % compute indices that will be used to extracted the requested fft output
-%     nsamplefoi    = timwin(ifoi) .* fsample;
-%     reqtboiind    = find((tboi >=  (nsamplefoi ./ 2)) & (tboi <    nsample - (nsamplefoi ./2)));
-%     reqtboi       = tboi(reqtboiind);
-%     
-%     % compute datspectrum*wavelet, if there are reqtboi's that have data
-%     if ~isempty(reqtboi)
-%       dum = fftshift(ifft(datspectrum .* repmat(wltspctrm{ifoi}(itap,:),[nchan,1]),[],2));
-%       spectrum(itap,:,ifoi,reqtboiind) = dum(:,reqtboi);
-%     end
-%   end
-% end
-% toc
-% 
 
 
 
