@@ -52,6 +52,8 @@ if ~isfield(cfg, 'complex'),    cfg.complex    = 'abs'; end
 if ~isfield(cfg, 'jackknife'),  cfg.jackknife  = 'no';  end
 if ~isfield(cfg, 'removemean'), cfg.removemean = 'yes'; end
 if ~isfield(cfg, 'partchannel'), cfg.partchannel = '';  end
+if ~isfield(cfg, 'conditional'), cfg.conditional = [];  end
+if ~isfield(cfg, 'blockindx'),   cfg.blockindx   = {};  end
 
 hasjack = (isfield(data, 'method') && strcmp(data.method, 'jackknife')) || strcmp(data.dimord(1:6), 'rptjck');
 hasrpt  = ~isempty(strfind(data.dimord, 'rpt'));
@@ -282,6 +284,8 @@ case 'amplcorr'
   tmpcfg.dimord   = data.dimord;
   tmpcfg.complex  = 'real';
   tmpcfg.powindx  = powindx;
+  tmpcfg.pownorm  = 1;
+  tmpcfg.pchanindx = [];
   [datout, varout, nrpt] = coupling_corr(tmpcfg, data.(inparam), hasrpt, hasjack);
   outparam        = 'amplcorrspctrm';   
 
@@ -313,10 +317,19 @@ case 'granger'
       data.crsspctrm = reshape(data.crsspctrm, [1 siz]);
     end
 
-    if isfield(data, 'labelcmb'),
+    if isfield(data, 'labelcmb') && isempty(cfg.conditional),
       % multiple pairwise non-parametric transfer functions
       % linearly indexed
       powindx = labelcmb2indx(data.labelcmb);
+    elseif isfield(data, 'labelcmb')
+      % conditional (blockwise) needs linearly represented cross-spectra 
+      for k = 1:size(cfg.conditional,1)
+        tmp{k,1} = cfg.conditional(k,:);
+        tmp{k,2} = cfg.conditional(k,[1 3]);
+      end
+      [cmbindx, n] = blockindx2cmbindx(data.labelcmb, cfg.blockindx, tmp);
+      powindx.cmbindx = cmbindx;
+      powindx.n       = n;
     elseif isfield(cfg, 'block') && ~isempty(cfg.block)
       % blockwise granger
       powindx = cfg.block;
@@ -463,7 +476,7 @@ end
 if ~isempty(powindx),
   switch dtype
   case {'freq' 'freqmvar'}
-    if isfield(data, 'labelcmb'),
+    if isfield(data, 'labelcmb') && ~isstruct(powindx),
       keep   = powindx(:,1) ~= powindx(:,2);
       datout = datout(keep,:,:,:,:);
       if ~isempty(varout),
@@ -904,7 +917,7 @@ if isempty(powindx),
       outsum(ii,ii,:,:) = 0;%self-granger set to zero
     end
   end
-elseif ~iscell(powindx)
+elseif ~iscell(powindx) && ~isstruct(powindx)
   % data are linearly indexed
   for k = 1:Nc
     for j = 1:n
@@ -926,7 +939,10 @@ elseif iscell(powindx)
   % S = crosspectrum      nchan x nchan x nfreq
   % powindx{1} is a list of indices for block1 
   % powindx{2} is a list of indices for block2
-  
+ 
+  %FIXME rewrite to allow for multiple blocks
+  %FIXME change cfg.block functionality in this case
+  %cfg.blockindx = {{list of channel names} [list of block indices]} 
   block1 = powindx{1}(:);
   block2 = powindx{2}(:);
   
@@ -951,17 +967,16 @@ elseif iscell(powindx)
     tmpZ = reshape(Z(k,:,:), [nchan nchan]);
 
     % projection matrix for block2 -> block1
-    P1 = [eye(n1)                                      zeros(n1,n2);
-          -tmpZ(indx2,indx1)*pinv(tmpZ(indx1,indx1))     eye(n2)];
+    P1 = [eye(n1)                                zeros(n1,n2);
+          -tmpZ(indx2,indx1)/tmpZ(indx1,indx1)     eye(n2)];
     
     % projection matrix for block1 -> block2
-    P2 = [  eye(n1)    -tmpZ(indx1,indx2)*pinv(tmpZ(indx2,indx2));
+    P2 = [  eye(n1)    -tmpZ(indx1,indx2)/tmpZ(indx2,indx2);
           zeros(n2,n1) eye(n2)];
     
     % invert only once
-    invP1 = pinv(P1);
-    invP2 = pinv(P2);
-    
+    invP1 = inv(P1);
+    invP2 = inv(P2);
     for jj = 1:nfreq
       % post multiply transfer matrix with the inverse of the projection matrix  
       % this is equivalent to time domain pre multiplication with P
@@ -971,13 +986,41 @@ elseif iscell(powindx)
       H2 = reshape(H(k,:,:,jj), [nchan nchan])*invP2;
       num1 = abs(det(Sj(indx1,indx1))); % numerical round off leads to tiny imaginary components
       num2 = abs(det(Sj(indx2,indx2))); % numerical round off leads to tiny imaginary components
-      denom1 = abs(det(H1(indx1,indx1)*Zj(indx1,indx1)*H1(indx1,indx1)'));
-      denom2 = abs(det(H2(indx2,indx2)*Zj(indx2,indx2)*H2(indx2,indx2)'));
+      %denom1 = abs(det(H1(indx1,indx1)*Zj(indx1,indx1)*H1(indx1,indx1)'));
+      %denom2 = abs(det(H2(indx2,indx2)*Zj(indx2,indx2)*H2(indx2,indx2)'));
+      rH1 = real(H1(indx1,indx1));
+      rH2 = real(H2(indx2,indx2));
+      iH1 = imag(H1(indx1,indx1));
+      iH2 = imag(H2(indx2,indx2));
+      h1 = rH1*Zj(indx1,indx1)*rH1' + iH1*Zj(indx1,indx1)*iH1';
+      h2 = rH2*Zj(indx2,indx2)*rH2' + iH2*Zj(indx2,indx2)*iH2';
+      denom1 = det(h1);
+      denom2 = det(h2);      
+
       outsum(2,1,jj) = log( num1./denom1 )    + outsum(2,1,jj);
-      outsum(1,2,jj) = log( num2./denom2 )       + outsum(1,2,jj);
+      outsum(1,2,jj) = log( num2./denom2 )    + outsum(1,2,jj);
       outssq(2,1,jj) = log( num1./denom1 ).^2 + outssq(2,1,jj);
       outssq(1,2,jj) = log( num2./denom2 ).^2 + outssq(1,2,jj);
     end
+  end
+elseif isstruct(powindx)
+  %blockwise conditional
+  
+  n     = size(H,1);
+  ncmb  = size(H,2);
+  nfreq = size(H,3);  
+  ncnd  = size(powindx.cmbindx,1);
+    
+  outsum = zeros(ncnd, nfreq);
+  outssq = zeros(ncnd, nfreq);
+  for k = 1:n
+    tmpS = reshape(S, [ncmb nfreq]);
+    tmpH = reshape(H, [ncmb nfreq]);
+    tmpZ = reshape(Z, [ncmb 1]);
+    tmp  = blockwise_conditionalgranger(tmpS,tmpH,tmpZ,powindx.cmbindx,powindx.n);
+    
+    outsum = outsum + tmp;
+    outssq = outssq + tmp.^2;
   end
 end
 
@@ -1256,6 +1299,7 @@ case 'source'
     data.pos    = [data.pos repmat(data.pos(cmb,:),[nvox 1]);data.pos data.pos]; 
     data.inside = [data.inside(:); data.inside(:)+nvox];
     data.outside = [data.outside(:); data.outside(:)+nvox];
+    data.dim(2) = size(data.pos,1);
   elseif strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'crsspctrm'),
     if keeprpt,
       [nrpt,nvox]    = size(data.fourierspctrm);
