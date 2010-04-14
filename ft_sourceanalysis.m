@@ -287,7 +287,7 @@ if isfreq
 end
 
 % collect and preprocess the electrodes/gradiometer and head model
-[vol, sens, cfg] = ft_prepare_headmodel(cfg, data);
+[vol, sens, cfg] = prepare_headmodel(cfg, data);
 
 % It might be that the number of channels in the data, the number of
 % channels in the electrode/gradiometer definition and the number of

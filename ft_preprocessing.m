@@ -238,7 +238,7 @@ if hasdata
   end
 
   % translate the channel groups (like 'all' and 'MEG') into real labels
-  cfg.channel = channelselection(cfg.channel, data.label);
+  cfg.channel = ft_channelselection(cfg.channel, data.label);
   rawindx = match_str(data.label, cfg.channel);
 
   % this will contain the newly processed data
@@ -264,7 +264,7 @@ else
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   if isfield(cfg, 'trialdef') && ~isfield(cfg, 'trl')
-    error('you must call DEFINETRIAL prior to PREPROCESSING');
+    error('you must call FT_DEFINETRIAL prior to FT_PREPROCESSING');
   end
 
   % check if the input cfg is valid for this function
@@ -274,7 +274,7 @@ else
   cfg = checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
   % read the header
-  hdr = read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
 
   % this option relates to reading over trial boundaries in a pseudo-continuous dataset
   if ~isfield(cfg, 'continuous')
@@ -302,13 +302,13 @@ else
   end
 
   % translate the channel groups (like 'all' and 'MEG') into real labels
-  cfg.channel = channelselection(cfg.channel, hdr.label);
+  cfg.channel = ft_channelselection(cfg.channel, hdr.label);
 
   if ~isempty(cfg.implicitref)
     % add the label of the implicit reference channel to these cell-arrays
     cfg.channel    = cat(1, cfg.channel(:), cfg.implicitref);
   end
-  cfg.refchannel = channelselection(cfg.refchannel, cfg.channel);
+  cfg.refchannel = ft_channelselection(cfg.refchannel, cfg.channel);
 
   % determine the length in samples to which the data should be padded before filtering is applied
   % the filter padding is done by reading a longer segment of data from the original data file
@@ -354,18 +354,18 @@ else
       any(strmatch('rejectmuscle', fieldnames(cfg))) || ...
       any(strmatch('rejectjump',   fieldnames(cfg)))
     % this is only for backward compatibility
-    error('you should call REJECTARTIFACT prior to PREPROCESSING, please update your scripts');
+    error('you should call FT_REJECTARTIFACT prior to FT_PREPROCESSING, please update your scripts');
   end
 
   ntrl = size(cfg.trl,1);
   if ntrl<1
-    error('no trials were selected for preprocessing, see DEFINETRIAL for help');
+    error('no trials were selected for preprocessing, see FT_DEFINETRIAL for help');
   end
 
   % compute the template for MCG and the QRS latency indices, and add it to the configuration
   if strcmp(cfg.removemcg, 'yes')
     cfg = template_mcg(cfg);
-    mcgchannel = channelselection(cfg.artfctdef.mcg.channel, hdr.label);
+    mcgchannel = ft_channelselection(cfg.artfctdef.mcg.channel, hdr.label);
     mcgindx    = match_str(cfg.channel, mcgchannel);
     for i=1:length(mcgchannel)
       fprintf('removing mcg on channel %s\n', mcgchannel{i});
@@ -434,7 +434,7 @@ else
       end
 
       % read the raw data with padding on both sides of the trial
-      dat = read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', rawindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
+      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', rawindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
 
       % do the preprocessing on the padded trial data and remove the padding after filtering
       [cutdat{i}, label, time{i}, cfg] = preproc(dat, hdr.label(rawindx), hdr.Fs, cfg, cfg.trl(i,3), begpadding, endpadding);
