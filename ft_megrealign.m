@@ -122,7 +122,7 @@ Ntrials = length(data.trial);
 
 % retain only the MEG channels in the data and temporarily store
 % the rest, these will be added back to the transformed data later.
-cfg.channel = channelselection(cfg.channel, data.label);
+cfg.channel = ft_channelselection(cfg.channel, data.label);
 dataindx = match_str(data.label, cfg.channel);
 restindx = setdiff(1:length(data.label),dataindx);
 if ~isempty(restindx)
@@ -152,7 +152,7 @@ for i=1:Ntemplate
 end
 
 % to construct the average location of the MEG sensors, 4 channels are needed that should  be sufficiently far apart
-switch senstype(template(1))
+switch ft_senstype(template(1))
 case {'ctf151' 'ctf275'}
   labC = 'MZC01';
   labF = 'MZF03';
@@ -273,7 +273,7 @@ elseif isfield(cfg, 'vol')
 end
 volcfg.grad    = data.grad;
 volcfg.channel = data.label; % this might be a subset of the MEG channels
-[volold, data.grad] = prepare_headmodel(volcfg);
+[volold, data.grad] = ft_prepare_headmodel(volcfg);
 
 % note that it is neccessary to keep the two volume conduction models
 % seperate, since the single-shell Nolte model contains gradiometer specific
@@ -281,9 +281,9 @@ volcfg.channel = data.label; % this might be a subset of the MEG channels
 % good projection for local sphere models. 
 volcfg.grad    = template.grad;
 volcfg.channel = 'MEG'; % include all MEG channels
-[volnew, template.grad] = prepare_headmodel(volcfg);
+[volnew, template.grad] = ft_prepare_headmodel(volcfg);
 
-if strcmp(senstype(data.grad), senstype(template.grad))
+if strcmp(ft_senstype(data.grad), ft_senstype(template.grad))
   [id, it] = match_str(data.grad.label, template.grad.label);  
   fprintf('mean distance towards template gradiometers is %.2f %s\n', mean(sum((data.grad.pnt(id,:)-template.grad.pnt(it,:)).^2, 2).^0.5), template.grad.unit);
 else
@@ -303,10 +303,10 @@ pos(sel,:) = [];
 
 % compute the forward model for the new gradiometer positions
 fprintf('computing forward model for %d dipoles\n', size(pos,1));
-lfnew = compute_leadfield(pos, template.grad, volnew);
+lfnew = ft_compute_leadfield(pos, template.grad, volnew);
 if ~pertrial,
   %this needs to be done only once
-  lfold = compute_leadfield(pos, data.grad, volold);
+  lfold = ft_compute_leadfield(pos, data.grad, volold);
   [realign, noalign, bkalign] = computeprojection(lfold, lfnew, cfg.pruneratio, cfg.verify);
 else
   %the forward model and realignment matrices have to be computed for each trial
@@ -329,14 +329,14 @@ for i=1:Ntrials
     else
       %M    = rigidbodyJM(hmdat(:,1))
       M    = headcoordinates(hmdat(1:3,1),hmdat(4:6,1),hmdat(7:9,1));
-      grad = transform_sens(M, data.grad); 
+      grad = ft_transform_sens(M, data.grad); 
     end
 
     volcfg.grad = grad;
     %compute volume conductor
-    [volold, grad] = prepare_headmodel(volcfg);
+    [volold, grad] = ft_prepare_headmodel(volcfg);
     %compute forward model
-    lfold = compute_leadfield(pos, grad, volold);
+    lfold = ft_compute_leadfield(pos, grad, volold);
     %compute projection matrix
     [realign, noalign, bkalign] = computeprojection(lfold, lfnew, cfg.pruneratio, cfg.verify);
   end

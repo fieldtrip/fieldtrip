@@ -116,11 +116,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % collect and preprocess the electrodes/gradiometer and head model
-[vol, sens, cfg] = prepare_headmodel(cfg, data);
+[vol, sens, cfg] = ft_prepare_headmodel(cfg, data);
 
 % set the default for reducing the rank of the leadfields
 if ~isfield(cfg, 'reducerank')
-  if senstype(sens, 'eeg')
+  if ft_senstype(sens, 'eeg')
     cfg.reducerank = 3;
   else
     cfg.reducerank = 2;
@@ -130,11 +130,11 @@ end
 % construct the grid on which the scanning will be done
 [grid, cfg] = prepare_dipole_grid(cfg, vol, sens);
 
-if voltype(vol, 'openmeeg')
+if ft_voltype(vol, 'openmeeg')
   % the system call to the openmeeg executable makes it rather slow
   % calling it once is much more efficient
   fprintf('calculating leadfield for all positions at once, this may take a while...\n');
-  lf = compute_leadfield(grid.pos(grid.inside,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
+  lf = ft_compute_leadfield(grid.pos(grid.inside,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
   % reassign the large leadfield matrix over the single grid locations
   for i=1:length(grid.inside)
     sel = (3*i-2):(3*i);           % 1:3, 4:6, ...
@@ -149,7 +149,7 @@ else
     % compute the leadfield on all grid positions inside the brain
     progress(i/length(grid.inside), 'computing leadfield %d/%d\n', i, length(grid.inside));
     dipindx = grid.inside(i);
-    grid.leadfield{dipindx} = compute_leadfield(grid.pos(dipindx,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
+    grid.leadfield{dipindx} = ft_compute_leadfield(grid.pos(dipindx,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
     
     if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
       % multiply with the normalized dipole moment to get the leadfield in the desired orientation

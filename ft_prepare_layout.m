@@ -113,7 +113,7 @@ elseif isstruct(cfg.layout) && isfield(cfg.layout, 'pos') && isfield(cfg.layout,
 elseif isequal(cfg.layout, 'butterfly')
   if nargin>1 && ~isempty(data)
     % look at the data to determine the overlapping channels
-    cfg.channel = channelselection(cfg.channel, data.label);
+    cfg.channel = ft_channelselection(cfg.channel, data.label);
     chanindx    = match_str(data.label, cfg.channel);
     nchan       = length(data.label(chanindx));
     lay.label   = data.label(chanindx);
@@ -132,7 +132,7 @@ elseif isequal(cfg.layout, 'butterfly')
 elseif isequal(cfg.layout, 'vertical')
   if nargin>1 && ~isempty(data)
     % look at the data to determine the overlapping channels
-    cfg.channel = channelselection(data.label, cfg.channel); % with this order order of channels stays the same
+    cfg.channel = ft_channelselection(data.label, cfg.channel); % with this order order of channels stays the same
     [dum chanindx] = match_str(cfg.channel, data.label); % order of channels according to cfg specified by user
     nchan       = length(data.label(chanindx));
     lay.label   = data.label(chanindx);
@@ -158,7 +158,7 @@ elseif isequal(cfg.layout, 'vertical')
 elseif isequal(cfg.layout, 'ordered')
   if nargin>1 && ~isempty(data)
     % look at the data to determine the overlapping channels
-    cfg.channel = channelselection(cfg.channel, data.label);
+    cfg.channel = ft_channelselection(cfg.channel, data.label);
     chanindx    = match_str(data.label, cfg.channel);
     nchan       = length(data.label(chanindx));
     lay.label   = data.label(chanindx);
@@ -197,22 +197,22 @@ elseif isequal(cfg.layout, 'ordered')
   lay.pos(end+1,:) = [x y];
 
   % try to generate layout from other configuration options
-elseif ischar(cfg.layout) && filetype(cfg.layout, 'matlab')
+elseif ischar(cfg.layout) && ft_filetype(cfg.layout, 'matlab')
   fprintf('reading layout from file %s\n', cfg.layout);
   load(cfg.layout, 'lay');
 
-elseif ischar(cfg.layout) && filetype(cfg.layout, 'layout')
+elseif ischar(cfg.layout) && ft_filetype(cfg.layout, 'layout')
   fprintf('reading layout from file %s\n', cfg.layout);
   lay = readlay(cfg.layout);
 
-elseif ischar(cfg.layout) && ~filetype(cfg.layout, 'layout')
+elseif ischar(cfg.layout) && ~ft_filetype(cfg.layout, 'layout')
   % assume that cfg.layout is an electrode file
   fprintf('creating layout from electrode file %s\n', cfg.layout);
-  lay = sens2lay(read_sens(cfg.layout), cfg.rotate, cfg.projection, cfg.style);
+  lay = sens2lay(ft_read_sens(cfg.layout), cfg.rotate, cfg.projection, cfg.style);
 
 elseif ischar(cfg.elecfile)
   fprintf('creating layout from electrode file %s\n', cfg.elecfile);
-  lay = sens2lay(read_sens(cfg.elecfile), cfg.rotate, cfg.projection, cfg.style);
+  lay = sens2lay(ft_read_sens(cfg.elecfile), cfg.rotate, cfg.projection, cfg.style);
 
 elseif ~isempty(cfg.elec) && isstruct(cfg.elec)
   fprintf('creating layout from cfg.elec\n');
@@ -224,7 +224,7 @@ elseif isfield(data, 'elec') && isstruct(data.elec)
 
 elseif ischar(cfg.gradfile)
   fprintf('creating layout from gradiometer file %s\n', cfg.gradfile);
-  lay = sens2lay(read_sens(cfg.gradfile), cfg.rotate, cfg.projection, cfg.style);
+  lay = sens2lay(ft_read_sens(cfg.gradfile), cfg.rotate, cfg.projection, cfg.style);
 
 elseif ~isempty(cfg.grad) && isstruct(cfg.grad)
   fprintf('creating layout from cfg.grad\n');
@@ -571,15 +571,15 @@ if ~strcmp(cfg.montage, 'no')
   % pretend it is a sensor structure, this achieves averaging after channel matching
   tmp.tra   = lay.pos;
   tmp.label = lay.label;
-  new = apply_montage(tmp, cfg.montage);
+  new = ft_apply_montage(tmp, cfg.montage);
   lay.pos   = new.tra;
   lay.label = new.label;
   % do the same for the width and height
   tmp.tra = lay.width(:);
-  new = apply_montage(tmp, cfg.montage);
+  new = ft_apply_montage(tmp, cfg.montage);
   lay.width = new.tra;
   tmp.tra = lay.height(:);
-  new = apply_montage(tmp, cfg.montage);
+  new = ft_apply_montage(tmp, cfg.montage);
   lay.height = new.tra;
 end
 
@@ -626,7 +626,7 @@ end
 if strcmp(cfg.feedback, 'yes') && strcmpi(cfg.style, '2d')
   tmpcfg = [];
   tmpcfg.layout = lay;
-  layoutplot(tmpcfg);
+  ft_layoutplot(tmpcfg);
 end
 
 % to write the layout to a text file, you can use this code snippet
@@ -675,10 +675,10 @@ return % function readlay
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function lay = sens2lay(sens, rz, method, style)
 
-fprintf('creating layout for %s system\n', senstype(sens));
+fprintf('creating layout for %s system\n', ft_senstype(sens));
 % apply rotation
 if isempty(rz)
-  switch senstype(sens)
+  switch ft_senstype(sens)
     case {'ctf151', 'ctf275', 'bti148', 'bti248', 'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar'}
       rz = 90;
     case {'neuromag122', 'neuromag306'}
@@ -692,7 +692,7 @@ end
 sens.pnt = warp_apply(rotate([0 0 rz]), sens.pnt, 'homogenous');
 
 % use helper function for 3D layout
-[pnt, label] = channelposition(sens);
+[pnt, label] = ft_channelposition(sens);
 
 if strcmpi(style, '3d')
   lay.pos   = pnt;

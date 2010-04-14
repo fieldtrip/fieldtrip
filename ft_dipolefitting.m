@@ -212,7 +212,7 @@ end
 
 % prepare the volume conduction model and the sensor array
 % this updates the configuration with the appropriate fields
-[vol, sens, cfg] = prepare_headmodel(cfg, data);
+[vol, sens, cfg] = ft_prepare_headmodel(cfg, data);
 
 % select the desired channels, the order should be the same as in the sensor structure
 [selsens, seldata] = match_str(sens.label, data.label);
@@ -250,7 +250,7 @@ if ntime<1
 end
 
 % check whether EEG is average referenced
-if senstype(sens, 'eeg')
+if ft_senstype(sens, 'eeg')
   if any(rv(Vdata, avgref(Vdata))>0.001)
     warning('the EEG data is not average referenced, correcting this');
   end
@@ -301,7 +301,7 @@ if strcmp(cfg.gridsearch, 'yes')
       % reuse the previously computed leadfield
       lf = grid.leadfield{indx};
     else
-      lf = compute_leadfield(grid.pos(indx,:), sens, vol);
+      lf = ft_compute_leadfield(grid.pos(indx,:), sens, vol);
     end
     % the model is V=lf*mom+noise, therefore mom=pinv(lf)*V estimates the
     % dipole moment this makes the model potential U=lf*pinv(lf)*V and the
@@ -453,7 +453,7 @@ switch cfg.model
   case 'regional'
     if success
       % re-compute the leadfield in order to compute the model potential and dipole moment
-      lf = compute_leadfield(dip.pos, sens, vol);
+      lf = ft_compute_leadfield(dip.pos, sens, vol);
       % compute all details of the final dipole model
       dip.mom = pinv(lf)*Vdata;
       dip.pot = lf*dip.mom;

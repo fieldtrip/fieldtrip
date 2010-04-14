@@ -76,7 +76,7 @@ cfg.dip = fixdipole(cfg.dip);
 Ndipoles = size(cfg.dip.pos,1);
 
 % prepare the volume conductor and the sensor array
-[vol, sens, cfg] = prepare_headmodel(cfg, []);
+[vol, sens, cfg] = ft_prepare_headmodel(cfg, []);
 
 if ~isfield(cfg, 'ntrials') 
   if isfield(cfg.dip, 'signal')
@@ -168,15 +168,15 @@ simulated.time   = {};
 progress('init', cfg.feedback, 'computing simulated data');
 for trial=1:Ntrials
   progress(trial/Ntrials, 'computing simulated data for trial %d\n', trial);
-  lf = compute_leadfield(dippos{trial}, sens, vol);
+  lf = ft_compute_leadfield(dippos{trial}, sens, vol);
   simulated.trial{trial}  = lf * dipmom{trial} * dipsignal{trial};
   simulated.time{trial}   = time{trial};
 end
 progress('close');
 
-if senstype(sens, 'meg')
+if ft_senstype(sens, 'meg')
   simulated.grad = sens;
-elseif senstype(sens, 'meg')
+elseif ft_senstype(sens, 'meg')
   simulated.elec = sens;
 end
 

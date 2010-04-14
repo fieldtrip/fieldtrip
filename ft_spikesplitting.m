@@ -51,7 +51,7 @@ end
 fprintf('writing to output directory ''%s''\n', cfg.output);
 
 % read the header of the completete dataset
-hdr = read_header(cfg.dataset);
+hdr = ft_read_header(cfg.dataset);
 
 if isfield(hdr, 'orig') && isfield(hdr.orig, 'Header')
   [p, f, x]  = fileparts(cfg.output);
@@ -72,7 +72,7 @@ if numel(cfg.downscale)==1
 end
 
 % determine the selected channels
-cfg.channel        = channelselection(cfg.channel, hdr.label);
+cfg.channel        = ft_channelselection(cfg.channel, hdr.label);
 chansel            = match_str(hdr.label, cfg.channel);  % this is a list with the indices of the selected channels
 writechan          = zeros(1,hdr.nChans);
 writechan(chansel) = 1;                                  % this is a logical/boolean vector with a 0/1 for each channel
@@ -116,7 +116,7 @@ fprintf('duration of selection %02dh:%02dm:%02ds\n', h, m, s);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % split the DMA file into seperate channels
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~filetype(cfg.dataset, 'neuralynx_dma')
+if ~ft_filetype(cfg.dataset, 'neuralynx_dma')
   error('unsupported data format for DMA splitting');
 end
 

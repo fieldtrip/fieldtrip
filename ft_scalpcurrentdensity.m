@@ -75,7 +75,7 @@ end
 % get the electrode positions
 if isfield(cfg, 'elecfile')
   fprintf('reading electrodes from file %s\n', cfg.elecfile);
-  elec = read_sens(cfg.elecfile);
+  elec = ft_read_sens(cfg.elecfile);
 elseif isfield(cfg, 'elec')
   fprintf('using electrodes specified in the configuration\n');
   elec = cfg.elec;
@@ -84,8 +84,8 @@ elseif isfield(data, 'elec')
   elec = data.elec;
 elseif isfield(cfg, 'layout')
   fprintf('using the 2-D layout to determine the neighbours\n');
-  cfg.layout = prepare_layout(cfg);
-  cfg.neighbours = neighbourselection(cfg, data);
+  cfg.layout = ft_prepare_layout(cfg);
+  cfg.neighbours = ft_neighbourselection(cfg, data);
   % create a dummy electrode structure, this is needed for channel selection
   elec = [];
   elec.label  = cfg.layout.label;
@@ -139,7 +139,7 @@ elseif strcmp(cfg.method, 'hjorth')
   if ~isfield(cfg, 'neighbours')
     tmpcfg      = [];
     tmpcfg.elec = elec;
-    cfg.neighbours = neighbourselection(tmpcfg, data);
+    cfg.neighbours = ft_neighbourselection(tmpcfg, data);
   end
   % convert the neighbourhood structure into a montage
   labelnew = {};

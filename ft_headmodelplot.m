@@ -109,7 +109,7 @@ if ~isfield(cfg, 'plotbnd'),          cfg.plotbnd = 'no';            end
 if ~isfield(cfg, 'plotfiducial'),     cfg.plotfiducial = 'no';       end
 
 % extract/read the gradiometer and volume conductor
-[vol, sens, cfg] = prepare_headmodel(cfg, data);
+[vol, sens, cfg] = ft_prepare_headmodel(cfg, data);
 
 if strcmp(cfg.plotgrid, 'yes')
   if isfield(cfg.grid, 'pos')
@@ -130,8 +130,8 @@ else
 end
 
 % determine the type of input data
-ismeg          = senstype(sens, 'meg');
-iseeg          = senstype(sens, 'eeg');
+ismeg          = ft_senstype(sens, 'meg');
+iseeg          = ft_senstype(sens, 'eeg');
 isbem          = isfield(vol, 'bnd');
 issphere       = isfield(vol, 'r');
 ismultisphere  = isfield(vol, 'r') && length(vol.r)>4;
@@ -323,7 +323,7 @@ elseif ismeg
       headshape.pnt = cfg.headshape;
     elseif ischar(cfg.headshape)
       % read the headshape from file
-      headshape = read_headshape(cfg.headshape);
+      headshape = ft_read_headshape(cfg.headshape);
     else
       error('cfg.headshape is not specified correctly')
     end

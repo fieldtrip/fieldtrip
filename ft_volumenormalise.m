@@ -90,7 +90,7 @@ if isfield(cfg, 'coordinates')
 end
 
 % the template anatomy should always be stored in a SPM-compatible file
-if filetype(cfg.template, 'analyze_hdr') || filetype(cfg.template, 'analyze_img') || filetype(cfg.template, 'minc')
+if ft_filetype(cfg.template, 'analyze_hdr') || ft_filetype(cfg.template, 'analyze_img') || ft_filetype(cfg.template, 'minc')
   % based on the filetype assume that the coordinates correspond with MNI/SPM convention
   template_coordinates = 'spm';
 end
@@ -100,8 +100,8 @@ end
 if ischar(interp),
   fprintf('reading source MRI from file\n');
   filename = interp;
-  interp   = read_mri(filename);
-  if filetype(filename, 'ctf_mri')
+  interp   = ft_read_mri(filename);
+  if ft_filetype(filename, 'ctf_mri')
     % based on the filetype assume that the coordinates correspond with CTF convention
     source_coordinates = 'ctf';
   end
@@ -127,7 +127,7 @@ tmpcfg            = [];
 tmpcfg.downsample = cfg.downsample;
 tmpcfg.parameter  = cfg.parameter;
 tmpcfg.smooth     = cfg.smooth;
-interp = volumedownsample(tmpcfg, interp);
+interp = ft_volumedownsample(tmpcfg, interp);
 
 if isempty(source_coordinates)
   source_coordinates = determine_coordinates('input');       % use interactive helper-function

@@ -52,7 +52,7 @@ if ~isfield(cfg, 'arrowsize'),   cfg.arrowsize = nan;          end % length of t
 if ~isfield(cfg, 'arrowoffset'), cfg.arrowoffset = nan;        end % absolute, should be in in figure units, i.e. the same units as the layout
 if ~isfield(cfg, 'arrowlength'), cfg.arrowlength = 0.8;        end % relative to the complete line
 
-lay = prepare_layout(cfg, freq);
+lay = ft_prepare_layout(cfg, freq);
 
 beglabel = freq.labelcmb(:,1);
 endlabel = freq.labelcmb(:,2);

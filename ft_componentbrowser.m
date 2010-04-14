@@ -42,7 +42,7 @@ if numel(cfg.trial) > 1,
 end
 
 % Read or create the layout that will be used for plotting:
-[cfg.layout] = prepare_layout(cfg, comp);
+[cfg.layout] = ft_prepare_layout(cfg, comp);
 
 % Identify the channels to plot
 [labels, cfg.chanidx.lay, cfg.chanidx.comp] = intersect(cfg.layout.label, comp.topolabel); % in case channels are missing

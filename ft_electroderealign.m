@@ -130,7 +130,7 @@ if usetemplate
     if isstruct(cfg.template{i})
       template(i) = cfg.template{i};
     else
-      template(i) = read_sens(cfg.template{i});
+      template(i) = ft_read_sens(cfg.template{i});
     end
   end
 end

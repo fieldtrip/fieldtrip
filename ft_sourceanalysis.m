@@ -259,7 +259,7 @@ if ~istimelock && (strcmp(cfg.method, 'mne') || strcmp(cfg.method, 'loreta') || 
 end
 
 % select only those channels that are present in the data
-cfg.channel = channelselection(cfg.channel, data.label); 
+cfg.channel = ft_channelselection(cfg.channel, data.label); 
 
 if nargin>2 && (strcmp(cfg.randomization, 'no') && strcmp(cfg.permutation, 'no') && strcmp(cfg.prewhiten, 'no'))
   error('input of two conditions only makes sense if you want to randomize or permute, or if you want to prewhiten');
@@ -287,7 +287,7 @@ if isfreq
 end
 
 % collect and preprocess the electrodes/gradiometer and head model
-[vol, sens, cfg] = prepare_headmodel(cfg, data);
+[vol, sens, cfg] = ft_prepare_headmodel(cfg, data);
 
 % It might be that the number of channels in the data, the number of
 % channels in the electrode/gradiometer definition and the number of
@@ -299,7 +299,7 @@ Nchans = length(cfg.channel);
 % option to the specific method and will be passed on to the low-level
 % function
 if ~isfield(cfg.(cfg.method), 'reducerank')
-  if senstype(sens, 'meg')
+  if ft_senstype(sens, 'meg')
     cfg.(cfg.method).reducerank = 2;
   else
     cfg.(cfg.method).reducerank = 3;
@@ -309,7 +309,7 @@ end
 if strcmp(cfg.keepleadfield, 'yes') && (~isfield(cfg, 'grid') || ~isfield(cfg.grid, 'leadfield'))
   % precompute the leadfields upon the users request
   fprintf('precomputing leadfields\n');
-  [grid, cfg] = prepare_leadfield(cfg, data);
+  [grid, cfg] = ft_prepare_leadfield(cfg, data);
 elseif (strcmp(cfg.permutation,   'yes') || ...
     strcmp(cfg.randomization, 'yes') || ...
     strcmp(cfg.bootstrap,     'yes') || ...
@@ -319,7 +319,7 @@ elseif (strcmp(cfg.permutation,   'yes') || ...
     strcmp(cfg.rawtrial,      'yes')) && (~isfield(cfg, 'grid') || ~isfield(cfg.grid, 'leadfield'))
   % also precompute the leadfields if multiple trials have to be processed
   fprintf('precomputing leadfields for efficient handling of multiple trials\n');
-  [grid, cfg] = prepare_leadfield(cfg, data);
+  [grid, cfg] = ft_prepare_leadfield(cfg, data);
 else
   % only prepare the grid positions, the leadfield will be computed on the fly if not present
   [grid, cfg] = prepare_dipole_grid(cfg, vol, sens);
@@ -336,8 +336,8 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc'}))
     if ~isfield(cfg, 'supdip'), cfg.supdip = []; end
     if ~isfield(cfg, 'refchan'), cfg.refchan = []; end
     if ~isfield(cfg, 'supchan'), cfg.supchan = []; end
-    cfg.refchan = channelselection(cfg.refchan, data.label);
-    cfg.supchan = channelselection(cfg.supchan, data.label);
+    cfg.refchan = ft_channelselection(cfg.refchan, data.label);
+    cfg.supchan = ft_channelselection(cfg.supchan, data.label);
 
     % HACK: use some experimental code
     if nargin>2 && strcmp(cfg.prewhiten, 'no'),

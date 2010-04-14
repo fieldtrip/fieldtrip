@@ -56,13 +56,13 @@ elseif isfield(cfg, 'elec')
   sens = cfg.elec;
 elseif isfield(cfg, 'gradfile')
   fprintf('Obtaining the gradiometer configuration from a file.\n');
-  sens = read_sens(cfg.gradfile);
+  sens = ft_read_sens(cfg.gradfile);
 elseif isfield(cfg, 'elecfile')
   fprintf('Obtaining the electrode configuration from a file.\n');
-  sens = read_sens(cfg.elecfile);
+  sens = ft_read_sens(cfg.elecfile);
 elseif isfield(cfg, 'layout')
   fprintf('Using the 2-D layout to determine the neighbours\n');
-  lay = prepare_layout(cfg);
+  lay = ft_prepare_layout(cfg);
   sens = [];
   sens.label = lay.label;
   sens.pnt = lay.pos;

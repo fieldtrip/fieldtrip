@@ -287,7 +287,7 @@ elseif strcmp(data.dimord, 'subj_chan_freq') || strcmp(data.dimord, 'rpt_chan_fr
     data.(cfg.zparam)  = tempdata.powspctrm;
     clear tempdata
   else
-    data = freqdescriptives(tmpcfg, data);
+    data = ft_freqdescriptives(tmpcfg, data);
   end
   if ~isfield(cfg, 'xparam'),      cfg.xparam='freq';         end
   if ~isfield(cfg, 'yparam'),      cfg.yparam='';             end
@@ -311,11 +311,11 @@ elseif strcmp(data.dimord, 'subj_chan_freq_time') || strcmp(data.dimord, 'rpt_ch
     tempdata.label     = data.label;
     tempdata.powspctrm = data.(cfg.zparam);
     tempdata.cfg       = data.cfg;
-    tempdata           = freqdescriptives(tmpcfg, tempdata);
+    tempdata           = ft_freqdescriptives(tmpcfg, tempdata);
     data.(cfg.zparam)  = tempdata.powspctrm;
     clear tempdata
   else
-    data = freqdescriptives(tmpcfg, data);
+    data = ft_freqdescriptives(tmpcfg, data);
   end
   if ~isfield(cfg, 'xparam'),      cfg.xparam='time';         end
   if ~isfield(cfg, 'yparam'),      cfg.yparam='freq';         end
@@ -341,7 +341,7 @@ else
 end
 
 % Read or create the layout that will be used for plotting:
-lay = prepare_layout(cfg, data);
+lay = ft_prepare_layout(cfg, data);
 cfg.layout = lay;
 
 % Create time-series of small topoplots:
@@ -353,7 +353,7 @@ if ~ischar(cfg.xlim) && length(cfg.xlim)>2
   for i=1:length(xlims)-1
     subplot(ceil(sqrt(length(xlims)-1)), ceil(sqrt(length(xlims)-1)), i);
     cfg.xlim = xlims(i:i+1);
-    topoplotER(cfg, data);
+    ft_topoplotER(cfg, data);
   end
   return
 end
@@ -406,9 +406,9 @@ end
 % Apply baseline correction:
 if ~strcmp(cfg.baseline, 'no')
   if strcmp(cfg.xparam, 'freq') || strcmp(cfg.yparam, 'freq')
-    data = freqbaseline(cfg, data);
+    data = ft_freqbaseline(cfg, data);
   else
-    data = timelockbaseline(cfg, data);
+    data = ft_timelockbaseline(cfg, data);
   end
 end
 
@@ -598,12 +598,12 @@ templay.mask    = lay.mask;
 % For Highlight (channel-selection)
 for icell = 1:length(cfg.highlight)
   if ~strcmp(cfg.highlight{icell},'off')
-    [dum labelindex]   = match_str(channelselection(cfg.highlightchannel{icell}, data.label), lay.label);
-    highlightchansel   = [highlightchansel; match_str(data.label,channelselection(cfg.highlightchannel{icell}, data.label))];
+    [dum labelindex]   = match_str(ft_channelselection(cfg.highlightchannel{icell}, data.label), lay.label);
+    highlightchansel   = [highlightchansel; match_str(data.label,ft_channelselection(cfg.highlightchannel{icell}, data.label))];
     templay.pos        = lay.pos(labelindex,:);
     templay.width      = lay.width(labelindex);
     templay.height     = lay.height(labelindex);
-    templay.label      = channelselection(cfg.highlightchannel{icell}, data.label);
+    templay.label      = ft_channelselection(cfg.highlightchannel{icell}, data.label);
     if strcmp(cfg.highlight{icell}, 'labels') || strcmp(cfg.highlight{icell}, 'numbers')
       labelflg = 1;
     else
@@ -624,11 +624,11 @@ for icell = 1:length(cfg.highlight)
 end % for icell
 % For Markers (all channels)
 if ~strcmp(cfg.marker,'off')
-  [dum labelindex] = match_str(channelselection(setdiff(1:length(data.label),highlightchansel), data.label),lay.label);
+  [dum labelindex] = match_str(ft_channelselection(setdiff(1:length(data.label),highlightchansel), data.label),lay.label);
   templay.pos      = lay.pos(labelindex,:);
   templay.width    = lay.width(labelindex);
   templay.height   = lay.height(labelindex);
-  templay.label    = channelselection(setdiff(1:length(data.label),highlightchansel), data.label);
+  templay.label    = ft_channelselection(setdiff(1:length(data.label),highlightchansel), data.label);
   if strcmp(cfg.marker, 'labels') || strcmp(cfg.marker, 'numbers')
     labelflg = 1;
   else
@@ -716,7 +716,7 @@ fprintf('selected cfg.cohrefchannel = ''%s''\n', cfg.cohrefchannel);
 p = get(gcf, 'Position');
 f = figure;
 set(f, 'Position', p);
-topoplotER(cfg, varargin{:});
+ft_topoplotER(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting channels in case of cfg.interactive='yes'
@@ -733,7 +733,7 @@ if ~isempty(label)
   p = get(gcf, 'Position');
   f = figure;
   set(f, 'Position', p);
-  singleplotER(cfg, varargin{:});
+  ft_singleplotER(cfg, varargin{:});
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -752,5 +752,5 @@ if ~isempty(label)
   p = get(gcf, 'Position');
   f = figure;
   set(f, 'Position', p);
-  singleplotTFR(cfg, varargin{:});
+  ft_singleplotTFR(cfg, varargin{:});
 end

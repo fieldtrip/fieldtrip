@@ -118,10 +118,10 @@ if strcmp(cfg.artfctdef.eog.method, 'zvalue')
     cfg = checkconfig(cfg, 'required', {'headerfile', 'datafile'});  
     tmpcfg.datafile    = cfg.datafile;
     tmpcfg.headerfile  = cfg.headerfile;
-    [tmpcfg, artifact] = artifact_zvalue(tmpcfg);
+    [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg);
   elseif nargin ==2
     cfg = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
-    [tmpcfg, artifact] = artifact_zvalue(tmpcfg, data);
+    [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg, data);
   end
   cfg.artfctdef.eog  = tmpcfg.artfctdef.zvalue;
 else

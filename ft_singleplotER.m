@@ -95,7 +95,7 @@ elseif strcmp(varargin{1}.dimord, 'subj_chan_time') || strcmp(varargin{1}.dimord
   tmpcfg = [];
   tmpcfg.trials = cfg.trials;
   for i=1:(nargin-1)
-    varargin{i} = timelockanalysis(tmpcfg, varargin{i});
+    varargin{i} = ft_timelockanalysis(tmpcfg, varargin{i});
   end
   if ~isfield(cfg, 'xparam'),      cfg.xparam='time';                  end
   if ~isfield(cfg, 'zparam'),      cfg.zparam='avg';                   end
@@ -113,14 +113,14 @@ elseif strcmp(varargin{1}.dimord, 'subj_chan_freq') || strcmp(varargin{1}.dimord
       tempdata.label     = varargin{i}.label;
       tempdata.powspctrm = varargin{i}.(cfg.zparam);
       tempdata.cfg       = varargin{i}.cfg;
-      tempdata           = freqdescriptives(tmpcfg, tempdata);
+      tempdata           = ft_freqdescriptives(tmpcfg, tempdata);
       varargin{i}.(cfg.zparam)  = tempdata.powspctrm;
       clear tempdata
     end
   else
     for i=1:(nargin-1)
       if isfield(varargin{i}, 'crsspctrm'), varargin{i} = rmfield(varargin{i}, 'crsspctrm'); end % on the fly computation of coherence spectrum is not supported
-      varargin{i} = freqdescriptives(tmpcfg, varargin{i});
+      varargin{i} = ft_freqdescriptives(tmpcfg, varargin{i});
     end
   end
   if ~isfield(cfg, 'xparam'),      cfg.xparam='freq';                  end
@@ -148,7 +148,7 @@ for k=1:length(varargin)
     if strcmp(cfg.cohrefchannel, 'gui')
       % Open a single figure with the channel layout, the user can click on a reference channel
       h = clf;
-      lay = prepare_layout(cfg, varargin{1});
+      lay = ft_prepare_layout(cfg, varargin{1});
       cfg.layout = lay;
       plot_lay(cfg.layout, 'box', false);
       title('Select the reference channel by clicking on it...');
@@ -175,7 +175,7 @@ for k=1:length(varargin)
   % Apply baseline correction:
   if ~strcmp(cfg.baseline, 'no')
     if strcmp(cfg.xparam, 'time')
-      varargin{k} = timelockbaseline(cfg, varargin{k});
+      varargin{k} = ft_timelockbaseline(cfg, varargin{k});
     elseif strcmp(cfg.xparam, 'freq')
       warning('Baseline correction not possible for powerspectra');
     else 
@@ -226,7 +226,7 @@ for k=2:nargin
  end
 
   % select channels
-  cfg.channel = channelselection(cfg.channel, varargin{k-1}.label);
+  cfg.channel = ft_channelselection(cfg.channel, varargin{k-1}.label);
   if isempty(cfg.channel)
     error('no channels selected');
   else
@@ -311,7 +311,7 @@ fprintf('selected cfg.cohrefchannel = ''%s''\n', cfg.cohrefchannel);
 p = get(gcf, 'Position');
 f = figure;
 set(f, 'Position', p);
-singleplotER(cfg, varargin{:});
+ft_singleplotER(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting a time range
@@ -324,4 +324,4 @@ fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
 p = get(gcf, 'Position');
 f = figure;
 set(f, 'Position', p);
-topoplotER(cfg, varargin{:});
+ft_topoplotER(cfg, varargin{:});

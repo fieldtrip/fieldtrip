@@ -76,7 +76,7 @@ if isfield(cfg, 'layout')
 end
 
 % otherwise create the layout structure
-if isempty(lay), lay = prepare_layout(cfg, data); end;
+if isempty(lay), lay = ft_prepare_layout(cfg, data); end;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % plot all details pertaining to the layout in one figure

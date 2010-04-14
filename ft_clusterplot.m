@@ -94,7 +94,7 @@ if isfield(cfg, 'shading'),               cfgtopo.shading        =  cfg.shading'
 cfgtopo.zparam = cfg.zparam;
 
 % prepare the layout, this only has to be done once
-cfgtopo.layout = prepare_layout(cfg, stat);
+cfgtopo.layout = ft_prepare_layout(cfg, stat);
 
 % detect 2D or 1D
 is2D = isfield(stat,'time');
@@ -287,7 +287,7 @@ else
           cfgtopo.comment = strcat('time: ',num2str(stat.time(ind_timewin_min+PlN-1)), ' s');
           cfgtopo.commentpos = 'title';
           subplot(3,5,iT);
-          topoplotER(cfgtopo, stat);
+          ft_topoplotER(cfgtopo, stat);
         end
       elseif iPl == Nfig
         for iT = 1:Npl-(15*(Nfig-1))
@@ -297,7 +297,7 @@ else
           cfgtopo.comment = strcat('time: ',num2str(stat.time(ind_timewin_min+PlN-1)), ' s');
           cfgtopo.commentpos = 'title';
           subplot(3,5,iT);
-          topoplotER(cfgtopo, stat);
+          ft_topoplotER(cfgtopo, stat);
         end
       end
     else
@@ -306,7 +306,7 @@ else
       cfgtopo.yparam = '';
       cfgtopo.comment = strcat(compos,comneg);
       cfgtopo.commentpos = 'title';
-      topoplotER(cfgtopo, stat);
+      ft_topoplotER(cfgtopo, stat);
     end
     % save figure
     if isequal(cfg.saveaspng,'no');

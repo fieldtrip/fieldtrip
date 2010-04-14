@@ -129,7 +129,7 @@ elseif strcmp(varargin{1}.dimord, 'subj_chan_time') || strcmp(varargin{1}.dimord
   tmpcfg = [];
   tmpcfg.trials = cfg.trials;
   for i=1:(nargin-1)
-    varargin{i} = timelockanalysis(tmpcfg, varargin{i});
+    varargin{i} = ft_timelockanalysis(tmpcfg, varargin{i});
   end
   if ~isfield(cfg, 'xparam'),      cfg.xparam='time';                  end
   if ~isfield(cfg, 'zparam'),      cfg.zparam='avg';                   end
@@ -172,7 +172,7 @@ end
 cfg = checkconfig(cfg, 'unused',  {'cohtargetchannel'});
 
 % Read or create the layout that will be used for plotting
-lay = prepare_layout(cfg, varargin{1});
+lay = ft_prepare_layout(cfg, varargin{1});
 cfg.layout = lay;
 
 for k=1:length(varargin)
@@ -211,9 +211,9 @@ for k=1:length(varargin)
   % Apply baseline correction:
   if ~strcmp(cfg.baseline, 'no')
     if strcmp(cfg.xparam, 'time')
-      varargin{k} = timelockbaseline(cfg, varargin{k});
+      varargin{k} = ft_timelockbaseline(cfg, varargin{k});
     elseif strcmp(cfg.xparam, 'freq')
-      varargin{k} = freqbaseline(cfg, varargin{k});
+      varargin{k} = ft_freqbaseline(cfg, varargin{k});
     else 
       warning('Baseline not applied, please set cfg.xparam');
     end
@@ -517,7 +517,7 @@ fprintf('selected cfg.cohrefchannel = ''%s''\n', cfg.cohrefchannel);
 p = get(gcf, 'Position');
 f = figure;
 set(f, 'Position', p);
-multiplotER(cfg, varargin{:});
+ft_multiplotER(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting channels in case of cfg.interactive='yes'
@@ -534,6 +534,6 @@ if ~isempty(label)
   p = get(gcf, 'Position');
   f = figure;
   set(f, 'Position', p);
-  singleplotER(cfg, varargin{:});
+  ft_singleplotER(cfg, varargin{:});
 end
 

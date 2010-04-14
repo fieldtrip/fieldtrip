@@ -20,7 +20,7 @@ fieldtripdefs
 
 data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
-if ~senstype(data, 'ctf')
+if ~ft_senstype(data, 'ctf')
   error('synthetic gradients can only be computed for CTF data');
 end
 

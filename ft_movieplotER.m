@@ -4,7 +4,7 @@ function ft_movieplotER(cfg, timelock)
 % time-locked average.
 %
 % Use as
-%   FT_MOVIEPLOTER(cfg, timelock)
+%   FT_movieplotER(cfg, timelock)
 % where the input data is from FT_TIMELOCKANALYSIS and the configuration
 % can contain
 %   cfg.samperframe  = number, samples per fram (default = 1)
@@ -42,7 +42,7 @@ if ~isfield(cfg, 'framespersec'),  cfg.framespersec = 5;          end
 if ~isfield(cfg, 'framesfile'),    cfg.framesfile = 'no';         end
 
 % Read or create the layout that will be used for plotting:
-lay = prepare_layout(cfg, timelock);
+lay = ft_prepare_layout(cfg, timelock);
 
 % Select the channels in the data that match with the layout:
 [seldat, sellay] = match_str(timelock.label, lay.label);

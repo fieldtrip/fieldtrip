@@ -87,8 +87,8 @@ if ischar(mri),
   % read the anatomical MRI data from file   
   filename = mri;
   fprintf('reading MRI from file\n');
-  mri = read_mri(filename);
-  if filetype(filename, 'ctf_mri') && isempty(cfg.coordinates)
+  mri = ft_read_mri(filename);
+  if ft_filetype(filename, 'ctf_mri') && isempty(cfg.coordinates)
     % based on the filetype assume that the coordinates correspond with CTF convention
     cfg.coordinates = 'ctf';
   end

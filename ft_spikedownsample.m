@@ -81,7 +81,7 @@ if ~isfield(cfg, 'fsample'),            cfg.fsample = 1000;               end
 %if ~isfield(cfg, 'method'),            cfg.method = [];                  end
 
 if ~isfield(cfg, 'calibration')
-  if filetype(cfg.dataset, 'neuralynx_dma') || filetype(cfg.dataset, 'neuralynx_sdma')
+  if ft_filetype(cfg.dataset, 'neuralynx_dma') || ft_filetype(cfg.dataset, 'neuralynx_sdma')
     error('You must specify cfg.calibration in case of neuralynx_dma or neuralynx_sdma');
   else
     cfg.calibration = 1;
@@ -101,8 +101,8 @@ if ~status
 end
 
 % read the header of the completete dataset
-hdr = read_header(cfg.dataset);
-cfg.channel = channelselection(cfg.channel, hdr.label);
+hdr = ft_read_header(cfg.dataset);
+cfg.channel = ft_channelselection(cfg.channel, hdr.label);
 chansel = match_str(hdr.label, cfg.channel);
 
 if strcmp(cfg.timestampdefinition, 'sample')
@@ -191,7 +191,7 @@ for i=chansel(:)'
   % read the data of a single channel and concatenate into one vector
   org = zeros(1,sum(numsample));
   for j=1:numsegment
-    buf = read_data(cfg.dataset, 'header', hdr, 'begsample', begsample(j), 'endsample', endsample(j), 'chanindx', i);
+    buf = ft_read_data(cfg.dataset, 'header', hdr, 'begsample', begsample(j), 'endsample', endsample(j), 'chanindx', i);
 
     % apply the optional calibration to the data to ensure that the numbers represent uV
     if cfg.calibration~=1
@@ -214,7 +214,7 @@ for i=chansel(:)'
   % apply preprocessing and downsample
   fprintf('preprocessing\n');
   dat = preproc(org, label, hdr.Fs, cfg.preproc);
-  dat = preproc_resample(dat, hdr.Fs, cfg.fsample, cfg.method);
+  dat = ft_preproc_resample(dat, hdr.Fs, cfg.fsample, cfg.method);
 
   chanhdr             = [];
   chanhdr.nChans      = 1;
@@ -244,7 +244,7 @@ for i=chansel(:)'
   % the output file contains the new channel name
   datafile = fullfile(cfg.output, chanhdr.label{1});  % this is without filename extension
   fprintf('writing to file ''%s''\n', datafile);
-  write_data(datafile, dat, 'header', chanhdr, 'dataformat', cfg.dataformat);
+  ft_write_data(datafile, dat, 'header', chanhdr, 'dataformat', cfg.dataformat);
 
   % keep memory tidy
   clear dat

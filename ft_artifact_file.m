@@ -20,9 +20,9 @@ if isfield(cfg, 'rejectfile') && ~strcmp(cfg.rejectfile, 'no')
   cfg = checkconfig(cfg, 'dataset2files', {'yes'});
   cfg = checkconfig(cfg, 'required', {'headerfile'});
   hdr = read_header(cfg.headerfile);
-  if filetype(cfg.rejectfile, 'eep_rej')
+  if ft_filetype(cfg.rejectfile, 'eep_rej')
     artifact = read_eep_rej(cfg.rejectfile);
-  elseif filetype(cfg.rejectfile, 'brainvision_marker')
+  elseif ft_filetype(cfg.rejectfile, 'brainvision_marker')
     artifact = read_brainvision_marker(cfg.rejectfile);
   else
     error(sprintf('unrecognized filetype for rejection file ''%s''', cfg.rejectfile));

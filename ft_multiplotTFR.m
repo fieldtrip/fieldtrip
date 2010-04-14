@@ -135,11 +135,11 @@ elseif strcmp(data.dimord, 'subj_chan_freq_time') || strcmp(data.dimord, 'rpt_ch
     tempdata.label     = data.label;
     tempdata.powspctrm = data.(cfg.zparam);
     tempdata.cfg       = data.cfg;
-    tempdata           = freqdescriptives(tmpcfg, tempdata);
+    tempdata           = ft_freqdescriptives(tmpcfg, tempdata);
     data.(cfg.zparam)  = tempdata.powspctrm;
     clear tempdata
   else
-    data = freqdescriptives(tmpcfg, data);
+    data = ft_freqdescriptives(tmpcfg, data);
   end
   if ~isfield(cfg, 'xparam'),      cfg.xparam='time';                  end
   if ~isfield(cfg, 'yparam'),      cfg.yparam='freq';                  end
@@ -186,7 +186,7 @@ end
 
 % Apply baseline correction:
 if ~strcmp(cfg.baseline, 'no')
-  data = freqbaseline(cfg, data);
+  data = ft_freqbaseline(cfg, data);
 end
 
 % Get physical x-axis range:
@@ -426,7 +426,7 @@ fprintf('selected cfg.cohrefchannel = ''%s''\n', cfg.cohrefchannel);
 p = get(gcf, 'Position');
 f = figure;
 set(f, 'Position', p);
-multiplotTFR(cfg, varargin{:});
+ft_multiplotTFR(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting channels in case of cfg.interactive='yes'
@@ -444,6 +444,6 @@ if ~isempty(label)
   p = get(gcf, 'Position');
   f = figure;
   set(f, 'Position', p);
-  singleplotTFR(cfg, varargin{:});
+  ft_singleplotTFR(cfg, varargin{:});
 end
 

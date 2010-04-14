@@ -95,11 +95,11 @@ elseif strcmp(data.dimord, 'subj_chan_freq_time') || strcmp(data.dimord, 'rpt_ch
     tempdata.label     = data.label;
     tempdata.powspctrm = data.(cfg.zparam);
     tempdata.cfg       = data.cfg;
-    tempdata           = freqdescriptives(tmpcfg, tempdata);
+    tempdata           = ft_freqdescriptives(tmpcfg, tempdata);
     data.(cfg.zparam)  = tempdata.powspctrm;
     clear tempdata
   else
-    data = freqdescriptives(tmpcfg, data);
+    data = ft_freqdescriptives(tmpcfg, data);
   end
   if ~isfield(cfg, 'xparam'),      cfg.xparam='time';                  end
   if ~isfield(cfg, 'yparam'),      cfg.yparam='freq';                  end
@@ -125,7 +125,7 @@ if (strcmp(cfg.zparam,'cohspctrm')) && (isfield(data, 'labelcmb'))
   if strcmp(cfg.cohrefchannel, 'gui')
     % Open a single figure with the channel layout, the user can click on a reference channel
     h = clf;
-    lay = prepare_layout(cfg, data);
+    lay = ft_prepare_layout(cfg, data);
     cfg.layout = lay;
     plot_lay(lay, 'box', false);
     title('Select the reference channel by clicking on it...');
@@ -149,7 +149,7 @@ if (strcmp(cfg.zparam,'cohspctrm')) && (isfield(data, 'labelcmb'))
   data           = rmfield(data, 'labelcmb');
 end
 
-cfg.channel = channelselection(cfg.channel, data.label);
+cfg.channel = ft_channelselection(cfg.channel, data.label);
 if isempty(cfg.channel)
   error('no channels selected');
 else
@@ -164,7 +164,7 @@ end
 
 % Apply baseline correction:
 if ~strcmp(cfg.baseline, 'no')
-  data = freqbaseline(cfg, data);
+  data = ft_freqbaseline(cfg, data);
 end
 
 % Get physical x-axis range:
@@ -320,7 +320,7 @@ fprintf('selected cfg.cohrefchannel = ''%s''\n', cfg.cohrefchannel);
 p = get(gcf, 'Position');
 f = figure;
 set(f, 'Position', p);
-singleplotTFR(cfg, varargin{:});
+ft_singleplotTFR(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting a time range
@@ -334,4 +334,4 @@ fprintf('selected cfg.ylim = [%f %f]\n', cfg.ylim(1), cfg.ylim(2));
 p = get(gcf, 'Position');
 f = figure;
 set(f, 'Position', p);
-topoplotER(cfg, varargin{:});
+ft_topoplotER(cfg, varargin{:});
