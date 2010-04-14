@@ -79,15 +79,15 @@ end
 if isfield(data, 'topolabel')
   % the data reflects a componentanalysis, where the topographic and the
   % timecourse labels are different
-  cfg.channel = channelselection(cfg.channel, data.topolabel);
+  cfg.channel = ft_channelselection(cfg.channel, data.topolabel);
 elseif isfield(data, 'label')
   % In the subsequent code, the matching channels in the sensor array and
   % in the configuration will be selected. To ensure that these channels
   % are also present in the data, update the configuration to match the data.
-  cfg.channel = channelselection(cfg.channel, data.label);
+  cfg.channel = ft_channelselection(cfg.channel, data.label);
 else
   % update the selected channels based on the electrode/gradiometer definition
-  cfg.channel = channelselection(cfg.channel, sens.label);
+  cfg.channel = ft_channelselection(cfg.channel, sens.label);
 end
 
 % ensure that these are a struct, which may be required in case configuration tracking is used
@@ -95,7 +95,7 @@ vol  = struct(vol);
 sens = struct(sens);
 
 % the prepare_vol_sens function from the forwinv module does most of the actual work
-[vol, sens] = prepare_vol_sens(vol, sens, 'channel', cfg.channel, 'order', cfg.order);
+[vol, sens] = ft_prepare_vol_sens(vol, sens, 'channel', cfg.channel, 'order', cfg.order);
 
 % update the selected channels in the configuration
 cfg.channel = sens.label;

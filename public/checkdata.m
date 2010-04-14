@@ -337,7 +337,7 @@ if issource || isvolume,
 
   if isequal(hasunits, 'yes') && ~isfield(data, 'units')
     % calling convert_units with only the input data adds the units without converting
-    data = convert_units(data);
+    data = ft_convert_units(data);
   end
   
   % the following section is to make a dimord-consistent representation of

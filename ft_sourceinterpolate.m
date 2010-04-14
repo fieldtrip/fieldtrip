@@ -53,7 +53,7 @@ cfg = checkconfig(cfg, 'deprecated', {'sourceunits', 'mriunits'});
 if ischar(anatomical)
   % read the anatomical MRI data from file
   fprintf('reading MRI from file\n');
-  anatomical = read_mri(anatomical);
+  anatomical = ft_read_mri(anatomical);
 end
 
 % check if the input data is valid for this function and ensure that the structures correctly describes a volume

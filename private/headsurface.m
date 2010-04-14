@@ -105,7 +105,7 @@ elseif ~isempty(vol) && isfield(vol, 'r') && length(vol.r)<5
   pnt(:,3) = pnt(:,3) + origin(3);
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif voltype(vol, 'multisphere')
+elseif ft_voltype(vol, 'multisphere')
   % local spheres MEG model, this also requires a gradiometer structure
   grad = sens;
   if ~isfield(grad, 'tra') || ~isfield(grad, 'pnt')
@@ -140,7 +140,7 @@ elseif voltype(vol, 'multisphere')
   tri = projecttri(pnt);
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif voltype(vol, 'bem') ||  voltype(vol, 'nolte')
+elseif ft_voltype(vol, 'bem') ||  ft_voltype(vol, 'nolte')
   % volume conduction model with triangulated boundaries
   switch surface
     case 'skin'

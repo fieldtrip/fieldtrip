@@ -116,7 +116,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % collect and preprocess the electrodes/gradiometer and head model
-[vol, sens, cfg] = ft_prepare_headmodel(cfg, data);
+[vol, sens, cfg] = prepare_headmodel(cfg, data);
 
 % set the default for reducing the rank of the leadfields
 if ~isfield(cfg, 'reducerank')

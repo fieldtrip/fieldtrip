@@ -69,4 +69,4 @@ switch fileformat
 end
 
 % this will add the units to the volume conductor model
-vol = convert_units(vol);
+vol = ft_convert_units(vol);

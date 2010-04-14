@@ -260,16 +260,16 @@ hold on
 
 % the "individual" struct is a local copy, so it is safe to change it here
 if ~isempty(individual.vol)
-  individual.vol = transform_vol(H, individual.vol);
+  individual.vol = ft_transform_vol(H, individual.vol);
 end
 if ~isempty(individual.elec)
-  individual.elec = transform_sens(H, individual.elec);
+  individual.elec = ft_transform_sens(H, individual.elec);
 end
 if ~isempty(individual.grad)
-  individual.grad = transform_sens(H, individual.grad);
+  individual.grad = ft_transform_sens(H, individual.grad);
 end
 if ~isempty(individual.headshape)
-  individual.headshape = transform_headshape(H, individual.headshape);
+  individual.headshape = ft_transform_headshape(H, individual.headshape);
 end
 
 if ~isempty(template.elec)

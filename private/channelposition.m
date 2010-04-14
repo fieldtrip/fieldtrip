@@ -25,7 +25,7 @@ if isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(sens.
   end
 end
 
-switch senstype(sens)
+switch ft_senstype(sens)
   case {'ctf151', 'ctf275' 'bti148', 'bti248', 'chieti153', 'yokogawa160'}
     % remove the non-MEG channels altogether
     sel = chantype(sens, 'meg');

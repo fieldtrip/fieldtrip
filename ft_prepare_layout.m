@@ -692,7 +692,7 @@ end
 sens.pnt = warp_apply(rotate([0 0 rz]), sens.pnt, 'homogenous');
 
 % use helper function for 3D layout
-[pnt, label] = ft_channelposition(sens);
+[pnt, label] = channelposition(sens);
 
 if strcmpi(style, '3d')
   lay.pos   = pnt;

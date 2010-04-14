@@ -212,7 +212,7 @@ end
 
 % prepare the volume conduction model and the sensor array
 % this updates the configuration with the appropriate fields
-[vol, sens, cfg] = ft_prepare_headmodel(cfg, data);
+[vol, sens, cfg] = prepare_headmodel(cfg, data);
 
 % select the desired channels, the order should be the same as in the sensor structure
 [selsens, seldata] = match_str(sens.label, data.label);

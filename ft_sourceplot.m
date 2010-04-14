@@ -215,7 +215,7 @@ try, cfg.maskparameter = cfg.maskparameter{1}; end
 tmpcfg = [];
 tmpcfg.parameter  = {cfg.funparameter, cfg.maskparameter, 'anatomy'};
 tmpcfg.downsample = cfg.downsample;
-data = volumedownsample(tmpcfg, data);
+data = ft_volumedownsample(tmpcfg, data);
 
 %%% make the local variables:
 dim = data.dim;
@@ -226,7 +226,7 @@ if ~isempty(cfg.atlas)
   hasatlas = 1;
   [p, f, x] = fileparts(cfg.atlas);
   fprintf(['reading ', f,' atlas coordinates and labels\n']);
-  atlas = prepare_atlas(cfg.atlas);
+  atlas = ft_prepare_atlas(cfg.atlas);
 end
 
 hasroi = 0;

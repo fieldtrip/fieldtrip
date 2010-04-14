@@ -55,7 +55,7 @@ elseif size(vol.mat,1)==nskin
   % the output leadfield corresponds to the number skin vertices
 elseif size(vol.mat,1)==nall
   % the output leadfield corresponds to the total number of vertices
-elseif strcmp(voltype(vol),'openmeeg')
+elseif strcmp(ft_voltype(vol),'openmeeg')
   % this is handled differently, although at the moment I don't know why
 else
   error('unexpected size of vol.mat')
@@ -65,7 +65,7 @@ end
 cond = vol.cond(vol.source);
 
 % compute the infinite medium potential on all vertices
-switch voltype(vol)
+switch ft_voltype(vol)
   case 'avo'
     % the system matrix was computed using code from Adriaan van Oosterom
     % the code by Adriaan van Oosterom does not implement isolated source approach
@@ -107,10 +107,10 @@ switch voltype(vol)
     lf = cat(1, lf{:});
    
   otherwise
-    error('unsupported type of volume conductor (%s)\n', voltype(vol));
-end % switch voltype
+    error('unsupported type of volume conductor (%s)\n', ft_voltype(vol));
+end % switch ft_voltype
 
-if isfield(vol, 'mat') && ~voltype(vol, 'openmeeg')
+if isfield(vol, 'mat') && ~ft_voltype(vol, 'openmeeg')
   
   % compute the bounded medium potential on all vertices
   % this may include the bilinear interpolation from vertices towards electrodes

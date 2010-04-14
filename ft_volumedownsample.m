@@ -19,7 +19,9 @@ function [down] = ft_volumedownsample(cfg, source);
 fieldtripdefs
 
 % check if SPM2 is in path and if not add
-hastoolbox('SPM2',1);
+if ~hastoolbox('SPM8', 0, 1); % No need to add SPM2 when SPM8 is available
+    hastoolbox('SPM2',1);
+end
 
 %% checkdata see below!!! %%
 
