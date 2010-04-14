@@ -464,7 +464,7 @@ switch cfg.model
     for t=1:ntime
       if success(t)
         % re-compute the leadfield in order to compute the model potential and dipole moment
-        lf = compute_leadfield(dip(t).pos, sens, vol);
+        lf = ft_compute_leadfield(dip(t).pos, sens, vol);
         % compute all details of the final dipole model
         dip(t).mom = pinv(lf)*Vdata(:,t);
         dip(t).pot = lf*dip(t).mom;

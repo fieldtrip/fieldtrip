@@ -122,9 +122,9 @@ end
 
 % ensure that channelselection and selection of channelcombinations is
 % perfomed consistently
-cfg.channel = channelselection(cfg.channel, data.label);
+cfg.channel = ft_channelselection(cfg.channel, data.label);
 if isfield(cfg, 'channelcmb')
-  cfg.channelcmb = channelcombination(cfg.channelcmb, data.label);
+  cfg.channelcmb = ft_channelcombination(cfg.channelcmb, data.label);
 end
 
 % determine the corresponding indices of all channels

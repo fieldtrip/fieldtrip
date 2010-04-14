@@ -107,7 +107,7 @@ case {'linear_mix'}
     trial{tr} = tmp;
     
     % add some noise
-    trial{tr} = preproc_baselinecorrect(trial{tr} + cfg.absnoise*randn(size(trial{tr})));
+    trial{tr} = ft_preproc_baselinecorrect(trial{tr} + cfg.absnoise*randn(size(trial{tr})));
     
     % define time axis for this trial
     time{tr}  = tim;
@@ -126,7 +126,7 @@ case {'mvnrnd'}
     for kk = 1:cfg.nsignal
       begsmp =      + shift(kk) + 1;
       endsmp = nsmp + 2*fltpad + shift(kk);
-      newtmp(kk,:) = preproc_baselinecorrect(tmp(kk,begsmp:endsmp));
+      newtmp(kk,:) = ft_preproc_baselinecorrect(tmp(kk,begsmp:endsmp));
     end
   
     % apply preproc
@@ -135,7 +135,7 @@ case {'mvnrnd'}
     trial{k} = newtmp;
     
     % add some noise
-    trial{k} = preproc_baselinecorrect(trial{k} + cfg.absnoise*randn(size(trial{k})));
+    trial{k} = ft_preproc_baselinecorrect(trial{k} + cfg.absnoise*randn(size(trial{k})));
   
     % define time axis for this trial
     time{k}  = tim;

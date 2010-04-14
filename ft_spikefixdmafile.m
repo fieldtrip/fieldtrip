@@ -31,7 +31,7 @@ if isempty(cfg.output)
 end
 
 try
-  hdr = read_header(cfg.dataset);
+  hdr = ft_read_header(cfg.dataset);
 catch
   disp(lasterr);
 end

@@ -24,7 +24,7 @@ if strcmp(cfg.foi, 'all'),
   cfg.foi = [0:1:data.fsampleorig./2];
 end
 
-cfg.channel    = channelselection(cfg.channel,      data.label);
+cfg.channel    = ft_channelselection(cfg.channel,      data.label);
 %cfg.channelcmb = channelcombination(cfg.channelcmb, data.label);
 
 %keeprpt  = strcmp(cfg.keeptrials, 'yes');

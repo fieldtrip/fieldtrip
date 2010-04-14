@@ -39,7 +39,7 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 % cfg.normalizecov
 % cfg.preproc
 %
-% This function depends on FT_PREPROC which has the following options:
+% This function depends on PREPROC which has the following options:
 % cfg.absdiff
 % cfg.blc
 % cfg.blcwindow
@@ -119,7 +119,7 @@ for i=1:ntrial
 end
 
 % determine the channels of interest
-cfg.channel = channelselection(cfg.channel, data.label);
+cfg.channel = ft_channelselection(cfg.channel, data.label);
 chansel     = match_str(data.label, cfg.channel);
 nchan       = length(cfg.channel);  % number of channels
 numsamples  = zeros(ntrial,1);      % number of selected samples in each trial, is determined later
@@ -356,7 +356,7 @@ for i=1:ntrial
     dat = data.trial{i}(chansel, begsampl:endsampl);
     if ~isempty(dat)  % we did not exlude this case above
       if strcmp(cfg.removemean, 'yes')
-        dat = preproc_baselinecorrect(dat);
+        dat = ft_preproc_baselinecorrect(dat);
       end
       covsig(i,:,:) = dat * dat';
     end
@@ -370,7 +370,7 @@ for i=1:ntrial
     dat = data.trial{i}(chansel, begsampl:endsampl);
     if ~isempty(dat)  % we did not exlude this case above
       if strcmp(cfg.removemean, 'yes')
-        dat = preproc_baselinecorrect(dat);
+        dat = ft_preproc_baselinecorrect(dat);
       end
       covbl(i,:,:) = dat * dat';
     end

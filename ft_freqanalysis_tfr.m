@@ -59,7 +59,7 @@ if isfield(cfg, 'output') && strcmp(cfg.output, 'powandcsd'),
 end
 
 % determine the channels of interest
-cfg.channel = channelselection(cfg.channel, data.label);
+cfg.channel = ft_channelselection(cfg.channel, data.label);
 chansel     = match_str(data.label, cfg.channel);
 
 % determine the duration of each trial

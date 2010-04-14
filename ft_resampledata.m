@@ -15,7 +15,7 @@ function [data] = ft_resampledata(cfg, data);
 %
 % Instead of specifying cfg.resamplefs, you can also specify a time axis on
 % which you want the data to be resampled. This is usefull for merging data
-% from two acquisition devides, after resampledata you can call APPENDDATA
+% from two acquisition devides, after resampledata you can call FT_APPENDDATA
 % to concatenate the channles from the different acquisition devices.
 %   cfg.time        = cell-array with one time axis per trial (i.e. from another dataset)
 %   cfg.method      = interpolation method, see INTERP1 (default = 'pchip')
@@ -110,10 +110,10 @@ if usefsample
   for itr = 1:ntr
     progress(itr/ntr, 'resampling data in trial %d from %d\n', itr, ntr);
     if strcmp(cfg.blc,'yes')
-      data.trial{itr} = preproc_baselinecorrect(data.trial{itr});
+      data.trial{itr} = ft_preproc_baselinecorrect(data.trial{itr});
     end
     if strcmp(cfg.detrend,'yes')
-      data.trial{itr} = preproc_detrend(data.trial{itr});
+      data.trial{itr} = ft_preproc_detrend(data.trial{itr});
     end
     % perform the resampling
     if isa(data.trial{itr}, 'single')
@@ -141,10 +141,10 @@ elseif usetime
   for itr = 1:ntr
     progress(itr/ntr, 'resampling data in trial %d from %d\n', itr, ntr);
     if strcmp(cfg.blc,'yes')
-      data.trial{itr} = preproc_baselinecorrect(data.trial{itr});
+      data.trial{itr} = ft_preproc_baselinecorrect(data.trial{itr});
     end
     if strcmp(cfg.detrend,'yes')
-      data.trial{itr} = preproc_detrend(data.trial{itr});
+      data.trial{itr} = ft_preproc_detrend(data.trial{itr});
     end
     % perform the resampling
     if length(data.time{itr})>1,

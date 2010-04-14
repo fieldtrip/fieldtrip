@@ -106,8 +106,8 @@ if ~status
 end
 
 % read the header of the completete dataset
-hdr = read_header(cfg.dataset);
-cfg.channel = channelselection(cfg.channel, hdr.label);
+hdr = ft_read_header(cfg.dataset);
+cfg.channel = ft_channelselection(cfg.channel, hdr.label);
 chansel = match_str(hdr.label, cfg.channel);
 
 if strcmp(cfg.timestampdefinition, 'sample')
@@ -188,7 +188,7 @@ for i=chansel(:)'
       org = zeros(1,sum(numsample));
       for j=1:numsegment
         fprintf('reading channel %s, latency from %f to %f\n', hdr.label{i}, cfg.latency(j,1), cfg.latency(j,2));
-        buf = read_data(cfg.dataset, 'header', hdr, 'begsample', begsample(j), 'endsample', endsample(j), 'chanindx', i);
+        buf = ft_read_data(cfg.dataset, 'header', hdr, 'begsample', begsample(j), 'endsample', endsample(j), 'chanindx', i);
         if j==1
           begsegment = 1;
           endsegment = numsample(j);

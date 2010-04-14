@@ -218,7 +218,7 @@ end
 
 % make header, needed only for sampling frequency
 if nargin ==1
-    hdr = read_header(cfg.headerfile);
+    hdr = ft_read_header(cfg.headerfile);
 elseif nargin ==2
     hdr = fetch_header(data);
 end
@@ -388,7 +388,7 @@ if nargin>1
     else
         tmpcfg     = [];
         tmpcfg.trl = cfg.trl;
-        data       = redefinetrial(tmpcfg,data);
+        data       = ft_redefinetrial(tmpcfg,data);
         % remember the configuration details, this overwrites the stored configuration of redefinetrial
         data.cfg = cfg;
         % return the data instead of the cfg

@@ -84,7 +84,7 @@ if strcmp(cfg.method, 'rate'),
     tmpcfg.foi       = 0;
     tmpcfg.channel   = label;
     tmpcfg.pad       = 'maxperlen';
-    tmpfreq          = freqanalysis(tmpcfg, data);
+    tmpfreq          = ft_freqanalysis(tmpcfg, data);
     rate             = sqrt(squeeze(tmpfreq.powspctrm)/2)*data.fsample;    
  
     spike        = [];
@@ -94,7 +94,7 @@ if strcmp(cfg.method, 'rate'),
 elseif strcmp(cfg.method, 'spikephase'),
   % select the combination of spike and lfp channels to be analyzed
   if isfield(cfg, 'channelcmb')
-    cfg.channelcmb = channelcombination(cfg.channelcmb, data.label);
+    cfg.channelcmb = ft_channelcombination(cfg.channelcmb, data.label);
   end
   
   % check whether the selection of channels is valid
