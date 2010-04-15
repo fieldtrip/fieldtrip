@@ -13,4 +13,4 @@ function ft_sourcewrite(cfg, volume)
 warning('SOURCEWRITE has been renamed to VOLUMEWRITE');
 warning('backward compatibility will be removed in the future');
 
-volumewrite(cfg, volume);
+ft_volumewrite(cfg, volume);

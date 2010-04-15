@@ -99,7 +99,7 @@ try, cfg.parameter = cfg.parameter{1}; end
 tmpcfg = [];
 tmpcfg.downsample = cfg.downsample;
 tmpcfg.parameter  = cfg.parameter;
-volume = volumedownsample(tmpcfg, volume);
+volume = ft_volumedownsample(tmpcfg, volume);
 
 % copy the data and convert into double values so that it can be scaled later
 transform = volume.transform;

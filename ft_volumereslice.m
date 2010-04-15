@@ -30,7 +30,7 @@ if ~isequal(cfg.downsample, 1)
   % downsample the anatomical volume
   tmpcfg = [];
   tmpcfg.downsample = cfg.downsample;
-  mri = volumedownsample(tmpcfg, mri);
+  mri = ft_volumedownsample(tmpcfg, mri);
 end
 
 % compute the desired grid positions

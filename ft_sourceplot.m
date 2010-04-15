@@ -198,7 +198,7 @@ if ischar(data)
   % read the anatomical MRI data from file
   filename = data;
   fprintf('reading MRI from file\n');
-  data = read_mri(filename);
+  data = ft_read_mri(filename);
 end
 
 % check if the input data is valid for this function
@@ -239,7 +239,7 @@ if ~isempty(cfg.roi)
     tmpcfg.roi = cfg.roi;
     tmpcfg.atlas = cfg.atlas;
     tmpcfg.inputcoord = cfg.inputcoord;
-    roi = volumelookup(tmpcfg,data);
+    roi = ft_volumelookup(tmpcfg,data);
   end
 end
 
@@ -793,7 +793,7 @@ elseif isequal(cfg.method,'glassbrain')
     data = setsubfield(data, 'inside', msk);
   end
 
-  sourceplot(tmpcfg, data);
+  ft_sourceplot(tmpcfg, data);
 
 elseif isequal(cfg.method,'surface')
 

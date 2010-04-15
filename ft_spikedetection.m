@@ -8,7 +8,7 @@ function [cfg, spike] = ft_spikedetection(cfg)
 % The configuration options can contain
 %   cfg.dataset             = string with the input dataset
 %   cfg.output              = string with the output dataset (default is determined automatic)
-%   cfg.dataformat          = string with the output dataset format, see WRITE_FCDC_SPIKE
+%   cfg.dataformat          = string with the output dataset format, see FT_WRITE_FCDC_SPIKE
 %   cfg.method              = string with the method to use, can be 'all', 'zthresh', 'ztrig', 'flank'
 %   cfg.interactive         = 'yes' or 'no'
 %   cfg.timestampdefinition = 'orig' or 'sample'
@@ -348,7 +348,7 @@ for i=chansel(:)'
       % write the spike data to a new file
       datafile = fullfile(cfg.output, spike.label{1});  % this is without filename extension
       fprintf(', writing to %s\n', datafile);
-      write_fcdc_spike(datafile, spike, 'dataformat', cfg.dataformat, 'fsample', hdr.Fs, 'TimeStampPerSample', hdr.TimeStampPerSample*hdr.Fs);
+      ft_write_fcdc_spike(datafile, spike, 'dataformat', cfg.dataformat, 'fsample', hdr.Fs, 'TimeStampPerSample', hdr.TimeStampPerSample*hdr.Fs);
 
       % jump out of the interactive loop
       runloop = false;

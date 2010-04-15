@@ -265,7 +265,7 @@ elseif strcmp(data.dimord, 'chan_freq')
 elseif strcmp(data.dimord, 'subj_chan_time') || strcmp(data.dimord, 'rpt_chan_time')
   tmpcfg = [];
   tmpcfg.trials = cfg.trials;
-  data = timelockanalysis(tmpcfg, data);
+  data = ft_timelockanalysis(tmpcfg, data);
   if ~isfield(cfg, 'xparam'),      cfg.xparam='time';         end
   if ~isfield(cfg, 'yparam'),      cfg.yparam='';             end
   if ~isfield(cfg, 'zparam'),      cfg.zparam='avg';          end

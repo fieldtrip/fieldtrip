@@ -72,7 +72,7 @@ function [data] = ft_rejectvisual(cfg, data);
 % Undocumented local options:
 % cfg.feedback
 %
-% This function depends on FT_PREPROC which has the following options:
+% This function depends on PREPROC which has the following options:
 % cfg.absdiff
 % cfg.blc
 % cfg.blcwindow

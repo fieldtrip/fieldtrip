@@ -78,7 +78,7 @@ end
 
 if ~strcmp(functional.unit, anatomical.unit)
   fprintf('converting functional data from %s into %s\n', functional.unit, anatomical.unit);
-  functional = convert_units(functional, anatomical.unit);
+  functional = ft_convert_units(functional, anatomical.unit);
 end
 
 % select the parameters that should be interpolated
@@ -90,7 +90,7 @@ if ~isequal(cfg.downsample, 1)
   tmpcfg = [];
   tmpcfg.downsample = cfg.downsample;
   tmpcfg.parameter  = 'anatomy';
-  anatomical = volumedownsample(tmpcfg, anatomical);
+  anatomical = ft_volumedownsample(tmpcfg, anatomical);
 end
 
 % collect the functional volumes that should be converted

@@ -60,9 +60,9 @@ Ncompartment = length(vol.cond);
 
 % construct the geometry of the BEM boundaries
 if nargin==1
-  vol.bnd = prepare_mesh(cfg);
+  vol.bnd = ft_prepare_mesh(cfg);
 else
-  vol.bnd = prepare_mesh(cfg, mri);
+  vol.bnd = ft_prepare_mesh(cfg, mri);
 end
 
 vol.source = find_innermost_boundary(vol.bnd);

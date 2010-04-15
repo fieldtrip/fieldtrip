@@ -147,7 +147,7 @@ elseif strcmp(varargin{1}.dimord, 'subj_chan_freq') || strcmp(varargin{1}.dimord
       tempdata.label     = varargin{i}.label;
       tempdata.powspctrm = varargin{i}.(cfg.zparam);
       tempdata.cfg       = varargin{i}.cfg;
-      tempdata           = freqdescriptives(tmpcfg, tempdata);
+      tempdata           = ft_freqdescriptives(tmpcfg, tempdata);
       varargin{i}.(cfg.zparam)  = tempdata.powspctrm;
       clear tempdata
     end

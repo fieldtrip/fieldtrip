@@ -95,7 +95,7 @@ if roi2mask
   xyz = volume.transform * ijk; % note that this is 4xN
 
   if isatlas
-    atlas = prepare_atlas(cfg.atlas);
+    atlas = ft_prepare_atlas(cfg.atlas);
 
     if ischar(cfg.roi)
       cfg.roi = {cfg.roi};
@@ -196,7 +196,7 @@ elseif mask2label
     error('incorrect query range, should be one of [1 3 5]');
   end
 
-  atlas = prepare_atlas(cfg.atlas);
+  atlas = ft_prepare_atlas(cfg.atlas);
   sel = find(volume.(cfg.maskparameter)(:));
   labels.name = atlas.descr.name;
   labels.name{end+1} = 'no_label_found';

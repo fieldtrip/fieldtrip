@@ -59,13 +59,13 @@ fieldtripdefs
 if 0
   % this code snippet ensures that these functions are included in the
   % documentation as dependencies
-  try, dum = artifact_ecg;       end
-  try, dum = artifact_eog;       end
-  try, dum = artifact_muscle;    end
-  try, dum = artifact_jump;      end
-  try, dum = artifact_clip;      end
-  try, dum = artifact_manual;    end
-  try, dum = artifact_threshold; end
+  try, dum = ft_artifact_ecg;       end
+  try, dum = ft_artifact_eog;       end
+  try, dum = ft_artifact_muscle;    end
+  try, dum = ft_artifact_jump;      end
+  try, dum = ft_artifact_clip;      end
+  try, dum = ft_artifact_manual;    end
+  try, dum = ft_artifact_threshold; end
 end
 
 % check if the input cfg is valid for this function

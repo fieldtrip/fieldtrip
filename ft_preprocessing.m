@@ -98,7 +98,7 @@ function [dataout] = ft_preprocessing(cfg, data)
 % write it to disk in another format. The reading is done either as one
 % long continuous segment or in multiple trials. This is achieved by
 %   cfg.export.dataset    = string with the output file name
-%   cfg.export.dataformat = string describing the output file format, see WRITE_DATA
+%   cfg.export.dataformat = string describing the output file format, see FT_WRITE_DATA
 
 % This function depends on PREPROC which has the following options:
 % cfg.absdiff
@@ -446,7 +446,7 @@ else
         newhdr.label  = label;
         newhdr.nChans = length(newhdr.label);
         % only append for the second and consecutive trials
-        write_data(cfg.export.dataset, cutdat{i}, 'dataformat', cfg.export.dataformat, 'header', newhdr, 'append', i~=1);
+        ft_write_data(cfg.export.dataset, cutdat{i}, 'dataformat', cfg.export.dataformat, 'header', newhdr, 'append', i~=1);
         if nargout==0
           % don't keep th eprocessed data in memory
           cutdat(i) = [];

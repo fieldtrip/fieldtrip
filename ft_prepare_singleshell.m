@@ -53,9 +53,9 @@ if ~isfield(cfg, 'numvertices'),   cfg.numvertices = 4000;  end % approximate nu
 % the initialization of the forward computation code is done later in prepare_headmodel
 vol = [];
 if nargin==1
-  vol.bnd = prepare_mesh(cfg);
+  vol.bnd = ft_prepare_mesh(cfg);
 else
-  vol.bnd = prepare_mesh(cfg, mri);
+  vol.bnd = ft_prepare_mesh(cfg, mri);
 end
 vol.type = 'nolte';
 

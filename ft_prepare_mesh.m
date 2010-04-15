@@ -62,7 +62,7 @@ if basedonseg || basedonmri
   % optionally downsample the anatomical MRI and/or the tissue segmentation
   tmpcfg = [];
   tmpcfg.downsample = cfg.downsample;
-  mri = volumedownsample(tmpcfg, mri);
+  mri = ft_volumedownsample(tmpcfg, mri);
 end
 
 if basedonseg
@@ -95,7 +95,7 @@ elseif basedonsphere
     sprintf('using the mesh specified by msphere with %d vertices\n',size(pnt,1));
   end
   
-  switch voltype(vol)
+  switch ft_voltype(vol)
     case {'singlesphere' 'concentric'}
       vol.r = sort(vol.r);
       bnd = [];

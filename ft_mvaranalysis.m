@@ -156,7 +156,7 @@ if strcmp(cfg.blc, 'yes'),
   tmpcfg           = [];
   tmpcfg.blc       = 'yes';
   tmpcfg.blcwindow = cfg.toi([1 end]) + cfg.t_ftimwin.*[-0.5 0.5];
-  data             = preprocessing(tmpcfg, data);
+  data             = ft_preprocessing(tmpcfg, data);
 else
   %do nothing
 end
@@ -221,7 +221,7 @@ for j = 1:ntoi
   tmpcfg.toilim = [timeaxis(sample-floor(tfwin/2)) timeaxis(sample+ceil(tfwin/2)-1)];
   tmpcfg.feedback = 'no';
   tmpcfg.minlength= 'maxperlen';
-  tmpdata       = redefinetrial(tmpcfg, data);
+  tmpdata       = ft_redefinetrial(tmpcfg, data);
   
   cfg.toi(j)    = mean(tmpdata.time{1}([1 end]))+0.5./data.fsample; %FIXME think about this
 
