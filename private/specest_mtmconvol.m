@@ -161,6 +161,7 @@ for ifreqoi = 1:nfreqoi
   cyclefraction = anglein / (2*pi); % transform angle to fraction of cycles
   fullcyclenum = floor(max(cyclefraction)); % get the number of complete cycles in angle
   [dum fractind] = min(abs(cyclefraction - fullcyclenum)); % determine closest breakpoint in angle for which the last uncomplete cycle starts (closest so angle(wavelet) at centre gets closest to 0)
+  % create new anglein with non-full cycly being split to both sides of the (resulting) wavelet
   angleind = 1:(length(anglein)-ceil((length(anglein) - fractind)/2))+1;
   anglestart = -(ceil(((length(anglein)-fractind)/2)-1):-1:1) .* ((2.*pi./fsample) .* freqoi(ifreqoi));
   anglein      = [anglestart' ; anglein(angleind)];
