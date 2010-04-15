@@ -154,15 +154,37 @@ for ifreqoi = 1:nfreqoi
   tappad   = ceil(round(endnsample ./ 2)) - floor(timwinsample(ifreqoi) ./ 2);
   prezero  = zeros(1,tappad);
   postzero = zeros(1,round(endnsample) - ((tappad-1) + timwinsample(ifreqoi))-1);
-  angle    = (0:timwinsample(ifreqoi)-1)' .* ((2.*pi./fsample) .* freqoi(ifreqoi));
+  anglein    = (0:timwinsample(ifreqoi)-1)' .* ((2.*pi./fsample) .* freqoi(ifreqoi));
   wltspctrm{ifreqoi} = complex(zeros(size(tap,1),round(endnsample)));
+  
+  % determine appropriate phase-shift so angle(wavelet) at center approximates 0
+  cyclefraction = anglein / (2*pi); % transform angle to fraction of cycles
+  fullcyclenum = floor(max(cyclefraction)); % get the number of complete cycles in angle
+  [dum fractind] = min(abs(cyclefraction - fullcyclenum)); % determine closest breakpoint in angle for which the last uncomplete cycle starts (closest so angle(wavelet) at centre gets closest to 0)
+  angleind = 1:(length(anglein)-ceil((length(anglein) - fractind)/2))+1;
+  anglestart = -(ceil(((length(anglein)-fractind)/2)-1):-1:1) .* ((2.*pi./fsample) .* freqoi(ifreqoi));
+  anglein      = [anglestart' ; anglein(angleind)];
+  
   for itap = 1:ntaper(ifreqoi)
     try % this try loop tries to fit the wavelet into wltspctrm, when its length is smaller than ndatsample, the rest is 'filled' with zeros because of above code
       % if a wavelet is longer than ndatsample, it doesn't fit and it is kept at zeros, which is translated to NaN's in the output
       % construct the complex wavelet
-      coswav  = horzcat(prezero, tap(itap,:) .* cos(angle)', postzero);
-      sinwav  = horzcat(prezero, tap(itap,:) .* sin(angle)', postzero);
+      coswav  = horzcat(prezero, tap(itap,:) .* cos(anglein)', postzero);
+      sinwav  = horzcat(prezero, tap(itap,:) .* sin(anglein)', postzero);
+      
+      % consistency: cos must always be 1 at centre (necessary for angle(wavelet) at centre approximates 0), and sin must always be centered in upgoing flank (arbitrary), and
+      centreind = round(length(coswav) / 2);
+      % first the cos
+      if coswav(centreind) < 0
+        coswav = -coswav;
+      end
+      % now the sin
+      if sinwav(centreind) > sinwav(centreind+1)
+        sinwav = -sinwav;
+      end
       wavelet = complex(coswav, sinwav);
+      % debug plotting
+      %figure; subplot(2,1,1);hold on;plot(real(wavelet(wavelet~=0)));plot(imag(wavelet(wavelet~=0)),'color','r'); tline = length(wavelet(wavelet~=0))/2;line([tline tline],[-0.2 0.2]); subplot(2,1,2);plot(angle(wavelet(wavelet~=0)),'color','g');line([tline tline],[-pi pi])
       % store the fft of the complex wavelet
       wltspctrm{ifreqoi}(itap,:) = fft(wavelet,[],2);
     end
