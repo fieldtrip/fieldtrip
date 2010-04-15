@@ -90,7 +90,7 @@ end
 
 % determine which channels, frequencies and latencies are available for all inputs
 for i=1:Nsubj
-  cfg.channel = channelselection(cfg.channel, varargin{i}.label);
+  cfg.channel = ft_channelselection(cfg.channel, varargin{i}.label);
   if hasfreq
     fbeg = max(fbeg, varargin{i}.freq(1  ));
     fend = min(fend, varargin{i}.freq(end));

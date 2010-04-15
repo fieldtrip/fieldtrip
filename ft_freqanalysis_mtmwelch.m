@@ -87,7 +87,7 @@ cfgconvol.toi    = tmin:(1/data.fsample):tmax;
 cfgconvol.trials = 'all'; % trial selection already applied during first call of freqanalysis
 
 % use mtmconvol to do the dirty work
-freq = freqanalysis(cfgconvol, data);
+freq = ft_freqanalysis(cfgconvol, data);
 
 % determine the time dimension
 if strcmp(freq.dimord, 'chan_freq_time')

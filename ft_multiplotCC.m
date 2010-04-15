@@ -94,7 +94,7 @@ for k=1:length(chNum) - 2
     config.colorbar = 'no';
     config.zlim     = scale;
     config.grid_scale = 30;
-    topoplotER(config, data);
+    ft_topoplotER(config, data);
     drawnow;
   end
 end

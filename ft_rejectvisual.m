@@ -183,28 +183,28 @@ tmpdata = data;
 scaled  = 0;
 if ~isempty(cfg.eegscale)
   scaled = 1;
-  chansel = match_str(tmpdata.label, channelselection('EEG', tmpdata.label));
+  chansel = match_str(tmpdata.label, ft_channelselection('EEG', tmpdata.label));
   for i=1:length(tmpdata.trial)
     tmpdata.trial{i}(chansel,:) = tmpdata.trial{i}(chansel,:) .* cfg.eegscale;
   end
 end
 if ~isempty(cfg.eogscale)
   scaled = 1;
-  chansel = match_str(tmpdata.label, channelselection('EOG', tmpdata.label));
+  chansel = match_str(tmpdata.label, ft_channelselection('EOG', tmpdata.label));
   for i=1:length(tmpdata.trial)
     tmpdata.trial{i}(chansel,:) = tmpdata.trial{i}(chansel,:) .* cfg.eogscale;
   end
 end
 if ~isempty(cfg.ecgscale)
   scaled = 1;
-  chansel = match_str(tmpdata.label, channelselection('ECG', tmpdata.label));
+  chansel = match_str(tmpdata.label, ft_channelselection('ECG', tmpdata.label));
   for i=1:length(tmpdata.trial)
     tmpdata.trial{i}(chansel,:) = tmpdata.trial{i}(chansel,:) .* cfg.ecgscale;
   end
 end
 if ~isempty(cfg.megscale)
   scaled = 1;
-  chansel = match_str(tmpdata.label, channelselection('MEG', tmpdata.label));
+  chansel = match_str(tmpdata.label, ft_channelselection('MEG', tmpdata.label));
   for i=1:length(tmpdata.trial)
     tmpdata.trial{i}(chansel,:) = tmpdata.trial{i}(chansel,:) .* cfg.megscale;
   end

@@ -154,7 +154,7 @@ elseif strcmp(varargin{1}.dimord, 'subj_chan_freq') || strcmp(varargin{1}.dimord
   else
     for i=1:(nargin-1)
       if isfield(varargin{i}, 'crsspctrm'), varargin{i} = rmfield(varargin{i}, 'crsspctrm'); end % on the fly computation of coherence spectrum is not supported
-      varargin{i} = freqdescriptives(tmpcfg, varargin{i});
+      varargin{i} = ft_freqdescriptives(tmpcfg, varargin{i});
     end
   end
   if ~isfield(cfg, 'xparam'),      cfg.xparam='freq';                  end

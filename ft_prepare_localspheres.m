@@ -61,14 +61,14 @@ if ~isfield(cfg, 'headshape'),     cfg.headshape = [];      end
 
 % construct the geometry of the headshape using a single boundary
 if nargin==1
-  headshape = prepare_mesh(cfg);
+  headshape = ft_prepare_mesh(cfg);
 else
-  headshape = prepare_mesh(cfg, mri);
+  headshape = ft_prepare_mesh(cfg, mri);
 end
 
 % read the gradiometer definition from file or copy it from the configuration
 if isfield(cfg, 'gradfile')
-  grad = read_sens(cfg.gradfile);
+  grad = ft_read_sens(cfg.gradfile);
 else
   grad = cfg.grad;
 end

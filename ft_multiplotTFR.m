@@ -150,7 +150,7 @@ end
 cfg = checkconfig(cfg, 'unused',  {'cohtargetchannel'});
 
 % Read or create the layout that will be used for plotting:
-lay = prepare_layout(cfg, data);
+lay = ft_prepare_layout(cfg, data);
 cfg.layout = lay;
 
 % Check for unconverted coherence spectrum data:

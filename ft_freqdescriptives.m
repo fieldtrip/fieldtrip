@@ -91,7 +91,7 @@ if hastim, if ~strcmp(cfg.toilim,  'all'), freq = selectdata(freq, 'toilim', cfg
 if hasrpt, if ~strcmp(cfg.trials,  'all'), freq = selectdata(freq, 'rpt',    cfg.trials); end; end
 
 if ~strcmp(cfg.channel, 'all'),
-  channel = channelselection(cfg.channel, freq.label);
+  channel = ft_channelselection(cfg.channel, freq.label);
   freq    = selectdata(freq, 'channel', channel);
 end
 

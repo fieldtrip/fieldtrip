@@ -64,7 +64,7 @@ for t=1:cfg.ntrial
   spike = zeros(cfg.nspikechan, nsample);
   
   for i=1:cfg.nlfpchan, 
-    lfp(i,:) = preproc_bandpassfilter(randn(1,nsample), fsample, cfg.bpfreq);
+    lfp(i,:) = ft_preproc_bandpassfilter(randn(1,nsample), fsample, cfg.bpfreq);
   end
 
   for i=1:cfg.nspikechan

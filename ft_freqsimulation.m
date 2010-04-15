@@ -281,8 +281,8 @@ elseif strcmp(cfg.method,'broadband')
 
   % make data
   for iTr = 1 : length(timevec)
-    n1    = preproc_bandpassfilter(cfg.n1.ampl*randn(size(timevec{iTr})), cfg.fsample, cfg.n1.bpfreq);
-    n2    = preproc_bandpassfilter(cfg.n2.ampl*randn(size(timevec{iTr})), cfg.fsample, cfg.n2.bpfreq);
+    n1    = ft_preproc_bandpassfilter(cfg.n1.ampl*randn(size(timevec{iTr})), cfg.fsample, cfg.n1.bpfreq);
+    n2    = ft_preproc_bandpassfilter(cfg.n2.ampl*randn(size(timevec{iTr})), cfg.fsample, cfg.n2.bpfreq);
     noise = cfg.noise.ampl*randn(size(timevec{iTr}));
     mix   = n1 + n2 + noise;
 

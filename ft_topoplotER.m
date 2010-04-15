@@ -283,7 +283,7 @@ elseif strcmp(data.dimord, 'subj_chan_freq') || strcmp(data.dimord, 'rpt_chan_fr
     tempdata.label     = data.label;
     tempdata.powspctrm = data.(cfg.zparam);
     tempdata.cfg       = data.cfg;
-    tempdata           = freqdescriptives(tmpcfg, tempdata);
+    tempdata           = ft_freqdescriptives(tmpcfg, tempdata);
     data.(cfg.zparam)  = tempdata.powspctrm;
     clear tempdata
   else

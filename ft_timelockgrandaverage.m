@@ -80,7 +80,7 @@ cfg.latency = [ResultsTime(1), ResultsTime(end)];
 
 %DETERMINE WHICH CHANNELS ARE AVAILABLE FOR ALL SUBJECTS
 for i=1:Nsubj
-  cfg.channel = channelselection(cfg.channel, varargin{i}.label);
+  cfg.channel = ft_channelselection(cfg.channel, varargin{i}.label);
 end
 ResultNChannels = size(cfg.channel, 1);
 

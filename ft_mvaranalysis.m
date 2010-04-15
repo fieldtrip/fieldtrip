@@ -113,7 +113,7 @@ else
   error('cfg should contain both cfg.toi and cfg.t_ftimwin');
 end  
 
-cfg.channel = channelselection(cfg.channel, data.label);
+cfg.channel = ft_channelselection(cfg.channel, data.label);
 
 keeprpt  = strcmp(cfg.keeptrials, 'yes');
 keeptap  = strcmp(cfg.keeptapers, 'yes');

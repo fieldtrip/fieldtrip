@@ -172,13 +172,13 @@ elseif strcmp(cfg.planarmethod, 'sourceproject')
 
   % compute the forward model for the axial gradiometers
   fprintf('computing forward model for %d dipoles\n', size(pos,1));
-  lfold = compute_leadfield(pos, axial.grad, vol);
+  lfold = ft_compute_leadfield(pos, axial.grad, vol);
 
   % construct the planar gradient definition and compute its forward model
   % this will not work for a multisphere model, compute_leadfield will catch
   % the error
   planar.grad = constructplanargrad([], axial.grad);
-  lfnew = compute_leadfield(pos, planar.grad, vol);
+  lfnew = ft_compute_leadfield(pos, planar.grad, vol);
 
   % compute the interpolation matrix
   transform = lfnew * prunedinv(lfold, cfg.pruneratio);

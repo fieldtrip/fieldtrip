@@ -46,7 +46,7 @@ if isequal(cfg.method, 'kmeans')
 end
 
 % select the channels
-cfg.channel = channelselection(cfg.channel, spike.label);
+cfg.channel = ft_channelselection(cfg.channel, spike.label);
 sel = match_str(spike.label, cfg.channel);
 spike.label     = spike.label(sel);
 spike.waveform  = spike.waveform(sel);

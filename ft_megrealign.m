@@ -145,7 +145,7 @@ Ntemplate = length(cfg.template);
 for i=1:Ntemplate
   if isstr(cfg.template{i}),
     fprintf('reading template sensor position from %s\n', cfg.template{i});
-    template(i) = read_sens(cfg.template{i});
+    template(i) = ft_read_sens(cfg.template{i});
   elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'pnt') && isfield(cfg.template{i}, 'ori') && isfield(cfg.template{i}, 'tra'),
     template(i) = cfg.template{i};
   end
@@ -388,7 +388,7 @@ if strcmp(cfg.feedback, 'yes')
   tmpcfg.grad = data.grad;
   tmpcfg.grid = grid;
   tmpcfg.plotsensors = 'no';  % these are plotted seperately below
-  headmodelplot(tmpcfg);
+  ft_headmodelplot(tmpcfg);
   hold on
   plot3(pnt1(:,1), pnt1(:,2), pnt1(:,3), 'r.') % original positions
   plot3(pnt2(:,1), pnt2(:,2), pnt2(:,3), 'g.') % template positions
