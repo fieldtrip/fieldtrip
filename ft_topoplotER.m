@@ -603,7 +603,7 @@ for icell = 1:length(cfg.highlight)
     templay.pos        = lay.pos(labelindex,:);
     templay.width      = lay.width(labelindex);
     templay.height     = lay.height(labelindex);
-    templay.label      = ft_channelselection(cfg.highlightchannel{icell}, data.label);
+    templay.label      = lay.label(labelindex);
     if strcmp(cfg.highlight{icell}, 'labels') || strcmp(cfg.highlight{icell}, 'numbers')
       labelflg = 1;
     else
@@ -628,7 +628,7 @@ if ~strcmp(cfg.marker,'off')
   templay.pos      = lay.pos(labelindex,:);
   templay.width    = lay.width(labelindex);
   templay.height   = lay.height(labelindex);
-  templay.label    = ft_channelselection(setdiff(1:length(data.label),highlightchansel), data.label);
+  templay.label    = lay.label(labelindex);
   if strcmp(cfg.marker, 'labels') || strcmp(cfg.marker, 'numbers')
     labelflg = 1;
   else
