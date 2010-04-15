@@ -154,17 +154,17 @@ for ifreqoi = 1:nfreqoi
   tappad   = ceil(round(endnsample ./ 2)) - floor(timwinsample(ifreqoi) ./ 2);
   prezero  = zeros(1,tappad);
   postzero = zeros(1,round(endnsample) - ((tappad-1) + timwinsample(ifreqoi))-1);
-  anglein    = (0:timwinsample(ifreqoi)-1)' .* ((2.*pi./fsample) .* freqoi(ifreqoi));
+  anglein  = (0:timwinsample(ifreqoi)-1)' .* ((2.*pi./fsample) .* freqoi(ifreqoi));
   wltspctrm{ifreqoi} = complex(zeros(size(tap,1),round(endnsample)));
   
   % determine appropriate phase-shift so angle(wavelet) at center approximates 0
-  cyclefraction = anglein / (2*pi); % transform angle to fraction of cycles
-  fullcyclenum = floor(max(cyclefraction)); % get the number of complete cycles in angle
+  cyclefraction  = anglein / (2*pi); % transform angle to fraction of cycles
+  fullcyclenum   = floor(max(cyclefraction)); % get the number of complete cycles in angle
   [dum fractind] = min(abs(cyclefraction - fullcyclenum)); % determine closest breakpoint in angle for which the last uncomplete cycle starts (closest so angle(wavelet) at centre gets closest to 0)
   % create new anglein with non-full cycly being split to both sides of the (resulting) wavelet
-  angleind = 1:(length(anglein)-ceil((length(anglein) - fractind)/2))+1;
+  angleind   = 1:(length(anglein)-ceil((length(anglein) - fractind)/2))+1;
   anglestart = -(ceil(((length(anglein)-fractind)/2)-1):-1:1) .* ((2.*pi./fsample) .* freqoi(ifreqoi));
-  anglein      = [anglestart' ; anglein(angleind)];
+  anglein    = [anglestart' ; anglein(angleind)];
   
   for itap = 1:ntaper(ifreqoi)
     try % this try loop tries to fit the wavelet into wltspctrm, when its length is smaller than ndatsample, the rest is 'filled' with zeros because of above code
