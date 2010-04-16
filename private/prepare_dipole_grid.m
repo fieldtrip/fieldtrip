@@ -1,8 +1,8 @@
 function [grid, cfg] = prepare_dipole_grid(cfg, vol, sens)
 
 % PREPARE_DIPOLE_GRID helps to make a regular grid with dipoles that can be
-% used for scanning (e.g. for SOURCEANALYSIS) or linear estimation (e.g.
-% for MEGREALIGN).
+% used for scanning (e.g. for FT_SOURCEANALYSIS) or linear estimation (e.g.
+% for FT_MEGREALIGN).
 %
 % A grid can be constructed based on
 %   - regular 3D grid with explicit specification
@@ -44,7 +44,7 @@ function [grid, cfg] = prepare_dipole_grid(cfg, vol, sens)
 %                      single triangulated boundary, or a Nx3 matrix with surface
 %                      points
 %
-% See also SOURCEANALYSIS, MEGREALIGN, DIPOLEFITTING, PREPARE_LEADFIELD
+% See also FT_SOURCEANALYSIS, FT_MEGREALIGN, FT_DIPOLEFITTING, FT_PREPARE_LEADFIELD
 
 % Copyright (C) 2004-2009, Robert Oostenveld
 %
@@ -367,7 +367,7 @@ if basedonshape
     headshape.pnt = cfg.headshape;
   elseif ischar(cfg.headshape)
     % read the headshape from file
-    headshape = read_headshape(cfg.headshape);
+    headshape = ft_read_headshape(cfg.headshape);
   else
     error('cfg.headshape is not specified correctly')
   end

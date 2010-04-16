@@ -10,7 +10,7 @@ function ft_write_data(filename, dat, varargin)
 % but that is not required since it will be added automatically.
 %
 % Additional options should be specified in key-value pairs and can be
-%   'header'         header structure, see READ_HEADER
+%   'header'         header structure, see FT_READ_HEADER
 %   'dataformat'     string, see below
 %   'append'         boolean, not supported for all formats
 %   'chanindx'       1xN array

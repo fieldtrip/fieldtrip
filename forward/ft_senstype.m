@@ -56,7 +56,7 @@ function [type] = ft_senstype(input, desired)
 %   ft_senstype(data.grad)
 %   ft_senstype(data.grad.label)
 %
-% See also SENSLABEL, CHANTYPE, READ_SENS, COMPUTE_LEADFIELD
+% See also FT_SENSLABEL, FT_CHANTYPE, FT_READ_SENS, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2007-2009, Robert Oostenveld
 %

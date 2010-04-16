@@ -8,7 +8,7 @@ function [sens] = ft_transform_sens(transform, sens)
 % Use as
 %   sens = ft_transform_sens(transform, sens)
 %
-% See also FT_READ_SENS, FT_PREPARE_VOL_SENS, FT_OMPUTE_LEADFIELD
+% See also FT_READ_SENS, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2008, Robert Oostenveld
 %
