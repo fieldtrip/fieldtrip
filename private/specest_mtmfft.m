@@ -34,7 +34,7 @@ function [spectrum,freqoi] = specest_mtmfft(dat, time, varargin)
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'taper','pad','freqoi','tapsmofrq'});
-taper     = keyval('taper',       varargin); if isempty(taper),    taper   = 'dpss';     end
+taper     = keyval('taper',       varargin); if isempty(taper),  error('You must specify a taper');    end
 pad       = keyval('pad',         varargin);
 freqoi    = keyval('freqoi',      varargin); if isempty(freqoi),   freqoi  = 'max';      end  
 tapsmofrq = keyval('tapsmofrq',   varargin); 
@@ -64,7 +64,7 @@ end
 postpad = zeros(1,ceil((pad - dattime) * fsample));
 endnsample = pad * fsample;  % total number of samples of padded data
 endtime    = pad;            % total time in seconds of padded data
-
+postpad = [];
 
 
 % Set freqboi and freqoi
@@ -139,7 +139,7 @@ for itap = 1:ntap
     spectrum(itap,ichan,:) = dum;
   end
 end
-anglefprintf('nfft: %d samples, taper length: %d samples, %d tapers\n',endnsample,ndatsample,ntap);
+fprintf('nfft: %d samples, taper length: %d samples, %d tapers\n',endnsample,ndatsample,ntap);
 
 
 
