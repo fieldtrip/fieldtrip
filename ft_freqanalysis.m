@@ -1,4 +1,4 @@
-function [freq] =ft_freqanalysis(cfg, data);
+function [freq] =ft_freqanalysis(cfg, data, flag);
 
 % FT_FREQANALYSIS performs frequency and time-frequency analysis
 % on time series data over multiple trials
@@ -44,6 +44,13 @@ function [freq] =ft_freqanalysis(cfg, data);
 
 fieldtripdefs
 
+%allow for both the new and old implementation to be changed with a flag
+%input
+
+if nargin < 3
+    flag = 0;
+end
+
 % check if the input data is valid for this function
 data = checkdata(data, 'datatype', {'raw', 'comp', 'mvar'}, 'feedback', 'yes', 'hasoffset', 'yes');
 
@@ -68,7 +75,7 @@ if ~strcmp(cfg.trials, 'all')
   end
 end
 
-if true
+if ~flag
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % HERE THE OLD IMPLEMENTATION STARTS
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -83,52 +90,89 @@ else
   % chansel = ...;
 
   % do the bookkeeping that is required for the computation
-  offset    = data.offset;
+  %offset    = data.offset;
+  
+  if ~isfield(cfg, 'padding'), cfg.padding = [];   end
+  if ~isfield(cfg, 'output'),  cfg.output = 'pow'; end
+  if ~isfield(cfg, 'taper'),   cfg.taper =  'dpss';     end
+  if ~isfield(cfg, 'method'), error('you must specify a method in cfg.method'); end
+  if ~isfield(cfg, 'foi'),     cfg.foi = [];       end
+  if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))
+      error('you must specify a smoothing parameter with taper = dpss'); 
+  end  
+  
+  ntrials = size(data.trial,2);
   trllength = zeros(1, ntrials);
 
   for trllop=1:ntrials
-    trllength(i) = size(data.trial{trllop}, 2);
+    trllength(trllop) = size(data.trial{trllop}, 2);
   end
-
-  if strcmp(cfg.padding, 'maxperlen')
-    padding = max(trllength);
-    cfg.padding = padding/data.fsample;
-  else
-    padding = cfg.padding*data.fsample;
-    if padding<max(trllength)
-      error('the specified padding is too short');
-    end
+  
+  if not(isempty(cfg.padding))
+      if strcmp(cfg.padding, 'maxperlen')
+        padding = max(trllength);
+        cfg.padding = padding/data.fsample;
+      else
+        padding = cfg.padding*data.fsample;
+        if padding<max(trllength)
+          error('the specified padding is too short');
+        end
+      end
   end
-
   % these don't change over trials
-  options = {'fsample', data.fsample, 'padding', padding};
-
+  options = {'pad', cfg.padding, 'taper', cfg.taper, 'freqoi', cfg.foi, 'tapsmofrq', cfg.tapsmofrq}; 
+  
   % do the bookkeeping that is required for the output data
-  % ...
-
-  state = [];
+  freq  = [];
+  numsmp = length(data.time{1});
+  flag = 0;
   for trllop=1:ntrials
 
-    dat = data.trial{trllop}(chansel,:);
+    dat = data.trial{trllop}; %chansel has already been performed 
+    time = data.time{trllop};
+    
 
     % do the spectral decompisition of this trial
     switch cfg.method
       case 'mtmfft'
-        [spectrum, state] = specest_mtmfft(   dat, options{:}, 'state', state, 'offset', offset(trllop));
+        [spectrum, foi] = specest_mtmfft(dat, time, options{:}); %Add offset option later 'offset', offset(trllop));
+        if flag == 0
+            fourierspctrm = zeros(ntrials,size(spectrum,1),size(spectrum,2),size(spectrum,3)); %this matrix is trials by tapers by channel by frequency
+            flag = 1;
+        end
       case 'mtmconvol'
-        [spectrum, state] = specest_mtmconvol(dat, options{:}, 'state', state, 'offset', offset(trllop));
+        [spectrum, foi] = specest_mtmconvol(dat, time, options{:});
       case 'wltconvol'
-        [spectrum, state] = specest_wltconvol(dat, options{:}, 'state', state, 'offset', offset(trllop));
+        [spectrum, foi] = specest_wltconvol(dat, time, options{:});
       otherwise
         error('method %s is unknown', cfg.method);
     end % switch
 
-    % do the bookkeping to fit the spectral decomposition in the correct
-    % output representation
-
-    % ...
+    fourierspctrm(trllop,:,:,:) = spectrum;
 
   end % for ntrials
+  %now get the output in the correct format
+  if isequal(cfg.output, 'pow')
+    freq.powspctrm = 2 .* (fourierspctrm .* conj(fourierspctrm)) ./ numsmp; %cf Numercial Receipes 13.4.9
+    freq.powspctrm = reshape(freq.powspctrm, size(freq.powspctrm,1)*size(freq.powspctrm,2),size(freq.powspctrm,3),size(freq.powspctrm,4));
+    freq.dimord = 'rpttap_chan_freq';
+    freq.freq = foi;
+  elseif isequal(cfg.output, 'fourier')
+    freq.fourierspctrm = (fourierspctrm) .* sqrt(2 ./ numsmp); %cf Numercial Receipes 13.4.9
+    freq.fourierspctrm = reshape(freq.fourierspctrm, size(freq.fourierspctrm,1)*size(freq.fourierspctrm,2),size(freq.fourierspctrm,3),size(freq.fourierspctrm,4));
+    freq.dimord = 'rpttap_chan_freq'; 
+    freq.freq = foi;
+  elseif isequal(cfg.output, 'csd')
+    freq.dimord = 'rpttap_chan_freq';
+    freq.freq = foi;
+    freq.label = data.label;
+    freq.cumtapcnt = size(spectrum,1)*zeros(ntrials,1);
+    freq.fourierspctrm = (fourierspctrm) .* sqrt(2 ./ numsmp); %cf Numercial Receipes 13.4.9
+    freq.fourierspctrm = reshape(freq.fourierspctrm, size(freq.fourierspctrm,1)*size(freq.fourierspctrm,2),size(freq.fourierspctrm,3),size(freq.fourierspctrm,4));
+    freq = fixcsd(freq, 'full', []);
+  else
+    error('output is not recognized',cfg.output);
+  end  
 
 end % if old or new implementation
 
