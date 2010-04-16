@@ -27,7 +27,7 @@ function [cfg] = ft_definetrial(cfg);
 %
 % Simple trial definitions (e.g. based on a trigger alone) are supported by
 % FT_DEFINETRIAL itself. For this, the general and data format independent way
-% of handling trials is by relying on the FT_READ_FCDC_EVENT function to
+% of handling trials is by relying on the FT_READ_EVENT function to
 % collect all event information (such as triggers) from your dataset and
 % select trials based on those events. This is implemented in FT_DEFINETRIAL as
 %   cfg.trialdef.eventtype  = 'string'
