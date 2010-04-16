@@ -88,8 +88,8 @@ if isempty(maxiter)
 end
 
 % determine whether it is EEG or MEG
-iseeg = senstype(sens, 'eeg');
-ismeg = senstype(sens, 'meg');
+iseeg = ft_senstype(sens, 'eeg');
+ismeg = ft_senstype(sens, 'meg');
 
 if ismeg && iseeg
   % this is something that I might implement in the future
@@ -227,7 +227,7 @@ if checkinside
 end
 
 % construct the leadfield matrix for all dipoles
-lf = compute_leadfield(pos, sens, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+lf = ft_compute_leadfield(pos, sens, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
 if isfield(constr, 'fixedori') && constr.fixedori
   lf = lf * ori;
 end

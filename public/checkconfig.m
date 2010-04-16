@@ -400,7 +400,7 @@ if ~isempty(dataset2files) && strcmp(dataset2files, 'yes')
     filename   = cfg.dataset;
     datafile   = [];
     headerfile = [];
-    switch filetype(filename)
+    switch ft_filetype(filename)
       case '4d_pdf'
         datafile   = filename;
         headerfile = [datafile '.m4d'];
@@ -490,12 +490,12 @@ if ~isempty(dataset2files) && strcmp(dataset2files, 'yes')
 
     % fill dataformat if unspecified
     if ~isfield(cfg,'dataformat') || isempty(cfg.dataformat)
-      cfg.dataformat = filetype(datafile);
+      cfg.dataformat = ft_filetype(datafile);
     end
 
     % fill dataformat if unspecified
     if ~isfield(cfg,'headerformat') || isempty(cfg.headerformat)
-      cfg.headerformat = filetype(headerfile);
+      cfg.headerformat = ft_filetype(headerfile);
     end
     
   elseif ~isempty(cfg.datafile) && isempty(cfg.headerfile);

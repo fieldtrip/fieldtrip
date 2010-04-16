@@ -203,9 +203,9 @@ elseif userData.selecting
                copyPosition(userData.hFigure);
 
                if iscell(userData.data)
-                  singleplotER(new_cfg, userData.data{:});
+                  ft_singleplotER(new_cfg, userData.data{:});
                else
-                  singleplotER(new_cfg, userData.data);
+                  ft_singleplotER(new_cfg, userData.data);
                end
             end
          else
@@ -236,9 +236,9 @@ elseif userData.selecting
             copyPosition(userData.hFigure);
 
             if iscell(userData.data)
-               topoplotER(new_cfg, userData.data{:});
+               ft_topoplotER(new_cfg, userData.data{:});
             else
-               topoplotER(new_cfg, userData.data);
+               ft_topoplotER(new_cfg, userData.data);
             end
          end
 
@@ -264,7 +264,7 @@ elseif userData.selecting
 
                figure;
                copyPosition(userData.hFigure);
-               singleplotTFR(new_cfg, userData.data);
+               ft_singleplotTFR(new_cfg, userData.data);
             end
          else
             % Launch TFR topoplot figure:
@@ -283,7 +283,7 @@ elseif userData.selecting
             % Produce topoplot:
             figure;
             copyPosition(userData.hFigure);
-            topoplotTFR(new_cfg, userData.data);
+            ft_topoplotTFR(new_cfg, userData.data);
          end
 
          % Check data dimord for FREQ data:

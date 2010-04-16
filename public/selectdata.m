@@ -318,7 +318,7 @@ end
 if selectchan,
   %FIXME give selchan according to the order requested in selchan
   %this does not work 
-  tmp            = channelselection(selchan, data.label);
+  tmp            = ft_channelselection(selchan, data.label);
   [dum, selchan] = match_str(tmp, data.label);
 end
 

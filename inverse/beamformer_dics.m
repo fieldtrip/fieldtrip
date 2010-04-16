@@ -210,10 +210,10 @@ switch submethod
         lf = dip.leadfield{i};
       elseif isfield(dip, 'mom')
         % compute the leadfield for a fixed dipole orientation
-        lf = compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
+        lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
       else
         % compute the leadfield
-        lf = compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+        lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
       end
       if isfield(dip, 'subspace')
         % do subspace projection of the forward model
@@ -274,10 +274,10 @@ switch submethod
         lf = dip.leadfield{i};
       elseif isfield(dip, 'mom')
         % compute the leadfield for a fixed dipole orientation
-        lf = compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize) .* dip.mom(i,:)';
+        lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize) .* dip.mom(i,:)';
       else
         % compute the leadfield
-        lf = compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize);
+        lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize);
       end
       if isfield(dip, 'subspace')
         % do subspace projection of the forward model
@@ -346,7 +346,7 @@ switch submethod
       error('fixed orientations are not supported for beaming cortico-cortical coherence');
     end
     % compute cortio-cortical coherence with a dipole at the reference position
-    lf1 = compute_leadfield(refdip, grad, vol, 'reducerank', reducerank, 'normalize', normalize);
+    lf1 = ft_compute_leadfield(refdip, grad, vol, 'reducerank', reducerank, 'normalize', normalize);
     % construct the spatial filter for the first (reference) dipole location
     filt1 = pinv(lf1' * invCf * lf1) * lf1' * invCf;       % use PINV/SVD to cover rank deficient leadfield
     if powlambda1
@@ -360,10 +360,10 @@ switch submethod
         lf2 = dip.leadfield{i};
       elseif isfield(dip, 'mom')
         % compute the leadfield for a fixed dipole orientation
-        lf2 = compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize) .* dip.mom(i,:)';
+        lf2 = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize) .* dip.mom(i,:)';
       else
         % compute the leadfield
-        lf2 = compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize);
+        lf2 = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize);
       end
       if isfield(dip, 'filter')
         % use the provided filter

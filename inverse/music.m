@@ -71,10 +71,10 @@ for i=1:length(dip.inside)
     lf = dip.leadfield{i};
   elseif isfield(dip, 'mom')
     % compute the leadfield for a fixed dipole orientation
-    lf = compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
+    lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
   else
     % compute the leadfield
-    lf = compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+    lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
   end
 
   % compute the MUSIC metric, c.f. equation 26

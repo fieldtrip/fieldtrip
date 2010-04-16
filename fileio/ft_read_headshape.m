@@ -249,4 +249,4 @@ end
 shape.fid.label = shape.fid.label(:);
 
 % this will add the units to the head shape
-shape = convert_units(shape);
+shape = ft_convert_units(shape);

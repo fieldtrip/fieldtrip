@@ -223,4 +223,4 @@ if senstype(sens, 'eeg')
 end
 
 % this will add the units to the sensor array
-sens = convert_units(sens);
+sens = ft_convert_units(sens);

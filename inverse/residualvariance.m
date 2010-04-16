@@ -37,7 +37,7 @@ for i=1:length(dip.inside)
     lf = dip.leadfield{i};
   else
     % compute the leadfield
-    lf = compute_leadfield(dip.pos(i,:), grad, vol);
+    lf = ft_compute_leadfield(dip.pos(i,:), grad, vol);
   end
 
   if isfield(dip, 'subspace')

@@ -44,7 +44,7 @@ vertexindex = istrue(vertexindex);
 [pnt, tri] = icosahedron162;
 
 % prepare a single or multiple triangulated boundaries
-switch voltype(vol)
+switch ft_voltype(vol)
   case {'singlesphere' 'concentric'}
     vol.r = sort(vol.r);
     bnd = [];

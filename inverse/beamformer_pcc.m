@@ -76,13 +76,13 @@ dip.inside  = 1:size(dip.pos,1);
 dip.outside = [];
 
 if ~isempty(refdip)
-  rf = compute_leadfield(refdip, grad, vol, 'reducerank', reducerank, 'normalize', normalize);
+  rf = ft_compute_leadfield(refdip, grad, vol, 'reducerank', reducerank, 'normalize', normalize);
 else
   rf = [];
 end
 
 if ~isempty(supdip)
-  sf = compute_leadfield(supdip, grad, vol, 'reducerank', reducerank, 'normalize', normalize);
+  sf = ft_compute_leadfield(supdip, grad, vol, 'reducerank', reducerank, 'normalize', normalize);
 else
   sf = [];
 end
@@ -143,10 +143,10 @@ for i=1:size(dip.pos,1)
     lf = dip.leadfield{i} * dip.mom(:,i);
   elseif ~isfield(dip, 'leadfield') && isfield(dip, 'mom')
     % compute the leadfield for a fixed dipole orientation
-    lf = compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
+    lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
   else
     % compute the leadfield
-    lf = compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+    lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
   end
 
   % concatenate scandip, refdip and supdip

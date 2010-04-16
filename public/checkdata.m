@@ -270,7 +270,7 @@ if ~isempty(stype)
   end
 
   if isfield(data, 'grad') || isfield(data, 'elec')
-    if any(strcmp(senstype(data), stype));
+    if any(strcmp(ft_senstype(data), stype));
       okflag = 1;
     else
       okflag = 0;
@@ -287,7 +287,7 @@ if ~isempty(stype)
     else
       str = stype{1};
     end
-    str = sprintf('This function requires %s data as input, but you are giving %s data.', str, senstype(data));
+    str = sprintf('This function requires %s data as input, but you are giving %s data.', str, ft_senstype(data));
     error(str);
   end % if okflag
 end

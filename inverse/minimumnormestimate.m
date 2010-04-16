@@ -60,12 +60,12 @@ if ~isfield(dip, 'leadfield')
   if isfield(dip, 'mom')
     for i=dip.inside
       % compute the leadfield for a fixed dipole orientation
-      dip.leadfield{i} = compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
+      dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
     end
   else
     for i=dip.inside
       % compute the leadfield
-      dip.leadfield{i} = compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+      dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
     end
   end
   for i=dip.outside

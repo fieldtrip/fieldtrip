@@ -11,8 +11,8 @@ function [cfg] = surfaceplot(cfg, vol, surf)
 % Use as
 %   surfaceplot(cfg, functional) or
 %   surfaceplot(cfg, functional, surface)
-% where the functional data is obtained from SOURCEANALYSIS,
-% SOURCEINTERPOLATE or VOLUMENORMALIZE.
+% where the functional data is obtained from FT_SOURCEANALYSIS,
+% FT_SOURCEINTERPOLATE or FT_VOLUMENORMALISE.
 %
 % The configuration can contain
 %   cfg.method         = 'nearest' 'sphere_avg', 'sphere_weighteddistance'
@@ -34,7 +34,7 @@ function [cfg] = surfaceplot(cfg, vol, surf)
 % The resulting plot can be rotated in 3-D, or you can change the viewpoint
 % using the VIEW command.
 %
-% See also SOURCEPLOT, SLICEINTERP
+% See also FT_SOURCEPLOT, FT_SLICEINTERP
 
 % Copyright (C) 2006, Jan-Mathijs Schoffelen
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
@@ -56,7 +56,7 @@ if ~isfield(cfg, 'surfdownsample'), cfg.surfdownsample = 1;  end
 % downsample the functional data
 tmpcfg = [];
 tmpcfg.downsample = cfg.downsample;
-vol = volumedownsample(tmpcfg, vol);
+vol = ft_volumedownsample(tmpcfg, vol);
 
 hasmask = ~isempty(cfg.maskparameter);
 
