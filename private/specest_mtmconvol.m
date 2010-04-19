@@ -157,10 +157,16 @@ for ifreqoi = 1:nfreqoi
   anglein  = (0:timwinsample(ifreqoi)-1)' .* ((2.*pi./fsample) .* freqoi(ifreqoi));
   wltspctrm{ifreqoi} = complex(zeros(size(tap,1),round(endnsample)));
   
-  % determine appropriate phase-shift so angle(wavelet) at center approximates 0
+  % determine appropriate phase-shift so angle(wavelet) at center approximates 0 NOTE: this procedure becomes inaccurate when there are very samples per cycle (i.e. 4-5)
   cyclefraction  = anglein / (2*pi); % transform angle to fraction of cycles
+  if ((length(cyclefraction(cyclefraction<1))-1) < 5) % could be more robust
+    warning('number of samples per wavelet cycle is less than 5')
+  end
   fullcyclenum   = floor(max(cyclefraction)); % get the number of complete cycles in angle
   [dum fractind] = min(abs(cyclefraction - fullcyclenum)); % determine closest breakpoint in angle for which the last uncomplete cycle starts (closest so angle(wavelet) at centre gets closest to 0)
+  if cyclefraction(fractind) < fullcyclenum % if index is from the last full cycle, shift it by 1. should be integrated in above line
+    fractind = fractind + 1;
+  end
   fractind = (fractind + 1):length(anglein); % shift one sample upwards and fill indices
   if length(fractind) > 1 % only continue if more than one sample can be split up
     % create new anglein with non-full cycly being split to both sides of the (resulting) wavelet
@@ -189,7 +195,8 @@ for ifreqoi = 1:nfreqoi
       end
       wavelet = complex(coswav, sinwav);
       % debug plotting
-      figure; subplot(2,1,1);hold on;plot(real(wavelet(wavelet~=0)));plot(imag(wavelet(wavelet~=0)),'color','r'); tline = length(wavelet(wavelet~=0))/2;line([tline tline],[-0.2 0.2]); subplot(2,1,2);plot(angle(wavelet(wavelet~=0)),'color','g');line([tline tline],[-pi pi])
+      %figure; subplot(2,1,1);hold on;plot(real(wavelet(wavelet~=0)));plot(imag(wavelet(wavelet~=0)),'color','r'); tline = length(wavelet(wavelet~=0))/2;line([tline tline],[-0.2 0.2]); subplot(2,1,2);plot(angle(wavelet(wavelet~=0)),'color','g');line([tline tline],[-pi pi])
+      %figure; subplot(2,1,1);hold on;plot(real(wavelet));plot(imag(wavelet),'color','r'); tline = length(wavelet)/2;line([tline tline],[-0.2 0.2]); subplot(2,1,2);plot(angle(wavelet),'color','g');line([tline tline],[-pi pi])
       % store the fft of the complex wavelet
       wltspctrm{ifreqoi}(itap,:) = fft(wavelet,[],2);
     end
