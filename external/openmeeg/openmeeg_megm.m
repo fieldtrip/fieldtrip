@@ -16,7 +16,7 @@ function [h2mm, s2mm] = openmeeg_megm(pos, vol, sens)
 
 % store the current path and change folder to the temporary one
 tmpfolder = cd;
-checkombin;
+om_checkombin;
 try
     cd(tempdir)
 
@@ -65,7 +65,6 @@ try
     efid = fopen(exefile, 'w');
     omp_num_threads = feature('numCores');
 
-    checkombin
     if ~ispc
       fprintf(efid,'#!/usr/bin/env bash\n');
       fprintf(efid,['export OMP_NUM_THREADS=',num2str(omp_num_threads),'\n']);
@@ -119,8 +118,3 @@ function cleaner(vol,bndfile,condfile,geomfile,exefile,dipfile,h2mmfile,s2mmfile
   if exist(s2mmfile,'file'),delete(s2mmfile);end
   if exist(sqdfile,'file'),delete(sqdfile);end
 
-function checkombin
-  [status,result] = system('om_assemble');
-  if status
-    error('OpenMEEG binaries are not correctly installed. See http://gforge.inria.fr/frs/?group_id=435')
-  end

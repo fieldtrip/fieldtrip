@@ -12,7 +12,7 @@ function [vol] = openmeeg(vol, isolated)
 
 
 openmeeg_license
-checkombin;
+om_checkombin;
 sprintf('%s','Calculating BEM model...please wait');
 
 % the first compartment should be the skin, the last the source
@@ -95,7 +95,7 @@ try
     if ispc
         dos([exefile]);
     else
-        version = getgccversion;
+        version = om_getgccversion;
         if version>3
           dos(['./' exefile]);
         else
@@ -112,29 +112,6 @@ catch
     cd(tmpfolder)
 end
 
-function version = getgccversion
-  % checks for gcc compiler version (works if superior to gcc3)
-  tmpdir = pwd;
-  cd /tmp
-  [junk,tname] = fileparts(tempname);
-  txtfile  = [tname '.txt'];
-  dos(['gcc -v >& ' txtfile]);
-  efid = fopen(txtfile);
-
-  tmp = ''; cnt = 1;
-  vec = [];
-  while ~isnumeric(tmp)
-    tmp = fgetl(efid);
-    vec{cnt} = tmp;
-    cnt = cnt+1;
-  end
-  fclose(efid);
-  delete(txtfile);
-  cd(tmpdir);
-  tmp = deblank(vec{cnt-2});
-  num = findstr('gcc version ',tmp);
-  version = str2num(tmp(num+11:num+12));
-
 function cleaner(vol,bndfile,condfile,geomfile,hmfile,hminvfile,exefile)
 
 % delete the temporary files
@@ -148,22 +125,3 @@ delete(hmfile);
 delete(hminvfile);
 delete(exefile);
 return
-
-function checkombin
-  [status,result] = system('om_assemble');
-  if status
-    web('http://gforge.inria.fr/frs/?group_id=435')
-    clc
-    disp('---------------------------------------------')
-    disp('---------------------------------------------')
-    disp('OpenMEEG binaries are not correctly installed')
-    disp(' ')
-    disp('Download OpenMEEG from')
-    disp('http://gforge.inria.fr/frs/?group_id=435')
-    disp(' ')
-    disp('See wiki page for installation instructions:')
-    disp('http://fieldtrip.fcdonders.nl/development/openmeeg/testinginstallation')
-    disp('---------------------------------------------')
-    disp('---------------------------------------------')
-    error('OpenMEEG not found')
-  end
