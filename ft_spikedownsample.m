@@ -79,6 +79,7 @@ if ~isfield(cfg, 'latency'),            cfg.latency = [0 inf];            end
 % set the specific defaults
 if ~isfield(cfg, 'fsample'),            cfg.fsample = 1000;               end
 %if ~isfield(cfg, 'method'),            cfg.method = [];                  end
+if ~isfield(cfg, 'precision'),          cfg.precision = 'double';         end
 
 if ~isfield(cfg, 'calibration')
   if ft_filetype(cfg.dataset, 'neuralynx_dma') || ft_filetype(cfg.dataset, 'neuralynx_sdma')
@@ -239,6 +240,9 @@ for i=chansel(:)'
     chanhdr.FirstTimeStamp     = nan;
     chanhdr.LastTimeStamp      = nan;
     chanhdr.TimeStampPerSample = nan;
+  end
+  if strcmp(cfg.dataformat, 'fcdc_matbin')
+    chanhdr.precision = cfg.precision;
   end
 
   % the output file contains the new channel name
