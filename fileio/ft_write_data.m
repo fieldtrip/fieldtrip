@@ -225,14 +225,17 @@ switch dataformat
     if nchans~=hdr.nChans && length(chanindx)==nchans
       % assume that the header corresponds to the original multichannel
       % file and that the data represents a subset of channels
-      hdr.label = hdr.label(chanindx);
-      hdr.nChans = length(chanindx);
+      hdr.label     = hdr.label(chanindx);
+      hdr.nChans    = length(chanindx);
+    end
+    if ~isfield(hdr, 'precision')
+      hdr.precision = 'double';
     end
     % write the header file
     save(headerfile, 'hdr', '-v6');
     % write the data file
     [fid,message] = fopen(datafile,'wb','ieee-le');
-    fwrite(fid, dat, 'double');
+    fwrite(fid, dat, hdr.precision);
     fclose(fid);
     
   case 'fcdc_mysql'

@@ -528,8 +528,16 @@ switch dataformat
     % multiplexed data in a *.bin file, accompanied by a matlab file containing the header
     offset        = begsample-1;
     numsamples    = endsample-begsample+1;
-    samplesize    = 8;
-    sampletype    = 'double';
+    if isfield(hdr, 'precision'), 
+      sampletype    = hdr.precision;
+    else
+      sampletype    = 'double'; %original format without precision info in hdr is always in double
+    end
+    if strcmp(sampletype, 'single')
+      samplesize    = 4;
+    elseif strcmp(sampletype, 'double')
+      samplesize    = 8;
+    end
     [fid,message] = fopen(datafile,'rb','ieee-le');
     % jump to the desired data
     fseek(fid, offset*samplesize*hdr.nChans, 'cof');
