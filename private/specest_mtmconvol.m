@@ -161,10 +161,14 @@ for ifreqoi = 1:nfreqoi
   cyclefraction  = anglein / (2*pi); % transform angle to fraction of cycles
   fullcyclenum   = floor(max(cyclefraction)); % get the number of complete cycles in angle
   [dum fractind] = min(abs(cyclefraction - fullcyclenum)); % determine closest breakpoint in angle for which the last uncomplete cycle starts (closest so angle(wavelet) at centre gets closest to 0)
-  % create new anglein with non-full cycly being split to both sides of the (resulting) wavelet
-  angleind   = 1:(length(anglein)-ceil((length(anglein) - fractind)/2))+1;
-  anglestart = -(ceil(((length(anglein)-fractind)/2)-1):-1:1) .* ((2.*pi./fsample) .* freqoi(ifreqoi));
-  anglein    = [anglestart' ; anglein(angleind)];
+  fractind = (fractind + 1):length(anglein); % shift one sample upwards and fill indices
+  if length(fractind) > 1 % only continue if more than one sample can be split up
+    % create new anglein with non-full cycly being split to both sides of the (resulting) wavelet
+    nsplit     = length(fractind) / 2;
+    anglestart = -(floor(nsplit):-1:1) .* ((2.*pi./fsample) .* freqoi(ifreqoi)); % using floor(nsplit) here, as the beginning of anglein is always at the exact start of sin/cos
+    angleind   = 1:fractind(ceil(nsplit)); % using ceil(nsplit) here, as the end of anglein is nearly never at the end of a sin/cos, so an extra sample in case of non-integer-nsplit would do the most good here
+    anglein    = [anglestart' ; anglein(angleind)];
+  end
   
   for itap = 1:ntaper(ifreqoi)
     try % this try loop tries to fit the wavelet into wltspctrm, when its length is smaller than ndatsample, the rest is 'filled' with zeros because of above code
@@ -185,7 +189,7 @@ for ifreqoi = 1:nfreqoi
       end
       wavelet = complex(coswav, sinwav);
       % debug plotting
-      %figure; subplot(2,1,1);hold on;plot(real(wavelet(wavelet~=0)));plot(imag(wavelet(wavelet~=0)),'color','r'); tline = length(wavelet(wavelet~=0))/2;line([tline tline],[-0.2 0.2]); subplot(2,1,2);plot(angle(wavelet(wavelet~=0)),'color','g');line([tline tline],[-pi pi])
+      figure; subplot(2,1,1);hold on;plot(real(wavelet(wavelet~=0)));plot(imag(wavelet(wavelet~=0)),'color','r'); tline = length(wavelet(wavelet~=0))/2;line([tline tline],[-0.2 0.2]); subplot(2,1,2);plot(angle(wavelet(wavelet~=0)),'color','g');line([tline tline],[-pi pi])
       % store the fft of the complex wavelet
       wltspctrm{ifreqoi}(itap,:) = fft(wavelet,[],2);
     end
