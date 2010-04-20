@@ -270,7 +270,7 @@ elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'-Te
 elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'-FLL')) == 1
   type = 'yokogawa_fll';
   manufacturer = 'Yokogawa';
-  
+
   % known 4D/BTI file types
 elseif filetype_check_extension(filename, '.pdf') && filetype_check_header(filename, 'E|lk') % I am not sure whether this header always applies
   type = '4d_pdf';
@@ -718,6 +718,16 @@ elseif filetype_check_extension(filename, '.dig')
   manufacturer = 'Curry';
   content = 'digitizer file';
 
+  % known SR Research eyelink file formats
+elseif filetype_check_extension(filename, '.asc') && filetype_check_header(filename, '**')
+  type = 'eyelink_asc';
+  manufacturer = 'SR Research (ascii)';
+  content = 'eyetracker data';
+elseif filetype_check_extension(filename, '.edf') && filetype_check_header(filename, 'SR_RESEARCH')
+  type = 'eyelink_edf';
+  manufacturer = 'SR Research';
+  content = 'eyetracker data (binary)';
+
   % known Curry V2 file types
 elseif filetype_check_extension(filename, '.sp0') || filetype_check_extension(filename, '.sp1') || filetype_check_extension(filename, '.sp2') || filetype_check_extension(filename, '.sp3') || filetype_check_extension(filename, '.sp4') || filetype_check_extension(filename, '.sp5') || filetype_check_extension(filename, '.sp6') || filetype_check_extension(filename, '.sp7') || filetype_check_extension(filename, '.sp8') || filetype_check_extension(filename, '.sp9')
   type = 'curry_sp';
@@ -899,8 +909,8 @@ fnames = {
   'length'
   'values'
   'times'
-};
+  };
 
 res = (numel(intersect(fieldnames(var{1}), fnames)) == 10);
 
- 
+

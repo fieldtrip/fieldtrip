@@ -72,12 +72,20 @@ end
 % get the options
 headerformat = keyval('headerformat', varargin);
 fallback     = keyval('fallback',     varargin);
-cache        = keyval('cache',        varargin); if isempty(cache), cache = false; end
+cache        = keyval('cache',        varargin);
 retry        = keyval('retry',        varargin); if isempty(retry), retry = false; end % for fcdc_buffer
 
 % determine the filetype
 if isempty(headerformat)
   headerformat = ft_filetype(filename);
+end
+
+if isempty(cache),
+  if strcmp(headerformat, 'bci2000_dat') || strcmp(headerformat, 'eyelink_asc')
+    cache = true;
+  else
+    cache = false;
+  end
 end
 
 % start with an empty header
@@ -176,7 +184,6 @@ if ~strcmp(filename, headerfile) && ~ft_filetype(filename, 'ctf_ds')
   filename     = headerfile;                % this function will read the header
   headerformat = ft_filetype(filename);        % update the filetype
 end
-
 
 % implement the caching in a data-format independent way
 if cache && exist(headerfile, 'file') && ~isempty(cacheheader)
@@ -523,6 +530,33 @@ switch headerformat
   case 'eeglab_set'
     hdr = read_eeglabheader(filename);
 
+  case 'eyelink_asc'
+    asc = read_eyelink_asc(filename);
+    hdr.nChans      = size(asc.dat,1);
+    hdr.nSamples    = size(asc.dat,2);
+    hdr.nSamplesPre = 0;
+    hdr.nTrials     = 1;
+    hdr.Fs          = 1000/median(diff(asc.dat(1,:)));
+    if isempty(fakechannelwarning) || ~fakechannelwarning
+      % give this warning only once
+      warning('creating fake channel names');
+      fakechannelwarning = true;
+    end
+    for i=1:hdr.nChans
+      hdr.label{i} = sprintf('%d', i);
+    end
+    hdr.FirstTimeStamp     = asc.dat(1,1);
+    hdr.TimeStampPerSample = 1;
+
+    % remember the original header details
+    hdr.orig.header       = asc.header;
+    % also remember the complete data upon request
+    if cache
+      hdr.orig.msg      = asc.msg;
+      hdr.orig.input    = asc.input;
+      hdr.orig.dat      = asc.dat;
+    end
+
   case  'spmeeg_mat'
     hdr = read_spmeeg_header(filename);
 
@@ -655,15 +689,15 @@ switch headerformat
       fakechannelwarning = true;
     end
     hdr.label = cell(hdr.nChans,1);
-    if hdr.nChans < 2000  % it takes 3.6s to attach 140000 labels to fMRI data... 
+    if hdr.nChans < 2000  % it takes 3.6s to attach 140000 labels to fMRI data...
       for i=1:hdr.nChans
-	    hdr.label{i} = sprintf('%d', i);
+        hdr.label{i} = sprintf('%d', i);
       end
       % this should be a column vector
       hdr.label = hdr.label(:);
     end
-    % remember the original header details      
-	hdr.orig = orig;
+    % remember the original header details
+    hdr.orig = orig;
 
   case 'fcdc_matbin'
     % this is multiplexed data in a *.bin file, accompanied by a matlab file containing the header
@@ -975,15 +1009,15 @@ switch headerformat
 
   case {'ns_cnt' 'ns_cnt16', 'ns_cnt32'}
     if strcmp(headerformat, 'ns_cnt')
-        orig = loadcnt(filename, 'ldnsamples', 1);
+      orig = loadcnt(filename, 'ldnsamples', 1);
     elseif strcmp(headerformat, 'ns_cnt16')
-        orig = loadcnt(filename, 'ldnsamples', 1, 'dataformat', 'int16');
+      orig = loadcnt(filename, 'ldnsamples', 1, 'dataformat', 'int16');
     elseif strcmp(headerformat, 'ns_cnt32')
-        orig = loadcnt(filename, 'ldnsamples', 1, 'dataformat', 'int32');
+      orig = loadcnt(filename, 'ldnsamples', 1, 'dataformat', 'int32');
     end
-    
+
     orig = rmfield(orig, {'data', 'ldnsamples'});
-    
+
     % do some reformatting/renaming of the header items
     hdr.Fs          = orig.header.rate;
     hdr.nChans      = orig.header.nchannels;

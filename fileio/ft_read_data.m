@@ -172,10 +172,10 @@ switch dataformat
     [path, file, ext] = fileparts(filename);
     headerfile = [path '/' file 'newparams.txt'];
     if isempty(headerformat)
-        headerformat = 'nmc_archive_k';
+      headerformat = 'nmc_archive_k';
     end
     if isempty(hdr)
-        hdr = ft_read_header(headerfile, 'headerformat', headerformat);
+      hdr = ft_read_header(headerfile, 'headerformat', headerformat);
     end
     datafile = filename;
   otherwise
@@ -452,7 +452,7 @@ switch dataformat
     dat = lcReadData(chansel, begsample, endsample, filename);
     % take the subset of channels that is selected by the user
     dat = dat(chanindx, :);
-    
+
   case  'combined_ds'
     dat = read_combined_ds(filename, hdr, begsample, endsample, chanindx);
 
@@ -517,9 +517,19 @@ switch dataformat
     dat = read_eep_cnt(filename, begsample, endsample);
     dat = dat.data(chanindx,:);                         % select the desired channels
 
+  case 'eyelink_asc'
+    if isfield(hdr.orig, 'dat')
+      % this is inefficient, since it keeps the complete data in memory
+      % but it does speed up subsequent read operations without the user
+      % having to care about it
+      asc = hdr.orig;
+    else
+      asc = read_eyelink_asc(filename);
+    end
+    dat = asc.dat(chanindx,begsample:endsample);
+
   case 'fcdc_buffer'
     % read from a networked buffer for realtime analysis
-    
     [host, port] = filetype_check_uri(filename);
     dat = buffer('get_dat', [begsample-1 endsample-1], host, port);  % indices should be zero-offset
     dat = dat.buf(chanindx,:);                                        % select the desired channels
@@ -528,7 +538,7 @@ switch dataformat
     % multiplexed data in a *.bin file, accompanied by a matlab file containing the header
     offset        = begsample-1;
     numsamples    = endsample-begsample+1;
-    if isfield(hdr, 'precision'), 
+    if isfield(hdr, 'precision'),
       sampletype    = hdr.precision;
     else
       sampletype    = 'double'; %original format without precision info in hdr is always in double
@@ -585,15 +595,15 @@ switch dataformat
 
   case {'egi_sbin'}
     if mod(hdr.orig.header_array(1),2)==0,
-        %unsegmented data contains only 1 trial, don't read the whole file
-        dat = read_sbin_data(filename, hdr, begsample, endsample, chanindx);
-        requestsamples = 0;
+      %unsegmented data contains only 1 trial, don't read the whole file
+      dat = read_sbin_data(filename, hdr, begsample, endsample, chanindx);
+      requestsamples = 0;
     else
-        %segmented data
-        dat = read_sbin_data(filename, hdr, begtrial, endtrial, chanindx);
+      %segmented data
+      dat = read_sbin_data(filename, hdr, begtrial, endtrial, chanindx);
     end
     dimord = 'chans_samples_trials';
-    
+
   case 'micromed_trc'
     dat = read_micromed_trc(filename, begsample, endsample);
     dat = dat(chanindx,:);
@@ -666,7 +676,7 @@ switch dataformat
   case {'ns_cnt' 'ns_cnt16', 'ns_cnt32'}
     % Neuroscan continuous data
     sample1    = begsample-1;
-    ldnsamples = endsample-begsample+1; % number of samples to read   
+    ldnsamples = endsample-begsample+1; % number of samples to read
     chanoi     = chanindx(:)';          % channels of interest
     if sample1<0
       error('begin sample cannot be for the beginning of the file');
@@ -677,7 +687,7 @@ switch dataformat
     elseif isfield(hdr, 'nsdf') && hdr.nsdf==32
       dataformat = 'ns_cnt32';
     end
-    
+
     if strcmp(dataformat, 'ns_cnt')
       tmp = loadcnt(filename, 'sample1', sample1, 'ldnsamples', ldnsamples, 'blockread', 1);
     elseif strcmp(dataformat, 'ns_cnt16')
@@ -704,13 +714,13 @@ switch dataformat
     elseif (hdr.orig.isaverage)
       dat = cat(2, hdr.orig.evoked.epochs);            % concatenate all epochs, this works both when they are of constant or variable length
       if checkboundary
-          trialnumber = [];
-          for i = 1:numel(hdr.orig.evoked)
-              trialnumber = [trialnumber i*ones(size(hdr.orig.evoked(i).times))];
-          end
-          if trialnumber(begsample) ~= trialnumber(endsample)
-              error('requested data segment extends over a discontinuous trial boundary');
-          end
+        trialnumber = [];
+        for i = 1:numel(hdr.orig.evoked)
+          trialnumber = [trialnumber i*ones(size(hdr.orig.evoked(i).times))];
+        end
+        if trialnumber(begsample) ~= trialnumber(endsample)
+          error('requested data segment extends over a discontinuous trial boundary');
+        end
       end
       dat = dat(chanindx, begsample:endsample);        % select the desired channels and samples
       dimord = 'chans_samples';
@@ -740,10 +750,10 @@ switch dataformat
     endsample = endsample - (begepoch-1)*hdr.nSamples;  % correct for the number of bytes that were skipped
     dat = dat(:, begsample:endsample);
 
-  case 'neuroprax_eeg'   
+  case 'neuroprax_eeg'
     tmp = np_readdata(filename, hdr.orig, begsample - 1, endsample - begsample + 1, 'samples');
     dat = tmp.data';
-      
+
   case 'plexon_ds'
     dat = read_plexon_ds(filename, hdr, begsample, endsample, chanindx);
 
@@ -870,7 +880,7 @@ switch dataformat
 
     tmp = read_neuroshare(filename, 'readanalog', 'yes', 'chanindx', chanindx, 'begsample', begsample, 'endsample', endsample);
     dat = tmp.analog.data';
-    
+
   otherwise
     if strcmp(fallback, 'biosig') && hastoolbox('BIOSIG', 1)
       dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);

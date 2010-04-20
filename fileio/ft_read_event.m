@@ -568,36 +568,36 @@ switch eventformat
     end
     version     = header_array(1);
     unsegmented = ~mod(version, 2);
-    
+
     eventCount=0;
     if unsegmented
-            [evType,sampNum] = find(eventData);
-        for k = 1:length(evType)
-            event(k).sample   = sampNum(k);
-            event(k).offset   = [];
-            event(k).duration = 0;
-            event(k).type     = 'trigger';
-            event(k).value    = char(EventCodes(evType(k),:));
-        end
+      [evType,sampNum] = find(eventData);
+      for k = 1:length(evType)
+        event(k).sample   = sampNum(k);
+        event(k).offset   = [];
+        event(k).duration = 0;
+        event(k).type     = 'trigger';
+        event(k).value    = char(EventCodes(evType(k),:));
+      end
     else
-        for theEvent=1:size(eventData,1)
-            for segment=1:hdr.nTrials
-                if any(eventData(theEvent,((segment-1)*hdr.nSamples +1):segment*hdr.nSamples))
-                    eventCount=eventCount+1;
-                    event(eventCount).sample   = min(find(eventData(theEvent,((segment-1)*hdr.nSamples +1):segment*hdr.nSamples))) +(segment-1)*hdr.nSamples;
-                    event(eventCount).offset   = -hdr.nSamplesPre;
-                    event(eventCount).duration =  length(find(eventData(theEvent,((segment-1)*hdr.nSamples +1):segment*hdr.nSamples )>0))-1;
-                    if event(eventCount).duration == 0
-                        event(eventCount).type     = 'trigger';
-                    else
-                        event(eventCount).type     = 'trial';
-                    end;
-                    event(eventCount).value    =  char(EventCodes(theEvent,:));
-                end
-            end
+      for theEvent=1:size(eventData,1)
+        for segment=1:hdr.nTrials
+          if any(eventData(theEvent,((segment-1)*hdr.nSamples +1):segment*hdr.nSamples))
+            eventCount=eventCount+1;
+            event(eventCount).sample   = min(find(eventData(theEvent,((segment-1)*hdr.nSamples +1):segment*hdr.nSamples))) +(segment-1)*hdr.nSamples;
+            event(eventCount).offset   = -hdr.nSamplesPre;
+            event(eventCount).duration =  length(find(eventData(theEvent,((segment-1)*hdr.nSamples +1):segment*hdr.nSamples )>0))-1;
+            if event(eventCount).duration == 0
+              event(eventCount).type     = 'trigger';
+            else
+              event(eventCount).type     = 'trial';
+            end;
+            event(eventCount).value    =  char(EventCodes(theEvent,:));
+          end
         end
+      end
     end
-    
+
     for segment=1:hdr.nTrials  % cell information
       eventCount=eventCount+1;
       event(eventCount).type     = 'trial';
@@ -605,10 +605,32 @@ switch eventformat
       event(eventCount).offset   = -hdr.nSamplesPre;
       event(eventCount).duration =  hdr.nSamples;
       if unsegmented,
-          event(eventCount).value    = [];
+        event(eventCount).value    = [];
       else
-          event(eventCount).value    =  char([CateNames{segHdr(segment,1)}(1:CatLengths(segHdr(segment,1)))]);
+        event(eventCount).value    =  char([CateNames{segHdr(segment,1)}(1:CatLengths(segHdr(segment,1)))]);
       end
+    end
+
+  case 'eyelink_asc'
+    if isfield(hdr.orig, 'dat')
+      % this is inefficient, since it keeps the complete data in memory
+      % but it does speed up subsequent read operations without the user
+      % having to care about it
+      asc = hdr.orig;
+    else
+      asc = read_eyelink_asc(filename);
+    end
+    timestamp = [asc.input(:).timestamp];
+    value     = [asc.input(:).value];
+    % note that in this dataformat the first input trigger can be before
+    % the start of the data acquisition
+    for i=1:length(timestamp)
+      event(end+1).type       = 'INPUT';
+      event(end  ).sample     = (timestamp(i)-hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1;
+      event(end  ).timestamp  = timestamp(i);
+      event(end  ).value      = value(i);
+      event(end  ).duration   = 1;
+      event(end  ).offset     = 0;
     end
 
   case 'fcdc_buffer'
@@ -693,23 +715,23 @@ switch eventformat
 
   case 'fcdc_fifo'
 
-    
+
     fifo = filetype_check_uri(filename);
-    
+
     if ~exist(fifo,'file')
       warning('the FIFO %s does not exist; attempting to create it', fifo);
       system(sprintf('mkfifo -m 0666 %s',fifo));
     end
-    
+
     fid = fopen(fifo, 'r');
     msg = fread(fid, inf, 'uint8');
     fclose(fid);
-    
+
     try
       event = mxDeserialize(uint8(msg));
     catch
       warning(lasterr);
-    end    
+    end
 
   case 'fcdc_tcp'
     % requires tcp/udp/ip-toolbox
@@ -727,9 +749,9 @@ switch eventformat
         if ~isempty(msg)
           event = mxDeserialize(uint8(str2num(msg)));
         end
-%       catch
-%         warning(lasterr);
-      end      
+        %       catch
+        %         warning(lasterr);
+      end
       pnet(con,'close');
     end
     con = [];
@@ -851,19 +873,19 @@ switch eventformat
     end
 
 
-    
+
     if iscontinuous
       analogindx = find(strcmp(ft_chantype(hdr), 'analog trigger'));
       binaryindx = find(strcmp(ft_chantype(hdr), 'digital trigger'));
-      
-      
-      if isempty(binaryindx)&&isempty(analogindx) 
+
+
+      if isempty(binaryindx)&&isempty(analogindx)
         % included in case of problems with older systems and MNE reader:
         % use a predefined set of channel names
         binary     = {'STI 014', 'STI 015', 'STI 016'};
         binaryindx = match_str(hdr.label, binary);
       end
-      
+
       if ~isempty(binaryindx)
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', binaryindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', 0);
         event   = appendevent(event, trigger);
@@ -1099,19 +1121,19 @@ switch eventformat
     %       event(i).sample   = [];
     %     end
 
-   
-  case {'neuroprax_eeg', 'neuroprax_mrk'}     
-    tmp = np_readmarker (filename, 0, inf, 'samples');    
+
+  case {'neuroprax_eeg', 'neuroprax_mrk'}
+    tmp = np_readmarker (filename, 0, inf, 'samples');
     event = [];
     for i = 1:numel(tmp.marker)
-        if isempty(tmp.marker{i})
-            break;
-        end
-        event = [event struct('type', tmp.markernames(i),...
-            'sample', num2cell(tmp.marker{i}),...
-            'value', {tmp.markertyp(i)})];
+      if isempty(tmp.marker{i})
+        break;
+      end
+      event = [event struct('type', tmp.markernames(i),...
+        'sample', num2cell(tmp.marker{i}),...
+        'value', {tmp.markertyp(i)})];
     end
-        
+
   case 'nexstim_nxe'
     event = read_nexstim_event(filename);
 
@@ -1190,14 +1212,14 @@ switch eventformat
     hastoolbox('yokogawa', 1);
     % allow the user to specify custom trigger channels
     event = read_yokogawa_event(filename, 'trigindx', trigindx);
-    
+
   case 'nmc_archive_k'
     event = read_nmc_archive_k_event(filename);
 
   case 'neuroshare' % NOTE: still under development
     % check that the required neuroshare toolbox is available
     hastoolbox('neuroshare', 1);
-    
+
     tmp = read_neuroshare(filename, 'readevent', 'yes');
     for i=1:length(tmp.hdr.eventinfo)
       event(i).type      = tmp.hdr.eventinfo(i).EventType;
@@ -1205,7 +1227,7 @@ switch eventformat
       event(i).timestamp = tmp.event.timestamp(i);
       event(i).sample    = tmp.event.sample(i);
     end
-    
+
   otherwise
     error('unsupported event format');
 end
@@ -1221,14 +1243,14 @@ end
 
 % make sure that all numeric values are double
 if ~isempty(event)
-    for i=1:length(event)
-        if isnumeric(event(i).value)
-            event(i).value = double(event(i).value);
-        end
-        event(i).sample    = double(event(i).sample);
-        event(i).offset    = double(event(i).offset);
-        event(i).duration  = double(event(i).duration);
+  for i=1:length(event)
+    if isnumeric(event(i).value)
+      event(i).value = double(event(i).value);
     end
+    event(i).sample    = double(event(i).sample);
+    event(i).offset    = double(event(i).offset);
+    event(i).duration  = double(event(i).duration);
+  end
 end
 
 if ~isempty(event)
@@ -1236,11 +1258,9 @@ if ~isempty(event)
   % this has the side effect that events without a sample number are discarded
   [dum, indx] = sort([event.sample]);
   event = event(indx);
-% else
-%   warning(sprintf('no events found in %s', filename));
+  % else
+  %   warning(sprintf('no events found in %s', filename));
 end
 
 % apply the optional filters
 event = ft_filter_event(event, varargin{:});
-
-
