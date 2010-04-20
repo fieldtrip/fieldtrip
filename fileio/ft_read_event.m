@@ -612,6 +612,9 @@ switch eventformat
     end
 
   case 'eyelink_asc'
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
     if isfield(hdr.orig, 'dat')
       % this is inefficient, since it keeps the complete data in memory
       % but it does speed up subsequent read operations without the user
