@@ -37,7 +37,8 @@ end
 if strcmp(current, type),
   %do nothing
   output = input;
-  return
+  
+  %return
 elseif strcmp(current, 'old') && strcmp(type, 'new'),
   %go from old to new
 
@@ -211,6 +212,9 @@ if strcmp(current, 'new') && strcmp(haspow, 'yes'),
     output.pow       = tmppow;
     output.powdimord = ['pos_rpt_freq']; 
   end  
+
+elseif strcmp(current, 'old') && strcmp(haspow, 'yes')
+  warning('construction of single trial power estimates is not implemented here using old style source representation');
 
 end
  
