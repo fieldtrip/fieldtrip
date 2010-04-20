@@ -585,8 +585,12 @@ if issource && strcmp(keepoutside, 'no'),
 end
 
 if issource && ~isempty(sourcerepresentation)
-  data = fixsource(data, 'type', sourcerepresentation, 'haspow', haspow);
+  data = fixsource(data, 'type', sourcerepresentation);
 end
+
+if issource && ~isempty(haspow)
+ data = fixsource(data, 'type', sourcerepresentation, 'haspow', haspow);
+end 
 
 if isfield(data, 'grad')
   % ensure that the gradiometer balancing is specified
