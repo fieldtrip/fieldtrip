@@ -532,11 +532,13 @@ switch headerformat
 
   case 'eyelink_asc'
     asc = read_eyelink_asc(filename);
-    hdr.nChans      = size(asc.dat,1);
-    hdr.nSamples    = size(asc.dat,2);
-    hdr.nSamplesPre = 0;
-    hdr.nTrials     = 1;
-    hdr.Fs          = 1000/median(diff(asc.dat(1,:)));
+    hdr.nChans              = size(asc.dat,1);
+    hdr.nSamples            = size(asc.dat,2);
+    hdr.nSamplesPre         = 0;
+    hdr.nTrials             = 1;
+    hdr.Fs                  = 2000/median(diff(asc.dat(1,:)));
+    hdr.FirstTimeStamp      = asc.dat(1,1);
+    hdr.TimeStampPerSample  = 2;
     if isempty(fakechannelwarning) || ~fakechannelwarning
       % give this warning only once
       warning('creating fake channel names');
@@ -545,8 +547,6 @@ switch headerformat
     for i=1:hdr.nChans
       hdr.label{i} = sprintf('%d', i);
     end
-    hdr.FirstTimeStamp     = asc.dat(1,1);
-    hdr.TimeStampPerSample = 1;
 
     % remember the original header details
     hdr.orig.header       = asc.header;
