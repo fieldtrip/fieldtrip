@@ -29,7 +29,6 @@ function [fid, sens, label] = read_polhemus_fil(Fname_pol,skip)
 % Jeremie Mattout
 % $Id$
 
-
 % checks and assigments
 %--------------------------------------------------------------------------
 try, skip;    catch, skip    = 0; end
@@ -39,7 +38,6 @@ if ~strcmp(ext,'.pol')
     warndlg(sprintf('Wrong input file format\n'));
     return
 end
-
 
 % --- READ Polhemus Sensor + fiducial locations ---
 %==========================================================================

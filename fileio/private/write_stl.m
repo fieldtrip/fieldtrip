@@ -11,13 +11,23 @@ function write_stl(filename, pnt, tri, nrm);
   
 % Copyright (C) 2006, Robert Oostenveld
 % 
-% $Log: write_stl.m,v $
-% Revision 1.1  2009/01/14 09:33:10  roboos
-% moved even more files from fileio to fileio/private, see previous log entry
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
 %
-% Revision 1.1  2006/04/19 12:54:47  roboos
-% new implementation, to be used in construction of solid model of monkey brain
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
 %
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
   
 % solid   testsphere
 %   facet normal -0.13 -0.13 -0.98

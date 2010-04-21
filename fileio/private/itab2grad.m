@@ -8,13 +8,23 @@ function grad = itab2grad(header_info)
 % Copyright (C) 2009, Robert Oostenveld, Donders Institute for Brain, Cognition and Behaviour
 % Copyright (C) 2009, Stefania Della Penna, ITAB, University Chiety, Italy
 %
-% $Log: itab2grad.m,v $
-% Revision 1.1  2009/10/16 07:31:18  roboos
-% renamed chieti into itab for consistency with other formats
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
 %
-% Revision 1.1  2009/10/13 10:11:50  roboos
-% first implementation, based on code from Stefania
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
 %
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 grad = struct;
 for i=1:header_info.nmagch

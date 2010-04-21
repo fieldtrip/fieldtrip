@@ -10,19 +10,23 @@ function [pnt, tri, nrm] = read_stl(filename);
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% $Log: read_stl.m,v $
-% Revision 1.1  2009/01/14 09:33:10  roboos
-% moved even more files from fileio to fileio/private, see previous log entry
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
 %
-% Revision 1.3  2008/11/14 07:49:19  roboos
-% use standard matlab strtrim function instead of deblank2
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
 %
-% Revision 1.2  2008/11/12 16:58:30  roboos
-% open as text, fixed typo in solLid
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
 %
-% Revision 1.1  2006/04/19 12:54:47  roboos
-% new implementation, to be used in construction of solid model of monkey brain
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
+% $Id$
 
 % solid   testsphere
 %   facet normal -0.13 -0.13 -0.98

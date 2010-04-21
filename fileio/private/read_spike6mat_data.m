@@ -1,4 +1,5 @@
 function dat = read_spike6mat_data(filename, varargin)
+
 % read_spike6mat_data() - read Matlab files exported from Spike 6
 %
 % Usage:
@@ -18,8 +19,6 @@ function dat = read_spike6mat_data(filename, varargin)
 % _______________________________________________________________________
 % Copyright (C) 2008 Institute of Neurology, UCL
 % Vladimir Litvak
-
-
 
 if nargin < 1
     help read_spike6mat_data;

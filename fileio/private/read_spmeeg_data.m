@@ -1,4 +1,5 @@
 function dat = read_spmeeg_data(filename, varargin)
+
 % read_spmeeg_data() - import SPM5 and SPM8 meeg datasets
 %
 % Usage:
@@ -19,13 +20,10 @@ function dat = read_spmeeg_data(filename, varargin)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 % Vladimir Litvak
 
-
-
 if nargin < 1
     help read_spmeeg_data;
     return;
 end;
-
 
 typenames = {'uint8','int16','int32','float32','float64','int8','uint16','uint32'};
 typesizes   = [1  2  4  4 8 1 2 4];
