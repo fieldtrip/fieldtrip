@@ -30,30 +30,48 @@ function [type] = ft_filetype(filename, desired, varargin)
 % whether it is of the desired type.
 %
 % Most filetypes of the following manufacturers and/or software programs are recognized
-%  - VSMMedtech/CTF
-%  - Elektra/Neuromag
-%  - Yokogawa
 %  - 4D/BTi
-%  - EDF
-%  - Neuroscan
-%  - Analyse
-%  - EEProbe
-%  - BrainVision
-%  - BESA
-%  - Curry
-%  - ASA
-%  - LORETA
-%  - Analyze/SPM
-%  - MINC
 %  - AFNI
+%  - ASA
+%  - Analyse
+%  - Analyze/SPM
+%  - BESA
+%  - BrainVision
+%  - Curry
+%  - EDF
+%  - EEProbe
+%  - Elektra/Neuromag
+%  - LORETA
+%  - MINC
 %  - Neuralynx
+%  - Neuroscan
 %  - Plexon
+%  - SR Research Eyelink
+%  - Tucker Davis Technology
+%  - VSMMedtech/CTF
+%  - Yokogawa
 %
 % See also READ_XXX_YYY where XXX=manufacturer and YYY=subtype
 
-% Copyright (C) 2003-2007 Robert Oostenveld
+% Copyright (C) 2003-2010 Robert Oostenveld
 %
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 % these are for remembering the type on subsequent calls with the same input arguments
 persistent previous_argin previous_argout previous_pwd
