@@ -615,7 +615,7 @@ switch eventformat
     if isempty(hdr)
       hdr = ft_read_header(filename);
     end
-    if isfield(hdr.orig, 'dat')
+    if isfield(hdr.orig, 'input')
       % this is inefficient, since it keeps the complete data in memory
       % but it does speed up subsequent read operations without the user
       % having to care about it

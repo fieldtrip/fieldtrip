@@ -35,6 +35,10 @@ fixctf      = keyval('fixctf',      varargin); if isempty(fixctf),      fixctf =
 fixneuromag = keyval('fixneuromag', varargin); if isempty(fixneuromag), fixneuromag = 0;  end
 fix4dglasgow= keyval('fix4dglasgow', varargin); if isempty(fix4dglasgow), fix4dglasgow = 0; end
 
+if isempty(hdr)
+  hdr = ft_read_header(filename);
+end
+
 if isempty(begsample)
   begsample = 1;
 end

@@ -10,10 +10,14 @@ function asc = read_eyelink_asc(filename)
 
 fid = fopen(filename, 'rt');
 
-header  = {};
-msg     = {};
-input   = [];
-dat     = [];
+asc.header  = {};
+asc.msg     = {};
+asc.input   = [];
+asc.sfix    = {};
+asc.efix    = {};
+asc.ssacc   = {};
+asc.esacc   = {};
+asc.dat     = [];
 current   = 0;
 
 while ~feof(fid)
@@ -24,37 +28,53 @@ while ~feof(fid)
     nchan = numel(tmp);
     current = current + 1;
 
-    if size(dat,1)<nchan
+    if size(asc.dat,1)<nchan
       % increase the allocated number of channels
-      dat(nchan,:) = 0;
+      asc.dat(nchan,:) = 0;
     end
 
-    if size(dat, 2)<current
+    if size(asc.dat, 2)<current
       % increase the allocated number of samples
-      dat(:,end+10000) = 0;
+      asc.dat(:,end+10000) = 0;
     end
 
     % add the current sample to the data matrix
-    dat(1:nchan, current) = tmp;
-
-
-  elseif regexp(tline, '\*\*.*')
-    header = cat(1, header, {tline});
-
-
-  elseif regexp(tline, '^MSG')
-    msg = cat(1, msg, {tline});
+    asc.dat(1:nchan, current) = tmp;
 
 
   elseif regexp(tline, '^INPUT')
     [val, num] = sscanf(tline, 'INPUT %d %d');
     this.timestamp = val(1);
     this.value     = val(2);
-    if isempty(input)
-      input = this;
+    if isempty(asc.input)
+      asc.input = this;
     else
-      input = cat(1, input, this);
+      asc.input = cat(1, asc.input, this);
     end
+
+
+  elseif regexp(tline, '\*\*.*')
+    asc.header = cat(1, asc.header, {tline});
+
+
+  elseif regexp(tline, '^MSG')
+    asc.msg = cat(1, asc.msg, {tline});
+
+
+  elseif regexp(tline, '^SFIX')
+    asc.sfix = cat(1, asc.sfix, {tline});
+
+
+  elseif regexp(tline, '^EFIX')
+    asc.efix = cat(1, asc.efix, {tline});
+
+
+  elseif regexp(tline, '^SSACC')
+    asc.ssacc = cat(1, asc.ssacc, {tline});
+
+
+  elseif regexp(tline, '^ESACC')
+    asc.esacc = cat(1, asc.esacc, {tline});
 
 
   else
@@ -63,9 +83,8 @@ while ~feof(fid)
 
 end
 
+% close the file?
 fclose(fid);
 
-asc.header  = header;
-asc.msg     = msg;
-asc.input   = input;
-asc.dat     = dat(:,1:current);
+% remove the samples that were not filled with real data
+asc.dat = asc.dat(:,1:current);

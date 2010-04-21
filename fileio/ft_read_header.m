@@ -536,9 +536,9 @@ switch headerformat
     hdr.nSamples            = size(asc.dat,2);
     hdr.nSamplesPre         = 0;
     hdr.nTrials             = 1;
-    hdr.Fs                  = 2000/median(diff(asc.dat(1,:)));
+    hdr.Fs                  = 1000/median(diff(asc.dat(1,:)));  % these timestamps are in miliseconds
     hdr.FirstTimeStamp      = asc.dat(1,1);
-    hdr.TimeStampPerSample  = 2;
+    hdr.TimeStampPerSample  = median(diff(asc.dat(1,:)));
     if isempty(fakechannelwarning) || ~fakechannelwarning
       % give this warning only once
       warning('creating fake channel names');
@@ -549,12 +549,10 @@ switch headerformat
     end
 
     % remember the original header details
-    hdr.orig.header       = asc.header;
-    % also remember the complete data upon request
+    hdr.orig.header = asc.header;
+    % remember all header and data details upon request
     if cache
-      hdr.orig.msg      = asc.msg;
-      hdr.orig.input    = asc.input;
-      hdr.orig.dat      = asc.dat;
+      hdr.orig = asc;
     end
 
   case  'spmeeg_mat'
