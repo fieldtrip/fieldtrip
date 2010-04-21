@@ -65,23 +65,27 @@ classdef mvmethod
           
           if bindim
             obj.indims = cell(1,length(data));
-          end
-          for c=1:length(data)
-            if bindim
+            for c=1:length(data)
               obj.indims{c} = size(data{c});
               obj.indims{c} = obj.indims{c}(2:end);
             end
+          elseif ~iscell(obj.indims)
+            obj.indims = repmat({obj.indims},[1 length(data)]);
+          end
+          
+          for c=1:length(data)
             data{c} = data{c}(1:size(data{c},1),:);
           end
           
           if boutdim
             obj.outdims = cell(1,length(design));
-          end
-          for c=1:length(design)
-            if boutdim
+            for c=1:length(design)
               obj.outdims{c} = size(design{c});
               obj.outdims{c} = obj.outdims{c}(2:end);
             end
+          end
+          
+          for c=1:length(design)
             design{c} = design{c}(1:size(design{c},1),:);
           end
           

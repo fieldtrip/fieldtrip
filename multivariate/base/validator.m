@@ -31,7 +31,9 @@ classdef validator
         if obj.verbose
           fprintf('initializing random number generator with seed %d\n',obj.init)
         end
-        RandStream.setDefaultStream(RandStream('mt19937ar','seed',obj.init));
+        %RandStream.setDefaultStream(RandStream('mt19937ar','seed',obj.init));
+        rand('state',obj.init);
+        randn('state',obj.init);
       end
       
     end
