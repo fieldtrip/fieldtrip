@@ -157,7 +157,7 @@ for ifreqoi = 1:nfreqoi
   anglein  = (0:timwinsample(ifreqoi)-1)' .* ((2.*pi./fsample) .* freqoi(ifreqoi));
   wltspctrm{ifreqoi} = complex(zeros(size(tap,1),round(endnsample)));
   
-  % determine appropriate phase-shift so angle(wavelet) at center approximates 0 NOTE: this procedure becomes inaccurate when there are very samples per cycle (i.e. 4-5)
+  % determine appropriate phase-shift so angle(wavelet) at center approximates 0 NOTE: this procedure becomes inaccurate when there are very few samples per cycle (i.e. 4-5)
   cyclefraction  = anglein / (2*pi); % transform angle to fraction of cycles
   if ((length(cyclefraction(cyclefraction<1))-1) < 5) % could be more robust
     warning('number of samples per wavelet cycle is less than 5')
