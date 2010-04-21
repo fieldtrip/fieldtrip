@@ -4,7 +4,7 @@ function [spectrum,ntaper,freqoi,timeoi] = specest_mtmconvol(dat, time, varargin
 %
 %
 % Use as
-%   [spectrum,ntaper,freqoi,timeoi] = specest_mtmfft(dat,time,...) 
+%   [spectrum,ntaper,freqoi,timeoi] = specest_mtmconvol(dat,time,...) 
 %
 %   dat      = matrix of chan*sample
 %   time     = vector, containing time in seconds for each sample
