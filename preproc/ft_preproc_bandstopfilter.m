@@ -3,7 +3,6 @@ function [filt] = ft_preproc_bandstopfilter(dat,Fs,Fbp,N,type,dir)
 % FT_PREPROC_BANDSTOPFILTER applies a band-stop filter to the data and thereby
 % removes the spectral components in the specified frequency band 
 % 
-% 
 % Use as
 %   [filt] = ft_preproc_bandstopfilter(dat, Fsample, Fbp, N, type, dir)
 % where
@@ -27,7 +26,23 @@ function [filt] = ft_preproc_bandstopfilter(dat,Fs,Fbp,N,type,dir)
 
 % Copyright (c) 2007-2008, Robert Oostenveld
 %
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 % set the default filter order later
 if nargin<4 || isempty(N)
