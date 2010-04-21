@@ -167,7 +167,8 @@ for ifreqoi = 1:nfreqoi
   if cyclefraction(fractind) < fullcyclenum % if index is from the last full cycle, shift it by 1. should be integrated in above line
     fractind = fractind + 1;
   end
-  fractind = (fractind + 1):length(anglein); % shift one sample upwards and fill indices
+  fractind = fractind + (length(prezero) - length(postzero)); % correct for unevend zero-padding (which shift the wavelet itself)
+  fractind = (fractind + 1):length(anglein); % shift one sample upwards and fill indices (why again?)
   if length(fractind) > 1 % only continue if more than one sample can be split up
     % create new anglein with non-full cycly being split to both sides of the (resulting) wavelet
     nsplit     = length(fractind) / 2;
