@@ -19,21 +19,23 @@ function [x] = struct2single(x, maxdepth);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: struct2single.m,v $
-% Revision 1.4  2009/02/25 09:25:55  roboos
-% also deal with intXX
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
 %
-% Revision 1.3  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
 %
-% Revision 1.2  2005/07/18 14:35:04  roboos
-% added support for structure arrays (caused error)
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
 %
-% Revision 1.1  2005/06/29 09:50:32  roboos
-% new implementation, intended to reduce the size of Matlab files on disk
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-
-fieldtripdefs
+% $Id$
 
 if nargin<2
   maxdepth = inf;

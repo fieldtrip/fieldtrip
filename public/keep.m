@@ -1,17 +1,17 @@
 function keep(varargin)
 
-%KEEP clears all the variables in the workspace except the ones you specify
-%after the keep command. It works just like clear, but only for variables
+% KEEP clears all the variables in the workspace except the ones you specify
+% after the keep command. It works just like clear, but only for variables
 %
-%KEEP is a modified version of the KEEP M-file written by 
-%Xiaoning (David) Yang (1998). It allows the use of the wildcard * as in the
-%clear command
+% KEEP is a modified version of the KEEP M-file written by 
+% Xiaoning (David) Yang (1998). It allows the use of the wildcard * as in the
+% clear command
 %
-%Examples:
-% keep set1data set2data set3data
-% keep *data
+% Examples:
+%   keep set1data set2data set3data
+%   keep *data
 %
-%Martin Barugel (mbarugel@utdt.edu)
+% Martin Barugel (mbarugel@utdt.edu)
 
 %       Keep all
 if isempty(varargin) | sum(strcmp('*',varargin))>=1

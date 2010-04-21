@@ -10,12 +10,13 @@ function h = uimagesc(varargin)
 %   Revision: 1.01,  Date: 2006/06/13.
 %
 %   See also IMAGE, IMAGESC, UIMAGE.
+%
 % This function is downloaded on Oct 24th 2008 from www.mathworks.com/matlabcentral/fileexchange/11368
 
 % History:
-% 2006/06/12: v1.00, first version.
+%   2006/06/12: v1.00, first version.
 %
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
+% $Id$
 
 clim = [];
 switch (nargin),

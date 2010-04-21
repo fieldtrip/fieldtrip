@@ -1,7 +1,5 @@
 function param = selparam(data)
 
-% SELPARAM
-
 dim = dimlength(data);
 ndim = length(dim);
 %remove all 1's at the right side of dim

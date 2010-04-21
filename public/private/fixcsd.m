@@ -4,9 +4,7 @@ function [data] = fixcsd(data, desired, channelcmb)
 % representation (crsspctrm), or changes the representation of bivariate frequency
 % domain data (sparse/full/sparsewithpow, sparsewithpow only works for crsspctrm or
 % fourierspctrm)
-% This code moved as a subfunction in checkdata to a separate function, private to
-% fieldtrip/public
-%
+
 % Copyright (C) 2010, Jan-Mathijs Schoffelen, Robert Oostenveld 
 
 if isfield(data, 'crsspctrm') && isfield(data, 'powspctrm')

@@ -11,7 +11,6 @@ function [dim] = pos2dim3d(pos,dimold)
 %  correspond to the 3D volumetric dimensions
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin==1 && ~isstruct(pos),
   dimold = zeros(0,2);

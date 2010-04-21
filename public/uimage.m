@@ -37,13 +37,14 @@ function h = uimage(varargin)
 %   Revision: 1.03,  Date: 2006/06/14.
 %
 %   See also IMAGE, IMAGESC, UIMAGESC.
+%
 % This function is downloaded on Oct 24th 2008 from www.mathworks.com/matlabcentral/fileexchange/11368
 
 % History:
-% 2006/06/12: v1.00, first version.
-% 2006/06/14: v1.03, minor bug fixed; works in ML6.
+%   2006/06/12: v1.00, first version.
+%   2006/06/14: v1.03, minor bug fixed; works in ML6.
 %
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
+% $Id$
 
 error(nargchk(3,inf,nargin));
 

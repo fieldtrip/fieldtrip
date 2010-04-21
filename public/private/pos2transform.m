@@ -11,7 +11,6 @@ function [transform] = pos2transform(pos)
 % from 'voxelspace' into the positions provided in the input
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 dim = pos2dim3d(pos);
 x   = 1:dim(1);
