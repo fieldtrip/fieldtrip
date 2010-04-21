@@ -33,8 +33,8 @@ function vol = triangle4pt(vol)
 %
 % written by Christophe Phillips, 2009/01/19
 % Cyclotron Research Centre, University of li?ge, belgium
-
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
+%
+% $Id$
 
 Ns = length(vol.bnd);
 for ii=1:Ns % treat each mesh one at a time

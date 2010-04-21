@@ -21,14 +21,28 @@ function field=meg_forward(dip_par,forwpar)
 %
 % note: it is assumed that locations are in cm, and dipole moments in nAm.
 %       Then the field is in fT. 
+
+% Copyright (C) 2003, Guido Nolte
 %
-% written by Guido Nolte
-
-
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 device_sens=forwpar.device_sens;
-
-
 
 field_sens_sphere=getfield_sphere(dip_par,forwpar.device_sens,forwpar.center);
 field=field_sens_sphere;clear field_sens_sphere;

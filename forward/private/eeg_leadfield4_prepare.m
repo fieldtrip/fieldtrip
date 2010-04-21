@@ -11,27 +11,32 @@ function [lut_t, cuf_t] = eeg_leadfield4_prepare(vol, Nmax);
 % and N is the number of terms for the series (default 60). The constant
 % factors t then do not have to be computed each time in eeg_leadfield4.
 %
-% See also EEG_LEADFIELD4
-
-% Copyright (C) 2002, Robert Oostenveld
-%
 % this implementation is adapted from
 %   Lutkenhoner, Habilschrift 1992.
 % which again is taken from
 %   B. N. Cuffin and D. Cohen. Comparion of the Magnetoencephalogram and the Electroencephalogram. Electroencephalogr Clin Neurophysiol, 47:131-146, 1979.
 %
-% $Log: eeg_leadfield4_prepare.m,v $
-% Revision 1.4  2003/07/29 16:02:07  roberto
-% minor cosmetic change in the constants
+% See also EEG_LEADFIELD4
+
+% Copyright (C) 2002, Robert Oostenveld
 %
-% Revision 1.3  2003/07/29 15:52:44  roberto
-% fixed a bug in the implementation of eeg_leadfield4, caused by mixing the constants of
-% lutkenhoner and cuffin
-% furthermore multiple cosmetic changes and default projection of electrodes to sphere
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
 %
-% Revision 1.2  2003/03/11 14:45:36  roberto
-% updated help and copyrights
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
 %
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 % sort the spheres from the smallest to the largest
 [vol.r, indx] = sort(vol.r);

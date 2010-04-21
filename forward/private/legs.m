@@ -27,9 +27,26 @@ function [basis,gradbasis]=legs(x,dir,n,scale)
 %
 %         gradbasis: Nx((n+1)^2-1) matrix containing in the j.th row the scalar 
 %                     product of the gradient of the former with the j.th row of dir
-%             
-% CC Guido Nolte 
+
+% Copyright (C) 2003, Guido Nolte
 %
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 [n1,n2]=size(x);
 
