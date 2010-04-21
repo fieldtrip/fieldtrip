@@ -7,10 +7,24 @@ function [freq] = ft_freqanalysis_mvar(cfg, data)
 %   [freq] = ft_freqanalysis(cfg, data)
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
-% $Log: freqanalysis_mvar.m,v $
-% Revision 1.1  2009/10/02 13:55:48  jansch
-% first implementation in fieldtrip
 %
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 if ~isfield(cfg, 'channel'),    cfg.channel    = 'all';          end
 if ~isfield(cfg, 'channelcmb'), cfg.channelcmb = {'all' 'all'};  end

@@ -1,10 +1,10 @@
 function [cfg] = ft_topoplotIC(cfg, varargin)
 
-% FT_TOPOPLOTIC plots the topographic distribution of an independent component that was computed
-% using the FT_COMPONENTANALYSIS function, as a 2-D circular
-% view (looking down at the top of the head).
+% FT_TOPOPLOTIC plots the topographic distribution of an independent
+% component that was computed using the FT_COMPONENTANALYSIS function,
+% as a 2-D circular view (looking down at the top of the head).
 %
-% Use as:
+% Use as
 %   ft_topoplotIC(cfg, data)
 %
 % The configuration should have the following parameters:
@@ -68,14 +68,11 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 % layout. If you want to have more fine-grained control over the layout
 % of the subplots, you should create your own layout file.
 %
-% FT_TOPOPLOTIC calls the function FT_TOPOPLOTER to do the plotting.
-%
 % See also:
 %   ft_topoplotER, ft_singleplotTFR, ft_multiplotTFR, ft_prepare_layout
 
 % Undocumented local options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)
-
 
 % Copyright (C) 2010, Donders Centre for Cognitive Neuroimaging, Arjen Stolk
 %
@@ -96,7 +93,6 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-% -v log | less' to get detailled information
 
 % config default
 if ~isfield(cfg, 'component'),             cfg.component = [];            end
