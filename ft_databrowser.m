@@ -425,7 +425,7 @@ else
     trlvis(:,3) = begsamples-1;
   else
     % offset according to original time axis
-    trlvis(:,3) = opt.orgdata.time{1}(begsamples-opt.trlorg(3))*opt.fsample;
+    trlvis(:,3) = opt.trlorg(3) + begsamples - opt.trlorg(1);
   end
   
   if isfield(opt, 'trlvis')
