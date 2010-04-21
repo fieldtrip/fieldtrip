@@ -1,4 +1,4 @@
-function [s, cfg] = statfun_roc(cfg, dat, design);
+function [s, cfg] = statfun_roc(cfg, dat, design)
 
 % STATFUN_ROC computes the ROC (the 'area under the curve') of the separability
 % of the data, which is divided over two conditions, as specified in the
@@ -15,11 +15,20 @@ function [s, cfg] = statfun_roc(cfg, dat, design);
 %
 % Additional settings can be passed through to this function using
 % the cfg structure.
+% 
+% Example
+%   a = randn(1,1000) + 1;
+%   b = randn(1,1000);
+%   design = [1*ones(1,1000) 2*ones(1,1000)];
+%   auc = statfun_roc([], [a b], design);
 %
+% Note that this statfun performs a one sided test in which "a" is assumed
+% to be larger than "b".
 
 if ~isfield(cfg, 'ivar'),         cfg.ivar   =  1;         end
+if ~isfield(cfg, 'logtransform'), cfg.logtransform = 'no'; end
 
-if isfield(cfg, 'logtransform') && strcmp(cfg.logtransform, 'yes'),
+if strcmp(cfg.logtransform, 'yes'),
   dat = log10(dat);
 end
 
@@ -90,6 +99,15 @@ for k = 1:nobs
   % the numerical integration is faster if the points are sorted
   hits = fliplr(hits);
   fa   = fliplr(fa);
+
+  if true
+    % this part is optional and should only be used when exploring the data
+    figure
+    plot(fa, hits, '.-')
+    xlabel('false positive');
+    ylabel('true positive');
+    title('ROC-curve');
+  end
 
   % compute the area under the curve using numerical integration
   auc(k) = numint(fa, hits);
