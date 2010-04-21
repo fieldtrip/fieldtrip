@@ -211,39 +211,23 @@ function [clusrand] = clusterrandanalysis(cfg,varargin);
 
 % Copyright (C) 2005-2006, Eric Maris, NICI, University Nijmegen
 %
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
-
-% Revision 1.15  2006/02/23 10:28:16  roboos
-% changed dimord strings for consistency, changed toi and foi into time and freq, added fixdimord where neccessary
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
 %
-% Revision 1.14  2006/02/01 12:26:00  roboos
-% made all uses of dimord consistent with the common definition of data dimensions, see the fixdimord() function
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
 %
-% Revision 1.13  2005/12/06 13:18:08  erimar
-% (1) Removed all functionality with respect to channel combinations
-% (because it was not sufficiently tested for data sets of realistic
-% sizes). (2) Improved and extended the handling of external predictor
-% variables (for the independent and the dependent samples regression
-% coefficient T-statistics).
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
 %
-% Revision 1.12  2005/11/28 11:15:09  erimar
-% Improved help
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% Revision 1.11  2005/08/10 15:35:41  roboos
-% fixed cfg.elecfile (accidentally called gradfile), thanks to chrfor
-%
-% Revision 1.10  2005/08/05 12:19:03  erimar
-% Correct an error in the handling of the .ext-field for
-% cfg.indepsamplesregrT detected by Vladimir Litvak.
-%
-% Revision 1.9  2005/08/05 07:48:37  roboos
-% added support for cfg.elec/grad/elecfile/gradfile
-% cleaned up the help
-% removed the "defaults set in xxx" help comments, since those subfunctions are not accessible for the end-user
-%
-% Revision 1.8  2005/04/22 07:44:41  roboos
-% added/corrected copyrights, added a Log tag for CVS, converted to unix ascii
-%
+% $Id$
 
 fieldtripdefs
 
