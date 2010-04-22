@@ -1,6 +1,6 @@
-function [output] = sourcerestyle(input, varargin)
+function [output] = fixsource(input, varargin)
 
-% SOURCERESTYLE converts old style source structures into new style source structures and the
+% FIXSOURCE converts old style source structures into new style source structures and the
 % other way around
 %
 % Use as:
