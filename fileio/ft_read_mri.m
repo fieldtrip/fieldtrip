@@ -137,9 +137,9 @@ elseif ft_filetype(filename, 'neuromag_fif') && hastoolbox('mne')
   img = cat(3, hdr.slices.data);
   hdr.slices = rmfield(hdr.slices, 'data'); % remove the image data to save memory
   % hmm, which transformation matrix should I use?
-  if issubfield(hdr.voxel_trans, 'trans')
+  if isfield(hdr, 'voxel_trans') && issubfield(hdr.voxel_trans, 'trans')
     transform = hdr.voxel_trans.trans;
-  elseif issubfield(hdr.trans, 'trans')
+  elseif isfield(hdr, 'trans') && issubfield(hdr.trans, 'trans')
     transform = hdr.trans.trans;
   end
 
