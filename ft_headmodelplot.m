@@ -125,7 +125,7 @@ if ~isfield(cfg, 'plotbnd'),          cfg.plotbnd = 'no';            end
 if ~isfield(cfg, 'plotfiducial'),     cfg.plotfiducial = 'no';       end
 
 % extract/read the gradiometer and volume conductor
-[vol, sens, cfg] = ft_prepare_headmodel(cfg, data);
+[vol, sens, cfg] = prepare_headmodel(cfg, data);
 
 if strcmp(cfg.plotgrid, 'yes')
   if isfield(cfg.grid, 'pos')

@@ -44,7 +44,7 @@ end
 switch ft_senstype(sens)
   case {'ctf151', 'ctf275' 'bti148', 'bti248', 'chieti153', 'yokogawa160'}
     % remove the non-MEG channels altogether
-    sel = chantype(sens, 'meg');
+    sel = ft_chantype(sens, 'meg');
     sens.label = sens.label(sel);
     sens.tra   = sens.tra(sel,:);
 
