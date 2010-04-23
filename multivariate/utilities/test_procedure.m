@@ -22,7 +22,6 @@ function [acc,sig,cv] = test_procedure(myproc,nfolds,X,Y)
     
     X  = [squeeze(mean(left.powspctrm(:,cvec,fvec,tvec),4)); squeeze(mean(right.powspctrm(:,cvec,fvec,tvec),4))];
     Y  = [ones(size(left.powspctrm,1),1); 2*ones(size(right.powspctrm,1),1)];
-    Y(1:40) = 3;
     
     if isa(myproc{end},'transfer_learner')
       

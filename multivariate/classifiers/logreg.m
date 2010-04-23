@@ -1,8 +1,8 @@
 classdef logreg < classifier
 % logistic regression; various flavours using Mark Schmidt's L1General
-% package
+% package; elastic net implementation based on Friedman et al
 %
-%   Copyright (c) 2010, Marcel van Gerven
+%   Copyright (c) 2010, Marcel van Gerven, Ali Bahramisharif
 
   properties
     
@@ -30,8 +30,8 @@ classdef logreg < classifier
       nclasses = numel(unique(Y(:,1)));
       
       if nclasses == 2
-        Y = 3 - 2*Y; % convert to -1 / + 1
-        funObj = @(w)LogisticLoss(w,X,Y);
+        % convert to -1 / + 1
+        funObj = @(w)LogisticLoss(w,X,3 - 2*Y);
       else
         funObj = @(w)SoftmaxLoss2(w,X,Y,nclasses);
       end
@@ -72,16 +72,23 @@ classdef logreg < classifier
       else
         % elastic net logistic regression
         
-        L2 = obj.L2*ones(nvars,nclasses-1);
-        L2(1,:) = 0; % Don't regularize bias elements
-        funObjL2 = @(w)penalizedL2(w,funObj,L2(:));
+        % Mark Schmidt implementation
+        %         L2 = obj.L2*ones(nvars,nclasses-1);
+        %         L2(1,:) = 0; % Don't regularize bias elements
+        %         funObjL2 = @(w)penalizedL2(w,funObj,L2(:));
+        %
+        %         % Set up regularizer
+        %         L1 = obj.L1*ones(nvars,nclasses-1);
+        %         L1(1,:) = 0; % Don't regularize bias elements
+        %
+        %         p.model = L1GeneralProjection(funObjL2,w_init,L1(:));
+
+        opt.L1=obj.L1;            
+        opt.L2=obj.L2;                 
+        opt.verbose=obj.verbose; 
         
-        % Set up regularizer
-        L1 = obj.L1*ones(nvars,nclasses-1);
-        L1(1,:) = 0; % Don't regularize bias elements
-        
-        p.model = L1GeneralProjection(funObjL2,w_init,L1(:));
-        
+        p.model = -elasticlr(X,Y,opt);
+
       end
       
       p.model = reshape(p.model,nvars,nclasses-1);
