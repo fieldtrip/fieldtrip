@@ -20,7 +20,7 @@ function [lf] = ft_compute_leadfield(pos, sens, vol, varargin)
 % It is possible to compute a simultaneous forward solution for EEG and MEG
 % by specifying sens and grad as two cell-arrays, e.g.
 %   sens = {senseeg, sensmeg}
-%   vol  = {voleeg, volmeg }
+%   vol  = {voleeg,  volmeg}
 % This results in the computation of the leadfield of the first element of
 % sens and vol, followed by the second, etc. The leadfields of the
 % different imaging modalities are concatenated.
@@ -30,6 +30,11 @@ function [lf] = ft_compute_leadfield(pos, sens, vol, varargin)
 %   'reducerank'      = 'no' or number
 %   'normalize'       = 'no', 'yes' or 'column'
 %   'normalizeparam'  = parameter for depth normalization (default = 0.5)
+%   'weight'          = number or 1xN vector, weight for each dipole position (default = 1)
+%
+% The leadfield weight may be used to specify a (normalized)
+% corresponding surface area for each dipole, e.g. when the dipoles
+% represent a folded cortical surface with varying triangle size.
 %
 % Depending on the specific input arguments for the sensor and volume, this
 % function will select the appropriate low-level EEG or MEG forward model.
@@ -63,7 +68,7 @@ function [lf] = ft_compute_leadfield(pos, sens, vol, varargin)
 %   A sensor-weighted overlapping-sphere head model and exhaustive head model comparison for MEG
 %   Phys Med Biol. 1999 Feb;44(2):423-40
 
-% Copyright (C) 2004-2008, Robert Oostenveld
+% Copyright (C) 2004-2010, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -108,6 +113,7 @@ ismeg = ft_senstype(sens, 'meg');
 reducerank     = keyval('reducerank', varargin); if isempty(reducerank), reducerank = 'no'; end
 normalize      = keyval('normalize' , varargin); if isempty(normalize ), normalize  = 'no'; end
 normalizeparam = keyval('normalizeparam', varargin); if isempty(normalizeparam ), normalizeparam = 0.5; end
+weight         = keyval('weight', varargin);
 
 % multiple dipoles can be represented either as a 1x(N*3) vector or as a
 % as a Nx3 matrix, i.e. [x1 y1 z1 x2 y2 z2] or [x1 y1 z1; x2 y2 z2]
@@ -458,7 +464,8 @@ if ~strcmp(reducerank, 'no') && reducerank<size(lf,2) && ~strcmp(ft_voltype(vol)
 end
 
 % optionally apply leadfield normaliziation
-if strcmp(normalize, 'yes')
+switch normalize
+case 'yes'
   if normalizeparam==0.5
     % normalize the leadfield by the Frobenius norm of the matrix
     % this is the same as below in case normalizeparam is 0.5
@@ -471,10 +478,20 @@ if strcmp(normalize, 'yes')
   if nrm>0
     lf = lf ./ nrm;
   end
-elseif strcmp(normalize, 'column')
+case 'column'
   % normalize each column of the leadfield by its norm
   for j=1:size(lf,2)
     nrm = sum(lf(:,j).^2)^normalizeparam;
     lf(:,j) = lf(:,j)./nrm;
   end
 end
+
+% optionally apply a weight to the leadfield for each dipole location
+if ~isempty(weight)
+  for i=1:Ndipoles
+    lf(:,3*(i-1)+1) = lf(:,3*(i-1)+1) * weight(i); % the leadfield for the x-direction
+    lf(:,3*(i-1)+2) = lf(:,3*(i-2)+1) * weight(i); % the leadfield for the y-direction
+    lf(:,3*(i-1)+3) = lf(:,3*(i-3)+1) * weight(i); % the leadfield for the z-direction
+  end
+end
+
