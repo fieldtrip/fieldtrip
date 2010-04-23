@@ -420,7 +420,7 @@ classdef crossvalidator < validator
                   randn('state',obj.init);
                 end
                 
-                testfolds{f,d} = setdiff(1:design{d}.nsamples,trainfolds{f,d})';
+                testfolds{f,d} = setdiff(1:size(design{d},1),trainfolds{f,d})';
                 testfolds{f,d} = testfolds{f,d}(randperm(size(testfolds{f,d},1)));
               end
             end
