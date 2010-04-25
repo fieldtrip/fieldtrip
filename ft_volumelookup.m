@@ -1,33 +1,40 @@
 function [output] = ft_volumelookup(cfg, volume)
 
-% FT_VOLUMELOOKUP can be used in two directions. (1) It creates a mask
-% according to a label from a given atlas, or a sphere or box around a
-% point of interest. (2) It gives the labels from a given atlas according
-% to a given mask.
+% FT_VOLUMELOOKUP can be used in to combine an anatomical or functional
+% atlas with source recunstruction. You can use it for forward and reverse
+% lookup.
 %
-% Use as
-%   (1) [mask]  = ft_volumelookup(cfg, volume)
-% or
-%   (2) [labels] = ft_volumelookup(cfg, volume)
+% Given the anatomical or functional label, it looks up the locations and
+% creates a mask (as a binary volume) based on the label, or creates a
+% sphere or box around a point of interest. In this case the function is to
+% be used as:
+%   mask = ft_volumelookup(cfg, volume)
 %
-% where volume can be:
-%   mri    is the output of READ_FCDC_MRI
+% Given a binary volume that indicates a region of interest, it looks up
+% the corresponding anatomical or functional labels from a given atlas. In
+% this case the function is to be used as follows:
+%    labels = ft_volumelookup(cfg, volume)
+%
+% In both cases the input volume can be:
+%   mri    is the output of FT_READ_MRI
 %   source is the output of FT_SOURCEANALYSIS
 %   stat   is the output of FT_SOURCESTATISTICS
 %
-% configuration options for a mask according to an atlas:
+% The configuration options for a mask according to an atlas:
 %   cfg.inputcoord = 'mni' or 'tal', coordinate system of the mri/source/stat
 %   cfg.atlas      = string, filename of atlas to use, either the AFNI
 %                     brik file that is available from http://afni.nimh.nih.gov/afni/doc/misc/ttatlas_tlrc,
 %                     or the WFU atlasses available from  http://fmri.wfubmc.edu. see FT_PREPARE_ATLAS
 %   cfg.roi        = string or cell of strings, region(s) of interest from anatomical atlas
-% configuration options for a spherical/box mask around a point of interest:
+%
+% The configuration options for a spherical/box mask around a point of interest:
 %   cfg.roi                = Nx3 vector, coordinates of the points of interest
 %   cfg.sphere             = radius of each sphere in cm/mm dep on unit of input
 %   cfg.box                = Nx3 vector, size of each box in cm/mm dep on unit of input
 %   cfg.round2nearestvoxel = 'yes' or 'no' (default = 'no'), voxel closest to point of interest is calculated
 %                             and box/sphere is centered around coordinates of that voxel
-% configuration options for labels from a mask:
+%
+% The configuration options for labels from a mask:
 %   cfg.inputcoord    = 'mni' or 'tal', coordinate system of the mri/source/stat
 %   cfg.atlas         = string, filename of atlas to use, either the AFNI
 %                        brik file that is available from http://afni.nimh.nih.gov/afni/doc/misc/ttatlas_tlrc,
@@ -84,7 +91,7 @@ end
 if roi2mask
   % only for volume data
   volume = checkdata(volume, 'datatype', 'volume');
-  
+
   % set the defaults
   if ~isfield(cfg, 'round2nearestvoxel'),  cfg.round2nearestvoxel = 'no';  end
 
@@ -199,7 +206,7 @@ if roi2mask
   mask = reshape(mask, dim);
   fprintf('%i voxels in mask, which is %.3f %% of total volume\n', sum(mask(:)), 100*mean(mask(:)));
   output = mask;
-  
+
 elseif mask2label
   % convert to source representation (easier to work with)
   volume = checkdata(volume, 'datatype', 'source');
@@ -220,7 +227,7 @@ elseif mask2label
   for iLab = 1:length(labels.name)
     labels.usedqueryrange{iLab} = [];
   end
-  
+
   for iVox = 1:length(sel)
     usedQR = 1;
     label = atlas_lookup(atlas, [volume.pos(sel(iVox),1) volume.pos(sel(iVox),2) volume.pos(sel(iVox),3)], 'inputcoord', cfg.inputcoord, 'queryrange', 1);
@@ -237,7 +244,7 @@ elseif mask2label
     elseif length(label) == 1
       label = {label};
     end
-    
+
     ind_lab = [];
     for iLab = 1:length(label)
       ind_lab = [ind_lab find(strcmp(label{iLab}, labels.name))];
@@ -252,9 +259,9 @@ elseif mask2label
       end
     end
   end %iVox
-  
+
   output = labels;
-  
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
