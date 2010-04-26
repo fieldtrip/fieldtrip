@@ -11,6 +11,7 @@
 #include <errno.h>
 
 #define RDA_FIXED_NAME_LEN   7
+#define RDA_MAX_NUM_CLIENTS  32			/* On Windows, this number must be smaller than 64 */
 
 const UINT8_T _rda_guid[16]={
 	0x8E,0x45,0x58,0x43,0x96,0xC9,0x86,0x4C,0xAF,0x4A,0x98,0xBB,0xF6,0xC9,0x14,0x50
@@ -326,7 +327,7 @@ void *_rdaserver_thread(void *arg) {
 		the sampling rate and number of channels, you would probably hit
 		other performance boundaries first.
 	*/
-	rda_client_job_t clients[63];
+	rda_client_job_t clients[RDA_MAX_NUM_CLIENTS];
 	rda_buffer_item_t *startItem    = NULL; 
 	rda_buffer_item_t *firstDataItem = NULL;
 	
@@ -352,8 +353,8 @@ void *_rdaserver_thread(void *arg) {
 	typeOk = SC->use16bit ? 0 : 1;
 		
 	/* wait up to 10 ms for new events */
-	tv.tv_sec = 1; /* CHANGE THIS */
-	tv.tv_usec = 0;
+	tv.tv_sec = 0; 
+	tv.tv_usec = 10000;
 	
 	#ifndef PLATFORM_WIN32
 	fdMax = SC->server_socket;
@@ -362,10 +363,13 @@ void *_rdaserver_thread(void *arg) {
 	while (!SC->should_exit) {
 		int sel;
 		
-		/* Prepare read (also error!) and write sets */
+		/* Prepare read (also error!) and write sets: clear them first */
 		FD_ZERO(&readSet);
 		FD_ZERO(&writeSet);
-		FD_SET(SC->server_socket, &readSet);
+		/* Add server socket to read set, but only if we can actually handle more clients */
+		if (numClients < RDA_MAX_NUM_CLIENTS) {
+			FD_SET(SC->server_socket, &readSet);
+		}
 		for (i=0;i<numClients;i++) {
 			/* Every client is listened to (for disconnection!) */
 			FD_SET(clients[i].sock, &readSet);
@@ -380,7 +384,7 @@ void *_rdaserver_thread(void *arg) {
 			continue; /* TODO: think about stopping operation */
 		}
 		
-		/* In case of a timeout: check the FieldTrip buffer for header + data */
+		/* In case of a timeout (=no network events): check the FieldTrip buffer for header + data */
 		if (sel == 0) {
 			/* If we can't get the header, go back to the start of the loop */
 			if (rda_aux_get_hdr(SC->ft_buffer, &ftHdr)) continue;
@@ -408,7 +412,7 @@ void *_rdaserver_thread(void *arg) {
 				}
 				/* Now the start item should have proper size/sizeAlloc/data fields */
 				
-				printf("Picked up FT header for first time!\n");
+				/* printf("Picked up FT header for first time!\n"); */
 				
 				/* Add the start item to every client */
 				for (i=0;i<numClients;i++) {
@@ -480,7 +484,7 @@ void *_rdaserver_thread(void *arg) {
 				
 				for (i=0;i<numClients;i++) {
 					if (clients[i].item == NULL) {
-						printf("Adding new job for client %i\n", clients[i].sock);
+						/* printf("Adding new job for client %i\n", clients[i].sock); */
 						clients[i].item = item;
 						item->refCount++;
 					}
@@ -522,13 +526,13 @@ void *_rdaserver_thread(void *arg) {
 
 			if (!FD_ISSET(C->sock, &writeSet)) continue;
 						
-			printf("Sending out data (%i bytes)...\n", C->item->size - C->written);
+			/* printf("Sending out data (%i bytes)...\n", C->item->size - C->written); */
 			sent = send(C->sock, (char *) C->item->data + C->written, C->item->size - C->written, 0);
-			printf("%i bytes\n", sent);
+			/* printf("%i bytes\n", sent); */
 			if (sent > 0) {
 				C->written += sent;
 				if (C->written == C->item->size) {
-					printf("Done with this packet on client %i\n", C->sock);
+					/* printf("Done with this packet on client %i\n", C->sock); */
 					C->item->refCount--;
 					C->written = 0;
 					C->item = C->item->next;
@@ -584,15 +588,13 @@ void *_rdaserver_thread(void *arg) {
 		}
 		
 		/* just for debugging - this will be removed */
-		/*
-		{
+		if (0) {
 			rda_buffer_item_t *item = firstDataItem;
 			while (item!=NULL) {
 				printf("Item at %lX  has refcount %i  and points at %lX\n", (long) (void *) item,  item->refCount, (long) (void *) item->next);
 				item = item->next;
 			}
 		}
-		*/
 		
 		/* Done with the network-specific stuff, now clean up the data items */
 		if (firstDataItem!=NULL) {		
@@ -755,7 +757,7 @@ int rda_stop_server(rda_server_ctrl_t *SC) {
 	if (SC==NULL) return -1;
 	
 	pthread_mutex_lock(&SC->mutex);
-	SC->should_exit = 0;
+	SC->should_exit = 1;
 	pthread_mutex_unlock(&SC->mutex);
 	
 	pthread_join(SC->thread, NULL);

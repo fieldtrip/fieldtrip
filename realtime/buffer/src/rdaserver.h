@@ -44,9 +44,9 @@ typedef struct {
 	pthread_mutex_t mutex;		/**< Mutex for protecting num_clients (actually not really necessary) */
 	SOCKET server_socket;		/**< The server socket that clients connect to */
 	int ft_buffer;				/**< Connection to FieldTrip buffer (socket or 0 for dmarequests) */
-	int num_clients;			/**< Current number of clients */
-	int should_exit;			/**< Flag to notify the server thread that it should stop */
-	int is_running;				/**< Flag that indicates whether the thread is still running */
+	volatile int num_clients;	/**< Current number of clients */
+	volatile int should_exit;	/**< Flag to notify the server thread that it should stop */
+	volatile int is_running;	/**< Flag that indicates whether the thread is still running */
 	int use16bit;				/**< Flag that indicates whether 16 bit data should be streamed */
 	int verbosity;				/**< Option that determines how much status information is printed during operation */
 } rda_server_ctrl_t;
