@@ -45,6 +45,9 @@ demo_event: demo_event.o event.o ../src/libbuffer.a
 demo_buffer: demo_buffer.o ../src/libbuffer.a
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
 
+demo_buffer_rda: demo_buffer_rda.o ../src/libbuffer.a ../src/rdaserver.o
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)	
+
 test_gethdr: test_gethdr.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
 
