@@ -7,13 +7,24 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 #include <time.h>
 #include "buffer.h"
 #include "rdaserver.h"
 
+rda_server_ctrl_t *rdac = NULL;
+
+void abortHandler(int sig) {
+	printf("Ctrl-C pressed -- stopping RDA server...\n");
+	rda_stop_server(rdac);
+	printf("Done.\n");
+	/* TODO: do the same with the tcp server if run from a thread */
+	exit(0);
+}
+
 int main(int argc, char *argv[]) {
 	host_t host;
-	rda_server_ctrl_t *rdac;
+
 	int errval;
 
     /* verify that all datatypes have the expected syze in bytes */
@@ -34,6 +45,8 @@ int main(int argc, char *argv[]) {
 		printf("Could not start rdaserver: %i\n", errval);
 		return errval;
 	}
+	
+	signal(SIGINT, abortHandler);
 	
 	/* start the buffer */
 	tcpserver((void *)(&host));
