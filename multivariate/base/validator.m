@@ -1,4 +1,4 @@
-classdef validator
+classdef validator < handle
     
   properties
     
@@ -16,6 +16,7 @@ classdef validator
   end
   
   methods
+    
     function obj = validator(varargin)
       % a procedure is a mva
       

@@ -143,7 +143,7 @@ classdef mvmethod
         end
         
         data = obj.map(data);
-        
+     
         % try to map result back to original dimensions
         
         if iscell(data)

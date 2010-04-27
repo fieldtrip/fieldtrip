@@ -48,7 +48,7 @@ classdef linreg < regressor
             
             p.model = R\(R'\(X'*Y));
             
-          elseif 0 && obj.L1 ~= 0 && all(obj.L2(:) == 0)
+          elseif obj.L1 ~= 0 && all(obj.L2(:) == 0)
             
             if obj.verbose
               fprintf('computing lasso with L1 parameter %g\n',obj.L1);
@@ -98,9 +98,9 @@ classdef linreg < regressor
         end
         
         function [m,desc] = getmodel(obj)
-          % return the parameters wrt a class label in some shape
+          % return the parameters in some shape
           
-          m = {obj.params.model(1:(end-1))'}; % ignore bias term
+          m = {obj.params.model(1:(end-1),:)'}; % ignore bias term
           desc = {'unknown'};
           
         end

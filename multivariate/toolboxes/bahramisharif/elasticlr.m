@@ -5,9 +5,9 @@ function [beta,yhat,obfun]=elasticlr(X,y,options)
 % "Regularization paths for generalized linear models via coordinate descent", 
 % Journal of Statistical software, Vol.33(1), pp 1-22
 %
-% X: ntrial x nfeatures (assumed to be standardized)
+% X: ntrial x nfeatures (assumed to be standardized!!!)
 % y: ntrial x 1
-% beta: (nfeatues+1) x 1
+% beta: (nfeatures+1) x 1
 % options.L1=0.1;      %L1 regularization parameter
 % options.L2=0.1;      %L2 regularization parameter
 % options.eta=0.1;     %stepsize for the Newton's update
@@ -16,6 +16,10 @@ function [beta,yhat,obfun]=elasticlr(X,y,options)
 % options.maxiter=5e3; %maximum number of iterations
 % options.verbose=1;   %show output
 %
+% bias term not included by default!
+%
+% all terms (including possibly bias) are regularized
+% 
 % copyright 2010, Ali Bahramisharif
 
 if nargin<2
@@ -34,7 +38,7 @@ if ~isfield(options,'eta')
     options.eta=0.1;
 end
 if ~isfield(options,'maxiter')
-    options.maxiter=1e3;
+    options.maxiter=1e4;
 end
 if ~isfield(options,'verbose')
     options.verbose=1;
@@ -56,7 +60,6 @@ end
 ntrials=size(X,1);
 nfeatures=size(X,2);
 
-X=cat(2,X,ones(ntrials,1));
 beta=zeros(size(X,2),1); % initialization with all betas to be 0
 
 newbeta=beta;
@@ -91,7 +94,7 @@ while ~converge
         r=4*(y-ptild);
     end
 
-    for j=1:nfeatures+1
+    for j=1:nfeatures
         fparam=0;
         for i=1:ntrials
             if options.HessApprox
@@ -124,7 +127,7 @@ if niter>options.maxiter && options.verbose
     fprintf('maximum number of iterations reached\n')
 end
 
-beta = beta(1:(end-1));
+beta = beta(:);
 
 if nargout>1
     yhat=1+(ptild>0.5);

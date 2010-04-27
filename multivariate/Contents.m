@@ -68,15 +68,12 @@
 % - repeated calls to train should allow for online learning as much as possible
 % - rethink significance testing (binomial,wilcoxon,permutation) and also implement for regressor
 % - return standard error of mean as second argument of evaluate
-% - rewrite feature selection stuff and add searchlight (also check blogreg)
 % - better handling of checking of datasets for each method
 % - rewrite handling of timeseries...
 % - allow arbitrary labels for the classifiers
 % - getmodel add descriptions and make sure they can be remapped (e.g.,
 %   featureselector)
 % - blogreg blinreg return used scale when using multiple updates
-% - clean up metric and significance stuff and split up into clf, regress,
-%   and reconstruct
 % - what is positive and negative class? be consistent over datasets wrt
 %   getmodel
 % - test validator.getmodel for transfer learners
@@ -92,7 +89,8 @@
 %   mean + error estimates? see e.g. the kalman filter
 % - clean up nclasses field
 % - add wilcoxon test; add multiple outputs for evaluate/significance
-% - crossvalidator 276: roundoff error changes the actual number of used
+% - crossvalidator 278: roundoff error changes the actual number of used
 %   samples; can go wrong with skewed unique samples; also for ten-fold
 % - timeseries: implementation for infinite horizon; finite horizon always
-% represented as a static classifier/regressor
+%   represented as a static classifier/regressor
+% - make validator object a handle class to prevent c = c.validate;

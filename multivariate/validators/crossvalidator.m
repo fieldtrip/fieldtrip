@@ -50,7 +50,7 @@ classdef crossvalidator < validator
         
       end
       
-      function obj = validate(obj,data,design)
+      function res = validate(obj,data,design)
       
         assert(~isempty(obj.procedure));
       
@@ -80,12 +80,17 @@ classdef crossvalidator < validator
         if obj.verbose          
           fprintf('performing crossvalidation for %d dataset(s)\n',nsets);   
           for d=1:nsets
-            sz = size(data{d});
-            fprintf('dataset %d consists of %d examples and %d',d,sz(1),sz(2));
-            for dd=3:length(sz)
-              fprintf(' x %d',sz(dd));
+            szin = size(data{d});
+            szout = size(design{d});
+            fprintf('dataset %d consists of %d examples, %d',d,szin(1),szin(2));
+            for dd=3:length(szin)
+              fprintf(' x %d',szin(dd));
             end
-            fprintf(' features\n');
+            fprintf(' input features and %d',szout(2));
+            for dd=3:length(szout)
+              fprintf(' x %d',szout(dd));
+            end
+            fprintf(' output features\n');
           end
         end
         
@@ -154,9 +159,18 @@ classdef crossvalidator < validator
             obj.post{f} = tproc.test(testdata{1});
             obj.design{f} = testdesign{1};
           else
+            
             tproc = obj.procedure{f}.train(traindata,traindesign);
-            obj.post(f,:) = tproc.test(testdata);
-            obj.design(f,:) = testdesign;           
+            
+            % transfer learner is free to return a cell array or not in
+            % case of one input dataset
+            res = tproc.test(testdata);
+            if iscell(res), res = res{1}; end
+            obj.post{f} = res;
+            %obj.post(f,:) = tproc.test(testdata);
+            
+            obj.design(f,:) = testdesign;  
+          
           end
           
           if iscell(obj.model) || obj.model
@@ -194,11 +208,26 @@ classdef crossvalidator < validator
           end
         end
         
+        % return the predictions
+        if size(obj.post,2)>1
+          % multiple datasets
+          
+          res = cell(1,size(obj.post,2));
+          for c=1:size(obj.post,2)
+            res{c} = cell2mat(obj.post(:,c));
+          end
+          
+        else
+          
+          res = cell2mat(obj.post);
+          
+        end
+        
       end
       
     end
          
-   methods(Access=protected)
+   methods
        
        function [trainfolds,testfolds,nfolds] = create_folds(obj,design)
         % workhorse helper function to create the folds in terms of trial indices
@@ -278,13 +307,12 @@ classdef crossvalidator < validator
                   
                   for j=1:mx                 
                     iidx = find(idx == j);
-                    % use conservative ceil operation
                     testfolds{1,d} = [testfolds{1,d}; idxs(iidx(1:floor((1-nfolds)*numel(iidx))))];
                   end
                   
                   % add random instances to complete the number
-                  if numel(testfolds{1,d}) < floor((1-nfolds) * numel(idxs))
-                    n = floor((1-nfolds) * numel(idxs)) - numel(testfolds{1,d}); 
+                  n = floor((1-nfolds) * numel(idxs)) - numel(testfolds{1,d});
+                  if n>0
                     x = setdiff(idxs,testfolds{1,d});
                     x = x(randperm(numel(x)));
                     testfolds{1,d} = [testfolds{1,d}; x(1:n)];
@@ -303,7 +331,7 @@ classdef crossvalidator < validator
                 if mx == nsamples % unique samples
                  
                   for f=1:nfolds
-                    testfolds{f,d} = idxs((floor((f-1)*(length(idxs)/nfolds))+1):round(f*(length(idxs)/nfolds)));
+                    testfolds{f,d} = idxs((floor((f-1)*(length(idxs)/nfolds))+1):floor(f*(length(idxs)/nfolds)));
                   end
                  
                 else
