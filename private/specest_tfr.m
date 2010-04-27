@@ -22,12 +22,17 @@ function [spectrum, freqoi, timeoi] = specest_tfr(dat, time, varargin)
 %
 %
 %
+%
+%
+% See also SPECEST_MTMFFT, SPECEST_MTMCONVOL, SPECEST_HILBERT, SPECEST_MTMWELCH, SPECEST_NANFFT, SPECEST_MVAR, SPECEST_WLTCONVOL
+%
 %  OPTION DOWNSAMPLE: this looks like something that would fit in better in the wrapper I think
 %
 %  OPTION LATENCY, WHAT TO DO WITH THIS? 
 %
 %  HOW TO MAKE CONSISTENT freqoi'S OVER TRIALS? ZERO-PADDING NOT AN OPTION... YET WE SHOULD STILL ONLY HAVE freqoi'S THAT ACTUALLY MATCH THE FREQUENCIES IN OUTPUT
 %
+
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'waveletwidth','pad','timeoi','freqoi'});
