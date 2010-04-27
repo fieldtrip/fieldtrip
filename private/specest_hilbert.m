@@ -26,7 +26,7 @@ function [spectrum,foi,toi] = specest_hilbert(dat, time, varargin)
 %
 %
 %
-% See also SPECEST_MTMFFT, SPECEST_MTMCONVOL, SPECEST_TFR, SPECEST_NANFFT
+% See also SPECEST_MTMFFT, SPECEST_TFR, SPECEST_MTMCONVOL, SPECEST_MTMWELCH, SPECEST_NANFFT, SPECEST_MVAR, SPECEST_WLTCONVOL
 
 % Copyright (C) 2010, Robert Oostenveld
 %
