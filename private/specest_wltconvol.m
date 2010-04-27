@@ -1,4 +1,4 @@
-function [spectrum] = specest_wltconvol(dat, time, varargin) 
+function [spectrum,freqoi] = specest_wltconvol(dat, time, varargin) 
 
 % SPECEST_WLTCONVOL performs time-frequency analysis on any time series trial data using the 'wavelet method' based on Morlet wavelets.
 %
@@ -9,18 +9,17 @@ function [spectrum] = specest_wltconvol(dat, time, varargin)
 %
 %   dat      = matrix of chan*sample 
 %   time     = vector, containing time in seconds for each sample
-%   spectrum = matrix of taper*chan*freqoi of fourier coefficients
+%   spectrum = matrix of chan*freqoi*timeoi of fourier coefficients
 %   freqoi   = vector of frequencies in spectrum
 %
 %
 %
 %
 % Optional arguments should be specified in key-value pairs and can include:
-%   taper      = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
 %   pad        = number, total length of data after zero padding (in seconds)
 %   freqoi     = vector, containing frequencies of interest                                           
-%   tapsmofrq  = the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
-%
+%   width      = 
+%   gwidth     = 
 %
 %
 %
@@ -31,9 +30,10 @@ function [spectrum] = specest_wltconvol(dat, time, varargin)
 
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'width','gwidth'});
-width     = keyval('width',       varargin);  if isempty(width),  width    = 7;      end
-gwidth    = keyval('gwidth',       varargin); if isempty(gwidth), gwidth   = 3;      end
+keyvalcheck(varargin, 'optional', {'pad','width','gwidth','freqoi'});
+freqoi    = keyval('freqoi',      varargin);  if isempty(freqoi),   freqoi  = 'all';   end
+width     = keyval('width',       varargin);  if isempty(width),    width    = 7;      end
+gwidth    = keyval('gwidth',      varargin);  if isempty(gwidth),   gwidth   = 3;      end
 pad       = keyval('pad',         varargin);
 
 
@@ -130,22 +130,20 @@ end
 
 
 % Compute fft
-spectrum = complex(nan([sum(ntaper),nchan,nfreqoi,ntimeboi]));
+spectrum = complex(nchan,nfreqoi,ntimeboi);
 datspectrum = fft([repmat(prepad,[nchan, 1]) dat repmat(postpad,[nchan, 1])],[],2); % should really be done above, but since the chan versus whole dataset fft'ing is still unclear, repmat is used
 for ifreqoi = 1:nfreqoi
-  fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
-  for itap = 1:ntaper(ifreqoi)
-    for ichan = 1:nchan
-      % compute indices that will be used to extracted the requested fft output    
-      nsamplefreqoi    = timwin(ifreqoi) .* fsample;
-      reqtimeboiind    = find((timeboi >=  (nsamplefreqoi ./ 2)) & (timeboi <    ndatsample - (nsamplefreqoi ./2)));
-      reqtimeboi       = timeboi(reqtimeboiind);
-      
-      % compute datspectrum*wavelet, if there are reqtimeboi's that have data
-      if ~isempty(reqtimeboi)
-        dum = fftshift(ifft(datspectrum(ichan,:) .* wltspctrm{ifreqoi}(itap,:),[],2)); % why is this fftshift necessary?
-        spectrum(itap,ichan,ifreqoi,reqtimeboiind) = dum(reqtimeboi);
-      end
+  fprintf('processing frequency %d (%.2f Hz)\n', ifreqoi,freqoi(ifreqoi));
+  for ichan = 1:nchan
+    % compute indices that will be used to extracted the requested fft output
+    nsamplefreqoi    = timwin(ifreqoi) .* fsample;
+    reqtimeboiind    = find((timeboi >=  (nsamplefreqoi ./ 2)) & (timeboi <    ndatsample - (nsamplefreqoi ./2)));
+    reqtimeboi       = timeboi(reqtimeboiind);
+    
+    % compute datspectrum*wavelet, if there are reqtimeboi's that have data
+    if ~isempty(reqtimeboi)
+      dum = fftshift(ifft(datspectrum(ichan,:) .* wltspctrm{ifreqoi},[],2)); % why is this fftshift necessary?
+      spectrum(ichan,ifreqoi,reqtimeboiind) = dum(reqtimeboi);
     end
   end
 end
