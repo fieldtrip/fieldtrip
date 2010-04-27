@@ -1,7 +1,7 @@
 function [spectrum,freqoi] = specest_wltconvol(dat, time, varargin) 
 
-% SPECEST_WLTCONVOL performs time-frequency analysis on any time series trial data using the 'wavelet method' based on Morlet wavelets.
-%
+% SPECEST_WLTCONVOL performs time-frequency analysis on any time series trial data using the 'wavelet method' based on Morlet wavelets,
+% doing convolution in the time domain by multiplaction in the frequency domain
 %
 %
 % Use as
