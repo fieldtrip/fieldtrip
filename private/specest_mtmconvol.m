@@ -37,9 +37,9 @@ function [spectrum,ntaper,freqoi,timeoi] = specest_mtmconvol(dat, time, varargin
 keyvalcheck(varargin, 'optional', {'taper','pad','timeoi','timwin','freqoi','tapsmofrq'});
 taper     = keyval('taper',       varargin); if isempty(taper),    taper   = 'dpss';     end
 pad       = keyval('pad',         varargin); 
-timeoi    = keyval('timeoi',      varargin); if isempty(timeoi),   timeoi  = 'max';      end
+timeoi    = keyval('timeoi',      varargin); if isempty(timeoi),   timeoi  = 'all';      end
 timwin    = keyval('timwin',      varargin); 
-freqoi    = keyval('freqoi',      varargin); if isempty(freqoi),   freqoi  = 'max';      end
+freqoi    = keyval('freqoi',      varargin); if isempty(freqoi),   freqoi  = 'all';      end
 tapsmofrq = keyval('tapsmofrq',   varargin);
 
 % throw errors for required input
@@ -78,7 +78,7 @@ endtime    = pad;            % total time in seconds of padded data
 if isnumeric(freqoi) % if input is a vector
   freqboi   = round(freqoi ./ (fsample ./ endnsample)) + 1;
   freqoi    = (freqboi-1) ./ endtime; % boi - 1 because 0 Hz is included in fourier output..... is this going correctly?
-elseif strcmp(freqoi,'max') % if input was 'max' THIS IS IRRELEVANT, BECAUSE TIMWIN IS A REQUIRED INPUT NOW
+elseif strcmp(freqoi,'all') % if input was 'all' THIS IS IRRELEVANT, BECAUSE TIMWIN IS A REQUIRED INPUT NOW
   freqboilim = round([0 fsample/2] ./ (fsample ./ endnsample)) + 1;
   freqboi    = freqboilim(1):1:freqboilim(2);
   freqoi     = (freqboi-1) ./ endtime;
@@ -102,7 +102,7 @@ if isnumeric(timeoi) % if input is a vector
   timeboi  = round(timeoi .* fsample) + 1;
   ntimeboi = length(timeboi);
   timeoi   = round(timeoi .* fsample) ./ fsample;
-elseif strcmp(timeoi,'max') % if input was 'max'
+elseif strcmp(timeoi,'all') % if input was 'all'
   timeboi  = 1:length(time);
   ntimeboi = length(timeboi);
   timeoi   = time;
