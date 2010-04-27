@@ -9,15 +9,15 @@ function [spectrum, freqoi, timeoi] = specest_tfr(dat, time, varargin)
 %   dat      = matrix of chan*sample
 %   time     = vector, containing time in seconds for each sample
 %   spectrum = matrix of chan*freqoi*timeoi of fourier coefficients
-%   freqoi      = vector of frequencies in spectrum
-%   timeoi      = vector of timebins in spectrum
+%   freqoi   = vector of frequencies in spectrum
+%   timeoi   = vector of timebins in spectrum
 %
 %
 %
 %
 % Optional arguments should be specified in key-value pairs and can include:
-%   timeoi           = vector, containing time points of interest (in seconds, analysis window will be centered around these time points)
-%   freqoi           = vector, containing frequencies (in Hz)
+%   timeoi        = vector, containing time points of interest (in seconds, analysis window will be centered around these time points)
+%   freqoi        = vector, containing frequencies (in Hz)
 %   waveletwidth  = number, 'width' of wavelets expressed in cycles (default = 7)   
 %
 %
@@ -31,8 +31,8 @@ function [spectrum, freqoi, timeoi] = specest_tfr(dat, time, varargin)
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'waveletwidth','pad','timeoi','freqoi'});
-timeoi           = keyval('timeoi',           varargin); if isempty(timeoi),          timeoi          = 'all';    end
-freqoi           = keyval('freqoi',           varargin); if isempty(freqoi),          freqoi          = 'all';    end
+timeoi        = keyval('timeoi',        varargin); if isempty(timeoi),       timeoi       = 'all';    end
+freqoi        = keyval('freqoi',        varargin); if isempty(freqoi),       freqoi       = 'all';    end
 waveletwidth  = keyval('waveletwidth',  varargin); if isempty(waveletwidth), waveletwidth = 7;        end
 
 
