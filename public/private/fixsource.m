@@ -30,6 +30,7 @@ if any(tmp>1),
   current = 'new';
 elseif any(tmp==1),
   %don't know what to do yet data is JM's own invention
+  current = 'old';
 else
   current = 'old';
 end
