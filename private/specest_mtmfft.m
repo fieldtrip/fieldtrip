@@ -24,9 +24,6 @@ function [spectrum,freqoi] = specest_mtmfft(dat, time, varargin)
 %
 %
 %
-%  TO DO:
-%  - anchor phase to specific part of time-window (t=0 current suggestion), how to do it in the current format? need to do multiplication freq-domain (ala mtmconvol)?
-%  - implement computation reduction by keeping tapers and such one way or another
 %
 %
 % See also SPECEST_MTMCONVOL, SPECEST_TFR, SPECEST_HILBERT, SPECEST_MTMWELCH, SPECEST_NANFFT, SPECEST_MVAR, SPECEST_WLTCONVOL
