@@ -1,23 +1,24 @@
-function [spectrum,freqoi] = specest_wltconvol(dat, time, varargin) 
+function [spectrum,freqoi,timeoi] = specest_wltconvol(dat, time, varargin) 
 
 % SPECEST_WLTCONVOL performs time-frequency analysis on any time series trial data using the 'wavelet method' based on Morlet wavelets,
 % doing convolution in the time domain by multiplaction in the frequency domain
 %
 %
 % Use as
-%   [spectrum,freqoi] = specest_wltconvol(dat,time...)   
+%   [spectrum,freqoi,timoei] = specest_wltconvol(dat,time...)   
 %
 %   dat      = matrix of chan*sample 
 %   time     = vector, containing time in seconds for each sample
 %   spectrum = matrix of chan*freqoi*timeoi of fourier coefficients
 %   freqoi   = vector of frequencies in spectrum
-%
+%   timeoi   = vector of timebins in spectrum
 %
 %
 %
 % Optional arguments should be specified in key-value pairs and can include:
 %   pad        = number, total length of data after zero padding (in seconds)
 %   freqoi     = vector, containing frequencies of interest                                           
+%   timeoi     = vector, containing time points of interest (in seconds)
 %   width      = 
 %   gwidth     = 
 %
@@ -30,8 +31,9 @@ function [spectrum,freqoi] = specest_wltconvol(dat, time, varargin)
 
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'pad','width','gwidth','freqoi'});
+keyvalcheck(varargin, 'optional', {'pad','width','gwidth','freqoi','timeoi'});
 freqoi    = keyval('freqoi',      varargin);  if isempty(freqoi),   freqoi  = 'all';   end
+timeoi    = keyval('timeoi',      varargin);  if isempty(timeoi),   timeoi  = 'all';   end
 width     = keyval('width',       varargin);  if isempty(width),    width    = 7;      end
 gwidth    = keyval('gwidth',      varargin);  if isempty(gwidth),   gwidth   = 3;      end
 pad       = keyval('pad',         varargin);
@@ -66,7 +68,7 @@ endtime    = pad;            % total time in seconds of padded data
 if isnumeric(freqoi) % if input is a vector
   freqboi   = round(freqoi ./ (fsample ./ endnsample)) + 1;
   freqoi    = (freqboi-1) ./ endtime; % boi - 1 because 0 Hz is included in fourier output..... is this going correctly?
-elseif strcmp(freqoi,'all') % if input was 'all' THIS IS IRRELEVANT, BECAUSE TIMWIN IS A REQUIRED INPUT NOW
+elseif strcmp(freqoi,'all') % if input was 'all'
   freqboilim = round([0 fsample/2] ./ (fsample ./ endnsample)) + 1;
   freqboi    = freqboilim(1):1:freqboilim(2);
   freqoi     = (freqboi-1) ./ endtime;
