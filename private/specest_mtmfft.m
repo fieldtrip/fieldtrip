@@ -29,7 +29,7 @@ function [spectrum,freqoi] = specest_mtmfft(dat, time, varargin)
 %  - implement computation reduction by keeping tapers and such one way or another
 %
 %
-% See also SPECEST_MTMCONVOL, SPECEST_HILBERT, SPECEST_TFR, SPECEST_NANFFT
+% See also SPECEST_MTMCONVOL, SPECEST_TFR, SPECEST_HILBERT, SPECEST_MTMWELCH, SPECEST_NANFFT, SPECEST_MVAR, SPECEST_WLTCONVOL
 
 
 % get the optional input arguments
