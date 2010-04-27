@@ -36,7 +36,7 @@ function [spectrum,freqoi] = specest_mtmfft(dat, time, varargin)
 keyvalcheck(varargin, 'optional', {'taper','pad','freqoi','tapsmofrq'});
 taper     = keyval('taper',       varargin); if isempty(taper),  error('You must specify a taper');    end
 pad       = keyval('pad',         varargin);
-freqoi    = keyval('freqoi',      varargin); if isempty(freqoi),   freqoi  = 'max';      end  
+freqoi    = keyval('freqoi',      varargin); if isempty(freqoi),   freqoi  = 'all';      end  
 tapsmofrq = keyval('tapsmofrq',   varargin); 
 
 % throw errors for required input
@@ -71,7 +71,7 @@ postpad = [];
 if isnumeric(freqoi) % if input is a vector
   freqboi   = round(freqoi ./ (fsample ./ endnsample)) + 1;
   freqoi    = (freqboi-1) ./ endtime; % boi - 1 because 0 Hz is included in fourier output..... is this going correctly?
-elseif strcmp(freqoi,'max') % if input was 'max' THIS IS IRRELEVANT, BECAUSE TIMWIN IS A REQUIRED INPUT NOW
+elseif strcmp(freqoi,'all') % if input was 'all' 
   freqboilim = round([0 fsample/2] ./ (fsample ./ endnsample)) + 1;
   freqboi    = freqboilim(1):1:freqboilim(2);
   freqoi     = (freqboi-1) ./ endtime;
