@@ -1,23 +1,23 @@
-function [spectrum, foi, toi] = specest_tfr(dat, time, varargin)
+function [spectrum, freqoi, timeoi] = specest_tfr(dat, time, varargin)
 
 % SPECEST_TFR performs wavelet convolution in the time domain by convolution with Morlet's wavelets.
 %
 %
 % Use as
-%   [spectrum,foi,toi] = specest_tfr(dat,time,...)  
+%   [spectrum,freqoi,timeoi] = specest_tfr(dat,time,...)  
 %
 %   dat      = matrix of chan*sample
 %   time     = vector, containing time in seconds for each sample
-%   spectrum = matrix of chan*foi*toi of fourier coefficients
-%   foi      = vector of frequencies in spectrum
-%   toi      = vector of timebins in spectrum
+%   spectrum = matrix of chan*freqoi*timeoi of fourier coefficients
+%   freqoi      = vector of frequencies in spectrum
+%   timeoi      = vector of timebins in spectrum
 %
 %
 %
 %
 % Optional arguments should be specified in key-value pairs and can include:
-%   toi           = vector, containing time points of interest (in seconds, analysis window will be centered around these time points)
-%   foi           = vector, containing frequencies (in Hz)
+%   timeoi           = vector, containing time points of interest (in seconds, analysis window will be centered around these time points)
+%   freqoi           = vector, containing frequencies (in Hz)
 %   waveletwidth  = number, 'width' of wavelets expressed in cycles (default = 7)   
 %
 %
@@ -26,79 +26,76 @@ function [spectrum, foi, toi] = specest_tfr(dat, time, varargin)
 %
 %  OPTION LATENCY, WHAT TO DO WITH THIS? 
 %
-%  HOW TO MAKE CONSISTENT FOI'S OVER TRIALS? ZERO-PADDING NOT AN OPTION... YET WE SHOULD STILL ONLY HAVE FOI'S THAT ACTUALLY MATCH THE FREQUENCIES IN OUTPUT
+%  HOW TO MAKE CONSISTENT freqoi'S OVER TRIALS? ZERO-PADDING NOT AN OPTION... YET WE SHOULD STILL ONLY HAVE freqoi'S THAT ACTUALLY MATCH THE FREQUENCIES IN OUTPUT
 %
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'waveletwidth','pad','toi','foi'});
-toi           = keyval('toi',           varargin); if isempty(toi),          toi          = 'max';    end
-foi           = keyval('foi',           varargin); if isempty(foi),          foi          = 'max';    end
+keyvalcheck(varargin, 'optional', {'waveletwidth','pad','timeoi','freqoi'});
+timeoi           = keyval('timeoi',           varargin); if isempty(timeoi),          timeoi          = 'all';    end
+freqoi           = keyval('freqoi',           varargin); if isempty(freqoi),          freqoi          = 'all';    end
 waveletwidth  = keyval('waveletwidth',  varargin); if isempty(waveletwidth), waveletwidth = 7;        end
 
 
 % Set n's
-[nchan,nsample] = size(dat);
+[nchan,ndatsample] = size(dat);
 
 
-% Determine fsample
-fsample = nsample / (time(end) - time(1));
+% Determine fsample and set total time-length of data
+fsample = 1/(time(2)-time(1));
+dattime = ndatsample / fsample; % total time in seconds of input data
+endnsample = ndatsample;  % for consistency with mtmconvol and mtmfft
+endtime    = dattime;     % for consistency with mtmconvol and mtmfft
 
 
-% Set fboi and foi and default tapsmofrq
-pad = (time(end)-time(1)); % PADDING DOES NOT EXIST IN TFR, PERHAPS MAKE A NEW VAR-NAME TO BE USED IN ALL SPECEST, LIKE DATLENGHT OR SOMETHING, FOR CONSISTENCY
-if isnumeric(foi) % if input is a vector
-  fboi   = round(foi ./ (fsample ./ (pad * fsample))) + 1;
-  nfboi  = length(fboi);
-  foi    = (fboi-1) ./ pad; % boi - 1 because 0 Hz is included in fourier output..... is this going correctly?
-elseif strcmp(foi,'max') % if input was 'max'
-  fboilim = round([0 fsample/2] ./ (fsample ./ (pad * fsample))) + 1;
-  fboi    = fboilim(1):1:fboilim(2);
-  nfboi   = length(fboi);
-  foi     = (fboi-1) ./ pad;
+% Set freqboi and freqoi
+if isnumeric(freqoi) % if input is a vector
+  freqboi   = round(freqoi ./ (fsample ./ endnsample)) + 1;
+  freqoi    = (freqboi-1) ./ endtime; % boi - 1 because 0 Hz is included in fourier output..... is this going correctly?
+elseif strcmp(freqoi,'all')
+  freqboilim = round([0 fsample/2] ./ (fsample ./ endnsample)) + 1;
+  freqboi    = freqboilim(1):1:freqboilim(2);
+  freqoi     = (freqboi-1) ./ endtime;
 end
-% check for foi = 0 and remove it, there is no wavelet for foi = 0
-if any(foi==0)
-  foi(foi==0) = [];
-end
-nfoi = length(foi);
+nfreqboi   = length(freqboi);
+nfreqoi = length(freqoi);
 
 
-% Set tboi and toi
-if isnumeric(toi) % if input is a vector
-  tboi  = round(toi .* fsample) + 1;
-  ntboi = length(tboi);
-  toi   = round(toi .* fsample) ./ fsample;
-elseif strcmp(toi,'max') % if input was 'max'
-  tboi  = 1:length(time);
-  ntboi = length(tboi);
-  toi   = time;
+% Set timeboi and timeoi
+if isnumeric(timeoi) % if input is a vector
+  timeboi  = round(timeoi .* fsample) + 1;
+  ntimeboi = length(timeboi);
+  timeoi   = round(timeoi .* fsample) ./ fsample;
+elseif strcmp(timeoi,'all') % if input was 'all'
+  timeboi  = 1:length(time);
+  ntimeboi = length(timeboi);
+  timeoi   = time;
 end
 
 
 
 % compute wavelet family
-wavfam = waveletfam(foi,fsample,waveletwidth);
+wavfam = waveletfam(freqoi,fsample,waveletwidth);
 
 
 % compute spectrum by convolving the wavelets with the data
-spectrum = zeros(nchan, nfoi, nsample);
-for ifoi = 1:nfoi
-  wavelet = wavfam{ifoi};
+spectrum = zeros(nchan, nfreqoi, nsample);
+for ifreqoi = 1:nfreqoi
+  wavelet = wavfam{ifreqoi};
   for ichan = 1:nchan
-    spectrum(ichan,ifoi,:) = conv(dat(ichan,:),  wavelet, 'same');
+    spectrum(ichan,ifreqoi,:) = conv(dat(ichan,:),  wavelet, 'same');
   end
   % pad the edges with nans to indicate that the wavelet was not fully immersed in the data THERE ARE NO NANS ADDED IN FREQANALYSIS_TFR?
-  nanpad = ceil(length(wavfam{ifoi})/2);
+  nanpad = ceil(length(wavfam{ifreqoi})/2);
   % the padding should not be longer than the actual data
   nanpad = min(nanpad, nsample);
   begnanpad = 1:nanpad;
   endnanpad = (nsample-nanpad+1):nsample;
-  spectrum(:,ifoi,begnanpad) = nan;
-  spectrum(:,ifoi,endnanpad) = nan;
+  spectrum(:,ifreqoi,begnanpad) = nan;
+  spectrum(:,ifreqoi,endnanpad) = nan;
 end
 
 % select the samples for the output
-spectrum = spectrum(:,:,tboi);
+spectrum = spectrum(:,:,timeboi);
 
 
 
