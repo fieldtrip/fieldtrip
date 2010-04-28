@@ -57,11 +57,11 @@ if needhdr
 
   ftype = zeros(length(fname), 1);
   for i=1:length(fname)
-    if     filetype(fname{i}, 'neuralynx_ncs')
+    if     ft_filetype(fname{i}, 'neuralynx_ncs')
       ftype(i) = 1;
-    elseif filetype(fname{i}, 'neuralynx_nse')
+    elseif ft_filetype(fname{i}, 'neuralynx_nse')
       ftype(i) = 2;
-    elseif filetype(fname{i}, 'neuralynx_nts')
+    elseif ft_filetype(fname{i}, 'neuralynx_nts')
       ftype(i) = 3;
     end
   end
@@ -194,7 +194,7 @@ else
   for i=1:nchan
     thischan = chanindx(i);
     thisfile = hdr.filename{thischan};
-    switch filetype(thisfile)
+    switch ft_filetype(thisfile)
     case 'neuralynx_ncs'
       % determine the records that contain the sample numbers of the requested segment
       begrecord  = ceil(begsample/512);
@@ -222,7 +222,7 @@ else
       sample = sample(sample>=begsample & sample<=endsample) - begsample + 1;
       dat(i,sample) = dat(i,sample) + 1;
 
-    end % switch filetype
+    end % switch ft_filetype
   end % for nchan
 end % reading data
 
