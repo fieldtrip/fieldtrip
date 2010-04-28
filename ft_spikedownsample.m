@@ -63,7 +63,7 @@ function [cfg] = ft_spikedownsample(cfg)
 %   cfg.preproc.hilbert       = 'no' or 'yes'
 %   cfg.preproc.rectify       = 'no' or 'yes'
 
-% Copyright (C) 2005-2009, Robert Oostenveld
+% Copyright (C) 2005-2010, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
