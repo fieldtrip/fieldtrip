@@ -93,4 +93,5 @@
 %   samples; can go wrong with skewed unique samples; also for ten-fold
 % - timeseries: implementation for infinite horizon; finite horizon always
 %   represented as a static classifier/regressor
-% - make validator object a handle class to prevent c = c.validate;
+% - getposteriors in validator should also get a getpredictions; think
+%   again about giving back multiple moments

@@ -103,7 +103,7 @@ else
 end
 
 % perform everything ;o)
-cv.validate(dat,design);
+cv = cv.validate(dat,design);
 
 % the statistic of interest
 res = cv.evaluate('metric',cfg.metric);

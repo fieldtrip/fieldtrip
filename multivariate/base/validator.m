@@ -1,4 +1,4 @@
-classdef validator < handle
+classdef validator
     
   properties
     
@@ -26,7 +26,7 @@ classdef validator < handle
           obj.(varargin{i}) = varargin{i+1};
         end
       end
-                    
+      
       % initialize random number generator
       if ~isempty(obj.init)
         if obj.verbose
@@ -39,16 +39,28 @@ classdef validator < handle
       
     end
     
-%     function n = nclasses(obj)
-%       % return number of classes when known (called by statistics_crossvalidate)
-%       
-%       n = obj.getpredictor().nclasses;
-%       
-%     end
+    function res = getposteriors(obj)
+      
+      % return the predictions
+      if size(obj.post,2)>1
+        % multiple datasets
+        
+        res = cell(1,size(obj.post,2));
+        for c=1:size(obj.post,2)
+          res{c} = cell2mat(obj.post(:,c));
+        end
+        
+      else
+        
+        res = cell2mat(obj.post);
+        
+      end
+      
+    end
     
     function [m,desc] = getmodel(obj)
       % try to return the classifier parameters as a model
-          
+      
       if ~iscell(obj.procedure)
         obj.procedure = {obj.procedure};
       end
@@ -58,7 +70,7 @@ classdef validator < handle
         m = {};
         desc = {};
         return;
-      
+        
       end
       
       fm = cellfun(@(x)(x.getmodel()),obj.procedure,'UniformOutput', false);
@@ -89,7 +101,7 @@ classdef validator < handle
       % indirect call to eval to simplify the interface
       
       % create the concatenation of all folds for each of the datasets
-     
+      
       post = obj.post;
       design = obj.design;
       
@@ -103,7 +115,7 @@ classdef validator < handle
       result = cell(1,length(tpost));
       
       for c=1:length(tpost)
-        result{c} = obj.getpredictor().evaluate(tpost{c},tdesign{c},varargin{:});   
+        result{c} = obj.getpredictor().evaluate(tpost{c},tdesign{c},varargin{:});
       end
       
       if length(result) == 1
@@ -115,7 +127,7 @@ classdef validator < handle
     function p = significance(obj,varargin)
       
       % create the concatenation of all folds for each of the datasets
-     
+      
       post = obj.post;
       design = obj.design;
       
@@ -127,36 +139,36 @@ classdef validator < handle
       end
       
       p = obj.getpredictor().significance(tpost,tdesign,varargin{:});
-
+      
     end
-      
-      
+    
+    
     
   end
   
   methods(Access = protected)
- 
+    
     
     function p = getpredictor(obj)
-       % get the predictor (ending) mvmethod
-
-       if iscell(obj.procedure)
-         if iscell(obj.procedure{1}.mvmethods{end})
-           p = obj.procedure{1}.mvmethods{end}{1};
-         else
-           p = obj.procedure{1}.mvmethods{end};
-         end
-       else
-         if iscell(obj.procedure.mvmethods{end})
-           p = obj.procedure.mvmethods{end}{1};
-         else
-           p = obj.procedure.mvmethods{end};
-         end
-       end
+      % get the predictor (ending) mvmethod
+      
+      if iscell(obj.procedure)
+        if iscell(obj.procedure{1}.mvmethods{end})
+          p = obj.procedure{1}.mvmethods{end}{1};
+        else
+          p = obj.procedure{1}.mvmethods{end};
+        end
+      else
+        if iscell(obj.procedure.mvmethods{end})
+          p = obj.procedure.mvmethods{end}{1};
+        else
+          p = obj.procedure.mvmethods{end};
+        end
+      end
       
     end
     
   end
- 
+  
   
 end

@@ -24,9 +24,7 @@ classdef searchlight < featureselector
     step                  % stepsize in terms of array elements    
    
     mask                  % optional mask
-    
-    % indims              % optional dimensions of input volume
-    
+        
   end
   
   methods
@@ -65,7 +63,7 @@ classdef searchlight < featureselector
       
       p.centers = cartprod(dd{:});
       
-      % identify centers which lie inside the mask
+      % identify centers which are inside the mask
       if ~isempty(obj.mask)
      
         cidx = subv2ind(obj.indims,p.centers);

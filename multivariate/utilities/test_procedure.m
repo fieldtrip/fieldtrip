@@ -15,12 +15,13 @@ function [acc,sig,cv] = test_procedure(myproc,nfolds,X,Y)
     % load example data
     load covattfrq1
     
-    cvec = ismember(left.label,ft_channelselection({'MLO' 'MRO'},left.label)); % subset of channels
+    chans = ft_channelselection({'MLO' 'MRO'},left.label);
+    cvec = ismember(left.label,chans); % subset of channels
     %cvec = 1:length(left.label);
     fvec = (left.freq >= 8 & left.freq <= 14); % subset of frequencies
     tvec = (left.time >= 1.5 & left.time <= 2.5); % subset of time segment
     
-    X  = [squeeze(mean(left.powspctrm(:,cvec,fvec,tvec),4)); squeeze(mean(right.powspctrm(:,cvec,fvec,tvec),4))];
+    X  = [squeeze(left.powspctrm(:,cvec,fvec,tvec)); squeeze(right.powspctrm(:,cvec,fvec,tvec))];
     Y  = [ones(size(left.powspctrm,1),1); 2*ones(size(right.powspctrm,1),1)];
     
     if isa(myproc{end},'transfer_learner')
@@ -44,7 +45,7 @@ function [acc,sig,cv] = test_procedure(myproc,nfolds,X,Y)
   
   cv = crossvalidator('procedure',myproc,'nfolds',nfolds,'verbose',true,'compact',false,'model',true);
   
-  cv.validate(X,Y);
+  cv = cv.validate(X,Y);
   
   acc = cv.evaluate;
   sig = cv.significance;

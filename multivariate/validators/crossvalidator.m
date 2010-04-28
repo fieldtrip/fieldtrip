@@ -50,7 +50,7 @@ classdef crossvalidator < validator
         
       end
       
-      function res = validate(obj,data,design)
+      function obj = validate(obj,data,design)
       
         assert(~isempty(obj.procedure));
       
@@ -206,21 +206,6 @@ classdef crossvalidator < validator
           for mm=1:numel(obj.model)
             obj.model{mm} = obj.model{mm}./nfolds;
           end
-        end
-        
-        % return the predictions
-        if size(obj.post,2)>1
-          % multiple datasets
-          
-          res = cell(1,size(obj.post,2));
-          for c=1:size(obj.post,2)
-            res{c} = cell2mat(obj.post(:,c));
-          end
-          
-        else
-          
-          res = cell2mat(obj.post);
-          
         end
         
       end
