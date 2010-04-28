@@ -107,6 +107,7 @@ else
 end
 cfg.zlim   = [zmin zmax];
 
+figure;
 % Collect frames
 for iFrame = 1:floor(size(datavector,2)/cfg.samperframe)
   data_frame = mean(datavector(:,((iFrame-1)*cfg.samperframe)+1:iFrame*cfg.samperframe),2);
@@ -134,8 +135,8 @@ axis off
 data_movie.F = F;
 data_movie.cfg = cfg;
 
-uicontrol('parent', hmov, 'units', 'normalized', 'style', 'pushbutton', 'string', 'replay', 'userdata', 1, 'position', [0.91, 0.1, 0.08, 0.05], 'backgroundcolor', [1 1 1], 'callback', @replay_cb)
-uicontrol('parent', hmov, 'units', 'normalized', 'style', 'pushbutton', 'string', 'framespersec', 'userdata', 1, 'position', [0.91, 0.3, 0.08, 0.05], 'backgroundcolor', [1 1 1], 'callback', @framespersec_cb)
+uicontrol('parent', hmov, 'units', 'normalized', 'style', 'pushbutton', 'string', 'replay', 'userdata', 1, 'position', [0.86, 0.1, 0.12, 0.05], 'backgroundcolor', [1 1 1], 'callback', @replay_cb)
+uicontrol('parent', hmov, 'units', 'normalized', 'style', 'pushbutton', 'string', 'frames/s', 'userdata', 1, 'position', [0.86, 0.18, 0.12, 0.05], 'backgroundcolor', [1 1 1], 'callback', @framespersec_cb)
 
 movie(F,1,cfg.framespersec)
 guidata(hmov, data_movie);
