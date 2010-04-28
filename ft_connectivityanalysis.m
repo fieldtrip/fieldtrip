@@ -74,7 +74,7 @@ if ~isfield(cfg, 'conditional'), cfg.conditional = [];  end
 if ~isfield(cfg, 'blockindx'),   cfg.blockindx   = {};  end
 
 hasjack = (isfield(data, 'method') && strcmp(data.method, 'jackknife')) || (isfield(data, 'dimord') && strcmp(data.dimord(1:6), 'rptjck'));
-hasrpt  = ~isempty(strfind(data.dimord, 'rpt'));
+hasrpt  = (isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'rpt'))) || (isfield(data, 'avg') && isfield(data.avg, 'mom')); %FIXME old-fashioned pcc data
 dojack  = strcmp(cfg.jackknife, 'yes');
 normrpt = 0; % default, has to be overruled e.g. in plv, because of single replicate normalisation
 normpow = 1; % default, has to be overruled e.g. in csd, 
