@@ -345,6 +345,14 @@ function select_topoplotTFR(range, cfg, varargin)
 cfg.comment = 'auto';
 cfg.xlim = range(1:2);
 cfg.ylim = range(3:4);
+% compatibility fix for new ft_topoplotER/TFR cfg options
+if isfield(cfg,'showlabels') && strcmp(cfg.showlabels,'yes')
+  cfg = rmfield(cfg,'showlabels');
+  cfg.marker = 'labels';
+elseif isfield(cfg,'showlabels') && strcmp(cfg.showlabels,'no')
+  cfg = rmfield(cfg,'showlabels');
+  cfg.marker = 'on';
+end
 fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
 fprintf('selected cfg.ylim = [%f %f]\n', cfg.ylim(1), cfg.ylim(2));
 p = get(gcf, 'Position');
