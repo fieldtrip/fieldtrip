@@ -9,6 +9,8 @@ function [event] = ft_read_event(filename, varargin)
 %   [event] = ft_read_event(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can be
+%   'dataformat'    string
+%   'headerformat'  string
 %   'eventformat'   string
 %   'header'        structure, see FT_READ_HEADER
 %   'detectflank'   string, can be 'up', 'down' or 'both' (default = 'up')
