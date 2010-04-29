@@ -180,18 +180,15 @@ elseif usetime
 
 end % if usefsample or usetime
 
-%try to give an updated trl matrix, which is necessary to fool
-%fetch_data and fetch_header at a potential later stage of the
-%analysis pipeline
-%FIXME this is only done in case of usefsample, think of whether
-%it is possible as well in the other case
-if ~isempty(trl) && usefsample,
-  trlorig = trl;
-  offsindx = round((trl(:,1)-trl(:,3)).*(fsres./fsorig));
-  offs     = round(trl(:,3).*(fsres./fsorig));
-  nsmp     = cellfun('size',data.trial,2)';
-  trl      = [offsindx+offs offsindx+offs+nsmp-1 offs];
-  cfg.resampletrl = trl;
+% update the trl matrix, which is needed for fetch_data and fetch_header (e.g. in ft_databrowser)
+if ~isempty(trl)
+ trlorig  = trl;
+ offsindx = round((trl(:,1)-trl(:,3)).*(data.fsample./cfg.origfs));
+ offs     = round(trl(:,3).*(data.fsample./cfg.origfs));
+ nsmp     = cellfun('size',data.trial,2)';
+ trl      = [offsindx+offs+1 offsindx+offs+nsmp offs];
+ cfg.trl = trl;
+ cfg.trlorig = trlorig;
 end
 
 fprintf('original sampling rate = %d Hz\nnew sampling rate = %d Hz\n', cfg.origfs, data.fsample);
