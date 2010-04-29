@@ -58,6 +58,13 @@ classdef crossvalidator < validator
           % try to create procedure if input is a cell array or a predictor
           obj.procedure = mva(obj.procedure);
         end
+        
+        if strcmp(obj.verbose,'all')
+          for j=1:length(obj.procedure.mvmethods)
+            obj.procedure.mvmethods{j}.verbose = true;
+          end
+          obj.verbose = true;
+        end
       
         % move to cell-array representation
         if ~iscell(data)

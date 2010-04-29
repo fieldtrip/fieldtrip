@@ -43,7 +43,7 @@ function [acc,sig,cv] = test_procedure(myproc,nfolds,X,Y)
     
   end
   
-  cv = crossvalidator('procedure',myproc,'nfolds',nfolds,'verbose',true,'compact',false,'model',true);
+  cv = crossvalidator('procedure',myproc,'nfolds',nfolds,'verbose','all','compact',false,'model',true);
   
   cv = cv.validate(X,Y);
   

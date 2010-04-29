@@ -24,6 +24,7 @@
 % Jason Farquhar
 % Adriana Birlutiu
 % Tom Heskes 
+% Stefan Klanke
 %
 % Donders Institute for Brain, Cognition and Behaviour
 % 
@@ -95,3 +96,5 @@
 %   represented as a static classifier/regressor
 % - getposteriors in validator should also get a getpredictions; think
 %   again about giving back multiple moments
+% - mva.getmodel moet alle modellen terug kunnen geven voor alle mvmethods
+%   (compact true moet toch alle modellen aankunnen)

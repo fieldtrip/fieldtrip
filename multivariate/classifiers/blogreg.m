@@ -44,7 +44,8 @@ classdef blogreg < classifier
       scale  = 1; 
       
       % mask that can be used to access only a subset of a volume of data
-      % when specifying the coupling
+      % when specifying the coupling; specify mask as size of input
+      % dimensions
       mask = [];
             
       % some mutable options for laplacedegenerate_ep
@@ -392,7 +393,7 @@ classdef blogreg < classifier
             fprintf('%g]\n',obj.coupling);
           end
           
-          prior = construct_prior(obj.dims,obj.coupling,'mask',obj.mask,'circulant',[0 0 0 0]);
+          prior = construct_prior(obj.dims,obj.coupling,'mask',find(obj.mask(:)),'circulant',[0 0 0 0]);
           
         end
         
