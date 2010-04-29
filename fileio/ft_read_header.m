@@ -448,6 +448,16 @@ switch headerformat
     catch
       warning('cannot read balancing coefficients for G3BR');
     end
+    try
+      [alphaMEG,MEGlist,Refindex] = getCTFBalanceCoefs(orig,'G3AR', 'T');
+      orig.BalanceCoefs.G3AR.alphaMEG  = alphaMEG;
+      orig.BalanceCoefs.G3AR.MEGlist   = MEGlist;
+      orig.BalanceCoefs.G3AR.Refindex  = Refindex;
+    catch
+      % May not want a warning here if these are not commonly used.
+      % Already get a (fprintf) warning from getCTFBalanceCoefs.m
+      % warning('cannot read balancing coefficients for G3AR');
+    end
     % add a gradiometer structure for forward and inverse modelling
     try
       hdr.grad = ctf2grad(orig);
