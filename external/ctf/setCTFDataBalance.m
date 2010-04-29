@@ -115,7 +115,8 @@ balance1=upper(balance1);
 
 %  Check that arrays data and chanList are consistent and sensible
 if size(data,2)>ds.res4.no_channels
-  fprintf('\nsetCTFDataBalance: ds.res4.no_channels=%d, but size data=[');
+  fprintf('\nsetCTFDataBalance: ds.res4.no_channels=%d, but size data=[',...
+    ds.res4.no_channels);
   fprintf(' %d',size(data));fprintf(']\n\n');
   data=[];ds=-1;
   return
@@ -196,7 +197,7 @@ elseif isempty(messages);
   messages=1;
 elseif ~isequal(size(messages),[1 1])
   fprintf('\nsetCTFDataBalance: Input messages doesn''t make sense.  size(messages)=[');
-  fprintf(' %d');fprintf(']   (Must be [1 1])\n\n');
+  fprintf(' %d',size(messages));fprintf(']   (Must be [1 1])\n\n');
   data=[];ds=-1;
   return
 elseif messages<0 | messages>2

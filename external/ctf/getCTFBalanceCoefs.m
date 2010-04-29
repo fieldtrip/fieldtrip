@@ -9,7 +9,8 @@ function [alphaMEG,MEGindex,MEGbalanceindex,alphaGref,Grefindex,Gbalanceindex]=.
 %                          'G1BR'  : 1st order balancing
 %                          'G2BR'  : 2nd order balancing
 %                          'G3BR'  : 3rd order balancing
-%                  If only MEG balance table is requested, size(balanceType)=[1 4]
+%                          'G3AR'  : 3rd order balancing + adaptive
+%                  If only MEG balance table is requested, size(balanceType)=[1 5]
 %                  If Gref balance table is requested also, size(balanceType)=[2 4]
 %          unit:  Type of units.  Option: 'fT','T','phi0','int'.
 %                 If unit is not entered, of unit=[], the default is unit='fT'.
@@ -76,7 +77,8 @@ if nargout==0 & nargin==0
   return
 end
 
-balanceOptions=strvcat('NONE','G1BR','G2BR','G3BR');
+balanceOptions=strvcat('NONE','G1BR','G2BR','G3BR', 'G3AR');
+balanceOptionsEnds = [size(balanceOptions, 1), 2]; % Which options are available for MEGs and Grefs.
 physical_options=strvcat('fT','T');
 raw_options=strvcat('phi0','int');
 unit_options=strvcat(physical_options,raw_options);
@@ -121,7 +123,7 @@ end
 
 %  Check that balanceType has allowed values
 for k=1:size(balanceType,1)  % k=1:MEGs, k=2:Grefs
-  if isempty(strmatch(balanceType(k,:),balanceOptions(1:(6-2*k),:)))
+  if isempty(strmatch(balanceType(k,:),balanceOptions(1:balanceOptionsEnds(k),:)))
     fprintf('\ngetCTFBalanceCoefs: balanceType(%d,:)=%s   Not an allowed option.\n\n',...
       k,balanceType(k,:));
     return
@@ -220,6 +222,7 @@ function [betaMEG,MEGindex,Refindex,betaGref,Grefindex,Gbalanceindex]=...
 %                          'G1BR'  : 1st order balancing
 %                          'G2BR'  : 2nd order balancing
 %                          'G3BR'  : 3rd order balancing
+%                          'G3AR'  : 3rd order balancing + adaptive
 %                  If only MEG balance table is requested, size(balanceType)=[1 4]
 %                  If Gref balance table is requested also, size(balanceType)=[2 4]
 %           If balancing 'NONE' is specified, getRawCTFBalanceCoefs returns lists MEGindex and
@@ -273,7 +276,8 @@ function [betaMEG,MEGindex,Refindex,betaGref,Grefindex,Gbalanceindex]=...
 %  No function calls.
 missingMEGMessage=0;
 missingGrefMessage=0;
-balanceOptions=strvcat('NONE','G1BR','G2BR','G3BR');
+balanceOptions=strvcat('NONE','G1BR','G2BR','G3BR', 'G3AR');
+balanceOptionsEnds = [size(balanceOptions, 1), 2]; % Which options are available for MEGs and Grefs.
 common_mode_only=0;
 
 Brefindex=[];  %  Index list of reference magnetometers in the data arrays
@@ -314,7 +318,7 @@ end
 
 %  Check that balanceType has allowed values
 for k=1:size(balanceType,1)  % k=1:MEGs, k=2:Grefs
-  if isempty(strmatch(balanceType(k,:),balanceOptions(1:(6-2*k),:)))
+  if isempty(strmatch(balanceType(k,:),balanceOptions(1:balanceOptionsEnds(k),:)))
     fprintf('\ngetRawCTFBalanceCoefs: balance(%d,:)=%s   Not an allowed option.\n\n',...
       k,balanceType(k,:));
     return
@@ -377,14 +381,23 @@ elseif nargout==6 & ~strcmp(balanceType(2,:),'NONE')
       end
       if (m==m1-1 & m1>1) | (m==mtot & m1==1)
         if missingGrefMessage==0
-          fprintf(['\ngetRawCTFBalanceCoefs: Failed to find %s balance coefficients',...
+          if strncmp(balanceType(2,:), balanceOptions(5,:), 4)
+            % Avoid warning for all sensors for adaptive coefficients.
+            fprintf('\ngetRawCTFBalanceCoefs: Failed to find %s balance coefficients for reference sensors.\n',...
+              balanceType(2,:));
+          else
+            fprintf(['\ngetRawCTFBalanceCoefs: Failed to find %s balance coefficients',...
               ' for sensor(s)'],balanceType(2,:));
+            fprintf('\n\t\t\t\t');
+          end
         end
         missingGrefMessage=missingGrefMessage+1;
-        if missingGrefMessage==10*round(missingGrefMessage/10)
-          fprintf('\n\t\t\t\t');
+        if ~strncmp(balanceType(2,:), balanceOptions(5,:), 4)
+          if missingGrefMessage==10*round(missingGrefMessage/10)
+            fprintf('\n\t\t\t\t');
+          end
+          fprintf(' %s',Gname);
         end
-        fprintf(' %s',Gname);
         betaGRef(:,n)=zeros(nGbalcoef,1);
         return
       end
@@ -440,14 +453,23 @@ for n=1:nMEG
     end
     if (m==m1-1 & m1>1) | (m==mtot & m1==1)
       if missingMEGMessage==0
-        fprintf(['\ngetRawCTFBalanceCoefs: Failed to find %s balance coefficients',...
-            ' for sensor(s)'],balanceType(2,:));
+        if strncmp(balanceType(2,:), balanceOptions(5,:), 4)
+          % Avoid warning for all sensors for adaptive coefficients.
+          fprintf('\ngetRawCTFBalanceCoefs: Failed to find %s balance coefficients for sensors.\n',...
+            balanceType(2,:));
+        else
+          fprintf(['\ngetRawCTFBalanceCoefs: Failed to find %s balance coefficients',...
+            ' for sensor(s)'],balanceType(1,:));
+          fprintf('\n\t\t\t\t');
+        end
       end
       missingMEGMessage=missingMEGMessage+1;
-      if missingMEGMessage==10*round(missingMEGMessage/10)
-        fprintf('\n\t\t\t\t');
+      if ~strncmp(balanceType(2,:), balanceOptions(5,:), 4)
+        if missingMEGMessage==10*round(missingMEGMessage/10)
+          fprintf('\n\t\t\t\t');
+        end
+        fprintf(' %s',MEGname);
       end
-      fprintf(' %s',MEGname);
       betaMEG(:,n)=zeros(nRef,1);
     end
   end  % End of loop over m (ds.res4.scrr table)

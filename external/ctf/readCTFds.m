@@ -8,23 +8,40 @@ function ds=readCTFds(datasetname)
 %
 % ************************************************************************
 
-%  Version 1.2:  24 April 2007 
-%          - readHc modified to read fMEG .hc files.
-%          - readCPersist modified to handle extra bytes that appear in some .acq files.                                 
-%  Author : Harold Wilson
-
-%  Version 1.1:  13 April 2007
-%  readCTFds is modified to handle cases where the data files exceed a total of 2^31-8
-%  bytes.  In these cases files .1_meg4,.2_meg4. are needed to store all of the data.
-
-%  readCTFds opens a CTF data set, and stores the information in the .res4, .infods,
-%  .newds, .acq, .hc, .hist, .EEG, bad.segments, BadChannels, ClassFile.cls and 
-%  MarkerFile.mrk files.
+%  readCTFds opens a CTF data set and creates a MATLAB structure with the information
+%  in the .res4, .infods, .newds, .acq, .hc, .hist, .EEG, bad.segments, BadChannels,
+%  ClassFile.cls andMarkerFile.mrk files.  It confirms the existence of a .meg4 file
+%  with the correct size.
 
 %  See document CTF MEG File Formats, PN900-0088 for a description of the formats of
 %  dataset files.
 
-%  It confirms the existence of a .meg4 file with the correct size.
+%  Author : Harold Wilson
+
+% *****************  Revisions and bug fixes  **************************************
+%  Version 1.3  4 October 2007
+%  1. readCTFds v1.2 failed when run in MATLAB 7.2, but ran correctly in
+%    MATLAB 6.5 and 7.3.  The failure occurred when calls to fscanf with a
+%    final '\n' in the format string were followed by fgetl.  In MATLAB 6.5 and 7.3,
+%    this returns the next line of a text file, but in MATLAB 7.2, this
+%    returns an empty charatcer string.
+%    Changes were made to subprograms
+%           - readHc,
+%           - readClassFile
+%           - readMarkerFile.
+%  2. In v1.1 and 1.2, if any of the head coil positions exceeded 100 cm, readHc
+%     reported an error and returned hc=struct([]).  In v1.3, is reports the error,
+%     and returns the erroneaous values. 
+
+
+%  Version 1.2:  24 April 2007
+%          - readHc modified to read fMEG .hc files.
+%          - readCPersist modified to handle extra bytes that appear in some .acq files.
+
+%  Version 1.1:  13 April 2007
+%  readCTFds is modified to handle cases where the data files exceed a total of 2^31-8
+%  bytes.  In these cases files .1_meg4,.2_meg4,... appear in the dataset.
+% ***********************************************************************************
 
 %  Inputs : datasetname : Complete name of the data set directory.  Includes the complete
 %                         path and the .ds extension.
@@ -49,7 +66,7 @@ function ds=readCTFds(datasetname)
 persistent printWarning multipleMeg4Files
 
 if nargin==0 & nargout==0  %  Print a version number
-  fprintf(['\treadCTFds: Version 1.2   24 April 2006   ',...
+  fprintf(['\treadCTFds: Version 1.3   4 October 2007   ',...
     'Reads v4.1 and v4.2 CTF data sets including fMEG .hc files.\n',...
     '\tCall: ds=readCTFds(datasetname)\n',...
     '\t\tdatasetname = Name of the dataset including the path.\n',...
@@ -102,7 +119,7 @@ else
   end
 end
 
-%  Check that the res4 and meg4 files exist.  
+%  Check that the res4 and meg4 files exist.
 res4File=[datasetname,delim,baseName,'.res4'];
 meg4File=[datasetname,delim,baseName,'.meg4'];
 
@@ -160,16 +177,16 @@ clear meg4Header meg4Size;
 %  Does the size of the .meg4 file match the size specified by the .res4 file?
 if ds.meg4.fileSize~=8*Nmeg4+dataBytes
   fprintf(['\nreadCTFds: Data set error : size of meg4 file(s)\n\t\t',...
-      '%10d bytes (from dir command)\n'],ds.meg4.fileSize);
+    '%10d bytes (from dir command)\n'],ds.meg4.fileSize);
   fprintf('\t\t%10d bytes (from res4 file)\n\n',8*Nmeg4+dataBytes);
   return
 end
 
 if isempty(printWarning)
   fprintf(['\nreadCTFds: You are reading CTF data for use with a software-application tool\n',...
-      '\tthat is not manufactured by VSM MedTech Ltd. and has not received marketing\n',...
-      '\tclearance for clinical applications.  If CTF MEG data are processed by this tool,\n',...
-      '\tthey should not be later employed for clinical and/or diagnostic purposes.\n\n']);
+    '\tthat is not manufactured by VSM MedTech Ltd. and has not received marketing\n',...
+    '\tclearance for clinical applications.  If CTF MEG data are processed by this tool,\n',...
+    '\tthey should not be later employed for clinical and/or diagnostic purposes.\n\n']);
   printWarning=1;
 end
 
@@ -268,7 +285,7 @@ fid=fopen(res4File,'r','ieee-be');
 res4.header=char(fread(fid,8,'char')');
 if isempty(strmatch(res4.header,res4Headers,'exact'))
   fprintf(['\nreadCTFds (readRes4):res4 file header = %s.  ',...
-      'Valid header options:'],res4.header);
+    'Valid header options:'],res4.header);
   for k=1:size(res4Headers,1);fprintf(' %s',res4Headers(k,:));end;fprintf('\n\n');
   res4=struct([]);
   fclose(fid);
@@ -322,7 +339,7 @@ res4.nf_subject_id=[deblank(char(fread(fid,32,'char')')) char(0)];
 res4.nf_operator=[deblank(char(fread(fid,32,'char')')) char(0)];
 res4.nf_sensorFileName=[deblank(char(fread(fid,56,'char')')) char(0)];
 temp=fread(fid,3,'int32');
-res4.rdlen=temp(2); 
+res4.rdlen=temp(2);
 
 res4.run_description=[deblank(char(fread(fid,res4.rdlen,'char')')) char(0)];
 %  end of meg4FileSetup part of meg41GeneralResRec
@@ -355,7 +372,7 @@ for kchan=1:res4.no_channels
 end
 clear kchan xname;
 
-%  Read sensor resource table.  Floating point values are 'double' 
+%  Read sensor resource table.  Floating point values are 'double'
 %  but the code could be changed to convert to 'single' to save memory.
 for kchan=1:res4.no_channels
   res4.senres(kchan).sensorTypeIndex=fread(fid,1,'int16');
@@ -369,7 +386,7 @@ for kchan=1:res4.no_channels
   numCoils=res4.senres(kchan).numCoils;
   temp=fread(fid,3,'int16');
   res4.senres(kchan).grad_order_no=temp(1);
-  
+
   %  Special code to take care of situations where someone wants to label bad channels
   %  by setting their gain to zero.
   invgain=(res4.senres(kchan).ioGain*...
@@ -383,9 +400,9 @@ for kchan=1:res4.no_channels
     % Nominal gain (fT/integer step)
     res4.senres(kchan).gain=1e15*res4.senres(kchan).gain;
   end
-  
+
   % Data that was included in res4.senres(kchan).coilTbl in earlier versions of readCTFds
-  
+
   res4.senres(kchan).pos0=zeros(3,res4.senres(kchan).numCoils);
   res4.senres(kchan).ori0=zeros(3,res4.senres(kchan).numCoils);
   res4.senres(kchan).area=zeros(1,res4.senres(kchan).numCoils);
@@ -399,11 +416,11 @@ for kchan=1:res4.no_channels
     res4.senres(kchan).area(qx)=fread(fid,1,'double');
   end
   if numCoils<MAX_COILS   % Skip the rest of the coilTbl
-    buff=fread(fid,10*(MAX_COILS-numCoils),'double');   
+    buff=fread(fid,10*(MAX_COILS-numCoils),'double');
   end
-  
+
   % Data that was included in res4.senres(kchan).HdcoilTbl in earlier versions of readCTFds
-  
+
   res4.senres(kchan).pos=zeros(3,res4.senres(kchan).numCoils);
   res4.senres(kchan).ori=zeros(3,res4.senres(kchan).numCoils);
   for qx=1:numCoils
@@ -413,7 +430,7 @@ for kchan=1:res4.no_channels
     temp=fread(fid,2,'double');  % Don't bother with area and numturns.  Already read.
   end
   if numCoils<MAX_COILS      % Skip the rest of the HdcoilTbl
-    buff=fread(fid,10*(MAX_COILS-numCoils),'double');   
+    buff=fread(fid,10*(MAX_COILS-numCoils),'double');
   end
 end
 clear kchan buff numCoils temp qx;
@@ -431,7 +448,7 @@ for nx=1:res4.numcoef
   buff=fread(fid,SENSOR_LABEL*MAX_BALANCING,'uint8');
   buff=reshape(buff,SENSOR_LABEL,MAX_BALANCING);
   res4.scrr(nx).sensor=[uint8(buff(:,1:numcoef)) ...
-      uint8(zeros(SENSOR_LABEL,MAX_BALANCING-numcoef))];
+    uint8(zeros(SENSOR_LABEL,MAX_BALANCING-numcoef))];
   buff=fread(fid,MAX_BALANCING,'double');
   res4.scrr(nx).coefs=[buff(1:numcoef);zeros(MAX_BALANCING-numcoef,1)];
 end
@@ -472,15 +489,15 @@ function hc=readHc(hcFile);
 %        are permitted.  The first two sets of coil positions are in dewar coordinates.
 %        The last set is in 'head' or 'abdomen' coordinates.
 
-%    Units : For .hc to be a valid coil position file, the coordinates must be in cm.  The
-%    program searches for the string '(cm):'
+%    Units : For .hc to be a valid coil position file, the coordinates must be in cm.
+%            The program searches for the string '(cm):'.
 
 %    F = coordinate (numeric)
 
 %   There are exactly 3 sets of coil positions in the file appearing in the order
-%          (1) A='standard', D='dewar'
-%          (2) A='measured', D='dewar'
-%          (3) A='measured', D='head' or 'abdomen'
+%          (1) A='standard', C='dewar'
+%          (2) A='measured', C='dewar'
+%          (3) A='measured', C='head' or 'abdomen'
 %   The coils must appear in the same order in each set.
 
 %  Input : Name of hc file (including complete path and .hc extension)
@@ -488,14 +505,24 @@ function hc=readHc(hcFile);
 %  Output : Structure hc containing standard, dewar and CTF coordinates of the
 %           nasion,left,right coils.
 %             hc.name= names of the coils  size(hc.name)=[nCoil x]
-%         MEG: hc.standard, hc.dewar, hc.head : size=[3 nCoil] : coil positions in cm
-%        fMEG: hc.standard, hc.dewar, hc.abdomen : size=[3 nCoil] : coil positions in cm
+%      MEG: hc.standard, hc.dewar, hc.head : size=[3 nCoil] : coil positions in cm
+%     fMEG: hc.standard, hc.dewar, hc.abdomen : size=[3 nCoil] : coil positions in cm
+
+if nargin==0 & nargout==0
+  fprintf(['readHc:  Version 1.3   4 Oct. 2007\n',...
+    '\thc=readHc(hcFile) reads head-coil file hcFile and returns the head coil',...
+    '\t   positions in structure hc\n\n',...
+    '\tThe file format is defined in document CTF MEG File Formats, PN900-0088.\n\n']);
+  return
+end
 
 basicString='coil position relative to';
 %  In MEG systems, the first three coil names are fixed.
 MEGCoilLabel=strvcat('nasion','left ear','right ear');
 C3options=strvcat('head','abdomen');
 unitString='(cm):';
+maxRCoil=200;  % Report an error if any coil position is > maxRCoil cm.
+printWarning=1;
 hc=struct([]);  % Return in event of an error.
 
 if exist(hcFile)~=2
@@ -503,8 +530,8 @@ if exist(hcFile)~=2
 end
 
 prec=1e-6;  % Round positions.
-%  Decide if this is a MEG or an fMEG system.  Find the first line that contains the string
-%  'coil position relative to'.  
+%  Decide if this is a MEG or an fMEG system.  Find the first line that contains the
+%  string 'coil position relative to'.
 %        MEG system: This line contains 'nasion'.
 %       fMEG system: This line does not contains 'nasion'.
 
@@ -520,9 +547,12 @@ while 1
   if isequal(textline,-1)
     break
   elseif strfind(textline,'coil position relative to');
-    % Take care of typographic error in some releases of Acq v4.
     stringA=strtok(textline);
-    if ~strcmp(stringA,'standard') & ~strcmp(stringA,'stadard')
+    % Fix typographic error in some releases of Acq, not in all coils.
+    if strcmp(stringA,'stadard')
+      stringA = 'standard';
+    end
+    if ~strcmp(stringA,'standard')
       break
     end
     stringA=strvcat(stringA,'measured','measured');
@@ -531,7 +561,7 @@ while 1
 end
 
 if isequal(textline,-1) | size(stringA,1)<3
-  fprintf('readHc: File %s does not have the head position file format.\n');
+  fprintf('readHc: File %s does not have the head position file format.\n',hcFile);
   fclose(fhc);
   return
 end
@@ -550,6 +580,10 @@ lastPositionSet=1;
 while ~isequal(textline,-1)
   %  Parse the line
   [A,R]=strtok(textline);
+  % Fix typographic error in some releases of Acq, not in all coils.
+  if strcmp(A,'stadard')
+    A = 'standard';
+  end
   kpos=strfind(R,basicString);
   coilName=deblank(R(2:kpos-1));
   [C,R]=strtok(R(kpos+length(basicString):length(R)));
@@ -573,13 +607,14 @@ while ~isequal(textline,-1)
   elseif ~strcmp(coilName,deblank(coilLabel(coil,:)));
     break;
   end
-  %  The line describing the coil and coordinate frame is OK.  
+  %  The line describing the coil and coordinate frame is OK.
   %  Get the coordinates by reading 3 lines.
-  buff=fscanf(fhc,'%s%s%f\n',9);
-  if ~isequal(size(buff),[9 1]) | any(abs(buff(3:3:length(buff)))>200)
+  buff=fscanf(fhc,'%s%s%f',9);
+  if ~isequal(size(buff),[9 1])
     break
   end
   rhc=[rhc prec*round(buff(3:3:9)/prec)];
+  fgetl(fhc);  % Skip to the start of the next line.
   textline=fgetl(fhc);
   lastPositionSet=positionSet;
 end
@@ -592,6 +627,11 @@ if size(rhc,2)~=positionSet*nCoil
   fprintf('readHc: File %s does not have %d complete sets of %d coils.\n',...
     hcFile,positionSet,nCoil);
   return
+end
+
+if max(max(abs(rhc)))>maxRCoil & printWarning
+  fprintf('readHc: Head Coil file %s\n        max(coil position)>%d.\n',...
+    hcFile,round(maxRCoil));
 end
 
 %  Assemble structure hc.
@@ -665,7 +705,7 @@ end
 fid=fopen(ClassFileName,'r','ieee-be');
 
 for k=1:5;fgetl(fid);end  % Skip 5 lines (including path info)
-nClass=fscanf(fid,'%d\n',1); %Read value and skip to the start of the next non-blank line.
+nClass=sscanf(fgetl(fid),'%d',1); %Read value and skip to the start of the next non-blank line.
 if nClass<=0
   fprintf('readClassFile: File %s has %d classes.\n',nClass);
   return
@@ -675,8 +715,11 @@ TrialClass=struct('ClassGroupId',[],'Name',char([]),...
   'Comment',char([]),'Color',char([]),'Editable',char([]),'ClassId',[],'trial',[]);
 
 for k=1:nClass
-  fgetl(fid);  %  Skip CLASSGROUPID:
-  ClassGroupId=fscanf(fid,'%d\n',1);
+  %  Find the start of the next class identification
+  %  There is no need to check for end of file because the loop ends before an attempt
+  %  is made to read class nClass+1.
+  while ~strcmp('CLASSGROUPID:',fgetl(fid));end
+  ClassGroupId=sscanf(fgetl(fid),'%d',1);
   fgetl(fid);
   Name=deblank(fgetl(fid));
   fgetl(fid);
@@ -686,17 +729,15 @@ for k=1:nClass
   fgetl(fid);
   Editable=deblank(fgetl(fid));
   fgetl(fid);
-  ClassId=fscanf(fid,'%d\n',1);
+  ClassId=sscanf(fgetl(fid),'%d',1);
   fgetl(fid);
-  No_of_Trials=fscanf(fid,'%d\n',1);
+  No_of_Trials=sscanf(fgetl(fid),'%d',1);
   fgetl(fid);fgetl(fid);
   if No_of_Trials>0
     trial=reshape(fscanf(fid,'%d',No_of_Trials),1,No_of_Trials);
-    fgetl(fid);
   else
     trial=[];
   end
-  fgetl(fid);fgetl(fid);  % Positioned at the next CLASSGROUPID: line.
   %  Adjust trial numbering so it starts at 1.
   TrialClass(k)=struct('ClassGroupId',ClassGroupId,'Name',Name,...
     'Comment',Comment,'Color',Color,'Editable',Editable,'ClassId',ClassId,...
@@ -714,7 +755,7 @@ function badSegments=readBadSegments(badSegmentsFile);
 
 %  Reads the bad.segements file of a CTF data set and stores the information in structure
 %  bad_segments.
-%    badSegments.trial = List of trial numbers   
+%    badSegments.trial = List of trial numbers
 %    badSegments.StartTime = List of bad segment start times (relative to trial).
 %    badSegments.EndTime   = List of bad segment end times.
 
@@ -818,7 +859,7 @@ return
 %%%%%%%%%   Function readMarkerFile  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function marker=readMarkerFile(MarkerFileName,trialList);
 
-% Version 1.0   27 Oct. 2006
+% Version 1.3   4 Oct. 2007
 
 %   Reads specified trials of a CTF MarkerFile.
 %   The MarkerFile format is defined in document CTF MEG File Formats, PN900-0088.
@@ -846,14 +887,14 @@ function marker=readMarkerFile(MarkerFileName,trialList);
 
 
 if nargin==0 & nargout==0
-  fprintf(['readMarkerFile:  Version 1.0   27 Oct. 2006\n',...
-      '\tReads a CTF dataset MarkerFile and returns a structure array.\n',...
-      '\tmarker=readMarkerFile(FileName) reads ',...
-      'a marker file and returns the trials and times.\n',...
-      '\tmarker=readMarkerFile(FileName,trialList) reads a marker file and returns only\n',...
-      '\t\t\tthe markers for trials listed in vector trialList.\n\n',...
-      '\treadMarkerFile increments trial numbers by 1 so first trial in a dataset has trial=1.\n\n',... 
-      '\tThe MarkerFile format is defined in document CTF MEG File Formats, PN900-0088.\n\n']);
+  fprintf(['readMarkerFile:  Version 1.3   4 Oct. 2007\n',...
+    '\tReads a CTF dataset MarkerFile and returns a structure array.\n',...
+    '\tmarker=readMarkerFile(FileName) reads ',...
+    'a marker file and returns the trials and times.\n',...
+    '\tmarker=readMarkerFile(FileName,trialList) reads a marker file and returns only\n',...
+    '\t\t\tthe markers for trials listed in vector trialList.\n\n',...
+    '\treadMarkerFile increments trial numbers by 1 so first trial in a dataset has trial=1.\n\n',...
+    '\tThe MarkerFile format is defined in document CTF MEG File Formats, PN900-0088.\n\n']);
   return
 end
 
@@ -880,8 +921,8 @@ end
 
 fid=fopen(MarkerFileName,'r','ieee-be');
 
-for k=1:5;fgetl(fid);end  % SKip 5 lines (including path info)
-nMarker=fscanf(fid,'%d\n',1); %Read value and skip to the start of the next non-blank line.
+for k=1:5;fgetl(fid);end  % Skip 5 lines (including path info)
+nMarker=sscanf(fgetl(fid),'%d',1); %Read value and skip to the start of the next non-blank line.
 if nMarker<=0
   fprintf('readMarkerFile: File %s has %d markers.\n',nMarker);
   fclose(fid);
@@ -889,19 +930,18 @@ if nMarker<=0
 end
 
 marker=struct('ClassGroupId',[],'Name',char([]),...
-    'Comment',char([]),'Color',char([]),'Editable',char([]),'ClassId',[],...
-    'BitNumber',[],'Polarity',char([]),'Source',char([]),'Threshold',[],...
-    'trial',[],'time',[]);
-  
+  'Comment',char([]),'Color',char([]),'Editable',char([]),'ClassId',[],...
+  'BitNumber',[],'Polarity',char([]),'Source',char([]),'Threshold',[],...
+  'trial',[],'time',[]);
+
 for k=1:nMarker
-  while 1
-    txtline=fgetl(fid);
-    if isequal(txtline,-1);flose(fid);return;end
-    if strmatch('CLASSGROUPID:',txtline);break;end
-  end
-  ClassGroupId=fscanf(fid,'%d\n',1);
+  %  Find the start of the next marker identification
+  %  There is no need to check for end of file because the loop ends before an attempt
+  %  is made to read marker class nClass+1.
+  while ~strcmp('CLASSGROUPID:',fgetl(fid));end
+  ClassGroupId=sscanf(fgetl(fid),'%d',1);
   if ~any(ClassGroupId==[0 3])
-    fprintf('read_MArkerFile: Skipping a marker with CLASSGROUPID=%d\n',ClassGroupId);
+    fprintf('read_MarkerFile: Skipping a marker with CLASSGROUPID=%d\n',ClassGroupId);
     continue;
   end
   fgetl(fid);
@@ -913,16 +953,16 @@ for k=1:nMarker
   fgetl(fid);
   Editable=deblank(fgetl(fid));
   fgetl(fid);
-  ClassId=fscanf(fid,'%d\n',1);
+  ClassId=sscanf(fgetl(fid),'%d',1);
   if ClassGroupId==0
     fgetl(fid);
-    BitNumber=fscanf(fid,'%d\n',1);
+    BitNumber=sscanf(fgetl(fid),'%d',1);
     fgetl(fid);
     Polarity=deblank(fgetl(fid));
     fgetl(fid);
     Source=deblank(fgetl(fid));
     fgetl(fid);
-    Threshold=fscanf(fid,'%f\n',1);
+    Threshold=sscanf(fgetl(fid),'%f',1);
   else
     BitNumber=[];
     Polarity=char([]);
@@ -930,13 +970,11 @@ for k=1:nMarker
     Threshold=[];
   end
   fgetl(fid);
-  No_of_Samples=fscanf(fid,'%d\n',1);
+  No_of_Samples=sscanf(fgetl(fid),'%d',1);
   fgetl(fid);fgetl(fid);
   trial=zeros(1,No_of_Samples);
   time=zeros(1,No_of_Samples);
-  if No_of_Samples==0
-    fgetl(fid);fgetl(fid);
-  else
+  if No_of_Samples>0
     buff=fscanf(fid,'%d %f\n',2*No_of_Samples);
     trial=reshape(buff(1:2:2*No_of_Samples-1),1,No_of_Samples)+1; % Trial numbering starts at 1.
     time=reshape(buff(2:2:2*No_of_Samples),1,No_of_Samples);

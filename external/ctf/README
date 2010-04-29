@@ -1,12 +1,6 @@
-The MATLAB functions in this directory are provided courtesy of
-MISL. Although these functions are released on conjunction with
-FieldTrip and SPM, these are not part of the FieldTrip or SPM
-project.
+The MATLAB functions in this directory are provided courtesy 
+of Dr. Harold Wilson, MISL. Although these functions are released 
+in conjunction with FieldTrip and SPM, they are not part of the 
+FieldTrip or SPM project.
 
-Brent Taylor <brent.taylor@megservice.com> on behalf of MISL MEG
-customer support wrote:
-
-> Yes, if these updated MatLab routines resolve the problem then if
-> you wish you may freely offer them (the 'P' or 'M' versions) to
-> SPM/Fieldtrip for them to use as they deem appropriate (please just
-> acknowledge that they are courtesy of MISL).
+For more information, see the file: CTF_MATLAB_v13.pdf

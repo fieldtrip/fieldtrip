@@ -10,17 +10,16 @@ function ds=writeCTFds(datasetname,ds,data,unit);
 %                                                                                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%  Author : Harold Wilson
 
-%  Version 1.2   Mofied to write both MEG and fMEG .hc files.
+%  Version 1.3  5 October 2007  Spelling errors in some variables corrected.
+%  Version 1.2  24 April 2007  Modified to write both MEG and fMEG .hc files.
 
 %  writeCTFds.m    Version 1.1  Prepares a CTF-format data set. MATLAB to CTF conversion.
 %                  Adds record of filter changes to hist and newds files.
 %                  Adds no-clinical-use messages.
 %                  Creates multiple meg4 files when the total size of the data array
 %                  >536870910 elements.
-
-%  Date : 16 April 2007
-%  Author : Harold Wilson
 
 %  Operation :
 %    1.  User reads a data set using readCTFds and getTrial2.
@@ -89,7 +88,7 @@ persistent printWarning bandwidthMessage
 delim=filesep;
 
 if nargin==0 & nargout==0  %  Print a version number
-  fprintf(['\twriteCTFds: Version 1.2   23 April 2007   ',...
+  fprintf(['\twriteCTFds: Version 1.3   5 October 2007   ',...
       'Creates v4.1 and v4.2 CTF data sets.\n',...
       '\tCall: ds=writeCTFds(datasetname,ds,data,unit);\n',...
       '\t\tdatasetname = Name of the new dataset including the path.\n',...
@@ -204,7 +203,8 @@ if size(ds.res4.chanNames,2)~=lenSensorName
   fprintf(['\nwriteCTFds : size(ds.res4.chanNames)=[%d %d] ?  Must ',...
       'have %d-character channel names.\n\n'],size(ds.res4.chanNames),lenSensorName);
   ds=-1;
-  returnend
+  return
+end
 
 %  Check that the channel names have a sensor-file identification extensions.
 %  If it is missing, print a warning message.
@@ -349,8 +349,8 @@ clear msg status;
 %  the output .meg4 file has an acceptable header.
 headerMessage=1;
 if ~isfield(ds.meg4,'header');  %  If ds.meg4.header is missing, add it.
-  nChar=length(deblank(meg4_header(1,:)));
-  ds.meg4.header=[meg4_header(1,1:min(7,nChar)) char(zeros(1,7-nChar))];
+  nChar=length(deblank(meg4_headers(1,:)));
+  ds.meg4.header=[meg4_headers(1,1:min(7,nChar)) char(zeros(1,7-nChar))];
 elseif isempty(strmatch(ds.meg4.header(1:7),meg4_headers(:,1:7),'exact'))
   ds.meg4.header=meg4_headers(1,1:7);
 else
@@ -1342,7 +1342,7 @@ for q=1:size(addCommentTag,1)
       end
     else
       fprintf(['writeCTFds (updateDescriptors): Tag %s appears %d times in ',...
-          'ds.infods ??\n'],deblank(addCOmmentTag(q,:)),length(k));
+          'ds.infods ??\n'],deblank(addCommentTag(q,:)),length(k));
     end
   end
 end

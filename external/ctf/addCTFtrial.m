@@ -67,8 +67,8 @@ function cntrl=addCTFtrial(datasetname,data,unit,mrk,cls,badSegments);
 %  with 'wt' permission because this will add an extra byte (char(13)) at the end of each
 %  line of text.
 
-persistent printWarning
-printWarning=1;
+%persistent printWarning  % No clinical-use warning with addCTFtrial.
+%printWarning=1;
 delim=filesep;
 
 if nargin==0 & nargout==0  %  Print a version number
@@ -92,7 +92,7 @@ meg4_headers=strvcat(['MEG41CP',char(0)],['MEG42CP',char(0)]);
 MAX_COILS=8;      % Parameter that determines the size of the ds.res4.senres structure.
 maxMEG4Size=2^31;  % Maximum MEG$ file in bytes.  (Limit set by Linux software)
 
-% addCTFds will add trials to datasets only iof they were crreated by writeCTFds.
+% addCTFds will add trials to datasets only if they were created by writeCTFds.
 originalCreatorSoftware='writeCTFds';
 creatorSoftware='addCTFtrial';  % Added to .infods file
 meg4ChunkSize=2^20; % Write new .meg4 file in chunks of 4*meg4ChunkSize bytes.
@@ -606,7 +606,8 @@ for k=1:length(mrk)
           ~isfield(mrk(k),'Source') | ~isfield(mrk(k),'Threshold')
         fprintf(['addCTFtrial: Structure mrk defines ClassGroupId=0 marker %s, ',...
             'but not fields BitNumber, Polarity, Source or Threshold.\n'],mrk(k).Name);
-        fprintf('             Marker set %s will be defined with ClassGroupId=3.\n');
+        fprintf('             Marker set %s will be defined with ClassGroupId=3.\n',...
+          mrk(k).Name);
         mrk(k).ClassGroupId=3;
       end
     end

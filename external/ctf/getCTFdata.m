@@ -78,7 +78,7 @@ data=[];    % If an error causes in an early return.
 delim=filesep;
 
 if exist('ds')~=1
-  fprintf('\ngetCTFdata: No input arguments.\n\n',nargin);
+  fprintf('\ngetCTFdata: No input arguments.\n\n');
   return
 elseif isempty(ds)
   fprintf('\ngetCTFdata: ds is empty.\n\n');
