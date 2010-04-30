@@ -1,6 +1,11 @@
-The MATLAB functions in this directory are provided courtesy 
-of Dr. Harold Wilson, MISL. Although these functions are released 
-in conjunction with FieldTrip and SPM, they are not part of the 
-FieldTrip or SPM project.
+MATLAB Import/Export Routines
+Version 1.3
 
-For more information, see the file: CTF_MATLAB_v13.pdf
+The MATLAB functions in this directory are provided courtesy of 
+Dr. Harold Wilson, MEG International Services Ltd. (MISL) 
+(formerly VSM MedTech Ltd., manufacturer of CTF MEG systems). 
+Although these functions are released in conjunction with 
+FieldTrip and SPM, they are not part of the FieldTrip or SPM 
+projects.
+
+For copyright information, see the file COPYING in this directory.

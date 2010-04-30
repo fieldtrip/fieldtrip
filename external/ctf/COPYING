@@ -1,0 +1,24 @@
+MATLAB Import/Export Routines
+Version 1.3
+
+The MATLAB functions in this directory are written by Dr. 
+Harold Wilson and provided courtesy of MEG International 
+Services Ltd. (MISL) (formerly VSM MedTech Ltd., manufacturer 
+of CTF MEG systems). 
+
+Explicit permission to use, modify and redistribute this code 
+with FieldTrip and SPM is granted by MISL, with the following 
+caveats: 
+
+1. These programs are not validated and must not be used for 
+clinical applications. The user assumes all responsibility 
+with their use.  If CTF MEG data are processed by this tool, 
+they should not be later employed for clinical and/or 
+diagnostic purposes.
+
+2. MISL does not support these utilities, and any feedback 
+should go through the usual FieldTrip/SPM channels, e.g. 
+the email lists.
+
+These functions are not part of FieldTrip nor SPM and the 
+copyrights belong to the manufacturer.
