@@ -24,6 +24,10 @@ classdef searchlight < featureselector
     step                  % stepsize in terms of array elements    
    
     mask                  % optional mask
+    
+    center = false;       % only selects center features if true
+    
+    nspheres = 1;        % select the union of the best nspheres spheres
         
   end
   
@@ -78,9 +82,9 @@ classdef searchlight < featureselector
           size(p.centers,1),rad,stepsize,num2str(obj.indims));
       end
       
-      if ~isempty(obj.mask)
-        midx = find(obj.mask(:));
-      end
+%       if ~isempty(obj.mask)
+%         midx = find(obj.mask(:));
+%       end
       
       p.spheres = cell(size(p.centers,1),1); 
       n=0;
@@ -110,7 +114,7 @@ classdef searchlight < featureselector
           p.spheres{c} = p.spheres{c}(logical(obj.mask(p.spheres{c})));
           
           % transform to mask indices
-          [a,p.spheres{c}] = ismember(p.spheres{c},midx);
+          %[a,p.spheres{c}] = ismember(p.spheres{c},midx);
           
         end
         
@@ -139,8 +143,12 @@ classdef searchlight < featureselector
 
       end
       
-      [a,b] = max(p.value);
-      p.subset = p.spheres{b};
+      [a,b] = sort(p.value,'descend');
+      if obj.center
+        p.subset = unique(subv2ind(obj.indims,p.centers(b(1:obj.nspheres),:)));
+      else
+        p.subset = unique(cell2mat(p.spheres(b(1:obj.nspheres))));
+      end
       
     end
     

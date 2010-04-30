@@ -53,7 +53,7 @@ classdef validator
       else
         
         res = cell2mat(obj.post);
-        
+                
       end
       
     end
