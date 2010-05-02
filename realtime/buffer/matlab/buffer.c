@@ -6,11 +6,12 @@
  */
 
 #include <pthread.h>
+#include <string.h>
 
 #include "mex.h"
 #include "matrix.h"
 #include "buffer.h"
-#include <string.h>
+#include "extern.h"
 
 #define DEFAULT_HOST "localhost"
 #define DEFAULT_PORT 1972
@@ -19,7 +20,6 @@
 #ifdef WIN32
 #define sleep(x)   Sleep((x)*1000)
 #endif
-
 
 /* This struct is used for keeping a linked list of hostnames / ports / sockets.
    The list is initially empty and added to whenever a new connection is opened.
@@ -39,18 +39,12 @@ typedef struct host_port_sock_list_item {
 /* This is the head of the list */
 host_port_sock_list_item_t *firstHostPortSock = NULL;
 
-/* these variables keep track of the threads */
+/* This keeps track of the running thread */
 pthread_t tcpserverThread;
-pthread_t sleepThread;
-int tcpserverThreadRunning  = 0;
-int sleepThreadRunning      = 0;
+
 /* a pointer to this is passed on to the thread, we only need it once
    and therefore use a static variable */
 host_t host_for_server; 
-
-/* these are for testing the threading using "do_thread" */
-#define MAX_NUM_THREADS 100
-pthread_t threads[MAX_NUM_THREADS];
 
 /* these subfunctions are used in the switch-yard below 
 ** SK: they now return integer error codes like the following
@@ -73,72 +67,27 @@ int buffer_flushhdr(int, mxArray **, const mxArray **);
 int buffer_flushdat(int, mxArray **, const mxArray **);
 int buffer_flushevt(int, mxArray **, const mxArray **);
 
-
-
-/* this is a test function for the multithreading */
-void sleep_cleanup(void *arg) {
-  mexPrintf("stopping sleep thread\n");
-  return;
-}
-
-/* this is a test function for the multithreading */
-void *sleep_thread(void *arg) {
-  int oldcancelstate, oldcanceltype;
-  pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldcancelstate);
-  pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &oldcanceltype);
-  pthread_cleanup_push(sleep_cleanup, NULL);
-  mexPrintf("starting sleep thread\n");
-  while (1) {
-    pthread_testcancel();
-    mexPrintf("sleeping for 4 seconds...\n");
-    sleep(4);
-  }
-  pthread_cleanup_pop(1);
-  return NULL;
-}
-
-/* this is a test function for the multithreading */
-void *do_thread(void *threadid) {
-  int tid;
-  tid = (int)threadid;
-  mexPrintf("In thread: just started thread #%d\n", tid);
-  sleep(4); /* pretend that the code is busy for a few seconds */
-  mexPrintf("In thread: about to exit from thread #%d\n", tid);
-  pthread_exit(NULL);
-  return NULL;
-}
-
 /* this function is called upon unloading of the mex-file */
-void cleanupMex(void) {
+void exitFun(void) {
 	int verbose = 1;
 	int rc;
   
 	if (verbose) {
-		printf("Entering cleanupMex() routine\n");
+		printf("Entering exitFun() routine\n");
 	}
-  
-	if (tcpserverThreadRunning) {
-		mexWarnMsgTxt("stopping tcpserver thread");
-		rc = pthread_cancel(tcpserverThread);
-		if (rc)	mexWarnMsgTxt("problem with return code from pthread_cancel()");
-		/* this blocks forever */
-		/*
-		rc = pthread_join(tcpserverThread, NULL);
-		if (rc)	mexWarnMsgTxt("problem with return code from pthread_join()");
-		*/
-		
-		tcpserverThreadRunning = 0;
-	}
-	if (sleepThreadRunning) {
-		mexWarnMsgTxt("stopping sleep thread");
-		rc = pthread_cancel(sleepThread);
-		if (rc)	mexWarnMsgTxt("problem with return code from pthread_cancel()");
-		/*
-		rc = pthread_join(sleepThread, NULL);
-		if (rc)	mexWarnMsgTxt("problem with return code from pthread_join()");
-		*/
-		sleepThreadRunning = 0;
-	}
+
+    /* tell the tcpserver thread to stop */
+    pthread_mutex_lock(&mutexstatus);
+    if (tcpserverStatus) {
+            pthread_mutex_unlock(&mutexstatus);
+            mexPrintf("requesting cancelation of tcpserver thread\n");
+            pthread_cancel(tcpserverThread);
+            pthread_join(tcpserverThread, NULL);
+    }
+    else {
+            pthread_mutex_unlock(&mutexstatus);
+    }
+
 	/* clean up host/address/socket list and close open sockets */
 	while (firstHostPortSock != NULL) {
 		host_port_sock_list_item_t *hpsli = firstHostPortSock;
@@ -203,7 +152,7 @@ int add_hps_item(const char *hostname, int port, int sock) {
 	hpsli->next = firstHostPortSock;
 	firstHostPortSock = hpsli;
 	
-	mexAtExit(cleanupMex);   /* register cleanup routine so the list get's properly destroyed */
+	mexAtExit(exitFun);   /* register cleanup routine so the list get's properly destroyed */
 	return 1;
 }
 
@@ -334,7 +283,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
       mexErrMsgTxt ("invalid input argument #2");
     if (strcasecmp(argument, "init")==0) {
 		
-      if (tcpserverThreadRunning)
+      if (tcpserverStatus)
         mexErrMsgTxt("thread is already running");
       mexPrintf("In main: spawning tcpserver thread\n");
 	  
@@ -345,47 +294,18 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
       if (rc)
         mexErrMsgTxt("problem with return code from pthread_create()");
 		
-      tcpserverThreadRunning = 1;
-
 	  /* put this as a "connection" with sock=0 into the list */
 	  add_hps_item(hostname, port, 0);
     }
     else if (strcasecmp(argument, "exit")==0) {
-      if (!tcpserverThreadRunning)
+      if (!tcpserverStatus)
         mexErrMsgTxt("thread is not running");
       mexPrintf("In main: requesting cancelation of tcpserver thread\n");
       rc = pthread_cancel(tcpserverThread);
       if (rc)
         mexErrMsgTxt("problem with return code from pthread_cancel()");
-      tcpserverThreadRunning = 0;
 	  /* remove sock=0 connection from host/port/socket list */
 	  remove_hps_item(0);
-    }
-  }
-  
-  else if (strcasecmp(command, "sleep")==0) {
-    argument = mxArrayToString(prhs[1]);
-    if (argument==NULL)
-      mexErrMsgTxt ("invalid input argument #2");
-    if (strcasecmp(argument, "init")==0) {
-      if (sleepThreadRunning)
-        mexErrMsgTxt("thread is already running");
-      mexPrintf("In main: spawning sleep thread\n");
-      rc = pthread_create(&sleepThread, NULL, sleep_thread, NULL);
-      if (rc)
-        mexErrMsgTxt("problem with return code from pthread_create()");
-      else
-        sleepThreadRunning = 1;
-    }
-    else if (strcasecmp(argument, "exit")==0) {
-      if (!sleepThreadRunning)
-        mexErrMsgTxt("thread is already running");
-      mexPrintf("In main: requesting cancelation of sleep thread\n");
-      rc = pthread_cancel(sleepThread);
-      if (rc)
-        mexErrMsgTxt("problem with return code from pthread_cancel()");
-      else
-        sleepThreadRunning = 0;
     }
   }
   
@@ -444,35 +364,14 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
     errorCode = buffer_flushevt(server, &(plhs[0]), &(prhs[1]));
   }
   
-  else if (strcasecmp(command, "do_thread")==0) {
-    /* get the second input argument, should be single number */
-    if (mxIsEmpty(prhs[1]) || !mxIsNumeric(prhs[1]))
-      mexErrMsgTxt ("invalid input argument #2");
-    else
-      num = mxGetScalar(prhs[1]);
-    
-    if (num>MAX_NUM_THREADS)
-      mexErrMsgTxt ("number of requested threads too large");
-    
-    for(t=0; t<num; t++){
-      mexPrintf("In main: spawning thread %d\n", t);
-      rc = pthread_create(&threads[t], NULL, do_thread, (void *)t);
-      if (rc){
-        mexErrMsgTxt("problem with return code from pthread_create()");
-      }
-      /* sleep for one seconds */
-      sleep(1);
-    }
-  }
-  
   else if (strcasecmp(command, "list_connections")==0) {
 	dump_hps_list();
   }
-  
+
   else if (strcasecmp(command, "lookup_connection")==0) {
 	plhs[0] = mxCreateDoubleScalar(lookup_hps_item(hostname, port));
   }
-  
+
   else if (strcasecmp(command, "close_connection")==0) {
 	int sock = lookup_hps_item(hostname, port);
 	/* Note that we ignore request to close the dma "connection" */
@@ -482,7 +381,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
 	}
 	dump_hps_list();
   }
-  
+
   else {
     mexErrMsgTxt ("unknown command");
   }
@@ -493,7 +392,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
   if (argument) mxFree(argument); 
   if (command)  mxFree(command);
   if (hostname) mxFree(hostname); 
-  
+
   if (errorCode > 0) {
     char msg[512];
     /* valid connection, but invalid request */

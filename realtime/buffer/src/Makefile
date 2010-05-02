@@ -23,20 +23,30 @@
 #
 ##############################################################################
 
-CC	 = gcc
+CC = gcc
 
 PLATFORM = $(shell gcc -dumpmachine)
 
-ifeq "$(PLATFORM)" "mingw32"
-	INCPATH	 = -I. -I../pthreads-win32/include
-	LIBPATH  = -L. -L../pthreads-win32/lib
-	LIBS 	 = -lbuffer -lm -lpthreadGC2
-	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -fpack-struct -g 
-else
+# default
+INCPATH	 = -I.
+LIBPATH  = -L.
+LIBS 	 = -lbuffer -lm -lpthread
+CFLAGS	 = $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -fpack-struct -g
+
+ifeq "$(PLATFORM)" "i686-apple-darwin10"
+    # override the defaults
 	INCPATH	 = -I.
 	LIBPATH  = -L.
 	LIBS 	 = -lbuffer -lm -lpthread
-	CFLAGS	 = $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -fpack-struct -g
+	CFLAGS	 = $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -fpack-struct -g -arch i386
+endif
+
+ifeq "$(PLATFORM)" "mingw32"
+    # override the defaults
+	INCPATH	 = -I. -I../pthreads-win32/include
+	LIBPATH  = -L. -L../pthreads-win32/lib
+	LIBS 	 = -lbuffer -lm -lpthreadGC2
+	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -fpack-struct -g
 endif
 
 BINDIR	 = .
@@ -46,13 +56,13 @@ CXXFLAGS = $(INCPATH) -Wunused -pedantic -O0
 
 all: libbuffer.a
 
-libbuffer.a: tcpserver.o tcpsocket.o tcprequest.o clientrequest.o dmarequest.o cleanup.o util.o printstruct.o swapbytes.o property.o
+libbuffer.a: tcpserver.o tcpsocket.o tcprequest.o clientrequest.o dmarequest.o cleanup.o util.o printstruct.o swapbytes.o property.o extern.o
 	 ar rv $@ $^
 
 libclient.a: tcprequest.o util.o
 	 ar rv $@ $^
 
-%.o: %.c buffer.h message.h swapbytes.h socket_includes.h unix_includes.h
+%.o: %.c buffer.h message.h extern.h swapbytes.h socket_includes.h unix_includes.h
 	$(CC) $(CFLAGS) -c $*.c
 
 clean:

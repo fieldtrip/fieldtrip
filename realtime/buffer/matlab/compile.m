@@ -1,4 +1,5 @@
 function compile(cc)
+
 % COMPILE  This script/function is used for compiling and linking the 'buffer' MEX file.
 %
 % On Linux and MacOS X, you should just be able to call this function without arguments.
@@ -8,6 +9,7 @@ function compile(cc)
 %   compile('bcc55') - Borland C++ 5.5 (free command line tools)
 %   compile('mingw') - MinGW (GCC port without cygwin dependency)
 %   compile('vc')    - Visual Studio C++ 2005 or 2008
+%
 % Please note that this script does NOT set up your MEX environment for you, so in case
 % you haven't selected a C compiler on Windows yet, you need to type 'mex -setup' first
 % to choose either the Borland or Microsoft compiler. If you want to use MinGW, you also
@@ -16,9 +18,7 @@ function compile(cc)
 %
 % Please also note that you can only use this function, AFTER you have compiled the
 % 'buffer' library from '../src' with the SAME compiler you use here.
-		   
-		   
-		   
+
 % You can tweak this a bit for setting platform-independent options, e.g for optimisation 
 % or debugging. The default is to enable debug information (-g).
 % The -I../src is for including the header files of the buffer C library.
@@ -29,7 +29,7 @@ if ispc
 	% If you are having problems compiling the buffer, you can try to tweak
 	% the variables 'extra_cflags' and 'ldflags' specific to your compiler,
 	% or you can add your own compiler flags.
-	
+
 	extra_cflags = '-I../pthreads-win32/include';
 	suffix = 'obj';
 

@@ -9,15 +9,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>       /* for strerror */
-#include "buffer.h"
 
-/* these are for debugging */
-pthread_mutex_t mutexappendcount = PTHREAD_MUTEX_INITIALIZER;
-int appendcount = 0;
-pthread_mutex_t mutexthreadcount = PTHREAD_MUTEX_INITIALIZER;
-int threadcount = 0;
-pthread_mutex_t mutexsocketcount = PTHREAD_MUTEX_INITIALIZER;
-int socketcount = 0;
+#include "buffer.h"
+#include "extern.h"
 
 unsigned int bufread(int s, void *buf, unsigned int numel) {
 		unsigned int numcall = 0, numthis = 0, numread = 0, verbose = 0;

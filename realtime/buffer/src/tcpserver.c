@@ -16,15 +16,28 @@
 #include <errno.h>
 
 #include "buffer.h"
+#include "extern.h"
 
 #define ACCEPTSLEEP 1000
 
-/* extern int errno; */
+typedef struct {
+        int fd;
+} threadlocal_t;
+
+void cleanup_tcpserver(void *arg) {
+        threadlocal_t *threadlocal;
+        threadlocal = (threadlocal_t *)arg;
+        if (threadlocal && threadlocal->fd>0) {
+                close(threadlocal->fd);
+                threadlocal->fd = -1;
+        }
+
+        pthread_mutex_lock(&mutexstatus);
+        tcpserverStatus = 0;
+        pthread_mutex_unlock(&mutexstatus);
+}
 
 /* pthread_attr_t attr; */ /* this one would be passed to the thread */
-
-extern pthread_mutex_t mutexthreadcount;
-extern int threadcount;
 
 /***********************************************************************
  * this thread listens to incoming TCP connections
@@ -32,6 +45,7 @@ extern int threadcount;
  ***********************************************************************/
 void *tcpserver(void *arg) {
     int verbose = 0;
+	host_t *host;
 
 	/* these variables are for the socket */
 	struct sockaddr_in sa;
@@ -50,18 +64,30 @@ void *tcpserver(void *arg) {
 	int rc;
 	pthread_t tid;
 
+    threadlocal_t threadlocal;
+    threadlocal.fd = -1;
+
 	/* this determines the port on which the server will listen */
-	host_t *host = (host_t *)arg;
 	if (!arg)
 		exit(1);
+    else
+       host = (host_t *)arg;
 
 	if (verbose>0) fprintf(stderr, "tcpserver: host.name =  %s\n", host->name);
 	if (verbose>0) fprintf(stderr, "tcpserver: host.port =  %d\n", host->port);
 
-	/* the thread is allowed to be canceled at almost any moment */
-	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldcancelstate);
-	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &oldcanceltype);
-	pthread_cleanup_push(cleanup_socket, (void *)&s);
+    pthread_cleanup_push(cleanup_tcpserver, &threadlocal);
+
+    /* the status contains the thread id when running, or zero when not running */
+    pthread_mutex_lock(&mutexstatus);
+    if (tcpserverStatus==0) {
+            tcpserverStatus = 1;
+            pthread_mutex_unlock(&mutexstatus);
+    }
+    else {
+            pthread_mutex_unlock(&mutexstatus);
+            goto cleanup;
+    }
 
 #ifdef WIN32
  	if(WSAStartup(MAKEWORD(1, 1), &wsa))
@@ -75,6 +101,9 @@ void *tcpserver(void *arg) {
 		perror("tcpserver socket");
 		goto cleanup;
 	}
+
+    /* this will be closed at cleanup */
+    threadlocal.fd = s;
 
 	/* place the socket in non-blocking mode, required to do thread cancelation */
 #ifdef WIN32
@@ -230,12 +259,8 @@ void *tcpserver(void *arg) {
 	}
 
 cleanup:
-	/* from now on it is safe to cancel the thread */
-	pthread_setcancelstate(oldcancelstate, NULL);
-	pthread_setcanceltype(oldcanceltype, NULL);
-
-	pthread_cleanup_pop(1);  /* socket */
-	pthread_exit(NULL);
+    printf("");
+	pthread_cleanup_pop(1);
 	return NULL;
 }
 

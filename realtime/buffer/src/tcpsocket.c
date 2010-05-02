@@ -10,7 +10,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+
 #include "buffer.h"
+#include "extern.h"
 
 #ifdef ENABLE_POLLING
   #include <poll.h>
@@ -18,16 +20,33 @@
 
 #define THREADSLEEP 1000000  /* in microseconds */
 #define POLLSLEEP   100      /* in microseconds */
-
 #define MERGE_THRESHOLD      4096    /* TODO: optimize this value? Maybe look at MTU size */
-
-
 #define DIE_BAD_MALLOC(ptr)   if ((ptr)==NULL) { fprintf(stderr,"Out of memory in line %d",__LINE__); exit(1); }
 
-extern pthread_mutex_t mutexsocketcount;
-extern int socketcount;
-extern pthread_mutex_t mutexthreadcount;
-extern int threadcount;
+typedef struct {
+        void *message;
+        int fd;
+} threadlocal_t;
+
+void cleanup_tcpsocket(void *arg) {
+        threadlocal_t *threadlocal;
+        threadlocal = (threadlocal_t *)arg;
+        if (threadlocal && threadlocal->message) {
+                FREE(threadlocal->message);
+        }
+        if (threadlocal && threadlocal->fd>0) {
+                close(threadlocal->fd);
+                threadlocal->fd = -1;
+        }
+
+        pthread_mutex_lock(&mutexsocketcount);
+        socketcount--;
+        pthread_mutex_unlock(&mutexsocketcount);
+
+        pthread_mutex_lock(&mutexthreadcount);
+        threadcount--;
+        pthread_mutex_unlock(&mutexthreadcount);
+}
 
 /* this function deals with the incoming client request */
 void *tcpsocket(void *arg) {
@@ -39,24 +58,26 @@ void *tcpsocket(void *arg) {
 	struct pollfd fds;
 #endif
 
-	// these are used for communication over the TCP socket
+	/* these are used for communication over the TCP socket */
 	int client = 0;
 	message_t *request = NULL, *response = NULL;
 
+    threadlocal_t threadlocal;
+    threadlocal.message = NULL;
+    threadlocal.fd = -1;
+
 	/* the connection to the client has been made by the server */
 	client = (int)arg;
+
+    /* this will be closed at cleanup */
+    threadlocal.fd = client;
+
+    pthread_cleanup_push(cleanup_tcpsocket, &threadlocal);
 
     /* this is for debugging */
     pthread_mutex_lock(&mutexsocketcount);
     socketcount++;
     pthread_mutex_unlock(&mutexsocketcount);
-
-	/* this is to prevent closing the thread at an unwanted moment and memory from leaking */
-	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldcancelstate);
-	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &oldcanceltype);
-	pthread_cleanup_push(cleanup_message, &request);
-	pthread_cleanup_push(cleanup_message, &response)
-	pthread_cleanup_push(cleanup_socket, &client);
 
     if (verbose>1) fprintf(stderr, "tcpsocket: client = %d, socketcount = %d, threadcount = %d\n", client, socketcount, threadcount);
 
@@ -85,13 +106,13 @@ void *tcpsocket(void *arg) {
 			}
 
 			if (fds.revents & POLLHUP)
-				goto cleanup;				// the connection has been closed
+				goto cleanup;				/* the connection has been closed */
 			else if (fds.revents & POLLERR)
-				goto cleanup;				// the connection has been closed
+				goto cleanup;				/* the connection has been closed */
 			else if (fds.revents & POLLIN)
-				break;						// data is available, process the message
+				break;						/* data is available, process the message */
 			else
-				usleep(POLLSLEEP);			// wait for data or closed connection
+				usleep(POLLSLEEP);			/* wait for data or closed connection */
 		}
 #endif
 
@@ -165,17 +186,13 @@ void *tcpsocket(void *arg) {
 	} /* while (1) */
 
 cleanup:
+    printf(""); /* otherwise the pthread_cleanup_pop won't compile */
+
 	if (response!=NULL) 
 		cleanup_message(&response);
-	response = NULL;	// SK: prevent double free in following pthread_cleanup_pop
+	response = NULL;	/* SK: prevent double free in following pthread_cleanup_pop */
 
-	/* from now on it is safe to cancel the thread */
-	pthread_setcancelstate(oldcancelstate, NULL);
-	pthread_setcanceltype(oldcanceltype, NULL);
-
-	pthread_cleanup_pop(1); // request
-	pthread_cleanup_pop(1); // response
-	pthread_cleanup_pop(1); // socket
+	pthread_cleanup_pop(1);
 
     /* this is for debugging */
     pthread_mutex_lock(&mutexsocketcount);
