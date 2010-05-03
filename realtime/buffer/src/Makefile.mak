@@ -26,7 +26,7 @@ LIBFLAGS = /MACHINE:X86
 
 all: libbuffer.lib
 
-libbuffer.lib: tcpserver.obj tcpsocket.obj tcprequest.obj clientrequest.obj dmarequest.obj cleanup.obj util.obj printstruct.obj swapbytes.obj property.obj gettimeofday.obj
+libbuffer.lib: tcpserver.obj tcpsocket.obj tcprequest.obj clientrequest.obj dmarequest.obj cleanup.obj util.obj printstruct.obj swapbytes.obj property.obj gettimeofday.obj extern.obj
 	lib $(LIBFLAGS) /OUT:libbuffer.lib $**
 
 gettimeofday.obj: win32/gettimeofday.c

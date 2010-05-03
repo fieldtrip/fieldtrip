@@ -33,6 +33,8 @@
 #define EPOCHFILETIME (116444736000000000LL)
 #endif
 
+#include "gettimeofday.h"
+
 /*!
     \brief A Windows gettimeofday implementation.
  */

@@ -4,11 +4,10 @@
 
 BCCDIR = C:/BCC55
 
-CC = BCC32.EXE
-LD = ILINK32.EXE
+CC = $(BCCDIR)/BIN/BCC32.EXE
 
 INCPATH	 = -I../src -I../pthreads-win32/include -I$(BCCDIR)/INCLUDE
-LIBS 	 = "../src/libbuffer.lib" "../pthreads-win32/lib/pthreadVC2_Borland.lib" -lm -lpthreadVC2 /ap /Tpe 
+LIBS 	 = "../src/libbuffer.lib" "../pthreads-win32/lib/pthreadVC2_bcc55.lib" -lm -lpthreadVC2 /ap /Tpe 
 CFLAGS	 = $(INCPATH) 
 
 ##############################################################################

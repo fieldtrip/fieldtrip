@@ -204,6 +204,10 @@
 				RelativePath=".\util.c"
 				>
 			</File>
+			<File
+				RelativePath=".\extern.c"
+				>
+			</File>			
 		</Filter>
 	</Files>
 	<Globals>
