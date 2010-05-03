@@ -99,6 +99,10 @@ classdef blogreg < classifier
            end      
            p.prior = obj.prior;
          end
+         
+         if ~isempty(obj.mask)
+           X = X(:,find(obj.mask(:)));
+         end
            
          if isempty(obj.degenerate)
            obj.degenerate = size(X,1) < size(X,2);
@@ -204,6 +208,10 @@ classdef blogreg < classifier
        
        function post = map(obj,X)       
          
+         if ~isempty(obj.mask)
+           X = X(:,find(obj.mask(:)));
+         end
+         
          X = [X ones(size(X,1),1)];
          
          G = obj.params.Gauss;
@@ -301,6 +309,17 @@ classdef blogreg < classifier
          m{3} = varprior;
          m{4} = meanbeta;
          m{5} = varbeta; 
+         
+         if ~isempty(obj.mask)
+
+           msk = obj.mask(:) ~= 0;
+           mm = nan(obj.indims);
+           for j=1:5
+             mm(msk) = m{j};
+             m{j} = mm;
+           end
+           
+         end
          
          desc = { ...
            'importance values (posterior  - prior variance of auxiliary variables)' ...
