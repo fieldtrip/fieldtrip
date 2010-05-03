@@ -10,11 +10,10 @@
  */
 
 #include <math.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "buffer.h"
+#include <pthread.h>
 
 #define FREQ       1
 #define PI         3.1415926
