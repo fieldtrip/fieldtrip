@@ -169,6 +169,15 @@ if issource && isvolume
   issource = false;
 end
 
+if issource || isvolume
+  % these don't contain a dimord but in the frequency domain case they could 
+  % contain a .frequency field rather than a .freq field
+  if isfield(data, 'frequency'), 
+    data.freq = data.frequency;
+    data      = rmfield(data, 'frequency');
+  end
+end
+
 if ~isempty(dtype)
   if ~isa(dtype, 'cell')
     dtype = {dtype};

@@ -65,7 +65,7 @@ elseif strcmp(current, 'old') && strcmp(type, 'new'),
     if ~isempty(ix),
       output = rmfield(output, fnames{k});
     end
-    ix = strmatch(fnames{k}, renamefields(:,1));
+    ix = strmatch(fnames{k}, renamefields(:,1), 'exact');
     if ~isempty(ix),
       output = setfield(output, renamefields{ix,2}, ...
                         getfield(output, renamefields{ix,1}));
