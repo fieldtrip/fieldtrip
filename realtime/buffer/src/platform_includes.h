@@ -17,6 +17,20 @@
 	#include <stdint.h>
 
 	#define closesocket(s) (close(s))
+	
+#elif defined (PLATFORM_WIN64)
+
+#if defined (COMPILER_MSVC)
+	#include <winsock2.h>						/* for timeval */
+	#include "win32/gettimeofday.h"
+	#include "win32/stdint.h"
+
+	#define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
+	#define usleep(x)    (Sleep((x)/1000))
+	#define strcasecmp(a,b) (strcmpi(a,b))
+#else
+	#error "Only Microsoft Visual C is supported on Win64 so far"
+#endif
 
 #elif defined (PLATFORM_WIN32)
 /* there are various compiler options for windows */

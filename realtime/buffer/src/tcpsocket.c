@@ -6,12 +6,12 @@
  *
  */
 
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
 #include "buffer.h"
+#include <pthread.h>
 #include "extern.h"
 
 #ifdef ENABLE_POLLING
@@ -35,7 +35,7 @@ void cleanup_tcpsocket(void *arg) {
                 FREE(threadlocal->message);
         }
         if (threadlocal && threadlocal->fd>0) {
-                close(threadlocal->fd);
+                closesocket(threadlocal->fd);
                 threadlocal->fd = -1;
         }
 

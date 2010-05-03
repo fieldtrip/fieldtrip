@@ -6,7 +6,6 @@
  *
  */
 
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -16,6 +15,7 @@
 #include <errno.h>
 
 #include "buffer.h"
+#include <pthread.h>
 #include "extern.h"
 
 #define ACCEPTSLEEP 1000

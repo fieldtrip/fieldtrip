@@ -7,14 +7,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
 #include "buffer.h"
 
 /*******************************************************************************
  * this function is called by the client
  * it takes care that the request is processed by the buffer
  *******************************************************************************/
-int clientrequest(int server, message_t *request, message_t **response_ptr) {
+int clientrequest(int server, const message_t *request, message_t **response_ptr) {
     int verbose = 0;
 
 	if (verbose>0) fprintf(stderr, "clientrequest: server = %d\n", server);

@@ -8,8 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
 #include "buffer.h"
+#include <pthread.h>
 
 // FIXME should these be static?
 static header_t   *header   = NULL;

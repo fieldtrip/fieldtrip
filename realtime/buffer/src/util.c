@@ -5,12 +5,12 @@
  *
  */
 
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>       /* for strerror */
 
 #include "buffer.h"
+#include <pthread.h>
 #include "extern.h"
 
 unsigned int bufread(int s, void *buf, unsigned int numel) {

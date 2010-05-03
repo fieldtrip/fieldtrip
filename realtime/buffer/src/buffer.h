@@ -57,6 +57,7 @@ extern "C" {
 #endif
 
 /* declaration of "public" buffer API functions */
+/* SK: where are these, and what are they for ? */
 int read_header( const char *hostname, int port,           void **ppw);
 int read_data(   const char *hostname, int port, int *pnw, void **ppw);
 int read_event(  const char *hostname, int port, int *pnw, void **ppw);
@@ -103,7 +104,7 @@ int close_connection(int);
 unsigned int append(void **, unsigned int, void *, unsigned int);
 unsigned int bufread(int, void *, unsigned int);
 unsigned int bufwrite(int, const void *, unsigned int);
-int clientrequest(int, message_t *, message_t**);
+int clientrequest(int, const message_t *, message_t**);
 int dmarequest(const message_t *, message_t**);
 int tcprequest(int, const message_t *, message_t**);
 int find_property(property_t *);

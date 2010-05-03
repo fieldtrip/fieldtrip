@@ -108,55 +108,54 @@ int rda_aux_prep_start(const headerdef_t *hdr, rda_buffer_item_t *item) {
 
 void rda_aux_convert_to_float(UINT32_T N, void *dest, UINT32_T data_type, const void *src) {
 	UINT32_T n;
-	float *d;
+	float *d = (float *) dest;
 	switch(data_type) {
 		case DATATYPE_CHAR:
 		case DATATYPE_UINT8:
 			{
-				const UINT8_T *s = src;
+				const UINT8_T *s = (const UINT8_T *) src;
 				for (n=0;n<N;n++) d[n] = (float) s[n];
 			}
 			break;
 		case DATATYPE_UINT16:
 			{
-				const UINT16_T *s = src;
+				const UINT16_T *s = (const UINT16_T *) src;
 				for (n=0;n<N;n++) d[n] = (float) s[n];
 			}
 			break;
 		case DATATYPE_UINT32:
 			{
-				const UINT32_T *s = src;
+				const UINT32_T *s = (const UINT32_T *) src;
 				for (n=0;n<N;n++) d[n] = (float) s[n];
 			}
 			break;
 		case DATATYPE_UINT64:
 			{
-				const UINT64_T *s = src;
+				const UINT64_T *s = (const UINT64_T *) src;
 				for (n=0;n<N;n++) d[n] = (float) s[n];
 			}
 			break;
 		case DATATYPE_INT8:
 			{
-				const INT8_T *s = src;
+				const INT8_T *s = (const INT8_T *) src;
 				for (n=0;n<N;n++) d[n] = (float) s[n];
 			}
 			break;
 		case DATATYPE_INT16:
 			{
-				const INT16_T *s = src;
+				const INT16_T *s = (const INT16_T *) src;
 				for (n=0;n<N;n++) d[n] = (float) s[n];
 			}
 			break;
 		case DATATYPE_INT32:
 			{
-				const INT32_T *s = src;
+				const INT32_T *s = (const INT32_T *) src;
 				for (n=0;n<N;n++) d[n] = (float) s[n];
 			}
 			break;
 		case DATATYPE_INT64:
 			{
-				const INT64_T *s = src;
-				/* this will end badly */
+				const INT64_T *s = (const INT64_T *) src;
 				for (n=0;n<N;n++) d[n] = (float) s[n];
 			}
 			break;
@@ -165,8 +164,7 @@ void rda_aux_convert_to_float(UINT32_T N, void *dest, UINT32_T data_type, const 
 			break;
 		case DATATYPE_FLOAT64:
 			{
-				const double *s = src;
-				/* this will end badly */
+				const double *s = (const double *) src;
 				for (n=0;n<N;n++) d[n] = (float) s[n];
 			}
 			break;
@@ -229,6 +227,7 @@ int rda_aux_get_float_data(int ft_buffer, unsigned int start, unsigned int end, 
 		/* convert the samples, note that (R+1) points to the first byte after the RDA data header
 		   and (ddef+1) points to the first byte after the FieldTrip data header */
 		rda_aux_convert_to_float(numTotal, (void *)(R+1), ddef->data_type, (void *)(ddef+1));
+		
 		/* done */
 		r = 0;
 	} else {
@@ -412,7 +411,9 @@ void *_rdaserver_thread(void *arg) {
 				}
 				/* Now the start item should have proper size/sizeAlloc/data fields */
 				
-				/* printf("Picked up FT header for first time!\n"); */
+				if (SC->verbosity > 4) {
+					printf("Picked up FT header for first time!\n"); 
+				}
 				
 				/* Add the start item to every client */
 				for (i=0;i<numClients;i++) {
@@ -458,7 +459,9 @@ void *_rdaserver_thread(void *arg) {
 					item = firstDataItem;
 				}
 				
-				/* printf("Trying to get data [%i ; %i]\n", lastNumSamples, ftHdr.nsamples); */
+				if (SC->verbosity > 5) {
+					printf("Trying to get data [%i ; %i]\n", lastNumSamples, ftHdr.nsamples); 
+				}
 				if (SC->use16bit) {
 					i = rda_aux_get_int16_data(SC->ft_buffer, lastNumSamples, ftHdr.nsamples-1, item);
 				} else {
@@ -484,7 +487,9 @@ void *_rdaserver_thread(void *arg) {
 				
 				for (i=0;i<numClients;i++) {
 					if (clients[i].item == NULL) {
-						/* printf("Adding new job for client %i\n", clients[i].sock); */
+						if (SC->verbosity>5) {
+							printf("Adding new job for client %i\n", clients[i].sock);
+						}
 						clients[i].item = item;
 						item->refCount++;
 					}
@@ -501,7 +506,7 @@ void *_rdaserver_thread(void *arg) {
 			SOCKET newSock;
 	
 			newSock = accept(SC->server_socket, (struct sockaddr *)&sa, &size_sa);
-			if (newSock==-1) {
+			if (newSock == INVALID_SOCKET) {
 				perror("rda_server_thread - accept");
 			} else {
 				if (SC->verbosity > 0) fprintf(stderr, "rdaserver_thread: opened connection to client (%i)\n",newSock);
@@ -591,7 +596,7 @@ void *_rdaserver_thread(void *arg) {
 		if (0) {
 			rda_buffer_item_t *item = firstDataItem;
 			while (item!=NULL) {
-				printf("Item at %lX  has refcount %i  and points at %lX\n", (long) (void *) item,  item->refCount, (long) (void *) item->next);
+				printf("Item at 0x%lX has refcount %i and points at 0x%lX\n", (long) (void *) item,  item->refCount, (long) (void *) item->next);
 				item = item->next;
 			}
 		}
@@ -638,7 +643,7 @@ void *_rdaserver_thread(void *arg) {
 /* see header file for documentation */
 rda_server_ctrl_t *rda_start_server(int ft_buffer, int use16bit, int port, int *errval) {
 	rda_server_ctrl_t *SC = NULL;
-	SOCKET s = -1;
+	SOCKET s = INVALID_SOCKET;
 	struct sockaddr_in sa;
 	unsigned long optval;
 	int interr = FT_ERR_SOCKET;  /* if things go wrong here, it's most often because of socket errors */
@@ -740,7 +745,7 @@ rda_server_ctrl_t *rda_start_server(int ft_buffer, int use16bit, int port, int *
 cleanup:
 	if (errval!=NULL) *errval = interr;
 	if (SC != NULL) free(SC);
-	if (s != -1) {
+	if (s != INVALID_SOCKET) {
 		#ifdef PLATFORM_WIN32
 		shutdown(s, SD_BOTH);
 		#else
