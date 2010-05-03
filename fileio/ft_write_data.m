@@ -138,6 +138,9 @@ switch dataformat
       packet.nsamples  = 0;
       packet.nevents   = 0;
       packet.data_type = find(strcmp(type, class(dat))) - 1; % zero-offset
+      if isfield(hdr,'blob')
+        packet.blob      = hdr.blob;
+      end
       
       % try to put_hdr and initialize if necessary
       try

@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
 	
 	timeBeginPeriod(1);
 	
-	pdg.setVerbosity(0);
+	pdg.setVerbosity(3);
 	
 	if (argc>=2) {
 		strncpy(hostname, argv[1], 256);

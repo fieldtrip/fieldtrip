@@ -7,9 +7,6 @@
 #include <PixelDataGrabber.h>
 #include <stdio.h>
 #include <math.h>
-
-#include <message.h>
-#include <buffer.h>
 #include <FolderWatcher.h>
 
 PixelDataGrabber::PixelDataGrabber() {
@@ -21,6 +18,7 @@ PixelDataGrabber::PixelDataGrabber() {
 	samplesWritten = 0;
 	readResolution = 0;
 	numSlices = 0;
+	TR = 0;
 	lastAction = Nothing;
 	protInfo = NULL;
 	fwActive = false;
@@ -104,171 +102,97 @@ int PixelDataGrabber::run(unsigned int ms) {
 
 	
 bool PixelDataGrabber::writeHeader() {
-	headerdef_t header_def;
-
-	message_t request;
-	messagedef_t request_def;
-	message_t *response = NULL;
+	FtBufferResponse resp;
+	UINT32_T nchans = numSlices*readResolution*phaseResolution;
+	float    fsamp  = 1.0e6 / (float) TR;
 	
 	headerWritten = false;
-			
-	header_def.nchans = (UINT32_T) numSlices*readResolution*phaseResolution;
-	header_def.nsamples = 0;
-	header_def.nevents = 0;
-	header_def.fsample = 0.5; /* TODO: is this always correct ? */
-	header_def.data_type = DATATYPE_INT16;
-	header_def.bufsize = protBuffer.size();
 	
-	request.def = &request_def;
-	request.buf = NULL;
-	request_def.version = VERSION;
-	request_def.command = PUT_HDR;
-	request_def.bufsize = append(&request.buf, 0, &header_def, sizeof(headerdef_t));
-	request_def.bufsize = append(&request.buf, request_def.bufsize, protBuffer.data(), protBuffer.size());
-	
-	// write the request, read the response
-	int result = tcprequest(ftbSocket, &request, &response);		
-	
-	if (result < 0) {
-		if (verbosity>0) fprintf(stderr, "Communication error when sending header to fieldtrip buffer\n");
-		lastAction = TransmissionError;
-	} else if (!response || !response->def) {
-		if (verbosity>0) fprintf(stderr, "PUT_HDR: unknown error in response\n");
-		lastAction = TransmissionError;
-	} else {
-		if (response->def->command!=PUT_OK) {
-			if (verbosity>0) fprintf(stderr, "PUT_HDR: Buffer returned an error (%d)\n", response->def->command);
-			lastAction = TransmissionError;
-		} else {
-			headerWritten = true;
-		}
-	}
-	
-	samplesWritten = 0;
-		
-	// cleanup_message(response); -- can't even call this in C++ 
-	if (response) {
-		if (response->def) free(response->def);
-		if (response->buf) free(response->buf);
-		free(response);
-	}
-	return (headerWritten == true);
-}
-	
-bool PixelDataGrabber::writePixelData() {
-	datadef_t data_def;
-	message_t request;
-	messagedef_t request_def;
-	message_t *response = NULL;
-
-	data_def.nchans = (UINT32_T) readResolution*phaseResolution*numSlices;
-	data_def.nsamples = 1;
-	data_def.data_type = DATATYPE_INT16; 
-	data_def.bufsize = sliceBuffer.size();
-	
-	// print_datadef(&data_def);
-	
-	request.def = &request_def;
-	request_def.version = VERSION;
-	request_def.command = PUT_DAT;
-	request.buf = NULL;
-	
-	request_def.bufsize = sizeof(data_def) + data_def.bufsize;
-	
-	char *reqbuf = (char *) malloc(request_def.bufsize);
-	if (reqbuf == NULL) {
+	if (!ftReq.prepPutHeader(nchans, DATATYPE_INT16, fsamp, protBuffer.size(), protBuffer.data())) {
 		lastAction = OutOfMemory;
 		return false;
 	}
 	
-	memcpy(reqbuf, &data_def, sizeof(data_def));
-	memcpy(reqbuf + sizeof(data_def), sliceBuffer.data(), data_def.bufsize);
+	// write the request, read the response
+	int result = tcprequest(ftbSocket, ftReq.out(), resp.in());		
 	
-	request.buf = reqbuf;
-	// print_request(request.def);
-
+	if (result < 0) {
+		if (verbosity>0) fprintf(stderr, "Communication error when sending header to fieldtrip buffer\n");
+		lastAction = TransmissionError;
+		return false;
+	}
+	
+	if (!resp.checkPut()) {
+		if (verbosity>0) fprintf(stderr, "PUT_HDR: error from buffer server\n");
+		lastAction = TransmissionError;
+		return false;
+	}
+	headerWritten = true;
+	samplesWritten = 0;
+	return true;
+}
+	
+bool PixelDataGrabber::writePixelData() {
+	FtBufferResponse resp;
+	UINT32_T nchans = numSlices*readResolution*phaseResolution;
+	
+	if (!ftReq.prepPutData(nchans, 1, DATATYPE_INT16, sliceBuffer.data())) {
+		if (verbosity > 0) fprintf(stderr, "Out of memory!\n");
+		lastAction = OutOfMemory;
+		return false;
+	}
+	
 	/* write the request, read the response */
 	DWORD t0 = timeGetTime();
-	int result = tcprequest(ftbSocket, &request, &response);
+	int result = tcprequest(ftbSocket, ftReq.out(), resp.in());
 	DWORD t1 = timeGetTime();	
 	if (verbosity>2) printf("Time lapsed while writing data: %li ms\n", t1-t0);
 	
-	lastAction = TransmissionError;
 	if (result < 0) {
 		if (verbosity>0) fprintf(stderr, "Communication error when sending pixel data to fieldtrip buffer\n");
-	} else if (!response || !response->def) {
-		if (verbosity>0) fprintf(stderr, "PUT_DAT: unknown error in response\n");
-	} else {
-		if (response->def->command!=PUT_OK) {
-			if (verbosity>0) fprintf(stderr, "PUT_DAT: Buffer returned an error (%d)\n", response->def->command);
-		} else {
-			samplesWritten++;
-			lastAction = PixelsTransmitted;
-		}
+		lastAction = TransmissionError;
+		return false;
 	}
-	// cleanup_message(response); -- can't even call this in C++ 
-	if (response) {
-		if (response->def) free(response->def);
-		if (response->buf) free(response->buf);
-		free(response);
+	if (!resp.checkPut()) {
+		if (verbosity>0) fprintf(stderr, "PUT_DAT: error from buffer server\n");
+		lastAction = TransmissionError;
+		return false;
 	}
-	free(reqbuf);
-	return lastAction == PixelsTransmitted;
+	samplesWritten++;
+	lastAction = PixelsTransmitted;
+	return true;
 }	
 	
 bool PixelDataGrabber::writeTimestampEvent(const struct timeval &tv) {
+	FtBufferResponse resp;
+	char ts[20];
 	DWORD t0, t1;
-	struct {
-		eventdef_t def;
-		char buf[40];
-	} event;
-		
-	message_t request;
-	messagedef_t request_def;
-	message_t *response = NULL;
-			
-	event.def.type_type = DATATYPE_CHAR;
-	event.def.type_numel = 8;
-	event.def.value_type = DATATYPE_CHAR;
-	event.def.value_numel = 11+1+6;
-	event.def.sample = samplesWritten - 1;
-	event.def.offset = 0;
-	event.def.duration = 0;
-	event.def.bufsize = event.def.type_numel + event.def.value_numel;
-	sprintf(event.buf, "unixtime%11li.%06li", tv.tv_sec, tv.tv_usec);
-			
-	request.def = &request_def;
-	request_def.version = VERSION;
-	request_def.command = PUT_EVT;
-	request_def.bufsize = sizeof(eventdef_t) + event.def.bufsize;
-	request.buf = &event;
+	
+	sprintf(ts, "%11li.%06li", tv.tv_sec, tv.tv_usec);
+	
+	if (!ftReq.prepPutEvent(samplesWritten-1, 0, 0, "unixtime", ts)) {
+		if (verbosity>0) fprintf(stderr, "Out of memory!\n");
+		lastAction = OutOfMemory;
+		return false;
+	}
 
 	t0 = timeGetTime();
-	int result = tcprequest(ftbSocket, &request, &response);
+	int result = tcprequest(ftbSocket, ftReq.out(), resp.in());
 	t1 = timeGetTime();
 	if (verbosity>2) printf("Time lapsed while writing event: %li ms\n", t1-t0);
 	
 	if (result < 0) {
-		if (verbosity>0) fprintf(stderr, "Communication error when sending event to fieldtrip buffer\n");
+		if (verbosity>0) fprintf(stderr, "Communication error when sending pixel data to fieldtrip buffer\n");
 		lastAction = TransmissionError;
-	} else if (!response || !response->def) {
-		fprintf(stderr, "PUT_EVT: unknown error in response\n");
+		return false;
+	}
+	if (!resp.checkPut()) {
+		if (verbosity>0) fprintf(stderr, "PUT_EVT: error from buffer server\n");
 		lastAction = TransmissionError;
-	} else {
-		if (response->def->command!=PUT_OK) {
-			fprintf(stderr, "PUT_EVT: Buffer returned an error (%d)\n", response->def->command);
-			lastAction = TransmissionError;
-		}
+		return false;
 	}
-	// cleanup_message(response); -- can't even call this in C++ 
-	if (response) {
-		if (response->def) free(response->def);
-		if (response->buf) free(response->buf);
-		free(response);
-	}
-	return (lastAction != TransmissionError);
+	return true;
 }
-
 
 bool PixelDataGrabber::sendFrameToBuffer(const struct timeval &tv) {
 	if (!headerWritten) {
@@ -278,7 +202,6 @@ bool PixelDataGrabber::sendFrameToBuffer(const struct timeval &tv) {
 	if (!writeTimestampEvent(tv)) return false;
 	return true;
 }
-
 
 void PixelDataGrabber::handleProtocol(const char *info, unsigned int sizeInBytes) {
 	const sap_item_t *item;
@@ -321,6 +244,14 @@ void PixelDataGrabber::handleProtocol(const char *info, unsigned int sizeInBytes
 		phaseResolution = 0;
 	}
 	if (verbosity>2) printf("Resolution: %i x %i x %i\n", readResolution, phaseResolution, numSlices);
+	
+	item = sap_search_deep(PI, "alTR");
+	if (item!=NULL && item->type == SAP_LONG) {
+		TR = ((long *) item->value)[0];
+		if (verbosity>2) printf("TR: %i microsec.\n", TR);
+	} else {
+		TR = 2000000;
+	}
 		
 	protInfo = PI;
 }

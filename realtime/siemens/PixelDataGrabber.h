@@ -14,6 +14,7 @@
 
 #include <siemensap.h>
 #include <SimpleStorage.h>
+#include <FtBuffer.h>
 
 class FolderWatcher;
 
@@ -199,12 +200,14 @@ class PixelDataGrabber {
 	unsigned int readResolution;	/**< Number of pixels in readout direction (X) */
 	unsigned int phaseResolution;	/**< Number of pixels in phase direction (Y) */
 	unsigned int numSlices;			/**< Number of slices */
+	unsigned int TR;                /**< Repetition time in microseconds */
 	double phaseFOV, readoutFOV;	/**< Size of the field of view in mm */
 	Action lastAction;				/**< Contains last action or error that occured */
 	
-	SimpleStorage pixBuffer;		/**< Simple buffer that contains pixel data as read from file (e.g., mosaic) */
+	SimpleStorage pixBuffer;	/**< Simple buffer that contains pixel data as read from file (e.g., mosaic) */
 	SimpleStorage sliceBuffer;	/**< Simple buffer that contains slice-shaped pixel data */
 	SimpleStorage protBuffer;	/**< Simple buffer that contains ASCII protocol information */
+	FtBufferRequest ftReq;		/**< For sending request to the buffer */
 };
 
 #endif

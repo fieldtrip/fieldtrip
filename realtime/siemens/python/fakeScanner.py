@@ -42,7 +42,7 @@ logFile = file(destdir + '-logging.txt','w')
 shutil.copy(srcdir + 'mrprot.txt', 'D:/watch/image/mrprot.txt')
 
 while 1:
-	time.sleep(0.2)
+	time.sleep(1.5)
 	T = time.time()
 	shutil.copy(srcdir + PixFN[idxSrc], '%s/Scan%04i.PixelData'%(destdir,idxDest))
 	info = '%16.4f  %04i  %s\n'%(T,idxDest,PixFN[idxSrc])

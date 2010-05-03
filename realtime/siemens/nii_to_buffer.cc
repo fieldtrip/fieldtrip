@@ -25,6 +25,7 @@ unsigned int dataSize;
 int nChans;
 int ftSocket;
 FtBufferRequest ftReq;
+int interval = 2000; // in milliseconds
 
 bool isRelative(const char *fn) {
 	while (*fn != 0) {
@@ -113,7 +114,7 @@ bool grabScan(int i) {
 bool writeHeader() {
 	FtBufferResponse resp;
 	
-	if (!ftReq.prepPutHeader(nChans, DATATYPE_INT16, 0.5, sizeof(commonHeader), &commonHeader)) {
+	if (!ftReq.prepPutHeader(nChans, DATATYPE_INT16, 1000.0 / (float) interval, sizeof(commonHeader), &commonHeader)) {
 		fprintf(stderr, "Out of memory!\n");
 		exit(1);
 	}
@@ -147,7 +148,6 @@ bool writeScan(int i, const struct timeval &tv) {
 int main(int argc, char *argv[]) {
 	char hostname[256];
 	int port;
-	int interval = 2000; // in milliseconds
 	struct timeval tvBefore, tvAfter;
 	
 	if (sizeof(nifti_1_header) != 348) {
@@ -163,6 +163,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 	
+	printf("Reading %s and checking listed files...\n", argv[1]);
 	int numFiles = readAndCheckScannerFile(argv[1]);
 	
 	if (numFiles == -1) {
