@@ -78,6 +78,7 @@ end
 if strcmp(cfg.computecritval,'yes')
   % also compute the critical values
   s.df      = df;
+  if all(df==df(1)), df = df(1); end
   if cfg.tail==-1
     s.critval = tinv(cfg.alpha,df);
   elseif  cfg.tail==0
