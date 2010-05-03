@@ -3,18 +3,19 @@ classdef rls < regressor
 %
 % Calculates regularised least squares regression in an online fashion,
 % that is, it minimises  E=(Y-X*beta) + L2*|beta|^2 given one row of X 
-% and Y at a time. Batch solution is  beta = (X'*X + L2)\Y of course, and
-% RLS works by rank-1 updates to the inverse of (X'*X + L2).
+% and Y at a time. Batch solution is  beta = inv(X'*X + L2)*X'*Y of course, and
+% RLS works by rank-1 updates to the inverse of (X'*X + L2) and similarly for
+% 'beta' itself.
 %
-% You can also set a forgetting factor 'lambda' (which is actually a 
-% keep-in-mind-factor), which down-weights old samples. This also downweights
-% the ridge parameter L2 over time (but that's fine if you have lots of data).
+% You can set a forgetting factor 'lambda' (actually a keep-in-mind-factor), 
+% which down-weights old samples. This also downweights the ridge parameter 
+% L2 over time (but that's fine if you have lots of data).
 %
 % Copyright (c) 2010, S.Klanke
 
   properties
 	% invH and beta are part of 'params'
-	% invH   = [];	% Inverse of regularised hessian   (X'*X
+	% invH   = [];	% Inverse of regularised hessian   (X'*X + L2*eye)
 	% beta   = [];
 	  
     L2     = 1e-6;
