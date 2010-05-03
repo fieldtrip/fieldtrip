@@ -1,4 +1,4 @@
-function [data] = fixdimord(data);
+function [data] = fixdimord(data, keepsourcedimord);
 
 % FIXDIMORD ensures consistency between the dimord string and the axes
 % that describe the data dimensions. The main purpose of this function
@@ -41,8 +41,10 @@ function [data] = fixdimord(data);
 %
 % $Id$
 
+if nargin<2, keepsourcedimord = 0; end
+
 if strcmp('volume', datatype(data)) || strcmp('source', datatype(data));
-  if isfield(data, 'dimord')
+  if isfield(data, 'dimord') && ~keepsourcedimord
     % data should not have a dimord (is not implemented yet, but some
     % functions add a dimord to these data which leads to unexpected behavior)
     warning(sprintf('unexpected dimord "%s", dimord is removed from data', data.dimord));

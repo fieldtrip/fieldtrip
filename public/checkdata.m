@@ -148,7 +148,7 @@ end % give feedback
 
 if isfreq || istimelock || iscomp || issource || isvolume
   % ensure consistency between the dimord string and the axes that describe the data dimensions
-  data = fixdimord(data);
+  data = fixdimord(data, strcmp(sourcerepresentation, 'new'));
 end
 
 if istimelock
@@ -170,7 +170,8 @@ if issource && isvolume
 end
 
 if issource || isvolume
-  % these don't contain a dimord but in the frequency domain case they could 
+  % these don't contain a dimord in the old representation
+  % but in the frequency domain case they could 
   % contain a .frequency field rather than a .freq field
   if isfield(data, 'frequency'), 
     data.freq = data.frequency;
