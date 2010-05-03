@@ -157,21 +157,25 @@ classdef searchlight < featureselector
       s = obj.params.spheres;
       v = obj.params.value;
       
-      if ~isempty(obj.mask)
-        midx = find(obj.mask(:));
-      end
+%       if ~isempty(obj.mask)
+%         midx = find(obj.mask(:));
+%       end
       
       m = zeros(obj.indims);
       n = zeros(obj.indims);
       for c=1:length(s)
         
-        if ~isempty(obj.mask)
-          m(midx(s{c})) = m(midx(s{c})) + v(c);
-          n(midx(s{c})) = n(midx(s{c})) + 1;
-        else
-          m(s{c}) = m(s{c}) + v(c);
-          n(s{c}) = n(s{c}) + 1;
-        end
+%         if ~isempty(obj.mask)
+%           m(midx(s{c})) = m(midx(s{c})) + v(c);
+%           n(midx(s{c})) = n(midx(s{c})) + 1;
+%         else
+%           m(s{c}) = m(s{c}) + v(c);
+%           n(s{c}) = n(s{c}) + 1;
+%         end
+        
+        m(s{c}) = m(s{c}) + v(c);
+        n(s{c}) = n(s{c}) + 1;
+        
       end
       
       m(n(:)~=0) = m(n(:)~=0) ./ n(n(:)~=0);
