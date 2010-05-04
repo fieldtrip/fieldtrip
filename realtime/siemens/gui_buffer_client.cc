@@ -151,7 +151,7 @@ bool readHeader() {
 		if (chunk==NULL) break;
 		
 		if (chunk->def.type == FT_CHUNK_NIFTI1 && chunk->def.size == sizeof(nifti_1_header)) {
-			nifti_1_header *NH = (nifti_1_header *) protBuffer.data();
+			nifti_1_header *NH = (nifti_1_header *) chunk->data;
 			if (!strcmp(NH->magic, "ni1") || !strcmp(NH->magic,"n+1")) {
 				printf("Got NIFTI-1 header!\n");
 				essProtInfo.readoutPixels  = NH->dim[1];
