@@ -88,7 +88,7 @@ if ~isfield(cfg, 'selectmode'),      cfg.selectmode = 'mark';         end
 if ~isfield(cfg, 'viewmode'),        cfg.viewmode = 'butterfly';      end % butterfly, vertical, component, settings
 if ~isfield(cfg, 'blocksize'),       cfg.blocksize = 1;               end % only for segmenting continuous data, i.e. one long trial
 if ~isfield(cfg, 'preproc'),         cfg.preproc = [];                end % see preproc for options
-if ~isfield(cfg, 'eventfile'),       cfg.eventfile = [];              end
+if ~isfield(cfg, 'event'),           cfg.event = [];                  end
 if ~isfield(cfg, 'selfun'),          cfg.selfun = 'browse_multiplotER'; end
 if ~isfield(cfg, 'selcfg'),          cfg.selcfg = [];                 end
 if ~isfield(cfg, 'colorgroups'),     cfg.colorgroups = 'sequential';  end
@@ -128,8 +128,8 @@ else
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
   
   % read the events
-  if ~isempty(cfg.eventfile)
-    event = ft_read_event(cfg.eventfile);
+  if ~isempty(cfg.event)
+    event = ft_read_event(cfg.dataset);
   else
     event = [];
   end
