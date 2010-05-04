@@ -706,19 +706,26 @@ switch headerformat
     hdr.nSamples    = orig.nsamples;
     hdr.nSamplesPre = 0; % since continuous
     hdr.nTrials     = 1; % since continuous
-    hdr.label       = cell(1,hdr.nChans);
-    if isempty(fakechannelwarning) || ~fakechannelwarning
-      % give this warning only once
-      warning('creating fake channel names');
-      fakechannelwarning = true;
-    end
-    hdr.label = cell(hdr.nChans,1);
-    if hdr.nChans < 2000  % it takes 3.6s to attach 140000 labels to fMRI data...
-      for i=1:hdr.nChans
-        hdr.label{i} = sprintf('%d', i);
-      end
-      % this should be a column vector
-      hdr.label = hdr.label(:);
+	if isfield(orig, 'nifti_1') 
+		hdr.nifti_1 = decode_nifti1(orig.nifti_1); 
+	end
+	if isfield(orig, 'siemensap') && exist('sap2matlab')==3 % only run this if MEX file is present
+		hdr.siemensap = sap2matlab(orig.siemensap); 
+	end
+	if isfield(orig, 'channel_names')
+		hdr.label = orig.channel_names;
+	else
+		if isempty(fakechannelwarning) || ~fakechannelwarning
+			% give this warning only once
+			warning('creating fake channel names');
+			fakechannelwarning = true;
+		end
+		hdr.label = cell(hdr.nChans,1);
+		if hdr.nChans < 2000 % don't do this for fMRI etc.
+			for i=1:hdr.nChans
+				hdr.label{i} = sprintf('%d', i);
+			end
+		end
     end
     % remember the original header details
     hdr.orig = orig;

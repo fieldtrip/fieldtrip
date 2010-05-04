@@ -35,20 +35,17 @@ hdr = read_header(cfg.headerfile);
 
 disp(hdr);
 
-if isfield(hdr.orig,'blob')
-  NH = nifti2matlab(hdr.orig.blob);
-  if ~isempty(NH)
-    width  = NH.dim(1)
-    height = NH.dim(2)
-    numSlices = NH.dim(3)
-  else 
-    SP = sap2matlab(hdr.orig.blob);
-    width = SP.sKSpace.lBaseResolution;
-    phaseFOV = SP.sSliceArray.asSlice{1}.dPhaseFOV;
-    readoutFOV = SP.sSliceArray.asSlice{1}.dReadoutFOV;
+if isfield(hdr,'nifti_1')
+	ddim = double(hdr.nifti_1.dim);
+    width  = ddim(1);
+    height = ddim(2);
+    numSlices = ddim(3);
+elseif isfield(hdr,'siemensap') && isstruct(hdr.siemensap)
+    width = siemensap.sKSpace.lBaseResolution;
+    phaseFOV = siemensap.sSliceArray.asSlice{1}.dPhaseFOV;
+    readoutFOV = siemensap.sSliceArray.asSlice{1}.dReadoutFOV;
     height = width * phaseFOV / readoutFOV;
-    numSlices = SP.sSliceArray.lSize;
-  end
+    numSlices = siemensap.sSliceArray.lSize;
 else
   warning('No protocol information found!')
   width = sqrt(hdr.nChans);
@@ -67,6 +64,11 @@ colormap(gray);
 
 blocksize  = 1;
 prevSample = 0;
+
+% simple smoothing kernel
+kern1d = [1 2 1];
+kern = convn(kern1d'*kern1d,reshape(kern1d,1,1,3))
+kern = kern/sum(kern(:));
 
 while true
   
@@ -106,6 +108,15 @@ while true
     
     % actually, you should reshape to 3D (remove the *)
     S = reshape(dat, [width  height*numSlices]);
+    
+    V = reshape(dat, [width  height numSlices]);
+    tic;
+    Vn = convn(V,kern);
+    toc
+    Vn = Vn(2:end-1,2:end-1,2:end-1);
+    size(Vn)
+    S = reshape(Vn, [width height*numSlices]);
+
     
     imagesc(S(:,:)',[0 2048]);
     
