@@ -307,6 +307,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
 	  /* remove sock=0 connection from host/port/socket list */
 	  remove_hps_item(0);
     }
+	else if (strcasecmp(argument, "status")==0) {
+		plhs[0] = mxCreateDoubleScalar(tcpserverStatus);
+	}
   }
   
   else if (strcasecmp(command, "get_hdr")==0) {
