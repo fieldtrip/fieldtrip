@@ -399,6 +399,10 @@ classdef blogreg < classifier
           prior = spalloc(nfeatures,nfeatures,nfeatures+1);
           prior(1:(nfeatures+1):numel(prior)) = 1;
           
+          if ~isempty(obj.mask)
+            prior = prior(find(obj.mask(:)),find(obj.mask(:)));
+          end
+          
         else
           
           if numel(obj.coupling)==1 && numel(obj.dims) > 1

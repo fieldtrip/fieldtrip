@@ -98,3 +98,5 @@
 %   again about giving back multiple moments
 % - mva.getmodel moet alle modellen terug kunnen geven voor alle mvmethods
 %   (compact true moet toch alle modellen aankunnen)
+% - one_against_* should pass input dimensions to inner method
+% - elasticlr for multinomial classes should be implemented
