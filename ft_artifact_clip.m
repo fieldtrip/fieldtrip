@@ -56,6 +56,7 @@ if ~isfield(cfg.artfctdef.clip,'channel'),  cfg.artfctdef.clip.channel  = 'all';
 if ~isfield(cfg.artfctdef.clip,'thresh'),   cfg.artfctdef.clip.thresh   = 0.010;           end;
 if ~isfield(cfg.artfctdef.clip,'pretim'),   cfg.artfctdef.clip.pretim   = 0.000;           end;
 if ~isfield(cfg.artfctdef.clip,'psttim'),   cfg.artfctdef.clip.psttim   = 0.000;           end;
+if ~isfield(cfg, 'headerformat'),           cfg.headerformat            = [];              end;
 
 % for backward compatibility
 if isfield(cfg.artfctdef.clip,'sgn')
@@ -71,7 +72,7 @@ if nargin == 1
   isfetch = 0;
   cfg = checkconfig(cfg, 'dataset2files', {'yes'});
   cfg = checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-  hdr = ft_read_header(cfg.headerfile);
+  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
 elseif nargin == 2
   isfetch = 1;
   cfg = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});

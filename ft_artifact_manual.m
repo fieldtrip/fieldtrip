@@ -76,6 +76,7 @@ if ~isfield(cfg.artfctdef.manual,'pretrialtime'),       cfg.artfctdef.manual.pre
 if ~isfield(cfg.artfctdef.manual,'posttrialtime'),      cfg.artfctdef.manual.posttrialtime       = 0;        end
 if ~isfield(cfg.artfctdef.manual,'timeaxrelative'),     cfg.artfctdef.manual.timeaxrelative      = 'yes';    end
 if ~isfield(cfg.artfctdef.manual,'maxnumberofchannels'),cfg.artfctdef.manual.maxnumberofchannels = 20;       end
+if ~isfield(cfg, 'headerformat'),                       cfg.headerformat                         = [];       end
 
 % for backward compatibility
 if isfield(cfg.artfctdef.manual,'sgn')
@@ -92,7 +93,7 @@ end
 fprintf('Reading raw data...');
 cfg = checkconfig(cfg, 'dataset2files', {'yes'});
 cfg = checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-hdr = ft_read_header(cfg.headerfile);
+hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
 cfg.artfctdef.manual.channel=ft_channelselection(cfg.artfctdef.manual.channel, hdr.label);
 cfg.artfctdef.manual.trl=cfg.trl;
 if(isempty(cfg.artfctdef.manual.channel))

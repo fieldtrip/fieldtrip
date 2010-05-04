@@ -89,6 +89,7 @@ fieldtripdefs
 % set default rejection parameters
 if ~isfield(cfg,'artfctdef'),                   cfg.artfctdef                    = [];       end
 if ~isfield(cfg.artfctdef,'zvalue'),            cfg.artfctdef.zvalue             = [];       end
+if ~isfield(cfg, 'headerformat'),               cfg.headerformat                 = [];       end
 
 % for backward compatibility
 if isfield(cfg.artfctdef.zvalue,'sgn')
@@ -118,7 +119,7 @@ if nargin > 1
 elseif nargin == 1
   % only cfg given
   isfetch = 0;
-  hdr = ft_read_header(cfg.headerfile);
+  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat); 
 end
 
 % set default cfg.continuous

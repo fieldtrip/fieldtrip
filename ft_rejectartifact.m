@@ -234,7 +234,7 @@ end
 
 % make header, needed only for sampling frequency
 if nargin ==1
-    hdr = ft_read_header(cfg.headerfile);
+    hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
 elseif nargin ==2
     hdr = fetch_header(data);
 end

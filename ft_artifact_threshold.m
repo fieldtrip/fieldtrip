@@ -60,8 +60,9 @@ fieldtripdefs
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 cfg = checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
 cfg = checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
-
-if ~isfield(cfg.artfctdef, 'threshold'), cfg.artfctdef.threshold = []; end
+if ~isfield(cfg, 'artfctdef'),          cfg.artfctdef            = [];  end
+if ~isfield(cfg.artfctdef,'threshold'), cfg.artfctdef.threshold  = [];  end
+if ~isfield(cfg, 'headerformat'),       cfg.headerformat         = [];  end
 
 % copy the specific configuration for this function out of the master cfg
 artfctdef = cfg.artfctdef.threshold;
@@ -92,7 +93,7 @@ if nargin == 1
   isfetch = 0;
   cfg = checkconfig(cfg, 'dataset2files', {'yes'});
   cfg = checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-  hdr = ft_read_header(cfg.headerfile);
+  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
 elseif nargin == 2
   isfetch = 1;
   cfg = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
