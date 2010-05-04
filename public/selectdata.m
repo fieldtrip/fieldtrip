@@ -62,6 +62,9 @@ for k = 1:length(data)
     %ensure it to have an offset
     data{k} = checkdata(data{k}, 'datatype', 'raw', 'hasoffset', 'yes');
   end
+  if strcmp(dtype{k}, 'source'),
+    data{k} = checkdata(data{k}, 'sourcerepresentation', 'new');
+  end
 end
 
 if any(~strmatch(dtype{1},dtype))
@@ -131,29 +134,39 @@ if length(data)>1 && ~israw,
     end
   end
    
-  if issource || isvolume,
-    param = parameterselection(param, data{1}); % FIXME check consistency across input data of presence of specific parameters
-  else
+  %if issource || isvolume,
+  %  param = parameterselection(param, data{1}); % FIXME check consistency across input data of presence of specific parameters
+  %else
     param = {param};
+  %end
+  if issource || isvolume
+    if numel(param)>1,
+      error('selectdata for source inputs works only for one parameter at a time');
+    end
+    dimord(:) = {getfield(data{1}, [param{1},'dimord'])};
   end
   dimtok                           = tokenize(dimord{1}, '_');
   dimtok(strmatch('chan', dimtok)) = {'label'}; % data.chan does not exist
-
+  
   dimmat      = zeros(length(dimtok), length(data));
   dimmat(:,1) = 1;
   for k = 1:length(dimtok)
-    if isempty(strfind(dimtok{k},'rpt')),
+    if isempty(strfind(dimtok{k},'rpt')) && isempty(strfind(dimtok{k},'{pos}')) && isempty(strfind(dimtok{k},'ori')),
       dimdat = getfield(data{1}, dimtok{k});
-    else
+    elseif ~isempty(strfind(dimtok{k},'{pos}')),
+      dimdat = getfield(data{1}, dimtok{k}(2:end-1)); 
+    elseif isempty(strfind(dimtok{k},'ori')),
       % dimtok is 'rpt' or 'rpttap'
-      dimdat = size(getsubfield(data{1}, param{1}),1);
+      dimdat = size(getfield(data{1}, param{1}),1);
     end
     for m = 2:length(data)
-      if isempty(strfind(dimtok{k},'rpt')),
+      if isempty(strfind(dimtok{k},'rpt')) && isempty(strfind(dimtok{k}, '{pos}')) && isempty(strfind(dimtok{k},'ori')),
         dimdat2 = getfield(data{m},dimtok{k});
-      else
+      elseif ~isempty(strfind(dimtok{k},'{pos}')),
+        dimdat2 = getfield(data{m},dimtok{k}(2:end-1));
+      elseif isempty(strfind(dimtok{k},'ori')),
         % dimtok is 'rpt' or 'rpttap'
-        dimdat2 = size(getsubfield(data{m}, param{1}),1);
+        dimdat2 = size(getfield(data{m}, param{1}),1);
       end
       try, dimmat(k,m) = all(dimdat(:)==dimdat2(:));            catch end;
       try, dimmat(k,m) = all(cellfun(@isequal,dimdat,dimdat2)); catch end;
@@ -170,23 +183,50 @@ if length(data)>1 && ~israw,
   elseif isempty(catdim) && (~isempty(strmatch('rpt',dimtok)) || ~isempty(strmatch('rpttap',dimtok)))
     %append observations
     catdim = 1;
+  elseif ~isempty(strfind(dimtok{catdim},'pos'))
+    dimtok{catdim} = 'pos';
   elseif isempty(catdim)
     error('don''t know how to concatenate the data');
   end
 
   % concatenate the data
+  % FIXME this works for source data, does this also work for volume data?
   for k = 1:length(param)
     tmp = cell(1,length(data));
     for m = 1:length(tmp)
-      tmp{m} = getsubfield(data{m},param{k});
+      tmp{m} = getfield(data{m},param{k});
     end
-    if catdim==0,
-      ndim    = length(size(tmp{1}));
-      data{1} = setsubfield(data{1}, param{k}, permute(cat(ndim+1,tmp{:}),[ndim+1 1:ndim]));
+    if ~iscell(tmp{1}),
+      % this is for the 'normal' case
+      if catdim==0,
+        ndim    = length(size(tmp{1}));
+        data{1} = setfield(data{1}, param{k}, permute(cat(ndim+1,tmp{:}),[ndim+1 1:ndim]));
+      else
+        data{1} = setfield(data{1}, param{k}, cat(catdim,tmp{:}));
+      end
     else
-      data{1} = setsubfield(data{1}, param{k}, cat(catdim,tmp{:}));
-    end
-  end
+      % this is for source data with the positions in a cell-array
+      npos = numel(tmp{1});
+      if catdim==0,
+        error('not implemented yet');
+      elseif catdim==1,
+        data{1}.(param{k}) = cat(1, tmp{:});
+      else
+        for kk = 1:npos
+          tmpsiz = size(tmp{1}{kk});
+          if ~all(tmpsiz==0)
+            for kkk = 1:numel(data)
+              tmp2{kkk} = tmp{kkk}{kk};
+            end          
+            data{1}.(param{k}){kk} = cat(catdim-1, tmp2{:});
+          else
+            %keep empty
+          end
+        end %for kk = 1:npos
+      end %if catdim==0
+    end %if ~iscell(tmp{1}) 
+    paramdimord{k} = [param{k},'dimord'];
+  end %for k = 1:numel(param)
   
   if catdim==0,
     %a dimension has been prepended
@@ -257,31 +297,39 @@ if length(data)>1 && ~israw,
   %if issource || isvolume,
   %  data{1}.dim(catdim) = max(size(tmp));
   %end
-
+  
   % sort concatenated data FIXME this is also ugly and depends on tmp
-  if sortflag && ~iscell(tmp),
+  % FIXME if functional data in cell-array no sorting takes place
+  if sortflag && ~iscell(tmp) && ~iscell(data{1}.(param{1})),
     [srt, ind] = sort(tmp, 2);
-    data{1} = setsubfield(data{1}, dimtok{catdim}, tmp(ind));
+    data{1} = setfield(data{1}, dimtok{catdim}, tmp(ind));
     for k = 1:length(param)
       tmp     = getsubfield(data{1}, param{k});
       tmp     = permute(tmp, [catdim setdiff(1:length(size(tmp)), catdim)]);
       tmp     = ipermute(tmp(ind,:,:,:,:), [catdim setdiff(1:length(size(tmp)), catdim)]);
-      data{1} = setsubfield(data{1}, param{k}, tmp);
+      data{1} = setfield(data{1}, param{k}, tmp);
     end
   elseif exist('tmp', 'var') && iscell(tmp)
     %in this case (ugly!) tmp is probably a cell-array containing functional data
   end
-  
   % remove unspecified parameters
-  rmparam = setdiff(parameterselection('all',data{1}),[param 'pos' 'inside' 'outside']);
+  if ~issource,
+    rmparam = setdiff(parameterselection('all',data{1}),[param 'pos' 'inside' 'outside']);
+  else
+    rmparam = setdiff(fieldnames(data{1}), [param(:)' paramdimord(:)' 'pos' 'inside' 'outside' 'dim' 'cfg' 'vol' 'cumtapcnt' 'orilabel']);
+  end
   for k = 1:length(rmparam)
-    data{1} = rmsubfield(data{1}, rmparam{k});
+    data{1} = rmfield(data{1}, rmparam{k});
   end
   
   % keep the first structure only
   data        = data{1};
   dimord      = dimord{1};
-  data.dimord = dimord;
+  if ~issource,
+    data.dimord = dimord;
+  else
+    data.([param{1},'dimord']) = dimord;
+  end
   if isfield(data, 'dim') & ~issource,
     %data.dim    = dim;
     data.dim = size(data.(param{1}));
