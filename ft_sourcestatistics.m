@@ -113,14 +113,7 @@ if strcmp(cfg.implementation, 'old'),
     % use the source-specific statistical subfunction
     stat = sourcestatistics_randcluster(cfg, varargin{:});
   else
-    [status,output] = system('whoami');
-    if isempty(strfind(output,'jan')),
-      % use the data-indepentend statistical wrapper function
-      % this will collect the data and subsequently call STATISTICS_XXX
-      [stat, cfg] = statistics_wrapper(cfg, varargin{:});
-    else
-      [stat, cfg] = statistics_wrapperJM(cfg, varargin{:});
-    end
+    [stat, cfg] = statistics_wrapper(cfg, varargin{:});
   end
   
   % add version information to the configuration
@@ -446,13 +439,13 @@ elseif strcmp(cfg.implementation, 'new')
   
   for i=1:length(statfield)
     tmp   = getsubfield(stat, statfield{i});
+    tmp2  = [];
     ntmp  = numel(tmp);
     if hasfreq, 
       tmpdim = [ntmp/(nfreq*ntime) nfreq ntime];
     else
       tmpdim = [ntmp/ntime ntime];
     end
-
     if isfield(varargin{1}, 'inside') && numel(tmp)==nfreq*ntime*length(varargin{1}.inside)
       % the statistic was only computed on voxels that are inside the brain
       % sort the inside and outside voxels back into their original place
@@ -587,5 +580,7 @@ else
     dat(:,k) = tmp(:);
   end
 end
+cfg.dim     = varargin{1}.dim;
+cfg.inside  = varargin{1}.inside; %FIXME take the intersection between all inputs
 cfg.dimord  = 'voxel';
-cfg.origdim = siz;
+cfg.origdim = [cfg.dim siz(2:end-1)];
