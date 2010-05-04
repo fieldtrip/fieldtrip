@@ -31,6 +31,51 @@
 #include "matrix.h"
 #include "buffer.h"
 
+#define SIZE_NIFTI_1   348
+
+ft_chunk_t *encodeChannelNames(const mxArray *L, int N) {
+	ft_chunk_t *chunk = NULL;
+	char *ptr;
+	int i,size=0,NL;
+	
+	if (!mxIsCell(L)) return NULL;
+	
+	NL = mxGetNumberOfElements(L);
+	if (NL>N) return NULL;
+	
+	for (i=0;i<NL;i++) {
+		int li = 0;
+		mxArray *S = mxGetCell(L, i);
+		if (S == NULL || !mxIsChar(S)) return NULL;
+		li = mxGetNumberOfElements(S);
+		size += li+1; /* add 1 for trailing 0 */
+	}
+	/* L contains less names than we've got channels - this is
+		for the 0's for the anonymous channels */
+	size += N-NL; 
+	
+	/* now we (over)allocate the chunk */
+	chunk = (ft_chunk_t *) mxMalloc(size + sizeof(ft_chunkdef_t));
+	
+	chunk->def.size = size;
+	chunk->def.type = FT_CHUNK_CHANNEL_NAMES;
+	
+	ptr = chunk->data;
+	
+	/* run through the cell array again */
+	for (i=0;i<NL;i++) {
+		mxArray *S = mxGetCell(L, i);
+		int n = mxGetNumberOfElements(S) + 1;
+		mxGetString(S, ptr, n);
+		ptr+=n;
+	}
+	for (i=NL;i<N;i++) {
+		*ptr++ = 0;
+	}
+	/* that's it - the receiver should free this thing using mxFree */
+	return chunk;
+}
+
 int buffer_puthdr(int server, mxArray * plhs[], const mxArray * prhs[])
 {
 	int fieldnumber;
@@ -40,13 +85,9 @@ int buffer_puthdr(int server, mxArray * plhs[], const mxArray * prhs[])
 	message_t     request;
 	messagedef_t  request_def;
 	message_t    *response = NULL;
-	header_t      header;
 	headerdef_t   header_def;
-  
-  /* allocate the header */
-	header.def = &header_def;
-	header.buf = NULL;
-	header_def.bufsize   = 0;
+	
+	ft_chunkdef_t chunk_def;
   
   /* allocate the request message */
 	request.def = &request_def;
@@ -99,21 +140,54 @@ int buffer_puthdr(int server, mxArray * plhs[], const mxArray * prhs[])
 		mexErrMsgTxt("invalid data type for 'data_type'");
 	header_def.data_type    = (UINT32_T)mxGetScalar(field) ;
 	
-	fieldnumber = mxGetFieldNumber(prhs[0], "blob");
+	/* construct a PUT_HDR request */
+	request_def.bufsize = append(&request.buf, request_def.bufsize, &header_def, sizeof(headerdef_t));
+	
+	/* append existing chunks to request.buf, set correct header_def.bufsize at the end */
+	fieldnumber = mxGetFieldNumber(prhs[0], "nifti_1");
 	if (fieldnumber>=0) {
 		field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
-		if (!mxIsUint8(field) || mxIsEmpty(field)) 
-			mexErrMsgTxt("invalid data type for 'blob'");
-		header_def.bufsize = mxGetNumberOfElements(field);
-		header.buf = mxGetData(field);
+		if (!mxIsUint8(field) || mxGetNumberOfElements(field)!=SIZE_NIFTI_1) {
+			mexWarnMsgTxt("invalid data type for field 'nifti_1' -- ignoring");
+		} else {
+			chunk_def.size = SIZE_NIFTI_1;
+			chunk_def.type = FT_CHUNK_NIFTI1;
+		
+			request_def.bufsize = append(&request.buf, request_def.bufsize, &chunk_def, sizeof(chunk_def));
+			request_def.bufsize = append(&request.buf, request_def.bufsize, mxGetData(field), chunk_def.size);
+		}
 	}
-  
-	/* construct a PUT_HDR request */
-	request_def.bufsize = append(&request.buf, request_def.bufsize, header.def, sizeof(headerdef_t));
-	request_def.bufsize = append(&request.buf, request_def.bufsize, header.buf, header_def.bufsize);
-  
-	/* the header structure is not needed any more, but everything's local */
-  
+	
+	fieldnumber = mxGetFieldNumber(prhs[0], "siemensap");
+	if (fieldnumber>=0) {
+		field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+		if (!mxIsUint8(field)) {
+			mexWarnMsgTxt("invalid data type for field 'siemensap' -- ignoring");
+		} else {
+			chunk_def.size = mxGetNumberOfElements(field);
+			chunk_def.type = FT_CHUNK_SIEMENS_AP;
+		
+			request_def.bufsize = append(&request.buf, request_def.bufsize, &chunk_def, sizeof(chunk_def));
+			request_def.bufsize = append(&request.buf, request_def.bufsize, mxGetData(field), chunk_def.size);
+		}
+	}
+	
+	fieldnumber = mxGetFieldNumber(prhs[0], "channel_names");
+	if (fieldnumber>=0) {
+		ft_chunk_t *chunk = NULL;
+		field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+		chunk = encodeChannelNames(field, header_def.nchans);
+		if (chunk == NULL) {
+			mexWarnMsgTxt("invalid data type for field 'channel_names' -- ignoring.");
+		} else {
+			request_def.bufsize = append(&request.buf, request_def.bufsize, &chunk, sizeof(ft_chunkdef_t) + chunk->def.size);
+			mxFree(chunk);
+		}
+	}	
+	
+	/* header->def->bufsize is the request->def->bufsize - sizeof(header->def) */
+	((headerdef_t *) request.buf)->bufsize = request_def.bufsize - sizeof(headerdef_t);
+	
 	/* write the request, read the response */
 	result = clientrequest(server, &request, &response);
   

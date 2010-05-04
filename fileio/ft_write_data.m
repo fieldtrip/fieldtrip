@@ -138,9 +138,31 @@ switch dataformat
       packet.nsamples  = 0;
       packet.nevents   = 0;
       packet.data_type = find(strcmp(type, class(dat))) - 1; % zero-offset
-      if isfield(hdr,'blob')
-        packet.blob      = hdr.blob;
+      if isfield(hdr,'label') && iscell(hdr.label)
+		packet.channel_names = hdr.label;
       end
+      if isfield(hdr,'siemensap')
+        if isa(hdr.siemensap, 'uint8')
+		  packet.siemensap = hdr.siemensap;
+        else
+		  try
+		    packet.siemensap = matlab2sap(hdr.siemensap);
+		  catch
+		    warning 'Ignoring field "siemensap"';
+		  end	
+		end
+	  end
+	  if isfield(hdr,'nifti_1')
+	    if isa(hdr.nifti_1, 'uint8')
+		  packet.nifti_1 = hdr.nifti_1;
+		else
+          try
+            packet.nifti_1 = decode_nifti1(hdr.nifti_1);
+		  catch
+		    warning 'Ignoring field "nifti_1"';
+          end
+		end
+      end		
       
       % try to put_hdr and initialize if necessary
       try

@@ -33,7 +33,7 @@ hdr.nSamples           = 0;
 hdr.nSamplesPre        = 0;
 hdr.nTrials            = 1;                           
 hdr.label              = [];
-hdr.blob               = AsciiProtocol;
+hdr.siemensap          = AsciiProtocol;
 
 endsample = 0;
 stopwatch = tic;
@@ -58,13 +58,13 @@ while true
 
 	if endsample==1
     % flush the file, write the header and subsequently write the data segment
-    write_data(cfg.target.datafile, pix, 'header', hdr, 'dataformat', cfg.target.dataformat, 'append', false);
+    ft_write_data(cfg.target.datafile, pix, 'header', hdr, 'dataformat', cfg.target.dataformat, 'append', false);
   else
     % write the data segment
-    write_data(cfg.target.datafile, pix, 'append', true);
+    ft_write_data(cfg.target.datafile, pix, 'append', true);
   end 
   
-  write_event(cfg.target.datafile, ev);
+  ft_write_event(cfg.target.datafile, ev);
 	% TODO: send an event along each with scan
 
 	hdr.nSamples = endsample;
