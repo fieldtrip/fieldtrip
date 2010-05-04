@@ -147,31 +147,42 @@ bool readHeader() {
 	
 	printf("\nHeader information: %i samples / %i channels\n\n", header_def.nsamples, header_def.nchans);
 	
-	if (protBuffer.size() == sizeof(nifti_1_header)) {
-		nifti_1_header *NH = (nifti_1_header *) protBuffer.data();
-		if (!strcmp(NH->magic, "ni1") || !strcmp(NH->magic,"n+1")) {
-			essProtInfo.readoutPixels  = NH->dim[1];
-			essProtInfo.phasePixels    = NH->dim[2];
-			essProtInfo.numberOfSlices = NH->dim[3];
+	FtChunkIterator chunkIt(protBuffer);
+	while (1) {
+		ft_chunk_t *chunk = chunkIt.getNext();
+		
+		if (chunk==NULL) break;
+		
+		if (chunk->def.type == FT_CHUNK_NIFTI1 && chunk->def.size == sizeof(nifti_1_header)) {
+			nifti_1_header *NH = (nifti_1_header *) protBuffer.data();
+			if (!strcmp(NH->magic, "ni1") || !strcmp(NH->magic,"n+1")) {
+				printf("Got NIFTI-1 header!\n");
+				essProtInfo.readoutPixels  = NH->dim[1];
+				essProtInfo.phasePixels    = NH->dim[2];
+				essProtInfo.numberOfSlices = NH->dim[3];
+				printf("Resolution (px)...: %i x %i x %i\n", essProtInfo.readoutPixels, essProtInfo.phasePixels, essProtInfo.numberOfSlices);
+				printf("Voxel size (mm) ..: %f x %f x %f\n", NH->pixdim[1], NH->pixdim[2], NH->pixdim[2]);
+				return true;
+			}
+		} else if (chunk->def.type == FT_CHUNK_SIEMENS_AP) {
+			sap_item_t *PI = sap_parse(chunk->data, chunk->def.size);
+			printf("Got Siemens ASCII protocol information!\n");
+			if (sap_get_essentials(PI, &essProtInfo) != SAP_NUM_ESSENTIALS) {
+				printf("Not all information could be parsed :-(\n");
+			}
 			printf("Resolution (px)...: %i x %i x %i\n", essProtInfo.readoutPixels, essProtInfo.phasePixels, essProtInfo.numberOfSlices);
-			printf("Voxel size (mm) ..: %f x %f x %f\n", NH->pixdim[1], NH->pixdim[2], NH->pixdim[2]);
+			printf("FOV (mm)..........: %f x %f\n", essProtInfo.readoutFOV, essProtInfo.phaseFOV);
+			printf("Slice thickness...: %f\n", essProtInfo.sliceThickness);
+			printf("TR (microsec.)....: %li\n", essProtInfo.TR);
+			printf("#Contrasts........: %i\n", essProtInfo.numberOfContrasts);
+			sap_destroy(PI);
 			return true;
 		}
 	}
-	
-	sap_item_t *PI = sap_parse((char *) protBuffer.data(), protBuffer.size());
-	
-	if (sap_get_essentials(PI, &essProtInfo) != SAP_NUM_ESSENTIALS) {
-		printf("Not all information could be parsed :-(\n");
-	}
-	printf("Resolution (px)...: %i x %i x %i\n", essProtInfo.readoutPixels, essProtInfo.phasePixels, essProtInfo.numberOfSlices);
-	printf("FOV (mm)..........: %f x %f\n", essProtInfo.readoutFOV, essProtInfo.phaseFOV);
-	printf("Slice thickness...: %f\n", essProtInfo.sliceThickness);
-	printf("TR (microsec.)....: %li\n", essProtInfo.TR);
-	printf("#Contrasts........: %i\n", essProtInfo.numberOfContrasts);
-	sap_destroy(PI);
-	return true;
+	printf("No meta information (e.g. resolution) found.\n");
+	return false;
 }
+
 
 // this will get called repeatedly from the GUI loop, use this to poll for new data
 void idleCall(void *dummy) {

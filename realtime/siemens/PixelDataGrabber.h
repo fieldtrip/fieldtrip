@@ -15,6 +15,7 @@
 #include <siemensap.h>
 #include <SimpleStorage.h>
 #include <FtBuffer.h>
+#include <nifti1.h>
 
 class FolderWatcher;
 
@@ -203,6 +204,8 @@ class PixelDataGrabber {
 	unsigned int TR;                /**< Repetition time in microseconds */
 	double phaseFOV, readoutFOV;	/**< Size of the field of view in mm */
 	Action lastAction;				/**< Contains last action or error that occured */
+	
+	nifti_1_header nifti;           /**< Contains the NIFTI-1 header after parsing the protocol */
 	
 	SimpleStorage pixBuffer;	/**< Simple buffer that contains pixel data as read from file (e.g., mosaic) */
 	SimpleStorage sliceBuffer;	/**< Simple buffer that contains slice-shaped pixel data */

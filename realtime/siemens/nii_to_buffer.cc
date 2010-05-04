@@ -114,11 +114,14 @@ bool grabScan(int i) {
 bool writeHeader() {
 	FtBufferResponse resp;
 	
-	if (!ftReq.prepPutHeader(nChans, DATATYPE_INT16, 1000.0 / (float) interval, sizeof(commonHeader), &commonHeader)) {
+	if (ftReq.prepPutHeader(nChans, DATATYPE_INT16, 1000.0 / (float) interval) && 
+		ftReq.prepPutHeaderAddChunk(FT_CHUNK_NIFTI1, sizeof(commonHeader), &commonHeader)) {
+
+		tcprequest(ftSocket, ftReq.out(), resp.in());
+	} else {
 		fprintf(stderr, "Out of memory!\n");
 		exit(1);
 	}
-	tcprequest(ftSocket, ftReq.out(), resp.in());
 	return resp.checkPut();
 }
 

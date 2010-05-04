@@ -108,28 +108,32 @@ bool PixelDataGrabber::writeHeader() {
 	
 	headerWritten = false;
 	
-	if (!ftReq.prepPutHeader(nchans, DATATYPE_INT16, fsamp, protBuffer.size(), protBuffer.data())) {
+	if (ftReq.prepPutHeader(nchans, DATATYPE_INT16, fsamp) &&
+		ftReq.prepPutHeaderAddChunk(FT_CHUNK_SIEMENS_AP, protBuffer.size(), protBuffer.data()) &&
+		ftReq.prepPutHeaderAddChunk(FT_CHUNK_NIFTI1, sizeof(nifti), &nifti)) {
+		
+		// write the request, read the response
+		int result = tcprequest(ftbSocket, ftReq.out(), resp.in());		
+	
+		if (result < 0) {
+			if (verbosity>0) fprintf(stderr, "Communication error when sending header to fieldtrip buffer\n");
+			lastAction = TransmissionError;
+			return false;
+		}
+	
+		if (!resp.checkPut()) {
+			if (verbosity>0) fprintf(stderr, "PUT_HDR: error from buffer server\n");
+			lastAction = TransmissionError;
+			return false;
+		}
+		headerWritten = true;
+		samplesWritten = 0;
+		return true;
+	} else {
+		// one of the prepPutHeader* calls failed
 		lastAction = OutOfMemory;
 		return false;
 	}
-	
-	// write the request, read the response
-	int result = tcprequest(ftbSocket, ftReq.out(), resp.in());		
-	
-	if (result < 0) {
-		if (verbosity>0) fprintf(stderr, "Communication error when sending header to fieldtrip buffer\n");
-		lastAction = TransmissionError;
-		return false;
-	}
-	
-	if (!resp.checkPut()) {
-		if (verbosity>0) fprintf(stderr, "PUT_HDR: error from buffer server\n");
-		lastAction = TransmissionError;
-		return false;
-	}
-	headerWritten = true;
-	samplesWritten = 0;
-	return true;
 }
 	
 bool PixelDataGrabber::writePixelData() {
@@ -225,7 +229,7 @@ void PixelDataGrabber::handleProtocol(const char *info, unsigned int sizeInBytes
 		long slices = *((long *) item->value);
 		numSlices = (slices > 0) ? slices : 0;
 	}
-	
+		
 	item = sap_search_deep(PI, "sSliceArray.asSlice[0].dPhaseFOV");
 	if (item!=NULL && item->type == SAP_DOUBLE) {
 		phaseFOV = *((double *) item->value);
@@ -252,6 +256,82 @@ void PixelDataGrabber::handleProtocol(const char *info, unsigned int sizeInBytes
 	} else {
 		TR = 2000000;
 	}
+	
+	memset(&nifti, 0, sizeof(nifti));
+	nifti.sizeof_hdr = 348;
+	nifti.dim[0] = 3;
+	nifti.dim[1] = (short) readResolution;
+	nifti.dim[2] = (short) phaseResolution;
+	nifti.dim[3] = (short) numSlices;
+	nifti.datatype = DT_INT16;
+	nifti.bitpix = 16;
+	nifti.slice_start = 0;
+	nifti.scl_slope = 1.0f;
+	nifti.slice_end = (short) numSlices-1;
+	nifti.xyzt_units = NIFTI_UNITS_MM | NIFTI_UNITS_SEC;
+	nifti.slice_duration = (TR/numSlices)*1e-6f;	// in seconds
+	
+	nifti.pixdim[0] = 1.0f;		// TODO: this is qfac - check if this needs to be -1 
+	nifti.pixdim[1] = (float) (readoutFOV / readResolution);
+	nifti.pixdim[2] = (float) (phaseFOV / phaseResolution);
+	nifti.pixdim[4] = TR*1e-6f;	// repetition time in seconds 
+	
+	item = sap_search_deep(PI, "sSliceArray.asSlice[0].dThickness");
+	if (item!=NULL && item->type == SAP_DOUBLE) {
+		nifti.pixdim[3] = (float) *((double *) item->value);
+	}
+
+	long ucMode = 1;
+	item = sap_search_deep(PI, "sSliceArray.ucMode");
+	if (item!=NULL && item->type == SAP_LONG) {
+		ucMode = *((long *) item->value);
+	}
+	switch(ucMode) {
+		case 1:
+			nifti.slice_code = NIFTI_SLICE_SEQ_INC;
+			break;
+		case 2:
+			nifti.slice_code = NIFTI_SLICE_SEQ_DEC;
+			break;
+		case 4:
+			// in case of an odd number of slices, start at zero (ALT), 
+			// otherwise slice[1] (=second!) has been acquired first (ALT2)
+			nifti.slice_code = (numSlices & 1) ? NIFTI_SLICE_ALT_INC : NIFTI_SLICE_ALT_INC2;
+			break;
+	}
+	
+	float px = 0.0;
+	float py = 0.0;
+	float pz = 0.0;
+	item = sap_search_deep(PI, "sSliceArray.asSlice[0].sPosition.dSag");
+	if (item!=NULL && item->type == SAP_DOUBLE) {
+		px = (float) *((double *) item->value);
+	}	
+	item = sap_search_deep(PI, "sSliceArray.asSlice[0].sPosition.dCor");
+	if (item!=NULL && item->type == SAP_DOUBLE) {
+		py = (float) *((double *) item->value);
+	}	
+	item = sap_search_deep(PI, "sSliceArray.asSlice[0].sPosition.dTra");
+	if (item!=NULL && item->type == SAP_DOUBLE) {
+		pz = (float) *((double *) item->value);
+	}	
+	// TODO: squeeze out correct rotation from SAP info
+	nifti.qform_code = NIFTI_XFORM_SCANNER_ANAT;
+	nifti.qoffset_x = px;
+	nifti.qoffset_y = py;
+	nifti.qoffset_z = pz;
+	
+	nifti.sform_code = NIFTI_XFORM_SCANNER_ANAT;
+	nifti.srow_x[0] = 1.0;
+	nifti.srow_x[3] = px;
+	nifti.srow_y[1] = 1.0;
+	nifti.srow_y[3] = py;
+	nifti.srow_z[2] = 1.0;
+	nifti.srow_z[3] = pz;
+	
+	nifti.magic[0] = 'n';
+	nifti.magic[1] = 'i';
+	nifti.magic[2] = '1';
 		
 	protInfo = PI;
 }

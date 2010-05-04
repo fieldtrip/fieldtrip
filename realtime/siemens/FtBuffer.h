@@ -28,17 +28,15 @@ class FtBufferRequest {
 		m_msg.buf = NULL;		
 	}
 	
-	bool prepPutHeader(UINT32_T numChannels, UINT32_T dataType, float fsample, UINT32_T sizeOfBlob, const void *blob) {
+	bool prepPutHeader(UINT32_T numChannels, UINT32_T dataType, float fsample) {
 		// This is for safety: If a user ignores this function returning false,
 		// and just sends this request to the buffer server, we need to make sure
 		// no harm is done - so we sent a small invalid packet
 		m_def.command = GET_ERR; 
 		m_def.bufsize = 0;
-		
-		UINT32_T  totalSize = sizeOfBlob + sizeof(headerdef_t);
 		headerdef_t *hd;
 		
-		if (!m_buf.resize(totalSize)) return false;
+		if (!m_buf.resize(sizeof(headerdef_t))) return false;
 		m_msg.buf = m_buf.data();
 		hd = (headerdef_t *) m_buf.data();
 		hd->nchans    = numChannels;
@@ -46,13 +44,32 @@ class FtBufferRequest {
 		hd->nevents   = 0;
 		hd->data_type = dataType;
 		hd->fsample   = fsample;
-		hd->bufsize   = sizeOfBlob;
-		// hd+1 points to the next byte after the header_def
-		memcpy(hd+1, blob, sizeOfBlob);
+		hd->bufsize   = 0;
 		m_def.command = PUT_HDR;
-		m_def.bufsize = totalSize;
+		m_def.bufsize = sizeof(headerdef_t);
 		return true;
 	}	
+	
+	bool prepPutHeaderAddChunk(UINT32_T chunkType, UINT32_T chunkSize, const void *data) {
+		if (m_def.command != PUT_HDR) return false;
+	
+		UINT32_T oldSize = m_buf.size();
+		UINT32_T newSize = oldSize + sizeof(ft_chunkdef_t) + chunkSize;
+		
+		if (!m_buf.resize(newSize)) return false;
+		
+		m_def.bufsize = newSize;
+		m_msg.buf = m_buf.data();
+		
+		ft_chunk_t *chunk = (ft_chunk_t *) ((char *) m_msg.buf + oldSize);
+		chunk->def.type = chunkType;
+		chunk->def.size = chunkSize;
+		memcpy(chunk->data, data, chunkSize);
+		// increment headerdef->bufsize by total size of chunk
+		headerdef_t *hd = (headerdef_t *) m_msg.buf;
+		hd->bufsize += chunkSize + sizeof(ft_chunkdef_t);
+		return true;
+	}		
 
 	bool prepPutData(UINT32_T numChannels, UINT32_T numSamples, UINT32_T dataType, const void *data) {
 		// This is for safety: If a user ignores this function returning false,
@@ -241,6 +258,25 @@ class FtBufferResponse {
 	}
 	
 	message_t *m_response;
+};
+
+class FtChunkIterator {
+	public:
+	
+	FtChunkIterator(SimpleStorage& buf) : store(buf) {
+		pos = 0;
+	}
+	
+	ft_chunk_t *getNext() {
+		if (pos + sizeof(ft_chunkdef_t) > store.size()) return NULL;
+		ft_chunk_t *chunk = (ft_chunk_t * ) ((char *) store.data() + pos);
+		pos += sizeof(ft_chunkdef_t) + chunk->def.size;
+		return chunk;
+	}
+	
+	protected:
+	SimpleStorage &store;
+	int pos;
 };
 
 #endif

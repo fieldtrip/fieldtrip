@@ -561,7 +561,7 @@ void *_rdaserver_thread(void *arg) {
 			
 			len = recv(clients[i].sock, dummy, sizeof(dummy), 0);
 			
-			if (len>0) continue;
+			if (len>0) continue;	/* clients are not supposed to write, and if they do, we ignore it */
 			if (len<0) {
 				/* close this client */
 				if (SC->verbosity > 0) fprintf(stderr, "rdaserver_thread: lost connection to client (%i)\n", clients[i].sock); 
