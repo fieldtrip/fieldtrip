@@ -1,6 +1,6 @@
 function [source] = source2sparse(source);
 
-% SOURCE2SPARCE removes the grid locations outside the brain from the source 
+% SOURCE2SPARSE removes the grid locations outside the brain from the source 
 % reconstruction, thereby saving memory.
 %
 % This invalidates the fields that describe the grid, and also makes it
@@ -51,65 +51,100 @@ fprintf('total number of dipoles        : %d\n', length(inside)+length(outside))
 fprintf('number of dipoles inside  brain: %d\n', length(inside));
 fprintf('number of dipoles outside brain: %d\n', length(outside));
 
-% first do the non-trial fields
-[param]    = parameterselection('all', source);
-trlparam   = strmatch('trial', param);
-sel        = setdiff(1:length(param), trlparam);
-param      = param(sel);
-
-for j = 1:length(param)
-  dat    = getsubfield(source, param{j});
-  source = setsubfield(source, param{j}, dat(inside));
+% determine whether the source is old or new style
+fnames = fieldnames(source);
+if any(~cellfun('isempty', strfind(fnames, 'dimord'))),
+  stype = 'new';
+else
+  stype = 'old';
 end
 
-% then do the trial fields
-if isfield(source, 'trial'),
-  for j = 1:length(source.trial)
-    tmpsource     = source.trial(j);
-    tmpsource.dim = source.dim; % to fool parameterselection
-    tmpparam      = parameterselection('all', tmpsource);
-    for k = 1:length(tmpparam)
-      dat       = getsubfield(tmpsource, tmpparam{k});
-      tmpsource = setsubfield(tmpsource, tmpparam{k}, dat(inside));
-    end
-    tmpsource       = rmfield(tmpsource, 'dim');
-    source.trial(j) = tmpsource;
+if strcmp(stype, 'old'),
+  % original code
+  % first do the non-trial fields
+  [param]    = parameterselection('all', source);
+  trlparam   = strmatch('trial', param);
+  sel        = setdiff(1:length(param), trlparam);
+  param      = param(sel);
+  
+  for j = 1:length(param)
+    dat    = getsubfield(source, param{j});
+    source = setsubfield(source, param{j}, dat(inside));
   end
-elseif isfield(source, 'trialA'),
-  for j = 1:length(source.trialA)
-    tmpsource     = source.trialA(j);
-    tmpsource.dim = source.dim; % to fool parameterselection
-    tmpparam      = parameterselection('all', tmpsource);
-    for k = 1:length(tmpparam)
-      dat       = getsubfield(tmpsource, tmpparam{k});
-      tmpsource = setsubfield(tmpsource, tmpparam{k}, dat(inside));
+  
+  % then do the trial fields
+  if isfield(source, 'trial'),
+    for j = 1:length(source.trial)
+      tmpsource     = source.trial(j);
+      tmpsource.dim = source.dim; % to fool parameterselection
+      tmpparam      = parameterselection('all', tmpsource);
+      for k = 1:length(tmpparam)
+        dat       = getsubfield(tmpsource, tmpparam{k});
+        tmpsource = setsubfield(tmpsource, tmpparam{k}, dat(inside));
+      end
+      tmpsource       = rmfield(tmpsource, 'dim');
+      source.trial(j) = tmpsource;
     end
-    tmpsource        = rmfield(tmpsource, 'dim');
-    source.trialA(j) = tmpsource;
-  end
-elseif isfield(source, 'trialB'),
-  for j = 1:length(source.trialB)
-    tmpsource     = source.trialB(j);
-    tmpsource.dim = source.dim; % to fool parameterselection
-    tmpparam      = parameterselection('all', tmpsource);
-    for k = 1:length(tmpparam)
-      dat       = getsubfield(tmpsource, tmpparam{k});
-      tmpsource = setsubfield(tmpsource, tmpparam{k}, dat(inside));
+  elseif isfield(source, 'trialA'),
+    for j = 1:length(source.trialA)
+      tmpsource     = source.trialA(j);
+      tmpsource.dim = source.dim; % to fool parameterselection
+      tmpparam      = parameterselection('all', tmpsource);
+      for k = 1:length(tmpparam)
+        dat       = getsubfield(tmpsource, tmpparam{k});
+        tmpsource = setsubfield(tmpsource, tmpparam{k}, dat(inside));
+      end
+      tmpsource        = rmfield(tmpsource, 'dim');
+      source.trialA(j) = tmpsource;
     end
-    tmpsource        = rmfield(tmpsource, 'dim');
-    source.trialB(j) = tmpsource;
+  elseif isfield(source, 'trialB'),
+    for j = 1:length(source.trialB)
+      tmpsource     = source.trialB(j);
+      tmpsource.dim = source.dim; % to fool parameterselection
+      tmpparam      = parameterselection('all', tmpsource);
+      for k = 1:length(tmpparam)
+        dat       = getsubfield(tmpsource, tmpparam{k});
+        tmpsource = setsubfield(tmpsource, tmpparam{k}, dat(inside));
+      end
+      tmpsource        = rmfield(tmpsource, 'dim');
+      source.trialB(j) = tmpsource;
+    end
   end
-end
-
-% update the inside, outside and source position
-if isfield(source, 'inside')
-  source.inside  = 1:length(inside);
-end
-if isfield(source, 'outside')
-  source.outside = [];
-end
-if isfield(source, 'pos')
-  source.pos     = source.pos(inside,:);
+  
+  % update the inside, outside and source position
+  if isfield(source, 'inside')
+    source.inside  = [1:length(inside)]';
+  end
+  if isfield(source, 'outside')
+    source.outside = [];
+  end
+  if isfield(source, 'pos')
+    source.pos     = source.pos(inside,:);
+  end
+elseif strcmp(stype, 'new')
+  % new style conversion
+  nvox = numel(inside) + numel(outside);
+  for k = 1:numel(fnames)
+    tmpsiz = size(source.(fnames{k}));
+    if any(tmpsiz==nvox)
+      tmpsel = find(tmpsiz==nvox);
+      if tmpsel==1,
+        source.(fnames{k}) = source.(fnames{k})(inside,:,:,:,:);
+      elseif tmpsel==2,
+        source.(fnames{k}) = source.(fnames{k})(:,inside,:,:,:);
+      else
+        warning('not subselecting voxels, because location of pos-dimension is unexpected');
+      end
+    end
+  end 
+  
+  % update the inside and outside
+  if isfield(source, 'inside')
+    source.inside  = [1:length(inside)]';
+  end
+  if isfield(source, 'outside')
+    source.outside = [];
+  end
 end
   
 cfg = [];
