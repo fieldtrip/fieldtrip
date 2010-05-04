@@ -483,14 +483,16 @@ if issource || isvolume,
       data = rmfield(data, 'trial');
     end
   end
-
+  
   % ensure consistent dimensions of the source reconstructed data
   % reshape each of the source reconstructed parameters
   if issource && prod(data.dim)==size(data.pos,1)
     dim = [prod(data.dim) 1];
+  elseif issource && any(~cellfun('isempty',strfind(fieldnames(data), 'dimord')))
+    dim = [size(data.pos,1) 1]; %sparsely represented source structure new style
   elseif isfield(data, 'dim'),
     dim = [data.dim 1];
-  else
+  elseif isfield(data, 'dimord'),
     %HACK
     dimtok = tokenize(data.dimord, '_');
     for i=1:length(dimtok)
@@ -514,7 +516,7 @@ if issource || isvolume,
     end
     if numel(dim)==1, dim(1,2) = 1; end;
   end
-
+  
   % these fields should not be reshaped
   exclude = {'cfg' 'fwhm' 'leadfield' 'q' 'rough'};
   if ~strcmp(inside, 'logical')
@@ -614,7 +616,7 @@ if issource && ~isempty(sourcerepresentation)
   data = fixsource(data, 'type', sourcerepresentation);
 end
 
-if issource && ~isempty(haspow)
+if issource && ~strcmp(haspow, 'no')
  data = fixsource(data, 'type', sourcerepresentation, 'haspow', haspow);
 end 
 
