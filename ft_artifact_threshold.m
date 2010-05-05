@@ -60,9 +60,12 @@ fieldtripdefs
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 cfg = checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
 cfg = checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
+
+% set default rejection parameters for clip artifacts if necessary
 if ~isfield(cfg, 'artfctdef'),          cfg.artfctdef            = [];  end
 if ~isfield(cfg.artfctdef,'threshold'), cfg.artfctdef.threshold  = [];  end
 if ~isfield(cfg, 'headerformat'),       cfg.headerformat         = [];  end
+if ~isfield(cfg, 'dataformat'),         cfg.dataformat           = [];  end
 
 % copy the specific configuration for this function out of the master cfg
 artfctdef = cfg.artfctdef.threshold;
@@ -119,7 +122,7 @@ for trlop = 1:numtrl
   if isfetch
     dat = fetch_data(data,        'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
   else
-    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
+    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
   end
   dat = preproc(dat, channel, hdr.Fs, artfctdef, cfg.trl(trlop,3));
   % compute the min, max and range over all channels and samples

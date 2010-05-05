@@ -65,6 +65,7 @@ if ~isfield(cfg.artfctdef.ecg,'pretim'), cfg.artfctdef.ecg.pretim    = 0.05;    
 if ~isfield(cfg.artfctdef.ecg,'psttim'), cfg.artfctdef.ecg.psttim    = 0.3;           end
 if ~isfield(cfg.artfctdef.ecg,'mindist'), cfg.artfctdef.ecg.mindist  = 0.5;           end
 if ~isfield(cfg, 'headerformat'),         cfg.headerformat           = [];            end
+if ~isfield(cfg, 'dataformat'),           cfg.dataformat             = [];            end
 
 % for backward compatibility
 if isfield(cfg.artfctdef.ecg,'sgn')
@@ -121,7 +122,7 @@ end
 
 for j = 1:ntrl
   if nargin==1,
-    ecg{j} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
+    ecg{j} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
   end
   ecg{j} = preproc(ecg{j}, artfctdef.channel, hdr.Fs, artfctdef, [], fltpadding, fltpadding);
   ecg{j} = ecg{j}.^2;
@@ -221,7 +222,7 @@ if ~isempty(sgnind)
   for j = 1:ntrl
     fprintf('reading and preprocessing trial %d of %d\n', j, ntrl);
     if nargin==1,
-      dum = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
+      dum = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
       dat = dat + ft_preproc_baselinecorrect(dum);
       ntrlok = ntrlok + 1;
     elseif nargin==2,
