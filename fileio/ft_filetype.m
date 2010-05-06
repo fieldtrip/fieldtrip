@@ -199,7 +199,7 @@ elseif filetype_check_extension(filename, '.meg4') && filetype_check_header(file
   type = 'ctf_meg4';
   manufacturer = 'CTF';
   content = 'MEG/EEG';
-elseif filetype_check_extension(filename, '.mrk') && filetype_check_header(filename, 'PATH OF DATASET:')
+elseif strcmp(f, 'MarkerFile') && filetype_check_extension(filename, '.mrk') && filetype_check_header(filename, 'PATH OF DATASET:')
   type = 'ctf_mrk';
   manufacturer = 'CTF';
   content = 'marker file';
