@@ -92,7 +92,7 @@ cfg.dip = fixdipole(cfg.dip);
 Ndipoles = size(cfg.dip.pos,1);
 
 % prepare the volume conductor and the sensor array
-[vol, sens, cfg] = ft_prepare_headmodel(cfg, []);
+[vol, sens, cfg] = prepare_headmodel(cfg, []);
 
 if ~isfield(cfg, 'ntrials') 
   if isfield(cfg.dip, 'signal')
