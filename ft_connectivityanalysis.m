@@ -103,7 +103,16 @@ case {'coh' 'csd'}
         normpow     = 0;
         warning('cfg.complex for requested csd is set to %s, do you really want this?', cfg.complex);
     end
+    
+    dtype   = datatype(data);
+    switch dtype
+    case 'source'
+        if isempty(cfg.refindx), error('indices of reference voxels need to be specified'); end
+        % if numel(cfg.refindx)>1, error('more than one reference voxel is not yet supported'); end
+    otherwise
+    end
     % FIXME think of accommodating partial coherence for source data with only a few references
+
 case {'plv'}
     data    = checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';  
@@ -136,15 +145,20 @@ case {'dtf' 'pdc'}
     data    = checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'transfer';
 case {'psi'}
-    if ~isfield(cfg, 'normalize'),  cfg.normalize  = 'no';  end
-    data    = checkdata(data, 'datatype', {'freqmvar' 'freq'});
-    inparam = 'crsspctrm';
+  if ~isfield(cfg, 'normalize'),  cfg.normalize  = 'no';  end
+  data    = checkdata(data, 'datatype', {'freqmvar' 'freq'});
+  inparam = 'crsspctrm';
 case {'di'}
     %wat eigenlijk?
 otherwise
     error('unknown method %s', cfg.method);
 end
 dtype = datatype(data);
+
+% ensure that source data §is in 'new' representation
+if strcmp(dtype, 'source'), 
+  data = checkdata(data, 'sourcerepresentation', 'new'); 
+end
 
 % FIXME throw an error if cfg.complex~='abs', and dojack==1
 % FIXME throw an error if no replicates and cfg.method='plv'
@@ -181,9 +195,10 @@ if ~isfield(data, inparam) || (strcmp(inparam, 'crsspctrm') && isfield(data, 'cr
         end
     case 'source'
         if strcmp(inparam, 'crsspctrm')
-            [data, powindx, hasrpt] = univariate2bivariate(data, 'fourierspctrm', 'crsspctrm', dtype, 0, cfg.refindx, [], 0);
+            [data, powindx, hasrpt] = univariate2bivariate(data, 'mom', 'crsspctrm', dtype, 0, cfg.refindx, [], 0);
             %[data, powindx, hasrpt] = univariate2bivariate(data, 'fourierspctrm', 'crsspctrm', dtype, 0, cfg.refindx, [], 1);
         elseif strcmp(inparam, 'powcov')
+            data            = checkdata(data, 'haspow', 'yes');
             [data, powindx] = univariate2bivariate(data, 'pow', 'powcov', dtype, strcmp(cfg.removemean,'yes'), cfg.refindx, strcmp(cfg.method,'amplcorr'), 0); 
         end
     otherwise
@@ -539,7 +554,7 @@ case {'freq' 'freqmvar'},
 case 'source'
   stat         = [];
   stat.pos     = data.pos;
-  stat.dimord  = data.dimord;
+  stat.dim     = data.dim;
   stat.inside  = data.inside;
   stat.outside = data.outside;
   stat         = setfield(stat, outparam, datout);
@@ -1301,7 +1316,7 @@ case 'freq'
   end
 case 'source'
   ncmb = numel(cmb);
-
+  
   if strcmp(inparam, 'pow') && strcmp(outparam, 'powcov'),
     [nrpt,nvox] = size(data.pow);
     if sqrtflag, data.pow = sqrt(data.pow); end
@@ -1318,24 +1333,28 @@ case 'source'
     data.inside = [data.inside(:); data.inside(:)+nvox];
     data.outside = [data.outside(:); data.outside(:)+nvox];
     data.dim(2) = size(data.pos,1);
-  elseif strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'crsspctrm'),
+  elseif strcmp(inparam, 'mom') && strcmp(outparam, 'crsspctrm'),
+    %get mom as rpttap_pos_freq matrix
+    %FIXME this assumes only 1 freq bin
+    mom = zeros(size(data.mom{data.inside(1)},1), size(data.pos,1));
+    mom(:, data.inside) = cat(2, data.mom{data.inside});
     if keeprpt,
-      [nrpt,nvox]    = size(data.fourierspctrm);
-      data.crsspctrm = [data.fourierspctrm.*conj(data.fourierspctrm(:,ones(1,nvox)*cmb)) abs(data.fourierspctrm).^2];
-      data           = rmfield(data, 'fourierspctrm');
+      [nrpt,nvox]    = size(mom);
+      data.crsspctrm = [mom.*conj(mom(:,ones(1,nvox)*cmb)) abs(mom).^2];
+      data           = rmfield(data, 'mom');
+      data           = rmfield(data, 'momdimord');
       powindx     = [nvox+[1:nvox] nvox+[1:nvox]; cmb*ones(1,nvox) nvox+[1:nvox]]';
 
       data.pos    = [data.pos repmat(data.pos(cmb,:),[nvox 1]);data.pos data.pos]; 
       data.inside = [data.inside(:); data.inside(:)+nvox];
       data.outside = [data.outside(:); data.outside(:)+nvox];
-    elseif ncmb<size(data.fourierspctrm,2)
+    elseif ncmb<size(mom,2)
       %do it computationally more efficient
-      [nrpt,nvox]    = size(data.fourierspctrm);
+      [nrpt,nvox]    = size(mom);
 
-      data.crsspctrm = reshape((transpose(data.fourierspctrm)*conj(data.fourierspctrm(:,cmb)))./nrpt, [nvox*ncmb 1]);
-      tmppow         = mean(abs(data.fourierspctrm).^2)';
+      data.crsspctrm = reshape((transpose(mom)*conj(mom(:,cmb)))./nrpt, [nvox*ncmb 1]);
+      tmppow         = mean(abs(mom).^2)';
       data.crsspctrm = cat(1, data.crsspctrm, tmppow);
-      data           = rmfield(data, 'fourierspctrm');
       tmpindx1       = transpose(ncmb*nvox + ones(ncmb+1,1)*[1:nvox]);
       tmpindx2       = repmat(tmpindx1(cmb(:),end), [1 nvox])';
       tmpindx3       = repmat(cmb(:), [1 nvox])'; %expressed in original voxel indices
@@ -1345,21 +1364,28 @@ case 'source'
       data.inside    = data.inside(:)*ones(1,ncmb+1) + (ones(length(data.inside),1)*nvox)*[0:ncmb];
       data.inside    = data.inside(:);
       data.outside   = setdiff([1:nvox*(ncmb+1)]', data.inside);
-      data.dimord    = data.dimord(8:end); %FIXME this assumes dimord to be 'rpttap_...'
+      if isfield(data, 'momdimord'), 
+        data.crsspctrmdimord = ['pos_',data.momdimord(14:end)];%FIXME this assumes dimord to be 'rpttap_...'
+      end
+      data           = rmfield(data, 'mom');
+      data           = rmfield(data, 'momdimord');
     else
-      [nrpt,nvox]    = size(data.fourierspctrm);
-      data.crsspctrm = (transpose(data.fourierspctrm)*conj(data.fourierspctrm))./nrpt;
-      data           = rmfield(data, 'fourierspctrm');
+      [nrpt,nvox]    = size(mom);
+      data.crsspctrm = (transpose(mom)*conj(mom))./nrpt;
+      data           = rmfield(data, 'mom');
+      data           = rmfield(data, 'momdimord');
       powindx        = [];
-      data.dimord    = 'pos_pos_freq'; %FIXME hard coded
+      data.crsspctrmdimord = 'pos_pos_freq'; %FIXME hard coded
     end
+    data.dimord = data.crsspctrmdimord;
+    clear mom;
   else
     error('unknown conversion from univariate to bivariate representation');
   end
 otherwise
 end
 
-hasrpt  = ~isempty(strfind(data.dimord, 'rpt'));
+hasrpt  = (isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'rpt')));
 
 %if ~isfield(cfg, 'cohmethod'), cfg.cohmethod = 'coh';           end;
 %if ~iscell(cfg.cohmethod),     cfg.cohmethod = {cfg.cohmethod}; end;
