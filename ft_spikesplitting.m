@@ -53,6 +53,7 @@ if ~isfield(cfg, 'feedback'),         cfg.feedback = 'textbar';         end
 if ~isfield(cfg, 'output'),           cfg.output = [];                  end % see below
 if ~isfield(cfg, 'format'),           cfg.format = 'int32';             end
 if ~isfield(cfg, 'downscale'),        cfg.downscale = 0;                end
+if ~isfield(cfg, 'headerformat'),     cfg.headerformat = [];            end 
 
 if isempty(cfg.output)
   % set smart defaults for the output
@@ -67,7 +68,7 @@ end
 fprintf('writing to output directory ''%s''\n', cfg.output);
 
 % read the header of the completete dataset
-hdr = ft_read_header(cfg.dataset);
+hdr = ft_read_header(cfg.dataset, 'headerformat', cfg.headerformat);
 
 if isfield(hdr, 'orig') && isfield(hdr.orig, 'Header')
   [p, f, x]  = fileparts(cfg.output);

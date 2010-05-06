@@ -92,6 +92,8 @@ if ~isfield(cfg, 'output'),             cfg.output = [];                  end
 if ~isfield(cfg, 'channel'),            cfg.channel = 'all';              end
 if ~isfield(cfg, 'channelprefix'),      cfg.channelprefix = [];           end
 if ~isfield(cfg, 'latency'),            cfg.latency = [0 inf];            end
+if ~isfield(cfg, 'headerformat'),       cfg.headerformat = [];            end 
+if ~isfield(cfg, 'dataformat'),         cfg.dataformat = [];              end
 % set the specific defaults
 if ~isfield(cfg, 'fsample'),            cfg.fsample = 1000;               end
 %if ~isfield(cfg, 'method'),            cfg.method = [];                  end
@@ -118,7 +120,7 @@ if ~status
 end
 
 % read the header of the completete dataset
-hdr = ft_read_header(cfg.dataset);
+hdr = ft_read_header(cfg.dataset, 'headerformat', cfg.headerformat);
 cfg.channel = ft_channelselection(cfg.channel, hdr.label);
 chansel = match_str(hdr.label, cfg.channel);
 
@@ -208,7 +210,7 @@ for i=chansel(:)'
   % read the data of a single channel and concatenate into one vector
   org = zeros(1,sum(numsample));
   for j=1:numsegment
-    buf = ft_read_data(cfg.dataset, 'header', hdr, 'begsample', begsample(j), 'endsample', endsample(j), 'chanindx', i);
+    buf = ft_read_data(cfg.dataset, 'header', hdr, 'begsample', begsample(j), 'endsample', endsample(j), 'chanindx', i, 'dataformat', cfg.dataformat);
 
     % apply the optional calibration to the data to ensure that the numbers represent uV
     if cfg.calibration~=1

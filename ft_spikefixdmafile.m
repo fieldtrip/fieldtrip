@@ -1,4 +1,4 @@
-function ft_spikefixdmafile(cfg)
+edit function ft_spikefixdmafile(cfg)
 
 % FT_SPIKEFIXDMAFILE fixes the problem in DMA files due to stopping
 % and restarting the acquisition. It takes one Neuralynx DMA file and
@@ -40,6 +40,7 @@ fieldtripdefs
 if ~isfield(cfg, 'dataset'),  cfg.dataset = [];           end
 if ~isfield(cfg, 'output'),   cfg.output = [];            end
 if ~isfield(cfg, 'numchans'), cfg.numchans = 256;         end
+if ~isfield(cfg, 'headerformat'), cfg.headerformat = [];  end 
 
 if isempty(cfg.output)
   [p, f, x] = fileparts(cfg.dataset);
@@ -47,7 +48,7 @@ if isempty(cfg.output)
 end
 
 try
-  hdr = ft_read_header(cfg.dataset);
+  hdr = ft_read_header(cfg.dataset, 'headerformat', cfg.headerformat);
 catch
   disp(lasterr);
 end
