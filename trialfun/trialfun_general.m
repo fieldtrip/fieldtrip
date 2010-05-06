@@ -47,7 +47,7 @@ if isfield(cfg.trialdef, 'triallength')
 end
 
 % read the header, contains the sampling frequency 
-hdr = read_header(cfg.headerfile);
+hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
 
 % read the events
 if isfield(cfg, 'event')
@@ -56,7 +56,7 @@ if isfield(cfg, 'event')
 else
   try
     fprintf('reading the events from ''%s''\n', cfg.headerfile);
-    event = read_event(cfg.headerfile);
+    event = ft_read_event(cfg.headerfile,'headerformat', cfg.headerformat);
   catch
     event = [];
   end

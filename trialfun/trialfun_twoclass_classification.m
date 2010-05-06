@@ -32,13 +32,13 @@ end
 if isfield(cfg, 'hdr')
   hdr = cfg.hdr;
 else
-  hdr = read_header(cfg.headerfile);
+  hdr = read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
 end
 
 if isfield(cfg, 'event')
   event = cfg.event;
 else
-  event = read_event(cfg.headerfile);
+  event = read_event(cfg.headerfile, 'headerformat', cfg.headerformat);
 end
 
 baseline = round(cfg.trialdef.prestim*hdr.Fs);
