@@ -210,7 +210,7 @@ for i=chansel(:)'
   % read the data of a single channel and concatenate into one vector
   org = zeros(1,sum(numsample));
   for j=1:numsegment
-    buf = ft_read_data(cfg.dataset, 'header', hdr, 'begsample', begsample(j), 'endsample', endsample(j), 'chanindx', i, 'dataformat', cfg.dataformat);
+    buf = ft_read_data(cfg.dataset, 'header', hdr, 'begsample', begsample(j), 'endsample', endsample(j), 'chanindx', i);
 
     % apply the optional calibration to the data to ensure that the numbers represent uV
     if cfg.calibration~=1
