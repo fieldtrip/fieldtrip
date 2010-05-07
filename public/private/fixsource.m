@@ -175,7 +175,27 @@ elseif strcmp(current, 'old') && strcmp(type, 'new'),
   if isfield(output, 'csdlabel')
     output = setfield(output, 'orilabel', getfield(output, 'csdlabel'));
     output = rmfield(output,  'csdlabel');
-  end 
+  end
+
+  if isfield(output, 'leadfield')
+    % add dimord to leadfield as well. since the leadfield is not in
+    % the original .avg or .trial field it has not yet been taken care of
+    output.leadfielddimord = createdimord(output, 'leadfield');  
+  end
+  
+  if isfield(output, 'ori')
+    % convert cell-array ori into matrix
+    ori = zeros(3,npos) + nan;
+    try,
+      ori(:,output.inside) = cat(2, output.ori{output.inside});
+    catch
+      %when oris are in wrong orientation (row rather than column)
+      for k = 1:numel(output.inside)
+        ori(:,output.inside(k)) = output.ori{output.inside(k)}';
+      end
+     end
+    output.ori = ori;
+  end
   current = 'new';
  
 elseif strcmp(current, 'new') && strcmp(type, 'old')
@@ -229,8 +249,9 @@ tmp = getfield(output, fname);
 
 dimord = '';
 dimnum = 1;
+hasori = isfield(output, 'ori'); %if not, this is probably singleton and not relevant at the end
 
-if iscell(tmp) && size(output.pos,1)==size(tmp,dimnum)
+if iscell(tmp) && (size(output.pos,1)==size(tmp,dimnum) || size(output.pos,1)==size(tmp,2))
   dimord = [dimord,'{pos}'];
   dimnum = dimnum + 1;
 elseif ~iscell(tmp) && size(output.pos,1)==size(tmp,dimnum)
@@ -240,18 +261,26 @@ end
 
 switch fname
   case 'cov'
-    dimord = [dimord,'_ori_ori'];
+    if hasori, dimord = [dimord,'_ori_ori']; end;
   case 'csd'
-    dimord = [dimord,'_ori_ori'];
+    if hasori, dimord = [dimord,'_ori_ori']; end;
   case 'csdlabel'
     dimord = dimord;
   case 'filter'
     dimord = [dimord,'_ori_chan']; 
   case 'leadfield'
-    dimord = [dimord,'_chan_ori'];
+    if hasori,
+      dimord = [dimord,'_chan_ori'];
+    else
+      dimord = [dimord,'_chan'];
+    end
   case 'mom'
     if isfield(output, 'cumtapcnt') && sum(output.cumtapcnt)==size(tmp{output.inside(1)},1)
-      dimord = [dimord,'_rpttap_ori'];
+      if hasori,
+        dimord = [dimord,'_rpttap_ori'];
+      else
+        dimord = [dimord,'_rpttap'];
+      end
     elseif isfield(output, 'time')
       if rptflag,
         dimord = [dimord,'_rpt'];
@@ -262,7 +291,7 @@ switch fname
       end
     end
     
-    if isfield(output, 'freq')
+    if isfield(output, 'freq') && numel(output.freq)>1,
       dimord = [dimord,'_freq'];
     end    
   case 'nai'
@@ -274,10 +303,8 @@ switch fname
       dimord = [dimord,'_freq'];
     end
   case 'noisecsd'
-    dimord = [dimord,'_ori_ori'];
+    if hasori, dimord = [dimord,'_ori_ori']; end
   case 'ori'
-    %this field is equivalent to a pos-field
-    %FIXME should this be matricized (size is not that big)
     dimord = '';
   case 'pow'
     if isfield(output, 'cumtapcnt') && numel(output.cumtapcnt)==size(tmp,dimnum)
@@ -285,7 +312,7 @@ switch fname
       dimnum = dimnum + 1;
     end
     
-    if isfield(output, 'freq') && numel(output.freq)==size(tmp,dimnum)
+    if isfield(output, 'freq') && numel(output.freq)>1 && numel(output.freq)==size(tmp,dimnum)
       dimord = [dimord,'_freq'];
     end
   otherwise
