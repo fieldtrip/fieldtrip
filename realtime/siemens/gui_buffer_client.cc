@@ -186,19 +186,19 @@ void idleCall(void *dummy) {
 	datadef_t data_def;
 	FtBufferRequest request;
 	FtBufferResponse response;
-	unsigned newSamples;
+	unsigned int newSamples, newEvents;
 	
 	if (essProtInfo.numberOfSlices == 0) {
 		if (!readHeader()) return;
 	}
 	
-	request.prepWaitData(prevSamples, 50);
+	request.prepWaitData(prevSamples, 0xFFFFFFFF, 50);
 	
 	if (tcprequest(ftbSocket, request.out(), response.in()) < 0) {
 		fprintf(stderr, "Error in communication. Buffer server aborted??\n");
 		return;
 	}
-	if (!response.checkWait(newSamples)) {
+	if (!response.checkWait(newSamples, newEvents)) {
 		fprintf(stderr, "Error in received packet.\n");
 		return;
 	}

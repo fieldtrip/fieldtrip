@@ -139,9 +139,9 @@ enum {
 		the first four of which are for MEG, then 2 channels EOG, then 2 channels A/D.	*/
 	FT_CHUNK_CHANNEL_FLAGS,
 
-	/** FT_CHUNK_RESOLUTION contains N float values mapping from A/D values to physical
+	/** FT_CHUNK_RESOLUTIONS contains N double precision values mapping from A/D values to physical
 		quantities such as micro-Volts in EEG.		*/
-	FT_CHUNK_RESOLUTION,
+	FT_CHUNK_RESOLUTIONS,
 
 	/** FT_CHUNK_ASCII_KEYVAL contains an arbitrary number of key/value pairs, each of
 		which is given as a 0-terminated string. An empty key (=double 0) indicates the
@@ -236,7 +236,12 @@ typedef struct {
 } eventsel_t;
 
 typedef struct {
-	UINT32_T threshold;
+	UINT32_T nsamples;
+	UINT32_T nevents;
+} samples_events_t;
+
+typedef struct {
+	samples_events_t threshold;
 	UINT32_T milliseconds;
 } waitdef_t;
 

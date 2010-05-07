@@ -24,7 +24,7 @@ void abortHandler(int sig) {
 
 int main(int argc, char *argv[]) {
 	host_t host;
-
+	sigset_t sigInt;
 	int errval;
 
     /* verify that all datatypes have the expected syze in bytes */
@@ -39,6 +39,16 @@ int main(int argc, char *argv[]) {
 		host.port = DEFAULT_PORT;
 	}
 	
+	/* Make sure the RDA server thread does not receive CTRL-C, instead it will
+		get terminated properly using rda_stop_server from a handler. We need this
+		because otherwise it is unspecified in which thread the signal will be
+		received - the thread created in rda_start_server will inherit the signal
+		mask we temporarily modify here.
+	*/
+	sigemptyset(&sigInt);
+	sigaddset(&sigInt, SIGINT);
+	sigprocmask(SIG_BLOCK, &sigInt, NULL);
+	
 	/* 0,0,0 = dma-connection to fieldtrip, default = float, default port */
 	rdac = rda_start_server(0, 0, 0, &errval);
 	if (errval != 0) {
@@ -46,6 +56,8 @@ int main(int argc, char *argv[]) {
 		return errval;
 	}
 	
+	/* We want CTRL-C in this thread */
+	sigprocmask(SIG_UNBLOCK, &sigInt, NULL);
 	signal(SIGINT, abortHandler);
 	
 	/* start the buffer */

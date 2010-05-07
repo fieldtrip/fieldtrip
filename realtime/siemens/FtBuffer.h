@@ -145,11 +145,12 @@ class FtBufferRequest {
 		m_extras.ds.endsample = endsample;
 	}
 		
-	void prepWaitData(UINT32_T threshold, UINT32_T milliseconds) {
+	void prepWaitData(UINT32_T nSamples, UINT32_T nEvents, UINT32_T milliseconds) {
 		m_def.command = WAIT_DAT;
 		m_msg.buf = &m_extras.wd;
 		m_def.bufsize = sizeof(waitdef_t);
-		m_extras.wd.threshold = threshold;
+		m_extras.wd.threshold.nsamples = nSamples;
+		m_extras.wd.threshold.nevents = nEvents;
 		m_extras.wd.milliseconds = milliseconds;
 	}
 
@@ -216,14 +217,16 @@ class FtBufferResponse {
 		return true;
 	}
 	
-	bool checkWait(unsigned int &nSamples) const {
+	bool checkWait(unsigned int &nSamples, unsigned int &nEvents) const {
 		if (m_response == NULL) return false;
 		if (m_response->def == NULL) return false;
 		if (m_response->def->version != VERSION) return false;
 		if (m_response->def->command != WAIT_OK) return false;
-		if (m_response->def->bufsize != sizeof(UINT32_T)) return false;
+		if (m_response->def->bufsize != sizeof(samples_events_t)) return false;
 		if (m_response->buf == NULL) return false;
-		nSamples = *((UINT32_T *)m_response->buf);
+		samples_events_t *nse = (samples_events_t *) m_response->buf;
+		nSamples = nse->nsamples;
+		nEvents  = nse->nevents;
 		return true;
 	}	
 	

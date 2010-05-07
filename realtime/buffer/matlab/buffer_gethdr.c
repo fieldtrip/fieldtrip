@@ -121,6 +121,19 @@ void addChunksToMatrix(mxArray *S, const char *buf, int bufsize, int numChannels
 				memcpy(mxGetData(A), chunk->data, chunk->def.size);
 				mxSetFieldByNumber(S, 0, field, A);
 				break;
+			case FT_CHUNK_RESOLUTIONS:
+				field = addIfNew(S, "resolutions");
+				if (field >=0) {
+					int nc = chunk->def.size / sizeof(double);
+					/*  If the chunk is buggy and there are less resolution values present,
+						we only fill in those we have. If there are more, we only fill in numChannels.
+						So the returned 'resolutions' field will always match the number of channels in the buffer.
+					*/
+					if (nc>numChannels) nc = numChannels;
+					A = mxCreateDoubleMatrix(numChannels, 1, mxREAL);
+					memcpy(mxGetPr(A), chunk->data, nc*sizeof(double));
+				}
+				break;
 			case FT_CHUNK_UNSPECIFIED:
 			default:
 				if (numBlobs < MAX_NUM_BLOBS) {

@@ -61,7 +61,8 @@ end
 % its name here (without the .c suffix)
 helpers = {'buffer_gethdr', 'buffer_getdat', 'buffer_getevt', 'buffer_getprp', ...
 		   'buffer_puthdr', 'buffer_putdat', 'buffer_putevt', 'buffer_putprp', ...
-		   'buffer_flushhdr', 'buffer_flushdat', 'buffer_flushevt'};
+		   'buffer_flushhdr', 'buffer_flushdat', 'buffer_flushevt', ...
+		   'buffer_waitdat'};
 
 
 %%%% Please do not change anything below this line %%%%

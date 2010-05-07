@@ -66,6 +66,7 @@ int buffer_putprp(int, mxArray **, const mxArray **);
 int buffer_flushhdr(int, mxArray **, const mxArray **);
 int buffer_flushdat(int, mxArray **, const mxArray **);
 int buffer_flushevt(int, mxArray **, const mxArray **);
+int buffer_waitdat(int, mxArray **, const mxArray **);
 
 /* this function is called upon unloading of the mex-file */
 void exitFun(void) {
@@ -365,6 +366,11 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
   else if (strcasecmp(command, "flush_evt")==0) {
     server = open_connection_with_list(hostname, port);
     errorCode = buffer_flushevt(server, &(plhs[0]), &(prhs[1]));
+  }
+  
+  else if (strcasecmp(command, "wait_dat")==0) {
+    server = open_connection_with_list(hostname, port);
+    errorCode = buffer_waitdat(server, &(plhs[0]), &(prhs[1]));
   }
   
   else if (strcasecmp(command, "list_connections")==0) {

@@ -17,8 +17,8 @@ int main(int argc, char *argv[]) {
 	messagedef_t requestdef;
 	waitdef_t waitdef;
 
-	if (argc != 5) {
-		fprintf(stderr, "USAGE: application <server_ip> <port> <sample nr> <ms>\n");
+	if (argc != 6) {
+		fprintf(stderr, "USAGE: application <server_ip> <port> <sample nr> <event nr> <ms>\n");
 		exit(1);
 	}
 
@@ -28,8 +28,9 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 	
-	waitdef.threshold    = atoi(argv[3]);
-	waitdef.milliseconds = atoi(argv[4]);
+	waitdef.threshold.nsamples = atoi(argv[3]);
+	waitdef.threshold.nevents  = atoi(argv[4]);
+	waitdef.milliseconds = atoi(argv[5]);
 
 	requestdef.version = VERSION;
 	requestdef.command = WAIT_DAT;
@@ -38,7 +39,7 @@ int main(int argc, char *argv[]) {
 	request.def = &requestdef;
 	request.buf = &waitdef;
 	
-	printf("Want to wait up to %i milliseconds for nsamples > %i\n", waitdef.milliseconds, waitdef.threshold);
+	printf("Want to wait up to %i milliseconds for nsamples > %i || nevents > %i\n", waitdef.milliseconds, waitdef.threshold.nsamples, waitdef.threshold.nevents);
 	
 	printf("Sending request...\n");
 	tcprequest(server, &request, &response);
@@ -48,12 +49,12 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "Unknown error in response\n");
 	} else if (response->def->command != WAIT_OK) {
 		fprintf(stderr, "Response != WAIT_OK : %X\n", response->def->command);
-	} else if (response->def->bufsize != sizeof(UINT32_T) || response->buf == NULL) {
-		fprintf(stderr, "Response->buf != &UINT32_T\n");
+	} else if (response->def->bufsize != sizeof(samples_events_t) || response->buf == NULL) {
+		fprintf(stderr, "Response->buf != samples_event_t\n");
 	} else {
-		UINT32_T ns = *((UINT32_T *) response->buf);
-		
-		printf("Number of samples: %i\n",ns);
+		samples_events_t *ns = (samples_events_t *) response->buf;
+		printf("Number of samples: %i\n",ns->nsamples);
+		printf("Number of events : %i\n",ns->nevents);
 	}
 	
 	if (response!=NULL) {

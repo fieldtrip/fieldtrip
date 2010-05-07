@@ -76,6 +76,25 @@ ft_chunk_t *encodeChannelNames(const mxArray *L, int N) {
 	return chunk;
 }
 
+
+ft_chunk_t *encodeResolutions(const mxArray *R, int N) {
+	ft_chunk_t *chunk = NULL;
+	
+	/* possible extension: allow other types than 'double' and convert below */
+	if (!mxIsDouble(R) || mxIsComplex(R)) return NULL;
+	if (!(mxGetM(R)==N && mxGetN(R)==1) && (mxGetM(R)==1 && mxGetN(R)==N)) return NULL;
+	
+	/* now we (over)allocate the chunk */
+	chunk = (ft_chunk_t *) mxMalloc(N*sizeof(double) + sizeof(ft_chunkdef_t));
+	
+	chunk->def.size = N*sizeof(double);
+	chunk->def.type = FT_CHUNK_RESOLUTIONS;
+	memcpy(chunk->data, mxGetPr(R), N*sizeof(double));
+	
+	/* that's it - the receiver should free this thing using mxFree */
+	return chunk;
+}
+
 int buffer_puthdr(int server, mxArray * plhs[], const mxArray * prhs[])
 {
 	int fieldnumber;
@@ -183,7 +202,20 @@ int buffer_puthdr(int server, mxArray * plhs[], const mxArray * prhs[])
 			request_def.bufsize = append(&request.buf, request_def.bufsize, &chunk, sizeof(ft_chunkdef_t) + chunk->def.size);
 			mxFree(chunk);
 		}
-	}	
+	}
+	
+	fieldnumber = mxGetFieldNumber(prhs[0], "resolutions");
+	if (fieldnumber>=0) {
+		ft_chunk_t *chunk = NULL;
+		field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+		chunk = encodeResolutions(field, header_def.nchans);
+		if (chunk == NULL) {
+			mexWarnMsgTxt("invalid data type for field 'resolutions' -- ignoring.");
+		} else {
+			request_def.bufsize = append(&request.buf, request_def.bufsize, &chunk, sizeof(ft_chunkdef_t) + chunk->def.size);
+			mxFree(chunk);
+		}
+	}		
 	
 	/* header->def->bufsize is the request->def->bufsize - sizeof(header->def) */
 	((headerdef_t *) request.buf)->bufsize = request_def.bufsize - sizeof(headerdef_t);
