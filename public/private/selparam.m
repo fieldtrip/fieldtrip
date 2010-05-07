@@ -1,6 +1,10 @@
 function param = selparam(data)
 
-dim = dimlength(data);
+[dim, fn] = dimlength(data);
+if numel(fn)==1 && strcmp(fn{1}, 'dimord'),
+  %data is not source data
+  dim = dim{1};
+end
 ndim = length(dim);
 %remove all 1's at the right side of dim
 for i=ndim:-1:3

@@ -352,13 +352,25 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % determine the subselection in the data
-if selectrpt && ~israw,
+if selectrpt && ~israw
   if islogical(selrpt),
     selrpt = find(selrpt);
   end
-
-  dimtok = tokenize(data.dimord, '_');
-  if strcmp(dimtok{1}, 'rpttap'),
+  
+  if ~issource
+    rpttapflag = ~isempty(strfind(data.dimord, 'rpttap')); 
+    rptflag    = ~isempty(strfind(data.dimord, 'rpt')) && ~rpttapflag; 
+  else
+    fn    = fieldnames(data);
+    selfn = find(~cellfun('isempty', strfind(fn, 'dimord')));
+    fn    = fn(selfn);
+    for k = 1:numel(fn)
+      rpttapflag(k,1) = ~isempty(strfind(data.(fn{k}), 'rpttap'));
+      rptflag(k,1)    = ~isempty(strfind(data.(fn{k}), 'rpt')) && ~rpttapflag(k,1);
+    end
+  end    
+  
+  if any(rpttapflag),
     %account for the tapers
     sumtapcnt = [0;cumsum(data.cumtapcnt(:))];
     begtapcnt = sumtapcnt(1:end-1)+1;

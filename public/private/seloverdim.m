@@ -1,51 +1,102 @@
 function data = seloverdim(data, seldim, sel)
 
-dimtok    = tokenize(data.dimord, '_');
-seldimnum = find(strcmp(seldim, dimtok)); % the selected dimension as number
-if length(seldimnum)<1 && strcmp(seldim, 'rpt'),
-  %try rpttap
-  seldimnum = find(strcmp([seldim,'tap'], dimtok));
-  tapflag   = 1;
-else
-  tapflag   = 0;
+fn    = fieldnames(data);
+selfn = find(~cellfun('isempty', strfind(fn, 'dimord')));
+fn    = fn(selfn);
+
+for k = 1:numel(fn)
+  fndimord{k} = data.(fn{k});
 end
 
-if length(seldimnum)<1
+%check which XXXdimord fields contain the seldim and keep only those
+selx     = ~cellfun('isempty', strfind(fndimord, seldim));
+fn       = fn(selx);
+fndimord = fndimord(selx);
+
+for k = 1:numel(fn)
+  dimtok       = tokenize(fndimord{k}, '_');
+  seldimnum{k} = find(strcmp(seldim, dimtok)); % the selected dimension as number
+  if numel(seldimnum{k})<1 && strcmp(seldim, 'rpt'),
+    %try rpttap
+    seldimnum{k} = find(strcmp([seldim,'tap'], dimtok));
+    tapflag      = 1;
+  else
+    tapflag      = 0;
+  end
+end
+
+if sum(~cellfun('isempty', seldimnum))<1
   error('the "%s" dimension is not present in the data', seldim)
-elseif length(seldimnum)>1
+elseif any(cellfun(@numel, seldimnum)>1)
   error('cannot select over multiple dimensions at the same time')
 end
 
-reduceddim = dimlength(data);
-reduceddim(seldimnum) = length(sel);
+[reduceddim, fntmp] = dimlength(data);
+selx       = find(ismember(fntmp, fn));
+reduceddim = reduceddim(selx);
+fntmp      = fntmp(selx);
 
-param = selparam(data);
-for i=1:length(param)
-  fprintf('selection %s along dimension %d\n', param{i}, seldimnum);
-  tmp = data.(param{i});
-  switch seldimnum
-    case 1
-      tmp = tmp(sel,:,:,:,:,:,:,:,:);
-    case 2
-      tmp = tmp(:,sel,:,:,:,:,:,:,:);
-    case 3
-      tmp = tmp(:,:,sel,:,:,:,:,:,:);
-    case 4
-      tmp = tmp(:,:,:,sel,:,:,:,:,:);
-    case 5
-      tmp = tmp(:,:,:,:,sel,:,:,:,:);
-    case 6
-      tmp = tmp(:,:,:,:,:,sel,:,:,:);
-    case 7
-      tmp = tmp(:,:,:,:,:,:,sel,:,:);
-    case 8
-      tmp = tmp(:,:,:,:,:,:,:,sel,:);
-    case 9
-      tmp = tmp(:,:,:,:,:,:,:,:,sel);
-    otherwise
-      error('the number of dimensions is too high');
+for k=1:numel(fn)
+  reduceddim{k}(seldimnum{k}) = numel(sel);
+  if numel(fntmp{k})>6 && isfield(data, fntmp{k}(1:end-6)),
+    %it concerns source data with a one-to-one mapping of XXXdimord to XXX
+    param = {fntmp{k}(1:end-6)};
+  else
+    %it concerns other type data in which there is only one dimord
+    param = selparam(data);
   end
-  data.(param{i}) = reshape(tmp, reduceddim);
+  for i=1:length(param)
+    fprintf('selection %s along dimension %d\n', param{i}, seldimnum{k});
+    tmp       = data.(param{i});
+    iscelltmp = iscell(tmp);
+    if ~iscelltmp,
+      %temporarily convert to cell
+      tmp = {tmp};
+    else
+      %keep cells but reduce seldimnum
+      seldimnum{k}  = seldimnum{k} - 1; %FIXME this only works if cell is 1D
+      reduceddim{k} = [reduceddim{k}(2:end) 1];
+    end
+   
+    if seldimnum{k}>0,
+      %subselection from each of the cells
+      for j=1:numel(tmp)
+        if ~isempty(tmp{j}),
+          switch seldimnum{k}
+            case 1
+              tmp{j} = tmp{j}(sel,:,:,:,:,:,:,:,:);
+            case 2
+              tmp{j} = tmp{j}(:,sel,:,:,:,:,:,:,:);
+            case 3
+              tmp{j} = tmp{j}(:,:,sel,:,:,:,:,:,:);
+            case 4
+              tmp{j} = tmp{j}(:,:,:,sel,:,:,:,:,:);
+            case 5
+              tmp{j} = tmp{j}(:,:,:,:,sel,:,:,:,:);
+            case 6
+              tmp{j} = tmp{j}(:,:,:,:,:,sel,:,:,:);
+            case 7
+              tmp{j} = tmp{j}(:,:,:,:,:,:,sel,:,:);
+            case 8
+              tmp{j} = tmp{j}(:,:,:,:,:,:,:,sel,:);
+            case 9
+              tmp{j} = tmp{j}(:,:,:,:,:,:,:,:,sel);
+            otherwise
+              error('the number of dimensions is too high');
+          end
+          tmp{j} = reshape(tmp{j}, reduceddim{k});
+        end
+      end
+    else
+      %subselection of cells
+      tmp = tmp(sel);
+    end
+
+    if ~iscelltmp,
+      tmp = tmp{1};
+    end
+    data.(param{i}) = tmp;
+  end
 end
 
 switch seldim
@@ -70,7 +121,6 @@ switch seldim
       trl = [];  
     end
     if isempty(trl) || size(trl,1)<length(tmpsel)
-      % a trial definition is expected in each continuous data set
       warning('could not locate the correct trial definition ''trl'' in the data structure');
     else
       data.cfg.trlold = trl;
