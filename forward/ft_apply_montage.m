@@ -7,9 +7,9 @@ function [sens] = ft_apply_montage(sens, montage, varargin)
 % forward computation and source reconstruction of the data.
 %
 % Use as
-%   [sens]    = apply_montage(sens,     montage,  ...)
-%   [data]    = apply_montage(data,     montage,  ...)
-%   [montage] = apply_montage(montage1, montage2, ...)
+%   [sens]    = ft_apply_montage(sens,     montage,  ...)
+%   [data]    = ft_apply_montage(data,     montage,  ...)
+%   [montage] = ft_apply_montage(montage1, montage2, ...)
 % where the input is a FieldTrip sensor definition as obtained from FT_READ_SENS
 % or a FieldTrip raw data structure as obtained from FT_PREPROCESSING.
 %
