@@ -229,7 +229,7 @@ switch fileformat
             % and treat those as fiducials
             try
                 elec = ft_read_sens(filename);
-                if ~senstype(elec, 'eeg')
+                if ~ft_senstype(elec, 'eeg')
                     error('headshape information can not be read from MEG gradiometer file');
                 else
                     shape.fid.pnt   = elec.pnt;
@@ -244,7 +244,7 @@ switch fileformat
             % and treat the skin surface as headshape
             try
                 vol = ft_read_vol(filename);
-                if ~voltype(vol, 'bem')
+                if ~ft_voltype(vol, 'bem')
                     error('skin surface can only be extracted from boundary element model');
                 else
                     if ~isfield(vol, 'skin')

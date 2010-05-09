@@ -141,7 +141,7 @@ end
 
 % construct a cell-array with labels of each channel
 for i=1:hdr.nChans
-% this should be consistent with the predefined list in senslabel,
+% this should be consistent with the predefined list in ft_senslabel,
 % with yokogawa2grad and with ft_channelselection
   if     hdr.orig.channel_info(i, 2) == handles.NullChannel
     prefix = '';

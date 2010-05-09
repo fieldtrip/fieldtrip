@@ -62,7 +62,7 @@ for i=1:length(type)
   type{i} = 'unknown';
 end
 
-if senstype(input, 'neuromag')
+if ft_senstype(input, 'neuromag')
   % channames-KI is the channel kind, 1=meg, 202=eog, 2=eeg, 3=trigger (I am nut sure, but have inferred this from a single test file)
   % chaninfo-TY is the Coil type (0=magnetometer, 1=planar gradiometer)
   if isfield(hdr, 'orig') && isfield(hdr.orig, 'channames')
@@ -157,7 +157,7 @@ if senstype(input, 'neuromag')
     end
   end
 
-elseif senstype(input, 'ctf') && isheader
+elseif ft_senstype(input, 'ctf') && isheader
   % meg channels are 5, refmag 0, refgrad 1, adcs 18, trigger 11, eeg 9
   if isfield(hdr, 'orig') && isfield(hdr.orig, 'sensType')
     origSensType = hdr.orig.sensType;
@@ -199,7 +199,7 @@ elseif senstype(input, 'ctf') && isheader
   %   type{sel} = 'SPLxxxx'; % I have no idea what these are
   % end
 
-elseif senstype(input, 'ctf') && isgrad
+elseif ft_senstype(input, 'ctf') && isgrad
   % in principle it is possible to look at the number of coils, but here the channels are identified based on their name
   sel = myregexp('^M[ZLR][A-Z][0-9][0-9]$', grad.label);
   type(sel) = {'meggrad'};            % normal gradiometer channels
@@ -208,7 +208,7 @@ elseif senstype(input, 'ctf') && isgrad
   sel = myregexp('^[GPQR][0-9][0-9]$', grad.label);
   type(sel) = {'refgrad'};            % reference gradiometers
 
-elseif senstype(input, 'ctf') && islabel
+elseif ft_senstype(input, 'ctf') && islabel
   % the channels have to be identified based on their name alone
   sel = myregexp('^M[ZLR][A-Z][0-9][0-9]$', label);
   type(sel) = {'meggrad'};                % normal gradiometer channels
@@ -217,7 +217,7 @@ elseif senstype(input, 'ctf') && islabel
   sel = myregexp('^[GPQR][0-9][0-9]$', label);
   type(sel) = {'refgrad'};            % reference gradiometers
 
-elseif senstype(input, 'bti')
+elseif ft_senstype(input, 'bti')
   % all 4D-BTi MEG channels start with "A"
   % all 4D-BTi reference channels start with M or G
   % all 4D-BTi EEG channels start with E
@@ -253,7 +253,7 @@ elseif senstype(input, 'bti')
     end
   end
 
-elseif senstype(input, 'yokogawa') && isheader
+elseif ft_senstype(input, 'yokogawa') && isheader
   % This is to recognize Yokogawa channel types from the original header
     % This is from the original documentation
     NullChannel                   = 0;
@@ -291,15 +291,15 @@ elseif senstype(input, 'yokogawa') && isheader
     sel = (hdr.orig.channel_info(:, 2) == EtcChannel);
     type(sel) = {'etc'};
 
-elseif senstype(input, 'yokogawa') && isgrad
+elseif ft_senstype(input, 'yokogawa') && isgrad
   % all channels in the gradiometer definition are meg
   type(1:end) = {'meg'};
   
-elseif senstype(input, 'yokogawa') && islabel
+elseif ft_senstype(input, 'yokogawa') && islabel
   % the yokogawa channel labels are a mess, so autodetection is not possible
   type(1:end) = {'meg'};
 
-elseif senstype(input, 'itab') && isheader
+elseif ft_senstype(input, 'itab') && isheader
   sel = ([hdr.orig.ch.type]==0);
   type(sel) = {'unknown'};
   sel = ([hdr.orig.ch.type]==1);
@@ -316,7 +316,7 @@ elseif senstype(input, 'itab') && isheader
   % the types fopr the ones that read_header and read_data return
   type = type(hdr.orig.chansel);
 
-elseif senstype(input, 'itab') && isgrad
+elseif ft_senstype(input, 'itab') && isgrad
   % the channels have to be identified based on their name alone
   sel = myregexp('^MAG_[0-9][0-9][0-9]$', label);
   type(sel) = {'megmag'};
@@ -325,7 +325,7 @@ elseif senstype(input, 'itab') && isgrad
   sel = myregexp('^AUX.*$', label);
   type(sel) = {'aux'};
 
-elseif senstype(input, 'itab') && islabel
+elseif ft_senstype(input, 'itab') && islabel
   % the channels have to be identified based on their name alone
   sel = myregexp('^MAG_[0-9][0-9][0-9]$', label);
   type(sel) = {'megmag'};
@@ -334,15 +334,15 @@ elseif senstype(input, 'itab') && islabel
   sel = myregexp('^AUX.*$', label);
   type(sel) = {'aux'};
 
-elseif senstype(input, 'eeg') && islabel
+elseif ft_senstype(input, 'eeg') && islabel
   % use an external helper function to define the list with EEG channel names
-  type(match_str(label, senslabel(senstype(label)))) = {'eeg'};
+  type(match_str(label, ft_senslabel(ft_senstype(label)))) = {'eeg'};
 
-elseif senstype(input, 'eeg') && isheader
+elseif ft_senstype(input, 'eeg') && isheader
   % use an external helper function to define the list with EEG channel names
-  type(match_str(hdr.label, senslabel(senstype(hdr)))) = {'eeg'};
+  type(match_str(hdr.label, ft_senslabel(ft_senstype(hdr)))) = {'eeg'};
 
-elseif senstype(input, 'plexon') && isheader
+elseif ft_senstype(input, 'plexon') && isheader
   % this is a complete header that was read from a Plexon *.nex file using read_plexon_nex
   for i=1:numchan
     switch hdr.orig.VarHeader(i).Type
@@ -363,7 +363,7 @@ elseif senstype(input, 'plexon') && isheader
     end
   end
 
-end % senstype
+end % ft_senstype
 
 % if possible, set additional types based on channel labels
 label2type = {

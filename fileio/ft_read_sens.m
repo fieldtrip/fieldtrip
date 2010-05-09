@@ -230,7 +230,7 @@ switch fileformat
     error('unknown fileformat for electrodes or gradiometers');
 end
 
-if senstype(sens, 'eeg')
+if ft_senstype(sens, 'eeg')
   % only keep positions and labels in case of EEG electrodes
   dum  = sens;
   sens = [];
