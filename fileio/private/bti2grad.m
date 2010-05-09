@@ -198,9 +198,9 @@ elseif isfield(hdr, 'config'),
     
     if balanceflag,
       fprintf('applying digital weights in the gradiometer balancing matrix\n');
-      grad.balance      = balance;
+      grad.balance         = balance;
       grad.balance.current = weights.position;
-      grad              = apply_montage(grad, getfield(grad.balance, grad.balance.current));
+      grad                 = ft_apply_montage(grad, getfield(grad.balance, grad.balance.current));
     else
       fprintf('not applying digital weights in the gradiometer balancing matrix\n');
     end

@@ -127,11 +127,11 @@ montage          = [];
 montage.tra      = tra;
 montage.labelorg = labelorg;
 montage.labelnew = labelnew;
-data             = apply_montage(data, montage, 'keepunused', keepunused);
+data             = ft_apply_montage(data, montage, 'keepunused', keepunused);
 if isfield(data, 'grad'),
   data.grad.balance.component = montage;
   data.grad.balance.current   = 'component';
-  data.grad = apply_montage(data.grad, montage, 'keepunused', 'yes');
+  data.grad = ft_apply_montage(data.grad, montage, 'keepunused', 'yes');
 else
   warning('the gradiometer description does not match the data anymore');
 end

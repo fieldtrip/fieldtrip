@@ -69,8 +69,8 @@ if ~strcmp(current, 'none')
     error('unknown balancing for input data');
   end
   fprintf('converting from "%s" to "none"\n', current);
-  data.grad = apply_montage(data.grad, current_montage, 'keepunused', 'yes', 'inverse', 'yes');
-  data      = apply_montage(data     , current_montage, 'keepunused', 'yes', 'inverse', 'yes');
+  data.grad = ft_apply_montage(data.grad, current_montage, 'keepunused', 'yes', 'inverse', 'yes');
+  data      = ft_apply_montage(data     , current_montage, 'keepunused', 'yes', 'inverse', 'yes');
   data.grad.balance.current = 'none';
 end % if
 
@@ -82,8 +82,8 @@ if ~strcmp(desired, 'none')
     error('unknown balancing for input data');
   end
   fprintf('converting from "none" to "%s"\n', desired);
-  data.grad = apply_montage(data.grad, desired_montage, 'keepunused', 'yes', 'inverse', 'yes');
-  data      = apply_montage(data     , desired_montage, 'keepunused', 'yes', 'inverse', 'yes');
+  data.grad = ft_apply_montage(data.grad, desired_montage, 'keepunused', 'yes', 'inverse', 'yes');
+  data      = ft_apply_montage(data     , desired_montage, 'keepunused', 'yes', 'inverse', 'yes');
   data.grad.balance.current = desired;
 end % if
 

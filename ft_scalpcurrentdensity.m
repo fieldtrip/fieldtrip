@@ -147,8 +147,8 @@ elseif strcmp(cfg.method, 'finite')
   montage.labelorg = data.label;
   montage.labelnew = data.label;
   % apply the montage to the data, also update the electrode definition
-  scd = apply_montage(data, montage);
-  elec = apply_montage(elec, montage);
+  scd  = ft_apply_montage(data, montage);
+  elec = ft_apply_montage(elec, montage);
 
 elseif strcmp(cfg.method, 'hjorth')
   % the Hjorth filter requires a specification of the neighbours
@@ -178,8 +178,8 @@ elseif strcmp(cfg.method, 'hjorth')
   montage.labelorg = labelorg;
   montage.labelnew = labelnew;
   % apply the montage to the data, also update the electrode definition
-  scd = apply_montage(data, montage);
-  elec = apply_montage(elec, montage);
+  scd  = ft_apply_montage(data, montage);
+  elec = ft_apply_montage(elec, montage);
 
 else
   error('unknown method for SCD computation');

@@ -240,7 +240,7 @@ if ~strcmp(cfg.montage, 'no') && ~isempty(cfg.montage)
   % this is an alternative approach for rereferencing, with arbitrary complex linear combinations of channels
   tmp.trial = {dat};
   tmp.label = label;
-  tmp = apply_montage(tmp, cfg.montage);
+  tmp = ft_apply_montage(tmp, cfg.montage);
   dat = tmp.trial{1};
   label = tmp.label;
   clear tmp

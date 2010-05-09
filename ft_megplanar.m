@@ -224,9 +224,9 @@ end % cfg.planarmethod
 
 if any(strcmp(cfg.planarmethod, {'orig', 'sincos', 'fitplane'}))
   % apply the linear transformation to the data
-  interp  = apply_montage(data, montage, 'keepunused', 'yes');
+  interp  = ft_apply_montage(data, montage, 'keepunused', 'yes');
   % also apply the linear transformation to the gradiometer definition
-  interp.grad = apply_montage(data.grad, montage);
+  interp.grad = ft_apply_montage(data.grad, montage);
   interp.grad.balance.planar = montage;
   % ensure that the old sensor type does not stick around, because it is now invalid
   % the sensor type is added in FT_PREPARE_VOL_SENS but is not used in external fieldtrip code

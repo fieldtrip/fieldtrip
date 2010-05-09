@@ -34,7 +34,7 @@ if isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(sens.
   if length(indx)==1,
     %  undo the synthetic gradient balancing
     fprintf('undoing the %s balancing\n', sens.balance.current);
-    sens = apply_montage(sens, getfield(sens.balance, sens.balance.current), 'inverse', 'yes');
+    sens = ft_apply_montage(sens, getfield(sens.balance, sens.balance.current), 'inverse', 'yes');
     sens.balance.current = 'none';
   else
     warning('cannot undo %s balancing\n', sens.balance.current);
