@@ -82,7 +82,7 @@ typedef struct {
 	UINT32_T nPosition; /* Relative position in the data block */
 	UINT32_T nPoints;	/* Number of points of this marker */
 	INT32_T nChannel;	/* Associated channel number (-1 = all channels) */
-	char sTypeDesc[1];  /* Type description in ASCII delimited by '\0', variable length actually */
+	/* char sTypeDesc[1];  Type description in ASCII delimited by '\0', variable length actually */
 } rda_marker_t;	
 
 /** Internally used data structure to keep a linked list of 

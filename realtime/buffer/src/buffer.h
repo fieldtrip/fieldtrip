@@ -112,6 +112,7 @@ int get_property(int, const char *, INT32_T *);
 int set_property(int, const char *, INT32_T *);
 unsigned int wordsize_from_type(UINT32_T data_type);
 void check_datatypes(void);
+const ft_chunk_t *find_chunk(const void *buf, int offset0, int size, UINT32_T chunk_type);
 
 typedef struct {
 	char name[256];

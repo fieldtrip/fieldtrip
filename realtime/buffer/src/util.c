@@ -246,3 +246,14 @@ unsigned int wordsize_from_type(UINT32_T data_type) {
 	}
 	return 0;
 }
+
+const ft_chunk_t *find_chunk(const void *buf, int offset0, int size, UINT32_T chunk_type) {
+	int bufpos = offset0;
+	while (bufpos + sizeof(ft_chunkdef_t) <= size) {
+		const ft_chunk_t *chunk = (ft_chunk_t *) ((char *)buf + bufpos);
+		if (chunk->def.type == chunk_type) return chunk;
+		
+		bufpos += sizeof(ft_chunkdef_t) + chunk->def.size;
+	}
+	return NULL;
+}
