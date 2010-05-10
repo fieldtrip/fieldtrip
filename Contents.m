@@ -55,75 +55,75 @@
 % in Matlab.
 %
 % Preprocessing and reading data
-%   definetrial
-%   rejectartifact
-%   rejectvisual
-%   preprocessing
-%   appenddata
-%   resampledata
-%   channelrepair
-%   recodeevent
-%   redefinetrial
-%   read_fcdc_header
-%   read_fcdc_data
-%   read_fcdc_event
-%   read_fcdc_mri
+%   ft_definetrial
+%   ft_rejectartifact
+%   ft_rejectvisual
+%   ft_preprocessing
+%   ft_appenddata
+%   ft_resampledata
+%   ft_channelrepair
+%   ft_recodeevent
+%   ft_redefinetrial
+%   ft_read_header
+%   ft_read_data
+%   ft_read_event
+%   ft_read_mri
 %
 % Event-Related Fields or Potentials
-%   timelockanalysis
-%   timelockgrandaverage
-%   timelockstatistics
-%   singleplotER
-%   topoplotER
-%   multiplotER
+%   ft_timelockanalysis
+%   ft_timelockgrandaverage
+%   ft_timelockstatistics
+%   ft_singleplotER
+%   ft_topoplotER
+%   ft_multiplotER
 %
 % Frequency and Time-Frequency analysis
-%   freqanalysis
-%   freqanalysis_mtmfft
-%   freqanalysis_mtmwelch
-%   freqanalysis_mtmconvol
-%   freqanalysis_wltconvol
-%   freqanalysis_tfr
-%   freqgrandaverage
-%   freqdescriptives
-%   freqstatistics
-%   singleplotTFR
-%   topoplotTFR
-%   multiplotTFR
+%   ft_freqanalysis
+%   ft_freqanalysis_mtmfft
+%   ft_freqanalysis_mtmwelch
+%   ft_freqanalysis_mtmconvol
+%   ft_freqanalysis_wltconvol
+%   ft_freqanalysis_tfr
+%   ft_freqgrandaverage
+%   ft_freqdescriptives
+%   ft_freqstatistics
+%   ft_singleplotTFR
+%   ft_topoplotTFR
+%   ft_multiplotTFR
 %
 % Source analysis
-%   dipolefitting
-%   dipolesimulation
-%   sourceanalysis
-%   sourcegrandaverage
-%   sourcedescriptives
-%   sourcestatistics
-%   sourceplot
-%   sourceinterpolate
-%   prepare_localspheres
-%   prepare_singleshell
-%   prepare_bemmodel
-%   prepare_leadfield
-%   prepare_atlas
-%   volumelookup
+%   ft_dipolefitting
+%   ft_dipolesimulation
+%   ft_sourceanalysis
+%   ft_sourcegrandaverage
+%   ft_sourcedescriptives
+%   ft_sourcestatistics
+%   ft_sourceplot
+%   ft_sourceinterpolate
+%   ft_prepare_localspheres
+%   ft_prepare_singleshell
+%   ft_prepare_bemmodel
+%   ft_prepare_leadfield
+%   ft_prepare_atlas
+%   ft_volumelookup
 %
 % Statistical analysis
-%   timelockstatistics
-%   freqstatistics
-%   sourcestatistics
+%   ft_timelockstatistics
+%   ft_freqstatistics
+%   ft_sourcestatistics
 %
 % Plotting and display of data
-%   prepare_layout
-%   layoutplot
-%   topoplot
-%   topoplotER
-%   topoplotTFR
-%   multiplotER
-%   multiplotTFR
-%   singleplotER
-%   singleplotTFR
-%   sourceplot
-%   clusterplot
+%   ft_prepare_layout
+%   ft_layoutplot
+%   ft_topoplot
+%   ft_topoplotER
+%   ft_topoplotTFR
+%   ft_multiplotER
+%   ft_multiplotTFR
+%   ft_singleplotER
+%   ft_singleplotTFR
+%   ft_sourceplot
+%   ft_clusterplot
 
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
