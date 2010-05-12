@@ -60,8 +60,8 @@ hdr.rotate_coronal  = rotation(1);
 hdr.rotate_sagittal = rotation(2);
 hdr.rotate_axial    = rotation(3);
 
-transformMatrix = split_nvalue(get_value(cpersist, '_CTFMRI_TRANSFORMMATRIX'));
-transformMatrix = reshape(transformMatrix, 4, 4)';
+hdr.transformMatrix = split_nvalue(get_value(cpersist, '_CTFMRI_TRANSFORMMATRIX'));
+hdr.transformMatrix = reshape(hdr.transformMatrix, 4, 4)';
 
 mmPerPixel = split_nvalue(get_value(cpersist, '_CTFMRI_MMPERPIXEL'));
 hdr.mmPerPixel_sagittal = mmPerPixel(1);
@@ -128,17 +128,46 @@ fclose(fid);
 % DO POST-PROCESSING
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% reorient the image data to obtain corresponding image data and transformation matrix
-mri = permute(mri, [3 1 2]);    % this was determined by trial and error
+% Data is stored in PIR order (i.e. fastest changing direction goes from
+% anterior to Posterior, then from superior to Inferior, finally from left
+% to Right) assuming subject position was not too oblique and proper
+% conversion to .mri format.  (Does this depend on hdr.imageOrientation?)
+% On the other hand, the transformation matrix and fiducials are in RPI
+% order so we must reorient the image data to match them.
+mri = permute(mri, [3 1 2]);
 
-% reorient the image data and the transformation matrix along the left-right direction
-% remember that the fiducials in voxel coordinates also have to be flipped (see down)
-mri = flipdim(mri, 1);
-flip = [-1 0 0 256
-  0 1 0 0
-  0 0 1 0
-  0 0 0 1    ];
-transformMatrix = flip*transformMatrix;
+transformMatrix = hdr.transformMatrix;
+
+% Construct minimal transformation matrix if fiducials were not defined.  
+% Bring data into same orientation (head coordinates are ALS) at least.
+if all(transformMatrix == 0)
+  transformMatrix(1, 2) = -1;
+  transformMatrix(2, 1) = -1;
+  transformMatrix(3, 3) = -1;
+  transformMatrix(4, 4) = 1;
+end
+
+% determine location of fiducials in MRI voxel coordinates
+% flip the fiducials in voxel coordinates to correspond to the previous flip along left-right
+hdr.fiducial.mri.nas = [hdr.HeadModel.Nasion_Sag hdr.HeadModel.Nasion_Cor hdr.HeadModel.Nasion_Axi];
+hdr.fiducial.mri.lpa = [hdr.HeadModel.LeftEar_Sag hdr.HeadModel.LeftEar_Cor hdr.HeadModel.LeftEar_Axi];
+hdr.fiducial.mri.rpa = [hdr.HeadModel.RightEar_Sag hdr.HeadModel.RightEar_Cor hdr.HeadModel.RightEar_Axi];
+
+% Reorient the image data, the transformation matrix and the fiducials
+% along the left-right direction.
+% This may have been done only for visualization?  It can probably be
+% "turned off" without problem.
+if true
+  mri = flipdim(mri, 1);
+  flip = [-1 0 0 hdr.imageSize+1
+           0 1 0 0
+           0 0 1 0
+           0 0 0 1    ];
+  transformMatrix = flip*transformMatrix;
+  hdr.fiducial.mri.nas = [hdr.fiducial.mri.nas, 1] * flip(1:3, :)';
+  hdr.fiducial.mri.lpa = [hdr.fiducial.mri.lpa, 1] * flip(1:3, :)';
+  hdr.fiducial.mri.rpa = [hdr.fiducial.mri.rpa, 1] * flip(1:3, :)';
+end
 
 % re-compute the homogeneous transformation matrices (apply voxel scaling)
 scale = eye(4);
@@ -148,16 +177,11 @@ scale(3,3) = hdr.mmPerPixel_axial;
 hdr.transformHead2MRI = transformMatrix*inv(scale);
 hdr.transformMRI2Head = scale*inv(transformMatrix);
 
-% determint location of fiducials in MRI voxel coordinates
-% flip the fiducials in voxel coordinates to correspond to the previous flip along left-right
-hdr.fiducial.mri.nas = [256 - hdr.HeadModel.Nasion_Sag hdr.HeadModel.Nasion_Cor hdr.HeadModel.Nasion_Axi];
-hdr.fiducial.mri.lpa = [256 - hdr.HeadModel.LeftEar_Sag hdr.HeadModel.LeftEar_Cor hdr.HeadModel.LeftEar_Axi];
-hdr.fiducial.mri.rpa = [256 - hdr.HeadModel.RightEar_Sag hdr.HeadModel.RightEar_Cor hdr.HeadModel.RightEar_Axi];
-
 % compute location of fiducials in MRI and HEAD coordinates
 hdr.fiducial.head.nas = warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.nas, 'homogenous');
 hdr.fiducial.head.lpa = warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.lpa, 'homogenous');
 hdr.fiducial.head.rpa = warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.rpa, 'homogenous');
+
 
 %
 % Reads a series of delimited numbers from a string

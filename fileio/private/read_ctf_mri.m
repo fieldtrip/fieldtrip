@@ -1,5 +1,6 @@
 function [mri, hdr] = read_ctf_mri(filename);
 
+
 % READ_CTF_MRI reads header and image data from a CTF version 2.2 MRI file
 %
 % Use as
@@ -27,7 +28,8 @@ function [mri, hdr] = read_ctf_mri(filename);
 %
 % $Id$
 
-fid = fopen(filename,'rb', 'ieee-be');
+% Some versions require specifying latin1 (ISO-8859-1) character encoding.
+fid = fopen(filename, 'rb', 'ieee-be', 'ISO-8859-1');
 
 if fid<=0
   error(sprintf('could not open MRI file: %s\n', filename));
@@ -98,11 +100,15 @@ hdr.orthogonalFlag = fread(fid,1,'int16'); % if set then image is orthogonal
 hdr.interpolatedFlag = fread(fid,1,'int16'); % if set than image was interpolated
 hdr.originalSliceThickness = fread(fid,1,'float'); % original spacing between slices before interpolation
 hdr.transformMatrix = fread(fid,[4 4],'float')'; % transformation matrix head->MRI[column][row]
-fread(fid,202,'uint8'); % unused, padding to 1028 bytes
 
-% note that although the 202 bytes padding is according to the CTF
-% documentation, that results in the file pointer being at 1026 and
-% not 1028, which is INconsistent with the CTF documentation.
+% Go to image data file position. 
+% fread(fid,202,'uint8'); % unused, padding to 1028 bytes.
+% The previous (commented) line should read 202 bytes to get to the end of
+% the header (position 1028), but it seems some versions of Matlab (or
+% perhaps only on some systems) doesn't read 2 bytes somewhere and end up
+% in position 1026...  In any case, it caused an error with some files so
+% we must explicitely seek to position 1028.
+fseek(fid, 1028, 'bof');
 
 % turn all warnings back on
 warning(ws);
@@ -111,18 +117,21 @@ warning(ws);
 % READ THE IMAGE DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% explicitely seek to position 1028, the remainder of the file is
-% exactly 256*256*256 times 1 (uint8) or times 2 (uint16) bytes
-fseek(fid, 1028, 'bof');
-
-if hdr.dataSize==1
-  mri = uint8(fread(fid, 256*256*256, 'uint8'));
-elseif hdr.dataSize==2
-  mri = uint16(fread(fid, 256*256*256, 'uint16'));
+if hdr.dataSize == 1
+  precision = '*uint8';
+elseif hdr.dataSize == 2
+  if hdr.clippingRange < 2^15
+    % I think this is usually the case, i.e. data is stored as signed 16
+    % bit int, even though data is only positive.
+    precision = '*int16';
+  else
+    precision = '*uint16';
+  end
 else
-  error('unknown datasize in CTF mri file');
+  error('unknown datasize (%d) in CTF mri file.', hdr.dataSize);
 end
-mri = reshape(mri, [256 256 256]);
+mri = fread(fid, hdr.imageSize.^3, precision);
+mri = reshape(mri, [hdr.imageSize hdr.imageSize hdr.imageSize]);
 fclose(fid);
 
 
@@ -131,19 +140,46 @@ fclose(fid);
 % DO POST-PROCESSING
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Data is stored in PIR order (i.e. fastest changing direction goes from
+% anterior to Posterior, then from superior to Inferior, finally from left
+% to Right) assuming subject position was not too oblique and proper
+% conversion to .mri format.  (Does this depend on hdr.imageOrientation?)
+% On the other hand, the transformation matrix and fiducials are in RPI
+% order so we must reorient the image data to match them.
+mri = permute(mri, [3 1 2]);
+
 transformMatrix = hdr.transformMatrix;
 
-% reorient the image data to obtain corresponding image data and transformation matrix
-mri = permute(mri, [3 1 2]);    % this was determined by trial and error
+% Construct minimal transformation matrix if fiducials were not defined.  
+% Bring data into same orientation (head coordinates are ALS) at least.
+if all(transformMatrix == 0)
+  transformMatrix(1, 2) = -1;
+  transformMatrix(2, 1) = -1;
+  transformMatrix(3, 3) = -1;
+  transformMatrix(4, 4) = 1;
+end
 
-% reorient the image data and the transformation matrix along the left-right direction
-% remember that the fiducials in voxel coordinates also have to be flipped (see down)
-mri = flipdim(mri, 1);
-flip = [-1 0 0 256
-         0 1 0 0
-         0 0 1 0
-         0 0 0 1    ];
-transformMatrix = flip*transformMatrix;
+% determine location of fiducials in MRI voxel coordinates
+% flip the fiducials in voxel coordinates to correspond to the previous flip along left-right
+hdr.fiducial.mri.nas = [hdr.HeadModel.Nasion_Sag hdr.HeadModel.Nasion_Cor hdr.HeadModel.Nasion_Axi];
+hdr.fiducial.mri.lpa = [hdr.HeadModel.LeftEar_Sag hdr.HeadModel.LeftEar_Cor hdr.HeadModel.LeftEar_Axi];
+hdr.fiducial.mri.rpa = [hdr.HeadModel.RightEar_Sag hdr.HeadModel.RightEar_Cor hdr.HeadModel.RightEar_Axi];
+
+% Reorient the image data, the transformation matrix and the fiducials
+% along the left-right direction.
+% This may have been done only for visualization?  It can probably be
+% "turned off" without problem.
+if true
+  mri = flipdim(mri, 1);
+  flip = [-1 0 0 hdr.imageSize+1
+           0 1 0 0
+           0 0 1 0
+           0 0 0 1    ];
+  transformMatrix = flip*transformMatrix;
+  hdr.fiducial.mri.nas = [hdr.fiducial.mri.nas, 1] * flip(1:3, :)';
+  hdr.fiducial.mri.lpa = [hdr.fiducial.mri.lpa, 1] * flip(1:3, :)';
+  hdr.fiducial.mri.rpa = [hdr.fiducial.mri.rpa, 1] * flip(1:3, :)';
+end
 
 % re-compute the homogeneous transformation matrices (apply voxel scaling)
 scale = eye(4);
@@ -153,14 +189,9 @@ scale(3,3) = hdr.mmPerPixel_axial;
 hdr.transformHead2MRI = transformMatrix*inv(scale);
 hdr.transformMRI2Head = scale*inv(transformMatrix);
 
-% determint location of fiducials in MRI voxel coordinates
-% flip the fiducials in voxel coordinates to correspond to the previous flip along left-right
-hdr.fiducial.mri.nas = [256 - hdr.HeadModel.Nasion_Sag hdr.HeadModel.Nasion_Cor hdr.HeadModel.Nasion_Axi];
-hdr.fiducial.mri.lpa = [256 - hdr.HeadModel.LeftEar_Sag hdr.HeadModel.LeftEar_Cor hdr.HeadModel.LeftEar_Axi];
-hdr.fiducial.mri.rpa = [256 - hdr.HeadModel.RightEar_Sag hdr.HeadModel.RightEar_Cor hdr.HeadModel.RightEar_Axi];
-
 % compute location of fiducials in MRI and HEAD coordinates
 hdr.fiducial.head.nas = warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.nas, 'homogenous');
 hdr.fiducial.head.lpa = warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.lpa, 'homogenous');
 hdr.fiducial.head.rpa = warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.rpa, 'homogenous');
+
 
