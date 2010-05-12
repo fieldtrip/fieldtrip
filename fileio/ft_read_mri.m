@@ -55,6 +55,11 @@ if ft_filetype(filename, 'ctf_mri')
 elseif ft_filetype(filename, 'ctf_mri4')
   [img, hdr] = read_ctf_mri4(filename);
   transform = hdr.transformMRI2Head;
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+elseif ft_filetype(filename, 'ctf_svl')
+  [img, hdr] = read_ctf_svl(filename);
+  transform = hdr.transform;
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif ft_filetype(filename, 'asa_mri')
