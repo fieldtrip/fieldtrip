@@ -444,8 +444,7 @@ elseif filetype_check_extension(filename, '.vabs')
   type = 'brainvision_vabs';
   manufacturer = 'BrainProducts';
   content = 'Brain Vison Analyzer macro';
-elseif filetype_check_extension(filename, '.eeg')
-  % FIXME, can also be Neuroscan epoched EEG data
+elseif (filetype_check_extension(filename, '.eeg') || filetype_check_extension(filename, '.dat')) && exist(fullfile(p, [f '.vhdr']), 'file')
   type = 'brainvision_eeg';
   manufacturer = 'BrainProducts';
   content = 'continuous EEG data';
