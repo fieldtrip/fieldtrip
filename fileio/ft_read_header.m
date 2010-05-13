@@ -902,7 +902,8 @@ switch headerformat
     if iscontinuous
       raw = fiff_setup_read_raw(filename);
       hdr.nSamples    = raw.last_samp - raw.first_samp + 1; % number of samples per trial
-      hdr.nSamplesPre = -raw.first_samp;                    % represented as negative number in fif file
+      hdr.nSamplesPre = raw.first_samp;                     % this should be kept without a negative sign,
+							    % otherwise conflicts will occur in read_data
       hdr.nTrials     = 1;
       orig.raw        = raw; % keep all the details
 
