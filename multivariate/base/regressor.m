@@ -52,7 +52,7 @@ classdef regressor < predictor
         %       'circrss' : circular residual sum of squares
         %       'correlation' : correlation between real and predicted regressions
       
-         options = varargin2struct(varargin);
+	  options = struct(varargin{:});
       
          if ~isfield(options,'metric'), options.metric = 'correlation'; end
          

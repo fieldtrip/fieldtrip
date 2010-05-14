@@ -46,7 +46,7 @@ classdef reconstructor < predictor
         %       'mse' : mean squared error
         %       'correlation' : correlation between real and predicted reconstructions
       
-         options = varargin2struct(varargin);
+	  options = struct(varargin{:});
       
          if ~isfield(options,'metric'), options.metric = 'accuracy'; end
          

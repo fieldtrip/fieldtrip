@@ -74,7 +74,7 @@ classdef classifier < predictor
       %       'f1' : 2*TP/(2*TP + FN + FP)
       %       'hfdiff' : hitrate - missrate (or sensitivity + precision - 1)
       
-      options = varargin2struct(varargin);
+      options = struct(varargin{:});
       
       if ~isfield(options,'metric'), options.metric = 'accuracy'; end
       
@@ -373,7 +373,7 @@ classdef classifier < predictor
       % Bonferroni correction is applied for multiple datasets
       %
       
-      options = varargin2struct(varargin);
+      options = struct(varargin{:});
       
       p = cell(1,length(post));
       for c=1:length(post)
@@ -435,7 +435,7 @@ classdef classifier < predictor
       
       % initialization
       
-      cfg = varargin2struct(varargin);
+      cfg = struct(varargin{:});
       
       if ~isfield(cfg,'test'), cfg.test = 'mcnemar'; end
       if ~isfield(cfg,'bonferroni'), cfg.bonferroni = 1; end

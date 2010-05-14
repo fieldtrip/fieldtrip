@@ -263,7 +263,7 @@ classdef bayesnet < graphicalmodel
            ext = 'ps';
            
            % get optional parameters
-           v = varargin2struct(varargin);
+           v = struct(varargin{:});
            if isfield(v,'extension'), ext = v.extension; end 
                           
            fid = fopen(strcat(filename,'.dot'), 'wt');
