@@ -58,6 +58,25 @@ classdef validator
       
     end
     
+    function res = getdesign(obj)
+      
+      % return the predictions
+      if size(obj.design,2)>1
+        % multiple datasets
+        
+        res = cell(1,size(obj.design,2));
+        for c=1:size(obj.design,2)
+          res{c} = cell2mat(obj.design(:,c));
+        end
+        
+      else
+        
+        res = cell2mat(obj.design);
+                
+      end
+      
+    end
+    
     function [m,desc] = getmodel(obj)
       % try to return the classifier parameters as a model
       
