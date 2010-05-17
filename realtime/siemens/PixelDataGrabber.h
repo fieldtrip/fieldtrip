@@ -156,6 +156,14 @@ class PixelDataGrabber {
 	*/
 	void handleProtocol(const char *info, unsigned int sizeInBytes);
 	
+	/** Fill 'sform' and 'qform' fields of NIFTI-1 header from given slice position, normal vector,
+		and in-plane-rotation angle.
+		@param  pos			Must point to slice position (3 doubles)
+		@param  norm		Must point to slice normal vector (3 doubles)
+		@param  inPlane		In-plane rotation angle
+	*/	
+	void fillXFormFromSAP(const double *pos, const double *norm, double inPlane);
+	
 	/** Try to read the complete contents of a file into a given SimpleStorage object.
 		This is used internally for pixel data (->pixBuffer) and protocol information
 		(->protBuffer). If the file cannot be opened, the sBuf is not modified,
