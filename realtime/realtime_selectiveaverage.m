@@ -1,10 +1,10 @@
-function rt_average(cfg)
+function realtime_selectiveaverage(cfg)
 
-% RT_AVERAGE is an example realtime application for online
+% REALTIME_SELECTIVEAVERAGE is an example realtime application for online
 % averaging of the data. It should work both for EEG and MEG.
 %
 % Use as
-%   rt_average(cfg)
+%   realtime_selectiveaverage(cfg)
 % with the following configuration options
 %   cfg.channel    = cell-array, see CHANNELSELECTION (default = 'all')
 %   cfg.trialfun   = string with the trial function
@@ -21,7 +21,7 @@ function rt_average(cfg)
 %
 % To stop the realtime function, you have to press Ctrl-C
 
-% Copyright (C) 2009, Robert Oostenveld
+% Copyright (C) 2008, Robert Oostenveld
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
@@ -52,11 +52,8 @@ end
 prevSample = 0;
 count      = 0;
 
-% initialize the average, it will be filled on the first iteration
-avgsum = [];
-avgnum = [];
-% open a figure in which the average will be plotted
-figure
+% initialize the timelock cell-array, each cell will hold the average in one condition
+timelock = {};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the general BCI loop where realtime incoming data is handled
@@ -73,6 +70,12 @@ while true
   fprintf('evaluating ''%s'' based on %d events\n', cfg.trialfun, length(event));
   trl = feval(cfg.trialfun, cfg);
 
+  % the code below assumes that the 4th column of the trl matrix contains the condition index
+  % set the default condition to one if no condition index was given
+  if size(trl,2)<4
+    trl(:,4) = 1;
+  end
+
   fprintf('processing %d trials\n', size(trl,1));
 
   for trllop=1:size(trl,1)
@@ -80,11 +83,12 @@ while true
     begsample = trl(trllop,1);
     endsample = trl(trllop,2);
     offset    = trl(trllop,3);
+    condition = trl(trllop,4);
 
     % remember up to where the data was read
     prevSample  = endsample;
     count       = count + 1;
-    fprintf('processing segment %d from sample %d to %d\n', count, begsample, endsample);
+    fprintf('processing segment %d from sample %d to %d, condition = %d\n', count, begsample, endsample, condition);
 
     % read data segment from buffer
     dat = read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
@@ -93,24 +97,51 @@ while true
     % from here onward it is specific to the processing of the data
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % apply some preprocessing options
-    dat = preproc_baselinecorrect(dat);
+    % put the data in a fieldtrip-like raw structure
+    data.trial{1} = dat;
+    data.time{1}  = offset2time(offset, hdr.Fs, endsample-begsample+1);
+    data.label    = hdr.label(chanindx);
+    data.hdr      = hdr;
+    data.fsample  = hdr.Fs;
 
-    if isempty(average)
-      % initialize the accumulating variables on the first call
-      avgsum = dat;
-      avgnum = 1;
-    else
-      avgsum = avgsum + dat;
-      avgnum = avgnum + 1;
+    % apply some preprocessing options
+    data.trial{1} = preproc_baselinecorrect(data.trial{1});
+
+    if length(timelock)<condition || isempty(timelock{condition})
+      % this is the first occurence of this condition, initialize an empty timelock structure
+      timelock{condition}.label   = data.label;
+      timelock{condition}.time    = data.time{1};
+      timelock{condition}.avg     = [];
+      timelock{condition}.var     = [];
+      timelock{condition}.dimord  = 'chan_time';
+      nchans   = size(data.trial{1}, 1);
+      nsamples = size(data.trial{1}, 2);
+      % the following elements are for the cumulative computation
+      timelock{condition}.n   = 0;                          % number of trials
+      timelock{condition}.s   = zeros(nchans, nsamples);    % sum
+      timelock{condition}.ss  = zeros(nchans, nsamples);    % sum of squares
     end
 
-    % compute the average
-    avg = avgsum ./ avgnum;
+    % add the new data to the accumulated data
+    timelock{condition}.n  = timelock{condition}.n  + 1;
+    timelock{condition}.s  = timelock{condition}.s  + data.trial{1};
+    timelock{condition}.ss = timelock{condition}.ss + data.trial{1}.^2;
 
-    % create a time-axis and plot the average
-    time = offset2time(offset, hdr.Fs, endsample-begsample+1);
-    plot(time, avg);
+    % compute the average and variance on the fly
+    timelock{condition}.avg = timelock{condition}.s ./ timelock{condition}.n;
+    timelock{condition}.var = (timelock{condition}.ss - (timelock{condition}.s.^2)./timelock{condition}.n) ./ (timelock{condition}.n-1);
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % from here onward additional processing of the selective averages could be done
+    % as an example here the ERP of each condition is plotted in its own figure
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    % compute the t-score versus zero by dividing the average by the standard error of mean
+    tscore = timelock{condition}.avg ./ (sqrt(timelock{condition}.var)./(timelock{condition}.n - 1));
+
+    figure(condition)
+    plot(timelock{condition}.time, tscore);
+    title(sprintf('condition %d, ntrials = %d', condition, timelock{condition}.n));
 
     % force matlab to redraw the figure
     drawnow

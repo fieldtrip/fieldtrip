@@ -1,6 +1,6 @@
-function rt_ctfproxy(cfg)
+function realtime_ctfproxy(cfg)
 
-% RT_CTFPROXY reads continuous data from shared memory on a CTF
+% REALTIME_CTFPROXY reads continuous data from shared memory on a CTF
 % acquisition system and writes it to a FieldTrip buffer.
 %
 % The FieldTrip buffer is a network transparent server that allows the
@@ -14,7 +14,7 @@ function rt_ctfproxy(cfg)
 % the network, so the actual analysis can be done elsewhere.
 %
 % Use as
-%   rt_ctfproxy(cfg)
+%   realtime_ctfproxy(cfg)
 %
 % The target to write the data to is configured as
 %   cfg.target.datafile      = string, target destination for the data (default = 'buffer://localhost:1972')
@@ -36,5 +36,5 @@ cfg.jumptoeof = 'yes';
 cfg.readevent = 'yes';
 cfg.source.datafile   = 'shm://';
 cfg.source.dataformat = 'ctf_shm';
-rt_fileproxy(cfg);
+realtime_fileproxy(cfg);
 

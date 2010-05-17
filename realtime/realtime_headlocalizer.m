@@ -1,10 +1,10 @@
-function rt_headlocalizer(cfg)
+function realtime_headlocalizer(cfg)
 
-% RT_HEADLOCALIZER is a realtime application for online
+% REALTIME_HEADLOCALIZER is a realtime application for online
 % visualization of the head localization coils in a CTF275 system.
 %
 % Use as
-%   rt_headlocalizer(cfg)
+%   realtime_headlocalizer(cfg)
 % with the following configuration options
 %   cfg.template        = string, name of the original data set to be used as template (default = [])
 %   cfg.blocksize       = number, size of the blocks/chuncks that are processed (default = 1 second)

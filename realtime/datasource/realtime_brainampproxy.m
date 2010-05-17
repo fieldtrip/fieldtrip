@@ -1,6 +1,6 @@
-function rt_brainampproxy(cfg)
+function realtime_brainampproxy(cfg)
 
-% RT_BRAINAMPPROXY reads continuous data from a BrainAmp EEG acquisition
+% REALTIME_BRAINAMPPROXY reads continuous data from a BrainAmp EEG acquisition
 % system through the RDA network interface and writes it to a FieldTrip
 % buffer.
 %
@@ -10,7 +10,7 @@ function rt_brainampproxy(cfg)
 % each analyzing a specific aspect of the data concurrently.
 %
 % Use as
-%   rt_brainampproxy(cfg)
+%   realtime_brainampproxy(cfg)
 %
 % The configuration should contain
 %   cfg.host                 = string, name of computer running the recorder software (default = 'eeg002')

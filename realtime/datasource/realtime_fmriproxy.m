@@ -1,12 +1,13 @@
-function rt_fmriproxy(cfg)
-% RT_FMRIPROXY simulates an fMRI acquisition system by writing pixeldata in
+function realtime_fmriproxy(cfg)
+
+% REALTIME_FMRIPROXY simulates an fMRI acquisition system by writing pixeldata in
 % a 2s cycle. The pixeldata in this case is treated as a column vector with
 % 122880 channels, but actually this represents 30 slices of 64x64 pixel
 % each, one slice after another. The pixeldata is the same in each cycle 
 % apart from added noise.
 %
 % Use as
-%   rt_fmriproxy(cfg)
+%   realtime_fmriproxy(cfg)
 %
 % The target to write the data to is configured as
 %   cfg.target.datafile      = string, target destination for the data (default = 'buffer://localhost:1972')

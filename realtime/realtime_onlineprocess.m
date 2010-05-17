@@ -1,9 +1,12 @@
-function rt_onlineprocess(cfg)
-% This function is for online BCI.
-% it calculates the alpha lateralization index and based on the thresholding
-% scheme, sends the outputs to the presentation machine as 1 for left, 2 for
-% right and 3 for no move.
+function realtime_onlineprocess(cfg)
 
+% REALTIME_ONLINEPROCESS calculates the alpha lateralization index
+% and based on the thresholding scheme, sends the outputs to the
+% presentation machine as 1 for left, 2 for right and 3 for no move.
+%
+% Use as
+%   realtime_average(cfg)
+% with the following configuration options
 %   cfg.blocksize  = number, size of the blocks/chuncks that are processed (default = 1 second)
 %   cfg.channel    = cell-array, see CHANNELSELECTION (default = {'MLO' 'MRO'}')
 %   cfg.bufferdata = whether to start on the 'first or 'last' data that is available (default = 'last')
@@ -20,9 +23,10 @@ function rt_onlineprocess(cfg)
 %   cfg.ntraining     = number, the number of trials to be used in the training phase (default=inf) 
 %
 % To stop the realtime function, you have to press Ctrl-C
+
 %  Copyright (C) 2009, Ali Bahramisharif, Marcel van Gerven, Robert Oostenveld
-
-
+%
+% $Id$
 
 % set the default configuration options
 if ~isfield(cfg, 'dataformat'),     cfg.dataformat = [];      end % default is detected automatically

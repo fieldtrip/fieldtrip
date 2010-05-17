@@ -1,6 +1,6 @@
-function rt_asaproxy(cfg)
+function realtime_asaproxy(cfg)
 
-% RT_ASAPROXY reads continuous data from the ASA acquisition system
+% REALTIME_ASAPROXY reads continuous data from the ASA acquisition system
 % and writes it to a FieldTrip buffer. This function uses the
 % NeuroSDK software, which can be obtained from ANT.
 %
@@ -10,7 +10,7 @@ function rt_asaproxy(cfg)
 % each analyzing a specific aspect of the data concurrently.
 %
 % Use as
-%   rt_asaproxy(cfg)
+%   realtime_asaproxy(cfg)
 %
 % The configuration should contain
 %   cfg.channel              = cell-array, see CHANNELSELECTION (default = 'all')

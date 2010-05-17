@@ -1,6 +1,6 @@
-function rt_pooraudioproxy(cfg)
+function realtime_pooraudioproxy(cfg)
 
-% RT_POORAUDIOPROXY reads continuous data from the sound card using the 
+% REALTIME_POORAUDIOPROXY reads continuous data from the sound card using the 
 % standard Matlab API and writes it to a FieldTrip buffer. This proxy has
 % poor timing and will produce dropped audio frames between blocks. Also
 % the Matlab documentation warns about using this API for long recordings
@@ -12,7 +12,7 @@ function rt_pooraudioproxy(cfg)
 % each analyzing a specific aspect of the data concurrently.
 %
 % Use as
-%   rt_pooraudioproxy(cfg)
+%   realtime_pooraudioproxy(cfg)
 %
 % The audio-specific configuration structure can contain
 %   cfg.channel     = number of channels (1 or 2, default=2)

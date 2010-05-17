@@ -1,11 +1,11 @@
-function rt_process(cfg)
+function realtime_process(cfg)
 
-% RT_PROCESS is used to process the data according to a specified
+% REALTIME_PROCESS is used to process the data according to a specified
 % trialfun and bcifun. This function can be considered as the general
 % workhorse for realtime processing.
 %
 % Use as
-%   rt_process(cfg)
+%   realtime_process(cfg)
 % with the following configuration options
 %   cfg.channel    = cell-array, see CHANNELSELECTION (default = 'all')
 %   cfg.trialfun   = string with the trial function

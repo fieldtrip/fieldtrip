@@ -1,9 +1,9 @@
-function rt_downsample(cfg)
+function realtime_downsample(cfg)
 
-% RT_DOWNSAMPLE
+% REALTIME_DOWNSAMPLE
 %
 % Use as
-%   rt_downsample(cfg)
+%   realtime_downsample(cfg)
 % with the following configuration options
 %   cfg.channel              = cell-array, see CHANNELSELECTION (default = 'all')
 %
