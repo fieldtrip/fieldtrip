@@ -1,7 +1,8 @@
 function rt_process(cfg)
 
-% RT_PROCESS is used to process the data according to a specified trialfun
-% and bcifun
+% RT_PROCESS is used to process the data according to a specified
+% trialfun and bcifun. This function can be considered as the general
+% workhorse for realtime processing.
 %
 % Use as
 %   rt_process(cfg)

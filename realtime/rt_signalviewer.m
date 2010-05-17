@@ -40,6 +40,10 @@ if ~isfield(cfg, 'readevent'),      cfg.readevent = 'no';     end % capture even
 if ~isfield(cfg, 'jumptoeof'),      cfg.jumptoeof = 'no';     end % jump to end of file at initialization
 if ~isfield(cfg, 'blc'),            cfg.blc = 'yes';          end % baseline correction
 
+if ~isfield(cfg, 'dataset') && ~isfield(cfg, 'header') && ~isfield(cfg, 'datafile')
+  cfg.dataset = 'buffer://localhost:1972';
+end
+
 % translate dataset into datafile+headerfile
 cfg = checkconfig(cfg, 'dataset2files', 'yes');
 cfg = checkconfig(cfg, 'required', {'datafile' 'headerfile'});
@@ -144,7 +148,7 @@ while true
         else
           description = 'event';
         end
-        
+
         h = line([time time], ylim);
         set(h, 'LineWidth', 2, 'LineStyle', ':', 'Color', 'k');
         y = ylim; y = y(1);
