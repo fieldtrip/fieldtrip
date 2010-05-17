@@ -29,7 +29,7 @@ function [inside, outside] = find_inside_vol(pos, vol);
 % $Id$
 
 
-inside  = inside_vol(pos, vol);
+inside  = ft_inside_vol(pos, vol);
 % replace boolean vector with indexing vectors
 outside = find(~inside);
 inside  = find(inside);
