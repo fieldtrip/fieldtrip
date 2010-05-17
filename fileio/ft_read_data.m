@@ -288,7 +288,7 @@ if strcmp(dataformat, 'bci2000_dat')
   % caching for BCI2000 is handled in the main section and in read_header
 else
   % implement the caching in a data-format independent way
-  if cache && isempty(cachedata)
+  if cache && (isempty(cachedata) || ~isequal(cachedata.label,hdr.label(chanindx)))
     % create a new FieldTrip raw data structure that will hold the data
     cachedata.label = hdr.label(chanindx);
     cachedata.fsample = hdr.Fs;
