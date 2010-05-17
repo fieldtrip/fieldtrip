@@ -40,7 +40,7 @@ if ~isfield(cfg.target, 'headerformat'),  cfg.target.headerformat = [];         
 if ~isfield(cfg.target, 'dataformat'),    cfg.target.dataformat = [];                       end % default is detected automatically
 if ~isfield(cfg.target, 'datafile'),      cfg.target.datafile = 'buffer://localhost:1972';  end
 if ~isfield(cfg, 'blocksize'),            cfg.blocksize = 1;                                end % in seconds
-if ~isfield(cfg, 'channel'),              cfg.channel = senslabel('eeg1020');               end
+if ~isfield(cfg, 'channel'),              cfg.channel = ft_senslabel('eeg1020');            end
 if ~isfield(cfg, 'fsample'),              cfg.fsample = 250;                                end % in Hz
 if ~isfield(cfg, 'speed'),                cfg.speed = 1 ;                                   end % relative
 % set the defaults for filtering
