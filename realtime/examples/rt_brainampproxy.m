@@ -93,6 +93,7 @@ while isempty(hdr)
       hdr.nChans  = msg.nChannels;
       hdr.Fs      = 1/(msg.dSamplingInterval/1e6);
       hdr.label   = msg.sChannelNames;
+	  hdr.resolutions = msg.dResolutions;
       % determine the selection of channels to be transmitted
       cfg.channel = channelselection(cfg.channel, hdr.label);
       chanindx = match_str(hdr.label, cfg.channel);
