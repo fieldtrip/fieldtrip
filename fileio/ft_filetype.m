@@ -818,6 +818,10 @@ elseif filetype_check_extension(filename, '.edf')
   type = 'edf';
   manufacturer = 'European Data Format';
   content = 'electrophysiological data';
+elseif filetype_check_extension(filename, '.gdf') && filetype_check_header(filename, 'GDF')
+  type = 'gdf';
+  manufacturer = 'BIOSIG - Alois Schloegl';
+  content = 'biosignals';
 elseif filetype_check_extension(filename, '.mat') && exist(filename, 'file') && exist([filename(1:(end-4)) '.dat'], 'file') && numel(whos('-file', filename))==1 && strcmp('D', getfield(whos('-file', filename), {1}, 'name')) && strcmp('struct', getfield(whos('-file', filename), {1}, 'class'))
   type = 'spmeeg_mat';
   manufacturer = 'Wellcome Trust Centre for Neuroimaging, UCL, UK';

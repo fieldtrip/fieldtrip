@@ -340,6 +340,12 @@ switch eventformat
       event(end+1).type   = 'Battery_ok';
       event(end  ).sample = i;
     end
+    
+  case {'biosig', 'gdf'}
+    % FIXME it would be nice to figure out how sopen/sread return events
+    % for all possible fileformats that can be processed with biosig
+    warning('BIOSIG does not have a consistent event representation, skipping events')
+    event = [];
 
   case 'brainvision_vmrk'
     fid=fopen(filename,'rt');
@@ -1255,7 +1261,7 @@ switch eventformat
     end
 
   otherwise
-    error('unsupported event format');
+    error('unsupported event format (%s)', eventformat);
 end
 
 if ~isempty(event)

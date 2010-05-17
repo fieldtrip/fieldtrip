@@ -324,7 +324,7 @@ switch headerformat
     hdr.nTrials     = 1;
     hdr.label       = orig.label;
 
-  case 'biosig'
+  case {'biosig' 'gdf'}
     % use the biosig toolbox if available
     hastoolbox('BIOSIG', 1);
     hdr = read_biosig_header(filename);
@@ -744,7 +744,7 @@ switch headerformat
       hdr.label = mxDeserialize(hdr.label);
     end
 
-  case  'itab_raw'
+  case 'itab_raw'
     % check the presence of the required low-level toolbox
     hastoolbox('lc-libs', 1);
     header_info = lcReadHeader(filename);
@@ -1238,7 +1238,7 @@ switch headerformat
     if strcmp(fallback, 'biosig') && hastoolbox('BIOSIG', 1)
       hdr = read_biosig_header(filename);
     else
-      error('unsupported header format');
+      error('unsupported header format (%s)', headerformat);
     end
 end
 

@@ -433,7 +433,7 @@ switch dataformat
     % close the file between seperate read operations
     fclose(orig.Head.FILE.FID);
 
-  case {'biosig'}
+  case {'biosig', 'gdf'}
     % use the biosig toolbox if available
     hastoolbox('BIOSIG', 1);
     dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
@@ -901,7 +901,7 @@ switch dataformat
     if strcmp(fallback, 'biosig') && hastoolbox('BIOSIG', 1)
       dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
     else
-      error('unsupported data format');
+      error('unsupported data format (%s)', dataformat);
     end
 
 end
