@@ -29,6 +29,7 @@ function [freq] = ft_freqanalysis_mtmfft(cfg, data);
 %   cfg.tapsmofrq  = number, the amount of spectral smoothing through
 %                    multi-tapering. Note that 4 Hz smoothing means
 %                    plus-minus 4 Hz, i.e. a 8 Hz smoothing box.
+%   cfg.trials     = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.keeptrials = 'yes' or 'no', return individual trials or average (default = 'no')
 %   cfg.keeptapers = 'yes' or 'no', return individual tapers or average (default = 'no')
 %   cfg.pad        = number or 'maxperlen', length in seconds to which the data can be padded out (default = 'maxperlen')

@@ -24,6 +24,7 @@ function [freq] = ft_freqanalysis_wltconvol(cfg, data);
 %   cfg.foi        = vector 1 x numfoi, frequencies of interest
 %   cfg.toi        = vector 1 x numtoi, the times on which the analysis windows
 %                    should be centered (in seconds)
+%   cfg.trials     = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.keeptrials = 'yes' or 'no', return individual trials or average (default = 'no')
 %   cfg.width      = 'width' of the wavelet, determines the temporal and spectral
 %                    resolution of the analysis (default = 7)
