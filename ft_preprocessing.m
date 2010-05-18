@@ -220,8 +220,7 @@ if ~isempty(cfg.inputfile)
   if hasdata
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
-    fprintf('reading input data from "%s"\n', cfg.inputfile);
-    load(cfg.inputfile, 'data');
+    data = loadvar(cfg.inputfile, 'data');
     hasdata = true;
   end
 end
@@ -517,9 +516,5 @@ dataout.cfg = cfg;
 
 % the output data should be saved to a MATLAB file
 if ~isempty(cfg.outputfile)
-  fprintf('writing output data to "%s"\n', cfg.outputfile);
-  data = dataout; % use the variable name "data" in the output file
-  save(cfg.outputfile, 'data');
+  savevar(cfg.outputfile, 'data', dataout); % use the variable name "data" in the output file
 end
-
-
