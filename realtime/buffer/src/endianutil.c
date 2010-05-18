@@ -76,14 +76,27 @@ void ft_swap_data(UINT32_T numel, UINT32_T datatype, void *data) {
 	}	
 }
 
-int ft_swap_chunks_to_native(UINT32_T size, void *buf) {
+int ft_swap_chunks_to_native(UINT32_T size, UINT32_T nchans, void *buf) {
 	UINT32_T offset = 0;
 	while (offset + sizeof(ft_chunkdef_t) <= size) {
 		ft_chunk_t *chunk = (ft_chunk_t *) ((char *) buf + offset);
 		
 		ft_swap32(2, &(chunk->def));
-		/* TODO: check any contents of the chunk for possible swapping */
 		
+		offset += sizeof(ft_chunkdef_t) + chunk->def.size;
+		/* chunk definition fault (=too big) ? */
+		if (offset < size) return -1;
+		
+		switch(chunk->def.type) {
+			case FT_CHUNK_RESOLUTIONS:
+				if (chunk->def.size >= nchans*sizeof(FLOAT64_T)) {
+					ft_swap64(nchans, chunk->data);
+				}
+				break;
+			/* Add other cases here as needed */
+		}		
+		
+		/* TODO: check any contents of the chunk for possible swapping */
 		offset += sizeof(ft_chunkdef_t) + chunk->def.size;
 	}
 	return 0;
@@ -92,6 +105,7 @@ int ft_swap_chunks_to_native(UINT32_T size, void *buf) {
 int ft_swap_events_to_native(UINT32_T size, void *buf) {
 	UINT32_T offset = 0;
 	
+
 	while (offset + sizeof(eventdef_t) <= size) {
 		unsigned int wst;
 		
@@ -133,22 +147,34 @@ int ft_swap_buf_to_native(UINT16_T command, UINT32_T bufsize, void *buf) {
 		case PUT_HDR:
 			/* buf contains a headerdef_t and optionally chunks */
 			ft_swap32(6, buf);	/* all fields are 32-bit values */
-			return ft_swap_chunks_to_native(bufsize - sizeof(headerdef_t), (char *) buf + sizeof(headerdef_t));
+			return ft_swap_chunks_to_native(bufsize - sizeof(headerdef_t), ((headerdef_t *) buf)->nchans, (char *) buf + sizeof(headerdef_t));
 		case PUT_EVT:
 			/* buf contains multiple eventdef_t and buf's */
-			return ft_swap_events_to_native(bufsize - sizeof(headerdef_t), (char *) buf + sizeof(headerdef_t));
+			return ft_swap_events_to_native(bufsize, buf);
 	}
 	return -1;
 }
 
 
 
-int ft_swap_chunks_from_native(UINT32_T size, void *buf) {
+int ft_swap_chunks_from_native(UINT32_T size, UINT32_T nchans, void *buf) {
 	UINT32_T offset = 0;
 	while (offset + sizeof(ft_chunkdef_t) <= size) {
 		ft_chunk_t *chunk = (ft_chunk_t *) ((char *) buf + offset);
 		offset += sizeof(ft_chunkdef_t) + chunk->def.size;
-		/* TODO: check any contents of the chunk for possible swapping */
+		
+		/* chunk definition fault (=too big) ? */
+		if (offset < size) return -1;
+		
+		switch(chunk->def.type) {
+			case FT_CHUNK_RESOLUTIONS:
+				if (chunk->def.size >= nchans*sizeof(FLOAT64_T)) {
+					ft_swap64(nchans, chunk->data);
+				}
+				break;
+			/* Add other cases here as needed */
+		}
+		
 		ft_swap32(2, &(chunk->def));
 	}
 	return 0;
@@ -175,6 +201,7 @@ int ft_swap_events_from_native(UINT32_T size, void *buf) {
 
 int ft_swap_from_native(UINT16_T orgCommand, message_t *msg) {
 	datadef_t *ddef;
+	UINT32_T nchans;
 
 	UINT32_T bufsize = msg->def->bufsize;
 	
@@ -186,8 +213,9 @@ int ft_swap_from_native(UINT16_T orgCommand, message_t *msg) {
 	
 	switch(orgCommand) {
 		case GET_HDR:
+			nchans = ((headerdef_t *) msg->buf)->nchans;
 			ft_swap32(6, msg->buf);	/* all fields are 32-bit values */
-			return ft_swap_chunks_from_native(bufsize - sizeof(headerdef_t), (char *) msg->buf + sizeof(headerdef_t));
+			return ft_swap_chunks_from_native(bufsize - sizeof(headerdef_t), nchans, (char *) msg->buf + sizeof(headerdef_t));
 		case GET_DAT:
 			ddef = (datadef_t *) msg->buf;
 			ft_swap_data(ddef->nchans*ddef->nsamples, ddef->data_type, ddef + 1); /* ddef+1 points to first data byte */
