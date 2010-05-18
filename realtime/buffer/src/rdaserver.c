@@ -174,7 +174,6 @@ cleanup:
 }	
 
 
-
 void rda_aux_convert_to_float(UINT32_T N, void *dest, UINT32_T data_type, const void *src) {
 	UINT32_T n;
 	float *d = (float *) dest;
@@ -398,7 +397,7 @@ int rda_aux_get_float_data(int ft_buffer, unsigned int start, unsigned int end, 
 		datadef_t *ddef = (datadef_t *) resp->buf;
 		unsigned int numTotal = ddef->nchans * ddef->nsamples;
 		
-		 if (ddef->nchans != nChans) {
+		if (ddef->nchans != nChans || ddef->nsamples != (end-start+1)) {
 			r = -1;
 			goto cleanup;
 		}

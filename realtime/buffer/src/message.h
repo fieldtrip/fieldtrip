@@ -72,6 +72,9 @@ typedef uint64_t UINT64_T;
 /* define the version of the message packet */
 #define VERSION    (UINT16_T)0x0001
 
+/* the same version number in the "other" endianness */
+#define VERSION_OE  (UINT16_T) (((VERSION & 0x00FF) << 8) | ((VERSION & 0xFF00) >> 8))
+
 /* these define the commands that can be used, which are split over the two available bytes */
 #define PUT_HDR    (UINT16_T)0x0101
 #define PUT_DAT    (UINT16_T)0x0102

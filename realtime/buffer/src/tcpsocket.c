@@ -83,6 +83,9 @@ void *tcpsocket(void *arg) {
 
 	/* keep processing messages untill the connection is closed */
 	while (1) {
+		int swap = 0;
+		UINT16_T reqCommand;
+		UINT32_T respBufSize;
 
 		request       = (message_t*)malloc(sizeof(message_t));
 		DIE_BAD_MALLOC(request);
@@ -120,12 +123,19 @@ void *tcpsocket(void *arg) {
 			if (verbose>0) fprintf(stderr, "tcpsocket: packet size = %d, should be %d\n", n, sizeof(messagedef_t));
 			goto cleanup;
 		}
+		
+		if (request->def->version==VERSION_OE) {
+			swap = 1;
+			ft_swap16(2, &request->def->version); /* version + command */
+			ft_swap32(1, &request->def->bufsize);
+			reqCommand = request->def->command;		
+		}
 
 		if (request->def->version!=VERSION) {
 			if (verbose>0) fprintf(stderr, "tcpsocket: incorrect request version\n");
 			goto cleanup;
 		}
-
+		
 		if (request->def->bufsize>0) {
 			request->buf = malloc(request->def->bufsize);
 			DIE_BAD_MALLOC(request->buf);
@@ -134,6 +144,8 @@ void *tcpsocket(void *arg) {
 				goto cleanup;
 			}
 		}
+		
+		if (swap && request->def->bufsize > 0) ft_swap_buf_to_native(reqCommand, request->def->bufsize, request->buf);
 
 		if (verbose>1) print_request(request->def);
 		if (verbose>1) print_buf(request->buf, request->def->bufsize);
@@ -145,22 +157,25 @@ void *tcpsocket(void *arg) {
 		
 		DIE_BAD_MALLOC(response);
 		DIE_BAD_MALLOC(response->def);
-
+		
 		if (verbose>1) print_response(response->def);
 		if (verbose>1) print_buf(request->buf, request->def->bufsize);
+		
+		respBufSize = response->def->bufsize;
+		if (swap) ft_swap_from_native(reqCommand, response);
 
 		/* we don't need the request anymore */
 		cleanup_message(&request);
 		request = NULL;
 		
 		/* merge response->def and response->buf if they are small, so we can send it in one go over TCP */
-		if (response->def->bufsize + sizeof(messagedef_t) <= MERGE_THRESHOLD) {
-			int msize = response->def->bufsize + sizeof(messagedef_t);
+		if (respBufSize + sizeof(messagedef_t) <= MERGE_THRESHOLD) {
+			int msize = respBufSize + sizeof(messagedef_t);
 			void *merged = NULL;
 			
 			append(&merged, 0, response->def, sizeof(messagedef_t));
 			DIE_BAD_MALLOC(merged);
-			append(&merged, sizeof(messagedef_t), response->buf, response->def->bufsize);
+			append(&merged, sizeof(messagedef_t), response->buf, respBufSize);
 			DIE_BAD_MALLOC(merged);
 						
 			if ((n=bufwrite(client, merged, msize) != msize)) {
@@ -174,8 +189,8 @@ void *tcpsocket(void *arg) {
 				if (verbose>0) fprintf(stderr, "tcpsocket: write size = %d, should be %d\n", n, sizeof(messagedef_t));
 				goto cleanup;
 			}
-			if ((n = bufwrite(client, response->buf, response->def->bufsize))!=response->def->bufsize) {
-				if (verbose>0) fprintf(stderr, "tcpsocket: write size = %d, should be %d\n", n, response->def->bufsize);
+			if ((n = bufwrite(client, response->buf, respBufSize))!=respBufSize) {
+				if (verbose>0) fprintf(stderr, "tcpsocket: write size = %d, should be %d\n", n, respBufSize);
 				goto cleanup;
 			}
 		}

@@ -114,6 +114,13 @@ unsigned int wordsize_from_type(UINT32_T data_type);
 void check_datatypes(void);
 const ft_chunk_t *find_chunk(const void *buf, int offset0, int size, UINT32_T chunk_type);
 
+void ft_swap16(unsigned int numel, void *data);
+void ft_swap32(unsigned int numel, void *data);
+void ft_swap64(unsigned int numel, void *data);
+int ft_swap_buf_to_native(UINT16_T command, UINT32_T bufsize, void *buf);
+int ft_convert_chunks_from_native(UINT32_T size, void *buf);
+int ft_swap_from_native(UINT16_T orgCommand, message_t *msg);
+
 typedef struct {
 	char name[256];
 	int  port;
