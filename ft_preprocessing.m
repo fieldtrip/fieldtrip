@@ -19,7 +19,7 @@ function [dataout] = ft_preprocessing(cfg, data)
 % specify
 %   cfg.dataset      = string with the filename
 %   cfg.trl          = Nx3 matrix with the trial definition, see FT_DEFINETRIAL
-%   cfg.padding      = length to which the trials are padded for filtering
+%   cfg.padding      = length to which the trials are padded for filtering (default = 0)
 %   cfg.continuous   = 'yes' or 'no' whether the file contains continuous data
 %                      (default is determined automatic)
 %
@@ -39,38 +39,38 @@ function [dataout] = ft_preprocessing(cfg, data)
 %                      see FT_CHANNELSELECTION for details
 %
 % The preprocessing options for the selected channels are specified with
-%   cfg.lpfilter      = 'no' or 'yes'  lowpass filter
-%   cfg.hpfilter      = 'no' or 'yes'  highpass filter
-%   cfg.bpfilter      = 'no' or 'yes'  bandpass filter
-%   cfg.bsfilter      = 'no' or 'yes'  bandstop filter
-%   cfg.dftfilter     = 'no' or 'yes'  line noise removal using discrete fourier transform
-%   cfg.medianfilter  = 'no' or 'yes'  jump preserving median filter
+%   cfg.lpfilter      = 'no' or 'yes'  lowpass filter (default = 'no')
+%   cfg.hpfilter      = 'no' or 'yes'  highpass filter (default = 'no')
+%   cfg.bpfilter      = 'no' or 'yes'  bandpass filter (default = 'no')
+%   cfg.bsfilter      = 'no' or 'yes'  bandstop filter (default = 'no')
+%   cfg.dftfilter     = 'no' or 'yes'  line noise removal using discrete fourier transform (default = 'no')
+%   cfg.medianfilter  = 'no' or 'yes'  jump preserving median filter (default = 'no')
 %   cfg.lpfreq        = lowpass  frequency in Hz
 %   cfg.hpfreq        = highpass frequency in Hz
 %   cfg.bpfreq        = bandpass frequency range, specified as [low high] in Hz
 %   cfg.bsfreq        = bandstop frequency range, specified as [low high] in Hz
-%   cfg.dftfreq       = line noise frequencies for DFT filter, default [50 100 150] Hz
-%   cfg.lpfiltord     = lowpass  filter order
-%   cfg.hpfiltord     = highpass filter order
-%   cfg.bpfiltord     = bandpass filter order
-%   cfg.bsfiltord     = bandstop filter order
-%   cfg.lpfilttype    = digital filter type, 'but' (default) or 'fir'
-%   cfg.hpfilttype    = digital filter type, 'but' (default) or 'fir'
-%   cfg.bpfilttype    = digital filter type, 'but' (default) or 'fir'
-%   cfg.bsfilttype    = digital filter type, 'but' (default) or 'fir'
-%   cfg.lpfiltdir     = filter direction, 'twopass' (default), 'onepass' or 'onepass-reverse'
-%   cfg.hpfiltdir     = filter direction, 'twopass' (default), 'onepass' or 'onepass-reverse'
-%   cfg.bpfiltdir     = filter direction, 'twopass' (default), 'onepass' or 'onepass-reverse'
-%   cfg.bsfiltdir     = filter direction, 'twopass' (default), 'onepass' or 'onepass-reverse'
-%   cfg.medianfiltord = length of median filter
-%   cfg.blc           = 'no' or 'yes', whether to apply baseline correction
-%   cfg.blcwindow     = [begin end] in seconds, the default is the complete trial
-%   cfg.detrend       = 'no' or 'yes', this is done on the complete trial
-%   cfg.polyremoval   = 'no' or 'yes', this is done on the complete trial
+%   cfg.dftfreq       = line noise frequencies in Hz for DFT filter (default = [50 100 150])
+%   cfg.lpfiltord     = lowpass  filter order (default = 6)
+%   cfg.hpfiltord     = highpass filter order (default = 6)
+%   cfg.bpfiltord     = bandpass filter order (default = 4)
+%   cfg.bsfiltord     = bandstop filter order (default = 4)
+%   cfg.lpfilttype    = digital filter type, 'but' or 'fir' (default = 'but')
+%   cfg.hpfilttype    = digital filter type, 'but' or 'fir' (default = 'but')
+%   cfg.bpfilttype    = digital filter type, 'but' or 'fir' (default = 'but')
+%   cfg.bsfilttype    = digital filter type, 'but' or 'fir' (default = 'but')
+%   cfg.lpfiltdir     = filter direction, 'twopass', 'onepass' or 'onepass-reverse' (default = 'twopass') 
+%   cfg.hpfiltdir     = filter direction, 'twopass', 'onepass' or 'onepass-reverse' (default = 'twopass') 
+%   cfg.bpfiltdir     = filter direction, 'twopass', 'onepass' or 'onepass-reverse' (default = 'twopass') 
+%   cfg.bsfiltdir     = filter direction, 'twopass', 'onepass' or 'onepass-reverse' (default = 'twopass') 
+%   cfg.medianfiltord = length of median filter (default = 9)
+%   cfg.blc           = 'no' or 'yes', whether to apply baseline correction (default = 'no')
+%   cfg.blcwindow     = [begin end] in seconds, the default is the complete trial (default = 'all')
+%   cfg.detrend       = 'no' or 'yes', this is done on the complete trial (default = 'no')
+%   cfg.polyremoval   = 'no' or 'yes', this is done on the complete trial (default = 'no')
 %   cfg.polyorder     = polynome order (default = 2)
-%   cfg.derivative    = 'no' (default) or 'yes', computes the first order derivative of the data
+%   cfg.derivative    = 'no' or 'yes', computes the first order derivative of the data (default = 'no')
 %   cfg.hilbert       = 'no', 'abs', 'complex', 'real', 'imag', 'absreal', 'absimag' or 'angle' (default = 'no')
-%   cfg.rectify       = 'no' or 'yes'
+%   cfg.rectify       = 'no' or 'yes' (default = 'no')
 %   cfg.precision     = 'single' or 'double' (default = 'double')
 %
 % Preprocessing options that you should only use for EEG data are
