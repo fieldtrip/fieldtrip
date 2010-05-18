@@ -20,7 +20,7 @@ function [mri] = ft_volumerealign(cfg, mri);
 %   cfg.clim           = [min max], scaling of the anatomy color (default
 %                        is to adjust to the minimum and maximum)
 %   cfg.method         = different methods for aligning the electrodes
-%                        'realignfiducial' realign the volume to the fiducials
+%                        'fiducial' realign the volume to the fiducials
 %                        'interactive'     manually using graphical user interface
 %
 % For realigning to the fiducials, you should specify the position of the
@@ -61,6 +61,7 @@ function [mri] = ft_volumerealign(cfg, mri);
 
 fieldtripdefs
 
+cfg = checkconfig(cfg, 'renamedval', {'method', 'realignfiducial', 'fiducial'});
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
 % check if the input data is valid for this function
@@ -73,7 +74,7 @@ if ~isfield(cfg, 'clim'),      cfg.clim      = [];        end
 
 if ~isfield(cfg, 'method')
   if ~isempty(cfg.fiducial)
-    cfg.method = 'realignfiducial';
+    cfg.method = 'fiducial';
   else
     cfg.method = 'interactive';
   end
@@ -86,9 +87,11 @@ if iscell(cfg.parameter)
 end
 
 switch cfg.method
-  case 'realignfiducial'
+  case 'fiducial'
     % do nothing
+    
   case 'interactive'
+    showcrosshair = true;
     dat = getsubfield(mri, cfg.parameter);
     nas = [];
     lpa = [];
@@ -99,15 +102,18 @@ switch cfg.method
     xc = round(mri.dim(1)/2);
     yc = round(mri.dim(2)/2);
     zc = round(mri.dim(3)/2);
-    while(1) % break when 'q' is pressed
+    
+    while true % break when 'q' is pressed
       fprintf('============================================================\n');
       fprintf('click with mouse button to reslice the display to a new position\n');
       fprintf('press n/l/r on keyboard to record the current position as fiducial location\n');
+      fprintf('press i,j,k or I,J,K on the keyboard to increment or decrement the slice number by one\n');
+      fprintf('press c or C on the keyboard to show or hide the crosshair\n');
       fprintf('press q on keyboard to quit interactive mode\n');
-      xc = round(xc);
-      yc = round(yc);
-      zc = round(zc);
-      volplot(x, y, z, dat, [xc yc zc], cfg.clim);
+      xc = round(xc); xc = max(1,xc); xc = min(mri.dim(1),xc);
+      yc = round(yc); yc = max(1,yc); yc = min(mri.dim(2),yc);
+      zc = round(zc); zc = max(1,zc); zc = min(mri.dim(3),zc);
+      volplot(x, y, z, dat, [xc yc zc], cfg.clim, showcrosshair);
       drawnow;
       try, [d1, d2, key] = ginput(1); catch, key='q'; end
       if key=='q'
@@ -118,6 +124,22 @@ switch cfg.method
         rpa = [xc yc zc];
       elseif key=='n'
         nas = [xc yc zc];
+      elseif key=='c'
+        showcrosshair = true;
+      elseif key=='C'
+        showcrosshair = false;
+      elseif key=='i'
+        xc = xc+1;
+      elseif key=='I'
+        xc = xc-1;
+      elseif key=='j'
+        yc = yc+1;
+      elseif key=='J'
+        yc = yc-1;
+      elseif key=='k'
+        zc = zc+1;
+      elseif key=='K'
+        zc = zc-1;
       else
         % update the view to a new position
         l1 = get(get(gca, 'xlabel'), 'string');
@@ -139,10 +161,24 @@ switch cfg.method
             zc = d2;
         end
       end
-      if ~isempty(nas), fprintf('nas = [%f %f %f]\n', nas); else fprintf('nas = undefined\n'); end
-      if ~isempty(lpa), fprintf('lpa = [%f %f %f]\n', lpa); else fprintf('lpa = undefined\n'); end
-      if ~isempty(rpa), fprintf('rpa = [%f %f %f]\n', rpa); else fprintf('rpa = undefined\n'); end
-    end
+      
+      fprintf('cur_voxel = [%f %f %f], cur_head = [%f %f %f]\n', [xc yc zc], warp_apply(mri.transform, [xc yc zc]));
+      if ~isempty(nas),
+        fprintf('nas_voxel = [%f %f %f], nas_head = [%f %f %f]\n', nas, warp_apply(mri.transform, nas));
+      else
+        fprintf('nas = undefined\n');
+      end
+      if ~isempty(lpa),
+        fprintf('lpa_voxel = [%f %f %f], lpa_head = [%f %f %f]\n', lpa, warp_apply(mri.transform, lpa));
+      else
+        fprintf('lpa = undefined\n');
+      end
+      if ~isempty(rpa),
+        fprintf('rpa_voxel = [%f %f %f], rpa_head = [%f %f %f]\n', rpa, warp_apply(mri.transform, rpa));
+      else
+        fprintf('rpa = undefined\n');
+      end
+    end % while true
 
     cfg.fiducial.nas = nas;
     cfg.fiducial.lpa = lpa;
@@ -152,24 +188,20 @@ switch cfg.method
     error('unsupported method');
 end
 
-% compute the homogenous transformation matrix describing the new coordinate system
-vox2head  = headcoordinates(cfg.fiducial.nas, cfg.fiducial.lpa, cfg.fiducial.rpa);
 
-if ~isfield(mri, 'transform')
-  mri.transform = vox2head;
-elseif all(all(mri.transform==eye(4)))
-  mri.transform = vox2head;
-else
-  warning('removing old transformation matrix');
-  scale          = eye(4);
-  %FIXME check whether the following is ever necessary
-  %origvox2head   = mri.transform;
-  %scale(1:3,1:3) = diag(sqrt(sum(origvox2head(1:3,1:3).^2,2)));
-  mri.transform  = scale*vox2head;
-end
+% the fiducial locations are now specified in voxels, convert them to head
+% coordinates according to the existing transform matrix
+nas_head = warp_apply(mri.transform, cfg.fiducial.nas);
+lpa_head = warp_apply(mri.transform, cfg.fiducial.lpa);
+rpa_head = warp_apply(mri.transform, cfg.fiducial.rpa);
+
+% compute the homogenous transformation matrix describing the new coordinate system
+realign = headcoordinates(nas_head, lpa_head, rpa_head);
+% combine the additional transformation with the original one
+mri.transform = realign * mri.transform;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 try
@@ -188,7 +220,7 @@ mri.cfg = cfg;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function to show three orthogonal slices
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function volplot(x, y, z, dat, c, cscale);
+function volplot(x, y, z, dat, c, cscale, showcrosshair)
 xi = c(1);
 yi = c(2);
 zi = c(3);
@@ -211,20 +243,26 @@ imagesc(x, z, squeeze(dat(:,yi,:))'); set(gca, 'ydir', 'normal')
 axis equal; axis tight;
 xlabel('i'); ylabel('k');
 caxis([cmin cmax]);
-crosshair([x(xi) z(zi)], 'color', 'yellow');
+if showcrosshair
+  crosshair([x(xi) z(zi)], 'color', 'yellow');
+end
 
 subplot(h2);
 imagesc(y, z, squeeze(dat(xi,:,:))'); set(gca, 'ydir', 'normal')
 axis equal; axis tight;
 xlabel('j'); ylabel('k');
 caxis([cmin cmax]);
-crosshair([y(yi) z(zi)], 'color', 'yellow');
+if showcrosshair
+  crosshair([y(yi) z(zi)], 'color', 'yellow');
+end
 
 subplot(h3);
 imagesc(x, y, squeeze(dat(:,:,zi))'); set(gca, 'ydir', 'normal')
 axis equal; axis tight;
 xlabel('i'); ylabel('j');
 caxis([cmin cmax]);
-crosshair([x(xi) y(yi)], 'color', 'yellow');
+if showcrosshair
+  crosshair([x(xi) y(yi)], 'color', 'yellow');
+end
 
 colormap gray
