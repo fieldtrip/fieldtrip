@@ -310,14 +310,14 @@ end
 if issource
   if isempty(cfg.roi) || strcmp(cfg.avgoverroi, 'no')
     % remember the definition of the volume, assume that they are identical for all input arguments
-    try, stat.dim       = varargin{1}.dim;        end
-    try, stat.xgrid     = varargin{1}.xgrid;      end
-    try, stat.ygrid     = varargin{1}.ygrid;      end
-    try, stat.zgrid     = varargin{1}.zgrid;      end
-    try, stat.inside    = varargin{1}.inside;     end
-    try, stat.outside   = varargin{1}.outside;    end
-    try, stat.pos       = varargin{1}.pos;        end
-    try, stat.transform = varargin{1}.transform;  end
+    try stat.dim       = varargin{1}.dim;        end
+    try stat.xgrid     = varargin{1}.xgrid;      end
+    try stat.ygrid     = varargin{1}.ygrid;      end
+    try stat.zgrid     = varargin{1}.zgrid;      end
+    try stat.inside    = varargin{1}.inside;     end
+    try stat.outside   = varargin{1}.outside;    end
+    try stat.pos       = varargin{1}.pos;        end
+    try stat.transform = varargin{1}.transform;  end
   else
     stat.inside  = 1:length(roilabel);
     stat.outside = [];
@@ -409,7 +409,7 @@ return % statistics_wrapper main()
 % SUBFUNCTION for extracting the data of interest
 % data resemples PCC beamed source reconstruction, multiple trials are coded in mom
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [dat, cfg] = get_source_pcc_mom(cfg, varargin);
+function [dat, cfg] = get_source_pcc_mom(cfg, varargin)
 Nsource = length(varargin);
 Nvoxel  = length(varargin{1}.inside) + length(varargin{1}.outside);
 Ninside = length(varargin{1}.inside);
@@ -434,7 +434,7 @@ cfg.inside = varargin{1}.inside;
 % SUBFUNCTION for extracting the data of interest
 % data resemples LCMV beamed source reconstruction, mom contains timecourse
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [dat, cfg] = get_source_lcmv_mom(cfg, varargin);
+function [dat, cfg] = get_source_lcmv_mom(cfg, varargin)
 Nsource = length(varargin);
 Nvoxel  = length(varargin{1}.inside) + length(varargin{1}.outside);
 Ntime   = length(varargin{1}.avg.mom{varargin{1}.inside(1)});
@@ -459,7 +459,7 @@ cfg.inside = varargin{1}.inside;
 % SUBFUNCTION for extracting the data of interest
 % data contains single-trial or single-subject source reconstructions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [dat, cfg] = get_source_trial(cfg, varargin);
+function [dat, cfg] = get_source_trial(cfg, varargin)
 Nsource = length(varargin);
 Nvoxel  = length(varargin{1}.inside) + length(varargin{1}.outside);
 
@@ -476,12 +476,12 @@ for i=1:Nsource
     else
       dim = [Nvoxel size(tmp{varargin{i}.inside(1)})];
     end
-    if i==1 && j==1 && prod(size(tmp))~=Nvoxel,
+    if i==1 && j==1 && numel(tmp)~=Nvoxel,
       warning('the input-data contains more entries than the number of voxels in the volume, the data will be concatenated');
       dat    = zeros(prod(dim), sum(Ntrial)); %FIXME this is old code should be removed
     elseif i==1 && j==1 && iscell(tmp),
       warning('the input-data contains more entries than the number of voxels in the volume, the data will be concatenated');
-      dat    = zeros(Nvoxel*prod(size(tmp{varargin{i}.inside(1)})), sum(Ntrial));
+      dat    = zeros(Nvoxel*numel(tmp{varargin{i}.inside(1)}), sum(Ntrial));
     elseif i==1 && j==1,
       dat = zeros(Nvoxel, sum(Ntrial));
     end
@@ -492,11 +492,11 @@ for i=1:Nsource
       %tmpvec    = (varargin{i}.inside-1)*prod(size(tmp{varargin{i}.inside(1)}));
       tmpvec    = varargin{i}.inside;
       insidevec = [];
-      for m = 1:prod(size(tmp{varargin{i}.inside(1)}))
+      for m = 1:numel(tmp{varargin{i}.inside(1)})
         insidevec = [insidevec; tmpvec(:)+(m-1)*Nvoxel];
       end
       insidevec = insidevec(:)';
-      tmpdat  = reshape(permute(cat(3,tmp{varargin{1}.inside}), [3 1 2]), [Ninside prod(size(tmp{varargin{1}.inside(1)}))]);
+      tmpdat  = reshape(permute(cat(3,tmp{varargin{1}.inside}), [3 1 2]), [Ninside numel(tmp{varargin{1}.inside(1)})]);
       dat(insidevec, k) = tmpdat(:);
     end
     % add original dimensionality of the data to the configuration, is required for clustering
@@ -522,7 +522,7 @@ cfg.inside = varargin{1}.inside;
 % SUBFUNCTION for extracting the data of interest
 % get the average source reconstructions, the repetitions are in multiple input arguments
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [dat, cfg] = get_source_avg(cfg, varargin);
+function [dat, cfg] = get_source_avg(cfg, varargin)
 Nsource = length(varargin);
 Nvoxel  = length(varargin{1}.inside) + length(varargin{1}.outside);
 dim     = varargin{1}.dim;
@@ -544,14 +544,14 @@ cfg.inside = varargin{1}.inside;
 % SUBFUNCTION for creating a design matrix
 % should be called in the code above, or in prepare_design
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [cfg] = get_source_design_pcc_mom(cfg, varargin);
+function [cfg] = get_source_design_pcc_mom(cfg, varargin)
 % should be implemented
 
-function [cfg] = get_source_design_lcmv_mom(cfg, varargin);
+function [cfg] = get_source_design_lcmv_mom(cfg, varargin)
 % should be implemented
 
-function [cfg] = get_source_design_trial(cfg, varargin);
+function [cfg] = get_source_design_trial(cfg, varargin)
 % should be implemented
 
-function [cfg] = get_source_design_avg(cfg, varargin);
+function [cfg] = get_source_design_avg(cfg, varargin)
 % should be implemented
