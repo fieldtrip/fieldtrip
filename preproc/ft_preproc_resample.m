@@ -10,7 +10,12 @@ function [dat, tim] = ft_preproc_resample(dat, Fold, Fnew, method)
 %   Fnew   = scalar, desired sampling frequency in Hz
 %   method = string, can be 'resample', 'decimate', 'downsample'
 %
-% See also PREPROC
+% The resample method applies an anti-aliasing (lowpass) FIR filter to
+% the data during the resampling process, and compensates for the filter's
+% delay. For the other two methods you should apply an anti-aliassing
+% filter prior to calling this function.
+%
+% See also PREPROC, FT_PREPROC_LOWPASSFILTER
 
 % Copyright (C) 2006-2010, Robert Oostenveld
 %
