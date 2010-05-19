@@ -7,8 +7,8 @@ function type = ft_chantype(input, desired)
 %   type = ft_chantype(sens)
 %   type = ft_chantype(label)
 % or as
-%   type = ft_chantype(hdr, desired)
-%   type = ft_chantype(sens, desired)
+%   type = ft_chantype(hdr,   desired)
+%   type = ft_chantype(sens,  desired)
 %   type = ft_chantype(label, desired)
 
 % Copyright (C) 2008, Robert Oostenveld
