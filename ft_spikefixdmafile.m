@@ -1,4 +1,4 @@
-edit function ft_spikefixdmafile(cfg)
+function ft_spikefixdmafile(cfg)
 
 % FT_SPIKEFIXDMAFILE fixes the problem in DMA files due to stopping
 % and restarting the acquisition. It takes one Neuralynx DMA file and
