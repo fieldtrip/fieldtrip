@@ -78,6 +78,9 @@ else
   cfg = checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 end
 
+% this is the default for cfg.channelcolormap
+lines_color = [0.75 0 0;0 0 1;0 1 0;0.44 0.19 0.63;0 0.13 0.38;0.5 0.5 0.5;1 0.75 0;1 0 0;0.89 0.42 0.04;0.85 0.59 0.58;0.57 0.82 0.31;0 0.69 0.94;1 0 0.4;0 0.69 0.31;0 0.44 0.75];
+
 % set the defaults
 if ~isfield(cfg, 'channel'),         cfg.channel = 'all';             end
 if ~isfield(cfg, 'continuous'),      cfg.continuous = 'no';           end % only for reading from file
@@ -89,12 +92,14 @@ if ~isfield(cfg, 'viewmode'),        cfg.viewmode = 'butterfly';      end % butt
 if ~isfield(cfg, 'blocksize'),       cfg.blocksize = 1;               end % only for segmenting continuous data, i.e. one long trial
 if ~isfield(cfg, 'preproc'),         cfg.preproc = [];                end % see preproc for options
 if ~isfield(cfg, 'event'),           cfg.event = [];                  end
-if ~isfield(cfg, 'selfun'),          cfg.selfun = 'browse_multiplotER'; end
-if ~isfield(cfg, 'selcfg'),          cfg.selcfg = [];                 end
-if ~isfield(cfg, 'colorgroups'),     cfg.colorgroups = 'sequential';  end
-lines_color = [0.75 0 0;0 0 1;0 1 0;0.44 0.19 0.63;0 0.13 0.38;0.5 0.5 0.5;1 0.75 0;1 0 0;0.89 0.42 0.04;0.85 0.59 0.58;0.57 0.82 0.31;0 0.69 0.94;1 0 0.4;0 0.69 0.31;0 0.44 0.75];
-if ~isfield(cfg, 'channelcolormap'), cfg.channelcolormap = lines_color;  end
-
+if ~isfield(cfg, 'selfun'),          cfg.selfun = 'browse_multiplotER';   end
+if ~isfield(cfg, 'selcfg'),          cfg.selcfg = [];                     end
+if ~isfield(cfg, 'colorgroups'),     cfg.colorgroups = 'sequential';      end
+if ~isfield(cfg, 'channelcolormap'), cfg.channelcolormap = lines_color;   end
+if ~isfield(cfg, 'eegscale'),        cfg.eegscale = [];                   end
+if ~isfield(cfg, 'eogscale'),        cfg.eogscale = [];                   end
+if ~isfield(cfg, 'ecgscale'),        cfg.ecgscale = [];                   end
+if ~isfield(cfg, 'megscale'),        cfg.megscale = [];                   end
 
 if ischar(cfg.selectfeature)
   % ensure that it is a cell array
@@ -784,6 +789,24 @@ opt.curdat.time{1}  = tim;
 opt.curdat.trial{1} = dat;
 opt.curdat.fsample  = opt.fsample;
 opt.curdat.cfg.trl  = [begsample endsample offset];
+
+% apply scaling to selected channels
+if ~isempty(opt.cfg.megscale)
+  chansel = match_str(lab, ft_channelselection('MEG', lab));
+  dat(chansel,:) = dat(chansel,:) .* opt.cfg.megscale;
+end
+if ~isempty(opt.cfg.eegscale)
+  chansel = match_str(lab, ft_channelselection('EEG', lab));
+  dat(chansel,:) = dat(chansel,:) .* opt.cfg.eegscale;
+end
+if ~isempty(opt.cfg.eogscale)
+  chansel = match_str(lab, ft_channelselection('EOG', lab));
+  dat(chansel,:) = dat(chansel,:) .* opt.cfg.eogscale;
+end
+if ~isempty(opt.cfg.ecgscale)
+  chansel = match_str(lab, ft_channelselection('ECG', lab));
+  dat(chansel,:) = dat(chansel,:) .* opt.cfg.ecgscale;
+end
 
 fprintf('plotting data... ');
 switch opt.cfg.viewmode
