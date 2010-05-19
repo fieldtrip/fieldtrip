@@ -76,6 +76,11 @@ typedef struct {
 	   channels names come after this as 0-terminated strings */
 } rda_msg_start_t;
 
+/* TODO: we never send a STOP packet, because it's hard to tell when the buffer will
+	stop receiving data. We should maybe try to detect if a new header is put into the
+	buffer, and send a STOP and a START in that case.
+*/	
+
 /** Describes the structure of an RDA marker (fixed part only) */
 typedef struct {
 	UINT32_T nSize;		/* Size of this marker */

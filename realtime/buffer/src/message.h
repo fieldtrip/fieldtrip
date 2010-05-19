@@ -135,7 +135,7 @@ enum {
 		Example: chunk_data = "Left\0Right\0" for stereo sound signals.		*/
 	FT_CHUNK_CHANNEL_NAMES,
 
-	/** FT_CHUN_CHANNEL_FLAGS contains a 0-terminated string describing the type of flags,
+	/** FT_CHUNK_CHANNEL_FLAGS contains a 0-terminated string describing the type of flags,
 		and after that N (=#channels) bytes describing each channel. This is useful for
 		specifying that a channel can have a discrete number of different types, e.g.
 		chunk_data = "meg_ad_eog\0\1\1\1\1\3\3\2\2" should be used for a system with 8 channels, 

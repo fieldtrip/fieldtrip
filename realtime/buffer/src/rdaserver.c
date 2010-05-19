@@ -16,6 +16,12 @@ const UINT8_T _rda_guid[16]={
 	0x8E,0x45,0x58,0x43,0x96,0xC9,0x86,0x4C,0xAF,0x4A,0x98,0xBB,0xF6,0xC9,0x14,0x50
 };
 
+/** RDA is defined as a little-endian protocol. If this code runs on a big-endian
+	computer, than the following flag will be set to True[=1] in rda_start_server,
+	and all packets will be converted accordingly.
+*/
+static int _i_am_big_endian_ = 0;
+
 /* return 0 on success, -1 on error (out of memory), item may not be NULL */
 int rda_aux_alloc_item(rda_buffer_item_t *item, size_t size) {
 	if (size > item->sizeAlloc) {
@@ -73,7 +79,8 @@ cleanup:
 }
 
 
-/** Prepares "start" RDA packet with fake channel names (for now)
+/** Prepares "start" RDA packet with channel names determined from the corresponding chunk (or empty)
+	Also converts to little-endian if this machine is big endian
 	@param item	Receives the packet (usually "startItem")
 	@param hdr  Points to headerdef_t structure, will be filled, may not be NULL
 	@return 0 on success, <0 on connection errors, >0 if out of memory 
@@ -147,6 +154,12 @@ int rda_aux_get_hdr_prep_start(int ft_buffer, headerdef_t *hdr, rda_buffer_item_
 	R->nChannels = hdr->nchans;
 	R->dSamplingInterval = 1.0/hdr->fsample;
 	
+	if (_i_am_big_endian_) {
+		/* take care of hdr.nSize, hdr.nType, nChannels */
+		ft_swap32(3, &(R->hdr.nSize)); 
+		ft_swap64(1, &(R->dSamplingInterval));
+	}
+	
 	/* R+1 points to first byte after header info */
 	dRes = (double *) ((void *)(R+1)); 
 	if (dResSource == NULL) {
@@ -154,6 +167,10 @@ int rda_aux_get_hdr_prep_start(int ft_buffer, headerdef_t *hdr, rda_buffer_item_
 		for (i=0;i<hdr->nchans;i++) dRes[i]=1.0;
 	} else {
 		memcpy(dRes, dResSource, hdr->nchans * sizeof(double));
+	}
+	/* swap byte order if necessary */
+	if (_i_am_big_endian_) {
+		ft_swap64(hdr->nchans, dRes);
 	}
 	
 	/* Let 'str' point to first byte after the resolution values */
@@ -353,8 +370,14 @@ int rda_aux_get_markers(int ft_buffer, const samples_events_t *last, const sampl
 			} else {
 				*ptr++ = '-';
 			}
+			/* add trailing 0, see how big the complete marker got */
 			*ptr++ = 0;
 			marker->nSize = (ptr - (char *) marker);
+			
+			if (_i_am_big_endian_) {
+				/* convert the 4 int32's in the marker definition */
+				ft_swap32(4, (void *) marker);
+			}
 		}		
 	} 
 	
@@ -405,6 +428,7 @@ int rda_aux_get_float_data(int ft_buffer, unsigned int start, unsigned int end, 
 		/* convert the samples, note that (R+1) points to the first byte after the RDA data header
 		   and (ddef+1) points to the first byte after the FieldTrip data header */
 		rda_aux_convert_to_float(numTotal, data, ddef->data_type, (void *)(ddef+1));
+		if (_i_am_big_endian_) ft_swap32(numTotal, data);
 		
 		/* done */
 		r = 0;
@@ -453,9 +477,23 @@ int rda_aux_get_int16_data(int ft_buffer, unsigned int start, unsigned int end, 
 			r = -1;
 			goto cleanup;
 		}
-		/* copy the samples, note that (R+1) points to the first byte after the RDA data header
-		   and (ddef+1) points to the first byte after the FieldTrip data header */
-		memcpy(data, (void *)(ddef+1), numTotal*sizeof(INT16_T));
+		
+		if (_i_am_big_endian_) {
+			/* copy + swap the 16 bit samples */
+			unsigned char *source = (unsigned char *) (ddef+1);
+			unsigned char *dest = data;
+			unsigned int i;
+			
+			for (i=0;i<numTotal;i++) {
+				dest[0] = source[1];
+				dest[1] = source[0];
+				dest+=2;
+				source+=2;
+			}
+		} else {
+			/* copy the samples, note that (ddef+1) points to the first byte after the FieldTrip data header */
+			memcpy(data, (void *)(ddef+1), numTotal*sizeof(INT16_T));
+		}
 		/* done */
 		r = 0;
 	} else {
@@ -621,6 +659,12 @@ void *_rdaserver_thread(void *arg) {
 					R->nBlock = numBlock; 
 					R->nPoints = curNum.nsamples - lastNum.nsamples;
 					R->nMarkers = numEvts;
+					if (_i_am_big_endian_) {
+						/* take care of hdr.nSize, hdr.nType, nBlocks, nPoints, nMarkers */
+						ft_swap32(5, &(R->hdr.nSize)); 
+						/* samples are swapped in rda_aux_get_***_data */
+						/* markers were swapped in rda_aux_get_markers */
+					}
 					if (curNum.nsamples > lastNum.nsamples) {
 						int err;
 						if (SC->use16bit) {
@@ -816,7 +860,8 @@ rda_server_ctrl_t *rda_start_server(int ft_buffer, int use16bit, int port, int *
 	struct sockaddr_in sa;
 	unsigned long optval;
 	int interr = FT_ERR_SOCKET;  /* if things go wrong here, it's most often because of socket errors */
-	
+	UINT16_T testEndian = 0x0100;	/* this will be [0x00,0x01] on little-endian, [0x01,0x00] on big-endian */
+		
 #ifdef PLATFORM_WIN32
 	WSADATA wsa;
  	if(WSAStartup(MAKEWORD(1, 1), &wsa))
@@ -825,6 +870,13 @@ rda_server_ctrl_t *rda_start_server(int ft_buffer, int use16bit, int port, int *
 		goto cleanup;
 	}
 #endif
+
+	if (*((UINT8_T *) &testEndian)) {
+		_i_am_big_endian_ = 1;
+		/*
+		printf("Running on big-endian machine - conversion enabled\n");
+		*/
+	}
 
 	/* allocate the control structure */
 	SC = (rda_server_ctrl_t *) malloc(sizeof(rda_server_ctrl_t));
