@@ -12,7 +12,9 @@ function [normalise] = ft_volumenormalise(cfg, interp)
 % anatomical MRI.
 %
 % Configuration options are:
-%   cfg.template    = string with filename (default = '/home/common/matlab/spm2/templates/T1.mnc')
+%   cfg.spmversion  = 'spm8' (default) or 'spm2'
+%   cfg.template    = filename of the template anatomical MRI (default is the 'T1.mnc' (spm2) or 'T1.nii' (spm8)
+%                     in the (spm-directory)/templates/)
 %   cfg.parameter   = cell-array with the functional data which has to
 %                     be normalised, can be 'all'
 %   cfg.downsample  = integer number (default = 1, i.e. no downsampling)
@@ -61,11 +63,8 @@ cfg = checkconfig(cfg, 'trackconfig', 'on');
 
 %% checkdata see below!!! %%
 
-% check the availability of the required SPM2 toolbox
-hastoolbox('spm2', 1);
-
 % set the defaults
-if ~isfield(cfg,'template'),         cfg.template = '/home/common/matlab/spm2/templates/T1.mnc'; end;
+if ~isfield(cfg,'spmversion'),       cfg.spmversion = 'spm8';                     end
 if ~isfield(cfg,'parameter'),        cfg.parameter = 'all';                       end;
 if ~isfield(cfg,'downsample'),       cfg.downsample = 1;                          end;
 if ~isfield(cfg,'write'),            cfg.write = 'no';                            end;
@@ -75,6 +74,19 @@ if ~isfield(cfg,'coordinates'),      cfg.coordinates = [];                      
 if ~isfield(cfg,'initial'),          cfg.initial = [];                            end;
 if ~isfield(cfg,'nonlinear'),        cfg.nonlinear = 'yes';                       end;
 if ~isfield(cfg,'smooth'),           cfg.smooth    = 'no';                        end;
+
+% check if the required spm is in your path:
+if strcmpi(cfg.spmversion, 'spm2'),
+  hastoolbox('SPM2',1);
+elseif strcmpi(cfg.spmversion, 'spm8'),
+  hastoolbox('SPM8',1);
+end
+
+if ~isfield(cfg, 'template'),
+  spmpath      = spm('dir');
+  if strcmpi(cfg.spmversion, 'spm8'), cfg.template = [spmpath,filesep,'templates',filesep,'T1.nii']; end
+  if strcmpi(cfg.spmversion, 'spm2'), cfg.template = [spmpath,filesep,'templates',filesep,'T1.mnc']; end
+end
 
 if strcmp(cfg.keepinside, 'yes')
   % add inside to the list of parameters
@@ -106,7 +118,8 @@ if isfield(cfg, 'coordinates')
 end
 
 % the template anatomy should always be stored in a SPM-compatible file
-if ft_filetype(cfg.template, 'analyze_hdr') || ft_filetype(cfg.template, 'analyze_img') || ft_filetype(cfg.template, 'minc')
+template_ftype = ft_filetype(cfg.template);
+if strcmp(template_ftype, 'analyze_hdr') || strcmp(template_ftype, 'analyze_img') || strcmp(template_ftype, 'minc') || strcmp(template_ftype, 'nifti') 
   % based on the filetype assume that the coordinates correspond with MNI/SPM convention
   template_coordinates = 'spm';
 end
@@ -177,22 +190,23 @@ ws = warning('off');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % create an spm-compatible header for the anatomical volume data
-VF = volumewrite_spm([cfg.intermediatename,'_anatomy.img'], interp.anatomy, interp.transform);
+VF = volumewrite_spm([cfg.intermediatename,'_anatomy.img'], interp.anatomy, interp.transform, cfg.spmversion);
 
 % create an spm-compatible file for each of the functional volumes
 for parlop=2:length(cfg.parameter)  % skip the anatomy
   tmp  = cfg.parameter{parlop};
   data = reshape(getsubfield(interp, tmp), interp.dim);
   tmp(find(tmp=='.')) = '_';
-  volumewrite_spm([cfg.intermediatename,'_' tmp '.img'], data, interp.transform);
+  volumewrite_spm([cfg.intermediatename,'_' tmp '.img'], data, interp.transform, cfg.spmversion);
 end
 
 % read the template anatomical volume
-if strcmp(char(cfg.template(end-2:end)),'mnc'),
+switch template_ftype
+case 'minc'
   VG    = spm_vol_minc(cfg.template);
-elseif strcmp(char(cfg.template(end-2:end)),'img'),
+case {'analyze_img', 'analyze_hdr', 'nifti'},
   VG    = spm_vol(cfg.template);
-else
+otherwise
   error('Unknown template');
 end
 
@@ -260,7 +274,7 @@ if strcmp(cfg.write,'yes')
     tmp  = cfg.parameter{parlop};
     data = reshape(getsubfield(normalise, tmp), normalise.dim);
     tmp(find(tmp=='.')) = '_';
-    volumewrite_spm([cfg.name,'_' tmp '.img'], data, normalise.transform);
+    volumewrite_spm([cfg.name,'_' tmp '.img'], data, normalise.transform, cfg.spmversion);
   end
 end
 

@@ -3,7 +3,7 @@ function [segment] = ft_volumesegment(cfg, mri)
 % FT_VOLUMESEGMENT segments an anatomical MRI into gray matter, white matter,
 % and cerebro-spinal fluid compartments.
 %
-% This function the SPM2 toolbox, see http://www.fil.ion.ucl.ac.uk/spm/
+% This function uses the SPM2 toolbox, see http://www.fil.ion.ucl.ac.uk/spm/
 %
 % Use as
 %   [segment] = ft_volumesegment(cfg, mri)
@@ -13,13 +13,21 @@ function [segment] = ft_volumesegment(cfg, mri)
 % specify a string with a filename of an MRI file.
 %
 % The configuration options are
-%   cfg.template    = filename of the template anatomical MRI (default is '/home/common/matlab/spm2/templates/T1.mnc')
+%   cfg.spmversion  = 'spm8' (default) or 'spm2'
+%   cfg.template    = filename of the template anatomical MRI (default is the 'T1.mnc' (spm2) or 'T1.nii' (spm8)
+%                     in the (spm-directory)/templates/)
 %   cfg.name        = string for output filename
 %   cfg.write       = 'no' or 'yes' (default = 'no'),
-%                     writes the segmented volumes to SPM2 compatible analyze-file with the suffix
+%                     writes the segmented volumes to SPM compatible analyze-files,
+%                     with the suffix (spm2)
 %                     _seg1, for the gray matter segmentation
 %                     _seg2, for the white matter segmentation
 %                     _seg3, for the csf segmentation
+%                     or with the prefix (spm8)
+%                     c1, for the gray matter segmentation
+%                     c2, for the white matter segmentation
+%                     c3, for the csf segmentation
+%                   
 %   cfg.smooth      = 'no' or the FWHM of the gaussian kernel in voxels (default = 'no')
 %   cfg.coordinates = 'spm, 'ctf' or empty for interactive (default = [])
 %
@@ -77,16 +85,14 @@ cfg = checkconfig(cfg, 'trackconfig', 'on');
 
 %% checkdata see below!!! %%
 
-% check if spm2 is in your path:
-hastoolbox('SPM2',1);
 
 % set the defaults
-if ~isfield(cfg,'segment'),         cfg.segment = 'yes';                                        end;
-if ~isfield(cfg,'smooth'),          cfg.smooth = 'no';                                          end;
-if ~isfield(cfg,'template'),        cfg.template = '/home/common/matlab/spm2/templates/T1.mnc'; end;
-if ~isfield(cfg,'write'),           cfg.write = 'no';                                           end;
-if ~isfield(cfg,'keepintermediate'),cfg.keepintermediate = 'no';                                end;
-if ~isfield(cfg,'coordinates'),     cfg.coordinates = [];                                       end;
+if ~isfield(cfg,'segment'),         cfg.segment     = 'yes';                                     end;
+if ~isfield(cfg,'smooth'),          cfg.smooth      = 'no';                                      end;
+if ~isfield(cfg,'spmversion'),      cfg.spmversion  = 'spm8';                                    end;
+if ~isfield(cfg,'write'),           cfg.write       = 'no';                                      end;
+if ~isfield(cfg,'keepintermediate'),cfg.keepintermediate = 'no';                                 end;
+if ~isfield(cfg,'coordinates'),     cfg.coordinates = [];                                        end;
 
 if ~isfield(cfg,'name') 
   if ~strcmp(cfg.write,'yes')
@@ -98,6 +104,19 @@ if ~isfield(cfg,'name')
     error('you must specify the output filename in cfg.name');
   end
 end 
+
+% check if the required spm is in your path:
+if strcmpi(cfg.spmversion, 'spm2'),
+  hastoolbox('SPM2',1);
+elseif strcmpi(cfg.spmversion, 'spm8'),
+  hastoolbox('SPM8',1);
+end
+
+if ~isfield(cfg, 'template'),
+  spmpath      = spm('dir');
+  if strcmpi(cfg.spmversion, 'spm8'), cfg.template = [spmpath,filesep,'templates',filesep,'T1.nii']; end
+  if strcmpi(cfg.spmversion, 'spm2'), cfg.template = [spmpath,filesep,'templates',filesep,'T1.mnc']; end
+end
 
 if ischar(mri),
   % read the anatomical MRI data from file   
@@ -157,7 +176,7 @@ if strcmp(cfg.coordinates, 'ctf')
   % this seems to improve the convergence of the segmentation algorithm
   mri = align_ijk2xyz(mri);
 elseif strcmp(cfg.coordinates, 'spm')
-  fprintf('assuming that the input MRI is already approximately alligned with SPM coordinates\n');
+  fprintf('assuming that the input MRI is already approximately aligned with SPM coordinates\n');
   % nothing needs to be done
 else
   error('cannot determine the (approximate) alignmenmt of the input MRI with the SPM template');
@@ -165,65 +184,120 @@ end
 
 if strcmp(cfg.segment, 'yes')
   % convert and write the volume to an analyze format, so that it can be handled by spm
-  Va = volumewrite_spm([cfg.name,'.img'], mri.anatomy, mri.transform);
+  Va = volumewrite_spm([cfg.name,'.img'], mri.anatomy, mri.transform, cfg.spmversion);
 
   % spm is quite noisy, prevent the warnings from displaying on screen
   % warning off;
 
-  % set the spm segmentation defaults (from /opt/spm2/spm_defaults.m script)
-  defaults.segment.estimate.priors = str2mat(...
-    fullfile(spm('Dir'),'apriori','gray.mnc'),...
-    fullfile(spm('Dir'),'apriori','white.mnc'),...
-    fullfile(spm('Dir'),'apriori','csf.mnc'));
-  defaults.segment.estimate.reg    = 0.01;
-  defaults.segment.estimate.cutoff = 30;
-  defaults.segment.estimate.samp   = 3;
-  defaults.segment.estimate.bb     =  [[-88 88]' [-122 86]' [-60 95]'];
-  defaults.segment.estimate.affreg.smosrc = 8;
-  defaults.segment.estimate.affreg.regtype = 'mni';
-  %defaults.segment.estimate.affreg.weight = fullfile(spm('Dir'),'apriori','brainmask.mnc'); 
-  defaults.segment.estimate.affreg.weight = '';
-  defaults.segment.write.cleanup   = 1;
-  defaults.segment.write.wrt_cor   = 1;
-  flags = defaults.segment;
+  if strcmpi(cfg.spmversion, 'spm2'),
+    % set the spm segmentation defaults (from /opt/spm2/spm_defaults.m script)
+    defaults.segment.estimate.priors = str2mat(...
+      fullfile(spm('Dir'),'apriori','gray.mnc'),...
+      fullfile(spm('Dir'),'apriori','white.mnc'),...
+      fullfile(spm('Dir'),'apriori','csf.mnc'));
+    defaults.segment.estimate.reg    = 0.01;
+    defaults.segment.estimate.cutoff = 30;
+    defaults.segment.estimate.samp   = 3;
+    defaults.segment.estimate.bb     =  [[-88 88]' [-122 86]' [-60 95]'];
+    defaults.segment.estimate.affreg.smosrc = 8;
+    defaults.segment.estimate.affreg.regtype = 'mni';
+    %defaults.segment.estimate.affreg.weight = fullfile(spm('Dir'),'apriori','brainmask.mnc'); 
+    defaults.segment.estimate.affreg.weight = '';
+    defaults.segment.write.cleanup   = 1;
+    defaults.segment.write.wrt_cor   = 1;
+    
+    flags = defaults.segment;
 
-  % perform the segmentation
-  fprintf('performing the segmentation on the specified volume\n');
-  spm_segment(Va,cfg.template,flags);
-  Vtmp = spm_vol({[cfg.name,'_seg1.img'];...
-                  [cfg.name,'_seg2.img'];...
-                  [cfg.name,'_seg3.img']});
+    % perform the segmentation
+    fprintf('performing the segmentation on the specified volume\n');
+    spm_segment(Va,cfg.template,flags);
+    Vtmp = spm_vol({[cfg.name,'_seg1.img'];...
+                    [cfg.name,'_seg2.img'];...
+                    [cfg.name,'_seg3.img']});
 
-  % read the resulting volumes
-  for j = 1:3
-     vol = spm_read_vols(Vtmp{j});
-     Vtmp{j}.dat = vol;
-     V(j) = struct(Vtmp{j});
-  end
+    % read the resulting volumes
+    for j = 1:3
+      vol = spm_read_vols(Vtmp{j});
+      Vtmp{j}.dat = vol;
+      V(j) = struct(Vtmp{j});
+    end
 
-  % keep or remove the files according to the configuration
-  if strcmp(cfg.keepintermediate,'no'),
-     delete([cfg.name,'.img']);
-     delete([cfg.name,'.hdr']);
-     delete([cfg.name,'.mat']);
-  end
-  if strcmp(cfg.write,'no'),
-     delete([cfg.name,'_seg1.hdr']);
-     delete([cfg.name,'_seg2.hdr']);
-     delete([cfg.name,'_seg3.hdr']);
-     delete([cfg.name,'_seg1.img']);
-     delete([cfg.name,'_seg2.img']);
-     delete([cfg.name,'_seg3.img']);
-     delete([cfg.name,'_seg1.mat']);
-     delete([cfg.name,'_seg2.mat']);
-     delete([cfg.name,'_seg3.mat']);
-  elseif strcmp(cfg.write,'yes'),
-     for j = 1:3
-       % put the original transformation-matrix in the headers
-       V(j).mat = original.transform;
-       % write the updated header information back to file ???????
-       V(j) = spm_create_vol(V(j));
-     end
+    % keep or remove the files according to the configuration
+    if strcmp(cfg.keepintermediate,'no'),
+      delete([cfg.name,'.img']);
+      delete([cfg.name,'.hdr']);
+      delete([cfg.name,'.mat']);
+    end
+    if strcmp(cfg.write,'no'),
+       delete([cfg.name,'_seg1.hdr']);
+       delete([cfg.name,'_seg2.hdr']);
+       delete([cfg.name,'_seg3.hdr']);
+       delete([cfg.name,'_seg1.img']);
+       delete([cfg.name,'_seg2.img']);
+       delete([cfg.name,'_seg3.img']);
+       delete([cfg.name,'_seg1.mat']);
+       delete([cfg.name,'_seg2.mat']);
+       delete([cfg.name,'_seg3.mat']);
+    elseif strcmp(cfg.write,'yes'),
+      for j = 1:3
+        % put the original transformation-matrix in the headers
+        V(j).mat = original.transform;
+        % write the updated header information back to file ???????
+        V(j) = spm_create_vol(V(j));
+      end
+    end
+
+  elseif strcmpi(cfg.spmversion, 'spm8'),
+    
+    fprintf('performing the segmentation on the specified volume\n');
+    p        = spm_preproc(Va);
+    [po,pin] = spm_prep2sn(p);
+    
+    % I took these settings from a batch
+    opts     = [];
+    opts.GM  = [0 0 1];
+    opts.WM  = [0 0 1];
+    opts.CSF = [0 0 1];
+    opts.biascor = 1;
+    opts.cleanup = 0;
+    spm_preproc_write(po, opts);
+     
+    [pathstr,name,ext] = fileparts(cfg.name);
+    Vtmp = spm_vol({fullfile(pathstr,['c1',name,'.img']);...
+                    fullfile(pathstr,['c2',name,'.img']);...
+                    fullfile(pathstr,['c3',name,'.img'])});
+
+    % read the resulting volumes
+    for j = 1:3
+      vol = spm_read_vols(Vtmp{j});
+      Vtmp{j}.dat = vol;
+      V(j) = struct(Vtmp{j});
+    end
+
+    % keep or remove the files according to the configuration
+    if strcmp(cfg.keepintermediate,'no'),
+      delete([cfg.name,'.img']);
+      delete([cfg.name,'.hdr']);
+      delete([cfg.name,'.mat']);
+    end
+    if strcmp(cfg.write,'no'),
+       delete(fullfile(pathstr,['c1',name,'.hdr']));
+       delete(fullfile(pathstr,['c1',name,'.img']));
+       delete(fullfile(pathstr,['c2',name,'.hdr']));
+       delete(fullfile(pathstr,['c2',name,'.img']));
+       delete(fullfile(pathstr,['c3',name,'.hdr']));
+       delete(fullfile(pathstr,['c3',name,'.img']));
+       delete(fullfile(pathstr,['m',name,'.hdr']));
+       delete(fullfile(pathstr,['m',name,'.img']));
+    elseif strcmp(cfg.write,'yes'),
+      for j = 1:3
+        % put the original transformation-matrix in the headers
+        V(j).mat = original.transform;
+        % write the updated header information back to file ???????
+        V(j) = spm_create_vol(V(j));
+      end
+    end
+    
   end
 
 else

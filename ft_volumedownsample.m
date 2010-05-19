@@ -34,21 +34,24 @@ function [down] = ft_volumedownsample(cfg, source);
 
 fieldtripdefs
 
-% check if SPM2 is in path and if not add
-if ~hastoolbox('SPM8', 0, 1); % No need to add SPM2 when SPM8 is available
-    hastoolbox('SPM2',1);
-end
-
 %% checkdata see below!!! %%
 
 % check if the input cfg is valid for this function
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 cfg = checkconfig(cfg, 'unused',  {'voxelcoord'});
 
+if ~isfield(cfg, 'spmversion'), cfg.spmversion = 'spm8'; end
 if ~isfield(cfg, 'downsample'), cfg.downsample = 1;     end
 if ~isfield(cfg, 'keepinside'), cfg.keepinside = 'yes'; end
 if ~isfield(cfg, 'parameter'),  cfg.parameter = 'all';  end
 if ~isfield(cfg, 'smooth'),     cfg.smooth = 'no';      end
+
+% check if the required spm is in your path:
+if strcmpi(cfg.spmversion, 'spm2'),
+  hastoolbox('SPM2',1);
+elseif strcmpi(cfg.spmversion, 'spm8'),
+  hastoolbox('SPM8',1);
+end
 
 if strcmp(cfg.keepinside, 'yes')
   % add inside to the list of parameters

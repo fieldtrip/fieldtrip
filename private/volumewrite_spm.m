@@ -1,4 +1,4 @@
-function [Va] = volumewrite_spm(filename, data, transform)
+function [Va] = volumewrite_spm(filename, data, transform, spmversion)
 
 % VOLUMEWRITE_SPM write a anatomical or functional volume to img/hdr file
 % using the SPM toolbox
@@ -8,26 +8,14 @@ function [Va] = volumewrite_spm(filename, data, transform)
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
-% for the documentation and details.
-%
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
-%
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
-%
-%    You should have received a copy of the GNU General Public License
-%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
-%
-% $Id$
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-% check whether the required SPM2 toolbox is available
-hastoolbox('SPM2', 1);
+if nargin<4,
+  spmversion = 'SPM2';
+end
+
+% check whether the required SPM toolbox is available
+hastoolbox(upper(spmversion), 1);
 
 if 0
   % not all datatypes are supported by SPM, this can be checked with
@@ -47,20 +35,34 @@ if 0
   spm_type('uint64') %           -- 64-bit unsigned integer array
 end
 
-if isnan(spm_type(class(data)))
+typ       = spm_type(class(data));
+dim       = size(data);
+if isnan(typ)
   % convert every unsupported data type into double
-  data = double(data);
+  data      = double(data);
 end
 
-typ        = spm_type(class(data));
-dim        = size(data);
-Va         = [];
-Va.mat     = transform;
-Va.fname   = filename;
-Va.dim     = [dim typ];
-Va.n       = 1;
-Va.pinfo   = [1 0 0]';
-Va.private.hdr.dime.datatype = typ;
+switch lower(spmversion)
+case {'spm2'}
+  %see spm_vol
+  Va         = [];
+  Va.mat     = transform;
+  Va.fname   = filename;
+  Va.dim     = [dim typ];
+  Va.n       = 1;
+  Va.pinfo   = [1 0 0]';
+  Va.private.hdr.dime.datatype = typ;
+case {'spm8'}
+  Va         = [];
+  Va.mat     = transform;
+  Va.fname   = filename;
+  Va.dim     = dim;
+  Va.n       = 1;
+  Va.pinfo   = [1 0 0]';
+  %Va.dt      = [typ 1]; % this is not necessary because assigned in spm_create_vol
+otherwise
+  error('unsupported version of spm requested');
+end
 Va         = spm_create_vol(Va);
 Va         = spm_write_vol(Va,data);
 
