@@ -90,6 +90,7 @@ function [dataout] = ft_preprocessing(cfg, data)
 % See also FT_DEFINETRIAL, FT_REDEFINETRIAL, FT_APPENDDATA, FT_APPENDSPIKE
 
 % Undocumented local options:
+% cfg.paddir = direction of padding, 'left'/'right'/'both' (default = 'both')
 % cfg.artfctdef
 % cfg.removemcg
 % cfg.inputfile
@@ -177,6 +178,7 @@ end
 
 if ~isfield(cfg, 'precision'),    cfg.precision = 'double';     end
 if ~isfield(cfg, 'padding'),      cfg.padding = 0;              end % padding is only done when filtering
+if ~isfield(cfg, 'paddir'),       cfg.paddir  = 'both';         end
 if ~isfield(cfg, 'headerformat'), cfg.headerformat = [];        end % is passed to low-level function, empty implies autodetection
 if ~isfield(cfg, 'dataformat'),   cfg.dataformat = [];          end % is passed to low-level function, empty implies autodetection
 
@@ -424,9 +426,21 @@ else
         begpadding = 0;
         endpadding = 0;
       else
-        % begpadding+nsamples+endpadding = total length of raw data that will be read
-        begpadding = ceil((padding-nsamples)/2);
-        endpadding = floor((padding-nsamples)/2);
+        switch cfg.paddir
+        case 'both'
+          % begpadding+nsamples+endpadding = total length of raw data that will be read
+          begpadding = ceil((padding-nsamples)/2);
+          endpadding = floor((padding-nsamples)/2);
+        case 'left'
+          begpadding = padding-nsamples;
+          endpadding = 0;
+        case 'right'
+          begpadding = 0;
+          endpadding = padding-nsamples;
+        otherwise
+          error('unsupported requested direction of padding');
+        end
+        
         begsample  = cfg.trl(i,1) - begpadding;
         endsample  = cfg.trl(i,2) + endpadding;
         if begsample<1
