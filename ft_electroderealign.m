@@ -13,24 +13,32 @@ function [norm] = ft_electroderealign(cfg)
 % based on a warping method, based on the fiducials or interactive with a
 % graphical user interface. Each of these approaches is described below.
 %
-% 1) You can apply a spatial deformation method (i.e. 'warp') that
-% automatically minimizes the distance between the electrodes and the
-% averaged standard. The warping methods use a non-linear search to
-% optimize the error between input and template electrodes or the
-% head surface.
+% 1) You can apply a spatial transformation/deformation (i.e. 'warp')
+% that automatically minimizes the distance between the electrodes
+% and the template or standard electrode set. The warping methods use
+% a non-linear search to optimize the error between input and template
+% electrodes or the head surface.
 %
 % 2) You can apply a rigid body realignment based on three fiducial locations.
 % Realigning using the fiducials only ensures that the fiducials (typically
-% nose, left and right ear) are along the same axes in the input electrode
+% nose, left and right ear) are along the same axes in the input eectrode
 % set as in the template electrode set.
 %
 % 3) You can display the electrode positions together with the skin surface,
 % and manually (using the graphical user interface) adjust the rotation,
 % translation and scaling parameters, so that the two match.
 %
+% 4) You can display the skin surface and manually position the electrodes by
+% clicking.
+%
 % The configuration can contain the following options
 %   cfg.method         = string representing the method for aligning or placing the electrodes
-%                        'rigidbody'       apply a rigid-body warp
+%                        'template'        realign the electrodes to a template electrode set
+%                        'fiducial'        realign using the NAS, LPA and RPA fiducials
+%                        'interactive'     realign manually using a graphical user interface
+%                        'manual'          manual positioning of the electrodes by clicking in a graphical user interface
+%   cfg.warp          = string describing the spatial transformation for the template method
+%                        'rigidbody'       apply a rigid-body warp (default)
 %                        'globalrescale'   apply a rigid-body warp with global rescaling
 %                        'traditional'     apply a rigid-body warp with individual axes rescaling
 %                        'nonlin1'         apply a 1st order non-linear warp
@@ -38,9 +46,6 @@ function [norm] = ft_electroderealign(cfg)
 %                        'nonlin3'         apply a 3rd order non-linear warp
 %                        'nonlin4'         apply a 4th order non-linear warp
 %                        'nonlin5'         apply a 5th order non-linear warp
-%                        'realignfiducial' realign the fiducials
-%                        'interactive'     realign manually using graphical user interface
-%                        'position'        position electrodes manually using graphical user interface
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
 %                        see  FT_CHANNELSELECTION for details
 %   cfg.fiducial       = cell-array with the name of three fiducials used for
@@ -48,7 +53,6 @@ function [norm] = ft_electroderealign(cfg)
 %   cfg.casesensitive  = 'yes' or 'no', determines whether string comparisons
 %                        between electrode labels are case sensitive (default = 'yes')
 %   cfg.feedback       = 'yes' or 'no' (default = 'no')
-%   cfg.outline        = 'yes' or 'no' to add the outline characteristic landmarks such as sulci (default = 'no')
 %
 % The electrode set that will be realigned is specified as
 %   cfg.elecfile       = string with filename, or alternatively
@@ -64,8 +68,8 @@ function [norm] = ft_electroderealign(cfg)
 % structures (i.e. when they are already read in memory) or as electrode
 % files.
 %
-% If you only want to realign using the fiducials, the template electrode
-% set only has to contain the three fiducials, e.g.
+% If you only want to realign using the fiducials, the template has to contain
+% the three fiducials, e.g.
 %   cfg.template.pnt(1,:) = [110 0 0]  % location of the nose
 %   cfg.template.pnt(2,:) = [0  90 0]  % left ear
 %   cfg.template.pnt(3,:) = [0 -90 0]  % right ear
@@ -77,9 +81,9 @@ function [norm] = ft_electroderealign(cfg)
 %                        single triangulated boundary, or a Nx3 matrix with surface
 %                        points
 %
-% See also  FT_READ_ELEC,  FT_VOLUMEREALIGN
+% See also FT_READ_SENS,  FT_VOLUMEREALIGN
 
-% Copyright (C) 2005-2009, Robert Oostenveld
+% Copyright (C) 2005-2010, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -107,20 +111,19 @@ global fb
 % set the defaults
 if ~isfield(cfg, 'channel'),       cfg.channel = 'all';       end
 if ~isfield(cfg, 'feedback'),      cfg.feedback = 'no';       end
-if ~isfield(cfg, 'outline'),       cfg.outline = 'no';       end
 if ~isfield(cfg, 'casesensitive'), cfg.casesensitive = 'yes'; end
 if ~isfield(cfg, 'headshape'),     cfg.headshape = [];        end % for triangulated head surface, without labels
 if ~isfield(cfg, 'template'),      cfg.template = [];         end % for electrodes or fiducials, always with labels
+if ~isfield(cfg, 'warp'),          cfg.warp = 'rigidbody';    end
+
+cfg = checkconfig(cfg, 'renamed', {'realignfiducials', 'fiducial'});
+cfg = checkconfig(cfg, 'renamed', {'realignfiducial',  'fiducial'});
+cfg = checkconfig(cfg, 'forbidden', 'outline');
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure
   cfg.headshape = struct(cfg.headshape);
 end
-
-% this is a common mistake which can be accepted
-cfg = checkconfig(cfg, 'renamed', {'realignfiducials', 'realignfiducial'});
-% rename the default warp to one of the method recognized by the warping toolbox
-cfg = checkconfig(cfg, 'renamed', {'warp', 'traditional'});
 
 if strcmp(cfg.feedback, 'yes')
   % use the global fb field to tell the warping toolbox to print feedback
@@ -129,12 +132,22 @@ else
   fb = 0;
 end
 
+% get the electrode definition that should be warped
+if isfield(cfg, 'elec')
+  elec = cfg.elec;
+elseif isfield(cfg, 'elecfile')
+  elec = ft_read_sens(cfg.elecfile);
+else
+  % start with an empty set of electrodes (usefull for manual positioning)
+  elec = [];
+  elec.pnt    = zeros(0,3);
+  elec.label  = cell(0,1);
+  elec.unit   = 'mm';
+end
+elec = ft_convert_units(elec); % ensure that the units are specified
+
 usetemplate  = isfield(cfg, 'template')  && ~isempty(cfg.template);
 useheadshape = isfield(cfg, 'headshape') && ~isempty(cfg.headshape);
-
-if ~usetemplate && ~useheadshape
-  error('you should either specify template electrode positions, template fiducials or a head shape');
-end
 
 if usetemplate
   % get the template electrode definitions
@@ -149,9 +162,10 @@ if usetemplate
       template(i) = ft_read_sens(cfg.template{i});
     end
   end
-end
-
-if useheadshape
+  for i=1:Ntemplate
+    template(i) = ft_convert_units(template(i), elec.unit); % ensure that the units are consistent with the electrodes
+  end
+elseif useheadshape
   % get the surface describing the head shape
   if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
     % use the headshape surface specified in the configuration
@@ -170,18 +184,9 @@ if useheadshape
     headshape.pnt = unique(headshape.pnt, 'rows');
     headshape.tri = projecttri(headshape.pnt);
   end
-end
-
-% get the electrode definition that should be warped
-if isfield(cfg, 'elec')
-  elec = cfg.elec;
-elseif isfield(cfg, 'elecfile')
-  elec = ft_read_sens(cfg.elecfile);
+  headshape = ft_convert_units(headshape, elec.unit); % ensure that the units are consistent with the electrodes
 else
-  % start with an empty set of electrodes (usefull for manual positioning)
-  elec = [];
-  elec.pnt = zeros(0,3);
-  elec.label = cell(0,1);
+  error('you should either specify template electrode positions, template fiducials or a head shape');
 end
 
 % remember the original electrode locations and labels
@@ -212,7 +217,7 @@ if strcmp(cfg.feedback, 'yes')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if usetemplate && any(strcmp(cfg.method, {'rigidbody', 'globalrescale', 'traditional', 'nonlin1', 'nonlin2', 'nonlin3', 'nonlin4', 'nonlin5'}))
+if usetemplate && strcmp(cfg.method, 'template')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   % determine electrode selection and overlapping subset for warping
@@ -240,7 +245,7 @@ if usetemplate && any(strcmp(cfg.method, {'rigidbody', 'globalrescale', 'traditi
   stderr = std(all, [], 3);
 
   fprintf('warping electrodes to template... '); % the newline comes later
-  [norm.pnt, norm.m] = warp_optim(elec.pnt, avg, cfg.method);
+  [norm.pnt, norm.m] = warp_optim(elec.pnt, avg, cfg.warp);
   norm.label = elec.label;
 
   dpre  = mean(sqrt(sum((avg - elec.pnt).^2, 2)));
@@ -281,7 +286,7 @@ if usetemplate && any(strcmp(cfg.method, {'rigidbody', 'globalrescale', 'traditi
   end
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif useheadshape && any(strcmp(cfg.method, {'rigidbody', 'globalrescale', 'traditional', 'nonlin1', 'nonlin2', 'nonlin3', 'nonlin4', 'nonlin5'}))
+elseif useheadshape && strcmp(cfg.method, 'template')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   % determine electrode selection and overlapping subset for warping
@@ -293,15 +298,15 @@ elseif useheadshape && any(strcmp(cfg.method, {'rigidbody', 'globalrescale', 'tr
   elec.pnt   = elec.pnt(datsel,:);
 
   fprintf('warping electrodes to head shape... '); % the newline comes later
-  [norm.pnt, norm.m] = warp_optim(elec.pnt, headshape, cfg.method);
+  [norm.pnt, norm.m] = warp_optim(elec.pnt, headshape, cfg.warp);
   norm.label = elec.label;
 
-  dpre  = warp_error([],     elec.pnt, headshape, cfg.method);
-  dpost = warp_error(norm.m, elec.pnt, headshape, cfg.method);
+  dpre  = warp_error([],     elec.pnt, headshape, cfg.warp);
+  dpost = warp_error(norm.m, elec.pnt, headshape, cfg.warp);
   fprintf('mean distance prior to warping %f, after warping %f\n', dpre, dpost);
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif strcmp(cfg.method, 'realignfiducial')
+elseif strcmp(cfg.method, 'fiducial')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   % try to determine the fiducials automatically if not specified
@@ -438,7 +443,7 @@ elseif strcmp(cfg.method, 'interactive')
   clear tmp
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif strcmp(cfg.method, 'position')
+elseif strcmp(cfg.method, 'manual')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % open a figure
   fig = figure;
@@ -449,11 +454,6 @@ elseif strcmp(cfg.method, 'position')
   for i=1:size(orig.pnt,1)
     orig.label{i,1} = 'unknown';
   end
-  
-  if strcmp(cfg.outline, 'yes')
-    % FIXME also go over the outlines with manual clicking
-    keyboard
-  end
 
 else
   error('unknown method');
@@ -462,17 +462,9 @@ end
 % apply the spatial transformation to all electrodes, and replace the
 % electrode labels by their case-sensitive original values
 switch cfg.method
-  case {'rigidbody', 'globalrescale', 'traditional', 'nonlin1', 'nonlin2', 'nonlin3', 'nonlin4', 'nonlin5'}
-    norm.pnt   = warp_apply(norm.m, orig.pnt, cfg.method);
-    if isfield(orig, 'outline')
-      % FIXME also apply the warp to the outlines
-    end
-  case {'interactive'}
-    norm.pnt   = warp_apply(norm.m, orig.pnt, 'homogenous');
-    if isfield(orig, 'outline')
-      % FIXME also apply the warp to the outlines
-    end
-  case {'position'}
+  case {'template' 'fiducial', 'interactive'}
+    norm.pnt   = warp_apply(norm.m, orig.pnt, cfg.warp);
+  case 'manual'
     % the positions are already assigned in correspondence with the mesh
     norm = orig;
   otherwise
