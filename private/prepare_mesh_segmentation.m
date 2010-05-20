@@ -8,7 +8,7 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-needspm = ~strcmp(cfg.smooth, 'no');
+needspm = isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no');
 if needspm
   % check if SPM is in path and if not add
   hasspm2 = hastoolbox('SPM2');

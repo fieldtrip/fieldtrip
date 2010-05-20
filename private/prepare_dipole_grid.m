@@ -138,7 +138,7 @@ if sum([basedonauto basedongrid basedonpos basedonshape basedonmri basedonvol])~
   error('incorrect cfg specification for constructing a dipole grid');
 end
 
-needspm = ~strcmp(cfg.smooth, 'no');
+needspm = isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no');
 if needspm
   % check if SPM is in path and if not add
   hasspm2 = hastoolbox('SPM2');
