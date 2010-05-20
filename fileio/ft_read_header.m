@@ -1211,7 +1211,7 @@ switch headerformat
     % the above code is not complete
     error('not yet implemented');
 
-  case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
+  case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'yokogawa_mrk'}
     % chek that the required low-level toolbox is available
     hastoolbox('yokogawa', 1);
     hdr = read_yokogawa_header(filename);
