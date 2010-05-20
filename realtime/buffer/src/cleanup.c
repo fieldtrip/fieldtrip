@@ -65,17 +65,6 @@ void cleanup_event(void **arg) {
 	return;
 }
 
-void cleanup_property(void **arg) {
-	property_t *property = (property_t *)*arg;
-	if (verbose>0) fprintf(stderr, "cleanup_property()\n");
-	if (property) {
-		FREE(property->def);
-		FREE(property->buf);
-		FREE(property);
-	}
-	return;
-}
-
 void cleanup_buf(void **arg) {
 	if (verbose>0) fprintf(stderr, "cleanup_buf()\n");
 	if (*arg) {

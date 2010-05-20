@@ -36,11 +36,11 @@
  *
  */
 
-#include "mex.h"
-#include "matrix.h"
-#include "buffer.h"
+#include "buffer_mxutils.h"
 
-#define NUMBER_OF_FIELDS 9
+#define NUMBER_OF_FIELDS 5
+
+
 
 int buffer_getevt(int server, mxArray *plhs[], const mxArray *prhs[])
 {
@@ -55,20 +55,15 @@ int buffer_getevt(int server, mxArray *plhs[], const mxArray *prhs[])
   
   message_t *request  = NULL;
   message_t *response = NULL;
-  event_t   *event    = NULL;
   eventsel_t eventsel;
   
   /* this is for the Matlab specific output */
   const char *field_names[] = {
-    "type_type",
-    "type_numel",
-    "value_type",
-    "value_numel",
+    "type",
+    "value",
     "sample",
     "offset",
-    "duration",
-    "bufsize",
-    "buf"
+    "duration"
   };
   
   /* allocate the elements that will be used in the communication */
@@ -94,16 +89,15 @@ int buffer_getevt(int server, mxArray *plhs[], const mxArray *prhs[])
   
   if (result == 0) {
     if (response->def->command==GET_OK) {
-      event = malloc(sizeof(event_t));
-      
+	  eventdef_t *event_def;
       /* first count the number of events */
       nevents = 0;
       offset = 0;
       while (offset<response->def->bufsize) {
-        event->def = (eventdef_t *)((char *)response->buf + offset);
-        event->buf = (char *)response->buf + offset + sizeof(eventdef_t);
-        if (verbose) print_eventdef(event->def);
-        offset += sizeof(eventdef_t) + event->def->bufsize;
+        event_def = (eventdef_t *)((char *)response->buf + offset);
+        /* event_buf = (char *)response->buf + offset + sizeof(eventdef_t); */
+        if (verbose) print_eventdef(event_def);
+        offset += sizeof(eventdef_t) + event_def->bufsize;
         nevents++;
       }
       
@@ -112,24 +106,17 @@ int buffer_getevt(int server, mxArray *plhs[], const mxArray *prhs[])
       
       offset = 0;
       for (i=0; i<nevents; i++) {
-        event->def = (eventdef_t *) ((char *)response->buf + offset);
-        event->buf = (char *)response->buf + offset + sizeof(eventdef_t);
-        
-        bufptr = mxCreateNumericMatrix(1, event->def->bufsize, mxUINT8_CLASS, mxREAL);
-        memcpy(mxGetPr(bufptr), event->buf, event->def->bufsize);
-        
-        mxSetFieldByNumber(plhs[0], i, 0, mxCreateDoubleScalar((double)event->def->type_type));
-        mxSetFieldByNumber(plhs[0], i, 1, mxCreateDoubleScalar((double)event->def->type_numel));
-        mxSetFieldByNumber(plhs[0], i, 2, mxCreateDoubleScalar((double)event->def->value_type));
-        mxSetFieldByNumber(plhs[0], i, 3, mxCreateDoubleScalar((double)event->def->value_numel));
-        mxSetFieldByNumber(plhs[0], i, 4, mxCreateDoubleScalar((double)event->def->sample));
-        mxSetFieldByNumber(plhs[0], i, 5, mxCreateDoubleScalar((double)event->def->offset));
-        mxSetFieldByNumber(plhs[0], i, 6, mxCreateDoubleScalar((double)event->def->duration));
-        mxSetFieldByNumber(plhs[0], i, 7, mxCreateDoubleScalar((double)event->def->bufsize));
-        mxSetFieldByNumber(plhs[0], i, 8, bufptr);
-        offset += sizeof(eventdef_t) + event->def->bufsize;
+        event_def = (eventdef_t *) ((char *)response->buf + offset);
+		char *buf_type = (char *) response->buf + offset + sizeof(eventdef_t);
+		char *buf_value = buf_type + event_def->type_numel * wordsize_from_type(event_def->type_type);
+                
+		mxSetFieldByNumber(plhs[0], i, 0, matrix_from_ft_type_data(event_def->type_type, 1, event_def->type_numel, buf_type));
+		mxSetFieldByNumber(plhs[0], i, 1, matrix_from_ft_type_data(event_def->value_type, 1, event_def->value_numel, buf_value));
+        mxSetFieldByNumber(plhs[0], i, 2, mxCreateDoubleScalar((double)event_def->sample));
+        mxSetFieldByNumber(plhs[0], i, 3, mxCreateDoubleScalar((double)event_def->offset));
+        mxSetFieldByNumber(plhs[0], i, 4, mxCreateDoubleScalar((double)event_def->duration));
+        offset += sizeof(eventdef_t) + event_def->bufsize;
       }
-      FREE(event);
     }
     else {
       result = response->def->command;

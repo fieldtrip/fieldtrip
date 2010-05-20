@@ -46,7 +46,6 @@
 #define MAXNUMBYTE      (512*1024*1024)
 #define MAXNUMSAMPLE    600000
 #define MAXNUMEVENT     100
-#define MAXNUMPROPERTY  100
 
 #define WRAP(x,y) ((x) - ((int)((float)(x)/(y)))*(y))
 #define FREE(x) {if (x) {free(x); x=NULL;}}
@@ -82,7 +81,6 @@ void cleanup_message(void **arg);
 void cleanup_header(void **arg);
 void cleanup_data(void **arg);
 void cleanup_event(void **arg);
-void cleanup_property(void **arg);
 void cleanup_buf(void **arg);
 void cleanup_socket(int *);
 
@@ -92,10 +90,8 @@ void print_response(messagedef_t *);
 void print_headerdef(headerdef_t *);
 void print_datadef(datadef_t *);
 void print_eventdef(eventdef_t *);
-void print_propertydef(propertydef_t *);
 void print_datasel(datasel_t *);
 void print_eventsel(eventsel_t *);
-void print_propertydef(propertydef_t *);
 void print_buf(void *, int);
 
 /* definition of even more helper functions, see util.c */
@@ -107,9 +103,6 @@ unsigned int bufwrite(int, const void *, unsigned int);
 int clientrequest(int, const message_t *, message_t**);
 int dmarequest(const message_t *, message_t**);
 int tcprequest(int, const message_t *, message_t**);
-int find_property(property_t *);
-int get_property(int, const char *, INT32_T *);
-int set_property(int, const char *, INT32_T *);
 unsigned int wordsize_from_type(UINT32_T data_type);
 void check_datatypes(void);
 const ft_chunk_t *find_chunk(const void *buf, int offset0, int size, UINT32_T chunk_type);

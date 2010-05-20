@@ -327,12 +327,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
     server = open_connection_with_list(hostname, port);
     errorCode = buffer_getevt(server, &(plhs[0]), &(prhs[1]));
   }
-  
-  else if (strcasecmp(command, "get_prp")==0) {
-    server = open_connection_with_list(hostname, port);
-    errorCode = buffer_getprp(server, &(plhs[0]), &(prhs[1]));
-  }
-  
+    
   else if (strcasecmp(command, "put_hdr")==0) {
     server = open_connection_with_list(hostname, port);
     errorCode = buffer_puthdr(server, &(plhs[0]), &(prhs[1]));
@@ -347,12 +342,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
     server = open_connection_with_list(hostname, port);
     errorCode = buffer_putevt(server, &(plhs[0]), &(prhs[1]));
   }
-  
-  else if (strcasecmp(command, "put_prp")==0) {
-    server = open_connection_with_list(hostname, port);
-    errorCode = buffer_putprp(server, &(plhs[0]), &(prhs[1]));
-  }
-  
+    
   else if (strcasecmp(command, "flush_hdr")==0) {
     server = open_connection_with_list(hostname, port);
     errorCode = buffer_flushhdr(server, &(plhs[0]), &(prhs[1]));

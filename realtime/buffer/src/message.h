@@ -81,21 +81,18 @@ typedef uint64_t UINT64_T;
 #define PUT_EVT    (UINT16_T)0x0103
 #define PUT_OK     (UINT16_T)0x0104
 #define PUT_ERR    (UINT16_T)0x0105
-#define PUT_PRP    (UINT16_T)0x0106
 
 #define GET_HDR    (UINT16_T)0x0201 
 #define GET_DAT    (UINT16_T)0x0202
 #define GET_EVT    (UINT16_T)0x0203
 #define GET_OK     (UINT16_T)0x0204
 #define GET_ERR    (UINT16_T)0x0205
-#define GET_PRP    (UINT16_T)0x0206
 
 #define FLUSH_HDR  (UINT16_T)0x0301 
 #define FLUSH_DAT  (UINT16_T)0x0302
 #define FLUSH_EVT  (UINT16_T)0x0303
 #define FLUSH_OK   (UINT16_T)0x0304
 #define FLUSH_ERR  (UINT16_T)0x0305
-#define FLUSH_PRP  (UINT16_T)0x0306
 
 #define WAIT_DAT   (UINT16_T)0x0402
 #define WAIT_OK    (UINT16_T)0x0404
@@ -113,6 +110,10 @@ typedef uint64_t UINT64_T;
 #define DATATYPE_INT64   (UINT32_T)8
 #define DATATYPE_FLOAT32 (UINT32_T)9
 #define DATATYPE_FLOAT64 (UINT32_T)10
+/* this should never be used to put data into the buffer,
+   but is handy for handling conversions of other data types
+*/
+#define DATATYPE_UNKNOWN (UINT32_T)0xFFFFFFFF
 
 /* these are used in the specification of the event selection criteria */
 #define EVENTSEL_TYPE   1
@@ -196,14 +197,6 @@ typedef struct {
 } eventdef_t;
 
 typedef struct {
-	UINT32_T type_type;        /* usual would be DATATYPE_CHAR */
-	UINT32_T type_numel;       /* length of the type string */
-	UINT32_T value_type;
-	UINT32_T value_numel; 
-	UINT32_T bufsize;          /* size of the buffer in bytes */
-} propertydef_t;
-
-typedef struct {
 	messagedef_t *def;
 	void         *buf;
 } message_t;
@@ -222,11 +215,6 @@ typedef struct {
 	eventdef_t *def;
 	void       *buf;
 } event_t;
-
-typedef struct {
-	propertydef_t *def;
-	void          *buf;
-} property_t;
 
 typedef struct {
 	UINT32_T begsample; /* indexing starts with 0, should be >=0 */

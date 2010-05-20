@@ -15,18 +15,15 @@
 static header_t   *header   = NULL;
 static data_t     *data     = NULL;
 static event_t    *event    = NULL;
-static property_t *property = NULL;
 
 static unsigned int current_max_num_sample = 0;
 
 static int thissample = 0;    // points at the buffer
 static int thisevent = 0;     // points at the buffer
-static int thisproperty = 0;  // points at the buffer
 
 pthread_mutex_t mutexheader   = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutexdata     = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutexevent    = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mutexproperty = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_cond_t getData_cond   = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t getData_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -70,20 +67,6 @@ void free_event() {
 	}
 	thisevent = 0;
 	if (header) header->def->nevents = 0;
-}
-
-void free_property() {
-	int verbose = 0;
-	int i;
-	if (verbose>0) fprintf(stderr, "free_property: freeing property buffer\n");
-	if (property) {
-		for (i=0; i<MAXNUMPROPERTY; i++) {
-			FREE(property[i].def);
-			FREE(property[i].buf);
-		}
-		FREE(property);
-	}
-	thisproperty = 0;
 }
 
 /*****************************************************************************/
@@ -138,61 +121,16 @@ void init_event(void) {
 	}
 }
 
-void init_property(void) {
-	int verbose = 0;
-	int i;
-	if (verbose>0) fprintf(stderr, "init_event: creating property buffer\n");
-	property = (property_t*)malloc(MAXNUMPROPERTY*sizeof(property_t));
-	DIE_BAD_MALLOC(property);
-	for (i=0; i<MAXNUMPROPERTY; i++) {
-		property[i].def = NULL;
-		property[i].buf = NULL;
-	}
-}
-
-/*****************************************************************************/
-
-int find_property(property_t *desired) {
-	int i, n = -1;
-	if (property)
-		for (i=0; i<MAXNUMPROPERTY; i++) {
-			if (property[i].def==NULL || property[i].buf==NULL)
-				continue;
-			if ((property[i].def->type_type==desired->def->type_type) &&
-				(property[i].def->type_numel==desired->def->type_numel)) {
-				switch (desired->def->type_type) {
-					case DATATYPE_CHAR:
-						n = (memcmp(property[i].buf, desired->buf, desired->def->type_numel*WORDSIZE_CHAR)==0 ? i : -1);
-						break;
-					case DATATYPE_INT8:
-					case DATATYPE_INT16:
-					case DATATYPE_INT32:
-					case DATATYPE_INT64:
-					case DATATYPE_UINT8:
-					case DATATYPE_UINT16:
-					case DATATYPE_UINT32:
-					case DATATYPE_UINT64:
-					case DATATYPE_FLOAT32:
-					case DATATYPE_FLOAT64:
-					default:
-						fprintf(stderr, "find_property: unsupported type\n");
-				}
-			}
-			if (n>=0)
-				// the desired property has been found
-				break;
-		}
-	return n;
-}
 
 /***************************************************************************** 
  * this function handles the direct memory access to the buffer
  * and copies objects to and from memory
  *****************************************************************************/
 int dmarequest(const message_t *request, message_t **response_ptr) {
-	int numprop;
 	unsigned int offset;
+	/*
     int blockrequest = 0;
+	*/
 	int verbose = 0;
 
     // these are used for blocking the read requests
@@ -207,10 +145,6 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 	datadef_t      *datadef;
 	eventdef_t     *eventdef;
 	eventsel_t     *eventsel;
-	propertydef_t  *propertydef;
-
-	// this is used to find a given property in the buffer
-	property_t *desired;
 
 	// this will hold the response
 	message_t *response;
@@ -242,7 +176,6 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			pthread_mutex_lock(&mutexheader);
 			pthread_mutex_lock(&mutexdata);
 			pthread_mutex_lock(&mutexevent);
-			pthread_mutex_lock(&mutexproperty);
 
 			headerdef = (headerdef_t*)request->buf;
 			if (verbose>1) print_headerdef(headerdef);
@@ -280,7 +213,6 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			pthread_mutex_unlock(&mutexheader);
 			pthread_mutex_unlock(&mutexdata);
 			pthread_mutex_unlock(&mutexevent);
-			pthread_mutex_unlock(&mutexproperty);
 			break;
 
 		case PUT_DAT:
@@ -378,69 +310,6 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			pthread_mutex_unlock(&mutexheader);
 			break;
 
-		case PUT_PRP:
-			if (verbose>1) fprintf(stderr, "dmarequest: PUT_PRP\n");
-			if (request->def->bufsize==0) {
-				response->def->version = VERSION;
-				response->def->command = PUT_ERR;
-				response->def->bufsize = 0;
-				break;
-			}
-
-			pthread_mutex_lock(&mutexproperty);
-
-			// the property buffer should exist seperate from header, data and events
-			if (!property)
-				init_property();
-
-			propertydef = (propertydef_t*)request->buf;
-			if (verbose>1) print_propertydef(propertydef);
-
-			// determine whether the property already exists in the buffer
-			// if it already exists, then it should be updated
-			// otherwise it should be inserted as new property
-			desired = (property_t*)malloc(sizeof(property_t));
-			DIE_BAD_MALLOC(desired);
-			desired->def = (propertydef_t*)request->buf;
-			if (desired->def->bufsize)
-				desired->buf = (char*)request->buf+sizeof(propertydef_t);
-			else
-				desired->buf = NULL;
-			numprop = find_property(desired);
-			FREE(desired);
-
-			if (numprop<0 && (thisproperty<MAXNUMPROPERTY)) {
-				// insert as new property
-				numprop = thisproperty;
-				thisproperty++;
-			}
-
-			if (numprop>=0) {
-				// clear the old property information (if any)
-				FREE(property[numprop].def);
-				FREE(property[numprop].buf);
-
-				// insert the new property information
-				property[numprop].def = (propertydef_t*)malloc(sizeof(propertydef_t));
-				DIE_BAD_MALLOC(property[numprop].def);
-				memcpy(property[numprop].def, request->buf, sizeof(propertydef_t));
-				property[numprop].buf = malloc(property[numprop].def->bufsize);
-				DIE_BAD_MALLOC(property[numprop].buf);
-				memcpy(property[numprop].buf, (char*)request->buf+sizeof(propertydef_t), property[numprop].def->bufsize);
-
-				response->def->version = VERSION;
-				response->def->command = PUT_OK;
-				response->def->bufsize = 0;
-			}
-			else {
-				response->def->version = VERSION;
-				response->def->command = PUT_ERR;
-				response->def->bufsize = 0;
-			}
-
-			pthread_mutex_unlock(&mutexproperty);
-			break;
-
 		case GET_HDR:
 			if (verbose>1) fprintf(stderr, "dmarequest: GET_HDR\n");
 			if (header==NULL) {
@@ -470,11 +339,6 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 				break;
 			}
 			
-			// Check whether the read-request should block...
-			blockrequest = 0;
-			// get_property(0, "dmaBlockRequest", &blockrequest);
-			if (verbose>1) fprintf(stderr, "dmarequest: blockrequest = %d\n", blockrequest);
-
 			pthread_mutex_lock(&mutexdata);
 			pthread_mutex_lock(&mutexheader);
 
@@ -500,6 +364,8 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 					datasel.endsample = header->def->nsamples - 1;
 				}
 			}
+			
+			/*
 			
 			// if the read should block...
 			if(blockrequest == 1)
@@ -527,6 +393,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 						datasel.endsample = header->def->nsamples - 1;
 				}
 			}
+			*/
 
 			if (verbose>1) print_headerdef(header->def);
 			if (verbose>1) print_datasel(&datasel);
@@ -694,61 +561,6 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			pthread_mutex_unlock(&mutexheader);
 			break;
 
-		case GET_PRP:
-			if (verbose>1) fprintf(stderr, "dmarequest: GET_PRP\n");
-			if (property==NULL) {
-				response->def->version = VERSION;
-				response->def->command = GET_ERR;
-				response->def->bufsize = 0;
-				break;
-			}
-
-			pthread_mutex_lock(&mutexproperty);
-
-			if (request->def->bufsize) {
-				// determine whether the property exists in the buffer
-				// the message payload should include a full property def and buf 
-				// although the value_type and value_value will not be used here
-				desired = (property_t*)malloc(sizeof(property));
-				DIE_BAD_MALLOC(desired);
-				desired->def = (propertydef_t*)request->buf;
-				if (desired->def->bufsize)
-					desired->buf = (char*)request->buf+sizeof(propertydef_t);
-				else
-					desired->buf = NULL;
-				numprop = find_property(desired);
-				FREE(desired);
-
-				if (numprop>=0) {
-					response->def->version = VERSION;
-					response->def->command = GET_OK;
-					response->def->bufsize = 0;
-					response->def->bufsize = append(&response->buf, response->def->bufsize, property[numprop].def, sizeof(propertydef_t));
-					response->def->bufsize = append(&response->buf, response->def->bufsize, property[numprop].buf, property[numprop].def->bufsize);
-				}
-				else {
-					response->def->version = VERSION;
-					response->def->command = GET_ERR;
-					response->def->bufsize = 0;
-				}
-			}
-			else {
-				unsigned int n;
-				// send all properties
-				response->def->version = VERSION;
-				response->def->command = GET_OK;
-				response->def->bufsize = 0;
-			    if (verbose>1) fprintf(stderr, "dmarequest: sending %d properties\n", thisproperty);
-				for (n=0; n<thisproperty; n++) {
-					if (verbose>1) print_propertydef(property[n].def);
-					response->def->bufsize = append(&response->buf, response->def->bufsize, property[n].def, sizeof(propertydef_t));
-					response->def->bufsize = append(&response->buf, response->def->bufsize, property[n].buf, property[n].def->bufsize);
-				}
-			}
-
-			pthread_mutex_unlock(&mutexproperty);
-			break;
-
 		case FLUSH_HDR:
 			pthread_mutex_lock(&mutexheader);
 			pthread_mutex_lock(&mutexdata);
@@ -811,28 +623,6 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			}
 			pthread_mutex_unlock(&mutexevent);
 			pthread_mutex_unlock(&mutexheader);
-			break;
-
-		case FLUSH_PRP:
-			pthread_mutex_lock(&mutexproperty);
-			if (property) {
-				unsigned int i;
-				
-				thisproperty = 0;
-				for (i=0; i<MAXNUMPROPERTY; i++) {
-					FREE(property[i].def);
-					FREE(property[i].buf);
-				}
-				response->def->version = VERSION;
-				response->def->command = FLUSH_OK;
-				response->def->bufsize = 0;
-			}
-			else {
-				response->def->version = VERSION;
-				response->def->command = FLUSH_ERR;
-				response->def->bufsize = 0;
-			}
-			pthread_mutex_unlock(&mutexproperty);
 			break;
 			
 		case WAIT_DAT:

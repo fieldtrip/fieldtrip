@@ -60,18 +60,6 @@ void print_eventdef(eventdef_t *eventdef) {
 	}
 }
 
-void print_propertydef(propertydef_t *propertydef) {
-	if (propertydef==NULL) 
-		fprintf(stderr, "propertydef==NULL\n");
-	else {
-		fprintf(stderr, "propertydef.type_type       = %u\n", propertydef->type_type      );
-		fprintf(stderr, "propertydef.type_numel      = %u\n", propertydef->type_numel     );
-		fprintf(stderr, "propertydef.value_type      = %u\n", propertydef->value_type     );
-		fprintf(stderr, "propertydef.value_numel     = %u\n", propertydef->value_numel    );
-		fprintf(stderr, "propertydef.bufsize         = %u\n", propertydef->bufsize        );
-	}
-}
-
 void print_datasel(datasel_t *datasel) {
 	fprintf(stderr, "datasel.begsample  = %u\n", datasel->begsample);
 	fprintf(stderr, "datasel.endsample  = %u\n", datasel->endsample);

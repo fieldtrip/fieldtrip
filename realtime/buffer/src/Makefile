@@ -56,7 +56,7 @@ CXXFLAGS = $(INCPATH) -Wunused -pedantic -O0
 
 all: libbuffer.a
 
-libbuffer.a: tcpserver.o tcpsocket.o tcprequest.o clientrequest.o dmarequest.o cleanup.o util.o printstruct.o swapbytes.o property.o extern.o endianutil.o
+libbuffer.a: tcpserver.o tcpsocket.o tcprequest.o clientrequest.o dmarequest.o cleanup.o util.o printstruct.o swapbytes.o extern.o endianutil.o
 	 ar rv $@ $^
 
 libclient.a: tcprequest.o util.o

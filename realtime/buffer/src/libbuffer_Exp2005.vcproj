@@ -181,10 +181,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\property.c"
-				>
-			</File>
-			<File
 				RelativePath=".\swapbytes.c"
 				>
 			</File>

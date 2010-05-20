@@ -59,10 +59,10 @@ end
 
 % If you want to add a new helper function to the MEX file, you should just add 
 % its name here (without the .c suffix)
-helpers = {'buffer_gethdr', 'buffer_getdat', 'buffer_getevt', 'buffer_getprp', ...
-		   'buffer_puthdr', 'buffer_putdat', 'buffer_putevt', 'buffer_putprp', ...
+helpers = {'buffer_gethdr', 'buffer_getdat', 'buffer_getevt', ...
+		   'buffer_puthdr', 'buffer_putdat', 'buffer_putevt', ...
 		   'buffer_flushhdr', 'buffer_flushdat', 'buffer_flushevt', ...
-		   'buffer_waitdat'};
+		   'buffer_waitdat', 'buffer_mxutils'};
 
 
 %%%% Please do not change anything below this line %%%%
@@ -72,7 +72,7 @@ allObjects = '';
 
 % This is for compiling all the helper functions (no linking yet).
 for i=1:length(helpers)
-	fprintf(1,'Compiling helper function %s ...\n', helpers{i});
+	fprintf(1,'Compiling helper functions in %s ...\n', helpers{i});
 	cmd = sprintf('mex -c %s %s %s.c', cflags, extra_cflags, helpers{i});
 	eval(cmd);
 

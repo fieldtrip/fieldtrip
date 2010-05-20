@@ -19,7 +19,6 @@
 #define PI         3.1415926
 
 void *event_thread(void *arg) {
-	int status = 0;
 	long tdif;
 	host_t *host = (host_t *)arg;
 
@@ -39,7 +38,6 @@ void *event_thread(void *arg) {
 	/* these represent the acquisition system properties */
 	int fsample        = 250;
 	int blocksize      = 125;
-	int stopthread	   = 0;
 
 	/* this is to prevent closing the thread at an unwanted moment and memory from leaking */
 	int oldcancelstate, oldcanceltype;
@@ -78,24 +76,11 @@ void *event_thread(void *arg) {
 	event->def = malloc(sizeof(eventdef_t));
 	event->buf = NULL;
 
-    /* the stopthread property is used to signal that the thread should exit */
-	server = open_connection(host->name, host->port);
-	status = set_property(server, "eventStopThread", &stopthread);
-	status = close_connection(server);
-
 	while (1) {
 
 		/* increment the trigger value on each iteration */
 		value++;
 		sample += blocksize;
-
-    	/* the stopthread property is used to signal that the thread should exit */
-		server = open_connection(host->name, host->port);
-		status = get_property(server, "eventStopThread", &stopthread);
-		status = close_connection(server);
-
-		if(stopthread == 1)
-			goto cleanup;
 
 		/* construct the event definition */
 		event->def->type_type   = DATATYPE_CHAR; 

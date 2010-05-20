@@ -214,7 +214,6 @@ void check_datatypes() {
 		if (WORDSIZE_FLOAT64 !=8) { fprintf(stderr, "invalid size of FLOAT64 (%d)\n", (int) WORDSIZE_FLOAT64); exit(-1); }
 		if (sizeof(messagedef_t)  !=8 ) { fprintf(stderr, "invalid size of messagedef_t\n"); exit(-1); }
 		if (sizeof(headerdef_t)   !=24) { fprintf(stderr, "invalid size of headerdef_t \n"); exit(-1); }
-		if (sizeof(propertydef_t) !=20) { fprintf(stderr, "invalid size of propertydef_t \n"); exit(-1); }
 		if (sizeof(datadef_t)     !=16) { fprintf(stderr, "invalid size of datadef_t   \n"); exit(-1); }
 		if (sizeof(eventdef_t)    !=32) { fprintf(stderr, "invalid size of eventdef_t  \n"); exit(-1); }
 		if (sizeof(datasel_t)     !=8 ) { fprintf(stderr, "invalid size of datasel_t   \n"); exit(-1); }
