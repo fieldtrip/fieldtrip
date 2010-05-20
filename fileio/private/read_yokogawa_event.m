@@ -30,6 +30,10 @@ function [event] = read_yokogawa_event(filename, varargin)
 %
 % $Id$
 
+if ~hasyokogawa('16bitBeta6')
+    error('cannot determine whether Yokogawa toolbox is present');
+end
+
 % get the options
 trigindx = keyval('trigindx', varargin); % default is based on chantype helper function
 
