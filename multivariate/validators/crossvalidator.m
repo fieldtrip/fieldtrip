@@ -389,39 +389,49 @@ classdef crossvalidator < validator
                 
                 trainfolds{f,d} = setdiff(1:size(design{d},1),testfolds{f,d})';
                 trainfolds{f,d} = trainfolds{f,d}(randperm(size(trainfolds{f,d},1)));
+                               
+              end
+            end
+            
+          end
+          
+          if obj.balanced
+            % make sure all classes are represented equally in the
+            % train samples by sampling with replacement and in the
+            % test samples by using the minimum number of trials in a
+            % condition. This ensures that training makes most use of
+            % the data while testing has no inherent bias in the
+            % data. We lose power by removing superfluous trials.
+                        
+            if obj.verbose
+              fprintf('balancing training samples by sampling with replacement\n');
+            end
+            
+            for f=1:nfolds
+              for d=1:nsets
+            
+                [unq,tmp,idx] = unique(design{d}(1:size(design{d}),:),'rows');
                 
-                if obj.balanced
-                  % make sure all classes are represented equally in the
-                  % train samples by sampling with replacement
+                idx = idx(trainfolds{f,d});
+                
+                maxsmp = max(arrayfun(@(x)(sum(idx == x)),unq));
+                
+                tmp = trainfolds{f,d};
+                for j=1:length(unq)
+                  
+                  iidx = find(idx == unq(j));
                   
                   if obj.verbose
-                    fprintf('balancing training samples by sampling with replacement\n');
+                    fprintf('drawing %d additional samples for label %d\n',maxsmp - length(iidx),unq(j));
                   end
                   
-                  [unq,tmp,idx] = unique(design{d}(1:size(design{d}),:),'rows');
-
-                  idx = idx(trainfolds{f,d});
-                  
-                  maxsmp = max(arrayfun(@(x)(sum(idx == x)),unq));
-                  
-                  tmp = trainfolds{f,d};
-                  for j=1:length(unq)                   
-                    
-                    iidx = find(idx == unq(j));                    
-                    
-                    if obj.verbose
-                      fprintf('drawing %d additional samples for label %d\n',maxsmp - length(iidx),unq(j));
-                    end
-                    
-                    % nameclash with fieldtrip_private!
-                    tmp = [tmp; randsample(trainfolds{f,d}(iidx),maxsmp - length(iidx),true)];
-                    
-                  end
-                  
-                  trainfolds{f,d} = tmp(randperm(length(tmp)));
+                  % nameclash with fieldtrip_private!
+                  tmp = [tmp; randsample(trainfolds{f,d}(iidx),maxsmp - length(iidx),true)];
                   
                 end
-                               
+                
+                trainfolds{f,d} = tmp(randperm(length(tmp)));
+            
               end
             end
             
@@ -442,6 +452,48 @@ classdef crossvalidator < validator
                 
                 testfolds{f,d} = setdiff(1:size(design{d},1),trainfolds{f,d})';
                 testfolds{f,d} = testfolds{f,d}(randperm(size(testfolds{f,d},1)));
+                
+              end
+            end
+            
+          end
+          
+          if obj.balanced
+            % make sure all classes are represented equally in the
+            % train samples by sampling with replacement and in the
+            % test samples by using the minimum number of trials in a
+            % condition. This ensures that training makes most use of
+            % the data while testing has no inherent bias in the
+            % data. We lose power by removing superfluous trials.
+            
+            if obj.verbose
+              fprintf('balancing test samples by removing superfluous trials\n');
+            end
+            
+            for f=1:nfolds
+              for d=1:nsets
+                
+                [unq,tmp,idx] = unique(design{d}(1:size(design{d}),:),'rows');
+                
+                idx = idx(testfolds{f,d});
+                
+                minsmp = min(arrayfun(@(x)(sum(idx == x)),unq));
+                
+                tmp = [];
+                for j=1:length(unq)
+                  
+                  iidx = find(idx == unq(j));
+                  
+                  if obj.verbose
+                    fprintf('removing %d superfluous samples for label %d\n',length(iidx) - minsmp,unq(j));
+                  end
+                  
+                  tmp = [tmp; testfolds{f,d}(iidx(1:minsmp))];
+                  
+                end
+                
+                testfolds{f,d} = tmp(randperm(length(tmp)));
+          
               end
             end
             
