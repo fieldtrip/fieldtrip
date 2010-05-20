@@ -136,7 +136,7 @@ switch toolbox
   case 'EEPROBE'
     status  = (exist('read_eep_avr') && exist('read_eep_cnt'));
   case 'YOKOGAWA'
-    status  = (exist('GetMeg160ChannelInfoM') && exist('GetMeg160ContinuousRawDataM'));
+    status  = hasyokogawa('16bitBeta6');
   case 'BEOWULF'
     status = (exist('evalwulf') && exist('evalwulf') && exist('evalwulf'));
   case 'MENTAT'
