@@ -137,7 +137,7 @@ if length(data)>1 && ~israw,
   %if issource || isvolume,
   %  param = parameterselection(param, data{1}); % FIXME check consistency across input data of presence of specific parameters
   %else
-    param = {param};
+  if ~iscell(param), param = {param}; end
   %end
   if issource || isvolume
     if numel(param)>1,
