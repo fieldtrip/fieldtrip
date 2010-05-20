@@ -206,9 +206,9 @@ else
       type = 'itab153';
     elseif (mean(ismember(ft_senslabel('itab153_planar'), sens.label)) > 0.8)
       type = 'itab153_planar';
-    elseif (mean(ismember(ft_senslabel('yokogawa160'),    sens.label)) > 0.8)
+    elseif (mean(ismember(ft_senslabel('yokogawa160'),    sens.label)) > 0.4)
       type = 'yokogawa160';
-    elseif (mean(ismember(ft_senslabel('yokogawa160_planar'), sens.label)) > 0.8)
+    elseif (mean(ismember(ft_senslabel('yokogawa160_planar'), sens.label)) > 0.4)
       type = 'yokogawa160_planar';
     elseif (mean(ismember(ft_senslabel('neuromag306'),   sens.label)) > 0.8)
       type = 'neuromag306';
@@ -278,9 +278,9 @@ else
       type = 'itab153';
     elseif (mean(ismember(ft_senslabel('itab153_planar'), sens.label)) > 0.8)
       type = 'itab153_planar';
-    elseif (mean(ismember(ft_senslabel('yokogawa160'),    sens.label)) > 0.8)
+    elseif (mean(ismember(ft_senslabel('yokogawa160'),    sens.label)) > 0.4)
       type = 'yokogawa160';
-    elseif (mean(ismember(ft_senslabel('yokogawa160_planar'), sens.label)) > 0.8)
+    elseif (mean(ismember(ft_senslabel('yokogawa160_planar'), sens.label)) > 0.4)
       type = 'yokogawa160_planar';
     elseif (mean(ismember(ft_senslabel('neuromag306'),   sens.label)) > 0.8)
       type = 'neuromag306';
