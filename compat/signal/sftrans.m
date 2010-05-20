@@ -122,18 +122,17 @@ if length(W)==2
       Sg = Sg * real(prod(-Sz));
     else
       Sg = Sg * real(prod(-Sz)/prod(-Sp));
-      endif
-      b = (C*(Fh-Fl)/2)./Sp;
-      Sp = [b+sqrt(b.^2-Fh*Fl), b-sqrt(b.^2-Fh*Fl)];
-      extend = [sqrt(-Fh*Fl), -sqrt(-Fh*Fl)];
-      if isempty(Sz)
-        Sz = [extend(1+rem([1:2*p],2))];
-      else
-        b = (C*(Fh-Fl)/2)./Sz;
-        Sz = [b+sqrt(b.^2-Fh*Fl), b-sqrt(b.^2-Fh*Fl)];
-        if (p > z)
-          Sz = [Sz, extend(1+rem([1:2*(p-z)],2))];
-        end
+    end
+    b = (C*(Fh-Fl)/2)./Sp;
+    Sp = [b+sqrt(b.^2-Fh*Fl), b-sqrt(b.^2-Fh*Fl)];
+    extend = [sqrt(-Fh*Fl), -sqrt(-Fh*Fl)];
+    if isempty(Sz)
+      Sz = [extend(1+rem([1:2*p],2))];
+    else
+      b = (C*(Fh-Fl)/2)./Sz;
+      Sz = [b+sqrt(b.^2-Fh*Fl), b-sqrt(b.^2-Fh*Fl)];
+      if (p > z)
+        Sz = [Sz, extend(1+rem([1:2*(p-z)],2))];
       end
     end
   else
@@ -171,15 +170,14 @@ else
       Sg = Sg * real(prod(-Sz));
     else
       Sg = Sg * real(prod(-Sz)/prod(-Sp));
-      endif
-      Sp = C * Fc ./ Sp;
-      if isempty(Sz)
-        Sz = zeros(1,p);
-      else
-        Sz = [C * Fc ./ Sz];
-        if (p > z)
-          Sz = [Sz, zeros(1,p-z)];
-        end
+    end
+    Sp = C * Fc ./ Sp;
+    if isempty(Sz)
+      Sz = zeros(1,p);
+    else
+      Sz = [C * Fc ./ Sz];
+      if (p > z)
+        Sz = [Sz, zeros(1,p-z)];
       end
     end
   else

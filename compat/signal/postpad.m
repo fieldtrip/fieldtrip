@@ -28,53 +28,53 @@
 
 function y = postpad (x, l, c, dim)
 
-if (nargin < 2 || nargin > 4)
-  print_usage ();
+if nargin < 2 || nargin > 4
+  %print_usage ();
+  error('wrong number of input arguments, should be between 2 and 4');
 end
 
-if (nargin < 3 || isempty (c))
+if nargin < 3 || isempty(c)
   c = 0;
 else
-  if (~ isscalar (c))
+  if ~isscalar(c)
     error ('postpad: third argument must be empty or a scalar');
   end
 end
 
-nd = ndims (x);
-sz = size (x);
-if (nargin < 4)
-  %% Find the first non-singleton dimension
+nd = ndims(x);
+sz = size(x);
+if nargin < 4
+  % Find the first non-singleton dimension
   dim  = 1;
-  while (dim < nd + 1 && sz (dim) == 1)
+  while dim < nd+1 && sz(dim)==1
     dim = dim + 1;
   end
-  if (dim > nd)
+  if dim > nd
     dim = 1;
-  elseif (~ (isscalar (dim) && dim == round (dim)) && dim > 0 && dim < (nd + 1))
-    error ('postpad: dim must be an integer and valid dimension');
+  elseif ~(isscalar(dim) && dim == round(dim)) && dim > 0 && dim< nd+1
+    error('postpad: dim must be an integer and valid dimension');
   end
 end
 
-if (~ isscalar (l) || l < 0)
-  error ('second argument must be a positive scaler');
+if ~isscalar(l) || l<0
+  error ('second argument must be a positive scalar');
 end
 
-if (dim > nd)
+if dim > nd
   sz(nd+1:dim) = 1;
 end
 
-d = sz (dim);
+d = sz(dim);
 
-if (d >= l)
-  idx = cell ();
+if d >= l
+  idx = cell(1,nd);
   for i = 1:nd
     idx{i} = 1:sz(i);
-    endfor
-    idx{dim} = 1:l;
-    y = x(idx{:});
   end
+  idx{dim} = 1:l;
+  y = x(idx{:});
 else
-  sz (dim) = l - d;
-  y = cat (dim, x, c * ones (sz));
+  sz(dim) = l-d;
+  y = cat(dim, x, c * ones(sz));
 end
 
