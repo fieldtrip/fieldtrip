@@ -1,8 +1,8 @@
 function [grid, cfg] = prepare_dipole_grid(cfg, vol, sens)
 
 % PREPARE_DIPOLE_GRID helps to make a regular grid with dipoles that can be
-% used for scanning (e.g. for FT_SOURCEANALYSIS) or linear estimation (e.g.
-% for FT_MEGREALIGN).
+% used for scanning (e.g. for SOURCEANALYSIS) or linear estimation (e.g.
+% for MEGREALIGN).
 %
 % A grid can be constructed based on
 %   - regular 3D grid with explicit specification
@@ -44,27 +44,11 @@ function [grid, cfg] = prepare_dipole_grid(cfg, vol, sens)
 %                      single triangulated boundary, or a Nx3 matrix with surface
 %                      points
 %
-% See also FT_SOURCEANALYSIS, FT_MEGREALIGN, FT_DIPOLEFITTING, FT_PREPARE_LEADFIELD
+% See also SOURCEANALYSIS, MEGREALIGN, DIPOLEFITTING, PREPARE_LEADFIELD
 
 % Copyright (C) 2004-2009, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
-% for the documentation and details.
-%
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
-%
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
-%
-%    You should have received a copy of the GNU General Public License
-%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
-%
-% $Id$
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the defaults
 if ~isfield(cfg, 'symmetry'),         cfg.symmetry    = [];       end
@@ -152,6 +136,21 @@ end
 % these are mutually exclusive
 if sum([basedonauto basedongrid basedonpos basedonshape basedonmri basedonvol])~=1
   error('incorrect cfg specification for constructing a dipole grid');
+end
+
+needspm = ~strcmp(cfg.smooth, 'no');
+if needspm
+  % check if SPM is in path and if not add
+  hasspm2 = hastoolbox('SPM2');
+  hasspm8 = hastoolbox('SPM8');
+  
+  if ~hasspm2 && ~hasspm8
+    try, hasspm8 = hastoolbox('SPM8', 1); end
+  end
+  
+  if ~hasspm8
+    try, hastoolbox('SPM2', 1); end
+  end
 end
 
 % start with an empty grid
@@ -310,9 +309,9 @@ if basedonmri
   end
 
   % apply a smoothing of a certain amount of voxels
-  if ~isstr(cfg.smooth) && cfg.smooth>1
+  if ~strcmp(cfg.smooth, 'no');
     fprintf('smoothing gray matter segmentation with %d voxels\n', cfg.smooth);
-    mri.gray = spm_conv(mri.gray, cfg.smooth);
+    spm_smooth(mri.gray, mri.gray, cfg.smooth);
   end
 
   % determine for each voxel whether it belongs to the cortex
@@ -383,7 +382,7 @@ if basedonshape
     headshape.pnt = cfg.headshape;
   elseif ischar(cfg.headshape)
     % read the headshape from file
-    headshape = ft_read_headshape(cfg.headshape);
+    headshape = read_headshape(cfg.headshape);
   else
     error('cfg.headshape is not specified correctly')
   end

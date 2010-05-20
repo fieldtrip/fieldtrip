@@ -6,26 +6,22 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 
 % Copyrights (C) 2009, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
-% for the documentation and details.
-%
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
-%
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
-%
-%    You should have received a copy of the GNU General Public License
-%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
-%
-% $Id$
+% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-% check if SPM2 is in path and if not add
-hastoolbox('SPM2',1);
+needspm = ~strcmp(cfg.smooth, 'no');
+if needspm
+  % check if SPM is in path and if not add
+  hasspm2 = hastoolbox('SPM2');
+  hasspm8 = hastoolbox('SPM8');
+  
+  if ~hasspm2 && ~hasspm8
+    try, hasspm8 = hastoolbox('SPM8', 1); end
+  end
+  
+  if ~hasspm8
+    try, hastoolbox('SPM2', 1); end
+  end
+end
 
 % some initial checks
 cfg = checkconfig(cfg, 'forbidden', 'numcompartments');
@@ -51,8 +47,6 @@ if ~isfield(mri, 'seg') && isequal(cfg.tissue, 1)
     mri.seg = mri.seg | (mri.csf>(cfg.threshold*max(mri.csf(:))));
   end
   if ~strcmp(cfg.smooth, 'no'),
-    % check whether the required SPM2 toolbox is available
-    hastoolbox('spm2', 1);
     fprintf('smoothing the segmentation with a %d-pixel FWHM kernel\n',cfg.smooth);
     mri.seg = double(mri.seg);
     spm_smooth(mri.seg, mri.seg, cfg.smooth);
