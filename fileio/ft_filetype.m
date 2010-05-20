@@ -265,6 +265,10 @@ elseif filetype_check_extension(filename, '.raw') && filetype_check_header(filen
   type = 'yokogawa_raw';
   manufacturer = 'Yokogawa';
   content = 'evoked/trialbased MEG data';
+elseif filetype_check_extension(filename, '.mrk') && filetype_check_header(filename,  char([0 0 0 0])) % FIXME, this detection should possibly be improved
+  type = 'yokogawa_mrk';
+  manufacturer = 'Yokogawa';
+  content = 'headcoil locations';
 elseif filetype_check_extension(filename, '.mri') && filetype_check_header(filename, char([0 0 0 0])) % FIXME, this detection should possibly be improved
   type = 'yokogawa_mri';
   manufacturer = 'Yokogawa';
