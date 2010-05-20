@@ -699,7 +699,9 @@ if isempty(rz)
             'bti248_planar', 'yokogawa160', 'yokogawa160_planar', 'magnetometer', 'meg'}
       rz = 90;
     case {'neuromag122', 'neuromag306'}
-      rz = 0;
+      rz = 0; 
+    case {'yokogawa160','yokogawa160_planar'}
+      rz = 90;
     case 'electrode'
       rz = 90;
     otherwise
