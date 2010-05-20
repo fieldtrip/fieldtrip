@@ -172,7 +172,21 @@ switch fileformat
             otherwise
                 error('Incorrect coordinates specified');
         end
+   case {'yokogawa_mrk','yokogawa_ave','yokogawa_con','yokogawa_raw' }
         
+        hdr = read_yokogawa_header(filename);
+        marker = hdr.orig.matching_info.marker;
+        for i=1:5, shape.fid.pnt(i,:) = marker(i).meg_pos; end
+               
+        sw_ind = [3 1 2];
+        shape.fid.pnt(1:3,:)= shape.fid.pnt(sw_ind, :);
+        shape.fid.label(1:5)= {'nas', 'lpa', 'rpa','Marker4','Marker5'}; 
+        shape.fid.unit = 'm'; 
+ 
+         if ~isempty(hdr.orig.matching_info.meg_to_mri)
+            shape.matching_info.meg_to_mri = hdr.orig.matching_info.meg_to_mri;
+            shape.matching_info.mri_to_meg = hdr.orig.matching_info.mri_to_meg;
+         end     
     case 'yokogawa_coregis'
         
         in_str = textread(filename, '%s');
