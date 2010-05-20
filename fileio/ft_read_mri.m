@@ -68,7 +68,7 @@ elseif ft_filetype(filename, 'asa_mri')
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif ft_filetype(filename, 'minc')
-  if ~hasspm
+  if ~(hasspm2 || hasspm5)
     error('the SPM2 or SPM5 toolbox is required to read *.mnc files');
   end
   % use the functions from SPM
