@@ -54,8 +54,9 @@ baseline = mean(dat(:,begsample:endsample), 2);
 %  dat(chan,:) = dat(chan,:) - baseline(chan);
 % end
 
-for sample=1:Nsamples
-  dat(:,sample) = dat(:,sample) - baseline;
-end
+% for sample=1:Nsamples
+%   dat(:,sample) = dat(:,sample) - baseline;
+% end
 
-
+% it is even faster to do this
+dat = bsxfun(@minus,dat,baseline);
