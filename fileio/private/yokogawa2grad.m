@@ -26,6 +26,13 @@ function grad = yokogawa2grad(hdr)
 %
 % $Id$
 
+if ~hasyokogawa('16bitBeta6')
+    error('cannot determine whether Yokogawa toolbox is present');
+end
+
+if isfield(hdr, 'label')
+  label = hdr.label; % keep for later use
+end
 
 if isfield(hdr, 'orig')
   hdr = hdr.orig; % use the original header, not the FieldTrip header
@@ -38,8 +45,8 @@ end
 % 4  position y (in m)
 % 5  position z (in m)
 % 6  orientation of first coil (theta in deg)
-% 7  orientation from the 1st to 2nd coil for gradiometer (theta in deg)
-% 8  orientation of first coil (phi in deg)
+% 7  orientation of first coil (phi in deg)
+% 8  orientation from the 1st to 2nd coil for gradiometer (theta in deg)
 % 9  orientation from the 1st to 2nd coil for gradiometer (phi in deg)
 % 10 coil size (in m)
 % 11 baseline (in m)
@@ -49,7 +56,7 @@ isgrad     = (hdr.channel_info(:,2)==handles.AxialGradioMeter | hdr.channel_info
 grad.pnt   = hdr.channel_info(isgrad,3:5)*100;    % cm
 
 % Get orientation of the 1st coil
-ori_1st   = hdr.channel_info(find(isgrad),[6 8]);
+ori_1st   = hdr.channel_info(find(isgrad),[6 7]);
 % polar to x,y,z coordinates
 ori_1st = ...
   [sin(ori_1st(:,1)/180*pi).*cos(ori_1st(:,2)/180*pi) ...
@@ -58,7 +65,7 @@ ori_1st = ...
 grad.ori = ori_1st;
 
 % Get orientation from the 1st to 2nd coil for gradiometer
-ori_1st_to_2nd   = hdr.channel_info(find(isgrad),[7 9]);
+ori_1st_to_2nd   = hdr.channel_info(find(isgrad),[8 9]);
 % polar to x,y,z coordinates
 ori_1st_to_2nd = ...
   [sin(ori_1st_to_2nd(:,1)/180*pi).*cos(ori_1st_to_2nd(:,2)/180*pi) ...
@@ -68,13 +75,14 @@ ori_1st_to_2nd = ...
 baseline = hdr.channel_info(isgrad,size(hdr.channel_info,2));
 
 % Define the location and orientation of 2nd coil
+info = hdr.channel_info(isgrad,2); 
 for i=1:sum(isgrad)
-  if hdr.channel_info(i,2) == handles.AxialGradioMeter
+  if info(i) == handles.AxialGradioMeter
     grad.pnt(i+sum(isgrad),:) = [grad.pnt(i,:)+ori_1st(i,:)*baseline(i)*100];
     grad.ori(i+sum(isgrad),:) = -ori_1st(i,:);
-  elseif hdr.channel_info(i,2) == handles.PlannerGradioMeter
+  elseif info(i) == handles.PlannerGradioMeter
     grad.pnt(i+sum(isgrad),:) = [grad.pnt(i,:)+ori_1st_to_2nd(i,:)*baseline(i)*100];
-    grad.ori(i+sum(isgrad),:) = ori_1st(i,:);
+    grad.ori(i+sum(isgrad),:) = -ori_1st(i,:);
   end
 end
 
@@ -88,12 +96,34 @@ grad.tra = sparse(grad.tra);
 % the gradiometer labels should be consistent with the channel labels in
 % read_yokogawa_header, the predefined list of channel names in ft_senslabel
 % and with ft_channelselection
-label = cell(size(isgrad));
-for i=1:length(label)
-  label{i} = sprintf('AG%03d', i);
+% ONLY consistent with read_yokogawa_header as NO FIXED relation between
+% channel index and type of channel exists for Yokogawa systems. Therefore
+% all have individual label sequences: No useful support in ft_senslabel possible
+if ~isempty(label)
+    grad.label = label(isgrad);
+else
+    % this is only backup, if something goes wrong above.
+    label = cell(size(isgrad));
+    for i=1:length(label)
+    label{i} = sprintf('AG%03d', i);
+    end
+    grad.label = label(isgrad);    
 end
-grad.label = label(isgrad);
 grad.unit  = 'cm';
+
+% transform sensor geometry from dewar to head coordinates, if possible
+[p, f, x] = fileparts(hdr.filename)
+filename = fullfile(p, [f '.mrk'])
+if exist( filename )
+    fprintf('reading fiducial locations from %s, returning sensor positions in head coordinates \n', filename );
+    shape = ft_read_headshape(filename);
+    shape.fid.pnt = shape.fid.pnt*100; 
+    shape.fid.unit = 'cm'; 
+    sens2hc =  headcoordinates(shape.fid.pnt(1,:),shape.fid.pnt(2,:),shape.fid.pnt(3,:));
+    grad = ft_transform_sens(sens2hc,grad);
+else
+    warning('the file %s with the fiducial information was not found, returning sensor positions in dewar coordinates', filename )
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this defines some usefull constants
