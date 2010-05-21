@@ -250,7 +250,12 @@ for k=2:nargin
   end
 
   % Average across selected channels:
-  P = squeeze(mean(P(chansel,:), 1));
+  if length(size(P)) > 2 %chan_chan_indexing
+    refchan = match_str(varargin{k-1}.label,cfg.cohrefchannel);
+    P = squeeze(mean(P(refchan,chansel,:),2));
+  else
+    P = squeeze(mean(P(chansel,:), 1));
+  end
   
   % select mask
   if ~isempty(cfg.maskparameter) %&& masking
