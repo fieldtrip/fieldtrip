@@ -448,7 +448,7 @@ elseif filetype_check_extension(filename, '.vabs')
   type = 'brainvision_vabs';
   manufacturer = 'BrainProducts';
   content = 'Brain Vison Analyzer macro';
-elseif (filetype_check_extension(filename, '.eeg') || filetype_check_extension(filename, '.dat')) && exist(fullfile(p, [f '.vhdr']), 'file')
+elseif filetype_check_extension(filename, '.eeg') && exist(fullfile(p, [f '.vhdr']), 'file')
   type = 'brainvision_eeg';
   manufacturer = 'BrainProducts';
   content = 'continuous EEG data';
@@ -456,7 +456,9 @@ elseif filetype_check_extension(filename, '.seg')
   type = 'brainvision_seg';
   manufacturer = 'BrainProducts';
   content = 'segmented EEG data';
-elseif filetype_check_extension(filename, '.dat') && ~filetype_check_header(filename, 'HeaderLen=') && ~filetype_check_header(filename, 'BESA_SA_IMAGE') && ~(exist(fullfile(p, [f '.gen']), 'file') || exist(fullfile(p, [f '.generic']), 'file'))
+elseif filetype_check_extension(filename, '.dat') && exist(fullfile(p, [f '.vhdr']), 'file') &&...
+        ~filetype_check_header(filename, 'HeaderLen=') && ~filetype_check_header(filename, 'BESA_SA_IMAGE') &&...
+        ~(exist(fullfile(p, [f '.gen']), 'file') || exist(fullfile(p, [f '.generic']), 'file'))
   % WARNING this is a very general name, it could be exported BrainVision
   % data but also a BESA beamformer source reconstruction or BCI2000
   type = 'brainvision_dat';
