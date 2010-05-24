@@ -22,6 +22,22 @@ function realtime_signalviewer(cfg)
 %   cfg.headerformat  = string, default is determined automatic
 %   cfg.eventformat   = string, default is determined automatic
 %
+% Some notes about skipping data and catching up with the data stream:
+%
+% cfg.jumptoeof='yes' causes the realtime function to jump to the end
+% when the function _starts_. It causes all data acquired prior to
+% starting the RT function to be skipped.
+% 
+% cfg.bufferdata=last causes the realtime function to jump to the last
+% available data while _running_. If the RT loop is not fast enough,
+% it causes some data to be dropped.
+% 
+% If you want to skip all data that was acquired before you start the
+% RT function, but don't want to miss any data that was acquired while
+% the realtime function is started, then you should use jumptoeof=yes and
+% bufferdata=first. If you want to analyse data from a file, then you
+% should use jumptoeof=no and bufferdata=first.
+%
 % To stop the realtime function, you have to press Ctrl-C
 
 % Copyright (C) 2008, Robert Oostenveld
