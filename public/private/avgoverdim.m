@@ -14,6 +14,9 @@ elseif length(avgdimnum)>1
 end
 
 reduceddim = dimlength(data);
+if iscell(reduceddim)
+  reduceddim = reduceddim{1}; % if reduceddim iscell, the next line of code cannot be executed
+end
 reduceddim(avgdimnum) = 1;
 
 param = selparam(data);
