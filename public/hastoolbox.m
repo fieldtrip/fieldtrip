@@ -116,7 +116,7 @@ switch toolbox
   case 'SPM5'
     status = exist('spm.m') && strcmp(spm('ver'),'SPM5');
   case 'SPM8'
-    status = exist('spm.m') && strncmp(spm('ver'),'SPM8', 3);
+    status = exist('spm.m') && strncmp(spm('ver'),'SPM8', 4);
   case 'MEG-PD'
     status = (exist('rawdata') && exist('channames'));
   case 'MEG-CALC'
