@@ -63,6 +63,13 @@ try
     warning('Yokogawa toolbox is installed, but the version cannot be determined.');
     version = 'unknown';
   end
+  if nargin>0
+    version = strcmpi(version, desired);
+    if ~version
+        warning('The required version of the Yokogawa input toolbox (%s) is not installed. Contact the manufacturer or FieldTrip.', desired);
+    end
+  end
+  
 catch
   m = lasterror;
   m.identifier;
@@ -71,13 +78,11 @@ catch
       version = '12bitBeta3';
     else
       warning('Yokogawa toolbox not installed. Contact the manufacturer or FieldTrip.');
-    end
+      version = 'unknown';
+   end
   end
-end
-
-if nargin>0
-  version = strcmpi(version, desired);
-  if ~version
-    warning('The required version of the Yokogawa input toolbox (%s) is not installed. Contact the manufacturer or FieldTrip.', desired);
+  if nargin>0
+    version = 0; % logical output
   end
+  
 end
