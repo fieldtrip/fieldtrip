@@ -153,13 +153,13 @@ labeleeg   = [];
 switch ft_senstype(datachannel)
 
   case {'yokogawa', 'yokogawa160', 'yokogawa160_planar'}
-    % all Yokogawa axial gradiometer channels start with AG
-    labelmeg = datachannel(strncmp('AG', datachannel, length('AG')));
-    % all Yokogawa (hardware) planar gradiometer channels start with PG
-    if any( strncmp('PG', datachannel, length('PG')) ) 
-           megind = logical( strncmp('PG', datachannel, length('PG')) + strncmp('AG', datachannel, length('AG')));
-           labelmeg = datachannel(megind);
-    end
+    % Yokogawa axial gradiometers channels start with AG, hardware planar gradiometer 
+    % channels start with PG, magnetometers start with M
+    megax =strncmp('AG', datachannel, length('AG'));
+    megpl =strncmp('PG', datachannel, length('PG'));
+    megmag =strncmp('M', datachannel, length('M'));
+    megind = logical( megax + megpl + megmag);
+    labelmeg = datachannel(megind);
   
   case {'ctf', 'ctf275', 'ctf151', 'ctf275_planar', 'ctf151_planar'}
     % all CTF MEG channels start with "M"
