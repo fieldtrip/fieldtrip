@@ -80,7 +80,7 @@ if strcmp(inverse, 'yes')
 end
 
 % use default transfer from sensors to channels if not specified
-if ~isfield(sens, 'tra') && ~isfield(sens, 'trial')
+if isfield(sens, 'pnt') && ~isfield(sens, 'tra')
   nchan = size(sens.pnt,1);
   sens.tra = sparse(eye(nchan));
 end
@@ -158,6 +158,7 @@ elseif isfield(sens, 'tra')
 elseif isfield(sens, 'trial')
   % apply the montage to the raw data that was preprocessed using fieldtrip
   data = sens;
+  clear sens
 
   Ntrials = numel(data.trial);
   for i=1:Ntrials
@@ -178,17 +179,31 @@ elseif isfield(sens, 'trial')
 elseif isfield(sens, 'fourierspctrm')
   % apply the montage to the spectrally decomposed data
   freq = sens;
+  clear sens
 
-  siz    = size(freq.fourierspctrm);
-  nrpt   = siz(1);
-  nchan  = siz(2);
-  nfreq  = siz(3);
-  ntime  = siz(4);
-  output = zeros(nrpt, size(montage.tra,1), nfreq, ntime);
-  for foilop=1:nfreq
-    for toilop = 1:ntime
-      output(:,:,foilop,toilop) = freq.fourierspctrm(:,:,foilop,toilop) * montage.tra';
+  if strcmp(freq.dimord, 'rpttap_chan_freq')
+    siz    = size(freq.fourierspctrm);
+    nrpt   = siz(1);
+    nchan  = siz(2);
+    nfreq  = siz(3);
+    output = zeros(nrpt, size(montage.tra,1), nfreq);
+    for foilop=1:nfreq
+      output(:,:,foilop) = freq.fourierspctrm(:,:,foilop) * montage.tra';
     end
+  elseif strcmp(freq.dimord, 'rpttap_chan_freq_time')
+    siz    = size(freq.fourierspctrm);
+    nrpt   = siz(1);
+    nchan  = siz(2);
+    nfreq  = siz(3);
+    ntime  = siz(4);
+    output = zeros(nrpt, size(montage.tra,1), nfreq, ntime);
+    for foilop=1:nfreq
+      for toilop = 1:ntime
+        output(:,:,foilop,toilop) = freq.fourierspctrm(:,:,foilop,toilop) * montage.tra';
+      end
+    end
+  else
+    error('unsupported dimord in frequency data (%s)', freq.dimord);
   end
 
   % replace the Fourier spectrum
