@@ -52,7 +52,8 @@ end
 % 11 baseline (in m)
 
 handles    = definehandles;
-isgrad     = (hdr.channel_info(:,2)==handles.AxialGradioMeter | hdr.channel_info(:,2)==handles.PlannerGradioMeter);
+ismag 	   = hdr.channel_info(:,2)==handles.MagnetoMeter;
+isgrad     = (hdr.channel_info(:,2)==handles.AxialGradioMeter | hdr.channel_info(:,2)==handles.PlannerGradioMeter | hdr.channel_info(:,2)==handles.MagnetoMeter);
 grad.pnt   = hdr.channel_info(isgrad,3:5)*100;    % cm
 
 % Get orientation of the 1st coil
@@ -89,6 +90,14 @@ end
 % Define the pair of 1st and 2nd coils for each gradiometer
 grad.tra = repmat(diag(ones(1,size(grad.pnt,1)/2),0),1,2);
 
+% for mangetometers change tra as there is no second coil
+if any(ismag)
+    sz_pnt = size(grad.pnt,1)/2;
+    % create logical variable
+    not_2nd_coil = ([diag(zeros(sz_pnt),0)' ismag']~=0);
+    grad.tra(ismag,not_2nd_coil) = 0;
+end
+
 % Make the matrix sparse to speed up the multiplication in the forward
 % computation with the coil-leadfield matrix to get the channel leadfield
 grad.tra = sparse(grad.tra);
@@ -112,8 +121,8 @@ end
 grad.unit  = 'cm';
 
 % transform sensor geometry from dewar to head coordinates, if possible
-[p, f, x] = fileparts(hdr.filename)
-filename = fullfile(p, [f '.mrk'])
+[p, f, x] = fileparts(hdr.filename);
+filename = fullfile(p, [f '.mrk']);
 if exist( filename )
     fprintf('reading fiducial locations from %s, returning sensor positions in head coordinates \n', filename );
     shape = ft_read_headshape(filename);
@@ -122,7 +131,7 @@ if exist( filename )
     sens2hc =  headcoordinates(shape.fid.pnt(1,:),shape.fid.pnt(2,:),shape.fid.pnt(3,:));
     grad = ft_transform_sens(sens2hc,grad);
 else
-    warning('the file %s with the fiducial information was not found, returning sensor positions in dewar coordinates', filename )
+    warning('the file %s with the fiducial information was not found, returning sensor positions in dewar coordinates', filename );
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
