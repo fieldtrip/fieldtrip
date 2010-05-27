@@ -121,6 +121,14 @@ void addChunksToMatrix(mxArray *S, const char *buf, int bufsize, int numChannels
 				memcpy(mxGetData(A), chunk->data, chunk->def.size);
 				mxSetFieldByNumber(S, 0, field, A);
 				break;
+			case FT_CHUNK_CTF_RES4:
+				field = addIfNew(S, "ctf_res4");
+				if (field < 0) break;
+				/* pass on as uint8, should be decoded on Matlab level (?) */
+				A  = mxCreateNumericMatrix(1, chunk->def.size, mxUINT8_CLASS, mxREAL);
+				memcpy(mxGetData(A), chunk->data, chunk->def.size);
+				mxSetFieldByNumber(S, 0, field, A);
+				break;
 			case FT_CHUNK_RESOLUTIONS:
 				field = addIfNew(S, "resolutions");
 				if (field >=0) {
