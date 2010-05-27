@@ -129,34 +129,37 @@ enum {
 	/** FT_CHUNK_UNSPECIFIED refers to a binary blob of known length, but unknown contents.
 		Clients encountering this can try to use auto-detection, or just ignore this chunk.
 		Unknown chunk types should be treated in the same manner. 			*/
-	FT_CHUNK_UNSPECIFIED,
+	FT_CHUNK_UNSPECIFIED = 0,
 
 	/** FT_CHUNK_CHANNEL_NAMES contains the channel names in ASCII format. Each channel is
 		represented as a 0-terminated string (includes the case of just a 0 for an empty string).
 		Example: chunk_data = "Left\0Right\0" for stereo sound signals.		*/
-	FT_CHUNK_CHANNEL_NAMES,
+	FT_CHUNK_CHANNEL_NAMES = 1,
 
 	/** FT_CHUNK_CHANNEL_FLAGS contains a 0-terminated string describing the type of flags,
 		and after that N (=#channels) bytes describing each channel. This is useful for
 		specifying that a channel can have a discrete number of different types, e.g.
 		chunk_data = "meg_ad_eog\0\1\1\1\1\3\3\2\2" should be used for a system with 8 channels, 
 		the first four of which are for MEG, then 2 channels EOG, then 2 channels A/D.	*/
-	FT_CHUNK_CHANNEL_FLAGS,
+	FT_CHUNK_CHANNEL_FLAGS = 2,
 
 	/** FT_CHUNK_RESOLUTIONS contains N double precision values mapping from A/D values to physical
 		quantities such as micro-Volts in EEG.		*/
-	FT_CHUNK_RESOLUTIONS,
+	FT_CHUNK_RESOLUTIONS = 3,
 
 	/** FT_CHUNK_ASCII_KEYVAL contains an arbitrary number of key/value pairs, each of
 		which is given as a 0-terminated string. An empty key (=double 0) indicates the
 		end of the list. Example: "amplifier_gain\0high\0noise_reduction\0active\0\0".	*/
-	FT_CHUNK_ASCII_KEYVAL,
+	FT_CHUNK_ASCII_KEYVAL = 4,
 
 	/** FT_CHUNK_NIFTI1 contains a NIFTI-1 header (348 bytes long) */
-	FT_CHUNK_NIFTI1,
+	FT_CHUNK_NIFTI1 = 5,
 
 	/** FT_CHUNK_SIEMENS_AP contains Siemens Protocol data in ASCII format (string) */
-	FT_CHUNK_SIEMENS_AP
+	FT_CHUNK_SIEMENS_AP = 6,
+	
+	/** FT_CHUNK_CTF_RES4 contains a .res4 file as written by the CTF MEG acquisition software (binary) */
+	FT_CHUNK_CTF_RES4 = 7
 };
 
 /* a packet that is sent over the network (or to disk) should contain the following */
