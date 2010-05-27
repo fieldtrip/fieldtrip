@@ -1,4 +1,4 @@
-function [freq] = ft_freqanalysis_mtmconvol(cfg, data);
+function [freq] = ft_freqanalysis_mtmconvol(cfg, data)
 
 % FT_FREQANALYSIS_MTMCONVOL performs time-frequency analysis on any time series trial data
 % using the 'multitaper method' (MTM) based on Slepian sequences as tapers. Alternatively,
@@ -191,13 +191,13 @@ numsmp = round(cfg.pad .* data.fsample);
 
 % keeping trials and/or tapers?
 if strcmp(cfg.keeptrials,'no') &&  strcmp(cfg.keeptapers,'no')
-    keep = 1;
+    keeprpt = 1;
 elseif strcmp(cfg.keeptrials,'yes') &&  strcmp(cfg.keeptapers,'no')
-    keep = 2;
+    keeprpt = 2;
 elseif strcmp(cfg.keeptrials,'no') &&  strcmp(cfg.keeptapers,'yes')
     error('There is currently no support for keeping tapers WITHOUT KEEPING TRIALS.');
 elseif strcmp(cfg.keeptrials,'yes') &&  strcmp(cfg.keeptapers,'yes')
-    keep = 4;
+    keeprpt = 4;
 end
 
 if strcmp(cfg.keeptrials,'yes') && strcmp(cfg.keeptapers,'yes')
@@ -285,18 +285,18 @@ for foilop = 1:numfoi
 end
 
 % added cfg.precision (undocumented) in below memory allocation
-if keep == 1
+if keeprpt == 1
     if powflg, powspctrm     = zeros(numsgn,numfoi,numtoi,cfg.precision);             end
     if csdflg, crsspctrm     = complex(zeros(numsgncmb,numfoi,numtoi,cfg.precision)); end
     if fftflg, fourierspctrm = complex(zeros(numsgn,numfoi,numtoi,cfg.precision));    end
     cntpertoi = zeros(numfoi,numtoi);
     dimord    = 'chan_freq_time';
-elseif keep == 2
+elseif keeprpt == 2
     if powflg, powspctrm     = zeros(numper,numsgn,numfoi,numtoi,cfg.precision);             end
     if csdflg, crsspctrm     = complex(zeros(numper,numsgncmb,numfoi,numtoi,cfg.precision)); end
     if fftflg, fourierspctrm = complex(zeros(numper,numsgn,numfoi,numtoi,cfg.precision));    end
     dimord    = 'rpt_chan_freq_time';
-elseif keep == 4
+elseif keeprpt == 4
     % FIXME this works only if all frequencies have the same number of tapers
     if powflg, powspctrm     = zeros(numper*numtap(1),numsgn,numfoi,numtoi,cfg.precision);             end
     if csdflg, crsspctrm     = complex(zeros(numper*numtap(1),numsgncmb,numfoi,numtoi,cfg.precision)); end
@@ -307,7 +307,7 @@ end
 
 for perlop = 1:numper
     fprintf('processing trial %d: %d samples\n', perlop, numdatbnsarr(perlop,1));
-    if keep == 2
+    if keeprpt == 2
         cnt = perlop;
     end
     numdatbns = numdatbnsarr(perlop,1);
@@ -332,13 +332,13 @@ for perlop = 1:numper
         nonacttimboiind = find(timboi <  (-minoffset + data.offset(perlop) + (actfoinumsmp ./ 2)) | timboi >= (-minoffset + data.offset(perlop) + numdatbns - (actfoinumsmp ./2)));
         acttimboi       = timboi(acttimboiind);
         numacttimboi    = length(acttimboi);
-        if keep ==1
+        if keeprpt ==1
             cntpertoi(foilop,acttimboiind) = cntpertoi(foilop,acttimboiind) + 1;
         end
         for taplop = 1:numtap(foilop)
-            if keep == 3
+            if keeprpt == 3
                 cnt = taplop;
-            elseif keep == 4
+            elseif keeprpt == 4
                 % this once again assumes a fixed number of tapers per frequency
                 cnt = (perlop-1)*numtap(1) + taplop;
             end
@@ -354,43 +354,43 @@ for perlop = 1:numper
                 if strcmp(cfg.taper, 'sine')
                     powdum = powdum .* (1 - (((taplop - 1) ./ numtap(foilop)) .^ 2));
                 end
-                if keep == 1 && numacttimboi > 0
+                if keeprpt == 1 && numacttimboi > 0
                     powspctrm(:,foilop,acttimboiind) = powspctrm(:,foilop,acttimboiind) + reshape(powdum ./ numtap(foilop),[numsgn,1,numacttimboi]);
-                elseif keep == 2 && numacttimboi > 0
+                elseif keeprpt == 2 && numacttimboi > 0
                     powspctrm(cnt,:,foilop,acttimboiind) = powspctrm(cnt,:,foilop,acttimboiind) + reshape(powdum ./ numtap(foilop),[1,numsgn,1,numacttimboi]);
                     powspctrm(cnt,:,foilop,nonacttimboiind) = nan;
-                elseif keep == 4 && numacttimboi > 0
+                elseif keeprpt == 4 && numacttimboi > 0
                     powspctrm(cnt,:,foilop,acttimboiind) = reshape(powdum,[1,numsgn,1,numacttimboi]);
                     powspctrm(cnt,:,foilop,nonacttimboiind) = nan;
-                elseif (keep == 4 || keep == 2) && numacttimboi == 0
+                elseif (keeprpt == 4 || keeprpt == 2) && numacttimboi == 0
                     powspctrm(cnt,:,foilop,nonacttimboiind) = nan;
                 end
             end
             if fftflg
                 fourierdum = (autspctrmacttap) .* sqrt(2 ./ actfoinumsmp); %cf Numercial Receipes 13.4.9
-                if keep == 1 && numacttimboi > 0
+                if keeprpt == 1 && numacttimboi > 0
                     fourierspctrm(:,foilop,acttimboiind) = fourierspctrm(:,foilop,acttimboiind) + reshape((fourierdum ./ numtap(foilop)),[numsgn,1,numacttimboi]);
-                elseif keep == 2 && numacttimboi > 0
+                elseif keeprpt == 2 && numacttimboi > 0
                     fourierspctrm(cnt,:,foilop,acttimboiind) = fourierspctrm(cnt,:,foilop,acttimboiind) + reshape(fourierdum ./ numtap(foilop),[1,numsgn,1,numacttimboi]);
                     fourierspctrm(cnt,:,foilop,nonacttimboiind) = nan;
-                elseif keep == 4 && numacttimboi > 0
+                elseif keeprpt == 4 && numacttimboi > 0
                     fourierspctrm(cnt,:,foilop,acttimboiind) = reshape(fourierdum,[1,numsgn,1,numacttimboi]);
                     fourierspctrm(cnt,:,foilop,nonacttimboiind) = nan;
-                elseif (keep == 4 || keep == 2) && numacttimboi == 0
+                elseif (keeprpt == 4 || keeprpt == 2) && numacttimboi == 0
                     fourierspctrm(cnt,:,foilop,nonacttimboiind) = nan;
                 end
             end
             if csdflg
                 csddum = 2.* (autspctrmacttap(cutdatindcmb(:,1),:) .* conj(autspctrmacttap(cutdatindcmb(:,2),:))) ./ actfoinumsmp;
-                if keep == 1 && numacttimboi > 0
+                if keeprpt == 1 && numacttimboi > 0
                     crsspctrm(:,foilop,acttimboiind) = crsspctrm(:,foilop,acttimboiind) + reshape((csddum ./ numtap(foilop)),[numsgncmb,1,numacttimboi]);
-                elseif keep == 2 && numacttimboi > 0
+                elseif keeprpt == 2 && numacttimboi > 0
                     crsspctrm(cnt,:,foilop,acttimboiind) = crsspctrm(cnt,:,foilop,acttimboiind) + reshape(csddum ./ numtap(foilop),[1,numsgncmb,1,numacttimboi]);
                     crsspctrm(cnt,:,foilop,nonacttimboiind) = nan;
-                elseif keep == 4 && numacttimboi > 0
+                elseif keeprpt == 4 && numacttimboi > 0
                     crsspctrm(cnt,:,foilop,acttimboiind) = reshape(csddum,[1,numsgncmb,1,numacttimboi]);
                     crsspctrm(cnt,:,foilop,nonacttimboiind) = nan;
-                elseif (keep == 4 || keep == 2) && numacttimboi == 0
+                elseif (keeprpt == 4 || keeprpt == 2) && numacttimboi == 0
                     crsspctrm(cnt,:,foilop,nonacttimboiind) = nan;
                 end
             end
@@ -401,7 +401,7 @@ for perlop = 1:numper
     end % for foilop
 end % for perlop
 
-if keep == 1
+if keeprpt == 1
     ws = warning('off');
     if powflg
         powspctrm(:,:,:) = powspctrm(:,:,:) ./ repmat(permute(cntpertoi,[3,1,2]),[numsgn,1,1]);
@@ -439,9 +439,9 @@ if calcdof
     freq.dof=2*dof;
 end;
 
-if keep == 2,
+if keeprpt == 2,
     freq.cumtapcnt = repmat(numtap(:)', [size(powspctrm,1) 1]);
-elseif keep == 4,
+elseif keeprpt == 4,
     %all(numtap(1)==numtap)
     freq.cumtapcnt = repmat(numtap(1), [size(fourierspctrm,1)./numtap(1) 1]);
 end
@@ -471,6 +471,6 @@ freq.cfg = cfg;
 % precision this prevents an instability (bug) in the computation of the
 % tapers for Matlab 6.5 and 7.0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [tap] = double_dpss(a, b, varargin);
+function [tap] = double_dpss(a, b, varargin)
 tap = dpss(double(a), double(b), varargin{:});
 

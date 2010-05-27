@@ -189,13 +189,13 @@ numsmp = ceil(cfg.pad .* data.fsample); % this used to be "cfg.pad .* data.fsamp
 
 % keeping trials and/or tapers?
 if strcmp(cfg.keeptrials,'no') &&  strcmp(cfg.keeptapers,'no')
-  keep = 1;
+  keeprpt = 1;
 elseif strcmp(cfg.keeptrials,'yes') &&  strcmp(cfg.keeptapers,'no')
-  keep = 2;
+  keeprpt = 2;
 elseif strcmp(cfg.keeptrials,'no') &&  strcmp(cfg.keeptapers,'yes')
   error('There is no support for keeping tapers WITHOUT KEEPING TRIALS.');
 elseif strcmp(cfg.keeptrials,'yes') &&  strcmp(cfg.keeptapers,'yes')
-  keep = 4;
+  keeprpt = 4;
 end
 
 % calculating degrees of freedom
@@ -207,17 +207,17 @@ boi     = boilim(1):boilim(2);
 numboi  = size(boi,2);
 foi     = (boi-1) ./ cfg.pad;
 
-if keep == 1
+if keeprpt == 1
   if powflg, powspctrm     = zeros(numsgn,numboi);              end
   if csdflg, crsspctrm     = complex(zeros(numsgncmb,numboi));  end
   if fftflg, fourierspctrm = complex(zeros(numsgn,numboi));     end
   dimord    = 'chan_freq';
-elseif keep == 2
+elseif keeprpt == 2
   if powflg, powspctrm     = zeros(numper,numsgn,numboi);             end
   if csdflg, crsspctrm     = complex(zeros(numper,numsgncmb,numboi)); end
   if fftflg, fourierspctrm = complex(zeros(numper,numsgn,numboi));    end
   dimord    = 'rpt_chan_freq';
-elseif keep == 4
+elseif keeprpt == 4
   if rectan == 1, % compute the amount of memory needed to collect the results
     numdatbns = numdatbnsarr(1,1);
     if strcmp(cfg.taper, 'dpss'),
@@ -275,7 +275,7 @@ if rectan == 1
     tap(2,:) = nan;
   end
   numtap = size(tap,1) - 1;
-  if keep == 2 || calcdof
+  if keeprpt == 2 || calcdof
     cumtapcnt(:) = numtap;
   end
   if (numtap < 1)
@@ -290,7 +290,7 @@ end
 
 for perlop = 1:numper
   fprintf('processing trial %d, ', perlop);
-  if keep == 2
+  if keeprpt == 2
     cnt = perlop;
     cumsumcnt(cnt,1) = numdatbnsarr(perlop,1);
   end
@@ -312,7 +312,7 @@ for perlop = 1:numper
       tap(2,:) = nan;
     end
     numtap = size(tap,1) - 1;
-    if keep == 2 || calcdof
+    if keeprpt == 2 || calcdof
       cnt = perlop;
       cumtapcnt(cnt,1) = numtap;
     end
@@ -326,7 +326,7 @@ for perlop = 1:numper
     pad = zeros(1,numsmp - numdatbns);
   end
   for taplop = 1:numtap
-    if keep == 4
+    if keeprpt == 4
       cnt = cnt+1;
       cumsumcnt(perlop,1) = numdatbnsarr(perlop,1);
       cumtapcnt(perlop,1) = numtap;
@@ -346,38 +346,38 @@ for perlop = 1:numper
     end
     if powflg
       powdum = 2 .* (autspctrmacttap .* conj(autspctrmacttap)) ./ numsmp; %cf Numercial Receipes 13.4.9
-      if keep == 1
+      if keeprpt == 1
         powspctrm(:,:) = powspctrm(:,:) + (powdum ./ numtap);
-      elseif keep == 2
+      elseif keeprpt == 2
         powspctrm(cnt,:,:) = powspctrm(cnt,:,:) + (permute(powdum,[3,1,2]) ./ numtap);
-      elseif keep == 4
+      elseif keeprpt == 4
         powspctrm(cnt,:,:) = powdum;
       end
     end
     if fftflg
       fourierdum = (autspctrmacttap) .* sqrt(2 ./ numsmp); %cf Numercial Receipes 13.4.9
-      if keep == 1
+      if keeprpt == 1
         fourierspctrm(:,:) = fourierspctrm(:,:) + (fourierdum ./ numtap);
-      elseif keep == 2
+      elseif keeprpt == 2
         fourierspctrm(cnt,:,:) = fourierspctrm(cnt,:,:) + (permute(fourierdum,[3,1,2]) ./ numtap);
-      elseif keep == 4
+      elseif keeprpt == 4
         fourierspctrm(cnt,:,:) = fourierdum;
       end
     end
     if csdflg
       csddum = 2.* (autspctrmacttap(cutdatindcmb(:,1),:) .* ...
         conj(autspctrmacttap(cutdatindcmb(:,2),:))) ./ numsmp;
-      if keep == 1
+      if keeprpt == 1
         crsspctrm(:,:) = crsspctrm(:,:) + csddum ./ numtap;
-      elseif keep == 2
+      elseif keeprpt == 2
         crsspctrm(cnt,:,:) = crsspctrm(cnt,:,:) + permute(csddum,[3,1,2]) ./ numtap;
-      elseif keep == 4
+      elseif keeprpt == 4
         crsspctrm(cnt,:,:) = csddum;
       end
     end
   end % taplop
 end % perlop
-if keep ==1
+if keeprpt ==1
   if powflg, powspctrm = powspctrm ./ numper; end
   if csdflg, crsspctrm = crsspctrm ./ numper; end
 end
@@ -398,11 +398,11 @@ if csdflg
   freq.crsspctrm  = crsspctrm;
 end
 
-if strcmp(cfg.method,'mtmfft') && (keep == 2 || keep == 4)
+if strcmp(cfg.method,'mtmfft') && (keeprpt == 2 || keeprpt == 4)
   freq.cumsumcnt = cumsumcnt;
 end
 
-if strcmp(cfg.method,'mtmfft') && (keep == 2 || keep == 4)
+if strcmp(cfg.method,'mtmfft') && (keeprpt == 2 || keeprpt == 4)
   freq.cumtapcnt = cumtapcnt;
 end
 

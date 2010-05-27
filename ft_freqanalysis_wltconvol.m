@@ -156,9 +156,9 @@ numsmp = cfg.pad .* data.fsample;
 
 % keeping trials and/or tapers?
 if strcmp(cfg.keeptrials,'no')
-  keep = 1;
+  keeprpt = 1;
 elseif strcmp(cfg.keeptrials,'yes')
-  keep = 2;
+  keeprpt = 2;
 end
 
 % do the computation for WLTCONVOL
@@ -188,19 +188,19 @@ if strcmp(cfg.method,'wltconvol')
       fft(complex(vertcat(prezer,tap.*cos(ind),pstzer), ...
       vertcat(prezer,tap.*sin(ind),pstzer)),[],1)';
   end
-  if keep == 1
+  if keeprpt == 1
     powspctrm = zeros(numsgn,numfoi,numtoi);
     if csdflg, crsspctrm = complex(zeros(numsgncmb,numfoi,numtoi)); end
     cntpertoi = zeros(numfoi,numtoi);
     dimord    = 'chan_freq_time';
-  elseif keep == 2
+  elseif keeprpt == 2
     powspctrm = zeros(numper,numsgn,numfoi,numtoi);
     if csdflg, crsspctrm = complex(zeros(numper,numsgncmb,numfoi,numtoi)); end
     dimord    = 'rpt_chan_freq_time';
   end
   for perlop = 1:numper
     fprintf('processing trial %d: %d samples\n', perlop, numdatbnsarr(perlop,1));
-    if keep == 2
+    if keeprpt == 2
       cnt = perlop;
     end
     numdatbns = numdatbnsarr(perlop,1);
@@ -222,10 +222,10 @@ if strcmp(cfg.method,'wltconvol')
         timboi >= (-minoffset + data.offset(perlop) + numdatbns - (actfoinumsmp ./2)));
       acttimboi = timboi(acttimboiind);
       numacttimboi = length(acttimboi);
-      if keep ==1
+      if keeprpt ==1
         cntpertoi(foilop,acttimboiind) = cntpertoi(foilop,acttimboiind) + 1;
       end
-      if keep == 3
+      if keeprpt == 3
         cnt = 1;
       end
       autspctrmacttap = complex(zeros(numsgn,numacttimboi));
@@ -237,35 +237,35 @@ if strcmp(cfg.method,'wltconvol')
         end
         powdum = 2.* (abs(autspctrmacttap).^2)  ./ data.fsample;
       end
-      if keep == 1 && numacttimboi > 0
+      if keeprpt == 1 && numacttimboi > 0
         powspctrm(:,foilop,acttimboiind) = powspctrm(:,foilop,acttimboiind) + ...
           reshape(powdum,[numsgn,1,numacttimboi]);
-      elseif keep == 2 && numacttimboi > 0
+      elseif keeprpt == 2 && numacttimboi > 0
         powspctrm(cnt,:,foilop,acttimboiind) = powspctrm(cnt,:,foilop,acttimboiind) + ...
           reshape(powdum,[1,numsgn,1,numacttimboi]);
         powspctrm(cnt,:,foilop,nonacttimboiind) = nan;
-      elseif keep == 2 && numacttimboi == 0
+      elseif keeprpt == 2 && numacttimboi == 0
         powspctrm(cnt,:,foilop,nonacttimboiind) = nan;
       end
       if csdflg
         csddum = 2.* (autspctrmacttap(cutdatindcmb(:,1),:) .* ...
           conj(autspctrmacttap(cutdatindcmb(:,2),:))) ./ data.fsample; %actfoinumsmp;
-        if keep == 1 && numacttimboi > 0
+        if keeprpt == 1 && numacttimboi > 0
           crsspctrm(:,foilop,acttimboiind) = ...
             crsspctrm(:,foilop,acttimboiind) + ...
             reshape(csddum,[numsgncmb,1,numacttimboi]);
-        elseif keep == 2 && numacttimboi > 0
+        elseif keeprpt == 2 && numacttimboi > 0
           crsspctrm(cnt,:,foilop,acttimboiind) = ...
             crsspctrm(cnt,:,foilop,acttimboiind) + ...
             reshape(csddum,[1,numsgncmb,1,numacttimboi]);
           crsspctrm(cnt,:,foilop,nonacttimboiind) = nan;
-        elseif keep == 2 && numacttimboi == 0
+        elseif keeprpt == 2 && numacttimboi == 0
           crsspctrm(cnt,:,foilop,nonacttimboiind) = nan;
         end
       end
     end% of foilop
   end%of perlop
-  if keep == 1
+  if keeprpt == 1
     ws = warning('off');
     powspctrm(:,:,:) = powspctrm(:,:,:) ./ repmat(permute(cntpertoi,[3,1,2]),[numsgn,1,1]);
     if csdflg
