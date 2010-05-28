@@ -176,13 +176,28 @@ switch fileformat
         
         hdr = read_yokogawa_header(filename);
         marker = hdr.orig.matching_info.marker;
-        for i=1:5, shape.fid.pnt(i,:) = marker(i).meg_pos; end
-               
-        sw_ind = [3 1 2];
-        shape.fid.pnt(1:3,:)= shape.fid.pnt(sw_ind, :);
-        shape.fid.label(1:5)= {'nas', 'lpa', 'rpa','Marker4','Marker5'}; 
-        shape.fid.unit = 'm'; 
- 
+
+        % markers 1-3 identical to zero: try *.mrk file
+        if sum(  [abs(marker(1).meg_pos(1:3)) abs(marker(2).meg_pos(1:3)) abs(marker(3).meg_pos(1:3))] ) == 0.0
+            [p, f, x] = fileparts(filename);
+            filename = fullfile(p, [f '.mrk']);
+            if exist( filename )
+                hdr = read_yokogawa_header(filename);
+                marker = hdr.orig.matching_info.marker;
+            end
+        end
+
+        % non zero markers 1-3
+        if sum(  [abs(marker(1).meg_pos(1:3)) abs(marker(2).meg_pos(1:3)) abs(marker(3).meg_pos(1:3))] ) > 0.0
+	    for i=1:5, shape.fid.pnt(i,:) = marker(i).meg_pos; end   
+	    sw_ind = [3 1 2];
+	    shape.fid.pnt(1:3,:)= shape.fid.pnt(sw_ind, :);
+	    shape.fid.label(1:5)= {'nas', 'lpa', 'rpa','Marker4','Marker5'}; 
+	    shape.fid.unit = 'm'; 
+	else
+            error('no coil information found in Yokogawa file');
+        end	
+
          if ~isempty(hdr.orig.matching_info.meg_to_mri)
             shape.matching_info.meg_to_mri = hdr.orig.matching_info.meg_to_mri;
             shape.matching_info.mri_to_meg = hdr.orig.matching_info.mri_to_meg;
