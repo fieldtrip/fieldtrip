@@ -23,7 +23,7 @@ function [spectrum,freqoi] = specest_mtmfft(dat, time, varargin)
 %
 %
 %
-%
+% FFT SPEED NOT YET OPTIMIZED (e.g. matlab version, transpose or not)
 %
 %
 % See also SPECEST_MTMCONVOL, SPECEST_TFR, SPECEST_HILBERT, SPECEST_MTMWELCH, SPECEST_NANFFT, SPECEST_MVAR, SPECEST_WLTCONVOL
