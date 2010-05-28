@@ -24,6 +24,7 @@ function [spectrum,freqoi] = specest_mtmfft(dat, time, varargin)
 %
 %
 % FFT SPEED NOT YET OPTIMIZED (e.g. matlab version, transpose or not)
+% SHOULD FREQOI = 'ALL' BE REMOVED OR NOT?
 %
 %
 % See also SPECEST_MTMCONVOL, SPECEST_TFR, SPECEST_HILBERT, SPECEST_MTMWELCH, SPECEST_NANFFT, SPECEST_MVAR, SPECEST_WLTCONVOL
@@ -67,7 +68,7 @@ postpad = [];
 % Set freqboi and freqoi
 if isnumeric(freqoi) % if input is a vector
   freqboi   = round(freqoi ./ (fsample ./ endnsample)) + 1;
-  freqoi    = (freqboi-1) ./ endtime; % boi - 1 because 0 Hz is included in fourier output..... is this going correctly?
+  freqoi    = (freqboi-1) ./ endtime; % boi - 1 because 0 Hz is included in fourier output
 elseif strcmp(freqoi,'all') % if input was 'all' 
   freqboilim = round([0 fsample/2] ./ (fsample ./ endnsample)) + 1;
   freqboi    = freqboilim(1):1:freqboilim(2);
@@ -125,12 +126,12 @@ if timedelay ~= 0
   end
 end
 
-% compute fft per channel, keeping tapers automatically (per channel is about 40% faster than all channels at the same time)
+
 % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
 spectrum = complex(zeros(ntap,nchan,nfreqboi),zeros(ntap,nchan,nfreqboi));
 for itap = 1:ntap
   for ichan = 1:nchan
-    dum = fft([dat(ichan,:) .* tap(itap,:) postpad],[],2); % would be much better if fft could take boi as input (muuuuuch less computation)
+    dum = fft([dat(ichan,:) .* tap(itap,:) postpad],[],2); 
     dum = dum(freqboi);
     % phase-shift according to above angles
     if timedelay ~= 0
