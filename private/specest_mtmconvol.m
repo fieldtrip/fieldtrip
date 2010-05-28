@@ -29,7 +29,8 @@ function [spectrum,ntaper,freqoi,timeoi] = specest_mtmconvol(dat, time, varargin
 %
 %
 % FFT SPEED NOT YET OPTIMIZED (e.g. matlab version, transpose or not)
-%
+% IF FREQOI CONTAINS 0 (we should either remove it or allow the creation of a wavelet which is a straigth line, it's removed now)
+% SHOULD FREQOI = 'ALL' BE REMOVED OR NOT?
 %
 % See also SPECEST_MTMFFT, SPECEST_TFR, SPECEST_HILBERT, SPECEST_MTMWELCH, SPECEST_NANFFT, SPECEST_MVAR, SPECEST_WLTCONVOL
 
@@ -49,6 +50,8 @@ if isempty(tapsmofrq) && strcmp(taper, 'dpss')
 end
 if isempty(timwin)
   error('you need to specify timwin')
+elseif (length(timwin) ~= length(freqoi) && ~strcmp(freqoi,'all'))
+  error('timwin should be of equal length as freqoi')
 end
 
 
@@ -78,24 +81,23 @@ endtime    = pad;            % total time in seconds of padded data
 % Set freqboi and freqoi
 if isnumeric(freqoi) % if input is a vector
   freqboi   = round(freqoi ./ (fsample ./ endnsample)) + 1;
-  freqoi    = (freqboi-1) ./ endtime; % boi - 1 because 0 Hz is included in fourier output..... is this going correctly?
-elseif strcmp(freqoi,'all') % if input was 'all' THIS IS IRRELEVANT, BECAUSE TIMWIN IS A REQUIRED INPUT NOW
+  freqoi    = (freqboi-1) ./ endtime; % boi - 1 because 0 Hz is included in fourier output
+elseif strcmp(freqoi,'all') 
   freqboilim = round([0 fsample/2] ./ (fsample ./ endnsample)) + 1;
   freqboi    = freqboilim(1):1:freqboilim(2);
   freqoi     = (freqboi-1) ./ endtime;
 end
-nfreqboi   = length(freqboi);
-nfreqoi = length(freqoi);
 % check for freqoi = 0 and remove it, there is no wavelet for freqoi = 0
 if freqoi(1)==0
   freqoi(1)  = [];
   freqboi(1) = [];
-  nfreqboi   = length(freqboi);
-  nfreqoi    = length(freqoi);
-  if length(timwin) ~= nfreqoi
+  if length(timwin) == (length(freqoi) + 1)
     timwin(1) = [];
   end
 end
+nfreqboi = length(freqboi);
+nfreqoi  = length(freqoi);
+
 
 
 % Set timeboi and timeoi
@@ -158,6 +160,7 @@ for ifreqoi = 1:nfreqoi
   anglein  = (0:timwinsample(ifreqoi)-1)' .* ((2.*pi./fsample) .* freqoi(ifreqoi));
   wltspctrm{ifreqoi} = complex(zeros(size(tap,1),round(endnsample)));
   
+  % the following code determines the phase-shift needed so that the centre of each wavelet has angle = 0. This code can probably be optimized greatly.
   % determine appropriate phase-shift so angle(wavelet) at center approximates 0 NOTE: this procedure becomes inaccurate when there are very few samples per cycle (i.e. 4-5)
   cyclefraction  = anglein / (2*pi); % transform angle to fraction of cycles
   if ((length(cyclefraction(cyclefraction<1))-1) < 5) % could be more robust
@@ -197,7 +200,6 @@ for ifreqoi = 1:nfreqoi
       end
       wavelet = complex(coswav, sinwav);
       % debug plotting
-      %figure; subplot(2,1,1);hold on;plot(real(wavelet(wavelet~=0)));plot(imag(wavelet(wavelet~=0)),'color','r'); tline = length(wavelet(wavelet~=0))/2;line([tline tline],[-0.2 0.2]); subplot(2,1,2);plot(angle(wavelet(wavelet~=0)),'color','g');line([tline tline],[-pi pi])
       %figure; subplot(2,1,1);hold on;plot(real(wavelet));plot(imag(wavelet),'color','r'); tline = length(wavelet)/2;line([tline tline],[-0.2 0.2]); subplot(2,1,2);plot(angle(wavelet),'color','g');line([tline tline],[-pi pi])
       % store the fft of the complex wavelet
       wltspctrm{ifreqoi}(itap,:) = fft(wavelet,[],2);
@@ -208,7 +210,7 @@ end
 
 % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
 spectrum = complex(nan([sum(ntaper),nchan,nfreqoi,ntimeboi]));
-datspectrum = fft([repmat(prepad,[nchan, 1]) dat repmat(postpad,[nchan, 1])],[],2); % should really be done above, but since the chan versus whole dataset fft'ing is still unclear, repmat is used
+datspectrum = fft([repmat(prepad,[nchan, 1]) dat repmat(postpad,[nchan, 1])],[],2); 
 for ifreqoi = 1:nfreqoi
   fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
   for itap = 1:ntaper(ifreqoi)
