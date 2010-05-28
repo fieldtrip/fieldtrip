@@ -21,6 +21,8 @@ function [spectrum] = specest_nanfft(dat, time, varargin)
 %
 %
 %
+% FFT SPEED NOT YET OPTIMIZED (e.g. matlab version, transpose or not)
+%
 % See also SPECEST_MTMFFT, SPECEST_TFR, SPECEST_HILBERT, SPECEST_MTMWELCH, SPECEST_MTMCONVOL, SPECEST_MVAR, SPECEST_WLTCONVOL
 
 
