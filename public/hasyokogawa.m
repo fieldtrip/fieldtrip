@@ -42,6 +42,7 @@ function [version] = hasyokogawa(desired)
 version = [];
 
 try
+  warning('off', 'MATLAB:pfileOlderThanMfile');
   % Call some functions with input argument "Inf": If
   % the functions are present they return their revision number.
   % Call first GetMeg160ADbitInfoM as this is not present in
@@ -66,18 +67,18 @@ try
   if nargin>0
     version = strcmpi(version, desired);
     if ~version
-        warning('The required version of the Yokogawa input toolbox (%s) is not installed. Contact the manufacturer or FieldTrip.', desired);
+        warning('The required version of the Yokogawa input toolbox (%s) is not installed.', desired);
     end
   end
-  
+  warning('on', 'MATLAB:pfileOlderThanMfile');
 catch
+  warning('on', 'MATLAB:pfileOlderThanMfile');
   m = lasterror;
   m.identifier;
   if strcmp(m.identifier, 'MATLAB:UndefinedFunction') || strcmp(m.identifier, 'MATLAB:FileIO:InvalidFid')
     if (exist('GetMeg160ChannelInfoM') && exist('GetMeg160ContinuousRawDataM'));
       version = '12bitBeta3';
     else
-      warning('Yokogawa toolbox not installed. Contact the manufacturer or FieldTrip.');
       version = 'unknown';
    end
   end

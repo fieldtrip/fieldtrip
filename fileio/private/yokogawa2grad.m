@@ -120,19 +120,6 @@ else
 end
 grad.unit  = 'cm';
 
-% transform sensor geometry from dewar to head coordinates, if possible
-[p, f, x] = fileparts(hdr.filename);
-filename = fullfile(p, [f '.mrk']);
-if exist( filename )
-    fprintf('reading fiducial locations from %s, returning sensor positions in head coordinates \n', filename );
-    shape = ft_read_headshape(filename);
-    shape.fid.pnt = shape.fid.pnt*100; 
-    shape.fid.unit = 'cm'; 
-    sens2hc =  headcoordinates(shape.fid.pnt(1,:),shape.fid.pnt(2,:),shape.fid.pnt(3,:));
-    grad = ft_transform_sens(sens2hc,grad);
-else
-    warning('the file %s with the fiducial information was not found, returning sensor positions in dewar coordinates', filename );
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this defines some usefull constants

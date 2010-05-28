@@ -63,18 +63,18 @@ switch fileformat
         elseif strcmp(fileformat, 'ctf_res4')
             filename = fullfile(p, [f '.hc']);
         end
-
+        
         orig = read_ctf_hc(filename);
         switch coordinates
-          case 'head'
-            shape.fid.pnt = cell2mat(struct2cell(orig.head));
-          case 'dewar'
-            shape.fid.pnt = cell2mat(struct2cell(orig.dewar));
-          otherwise
-            error('incorrect coordinates specified');
+            case 'head'
+                shape.fid.pnt = cell2mat(struct2cell(orig.head));
+            case 'dewar'
+                shape.fid.pnt = cell2mat(struct2cell(orig.dewar));
+            otherwise
+                error('incorrect coordinates specified');
         end
         shape.fid.label = fieldnames(orig.head);
-
+        
     case 'ctf_shape'
         orig = read_ctf_shape(filename);
         shape.pnt = orig.pnt;
@@ -83,7 +83,7 @@ switch fileformat
             shape.fid.pnt = cat(1, shape.fid.pnt, ...
                 getfield(orig.MRI_Info, shape.fid.label{i}));
         end
-
+        
     case {'4d_xyz', '4d_m4d', '4d_hs', '4d', '4d_pdf'}
         [p, f, x] = fileparts(filename);
         if ~strcmp(fileformat, '4d_hs')
@@ -100,7 +100,7 @@ switch fileformat
         [junk, L]  = max(fid(1:3,2));
         [junk, R]  = min(fid(1:3,2));
         rest       = setdiff(1:size(fid,1),[NZ L R]);
-
+        
         shape.fid.pnt = fid([NZ L R rest], :);
         shape.fid.label = {'NZ', 'L', 'R'};
         if ~isempty(rest),
@@ -112,11 +112,11 @@ switch fileformat
     case 'neuromag_mex'
         [co,ki,nu] = hpipoints(filename);
         fid = co(:,find(ki==1))';
-
+        
         [junk, NZ] = max(fid(:,2));
         [junk, L] = min(fid(:,1));
         [junk, R] = max(fid(:,1));
-
+        
         shape.fid.pnt = fid([NZ L R], :);
         shape.fid.label = {'NZ', 'L', 'R'};
         
@@ -147,10 +147,10 @@ switch fileformat
                                 case 3 % RPA
                                     shape.fid.label{fidN} = 'RPA';
                                 otherwise
-                                    error('Unidentified cardinal point in file!');                                        
+                                    error('Unidentified cardinal point in file!');
                             end
                             fidN = fidN + 1;
-                                
+                            
                         case 2 % HPI coil
                             shape.pnt(pntN,1:3) = hdr.orig.dig(i).r*100;
                             pntN = pntN + 1;
@@ -163,7 +163,7 @@ switch fileformat
                         otherwise
                             warning('Unidentified digitiser point in file!');
                     end
-                        
+                    
                 end
                 shape.fid.label=shape.fid.label';
                 
@@ -172,36 +172,33 @@ switch fileformat
             otherwise
                 error('Incorrect coordinates specified');
         end
-   case {'yokogawa_mrk','yokogawa_ave','yokogawa_con','yokogawa_raw' }
+    case {'yokogawa_mrk', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw' }
         
         hdr = read_yokogawa_header(filename);
         marker = hdr.orig.matching_info.marker;
-
+        
         % markers 1-3 identical to zero: try *.mrk file
-        if sum(  [abs(marker(1).meg_pos(1:3)) abs(marker(2).meg_pos(1:3)) abs(marker(3).meg_pos(1:3))] ) == 0.0
+        if ~any([marker(:).meg_pos])
             [p, f, x] = fileparts(filename);
             filename = fullfile(p, [f '.mrk']);
-            if exist( filename )
-                hdr = read_yokogawa_header(filename);
+            if exist(filename, 'file')
+                hdr    = read_yokogawa_header(filename);
                 marker = hdr.orig.matching_info.marker;
             end
         end
-
+        
         % non zero markers 1-3
-        if sum(  [abs(marker(1).meg_pos(1:3)) abs(marker(2).meg_pos(1:3)) abs(marker(3).meg_pos(1:3))] ) > 0.0
-	    for i=1:5, shape.fid.pnt(i,:) = marker(i).meg_pos; end   
-	    sw_ind = [3 1 2];
-	    shape.fid.pnt(1:3,:)= shape.fid.pnt(sw_ind, :);
-	    shape.fid.label(1:5)= {'nas', 'lpa', 'rpa','Marker4','Marker5'}; 
-	    shape.fid.unit = 'm'; 
-	else
+        if any([marker(:).meg_pos])
+            shape.fid.pnt = cat(1, marker(1:5).meg_pos);
+            sw_ind = [3 1 2];
+            shape.fid.pnt(1:3,:)= shape.fid.pnt(sw_ind, :);
+            shape.fid.label = {'nas'; 'lpa'; 'rpa'; 'Marker4'; 'Marker5'};
+        else
             error('no coil information found in Yokogawa file');
-        end	
-
-         if ~isempty(hdr.orig.matching_info.meg_to_mri)
-            shape.matching_info.meg_to_mri = hdr.orig.matching_info.meg_to_mri;
-            shape.matching_info.mri_to_meg = hdr.orig.matching_info.mri_to_meg;
-         end     
+        end
+                
+        % Convert to the units of the grad.
+        shape = ft_convert_units(shape, 'cm');
     case 'yokogawa_coregis'
         
         in_str = textread(filename, '%s');
@@ -220,13 +217,13 @@ switch fileformat
             end
         end
         if size(shape.fid.label,1) ~= 5
-            error('Wrong number of coils');           
-        end        
+            error('Wrong number of coils');
+        end
         
         sw_ind = [3 1 2];
         
         shape.fid.pnt(1:3,:)= shape.fid.pnt(sw_ind, :);
-        shape.fid.label(1:3)= {'nas', 'lpa', 'rpa'};        
+        shape.fid.label(1:3)= {'nas', 'lpa', 'rpa'};
         
     case 'polhemus_fil'
         [shape.fid.pnt, shape.pnt, shape.fid.label] = read_polhemus_fil(filename, 0);
@@ -238,7 +235,7 @@ switch fileformat
         else
             error('no headshape found in SPM EEG file');
         end
-
+        
     case 'matlab'
         tmp = load(filename);
         if isfield(tmp, 'shape')
@@ -249,9 +246,9 @@ switch fileformat
         else
             error('no headshape found in Matlab file');
         end
-
+        
     otherwise
-
+        
         success = 0;
         if ~success
             % try reading it as electrode positions
@@ -267,7 +264,7 @@ switch fileformat
                 end
             end
         end
-
+        
         if ~success
             % try reading it as volume conductor
             % and treat the skin surface as headshape
@@ -285,7 +282,7 @@ switch fileformat
                 end
             end
         end
-
+        
         if ~success
             error('unknown fileformat for head shape information');
         end
