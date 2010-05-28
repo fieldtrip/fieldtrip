@@ -11,7 +11,11 @@ elseif rptdim~=1
   error('jackknife only works if replicates are in the first dimension of the data');
 end
 
-reduceddim = dimlength(data);
+[reduceddim, fn] = dimlength(data);
+if numel(fn)==1 && strcmp(fn{1}, 'dimord'),
+  %data is not source data
+  reduceddim = reduceddim{1};
+end
 reduceddim(rptdim) = 1;
 
 param = selparam(data);
