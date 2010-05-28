@@ -27,6 +27,7 @@ function [spectrum,freqoi,timeoi] = specest_wltconvol(dat, time, varargin)
 %
 %
 % FFT SPEED NOT YET OPTIMIZED (e.g. matlab version, transpose or not)
+% SHOULD FREQOI = 'ALL' BE REMOVED OR NOT?
 %
 %
 % See also SPECEST_MTMCONVOL, SPECEST_TFR, SPECEST_HILBERT, SPECEST_MTMWELCH, SPECEST_NANFFT, SPECEST_MVAR, SPECEST_MTMCONVOL
@@ -69,24 +70,19 @@ endtime    = pad;            % total time in seconds of padded data
 % Set freqboi and freqoi
 if isnumeric(freqoi) % if input is a vector
   freqboi   = round(freqoi ./ (fsample ./ endnsample)) + 1;
-  freqoi    = (freqboi-1) ./ endtime; % boi - 1 because 0 Hz is included in fourier output..... is this going correctly?
+  freqoi    = (freqboi-1) ./ endtime; % boi - 1 because 0 Hz is included in fourier output
 elseif strcmp(freqoi,'all') % if input was 'all'
   freqboilim = round([0 fsample/2] ./ (fsample ./ endnsample)) + 1;
   freqboi    = freqboilim(1):1:freqboilim(2);
   freqoi     = (freqboi-1) ./ endtime;
 end
-nfreqboi   = length(freqboi);
-nfreqoi = length(freqoi);
 % check for freqoi = 0 and remove it, there is no wavelet for freqoi = 0
 if freqoi(1)==0
   freqoi(1)  = [];
   freqboi(1) = [];
-  nfreqboi   = length(freqboi);
-  nfreqoi    = length(freqoi);
-  if length(timwin) ~= nfreqoi
-    timwin(1) = [];
-  end
 end
+nfreqboi = length(freqboi);
+nfreqoi  = length(freqoi);
 % expand width to array if constant width
 if numel(width) == 1
   width = ones(1,nfreqoi) * width;
@@ -135,12 +131,12 @@ end
 
 % Compute fft
 spectrum = complex(nchan,nfreqoi,ntimeboi);
-datspectrum = fft([repmat(prepad,[nchan, 1]) dat repmat(postpad,[nchan, 1])],[],2); % should really be done above, but since the chan versus whole dataset fft'ing is still unclear, repmat is used
+datspectrum = fft([repmat(prepad,[nchan, 1]) dat repmat(postpad,[nchan, 1])],[],2);
 for ifreqoi = 1:nfreqoi
   fprintf('processing frequency %d (%.2f Hz)\n', ifreqoi,freqoi(ifreqoi));
   for ichan = 1:nchan
     % compute indices that will be used to extracted the requested fft output
-    nsamplefreqoi    = timwin(ifreqoi) .* fsample;
+    nsamplefreqoi    = taplen(ifreqoi) .* fsample;
     reqtimeboiind    = find((timeboi >=  (nsamplefreqoi ./ 2)) & (timeboi <    ndatsample - (nsamplefreqoi ./2)));
     reqtimeboi       = timeboi(reqtimeboiind);
     
