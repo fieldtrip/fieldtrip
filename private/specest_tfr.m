@@ -23,15 +23,14 @@ function [spectrum, freqoi, timeoi] = specest_tfr(dat, time, varargin)
 %
 %
 %
+%  OPTION DOWNSAMPLE: this looks like something that would fit in better in the (freqanalysis) wrapper I think
+%  OPTION LATENCY, WHAT TO DO WITH THIS? 
+%  HOW TO MAKE CONSISTENT freqoi'S OVER TRIALS (e.g. multiple runs of this function)? ZERO-PADDING NOT AN OPTION... YET WE SHOULD STILL ONLY HAVE freqoi'S THAT ACTUALLY MATCH THE FREQUENCIES IN OUTPUT
+%
 %
 % See also SPECEST_MTMFFT, SPECEST_MTMCONVOL, SPECEST_HILBERT, SPECEST_MTMWELCH, SPECEST_NANFFT, SPECEST_MVAR, SPECEST_WLTCONVOL
-%
-%  OPTION DOWNSAMPLE: this looks like something that would fit in better in the wrapper I think
-%
-%  OPTION LATENCY, WHAT TO DO WITH THIS? 
-%
-%  HOW TO MAKE CONSISTENT freqoi'S OVER TRIALS? ZERO-PADDING NOT AN OPTION... YET WE SHOULD STILL ONLY HAVE freqoi'S THAT ACTUALLY MATCH THE FREQUENCIES IN OUTPUT
-%
+
+
 
 
 % get the optional input arguments
@@ -55,7 +54,7 @@ endtime    = dattime;     % for consistency with mtmconvol and mtmfft
 % Set freqboi and freqoi
 if isnumeric(freqoi) % if input is a vector
   freqboi   = round(freqoi ./ (fsample ./ endnsample)) + 1;
-  freqoi    = (freqboi-1) ./ endtime; % boi - 1 because 0 Hz is included in fourier output..... is this going correctly?
+  freqoi    = (freqboi-1) ./ endtime; % boi - 1 because 0 Hz is included in fourier output
 elseif strcmp(freqoi,'all')
   freqboilim = round([0 fsample/2] ./ (fsample ./ endnsample)) + 1;
   freqboi    = freqboilim(1):1:freqboilim(2);
