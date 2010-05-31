@@ -8,8 +8,12 @@
 #include <signal.h>
 #include <pthread.h>
 
+#define CTF_TRIGGER_TYPE   11
+
 #define OVERALLOC  10000   /* to overcome Acq bug */
 #define INT_RB_SIZE   10	/* Length of internal ring buffer of (overallocated) packets */
+#define MAX_CHANNEL  512
+#define MAX_TRIGGER   16
 
 /*	 uncomment this for testing on different machines with fake_meg
 */
@@ -38,11 +42,28 @@ typedef struct {
   int data[28160 + OVERALLOC];
 } ACQ_OverAllocType;
 
+typedef struct {
+	eventdef_t def;
+	char type[8]; /* always "CTF-TRIG" */
+	UINT16_T value;
+} TriggerEvent __attribute__ ((aligned (1)));
+
+typedef struct {
+	TriggerEvent *te;
+	int num, numAlloc;
+} EventChain;
+
 volatile int keepRunning = 1;
 int ftSocket = -1;
 int mySockets[2];	/* a socket pair for communication between the two threads */
 
 ACQ_OverAllocType intPackets[INT_RB_SIZE];
+
+
+int sensType[MAX_CHANNEL];
+int triggerChannel[MAX_TRIGGER];
+int lastValue[MAX_TRIGGER];
+int numTriggerChannels;
 
 
 /* prototypes for helper functions defined below */
@@ -53,6 +74,7 @@ ACQ_MessageType waitPacket(volatile ACQ_MessageType *msgtyp);
 void abortHandler(int sig);
 void *dataToFieldTripThread(void *arg);
 headerdef_t *handleRes4(const char *dsname, UINT32_T *size);
+void addTriggerEvent(EventChain *EC, int trigChan, UINT32_T sample);
 
 
 int main(int argc, char **argv) {
@@ -62,6 +84,8 @@ int main(int argc, char **argv) {
 	int numChannels, numSamples, sampleNumber;
 	host_t host;
 	pthread_t tcpserverThread, convertThread;
+	
+	printf("sizeof TE = %i\n", sizeof(TriggerEvent));
 	
 	/* Parse command line arguments */
 	if (argc == 1) {
@@ -289,11 +313,15 @@ void abortHandler(int sig) {
 
 void *dataToFieldTripThread(void *arg) {
 	ACQ_OverAllocType *pack;
+	EventChain EC;
 	headerdef_t *hdef = NULL; 	/* contains header information + chunks !!! */
-	int slot, res;
+	int slot, res, i,j;
 	int numChannels = 0, numSamples;
 	messagedef_t reqdef;
 	message_t request, *response;
+	
+	EC.te = NULL;
+	EC.numAlloc = 0;
 	
 	request.def = &reqdef;
 	
@@ -329,6 +357,7 @@ void *dataToFieldTripThread(void *arg) {
 			
 		} else if (pack->message_type == ACQ_MSGQ_DATA) {
 			datadef_t *ddef; 
+			int sampleNumber;
 			
 			if (hdef != NULL) {
 				/* there is still header information to be written, but first
@@ -373,7 +402,8 @@ void *dataToFieldTripThread(void *arg) {
 				continue;
 			}
 			
-			numSamples = pack->numSamples;
+			sampleNumber = pack->sampleNumber;
+			numSamples   = pack->numSamples;
 			
 			/* Put the FT datadef at the location of the current ACQ packet definition.
 			   This just fits, no memcpy'ing of the samples again... */
@@ -392,12 +422,43 @@ void *dataToFieldTripThread(void *arg) {
 			res = clientrequest(ftSocket, &request, &response);
 			
 			if (res < 0) {
-				fprintf(stderr, "Error in FieldTrip connection\n");
+				fprintf(stderr, "Error in FieldTrip connection (writing data)\n");
 			} else if (response) {
 				if (response->def->command != PUT_OK) {
 					fprintf(stderr, "Error in PUT_DAT\n");
 				} else {
 					/* printf("FT: Transmitted samples\n"); */
+				}
+				cleanup_message((void **) &response);
+			}
+			
+			/* look at trigger channels and add events to chain, clear this first */
+			EC.num = 0;
+			for (j=0;j<numSamples;j++) {
+				int *sj = pack->data + j*numChannels;
+				for (i=0;i<numTriggerChannels;i++) {
+					int sji = sj[triggerChannel[i]];
+					if (sji > lastValue[i]) addTriggerEvent(&EC, i, sampleNumber + j);
+					lastValue[i] = sji;
+				}
+			}
+			if (EC.num > 0) {
+				reqdef.version = VERSION;
+				reqdef.command = PUT_EVT;
+				reqdef.bufsize = EC.num * sizeof(TriggerEvent);
+				request.buf = EC.te;
+				
+				res = clientrequest(ftSocket, &request, &response);
+			
+				if (res < 0) {
+					fprintf(stderr, "Error in FieldTrip connection (writing events)\n");
+				} else if (response) {
+					if (response->def->command != PUT_OK) {
+						fprintf(stderr, "Error in PUT_EVT\n");
+					} else {
+						printf("Wrote %i events / %i bytes\n", EC.num, reqdef.bufsize);
+						/* printf("FT: Transmitted samples\n"); */
+					}
 				}
 				cleanup_message((void **) &response);
 			}
@@ -408,6 +469,7 @@ void *dataToFieldTripThread(void *arg) {
 	}
 	printf("Leaving converter thread...\n");
 	close(mySockets[1]);
+	if (EC.numAlloc > 0) free(EC.te);
 	return NULL;
 }
 
@@ -422,13 +484,13 @@ headerdef_t *handleRes4(const char *dsname, UINT32_T *size) {
 	headerdef_t *hdef;
 	char *res4name;
 	ft_chunk_t *chunk;
-	int i, len, pdot, pstart, rlen;
+	int i, len, pdot, pstart, rlen, offset, numFilters;
 	FILE *f;
 	union {
 		double d;
 		char b[8];
 	} fsamp;
-			
+				
 	/* printf("Picked up dataset name : %s\n", dsname); */
 	len = strlen(dsname);
 			
@@ -528,7 +590,84 @@ headerdef_t *handleRes4(const char *dsname, UINT32_T *size) {
 	hdef->bufsize = sizeof(ft_chunkdef_t) + len;
 	chunk->def.type = FT_CHUNK_CTF_RES4;
 	chunk->def.size = len;
-
 	if (size != NULL) *size = rlen;
+
+	/* Ok, the header + chunk is ready, now parse some additional information
+		used internally
+	*/
+	
+	/* set rlen to "run description length", see read_ctf_res4, line 92f */
+	rlen = (chunk->data[1836] << 24) + (chunk->data[1837] << 16) + (chunk->data[1838] << 8) + chunk->data[1839];
+	
+	/* offset points at first byte after run_desc */
+	offset = rlen + 1844;
+	
+	/* "number of filters" */
+	numFilters = (chunk->data[offset] << 8) + chunk->data[offset+1];
+	offset += 2;
+	
+	/* printf("numFilters = %i\n", numFilters); */
+	
+	for (i=0;i<numFilters;i++) {
+		len = (chunk->data[offset+16] << 8) + chunk->data[offset+17];
+		offset += 18 + len;
+		/* printf("Filter %i: offset = %i,  len = %i\n", i, offset, len); */
+	}
+	
+	/* next we've got 32 bytes per channel (name) */
+	offset += 32 * hdef->nchans; 
+	
+	numTriggerChannels = 0;
+	
+	for (i=0;i<hdef->nchans;i++) {
+		unsigned char ct = chunk->data[offset + 1 + 1328*i]; 
+		if (i<MAX_CHANNEL) {
+			sensType[i] = ct;
+		}
+		if (ct == CTF_TRIGGER_TYPE) {
+			if (numTriggerChannels < MAX_TRIGGER) {
+				triggerChannel[numTriggerChannels++] = i;
+				printf("Trigger channel @ %i\n", i);
+			}
+		}	
+	}
+	
+	for (i=0;i<numTriggerChannels;i++) {
+		lastValue[i] = 0;
+	}
+	
 	return hdef;
+}
+
+void addTriggerEvent(EventChain *EC, int trigChan, UINT32_T sample) {
+	TriggerEvent *nte;
+	
+	if (EC->numAlloc == 0) {
+		EC->te = (TriggerEvent *) malloc(sizeof(TriggerEvent));
+		if (EC->te == NULL) {
+			fprintf(stderr, "Cannot add trigger event - out of memory...\n");
+			return;
+		}
+		EC->numAlloc = 1;
+	} else if (EC->num == EC->numAlloc) {
+		/* try to get more space */
+		nte = (TriggerEvent *) realloc(EC->te, sizeof(TriggerEvent) * (EC->num + 1));
+		if (nte == NULL) {
+			fprintf(stderr, "Cannot add trigger event - out of memory...\n");
+			return;
+		}
+		EC->te = nte;
+		EC->numAlloc++;
+	}
+	nte = &EC->te[EC->num++];
+	nte->def.type_type   = DATATYPE_CHAR;
+	nte->def.type_numel  = 8;
+	nte->def.value_type  = DATATYPE_UINT16;
+	nte->def.value_numel = 1;
+	nte->def.sample = sample;
+	nte->def.offset = 0;
+	nte->def.duration = 0;
+	nte->def.bufsize = sizeof(TriggerEvent) - sizeof(eventdef_t);
+	memcpy(nte->type, "CTF-TRIG", 8);
+	nte->value = triggerChannel[trigChan];
 }
