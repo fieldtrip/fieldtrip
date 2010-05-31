@@ -635,7 +635,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 					in the buffer as described by samples_events_t.
 			*/
 			response->def->version = VERSION;
-			if (header==NULL) {
+			if (header==NULL || request->def->bufsize!=sizeof(waitdef_t)) {
 				response->def->command = WAIT_ERR;
 				response->def->bufsize = 0;
 			} else {
