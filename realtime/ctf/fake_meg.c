@@ -12,7 +12,7 @@
 #define ACQ_MSGQ_SIZE 10
 
 #undef  ACQ_MSGQ_SHMKEY 
-#define ACQ_MSGQ_SHMKEY    0x08150816
+#define ACQ_MSGQ_SHMKEY    0x08150842
 
 /* prototypes for helper functions defined below */
 ACQ_MessagePacketType *createSharedMem();
@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
 	ACQ_MessagePacketType *packet;
 	int currentPacket = 0;
 	int numChannels = 356;
-	int blockSize = 60; /* 80; */ /* this is too much for regular operation! */
+	int blockSize = 60;  /* this is too much for regular operation! */
 	int numPackets = 42;
 	int sampleNumber = 0;
 	int i;
@@ -88,7 +88,7 @@ ACQ_MessagePacketType *createSharedMem() {
 	int shmid;
 	size_t siz = sizeof(ACQ_MessagePacketType)*ACQ_MSGQ_SIZE;
 		
-	shmid = shmget(ACQ_MSGQ_SHMKEY, siz, 0666|IPC_CREAT);
+	shmid = shmget(ACQ_MSGQ_SHMKEY, siz, 0666);
 	if (shmid == -1) {
 		perror("shmget");
 		return NULL;

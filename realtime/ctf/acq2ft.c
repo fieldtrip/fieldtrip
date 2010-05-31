@@ -17,7 +17,7 @@
 #define ACQ_MSGQ_SIZE 10
 
 #undef  ACQ_MSGQ_SHMKEY 
-#define ACQ_MSGQ_SHMKEY    0x08150816
+#define ACQ_MSGQ_SHMKEY    0x08150842
 /*
 */
 
@@ -26,7 +26,9 @@ static char usage[] =
 "Just calling 'acq2ft' without parameters starts a local FieldTrip buffer on port 1972.\n" \
 "Using '-' for the hostname starts a local buffer on the given port.\n";
 
-/* this is only used internally to retrieve data from the socket pair */
+/*  This is used for the internal ringbuffer to overcome the bug in Acq.
+    Same structure but bigger data field...
+*/
 typedef struct {
   ACQ_MessageType message_type;
   int messageId;
@@ -42,13 +44,16 @@ int mySockets[2];	/* a socket pair for communication between the two threads */
 
 ACQ_OverAllocType intPackets[INT_RB_SIZE];
 
+
 /* prototypes for helper functions defined below */
 ACQ_MessagePacketType *createSharedMem();
 void closeSharedMem(ACQ_MessagePacketType *packet);
 void initSharedMem(ACQ_MessagePacketType *packet);
-int waitPacket(volatile ACQ_MessagePacketType *pi);
+ACQ_MessageType waitPacket(volatile ACQ_MessageType *msgtyp);
 void abortHandler(int sig);
 void *dataToFieldTripThread(void *arg);
+headerdef_t *handleRes4(const char *dsname, UINT32_T *size);
+
 
 int main(int argc, char **argv) {
 	ACQ_MessagePacketType *packet;
@@ -60,6 +65,7 @@ int main(int argc, char **argv) {
 	
 	/* Parse command line arguments */
 	if (argc == 1) {
+		/* Put defaults in case no arguments given */
 		strcpy(host.name, "-");
 		host.port = 1972;
 	} else if (argc == 3) {
@@ -135,13 +141,13 @@ int main(int argc, char **argv) {
 	while (keepRunning) {
 		int size;
 		char *dataset;
-		int code = waitPacket(&packet[currentPacket]);
+		int code = waitPacket(&packet[currentPacket].message_type);
+		
 		switch(code) {
 			case ACQ_MSGQ_SETUP_COLLECTION:
 				lastId = packet[currentPacket].messageId;
 				dataset = (char *) packet[currentPacket].data;
-				numChannels = packet[currentPacket].numChannels;
-				printf("Setup | ID=%i | %i channels | %.255s\n", lastId, numChannels, dataset);
+				printf("Setup | ID=%i | %.255s\n", lastId, dataset);
 				
 				size = 5*sizeof(int) + strlen(dataset) + 1;
 				if (size >= sizeof(ACQ_MessagePacketType)) {
@@ -165,11 +171,21 @@ int main(int argc, char **argv) {
 				numChannels  = packet[currentPacket].numChannels;
 				numSamples   = packet[currentPacket].numSamples;
 				sampleNumber = packet[currentPacket].sampleNumber;
-				printf("Data | %3i channels x %3i samples | nr = %6i | ID=%i | slot=%i\n", numChannels, numSamples, sampleNumber, lastId, currentPacket);
-				
+				printf("Data | %3i channels x %3i samples | nr = %6i | ID=%4i | slot=%3i\n", numChannels, numSamples, sampleNumber, lastId, currentPacket);
+								
 				size = 5*sizeof(int) + numSamples*numChannels*sizeof(int);
-				bufwrite(mySockets[0], &size, sizeof(size));
-				bufwrite(mySockets[0], &packet[currentPacket], size);
+				
+				if (size > sizeof(ACQ_OverAllocType)) {
+					fprintf(stderr, "Acq wrote far too much data -- cannot handle this\n");
+				} else {
+					if (intPackets[intSlot].message_type != ACQ_MSGQ_INVALID) {
+						fprintf(stderr, "Internal converter thread does not keep up with the load.\n");
+					} else {
+						memcpy(&intPackets[intSlot], &packet[currentPacket], size);
+						write(mySockets[0], &intSlot, sizeof(int));
+						if (++intSlot == INT_RB_SIZE) intSlot=0;
+					}
+				}				
 				
 				if (numSamples * numChannels > 28160) {
 					fprintf(stderr, "Warning: Acq wrote too much data into this block!\n");
@@ -226,9 +242,9 @@ ACQ_MessagePacketType *createSharedMem() {
 	int shmid;
 	size_t siz = sizeof(ACQ_MessagePacketType)*ACQ_MSGQ_SIZE;
    
-   siz += OVERALLOC*sizeof(int); /* to overcome Acq bug */
+    siz += OVERALLOC*sizeof(int); /* to overcome Acq bug */
 		
-	shmid = shmget(ACQ_MSGQ_SHMKEY + 10000, siz, 0666|IPC_CREAT);
+	shmid = shmget(ACQ_MSGQ_SHMKEY, siz, 0666|IPC_CREAT);
 	if (shmid == -1) {
 		perror("shmget");
 		return NULL;
@@ -255,10 +271,11 @@ void initSharedMem(ACQ_MessagePacketType *packet) {
 }
 
 /* wait up to 1 second for new packet */
-int waitPacket(volatile ACQ_MessagePacketType *pi) {
-	int i,t;
+ACQ_MessageType waitPacket(volatile ACQ_MessageType *msgtyp) {
+	int i;
+	volatile ACQ_MessageType t;
 	for (i=0;i<1000 && keepRunning;i++) {
-		t = pi->message_type;
+		t = *msgtyp;
 		if (t != ACQ_MSGQ_INVALID) break;
 		usleep(1000);
 	}
@@ -272,6 +289,7 @@ void abortHandler(int sig) {
 
 void *dataToFieldTripThread(void *arg) {
 	ACQ_OverAllocType *pack;
+	headerdef_t *hdef = NULL; 	/* contains header information + chunks !!! */
 	int slot, res;
 	int numChannels = 0, numSamples;
 	messagedef_t reqdef;
@@ -297,132 +315,69 @@ void *dataToFieldTripThread(void *arg) {
 		pack = &intPackets[slot];
 		
 		if (pack->message_type == ACQ_MSGQ_SETUP_COLLECTION) {
-			char *dsname = (char *) pack->data;
-			char *res4name, *aux;
-			headerdef_t *hdef;
-			ft_chunk_t *chunk;
-			int len, pdot, pstart, rlen;
-			FILE *f;
+			UINT32_T size;
 			
-			/* printf("Picked up dataset name : %s\n", dsname); */
-			len = strlen(dsname);
+			hdef = handleRes4((const char *) pack->data, &size);
 			
-			pdot = len;
-			while (--pdot>0) {
-				if (dsname[pdot] == '.') break;
-			}
-			if (pdot == 0) {
-				fprintf(stderr, "No . found in dataset name - don't know where to pick up .res4 file\n");
-				continue;
-			}
-			pstart = pdot;
-			while (--pstart>0) {
-				if (dsname[pstart] == '/') {
-					/* slash at pstart -> increase because filename comes 1 character later */
-					pstart++;
-					break;
-				}
-			}
-			/* no slash found? then pstart = 0, which is fine - treat as relative path */
-			
-			/* compose .res4 file name from dsname/dsname[pslash+1:pdot].res4 */
-			rlen = len + 1 + pdot - pstart + 5 + 1;
-			
-			res4name = (char *) malloc(rlen);
-			if (res4name == NULL) {
-				fprintf(stderr, "Out of memory -- could not compose filename\n");
-				continue;
+			if (hdef != NULL) {
+				/* prepare PUT_HDR request here, but only send it along with first data block */
+				reqdef.version = VERSION;
+				reqdef.command = PUT_HDR;
+				reqdef.bufsize = size;
+				request.buf = hdef;
 			}
 			
-			/* compose .res4 file name from dsname/dsname[pstart:pdot-1].res4 */
-			memcpy(res4name, dsname, len);
-			res4name[len] = '/';
-			memcpy(res4name + len + 1, dsname + pstart, pdot - pstart);
-			rlen = len + 1 + pdot - pstart;
-			res4name[rlen++] = '.';
-			res4name[rlen++] = 'r';
-			res4name[rlen++] = 'e';
-			res4name[rlen++] = 's';
-			res4name[rlen++] = '4';
-			res4name[rlen++] = 0;
-			
-			/* printf("Trying to open %s\n", res4name); */
-			f = fopen(res4name, "rb");
-			if (f==NULL) {
-				fprintf(stderr, "File %s could not be opened\n", res4name);
-				free(res4name);
-				continue;
-			}
-			
-			fseek(f, 0, SEEK_END);
-			len = ftell(f);
-			fseek(f, 0, SEEK_SET);
-			
-			printf("CTF RES4 file %s contains %i bytes.\n", res4name, len);
-			free(res4name); /* not needed anymore */
-			
-			rlen = len + sizeof(headerdef_t) + sizeof(ft_chunkdef_t);
-			aux = (char *) malloc(rlen);
-			if (aux == NULL) {
-				fprintf(stderr, "Out of memory - can not allocate space for reading .res4 file\n");
-				fclose(f);
-				continue;
-			}
-			
-			hdef = (headerdef_t *) aux;
-			chunk = (ft_chunk_t *) (aux + sizeof(headerdef_t));
-			
-			if (fread(chunk->data, 1, len, f) != len) {
-				fprintf(stderr, "Could not read complete .res4 file\n");
-				fclose(f);
-				free(aux);
-				continue;
-			}
-			fclose(f);
-			
-			hdef->nchans = pack->numChannels;
-			hdef->nsamples = 0;
-			hdef->nevents = 0;
-			hdef->fsample = 1200.0; /* TODO: check this */
-			hdef->data_type = DATATYPE_INT32;
-			hdef->bufsize = sizeof(ft_chunkdef_t) + len;
-			chunk->def.type = FT_CHUNK_CTF_RES4;
-			chunk->def.size = len;
-			
-			reqdef.version = VERSION;
-			reqdef.command = PUT_HDR;
-			reqdef.bufsize = sizeof(headerdef_t) + rlen;
-			request.buf = aux;
-			
-			res = clientrequest(ftSocket, &request, &response);
-			
-			free(aux);
-			
-			if (res < 0) {
-				fprintf(stderr, "Error in FieldTrip connection\n");
-			} else if (response) {
-				if (response->def->command != PUT_OK) {
-					fprintf(stderr, "Error in PUT_HDR\n");
-				} else {
-					/* printf("FT: Transmitted header\n"); */
-					numChannels = pack->numChannels;
-				}
-				cleanup_message((void **) &response);
-			}
 		} else if (pack->message_type == ACQ_MSGQ_DATA) {
-			datadef_t *ddef = (datadef_t *) &pack->messageId; /* This just fits ! */
+			datadef_t *ddef; 
 			
+			if (hdef != NULL) {
+				/* there is still header information to be written, but first
+					have a look at this packets channel count
+				*/
+				
+				if (pack->numChannels != hdef->nchans) {
+					printf("\nWARNING: Channel count in first data packet does not equal header information from .res4 file (%i channels)\n\n", hdef->nchans);
+				}
+				hdef->nchans = pack->numChannels;
+			
+				res = clientrequest(ftSocket, &request, &response);
+				
+				if (res < 0) {
+					fprintf(stderr, "Error in FieldTrip connection\n");
+					pack->message_type = ACQ_MSGQ_INVALID;
+					continue;
+				} else if (response) {
+					if (response->def->command != PUT_OK) {
+						fprintf(stderr, "Error in PUT_HDR\n");
+						pack->message_type = ACQ_MSGQ_INVALID;
+						continue;
+					} else {
+						/* printf("FT: Transmitted header\n"); */
+						numChannels = hdef->nchans;
+						free(hdef);
+						hdef = NULL;
+					}
+					cleanup_message((void **) &response);
+				}
+			}
+						
 			if (numChannels == 0) {
 				fprintf(stderr, "No header written yet -- ignoring data packet\n");
-				continue;
-			}
-			if (numChannels != pack->numChannels) {
-				fprintf(stderr, "Number of channels in data packet (%i) does not match setup (%i)\n", pack->numChannels, numChannels);
+				pack->message_type = ACQ_MSGQ_INVALID;
 				continue;
 			}
 			
-			numChannels = pack->numChannels;
+			if (numChannels != pack->numChannels) {
+				fprintf(stderr, "Number of channels in data packet (%i) does not match setup (%i)\n", pack->numChannels, numChannels);
+				pack->message_type = ACQ_MSGQ_INVALID;
+				continue;
+			}
+			
 			numSamples = pack->numSamples;
+			
+			/* Put the FT datadef at the location of the current ACQ packet definition.
+			   This just fits, no memcpy'ing of the samples again... */
+			ddef = (datadef_t *) &pack->messageId; 
 			
 			ddef->nsamples = numSamples;
 			ddef->nchans = numChannels;
@@ -454,4 +409,126 @@ void *dataToFieldTripThread(void *arg) {
 	printf("Leaving converter thread...\n");
 	close(mySockets[1]);
 	return NULL;
+}
+
+
+/** Parses .res4 file corresponding to dsname and returns a headerdef and
+	chunks suitable for sending off to FieldTrip. Also returns size of that
+	message payload in 'size'. Returns NULL on error.
+	
+	Returned pointer needs to be disposed of using free() later.
+*/
+headerdef_t *handleRes4(const char *dsname, UINT32_T *size) {
+	headerdef_t *hdef;
+	char *res4name;
+	ft_chunk_t *chunk;
+	int i, len, pdot, pstart, rlen;
+	FILE *f;
+	union {
+		double d;
+		char b[8];
+	} fsamp;
+			
+	/* printf("Picked up dataset name : %s\n", dsname); */
+	len = strlen(dsname);
+			
+	pdot = len;
+	while (--pdot>0) {
+		if (dsname[pdot] == '.') break;
+	}
+	if (pdot == 0) {
+		fprintf(stderr, "No . found in dataset name - don't know where to pick up .res4 file\n");
+		return NULL;
+	}
+	pstart = pdot;
+	while (--pstart>0) {
+		if (dsname[pstart] == '/') {
+			/* slash at pstart -> increase because filename comes 1 character later */
+			pstart++;
+			break;
+		}
+	}
+	/* no slash found? then pstart = 0, which is fine - treat as relative path */
+			
+	/* compose .res4 file name from dsname/dsname[pslash+1:pdot].res4 */
+	rlen = len + 1 + pdot - pstart + 5 + 1;
+			
+	res4name = (char *) malloc(rlen);
+	if (res4name == NULL) {
+		fprintf(stderr, "Out of memory -- could not compose filename\n");
+		return NULL;
+	}
+			
+	/* compose .res4 file name from dsname/dsname[pstart:pdot-1].res4 */
+	memcpy(res4name, dsname, len);
+	res4name[len] = '/';
+	memcpy(res4name + len + 1, dsname + pstart, pdot - pstart);
+	rlen = len + 1 + pdot - pstart;
+	res4name[rlen++] = '.';
+	res4name[rlen++] = 'r';
+	res4name[rlen++] = 'e';
+	res4name[rlen++] = 's';
+	res4name[rlen++] = '4';
+	res4name[rlen++] = 0;
+			
+	/* printf("Trying to open %s\n", res4name); */
+	f = fopen(res4name, "rb");
+	if (f==NULL) {
+		fprintf(stderr, "File %s could not be opened\n", res4name);
+		free(res4name);
+		return NULL;
+	}
+			
+	fseek(f, 0, SEEK_END);
+	len = ftell(f);
+	fseek(f, 0, SEEK_SET);
+			
+	printf("\nCTF RES4 file %s contains %i bytes.\n", res4name, len);
+	free(res4name); /* not needed anymore */
+
+	/* get space for headerdef, 1x chunkdef, size of res4-file */
+	rlen = sizeof(headerdef_t) + sizeof(ft_chunkdef_t) + len;
+	hdef = (headerdef_t *) malloc(rlen);
+	
+	if (hdef == NULL) {
+		fprintf(stderr, "Out of memory - can not allocate space for reading .res4 file\n");
+		fclose(f);
+		return NULL;
+	}
+					
+	chunk = (ft_chunk_t *) (hdef+1); /* chunk starts directly after hdef */
+	if (fread(chunk->data, 1, len, f) != len) {
+		fprintf(stderr, "Could not read complete .res4 file\n");
+		fclose(f);
+		free(hdef);
+		return NULL;
+	} 
+	fclose(f);			
+	
+	hdef->nsamples = 0;
+	hdef->nevents = 0;
+	/* .res4 file is big-endian, but we assume this machine to be little-endian */
+	hdef->nchans  = 256*chunk->data[1292] + chunk->data[1293];
+	
+	printf("Number of channels: %i\n", hdef->nchans);
+	
+	for (i=0;i<8;i++) {
+		fsamp.b[7-i] = chunk->data[1296+i];
+	}
+	hdef->fsample = (float) fsamp.d;
+	
+	if (hdef->fsample < 1.0) {
+		printf("\nWARNING: suspicious sampling frequency (%f Hz) picked from .res4 -- setting to 1200 Hz\n\n", hdef->fsample);
+		hdef->fsample = 1200.0;
+	} else {
+		printf("Sampling frequency: %f Hz\n", hdef->fsample);
+	}
+	
+	hdef->data_type = DATATYPE_INT32;
+	hdef->bufsize = sizeof(ft_chunkdef_t) + len;
+	chunk->def.type = FT_CHUNK_CTF_RES4;
+	chunk->def.size = len;
+
+	if (size != NULL) *size = rlen;
+	return hdef;
 }
