@@ -32,6 +32,10 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.selfun                  = string, name of function which is evaluated if selectmode is set to 'eval'.
 %                                  The selected data and the selcfg are passed on to this function.
 %   cfg.selcfg                  = configuration options for selfun
+%   cfg.eegscale                = number, scaling to apply to the EEG channels prior to display
+%   cfg.eogscale                = number, scaling to apply to the EOG channels prior to display
+%   cfg.ecgscale                = number, scaling to apply to the ECG channels prior to display
+%   cfg.megscale                = number, scaling to apply to the MEG channels prior to display
 %
 % The "artifact" field in the output cfg is a Nx2 matrix comparable to the
 % "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
@@ -260,6 +264,10 @@ for i=1:length(cfg.selectfeature)
   end
 end
 
+if length(artlabel) > 8
+  error('only upto 8 artifacts groups supported')
+end
+
 % make artdata representing all artifacts in a "raw data" format
 datendsample = max(trlorg(:,2));
 artdat = convert_event(artifact, 'boolvec', 'endsample', datendsample);
@@ -346,7 +354,9 @@ uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbut
 
 % legend artifacts/features
 for iArt = 1:length(artlabel)
-  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', artlabel{iArt}, 'userdata', num2str(iArt), 'position', [0.91, 0.9 - ((iArt-1)*0.1), 0.08, 0.05], 'backgroundcolor', opt.artcol(iArt,:))
+  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', artlabel{iArt}, 'userdata', num2str(iArt), 'position', [0.91, 0.9 - ((iArt-1)*0.1), 0.08, 0.04], 'backgroundcolor', opt.artcol(iArt,:))
+  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', ['shift+' num2str(iArt)], 'position', [0.91, 0.85 - ((iArt-1)*0.1), 0.03, 0.04], 'backgroundcolor', opt.artcol(iArt,:))
+  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', ['control+' num2str(iArt)], 'position', [0.96, 0.85 - ((iArt-1)*0.1), 0.03, 0.04], 'backgroundcolor', opt.artcol(iArt,:))
 end
 
 if strcmp(cfg.viewmode, 'butterfly')
@@ -545,10 +555,10 @@ elseif strcmp(opt.cfg.selectmode, 'mark')
   artval = opt.artdata.trial{1}(opt.ftsel, begsel:endsel);
   artval = any(artval,1);
   if any(artval)
-    fprintf('there is overlap with the arctive artifact (%s), disable this artifact\n',opt.artdata.label{opt.ftsel});
+    fprintf('there is overlap with the active artifact (%s), disable this artifact\n',opt.artdata.label{opt.ftsel});
     opt.artdata.trial{1}(opt.ftsel, begsel:endsel) = 0;
   else
-    fprintf('there is no overlap with the arctive artifact (%s), mark this as a new artifact\n',opt.artdata.label{opt.ftsel});
+    fprintf('there is no overlap with the active artifact (%s), mark this as a new artifact\n',opt.artdata.label{opt.ftsel});
     opt.artdata.trial{1}(opt.ftsel, begsel:endsel) = 1;
   end
   
@@ -590,12 +600,48 @@ else
 end
 
 switch key
-  case {'1' '2' '3' '4' '5' '6' '7' '8' '9'}
+  case {'1' '2' '3' '4' '5' '6' '7' '8'}
     % switch to another artifact type
     opt.ftsel = str2double(key);
     guidata(h, opt);
     fprintf('switching to the "%s" artifact\n', opt.artdata.label{opt.ftsel});
     redraw_cb(h, eventdata);
+  case {'shift+1' 'shift+2' 'shift+3' 'shift+4' 'shift+5' 'shift+6' 'shift+7' 'shift+8'}
+    % go to previous artifact
+    opt.ftsel = str2double(key(end));
+    cursam = opt.trlvis(opt.trlop,1);
+    artsam = find(opt.artdata.trial{1}(opt.ftsel,1:cursam-1), 1, 'last');
+    if isempty(artsam)
+      fprintf('no earlier "%s" artifact found\n', opt.artdata.label{opt.ftsel});
+    else
+      fprintf('going to previous "%s" artifact\n', opt.artdata.label{opt.ftsel});
+      if opt.trlvis(nearest(opt.trlvis(:,1),artsam),1) < artsam
+        arttrl = nearest(opt.trlvis(:,1),artsam);
+      else
+        arttrl = nearest(opt.trlvis(:,1),artsam)-1;
+      end
+      opt.trlop = arttrl;
+      guidata(h, opt);
+      redraw_cb(h, eventdata);
+    end
+  case {'control+1' 'control+2' 'control+3' 'control+4' 'control+5' 'control+6' 'control+7' 'control+8'}
+    % go to next artifact
+    opt.ftsel = str2double(key(end));
+    cursam = opt.trlvis(opt.trlop,2);
+    artsam = find(opt.artdata.trial{1}(opt.ftsel,cursam+1:end), 1, 'first') + cursam;
+    if isempty(artsam)
+      fprintf('no later "%s" artifact found\n', opt.artdata.label{opt.ftsel});
+    else
+      fprintf('going to next "%s" artifact\n', opt.artdata.label{opt.ftsel});
+      if opt.trlvis(nearest(opt.trlvis(:,1),artsam),1) < artsam
+        arttrl = nearest(opt.trlvis(:,1),artsam);
+      else
+        arttrl = nearest(opt.trlvis(:,1),artsam)-1;
+      end
+      opt.trlop = arttrl;
+      guidata(h, opt);
+      redraw_cb(h, eventdata);
+    end
   case 'leftarrow'
     opt.trlop = max(opt.trlop - 1, 1); % should not be smaller than 1
     guidata(h, opt);
