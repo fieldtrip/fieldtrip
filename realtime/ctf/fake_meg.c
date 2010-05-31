@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
 	ACQ_MessagePacketType *packet;
 	int currentPacket = 0;
 	int numChannels = 356;
-	int blockSize = 80; /* one block every 0.05 seconds */
+	int blockSize = 60; /* 80; */ /* this is too much for regular operation! */
 	int numPackets = 42;
 	int sampleNumber = 0;
 	int i;
@@ -52,10 +52,10 @@ int main(int argc, char **argv) {
 	
 	for (i=0;i<numPackets;i++) {
       
-      if (packet[currentPacket].message_type != ACQ_MSGQ_INVALID) {
-         printf("Packet #%i not free...\n", currentPacket);
-         break;
-      }
+		if (packet[currentPacket].message_type != ACQ_MSGQ_INVALID) {
+			printf("Packet #%i not free...\n", currentPacket);
+			break;
+		}
 	
 		packet[currentPacket].messageId = i+1;
 		packet[currentPacket].sampleNumber = sampleNumber;

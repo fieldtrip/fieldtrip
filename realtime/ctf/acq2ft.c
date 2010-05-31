@@ -8,8 +8,8 @@
 #include <signal.h>
 #include <pthread.h>
 
-
 #define OVERALLOC  10000   /* to overcome Acq bug */
+#define INT_RB_SIZE   10	/* Length of internal ring buffer of (overallocated) packets */
 
 /*	 uncomment this for testing on different machines with fake_meg
 */
@@ -38,7 +38,9 @@ typedef struct {
 
 volatile int keepRunning = 1;
 int ftSocket = -1;
-int mySockets[2];	/* keeps a socket pair */
+int mySockets[2];	/* a socket pair for communication between the two threads */
+
+ACQ_OverAllocType intPackets[INT_RB_SIZE];
 
 /* prototypes for helper functions defined below */
 ACQ_MessagePacketType *createSharedMem();
@@ -50,10 +52,9 @@ void *dataToFieldTripThread(void *arg);
 
 int main(int argc, char **argv) {
 	ACQ_MessagePacketType *packet;
-	int currentPacket = 0;
-	int lastId, optval;
+	int currentPacket, intSlot;
+	int lastId;
 	int numChannels, numSamples, sampleNumber;
-	char dataset[1024] = {0};
 	host_t host;
 	pthread_t tcpserverThread, convertThread;
 	
@@ -81,15 +82,15 @@ int main(int argc, char **argv) {
 		perror("Could not create socket pair for internal communication: ");
 		return 1;
 	}
-   
-   /* set large send buffer for mySockets[0] */
-   optval = 4*sizeof(ACQ_MessagePacketType);
-   if (setsockopt(mySockets[0], SOL_SOCKET, SO_SNDBUF, (const char*)&optval, sizeof(optval)) < 0) {
-      perror("setsockopt/SO_SNDBUF");
+	
+	/*  Internal ringbuffer uses same mechanism as Acq: free slots are
+		marked with ACQ_MSGQ_INVALID. To avoid polling in the converter thread,
+		the main thread sends the index of the latest slot over the socket pair.
+		If the converter thread does not manage to clear the ringbuffer quickly
+		enough, the program will report an error. */
+	for (intSlot=0;intSlot<INT_RB_SIZE;intSlot++) {
+		intPackets[intSlot].message_type = ACQ_MSGQ_INVALID;
 	}
-   if (setsockopt(mySockets[1], SOL_SOCKET, SO_RCVBUF, (const char*)&optval, sizeof(optval)) < 0) {
-      perror("setsockopt/SO_RCVBUF");
-	}  
 	
 	/* Spawn conversion thread */
 	if (pthread_create(&convertThread, NULL, dataToFieldTripThread, NULL)) {
@@ -127,26 +128,36 @@ int main(int argc, char **argv) {
 	/* register CTRL-C handler */
 	signal(SIGINT, abortHandler);
 	
+	/* Both ringbuffers start at 0 */
+	currentPacket = intSlot = 0;
+	
 	printf("Entering main loop. Press CTRL-C to stop operation.\n\n");
 	while (keepRunning) {
 		int size;
+		char *dataset;
 		int code = waitPacket(&packet[currentPacket]);
 		switch(code) {
 			case ACQ_MSGQ_SETUP_COLLECTION:
 				lastId = packet[currentPacket].messageId;
+				dataset = (char *) packet[currentPacket].data;
 				numChannels = packet[currentPacket].numChannels;
-				strncpy(dataset, (char *) packet[currentPacket].data, 1024);
-				dataset[1023] = 0;
-				printf("Setup | ID=%i | %i channels | %s\n", lastId, numChannels, dataset);
+				printf("Setup | ID=%i | %i channels | %.255s\n", lastId, numChannels, dataset);
 				
 				size = 5*sizeof(int) + strlen(dataset) + 1;
-				bufwrite(mySockets[0], &size, sizeof(size));
-				bufwrite(mySockets[0], &packet[currentPacket], size);
+				if (size >= sizeof(ACQ_MessagePacketType)) {
+					fprintf(stderr, "Dataset name not zero-terminated -- ignoring\n");
+					continue;
+				}
+				
+				if (intPackets[intSlot].message_type != ACQ_MSGQ_INVALID) {
+					fprintf(stderr, "Internal converter thread does not keep up with the load.\n");
+				} else {
+					memcpy(&intPackets[intSlot], &packet[currentPacket], size);
+					write(mySockets[0], &intSlot, sizeof(int));
+					if (++intSlot == INT_RB_SIZE) intSlot=0;
+				}
 				
 				packet[currentPacket].message_type = ACQ_MSGQ_INVALID;
-				
-				/* TODO: grab the data here and put it into FieldTrip */
-				
 				if (++currentPacket == ACQ_MSGQ_SIZE) currentPacket=0;
 				break;
 			case ACQ_MSGQ_DATA:
@@ -163,11 +174,10 @@ int main(int argc, char **argv) {
 				if (numSamples * numChannels > 28160) {
 					fprintf(stderr, "Warning: Acq wrote too much data into this block!\n");
             
-               /* clear this packet */
+					/* clear this packet */
 					packet[currentPacket].message_type = ACQ_MSGQ_INVALID;
 					/* next packet last in ringbuffer? */ 
-               
-               if (++currentPacket == ACQ_MSGQ_SIZE) {
+					if (++currentPacket == ACQ_MSGQ_SIZE) {
 						currentPacket = 0;
 					} else {
 						/* make sure the next packet is marked as free */
@@ -218,7 +228,7 @@ ACQ_MessagePacketType *createSharedMem() {
    
    siz += OVERALLOC*sizeof(int); /* to overcome Acq bug */
 		
-	shmid = shmget(ACQ_MSGQ_SHMKEY, siz, 0666|IPC_CREAT);
+	shmid = shmget(ACQ_MSGQ_SHMKEY + 10000, siz, 0666|IPC_CREAT);
 	if (shmid == -1) {
 		perror("shmget");
 		return NULL;
@@ -260,10 +270,9 @@ void abortHandler(int sig) {
 	keepRunning = 0;
 }
 
-
 void *dataToFieldTripThread(void *arg) {
-	ACQ_OverAllocType packet;
-	int size,sr;
+	ACQ_OverAllocType *pack;
+	int slot, res;
 	int numChannels = 0, numSamples;
 	messagedef_t reqdef;
 	message_t request, *response;
@@ -271,23 +280,24 @@ void *dataToFieldTripThread(void *arg) {
 	request.def = &reqdef;
 	
 	while (1) {
-		sr = bufread(mySockets[1], &size, sizeof(size));
-		if (sr <= 0) break;
+		res = read(mySockets[1], &slot, sizeof(int));
 		
-		if (size > sizeof(packet)) {
-			fprintf(stderr, "Packet too large to fit\n");
-			exit(2);
+		if (res == 0) break; /* socket pair was closed - exit */
+		
+		if (res != sizeof(int)) {
+			fprintf(stderr, "Error when reading from socket pair\n");
+			break;
 		}
 		
-		sr = bufread(mySockets[1], &packet, size);
-		/* read on a socket pait should always give desired size */
-		if (sr != size) {
-			fprintf(stderr, "Unexpected read error (%i vs. %i)\n", size, sr);
-			exit(2);
+		if (slot<0 || slot>=INT_RB_SIZE) {
+			fprintf(stderr, "Got errorneous slot number from socket pair\n");
+			break;
 		}
 		
-		if (packet.message_type == ACQ_MSGQ_SETUP_COLLECTION) {
-			char *dsname = (char *) packet.data;
+		pack = &intPackets[slot];
+		
+		if (pack->message_type == ACQ_MSGQ_SETUP_COLLECTION) {
+			char *dsname = (char *) pack->data;
 			char *res4name, *aux;
 			headerdef_t *hdef;
 			ft_chunk_t *chunk;
@@ -370,7 +380,7 @@ void *dataToFieldTripThread(void *arg) {
 			}
 			fclose(f);
 			
-			hdef->nchans = packet.numChannels;
+			hdef->nchans = pack->numChannels;
 			hdef->nsamples = 0;
 			hdef->nevents = 0;
 			hdef->fsample = 1200.0; /* TODO: check this */
@@ -384,35 +394,35 @@ void *dataToFieldTripThread(void *arg) {
 			reqdef.bufsize = sizeof(headerdef_t) + rlen;
 			request.buf = aux;
 			
-			sr = clientrequest(ftSocket, &request, &response);
+			res = clientrequest(ftSocket, &request, &response);
 			
 			free(aux);
 			
-			if (sr < 0) {
+			if (res < 0) {
 				fprintf(stderr, "Error in FieldTrip connection\n");
 			} else if (response) {
 				if (response->def->command != PUT_OK) {
 					fprintf(stderr, "Error in PUT_HDR\n");
 				} else {
 					/* printf("FT: Transmitted header\n"); */
-					numChannels = packet.numChannels;
+					numChannels = pack->numChannels;
 				}
 				cleanup_message((void **) &response);
 			}
-		} else if (packet.message_type == ACQ_MSGQ_DATA) {
-			datadef_t *ddef = (datadef_t *) &packet.messageId; /* This just fits ! */
+		} else if (pack->message_type == ACQ_MSGQ_DATA) {
+			datadef_t *ddef = (datadef_t *) &pack->messageId; /* This just fits ! */
 			
 			if (numChannels == 0) {
 				fprintf(stderr, "No header written yet -- ignoring data packet\n");
 				continue;
 			}
-			if (numChannels != packet.numChannels) {
-				fprintf(stderr, "Number of channels in data packet (%i) does not match setup (%i)\n", packet.numChannels, numChannels);
+			if (numChannels != pack->numChannels) {
+				fprintf(stderr, "Number of channels in data packet (%i) does not match setup (%i)\n", pack->numChannels, numChannels);
 				continue;
 			}
 			
-			numChannels = packet.numChannels;
-			numSamples = packet.numSamples;
+			numChannels = pack->numChannels;
+			numSamples = pack->numSamples;
 			
 			ddef->nsamples = numSamples;
 			ddef->nchans = numChannels;
@@ -424,9 +434,9 @@ void *dataToFieldTripThread(void *arg) {
 			reqdef.bufsize = ddef->bufsize + sizeof(datadef_t);
 			request.buf = ddef; /* data is still behind that */
 			
-			sr = clientrequest(ftSocket, &request, &response);
+			res = clientrequest(ftSocket, &request, &response);
 			
-			if (sr < 0) {
+			if (res < 0) {
 				fprintf(stderr, "Error in FieldTrip connection\n");
 			} else if (response) {
 				if (response->def->command != PUT_OK) {
@@ -437,8 +447,9 @@ void *dataToFieldTripThread(void *arg) {
 				cleanup_message((void **) &response);
 			}
 		} else {
-			fprintf(stderr,"Converter thread: Packet contains neither SETUP nor DATA (%i)...\n", packet.message_type);
+			fprintf(stderr,"Converter thread: Packet contains neither SETUP nor DATA (%i)...\n", pack->message_type);
 		}
+		pack->message_type = ACQ_MSGQ_INVALID;
 	}
 	printf("Leaving converter thread...\n");
 	close(mySockets[1]);
