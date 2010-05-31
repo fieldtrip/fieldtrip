@@ -129,7 +129,7 @@ end
 
 
 % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
-spectrum = complex(zeros(ntap,nchan,nfreqboi),zeros(ntap,nchan,nfreqboi));
+spectrum = complex(zeros(ntaper,nchan,nfreqboi),zeros(ntaper,nchan,nfreqboi));
 for itap = 1:ntap
   for ichan = 1:nchan
     dum = fft([dat(ichan,:) .* tap(itap,:) postpad],[],2); 
