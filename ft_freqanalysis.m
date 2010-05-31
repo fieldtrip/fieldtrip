@@ -124,71 +124,103 @@ else
     trllength(trllop) = size(data.trial{trllop}, 2);
   end
   
-  if not(isempty(cfg.padding))
-      if strcmp(cfg.padding, 'maxperlen')
-        padding = max(trllength);
-        cfg.padding = padding/data.fsample;
-      else
-        padding = cfg.padding*data.fsample;
-        if padding<max(trllength)
-          error('the specified padding is too short');
-        end
-      end
+  
+  if strcmp(cfg.padding, 'maxperlen')
+    padding = max(trllength);
+    cfg.padding = padding/data.fsample;
+  else
+    padding = cfg.padding*data.fsample;
+    cfg.padding = padding;
+    if padding<max(trllength)
+      error('the specified padding is too short');
+    end
   end
+
   % these don't change over trials
   options = {'pad', cfg.padding, 'taper', cfg.taper, 'freqoi', cfg.foi, 'tapsmofrq', cfg.tapsmofrq}; 
   
   % do the bookkeeping that is required for the output data
   freq  = [];
-  numsmp = length(data.time{1});
-  flag = 0;
+  numsmp = max(trllength);
   for trllop=1:ntrials
-
-    dat = data.trial{trllop}; %chansel has already been performed 
+    
+    dat = data.trial{trllop}; % chansel has already been performed
     time = data.time{trllop};
     
-
+    
     % do the spectral decompisition of this trial
     switch cfg.method
       case 'mtmfft'
-        [spectrum, foi] = specest_mtmfft(dat, time, options{:}); %Add offset option later 'offset', offset(trllop));
-        if flag == 0
-            fourierspctrm = zeros(ntrials,size(spectrum,1),size(spectrum,2),size(spectrum,3)); %this matrix is trials by tapers by channel by frequency
-            flag = 1;
-        end
+        [spectrum,ntaper,foi] = specest_mtmfft(dat, time, options{:}); %Add offset option later 'offset', offset(trllop));
       case 'mtmconvol'
-        [spectrum, foi] = specest_mtmconvol(dat, time, options{:});
+        [spectrum,ntaper,foi,toi] = specest_mtmconvol(dat, time, options{:},'timwin',cfg.t_ftimwin);
       case 'wltconvol'
-        [spectrum, foi] = specest_wltconvol(dat, time, options{:});
+        [spectrum,foi,toi] = specest_wltconvol(dat, time, options{:});
       otherwise
         error('method %s is unknown', cfg.method);
     end % switch
-
-    fourierspctrm(trllop,:,:,:) = spectrum;
-
+    if ~exist('fourierspctrm','var')
+      fourierspctrm = zeros([ntrials,size(spectrum)]);
+    end
+    if exist('toi','var')
+      fourierspctrm(trllop,:,:,:,:) = spectrum;
+    elseif ~exist('toi','var')
+      fourierspctrm(trllop,:,:,:) = spectrum;
+    end
+    
   end % for ntrials
-  %now get the output in the correct format
-  if isequal(cfg.output, 'pow')
-    freq.powspctrm = 2 .* (fourierspctrm .* conj(fourierspctrm)) ./ numsmp; %cf Numercial Receipes 13.4.9
+ 
+  
+  % set output variables
+  freq.label = data.label;
+    
+  % now get the output in the correct format
+  if strcmp(cfg.output, 'pow')
+    freq.dimord = 'rpt_chan_freq';
+    freq.freq = foi;
+    freq.powspctrm = 2 .* (fourierspctrm .* conj(fourierspctrm)) ./ numsmp; % cf Numercial Receipes 13.4.9
     freq.powspctrm = reshape(freq.powspctrm, size(freq.powspctrm,1)*size(freq.powspctrm,2),size(freq.powspctrm,3),size(freq.powspctrm,4));
-    freq.dimord = 'rpttap_chan_freq';
+  elseif strcmp(cfg.output, 'fourier')
+    freq.dimord = 'rpt_chan_freq'; 
     freq.freq = foi;
-  elseif isequal(cfg.output, 'fourier')
-    freq.fourierspctrm = (fourierspctrm) .* sqrt(2 ./ numsmp); %cf Numercial Receipes 13.4.9
+    freq.fourierspctrm = (fourierspctrm) .* sqrt(2 ./ numsmp); % cf Numercial Receipes 13.4.9
     freq.fourierspctrm = reshape(freq.fourierspctrm, size(freq.fourierspctrm,1)*size(freq.fourierspctrm,2),size(freq.fourierspctrm,3),size(freq.fourierspctrm,4));
-    freq.dimord = 'rpttap_chan_freq'; 
+  elseif strcmp(cfg.output, 'csd')
+    freq.dimord = 'rpt_chan_freq';
     freq.freq = foi;
-  elseif isequal(cfg.output, 'csd')
-    freq.dimord = 'rpttap_chan_freq';
-    freq.freq = foi;
-    freq.label = data.label;
     freq.cumtapcnt = size(spectrum,1)*zeros(ntrials,1);
-    freq.fourierspctrm = (fourierspctrm) .* sqrt(2 ./ numsmp); %cf Numercial Receipes 13.4.9
+    freq.fourierspctrm = (fourierspctrm) .* sqrt(2 ./ numsmp); % cf Numercial Receipes 13.4.9
     freq.fourierspctrm = reshape(freq.fourierspctrm, size(freq.fourierspctrm,1)*size(freq.fourierspctrm,2),size(freq.fourierspctrm,3),size(freq.fourierspctrm,4));
     freq = fixcsd(freq, 'full', []);
   else
     error('output is not recognized',cfg.output);
   end  
+  
 
+  % get the output cfg
+  cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+  
+  % add information about the version of this function to the configuration
+  try
+    % get the full name of the function
+    cfg.version.name = mfilename('fullpath');
+  catch
+    % required for compatibility with Matlab versions prior to release 13 (6.5)
+    [st, i1] = dbstack;
+    cfg.version.name = st(i1);
+  end
+  cfg.version.id = '$Id$';
+  % remember the configuration details of the input data
+  try, cfg.previous = data.cfg; end
+  % remember the exact configuration details in the output
+  freq.cfg = cfg;
+  
 end % if old or new implementation
+
+
+
+
+
+
+
 
