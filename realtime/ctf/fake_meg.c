@@ -12,7 +12,7 @@
 #define ACQ_MSGQ_SIZE 10
 
 #undef  ACQ_MSGQ_SHMKEY 
-#define ACQ_MSGQ_SHMKEY    0x08150815
+#define ACQ_MSGQ_SHMKEY    0x08150816
 
 /* prototypes for helper functions defined below */
 ACQ_MessagePacketType *createSharedMem();
@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
 	ACQ_MessagePacketType *packet;
 	int currentPacket = 0;
 	int numChannels = 356;
-	int blockSize = 60; /* one block every 0.05 seconds */
+	int blockSize = 80; /* one block every 0.05 seconds */
 	int numPackets = 42;
 	int sampleNumber = 0;
 	int i;
@@ -51,6 +51,11 @@ int main(int argc, char **argv) {
 	usleep(200000); /* 0.2 sec */
 	
 	for (i=0;i<numPackets;i++) {
+      
+      if (packet[currentPacket].message_type != ACQ_MSGQ_INVALID) {
+         printf("Packet #%i not free...\n", currentPacket);
+         break;
+      }
 	
 		packet[currentPacket].messageId = i+1;
 		packet[currentPacket].sampleNumber = sampleNumber;

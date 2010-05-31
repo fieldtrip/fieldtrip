@@ -8,12 +8,17 @@
 #include <signal.h>
 #include <pthread.h>
 
+
+#define OVERALLOC  10000   /* to overcome Acq bug */
+
 /*	 uncomment this for testing on different machines with fake_meg
+*/
 #undef  ACQ_MSGQ_SIZE   
 #define ACQ_MSGQ_SIZE 10
 
 #undef  ACQ_MSGQ_SHMKEY 
-#define ACQ_MSGQ_SHMKEY    0x08150815
+#define ACQ_MSGQ_SHMKEY    0x08150816
+/*
 */
 
 static char usage[] = 
@@ -28,7 +33,7 @@ typedef struct {
   int sampleNumber;
   int numSamples;
   int numChannels;
-  int data[28160 + 10000];
+  int data[28160 + OVERALLOC];
 } ACQ_OverAllocType;
 
 volatile int keepRunning = 1;
@@ -46,7 +51,7 @@ void *dataToFieldTripThread(void *arg);
 int main(int argc, char **argv) {
 	ACQ_MessagePacketType *packet;
 	int currentPacket = 0;
-	int lastId;
+	int lastId, optval;
 	int numChannels, numSamples, sampleNumber;
 	char dataset[1024] = {0};
 	host_t host;
@@ -76,6 +81,15 @@ int main(int argc, char **argv) {
 		perror("Could not create socket pair for internal communication: ");
 		return 1;
 	}
+   
+   /* set large send buffer for mySockets[0] */
+   optval = 4*sizeof(ACQ_MessagePacketType);
+   if (setsockopt(mySockets[0], SOL_SOCKET, SO_SNDBUF, (const char*)&optval, sizeof(optval)) < 0) {
+      perror("setsockopt/SO_SNDBUF");
+	}
+   if (setsockopt(mySockets[1], SOL_SOCKET, SO_RCVBUF, (const char*)&optval, sizeof(optval)) < 0) {
+      perror("setsockopt/SO_RCVBUF");
+	}  
 	
 	/* Spawn conversion thread */
 	if (pthread_create(&convertThread, NULL, dataToFieldTripThread, NULL)) {
@@ -126,8 +140,8 @@ int main(int argc, char **argv) {
 				printf("Setup | ID=%i | %i channels | %s\n", lastId, numChannels, dataset);
 				
 				size = 5*sizeof(int) + strlen(dataset) + 1;
-				write(mySockets[0], &size, sizeof(size));
-				write(mySockets[0], &packet[currentPacket], size);
+				bufwrite(mySockets[0], &size, sizeof(size));
+				bufwrite(mySockets[0], &packet[currentPacket], size);
 				
 				packet[currentPacket].message_type = ACQ_MSGQ_INVALID;
 				
@@ -143,23 +157,21 @@ int main(int argc, char **argv) {
 				printf("Data | %3i channels x %3i samples | nr = %6i | ID=%i | slot=%i\n", numChannels, numSamples, sampleNumber, lastId, currentPacket);
 				
 				size = 5*sizeof(int) + numSamples*numChannels*sizeof(int);
-				write(mySockets[0], &size, sizeof(size));
-				write(mySockets[0], &packet[currentPacket], size);
+				bufwrite(mySockets[0], &size, sizeof(size));
+				bufwrite(mySockets[0], &packet[currentPacket], size);
 				
 				if (numSamples * numChannels > 28160) {
 					fprintf(stderr, "Warning: Acq wrote too much data into this block!\n");
-					
-					/* clear this packet */
+            
+               /* clear this packet */
 					packet[currentPacket].message_type = ACQ_MSGQ_INVALID;
 					/* next packet last in ringbuffer? */ 
-					if (currentPacket == ACQ_MSGQ_SIZE - 2) {
-						/*  can't write too many samples there -> disable by faking data */
-						packet[ACQ_MSGQ_SIZE-1].message_type = ACQ_MSGQ_DATA;
-						/* start from 0 again -- hopefully Acq does this too */
+               
+               if (++currentPacket == ACQ_MSGQ_SIZE) {
 						currentPacket = 0;
 					} else {
 						/* make sure the next packet is marked as free */
-						packet[++currentPacket].message_type = ACQ_MSGQ_INVALID;
+						packet[currentPacket].message_type = ACQ_MSGQ_INVALID;
 					}
 				} else {
 					packet[currentPacket].message_type = ACQ_MSGQ_INVALID;
@@ -203,6 +215,8 @@ ACQ_MessagePacketType *createSharedMem() {
 	void *ptr;
 	int shmid;
 	size_t siz = sizeof(ACQ_MessagePacketType)*ACQ_MSGQ_SIZE;
+   
+   siz += OVERALLOC*sizeof(int); /* to overcome Acq bug */
 		
 	shmid = shmget(ACQ_MSGQ_SHMKEY, siz, 0666|IPC_CREAT);
 	if (shmid == -1) {
@@ -257,7 +271,7 @@ void *dataToFieldTripThread(void *arg) {
 	request.def = &reqdef;
 	
 	while (1) {
-		sr = read(mySockets[1], &size, sizeof(size));
+		sr = bufread(mySockets[1], &size, sizeof(size));
 		if (sr <= 0) break;
 		
 		if (size > sizeof(packet)) {
@@ -265,7 +279,7 @@ void *dataToFieldTripThread(void *arg) {
 			exit(2);
 		}
 		
-		sr = read(mySockets[1], &packet, size);
+		sr = bufread(mySockets[1], &packet, size);
 		/* read on a socket pait should always give desired size */
 		if (sr != size) {
 			fprintf(stderr, "Unexpected read error (%i vs. %i)\n", size, sr);
