@@ -1,4 +1,4 @@
-function [spectrum,freqoi] = specest_mtmfft(dat, time, varargin) 
+function [spectrum,ntaper,freqoi] = specest_mtmfft(dat, time, varargin) 
 
 % SPECEST_MTMFFT computes a fast Fourier transform using many possible tapers
 %
@@ -9,6 +9,7 @@ function [spectrum,freqoi] = specest_mtmfft(dat, time, varargin)
 %   dat      = matrix of chan*sample 
 %   time     = vector, containing time in seconds for each sample
 %   spectrum = matrix of taper*chan*freqoi of fourier coefficients
+%   ntaper   = vector containing number of tapers per element of freqoi
 %   freqoi   = vector of frequencies in spectrum
 %
 %
@@ -108,7 +109,7 @@ switch taper
     tap = tap ./ norm(tap,'fro');
     
 end % switch taper
-ntap = size(tap,1);
+ntaper = size(tap,1);
 
 
 % determine phase-shift so that for all frequencies angle(t=0) = 0
