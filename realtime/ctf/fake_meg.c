@@ -63,6 +63,7 @@ int main(int argc, char **argv) {
 		packet[currentPacket].numChannels = numChannels;
 		memset(packet[currentPacket].data, 0, numChannels * blockSize * sizeof(int));
 		packet[currentPacket].data[0] = i+1;
+		packet[currentPacket].data[10*numChannels] = 10;
 		packet[currentPacket].numChannels = numChannels;
 		packet[currentPacket].message_type = ACQ_MSGQ_DATA;
 		

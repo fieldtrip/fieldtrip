@@ -3,7 +3,7 @@ CFLAGS=-I. -Wall
 LFLAGS=-lncurses
 DEPS = AcqBuffer.h
 
-all: AcqBuffer acq2ft fake_meg
+all: AcqBuffer acq2ft fake_meg check_shm
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
@@ -16,3 +16,6 @@ acq2ft: acq2ft.c
 	
 fake_meg: fake_meg.c
 	gcc -o fake_meg fake_meg.c -I. -Wall
+
+check_shm: check_shm.c
+	gcc -o check_shm check_shm.c -I. -Wall

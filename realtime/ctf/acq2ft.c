@@ -10,7 +10,7 @@
 
 #define CTF_TRIGGER_TYPE   11
 
-#define OVERALLOC  10000   /* to overcome Acq bug */
+#define OVERALLOC   1000    /* to overcome Acq bug */
 #define INT_RB_SIZE   10	/* Length of internal ring buffer of (overallocated) packets */
 #define MAX_CHANNEL  512
 #define MAX_TRIGGER   16
@@ -18,9 +18,8 @@
 /*	 uncomment this for testing on different machines with fake_meg
 #undef  ACQ_MSGQ_SIZE   
 #define ACQ_MSGQ_SIZE 10
-
 #undef  ACQ_MSGQ_SHMKEY 
-#define ACQ_MSGQ_SHMKEY    0x08150842
+#define ACQ_MSGQ_SHMKEY    0x08150842 
 */
 
 static char usage[] = 
@@ -430,7 +429,7 @@ void *dataToFieldTripThread(void *arg) {
 				int *sj = pack->data + j*numChannels;
 				for (i=0;i<numTriggerChannels;i++) {
 					int sji = sj[triggerChannel[i]];
-					if (sji != lastValue[i] && sji != 0) addTriggerEvent(&EC, i, sampleNumber + j, sji);
+					if (sji != lastValue[i] && sji > 0) addTriggerEvent(&EC, i, sampleNumber + j, sji);
 					lastValue[i] = sji;
 				}
 			}
@@ -655,9 +654,9 @@ void addTriggerEvent(EventChain *EC, int trigChan, UINT32_T sample, int value) {
 			return;
 		}
 		EC->sizeAlloc = addSize;
-	} else if (EC->size + addSize < EC->sizeAlloc) {
+	} else if (EC->size + addSize > EC->sizeAlloc) {
 		/* try to get more space */
-		void *nevs = realloc(EC->evs, EC->size + addSize);
+		void *nevs =  realloc(EC->evs, EC->size + addSize);
 		if (nevs == NULL) {
 			fprintf(stderr, "Cannot add trigger event - out of memory...\n");
 			return;
