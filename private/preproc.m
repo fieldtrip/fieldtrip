@@ -233,7 +233,7 @@ if strcmp(cfg.reref, 'yes'),
   if isempty(refindx)
     error('reference channel was not found')
   end
-  dat = preproc_rereference(dat, refindx);
+  dat = ft_preproc_rereference(dat, refindx);
 end
 
 if ~strcmp(cfg.montage, 'no') && ~isempty(cfg.montage)
@@ -263,24 +263,24 @@ if ~isempty(cfg.denoise),
   hflag    = isfield(cfg.denoise, 'hilbert') && strcmp(cfg.denoise.hilbert, 'yes');
   datlabel = match_str(label, cfg.denoise.channel);
   reflabel = match_str(label, cfg.denoise.refchannel);
-  tmpdat   = preproc_denoise(dat(datlabel,:), dat(reflabel,:), hflag);
+  tmpdat   = ft_preproc_denoise(dat(datlabel,:), dat(reflabel,:), hflag);
   dat(datlabel,:) = tmpdat;
 end
-if strcmp(cfg.medianfilter, 'yes'), dat = preproc_medianfilter(dat, cfg.medianfiltord); end
-if strcmp(cfg.lpfilter, 'yes'),     dat = preproc_lowpassfilter(dat, fsample, cfg.lpfreq, cfg.lpfiltord, cfg.lpfilttype, cfg.lpfiltdir); end
-if strcmp(cfg.hpfilter, 'yes'),     dat = preproc_highpassfilter(dat, fsample, cfg.hpfreq, cfg.hpfiltord, cfg.hpfilttype, cfg.hpfiltdir); end
-if strcmp(cfg.bpfilter, 'yes'),     dat = preproc_bandpassfilter(dat, fsample, cfg.bpfreq, cfg.bpfiltord, cfg.bpfilttype, cfg.bpfiltdir); end
+if strcmp(cfg.medianfilter, 'yes'), dat = ft_preproc_medianfilter(dat, cfg.medianfiltord); end
+if strcmp(cfg.lpfilter, 'yes'),     dat = ft_preproc_lowpassfilter(dat, fsample, cfg.lpfreq, cfg.lpfiltord, cfg.lpfilttype, cfg.lpfiltdir); end
+if strcmp(cfg.hpfilter, 'yes'),     dat = ft_preproc_highpassfilter(dat, fsample, cfg.hpfreq, cfg.hpfiltord, cfg.hpfilttype, cfg.hpfiltdir); end
+if strcmp(cfg.bpfilter, 'yes'),     dat = ft_preproc_bandpassfilter(dat, fsample, cfg.bpfreq, cfg.bpfiltord, cfg.bpfilttype, cfg.bpfiltdir); end
 if strcmp(cfg.bsfilter, 'yes')
   for i=1:size(cfg.bsfreq,1)
     % apply a bandstop filter for each of the specified bands, i.e. cfg.bsfreq should be Nx2
-    dat = preproc_bandstopfilter(dat, fsample, cfg.bsfreq(i,:), cfg.bsfiltord, cfg.bsfilttype, cfg.bsfiltdir);
+    dat = ft_preproc_bandstopfilter(dat, fsample, cfg.bsfreq(i,:), cfg.bsfiltord, cfg.bsfilttype, cfg.bsfiltdir);
   end
 end
 if strcmp(cfg.dftfilter, 'yes')
   datorig = dat;
   for i=1:length(cfg.dftfreq)
     % filter out the 50Hz noise, optionally also the 100 and 150 Hz harmonics
-    dat = preproc_dftfilter(dat, fsample, cfg.dftfreq(i));
+    dat = ft_preproc_dftfilter(dat, fsample, cfg.dftfreq(i));
   end
   if strcmp(cfg.dftinvert, 'yes'),
     dat = datorig - dat;
@@ -298,7 +298,7 @@ if strcmp(cfg.detrend, 'yes')
   % the begin and endsample of the detrend period correspond to the complete data minus padding
   begsample = 1        + begpadding;
   endsample = nsamples - endpadding;
-  dat = preproc_detrend(dat, begsample, endsample);
+  dat = ft_preproc_detrend(dat, begsample, endsample);
 end
 if strcmp(cfg.blc, 'yes') || nargout>2
   % determine the complete time axis for the baseline correction
@@ -312,19 +312,19 @@ if strcmp(cfg.blc, 'yes')
     % the begin and endsample of the baseline period correspond to the complete data minus padding
     begsample = 1        + begpadding;
     endsample = nsamples - endpadding;
-    dat       = preproc_baselinecorrect(dat, begsample, endsample);
+    dat       = ft_preproc_baselinecorrect(dat, begsample, endsample);
   else
     % determine the begin and endsample of the baseline period and baseline correct for it
     begsample = nearest(time, cfg.blcwindow(1));
     endsample = nearest(time, cfg.blcwindow(2));
-    dat       = preproc_baselinecorrect(dat, begsample, endsample);
+    dat       = ft_preproc_baselinecorrect(dat, begsample, endsample);
   end
 end
 if ~strcmp(cfg.hilbert, 'no')
-  dat = preproc_hilbert(dat, cfg.hilbert);
+  dat = ft_preproc_hilbert(dat, cfg.hilbert);
 end
 if strcmp(cfg.rectify, 'yes'),
-  dat = preproc_rectify(dat);
+  dat = ft_preproc_rectify(dat);
 end
 if isnumeric(cfg.boxcar)
   numsmp = round(cfg.boxcar*fsample);
@@ -350,17 +350,17 @@ if isnumeric(cfg.conv)
   dat = convn(dat, kernel, 'same');
 end
 if strcmp(cfg.derivative, 'yes'),
-  dat = preproc_derivative(dat, 1, 'end');
+  dat = ft_preproc_derivative(dat, 1, 'end');
 end
 if strcmp(cfg.absdiff, 'yes'),
   % this implements abs(diff(data), which is required for jump detection
   dat = abs([diff(dat, 1, 2) zeros(size(dat,1),1)]);
 end
 if strcmp(cfg.standardize, 'yes'),
-  dat = preproc_standardize(dat, 1, size(dat,2));
+  dat = ft_preproc_standardize(dat, 1, size(dat,2));
 end
 if ~isempty(cfg.subspace),
-  dat = preproc_subspace(dat, cfg.subspace);
+  dat = ft_preproc_subspace(dat, cfg.subspace);
 end
 if ~isempty(cfg.precision)
   % convert the data to another numeric precision, i.e. double, single or int32
