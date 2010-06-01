@@ -176,15 +176,17 @@ if isfield(data, 'label') && ~isempty(cfg.channelcmb),
 end
 
 % check whether the required inparam is present in the data
-if ~isfield(data, inparam) || (strcmp(inparam, 'crsspctrm') && isfield(data, 'crsspctrm') && isfield(data, 'powspctrm')),
+if ~isfield(data, inparam) || (strcmp(inparam, 'crsspctrm') && isfield(data, 'crsspctrm')),
     switch dtype
     case 'freq'
         if strcmp(inparam, 'crsspctrm') 
-            if ~isfield(data, 'powspctrm')
+            if isfield(data, 'fourierspctrm')
                 [data, powindx, hasrpt] = univariate2bivariate(data, 'fourierspctrm', 'crsspctrm', dtype, 0, cfg.channelcmb);
             elseif strcmp(inparam, 'crsspctrm') && isfield(data, 'powspctrm')
                 % if input data is old-fashioned, i.e. contains powandcsd
                 [data, powindx, hasrpt] = univariate2bivariate(data, 'powandcsd', 'crsspctrm', dtype, 0, cfg.channelcmb);
+            else
+                powindx = labelcmb2indx(data.labelcmb);
             end
         elseif strcmp(inparam, 'powcovspctrm')
             if isfield(data, 'powspctrm'),
@@ -204,7 +206,7 @@ if ~isfield(data, inparam) || (strcmp(inparam, 'crsspctrm') && isfield(data, 'cr
     otherwise
     end
       
-else
+else 
     powindx = [];
 end
 
