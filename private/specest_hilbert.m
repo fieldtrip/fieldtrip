@@ -62,6 +62,7 @@ nfreq = length(freqoi);
 
 
 % Set timeboi and timeoi
+offset = round(time(1)*fsample);
 if isnumeric(timeoi) % if input is a vector
   timeboi  = round(timeoi .* fsample) + 1;
   ntimeboi = length(timeboi);
