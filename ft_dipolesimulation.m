@@ -185,7 +185,13 @@ progress('init', cfg.feedback, 'computing simulated data');
 for trial=1:Ntrials
   progress(trial/Ntrials, 'computing simulated data for trial %d\n', trial);
   lf = ft_compute_leadfield(dippos{trial}, sens, vol);
-  simulated.trial{trial}  = lf * dipmom{trial} * dipsignal{trial};
+  nsamples = size(dipsignal{trial},2);
+  nchannels = size(lf,1);
+  simulated.trial{trial} = zeros(nchannels,nsamples);
+  for i = 1:3,
+    simulated.trial{trial}  = simulated.trial{trial} + lf(:,i:3:end) * ...
+       (repmat(dipmom{trial}(i:3:end),1,nsamples) .* dipsignal{trial});
+  end
   simulated.time{trial}   = time{trial};
 end
 progress('close');
