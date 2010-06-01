@@ -70,8 +70,7 @@ end
 if isempty(pad) % if no padding is specified padding is equal to current data length
   pad = dattime;
 end
-prepad  = zeros(1,floor((pad - dattime) * fsample ./ 2));
-postpad = zeros(1,ceil((pad - dattime) * fsample ./ 2));
+postpad = zeros(1,round((pad - dattime) * fsample));
 endnsample = pad * fsample;  % total number of samples of padded data
 endtime    = pad;            % total time in seconds of padded data
 
@@ -101,8 +100,9 @@ nfreqoi  = length(freqoi);
 
 
 % Set timeboi and timeoi
+offset = round(time(1)*fsample);
 if isnumeric(timeoi) % if input is a vector
-  timeboi  = round(timeoi .* fsample) + 1;
+  timeboi  = round(timeoi .* fsample - offset) + 1;
   ntimeboi = length(timeboi);
   timeoi   = round(timeoi .* fsample) ./ fsample;
 elseif strcmp(timeoi,'all') % if input was 'all'
@@ -154,12 +154,13 @@ for ifreqoi = 1:nfreqoi
   ntaper(ifreqoi) = size(tap,1);
   
   % Wavelet construction
-  tappad   = ceil(round(endnsample ./ 2)) - floor(timwinsample(ifreqoi) ./ 2);
+  tappad   = ceil(endnsample ./ 2) - floor(timwinsample(ifreqoi) ./ 2);
   prezero  = zeros(1,tappad);
   postzero = zeros(1,round(endnsample) - ((tappad-1) + timwinsample(ifreqoi))-1);
   anglein  = (0:timwinsample(ifreqoi)-1)' .* ((2.*pi./fsample) .* freqoi(ifreqoi));
   wltspctrm{ifreqoi} = complex(zeros(size(tap,1),round(endnsample)));
-  
+
+
   % the following code determines the phase-shift needed so that the centre of each wavelet has angle = 0. This code can probably be optimized greatly.
   % determine appropriate phase-shift so angle(wavelet) at center approximates 0 NOTE: this procedure becomes inaccurate when there are very few samples per cycle (i.e. 4-5)
   cyclefraction  = anglein / (2*pi); % transform angle to fraction of cycles
@@ -210,7 +211,7 @@ end
 
 % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
 spectrum = complex(nan([sum(ntaper),nchan,nfreqoi,ntimeboi]));
-datspectrum = fft([repmat(prepad,[nchan, 1]) dat repmat(postpad,[nchan, 1])],[],2); 
+datspectrum = fft([dat repmat(postpad,[nchan, 1])],[],2); 
 for ifreqoi = 1:nfreqoi
   fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
   for itap = 1:ntaper(ifreqoi)
@@ -222,7 +223,7 @@ for ifreqoi = 1:nfreqoi
       
       % compute datspectrum*wavelet, if there are reqtimeboi's that have data
       if ~isempty(reqtimeboi)
-        dum = fftshift(ifft(datspectrum(ichan,:) .* wltspctrm{ifreqoi}(itap,:),[],2)); % why is this fftshift necessary?
+        dum = fftshift(ifft(datspectrum(ichan,:) .* wltspctrm{ifreqoi}(itap,:),[],2)); % fftshift is necessary because of post zero-padding, not necessary when pre-padding
         spectrum(itap,ichan,ifreqoi,reqtimeboiind) = dum(reqtimeboi);
       end
     end
