@@ -152,7 +152,11 @@ switch seldim
 
   case 'chan'
     if ~isfield(data, 'inside'), 
-      n = length(data.label);
+      try, 
+        n = length(data.label);
+      catch
+        n = size(data.labelcmb, 1);
+      end
     else
       n = nan; %FIXME discuss appending label to source-like data
     end
