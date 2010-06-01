@@ -35,11 +35,13 @@ int main(int argc, char **argv) {
 	
 	r = shmctl(shmid, IPC_STAT, &DS);
 	if (r==0) {
-		printf("SHM INFO\n");
+		printf("SHM info\n");
 		printf("size (bytes)     = %i\n", DS.shm_segsz);
 		printf("current attaches = %i\n", DS.shm_nattch);
 		printf("PID of creator   = %i\n", DS.shm_cpid);
 		printf("PID of last opr. = %i\n", DS.shm_lpid);
+		printf("UID of owner     = %i\n", DS.shm_perm.uid);
+		printf("UID of creator   = %i\n", DS.shm_perm.cuid);
 	}
 
 	printf("Trying to attach...\n");
@@ -53,8 +55,7 @@ int main(int argc, char **argv) {
 	
 	r = shmctl(shmid, IPC_STAT, &DS);
 	if (r==0) {
-		printf("SHM INFO\n");
-		printf("size (bytes)     = %i\n", DS.shm_segsz);
+		printf("Updated SHM info\n");
 		printf("current attaches = %i\n", DS.shm_nattch);
 		printf("PID of creator   = %i\n", DS.shm_cpid);
 		printf("PID of last opr. = %i\n", DS.shm_lpid);
