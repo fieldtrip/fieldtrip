@@ -16,13 +16,11 @@
 #define MAX_TRIGGER   16
 
 /*	 uncomment this for testing on different machines with fake_meg
-*/
 #undef  ACQ_MSGQ_SIZE   
 #define ACQ_MSGQ_SIZE 10
 
 #undef  ACQ_MSGQ_SHMKEY 
 #define ACQ_MSGQ_SHMKEY    0x08150842
-/*
 */
 
 static char usage[] = 
@@ -43,14 +41,8 @@ typedef struct {
 } ACQ_OverAllocType;
 
 typedef struct {
-	eventdef_t def;
-	char type[8]; /* always "CTF-TRIG" */
-	UINT16_T value;
-} TriggerEvent __attribute__ ((aligned (1)));
-
-typedef struct {
-	TriggerEvent *te;
-	int num, numAlloc;
+	void *evs;
+	int num, size, sizeAlloc;
 } EventChain;
 
 volatile int keepRunning = 1;
@@ -62,6 +54,8 @@ ACQ_OverAllocType intPackets[INT_RB_SIZE];
 
 int sensType[MAX_CHANNEL];
 int triggerChannel[MAX_TRIGGER];
+char triggerChannelName[MAX_TRIGGER][32];
+int triggerChannelNameLen[MAX_TRIGGER];
 int lastValue[MAX_TRIGGER];
 int numTriggerChannels;
 
@@ -74,7 +68,7 @@ ACQ_MessageType waitPacket(volatile ACQ_MessageType *msgtyp);
 void abortHandler(int sig);
 void *dataToFieldTripThread(void *arg);
 headerdef_t *handleRes4(const char *dsname, UINT32_T *size);
-void addTriggerEvent(EventChain *EC, int trigChan, UINT32_T sample);
+void addTriggerEvent(EventChain *EC, int trigChan, UINT32_T sample, int value);
 
 
 int main(int argc, char **argv) {
@@ -84,8 +78,6 @@ int main(int argc, char **argv) {
 	int numChannels, numSamples, sampleNumber;
 	host_t host;
 	pthread_t tcpserverThread, convertThread;
-	
-	printf("sizeof TE = %i\n", sizeof(TriggerEvent));
 	
 	/* Parse command line arguments */
 	if (argc == 1) {
@@ -320,8 +312,8 @@ void *dataToFieldTripThread(void *arg) {
 	messagedef_t reqdef;
 	message_t request, *response;
 	
-	EC.te = NULL;
-	EC.numAlloc = 0;
+	EC.evs = NULL;
+	EC.sizeAlloc = 0;
 	
 	request.def = &reqdef;
 	
@@ -433,20 +425,20 @@ void *dataToFieldTripThread(void *arg) {
 			}
 			
 			/* look at trigger channels and add events to chain, clear this first */
-			EC.num = 0;
+			EC.size = EC.num = 0;
 			for (j=0;j<numSamples;j++) {
 				int *sj = pack->data + j*numChannels;
 				for (i=0;i<numTriggerChannels;i++) {
 					int sji = sj[triggerChannel[i]];
-					if (sji > lastValue[i]) addTriggerEvent(&EC, i, sampleNumber + j);
+					if (sji != lastValue[i] && sji != 0) addTriggerEvent(&EC, i, sampleNumber + j, sji);
 					lastValue[i] = sji;
 				}
 			}
-			if (EC.num > 0) {
+			if (EC.size > 0) {
 				reqdef.version = VERSION;
 				reqdef.command = PUT_EVT;
-				reqdef.bufsize = EC.num * sizeof(TriggerEvent);
-				request.buf = EC.te;
+				reqdef.bufsize = EC.size;
+				request.buf = EC.evs;
 				
 				res = clientrequest(ftSocket, &request, &response);
 			
@@ -456,7 +448,7 @@ void *dataToFieldTripThread(void *arg) {
 					if (response->def->command != PUT_OK) {
 						fprintf(stderr, "Error in PUT_EVT\n");
 					} else {
-						printf("Wrote %i events / %i bytes\n", EC.num, reqdef.bufsize);
+						printf("Wrote %i events (%i bytes)\n", EC.num, reqdef.bufsize);
 						/* printf("FT: Transmitted samples\n"); */
 					}
 				}
@@ -469,7 +461,7 @@ void *dataToFieldTripThread(void *arg) {
 	}
 	printf("Leaving converter thread...\n");
 	close(mySockets[1]);
-	if (EC.numAlloc > 0) free(EC.te);
+	if (EC.sizeAlloc > 0) free(EC.evs);
 	return NULL;
 }
 
@@ -484,7 +476,7 @@ headerdef_t *handleRes4(const char *dsname, UINT32_T *size) {
 	headerdef_t *hdef;
 	char *res4name;
 	ft_chunk_t *chunk;
-	int i, len, pdot, pstart, rlen, offset, numFilters;
+	int i, len, pdot, pstart, rlen, offset, offsetNames, numFilters;
 	FILE *f;
 	union {
 		double d;
@@ -615,6 +607,7 @@ headerdef_t *handleRes4(const char *dsname, UINT32_T *size) {
 	}
 	
 	/* next we've got 32 bytes per channel (name) */
+	offsetNames = offset;
 	offset += 32 * hdef->nchans; 
 	
 	numTriggerChannels = 0;
@@ -626,8 +619,19 @@ headerdef_t *handleRes4(const char *dsname, UINT32_T *size) {
 		}
 		if (ct == CTF_TRIGGER_TYPE) {
 			if (numTriggerChannels < MAX_TRIGGER) {
-				triggerChannel[numTriggerChannels++] = i;
-				printf("Trigger channel @ %i\n", i);
+				int j;
+				char *tn = triggerChannelName[numTriggerChannels];
+				
+				memcpy(tn, chunk->data + offsetNames + 32*i, 32);
+				for (j=0;j<32;j++) {
+					if (tn[j] <= 32 || tn[j] == '-') break;
+				}
+				triggerChannelNameLen[numTriggerChannels] = j;
+			
+				triggerChannel[numTriggerChannels] = i;
+				printf("Trigger channel @ %i: %.*s\n", i, j, tn);
+				
+				++numTriggerChannels;
 			}
 		}	
 	}
@@ -639,35 +643,45 @@ headerdef_t *handleRes4(const char *dsname, UINT32_T *size) {
 	return hdef;
 }
 
-void addTriggerEvent(EventChain *EC, int trigChan, UINT32_T sample) {
-	TriggerEvent *nte;
+void addTriggerEvent(EventChain *EC, int trigChan, UINT32_T sample, int value) {
+	eventdef_t *ne;
+	char *ntype;
+	int addSize = sizeof(eventdef_t) + triggerChannelNameLen[trigChan] + sizeof(int);
 	
-	if (EC->numAlloc == 0) {
-		EC->te = (TriggerEvent *) malloc(sizeof(TriggerEvent));
-		if (EC->te == NULL) {
+	if (EC->sizeAlloc == 0) {
+		EC->evs = malloc(addSize);
+		if (EC->evs == NULL) {
 			fprintf(stderr, "Cannot add trigger event - out of memory...\n");
 			return;
 		}
-		EC->numAlloc = 1;
-	} else if (EC->num == EC->numAlloc) {
+		EC->sizeAlloc = addSize;
+	} else if (EC->size + addSize < EC->sizeAlloc) {
 		/* try to get more space */
-		nte = (TriggerEvent *) realloc(EC->te, sizeof(TriggerEvent) * (EC->num + 1));
-		if (nte == NULL) {
+		void *nevs = realloc(EC->evs, EC->size + addSize);
+		if (nevs == NULL) {
 			fprintf(stderr, "Cannot add trigger event - out of memory...\n");
 			return;
 		}
-		EC->te = nte;
-		EC->numAlloc++;
+		EC->evs = nevs;
+		EC->sizeAlloc = EC->size + addSize;
 	}
-	nte = &EC->te[EC->num++];
-	nte->def.type_type   = DATATYPE_CHAR;
-	nte->def.type_numel  = 8;
-	nte->def.value_type  = DATATYPE_UINT16;
-	nte->def.value_numel = 1;
-	nte->def.sample = sample;
-	nte->def.offset = 0;
-	nte->def.duration = 0;
-	nte->def.bufsize = sizeof(TriggerEvent) - sizeof(eventdef_t);
-	memcpy(nte->type, "CTF-TRIG", 8);
-	nte->value = triggerChannel[trigChan];
+	
+	ntype = (char *) EC->evs + EC->size;
+	
+	EC->size+=addSize;
+	EC->num++;
+	
+	ne = (eventdef_t *) ntype;
+	ntype += sizeof(eventdef_t);
+	
+	ne->type_type   = DATATYPE_CHAR;
+	ne->type_numel  = triggerChannelNameLen[trigChan];
+	ne->value_type  = DATATYPE_INT32;
+	ne->value_numel = 1;
+	ne->sample = sample;
+	ne->offset = 0;
+	ne->duration = 0;
+	ne->bufsize = triggerChannelNameLen[trigChan] + sizeof(int);
+	memcpy(ntype, triggerChannelName[trigChan], triggerChannelNameLen[trigChan]);
+	memcpy(ntype + triggerChannelNameLen[trigChan], &value, sizeof(int));
 }
