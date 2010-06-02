@@ -101,7 +101,8 @@ while true
         
         % put the data in a fieldtrip-like raw structure
         data.trial{1} = dat;
-        data.time{1}  = offset2time(begsample, hdr.Fs, endsample-begsample+1);
+        %data.time{1}  = offset2time(begsample, hdr.Fs, endsample-begsample+1);
+        data.time{1}  = (double(begsample) + (0:(double(endsample-begsample))))/hdr.Fs;
         data.label    = hdr.label(chanindx);
         data.hdr      = hdr;
         data.fsample  = hdr.Fs;
