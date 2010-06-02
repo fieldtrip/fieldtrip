@@ -215,6 +215,7 @@ if ~isfield(cfg, 'highlightfontsize'),     cfg.highlightfontsize = 8;     end
 if ~isfield(cfg, 'labeloffset'),           cfg.labeloffset = 0.005;       end
 if ~isfield(cfg, 'maskparameter'),         cfg.maskparameter = [];        end
 if ~isfield(cfg, 'component'),             cfg.component = [];            end
+if ~isfield(cfg, 'matrixside'),            cfg.matrixside = 'feedforward'; end
 
 % compatability for previous highlighting option
 if isnumeric(cfg.highlight)
@@ -390,14 +391,17 @@ if (strcmp(cfg.zparam,'cohspctrm') && isfield(data, 'labelcmb')) || ...
     % Open a single figure with the channel layout, the user can click on a reference channel
     h = clf;
     plot_lay(lay, 'box', false);
-    title('Select the reference channel by clicking on it...');
+    title('Select the reference channel by dragging a selection window, more than 1 channel can be selected...');
     % add the channel information to the figure
     info       = guidata(gcf);
     info.x     = lay.pos(:,1);
     info.y     = lay.pos(:,2);
     info.label = lay.label;
     guidata(h, info);
-    set(gcf, 'WindowButtonUpFcn', {@select_channel, 'callback', {@select_topoplotER, cfg, data}});
+    %set(gcf, 'WindowButtonUpFcn', {@select_channel, 'callback', {@select_topoplotER, cfg, data}});
+    set(gcf, 'WindowButtonUpFcn',     {@select_channel, 'multiple', true, 'callback', {@select_topoplotER, cfg, data}, 'event', 'WindowButtonUpFcn'});
+    set(gcf, 'WindowButtonDownFcn',   {@select_channel, 'multiple', true, 'callback', {@select_topoplotER, cfg, data}, 'event', 'WindowButtonDownFcn'});
+    set(gcf, 'WindowButtonMotionFcn', {@select_channel, 'multiple', true, 'callback', {@select_topoplotER, cfg, data}, 'event', 'WindowButtonMotionFcn'});    
     return
   end
 
@@ -413,9 +417,18 @@ if (strcmp(cfg.zparam,'cohspctrm') && isfield(data, 'labelcmb')) || ...
     data           = rmfield(data, 'labelcmb');
   else
     % general solution
-    sel               = strmatch(cfg.cohrefchannel, data.label); 
-    siz               = [size(data.(cfg.zparam)) 1];
-    data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]); 
+       
+      sel               = match_str(data.label, cfg.cohrefchannel); 
+      siz               = [size(data.(cfg.zparam)) 1];    
+      if strcmp(cfg.matrixside, 'feedback')
+        data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]); 
+      elseif strcmp(cfg.matrixside, 'feedforward')
+        data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]); 
+      elseif strcmp(cfg.matrixside, 'ff-fd')
+        data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]) - reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
+      elseif strcmp(cfg.matrixside, 'fd-ff')
+        data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]) - reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);   
+      end
   end
 end
 
@@ -537,6 +550,13 @@ elseif strcmp(cfg.comment, 'xlim')
 elseif ~ischar(cfg.comment)
   error('cfg.comment must be string');
 end
+if isfield(cfg,'cohrefchannel')
+    if iscell(cfg.cohrefchannel)
+      cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.cohrefchannel{:});
+    else
+      cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.cohrefchannel);
+    end
+end
 
 % Specify the x and y coordinates of the comment 
 if strcmp(cfg.commentpos,'layout')
@@ -594,7 +614,7 @@ if strcmp(cfg.style,'fill');        style = 'isofill';     end
 
 % Draw plot
 if ~strcmp(cfg.style,'blank')
-  plot_topo(chanX,chanY,datavector,'interpmethod',cfg.interpolation,...
+  ft_plot_topo(chanX,chanY,datavector,'interpmethod',cfg.interpolation,...
                                    'interplim',interplimits,...
                                    'gridscale',cfg.gridscale,...
                                    'outline',lay.outline,...
@@ -701,7 +721,7 @@ if strcmp(cfg.interactive, 'yes')
     info.label = lay.label;
     guidata(gcf, info);
 
-  if any(strcmp(data.dimord, {'chan_time', 'chan_freq', 'subj_chan_time', 'rpt_chan_time'}))
+  if any(strcmp(data.dimord, {'chan_time', 'chan_freq', 'subj_chan_time', 'rpt_chan_time', 'chan_chan_freq'}))
     set(gcf, 'WindowButtonUpFcn',     {@select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonUpFcn'});
     set(gcf, 'WindowButtonDownFcn',   {@select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonDownFcn'});
     set(gcf, 'WindowButtonMotionFcn', {@select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonMotionFcn'});
@@ -728,10 +748,15 @@ cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 function select_topoplotER(label, cfg, varargin)
 
 cfg.cohrefchannel = label;
-fprintf('selected cfg.cohrefchannel = ''%s''\n', cfg.cohrefchannel);
+fprintf('selected cfg.cohrefchannel = ''%s''\n', cfg.cohrefchannel{:});
 p = get(gcf, 'Position');
 f = figure;
 set(f, 'Position', p);
+cfg.highlight = 'on';
+cfg.highlightsymbol  = '.';
+cfg.highlightcolor   = 'r';
+cfg.highlightsize = 20;
+cfg.highlightchannel =  cfg.cohrefchannel;
 ft_topoplotER(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
