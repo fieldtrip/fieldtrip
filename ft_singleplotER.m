@@ -251,8 +251,18 @@ for k=2:nargin
 
   % Average across selected channels:
   if length(size(P)) > 2 %chan_chan_indexing
+    
     refchan = match_str(varargin{k-1}.label,cfg.cohrefchannel);
-    P = squeeze(mean(P(refchan,chansel,:),2));
+      
+    if strcmp(cfg.matrixside, 'feedback')
+      P = squeeze(mean(mean(P(chansel,refchan,:),2),1));
+    elseif strcmp(cfg.matrixside, 'feedforward')
+      P = squeeze(mean(mean(P(refchan,chansel,:),2),1));
+    elseif strcmp(cfg.matrixside, 'ff-fd')
+      P = squeeze(mean(mean(P(refchan,chansel,:),2),1)) - squeeze(mean(mean(P(chansel,refchan,:),2),1));
+    elseif strcmp(cfg.matrixside, 'fd-ff')
+      P = squeeze(mean(mean(P(chansel,refchan,:),2),1)) - squeeze(mean(mean(P(refchan,chansel,:),2),1));
+    end      
   else
     P = squeeze(mean(P(chansel,:), 1));
   end
@@ -269,8 +279,8 @@ for k=2:nargin
   if strcmp(cfg.ylim, 'maxmin')
     ind_xmin = nearest(varargin{k-1}.(cfg.xparam), xmin);
     ind_xmax = nearest(varargin{k-1}.(cfg.xparam), xmax);
-    ymin = min([ymin P(ind_xmin:ind_xmax)]);
-    ymax = max([ymax P(ind_xmin:ind_xmax)]);
+    ymin = min([ymin min(P(ind_xmin:ind_xmax))]);
+    ymax = max([ymax max(P(ind_xmin:ind_xmax))]);
   else
     ymin = cfg.ylim(1);
     ymax = cfg.ylim(2);
