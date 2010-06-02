@@ -4,7 +4,7 @@ dimtok = tokenize(data.dimord, '_');
 rptdim = find(strcmp('rpt', dimtok)); % the selected dimension as number
 
 if length(rptdim)<1
-  error('the "%s" dimension is not present in the data', avgdim);
+  error('the ''rpt'' dimension is not present in the data');
 elseif length(rptdim)>1
   error('cannot jackknife over multiple dimensions at the same time');
 elseif rptdim~=1
