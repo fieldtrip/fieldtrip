@@ -120,7 +120,7 @@ end
 
 for c=1:Nvarargin
   % match the channel selection with this dataset
-  cfg.channel = channelselection(cfg.channel, remember{c}.label);
+  cfg.channel = ft_channelselection(cfg.channel, remember{c}.label);
 
   % match the selected latency with this dataset
   if isempty(findstr(remember{c}.dimord, 'time')) || all(isnan(remember{c}.time))
