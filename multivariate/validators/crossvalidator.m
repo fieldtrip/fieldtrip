@@ -93,6 +93,9 @@ classdef crossvalidator < validator
             for dd=3:length(szin)
               fprintf(' x %d',szin(dd));
             end
+            if length(szin)>2
+              fprintf(' = %d',prod(szin(2:end)));
+            end
             fprintf(' input features and %d',szout(2));
             for dd=3:length(szout)
               fprintf(' x %d',szout(dd));
@@ -147,17 +150,21 @@ classdef crossvalidator < validator
             
             sz(1) = numel(obj.trainfolds{f,d});
             traindata{d} = reshape(data{d}(obj.trainfolds{f,d},:),sz);
-            
+            if isempty(traindata{d}), traindata{d} = []; end 
+              
             sz(1) = numel(obj.testfolds{f,d});
             testdata{d} = reshape(data{d}(obj.testfolds{f,d},:),sz);
+            if isempty(testdata{d}), testdata{d} = []; end 
             
             sz = size(design{d});
             
             sz(1) = numel(obj.trainfolds{f,d});
             traindesign{d} = reshape(design{d}(obj.trainfolds{f,d},:),sz);
-            
+            if isempty(traindesign{d}), traindesign{d} = []; end
+          
             sz(1) = numel(obj.testfolds{f,d});
             testdesign{d} = reshape(design{d}(obj.testfolds{f,d},:),sz);
+            if isempty(testdesign{d}), testdesign{d} = []; end 
           
           end
 
@@ -169,12 +176,13 @@ classdef crossvalidator < validator
             
             tproc = obj.procedure{f}.train(traindata,traindesign);
             
-            % transfer learner is free to return a cell array or not in
-            % case of one input dataset
-            res = tproc.test(testdata);
-            if iscell(res), res = res{1}; end
-            obj.post{f} = res;
-            %obj.post(f,:) = tproc.test(testdata);
+%             % transfer learner is free to return a cell array or not in
+%             % case of one input dataset
+%             res = tproc.test(testdata);
+%             if iscell(res), res = res{1}; end
+%             obj.post{f} = res;
+            
+            obj.post(f,:) = tproc.test(testdata);
             
             obj.design(f,:) = testdesign;  
           
@@ -498,7 +506,9 @@ classdef crossvalidator < validator
             end
             
           end
-                    
+                 
+          
+          
        end
    end
 end

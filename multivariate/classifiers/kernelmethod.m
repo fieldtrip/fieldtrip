@@ -138,7 +138,7 @@ classdef kernelmethod < classifier
       % return the parameters wrt a class label in some shape
       
       m = {obj.params.primal}; % only one vector for kernelmethod
-      desc = {'unknown'};
+      desc = {'primal form parameters; positive values indicate condition 2'};
       
     end
     

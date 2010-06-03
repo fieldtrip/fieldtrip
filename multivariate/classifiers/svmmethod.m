@@ -152,7 +152,7 @@ classdef svmmethod < classifier
         % return the parameters
         
         m = {obj.params.wv}; % only one vector for svmmethod
-        desc = {'unknown'};
+        desc = {'primal form parameters; positive values indicate condition two'};
         
       end
       

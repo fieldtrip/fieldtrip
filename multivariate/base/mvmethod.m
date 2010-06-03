@@ -58,10 +58,10 @@ classdef mvmethod
         % data and design are collapsed to matrices
         if iscell(data) && obj.istransfer()
           
-          if length(unique(cellfun(@(x)(size(x,2)),data))) > 1
-            % check if datasets have the same number of features
-            error('datasets must have the same number of features for transfer learning');
-          end
+%           if length(unique(cellfun(@(x)(size(x,2)),data))) > 1
+%             % check if datasets have the same number of features
+%             error('datasets must have the same number of features for transfer learning');
+%           end
           
           if bindim
             obj.indims = cell(1,length(data));
@@ -150,6 +150,7 @@ classdef mvmethod
           for c=1:length(data)
             if numel(data{c}) == prod([size(data{c},1) obj.indims{c}])
               data{c} = reshape(data{c},[size(data{c},1) obj.indims{c}]);
+              if isempty(data{c}), data{c} = []; end
             end
           end
         else

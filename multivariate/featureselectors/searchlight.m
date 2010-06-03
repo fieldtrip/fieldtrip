@@ -40,7 +40,7 @@ classdef searchlight < featureselector
       assert(~isempty(obj.procedure));
       
       if isempty(obj.validator)
-        obj.validator = crossvalidator('verbose',true);
+        obj.validator = crossvalidator('verbose',true,'compact',true,'model',true);
       end
       
       obj.validator.procedure = mva(obj.procedure);
@@ -129,18 +129,21 @@ classdef searchlight < featureselector
       % test each sphere
       
       p.value = zeros(length(p.spheres),1);
+      p.vld = cell(length(p.spheres),1);
       for c=1:length(p.spheres)
 
         vld = obj.validator;
-        
         vld = vld.validate(X(:,p.spheres{c}),Y);
            
-        p.value(c) = vld.evaluate('metric',obj.metric);        
+        p.value(c) = vld.evaluate('metric',obj.metric); 
 
         if obj.verbose
           fprintf('performance for sphere %d of %d using metric %s: %g\n',c,length(p.spheres),obj.metric,p.value(c));
         end
 
+        % save validator
+        p.vld{c} = vld;
+        
       end
       
       [a,b] = sort(p.value,'descend');

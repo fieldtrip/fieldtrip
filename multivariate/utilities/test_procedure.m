@@ -21,7 +21,7 @@ function [acc,sig,cv] = test_procedure(myproc,nfolds,X,Y)
     fvec = (left.freq >= 8 & left.freq <= 14); % subset of frequencies
     tvec = (left.time >= 1.5 & left.time <= 2.5); % subset of time segment
     
-    X  = [squeeze(left.powspctrm(:,cvec,fvec,tvec)); squeeze(right.powspctrm(:,cvec,fvec,tvec))];
+    X  = [squeeze(mean(left.powspctrm(:,cvec,fvec,tvec),4)); squeeze(mean(right.powspctrm(:,cvec,fvec,tvec),4))];
     Y  = [ones(size(left.powspctrm,1),1); 2*ones(size(right.powspctrm,1),1)];
     
     if isa(myproc{end},'transfer_learner')

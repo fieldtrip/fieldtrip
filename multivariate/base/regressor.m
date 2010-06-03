@@ -24,6 +24,8 @@ classdef regressor < predictor
           for i=1:2:length(varargin)
             if ismember(varargin{i},fieldnames(obj))
               obj.(varargin{i}) = varargin{i+1};
+            else
+              error('unrecognized fieldname');
             end
           end
 
