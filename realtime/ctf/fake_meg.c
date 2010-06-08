@@ -1,3 +1,11 @@
+/* 
+ * Copyright (C) 2010, Stefan Klanke
+ * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
+ * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
+ *
+ * This is just a small test program for writing (too big) packets to a
+ * shared memory segment similar to how CTF's Acq operates.
+ */
 #include <stdio.h>
 #include "AcqBuffer.h"
 #include <sys/shm.h>
@@ -19,7 +27,6 @@ ACQ_MessagePacketType *createSharedMem();
 void closeSharedMem(ACQ_MessagePacketType *packet);
 void initSharedMem(ACQ_MessagePacketType *packet);
 
-  
 int main(int argc, char **argv) {
 	ACQ_MessagePacketType *packet;
 	int currentPacket = 0;

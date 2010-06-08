@@ -1,3 +1,22 @@
+/* 
+ * Copyright (C) 2010, Stefan Klanke
+ * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
+ * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
+ *
+ * This program is used for setting up a shared memory segment where CTFs Acq can
+ * write data to. This program picks up the data, copies it into a short internal
+ * ringbuffer, and subsequently frees up the corresponding slot in the shared memory
+ * segment. Notably this should also work in those cases where Acq writes more samples
+ * than would normally fit into each slot, that is, this program also cleans up the 
+ * next slot in those cases, such that Acq finds a perfectly valid slot for the next
+ * data packet.
+ *
+ * Using a socket pair, a seperate thread is notified of the incoming data packets,
+ * which are then being pulled out of the internal ringbuffer, analysed for triggers,
+ * and then written to a local or remote FieldTrip buffer (samples + events).
+ * 
+ * The program is stopped by pressing CTRL-C after which a clean shutdown is performed.
+ */
 #include <stdio.h>
 #include "AcqBuffer.h"
 #include <buffer.h>

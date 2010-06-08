@@ -1,3 +1,10 @@
+/* 
+ * Copyright (C) 2010, Stefan Klanke
+ * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
+ * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
+ *
+ * Small program to inspect the CTF shared memory segment, and to delete it if desired.
+ */
 #include <stdio.h>
 #include "AcqBuffer.h"
 #include <sys/shm.h>
