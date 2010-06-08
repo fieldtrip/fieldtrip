@@ -60,6 +60,8 @@ function [segment] = ft_volumesegment(cfg, mri)
 % undocumented options
 %   cfg.keepintermediate = 'yes' or 'no'
 %   cfg.segment          = 'yes' or 'no'
+%   cfg.inputfile        = one can specifiy preanalysed saved data as input
+%   cfg.outputfile       = one can specify output as file to save to disk  
 
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -93,6 +95,8 @@ if ~isfield(cfg,'spmversion'),      cfg.spmversion  = 'spm8';                   
 if ~isfield(cfg,'write'),           cfg.write       = 'no';                                      end;
 if ~isfield(cfg,'keepintermediate'),cfg.keepintermediate = 'no';                                 end;
 if ~isfield(cfg,'coordinates'),     cfg.coordinates = [];                                        end;
+if ~isfield(cfg, 'inputfile'),      cfg.inputfile   = [];   end
+if ~isfield(cfg, 'outputfile'),     cfg.outputfile  = [];   end
 
 if ~isfield(cfg,'name') 
   if ~strcmp(cfg.write,'yes')
@@ -118,14 +122,27 @@ if ~isfield(cfg, 'template'),
   if strcmpi(cfg.spmversion, 'spm2'), cfg.template = [spmpath,filesep,'templates',filesep,'T1.mnc']; end
 end
 
-if ischar(mri),
-  % read the anatomical MRI data from file   
-  filename = mri;
-  fprintf('reading MRI from file\n');
-  mri = ft_read_mri(filename);
-  if ft_filetype(filename, 'ctf_mri') && isempty(cfg.coordinates)
-    % based on the filetype assume that the coordinates correspond with CTF convention
-    cfg.coordinates = 'ctf';
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    mri = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+if hasdata
+  if ischar(mri),
+    % read the anatomical MRI data from file
+    filename = mri;
+    fprintf('reading MRI from file\n');
+    mri = ft_read_mri(filename);
+    if ft_filetype(filename, 'ctf_mri') && isempty(cfg.coordinates)
+      % based on the filetype assume that the coordinates correspond with CTF convention
+      cfg.coordinates = 'ctf';
+    end
   end
 end
 
@@ -322,6 +339,10 @@ segment.gray      = V(1).dat;
 if length(V)>1, segment.white     = V(2).dat; end
 if length(V)>2, segment.csf       = V(3).dat; end
 
+% accessing this field here is needed for the configuration tracking
+% by accessing it once, it will not be removed from the output cfg
+cfg.outputfile;
+
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
 
@@ -339,4 +360,10 @@ cfg.version.id = '$Id$';
 try, cfg.previous = mri.cfg; end
 % remember the exact configuration details in the output 
 segment.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', segment); % use the variable name "data" in the output file
+end
+
 

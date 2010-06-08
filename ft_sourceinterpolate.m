@@ -22,8 +22,10 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical);
 %   cfg.downsample    = integer number (default = 1, i.e. no downsampling)
 %
 % See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS, FT_READ_FCDC_MRI
-
+%
 % Undocumented options
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
 %   cfg.voxelcoord = 'yes' (default) or 'no' determines whether the
 %   downsampled output anatomical MRI will have the x/y/zgrid converted or
 %   the homogenous transformation matrix
@@ -62,9 +64,25 @@ if ~isfield(cfg, 'interpmethod'); cfg.interpmethod = 'linear';  end
 if ~isfield(cfg, 'downsample');   cfg.downsample   = 1;         end
 if ~isfield(cfg, 'voxelcoord'),   cfg.voxelcoord   = 'yes';     end
 if ~isfield(cfg, 'feedback'),     cfg.feedback     = 'text';    end
+if ~isfield(cfg, 'inputfile'),    cfg.inputfile    = [];        end
+if ~isfield(cfg, 'outputfile'),   cfg.outputfile   = [];        end
+
 % if ~isfield(cfg, 'sourceunits');  cfg.sourceunits  = [];        end % this is deprecated, since now autodetermined
 % if ~isfield(cfg, 'mriunits');     cfg.mriunits     = [];        end % this is deprecated, since now autodetermined
 cfg = checkconfig(cfg, 'deprecated', {'sourceunits', 'mriunits'});
+
+hasdata = (nargin>2);
+
+% load optional given inputfile as data
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    anatomical = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
 
 if ischar(anatomical)
   % read the anatomical MRI data from file

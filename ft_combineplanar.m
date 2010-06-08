@@ -24,6 +24,8 @@ function [data] = ft_combineplanar(cfg, data)
 % cfg.combinemethod
 % cfg.foilim
 % cfg.trials
+% cfg.inputfile     = one can specifiy preanalysed saved data as input
+% cfg.outputfile    = one can specify output as file to save to disk
 
 % Copyright (C) 2004, Ole Jensen, Robert Oostenveld
 %
@@ -47,6 +49,27 @@ function [data] = ft_combineplanar(cfg, data)
 
 fieldtripdefs
 
+% set the defaults
+if ~isfield(cfg, 'blc'),           cfg.blc            = 'no';       end
+if ~isfield(cfg, 'foilim'),        cfg.foilim         = [-inf inf]; end
+if ~isfield(cfg, 'blcwindow'),     cfg.blcwindow      = [-inf inf]; end
+if ~isfield(cfg, 'combinemethod'), cfg.combinemethod  = 'sum';      end
+if ~isfield(cfg, 'trials'),        cfg.trials         = 'all';      end
+if ~isfield(cfg, 'feedback'),      cfg.feedback       = 'none';     end
+if ~isfield(cfg, 'inputfile'),     cfg.inputfile      = [];         end
+if ~isfield(cfg, 'outputfile'),    cfg.outputfile     = [];         end
+
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
 % check if the input data is valid for this function
 data = checkdata(data, 'datatype', {'raw', 'freq', 'timelock'}, 'feedback', 'yes', 'senstype', {'ctf151_planar', 'ctf275_planar', 'neuromag122', 'neuromag306', 'bti248_planar', 'bti148_planar'});
 
@@ -59,14 +82,6 @@ if isfield(cfg, 'baseline')
   cfg.blc       = 'yes';
   cfg.blcwindow = cfg.baseline;
 end
-
-% set the defaults
-if ~isfield(cfg, 'blc'),           cfg.blc            = 'no';       end
-if ~isfield(cfg, 'foilim'),        cfg.foilim         = [-inf inf]; end
-if ~isfield(cfg, 'blcwindow'),     cfg.blcwindow      = [-inf inf]; end
-if ~isfield(cfg, 'combinemethod'), cfg.combinemethod  = 'sum';      end
-if ~isfield(cfg, 'trials'),        cfg.trials         = 'all';      end
-if ~isfield(cfg, 'feedback'),      cfg.feedback       = 'none';     end
 
 israw      = datatype(data, 'raw');
 isfreq     = datatype(data, 'freq');
@@ -115,7 +130,7 @@ if strcmp(cfg.blc, 'yes')
 end
 
 if isfreq
-
+  
   switch cfg.combinemethod
     case 'sum'
       if isfield(data, 'powspctrm'),
@@ -157,7 +172,7 @@ if isfreq
             dum(1,timbin) = dum2;
             dum = reshape(dum(1,:),[Ntim Nrpt]);
             fourier(:,j,k,:) = transpose(dum);
-
+            
             %for m = 1:Ntim
             %  dum                     = data.fourierspctrm(:,[sel_dH(j) sel_dV(j)],fbin(k),m);
             %  timbin                  = find(~isnan(dum(:,1)));
@@ -177,13 +192,13 @@ if isfreq
     otherwise
       error('cfg.combinemethod = ''%s'' is not supported for frequency data', cfg.combinemethod);
   end
-
+  
 elseif (israw || istimelock)
   if istimelock,
     % convert timelock to raw
     data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
   end
-
+  
   switch cfg.combinemethod
     case 'sum'
       Nrpt = length(data.trial);
@@ -221,12 +236,12 @@ elseif (israw || istimelock)
     otherwise
       error('cfg.combinemethod = ''%s'' is not supported for timelocked or raw data', cfg.combinemethod);
   end
-
+  
   if istimelock,
     % convert raw to timelock
     data = checkdata(data, 'datatype', 'timelock', 'feedback', 'yes');
   end
-
+  
 else
   error('unsupported input data');
 end % which datatype
@@ -234,6 +249,8 @@ end % which datatype
 % remove the fields for which the planar gradient could not be combined
 try, data = rmfield(data, 'crsspctrm');   end
 try, data = rmfield(data, 'labelcmb');    end
+
+cfg.outputfile;
 
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
@@ -249,6 +266,14 @@ catch
 end
 cfg.version.id  = '$Id$';
 % remember the configuration details of the input data
-try, cfg.previous = data.cfg; end
+if hasdata && isfield(data, 'cfg')
+  % remember the configuration details of the input data
+  cfg.previous = data.cfg;
+end
 % remember the exact configuration details in the output
 data.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', data); % use the variable name "data" in the output file
+end
