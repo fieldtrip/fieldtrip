@@ -11,6 +11,10 @@ function [down] = ft_volumedownsample(cfg, source);
 %   cfg.smooth     = 'no' or the FWHM of the gaussian kernel in voxels (default = 'no')
 %
 % This function is used by FT_SOUREINTERPOLATE, FT_SOURCEREAD and FT_SOURCENORMALIZE.
+%
+% Undocumented local options:
+% cfg.inputfile
+% cfg.outputfile
 
 % Copyright (C) 2004, Robert Oostenveld
 %

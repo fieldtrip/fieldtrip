@@ -57,6 +57,7 @@ function [grid, cfg] = ft_prepare_leadfield(cfg, data)
 % cfg.sel50p      = 'no' (default) or 'yes'
 % cfg.lbex        = 'no' (default) or a number that corresponds with the radius
 % cfg.mollify     = 'no' (default) or a number that corresponds with the FWHM
+% cfg.inputfile        = one can specifiy preanalysed saved data as input
 
 % This function depends on FT_PREPARE_DIPOLE_GRID which has the following options:
 % cfg.grid.xgrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.xgrid = 'auto'), documented
@@ -108,8 +109,23 @@ cfg = checkconfig(cfg, 'trackconfig', 'on');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if nargin<2
-  data = [];
+if ~isfield(cfg, 'inputfile'),        cfg.inputfile  = [];            end
+
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+    % the input data should be read from file
+    if hasdata
+        error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+    else
+        data = loadvar(cfg.inputfile, 'data');
+        hasdata = true;
+    end
+end
+
+if ~hasdata
+    data = [];
+else
+    return
 end
 
 % set the defaults
@@ -122,11 +138,12 @@ if ~isfield(cfg, 'mollify'),          cfg.mollify    = 'no';          end
 if ~isfield(cfg, 'patchsvd'),         cfg.patchsvd   = 'no';          end
 % if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';          end  % the default for this depends on EEG/MEG and is set below
 
+
 % put the low-level options pertaining to the dipole grid in their own field
 cfg = checkconfig(cfg, 'createsubcfg',  {'grid'});
 
 if strcmp(cfg.sel50p, 'yes') && strcmp(cfg.lbex, 'yes')
-  error('subspace projection with either lbex or sel50p is mutually exclusive');
+    error('subspace projection with either lbex or sel50p is mutually exclusive');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -136,43 +153,43 @@ end
 
 % set the default for reducing the rank of the leadfields
 if ~isfield(cfg, 'reducerank')
-  if ft_senstype(sens, 'eeg')
-    cfg.reducerank = 3;
-  else
-    cfg.reducerank = 2;
-  end
+    if ft_senstype(sens, 'eeg')
+        cfg.reducerank = 3;
+    else
+        cfg.reducerank = 2;
+    end
 end
 
 % construct the grid on which the scanning will be done
 [grid, cfg] = prepare_dipole_grid(cfg, vol, sens);
 
 if ft_voltype(vol, 'openmeeg')
-  % the system call to the openmeeg executable makes it rather slow
-  % calling it once is much more efficient
-  fprintf('calculating leadfield for all positions at once, this may take a while...\n');
-  lf = ft_compute_leadfield(grid.pos(grid.inside,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
-  % reassign the large leadfield matrix over the single grid locations
-  for i=1:length(grid.inside)
-    sel = (3*i-2):(3*i);           % 1:3, 4:6, ...
-    dipindx = grid.inside(i);
-    grid.leadfield{dipindx} = lf(:,sel);
-  end
-  clear lf
-  
-else
-  progress('init', cfg.feedback, 'computing leadfield');
-  for i=1:length(grid.inside)
-    % compute the leadfield on all grid positions inside the brain
-    progress(i/length(grid.inside), 'computing leadfield %d/%d\n', i, length(grid.inside));
-    dipindx = grid.inside(i);
-    grid.leadfield{dipindx} = ft_compute_leadfield(grid.pos(dipindx,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
-    
-    if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
-      % multiply with the normalized dipole moment to get the leadfield in the desired orientation
-      grid.leadfield{dipindx} = grid.leadfield{dipindx} * grid.mom(:,dipindx);
+    % the system call to the openmeeg executable makes it rather slow
+    % calling it once is much more efficient
+    fprintf('calculating leadfield for all positions at once, this may take a while...\n');
+    lf = ft_compute_leadfield(grid.pos(grid.inside,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
+    % reassign the large leadfield matrix over the single grid locations
+    for i=1:length(grid.inside)
+        sel = (3*i-2):(3*i);           % 1:3, 4:6, ...
+        dipindx = grid.inside(i);
+        grid.leadfield{dipindx} = lf(:,sel);
     end
-  end % for all grid locations inside the brain
-  progress('close');
+    clear lf
+    
+else
+    progress('init', cfg.feedback, 'computing leadfield');
+    for i=1:length(grid.inside)
+        % compute the leadfield on all grid positions inside the brain
+        progress(i/length(grid.inside), 'computing leadfield %d/%d\n', i, length(grid.inside));
+        dipindx = grid.inside(i);
+        grid.leadfield{dipindx} = ft_compute_leadfield(grid.pos(dipindx,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
+        
+        if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
+            % multiply with the normalized dipole moment to get the leadfield in the desired orientation
+            grid.leadfield{dipindx} = grid.leadfield{dipindx} * grid.mom(:,dipindx);
+        end
+    end % for all grid locations inside the brain
+    progress('close');
 end
 
 
@@ -181,24 +198,23 @@ grid.leadfield(grid.outside) = {nan};
 
 % mollify the leadfields
 if ~strcmp(cfg.mollify, 'no')
-  grid = mollify(cfg, grid);
+    grid = mollify(cfg, grid);
 end
 
 % combine leadfields in patches and do an SVD on them
 if ~strcmp(cfg.patchsvd, 'no')
-  grid = patchsvd(cfg, grid);
+    grid = patchsvd(cfg, grid);
 end
 
 % compute the 50 percent channel selection subspace projection
 if ~strcmp(cfg.sel50p, 'no')
-  grid = sel50p(cfg, grid, sens);
+    grid = sel50p(cfg, grid, sens);
 end
 
 % compute the local basis function expansion (LBEX) subspace projection
 if ~strcmp(cfg.lbex, 'no')
-  grid = lbex(cfg, grid);
+    grid = lbex(cfg, grid);
 end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -207,12 +223,12 @@ cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 try
-  % get the full name of the function
-  cfg.version.name = mfilename('fullpath');
+    % get the full name of the function
+    cfg.version.name = mfilename('fullpath');
 catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
-  [st, i] = dbstack;
-  cfg.version.name = st(i);
+    % required for compatibility with Matlab versions prior to release 13 (6.5)
+    [st, i] = dbstack;
+    cfg.version.name = st(i);
 end
 cfg.version.id = '$Id$';
 % remember the configuration details of the input data

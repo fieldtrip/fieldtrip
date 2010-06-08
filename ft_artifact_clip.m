@@ -10,7 +10,7 @@ function [cfg, artifact] = ft_artifact_clip(cfg,data)
 %   cfg.dataset or both cfg.headerfile and cfg.datafile
 % or
 %   [cfg, artifact] = ft_artifact_clip(cfg, data)
-%   forbidden configuration options: 
+%   forbidden configuration options:
 %   cfg.dataset, cfg.headerfile and cfg.datafile
 %
 % In both cases the configuration should also contain:
@@ -19,7 +19,7 @@ function [cfg, artifact] = ft_artifact_clip(cfg,data)
 %   cfg.artfctdef.clip.psttim   = 0.000;  post-artifact rejection-interval in seconds
 %   cfg.artfctdef.clip.thresh   = 0.010;  minimum duration in seconds of a datasegment with consecutive identical samples to be considered as 'clipped'
 %   cfg.continuous              = 'yes' or 'no' whether the file contains continuous data
-%   
+%
 % See also FT_REJECTARTIFACT
 
 % Undocumented local options:
@@ -72,7 +72,7 @@ if isfield(cfg.artfctdef.clip,'sgn')
 end
 
 % start with an empty artifact list
-    artifact = [];
+artifact = [];
 
 
 hasdata = (nargin>1);
@@ -87,12 +87,12 @@ if ~isempty(cfg.inputfile)
 end
 
 if hasdata
-% read the header
-% isfetch = 1;
+  % read the header
+  % isfetch = 1;
   cfg = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
   hdr = fetch_header(data);
 else
-%   isfetch = 0;
+  %   isfetch = 0;
   cfg = checkconfig(cfg, 'dataset2files', {'yes'});
   cfg = checkconfig(cfg, 'required', {'headerfile', 'datafile'});
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
@@ -100,11 +100,11 @@ end
 
 % set default cfg.continuous
 if ~isfield(cfg, 'continuous')
-    if hdr.nTrials==1
-      cfg.continuous = 'yes';
-    else
-      cfg.continuous = 'no';
-    end
+  if hdr.nTrials==1
+    cfg.continuous = 'yes';
+  else
+    cfg.continuous = 'no';
+  end
 end
 
 % find the channel labels present in the data and their indices
@@ -119,7 +119,7 @@ nsgn = length(sgnindx);
 for trlop=1:ntrl
   fprintf('searching for clipping artifacts in trial %d\n', trlop);
   % read the data of this trial
-  if hasdata 
+  if hasdata
     dat = fetch_data(data,        'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', sgnindx);
   else
     dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', sgnindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
@@ -130,7 +130,7 @@ for trlop=1:ntrl
   identical = (datflt(:,1:(end-1)) == datflt(:,2:end));
   % ensure that the number of samples does not change
   identical = [identical zeros(nsgn,1)];
-
+  
   % determine the number of consecutively identical samples
   clip = zeros(size(dat));
   for sgnlop=1:length(sgnindx)
@@ -142,11 +142,11 @@ for trlop=1:ntrl
   end
   % collapse over cannels
   clip = max(clip,[],1);
-
+  
   % detect whether there are intervals in which the number of consecutive
   % identical samples is larger than the threshold
   thresh = (clip>=artfctdef.thresh*hdr.Fs);
-
+  
   % remember the thresholded parts as artifacts
   artup = find(diff([0 thresh])== 1) + cfg.trl(trlop,1) - 1;
   artdw = find(diff([thresh 0])==-1) + cfg.trl(trlop,1) - 1;
@@ -166,11 +166,11 @@ cfg.artfctdef.clip          = artfctdef;
 cfg.artfctdef.clip.label    = label;
 cfg.artfctdef.clip.trl      = cfg.trl;
 cfg.artfctdef.clip.artifact = artifact;
-     
+
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 try
