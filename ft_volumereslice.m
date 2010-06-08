@@ -13,6 +13,10 @@ function mri = ft_volumereslice(cfg, mri)
 %   cfg.resolution = number, in physical units
 %
 % See also FT_VOLUMEDOWNSAMPLE, FT_SOURCEINTREPOLATE
+%
+% Undocumented local options:
+%   cfg.inputfile        = one can specifiy preanalysed saved data as input
+%   cfg.outputfile       = one can specify output as file to save to disk
 
 % Copyright (C) 2010, Robert Oostenveld
 %
@@ -37,12 +41,26 @@ function mri = ft_volumereslice(cfg, mri)
 % check if the input cfg is valid for this function
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
-% check if the input data is valid for this function and ensure that the structures correctly describes a volume
-mri = checkdata(mri, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
-
 % set the defaults
 if ~isfield(cfg, 'resolution');   cfg.resolution   = 1;         end % in physical units
 if ~isfield(cfg, 'downsample');   cfg.downsample   = 1;         end
+if ~isfield(cfg, 'inputfile'),    cfg.inputfile    = [];        end
+if ~isfield(cfg, 'outputfile'),   cfg.outputfile   = [];        end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    mri = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+% check if the input data is valid for this function and ensure that the structures correctly describes a volume
+mri = checkdata(mri, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
 
 cfg = checkconfig(cfg, 'required', {'xrange', 'yrange', 'zrange'});
 
@@ -70,6 +88,10 @@ fprintf('reslicing from [%d %d %d] to [%d %d %d]\n', mri.dim(1), mri.dim(2), mri
 tmpcfg = [];
 mri = ft_sourceinterpolate(tmpcfg, mri, pseudomri);
 
+% accessing this field here is needed for the configuration tracking
+% by accessing it once, it will not be removed from the output cfg
+cfg.outputfile;
+
 % add version information to the configuration
 try
   % get the full name of the function
@@ -81,7 +103,11 @@ catch
 end
 cfg.version.id = '$Id: ft_sourceinterpolate.m 715 2010-03-09 10:57:27Z roboos $';
 % remember the configuration details of the input data
-try, cfg.previous = mri.cfg; end
+try cfg.previous = mri.cfg; end
 % remember the exact configuration details in the output
 mri.cfg = cfg;
 
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', mri); % use the variable name "data" in the output file
+end

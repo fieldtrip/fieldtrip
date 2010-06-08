@@ -31,11 +31,13 @@ function [normalise] = ft_volumenormalise(cfg, interp)
 %                     when for example a region of interest is dFT_efined on the normalised
 %                     group-average.
 
-% Undocumented local options:FT_
+% Undocumented local options:
 %   cfg.keepintermediate = 'yes' or 'no'
 %   cfg.intermediatename = prefix of the the coregistered images and of the
 %                          original images in the original headcFT_oordinate system
 %   cfg.spmparams        = one can feed in parameters from a prior normalisation
+%   cfg.inputfile        = one can specifiy preanalysed saved data as input
+%   cfg.outputfile       = one can specify output as file to save to disk
 
 % Copyright (C) 2004-2006, Jan-Mathijs Schoffelen
 %
@@ -74,6 +76,20 @@ if ~isfield(cfg,'coordinates'),      cfg.coordinates = [];                      
 if ~isfield(cfg,'initial'),          cfg.initial = [];                            end;
 if ~isfield(cfg,'nonlinear'),        cfg.nonlinear = 'yes';                       end;
 if ~isfield(cfg,'smooth'),           cfg.smooth    = 'no';                        end;
+if ~isfield(cfg, 'inputfile'),       cfg.inputfile  = [];                         end;
+if ~isfield(cfg, 'outputfile'),      cfg.outputfile = [];                         end;
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    interp = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
 
 % check if the required spm is in your path:
 if strcmpi(cfg.spmversion, 'spm2'),
@@ -119,7 +135,7 @@ end
 
 % the template anatomy should always be stored in a SPM-compatible file
 template_ftype = ft_filetype(cfg.template);
-if strcmp(template_ftype, 'analyze_hdr') || strcmp(template_ftype, 'analyze_img') || strcmp(template_ftype, 'minc') || strcmp(template_ftype, 'nifti') 
+if strcmp(template_ftype, 'analyze_hdr') || strcmp(template_ftype, 'analyze_img') || strcmp(template_ftype, 'minc') || strcmp(template_ftype, 'nifti')
   % based on the filetype assume that the coordinates correspond with MNI/SPM convention
   template_coordinates = 'spm';
 end
@@ -202,12 +218,12 @@ end
 
 % read the template anatomical volume
 switch template_ftype
-case 'minc'
-  VG    = spm_vol_minc(cfg.template);
-case {'analyze_img', 'analyze_hdr', 'nifti'},
-  VG    = spm_vol(cfg.template);
-otherwise
-  error('Unknown template');
+  case 'minc'
+    VG    = spm_vol_minc(cfg.template);
+  case {'analyze_img', 'analyze_hdr', 'nifti'},
+    VG    = spm_vol(cfg.template);
+  otherwise
+    error('Unknown template');
 end
 
 fprintf('performing the normalisation\n');
@@ -288,8 +304,12 @@ if strcmp(cfg.keepintermediate,'no')
   end
 end
 
+% accessing this field here is needed for the configuration tracking
+% by accessing it once, it will not be removed from the output cfg
+cfg.outputfile;
+
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % remember the normalisation parameters in the configuration
 cfg.spmparams = params;
@@ -310,6 +330,11 @@ cfg.version.id = '$Id$';
 try, cfg.previous = interp.cfg; end
 % remember the exact configuration details in the output
 normalise.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', normalise); % use the variable name "data" in the output file
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HELPER FUNCTION that asks a few questions to determine the coordinate system

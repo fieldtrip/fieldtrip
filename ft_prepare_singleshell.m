@@ -29,7 +29,10 @@ function [vol, cfg] = ft_prepare_singleshell(cfg, mri)
 %   G. Nolte, "The magnetic lead field theorem in the quasi-static
 %   approximation and its use for magnetoencephalography forward calculation
 %   in realistic volume conductors", Phys Med Biol. 2003 Nov 21;48(22):3637-52.
-
+%
+% Undocumented local options:
+%   cfg.inputfile        = one can specifiy preanalysed saved data as input
+%
 % TODO the spheremesh option should be renamed consistently with other mesh generation cfgs
 % TODO shape should contain pnt as subfield and not be equal to pnt (for consistency with other use of shape)
 
@@ -64,17 +67,27 @@ if ~isfield(cfg, 'mriunits');      cfg.mriunits = 'mm';     end
 if ~isfield(cfg, 'sourceunits'),   cfg.sourceunits = 'cm';  end
 if ~isfield(cfg, 'threshold'),     cfg.threshold = 0.5;     end % relative
 if ~isfield(cfg, 'numvertices'),   cfg.numvertices = 4000;  end % approximate number of vertices in sphere
+if ~isfield(cfg, 'inputfile'),     cfg.inputfile = [];      end
 
 % construct the geometry of the volume conductor model, containing a single boundary
 % the initialization of the forward computation code is done later in prepare_headmodel
-vol = [];
-if nargin==1
-  vol.bnd = ft_prepare_mesh(cfg);
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+    % the input data should be read from file
+    if hasdata
+        error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+    else
+        mri = loadvar(cfg.inputfile, 'data');
+        hasdata = true;
+    end
+end
+
+if hasdata
+    vol.bnd = ft_prepare_mesh(cfg, mri);
 else
-  vol.bnd = ft_prepare_mesh(cfg, mri);
+    vol.bnd = ft_prepare_mesh(cfg);
 end
 vol.type = 'nolte';
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
-
+cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');

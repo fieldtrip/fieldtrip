@@ -43,6 +43,10 @@ function [interp] = ft_megplanar(cfg, data)
 % of the volume conduction model.
 %
 % See also FT_COMBINEPLANAR
+%
+% Undocumented local options:
+%   cfg.inputfile        = one can specifiy preanalysed saved data as input
+%   cfg.outputfile       = one can specify output as file to save to disk
 
 % This function depends on FT_PREPARE_BRAIN_SURFACE which has the following options:
 % cfg.headshape  (default set in FT_MEGPLANAR: cfg.headshape = 'headmodel'), documented
@@ -83,6 +87,22 @@ fieldtripdefs
 
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
+% set defaults
+if ~isfield(cfg, 'inputfile'),      cfg.inputfile  = [];          end
+if ~isfield(cfg, 'outputfile'),     cfg.outputfile = [];          end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
 isfreq = datatype(data, 'freq');
 israw  = datatype(data, 'raw');
 istlck = datatype(data, 'timelock');  % this will be temporary converted into raw
@@ -112,6 +132,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   if ~isfield(cfg, 'spheremesh'),    cfg.spheremesh = 642;          end
 end
 
+
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure
   cfg.headshape = struct(cfg.headshape);
@@ -124,7 +145,7 @@ cfg = checkconfig(cfg, 'renamedvalue',  {'headshape', 'headmodel', []});
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
-  data = selectdata(data, 'rpt', cfg.trials);  
+  data = selectdata(data, 'rpt', cfg.trials);
   if isfield(data, 'cfg') % try to locate the trl in the nested configuration
     cfg.trlold = findcfg(data.cfg, 'trlold');
     cfg.trl    = findcfg(data.cfg, 'trl');
@@ -133,32 +154,32 @@ end
 
 if     strcmp(cfg.planarmethod, 'orig')
   montage = megplanar_orig(cfg, data.grad);
-
+  
 elseif strcmp(cfg.planarmethod, 'sincos')
   montage = megplanar_sincos(cfg, data.grad);
-
+  
 elseif strcmp(cfg.planarmethod, 'fitplane')
   montage = megplanar_fitplane(cfg, data.grad);
-
+  
 elseif strcmp(cfg.planarmethod, 'sourceproject')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Do an inverse computation with a simplified distributed source model
   % and compute forward again with the axial gradiometer array replaced by
   % a planar one.
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
   if isfreq
     error('the method ''sourceproject'' is not supported for frequency data as input');
   end
-
+  
   Nchan   = length(data.label);
   Ntrials = length(data.trial);
-
+  
   % FT_PREPARE_VOL_SENS will match the data labels, the gradiometer labels and the
   % volume model labels (in case of a multisphere model) and result in a gradiometer
   % definition that only contains the gradiometers that are present in the data.
   [vol, axial.grad, cfg] = prepare_headmodel(cfg, data);
-
+  
   % determine the dipole layer that represents the surface of the brain
   if isempty(cfg.headshape)
     % construct from the inner layer of the volume conduction model
@@ -185,30 +206,30 @@ elseif strcmp(cfg.planarmethod, 'sourceproject')
     % construct from the head surface
     pos = headsurface([], [], 'headshape', headshape, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
   end
-
+  
   % compute the forward model for the axial gradiometers
   fprintf('computing forward model for %d dipoles\n', size(pos,1));
   lfold = ft_compute_leadfield(pos, axial.grad, vol);
-
+  
   % construct the planar gradient definition and compute its forward model
   % this will not work for a multisphere model, compute_leadfield will catch
   % the error
   planar.grad = constructplanargrad([], axial.grad);
   lfnew = ft_compute_leadfield(pos, planar.grad, vol);
-
+  
   % compute the interpolation matrix
   transform = lfnew * prunedinv(lfold, cfg.pruneratio);
-
+  
   % interpolate the data towards the planar gradiometers
   for i=1:Ntrials
     fprintf('interpolating trial %d to planar gradiometer\n', i);
     interp.trial{i} = transform * data.trial{i}(dataindx,:);
   end % for Ntrials
-
+  
   % all planar gradiometer channels are included in the output
   interp.grad  = planar.grad;
   interp.label = planar.grad.label;
-
+  
   % copy the non-gradiometer channels back into the output data
   other = setdiff(1:Nchan, dataindx);
   for i=other
@@ -217,7 +238,7 @@ elseif strcmp(cfg.planarmethod, 'sourceproject')
       interp.trial{j}(end+1,:) = data.trial{j}(i,:);
     end
   end
-
+  
 else
   error('unknown method for computation of planar gradient');
 end % cfg.planarmethod
@@ -247,6 +268,8 @@ if istlck
   israw  = false;
 end
 
+cfg.outputfile;
+
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
@@ -260,10 +283,18 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id   = '$Id$';
+
 % remember the configuration details of the input data
-try, cfg.previous = data.cfg; end
+try cfg.previous = data.cfg; end
+
 % remember the exact configuration details in the output
 interp.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', interp); % use the variable name "data" in the output file
+end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that computes the inverse using a pruned SVD

@@ -1,3 +1,4 @@
+ls
 function [vol, cfg] = ft_prepare_localspheres(cfg, mri)
 
 % FT_PREPARE_LOCALSPHERES creates a MEG volume conductor model with a sphere
@@ -35,8 +36,9 @@ function [vol, cfg] = ft_prepare_localspheres(cfg, mri)
 % TODO shape should contain pnt as subfield and not be equal to pnt (for consistency with other use of shape)
 %
 % Undocumented local options:
-% cfg.spheremesh, number of points that is placed on the brain surface (default 4000)
+% cfg.spheremesh = number of points that is placed on the brain surface (default 4000)
 % cfg.maxradius
+% cfg.inputfile = one can specifiy preanalysed saved data as input
 
 % Copyright (C) 2005-2006, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
@@ -74,12 +76,24 @@ if ~isfield(cfg, 'threshold'),     cfg.threshold = 0.5;     end % relative
 if ~isfield(cfg, 'spheremesh'),    cfg.spheremesh = 4000;   end
 if ~isfield(cfg, 'singlesphere'),  cfg.singlesphere = 'no'; end
 if ~isfield(cfg, 'headshape'),     cfg.headshape = [];      end
+if ~isfield(cfg, 'inputfile'),     cfg.inputfile = [];      end
 
-% construct the geometry of the headshape using a single boundary
-if nargin==1
-  headshape = ft_prepare_mesh(cfg);
-else
+% check for option of cfg.inputfile
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    mri = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+if hasdata
   headshape = ft_prepare_mesh(cfg, mri);
+else
+  headshape = ft_prepare_mesh(cfg);
 end
 
 % read the gradiometer definition from file or copy it from the configuration
@@ -196,4 +210,3 @@ vol.type = 'multisphere';
 
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
