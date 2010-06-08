@@ -36,7 +36,11 @@ function [source] = ft_sourcedescriptives(cfg, source)
 % on the power and projected noise.
 %
 % See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS
-
+%
+% Undocumented local options:
+% cfg.inputfile
+% cfg.outputfile
+%
 % Copyright (C) 2004-2007, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -61,9 +65,6 @@ fieldtripdefs
 
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
-% check if the input data is valid for this function
-source = checkdata(source, 'datatype', 'source', 'feedback', 'yes');
-
 % set the defaults
 if ~isfield(cfg, 'transform'),        cfg.transform        = [];            end
 if ~isfield(cfg, 'projectmom'),       cfg.projectmom       = 'no';          end % if yes -> svdfft
@@ -79,6 +80,22 @@ if ~isfield(cfg, 'kurtosis'),         cfg.kurtosis         = 'no';          end
 if ~isfield(cfg, 'keeptrials'),       cfg.keeptrials       = 'no';          end
 if ~isfield(cfg, 'keepcsd'),          cfg.keepcsd          = 'no';          end
 if ~isfield(cfg, 'fixedori'),         cfg.fixedori = 'over_trials';         end
+if ~isfield(cfg, 'inputfile'),        cfg.inputfile        = [];            end
+if ~isfield(cfg, 'outputfile'),       cfg.outputfile       = [];            end
+
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    source = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+% check if the input data is valid for this function
+source = checkdata(source, 'datatype', 'source', 'feedback', 'yes');
 
 % this is required for backward compatibility with the old sourceanalysis
 if isfield(source, 'method') && strcmp(source.method, 'randomized')
@@ -827,6 +844,10 @@ if strcmp(cfg.resolutionmatrix, 'yes')
   source.resolution(source.inside, source.inside) = allfilter*allleadfield;
 end
 
+% accessing this field here is needed for the configuration tracking
+% by accessing it once, it will not be removed from the output cfg
+cfg.outputfile;
+
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
 
@@ -844,6 +865,11 @@ cfg.version.id = '$Id$';
 try, cfg.previous = source.cfg; end
 % remember the exact configuration details in the output
 source.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', source); % use the variable name "data" in the output file
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function to compute eta from a csd-matrix

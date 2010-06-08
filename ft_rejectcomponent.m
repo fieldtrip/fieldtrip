@@ -21,6 +21,10 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 %   cfg.component = list of components to remove, e.g. [1 4 7]
 % 
 % See also FT_COMPONENTANALYSIS, FT_PREFPROCESSING
+%
+% Undocumented local options:
+% cfg.inputfile
+% cfg.outputfile
 
 % Copyright (C) 2005-2009, Robert Oostenveld
 % 
@@ -44,20 +48,26 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 
 fieldtripdefs
 
+% set defaults
 if ~isfield(cfg, 'component'), cfg.component = [];      end
+if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];           end
+if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end
 
-comp    = checkdata(comp, 'datatype', 'comp');
-ncomps  = length(comp.label);
-hasdata = nargin==3;
-
-if hasdata, 
+if nargin==3 
   ntrials = length(data.trial);
   data    = checkdata(data, 'datatype', 'raw');
   label   = data.label;
-else
+elseif nargin==2 
   ntrials = length(comp.trial);
   label   = comp.topolabel;
+else nargin<2 % only cfg is given; inputfile is expected
+    comp = loadvar(cfg.inputfile, 'data');
+    ntrials = length(comp.trial);
+    label   = comp.topolabel;
 end
+
+comp    = checkdata(comp, 'datatype', 'comp');
+ncomps  = length(comp.label);
 
 if min(cfg.component)<1
   error('you cannot remove components that are not present in the data');
@@ -75,11 +85,11 @@ fprintf('keeping %d components\n',  ncomps-length(cfg.component));
 %topographies of the to-be-removed components from identity
 [seldat, selcomp] = match_str(label, comp.topolabel);
 
-if length(seldat)~=length(label) && hasdata,
+if length(seldat)~=length(label) && nargin==3,
   warning('the subspace projection is not guaranteed to be correct for non-orthogonal components');
 end
 
-if hasdata,
+if nargin==3,
   topo     = comp.topo(selcomp,:);
   invtopo  = pinv(topo);
   tra      = eye(length(selcomp)) - topo(:, cfg.component)*invtopo(cfg.component, :);
@@ -136,6 +146,10 @@ else
   warning('the gradiometer description does not match the data anymore');
 end
 
+% accessing this field here is needed for the configuration tracking
+% by accessing it once, it will not be removed from the output cfg
+cfg.outputfile;
+
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
 
@@ -149,7 +163,7 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id = '$Id$';
-if nargin==2,
+if nargin==2 || nargin < 2 
   % remember the configuration details of the input data 
   try, cfg.previous = comp.cfg; end
 elseif nargin==3,
@@ -163,3 +177,7 @@ end
 % keep the configuration in the output
 data.cfg = cfg;
 
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', data); % use the variable name "data" in the output file
+end

@@ -6,11 +6,12 @@ function [source] = ft_sourceanalysis(cfg, data, baseline);
 % Use as either
 %   [source] = ft_sourceanalysis(cfg, freq)
 %   [source] = ft_sourceanalysis(cfg, timelock)
+%   [source] = ft_sourceanalysis(cfg, comp)
 %
 % where the data in freq or timelock should be organised in a structure
-% as obtained from the FT_FREQANALYSIS or FT_TIMELOCKANALYSIS function. The
-% configuration "cfg" is a structure containing information about
-% source positions and other options.
+% as obtained from the FT_FREQANALYSIS, FT_TIMELOCKANALYSIS or 
+% FT_COMPONENTANALYSIS function. The configuration "cfg" is a structure 
+% containing information about source positions and other options.
 %
 % The different source reconstruction algorithms that are implemented
 % are
@@ -110,6 +111,8 @@ function [source] = ft_sourceanalysis(cfg, data, baseline);
 % cfg.refchannel
 % cfg.trialweight        = 'equal' or 'proportional'
 % cfg.powmethod          = 'lambda1' or 'trace'
+% cfg.inputfile
+% cfg.outputfile
 %
 % This function depends on FT_PREPARE_DIPOLE_GRID which has the following options:
 % cfg.grid.xgrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.xgrid = 'auto'), documented
@@ -191,6 +194,49 @@ tic;
 
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
+% set the defaults
+if ~isfield(cfg, 'method') && istimelock, cfg.method = 'lcmv';      end
+if ~isfield(cfg, 'method') && isfreq,     cfg.method = 'dics';      end
+if ~isfield(cfg, 'keeptrials')        cfg.keeptrials  = 'no';     end
+if ~isfield(cfg, 'keepfilter')        cfg.keepfilter = 'no';      end
+if ~isfield(cfg, 'keepleadfield')     cfg.keepleadfield = 'no';   end
+if ~isfield(cfg, 'keepcsd')           cfg.keepcsd     = 'no';     end
+if ~isfield(cfg, 'keepmom')           cfg.keepmom     = 'yes';    end
+if ~isfield(cfg, 'projectnoise')      cfg.projectnoise = 'no';    end
+if ~isfield(cfg, 'trialweight')       cfg.trialweight = 'equal';  end
+if ~isfield(cfg, 'jackknife'),        cfg.jackknife    = 'no';    end
+if ~isfield(cfg, 'pseudovalue'),      cfg.pseudovalue = 'no';     end
+if ~isfield(cfg, 'bootstrap'),        cfg.bootstrap   = 'no';     end
+if ~isfield(cfg, 'singletrial'),      cfg.singletrial = 'no';     end
+if ~isfield(cfg, 'rawtrial'),         cfg.rawtrial    = 'no';     end
+if ~isfield(cfg, 'randomization'),    cfg.randomization = 'no';   end
+if ~isfield(cfg, 'numrandomization'), cfg.numrandomization = 100; end
+if ~isfield(cfg, 'permutation'),      cfg.permutation = 'no';     end
+if ~isfield(cfg, 'numpermutation'),   cfg.numpermutation = 100;   end
+if ~isfield(cfg, 'wakewulf'),         cfg.wakewulf    = 'yes';    end
+if ~isfield(cfg, 'killwulf'),         cfg.killwulf    = 'yes';    end
+if ~isfield(cfg, 'feedback'),         cfg.feedback    = 'text';   end
+if ~isfield(cfg, 'supdip'),           cfg.supdip = [];            end
+if ~isfield(cfg, 'lambda'),           cfg.lambda = [];            end
+if ~isfield(cfg, 'powmethod'),        cfg.powmethod = [];         end
+if ~isfield(cfg, 'channel'),          cfg.channel = 'all';        end
+if ~isfield(cfg, 'normalize'),        cfg.normalize = 'no';       end
+if ~isfield(cfg, 'prewhiten'),        cfg.prewhiten = 'no';       end
+if ~isfield(cfg, 'inputfile'),        cfg.inputfile = [];         end
+if ~isfield(cfg, 'outputfile'),       cfg.outputfile = [];        end
+% if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';      end  % the default for this depends on EEG/MEG and is set below
+
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
 % check if the input data is valid for this function
 data = checkdata(data, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
 if nargin>2
@@ -223,36 +269,6 @@ elseif isfield(data, 'time')
 else
   error('input data is not recognized');
 end
-
-% set the defaults
-if ~isfield(cfg, 'method') && istimelock, cfg.method = 'lcmv';      end
-if ~isfield(cfg, 'method') && isfreq,     cfg.method = 'dics';      end
-if ~isfield(cfg, 'keeptrials')        cfg.keeptrials  = 'no';     end
-if ~isfield(cfg, 'keepfilter')        cfg.keepfilter = 'no';      end
-if ~isfield(cfg, 'keepleadfield')     cfg.keepleadfield = 'no';   end
-if ~isfield(cfg, 'keepcsd')           cfg.keepcsd     = 'no';     end
-if ~isfield(cfg, 'keepmom')           cfg.keepmom     = 'yes';    end
-if ~isfield(cfg, 'projectnoise')      cfg.projectnoise = 'no';    end
-if ~isfield(cfg, 'trialweight')       cfg.trialweight = 'equal';  end
-if ~isfield(cfg, 'jackknife'),        cfg.jackknife    = 'no';    end
-if ~isfield(cfg, 'pseudovalue'),      cfg.pseudovalue = 'no';     end
-if ~isfield(cfg, 'bootstrap'),        cfg.bootstrap   = 'no';     end
-if ~isfield(cfg, 'singletrial'),      cfg.singletrial = 'no';     end
-if ~isfield(cfg, 'rawtrial'),         cfg.rawtrial    = 'no';     end
-if ~isfield(cfg, 'randomization'),    cfg.randomization = 'no';   end
-if ~isfield(cfg, 'numrandomization'), cfg.numrandomization = 100; end
-if ~isfield(cfg, 'permutation'),      cfg.permutation = 'no';     end
-if ~isfield(cfg, 'numpermutation'),   cfg.numpermutation = 100;   end
-if ~isfield(cfg, 'wakewulf'),         cfg.wakewulf    = 'yes';    end
-if ~isfield(cfg, 'killwulf'),         cfg.killwulf    = 'yes';    end
-if ~isfield(cfg, 'feedback'),         cfg.feedback    = 'text';   end
-if ~isfield(cfg, 'supdip'),           cfg.supdip = [];            end
-if ~isfield(cfg, 'lambda'),           cfg.lambda = [];            end
-if ~isfield(cfg, 'powmethod'),        cfg.powmethod = [];         end
-if ~isfield(cfg, 'channel'),          cfg.channel = 'all';        end
-if ~isfield(cfg, 'normalize'),        cfg.normalize = 'no';       end
-if ~isfield(cfg, 'prewhiten'),        cfg.prewhiten = 'no';       end
-% if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';      end  % the default for this depends on EEG/MEG and is set below
 
 % put the low-level options pertaining to the source reconstruction method in their own field
 % put the low-level options pertaining to the dipole grid in their own field

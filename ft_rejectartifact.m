@@ -42,6 +42,9 @@ function [cfg] = ft_rejectartifact(cfg,data)
 % cfg.trl
 % cfg.trlold
 % cfg.version
+% cfg.inputfile
+% cfg.outputfile
+%
 % These old configuration options are still supported
 % cfg.rejectmuscle      = 'no' or 'yes'
 % cfg.rejecteog         = 'no' or 'yes'
@@ -94,6 +97,8 @@ if ~isfield(cfg.artfctdef,'type'),          cfg.artfctdef.type   = {};         e
 if ~isfield(cfg.artfctdef,'reject'),        cfg.artfctdef.reject = 'complete'; end
 if ~isfield(cfg.artfctdef,'minaccepttim'),  cfg.artfctdef.minaccepttim = 0.1;  end
 if ~isfield(cfg.artfctdef,'feedback'),      cfg.artfctdef.feedback = 'no';     end
+if ~isfield(cfg, 'inputfile'),              cfg.inputfile        = [];         end
+if ~isfield(cfg, 'outputfile'),             cfg.outputfile       = [];         end
 
 % convert from old-style to new-style configuration
 if isfield(cfg,'reject')
@@ -168,7 +173,18 @@ if isfield(cfg, 'rejectfile')
   end
 end
 
-if nargin>1
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+if hasdata
   trl = findcfg(data.cfg, 'trl');
 elseif isfield(cfg, 'trl')
   trl = cfg.trl;
@@ -373,6 +389,8 @@ else
   fprintf('not rejecting any data, only marking the artifacts\n');
 end
 
+cfg.outputfile;
+
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
 
@@ -398,17 +416,44 @@ cfg.version.id = '$Id$';
 % cfg.previous = cfgtmp;
 
 % apply the updated trial definition on the data
-if nargin>1
-    if isempty(cfg.trl)
-        error('No trials left after artifact rejection.')
-    else
-        tmpcfg     = [];
+
+if hasdata
+    tmpcfg     = [];
         tmpcfg.trl = cfg.trl;
         data       = ft_redefinetrial(tmpcfg,data);
         % remember the configuration details, this overwrites the stored configuration of redefinetrial
         data.cfg = cfg;
         % return the data instead of the cfg
         cfg = data;
+else
+    if isempty(cfg.trl)
+        error('No trials left after artifact rejection.')
     end
 end
 
+% if nargin>1
+%     if isempty(cfg.trl)
+%         error('No trials left after artifact rejection.')
+%     else
+%         tmpcfg     = [];
+%         tmpcfg.trl = cfg.trl;
+%         data       = ft_redefinetrial(tmpcfg,data);
+%         % remember the configuration details, this overwrites the stored configuration of redefinetrial
+%         data.cfg = cfg;
+%         % return the data instead of the cfg
+%         cfg = data;
+%     end
+% end
+
+if hasdata && isfield(data, 'cfg')
+  % remember the configuration details of the input data
+  cfg.previous = data.cfg;
+end
+
+% remember the exact configuration details in the output
+data.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', data); % use the variable name "data" in the output file
+end
