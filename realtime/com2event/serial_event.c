@@ -379,7 +379,7 @@ int main(int argc, char **argv) {
 	reqdef.bufsize = bufsize;
 	reqdef.command = PUT_EVT;
 	request.def = &reqdef;
-	request.buf = &evdef;
+	request.buf = evdef;
 	
 	evdef->offset = conf.offset;
 	evdef->duration = conf.duration;
