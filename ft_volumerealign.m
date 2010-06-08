@@ -38,6 +38,10 @@ function [mri] = ft_volumerealign(cfg, mri);
 %
 %
 % See also READ_MRI, FT_ELECTRODEREALIGN
+% 
+% Undocumented local options:
+% cfg.inputfile
+% cfg.outputfile
 
 % Copyright (C) 2006-2009, Robert Oostenveld
 %
@@ -64,13 +68,26 @@ fieldtripdefs
 cfg = checkconfig(cfg, 'renamedval', {'method', 'realignfiducial', 'fiducial'});
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
-% check if the input data is valid for this function
-mri = checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
-
 % set the defaults
 if ~isfield(cfg, 'fiducial'),  cfg.fiducial = [];         end
 if ~isfield(cfg, 'parameter'), cfg.parameter = 'anatomy'; end
 if ~isfield(cfg, 'clim'),      cfg.clim      = [];        end
+if ~isfield(cfg, 'inputfile'),          cfg.inputfile = [];                      end
+if ~isfield(cfg, 'outputfile'),         cfg.outputfile = [];                     end
+
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    mri = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+% check if the input data is valid for this function
+mri = checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
 
 if ~isfield(cfg, 'method')
   if ~isempty(cfg.fiducial)
@@ -200,6 +217,10 @@ realign = headcoordinates(nas_head, lpa_head, rpa_head);
 % combine the additional transformation with the original one
 mri.transform = realign * mri.transform;
 
+% accessing this field here is needed for the configuration tracking
+% by accessing it once, it will not be removed from the output cfg
+cfg.outputfile;
+
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
@@ -216,6 +237,11 @@ cfg.version.id = '$Id$';
 
 % remember the configuration
 mri.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', mri); % use the variable name "data" in the output file
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function to show three orthogonal slices
