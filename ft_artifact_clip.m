@@ -22,6 +22,10 @@ function [cfg, artifact] = ft_artifact_clip(cfg,data)
 %   
 % See also FT_REJECTARTIFACT
 
+% Undocumented local options:
+% cfg.inputfile
+% cfg.outputfile
+
 % Copyright (C) 2005, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -58,6 +62,8 @@ if ~isfield(cfg.artfctdef.clip,'pretim'),   cfg.artfctdef.clip.pretim   = 0.000;
 if ~isfield(cfg.artfctdef.clip,'psttim'),   cfg.artfctdef.clip.psttim   = 0.000;           end;
 if ~isfield(cfg, 'headerformat'),           cfg.headerformat            = [];              end;
 if ~isfield(cfg, 'dataformat'),             cfg.dataformat              = [];              end;
+if ~isfield(cfg, 'inputfile'),              cfg.inputfile               = [];              end;
+if ~isfield(cfg, 'outputfile'),             cfg.outputfile              = [];              end;
 
 % for backward compatibility
 if isfield(cfg.artfctdef.clip,'sgn')
@@ -66,18 +72,30 @@ if isfield(cfg.artfctdef.clip,'sgn')
 end
 
 % start with an empty artifact list
-artifact = [];
+    artifact = [];
 
+
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+if hasdata
 % read the header
-if nargin == 1
-  isfetch = 0;
+% isfetch = 1;
+  cfg = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
+  hdr = fetch_header(data);
+else
+%   isfetch = 0;
   cfg = checkconfig(cfg, 'dataset2files', {'yes'});
   cfg = checkconfig(cfg, 'required', {'headerfile', 'datafile'});
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
-elseif nargin == 2
-  isfetch = 1;
-  cfg = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
-  hdr = fetch_header(data);
 end
 
 % set default cfg.continuous
@@ -101,7 +119,7 @@ nsgn = length(sgnindx);
 for trlop=1:ntrl
   fprintf('searching for clipping artifacts in trial %d\n', trlop);
   % read the data of this trial
-  if isfetch
+  if hasdata 
     dat = fetch_data(data,        'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', sgnindx);
   else
     dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', sgnindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
@@ -148,6 +166,8 @@ cfg.artfctdef.clip          = artfctdef;
 cfg.artfctdef.clip.label    = label;
 cfg.artfctdef.clip.trl      = cfg.trl;
 cfg.artfctdef.clip.artifact = artifact;
+     
+cfg.outputfile;
 
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
@@ -162,3 +182,16 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id = '$Id$';
+
+if hasdata && isfield(data, 'cfg')
+  % remember the configuration details of the input data
+  cfg.previous = data.cfg;
+end
+
+% remember the exact configuration details in the output
+data.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', data); % use the variable name "data" in the output file
+end

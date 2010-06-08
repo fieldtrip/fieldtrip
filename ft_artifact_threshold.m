@@ -33,7 +33,11 @@ function [cfg, artifact] = ft_artifact_threshold(cfg,data)
 % function does not support artifact- or filterpadding.
 %
 % See also FT_REJECTARTIFACT
-
+%
+% Undocumented local options:
+% cfg.inputfile
+% cfg.outputfile
+%
 % Copyright (c) 2003, Robert Oostenveld, SMI, FCDC
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -66,6 +70,8 @@ if ~isfield(cfg, 'artfctdef'),          cfg.artfctdef            = [];  end
 if ~isfield(cfg.artfctdef,'threshold'), cfg.artfctdef.threshold  = [];  end
 if ~isfield(cfg, 'headerformat'),       cfg.headerformat         = [];  end
 if ~isfield(cfg, 'dataformat'),         cfg.dataformat           = [];  end
+if ~isfield(cfg, 'inputfile'),          cfg.inputfile            = [];  end
+if ~isfield(cfg, 'outputfile'),         cfg.outputfile           = [];  end
 
 % copy the specific configuration for this function out of the master cfg
 artfctdef = cfg.artfctdef.threshold;
@@ -92,16 +98,29 @@ if ~isfield(artfctdef, 'min'),      artfctdef.min =  -inf;           end
 if ~isfield(artfctdef, 'max'),      artfctdef.max =   inf;           end
 
 % read the header
-if nargin == 1
-  isfetch = 0;
+% depending on whether the inputfile is provided or not
+
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+if hasdata 
+    %   isfetch = 1; 
+  cfg = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
+  hdr = fetch_header(data);
+else
+    %   isfetch = 0;
   cfg = checkconfig(cfg, 'dataset2files', {'yes'});
   cfg = checkconfig(cfg, 'required', {'headerfile', 'datafile'});
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
-elseif nargin == 2
-  isfetch = 1;
-  cfg = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
-  hdr = fetch_header(data);
-end
+end 
 
 % set default cfg.continuous
 if ~isfield(cfg, 'continuous')
@@ -119,7 +138,7 @@ channelindx = match_str(hdr.label,channel);
 artifact    = [];
 
 for trlop = 1:numtrl
-  if isfetch
+  if hasdata
     dat = fetch_data(data,        'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
   else
     dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
@@ -150,6 +169,10 @@ cfg.artfctdef.threshold.trl      = cfg.trl;         % trialdefinition prior to r
 cfg.artfctdef.threshold.channel  = channel;         % exact channels used for detection
 cfg.artfctdef.threshold.artifact = artifact;        % detected artifacts
 
+% accessing this field here is needed for the configuration tracking
+% by accessing it once, it will not be removed from the output cfg
+cfg.outputfile;
+
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
 
@@ -163,3 +186,16 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id = '$Id$';
+
+if hasdata && isfield(data, 'cfg')
+  % remember the configuration details of the input data
+  cfg.previous = data.cfg;
+end
+
+% remember the exact configuration details in the output
+data.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', data); % use the variable name "data" in the output file
+end

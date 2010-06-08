@@ -1,4 +1,4 @@
-edit function [cfg, artifact] = ft_artifact_ecg(cfg, data)
+function [cfg, artifact] = ft_artifact_ecg(cfg, data)
 
 % FT_ARTIFACT_ECG performs a peak-detection on the ECG-channel. The
 % heart activity can be seen in the MEG data as an MCG artifact and
@@ -25,6 +25,8 @@ edit function [cfg, artifact] = ft_artifact_ecg(cfg, data)
 
 % Undocumented local options:
 % cfg.datatype
+% cfg.inputfile
+% cfg.outputfile
 
 % Copyright (c) 2005, Jan-Mathijs Schoffelen
 %
@@ -66,7 +68,8 @@ if ~isfield(cfg.artfctdef.ecg,'psttim'), cfg.artfctdef.ecg.psttim    = 0.3;     
 if ~isfield(cfg.artfctdef.ecg,'mindist'), cfg.artfctdef.ecg.mindist  = 0.5;           end
 if ~isfield(cfg, 'headerformat'),         cfg.headerformat           = [];            end
 if ~isfield(cfg, 'dataformat'),           cfg.dataformat             = [];            end
-
+if ~isfield(cfg, 'inputfile'),            cfg.inputfile              = [];            end;
+if ~isfield(cfg, 'outputfile'),           cfg.outputfile             = [];            end;
 % for backward compatibility
 if isfield(cfg.artfctdef.ecg,'sgn')
   cfg.artfctdef.ecg.channel = cfg.artfctdef.ecg.sgn;
@@ -77,16 +80,28 @@ if ~strcmp(cfg.artfctdef.ecg.method, 'zvalue'),
   error('this method is not applicable');
 end
 
-if nargin == 1,
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+if hasdata
+  cfg = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
+  hdr = fetch_header(data);
+  trl = findcfg(data.cfg, 'trl');
+else
   cfg = checkconfig(cfg, 'dataset2files', {'yes'});
   cfg = checkconfig(cfg, 'required', {'headerfile', 'datafile'});
   hdr = ft_read_header(cfg.headerfile,'headerformat', cfg.headerformat);
   trl = cfg.trl;
-elseif nargin == 2,
-  cfg = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
-  hdr = fetch_header(data);
-  trl = findcfg(data.cfg, 'trl');
 end
+
 artfctdef     = cfg.artfctdef.ecg;
 padsmp        = round(artfctdef.padding*hdr.Fs);
 ntrl          = size(trl,1);
@@ -113,7 +128,7 @@ if ~isfield(cfg, 'continuous')
 end
 
 % read in the ecg-channel and do blc and squaring
-if nargin==2,
+if ~hasdata
   tmpcfg = [];
   tmpcfg.channel = artfctdef.channel;
   ecgdata = ft_preprocessing(tmpcfg, data);
@@ -128,7 +143,7 @@ for j = 1:ntrl
   ecg{j} = ecg{j}.^2;
 end
 
-if nargin==2 && ~isempty(findcfg(data.cfg,'resamplefs')) && ~isempty(findcfg(data.cfg,'resampletrl')),
+if hasdata && ~isempty(findcfg(data.cfg,'resamplefs')) && ~isempty(findcfg(data.cfg,'resampletrl')),
   %the data have been resampled along the way, the trl is in the original sampling rate
   %adjust this
   warning('the data have been resampled along the way, the trl-definition is in the original sampling rate, attempt to adjust for this may introduce some timing inaccuracies');
@@ -221,16 +236,16 @@ if ~isempty(sgnind)
   ntrlok = 0;
   for j = 1:ntrl
     fprintf('reading and preprocessing trial %d of %d\n', j, ntrl);
-    if nargin==1,
-      dum = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
-      dat = dat + ft_preproc_baselinecorrect(dum);
-      ntrlok = ntrlok + 1;
-    elseif nargin==2,
-      dum = fetch_data(data, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'docheck', 0);
+    if hasdata
+        dum = fetch_data(data, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'docheck', 0);
       if any(~isfinite(dum(:))),
       else
         ntrlok = ntrlok + 1;
         dat    = dat + ft_preproc_baselinecorrect(dum);
+      else
+        dum = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
+      dat = dat + ft_preproc_baselinecorrect(dum);
+      ntrlok = ntrlok + 1;
       end
     end
   end
@@ -297,6 +312,10 @@ artifact(:,2) = trl(:,1) - trl(:,3) + round(artfctdef.psttim*hdr.Fs);
 cfg.artfctdef.ecg          = artfctdef;
 cfg.artfctdef.ecg.artifact = artifact;
 
+% accessing this field here is needed for the configuration tracking
+% by accessing it once, it will not be removed from the output cfg
+cfg.outputfile
+
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
 
@@ -310,3 +329,13 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id = '$Id$';
+
+if hasdata && isfield(data, 'cfg')
+  % remember the configuration details of the input data
+  cfg.previous = data.cfg;
+end
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', artifact); % use the variable name "data" in the output file
+end

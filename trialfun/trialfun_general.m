@@ -46,6 +46,10 @@ if isfield(cfg.trialdef, 'triallength')
   end
 end
 
+% default rejection parameter
+if ~isfield(cfg, 'headerformat'), cfg.headerformat = [];        end
+if ~isfield(cfg, 'dataformat'), cfg.dataformat = [];        end
+
 % read the header, contains the sampling frequency 
 hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
 

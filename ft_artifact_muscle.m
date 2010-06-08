@@ -42,6 +42,8 @@ function [cfg, artifact] = ft_artifact_muscle(cfg,data)
 
 % Undocumented local options:
 % cfg.method
+% cfg.inputfile
+% cfg.outputfile
 
 % Copyright (c) 2003-2006, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
@@ -74,6 +76,8 @@ cfg = checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 if ~isfield(cfg,'artfctdef'),                     cfg.artfctdef                    = [];        end
 if ~isfield(cfg.artfctdef,'muscle'),              cfg.artfctdef.muscle             = [];        end
 if ~isfield(cfg.artfctdef.muscle,'method'),       cfg.artfctdef.muscle.method      = 'zvalue';  end
+if ~isfield(cfg, 'inputfile'),                    cfg.inputfile                    = [];        end
+if ~isfield(cfg, 'outputfile'),                   cfg.outputfile                   = [];        end
 
 % for backward compatibility
 if isfield(cfg.artfctdef.muscle,'sgn')
@@ -132,20 +136,50 @@ if strcmp(cfg.artfctdef.muscle.method, 'zvalue')
   if isfield(cfg, 'dataformat'),   tmpcfg.dataformat       = cfg.dataformat;    end
   if isfield(cfg, 'headerformat'), tmpcfg.headerformat     = cfg.headerformat;  end
   % call the zvalue artifact detection function
-  if nargin ==1
-    cfg = checkconfig(cfg, 'dataset2files', {'yes'});
+  
+  
+  hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+if hasdata
+% read the header
+cfg = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
+    [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg, data);
+else
+ cfg = checkconfig(cfg, 'dataset2files', {'yes'});
     cfg = checkconfig(cfg, 'required', {'headerfile', 'datafile'});  
     tmpcfg.datafile    = cfg.datafile;
     tmpcfg.headerfile  = cfg.headerfile;
     [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg);
-  elseif nargin ==2
-    cfg = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
-    [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg, data);
-  end
+end
   cfg.artfctdef.muscle = tmpcfg.artfctdef.zvalue;
+  
 else
   error(sprintf('muscle artifact detection only works with cfg.method=''zvalue'''));
 end
 
+cfg.outputfile;
+
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+
+if hasdata && isfield(data, 'cfg')
+  % remember the configuration details of the input data
+  cfg.previous = data.cfg;
+end
+
+% remember the exact configuration details in the output
+data.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', data); % use the variable name "data" in the output file
+end
