@@ -39,6 +39,10 @@ typedef struct {
   int data[28160 + OVERALLOC];
 } ACQ_OverAllocType;
 
+/* This is used internally to store events in the same format that is being sent to the buffer.
+   The memory pointed to by 'evs' is not free'd between handling different slots, but instead 
+   reused. 'sizeAlloc' keeps track of the amount of reserved memory, whereas 'size' contains
+   the size in bytes of the actual event content. */
 typedef struct {
 	void *evs;
 	int num, size, sizeAlloc;
@@ -297,17 +301,24 @@ ACQ_MessageType waitPacket(volatile ACQ_MessageType *msgtyp) {
 	return t;
 }
 
+/** Sets 'keepRunning' to 0 in case the uses presses CTRL-C - this makes
+    the main thread leave its processing loop, after which the program
+	exits smoothly.
+*/
 void abortHandler(int sig) {
 	printf("Ctrl-C pressed -- stopping acq2ft...\n");
 	keepRunning = 0;
 }
 
+/** Background thread for grabbing setup and data packets from the internal, overallocated ringbuffer.
+    This thread stops automatically if the socket pair is closed in the main thread.
+*/
 void *dataToFieldTripThread(void *arg) {
 	ACQ_OverAllocType *pack;
 	EventChain EC;
-	headerdef_t *hdef = NULL; 	/* contains header information + chunks !!! */
 	int slot, res, i,j;
 	int numChannels = 0, numSamples;
+	int warningGiven = 0;
 	messagedef_t reqdef;
 	message_t request, *response;
 	
@@ -335,62 +346,53 @@ void *dataToFieldTripThread(void *arg) {
 		
 		if (pack->message_type == ACQ_MSGQ_SETUP_COLLECTION) {
 			UINT32_T size;
+			headerdef_t *hdef;	/* contains header information + chunks !!! */
 			
 			hdef = handleRes4((const char *) pack->data, &size);
+			/* clear internal ringbuffer slot */
+			pack->message_type = ACQ_MSGQ_INVALID;
 			
-			if (hdef != NULL) {
-				/* prepare PUT_HDR request here, but only send it along with first data block */
-				reqdef.version = VERSION;
-				reqdef.command = PUT_HDR;
-				reqdef.bufsize = size;
-				request.buf = hdef;
+			if (hdef == NULL) continue;	/* problem while picking up header -- ignore this packet */
+			
+			/* prepare PUT_HDR request here, but only send it along with first data block */
+			reqdef.version = VERSION;
+			reqdef.command = PUT_HDR;
+			reqdef.bufsize = size;
+			request.buf = hdef;
+				
+			res = clientrequest(ftSocket, &request, &response);
+				
+			if (res < 0) {
+				fprintf(stderr, "Error in FieldTrip connection\n");
+			} else if (response) {
+				if (response->def->command != PUT_OK) {
+					fprintf(stderr, "Error in PUT_HDR\n");
+				} else {
+					/* printf("FT: Transmitted header\n"); */
+					
+					/* set numChannels variable to the value we picked up
+					   this also enables transmitting data in following packets
+					*/
+					numChannels = hdef->nchans;
+					warningGiven = 0;
+				}
+				cleanup_message((void **) &response);
 			}
+			free(hdef);
 			
 		} else if (pack->message_type == ACQ_MSGQ_DATA) {
 			datadef_t *ddef; 
 			int sampleNumber;
 			
-			if (hdef != NULL) {
-				/* there is still header information to be written, but first
-					have a look at this packets channel count
-				*/
-				
-				if (pack->numChannels != hdef->nchans) {
-					printf("\nWARNING: Channel count in first data packet does not equal header information from .res4 file (%i channels)\n\n", hdef->nchans);
-				}
-				hdef->nchans = pack->numChannels;
-			
-				res = clientrequest(ftSocket, &request, &response);
-				
-				if (res < 0) {
-					fprintf(stderr, "Error in FieldTrip connection\n");
-					pack->message_type = ACQ_MSGQ_INVALID;
-					continue;
-				} else if (response) {
-					if (response->def->command != PUT_OK) {
-						fprintf(stderr, "Error in PUT_HDR\n");
-						pack->message_type = ACQ_MSGQ_INVALID;
-						continue;
-					} else {
-						/* printf("FT: Transmitted header\n"); */
-						numChannels = hdef->nchans;
-						free(hdef);
-						hdef = NULL;
-					}
-					cleanup_message((void **) &response);
-				}
-			}
-						
 			if (numChannels == 0) {
 				fprintf(stderr, "No header written yet -- ignoring data packet\n");
 				pack->message_type = ACQ_MSGQ_INVALID;
 				continue;
 			}
 			
-			if (numChannels != pack->numChannels) {
-				fprintf(stderr, "Number of channels in data packet (%i) does not match setup (%i)\n", pack->numChannels, numChannels);
-				pack->message_type = ACQ_MSGQ_INVALID;
-				continue;
+			if (!warningGiven && pack->numChannels != numChannels) {
+				printf("\nWARNING: Channel count in first data packet does not equal header information from .res4 file (%i channels)\n\n", numChannels);
+				warningGiven = 1;
 			}
 			
 			sampleNumber = pack->sampleNumber;
@@ -642,6 +644,9 @@ headerdef_t *handleRes4(const char *dsname, UINT32_T *size) {
 	return hdef;
 }
 
+/** Add one event to the chain, increases 'size' and 'num' fields of EC if successful.
+	If memory can not be allocated, the event is dropped and an error message is printed.
+*/
 void addTriggerEvent(EventChain *EC, int trigChan, UINT32_T sample, int value) {
 	eventdef_t *ne;
 	char *ntype;
