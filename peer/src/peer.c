@@ -339,6 +339,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mexPrintf("  host.memavail = %u\n", peer->host->memavail);
 						mexPrintf("  host.cpuavail = %u\n", peer->host->cpuavail);
 						mexPrintf("  host.timavail = %u\n", peer->host->timavail);
+						mexPrintf("  ipaddr        = %s\n", peer->ipaddr);
 						mexPrintf("  time          = %s",   ctime(&(peer->time)));
 						peer = peer->next ;       
 						i++;
@@ -666,7 +667,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				}
 
 				/* open the TCP socket */
-				if ((server = open_connection(peer->host->name, peer->host->port)) < 0) {
+				if ((server = open_connection(peer->ipaddr, peer->host->port)) < 0) {
 						pthread_mutex_unlock(&mutexpeerlist);
 						mexErrMsgTxt("failed to create socket\n");
 				}

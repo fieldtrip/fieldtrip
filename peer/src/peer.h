@@ -152,30 +152,31 @@ typedef struct joblist_s {
 typedef struct peerlist_s {
 		hostdef_t *host;
 		time_t time;        /* time in seconds since January 1, 1970, Coordinated Universal Time */
+		char ipaddr[INET_ADDRSTRLEN];
 		struct peerlist_s *next;
 } peerlist_t;
 
 typedef struct fairsharelist_s {
 		UINT32_T timreq; 
-        struct fairsharelist_s *next;
+		struct fairsharelist_s *next;
 } fairsharelist_t;
 
 /* this is for restricting the access to a peer to one user or a list of users */
 typedef struct userlist_s {
-  char *name;
-  struct userlist_s *next;
+		char *name;
+		struct userlist_s *next;
 } userlist_t;
 
 /* this is for restricting the access to a peer to one group or a list of groups */
 typedef struct grouplist_s {
-  char *name;
-  struct grouplist_s *next;
+		char *name;
+		struct grouplist_s *next;
 } grouplist_t;
 
 /* this is for restricting the access to a peer to one host or a list of hosts */
 typedef struct hostlist_s {
-  char *name;
-  struct hostlist_s *next;
+		char *name;
+		struct hostlist_s *next;
 } hostlist_t;
 
 typedef struct {
@@ -200,26 +201,27 @@ void  peerexit (void *);
 int   announce_once(void);
 
 /* functions from fairshare.c */
-void  fairshare_reset   (void);
-int   fairshare_check   (float timreq, int hostid);
-void  fairshare_history (jobdef_t *job);
+void fairshare_reset   (void);
+int  fairshare_check   (float timreq, int hostid);
+void fairshare_history (jobdef_t *job);
 
 /* functions from security.c */
-int  security_check(hostdef_t *host);
+int security_check(hostdef_t *host);
 int ismember_userlist(char *);
 int ismember_grouplist(char *);
 int ismember_hostlist(char *);
 
 /* functions from util.c */
-int bufread(int s, void *buf, int numel);
-int bufwrite(int s, void *buf, int numel);
-int append(void **buf1, int bufsize1, void *buf2, int bufsize2);
-int close_connection(int s);
-int open_connection(const char *hostname, int port);
+int  append(void **buf1, int bufsize1, void *buf2, int bufsize2);
+int  bufread(int s, void *buf, int numel);
+int  bufwrite(int s, void *buf, int numel);
+int  open_connection(const char *hostname, int port);
+int  close_connection(int s);
 void check_datatypes(void);
-int jobcount(void);
-int peercount(void);
-int hoststatus(void);
+int  jobcount(void);
+int  peercount(void);
+int  hoststatus(void);
+int  localhost(const char *ipaddr);
 
 #ifdef __cplusplus
 }

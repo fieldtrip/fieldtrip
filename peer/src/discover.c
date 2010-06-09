@@ -224,6 +224,11 @@ void *discover(void *arg) {
 				memcpy(peer->host, discovery, sizeof(hostdef_t));
 				FREE(discovery);
 
+				/* the UDP packet specifies the IP address of the sender */
+				inet_ntop(AF_INET, &addr.sin_addr, peer->ipaddr, INET_ADDRSTRLEN);
+				/* if possible use the loopback IP address instead of external IP address */
+				if (localhost(peer->ipaddr)==1)
+					strncpy(peer->ipaddr, "127.0.0.1", INET_ADDRSTRLEN);
 				peer->time      = time(NULL);
 				peer->next      = peerlist;
 				peerlist        = peer;

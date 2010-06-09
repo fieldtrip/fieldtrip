@@ -20,7 +20,7 @@ TEST = test_announce test_discover test_send test_recv
 
 all: $(TEST)
 
-libpeer.a: tcpserver.o tcpsocket.o discover.o announce.o expire.o util.o extern.o peerinit.o fairshare.o security.o
+libpeer.a: tcpserver.o tcpsocket.o discover.o announce.o expire.o util.o extern.o peerinit.o fairshare.o security.o localhost.o
 	ar rv $@ $^
 
 peer: peer.o libpeer.a

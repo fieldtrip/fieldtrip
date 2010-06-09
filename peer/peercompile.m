@@ -51,7 +51,7 @@ switch action
             % create object files
             cfiles = {'announce.c' 'discover.c' 'expire.c' 'extern.c' ...
                 'fairshare.c' 'peerinit.c' 'util.c' 'tcpserver.c' 'tcpsocket.c' ...
-                'security.c'};
+                'security.c' 'localhost.c'};
             ofiles = cell(1,numel(cfiles));
             for i=1:numel(cfiles)
                 mex(includes,'-c',cfiles{i});
