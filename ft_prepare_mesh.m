@@ -17,8 +17,12 @@ function bnd = ft_prepare_mesh(cfg, mri)
 %   cfg.headshape     = a filename containing headshape, a Nx3 matrix with surface
 %                       points, or a structure with a single or multiple boundaries
 %
+% Undocumented local options:
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
+%
 % Example use:
-%   mri = read_mri('Subject01.mri');
+%   mri            = ft_read_mri('Subject01.mri');
 %   cfg            = [];
 %   cfg.method     = 'manual';
 %   cfg.downsample = 2;
@@ -50,28 +54,44 @@ cfg = checkconfig(cfg, 'forbidden', 'numcompartments');
 if ~isfield(cfg, 'downsample'),      cfg.downsample = 1;         end
 if ~isfield(cfg, 'tissue'),          cfg.tissue = [];            end
 if ~isfield(cfg, 'numvertices'),     cfg.numvertices = [];       end
+if ~isfield(cfg, 'inputfile'),       cfg.inputfile = [];         end
+if ~isfield(cfg, 'outputfile'),      cfg.outputfile = [];        end
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested cmethodonfig-object back into a normal structure
   cfg.headshape = struct(cfg.headshape);
 end
 
-% there are three types of input possible
-if nargin>1 && (~isfield(cfg,'headshape') || isempty(cfg.headshape))
-  basedonseg        = isfield(mri, 'transform') && any(isfield(mri, {'seg', 'csf', 'white', 'gray'}));
-  basedonmri        = isfield(mri, 'transform') && ~basedonseg;
-  basedonvol        = isfield(mri, 'bnd');
-  basedonsphere     = isfield(mri,'r') && isfield(mri,'o');
-  basedonheadshape  = 0;
+% load optional given inputfile like already segmented volume 
+hasdata = (nargin>1);
+
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    mri = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+if hasdata
   
-elseif nargin==1 && isfield(cfg,'headshape') && ~isempty(cfg.headshape)
-  basedonseg        = 0;
-  basedonmri        = 0;
-  basedonvol        = 0;
-  basedonsphere     = 0;
-  basedonheadshape  = 1; 
-else
-  error('inconsistent configuration, cfg.headshape should not be used in combination with an mri input')
+  if ~isfield(cfg,'headshape') || isempty(cfg.headshape)
+    basedonseg        = isfield(mri, 'transform') && any(isfield(mri, {'seg', 'csf', 'white', 'gray'}));
+    basedonmri        = isfield(mri, 'transform') && ~basedonseg;
+    basedonvol        = isfield(mri, 'bnd');
+    basedonsphere     = isfield(mri,'r') && isfield(mri,'o');
+    basedonheadshape  = 0;
+  elseif isfield(cfg,'headshape') && ~isempty(cfg.headshape)
+    basedonseg        = 0;
+    basedonmri        = 0;
+    basedonvol        = 0;
+    basedonsphere     = 0;
+    basedonheadshape  = 1;
+  else
+    error('inconsistent configuration, cfg.headshape should not be used in combination with an mri input')
+  end
 end
 
 if basedonseg || basedonmri
@@ -141,3 +161,7 @@ for i=1:length(bnd)
   bnd(i).tri = double(bnd(i).tri);
 end
 
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', bnd); % use the variable name "data" in the output file
+end

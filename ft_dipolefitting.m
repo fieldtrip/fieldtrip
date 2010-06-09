@@ -92,7 +92,9 @@ function [source] = ft_dipolefitting(cfg, data)
 % dip.dimord
 
 % Undocumented local options:
-% cfg.dipfit.constr   = Source model constraints, depends on cfg.symmetry
+%   cfg.dipfit.constr   = Source model constraints, depends on cfg.symmetry
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
 %
 % This function depends on FT_PREPARE_DIPOLE_GRID which has the following options:
 % cfg.grid.xgrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.xgrid = 'auto'), documented
@@ -143,9 +145,6 @@ function [source] = ft_dipolefitting(cfg, data)
 fieldtripdefs
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
-% check if the input data is valid for this function
-data = checkdata(data, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
-
 % set the defaults
 if ~isfield(cfg, 'channel'),     cfg.channel = 'all';        end
 if ~isfield(cfg, 'component'),   cfg.component = [];         end  % for comp input
@@ -155,6 +154,23 @@ if ~isfield(cfg, 'feedback'),    cfg.feedback = 'text';      end
 if ~isfield(cfg, 'gridsearch'),  cfg.gridsearch = 'yes';     end
 if ~isfield(cfg, 'nonlinear'),   cfg.nonlinear = 'yes';      end
 if ~isfield(cfg, 'symmetry'),    cfg.symmetry = [];          end
+if ~isfield(cfg, 'inputfile'),   cfg.inputfile = [];         end
+if ~isfield(cfg, 'outputfile'),  cfg.outputfile = [];        end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+% check if the input data is valid for this function
+data = checkdata(data, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
 
 % put the low-level options pertaining to the dipole grid (used for initial scanning) in their own field
 cfg = checkconfig(cfg, 'createsubcfg',  {'grid'});
@@ -306,7 +322,7 @@ if strcmp(cfg.gridsearch, 'yes')
   else
     error('dipole scanning is only possible for a single dipole or a symmetric dipole pair');
   end
-
+  
   % construct the grid on which the scanning will be done
   [grid, cfg] = prepare_dipole_grid(cfg, vol, sens);
   progress('init', cfg.feedback, 'scanning grid');
@@ -334,7 +350,7 @@ if strcmp(cfg.gridsearch, 'yes')
     end % switch model
   end % looping over the grid
   progress('close');
-
+  
   switch cfg.model
     case 'regional'
       % find the grid point(s) with the minimum error
@@ -458,7 +474,7 @@ if strcmp(cfg.nonlinear, 'no')
       success = ones(1,ntime);
     otherwise
       error('unsupported cfg.model');
-
+      
   end % switch model
 end
 
@@ -553,8 +569,16 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id = '$Id$';
-% remember the configuration details of the input data
-try, cfg.previous = data.cfg; end
+
+if hasdata && isfield(data, 'cfg')
+  % remember the configuration details of the input data
+  cfg.previous = data.cfg;
+end
 % remember the exact configuration details in the output
 source.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', source); % use the variable name "data" in the output file
+end
 

@@ -5,12 +5,17 @@ function [data] = ft_denoise_synthetic(cfg, data);
 %
 % Use as
 %   [data] = ft_denoise_synthetic(cfg, data);
+%
 % where data should come from FT_PREPROCESSING and the configuration should contain
 %   cfg.gradient = 'none', 'G1BR', 'G2BR' or 'G3BR' specifies the gradiometer
 %                  type to which the data should be changed
 %   cfg.trials   = 'all' or a selection given as a 1xN vector (default = 'all')
 %
 % See also FT_PREPROCESSING, FT_DENOISE_SNS, FT_DENOISE_TSR, DENOISE_PCA
+%
+% Undocumented local options:
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
 
 % Copyright (C) 2004-2008, Robert Oostenveld
 %
@@ -34,20 +39,34 @@ function [data] = ft_denoise_synthetic(cfg, data);
 
 fieldtripdefs
 
+% set the defaults
+if ~isfield(cfg, 'gradient'),   error('cfg.gradient must be specified'); end
+if ~isfield(cfg, 'trials'),     cfg.trials                      = 'all'; end
+if ~isfield(cfg, 'inputfile'),  cfg.inputfile                   = [];    end
+if ~isfield(cfg, 'outputfile'), cfg.outputfile                  = [];    end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
 data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 if ~ft_senstype(data, 'ctf')
   error('synthetic gradients can only be computed for CTF data');
 end
 
-% set the defaults
-if ~isfield(cfg, 'gradient'), error('cfg.gradient must be specified'); end
-if ~isfield(cfg, 'trials'), cfg.trials = 'all'; end
-
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
-  data = selectdata(data, 'rpt', cfg.trials);  
+  data = selectdata(data, 'rpt', cfg.trials);
   if isfield(data, 'cfg') % try to locate the trl in the nested configuration
     cfg.trlold = findcfg(data.cfg, 'trlold');
     cfg.trl    = findcfg(data.cfg, 'trl');
@@ -108,8 +127,15 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id = '$Id$';
-% remember the configuration details of the input data
-try, cfg.previous = data.cfg; end
+
+if hasdata && isfield(data, 'cfg')
+  % remember the configuration details of the input data
+  cfg.previous = data.cfg;
+end
 % remember the exact configuration details in the output
 data.cfg = cfg;
 
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', data); % use the variable name "data" in the output file
+end

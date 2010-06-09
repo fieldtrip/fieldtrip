@@ -50,7 +50,11 @@ function [mvardata] = ft_mvaranalysis(cfg, data)
 %   cfg.toi       = [t1 t2 ... tx] the time points at which the windows are 
 %                    centered 
 
-% Undocumented local options: cfg.keeptapers, cfg.taper
+% Undocumented local options: 
+%   cfg.keeptapers
+%   cfg.taper
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk   
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 %
@@ -72,6 +76,7 @@ function [mvardata] = ft_mvaranalysis(cfg, data)
 %
 % $Id$
 
+% set default configurations
 if ~isfield(cfg, 'toolbox'),    cfg.toolbox    = 'biosig';       end
 if ~isfield(cfg, 'mvarmethod'), cfg.mvarmethod = 2;              end
 if ~isfield(cfg, 'order'),      cfg.order      = 10;             end
@@ -85,6 +90,8 @@ if ~isfield(cfg, 'toi'),        cfg.toi        = [];             end
 if ~isfield(cfg, 't_ftimwin'),  cfg.t_ftimwin  = [];             end
 if ~isfield(cfg, 'keeptapers'), cfg.keeptapers = 'yes';          end
 if ~isfield(cfg, 'taper'),      cfg.taper      = 'rectwin';      end
+if ~isfield(cfg, 'inputfile'),  cfg.inputfile  = [];             end
+if ~isfield(cfg, 'outputfile'), cfg.outputfile = [];             end
 
 %check whether the requested toolbox is present
 switch cfg.toolbox
@@ -96,6 +103,18 @@ switch cfg.toolbox
     nnans  = 0;
   otherwise
     error('toolbox %s is not yet supported', cfg.toolbox);
+end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
 end
 
 %check the input-data
@@ -316,10 +335,19 @@ mvardata.coeffs   = coeffs;
 mvardata.noisecov = noisecov;
 mvardata.dof      = dof;
 
-try,
+cfg.outputfile;
+
+if hasdata && isfield(data, 'cfg')
+  % remember the configuration details of the input data
   cfg.previous = data.cfg;
 end
+
 mvardata.cfg     = cfg; 
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', mvardata); % use the variable name "data" in the output file
+end
 
 %----------------------------------------------------
 %subfunction to concatenate data with nans in between
