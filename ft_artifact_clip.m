@@ -23,8 +23,7 @@ function [cfg, artifact] = ft_artifact_clip(cfg,data)
 % See also FT_REJECTARTIFACT
 
 % Undocumented local options:
-% cfg.inputfile
-% cfg.outputfile
+%   cfg.inputfile        = one can specifiy preanalysed saved data as input
 
 % Copyright (C) 2005, Robert Oostenveld
 %
@@ -63,7 +62,6 @@ if ~isfield(cfg.artfctdef.clip,'psttim'),   cfg.artfctdef.clip.psttim   = 0.000;
 if ~isfield(cfg, 'headerformat'),           cfg.headerformat            = [];              end;
 if ~isfield(cfg, 'dataformat'),             cfg.dataformat              = [];              end;
 if ~isfield(cfg, 'inputfile'),              cfg.inputfile               = [];              end;
-if ~isfield(cfg, 'outputfile'),             cfg.outputfile              = [];              end;
 
 % for backward compatibility
 if isfield(cfg.artfctdef.clip,'sgn')
@@ -73,7 +71,6 @@ end
 
 % start with an empty artifact list
 artifact = [];
-
 
 hasdata = (nargin>1);
 if ~isempty(cfg.inputfile)
@@ -167,8 +164,6 @@ cfg.artfctdef.clip.label    = label;
 cfg.artfctdef.clip.trl      = cfg.trl;
 cfg.artfctdef.clip.artifact = artifact;
 
-cfg.outputfile;
-
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
@@ -183,15 +178,3 @@ catch
 end
 cfg.version.id = '$Id$';
 
-if hasdata && isfield(data, 'cfg')
-  % remember the configuration details of the input data
-  cfg.previous = data.cfg;
-end
-
-% remember the exact configuration details in the output
-data.cfg = cfg;
-
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'data', data); % use the variable name "data" in the output file
-end

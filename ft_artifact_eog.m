@@ -5,11 +5,11 @@ function [cfg, artifact] = ft_artifact_eog(cfg,data)
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_eog(cfg)
-%   required configuration options: 
+%   required configuration options:
 %   cfg.dataset or both cfg.headerfile and cfg.datafile
 % or
 %   [cfg, artifact] = ft_artifact_eog(cfg, data)
-%   forbidden configuration options: 
+%   forbidden configuration options:
 %   cfg.dataset, cfg.headerfile and cfg.datafile
 %
 % In both cases the configuration should also contain:
@@ -42,7 +42,6 @@ function [cfg, artifact] = ft_artifact_eog(cfg,data)
 % Undocumented local options
 % cfg.method
 % cfg.inputfile
-% cfg.outputfile
 
 % Copyright (c) 2003-2006, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
@@ -75,8 +74,7 @@ cfg = checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 if ~isfield(cfg,'artfctdef'),                  cfg.artfctdef                 = [];       end
 if ~isfield(cfg.artfctdef,'eog'),              cfg.artfctdef.eog             = [];       end
 if ~isfield(cfg.artfctdef.eog,'method'),       cfg.artfctdef.eog.method      = 'zvalue'; end
-if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];           end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end
+if ~isfield(cfg, 'inputfile'),                 cfg.inputfile                 = [];       end
 
 % for backward compatibility
 if isfield(cfg.artfctdef.eog,'sgn')
@@ -135,22 +133,22 @@ if strcmp(cfg.artfctdef.eog.method, 'zvalue')
   % call the zvalue artifact detection function
   
   hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-    hasdata = true;
+  if ~isempty(cfg.inputfile)
+    % the input data should be read from file
+    if hasdata
+      error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+    else
+      data = loadvar(cfg.inputfile, 'data');
+      hasdata = true;
+    end
   end
-end
   
-if hasdata
-   cfg = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
-    [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg, data); 
-else
+  if hasdata
+    cfg = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
+    [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg, data);
+  else
     cfg = checkconfig(cfg, 'dataset2files', {'yes'});
-    cfg = checkconfig(cfg, 'required', {'headerfile', 'datafile'});  
+    cfg = checkconfig(cfg, 'required', {'headerfile', 'datafile'});
     tmpcfg.datafile    = cfg.datafile;
     tmpcfg.headerfile  = cfg.headerfile;
     [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg);
@@ -160,20 +158,5 @@ else
   error(sprintf('EOG artifact detection only works with cfg.method=''zvalue'''));
 end
 
-cfg.outputfile;
-
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-if hasdata && isfield(data, 'cfg')
-  % remember the configuration details of the input data
-  cfg.previous = data.cfg;
-end
-
-% remember the exact configuration details in the output
-data.cfg = cfg;
-
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'data', data); % use the variable name "data" in the output file
-end

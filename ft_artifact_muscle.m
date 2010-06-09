@@ -42,8 +42,7 @@ function [cfg, artifact] = ft_artifact_muscle(cfg,data)
 
 % Undocumented local options:
 % cfg.method
-% cfg.inputfile
-% cfg.outputfile
+% cfg.inputfile = one can specifiy preanalysed saved data as input
 
 % Copyright (c) 2003-2006, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
@@ -77,7 +76,6 @@ if ~isfield(cfg,'artfctdef'),                     cfg.artfctdef                 
 if ~isfield(cfg.artfctdef,'muscle'),              cfg.artfctdef.muscle             = [];        end
 if ~isfield(cfg.artfctdef.muscle,'method'),       cfg.artfctdef.muscle.method      = 'zvalue';  end
 if ~isfield(cfg, 'inputfile'),                    cfg.inputfile                    = [];        end
-if ~isfield(cfg, 'outputfile'),                   cfg.outputfile                   = [];        end
 
 % for backward compatibility
 if isfield(cfg.artfctdef.muscle,'sgn')
@@ -137,7 +135,6 @@ if strcmp(cfg.artfctdef.muscle.method, 'zvalue')
   if isfield(cfg, 'headerformat'), tmpcfg.headerformat     = cfg.headerformat;  end
   % call the zvalue artifact detection function
   
-  
   hasdata = (nargin>1);
 if ~isempty(cfg.inputfile)
   % the input data should be read from file
@@ -166,20 +163,5 @@ else
   error(sprintf('muscle artifact detection only works with cfg.method=''zvalue'''));
 end
 
-cfg.outputfile;
-
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
-
-if hasdata && isfield(data, 'cfg')
-  % remember the configuration details of the input data
-  cfg.previous = data.cfg;
-end
-
-% remember the exact configuration details in the output
-data.cfg = cfg;
-
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'data', data); % use the variable name "data" in the output file
-end

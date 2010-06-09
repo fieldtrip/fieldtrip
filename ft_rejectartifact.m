@@ -33,7 +33,7 @@ function [cfg] = ft_rejectartifact(cfg,data)
 %   If cfg is used as the only input parameter, a cfg with a new trl is the output.
 %   If cfg and data are both input parameters, a new raw data structure with only the clean data segments is the output.
 %
-% See also FT_ARTIFACT_EOG, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_JUMP, FT_ARTIFACT_MANUAL, 
+% See also FT_ARTIFACT_EOG, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_JUMP, FT_ARTIFACT_MANUAL,
 % FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG
 
 % Undocumented local options:
@@ -42,6 +42,8 @@ function [cfg] = ft_rejectartifact(cfg,data)
 % cfg.trl
 % cfg.trlold
 % cfg.version
+% cfg.inputfile = one can specifiy preanalysed saved data as input
+%
 % These old configuration options are still supported
 % cfg.rejectmuscle      = 'no' or 'yes'
 % cfg.rejecteog         = 'no' or 'yes'
@@ -94,6 +96,7 @@ if ~isfield(cfg.artfctdef,'type'),          cfg.artfctdef.type   = {};         e
 if ~isfield(cfg.artfctdef,'reject'),        cfg.artfctdef.reject = 'complete'; end
 if ~isfield(cfg.artfctdef,'minaccepttim'),  cfg.artfctdef.minaccepttim = 0.1;  end
 if ~isfield(cfg.artfctdef,'feedback'),      cfg.artfctdef.feedback = 'no';     end
+if ~isfield(cfg, 'inputfile'),              cfg.inputfile        = [];         end
 
 % convert from old-style to new-style configuration
 if isfield(cfg,'reject')
@@ -168,7 +171,18 @@ if isfield(cfg, 'rejectfile')
   end
 end
 
-if nargin>1
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+if hasdata
   trl = findcfg(data.cfg, 'trl');
 elseif isfield(cfg, 'trl')
   trl = cfg.trl;
@@ -234,9 +248,9 @@ end
 
 % make header, needed only for sampling frequency
 if nargin ==1
-    hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
 elseif nargin ==2
-    hdr = fetch_header(data);
+  hdr = fetch_header(data);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -251,7 +265,7 @@ if strcmp(cfg.artfctdef.feedback, 'yes')
   for i=1:size(trl,1)
     time{i} = offset2time(trl(i,3), hdr.Fs, trl(i,2)-trl(i,1)+1);
   end
-
+  
   figure
   title('linear display of the continuous data')
   xlabel('sample number');
@@ -273,7 +287,7 @@ if strcmp(cfg.artfctdef.feedback, 'yes')
   smpend = dum(end) + hdr.Fs;
   axis([smpbeg smpend 0 1]);
   legend({'defined trials', cfg.artfctdef.type{:}});
-
+  
   figure
   title('individual trials after alignment')
   xlabel('time (s)');
@@ -362,19 +376,19 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
       trialok = [trialok; trialnew];
     end
   end
-
+  
   fprintf('rejected  %3d trials completely\n', count_complete_reject);
   fprintf('rejected  %3d trials partially\n', count_partial_reject);
   fprintf('resulting %3d trials\n', size(trialok,1));
   cfg.trlold = trl;      % return the original trial definition in the configuration
   cfg.trl    = trialok;  % return the cleaned trial definition in the configuration
-
+  
 else
   fprintf('not rejecting any data, only marking the artifacts\n');
 end
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the artfctdef substructure
 try
@@ -398,17 +412,33 @@ cfg.version.id = '$Id$';
 % cfg.previous = cfgtmp;
 
 % apply the updated trial definition on the data
-if nargin>1
-    if isempty(cfg.trl)
-        error('No trials left after artifact rejection.')
-    else
-        tmpcfg     = [];
-        tmpcfg.trl = cfg.trl;
-        data       = ft_redefinetrial(tmpcfg,data);
-        % remember the configuration details, this overwrites the stored configuration of redefinetrial
-        data.cfg = cfg;
-        % return the data instead of the cfg
-        cfg = data;
-    end
+
+if hasdata
+  tmpcfg     = [];
+  tmpcfg.trl = cfg.trl;
+  data       = ft_redefinetrial(tmpcfg,data);
+  % remember the configuration details, this overwrites the stored configuration of redefinetrial
+  data.cfg = cfg;
+  % return the data instead of the cfg
+  cfg = data;
+else
+  if isempty(cfg.trl)
+    error('No trials left after artifact rejection.')
+  end
 end
+
+% if nargin>1
+%     if isempty(cfg.trl)
+%         error('No trials left after artifact rejection.')
+%     else
+%         tmpcfg     = [];
+%         tmpcfg.trl = cfg.trl;
+%         data       = ft_redefinetrial(tmpcfg,data);
+%         % remember the configuration details, this overwrites the stored configuration of redefinetrial
+%         data.cfg = cfg;
+%         % return the data instead of the cfg
+%         cfg = data;
+%     end
+% end
+
 
