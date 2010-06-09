@@ -229,7 +229,7 @@ try, cfg.maskparameter = cfg.maskparameter{1}; end
 
 % downsample all volumes
 tmpcfg = [];
-tmpcfg.parameter  = {cfg.funparameter, cfg.maskparameter, 'anatomy'};
+tmpcfg.parameter  = {cfg.funparameter, cfg.maskparameter, cfg.anaparameter};
 tmpcfg.downsample = cfg.downsample;
 data = ft_volumedownsample(tmpcfg, data);
 
@@ -260,23 +260,17 @@ if ~isempty(cfg.roi)
 end
 
 %%% anaparameter
-if isequal(cfg.anaparameter,'anatomy')
-  if isfield(data, 'anatomy')
-    hasana = 1;
-    % convert integers to single precision float if neccessary
-    if isa(data.anatomy, 'uint8') || isa(data.anatomy, 'uint16') || isa(data.anatomy, 'int8') || isa(data.anatomy, 'int16')
-      fprintf('converting anatomy to double\n');
-      ana = double(data.anatomy);
-    else
-      ana = data.anatomy;
-    end
-  else
-    warning('no anatomical volume present, not plotting anatomy\n')
-    hasana = 0;
-  end
-elseif isempty(cfg.anaparameter);
+if isempty(cfg.anaparameter);
   hasana = 0;
   fprintf('not plotting anatomy\n');
+elseif isfield(data, cfg.anaparameter)
+    hasana = 1;
+    ana = getsubfield(data, cfg.anaparameter);
+    % convert integers to single precision float if neccessary
+    if isa(ana, 'uint8') || isa(ana, 'uint16') || isa(ana, 'int8') || isa(ana, 'int16')
+      fprintf('converting anatomy to double\n');
+      ana = double(ana);
+    end
 else
   warning('do not understand cfg.anaparameter, not plotting anatomy\n')
   hasana = 0;
@@ -794,11 +788,11 @@ elseif isequal(cfg.method,'glassbrain')
   end
 
   if hasana,
-    ana = getsubfield(data, 'anatomy');
+    ana = getsubfield(data, cfg.anaparameter);
     %ana(1,:,:) = max(ana, [], 1);
     %ana(:,1,:) = max(ana, [], 2);
     %ana(:,:,1) = max(ana, [], 3);
-    data = setsubfield(data, 'anatomy', ana);
+    data = setsubfield(data, cfg.anaparameter, ana);
   end
 
   if hasmsk,
