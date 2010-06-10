@@ -289,7 +289,7 @@ elseif isfield(cfg, 'vol')
 end
 volcfg.grad    = data.grad;
 volcfg.channel = data.label; % this might be a subset of the MEG channels
-[volold, data.grad] = ft_prepare_headmodel(volcfg);
+[volold, data.grad] = prepare_headmodel(volcfg);
 
 % note that it is neccessary to keep the two volume conduction models
 % seperate, since the single-shell Nolte model contains gradiometer specific
@@ -297,7 +297,7 @@ volcfg.channel = data.label; % this might be a subset of the MEG channels
 % good projection for local sphere models. 
 volcfg.grad    = template.grad;
 volcfg.channel = 'MEG'; % include all MEG channels
-[volnew, template.grad] = ft_prepare_headmodel(volcfg);
+[volnew, template.grad] = prepare_headmodel(volcfg);
 
 if strcmp(ft_senstype(data.grad), ft_senstype(template.grad))
   [id, it] = match_str(data.grad.label, template.grad.label);  
@@ -350,7 +350,7 @@ for i=1:Ntrials
 
     volcfg.grad = grad;
     %compute volume conductor
-    [volold, grad] = ft_prepare_headmodel(volcfg);
+    [volold, grad] = prepare_headmodel(volcfg);
     %compute forward model
     lfold = ft_compute_leadfield(pos, grad, volold);
     %compute projection matrix
