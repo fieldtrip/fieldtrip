@@ -6,12 +6,11 @@ function [source] = ft_sourceanalysis(cfg, data, baseline);
 % Use as either
 %   [source] = ft_sourceanalysis(cfg, freq)
 %   [source] = ft_sourceanalysis(cfg, timelock)
-%   [source] = ft_sourceanalysis(cfg, comp)
 %
 % where the data in freq or timelock should be organised in a structure
-% as obtained from the FT_FREQANALYSIS, FT_TIMELOCKANALYSIS or 
-% FT_COMPONENTANALYSIS function. The configuration "cfg" is a structure 
-% containing information about source positions and other options.
+% as obtained from the FT_FREQANALYSIS or FT_TIMELOCKANALYSIS function. The
+% configuration "cfg" is a structure containing information about
+% source positions and other options.
 %
 % The different source reconstruction algorithms that are implemented
 % are
@@ -111,8 +110,6 @@ function [source] = ft_sourceanalysis(cfg, data, baseline);
 % cfg.refchannel
 % cfg.trialweight        = 'equal' or 'proportional'
 % cfg.powmethod          = 'lambda1' or 'trace'
-% cfg.inputfile
-% cfg.outputfile
 %
 % This function depends on FT_PREPARE_DIPOLE_GRID which has the following options:
 % cfg.grid.xgrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.xgrid = 'auto'), documented
@@ -194,6 +191,12 @@ tic;
 
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
+% check if the input data is valid for this function
+data = checkdata(data, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
+if nargin>2
+  baseline = checkdata(baseline, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
+end
+
 % check if the input cfg is valid for this function
 cfg = checkconfig(cfg, 'renamed',     {'jacknife',   'jackknife'});
 cfg = checkconfig(cfg, 'renamed',     {'refchannel', 'refchan'});
@@ -203,28 +206,6 @@ cfg = checkconfig(cfg, 'renamedval',  {'method', 'coh_refdip',      'dics'});
 cfg = checkconfig(cfg, 'renamedval',  {'method', 'dics_cohrefchan', 'dics'});
 cfg = checkconfig(cfg, 'renamedval',  {'method', 'dics_cohrefdip',  'dics'});
 cfg = checkconfig(cfg, 'forbidden',   {'parallel'});
-
-% set defaults for hasdata
-if ~isfield(cfg, 'inputfile'),        cfg.inputfile = [];         end
-if ~isfield(cfg, 'outputfile'),       cfg.outputfile = [];        end
-
-% load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-    hasdata = true;
-  end
-end
-
-% check if the input data is valid for this function
-data = checkdata(data, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
-if nargin==3
-  baseline = checkdata(baseline, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
-end
 
 % determine the type of input data
 if isfield(data, 'freq')
@@ -1014,7 +995,6 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id = '$Id$';
-
 % remember the configuration details of the input data
 if nargin==2
   try, cfg.previous    = data.cfg;     end
@@ -1025,11 +1005,6 @@ elseif nargin==3
 end
 % remember the exact configuration details in the output
 source.cfg = cfg;
-
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'data', source); % use the variable name "data" in the output file
-end
 
 fprintf('total time in sourceanalysis %.1f seconds\n', toc);
 
