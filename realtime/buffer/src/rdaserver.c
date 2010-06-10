@@ -157,7 +157,7 @@ rda_buffer_item_t *rda_aux_get_hdr_prep_start(int ft_buffer, headerdef_t *hdr) {
 	R->hdr.nSize = bytesTotal;
 	R->hdr.nType = RDA_START_MSG;
 	R->nChannels = hdr->nchans;
-	R->dSamplingInterval = 100000.0/(double) hdr->fsample;	/* should be in microseconds */
+	R->dSamplingInterval = 1.0e6/(double) hdr->fsample;	/* should be in microseconds */
 	
 	if (_i_am_big_endian_) {
 		/* take care of hdr.nSize, hdr.nType, nChannels */
