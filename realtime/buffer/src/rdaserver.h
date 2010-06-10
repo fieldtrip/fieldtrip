@@ -32,6 +32,16 @@ typedef int SOCKET;
 #define FT_ERR_OUT_OF_MEM   1
 #define FT_ERR_SOCKET       2
 #define FT_ERR_THREADING    3
+
+
+/** 'select' cannot handle more than 64 elements on Windows, but this
+	should really be enough for all practical purposes. Depending on
+	the sampling rate and number of channels, you would probably hit
+	other performance boundaries first. Since the server socket itself
+	also needs listening to (taking 1 away from the available 64), 
+	NEVER set the following number to more than	63!!!
+*/
+#define RDA_MAX_NUM_CLIENTS  32
  
 /** RDA server control structure for starting, inspecting, and stopping a server */
 typedef struct {
@@ -50,13 +60,12 @@ typedef struct {
 	data packets that need to be sent out */
 typedef struct rda_buffer_item {
 	void *data;						/**< Points to complete RDA packet */
-	size_t size, sizeAlloc;			/**< Size of the packet and size of allocated memory block */
+	size_t size;					/**< Size of the packet (=allocated memory block) */
 	unsigned int refCount;			/**< Reference count (multiple clients get the same data) */
 	struct rda_buffer_item *next;	/**< Next item in list or NULL */
 } rda_buffer_item_t;
 
-/** Internally used data structure to describe a bunch of clients
-	and their pending jobs */
+/** Internally used data structure to describe a client and its pending jobs */
 typedef struct {
 	SOCKET sock;				/**< Client socket */
 	rda_buffer_item_t *item;	/**< Points to the current/next packet to be written */

@@ -10,7 +10,6 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#define RDA_MAX_NUM_CLIENTS  32			/* On Windows, this number must be smaller than 64 */
 
 const UINT8_T _rda_guid[16]={
 	0x8E,0x45,0x58,0x43,0x96,0xC9,0x86,0x4C,0xAF,0x4A,0x98,0xBB,0xF6,0xC9,0x14,0x50
@@ -22,17 +21,20 @@ const UINT8_T _rda_guid[16]={
 */
 static int _i_am_big_endian_ = 0;
 
-/* return 0 on success, -1 on error (out of memory), item may not be NULL */
-int rda_aux_alloc_item(rda_buffer_item_t *item, size_t size) {
-	if (size > item->sizeAlloc) {
-		void *data = malloc(size);
-		if (data == NULL) return -1;
-		if (item->data != NULL) free(item->data);
-		item->data = data;
-		item->sizeAlloc = size;
+/* returns new item or NULL on failure */
+rda_buffer_item_t *rda_aux_alloc_item(size_t size) {
+	rda_buffer_item_t *item = (rda_buffer_item_t *) malloc(sizeof(rda_buffer_item_t));
+	if (item==NULL) return NULL;
+	
+	item->data = malloc(size);
+	if (item->data == NULL) {
+		free(item);
+		return NULL;
 	}
 	item->size = size;
-	return 0;
+	item->next = NULL;
+	item->refCount = 0;
+	return item;
 }
 
 
@@ -59,13 +61,17 @@ int rda_aux_wait_dat(int ft_buffer, const samples_events_t *previous, samples_ev
 	msg_def.bufsize = sizeof(waitdef_t);
 	
 	r = clientrequest(ft_buffer, &req, &resp);
-	if (r<0) return r;
+	if (r<0) {
+		*result = *previous;
+		return r;
+	}
 	
 	if (resp == NULL || resp->def == NULL || resp->buf == NULL || 
 		resp->def->command != WAIT_OK || 
 		resp->def->bufsize != sizeof(samples_events_t)) {
-		printf("Weird things...\n");
+		printf("Bad response from WAIT_DAT call\n");
 		r = -1;
+		*result = *previous;
 		goto cleanup;
 	}
 	memcpy(result, resp->buf, sizeof(samples_events_t));
@@ -81,11 +87,11 @@ cleanup:
 
 /** Prepares "start" RDA packet with channel names determined from the corresponding chunk (or empty)
 	Also converts to little-endian if this machine is big endian
-	@param item	Receives the packet (usually "startItem")
 	@param hdr  Points to headerdef_t structure, will be filled, may not be NULL
-	@return 0 on success, <0 on connection errors, >0 if out of memory 
+	@return created start item, or NULL on error (connection / out of memory)
 */
-int rda_aux_get_hdr_prep_start(int ft_buffer, headerdef_t *hdr, rda_buffer_item_t *item) {
+rda_buffer_item_t *rda_aux_get_hdr_prep_start(int ft_buffer, headerdef_t *hdr) {
+	rda_buffer_item_t *item = NULL;
 	const ft_chunk_t *chunk;
 	rda_msg_start_t *R;
 	char *str;
@@ -103,10 +109,11 @@ int rda_aux_get_hdr_prep_start(int ft_buffer, headerdef_t *hdr, rda_buffer_item_
 	msg_def.bufsize = 0;
 	
 	r = clientrequest(ft_buffer, &req, &resp);
-	if (r<0) return r;
+	if (r<0 || resp == NULL || resp->def == NULL) {
+		goto cleanup;
+	}
 	
-	if (resp == NULL || resp->def == NULL || resp->buf == NULL || resp->def->command != GET_OK || resp->def->bufsize < sizeof(headerdef_t)) {
-		r = -1;
+	if (resp->def->command != GET_OK || resp->def->bufsize < sizeof(headerdef_t) || resp->buf == NULL) {
 		goto cleanup;
 	}
 	
@@ -125,7 +132,7 @@ int rda_aux_get_hdr_prep_start(int ft_buffer, headerdef_t *hdr, rda_buffer_item_
 	/* Now see if we can find channel names */
 	chunk = find_chunk(resp->buf, sizeof(headerdef_t), resp->def->bufsize, FT_CHUNK_CHANNEL_NAMES);
 	if (chunk != NULL && chunk->def.size >= hdr->nchans) {
-		/* The chunk seems ok - check whether we really have N 0-terminated string */
+		/* The chunk seems ok - check whether we really have N (0-terminated) strings */
 		int k,nz = 0;
 		for (k = 0; k<chunk->def.size && nz<=hdr->nchans; k++) {
 			if (chunk->data[k] == 0) nz++;
@@ -142,10 +149,8 @@ int rda_aux_get_hdr_prep_start(int ft_buffer, headerdef_t *hdr, rda_buffer_item_
 	
 	bytesTotal = sizeof(rda_msg_start_t) + hdr->nchans*(sizeof(double)) + sizeOrgNames + numExtraZeros;
 	
-	if (rda_aux_alloc_item(item, bytesTotal)) {
-		r = 1;
-		goto cleanup;
-	}
+	item = rda_aux_alloc_item(bytesTotal);
+	if (item == NULL) goto cleanup;
 	
 	R = (rda_msg_start_t *) item->data;
 	memcpy(R->hdr.guid, _rda_guid, sizeof(_rda_guid));
@@ -180,14 +185,13 @@ int rda_aux_get_hdr_prep_start(int ft_buffer, headerdef_t *hdr, rda_buffer_item_
 	}
 	for (i=0;i<numExtraZeros;i++) str[sizeOrgNames + i] = 0;
 	/* done */
-	r = 0;
 cleanup:
 	if (resp) {
 		if (resp->def) free(resp->def);
 		if (resp->buf) free(resp->buf);
 		free(resp);
 	}
-	return r;
+	return item;
 }	
 
 
@@ -258,42 +262,70 @@ void rda_aux_convert_to_float(UINT32_T N, void *dest, UINT32_T data_type, const 
 
 
 
-/* returns -1 on errors, or the number of markers if succesfully allocated and transformed */
-int rda_aux_get_markers(int ft_buffer, const samples_events_t *last, const samples_events_t *cur, unsigned int sizeSamples, rda_buffer_item_t *item) {
-	int numEvt = 0;
-	message_t req, *resp = NULL;
+/** Retrieves samples and markers and returns them in as a new 'item', or NULL on errors.
+*/
+rda_buffer_item_t *rda_aux_get_samples_and_markers(int ft_buffer, const samples_events_t *last, const samples_events_t *cur, int numBlock, int use16bit) {
+	rda_buffer_item_t *item = NULL;
+	int numEvt = 0,numChans = 0,numSmp = 0;
+	message_t req, *respSmp = NULL, *respEvt = NULL;
 	messagedef_t msg_def;
-	eventsel_t evt_sel;
-	size_t bytesHdrData = sizeof(rda_msg_data_t) + sizeSamples;
+	datadef_t *ddef;
+	size_t bytesSamples = 0, bytesMarkers = 0;
 	
-	if (cur->nevents<=last->nevents) {
-		/* actually there are no markers present - just allocate enough space for the data */
-		return rda_aux_alloc_item(item, bytesHdrData);	/* 0 on success - that's what we need here */
-	}
-	
-	msg_def.version = VERSION;
-	msg_def.command = GET_EVT;
-	msg_def.bufsize = sizeof(evt_sel);
-	evt_sel.begevent = last->nevents;
-	evt_sel.endevent = cur->nevents-1;
-	req.def = &msg_def;
-	req.buf = &evt_sel;
-	
-	if (clientrequest(ft_buffer, &req, &resp) < 0) return -1;
-	if (resp == NULL) return -1;
-	if (resp->def == NULL || resp->buf == NULL) {
-		numEvt = -1;
-		goto cleanup;
-	}
-	
-	if (resp->def->command == GET_OK) {
-		size_t bytesMarkers = 0;
-		int offset = 0;
-		char *ptr;
+	/* First, try to grab the samples */
+	if (cur->nsamples > last->nsamples) {
+		datasel_t dat_sel;
 		
+		msg_def.version = VERSION;
+		msg_def.command = GET_DAT;
+		msg_def.bufsize = sizeof(dat_sel);
+		dat_sel.begsample = last->nsamples;
+		dat_sel.endsample = cur->nsamples-1;
+		req.def = &msg_def;
+		req.buf = &dat_sel;
+	
+		if (clientrequest(ft_buffer, &req, &respSmp)<0) {
+			goto cleanup;
+		}
+		
+		numSmp = cur->nsamples - last->nsamples;
+		
+		if (respSmp == NULL || respSmp->def == NULL || respSmp->buf == NULL || respSmp->def->command != GET_OK) {
+			goto cleanup;
+		} else {
+			ddef = (datadef_t *) respSmp->buf;
+			
+			if (ddef->nsamples != numSmp) goto cleanup;
+			
+			numChans = ddef->nchans;
+			bytesSamples  = (use16bit ? sizeof(INT16_T) : sizeof(float)) * numSmp * numChans;
+		}
+	} 
+	
+	/* Now, try to grab the markers */
+	if (cur->nevents > last->nevents) {
+		eventsel_t evt_sel;
+		size_t bytesMarkers = 0;
+		int offset;
+		
+		msg_def.version = VERSION;
+		msg_def.command = GET_EVT;
+		msg_def.bufsize = sizeof(evt_sel);
+		evt_sel.begevent = last->nevents;
+		evt_sel.endevent = cur->nevents-1;
+		req.def = &msg_def;
+		req.buf = &evt_sel;
+	
+		if (clientrequest(ft_buffer, &req, &respEvt) < 0) {
+			goto cleanup;
+		}
+		if (respEvt == NULL || respEvt->def == NULL || respEvt->buf == NULL || respEvt->def->command != GET_OK) {
+			goto cleanup;
+		}
+			
 		/* count the number of events, increase bytesTotal as required */
-		while (offset + sizeof(eventdef_t) <= resp->def->bufsize) {
-			eventdef_t *evdef = (eventdef_t *) ((char *)resp->buf + offset);
+		while (offset + sizeof(eventdef_t) <= respEvt->def->bufsize) {
+			eventdef_t *evdef = (eventdef_t *) ((char *)respEvt->buf + offset);
 			offset += sizeof(eventdef_t) + evdef->bufsize;
 			
 			if (evdef->bufsize < evdef->type_numel*wordsize_from_type(evdef->type_type) + evdef->value_numel*wordsize_from_type(evdef->value_type)) {
@@ -321,20 +353,68 @@ int rda_aux_get_markers(int ft_buffer, const samples_events_t *last, const sampl
 			}
 			numEvt++;
 		}
-		
-		if (rda_aux_alloc_item(item, bytesHdrData + bytesMarkers)) {
-			numEvt = -1;
-			goto cleanup;
+	}
+	
+	/* Now, allocate an item with enough space for both samples and markers */
+	item = rda_aux_alloc_item(sizeof(rda_msg_data_t) + bytesSamples + bytesMarkers);
+	if (item == NULL) {
+		fprintf(stderr, "Out of memory\n");
+		goto cleanup;
+	}
+	
+	/* Okay, we've got the samples in respSmp, events in respEvt, and a big enough 'item'.
+		First fill in the header.
+	*/
+	{
+		rda_msg_data_t *R = (rda_msg_data_t *) item->data;
+
+		memcpy(R->hdr.guid, _rda_guid, sizeof(_rda_guid));
+		R->hdr.nType = use16bit ? RDA_INT_MSG : RDA_FLOAT_MSG;
+		R->hdr.nSize = item->size;
+		R->nBlock = numBlock; 
+		R->nPoints = numSmp;
+		R->nMarkers = numEvt;
+		if (_i_am_big_endian_) {
+			/* take care of hdr.nSize, hdr.nType, nBlocks, nPoints, nMarkers */
+			ft_swap32(5, &(R->hdr.nSize)); 
 		}
-		/* Ok, we've reserved enough space for header, data, and markers.
-			Here we just fill in the markers */
-		ptr = (char *) item->data + bytesHdrData;
-		offset = 0;
+	}
+	
+	/* Now, fill in the samples, possibly using conversion */
+	if (numSmp > 0) {
+		char *dataDest = ((char *) item->data + sizeof(rda_msg_data_t));
+		char *dataSrc  = ((char *) respSmp->buf + sizeof(datadef_t));
+		int numTotal = numSmp * numChans;
+		
+		if (use16bit) {
+			if (_i_am_big_endian_) {
+				/* copy + swap the 16 bit samples */
+				int i;
+				for (i=0;i<numTotal;i++) {
+					dataDest[0] = dataSrc[1];
+					dataDest[1] = dataSrc[0];
+					dataDest+=2;
+					dataSrc+=2;
+				}
+			} else {
+				/* just copy the samples */
+				memcpy(dataDest, dataSrc, bytesSamples);
+			}
+		} else {
+			rda_aux_convert_to_float(numTotal, dataDest, ddef->data_type, dataSrc);
+			if (_i_am_big_endian_) ft_swap32(numTotal, dataDest);
+		}
+	}
+	
+	/* Finally, fill in the events */
+	if (numEvt>0) {
+		char *ptr = (char *) item->data + sizeof(rda_msg_data_t) + bytesSamples;
+		char offset = 0;
 		
 		/* count the number of events, increase bytesTotal as required */
-		while (offset + sizeof(eventdef_t) <= resp->def->bufsize) {
-			eventdef_t *evdef = (eventdef_t *) ((char *)resp->buf + offset);
-			char *evbuf = (char *)resp->buf + offset + sizeof(eventdef_t);
+		while (offset + sizeof(eventdef_t) <= respEvt->def->bufsize) {
+			eventdef_t *evdef = (eventdef_t *) ((char *)respEvt->buf + offset);
+			char *evbuf = (char *)respEvt->buf + offset + sizeof(eventdef_t);
 			rda_marker_t *marker = (rda_marker_t *) ptr;
 			int i;
 			
@@ -380,161 +460,135 @@ int rda_aux_get_markers(int ft_buffer, const samples_events_t *last, const sampl
 			}
 		}		
 	} 
-	
+	/* Done */
 cleanup:
-	if (resp) {
-		FREE(resp->buf);
-		FREE(resp->def);
-		free(resp);
+	if (respSmp) {
+		FREE(respSmp->buf);
+		FREE(respSmp->def);
+		free(respSmp);
 	}
-	return numEvt;
+	if (respEvt) {
+		FREE(respEvt->buf);
+		FREE(respEvt->def);
+		free(respEvt);
+	}
+	return item;
 }
 
-
-/** Get data from FT buffer and convert it into a single precision RDA packet
-	@return  0 on success, -1 on connection errors, -2 on out of memory
+/** Check for sockets that are ready to be written to, and write out as much of the corresponding job 
+    as possible.
+	@param 	remSelect	Number of remaining sockets to deal with
+	@param	writeSet	The socket set to check for writable clients
+	@param	numClients	The number of elements in the 'clients' array
+	@param	clients		Array describing the clients and their jobs
+	@param	verbosity	Determines how much status/error message to print
+	@return	the remaining number of sockets to deal with (non-write operations)
 */
-int rda_aux_get_float_data(int ft_buffer, unsigned int start, unsigned int end, unsigned int nChans, void *data) {
-	int r;
-	message_t req, *resp = NULL;
-	messagedef_t msg_def;
-	datasel_t dat_sel;
+int rda_aux_check_writing(int remSelect, const fd_set *writeSet, int numClients, rda_client_job_t *clients, int verbosity) {
+	int i;
 	
-	msg_def.version = VERSION;
-	msg_def.command = GET_DAT;
-	msg_def.bufsize = sizeof(dat_sel);
-	dat_sel.begsample = start;
-	dat_sel.endsample = end;
-	req.def = &msg_def;
-	req.buf = &dat_sel;
-	
-	r = clientrequest(ft_buffer, &req, &resp);
-	if (r<0) return r;
-	
-	if (resp == NULL) return -1;
-	if (resp->def == NULL || resp->buf == NULL) {
-		r = -1;
-		goto cleanup;
-	}
-	if (resp->def->command == GET_OK) {
-		datadef_t *ddef = (datadef_t *) resp->buf;
-		unsigned int numTotal = ddef->nchans * ddef->nsamples;
-		
-		if (ddef->nchans != nChans || ddef->nsamples != (end-start+1)) {
-			r = -1;
-			goto cleanup;
-		}
-				
-		/* convert the samples, note that (R+1) points to the first byte after the RDA data header
-		   and (ddef+1) points to the first byte after the FieldTrip data header */
-		rda_aux_convert_to_float(numTotal, data, ddef->data_type, (void *)(ddef+1));
-		if (_i_am_big_endian_) ft_swap32(numTotal, data);
-		
-		/* done */
-		r = 0;
-	} else {
-		r = -1;
-	}
-cleanup:
-	if (resp) {
-		FREE(resp->buf);
-		FREE(resp->def);
-		free(resp);
-	}
-	return r;
-}
+	for (i=0 ; i<numClients && remSelect>0 ; i++) {
+		int sent;
+		rda_client_job_t *C = &clients[i];
 
-/** Get 16-bit data from FT buffer and convert it into a single precision RDA packet
-	@return  0 on success, -1 on connection errors, -2 on out of memory
-*/
-int rda_aux_get_int16_data(int ft_buffer, unsigned int start, unsigned int end, unsigned int nChans, void *data) {
-	int r;
-	message_t req, *resp = NULL;
-	messagedef_t msg_def;
-	datasel_t dat_sel;
-	
-	msg_def.version = VERSION;
-	msg_def.command = GET_DAT;
-	msg_def.bufsize = sizeof(dat_sel);
-	dat_sel.begsample = start;
-	dat_sel.endsample = end;
-	req.def = &msg_def;
-	req.buf = &dat_sel;
-	
-	r = clientrequest(ft_buffer, &req, &resp);
-	if (r<0) return r;
-	
-	if (resp == NULL) return -1;
-	if (resp->def == NULL || resp->buf == NULL) {
-		r = -1;
-		goto cleanup;
-	}
-	if (resp->def->command == GET_OK) {
-		datadef_t *ddef = (datadef_t *) resp->buf;
-		unsigned int numTotal = ddef->nchans * ddef->nsamples;
+		if (!FD_ISSET(C->sock, writeSet)) continue;	/* skip to next client in set */
+						
+		/* printf("Sending out data (%i bytes)...\n", C->item->size - C->written); */
+		sent = send(C->sock, (char *) C->item->data + C->written, C->item->size - C->written, 0);
 		
-		if (((ddef->data_type != DATATYPE_INT16) && (ddef->data_type != DATATYPE_UINT16)) || (ddef->nchans != nChans)) {
-			r = -1;
-			goto cleanup;
-		}
-		
-		if (_i_am_big_endian_) {
-			/* copy + swap the 16 bit samples */
-			unsigned char *source = (unsigned char *) (ddef+1);
-			unsigned char *dest = data;
-			unsigned int i;
-			
-			for (i=0;i<numTotal;i++) {
-				dest[0] = source[1];
-				dest[1] = source[0];
-				dest+=2;
-				source+=2;
+		if (sent > 0) {
+			C->written += sent;
+			if (C->written == C->item->size) {
+				/* printf("Done with this packet on client %i\n", C->sock); */
+				C->item->refCount--;
+				C->written = 0;
+				C->item = C->item->next;
+				if (C->item != NULL) {
+					C->item->refCount++;
+				}
 			}
 		} else {
-			/* copy the samples, note that (ddef+1) points to the first byte after the FieldTrip data header */
-			memcpy(data, (void *)(ddef+1), numTotal*sizeof(INT16_T));
+			if (verbosity>0) 
+				fprintf(stderr, "rdaserver check_writing: write error on socket %i\n",C->sock);
+			C->item = NULL;	/* do not attempt to send more data, will probably be closed later on */
 		}
-		/* done */
-		r = 0;
-	} else {
-		r = -1;
+		--remSelect;
 	}
-cleanup:
-	if (resp) {
-		FREE(resp->buf);
-		FREE(resp->def);
-		free(resp);
-	}
-	return r;
+	return remSelect;
 }
 
 
+/** Check for sockets that are have been closed from the other end, and remove the corresponding client.
+	@param 	remSelect	Number of remaining sockets to deal with
+	@param	readSet		The socket set to check for readable clients (read 0 bytes => close)
+	@param	numClients	The number of elements in the 'clients' array
+	@param	clients		Array describing the clients and their jobs
+	@param	verbosity	Determines how much status/error message to print
+	@return	the remaining number of clients
+*/
+int rda_aux_check_closure(int remSelect, const fd_set *readSet, int numClients, rda_client_job_t *clients, int verbosity) {
+	int i;
+
+	for (i=0 ; i<numClients && remSelect>0 ; i++) {
+		char dummy[1024];
+		int len;
+		if (!FD_ISSET(clients[i].sock, readSet)) continue;
+			
+		len = recv(clients[i].sock, dummy, sizeof(dummy), 0);
+			
+		if (len>0) continue;	/* clients are not supposed to write, but if they do, we ignore it */
+		if (len<0) {
+			/* close this client */
+			if (verbosity > 0) fprintf(stderr, "rdaserver_thread: lost connection to client (%i)\n", clients[i].sock); 
+		} else {	/* len == 0: smooth close from remote side */
+			if (verbosity > 0) fprintf(stderr, "rdaserver_thread: client (%i) closed the connection\n", clients[i].sock); 
+		}
+			
+		closesocket(clients[i].sock);
+			
+		if (clients[i].item != NULL) {
+			/* apparently we lost this connection during transmission */
+			clients[i].item->refCount--;
+		}
+		/* Remove clients from list by moving the last one in its place */
+		if (numClients > 1) {
+			clients[i] = clients[numClients-1];
+		}
+		--numClients;
+		--remSelect;
+	}
+	return numClients;
+}
+
 /** Thread function of the RDA server. Can handle multiple clients in parallel.
-	TODO: Fieldtrip events are not transmitted as RDA markers, yet 
+
+	Incoming data (from the FieldTrip buffer) is first converted to "items" in a form that RDA clients expect,
+	and a linked list of these items is kept. Each item has a reference count that determines on how many client
+	sockets it's currently being streamed out. At the end of the main server loop, the linked list is inspected
+	for unreferenced items at the start of the list, and those are removed.
+	
+	On top of the data items, also a "start item" is kept that contains the header information (RDA start packet).
+	This is necessary for being able to write out the header information to newly connecting clients.
+	
+	Initially, both the "start item" and the "first data item" are empty, indicating that no header information
+	and data/events	have been read yet.
 */
 void *_rdaserver_thread(void *arg) {
-	/* 'select' cannot handle more than 64 elements on Windows, but this
-		should really be enough for all practical purposes. Depending on
-		the sampling rate and number of channels, you would probably hit
-		other performance boundaries first.
-	*/
-	rda_client_job_t clients[RDA_MAX_NUM_CLIENTS];
-	rda_buffer_item_t startItem = {NULL,0,0,0,NULL}; 
-	rda_buffer_item_t *firstDataItem = NULL;
+	rda_server_ctrl_t *SC = (rda_server_ctrl_t *) arg;	/* our control structure */
+	rda_client_job_t clients[RDA_MAX_NUM_CLIENTS];		/* list of clients and their current jobs */
+	rda_buffer_item_t *startItem = NULL;				/* item containing start packet (header info) */
+	rda_buffer_item_t *firstDataItem = NULL;			/* first item in list of (mostly) data packets */
 	
-	headerdef_t ftHdr;
-	int i,typeOk;
-	int ftTimeout = 0;
-	unsigned int numBlock = 0;
-	
-	samples_events_t lastNum = {0,0}, curNum;
-	
-	fd_set readSet, writeSet;
-	int fdMax = 1;				 /* not really used on Windows */	
-	struct timeval tv;
-	rda_server_ctrl_t *SC = (rda_server_ctrl_t *) arg;
-	int numClients = 0;
-
+	headerdef_t ftHdr;			/* contains header information */
+	int i,typeOk;				/* typeOk is only interesting for 16-bit servers */
+	int ftTimeout = 20;			/* wait up to 20ms for new data/events */
+	unsigned int numBlock = 0;	/* running count of data blocks received */
+	samples_events_t lastNum = {0,0};	/* number of samples + events handled so far */
+	samples_events_t curNum = {0,0};	/* ... currently available */
+	fd_set readSet, writeSet;	/* for select on server + child sockets */
+	int fdMax = 1;				/* for select, not really used on Windows */	
+	struct timeval tv;			/* for select timeout */
+	int numClients = 0;			/* current number of clients */
 	
 	if (SC==NULL) return NULL;
 	
@@ -543,17 +597,95 @@ void *_rdaserver_thread(void *arg) {
 		(in the latter case we need to check the FT header first)
 	*/
 	typeOk = SC->use16bit ? 0 : 1;
-		
-	/* wait up to 10 ms for new events */
-	tv.tv_sec = 0; 
-	tv.tv_usec = 10000;
-	
+			
 	#ifndef PLATFORM_WIN32
 	fdMax = SC->server_socket;
 	#endif
-	
+
+	/* Loop this until errors occur or this flag is set from another thread */
 	while (!SC->should_exit) {
 		int sel;
+		
+		/* First, in case we have no header, or in case the new number of samples 
+		   is smaller than what we had so far,  we need to (re)read the header information.
+		*/
+		if (startItem == NULL || curNum.nsamples < lastNum.nsamples) {
+			rda_buffer_item_t *newStart;
+				
+			/* If we already have a startItem, free it first, since it will be invalid anyway.
+			   However, keep the pointer itself for now, so we now that we did this here. */
+			if (startItem != NULL) {
+				free(startItem->data);
+				free(startItem);
+			}
+			
+			/* Try to grab header */
+			newStart = rda_aux_get_hdr_prep_start(SC->ft_buffer, &ftHdr);
+			if (newStart == NULL) {
+				/* No header could be picked up - wait in 'select' */
+				startItem = NULL;
+				tv.tv_sec  = 0; 
+				tv.tv_usec = 100000;
+			} else {
+				/* Now the start item should have proper size/sizeAlloc/data fields */
+				if (SC->use16bit) {
+					typeOk = (ftHdr.data_type == DATATYPE_INT16) || (ftHdr.data_type == DATATYPE_UINT16);
+				}
+				if (SC->verbosity > 4) {
+					printf("Picked up FieldTrip header: %i channels, datatype=%i\n",ftHdr.nchans, ftHdr.data_type); 
+				}
+				if (typeOk) {
+					if (startItem == NULL) {
+						/* first time? then add it to every client */
+						for (i=0;i<numClients;i++) {
+							clients[i].item = newStart;
+							clients[i].written = 0;
+							newStart->refCount++;
+						}
+					} else {
+						/* otherwise, add it at the end of the chain */
+						
+						rda_buffer_item_t *stopItem = rda_aux_alloc_item(sizeof(rda_msg_hdr_t));
+						if (stopItem == NULL) {
+							fprintf(stderr, "Out of memory\n");
+							startItem = NULL;
+							break;
+						}			
+					
+						/* First add a STOP message to be sent to the list */
+						memcpy(stopItem->data, _rda_guid, sizeof(_rda_guid));
+						((rda_msg_hdr_t *) stopItem->data)->nSize = sizeof(rda_msg_hdr_t);
+						((rda_msg_hdr_t *) stopItem->data)->nType = RDA_STOP_MSG;
+						stopItem->next = newStart;
+					
+						if (firstDataItem == NULL) {
+							firstDataItem = stopItem;
+						} else {
+							rda_buffer_item_t *last = firstDataItem;
+							while (last->next != NULL) last = last->next;
+							last->next = stopItem;
+						}
+						
+						/* ... but we also need to add it to clients that are currently waiting */
+						for (i=0;i<numClients;i++) {
+							if (clients[i].item == NULL) {
+								clients[i].item = stopItem;
+								stopItem->refCount++;
+							}
+						}
+					}
+						
+					startItem = newStart;					
+					lastNum.nsamples = ftHdr.nsamples;	/* using 0 here is unsafe */
+					lastNum.nevents  = ftHdr.nevents;
+				} 
+				/* do not wait in 'select' call, will wait for data instead */
+				tv.tv_sec  = 0; 
+				tv.tv_usec = 0;
+			}
+		}
+		
+		/* Now, we deal with the things specific to client sockets */
 		
 		/* Prepare read (also error!) and write sets: clear them first */
 		FD_ZERO(&readSet);
@@ -576,145 +708,6 @@ void *_rdaserver_thread(void *arg) {
 			continue; /* TODO: think about stopping operation */
 		}
 		
-		/* In case of a timeout (=no network events): check the FieldTrip buffer for header + data */
-		if (sel == 0) {
-			if (startItem.data == NULL) {
-				if (rda_aux_get_hdr_prep_start(SC->ft_buffer, &ftHdr, &startItem)) continue;
-				/* Now the start item should have proper size/sizeAlloc/data fields */
-				if (SC->use16bit) {
-					typeOk = (ftHdr.data_type == DATATYPE_INT16) || (ftHdr.data_type == DATATYPE_UINT16);
-				}
-				if (SC->verbosity > 4) {
-					printf("Picked up FT header for first time!\n"); 
-				}
-				if (typeOk) {
-					/* Add the start item to every client */
-					for (i=0;i<numClients;i++) {
-						clients[i].item = &startItem;
-						clients[i].written = 0;
-					}
-					lastNum.nsamples = ftHdr.nsamples;
-					lastNum.nevents = ftHdr.nevents;
-				}
-				continue;
-			}
-			/* Check for new data (samples / events) */
-			if (rda_aux_wait_dat(SC->ft_buffer, &lastNum, &curNum, ftTimeout)) continue;
-			
-			/* TODO: check if new numbers are smaller, which indicates a rewritten header */
-			if (!typeOk) continue;
-				
-			if (curNum.nsamples > lastNum.nsamples || curNum.nevents > lastNum.nevents) {
-				/* There's new data to stream out */
-				rda_buffer_item_t *item, *last;
-				int newItem = 0;
-				int numEvts;
-				size_t sizeSamples;
-				
-				/* Three cases:
-					a) first data packet ever (firstDataItem = NULL)
-						-> create new item and have firstDataItem point to it
-					b) firstDataItem has refCount=0
-						-> put data packet into that item (possible recycle memory)
-					c) otherwise
-						-> create new item and link it into the back of the list
-				*/
-				if (firstDataItem == NULL) {
-					/* case a */
-					newItem = 1;
-				} else if (firstDataItem->refCount > 0) {
-					/* case c */
-					newItem = 1;
-					last = firstDataItem;
-					while (last->next != NULL) last=last->next;
-				}
-				
-				if (newItem) {
-					item = (rda_buffer_item_t *) malloc(sizeof(rda_buffer_item_t));
-					if (item == NULL) {
-						fprintf(stderr,"rdaserver_thread: Out of memory\n");
-						break;
-					}
-					item->next = NULL;
-					item->refCount = 0;
-					item->sizeAlloc = 0;
-					item->data = NULL;
-				} else {
-					item = firstDataItem;
-				}
-				
-				if (SC->verbosity > 5) {
-					printf("Trying to get data [%i ; %i], events [%i;%i]\n", lastNum.nsamples, curNum.nsamples, lastNum.nevents, curNum.nevents); 
-				}
-				
-				sizeSamples = (SC->use16bit) ? sizeof(INT16_T) : sizeof(float);
-				sizeSamples *= (curNum.nsamples - lastNum.nsamples) * ftHdr.nchans;
-				
-				numEvts = rda_aux_get_markers(SC->ft_buffer, &lastNum, &curNum, sizeSamples, item);
-				if (numEvts >= 0) {
-					rda_msg_data_t *R = (rda_msg_data_t *) item->data;
-					void *sample_data = (void *)(R+1);
-					memcpy(R->hdr.guid, _rda_guid, sizeof(_rda_guid));
-					R->hdr.nSize = item->size;
-					R->nBlock = numBlock; 
-					R->nPoints = curNum.nsamples - lastNum.nsamples;
-					R->nMarkers = numEvts;
-					if (_i_am_big_endian_) {
-						/* take care of hdr.nSize, hdr.nType, nBlocks, nPoints, nMarkers */
-						ft_swap32(5, &(R->hdr.nSize)); 
-						/* samples are swapped in rda_aux_get_***_data */
-						/* markers were swapped in rda_aux_get_markers */
-					}
-					if (curNum.nsamples > lastNum.nsamples) {
-						int err;
-						if (SC->use16bit) {
-							R->hdr.nType = RDA_INT_MSG;
-							err = rda_aux_get_int16_data(SC->ft_buffer, lastNum.nsamples, curNum.nsamples-1, ftHdr.nchans, sample_data);
-						} else {
-							R->hdr.nType = RDA_FLOAT_MSG;
-							err = rda_aux_get_float_data(SC->ft_buffer, lastNum.nsamples, curNum.nsamples-1, ftHdr.nchans, sample_data);
-						}
-						if (err!=0) {
-							fprintf(stderr, "Error while getting data from FieldTrip buffer!\n");
-							numEvts = -1;
-						}
-					}
-				} else {
-					fprintf(stderr, "Error in rda_aux_get_markers\n");
-				}
-				
-				if (numEvts < 0) {
-					/* get rid of the item again */
-					if (newItem) {
-						if (item->data != NULL) free(item->data);
-						free(item);
-					}
-					continue;
-				}
-					
-				
-				if (newItem) {
-					if (firstDataItem == NULL) {
-						firstDataItem = item;
-					} else {
-						last->next = item;
-					}
-				}
-				
-				for (i=0;i<numClients;i++) {
-					if (clients[i].item == NULL) {
-						if (SC->verbosity>5) {
-							printf("Adding new job for client %i\n", clients[i].sock);
-						}
-						clients[i].item = item;
-						item->refCount++;
-					}
-				}
-				lastNum = curNum;
-				numBlock++;
-			}
-		}
-		
 		/* Check if we have a new client connection */
 		if (sel>0 && FD_ISSET(SC->server_socket, &readSet)) {
 			struct sockaddr_in sa;
@@ -728,7 +721,7 @@ void *_rdaserver_thread(void *arg) {
 				if (SC->verbosity > 0) fprintf(stderr, "rdaserver_thread: opened connection to client (%i)\n",newSock);
 				
 				clients[numClients].sock = newSock;
-				clients[numClients].item = startItem.data == NULL ? NULL : &startItem;
+				clients[numClients].item = startItem;
 				clients[numClients].written = 0;
 				numClients++;
 				pthread_mutex_lock(&SC->mutex);
@@ -740,72 +733,67 @@ void *_rdaserver_thread(void *arg) {
 			}
 			--sel;
 		}
+		
 		/* Check for sockets that are ready to be written to */
-		for (i=0 ; i<numClients && sel>0 ; i++) {
-			int sent;
-			rda_client_job_t *C = &clients[i];
-
-			if (!FD_ISSET(C->sock, &writeSet)) continue;
-						
-			/* printf("Sending out data (%i bytes)...\n", C->item->size - C->written); */
-			sent = send(C->sock, (char *) C->item->data + C->written, C->item->size - C->written, 0);
-			/* printf("%i bytes\n", sent); */
-			if (sent > 0) {
-				C->written += sent;
-				if (C->written == C->item->size) {
-					/* printf("Done with this packet on client %i\n", C->sock); */
-					C->item->refCount--;
-					C->written = 0;
-					C->item = C->item->next;
-					if (C->item != NULL) {
-						C->item->refCount++;
-					}
-				}
-			} else {
-				if (SC->verbosity > 0) {
-					fprintf(stderr, "rdaserver_thread: write error on socket %i\n",C->sock);
-				}
-				C->item = NULL;
-			}
-			--sel;
+		if (sel>0) {
+			sel = rda_aux_check_writing(sel, &writeSet, numClients, clients, SC->verbosity);
 		}
+		
 		/* Check for sockets on which we can read (=> read 0 bytes means closure ) */
-		for (i=0 ; i<numClients && sel>0 ; i++) {
-			char dummy[1024];
-			int len;
-			if (!FD_ISSET(clients[i].sock, &readSet)) continue;
-			
-			len = recv(clients[i].sock, dummy, sizeof(dummy), 0);
-			
-			if (len>0) continue;	/* clients are not supposed to write, and if they do, we ignore it */
-			if (len<0) {
-				/* close this client */
-				if (SC->verbosity > 0) fprintf(stderr, "rdaserver_thread: lost connection to client (%i)\n", clients[i].sock); 
-			} else {
-				if (SC->verbosity > 0) fprintf(stderr, "rdaserver_thread: client (%i) closed the connection\n", clients[i].sock); 
+		if (sel>0) {
+			int newNum = rda_aux_check_closure(sel, &readSet, numClients, clients, SC->verbosity);
+			if (newNum < numClients) {
+				#ifndef PLATFORM_WIN32
+				fdMax = SC->server_socket;
+				for (i=0;i<numClients;i++) {
+					if (clients[i].sock > fdMax) fdMax = clients[i].sock;
+				}
+				#endif
+				pthread_mutex_lock(&SC->mutex);
+				SC->num_clients = numClients = newNum;
+				pthread_mutex_unlock(&SC->mutex);
 			}
-			
-			closesocket(clients[i].sock);
-			
-			if (clients[i].item != NULL) {
-				/* apparently we lost this connection during transmission */
-				clients[i].item->refCount--;
+		}
+
+		/* Ok, (client) network stuff is done, let's see if there is more data */
+		
+		
+		/* If we already have the header, check for new data (samples / events) */
+		if (startItem != NULL && !rda_aux_wait_dat(SC->ft_buffer, &lastNum, &curNum, ftTimeout)) {
+			/* printf("after wait: %i %i\n", curNum.nsamples, curNum.nevents); */
+			if (typeOk && (curNum.nsamples > lastNum.nsamples || curNum.nevents > lastNum.nevents)) {
+				/* There's new data to stream out */
+				rda_buffer_item_t *item;
+								
+				if (SC->verbosity > 5) {
+					printf("Trying to get data [%i;%i), events [%i;%i)\n", lastNum.nsamples, curNum.nsamples, lastNum.nevents, curNum.nevents); 
+				}
+				
+				item = rda_aux_get_samples_and_markers(SC->ft_buffer, &lastNum, &curNum, numBlock, SC->use16bit);
+				if (item != NULL) {
+					if (firstDataItem == NULL) {
+						firstDataItem = item;
+					} else {
+						rda_buffer_item_t *last = firstDataItem;
+						while (last->next != NULL) last = last->next;
+						last->next = item;
+					}
+					
+					for (i=0;i<numClients;i++) {
+						if (clients[i].item == NULL) {
+							if (SC->verbosity>5) {
+								printf("Adding new job for client %i\n", clients[i].sock);
+							}
+							clients[i].item = item;
+							item->refCount++;
+						}
+					}
+					lastNum = curNum;
+					numBlock++;
+				} else {
+					printf("Could not get data or allocate memory\n");
+				}
 			}
-			#ifndef PLATFORM_WIN32
-			fdMax = SC->server_socket;
-			for (i=0;i<numClients;i++) {
-				if (clients[i].sock > fdMax) fdMax = clients[i].sock;
-			}
-			#endif
-			/* Remove clients from list by moving the last one in its place */
-			if (numClients > 1) {
-				clients[i] = clients[numClients-1];
-			}
-			numClients--;
-			pthread_mutex_lock(&SC->mutex);
-			SC->num_clients = numClients;
-			pthread_mutex_unlock(&SC->mutex);
-			--sel;
 		}
 		
 		/* just for debugging - this will be removed */
@@ -818,16 +806,16 @@ void *_rdaserver_thread(void *arg) {
 		}
 		
 		/* Done with the network-specific stuff, now clean up the data items */
-		if (firstDataItem!=NULL) {		
-			/* We always keep one item to put the next data in, but also to be able to send
-			   out data as soon as a client connects
-			*/
-			while (firstDataItem->refCount == 0 && firstDataItem->next != NULL) {
-				if (firstDataItem->data != NULL) free(firstDataItem->data);
-				/* printf("Shifting data item list...\n"); */
-				firstDataItem = firstDataItem->next;
+		while (firstDataItem != NULL && firstDataItem->refCount == 0) { 
+			rda_buffer_item_t *next = firstDataItem->next;
+			if (firstDataItem!=startItem) {
+				free(firstDataItem->data);
+				free(firstDataItem);
 			}
-			startItem.next = firstDataItem;
+			if (startItem != NULL && startItem->next == firstDataItem) {	
+				startItem->next = next;
+			}
+			firstDataItem = next;
 		}
 	}		
 	/* shutdown clients */
@@ -841,13 +829,16 @@ void *_rdaserver_thread(void *arg) {
 		#endif
 	}
 	/* free memory pointed to by startItem ... */
-	if (startItem.data) free(startItem.data);
+	if (startItem) {
+		free(startItem->data);
+		free(startItem);
+	}
 	/* ... and firstDataItem (including following list elements) */
 	while (firstDataItem!=NULL) {
-		rda_buffer_item_t *item = firstDataItem;
-		firstDataItem = item->next;
-		if (item->data) free(item->data);
-		free(item);
+		rda_buffer_item_t *next = firstDataItem->next;
+		free(firstDataItem->data);
+		free(firstDataItem);
+		firstDataItem = next;
 	}
 	SC->is_running = 0;
 	return NULL;

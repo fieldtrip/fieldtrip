@@ -241,7 +241,7 @@ typedef struct {
 
 typedef struct {
 	UINT32_T type;	/* One of FT_CHUNK_** (see above) */
-	UINT32_T size;	/* Size of chunk.data (total size is given by adding 8) */
+	UINT32_T size;	/* Size of chunk.data, total size is given by adding sizeof(ft_chunkdef_t)=8 */
 } ft_chunkdef_t;
 
 typedef struct {
