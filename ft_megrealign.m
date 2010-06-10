@@ -1,14 +1,16 @@
 function [interp] = ft_megrealign(cfg, data);
 
-% FT_MEGREALIGN interpolates MEG data towards standard gradiometer locations 
+% FT_MEGREALIGN interpolates MEG data towards standard gradiometer locations
 % by projecting the individual timelocked data towards a coarse source
 % reconstructed representation and computing the magnetic field on
 % the standard gradiometer locations.
 %
 % Use as
 %   [interp] = ft_megrealign(cfg, data)
-%   Required configuration options:
-%   cfg.template, cfg.inwardshift
+%
+% Required configuration options:
+%   cfg.template
+%   cfg.inwardshift
 %
 % The new gradiometer definition is obtained from a template dataset,
 % or can be constructed by averaging the gradiometer positions over
@@ -24,45 +26,49 @@ function [interp] = ft_megrealign(cfg, data);
 %
 % A head model must be specified with
 %   cfg.hdmfile     = string, file containing the volume conduction model
-% or alternatively manually using 
+% or alternatively manually using
 %   cfg.vol.r       = radius of sphere
 %   cfg.vol.o       = [x, y, z] position of origin
 %
 % A source model (i.e. a superficial layer with distributed sources) can be
 % constructed from a headshape file, or from the volume conduction model
 %   cfg.spheremesh  = number of dipoles in the source layer (default = 642)
-%   cfg.inwardshift = depth of the source layer relative to the headshape 
-%                     surface or volume conduction model (no default 
+%   cfg.inwardshift = depth of the source layer relative to the headshape
+%                     surface or volume conduction model (no default
 %                     supplied, see below)
 %   cfg.headshape   = a filename containing headshape, a structure containing a
 %                     single triangulated boundary, or a Nx3 matrix with surface
 %                     points
 %
-% If you specify a headshape and it describes the skin surface, you should specify an 
+% If you specify a headshape and it describes the skin surface, you should specify an
 % inward shift of 2.5 cm.
 %
 % For a single-sphere or a local-spheres volume conduction model based on the skin
-% surface, an inward shift of 2.5 cm is reasonable. 
-% 
+% surface, an inward shift of 2.5 cm is reasonable.
+%
 % For a single-sphere or a local-spheres volume conduction model based on the brain
 % surface, you should probably use an inward shift of about 1 cm.
-% 
+%
 % For a realistic single-shell volume conduction model based on the brain surface, you
-% should probably use an inward shift of about 1 cm. 
-% 
+% should probably use an inward shift of about 1 cm.
+%
 % Other options are
-%   cfg.pruneratio  = for singular values, default is 1e-3
-%   cfg.verify      = 'yes' or 'no', show the percentage difference (default = 'yes')
-%   cfg.feedback    = 'yes' or 'no' (default = 'no')
-%   cfg.channel     =  Nx1 cell-array with selection of channels (default = 'MEG'),
+% cfg.pruneratio  = for singular values, default is 1e-3
+% cfg.verify      = 'yes' or 'no', show the percentage difference (default = 'yes')
+% cfg.feedback    = 'yes' or 'no' (default = 'no')
+% cfg.channel     =  Nx1 cell-array with selection of channels (default = 'MEG'),
 %                      see FT_CHANNELSELECTION for details
-%   cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
-% 
+% cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
+%
 % This implements the method described by T.R. Knosche, Transformation
 % of whole-head MEG recordings between different sensor positions.
 % Biomed Tech (Berl). 2002 Mar;47(3):59-62.
-% 
+%
 % See also FT_MEGINTERPOLATE, FT_PREPARE_LOCALSPHERES, FT_PREPARE_SINGLESHELL
+%
+% Undocumented local options:
+% cfg.inputfile        = one can specifiy preanalysed saved data as input
+% cfg.outputfile       = one can specify output as file to save to disk
 
 % This function depends on FT_PREPARE_DIPOLE_GRID
 %
@@ -100,15 +106,7 @@ fieldtripdefs
 
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
-% check if the input data is valid for this function
-data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'ismeg', 'yes');
-
-% check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'renamed',     {'plot3d',      'feedback'});
-cfg = checkconfig(cfg, 'renamedval',  {'headshape',   'headmodel', []});
-cfg = checkconfig(cfg, 'required',    {'inwardshift', 'template'});
-
-% set the default configuration 
+% set the default configuration
 if ~isfield(cfg, 'headshape'),     cfg.headshape = [];            end
 if ~isfield(cfg, 'pruneratio'),    cfg.pruneratio = 1e-3;         end
 if ~isfield(cfg, 'spheremesh'),    cfg.spheremesh = 642;          end
@@ -117,6 +115,30 @@ if ~isfield(cfg, 'feedback'),      cfg.feedback = 'yes';          end
 if ~isfield(cfg, 'trials'),        cfg.trials = 'all';            end
 if ~isfield(cfg, 'channel'),       cfg.channel = 'MEG';           end
 if ~isfield(cfg, 'topoparam'),     cfg.topoparam = 'rms';         end
+if ~isfield(cfg, 'inputfile'),     cfg.inputfile = [];            end
+if ~isfield(cfg, 'outputfile'),    cfg.outputfile = [];           end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+if hasdata
+% check if the input data is valid for this function
+data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'ismeg', 'yes');
+end
+
+% check if the input cfg is valid for this function
+cfg = checkconfig(cfg, 'renamed',     {'plot3d',      'feedback'});
+cfg = checkconfig(cfg, 'renamedval',  {'headshape',   'headmodel', []});
+cfg = checkconfig(cfg, 'required',    {'inwardshift', 'template'});
 
 %do realignment per trial
 pertrial = all(ismember({'nasX';'nasY';'nasZ';'lpaX';'lpaY';'lpaZ';'rpaX';'rpaY';'rpaZ'}, data.label));
@@ -127,7 +149,7 @@ cfg = checkconfig(cfg, 'createsubcfg',  {'grid'});
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
-  data = selectdata(data, 'rpt', cfg.trials);  
+  data = selectdata(data, 'rpt', cfg.trials);
   if isfield(data, 'cfg') % try to locate the trl in the nested configuration
     cfg.trlold = findcfg(data.cfg, 'trlold');
     cfg.trl    = findcfg(data.cfg, 'trl');
@@ -169,29 +191,29 @@ end
 
 % to construct the average location of the MEG sensors, 4 channels are needed that should  be sufficiently far apart
 switch ft_senstype(template(1))
-case {'ctf151' 'ctf275'}
-  labC = 'MZC01';
-  labF = 'MZF03';
-  labL = 'MLC21';
-  labR = 'MRC21';
-case {'ctf151_planar' 'ctf275_planar'}
-  labC = 'MZC01_dH';
-  labF = 'MZF03_dH';
-  labL = 'MLC21_dH';
-  labR = 'MRC21_dH';
-case {'bti148'}
-  labC = 'A14';
-  labF = 'A2';
-  labL = 'A15';
-  labR = 'A29';
-case {'bti248'}
-  labC = 'A19';
-  labF = 'A2';
-  labL = 'A44';
-  labR = 'A54';
-otherwise
-  % this could in principle be added to the cfg, but better is to have a more exhaustive list here
-  error('unsupported MEG system for realigning, please ask on the mailing list');
+  case {'ctf151' 'ctf275'}
+    labC = 'MZC01';
+    labF = 'MZF03';
+    labL = 'MLC21';
+    labR = 'MRC21';
+  case {'ctf151_planar' 'ctf275_planar'}
+    labC = 'MZC01_dH';
+    labF = 'MZF03_dH';
+    labL = 'MLC21_dH';
+    labR = 'MRC21_dH';
+  case {'bti148'}
+    labC = 'A14';
+    labF = 'A2';
+    labL = 'A15';
+    labR = 'A29';
+  case {'bti248'}
+    labC = 'A19';
+    labF = 'A2';
+    labL = 'A44';
+    labR = 'A54';
+  otherwise
+    % this could in principle be added to the cfg, but better is to have a more exhaustive list here
+    error('unsupported MEG system for realigning, please ask on the mailing list');
 end
 
 templ.meanC = [0 0 0];
@@ -199,14 +221,14 @@ templ.meanF = [0 0 0];
 templ.meanL = [0 0 0];
 templ.meanR = [0 0 0];
 for i=1:Ntemplate
-  % determine the 4 ref sensors for this individual template helmet 
+  % determine the 4 ref sensors for this individual template helmet
   % FIXME this assumes that coils and sensors coincide, this is generally not
   % true, however there is not much of a problem, because the points are only
   % used to get a transformation matrix
-  indxC = strmatch(labC, template(i).label, 'exact'); 
-  indxF = strmatch(labF, template(i).label, 'exact'); 
-  indxL = strmatch(labL, template(i).label, 'exact'); 
-  indxR = strmatch(labR, template(i).label, 'exact'); 
+  indxC = strmatch(labC, template(i).label, 'exact');
+  indxF = strmatch(labF, template(i).label, 'exact');
+  indxL = strmatch(labL, template(i).label, 'exact');
+  indxR = strmatch(labR, template(i).label, 'exact');
   if isempty(indxC) || isempty(indxF) || isempty(indxL) || isempty(indxR)
     error('not all 4 sensors were found that are needed to rotate/translate');
   end
@@ -231,10 +253,10 @@ templ.dirZ = cross(templ.dirX, templ.dirY);
 templ.tra = fixedbody(templ.meanC, templ.dirX, templ.dirY, templ.dirZ);
 
 % determine the 4 ref sensors for the helmet that belongs to this dataset
-indxC = strmatch(labC, template(1).label, 'exact'); 
-indxF = strmatch(labF, template(1).label, 'exact'); 
-indxL = strmatch(labL, template(1).label, 'exact'); 
-indxR = strmatch(labR, template(1).label, 'exact'); 
+indxC = strmatch(labC, template(1).label, 'exact');
+indxF = strmatch(labF, template(1).label, 'exact');
+indxL = strmatch(labL, template(1).label, 'exact');
+indxR = strmatch(labR, template(1).label, 'exact');
 if isempty(indxC) || isempty(indxF) || isempty(indxL) || isempty(indxR)
   error('not all 4 sensors were found that are needed to rotate/translate');
 end
@@ -276,15 +298,15 @@ template.grad.tra   = tmp_tra;
 template.grad.unit  = tmp_unit;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% FT_PREPARE_VOL_SENS will match the data labels, the gradiometer labels and the 
-% volume model labels (in case of a multisphere model) and result in a gradiometer 
+% FT_PREPARE_VOL_SENS will match the data labels, the gradiometer labels and the
+% volume model labels (in case of a multisphere model) and result in a gradiometer
 % definition that only contains the gradiometers that are present in the data.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 volcfg = [];
 if isfield(cfg, 'hdmfile')
   volcfg.hdmfile = cfg.hdmfile;
-elseif isfield(cfg, 'vol') 
+elseif isfield(cfg, 'vol')
   volcfg.vol = cfg.vol;
 end
 volcfg.grad    = data.grad;
@@ -294,13 +316,13 @@ volcfg.channel = data.label; % this might be a subset of the MEG channels
 % note that it is neccessary to keep the two volume conduction models
 % seperate, since the single-shell Nolte model contains gradiometer specific
 % precomputed parameters. Note that this is not guaranteed to result in a
-% good projection for local sphere models. 
+% good projection for local sphere models.
 volcfg.grad    = template.grad;
 volcfg.channel = 'MEG'; % include all MEG channels
 [volnew, template.grad] = prepare_headmodel(volcfg);
 
 if strcmp(ft_senstype(data.grad), ft_senstype(template.grad))
-  [id, it] = match_str(data.grad.label, template.grad.label);  
+  [id, it] = match_str(data.grad.label, template.grad.label);
   fprintf('mean distance towards template gradiometers is %.2f %s\n', mean(sum((data.grad.pnt(id,:)-template.grad.pnt(it,:)).^2, 2).^0.5), template.grad.unit);
 else
   % the projection is from one MEG system to another MEG system, which makes a comparison of the data difficult
@@ -329,7 +351,7 @@ else
   %this also goes for the singleshell volume conductor model
   %x = which('rigidbodyJM'); %this function is needed
   %if isempty(x),
-  %  error('you are trying out experimental code for which you need some extra functionality which is currently not in the release version of fieldtrip. if you are interested in trying it out, contact jan-mathijs'); 
+  %  error('you are trying out experimental code for which you need some extra functionality which is currently not in the release version of fieldtrip. if you are interested in trying it out, contact jan-mathijs');
   %end
 end
 
@@ -345,9 +367,9 @@ for i=1:Ntrials
     else
       %M    = rigidbodyJM(hmdat(:,1))
       M    = headcoordinates(hmdat(1:3,1),hmdat(4:6,1),hmdat(7:9,1));
-      grad = ft_transform_sens(M, data.grad); 
+      grad = ft_transform_sens(M, data.grad);
     end
-
+    
     volcfg.grad = grad;
     %compute volume conductor
     [volold, grad] = prepare_headmodel(volcfg);
@@ -367,13 +389,13 @@ for i=1:Ntrials
     rvnoalign = rv(data.trial{i}, datnoalign);
     rvbkalign = rv(data.trial{i}, datbkalign);
     fprintf('original             -> original RV %.2f %%\n', 100 * mean(rvnoalign));
-    fprintf('original -> template -> original RV %.2f %%\n', 100 * mean(rvbkalign)); 
+    fprintf('original -> template -> original RV %.2f %%\n', 100 * mean(rvbkalign));
   end
 end
 
 % plot the topography before and after the realignment
 if strcmp(cfg.feedback, 'yes')
-    
+  
   warning('showing MEG topography (RMS value over time) in the first trial only');
   Nchan = length(data.grad.label);
   [id,it]   = match_str(data.grad.label, template.grad.label);
@@ -381,7 +403,7 @@ if strcmp(cfg.feedback, 'yes')
   pnt2 = template.grad.pnt(it,:);
   prj1 = elproj(pnt1); tri1 = delaunay(prj1(:,1), prj1(:,2));
   prj2 = elproj(pnt2); tri2 = delaunay(prj2(:,1), prj2(:,2));
-
+  
   switch cfg.topoparam
     case 'rms'
       p1 = sqrt(mean(data.trial{1}(id,:).^2, 2));
@@ -392,11 +414,11 @@ if strcmp(cfg.feedback, 'yes')
     otherwise
       error('unsupported cfg.topoparam');
   end
-
+  
   X = [pnt1(:,1) pnt2(:,1)]';
   Y = [pnt1(:,2) pnt2(:,2)]';
   Z = [pnt1(:,3) pnt2(:,3)]';
-
+  
   % show figure with old an new helmets, volume model and dipole grid
   figure
   tmpcfg = [];
@@ -410,7 +432,7 @@ if strcmp(cfg.feedback, 'yes')
   plot3(pnt2(:,1), pnt2(:,2), pnt2(:,3), 'g.') % template positions
   line(X,Y,Z, 'color', 'black');
   view(-90, 90);
-
+  
   % show figure with data on old helmet location
   figure
   hold on
@@ -421,7 +443,7 @@ if strcmp(cfg.feedback, 'yes')
   triplot(pnt1, tri1, p1);
   title('RMS, before realignment')
   view(-90, 90)
- 
+  
   % show figure with data on new helmet location
   figure
   hold on
@@ -453,7 +475,7 @@ if ~isempty(rest.label)
 end
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % store the configuration of this function call, including that of the previous function call
 try
@@ -465,10 +487,18 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id   = '$Id$';
-% remember the configuration details of the input data
-try, cfg.previous = data.cfg; end
-% remember the exact configuration details in the output 
+
+if hasdata && isfield(data, 'cfg')
+  % remember the configuration details of the input data
+  cfg.previous = data.cfg;
+end
+% remember the exact configuration details in the output
 interp.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', interp); % use the variable name "data" in the output file
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunction that computes the projection matrix(ces)
