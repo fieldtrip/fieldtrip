@@ -194,6 +194,55 @@ tic;
 
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
+% check if the input cfg is valid for this function
+cfg = checkconfig(cfg, 'renamed',     {'jacknife',   'jackknife'});
+cfg = checkconfig(cfg, 'renamed',     {'refchannel', 'refchan'});
+cfg = checkconfig(cfg, 'renamedval',  {'method', 'power',           'dics'});
+cfg = checkconfig(cfg, 'renamedval',  {'method', 'coh_refchan',     'dics'});
+cfg = checkconfig(cfg, 'renamedval',  {'method', 'coh_refdip',      'dics'});
+cfg = checkconfig(cfg, 'renamedval',  {'method', 'dics_cohrefchan', 'dics'});
+cfg = checkconfig(cfg, 'renamedval',  {'method', 'dics_cohrefdip',  'dics'});
+cfg = checkconfig(cfg, 'forbidden',   {'parallel'});
+
+% set defaults for hasdata
+if ~isfield(cfg, 'inputfile'),        cfg.inputfile = [];         end
+if ~isfield(cfg, 'outputfile'),       cfg.outputfile = [];        end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+% check if the input data is valid for this function
+data = checkdata(data, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
+if nargin==3
+  baseline = checkdata(baseline, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
+end
+
+% determine the type of input data
+if isfield(data, 'freq')
+  isfreq     = 1;
+  iscomp     = 0;
+  istimelock = 0;
+elseif isfield(data, 'topo')
+  isfreq     = 0;
+  iscomp     = 1;
+  istimelock = 0;
+elseif isfield(data, 'time')
+  iscomp     = 0;
+  isfreq     = 0;
+  istimelock = 1;
+else
+  error('input data is not recognized');
+end
+
 % set the defaults
 if ~isfield(cfg, 'method') && istimelock, cfg.method = 'lcmv';      end
 if ~isfield(cfg, 'method') && isfreq,     cfg.method = 'dics';      end
@@ -222,53 +271,7 @@ if ~isfield(cfg, 'powmethod'),        cfg.powmethod = [];         end
 if ~isfield(cfg, 'channel'),          cfg.channel = 'all';        end
 if ~isfield(cfg, 'normalize'),        cfg.normalize = 'no';       end
 if ~isfield(cfg, 'prewhiten'),        cfg.prewhiten = 'no';       end
-if ~isfield(cfg, 'inputfile'),        cfg.inputfile = [];         end
-if ~isfield(cfg, 'outputfile'),       cfg.outputfile = [];        end
 % if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';      end  % the default for this depends on EEG/MEG and is set below
-
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-    hasdata = true;
-  end
-end
-
-% check if the input data is valid for this function
-data = checkdata(data, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
-if nargin>2
-  baseline = checkdata(baseline, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
-end
-
-% check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'renamed',     {'jacknife',   'jackknife'});
-cfg = checkconfig(cfg, 'renamed',     {'refchannel', 'refchan'});
-cfg = checkconfig(cfg, 'renamedval',  {'method', 'power',           'dics'});
-cfg = checkconfig(cfg, 'renamedval',  {'method', 'coh_refchan',     'dics'});
-cfg = checkconfig(cfg, 'renamedval',  {'method', 'coh_refdip',      'dics'});
-cfg = checkconfig(cfg, 'renamedval',  {'method', 'dics_cohrefchan', 'dics'});
-cfg = checkconfig(cfg, 'renamedval',  {'method', 'dics_cohrefdip',  'dics'});
-cfg = checkconfig(cfg, 'forbidden',   {'parallel'});
-
-% determine the type of input data
-if isfield(data, 'freq')
-  isfreq     = 1;
-  iscomp     = 0;
-  istimelock = 0;
-elseif isfield(data, 'topo')
-  isfreq     = 0;
-  iscomp     = 1;
-  istimelock = 0;
-elseif isfield(data, 'time')
-  iscomp     = 0;
-  isfreq     = 0;
-  istimelock = 1;
-else
-  error('input data is not recognized');
-end
 
 % put the low-level options pertaining to the source reconstruction method in their own field
 % put the low-level options pertaining to the dipole grid in their own field
@@ -1011,6 +1014,7 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id = '$Id$';
+
 % remember the configuration details of the input data
 if nargin==2
   try, cfg.previous    = data.cfg;     end
@@ -1021,6 +1025,11 @@ elseif nargin==3
 end
 % remember the exact configuration details in the output
 source.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', source); % use the variable name "data" in the output file
+end
 
 fprintf('total time in sourceanalysis %.1f seconds\n', toc);
 

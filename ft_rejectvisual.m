@@ -71,6 +71,8 @@ function [data] = ft_rejectvisual(cfg, data);
 
 % Undocumented local options:
 % cfg.feedback
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
 %
 % This function depends on PREPROC which has the following options:
 % cfg.absdiff
@@ -128,9 +130,6 @@ fieldtripdefs
 
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
-% check if the input data is valid for this function
-data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
-
 if ~isfield(cfg, 'channel'),     cfg.channel = 'all';          end
 if ~isfield(cfg, 'trials'),      cfg.trials = 'all';           end
 if ~isfield(cfg, 'latency'),     cfg.latency = 'maxperlength'; end
@@ -142,6 +141,23 @@ if ~isfield(cfg, 'eegscale'),    cfg.eegscale = [];            end
 if ~isfield(cfg, 'eogscale'),    cfg.eogscale = [];            end
 if ~isfield(cfg, 'ecgscale'),    cfg.ecgscale = [];            end
 if ~isfield(cfg, 'megscale'),    cfg.megscale = [];            end
+if ~isfield(cfg, 'inputfile'),   cfg.inputfile = [];           end
+if ~isfield(cfg, 'outputfile'),  cfg.outputfile = [];          end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+% check if the input data is valid for this function
+data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 % for backward compatibility
 cfg = checkconfig(cfg, 'renamedval',  {'metric',  'absmax',  'maxabs'});
@@ -158,7 +174,7 @@ end
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
-  data = selectdata(data, 'rpt', cfg.trials);  
+  data = selectdata(data, 'rpt', cfg.trials);
 end
 
 % determine the duration of each trial
@@ -246,7 +262,7 @@ elseif strcmp(cfg.method, 'summary')
   else
     fprintf('showing a summary of the data for all channels and trials\n');
   end
-
+  
   [chansel, trlsel, cfg] = rejectvisual_summary(cfg, tmpdata);
 end
 
@@ -304,7 +320,6 @@ if isfield(data, 'offset')
   data = rmfield(data, 'offset');
 end
 
-
 if ~all(chansel)
   switch cfg.keepchannel
     case 'no'
@@ -315,7 +330,7 @@ if ~all(chansel)
         fprintf('%s, ', data.label{removed(i)});
       end
       fprintf('%s\n', data.label{removed(end)});
-
+      
       % remove channels that are not selected
       for i=1:length(data.trial)
         data.trial{i} = data.trial{i}(chansel,:);
@@ -339,6 +354,8 @@ if ~all(chansel)
   end
 end
 
+cfg.outputfile;
+
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
@@ -352,8 +369,15 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id = '$Id$';
-% remember the configuration details of the input data
-try, cfg.previous = data.cfg; end
+
+if hasdata && isfield(data, 'cfg')
+  % remember the configuration details of the input data
+  cfg.previous = data.cfg;
+end
 % remember the exact configuration details in the output
 data.cfg = cfg;
 
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', data); % use the variable name "data" in the output file
+end

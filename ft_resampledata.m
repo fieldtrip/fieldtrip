@@ -39,6 +39,10 @@ function [data] = ft_resampledata(cfg, data);
 %   data.time
 %
 % See also FT_PREPROCESSING
+%
+% Undocumented local options:
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
 
 % Copyright (C) 2003-2006, FC Donders Centre, Markus Siegel
 % Copyright (C) 2004-2009, FC Donders Centre, Robert Oostenveld
@@ -65,9 +69,6 @@ fieldtripdefs
 
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
-% check if the input data is valid for this function
-data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
-
 % set the defaults
 if ~isfield(cfg, 'resamplefs'), cfg.resamplefs = [];   end
 if ~isfield(cfg, 'time'),       cfg.time = {};         end
@@ -76,6 +77,23 @@ if ~isfield(cfg, 'blc'),        cfg.blc = 'no';        end
 if ~isfield(cfg, 'feedback'),   cfg.feedback = 'text'; end
 if ~isfield(cfg, 'trials'),     cfg.trials = 'all';    end
 if ~isfield(cfg, 'method'),     cfg.method = 'pchip';  end  % interpolation method
+if ~isfield(cfg, 'inputfile'),  cfg.inputfile = [];    end
+if ~isfield(cfg, 'outputfile'), cfg.outputfile = [];   end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+% check if the input data is valid for this function
+data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 if isempty(cfg.detrend)
   error('The previous default to apply detrending has been changed. Recommended is to apply a baseline correction instead of detrending. See the help of this function for more details.');
@@ -119,9 +137,9 @@ if usefsample
   % resample based on new sampling frequency
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   ntr = length(data.trial);
-
+  
   progress('init', cfg.feedback, 'resampling data');
-  [fsorig, fsres] = rat(cfg.origfs./cfg.resamplefs);%account for non-integer fs 
+  [fsorig, fsres] = rat(cfg.origfs./cfg.resamplefs);%account for non-integer fs
   cfg.resamplefs  = cfg.origfs.*(fsres./fsorig);%get new fs exact
   for itr = 1:ntr
     progress(itr/ntr, 'resampling data in trial %d from %d\n', itr, ntr);
@@ -143,16 +161,16 @@ if usefsample
     data.time{itr} = data.time{itr}(1) + (0:(nsmp-1))/cfg.resamplefs;
   end % for itr
   progress('close');
-
+  
   % specify the new sampling frequency in the output
   data.fsample = cfg.resamplefs;
-
+  
 elseif usetime
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % resample based on new time axes for each trial
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   ntr = length(data.trial);
-
+  
   progress('init', cfg.feedback, 'resampling data');
   for itr = 1:ntr
     progress(itr/ntr, 'resampling data in trial %d from %d\n', itr, ntr);
@@ -172,23 +190,23 @@ elseif usetime
     data.time{itr} = cfg.time{itr};
   end % for itr
   progress('close');
-
+  
   % specify the new sampling frequency in the output
   t1 = cfg.time{1}(1);
   t2 = cfg.time{1}(2);
   data.fsample = 1/(t2-t1);
-
+  
 end % if usefsample or usetime
 
 % update the trl matrix, which is needed for fetch_data and fetch_header (e.g. in ft_databrowser)
 if ~isempty(trl)
- trlorig  = trl;
- offsindx = round((trl(:,1)-trl(:,3)).*(data.fsample./cfg.origfs));
- offs     = round(trl(:,3).*(data.fsample./cfg.origfs));
- nsmp     = cellfun('size',data.trial,2)';
- trl      = [offsindx+offs+1 offsindx+offs+nsmp offs];
- cfg.trl = trl;
- cfg.trlorig = trlorig;
+  trlorig  = trl;
+  offsindx = round((trl(:,1)-trl(:,3)).*(data.fsample./cfg.origfs));
+  offs     = round(trl(:,3).*(data.fsample./cfg.origfs));
+  nsmp     = cellfun('size',data.trial,2)';
+  trl      = [offsindx+offs+1 offsindx+offs+nsmp offs];
+  cfg.trl = trl;
+  cfg.trlorig = trlorig;
 end
 
 fprintf('original sampling rate = %d Hz\nnew sampling rate = %d Hz\n', cfg.origfs, data.fsample);
@@ -206,8 +224,16 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id = '$Id$';
-% remember the configuration details of the input data
-try, cfg.previous = data.cfg; end
+
+if hasdata && isfield(data, 'cfg')
+  % remember the configuration details of the input data
+  cfg.previous = data.cfg;
+end
 % remember the exact configuration details in the output
 data.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', data); % use the variable name "data" in the output file
+end
 

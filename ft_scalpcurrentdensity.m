@@ -47,6 +47,10 @@ function [scd] = ft_scalpcurrentdensity(cfg, data);
 %   B. Hjort; An on-line transformation of EEG ccalp potentials into
 %   orthogonal source derivation. Electroencephalography and Clinical
 %   Neurophysiology 39:526-530, 1975.
+%
+% Undocumented local options:
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
 
 % Copyright (C) 2004-2006, Robert Oostenveld
 %
@@ -70,18 +74,32 @@ function [scd] = ft_scalpcurrentdensity(cfg, data);
 
 fieldtripdefs
 
-% check if the input data is valid for this function
-data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'ismeg', 'no');
-
 % set the defaults
 if ~isfield(cfg, 'method'),        cfg.method = 'spline';    end
 if ~isfield(cfg, 'conductivity'),  cfg.conductivity = 0.33;  end    % in S/m
 if ~isfield(cfg, 'trials'),        cfg.trials = 'all';       end
+if ~isfield(cfg, 'inputfile'),     cfg.inputfile = [];       end
+if ~isfield(cfg, 'outputfile'),    cfg.outputfile = [];      end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+% check if the input data is valid for this function
+data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'ismeg', 'no');
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
-  data = selectdata(data, 'rpt', cfg.trials);  
+  data = selectdata(data, 'rpt', cfg.trials);
   if isfield(data, 'cfg') % try to locate the trl in the nested configuration
     cfg.trlold = findcfg(data.cfg, 'trlold');
     cfg.trl    = findcfg(data.cfg, 'trl');
@@ -137,7 +155,7 @@ if strcmp(cfg.method, 'spline')
     [V2, L2, L1] = splint(elec.pnt, data.trial{trlop}, [0 0 1]);
     scd.trial{trlop} = L1;
   end
-
+  
 elseif strcmp(cfg.method, 'finite')
   % the finite difference approach requires a triangulation
   prj = elproj(elec.pnt);
@@ -149,7 +167,7 @@ elseif strcmp(cfg.method, 'finite')
   % apply the montage to the data, also update the electrode definition
   scd  = ft_apply_montage(data, montage);
   elec = ft_apply_montage(elec, montage);
-
+  
 elseif strcmp(cfg.method, 'hjorth')
   % the Hjorth filter requires a specification of the neighbours
   if ~isfield(cfg, 'neighbours')
@@ -173,14 +191,14 @@ elseif strcmp(cfg.method, 'hjorth')
     tra(i, thischan) = 1;
     tra(i, thisneighb) = -1/length(thisneighb);
   end
-  % combine it in a montage 
+  % combine it in a montage
   montage.tra = tra;
   montage.labelorg = labelorg;
   montage.labelnew = labelnew;
   % apply the montage to the data, also update the electrode definition
   scd  = ft_apply_montage(data, montage);
   elec = ft_apply_montage(elec, montage);
-
+  
 else
   error('unknown method for SCD computation');
 end
@@ -217,8 +235,16 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id   = '$Id$';
-% remember the configuration details of the input data
-try, cfg.previous = data.cfg; end
+
+if hasdata && isfield(data, 'cfg')
+  % remember the configuration details of the input data
+  cfg.previous = data.cfg;
+end
 % remember the exact configuration details in the output
 scd.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', scd); % use the variable name "data" in the output file
+end
 

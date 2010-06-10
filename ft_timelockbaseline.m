@@ -10,11 +10,13 @@ function [timelock] = ft_timelockbaseline(cfg, timelock);
 %   cfg.channel      = cell-array, see FT_CHANNELSELECTION
 %
 % See also FT_TIMELOCKANALYSIS, FT_FREQBASELINE
-
+%
 % Undocumented local options:
-% cfg.blcwindow
-% cfg.previous
-% cfg.version
+%   cfg.blcwindow
+%   cfg.previous
+%   cfg.version
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
 
 % Copyright (C) 2006, Robert Oostenveld
 %
@@ -40,6 +42,23 @@ fieldtripdefs
 
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
+% set the defaults
+if ~isfield(cfg, 'baseline'),   cfg.baseline    = 'no';   end
+if ~isfield(cfg, 'inputfile'),  cfg.inputfile   = [];     end
+if ~isfield(cfg, 'outputfile'), cfg.outputfile  = [];     end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    timelock = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
 % check if the input data is valid for this function
 timelock = checkdata(timelock, 'datatype', 'timelock', 'feedback', 'yes');
 
@@ -58,9 +77,6 @@ elseif isfield(cfg, 'blc') && strcmp(cfg.blc, 'yes')
   cfg = rmfield(cfg, 'blcwindow');
 end
 
-% set the defaults
-if ~isfield(cfg, 'baseline'), cfg.baseline = 'no'; end
-
 if ischar(cfg.baseline)
   if strcmp(cfg.baseline, 'yes')
     % do correction on the whole time interval
@@ -78,7 +94,7 @@ if ~(ischar(cfg.baseline) && strcmp(cfg.baseline, 'no'))
   % update the configuration
   cfg.baseline(1) = timelock.time(tbeg);
   cfg.baseline(2) = timelock.time(tend);
-
+  
   if isfield(cfg, 'channel')
     % only apply on selected channels
     cfg.channel = ft_channelselection(cfg.channel, timelock.label);
@@ -88,7 +104,7 @@ if ~(ischar(cfg.baseline) && strcmp(cfg.baseline, 'no'))
     % apply on all channels
     timelock.avg = ft_preproc_baselinecorrect(timelock.avg, tbeg, tend);
   end
-
+  
   if strcmp(timelock.dimord, 'rpt_chan_time')
     fprintf('applying baseline correction on each individual trial\n');
     ntrial = size(timelock.trial,1);
@@ -118,21 +134,21 @@ if ~(ischar(cfg.baseline) && strcmp(cfg.baseline, 'no'))
       end
     end
   end
-
+  
   if isfield(timelock, 'var')
     fprintf('baseline correction invalidates previous variance estimate, removing var\n');
     timelock = rmfield(timelock, 'var');
   end
-
+  
   if isfield(timelock, 'cov')
     fprintf('baseline correction invalidates previous covariance estimate, removing cov\n');
     timelock = rmfield(timelock, 'cov');
   end
-
+  
 end % ~strcmp(cfg.baseline, 'no')
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 try
@@ -144,8 +160,15 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id = '$Id$';
-% remember the configuration details of the input data
-try, cfg.previous = timelock.cfg; end
-% remember the exact configuration details in the output 
+
+if hasdata && isfield(timelock, 'cfg')
+  % remember the configuration details of the input data
+  cfg.previous = timelock.cfg;
+end
+% remember the exact configuration details in the output
 timelock.cfg = cfg;
 
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', timelock); % use the variable name "data" in the output file
+end
