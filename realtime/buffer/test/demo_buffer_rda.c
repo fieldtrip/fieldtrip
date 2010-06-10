@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 		printf("Could not start rdaserver: %i\n", errval);
 		return errval;
 	}
-	rdac->verbosity = 10;
+	rdac->verbosity = 5;
 
 #ifndef PLATFORM_WIN32	
 	/* We want CTRL-C in this thread */

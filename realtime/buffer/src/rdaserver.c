@@ -148,7 +148,7 @@ rda_buffer_item_t *rda_aux_get_hdr_prep_start(int ft_buffer, headerdef_t *hdr) {
 	}
 	
 	bytesTotal = sizeof(rda_msg_start_t) + hdr->nchans*(sizeof(double)) + sizeOrgNames + numExtraZeros;
-	
+		
 	item = rda_aux_alloc_item(bytesTotal);
 	if (item == NULL) goto cleanup;
 	
@@ -157,7 +157,7 @@ rda_buffer_item_t *rda_aux_get_hdr_prep_start(int ft_buffer, headerdef_t *hdr) {
 	R->hdr.nSize = bytesTotal;
 	R->hdr.nType = RDA_START_MSG;
 	R->nChannels = hdr->nchans;
-	R->dSamplingInterval = 1.0e6/hdr->fsample;	/* should be in microseconds */
+	R->dSamplingInterval = 100000.0/(double) hdr->fsample;	/* should be in microseconds */
 	
 	if (_i_am_big_endian_) {
 		/* take care of hdr.nSize, hdr.nType, nChannels */
@@ -184,6 +184,7 @@ rda_buffer_item_t *rda_aux_get_hdr_prep_start(int ft_buffer, headerdef_t *hdr) {
 		memcpy(str, chunk->data, sizeOrgNames);
 	}
 	for (i=0;i<numExtraZeros;i++) str[sizeOrgNames + i] = 0;
+	
 	/* done */
 cleanup:
 	if (resp) {
@@ -305,8 +306,7 @@ rda_buffer_item_t *rda_aux_get_samples_and_markers(int ft_buffer, const samples_
 	/* Now, try to grab the markers */
 	if (cur->nevents > last->nevents) {
 		eventsel_t evt_sel;
-		size_t bytesMarkers = 0;
-		int offset;
+		int offset = 0;
 		
 		msg_def.version = VERSION;
 		msg_def.command = GET_EVT;
@@ -322,7 +322,7 @@ rda_buffer_item_t *rda_aux_get_samples_and_markers(int ft_buffer, const samples_
 		if (respEvt == NULL || respEvt->def == NULL || respEvt->buf == NULL || respEvt->def->command != GET_OK) {
 			goto cleanup;
 		}
-			
+		
 		/* count the number of events, increase bytesTotal as required */
 		while (offset + sizeof(eventdef_t) <= respEvt->def->bufsize) {
 			eventdef_t *evdef = (eventdef_t *) ((char *)respEvt->buf + offset);
@@ -409,7 +409,7 @@ rda_buffer_item_t *rda_aux_get_samples_and_markers(int ft_buffer, const samples_
 	/* Finally, fill in the events */
 	if (numEvt>0) {
 		char *ptr = (char *) item->data + sizeof(rda_msg_data_t) + bytesSamples;
-		char offset = 0;
+		int offset = 0;
 		
 		/* count the number of events, increase bytesTotal as required */
 		while (offset + sizeof(eventdef_t) <= respEvt->def->bufsize) {
@@ -781,7 +781,7 @@ void *_rdaserver_thread(void *arg) {
 					
 					for (i=0;i<numClients;i++) {
 						if (clients[i].item == NULL) {
-							if (SC->verbosity>5) {
+							if (SC->verbosity>6) {
 								printf("Adding new job for client %i\n", clients[i].sock);
 							}
 							clients[i].item = item;

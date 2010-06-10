@@ -97,14 +97,24 @@ int main(int argc, char *argv[]) {
 		}
 
 //		status = close_connection(server);
-		if (status) {
+		if (status || response==NULL || response->def == NULL) {
 				fprintf(stderr, "sinewave: err2\n");
 				exit(1);
 		}
 
-		/* FIXME do someting with the response, i.e. check that it is OK */
-		FREE(request);
-		FREE(response);
+		free(request->def);
+		free(request);
+		
+		FREE(response->buf);
+		if (response->def->command != PUT_OK) {
+				fprintf(stderr, "sinewave: error in 'put header' request.\n");
+				exit(1);
+		}
+		free(response->def);
+		free(response);
+		
+		/* add a small pause between writing header + first data block */
+		usleep(200000);
 
 		while (1) {
 				for (j=0; j<blocksize; j++) {
@@ -143,10 +153,16 @@ int main(int argc, char *argv[]) {
 						fprintf(stderr, "sinewave: err4\n");
 						exit(1);
 				}
+				
+				printf("Sample count: %8i\n", sample);
 
 				/* FIXME do someting with the response, i.e. check that it is OK */
-				FREE(request);
-				FREE(response);
+				cleanup_message(&request);
+				
+				if (response == NULL || response->def == NULL || response->def->command!=PUT_OK) {
+					fprintf(stderr, "Error when writing samples.\n");
+				}
+				cleanup_message(&response);
 
 				/* approximate delay in microseconds */
 				tdif = (long)(blocksize * 1000000 / fsample);

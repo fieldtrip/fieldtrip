@@ -21,6 +21,8 @@ extern "C" {
 #define RDA_STOP_MSG	3
 #define RDA_FLOAT_MSG	4
 
+#pragma pack(push,1)
+
 /** Structure of the first 24 bytes of all RDA messages */
 typedef struct {
 	UINT8_T guid[16];
@@ -59,6 +61,8 @@ typedef struct {
 	INT32_T nChannel;	/* Associated channel number (-1 = all channels) */
 	/* char sTypeDesc[1];  Type description in ASCII delimited by '\0', variable length actually */
 } rda_marker_t;	
+
+#pragma pack(pop)
 
 #ifdef __cplusplus
 }
