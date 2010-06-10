@@ -336,18 +336,18 @@ rda_buffer_item_t *rda_aux_get_samples_and_markers(int ft_buffer, const samples_
 			bytesMarkers += sizeof(rda_marker_t);
 			if (evdef->type_type == DATATYPE_CHAR) {
 				if (evdef->value_type == DATATYPE_CHAR) {
-					/* Transform into TYPE\0VALUE\0 */
+					/* Transform into TYPE:VALUE\0 */
 					bytesMarkers += evdef->type_numel + evdef->value_numel + 2;
 				} else {
-					/* Transform into TYPE\0-\0 */
+					/* Transform into TYPE:-\0 */
 					bytesMarkers += evdef->type_numel + 3;
 				}
 			} else {
 				if (evdef->value_type == DATATYPE_CHAR) {
-					/* Transform into FT\0VALUE\0 */
+					/* Transform into FT:VALUE\0 */
 					bytesMarkers += evdef->value_numel + 4;
 				} else {
-					/* Transform into FT\0-\0 */
+					/* Transform into FT:-\0 */
 					bytesMarkers += 5; 
 				}
 			}
@@ -441,7 +441,7 @@ rda_buffer_item_t *rda_aux_get_samples_and_markers(int ft_buffer, const samples_
 				/* Skip bytes in event->buffer */
 				evbuf += evdef->type_numel;
 			}
-			*ptr++ = 0;				
+			*ptr++ = ':';				
 			if (evdef->value_type == DATATYPE_CHAR) {
 				/* copy value */
 				for (i=0;i<evdef->value_numel;i++) {
