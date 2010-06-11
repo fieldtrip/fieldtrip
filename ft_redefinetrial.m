@@ -37,6 +37,10 @@ function [data] = ft_redefinetrial(cfg, data)
 %   cfg.trl       = Nx3 matrix with the trial definition, see FT_DEFINETRIAL
 %
 % See also FT_DEFINETRIAL, FT_RECODEEVENT, FT_PREPROCESSING
+%
+% Undocumented local options:
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
 
 % Copyright (C) 2006-2008, Robert Oostenveld
 %
@@ -61,14 +65,28 @@ function [data] = ft_redefinetrial(cfg, data)
 fieldtripdefs
 
 % set the defaults
-if ~isfield(cfg, 'offset'),    cfg.offset = [];    end
-if ~isfield(cfg, 'toilim'),    cfg.toilim = [];    end
-if ~isfield(cfg, 'begsample'), cfg.begsample = []; end
-if ~isfield(cfg, 'endsample'), cfg.endsample = []; end
-if ~isfield(cfg, 'minlength'), cfg.minlength = []; end
-if ~isfield(cfg, 'trials'),    cfg.trials = 'all'; end
-if ~isfield(cfg, 'feedback'),  cfg.feedback = 'yes'; end
-if ~isfield(cfg, 'trl'),       cfg.trl =  [];      end
+if ~isfield(cfg, 'offset'),     cfg.offset = [];      end
+if ~isfield(cfg, 'toilim'),     cfg.toilim = [];      end
+if ~isfield(cfg, 'begsample'),  cfg.begsample = [];   end
+if ~isfield(cfg, 'endsample'),  cfg.endsample = [];   end
+if ~isfield(cfg, 'minlength'),  cfg.minlength = [];   end
+if ~isfield(cfg, 'trials'),     cfg.trials = 'all';   end
+if ~isfield(cfg, 'feedback'),   cfg.feedback = 'yes'; end
+if ~isfield(cfg, 'trl'),        cfg.trl =  [];        end
+if ~isfield(cfg, 'inputfile'),  cfg.inputfile = [];   end
+if ~isfield(cfg, 'outputfile'), cfg.outputfile = [];  end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
 
 % check if the input data is valid for this function
 data = checkdata(data, 'datatype', 'raw', 'feedback', cfg.feedback);
@@ -138,13 +156,13 @@ if ~isempty(cfg.toilim)
     trl(:,2) = trl(:,1) + endsample - begsample;
     trl(:,3) = trl(:,3) + begsample - 1;
   end
-
+  
   % remove trials that are completely empty
   trl = trl(~skiptrial,:);
   data.time  = data.time(~skiptrial);
   data.trial = data.trial(~skiptrial);
   if fb, fprintf('removing %d trials in which no data was selected\n', sum(skiptrial)); end
-
+  
 elseif ~isempty(cfg.offset)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % shift the time axis from each trial
@@ -156,12 +174,12 @@ elseif ~isempty(cfg.offset)
   for i=1:Ntrial
     data.time{i} = data.time{i} + offset(i)/data.fsample;
   end
-
+  
   % also correct the trial definition
   if ~isempty(trl)
     trl(:,3) = trl(:,3) + offset;
   end
-
+  
 elseif ~isempty(cfg.begsample) || ~isempty(cfg.endsample)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % select a latency window from each trial based on begin and/or end sample
@@ -178,24 +196,24 @@ elseif ~isempty(cfg.begsample) || ~isempty(cfg.endsample)
     data.trial{i} = data.trial{i}(:, begsample(i):endsample(i));
     data.time{i}  = data.time{i} (   begsample(i):endsample(i));
   end
-
+  
   % also correct the trial definition
   if ~isempty(trl)
     trl(:,1) = trl(:,1) + begsample - 1;
     trl(:,2) = trl(:,1) + endsample - begsample;
     trl(:,3) = trl(:,3) + begsample - 1;
   end
-
+  
 elseif ~isempty(cfg.trl)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % select new trials from the existing data
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   dataold = data;   % make a copy of the old data
   clear data        % this line is very important, we want to completely reconstruct the data from the old data!
-
+  
   % make header
   hdr = fetch_header(dataold);
-
+  
   % make new data structure
   trl = cfg.trl;
   for iTrl=1:length(trl(:,1))
@@ -251,9 +269,16 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id = '$Id$';
+
 % remember the configuration details of the input data
-try, cfg.previous = data.cfg;    end
-try, cfg.previous = dataold.cfg; end % in case of ~isempty(cfg.trl)
+if hasdata && isfield(data, 'cfg')
+  % remember the configuration details of the input data
+  try, cfg.previous = data.cfg; end
+  try, cfg.previous = dataold.cfg; end % in case of ~isempty(cfg.trl)
+end
 % remember the exact configuration details in the output
 data.cfg = cfg;
-
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', data); % use the variable name "data" in the output file
+end

@@ -1,13 +1,13 @@
 function [cfg] = ft_databrowser(cfg, data)
 
 % FT_DATABROWSER can be used for visual inspection of data. Artifacts that were detected
-% by artifact functions (see FT_ARTIFACT_xxx functions where xxx is the type of artifact) 
-% are marked. Additionally data pieces can be marked and unmarked as artifact by 
+% by artifact functions (see FT_ARTIFACT_xxx functions where xxx is the type of artifact)
+% are marked. Additionally data pieces can be marked and unmarked as artifact by
 % manual selection. The output cfg contains the updated artifactdef field.
 %
 % Use as
 %   cfg = ft_databrowser(cfg)
-%   required configuration options: 
+%   required configuration options:
 %   cfg.dataset or both cfg.headerfile and cfg.datafile
 % or as
 %   cfg = ft_databrowser(cfg, data)
@@ -24,10 +24,10 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.selectfeature           = string, name of feature to be selected/added (default = 'visual')
 %   cfg.selectmode              = string, what to do with a selection, can be 'mark', or 'eval' (default = 'mark')
 %                                 'mark': artfctdef field is updated, 'eval': the function defined in
-%                                 cfg.selfun is evaluated f.i. browse_movieplotER calls movieplotER which makes 
+%                                 cfg.selfun is evaluated f.i. browse_movieplotER calls movieplotER which makes
 %                                 a movie of the selected data
 %   cfg.colorgroups             = 'sequential' 'labelcharx' (x = xth character in label), 'chantype' or
-%                                  vector with length(data/hdr.label) defining groups (default = 'sequential') 
+%                                  vector with length(data/hdr.label) defining groups (default = 'sequential')
 %   cfg.channelcolormap         = COLORMAP (default = customized lines map with 15 colors)
 %   cfg.selfun                  = string, name of function which is evaluated if selectmode is set to 'eval'.
 %                                  The selected data and the selcfg are passed on to this function.
@@ -46,6 +46,10 @@ function [cfg] = ft_databrowser(cfg, data)
 %
 % See also FT_PREPROCESSING, FT_REJECTARTIFACT, FT_ARTIFACT_EOG, FT_ARTIFACT_MUSCLE,
 % FT_ARTIFACT_JUMP, FT_ARTIFACT_MANUAL, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG
+%
+% Undocumented local options:
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
 
 % Copyright (C) 2009, Robert Oostenveld, Ingrid Niewenhuis
 %
@@ -69,11 +73,27 @@ function [cfg] = ft_databrowser(cfg, data)
 
 fieldtripdefs
 
-if nargin>1
+% set defaults for optional cfg.input and or cfg.outputfile
+if ~isfield(cfg, 'inputfile'),       cfg.inputfile = [];               end
+if ~isfield(cfg, 'outputfile'),      cfg.outputfile = [];              end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+if hasdata
   data = checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hastrialdef', 'yes');
-  if ~isfield(cfg, 'continuous') && length(data.trial) == 1 
-    cfg.continuous = 'yes';           
-  end 
+  if ~isfield(cfg, 'continuous') && length(data.trial) == 1
+    cfg.continuous = 'yes';
+  end
 else
   % check if the input cfg is valid for this function
   cfg = checkconfig(cfg, 'dataset2files', {'yes'});
@@ -111,7 +131,7 @@ if ischar(cfg.selectfeature)
 end
 
 % get some initial parameters from the data
-if nargin>1
+if hasdata
   % fetch the header
   hdr = fetch_header(data);
   
@@ -122,7 +142,7 @@ if nargin>1
   chansel = match_str(data.label, cfg.channel);
   fsample = 1/(data.time{1}(2)-data.time{1}(1));
   Nchans  = length(chansel);
-    
+  
   % this is how the input data is segmented
   trlorg = findcfg(data.cfg, 'trl');
   Ntrials = size(trlorg, 1);
@@ -194,7 +214,7 @@ if Ntrials == 0
 end
 
 % determine coloring of channels
-if nargin>1
+if hasdata
   labels_all = data.label;
 else
   labels_all= hdr.label;
@@ -202,7 +222,7 @@ end
 if size(cfg.channelcolormap,2) ~= 3
   error('cfg.channelcolormap is not valid, size should be Nx3')
 end
-if isnumeric(cfg.colorgroups) 
+if isnumeric(cfg.colorgroups)
   % groups defined by user
   if length(labels_all) ~= length(cfg.colorgroups)
     error('length(cfg.colorgroups) should be length(data/hdr.label)')
@@ -210,7 +230,7 @@ if isnumeric(cfg.colorgroups)
   R = cfg.channelcolormap(:,1);
   G = cfg.channelcolormap(:,2);
   B = cfg.channelcolormap(:,3);
-  chan_colors = [R(cfg.colorgroups(:)) G(cfg.colorgroups(:)) B(cfg.colorgroups(:))]; 
+  chan_colors = [R(cfg.colorgroups(:)) G(cfg.colorgroups(:)) B(cfg.colorgroups(:))];
 elseif strcmp(cfg.colorgroups, 'chantype')
   type = ft_chantype(labels_all);
   [tmp1 tmp2 cfg.colorgroups] = unique(type);
@@ -305,10 +325,10 @@ set(h, 'WindowButtonMotionFcn', {@select_range, 'multiple', false, 'xrange', tru
 
 % these elements are stored inside the figure so that the callback routines can modify them
 opt = [];
-if nargin<2
-  opt.orgdata   = [];      % this means that it will look in opt.cfg.dataset
-else
+if hasdata
   opt.orgdata   = data;
+else
+  opt.orgdata   = [];      % this means that it will look in opt.cfg.dataset
 end
 opt.artdata  = artdata;
 opt.cfg      = cfg;        % the configuration of this function, not of the preprocessing
@@ -382,7 +402,7 @@ if nargout
   % wait until the user interface is closed, get the user data with the updated artifact details
   set(h, 'CloseRequestFcn', @cleanup_cb);
   
-  while ishandle(h) 
+  while ishandle(h)
     uiwait(h);
     opt = guidata(h);
     if opt.cleanup
@@ -406,11 +426,20 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id = '$Id$';
+
 % remember the configuration details of the input data
-try cfg.previous = data.cfg; end
+if hasdata && isfield(data, 'cfg')
+  cfg.previous = data.cfg;
+end
+% remember the exact configuration details in the output
+dataout.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', dataout); % use the variable name "data" in the output file
+end
 
 end % main function
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -504,7 +533,7 @@ switch opt.cfg.viewmode
       % different trigger in each trial, which is usually the case in trial data
       begsel = round(range(1)*opt.fsample+begsample-offset-1);
       endsel = round(range(2)*opt.fsample+begsample-offset);
-    elseif strcmp(opt.trialname, 'segment') 
+    elseif strcmp(opt.trialname, 'segment')
       % this is appropriate when the offset is defined according to a
       % one trigger, which is always the case in segment data [I think ingnie]
       begsel = round(range(1)*opt.fsample+1);
@@ -513,7 +542,7 @@ switch opt.cfg.viewmode
     % the selection should always be confined to the current trial
     begsel = max(begsample, begsel);
     endsel = min(endsample, endsel);
-
+    
   case {'vertical', 'component'}
     % the range should be in the displayed box
     range(1) = max(opt.hpos(1), range(1));
@@ -522,7 +551,7 @@ switch opt.cfg.viewmode
     range(2) = min(opt.hpos(2), range(2));
     range = (range - opt.hpos(1)) / (opt.hpos(2) - opt.hpos(1)); % left side of the box becomes 0, right side becomes 1
     range = range * (opt.hlim(2) - opt.hlim(1)) + opt.hlim(1);   % 0 becomes hlim(1), 1 becomes hlim(2)
-
+    
     begsample = opt.trlvis(opt.trlop,1);
     endsample = opt.trlvis(opt.trlop,2);
     offset    = opt.trlvis(opt.trlop,3);
@@ -562,14 +591,14 @@ elseif strcmp(opt.cfg.selectmode, 'mark')
     opt.artdata.trial{1}(opt.ftsel, begsel:endsel) = 1;
   end
   
-elseif strcmp(opt.cfg.selectmode, 'eval') 
+elseif strcmp(opt.cfg.selectmode, 'eval')
   % cut out the requested data segment
   seldata.label    = opt.curdat.label;
   seldata.time{1}  = offset2time(offset+begsel-begsample, opt.fsample, endsel-begsel+1);
   seldata.trial{1} = fetch_data(opt.curdat, 'begsample', begsel, 'endsample', endsel);
   seldata.fsample  = opt.fsample;
   seldata.cfg.trl  = [begsel endsel offset];
-
+  
   feval(opt.cfg.selfun, opt.cfg.selcfg, seldata);
   
 else
