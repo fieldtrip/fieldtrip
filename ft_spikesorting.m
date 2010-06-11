@@ -47,6 +47,8 @@ fieldtripdefs
 if ~isfield(cfg, 'feedback'),       cfg.feedback = 'textbar';    end
 if ~isfield(cfg, 'method'),         cfg.method = 'ward';         end
 if ~isfield(cfg, 'channel'),        cfg.channel = 'all';         end
+if ~isfield(cfg, 'inputfile'),      cfg.inputfile = [];          end
+if ~isfield(cfg, 'outputfile'),     cfg.outputfile = [];         end
 
 if isequal(cfg.method, 'ward')
   if ~isfield(cfg, 'ward'),           cfg.ward          = [];       end
@@ -59,6 +61,18 @@ end
 if isequal(cfg.method, 'kmeans')
   if ~isfield(cfg, 'kmeans'),         cfg.kmeans        = [];       end
   if ~isfield(cfg.kmeans, 'aantal'),  cfg.kmeans.aantal = 10;       end
+end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
 end
 
 % select the channels
@@ -120,6 +134,11 @@ cfg.version.id = '$Id$';
 try, cfg.previous    = spike.cfg;     end
 % remember the configuration
 spike.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', spike); % use the variable name "data" in the output file
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that computes the distance between all spike waveforms

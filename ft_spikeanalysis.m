@@ -11,10 +11,10 @@ function [spike] = ft_spikeanalysis(cfg, data);
 %   in combination with cfg.method = 'rate',
 %     cfg.toi    = the spike-rate is computed in a window surrounding the time-points in cfg.toi
 %     cfg.timwin = window width
-%     
+%
 %     if cfg.toi and cfg.timwin are not specified, the average rate across each trial is computed.
-%  
-%   in combination with cfg.method = 'spikephase' 
+%
+%   in combination with cfg.method = 'spikephase'
 %     cfg.channelcmb    = cell-array, see FT_CHANNELCOMBINATION
 %     cfg.bpfilter      = 'no' or 'yes'  bandpass filter
 %     cfg.bpfreq        = bandpass frequency range, specified as [low high] in Hz
@@ -31,6 +31,8 @@ function [spike] = ft_spikeanalysis(cfg, data);
 % cfg.taper
 % cfg.tapsmofrq
 % cfg.version
+% cfg.inputfile  = one can specifiy preanalysed saved data as input
+% cfg.outputfile = one can specify output as file to save to disk
 
 % Copyright (C) 2005, Robert Oostenveld
 %
@@ -61,11 +63,25 @@ if ~isfield(cfg, 'bpfilter'),     cfg.bpfilter = 'yes';            end
 if ~isfield(cfg, 'bpfiltord'),    cfg.bpfiltord = 4;               end
 if ~isfield(cfg, 'bpfilttype'),   cfg.bpfilttype = 'but';          end
 if ~isfield(cfg, 'bpfreq'),       cfg.bpfreq = [30 90];            end
+if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];              end
+if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];             end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
 
 if strcmp(cfg.method, 'rate'),
   ntrials = length(data.trial);
   nchans  = length(data.label);
-  spikechan = zeros(nchans,1); 
+  spikechan = zeros(nchans,1);
   for i=1:ntrials
     for j=1:nchans
       spikechan(j) = spikechan(j) + all(data.trial{i}(j,:)==0 | data.trial{i}(j,:)==1);
@@ -74,20 +90,20 @@ if strcmp(cfg.method, 'rate'),
   chanindx = find(spikechan==ntrials);
   nchans   = length(chanindx);
   label    = data.label(chanindx);
-
+  
   if ~isfield(cfg, 'toi'),
     %compute the number of spikes within each trial and normalise for the triallength
     rate = zeros(ntrials, nchans);
     for i=1:ntrials
       rate(i, :) = data.fsample*sum(data.trial{i}(chanindx, :), 2)/size(data.trial{i},2)';
     end
-  
+    
     spike          = [];
     spike.label    = label(:);
     spike.rate     = rate;
   elseif isfield(cfg, 'toi'),
     if ~isfield(cfg, 'timwin'), error('no timewindow specified'); end;
-    %compute the spike-rate based on the DC-bin after fourier-transformation. CAVE: the 
+    %compute the spike-rate based on the DC-bin after fourier-transformation. CAVE: the
     %data should NOT be baseline corrected.
     tmpcfg           = [];
     tmpcfg.method    = 'mtmconvol';
@@ -101,8 +117,8 @@ if strcmp(cfg.method, 'rate'),
     tmpcfg.channel   = label;
     tmpcfg.pad       = 'maxperlen';
     tmpfreq          = ft_freqanalysis(tmpcfg, data);
-    rate             = sqrt(squeeze(tmpfreq.powspctrm)/2)*data.fsample;    
- 
+    rate             = sqrt(squeeze(tmpfreq.powspctrm)/2)*data.fsample;
+    
     spike        = [];
     spike.label  = label(:);
     spike.rate   = rate;
@@ -119,14 +135,14 @@ elseif strcmp(cfg.method, 'spikephase'),
   spikechan = zeros(nchans,1);
   for i=1:ntrials
     for j=1:nchans
-      spikechan(j) = spikechan(j) + all(data.trial{i}(j,:)==0 | data.trial{i}(j,:)==1); 
+      spikechan(j) = spikechan(j) + all(data.trial{i}(j,:)==0 | data.trial{i}(j,:)==1);
     end
   end
   spikechan = spikechan==ntrials;
   cmbsel = ones(size(cfg.channelcmb,1), 1);
   for i=1:size(cfg.channelcmb,1)
     cmbsel(i) = spikechan(strmatch(cfg.channelcmb{i,1}, data.label))==1 & ...
-                spikechan(strmatch(cfg.channelcmb{i,2}, data.label))==0;
+      spikechan(strmatch(cfg.channelcmb{i,2}, data.label))==0;
   end
   
   % select only the valid combinations
@@ -163,7 +179,7 @@ elseif strcmp(cfg.method, 'spikephase'),
           sel = find(data.trial{i}(spklop,:));
           % remember the instantaneous phase and amplitude of the lfp channel
           spike.phase{outputcmb}     = [spike.phase{outputcmb}     phase(lfp(sel))      ];
-          spike.amplitude{outputcmb} = [spike.amplitude{outputcmb} abs(lfp(sel))        ]; 
+          spike.amplitude{outputcmb} = [spike.amplitude{outputcmb} abs(lfp(sel))        ];
           % remember the trial number in which the spike occurred
           spike.trlnum{outputcmb}    = [spike.trlnum{outputcmb}    i*ones(1,length(sel))];
         end
@@ -196,6 +212,10 @@ end
 cfg.version.id = '$Id$';
 % remember the configuration details of the input data
 try, cfg.previous = data.cfg; end
-% remember the exact configuration details in the output 
+% remember the exact configuration details in the output
 spike.cfg = cfg;
 
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', spike); % use the variable name "data" in the output file
+end
