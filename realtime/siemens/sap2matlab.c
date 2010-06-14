@@ -8,6 +8,7 @@
 #include <mex.h>
 #include <matrix.h>
 #include <siemensap.h>
+#include <string.h>
 
 mxArray *createStructFromSAP(sap_item_t *item) {
 	mxArray *A;
