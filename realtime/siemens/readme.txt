@@ -57,7 +57,7 @@ sample with RxPxN channels, with data ordering as in Matlab,
 that is, the pixel data is reshaped such that slices (and their 
 rows) are contiguous in memory, and empty tiles are dropped. 
 For the above example, we would have 64x48x32 = 98304 "channels".
-The data format is kept as UINT16_T.
+The data format is kept as INT16_T.
 
 Along with each sample, the acquisition tool also writes a "timestamp" 
 event to the buffer, which is represented by seconds.microseconds 
@@ -135,7 +135,7 @@ some special rules are added. For example, a field name that starts
 with "d" will always be parsed as a double precision value.
 
 If you need to write your own protocol file (E:\image\mrprot.txt),
-the most important ingedrients are the following lines:
+the most important ingredients are the following lines:
 alTR = 2900000
 lContrasts = 5
 sKSpace.lBaseResolution = 64
@@ -157,7 +157,5 @@ and online inspection.
 
 5) Integration in Matlab
 ------------------------
-A demo is available: rt_fmriviewer.m
-Otherwise see usual FieldTrip documentation, e.g., read_data and read_header,
-use sap2matlab (in .../realtime/private) to create a Matlab structure
-from the Siemens ASCII string.
+A demo is available: realtime_fmriviewer.m
+Otherwise see usual FieldTrip documentation, e.g., ft_read_data and ft_read_header.

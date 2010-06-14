@@ -23,7 +23,11 @@ mxArray *createStructFromSAP(sap_item_t *item) {
 		int nr;
 		
 		nr = mxAddField(A, item->fieldname);
-		if (nr==-1) mexErrMsgTxt("Out of memory");
+		if (nr==-1) {
+			printf("Invalid field name '%s' or out of memory -- skipping item...\n", item->fieldname);
+			item = item->next;
+			continue;
+		}
 		
 		switch(item->type) {
 			case SAP_DOUBLE:
@@ -88,7 +92,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		mexErrMsgTxt("Argument must be either of type 'char' or 'uint8'.");
 	}
 	
-	sap_reverse_in_place(L);
+	sap_reverse_in_place(&L);
 	
 	plhs[0] = createStructFromSAP(L);
 	

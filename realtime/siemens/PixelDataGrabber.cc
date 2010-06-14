@@ -227,8 +227,8 @@ void PixelDataGrabber::handleProtocol(const char *info, unsigned int sizeInBytes
 	// new info? replace the old one, if present
 	if (protInfo != NULL) {
 		sap_destroy(protInfo);
-		protInfo = PI;
 	}
+	protInfo = PI;	
 
 	// Prepare NIFTI-1 header by setting everything to zero, and then 
 	// filling in some constants (for acquiring pixel data this way)

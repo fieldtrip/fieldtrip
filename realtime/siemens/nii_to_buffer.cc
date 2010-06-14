@@ -127,7 +127,7 @@ bool writeHeader() {
 
 bool writeScan(int i, const struct timeval &tv) {
 	FtBufferResponse resp;
-	char ts[20];
+	//char ts[20];
 	
 	if (!ftReq.prepPutData(nChans, 1, DATATYPE_INT16, dataBuffer)) {
 		fprintf(stderr, "Out of memory!\n");
@@ -138,9 +138,9 @@ bool writeScan(int i, const struct timeval &tv) {
 	
 	if (!resp.checkPut()) return false;
 	
-	sprintf(ts, "%11li.%06li", tv.tv_sec, tv.tv_usec);
+	//sprintf(ts, "%11li.%06li", tv.tv_sec, tv.tv_usec);
 	
-	if (!ftReq.prepPutEvent(i, 0, 0, "unixtime", ts)) {
+	if (!ftReq.prepPutEvent(i, 0, 0, "scan","ready")) {
 		fprintf(stderr, "Out of memory!\n");
 		exit(1);
 	}
