@@ -6,6 +6,8 @@ function H = decode_nifti1(blob)
 % variable length arrays "dim" and "pixdim" are cut off to the right size, e.g., the
 % "dim" entry will only contain the relevant elements: 
 % dim[0..7]={3,64,64,18,x,x,x,x} in C would become dim=[64,64,18] in Matlab.
+%
+% WARNING: This function currently ignores endianness !!!
 
 % (C) 2010 S.Klanke
 
