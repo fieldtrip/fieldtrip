@@ -24,8 +24,18 @@ function [val] = filetype_check_header(filename, head, offset)
 %
 % $Id$
 
+% these are for remembering the type on subsequent calls with the same input arguments
+persistent previous_argin previous_argout
+
 if nargin<3
   offset = 0;
+end
+
+current_argin = {filename, head, offset};
+if isequal(current_argin, previous_argin)
+  % don't do the detection again, but return the previous value from cache
+  val = previous_argout;
+  return
 end
 
 if iscell(filename)
@@ -36,13 +46,13 @@ if iscell(filename)
   end
 elseif isdir(filename)
   % a directory cannot have a header
-  val = 0;
+  val = false;
 else
   % read the first few bytes from the file and compare them to the desired header
   fid = fopen(filename, 'rb');
   if fid<0
     warning(sprintf('could not open %s', filename));
-    val = 0;
+    val = false;
   else
     fseek(fid, offset, 'cof');
     if iscell(head)
@@ -62,12 +72,18 @@ else
       fclose(fid);
       if siz~=length(head)
         warning(sprintf('could not read the header from %s', filename));
-        val = 0;
+        val = false;
       else
         val = all(str(:)==head(:));
       end
     end
   end
 end
-return
 
+% remember the current input and output arguments, so that they can be
+% reused on a subsequent call in case the same input argument is given
+current_argout  = val;
+previous_argin  = current_argin;
+previous_argout = current_argout;
+
+return % main()

@@ -39,6 +39,21 @@ function varargout = filetype_check_uri(filename, ftyp)
 %
 % $Id$
 
+% these are for remembering the type on subsequent calls with the same input arguments
+persistent previous_argin previous_argout
+
+if nargin<2
+  % ensure that all input arguments are defined
+  ftyp = [];
+end
+
+current_argin = {filename, ftyp};
+if isequal(current_argin, previous_argin)
+  % don't do the detection again, but return the previous value from cache
+  varargout = previous_argout;
+  return
+end
+
 sep = find(filename==':');
 if ~isempty(sep)
   scheme = filename(1:(sep(1)-1));
@@ -54,7 +69,7 @@ else
   switch scheme
     case 'shm'
       % shm://<filename>
-      % the filename is optional, usually it can and will be read from shared memory 
+      % the filename is optional, usually it can and will be read from shared memory
       if length(filename)>6
         varargout{1} = filename(7:end);
       else
@@ -110,7 +125,7 @@ else
       end
 
     case 'serial'
-      % serial:<Port>?key1=value1&key2=value2&... 
+      % serial:<Port>?key1=value1&key2=value2&...
       % the supported optional arguments are
       %   BaudRate
       %   DataBits
@@ -134,12 +149,20 @@ else
         end
         varargout{2} = opt;
       end
-      
+
 
     otherwise
       error('unsupported scheme in URI')
   end
 end
+
+% remember the current input and output arguments, so that they can be
+% reused on a subsequent call in case the same input argument is given
+current_argout  = varargout;
+previous_argin  = current_argin;
+previous_argout = current_argout;
+
+return % main()
 
 % RFC4395 defines an IANA-maintained registry of URI Schemes.
 % see also http://www.iana.org/assignments/uri-schemes.html
