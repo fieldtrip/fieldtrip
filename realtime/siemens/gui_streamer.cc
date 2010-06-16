@@ -16,15 +16,54 @@
 #include <math.h>
 
 Fl_Window *window;
-Fl_Input *inpHostname, *inpDirectory;
-Fl_Int_Input *inpPort;
-Fl_Button *butConnect, *butListen;
+Fl_Input *inpHostname, *inpDirectory, *inpUdpTargetHost;
+Fl_Int_Input *inpPort, *inpUdpTargetPort;
+Fl_Button *butConnect, *butListen, *butUdpEnable;
 Fl_Browser *msgBrowser;
 Fl_Box *piBox;
 PixelDataGrabber pdg;
 char hostname[256];
 int port;
 char directory[256];
+
+SOCKET udpSocket;
+char udpTargetHost[256];
+int udpTargetPort;
+
+
+SOCKET createSocketUDP(const char *address, int port) {
+	struct hostent *host;
+	struct sockaddr_in addr;
+	unsigned int one = 1;
+	SOCKET sock;
+	
+	host = gethostbyname(address);
+	
+	if (host == NULL || host->h_length == 0) {
+		fprintf(stderr, "DNS look up failed on '%s'\n", address);
+		return INVALID_SOCKET;
+	}
+
+
+	memset(&addr, 0, sizeof(struct sockaddr_in));
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(port);
+	memcpy(&(addr.sin_addr.s_addr), host->h_addr_list[0], sizeof(addr.sin_addr.s_addr));
+
+	sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (sock == INVALID_SOCKET) {
+		perror("socket(...): ");
+		return INVALID_SOCKET;
+	}
+	setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (const char *) &one, sizeof(one));
+	if (connect(sock, (struct sockaddr *) &addr, sizeof(struct sockaddr_in))) {
+		perror("connect(...): ");
+		closesocket(sock);
+		return INVALID_SOCKET;
+	}
+
+	return sock;
+}
 
 
 void updatePiBox() {
@@ -61,6 +100,21 @@ void changeHostPortDisplay(bool connected) {
 	inpPort->redraw();
 }
 
+
+void changeUdpDisplay(bool connected) {
+	Fl_Color col = connected ? FL_DARK_GREEN : FL_RED;
+	const char *lab = connected ? "Disable" : "Enable";
+	int ro = connected ? 1 : 0;
+	
+	inpUdpTargetHost->readonly(ro);
+	inpUdpTargetPort->readonly(ro);
+	butUdpEnable->label(lab);
+	inpUdpTargetHost->textcolor(col);
+	inpUdpTargetHost->redraw();
+	inpUdpTargetPort->textcolor(col);
+	inpUdpTargetPort->redraw();
+}
+
 void disconnect() {
 	pdg.connectToFieldTrip(NULL,0);
 	addTimedMsg("Disconnected from FieldTrip");
@@ -89,6 +143,28 @@ void connectCallback(Fl_Widget *widget) {
 		connect();
 	}
 }
+
+
+void udpCallback(Fl_Widget *widget) {
+	if (udpSocket != INVALID_SOCKET) {
+		closesocket(udpSocket);
+		udpSocket = INVALID_SOCKET;
+		addTimedMsg("Disabled UDP messages");
+		changeUdpDisplay(false);
+	} else {
+		strncpy(udpTargetHost, inpUdpTargetHost->value(), 256);
+		udpTargetPort = atoi(inpUdpTargetPort->value());
+		udpSocket = createSocketUDP(udpTargetHost, udpTargetPort);
+		if (udpSocket != INVALID_SOCKET) {
+			addTimedMsg("Set UDP message target");
+			changeUdpDisplay(true);
+		} else {
+			addTimedMsg("Could not set UDP target");
+			changeUdpDisplay(false);
+		}
+	} 
+}
+
 
 bool startMonitor() {
 	strncpy(directory, inpDirectory->value(), 256);
@@ -125,6 +201,7 @@ int main(int argc, char *argv[]) {
 	bool autoLogin;
 	char portAsChar[8];
 	
+	udpSocket = INVALID_SOCKET;
 	
 	timeBeginPeriod(1);
 	
@@ -152,7 +229,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	Fl::visual(FL_RGB);
-	window = new Fl_Window(100,100,400,300,"Realtime fMRI streamer");
+	window = new Fl_Window(100,100,400,350,"Realtime fMRI streamer");
 	inpHostname = new Fl_Input(20,30,200,25,"Hostname");
 	inpPort = new Fl_Int_Input(230,30,60,25,"Port");
 	butConnect = new Fl_Button(300,30,80,25,"Connect");
@@ -160,6 +237,9 @@ int main(int argc, char *argv[]) {
 	butListen = new Fl_Button(300,80,80,25,"Start");
 	piBox = new Fl_Box(20, 120, 360, 25);
 	msgBrowser = new Fl_Browser(20, 160, 360, 120);
+	inpUdpTargetHost = new Fl_Input(20,300,200,25,"UDP target hostname");
+	inpUdpTargetPort = new Fl_Int_Input(230,300,60,25,"UDP port");
+	butUdpEnable = new Fl_Button(300,300,80,25,"Enable");
 	
 	inpHostname->align(FL_ALIGN_TOP);
 	inpPort->align(FL_ALIGN_TOP);
@@ -169,6 +249,11 @@ int main(int argc, char *argv[]) {
 	inpDirectory->value(directory);
 	butConnect->callback(connectCallback);
 	butListen->callback(listenCallback);
+	inpUdpTargetHost->value("lab-mri001");
+	inpUdpTargetHost->align(FL_ALIGN_TOP);
+	inpUdpTargetPort->value("1990");
+	inpUdpTargetPort->align(FL_ALIGN_TOP);
+	butUdpEnable->callback(udpCallback);
 	
 	piBox->box(FL_DOWN_BOX);
 	
@@ -195,6 +280,10 @@ int main(int argc, char *argv[]) {
 					break;
 				case PixelDataGrabber::ProtocolRead:
 					addTimedMsg("Read protocol");
+					if (udpSocket != INVALID_SOCKET) {
+						int n = send(udpSocket, "RESET", 5, 0);
+						printf("Send out %i bytes over UDP\n", n);
+					}
 					updatePiBox();
 					break;
 				case PixelDataGrabber::PixelsTransmitted:			

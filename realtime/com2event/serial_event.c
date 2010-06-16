@@ -4,10 +4,9 @@
 #include <serial.h>
 #include <buffer.h>
 #include <signal.h>
+#include <pthread.h>
 
 #define MAXLINE 256
-
-int keepRunning = 1;
 
 typedef struct {
 	char hostname[256];
@@ -18,6 +17,8 @@ typedef struct {
 	
 	char comport[256];
 	int baudrate, databits, stopbits, parity;
+	
+	int udp_port;
 	
 	INT32_T sample_start;
 	INT32_T sample_increase;
@@ -30,6 +31,15 @@ typedef struct {
 	char type_buf[MAXLINE];
 	char value_buf[MAXLINE];
 } SerialEventConfig;
+
+
+
+int keepRunning = 1;
+int udp_socket;
+SerialEventConfig conf;
+INT32_T sample;
+pthread_mutex_t sampleMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_t udpThread;
 
 
 /* returns 0 if ok, -1 if C==NULL, -2 if file can't be opened, positive number = #errors */
@@ -54,6 +64,7 @@ int parseConfig(SerialEventConfig *C, const char *filename) {
 	strcpy(C->type_buf, "serial");
 	C->value_type = DATATYPE_CHAR;
 	C->type_numel = 1;
+	C->udp_port = 1990;
 	
 	f = fopen(filename, "r");
 	if (f==NULL) {
@@ -143,6 +154,17 @@ int parseConfig(SerialEventConfig *C, const char *filename) {
 			}
 			C->sample_start = lva;
 			C->sample_increase = lvb;
+		} else if (!strcmp(line, "port")) {
+			char *p;
+			long lv;
+		
+			lv = strtol(value, &p, 10);
+			if (value==p) {
+				++numErrs;
+				printf("Ignoring faulty 'port' in line %i\n", lineNr);
+				continue;
+			}
+			C->udp_port = lv;
 		} else if (!strcmp(line, "offset")) {
 			char *p;
 			long lv;
@@ -335,16 +357,91 @@ int parseConfig(SerialEventConfig *C, const char *filename) {
 
 
 
+
+int create_udp_receiver(int port) {
+	struct sockaddr_in addr;
+	int sock;
+	unsigned long	optval;
+
+	memset(&addr, 0, sizeof(struct sockaddr_in));
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(port);
+	addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+	sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (sock == -1) {
+		perror("socket(...): ");
+		return -1;
+	}
+	if (bind(sock, (struct sockaddr *) &addr, sizeof(struct sockaddr_in))) {
+		perror("bind(...): ");
+		closesocket(sock);
+		return -1;
+	}
+	
+#ifdef PLATFORM_WIN32
+	optval = 1;
+	if (ioctlsocket(sock, FIONBIO, &optval) != 0) {
+		fprintf(stderr,"Could not set non-blocking mode\n");
+		closesocket(sock);
+		return -1;
+	}
+#else
+	optval = fcntl(sock, F_GETFL, NULL);
+	optval = optval | O_NONBLOCK;
+	if (fcntl(s, F_SETFL, optval)<0) {
+		perror("fcntl (set non-blocking)");
+		closesocket(sock);
+		return -1;
+	}
+#endif	
+	return sock;
+}
+
+
+void *_udp_thread(void *arg) {
+	fd_set readSet;
+	struct timeval tv;
+	char msg[8192];
+	
+	tv.tv_sec  = 0; 
+	tv.tv_usec = 100000; /* 100 ms  timeout for select */
+	
+	while (keepRunning) {
+		int n;
+		
+		FD_ZERO(&readSet);
+		FD_SET(udp_socket, &readSet);
+		
+		n = select(udp_socket + 1, &readSet, NULL, NULL, &tv);
+		if (n<1) continue;
+		
+		n = recv(udp_socket, msg, sizeof(msg)-1, 0);
+		if (n<=0) continue;
+		
+		/* force-terminate string */
+		msg[n] = 0;
+		
+		printf("Message received: %s\n", msg);
+		if (!strcmp(msg,"RESET")) {
+			pthread_mutex_lock(&sampleMutex);
+			sample = conf.sample_start;
+			pthread_mutex_unlock(&sampleMutex);
+		}	
+	}
+	return NULL;
+}
+
+
+
 void abortHandler(int sig) {
 	printf("Ctrl-C pressed -- stopping...\n");
 	keepRunning = 0;
 }
 
 int main(int argc, char **argv) {
-	SerialEventConfig conf;
 	SerialPort SP;
 	int ftBuffer = -1;
-	INT32_T sample;
 	eventdef_t *evdef;
 	UINT32_T sizetype, sizevalue, bufsize;
 	char *valBuf;
@@ -411,16 +508,26 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 	
+	sample = conf.sample_start;
+	
+	udp_socket = create_udp_receiver(conf.udp_port);
+	
+	if (udp_socket != -1) {
+		if (pthread_create(&udpThread, NULL, _udp_thread, NULL)) {
+			printf("Warning: UDP socket thread could not be spawned.\n");
+			closesocket(udp_socket);
+			udp_socket = -1;
+		}
+	}
+	
 	/* register CTRL-C handler */
 	signal(SIGINT, abortHandler);
-	
-	sample = conf.sample_start;
 	
 	printf("Starting to listen - press CTRL-C to quit\n");
 	while (keepRunning) {
 		char input;
 		int n;
-		
+				
 		n = serialRead(&SP, 1, &input);
 		if (n<0) {
 			printf("Error while reading from serial port - exiting\n");
@@ -435,24 +542,37 @@ int main(int argc, char **argv) {
 		}
 		
 		if (conf.set_value) *valBuf = input;
+		pthread_mutex_lock(&sampleMutex);
 		evdef->sample = sample;
+		pthread_mutex_unlock(&sampleMutex);
 		
-		n = tcprequest(ftBuffer, &request, &response);
-		
-		if (n<0 || response == NULL) {
-			printf("Error in FieldTrip connection\n");
+		if (evdef->sample < 0) {
+			printf("Ignoring negative sample (%i) event...\n", evdef->sample);
 		} else {
-			if (response->def == NULL || response->def->command != PUT_OK) {
-				printf("FieldTrip server returned an error\n");
+			n = tcprequest(ftBuffer, &request, &response);
+		
+			if (n<0 || response == NULL) {
+				printf("Error in FieldTrip connection\n");
 			} else {
-				printf("Sent off event (sample = %i, input = %c)\n", sample, input);
+				if (response->def == NULL || response->def->command != PUT_OK) {
+					printf("FieldTrip server returned an error\n");
+				} else {
+					printf("Sent off event (sample = %i, input = %c)\n", evdef->sample, input);
+				}
+				FREE(response->def);
+				FREE(response->buf);
+				free(response);
 			}
-			FREE(response->def);
-			FREE(response->buf);
-			free(response);
 		}
 		
+		pthread_mutex_lock(&sampleMutex);
 		sample += conf.sample_increase;
+		pthread_mutex_unlock(&sampleMutex);
+	}
+	
+	if (udp_socket!=-1) {
+		pthread_join(udpThread, NULL);
+		closesocket(udp_socket);
 	}
 
 	close_connection(ftBuffer);
