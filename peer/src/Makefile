@@ -16,7 +16,7 @@ LIBS 	 = -lm -lpthread -lpeer
 CFLAGS	 = $(INCPATH) -Wunused -pedantic -O1 -fPIC -fpack-struct
 # CXXFLAGS = $(INCPATH) -Wunused -pedantic -O1
 CFLAGS	 = $(INCPATH) -Wall -pthread
-TARGET   = test_announce test_discover test_send test_recv
+TARGET   = test_announce test_discover test_send test_recv peerslave
 
 ifeq "$(PLATFORM)" "x86_64-redhat-linux"
 	# this is only for the peerslave command line executable -> mentat001
