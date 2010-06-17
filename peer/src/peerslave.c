@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
 
 						/* there is a job to be executed */
 						if (matlabRunning==0) {
-								if ((en = engOpen(STARTCMD)) == NULL) {
+								if ((en = engOpen(STARTCMD " -nosplash")) == NULL) {
 										panic("failed to start MATLAB engine\n");
 								}
 								else {
