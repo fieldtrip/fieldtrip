@@ -52,8 +52,11 @@ end
 % 11 baseline (in m)
 
 handles    = definehandles;
-ismag 	   = hdr.channel_info(:,2)==handles.MagnetoMeter;
-isgrad     = (hdr.channel_info(:,2)==handles.AxialGradioMeter | hdr.channel_info(:,2)==handles.PlannerGradioMeter | hdr.channel_info(:,2)==handles.MagnetoMeter);
+ismag 	   = (hdr.channel_info(:,2)==handles.MagnetoMeter | hdr.channel_info(:,2)==handles.RefferenceMagnetoMeter);
+isgrad     = (hdr.channel_info(:,2)==handles.AxialGradioMeter | ...
+    hdr.channel_info(:,2)==handles.PlannerGradioMeter | hdr.channel_info(:,2)==handles.MagnetoMeter | ...
+    hdr.channel_info(:,2)==handles.RefferenceAxialGradioMeter  | hdr.channel_info(:,2)==handles.RefferencePlannerGradioMeter | ...
+    hdr.channel_info(:,2)==handles.RefferenceMagnetoMeter);
 grad.pnt   = hdr.channel_info(isgrad,3:5)*100;    % cm
 
 % Get orientation of the 1st coil
@@ -78,10 +81,10 @@ baseline = hdr.channel_info(isgrad,size(hdr.channel_info,2));
 % Define the location and orientation of 2nd coil
 info = hdr.channel_info(isgrad,2); 
 for i=1:sum(isgrad)
-  if info(i) == handles.AxialGradioMeter
+  if (info(i) == handles.AxialGradioMeter || info(i) == handles.RefferenceAxialGradioMeter )
     grad.pnt(i+sum(isgrad),:) = [grad.pnt(i,:)+ori_1st(i,:)*baseline(i)*100];
     grad.ori(i+sum(isgrad),:) = -ori_1st(i,:);
-  elseif info(i) == handles.PlannerGradioMeter
+  elseif (info(i) == handles.PlannerGradioMeter || info(i) == handles.RefferencePlannerGradioMeter)
     grad.pnt(i+sum(isgrad),:) = [grad.pnt(i,:)+ori_1st_to_2nd(i,:)*baseline(i)*100];
     grad.ori(i+sum(isgrad),:) = -ori_1st(i,:);
   end
