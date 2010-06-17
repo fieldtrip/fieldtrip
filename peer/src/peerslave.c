@@ -18,9 +18,12 @@ mxArray *mxDeserialize(const void*, size_t);
 #define MAXIDLETIME 30     /* in seconds */
 #define SLEEPTIME   10000  /* in microseconds */
 
+#ifndef STARTCMD
+#define STARTCMD "/Applications/MATLAB_R2009a.app/bin/matlab"
+#endif
+
 int main(int argc, char *argv[]) {
 		Engine *en;
-		char *startcmd = "/Applications/MATLAB_R2009a.app/bin/matlab";
 		mxArray *argin, *argout, *options, *arg, *opt;
 		joblist_t  *job  = NULL;
 		peerlist_t *peer = NULL;
@@ -83,7 +86,7 @@ int main(int argc, char *argv[]) {
 
 						/* there is a job to be executed */
 						if (matlabRunning==0) {
-								if ((en = engOpen(startcmd)) == NULL) {
+								if ((en = engOpen(STARTCMD)) == NULL) {
 										panic("failed to start MATLAB engine\n");
 								}
 								else {

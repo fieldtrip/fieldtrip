@@ -26,6 +26,16 @@ ifeq "$(PLATFORM)" "x86_64-redhat-linux"
 	MATLABINC  = -I$(MATLABPATH)/extern/include
 endif
 
+ifeq "$(PLATFORM)" "i686-apple-darwin9"
+    # override the defaults
+    CFLAGS	 = $(INCPATH) -Wall -pthread -arch i386
+	# this is only for the peerslave command line executable
+	MATLABARCH = maci
+	MATLABPATH = /Applications/MATLAB-2009a
+	MATLABLIBS = -L$(MATLABPATH)/bin/$(MATLABARCH) -leng -lmx
+	MATLABINC  = -I$(MATLABPATH)/extern/include
+endif
+
 ifeq "$(PLATFORM)" "i686-apple-darwin10"
     # override the defaults
     CFLAGS	 = $(INCPATH) -Wall -pthread -arch i386
@@ -74,7 +84,7 @@ linkedlist: linkedlist.o
 	$(CC) $(CFLAGS) $(INCPATH) -c $*.c
 
 peerslave.o: peerslave.c peer.h extern.h libpeer.a
-	$(CC) $(CFLAGS) $(INCPATH) $(MATLABINC) -c $*.c
+	$(CC) $(CFLAGS) -DSTARTCMD=\"$(MATLABPATH)/bin/matlab\" $(INCPATH) $(MATLABINC) -c $*.c
 
 clean:
 	rm -f core *.o *.obj *.a $(TEST) *~
