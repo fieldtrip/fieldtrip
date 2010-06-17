@@ -10,6 +10,10 @@ function [freq] = ft_freqbaseline(cfg, freq)
 %   cfg.baselinetype = 'absolute' 'relchange' 'relative' (default = 'absolute')
 %
 % See also FT_FREQANALYSIS, FT_TIMELOCKBASELINE, FT_FREQCOMPARISON
+%
+% Undocumented local options:
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
 
 % Copyright (C) 2004-2006, Marcel Bastiaansen
 % Copyright (C) 2005-2006, Robert Oostenveld
@@ -36,12 +40,26 @@ fieldtripdefs
 
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
-% check if the input data is valid for this function
-freq = checkdata(freq, 'datatype', 'freq', 'feedback', 'yes');
-
 % set the defaults
 if ~isfield(cfg, 'baseline'),     cfg.baseline     = 'no';       end
 if ~isfield(cfg, 'baselinetype'), cfg.baselinetype = 'absolute'; end % default is to use an absolute baseline
+if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];            end
+if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];           end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    freq = loadvar(cfg.inputfile, 'data');
+  end
+end
+
+% check if the input data is valid for this function
+freq = checkdata(freq, 'datatype', 'freq', 'feedback', 'yes');
 
 % give a warning if the input is inconsistent
 if ischar(cfg.baseline) && strcmp(cfg.baseline, 'no') && ~isempty(cfg.baselinetype)
@@ -82,13 +100,13 @@ if strcmp(freq.dimord, 'chan_freq_time')
   elseif strcmp(cfg.baselinetype, 'relative')
     if haspow, freq.powspctrm = TFrelative(freq.time, freq.freq, freq.powspctrm, cfg.baseline); end
     if hascoh, freq.cohspctrm = TFrelative(freq.time, freq.freq, freq.cohspctrm, cfg.baseline); end
-  % elseif strcmp(cfg.baselinetype, 'zscore')
-  %   freq.powspctrm = TFzscore(freq.time, freq.freq, freq.powspctrm,cfg.baseline);
+    % elseif strcmp(cfg.baselinetype, 'zscore')
+    %   freq.powspctrm = TFzscore(freq.time, freq.freq, freq.powspctrm,cfg.baseline);
   else
     error('unsupported method for baseline normalization');
   end
-
-elseif strcmp(freq.dimord, 'rpt_chan_freq_time') 
+  
+elseif strcmp(freq.dimord, 'rpt_chan_freq_time')
   % apply the desired method for each trial, see the subfunctions below
   if ~haspow || hascoh
     error('this only works for power, not for coherence');
@@ -99,29 +117,29 @@ elseif strcmp(freq.dimord, 'rpt_chan_freq_time')
     % Reshape freq.powspctrm into 3D matrix
     % This relies on dimord being 'rpt_chan_freq_time'
     tfdata = reshape(freq.powspctrm(i,:,:,:), ...
-             size(freq.powspctrm,2), ...
-             size(freq.powspctrm,3), ...
-             size(freq.powspctrm,4));
+      size(freq.powspctrm,2), ...
+      size(freq.powspctrm,3), ...
+      size(freq.powspctrm,4));
     
-    if strcmp(cfg.baselinetype, 'absolute'),      
+    if strcmp(cfg.baselinetype, 'absolute'),
       freq.powspctrm(i,:,:,:) = TFabschange(freq.time, freq.freq, tfdata, cfg.baseline);
     elseif strcmp(cfg.baselinetype, 'relchange')
       freq.powspctrm(i,:,:,:) = TFrelchange(freq.time, freq.freq, tfdata, cfg.baseline);
     elseif strcmp(cfg.baselinetype, 'relative')
       freq.powspctrm(i,:,:,:) = TFrelative(freq.time, freq.freq, tfdata, cfg.baseline);
-    % elseif strcmp(cfg.baselinetype, 'zscore')
-    %   freq.powspctrm = TFzscore(freq.time, freq.freq, freq.powspctrm,cfg.baseline);
+      % elseif strcmp(cfg.baselinetype, 'zscore')
+      %   freq.powspctrm = TFzscore(freq.time, freq.freq, freq.powspctrm,cfg.baseline);
     else
       error('unsupported method for baseline normalization');
     end
   end
-
+  
 else
   error('unsupported data dimensions');
 end
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 try
@@ -133,10 +151,18 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id = '$Id$';
+
+
 % remember the configuration details of the input data
 try, cfg.previous = freq.cfg; end
-% remember the exact configuration details in the output 
+
+% remember the exact configuration details in the output
 freq.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', freq); % use the variable name "data" in the output file
+end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function [TFdata] = TFzscore(timeVec,freqVec,TFdata,TimeInt)
@@ -150,12 +176,12 @@ freq.cfg = cfg;
 %     TFbl   (l,k) = squeeze(mean(TFdata(l,k,tidx),3));     %compute average baseline power
 %     TFblstd(l,k) = squeeze(std (TFdata(l,k,tidx),[], 3)); %compute standard deviation
 %   end
-% end 
+% end
 % for k=1:size(TFdata,2) % loop frequencies
 %   for l=1:size(TFdata,1) % loop channels
 %     TFdata(l,k,:) = ((TFdata(l,k,:) - TFbl(l,k)) / TFblstd(l,k));      % compute zscore
 %   end
-% end 
+% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [TFdata] = TFrelative(timeVec,freqVec,TFdata,TimeInt)
@@ -171,18 +197,18 @@ end
 for k=1:size(TFdata,2) % loop frequencies
   for l=1:size(TFdata,1) % loop channels
     TFbl(l,k) = nan_mean(TFdata(l,k,tidx),3);%compute average baseline power
-                          
+    
     if TFbl(l,k) == 0,
       error('Average baseline power is zero');
     end
-  
+    
   end
-end 
+end
 for k=1:size(TFdata,2) % loop frequencies
   for l=1:size(TFdata,1) % loop channels
     TFdata(l,k,:) = TFdata(l,k,:) / TFbl(l,k);     % compute relative change (i.e. ratio)
   end
-end 
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [TFdata] = TFrelchange(timeVec,freqVec,TFdata,TimeInt)
@@ -198,19 +224,19 @@ end
 for k=1:size(TFdata,2) % loop frequencies
   for l=1:size(TFdata,1) % loop channels
     TFbl(l,k) = nan_mean(TFdata(l,k,tidx),3); %compute average baseline power
-  
+    
     if TFbl(l,k) == 0,
       error('Average baseline power is zero');
     end
-  
+    
   end
-end 
+end
 
 for k=1:size(TFdata,2) % loop frequencies
   for l=1:size(TFdata,1) % loop channels
     TFdata(l,k,:) = ((TFdata(l,k,:) - TFbl(l,k)) / TFbl(l,k)); % compute relative change
   end
-end 
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [TFdata] = TFabschange(timeVec,freqVec,TFdata,TimeInt)
@@ -232,5 +258,5 @@ for k=1:size(TFdata,2) % loop frequencies
   for l=1:size(TFdata,1) % loop channels
     TFdata(l,k,:) = TFdata(l,k,:) - TFbl(l,k);        % subtract baseline power
   end
-end 
+end
 

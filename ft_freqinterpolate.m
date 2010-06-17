@@ -1,3 +1,4 @@
+
 function [freq] = ft_freqinterpolate(cfg, freq)
 
 % FT_FREQINTERPOLATE interpolates frequencies by looking at neighbouring
@@ -10,6 +11,11 @@ function [freq] = ft_freqinterpolate(cfg, freq)
 %   cfg.method   = 'nan', 'linear' (default = 'nan')
 %   cfg.foilim   = Nx2 matrix with begin and end of each interval to be
 %                  interpolated (default = [49 51; 99 101; 149 151])
+%
+% Undocumented local options:
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
+
 
 % Copyright (C) 2009, Aldemar Torres Valderama
 %
@@ -50,7 +56,6 @@ if ~isempty(cfg.inputfile)
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
     freq = loadvar(cfg.inputfile, 'data');
-    hasdata = true;
   end
 end
 
@@ -104,3 +109,8 @@ cfg.version.id   = '$Id$';
 try, cfg.previous = freq.cfg; end
 % remember the exact configuration details in the output
 freq.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', freq); % use the variable name "data" in the output file
+end

@@ -63,6 +63,21 @@ fieldtripdefs
 %allow for both the new and old implementation to be changed with a flag
 %input
 
+% defaults for optional input/ouputfile
+if ~isfield(cfg, 'inputfile'),  cfg.inputfile                   = [];    end
+if ~isfield(cfg, 'outputfile'), cfg.outputfile                  = [];    end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+  end
+end
+
 if nargin < 3
     flag = 0;
 end
@@ -217,8 +232,11 @@ else
   
 end % if old or new implementation
 
-
-
+% the output data should be saved to a MATLAB file
+  if ~isempty(cfg.outputfile)
+    savevar(cfg.outputfile, 'data', freq); % use the variable name "data" in the output file
+  end
+  
 
 
 
