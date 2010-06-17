@@ -18,7 +18,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.binica       = substructure with additional low-level options for this method
 %   cfg.dss          = substructure with additional low-level options for this method
 %   cfg.fastica      = substructure with additional low-level options for this method
-% 
+%
 % forbidden configuration option: cfg.detrend
 %
 % Instead of specifying a component analysis method, you can also specify
@@ -83,7 +83,6 @@ if ~isempty(cfg.inputfile)
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
     data = loadvar(cfg.inputfile, 'data');
-    hasdata = true;
   end
 end
 
@@ -95,17 +94,17 @@ cfg.channel = ft_channelselection(cfg.channel, data.label);
 
 if isfield(cfg, 'topo') && isfield(cfg, 'topolabel')
   % use the previously determined unmixing matrix on this dataset
-
+  
   % test whether all required channels are present in the data
   [datsel, toposel] = match_str(cfg.channel, cfg.topolabel);
   if length(toposel)~=length(cfg.topolabel)
     error('not all channels that are required for the unmixing are present in the data');
   end
-
+  
   % ensure that all data channels not used in the unmixing should be removed from the channel selection
   tmpchan = match_str(cfg.channel, cfg.topolabel);
   cfg.channel = cfg.channel(tmpchan);
-
+  
   % remove all cfg settings  that do not apply
   tmpcfg              = [];
   tmpcfg.blc          = cfg.blc;
@@ -155,7 +154,7 @@ end
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
-  data = selectdata(data, 'rpt', cfg.trials); 
+  data = selectdata(data, 'rpt', cfg.trials);
 end
 Ntrials  = length(data.trial);
 
@@ -200,7 +199,7 @@ elseif strcmp(cfg.method, 'parafac')
 else
   % concatenate all the data into a 2D matrix
   fprintf('concatenating data');
-
+  
   dat = zeros(Nchans, sum(Nsamples));
   for trial=1:Ntrials
     fprintf('.');
@@ -216,9 +215,9 @@ end
 % perform the component analysis
 fprintf('starting decomposition using %s\n', cfg.method);
 switch cfg.method
-
+  
   case 'fastica'
-
+    
     try
       % construct key-value pairs for the optional arguments
       optarg = cfg2keyval(cfg.fastica);
@@ -235,30 +234,30 @@ switch cfg.method
       % forward original error
       rethrow(ME);
     end
-
+    
   case 'runica'
     % construct key-value pairs for the optional arguments
     optarg = cfg2keyval(cfg.runica);
     [weights, sphere] = runica(dat, optarg{:});
-
+    
   case 'binica'
     % construct key-value pairs for the optional arguments
     optarg = cfg2keyval(cfg.binica);
     [weights, sphere] = binica(dat, optarg{:});
-
+    
   case 'jader'
     weights = jader(dat);
     sphere  = eye(size(weights, 2));
-
+    
   case 'varimax'
     weights = varimax(dat);
     sphere  = eye(size(weights, 2));
-
+    
   case 'cca'
     [y, w] = ccabss(dat);
     weights = w';
     sphere  = eye(size(weights, 2));
-
+    
   case 'pca'
     % compute data cross-covariance matrix
     C = (dat*dat')./(size(dat,2)-1);
@@ -271,7 +270,7 @@ switch cfg.method
     weights = E(:,d(1:cfg.numcomponent,1))';
     sphere = eye(size(weights,2));
     clear C D E d
-
+    
   case 'svd'
     if cfg.numcomponent<Nchans
       % compute only the first components
@@ -283,10 +282,10 @@ switch cfg.method
     end
     weights = u';
     sphere  = eye(size(weights, 2));
-
+    
   case 'parafac'
     f = parafac(dat, cfg.numcomponent);
-
+    
   case 'dss'
     params         = cfg.dss;
     params.denf.h  = str2func(cfg.dss.denf.function);
@@ -305,50 +304,50 @@ switch cfg.method
     % remember the updated configuration details
     cfg.dss.denf      = state.denf;
     cfg.numcomponent  = state.sdim;
-
+    
   case 'predetermined mixing matrix'
     % check which labels from the cfg are identical to those of the data
     % this gives us the rows of cfg.topo (the channels) and of
     % data.trial (also channels) that we are going to use later
     [datsel, chansel] = match_str(data.label, cfg.topolabel);
-
+    
     % ensure 1:1 corresponcence between cfg.topolabel & data.label
     % otherwise we cannot compute the components (if source channels are
     % missing) or will have a problem when projecting it back (because we
     % dont have a marker to say that there are channels in data.label
     % which we did not use and thus can't recover from source-space)
-
+    
     if length(cfg.topolabel)<length(chansel)
       error('COMPONENTANALYSIS:LABELMISSMATCH:topolabel', 'cfg.topolabels do not uniquely correspond to data.label, please check')
     end
     if length(data.label)<length(datsel)
       error('COMPONENTANALYSIS:LABELMISSMATCH:topolabel', 'cfg.topolabels do not uniquely correspond to data.label, please check')
     end
-
+    
     % reorder the mixing matrix so that the channel order matches the order in the data
     cfg.topo      = cfg.topo(chansel,:);
     cfg.topolabel = cfg.topolabel(chansel);
-
+    
     % get the number of channels we are using from the data
     Nchan   = size(cfg.topo, 1);
     % get the number of components in which the data was decomposed
-
+    
     Ncomp   = size(cfg.topo, 2);
     cfg.numcomponent = Ncomp;
-
+    
     % initialize sphere and weights
     sphere  = eye(Nchan,Nchan);
-
+    
     % cfg.topo is a Channel x Component matrix (the mixing matrix, A)
     % lets get the unmixing matrix (weights, W)
-
+    
     % now, the weights matrix is simply given by its (pseudo)-inverse
     if (Nchan==Ncomp)
       weights = inv(cfg.topo);
     else
       weights = pinv(cfg.topo);
     end
-
+    
   otherwise
     error('unknown method for component analysis');
 end % switch method
@@ -393,10 +392,8 @@ for k = 1:size(comp.topo,2)
 end
 comp.topolabel = data.label(:);
 
-cfg.outputfile;
-
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add the version details of this function call to the configuration
 try

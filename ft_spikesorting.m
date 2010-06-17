@@ -20,6 +20,10 @@ function [spike] = ft_spikesorting(cfg, spike);
 %   spike.unit      = 1 x Nchans cell-array, each element contains a vector (1 x Nspikes)
 %
 % See also READ_FCDC_SPIKE, FT_SPIKEDOWNSAMPLE
+% 
+% Undocumented local options:
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
 
 % Copyright (C) 2006-2007, Robert Oostenveld
 %
@@ -71,7 +75,6 @@ if ~isempty(cfg.inputfile)
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
     data = loadvar(cfg.inputfile, 'data');
-    hasdata = true;
   end
 end
 

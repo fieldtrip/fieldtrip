@@ -73,19 +73,19 @@ if ~isfield(cfg, 'inputfile'),     cfg.inputfile = [];      end
 % the initialization of the forward computation code is done later in prepare_headmodel
 hasdata = (nargin>1);
 if ~isempty(cfg.inputfile)
-    % the input data should be read from file
-    if hasdata
-        error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-    else
-        mri = loadvar(cfg.inputfile, 'data');
-        hasdata = true;
-    end
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    mri = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
 end
 
 if hasdata
-    vol.bnd = ft_prepare_mesh(cfg, mri);
+  vol.bnd = ft_prepare_mesh(cfg, mri);
 else
-    vol.bnd = ft_prepare_mesh(cfg);
+  vol.bnd = ft_prepare_mesh(cfg);
 end
 vol.type = 'nolte';
 

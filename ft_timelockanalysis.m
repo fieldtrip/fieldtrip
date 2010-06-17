@@ -38,7 +38,9 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 % cfg.feedback
 % cfg.normalizecov
 % cfg.preproc
-%
+% cfg.inputfile  = one can specifiy preanalysed saved data as input
+% cfg.outputfile = one can specify output as file to save to disk
+
 % This function depends on PREPROC which has the following options:
 % cfg.absdiff
 % cfg.blc
@@ -111,7 +113,6 @@ if ~isempty(cfg.inputfile)
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
     data = loadvar(cfg.inputfile, 'data');
-    hasdata = true;
   end
 end
 
@@ -489,8 +490,6 @@ if isfield(data, 'elec')
   % copy the electrode array along
   timelock.elec = data.elec;
 end
-
-cfg.outputfile;
 
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 

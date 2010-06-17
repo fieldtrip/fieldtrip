@@ -126,14 +126,11 @@ if ~isempty(cfg.inputfile)
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
     data = loadvar(cfg.inputfile, 'data');
-    hasdata = true;
   end
 end
 
-if hasdata
 % check if the input data is valid for this function
 data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'ismeg', 'yes');
-end
 
 % check if the input cfg is valid for this function
 cfg = checkconfig(cfg, 'renamed',     {'plot3d',      'feedback'});
@@ -488,10 +485,9 @@ catch
 end
 cfg.version.id   = '$Id$';
 
-if hasdata && isfield(data, 'cfg')
-  % remember the configuration details of the input data
-  cfg.previous = data.cfg;
-end
+% remember the configuration details of the input data
+try, cfg.previous = data.cfg; end
+
 % remember the exact configuration details in the output
 interp.cfg = cfg;
 

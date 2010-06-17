@@ -99,7 +99,6 @@ if ~isempty(cfg.inputfile)
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
     data = loadvar(cfg.inputfile, 'data');
-    hasdata = true;
   end
 end
 
@@ -267,8 +266,6 @@ if istlck
   interp = checkdata(interp, 'datatype', 'timelock');
   israw  = false;
 end
-
-cfg.outputfile;
 
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');

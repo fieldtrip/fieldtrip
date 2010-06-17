@@ -165,7 +165,6 @@ if ~isempty(cfg.inputfile)
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
     data = loadvar(cfg.inputfile, 'data');
-    hasdata = true;
   end
 end
 
@@ -570,10 +569,9 @@ catch
 end
 cfg.version.id = '$Id$';
 
-if hasdata && isfield(data, 'cfg')
-  % remember the configuration details of the input data
-  cfg.previous = data.cfg;
-end
+% remember the configuration details of the input data
+try, cfg.previous = data.cfg; end
+
 % remember the exact configuration details in the output
 source.cfg = cfg;
 

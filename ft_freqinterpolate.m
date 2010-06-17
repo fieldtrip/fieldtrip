@@ -33,15 +33,29 @@ function [freq] = ft_freqinterpolate(cfg, freq)
 
 fieldtripdefs
 
-% check if the input data is valid for this function
-freq = checkdata(freq, 'datatype', 'freq', 'feedback', 'yes');
-
 % check if the input cfg is valid for this function
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
 % set the default values
 if ~isfield(cfg, 'method'),     cfg.method = 'nan';                     end
 if ~isfield(cfg, 'foilim'),     cfg.foilim = [49 51; 99 101; 149 151];  end
+if ~isfield(cfg, 'inputfile'),  cfg.inputfile                   = [];    end
+if ~isfield(cfg, 'outputfile'), cfg.outputfile                  = [];    end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    freq = loadvar(cfg.inputfile, 'data');
+    hasdata = true;
+  end
+end
+
+% check if the input data is valid for this function
+freq = checkdata(freq, 'datatype', 'freq', 'feedback', 'yes');
 
 for i = 1:size(cfg.foilim,1)
   % determine the exact frequency bins to interpolate
@@ -50,7 +64,7 @@ for i = 1:size(cfg.foilim,1)
   % update the configuration
   cfg.foilim(i,1) = freq.freq(peakbeg);
   cfg.foilim(i,2) = freq.freq(peakend);
-
+  
   if strcmp(cfg.method, 'nan')
     switch freq.dimord
       case 'chan_freq'
@@ -64,10 +78,10 @@ for i = 1:size(cfg.foilim,1)
       otherwise
         error('unsupported dimord');
     end % switch
-
+    
   elseif strcmp(cfg.method, 'linear')
     error('not yet implemented');
-
+    
   else
     error('unsupported method');
   end

@@ -38,10 +38,10 @@ function [mri] = ft_volumerealign(cfg, mri);
 %
 %
 % See also READ_MRI, FT_ELECTRODEREALIGN
-% 
+%
 % Undocumented local options:
-% cfg.inputfile
-% cfg.outputfile
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
 
 % Copyright (C) 2006-2009, Robert Oostenveld
 %
@@ -72,8 +72,8 @@ cfg = checkconfig(cfg, 'trackconfig', 'on');
 if ~isfield(cfg, 'fiducial'),  cfg.fiducial = [];         end
 if ~isfield(cfg, 'parameter'), cfg.parameter = 'anatomy'; end
 if ~isfield(cfg, 'clim'),      cfg.clim      = [];        end
-if ~isfield(cfg, 'inputfile'),          cfg.inputfile = [];                      end
-if ~isfield(cfg, 'outputfile'),         cfg.outputfile = [];                     end
+if ~isfield(cfg, 'inputfile'), cfg.inputfile = [];        end
+if ~isfield(cfg, 'outputfile'),cfg.outputfile = [];       end
 
 hasdata = (nargin>1);
 if ~isempty(cfg.inputfile)
@@ -82,7 +82,6 @@ if ~isempty(cfg.inputfile)
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
     mri = loadvar(cfg.inputfile, 'data');
-    hasdata = true;
   end
 end
 
@@ -196,11 +195,11 @@ switch cfg.method
         fprintf('rpa = undefined\n');
       end
     end % while true
-
+    
     cfg.fiducial.nas = nas;
     cfg.fiducial.lpa = lpa;
     cfg.fiducial.rpa = rpa;
-
+    
   otherwise
     error('unsupported method');
 end
@@ -216,10 +215,6 @@ rpa_head = warp_apply(mri.transform, cfg.fiducial.rpa);
 realign = headcoordinates(nas_head, lpa_head, rpa_head);
 % combine the additional transformation with the original one
 mri.transform = realign * mri.transform;
-
-% accessing this field here is needed for the configuration tracking
-% by accessing it once, it will not be removed from the output cfg
-cfg.outputfile;
 
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');

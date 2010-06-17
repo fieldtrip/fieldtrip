@@ -55,7 +55,6 @@ if ~isempty(cfg.inputfile)
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
     timelock = loadvar(cfg.inputfile, 'data');
-    hasdata = true;
   end
 end
 
@@ -161,10 +160,9 @@ catch
 end
 cfg.version.id = '$Id$';
 
-if hasdata && isfield(timelock, 'cfg')
-  % remember the configuration details of the input data
-  cfg.previous = timelock.cfg;
-end
+% remember the configuration details of the input data
+try, cfg.previous = timelock.cfg; end
+
 % remember the exact configuration details in the output
 timelock.cfg = cfg;
 
