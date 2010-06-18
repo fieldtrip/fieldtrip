@@ -176,7 +176,7 @@ if isfield(data, 'label') && ~isempty(cfg.channelcmb),
 end
 
 % check whether the required inparam is present in the data
-if ~isfield(data, inparam) || (strcmp(inparam, 'crsspctrm') && isfield(data, 'crsspctrm')),
+if ~isfield(data, inparam) || (~strcmp(dtype, 'freqmvar') && strcmp(inparam, 'crsspctrm') && isfield(data, 'crsspctrm')),
     switch dtype
     case 'freq'
         if strcmp(inparam, 'crsspctrm') 
