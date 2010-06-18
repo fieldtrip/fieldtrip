@@ -68,9 +68,19 @@ SOCKET createSocketUDP(const char *address, int port) {
 
 void updatePiBox() {
 	char msg[200];
-	snprintf(msg, 200, "Format: %i x %i x %i  -  Scans: %4i", 
-				pdg.getReadoutResolution(), pdg.getPhaseResolution(), 
-				pdg.getNumSlices(), pdg.getNumScansWritten());
+	int ne = pdg.getNumEchos();
+	int nt = pdg.getNumWritten();
+	
+	if (ne>1) {
+		int ns = nt/ne;
+		snprintf(msg, 200, "Format: %i x %i x %i  -  Scans/Echos: %4i/%i", 
+					pdg.getReadoutResolution(), pdg.getPhaseResolution(), 
+					pdg.getNumSlices(), ns, nt);
+	} else {
+		snprintf(msg, 200, "Format: %i x %i x %i  -  Scans: %4i", 
+					pdg.getReadoutResolution(), pdg.getPhaseResolution(), 
+					pdg.getNumSlices(), nt);
+	}
 	piBox->copy_label(msg);
 	piBox->redraw();
 }
@@ -269,7 +279,7 @@ int main(int argc, char *argv[]) {
 	
 	while (Fl::check()) {
 		Fl::wait(0);
-		if (pdg.run(200) < 0) {
+		if (pdg.run(20) < 0) {
 			Fl::wait();
 		} else {
 			switch(pdg.getLastAction()) {
@@ -287,7 +297,7 @@ int main(int argc, char *argv[]) {
 					updatePiBox();
 					break;
 				case PixelDataGrabber::PixelsTransmitted:			
-					if (pdg.getNumScansWritten()==1) addTimedMsg("Transmitted first scan");
+					if (pdg.getNumWritten()==1) addTimedMsg("Transmitted first sample");
 					updatePiBox();
 					break;
 				case PixelDataGrabber::BadPixelData:

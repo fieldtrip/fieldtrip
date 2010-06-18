@@ -11,18 +11,16 @@
 #include <vector>
 #include <string>
 
+#define FILE_INFO_BUFFER_SIZE  20000
 
 class FolderWatcher {
 	public:
 	
 	FolderWatcher(const char *directory);
 	~FolderWatcher();
-	
-	/* Synchronous (blocking) operation, returns number of changes or 0 on error */
-	int waitForChanges();
-	
+		
 	/* Asynchronous operation, returns "false" on error */
-	bool startListenForChanges(HANDLE eventHandle = INVALID_HANDLE_VALUE);
+	bool startListenForChanges();
 	bool stopListenForChanges();
 	
 	/* Asynchronous operation, returns number of changes -- if non-zero, restart listening */
@@ -37,17 +35,16 @@ class FolderWatcher {
 		return (dirHandle != INVALID_HANDLE_VALUE); 
 	}
 	
-	int processChanges();
-	
-	HANDLE getWin32Event() { return eventHandle; }
-	
 	protected:
 	
 	bool isListening;
+	int processChanges(int which);
 	
 	std::vector<std::string> vecFilenames;
-	char fileInfoBuffer[16384];
-	HANDLE dirHandle, eventHandle, usedHandle;
+	char fileInfoBuffer[2][FILE_INFO_BUFFER_SIZE];
+	int activeBuffer;
+	HANDLE dirHandle;
+	HANDLE completionPort;
 	OVERLAPPED overlap;
 };
 

@@ -82,6 +82,8 @@ class PixelDataGrabber {
 	
 	/** Returns the number of slices as determined from the latest protocol file read */
 	int getNumSlices() const { return numSlices; }
+	/** Returns the number of echos per scan as determined from the latest protocol file read */
+	int getNumEchos() const { return numEchos; }
 	/** Returns the readout resolution (number of pixels in X direction) */
 	int getReadoutResolution() const { return readResolution; }
 	/** Returns the phase resolution (number of pixels in Y direction) */
@@ -94,10 +96,10 @@ class PixelDataGrabber {
 		protocol data (...\mrprot.txt) or pixel data (...\xxx.PixelData).
 	*/
 	const char *getLastFilename() { return fullName.c_str(); }
-	/** Returns the number of scans transmitted to the currently connected
+	/** Returns the number of samples (scans/echos) transmitted to the currently connected
 		FieldTrip buffer.
 	*/
-	int getNumScansWritten() { return samplesWritten; }
+	int getNumWritten() { return samplesWritten; }
 	/** Returns a code for errors or the action carried out during the last run() */
 	Action getLastAction() const { return lastAction; }
 
@@ -197,6 +199,7 @@ class PixelDataGrabber {
 
 	std::string sourceDir;	/**< Contains the path of the directory that is being monitored */
 	std::string fullName;	/**< Contains the full path of the latest read file */
+	std::string lastName;	/**< Contains the full path of the last pixeldata file transmitted */
 	FolderWatcher *FW;		/**< Points to a FolderWatcher object */
 	HANDLE fwEventHandle;	/**< WIN32 event handle used for the FolderWatcher */
 	int ftbSocket;			/**< Socket identifying the remote FieldTrip buffer, or -1 if unconnected */
@@ -210,6 +213,7 @@ class PixelDataGrabber {
 	unsigned int phaseResolution;	/**< Number of pixels in phase direction (Y) */
 	unsigned int numSlices;			/**< Number of slices */
 	unsigned int TR;                /**< Repetition time in microseconds */
+	unsigned int numEchos;          /**< Number of echos per scan */
 	double phaseFOV, readoutFOV;	/**< Size of the field of view in mm */
 	Action lastAction;				/**< Contains last action or error that occured */
 	

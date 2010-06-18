@@ -41,8 +41,15 @@ logFile = file(destdir + '-logging.txt','w')
 
 shutil.copy(srcdir + 'mrprot.txt', 'D:/watch/image/mrprot.txt')
 
+echoTimes = [1.5, 0.01, 0.03, 0.2, 0.25]
+curEcho = 0;
+
 while 1:
-	time.sleep(1.5)
+	time.sleep(echoTimes[curEcho])
+	curEcho = curEcho + 1
+	if curEcho == len(echoTimes):
+		curEcho = 0
+	
 	T = time.time()
 	shutil.copy(srcdir + PixFN[idxSrc], '%s/Scan%04i.PixelData'%(destdir,idxDest))
 	info = '%16.4f  %04i  %s\n'%(T,idxDest,PixFN[idxSrc])

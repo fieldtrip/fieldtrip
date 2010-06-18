@@ -10,8 +10,7 @@ FolderWatcher::FolderWatcher(const char *directory) : vecFilenames(0) {
 	dirHandle = INVALID_HANDLE_VALUE;
 	isListening = false;
 	
-	eventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
-	if (eventHandle == INVALID_HANDLE_VALUE) return;
+	activeBuffer = 0;
 	
 	dirHandle = CreateFile(directory, 
 					FILE_LIST_DIRECTORY, 
@@ -20,36 +19,26 @@ FolderWatcher::FolderWatcher(const char *directory) : vecFilenames(0) {
 					OPEN_EXISTING, 
 					FILE_FLAG_BACKUP_SEMANTICS|FILE_FLAG_OVERLAPPED, 
 					NULL);
-}
-
-int FolderWatcher::waitForChanges() {
-	DWORD bufferLength=0;
-	
-	vecFilenames.clear();
-	
-	if (dirHandle==INVALID_HANDLE_VALUE) return -1;
-		
-	BOOL ok = ReadDirectoryChangesW(dirHandle, fileInfoBuffer, sizeof(fileInfoBuffer), TRUE, FILE_NOTIFY_CHANGE_SIZE, &bufferLength, NULL, NULL);
-	
-	if (!ok) return 0;	
-	if (bufferLength==0) return 0;
-	
-	return processChanges();
-}
-
-
-bool FolderWatcher::startListenForChanges(HANDLE extHandle) {
-	vecFilenames.clear();
-	
-	if (dirHandle==INVALID_HANDLE_VALUE) return 0;
-	
-	if (extHandle==INVALID_HANDLE_VALUE) {
-		usedHandle = overlap.hEvent = eventHandle;
-	} else {
-		usedHandle = overlap.hEvent = extHandle;
+				
+	if (dirHandle != INVALID_HANDLE_VALUE) {
+		completionPort = CreateIoCompletionPort(dirHandle, NULL, 0, 0);
+		if (completionPort == NULL) {
+			CloseHandle(dirHandle);
+			dirHandle = INVALID_HANDLE_VALUE;
+		}
 	}
+}
+
+bool FolderWatcher::startListenForChanges() {
+	vecFilenames.clear();
 	
-	if (ReadDirectoryChangesW(dirHandle, fileInfoBuffer, sizeof(fileInfoBuffer), TRUE, FILE_NOTIFY_CHANGE_LAST_WRITE, NULL, &overlap, NULL)) {
+	if (dirHandle==INVALID_HANDLE_VALUE) return false;
+	
+	memset(&overlap, 0, sizeof(overlap));
+	
+	activeBuffer = 1 - activeBuffer;
+	
+	if (ReadDirectoryChangesW(dirHandle, fileInfoBuffer[activeBuffer], FILE_INFO_BUFFER_SIZE, TRUE, FILE_NOTIFY_CHANGE_LAST_WRITE, NULL, &overlap, NULL)) {
 		isListening = true;
 		return true;
 	}
@@ -68,17 +57,25 @@ bool FolderWatcher::stopListenForChanges() {
 }
 
 int FolderWatcher::checkHasChanged(unsigned int millis) {
-	if (WaitForSingleObject(usedHandle, millis) != WAIT_OBJECT_0) return 0;
+	BOOL ok;
+	DWORD numBytes, compKey;
+	OVERLAPPED *overLapped;
+
+	ok = GetQueuedCompletionStatus(completionPort, &numBytes, &compKey, &overLapped, millis);
 	
-	return processChanges();
+	if (ok) {
+		int oldBuffer = activeBuffer;
+		startListenForChanges();
+		return processChanges(oldBuffer);
+	}
+	return 0;
 }
 	
-int FolderWatcher::processChanges() {
+int FolderWatcher::processChanges(int which) {
 	FILE_NOTIFY_INFORMATION *info;
 
-	char *fileInfoBufferPtr = fileInfoBuffer;
+	char *fileInfoBufferPtr = fileInfoBuffer[which];
 	
-	memset(fileInfoBuffer, 0, sizeof(DWORD));
 	isListening = false;	
 	
 	do {
@@ -86,18 +83,6 @@ int FolderWatcher::processChanges() {
 		info = (FILE_NOTIFY_INFORMATION *) fileInfoBufferPtr;
 		
 		fileInfoBufferPtr += info->NextEntryOffset;
-		/*
-		switch(info->Action) {
-			case FILE_ACTION_ADDED:
-				printf("File added\n");
-				break;
-			case FILE_ACTION_MODIFIED:
-				printf("File modified\n");
-				break;
-			default:
-				printf("Other action\n");
-		}
-		*/
 		#ifdef UNICODE
         lstrcpynW(filename, info->FileName, min(MAX_PATH, info->FileNameLength / sizeof(WCHAR) + 1));
 		#else
@@ -117,6 +102,6 @@ FolderWatcher::~FolderWatcher() {
 	if (isListening) {
 		CancelIo(dirHandle);
 	}
+	if (completionPort != NULL) CloseHandle(completionPort);
 	CloseHandle(dirHandle);
-	CloseHandle(eventHandle);
 }

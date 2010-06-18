@@ -12,7 +12,6 @@
 PixelDataGrabber::PixelDataGrabber() {
 	ftbSocket = -1;
 	FW = NULL;
-	fwEventHandle = INVALID_HANDLE_VALUE;
 	
 	phaseFOV = readoutFOV = 0.0;
 	samplesWritten = 0;
@@ -27,7 +26,6 @@ PixelDataGrabber::PixelDataGrabber() {
 }
 
 PixelDataGrabber::~PixelDataGrabber() {
-	if (fwEventHandle != INVALID_HANDLE_VALUE) CloseHandle(fwEventHandle);
 	if (FW) delete FW;
 		
 	if (ftbSocket > 0) close_connection(ftbSocket);
@@ -35,11 +33,6 @@ PixelDataGrabber::~PixelDataGrabber() {
 }
 	
 bool PixelDataGrabber::monitorDirectory(const char *directory) {
-	if (fwEventHandle == INVALID_HANDLE_VALUE) {
-		fwEventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
-		if (fwEventHandle == INVALID_HANDLE_VALUE) return false;
-	}
-	
 	if (protInfo) {
 		sap_destroy(protInfo);
 		protInfo = NULL;
@@ -59,7 +52,7 @@ bool PixelDataGrabber::monitorDirectory(const char *directory) {
 		if (sourceDir[n-1]!='\\' && sourceDir[n-1]!='/') sourceDir += '\\';
 
 		FW = new FolderWatcher(directory);
-		fwActive = FW->startListenForChanges(fwEventHandle);
+		fwActive = FW->startListenForChanges();
 	}
 
 	return fwActive;
@@ -82,20 +75,11 @@ int PixelDataGrabber::run(unsigned int ms) {
 		if (verbosity>3) fprintf(stderr, "No directory is being monitored.\n");
 		return -1;
 	}
+	
+	int numChg = FW->checkHasChanged(ms);
 
-	DWORD waitResult = WaitForSingleObject(fwEventHandle, ms);
-
-	if (waitResult == WAIT_FAILED) {
-		if (verbosity>0) fprintf(stderr, "Error in WaitForSingleObject(...) !\n");
-		// TODO: proper error handling
-		return -1;
-	}
-		
-	if (waitResult == WAIT_TIMEOUT) return 0;
-
-	if (FW->processChanges() > 0) {
+	if (numChg > 0) {
 		tryFolderToBuffer();
-		FW->startListenForChanges(fwEventHandle);
 	}
 	return 1;
 }
@@ -203,7 +187,7 @@ bool PixelDataGrabber::sendFrameToBuffer(const struct timeval &tv) {
 		if (!writeHeader()) return false;
 	}
 	if (!writePixelData()) return false;
-	if (!writeTimestampEvent(tv)) return false;
+	// if (!writeTimestampEvent(tv)) return false;
 	return true;
 }
 
@@ -254,7 +238,15 @@ void PixelDataGrabber::handleProtocol(const char *info, unsigned int sizeInBytes
 	// TODO: Does the following make sense?
 	nifti.pixdim[4] = TR*1e-6f;	// repetition time in seconds 
 
-
+	// lContrasts --> number of echos
+	item = sap_search_deep(PI, "lContrasts");
+	if (item!=NULL && item->type == SAP_LONG) {
+		numEchos = ((long *) item->value)[0];
+		if (verbosity>2) printf("Multi-echo: %i\n", numEchos);
+	} else {
+		numEchos = 1;
+	}		
+	
 	// sKSpace.lBaseResolution => number of pixels in readout direction
 	item = sap_search_deep(PI, "sKSpace.lBaseResolution");
 	if (item!=NULL && item->type == SAP_LONG) {
@@ -629,14 +621,20 @@ void PixelDataGrabber::tryFolderToBuffer() {
 		if (vfn[i].compare(vfn[i].size()-10,10, ".PixelData") == 0) {
 			struct timeval tv;
 			
+			if (lastName == fullName) {
+				printf("Warning: 2nd change on file %s detected - ignoring\n", fullName.c_str());
+				continue;
+			}
 			gettimeofday(&tv, NULL);
 			if (!tryReadFile(fullName.c_str(), pixBuffer)) continue;
 			
 			if (protInfo == NULL) tryReadProtocol();
 			reshapeToSlices();
 			if (sliceBuffer.size()==0) continue;
+			lastName = fullName;
 			if (ftbSocket == -1) continue;
 			sendFrameToBuffer(tv);
+			
 		} 
 		else if (vfn[i].compare(vfn[i].size()-10,10, "mrprot.txt") == 0) {
 			if (!tryReadFile(fullName.c_str(), protBuffer)) return;
