@@ -11,15 +11,15 @@
 #include "buffer.h"
 #include <pthread.h>
 
-// FIXME should these be static?
+/* FIXME should these be static? */
 static header_t   *header   = NULL;
 static data_t     *data     = NULL;
 static event_t    *event    = NULL;
 
 static unsigned int current_max_num_sample = 0;
 
-static int thissample = 0;    // points at the buffer
-static int thisevent = 0;     // points at the buffer
+static int thissample = 0;    /* points at the buffer */
+static int thisevent = 0;     /* points at the buffer */
 
 pthread_mutex_t mutexheader   = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutexdata     = PTHREAD_MUTEX_INITIALIZER;
@@ -133,20 +133,20 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 	*/
 	int verbose = 0;
 
-    // these are used for blocking the read requests
+    /* these are used for blocking the read requests */
     struct timeval tp;
 	struct timespec ts;
 
 	/* use a local variable for datasel (in GET_DAT) */
 	datasel_t datasel;
 	
-	// these are for typecasting
+	/* these are for typecasting */
 	headerdef_t    *headerdef;
 	datadef_t      *datadef;
 	eventdef_t     *eventdef;
 	eventsel_t     *eventsel;
 
-	// this will hold the response
+	/* this will hold the response */
 	message_t *response;
 	response      = (message_t*)malloc(sizeof(message_t));
 	
@@ -164,7 +164,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 		return -1;
 	}
 	response->buf = NULL;
-	// the response should be passed to the calling function, where it should be freed
+	/* the response should be passed to the calling function, where it should be freed */
 	*response_ptr = response;
 
     if (verbose>1) print_request(request->def);
@@ -180,12 +180,12 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			headerdef = (headerdef_t*)request->buf;
 			if (verbose>1) print_headerdef(headerdef);
 
-			// delete the old header, data and events
+			/* delete the old header, data and events */
 			free_header();
 			free_data();
 			free_event();
 
-			// store the header and re-initialize
+			/* store the header and re-initialize */
 			header      = (header_t*)malloc(sizeof(header_t));
 			DIE_BAD_MALLOC(header);
 			header->def = (headerdef_t*)malloc(sizeof(headerdef_t));
@@ -272,18 +272,18 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			pthread_mutex_lock(&mutexheader);
 			pthread_mutex_lock(&mutexevent);
 
-			// go over all events and store them one by one
-			if (header==NULL || event==NULL) {
+			/* Give an error message if there is no header, or if the given event array is defined badly */
+			if (header==NULL || event==NULL || check_event_array(request->def->bufsize, request->buf) < 0) {
 				response->def->version = VERSION;
 				response->def->command = PUT_ERR;
 				response->def->bufsize = 0;
 			}
-			else {
+			else {	/* go over all events and store them one by one */
 				response->def->version = VERSION;
 				response->def->command = PUT_OK;
 				response->def->bufsize = 0;
 
-				offset = 0; // this represents the offset of the event in the buffer
+				offset = 0; /* this represents the offset of the event in the buffer */
 				while (offset<request->def->bufsize) {
 					FREE(event[thisevent].def);
 					FREE(event[thisevent].buf);
@@ -343,23 +343,23 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			pthread_mutex_lock(&mutexheader);
 
 			if (request->def->bufsize) {
-				// the selection has been specified
+				/* the selection has been specified */
 				memcpy(&datasel, request->buf, sizeof(datasel_t));
-				// If endsample is -1 read the buffer to the end
+				/* If endsample is -1 read the buffer to the end */
 				if(datasel.endsample == -1)
 				{
 					datasel.endsample = header->def->nsamples - 1;
 				}
 			}
 			else {
-				// determine a valid selection
+				/* determine a valid selection */
 				if (header->def->nsamples>current_max_num_sample) {
-					// the ringbuffer is completely full
+					/* the ringbuffer is completely full */
 					datasel.begsample = header->def->nsamples - current_max_num_sample;
 					datasel.endsample = header->def->nsamples - 1;
 				}
 				else {
-					// the ringbuffer is not yet completely full
+					/* the ringbuffer is not yet completely full */
 					datasel.begsample = 0;
 					datasel.endsample = header->def->nsamples - 1;
 				}
@@ -429,7 +429,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 					response->def->command = GET_OK;
 					response->def->bufsize = 0;
 				
-					// determine the number of samples to return
+					/* determine the number of samples to return */
 					n = datasel.endsample - datasel.begsample + 1;
 				
 					response->buf = malloc(sizeof(datadef_t) + n*data->def->nchans*wordsize);
@@ -494,20 +494,20 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			eventsel = (eventsel_t*)malloc(sizeof(eventsel_t));
 			DIE_BAD_MALLOC(eventsel);
 						
-			// determine the selection
+			/* determine the selection */
 			if (request->def->bufsize) {
-				// the selection has been specified
+				/* the selection has been specified */
 				memcpy(eventsel, request->buf, sizeof(eventsel_t));
 			}
 			else {
-				// determine a valid selection
+				/* determine a valid selection */
 				if (header->def->nevents>MAXNUMEVENT) {
-					// the ringbuffer is completely full
+					/* the ringbuffer is completely full */
 					eventsel->begevent = header->def->nevents - MAXNUMEVENT;
 					eventsel->endevent = header->def->nevents - 1;
 				}
 				else {
-					// the ringbuffer is not yet completely full
+					/* the ringbuffer is not yet completely full */
 					eventsel->begevent = 0;
 					eventsel->endevent = header->def->nevents - 1;
 				}
@@ -546,7 +546,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 				response->def->command = GET_OK;
 				response->def->bufsize = 0;
 
-                // determine the number of events to return
+                /* determine the number of events to return */
 				n = eventsel->endevent - eventsel->begevent + 1;
 
 				for (j=0; j<n; j++) {

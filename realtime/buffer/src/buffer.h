@@ -105,6 +105,7 @@ int dmarequest(const message_t *, message_t**);
 int tcprequest(int, const message_t *, message_t**);
 unsigned int wordsize_from_type(UINT32_T data_type);
 void check_datatypes(void);
+int check_event_array(unsigned int size, const void *buf);
 const ft_chunk_t *find_chunk(const void *buf, int offset0, int size, UINT32_T chunk_type);
 
 void ft_swap16(unsigned int numel, void *data);

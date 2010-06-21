@@ -256,3 +256,47 @@ const ft_chunk_t *find_chunk(const void *buf, int offset0, int size, UINT32_T ch
 	}
 	return NULL;
 }
+
+
+/** Iterate through an array of events and check whether all of them are properly defined,
+	that is, whether the "type" and "value" fields are of valid type and size, and whether the
+	"bufsize" fields are correct (that is, fully contained in the passed buffer, and big enough
+	to hold "type" and "value".
+	Returns the number of events on success (might also be 0), or
+	a negative number that indicates in which event definition an error happend,
+	for example, a return value of -2 means that the first event was ok, but the second event
+	definition was invalid. This function returns at the first error.
+*/
+int check_event_array(unsigned int size, const void *buf) {
+	unsigned int offset=0;
+	int numEvents = 0;
+	
+	while (offset + sizeof(eventdef_t) <= size) {
+		const eventdef_t *E;	
+		unsigned int wsType, wsValue;
+		
+		/* Set our event pointer to the current location within the array */
+		E = (const eventdef_t *) ((char *) buf + offset);
+		
+		/* Increase the offset by the size of this event, and check whether it's fully
+		   contained within the given array.
+		*/
+		offset += sizeof(eventdef_t) + E->bufsize;
+		if (offset < size) goto error;
+		
+		/* Check whether "type" and "value" are of known type */
+		wsType = wordsize_from_type(E->type_type);
+		if (wsType == 0) goto error;
+		wsValue = wordsize_from_type(E->value_type);
+		if (wsValue == 0) goto error;
+		
+		/* Check whether "type" and "value" are contained in this event's "buf" */
+		if (wsType * E->type_numel + wsValue * E->value_numel > E->bufsize) goto error;
+
+		/* all checks passed, continue at next offset */
+		++numEvents;
+	}
+	return numEvents;
+error:
+	return -(1+numEvents);
+}
