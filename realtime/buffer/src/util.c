@@ -282,7 +282,7 @@ int check_event_array(unsigned int size, const void *buf) {
 		   contained within the given array.
 		*/
 		offset += sizeof(eventdef_t) + E->bufsize;
-		if (offset < size) goto error;
+		if (offset > size) goto error;
 		
 		/* Check whether "type" and "value" are of known type */
 		wsType = wordsize_from_type(E->type_type);

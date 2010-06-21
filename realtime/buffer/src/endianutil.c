@@ -85,7 +85,7 @@ int ft_swap_chunks_to_native(UINT32_T size, UINT32_T nchans, void *buf) {
 		
 		offset += sizeof(ft_chunkdef_t) + chunk->def.size;
 		/* chunk definition fault (=too big) ? */
-		if (offset < size) return -1;
+		if (offset > size) return -1;
 		
 		switch(chunk->def.type) {
 			case FT_CHUNK_RESOLUTIONS:
@@ -96,24 +96,30 @@ int ft_swap_chunks_to_native(UINT32_T size, UINT32_T nchans, void *buf) {
 			/* Add other cases here as needed */
 		}		
 		
-		/* TODO: check any contents of the chunk for possible swapping */
 		offset += sizeof(ft_chunkdef_t) + chunk->def.size;
 	}
 	return 0;
 }
 
+/* returns 0 on success, -1 on error */
 int ft_swap_events_to_native(UINT32_T size, void *buf) {
 	UINT32_T offset = 0;
-	
 
 	while (offset + sizeof(eventdef_t) <= size) {
-		unsigned int wst;
+		unsigned int wst, wsv;
 		
 		eventdef_t *edef = (eventdef_t *) ((char *) buf + offset);
 		ft_swap32(8, edef); /* all fields are 32-bit */
 		
+		/* Increase offset to beginning of next event */
 		offset += sizeof(eventdef_t) + edef->bufsize;
+		if (offset > size) return -1;	/* this event is too big for "buf" */
+		
 		wst = wordsize_from_type(edef->type_type);
+		wsv = wordsize_from_type(edef->value_type);
+		
+		/* check if type and value fit into this event's local buffer */
+		if (wst*edef->type_numel + wsv*edef->value_numel > edef->bufsize) return -1;
 		
 		ft_swap_data(edef->type_numel, edef->type_type, (char *) buf + offset);
 		ft_swap_data(edef->value_numel, edef->value_type, (char *) buf + offset + wst*edef->type_numel);
@@ -164,7 +170,7 @@ int ft_swap_chunks_from_native(UINT32_T size, UINT32_T nchans, void *buf) {
 		offset += sizeof(ft_chunkdef_t) + chunk->def.size;
 		
 		/* chunk definition fault (=too big) ? */
-		if (offset < size) return -1;
+		if (offset > size) return -1;
 		
 		switch(chunk->def.type) {
 			case FT_CHUNK_RESOLUTIONS:
