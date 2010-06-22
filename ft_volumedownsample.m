@@ -63,13 +63,6 @@ if ~isempty(cfg.inputfile)
   end
 end
 
-% check if the required spm is in your path:
-if strcmpi(cfg.spmversion, 'spm2'),
-  hastoolbox('SPM2',1);
-elseif strcmpi(cfg.spmversion, 'spm8'),
-  hastoolbox('SPM8',1);
-end
-
 if strcmp(cfg.keepinside, 'yes')
   % add inside to the list of parameters
   if ~iscell(cfg.parameter),
@@ -112,6 +105,13 @@ down = grid2transform(down);
 
 % smooth functional parameters, excluding anatomy and inside
 if ~strcmp(cfg.smooth, 'no'),
+  % check if the required spm is in your path:
+  if strcmpi(cfg.spmversion, 'spm2'),
+    hastoolbox('SPM2',1);
+  elseif strcmpi(cfg.spmversion, 'spm8'),
+    hastoolbox('SPM8',1);
+  end
+
   for j = 1:length(cfg.parameter)
     if strcmp(cfg.parameter{j}, 'inside')
       fprintf('not smoothing %s\n', cfg.parameter{j});
