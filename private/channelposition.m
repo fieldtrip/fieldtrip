@@ -42,7 +42,7 @@ if isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(sens.
 end
 
 switch ft_senstype(sens)
-  case {'ctf151', 'ctf275' 'bti148', 'bti248', 'chieti153', 'yokogawa160'}
+  case {'ctf151', 'ctf275' 'bti148', 'bti248', 'itab153', 'yokogawa160'}
     % remove the non-MEG channels altogether
     sel = ft_chantype(sens, 'meg');
     sens.label = sens.label(sel);
@@ -70,7 +70,7 @@ switch ft_senstype(sens)
     pnt = sens.pnt(ind, :);
     ori = sens.ori(ind, :);
 
-  case {'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'chieti153_planar', 'yokogawa160_planar'}
+  case {'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'itab153_planar', 'yokogawa160_planar'}
     % create a list with planar channel names
     chan = {};
     for i=1:length(sens.label)
@@ -163,10 +163,12 @@ switch ft_senstype(sens)
       % compute a weighted position for the channel
       [nchan, ncoil] = size(sens.tra);
       pnt = zeros(nchan,3);
+      ori = zeros(nchan,3); % FIXME not sure whether this will work
       for i=1:nchan
         weight = abs(sens.tra(i,:));
         weight = weight ./ norm(weight);
         pnt(i,:) = weight * sens.pnt;
+        ori(i,:) = weight * sens.ori;
       end
       lab = sens.label;
 

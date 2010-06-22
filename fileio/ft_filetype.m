@@ -682,6 +682,11 @@ elseif filetype_check_extension(filename, '.raw') && filetype_check_header(filen
   type = 'itab_raw';
   manufacturer = 'Chieti ITAB';
   content = 'MEG data, including sensor positions';
+  % known Chieti ITAB file types
+elseif filetype_check_extension(filename, '.raw.mhd')
+  type = 'itab_mhd';
+  manufacturer = 'Chieti ITAB';
+  content = 'MEG header data, including sensor positions';
 
   % known Nexstim file types
 elseif filetype_check_extension(filename, '.nxe')

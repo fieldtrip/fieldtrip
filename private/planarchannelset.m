@@ -764,6 +764,14 @@ switch lower(senstype(data))
       planar{k,2} = ['A',num2str(k),'_dV'];
       planar{k,3} = ['A',num2str(k)];
     end
+    
+  case 'itab153_planar'
+    planar = cell(153,3);
+    for k = 1:153
+      planar{k,1} = sprintf('MAG_%03d_dH', k-1);
+      planar{k,2} = sprintf('MAG_%03d_dV', k-1);
+      planar{k,3} = sprintf('MAG_%03d',    k-1);
+    end
 
   otherwise
 

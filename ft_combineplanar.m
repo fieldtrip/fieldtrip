@@ -70,7 +70,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-data = checkdata(data, 'datatype', {'raw', 'freq', 'timelock'}, 'feedback', 'yes', 'senstype', {'ctf151_planar', 'ctf275_planar', 'neuromag122', 'neuromag306', 'bti248_planar', 'bti148_planar'});
+data = checkdata(data, 'datatype', {'raw', 'freq', 'timelock'}, 'feedback', 'yes', 'senstype', {'ctf151_planar', 'ctf275_planar', 'neuromag122', 'neuromag306', 'bti248_planar', 'bti148_planar', 'itab153_planar'});
 
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 cfg = checkconfig(cfg, 'forbidden', {'combinegrad'});

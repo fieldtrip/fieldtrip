@@ -130,22 +130,22 @@ if isempty(detectflank)
 end
 
 if ismember(eventformat, {'brainvision_eeg', 'brainvision_dat'})
-    [p, f, e] = fileparts(filename);
-    filename = fullfile(p, [f '.vhdr']);
-    eventformat = 'brainvision_vhdr';
+  [p, f, e] = fileparts(filename);
+  filename = fullfile(p, [f '.vhdr']);
+  eventformat = 'brainvision_vhdr';
 end
 
 if strcmp(eventformat, 'brainvision_vhdr')
-    % read the headerfile belonging to the dataset and try to determine the corresponding markerfile
-    eventformat = 'brainvision_vmrk';
-    hdr = read_brainvision_vhdr(filename);
-    % replace the filename with the filename of the markerfile
-    if ~isfield(hdr, 'MarkerFile') || isempty(hdr.MarkerFile)
-        filename = [];
-    else
-        [p, f, e] = fileparts(filename);
-        filename = fullfile(p, hdr.MarkerFile);
-    end
+  % read the headerfile belonging to the dataset and try to determine the corresponding markerfile
+  eventformat = 'brainvision_vmrk';
+  hdr = read_brainvision_vhdr(filename);
+  % replace the filename with the filename of the markerfile
+  if ~isfield(hdr, 'MarkerFile') || isempty(hdr.MarkerFile)
+    filename = [];
+  else
+    [p, f, e] = fileparts(filename);
+    filename = fullfile(p, hdr.MarkerFile);
+  end
 end
 
 % start with an empty event structure
@@ -189,6 +189,11 @@ switch eventformat
   case 'bci2000_dat'
     % this requires the load_bcidat mex file to be present on the path
     hastoolbox('BCI2000', 1);
+
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+
     if isfield(hdr.orig, 'signal') && isfield(hdr.orig, 'states')
       % assume that the complete data is stored in the header, this speeds up subsequent read operations
       signal        = hdr.orig.signal;
@@ -340,7 +345,7 @@ switch eventformat
       event(end+1).type   = 'Battery_ok';
       event(end  ).sample = i;
     end
-    
+
   case {'biosig', 'gdf'}
     % FIXME it would be nice to figure out how sopen/sread return events
     % for all possible fileformats that can be processed with biosig
@@ -823,9 +828,21 @@ switch eventformat
       event = db_select('fieldtrip.event', {'type', 'value', 'sample', 'offset', 'duration'});
     end
 
-  case 'itab_raw'
-    error('suppoport for events in this fileformat is not yet implemented')
-
+  case {'itab_raw' 'itab_mhd'}
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+    for i=1:hdr.orig.nsmpl
+      event(end+1).type = 'trigger';
+      event(end  ).value    = hdr.orig.smpl(i).type;
+      event(end  ).sample   = hdr.orig.smpl(i).start + 1;
+      event(end  ).duration = hdr.orig.smpl(i).ntptot;
+      event(end  ).offset   = -hdr.orig.smpl(i).ntppre;  % number of samples prior to the trigger
+    end
+    % trigsel = find(ft_chantype(hdr, 'flag'));
+    % trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigsel, 'detectflank', detectflank, 'trigshift', trigshift);
+    % event   = appendevent(event, trigger);
+    
   case 'matlab'
     % read the events from a normal Matlab file
     tmp   = load(filename, 'event');

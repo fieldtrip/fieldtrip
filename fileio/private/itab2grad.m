@@ -29,8 +29,8 @@ function grad = itab2grad(header_info)
 grad = struct;
 for i=1:header_info.nmagch
   grad.label{i}   = header_info.ch(i).label;
-  grad.pnt(i,1:3) = [header_info.ch(i).pos(1).r_s.comp];
-  grad.ori(i,1:3) = [header_info.ch(i).pos(1).u_s.comp];
+  grad.pnt(i,1:3) = [header_info.ch(i).position(1).r_s];
+  grad.ori(i,1:3) = [header_info.ch(i).position(1).u_s];
 end
 grad.unit  = 'mm';
 grad.tra   = eye(header_info.nmagch);

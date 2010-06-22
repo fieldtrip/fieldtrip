@@ -176,6 +176,10 @@ switch dataformat
     [path, file, ext] = fileparts(filename);
     headerfile = fullfile(path, [file '.vhdr']);
     datafile   = fullfile(path, [file '.dat']);
+  case 'itab_raw'
+    [path, file, ext] = fileparts(filename);
+    headerfile = fullfile(path, [file '.raw.mhd']);
+    datafile   = fullfile(path, [file '.raw']);
   case 'fcdc_matbin'
     [path, file, ext] = fileparts(filename);
     headerfile = fullfile(path, [file '.mat']);
@@ -461,12 +465,41 @@ switch dataformat
     dat = cell2mat(tmp.data');
 
   case  'itab_raw'
-    % check the presence of the required low-level toolbox
-    hastoolbox('lc-libs', 1);
-    chansel = hdr.orig.chansel;  % these are the channels that are visible to fieldtrip
-    % read the data using the dll
-    dat = lcReadData(chansel, begsample, endsample, filename);
-    % take the subset of channels that is selected by the user
+    if ismember(hdr.orig.data_type, [0 1 2])
+      % big endian
+      fid = fopen(datafile, 'rb', 'ieee-be');
+    elseif ismember(hdr.orig.data_type, [3 4 5])
+      % little endian
+      fid = fopen(datafile, 'rb', 'ieee-le');
+    else
+      error('unsuppported data_type in itab format');
+    end
+
+    % skip the ascii header
+    fseek(fid, hdr.orig.start_data, 'bof');
+
+    if ismember(hdr.orig.data_type, [0 3])
+      % short
+      fseek(fid, (begsample-1)*hdr.orig.nchan*2, 'cof');
+      dat = fread(fid, [hdr.orig.nchan endsample-begsample+1], 'int16');
+    elseif ismember(hdr.orig.data_type, [1 4])
+      % long
+      fseek(fid, (begsample-1)*hdr.orig.nchan*4, 'cof');
+      dat = fread(fid, [hdr.orig.nchan endsample-begsample+1], 'int32');
+    elseif ismember(hdr.orig.data_type, [2 5])
+      % float
+      fseek(fid, (begsample-1)*hdr.orig.nchan*4, 'cof');
+      dat = fread(fid, [hdr.orig.nchan endsample-begsample+1], 'float');
+    else
+      error('unsuppported data_type in itab format');
+    end
+    % these are the channels that are visible to fieldtrip
+    chansel = 1:hdr.orig.nchan;  
+    tmp = [hdr.orig.ch(chansel).calib];
+    tmp = tmp(:);
+    tmp(tmp==0) = 1;
+    dat = dat ./ tmp(:,ones(1,size(dat,2)));
+    % select the subset of visible channels that the user requested
     dat = dat(chanindx, :);
 
   case  'combined_ds'

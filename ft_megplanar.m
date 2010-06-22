@@ -107,7 +107,7 @@ israw  = datatype(data, 'raw');
 istlck = datatype(data, 'timelock');  % this will be temporary converted into raw
 
 % check if the input data is valid for this function
-data  = checkdata(data, 'datatype', {'raw' 'freq'}, 'feedback', 'yes', 'ismeg', 'yes', 'senstype', {'ctf151', 'ctf275', 'bti148', 'bti248'});
+data  = checkdata(data, 'datatype', {'raw' 'freq'}, 'feedback', 'yes', 'ismeg', 'yes', 'senstype', {'ctf151', 'ctf275', 'bti148', 'bti248', 'itab153'});
 
 if istlck
   % the timelocked data has just been converted to a raw representation
@@ -122,7 +122,16 @@ end
 % set the default configuration
 if ~isfield(cfg, 'channel'),       cfg.channel = 'MEG';             end
 if ~isfield(cfg, 'trials'),        cfg.trials = 'all';              end
-if ~isfield(cfg, 'neighbourdist'), cfg.neighbourdist = 4;           end
+% use a smart default for the distance
+if ~isfield(cfg, 'neighbourdist'),
+  if     isfield(data.grad, 'unit') && strcmp(data.grad.unit, 'cm')
+    cfg.neighbourdist = 4;
+  elseif isfield(data.grad, 'unit') && strcmp(data.grad.unit, 'mm')
+    cfg.neighbourdist = 40;
+  else
+    % don't provide a default in case the dimensions of the sensor array are unknown
+  end
+end
 if ~isfield(cfg, 'planarmethod'),  cfg.planarmethod = 'sincos';     end
 if strcmp(cfg.planarmethod, 'sourceproject')
   if ~isfield(cfg, 'headshape'),     cfg.headshape = [];            end % empty will result in the vol being used

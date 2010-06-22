@@ -180,6 +180,10 @@ switch headerformat
     [path, file, ext] = fileparts(filename);
     headerfile = fullfile(path, [file '.vhdr']);
     datafile   = fullfile(path, [file '.dat']);
+  case 'itab_raw'
+    [path, file, ext] = fileparts(filename);
+    headerfile = fullfile(path, [file '.raw.mhd']);
+    datafile   = fullfile(path, [file '.raw']);
   case 'fcdc_matbin'
     [path, file, ext] = fileparts(filename);
     headerfile = fullfile(path, [file '.mat']);
@@ -706,26 +710,26 @@ switch headerformat
     hdr.nSamples    = orig.nsamples;
     hdr.nSamplesPre = 0; % since continuous
     hdr.nTrials     = 1; % since continuous
-	if isfield(orig, 'nifti_1') 
-		hdr.nifti_1 = decode_nifti1(orig.nifti_1); 
-	end
-	if isfield(orig, 'siemensap') && exist('sap2matlab')==3 % only run this if MEX file is present
-		hdr.siemensap = sap2matlab(orig.siemensap); 
-	end
-	if isfield(orig, 'channel_names')
-		hdr.label = orig.channel_names;
-	else
-		if isempty(fakechannelwarning) || ~fakechannelwarning
-			% give this warning only once
-			warning('creating fake channel names');
-			fakechannelwarning = true;
-		end
-		hdr.label = cell(hdr.nChans,1);
-		if hdr.nChans < 2000 % don't do this for fMRI etc.
-			for i=1:hdr.nChans
-				hdr.label{i} = sprintf('%d', i);
-			end
-		end
+    if isfield(orig, 'nifti_1')
+      hdr.nifti_1 = decode_nifti1(orig.nifti_1);
+    end
+    if isfield(orig, 'siemensap') && exist('sap2matlab')==3 % only run this if MEX file is present
+      hdr.siemensap = sap2matlab(orig.siemensap);
+    end
+    if isfield(orig, 'channel_names')
+      hdr.label = orig.channel_names;
+    else
+      if isempty(fakechannelwarning) || ~fakechannelwarning
+        % give this warning only once
+        warning('creating fake channel names');
+        fakechannelwarning = true;
+      end
+      hdr.label = cell(hdr.nChans,1);
+      if hdr.nChans < 2000 % don't do this for fMRI etc.
+        for i=1:hdr.nChans
+          hdr.label{i} = sprintf('%d', i);
+        end
+      end
     end
     % remember the original header details
     hdr.orig = orig;
@@ -744,30 +748,22 @@ switch headerformat
       hdr.label = mxDeserialize(hdr.label);
     end
 
-  case 'itab_raw'
-    % check the presence of the required low-level toolbox
-    hastoolbox('lc-libs', 1);
-    header_info = lcReadHeader(filename);
-    % some channels don't have a label and are not supported by fieldtrip
-    chansel = true(size(header_info.ch));
-    for i=1:length(chansel)
-      chansel(i) = ~isempty(header_info.ch(i).label);
-    end
-    % convert into numeric array with indices
-    chansel = find(chansel);
+  case {'itab_raw' 'itab_mhd'}
+    % read the full header information frtom the binary header structure
+    header_info = read_itab_mhd(headerfile);
+
+    % these are the channels that are visible to fieldtrip
+    chansel = 1:header_info.nchan;
+
     % convert the header information into a fieldtrip compatible format
     hdr.nChans      = length(chansel);
     hdr.label       = {header_info.ch(chansel).label};
     hdr.label       = hdr.label(:);  % should be column vector
     hdr.Fs          = header_info.smpfq;
-    if header_info.nsmpl==0
-      % for continuous data
-      hdr.nSamples    = header_info.ntpdata;
-      hdr.nSamplesPre = 0; % it is a single continuous trial
-      hdr.nTrials     = 1; % it is a single continuous trial
-    else
-      error('epoched data in a itab_raw file is not yet supported (but should be easy to add)');
-    end
+    % it will always be continuous data
+    hdr.nSamples    = header_info.ntpdata;
+    hdr.nSamplesPre = 0; % it is a single continuous trial
+    hdr.nTrials     = 1; % it is a single continuous trial
     % keep the original details AND the list of channels as used by fieldtrip
     hdr.orig         = header_info;
     hdr.orig.chansel = chansel;
@@ -903,7 +899,7 @@ switch headerformat
       raw = fiff_setup_read_raw(filename);
       hdr.nSamples    = raw.last_samp - raw.first_samp + 1; % number of samples per trial
       hdr.nSamplesPre = raw.first_samp;                     % this should be kept without a negative sign,
-							    % otherwise conflicts will occur in read_data
+      % otherwise conflicts will occur in read_data
       hdr.nTrials     = 1;
       orig.raw        = raw; % keep all the details
 
