@@ -72,6 +72,7 @@ ft_chunk_t *encodeChannelNames(const mxArray *L, int N) {
 	for (i=NL;i<N;i++) {
 		*ptr++ = 0;
 	}
+	
 	/* that's it - the receiver should free this thing using mxFree */
 	return chunk;
 }
@@ -160,7 +161,7 @@ int buffer_puthdr(int server, mxArray * plhs[], const mxArray * prhs[])
 	header_def.data_type    = (UINT32_T)mxGetScalar(field) ;
 	
 	/* construct a PUT_HDR request */
-	request_def.bufsize = append(&request.buf, request_def.bufsize, &header_def, sizeof(headerdef_t));
+	request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, &header_def, sizeof(headerdef_t));
 	
 	/* append existing chunks to request.buf, set correct header_def.bufsize at the end */
 	fieldnumber = mxGetFieldNumber(prhs[0], "nifti_1");
@@ -172,8 +173,8 @@ int buffer_puthdr(int server, mxArray * plhs[], const mxArray * prhs[])
 			chunk_def.size = SIZE_NIFTI_1;
 			chunk_def.type = FT_CHUNK_NIFTI1;
 		
-			request_def.bufsize = append(&request.buf, request_def.bufsize, &chunk_def, sizeof(chunk_def));
-			request_def.bufsize = append(&request.buf, request_def.bufsize, mxGetData(field), chunk_def.size);
+			request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, &chunk_def, sizeof(chunk_def));
+			request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, mxGetData(field), chunk_def.size);
 		}
 	}
 	
@@ -186,8 +187,8 @@ int buffer_puthdr(int server, mxArray * plhs[], const mxArray * prhs[])
 			chunk_def.size = mxGetNumberOfElements(field);
 			chunk_def.type = FT_CHUNK_SIEMENS_AP;
 		
-			request_def.bufsize = append(&request.buf, request_def.bufsize, &chunk_def, sizeof(chunk_def));
-			request_def.bufsize = append(&request.buf, request_def.bufsize, mxGetData(field), chunk_def.size);
+			request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, &chunk_def, sizeof(chunk_def));
+			request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, mxGetData(field), chunk_def.size);
 		}
 	}
 	
@@ -199,7 +200,7 @@ int buffer_puthdr(int server, mxArray * plhs[], const mxArray * prhs[])
 		if (chunk == NULL) {
 			mexWarnMsgTxt("invalid data type for field 'channel_names' -- ignoring.");
 		} else {
-			request_def.bufsize = append(&request.buf, request_def.bufsize, &chunk, sizeof(ft_chunkdef_t) + chunk->def.size);
+			request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, chunk, sizeof(ft_chunkdef_t) + chunk->def.size);
 			mxFree(chunk);
 		}
 	}
@@ -212,7 +213,7 @@ int buffer_puthdr(int server, mxArray * plhs[], const mxArray * prhs[])
 		if (chunk == NULL) {
 			mexWarnMsgTxt("invalid data type for field 'resolutions' -- ignoring.");
 		} else {
-			request_def.bufsize = append(&request.buf, request_def.bufsize, &chunk, sizeof(ft_chunkdef_t) + chunk->def.size);
+			request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, chunk, sizeof(ft_chunkdef_t) + chunk->def.size);
 			mxFree(chunk);
 		}
 	}		
@@ -224,7 +225,7 @@ int buffer_puthdr(int server, mxArray * plhs[], const mxArray * prhs[])
 	result = clientrequest(server, &request, &response);
   
 	/* the request structure is not needed any more, but only .buf needs to be free'd */
-    FREE(request.buf);
+    if (request.buf != NULL) mxFree(request.buf);
 	
 	if (result == 0) {
 		/* check that the response is PUT_OK */
