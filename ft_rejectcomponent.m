@@ -23,8 +23,8 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 % See also FT_COMPONENTANALYSIS, FT_PREFPROCESSING
 %
 % Undocumented local options:
-% cfg.inputfile
-% cfg.outputfile
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
 
 % Copyright (C) 2005-2009, Robert Oostenveld
 % 

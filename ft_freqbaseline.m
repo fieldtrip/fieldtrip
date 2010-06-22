@@ -138,6 +138,10 @@ else
   error('unsupported data dimensions');
 end
 
+% accessing this field here is needed for the configuration tracking
+% by accessing it once, it will not be removed from the output cfg
+cfg.outputfile;
+
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
@@ -151,7 +155,6 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id = '$Id$';
-
 
 % remember the configuration details of the input data
 try, cfg.previous = freq.cfg; end

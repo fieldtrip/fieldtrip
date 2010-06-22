@@ -249,6 +249,8 @@ end % which datatype
 try, data = rmfield(data, 'crsspctrm');   end
 try, data = rmfield(data, 'labelcmb');    end
 
+% accessing this field here is needed for the configuration tracking
+% by accessing it once, it will not be removed from the output cfg
 cfg.outputfile;
 
 % get the output cfg

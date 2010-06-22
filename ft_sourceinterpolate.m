@@ -229,6 +229,10 @@ if ~any(strcmp(cfg.parameter, 'anatomy'))
   interp.anatomy   = anatomical.anatomy;
 end
 
+% accessing this field here is needed for the configuration tracking
+% by accessing it once, it will not be removed from the output cfg
+cfg.outputfile;
+
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
@@ -248,6 +252,12 @@ try, cfg.previous{1} = functional.cfg; end
 try, cfg.previous{2} = anatomical.cfg; end
 % remember the exact configuration details in the output
 interp.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', interp); % use the variable name "data" in the output file
+end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION this function computes the location of all voxels in head

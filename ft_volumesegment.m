@@ -338,6 +338,10 @@ segment.gray      = V(1).dat;
 if length(V)>1, segment.white     = V(2).dat; end
 if length(V)>2, segment.csf       = V(3).dat; end
 
+% accessing this field here is needed for the configuration tracking
+% by accessing it once, it will not be removed from the output cfg
+cfg.outputfile;
+
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
 

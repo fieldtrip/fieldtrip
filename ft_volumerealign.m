@@ -216,6 +216,10 @@ realign = headcoordinates(nas_head, lpa_head, rpa_head);
 % combine the additional transformation with the original one
 mri.transform = realign * mri.transform;
 
+% accessing this field here is needed for the configuration tracking
+% by accessing it once, it will not be removed from the output cfg
+cfg.outputfile;
+
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
