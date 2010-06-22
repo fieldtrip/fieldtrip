@@ -2,12 +2,12 @@ function neighbours = ft_neighbourselection(cfg,data)
 
 % FT_NEIGHBOURSELECTION finds the neighbours of the channels on the basis of a
 % minimum neighbourhood distance (in cfg.neighbourdist). The positions of
-% the channel are specified in a gradiometer or electrode configuration or 
+% the channel are specified in a gradiometer or electrode configuration or
 % from a layout.
-% This configuration can be passed in three ways: 
-%  (1) in a configuration field, 
-%  (2) in a file whose name is passed in a configuration field, and that can be imported using READ_SENS, or 
-%  (3) in a data field. 
+% This configuration can be passed in three ways:
+%  (1) in a configuration field,
+%  (2) in a file whose name is passed in a configuration field, and that can be imported using READ_SENS, or
+%  (3) in a data field.
 %
 % Use as
 %   neighbours = ft_neighbourselection(cfg, data)
@@ -25,8 +25,8 @@ function neighbours = ft_neighbourselection(cfg,data)
 %   data.elec     = structure with EEG electrode positions
 %   data.grad     = structure with MEG gradiometer positions
 %
-% The output: 
-%   neighbours     = definition of neighbours for each channel, 
+% The output:
+%   neighbours     = definition of neighbours for each channel,
 %     which is structured like this:
 %        neighbours{1}.label = 'Fz';
 %        neighbours{1}.neighblabel = {'Cz', 'F3', 'F3A', 'FzA', 'F4A', 'F4'};
@@ -60,8 +60,10 @@ function neighbours = ft_neighbourselection(cfg,data)
 fieldtripdefs
 
 % set the defaults
-if ~isfield(cfg, 'neighbourdist'),  cfg.neighbourdist = 4; end
 if ~isfield(cfg, 'feedback'),       cfg.feedback = 'no';   end
+
+% the default value for this is set later
+% if ~isfield(cfg, 'neighbourdist'),  cfg.neighbourdist = 4; end
 
 % get the the grad or elec if not present in the data
 if isfield(cfg, 'grad')
@@ -94,6 +96,17 @@ if ~isstruct(sens)
   error('Did not find gradiometer or electrode information.');
 end;
 
+% use a smart default for the distance
+if ~isfield(cfg, 'neighbourdist'),
+  if     isfield(sens, 'unit') && strcmp(sens.unit, 'cm')
+    cfg.neighbourdist = 4;
+  elseif isfield(sens, 'unit') && strcmp(sens.unit, 'mm')
+    cfg.neighbourdist = 40;
+  else
+    % don't provide a default in case the dimensions of the sensor array are unknown
+  end
+end
+
 neighbours = compneighbstructfromgradelec(sens, cfg.neighbourdist);
 
 k = 0;
@@ -103,7 +116,7 @@ end
 fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbours));
 
 if strcmp(cfg.feedback, 'yes')
-  % give some graphical feedback 
+  % give some graphical feedback
   if all(sens.pnt(:,3)==0)
     % the sensor positions are already projected on a 2D plane
     proj = sens.pnt(:,1:2);
