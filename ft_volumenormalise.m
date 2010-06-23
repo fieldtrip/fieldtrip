@@ -172,6 +172,7 @@ tmpcfg            = [];
 tmpcfg.downsample = cfg.downsample;
 tmpcfg.parameter  = cfg.parameter;
 tmpcfg.smooth     = cfg.smooth;
+tmpcfg.outputfile = cfg.outputfile;
 interp = ft_volumedownsample(tmpcfg, interp);
 
 if isempty(source_coordinates)

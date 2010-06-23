@@ -96,6 +96,7 @@ end
 if basedonseg || basedonmri
   % optionally downsample the anatomical MRI and/or the tissue segmentation
   tmpcfg = [];
+  tmpcfg.outputfile = cfg.outputfile;
   tmpcfg.downsample = cfg.downsample;
   mri = ft_volumedownsample(tmpcfg, mri);
 end

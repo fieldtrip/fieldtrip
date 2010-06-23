@@ -16,6 +16,10 @@ function [grandavg] = ft_freqgrandaverage(cfg, varargin);
 %                       see FT_CHANNELSELECTION for details
 %
 % See also FT_TIMELOCKGRANDAVERAGE, FT_FREQANALYSIS, FT_FREQDESCRIPTIVES
+%
+% Undocumented local options:
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
 
 % FIXME averaging coherence is not possible if inputs contain different amounts of data (i.e. chan/freq/time)
 
@@ -42,6 +46,21 @@ function [grandavg] = ft_freqgrandaverage(cfg, varargin);
 fieldtripdefs
 
 cfg = checkconfig(cfg, 'trackconfig', 'on');
+
+% set the defaults
+if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];          end
+if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];         end
+
+hasdata = nargin>2;
+if ~isempty(cfg.inputfile) % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    for i=1:numel(cfg.inputfile)
+      varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets from array inputfile
+    end
+  end
+end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
@@ -133,25 +152,25 @@ for i=1:Nsubj
   end
   % select the overlapping samples in the power spectrum
   switch dimord
-  case 'chan_freq'
-    varargin{i}.powspctrm = varargin{i}.powspctrm(chansel,freqsel);
-  case 'chan_freq_time'
-    varargin{i}.powspctrm = varargin{i}.powspctrm(chansel,freqsel,timesel);
-  case {'rpt_chan_freq' 'rpttap_chan_freq' 'subj_chan_freq'}
-    varargin{i}.powspctrm = varargin{i}.powspctrm(:,chansel,freqsel);
-  case {'rpt_chan_freq_time' 'rpttap_chan_freq_time' 'subj_chan_freq_time'}
-    varargin{i}.powspctrm = varargin{i}.powspctrm(:,chansel,freqsel,timesel);
-  otherwise
-    error('unsupported dimord');
+    case 'chan_freq'
+      varargin{i}.powspctrm = varargin{i}.powspctrm(chansel,freqsel);
+    case 'chan_freq_time'
+      varargin{i}.powspctrm = varargin{i}.powspctrm(chansel,freqsel,timesel);
+    case {'rpt_chan_freq' 'rpttap_chan_freq' 'subj_chan_freq'}
+      varargin{i}.powspctrm = varargin{i}.powspctrm(:,chansel,freqsel);
+    case {'rpt_chan_freq_time' 'rpttap_chan_freq_time' 'subj_chan_freq_time'}
+      varargin{i}.powspctrm = varargin{i}.powspctrm(:,chansel,freqsel,timesel);
+    otherwise
+      error('unsupported dimord');
   end
 end
 
 % determine the size of the data to be averaged
 dim = size(varargin{1}.powspctrm);
-if hascoh, 
+if hascoh,
   cohdim = size(varargin{1}.cohspctrm);
 end
-if hasplv, 
+if hasplv,
   plvdim = size(varargin{1}.plvspctrm);
 end
 
@@ -186,7 +205,7 @@ for s=1:Nsubj
   else
     % concatenate this subject to the rest
     if haspow, s_pow(s,:) = varargin{s}.powspctrm(:); end
-    if hascoh, s_coh(s,:) = varargin{s}.cohspctrm(:); end 
+    if hascoh, s_coh(s,:) = varargin{s}.cohspctrm(:); end
     if hasplv, s_plv(s,:) = varargin{s}.plvspctrm(:); end
   end
 end
@@ -229,8 +248,10 @@ else
   end
 end
 
+cfg.outputfile;
+
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 try
@@ -247,6 +268,10 @@ cfg.previous = [];
 for i=1:length(varargin)
   try, cfg.previous{i} = varargin{i}.cfg; end
 end
-% remember the exact configuration details in the output 
+% remember the exact configuration details in the output
 grandavg.cfg = cfg;
 
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', grandavg); % use the variable name "data" in the output file
+end

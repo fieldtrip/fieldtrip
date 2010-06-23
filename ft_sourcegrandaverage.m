@@ -4,7 +4,7 @@ function [grandavg] = ft_sourcegrandaverage(cfg, varargin);
 % subjects or conditions. It computes the average and variance for all
 % known source parameters. The output can be used in FT_SOURCESTATISTICS
 % with the method 'parametric'.
-% 
+%
 % Alternatively, it can construct an average for multiple input source
 % reconstructions in two conditions after randomly reassigning the
 % input data over the two conditions. The output then can be used in
@@ -12,15 +12,15 @@ function [grandavg] = ft_sourcegrandaverage(cfg, varargin);
 %
 % The input source structures should be spatially alligned to each other
 % and should have the same positions for the source grid.
-% 
-% Use as 
-%  [grandavg] = ft_sourcegrandaverage(cfg, source1, source2, ...) 
+%
+% Use as
+%  [grandavg] = ft_sourcegrandaverage(cfg, source1, source2, ...)
 %
 % where the source structures are obtained from FT_SOURCEANALYSIS or
 % from FT_VOLUMENORMALISE, and the configuration can contain the
 % following fields:
 %   cfg.parameter          = string, describing the functional data to be processed, e.g. 'pow', 'nai' or 'coh'
-%   cfg.keepindividual     = 'no' or 'yes'  
+%   cfg.keepindividual     = 'no' or 'yes'
 %
 % See also FT_SOURCEANALYSIS, FT_VOLUMENORMALISE, FT_SOURCESTATISTICS
 
@@ -28,7 +28,7 @@ function [grandavg] = ft_sourcegrandaverage(cfg, varargin);
 %  You can also use FT_SOURCEGRANDAVERAGE to compute averages after
 % randomizing the assignment of the functional data over two conditions.
 % The resulting output can then be used in a statistical test just like
-% the randomized single-subject source reconstruction that results from 
+% the randomized single-subject source reconstruction that results from
 % randomization in FT_SOURCEANALYSIS. This involves the following options
 %   cfg.randomization      = 'no' or 'yes'
 %   cfg.permutation        = 'no' or 'yes'
@@ -36,6 +36,9 @@ function [grandavg] = ft_sourcegrandaverage(cfg, varargin);
 %   cfg.numpermutation     = number, e.g. 500 or 'all'
 %   cfg.c1                 = list with subjects belonging to condition 1 (or A)
 %   cfg.c2                 = list with subjects belonging to condition 2 (or B)
+%   cfg.inputfile          = one can specifiy preanalysed saved data as input
+%   cfg.outputfile         = one can specify output as file to save to disk
+
 
 % Copyright (C) 2005, Robert Oostenveld
 %
@@ -61,11 +64,6 @@ fieldtripdefs
 
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
-% check if the input data is valid for this function
-for i=1:length(varargin)
-  varargin{i} = checkdata(varargin{i}, 'datatype', {'source', 'volume'}, 'feedback', 'no');
-end
-
 % set the defaults
 if ~isfield(cfg, 'parameter'),      cfg.parameter = 'pow';     end
 if ~isfield(cfg, 'keepindividual'), cfg.keepindividual = 'no'; end
@@ -74,9 +72,27 @@ if ~isfield(cfg, 'randomization'),  cfg.randomization = 'no';  end
 if ~isfield(cfg, 'permutation'),    cfg.permutation = 'no';    end
 if ~isfield(cfg, 'c1'),             cfg.c1 = [];               end
 if ~isfield(cfg, 'c2'),             cfg.c2 = [];               end
+if ~isfield(cfg, 'inputfile'),      cfg.inputfile = [];        end
+if ~isfield(cfg, 'outputfile'),     cfg.outputfile = [];       end
 
 if strcmp(cfg.concatenate, 'yes') && strcmp(cfg.keepindividual, 'yes'),
   error('you can either specify cfg.keepindividual or cfg.concatenate to be yes');
+end
+
+hasdata = nargin>2;
+if ~isempty(cfg.inputfile) % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    for i=1:numel(cfg.inputfile)
+      varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets from array inputfile
+    end
+  end
+end
+
+% check if the input data is valid for this function
+for i=1:length(varargin)
+  varargin{i} = checkdata(varargin{i}, 'datatype', {'source', 'volume'}, 'feedback', 'no');
 end
 
 Nsubject = length(varargin);
@@ -150,7 +166,7 @@ if strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 'yes')
   if strcmp(cfg.keepindividual, 'yes')
     error('you cannot keep individual data in combination with randomization or permutation');
   end
-
+  
   % construct a design vector that contains the condition number 1 or 2
   design = zeros(1,Nsubject);
   design(cfg.c1) = 1;
@@ -160,7 +176,7 @@ if strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 'yes')
   elseif length(design)~=Nsubject
     error('not enough input source structures given cfg.c1 and cfg.c2');
   end
-
+  
   % create a matrix with all randomized assignments to the two conditions
   if strcmp(cfg.randomization, 'yes')
     res = zeros(cfg.numrandomization, Nsubject);
@@ -182,7 +198,7 @@ if strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 'yes')
       res(i,sel2(find(flip))) = 1;
     end
   end % randomization or permutation
-
+  
   % randomize the input source parameter between the two conditions
   clear trialA
   clear trialB
@@ -198,13 +214,13 @@ if strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 'yes')
   selB = find(design==2);
   avgA = setsubfield([], cfg.parameter, nan_mean(dat(:,selA),2));
   avgB = setsubfield([], cfg.parameter, nan_mean(dat(:,selB),2));
-
+  
   % construct a source structure that can be fed into SOURCESTATISTICS_RANDOMIZATION or SOURCESTATISTICS_RANDCLUSTER
   grandavg.trialA  = trialA;
   grandavg.trialB  = trialB;
   grandavg.avgA    = avgA;
   grandavg.avgB    = avgB;
-
+  
 else
   if strcmp(cfg.concatenate, 'no'),
     % compute a plain average and variance over all input source structures
@@ -215,8 +231,8 @@ else
     grandavg.avg    = setsubfield([], cfg.parameter, dat);
     grandavg.dimord = 'voxel_freq';
     grandavg.dim    = [grandavg.dim size(dat,2)];
-  end 
- 
+  end
+  
   if strcmp(cfg.keepindividual, 'yes')
     clear trial
     for i=1:Nsubject
@@ -224,7 +240,7 @@ else
     end
     grandavg.trial = trial;
   end
-end 
+end
 
 % determine which sources were inside or outside the brain in all subjects
 allinside  = find(all( inside,2));
@@ -240,11 +256,12 @@ if strcmp(cfg.concatenate, 'no'),
   grandavg.df      = sum(inside,2);
 else
   grandavg.inside  = find(inside(:));
-  grandavg.outside = setdiff([1:prod(size(dat))]', grandavg.inside); 
+  grandavg.outside = setdiff([1:prod(size(dat))]', grandavg.inside);
 end
 
+cfg.outputfile;
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 try
@@ -261,6 +278,10 @@ cfg.previous = [];
 for i=1:Nsubject
   try, cfg.previous{i} = varargin{i}.cfg; end
 end
-% remember the exact configuration details in the output 
+% remember the exact configuration details in the output
 grandavg.cfg = cfg;
 
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', grandavg); % use the variable name "data" in the output file
+end

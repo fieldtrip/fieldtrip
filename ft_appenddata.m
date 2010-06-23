@@ -1,6 +1,6 @@
 function [data] = ft_appenddata(cfg, varargin);
 
-% FT_APPENDDATA combines multiple datasets that have been preprocessed separately 
+% FT_APPENDDATA combines multiple datasets that have been preprocessed separately
 % into a single large dataset.
 %
 % Use as
@@ -25,9 +25,10 @@ function [data] = ft_appenddata(cfg, varargin);
 % channels in one of the data structures). The function will then return a data
 % structure containing only the channels which are present in all inputs.
 % See also FT_PREPROCESSING
-
-% undocumented options:
-%   none
+%
+% Undocumented local options:
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
@@ -52,17 +53,29 @@ function [data] = ft_appenddata(cfg, varargin);
 
 fieldtripdefs
 
+% set the defaults
+if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];          end
+if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];         end
+
+hasdata = nargin>2;
+if ~isempty(cfg.inputfile) % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    for i=1:numel(cfg.inputfile)
+      varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets from array inputfile
+      Ndata       = numel(cfg.inputfile); % use Ndata as if separate datafiles were specified
+    end
+  end
+else Ndata = nargin-1; % use old implementation of Ndata if no inputfile is specified
+  if Ndata<2
+    error('you must give at least two datasets to append');
+  end
+end
+
 % check if the input data is valid for this function
 for i=1:length(varargin)
   varargin{i} = checkdata(varargin{i}, 'datatype', 'raw', 'feedback', 'no');
-end
-
-% set the defaults
-cfg = [];
-
-Ndata = nargin-1;
-if Ndata<2
-  error('you must give at least two datasets to append');
 end
 
 % determine the dimensions of the data
@@ -113,23 +126,23 @@ haselec = isfield(varargin{1}, 'elec');
 hasgrad = isfield(varargin{1}, 'grad');
 removesens = 0;
 if haselec || hasgrad,
-for j=1:Ndata
-  if haselec, sens{j} = getfield(varargin{j}, 'elec'); end
-  if hasgrad, sens{j} = getfield(varargin{j}, 'grad'); end
-  if j>1,
-    if numel(sens{j}.pnt) ~= numel(sens{1}.pnt) || any(sens{j}.pnt(:) ~= sens{1}.pnt(:)),
-      removesens = 1;
-      warning('sensor information does not seem to be consistent across the input arguments');
-      break;
+  for j=1:Ndata
+    if haselec, sens{j} = getfield(varargin{j}, 'elec'); end
+    if hasgrad, sens{j} = getfield(varargin{j}, 'grad'); end
+    if j>1,
+      if numel(sens{j}.pnt) ~= numel(sens{1}.pnt) || any(sens{j}.pnt(:) ~= sens{1}.pnt(:)),
+        removesens = 1;
+        warning('sensor information does not seem to be consistent across the input arguments');
+        break;
+      end
     end
   end
-end
 end
 
 catlabel   = all(sum(order~=0,2)==1);
 cattrial   = any(sum(order~=0,2)==Ndata);
 shuflabel  = cattrial && ~all(all(order-repmat(order(:,1),[1 Ndata])==0));
-prunelabel = cattrial && sum(sum(order~=0,2)==Ndata)<length(alllabel); 
+prunelabel = cattrial && sum(sum(order~=0,2)==Ndata)<length(alllabel);
 
 if shuflabel,
   fprintf('the channel order in the input-structures is not consistent, reordering\n');
@@ -145,7 +158,7 @@ if shuflabel,
       varargin{i}.trial{j} = varargin{i}.trial{j}(order(:,i),:);
     end
   end
-end  
+end
 
 if cattrial && catlabel
   error('cannot determine how the data should be concatenated');
@@ -162,7 +175,7 @@ elseif cattrial
   end
   % also concatenate the trial specification
   cfg.trl = cat(1, trl{:});
-
+  
 elseif catlabel
   % concatenate the channels in each trial
   fprintf('concatenating the channels within each trial\n');
@@ -177,7 +190,7 @@ elseif catlabel
     Nch(i,1)   = numel(varargin{i}.label);
     data.label = cat(1, data.label(:), varargin{i}.label(:));
   end
-
+  
   for j=1:Ntrial
     %pre-allocate memory for this trial
     data.trial{j} = [data.trial{j}; zeros(sum(Nch(2:end)), size(data.trial{j},2))];
@@ -193,7 +206,7 @@ elseif catlabel
       data.trial{j}(begchan:endchan,:) = varargin{i}.trial{j};
     end
   end
-
+  
 else
   % labels are inconsistent, cannot determine how to concatenate the data
   error('cannot determine how the data should be concatenated');
@@ -202,7 +215,7 @@ end
 % unshuffle the channels again to match the order of the first input data-structure
 if shuflabel
   [srt,reorder] = sort(order(order(:,1)~=0,1));
- 
+  
   fprintf('reordering the channels\n');
   for i=1:length(data.trial)
     data.trial{i} = data.trial{i}(reorder,:);
@@ -231,8 +244,13 @@ cfg.previous = [];
 for i=1:Ndata
   try, cfg.previous{i} = varargin{i}.cfg; end
 end
-% remember the exact configuration details in the output 
+
+% remember the exact configuration details in the output
 data.cfg = cfg;
 
 fprintf('output dataset, %d channels, %d trials\n', length(data.label), length(data.trial));
 
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', data); % use the variable name "data" in the output file
+end
