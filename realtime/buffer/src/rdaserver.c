@@ -61,6 +61,7 @@ int rda_aux_wait_dat(int ft_buffer, const samples_events_t *previous, samples_ev
 	msg_def.bufsize = sizeof(waitdef_t);
 	
 	r = clientrequest(ft_buffer, &req, &resp);
+	
 	if (r<0) {
 		*result = *previous;
 		return r;
@@ -527,16 +528,23 @@ int rda_aux_check_writing(int remSelect, const fd_set *writeSet, int numClients,
 	@return	the remaining number of clients
 */
 int rda_aux_check_closure(int remSelect, const fd_set *readSet, int numClients, rda_client_job_t *clients, int verbosity) {
-	int i;
-
-	for (i=0 ; i<numClients && remSelect>0 ; i++) {
+	int i = 0;	/* index of client we're looking at */
+	
+	while (i<numClients && remSelect>0) {
 		char dummy[1024];
 		int len;
-		if (!FD_ISSET(clients[i].sock, readSet)) continue;
+		if (!FD_ISSET(clients[i].sock, readSet)) {
+			++i;
+			continue;
+		}
 			
 		len = recv(clients[i].sock, dummy, sizeof(dummy), 0);
 			
-		if (len>0) continue;	/* clients are not supposed to write, but if they do, we ignore it */
+		if (len>0) {
+			/* clients are not supposed to write, but if they do, we ignore it */
+			++i;			
+			continue;	
+		}
 		if (len<0) {
 			/* close this client */
 			if (verbosity > 0) fprintf(stderr, "rdaserver_thread: lost connection to client (%i)\n", clients[i].sock); 
@@ -556,6 +564,7 @@ int rda_aux_check_closure(int remSelect, const fd_set *readSet, int numClients, 
 		}
 		--numClients;
 		--remSelect;
+		/* no increase of i here */
 	}
 	return numClients;
 }
@@ -601,7 +610,7 @@ void *_rdaserver_thread(void *arg) {
 	#ifndef PLATFORM_WIN32
 	fdMax = SC->server_socket;
 	#endif
-
+	
 	/* Loop this until errors occur or this flag is set from another thread */
 	while (!SC->should_exit) {
 		int sel;
@@ -613,7 +622,7 @@ void *_rdaserver_thread(void *arg) {
 			rda_buffer_item_t *newStart;
 				
 			/* If we already have a startItem, free it first, since it will be invalid anyway.
-			   However, keep the pointer itself for now, so we now that we did this here. */
+			   However, keep the pointer itself for now, so we know that we did this here. */
 			if (startItem != NULL) {
 				free(startItem->data);
 				free(startItem);
@@ -718,7 +727,9 @@ void *_rdaserver_thread(void *arg) {
 			if (newSock == INVALID_SOCKET) {
 				perror("rda_server_thread - accept");
 			} else {
-				if (SC->verbosity > 0) fprintf(stderr, "rdaserver_thread: opened connection to client (%i)\n",newSock);
+				if (SC->verbosity > 0) {
+					fprintf(stderr, "rdaserver_thread: opened connection (%i) to client at %s\n",newSock,inet_ntoa(sa.sin_addr));
+				}
 				
 				clients[numClients].sock = newSock;
 				clients[numClients].item = startItem;
@@ -756,7 +767,6 @@ void *_rdaserver_thread(void *arg) {
 		}
 
 		/* Ok, (client) network stuff is done, let's see if there is more data */
-		
 		
 		/* If we already have the header, check for new data (samples / events) */
 		if (startItem != NULL && !rda_aux_wait_dat(SC->ft_buffer, &lastNum, &curNum, ftTimeout)) {
