@@ -71,8 +71,8 @@ try
       fprintf(efid,['om_assemble -DS2MM ./',dipfile,' ./',sqdfile,' ./',s2mmfile,' 2>&1 > /dev/null\n']);
       fprintf(efid,['om_assemble -H2MM ./',geomfile,' ./',condfile,' ./',sqdfile,' ./', h2mmfile,' 2>&1 > /dev/null\n']);
     else
-      fprintf(efid,['om_assemble -DS2MM ./',dipfile,' ./',sqdfile,' ./',s2mmfile,' 2>&1 > /dev/null\n']);
-      fprintf(efid,['om_assemble -H2MM ./',geomfile,' ./',condfile,' ./',sqdfile,' ./', h2mmfile,' 2>&1 > /dev/null\n']);
+      fprintf(efid,['om_assemble -DS2MM ./',dipfile,' ./',sqdfile,' ./',s2mmfile,'\n']);
+      fprintf(efid,['om_assemble -H2MM ./',geomfile,' ./',condfile,' ./',sqdfile,' ./', h2mmfile,'\n']);
     end
     fclose(efid);
 

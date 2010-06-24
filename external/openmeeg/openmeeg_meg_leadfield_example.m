@@ -66,6 +66,7 @@ vol = ft_prepare_bemmodel(cfg, vol);
 cfg.vol = vol;
 cfg.grid.pos = pos;
 cfg.grad = sens;
+cfg.reducerank = 'no';
 grid = ft_prepare_leadfield(cfg);
 lf_openmeeg = grid.leadfield{1};
 
@@ -77,6 +78,7 @@ cfg.grad = sens;
 vol1.type = 'nolte';
 [vol1,sens] = prepare_vol_sens(vol1, sens);
 cfg.vol = vol1;
+cfg.reducerank = 'no';
 grid = ft_prepare_leadfield(cfg);
 lf_nolte = grid.leadfield{1};
 
