@@ -61,6 +61,20 @@ function lrp = ft_lateralizedpotential(cfg, avgL, avgR);
 
 fieldtripdefs
 
+% set the defaults
+if ~isfield(cfg, 'inputfile'),  cfg.inputfile                   = [];    end
+if ~isfield(cfg, 'outputfile'), cfg.outputfile                  = [];    end
+
+hasdata = nargin>1;
+if ~isempty(cfg.inputfile) % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    avgL=loadvar(cfg.inputfile{1}, 'data'); % read first element as avgL from array inputfile
+    avgR=loadvar(cfg.inputfile{2}, 'data'); % read second element as avgR from array inputfile
+  end
+end
+
 if ~isfield(cfg, 'channelcmb'), 
   cfg.channelcmb = {
     'Fp1'   'Fp2'
@@ -119,3 +133,7 @@ try, cfg.previous{2} = avgR.cfg; end
 % remember the exact configuration details in the output 
 lrp.cfg = cfg;
 
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', lrp); % use the variable name "data" in the output file
+end

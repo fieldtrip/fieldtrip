@@ -57,7 +57,7 @@ function [grid, cfg] = ft_prepare_leadfield(cfg, data)
 % cfg.sel50p      = 'no' (default) or 'yes'
 % cfg.lbex        = 'no' (default) or a number that corresponds with the radius
 % cfg.mollify     = 'no' (default) or a number that corresponds with the FWHM
-% cfg.inputfile        = one can specifiy preanalysed saved data as input
+% cfg.inputfile   = one can specifiy preanalysed saved data as input
 
 % This function depends on FT_PREPARE_DIPOLE_GRID which has the following options:
 % cfg.grid.xgrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.xgrid = 'auto'), documented
@@ -127,7 +127,6 @@ if ~isempty(cfg.inputfile)
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
     data = loadvar(cfg.inputfile, 'data');
-    hasdata = true;
   end
 end
 
