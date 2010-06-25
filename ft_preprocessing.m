@@ -209,6 +209,13 @@ end
 % this option has been renamed?
 cfg = checkconfig(cfg, 'renamed', {'output', 'export'});
 
+%this relates to a previous fix to handle 32 bit neuroscan data
+if isfield(cfg, 'nsdf'),
+  %FIXME this should be handled by checkconfig, but checkconfig does not allow yet for
+  %specific errors in the case of forbidden fields
+  error('the use of cfg.nsdf is deprecated. fieldtrip tries to determine the bit resolution automatically. you can overrule this by specifying cfg.dataformat and cfg.headerformat. see: http://fieldtrip.fcdonders.nl/faq/i_have_problems_reading_in_neuroscan_.cnt_files._how_can_i_fix_this');
+end
+
 if isfield(cfg, 'export') && ~isempty(cfg.export)
   % export the data to an output file
   if ~strcmp(cfg.method, 'trial')
@@ -455,13 +462,6 @@ else
         end
       end
 
-      % ONLY RELEVANT FOR NEUROSCAN CNT
-      if ~isfield(cfg, 'nsdf')
-        hdr.nsdf=16;
-      else
-        hdr.nsdf=cfg.nsdf;
-      end
-
       % read the raw data with padding on both sides of the trial
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', rawindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
 
@@ -481,9 +481,6 @@ else
           cutdat(i) = [];
         end
       end
-
-      % ONLY RELEVANT FOR NEUROSCAN CNT
-      hdr=rmfield(hdr,'nsdf');
 
     end % for all trials
     progress('close');

@@ -47,8 +47,9 @@ if isfield(cfg.trialdef, 'triallength')
 end
 
 % default rejection parameter
-if ~isfield(cfg, 'headerformat'), cfg.headerformat = [];        end
-if ~isfield(cfg, 'dataformat'), cfg.dataformat = [];        end
+if ~isfield(cfg, 'eventformat'),  cfg.eventformat  = []; end
+if ~isfield(cfg, 'headerformat'), cfg.headerformat = []; end
+if ~isfield(cfg, 'dataformat'),   cfg.dataformat   = []; end
 
 % read the header, contains the sampling frequency 
 hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
@@ -60,7 +61,7 @@ if isfield(cfg, 'event')
 else
   try
     fprintf('reading the events from ''%s''\n', cfg.headerfile);
-    event = ft_read_event(cfg.headerfile,'headerformat', cfg.headerformat);
+    event = ft_read_event(cfg.headerfile, 'headerformat', cfg.headerformat, 'eventformat', cfg.eventformat);
   catch
     event = [];
   end
