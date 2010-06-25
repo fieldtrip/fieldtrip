@@ -29,6 +29,11 @@ function [stat] = ft_timelockstatistics(cfg, varargin)
 % explanation of each method.
 %
 % See also FT_TIMELOCKANALYSIS, FT_TIMELOCKGRANDAVERAGE
+%
+% Undocumented local options:
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
+
 
 % This function depends on STATISTICS_WRAPPER
 
@@ -54,12 +59,27 @@ function [stat] = ft_timelockstatistics(cfg, varargin)
 
 fieldtripdefs
 
-% check if the input data is valid for this function
-for i=1:length(varargin)
-  % FIXME at this moment (=10 May) this does not work, because the input might not always have an avg
-  % See freqstatistics
-  %varargin{i} = checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'no');
+% set the defaults
+if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];          end
+if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];         end
+
+hasdata = nargin>1;
+if ~isempty(cfg.inputfile) % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    for i=1:numel(cfg.inputfile)
+      varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets from array inputfile
+    end
+  end
 end
+
+% % check if the input data is valid for this function
+% for i=1:length(varargin)
+%   % FIXME at this moment (=10 May) this does not work, because the input might not always have an avg
+%   % See freqstatistics
+%   %varargin{i} = checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'no');
+% end
 
 % the low-level data selection function does not know how to deal with other parameters, so work around it
 if isfield(cfg, 'parameter')
@@ -118,3 +138,9 @@ end
 
 % remember the exact configuration details
 stat.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', stat); % use the variable name "data" in the output file
+end
+

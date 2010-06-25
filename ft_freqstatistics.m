@@ -1,6 +1,6 @@
 function [stat] = ft_freqstatistics(cfg, varargin)
 
-% FT_FREQSTATISTICS computes significance probabilities and/or critical values of a parametric statistical test 
+% FT_FREQSTATISTICS computes significance probabilities and/or critical values of a parametric statistical test
 % or a non-parametric permutation test.
 %
 % Use as
@@ -26,11 +26,16 @@ function [stat] = ft_freqstatistics(cfg, varargin)
 %                    'glm'        use a general linear model approach.
 %
 % The other cfg options depend on the method that you select. You
-% should read the help of the respective subfunction FT_STATISTICS_XXX
+% should read the help of the respective subfunction STATISTICS_XXX
 % for the corresponding configuration options and for a detailed
 % explanation of each method.
 %
 % See also FT_FREQANALYSIS, FT_FREQDESCRIPTIVES, FT_FREQGRANDAVERAGE
+%
+% Undocumented local options:
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
+
 
 % This function depends on FT_STATISTICS_WRAPPER
 %
@@ -58,6 +63,22 @@ function [stat] = ft_freqstatistics(cfg, varargin)
 
 fieldtripdefs
 
+% set the defaults
+if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];          end
+if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];         end
+
+hasdata = nargin>1;
+
+if ~isempty(cfg.inputfile) % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    for i=1:numel(cfg.inputfile)
+      varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets from array inputfile
+    end
+  end
+end
+
 % check if the input data is valid for this function
 for i=1:length(varargin)
   % FIXME at this moment (=2 April) this does not work, because the input might not always have a powspctrm o.i.d.
@@ -67,7 +88,7 @@ end
 
 % the low-level data selection function does not know how to deal with other parameters, so work around it
 if isfield(cfg, 'parameter') && strcmp(cfg.parameter, 'powspctrm')
-  % use the power spectrum, this is the default 
+  % use the power spectrum, this is the default
   for i=1:length(varargin)
     if isfield(varargin{i}, 'crsspctrm'), varargin{i} = rmfield(varargin{i}, 'crsspctrm'); end % remove to avoid confusion
     if isfield(varargin{i}, 'cohspctrm'), varargin{i} = rmfield(varargin{i}, 'cohspctrm'); end % remove to avoid confusion
@@ -76,7 +97,7 @@ if isfield(cfg, 'parameter') && strcmp(cfg.parameter, 'powspctrm')
 elseif isfield(cfg, 'parameter') && strcmp(cfg.parameter, 'crsspctrm')
   % use the cross spectrum, this might work as well (but has not been tested)
 elseif isfield(cfg, 'parameter') && strcmp(cfg.parameter, 'cohspctrm')
-  % for testing coherence on group level: 
+  % for testing coherence on group level:
   % rename cohspctrm->powspctrm and labelcmb->label
   for i=1:length(varargin)
     dat         = varargin{i}.cohspctrm;
@@ -131,3 +152,8 @@ end
 
 % remember the exact configuration details
 stat.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', stat); % use the variable name "data" in the output file
+end
