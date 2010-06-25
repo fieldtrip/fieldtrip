@@ -11,20 +11,88 @@ import struct
 import numpy
 
 VERSION = 1
-GET_HDR = 513
-GET_DAT = 514
-GET_EVT = 515
-GET_OK  = 516
-GET_ERR = 517
+PUT_HDR = 0x101
+PUT_DAT = 0x102
+PUT_EVT = 0x103
+PUT_OK  = 0x104
+PUT_ERR = 0x105
+GET_HDR = 0x201
+GET_DAT = 0x202
+GET_EVT = 0x203
+GET_OK  = 0x204
+GET_ERR = 0x205
+FLUSH_HDR = 0x301
+FLUSH_DAT = 0x302
+FLUSH_EVT = 0x303
+FLUSH_OK  = 0x304
+FLUSH_ERR = 0x305
+WAIT_POLL = 0x401
 
+DATATYPE_CHAR = 0
+DATATYPE_UINT8 = 1
+DATATYPE_UINT16 = 2
+DATATYPE_UINT32 = 3
+DATATYPE_UINT64 = 4
+DATATYPE_INT8 = 5
+DATATYPE_INT16 = 6
+DATATYPE_INT32 = 7
+DATATYPE_INT64 = 8
+DATATYPE_FLOAT32 = 9
+DATATYPE_FLOAT64 = 10
+DATATYPE_UNKNOWN = 0xFFFFFFFF
+
+# List for converting FieldTrip datatypes to Numpy datatypes
 numpyType = ['int8', 'uint8', 'uint16', 'uint32', 'uint64', 'int8', 'int16', 'int32', 'int64', 'float32', 'float64']
+# Corresponding word sizes
 wordSize = [1,1,2,4,8,1,2,4,8,4,8]
+# FieldTrip data type as indexed by numpy dtype.num
+# this goes  0 => nothing, 1..4 => int8, uint8, int16, uint16, 7..10 => int32, uint32, int64, uint64  11..12 => float32, float64
+dataType = [-1, 5, 1, 6, 2, -1, -1, 7, 3, 8, 4, 9, 10]
+
+def serialize(A):
+	"""Returns Fieldtrip data type and string representation of the given object, if possible."""
+	if isinstance(A, str):
+		return (0,A)
+	
+	if isinstance(A, numpy.ndarray):
+		dt = A.dtype
+		if not(dt.isnative) or dt.num<1 or dt.num>=len(dataType):
+			return (DATATYPE_UNKNOWN, None)
+			
+		ft = dataType[dt.num]
+		if ft == -1:
+			return (DATATYPE_UNKNOWN, None)
+			
+		try:
+			buf = A.data
+		except:
+		    buf = A.flatten().data
+			
+		return (ft, str(buf))
+	
+	if isinstance(A, int):
+		return (DATATYPE_INT32, struct.pack('i', A))
+	
+	if isinstance(A, float):
+		return (DATATYPE_FLOAT64, struct.pack('d', A))
+
+	return (DATATYPE_UNKNOWN, None)
+
 
 def recv_all(s, N):
+	"""Receive N bytes from a socket 's' and return it as a string."""
 	A = s.recv(N)
 	while len(A)<N:
 		A += s.recv(N-len(A))
 	return A
+
+	
+def send_all(s, A):
+	"""Send all bytes of the string 'A' out to socket 's'."""
+	N = len(A);
+	nw = s.send(A)
+	while nw<N:
+		nw += s.send(A[nw:])
 
 	
 class Chunk:
@@ -48,12 +116,15 @@ class Header:
 		
 class Event:
 	"""Class for storing events in the FieldTrip buffer format"""
-	def __init__(self):
-		self.type = ''
-		self.value = ''
-		self.sample = 0
-		self.offset = 0
-		self.duration = 0
+	def __init__(self, S = None):
+		if S is None:
+			self.type = ''
+			self.value = ''
+			self.sample = 0
+			self.offset = 0
+			self.duration = 0
+		else:
+			self.deserialize(S)
 	
 	def __str__(self):
 		return 'Type.....: %s\nValue....: %s\nSample...: %i\nOffset...: %i\nDuration.: %i\n'%(str(self.type),str(self.value), self.sample, self.offset, self.duration)
@@ -90,6 +161,27 @@ class Event:
 
 		return bsiz + 32
 		
+	def serialize(self):
+		"""Returns the contents of this event as a string, ready to send over the network, 
+		   or None in case of conversion problems.
+		"""
+		type_type, type_buf = serialize(self.type)
+		if type_type == DATATYPE_UNKNOWN:
+			return None
+		type_size = len(type_buf)
+		type_numel = type_size / wordSize[type_type]
+			
+		value_type, value_buf = serialize(self.value)
+		if value_type == DATATYPE_UNKNOWN:
+			return None
+		value_size = len(value_buf)
+		value_numel = value_size / wordSize[value_type]
+		
+		bufsize = type_size + value_size
+		
+		S = struct.pack('IIIIIiiI', type_type, type_numel, value_type, value_numel, int(self.sample), int(self.offset), int(self.duration), bufsize)
+		return S + type_buf + value_buf 
+		
 class Client:
 	"""Class for managing a client connection to a FieldTrip buffer."""
 	def __init__(self):
@@ -116,7 +208,7 @@ class Client:
 			raise IOError('Not connected to FieldTrip buffer')
 		
 		request = struct.pack('HHI', VERSION, GET_HDR, 0)
-		nWr = self.sock.send(request)
+		nWr = send_all(self.sock, request)
 		resp_hdr = recv_all(self.sock, 8)
 		
 		(version, command, bufsize) = struct.unpack('HHI', resp_hdr)
@@ -162,12 +254,12 @@ class Client:
 			
 		if index is None:
 			request = struct.pack('HHI', VERSION, GET_DAT, 0)
-			nWr = self.sock.send(request)
+			nWr = send_all(self.sock, request)
 		else:
 			indS = int(index[0])
 			indE = int(index[1])
 			request = struct.pack('HHIII', VERSION, GET_DAT, 8, indS, indE)
-			nWr = self.sock.send(request)
+			nWr = send_all(self.sock, request)
 
 		resp_hdr = recv_all(self.sock, 8)
 		
@@ -209,12 +301,12 @@ class Client:
 			
 		if index is None:
 			request = struct.pack('HHI', VERSION, GET_EVT, 0)
-			nWr = self.sock.send(request)
+			nWr = send_all(self.sock, request)
 		else:
 			indS = int(index[0])
 			indE = int(index[1])
 			request = struct.pack('HHIII', VERSION, GET_EVT, 8, indS, indE)
-			nWr = self.sock.send(request)
+			nWr = send_all(self.sock, request)
 
 		resp_hdr = recv_all(self.sock, 8)
 		
