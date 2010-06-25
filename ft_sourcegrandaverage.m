@@ -37,6 +37,7 @@ function [grandavg] = ft_sourcegrandaverage(cfg, varargin);
 %   cfg.c1                 = list with subjects belonging to condition 1 (or A)
 %   cfg.c2                 = list with subjects belonging to condition 2 (or B)
 %   cfg.inputfile          = one can specifiy preanalysed saved data as input
+%                             The data should be provided in a cell array
 %   cfg.outputfile         = one can specify output as file to save to disk
 
 

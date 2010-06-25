@@ -19,6 +19,7 @@ function [grandavg] = ft_freqgrandaverage(cfg, varargin);
 %
 % Undocumented local options:
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%                     The data should be provided in a cell array
 %   cfg.outputfile = one can specify output as file to save to disk
 
 % FIXME averaging coherence is not possible if inputs contain different amounts of data (i.e. chan/freq/time)
