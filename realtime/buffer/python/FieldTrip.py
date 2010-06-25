@@ -117,8 +117,7 @@ class Client:
 		
 		request = struct.pack('HHI', VERSION, GET_HDR, 0)
 		nWr = self.sock.send(request)
-		resp_hdr = self.sock.recv(8)
-		nRd = len(resp_hdr)
+		resp_hdr = recv_all(self.sock, 8)
 		
 		(version, command, bufsize) = struct.unpack('HHI', resp_hdr)
 		
@@ -167,11 +166,10 @@ class Client:
 		else:
 			indS = int(index[0])
 			indE = int(index[1])
-			request = struct.pack('HHIII', VERSION, GET_DAT, 0, indS, indE)
+			request = struct.pack('HHIII', VERSION, GET_DAT, 8, indS, indE)
 			nWr = self.sock.send(request)
 
-		resp_hdr = self.sock.recv(8)
-		nRd = len(resp_hdr)
+		resp_hdr = recv_all(self.sock, 8)
 		
 		(version, command, bufsize) = struct.unpack('HHI', resp_hdr)
 		
@@ -218,8 +216,7 @@ class Client:
 			request = struct.pack('HHIII', VERSION, GET_EVT, 8, indS, indE)
 			nWr = self.sock.send(request)
 
-		resp_hdr = self.sock.recv(8)
-		nRd = len(resp_hdr)
+		resp_hdr = recv_all(self.sock, 8)
 		
 		(version, command, bufsize) = struct.unpack('HHI', resp_hdr)
 		
