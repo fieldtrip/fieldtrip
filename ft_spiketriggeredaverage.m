@@ -1,6 +1,6 @@
 function [timelock] = ft_spiketriggeredaverage(cfg, data)
 
-% FT_SPIKETRIGGEREDAVERAGE computes the avererage of teh LFP around the spikes.
+% FT_SPIKETRIGGEREDAVERAGE computes the avererage of the LFP around the spikes.
 %
 % Use as
 %   [timelock] = ft_spiketriggeredaverage(cfg, data)
@@ -14,6 +14,10 @@ function [timelock] = ft_spiketriggeredaverage(cfg, data)
 %                      see FT_CHANNELSELECTION for details
 %   cfg.keeptrials   = 'yes' or 'no', return individual trials or average (default = 'no')
 %   cfg.feedback     = 'no', 'text', 'textbar', 'gui' (default = 'no')
+%
+% Undocumented local options:
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
 
 % Copyright (C) 2008, Robert Oostenveld
 %
@@ -43,6 +47,19 @@ if ~isfield(cfg, 'channel'),      cfg.channel = 'all';        end
 if ~isfield(cfg, 'spikechannel'), cfg.spikechannel = [];      end
 if ~isfield(cfg, 'keeptrials'),   cfg.keeptrials = 'no';      end
 if ~isfield(cfg, 'feedback'),     cfg.feedback = 'no';        end
+if ~isfield(cfg, 'inputfile'),  cfg.inputfile = [];           end
+if ~isfield(cfg, 'outputfile'), cfg.outputfile = [];          end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+  end
+end
 
 % autodetect the spike channels
 ntrial = length(data.trial);
@@ -94,11 +111,11 @@ cumcnt = 0;
 for i=1:ntrial
   spikesmp = find(data.trial{i}(spikesel,:));
   spikecnt = data.trial{i}(spikesel,spikesmp);
-
+  
   if any(spikecnt>5) || any(spikecnt<0)
     error('the spike count lies out of the regular bounds');
   end
-
+  
   % instead of doing the bookkeeping of double spikes below, replicate the double spikes by looking at spikecnt
   sel = find(spikecnt>1);
   tmp = zeros(1,sum(spikecnt(sel)));
@@ -114,11 +131,11 @@ for i=1:ntrial
   spikesmp = [spikesmp tmp];              % add the double spikes as replicated single spikes
   spikecnt = [spikecnt ones(size(tmp))];  % add the double spikes as replicated single spikes
   spikesmp = sort(spikesmp);              % sort them to keep the original ordering (not needed on spikecnt, since that is all ones)
-
+  
   spiketime{i}  = data.time{i}(spikesmp);
   spiketrial{i} = i*ones(size(spikesmp));
   fprintf('processing trial %d of %d (%d spikes)\n', i, ntrial, sum(spikecnt));
-
+  
   if strcmp(cfg.keeptrials, 'yes')
     if any(spikecnt>1)
       error('overlapping spikes not supported with cfg.keeptrials=yes');
@@ -126,13 +143,13 @@ for i=1:ntrial
     % initialize the memory for this trial
     singletrial{i} = nan*zeros(length(spikesmp), nchansel, numsmp);
   end
-
+  
   progress('init', cfg.feedback, 'averaging spikes');
   for j=1:length(spikesmp)
     progress(i/ntrial, 'averaging spike %d of %d\n', j, length(spikesmp));
     begsmp = spikesmp(j) + begpad;
     endsmp = spikesmp(j) + endpad;
-
+    
     if begsmp<1
       % a possible alternative would be to pad the begin with nan
       % this excludes the complete segment
@@ -147,13 +164,13 @@ for i=1:ntrial
     if strcmp(cfg.keeptrials, 'yes')
       singletrial{i}(j,:,:) = segment;
     end
-
+    
     cumsum = cumsum + spikecnt(j)*segment;
     cumcnt = cumcnt + spikecnt(j);
-
+    
   end % for each spike in this trial
   progress('close');
-
+  
 end % for each trial
 
 
@@ -170,7 +187,7 @@ if (strcmp(cfg.keeptrials, 'yes'))
   timelock.trial     = cat(1, singletrial{:});
   timelock.origtime  = cat(2,spiketime{:})';  % this deviates from the standard output, but is included for reference
   timelock.origtrial = cat(2,spiketrial{:})'; % this deviates from the standard output, but is included for reference
-
+  
   % select all trials that do not contain data in the first sample
   sel = isnan(timelock.trial(:,1,1));
   fprintf('removing %d trials from the output that do not contain data\n', sum(sel));
@@ -196,5 +213,10 @@ cfg.version.id = '$Id$';
 try, cfg.previous = data.cfg; end
 % remember the exact configuration details in the output
 timelock.cfg = cfg;
+
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', timelock); % use the variable name "data" in the output file
+end
 
 

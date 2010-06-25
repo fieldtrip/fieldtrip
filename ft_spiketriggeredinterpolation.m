@@ -25,6 +25,10 @@ function [data] = ft_spiketriggeredinterpolation(cfg, data)
 % selected channels will be interpolated or replaced with NaNs.
 %
 % See also FT_SPIKETRIGGEREDSPECTRUM, FT_SPIKETRIGGEREDAVERAGE
+%
+% Undocumented local options:
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
+%   cfg.outputfile = one can specify output as file to save to disk
 
 % Copyright (C) 2008, Thilo Womelsdorf
 %
@@ -53,11 +57,23 @@ if ~isfield(cfg, 'method'),         cfg.method = 'nan';             end
 if ~isfield(cfg, 'spikechannel'),   cfg.spikechannel = [];          end
 if ~isfield(cfg, 'outputexamples'), cfg.outputexamples = 'no';      end
 if ~isfield(cfg, 'feedback'),       cfg.feedback = 'no';            end
-
+if ~isfield(cfg, 'inputfile'),      cfg.inputfile = [];             end
+if ~isfield(cfg, 'outputfile'),     cfg.outputfile = [];            end
 if strcmp(cfg.method, 'nan')
   cfg.interptoi = 0;
 else
   cfg.interptoi = 0.010;
+end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+  end
 end
 
 % autodetect the spike channels
@@ -179,4 +195,8 @@ try, cfg.previous = data.cfg; end
 % remember the exact configuration details in the output
 data.cfg = cfg;
 
+% the output data should be saved to a MATLAB file
+if ~isempty(cfg.outputfile)
+  savevar(cfg.outputfile, 'data', data); % use the variable name "data" in the output file
+end
 
