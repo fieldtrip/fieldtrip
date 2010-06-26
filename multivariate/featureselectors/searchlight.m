@@ -27,8 +27,10 @@ classdef searchlight < featureselector
     
     center = false;       % only selects center features if true
     
-    nspheres = 1;        % select the union of the best nspheres spheres
+    nspheres = 1;         % select the union of the best nspheres spheres
         
+    neighbours            % a sparse adjacency matrix specifying the neighbourhood structure for irregular data
+    
   end
   
   methods
@@ -40,7 +42,7 @@ classdef searchlight < featureselector
       assert(~isempty(obj.procedure));
       
       if isempty(obj.validator)
-        obj.validator = crossvalidator('verbose',true,'compact',true,'model',true);
+        obj.validator = crossvalidator('verbose',true,'compact',true,'model',true,'nfolds',5);
       end
       
       obj.validator.procedure = mva(obj.procedure);
@@ -75,6 +77,17 @@ classdef searchlight < featureselector
         
       end
       
+      if ~isempty(obj.neighbours)
+        
+        % centers as variable indices
+        p.centers = subv2ind(obj.indims,p.centers);
+        
+        % neighbourhood index
+        nidx = repmat(1:size(obj.neighbours,2),[size(obj.neighbours,1) 1]);
+        nidx(~obj.neighbours(:)) = 0;
+        
+      end
+      
       % identify subsets which fall in each sphere
       
       if obj.verbose
@@ -94,19 +107,40 @@ classdef searchlight < featureselector
           fprintf('estimating sphere %d of %d\n',c,size(p.centers,1));
         end
         
-        % generate potential points (the cube)
-        v = cell(1,numel(obj.indims));
-        for j=1:numel(obj.indims)
-          v{j} = floor(p.centers(c,j)-rad):ceil(p.centers(c,j)+rad);
+        if isempty(obj.neighbours)
+          % neighbourhood structure defined by the input dimensions
+        
+          % generate potential points (the cube)
+          v = cell(1,numel(obj.indims));
+          for j=1:numel(obj.indims)
+            v{j} = floor(p.centers(c,j)-rad):ceil(p.centers(c,j)+rad);
+          end
+          
+          cube = cartprod(v{:});
+          
+          % reduce to elements inside the cube
+          cube = cube(all(cube>0,2) & all(bsxfun(@minus,cube,obj.indims)<=0,2),:);
+          
+          % reduce to index elements inside the sphere
+          p.spheres{c} = subv2ind(obj.indims,cube(sqrt(sum(bsxfun(@minus,cube,p.centers(c,:)).^2,2)) <= rad,:));
+          
+        else
+          % explicit neighbourhood structure for irregular data
+          % radius becomes path length in the adjacency matrix
+          
+          p.spheres{c} = p.centers(c);
+          
+          for j=1:obj.radius
+            
+            inthere = nidx(p.spheres{c},:);
+            inthere = inthere(inthere > 0);
+            inthere = inthere(:)';
+            
+            p.spheres{c} = unique([p.spheres{c} inthere]);
+            
+          end
+                    
         end
-        
-        cube = cartprod(v{:});
-        
-        % reduce to elements inside the cube
-        cube = cube(all(cube>0,2) & all(bsxfun(@minus,cube,obj.indims)<=0,2),:);
-        
-        % reduce to index elements inside the sphere
-        p.spheres{c} = subv2ind(obj.indims,cube(sqrt(sum(bsxfun(@minus,cube,p.centers(c,:)).^2,2)) <= rad,:));
         
         if ~isempty(obj.mask)
           

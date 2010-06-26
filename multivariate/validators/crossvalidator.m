@@ -181,7 +181,7 @@ classdef crossvalidator < validator
 %             res = tproc.test(testdata);
 %             if iscell(res), res = res{1}; end
 %             obj.post{f} = res;
-            
+        
             obj.post(f,:) = tproc.test(testdata);
             
             obj.design(f,:) = testdesign;  

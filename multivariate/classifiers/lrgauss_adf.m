@@ -1,5 +1,5 @@
 classdef lrgauss_adf < classifier
-%Posterior for a Gaussian prior and a logistic likelihood
+% logistic regression with a Gaussian prior using assumed density filtering
 %
 %   Options:
 %   'prior' : the prior Gaussian distribution in the format
@@ -37,8 +37,9 @@ classdef lrgauss_adf < classifier
          targets(targets == 1) = -1;
          targets(targets == 2) = 1;
          
-         if isempty(obj.prior)
+         if isempty(obj.prior) || isscalar(obj.prior)
            pr = priorstandard(size(X,2)+1,1);
+           pr.cov = obj.prior .* pr.cov;
          else
            pr = obj.prior;
          end

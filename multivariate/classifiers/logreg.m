@@ -9,6 +9,8 @@ classdef logreg < classifier
     L1 = 0; % L1 regularization parameter
     L2 = 0; % L2 regularization parameter
     
+    tol; % convergence criterion of elastic net
+    
   end
 
   methods
@@ -86,9 +88,10 @@ classdef logreg < classifier
         opt.L1=obj.L1;            
         opt.L2=obj.L2;                 
         opt.verbose=obj.verbose; 
+        opt.tol=obj.tol;
         
         p.model = -elasticlr(X,Y,opt);
-
+         
       end
       
       p.model = reshape(p.model,nvars,nclasses-1);

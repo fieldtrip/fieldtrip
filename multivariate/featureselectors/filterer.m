@@ -25,7 +25,7 @@ classdef filterer < featureselector
     % anova : order according to anova test  
     % regression : linearly regress input on output and compute residual
     % correlation : correlation between input and output
-    filter = 'mutual_information';    
+    filter = 'anova';    
     
   end
   
@@ -122,6 +122,21 @@ classdef filterer < featureselector
         criterion(f) = m;
         
       end
+      
+    end
+    
+    function [model,desc] = getmodel(obj)
+      % return logical array with ones indicating selected features
+      
+      m = zeros(obj.indims);
+      m(obj.params.subset) = 1;      
+      model{1} = m;      
+      desc{1} = {'logical array with ones indicating selected features'};
+      
+      m = zeros(obj.indims);
+      m(:) = obj.params.value;
+      model{2} = m;
+      desc{2} = {sprintf('importance according to filter %s',obj.filter)};
       
     end
     
@@ -244,6 +259,7 @@ classdef filterer < featureselector
       end
       
     end
+    
     
     
   end

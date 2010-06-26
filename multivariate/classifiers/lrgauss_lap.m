@@ -1,5 +1,5 @@
 classdef lrgauss_lap < classifier
-%Posterior for a Gaussian prior and a logistic likelihood
+% logistic regression with a Gaussian prior using the Laplace approximation
 %
 %   Options:
 %   'prior' : the prior Gaussian distribution in the format
@@ -33,7 +33,8 @@ classdef lrgauss_lap < classifier
          
          if isempty(obj.prior)
            pr = priorstandard(size(X,2)+1,1);
-         else
+           pr.cov = obj.prior .* pr.cov;
+        else
            pr = obj.prior;
          end
          
