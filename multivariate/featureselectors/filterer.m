@@ -128,12 +128,15 @@ classdef filterer < featureselector
     function [model,desc] = getmodel(obj)
       % return logical array with ones indicating selected features
       
-      m = zeros(obj.indims);
+      indim = obj.indims;
+      if length(indims) == 1, indim = [1 indim]; end
+      
+      m = zeros(indim);
       m(obj.params.subset) = 1;      
       model{1} = m;      
       desc{1} = {'logical array with ones indicating selected features'};
       
-      m = zeros(obj.indims);
+      m = zeros(indim);
       m(:) = obj.params.value;
       model{2} = m;
       desc{2} = {sprintf('importance according to filter %s',obj.filter)};
