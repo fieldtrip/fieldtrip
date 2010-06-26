@@ -129,7 +129,7 @@ classdef filterer < featureselector
       % return logical array with ones indicating selected features
       
       indim = obj.indims;
-      if length(indims) == 1, indim = [1 indim]; end
+      if length(indim) == 1, indim = [1 indim]; end
       
       m = zeros(indim);
       m(obj.params.subset) = 1;      
