@@ -79,12 +79,17 @@ classdef searchlight < featureselector
       
       if ~isempty(obj.neighbours)
         
+        if obj.verbose
+          fprintf('building neighbourhood\n');
+        end
+        
         % centers as variable indices
         p.centers = subv2ind(obj.indims,p.centers);
-        
-        % neighbourhood index
-        nidx = repmat(1:size(obj.neighbours,2),[size(obj.neighbours,1) 1]);
-        nidx(~obj.neighbours(:)) = 0;
+                
+        nidx = cell(size(obj.neighbours,1),1);
+        for c=1:length(nidx)
+          nidx{c} = find(obj.neighbours(c,:));
+        end
         
       end
       
@@ -129,15 +134,8 @@ classdef searchlight < featureselector
           % radius becomes path length in the adjacency matrix
           
           p.spheres{c} = p.centers(c);
-          
           for j=1:obj.radius
-            
-            inthere = nidx(p.spheres{c},:);
-            inthere = inthere(inthere > 0);
-            inthere = inthere(:)';
-            
-            p.spheres{c} = unique([p.spheres{c} inthere]);
-            
+            p.spheres{c} = unique([p.spheres{c} cell2mat(nidx(p.spheres{c})')]);
           end
                     
         end
