@@ -487,21 +487,24 @@ classdef crossvalidator < validator
                 
                 minsmp = min(arrayfun(@(x)(sum(idx == x)),unq));
                 
-                tmp = [];
-                for j=1:length(unq)
+                if minsmp > 0
                   
-                  iidx = find(idx == unq(j));
-                  
-                  if obj.verbose
-                    fprintf('removing %d superfluous samples for label %d\n',length(iidx) - minsmp,unq(j));
+                  tmp = [];
+                  for j=1:length(unq)
+                    
+                    iidx = find(idx == unq(j));
+                    
+                    if obj.verbose
+                      fprintf('removing %d superfluous samples for label %d\n',length(iidx) - minsmp,unq(j));
+                    end
+                    
+                    tmp = [tmp; testfolds{f,d}(iidx(1:minsmp))];
+                    
                   end
                   
-                  tmp = [tmp; testfolds{f,d}(iidx(1:minsmp))];
-                  
-                end
-                
-                testfolds{f,d} = tmp(randperm(length(tmp)));
+                  testfolds{f,d} = tmp(randperm(length(tmp)));
           
+                end
               end
             end
             
