@@ -31,6 +31,8 @@ classdef searchlight < featureselector
         
     neighbours            % a sparse adjacency matrix specifying the neighbourhood structure for irregular data
     
+    compact = true;       % save validator if compact = false
+    
   end
   
   methods
@@ -174,7 +176,9 @@ classdef searchlight < featureselector
         end
 
         % save validator
-        p.vld{c} = vld;
+        if ~obj.compact
+          p.vld{c} = vld;
+        end
         
       end
       
