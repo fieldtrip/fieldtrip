@@ -678,15 +678,18 @@ elseif  filetype_check_header(filename, 'DTLG') && filetype_check_extension(file
   content = 'electrophysiological data';
 
   % known Chieti ITAB file types
-elseif filetype_check_extension(filename, '.raw') && filetype_check_header(filename, 'FORMAT: ATB-BIOMAGDATA')
+elseif filetype_check_extension(filename, '.raw') && (filetype_check_header(filename, 'FORMAT: ATB-BIOMAGDATA') || filetype_check_header(filename, '[HeaderType]'))
   type = 'itab_raw';
   manufacturer = 'Chieti ITAB';
   content = 'MEG data, including sensor positions';
-  % known Chieti ITAB file types
 elseif filetype_check_extension(filename, '.raw.mhd')
   type = 'itab_mhd';
   manufacturer = 'Chieti ITAB';
   content = 'MEG header data, including sensor positions';
+elseif filetype_check_extension(filename, '.asc')
+  type = 'itab_asc';
+  manufacturer = 'Chieti ITAB';
+  content = 'headshape digitization file';
 
   % known Nexstim file types
 elseif filetype_check_extension(filename, '.nxe')
