@@ -39,13 +39,19 @@ f3 = {f3.name}';
 f4 = dir(fullfile(p, 'fileio', '*.m'));
 f4 = {f4.name}';
 
-f5 = dir(fullfile(p, 'forwinv', '*.m'));
+f5 = dir(fullfile(p, 'forward', '*.m'));
 f5 = {f5.name}';
 
-f6 = dir(fullfile(p, 'realtime', 'rt_*.m'));
+f6 = dir(fullfile(p, 'inverse', '*.m'));
 f6 = {f6.name}';
 
-funname = cat(1, f1, f2, f3, f4, f5, f6);
+f7 = dir(fullfile(p, 'realtime', '*.m'));
+f7 = {f7.name}';
+
+f8 = dir(fullfile(p, 'realtime', 'datasource', '*.m'));
+f8 = {f8.name}';
+
+funname = cat(1, f1, f2, f3, f4, f5, f6, f7, f8);
 
 for i=1:length(funname)
   [p, funname{i}, x] = fileparts(funname{i});
