@@ -89,144 +89,27 @@ switch eventformat
    % remote frame buffer, i.e. VNC server on another computer
    [password, host, port] = filetype_check_uri(filename);
    rfbevent(sprintf('%s:%d', host, port), password, event.type, event.value);
-   
+
   case 'fcdc_buffer'
     % read from a networked buffer for realtime analysis
     [host, port] = filetype_check_uri(filename);
 
-    type = {
-      'char'
-      'uint8'
-      'uint16'
-      'uint32'
-      'uint64'
-      'int8'
-      'int16'
-      'int32'
-      'int64'
-      'single'
-      'double'
-      };
-
-    wordsize = {
-      1 % 'char'
-      1 % 'uint8'
-      2 % 'uint16'
-      4 % 'uint32'
-      8 % 'uint64'
-      1 % 'int8'
-      2 % 'int16'
-      4 % 'int32'
-      8 % 'int64'
-      4 % 'single'
-      8 % 'double'
-      };
-
-    for i=1:length(event)
-      evt = [];
-      buf = [];
-      bufsize = 0;
-      
-      % convert the field "type" into the message representation
-      this_type = class(event(i).type);
-      this_size = numel(event(i).type);
-      switch this_type
-        case 'char'
-          buf = cat(2, buf, event(i).type);
-        otherwise
-          buf = cat(2, buf, typecast(event(i).type, 'uint8'));
-      end
-      bufsize = bufsize + wordsize{strcmp(type, this_type)}*this_size;
-      evt.type_type  = find(strcmp(type, this_type))-1; % zero-offset
-      evt.type_numel = this_size;
-      
-      % convert the field "value" into the message representation
-      this_type = class(event(i).value);
-      this_size = numel(event(i).value);
-      event(i).value = event(i).value(:)';  % it must be represented as a vector
-      switch this_type
-        case 'char'
-          buf = cat(2, buf, event(i).value);
-        otherwise
-          buf = cat(2, buf, typecast(event(i).value, 'uint8'));
-      end
-      bufsize = bufsize + wordsize{strcmp(type, this_type)}*this_size;
-      evt.value_type  = find(strcmp(type, this_type))-1; % zero-offset
-      evt.value_numel = this_size;
-      
-      % although sample, offset and duration do not play a role in BCI2000,
-      % they must exist for the buffer
-      if ~isfield(event(i), 'sample') || isempty(event(i).sample)
-        event(i).sample = 0;
-      end
-      if ~isfield(event(i), 'offset') || isempty(event(i).offset)
-        event(i).offset = 0;
-      end
-      if ~isfield(event(i), 'duration') || isempty(event(i).duration)
-        event(i).duration = 0;
-      end
-      
-      % the other fields are simple, because they have a fixed type and only a single elements
-      evt.sample   = int32(event(i).sample);
-      evt.offset   = int32(event(i).offset);
-      evt.duration = int32(event(i).duration);
-
-      evt.bufsize = bufsize;
-      evt.buf     = uint8(buf);
-      
-      % check if buffer is open and keep trying to fill it...
-      try
-        
-        if strcmp(append,'no')        
-          buffer('flush_evt', [], host, port);  % flush event
-        end
-
-        buffer('put_evt', evt, host, port);  % indices should be zero-offset
-        
-      catch
-        
-        % retrieve hostname
-        [ret, hname] = system('hostname');
-        if ret ~= 0,
-          if ispc
-            hname = getenv('COMPUTERNAME');
-          else
-            hname = getenv('HOSTNAME');
-          end
-        end
-
-        if strcmpi(host,'localhost') || strcmpi(host,hname)
-          
-          warning('starting fieldtrip buffer on localhost');
-
-          % try starting a local buffer
-          buffer('tcpserver', 'init', host, port);
-          pause(1);
-
-          % write packet until succeed
-          bhdr = false;
-          while ~bhdr
-            try
-              bhdr = true;
-
-              % try writing a dummy header
-              dumhdr.fsample   = 0;
-              dumhdr.nchans    = 0;
-              dumhdr.nsamples  = 0;
-              dumhdr.nevents   = 0;
-              dumhdr.data_type = 0;
-
-              buffer('put_hdr', dumhdr, host, port);
-              buffer('put_evt', evt, host, port);  % indices should be zero-offset
-
-            catch
-              bhdr = false;
-            end
-          end
-        end
-      end
+    if strcmp(append, 'no')        
+      buffer('flush_evt', [], host, port);  % flush event
     end
 
+	% the MEX file now can handle various Matlab types directly and respects the fields
+	% sample, offset, duration
+	%   -- these must all be numeric and non-empty (only first element is of interest)
+	% type, value
+	%   -- these can be strings or any numeric type (double, single, [u]int[8-64])
+	%      will be transmitted as if vectorised
+	buffer('put_evt', event, host, port);
+
+	% SK: There was some code here for firing up a FieldTrip buffer locally,
+	% but this is very likely to be senseless because we have no proper header 
+	% information here. Please explicitly use ft_create_buffer instead.
+  
   case 'fcdc_serial'
     % this code is moved to a seperate file
     write_serial_event(filename, event);

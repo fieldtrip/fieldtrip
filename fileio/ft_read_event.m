@@ -674,71 +674,32 @@ switch eventformat
     % read from a networked buffer for realtime analysis
     [host, port] = filetype_check_uri(filename);
 
-    % FIXME it should be possible to specify event numbers
+    % SK: the following was intended to speed up, but does not work
+    % the buffer server will try to return exact indices, even
+    % if the intend here is to filter based on a maximum range.
+    % We could change the definition of GET_EVT to comply
+    % with filtering, but that might break other existing code.
+
+    %if isempty(flt_minnumber) && isempty(flt_maxnumber)
+    %   evtsel = [];
+    %else
+    %   evtsel = [0 2^32-1];
+    %   if ~isempty(flt_minnumber)
+    %       evtsel(1) = flt_minnumber-1;
+    %   end
+    %   if ~isempty(flt_maxnumber)
+    %       evtsel(2) = flt_maxnumber-1;
+    %   end
+    %end
 
     try
-      evt = buffer('get_evt', [], host, port);  % indices should be zero-offset
+      event = buffer('get_evt', [], host, port);
     catch
       if strfind(lasterr, 'the buffer returned an error')
-        evt = [];
+        event = [];
       else
         rethrow(lasterr);
       end
-    end
-
-    type = {
-      'char'
-      'uint8'
-      'uint16'
-      'uint32'
-      'uint64'
-      'int8'
-      'int16'
-      'int32'
-      'int64'
-      'single'
-      'double'
-      };
-
-    wordsize = {
-      1 % 'char'
-      1 % 'uint8'
-      2 % 'uint16'
-      4 % 'uint32'
-      8 % 'uint64'
-      1 % 'int8'
-      2 % 'int16'
-      4 % 'int32'
-      8 % 'int64'
-      4 % 'single'
-      8 % 'double'
-      };
-
-    for i=1:length(evt)
-      % convert the field "type" into the Matlab representation
-      this_type = type{evt(i).type_type+1};
-      this_size = wordsize{evt(i).type_type+1} * evt(i).type_numel;
-      sel = 1:this_size;
-      if strcmp(this_type, 'char')
-        event(i).type = char(evt(i).buf(sel));
-      else
-        event(i).type = typecast(evt(i).buf(sel), this_type);
-      end
-
-      % convert the field "value" into the Matlab representation
-      this_type = type{evt(i).value_type+1};
-      this_size = wordsize{evt(i).value_type+1} * evt(i).value_numel;
-      sel = sel(end) + (1:this_size);
-      if strcmp(this_type, 'char')
-        event(i).value = char(evt(i).buf(sel));
-      else
-        event(i).value = typecast(evt(i).buf(sel), this_type);
-      end
-
-      % the other fields are simple, because they have a fixed type and only a single elements
-      event(i).sample   = evt(i).sample;
-      event(i).offset   = evt(i).offset;
-      event(i).duration = evt(i).duration;
     end
 
   case 'fcdc_matbin'
@@ -845,7 +806,7 @@ switch eventformat
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigsel, 'detectflank', detectflank, 'trigshift', trigshift);
       event   = appendevent(event, trigger);
     end
-    
+
   case 'matlab'
     % read the events from a normal Matlab file
     tmp   = load(filename, 'event');
