@@ -250,7 +250,7 @@ if ~isempty(createsubcfg)
           'bsfiltord'
           'bsfilttype'
           'bsfreq'
-      'denoise'
+          'denoise'
           'dftfilter'
           'dftfreq'
           'hpfiltdir'
@@ -301,8 +301,8 @@ if ~isempty(createsubcfg)
           'reducerank'
           'keepcsd'
           'realfilter'
-      'subspace'
-      'keepsubspace'
+          'subspace'
+          'keepsubspace'
           };
 
       case 'lcmv'
@@ -319,8 +319,8 @@ if ~isempty(createsubcfg)
           'projectmom'
           'reducerank'
           'keepcov'
-      'subspace'
-      'keepsubspace'
+          'subspace'
+          'keepsubspace'
           };
 
       case 'pcc'
@@ -348,7 +348,7 @@ if ~isempty(createsubcfg)
           'feedback'
           'numcomponent'
           };
-        
+
       case 'sam'
         fieldname = {
           'meansphereorigin'
@@ -362,7 +362,7 @@ if ~isempty(createsubcfg)
 
       case 'mvl'
         fieldname = {};
-        
+
       otherwise
         error('unexpected name of the subfunction');
         fieldname = {};
@@ -489,10 +489,28 @@ if ~isempty(dataset2files) && strcmp(dataset2files, 'yes')
         [path, file, ext] = fileparts(filename);
         headerfile = fullfile(path, [file '.vhdr']);
         datafile   = fullfile(path, [file '.dat']);
+      case 'itab_raw'
+        [path, file, ext] = fileparts(filename);
+        headerfile = fullfile(path, [file '.raw.mhd']);
+        datafile   = fullfile(path, [file '.raw']);
       case 'fcdc_matbin'
         [path, file, ext] = fileparts(filename);
         headerfile = fullfile(path, [file '.mat']);
         datafile   = fullfile(path, [file '.bin']);
+      case {'tdt_tsq' 'tdt_tev'}
+        [path, file, ext] = fileparts(filename);
+        headerfile = fullfile(path, [file '.tsq']);
+        datafile   = fullfile(path, [file '.tev']);
+      case 'nmc_archive_k'
+        [path, file, ext] = fileparts(filename);
+        headerfile = [path '/' file 'newparams.txt'];
+        if isempty(headerformat)
+          headerformat = 'nmc_archive_k';
+        end
+        if isempty(hdr)
+          hdr = ft_read_header(headerfile, 'headerformat', headerformat);
+        end
+        datafile = filename;
       otherwise
         % convert filename into filenames, assume that the header and data are the same
         datafile   = filename;
@@ -513,7 +531,7 @@ if ~isempty(dataset2files) && strcmp(dataset2files, 'yes')
     if ~isfield(cfg,'headerformat') || isempty(cfg.headerformat)
       cfg.headerformat = ft_filetype(headerfile);
     end
-    
+
   elseif ~isempty(cfg.datafile) && isempty(cfg.headerfile);
     % assume that the datafile also contains the header
     cfg.headerfile = cfg.datafile;
