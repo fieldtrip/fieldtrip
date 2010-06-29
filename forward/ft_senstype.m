@@ -171,6 +171,10 @@ elseif issubfield(input, 'orig.FileHeader') &&  issubfield(input, 'orig.VarHeade
   % this is a complete header that was read from a Plexon *.nex file using read_plexon_nex
   type = 'plexon';
 
+elseif issubfield(input, 'orig.stname')
+  % this is a complete header that was read from an ITAB dataset
+  type = 'itab';
+
 elseif issubfield(input, 'orig.sys_name')
   % this is a complete header that was read from a Yokogawa dataset
   type = 'yokogawa160';
@@ -335,7 +339,7 @@ if ~isempty(desired)
     case 'yokogawa'
       type = any(strcmp(type, {'yokogawa160' 'yokogawa160_planar'}));
     case 'itab'
-      type = any(strcmp(type, {'itab153' 'itab153_planar'}));
+      type = any(strcmp(type, {'itab' 'itab153' 'itab153_planar'}));
     case 'meg_axial'
       % note that neuromag306 is mixed planar and axial
       type = any(strcmp(type, {'magnetometer' 'neuromag306' 'ctf151' 'ctf275' 'bti148' 'bti248' 'yokogawa160'}));
