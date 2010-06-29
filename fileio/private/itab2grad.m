@@ -27,11 +27,24 @@ function grad = itab2grad(header_info)
 % $Id$
 
 grad = struct;
-for i=1:header_info.nmagch
-  grad.label{i}   = header_info.ch(i).label;
-  grad.pnt(i,1:3) = [header_info.ch(i).position(1).r_s];
-  grad.ori(i,1:3) = [header_info.ch(i).position(1).u_s];
+
+chan = 0;
+coil = 0;
+for i=1:640
+  if header_info.ch(i).type==2
+    % it is a MAG channel
+    chan = chan+1;
+    grad.label{chan} = header_info.ch(i).label; 
+    for j=1:header_info.ch(i).ncoils
+      coil = coil+1;
+      grad.pnt(coil,:) = header_info.ch(i).position(j).r_s;
+      grad.ori(coil,:) = header_info.ch(i).position(j).u_s;
+      grad.tra(chan,coil) = header_info.ch(i).wgt(j);
+    end    
+  else
+    % skip all other channels
+  end
 end
+
 grad.unit  = 'mm';
-grad.tra   = eye(header_info.nmagch);
 grad.label = grad.label(:); % should be column vector
