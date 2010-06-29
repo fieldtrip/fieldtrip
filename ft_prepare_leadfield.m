@@ -128,6 +128,8 @@ if ~isempty(cfg.inputfile)
   else
     data = loadvar(cfg.inputfile, 'data');
   end
+else
+  data = [];
 end
 
 % put the low-level options pertaining to the dipole grid in their own field
