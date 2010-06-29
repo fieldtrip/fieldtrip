@@ -119,6 +119,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
   data.crsspctrm = crsspctrm;
   data.labelcmb  = labelcmb;
   data           = rmfield(data, 'fourierspctrm');
+  data           = rmfield(data, 'label');
   if ntim>1,
     data.dimord = 'chan_freq_time';
   else
@@ -145,7 +146,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'full')
   if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq);      else nfrq = 1; end
   if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time);      else ntim = 1; end
   nchan     = length(data.label);
-  crsspctrm = zeros(nrpt,nchan,nchan,nfrq,ntim)+i.*zeros(nrpt,nchan,nchan,nfrq,ntim);
+  crsspctrm = zeros(nrpt,nchan,nchan,nfrq,ntim);
   sumtapcnt = [0;cumsum(data.cumtapcnt(:))];
   for k = 1:ntim
     for m = 1:nfrq
@@ -153,6 +154,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'full')
         indx   = (sumtapcnt(p)+1):sumtapcnt(p+1);
         tmpdat = transpose(data.fourierspctrm(indx,:,m,k));
         crsspctrm(p,:,:,m,k) = (tmpdat*tmpdat')./data.cumtapcnt(p);
+        clear tmpdat;
       end
     end
   end
@@ -250,6 +252,7 @@ elseif strcmp(current, 'sparsewithpow') && strcmp(desired, 'sparse')
     data.labelcmb  = [data.label(:) data.label(:)];
     data           = rmfield(data, 'powspctrm');
   end
+  data = rmfield(data, 'label');
 
 elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
   dimtok = tokenize(data.dimord, '_');
@@ -278,6 +281,9 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
   fn = fieldnames(data);
   for ii=1:numel(fn)
     if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim;
+      if nrpt==1,
+        data.(fn{ii}) = reshape(data.(fn{ii}), [nrpt ncmb nfrq ntim]);
+      end
 
       tmpall = nan(nrpt,nchan,nchan,nfrq,ntim);
 
