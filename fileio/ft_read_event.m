@@ -839,9 +839,12 @@ switch eventformat
       event(end  ).duration = hdr.orig.smpl(i).ntptot;
       event(end  ).offset   = -hdr.orig.smpl(i).ntppre;  % number of samples prior to the trigger
     end
-    % trigsel = find(ft_chantype(hdr, 'flag'));
-    % trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigsel, 'detectflank', detectflank, 'trigshift', trigshift);
-    % event   = appendevent(event, trigger);
+    if isempty(event)
+      warning('no events found in the event table, reading the trigger channel(s)');
+      trigsel = find(ft_chantype(hdr, 'flag'));
+      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigsel, 'detectflank', detectflank, 'trigshift', trigshift);
+      event   = appendevent(event, trigger);
+    end
     
   case 'matlab'
     % read the events from a normal Matlab file
