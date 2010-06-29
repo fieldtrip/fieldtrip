@@ -156,7 +156,8 @@ else
   % read the header
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
   
-  % read the events
+% FIXME how is this supposed to work?
+% read the events
   if ~isempty(cfg.event)
     event = ft_read_event(cfg.dataset);
   else

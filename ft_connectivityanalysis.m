@@ -587,6 +587,10 @@ if exist('nrpt', 'var'),  stat.dof  = nrpt;      end
 %FIXME this is not correct for TF-representations when trials have
 %different lengths
 
+% accessing this field here is needed for the configuration tracking
+% by accessing it once, it will not be removed from the output cfg
+cfg.outputfile;
+
 % get the output cfg
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
