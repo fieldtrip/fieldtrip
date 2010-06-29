@@ -1,4 +1,3 @@
-ls
 function [vol, cfg] = ft_prepare_localspheres(cfg, mri)
 
 % FT_PREPARE_LOCALSPHERES creates a MEG volume conductor model with a sphere
