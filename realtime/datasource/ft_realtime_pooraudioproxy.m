@@ -43,6 +43,18 @@ if ~isfield(cfg, 'debug'),              cfg.debug = 'yes';                      
 if ~isfield(cfg.target, 'datafile'),    cfg.target.datafile = 'buffer://localhost:1972';  end
 if ~isfield(cfg.target, 'dataformat'),  cfg.target.dataformat = [];                       end % default is to use autodetection of the output format
 
+% it seems that audiorecorder can only record integer multiples of 0.5 seconds
+% this was observed on OSX with Matlab 2008a, but has not been confirmed on
+% other platforms
+newblocksize = round(cfg.blocksize*2)/2; % round to nearest half or full second
+if newblocksize<0.5
+  newblocksize = 0.5;
+end
+if newblocksize~=cfg.blocksize
+  warning('sestting cfg.blocksize to %f', newblocksize);
+  cfg.blocksize = newblocksize;
+end
+
 hdr = [];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % create a fieldtrip compatible header structure
