@@ -246,7 +246,7 @@ if length(data)>1 && ~israw,
   if ~strcmp(dimtok{catdim},'rpt') && ~strcmp(dimtok{catdim},'rpttap'),
     for k = 1:length(data)
       if k==1,
-        tmp       = getsubfield(data{k}, dimtok{catdim});
+        tmp       = getsubfield(data{k}, dimtok{catdim})';
 	if isfield(data{k}, 'inside'),
 	  tmpnvox   = numel(data{k}.inside)+numel(data{k}.outside);
 	  tmpinside = data{k}.inside(:);
@@ -258,7 +258,7 @@ if length(data)>1 && ~israw,
 	  tmpnvox   = tmpnvox+numel(data{k}.inside)+numel(data{k}.outside);
 	  sortflag  = 0;
 	else
-          tmp       = [tmp       getsubfield(data{k}, dimtok{catdim})];
+          tmp       = [tmp       getsubfield(data{k}, dimtok{catdim})'];
 	  sortflag  = 1;
 	end
       end
@@ -431,6 +431,10 @@ if israw,
   end
 
 elseif isfreq,
+  if isfield(data, 'labelcmb') && isfield(data, 'label') && (selectchan || avgoverchan)
+    error('selection of or averaging across channels in the presence of both label and labelcmb is ambiguous');
+  end
+
   if isfield(data, 'labelcmb'),
     %there is a crsspctrm or powcovspctrm field, 
     %this will only be selectdimmed
@@ -445,12 +449,13 @@ elseif isfreq,
     if avgoverrpt,  tmpdata = avgoverdim(tmpdata, 'rpt');   end
     if avgoverfreq, tmpdata = avgoverdim(tmpdata, 'freq');  end
     if avgovertime, tmpdata = avgoverdim(tmpdata, 'time');  end
+    if avgoverchan, error('avgoverchan not yet implemented in this case'); end
     if dojack,      tmpdata = leaveoneout(tmpdata);         end    
 
     if isfield(tmpdata, 'crsspctrm'),    crsspctrm = tmpdata.crsspctrm;    end
     if isfield(tmpdata, 'powcovspctrm'), crsspctrm = tmpdata.powcovspctrm; end
     if isfield(tmpdata, 'crsspctrm') || isfield(tmpdata, 'powcovspctrm'), clear tmpdata; end 
- else
+  else
     crsspctrm = [];
   end
   % make the subselection
