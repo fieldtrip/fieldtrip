@@ -72,7 +72,22 @@ fieldtripdefs
 % basic check/initialization of input arguments
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if (nargin<1) || (nargin>2), error('incorrect number of input arguments'); end;
-if (nargin<2), data = []; end;
+
+% defaults for input
+if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];          end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+  end
+  elseif (nargin<2), 
+    data = [];
+end
 
 if ~isstruct(cfg) && ~isempty(cfg), error('argument cfg must be a structure'); end;
 

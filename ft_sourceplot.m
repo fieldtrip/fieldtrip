@@ -2,7 +2,9 @@ function [cfg] = ft_sourceplot(cfg, data)
 
 % FT_SOURCEPLOT plots functional source reconstruction data on slices or on a
 % surface, optionally as an overlay on anatomical MRI data, where
-% statistical data can be used to determine the opacity of the mask.
+% statistical data can be used to determine the opacity of the mask. 
+% Input data comes from FT_SOURCEANALYSIS, FT_SOURCEGRANDAVERAGE or 
+% statistical values from FT_SOURCESTATISTICS.
 %
 % Use as:
 %   ft_sourceplot(cfg, data)
@@ -106,6 +108,9 @@ function [cfg] = ft_sourceplot(cfg, data)
 %   cfg.camlight       = 'yes' or 'no' (default = 'yes')
 %   cfg.renderer       = 'painters', 'zbuffer',' opengl' or 'none' (default = 'opengl')
 %                        When using opacity the OpenGL renderer is required.
+%
+% Undocumented local option:
+%   cfg.inputfile  = one can specifiy preanalysed saved data as input
 
 % TODO have to be built in:
 %   cfg.marker        = [Nx3] array defining N marker positions to display (orig: from sliceinterp)
@@ -143,6 +148,20 @@ fieldtripdefs
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
 %%% checkdata see below!!! %%%
+
+% set default for inputfile
+if ~isfield(cfg, 'inputfile'), cfg.inputfile                  = [];    end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+  end
+end
 
 % set the common defaults
 if ~isfield(cfg, 'method'),              cfg.method = 'ortho';              end

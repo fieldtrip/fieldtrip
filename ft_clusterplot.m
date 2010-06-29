@@ -30,6 +30,10 @@ function ft_clusterplot(cfg, stat)
 %
 % See also:
 %   ft_topoplotER, ft_singleplotER
+%
+% Undocumented local option:
+% cfg.inputfile  = one can specifiy preanalysed saved data as input
+
 
 % Copyright (C) 2007, Ingrid Nieuwenhuis, F.C. Donders Centre
 %
@@ -52,6 +56,20 @@ function ft_clusterplot(cfg, stat)
 % $Id$
 
 fieldtripdefs
+
+% default for inputfile
+if ~isfield(cfg, 'inputfile'),  cfg.inputfile                   = [];    end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    stat = loadvar(cfg.inputfile, 'data');
+  end
+end
 
 % check if given data is appropriate
 if isfield(stat,'freq') && length(stat.freq) > 1

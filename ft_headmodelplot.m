@@ -58,6 +58,8 @@ function [cfg] = ft_headmodelplot(cfg, data)
 % cfg.surface_facecolor
 % cfg.surface_edgecolor
 % cfg.surface_facealpha
+% cfg.inputfile  = one can specifiy preanalysed saved data as input
+
 %
 % This function depends on FT_PREPARE_VOL_SENS which has the following options:
 % cfg.channel, documented
@@ -102,16 +104,26 @@ if ~isfield(cfg, 'surface_facecolor'), cfg.surface_facecolor = skin;   end
 if ~isfield(cfg, 'surface_edgecolor'), cfg.surface_edgecolor = 'none'; end
 if ~isfield(cfg, 'surface_facealpha'), cfg.surface_facealpha = 0.7;    end
 if ~isfield(cfg, 'surftype'),          cfg.surftype = 'faces';         end
+if ~isfield(cfg, 'inputfile'),         cfg.inputfile = [];             end
+
+hasdata = (nargin>1);
+
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    data = loadvar(cfg.inputfile, 'data');
+  end
+elseif nargin<2 
+    data = [];
+end
 
 % put the low-level options pertaining to the dipole grid in their own field
 cfg = checkconfig(cfg, 'createsubcfg',  {'grid'});
 
 if ~isfield(cfg, 'vol') && ~isfield(cfg, 'hdmfile')
   cfg.vol = [];  % FIXME why is this empty setting neccessary?
-end
-
-if nargin<2
-  data = [];
 end
 
 % set the defaults that apply both to EEG and MEG
@@ -195,7 +207,7 @@ if iseeg
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % plotting for EEG
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
   if strcmp(cfg.plotgrid, 'yes')
     if strcmp(cfg.plotinside, 'yes')
       plot3(sourcegrid.pos(sourcegrid.inside,1), sourcegrid.pos(sourcegrid.inside,2), sourcegrid.pos(sourcegrid.inside,3), 'k.');
@@ -204,11 +216,11 @@ if iseeg
       plot3(sourcegrid.pos(sourcegrid.outside,1), sourcegrid.pos(sourcegrid.outside,2), sourcegrid.pos(sourcegrid.outside,3), 'k.');
     end
   end % plotgrid
-
+  
   if strcmp(cfg.plotsensors, 'yes')
     plot_sens(sens, 'style', 'g*');
   end % plotsensors
-
+  
   if strcmp(cfg.plotheadsurface, 'yes')  && ~isempty(vol)
     [pnt, tri] = headsurface(vol, sens);
     h = triplot(pnt, tri, [], cfg.surftype);
@@ -218,7 +230,7 @@ if iseeg
       set(h, 'facealpha', cfg.surface_facealpha);
     end
   end % plotheadsurface
-
+  
   if  strcmp(cfg.plotspheres, 'yes') && ~isempty(vol) && issphere
     % create a triangulated unit sphere
     if cfg.spheremesh==42
@@ -229,13 +241,13 @@ if iseeg
       [pnt0, tri] = icosahedron642;
     end
     Nvertices = size(pnt0,1);
-
+    
     colors = {cortex, brain, skull, skin};
-
+    
     for i=1:Nspheres
       % scale and shift the unit sphere to the proper location
       pnt = pnt0*vol.r(i) + repmat(vol.o, Nvertices,1);
-
+      
       h = triplot(pnt, tri, [], cfg.surftype);
       % set(h, 'FaceVertexCData', 0.5*ones(length(distance),30));
       % set(h, 'FaceVertexCData', [0 0 1]);
@@ -250,13 +262,13 @@ if iseeg
       end
     end
   end % plotspheres
-
+  
   if  strcmp(cfg.plotbnd, 'yes') && ~isempty(vol) && isbem
-
+    
     Nbnd = numel(vol.bnd);
-
+    
     colors = {skin, skull, brain};
-
+    
     for i=1:Nbnd
       h = triplot(vol.bnd(i).pnt, vol.bnd(i).tri, [], cfg.surftype);
       % set(h, 'FaceVertexCData', 0.5*ones(length(distance),30));
@@ -272,7 +284,7 @@ if iseeg
       end
     end
   end % plotbnd
-
+  
   if strcmp(cfg.plotlines, 'yes') && ~isempty(vol)
     if isbem
       % project the electrodes on the skin surface, on the nearest triangle
@@ -300,12 +312,12 @@ if iseeg
     z = [sens.pnt(:,3) prj(:,3)]';
     line(x, y, z, 'color', 'm');
   end % plotlines
-
+  
 elseif ismeg
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % plotting for MEG
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
   if strcmp(cfg.plotgrid, 'yes')
     if strcmp(cfg.plotinside, 'yes')
       plot3(sourcegrid.pos(sourcegrid.inside,1), sourcegrid.pos(sourcegrid.inside,2), sourcegrid.pos(sourcegrid.inside,3), 'k.');
@@ -314,11 +326,11 @@ elseif ismeg
       plot3(sourcegrid.pos(sourcegrid.outside,1), sourcegrid.pos(sourcegrid.outside,2), sourcegrid.pos(sourcegrid.outside,3), 'k.');
     end
   end % plotgrid
-
+  
   if strcmp(cfg.plotsensors, 'yes')
     plot_sens(sens, 'style', 'g*');
   end % plotsensors
-
+  
   if strcmp(cfg.plotcoil, 'yes')
     pnt = sens.pnt;
     ori = sens.ori;
@@ -328,7 +340,7 @@ elseif ismeg
     line(x, y, z, 'color', 'g');
     plot3(pnt(:,1), pnt(:,2), pnt(:,3), 'g.');
   end % plotsensors
-
+  
   if ~isempty(cfg.headshape)
     % get the surface describing the head shape
     if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
@@ -350,7 +362,7 @@ elseif ismeg
     end
     plot3(headshape.pnt(:,1), headshape.pnt(:,2), headshape.pnt(:,3), 'r.');
   end % plotheadshape
-
+  
   if strcmp(cfg.plotspheres, 'yes') && ~isempty(vol) && issphere
     % create a triangulated unit sphere
     if cfg.spheremesh==42
@@ -385,9 +397,9 @@ elseif ismeg
       end
     end
   end % plotspheres
-
+  
   if  strcmp(cfg.plotbnd, 'yes') && ~isempty(vol) && isbem
-
+    
     h = triplot(vol.bnd.pnt, vol.bnd.tri, [], cfg.surftype);
     % set(h, 'FaceVertexCData', 0.5*ones(length(distance),30));
     % set(h, 'FaceVertexCData', [0 0 1]);
@@ -400,13 +412,13 @@ elseif ismeg
       set(h, 'facecolor', 'none');
       % set(h, 'linestyle', 'none');
     end
-
+    
   end % plotbnd
-
+  
   if strcmp(cfg.plotspherecenter, 'yes') && ~isempty(vol) && issphere
     plot3(vol.o(:,1), vol.o(:,2), vol.o(:,3), 'k.');
   end % plotspherecenter
-
+  
   if strcmp(cfg.plotheadsurface, 'yes') && ~isempty(vol)
     % estimate the head surface from the spheres and gradiometers
     [pnt, tri] = headsurface(vol, sens);
@@ -417,7 +429,7 @@ elseif ismeg
       set(h, 'facealpha', cfg.surface_facealpha);
     end
   end % plotheadsurface
-
+  
   if strcmp(cfg.plotlines, 'yes') && ismultisphere
     % first determine the indices of the relevant gradiometers.
     [sel_g, sel_v] = match_str(chan.label, vol.label);
@@ -431,12 +443,12 @@ elseif ismeg
     z = [pnt0(:,3) pnt1(:,3)]';
     line(x, y, z, 'color', 'm');
   end % plotlines
-
+  
   if strcmp(cfg.plotfiducial, 'yes') && ~isempty(cfg.fiducial),
     fiduc = cfg.fiducial;
     plot3(fiduc(:,1), fiduc(:,2), fiduc(:,3), 'mo', 'lineWidth', 4);
   end
-
+  
 end % iseeg or ismeg
 
 lighting gouraud

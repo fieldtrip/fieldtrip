@@ -52,7 +52,7 @@ cfg = checkconfig(cfg, 'trackconfig', 'on');
 if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];          end
 if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];         end
 
-hasdata = nargin>2;
+hasdata = nargin>1;
 if ~isempty(cfg.inputfile) % the input data should be read from file
   if hasdata
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');

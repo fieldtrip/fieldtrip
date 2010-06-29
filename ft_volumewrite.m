@@ -47,6 +47,7 @@ function ft_volumewrite(cfg, volume)
 
 % Undocumented local options:
 % cfg.parameter
+% cfg.inputfile  = one can specifiy preanalysed saved data as input
 
 % Copyright (C) 2003-2006, Robert Oostenveld, Markus Siegel
 %
@@ -84,6 +85,7 @@ if ~isfield(cfg, 'downsample'),  cfg.downsample   = 1;          end
 if ~isfield(cfg, 'markorigin')   cfg.markorigin   = 'no';       end
 if ~isfield(cfg, 'markfiducial') cfg.markfiducial = 'no';       end
 if ~isfield(cfg, 'markcorner')   cfg.markcorner   = 'no';       end
+if ~isfield(cfg, 'inputfile'),   cfg.inputfile = [];            end
 
 if ~isfield(cfg, 'scaling'),
   if any(strmatch(cfg.datatype, {'int8', 'int16', 'int32'}))
@@ -101,6 +103,17 @@ end
 if ~isfield(cfg, 'vmpversion') & strcmp(cfg.filetype, 'vmp');
   fprintf('using BrainVoyager version 2 VMP format\n');
   cfg.vmpversion = 2;
+end
+
+% load optional given inputfile as data
+hasdata = (nargin>1);
+if ~isempty(cfg.inputfile)
+  % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    volume = loadvar(cfg.inputfile, 'data');
+  end
 end
 
 % check if the input data is valid for this function
