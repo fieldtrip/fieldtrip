@@ -253,48 +253,63 @@ elseif ft_senstype(input, 'bti')
     end
   end
 
+elseif ft_senstype(input, 'itab') && isheader
+  origtype = [input.orig.ch.type];
+  type(origtype==0) = {'unknown'};
+  type(origtype==1) = {'ele'};
+  type(origtype==2) = {'mag'}; % might be magnetometer or gradiometer, look at the number of coils
+  type(origtype==4) = {'ele ref'};
+  type(origtype==8) = {'mag ref'};
+  type(origtype==16) = {'aux'};
+  type(origtype==32) = {'param'};
+  type(origtype==64) = {'digit'};
+  type(origtype==128) = {'flag'};
+  % these are the channels that are visible to fieldtrip
+  chansel = 1:input.orig.nchan;
+  type = type(chansel);
+
 elseif ft_senstype(input, 'yokogawa') && isheader
   % This is to recognize Yokogawa channel types from the original header
-    % This is from the original documentation
-    NullChannel                   = 0;
-    MagnetoMeter                  = 1;
-    AxialGradioMeter              = 2;
-    PlannerGradioMeter            = 3;
-    RefferenceChannelMark         = hex2dec('0100');
-    RefferenceMagnetoMeter        = bitor( RefferenceChannelMark, MagnetoMeter      );
-    RefferenceAxialGradioMeter    = bitor( RefferenceChannelMark, AxialGradioMeter  );
-    RefferencePlannerGradioMeter  = bitor( RefferenceChannelMark, PlannerGradioMeter);
-    TriggerChannel                = -1;
-    EegChannel                    = -2;
-    EcgChannel                    = -3;
-    EtcChannel                    = -4;
-    sel = (hdr.orig.channel_info(:, 2) == NullChannel);
-    type(sel) = {'null'};
-    sel = (hdr.orig.channel_info(:, 2) == MagnetoMeter);
-    type(sel) = {'megmag'};
-    sel = (hdr.orig.channel_info(:, 2) == AxialGradioMeter);
-    type(sel) = {'meggrad'};
-    sel = (hdr.orig.channel_info(:, 2) == PlannerGradioMeter);
-    type(sel) = {'megplanar'};
-    sel = (hdr.orig.channel_info(:, 2) == RefferenceMagnetoMeter);
-    type(sel) = {'refmag'};
-    sel = (hdr.orig.channel_info(:, 2) == RefferenceAxialGradioMeter);
-    type(sel) = {'refgrad'};
-    sel = (hdr.orig.channel_info(:, 2) == RefferencePlannerGradioMeter);
-    type(sel) = {'refplanar'};
-    sel = (hdr.orig.channel_info(:, 2) == TriggerChannel);
-    type(sel) = {'trigger'};
-    sel = (hdr.orig.channel_info(:, 2) == EegChannel);
-    type(sel) = {'eeg'};
-    sel = (hdr.orig.channel_info(:, 2) == EcgChannel);
-    type(sel) = {'ecg'};
-    sel = (hdr.orig.channel_info(:, 2) == EtcChannel);
-    type(sel) = {'etc'};
+  % This is from the original documentation
+  NullChannel                   = 0;
+  MagnetoMeter                  = 1;
+  AxialGradioMeter              = 2;
+  PlannerGradioMeter            = 3;
+  RefferenceChannelMark         = hex2dec('0100');
+  RefferenceMagnetoMeter        = bitor( RefferenceChannelMark, MagnetoMeter      );
+  RefferenceAxialGradioMeter    = bitor( RefferenceChannelMark, AxialGradioMeter  );
+  RefferencePlannerGradioMeter  = bitor( RefferenceChannelMark, PlannerGradioMeter);
+  TriggerChannel                = -1;
+  EegChannel                    = -2;
+  EcgChannel                    = -3;
+  EtcChannel                    = -4;
+  sel = (hdr.orig.channel_info(:, 2) == NullChannel);
+  type(sel) = {'null'};
+  sel = (hdr.orig.channel_info(:, 2) == MagnetoMeter);
+  type(sel) = {'megmag'};
+  sel = (hdr.orig.channel_info(:, 2) == AxialGradioMeter);
+  type(sel) = {'meggrad'};
+  sel = (hdr.orig.channel_info(:, 2) == PlannerGradioMeter);
+  type(sel) = {'megplanar'};
+  sel = (hdr.orig.channel_info(:, 2) == RefferenceMagnetoMeter);
+  type(sel) = {'refmag'};
+  sel = (hdr.orig.channel_info(:, 2) == RefferenceAxialGradioMeter);
+  type(sel) = {'refgrad'};
+  sel = (hdr.orig.channel_info(:, 2) == RefferencePlannerGradioMeter);
+  type(sel) = {'refplanar'};
+  sel = (hdr.orig.channel_info(:, 2) == TriggerChannel);
+  type(sel) = {'trigger'};
+  sel = (hdr.orig.channel_info(:, 2) == EegChannel);
+  type(sel) = {'eeg'};
+  sel = (hdr.orig.channel_info(:, 2) == EcgChannel);
+  type(sel) = {'ecg'};
+  sel = (hdr.orig.channel_info(:, 2) == EtcChannel);
+  type(sel) = {'etc'};
 
 elseif ft_senstype(input, 'yokogawa') && isgrad
   % all channels in the gradiometer definition are meg
   type(1:end) = {'meg'};
-  
+
 elseif ft_senstype(input, 'yokogawa') && islabel
   % the yokogawa channel labels are a mess, so autodetection is not possible
   type(1:end) = {'meg'};
