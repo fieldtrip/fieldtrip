@@ -23,7 +23,11 @@ if isempty(trl)
   warning('the data does not contain a trial definition, assuming that the trials are consecutive segments of a continuous recording');
   % construct a trial definition on the fly, assume that the trials are
   % consecutive segments of a continuous recording
-  begsample = cat(1, 0, cumsum(nsmp(1:end-1))) + 1;
+  if ntrial==1,
+    begsample = 1;
+  else
+    begsample = cat(1, 0, cumsum(nsmp(1:end-1))) + 1;
+  end
   endsample = begsample + nsmp - 1;
   offset    = zeros(ntrial,1);
   for i=1:ntrial
