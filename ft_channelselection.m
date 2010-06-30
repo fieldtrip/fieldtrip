@@ -68,6 +68,10 @@ function [channel] = ft_channelselection(channel, datachannel)
 
 fieldtripdefs
 
+if length(datachannel)~=length(unique(datachannel))
+  error('data with non-unique channel names is not supported');
+end
+
 if any(size(channel) == 0)
   % there is nothing to do if it is empty
   return
