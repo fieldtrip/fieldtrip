@@ -1,3 +1,4 @@
+
 function [output] = ft_freqdescriptives(cfg, freq)
 
 % FT_FREQDESCRIPTIVES computes descriptive univariate statistics of
@@ -86,8 +87,8 @@ if ~isfield(cfg, 'channel'),     cfg.channel       = 'all';     end
 if ~isfield(cfg, 'foilim'),      cfg.foilim        = 'all';     end
 if ~isfield(cfg, 'toilim'),      cfg.toilim        = 'all';     end
 if ~isfield(cfg, 'keeptrials'),  cfg.keeptrials    = 'no';      end
-if ~isfield(cfg, 'inputfile'),  cfg.inputfile                   = [];    end
-if ~isfield(cfg, 'outputfile'), cfg.outputfile                  = [];    end
+if ~isfield(cfg, 'inputfile'),   cfg.inputfile     = [];        end
+if ~isfield(cfg, 'outputfile'),  cfg.outputfile    = [];        end
 
 % load optional given inputfile as data
 hasdata = (nargin>1);

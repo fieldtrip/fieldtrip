@@ -55,10 +55,10 @@ function [data] = ft_appenddata(cfg, varargin);
 fieldtripdefs
 
 % set the defaults
-if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];          end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];         end
+if ~isfield(cfg, 'inputfile'),    cfg.inputfile  = [];          end
+if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end
 
-hasdata = nargin>2;
+hasdata = nargin>1;
 if ~isempty(cfg.inputfile) % the input data should be read from file
   if hasdata
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');

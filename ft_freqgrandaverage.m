@@ -49,7 +49,7 @@ fieldtripdefs
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
 % set the defaults
-if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];          end
+if ~isfield(cfg, 'inputfile'),    cfg.inputfile  = [];         end
 if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];         end
 
 hasdata = nargin>1;
