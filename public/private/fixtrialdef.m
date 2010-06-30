@@ -33,7 +33,7 @@ if isempty(trl)
   for i=1:ntrial
     offset(i) = time2offset(data.time{i}, data.fsample);
   end
-  data.cfg.trl = [begsample endsample offset];
+  trl = [begsample endsample offset];
 
 elseif size(trl,1)~=ntrial
   error('the trial definition in the configuration is inconsistent with the actual data');
