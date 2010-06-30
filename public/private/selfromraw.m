@@ -7,8 +7,14 @@ if ~isempty(selrpt)
   fprintf('selecting %d trials\n', numel(selrpt));
   data.trial  = data.trial(selrpt);
   data.time   = data.time(selrpt);
-  if isfield(data, 'offset'), data.offset = data.offset(selrpt); end
+  
+  % this is new style keeping track of trialdef and trialinfo
+  if isfield(data, 'trialdef'),  data.trialdef  = data.trialdef(selrpt,  :); end
+  if isfield(data, 'trialinfo'), data.trialinfo = data.trialinfo(selrpt, :); end
+  if isfield(data, 'offset'),    data.offset    = data.offset(selrpt);       end
 
+  
+  % this is old style keeping track of trl-matrix
   if isfield(data, 'cfg')
     trl = findcfg(data.cfg, 'trl');
   else
@@ -20,7 +26,8 @@ if ~isempty(selrpt)
   else
     data.cfg.trlold = trl;
     data.cfg.trl    = trl(selrpt,:); 
-  end   
+  end
+  
 end
 
 if ~isempty(selchan)
