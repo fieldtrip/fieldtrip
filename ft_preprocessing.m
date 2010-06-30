@@ -277,6 +277,8 @@ if hasdata
   
   progress('init', cfg.feedback, 'preprocessing');
   ntrl = length(data.trial);
+  dataout.trial = cell(1, ntrl);
+  dataout.time  = cell(1, ntrl);
   for i=1:ntrl
     progress(i/ntrl, 'preprocessing trial %d from %d\n', i, ntrl);
     % do the preprocessing on the selected channels

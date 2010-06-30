@@ -83,13 +83,13 @@ issource = strcmp(dtype{1},'source');
 isvolume = strcmp(dtype{1},'volume');
 isfreqmvar = strcmp(dtype{1},'freqmvar');
 
-selchan  = keyval('channel', kvp); selectchan = ~isempty(selchan);
-selfoi   = keyval('foilim',  kvp); selectfoi  = ~isempty(selfoi);
-seltoi   = keyval('toilim',  kvp); selecttoi  = ~isempty(seltoi);
-selroi   = keyval('roi',     kvp); selectroi  = ~isempty(selroi);
-selrpt   = keyval('rpt',     kvp); selectrpt  = ~isempty(selrpt);
-selpos   = keyval('pos',     kvp); selectpos  = ~isempty(selpos);
-param    = keyval('param',   kvp); if isempty(param), param = 'all'; end
+selchan  = keyval('channel', kvp); selectchan = ~isempty(strmatch(kvp(cellfun(@ischar, kvp)), 'channel'));
+selfoi   = keyval('foilim',  kvp); selectfoi  = ~isempty(strmatch(kvp(cellfun(@ischar, kvp)), 'foilim'));
+seltoi   = keyval('toilim',  kvp); selecttoi  = ~isempty(strmatch(kvp(cellfun(@ischar, kvp)), 'toilim'));
+selroi   = keyval('roi',     kvp); selectroi  = ~isempty(strmatch(kvp(cellfun(@ischar, kvp)), 'roi'));
+selrpt   = keyval('rpt',     kvp); selectrpt  = ~isempty(strmatch(kvp(cellfun(@ischar, kvp)), 'rpt'));
+selpos   = keyval('pos',     kvp); selectpos  = ~isempty(strmatch(kvp(cellfun(@ischar, kvp)), 'pos'));
+param    = keyval('param',   kvp); if isempty(param), param = 'all'; end % FIXME think about this
 
 avgoverchan  = keyval('avgoverchan',  kvp); if isempty(avgoverchan), avgoverchan = false; end
 avgoverfreq  = keyval('avgoverfreq',  kvp); if isempty(avgoverfreq), avgoverfreq = false; end
@@ -355,6 +355,8 @@ end
 if selectrpt && ~israw
   if islogical(selrpt),
     selrpt = find(selrpt);
+  elseif isempty(selrpt),
+    warning('you request all repetitions to be thrown away');
   end
   
   if ~issource
@@ -388,6 +390,8 @@ if selectrpt && ~israw
 elseif selectrpt && israw
   if islogical(selrpt),
     selrpt = find(selrpt);
+  elseif isempty(selrpt),
+    warning('you request all repetitions to be thrown away');
   end
 end
 
@@ -399,8 +403,8 @@ if selectchan,
 end
 
 if selectfoi,
-  if length(selfoi)==1, selfoi(2) = selfoi; end;
-  if length(selfoi)==2,
+  if numel(selfoi)==1, selfoi(2) = selfoi; end;
+  if numel(selfoi)==2,
     %treat selfoi as lower limit and upper limit
     selfoi = nearest(data.freq, selfoi(1)):nearest(data.freq, selfoi(2));
   else
