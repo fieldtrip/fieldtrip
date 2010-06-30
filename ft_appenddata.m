@@ -126,7 +126,7 @@ for j=1:Ndata
   order(ix,j) = iy;
 end
 
-%check consistency of sensor positions across inputs
+% check consistency of sensor positions across inputs
 haselec = isfield(varargin{1}, 'elec');
 hasgrad = isfield(varargin{1}, 'grad');
 removesens = 0;
@@ -142,6 +142,17 @@ if haselec || hasgrad,
       end
     end
   end
+end
+
+% check whether the data are obtained from the same datafile
+origfile1      = findcfg(varargin{1}.cfg, 'datafile');
+removetrialdef = 0;
+for j=2:Ndata
+    if ~strcmp(origfile1, findcfg(varargin{j}.cfg, 'datafile')),
+        removetrialdef = 1;
+        warning('input data comes from different datafiles');
+        break;
+    end
 end
 
 catlabel   = all(sum(order~=0,2)==1);
@@ -241,6 +252,12 @@ if removesens
   fprintf('removing sensor information from output\n');
   if haselec, data = rmfield(data, 'elec'); end
   if hasgrad, data = rmfield(data, 'grad'); end
+end
+
+if removetrialdef
+    fprintf('removing trial definition from output\n');
+    data            = rmfield(data, 'trialdef');
+    cfg.trl(:, 1:2) = nan;
 end
 
 % add version information to the configuration
