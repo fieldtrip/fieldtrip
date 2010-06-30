@@ -9,15 +9,15 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %   ft_multiplotER(cfg, data)
 %   ft_multiplotER(cfg, data, data2, ..., dataN)
 %
-% The data can be an ERP/ERF produced by FT_TIMELOCKANALYSIS, a powerspectrum 
-% produced by FT_FREQANALYSIS or a coherencespectrum produced by FT_FREQDESCRIPTIVES. 
+% The data can be an ERP/ERF produced by FT_TIMELOCKANALYSIS, a powerspectrum
+% produced by FT_FREQANALYSIS or a coherencespectrum produced by FT_FREQDESCRIPTIVES.
 % If you specify multiple datasets they must contain the same channels, etc.
 %
 % The configuration can have the following parameters:
 % cfg.xparam        = field to be plotted on x-axis (default depends on data.dimord)
-%                     'time' or 'freq' 
+%                     'time' or 'freq'
 % cfg.zparam        = field to be plotted on y-axis (default depends on data.dimord)
-%                     'avg', 'powspctrm' or 'cohspctrm' 
+%                     'avg', 'powspctrm' or 'cohspctrm'
 % cfg.maskparameter = field in the first dataset to be used for marking significant data
 % cfg.maskstyle     = style used for masking of data, 'box', 'thickness' or 'saturation' (default = 'box')
 % cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
@@ -37,7 +37,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 % cfg.fontsize      = font size of comment and labels (if present) (default = 8)
 % cfg.interactive   = Interactive plot 'yes' or 'no' (default = 'no')
 %                     In a interactive plot you can select areas and produce a new
-%                     interactive plot when a selected area is clicked. Multiple areas 
+%                     interactive plot when a selected area is clicked. Multiple areas
 %                     can be selected by holding down the SHIFT key.
 % cfg.renderer      = 'painters', 'zbuffer',' opengl' or 'none' (default = [])
 % cfg.linestyle     = linestyle/marker type, see options of the matlab PLOT function (default = '-')
@@ -45,7 +45,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 % cfg.graphcolor    = color(s) used for plotting the dataset(s) (default = 'brgkywrgbkywrgbkywrgbkyw')
 %                     alternatively, colors can be specified as Nx3 matrix of RGB values
 %
-% cfg.layout        = specify the channel layout for plotting using one of 
+% cfg.layout        = specify the channel layout for plotting using one of
 %                     the following ways:
 %
 % The layout defines how the channels are arranged and what the size of each
@@ -66,6 +66,9 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 
 % Undocumented local options:
 % cfg.layoutname
+% cfg.inputfile  = one can specifiy preanalysed saved data as input
+%                     The data should be provided in a cell array
+
 %
 % This function depends on FT_TIMELOCKBASELINE which has the following options:
 % cfg.baseline, documented
@@ -103,6 +106,23 @@ fieldtripdefs
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
 clf
+
+% set default for inputfile
+if ~isfield(cfg, 'inputfile'),  cfg.inputfile = [];    end
+
+hasdata = nargin>1;
+if ~isempty(cfg.inputfile) % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    for i=1:numel(cfg.inputfile)
+      varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets from array inputfile
+      data = varargin{i};
+    end
+  end
+else
+  data = varargin{1};
+end
 
 % For backward compatibility with old data structures:
 for i=1:length(varargin)
@@ -198,7 +218,7 @@ for k=1:length(varargin)
     if ~isfield(cfg,'cohrefchannel'),
       error('no reference channel specified');
     end
-
+    
     if strcmp(cfg.cohrefchannel, 'gui')
       % Open a single figure with the channel layout, the user can click on a reference channel
       h = clf;
@@ -213,7 +233,7 @@ for k=1:length(varargin)
       set(gcf, 'WindowButtonUpFcn', {@select_channel, 'callback', {@select_multiplotER, cfg, varargin{:}}});
       return
     end
-
+    
     % Convert 2-dimensional channel matrix to a single dimension:
     sel1                  = strmatch(cfg.cohrefchannel, varargin{k}.labelcmb(:,2));
     sel2                  = strmatch(cfg.cohrefchannel, varargin{k}.labelcmb(:,1));
@@ -223,14 +243,14 @@ for k=1:length(varargin)
     varargin{k}.labelcmb  = varargin{k}.labelcmb([sel1;sel2],:);
     varargin{k}           = rmfield(varargin{k}, 'labelcmb');
   end
-
+  
   % Apply baseline correction:
   if ~strcmp(cfg.baseline, 'no')
     if strcmp(cfg.xparam, 'time')
       varargin{k} = ft_timelockbaseline(cfg, varargin{k});
     elseif strcmp(cfg.xparam, 'freq')
       varargin{k} = ft_freqbaseline(cfg, varargin{k});
-    else 
+    else
       warning('Baseline not applied, please set cfg.xparam');
     end
   end
@@ -264,11 +284,11 @@ if strcmp(cfg.ylim,'maxmin')
   ymax = [];
   for i=1:length(varargin)
     % Select the channels in the data that match with the layout:
-    dat = [];  
+    dat = [];
     dat = getsubfield(varargin{i}, cfg.zparam);
     [seldat, sellay] = match_str(varargin{k}.label, lay.label);
     if isempty(seldat)
-      error('labels in data and labels in layout do not match'); 
+      error('labels in data and labels in layout do not match');
     end
     data = dat(seldat,:);
     ymin = min([ymin min(min(min(data)))]);
@@ -310,13 +330,13 @@ end
 for k=1:length(varargin)
   P          = getsubfield(varargin{k}, cfg.zparam);
   Labels     = getfield(varargin{k}, 'label');
-
+  
   if length(varargin) > 1
     if ischar(GRAPHCOLOR);        colorLabels = [colorLabels inputname(k+1) '=' GRAPHCOLOR(k+1) '\n'];
     elseif isnumeric(GRAPHCOLOR); colorLabels = [colorLabels inputname(k+1) '=' num2str(GRAPHCOLOR(k+1,:)) '\n'];
     end
   end
-
+  
   if ischar(GRAPHCOLOR);        color = GRAPHCOLOR(k+1);
   elseif isnumeric(GRAPHCOLOR); color = GRAPHCOLOR(k+1,:);
   end
@@ -329,7 +349,7 @@ for k=1:length(varargin)
       else
         mask = [];
       end
-      % Plot ER:  
+      % Plot ER:
       plotWnd(varargin{k}.(cfg.xparam),P(l,:),xidc,[xmin xmax],[ymin ymax], ...
         X(m), ...
         Y(m), ...
@@ -338,7 +358,7 @@ for k=1:length(varargin)
         Lbl(m), ...
         cfg, color, mask) ...
         ;
-
+      
       % Keep ER plot coordinates (at centre of ER plot), and channel labels (will be stored in the figure's UserData struct):
       chanX(m) = X(m) + 0.5 * Width(m);
       chanY(m) = Y(m) + 0.5 * Height(m);
@@ -364,17 +384,17 @@ end
 
 % Make the figure interactive:
 if strcmp(cfg.interactive, 'yes')
-
-      % add the channel information to the figure
-    info       = guidata(gcf);
-    info.x     = lay.pos(:,1);
-    info.y     = lay.pos(:,2);
-    info.label = lay.label;
-    guidata(gcf, info);
-
-    set(gcf, 'WindowButtonUpFcn',     {@select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonUpFcn'});
-    set(gcf, 'WindowButtonDownFcn',   {@select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonDownFcn'});
-    set(gcf, 'WindowButtonMotionFcn', {@select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonMotionFcn'});
+  
+  % add the channel information to the figure
+  info       = guidata(gcf);
+  info.x     = lay.pos(:,1);
+  info.y     = lay.pos(:,2);
+  info.label = lay.label;
+  guidata(gcf, info);
+  
+  set(gcf, 'WindowButtonUpFcn',     {@select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonUpFcn'});
+  set(gcf, 'WindowButtonDownFcn',   {@select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonDownFcn'});
+  set(gcf, 'WindowButtonMotionFcn', {@select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonMotionFcn'});
 end
 
 axis tight
@@ -393,7 +413,7 @@ end
 
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -486,7 +506,7 @@ if ~isempty(mask) && strcmp(cfg.maskstyle, 'box')
   beg  = [];
   eind = [];
   for i = 1:length(mask)
-    if ~foundbeg  && mask(i) == 1 
+    if ~foundbeg  && mask(i) == 1
       beg(length(beg)+1) = i;
       foundbeg = 1;
       foundend = 0;

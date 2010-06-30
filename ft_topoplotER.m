@@ -1,8 +1,8 @@
 function [cfg] = ft_topoplotER(cfg, varargin)
 
 % FT_TOPOPLOTER plots the topographic distribution of 2-Dimensional datatypes as
-% event-related fields (ERF), potentials (ERP), the powerspectrum or coherence spectum 
-% that was computed using the FT_TIMELOCKALYSIS, FT_TIMELOCKGRANDAVERAGE, FT_FREQANALYSIS or 
+% event-related fields (ERF), potentials (ERP), the powerspectrum or coherence spectum
+% that was computed using the FT_TIMELOCKALYSIS, FT_TIMELOCKGRANDAVERAGE, FT_FREQANALYSIS or
 % FT_FREQDESCRIPTIVES functions, as a 2-D circular view (looking down at the top of the head).
 %
 % Use as:
@@ -10,7 +10,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %
 % cfg.xparam             = first dimension in data in which a selection is made
 %                         'time' or 'freq' (default depends on data.dimord)
-% cfg.zparam             = field that contains the data to be plotted as color 
+% cfg.zparam             = field that contains the data to be plotted as color
 %                         'avg', 'powspctrm' or 'cohspctrm' (default depends on data.dimord)
 % cfg.xlim               = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.zlim               = 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
@@ -19,13 +19,13 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 % cfg.baselinetype       = 'absolute' or 'relative' (default = 'absolute')
 % cfg.trials             = 'all' or a selection given as a 1xN vector (default = 'all')
 % cfg.colormap           = any sized colormap, see COLORMAP
-% cfg.marker             = 'on', 'labels', 'numbers', 'off'                    
+% cfg.marker             = 'on', 'labels', 'numbers', 'off'
 % cfg.markersymbol       = channel marker symbol (default = 'o')
 % cfg.markercolor        = channel marker color (default = [0 0 0] (black))
 % cfg.markersize         = channel marker size (default = 2)
-% cfg.markerfontsize     = font size of channel labels (default = 8 pt)                
-% cfg.highlight          = 'on', 'labels', 'numbers', 'off'                    
-% cfg.highlightchannel   =  Nx1 cell-array with selection of channels, or vector containing channel indices see FT_CHANNELSELECTION 
+% cfg.markerfontsize     = font size of channel labels (default = 8 pt)
+% cfg.highlight          = 'on', 'labels', 'numbers', 'off'
+% cfg.highlightchannel   =  Nx1 cell-array with selection of channels, or vector containing channel indices see FT_CHANNELSELECTION
 % cfg.highlightsymbol    = highlight marker symbol (default = 'o')
 % cfg.highlightcolor     = highlight marker color (default = [0 0 0] (black))
 % cfg.highlightsize      = highlight marker size (default = 6)
@@ -63,7 +63,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %                          [x y] coordinates
 % cfg.interactive        = Interactive plot 'yes' or 'no' (default = 'no')
 %                          In a interactive plot you can select areas and produce a new
-%                          interactive plot when a selected area is clicked. Multiple areas 
+%                          interactive plot when a selected area is clicked. Multiple areas
 %                          can be selected by holding down the SHIFT key.
 % cfg.layout             = specification of the layout, see below
 %
@@ -88,11 +88,13 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 % data (i.e. when ft_topoplotTFR calls ft_topoplotER):
 % cfg.yparam          field to be plotted on y-axis
 % cfg.ylim            'maxmin' or [ymin ymax]         (default = 'maxmin')
-%
+% cfg.inputfile  = one can specifiy preanalysed saved data as input
+%                  The data should be provided in a cell array
+
 % It is possible to use multiple highlight-selections (e.g.: multiple statistical clusters of channels)
 % To do this, all the content of the highlight-options (including cfg.highlight) should be placed in a cell-array
 % (even if the normal content was already in a cell-array). Specific marker settings (e.g. color, size) are defaulted when
-% not present. 
+% not present.
 % Example (3 selections):
 % cfg.highlight          = {'labels', 'labels', 'numbers'}
 % cfg.highlightchannel   = {{'MZF03','MZC01','MRT54'}, [1:5], 'C*'}
@@ -102,6 +104,8 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %
 % Other options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)
+% cfg.inputfile  = one can specifiy preanalysed saved data as input
+%                   The data should be provided in a cell array
 
 % This function depends on FT_TIMELOCKBASELINE which has the following options:
 % cfg.baseline, documented
@@ -144,7 +148,22 @@ if length(varargin)>1
   error('Multiple data sets are not supported for topoplotER/topoplotTFR.');
 end
 
-data = varargin{1};
+% set default for inputfile
+if ~isfield(cfg, 'inputfile'),  cfg.inputfile = [];    end
+
+hasdata = nargin>1;
+if ~isempty(cfg.inputfile) % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    for i=1:numel(cfg.inputfile)
+      varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets from array inputfile
+      data = varargin{i};
+    end
+  end
+else
+  data = varargin{1};
+end
 
 % For backward compatibility with old data structures:
 data = checkdata(data);
@@ -172,7 +191,7 @@ cfg = checkconfig(cfg, 'renamed',     {'emsize',        'markersize'});
 cfg = checkconfig(cfg, 'renamed',     {'efsize',        'markerfontsize'});
 cfg = checkconfig(cfg, 'renamed',     {'headlimits',    'interplimits'});
 
-% check for forbidden options 
+% check for forbidden options
 cfg = checkconfig(cfg, 'forbidden',  {'hllinewidth'});
 cfg = checkconfig(cfg, 'forbidden',  {'headcolor'});
 cfg = checkconfig(cfg, 'forbidden',  {'hcolor'});
@@ -206,7 +225,7 @@ if ~isfield(cfg, 'markersymbol'),          cfg.markersymbol = 'o';        end
 if ~isfield(cfg, 'markercolor'),           cfg.markercolor = [0 0 0];     end
 if ~isfield(cfg, 'markersize'),            cfg.markersize = 2;            end
 if ~isfield(cfg, 'markerfontsize'),        cfg.markerfontsize = 8;        end
-if ~isfield(cfg, 'highlight'),             cfg.highlight = 'off';         end 
+if ~isfield(cfg, 'highlight'),             cfg.highlight = 'off';         end
 if ~isfield(cfg, 'highlightchannel'),      cfg.highlightchannel = 'all';  end
 if ~isfield(cfg, 'highlightsymbol'),       cfg.highlightsymbol = '*';     end
 if ~isfield(cfg, 'highlightcolor'),        cfg.highlightcolor = [0 0 0];  end
@@ -237,8 +256,8 @@ end
 
 % Converting all higlight options to cell-arrays if they're not cell-arrays, to make defaulting and checking for backwards compatability and error
 % checking much, much easier
-if ~iscell(cfg.highlight),            cfg.highlight         = {cfg.highlight};            end         
-if ~iscell(cfg.highlightchannel),     cfg.highlightchannel  = {cfg.highlightchannel};     end 
+if ~iscell(cfg.highlight),            cfg.highlight         = {cfg.highlight};            end
+if ~iscell(cfg.highlightchannel),     cfg.highlightchannel  = {cfg.highlightchannel};     end
 if ischar(cfg.highlightchannel{1}),   cfg.highlightchannel  = {cfg.highlightchannel};     end % {'all'} is valid input to channelselection, {1:5} isn't
 if ~iscell(cfg.highlightsymbol),      cfg.highlightsymbol   = {cfg.highlightsymbol};      end
 if ~iscell(cfg.highlightcolor),       cfg.highlightcolor    = {cfg.highlightcolor};       end
@@ -339,12 +358,12 @@ elseif strcmp(data.dimord, 'subj_chan_freq_time') || strcmp(data.dimord, 'rpt_ch
   if ~isfield(cfg, 'zparam'),      cfg.zparam='powspctrm';    end
 elseif strcmp(data.dimord, 'chan_comp')
   % Add a pseudo-axis with the component numbers:
-  data.comp = 1:size(data.topo,2);  
-    % Specify the components 
-    if ~isempty(cfg.component)
-       data.comp = cfg.component;
-       data.topo = data.topo(:,cfg.component);     
-    end       
+  data.comp = 1:size(data.topo,2);
+  % Specify the components
+  if ~isempty(cfg.component)
+    data.comp = cfg.component;
+    data.topo = data.topo(:,cfg.component);
+  end
   % Rename the field with topographic label information:
   data.label = data.topolabel;
   if ~isfield(cfg, 'xparam'),      cfg.xparam='comp';         end
@@ -377,16 +396,16 @@ end
 
 % Check for unconverted coherence spectrum data or any other bivariate metric:
 dimtok  = tokenize(data.dimord, '_');
-selchan = strmatch('chan', dimtok); 
+selchan = strmatch('chan', dimtok);
 isfull  = length(selchan)>1;
 if (strcmp(cfg.zparam,'cohspctrm') && isfield(data, 'labelcmb')) || ...
-   (isfull && isfield(data, cfg.zparam)),
-
+    (isfull && isfield(data, cfg.zparam)),
+  
   % A reference channel is required:
   if ~isfield(cfg,'cohrefchannel'),
     error('no reference channel specified');
   end
-
+  
   if strcmp(cfg.cohrefchannel, 'gui')
     % Open a single figure with the channel layout, the user can click on a reference channel
     h = clf;
@@ -401,10 +420,10 @@ if (strcmp(cfg.zparam,'cohspctrm') && isfield(data, 'labelcmb')) || ...
     %set(gcf, 'WindowButtonUpFcn', {@select_channel, 'callback', {@select_topoplotER, cfg, data}});
     set(gcf, 'WindowButtonUpFcn',     {@select_channel, 'multiple', true, 'callback', {@select_topoplotER, cfg, data}, 'event', 'WindowButtonUpFcn'});
     set(gcf, 'WindowButtonDownFcn',   {@select_channel, 'multiple', true, 'callback', {@select_topoplotER, cfg, data}, 'event', 'WindowButtonDownFcn'});
-    set(gcf, 'WindowButtonMotionFcn', {@select_channel, 'multiple', true, 'callback', {@select_topoplotER, cfg, data}, 'event', 'WindowButtonMotionFcn'});    
+    set(gcf, 'WindowButtonMotionFcn', {@select_channel, 'multiple', true, 'callback', {@select_topoplotER, cfg, data}, 'event', 'WindowButtonMotionFcn'});
     return
   end
-
+  
   if ~isfull,
     % only works explicitly with coherence FIXME
     % Convert 2-dimensional channel matrix to a single dimension:
@@ -417,18 +436,18 @@ if (strcmp(cfg.zparam,'cohspctrm') && isfield(data, 'labelcmb')) || ...
     data           = rmfield(data, 'labelcmb');
   else
     % general solution
-       
-      sel               = match_str(data.label, cfg.cohrefchannel); 
-      siz               = [size(data.(cfg.zparam)) 1];    
-      if strcmp(cfg.matrixside, 'feedback')
-        data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]); 
-      elseif strcmp(cfg.matrixside, 'feedforward')
-        data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]); 
-      elseif strcmp(cfg.matrixside, 'ff-fd')
-        data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]) - reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
-      elseif strcmp(cfg.matrixside, 'fd-ff')
-        data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]) - reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);   
-      end
+    
+    sel               = match_str(data.label, cfg.cohrefchannel);
+    siz               = [size(data.(cfg.zparam)) 1];
+    if strcmp(cfg.matrixside, 'feedback')
+      data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
+    elseif strcmp(cfg.matrixside, 'feedforward')
+      data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
+    elseif strcmp(cfg.matrixside, 'ff-fd')
+      data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]) - reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
+    elseif strcmp(cfg.matrixside, 'fd-ff')
+      data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]) - reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
+    end
   end
 end
 
@@ -463,7 +482,7 @@ if ~isempty(cfg.yparam)
     ymin = cfg.ylim(1);
     ymax = cfg.ylim(2);
   end
-
+  
   % Replace value with the index of the nearest bin:
   ymin = nearest(getsubfield(data, cfg.yparam), ymin);
   ymax = nearest(getsubfield(data, cfg.yparam), ymax);
@@ -474,7 +493,7 @@ dat = getsubfield(data, cfg.zparam);
 if ~isempty(cfg.yparam),
   dat = dat(:, ymin:ymax, xmin:xmax);
   dat = nanmean(nanmean(dat, 2), 3);
-% if a component is specified, do nothing
+  % if a component is specified, do nothing
 elseif ~isempty(cfg.component),
 else
   dat = dat(:, xmin:xmax);
@@ -485,7 +504,7 @@ dat = dat(:);
 % Select the channels in the data that match with the layout:
 [seldat, sellay] = match_str(data.label, cfg.layout.label);
 if isempty(seldat)
-  error('labels in data and labels in layout do not match'); 
+  error('labels in data and labels in layout do not match');
 end
 
 datavector = dat(seldat);
@@ -551,14 +570,14 @@ elseif ~ischar(cfg.comment)
   error('cfg.comment must be string');
 end
 if isfield(cfg,'cohrefchannel')
-    if iscell(cfg.cohrefchannel)
-      cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.cohrefchannel{:});
-    else
-      cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.cohrefchannel);
-    end
+  if iscell(cfg.cohrefchannel)
+    cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.cohrefchannel{:});
+  else
+    cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.cohrefchannel);
+  end
 end
 
-% Specify the x and y coordinates of the comment 
+% Specify the x and y coordinates of the comment
 if strcmp(cfg.commentpos,'layout')
   ind_comment = strmatch('COMNT', cfg.layout.label);
   x_comment = cfg.layout.pos(ind_comment,1);
@@ -605,7 +624,7 @@ end
 % Draw topoplot
 hold on
 % Set plot_topo specific options
-if strcmp(cfg.interplimits,'head'),  interplimits = 'mask'; 
+if strcmp(cfg.interplimits,'head'),  interplimits = 'mask';
 else interplimits = cfg.interplimits; end
 if strcmp(cfg.style,'both');        style = 'surfiso';     end
 if strcmp(cfg.style,'straight');    style = 'surf';         end
@@ -615,19 +634,19 @@ if strcmp(cfg.style,'fill');        style = 'isofill';     end
 % Draw plot
 if ~strcmp(cfg.style,'blank')
   plot_topo(chanX,chanY,datavector,'interpmethod',cfg.interpolation,...
-                                   'interplim',interplimits,...
-                                   'gridscale',cfg.gridscale,...
-                                   'outline',lay.outline,...
-                                   'shading',cfg.shading,...
-                                   'isolines',cfg.contournum,...
-                                   'mask',cfg.layout.mask,...
-                                   'style',style,...
-                                   'datmask', maskdatavector);
+    'interplim',interplimits,...
+    'gridscale',cfg.gridscale,...
+    'outline',lay.outline,...
+    'shading',cfg.shading,...
+    'isolines',cfg.contournum,...
+    'mask',cfg.layout.mask,...
+    'style',style,...
+    'datmask', maskdatavector);
 elseif ~strcmp(cfg.style,'blank')
   plot_lay(lay,'box','no','label','no','point','no')
 end
 
-% Plotting markers for channels and/or highlighting a selection of channels 
+% Plotting markers for channels and/or highlighting a selection of channels
 highlightchansel = []; % used for remembering selection of channels
 templay.outline = lay.outline;
 templay.mask    = lay.mask;
@@ -683,7 +702,7 @@ if ~strcmp(cfg.marker,'off')
     'labeloffset',cfg.labeloffset)
 end
 
-% Set colour axis 
+% Set colour axis
 caxis([zmin zmax]);
 
 % Write comment
@@ -709,18 +728,18 @@ if ~isempty(cfg.renderer)
   set(gcf, 'renderer', cfg.renderer)
 end
 
-% The remainder of the code is meant to make the figure interactive 
+% The remainder of the code is meant to make the figure interactive
 hold on;
 
 % Make the figure interactive
 if strcmp(cfg.interactive, 'yes')
-    % add the channel information to the figure
-    info       = guidata(gcf);
-    info.x     = lay.pos(:,1);
-    info.y     = lay.pos(:,2);
-    info.label = lay.label;
-    guidata(gcf, info);
-
+  % add the channel information to the figure
+  info       = guidata(gcf);
+  info.x     = lay.pos(:,1);
+  info.y     = lay.pos(:,2);
+  info.label = lay.label;
+  guidata(gcf, info);
+  
   if any(strcmp(data.dimord, {'chan_time', 'chan_freq', 'subj_chan_time', 'rpt_chan_time', 'chan_chan_freq'}))
     set(gcf, 'WindowButtonUpFcn',     {@select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonUpFcn'});
     set(gcf, 'WindowButtonDownFcn',   {@select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonDownFcn'});
@@ -739,7 +758,7 @@ hold off;
 axis equal;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

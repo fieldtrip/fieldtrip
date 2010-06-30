@@ -73,6 +73,8 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 
 % Undocumented local options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)
+% cfg.inputfile  = one can specifiy preanalysed saved data as input
+%                  The data should be provided in a cell array
 
 % Copyright (C) 2010, Donders Centre for Cognitive Neuroimaging, Arjen Stolk
 %
@@ -96,6 +98,18 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 
 % config default
 if ~isfield(cfg, 'component'),             cfg.component = [];            end
+if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];          end
+
+hasdata = nargin>1;
+if ~isempty(cfg.inputfile) % the input data should be read from file
+  if hasdata
+    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+  else
+    for i=1:numel(cfg.inputfile)
+      varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets from array inputfile
+    end
+  end
+end
 
 % check whether cfg.component is speficied
 if isempty(cfg.component)
