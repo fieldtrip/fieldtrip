@@ -41,7 +41,10 @@ elseif nsmp~=(trl(:,2)-trl(:,1)+1)
   error('the trial definition in the configuration is inconsistent with the actual data');
 end
 
-data.trialdef = trl(:, 1:2);
-if size(trl, 2) > 3
+if ~isfield(data, 'trialdef'),
+    data.trialdef = trl(:, 1:2);
+end
+
+if (~isfield(data, 'trialinfo') || isempty(data.trialinfo)) && size(trl, 2) > 3,
     data.trialinfo = trl(:, 4:end); 
 end
