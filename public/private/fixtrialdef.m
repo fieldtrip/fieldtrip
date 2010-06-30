@@ -40,3 +40,8 @@ elseif size(trl,1)~=ntrial
 elseif nsmp~=(trl(:,2)-trl(:,1)+1)
   error('the trial definition in the configuration is inconsistent with the actual data');
 end
+
+data.trialdef = trl(:, 1:2);
+if size(trl, 2) > 3
+    data.trialinfo = trl(:, 4:end); 
+end

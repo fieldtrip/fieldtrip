@@ -272,7 +272,9 @@ if hasdata
   if isfield(data, 'fsample'),  dataout.fsample = data.fsample;     end
   if isfield(data, 'grad'),     dataout.grad    = data.grad;        end
   if isfield(data, 'elec'),     dataout.elec    = data.elec;        end
-
+  if isfield(data, 'trialdef'),  dataout.trialdef  = data.trialdef;  end
+  if isfield(data, 'trialinfo'), dataout.trialinfo = data.trialinfo; end
+  
   progress('init', cfg.feedback, 'preprocessing');
   ntrl = length(data.trial);
   for i=1:ntrl
@@ -491,6 +493,10 @@ else
     dataout.time               = time;                 % vector with the timeaxis for each individual trial
     dataout.trial              = cutdat;
     dataout.fsample            = hdr.Fs;
+    dataout.trialdef           = cfg.trl(:,1:2);
+    if size(cfg.trl,2) > 3
+        dataout.trialinfo      = cfg.trl(:,4:end);
+    end
     if isfield(hdr, 'grad')
       dataout.grad             = hdr.grad;             % gradiometer system in head coordinates
     end

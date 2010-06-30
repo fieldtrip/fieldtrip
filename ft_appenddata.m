@@ -76,7 +76,7 @@ end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
-  varargin{i} = checkdata(varargin{i}, 'datatype', 'raw', 'feedback', 'no');
+  varargin{i} = checkdata(varargin{i}, 'datatype', 'raw', 'feedback', 'no', 'hastrialdef', 'yes');
 end
 
 % determine the dimensions of the data
@@ -84,13 +84,15 @@ Nchan  = zeros(1,Ndata);
 Ntrial = zeros(1,Ndata);
 label  = {};
 for i=1:Ndata
-  Nchan(i) = length(varargin{i}.label);
+  Nchan(i)  = length(varargin{i}.label);
   Ntrial(i) = length(varargin{i}.trial);
   fprintf('input dataset %d, %d channels, %d trials\n', i, Nchan(i), Ntrial(i));
   label = cat(1, label(:), varargin{i}.label(:));
 end
 
-% try to locate the trial definition (trl) in the nested configuration
+% try to locate the trial definition (trl) in the nested configuration and
+% check whether the input data contains trialinfo
+hastrialinfo = 0;
 for i=1:Ndata
   if isfield(varargin{i}, 'cfg')
     trl{i} = findcfg(varargin{i}.cfg, 'trl');
@@ -101,7 +103,9 @@ for i=1:Ndata
     % a trial definition is expected in each continuous data set
     warning(sprintf('could not locate the trial definition ''trl'' in data structure %d', i));
   end
+  hastrialinfo = isfield(varargin{i}, 'trialinfo') + hastrialinfo;
 end
+hastrialinfo = hastrialinfo==Ndata;
 
 % check the consistency of the labels across the input-structures
 [alllabel, indx1, indx2] = unique(label, 'first');
@@ -115,7 +119,7 @@ order    = zeros(length(alllabel),Ndata);
 %  end
 %end
 
-%replace the nested for-loops with something faster
+% replace the nested for-loops with something faster
 for j=1:Ndata
   tmplabel = varargin{j}.label;
   [ix,iy]  = match_str(alllabel, tmplabel);
@@ -161,18 +165,27 @@ if shuflabel,
   end
 end
 
+% FIXME create the output from scratch and don't use the first varargin
+% (both for cattrial and catlabel
 if cattrial && catlabel
   error('cannot determine how the data should be concatenated');
-  %FIXME think whether this can ever happen
+  % FIXME think whether this can ever happen
+  
 elseif cattrial
   % concatenate the trials
   fprintf('concatenating the trials over all datasets\n');
   data = varargin{1};
   data.trial  = {};
   data.time   = {};
+  data.trialdef = [];
+  if hastrialinfo, data.trialinfo = []; end;
   for i=1:Ndata
-    data.trial  = cat(2, data.trial,  varargin{i}.trial(:)');
-    data.time   = cat(2, data.time,   varargin{i}.time(:)');
+    data.trial    = cat(2, data.trial,  varargin{i}.trial(:)');
+    data.time     = cat(2, data.time,   varargin{i}.time(:)');
+    data.trialdef = cat(1, data.trialdef, varargin{i}.trialdef);
+    if hastrialinfo, data.trialinfo = cat(1, data.trialinfo, varargin{i}.trialinfo); end;
+    % FIXME is not entirely robust if the different inputs have different
+    % number of columns in trialinfo
   end
   % also concatenate the trial specification
   cfg.trl = cat(1, trl{:});
