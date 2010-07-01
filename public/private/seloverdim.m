@@ -107,7 +107,7 @@ end
 
 switch seldim
   case 'rpt'
-    if tapflag && isfield(data, 'cumtapcnt'),,
+    if tapflag && isfield(data, 'cumtapcnt'),
       sumtapcnt = cumsum([0;data.cumtapcnt(:)]);
       tapers    = zeros(1, sumtapcnt(end));
       for i=1:length(data.cumtapcnt)
@@ -119,7 +119,12 @@ switch seldim
     end
     if isfield(data, 'cumtapcnt'), data.cumtapcnt = data.cumtapcnt(tmpsel); end
     if isfield(data, 'cumsumcnt'), data.cumsumcnt = data.cumsumcnt(tmpsel); end
-   
+    
+    % also try to adjust the trialinfo in the data
+    if isfield(data, 'trialinfo')
+      data.trialinfo = data.trialinfo(tmpsel, :);
+    end
+    
     % also try to adjust the trl description in the configuration
     if isfield(data, 'cfg'), %try to locate the trl in the nested configuration
       trl = findcfg(data.cfg, 'trl');
