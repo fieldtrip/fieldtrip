@@ -1,4 +1,4 @@
-function [data] = ft_resampledata(cfg, data);
+function [data] = ft_resampledata(cfg, data)
 
 % FT_RESAMPLEDATA performs a resampling or downsampling of the data
 %
@@ -70,15 +70,15 @@ fieldtripdefs
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
 % set the defaults
-if ~isfield(cfg, 'resamplefs'), cfg.resamplefs = [];   end
-if ~isfield(cfg, 'time'),       cfg.time = {};         end
-if ~isfield(cfg, 'detrend'),    cfg.detrend = [];      end  % no default to enforce people to consider backward compatibility problem, see below
-if ~isfield(cfg, 'blc'),        cfg.blc = 'no';        end
-if ~isfield(cfg, 'feedback'),   cfg.feedback = 'text'; end
-if ~isfield(cfg, 'trials'),     cfg.trials = 'all';    end
-if ~isfield(cfg, 'method'),     cfg.method = 'pchip';  end  % interpolation method
-if ~isfield(cfg, 'inputfile'),  cfg.inputfile = [];    end
-if ~isfield(cfg, 'outputfile'), cfg.outputfile = [];   end
+if ~isfield(cfg, 'resamplefs'), cfg.resamplefs = [];      end
+if ~isfield(cfg, 'time'),       cfg.time       = {};      end
+if ~isfield(cfg, 'detrend'),    cfg.detrend    = [];      end  % no default to enforce people to consider backward compatibility problem, see below
+if ~isfield(cfg, 'blc'),        cfg.blc        = 'no';    end
+if ~isfield(cfg, 'feedback'),   cfg.feedback   = 'text';  end
+if ~isfield(cfg, 'trials'),     cfg.trials     = 'all';   end
+if ~isfield(cfg, 'method'),     cfg.method     = 'pchip'; end  % interpolation method
+if ~isfield(cfg, 'inputfile'),  cfg.inputfile  = [];      end
+if ~isfield(cfg, 'outputfile'), cfg.outputfile = [];      end
 
 % load optional given inputfile as data
 hasdata = (nargin>1);
@@ -92,7 +92,8 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
+% ensure trialdef and trialinfo (if present) to be in the data
+data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hastrialdef', 'yes');
 
 if isempty(cfg.detrend)
   error('The previous default to apply detrending has been changed. Recommended is to apply a baseline correction instead of detrending. See the help of this function for more details.');
@@ -103,22 +104,28 @@ if isempty(cfg.resamplefs) && isempty(cfg.time),
   cfg.resamplefs = 256;
 end
 
-% this is needed if only a subset of trials is requested,
-% and for an attempt to pass in the output a trl matrix
-% which contains the indexing in the updated sampling rate
-if isfield(data, 'cfg') % try to locate the trl in the nested configuration
-  trl = findcfg(data.cfg, 'trl');
-else
-  trl = [];
-end
-
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
   data       = selectdata(data, 'rpt', cfg.trials);
-  cfg.trlold = findcfg(data.cfg, 'trlold');
-  cfg.trl    = findcfg(data.cfg, 'trl');
-  trl        = cfg.trl;
+end
+
+% trl is not specified in the function call, but the data is given ->
+% recreate trl-matrix from trialdef and time axes, or
+% try to locate the trial definition (trl) in the nested configuration
+% if isfield(data, 'trialdef')
+%   trl = data.trialdef;
+%   trl(:, 3) = 0;
+%   for k = 1:numel(data.trial)
+%     trl(k, 3) = time2offset(data.time{k}, data.fsample);
+%   end
+% else
+%   trl = [];
+% end
+
+% this should be removed
+if isfield(data, 'trialdef'),
+  data = rmfield(data, 'trialdef');
 end
 
 usefsample = ~isempty(cfg.resamplefs);
@@ -196,17 +203,6 @@ elseif usetime
   data.fsample = 1/(t2-t1);
   
 end % if usefsample or usetime
-
-% update the trl matrix, which is needed for fetch_data and fetch_header (e.g. in ft_databrowser)
-if ~isempty(trl)
-  trlorig  = trl;
-  offsindx = round((trl(:,1)-trl(:,3)).*(data.fsample./cfg.origfs));
-  offs     = round(trl(:,3).*(data.fsample./cfg.origfs));
-  nsmp     = cellfun('size',data.trial,2)';
-  trl      = [offsindx+offs+1 offsindx+offs+nsmp offs];
-  cfg.trl = trl;
-  cfg.trlorig = trlorig;
-end
 
 fprintf('original sampling rate = %d Hz\nnew sampling rate = %d Hz\n', cfg.origfs, data.fsample);
 
