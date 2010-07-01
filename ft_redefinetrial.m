@@ -123,6 +123,12 @@ if ~strcmp(cfg.trials, 'all')
   if length(cfg.endsample)>1 && length(cfg.endsample)~=length(cfg.trials)
     cfg.endsample=cfg.endsample(cfg.trials);
   end
+  
+  % also update the trl-matrix
+  if ~isempty(trl)
+    trl = trl(cfg.trials, :);
+  end
+  
 end
 Ntrial = numel(data.trial);
 
