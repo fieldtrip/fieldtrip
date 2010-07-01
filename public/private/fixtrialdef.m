@@ -38,13 +38,17 @@ if isempty(trl)
 elseif size(trl,1)~=ntrial
   error('the trial definition in the configuration is inconsistent with the actual data');
 elseif nsmp~=(trl(:,2)-trl(:,1)+1)
-  error('the trial definition in the configuration is inconsistent with the actual data');
+  warning('the trial definition in the configuration is inconsistent with the actual data');
+  trl = [];
 end
 
-if ~isfield(data, 'trialdef'),
-    data.trialdef = trl(:, 1:2);
+if ~isfield(data, 'trialdef') && ~isempty(trl)
+  data.trialdef = trl(:, 1:2);
+elseif ~isfield(data, 'trialdef') && isempty(trl)
+  warning('failed to create trialdef field');
 end
 
-if (~isfield(data, 'trialinfo') || isempty(data.trialinfo)) && size(trl, 2) > 3,
+if (~isfield(data, 'trialinfo') || isempty(data.trialinfo)) && ~isempty(trl) && size(trl, 2) > 3,
     data.trialinfo = trl(:, 4:end); 
 end
+
