@@ -29,28 +29,19 @@ function [hdr] = fetch_header(data)
 % $Id$
 
 % check whether input is data
-data = checkdata(data, 'datatype', 'raw');
+data = checkdata(data, 'datatype', 'raw', 'hastrialdef', 'yes');
 
-% get trial definition according to original data file
-trl    = findcfg(data.cfg, 'trl');
 trlnum = length(data.trial);
 trllen = zeros(trlnum,1);
 for trllop=1:trlnum
   trllen(trllop) = size(data.trial{trllop},2);
 end
 
-% check whether data.trial is consistent with trl
-if size(trl,1)~=length(data.trial)
-  error('trial definition is not internally consistent')
-elseif any(trllen~=(trl(:,2)-trl(:,1)+1)) && ~isempty(findcfg(data.cfg, 'resamplefs')) && ~isempty(findcfg(data.cfg,'resampletrl')),
-  warning('the data have been resampled along the way, the trl-definition is in the original sampling rate, attempt to adjust for this may introduce some timing inaccuracies');
-  trlold = trl;
-  trl    = findcfg(data.cfg, 'resampletrl');   
-end
-
-%this has to be done again
-if any(trllen~=(trl(:,2)-trl(:,1)+1))
-  error('trial definition is not internally consistent')
+% try to get trial definition according to original data file
+if isfield(data, 'trialdef')
+  trl = data.trialdef;
+else
+  trl = [1 sum(trllen)];
 end
 
 % fill in hdr.nChans 
@@ -74,4 +65,3 @@ if isfield(data, 'grad')
 elseif isfield(data, 'elec')
   hdr.elec=data.elec;
 end
-
