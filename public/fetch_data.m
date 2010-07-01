@@ -29,7 +29,7 @@ function [dat] = fetch_data(data, varargin)
 % $Id$
     
 % check whether input is data
-data = checkdata(data, 'datatype', 'raw');
+data = checkdata(data, 'datatype', 'raw', 'hastrialdef', 'yes');
     
 % get the options
 hdr           = keyval('header',        varargin);
@@ -51,7 +51,7 @@ if isempty(chanindx)
 end
 
 % get trial definition according to original data file
-trl    = findcfg(data.cfg, 'trl');
+trl    = data.trialdef;
 trlnum = length(data.trial);
 
 if trlnum>1,

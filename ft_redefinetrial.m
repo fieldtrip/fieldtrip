@@ -92,11 +92,18 @@ data = checkdata(data, 'datatype', 'raw', 'feedback', cfg.feedback);
 fb   = strcmp(cfg.feedback, 'yes');
 
 % trl is not specified in the function call, but the data is given ->
+% recreate trl-matrix from trialdef and time axes, or
 % try to locate the trial definition (trl) in the nested configuration
-if isfield(data,'cfg')
+if isfield(data, 'trialdef')
+  trl = data.trialdef;
+  trl(:, 3) = 0;
+  for k = 1:numel(data.trial)
+    trl(k, 3) = time2offset(data.time{k}, data.fsample);
+  end
+elseif isfield(data,'cfg')
   trl = findcfg(data.cfg, 'trl');
   if length(data.trial)~=size(trl,1) || length(data.time)~=size(trl,1)
-    error('the trial definition is inconsistent with the data');
+    error('the trial definition in the configuration is inconsistent with the data');
   end
 else
   trl = [];
@@ -107,7 +114,6 @@ trlold = trl;
 if ~strcmp(cfg.trials, 'all')
   if fb, fprintf('selecting %d trials\n', length(cfg.trials)); end
   data = selectdata(data, 'rpt', cfg.trials);
-  trl  = findcfg(data.cfg, 'trl');
   if length(cfg.offset)>1 && length(cfg.offset)~=length(cfg.trials)
     cfg.offset=cfg.offset(cfg.trials);
   end
@@ -118,7 +124,7 @@ if ~strcmp(cfg.trials, 'all')
     cfg.endsample=cfg.endsample(cfg.trials);
   end
 end
-Ntrial = size(trl,1);
+Ntrial = numel(data.trial);
 
 % check the input arguments, only one method for processing is allowed
 numoptions = ~isempty(cfg.toilim) + ~isempty(cfg.offset) + (~isempty(cfg.begsample) || ~isempty(cfg.endsample)) + ~isempty(cfg.trl);
@@ -136,6 +142,7 @@ if ~isempty(cfg.toilim)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   begsample = zeros(Ntrial,1);
   endsample = zeros(Ntrial,1);
+  offset    = zeros(Ntrial,1);
   skiptrial = zeros(Ntrial,1);
   for i=1:Ntrial
     if cfg.toilim(1)>data.time{i}(end) || cfg.toilim(2)<data.time{i}(1)
@@ -149,6 +156,7 @@ if ~isempty(cfg.toilim)
       data.time{i}  = data.time{i} (   begsample(i):endsample(i));
     end
   end
+
   % also correct the trial definition
   if ~isempty(trl)
     trl(:,1) = trl(:,1) + begsample - 1;
@@ -158,8 +166,17 @@ if ~isempty(cfg.toilim)
   
   % remove trials that are completely empty
   trl = trl(~skiptrial,:);
-  data.time  = data.time(~skiptrial);
-  data.trial = data.trial(~skiptrial);
+  
+  % also correct the trial definition
+  if isfield(data, 'trialdef'),
+      data.trialdef(:, 1) = data.trialdef(:, 1) + begsample - 1;
+      data.trialdef(:, 2) = data.trialdef(:, 1) + endsample - begsample;
+  end
+  
+  data.time     = data.time(~skiptrial);
+  data.trial    = data.trial(~skiptrial);
+  if isfield(data, 'trialdef'),  data.trialdef  = data.trialdef(~skiptrial, :); end
+  if isfield(data, 'trialinfo'), data.trialinfo = data.trialinfo(~skiptrial);   end
   if fb, fprintf('removing %d trials in which no data was selected\n', sum(skiptrial)); end
   
 elseif ~isempty(cfg.offset)
@@ -202,6 +219,12 @@ elseif ~isempty(cfg.begsample) || ~isempty(cfg.endsample)
     trl(:,2) = trl(:,1) + endsample - begsample;
     trl(:,3) = trl(:,3) + begsample - 1;
   end
+
+  % also correct the trial definition
+  if isfield(data, 'trialdef')
+      data.trialdef(:, 1) = data.trialdef(:, 1) + begsample - 1;
+      data.trialdef(:, 2) = data.trialdef(:, 1) + endsample - begsample;
+  end
   
 elseif ~isempty(cfg.trl)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -232,6 +255,13 @@ elseif ~isempty(cfg.trl)
   if isfield(dataold, 'elec')
     data.elec      = dataold.elec;
   end
+  if isfield(dataold, 'trialinfo')
+    data.trialinfo = dataold.trialinfo;
+  end
+  if isfield(dataold, 'trialdef')
+    % adjust the trial definition
+    data.trialdef  = trl(:, 1:2);
+  end
 end % processing the realignment or data selection
 
 if ~isempty(cfg.minlength)
@@ -248,10 +278,12 @@ if ~isempty(cfg.minlength)
   end
   % remove trials that are too short
   skiptrial = (trllength<minlength);
-  trl = trl(~skiptrial,:);
+  if ~isempty(trl), trl = trl(~skiptrial,:); end
   data.time  = data.time(~skiptrial);
   data.trial = data.trial(~skiptrial);
-  if fb, fprintf('removing %d trials that are too short\n', sum(skiptrial)); end
+  if isfield(data, 'trialdef'),  data.trialdef  = data.trialdef(~skiptrial,  :); end
+  if isfield(data, 'trialinfo'), data.trialinfo = data.trialinfo(~skiptrial, :); end
+  if fb, fprintf('removing %d trials that are too short\n', sum(skiptrial));     end
 end
 
 % remember the previous and the up-to-date trial definitions in the configuration
@@ -270,8 +302,12 @@ end
 cfg.version.id = '$Id$';
 
 % remember the configuration details of the input data
-try, cfg.previous = data.cfg; end
-try, cfg.previous = dataold.cfg; end % in case of ~isempty(cfg.trl)
+if ~isempty(cfg.trl)
+  % data is a cleared variable, use dataold instead
+  try, cfg.previous = dataold.cfg; end
+else
+  try, cfg.previous = data.cfg;    end
+end
 
 % remember the exact configuration details in the output
 data.cfg = cfg;
