@@ -107,7 +107,6 @@ lines_color = [0.75 0 0;0 0 1;0 1 0;0.44 0.19 0.63;0 0.13 0.38;0.5 0.5 0.5;1 0.7
 
 % set the defaults
 if ~isfield(cfg, 'channel'),         cfg.channel = 'all';             end
-if ~isfield(cfg, 'continuous'),      cfg.continuous = 'no';           end % only for reading from file
 if ~isfield(cfg, 'zscale'),          cfg.zscale = 'auto';             end
 if ~isfield(cfg, 'artfctdef'),       cfg.artfctdef = struct;          end
 if ~isfield(cfg, 'selectfeature'),   cfg.selectfeature = 'visual';    end % string or cell-array
