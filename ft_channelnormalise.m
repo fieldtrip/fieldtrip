@@ -30,7 +30,7 @@ function [dataout] = ft_channelnormalise(cfg, data);
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_channelnormalise$
+% $Id: ft_channelnormalise.m $
 
 fieldtripdefs
 
@@ -107,7 +107,7 @@ catch
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end
-cfg.version.id   = '$Id: ft_channelnormalise$';
+cfg.version.id   = '$Id: ft_channelnormalise.m $';
 % remember the configuration details of the input data
 
 % remember the configuration details of the input data
