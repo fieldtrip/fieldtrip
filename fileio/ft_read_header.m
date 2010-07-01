@@ -1238,6 +1238,19 @@ switch headerformat
     end
 end
 
+if length(hdr.label)~=length(unique(hdr.label))
+  % all channels must have unique names
+  warning('all channels must have unique labels, creating unique labels');
+  for i=1:hdr.nChans
+    sel = find(strcmp(hdr.label{i}, hdr.label));
+    if length(sel)>1
+      for j=1:length(sel)
+        hdr.label{sel(j)} = sprintf('%s-%d', hdr.label{sel(j)}, j);
+      end
+    end
+  end
+end
+  
 % ensure that these are double precision and not integers, otherwise
 % subsequent computations that depend on these might be messed up
 hdr.Fs          = double(hdr.Fs);
