@@ -4,19 +4,29 @@ function data = fixtrialdef(data)
 % which is constructed on the fly, assuming that the trials are
 % consecutive segments of a continuous recording
 
-% Copyright (C) 2009, Robert Oostenveld
+% Copyright (C) 2009-2010, Robert Oostenveld and Jan-Mathijs Schoffelen
 
 if ~isfield(data, 'cfg')
   % fieldtrip raw data structures are expected to have a cfg
   data.cfg = [];
 end
 
-ntrial = length(data.trial);
+hastrial = isfield(data, 'trial');
+
+if hastrial,
+  ntrial = length(data.trial);
+else
+  ntrial = dimlength(data, 'rpt');
+end
 trl    = findcfg(data.cfg, 'trl');
 
 nsmp = zeros(ntrial,1);
-for i=1:ntrial
-  nsmp(i) = size(data.trial{i}, 2);
+if hastrial,
+  for i=1:ntrial
+    nsmp(i) = size(data.trial{i}, 2);
+  end
+elseif ~isempty(trl)
+  nsmp = trl(:,2) - trl(:,1) + 1;
 end
 
 if isempty(trl)
@@ -52,3 +62,7 @@ if (~isfield(data, 'trialinfo') || isempty(data.trialinfo)) && ~isempty(trl) && 
     data.trialinfo = trl(:, 4:end); 
 end
 
+% if data is not raw then it does not make sense to keep the trialdef
+if ~hastrial && isfield(data, 'trialdef')
+  data = rmfield(data, 'trialdef');
+end
