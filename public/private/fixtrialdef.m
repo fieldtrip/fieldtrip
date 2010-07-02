@@ -17,6 +17,7 @@ if hastrial,
   ntrial = length(data.trial);
 else
   ntrial = dimlength(data, 'rpt');
+  if ~isfinite(ntrial), ntrial = 1; end
 end
 trl    = findcfg(data.cfg, 'trl');
 
