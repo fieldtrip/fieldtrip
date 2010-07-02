@@ -37,9 +37,15 @@ if ~isfield(ft_default, 'checksize'),   ft_default.checksize   = 1e5;      end %
 persistent versionpath
 persistent signalpath
 
-% don't use path caching with the persistent variable, this makes it slower
-% but ensures that during the transition the subdirectories are added smoothly
-clear hastoolbox
+% some people mess up their path settings with addpath(genpath(...))which
+% results in different versions of SPM or other other toolboxes on the path
+list = which('spm', '-all');
+if length(list)>1
+  warning('multiple versions of SPM on your path will confuse FieldTrip');
+  for i=1:length(list)
+    warning('spm is found here: %s', list{i});
+  end
+end
 
 if isempty(which('hastoolbox'))
   % the fieldtrip/public directory contains the hastoolbox function
@@ -49,7 +55,7 @@ end
 
 try
   % this directory contains the backward compatibility wrappers for the ft_xxx function name change
-  hastoolbox('compat', 1, 1);
+  hastoolbox('compat', 0, 1); % not required
 end
 
 try
@@ -70,19 +76,19 @@ end
 try
   % this contains the low-level reading functions
   hastoolbox('fileio', 1, 1);
-  hastoolbox('fileio/compat', 1, 1);
+  hastoolbox('fileio/compat', 0, 1); % not required
 end
 
 try
   % this is for filtering time-series data
   hastoolbox('preproc', 1, 1);
-  hastoolbox('preproc/compat', 1, 1);
+  hastoolbox('preproc/compat', 0, 1); % not required
 end
 
 try
   % this contains forward models for the EEG and MEG volume conduction problem
   hastoolbox('forward', 1, 1);
-  hastoolbox('forward/compat', 1, 1);
+  hastoolbox('forward/compat', 0, 1); % not required
 end
 
 try
@@ -102,6 +108,6 @@ end
 
 try
   % this contains specific code and examples for realtime processing
-  hastoolbox('realtime', 1, 1);
+  hastoolbox('realtime', 0, 1); % not required
 end
 
