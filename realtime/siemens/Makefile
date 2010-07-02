@@ -25,7 +25,7 @@ else
    WINONLY = 
 endif
 
-CXXFLAGS = $(FLFLAGS) -I../buffer/src -I. -Wunused -Wall -pedantic
+CXXFLAGS = $(FLFLAGS) -I../buffer/src -I../buffer/cpp -I. -Wunused -Wall -pedantic
  
 
 all: nii_to_buffer$(SUFFIX) opengl_client$(SUFFIX) gui_buffer_client$(SUFFIX) $(WINONLY)
@@ -48,7 +48,7 @@ gui_buffer_client.o: gui_buffer_client.cc siemensap.h
 gui_buffer_client$(SUFFIX): gui_buffer_client.o siemensap.o 
 	g++ -o gui_buffer_client$(SUFFIX) gui_buffer_client.o siemensap.o $(LDFLAGS) $(LDFL)
 
-opengl_client.o: opengl_client.cc siemensap.h FtBuffer.h
+opengl_client.o: opengl_client.cc siemensap.h
 	g++ -c opengl_client.cc $(CXXFLAGS)
 	
 Brain3dWindow.o: Brain3dWindow.cc Brain3dWindow.h
@@ -57,7 +57,7 @@ Brain3dWindow.o: Brain3dWindow.cc Brain3dWindow.h
 opengl_client$(SUFFIX): opengl_client.o siemensap.o Brain3dWindow.o
 	g++ -o opengl_client$(SUFFIX) opengl_client.o siemensap.o Brain3dWindow.o $(LDFLAGS) $(LDGL)
 	
-nii_to_buffer.o: nii_to_buffer.cc FtBuffer.h
+nii_to_buffer.o: nii_to_buffer.cc
 	g++ -c nii_to_buffer.cc $(CXXFLAGS)
 
 nii_to_buffer$(SUFFIX): nii_to_buffer.o

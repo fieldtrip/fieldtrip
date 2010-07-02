@@ -11,7 +11,7 @@
 #include <buffer.h>
 #include <SimpleStorage.h>
 
-/** Simple wrapper class for FieldTrip buffer request. Not complete yet.
+/** Simple wrapper class for FieldTrip buffer requests and responses.
 */
 
 class FtBufferRequest {
