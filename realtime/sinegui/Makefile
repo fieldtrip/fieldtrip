@@ -19,7 +19,7 @@ ifeq "$(PLATFORM)" "mingw32"
 else
    LDFLAGS = -lpthread ../buffer/src/libbuffer.a
    FLFLAGS = `fltk-config --cxxflags`
-   LDFL = `fltk-config --ldflags`
+   LDFL = `fltk-config --ldstaticflags`
    SUFFIX = 
 endif
 
