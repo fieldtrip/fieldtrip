@@ -38,11 +38,11 @@ int GetMaxEventStringLength(void);
 
 //data retrieval functions
 int GetNewCSCData(char* acqEntName, uint64_t **timeStamps, int **channelNumbers, int **samplingFrequency, int **numValidSamples, short **samples, int *numRecordsReturned, int *numDroppedRecords);
+int GetNewEventData(char* acqEntName, uint64_t **timeStamps, int **eventIDs, int **ttlValues, char** eventStrings, int *numRecordsReturned, int *numDroppedRecords);
 /*
 bool GetNewSEData(char* acqEntName, __int64* &timeStamps, int* &scNumbers, int* &cellNumbers, int* &featureValues, short* &samples, int &numRecordsReturned, int &numDroppedRecords); 
 bool GetNewSTData(char* acqEntName, __int64* &timeStamps, int* &scNumbers, int* &cellNumbers, int* &featureValues, short* &samples, int &numRecordsReturned, int &numDroppedRecords); 
 bool GetNewTTData(char* acqEntName, __int64* &timeStamps, int* &scNumbers, int* &cellNumbers, int* &featureValues, short* &samples, int &numRecordsReturned, int &numDroppedRecords); 
-bool GetNewEventData(char* acqEntName, __int64* &timeStamps, int* &eventIDs, int* &ttlValues, char** eventStrings, int &numRecordsReturned, int &numDroppedRecords);
 bool GetNewVTData(char* acqEntName, __int64* &timeStamps, int* &extractedLocations, int* &extractedAngles, int &numRecordsReturned, int &numDroppedRecords);
 */
 

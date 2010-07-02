@@ -21,13 +21,14 @@ int keepRunning = 1;
 char hostname[256];
 int port, numChannels, blockSize;
 int ftSocket = -1;
-int maxCscSamples, recordBufferSize;
+int maxCscSamples, recordBufferSize, maxEventStringLength;
 HANDLE pipeWrite, pipeRead;
 
 char cheetahObjects[MAX_OBJ][MAX_LEN];
 char cheetahTypes[MAX_OBJ][MAX_LEN];
 int cscIndex[MAX_OBJ];
-int numCSC = 0;
+int evcIndex[MAX_OBJ];
+int numCSC = 0, numEvC = 0;
 int fSamp = -1;
 
 char *channelNamesForChunk = NULL;
@@ -37,6 +38,10 @@ uint64_t *retBufTimeStamps;
 int *retBufChannelNumbers;
 int *retBufValidSamples;
 int *retBufSamplingFreq;
+int *retBufEventIDs;
+int *retBufTTL;
+char **retBufEventString;
+
 
 typedef struct {
 	int status; 	// 0=empty, 1=being filled, 2=being sent
@@ -45,9 +50,19 @@ typedef struct {
 	short *samples; /* numChannels x maxCscSamples */
 } MultiChannelBlock;
 
+typedef struct {
+	int status;		// 0=empty, 1=being sent
+	uint64_t timeStamp;
+	char *name;
+	int eventID;
+	int ttl;
+} EventBlock;
+
 int *rbStart; /* start of ringbuffer per channel */
 int *rbNumEl; /* number of elements in RB per channel */
 MultiChannelBlock mcbRingBuf[RB_SIZE];
+int evStart = 0, evNumEl = 0;
+EventBlock evRingBuf[RB_SIZE];
 
 int getObjectsAndTypes() {
 	char *objPtr[MAX_OBJ], *typPtr[MAX_OBJ];
@@ -74,7 +89,13 @@ int getObjectsAndTypes() {
 		if (!strcmp(cheetahTypes[n], "CscAcqEnt")) {
 			cscIndex[numCSC++] = n;
 			channelNamesSize += strlen(cheetahObjects[n]) + 1; // trailing 0
-		}	
+			continue;
+		}
+		
+		if (!strcmp(cheetahTypes[n], "EventAcqEnt")) {
+			evcIndex[numEvC++] = n;
+			continue;
+		}
 	}
 	
 	if (numCSC>0) {
@@ -180,13 +201,16 @@ int main(int argc, char *argv[]) {
 	
 	recordBufferSize = GetRecordBufferSize();
 	maxCscSamples = GetMaxCSCSamples();
+	maxEventStringLength = GetMaxEventStringLength();
 	
-	printf("Number of CSC streams..: %i\n", numCSC);
-	printf("Samples per block......: %i\n", maxCscSamples);
-	printf("Record buffer size.....: %i\n", recordBufferSize);
-	printf("Server PC name.........: %s\n", GetServerPCName());
-	printf("Server IP address......: %s\n", GetServerIPAddress());
-	printf("Server application.....: %s\n", GetServerApplicationName());
+	printf("Number of CSC streams......: %i\n", numCSC);
+	printf("Number of event streams....: %i\n", numEvC);
+	printf("Samples per block..........: %i\n", maxCscSamples);
+	printf("Record buffer size.........: %i\n", recordBufferSize);
+	printf("Max. length event strings..: %i\n", maxEventStringLength);
+	printf("Server PC name.............: %s\n", GetServerPCName());
+	printf("Server IP address..........: %s\n", GetServerIPAddress());
+	printf("Server application.........: %s\n", GetServerApplicationName());
 	
 	if (numCSC==0) {
 		printf("No continuous channels - exiting\n");
@@ -200,6 +224,12 @@ int main(int argc, char *argv[]) {
 	retBufChannelNumbers  = new int[recordBufferSize];
 	retBufSamplingFreq    = new int[recordBufferSize];	
 	retBufValidSamples    = new int[recordBufferSize];
+	retBufEventIDs        = new int[recordBufferSize];
+	retBufTTL             = new int[recordBufferSize];
+	retBufEventString     = new char*[recordBufferSize];
+	for (int j=0;j<recordBufferSize;j++) {
+		retBufEventString[j] = new char[maxEventStringLength+1];
+	}
 	rbStart = new int[numCSC];
 	rbNumEl = new int[numCSC];
 	
@@ -210,6 +240,10 @@ int main(int argc, char *argv[]) {
 		mcbRingBuf[j].timeStamp = 0;
 		mcbRingBuf[j].chansFilled = 0;
 		mcbRingBuf[j].samples = new short[numCSC * maxCscSamples];
+		
+		evRingBuf[j].status = 0;
+		evRingBuf[j].timeStamp = 0;
+		evRingBuf[j].name = new char[maxEventStringLength+1];
 	}
 	
 	printf("Opening CSC channels...\n");
@@ -222,32 +256,52 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 	}
+
+	printf("Opening event channels...\n");
+	for (int j=0;j<numEvC;j++) {
+		r = OpenStream(cheetahObjects[evcIndex[j]]);
+		if (!r) {
+			printf("Could not open event channel %s\n", cheetahObjects[evcIndex[j]]);
+			keepRunning = false;
+			break;
+		}
+	}
 	
 	/* register CTRL-C handler */
 	signal(SIGINT, abortHandler);
-	printf("Starting acquisition loop - press CTRL-C to stop.\n");
 	
 	if (pthread_create(&sendThread, NULL, dataToFieldTripThread, NULL)) {
 		fprintf(stderr, "Could not spawn conversion thread\n");
 		return 1;
 	}
 	
-	int nCSC = 0;
+	printf("Starting acquisition loop - press CTRL-C to stop.\n");	
 	
 	while (keepRunning) {
-		r = GetNewCSCData(cheetahObjects[cscIndex[nCSC]], &retBufTimeStamps, &retBufChannelNumbers, &retBufSamplingFreq, &retBufValidSamples, &retBufSamples, &numRecordsReturned, &numRecordsDropped);
+		int doneSomething = 0;
 		
-		if (r==0) {
-			printf("Error in GetNewCSCData\n");
-			break;
-		}
+		// loop over continuous channels
+		for (int nCSC = 0;nCSC < numCSC; nCSC++) {
+			char *stream = cheetahObjects[cscIndex[nCSC]];
+			
+			r = GetNewCSCData(stream, &retBufTimeStamps, &retBufChannelNumbers, &retBufSamplingFreq, &retBufValidSamples, &retBufSamples, &numRecordsReturned, &numRecordsDropped);
+		
+			if (r==0) {
+				printf("Error in GetNewCSCData from stream '%s' - aborting\n", stream);
+				keepRunning = false;
+				break;
+			}
 	
-		if (numRecordsDropped > 0) {
-			printf("Records dropped - cancelling operation.\n");
-			break;
-		}
+			if (numRecordsDropped > 0) {
+				printf("Records dropped in stream '%s' - cancelling operation.\n", stream);
+				keepRunning = false;
+				break;
+			}
+			
+			if (numRecordsReturned == 0) continue;
+			
+			doneSomething = 1;
 	
-		if (numRecordsReturned > 0) {
 			for (int i=0;i<numRecordsReturned;i++) {
 				// TODO: check if using this channel number is right and preferable to nCSC
 				int chan = retBufChannelNumbers[i];
@@ -255,7 +309,7 @@ int main(int argc, char *argv[]) {
 				int vals = retBufValidSamples[i]; 
 				uint64_t ts = retBufTimeStamps[i];
 
-				printf("#%i/%i  chan = %3i  Time = %8u  fSamp = %6i  valid = %4i\n", i+1, numRecordsReturned, chan, (uint32_t) ts, freq, vals);
+				// printf("#%i/%i  chan = %3i  Time = %8u  fSamp = %6i  valid = %4i\n", i+1, numRecordsReturned, chan, (uint32_t) ts, freq, vals);
 				if (fSamp == -1) {
 					fSamp = freq;
 					// write out header to Fieldtrip buffer here
@@ -270,12 +324,12 @@ int main(int argc, char *argv[]) {
 						break;
 					}						
 				} else if (fSamp != freq) {
-					printf("Inconsistent sampling frequency - aborting!\n");
+					printf("Inconsistent sampling frequency in stream '%s' - aborting!\n", stream);
 					keepRunning = false;
 					break;
 				}
 				if (vals != maxCscSamples) {
-					printf("Got less than %i samples in this record - aborting\n", maxCscSamples);
+					printf("Got less than %i samples in record from '%s' - aborting\n", maxCscSamples, stream);
 					keepRunning = false;
 					break;
 				}
@@ -294,7 +348,7 @@ int main(int argc, char *argv[]) {
 					mcbRingBuf[index].timeStamp = ts;
 					mcbRingBuf[index].status = 1;
 				} else if (mcbRingBuf[index].timeStamp != ts) {
-					printf("Inconsistent time stamps in records and internal ring buffer - aborting\n");
+					printf("Inconsistent time stamps in stream '%s' records and internal ring buffer - aborting\n", stream);
 					keepRunning = false;
 					break;
 				}
@@ -329,11 +383,41 @@ int main(int argc, char *argv[]) {
 					}
 				}
 			}
-		} else {
-			Sleep(1);
+		}  // end of loop over cont. channels
+		
+		for (int nEvC = 0; nEvC < numEvC; nEvC++) {
+			char *stream = cheetahObjects[evcIndex[nEvC]];
+			
+			r = GetNewEventData(stream, &retBufTimeStamps, &retBufEventIDs, &retBufTTL, retBufEventString, &numRecordsReturned, &numRecordsDropped);
+			
+		
+			if (r==0) {
+				printf("Error in GetNewEventData from stream '%s' - aborting\n", stream);
+				keepRunning = false;
+				break;
+			}
+	
+			if (numRecordsDropped > 0) {
+				printf("Records dropped in stream '%s' - cancelling operation.\n", stream);
+				keepRunning = false;
+				break;
+			}
+			
+			if (numRecordsReturned == 0) continue;
+			
+			doneSomething = 1;
+
+			for (int i=0;i<numRecordsReturned;i++) {
+				printf("Received event %s\n", retBufEventString[i]);
+				printf("TTL: %i,  Timestamp: %i,  ID: %i\n", retBufTTL[i], (int) retBufTimeStamps[i], retBufEventIDs[i]);
+			}
+			
+			// TODO: write out events (ringbuffer first)
+
 		}
-		// increment to next CSC and wrap around if needed
-		if (++nCSC == numCSC) nCSC = 0;
+
+		// if we're not to busy, let other processes use the machine
+		if (!doneSomething) Sleep(1);
 	} 
 	
 	DisconnectFromServer();
@@ -345,10 +429,13 @@ int main(int argc, char *argv[]) {
 	delete[] retBufChannelNumbers;
 	delete[] retBufSamplingFreq;
 	delete[] retBufValidSamples;
+	delete[] retBufTTL;
+	delete[] retBufEventIDs;
 	delete[] rbStart;
 	delete[] rbNumEl;
 	for (int j=0;j<RB_SIZE;j++) {
 		delete[] mcbRingBuf[j].samples;
+		delete[] evRingBuf[j].name;
 	}
 	if (channelNamesForChunk) {
 		delete[] channelNamesForChunk;
