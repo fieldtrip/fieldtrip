@@ -274,7 +274,7 @@ if length(data)>1 && ~israw,
   else
     % no such field as {'label','time','freq','pos'} has to be concatenated
     sortflag  = 0;
-    tryfields = {'cumsumcnt','cumtapcnt'}; 
+    tryfields = {'cumsumcnt','cumtapcnt','trialinfo'}; 
   end
   
   % concatenate the relevant descriptive fields in the data-structure (continued)
