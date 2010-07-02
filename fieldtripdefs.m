@@ -55,7 +55,7 @@ end
 
 try
   % this directory contains the backward compatibility wrappers for the ft_xxx function name change
-  hastoolbox('compat', 0, 1); % not required
+  hastoolbox('compat', 3, 1); % not required
 end
 
 try
@@ -76,19 +76,19 @@ end
 try
   % this contains the low-level reading functions
   hastoolbox('fileio', 1, 1);
-  hastoolbox('fileio/compat', 0, 1); % not required
+  hastoolbox('fileio/compat', 3, 1); % not required
 end
 
 try
   % this is for filtering time-series data
   hastoolbox('preproc', 1, 1);
-  hastoolbox('preproc/compat', 0, 1); % not required
+  hastoolbox('preproc/compat', 3, 1); % not required
 end
 
 try
   % this contains forward models for the EEG and MEG volume conduction problem
   hastoolbox('forward', 1, 1);
-  hastoolbox('forward/compat', 0, 1); % not required
+  hastoolbox('forward/compat', 3, 1); % not required
 end
 
 try
@@ -108,6 +108,6 @@ end
 
 try
   % this contains specific code and examples for realtime processing
-  hastoolbox('realtime', 0, 1); % not required
+  hastoolbox('realtime', 3, 1);             % not required
+  hastoolbox('realtime/datasource', 3, 1);  % not required
 end
-

@@ -6,8 +6,13 @@ function [status] = hastoolbox(toolbox, autoadd, silent)
 %
 % Use as
 %   [status] = hastoolbox(toolbox, autoadd, silent)
+%
+% autoadd = 0 means that it will not be added
+% autoadd = 1 means that give an error if it cannot be added
+% autoadd = 2 means that give a warning if it cannot be added
+% autoadd = 3 means that it try to add it silently
 
-% Copyright (C) 2005-2008, Robert Oostenveld
+% Copyright (C) 2005-2010, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -196,7 +201,7 @@ end
 status = (status~=0);
 
 % try to determine the path of the requested toolbox
-if autoadd && ~status
+if autoadd>0 && ~status
 
   % for core fieldtrip modules
   prefix = fileparts(which('fieldtripdefs'));
@@ -236,7 +241,13 @@ if autoadd && ~status
     else
       msg = sprintf('the %s toolbox is not installed', toolbox);
     end
-    error(msg);
+    if autoadd==1
+      error(msg);
+    elseif autoadd==2
+      warning(msg);
+    else
+      % fail silently
+    end
   end
 end
 
