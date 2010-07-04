@@ -31,9 +31,7 @@ mxArray *mxDeserialize(const void*, size_t);
 #define MAXIDLETIME 30     /* in seconds */
 #define SLEEPTIME   10000  /* in microseconds */
 
-#ifndef STARTCMD
 #define STARTCMD "matlab -nosplash"
-#endif
 
 static int verbose_flag = 0;
 
