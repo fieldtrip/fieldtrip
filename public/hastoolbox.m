@@ -89,7 +89,7 @@ url = {
   'BEMCP'      'contact Christophe Phillips'
   'OPENMEEG'   'see http://gforge.inria.fr/projects/openmeeg'
   'PRTOOLS'    'see http://www.prtools.org'
-  'LC-LIBS'    'contact Stefania Della Penna'
+  'ITAB'       'contact Stefania Della Penna'
   'BSMART'     'see http://www.brain-smart.org'
   };
 
@@ -188,7 +188,7 @@ switch toolbox
     status  = (exist('plot_topo', 'file') && exist('plot_mesh', 'file') && exist('plot_matrix', 'file'));
   case 'PRTOOLS'
     status  = (exist('prversion', 'file') && exist('dataset', 'file') && exist('svc', 'file'));
-  case 'LC-LIBS'
+  case 'ITAB'
     status  = (exist('lcReadHeader', 'file') && exist('lcReadData', 'file'));
   case 'BSMART' 
     status  = exist('bsmart'); 
