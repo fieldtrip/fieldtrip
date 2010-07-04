@@ -91,6 +91,7 @@ url = {
   'PRTOOLS'    'see http://www.prtools.org'
   'ITAB'       'contact Stefania Della Penna'
   'BSMART'     'see http://www.brain-smart.org'
+  'PEER'       'see http://fieldtrip.fcdonders.nl/development/peer'
   };
 
 if nargin<2
@@ -192,6 +193,8 @@ switch toolbox
     status  = (exist('lcReadHeader', 'file') && exist('lcReadData', 'file'));
   case 'BSMART' 
     status  = exist('bsmart'); 
+  case 'PEER' 
+    status  = exist('peerslave', 'file') && exist('peermaster', 'file');
   otherwise
     if ~silent, warning(sprintf('cannot determine whether the %s toolbox is present', toolbox)); end
     status = 0;
