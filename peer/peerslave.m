@@ -18,7 +18,6 @@ function peerslave(varargin)
 %   allowhost   = {...}
 %   allowuser   = {...}
 %   allowgroup  = {...}
-%   fairshare   = [a, b, c, d]
 %   group       = string
 %   hostname    = string
 %
@@ -49,7 +48,6 @@ sleep      = keyval('sleep',      varargin); if isempty(sleep),    sleep=0.01; e
 memavail   = keyval('memavail',   varargin);
 cpuavail   = keyval('cpuavail',   varargin);
 timavail   = keyval('timavail',   varargin);
-fairshare  = keyval('fairshare',  varargin);
 threads    = keyval('threads',    varargin);
 allowhost  = keyval('allowhost',  varargin); if isempty(allowhost), allowhost = {}; end
 allowuser  = keyval('allowuser',  varargin); if isempty(allowuser), allowuser = {}; end

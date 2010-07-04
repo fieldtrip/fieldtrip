@@ -1,10 +1,23 @@
+/*
+ *   memavail    = number, amount of memory available       (default = inf)
+ *   cpuavail    = number, speed of the CPU                 (default = inf)
+ *   timavail    = number, maximum duration of a single job (default = inf)
+ *   allowhost   = {...}
+ *   allowuser   = {...}
+ *   allowgroup  = {...}
+ *   group       = string
+ *   hostname    = string
+ *     matlab    = string
+ */
+
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <getopt.h>
+#include <string.h>
 
-#include "mex.h"
 #include "engine.h"
 
 #include "peer.h"
@@ -19,8 +32,10 @@ mxArray *mxDeserialize(const void*, size_t);
 #define SLEEPTIME   10000  /* in microseconds */
 
 #ifndef STARTCMD
-#define STARTCMD "/Applications/MATLAB_R2009a.app/bin/matlab"
+#define STARTCMD "/Applications/MATLAB_R2009a.app/bin/matlab -nosplash"
 #endif
+
+static int verbose_flag = 0;
 
 int main(int argc, char *argv[]) {
 		Engine *en;
@@ -30,8 +45,13 @@ int main(int argc, char *argv[]) {
 		jobdef_t   *def  = NULL;
 
 		int matlabRunning = 0, matlabStart, matlabFinished;
-		int n, rc, found, handshake, success, server, verbose = 0, jobnum = 0;
+		int c, n, rc, found, handshake, success, server, verbose = 0, jobnum = 0;
 		unsigned int peerid, jobid;
+		char *str = NULL, *startcmd = NULL;
+
+		userlist_t  *allowuser;
+		grouplist_t *allowgroup;
+		hostlist_t  *allowhost;
 
 		/* the thread IDs are needed for cancelation at cleanup */
 		pthread_t tcpserverThread;
@@ -40,6 +60,141 @@ int main(int argc, char *argv[]) {
 		pthread_t expireThread;
 
 		peerinit(NULL);
+
+		/* use GNU getopt_long for the command-line options */
+		while (1)
+		{
+				static struct option long_options[] =
+				{
+						{"verbose",   no_argument, &verbose_flag, 0},
+						{"memavail",  required_argument, 0, 'a'}, /* numeric argument */
+						{"cpuavail",  required_argument, 0, 'b'}, /* numeric argument */
+						{"timavail",  required_argument, 0, 'c'}, /* numeric argument */
+						{"hostname",  required_argument, 0, 'd'}, /* single string argument */
+						{"group",     required_argument, 0, 'e'}, /* single string argument */
+						{"allowuser", required_argument, 0, 'f'}, /* single or multiple string argument */
+						{"allowhost", required_argument, 0, 'g'}, /* single or multiple string argument */
+						{"allowgroup",required_argument, 0, 'h'}, /* single or multiple string argument */
+						{"matlab",    required_argument, 0, 'i'}, /* single string argument */
+						{0, 0, 0, 0}
+				};
+				/* getopt_long stores the option index here. */
+				int option_index = 0;
+
+				c = getopt_long (argc, argv, "a:b:c:d:e:f:g:h:v",
+								long_options, &option_index);
+
+				/* Detect the end of the options. */
+				if (c == -1)
+						break;
+
+				switch (c)
+				{
+						case 0:
+								/* If this option set a flag, do nothing else now. */
+								if (long_options[option_index].flag != 0)
+										break;
+								printf ("option %s", long_options[option_index].name);
+								if (optarg)
+										printf (" with arg %s", optarg);
+								printf ("\n");
+								break;
+
+						case 'a':
+								printf ("option -a with value `%s'\n", optarg);
+								pthread_mutex_lock(&mutexhost);
+								host->memavail = atol(optarg);
+								pthread_mutex_unlock(&mutexhost);
+								break;
+
+						case 'b':
+								printf ("option -b with value `%s'\n", optarg);
+								pthread_mutex_lock(&mutexhost);
+								host->cpuavail = atol(optarg);
+								pthread_mutex_unlock(&mutexhost);
+								break;
+
+						case 'c':
+								printf ("option -c with value `%s'\n", optarg);
+								pthread_mutex_lock(&mutexhost);
+								host->timavail = atol(optarg);
+								pthread_mutex_unlock(&mutexhost);
+								break;
+
+						case 'd':
+								printf ("option -d with value `%s'\n", optarg);
+								pthread_mutex_lock(&mutexhost);
+								strncpy(host->name, optarg, STRLEN);
+								pthread_mutex_unlock(&mutexhost);
+								break;
+
+						case 'e':
+								printf ("option -e with value `%s'\n", optarg);
+								pthread_mutex_lock(&mutexhost);
+								strncpy(host->group, optarg, STRLEN);
+								pthread_mutex_unlock(&mutexhost);
+								break;
+
+						case 'f':
+								printf ("option -f with value `%s'\n", optarg);
+								str = strtok(optarg, ",");
+								while (str) {
+										allowuser = (userlist_t *)malloc(sizeof(userlist_t));
+										allowuser->name = malloc(STRLEN);
+										strncpy(allowuser->name, str, STRLEN);
+										allowuser->next = userlist;
+										userlist = allowuser;
+										str = strtok(NULL, ",");
+								}
+								break;
+
+						case 'g':
+								printf ("option -g with value `%s'\n", optarg);
+								str = strtok(optarg, ",");
+								while (str) {
+										allowhost = (hostlist_t *)malloc(sizeof(hostlist_t));
+										allowhost->name = malloc(STRLEN);
+										strncpy(allowhost->name, str, STRLEN);
+										allowhost->next = hostlist;
+										hostlist = allowhost;
+										str = strtok(NULL, ",");
+								}
+								break;
+
+						case 'h':
+								printf ("option -h with value `%s'\n", optarg);
+								str = strtok(optarg, ",");
+								while (str) {
+										allowgroup = (grouplist_t *)malloc(sizeof(grouplist_t));
+										allowgroup->name = malloc(STRLEN);
+										strncpy(allowgroup->name, str, STRLEN);
+										allowgroup->next = grouplist;
+										grouplist = allowgroup;
+										str = strtok(NULL, ",");
+								}
+								break;
+
+						case 'i':
+								printf ("option -i with value `%s'\n", optarg);
+								startcmd = malloc(STRLEN);
+								strncpy(startcmd, optarg, STRLEN);
+								break;
+
+						case '?':
+								/* getopt_long already printed an error message. */
+								break;
+
+						default:
+								fprintf(stderr, "invalid command line options\n");
+								exit(1);
+				}
+		}
+
+		/* set the default command to start matlab */
+		if (!startcmd) {
+				startcmd = malloc(STRLEN);
+				strncpy(startcmd, STARTCMD, STRLEN);
+		}
 
 		if ((rc = pthread_create(&tcpserverThread, NULL, tcpserver, (void *)NULL))>0) {
 				fprintf(stderr, "failed to start tcpserver thread\n");
@@ -86,11 +241,11 @@ int main(int argc, char *argv[]) {
 
 						/* there is a job to be executed */
 						if (matlabRunning==0) {
-								if ((en = engOpen(STARTCMD " -nosplash")) == NULL) {
+								fprintf(stderr, "starting MATLAB engine\n");
+								if ((en = engOpen(startcmd)) == NULL) {
 										panic("failed to start MATLAB engine\n");
 								}
 								else {
-										fprintf(stderr, "started MATLAB engine\n");
 										matlabRunning = 1;
 								}
 						}

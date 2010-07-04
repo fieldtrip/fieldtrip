@@ -1,5 +1,5 @@
 /*
- * MEMPROFILE is a MATLAB mex file which can be used to exit Matlab
+ * DELAYEDEXIT is a MATLAB mex file which can be used to exit Matlab
  * after a specified time. A thread is started in the background,
  * which starts a timer and exits when the timer elapses.
  *
