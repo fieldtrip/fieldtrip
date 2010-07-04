@@ -84,7 +84,7 @@ linkedlist: linkedlist.o
 	$(CC) $(CFLAGS) $(INCPATH) -c $*.c
 
 peerslave.o: peerslave.c peer.h extern.h libpeer.a
-	$(CC) $(CFLAGS) -DSTARTCMD=\"$(MATLABPATH)/bin/matlab\" $(INCPATH) $(MATLABINC) -c $*.c
+	$(CC) $(CFLAGS) $(INCPATH) $(MATLABINC) -c $*.c
 
 clean:
 	rm -f core *.o *.obj *.a $(TARGET) *~

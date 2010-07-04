@@ -48,7 +48,7 @@ void peerinit(void *arg) {
 
 		/* initialize the random number generator */
 		/* this is used for creating host and job IDs */
-		srand(time(NULL));
+		srand(getpid());
 
 		if ((host = malloc(sizeof(hostdef_t)))==NULL) {
 				perror("announce malloc");
