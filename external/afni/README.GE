@@ -1,0 +1,42 @@
+Souheil J. Inati
+Dartmouth College
+September 2001
+souheil.inati@dartmouth.edu
+
+This is version 3.1.  This is a minor modification.
+Trying to use as many of the spm functions as possible.
+Replaced spm_write_vol calls so that the scaling factor is kept at 1.
+
+Questions or comments are welcome.
+
+Generates a mat file to go with every image relating the image coordinates to scanner coordinates.
+
+WARNING - this conversion utility now flips the data to neurological coordinates.
+
+This has been tested with Ax,Sag,Cor with slices acquired SI and IS, LR and RL,
+and PA, PA.  Also tested for Oblique axial.
+Don't count on double obliques or anything really fancy
+
+
+Listing of GE2SPM directory:
+
+GE_convertADW.m       GE_dumpImageHeader.m   GE_readHeaderSeries.m
+GE_convertVolume.m    GE_dumpSeriesHeader.m  GE_readHeaderSuite.m
+GE_createSPMHeader.m  GE_readHeader.m        GE_readVolume.m
+GE_createSPMmat.m     GE_readHeaderExam.m    GE_writeSPMHeader.m
+GE_dumpExamHeader.m   GE_readHeaderImage.m   README
+GE_dumpHeader.m       GE_readHeaderPixel.m   cstring.m
+
+The main scripts are GE_convertVolume, GE_convertADW, and GE_dumpHeader.
+
+GE_convertVolume
+  Converts a series of 5.X GE slices into Analyze format for SPM.
+
+GE_convertADW
+  Converts a series of GE slices acquired on the Advanced Development
+Workstation into Analyze format for SPM.  These are 5.X format stored
+on the Sun machine GE uses to bypass the 512 images/series limitation
+of its database.
+
+GE_dumpHeader
+ Dumps much of the header from a GE lx2 or 5.X file to a file or stdout.

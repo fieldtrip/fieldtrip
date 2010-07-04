@@ -1,0 +1,27 @@
+Wed Aug 29 12:00:44 PDT 2001.
+
+This is a set of Matlab functions that allows one to read and write certain AFNI data sets. Before using them you should be aware of a few important points:
+
+1- This library is in a testing phase. Please report any errors you find and I will do my best to correct them promptly. Any other comments are also appreciated. The library may be distributed in whole. The most current distribution is found on AFNI's website afni.nimh.nih.gov.
+
+2- I have included a matlab script called MatAFNI_Demo.m and a few demo data sets. The script should be useful illustration of how to access and write AFNI data.
+
+3- Writing AFNI bricks assumes you have an understanding of their header structure. Please read and understand the README.attributes file that is included in afni's distribution before writing afni bricks with these (or other) functions. There's only so much automatic checking on the header content that can be done and I can imagine quite a bit of room for creative error making! For convenience, I have included a copy of README.attributes with the library distribution. However this file may not be the most current version that is being distributed with afni.       
+
+4- Presently, documentation is only available by using the help function in matlab. 
+
+5- The MatAFNI_Demo and Test* scripts are included to illustrate how some functions can be used. Do not expect them to work on your machines without modification. I am not including any sample data with this distribution so you have to modify the Test scripts to read your own data.
+
+6- Remember: The data in the .BRIK is stored in the order (orientation) in which the images were loaded into to3d. So, in order to know how to slice through a data set you need to look into the Info structure (output of BrikInfo and BrikLoad). I have included the AFNI* functions to help shed some light into the darkness. 
+
+7- Brik or Brick about 100 functions later ...: I regret having used brik instead of brick in many of the functions. It just looks wrong, but at the time I thought it mirrored .BRIK a little better. So some functions use Brik some Brick, I am sure you'll get used to this minor inconvenience.
+
+8- To install the library, create a directory and unpack the distribution in it. Set the matlab path appropriately (for csh and tcsh users, add the directory to the MATLABPATH environment variable. 
+
+
+created on iodine, /home/ziad/Programs/matlab/Distributed_AFNI_functions                           
+
+
+Ziad Saad
+SSCC/NIMH/NIH
+ziad@nih.gov
