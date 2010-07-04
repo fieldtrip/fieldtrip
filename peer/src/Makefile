@@ -57,7 +57,7 @@ peer: peer.o libpeer.a
 	$(CC) $(CFLAGS) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
 
 peerslave: peerslave.o libpeer.a
-	$(CC) $(CFLAGS) $(LIBPATH) $(MATLABLIBS) -o $(BINDIR)/$@ $^ $(LIBS)
+	$(CC) $(CFLAGS) $(LIBPATH) $(MATLABLIBS) -o ../$@ $^ $(LIBS)
 
 test_send: test_send.o libpeer.a
 	$(CC) $(CFLAGS) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)

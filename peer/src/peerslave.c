@@ -32,7 +32,7 @@ mxArray *mxDeserialize(const void*, size_t);
 #define SLEEPTIME   10000  /* in microseconds */
 
 #ifndef STARTCMD
-#define STARTCMD "/Applications/MATLAB_R2009a.app/bin/matlab -nosplash"
+#define STARTCMD "matlab -nosplash"
 #endif
 
 static int verbose_flag = 0;
