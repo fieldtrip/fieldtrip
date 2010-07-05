@@ -86,9 +86,27 @@ classdef nb < classifier
     function [m,desc] = getmodel(obj)
       % return the parameters wrt a class label in some shape
 
-      % return model for all classes; i.e., their means
-        m = mat2cell(obj.params.means,ones(1,size(obj.params.means,1)),size(obj.params.means,2));
-        desc = repmat({'unknown'},size(m));
+      % return model for all classes; i.e., their means and standard
+      % deviations
+      m(3:4) = mat2cell(obj.params.means,ones(1,size(obj.params.means,1)),size(obj.params.means,2));
+      m(5:6) = mat2cell(obj.params.stds,ones(1,size(obj.params.stds,1)),size(obj.params.stds,2));
+      m{1}   = 2*(m{3} - m{4}).^2 ./  (m{5}.^2 + m{6}.^2) + ...
+        (m{5}.^2./m{6}.^2 - 1 - log(m{5}.^2./m{6}.^2))/2 + ...
+        (m{6}.^2./m{5}.^2 - 1 - log(m{6}.^2./m{5}.^2))/2;
+      
+      C1 = m{5};
+      C2 = m{6};
+      C=(C1+C2)/2;
+      dmu=(m{3}-m{4});
+      m{2}=0.125*dmu.*C.*dmu + 0.5*log(C ./ sqrt(C1.*C2));
+      
+      desc = cell(1,5);
+      desc{1} = 'Bhattacharyya distance'; % distance measure
+      desc{2} = 'symmetricized KL divergence'; % Bhattacharyya distance alternative
+      desc{3} = 'means for condition 1';
+      desc{4} = 'means for condition 2';
+      desc{5} = 'SD for condition 1';
+      desc{6} = 'SD for condition 2';
         
     end
 

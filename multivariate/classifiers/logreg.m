@@ -58,8 +58,7 @@ classdef logreg < classifier
         L2 = obj.L2*ones(nvars,nclasses-1);
         L2(1,:) = 0; % Don't regularize bias elements
         
-        funObjL2 = @(w)multiplicativeL2(w,funObj,L2(:));
-        
+        funObjL2 = @(w)penalizedL2(w,funObj,L2(:));        
         opt.Method = 'newton';
         p.model = minFunc(funObjL2,w_init,opt);
         

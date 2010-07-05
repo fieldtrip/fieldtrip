@@ -50,4 +50,16 @@ function [acc,sig,cv] = test_procedure(myproc,nfolds,X,Y)
   acc = cv.evaluate;
   sig = cv.significance;
   
+  if 0
+    scalp = left;
+    scalp.powspctrm = scalp.powspctrm(1,:,fvec,1);
+    %scalp.label = scalp.label(cvec);
+    scalp.powspctrm(1,~cvec,:,:) = 0;
+    scalp.powspctrm(1,cvec,:,:) =  reshape(cv.model{1},[1 sum(cvec) sum(fvec) 1]);
+    scalp.freq = scalp.freq(fvec);
+    scalp.time = mean(scalp.time(tvec));
+    cfg.layout = 'CTF275.lay';
+    topoplotTFR(cfg,scalp);
+  end
+  
 end
