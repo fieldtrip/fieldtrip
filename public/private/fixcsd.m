@@ -35,15 +35,28 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
   end
   if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq);      else nfrq = 1; end
   if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time);      else ntim = 1; end
+  
+  fastflag = all(data.cumtapcnt(:)==data.cumtapcnt(1));
 
   %create auto-spectra
   nchan     = length(data.label);
-  powspctrm = zeros(nrpt,nchan,nfrq,ntim)+i.*zeros(nrpt,nchan,nfrq,ntim);
-  sumtapcnt = [0;cumsum(data.cumtapcnt(:))];
-  for p = 1:nrpt
-    indx   = (sumtapcnt(p)+1):sumtapcnt(p+1);
-    tmpdat = data.fourierspctrm(indx,:,:,:);
-    powspctrm(p,:,:,:) = (sum(tmpdat.*conj(tmpdat),1))./data.cumtapcnt(p);
+  if fastflag
+    % all trials have the same amount of tapers
+    powspctrm = zeros(nrpt,nchan,nfrq,ntim);
+    ntap      = data.cumtapcnt(1);
+    for p = 1:ntap
+      powspctrm = powspctrm + abs(data.fourierspctrm(p:ntap:end,:,:,:,:)).^2;
+    end
+    powspctrm = powspctrm./ntap;
+  else
+    % different amount of tapers
+    powspctrm = zeros(nrpt,nchan,nfrq,ntim)+i.*zeros(nrpt,nchan,nfrq,ntim);
+    sumtapcnt = [0;cumsum(data.cumtapcnt(:))];
+    for p = 1:nrpt
+      indx   = (sumtapcnt(p)+1):sumtapcnt(p+1);
+      tmpdat = data.fourierspctrm(indx,:,:,:);
+      powspctrm(p,:,:,:) = (sum(tmpdat.*conj(tmpdat),1))./data.cumtapcnt(p);
+    end
   end
 
   %create cross-spectra
@@ -61,11 +74,20 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
     end
 
     crsspctrm = zeros(nrpt,ncmb,nfrq,ntim)+i.*zeros(nrpt,ncmb,nfrq,ntim);
-    for p = 1:nrpt
-      indx    = (sumtapcnt(p)+1):sumtapcnt(p+1);
-      tmpdat1 = data.fourierspctrm(indx,cmbindx(:,1),:,:);
-      tmpdat2 = data.fourierspctrm(indx,cmbindx(:,2),:,:);
-      crsspctrm(p,:,:,:) = (sum(tmpdat1.*conj(tmpdat2),1))./data.cumtapcnt(p);
+    if fastflag
+      for p = 1:ntap
+        tmpdat1   = data.fourierspctrm(p:ntap:end,cmbindx(:,1),:,:,:);
+        tmpdat2   = data.fourierspctrm(p:ntap:end,cmbindx(:,2),:,:,:);
+        crsspctrm = crsspctrm + tmpdat1.*conj(tmpdat2);
+      end
+      crsspctrm = crsspctrm./ntap;
+    else
+      for p = 1:nrpt
+        indx    = (sumtapcnt(p)+1):sumtapcnt(p+1);
+        tmpdat1 = data.fourierspctrm(indx,cmbindx(:,1),:,:);
+        tmpdat2 = data.fourierspctrm(indx,cmbindx(:,2),:,:);
+        crsspctrm(p,:,:,:) = (sum(tmpdat1.*conj(tmpdat2),1))./data.cumtapcnt(p);
+      end
     end
     data.crsspctrm = crsspctrm;
     data.labelcmb  = labelcmb;
@@ -187,11 +209,9 @@ elseif (strcmp(current, 'full')       && strcmp(desired, 'fourier')) || ...
 
 elseif strcmp(current, 'full') && strcmp(desired, 'sparsewithpow')
   error('not yet implemented');
-
 elseif strcmp(current, 'sparse') && strcmp(desired, 'sparsewithpow')
   % convert back to crsspctrm/powspctrm representation: useful for plotting functions etc
-  error('not yet implemented');
-
+  error(  'not yet implemented');
 elseif strcmp(current, 'full') && strcmp(desired, 'sparse')
   dimtok = tokenize(data.dimord, '_');
   if ~isempty(strmatch('rpt',   dimtok)), nrpt=numel(data.cumtapcnt); else nrpt = 1; end
