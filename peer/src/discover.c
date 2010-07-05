@@ -67,7 +67,7 @@ void *discover(void *arg) {
 		int i = 0;
 		int fd = 0;
 		unsigned int addrlen;
-		int nbytes, verbose = 0, found = 0;
+		int nbytes, verbose = 1, found = 0;
 		int one = 1;
 		int accept = 1;
 		peerlist_t *peer = NULL, *next = NULL;
@@ -167,10 +167,16 @@ void *discover(void *arg) {
 				}
 
 				if (verbose>0) {
+						char ipaddr[INET_ADDRSTRLEN];
+	
+						inet_ntop(AF_INET, &addr.sin_addr, ipaddr, INET_ADDRSTRLEN);
+
+						
 						fprintf(stderr, "\n");
 						fprintf(stderr, "discover: host->name = %s\n", discovery->name);
 						fprintf(stderr, "discover: host->port = %d\n", discovery->port);
 						fprintf(stderr, "discover: host->id   = %d\n", discovery->id);
+						fprintf(stderr, "discover: IP address = %s\n", ipaddr);
 				}
 
 				/* check whether the peer should be listed */
@@ -241,6 +247,7 @@ void *discover(void *arg) {
 								fprintf(stderr, "discover:   host.name = %s\n", peer->host->name);
 								fprintf(stderr, "discover:   host.port = %d\n", peer->host->port);
 								fprintf(stderr, "discover:   host.id   = %d\n", peer->host->id);
+								fprintf(stderr, "discover:   IP addr.  = %s\n", peer->ipaddr);
 								fprintf(stderr, "discover:   time      = %s",   ctime(&(peer->time)));
 								peer = peer->next ;
 								i++;

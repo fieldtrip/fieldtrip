@@ -54,7 +54,7 @@ void cleanup_announce(void *arg) {
 void *announce(void *arg) {
 		int fd = 0;
 		int verbose = 0;
-		struct sockaddr_in multicast;
+		struct sockaddr_in multicast, localhostAddr;
 		hostdef_t *message = NULL;
 		unsigned char ttl = 3;
 		unsigned char one = 1;
@@ -115,6 +115,12 @@ void *announce(void *arg) {
 		multicast.sin_family      = AF_INET;
 		multicast.sin_addr.s_addr = inet_addr(ANNOUNCE_GROUP);
 		multicast.sin_port        = htons(ANNOUNCE_PORT);
+		
+		/* set up destination address for localhost announce packet */
+		memset(&localhostAddr,0,sizeof(localhostAddr));
+		localhostAddr.sin_family      = AF_INET;
+		localhostAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+		localhostAddr.sin_port        = htons(ANNOUNCE_PORT);
 
 		/* now just sendto() our destination */
 		while (1) {
@@ -146,10 +152,16 @@ void *announce(void *arg) {
 
 				if (verbose>1)
 						fprintf(stderr, "announce\n");
+						
+				/* note that this is a thread cancelation point */
+				if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &localhostAddr,sizeof(localhostAddr)) < 0) {
+						perror("announce sendto (local)");
+						goto cleanup;
+				}
 
 				/* note that this is a thread cancelation point */
 				if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &multicast,sizeof(multicast)) < 0) {
-						perror("announce sendto");
+						perror("announce sendto (multicast)");
 						goto cleanup;
 				}
 
