@@ -338,7 +338,7 @@ class Client:
 # Just a small demo for testing purposes...
 # This should be moved to a separate file at some point		
 ftc = Client()
-ftc.connect('mentat069',1972)
+ftc.connect('localhost',1972)
 print '\nConnected - trying to read header...'
 print ftc.getHeader()	
 

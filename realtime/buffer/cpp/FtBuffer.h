@@ -136,6 +136,44 @@ class FtBufferRequest {
 		m_def.bufsize = totalSize;
 		return true;
 	}
+	
+	bool prepPutEvent(INT32_T sample, INT32_T offset, INT32_T duration, const char *type=NULL, INT32_T value = 0) {
+		// This is for safety: If a user ignores this function returning false,
+		// and just sends this request to the buffer server, we need to make sure
+		// no harm is done - so we sent a small invalid packet
+		m_def.command = GET_ERR; 
+		m_def.bufsize = 0;
+		
+		int len_type  = (type == NULL) ? 0 : strlen(type);
+		
+		UINT32_T  totalSize = sizeof(eventdef_t) + len_type + sizeof(INT32_T);
+		eventdef_t *ed;
+		
+		if (!m_buf.resize(totalSize)) return false;
+		m_msg.buf = m_buf.data();
+		
+		ed = (eventdef_t *) m_buf.data();
+		ed->type_type = DATATYPE_CHAR;
+		ed->type_numel = len_type;
+		ed->value_type = DATATYPE_INT32;
+		ed->value_numel = 1;
+		ed->sample = sample;
+		ed->offset = offset;
+		ed->duration = duration;
+		ed->bufsize  = ed->type_numel + sizeof(DATATYPE_INT32);
+		
+		char *dest = (char *) m_buf.data() + sizeof(eventdef_t);
+		
+		if (len_type>0) {
+			memcpy(dest, type, len_type);
+			dest+=len_type;
+		}
+		memcpy(dest, &value, sizeof(INT32_T));
+				
+		m_def.command = PUT_EVT;
+		m_def.bufsize = totalSize;
+		return true;
+	}	
 		
 	void prepGetData(UINT32_T begsample, UINT32_T endsample) {
 		m_def.command = GET_DAT;
