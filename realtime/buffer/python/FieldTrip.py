@@ -1,7 +1,7 @@
 """
 FieldTrip buffer (V1) client in pure Python
 
-Not complete yet - only simple GET_xxx calls implemented
+Not complete yet - only GET_xxx and PUT_xxx calls implemented.
 (C) 2010 S. Klanke
 """
 
@@ -63,12 +63,13 @@ def serialize(A):
 		if ft == -1:
 			return (DATATYPE_UNKNOWN, None)
 			
-		try:
-			buf = A.data
-		except:
-		    buf = A.flatten().data
-			
-		return (ft, str(buf))
+		if A.flags['C_CONTIGUOUS']:
+			# great, just use the array's buffer interface
+			return (ft, str(A.data))
+
+		# otherwise, we need a copy to C order
+		AC = A.copy('C')
+		return (ft, str(AC.data))
 	
 	if isinstance(A, int):
 		return (DATATYPE_INT32, struct.pack('i', A))
@@ -112,7 +113,7 @@ class Header:
 		self.chunks = []
 		
 	def __str__(self):
-		return 'Channels.: %i\nSamples..: %i\nEvents...: %i\nSampFreq.: %f\nDataType.: %i\n'%(self.nChannels, self.nSamples, self.nEvents, self.fSample, self.dataType)
+		return 'Channels.: %i\nSamples..: %i\nEvents...: %i\nSampFreq.: %f\nDataType.: %s\n'%(self.nChannels, self.nSamples, self.nEvents, self.fSample, numpyType[self.dataType])
 		
 class Event:
 	"""Class for storing events in the FieldTrip buffer format"""
@@ -334,22 +335,114 @@ class Client:
 		
 		return E
 		
+		
+	def putEvents(self, E):
+		"""putEvents(E) -- writes a single or multiple events, depending on whether an 'Event'
+		   object, or a list of 'Event' objects is given as an argument.
+		"""
+		if not(self.isConnected):
+			raise IOError('Not connected to FieldTrip buffer')	
+		if isinstance(E,Event):
+			buf = E.serialize()
+		else:
+			buf = ''
+			num = 0
+			for e in E:
+				if not(isinstance(e,Event)):
+					raise 'Element %i in given list is not an Event'%num
+				buf = buf + e.serialize()
+				num = num + 1
+		
+		request = struct.pack('HHI', VERSION, PUT_EVT, len(buf))
+		nWr = send_all(self.sock, request + buf)
+		
+		resp_hdr = recv_all(self.sock, 8)
+		(version, command, bufsize) = struct.unpack('HHI', resp_hdr)
+		
+		if version!=VERSION:
+			self.disconnect()
+			raise IOError('Bad response from buffer server - disconnecting')
+		
+		if bufsize > 0:
+			resp_buf = recv_all(self.sock, bufsize)
+		
+		if command != PUT_OK:
+			raise IOError('Events could not be written.')
+			
+			
+	def putData(self, D):
+		"""putData(D) -- writes samples that must be given as a NUMPY array, samples x channels.
+		   The type of the samples (D) and the number of channels must match the corresponding
+		   quantities in the FieldTrip buffer.
+		"""
+		if not(self.isConnected):
+			raise IOError('Not connected to FieldTrip buffer')		
 
-# Just a small demo for testing purposes...
-# This should be moved to a separate file at some point		
-ftc = Client()
-ftc.connect('localhost',1972)
-print '\nConnected - trying to read header...'
-print ftc.getHeader()	
+		if not(isinstance(D, numpy.ndarray)) or len(D.shape)!=2:
+			raise ValueError('Data must be given as a NUMPY array (samples x channels)')
+		
+		nSamp = D.shape[0]
+		nChan = D.shape[1]
+		
+		(dataType, dataBuf) = serialize(D)
+		
+		dataBufSize = len(dataBuf)
+		
+		request = struct.pack('HHI', VERSION, PUT_DAT, 16+dataBufSize)
+		dataDef = struct.pack('IIII', nChan, nSamp, dataType, dataBufSize)
+		nWr = send_all(self.sock, request + dataDef + dataBuf )
+		
+		resp_hdr = recv_all(self.sock, 8)
+		(version, command, bufsize) = struct.unpack('HHI', resp_hdr)
+		
+		if version!=VERSION:
+			self.disconnect()
+			raise IOError('Bad response from buffer server - disconnecting')
+		
+		if bufsize > 0:
+			resp_buf = recv_all(self.sock, bufsize)
+		
+		if command != PUT_OK:
+			raise IOError('Samples could not be written.')
 
-print '\nTrying to read (all) data...'
-D = ftc.getData()
-print D.shape
-print D
+			
 
-print '\nTrying to read (all) events...'
-E = ftc.getEvents()
-for e in E:
-	print e
+if __name__ == "__main__":
+	# Just a small demo for testing purposes...
+	# This should be moved to a separate file at some point		
+	import sys
+	
+	hostname = 'localhost'
+	port = 1972
+	
+	if len(sys.argv)>1:
+		hostname = sys.argv[1]
+	if len(sys.argv)>2:
+		try:
+			port = int(sys.argv[2])
+		except:
+			print 'Error: second argument (%s) must be a valid (=integer) port number'%sys.argv[2]
+			sys.exit(1)
+		
+	ftc = Client()		
+		
+	print 'Trying to connect to buffer on %s:%i ...'%(hostname,port)
+	ftc.connect(hostname, port)
+	
+	print '\nConnected - trying to read header...'
+	H = ftc.getHeader()
+	print H
+	
+	if H.nSamples > 0:
+		print '\nTrying to read (all) data...'
+		D = ftc.getData()
+		print D.shape
+		print D
 
-ftc.disconnect()
+	if H.nEvents > 0:
+		print '\nTrying to read (all) events...'
+		E = ftc.getEvents()
+		for e in E:
+			print e
+	
+	ftc.disconnect()
