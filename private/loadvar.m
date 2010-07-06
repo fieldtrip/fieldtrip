@@ -6,7 +6,11 @@ function value = loadvar(filename, varname)
 %
 % $Id$
 
-fprintf('reading ''%s'' from file ''%s''\n', varname, filename);
+if nargin<2
+  fprintf('reading variable from file ''%s''\n', filename);
+else
+  fprintf('reading ''%s'' from file ''%s''\n', varname, filename);
+end
 
 var = whos('-file', filename);
 
