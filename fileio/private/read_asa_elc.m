@@ -23,10 +23,16 @@ function elec = read_asa_elc(fn);
 %
 % $Id$
 
+% the older *.elc files have an Nx3 matrix with positions and seperate labels
+% the newer *.elc files are formatted like this
+%    Fp1:    94.9    30.7    14.0
+% and also include Positions2D
+
 Npnt = read_asa(fn, 'NumberPositions=', '%d');
 Ndhk = read_asa(fn, 'NumberPolygons=', '%d');
 Unit = read_asa(fn, 'UnitPosition', '%s', 1);
 pnt  = read_asa(fn, 'Positions', '%f', Npnt, ':');
+prj  = read_asa(fn, 'Positions2D', '%f', Npnt, ':');  % only in newer files
 dhk  = read_asa(fn, 'Polygons', '%d', Ndhk);
 lab  = read_asa(fn, 'Labels', '%s', Npnt);
 
@@ -37,19 +43,16 @@ elseif strcmpi(Unit,'cm')
 elseif strcmpi(Unit,'m')
   pnt = 1000*pnt;
 elseif ~isempty(Unit)
-  error(sprintf('Unknown unit of distance for electrodes (%s)', Unit));
+  error('Unknown unit of distance for electrodes (%s)', Unit);
 end
 
-if length(lab)==1 && iscell(lab)
+tmp = tokenize(lab{1});
+if length(tmp)==size(pnt,1)
   % the electrode labels were on a single line
   % reformat the electrode labels into an appropriately sized cell array
-  remainder = lab{1};
-  lab = {};
-  for i=1:size(pnt,1)
-    [lab{i}, remainder] = strtok(remainder);
-  end
+  lab = tmp;
 end
 
 elec.pnt = pnt;
 elec.dhk = dhk+1;
-elec.label = lab;
+elec.label = lab(:);
