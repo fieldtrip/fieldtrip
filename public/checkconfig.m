@@ -140,9 +140,9 @@ if ~isempty(renamedval) && isfield(cfg, renamedval{1})
     if silent
       % don't mention it
     elseif loose
-      warning(sprintf('use cfg.%s=%s instead of cfg.%s=%s', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2}));
+      warning(sprintf('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2}));
     elseif pedantic
-      error(sprintf('use cfg.%s=%s instead of cfg.%s=%s', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2}));
+      error(sprintf('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2}));
     end
   end
 end
