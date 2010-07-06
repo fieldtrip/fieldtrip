@@ -147,6 +147,24 @@ if usefsample
   progress('init', cfg.feedback, 'resampling data');
   [fsorig, fsres] = rat(cfg.origfs./cfg.resamplefs);%account for non-integer fs
   cfg.resamplefs  = cfg.origfs.*(fsres./fsorig);%get new fs exact
+  
+  % make sure that the resampled time axes are aligned (this is to avoid 
+  % rounding errors in the time axes). this procedure relies on the
+  % fact that resample assumes all data outside the data window to be zero
+  % anyway. therefore, padding with zeros (to the left) before resampling 
+  % does not hurt
+  firstsmp = zeros(ntr, 1);
+  for itr = 1:ntr
+    firstsmp(itr) = data.time{itr}(1);
+  end
+  minsmp = min(firstsmp);
+  padsmp = round((firstsmp-minsmp).*cfg.origfs);
+  
+  nchan  = numel(data.label);
+  if any(padsmp~=0)
+    warning('not all of the trials have the same original time axis: to avoid rounding issues in the resampled time axes, data will be zero-padded to the left prior to resampling');
+  end
+  
   for itr = 1:ntr
     progress(itr/ntr, 'resampling data in trial %d from %d\n', itr, ntr);
     if strcmp(cfg.blc,'yes')
@@ -155,16 +173,27 @@ if usefsample
     if strcmp(cfg.detrend,'yes')
       data.trial{itr} = ft_preproc_detrend(data.trial{itr});
     end
+
+    % pad the data with zeros to the left
+    data.trial{itr} = [zeros(nchan, padsmp(itr))     data.trial{itr}];
+    data.time{itr}  = [data.time{itr}(1)-(padsmp(itr):-1:1)./cfg.origfs data.time{itr}];
+    
     % perform the resampling
     if isa(data.trial{itr}, 'single')
       % temporary convert this trial to double precision
-      data.trial{itr} = single(resample(double(data.trial{itr})',fsres,fsorig))';
+      data.trial{itr} = transpose(single(resample(double(transpose(data.trial{itr})),fsres,fsorig)));
     else
-      data.trial{itr} = resample(transpose(data.trial{itr}),fsres,fsorig)';
+      data.trial{itr} = transpose(resample(transpose(data.trial{itr}),fsres,fsorig));
     end
     % update the time axis
     nsmp = size(data.trial{itr},2);
     data.time{itr} = data.time{itr}(1) + (0:(nsmp-1))/cfg.resamplefs;
+  
+    %un-pad the data
+    begindx         = ceil(cfg.resamplefs.*padsmp(itr)./cfg.origfs) + 1;
+    data.time{itr}  = data.time{itr}(begindx:end);
+    data.trial{itr} = data.trial{itr}(:, begindx:end);
+    
   end % for itr
   progress('close');
   
