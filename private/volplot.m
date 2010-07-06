@@ -1,4 +1,4 @@
-function [h, lpa, rpa] = volplot(x, y, z, dat, sel, cscale)
+function [dat] = volplot(x, y, z, dat, sel, cscale)
 
 % VOLPLOT make 2D or 3D plot of volumetric data (e.g. MRI)
 % that is defined on a regular orthogonal grid
@@ -132,6 +132,16 @@ if strcmp(sel, 'interactive')
       rpa = [xc yc zc];
     elseif key=='n'
       nas = [xc yc zc];
+    elseif key=='x'
+      selx= round((xc-0):(xc+0));
+      sely= round((yc-0):(yc+0));
+      selz= round((zc-0):(zc+0));
+      dat(selx,sely,selz) = 0;
+    elseif key=='X'
+      selx= round((xc-1):(xc+1));
+      sely= round((yc-1):(yc+1));
+      selz= round((zc-1):(zc+1));
+      dat(selx,sely,selz) = 0;
     else         
       % update the view to a new position
       l1 = get(get(gca, 'xlabel'), 'string');
