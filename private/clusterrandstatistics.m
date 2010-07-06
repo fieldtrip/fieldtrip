@@ -194,7 +194,7 @@ function [clusrand] = clusterrandstatistics(cfg,data);
 % $Id$
 
 % Turn divideByZero warnings off.
-warning off;
+ws = warning('off', 'MATLAB:divideByZero');
 
 fprintf('Running the statistics engine.\n');
 
@@ -1233,6 +1233,5 @@ end;
 clusrand.cfg  = cfg;            % remember the configuration details
 
 % Turn warnings on.
-warning on;
-
+warning(ws);
 

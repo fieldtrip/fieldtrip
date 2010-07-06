@@ -65,10 +65,12 @@ for i=1:length(indx)
   pnt3(indx(i),:) = pnt3(indx(i),:) + pnt1(i,:);
 end
 
-warning off MATLAB:divideByZero
+% turn the warning off
+ws = warning('off', 'MATLAB:divideByZero');
 pnt3 = pnt3 ./ [count count count];
-warning on MATLAB:divideByZero
 tri3 = tri2;
+% revert to previous warning state
+warning(ws)
 
 exception=find(count==0);
 if ~isempty(exception)

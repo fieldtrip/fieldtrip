@@ -34,7 +34,8 @@ end
 
 [cpersist] = read_cpersist(fid);
 
-warning off
+% turn warnings off
+ws = warning('off');
 
 % general header information
 hdr.identifierString        = get_value(cpersist, '_CTFMRI_VERSION');      % CTF_MRI_FORMAT VER 4.1
@@ -96,7 +97,9 @@ hdr.headOrigin_coronal = hmOrigin(2);
 hdr.headOrigin_axial = hmOrigin(3);
 
 %fread(fid,204,'char'); % unused, padding to 1028 bytes
-warning on
+
+% revert to previous warning state
+warning(ws);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % READ THE IMAGE DATA

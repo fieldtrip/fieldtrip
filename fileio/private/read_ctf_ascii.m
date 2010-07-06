@@ -59,7 +59,9 @@ while ischar(line)
       value(1) = ' ';           % remove the :
       value  = strtrim(value);
       item   = strtrim(item);
-      warning off
+
+      % turn warnings off
+      ws = warning('off');
       
       % the item name should be a real string, otherwise I cannot put it into the structure
       if strcmp(sprintf('%d', str2num(deblank(item))), deblank(item))
@@ -75,7 +77,9 @@ while ischar(line)
         % the value appears to be a number or a list of numbers
         eval(sprintf('file.%s.%s = [ %s ];', line, item, value));
       end
-      warning on
+
+      % revert to previous warning state
+      warning(ws);
     end
     subline = cleanline(fgetl(fid));    % read the first item
   end
