@@ -157,6 +157,26 @@ int add_hps_item(const char *hostname, int port, int sock) {
 	return 1;
 }
 
+/* This function searches the item with matching socket number and removes it from the list 
+	Note: The socket itself is not closed here.
+*/
+void remove_hps_item(int sock) {
+	host_port_sock_list_item_t *hpsli = firstHostPortSock;
+	/* the "next" pointer of the previous list item, or initially a pointer to the head of the list */
+	host_port_sock_list_item_t **prev_next = &firstHostPortSock;   
+	
+	while (hpsli != NULL) {
+		if (hpsli->sock == sock) {
+			*prev_next = hpsli->next;
+			free(hpsli->hostname);			
+			free(hpsli);
+			return;
+		}
+		prev_next = &(hpsli->next);
+		hpsli = hpsli->next;
+	}
+}
+
 /** This is a MEX-specific wrapper for the open_connection call.
 	If the requested host+port combination is already in the linked list,
 	it means that the connection is still open (at least from this side), and
@@ -173,10 +193,38 @@ int open_connection_with_list(const char *hostname, int port) {
 		printf("Looking for list item...\n");
 	sock = lookup_hps_item(hostname, port);
 	/* hostname/port combination found? just return the socket */
-	if (sock >= 0) {
+	if (sock == 0) {
+		/* dma connection to internal buffer */
 		if (verbose > 0) 
-			printf("Found connection on %i\n",sock);
+			printf("Found (dma) connection to internal buffer\n");
 		return sock;
+	}
+	if (sock > 0) {
+		/* First check whether that socket can be read from, indicating a 
+			closed connection from the remote side.
+		*/
+		fd_set readSet;
+		struct timeval tv;
+		int sel;
+		
+		tv.tv_sec = 0;
+		tv.tv_usec = 0;
+		
+		FD_ZERO(&readSet);
+		FD_SET(sock, &readSet);
+		
+		sel = select(sock + 1, &readSet, NULL, NULL, &tv);
+		
+		if (sel == 1) {
+			mexWarnMsgTxt("Existing connection seems to have been closed from remote side - trying to re-open...\n");
+			remove_hps_item(sock);
+			/* go on further down with opening new connection */
+		} else {
+			/* reading not possible means that connection is still open */
+			if (verbose > 0) 
+				printf("Found connection on %i\n",sock);
+			return sock;
+		}
 	}
 	
 	if (verbose>0) 
@@ -196,26 +244,6 @@ int open_connection_with_list(const char *hostname, int port) {
 	}
 	mexErrMsgTxt("ERROR: failed to create socket (1)");
 	return -1;
-}
-
-/* This function searches the item with matching socket number and removes it from the list 
-	Note: The socket itself is not closed here.
-*/
-void remove_hps_item(int sock) {
-	host_port_sock_list_item_t *hpsli = firstHostPortSock;
-	/* the "next" pointer of the previous list item, or initially a pointer to the head of the list */
-	host_port_sock_list_item_t **prev_next = &firstHostPortSock;   
-	
-	while (hpsli != NULL) {
-		if (hpsli->sock == sock) {
-			*prev_next = hpsli->next;
-			free(hpsli->hostname);			
-			free(hpsli);
-			return;
-		}
-		prev_next = &(hpsli->next);
-		hpsli = hpsli->next;
-	}
 }
 
 /* for debugging */
