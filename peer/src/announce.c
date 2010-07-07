@@ -26,6 +26,17 @@
 #include "extern.h"
 #include "platform_includes.h"
 
+/* The original behaviour was to use multicast to announce the
+   presence of a peer. In the presence of a firewall or if no network
+   is configured, the multicast does not work. In the case someone
+   only wants to use multiple peers on a single computer, an additional
+   localhost packet is sent which communicates the presence of multiple
+   peers to each other.
+ */
+
+#define USE_MULTICAST
+#define USE_LOCALHOST
+
 typedef struct {
 		void *message;
 		int fd;
@@ -153,18 +164,21 @@ void *announce(void *arg) {
 				if (verbose>1)
 						fprintf(stderr, "announce\n");
 
+#ifdef USE_MULTICAST
 				/* note that this is a thread cancelation point */
 				if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &multicastAddr,sizeof(multicastAddr)) < 0) {
 						perror("announce sendto (multicast)");
 						goto cleanup;
 				}
+#endif
 
-				strncpy(message->name, "localhost", STRLEN);
+#ifdef USE_LOCALHOST
 				/* note that this is a thread cancelation point */
 				if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &localhostAddr,sizeof(localhostAddr)) < 0) {
 						perror("announce sendto (localhost)");
 						goto cleanup;
 				}
+#endif
 
 				/* note that this is a thread cancelation point */
 				pthread_testcancel();
@@ -239,16 +253,19 @@ int announce_once(void) {
 		if ((setsockopt(fd, IPPROTO_IP, IP_MULTICAST_TTL, (void*)&ttl, sizeof(ttl))) < 0)
 				perror("setsockopt() failed");
 
+#ifdef USE_MULTICAST
 		if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &multicastAddr,sizeof(multicastAddr)) < 0) {
 				perror("announce_once sendto");
 				goto cleanup;
 		}
+#endif
 
-		strncpy(message->name, "localhost", STRLEN);
+#ifdef USE_LOCALHOST
 		if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &localhostAddr,sizeof(localhostAddr)) < 0) {
 				perror("announce sendto (localhost)");
 				goto cleanup;
 		}
+#endif
 
 cleanup:
 		FREE(message);

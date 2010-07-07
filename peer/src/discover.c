@@ -67,9 +67,9 @@ void *discover(void *arg) {
 		int i = 0;
 		int fd = 0;
 		unsigned int addrlen;
-		int nbytes, verbose = 0, found = 0;
+		int nbytes, verbose = 2, found = 0;
 		int one = 1;
-		int accept = 1, skip = 0;
+		int accept = 1;
 		peerlist_t *peer = NULL, *next = NULL;
 		hostdef_t  *discovery = NULL;
 
@@ -189,23 +189,6 @@ void *discover(void *arg) {
 
 				pthread_mutex_lock(&mutexpeerlist);
 
-				/* An incoming packet from localhost might be coming as a multicast over
-				   the external inet interface or might come from the loopback device. If
-				   the peer is already known from a previous loopback packet, then it does
-				   not make sense to add a multicast version of the peer to the list */
-				skip = 0;
-				peer = peerlist;
-				while(peer) {
-						skip = (peer->host->id==discovery->id);                   /* the presently discovered peer is already known */
-						skip = skip & (strcmp(discovery->name,  "localhost")!=0); /* the presently discovered peer is NOT localhost */
-						skip = skip & (strcmp(peer->host->name, "localhost")==0); /* the presently discovered peer is already known as localhost */
-						if (skip) {
-								if (verbose>0) fprintf(stderr, "discover: skipping multicast discovery\n");
-								break;
-						}
-						peer = peer->next;
-				}
-
 				/* remove previous observations of this discovery from the list */
 				/* test the first item on the list */
 				if (peerlist)	{
@@ -238,7 +221,6 @@ void *discover(void *arg) {
 						peer = peer->next;
 				}
 
-if (!skip) {
 				/* add the new discovery to the list */
 				peer       = (peerlist_t *)malloc(sizeof(peerlist_t));
 				peer->host = (hostdef_t *)malloc(sizeof(hostdef_t));
@@ -253,7 +235,6 @@ if (!skip) {
 				peer->time      = time(NULL);
 				peer->next      = peerlist;
 				peerlist        = peer;
-}
 
 				if (verbose>1) {
 						i = 0;
