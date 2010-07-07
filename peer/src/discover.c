@@ -200,7 +200,7 @@ void *discover(void *arg) {
 						skip = skip & (strcmp(discovery->name,  "localhost")!=0); /* the presently discovered peer is NOT localhost */
 						skip = skip & (strcmp(peer->host->name, "localhost")==0); /* the presently discovered peer is already known as localhost */
 						if (skip) {
-								fprintf(stderr, "discover: skipping multicast discovery\n");
+								if (verbose>0) fprintf(stderr, "discover: skipping multicast discovery\n");
 								break;
 						}
 						peer = peer->next;

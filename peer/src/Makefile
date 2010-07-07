@@ -21,7 +21,7 @@ TARGET   = test_announce test_discover test_send test_recv peerslave
 ifeq "$(PLATFORM)" "x86_64-redhat-linux"
 	# this is only for the peerslave command line executable -> mentat001
 	MATLABARCH = glnxa64
-	MATLABPATH = /opt/matlab75
+	MATLABPATH = /opt/matlab77
 	MATLABLIBS = -L$(MATLABPATH)/bin/$(MATLABARCH) -leng -lmx
 	MATLABINC  = -I$(MATLABPATH)/extern/include
 endif
