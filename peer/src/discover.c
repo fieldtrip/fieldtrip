@@ -67,7 +67,7 @@ void *discover(void *arg) {
 		int i = 0;
 		int fd = 0;
 		unsigned int addrlen;
-		int nbytes, verbose = 2, found = 0;
+		int nbytes, verbose = 0, found = 0;
 		int one = 1;
 		int accept = 1, skip = 0;
 		peerlist_t *peer = NULL, *next = NULL;
