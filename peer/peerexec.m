@@ -1,4 +1,13 @@
-function [argout, options] = peerexec(argin, options)
+function [argout, optout] = peerexec(argin, optin)
+
+% PEEREXEC is the low-level function that executes the job on the
+% slave. It also tries to change the path and pwd to those on the
+% master and it catches and deals with any errors in the code that
+% is executed.
+%
+% This function should not be called directly.
+%
+% See also PEERSLAVE, PEERMASTER, PEERCELLFUN
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
@@ -17,14 +26,13 @@ function [argout, options] = peerexec(argin, options)
 % along with this program.  If not, see <http://www.gnu.org/licenses/
 % -----------------------------------------------------------------------
 
-usediary = false;
-% keep track of the time and number of jobs
+% keep track of the time
 stopwatch = tic;
-prevtime  = toc(stopwatch);
-idlestart = toc(stopwatch);
-jobnum    = 0;
 
-    
+% remember the original working directory and the original path
+orig_pwd = pwd;
+orig_path = path;
+
 try
   % there are many reasons why the execution may fail, hence the elaborate try-catch
   
@@ -39,18 +47,18 @@ try
   fname = argin{1};
   argin = argin(2:end);
   
-  if ~iscell(options)
+  if ~iscell(optin)
     error('input options should be a cell-array');
   end
   
   % try setting the same path directory
-  option_path = keyval('path', options);
+  option_path = keyval('path', optin);
   if ~isempty(option_path)
     path(option_path, path);
   end
   
   % try changing to the same working directory
-  option_pwd = keyval('pwd', options);
+  option_pwd = keyval('pwd', optin);
   if ~isempty(option_pwd)
     try
       cd(option_pwd);
@@ -85,6 +93,10 @@ try
   % start measuring the time and memory requirements
   memprofile on
   timused = toc(stopwatch);
+
+  % check whether a diary file should be created
+  usediary = keyval('diary', optin);
+  usediary = any(strcmp(usediary, {'always', 'warning', 'error'}));
   
   if usediary
     % switch on the diary
@@ -124,14 +136,13 @@ try
   % in some left-over memory fragment that was not yet deallocated.
   % Larger memory jobs return more reliable measurements.
   
-  fprintf('executing job %d took %f seconds and %d bytes\n', jobnum, timused, memused);
+  fprintf('executing job took %f seconds and %d bytes\n', timused, memused);
   
   % collect the output options
-  options = {'timused', timused, 'memused', memused, 'lastwarn', lastwarn, 'lasterr', '', 'diary', diarystring, 'release', version('-release')};
+  optout = {'timused', timused, 'memused', memused, 'lastwarn', lastwarn, 'lasterr', '', 'diary', diarystring, 'release', version('-release')};
   
 catch feval_error
-  argout  = {};
-  
+
   if usediary
     % close the diary and read the contents
     diary off
@@ -142,13 +153,37 @@ catch feval_error
     % return an empty diary
     diarystring = [];
   end
-  
+
   % the output options will include the error
-  options = {'lastwarn', lastwarn, 'lasterr', feval_error, 'diary', diarystring};
+  % note that the error cannot be sent as object, but has to be sent as struct
+  optout = {'lastwarn', lastwarn, 'lasterr', struct(feval_error), 'diary', diarystring};
+
   % an error was detected while executing the job
   warning('an error was detected during job execution');
+
   % ensure that the memory profiler is switched off
   memprofile off
   memprofile clear
 end % try-catch
+
+% revert to the original path
+if ~isempty(option_path)
+  path(orig_path);
+end
+
+% revert to the original working directory
+if ~isempty(option_pwd)
+  cd(orig_pwd);
+end
+
+% clear the function and any persistent variables in it
+clear(fname);
+
+% close all files and figures
+fclose all;
+close all force;
+close all hidden;
+
+% clear any global variables
+clear global
 

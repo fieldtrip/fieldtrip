@@ -52,12 +52,8 @@ threads    = keyval('threads',    varargin);
 allowhost  = keyval('allowhost',  varargin); if isempty(allowhost), allowhost = {}; end
 allowuser  = keyval('allowuser',  varargin); if isempty(allowuser), allowuser = {}; end
 allowgroup = keyval('allowgroup', varargin); if isempty(allowgroup), allowgroup = {}; end
-hostname   = keyval('hostname',   varargin);
 group      = keyval('group',      varargin);
-usediary   = keyval('diary',      varargin);  % don't use the variable name diary, because it would interfere with the diary function
-
-% convert into a boolean value
-usediary = any(strcmp(usediary, {'always', 'warning', 'error'}));
+hostname   = keyval('hostname',   varargin);
 
 % these should be cell arrays
 if ~iscell(allowhost) && ischar(allowhost)
@@ -107,10 +103,6 @@ end
 % switch to idle slave mode
 peer('status', 2);
 
-% remember the original working directory and the original path
-orig_pwd = pwd;
-orig_path = path;
-
 % keep track of the time and number of jobs
 stopwatch = tic;
 prevtime  = toc(stopwatch);
@@ -118,228 +110,75 @@ idlestart = toc(stopwatch);
 jobnum    = 0;
 
 while true
-  
+
   if (toc(stopwatch)-idlestart) >= maxidle
     fprintf('maxidle exceeded, stopping as slave\n');
     break;
   end
-  
+
   if toc(stopwatch)>=maxtime
     fprintf('maxtime exceeded, stopping as slave\n');
     break;
   end
-  
+
   if jobnum>=maxnum
     fprintf('maxnum exceeded, stopping as slave\n');
     break;
   end
-  
+
   joblist = peer('joblist');
-  
+
   if isempty(joblist)
     % wait a little bit and try again
     pause(sleep);
-    
+
     % display the time every second
     currtime = toc(stopwatch);
     if (currtime-prevtime>=1)
       prevtime = currtime;
       disp(datestr(now));
     end
-    
+
   else
     % set the status to "busy slave"
     peer('status', 3);
-    
+
     % increment the job counter
     jobnum = jobnum + 1;
-    
+
     % reset the error and warning messages
     lasterr('');
     lastwarn('');
-    
+
     % get the last job from the list, which will be the oldest
     joblist = joblist(end);
-    
+
     fprintf('executing job %d from %s (jobid=%d)\n', jobnum, joblist.hostname, joblist.jobid);
     
     % get the input arguments and options
     [argin, options] = peer('get', joblist.jobid);
-    
-    try
-      % there are many reasons why the execution may fail, hence the elaborate try-catch
-      
-      if ~iscell(argin)
-        error('input argument should be a cell-array');
-      end
-      
-      if ~ischar(argin{1})
-        error('input argument #1 should be a string');
-      end
-      
-      fname = argin{1};
-      argin = argin(2:end);
-      
-      if ~iscell(options)
-        error('input options should be a cell-array');
-      end
-      
-      % try setting the same path directory
-      option_path = keyval('path', options);
-      if ~isempty(option_path)
-        path(option_path, path);
-      end
-      
-      % try changing to the same working directory
-      option_pwd = keyval('pwd', options);
-      if ~isempty(option_pwd)
-        try
-          cd(option_pwd);
-        catch cd_error
-          % don't throw an error, just give a warning (and hope for the best...)
-          warning(cd_error.message);
-        end
-      end
-      
-      % there are potentially errors to catch from the which() function
-      if isempty(which(fname))
-        error('Not a valid M-file (%s).', fname);
-      end
-      
-      % it can be difficult to determine the number of output arguments
-      try
-        numargout = nargout(fname);
-      catch nargout_error
-        if strcmp(nargout_error.identifier, 'MATLAB:narginout:doesNotApply')
-          % e.g. in case of nargin('plus')
-          numargout = 1;
-        else
-          rethrow(nargout_error);
-        end
-      end
-      
-      if numargout<0
-        % the nargout function returns -1 in case of a variable number of output arguments
-        numargout = 1;
-      end
-      
-      % start measuring the time and memory requirements
-      memprofile on
-      timused = toc(stopwatch);
-      
-      if usediary
-        % switch on the diary
-        diaryfile = tempname;
-        diary(diaryfile);
-      end
-      
-      % evaluate the function and get the output arguments
-      argout  = cell(1, numargout);
-      [argout{:}] = feval(fname, argin{:});
-      
-      if usediary
-        % close the diary and read the contents
-        diary off
-        fid = fopen(diaryfile, 'r');
-        diarystring = fread(fid, [1, inf], 'char=>char');
-        fclose(fid);
-      else
-        % return an empty diary
-        diarystring = [];
-      end
-      
-      % determine the time and memory requirements
-      timused = toc(stopwatch) - timused;
-      memstat = memprofile('info');
-      memprofile off
-      memprofile clear
-      
-      % determine the maximum amount of memory that was used during the function evaluation
-      memused = max([memstat.mem]) - min([memstat.mem]);
-      
-      % Note that the estimated memory is inaccurate, because of
-      % the dynamic memory management of Matlab and the garbage
-      % collector. Especially on small jobs, the reported memory
-      % use does not replect the size of the variables involved in
-      % the computation. Matlab is able to squeeze these small jobs
-      % in some left-over memory fragment that was not yet deallocated.
-      % Larger memory jobs return more reliable measurements.
-      
-      fprintf('executing job %d took %f seconds and %d bytes\n', jobnum, timused, memused);
-      
-      % collect the output options
-      options = {'timused', timused, 'memused', memused, 'lastwarn', lastwarn, 'lasterr', '', 'diary', diarystring, 'release', version('-release')};
-      
-    catch feval_error
-      argout  = {};
-      
-      if usediary
-        % close the diary and read the contents
-        diary off
-        fid = fopen(diaryfile, 'r');
-        diarystring = fread(fid, [1, inf], 'char=>char');
-        fclose(fid);
-      else
-        % return an empty diary
-        diarystring = [];
-      end
-      
-      % the output options will include the error
-      options = {'lastwarn', lastwarn, 'lasterr', feval_error, 'diary', diarystring};
-      % an error was detected while executing the job
-      warning('an error was detected during job execution');
-      % ensure that the memory profiler is switched off
-      memprofile off
-      memprofile clear
-    end % try-catch
-    
+
+    % evaluate the job
+    [argout, options] = peerexec(argin, options);
+
+    % write the results back to the master
     try
       peer('put', joblist.hostid, argout, options, 'jobid', joblist.jobid);
     catch
       warning('failed to return job results to the master');
     end
-    
+
     % remove the job from the tcpserver
     peer('clear', joblist.jobid);
-    
-    % revert to the original path
-    if ~isempty(option_path)
-      path(orig_path);
-    end
-    
-    % revert to the original working directory
-    if ~isempty(option_pwd)
-      cd(orig_pwd);
-    end
-    
-    % clear the function and any persistent variables in it
-    clear(fname);
-    
-    % close all files and figures
-    fclose all;
-    close all force;
-    close all hidden;
-    
-    % clear all temporary variables
-    vars = whos;
-    % easier would be to use the clearvars function, but that is only available in matlab 2008a and later
-    vars = setdiff({vars.name}, {'stopwatch' 'prevtime' 'jobnum' 'maxnum' 'maxtime' 'maxidle' 'idlestart' 'sleep' 'orig_path' 'orig_pwd' 'usediary'});
-    for indx=1:numel(vars)
-      clear(vars{indx});
-    end
-    clear vars indx
-    
-    % clear any global variables
-    clear global
-    
+
     % remember when the slave becomes idle
     idlestart = toc(stopwatch);
-    
+
     % set the status to "idle slave"
     peer('status', 2);
-    
+
   end % isempty(joblist)
-  
+
 end % while true
 
 peer('status', 0);

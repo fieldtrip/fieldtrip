@@ -28,7 +28,7 @@ mxArray *mxSerialize(const mxArray*);
 mxArray *mxDeserialize(const void*, size_t);
 
 #define panic(X) {fprintf(stderr, X); exit(1);}
-#define MAXIDLETIME 30     /* in seconds */
+#define MAXIDLETIME 10     /* in seconds */
 #define SLEEPTIME   10000  /* in microseconds */
 
 #define STARTCMD "matlab -nosplash"
