@@ -67,7 +67,7 @@ void *discover(void *arg) {
 		int i = 0;
 		int fd = 0;
 		unsigned int addrlen;
-		int nbytes, verbose = 1, found = 0;
+		int nbytes, verbose = 2, found = 0;
 		int one = 1;
 		int accept = 1;
 		peerlist_t *peer = NULL, *next = NULL;
@@ -145,8 +145,6 @@ void *discover(void *arg) {
 		/* now just enter an infinite loop */
 		while (1) {
 
-				addrlen=sizeof(addr);
-
 				if ((discovery = malloc(sizeof(hostdef_t)))==NULL) {
 						perror("discover malloc");
 						goto cleanup;
@@ -156,6 +154,7 @@ void *discover(void *arg) {
 				threadlocal.discovery = discovery;
 
 				/* note that this might be thread cancelation point, but I am not sure */
+				addrlen=sizeof(addr);
 				if ((nbytes=recvfrom(fd,discovery,sizeof(hostdef_t),0,(struct sockaddr *)&addr,&addrlen)) < 0) {
 						perror("discover recvfrom");
 						goto cleanup;
@@ -168,10 +167,8 @@ void *discover(void *arg) {
 
 				if (verbose>0) {
 						char ipaddr[INET_ADDRSTRLEN];
-	
 						inet_ntop(AF_INET, &addr.sin_addr, ipaddr, INET_ADDRSTRLEN);
 
-						
 						fprintf(stderr, "\n");
 						fprintf(stderr, "discover: host->name = %s\n", discovery->name);
 						fprintf(stderr, "discover: host->port = %d\n", discovery->port);
@@ -234,7 +231,7 @@ void *discover(void *arg) {
 				inet_ntop(AF_INET, &addr.sin_addr, peer->ipaddr, INET_ADDRSTRLEN);
 				/* if possible use the loopback IP address instead of external IP address */
 				if (localhost(peer->ipaddr)==1)
-					strncpy(peer->ipaddr, "127.0.0.1", INET_ADDRSTRLEN);
+						strncpy(peer->ipaddr, "127.0.0.1", INET_ADDRSTRLEN);
 				peer->time      = time(NULL);
 				peer->next      = peerlist;
 				peerlist        = peer;

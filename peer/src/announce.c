@@ -54,7 +54,7 @@ void cleanup_announce(void *arg) {
 void *announce(void *arg) {
 		int fd = 0;
 		int verbose = 0;
-		struct sockaddr_in multicast, localhostAddr;
+		struct sockaddr_in multicastAddr, localhostAddr;
 		hostdef_t *message = NULL;
 		unsigned char ttl = 3;
 		unsigned char one = 1;
@@ -110,17 +110,17 @@ void *announce(void *arg) {
 		/* this will be closed at cleanup */
 		threadlocal.fd = fd;
 
-		/* set up destination address for multicasting */
-		memset(&multicast,0,sizeof(multicast));
-		multicast.sin_family      = AF_INET;
-		multicast.sin_addr.s_addr = inet_addr(ANNOUNCE_GROUP);
-		multicast.sin_port        = htons(ANNOUNCE_PORT);
-		
 		/* set up destination address for localhost announce packet */
 		memset(&localhostAddr,0,sizeof(localhostAddr));
 		localhostAddr.sin_family      = AF_INET;
 		localhostAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 		localhostAddr.sin_port        = htons(ANNOUNCE_PORT);
+
+		/* set up destination address for multicast announce packet */
+		memset(&multicastAddr,0,sizeof(multicastAddr));
+		multicastAddr.sin_family      = AF_INET;
+		multicastAddr.sin_addr.s_addr = inet_addr(ANNOUNCE_GROUP);
+		multicastAddr.sin_port        = htons(ANNOUNCE_PORT);
 
 		/* now just sendto() our destination */
 		while (1) {
@@ -152,16 +152,17 @@ void *announce(void *arg) {
 
 				if (verbose>1)
 						fprintf(stderr, "announce\n");
-						
+
 				/* note that this is a thread cancelation point */
-				if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &localhostAddr,sizeof(localhostAddr)) < 0) {
-						perror("announce sendto (local)");
+				if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &multicastAddr,sizeof(multicastAddr)) < 0) {
+						perror("announce sendto (multicast)");
 						goto cleanup;
 				}
 
+				strncpy(message->name, "localhost", STRLEN);
 				/* note that this is a thread cancelation point */
-				if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &multicast,sizeof(multicast)) < 0) {
-						perror("announce sendto (multicast)");
+				if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &localhostAddr,sizeof(localhostAddr)) < 0) {
+						perror("announce sendto (localhost)");
 						goto cleanup;
 				}
 
@@ -184,7 +185,7 @@ cleanup:
 int announce_once(void) {
 		int fd = 0;
 		int verbose = 0;
-		struct sockaddr_in multicast;
+		struct sockaddr_in multicastAddr, localhostAddr;
 		hostdef_t *message = NULL;
 		unsigned char ttl = 3;
 		unsigned char one = 1;
@@ -195,13 +196,30 @@ int announce_once(void) {
 				goto cleanup;
 		}
 
-		/* set up destination address for multicasting */
-		memset(&multicast,0,sizeof(multicast));
-		multicast.sin_family      = AF_INET;
-		multicast.sin_addr.s_addr = inet_addr(ANNOUNCE_GROUP);
-		multicast.sin_port        = htons(ANNOUNCE_PORT);
+		/* allocate memory for the message */
+		if ((message = (hostdef_t *)malloc(sizeof(hostdef_t))) == NULL) {
+				perror("announce malloc");
+				goto cleanup;
+		}
+
+		/* set up destination address for localhost announce packet */
+		memset(&localhostAddr,0,sizeof(localhostAddr));
+		localhostAddr.sin_family      = AF_INET;
+		localhostAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+		localhostAddr.sin_port        = htons(ANNOUNCE_PORT);
+
+		/* set up destination address for multicast announce packet */
+		memset(&multicastAddr,0,sizeof(multicastAddr));
+		multicastAddr.sin_family      = AF_INET;
+		multicastAddr.sin_addr.s_addr = inet_addr(ANNOUNCE_GROUP);
+		multicastAddr.sin_port        = htons(ANNOUNCE_PORT);
 
 		pthread_mutex_lock(&mutexhost);
+
+		/* the host details can change over time */
+		memcpy(message, host, sizeof(hostdef_t));
+
+		pthread_mutex_unlock(&mutexhost);
 
 		if (strncasecmp(host->name, "localhost", STRLEN)==0)
 				ttl = 0;
@@ -221,13 +239,19 @@ int announce_once(void) {
 		if ((setsockopt(fd, IPPROTO_IP, IP_MULTICAST_TTL, (void*)&ttl, sizeof(ttl))) < 0)
 				perror("setsockopt() failed");
 
-		if (sendto(fd,host,sizeof(hostdef_t),0,(struct sockaddr *) &multicast,sizeof(multicast)) < 0) {
+		if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &multicastAddr,sizeof(multicastAddr)) < 0) {
 				perror("announce_once sendto");
 				goto cleanup;
 		}
 
+		strncpy(message->name, "localhost", STRLEN);
+		if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &localhostAddr,sizeof(localhostAddr)) < 0) {
+				perror("announce sendto (localhost)");
+				goto cleanup;
+		}
+
 cleanup:
-		pthread_mutex_unlock(&mutexhost);
+		FREE(message);
 		return 0;
 }
 
