@@ -163,6 +163,13 @@ switch dataformat
           end
 		end
       end		
+	  if isfield(hdr,'ctf_res4')
+	    if isa(hdr.ctf_res4, 'uint8')
+		  packet.ctf_res4 = hdr.ctf_res4;
+		else
+          warning 'Ignoring non-uint8 field "ctf_res4"';
+		end
+      end		  
       
       % try to put_hdr and initialize if necessary
       try
