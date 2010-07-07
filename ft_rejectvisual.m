@@ -156,7 +156,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
+data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hastrialdef', 'yes');
 
 % for backward compatibility
 cfg = checkconfig(cfg, 'renamedval',  {'metric',  'absmax',  'maxabs'});
@@ -313,6 +313,8 @@ end
 % remove the selected trials from the data
 data.time  = data.time(trlsel);
 data.trial = data.trial(trlsel);
+if isfield(data, 'trialinfo'), data.trialinfo = data.trialinfo(trlsel,:); end;
+if isfield(data, 'trialdef'),  data.trialdef  = data.trialdef(trlsel,:);  end;
 
 % remove the offset vector if present (only applies to datasets that have been preprocessed a long time ago)
 if isfield(data, 'offset')
