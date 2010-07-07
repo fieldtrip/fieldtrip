@@ -64,7 +64,6 @@ end
 
 % load optional given inputfile like already segmented volume 
 hasdata = (nargin>1);
-
 if ~isempty(cfg.inputfile)
   % the input data should be read from file
   if hasdata
@@ -72,25 +71,24 @@ if ~isempty(cfg.inputfile)
   else
     mri = loadvar(cfg.inputfile, 'data');
   end
+else
+  mri = [];
 end
 
-if hasdata
-  
-  if ~isfield(cfg,'headshape') || isempty(cfg.headshape)
-    basedonseg        = isfield(mri, 'transform') && any(isfield(mri, {'seg', 'csf', 'white', 'gray'}));
-    basedonmri        = isfield(mri, 'transform') && ~basedonseg;
-    basedonvol        = isfield(mri, 'bnd');
-    basedonsphere     = isfield(mri,'r') && isfield(mri,'o');
-    basedonheadshape  = 0;
-  elseif isfield(cfg,'headshape') && ~isempty(cfg.headshape)
-    basedonseg        = 0;
-    basedonmri        = 0;
-    basedonvol        = 0;
-    basedonsphere     = 0;
-    basedonheadshape  = 1;
-  else
-    error('inconsistent configuration, cfg.headshape should not be used in combination with an mri input')
-  end
+if ~isfield(cfg,'headshape') || isempty(cfg.headshape)
+  basedonseg        = isfield(mri, 'transform') && any(isfield(mri, {'seg', 'csf', 'white', 'gray'}));
+  basedonmri        = isfield(mri, 'transform') && ~basedonseg;
+  basedonvol        = isfield(mri, 'bnd');
+  basedonsphere     = isfield(mri,'r') && isfield(mri,'o');
+  basedonheadshape  = 0;
+elseif isfield(cfg,'headshape') && ~isempty(cfg.headshape)
+  basedonseg        = 0;
+  basedonmri        = 0;
+  basedonvol        = 0;
+  basedonsphere     = 0;
+  basedonheadshape  = 1;
+else
+  error('inconsistent configuration, cfg.headshape should not be used in combination with an mri input')
 end
 
 if basedonseg || basedonmri
