@@ -192,6 +192,20 @@ int buffer_puthdr(int server, mxArray * plhs[], const mxArray * prhs[])
 		}
 	}
 	
+	fieldnumber = mxGetFieldNumber(prhs[0], "ctf_res4");
+	if (fieldnumber>=0) {
+		field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+		if (!mxIsUint8(field)) {
+			mexWarnMsgTxt("invalid data type for field 'ctf_res4' -- ignoring");
+		} else {
+			chunk_def.size = mxGetNumberOfElements(field);
+			chunk_def.type = FT_CHUNK_CTF_RES4;
+		
+			request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, &chunk_def, sizeof(chunk_def));
+			request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, mxGetData(field), chunk_def.size);
+		}
+	}	
+	
 	fieldnumber = mxGetFieldNumber(prhs[0], "channel_names");
 	if (fieldnumber>=0) {
 		ft_chunk_t *chunk = NULL;
