@@ -43,6 +43,12 @@ end
 list = peer('peerlist');
 jobs = peer('joblist');
 
+% give a summary
+fprintf('there are %3d peers running as master\n', sum([list.hoststatus]==1));
+fprintf('there are %3d peers running as idle slave\n', sum([list.hoststatus]==2));
+fprintf('there are %3d peers running as busy slave\n', sum([list.hoststatus]==3));
+fprintf('there are %3d peers running as zombie\n', sum([list.hoststatus]==0));
+
 % display the hosts on screen, using the peerlist function
 peerlist;
 
