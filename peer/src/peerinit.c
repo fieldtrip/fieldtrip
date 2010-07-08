@@ -24,13 +24,25 @@
 #include "extern.h"
 #include "platform_includes.h"
 
+
+unsigned long hash(unsigned char *str)
+{
+		unsigned long hash = 5381;
+		int c;
+
+		while (c = *str++)
+				hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+
+		return hash;
+}
+
 /******************************************************************************/
 void peerinit(void *arg) {
 		struct passwd *pwd;
-		int family, s, verbose = 0;
+		int s, verbose = 0;
 
 #if defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64)
-    DWORD nStrLen; 
+		DWORD nStrLen; 
 #endif
 
 		if (verbose)
@@ -46,10 +58,6 @@ void peerinit(void *arg) {
 		/* check that all datatypes are of the expected size */
 		check_datatypes();
 
-		/* initialize the random number generator */
-		/* this is used for creating host and job IDs */
-		srand(getpid());
-
 		if ((host = malloc(sizeof(hostdef_t)))==NULL) {
 				perror("announce malloc");
 				exit(1);
@@ -62,7 +70,6 @@ void peerinit(void *arg) {
 		host->memavail = DEFAULT_MEMAVAIL;
 		host->cpuavail = DEFAULT_TIMAVAIL;
 		host->timavail = DEFAULT_CPUAVAIL;
-		host->id       = rand();
 
 #if defined (PLATFORM_LINUX) || defined (PLATFORM_OSX)
 
@@ -79,21 +86,32 @@ void peerinit(void *arg) {
 				exit(1);
 		}
 
-
 #else
-      
+
 		/* set the user name */
-    nStrLen = STRLEN;
-    GetUserName(host->user, &nStrLen);
+		nStrLen = STRLEN;
+		GetUserName(host->user, &nStrLen);
 
 		/* set the default group name */
 		strncpy(host->group, DEFAULT_GROUP, STRLEN);
 
-    /* get the host name */
+		/* get the host name */
 		nStrLen = STRLEN;
-    GetComputerName(host->name, &nStrLen);
+		GetComputerName(host->name, &nStrLen);
 
 #endif
+
+		/* initialize the random number generator */
+		/* this is used for creating host and job IDs */
+		srand(getpid());
+
+		/* this turns out not to be sufficiently random in the case of many peers */
+		host->id       = rand();
+
+		/* increasse the host ID with some host specific details */
+		host->id += hash(host->name);
+		host->id += hash(host->user);
+		host->id += hash(host->group);
 
 		if (verbose>0) {
 				fprintf(stderr, "peerinit: host.name =  %s\n", host->name);
