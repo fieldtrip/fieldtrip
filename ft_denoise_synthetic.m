@@ -11,7 +11,7 @@ function [data] = ft_denoise_synthetic(cfg, data);
 %                  type to which the data should be changed
 %   cfg.trials   = 'all' or a selection given as a 1xN vector (default = 'all')
 %
-% See also FT_PREPROCESSING, FT_DENOISE_SNS, FT_DENOISE_TSR, DENOISE_PCA
+% See also FT_PREPROCESSING, FT_DENOISE_SNS, FT_DENOISE_TSR, FT_DENOISE_PCA
 %
 % Undocumented local options:
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
@@ -100,8 +100,8 @@ if ~strcmp(desired, 'none')
     error('unknown balancing for input data');
   end
   fprintf('converting from "none" to "%s"\n', desired);
-  data.grad = ft_apply_montage(data.grad, desired_montage, 'keepunused', 'yes', 'inverse', 'yes');
-  data      = ft_apply_montage(data     , desired_montage, 'keepunused', 'yes', 'inverse', 'yes');
+  data.grad = ft_apply_montage(data.grad, desired_montage, 'keepunused', 'yes');
+  data      = ft_apply_montage(data     , desired_montage, 'keepunused', 'yes');
   data.grad.balance.current = desired;
 end % if
 
