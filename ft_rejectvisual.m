@@ -156,7 +156,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hastrialdef', 'yes');
+data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hastrialdef', 'yes', hasoffset', 'yes');
 
 % for backward compatibility
 cfg = checkconfig(cfg, 'renamedval',  {'metric',  'absmax',  'maxabs'});
@@ -270,24 +270,18 @@ fprintf('%d channels marked as GOOD, %d channels marked as BAD\n', sum(chansel),
 
 % trl is not specified in the function call, but the data is given ->
 % try to locate the trial definition (trl) in the nested configuration
-if isfield(data, 'cfg')
-  trl  = findcfg(data.cfg, 'trl');
+if isfield(data, 'trialdef')
+   trl  = [data.trialdef data.offset(:)];
 else
-  trl  = [];
-end
-if isempty(trl)
   % a trial definition is expected in each continuous data set
+  trl  = [];
   warning('could not locate the trial definition ''trl'' in the data structure');
 end
-trlold=trl;
 
 % construct an artifact matrix from the trl matrix
 if ~isempty(trl)
   % remember the sample numbers (begin and end) of each trial and each artifact
   % updating the trl and creating a trlold makes it compatible with FT_REJECTARTIFACT
-  if ~strcmp(cfg.trials, 'all')
-    trl=trl(cfg.trials,:);
-  end
   cfg.artifact = trl(~trlsel,1:2);
   cfg.trl      = trl( trlsel,:);
   cfg.trlold   = trlold;
