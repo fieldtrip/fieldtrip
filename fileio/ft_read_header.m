@@ -420,6 +420,7 @@ switch headerformat
       hdr.label{i} = strtok(hdr.label{i}, '-');
     end
     % read the balance coefficients, these are used to compute the synthetic gradients
+    coeftype = cellstr(char(orig.res4.scrr(:).coefType));
     try
       [alphaMEG,MEGlist,Refindex] = getCTFBalanceCoefs(orig,'NONE', 'T');
       orig.BalanceCoefs.none.alphaMEG  = alphaMEG;
@@ -428,39 +429,47 @@ switch headerformat
     catch
       warning('cannot read balancing coefficients for NONE');
     end
-    try
-      [alphaMEG,MEGlist,Refindex] = getCTFBalanceCoefs(orig,'G1BR', 'T');
-      orig.BalanceCoefs.G1BR.alphaMEG  = alphaMEG;
-      orig.BalanceCoefs.G1BR.MEGlist   = MEGlist;
-      orig.BalanceCoefs.G1BR.Refindex  = Refindex;
-    catch
-      warning('cannot read balancing coefficients for G1BR');
+    if ~cellfun(@isempty,strfind(coeftype, 'G1BR'))
+      try
+        [alphaMEG,MEGlist,Refindex] = getCTFBalanceCoefs(orig,'G1BR', 'T');
+        orig.BalanceCoefs.G1BR.alphaMEG  = alphaMEG;
+        orig.BalanceCoefs.G1BR.MEGlist   = MEGlist;
+        orig.BalanceCoefs.G1BR.Refindex  = Refindex;
+      catch
+        warning('cannot read balancing coefficients for G1BR');
+      end
     end
-    try
-      [alphaMEG,MEGlist,Refindex] = getCTFBalanceCoefs(orig,'G2BR', 'T');
-      orig.BalanceCoefs.G2BR.alphaMEG  = alphaMEG;
-      orig.BalanceCoefs.G2BR.MEGlist   = MEGlist;
-      orig.BalanceCoefs.G2BR.Refindex  = Refindex;
-    catch
-      warning('cannot read balancing coefficients for G2BR');
+    if ~cellfun(@isempty,strfind(coeftype, 'G2BR'))
+      try
+        [alphaMEG,MEGlist,Refindex] = getCTFBalanceCoefs(orig,'G2BR', 'T');
+        orig.BalanceCoefs.G2BR.alphaMEG  = alphaMEG;
+        orig.BalanceCoefs.G2BR.MEGlist   = MEGlist;
+        orig.BalanceCoefs.G2BR.Refindex  = Refindex;
+      catch
+        warning('cannot read balancing coefficients for G2BR');
+      end
     end
-    try
-      [alphaMEG,MEGlist,Refindex] = getCTFBalanceCoefs(orig,'G3BR', 'T');
-      orig.BalanceCoefs.G3BR.alphaMEG  = alphaMEG;
-      orig.BalanceCoefs.G3BR.MEGlist   = MEGlist;
-      orig.BalanceCoefs.G3BR.Refindex  = Refindex;
-    catch
-      warning('cannot read balancing coefficients for G3BR');
+    if ~cellfun(@isempty,strfind(coeftype, 'G3BR'))
+      try
+        [alphaMEG,MEGlist,Refindex] = getCTFBalanceCoefs(orig,'G3BR', 'T');
+        orig.BalanceCoefs.G3BR.alphaMEG  = alphaMEG;
+        orig.BalanceCoefs.G3BR.MEGlist   = MEGlist;
+        orig.BalanceCoefs.G3BR.Refindex  = Refindex;
+      catch
+        warning('cannot read balancing coefficients for G3BR');
+      end
     end
-    try
-      [alphaMEG,MEGlist,Refindex] = getCTFBalanceCoefs(orig,'G3AR', 'T');
-      orig.BalanceCoefs.G3AR.alphaMEG  = alphaMEG;
-      orig.BalanceCoefs.G3AR.MEGlist   = MEGlist;
-      orig.BalanceCoefs.G3AR.Refindex  = Refindex;
-    catch
-      % May not want a warning here if these are not commonly used.
-      % Already get a (fprintf) warning from getCTFBalanceCoefs.m
-      % warning('cannot read balancing coefficients for G3AR');
+    if ~cellfun(@isempty,strfind(coeftype, 'G1AR'))
+      try
+        [alphaMEG,MEGlist,Refindex] = getCTFBalanceCoefs(orig,'G3AR', 'T');
+        orig.BalanceCoefs.G3AR.alphaMEG  = alphaMEG;
+        orig.BalanceCoefs.G3AR.MEGlist   = MEGlist;
+        orig.BalanceCoefs.G3AR.Refindex  = Refindex;
+      catch
+        % May not want a warning here if these are not commonly used.
+        % Already get a (fprintf) warning from getCTFBalanceCoefs.m
+        % warning('cannot read balancing coefficients for G3AR');
+      end
     end
     % add a gradiometer structure for forward and inverse modelling
     try
