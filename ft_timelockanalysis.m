@@ -117,7 +117,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-data = checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hasoffset', 'yes');
+data = checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hastrialdef', 'yes', 'hasoffset', 'yes');
 
 % check if the input cfg is valid for this function
 cfg = checkconfig(cfg, 'trackconfig', 'on');
@@ -131,10 +131,6 @@ data = data2raw(data);
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
   data = selectdata(data, 'rpt', cfg.trials);  
-  if isfield(data, 'cfg') % try to locate the trl in the nested configuration
-    cfg.trlold = findcfg(data.cfg, 'trlold');
-    cfg.trl    = findcfg(data.cfg, 'trl');
-  end
 end
 
 ntrial = length(data.trial);
@@ -489,6 +485,11 @@ end
 if isfield(data, 'elec')
   % copy the electrode array along
   timelock.elec = data.elec;
+end
+if isfield(data, 'trialinfo') && strcmp(cfg.keeptrials, 'yes')
+  % copy the trialinfo into the output
+  % but not the trialdef
+  timelock.trialinfo = data.trialinfo;
 end
 
 % accessing this field here is needed for the configuration tracking

@@ -56,7 +56,7 @@ if ~isempty(cfg.inputfile)
   end
 end
 
-data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
+data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hastrialdef', 'yes');
 
 if ~ft_senstype(data, 'ctf')
   error('synthetic gradients can only be computed for CTF data');
@@ -66,10 +66,6 @@ end
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
   data = selectdata(data, 'rpt', cfg.trials);
-  if isfield(data, 'cfg') % try to locate the trl in the nested configuration
-    cfg.trlold = findcfg(data.cfg, 'trlold');
-    cfg.trl    = findcfg(data.cfg, 'trl');
-  end
 end
 
 % remember the original channel ordering
