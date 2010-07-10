@@ -106,10 +106,10 @@ while isempty(jobid)
     % it took too long to find a peer that was willing to execute the job
     break;
   end
-
+  
   % get the full list of peers
   peerlist = peer('peerlist');
-
+  
   if ~isempty(hostid)
     % only consider peers in the user specified list
     peerlist = peerlist(ismember([peerlist.hostid], hostid));
@@ -120,37 +120,37 @@ while isempty(jobid)
   if isempty(peerlist)
     error('there is no peer available as slave');
   end
-
+  
   % only peers with enough memory are interesting
   peerlist = peerlist([peerlist.hostmemavail] >= memreq);
   if isempty(peerlist)
     error('there are no slave peers available that meet the memory requirements');
   end
-
+  
   % only peers with enough CPU speed are interesting
   peerlist = peerlist([peerlist.hostcpuavail] >= cpureq);
   if isempty(peerlist)
     error('there are no slave peers available that meet the CPU requirements');
   end
-
+  
   % only peers with enough time for a single job are interesting
   peerlist = peerlist([peerlist.hosttimavail] >= timreq);
   if isempty(peerlist)
     error('there are no slave peers available to execute a job of this duration');
   end
-
+  
   % FIXME the heuristic rule for finding the best match needs to be improved
   mempenalty = scale([peerlist.hostmemavail] - memreq);
   cpupenalty = scale([peerlist.hostcpuavail] - cpureq);
   timpenalty = scale([peerlist.hosttimavail] - timreq);
   penalty    = mempenalty + 0.1* rand(1, length(peerlist)) + ([peerlist.hoststatus]==3);
-
+  
   % select the slave peer that has the best match with the job requirements
   [penalty, indx] = sort(penalty);
-
+  
   % sort the peerlist according to the penalty
   peerlist = peerlist(indx);
-
+  
   for i=1:length(peerlist)
     try
       jobid   = [];
@@ -164,12 +164,12 @@ while isempty(jobid)
       % probably the selected peer is busy, try the next peer in line
     end
   end % for
-
+  
   if isempty(jobid)
     % another attempt is needed, give the network some time to recover
     pause(sleep);
   end
-
+  
 end % while isempty(jobid)
 
 if isempty(jobid)
@@ -180,18 +180,30 @@ end
 % SUBFUNCTION that scales the input values between 0 and 1
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = scale(x)
-z = max(x(:)) - min(x(:));
-if z>0
-  y = (x - min(x(:))) / z;
+x = x(:);
+xmin = min(x);
+xmax = max(x);
+if xmin==xmax
+  y = (x-xmin);
 else
-  y = (x - min(x(:)));
+  y = (x-xmin) / (xmax-xmin);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that determines the present working directory
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function p = custompwd
+
+% these are for faster processing on subsequent calls
+persistent previous_pwd previous_argout
 persistent previous_warn
+
+if isequal(pwd, previous_pwd)
+  % don't do the processing again, but return the previous values from cache
+  p = previous_argout;
+  return
+end
+
 % don't use the present directory if it contains the peer code
 % it will confuse the slave with a potentially different mex file
 if strcmp(pwd, fileparts(mfilename('fullpath')))
@@ -205,11 +217,27 @@ else
   p = pwd;
 end
 
+% remember the current input and output arguments, so that they can be
+% reused on a subsequent call in case the same input argument is given
+previous_pwd    = pwd;
+previous_argout = p;
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that determines the path, excluding all Matlab toolboxes
 % the directories and the path on a windows computer look different than on unix
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function p = custompath
+
+% these are for faster processing on subsequent calls
+persistent previous_path previous_argout
+
+if isequal(path, previous_path)
+  % don't do the processing again, but return the previous values from cache
+  p = previous_argout;
+  return
+end
+
 if ispc
   p = tokenize(path, ';');
 else
@@ -235,3 +263,7 @@ else
 end
 p = p(1:end-1); % remove the last separator
 
+% remember the current input and output arguments, so that they can be
+% reused on a subsequent call in case the same input argument is given
+previous_path   = path;
+previous_argout = p;
