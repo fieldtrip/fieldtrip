@@ -39,6 +39,9 @@ int fairshare_check(float t, int hostid) {
 		float p, r, baseline = 1;
 		fairsharelist_t *listitem;
 
+		if (verbose)
+				fprintf(stderr, "fairshare_check\n");
+
 		pthread_mutex_lock(&mutexfairshare);
 
 		/* always accept jobs when fairshare is disabled */
@@ -69,7 +72,7 @@ int fairshare_check(float t, int hostid) {
 
 		if (fairshare.prevhostcount >= FAIRSHARE_PREVHOSTCOUNT) {
 				if (verbose)
-						fprintf(stderr, "fairshare: prevhostcount exceeded\n");
+						fprintf(stderr, "fairshare_check: prevhostcount exceeded\n");
 				fairshare.prevhostcount = 0;
 				pthread_mutex_unlock(&mutexfairshare);
 				return 1;
@@ -77,7 +80,7 @@ int fairshare_check(float t, int hostid) {
 
 		if ((time(NULL)-fairshare.t0) >= FAIRSHARE_TIMER) {
 				if (verbose)
-						fprintf(stderr, "fairshare: timer has elapsed\n");
+						fprintf(stderr, "fairshare_check: timer has elapsed\n");
 				pthread_mutex_unlock(&mutexfairshare);
 				return 1;
 		}
@@ -107,12 +110,15 @@ int fairshare_check(float t, int hostid) {
 		r = (float)rand() / (float)INT32_MAX;
 
 		if (verbose)
-				fprintf(stderr, "fairshare: t = %f, p = %f, r = %f, n = %d\n", t, p, r, fairshare.n);
+				fprintf(stderr, "fairshare_check: t = %f, p = %f, r = %f, n = %d\n", t, p, r, fairshare.n);
 
 		pthread_mutex_unlock(&mutexfairshare);
 
 		/* return 1 if the connection should be accepted, 0 if it should not be accepted */
-		return (p>r);
+		p = (p>r);
+		if (verbose>0)
+				fprintf(stderr, "fairshare_check: return value = %d\n", p);
+		return p;
 }
 
 
@@ -154,7 +160,7 @@ void fairshare_history(jobdef_t *job) {
 		pthread_mutex_unlock(&mutexpeerlist);
 
 		if (verbose)
-				fprintf(stderr, "historycount = %d, peercount = %d\n", historycount, peercount);
+				fprintf(stderr, "fairshare_history: historycount = %d, peercount = %d\n", historycount, peercount);
 
 		while (historycount > peercount*FAIRSHARE_HISTORY) {
 				/* remove the oldest item from the history */

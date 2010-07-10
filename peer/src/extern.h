@@ -16,6 +16,9 @@ extern int socketcount;
 extern pthread_mutex_t mutexthreadcount;
 extern int threadcount;
 
+extern pthread_mutex_t mutexconnectioncount;
+extern int connectioncount;
+
 extern pthread_mutex_t mutexhost;
 extern hostdef_t *host;
 

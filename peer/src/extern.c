@@ -33,6 +33,9 @@ int socketcount = 0;
 pthread_mutex_t mutexthreadcount = PTHREAD_MUTEX_INITIALIZER;
 int threadcount = 0; 
 
+pthread_mutex_t mutexconnectioncount = PTHREAD_MUTEX_INITIALIZER;
+int connectioncount = 0; 
+
 pthread_mutex_t mutexhost = PTHREAD_MUTEX_INITIALIZER;
 hostdef_t *host = NULL;
 

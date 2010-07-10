@@ -29,50 +29,41 @@ function [argout, optout] = peerexec(argin, optin)
 % keep track of the time
 stopwatch = tic;
 
-% remember the original working directory and the original path
-orig_pwd = pwd;
-orig_path = path;
-
+% there are many reasons why the execution may fail, hence the elaborate try-catch
 try
-  % there are many reasons why the execution may fail, hence the elaborate try-catch
-  
+
   if ~iscell(argin)
     error('input argument should be a cell-array');
   end
-  
+
   if ~ischar(argin{1})
     error('input argument #1 should be a string');
   end
-  
+
   fname = argin{1};
   argin = argin(2:end);
-  
+
   if ~iscell(optin)
     error('input options should be a cell-array');
   end
-  
+
+  % check whether a diary file should be created
+  usediary = keyval('diary', optin);
+  usediary = any(strcmp(usediary, {'always', 'warning', 'error'}));
+
   % try setting the same path directory
   option_path = keyval('path', optin);
-  if ~isempty(option_path)
-    path(option_path, path);
-  end
-  
+  setcustompath(option_path);
+
   % try changing to the same working directory
   option_pwd = keyval('pwd', optin);
-  if ~isempty(option_pwd)
-    try
-      cd(option_pwd);
-    catch cd_error
-      % don't throw an error, just give a warning (and hope for the best...)
-      warning(cd_error.message);
-    end
-  end
-  
+  setcustompwd(option_pwd);
+
   % there are potentially errors to catch from the which() function
   if isempty(which(fname))
     error('Not a valid M-file (%s).', fname);
   end
-  
+
   % it can be difficult to determine the number of output arguments
   try
     numargout = nargout(fname);
@@ -84,31 +75,27 @@ try
       rethrow(nargout_error);
     end
   end
-  
+
   if numargout<0
     % the nargout function returns -1 in case of a variable number of output arguments
     numargout = 1;
   end
-  
+
   % start measuring the time and memory requirements
   memprofile on
   timused = toc(stopwatch);
 
-  % check whether a diary file should be created
-  usediary = keyval('diary', optin);
-  usediary = any(strcmp(usediary, {'always', 'warning', 'error'}));
-  
   if usediary
     % switch on the diary
     diaryfile = tempname;
     diary(diaryfile);
   end
-  
+
   % evaluate the function and get the output arguments
   argout  = cell(1, numargout);
   [argout{:}] = feval(fname, argin{:});
-  
-  if usediary
+
+  if usediary && exist(diaryfile, 'file')
     % close the diary and read the contents
     diary off
     fid = fopen(diaryfile, 'r');
@@ -118,16 +105,16 @@ try
     % return an empty diary
     diarystring = [];
   end
-  
+
   % determine the time and memory requirements
   timused = toc(stopwatch) - timused;
   memstat = memprofile('info');
   memprofile off
   memprofile clear
-  
+
   % determine the maximum amount of memory that was used during the function evaluation
   memused = max([memstat.mem]) - min([memstat.mem]);
-  
+
   % Note that the estimated memory is inaccurate, because of
   % the dynamic memory management of Matlab and the garbage
   % collector. Especially on small jobs, the reported memory
@@ -135,15 +122,15 @@ try
   % the computation. Matlab is able to squeeze these small jobs
   % in some left-over memory fragment that was not yet deallocated.
   % Larger memory jobs return more reliable measurements.
-  
+
   fprintf('executing job took %f seconds and %d bytes\n', timused, memused);
-  
+
   % collect the output options
   optout = {'timused', timused, 'memused', memused, 'lastwarn', lastwarn, 'lasterr', '', 'diary', diarystring, 'release', version('-release')};
-  
+
 catch feval_error
 
-  if usediary
+  if usediary && exist(diaryfile, 'file')
     % close the diary and read the contents
     diary off
     fid = fopen(diaryfile, 'r');
@@ -167,14 +154,14 @@ catch feval_error
 end % try-catch
 
 % revert to the original path
-if ~isempty(option_path)
-  path(orig_path);
-end
+% if ~isempty(option_path)
+%   path(orig_path);
+% end
 
 % revert to the original working directory
-if ~isempty(option_pwd)
-  cd(orig_pwd);
-end
+% if ~isempty(option_pwd)
+%   cd(orig_pwd);
+% end
 
 % clear the function and any persistent variables in it
 clear(fname);

@@ -115,6 +115,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		char argument[STRLEN];
 		int i, n, rc, t, found, handshake, success, count, server;
 		unsigned int peerid, jobid, memreq, cpureq, timreq;
+		int tmp;
 
 		jobdef_t    *def;
 		joblist_t   *job, *nextjob;
@@ -675,9 +676,11 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				pthread_mutex_unlock(&mutexpeerlist);
 
 				if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
+						close_connection(server);
 						mexErrMsgTxt("tcpsocket: could not write handshake");
 				}
-				else if (!handshake) {
+
+				if (!handshake) {
 						close_connection(server);
 						mexErrMsgTxt("failed to negociate connection");
 				}
@@ -691,17 +694,22 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 
 				arg = (mxArray *) mxSerialize(prhs[2]);
 				opt = (mxArray *) mxSerialize(prhs[3]);
-
-				if (!arg)
-						mexErrMsgTxt("could not serialize job arguments");
-
-				if (!opt)
-						mexErrMsgTxt("could not serialize job options");
-
 				def = (jobdef_t *)malloc(sizeof(jobdef_t));
 
-				if (!def)
+				if (!arg) {
+						close_connection(server);
+						mexErrMsgTxt("could not serialize job arguments");
+				}
+
+				if (!opt) {
+						close_connection(server);
+						mexErrMsgTxt("could not serialize job options");
+				}
+
+				if (!def) {
+						close_connection(server);
 						mexErrMsgTxt("could not allocate memory");
+				}
 
 				def->version  = VERSION;
 				def->id       = jobid;
@@ -721,9 +729,11 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				pthread_mutex_unlock(&mutexhost);
 
 				if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
+						close_connection(server);
 						mexErrMsgTxt("could not write handshake");
 				}
-				else if (!handshake) {
+
+				if (!handshake) {
 						close_connection(server);
 						mexErrMsgTxt("failed to write hostdef");
 				}
@@ -732,9 +742,11 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						success = (bufwrite(server, def, sizeof(jobdef_t)) == sizeof(jobdef_t));
 
 				if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
+						close_connection(server);
 						mexErrMsgTxt("could not write handshake");
 				}
-				else if (!handshake) {
+
+				if (!handshake) {
 						close_connection(server);
 						mexErrMsgTxt("failed to write jobdef");
 				}
@@ -743,9 +755,11 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						success = (bufwrite(server, (void *)mxGetData(arg), def->argsize) == def->argsize);
 
 				if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
+						close_connection(server);
 						mexErrMsgTxt("could not write handshake");
 				}
-				else if (!handshake) {
+
+				if (!handshake) {
 						close_connection(server);
 						mexErrMsgTxt("failed to write arg");
 				}
@@ -754,9 +768,11 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						success = (bufwrite(server, (void *)mxGetData(opt), def->optsize) == def->optsize);
 
 				if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
+						close_connection(server);
 						mexErrMsgTxt("could not write handshake");
 				}
-				else if (!handshake) {
+
+				if (!handshake) {
 						close_connection(server);
 						mexErrMsgTxt("failed to write opt");
 				}

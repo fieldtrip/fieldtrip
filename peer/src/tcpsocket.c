@@ -37,7 +37,8 @@ void cleanup_tcpsocket(void *arg) {
 				FREE(threadlocal->message);
 		}
 		if (threadlocal && threadlocal->fd>0) {
-				close(threadlocal->fd);
+				if (closesocket(threadlocal->fd)!=0)
+						perror("cleanup_tcpsocket");
 				threadlocal->fd = -1;
 		}
 

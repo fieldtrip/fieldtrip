@@ -39,7 +39,7 @@ void cleanup_discover(void *arg) {
 				FREE(threadlocal->discovery);
 		}
 		if (threadlocal && threadlocal->fd>0) {
-				close(threadlocal->fd);
+				closesocket(threadlocal->fd);
 				threadlocal->fd = -1;
 		}
 

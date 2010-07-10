@@ -99,7 +99,7 @@ end
 jobid = [];
 
 % pass some options that may influence remote execution
-options = {'pwd', custompwd, 'path', custompath, 'diary', diary};
+options = {'pwd', getcustompwd, 'path', getcustompath, 'diary', diary};
 
 while isempty(jobid)
   if toc(stopwatch)>timeout
@@ -189,81 +189,3 @@ else
   y = (x-xmin) / (xmax-xmin);
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION that determines the present working directory
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function p = custompwd
-
-% these are for faster processing on subsequent calls
-persistent previous_pwd previous_argout
-persistent previous_warn
-
-if isequal(pwd, previous_pwd)
-  % don't do the processing again, but return the previous values from cache
-  p = previous_argout;
-  return
-end
-
-% don't use the present directory if it contains the peer code
-% it will confuse the slave with a potentially different mex file
-if strcmp(pwd, fileparts(mfilename('fullpath')))
-  if ~strcmp(previous_warn, pwd)
-    warning('the peer slave will not change directory to %s', pwd);
-    % warn only once
-    previous_warn = pwd;
-  end
-  p = [];
-else
-  p = pwd;
-end
-
-% remember the current input and output arguments, so that they can be
-% reused on a subsequent call in case the same input argument is given
-previous_pwd    = pwd;
-previous_argout = p;
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION that determines the path, excluding all Matlab toolboxes
-% the directories and the path on a windows computer look different than on unix
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function p = custompath
-
-% these are for faster processing on subsequent calls
-persistent previous_path previous_argout
-
-if isequal(path, previous_path)
-  % don't do the processing again, but return the previous values from cache
-  p = previous_argout;
-  return
-end
-
-if ispc
-  p = tokenize(path, ';');
-else
-  p = tokenize(path, ':');
-end
-% remove the matlab specific directories
-if ispc
-  s = false(size(p));
-  for i=1:length(p)
-    s(i) = ~strncmp(p{i}, matlabroot, length(matlabroot));
-  end
-else
-  s = cellfun(@isempty, regexp(p, ['^' matlabroot]));
-end
-p = p(s);
-% remove the directory containing the peer code, the slave should use its own
-p = setdiff(p, fileparts(mfilename('fullpath')));
-% concatenate the path, using the platform specific seperator
-if ispc
-  p = sprintf('%s;', p{:});
-else
-  p = sprintf('%s:', p{:});
-end
-p = p(1:end-1); % remove the last separator
-
-% remember the current input and output arguments, so that they can be
-% reused on a subsequent call in case the same input argument is given
-previous_path   = path;
-previous_argout = p;

@@ -49,7 +49,7 @@ void cleanup_announce(void *arg) {
 				FREE(threadlocal->message);
 		}
 		if (threadlocal && threadlocal->fd>0) {
-				close(threadlocal->fd);
+				closesocket(threadlocal->fd);
 				threadlocal->fd = -1;
 		}
 
@@ -206,13 +206,13 @@ int announce_once(void) {
 
 		/* create what looks like an ordinary UDP socket */
 		if ((fd=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP)) < 0) {
-				perror("announce socket");
+				perror("announce_once socket");
 				goto cleanup;
 		}
 
 		/* allocate memory for the message */
 		if ((message = (hostdef_t *)malloc(sizeof(hostdef_t))) == NULL) {
-				perror("announce malloc");
+				perror("announce_once malloc");
 				goto cleanup;
 		}
 
@@ -251,24 +251,25 @@ int announce_once(void) {
 		 */
 
 		if ((setsockopt(fd, IPPROTO_IP, IP_MULTICAST_TTL, (void*)&ttl, sizeof(ttl))) < 0)
-				perror("setsockopt() failed");
+				perror("announce_once setsockopt");
 
 #ifdef USE_MULTICAST
 		if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &multicastAddr,sizeof(multicastAddr)) < 0) {
-				perror("announce_once sendto");
+				perror("announce_once sendto (multicast)");
 				goto cleanup;
 		}
 #endif
 
 #ifdef USE_LOCALHOST
 		if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &localhostAddr,sizeof(localhostAddr)) < 0) {
-				perror("announce sendto (localhost)");
+				perror("announce_once sendto (localhost)");
 				goto cleanup;
 		}
 #endif
 
 cleanup:
 		FREE(message);
+		closesocket(fd);
 		return 0;
 }
 

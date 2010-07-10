@@ -52,6 +52,9 @@ int bufread(int s, void *buf, int numel) {
 int bufwrite(int s, void *buf, int numel) {
 		int numcall = 0, numthis = 0, numwrite = 0, verbose = 0;
 
+		if (verbose)
+				fprintf(stderr, "bufwrite: request for %d bytes\n", numel);
+
 		while (numwrite<numel) {
 
 				numthis = send(s, (char*)buf+numwrite, numel-numwrite, 0);
@@ -115,6 +118,12 @@ int close_connection(int s) {
 				status = closesocket(s);	/* it is a TCP connection */
 		if (status!=0)
 				perror("close_connection");
+		if (verbose>1) {
+				pthread_mutex_lock(&mutexconnectioncount);
+				connectioncount--;
+				fprintf(stderr, "close_connection: connectioncount = %d\n", connectioncount);
+				pthread_mutex_unlock(&mutexconnectioncount);
+		}
 		return status;
 }
 
@@ -160,9 +169,10 @@ int open_connection(const char *hostname, int port) {
 		sa.sin_port   = htons(port);
 		memcpy(&(sa.sin_addr.s_addr), host->h_addr_list[0], sizeof(sa.sin_addr.s_addr));
 
-		if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-				if (verbose>0)
-						fprintf(stderr, "open_connection: socket = %d\n", s);
+		s = socket(PF_INET, SOCK_STREAM, 0);
+		if (verbose>0)
+				fprintf(stderr, "open_connection: socket = %d\n", s);
+		if (s<0) {
 				perror("open_connection");
 				return -1;
 		}
@@ -191,6 +201,13 @@ int open_connection(const char *hostname, int port) {
 		   usleep(1000000);
 		   }
 		 */
+
+		if (verbose>1) {
+				pthread_mutex_lock(&mutexconnectioncount);
+				connectioncount++;
+				fprintf(stderr, "open_connection: connectioncount = %d\n", connectioncount);
+				pthread_mutex_unlock(&mutexconnectioncount);
+		}
 
 		if (verbose>0)
 				fprintf(stderr, "open_connection: connected to %s:%d on socket %d\n", hostname, port, s);
