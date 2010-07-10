@@ -40,7 +40,13 @@ end
 keys = varargin(1:2:end);
 vals = varargin(2:2:end);
 
-if ~all(cellfun(@ischar, keys))
+% the following is faster than cellfun(@isstr, keys)
+valid = false(size(keys));
+for i=1:numel(keys)
+  valid = ischar(keys{i});
+end
+
+if ~all(valid)
   error('optional input arguments should come in key-value pairs, the optional input argument %d is invalid (should be a string)', i);
 end
 

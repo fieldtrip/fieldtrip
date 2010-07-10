@@ -30,11 +30,23 @@ function varargout = peerget(jobid, varargin)
 % along with this program.  If not, see <http://www.gnu.org/licenses/
 % -----------------------------------------------------------------------
 
-% get the optional arguments
-timeout = keyval('timeout', varargin); if isempty(timeout), timeout=1;          end
-sleep   = keyval('sleep',   varargin); if isempty(sleep),   sleep=0.01;         end
-output  = keyval('output',  varargin); if isempty(output),  output='varargout'; end
-diary   = keyval('diary',   varargin); if isempty(diary),   diary='error';      end
+% the following are to speed up subsequent calls
+persistent previous_varargin previous_timeout previous_sleep previous_output previous_diary
+
+if isequal(previous_varargin, varargin)
+  % prevent the keyval function from being called, because it is slow
+  % reuse the values from the previous call
+  timeout = previous_timeout;
+  sleep   = previous_sleep;
+  output  = previous_output;
+  diary   = previous_diary;
+else
+  % get the optional arguments
+  timeout = keyval('timeout', varargin); if isempty(timeout), timeout=1;          end
+  sleep   = keyval('sleep',   varargin); if isempty(sleep),   sleep=0.01;         end
+  output  = keyval('output',  varargin); if isempty(output),  output='varargout'; end
+  diary   = keyval('diary',   varargin); if isempty(diary),   diary='error';      end
+end
 
 % keep track of the time
 stopwatch = tic;
@@ -132,4 +144,9 @@ else
   end
 end
 
-
+% remember the input arguments to speed up subsequent calls
+previous_varargin = varargin;
+previous_timeout  = timeout;
+previous_sleep    = sleep;
+previous_output   = output;
+previous_diary    = diary;

@@ -79,8 +79,7 @@ int main(int argc, char *argv[]) {
 				/* getopt_long stores the option index here. */
 				int option_index = 0;
 
-				c = getopt_long (argc, argv, "a:b:c:d:e:f:g:h:v",
-								long_options, &option_index);
+				c = getopt_long (argc, argv, "", long_options, &option_index); 
 
 				/* Detect the end of the options. */
 				if (c == -1)
@@ -99,42 +98,42 @@ int main(int argc, char *argv[]) {
 								break;
 
 						case 'a':
-								printf ("option -a with value `%s'\n", optarg);
+								printf ("option --memavail with value `%s'\n", optarg);
 								pthread_mutex_lock(&mutexhost);
 								host->memavail = atol(optarg);
 								pthread_mutex_unlock(&mutexhost);
 								break;
 
 						case 'b':
-								printf ("option -b with value `%s'\n", optarg);
+								printf ("option --cpuavail with value `%s'\n", optarg);
 								pthread_mutex_lock(&mutexhost);
 								host->cpuavail = atol(optarg);
 								pthread_mutex_unlock(&mutexhost);
 								break;
 
 						case 'c':
-								printf ("option -c with value `%s'\n", optarg);
+								printf ("option --timavail with value `%s'\n", optarg);
 								pthread_mutex_lock(&mutexhost);
 								host->timavail = atol(optarg);
 								pthread_mutex_unlock(&mutexhost);
 								break;
 
 						case 'd':
-								printf ("option -d with value `%s'\n", optarg);
+								printf ("option --hostname with value `%s'\n", optarg);
 								pthread_mutex_lock(&mutexhost);
 								strncpy(host->name, optarg, STRLEN);
 								pthread_mutex_unlock(&mutexhost);
 								break;
 
 						case 'e':
-								printf ("option -e with value `%s'\n", optarg);
+								printf ("option --group with value `%s'\n", optarg);
 								pthread_mutex_lock(&mutexhost);
 								strncpy(host->group, optarg, STRLEN);
 								pthread_mutex_unlock(&mutexhost);
 								break;
 
 						case 'f':
-								printf ("option -f with value `%s'\n", optarg);
+								printf ("option --allowuser with value `%s'\n", optarg);
 								str = strtok(optarg, ",");
 								while (str) {
 										allowuser = (userlist_t *)malloc(sizeof(userlist_t));
@@ -147,7 +146,7 @@ int main(int argc, char *argv[]) {
 								break;
 
 						case 'g':
-								printf ("option -g with value `%s'\n", optarg);
+								printf ("option --allowhost with value `%s'\n", optarg);
 								str = strtok(optarg, ",");
 								while (str) {
 										allowhost = (hostlist_t *)malloc(sizeof(hostlist_t));
@@ -160,7 +159,7 @@ int main(int argc, char *argv[]) {
 								break;
 
 						case 'h':
-								printf ("option -h with value `%s'\n", optarg);
+								printf ("option --allowgroup with value `%s'\n", optarg);
 								str = strtok(optarg, ",");
 								while (str) {
 										allowgroup = (grouplist_t *)malloc(sizeof(grouplist_t));
@@ -173,7 +172,7 @@ int main(int argc, char *argv[]) {
 								break;
 
 						case 'i':
-								printf ("option -i with value `%s'\n", optarg);
+								printf ("option --matlab with value `%s'\n", optarg);
 								startcmd = malloc(STRLEN);
 								strncpy(startcmd, optarg, STRLEN);
 								break;

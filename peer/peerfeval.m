@@ -39,6 +39,10 @@ function [jobid, puttime] = peerfeval(varargin)
 % Undocumented
 %   hostid   = number, only evaluate on a particular host
 
+% these are used to speed up the processing of multiple function calls with
+% the same input arguments (e.g. from peercellfun)
+persistent previous_argin previous_optarg
+
 % check that the required peer server threads are running
 status = true;
 status = status & peer('tcpserver', 'status');
@@ -91,8 +95,11 @@ if isa(varargin{1}, 'function_handle')
   varargin{1} = func2str(varargin{1});
 end
 
-if isempty(which(varargin{1}))
-  error('Not a valid M-file (%s).', varargin{1});
+if ~isempty(previous_argin) && ~isequal(varargin{1}, previous_argin{1})
+  % this can be skipped if the previous call used the same function
+  if isempty(which(varargin{1}))
+    error('Not a valid M-file (%s).', varargin{1});
+  end
 end
 
 % start with an empty return value
@@ -175,6 +182,10 @@ end % while isempty(jobid)
 if isempty(jobid)
   warning('none of the slave peers was willing to accept the job');
 end
+
+% remember the input arguments to speed up subsequent calls
+previous_argin  = varargin;
+previous_optarg = optarg;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that scales the input values between 0 and 1
