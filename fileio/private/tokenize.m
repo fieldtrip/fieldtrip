@@ -18,7 +18,7 @@ function [tok] = tokenize(str, sep, rep)
 %
 % See also STRTOK, TEXTSCAN
 
-% Copyright (C) 2003-2008, Robert Oostenveld
+% Copyright (C) 2003-2010, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -38,12 +38,22 @@ function [tok] = tokenize(str, sep, rep)
 %
 % $Id$
 
+% these are for remembering the type on subsequent calls with the same input arguments
+persistent previous_argin previous_argout
+
 if nargin<2
   sep = [9:13 32]; % White space characters
 end
 
 if nargin<3
   rep = false;
+end
+
+current_argin = {str, sep, rep};
+if isequal(current_argin, previous_argin)
+  % don't do the processing again, but return the previous values from cache
+  tok = previous_argout;
+  return
 end
 
 tok = {};
@@ -57,4 +67,10 @@ if rep
   % remove empty cells, which occur if the separator is repeated (e.g. multiple spaces)
   tok(cellfun('isempty', tok))=[];
 end
+
+% remember the current input and output arguments, so that they can be
+% reused on a subsequent call in case the same input argument is given
+current_argout  = tok;
+previous_argin  = current_argin;
+previous_argout = current_argout;
 
