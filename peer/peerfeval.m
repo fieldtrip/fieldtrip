@@ -180,9 +180,8 @@ end
 % SUBFUNCTION that scales the input values between 0 and 1
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = scale(x)
-x = x(:);
-xmin = min(x);
-xmax = max(x);
+xmin = min(x(:));
+xmax = max(x(:));
 if xmin==xmax
   y = (x-xmin);
 else
