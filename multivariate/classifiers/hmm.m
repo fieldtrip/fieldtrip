@@ -41,10 +41,10 @@ classdef hmm < dynamic_classifier
             hdata(:,((j-1)*numvar+1):((j-1)*numvar+ncont)) = data(:,((j-1)*ncont+1):(j*ncont));
           end
           
-          p = obj.estimate@dynamic_classifier(dataset(hdata),dataset(design));
+          p = obj.estimate@dynamic_classifier(hdata,design);
           
         else
-          p = obj.estimate@dynamic_classifier(dataset(data),dataset(design));
+          p = obj.estimate@dynamic_classifier(data,design);
         end
       end
       
@@ -72,29 +72,32 @@ classdef hmm < dynamic_classifier
       
       function factors = construct_factors(obj)
         
+        numvar = obj.params.numvar;
+        nclasses = obj.params.nclasses;
+        
         % definition of HMM factors
         
-        factors = cell(1,2*obj.numvar);
+        factors = cell(1,2*numvar);
         
         % discrete part
         
-        factors{1} = multinomial_cpd(1,[],ones([obj.nclasses 1]));
-        factors{obj.numvar+1} = multinomial_cpd(obj.numvar+1,1,ones(obj.nclasses));
+        factors{1} = multinomial_cpd(1,[],ones([nclasses 1]));
+        factors{numvar+1} = multinomial_cpd(numvar+1,1,ones(nclasses));
         
         if obj.mixture > 1
           
           % continuous part
-          ncont = ((obj.numvar-1)/2);
+          ncont = ((numvar-1)/2);
           
           % first slice
           
           % continuous variables
           for f=2:(ncont+1)
-            factors{f} = gaussian_cpd(f,[],[1 f+ncont],randn([obj.nclasses obj.mixture]),cell([obj.nclasses obj.mixture]),ones([obj.nclasses obj.mixture]));
+            factors{f} = gaussian_cpd(f,[],[1 f+ncont],randn([nclasses obj.mixture]),cell([nclasses obj.mixture]),ones([nclasses obj.mixture]));
           end
           
           % hidden discrete variables
-          for f=(ncont+2):obj.numvar
+          for f=(ncont+2):numvar
             factors{f} = multinomial_cpd(f,[], 1/obj.mixture - 1e-2 + 2e-2*rand([obj.mixture 1]));
           end
           
@@ -107,16 +110,16 @@ classdef hmm < dynamic_classifier
             % continuous variables
             for f=2:(ncont+1)
               
-              betas = cell([obj.nclasses obj.mixture]);
+              betas = cell([nclasses obj.mixture]);
               betas(:) = { randn };
               
-              factors{obj.numvar+f} = gaussian_cpd(obj.numvar + f,f,[obj.numvar+1 obj.numvar+f+ncont], ...
-                randn([obj.nclasses obj.mixture]),betas,ones([obj.nclasses obj.mixture]));
+              factors{numvar+f} = gaussian_cpd(numvar + f,f,[numvar+1 numvar+f+ncont], ...
+                randn([nclasses obj.mixture]),betas,ones([nclasses obj.mixture]));
             end
             
             % hidden discrete variables
-            for f=(ncont+2):obj.numvar
-              factors{obj.numvar+f} = multinomial_cpd(obj.numvar+f,[],1/obj.mixture - 1e-2 + 2e-2*rand([obj.mixture 1]));
+            for f=(ncont+2):numvar
+              factors{numvar+f} = multinomial_cpd(numvar+f,[],1/obj.mixture - 1e-2 + 2e-2*rand([obj.mixture 1]));
             end
             
           else
@@ -125,13 +128,13 @@ classdef hmm < dynamic_classifier
             
             % continuous variables
             for f=2:(ncont+1)
-              factors{obj.numvar+f} = gaussian_cpd(obj.numvar + f,[],[obj.numvar+1 obj.numvar+f+ncont], ...
-                randn([obj.nclasses obj.mixture]),cell([obj.nclasses obj.mixture]),ones([obj.nclasses obj.mixture]));
+              factors{numvar+f} = gaussian_cpd(numvar + f,[],[numvar+1 numvar+f+ncont], ...
+                randn([nclasses obj.mixture]),cell([nclasses obj.mixture]),ones([nclasses obj.mixture]));
             end
             
             % hidden discrete variables
-            for f=(ncont+2):obj.numvar
-              factors{obj.numvar+f} = multinomial_cpd(obj.numvar+f,[],1/obj.mixture - 1e-2 + 2e-2*rand([obj.mixture 1]));
+            for f=(ncont+2):numvar
+              factors{numvar+f} = multinomial_cpd(numvar+f,[],1/obj.mixture - 1e-2 + 2e-2*rand([obj.mixture 1]));
             end
             
           end
@@ -141,26 +144,26 @@ classdef hmm < dynamic_classifier
           % continuous part
           
           % first slice
-          for f=2:obj.numvar
-            factors{f} = gaussian_cpd(f,[],1,randn([obj.nclasses 1]),cell([obj.nclasses 1]),rand([obj.nclasses 1]));
+          for f=2:numvar
+            factors{f} = gaussian_cpd(f,[],1,randn([nclasses 1]),cell([nclasses 1]),rand([nclasses 1]));
           end
           
           % second slice
           if obj.ar
             
             % add autoregressive links
-            for f=(obj.numvar+2):(2*obj.numvar)
+            for f=(numvar+2):(2*numvar)
               
-              betas = cell([obj.nclasses 1]);
+              betas = cell([nclasses 1]);
               betas(:) = { randn };
               
-              factors{f} = gaussian_cpd(f,f-obj.numvar,obj.numvar+1,randn([obj.nclasses 1]),betas,rand([obj.nclasses 1]));
+              factors{f} = gaussian_cpd(f,f-numvar,numvar+1,randn([nclasses 1]),betas,rand([nclasses 1]));
             end
           else
             
             % naive bayes like structure
-            for f=(obj.numvar+2):(2*obj.numvar)
-              factors{f} = gaussian_cpd(f,[],obj.numvar+1,randn([obj.nclasses 1]),cell([obj.nclasses 1]),rand([obj.nclasses 1]));
+            for f=(numvar+2):(2*numvar)
+              factors{f} = gaussian_cpd(f,[],numvar+1,randn([nclasses 1]),cell([nclasses 1]),rand([nclasses 1]));
             end
           end
         end

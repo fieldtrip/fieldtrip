@@ -58,6 +58,7 @@ classdef dynamic_classifier < classifier
             if mod(p.numvar,1), error('inconsistent number of variables'); end
 
             % construct factors (custom code)
+            obj.params = p;
             factors = obj.construct_factors();
 
             % construct DBN

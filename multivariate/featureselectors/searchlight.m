@@ -23,13 +23,13 @@ classdef searchlight < featureselector
     
     step                  % stepsize in terms of array elements    
    
-    mask                  % optional mask
+    mask                  % optional logical mask (input features are only those in the mask)
     
     center = false;       % only selects center features if true
     
     nspheres = 1;         % select the union of the best nspheres spheres
         
-    neighbours            % a sparse adjacency matrix specifying the neighbourhood structure for irregular data
+    neighbours            % a sparse adjacency matrix specifying the neighbourhood structure for irregular data (don't use in conjunction with mask)
     
     compact = true;       % save validator if compact = false
     
@@ -53,11 +53,19 @@ classdef searchlight < featureselector
     
     function p = estimate(obj,X,Y)
       
+      % dimensions are retrieved from mask
+      if ~isempty(obj.mask)
+        obj.indims = size(obj.mask);
+        midx = find(obj.mask(:));
+      end
+      
+      % set default radius
       if isempty(obj.radius)
         obj.radius =  max(1,floor(min(obj.indims)./4));
       end
       rad = obj.radius;
       
+      % set default step size
       if isempty(obj.step)
         obj.step = max(1,floor(min(obj.indims)./4));
       end
@@ -79,6 +87,16 @@ classdef searchlight < featureselector
         
       end
       
+      % identify subsets which fall in each sphere
+      
+      if obj.verbose
+        fprintf('estimating %d spheres with radius %g with %g steps for a volume of size [%s]\n',...
+          size(p.centers,1),rad,stepsize,num2str(obj.indims));
+      end
+      
+      p.spheres = cell(size(p.centers,1),1);
+      n=0;
+      
       if ~isempty(obj.neighbours)
         
         if obj.verbose
@@ -87,36 +105,38 @@ classdef searchlight < featureselector
         
         % centers as variable indices
         p.centers = subv2ind(obj.indims,p.centers);
-                
+        
         nidx = cell(size(obj.neighbours,1),1);
         for c=1:length(nidx)
           nidx{c} = find(obj.neighbours(c,:));
         end
-        
-      end
-      
-      % identify subsets which fall in each sphere
-      
-      if obj.verbose
-        fprintf('estimating %d spheres with radius %g with %g steps for a volume of size [%s]\n',...
-          size(p.centers,1),rad,stepsize,num2str(obj.indims));
-      end
-      
-%       if ~isempty(obj.mask)
-%         midx = find(obj.mask(:));
-%       end
-      
-      p.spheres = cell(size(p.centers,1),1); 
-      n=0;
-      for c=1:length(p.spheres)
-        
-        if obj.verbose
-          fprintf('estimating sphere %d of %d\n',c,size(p.centers,1));
+            
+        for c=1:length(p.spheres)
+          
+          if obj.verbose
+            fprintf('estimating sphere %d of %d\n',c,size(p.centers,1));
+          end
+            
+          % explicit neighbourhood structure for irregular data
+          % radius becomes path length in the adjacency matrix
+          
+          p.spheres{c} = p.centers(c);
+          for j=1:obj.radius
+            p.spheres{c} = unique([p.spheres{c} cell2mat(nidx(p.spheres{c})')]);
+          end
+          
         end
         
-        if isempty(obj.neighbours)
-          % neighbourhood structure defined by the input dimensions
+      else
         
+        
+        for c=1:length(p.spheres)
+          
+          if obj.verbose
+            fprintf('estimating sphere %d of %d\n',c,size(p.centers,1));
+          end
+          
+          
           % generate potential points (the cube)
           v = cell(1,numel(obj.indims));
           for j=1:numel(obj.indims)
@@ -131,33 +151,31 @@ classdef searchlight < featureselector
           % reduce to index elements inside the sphere
           p.spheres{c} = subv2ind(obj.indims,cube(sqrt(sum(bsxfun(@minus,cube,p.centers(c,:)).^2,2)) <= rad,:));
           
-        else
-          % explicit neighbourhood structure for irregular data
-          % radius becomes path length in the adjacency matrix
-          
-          p.spheres{c} = p.centers(c);
-          for j=1:obj.radius
-            p.spheres{c} = unique([p.spheres{c} cell2mat(nidx(p.spheres{c})')]);
-          end
-                    
         end
         
-        if ~isempty(obj.mask)
+        % centers as variable indices
+        p.centers = subv2ind(obj.indims,p.centers);
+        
+      end
+      
+      % make spheres consistent with mask
+      if ~isempty(obj.mask)
+
+        tmp = p.spheres;
+        for c=1:length(p.spheres)
           
           % reduce to elements inside the mask
-          p.spheres{c} = p.spheres{c}(logical(obj.mask(p.spheres{c})));
+          tmp{c} = p.spheres{c}(logical(obj.mask(p.spheres{c})));
           
           % transform to mask indices
-          %[a,p.spheres{c}] = ismember(p.spheres{c},midx);
+          [a,p.spheres{c}] = ismember(tmp{c},midx);
           
         end
-        
-        n = n+length(p.spheres{c});
         
       end
       
       if obj.verbose
-        fprintf('average sphere volume: %g\n',n/length(p.spheres));
+        fprintf('average sphere volume: %g\n',sum(cellfun(@(x)(numel(x)),p.spheres))/length(p.spheres));
       end
       
       % test each sphere
@@ -187,6 +205,11 @@ classdef searchlight < featureselector
         p.subset = unique(subv2ind(obj.indims,p.centers(b(1:obj.nspheres),:)));
       else
         p.subset = unique(cell2mat(p.spheres(b(1:obj.nspheres))));
+      end
+      
+      % spheres as original indices
+      if ~isempty(obj.mask)
+        p.spheres = tmp;
       end
       
     end

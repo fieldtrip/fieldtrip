@@ -169,20 +169,20 @@ classdef crossvalidator < validator
           end
 
           if nsets == 1 && ~obj.getpredictor().istransfer()
+            
             tproc = obj.procedure{f}.train(traindata{1},traindesign{1});
             obj.post{f} = tproc.test(testdata{1});
             obj.design{f} = testdesign{1};
+          
           else
             
             tproc = obj.procedure{f}.train(traindata,traindesign);
             
-%             % transfer learner is free to return a cell array or not in
-%             % case of one input dataset
-%             res = tproc.test(testdata);
-%             if iscell(res), res = res{1}; end
-%             obj.post{f} = res;
-        
-            obj.post(f,:) = tproc.test(testdata);
+            % transfer learner is free to return a cell array or not in
+            % case of one input dataset
+            res = tproc.test(testdata);
+            if ~iscell(res), res = {res}; end
+            obj.post(f,:) = res;
             
             obj.design(f,:) = testdesign;  
           
