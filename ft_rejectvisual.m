@@ -156,7 +156,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hastrialdef', 'yes', hasoffset', 'yes');
+data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hastrialdef', 'yes', 'hasoffset', 'yes');
 
 % for backward compatibility
 cfg = checkconfig(cfg, 'renamedval',  {'metric',  'absmax',  'maxabs'});
@@ -284,12 +284,10 @@ if ~isempty(trl)
   % updating the trl and creating a trlold makes it compatible with FT_REJECTARTIFACT
   cfg.artifact = trl(~trlsel,1:2);
   cfg.trl      = trl( trlsel,:);
-  cfg.trlold   = trlold;
 else
   % since sample numbers are unknown, it is not possible to remember them here
   cfg.artifact = [];
   cfg.trl      = [];
-  cfg.trlold   = [];
 end
 
 % show the user which trials are removed
