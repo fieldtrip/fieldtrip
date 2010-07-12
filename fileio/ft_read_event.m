@@ -163,14 +163,7 @@ switch eventformat
     if isempty(hdr)
       hdr = ft_read_header(filename);
     end
-    % add the trials to the event structure
-    for i=1:hdr.nTrials
-      event(end+1).type     = 'trial';
-      event(end  ).sample   = (i-1)*hdr.nSamples + 1;
-      event(end  ).value    = [];
-      event(end  ).offset   = -hdr.nSamplesPre;
-      event(end  ).duration = hdr.nSamples;
-    end
+
     % read the trigger channel and do flank detection
     trgindx = match_str(hdr.label, 'TRIGGER');
     if isfield(hdr, 'orig') && isfield(hdr.orig, 'config_data') && strcmp(hdr.orig.config_data.site_name, 'Glasgow'),
@@ -449,15 +442,6 @@ switch eventformat
       % read the trigger channel and do flank detection
       trigger = read_trigger(filename, 'header', hdr, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigchanindx, 'dataformat', dataformat, 'detectflank', detectflank, 'trigshift', trigshift, 'fixctf', 1);
       event   = appendevent(event, trigger);
-    end
-
-    % make an event for each trial as defined in the header
-    for i=1:hdr.nTrials
-      event(end+1).type     = 'trial';
-      event(end  ).sample   = (i-1)*hdr.nSamples + 1;
-      event(end  ).offset   = -hdr.nSamplesPre;
-      event(end  ).duration =  hdr.nSamples;
-      event(end  ).value    =  [];
     end
 
     % read the classification file and make an event for each classified trial
@@ -912,17 +896,6 @@ switch eventformat
         event   = appendevent(event, trigger);
       end
 
-      if hdr.nTrials>1
-        % make an event for each trial as defined in the header
-        for i=1:hdr.nTrials
-          event(end+1).type     = 'trial';
-          event(end  ).sample   = (i-1)*hdr.nSamples + 1;
-          event(end  ).offset   = -hdr.nSamplesPre;
-          event(end  ).duration =  hdr.nSamples;
-          event(end  ).value    =  [];
-        end
-      end
-
     elseif isaverage
       % the length of each average can be variable
       nsamples = zeros(1, length(hdr.orig.evoked));
@@ -1243,6 +1216,18 @@ switch eventformat
 
   otherwise
     error('unsupported event format (%s)', eventformat);
+end
+
+if ~isempty(hdr) && hdr.nTrials>1 && ~any(strcmp({event.type}, 'trial'))
+  % the data suggests multiple trials and trial events have not yet been defined
+  % make an event for each trial according to the file header
+  for i=1:hdr.nTrials
+    event(end+1).type     = 'trial';
+    event(end  ).sample   = (i-1)*hdr.nSamples + 1;
+    event(end  ).offset   = -hdr.nSamplesPre;
+    event(end  ).duration =  hdr.nSamples;
+    event(end  ).value    =  [];
+  end
 end
 
 if ~isempty(event)
