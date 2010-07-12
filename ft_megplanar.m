@@ -107,7 +107,7 @@ israw  = datatype(data, 'raw');
 istlck = datatype(data, 'timelock');  % this will be temporary converted into raw
 
 % check if the input data is valid for this function
-data  = checkdata(data, 'datatype', {'raw' 'freq'}, 'feedback', 'yes', 'ismeg', 'yes', 'senstype', {'ctf151', 'ctf275', 'bti148', 'bti248', 'itab153'});
+data  = checkdata(data, 'datatype', {'raw' 'freq'}, 'feedback', 'yes', 'hastrialdef', 'yes', 'ismeg', 'yes', 'senstype', {'ctf151', 'ctf275', 'bti148', 'bti248', 'itab153'});
 
 if istlck
   % the timelocked data has just been converted to a raw representation
@@ -140,7 +140,6 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   if ~isfield(cfg, 'spheremesh'),    cfg.spheremesh = 642;          end
 end
 
-
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure
   cfg.headshape = struct(cfg.headshape);
@@ -154,10 +153,6 @@ cfg = checkconfig(cfg, 'renamedvalue',  {'headshape', 'headmodel', []});
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
   data = selectdata(data, 'rpt', cfg.trials);
-  if isfield(data, 'cfg') % try to locate the trl in the nested configuration
-    cfg.trlold = findcfg(data.cfg, 'trlold');
-    cfg.trl    = findcfg(data.cfg, 'trl');
-  end
 end
 
 if     strcmp(cfg.planarmethod, 'orig')
@@ -299,6 +294,16 @@ try cfg.previous = data.cfg; end
 
 % remember the exact configuration details in the output
 interp.cfg = cfg;
+
+% copy the trial specific information into the output
+if isfield(data, 'trialinfo')
+  interp.trialinfo = data.trialinfo;
+end
+
+% copy the trialdef field as well
+if isfield(data, 'trialdef')
+  interp.trialdef = data.trialdef;
+end
 
 % the output data should be saved to a MATLAB file
 if ~isempty(cfg.outputfile)

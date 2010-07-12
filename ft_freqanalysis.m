@@ -85,7 +85,7 @@ if nargin < 3
 end
 
 % check if the input data is valid for this function
-data = checkdata(data, 'datatype', {'raw', 'comp', 'mvar'}, 'feedback', 'yes', 'hasoffset', 'yes');
+data = checkdata(data, 'datatype', {'raw', 'comp', 'mvar'}, 'feedback', 'yes', 'hasoffset', 'yes', 'hastrialdef', 'yes');
 
 % check if the input cfg is valid for this function
 cfg = checkconfig(cfg, 'trackconfig', 'on');
@@ -102,10 +102,6 @@ if ~isfield(cfg, 'trials'),   cfg.trials = 'all';  end % set the default
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
   data = selectdata(data, 'rpt', cfg.trials);
-  if isfield(data, 'cfg') % try to locate the trl in the nested configuration
-    cfg.trlold = findcfg(data.cfg, 'trlold');
-    cfg.trl    = findcfg(data.cfg, 'trl');
-  end
 end
 
 if ~flag
@@ -236,6 +232,11 @@ else
   freq.cfg = cfg;
   
 end % if old or new implementation
+
+% copy the trial specific information into the output
+if isfield(data, 'trialinfo'),
+  freq.trialinfo = data.trialinfo;
+end
 
 % the output data should be saved to a MATLAB file
 if ~isempty(cfg.outputfile)
