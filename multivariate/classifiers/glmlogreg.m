@@ -13,7 +13,7 @@ classdef glmlogreg < classifier
 
   methods
     
-    function obj = glmlr(varargin)
+    function obj = glmlogreg(varargin)
       
       obj = obj@classifier(varargin{:});
       
@@ -54,7 +54,7 @@ classdef glmlogreg < classifier
       % return the parameters wrt a class label in some shape
       
       % weight-vector for class 1 is always zero
-      m =  mat2cell(obj.params.model(2:end,:)',ones(1,size(obj.params.model,2)),size(obj.params.model,1)-1);
+      m =  mat2cell(obj.params.model',ones(1,size(obj.params.model,2)),size(obj.params.model,1));
       m{length(m)+1,1} = zeros(size(m{1}));
       
       desc = cell(length(m),1);
