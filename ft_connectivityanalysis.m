@@ -101,7 +101,7 @@ switch cfg.method
       if hasrpt && ~hasjack,
         error('partialisation on single trial observations is not supported');
       end
-      try,
+      try
         data    = checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbrepresentation', 'full');
         inparam = 'crsspctrm';
       catch
@@ -168,7 +168,7 @@ switch cfg.method
 end
 dtype = datatype(data);
 
-% ensure that source data §is in 'new' representation
+% ensure that source data ?is in 'new' representation
 if strcmp(dtype, 'source'),
   data = checkdata(data, 'sourcerepresentation', 'new');
 end
@@ -276,46 +276,59 @@ end
 
 % compute the desired connectivity metric
 switch cfg.method
-  case {'coh'}
+  case 'coh'
+    % coherence (unsquared), if cfg.complex = 'imag' imaginary part of
+    % coherency
     
     tmpcfg             = [];
-    tmpcfg.complex     = cfg.complex;
+    tmpcfg.cmplx       = cfg.complex;
     tmpcfg.feedback    = cfg.feedback;
     tmpcfg.dimord      = data.dimord;
-    tmpcfg.powindx     = powindx;
     tmpcfg.pownorm     = normpow;
     tmpcfg.pchanindx   = cfg.pchanindx;
     tmpcfg.allchanindx = cfg.allchanindx;
+    tmpcfg.hasrpt      = hasrpt;
+    tmpcfg.hasjack     = hasjack;
+    if exist('powindx', 'var'), tmpcfg.powindx     = powindx; end
+    optarg             = cfg2keyval(tmpcfg);
     
-    [datout, varout, nrpt] = coupling_corr(tmpcfg, data.(inparam), hasrpt, hasjack);
+    [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg);
     outparam = 'cohspctrm';
     
-  case {'csd'}
+  case 'csd'
+    % cross-spectral density (only useful if partialisation is required)
     
     tmpcfg             = [];
-    tmpcfg.complex     = cfg.complex;
+    tmpcfg.cmplx       = cfg.complex;
     tmpcfg.feedback    = cfg.feedback;
     tmpcfg.dimord      = data.dimord;
-    tmpcfg.powindx     = powindx;
     tmpcfg.pownorm     = normpow;
     tmpcfg.pchanindx   = cfg.pchanindx;
     tmpcfg.allchanindx = cfg.allchanindx;
+    tmpcfg.hasrpt      = hasrpt;
+    tmpcfg.hasjack     = hasjack;
+    if exist('powindx', 'var'), tmpcfg.powindx     = powindx; end
+    optarg             = cfg2keyval(tmpcfg);
     
-    [datout, varout, nrpt] = coupling_corr(tmpcfg, data.(inparam), hasrpt, hasjack);
+    [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg);
     outparam = 'crsspctrm';
     
   case 'plv'
-    %phase locking value
+    % phase locking value
     
     tmpcfg           = [];
-    tmpcfg.complex   = cfg.complex;
+    tmpcfg.cmplx     = cfg.complex;
     tmpcfg.feedback  = cfg.feedback;
     tmpcfg.dimord    = data.dimord;
-    tmpcfg.powindx   = powindx;
     tmpcfg.pownorm     = normpow;
     tmpcfg.pchanindx   = cfg.pchanindx;
     tmpcfg.allchanindx = cfg.allchanindx;
-    [datout, varout, nrpt] = coupling_corr(tmpcfg, data.(inparam), hasrpt, hasjack);
+    tmpcfg.hasrpt      = hasrpt;
+    tmpcfg.hasjack     = hasjack;
+    if exist('powindx', 'var'), tmpcfg.powindx     = powindx; end
+    optarg             = cfg2keyval(tmpcfg);
+    
+    [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg);
     outparam         = 'plvspctrm';
     
   case 'corr'
@@ -327,25 +340,33 @@ switch cfg.method
   case 'amplcorr'
     % amplitude correlation
     
-    tmpcfg          = [];
-    tmpcfg.feedback = cfg.feedback;
-    tmpcfg.dimord   = data.dimord;
-    tmpcfg.complex  = 'real';
-    tmpcfg.powindx  = powindx;
-    tmpcfg.pownorm  = 1;
-    tmpcfg.pchanindx = [];
-    [datout, varout, nrpt] = coupling_corr(tmpcfg, data.(inparam), hasrpt, hasjack);
+    tmpcfg             = [];
+    tmpcfg.feedback    = cfg.feedback;
+    tmpcfg.dimord      = data.dimord;
+    tmpcfg.complex     = 'real';
+    tmpcfg.pownorm     = 1;
+    tmpcfg.pchanindx   = [];
+    tmpcfg.hasrpt      = hasrpt;
+    tmpcfg.hasjack     = hasjack;
+    if exist('powindx', 'var'), tmpcfg.powindx = powindx; end
+    optarg             = cfg2keyval(tmpcfg);
+    
+    [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg);
     outparam        = 'amplcorrspctrm';
     
   case 'powcorr'
     % power correlation
     
-    tmpcfg          = [];
-    tmpcfg.feedback = cfg.feedback;
-    tmpcfg.dimord   = data.dimord;
-    tmpcfg.complex  = 'real';
-    tmpcfg.powindx  = powindx;
-    [datout, varout, nrpt] = coupling_corr(tmpcfg, data.(inparam), hasrpt, hasjack);
+    tmpcfg             = [];
+    tmpcfg.feedback    = cfg.feedback;
+    tmpcfg.dimord      = data.dimord;
+    tmpcfg.complex     = 'real';
+    tmpcfg.hasrpt      = hasrpt;
+    tmpcfg.hasjack     = hasjack;
+    if exist('powindx', 'var'), tmpcfg.powindx = powindx; end
+    optarg             = cfg2keyval(tmpcfg);
+    
+    [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg);
     outparam        = 'powcorrspctrm';
     
   case 'granger'
@@ -388,17 +409,18 @@ switch cfg.method
       else
         % do nothing
       end
+      
       %fs = cfg.fsample; %FIXME do we really need this, or is this related to how
       %noisecov is defined and normalised?
       fs = 1;
-      [datout, varout, n] = coupling_granger(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack, powindx);
+      [datout, varout, n] = ft_connectivity_granger(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack, powindx);
       outparam = 'grangerspctrm';
     else
       error('granger for time domain data is not yet implemented');
     end
     
   case 'instantaneous_causality'
-    % instantaneous coupling between the series, requires the same elements as granger
+    % instantaneous ft_connectivity between the series, requires the same elements as granger
     if sum(datatype(data, {'freq' 'freqmvar'})),
       hasrpt = ~isempty(strfind(data.dimord, 'rpt'));
       if hasrpt,
@@ -430,7 +452,7 @@ switch cfg.method
       %fs = cfg.fsample; %FIXME do we really need this, or is this related to how
       %noisecov is defined and normalised?
       fs = 1;
-      [datout, varout, n] = coupling_instantaneous(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack, powindx);
+      [datout, varout, n] = ft_connectivity_instantaneous(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack, powindx);
       outparam = 'instantspctrm';
     else
       error('instantaneous causality for time domain data is not yet implemented');
@@ -443,15 +465,20 @@ switch cfg.method
     tmpcfg.complex   = cfg.complex;
     tmpcfg.feedback  = cfg.feedback;
     tmpcfg.dimord    = data.dimord;
-    tmpcfg.powindx   = powindx;
     tmpcfg.pownorm   = normpow;
     tmpcfg.pchanindx = cfg.pchanindx;
     tmpcfg.allchanindx = cfg.allchanindx;
-    [datout, varout, nrpt] = coupling_toti(tmpcfg, data.(inparam), hasrpt, hasjack);
+    tmpcfg.hasrpt      = hasrpt;
+    tmpcfg.hasjack     = hasjack;
+    if exist('powindx', 'var'), tmpcfg.powindx     = powindx; end
+    optarg             = cfg2keyval(tmpcfg);
+    
+    [datout, varout, nrpt] = ft_connectivity_toti(tmpcfg, data.(inparam), hasrpt, hasjack);
     outparam         = 'totispctrm';
     
   case 'dtf'
     % directed transfer function
+    
     if isfield(data, 'labelcmb'),
       powindx = labelcmb2indx(data.labelcmb);
     else
@@ -470,11 +497,12 @@ switch cfg.method
       nrpt  = 1;
       datin = reshape(data.(inparam), [1 size(data.(inparam))]);
     end
-    [datout, varout, n] = coupling_dtf(tmpcfg, datin, hasjack);
+    [datout, varout, n] = ft_connectivity_dtf(tmpcfg, datin, hasjack);
     outparam = 'dtfspctrm';
     
   case 'pdc'
     % partial directed coherence
+    
     if isfield(data, 'labelcmb'),
       powindx = labelcmb2indx(data.labelcmb);
     else
@@ -494,7 +522,7 @@ switch cfg.method
       datin = reshape(data.(inparam), [1 size(data.(inparam))]);
     end
     
-    [datout, varout, n] = coupling_pdc(tmpcfg, datin, hasjack);
+    [datout, varout, n] = ft_connectivity_pdc(tmpcfg, datin, hasjack);
     outparam = 'pdcspctrm';
     
   case 'pcd'
@@ -505,13 +533,17 @@ switch cfg.method
     tmpcfg           = [];
     tmpcfg.feedback  = cfg.feedback;
     tmpcfg.dimord    = data.dimord;
-    tmpcfg.powindx   = powindx;
     tmpcfg.pownorm   = normpow;
     tmpcfg.pchanindx = cfg.pchanindx;
     tmpcfg.allchanindx = cfg.allchanindx;
     tmpcfg.nbin      = nearest(data.freq, data.freq(1)+cfg.bandwidth)-1;
     tmpcfg.normalize = cfg.normalize;
-    [datout, varout, nrpt] = coupling_psi(tmpcfg, data.(inparam), hasrpt, hasjack);
+    tmpcfg.hasrpt      = hasrpt;
+    tmpcfg.hasjack     = hasjack;
+    if exist('powindx', 'var'), tmpcfg.powindx     = powindx; end
+    optarg             = cfg2keyval(tmpcfg);
+    
+    [datout, varout, nrpt] = ft_connectivity_psi(tmpcfg, data.(inparam), hasrpt, hasjack);
     outparam         = 'psispctrm';
     
   case 'di'
@@ -521,7 +553,7 @@ switch cfg.method
 end
 
 %remove the auto combinations if necessary
-if ~isempty(powindx),
+if exist('powindx', 'var') && ~isempty(powindx),
   switch dtype
     case {'freq' 'freqmvar'}
       if isfield(data, 'labelcmb') && ~isstruct(powindx),
@@ -595,15 +627,9 @@ cfg.outputfile;
 cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
-try
-  % get the full name of the function
-  cfg.version.name = mfilename('fullpath');
-catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
-  [st, i] = dbstack;
-  cfg.version.name = st(i);
-end
-cfg.version.id = '$Id$';
+cfg.version.name = mfilename('fullpath');
+cfg.version.id   = '$Id$';
+
 % remember the configuration details of the input data
 try, cfg.previous = data.cfg; end
 % remember the exact configuration details in the output
@@ -615,486 +641,37 @@ if ~isempty(cfg.outputfile)
 end
 
 %--------------------------------------------------------------
-function [c, v, n] = coupling_corr(cfg, input, hasrpt, hasjack)
-
-% takes in a square csd or cov matrix, calculates the partialised
-% csd, or partialised cov, if specified, then either normalizes by power (in
-% the case of coherence) or returns the partialized csd (if the goal is to
-% calculate partial granger, for example.
-
-if nargin==2,
-  hasrpt   = 0;
-  hasjack  = 0;
-elseif nargin==3,
-  hasjack  = 0;
-end
-
-siz = size(input);
-if ~hasrpt,
-  siz   = [1 siz];
-  input = reshape(input, siz);
-end
-
-% do partialisation if necessary
-if ~isempty(cfg.pchanindx),
-  % partial spectra are computed as in Rosenberg JR et al (1998) J.
-  % Neuroscience Methods, equation 38
-  
-  chan   = cfg.allchanindx;
-  nchan  = numel(chan);
-  pchan  = cfg.pchanindx;
-  npchan = numel(pchan);
-  newsiz = siz;
-  newsiz(2:3) = numel(chan); % size of partialised csd
-  
-  A  = zeros(newsiz);
-  
-  % FIXME this only works for data without time dimension
-  if numel(siz)>4, error('this only works for data without time'); end
-  for j = 1:siz(1) %rpt loop
-    AA = reshape(input(j, chan,  chan, : ), [nchan  nchan  siz(4:end)]);
-    AB = reshape(input(j, chan,  pchan,: ), [nchan  npchan siz(4:end)]);
-    BA = reshape(input(j, pchan, chan, : ), [npchan nchan  siz(4:end)]);
-    BB = reshape(input(j, pchan, pchan, :), [npchan npchan siz(4:end)]);
-    for k = 1:siz(4) %freq loop
-      A(j,:,:,k) = AA(:,:,k) - AB(:,:,k)*pinv(BB(:,:,k))*BA(:,:,k);
-    end
-  end
-  input = A;
-  siz = size(input);
-else
-  % do nothing
-end
-
-if (length(strfind(cfg.dimord, 'chan'))~=2 || length(strfind(cfg.dimord, 'pos'))>0) && isfield(cfg, 'powindx') && ~isempty(cfg.powindx),
-  %crossterms are not described with chan_chan_therest, but are linearly indexed
-  outsum = zeros(siz(2:end));
-  outssq = zeros(siz(2:end));
-  
-  progress('init', cfg.feedback, 'computing metric...');
-  for j = 1:siz(1)
-    progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
-    if cfg.pownorm
-      p1    = reshape(input(j,cfg.powindx(:,1),:,:,:), siz(2:end));
-      p2    = reshape(input(j,cfg.powindx(:,2),:,:,:), siz(2:end));
-      denom = sqrt(p1.*p2); clear p1 p2
-    else
-      denom = 1;
-    end
-    outsum = outsum + complexeval(reshape(input(j,:,:,:,:), siz(2:end))./denom, cfg.complex);
-    outssq = outssq + complexeval(reshape(input(j,:,:,:,:), siz(2:end))./denom, cfg.complex).^2;
-  end
-  progress('close');
-  
-elseif length(strfind(cfg.dimord, 'chan'))==2 || length(strfind(cfg.dimord, 'pos'))==2,
-  %crossterms are described by chan_chan_therest
-  
-  outsum = zeros(siz(2:end));
-  outssq = zeros(siz(2:end));
-  progress('init', cfg.feedback, 'computing metric...');
-  for j = 1:siz(1)
-    progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
-    if cfg.pownorm
-      p1  = zeros([siz(2) 1 siz(4:end)]);
-      p2  = zeros([1 siz(3) siz(4:end)]);
-      for k = 1:siz(2)
-        p1(k,1,:,:,:,:) = input(j,k,k,:,:,:,:);
-        p2(1,k,:,:,:,:) = input(j,k,k,:,:,:,:);
-      end
-      p1    = p1(:,ones(1,siz(3)),:,:,:,:);
-      p2    = p2(ones(1,siz(2)),:,:,:,:,:);
-      denom = sqrt(p1.*p2); clear p1 p2;
-    else
-      denom = 1;
-    end
-    outsum = outsum + complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./denom, cfg.complex);
-    outssq = outssq + complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./denom, cfg.complex).^2;
-  end
-  progress('close');
-  
-end
-n = siz(1);
-c = outsum./n;
-
-if hasrpt,
-  if hasjack
-    bias = (n-1).^2;
-  else
-    bias = 1;
-  end
-  
-  v = bias*(outssq - (outsum.^2)./n)./(n - 1);
-else
-  v = [];
-end
+%function [c, v, n] = ft_connectivity_corr(cfg, input, hasrpt, hasjack)
 
 %-------------------------------------------------------------
-function [c, v, n] = coupling_toti(cfg, input, hasrpt, hasjack)
+function [c, v, n] = ft_connectivity_toti(cfg, input, hasrpt, hasjack)
 
-[c, v, n] = coupling_corr(cfg, input, hasrpt, hasjack);
+% FIXME move functionality into ft_connectivity_granger
+
+cfg.hasrpt  = hasrpt;
+cfg.hasjack = hasjack;
+optarg = cfg2keyval(cfg);
+
+[c, v, n] = ft_connectivity_corr(input, optarg);
 c = -log(1-c.^2);
 v = -log(1-v.^2); %FIXME this is probably not correct
 
 %-------------------------------------------------------------
-function [c, v, n] = coupling_psi(cfg, input, hasrpt, hasjack)
-
-if nargin==2,
-  hasrpt   = 0;
-  hasjack  = 0;
-elseif nargin==3,
-  hasjack  = 0;
-end
-
-if (length(strfind(cfg.dimord, 'chan'))~=2 || length(strfind(cfg.dimord, 'pos'))>0) && isfield(cfg, 'powindx') && ~isempty(cfg.powindx),
-  %crossterms are not described with chan_chan_therest, but are linearly indexed
-  
-  siz = size(input);
-  if ~hasrpt,
-    siz   = [1 siz];
-    input = reshape(input, siz);
-  end
-  
-  outsum = zeros(siz(2:end));
-  outssq = zeros(siz(2:end));
-  pvec   = [2 setdiff(1:numel(siz),2)];
-  
-  progress('init', cfg.feedback, 'computing metric...');
-  %first compute coherency and then phaseslopeindex
-  for j = 1:siz(1)
-    progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
-    c      = reshape(input(j,:,:,:,:), siz(2:end));
-    p1     = abs(reshape(input(j,cfg.powindx(:,1),:,:,:), siz(2:end)));
-    p2     = abs(reshape(input(j,cfg.powindx(:,2),:,:,:), siz(2:end)));
-    
-    p      = ipermute(phaseslope(permute(c./sqrt(p1.*p2), pvec), cfg.nbin, cfg.normalize), pvec);
-    
-    outsum = outsum + p;
-    outssq = outssq + p.^2;
-    avgcrsspctrm = squeeze(mean(input,1));
-    phasediff = unwrap(angle(avgcrsspctrm),[],2);
-  end
-  progress('close');
-  
-elseif length(strfind(cfg.dimord, 'chan'))==2 || length(strfind(cfg.dimord, 'pos'))==2,
-  %crossterms are described by chan_chan_therest
-  
-  siz = size(input);
-  if ~hasrpt,
-    siz   = [1 siz];
-    input = reshape(input, siz);
-  end
-  
-  outsum = zeros(siz(2:end));
-  outssq = zeros(siz(2:end));
-  pvec   = [3 setdiff(1:numel(siz),3)];
-  
-  progress('init', cfg.feedback, 'computing metric...');
-  for j = 1:siz(1)
-    progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
-    p1  = zeros([siz(2) 1 siz(4:end)]);
-    p2  = zeros([1 siz(3) siz(4:end)]);
-    for k = 1:siz(2)
-      p1(k,1,:,:,:,:) = input(j,k,k,:,:,:,:);
-      p2(1,k,:,:,:,:) = input(j,k,k,:,:,:,:);
-    end
-    c      = reshape(input(j,:,:,:,:,:,:), siz(2:end));
-    p1     = p1(:,ones(1,siz(3)),:,:,:,:);
-    p2     = p2(ones(1,siz(2)),:,:,:,:,:);
-    p      = ipermute(phaseslope(permute(c./sqrt(p1.*p2),pvec),cfg.nbin, cfg.normalize),pvec);
-    outsum = outsum + p;
-    outssq = outssq + p.^2;
-  end
-  progress('close');
-  
-end
-
-n = siz(1);
-c = outsum./n;
-
-if hasrpt,
-  if hasjack
-    bias = (n-1).^2;
-  else
-    bias = 1;
-  end
-  
-  v = bias*(outssq - (outsum.^2)./n)./(n - 1);
-else
-  v = [];
-end
+%function [c, v, n] = ft_connectivity_psi(cfg, input, hasrpt, hasjack)
 
 %------------------------------------------------------------
-function [pdc, pdcvar, n] = coupling_pdc(cfg, input, hasjack)
-
-if nargin==2,
-  hasjack  = 0;
-end
-
-%crossterms are described by chan_chan_therest
-siz = size(input);
-n   = siz(1);
-
-outsum = zeros(siz(2:end));
-outssq = zeros(siz(2:end));
-
-%computing pdc is easiest on the inverse of the transfer function
-pdim     = prod(siz(4:end));
-tmpinput = reshape(input, [siz(1:3) pdim]);
-progress('init', cfg.feedback, 'inverting the transfer function...');
-for k = 1:n
-  progress(k/n, 'inverting the transfer function for replicate %d from %d\n', k, n);
-  tmp = reshape(tmpinput(k,:,:,:), [siz(2:3) pdim]);
-  for m = 1:pdim
-    tmp(:,:,m) = inv(tmp(:,:,m));
-  end
-  tmpinput(k,:,:,:) = tmp;
-end
-progress('close');
-input = reshape(tmpinput, siz);
-
-progress('init', cfg.feedback, 'computing metric...');
-for j = 1:n
-  progress(j/n, 'computing metric for replicate %d from %d\n', j, n);
-  invh   = reshape(input(j,:,:,:,:), siz(2:end));
-  den    = sum(abs(invh).^2,1);
-  tmppdc = abs(invh)./sqrt(repmat(den, [siz(2) 1 1 1 1]));
-  %if ~isempty(cfg.submethod), tmppdc = baseline(tmppdc, cfg.submethod, baselineindx); end
-  outsum = outsum + tmppdc;
-  outssq = outssq + tmppdc.^2;
-end
-progress('close');
-
-pdc = outsum./n;
-
-if n>1,
-  if hasjack
-    bias = (n-1).^2;
-  else
-    bias = 1;
-  end
-  pdcvar = bias*(outssq - (outsum.^2)./n)./(n - 1);
-else
-  pdcvar = [];
-end
+%function [pdc, pdcvar, n] = ft_connectivity_pdc(cfg, input, hasjack)
 
 %------------------------------------------------------------
-function [dtf, dtfvar, n] = coupling_dtf(cfg, input, hasjack)
-
-siz    = size(input);
-n      = siz(1);
-ncmb   = siz(2);
-outsum = zeros(siz(2:end));
-outssq = zeros(siz(2:end));
-
-if isempty(cfg.powindx)
-  % data are represented as chan_chan_therest
-  for j = 1:n
-    tmph   = reshape(input(j,:,:,:,:), siz(2:end));
-    den    = sum(abs(tmph).^2,2);
-    tmpdtf = abs(tmph)./sqrt(repmat(den, [1 siz(2) 1 1 1]));
-    %if ~isempty(cfg.submethod), tmpdtf = baseline(tmpdtf, cfg.submethod, baselineindx); end
-    outsum = outsum + tmpdtf;
-    outssq = outssq + tmpdtf.^2;
-    %tmp    = outsum; tmp(2,1,:,:) = outsum(1,2,:,:); tmp(1,2,:,:) = outsum(2,1,:,:); outsum = tmp;
-    %tmp    = outssq; tmp(2,1,:,:) = outssq(1,2,:,:); tmp(1,2,:,:) = outssq(2,1,:,:); outssq = tmp;
-    % swap the order of the cross-terms to achieve the convention such that
-    % labelcmb {'a' 'b'} represents: a->b
-  end
-else
-  % data are linearly indexed
-  sortindx = [0 0 0 0];
-  for k = 1:ncmb
-    iauto1  = find(sum(cfg.powindx==cfg.powindx(k,1),2)==2);
-    iauto2  = find(sum(cfg.powindx==cfg.powindx(k,2),2)==2);
-    icross1 = k;
-    icross2 = find(sum(cfg.powindx==cfg.powindx(ones(ncmb,1)*k,[2 1]),2)==2);
-    indx    = [iauto1 icross2 icross1 iauto2];
-    
-    if isempty(intersect(sortindx, sort(indx), 'rows')),
-      sortindx = [sortindx;sort(indx)];
-      for j = 1:n
-        tmph    = reshape(input(j,indx,:,:), [2 2 siz(3:end)]);
-        den     = sum(abs(tmph).^2,2);
-        tmpdtf  = reshape(abs(tmph)./sqrt(repmat(den, [1 2 1 1])), [4 siz(3:end)]);
-        outsum(indx,:) = outsum(indx,:) + tmpdtf([1 3 2 4],:);
-        outssq(indx,:) = outssq(indx,:) + tmpdtf([1 3 2 4],:).^2;
-        % swap the order of the cross-terms to achieve the convention such that
-        % labelcmb {'a' 'b'} represents: a->b
-      end
-    end
-  end
-end
-dtf = outsum./n;
-
-if n>1, %FIXME this is strictly only true for jackknife, otherwise other bias is needed
-  bias   = (n - 1).^2;
-  dtfvar = bias.*(outssq - (outsum.^2)/n)./(n-1);
-else
-  dtfvar = [];
-end
+%function [dtf, dtfvar, n] = ft_connectivity_dtf(cfg, input, hasjack)
 
 %-------------------------------------------------------------------------
-function [granger, v, n] = coupling_granger(H, Z, S, fs, hasjack, powindx)
-
-%Usage: causality = hz2causality(H,S,Z,fs);
-%Inputs: transfer  = transfer function,
-%        crsspctrm = 3-D spectral matrix;
-%        noisecov  = noise covariance,
-%        fs        = sampling rate
-%Outputs: granger (Granger causality between all channels)
-%               : auto-causality spectra are set to zero
-% Reference: Brovelli, et. al., PNAS 101, 9849-9854 (2004).
-%M. Dhamala, UF, August 2006.
-
-%FIXME speed up code and check
-siz = size(H);
-if numel(siz)==4,
-  siz(5) = 1;
-end
-n   = siz(1);
-Nc  = siz(2);
-
-outsum = zeros(siz(2:end));
-outssq = zeros(siz(2:end));
-
-if isempty(powindx),
-  % data are chan_chan_therest
-  for kk = 1:n
-    for ii = 1:Nc
-      for jj = 1:Nc
-        if ii ~=jj,
-          zc     = reshape(Z(kk,jj,jj,:) - Z(kk,ii,jj,:).^2./Z(kk,ii,ii,:),[1 1 1 1 siz(5)]);
-          zc     = repmat(zc,[1 1 1 siz(4) 1]);
-          numer  = reshape(abs(S(kk,ii,ii,:,:)),[1 1 siz(4:end)]);
-          denom  = reshape(abs(S(kk,ii,ii,:,:)-zc.*abs(H(kk,ii,jj,:,:)).^2./fs),[1 1 siz(4:end)]);
-          outsum(jj,ii,:,:) = outsum(jj,ii,:,:) + log(numer./denom);
-          outssq(jj,ii,:,:) = outssq(jj,ii,:,:) + (log(numer./denom)).^2;
-        end
-      end
-      outsum(ii,ii,:,:) = 0;%self-granger set to zero
-    end
-  end
-elseif ~iscell(powindx) && ~isstruct(powindx)
-  % data are linearly indexed
-  for k = 1:Nc
-    for j = 1:n
-      iauto1  = find(sum(powindx==powindx(k,1),2)==2);
-      iauto2  = find(sum(powindx==powindx(k,2),2)==2);
-      icross1 = k;
-      icross2 = find(sum(powindx==powindx(ones(Nc,1)*k,[2 1]),2)==2);
-      zc      = Z(j,iauto2,:) - Z(j,icross1,:).^2./Z(j,iauto1,:);
-      numer   = abs(S(j,iauto1,:));
-      denom   = abs(S(j,iauto1,:)-zc.*abs(H(j,icross1,:)).^2./fs);
-      outsum(icross2,:) = outsum(icross2,:) + reshape(log(numer./denom), [1 siz(3:end)]);
-      outssq(icross2,:) = outssq(icross2,:) + reshape((log(numer./denom)).^2, [1 siz(3:end)]);
-    end
-  end
-elseif iscell(powindx)
-  % blockwise granger
-  % H = transfer function nchan x nchan x nfreq
-  % Z = noise covariance  nchan x nchan
-  % S = crosspectrum      nchan x nchan x nfreq
-  % powindx{1} is a list of indices for block1
-  % powindx{2} is a list of indices for block2
-  
-  %FIXME rewrite to allow for multiple blocks
-  %FIXME change cfg.block functionality in this case
-  %cfg.blockindx = {{list of channel names} [list of block indices]}
-  block1 = powindx{1}(:);
-  block2 = powindx{2}(:);
-  
-  n     = size(H,1);
-  nchan = size(H,2);
-  nfreq = size(H,4);
-  
-  n1 = numel(block1);
-  n2 = numel(block2);
-  
-  % reorder
-  S = S(:,[block1;block2],[block1;block2],:);
-  H = H(:,[block1;block2],[block1;block2],:);
-  Z = Z(:,[block1;block2],[block1;block2]);
-  
-  indx1 = 1:n1;
-  indx2 = (n1+1):(n1+n2);
-  
-  outsum = zeros(2,2,nfreq);
-  outssq = zeros(2,2,nfreq);
-  for k = 1:n
-    tmpZ = reshape(Z(k,:,:), [nchan nchan]);
-    
-    % projection matrix for block2 -> block1
-    P1 = [eye(n1)                                zeros(n1,n2);
-      -tmpZ(indx2,indx1)/tmpZ(indx1,indx1)     eye(n2)];
-    
-    % projection matrix for block1 -> block2
-    P2 = [  eye(n1)    -tmpZ(indx1,indx2)/tmpZ(indx2,indx2);
-      zeros(n2,n1) eye(n2)];
-    
-    % invert only once
-    invP1 = inv(P1);
-    invP2 = inv(P2);
-    for jj = 1:nfreq
-      % post multiply transfer matrix with the inverse of the projection matrix
-      % this is equivalent to time domain pre multiplication with P
-      Sj = reshape(S(k,:,:,jj), [nchan nchan]);
-      Zj = tmpZ(:,:);
-      H1 = reshape(H(k,:,:,jj), [nchan nchan])*invP1;
-      H2 = reshape(H(k,:,:,jj), [nchan nchan])*invP2;
-      num1 = abs(det(Sj(indx1,indx1))); % numerical round off leads to tiny imaginary components
-      num2 = abs(det(Sj(indx2,indx2))); % numerical round off leads to tiny imaginary components
-      denom1 = abs(det(H1(indx1,indx1)*Zj(indx1,indx1)*H1(indx1,indx1)'));
-      denom2 = abs(det(H2(indx2,indx2)*Zj(indx2,indx2)*H2(indx2,indx2)'));
-      %rH1 = real(H1(indx1,indx1));
-      %rH2 = real(H2(indx2,indx2));
-      %iH1 = imag(H1(indx1,indx1));
-      %iH2 = imag(H2(indx2,indx2));
-      %h1 = rH1*Zj(indx1,indx1)*rH1' + iH1*Zj(indx1,indx1)*iH1';
-      %h2 = rH2*Zj(indx2,indx2)*rH2' + iH2*Zj(indx2,indx2)*iH2';
-      %denom1 = det(h1);
-      %denom2 = det(h2);
-      
-      outsum(2,1,jj) = log( num1./denom1 )    + outsum(2,1,jj);
-      outsum(1,2,jj) = log( num2./denom2 )    + outsum(1,2,jj);
-      outssq(2,1,jj) = log( num1./denom1 ).^2 + outssq(2,1,jj);
-      outssq(1,2,jj) = log( num2./denom2 ).^2 + outssq(1,2,jj);
-    end
-  end
-elseif isstruct(powindx)
-  %blockwise conditional
-  
-  n     = size(H,1);
-  ncmb  = size(H,2);
-  nfreq = size(H,3);
-  ncnd  = size(powindx.cmbindx,1);
-  
-  outsum = zeros(ncnd, nfreq);
-  outssq = zeros(ncnd, nfreq);
-  for k = 1:n
-    tmpS = reshape(S, [ncmb nfreq]);
-    tmpH = reshape(H, [ncmb nfreq]);
-    tmpZ = reshape(Z, [ncmb 1]);
-    tmp  = blockwise_conditionalgranger(tmpS,tmpH,tmpZ,powindx.cmbindx,powindx.n);
-    
-    outsum = outsum + tmp;
-    outssq = outssq + tmp.^2;
-  end
-end
-
-granger = outsum./n;
-if n>1,
-  if hasjack
-    bias = (n-1).^2;
-  else
-    bias = 1;
-  end
-  v = bias*(outssq - (outsum.^2)./n)./(n - 1);
-else
-  v = [];
-end
+%function [granger, v, n] = ft_connectivity_granger(H, Z, S, fs, hasjack, powindx)
 
 %----------------------------------------------------------------
-function [instc, v, n] = coupling_instantaneous(H, Z, S, fs, hasjack,powindx)
+function [instc, v, n] = ft_connectivity_instantaneous(H, Z, S, fs, hasjack,powindx)
+
+% FIXME move functionality into ft_connectivity_granger
 
 %Usage: causality = hz2causality(H,S,Z,fs);
 %Inputs: transfer  = transfer function,
@@ -1200,7 +777,7 @@ for k = 1:nchan
 end
 
 %----------------------------------
-function [c] = complexeval(c, str);
+function [c] = complexeval(c, str)
 
 switch str
   case 'complex'
@@ -1215,30 +792,6 @@ switch str
     c = real(c);
   otherwise
     error('cfg.complex = ''%s'' not supported', cfg.complex);
-end
-
-%---------------------------------------
-function [y] = phaseslope(x, n, norm)
-
-m   = size(x, 1); %total number of frequency bins
-y   = zeros(size(x));
-x(1:end-1,:,:,:,:) = conj(x(1:end-1,:,:,:,:)).*x(2:end,:,:,:,:);
-
-if strcmp(norm, 'yes')
-  coh = zeros(size(x));
-  coh(1:end-1,:,:,:,:) = (abs(x(1:end-1,:,:,:,:)) .* abs(x(2:end,:,:,:,:))) + 1;
-  %FIXME why the +1? get the coherence
-  for k = 1:m
-    begindx = max(1,k-n);
-    endindx = min(m,k+n);
-    y(k,:,:,:,:) = imag(sum(x(begindx:endindx,:,:,:,:)./coh(begindx:endindx,:,:,:,:)));
-  end
-else
-  for k = 1:m
-    begindx = max(1,k-n);
-    endindx = min(m,k+n);
-    y(k,:,:,:,:) = imag(sum(x(begindx:endindx,:,:,:,:)));
-  end
 end
 
 %------------------------------------------------------------------------------------------------------------------
@@ -1410,170 +963,3 @@ switch dtype
 end
 
 hasrpt  = (isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'rpt')));
-
-%if ~isfield(cfg, 'cohmethod'), cfg.cohmethod = 'coh';           end;
-%if ~iscell(cfg.cohmethod),     cfg.cohmethod = {cfg.cohmethod}; end;
-%if ~isfield(cfg, 'submethod'), cfg.submethod = '';              end;
-%if ~isempty(cfg.submethod) && ~isfield(cfg, 'baseline'),
-%  cfg.baseline = 'all';
-%end
-%
-%if isfield(cfg, 'baseline') && strcmp(cfg.baseline, 'all'),
-%  cfg.baseline = [freq.time(1) freq.time(end)];
-%end
-%
-%if isfield(cfg, 'baseline'),
-%  baselineindx = [nearest(freq.time, cfg.baseline(1)) nearest(freq.time, cfg.baseline(2))];
-%end
-%
-%
-%if hasrpt,
-%  nrpt = size(freq.cumtapcnt, 1);
-%else
-%  nrpt = 1;
-%  dum  = zeros([1 size(freq.crsspctrm)]); dum(1,:,:,:,:) = freq.crsspctrm; freq.crsspctrm = dum;
-%  dum  = zeros([1 size(freq.powspctrm)]); dum(1,:,:,:,:) = freq.powspctrm; freq.powspctrm = dum;
-%  dum  = zeros([1 size(freq.transfer) ]); dum(1,:,:,:,:) = freq.transfer;  freq.transfer  = dum;
-%  dum  = zeros([1 size(freq.itransfer)]); dum(1,:,:,:,:) = freq.itransfer; freq.itransfer = dum;
-%  dum  = zeros([1 size(freq.noisecov) ]); dum(1,:,:,:,:) = freq.noisecov;  freq.noisecov  = dum;
-%  hasrpt = 1;
-%end
-%if hastim,
-%  ntoi = length(freq.time);
-%else
-%  ntoi = 1;
-%end
-%nfoi  = length(freq.freq);
-%nchan = length(freq.label);
-%ncmb  = size(freq.labelcmb,1);
-%ntap  = freq.cumtapcnt(1);
-%
-%for m = 1:length(cfg.cohmethod)
-%  switch cfg.cohmethod{m}
-%    case {'coh' 'coh2'}
-%      for k = 1:ncmb
-%        cmbindx(k,1) = match_str(freq.label,freq.labelcmb(k,1));
-%        cmbindx(k,2) = match_str(freq.label,freq.labelcmb(k,2));
-%      end
-%
-%      sumcohspctrm = zeros([ncmb  nfoi ntoi]);
-%      sumpowspctrm = zeros([nchan nfoi ntoi]);
-%      sqrcohspctrm = zeros([ncmb  nfoi ntoi]);
-%      sqrpowspctrm = zeros([nchan nfoi ntoi]);
-%      warning off;
-%      for n = 1:nrpt
-%        crsspctrm    = abs(reshape(mean(freq.crsspctrm(n,:,:,:,:),5), [ncmb  nfoi ntoi]));
-%        tmppowspctrm = abs(reshape(mean(freq.powspctrm(n,:,:,:,:),5), [nchan nfoi ntoi]));
-%
-%   if strcmp(cfg.cohmethod{m}, 'coh'),
-%     tmpcohspctrm = crsspctrm./sqrt(abs(tmppowspctrm(cmbindx(:,1),:,:,:)).*abs(tmppowspctrm(cmbindx(:,2),:,:,:)));
-%        else
-%          tmph = reshape(freq.transfer(n,:,:,:,:), [nchan nchan nfoi ntoi ntap]);
-%     for flop = 1:nfoi
-%       for tlop = 1:ntoi
-%         dum                       = tmph(:,:,flop,tlop)*tmph(:,:,flop,tlop)';
-%         tmpcohspctrm(:,flop,tlop) = reshape(dum./sqrt(abs(diag(dum))*abs(diag(dum))'), [ncmb 1]);
-%       end
-%     end
-%   end
-%
-%   if ~isempty(cfg.submethod), tmpcohspctrm = baseline(tmpcohspctrm, cfg.submethod, baselineindx); end
-%        if ~isempty(cfg.submethod), tmppowspctrm = baseline(tmppowspctrm, cfg.submethod, baselineindx); end
-%   sumcohspctrm = tmpcohspctrm    + sumcohspctrm;
-%   sqrcohspctrm = tmpcohspctrm.^2 + sqrcohspctrm;
-%   sumpowspctrm = tmppowspctrm    + sumpowspctrm;
-%   sqrpowspctrm = tmppowspctrm.^2 + sqrpowspctrm;
-%      end
-%      warning on;
-%      cohspctrm = sumcohspctrm./nrpt;
-%      powspctrm = sumpowspctrm./nrpt;
-%
-%      if nrpt>1,
-%        bias         = (nrpt - 1)^2;
-%        cohspctrmvar = bias.*(sqrcohspctrm - (sumcohspctrm.^2)/nrpt)./(nrpt-1);
-%        powspctrmvar = bias.*(sqrpowspctrm - (sumpowspctrm.^2)/nrpt)./(nrpt-1);
-%        cohspctrmsem = sqrt(cohspctrmvar./nrpt);
-%        powspctrmsem = sqrt(powspctrmvar./nrpt);
-%      end
-%    case 'dtf'
-%      sumdtf = zeros(ncmb, nfoi, ntoi, ntap);
-%      sqrdtf = zeros(ncmb, nfoi, ntoi, ntap);
-%      for n = 1:nrpt
-%        tmph   = reshape(freq.transfer(n,:,:,:,:), [nchan nchan nfoi ntoi ntap]);
-%        den    = sum(abs(tmph).^2,2);
-%        tmpdtf = abs(tmph)./sqrt(repmat(den, [1 nchan 1 1 1]));
-%        tmpdtf = reshape(tmpdtf, [ncmb nfoi ntoi ntap]);
-%        if ~isempty(cfg.submethod), tmpdtf = baseline(tmpdtf, cfg.submethod, baselineindx); end
-%        sumdtf = sumdtf + tmpdtf;
-%   sqrdtf = sqrdtf + tmpdtf.^2;
-%      end
-%      dtf = sumdtf./nrpt;
-%
-%      if nrpt>1,
-%        bias   = (nrpt - 1).^2;
-%   dtfvar = bias.*(sqrdtf - (sumdtf.^2)/nrpt)./(nrpt-1);
-%   dtfsem = sqrt(dtfvar./nrpt);
-%      end
-%    case 'pdc'
-%      sumpdc = zeros(ncmb, nfoi, ntoi, ntap);
-%      sqrpdc = zeros(ncmb, nfoi, ntoi, ntap);
-%      for n = 1:nrpt
-%        invh = reshape(freq.itransfer(n,:,:,:,:), [nchan nchan nfoi ntoi ntap]);
-%        %invh = zeros(size(h));
-%        %for j = 1:nfoi
-%        %  for k = 1:ntoi
-%   %    invh(:,:,j,k) = inv(h(:,:,j,k));
-%   %  end
-%        %end
-%        den    = sum(abs(invh).^2,1);
-%        tmp    = abs(invh)./sqrt(repmat(den, [nchan 1 1 1 1]));
-%        tmppdc = reshape(tmp, [ncmb nfoi ntoi ntap]);
-%        if ~isempty(cfg.submethod), tmppdc = baseline(tmppdc, cfg.submethod, baselineindx); end
-%   sumpdc = sumpdc + tmppdc;
-%   sqrpdc = sqrpdc + tmppdc.^2;
-%      end
-%      pdc = sumpdc./nrpt;
-%
-%      if nrpt>1,
-%        bias   = (nrpt - 1).^2;
-%   pdcvar = bias.*(sqrpdc - (sumpdc.^2)/nrpt)./(nrpt-1);
-%   pdcsem = sqrt(pdcvar./nrpt);
-%      end
-%    otherwise
-%      error('unknown cohmethod specified in cfg.cohmethod');
-%  end
-%end
-%
-%%---create output-structure
-%fd = [];
-%fd.label = freq.label;
-%fd.labelcmb = freq.labelcmb;
-%fd.freq     = freq.freq;
-%if hastim, fd.time = freq.time; end
-%fd.nobs     = nrpt;
-%fd.dimord   = 'chan_freq_time';
-%
-%try, fd.pdc       = pdc;       end
-%try, fd.pdcsem    = pdcsem;    end
-%try, fd.dtf       = dtf;       end
-%try, fd.dtfsem    = dtfsem;    end
-%try, fd.cohspctrm = cohspctrm; end
-%try, fd.powspctrm = powspctrm; end
-%try, fd.cohspctrmsem = cohspctrmsem; end
-%try, fd.powspctrmsem = powspctrmsem; end
-%try, cfg.previous    = freq.cfg;     end
-%fd.cfg = cfg;
-%
-%%---subfunction to do baseline correction
-%function [output] = baseline(input, method, baseline)
-%
-%switch method,
-%  case 'relchange'
-%    b      = mean(input(:,:,baseline(1):baseline(2)),3);
-%    output = input./repmat(b, [1 1 size(input,3) 1]) - 1;
-%  case 'diff'
-%    b      = mean(input(:,:,baseline(1):baseline(2)),3);
-%    output = input-repmat(b, [1 1 size(input,3) 1]);
-%  otherwise
-%    error('specified baseline-method is not yet implemented');
-%end
