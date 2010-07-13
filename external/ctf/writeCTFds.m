@@ -182,7 +182,7 @@ clear ksep kdot;
 %  Save the name already in structure ds, and change to the new datset name.
 if isfield(ds,'baseName')
   olddatasetname=[ds.baseName,'.ds'];
-  if isfield(ds.path)
+  if isfield(ds, 'path')
     olddatasetname=[ds.path,olddatasetname];
   end
 else
@@ -384,7 +384,7 @@ while pt<ndata
   else
     meg4Ext=['.',int2str(floor(pt/maxPtsPerFile)),'_meg4'];
   end
-  fidMeg4=fopen([path,baseName,'.ds\',baseName,meg4Ext],'w','ieee-be');
+  fidMeg4=fopen([path,baseName,'.ds',delim,baseName,meg4Ext],'w','ieee-be');
   fwrite(fidMeg4,[ds.meg4.header(1:7),char(0)],'uint8');
   while pt<endPt
     pt1=min(pt+meg4ChunkSize,endPt);                   %  Convert to double in case data is
@@ -428,7 +428,7 @@ ds=updateBandwidth(ds,fhp,flp);
 ds=updateDateTime(ds);
 
 %  Create the .res4 file in the output dataset.
-ds.res4=writeRes4([path,baseName,'.ds\',baseName,'.res4'],ds.res4,MAX_COILS);
+ds.res4=writeRes4([path,baseName,'.ds',delim,baseName,'.res4'],ds.res4,MAX_COILS);
 
 if ds.res4.numcoef<0
   fprintf('\nwriteCTFds: writeRes4 returned ds.res4.numcoef=%d (<0??)\n\n',...
@@ -440,15 +440,15 @@ if ds.res4.numcoef<0
 end
 
 %  Create .hist file
-histfile=[path,baseName,'.ds\',baseName,'.hist'];
+histfile=[path,baseName,'.ds',delim,baseName,'.hist'];
 fid=fopen(histfile,'w');
-fwrite(fid,ds.hist,'char');
+fwrite(fid,ds.hist,'uint8');
 fclose(fid);
 
 % New .newds file
 if isfield(ds,'newds')
-  fid=fopen([path,baseName,'.ds\',baseName,'.newds'],'w');
-  fwrite(fid,ds.newds,'char');
+  fid=fopen([path,baseName,'.ds',delim,baseName,'.newds'],'w');
+  fwrite(fid,ds.newds,'uint8');
   fclose(fid);
 end
 
@@ -513,7 +513,7 @@ end
 if isfield(ds,'processing');
   if ischar(ds.processing)
     fid=fopen([datasetname,delim,'processing.cfg'],'w','ieee-be');
-    fwrite(fid,ds.processing,'char');
+    fwrite(fid,ds.processing,'uint8');
     fclose(fid);
   end
 end
@@ -811,9 +811,9 @@ for k=1:size(coilcoord,1)
   for coil=1:size(hc.names,1)
     clName=deblank(hc.names(coil,:));
     fwrite(fid,[labelword(k,:) ' ' clName ' coil position relative to ',...
-        deblank(relative(k,:)) ' (cm):' char(10)],'char');
+        deblank(relative(k,:)) ' (cm):' char(10)],'uint8');
     for m=1:3
-      fwrite(fid,[char(9) comp(m) ' = ' num2str(rcoil(m,coil),'%7.5f') char(10)],'char');
+      fwrite(fid,[char(9) comp(m) ' = ' num2str(rcoil(m,coil),'%7.5f') char(10)],'uint8');
     end
   end
 end

@@ -146,7 +146,7 @@ while 1
   if fid<=0;break;end
   D=dir([datasetname,delim,baseName,meg4Ext]);
   meg4Size=[meg4Size D.bytes];
-  meg4Header=char(fread(fid,8,'char')');
+  meg4Header=char(fread(fid,8,'uint8')');
   fclose(fid);
   if isempty(strmatch(meg4Header,meg4Headers,'exact'))
     fprintf('\nreadCTFds: %s file header=%s   Valid header options:',meg4Ext,meg4Header);
@@ -282,7 +282,7 @@ function res4=readRes4(res4File,res4Headers,...
 fid=fopen(res4File,'r','ieee-be');
 
 %  Check header.
-res4.header=char(fread(fid,8,'char')');
+res4.header=char(fread(fid,8,'uint8')');
 if isempty(strmatch(res4.header,res4Headers,'exact'))
   fprintf(['\nreadCTFds (readRes4):res4 file header = %s.  ',...
     'Valid header options:'],res4.header);
@@ -293,12 +293,12 @@ if isempty(strmatch(res4.header,res4Headers,'exact'))
 end
 
 % Remove trailing blanks, but include a final null (char(0)).
-res4.appName=[deblank(char(fread(fid,256,'char')')) char(0)];
-res4.dataOrigin=[deblank(char(fread(fid,256,'char')')) char(0)];
-res4.dataDescription=[deblank(char(fread(fid,256,'char')')) char(0)];
+res4.appName=[deblank(char(fread(fid,256,'uint8')')) char(0)];
+res4.dataOrigin=[deblank(char(fread(fid,256,'uint8')')) char(0)];
+res4.dataDescription=[deblank(char(fread(fid,256,'uint8')')) char(0)];
 res4.no_trials_avgd=fread(fid,1,'int16');
-res4.data_time=[deblank(char(fread(fid,255,'char')')) char(0)];
-res4.data_date=[deblank(char(fread(fid,255,'char')')) char(0)];
+res4.data_time=[deblank(char(fread(fid,255,'uint8')')) char(0)];
+res4.data_date=[deblank(char(fread(fid,255,'uint8')')) char(0)];
 
 % new_general_setup_rec_ext part of meg41GeneralResRec
 res4.no_samples=fread(fid,1,'int32');
@@ -331,17 +331,17 @@ res4.artifact_mode=fread(fid,1,'int32');
 
 % meg4FileSetup part of meg41GeneralResRec
 % Remove trailing blanks, but include a final null (char(0))
-res4.nf_run_name=[deblank(char(fread(fid,32,'char')')) char(0)];
-res4.nf_run_title=[deblank(char(fread(fid,256,'char')')) char(0)];
-res4.nf_instruments=[deblank(char(fread(fid,32,'char')')) char(0)];
-res4.nf_collect_descriptor=[deblank(char(fread(fid,32,'char')')) char(0)];
-res4.nf_subject_id=[deblank(char(fread(fid,32,'char')')) char(0)];
-res4.nf_operator=[deblank(char(fread(fid,32,'char')')) char(0)];
-res4.nf_sensorFileName=[deblank(char(fread(fid,56,'char')')) char(0)];
+res4.nf_run_name=[deblank(char(fread(fid,32,'uint8')')) char(0)];
+res4.nf_run_title=[deblank(char(fread(fid,256,'uint8')')) char(0)];
+res4.nf_instruments=[deblank(char(fread(fid,32,'uint8')')) char(0)];
+res4.nf_collect_descriptor=[deblank(char(fread(fid,32,'uint8')')) char(0)];
+res4.nf_subject_id=[deblank(char(fread(fid,32,'uint8')')) char(0)];
+res4.nf_operator=[deblank(char(fread(fid,32,'uint8')')) char(0)];
+res4.nf_sensorFileName=[deblank(char(fread(fid,56,'uint8')')) char(0)];
 temp=fread(fid,3,'int32');
 res4.rdlen=temp(2);
 
-res4.run_description=[deblank(char(fread(fid,res4.rdlen,'char')')) char(0)];
+res4.run_description=[deblank(char(fread(fid,res4.rdlen,'uint8')')) char(0)];
 %  end of meg4FileSetup part of meg41GeneralResRec
 
 %  Filter descriptions.  Set field res4.filters=[] if no filters are

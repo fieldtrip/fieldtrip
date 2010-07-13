@@ -251,7 +251,7 @@ openFile=1;
 
 % Check that the header of the .meg4 file is OK.  Don't bother to check the other
 % meg4 files (.1_meg4,...)
-meg4Header=char(fread(meg4Fid,8,'char')');
+meg4Header=char(fread(meg4Fid,8,'uint8')');
 if isempty(strmatch(meg4Header,allowedMeg4Headers,'exact'))
   fclose(meg4Fid);
   fprintf(['\ngetCTFdata: meg4 file header = %s.  ',...
