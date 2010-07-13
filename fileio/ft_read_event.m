@@ -129,12 +129,6 @@ if isempty(detectflank)
   detectflank = 'up';
 end
 
-if isempty(hdr)
-    try
-        hdr = ft_read_header(filename);
-    end
-end
-
 if ismember(eventformat, {'brainvision_eeg', 'brainvision_dat'})
   [p, f, e] = fileparts(filename);
   filename = fullfile(p, [f '.vhdr']);
@@ -496,9 +490,15 @@ switch eventformat
     event = read_shm_event(filename, varargin{:});
 
   case 'eeglab_set'
+    if isempty(hdr)
+       hdr = ft_read_header(filename);
+    end
     event = read_eeglabevent(filename, 'header', hdr);
 
   case 'spmeeg_mat'
+    if isempty(hdr)
+       hdr = ft_read_header(filename);
+    end
     event = read_spmeeg_event(filename, 'header', hdr);
 
   case 'eep_avr'
