@@ -6,6 +6,10 @@ function data = fixtrialdef(data)
 
 % Copyright (C) 2009-2010, Robert Oostenveld and Jan-Mathijs Schoffelen
 
+if isfield(data, 'trialdef')
+  return;
+end
+
 if ~isfield(data, 'cfg')
   % fieldtrip raw data structures are expected to have a cfg
   data.cfg = [];
@@ -19,7 +23,8 @@ else
   ntrial = dimlength(data, 'rpt');
   if ~isfinite(ntrial), ntrial = 1; end
 end
-trl    = findcfg(data.cfg, 'trl');
+
+trl = findcfg(data.cfg, 'trl');
 
 nsmp = zeros(ntrial,1);
 if hastrial,
