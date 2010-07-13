@@ -49,9 +49,6 @@ if isfield(D, 'Radc') % SPM5
 elseif all(isfield(D, {'type', 'Nsamples', 'Fsample', 'timeOnset'})) % SPM8
 
     for i = 1:numel(D.trials)
-        event = [event struct('type', 'trial', 'sample', (i-1)*header.nSamples + 1,...
-            'value', D.trials(i).label, 'offset', -header.nSamplesPre, 'duration', header.nSamples)];
-
         if isfield(D.trials, 'events')
             cevent = D.trials(i).events;
             if ~isempty(cevent)
@@ -63,7 +60,7 @@ elseif all(isfield(D, {'type', 'Nsamples', 'Fsample', 'timeOnset'})) % SPM8
                             if strcmp(D.type, 'continuous') && (D.timeOnset ~= 0)
                                 tmp.sample  = (cevent(j).time - D.timeOnset)* header.Fs + 1;
                             else
-                                tmp.sample = cevent(j).time*header.Fs;
+                                tmp.sample = (i-1)*header.nSamples + 1 +(cevent(j).time - D.trials(i).onset)*header.Fs;
                             end
                             tmp.sample = round(tmp.sample);
                             tmp.offset = 0;

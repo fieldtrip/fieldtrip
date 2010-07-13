@@ -129,6 +129,12 @@ if isempty(detectflank)
   detectflank = 'up';
 end
 
+if isempty(hdr)
+    try
+        hdr = ft_read_header(filename);
+    end
+end
+
 if ismember(eventformat, {'brainvision_eeg', 'brainvision_dat'})
   [p, f, e] = fileparts(filename);
   filename = fullfile(p, [f '.vhdr']);
@@ -1218,7 +1224,7 @@ switch eventformat
     error('unsupported event format (%s)', eventformat);
 end
 
-if ~isempty(hdr) && hdr.nTrials>1 && ~any(strcmp({event.type}, 'trial'))
+if ~isempty(hdr) && hdr.nTrials>1 && (isempty(event) || ~any(strcmp({event.type}, 'trial')))
   % the data suggests multiple trials and trial events have not yet been defined
   % make an event for each trial according to the file header
   for i=1:hdr.nTrials
