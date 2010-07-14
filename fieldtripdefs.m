@@ -106,6 +106,11 @@ try
   hastoolbox('plotting', 1, 1);
 end
 
+try 
+  % this contains the functions to compute connecitivy metrics
+  hastoolbox('connectivity', 1,1);
+end
+
 try
   % this contains specific code and examples for realtime processing
   hastoolbox('realtime', 3, 1);             % not required
