@@ -68,14 +68,14 @@ if (length(strfind(dimord, 'chan'))~=2 || length(strfind(dimord, 'pos'))>0) && ~
   for j = 1:siz(1)
     progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
     if pownorm
-      p1    = reshape(input(j,cfg.powindx(:,1),:,:,:), siz(2:end));
-      p2    = reshape(input(j,cfg.powindx(:,2),:,:,:), siz(2:end));
+      p1    = reshape(input(j,powindx(:,1),:,:,:), siz(2:end));
+      p2    = reshape(input(j,powindx(:,2),:,:,:), siz(2:end));
       denom = sqrt(p1.*p2); clear p1 p2
     else
       denom = 1;
     end
-    outsum = outsum + complexeval(reshape(input(j,:,:,:,:), siz(2:end))./denom, cfg.complex);
-    outssq = outssq + complexeval(reshape(input(j,:,:,:,:), siz(2:end))./denom, cfg.complex).^2;
+    outsum = outsum + complexeval(reshape(input(j,:,:,:,:), siz(2:end))./denom, cmplx);
+    outssq = outssq + complexeval(reshape(input(j,:,:,:,:), siz(2:end))./denom, cmplx).^2;
   end
   progress('close');
   
