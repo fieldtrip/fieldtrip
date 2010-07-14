@@ -195,6 +195,8 @@ switch toolbox
     status  = exist('bsmart'); 
   case 'PEER' 
     status  = exist('peerslave', 'file') && exist('peermaster', 'file');
+  case 'CONNECTIVITY'
+    status  = exist('ft_connectivity_corr', 'file') && exist('ft_connectivity_granger', 'file');
   otherwise
     if ~silent, warning(sprintf('cannot determine whether the %s toolbox is present', toolbox)); end
     status = 0;
