@@ -54,11 +54,11 @@ try
       elseif (TY(k) == 1), %planar gradiometer
          grad.pnt(kCoil,:)=100*(t{k}(1:3,4)-0.008*t{k}(1:3,1)); % multiply with 100 to get cm
          grad.ori(kCoil,:)=t{k}(1:3,3);
-         grad.tra(k,kCoil)=1;
+         grad.tra(k,kCoil)= -1;
          kCoil=kCoil+1;
          grad.pnt(kCoil,:)=100*(t{k}(1:3,4)+0.008*t{k}(1:3,1));
          grad.ori(kCoil,:)=t{k}(1:3,3);
-         grad.tra(k,kCoil)=-1;
+         grad.tra(k,kCoil)= 1;
          kCoil=kCoil+1;
          grad.label{k}=deblank(s(k,:));
       else
