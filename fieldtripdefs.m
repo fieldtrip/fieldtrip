@@ -104,6 +104,7 @@ end
 try
   % this contains intermediate-level plotting functions, e.g. multiplots and 3-d objects
   hastoolbox('plotting', 1, 1);
+  hastoolbox('plotting/compat', 1, 1);
 end
 
 try 
