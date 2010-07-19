@@ -218,7 +218,7 @@ if iseeg
   end % plotgrid
   
   if strcmp(cfg.plotsensors, 'yes')
-    plot_sens(sens, 'style', 'g*');
+    ft_plot_sens(sens, 'style', 'g*');
   end % plotsensors
   
   if strcmp(cfg.plotheadsurface, 'yes')  && ~isempty(vol)
@@ -328,7 +328,7 @@ elseif ismeg
   end % plotgrid
   
   if strcmp(cfg.plotsensors, 'yes')
-    plot_sens(sens, 'style', 'g*');
+    ft_plot_sens(sens, 'style', 'g*');
   end % plotsensors
   
   if strcmp(cfg.plotcoil, 'yes')

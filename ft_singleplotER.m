@@ -166,7 +166,7 @@ for k=1:length(varargin)
       h = clf;
       lay = ft_prepare_layout(cfg, varargin{1});
       cfg.layout = lay;
-      plot_lay(cfg.layout, 'box', false);
+      ft_plot_lay(cfg.layout, 'box', false);
       title('Select the reference channel by clicking on it...');
       % add the channel information to the figure
       info       = guidata(h);
@@ -174,7 +174,7 @@ for k=1:length(varargin)
       info.y     = lay.pos(:,2);
       info.label = lay.label;
       guidata(h, info);
-      set(gcf, 'WindowButtonUpFcn', {@select_channel, 'callback', {@select_singleplotER, cfg, varargin{:}}});
+      set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'callback', {@select_singleplotER, cfg, varargin{:}}});
       return
     end
 
@@ -289,7 +289,7 @@ for k=2:nargin
   if ischar(GRAPHCOLOR);        color = GRAPHCOLOR(k);
   elseif isnumeric(GRAPHCOLOR); color = GRAPHCOLOR(k,:);
   end
-  plot_vector(varargin{k-1}.(cfg.xparam), P, 'style', cfg.linestyle, 'color', color, 'highlight', M, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth);  
+  ft_plot_vector(varargin{k-1}.(cfg.xparam), P, 'style', cfg.linestyle, 'color', color, 'highlight', M, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth);  
 end
 
 % Set xlim and ylim:
@@ -298,9 +298,9 @@ ylim([ymin ymax]);
 
 % Make the figure interactive
 if strcmp(cfg.interactive, 'yes')
-  set(gcf, 'WindowButtonUpFcn',     {@select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg, varargin{:}}, 'event', 'WindowButtonUpFcn'});
-  set(gcf, 'WindowButtonDownFcn',   {@select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg, varargin{:}}, 'event', 'WindowButtonDownFcn'});
-  set(gcf, 'WindowButtonMotionFcn', {@select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg, varargin{:}}, 'event', 'WindowButtonMotionFcn'});
+  set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg, varargin{:}}, 'event', 'WindowButtonUpFcn'});
+  set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg, varargin{:}}, 'event', 'WindowButtonDownFcn'});
+  set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg, varargin{:}}, 'event', 'WindowButtonMotionFcn'});
 end
 
 % Create title text containing channel name(s) and channel number(s):

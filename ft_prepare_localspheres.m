@@ -118,8 +118,8 @@ end
 % plot all channels and headshape points
 if strcmp(cfg.feedback, 'yes')
   cla
-  plot_sens(grad);
-  plot_mesh(headshape, 'vertexcolor', 'g', 'facecolor', 'none', 'edgecolor', 'none');
+  ft_plot_sens(grad);
+  ft_plot_mesh(headshape, 'vertexcolor', 'g', 'facecolor', 'none', 'edgecolor', 'none');
   drawnow
 end
 
@@ -179,7 +179,7 @@ for chan=1:Nchan
   dist = sqrt(sum((headshape.pnt-repmat(thispnt,Nshape,1)).^2, 2));
   shapesel = find(dist<cfg.radius);
   if strcmp(cfg.feedback, 'yes')
-    plot_mesh(headshape.pnt(shapesel,:), 'vertexcolor', 'g');
+    ft_plot_mesh(headshape.pnt(shapesel,:), 'vertexcolor', 'g');
     drawnow
   end
   

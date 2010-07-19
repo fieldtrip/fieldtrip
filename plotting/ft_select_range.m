@@ -1,4 +1,4 @@
-function select_range(handle, eventdata, varargin)
+function ft_select_range(handle, eventdata, varargin)
 
 % SELECT_RANGE is a helper function that can be used as callback function
 % in a figure. It allows the user to select a horizontal or a vertical
@@ -9,13 +9,13 @@ function select_range(handle, eventdata, varargin)
 %   y = randn(10,1);
 %   figure; plot(x, y, '.');
 %
-%   set(gcf, 'WindowButtonDownFcn',   {@select_range, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonDownFcn'});
-%   set(gcf, 'WindowButtonUpFcn',     {@select_range, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonUpFcn'});
-%   set(gcf, 'WindowButtonMotionFcn', {@select_range, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonMotionFcn'});
+%   set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonDownFcn'});
+%   set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonUpFcn'});
+%   set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonMotionFcn'});
 %
-%   set(gcf, 'WindowButtonDownFcn',   {@select_range, 'multiple', false, 'xrange', false, 'yrange', false, 'callback', @disp, 'event', 'WindowButtonDownFcn'});
-%   set(gcf, 'WindowButtonUpFcn',     {@select_range, 'multiple', false, 'xrange', false, 'yrange', false, 'callback', @disp, 'event', 'WindowButtonUpFcn'});
-%   set(gcf, 'WindowButtonMotionFcn', {@select_range, 'multiple', false, 'xrange', false, 'yrange', false, 'callback', @disp, 'event', 'WindowButtonMotionFcn'});
+%   set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'xrange', false, 'yrange', false, 'callback', @disp, 'event', 'WindowButtonDownFcn'});
+%   set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'xrange', false, 'yrange', false, 'callback', @disp, 'event', 'WindowButtonUpFcn'});
+%   set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'xrange', false, 'yrange', false, 'callback', @disp, 'event', 'WindowButtonMotionFcn'});
 
 % Copyright (C) 2009, Robert Oostenveld
 %

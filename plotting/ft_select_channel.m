@@ -1,4 +1,4 @@
-function select_channel(handle, eventdata, varargin)
+function ft_select_channel(handle, eventdata, varargin)
 
 % SELECT_CHANNEL is a helper function that can be used as callback function
 % in a figure. It allows the user to select a channel. The channel labels
@@ -68,9 +68,9 @@ multiple  = istrue(multiple);
 
 if multiple
   % the selection is done using select_range, which will subsequently call select_channel_multiple
-  set(gcf, 'WindowButtonDownFcn',   {@select_range, 'multiple', true, 'callback', {@select_channel_multiple, callback}, 'event', 'WindowButtonDownFcn'});
-  set(gcf, 'WindowButtonUpFcn',     {@select_range, 'multiple', true, 'callback', {@select_channel_multiple, callback}, 'event', 'WindowButtonUpFcn'});
-  set(gcf, 'WindowButtonMotionFcn', {@select_range, 'multiple', true, 'callback', {@select_channel_multiple, callback}, 'event', 'WindowButtonMotionFcn'});
+  set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', true, 'callback', {@select_channel_multiple, callback}, 'event', 'WindowButtonDownFcn'});
+  set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', true, 'callback', {@select_channel_multiple, callback}, 'event', 'WindowButtonUpFcn'});
+  set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', true, 'callback', {@select_channel_multiple, callback}, 'event', 'WindowButtonMotionFcn'});
 else
   % the selection is done using select_channel_single
   pos = get(gca, 'CurrentPoint');

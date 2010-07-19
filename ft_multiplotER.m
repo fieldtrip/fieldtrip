@@ -222,7 +222,7 @@ for k=1:length(varargin)
     if strcmp(cfg.cohrefchannel, 'gui')
       % Open a single figure with the channel layout, the user can click on a reference channel
       h = clf;
-      plot_lay(lay, 'box', false);
+      ft_plot_lay(lay, 'box', false);
       title('Select the reference channel by clicking on it...');
       % add the channel information to the figure
       info       = guidata(h);
@@ -230,7 +230,7 @@ for k=1:length(varargin)
       info.y     = lay.pos(:,2);
       info.label = lay.label;
       guidata(h, info);
-      set(gcf, 'WindowButtonUpFcn', {@select_channel, 'callback', {@select_multiplotER, cfg, varargin{:}}});
+      set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'callback', {@select_multiplotER, cfg, varargin{:}}});
       return
     end
     
@@ -373,7 +373,7 @@ cfg.comment = [cfg.comment colorLabels];
 % Write comment text:
 l = cellstrmatch('COMNT',Lbl);
 if ~isempty(l)
-  plot_text(X(l),Y(l),sprintf(cfg.comment),'Fontsize',cfg.fontsize);
+  ft_plot_text(X(l),Y(l),sprintf(cfg.comment),'Fontsize',cfg.fontsize);
 end
 
 % Plot scales:
@@ -392,9 +392,9 @@ if strcmp(cfg.interactive, 'yes')
   info.label = lay.label;
   guidata(gcf, info);
   
-  set(gcf, 'WindowButtonUpFcn',     {@select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonUpFcn'});
-  set(gcf, 'WindowButtonDownFcn',   {@select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonDownFcn'});
-  set(gcf, 'WindowButtonMotionFcn', {@select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonMotionFcn'});
+  set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonUpFcn'});
+  set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonDownFcn'});
+  set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonMotionFcn'});
 end
 
 axis tight
@@ -423,24 +423,24 @@ x1 =  xpos;
 x2 =  xpos+width;
 y1 =  ypos;
 y2 =  ypos+width;
-plot_box([xpos xpos+width ypos ypos+height],'edgecolor','b')
+ft_plot_box([xpos xpos+width ypos ypos+height],'edgecolor','b')
 
 if xlim(1) <=  0 && xlim(2) >= 0
   xs =  xpos+width*([0 0]-xlim(1))/(xlim(2)-xlim(1));
   ys =  ypos+height*(ylim-ylim(1))/(ylim(2)-ylim(1));
-  plot_vector(xs,ys,'color','b');
+  ft_plot_vector(xs,ys,'color','b');
 end
 
 if ylim(1) <= 0 && ylim(2) >= 0
   xs =  xpos+width*(xlim-xlim(1))/(xlim(2)-xlim(1));
   ys =  ypos+height*([0 0]-ylim(1))/(ylim(2)-ylim(1));
-  plot_vector(xs,ys,'color','b');
+  ft_plot_vector(xs,ys,'color','b');
 end
 
-plot_text( x1,y1,num2str(xlim(1),3),'rotation',90,'HorizontalAlignment','Right','VerticalAlignment','middle','Fontsize',cfg.fontsize);
-plot_text( x2,y1,num2str(xlim(2),3),'rotation',90,'HorizontalAlignment','Right','VerticalAlignment','middle','Fontsize',cfg.fontsize);
-plot_text( x2,y1,num2str(ylim(1),3),'HorizontalAlignment','Left','VerticalAlignment','bottom','Fontsize',cfg.fontsize);
-plot_text( x2,y2,num2str(ylim(2),3),'HorizontalAlignment','Left','VerticalAlignment','bottom','Fontsize',cfg.fontsize);
+ft_plot_text( x1,y1,num2str(xlim(1),3),'rotation',90,'HorizontalAlignment','Right','VerticalAlignment','middle','Fontsize',cfg.fontsize);
+ft_plot_text( x2,y1,num2str(xlim(2),3),'rotation',90,'HorizontalAlignment','Right','VerticalAlignment','middle','Fontsize',cfg.fontsize);
+ft_plot_text( x2,y1,num2str(ylim(1),3),'HorizontalAlignment','Left','VerticalAlignment','bottom','Fontsize',cfg.fontsize);
+ft_plot_text( x2,y2,num2str(ylim(2),3),'HorizontalAlignment','Left','VerticalAlignment','bottom','Fontsize',cfg.fontsize);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -459,13 +459,13 @@ xs = xpos+width*(x-xlim(1))/(xlim(2)-xlim(1));
 ys = ypos+height*(y-ylim(1))/(ylim(2)-ylim(1));
 
 if isempty(mask) || (~isempty(mask) && strcmp(cfg.maskstyle,'box'))
-  plot_vector(xs, ys, 'color', color, 'style', cfg.linestyle, 'linewidth', cfg.linewidth)
+  ft_plot_vector(xs, ys, 'color', color, 'style', cfg.linestyle, 'linewidth', cfg.linewidth)
 elseif ~isempty(mask) && ~strcmp(cfg.maskstyle,'box') % plot_vector doesnt support boxes higher than ydata yet, so a separate option remains below
-  plot_vector(xs, ys, 'color', color, 'style', cfg.linestyle, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth)
+  ft_plot_vector(xs, ys, 'color', color, 'style', cfg.linestyle, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth)
 end
 
 if strcmp(cfg.showlabels,'yes')
-  plot_text(xpos,ypos+1.0*height,label,'Fontsize',cfg.fontsize)
+  ft_plot_text(xpos,ypos+1.0*height,label,'Fontsize',cfg.fontsize)
 end
 
 % Draw axes:
@@ -473,29 +473,29 @@ if strcmp(cfg.axes,'yes') || strcmp(cfg.axes, 'xy')
   % Draw y axis
   xs =  xpos+width*([0 0]-xlim(1))/(xlim(2)-xlim(1));
   ys =  ypos+height*(ylim-ylim(1))/(ylim(2)-ylim(1));
-  plot_vector(xs,ys,'color','k')
+  ft_plot_vector(xs,ys,'color','k')
   % Draw x axis
   xs =  xpos+width*(xlim-xlim(1))/(xlim(2)-xlim(1));
   ys =  ypos+height*([0 0]-ylim(1))/(ylim(2)-ylim(1));
-  plot_vector(xs,ys,'color','k')
+  ft_plot_vector(xs,ys,'color','k')
   
 elseif strcmp(cfg.axes,'x')
   % Draw x axis
   xs =  xpos+width*(xlim-xlim(1))/(xlim(2)-xlim(1));
   ys =  ypos+height*([0 0]-ylim(1))/(ylim(2)-ylim(1));
-  plot_vector(xs,ys,'color','k')
+  ft_plot_vector(xs,ys,'color','k')
   
 elseif strcmp(cfg.axes,'y')
   % Draw y axis
   xs =  xpos+width*([0 0]-xlim(1))/(xlim(2)-xlim(1));
   ys =  ypos+height*(ylim-ylim(1))/(ylim(2)-ylim(1));
-  plot_vector(xs,ys,'color','k')
+  ft_plot_vector(xs,ys,'color','k')
 end
 
 
 % Draw box around plot:
 if strcmp(cfg.box,'yes')
-  plot_box([xpos xpos+width ypos ypos+height],'edgecolor','k')
+  ft_plot_box([xpos xpos+width ypos ypos+height],'edgecolor','k')
 end
 
 % Add boxes when masktyle is box, plot_vector doesnt support boxes higher than ydata yet, so this code is left here

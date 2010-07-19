@@ -1,10 +1,10 @@
-function Zi = plot_topo(chanX, chanY, dat, varargin)
+function Zi = ft_plot_topo(chanX, chanY, dat, varargin)
 
 % PLOT_TOPO interpolates and plots the 2-D spatial topography of the
 % potential or field distribution over the head
 %
 % Use as
-%   plot_topo(x, y, val, ...)
+%   ft_plot_topo(x, y, val, ...)
 %
 % Additional options should be specified in key-value pairs and can be
 %   'hpos'
@@ -152,7 +152,7 @@ end
 for i=1:length(outline)
   xval = outline{i}(:,1) * width  + hpos;
   yval = outline{i}(:,2) * height + vpos;
-  plot_vector(xval, yval, 'Color','k', 'LineWidth',2)
+  ft_plot_vector(xval, yval, 'Color','k', 'LineWidth',2)
 end
 
 

@@ -409,7 +409,7 @@ if (strcmp(cfg.zparam,'cohspctrm') && isfield(data, 'labelcmb')) || ...
   if strcmp(cfg.cohrefchannel, 'gui')
     % Open a single figure with the channel layout, the user can click on a reference channel
     h = clf;
-    plot_lay(lay, 'box', false);
+    ft_plot_lay(lay, 'box', false);
     title('Select the reference channel by dragging a selection window, more than 1 channel can be selected...');
     % add the channel information to the figure
     info       = guidata(gcf);
@@ -417,10 +417,10 @@ if (strcmp(cfg.zparam,'cohspctrm') && isfield(data, 'labelcmb')) || ...
     info.y     = lay.pos(:,2);
     info.label = lay.label;
     guidata(h, info);
-    %set(gcf, 'WindowButtonUpFcn', {@select_channel, 'callback', {@select_topoplotER, cfg, data}});
-    set(gcf, 'WindowButtonUpFcn',     {@select_channel, 'multiple', true, 'callback', {@select_topoplotER, cfg, data}, 'event', 'WindowButtonUpFcn'});
-    set(gcf, 'WindowButtonDownFcn',   {@select_channel, 'multiple', true, 'callback', {@select_topoplotER, cfg, data}, 'event', 'WindowButtonDownFcn'});
-    set(gcf, 'WindowButtonMotionFcn', {@select_channel, 'multiple', true, 'callback', {@select_topoplotER, cfg, data}, 'event', 'WindowButtonMotionFcn'});
+    %set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'callback', {@select_topoplotER, cfg, data}});
+    set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_topoplotER, cfg, data}, 'event', 'WindowButtonUpFcn'});
+    set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_topoplotER, cfg, data}, 'event', 'WindowButtonDownFcn'});
+    set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_topoplotER, cfg, data}, 'event', 'WindowButtonMotionFcn'});
     return
   end
   
@@ -633,7 +633,7 @@ if strcmp(cfg.style,'fill');        style = 'isofill';     end
 
 % Draw plot
 if ~strcmp(cfg.style,'blank')
-  plot_topo(chanX,chanY,datavector,'interpmethod',cfg.interpolation,...
+  ft_plot_topo(chanX,chanY,datavector,'interpmethod',cfg.interpolation,...
     'interplim',interplimits,...
     'gridscale',cfg.gridscale,...
     'outline',lay.outline,...
@@ -643,7 +643,7 @@ if ~strcmp(cfg.style,'blank')
     'style',style,...
     'datmask', maskdatavector);
 elseif ~strcmp(cfg.style,'blank')
-  plot_lay(lay,'box','no','label','no','point','no')
+  ft_plot_lay(lay,'box','no','label','no','point','no')
 end
 
 % Plotting markers for channels and/or highlighting a selection of channels
@@ -669,7 +669,7 @@ for icell = 1:length(cfg.highlight)
         templay.label{ichan} = num2str(match_str(data.label,templay.label{ichan}));
       end
     end
-    plot_lay(templay,'box','no','label',labelflg,'point','yes',...
+    ft_plot_lay(templay,'box','no','label',labelflg,'point','yes',...
       'pointsymbol',cfg.highlightsymbol{icell},...
       'pointcolor',cfg.highlightcolor{icell},...
       'pointsize',cfg.highlightsize{icell},...
@@ -694,7 +694,7 @@ if ~strcmp(cfg.marker,'off')
       templay.label{ichan} = num2str(match_str(data.label,templay.label{ichan}));
     end
   end
-  plot_lay(templay,'box','no','label',labelflg,'point','yes',...
+  ft_plot_lay(templay,'box','no','label',labelflg,'point','yes',...
     'pointsymbol',cfg.markersymbol,...
     'pointcolor',cfg.markercolor,...
     'pointsize',cfg.markersize,...
@@ -710,7 +710,7 @@ if ~strcmp(cfg.comment,'no')
   if strcmp(cfg.commentpos, 'title')
     title(cfg.comment, 'Fontsize', cfg.fontsize);
   else
-    plot_text(x_comment,y_comment, cfg.comment, 'Fontsize', cfg.fontsize, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom');
+    ft_plot_text(x_comment,y_comment, cfg.comment, 'Fontsize', cfg.fontsize, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom');
   end
 end
 
@@ -741,13 +741,13 @@ if strcmp(cfg.interactive, 'yes')
   guidata(gcf, info);
   
   if any(strcmp(data.dimord, {'chan_time', 'chan_freq', 'subj_chan_time', 'rpt_chan_time', 'chan_chan_freq'}))
-    set(gcf, 'WindowButtonUpFcn',     {@select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonUpFcn'});
-    set(gcf, 'WindowButtonDownFcn',   {@select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonDownFcn'});
-    set(gcf, 'WindowButtonMotionFcn', {@select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonMotionFcn'});
+    set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonUpFcn'});
+    set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonDownFcn'});
+    set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonMotionFcn'});
   elseif any(strcmp(data.dimord, {'chan_freq_time', 'subj_chan_freq_time', 'rpt_chan_freq_time', 'rpttap_chan_freq_time'}))
-    set(gcf, 'WindowButtonUpFcn',     {@select_channel, 'multiple', true, 'callback', {@select_singleplotTFR, cfg, varargin{:}}, 'event', 'WindowButtonUpFcn'});
-    set(gcf, 'WindowButtonDownFcn',   {@select_channel, 'multiple', true, 'callback', {@select_singleplotTFR, cfg, varargin{:}}, 'event', 'WindowButtonDownFcn'});
-    set(gcf, 'WindowButtonMotionFcn', {@select_channel, 'multiple', true, 'callback', {@select_singleplotTFR, cfg, varargin{:}}, 'event', 'WindowButtonMotionFcn'});
+    set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR, cfg, varargin{:}}, 'event', 'WindowButtonUpFcn'});
+    set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR, cfg, varargin{:}}, 'event', 'WindowButtonDownFcn'});
+    set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR, cfg, varargin{:}}, 'event', 'WindowButtonMotionFcn'});
   else
     error('unsupported dimord "%" for interactive plotting', data.dimord);
   end
