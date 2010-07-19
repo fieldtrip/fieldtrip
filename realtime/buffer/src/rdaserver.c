@@ -417,7 +417,7 @@ rda_buffer_item_t *rda_aux_get_samples_and_markers(int ft_buffer, const samples_
 			eventdef_t *evdef = (eventdef_t *) ((char *)respEvt->buf + offset);
 			char *evbuf = (char *)respEvt->buf + offset + sizeof(eventdef_t);
 			rda_marker_t *marker = (rda_marker_t *) ptr;
-			int i;
+			int i, markerPos;
 			
 			offset += sizeof(eventdef_t) + evdef->bufsize;			
 			
@@ -425,9 +425,10 @@ rda_buffer_item_t *rda_aux_get_samples_and_markers(int ft_buffer, const samples_
 				continue; /* skip to next event */
 			}
 			
-			marker->nChannel = -1; /* All channels, FieldTrip doesn't have this*/
-			marker->nPosition = evdef->sample - (last->nsamples +1); /* relative to first sample in this block */
-			marker->nPoints = evdef->duration;
+			markerPos = evdef->sample - (last->nsamples +1); /* relative to first sample in this block */
+			marker->nPosition = (markerPos > 0) ? markerPos : 0;  /* needs to be unsigned! */
+			marker->nChannel  = -1; /* All channels, FieldTrip doesn't have this*/
+			marker->nPoints   = evdef->duration;
 			
 			ptr += sizeof(rda_marker_t);
 			
