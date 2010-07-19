@@ -611,7 +611,7 @@ switch eventformat
             event(eventCount).sample   = min(find(eventData(theEvent,((segment-1)*hdr.nSamples +1):segment*hdr.nSamples))) +(segment-1)*hdr.nSamples;
             event(eventCount).offset   = -hdr.nSamplesPre;
             event(eventCount).duration =  length(find(eventData(theEvent,((segment-1)*hdr.nSamples +1):segment*hdr.nSamples )>0))-1;
-            if event(eventCount).duration ~~= hdr.nSamples 
+            if event(eventCount).duration ~= hdr.nSamples 
               event(eventCount).type     = 'trigger';
             else
               event(eventCount).type     = 'trial';
