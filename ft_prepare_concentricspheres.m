@@ -123,13 +123,13 @@ for i = 1:numel(headshape)
     bndtmp = [];
     bndtmp.pnt = headshape(end-i+1).pnt;
     bndtmp.tri = headshape(end-i+1).tri;
-    plot_mesh(bndtmp,'facecolor','none')
+    ft_plot_mesh(bndtmp,'facecolor','none')
 
     % plot the sphere surface
     bndtmp = [];
     bndtmp.pnt = sphere_pnt*vol.r(i) + repmat(single_o, size(sphere_pnt, 1), 1);
     bndtmp.tri = sphere_tri;
-    plot_mesh(bndtmp,'edgecolor',colors{mod(i, numel(colors)) + 1},'facecolor','none');
+    ft_plot_mesh(bndtmp,'edgecolor',colors{mod(i, numel(colors)) + 1},'facecolor','none');
   end
 end
 
