@@ -222,7 +222,7 @@ class Client:
 			raise IOError('Bad response from buffer server - disconnecting')
 		
 		if bufsize > 0:
-			resp_buf = self.sock.recv(bufsize)
+			resp_buf = recv_all(self.sock, bufsize)
 			if len(resp_buf) < bufsize:
 				self.disconnect()
 				raise IOError('Error during socket read operation')
@@ -431,18 +431,22 @@ if __name__ == "__main__":
 	
 	print '\nConnected - trying to read header...'
 	H = ftc.getHeader()
-	print H
 	
-	if H.nSamples > 0:
-		print '\nTrying to read (all) data...'
-		D = ftc.getData()
-		print D.shape
-		print D
+	if H is None:
+		print 'Failed!'
+	else:
+		print H
+	
+		if H.nSamples > 0:
+			print '\nTrying to read last sample...'
+			index = H.nSamples - 1
+			D = ftc.getData([index, index])
+			print D
 
-	if H.nEvents > 0:
-		print '\nTrying to read (all) events...'
-		E = ftc.getEvents()
-		for e in E:
-			print e
+		if H.nEvents > 0:
+			print '\nTrying to read (all) events...'
+			E = ftc.getEvents()
+			for e in E:
+				print e
 	
 	ftc.disconnect()

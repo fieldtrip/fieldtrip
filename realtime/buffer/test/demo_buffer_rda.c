@@ -27,22 +27,32 @@ int main(int argc, char *argv[]) {
 #ifndef PLATFORM_WIN32
 	sigset_t sigInt;
 #endif
-	int errval;
+	int errval, blocksize;
 
     /* verify that all datatypes have the expected syze in bytes */
     check_datatypes();
-
-	if (argc>2) {
-		sprintf(host.name, argv[1]);
-		host.port = atoi(argv[2]);
+	
+	strcpy(host.name, DEFAULT_HOSTNAME);
+	if (argc>1) {
+		host.port = atoi(argv[1]);
 	}
 	else {
-		sprintf(host.name, DEFAULT_HOSTNAME);
 		host.port = DEFAULT_PORT;
 	}
 	
+	if (argc>2) {
+		blocksize = atoi(argv[2]);
+	} else {
+		blocksize = 0;
+	}
+	
+	if (host.port <= 0 || blocksize < 0) {
+		fprintf(stderr, "Usage: demo_buffer_rda [port [blocksize]]\nPort number must be positive, block size must be >= 0.\n");
+		return 1;
+	}
+	
 #ifndef PLATFORM_WIN32	
-	/* Make sure the RDA server thread does not receive CTRL-C, instead it will
+	/*  Make sure the RDA server thread does not receive CTRL-C, instead it will
 		get terminated properly using rda_stop_server from a handler. We need this
 		because otherwise it is unspecified in which thread the signal will be
 		received - the thread created in rda_start_server will inherit the signal
@@ -54,7 +64,7 @@ int main(int argc, char *argv[]) {
 #endif
 	
 	/* 0,0,0 = dma-connection to fieldtrip, default = float, default port */
-	rdac = rda_start_server(0, 0, 0, &errval);
+	rdac = rda_start_server(0, 0, 0, blocksize, &errval);
 	if (errval != 0) {
 		printf("Could not start rdaserver: %i\n", errval);
 		return errval;

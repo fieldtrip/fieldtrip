@@ -52,6 +52,7 @@ typedef struct {
 	volatile int num_clients;	/**< Current number of clients */
 	volatile int should_exit;	/**< Flag to notify the server thread that it should stop */
 	volatile int is_running;	/**< Flag that indicates whether the thread is still running */
+	int blocksize;				/**< Block size for streaming out samples, 0 => adapt to incoming data */
 	int use16bit;				/**< Flag that indicates whether 16 bit data should be streamed */
 	int verbosity;				/**< Option that determines how much status information is printed during operation */
 } rda_server_ctrl_t;
@@ -87,11 +88,12 @@ void rda_aux_convert_to_float(UINT32_T N, void *dest, UINT32_T data_type, const 
 						pass non-zero to serve 16 bit integers (only works if the FieldTrip buffer
 						also contains 16 bit data)
 	@param port			Port number to bind to, or 0 for default port (51244 for 16 bit, 51344 for single precision)
+	@param blocksize    Block size for streaming out samples (0=send out variable blocks depending on incoming data)
 	@param errval		Optional pointer to an integer error value. Will contain either
 						FT_NO_ERROR, FT_ERR_SOCKET, FT_OUT_OF_MEM or FT_THREADING on exit.
 	@return 	Pointer to RDA server control structure, or NULL if an error occured
 */
-rda_server_ctrl_t *rda_start_server(int ft_buffer, int use16bit, int port, int *errval);
+rda_server_ctrl_t *rda_start_server(int ft_buffer, int use16bit, int port, int blocksize, int *errval);
 
 /** Stops an RDA server by closing the associated connections, stopping the background thread, and
 	deallocating its memory (including the control structure pointed to by the argument)

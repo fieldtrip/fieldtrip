@@ -714,7 +714,7 @@ void *_rdaserver_thread(void *arg) {
 		sel = select(fdMax + 1, &readSet, &writeSet, NULL, &tv);
 		if (sel == -1) {
 			perror("rdaserver_thread -- select");
-			continue; /* TODO: think about stopping operation */
+			continue; /* TODO: think about stopping operation instead */
 		}
 		
 		/* Check if we have a new client connection */
@@ -770,8 +770,21 @@ void *_rdaserver_thread(void *arg) {
 		
 		/* If we already have the header, check for new data (samples / events) */
 		if (startItem != NULL && !rda_aux_wait_dat(SC->ft_buffer, &lastNum, &curNum, ftTimeout)) {
+			int newBlock;
+			
+			if (SC->blocksize > 0) {
+				/* only send out a DATA packet if there are enough new samples */
+				newBlock = (curNum.nsamples - lastNum.nsamples) >= SC->blocksize;
+				if (newBlock) {
+					curNum.nsamples = lastNum.nsamples + SC->blocksize;
+				}
+			} else {
+				/* blocksize = 0: send out a new block if there are new samples or new events */
+				newBlock = curNum.nsamples > lastNum.nsamples || curNum.nevents > lastNum.nevents;
+			}
+			
 			/* printf("after wait: %i %i\n", curNum.nsamples, curNum.nevents); */
-			if (typeOk && (curNum.nsamples > lastNum.nsamples || curNum.nevents > lastNum.nevents)) {
+			if (typeOk && newBlock) {
 				/* There's new data to stream out */
 				rda_buffer_item_t *item;
 								
@@ -855,7 +868,7 @@ void *_rdaserver_thread(void *arg) {
 }
  
 /* see header file for documentation */
-rda_server_ctrl_t *rda_start_server(int ft_buffer, int use16bit, int port, int *errval) {
+rda_server_ctrl_t *rda_start_server(int ft_buffer, int use16bit, int port, int blocksize, int *errval) {
 	rda_server_ctrl_t *SC = NULL;
 	SOCKET s = INVALID_SOCKET;
 	struct sockaddr_in sa;
@@ -946,6 +959,7 @@ rda_server_ctrl_t *rda_start_server(int ft_buffer, int use16bit, int port, int *
 	SC->ft_buffer = ft_buffer;
 	SC->use16bit = use16bit;
 	SC->verbosity = 10; /* TODO: specify proper values */
+	SC->blocksize = (blocksize < 0) ? 0 : blocksize;
 
 	/* if things go wrong after this, it's because of pthread issues */
 	interr = FT_ERR_THREADING;
