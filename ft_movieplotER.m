@@ -124,13 +124,13 @@ figure;
 for iFrame = 1:floor(size(datavector,2)/cfg.samperframe)
   data_frame = mean(datavector(:,((iFrame-1)*cfg.samperframe)+1:iFrame*cfg.samperframe),2);
   % Draw topoplot:
-  plot_topo(chanX, chanY, data_frame, 'mask', lay.mask, 'outline', lay.outline, 'interpmethod', 'cubic');
-  %plot_text(chanX, chanY, '.');
+  ft_plot_topo(chanX, chanY, data_frame, 'mask', lay.mask, 'outline', lay.outline, 'interpmethod', 'cubic');
+  %ft_plot_text(chanX, chanY, '.');
   axis off
   % plot comment
   if length(ind_COMNT)==1
     comment = sprintf('zlim=[%.3g %.3g]\ntime=[%.4g %.4g]', zmin, zmax, timelock.time(((iFrame-1)*cfg.samperframe)+1), timelock.time(iFrame*cfg.samperframe));
-    plot_text(X_COMNT,Y_COMNT, comment)
+    ft_plot_text(X_COMNT,Y_COMNT, comment)
   end
   F(iFrame) = getframe;
   cla

@@ -452,7 +452,7 @@ elseif strcmp(cfg.method, 'manual')
   % open a figure
   fig = figure;
   rotate3d on
-  plot_mesh(headshape, 'edgecolor', 'k')
+  ft_plot_mesh(headshape, 'edgecolor', 'k')
   xyz = select_point3d(headshape, 'multiple', true);
   orig.pnt = xyz;
   for i=1:size(orig.pnt,1)

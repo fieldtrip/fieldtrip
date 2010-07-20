@@ -131,7 +131,7 @@ end
 
 if strcmp(cfg.newfigure, 'yes')
   % also plot the position of the electrodes
-  plot_vector(lay.pos(:,1), lay.pos(:,2), 'style','k.');
+  ft_plot_vector(lay.pos(:,1), lay.pos(:,2), 'style','k.');
 
   % also plot the outline, i.e. head shape or sulci
   if isfield(lay, 'outline')
@@ -140,7 +140,7 @@ if strcmp(cfg.newfigure, 'yes')
       if ~isempty(lay.outline{i})
         X = lay.outline{i}(:,1);
         Y = lay.outline{i}(:,2);
-        plot_line(X, Y, 'color', 'k', 'linewidth', 1.5, 'linestyle', '-');
+        ft_plot_line(X, Y, 'color', 'k', 'linewidth', 1.5, 'linestyle', '-');
       end
     end
   end
@@ -155,7 +155,7 @@ if strcmp(cfg.newfigure, 'yes')
         % the polygon representing the mask should be closed
         X(end+1) = X(1);
         Y(end+1) = Y(1);
-        plot_line(X, Y, 'color', 'k', 'linewidth', 1.5, 'linestyle', '-');
+        ft_plot_line(X, Y, 'color', 'k', 'linewidth', 1.5, 'linestyle', '-');
       end
     end
   end

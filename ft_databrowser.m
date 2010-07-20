@@ -783,7 +783,7 @@ switch key
       redraw_cb(h, eventdata);
       hold on
       xtext = opt.cfg.zscale - 0.1*opt.cfg.zscale;
-      plot_text(val(1), xtext, channame, 'FontSize', 16);
+      ft_plot_text(val(1), xtext, channame, 'FontSize', 16);
       plot(opt.curdat.time{1}, opt.curdat.trial{1}(channb,:),'k','LineWidth',2)
     end
   case 'control+control'
@@ -900,7 +900,7 @@ switch opt.cfg.viewmode
       artbeg = find(tmp==+1);
       artend = find(tmp==-1) - 1;
       for j=1:numel(artbeg)
-        plot_box([tim(artbeg(j)) tim(artend(j)) -opt.cfg.zscale opt.cfg.zscale], 'facecolor', opt.artcol(i,:), 'edgecolor', 'none');
+        ft_plot_box([tim(artbeg(j)) tim(artend(j)) -opt.cfg.zscale opt.cfg.zscale], 'facecolor', opt.artcol(i,:), 'edgecolor', 'none');
       end
     end
     
@@ -912,12 +912,12 @@ switch opt.cfg.viewmode
         eventstr = 'unknown';
       end
       eventtim = (event(i).sample-begsample+offset)/opt.fsample;
-      plot_line([eventtim eventtim], [-opt.cfg.zscale opt.cfg.zscale]);
-      plot_text(eventtim, opt.cfg.zscale, eventstr);
+      ft_plot_line([eventtim eventtim], [-opt.cfg.zscale opt.cfg.zscale]);
+      ft_plot_text(eventtim, opt.cfg.zscale, eventstr);
     end
     set(gca,'ColorOrder',opt.chan_colors(chanindx,:)) % plot vector does not clear axis, therefore this is possible
     % plot the data on top of the box
-    plot_vector(tim, dat)
+    ft_plot_vector(tim, dat)
     ax(1) = tim(1);
     ax(2) = tim(end);
     ax(3) = -opt.cfg.zscale;
@@ -967,7 +967,7 @@ switch opt.cfg.viewmode
       arttim = arttim * (opt.hpos(2) - opt.hpos(1)) + opt.hpos(1);     % convert from relative to actual value along the horizontal figure axis
       
       for k=1:numel(artbeg)
-        plot_box([arttim(k,1) arttim(k,2) ax(3) ax(4)], 'facecolor', opt.artcol(j,:), 'edgecolor', 'none');
+        ft_plot_box([arttim(k,1) arttim(k,2) ax(3) ax(4)], 'facecolor', opt.artcol(j,:), 'edgecolor', 'none');
       end
     end % for each of the artifact channels
     
@@ -975,8 +975,8 @@ switch opt.cfg.viewmode
       datsel = i;
       laysel = match_str(laytime.label, opt.hdr.label(chanindx(i)));
       if ~isempty(datsel)
-        plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'HorizontalAlignment', 'right');
-        plot_vector(tim, dat(datsel, :), 'hpos', laytime.pos(laysel,1), 'vpos', laytime.pos(laysel,2), 'width', laytime.width(laysel), 'height', laytime.height(laysel), 'hlim', hlim, 'vlim', vlim, 'box', false, 'color', opt.chan_colors(chanindx(i),:));
+        ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'HorizontalAlignment', 'right');
+        ft_plot_vector(tim, dat(datsel, :), 'hpos', laytime.pos(laysel,1), 'vpos', laytime.pos(laysel,2), 'width', laytime.width(laysel), 'height', laytime.height(laysel), 'hlim', hlim, 'vlim', vlim, 'box', false, 'color', opt.chan_colors(chanindx(i),:));
       end
     end
     
@@ -1024,12 +1024,12 @@ switch opt.cfg.viewmode
       datsel = i;
       laysel = match_str(laytime.label,opt.hdr.label(compindx(i)));
       if ~isempty(datsel)
-        plot_text(labelx(laysel), labely(laysel), opt.hdr.label(compindx(i)));
+        ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(compindx(i)));
         % plot the timecourse of this component
-        plot_vector(tim, dat(datsel, :), 'hpos', laytime.pos(laysel,1), 'vpos', laytime.pos(laysel,2), 'width', laytime.width(laysel), 'height', laytime.height(laysel), 'hlim', hlim, 'vlim', vlim);
+        ft_plot_vector(tim, dat(datsel, :), 'hpos', laytime.pos(laysel,1), 'vpos', laytime.pos(laysel,2), 'width', laytime.width(laysel), 'height', laytime.height(laysel), 'hlim', hlim, 'vlim', vlim);
         % plot the topography of this component
         chanz = opt.orgdata.topo(sel1,compindx(i));
-        plot_topo(chanx, chany, chanz, 'mask', laychan.mask, 'outline', laychan.outline, 'hpos', laytopo.pos(laysel,1), 'vpos', laytopo.pos(laysel,2), 'width', laytopo.width(laysel), 'height', laytopo.height(laysel));
+        ft_plot_topo(chanx, chany, chanz, 'mask', laychan.mask, 'outline', laychan.outline, 'hpos', laytopo.pos(laysel,1), 'vpos', laytopo.pos(laysel,2), 'width', laytopo.width(laysel), 'height', laytopo.height(laysel));
         axis equal
         drawnow
       end

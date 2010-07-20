@@ -166,14 +166,14 @@ for k = cfg.comp
   cnt = cnt + 1;
 
   % write number of the component on the left
-  h_text(cnt) = plot_text(-2.5, -cnt*cfg.shift, ['n. ' num2str(cfg.comp(cnt))]);
+  h_text(cnt) = ft_plot_text(-2.5, -cnt*cfg.shift, ['n. ' num2str(cfg.comp(cnt))]);
 
   % plot only topography (no layout)
-  plot_topo(cfg.layout.pos(cfg.chanidx.lay,1), cfg.layout.pos(cfg.chanidx.lay,2), ...
+  ft_plot_topo(cfg.layout.pos(cfg.chanidx.lay,1), cfg.layout.pos(cfg.chanidx.lay,2), ...
     comp.topo(cfg.chanidx.comp, k)./max(abs(comp.topo(cfg.chanidx.comp, k))), ... % for proper scaling
     'hpos', -1, 'vpos', -cnt*cfg.shift, 'mask', cfg.layout.mask);
   % plot layout
-  plot_lay(cfg.layout, 'hpos', -1, 'vpos', -cnt*cfg.shift, 'point', false, 'box', false, 'label', false, 'mask', true, 'verbose', false);
+  ft_plot_lay(cfg.layout, 'hpos', -1, 'vpos', -cnt*cfg.shift, 'point', false, 'box', false, 'label', false, 'mask', true, 'verbose', false);
 end
 
 h_topo = findobj(cfg.h, 'type', 'surface');
@@ -240,7 +240,7 @@ for k = cfg.comp
   cnt = cnt + 1;
 
   % plot the activations
-  h_act(cnt) = plot_vector(comp.trial{cfg.trial}(k,:), 'hpos', 6 , 'vpos', -cnt*cfg.shift, 'width', 12, 'height', 1, 'box', true);
+  h_act(cnt) = ft_plot_vector(comp.trial{cfg.trial}(k,:), 'hpos', 6 , 'vpos', -cnt*cfg.shift, 'width', 12, 'height', 1, 'box', true);
 end
 
 h_inv = plot(6+12+1, -cnt*cfg.shift, '.'); %

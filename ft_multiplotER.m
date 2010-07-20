@@ -460,7 +460,7 @@ ys = ypos+height*(y-ylim(1))/(ylim(2)-ylim(1));
 
 if isempty(mask) || (~isempty(mask) && strcmp(cfg.maskstyle,'box'))
   ft_plot_vector(xs, ys, 'color', color, 'style', cfg.linestyle, 'linewidth', cfg.linewidth)
-elseif ~isempty(mask) && ~strcmp(cfg.maskstyle,'box') % plot_vector doesnt support boxes higher than ydata yet, so a separate option remains below
+elseif ~isempty(mask) && ~strcmp(cfg.maskstyle,'box') % ft_plot_vector doesnt support boxes higher than ydata yet, so a separate option remains below
   ft_plot_vector(xs, ys, 'color', color, 'style', cfg.linestyle, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth)
 end
 
@@ -498,7 +498,7 @@ if strcmp(cfg.box,'yes')
   ft_plot_box([xpos xpos+width ypos ypos+height],'edgecolor','k')
 end
 
-% Add boxes when masktyle is box, plot_vector doesnt support boxes higher than ydata yet, so this code is left here
+% Add boxes when masktyle is box, ft_plot_vector doesnt support boxes higher than ydata yet, so this code is left here
 if ~isempty(mask) && strcmp(cfg.maskstyle, 'box')
   % determine how many boxes
   foundbeg = 0;

@@ -623,7 +623,7 @@ end
 
 % Draw topoplot
 hold on
-% Set plot_topo specific options
+% Set ft_plot_topo specific options
 if strcmp(cfg.interplimits,'head'),  interplimits = 'mask';
 else interplimits = cfg.interplimits; end
 if strcmp(cfg.style,'both');        style = 'surfiso';     end

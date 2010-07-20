@@ -143,7 +143,7 @@ if (strcmp(cfg.zparam,'cohspctrm')) && (isfield(data, 'labelcmb'))
     h = clf;
     lay = ft_prepare_layout(cfg, data);
     cfg.layout = lay;
-    plot_lay(lay, 'box', false);
+    ft_plot_lay(lay, 'box', false);
     title('Select the reference channel by clicking on it...');
     % add the channel information to the figure
     info       = guidata(h);
@@ -263,18 +263,18 @@ end;
 if isequal(cfg.masknans,'yes') && isempty(cfg.maskparameter)
   mask = ~isnan(TFR);
   mask = double(mask);
-  plot_matrix(data.(cfg.xparam)(xidc),data.(cfg.yparam)(yidc), TFR, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
+  ft_plot_matrix(data.(cfg.xparam)(xidc),data.(cfg.yparam)(yidc), TFR, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
 elseif isequal(cfg.masknans,'yes') && ~isempty(cfg.maskparameter)
   mask = ~isnan(TFR);
   mask = mask .* mdata;
   mask = double(mask);
-  plot_matrix(data.(cfg.xparam)(xidc),data.(cfg.yparam)(yidc), TFR, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
+  ft_plot_matrix(data.(cfg.xparam)(xidc),data.(cfg.yparam)(yidc), TFR, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
 elseif isequal(cfg.masknans,'no') && ~isempty(cfg.maskparameter)
   mask = mdata;
   mask = double(mask);
-  plot_matrix(data.(cfg.xparam)(xidc),data.(cfg.yparam)(yidc), TFR, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
+  ft_plot_matrix(data.(cfg.xparam)(xidc),data.(cfg.yparam)(yidc), TFR, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
 else
-  plot_matrix(data.(cfg.xparam)(xidc),data.(cfg.yparam)(yidc), TFR, 'clim',[zmin,zmax],'tag','cip')
+  ft_plot_matrix(data.(cfg.xparam)(xidc),data.(cfg.yparam)(yidc), TFR, 'clim',[zmin,zmax],'tag','cip')
 end
 hold on
 axis xy;

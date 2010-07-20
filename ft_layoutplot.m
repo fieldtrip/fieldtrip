@@ -136,7 +136,7 @@ if isfield(cfg, 'image') && ~isempty(cfg.image)
   axis xy
 end
 
-plot_lay(lay, 'point', true, 'box', true, 'label', true, 'mask', true, 'outline', true);
+ft_plot_lay(lay, 'point', true, 'box', true, 'label', true, 'mask', true, 'outline', true);
 
 % the following code can be used to verify a bipolar montage, given the
 % layout of the monopolar channels 
