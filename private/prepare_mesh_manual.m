@@ -607,7 +607,7 @@ pntsslice = [];
 
 % 2d slice selected box boundaries
 if strcmp(get(obj,'string'),'box')
-  [x, y] = select_box;
+  [x, y] = ft_select_box;
   rowmin = min(y);    rowmax = max(y);
   colmin = min(x);    colmax = max(x);
   box = getappdata(fig,'box');
@@ -616,7 +616,7 @@ if strcmp(get(obj,'string'),'box')
 else
   % converts lines to points
   pos = slicedata2pnts(prop{1},prop{2});
-  tmp = select_point(pos);
+  tmp = ft_select_point(pos);
   point2mark.x = tmp(1); point2mark.y = tmp(2);
   setappdata(fig,'point2mark',point2mark);
 end
@@ -772,7 +772,8 @@ if ~isempty(pnt)
   bnd.pnt = pnt_;
   bnd.tri = tri;
   slicedata = getappdata(fig,'slicedata');
-  figure,plot_mesh(bnd,'vertexcolor','k')
+  figure
+  ft_plot_mesh(bnd,'vertexcolor','k');
 end
 
 function cancel_mesh(hObject, eventdata, handles)
