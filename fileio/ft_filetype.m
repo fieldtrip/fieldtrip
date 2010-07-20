@@ -836,11 +836,11 @@ elseif filetype_check_extension(filename, '.gdf') && filetype_check_header(filen
   type = 'gdf';
   manufacturer = 'BIOSIG - Alois Schloegl';
   content = 'biosignals';
-elseif filetype_check_extension(filename, '.mat') && exist(filename, 'file') && exist([filename(1:(end-4)) '.dat'], 'file') && numel(whos('-file', filename))==1 && strcmp('D', getfield(whos('-file', filename), {1}, 'name')) && strcmp('struct', getfield(whos('-file', filename), {1}, 'class'))
+elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB') && filetype_check_spmeeg_mat(filename)
   type = 'spmeeg_mat';
   manufacturer = 'Wellcome Trust Centre for Neuroimaging, UCL, UK';
   content = 'electrophysiological data';
-elseif filetype_check_extension(filename, '.mat') && exist(filename, 'file') && filetype_check_ced_spike6mat(filename)
+elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB') && filetype_check_ced_spike6mat(filename)
   type = 'ced_spike6mat';
   manufacturer = 'Cambridge Electronic Design Limited';
   content = 'electrophysiological data';
@@ -907,18 +907,21 @@ return % filetype main()
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that helps in deciding whether a directory with files should
 % be treated as a "dataset". This function returns a logical 1 (TRUE) if more
-% than half of the element of a vector are nonzero number or are logical 1
-% (TRUE).
+% than half of the element of a vector are nonzero number or are 1 or TRUE.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = most(x)
 x = x(~isnan(x(:)));
 y = sum(x==0)<ceil(length(x)/2);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that always returns a true value
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = filetype_true(varargin)
 y = 1;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that checks for CED spike6 mat file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function res = filetype_check_ced_spike6mat(filename)
 res = 1;
 var = whos('-file', filename);
@@ -948,4 +951,16 @@ fnames = {
 
 res = (numel(intersect(fieldnames(var{1}), fnames)) == 10);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that checks for a SPM eeg/meg mat file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function res = filetype_check_spmeeg_mat(filename)
+% check for the accompanying *.dat file
+res = exist([filename(1:(end-4)) '.dat'], 'file');
+if ~res, return; end
+% check the content of the *.mat file
+var = whos('-file', filename);
+res = res && numel(var)==1;
+res = res && strcmp('D', getfield(var, {1}, 'name'));
+res = res && strcmp('struct', getfield(var, {1}, 'class'));
 
