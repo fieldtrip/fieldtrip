@@ -38,8 +38,8 @@ for trllop=1:trlnum
 end
 
 % try to get trial definition according to original data file
-if isfield(data, 'trialdef')
-  trl = data.trialdef;
+if isfield(data, 'sampleinfo')
+  trl = data.sampleinfo;
 else
   trl = [1 sum(trllen)];
 end

@@ -50,8 +50,8 @@ if isempty(chanindx)
 end
 
 % get trial definition according to original data file
-if isfield(data, 'trialdef')
-  trl    = data.trialdef;
+if isfield(data, 'sampleinfo')
+  trl    = data.sampleinfo;
 else
   error('data does not contain a consistent trial definition, fetching data is not possible');
 end

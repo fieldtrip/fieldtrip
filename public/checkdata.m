@@ -627,6 +627,12 @@ if isfield(data, 'grad')
   end
 end
 
+% This is necessary to ensure backward compatibility for data processed and stored in July 2010. 
+% We decided to change the field trialdef into sampleinfo.
+if isfield(data, 'trialdef')
+  data.sampleinfo = data.trialdef;
+  data = rmfield(data, 'trialdef');
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % represent the covariance matrix in a particular manner
