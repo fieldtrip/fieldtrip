@@ -21,7 +21,11 @@ if hastrial,
   ntrial = length(data.trial);
 else
   ntrial = dimlength(data, 'rpt');
-  if ~isfinite(ntrial), ntrial = 1; end
+  if ~isfinite(ntrial) && strcmp(data.dimord(1:6), 'rpttap') && isfield(data, 'cumtapcnt'),
+    ntrial = numel(data.cumtapcnt);
+  elseif ~isfinite(ntrial)
+    ntrial = 1; 
+  end
 end
 
 trl = findcfg(data.cfg, 'trl');
@@ -52,7 +56,8 @@ if isempty(trl)
   trl = [begsample endsample offset];
 
 elseif size(trl,1)~=ntrial
-  error('the trial definition in the configuration is inconsistent with the actual data');
+  warning('the trial definition in the configuration is inconsistent with the actual data');
+  trl = [];
 elseif nsmp~=(trl(:,2)-trl(:,1)+1)
   warning('the trial definition in the configuration is inconsistent with the actual data');
   trl = [];
