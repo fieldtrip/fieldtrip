@@ -64,14 +64,14 @@ end
 
 % load optional given inputfile like already segmented volume 
 hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
+if      hasdata && ~isempty(cfg.inputfile)
+  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+elseif  hasdata &&  isempty(cfg.inputfile)
+  % this is ok
+elseif ~hasdata && ~isempty(cfg.inputfile)
   % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    mri = loadvar(cfg.inputfile, 'data');
-  end
-else
+  mri = loadvar(cfg.inputfile, 'data');
+elseif ~hasdata &&  isempty(cfg.inputfile)
   mri = [];
 end
 
