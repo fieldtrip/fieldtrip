@@ -183,7 +183,15 @@ if ~isempty(cfg.inputfile)
 end
 
 if hasdata
-  trl = findcfg(data.cfg, 'trl');
+  data = checkdata(data, 'hastrialdef', 'yes', 'hasoffset', 'yes');
+  if isfield(data, 'trialdef')
+    trl = [data.trialdef data.offset(:)];
+    if isfield(data, 'trialinfo')
+      trl(:, 3+(1:size(data.trialinfo,2))) = data.trialinfo;
+    end
+  else
+    trl = [];
+  end
 elseif isfield(cfg, 'trl')
   trl = cfg.trl;
 end
@@ -248,7 +256,11 @@ end
 
 % make header, needed only for sampling frequency
 if nargin ==1
-  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+  if isfield(cfg, 'headerformat')
+    hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+  else
+    hdr = ft_read_header(cfg.headerfile);
+  end
 elseif nargin ==2
   hdr = fetch_header(data);
 end
@@ -419,6 +431,9 @@ if hasdata
   data       = ft_redefinetrial(tmpcfg,data);
   % remember the configuration details, this overwrites the stored configuration of redefinetrial
   data.cfg = cfg;
+  if isfield(data, 'offset')
+    data = rmfield(data, 'offset');
+  end
   % return the data instead of the cfg
   cfg = data;
 else
