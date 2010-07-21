@@ -28,7 +28,7 @@ dat.cfg     = cfg;
 dat.artcfg  = artcfg;
 if nargin == 5
   % no data is given
-  dat.hdr          = read_fcdc_header(cfg.headerfile);
+  dat.hdr          = ft_read_header(cfg.headerfile);
 elseif nargin == 6
   % data is given
   dat.hdr          = fetch_header(inputdata); % used name inputdata iso data, because data is already used later in this function
