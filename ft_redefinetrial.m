@@ -244,6 +244,7 @@ elseif ~isempty(cfg.trl)
   
   % make new data structure
   trl = cfg.trl;
+  remove = 0;
   for iTrl=1:length(trl(:,1))
     begsample = trl(iTrl,1);
     endsample = trl(iTrl,2);
@@ -251,6 +252,14 @@ elseif ~isempty(cfg.trl)
     trllength        = endsample - begsample + 1;
     data.trial{iTrl} = fetch_data(dataold, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', 1:hdr.nChans, 'docheck', 0);
     data.time{iTrl}  = offset2time(offset, dataold.fsample, trllength);
+    
+    % ensure correct handling of trialinfo
+    iTrlorig = find(dataold.trialdef(:,1)>=begsample & dataold.trialdef(:,2)<=endsample);
+    if numel(iTrlorig)==1 && isfield(dataold, 'trialinfo'),
+      data.trialinfo(iTrl,:) = dataold.trialinfo(iTrlorig,:);
+    elseif isfield(dataold, 'trialinfo'),
+      remove = 1;
+    end
   end
   data.hdr       = hdr;
   data.label     = dataold.label;
@@ -261,8 +270,8 @@ elseif ~isempty(cfg.trl)
   if isfield(dataold, 'elec')
     data.elec      = dataold.elec;
   end
-  if isfield(dataold, 'trialinfo')
-    data.trialinfo = dataold.trialinfo;
+  if remove
+    data = rmfield(data, 'trialinfo');
   end
   if isfield(dataold, 'trialdef')
     % adjust the trial definition
