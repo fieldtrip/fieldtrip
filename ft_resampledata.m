@@ -92,7 +92,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-% ensure trialdef and trialinfo (if present) to be in the data
+% ensure sampleinfo and trialinfo (if present) to be in the data
 data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hastrialdef', 'yes');
 
 if isempty(cfg.detrend)
@@ -111,10 +111,10 @@ if ~strcmp(cfg.trials, 'all')
 end
 
 % trl is not specified in the function call, but the data is given ->
-% recreate trl-matrix from trialdef and time axes, or
+% recreate trl-matrix from sampleinfo and time axes, or
 % try to locate the trial definition (trl) in the nested configuration
-% if isfield(data, 'trialdef')
-%   trl = data.trialdef;
+% if isfield(data, 'sampleinfo')
+%   trl = data.sampleinfo;
 %   trl(:, 3) = 0;
 %   for k = 1:numel(data.trial)
 %     trl(k, 3) = time2offset(data.time{k}, data.fsample);
@@ -124,8 +124,8 @@ end
 % end
 
 % this should be removed
-if isfield(data, 'trialdef'),
-  data = rmfield(data, 'trialdef');
+if isfield(data, 'sampleinfo'),
+  data = rmfield(data, 'sampleinfo');
 end
 
 usefsample = ~isempty(cfg.resamplefs);

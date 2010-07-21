@@ -146,10 +146,10 @@ end
 
 % check whether the data are obtained from the same datafile
 origfile1      = findcfg(varargin{1}.cfg, 'datafile');
-removetrialdef = 0;
+removesampleinfo = 0;
 for j=2:Ndata
     if ~strcmp(origfile1, findcfg(varargin{j}.cfg, 'datafile')),
-        removetrialdef = 1;
+        removesampleinfo = 1;
         warning('input data comes from different datafiles');
         break;
     end
@@ -188,12 +188,12 @@ elseif cattrial
   data = varargin{1};
   data.trial  = {};
   data.time   = {};
-  data.trialdef = [];
+  data.sampleinfo = [];
   if hastrialinfo, data.trialinfo = []; end;
   for i=1:Ndata
     data.trial    = cat(2, data.trial,  varargin{i}.trial(:)');
     data.time     = cat(2, data.time,   varargin{i}.time(:)');
-    data.trialdef = cat(1, data.trialdef, varargin{i}.trialdef);
+    data.sampleinfo = cat(1, data.sampleinfo, varargin{i}.sampleinfo);
     if hastrialinfo, data.trialinfo = cat(1, data.trialinfo, varargin{i}.trialinfo); end;
     % FIXME is not entirely robust if the different inputs have different
     % number of columns in trialinfo
@@ -254,9 +254,9 @@ if removesens
   if hasgrad, data = rmfield(data, 'grad'); end
 end
 
-if removetrialdef
+if removesampleinfo
     fprintf('removing trial definition from output\n');
-    data            = rmfield(data, 'trialdef');
+    data            = rmfield(data, 'sampleinfo');
     cfg.trl(:, 1:2) = nan;
 end
 

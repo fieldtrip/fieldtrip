@@ -300,9 +300,9 @@ if isfield(data, 'trialinfo')
   interp.trialinfo = data.trialinfo;
 end
 
-% copy the trialdef field as well
-if isfield(data, 'trialdef')
-  interp.trialdef = data.trialdef;
+% copy the sampleinfo field as well
+if isfield(data, 'sampleinfo')
+  interp.sampleinfo = data.sampleinfo;
 end
 
 % the output data should be saved to a MATLAB file

@@ -92,10 +92,10 @@ data = checkdata(data, 'datatype', 'raw', 'feedback', cfg.feedback);
 fb   = strcmp(cfg.feedback, 'yes');
 
 % trl is not specified in the function call, but the data is given ->
-% recreate trl-matrix from trialdef and time axes, or
+% recreate trl-matrix from sampleinfo and time axes, or
 % try to locate the trial definition (trl) in the nested configuration
-if isfield(data, 'trialdef')
-  trl = data.trialdef;
+if isfield(data, 'sampleinfo')
+  trl = data.sampleinfo;
   trl(:, 3) = 0;
   for k = 1:numel(data.trial)
     trl(k, 3) = time2offset(data.time{k}, data.fsample);
@@ -174,14 +174,14 @@ if ~isempty(cfg.toilim)
   trl = trl(~skiptrial,:);
   
   % also correct the trial definition
-  if isfield(data, 'trialdef'),
-      data.trialdef(:, 1) = data.trialdef(:, 1) + begsample - 1;
-      data.trialdef(:, 2) = data.trialdef(:, 1) + endsample - begsample;
+  if isfield(data, 'sampleinfo'),
+      data.sampleinfo(:, 1) = data.sampleinfo(:, 1) + begsample - 1;
+      data.sampleinfo(:, 2) = data.sampleinfo(:, 1) + endsample - begsample;
   end
   
   data.time     = data.time(~skiptrial);
   data.trial    = data.trial(~skiptrial);
-  if isfield(data, 'trialdef'),  data.trialdef  = data.trialdef(~skiptrial, :); end
+  if isfield(data, 'sampleinfo'),  data.sampleinfo  = data.sampleinfo(~skiptrial, :); end
   if isfield(data, 'trialinfo'), data.trialinfo = data.trialinfo(~skiptrial);   end
   if fb, fprintf('removing %d trials in which no data was selected\n', sum(skiptrial)); end
   
@@ -227,9 +227,9 @@ elseif ~isempty(cfg.begsample) || ~isempty(cfg.endsample)
   end
 
   % also correct the trial definition
-  if isfield(data, 'trialdef')
-      data.trialdef(:, 1) = data.trialdef(:, 1) + begsample - 1;
-      data.trialdef(:, 2) = data.trialdef(:, 1) + endsample - begsample;
+  if isfield(data, 'sampleinfo')
+      data.sampleinfo(:, 1) = data.sampleinfo(:, 1) + begsample - 1;
+      data.sampleinfo(:, 2) = data.sampleinfo(:, 1) + endsample - begsample;
   end
   
 elseif ~isempty(cfg.trl)
@@ -254,11 +254,13 @@ elseif ~isempty(cfg.trl)
     data.time{iTrl}  = offset2time(offset, dataold.fsample, trllength);
     
     % ensure correct handling of trialinfo
-    iTrlorig = find(dataold.trialdef(:,1)>=begsample & dataold.trialdef(:,2)<=endsample);
-    if numel(iTrlorig)==1 && isfield(dataold, 'trialinfo'),
-      data.trialinfo(iTrl,:) = dataold.trialinfo(iTrlorig,:);
-    elseif isfield(dataold, 'trialinfo'),
-      remove = 1;
+    if isfield(dataold, 'sampleinfo'),
+      iTrlorig = find(dataold.sampleinfo(:,1)>=begsample & dataold.sampleinfo(:,2)<=endsample);
+      if numel(iTrlorig)==1 && isfield(dataold, 'trialinfo'),
+        data.trialinfo(iTrl,:) = dataold.trialinfo(iTrlorig,:);
+      elseif isfield(dataold, 'trialinfo'),
+        remove = 1;
+      end
     end
   end
   data.hdr       = hdr;
@@ -270,12 +272,12 @@ elseif ~isempty(cfg.trl)
   if isfield(dataold, 'elec')
     data.elec      = dataold.elec;
   end
-  if remove
+  if remove && isfield(data, 'trialinfo')
     data = rmfield(data, 'trialinfo');
   end
-  if isfield(dataold, 'trialdef')
+  if isfield(dataold, 'sampleinfo')
     % adjust the trial definition
-    data.trialdef  = trl(:, 1:2);
+    data.sampleinfo  = trl(:, 1:2);
   end
 end % processing the realignment or data selection
 
@@ -296,7 +298,7 @@ if ~isempty(cfg.minlength)
   if ~isempty(trl), trl = trl(~skiptrial,:); end
   data.time  = data.time(~skiptrial);
   data.trial = data.trial(~skiptrial);
-  if isfield(data, 'trialdef'),  data.trialdef  = data.trialdef(~skiptrial,  :); end
+  if isfield(data, 'sampleinfo'),  data.sampleinfo  = data.sampleinfo(~skiptrial,  :); end
   if isfield(data, 'trialinfo'), data.trialinfo = data.trialinfo(~skiptrial, :); end
   if fb, fprintf('removing %d trials that are too short\n', sum(skiptrial));     end
 end

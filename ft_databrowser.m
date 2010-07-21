@@ -143,8 +143,8 @@ if hasdata
   Nchans  = length(chansel);
   
   % this is how the input data is segmented
-  if isfield(data, 'trialdef'),
-    trlorg = [data.trialdef data.offset(:)];
+  if isfield(data, 'sampleinfo'),
+    trlorg = [data.sampleinfo data.offset(:)];
   else
     trlorg = [];
   end

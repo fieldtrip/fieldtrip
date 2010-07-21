@@ -131,8 +131,8 @@ else
   interp.grad  = sens;
 end
 
-if isfield(data, 'trialdef')
-  interp.trialdef = data.trialdef;
+if isfield(data, 'sampleinfo')
+  interp.sampleinfo = data.sampleinfo;
 end
 if isfield(data, 'trialinfo')
   interp.trialinfo = data.trialinfo;

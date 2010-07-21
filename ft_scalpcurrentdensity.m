@@ -219,8 +219,8 @@ scd.elec    = elec;
 scd.time    = data.time;
 scd.label   = data.label;
 scd.fsample = data.fsample;
-if isfield(data, 'trialdef')
-  scd.trialdef = data.trialdef;
+if isfield(data, 'sampleinfo')
+  scd.sampleinfo = data.sampleinfo;
 end
 if isfield(data, 'trialinfo')
   scd.trialinfo = data.trialinfo;

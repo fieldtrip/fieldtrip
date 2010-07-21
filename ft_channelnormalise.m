@@ -73,7 +73,7 @@ dataout.label   = data.label;
 dataout.fsample = data.fsample;
 dataout.trial   = cell(1,ntrl);
 dataout.time    = data.time;
-if isfield(data, 'trialdef'),  dataout.trialdef  = data.trialdef;  end
+if isfield(data, 'sampleinfo'),  dataout.sampleinfo  = data.sampleinfo;  end
 if isfield(data, 'trialinfo'), dataout.trialinfo = data.trialinfo; end
 
 % compute the mean and std
