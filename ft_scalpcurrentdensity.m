@@ -99,10 +99,6 @@ data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'ismeg', 'no');
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
   data = selectdata(data, 'rpt', cfg.trials);
-  if isfield(data, 'cfg') % try to locate the trl in the nested configuration
-    cfg.trlold = findcfg(data.cfg, 'trlold');
-    cfg.trl    = findcfg(data.cfg, 'trl');
-  end
 end
 
 % get the electrode positions
@@ -223,6 +219,12 @@ scd.elec    = elec;
 scd.time    = data.time;
 scd.label   = data.label;
 scd.fsample = data.fsample;
+if isfield(data, 'trialdef')
+  scd.trialdef = data.trialdef;
+end
+if isfield(data, 'trialinfo')
+  scd.trialinfo = data.trialinfo;
+end
 
 % store the configuration of this function call, including that of the previous function call
 try
