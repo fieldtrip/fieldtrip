@@ -6,7 +6,7 @@ function data = fixtrialdef(data)
 
 % Copyright (C) 2009-2010, Robert Oostenveld and Jan-Mathijs Schoffelen
 
-if isfield(data, 'trialdef')
+if isfield(data, 'sampleinfo')
   return;
 end
 
@@ -63,17 +63,17 @@ elseif nsmp~=(trl(:,2)-trl(:,1)+1)
   trl = [];
 end
 
-if ~isfield(data, 'trialdef') && ~isempty(trl)
-  data.trialdef = trl(:, 1:2);
-elseif ~isfield(data, 'trialdef') && isempty(trl)
-  warning('failed to create trialdef field');
+if ~isfield(data, 'sampleinfo') && ~isempty(trl)
+  data.sampleinfo = trl(:, 1:2);
+elseif ~isfield(data, 'sampleinfo') && isempty(trl)
+  warning('failed to create sampleinfo field');
 end
 
 if (~isfield(data, 'trialinfo') || isempty(data.trialinfo)) && ~isempty(trl) && size(trl, 2) > 3,
     data.trialinfo = trl(:, 4:end); 
 end
 
-% if data is not raw then it does not make sense to keep the trialdef
-if ~hastrial && isfield(data, 'trialdef')
-  data = rmfield(data, 'trialdef');
+% if data is not raw then it does not make sense to keep the sampleinfo
+if ~hastrial && isfield(data, 'sampleinfo')
+  data = rmfield(data, 'sampleinfo');
 end

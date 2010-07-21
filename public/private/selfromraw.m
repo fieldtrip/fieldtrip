@@ -8,10 +8,10 @@ if selectrpt,
   data.trial  = data.trial(selrpt);
   data.time   = data.time(selrpt);
   
-  % this is new style keeping track of trialdef and trialinfo
-  if isfield(data, 'trialdef'),  data.trialdef  = data.trialdef(selrpt,  :); end
-  if isfield(data, 'trialinfo'), data.trialinfo = data.trialinfo(selrpt, :); end
-  if isfield(data, 'offset'),    data.offset    = data.offset(selrpt);       end
+  % this is new style keeping track of sampleinfo and trialinfo
+  if isfield(data, 'sampleinfo'), data.sampleinfo = data.sampleinfo(selrpt, :); end
+  if isfield(data, 'trialinfo'),  data.trialinfo  = data.trialinfo(selrpt,  :); end
+  if isfield(data, 'offset'),     data.offset     = data.offset(selrpt);        end
 
   % this is old style keeping track of trl-matrix
   if isfield(data, 'cfg')
