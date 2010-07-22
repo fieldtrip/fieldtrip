@@ -26,7 +26,9 @@ FLUSH_DAT = 0x302
 FLUSH_EVT = 0x303
 FLUSH_OK  = 0x304
 FLUSH_ERR = 0x305
-WAIT_POLL = 0x401
+WAIT_DAT = 0x402
+WAIT_OK  = 0x404
+WAIT_ERR = 0x405
 
 DATATYPE_CHAR = 0
 DATATYPE_UINT8 = 1
@@ -40,6 +42,15 @@ DATATYPE_INT64 = 8
 DATATYPE_FLOAT32 = 9
 DATATYPE_FLOAT64 = 10
 DATATYPE_UNKNOWN = 0xFFFFFFFF
+
+CHUNK_UNSPECIFIED = 0
+CHUNK_CHANNEL_NAMES = 1
+CHUNK_CHANNEL_FLAGS = 2
+CHUNK_RESOLUTIONS = 3
+CHUNK_ASCII_KEYVAL = 4
+CHUNK_NIFTI1 = 5
+CHUNK_SIEMENS_AP = 6
+CHUNK_CTF_RES4 = 7
 
 # List for converting FieldTrip datatypes to Numpy datatypes
 numpyType = ['int8', 'uint8', 'uint16', 'uint32', 'uint64', 'int8', 'int16', 'int32', 'int64', 'float32', 'float64']
@@ -79,22 +90,6 @@ def serialize(A):
 
 	return (DATATYPE_UNKNOWN, None)
 
-
-def recv_all(s, N):
-	"""Receive N bytes from a socket 's' and return it as a string."""
-	A = s.recv(N)
-	while len(A)<N:
-		A += s.recv(N-len(A))
-	return A
-
-	
-def send_all(s, A):
-	"""Send all bytes of the string 'A' out to socket 's'."""
-	N = len(A);
-	nw = s.send(A)
-	while nw<N:
-		nw += s.send(A[nw:])
-
 	
 class Chunk:
 	def __init__(self):
@@ -110,7 +105,8 @@ class Header:
 		self.nEvents = 0
 		self.fSample = 0.0
 		self.dataType = 0
-		self.chunks = []
+		self.chunks = {}
+		self.labels = []
 		
 	def __str__(self):
 		return 'Channels.: %i\nSamples..: %i\nEvents...: %i\nSampFreq.: %f\nDataType.: %s\n'%(self.nChannels, self.nSamples, self.nEvents, self.fSample, numpyType[self.dataType])
@@ -202,36 +198,63 @@ class Client:
 			self.sock.close()
 			self.sock = []
 			self.isConnected = False
-
-	def getHeader(self):
-		"""getHeader() -- grabs header information (no chunks yet) from the buffer an returns it as a Header object."""
+			
+	def sendRaw(self, request):
+		"""Send all bytes of the string 'request' out to socket."""
 		if not(self.isConnected):
 			raise IOError('Not connected to FieldTrip buffer')
+
+		N = len(request);
+		nw = self.sock.send(request)
+		while nw<N:
+			nw += self.sock.send(request[nw:])
+			
+	def sendRequest(self, command, payload=None):
+		if payload is None:
+			request = struct.pack('HHI', VERSION, command, 0)
+		else:
+			request = struct.pack('HHI', VERSION, command, len(payload)) + payload
+		self.sendRaw(request)
+			
+	def receiveResponse(self, minBytes=0):
+		"""Receive response from server on socket 's' and return it as (status,bufsize,payload)."""
 		
-		request = struct.pack('HHI', VERSION, GET_HDR, 0)
-		nWr = send_all(self.sock, request)
-		resp_hdr = recv_all(self.sock, 8)
+		resp_hdr = self.sock.recv(8)
+		while len(resp_hdr) < 8:
+			resp_hdr += self.sock.recv(8-len(resp_hdr))
 		
 		(version, command, bufsize) = struct.unpack('HHI', resp_hdr)
 		
-		if command==GET_ERR:
-			return None
-		
-		if version!=VERSION or command!=GET_OK:
+		if version!=VERSION:
 			self.disconnect()
 			raise IOError('Bad response from buffer server - disconnecting')
 		
 		if bufsize > 0:
-			resp_buf = recv_all(self.sock, bufsize)
-			if len(resp_buf) < bufsize:
-				self.disconnect()
-				raise IOError('Error during socket read operation')
+			payload = self.sock.recv(bufsize)			
+			while len(payload) < bufsize:
+				payload += self.sock.recv(bufsize - len(payload))
+		else:
+			payload = None
+		return (command, bufsize, payload)
+
+	def getHeader(self):
+		"""getHeader() -- grabs header information from the buffer an returns it as a Header object."""
+			
+		self.sendRequest(GET_HDR)
+		(status, bufsize, payload) = self.receiveResponse()
+
+		if status==GET_ERR:
+			return None
+		
+		if status!=GET_OK:
+			self.disconnect()
+			raise IOError('Bad response from buffer server - disconnecting')
 				
 		if bufsize < 24:
 			self.disconnect()
 			raise IOError('Invalid HEADER packet received (too few bytes) - disconnecting')
 				
-		(nchans, nsamp, nevt, fsamp, dtype, bfsiz) = struct.unpack('IIIfII', resp_buf[0:24])
+		(nchans, nsamp, nevt, fsamp, dtype, bfsiz) = struct.unpack('IIIfII', payload[0:24])
 		
 		H = Header()
 		H.nChannels = nchans
@@ -240,9 +263,53 @@ class Client:
 		H.fSample = fsamp
 		H.dataType = dtype
 		
-		# TODO: chunks
+		if bfsiz > 0:
+			offset = 24
+			while offset + 8 < bufsize:
+				(chunk_type, chunk_len) = struct.unpack('II', payload[offset:offset+8])
+				offset+=8
+				if offset + chunk_len < bufsize:
+				   break
+				H.chunks[chunk_type] = payload[offset:offset+chunk_len]
+				offset += chunk_len
+				
+			if H.chunks.has_key(CHUNK_CHANNEL_NAMES):
+				L = H.chunks[CHUNK_CHANNEL_NAMES].split('\0')
+				numLab = len(L);
+				if numLab>=H.nChannels:
+					H.labels = L[0:H.nChannels]
 		
-		return H
+		return H		
+		
+	def putHeader(self, nChannels, fSample, dataType, labels = None, chunks = None):
+		haveLabels = False
+		extras = ''
+		if not(labels is None):
+			serLabels = ''
+			try:
+				for n in range(0,nChannels):
+					serLabels+=labels[n] + '\0'	
+			except:
+				raise ValueError('Channels names (labels), if given, must be a list of N=numChannels strings')
+		
+			extras = struct.pack('II', CHUNK_CHANNEL_NAMES, len(serLabels)) + serLabels
+			haveLabels = True
+		
+		if not(chunks is None):
+			for chunk_type, chunk_data in chunks:
+				if haveLabels and chunk_type==CHUNK_CHANNEL_NAMES:
+					# ignore channel names chunk in case we got labels
+					continue
+				extras += struct.pack('II', chunk_type, len(chunk_data)) + chunk_data
+		
+		sizeChunks = len(extras)
+		
+		hdef = struct.pack('IIIfII', nChannels, 0, 0, fSample, dataType, sizeChunks)
+		request = struct.pack('HHI', VERSION, PUT_HDR, sizeChunks + len(hdef)) + hdef + extras
+		self.sendRaw(request)
+		(status, bufsize, resp_buf) = self.receiveResponse()
+		if status != PUT_OK:
+			raise IOError('Header could not be written')
 		
 
 	def getData(self, index = None):
@@ -250,42 +317,33 @@ class Client:
 			The 'indices' argument is optional, and if given, must be a tuple or list with inclusive, zero-based 
 			start/end indices.
 		"""
-		if not(self.isConnected):
-			raise IOError('Not connected to FieldTrip buffer')
 			
 		if index is None:
 			request = struct.pack('HHI', VERSION, GET_DAT, 0)
-			nWr = send_all(self.sock, request)
 		else:
 			indS = int(index[0])
 			indE = int(index[1])
 			request = struct.pack('HHIII', VERSION, GET_DAT, 8, indS, indE)
-			nWr = send_all(self.sock, request)
+		self.sendRaw(request)
 
-		resp_hdr = recv_all(self.sock, 8)
-		
-		(version, command, bufsize) = struct.unpack('HHI', resp_hdr)
-		
-		if command == GET_ERR:
+		(status, bufsize, payload) = self.receiveResponse()
+		if status == GET_ERR:
 			return None
 		
-		if version!=VERSION or command!=GET_OK:
+		if status != GET_OK:
 			self.disconnect()
 			raise IOError('Bad response from buffer server - disconnecting')
-		
-		if bufsize > 0:
-			resp_buf = recv_all(self.sock, bufsize)
-				
+						
 		if bufsize < 16:
 			self.disconnect()
 			raise IOError('Invalid DATA packet received (too few bytes)')
 				
-		(nchans, nsamp, datype, bfsiz) = struct.unpack('IIII', resp_buf[0:16])
+		(nchans, nsamp, datype, bfsiz) = struct.unpack('IIII', payload[0:16])
 		
 		if bfsiz < bufsize - 16 or datype >= len(numpyType):
 			raise IOError('Invalid DATA packet received')
 			
-		raw = resp_buf[16:bfsiz+16]
+		raw = payload[16:bfsiz+16]
 		D = numpy.ndarray((nsamp, nchans), dtype=numpyType[datype], buffer=raw)
 		
 		return D
@@ -297,31 +355,22 @@ class Client:
 			inclusive, zero-based start/end indices. The 'type' and 'value' fields of the event
 			will be converted to strings or Numpy arrays.
 		"""
-		if not(self.isConnected):
-			raise IOError('Not connected to FieldTrip buffer')
 			
 		if index is None:
 			request = struct.pack('HHI', VERSION, GET_EVT, 0)
-			nWr = send_all(self.sock, request)
 		else:
 			indS = int(index[0])
 			indE = int(index[1])
 			request = struct.pack('HHIII', VERSION, GET_EVT, 8, indS, indE)
-			nWr = send_all(self.sock, request)
-
-		resp_hdr = recv_all(self.sock, 8)
+		self.sendRaw(request)
 		
-		(version, command, bufsize) = struct.unpack('HHI', resp_hdr)
-		
-		if command == GET_ERR:
+		(status, bufsize, resp_buf) = self.receiveResponse()
+		if status == GET_ERR:
 			return []
 		
-		if version!=VERSION or command!=GET_OK:
+		if status != GET_OK:
 			self.disconnect()
 			raise IOError('Bad response from buffer server - disconnecting')
-		
-		if bufsize > 0:
-			resp_buf = recv_all(self.sock, bufsize)
 			
 		offset = 0
 		E = []
@@ -340,8 +389,6 @@ class Client:
 		"""putEvents(E) -- writes a single or multiple events, depending on whether an 'Event'
 		   object, or a list of 'Event' objects is given as an argument.
 		"""
-		if not(self.isConnected):
-			raise IOError('Not connected to FieldTrip buffer')	
 		if isinstance(E,Event):
 			buf = E.serialize()
 		else:
@@ -353,20 +400,10 @@ class Client:
 				buf = buf + e.serialize()
 				num = num + 1
 		
-		request = struct.pack('HHI', VERSION, PUT_EVT, len(buf))
-		nWr = send_all(self.sock, request + buf)
-		
-		resp_hdr = recv_all(self.sock, 8)
-		(version, command, bufsize) = struct.unpack('HHI', resp_hdr)
-		
-		if version!=VERSION:
-			self.disconnect()
-			raise IOError('Bad response from buffer server - disconnecting')
-		
-		if bufsize > 0:
-			resp_buf = recv_all(self.sock, bufsize)
-		
-		if command != PUT_OK:
+		self.sendRequest(PUT_EVT, buf)
+		(status, bufsize, resp_buf) = self.receiveResponse()
+				
+		if status != PUT_OK:
 			raise IOError('Events could not be written.')
 			
 			
@@ -375,8 +412,6 @@ class Client:
 		   The type of the samples (D) and the number of channels must match the corresponding
 		   quantities in the FieldTrip buffer.
 		"""
-		if not(self.isConnected):
-			raise IOError('Not connected to FieldTrip buffer')		
 
 		if not(isinstance(D, numpy.ndarray)) or len(D.shape)!=2:
 			raise ValueError('Data must be given as a NUMPY array (samples x channels)')
@@ -390,22 +425,34 @@ class Client:
 		
 		request = struct.pack('HHI', VERSION, PUT_DAT, 16+dataBufSize)
 		dataDef = struct.pack('IIII', nChan, nSamp, dataType, dataBufSize)
-		nWr = send_all(self.sock, request + dataDef + dataBuf )
+		self.sendRaw(request + dataDef + dataBuf )
 		
-		resp_hdr = recv_all(self.sock, 8)
-		(version, command, bufsize) = struct.unpack('HHI', resp_hdr)
-		
-		if version!=VERSION:
-			self.disconnect()
-			raise IOError('Bad response from buffer server - disconnecting')
-		
-		if bufsize > 0:
-			resp_buf = recv_all(self.sock, bufsize)
-		
-		if command != PUT_OK:
+		(status, bufsize, resp_buf) = self.receiveResponse()
+		if status != PUT_OK:
 			raise IOError('Samples could not be written.')
-
 			
+	def poll(self):
+
+		request = struct.pack('HHIIII', VERSION, WAIT_DAT, 12, 0, 0, 0)
+		self.sendRaw(request)
+		
+		(status, bufsize, resp_buf) = self.receiveResponse()
+						
+		if status != WAIT_OK or bufsize < 8:
+			raise IOError('Polling failed.')
+			
+		return struct.unpack('II', resp_buf[0:8])
+		
+	def wait(self, nsamples, nevents, timeout):
+		request = struct.pack('HHIIII', VERSION, WAIT_DAT, 12, int(nsamples), int(nevents), int(timeout))
+		self.sendRaw(request)
+		
+		(status, bufsize, resp_buf) = self.receiveResponse()
+						
+		if status != WAIT_OK or bufsize < 8:
+			raise IOError('Wait request failed.')
+			
+		return struct.unpack('II', resp_buf[0:8])
 
 if __name__ == "__main__":
 	# Just a small demo for testing purposes...
@@ -436,6 +483,7 @@ if __name__ == "__main__":
 		print 'Failed!'
 	else:
 		print H
+		print H.labels
 	
 		if H.nSamples > 0:
 			print '\nTrying to read last sample...'
@@ -448,5 +496,7 @@ if __name__ == "__main__":
 			E = ftc.getEvents()
 			for e in E:
 				print e
+				
+	print ftc.poll()
 	
 	ftc.disconnect()
