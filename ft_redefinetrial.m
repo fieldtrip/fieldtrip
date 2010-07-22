@@ -108,7 +108,6 @@ elseif isfield(data,'cfg')
 else
   trl = [];
 end
-trlold = trl;
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
@@ -302,10 +301,6 @@ if ~isempty(cfg.minlength)
   if isfield(data, 'trialinfo'), data.trialinfo = data.trialinfo(~skiptrial, :); end
   if fb, fprintf('removing %d trials that are too short\n', sum(skiptrial));     end
 end
-
-% remember the previous and the up-to-date trial definitions in the configuration
-cfg.trl    = trl;
-cfg.trlold = trlold;
 
 % add version information to the configuration
 try
