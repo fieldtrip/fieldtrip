@@ -264,7 +264,7 @@ if hasdata
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   % the input data must be raw
-  data = checkdata(data, 'datatype', 'raw', 'hasoffset', 'yes');
+  data = checkdata(data, 'datatype', 'raw', 'hasoffset', 'yes', 'hastrialdef', 'yes');
 
   % check if the input cfg is valid for this function
   cfg = checkconfig(cfg, 'forbidden',   {'trl', 'dataset', 'datafile', 'headerfile'});
@@ -279,10 +279,6 @@ if hasdata
   % select trials of interest
   if ~strcmp(cfg.trials, 'all')
     data = selectdata(data, 'rpt', cfg.trials);
-    if isfield(data, 'cfg'),
-      cfg.trl    = findcfg(data.cfg, 'trl');
-      cfg.trlold = findcfg(data.cfg, 'trlold');
-    end
   end
 
   % translate the channel groups (like 'all' and 'MEG') into real labels
