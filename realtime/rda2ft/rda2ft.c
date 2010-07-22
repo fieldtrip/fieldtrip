@@ -179,7 +179,7 @@ void handleDataPacket(int ftSocket, int size, void *buf) {
 			evdef->type_numel = typeLen;
 			evdef->value_type = DATATYPE_INT32;
 			evdef->value_numel = 1;
-			evdef->sample = marker->nPosition; /* TODO: check this */
+			evdef->sample = samplesWritten + marker->nPosition;
 			evdef->offset = 0;
 			evdef->duration = marker->nPoints;
 			evdef->bufsize = typeLen + sizeof(INT32_T);
