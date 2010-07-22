@@ -169,7 +169,7 @@ hdr.fiducial.mri.rpa = [hdr.HeadModel.RightEar_Sag hdr.HeadModel.RightEar_Cor hd
 % along the left-right direction.
 % This may have been done only for visualization?  It can probably be
 % "turned off" without problem.
-if true
+if false
   mri = flipdim(mri, 1);
   flip = [-1 0 0 hdr.imageSize+1
            0 1 0 0
