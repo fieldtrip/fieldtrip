@@ -83,12 +83,12 @@ issource = strcmp(dtype{1},'source');
 isvolume = strcmp(dtype{1},'volume');
 isfreqmvar = strcmp(dtype{1},'freqmvar');
 
-selchan  = keyval('channel', kvp); selectchan = ~isempty(strmatch(kvp(cellfun(@ischar, kvp)), 'channel'));
-selfoi   = keyval('foilim',  kvp); selectfoi  = ~isempty(strmatch(kvp(cellfun(@ischar, kvp)), 'foilim'));
-seltoi   = keyval('toilim',  kvp); selecttoi  = ~isempty(strmatch(kvp(cellfun(@ischar, kvp)), 'toilim'));
-selroi   = keyval('roi',     kvp); selectroi  = ~isempty(strmatch(kvp(cellfun(@ischar, kvp)), 'roi'));
-selrpt   = keyval('rpt',     kvp); selectrpt  = ~isempty(strmatch(kvp(cellfun(@ischar, kvp)), 'rpt'));
-selpos   = keyval('pos',     kvp); selectpos  = ~isempty(strmatch(kvp(cellfun(@ischar, kvp)), 'pos'));
+selchan  = keyval('channel', kvp); selectchan = ~isempty(strmatch('channel', kvp(cellfun(@ischar, kvp))));
+selfoi   = keyval('foilim',  kvp); selectfoi  = ~isempty(strmatch('foilim',  kvp(cellfun(@ischar, kvp))));
+seltoi   = keyval('toilim',  kvp); selecttoi  = ~isempty(strmatch('toilim',  kvp(cellfun(@ischar, kvp))));
+selroi   = keyval('roi',     kvp); selectroi  = ~isempty(strmatch('roi', kvp(cellfun(@ischar, kvp))));
+selrpt   = keyval('rpt',     kvp); selectrpt  = ~isempty(strmatch('rpt', kvp(cellfun(@ischar, kvp))));
+selpos   = keyval('pos',     kvp); selectpos  = ~isempty(strmatch('pos', kvp(cellfun(@ischar, kvp))));
 param    = keyval('param',   kvp); if isempty(param), param = 'all'; end % FIXME think about this
 
 avgoverchan  = keyval('avgoverchan',  kvp); if isempty(avgoverchan), avgoverchan = false; end
@@ -438,7 +438,7 @@ elseif isfreq,
   if isfield(data, 'labelcmb') && isfield(data, 'label') && (selectchan || avgoverchan)
     error('selection of or averaging across channels in the presence of both label and labelcmb is ambiguous');
   end
-
+  
   if isfield(data, 'labelcmb'),
     %there is a crsspctrm or powcovspctrm field, 
     %this will only be selectdimmed
