@@ -224,7 +224,7 @@ for ifreqoi = 1:nfreqoi
       % compute datspectrum*wavelet, if there are reqtimeboi's that have data
       if ~isempty(reqtimeboi)
         dum = fftshift(ifft(datspectrum(ichan,:) .* wltspctrm{ifreqoi}(itap,:),[],2)); % fftshift is necessary because of post zero-padding, not necessary when pre-padding
-        spectrum(itap,ichan,ifreqoi,reqtimeboiind) = dum(reqtimeboi);
+        spectrum(itap,ichan,ifreqoi,reqtimeboiind) = dum(reqtimeboi); % this line of code takes roughly 100(!) of times longer than the computation above, the only way this can be avoided, is by computing spectral derivates in here, instead of the wrapper....
       end
     end
   end
