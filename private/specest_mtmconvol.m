@@ -1,4 +1,4 @@
-function [spectrum,ntaper,freqoi,timeoi] = specest_mtmconvol(dat, time, varargin)
+function [spectrum,tapfreq,freqoi,timeoi] = specest_mtmconvol(dat, time, varargin)
 
 % SPECEST_MTMCONVOL performs wavelet convolution in the time domain by multiplication in the frequency domain
 %
@@ -8,8 +8,8 @@ function [spectrum,ntaper,freqoi,timeoi] = specest_mtmconvol(dat, time, varargin
 %
 %   dat      = matrix of chan*sample
 %   time     = vector, containing time in seconds for each sample
-%   spectrum = matrix of taper*chan*freqoi*timeoi of fourier coefficients
-%   ntaper   = vector containing number of tapers per element of freqoi
+%   spectrum = matrix of taperXfreqoi*chan*timeoi of fourier coefficients
+%   tapfreq  = vector containing index for the taperXfreqoi dimension of spectrum, describing to which frequency each taper belongs
 %   freqoi   = vector of frequencies in spectrum
 %   timeoi   = vector of timebins in spectrum
 %
@@ -208,13 +208,22 @@ for ifreqoi = 1:nfreqoi
   end
 end
 
+% build tapfreq vector
+tapfreq = [];
+for ifreqoi = 1:nfreqoi
+  tapfreq =[tapfreq ones(1,ntaper(ifreqoi)) * ifreqoi];
+end
+tapfreq = tapfreq(:);
+
+
 
 % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
-spectrum = complex(nan([sum(ntaper),nchan,nfreqoi,ntimeboi]));
+spectrum = complex(nan([numel(tapfreq),nchan,ntimeboi]));
 datspectrum = fft([dat repmat(postpad,[nchan, 1])],[],2); 
 for ifreqoi = 1:nfreqoi
   fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
   for itap = 1:ntaper(ifreqoi)
+    tapfreqind = sum(ntaper(1:ifreqoi-1)) + itap;
     for ichan = 1:nchan
       % compute indices that will be used to extracted the requested fft output    
       nsamplefreqoi    = timwin(ifreqoi) .* fsample;
@@ -224,7 +233,7 @@ for ifreqoi = 1:nfreqoi
       % compute datspectrum*wavelet, if there are reqtimeboi's that have data
       if ~isempty(reqtimeboi)
         dum = fftshift(ifft(datspectrum(ichan,:) .* wltspctrm{ifreqoi}(itap,:),[],2)); % fftshift is necessary because of post zero-padding, not necessary when pre-padding
-        spectrum(itap,ichan,ifreqoi,reqtimeboiind) = dum(reqtimeboi); % this line of code takes roughly 100(!) of times longer than the computation above, the only way this can be avoided, is by computing spectral derivates in here, instead of the wrapper....
+        spectrum(tapfreqind,ichan,reqtimeboiind) = dum(reqtimeboi); 
       end
     end
   end
