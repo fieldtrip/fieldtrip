@@ -1,15 +1,14 @@
-function [spectrum,tapfreq,freqoi,timeoi] = specest_mtmconvol(dat, time, varargin)
+function [spectrum,freqoi,timeoi] = specest_mtmconvol(dat, time, varargin)
 
 % SPECEST_MTMCONVOL performs wavelet convolution in the time domain by multiplication in the frequency domain
 %
 %
 % Use as
-%   [spectrum,ntaper,freqoi,timeoi] = specest_mtmconvol(dat,time,...) 
+%   [spectrum,freqoi,timeoi] = specest_mtmconvol(dat,time,...) 
 %
 %   dat      = matrix of chan*sample
 %   time     = vector, containing time in seconds for each sample
-%   spectrum = matrix of taperXfreqoi*chan*timeoi of fourier coefficients
-%   tapfreq  = vector containing index for the taperXfreqoi dimension of spectrum, describing to which frequency each taper belongs
+%   spectrum = matrix of ntaper*chan*freqoi*timeoi of fourier coefficients
 %   freqoi   = vector of frequencies in spectrum
 %   timeoi   = vector of timebins in spectrum
 %
@@ -22,7 +21,7 @@ function [spectrum,tapfreq,freqoi,timeoi] = specest_mtmconvol(dat, time, varargi
 %   timeoi    = vector, containing time points of interest (in seconds)
 %   timwin    = vector, containing length of time windows (in seconds)
 %   freqoi    = vector, containing frequencies (in Hz)
-%   tapsmofrq = vector, the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
+%   tapsmofrq = number, the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
 %
 %
 %
@@ -53,7 +52,9 @@ if isempty(timwin)
 elseif (length(timwin) ~= length(freqoi) && ~strcmp(freqoi,'all'))
   error('timwin should be of equal length as freqoi')
 end
-
+if length(tapsmofrq) ~= 1 && strcmp(taper, 'dpss')
+  error('tapsmofrq can only be a number, different number of tapers per frequency is no longer supported')
+end
 
 % Set n's
 [nchan,ndatsample] = size(dat);
@@ -125,20 +126,20 @@ for ifreqoi = 1:nfreqoi
   switch taper
     case 'dpss'
       % create a sequence of DPSS tapers, ensure that the input arguments are double precision
-      tap = double_dpss(timwinsample(ifreqoi), timwinsample(ifreqoi) .* (tapsmofrq(ifreqoi) ./ fsample))';
+      tap = double_dpss(timwinsample(ifreqoi), timwinsample(ifreqoi) .* (tapsmofrq ./ fsample))';
       % remove the last taper because the last slepian taper is always messy
       tap = tap(1:(end-1), :);
 
       % give error/warning about number of tapers
       if isempty(tap)
-        error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',ndatsample/fsample,tapsmofrq(ifreqoi),fsample/fsample);
+        error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',ndatsample/fsample,tapsmofrq,fsample/fsample);
       elseif size(tap,1) == 1
         warning('using only one taper for specified smoothing')
       end
       
       
     case 'sine'
-      tap = sine_taper(timwinsample(ifreqoi), timwinsample(ifreqoi) .* (tapsmofrq(ifreqoi) ./ fsample))';
+      tap = sine_taper(timwinsample(ifreqoi), timwinsample(ifreqoi) .* (tapsmofrq ./ fsample))';
       
     case 'alpha'
       tap = alpha_taper(timwinsample(ifreqoi), freqoi(ifreqoi)./ fsample)';
@@ -208,23 +209,14 @@ for ifreqoi = 1:nfreqoi
   end
 end
 
-% build tapfreq vector
-tapfreq = [];
-for ifreqoi = 1:nfreqoi
-  tapfreq = [tapfreq ones(1,ntaper(ifreqoi)) * ifreqoi];
-end
-tapfreq = tapfreq(:);
-
-
 
 % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
 %spectrum = complex(nan([numel(tapfreq),nchan,ntimeboi]));
 datspectrum = fft([dat repmat(postpad,[nchan, 1])],[],2); 
-spectrum = cell(numel(tapfreq), nchan, ntimeboi);
+spectrum = cell(ntaper(1), nchan, nfreqoi);
 for ifreqoi = 1:nfreqoi
   fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
   for itap = 1:ntaper(ifreqoi)
-    tapfreqind = sum(ntaper(1:ifreqoi-1)) + itap;
     for ichan = 1:nchan
       % compute indices that will be used to extracted the requested fft output    
       nsamplefreqoi    = timwin(ifreqoi) .* fsample;
@@ -237,16 +229,49 @@ for ifreqoi = 1:nfreqoi
         %spectrum(tapfreqind,ichan,reqtimeboiind) = dum(reqtimeboi); 
         tmp = complex(nan(1,ntimeboi));
         tmp(reqtimeboiind) = dum(reqtimeboi);
-        spectrum{tapfreqind,ichan} = tmp; 
+        spectrum{itap,ichan,ifreqoi} = tmp; 
       end
     end
   end
 end
-spectrum = reshape(vertcat(spectrum{:}),[numel(tapfreq) nchan ntimeboi]);
+spectrum = reshape(vertcat(spectrum{:}),[ntaper(1) nchan nfreqoi ntimeboi]);
 
 
 
-
+% Below the code used to implement variable amount of tapers, which we decided no longer to support
+% % build tapfreq vector
+% tapfreq = [];
+% for ifreqoi = 1:nfreqoi
+%   tapfreq = [tapfreq ones(1,ntaper(ifreqoi)) * ifreqoi];
+% end
+% tapfreq = tapfreq(:);
+% 
+% % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
+% %spectrum = complex(nan([numel(tapfreq),nchan,ntimeboi]));
+% datspectrum = fft([dat repmat(postpad,[nchan, 1])],[],2); 
+% spectrum = cell(numel(tapfreq), nchan, ntimeboi);
+% for ifreqoi = 1:nfreqoi
+%   fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
+%   for itap = 1:ntaper(ifreqoi)
+%     tapfreqind = sum(ntaper(1:ifreqoi-1)) + itap;
+%     for ichan = 1:nchan
+%       % compute indices that will be used to extracted the requested fft output    
+%       nsamplefreqoi    = timwin(ifreqoi) .* fsample;
+%       reqtimeboiind    = find((timeboi >=  (nsamplefreqoi ./ 2)) & (timeboi <    ndatsample - (nsamplefreqoi ./2)));
+%       reqtimeboi       = timeboi(reqtimeboiind);
+%       
+%       % compute datspectrum*wavelet, if there are reqtimeboi's that have data
+%       if ~isempty(reqtimeboi)
+%         dum = fftshift(ifft(datspectrum(ichan,:) .* wltspctrm{ifreqoi}(itap,:),[],2)); % fftshift is necessary because of post zero-padding, not necessary when pre-padding
+%         %spectrum(tapfreqind,ichan,reqtimeboiind) = dum(reqtimeboi); 
+%         tmp = complex(nan(1,ntimeboi));
+%         tmp(reqtimeboiind) = dum(reqtimeboi);
+%         spectrum{tapfreqind,ichan} = tmp; 
+%       end
+%     end
+%   end
+% end
+% spectrum = reshape(vertcat(spectrum{:}),[numel(tapfreq) nchan ntimeboi]);
 
 
 
