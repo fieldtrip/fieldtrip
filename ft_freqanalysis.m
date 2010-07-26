@@ -234,6 +234,7 @@ else
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % this is done on trial basis to save memory
   for itrial = 1:ntrials
+    disp(['processing trial ' num2str(itrial) ': ' num2str(size(data.trial{itrial},2)) ' samples']);
     
     dat = data.trial{itrial}; % chansel has already been performed
     time = data.time{itrial};
@@ -245,9 +246,9 @@ else
       toi = []; % declare
       switch cfg.method
         case 'mtmconvol'
-          [spectrum,ntap,foi,toi] = specest_mtmconvol(dat, time, options{:},'timwin',cfg.t_ftimwin);
+          [spectrum,foi,toi] = specest_mtmconvol(dat, time, 'timeoi', cfg.toi, options{:},'timwin',cfg.t_ftimwin);
         case 'mtmfft'
-          [spectrum,ntap,foi] = specest_mtmfft(dat, time, options{:});
+          [spectrum,foi] = specest_mtmfft(dat, time, options{:});
         otherwise
           error('method %s is unknown', cfg.method);
       end % switch
@@ -257,6 +258,7 @@ else
       if ~isempty(toi)
         ntoi = numel(toi);
       end
+      ntap = size(spectrum,1);
       
       % allocate memory to output variables
       if keeprpt == 1 % cfg.keeptrials,'no' &&  cfg.keeptapers,'no'
@@ -271,9 +273,9 @@ else
         dimord    = 'rpt_chan_freq_time';
       elseif keeprpt == 4 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'yes'
         % FIXME this works only if all frequencies have the same number of tapers
-        if powflg, powspctrm     = zeros(ntrials*ntap(1),nchan,nfoi,ntoi,cfg.precision);             end
-        if csdflg, crsspctrm     = complex(zeros(ntrials*ntap(1),nchancmb,nfoi,ntoi,cfg.precision)); end
-        if fftflg, fourierspctrm = complex(zeros(ntrials*ntap(1),nchan,nfoi,ntoi,cfg.precision));    end
+        if powflg, powspctrm     = zeros(ntrials*ntap,nchan,nfoi,ntoi,cfg.precision);             end
+        if csdflg, crsspctrm     = complex(zeros(ntrials*ntap,nchancmb,nfoi,ntoi,cfg.precision)); end
+        if fftflg, fourierspctrm = complex(zeros(ntrials*ntap,nchan,nfoi,ntoi,cfg.precision));    end
         dimord    = 'rpttap_chan_freq_time';
       end
     end % if itrial == 1
@@ -287,16 +289,17 @@ else
       
       case 'mtmconvol'
         if itrial ~= 1
-          [spectrum,ntap,foi,toi] = specest_mtmconvol(dat, time, options{:},'timwin',cfg.t_ftimwin);
+          [spectrum,foi,toi] = specest_mtmconvol(dat, time, 'timeoi', cfg.toi, options{:},'timwin',cfg.t_ftimwin);
           nfoi = numel(foi);
           ntoi = numel(toi);
+          ntap = size(spectrum,1);
         end
         
         % get output in correct format
         % for now, there is a lot of redundancy, as each method has it's own case statement
         % when fully implemented, this can be cut down, perhaps in a separate switch, or perhaps as a time and a non-time if-loop
         foinumsmp = cfg.t_ftimwin .* data.fsample;
-        foinumsmp = repmat(foinumsmp,[ntap, nchan, 1, ntoi]);
+        foinumsmp = reshape(repmat(foinumsmp,[1, ntap, nchan, ntoi]),[ntap, nchan, nfoi, ntoi]);
         if powflg
           powdum = 2.* abs(spectrum) .^ 2 ./ foinumsmp;
           %           if strcmp(cfg.taper, 'sine') % NOT YET RE-IMPLEMENTED
@@ -386,9 +389,10 @@ else
   % set output variables
   freq = [];
   freq.label = data.label;
-  freq.foi   = foi;
+  freq.dimord = dimord;
+  freq.freq   = foi;
   if exist('toi','var')
-    freq.time = foi;
+    freq.time = toi;
   end
   if powflg
     freq.powspctrm = powspctrm;
