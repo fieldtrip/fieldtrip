@@ -9,7 +9,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %
 % where the data comes from FT_PREPROCESING or FT_TIMELOCKANALYSIS and the
 % configuration structure can contain
-%   cfg.method       = 'runica', 'fastica', 'binica', 'pca', 'jader', 'varimax', 'dss', 'cca' (default = 'runica')
+%   cfg.method       = 'runica', 'fastica', 'binica', 'pca', 'jader', 'varimax', 'dss', 'cca', 'sobi' (default = 'runica')
 %   cfg.channel      = cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.numcomponent = 'all' or number (default = 'all')
@@ -27,7 +27,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.topo         = NxN matrix with a component topography in each column
 %   cfg.topolabel    = Nx1 cell-array with the channel labels
 %
-% See also FASTICA, RUNICA, SVD, JADER, VARIMAX, DSS, CCA
+% See also FASTICA, RUNICA, SVD, JADER, VARIMAX, DSS, CCA, SOBI
 %
 % Undocumented local options:
 %   cfg.inputfile        = one can specifiy preanalysed saved data as input
@@ -139,7 +139,7 @@ if ~isfield(cfg.dss.denf, 'params'),      cfg.dss.denf.params   = [];           
 switch cfg.method
   case 'fastica'
     hastoolbox('fastica', 1);       % see http://www.cis.hut.fi/projects/ica/fastica
-  case {'runica', 'jader', 'varimax', 'binica'}
+  case {'runica', 'jader', 'varimax', 'binica', 'sobi'}
     hastoolbox('eeglab', 1);        % see http://www.sccn.ucsd.edu/eeglab
   case 'parafac'
     hastoolbox('nway', 1);          % see http://www.models.kvl.dk/source/nwaytoolbox
@@ -184,8 +184,8 @@ end
 
 if strcmp(cfg.method, 'predetermined mixing matrix')
   % the single trial data does not have to be concatenated
-elseif strcmp(cfg.method, 'parafac')
-  % concatenate all the data into a 3D matrix
+elseif strcmp(cfg.method, 'parafac') || strcmp(cfg.method, 'sobi')
+  % concatenate all the data into a 3D matrix respectively 2D (sobi) 
   fprintf('concatenating data');
   Nsamples = Nsamples(1);
   dat = zeros(Ntrials, Nchans, Nsamples);
@@ -197,6 +197,16 @@ elseif strcmp(cfg.method, 'parafac')
   end
   fprintf('\n');
   fprintf('concatenated data matrix size %dx%dx%d\n', size(dat,1), size(dat,2), size(dat,3));
+  if strcmp(cfg.method, 'sobi')
+    % sobi wants Nchans, Nsamples, Ntrials matrix and for Ntrials = 1 remove
+    % trial dimension
+    if Ntrials == 1
+        dummy = 0;
+        [dat, dummy] = shiftdim(dat);
+    else
+        dat = shiftdim(dat,1); 
+    end
+  end 
 else
   % concatenate all the data into a 2D matrix
   fprintf('concatenating data');
@@ -306,6 +316,20 @@ switch cfg.method
     cfg.dss.denf      = state.denf;
     cfg.numcomponent  = state.sdim;
     
+  case 'sobi'
+    % check for additional options, see SOBI for details
+    if ~isfield(cfg, 'sobi')
+        mixm = sobi(dat);
+    elseif isfield(cfg.sobi, 'n_sources') && isfield(cfg.sobi, 'p_correlations')
+        mixm = sobi(dat, cfg.sobi.n_sources, cfg.sobi.p_correlations);
+    elseif isfield(cfg.sobi, 'n_sources')
+        mixm = sobi(dat,cfg.sobi.n_sources);
+    else
+        error('unknown options for SOBI component analysis');      
+    end
+    weights = pinv(mixm);
+    sphere  = eye(size(weights, 2));
+
   case 'predetermined mixing matrix'
     % check which labels from the cfg are identical to those of the data
     % this gives us the rows of cfg.topo (the channels) and of
