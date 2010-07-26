@@ -214,7 +214,11 @@ cfg.artfctdef.type = cfg.artfctdef.type(:)';
 for type=1:length(cfg.artfctdef.type)
   fprintf('evaluating artifact_%s\n', cfg.artfctdef.type{type});
   % each call to artifact_xxx adds cfg.artfctdef.xxx.artifact
-  cfg = feval(sprintf('artifact_%s', cfg.artfctdef.type{type}), cfg);
+  if hasdata
+    cfg = feval(sprintf('artifact_%s', cfg.artfctdef.type{type}), cfg, data);
+  else
+    cfg = feval(sprintf('artifact_%s', cfg.artfctdef.type{type}), cfg);
+  end
 end
 
 % collect the artifacts that have been detected from cfg.artfctdef.xxx.artifact
