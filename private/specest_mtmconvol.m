@@ -211,15 +211,16 @@ end
 % build tapfreq vector
 tapfreq = [];
 for ifreqoi = 1:nfreqoi
-  tapfreq =[tapfreq ones(1,ntaper(ifreqoi)) * ifreqoi];
+  tapfreq = [tapfreq ones(1,ntaper(ifreqoi)) * ifreqoi];
 end
 tapfreq = tapfreq(:);
 
 
 
 % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
-spectrum = complex(nan([numel(tapfreq),nchan,ntimeboi]));
+%spectrum = complex(nan([numel(tapfreq),nchan,ntimeboi]));
 datspectrum = fft([dat repmat(postpad,[nchan, 1])],[],2); 
+spectrum = cell(numel(tapfreq), nchan, ntimeboi);
 for ifreqoi = 1:nfreqoi
   fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
   for itap = 1:ntaper(ifreqoi)
@@ -233,14 +234,15 @@ for ifreqoi = 1:nfreqoi
       % compute datspectrum*wavelet, if there are reqtimeboi's that have data
       if ~isempty(reqtimeboi)
         dum = fftshift(ifft(datspectrum(ichan,:) .* wltspctrm{ifreqoi}(itap,:),[],2)); % fftshift is necessary because of post zero-padding, not necessary when pre-padding
-        spectrum(tapfreqind,ichan,reqtimeboiind) = dum(reqtimeboi); 
+        %spectrum(tapfreqind,ichan,reqtimeboiind) = dum(reqtimeboi); 
+        tmp = complex(nan(1,ntimeboi));
+        tmp(reqtimeboiind) = dum(reqtimeboi);
+        spectrum{tapfreqind,ichan} = tmp; 
       end
     end
   end
 end
-
-
-
+spectrum = reshape(vertcat(spectrum{:}),[numel(tapfreq) nchan ntimeboi]);
 
 
 
