@@ -9,7 +9,7 @@ function [c, v, n] = ft_connectivity_corr(input, varargin)
 %FIXME hasrpt should go, because first dim should always be rpt, which could be
 %either leave one out or single observations
 hasrpt   = keyval('hasrpt',   varargin{:}); if isempty(hasrpt),   hasrpt   = 0;      end
-hasjck   = keyval('hasrpt',   varargin{:}); if isempty(hasrpt),   hasrpt   = 0;      end
+hasjack  = keyval('hasjack',  varargin{:}); if isempty(hasjack),  hasjack  = 0;      end
 cmplx    = keyval('complex',  varargin{:}); if isempty(cmplx),    cmplx    = 'abs';  end
 feedback = keyval('feedback', varargin{:}); if isempty(feedback), feedback = 'none'; end
 dimord   = keyval('dimord',   varargin{:});
