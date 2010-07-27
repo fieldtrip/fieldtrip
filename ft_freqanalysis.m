@@ -114,9 +114,9 @@ else
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   % set all the defaults
-  if ~isfield(cfg, 'padding'), cfg.padding = [];   end
-  if ~isfield(cfg, 'output'),  cfg.output = 'pow'; end
-  if ~isfield(cfg, 'taper'),   cfg.taper =  'dpss';     end
+  if ~isfield(cfg, 'pad'),           cfg.pad        = 'maxperlen';  end
+  if ~isfield(cfg, 'output'),        cfg.output     = 'pow';        end
+  if ~isfield(cfg, 'taper'),         cfg.taper      =  'dpss';      end
   if ~isfield(cfg, 'method'), error('you must specify a method in cfg.method'); end
   if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))
     error('you must specify a smoothing parameter with taper = dpss');
@@ -133,8 +133,8 @@ else
     cfg.keeptrials = 'yes';
     cfg.keeptapers = 'yes';
   end
-  if ~isfield(cfg, 'foi'),        cfg.foi    = [];    end
-  if ~isfield(cfg, 'foilim'),     cfg.foilim = [];    end
+  if ~isfield(cfg, 'foi'),           cfg.foi    = [];               end
+  if ~isfield(cfg, 'foilim'),        cfg.foilim = [];               end
   
  
   % set flags for keeping trials and/or tapers
@@ -206,12 +206,12 @@ else
   for itrial = 1:ntrials
     trllength(itrial) = size(data.trial{itrial}, 2);
   end
-  if strcmp(cfg.padding, 'maxperlen')
+  if strcmp(cfg.pad, 'maxperlen')
     padding = max(trllength);
-    cfg.padding = padding/data.fsample;
+    cfg.pad = padding/data.fsample;
   else
-    padding = cfg.padding*data.fsample;
-    cfg.padding = padding;
+    padding = cfg.pad*data.fsample;
+    cfg.pad = padding;
     if padding<max(trllength)
       error('the specified padding is too short');
     end
@@ -221,11 +221,11 @@ else
   if ~isempty(cfg.foilim) && isempty(cfg.foilim)
     error('use either cfg.foi or cfg.foilim')
   elseif ~isempty(cfg.foilim)
-    cfg.foi = cfg.foilim(1):data.fsample/(cfg.padding):cfg.foilim(2); % get the full foi in the current foilim and set it too be used as foilim
+    cfg.foi = cfg.foilim(1):data.fsample/(cfg.pad):cfg.foilim(2); % get the full foi in the current foilim and set it too be used as foilim
   end
   
   % options that don't change over trials
-  options = {'pad', cfg.padding, 'taper', cfg.taper, 'freqoi', cfg.foi, 'tapsmofrq', cfg.tapsmofrq};
+  options = {'pad', cfg.pad, 'taper', cfg.taper, 'freqoi', cfg.foi, 'tapsmofrq', cfg.tapsmofrq};
   
     
   
@@ -242,23 +242,28 @@ else
     % Perform memory allocation and several other things that require at least 1 specest call
     if itrial == 1
       % minimal specest call, bookkeeping and such is in a second switch below here
-      foi = [];
-      toi = []; % declare
       switch cfg.method
         case 'mtmconvol'
-          [spectrum,foi,toi] = specest_mtmconvol(dat, time, 'timeoi', cfg.toi, options{:},'timwin',cfg.t_ftimwin);
+          [spectrum,ntaper,foi,toi] = specest_mtmconvol(dat, time, 'timeoi', cfg.toi, options{:},'timwin',cfg.t_ftimwin);
+          nfoi = numel(foi);
+          ntoi = numel(toi);
+          ntap = size(spectrum,1); % assumes fixed number of tapers
+          acttimboiind = ~isnan(squeeze(spectrum(1,1,1,:)));
+          if strcmp(cfg.calcdof,'yes')
+            dof = zeros(ntrials,nfoi,numel(acttimboiind));
+          end
         case 'mtmfft'
-          [spectrum,foi] = specest_mtmfft(dat, time, options{:});
+          [spectrum,ntaper,foi] = specest_mtmfft(dat, time, options{:});
+%           nfoi = numel(foi);
+%           ntap = size(spectrum,1); % assumes fixed number of tapers
+%           if strcmp(cfg.calcdof)
+%             dof = zeros(ntrial,nfoi);
+%           end
         otherwise
           error('method %s is unknown', cfg.method);
       end % switch
-      if ~isempty(foi)
-        nfoi = numel(foi);
-      end
-      if ~isempty(toi)
-        ntoi = numel(toi);
-      end
-      ntap = size(spectrum,1);
+      
+      
       
       % allocate memory to output variables
       if keeprpt == 1 % cfg.keeptrials,'no' &&  cfg.keeptapers,'no'
@@ -289,10 +294,10 @@ else
       
       case 'mtmconvol'
         if itrial ~= 1
-          [spectrum,foi,toi] = specest_mtmconvol(dat, time, 'timeoi', cfg.toi, options{:},'timwin',cfg.t_ftimwin);
+          [spectrum,ntaper,foi,toi] = specest_mtmconvol(dat, time, 'timeoi', cfg.toi, options{:},'timwin',cfg.t_ftimwin);
           nfoi = numel(foi);
           ntoi = numel(toi);
-          ntap = size(spectrum,1);
+          ntap = size(spectrum,1); % assumes fixed number of tapers
         end
         
         % get output in correct format
@@ -337,10 +342,16 @@ else
           end
         end
         
+        if strcmp(cfg.calcdof,'yes')
+          acttimboiind = ~isnan(squeeze(spectrum(1,1,1,:)));
+          dof(itrial,:,acttimboiind) = repmat(ntaper,[1 sum(acttimboiind)]);
+        end
         
+        
+            
       case 'mtmfft'
         if itrial ~= 1
-          [spectrum,ntap,foi] = specest_mtmfft(dat, time, options{:});
+          [spectrum,ntaper,foi] = specest_mtmfft(dat, time, options{:});
         end
         
         %       case 'wltconvol' % not testest yet
@@ -350,34 +361,12 @@ else
       otherwise
         error('method %s is unknown', cfg.method);
     end % switch
+     
+
     
     
     
-    
-    
-    
-    %     % now get the output in the correct format
-    %     if strcmp(cfg.output, 'pow')
-    %       freq.dimord = 'rpt_chan_freq';
-    %       freq.freq = foi;
-    %       freq.powspctrm = 2 .* (fourierspctrm .* conj(fourierspctrm)) ./ numsmp; % cf Numercial Receipes 13.4.9
-    %       freq.powspctrm = reshape(freq.powspctrm, size(freq.powspctrm,1)*size(freq.powspctrm,2),size(freq.powspctrm,3),size(freq.powspctrm,4));
-    %     elseif strcmp(cfg.output, 'fourier')
-    %       freq.dimord = 'rpt_chan_freq';
-    %       freq.freq = foi;
-    %       freq.fourierspctrm = (fourierspctrm) .* sqrt(2 ./ numsmp); % cf Numercial Receipes 13.4.9
-    %       freq.fourierspctrm = reshape(freq.fourierspctrm, size(freq.fourierspctrm,1)*size(freq.fourierspctrm,2),size(freq.fourierspctrm,3),size(freq.fourierspctrm,4));
-    %     elseif strcmp(cfg.output, 'csd')
-    %       freq.dimord = 'rpt_chan_freq';
-    %       freq.freq = foi;
-    %       freq.cumtapcnt = size(spectrum,1)*zeros(ntrials,1);
-    %       freq.fourierspctrm = (fourierspctrm) .* sqrt(2 ./ numsmp); % cf Numercial Receipes 13.4.9
-    %       freq.fourierspctrm = reshape(freq.fourierspctrm, size(freq.fourierspctrm,1)*size(freq.fourierspctrm,2),size(freq.fourierspctrm,3),size(freq.fourierspctrm,4));
-    %       freq = fixcsd(freq, 'full', []);
-    %     else
-    %       error('output is not recognized',cfg.output);
-    %     end
-    
+       
   end % for ntrials
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% END: Main loop over trials
@@ -403,7 +392,16 @@ else
   if csdflg
     freq.crsspctrm = crsspctrm;
   end
-  
+  if strcmp(cfg.calcdof,'yes');
+    freq.dof = 2 .* dof;
+  end;
+  if keeprpt == 2,
+    freq.cumtapcnt = repmat(ntaper(:)', [size(powspctrm,1) 1]);
+  elseif keeprpt == 4,
+    freq.cumtapcnt = repmat(ntaper(1), [size(fourierspctrm,1)./ntaper(1) 1]); % assumes fixed number of tapers
+  end
+
+
   
   
   
