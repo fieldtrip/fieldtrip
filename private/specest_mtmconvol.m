@@ -1,4 +1,4 @@
-function [spectrum,freqoi,timeoi] = specest_mtmconvol(dat, time, varargin)
+function [spectrum,ntaper,freqoi,timeoi] = specest_mtmconvol(dat, time, varargin)
 
 % SPECEST_MTMCONVOL performs wavelet convolution in the time domain by multiplication in the frequency domain
 %
@@ -213,7 +213,7 @@ end
 % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
 %spectrum = complex(nan([numel(tapfreq),nchan,ntimeboi]));
 datspectrum = fft([dat repmat(postpad,[nchan, 1])],[],2); 
-spectrum = cell(ntaper(1), nchan, nfreqoi);
+spectrum = cell(ntaper(1), nchan, nfreqoi); % assumes fixed number of tapers
 for ifreqoi = 1:nfreqoi
   fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
   for itap = 1:ntaper(ifreqoi)
