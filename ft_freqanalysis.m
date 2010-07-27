@@ -222,15 +222,18 @@ else
   end
   
   % foilim 'backwards compatibility'
-  if ~isempty(cfg.foilim) && isempty(cfg.foilim)
+  if ~isempty(cfg.foi) && ~isempty(cfg.foilim)
     error('use either cfg.foi or cfg.foilim')
   elseif ~isempty(cfg.foilim)
-    cfg.foi = cfg.foilim(1):data.fsample/(cfg.pad):cfg.foilim(2); % get the full foi in the current foilim and set it too be used as foilim
+    cfg.foi = cfg.foilim(1):data.fsample/(cfg.pad*data.fsample):cfg.foilim(2); % get the full foi in the current foilim and set it too be used as foilim
   end
   
   % options that don't change over trials
-  options = {'pad', cfg.pad, 'taper', cfg.taper, 'freqoi', cfg.foi, 'tapsmofrq', cfg.tapsmofrq};
-  
+  if isfield(cfg,'tapsmofrq')
+    options = {'pad', cfg.pad, 'taper', cfg.taper, 'freqoi', cfg.foi, 'tapsmofrq', cfg.tapsmofrq};
+  else
+    options = {'pad', cfg.pad, 'taper', cfg.taper, 'freqoi', cfg.foi};
+  end
   
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -281,8 +284,8 @@ else
           [spectrum,ntaper,foi] = specest_mtmfft(dat, time, options{:});
           nfoi = numel(foi);
           ntap = size(spectrum,1); % assumes fixed number of tapers
-          if strcmp(cfg.calcdof)
-            dof = zeros(ntrial,nfoi);
+          if strcmp(cfg.calcdof,'yes')
+            dof = zeros(ntrials,nfoi);
           end
           
           
@@ -388,17 +391,17 @@ else
         % get output in correct format
         % for now, there is a lot of redundancy, as each method has it's own case statement
         % when fully implemented, this can be cut down, perhaps in a separate switch, or perhaps as a time and a non-time if-loop
-        foinumsmp = cfg.pad;
-        foinumsmp = reshape(repmat(foinumsmp,[1, ntap, nchan]),[ntap, nchan, nfoi]);
+        foinumsmp = cfg.pad * data.fsample;
+        foinumsmp = repmat(foinumsmp,[ntap, nchan, nfoi]);
         if powflg
           powdum = 2.* abs(spectrum) .^ 2 ./ foinumsmp;
           if strcmp(cfg.taper, 'sine')
-            sinetapscale = zeros(ntap,nfoi);  % assumes fixed number of tapers
-            for isinetap = 1:ntaper(1)  % assumes fixed number of tapers
-              sinetapscale(isinetap,:) = (1 - (((isinetap - 1) ./ ntaper) .^ 2));
-            end
-            sinetapscale = reshape(repmat(sinetapscale,[1 1 nchan]),[ntap nchan nfoi]);
-            powdum = powdum .* sinetapscale;
+%             sinetapscale = zeros(ntap,nfoi);  % assumes fixed number of tapers
+%             for isinetap = 1:ntaper(1)  % assumes fixed number of tapers
+%               sinetapscale(isinetap,:) = (1 - (((isinetap - 1) ./ ntaper) .^ 2));
+%             end
+%             sinetapscale = reshape(repmat(sinetapscale,[1 1 nchan]),[ntap nchan nfoi]);
+%             powdum = powdum .* sinetapscale;
           end
           if keeprpt == 1 % cfg.keeptrials,'no' &&  cfg.keeptapers,'no'
             powspctrm = powspctrm + (reshape(mean(powdum,1),[nchan nfoi]) ./ ntrials);
@@ -479,6 +482,9 @@ else
   if strcmp(cfg.calcdof,'yes');
     freq.dof = 2 .* dof;
   end;
+  if strcmp(cfg.method,'mtmfft') && (keeprpt == 2 || keeprpt == 4)
+    freq.cumsumcnt = trllength';
+  end
   if keeprpt == 2,
     freq.cumtapcnt = repmat(ntaper(:)', [size(powspctrm,1) 1]);
   elseif keeprpt == 4,
