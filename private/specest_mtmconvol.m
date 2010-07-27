@@ -140,6 +140,8 @@ for ifreqoi = 1:nfreqoi
       
     case 'sine'
       tap = sine_taper(timwinsample(ifreqoi), timwinsample(ifreqoi) .* (tapsmofrq ./ fsample))';
+      % remove the last taper
+      tap = tap(1:(end-1), :);
       
     case 'alpha'
       tap = alpha_taper(timwinsample(ifreqoi), freqoi(ifreqoi)./ fsample)';
@@ -165,8 +167,8 @@ for ifreqoi = 1:nfreqoi
   % the following code determines the phase-shift needed so that the centre of each wavelet has angle = 0. This code can probably be optimized greatly.
   % determine appropriate phase-shift so angle(wavelet) at center approximates 0 NOTE: this procedure becomes inaccurate when there are very few samples per cycle (i.e. 4-5)
   cyclefraction  = anglein / (2*pi); % transform angle to fraction of cycles
-  if ((length(cyclefraction(cyclefraction<1))-1) < 5) % could be more robust
-    warning('number of samples per wavelet cycle is less than 5')
+  if ((length(cyclefraction(cyclefraction<1))-1) < 4) % could be more robust
+    warning('number of samples per wavelet cycle is less than 4')
   end
   fullcyclenum   = floor(max(cyclefraction)); % get the number of complete cycles in angle
   [dum fractind] = min(abs(cyclefraction - fullcyclenum)); % determine closest breakpoint in angle for which the last uncomplete cycle starts (closest so angle(wavelet) at centre gets closest to 0)
