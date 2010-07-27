@@ -135,8 +135,12 @@ else
   end
   if ~isfield(cfg, 'foi'),           cfg.foi    = [];               end
   if ~isfield(cfg, 'foilim'),        cfg.foilim = [];               end
+  if isfield(cfg,'tapsmofrq') && length(cfg.tapsmofrq) ~= 1
+    warning('tapsmofrq can only be a number, different number of tapers per frequency is no longer supported, setting tapsmofrq to first element of vector')
+    cfg.tapsmofrq = cfg.tapsmofrq(1);
+  end
   
- 
+  
   % set flags for keeping trials and/or tapers
   if strcmp(cfg.keeptrials,'no') &&  strcmp(cfg.keeptapers,'no')
     keeprpt = 1;
@@ -227,7 +231,7 @@ else
   % options that don't change over trials
   options = {'pad', cfg.pad, 'taper', cfg.taper, 'freqoi', cfg.foi, 'tapsmofrq', cfg.tapsmofrq};
   
-    
+  
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% Main loop over trials, inside fourierspectra are obtained and transformed into the appropriate outputs
@@ -252,37 +256,57 @@ else
           if strcmp(cfg.calcdof,'yes')
             dof = zeros(ntrials,nfoi,numel(acttimboiind));
           end
+          
+          
+          % allocate memory to output variables
+          if keeprpt == 1 % cfg.keeptrials,'no' &&  cfg.keeptapers,'no'
+            if powflg, powspctrm     = zeros(nchan,nfoi,ntoi,cfg.precision);             end
+            if csdflg, crsspctrm     = complex(zeros(nchancmb,nfoi,ntoi,cfg.precision)); end
+            if fftflg, fourierspctrm = complex(zeros(nchan,nfoi,ntoi,cfg.precision));    end
+            dimord    = 'chan_freq_time';
+          elseif keeprpt == 2 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'no'
+            if powflg, powspctrm     = zeros(ntrials,nchan,nfoi,ntoi,cfg.precision);             end
+            if csdflg, crsspctrm     = complex(zeros(ntrials,nchancmb,nfoi,ntoi,cfg.precision)); end
+            if fftflg, fourierspctrm = complex(zeros(ntrials,nchan,nfoi,ntoi,cfg.precision));    end
+            dimord    = 'rpt_chan_freq_time';
+          elseif keeprpt == 4 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'yes'
+            % FIXME this works only if all frequencies have the same number of tapers
+            if powflg, powspctrm     = zeros(ntrials*ntap,nchan,nfoi,ntoi,cfg.precision);             end
+            if csdflg, crsspctrm     = complex(zeros(ntrials*ntap,nchancmb,nfoi,ntoi,cfg.precision)); end
+            if fftflg, fourierspctrm = complex(zeros(ntrials*ntap,nchan,nfoi,ntoi,cfg.precision));    end
+            dimord    = 'rpttap_chan_freq_time';
+          end
+          
         case 'mtmfft'
           [spectrum,ntaper,foi] = specest_mtmfft(dat, time, options{:});
-%           nfoi = numel(foi);
-%           ntap = size(spectrum,1); % assumes fixed number of tapers
-%           if strcmp(cfg.calcdof)
-%             dof = zeros(ntrial,nfoi);
-%           end
+          nfoi = numel(foi);
+          ntap = size(spectrum,1); % assumes fixed number of tapers
+          if strcmp(cfg.calcdof)
+            dof = zeros(ntrial,nfoi);
+          end
+          
+          
+          % allocate memory to output variables
+          if keeprpt == 1 % cfg.keeptrials,'no' &&  cfg.keeptapers,'no'
+            if powflg, powspctrm     = zeros(nchan,nfoi,cfg.precision);             end
+            if csdflg, crsspctrm     = complex(zeros(nchancmb,nfoi,cfg.precision)); end
+            if fftflg, fourierspctrm = complex(zeros(nchan,nfoi,cfg.precision));    end
+            dimord    = 'chan_freq_time';
+          elseif keeprpt == 2 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'no'
+            if powflg, powspctrm     = zeros(ntrials,nchan,nfoi,cfg.precision);             end
+            if csdflg, crsspctrm     = complex(zeros(ntrials,nchancmb,nfoi,cfg.precision)); end
+            if fftflg, fourierspctrm = complex(zeros(ntrials,nchan,nfoi,cfg.precision));    end
+            dimord    = 'rpt_chan_freq_time';
+          elseif keeprpt == 4 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'yes'
+            % FIXME this works only if all frequencies have the same number of tapers
+            if powflg, powspctrm     = zeros(ntrials*ntap,nchan,nfoi,cfg.precision);             end
+            if csdflg, crsspctrm     = complex(zeros(ntrials*ntap,nchancmb,nfoi,cfg.precision)); end
+            if fftflg, fourierspctrm = complex(zeros(ntrials*ntap,nchan,nfoi,cfg.precision));    end
+            dimord    = 'rpttap_chan_freq_time';
+          end
         otherwise
           error('method %s is unknown', cfg.method);
       end % switch
-      
-      
-      
-      % allocate memory to output variables
-      if keeprpt == 1 % cfg.keeptrials,'no' &&  cfg.keeptapers,'no'
-        if powflg, powspctrm     = zeros(nchan,nfoi,ntoi,cfg.precision);             end
-        if csdflg, crsspctrm     = complex(zeros(nchancmb,nfoi,ntoi,cfg.precision)); end
-        if fftflg, fourierspctrm = complex(zeros(nchan,nfoi,ntoi,cfg.precision));    end
-        dimord    = 'chan_freq_time';
-      elseif keeprpt == 2 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'no'
-        if powflg, powspctrm     = zeros(ntrials,nchan,nfoi,ntoi,cfg.precision);             end
-        if csdflg, crsspctrm     = complex(zeros(ntrials,nchancmb,nfoi,ntoi,cfg.precision)); end
-        if fftflg, fourierspctrm = complex(zeros(ntrials,nchan,nfoi,ntoi,cfg.precision));    end
-        dimord    = 'rpt_chan_freq_time';
-      elseif keeprpt == 4 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'yes'
-        % FIXME this works only if all frequencies have the same number of tapers
-        if powflg, powspctrm     = zeros(ntrials*ntap,nchan,nfoi,ntoi,cfg.precision);             end
-        if csdflg, crsspctrm     = complex(zeros(ntrials*ntap,nchancmb,nfoi,ntoi,cfg.precision)); end
-        if fftflg, fourierspctrm = complex(zeros(ntrials*ntap,nchan,nfoi,ntoi,cfg.precision));    end
-        dimord    = 'rpttap_chan_freq_time';
-      end
     end % if itrial == 1
     
     
@@ -307,9 +331,14 @@ else
         foinumsmp = reshape(repmat(foinumsmp,[1, ntap, nchan, ntoi]),[ntap, nchan, nfoi, ntoi]);
         if powflg
           powdum = 2.* abs(spectrum) .^ 2 ./ foinumsmp;
-          %           if strcmp(cfg.taper, 'sine') % NOT YET RE-IMPLEMENTED
-          %             powdum = powdum .* (1 - (((taplop - 1) ./ ntap(foilop)) .^ 2));
-          %           end
+          if strcmp(cfg.taper, 'sine')
+            sinetapscale = zeros(ntap,nfoi);  % assumes fixed number of tapers
+            for isinetap = 1:ntaper(1)  % assumes fixed number of tapers
+              sinetapscale(isinetap,:) = (1 - (((isinetap - 1) ./ ntaper) .^ 2));
+            end
+            sinetapscale = reshape(repmat(sinetapscale,[1 1 nchan ntoi]),[ntap nchan nfoi ntoi]);
+            powdum = powdum .* sinetapscale;
+          end
           if keeprpt == 1 % cfg.keeptrials,'no' &&  cfg.keeptapers,'no'
             powspctrm = powspctrm + (reshape(mean(powdum,1),[nchan nfoi ntoi]) ./ ntrials);
           elseif keeprpt == 2  % cfg.keeptrials,'yes' &&  cfg.keeptapers,'no'
@@ -348,11 +377,65 @@ else
         end
         
         
-            
+        
       case 'mtmfft'
         if itrial ~= 1
           [spectrum,ntaper,foi] = specest_mtmfft(dat, time, options{:});
+          nfoi = numel(foi);
+          ntap = size(spectrum,1); % assumes fixed number of tapers
         end
+        
+        % get output in correct format
+        % for now, there is a lot of redundancy, as each method has it's own case statement
+        % when fully implemented, this can be cut down, perhaps in a separate switch, or perhaps as a time and a non-time if-loop
+        foinumsmp = cfg.pad;
+        foinumsmp = reshape(repmat(foinumsmp,[1, ntap, nchan]),[ntap, nchan, nfoi]);
+        if powflg
+          powdum = 2.* abs(spectrum) .^ 2 ./ foinumsmp;
+          if strcmp(cfg.taper, 'sine')
+            sinetapscale = zeros(ntap,nfoi);  % assumes fixed number of tapers
+            for isinetap = 1:ntaper(1)  % assumes fixed number of tapers
+              sinetapscale(isinetap,:) = (1 - (((isinetap - 1) ./ ntaper) .^ 2));
+            end
+            sinetapscale = reshape(repmat(sinetapscale,[1 1 nchan]),[ntap nchan nfoi]);
+            powdum = powdum .* sinetapscale;
+          end
+          if keeprpt == 1 % cfg.keeptrials,'no' &&  cfg.keeptapers,'no'
+            powspctrm = powspctrm + (reshape(mean(powdum,1),[nchan nfoi]) ./ ntrials);
+          elseif keeprpt == 2  % cfg.keeptrials,'yes' &&  cfg.keeptapers,'no'
+            powspctrm(itrial,:,:) = reshape(mean(powdum,1),[nchan nfoi]);
+          elseif keeprpt == 4 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'yes'
+            rptind = reshape(1:ntrials * ntap,[ntap ntrials]);
+            powspctrm(rptind(:,itrial),:,:) = reshape(powdum,[ntap nchan nfoi]);
+          end
+        end
+        if fftflg
+          fourierdum = spectrum .* sqrt(2 ./ foinumsmp); %cf Numercial Receipes 13.4.9
+          if keeprpt == 1
+            fourierspctrm = fourierspctrm + (reshape(mean(fourierdum,1),[nchan nfoi]) ./ ntrials);
+          elseif keeprpt == 2
+            fourierspctrm(itrial,:,:) = reshape(mean(fourierdum,1), [nchan nfoi]);
+          elseif keeprpt == 4
+            rptind = reshape(1:ntrials * ntap,[ntap ntrials]);
+            fourierspctrm(rptind(:,itrial),:,:) = reshape(fourierdum,[ntap nchan nfoi]);
+          end
+        end
+        if csdflg
+          csddum = 2.* (spectrum(:,cutdatindcmb(:,1),:,:) .* conj(spectrum(:,cutdatindcmb(:,2),:,:))) ./ foinumsmp;
+          if keeprpt == 1
+            crsspctrm = crsspctrm + (reshape(mean(csddum,1),[nchancmb nfoi]) ./ ntrials);
+          elseif keeprpt == 2
+            crsspctrm(itrial,:,:) = reshape(mean(csddum,1), [nchancmb nfoi]);
+          elseif keeprpt == 4
+            rptind = reshape(1:ntrials * ntap,[ntap ntrials]);
+            crsspctrm(rptind(:,itrial),:,:) = reshape(csddum,[ntap nchancmb nfoi]);
+          end
+        end
+        
+        if strcmp(cfg.calcdof,'yes')
+          dof(itrial,:) = ntaper;
+        end
+        
         
         %       case 'wltconvol' % not testest yet
         %         [spectrum,foi,toi] = specest_wltconvol(dat, time, options{:});
@@ -361,12 +444,12 @@ else
       otherwise
         error('method %s is unknown', cfg.method);
     end % switch
-     
-
     
     
     
-       
+    
+    
+    
   end % for ntrials
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% END: Main loop over trials
@@ -390,6 +473,7 @@ else
     freq.fourierspctrm = fourierspctrm;
   end
   if csdflg
+    freq.labelcmb  = cfg.channelcmb;
     freq.crsspctrm = crsspctrm;
   end
   if strcmp(cfg.calcdof,'yes');
@@ -400,8 +484,8 @@ else
   elseif keeprpt == 4,
     freq.cumtapcnt = repmat(ntaper(1), [size(fourierspctrm,1)./ntaper(1) 1]); % assumes fixed number of tapers
   end
-
-
+  
+  
   
   
   
@@ -413,6 +497,8 @@ else
   % get the output cfg
   cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
   
+  try, freq.grad = data.grad; end   % remember the gradiometer array
+  try, freq.elec = data.elec; end   % remember the electrode array
   % add information about the version of this function to the configuration
   try
     % get the full name of the function
