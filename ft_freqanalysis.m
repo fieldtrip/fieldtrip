@@ -395,14 +395,15 @@ else
         foinumsmp = repmat(foinumsmp,[ntap, nchan, nfoi]);
         if powflg
           powdum = 2.* abs(spectrum) .^ 2 ./ foinumsmp;
-          if strcmp(cfg.taper, 'sine')
-%             sinetapscale = zeros(ntap,nfoi);  % assumes fixed number of tapers
-%             for isinetap = 1:ntaper(1)  % assumes fixed number of tapers
-%               sinetapscale(isinetap,:) = (1 - (((isinetap - 1) ./ ntaper) .^ 2));
-%             end
-%             sinetapscale = reshape(repmat(sinetapscale,[1 1 nchan]),[ntap nchan nfoi]);
-%             powdum = powdum .* sinetapscale;
-          end
+          % In freqanalysis_mtmfft, sine tapers are NOT scaled (they are in mtmconvol). below code performs the scaling for cfg.method = mtmfft
+          %           if strcmp(cfg.taper, 'sine')
+          %             sinetapscale = zeros(ntap,nfoi);  % assumes fixed number of tapers
+          %             for isinetap = 1:ntaper(1)  % assumes fixed number of tapers
+          %               sinetapscale(isinetap,:) = (1 - (((isinetap - 1) ./ ntaper) .^ 2));
+          %             end
+          %             sinetapscale = reshape(repmat(sinetapscale,[1 1 nchan]),[ntap nchan nfoi]);
+          %             powdum = powdum .* sinetapscale;
+          %           end
           if keeprpt == 1 % cfg.keeptrials,'no' &&  cfg.keeptapers,'no'
             powspctrm = powspctrm + (reshape(mean(powdum,1),[nchan nfoi]) ./ ntrials);
           elseif keeprpt == 2  % cfg.keeptrials,'yes' &&  cfg.keeptapers,'no'
