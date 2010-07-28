@@ -102,8 +102,12 @@ if isfield(data, 'sampleinfo')
   end
 elseif isfield(data,'cfg')
   trl = findcfg(data.cfg, 'trl');
-  if length(data.trial)~=size(trl,1) || length(data.time)~=size(trl,1)
-    error('the trial definition in the configuration is inconsistent with the data');
+  if ~isempty(trl)
+    if length(data.trial)~=size(trl,1) || length(data.time)~=size(trl,1)
+      error('the trial definition in the configuration is inconsistent with the data');
+    end
+  else
+    trl = [];
   end
 else
   trl = [];
