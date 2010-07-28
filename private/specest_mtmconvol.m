@@ -52,9 +52,7 @@ if isempty(timwin)
 elseif (length(timwin) ~= length(freqoi) && ~strcmp(freqoi,'all'))
   error('timwin should be of equal length as freqoi')
 end
-if ~isempty(tapsmofrq) && length(tapsmofrq) ~= 1
-  error('tapsmofrq can only be a number, different number of tapers per frequency is no longer supported')
-end
+
 
 % Set n's
 [nchan,ndatsample] = size(dat);
