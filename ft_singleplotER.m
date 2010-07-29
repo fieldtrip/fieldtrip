@@ -35,6 +35,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %                     can be selected by holding down the SHIFT key.
 % cfg.renderer      = 'painters', 'zbuffer',' opengl' or 'none' (default = [])
 % cfg.linestyle     = linestyle/marker type, see options of the matlab PLOT function (default = '-')
+%                     can be a single style for all datasets, or a cell-array containing one style for each dataset
 % cfg.linewidth     = linewidth in points (default = 0.5)
 % cfg.graphcolor    = color(s) used for plotting the dataset(s) (default = 'brgkywrgbkywrgbkywrgbkyw')
 %                     alternatively, colors can be specified as Nx3 matrix of RGB values
@@ -99,6 +100,23 @@ if ischar(cfg.graphcolor)
 elseif isnumeric(cfg.graphcolor)
   GRAPHCOLOR = [0 0 0; cfg.graphcolor];
 end
+
+% check for linestyle being a cell-array, check it's length, and lengthen it if does not have enough styles in it
+if ischar(cfg.linestyle)
+  cfg.linestyle = {cfg.linestyle};
+end
+if (nargin-1) > 1
+  if (length(cfg.linestyle) < (nargin-1)) && (length(cfg.linestyle) > 1)
+    error('either specify cfg.linestyle as a cell-array with one cell for each dataset, or only specify one linestyle')
+  elseif (length(cfg.linestyle) < (nargin-1)) && (length(cfg.linestyle) == 1)
+    tmpstyle = cfg.linestyle{1};
+    cfg.linestyle = cell(nargin-1,1);
+    for idataset = 1:(nargin-1)
+      cfg.linestyle{idataset} = tmpstyle;
+    end
+  end
+end
+
 
 % Set x/y/zparam defaults according to varargin{1}.dimord value:
 if strcmp(varargin{1}.dimord, 'chan_time')
@@ -289,7 +307,7 @@ for k=2:nargin
   if ischar(GRAPHCOLOR);        color = GRAPHCOLOR(k);
   elseif isnumeric(GRAPHCOLOR); color = GRAPHCOLOR(k,:);
   end
-  ft_plot_vector(varargin{k-1}.(cfg.xparam), P, 'style', cfg.linestyle, 'color', color, 'highlight', M, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth);  
+  ft_plot_vector(varargin{k-1}.(cfg.xparam), P, 'style', cfg.linestyle{k-1}, 'color', color, 'highlight', M, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth);  
 end
 
 % Set xlim and ylim:
