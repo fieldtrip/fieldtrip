@@ -212,7 +212,7 @@ end
 
 % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
 %spectrum = complex(nan([numel(tapfreq),nchan,ntimeboi]));
-datspectrum = transpose(fft(transpose([dat repmat(postpad,[nchan, 1])])));
+datspectrum = transpose(fft(transpose([dat repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
 spectrum = cell(max(ntaper), nfreqoi); % assumes fixed number of tapers
 for ifreqoi = 1:nfreqoi
   fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
@@ -228,16 +228,16 @@ for ifreqoi = 1:nfreqoi
       spectrum{itap,ifreqoi} = complex(nan(nchan,ntimeboi));
     else
       if ~isempty(reqtimeboi)
-        dum = fftshift(transpose(ifft(transpose(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1])))),2); % fftshift is necessary because of post zero-padding, not necessary when pre-padding
+        dum = fftshift(transpose(ifft(transpose(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1])))),2); % double explicit transpose to speedup fft
         %spectrum(tapfreqind,ichan,reqtimeboiind) = dum(reqtimeboi);
         tmp = complex(nan(nchan,ntimeboi));
         tmp(:,reqtimeboiind) = dum(:,reqtimeboi);
-        spectrum{itap,ifreqoi} = tmp;
+        spectrum{itap,ifreqoi} = tmp; 
       end
     end
   end
 end
-spectrum = reshape(vertcat(spectrum{:}),[nchan max(ntaper) nfreqoi ntimeboi]);
+spectrum = reshape(vertcat(spectrum{:}),[nchan max(ntaper) nfreqoi ntimeboi]); % collecting in a cell-array and later reshaping provides significant speedups
 spectrum = permute(spectrum, [2 1 3 4]);
 
 
