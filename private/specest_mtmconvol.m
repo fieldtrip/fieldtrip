@@ -27,9 +27,9 @@ function [spectrum,ntaper,freqoi,timeoi] = specest_mtmconvol(dat, time, varargin
 %
 %
 %
-% FFT SPEED NOT YET OPTIMIZED (e.g. matlab version, transpose or not)
-% IF FREQOI CONTAINS 0 (we should either remove it or allow the creation of a wavelet which is a straigth line, it's removed now)
-% SHOULD FREQOI = 'ALL' BE REMOVED OR NOT?
+% 
+% 
+% 
 %
 % See also SPECEST_MTMFFT, SPECEST_TFR, SPECEST_HILBERT, SPECEST_MTMWELCH, SPECEST_NANFFT, SPECEST_MVAR, SPECEST_WLTCONVOL
 
@@ -124,20 +124,20 @@ for ifreqoi = 1:nfreqoi
   switch taper
     case 'dpss'
       % create a sequence of DPSS tapers, ensure that the input arguments are double precision
-      tap = double_dpss(timwinsample(ifreqoi), timwinsample(ifreqoi) .* (tapsmofrq ./ fsample))';
+      tap = double_dpss(timwinsample(ifreqoi), timwinsample(ifreqoi) .* (tapsmofrq(ifreqoi) ./ fsample))';
       % remove the last taper because the last slepian taper is always messy
       tap = tap(1:(end-1), :);
 
       % give error/warning about number of tapers
       if isempty(tap)
-        error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',ndatsample/fsample,tapsmofrq,fsample/fsample);
+        error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',ndatsample/fsample,tapsmofrq(ifreqoi),fsample/fsample);
       elseif size(tap,1) == 1
         warning('using only one taper for specified smoothing')
       end
       
       
     case 'sine'
-      tap = sine_taper(timwinsample(ifreqoi), timwinsample(ifreqoi) .* (tapsmofrq ./ fsample))';
+      tap = sine_taper(timwinsample(ifreqoi), timwinsample(ifreqoi) .* (tapsmofrq(ifreqoi) ./ fsample))';
       % remove the last taper
       tap = tap(1:(end-1), :);
       
@@ -162,26 +162,26 @@ for ifreqoi = 1:nfreqoi
   wltspctrm{ifreqoi} = complex(zeros(size(tap,1),round(endnsample)));
 
 
-  % the following code determines the phase-shift needed so that the centre of each wavelet has angle = 0. This code can probably be optimized greatly.
-  % determine appropriate phase-shift so angle(wavelet) at center approximates 0 NOTE: this procedure becomes inaccurate when there are very few samples per cycle (i.e. 4-5)
-  cyclefraction  = anglein / (2*pi); % transform angle to fraction of cycles
-  if ((length(cyclefraction(cyclefraction<1))-1) < 4) % could be more robust
-    warning('number of samples per wavelet cycle is less than 4')
-  end
-  fullcyclenum   = floor(max(cyclefraction)); % get the number of complete cycles in angle
-  [dum fractind] = min(abs(cyclefraction - fullcyclenum)); % determine closest breakpoint in angle for which the last uncomplete cycle starts (closest so angle(wavelet) at centre gets closest to 0)
-  if cyclefraction(fractind) < fullcyclenum % if index is from the last full cycle, shift it by 1. should be integrated in above line
-    fractind = fractind + 1;
-  end
-  fractind = fractind + (length(prezero) - length(postzero)); % correct for unevend zero-padding (which shift the wavelet itself)
-  fractind = (fractind + 1):length(anglein); % shift one sample upwards and fill indices (why again?)
-  if length(fractind) > 1 % only continue if more than one sample can be split up
-    % create new anglein with non-full cycly being split to both sides of the (resulting) wavelet
-    nsplit     = length(fractind) / 2;
-    anglestart = -(floor(nsplit):-1:1) .* ((2.*pi./fsample) .* freqoi(ifreqoi)); % using floor(nsplit) here, as the beginning of anglein is always at the exact start of sin/cos
-    angleind   = 1:fractind(ceil(nsplit)); % using ceil(nsplit) here, as the end of anglein is nearly never at the end of a sin/cos, so an extra sample in case of non-integer-nsplit would do the most good here
-    anglein    = [anglestart' ; anglein(angleind)];
-  end
+%   % the following code determines the phase-shift needed so that the centre of each wavelet has angle = 0. This code can probably be optimized greatly.
+%   % determine appropriate phase-shift so angle(wavelet) at center approximates 0 NOTE: this procedure becomes inaccurate when there are very few samples per cycle (i.e. 4-5)
+%   cyclefraction  = anglein / (2*pi); % transform angle to fraction of cycles
+%   if ((length(cyclefraction(cyclefraction<1))-1) < 4) % could be more robust
+%     warning('number of samples per wavelet cycle is less than 4')
+%   end
+%   fullcyclenum   = floor(max(cyclefraction)); % get the number of complete cycles in angle
+%   [dum fractind] = min(abs(cyclefraction - fullcyclenum)); % determine closest breakpoint in angle for which the last uncomplete cycle starts (closest so angle(wavelet) at centre gets closest to 0)
+%   if cyclefraction(fractind) < fullcyclenum % if index is from the last full cycle, shift it by 1. should be integrated in above line
+%     fractind = fractind + 1;
+%   end
+%   fractind = fractind + (length(prezero) - length(postzero)); % correct for unevend zero-padding (which shift the wavelet itself)
+%   fractind = (fractind + 1):length(anglein); % shift one sample upwards and fill indices (why again?)
+%   if length(fractind) > 1 % only continue if more than one sample can be split up
+%     % create new anglein with non-full cycly being split to both sides of the (resulting) wavelet
+%     nsplit     = length(fractind) / 2;
+%     anglestart = -(floor(nsplit):-1:1) .* ((2.*pi./fsample) .* freqoi(ifreqoi)); % using floor(nsplit) here, as the beginning of anglein is always at the exact start of sin/cos
+%     angleind   = 1:fractind(ceil(nsplit)); % using ceil(nsplit) here, as the end of anglein is nearly never at the end of a sin/cos, so an extra sample in case of non-integer-nsplit would do the most good here
+%     anglein    = [anglestart' ; anglein(angleind)];
+%   end
   
   for itap = 1:ntaper(ifreqoi)
     try % this try loop tries to fit the wavelet into wltspctrm, when its length is smaller than ndatsample, the rest is 'filled' with zeros because of above code
@@ -193,13 +193,13 @@ for ifreqoi = 1:nfreqoi
       % consistency: cos must always be 1 at centre (necessary for angle(wavelet) at centre approximates 0), and sin must always be centered in upgoing flank (arbitrary), and
       centreind = round(length(coswav) / 2);
       % first the cos
-      if coswav(centreind) < 0
-        coswav = -coswav;
-      end
-      % now the sin
-      if sinwav(centreind) > sinwav(centreind+1)
-        sinwav = -sinwav;
-      end
+%       if coswav(centreind) < 0
+%         coswav = -coswav;
+%       end
+%       % now the sin
+%       if sinwav(centreind) > sinwav(centreind+1)
+%         sinwav = -sinwav;
+%       end
       wavelet = complex(coswav, sinwav);
       % debug plotting
       %figure; subplot(2,1,1);hold on;plot(real(wavelet));plot(imag(wavelet),'color','r'); tline = length(wavelet)/2;line([tline tline],[-0.2 0.2]); subplot(2,1,2);plot(angle(wavelet),'color','g');line([tline tline],[-pi pi])
@@ -212,33 +212,40 @@ end
 
 % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
 %spectrum = complex(nan([numel(tapfreq),nchan,ntimeboi]));
-datspectrum = fft([dat repmat(postpad,[nchan, 1])],[],2); 
-spectrum = cell(ntaper(1), nchan, nfreqoi); % assumes fixed number of tapers
+datspectrum = transpose(fft(transpose([dat repmat(postpad,[nchan, 1])])));
+spectrum = cell(max(ntaper), nfreqoi); % assumes fixed number of tapers
 for ifreqoi = 1:nfreqoi
   fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
   for itap = 1:ntaper(ifreqoi)
-    for ichan = 1:nchan
-      % compute indices that will be used to extracted the requested fft output    
-      nsamplefreqoi    = timwin(ifreqoi) .* fsample;
-      reqtimeboiind    = find((timeboi >=  (nsamplefreqoi ./ 2)) & (timeboi <    ndatsample - (nsamplefreqoi ./2)));
-      reqtimeboi       = timeboi(reqtimeboiind);
-      
-      % compute datspectrum*wavelet, if there are reqtimeboi's that have data
+    % compute indices that will be used to extracted the requested fft output
+    nsamplefreqoi    = timwin(ifreqoi) .* fsample;
+    reqtimeboiind    = find((timeboi >=  (nsamplefreqoi ./ 2)) & (timeboi <    ndatsample - (nsamplefreqoi ./2)));
+    reqtimeboi       = timeboi(reqtimeboiind);
+    
+    % compute datspectrum*wavelet, if there are reqtimeboi's that have data
+    % create a vector of NaNs if there is no taper for this current frequency-taper-number
+    if itap > ntaper(itap)
+      spectrum{itap,ifreqoi} = complex(nan(nchan,ntimeboi));
+    else
       if ~isempty(reqtimeboi)
-        dum = fftshift(ifft(datspectrum(ichan,:) .* wltspctrm{ifreqoi}(itap,:),[],2)); % fftshift is necessary because of post zero-padding, not necessary when pre-padding
-        %spectrum(tapfreqind,ichan,reqtimeboiind) = dum(reqtimeboi); 
-        tmp = complex(nan(1,ntimeboi));
-        tmp(reqtimeboiind) = dum(reqtimeboi);
-        spectrum{itap,ichan,ifreqoi} = tmp; 
+        dum = fftshift(transpose(ifft(transpose(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1])))),2); % fftshift is necessary because of post zero-padding, not necessary when pre-padding
+        %spectrum(tapfreqind,ichan,reqtimeboiind) = dum(reqtimeboi);
+        tmp = complex(nan(nchan,ntimeboi));
+        tmp(:,reqtimeboiind) = dum(:,reqtimeboi);
+        spectrum{itap,ifreqoi} = tmp;
       end
     end
   end
 end
-spectrum = reshape(vertcat(spectrum{:}),[ntaper(1) nchan nfreqoi ntimeboi]);
+spectrum = reshape(vertcat(spectrum{:}),[nchan max(ntaper) nfreqoi ntimeboi]);
+spectrum = permute(spectrum, [2 1 3 4]);
 
 
 
-% Below the code used to implement variable amount of tapers, which we decided no longer to support
+
+
+
+% Below the code used to implement variable amount of tapers in a different way, kept here for future use
 % % build tapfreq vector
 % tapfreq = [];
 % for ifreqoi = 1:nfreqoi
