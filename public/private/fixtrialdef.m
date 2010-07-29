@@ -16,6 +16,7 @@ if ~isfield(data, 'cfg')
 end
 
 hastrial = isfield(data, 'trial');
+hastime  = isfield(data, 'time');
 
 if hastrial,
   ntrial = length(data.trial);
@@ -49,9 +50,12 @@ if isempty(trl)
     begsample = cat(1, 0, cumsum(nsmp(1:end-1))) + 1;
   end
   endsample = begsample + nsmp - 1;
+  
   offset    = zeros(ntrial,1);
-  for i=1:ntrial
-    offset(i) = time2offset(data.time{i}, data.fsample);
+  if hastime,
+    for i=1:ntrial
+      offset(i) = time2offset(data.time{i}, data.fsample);
+    end
   end
   trl = [begsample endsample offset];
 
