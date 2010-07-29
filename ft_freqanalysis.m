@@ -265,9 +265,8 @@ else
           nfoi = numel(foi);
           ntoi = numel(toi);
           ntap = size(spectrum,1);
-          acttimboiind = ~isnan(squeeze(spectrum(1,1,1,:)));
           if strcmp(cfg.calcdof,'yes')
-            dof = zeros(ntrials,nfoi,numel(acttimboiind));
+            dof = zeros(ntrials,nfoi,ntoi);
           end
           
           
@@ -385,8 +384,8 @@ else
         end
         
         if strcmp(cfg.calcdof,'yes')
-          acttimboiind = ~isnan(squeeze(spectrum(1,1,1,:)));
-          dof(itrial,:,acttimboiind) = repmat(ntaper,[1 sum(acttimboiind)]);
+          acttimboiind = ~isnan(squeeze(spectrum(1,1,:,:)));
+          dof(itrial,:,:) = repmat(ntaper,[1, ntoi]) .* acttimboiind;
         end
         
         
