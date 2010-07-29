@@ -211,7 +211,6 @@ end
 
 
 % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
-%spectrum = complex(nan([numel(tapfreq),nchan,ntimeboi]));
 datspectrum = transpose(fft(transpose([dat repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
 spectrum = cell(max(ntaper), nfreqoi); % assumes fixed number of tapers
 for ifreqoi = 1:nfreqoi
@@ -229,7 +228,6 @@ for ifreqoi = 1:nfreqoi
     else
       if ~isempty(reqtimeboi)
         dum = fftshift(transpose(ifft(transpose(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1])))),2); % double explicit transpose to speedup fft
-        %spectrum(tapfreqind,ichan,reqtimeboiind) = dum(reqtimeboi);
         tmp = complex(nan(nchan,ntimeboi));
         tmp(:,reqtimeboiind) = dum(:,reqtimeboi);
         spectrum{itap,ifreqoi} = tmp; 
