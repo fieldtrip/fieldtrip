@@ -32,6 +32,7 @@ function [freq] =ft_freqanalysis(cfg, data, flag);
 % FT_FREQANALYSIS_WLTCONVOL, FT_FREQANALYSIS_TFR
 
 % Undocumented local options:
+% cfg.correctt_ftimwin (set to yes to try to determine new t_ftimwins based on correct cfg.foi)
 % cfg.channel
 % cfg.channelcmb
 % cfg.inputfile  = one can specifiy preanalysed saved data as input
@@ -114,28 +115,28 @@ else
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   % set all the defaults
-  if ~isfield(cfg, 'pad'),           cfg.pad        = 'maxperlen';  end
-  if ~isfield(cfg, 'output'),        cfg.output     = 'pow';        end
-  if ~isfield(cfg, 'taper'),         cfg.taper      =  'dpss';      end
+  if ~isfield(cfg, 'pad'),              cfg.pad              = 'maxperlen';  end
+  if ~isfield(cfg, 'output'),           cfg.output           = 'pow';        end
+  if ~isfield(cfg, 'taper'),            cfg.taper            =  'dpss';      end
   if ~isfield(cfg, 'method'), error('you must specify a method in cfg.method'); end
   if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))
     error('you must specify a smoothing parameter with taper = dpss');
   end
-  if ~isfield(cfg, 'keeptapers'),    cfg.keeptapers = 'no';         end
-  if ~isfield(cfg, 'keeptrials'),    cfg.keeptrials = 'no';         end
-  if ~isfield(cfg, 'calcdof'),       cfg.calcdof    = 'no';         end
+  if ~isfield(cfg, 'keeptapers'),       cfg.keeptapers       = 'no';         end
+  if ~isfield(cfg, 'keeptrials'),       cfg.keeptrials       = 'no';         end
+  if ~isfield(cfg, 'calcdof'),          cfg.calcdof          = 'no';         end
   
-  if ~isfield(cfg, 'pad'),           cfg.pad        = 'maxperlen';  end
-  if ~isfield(cfg, 'channel'),       cfg.channel    = 'all';        end
-  if ~isfield(cfg, 'precision'),     cfg.precision  = 'double';     end
-  if ~isfield(cfg, 'output'),        cfg.output     = 'powandcsd';  end
+  if ~isfield(cfg, 'pad'),              cfg.pad              = 'maxperlen';  end
+  if ~isfield(cfg, 'channel'),          cfg.channel          = 'all';        end
+  if ~isfield(cfg, 'precision'),        cfg.precision        = 'double';     end
+  if ~isfield(cfg, 'output'),           cfg.output           = 'powandcsd';  end
   if strcmp(cfg.output, 'fourier'),
     cfg.keeptrials = 'yes';
     cfg.keeptapers = 'yes';
   end
-  if ~isfield(cfg, 'foi'),           cfg.foi    = [];               end
-  if ~isfield(cfg, 'foilim'),        cfg.foilim = [];               end
-  
+  if ~isfield(cfg, 'foi'),              cfg.foi              = [];           end
+  if ~isfield(cfg, 'foilim'),           cfg.foilim           = [];           end
+  if ~isfield(cfg, 'correctt_ftimwin'), cfg.correctt_ftimwin = 'no';         end
   
   
   % set flags for keeping trials and/or tapers
@@ -218,7 +219,7 @@ else
     end
   end
   
-  % foilim 'backwards compatibility'
+  % correct foi and implement foilim 'backwards compatibility'
   if ~isempty(cfg.foi) && ~isempty(cfg.foilim)
     error('use either cfg.foi or cfg.foilim')
   elseif ~isempty(cfg.foilim)
@@ -226,7 +227,19 @@ else
     fboilim = round(cfg.foilim ./ (data.fsample ./ (cfg.pad*data.fsample))) + 1;
     fboi    = fboilim(1):1:fboilim(2);
     cfg.foi = (fboi-1) ./ cfg.pad;
+  else
+    % correct foi if foilim was empty and try to correct t_ftimwin (by detecting whether there is a constant factor between foi and t_ftimwin: cyclenum)
+    oldfoi = cfg.foi;
+    fboi   = round(cfg.foi ./ (data.fsample ./ (cfg.pad*data.fsample))) + 1;
+    cfg.foi    = (fboi-1) ./ cfg.pad; % boi - 1 because 0 Hz is included in fourier output
+    if strcmp(cfg.correctt_ftimwin,'yes')
+      cyclenum = oldfoi .* cfg.t_ftimwin;
+      cfg.t_ftimwin = cyclenum ./ cfg.foi;
+    end
   end
+  
+  
+  % correct t_ftimwin to proper foi
   
   % tapsmofrq compatibility between functions (make it into a vector if it's not)
   if isfield(cfg,'tapsmofrq')
@@ -340,7 +353,8 @@ else
         % for now, there is a lot of redundancy, as each method has it's own case statement
         % when fully implemented, this can be cut down, perhaps in a separate switch, or perhaps as a time and a non-time if-loop
         foinumsmp = cfg.t_ftimwin .* data.fsample;
-        foinumsmp = reshape(repmat(foinumsmp,[1, ntap, nchan, ntoi]),[ntap, nchan, nfoi, ntoi]);
+        foinumsmp = repmat(foinumsmp,[1, ntap, nchan, ntoi]);
+        foinumsmp = permute(foinumsmp,[1 3 2 4]);
         if powflg
           powdum = 2.* abs(spectrum) .^ 2 ./ foinumsmp;
           if strcmp(cfg.taper, 'sine') % THIS IS NOT DONE IN THE MTMFFT CASE IN THE OLD IMPLEMENTATION, WHY?
