@@ -91,28 +91,6 @@ end
 data = checkdata(data, 'datatype', 'raw', 'feedback', cfg.feedback);
 fb   = strcmp(cfg.feedback, 'yes');
 
-% trl is not specified in the function call, but the data is given ->
-% recreate trl-matrix from sampleinfo and time axes, or
-% try to locate the trial definition (trl) in the nested configuration
-if isfield(data, 'sampleinfo')
-  trl = data.sampleinfo;
-  trl(:, 3) = 0;
-  for k = 1:numel(data.trial)
-    trl(k, 3) = time2offset(data.time{k}, data.fsample);
-  end
-elseif isfield(data,'cfg')
-  trl = findcfg(data.cfg, 'trl');
-  if ~isempty(trl)
-    if length(data.trial)~=size(trl,1) || length(data.time)~=size(trl,1)
-      error('the trial definition in the configuration is inconsistent with the data');
-    end
-  else
-    trl = [];
-  end
-else
-  trl = [];
-end
-
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
   if fb, fprintf('selecting %d trials\n', length(cfg.trials)); end
@@ -126,12 +104,6 @@ if ~strcmp(cfg.trials, 'all')
   if length(cfg.endsample)>1 && length(cfg.endsample)~=length(cfg.trials)
     cfg.endsample=cfg.endsample(cfg.trials);
   end
-  
-  % also update the trl-matrix
-  if ~isempty(trl)
-    trl = trl(cfg.trials, :);
-  end
-  
 end
 Ntrial = numel(data.trial);
 
@@ -166,17 +138,7 @@ if ~isempty(cfg.toilim)
     end
   end
 
-  % also correct the trial definition
-  if ~isempty(trl)
-    trl(:,1) = trl(:,1) + begsample - 1;
-    trl(:,2) = trl(:,1) + endsample - begsample;
-    trl(:,3) = trl(:,3) + begsample - 1;
-  end
-  
-  % remove trials that are completely empty
-  trl = trl(~skiptrial,:);
-  
-  % also correct the trial definition
+  % also correct the sample information 
   if isfield(data, 'sampleinfo'),
       data.sampleinfo(:, 1) = data.sampleinfo(:, 1) + begsample - 1;
       data.sampleinfo(:, 2) = data.sampleinfo(:, 1) + endsample - begsample;
@@ -185,7 +147,7 @@ if ~isempty(cfg.toilim)
   data.time     = data.time(~skiptrial);
   data.trial    = data.trial(~skiptrial);
   if isfield(data, 'sampleinfo'),  data.sampleinfo  = data.sampleinfo(~skiptrial, :); end
-  if isfield(data, 'trialinfo'), data.trialinfo = data.trialinfo(~skiptrial);   end
+  if isfield(data, 'trialinfo'), data.trialinfo = data.trialinfo(~skiptrial, :);      end
   if fb, fprintf('removing %d trials in which no data was selected\n', sum(skiptrial)); end
   
 elseif ~isempty(cfg.offset)
@@ -198,11 +160,6 @@ elseif ~isempty(cfg.offset)
   end
   for i=1:Ntrial
     data.time{i} = data.time{i} + offset(i)/data.fsample;
-  end
-  
-  % also correct the trial definition
-  if ~isempty(trl)
-    trl(:,3) = trl(:,3) + offset;
   end
   
 elseif ~isempty(cfg.begsample) || ~isempty(cfg.endsample)
@@ -222,14 +179,7 @@ elseif ~isempty(cfg.begsample) || ~isempty(cfg.endsample)
     data.time{i}  = data.time{i} (   begsample(i):endsample(i));
   end
   
-  % also correct the trial definition
-  if ~isempty(trl)
-    trl(:,1) = trl(:,1) + begsample - 1;
-    trl(:,2) = trl(:,1) + endsample - begsample;
-    trl(:,3) = trl(:,3) + begsample - 1;
-  end
-
-  % also correct the trial definition
+  % also correct the sampleinfo
   if isfield(data, 'sampleinfo')
       data.sampleinfo(:, 1) = data.sampleinfo(:, 1) + begsample - 1;
       data.sampleinfo(:, 2) = data.sampleinfo(:, 1) + endsample - begsample;
@@ -239,6 +189,10 @@ elseif ~isempty(cfg.trl)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % select new trials from the existing data
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  % ensure that sampleinfo is present, if this fails fetch_data will crash
+  data = checkdata(data, 'hastrialdef', 'yes');  
+
   dataold = data;   % make a copy of the old data
   clear data        % this line is very important, we want to completely reconstruct the data from the old data!
   
@@ -298,12 +252,12 @@ if ~isempty(cfg.minlength)
   end
   % remove trials that are too short
   skiptrial = (trllength<minlength);
-  if ~isempty(trl), trl = trl(~skiptrial,:); end
+  %if ~isempty(trl), trl = trl(~skiptrial,:); end
   data.time  = data.time(~skiptrial);
   data.trial = data.trial(~skiptrial);
-  if isfield(data, 'sampleinfo'),  data.sampleinfo  = data.sampleinfo(~skiptrial,  :); end
-  if isfield(data, 'trialinfo'), data.trialinfo = data.trialinfo(~skiptrial, :); end
-  if fb, fprintf('removing %d trials that are too short\n', sum(skiptrial));     end
+  if isfield(data, 'sampleinfo'), data.sampleinfo  = data.sampleinfo(~skiptrial, :); end
+  if isfield(data, 'trialinfo'),  data.trialinfo   =  data.trialinfo(~skiptrial, :); end
+  if fb, fprintf('removing %d trials that are too short\n', sum(skiptrial));         end
 end
 
 % add version information to the configuration
