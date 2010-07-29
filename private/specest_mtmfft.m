@@ -24,8 +24,8 @@ function [spectrum,ntaper,freqoi] = specest_mtmfft(dat, time, varargin)
 %
 %
 %
-% FFT SPEED NOT YET OPTIMIZED (e.g. matlab version, transpose or not)
-% SHOULD FREQOI = 'ALL' BE REMOVED OR NOT?
+% 
+% 
 %
 %
 % See also SPECEST_MTMCONVOL, SPECEST_TFR, SPECEST_HILBERT, SPECEST_MTMWELCH, SPECEST_NANFFT, SPECEST_MVAR, SPECEST_WLTCONVOL
@@ -42,7 +42,6 @@ tapsmofrq = keyval('tapsmofrq',   varargin);
 if isempty(tapsmofrq) && strcmp(taper, 'dpss')
   error('you need to specify tapsmofrq when using dpss tapers')
 end
-
 
 
 % Set n's
@@ -63,7 +62,7 @@ end
 postpad = zeros(1,ceil((pad - dattime) * fsample));
 endnsample = round(pad * fsample);  % total number of samples of padded data
 endtime    = pad;            % total time in seconds of padded data
-postpad = [];
+
 
 
 % Set freqboi and freqoi
@@ -129,18 +128,21 @@ end
 
 
 % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
-spectrum = complex(zeros(ntaper,nchan,nfreqboi),zeros(ntaper,nchan,nfreqboi));
+%spectrum = complex(zeros(ntaper,nchan,nfreqboi),zeros(ntaper,nchan,nfreqboi));
+spectrum = cell(ntaper,1);
 for itap = 1:ntaper
-  for ichan = 1:nchan
-    dum = fft([dat(ichan,:) .* tap(itap,:) postpad],[],2); 
-    dum = dum(freqboi);
+  %for ichan = 1:nchan
+    dum = transpose(fft(transpose([dat .* repmat(tap(itap,:),[nchan, 1]) repmat(postpad,[nchan, 1])]))); 
+    dum = dum(:,freqboi);
     % phase-shift according to above angles
     if timedelay ~= 0
       dum = dum .* (exp(-1i*(angle(dum) - angletransform)));
     end
-    spectrum(itap,ichan,:) = dum;
-  end
+    spectrum{itap} = dum;
+  %end
 end
+spectrum = reshape(vertcat(spectrum{:}),[nchan ntaper nfreqboi]);
+spectrum = permute(spectrum, [2 1 3]);
 fprintf('nfft: %d samples, taper length: %d samples, %d tapers\n',endnsample,ndatsample,ntaper);
 
 
