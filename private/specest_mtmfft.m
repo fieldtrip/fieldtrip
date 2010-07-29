@@ -128,20 +128,17 @@ end
 
 
 % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
-%spectrum = complex(zeros(ntaper,nchan,nfreqboi),zeros(ntaper,nchan,nfreqboi));
 spectrum = cell(ntaper,1);
 for itap = 1:ntaper
-  %for ichan = 1:nchan
-    dum = transpose(fft(transpose([dat .* repmat(tap(itap,:),[nchan, 1]) repmat(postpad,[nchan, 1])]))); 
+    dum = transpose(fft(transpose([dat .* repmat(tap(itap,:),[nchan, 1]) repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
     dum = dum(:,freqboi);
     % phase-shift according to above angles
     if timedelay ~= 0
       dum = dum .* (exp(-1i*(angle(dum) - angletransform)));
     end
     spectrum{itap} = dum;
-  %end
 end
-spectrum = reshape(vertcat(spectrum{:}),[nchan ntaper nfreqboi]);
+spectrum = reshape(vertcat(spectrum{:}),[nchan ntaper nfreqboi]);% collecting in a cell-array and later reshaping provides significant speedups
 spectrum = permute(spectrum, [2 1 3]);
 fprintf('nfft: %d samples, taper length: %d samples, %d tapers\n',endnsample,ndatsample,ntaper);
 
