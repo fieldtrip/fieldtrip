@@ -1,4 +1,8 @@
-function data = avgoverdim(data, avgdim)
+function data = avgoverdim(data, avgdim, fb)
+
+if nargin<3,
+  fb = 1;
+end
 
 % get all XXXdimord fields
 fn    = fieldnames(data);
@@ -48,7 +52,7 @@ else
 end
 
 for i = 1:numel(param)
-  fprintf('averaging %s over %s\n', param{i}, avgdim);
+  if fb, fprintf('averaging %s over %s\n', param{i}, avgdim); end
   
   reduceddim{i}(avgdimnum{i}) = 1;
   tmp       = data.(param{i});
@@ -81,7 +85,7 @@ end
 switch avgdim
   case 'rpt'
     for i = 1:length(param)
-      fprintf('removing dimension %s from %s\n', avgdim, param{i});
+      if fb, fprintf('removing dimension %s from %s\n', avgdim, param{i}); end
       tmp = data.(param{i});
       tmp = reshape(tmp, [reduceddim{i}(2:end) 1]);
       data.(param{i}) = tmp;
@@ -96,7 +100,7 @@ switch avgdim
   
   case 'rpttap'
     for i=1:length(param)
-      fprintf('removing dimension %s from %s\n', avgdim, param{i});
+      if fb, fprintf('removing dimension %s from %s\n', avgdim, param{i}); end
       warning('this is only allowed for cross-spectra and power-spectra');
       tmp = data.(param{i});
       tmp = reshape(tmp, [reduceddim{i}(2:end) 1]);

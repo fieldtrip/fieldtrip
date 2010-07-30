@@ -1,4 +1,8 @@
-function data = seloverdim(data, seldim, sel)
+function data = seloverdim(data, seldim, sel, fb)
+
+if nargin<4,
+  fb = 1;
+end
 
 % get all XXXdimord fields
 fn    = fieldnames(data);
@@ -51,7 +55,7 @@ end
 
 % make the subselection
 for i = 1:numel(param)
-  fprintf('selection %s along dimension %d\n', param{i}, seldimnum{i});
+  if fb, fprintf('selection %s along dimension %d\n', param{i}, seldimnum{i}); end
   
   reduceddim{i}(seldimnum{i}) = numel(sel);
   tmp       = data.(param{i});

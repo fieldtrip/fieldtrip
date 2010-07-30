@@ -98,6 +98,13 @@ avgoverroi   = keyval('avgoverroi',   kvp); if isempty(avgoverroi),  avgoverroi 
 avgoverrpt   = keyval('avgoverrpt',   kvp); if isempty(avgoverrpt),  avgoverrpt  = false; end
 dojack       = keyval('jackknife',    kvp); if isempty(dojack),      dojack      = false; end
 
+fb       = keyval('feedback', kvp); if isempty(fb), fb = 'yes'; end
+if isstr(fb) && strcmp(fb, 'yes'), 
+  fb = 1;
+elseif isstr(fb) && strcmp(fb, 'no'),
+  fb = 0;
+end
+
 % create anonymous function and apply it to the boolean input arguments
 istrue = @(x)(ischar(x) && (strcmpi(x, 'yes') || strcmpi(x, 'true')) || (~isempty(x) && numel(x)==1 && x==1));
 
@@ -445,14 +452,14 @@ elseif isfreq,
     %if we apply a trick
     tmpdata = data;
     tmpdata.label = data.labelcmb;
-    if selectrpt,  tmpdata = seloverdim(tmpdata, 'rpt',  selrpt);  end
-    if selectchan, tmpdata = seloverdim(tmpdata, 'chan', selchan); end
-    if selectfoi,  tmpdata = seloverdim(tmpdata, 'freq', selfoi);  end
-    if selecttoi,  tmpdata = seloverdim(tmpdata, 'time', seltoi);  end
+    if selectrpt,  tmpdata = seloverdim(tmpdata, 'rpt',  selrpt,  fb); end
+    if selectchan, tmpdata = seloverdim(tmpdata, 'chan', selchan, fb); end
+    if selectfoi,  tmpdata = seloverdim(tmpdata, 'freq', selfoi,  fb); end
+    if selecttoi,  tmpdata = seloverdim(tmpdata, 'time', seltoi,  fb); end
     % average over dimensions
-    if avgoverrpt,  tmpdata = avgoverdim(tmpdata, 'rpt');   end
-    if avgoverfreq, tmpdata = avgoverdim(tmpdata, 'freq');  end
-    if avgovertime, tmpdata = avgoverdim(tmpdata, 'time');  end
+    if avgoverrpt,  tmpdata = avgoverdim(tmpdata, 'rpt',  fb);  end
+    if avgoverfreq, tmpdata = avgoverdim(tmpdata, 'freq', fb);  end
+    if avgovertime, tmpdata = avgoverdim(tmpdata, 'time', fb);  end
     if avgoverchan, error('avgoverchan not yet implemented in this case'); end
     if dojack,      tmpdata = leaveoneout(tmpdata);         end    
 
@@ -463,16 +470,16 @@ elseif isfreq,
     crsspctrm = [];
   end
   % make the subselection
-  if selectrpt,  data = seloverdim(data, 'rpt',  selrpt);  end
-  if selectchan, data = seloverdim(data, 'chan', selchan); end
-  if selectfoi,  data = seloverdim(data, 'freq', selfoi);  end
-  if selecttoi,  data = seloverdim(data, 'time', seltoi);  end
+  if selectrpt,  data = seloverdim(data, 'rpt',  selrpt,  fb); end
+  if selectchan, data = seloverdim(data, 'chan', selchan, fb); end
+  if selectfoi,  data = seloverdim(data, 'freq', selfoi,  fb); end
+  if selecttoi,  data = seloverdim(data, 'time', seltoi,  fb); end
   % average over dimensions
-  if avgoverrpt,  data = avgoverdim(data, 'rpt');   end
-  if avgoverchan, data = avgoverdim(data, 'chan');  end
-  if avgoverfreq, data = avgoverdim(data, 'freq');  end
-  if avgovertime, data = avgoverdim(data, 'time');  end
-  if dojack,      data = leaveoneout(data);         end    
+  if avgoverrpt,  data = avgoverdim(data, 'rpt',  fb);  end
+  if avgoverchan, data = avgoverdim(data, 'chan', fb);  end
+  if avgoverfreq, data = avgoverdim(data, 'freq', fb);  end
+  if avgovertime, data = avgoverdim(data, 'time', fb);  end
+  if dojack,      data = leaveoneout(data);             end    
   
   if ~isempty(crsspctrm),
     if isfield(data, 'crsspctrm'),    data.crsspctrm    = crsspctrm; end
@@ -481,37 +488,37 @@ elseif isfreq,
 
 elseif istlck,
   % make the subselection
-  if selectrpt,  data = seloverdim(data, 'rpt',  selrpt);  end
-  if selectchan, data = seloverdim(data, 'chan', selchan); end
-  if selectfoi,  data = seloverdim(data, 'freq', selfoi);  end
-  if selecttoi,  data = seloverdim(data, 'time', seltoi);  end
+  if selectrpt,  data = seloverdim(data, 'rpt',  selrpt,  fb); end
+  if selectchan, data = seloverdim(data, 'chan', selchan, fb); end
+  if selectfoi,  data = seloverdim(data, 'freq', selfoi,  fb); end
+  if selecttoi,  data = seloverdim(data, 'time', seltoi,  fb); end
   % average over dimensions
-  if avgoverrpt,  data = avgoverdim(data, 'rpt');   end
-  if avgoverchan, data = avgoverdim(data, 'chan');  end
-  if avgoverfreq, data = avgoverdim(data, 'freq');  end
-  if avgovertime, data = avgoverdim(data, 'time');  end
+  if avgoverrpt,  data = avgoverdim(data, 'rpt',  fb); end
+  if avgoverchan, data = avgoverdim(data, 'chan', fb); end
+  if avgoverfreq, data = avgoverdim(data, 'freq', fb); end
+  if avgovertime, data = avgoverdim(data, 'time', fb); end
   if dojack,      data = leaveoneout(data);         end    
 
 elseif issource,
   %FIXME fill in everything
-  if selectrpt,  data = seloverdim(data, 'rpt',  selrpt);  end
-  if selectfoi,  data = seloverdim(data, 'freq', selfoi);  end
-  if selectpos,  data = seloverdim(data, 'pos',  selpos);  end
-  if avgoverrpt,  data = avgoverdim(data, 'rpt');  end
+  if selectrpt,  data = seloverdim(data, 'rpt',  selrpt, fb); end
+  if selectfoi,  data = seloverdim(data, 'freq', selfoi, fb); end
+  if selectpos,  data = seloverdim(data, 'pos',  selpos, fb); end
+  if avgoverrpt,  data = avgoverdim(data, 'rpt'); end
   if avgoverfreq, data = avgoverdim(data, 'freq'); end
 
 elseif isvolume,
   error('this is not yet implemented');
 elseif isfreqmvar,
   % make the subselection
-  if selectrpt,  data = seloverdim(data, 'rpt',  selrpt);  end
-  if selectchan, data = seloverdim(data, 'chan', selchan); end
-  if selectfoi,  data = seloverdim(data, 'freq', selfoi);  end
-  if selecttoi,  data = seloverdim(data, 'time', seltoi);  end
+  if selectrpt,  data = seloverdim(data, 'rpt',  selrpt,  fb); end
+  if selectchan, data = seloverdim(data, 'chan', selchan, fb); end
+  if selectfoi,  data = seloverdim(data, 'freq', selfoi,  fb); end
+  if selecttoi,  data = seloverdim(data, 'time', seltoi,  fb); end
   % average over dimensions
-  if avgoverrpt,  data = avgoverdim(data, 'rpt');   end
-  if avgoverchan, data = avgoverdim(data, 'chan');  end
-  if avgoverfreq, data = avgoverdim(data, 'freq');  end
-  if avgovertime, data = avgoverdim(data, 'time');  end
-  if dojack,      data = leaveoneout(data);         end    
+  if avgoverrpt,  data = avgoverdim(data, 'rpt',  fb); end
+  if avgoverchan, data = avgoverdim(data, 'chan', fb); end
+  if avgoverfreq, data = avgoverdim(data, 'freq', fb); end
+  if avgovertime, data = avgoverdim(data, 'time', fb); end
+  if dojack,      data = leaveoneout(data);            end    
 end
