@@ -107,6 +107,20 @@ for i=1:Ndata
 end
 hastrialinfo = hastrialinfo==Ndata;
 
+hassampleinfo = 0;
+for i=1:Ndata
+  if isfield(varargin{i}, 'sampleinfo')
+  else
+     sampleinfo{i} = [];
+  end
+  if isempty(sampleinfo{i})
+    % a sample definition is expected in each data set
+    warning(sprintf('no ''sampleinfo'' field in data structure %d', i));
+  end
+  hassampleinfo = isfield(varargin{i}, 'sampleinfo') + hassampleinfo;
+end
+hassampleinfo = hassampleinfo==Ndata;
+
 % check the consistency of the labels across the input-structures
 [alllabel, indx1, indx2] = unique(label, 'first');
 order    = zeros(length(alllabel),Ndata);
@@ -193,7 +207,15 @@ elseif cattrial
   for i=1:Ndata
     data.trial    = cat(2, data.trial,  varargin{i}.trial(:)');
     data.time     = cat(2, data.time,   varargin{i}.time(:)');
-    data.sampleinfo = cat(1, data.sampleinfo, varargin{i}.sampleinfo);
+    % check if all datasets to merge have the sampleinfo field
+    if hassampleinfo
+      data.sampleinfo = cat(1, data.sampleinfo, varargin{i}.sampleinfo);
+    else
+      if isempty(sampleinfo{i})
+        varargin{i}.sampleinfo = [];
+      end
+      data.sampleinfo = cat(1, data.sampleinfo, varargin{i}.sampleinfo);
+    end
     if hastrialinfo, data.trialinfo = cat(1, data.trialinfo, varargin{i}.trialinfo); end;
     % FIXME is not entirely robust if the different inputs have different
     % number of columns in trialinfo
