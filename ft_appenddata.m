@@ -110,6 +110,7 @@ hastrialinfo = hastrialinfo==Ndata;
 hassampleinfo = 0;
 for i=1:Ndata
   if isfield(varargin{i}, 'sampleinfo')
+     sampleinfo{i} = varargin{i}.sampleinfo;
   else
      sampleinfo{i} = [];
   end
