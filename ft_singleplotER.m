@@ -171,9 +171,14 @@ end
 % Old style coherence plotting with cohtargetchannel is no longer supported:
 cfg = checkconfig(cfg, 'unused',  {'cohtargetchannel'});
 
+% Check for unconverted coherence spectrum data or any other bivariate metric:
+dimtok  = tokenize(varargin{1}.dimord, '_');
+selchan = strmatch('chan', dimtok);
+isfull  = length(selchan)>1;
 for k=1:length(varargin)
   % Check for unconverted coherence spectrum data:
-  if (strcmp(cfg.zparam,'cohspctrm')) && (isfield(varargin{k}, 'labelcmb'))
+  if (strcmp(cfg.zparam,'cohspctrm')) && (isfield(varargin{k}, 'labelcmb')) || ...
+     (isfull && isfield(varargin{k}, cfg.zparam)), 
     % A reference channel is required:
     if ~isfield(cfg,'cohrefchannel'),
       error('no reference channel specified');
@@ -196,14 +201,20 @@ for k=1:length(varargin)
       return
     end
 
-    % Convert 2-dimensional channel matrix to a single dimension:
-    sel1                  = strmatch(cfg.cohrefchannel, varargin{k}.labelcmb(:,2));
-    sel2                  = strmatch(cfg.cohrefchannel, varargin{k}.labelcmb(:,1));
-    fprintf('selected %d channels for coherence\n', length(sel1)+length(sel2));
-    varargin{k}.cohspctrm = varargin{k}.cohspctrm([sel1;sel2],:,:);
-    varargin{k}.label     = [varargin{k}.labelcmb(sel1,1);varargin{k}.labelcmb(sel2,2)];
-    varargin{k}.labelcmb  = varargin{k}.labelcmb([sel1;sel2],:);
-    varargin{k}           = rmfield(varargin{k}, 'labelcmb');
+    if ~isfull,
+      % only works explicitly with coherence FIXME
+      % Convert 2-dimensional channel matrix to a single dimension:
+      sel1                  = strmatch(cfg.cohrefchannel, varargin{k}.labelcmb(:,2));
+      sel2                  = strmatch(cfg.cohrefchannel, varargin{k}.labelcmb(:,1));
+      fprintf('selected %d channels for coherence\n', length(sel1)+length(sel2));
+      varargin{k}.cohspctrm = varargin{k}.cohspctrm([sel1;sel2],:,:);
+      varargin{k}.label     = [varargin{k}.labelcmb(sel1,1);varargin{k}.labelcmb(sel2,2)];
+      varargin{k}.labelcmb  = varargin{k}.labelcmb([sel1;sel2],:);
+      varargin{k}           = rmfield(varargin{k}, 'labelcmb');
+    else
+      % general solution will be dealt with below
+      % FIXME don't know if all still works
+    end
   end
 
   % Apply baseline correction:

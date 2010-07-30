@@ -440,10 +440,17 @@ if (strcmp(cfg.zparam,'cohspctrm') && isfield(data, 'labelcmb')) || ...
     sel               = match_str(data.label, cfg.cohrefchannel);
     siz               = [size(data.(cfg.zparam)) 1];
     if strcmp(cfg.matrixside, 'feedback')
-      data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
+      %data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
+      sel1 = 1:siz(1);
+      sel2 = sel;
+      meandir = 2;
     elseif strcmp(cfg.matrixside, 'feedforward')
-      data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
+      %data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
+      sel1 = sel;
+      sel2 = 1:siz(1);
+      meandir = 1;
     elseif strcmp(cfg.matrixside, 'ff-fd')
+      %FIXME don't know how to handle this
       data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]) - reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
     elseif strcmp(cfg.matrixside, 'fd-ff')
       data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]) - reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
@@ -488,8 +495,13 @@ if ~isempty(cfg.yparam)
   ymax = nearest(getsubfield(data, cfg.yparam), ymax);
 end
 
-% make dat structure with one value for each channel
+% make dat vector with one value for each channel
 dat = getsubfield(data, cfg.zparam);
+if isfull
+  siz = [size(dat) 1];
+  siz(meandir) = [];
+  dat = reshape(mean(dat(sel1,sel2,:,:),meandir), siz);
+end
 if ~isempty(cfg.yparam),
   dat = dat(:, ymin:ymax, xmin:xmax);
   dat = nanmean(nanmean(dat, 2), 3);
