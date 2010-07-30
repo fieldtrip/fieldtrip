@@ -173,6 +173,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'full')
   for k = 1:ntim
     for m = 1:nfrq
       for p = 1:nrpt
+        %FIXME speed this up in the case that all trials have equal number of tapers
         indx   = (sumtapcnt(p)+1):sumtapcnt(p+1);
         tmpdat = transpose(data.fourierspctrm(indx,:,m,k));
         crsspctrm(p,:,:,m,k) = (tmpdat*tmpdat')./data.cumtapcnt(p);
@@ -192,10 +193,35 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'full')
   if nrpt>1,
     data.dimord = ['rpt_',data.dimord];
   end   
-
+  
+  % remove first singleton dimension
   if flag, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, siz(2:end)); end
 
-end % from fourier to the requested bivariate representation
+elseif strcmp(current, 'fourier') && strcmp(desired, 'fullfast'),
+
+  dimtok = tokenize(data.dimord, '_');
+  nrpt = size(data.fourierspctrm, 1);    
+  nchn = numel(data.label);    
+  nfrq = numel(data.freq);  
+  if ~isempty(strmatch('time',  dimtok)), ntim=numel(data.time); else ntim = 1; end
+  
+  data.fourierspctrm = reshape(data.fourierspctrm, [nrpt nchn nfrq*ntim]);
+  data.fourierspctrm(~isfinite(data.fourierspctrm)) = 0;
+  crsspctrm = complex(zeros(nchn,nchn,nfrq*ntim));
+  for k = 1:nfrq*ntim
+    tmp = data.fourierspctrm(:,:,k);
+    n   = sum(tmp~=0,1);
+    crsspctrm(:,:,k) = transpose(tmp)*conj(tmp)./n(1);
+  end
+  data           = rmfield(data, 'fourierspctrm');
+  data.crsspctrm = reshape(crsspctrm, [nchn nchn nfrq ntim]);
+  if isfield(data, 'time'),
+    data.dimord = 'chan_chan_freq_time';
+  else
+    data.dimord = 'chan_chan_freq';
+  end
+
+end % convert to the requested bivariate representation
 
 % from one bivariate representation to another
 if isequal(current, desired)
