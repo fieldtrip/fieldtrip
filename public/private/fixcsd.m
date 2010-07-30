@@ -374,6 +374,74 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
     data.dimord = ['rpt_',data.dimord];
   end
 
+elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
+  dimtok = tokenize(data.dimord, '_');
+  if ~isempty(strmatch('rpt',   dimtok)), nrpt=numel(data.cumtapcnt); else nrpt = 1; end
+  if ~isempty(strmatch('freq',  dimtok)), nfrq=numel(data.freq);      else nfrq = 1; end
+  if ~isempty(strmatch('time',  dimtok)), ntim=numel(data.time);      else ntim = 1; end
+  
+  if ~isfield(data, 'label')
+    data.label = unique(data.labelcmb(:));
+  end
+
+  nchan     = length(data.label);
+  ncmb      = size(data.labelcmb,1);
+  cmbindx   = zeros(nchan,nchan);
+
+  for k = 1:size(data.labelcmb,1)
+    ch1 = find(strcmp(data.label, data.labelcmb(k,1)));
+    ch2 = find(strcmp(data.label, data.labelcmb(k,2)));
+    if ~isempty(ch1) && ~isempty(ch2),
+      cmbindx(ch1,ch2) = k;
+    end
+  end
+
+  complete = all(cmbindx(:)~=0);
+
+  fn = fieldnames(data);
+  for ii=1:numel(fn)
+    if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim;
+      if nrpt==1,
+        data.(fn{ii}) = reshape(data.(fn{ii}), [nrpt ncmb nfrq ntim]);
+      end
+
+      tmpall = nan(nchan,nchan,nfrq,ntim);
+
+      for k = 1:ntim
+        for m = 1:nfrq
+          tmpdat = nan(nchan,nchan);
+          indx   = find(cmbindx);
+          if ~complete
+            % this realizes the missing combinations to be represented as the
+            % conjugate of the corresponding combination across the diagonal
+            tmpdat(indx) = reshape(nanmean(data.(fn{ii})(:,cmbindx(indx),m,k)),[numel(indx) 1]);
+            tmpdat       = ctranspose(tmpdat);
+          end
+          tmpdat(indx)    = reshape(nanmean(data.(fn{ii})(:,cmbindx(indx),m,k)),[numel(indx) 1]);
+          tmpall(:,:,m,k) = tmpdat;
+        end % for m
+      end % for k
+
+      % replace the data in the old representation with the new representation
+      if nrpt>1,
+        data.(fn{ii}) = tmpall;
+      else
+        data.(fn{ii}) = reshape(tmpall, [nchan nchan nfrq ntim]);
+      end
+    end % if numel
+  end % for ii
+
+  % remove obsolete fields
+  try, data      = rmfield(data, 'powspctrm');  end
+  try, data      = rmfield(data, 'labelcmb');   end
+  try, data      = rmfield(data, 'dof');        end
+
+  if ntim>1,
+    data.dimord = 'chan_chan_freq_time';
+  else
+    data.dimord = 'chan_chan_freq';
+  end
+
 elseif strcmp(current, 'sparsewithpow') && strcmp(desired, 'full')
   % this is how is currently done in prepare_freq_matrices
   data = checkdata(data, 'cmbrepresentation', 'sparse');
