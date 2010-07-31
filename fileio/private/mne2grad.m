@@ -129,19 +129,26 @@ if nEEG>0
     elec.unit = 'cm';
     elec.label = cell(nEEG,1);
 
-    k=1;
-    for n=1:orig.nchan
-        if (orig.chs(n).kind==2) %it's an EEG channel
-            elec.pnt(k,1:3)=100*orig.chs(n).eeg_loc(1:3);  % multiply by 100 to get cm
-            elec.label{k}=deblank(orig.ch_names{n});
-            k=k+1;
-        else
-            %do nothing
-        end
-    end
+    % Amendments to overcome problem with fiff_read_meas_info.m when >60
+    % channels (thanks to Rik Henson)
+    
+    dig_eeg = find([orig.dig.kind]==3);  % Find EEG digitisations
+    dig_eeg(1) = [];                     % Remove reference
+    
+    chn_eeg = find([orig.chs.kind]==2);  % Find EEG channels
 
+    k=0;
+    for n = chn_eeg
+        k=k+1;
+        if nEEG<=60
+            elec.pnt(k,1:3)=100*orig.chs(n).eeg_loc(1:3);  % multiply by 100 to get cm
+        else
+            elec.pnt(k,1:3)=100*orig.dig(dig_eeg(k)).r;    % multiply by 100 to get cm
+        end
+        elec.label{k}=deblank(orig.ch_names{n});
+    end
+    
     %check we've got all the EEG channels:
-    k=k-1;
     if k ~= (nEEG)
         error('Number of EEG channels identified does not match number of channels in elec structure!!!!!');
     end
