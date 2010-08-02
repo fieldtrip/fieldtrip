@@ -209,9 +209,9 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'fullfast'),
   data.fourierspctrm(~isfinite(data.fourierspctrm)) = 0;
   crsspctrm = complex(zeros(nchn,nchn,nfrq*ntim));
   for k = 1:nfrq*ntim
-    tmp = data.fourierspctrm(:,:,k);
-    n   = sum(tmp~=0,1);
-    crsspctrm(:,:,k) = transpose(tmp)*conj(tmp)./n(1);
+    tmp = transpose(data.fourierspctrm(:,:,k));
+    n   = sum(tmp~=0,2);
+    crsspctrm(:,:,k) = tmp*tmp'./n(:,ones(1,size(tmp,2)));
   end
   data           = rmfield(data, 'fourierspctrm');
   data.crsspctrm = reshape(crsspctrm, [nchn nchn nfrq ntim]);
