@@ -547,7 +547,11 @@ if hasrpt,
     end
     %tmp    = cell2mat(varargin{1}.(cfg.parameter)(inside,:,:,:,:));
   else
-    tmp = varargin{1}.(cfg.parameter)(inside,:,:,:,:);
+    if find(rptdim)==1,
+      tmp = varargin{1}.(cfg.parameter)(:,inside,:,:,:);
+    else
+      tmp = varargin{1}.(cfg.parameter)(inside,:,:,:,:);
+    end
   end
   
   if numel(rptdim)==1,
