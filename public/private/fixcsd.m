@@ -237,7 +237,25 @@ elseif strcmp(current, 'full') && strcmp(desired, 'sparsewithpow')
   error('not yet implemented');
 elseif strcmp(current, 'sparse') && strcmp(desired, 'sparsewithpow')
   % convert back to crsspctrm/powspctrm representation: useful for plotting functions etc
-  error(  'not yet implemented');
+  indx     = labelcmb2indx(data.labelcmb);
+  autoindx = indx(indx(:,1)==indx(:,2), 1);
+  cmbindx  = setdiff([1:size(indx,1)]', autoindx);
+  
+  if strcmp(data.dimord(1:3), 'rpt')
+    data.powspctrm = data.crsspctrm(:, autoindx, :, :);
+    data.crsspctrm = data.crsspctrm(:, cmbindx,  :, :);
+  else
+    data.powspctrm = data.crsspctrm(autoindx, :, :);
+    data.crsspctrm = data.crsspctrm(cmbindx,  :, :);
+  end 
+  data.label    = data.labelcmb(autoindx,1);
+  data.labelcmb = data.labelcmb(cmbindx, :);
+  
+  if isempty(cmbindx)
+    data = rmfield(data, 'crsspctrm');
+    data = rmfield(data, 'labelcmb');
+  end
+  
 elseif strcmp(current, 'full') && strcmp(desired, 'sparse')
   dimtok = tokenize(data.dimord, '_');
   if ~isempty(strmatch('rpt',   dimtok)), nrpt=numel(data.cumtapcnt); else nrpt = 1; end
