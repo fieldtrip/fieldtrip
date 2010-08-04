@@ -175,7 +175,13 @@ else
     len1 = round(p*len);            % number of '-' characters before the dial
     len2 = len - len1;              % number of ' ' characters after the dial
     line = [s, ' [' repmat('-',1,len1), dial(1+a/45), repmat(' ',1,len2) ,']'];
-    fprintf('\r%s', line);
+    if c~=1
+      backline = repmat('\b', [1 length(line)]);
+    else
+      backline = '';
+    end
+    fprintf([backline,'%s'], line);
+    %fprintf('\r%s', line); %carriage return sometimes leads to a new line
     % increment the angle with 45 degrees
     a = a + 45;
     if a==360
