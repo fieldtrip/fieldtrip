@@ -211,7 +211,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'fullfast'),
   for k = 1:nfrq*ntim
     tmp = transpose(data.fourierspctrm(:,:,k));
     n   = sum(tmp~=0,2);
-    crsspctrm(:,:,k) = tmp*tmp'./n(:,ones(1,size(tmp,2)));
+    crsspctrm(:,:,k) = tmp*tmp'./n(1);
   end
   data           = rmfield(data, 'fourierspctrm');
   data.crsspctrm = reshape(crsspctrm, [nchn nchn nfrq ntim]);
