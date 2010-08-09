@@ -1,6 +1,6 @@
-function realtime_headlocalizer(cfg)
+function ft_realtime_headlocalizer(cfg)
 
-% REALTIME_HEADLOCALIZER is a realtime application for online
+% FT_REALTIME_HEADLOCALIZER is a realtime application for online
 % visualization of the head localization coils in a CTF275 system.
 %
 % Use as
@@ -63,6 +63,7 @@ blocksize = round(cfg.blocksize * hdr.Fs);
 
 prevSample  = 0;
 count       = 0;
+UpdatedReference = [];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the general BCI loop where realtime incoming data is handled
@@ -106,17 +107,7 @@ while true
         data.label    = hdr.label(chanindx);
         data.hdr      = hdr;
         data.fsample  = hdr.Fs;
-        
-        % for head coil "n", the labels can be interpreted as
-        % HLC00n1 x
-        % HLC00n2 y
-        % HLC00n3 z
-        % HLC00n4 reserved
-        % HLC00n5 reserved
-        % HLC00n6 reserved
-        % HLC00n7 reserved
-        % HLC00n8 fit error
-        
+                
         x1i = strmatch('HLC0011', data.label);
         y1i = strmatch('HLC0012', data.label);
         z1i = strmatch('HLC0013', data.label);
@@ -150,6 +141,33 @@ while true
             plot3(template.fid.pnt(3,1), template.fid.pnt(3,2), template.fid.pnt(3,3), 'ko', 'MarkerSize',27,'LineWidth',2);
         end
         
+        % 'u' keypress updates the reference coordinates
+        keypress = get(1,'CurrentCharacter');
+        if keypress == 'u'
+            fprintf('>>> Updating reference coordinates <<< \n')
+            
+            % update the reference positions
+            UpdatedReference(1,1) = coil1(1,end);
+            UpdatedReference(1,2) = coil1(2,end);
+            UpdatedReference(1,3) = coil1(3,end);
+            UpdatedReference(2,1) = coil2(1,end);
+            UpdatedReference(2,2) = coil2(2,end);
+            UpdatedReference(2,3) = coil2(3,end);
+            UpdatedReference(3,1) = coil3(1,end);
+            UpdatedReference(3,2) = coil3(2,end);
+            UpdatedReference(3,3) = coil3(3,end);
+ 
+            template = []; % switch off input template
+            set(1,'CurrentCharacter','o'); % update switch
+        end
+        
+        if ~isempty(UpdatedReference)
+            % plot the updated reference
+            plot3(UpdatedReference(1,1),UpdatedReference(1,2),UpdatedReference(1,3), 'k^', 'LineWidth',2,'MarkerSize',27) % nasion
+            plot3(UpdatedReference(2,1),UpdatedReference(2,2),UpdatedReference(2,3), 'ko', 'LineWidth',2,'MarkerSize',27) % right ear
+            plot3(UpdatedReference(3,1),UpdatedReference(3,2),UpdatedReference(3,3), 'ko', 'LineWidth',2,'MarkerSize',27) % left ear
+        end
+        
         % plot the coil positons
         plot3(coil1(1,:),coil1(2,:),coil1(3,:), 'k^', 'LineWidth',1,'MarkerSize',3) % nasion
         plot3(coil2(1,:),coil2(2,:),coil2(3,:), 'ko', 'LineWidth',1,'MarkerSize',3) % right ear
@@ -169,52 +187,97 @@ while true
         angle_nasion_sagittal = (theta * (180/pi));
         
         % check for nasion position
-        if ~isempty(template)
+        if ~isempty(UpdatedReference)
+            if abs(UpdatedReference(1,1))-cfg.accuracy_green < abs(coil1(1,end)) && abs(coil1(1,end)) < abs(UpdatedReference(1,1))+cfg.accuracy_green ...
+                    && abs(UpdatedReference(1,2))-cfg.accuracy_green < abs(coil1(2,end)) && abs(coil1(2,end)) < abs(UpdatedReference(1,2))+cfg.accuracy_green ...
+                    && abs(UpdatedReference(1,3))-cfg.accuracy_green < abs(coil1(3,end)) && abs(coil1(3,end)) < abs(UpdatedReference(1,3))+cfg.accuracy_green
+                plot3(coil1(1,end),coil1(2,end),coil1(3,end),'g^', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+                head1 = true;
+            elseif abs(UpdatedReference(1,1))-cfg.accuracy_orange < abs(coil1(1,end)) && abs(coil1(1,end)) < abs(UpdatedReference(1,1))+cfg.accuracy_orange ...
+                    && abs(UpdatedReference(1,2))-cfg.accuracy_orange < abs(coil1(2,end)) && abs(coil1(2,end)) < abs(UpdatedReference(1,2))+cfg.accuracy_orange ...
+                    && abs(UpdatedReference(1,3))-cfg.accuracy_orange < abs(coil1(3,end)) && abs(coil1(3,end)) < abs(UpdatedReference(1,3))+cfg.accuracy_orange
+                plot3(coil1(1,end),coil1(2,end),coil1(3,end),'y^', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+                head1 = false;
+            else % when not in correct position
+                plot3(coil1(1,end),coil1(2,end), coil1(3,end),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+                head1 = false;
+            end          
+        elseif ~isempty(template)
             if abs(template.fid.pnt(1,1))-cfg.accuracy_green < abs(coil1(1,end)) && abs(coil1(1,end)) < abs(template.fid.pnt(1,1))+cfg.accuracy_green ...
                     && abs(template.fid.pnt(1,2))-cfg.accuracy_green < abs(coil1(2,end)) && abs(coil1(2,end)) < abs(template.fid.pnt(1,2))+cfg.accuracy_green ...
                     && abs(template.fid.pnt(1,3))-cfg.accuracy_green < abs(coil1(3,end)) && abs(coil1(3,end)) < abs(template.fid.pnt(1,3))+cfg.accuracy_green
-                plot3(coil1(1,end),coil1(2,end),coil1(3,end),'g^','MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+                plot3(coil1(1,end),coil1(2,end),coil1(3,end),'g^', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
                 head1 = true;
             elseif abs(template.fid.pnt(1,1))-cfg.accuracy_orange < abs(coil1(1,end)) && abs(coil1(1,end)) < abs(template.fid.pnt(1,1))+cfg.accuracy_orange ...
                     && abs(template.fid.pnt(1,2))-cfg.accuracy_orange < abs(coil1(2,end)) && abs(coil1(2,end)) < abs(template.fid.pnt(1,2))+cfg.accuracy_orange ...
                     && abs(template.fid.pnt(1,3))-cfg.accuracy_orange < abs(coil1(3,end)) && abs(coil1(3,end)) < abs(template.fid.pnt(1,3))+cfg.accuracy_orange
-                plot3(coil1(1,end),coil1(2,end),coil1(3,end),'y^','MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+                plot3(coil1(1,end),coil1(2,end),coil1(3,end),'y^', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
                 head1 = false;
             else % when not in correct position
-                plot3(coil1(1,end),coil1(2,end), coil1(3,end),'r^','MarkerFaceColor',[1 0 0],'MarkerSize',25)
+                plot3(coil1(1,end),coil1(2,end), coil1(3,end),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
                 head1 = false;
             end
         else
-            plot3(coil1(1,end),coil1(2,end), coil1(3,end),'r^','MarkerFaceColor',[1 0 0],'MarkerSize',25)
+            plot3(coil1(1,end),coil1(2,end), coil1(3,end),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
             head1 = false;
         end
         
         % check for left ear position
-        if ~isempty(template)
+        if ~isempty(UpdatedReference)
+            if abs(UpdatedReference(2,1))-cfg.accuracy_green < abs(coil2(1,end)) && abs(coil2(1,end)) < abs(UpdatedReference(2,1))+cfg.accuracy_green ...
+                    && abs(UpdatedReference(2,2))-cfg.accuracy_green < abs(coil2(2,end)) && abs(coil2(2,end)) < abs(UpdatedReference(2,2))+cfg.accuracy_green ...
+                    && abs(UpdatedReference(2,3))-cfg.accuracy_green < abs(coil2(3,end)) && abs(coil2(3,end)) < abs(UpdatedReference(2,3))+cfg.accuracy_green
+                plot3(coil2(1,end),coil2(2,end),coil2(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+                head2 = true;
+            elseif abs(UpdatedReference(2,1))-cfg.accuracy_orange < abs(coil2(1,end)) && abs(coil2(1,end)) < abs(UpdatedReference(2,1))+cfg.accuracy_orange ...
+                    && abs(UpdatedReference(2,2))-cfg.accuracy_orange < abs(coil2(2,end)) && abs(coil2(2,end)) < abs(UpdatedReference(2,2))+cfg.accuracy_orange ...
+                    && abs(UpdatedReference(2,3))-cfg.accuracy_orange < abs(coil2(3,end)) && abs(coil2(3,end)) < abs(UpdatedReference(2,3))+cfg.accuracy_orange
+                plot3(coil2(1,end),coil2(2,end),coil2(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+                head2 = false;
+            else % when not in correct position
+                plot3(coil2(1,end),coil2(2,end), coil2(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+                head2 = false;
+            end
+        elseif ~isempty(template)
             if abs(template.fid.pnt(2,1))-cfg.accuracy_green < abs(coil2(1,end)) && abs(coil2(1,end)) < abs(template.fid.pnt(2,1))+cfg.accuracy_green ...
                     && abs(template.fid.pnt(2,2))-cfg.accuracy_green < abs(coil2(2,end)) && abs(coil2(2,end)) < abs(template.fid.pnt(2,2))+cfg.accuracy_green ...
                     && abs(template.fid.pnt(2,3))-cfg.accuracy_green < abs(coil2(3,end)) && abs(coil2(3,end)) < abs(template.fid.pnt(2,3))+cfg.accuracy_green
-                plot3(coil2(1,end),coil2(2,end),coil2(3,end),'go','MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+                plot3(coil2(1,end),coil2(2,end),coil2(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
                 head2 = true;
             elseif abs(template.fid.pnt(2,1))-cfg.accuracy_orange < abs(coil2(1,end)) && abs(coil2(1,end)) < abs(template.fid.pnt(2,1))+cfg.accuracy_orange ...
                     && abs(template.fid.pnt(2,2))-cfg.accuracy_orange < abs(coil2(2,end)) && abs(coil2(2,end)) < abs(template.fid.pnt(2,2))+cfg.accuracy_orange ...
                     && abs(template.fid.pnt(2,3))-cfg.accuracy_orange < abs(coil2(3,end)) && abs(coil2(3,end)) < abs(template.fid.pnt(2,3))+cfg.accuracy_orange
-                plot3(coil2(1,end),coil2(2,end),coil2(3,end),'yo','MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+                plot3(coil2(1,end),coil2(2,end),coil2(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
                 head2 = false;
             else % when not in correct position
-                plot3(coil2(1,end),coil2(2,end), coil2(3,end),'ro','MarkerFaceColor',[1 0 0],'MarkerSize',25)
+                plot3(coil2(1,end),coil2(2,end), coil2(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
                 head2 = false;
             end
         else
-            plot3(coil2(1,end),coil2(2,end), coil2(3,end),'ro','MarkerFaceColor',[1 0 0],'MarkerSize',25)
+            plot3(coil2(1,end),coil2(2,end), coil2(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
             head2 = false;
         end
         
         % check for right ear position
-        if ~isempty(template)
-            if abs(template.fid.pnt(3,1))-cfg.accuracy_green < abs(coil3(1,end)) && abs(coil3(1,end)) < abs(template.fid.pnt(3,1))+cfg.accuracy_green ...
-                    && abs(template.fid.pnt(3,2))-cfg.accuracy_green < abs(coil3(2,end)) && abs(coil3(2,end)) < abs(template.fid.pnt(3,2))+cfg.accuracy_green ...
-                    && abs(template.fid.pnt(3,3))-cfg.accuracy_green < abs(coil3(3,end)) && abs(coil3(3,end)) < abs(template.fid.pnt(3,3))+cfg.accuracy_green
+        if ~isempty(UpdatedReference)
+            if abs(UpdatedReference(3,1))-cfg.accuracy_green < abs(coil3(1,end)) && abs(coil3(1,end)) < abs(UpdatedReference(3,1))+cfg.accuracy_green  ...
+                    && abs(UpdatedReference(3,2))-cfg.accuracy_green  < abs(coil3(2,end)) && abs(coil3(2,end)) < abs(UpdatedReference(3,2))+cfg.accuracy_green  ...
+                    && abs(UpdatedReference(3,3))-cfg.accuracy_green  < abs(coil3(3,end)) && abs(coil3(3,end)) < abs(UpdatedReference(3,3))+cfg.accuracy_green
+                plot3(coil3(1,end),coil3(2,end),coil3(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+                head3 = true;
+            elseif abs(UpdatedReference(3,1))-cfg.accuracy_orange < abs(coil3(1,end)) && abs(coil3(1,end)) < abs(UpdatedReference(3,1))+cfg.accuracy_orange ...
+                    && abs(UpdatedReference(3,2))-cfg.accuracy_orange < abs(coil3(2,end)) && abs(coil3(2,end)) < abs(UpdatedReference(3,2))+cfg.accuracy_orange ...
+                    && abs(UpdatedReference(3,3))-cfg.accuracy_orange < abs(coil3(3,end)) && abs(coil3(3,end)) < abs(UpdatedReference(3,3))+cfg.accuracy_orange
+                plot3(coil3(1,end),coil3(2,end),coil3(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+                head3 = false;
+            else % when not in correct position
+                plot3(coil3(1,end),coil3(2,end), coil3(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+                head3 = false;
+            end
+        elseif ~isempty(template)
+            if abs(template.fid.pnt(3,1))-cfg.accuracy_green < abs(coil3(1,end)) && abs(coil3(1,end)) < abs(template.fid.pnt(3,1))+cfg.accuracy_green  ...
+                    && abs(template.fid.pnt(3,2))-cfg.accuracy_green  < abs(coil3(2,end)) && abs(coil3(2,end)) < abs(template.fid.pnt(3,2))+cfg.accuracy_green  ...
+                    && abs(template.fid.pnt(3,3))-cfg.accuracy_green  < abs(coil3(3,end)) && abs(coil3(3,end)) < abs(template.fid.pnt(3,3))+cfg.accuracy_green
                 plot3(coil3(1,end),coil3(2,end),coil3(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
                 head3 = true;
             elseif abs(template.fid.pnt(3,1))-cfg.accuracy_orange < abs(coil3(1,end)) && abs(coil3(1,end)) < abs(template.fid.pnt(3,1))+cfg.accuracy_orange ...
@@ -223,11 +286,11 @@ while true
                 plot3(coil3(1,end),coil3(2,end),coil3(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
                 head3 = false;
             else % when not in correct position
-                plot3(coil3(1,end),coil3(2,end), coil3(3,end),'ro','MarkerFaceColor',[1 0 0],'MarkerSize',25)
+                plot3(coil3(1,end),coil3(2,end), coil3(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
                 head3 = false;
             end
         else
-            plot3(coil3(1,end),coil3(2,end), coil3(3,end),'ro','MarkerFaceColor',[1 0 0],'MarkerSize',25)
+            plot3(coil3(1,end),coil3(2,end), coil3(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
             head3 = false;
         end
         
@@ -251,9 +314,9 @@ while true
             text(6,-6,template.fid.pnt(3,3),'Right','FontSize',15);
         end
         
-        str = sprintf('time = %d s\n', round(mean(data.time{1})));
+        % show the update key
+        str = sprintf('Press U to update the reference coordinates');
         title(str);
-        fprintf(str);
         
         if isempty(h)
             % only done once
@@ -293,13 +356,32 @@ while true
             plot3(template.fid.pnt(3,1), template.fid.pnt(3,2), template.fid.pnt(3,3), 'ko', 'MarkerSize',27,'LineWidth',2);
         end
         
+        if ~isempty(UpdatedReference)
+            % plot the updated reference
+            plot3(UpdatedReference(1,1),UpdatedReference(1,2),UpdatedReference(1,3), 'k^', 'LineWidth',2,'MarkerSize',27) % nasion
+            plot3(UpdatedReference(2,1),UpdatedReference(2,2),UpdatedReference(2,3), 'ko', 'LineWidth',2,'MarkerSize',27) % right ear
+            plot3(UpdatedReference(3,1),UpdatedReference(3,2),UpdatedReference(3,3), 'ko', 'LineWidth',2,'MarkerSize',27) % left ear
+        end
+        
         % plot the coil positons
         plot3(coil1(1,:),coil1(2,:),coil1(3,:), 'k^', 'LineWidth',1,'MarkerSize',3) % nasion
         plot3(coil2(1,:),coil2(2,:),coil2(3,:), 'ko', 'LineWidth',1,'MarkerSize',3) % right ear
         plot3(coil3(1,:),coil3(2,:),coil3(3,:), 'ko', 'LineWidth',1,'MarkerSize',3) % left ear
         
         % check for nasion position
-        if ~isempty(template)
+        if ~isempty(UpdatedReference)
+            if abs(UpdatedReference(1,1))-cfg.accuracy_green < abs(coil1(1,end)) && abs(coil1(1,end)) < abs(UpdatedReference(1,1))+cfg.accuracy_green ...
+                    && abs(UpdatedReference(1,2))-cfg.accuracy_green < abs(coil1(2,end)) && abs(coil1(2,end)) < abs(UpdatedReference(1,2))+cfg.accuracy_green ...
+                    && abs(UpdatedReference(1,3))-cfg.accuracy_green < abs(coil1(3,end)) && abs(coil1(3,end)) < abs(UpdatedReference(1,3))+cfg.accuracy_green
+                plot3(coil1(1,end),coil1(2,end),coil1(3,end),'g^', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+            elseif abs(UpdatedReference(1,1))-cfg.accuracy_orange < abs(coil1(1,end)) && abs(coil1(1,end)) < abs(UpdatedReference(1,1))+cfg.accuracy_orange ...
+                    && abs(UpdatedReference(1,2))-cfg.accuracy_orange < abs(coil1(2,end)) && abs(coil1(2,end)) < abs(UpdatedReference(1,2))+cfg.accuracy_orange ...
+                    && abs(UpdatedReference(1,3))-cfg.accuracy_orange < abs(coil1(3,end)) && abs(coil1(3,end)) < abs(UpdatedReference(1,3))+cfg.accuracy_orange
+                plot3(coil1(1,end),coil1(2,end),coil1(3,end),'y^', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+            else % when not in correct position
+                plot3(coil1(1,end),coil1(2,end), coil1(3,end),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+            end           
+        elseif ~isempty(template)
             if abs(template.fid.pnt(1,1))-cfg.accuracy_green < abs(coil1(1,end)) && abs(coil1(1,end)) < abs(template.fid.pnt(1,1))+cfg.accuracy_green ...
                     && abs(template.fid.pnt(1,2))-cfg.accuracy_green < abs(coil1(2,end)) && abs(coil1(2,end)) < abs(template.fid.pnt(1,2))+cfg.accuracy_green ...
                     && abs(template.fid.pnt(1,3))-cfg.accuracy_green < abs(coil1(3,end)) && abs(coil1(3,end)) < abs(template.fid.pnt(1,3))+cfg.accuracy_green
@@ -316,7 +398,19 @@ while true
         end
         
         % check for left ear position
-        if ~isempty(template)
+        if ~isempty(UpdatedReference)
+            if abs(UpdatedReference(2,1))-cfg.accuracy_green < abs(coil2(1,end)) && abs(coil2(1,end)) < abs(UpdatedReference(2,1))+cfg.accuracy_green ...
+                    && abs(UpdatedReference(2,2))-cfg.accuracy_green < abs(coil2(2,end)) && abs(coil2(2,end)) < abs(UpdatedReference(2,2))+cfg.accuracy_green ...
+                    && abs(UpdatedReference(2,3))-cfg.accuracy_green < abs(coil2(3,end)) && abs(coil2(3,end)) < abs(UpdatedReference(2,3))+cfg.accuracy_green
+                plot3(coil2(1,end),coil2(2,end),coil2(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+            elseif abs(UpdatedReference(2,1))-cfg.accuracy_orange < abs(coil2(1,end)) && abs(coil2(1,end)) < abs(UpdatedReference(2,1))+cfg.accuracy_orange ...
+                    && abs(UpdatedReference(2,2))-cfg.accuracy_orange < abs(coil2(2,end)) && abs(coil2(2,end)) < abs(UpdatedReference(2,2))+cfg.accuracy_orange ...
+                    && abs(UpdatedReference(2,3))-cfg.accuracy_orange < abs(coil2(3,end)) && abs(coil2(3,end)) < abs(UpdatedReference(2,3))+cfg.accuracy_orange
+                plot3(coil2(1,end),coil2(2,end),coil2(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+            else % when not in correct position
+                plot3(coil2(1,end),coil2(2,end), coil2(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+            end
+        elseif ~isempty(template)
             if abs(template.fid.pnt(2,1))-cfg.accuracy_green < abs(coil2(1,end)) && abs(coil2(1,end)) < abs(template.fid.pnt(2,1))+cfg.accuracy_green ...
                     && abs(template.fid.pnt(2,2))-cfg.accuracy_green < abs(coil2(2,end)) && abs(coil2(2,end)) < abs(template.fid.pnt(2,2))+cfg.accuracy_green ...
                     && abs(template.fid.pnt(2,3))-cfg.accuracy_green < abs(coil2(3,end)) && abs(coil2(3,end)) < abs(template.fid.pnt(2,3))+cfg.accuracy_green
@@ -333,7 +427,19 @@ while true
         end
         
         % check for right ear position
-        if ~isempty(template)
+        if ~isempty(UpdatedReference)
+            if abs(UpdatedReference(3,1))-cfg.accuracy_green < abs(coil3(1,end)) && abs(coil3(1,end)) < abs(UpdatedReference(3,1))+cfg.accuracy_green  ...
+                    && abs(UpdatedReference(3,2))-cfg.accuracy_green  < abs(coil3(2,end)) && abs(coil3(2,end)) < abs(UpdatedReference(3,2))+cfg.accuracy_green  ...
+                    && abs(UpdatedReference(3,3))-cfg.accuracy_green  < abs(coil3(3,end)) && abs(coil3(3,end)) < abs(UpdatedReference(3,3))+cfg.accuracy_green
+                plot3(coil3(1,end),coil3(2,end),coil3(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+            elseif abs(UpdatedReference(3,1))-cfg.accuracy_orange < abs(coil3(1,end)) && abs(coil3(1,end)) < abs(UpdatedReference(3,1))+cfg.accuracy_orange ...
+                    && abs(UpdatedReference(3,2))-cfg.accuracy_orange < abs(coil3(2,end)) && abs(coil3(2,end)) < abs(UpdatedReference(3,2))+cfg.accuracy_orange ...
+                    && abs(UpdatedReference(3,3))-cfg.accuracy_orange < abs(coil3(3,end)) && abs(coil3(3,end)) < abs(UpdatedReference(3,3))+cfg.accuracy_orange
+                plot3(coil3(1,end),coil3(2,end),coil3(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+            else % when not in correct position
+                plot3(coil3(1,end),coil3(2,end), coil3(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+            end
+        elseif ~isempty(template)
             if abs(template.fid.pnt(3,1))-cfg.accuracy_green < abs(coil3(1,end)) && abs(coil3(1,end)) < abs(template.fid.pnt(3,1))+cfg.accuracy_green  ...
                     && abs(template.fid.pnt(3,2))-cfg.accuracy_green  < abs(coil3(2,end)) && abs(coil3(2,end)) < abs(template.fid.pnt(3,2))+cfg.accuracy_green  ...
                     && abs(template.fid.pnt(3,3))-cfg.accuracy_green  < abs(coil3(3,end)) && abs(coil3(3,end)) < abs(template.fid.pnt(3,3))+cfg.accuracy_green
@@ -364,6 +470,11 @@ while true
             text(-8,8,template.fid.pnt(2,3),'Left','FontSize',15);
             text(6,-6,template.fid.pnt(3,3),'Right','FontSize',15);
         end
+        
+        % show current timesample
+        str = sprintf('time = %d s\n', round(mean(data.time{1})));
+        title(str);
+        fprintf(str);
         
         if isempty(i)
             % only done once
