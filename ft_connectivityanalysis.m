@@ -92,6 +92,15 @@ dojack  = strcmp(cfg.jackknife, 'yes');
 normrpt = 0; % default, has to be overruled e.g. in plv, because of single replicate normalisation
 normpow = 1; % default, has to be overruled e.g. in csd,
 
+% select trials of interest
+if ~strcmp(cfg.trials, 'all')
+  data = selectdata(data, 'rpt', cfg.trials);
+  if isfield(data, 'cfg'),
+    cfg.trl    = findcfg(data.cfg, 'trl');
+    cfg.trlold = findcfg(data.cfg, 'trlold');
+  end
+end
+
 % FIXME check which methods require hasrpt
 
 % ensure that the input data is appropriate for the method
@@ -198,8 +207,10 @@ if ~isfield(data, inparam) || (strcmp(inparam, 'crsspctrm') && isfield(data, 'cr
         elseif strcmp(inparam, 'crsspctrm') && isfield(data, 'powspctrm')
           % if input data is old-fashioned, i.e. contains powandcsd
           [data, powindx, hasrpt] = univariate2bivariate(data, 'powandcsd', 'crsspctrm', dtype, 0, cfg.channelcmb);
-        else
+        elseif isfield(data, 'labelcmb')
           powindx = labelcmb2indx(data.labelcmb);
+        else 
+          powindx = [];
         end
       elseif strcmp(inparam, 'powcovspctrm')
         if isfield(data, 'powspctrm'),
