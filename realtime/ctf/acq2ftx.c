@@ -36,12 +36,10 @@
 #define MAX_OUT        4
 
 /*	 uncomment this for testing on different machines with fake_meg
-*/
 #undef  ACQ_MSGQ_SIZE   
 #define ACQ_MSGQ_SIZE 10
 #undef  ACQ_MSGQ_SHMKEY 
 #define ACQ_MSGQ_SHMKEY    0x08150842 
-/*
 */
 
 static char usage[] = 
@@ -213,6 +211,9 @@ int main(int argc, char **argv) {
 				case 'g':
 				case 'G':
 					outConf[numOutputs].applyGains = 1;
+					break;
+				case '-':
+					/* silently ignore */
 					break;
 				default:
 					fprintf(stderr, "Warning: Ignoring unknown flag '%c' in output definition %i.\n", *flag, i);
