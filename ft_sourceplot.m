@@ -660,6 +660,7 @@ if isequal(cfg.method,'ortho')
       error('no anatomy is present and no functional data is selected, please check your cfg.funparameter');
     end
     
+    
     h1 = subplot(2,2,1);
     [vols2D] = handle_ortho(vols, [xi yi zi qi], 2, dim, doimage);
     plot2D(vols2D, scales, doimage);
@@ -673,7 +674,7 @@ if isequal(cfg.method,'ortho')
     if strcmp(cfg.crosshair, 'yes'), crosshair([yi zi]); end
 
     h3 = subplot(2,2,3);
-    [vols2D] = handle_ortho(vols, [xi yi zi qi], 3, dim, doimage);
+    [vols2D] = handle_ortho(vols, [xi yi zi qi], 3, dim, doimage);  
     plot2D(vols2D, scales, doimage);
     xlabel('i'); ylabel('j'); axis(cfg.axis);
     if strcmp(cfg.crosshair, 'yes'), crosshair([xi yi]); end
@@ -685,7 +686,9 @@ if isequal(cfg.method,'ortho')
       pcolor(double(data.time), double(data.freq), double(squeeze(vols{2}(xi,yi,zi,:,:))));
       shading('interp');
       xlabel('time'); ylabel('freq');
-      caxis([-1 1].*max(abs(caxis)));
+      try
+        caxis([-1 1].*max(abs(caxis)));
+      end
       colorbar;
       %caxis([fcolmin fcolmax]);
       %set(gca, 'Visible', 'off');
@@ -703,7 +706,9 @@ if isequal(cfg.method,'ortho')
         % imagesc(vectorcolorbar,1,vectorcolorbar);colormap(cfg.funcolormap);
         subplot(2,2,4);
         % use a normal Matlab colorbar, attach it to the invisible 4th subplot
-        caxis([fcolmin fcolmax]);
+        try
+          caxis([fcolmin fcolmax]);
+        end
         hc = colorbar;
         set(hc, 'YLim', [fcolmin fcolmax]);
         set(gca, 'Visible', 'off');
@@ -893,10 +898,13 @@ elseif isequal(cfg.method,'surface')
     set(h2, 'FaceVertexAlphaData', maskval);
     set(h2, 'FaceAlpha',          'interp');
     set(h2, 'AlphaDataMapping',   'scaled');
-    alim(gca, [opacmin opacmax]);
+    try
+      alim(gca, [opacmin opacmax]);
+    end
   end
-  caxis(gca,[fcolmin fcolmax]);
-
+  try
+    caxis(gca,[fcolmin fcolmax]);
+  end
   lighting gouraud
   if hasfun
     colormap(cfg.funcolormap);
@@ -1114,13 +1122,17 @@ if hasfun
     hf = image(fun);
   else
     hf = imagesc(fun);
-    caxis(scales{2});
+    try
+      caxis(scales{2});
+    end
     % apply the opacity mask to the functional data
     if hasmsk
       % set the opacity
       set(hf, 'AlphaData', msk)
       set(hf, 'AlphaDataMapping', 'scaled')
-      alim(scales{3});
+      try
+        alim(scales{3});
+      end
     elseif hasana
       set(hf, 'AlphaData', 0.5)
     end
