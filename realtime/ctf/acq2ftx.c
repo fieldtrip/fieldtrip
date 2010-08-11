@@ -729,18 +729,21 @@ ft_chunk_t *handleRes4(const char *dsname, int *numChannels, float *fSample) {
 		union {
 			char bytes[8];
 			double value;
-		} gain_i;
+		} sensGain, qGain, ioGain;
 		unsigned char ct = chunk->data[offset + 1 + 1328*i]; 
 				
 		if (i<MAX_CHANNEL) {
 			int j;
 			/* turn around big-endian gain value */
 			for (j=0;j<8;j++) {
-				gain_i.bytes[7-j] = chunk->data[offset + 8+j + 1328*i];
+				sensGain.bytes[7-j] = chunk->data[offset + 8+j + 1328*i];
+				qGain.bytes[7-j]    = chunk->data[offset + 16+j + 1328*i];
+				ioGain.bytes[7-j]   = chunk->data[offset + 24+j + 1328*i];
 			}
 
 			sensType[i] = ct;
-			gain[i] = gain_i.value;
+			gain[i] = ioGain.value / (qGain.value * sensGain.value);
+			printf("%i: %s Gain %f\n", i, channelNames[i], gain[i]);
 		}
 		if (ct == CTF_TRIGGER_TYPE) {
 			if (numTriggerChannels < MAX_TRIGGER) {
@@ -812,12 +815,16 @@ void matchChannels(int numChannels) {
 	for (i=0;i<numOutputs;i++) {
 		OutputConfig *oc = &outConf[i];
 		if (oc->numChannelsGiven <= 0) continue;
+
+		printf("%i. output definition:\n", i);
 		
 		oc->numChannelsFound = 0;
 		for (j=0;j<oc->numChannelsGiven;j++) {
 			for (k=0;k<numChannels;k++) {
 				if (!strcmp(channelNames[k], oc->channelNames[j])) {
 					oc->channels[oc->numChannelsFound++] = k;
+					printf("Channel %s has gain %f\n", channelNames[k], gain[k]);
+		
 				}
 			}
 		}
@@ -925,14 +932,17 @@ void writeSamples(OutputConfig *oc, const ACQ_OverAllocType *pack) {
 	nsamp = 0;
 		
 	if (oc->applyGains) {
+		/* write samples to floating point data buffer pointed to by 'dest' */
+		float *dest = putDatBuf.fData;
 		putDatBuf.ddef.data_type = DATATYPE_FLOAT32;
 		
 		if (oc->numChannelsFound == -1) {
 			/* transmit all channels, but with gains applied */
 			nchans = putDatBuf.ddef.nchans = pack->numChannels;
 			for (j=oc->skipSamples; j<pack->numSamples; j+=oc->downSample) {
+				const int *source_j = pack->data + j*pack->numChannels;
 				for (i=0;i<nchans;i++) {
-					putDatBuf.fData[i + j*nchans] = gain[i]*pack->data[i + j*nchans];
+					*dest++ = gain[i]*source_j[i];
 				}
 				++nsamp;
 			}
@@ -940,23 +950,27 @@ void writeSamples(OutputConfig *oc, const ACQ_OverAllocType *pack) {
 			/* only transmit selected channels with gains applied */
 			nchans = putDatBuf.ddef.nchans = oc->numChannelsFound;
 			for (j=oc->skipSamples; j<pack->numSamples; j+=oc->downSample) {
+				const int *source_j = pack->data + j*pack->numChannels;
 				for (i=0;i<nchans;i++) {
 					int ch = oc->channels[i];
-					putDatBuf.fData[i + j*nchans] = gain[ch]*pack->data[ch + j*nchans];
+					*dest++ = gain[ch]*source_j[ch];
 				}
 				++nsamp;
 			}
 		}
 		
 	} else {
+		/* write samples to integer data buffer pointed to by 'dest' */
+		int *dest = putDatBuf.data;
 		putDatBuf.ddef.data_type = DATATYPE_INT32;
 		
 		if (oc->numChannelsFound == -1) {
 			/* transmit all channels without gains */
 			nchans = putDatBuf.ddef.nchans = pack->numChannels;
 			for (j=oc->skipSamples; j<pack->numSamples; j+=oc->downSample) {
+				const int *source_j = pack->data + j*pack->numChannels;
 				for (i=0;i<nchans;i++) {
-					putDatBuf.data[i + j*nchans] = pack->data[i + j*nchans];
+					*dest++ = source_j[i];
 				}
 				++nsamp;
 			}
@@ -964,8 +978,9 @@ void writeSamples(OutputConfig *oc, const ACQ_OverAllocType *pack) {
 			/* only transmit selected channels without gains */
 			nchans = putDatBuf.ddef.nchans = oc->numChannelsFound;
 			for (j=oc->skipSamples; j<pack->numSamples; j+=oc->downSample) {
+				const int *source_j = pack->data + j*pack->numChannels;
 				for (i=0;i<nchans;i++) {
-					putDatBuf.data[i + j*nchans] = pack->data[oc->channels[i] + j*nchans];
+					*dest++ = source_j[oc->channels[i]];
 				}
 				++nsamp;
 			}
