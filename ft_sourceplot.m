@@ -710,7 +710,9 @@ if isequal(cfg.method,'ortho')
           caxis([fcolmin fcolmax]);
         end
         hc = colorbar;
-        set(hc, 'YLim', [fcolmin fcolmax]);
+        try
+          set(hc, 'YLim', [fcolmin fcolmax]);
+        end
         set(gca, 'Visible', 'off');
       else
         warning('no colorbar possible without functional data')
