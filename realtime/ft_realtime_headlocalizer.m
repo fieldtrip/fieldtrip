@@ -24,7 +24,7 @@ function ft_realtime_headlocalizer(cfg)
 %
 % To stop the realtime function, you have to press Ctrl-C
 
-% Copyright (C) 2008-2010, Robert Oostenveld, Arjen Stolk, Ana Todorovic
+% Copyright (C) 2008-2010, Robert Oostenveld, Arjen Stolk, Ana Todorovic, Stefan Klanke
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
