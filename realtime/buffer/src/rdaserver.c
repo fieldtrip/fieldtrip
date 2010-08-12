@@ -152,7 +152,7 @@ rda_buffer_item_t *rda_aux_get_hdr_prep_start(int ft_buffer, headerdef_t *hdr) {
 		
 	item = rda_aux_alloc_item(bytesTotal);
 	if (item == NULL) goto cleanup;
-	
+		
 	R = (rda_msg_start_t *) item->data;
 	memcpy(R->hdr.guid, _rda_guid, sizeof(_rda_guid));
 	R->hdr.nSize = bytesTotal;
@@ -363,6 +363,8 @@ rda_buffer_item_t *rda_aux_get_samples_and_markers(int ft_buffer, const samples_
 		goto cleanup;
 	}
 	
+	item->blockNumber = numBlock;
+	
 	/* Okay, we've got the samples in respSmp, events in respEvt, and a big enough 'item'.
 		First fill in the header.
 	*/
@@ -560,7 +562,7 @@ int rda_aux_check_closure(int remSelect, const fd_set *readSet, int numClients, 
 			clients[i].item->refCount--;
 		}
 		/* Remove clients from list by moving the last one in its place */
-		if (numClients > 1) {
+		if (i < numClients - 1) {
 			clients[i] = clients[numClients-1];
 		}
 		--numClients;
@@ -569,6 +571,38 @@ int rda_aux_check_closure(int remSelect, const fd_set *readSet, int numClients, 
 	}
 	return numClients;
 }
+
+
+/** Check for sockets that are lagging behind significantly, and close them.
+	@param 	minBlock    Threshold on block number of keeping the client alive
+	@param	numClients	The number of elements in the 'clients' array
+	@param	clients		Array describing the clients and their jobs
+	@param	verbosity	Determines how much status/error message to print
+	@return	the remaining number of clients
+*/
+int rda_aux_check_slow_clients(int minBlock, int numClients, rda_client_job_t *clients, int verbosity) {
+	int i = 0;	/* index of client we're looking at */
+	
+	while (i<numClients) {
+		if (clients[i].item != NULL && clients[i].item->blockNumber < minBlock) {
+			if (verbosity > 0) {
+				fprintf(stderr, "rdaserver_thread: disconnecting too slow client (%i)\n", clients[i].sock); 
+			}
+			/* Remove clients from list by moving the last one in its place */
+			closesocket(clients[i].sock);
+			if (i < numClients - 1) {
+				clients[i] = clients[numClients-1];
+			}
+			clients[i].item->refCount--;
+			--numClients;
+			/* no increase of i here */
+		} else {
+			++i;
+		}
+	}
+	return numClients;
+}
+
 
 /** Thread function of the RDA server. Can handle multiple clients in parallel.
 
@@ -584,10 +618,11 @@ int rda_aux_check_closure(int remSelect, const fd_set *readSet, int numClients, 
 	and data/events	have been read yet.
 */
 void *_rdaserver_thread(void *arg) {
-	rda_server_ctrl_t *SC = (rda_server_ctrl_t *) arg;	/* our control structure */
-	rda_client_job_t clients[RDA_MAX_NUM_CLIENTS];		/* list of clients and their current jobs */
-	rda_buffer_item_t *startItem = NULL;				/* item containing start packet (header info) */
-	rda_buffer_item_t *firstDataItem = NULL;			/* first item in list of (mostly) data packets */
+	rda_server_ctrl_t *SC = (rda_server_ctrl_t *) arg;		/* our control structure */
+	rda_client_job_t clients[RDA_MAX_NUM_CLIENTS];			/* list of clients and their current jobs */
+	rda_buffer_item_t *startItem = NULL;				 	/* item containing start packet (header info) */
+	rda_buffer_item_t *firstDataItem = NULL;				/* first item in list of (mostly) data packets */
+	rda_buffer_item_t *latestItem = NULL;
 	
 	headerdef_t ftHdr;			/* contains header information */
 	int i,typeOk;				/* typeOk is only interesting for 16-bit servers */
@@ -599,6 +634,11 @@ void *_rdaserver_thread(void *arg) {
 	int fdMax = 1;				/* for select, not really used on Windows */	
 	struct timeval tv;			/* for select timeout */
 	int numClients = 0;			/* current number of clients */
+	int newNumClients = 0;      /* number of clients after error checks */
+	int opState = 0; 			/* 	0 = waiting for clients or FT header, 
+									1 = running, 
+									2 = new header received, have all clients receive a stop message
+								*/
 	
 	if (SC==NULL) return NULL;
 	
@@ -616,86 +656,44 @@ void *_rdaserver_thread(void *arg) {
 	while (!SC->should_exit) {
 		int sel;
 		
-		/* First, in case we have no header, or in case the new number of samples 
-		   is smaller than what we had so far,  we need to (re)read the header information.
-		*/
-		if (startItem == NULL || curNum.nsamples < lastNum.nsamples) {
-			rda_buffer_item_t *newStart;
-				
-			/* If we already have a startItem, free it first, since it will be invalid anyway.
-			   However, keep the pointer itself for now, so we know that we did this here. */
-			if (startItem != NULL) {
-				free(startItem->data);
-				free(startItem);
-			}
-			
-			/* Try to grab header */
-			newStart = rda_aux_get_hdr_prep_start(SC->ft_buffer, &ftHdr);
-			if (newStart == NULL) {
-				/* No header could be picked up - wait in 'select' */
-				startItem = NULL;
+		/* First, in case we have no header,  we need to read it from the FT buffer	*/
+		if (startItem == NULL && opState == 0) {
+			startItem = rda_aux_get_hdr_prep_start(SC->ft_buffer, &ftHdr);
+			if (startItem == NULL) {
+				/* no header yet, wait in select call for clients connecting */
 				tv.tv_sec  = 0; 
 				tv.tv_usec = 100000;
 			} else {
-				/* Now the start item should have proper size/sizeAlloc/data fields */
+				/* yeah, we got it */
+				if (SC->verbosity > 4) {
+					printf("Picked up FieldTrip header: %i channels @ %.1f Hz, datatype=%i\n",ftHdr.nchans, ftHdr.fsample, ftHdr.data_type); 
+				}
+				/* don't wait in select call, but inside FT polling */
+				tv.tv_sec = 0;
+				tv.tv_usec = 0;
+				/* set 'typeOk' flag if we're running a 16 bit server */
 				if (SC->use16bit) {
 					typeOk = (ftHdr.data_type == DATATYPE_INT16) || (ftHdr.data_type == DATATYPE_UINT16);
 				}
-				if (SC->verbosity > 4) {
-					printf("Picked up FieldTrip header: %i channels, datatype=%i\n",ftHdr.nchans, ftHdr.data_type); 
-				}
-				if (typeOk) {
-					if (startItem == NULL) {
-						/* first time? then add it to every client */
-						for (i=0;i<numClients;i++) {
-							clients[i].item = newStart;
-							clients[i].written = 0;
-							newStart->refCount++;
-						}
-					} else {
-						/* otherwise, add it at the end of the chain */
-						
-						rda_buffer_item_t *stopItem = rda_aux_alloc_item(sizeof(rda_msg_hdr_t));
-						if (stopItem == NULL) {
-							fprintf(stderr, "Out of memory\n");
-							startItem = NULL;
-							break;
-						}			
-					
-						/* First add a STOP message to be sent to the list */
-						memcpy(stopItem->data, _rda_guid, sizeof(_rda_guid));
-						((rda_msg_hdr_t *) stopItem->data)->nSize = sizeof(rda_msg_hdr_t);
-						((rda_msg_hdr_t *) stopItem->data)->nType = RDA_STOP_MSG;
-						stopItem->next = newStart;
-					
-						if (firstDataItem == NULL) {
-							firstDataItem = stopItem;
-						} else {
-							rda_buffer_item_t *last = firstDataItem;
-							while (last->next != NULL) last = last->next;
-							last->next = stopItem;
-						}
-						
-						/* ... but we also need to add it to clients that are currently waiting */
-						for (i=0;i<numClients;i++) {
-							if (clients[i].item == NULL) {
-								clients[i].item = stopItem;
-								stopItem->refCount++;
-							}
-						}
+				/* start from the numbers of samples + events currently in the buffer */
+				lastNum.nsamples = ftHdr.nsamples;
+				lastNum.nevents  = ftHdr.nevents;
+				/* if we already have clients, change operation state */
+				if (numClients > 0) {
+					opState = 1;
+					/* add start packet to all clients */
+					for (i=0;i<numClients;i++) {
+						clients[i].item = startItem;
+						clients[i].written = 0;
 					}
-						
-					startItem = newStart;					
-					lastNum.nsamples = ftHdr.nsamples;	/* using 0 here is unsafe */
-					lastNum.nevents  = ftHdr.nevents;
-				} 
-				/* do not wait in 'select' call, will wait for data instead */
-				tv.tv_sec  = 0; 
-				tv.tv_usec = 0;
+				}
+				/* reset block counter */
+				numBlock = 0;
+				startItem->blockNumber = -1;
 			}
 		}
 		
-		/* Now, we deal with the things specific to client sockets */
+		/* Second, we deal with the things specific to client sockets */
 		
 		/* Prepare read (also error!) and write sets: clear them first */
 		FD_ZERO(&readSet);
@@ -707,7 +705,7 @@ void *_rdaserver_thread(void *arg) {
 		for (i=0;i<numClients;i++) {
 			/* Every client is listened to (for disconnection!) */
 			FD_SET(clients[i].sock, &readSet);
-			/* But only clients with a pending start/data are added to the write set */
+			/* But only clients with a pending start/data/stop item	are added to the write set */
 			if (clients[i].item != NULL) FD_SET(clients[i].sock, &writeSet);
 		}
 
@@ -744,6 +742,10 @@ void *_rdaserver_thread(void *arg) {
 				#endif
 			}
 			--sel;
+			if (numClients > 0 && startItem != NULL) {
+				/* let's go running */
+				opState = 1; 
+			}
 		}
 		
 		/* Check for sockets that are ready to be written to */
@@ -753,18 +755,29 @@ void *_rdaserver_thread(void *arg) {
 		
 		/* Check for sockets on which we can read (=> read 0 bytes means closure ) */
 		if (sel>0) {
-			int newNum = rda_aux_check_closure(sel, &readSet, numClients, clients, SC->verbosity);
-			if (newNum < numClients) {
-				#ifndef PLATFORM_WIN32
-				fdMax = SC->server_socket;
-				for (i=0;i<numClients;i++) {
-					if (clients[i].sock > fdMax) fdMax = clients[i].sock;
-				}
-				#endif
-				pthread_mutex_lock(&SC->mutex);
-				SC->num_clients = numClients = newNum;
-				pthread_mutex_unlock(&SC->mutex);
+			newNumClients = rda_aux_check_closure(sel, &readSet, numClients, clients, SC->verbosity);
+		} else {
+			newNumClients = numClients;
+		}
+		/* Check for clients that lag behind */
+		if (newNumClients > 0) {
+			newNumClients = rda_aux_check_slow_clients(numBlock - RDA_MAX_LAG, newNumClients, clients, SC->verbosity);
+		}
+			
+		if (newNumClients < numClients) {
+			#ifndef PLATFORM_WIN32
+			fdMax = SC->server_socket;
+			for (i=0;i<newNum;i++) {
+				if (clients[i].sock > fdMax) fdMax = clients[i].sock;
 			}
+			#endif
+			pthread_mutex_lock(&SC->mutex);
+			SC->num_clients = numClients = newNumClients;
+			pthread_mutex_unlock(&SC->mutex);
+		}
+		if (numClients == 0) {
+			/* no clients any more - wait */
+			opState = 0;
 		}
 
 		/* Ok, (client) network stuff is done, let's see if there is more data */
@@ -784,45 +797,116 @@ void *_rdaserver_thread(void *arg) {
 				newBlock = curNum.nsamples > lastNum.nsamples || curNum.nevents > lastNum.nevents;
 			}
 			
-			/* printf("after wait: %i %i\n", curNum.nsamples, curNum.nevents); */
-			if (typeOk && newBlock) {
-				/* There's new data to stream out */
-				rda_buffer_item_t *item;
-								
-				if (SC->verbosity > 5) {
-					printf("Trying to get data [%i;%i), events [%i;%i)\n", lastNum.nsamples, curNum.nsamples, lastNum.nevents, curNum.nevents); 
-				}
+			if (newBlock && SC->verbosity > 5) {
+				printf("New samples/events: %i, %i (Total: %i, %i)\n", 	curNum.nsamples-lastNum.nsamples, 
+																		lastNum.nevents-curNum.nevents,
+																		curNum.nsamples, curNum.nevents); 
+			}			
+			
+			/* 	In case the new number of samples is smaller than what we had so far,  
+				we need to send a STOP packet to all clients and later re-read the header 
+				information.
+			*/
+			if (curNum.nsamples < lastNum.nsamples) {
+				rda_buffer_item_t *stopItem;
+			
+				free(startItem->data);
+				free(startItem);
+				startItem = NULL;
 				
-				item = rda_aux_get_samples_and_markers(SC->ft_buffer, &lastNum, &curNum, numBlock, SC->use16bit);
-				if (item != NULL) {
+				if (opState == 1) {
+					if (SC->verbosity > 4) {
+						printf("Sample count in FieldTrip buffer decreased, sending STOP packet to all clients.\n");
+					}
+
+					/* if currently running with clients, send STOP packet */
+					stopItem = rda_aux_alloc_item(sizeof(rda_msg_hdr_t));
+					if (stopItem == NULL) {
+						fprintf(stderr, "Out of memory\n");
+						break;
+					}			
+					
+					/* First add a STOP message to be sent to the list */
+					memcpy(stopItem->data, _rda_guid, sizeof(_rda_guid));
+					((rda_msg_hdr_t *) stopItem->data)->nSize = sizeof(rda_msg_hdr_t);
+					((rda_msg_hdr_t *) stopItem->data)->nType = RDA_STOP_MSG;
+					stopItem->blockNumber = numBlock++;
+					stopItem->next = NULL;	/* restart from opState=0 here */
+					latestItem = stopItem;
+			
+					/* Add stop item to data packet list */
 					if (firstDataItem == NULL) {
-						firstDataItem = item;
+						firstDataItem = stopItem;
 					} else {
 						rda_buffer_item_t *last = firstDataItem;
-						while (last->next != NULL) last = last->next;
-						last->next = item;
+						while (last->next != NULL) {
+							last = last->next;
+						}
+						last->next = stopItem;
 					}
-					
+					/* ... and also add it to clients that are currently waiting */
 					for (i=0;i<numClients;i++) {
 						if (clients[i].item == NULL) {
-							if (SC->verbosity>6) {
-								printf("Adding new job for client %i\n", clients[i].sock);
-							}
-							clients[i].item = item;
-							item->refCount++;
+							clients[i].item = stopItem;
+							stopItem->refCount++;
 						}
 					}
-					lastNum = curNum;
-					numBlock++;
+					/* switch to waiting-for-stop operation mode */
+					opState = 2;
 				} else {
-					printf("Could not get data or allocate memory\n");
+					if (SC->verbosity > 4) {
+						printf("Sample count in FieldTrip buffer decreased, will re-read header.\n");
+					}
+				}
+			}
+			
+			if (opState != 1) {
+				/* if not running, just take note of the updated quantities */
+				lastNum = curNum;
+			} else {
+				/* If the type is right (for 16 bit servers) AND we've got a new block,
+					then read this block and start streaming it out
+				*/
+				if (typeOk && newBlock && opState==1) {
+					/* There's new data to stream out */
+					rda_buffer_item_t *item;
+				
+					item = rda_aux_get_samples_and_markers(SC->ft_buffer, &lastNum, &curNum, numBlock, SC->use16bit);
+					if (item != NULL) {
+						if (firstDataItem == NULL) {
+							firstDataItem = item;
+						} else {
+							rda_buffer_item_t *last = firstDataItem;
+							while (last->next != NULL) last = last->next;
+							last->next = item;
+						}
+						for (i=0;i<numClients;i++) {
+							if (clients[i].item == NULL) {
+								if (SC->verbosity>6) {
+									printf("Adding new job for client %i\n", clients[i].sock);
+								}
+								clients[i].item = item;
+								item->refCount++;
+							}
+						}
+						lastNum = curNum;
+						latestItem = item;
+						/* modify startItem's block number (for new clients),
+						   then increase block number
+						*/
+						startItem->blockNumber = numBlock++;
+					} else {
+						fprintf(stderr, "Could not get data from FT buffer or allocate memory\n");
+					}
 				}
 			}
 		}
 		
+		
 		/* just for debugging - this will be removed */
 		if (0) {
 			rda_buffer_item_t *item = firstDataItem;
+			
 			while (item!=NULL) {
 				printf("Item at 0x%lX has refcount %i and points at 0x%lX\n", (long) (void *) item,  item->refCount, (long) (void *) item->next);
 				item = item->next;
@@ -832,15 +916,20 @@ void *_rdaserver_thread(void *arg) {
 		/* Done with the network-specific stuff, now clean up the data items */
 		while (firstDataItem != NULL && firstDataItem->refCount == 0) { 
 			rda_buffer_item_t *next = firstDataItem->next;
-			if (firstDataItem!=startItem) {
-				free(firstDataItem->data);
-				free(firstDataItem);
-			}
-			if (startItem != NULL && startItem->next == firstDataItem) {	
-				startItem->next = next;
-			}
+			free(firstDataItem->data);
+			free(firstDataItem);
 			firstDataItem = next;
 		}
+		
+		if (firstDataItem == NULL) {
+			latestItem = NULL;
+			if (opState == 2) {
+				opState = 0;
+			}
+		}
+		
+		/* Update the startItem's (=header) next pointer */
+		if (startItem != NULL) startItem->next = latestItem;
 	}		
 	/* shutdown clients */
 	for (i=0;i<numClients;i++) {

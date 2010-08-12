@@ -33,7 +33,6 @@ typedef int SOCKET;
 #define FT_ERR_SOCKET       2
 #define FT_ERR_THREADING    3
 
-
 /** 'select' cannot handle more than 64 elements on Windows, but this
 	should really be enough for all practical purposes. Depending on
 	the sampling rate and number of channels, you would probably hit
@@ -42,6 +41,9 @@ typedef int SOCKET;
 	NEVER set the following number to more than	63!!!
 */
 #define RDA_MAX_NUM_CLIENTS  32
+
+/** Number of blocks any client can lag behind before being disconnected */
+#define RDA_MAX_LAG 5
  
 /** RDA server control structure for starting, inspecting, and stopping a server */
 typedef struct {
@@ -62,6 +64,7 @@ typedef struct {
 typedef struct rda_buffer_item {
 	void *data;						/**< Points to complete RDA packet */
 	size_t size;					/**< Size of the packet (=allocated memory block) */
+	int blockNumber;				/**< Number of this data block (or -1 for start packet) */
 	unsigned int refCount;			/**< Reference count (multiple clients get the same data) */
 	struct rda_buffer_item *next;	/**< Next item in list or NULL */
 } rda_buffer_item_t;
