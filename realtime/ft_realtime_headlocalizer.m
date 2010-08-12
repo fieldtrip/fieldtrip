@@ -52,7 +52,11 @@ clear read_header
 hdr = read_header(cfg.headerfile, 'cache', true);
 
 % define a subset of channels for reading, only "headloc" type channels are relevant
-chanindx = strmatch('headloc', chantype(hdr));
+if strcmp(cfg.dataset, 'buffer://odin:1972');
+    chanindx = 1:9; % odin buffer specific
+else
+    chanindx = strmatch('headloc', chantype(hdr));
+end
 
 if isempty(chanindx)
     error('the data does not seem to have headlocalization channels');
