@@ -429,21 +429,21 @@ cfg.version.id = '$Id$';
 
 % apply the updated trial definition on the data
 
-if hasdata
-  tmpcfg     = [];
-  tmpcfg.trl = cfg.trl;
-  data       = ft_redefinetrial(tmpcfg,data);
-  % remember the configuration details, this overwrites the stored configuration of redefinetrial
-  data.cfg = cfg;
-  if isfield(data, 'offset')
-    data = rmfield(data, 'offset');
-  end
-  % return the data instead of the cfg
-  cfg = data;
-else
-  if isempty(cfg.trl)
+if isempty(cfg.trl)
     error('No trials left after artifact rejection.')
-  end
+else  
+    if hasdata
+        tmpcfg     = [];
+        tmpcfg.trl = cfg.trl;
+        data       = ft_redefinetrial(tmpcfg,data);
+        % remember the configuration details, this overwrites the stored configuration of redefinetrial
+        data.cfg = cfg;
+        if isfield(data, 'offset')
+            data = rmfield(data, 'offset');
+        end
+        % return the data instead of the cfg
+        cfg = data;
+    end
 end
 
 % if nargin>1
