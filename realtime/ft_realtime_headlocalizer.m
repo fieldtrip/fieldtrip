@@ -105,7 +105,7 @@ while true
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         % put the data in a fieldtrip-like raw structure
-        data.trial{1} = dat;
+        data.trial{1} = double(dat);
         %data.time{1}  = offset2time(begsample, hdr.Fs, endsample-begsample+1);
         data.time{1}  = (double(begsample) + (0:(double(endsample-begsample))))/hdr.Fs;
         data.label    = hdr.label(chanindx);
@@ -476,7 +476,7 @@ while true
         end
         
         % show current timesample
-        str = sprintf('time = %d s\n', round(mean(data.time{1})));
+        str = sprintf('Press CTRL+C to stop, time = %d s\n', round(mean(data.time{1})));
         title(str);
         fprintf(str);
         
