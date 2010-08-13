@@ -205,10 +205,13 @@ switch submethod
   case 'dics_power'
     % only compute power of a dipole at the grid positions
     for i=1:size(dip.pos,1)
-      if isfield(dip, 'leadfield')
+      if isfield(dip, 'leadfield') && isfield(dip, 'mom')
         % reuse the leadfield that was previously computed
-        lf = dip.leadfield{i};
-      elseif isfield(dip, 'mom')
+        lf = dip.leadfield{i} * dip.mom(:,i);
+      elseif isfield(dip, 'leadfield') && ~isfield(dip, 'mom')
+        % reuse the leadfield that was previously computed
+        lf = dip.leadfield{i};        
+      elseif ~isfield(dip, 'leadfield') && isfield(dip, 'mom')
         % compute the leadfield for a fixed dipole orientation
         lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
       else
