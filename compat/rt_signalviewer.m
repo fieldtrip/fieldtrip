@@ -13,5 +13,6 @@ function varargout = funname(varargin)
 
 prefix    = 'ft_realtime';
 funname   = mfilename;
+funname   = funname(3:end); % strip the rt_ prefix, keep the underscore
 funhandle = str2func([prefix funname]);
 [varargout{1:nargout}] = funhandle(varargin{:});
