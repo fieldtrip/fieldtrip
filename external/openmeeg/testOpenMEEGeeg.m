@@ -8,6 +8,14 @@ pos = [0 0 70];
 
 %% Set the radius and conductivities of each of the compartments
 
+% 4 Layers
+r = [85 88 92 100];
+c = [1 1/20 1/80 1];
+
+rdms = run_bem_computation(r,c,pos);
+
+assertTrue(all(rdms < 0.12))
+
 % 3 Layers
 r = [88 92 100];
 c = [1 1/80 1];

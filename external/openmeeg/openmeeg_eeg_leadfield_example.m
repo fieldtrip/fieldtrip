@@ -11,6 +11,10 @@ close all
 clear
 clc
 
+% % 4 Layers
+% r = [85 88 92 100];
+% c = [1 1/20 1/80 1];
+
 % 3 Layers
 r = [88 92 100];
 c = [1 1/80 1];
@@ -33,7 +37,7 @@ sens.pnt = max(r) * pnt;
 sens.label = {};
 nsens = size(sens.pnt,1);
 for ii=1:nsens
-  sens.label{ii} = sprintf('vertex%03d', ii);
+    sens.label{ii} = sprintf('vertex%03d', ii);
 end
 
 %% Set the position of the probe dipole
