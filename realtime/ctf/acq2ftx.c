@@ -53,7 +53,7 @@ typedef struct {
 	int messageId;
 	int sampleNumber;
 	int numSamples;
-	int numChannels;
+	int numChannels;	/* Note: this is not the proper number of channels - bug in Acq */
 	int data[28160 + OVERALLOC];
 } ACQ_OverAllocType;
 
@@ -91,15 +91,16 @@ ACQ_OverAllocType intPackets[INT_RB_SIZE];
 OutputConfig outConf[MAX_OUT];
 int numOutputs = 0;
 
-double gain[MAX_CHANNEL];
-int sensType[MAX_CHANNEL];
-int triggerChannel[MAX_TRIGGER];
+unsigned char channelSensType[MAX_CHANNEL];
+double channelGainV[MAX_CHANNEL];
 char channelNames[MAX_CHANNEL][32];
 int channelNameLen[MAX_CHANNEL];
+
+int numTriggerChannels;
+int triggerChannel[MAX_TRIGGER];
 char *triggerChannelName[MAX_TRIGGER];	/* points into channelNames */
 int triggerChannelNameLen[MAX_TRIGGER];
 int lastValue[MAX_TRIGGER];
-int numTriggerChannels;
 
 struct {
 	datadef_t ddef;
@@ -478,6 +479,9 @@ void *dataToFieldTripThread(void *arg) {
 	int numChannels = 0, numSamples;
 	int warningGiven = 0;
 	
+	/*  Initialize event chains. The second one (ECd) is for duplicating
+		the first (EC) such that sample indices can be modified for down-sampling.
+	*/
 	EC.evs = NULL;
 	EC.sizeAlloc = 0;
 	ECd.evs = NULL;
@@ -568,6 +572,7 @@ void *dataToFieldTripThread(void *arg) {
 	printf("Leaving converter thread...\n");
 	close(mySockets[1]);
 	if (EC.sizeAlloc > 0) free(EC.evs);
+	if (ECd.sizeAlloc > 0) free(ECd.evs);
 	return NULL;
 }
 
@@ -734,16 +739,16 @@ ft_chunk_t *handleRes4(const char *dsname, int *numChannels, float *fSample) {
 				
 		if (i<MAX_CHANNEL) {
 			int j;
-			/* turn around big-endian gain value */
+			/* turn around big-endian gain values */
 			for (j=0;j<8;j++) {
 				sensGain.bytes[7-j] = chunk->data[offset + 8+j + 1328*i];
 				qGain.bytes[7-j]    = chunk->data[offset + 16+j + 1328*i];
 				ioGain.bytes[7-j]   = chunk->data[offset + 24+j + 1328*i];
 			}
 
-			sensType[i] = ct;
-			gain[i] = ioGain.value / (qGain.value * sensGain.value);
-			printf("%i: %s Gain %f\n", i, channelNames[i], gain[i]);
+			channelSensType[i] = ct;
+			channelGainV[i] = ioGain.value / (qGain.value * sensGain.value);
+			printf("Ch %i: %s  Gain: %g\n", i+1, channelNames[i], channelGainV[i]);
 		}
 		if (ct == CTF_TRIGGER_TYPE) {
 			if (numTriggerChannels < MAX_TRIGGER) {
@@ -816,15 +821,16 @@ void matchChannels(int numChannels) {
 		OutputConfig *oc = &outConf[i];
 		if (oc->numChannelsGiven <= 0) continue;
 
-		printf("%i. output definition:\n", i);
+		printf("%i. output definition:\n", i+1);
 		
 		oc->numChannelsFound = 0;
 		for (j=0;j<oc->numChannelsGiven;j++) {
 			for (k=0;k<numChannels;k++) {
 				if (!strcmp(channelNames[k], oc->channelNames[j])) {
 					oc->channels[oc->numChannelsFound++] = k;
-					printf("Channel %s has gain %f\n", channelNames[k], gain[k]);
-		
+					/* 
+					printf("Channel %s has gain %f\n", channelNames[k], channelGainV[k]); 
+					*/
 				}
 			}
 		}
@@ -942,7 +948,7 @@ void writeSamples(OutputConfig *oc, const ACQ_OverAllocType *pack) {
 			for (j=oc->skipSamples; j<pack->numSamples; j+=oc->downSample) {
 				const int *source_j = pack->data + j*pack->numChannels;
 				for (i=0;i<nchans;i++) {
-					*dest++ = gain[i]*source_j[i];
+					*dest++ = channelGainV[i]*source_j[i];
 				}
 				++nsamp;
 			}
@@ -953,7 +959,7 @@ void writeSamples(OutputConfig *oc, const ACQ_OverAllocType *pack) {
 				const int *source_j = pack->data + j*pack->numChannels;
 				for (i=0;i<nchans;i++) {
 					int ch = oc->channels[i];
-					*dest++ = gain[ch]*source_j[ch];
+					*dest++ = channelGainV[ch]*source_j[ch];
 				}
 				++nsamp;
 			}
