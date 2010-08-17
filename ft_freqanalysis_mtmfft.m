@@ -404,9 +404,9 @@ if fftflg
   % correct the 0 Hz bin if present
   if ~isempty(hasdc)
     if keeprpt>1
-      fourierspctrm(:,:,hasdc,:) = fourierspctrm(:,:,hasdc,:)./2;      
+      fourierspctrm(:,:,hasdc,:) = fourierspctrm(:,:,hasdc,:)./sqrt(2);      
     else
-      fourierspctrm(:,hasdc,:) = fourierspctrm(:,hasdc,:)./2;
+      fourierspctrm(:,hasdc,:) = fourierspctrm(:,hasdc,:)./sqrt(2);
     end
   end
   freq.fourierspctrm  = fourierspctrm;
