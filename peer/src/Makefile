@@ -16,7 +16,6 @@ LIBS 	 = -lm -lpthread -lpeer
 CFLAGS	 = $(INCPATH) -Wunused -pedantic -O1 -fPIC -fpack-struct
 # CXXFLAGS = $(INCPATH) -Wunused -pedantic -O1
 CFLAGS	 = $(INCPATH) -Wall -pthread
-TARGET   = test_announce test_discover test_send test_recv peerslave
 
 ifeq "$(PLATFORM)" "x86_64-redhat-linux"
 	# this is only for the peerslave command line executable -> mentat001
@@ -46,17 +45,19 @@ ifeq "$(PLATFORM)" "i686-apple-darwin10"
     CFLAGS	 = $(INCPATH) -Wall -pthread -arch i386
 endif
 
+TARGET   = test_announce test_discover test_send test_recv peerslave.$(MATLABARCH)
+
 ##############################################################################
 
 all: $(TARGET)
 
-libpeer.a: tcpserver.o tcpsocket.o discover.o announce.o expire.o util.o extern.o peerinit.o fairshare.o security.o localhost.o
+libpeer.a: tcpserver.o tcpsocket.o discover.o announce.o expire.o util.o extern.o peerinit.o fairshare.o security.o localhost.o smartmem.o
 	ar rv $@ $^
 
 peer: peer.o libpeer.a
 	$(CC) $(CFLAGS) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
 
-peerslave: peerslave.o libpeer.a
+peerslave.$(MATLABARCH): peerslave.o libpeer.a
 	$(CC) $(CFLAGS) $(LIBPATH) $(MATLABLIBS) -o ../$@ $^ $(LIBS)
 
 test_send: test_send.o libpeer.a

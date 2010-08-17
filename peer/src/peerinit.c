@@ -121,6 +121,10 @@ void peerinit(void *arg) {
 
 		pthread_mutex_unlock(&mutexhost);
 
+		pthread_mutex_lock(&mutexsmartmem);
+		smartmem.enabled  = 1;
+		pthread_mutex_unlock(&mutexsmartmem);
+
 		pthread_mutex_lock(&mutexfairshare);
 		fairshare.n             = 0;
 		fairshare.t0            = time(NULL);

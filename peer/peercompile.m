@@ -49,7 +49,11 @@ if ispc
     % the variables 'extra_cflags' and 'ldflags' specific to your compiler,
     % or you can add your own compiler flags.
     
-    extra_cflags = '-I../pthreads-win32/include';
+    if strcmp(computer, 'PCWIN')
+        extra_cflags = '-I../pthreads-win32/include';
+    elseif strcmp(computer, 'PCWIN64')
+        extra_cflags = '-I../pthreads-win32/include';
+    end
     suffix = 'obj';
     
     if nargin<1	        % this is just to make sure the switch statement works
@@ -65,7 +69,11 @@ if ispc
             % For MinGW/Gnumex, it seems to be easier to just directly refer to the archives
             ldflags = '../pthreads-win32/lib/libpthreadGC2.a C:/mingw/lib/libws2_32.a';
         case 'VC'
-            ldflags = '-L../src -L../pthreads-win32/lib -lpthreadVC2 ';
+            if strcmp(computer, 'PCWIN')
+                ldflags = '-L../src -L../pthreads-win32/lib -lpthreadVC2';
+            elseif strcmp(computer, 'PCWIN64')
+                ldflags = '-L../src -L../pthreads-win64/lib -lpthreadVC64';
+            end
         otherwise
             error 'On a PC, you must call this function with a string argument to select a compiler';
     end
@@ -80,20 +88,48 @@ end
 % its name here (without the .c suffix)
 helpers = {'announce' 'discover' 'expire' 'extern' ...
     'fairshare' 'peerinit' 'util' 'tcpserver' 'tcpsocket' ...
-    'security' 'localhost'};
+    'security' 'localhost' 'smartmem'};
+
+headers = {'compiler' 'peer' 'platform_includes' 'extern' 'platform' ...
+    'swapbytes'};
 
 %%%% Please do not change anything below this line %%%%
 
 % this will become the list of objects files for inclusion during linking
 allObjects = '';
 
+% get the timestamp of each file
+for i=1:length(helpers)
+    helperinfo(i) = dir([helpers{i} '.c']);
+end
+helperdate = [helperinfo.datenum];
+for i=1:length(headers)
+    headerinfo(i) = dir([headers{i}, '.h']);
+end
+headerdate = [headerinfo.datenum];
+
 % This is for compiling all the helper functions (no linking yet).
 for i=1:length(helpers)
-    fprintf(1,'Compiling helper functions in %s ...\n', helpers{i});
-    cmd = sprintf('mex -c %s %s %s.c', cflags, extra_cflags, helpers{i});
-    disp(cmd);
-    eval(cmd);
+
+    % get the timestamp of the object file
+    objinfo = dir([helpers{i}, '.' suffix]);
+    if isempty(objinfo)
+        objdate = -inf;
+    else
+        objdate = objinfo.datenum;
+    end
+    recompile = false;
+    recompile = recompile | helperdate(i)>objdate;
+    recompile = recompile | any(headerdate>objdate);
     
+    if ~recompile
+        fprintf(1,'%s.%s is up to date\n', helpers{i}, suffix);
+    else
+        fprintf(1,'Compiling helper functions in %s ...\n', helpers{i});
+        cmd = sprintf('mex -c %s %s %s.c', cflags, extra_cflags, helpers{i});
+        disp(cmd);
+        eval(cmd);
+    end
     % append newly created object file to the list of files we need to link
     allObjects = sprintf('%s %s.%s', allObjects, helpers{i}, suffix);
 end

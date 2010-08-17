@@ -205,6 +205,10 @@ void fairshare_reset   (void);
 int  fairshare_check   (float timreq, int hostid);
 void fairshare_history (jobdef_t *job);
 
+/* fnuctions from smartmem.c */
+int meminfo(int *MemTotal, int *MemFree);
+int smartmem_avail(void);
+
 /* functions from security.c */
 int security_check(hostdef_t *host);
 int ismember_userlist(char *);
@@ -222,6 +226,7 @@ int  jobcount(void);
 int  peercount(void);
 int  hoststatus(void);
 int  localhost(const char *ipaddr);
+
 
 #ifdef __cplusplus
 }

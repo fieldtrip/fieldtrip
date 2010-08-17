@@ -74,6 +74,8 @@ int main(int argc, char *argv[]) {
 						{"allowhost", required_argument, 0, 'g'}, /* single or multiple string argument */
 						{"allowgroup",required_argument, 0, 'h'}, /* single or multiple string argument */
 						{"matlab",    required_argument, 0, 'i'}, /* single string argument */
+						{"smartmem",  required_argument, 0, 'j'}, /* numeric, 0 or 1 */
+						{"fairshare", required_argument, 0, 'k'}, /* numeric, 0 or 1 */
 						{0, 0, 0, 0}
 				};
 				/* getopt_long stores the option index here. */
@@ -102,6 +104,9 @@ int main(int argc, char *argv[]) {
 								pthread_mutex_lock(&mutexhost);
 								host->memavail = atol(optarg);
 								pthread_mutex_unlock(&mutexhost);
+								pthread_mutex_lock(&mutexsmartmem);
+								smartmem.enabled = 0;
+								pthread_mutex_unlock(&mutexsmartmem);
 								break;
 
 						case 'b':
@@ -175,6 +180,21 @@ int main(int argc, char *argv[]) {
 								printf ("option --matlab with value `%s'\n", optarg);
 								startcmd = malloc(STRLEN);
 								strncpy(startcmd, optarg, STRLEN);
+								break;
+
+						case 'j':
+								printf ("option --smartmem with value `%s'\n", optarg);
+								pthread_mutex_lock(&mutexsmartmem);
+								smartmem.enabled = atol(optarg);
+								pthread_mutex_unlock(&mutexsmartmem);
+								break;
+
+						case 'k':
+								printf ("option --fairshare with value `%s'\n", optarg);
+								pthread_mutex_lock(&mutexfairshare);
+								fairshare.enabled = atol(optarg);
+								pthread_mutex_unlock(&mutexfairshare);
+
 								break;
 
 						case '?':

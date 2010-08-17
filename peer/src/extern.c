@@ -54,6 +54,13 @@ grouplist_t *grouplist = NULL;
 pthread_mutex_t mutexhostlist = PTHREAD_MUTEX_INITIALIZER;
 hostlist_t *hostlist = NULL;
 
+pthread_mutex_t mutexsmartmem;
+struct {
+/*		int minavail; */
+/*		int maxavail; */
+		int enabled;
+} smartmem;
+
 pthread_mutex_t mutexfairshare = PTHREAD_MUTEX_INITIALIZER;
 struct {
 		int    n;

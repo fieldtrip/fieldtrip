@@ -7,7 +7,11 @@
 
 int localhost(const char *ipaddr)
 {
-		int family, s, status = 0, verbose = 0;
+#if defined (PLATFORM_WIN32) || defined(PLATFORM_WIN64)
+    return 0;
+
+#else
+    int family, s, status = 0, verbose = 0;
 		struct ifaddrs *ifaddr, *ifa;
 		char host[NI_MAXHOST];
 
@@ -46,5 +50,6 @@ int localhost(const char *ipaddr)
 		}
 
 		return status;
+#endif
 }
 

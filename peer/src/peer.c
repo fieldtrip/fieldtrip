@@ -306,6 +306,10 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				mexPrintf("host.id         = %d\n", host->id);
 				pthread_mutex_unlock(&mutexhost);
 
+				pthread_mutex_lock(&mutexsmartmem);
+				mexPrintf("smartmem.enabled = %d\n", smartmem.enabled);
+				pthread_mutex_unlock(&mutexsmartmem);
+
 				pthread_mutex_lock(&mutexfairshare);
 				mexPrintf("fairshare.enabled = %d\n", fairshare.enabled);
 				pthread_mutex_unlock(&mutexfairshare);
@@ -380,6 +384,22 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				host->status = (UINT32_T)mxGetScalar(prhs[1]);
 				pthread_mutex_unlock(&mutexhost);
 				announce_once();
+		}
+
+		/****************************************************************************/
+		else if (strcasecmp(command, "smartmem")==0) {
+				/* the input arguments should be "smartmem <0|1> */
+				if (nrhs<2)
+						mexErrMsgTxt ("invalid number of input arguments");
+
+				if (!mxIsNumeric(prhs[1]))
+						mexErrMsgTxt ("invalid input argument #2");
+				if (!mxIsScalar(prhs[1]))
+						mexErrMsgTxt ("invalid input argument #2");
+
+				pthread_mutex_lock(&mutexsmartmem);
+				smartmem.enabled = mxGetScalar(prhs[1]);
+				pthread_mutex_unlock(&mutexsmartmem);
 		}
 
 		/****************************************************************************/
