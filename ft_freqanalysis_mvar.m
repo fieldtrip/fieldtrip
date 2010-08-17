@@ -123,4 +123,5 @@ for k = 1:nfoi
 end
 h   = sqrt(2).*h; %account for the negative frequencies, normalization necessary for
 %comparison with non-parametric (fft based) results in fieldtrip
+%FIXME probably the normalization for the zero Hz bin is incorrect
 zar = zar./sqrt(2);

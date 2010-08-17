@@ -421,18 +421,43 @@ freq.label      = data.label(sgnindx);
 freq.dimord     = dimord;
 freq.freq       = cfg.foi;
 freq.time       = toi;
+hasdc           = find(freq.freq==0);
 
 if powflg
-    freq.powspctrm  = powspctrm;
+  % correct the 0 Hz bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
+  if ~isempty(hasdc)
+    if keeprpt>1
+      powspctrm(:,:,hasdc,:) = powspctrm(:,:,hasdc,:)./2;      
+    else
+      powspctrm(:,hasdc,:) = powspctrm(:,hasdc,:)./2;
+    end
+  end
+  freq.powspctrm  = powspctrm;
 end
 
 if csdflg
-    freq.labelcmb   = cfg.channelcmb;
-    freq.crsspctrm  = crsspctrm;
+  % correct the 0 Hz bin if present
+  if ~isempty(hasdc)
+    if keeprpt>1
+      crsspctrm(:,:,hasdc,:) = crsspctrm(:,:,hasdc,:)./2;      
+    else
+      crsspctrm(:,hasdc,:) = crsspctrm(:,hasdc,:)./2;
+    end
+  end
+  freq.labelcmb   = cfg.channelcmb;
+  freq.crsspctrm  = crsspctrm;
 end
 
 if fftflg
-    freq.fourierspctrm  = fourierspctrm;
+  % correct the 0 Hz bin if present
+  if ~isempty(hasdc)
+    if keeprpt>1
+      fourierspctrm(:,:,hasdc,:) = fourierspctrm(:,:,hasdc,:)./2;      
+    else
+      fourierspctrm(:,hasdc,:) = fourierspctrm(:,hasdc,:)./2;
+    end
+  end
+  freq.fourierspctrm  = fourierspctrm;
 end
 
 if calcdof

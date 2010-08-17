@@ -279,11 +279,28 @@ end
 % collect the results
 freq.label      = data.label(sgnindx);
 freq.dimord     = dimord;
-freq.powspctrm  = powspctrm;
 freq.freq       = cfg.foi;
 freq.time       = cfg.toi;
+hasdc           = find(freq.freq==0); 
+% correct the 0 Hz bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
+if ~isempty(hasdc)
+  if keeprpt>1
+    powspctrm(:,:,hasdc,:) = powspctrm(:,:,hasdc,:)./2;      
+  else
+    powspctrm(:,hasdc,:) = powspctrm(:,hasdc,:)./2;
+  end
+end
+freq.powspctrm  = powspctrm;
 
 if csdflg
+  % correct the 0 Hz bin if present
+  if ~isempty(hasdc)
+    if keeprpt>1
+      crsspctrm(:,:,hasdc,:) = crsspctrm(:,:,hasdc,:)./2;      
+    else
+      crsspctrm(:,hasdc,:) = crsspctrm(:,hasdc,:)./2;
+    end
+  end
   freq.labelcmb   = cfg.channelcmb;
   freq.crsspctrm  = crsspctrm;
 end
