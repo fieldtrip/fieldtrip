@@ -118,7 +118,7 @@ export LD_LIBRARY_PATH=$MATLABPATH/bin/$MATLABARCH/
 function check_peerslave {
 	PEERPID=$1
 	if [[ -d /proc/$PEERPID ]] ; then
-		if ( grep -q peerslave /proc/$PEERPID/cmdline ) ; then
+		if ( grep -s -q peerslave /proc/$PEERPID/cmdline ) ; then
 			return 0
 		else
 			return 1
@@ -137,17 +137,27 @@ function start_peerslave {
 	if [[ -z "$SLAVENUM" ]] ; then
 		SLAVENUM=0
 	fi
+
 	EXECUTABLE=$EXECDIR/peerslave.$MATLABARCH
-	OPTIONS=
+	if [ ! -e $EXECUTABLE ] ; then
+		echo error: could not locate peerslave command-line executable
+		exit 1
+	fi
+
 	if [[ "$1" -eq "auto" ]] ; then
 		OPTIONS="--smartmem 1"
 	else
 		OPTIONS="--smartmem 0 --memavail $1"
 	fi
+
 	PIDFILE=$PIDDIR/peerslave.$SLAVENUM
 	$EXECUTABLE $OPTIONS &
 	PID=$!
-	echo -n $PID > $PIDFILE
+	if ( check_peerslave $PID ) ; then
+		echo -n $PID > $PIDFILE
+	else
+		echo warning: failed to start peerslave $SLAVENUM
+	fi
 }
 
 ##############################################################################
