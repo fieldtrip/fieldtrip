@@ -799,7 +799,7 @@ void *_rdaserver_thread(void *arg) {
 			
 			if (newBlock && SC->verbosity > 5) {
 				printf("New samples/events: %i, %i (Total: %i, %i)\n", 	curNum.nsamples-lastNum.nsamples, 
-																		lastNum.nevents-curNum.nevents,
+																		curNum.nevents-lastNum.nevents,
 																		curNum.nsamples, curNum.nevents); 
 			}			
 			
