@@ -767,7 +767,7 @@ void *_rdaserver_thread(void *arg) {
 		if (newNumClients < numClients) {
 			#ifndef PLATFORM_WIN32
 			fdMax = SC->server_socket;
-			for (i=0;i<newNum;i++) {
+			for (i=0;i<newNumClients;i++) {
 				if (clients[i].sock > fdMax) fdMax = clients[i].sock;
 			}
 			#endif
