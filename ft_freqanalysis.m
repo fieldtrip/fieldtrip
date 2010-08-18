@@ -126,7 +126,6 @@ else
   if ~isfield(cfg, 'keeptrials'),       cfg.keeptrials       = 'no';         end
   if ~isfield(cfg, 'calcdof'),          cfg.calcdof          = 'no';         end
   
-  if ~isfield(cfg, 'pad'),              cfg.pad              = 'maxperlen';  end
   if ~isfield(cfg, 'channel'),          cfg.channel          = 'all';        end
   if ~isfield(cfg, 'precision'),        cfg.precision        = 'double';     end
   if ~isfield(cfg, 'output'),           cfg.output           = 'powandcsd';  end
