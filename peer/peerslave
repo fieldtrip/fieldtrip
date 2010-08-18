@@ -5,8 +5,10 @@
 source /etc/rc.d/init.d/functions
 
 COMMAND=$1
-PIDDIR=.
+PIDDIR=/tmp/run
 EXECDIR=.
+
+mkdir -p $PIDDIR
 
 PLATFORM=`gcc -dumpmachine`
 HOSTNAME=`hostname -s`
