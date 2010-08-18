@@ -203,7 +203,7 @@ else
   end
   
   % determine trail characteristics
-  ntrials = size(data.trial,2);
+  ntrials = numel(data.trial);
   trllength = zeros(1, ntrials);
   for itrial = 1:ntrials
     trllength(itrial) = size(data.trial{itrial}, 2);
