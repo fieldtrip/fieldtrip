@@ -213,7 +213,6 @@ else
     cfg.pad = padding/data.fsample;
   else
     padding = cfg.pad*data.fsample;
-    cfg.pad = padding;
     if padding<max(trllength)
       error('the specified padding is too short');
     end
