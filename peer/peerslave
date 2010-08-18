@@ -2,8 +2,18 @@
 #
 # helper script to start multiple peers in slave mode
 
-command=$1
+source /etc/rc.d/init.d/functions
 
+COMMAND=$1
+PIDDIR=.
+EXECDIR=.
+
+PLATFORM=`gcc -dumpmachine`
+HOSTNAME=`hostname -s`
+
+##############################################################################
+# machine definitions
+##############################################################################
 # 512MB =  536870912
 # 1GB   = 1073741824
 # 2GB   = 2147483648 
@@ -12,14 +22,16 @@ command=$1
 
 case "$HOSTNAME" in 
 mentat001|mentat002)
-    # has 16GB of RAM and 4 cores
+	# has 16GB of RAM, 2 CPUs and 4 cores in total
+	# Dual Core AMD Opteron(tm) Processor 270
 	peermem[0]="auto"
 	peermem[1]="auto"
 	peermem[2]="auto"
 	peermem[3]="auto"
 	;;
 mentat003|mentat004)
-    # has 32GB of RAM and 8 cores
+	# has 32GB of RAM, 2 CPUs and 8 cores in total
+	# Intel(R) Xeon(R) CPU E5520 @ 2.27GHz
 	peermem[0]="auto"
 	peermem[1]="auto"
 	peermem[2]="auto"
@@ -30,7 +42,7 @@ mentat003|mentat004)
 	peermem[7]="auto"
 	;;
 mentat005)
-    # has 48GB of RAM and 12 cores
+	# has 48GB of RAM, 2 CPUs and 12 cores in total
 	peermem[ 0]=8589934592
 	peermem[ 1]=8589934592
 	peermem[ 2]=4294967296
@@ -44,70 +56,199 @@ mentat005)
 	peermem[10]="auto"
 	peermem[11]="auto"
 	;;
+mentat068|mentat069)
+	# this is an old 32 bit machine which has 4GB of RAM, a single CPU with a single core
+	# Intel(R) Pentium(R) 4 CPU 3.20GHz
+	peermem[3]="auto"
+	;;
+mentat193|mentat194|mentat195|mentat196|mentat197|mentat198|mentat199|mentat200|mentat201|mentat202|mentat203|mentat204|mentat205|mentat206|mentat207|mentat208|mentat209|mentat210|mentat211|mentat212|mentat213|mentat214|mentat215|mentat216|mentat217|mentat218|mentat219|mentat220|mentat221|mentat222|mentat223|mentat224|mentat225|mentat226|mentat227|mentat228|mentat229|mentat230|mentat231|mentat232|mentat233|mentat234)
+	# has 8GB of RAM, one CPU and 4 cores
+	# Intel(R) Core(TM)2 Quad CPU Q9550 @ 2.83GHz
+	peermem[0]="auto"
+	peermem[1]="auto"
+	peermem[2]="auto"
+	peermem[3]="auto"
+	;;
+
+mentat235|mentat236|mentat237|mentat238|mentat239|mentat240|mentat241|mentat242|mentat243|mentat244|mentat245)
+	# has 8GB of RAM, one CPU and 4 cores
+	# Intel(R) Xeon(R) CPU W3530 @ 2.80GHz
+	peermem[0]="auto"
+	peermem[1]="auto"
+	peermem[2]="auto"
+	peermem[3]="auto"
+	;;
+*)
+	# the default configuration for all other machines is a single peerslave 
+	peermem[3]="auto"
+	;;
 esac
-
-##############################################################################
-
-PLATFORM=`gcc -dumpmachine`
-HOSTNAME=`hostname -s`
 
 case "$PLATFORM" in
 "x86_64-redhat-linux")
-    MATLABARCH=glnxa64
+	MATLABARCH=glnxa64
 	MATLABPATH=/opt/matlab77
 	;;
 "i386-redhad-linux")
-    MATLABARCH=glnx86
+	MATLABARCH=glnx86
 	MATLABPATH=/opt/matlab77
 	;;
 "i686-apple-darwin9")
-    MATLABARCH=maci
+	MATLABARCH=maci
 	MATLABPATH=/opt/matlab77
 	;;
 "i686-apple-darwin10")
-    MATLABARCH=maci
+	MATLABARCH=maci
 	MATLABPATH=/opt/matlab77
 	;;
 *)
-    MATLABARCH=unknown
+	MATLABARCH=unknown
 	MATLABPATH=unknown
 	;;
 esac
 
 export LD_LIBRARY_PATH=$MATLABPATH/bin/$MATLABARCH/ 
-EXECPATH=/home/common/matlab/fieldtrip/peer
-EXECUTABLE=$EXECPATH/peerslave.$MATLABARCH
-OPTIONS=
 
 ##############################################################################
+# functions
+##############################################################################
 
-case $command in
+function check_peerslave {
+	PEERPID=$1
+	if [[ -d /proc/$PEERPID ]] ; then
+		if ( grep -q peerslave /proc/$PEERPID/cmdline ) ; then
+			return 0
+		else
+			return 1
+		fi
+	else
+		return 1
+	fi
+}
+
+function start_peerslave {
+	MEMAVAIL=$1
+	SLAVENUM=$2
+	if [[ -z "$MEMAVAIL" ]] ; then
+		MEMAVAIL=auto
+	fi
+	if [[ -z "$SLAVENUM" ]] ; then
+		SLAVENUM=0
+	fi
+	EXECUTABLE=$EXECDIR/peerslave.$MATLABARCH
+	OPTIONS=
+	if [[ "$1" -eq "auto" ]] ; then
+		OPTIONS="--smartmem 1"
+	else
+		OPTIONS="--smartmem 0 --memavail $1"
+	fi
+	PIDFILE=$PIDDIR/peerslave.$SLAVENUM
+	$EXECUTABLE $OPTIONS &
+	PID=$!
+	echo -n $PID > $PIDFILE
+}
+
+##############################################################################
+# execution
+##############################################################################
+
+case $COMMAND in
+
 start)
 length=${#peermem[@]}
 index=0
 while [ "$index" -lt "$length" ] ; do
-	memavail=${peermem[$index]}
-	if [[ "$memavail" -eq "auto" ]] ; then
-		OPTIONS="--smartmem 1"
+	PIDFILE=$PIDDIR/peerslave.$index
+	if [[ -e $PIDFILE ]] ; then
+		echo warning: peerslave number $index appears already to be running with pid `cat $PIDFILE`
 	else
-		OPTIONS="--smartmem 0 --memavail $memavail"
+		echo starting peerslave number $index
+		start_peerslave ${peermem[$index]} $index
 	fi
-	eval $EXECUTABLE $OPTIONS &
-	peerstatus[$index]=$?
-	peerpid[$index]=$!
 	let "index = $index + 1"
 done
-#echo ${peermem[@]}
-#echo ${peerpid[@]}
-#echo ${peerstatus[@]}
+;;
+
+restart)
+# find the pid of each peerslave, see whether it still is running, if not start it again
+length=${#peermem[@]}
+index=0
+while [ "$index" -lt "$length" ] ; do
+	PIDFILE=$PIDDIR/peerslave.$index
+	if [[ -e $PIDFILE ]] ; then
+		PEERPID=`cat $PIDFILE`
+		if [[ -d /proc/$PEERPID ]] ; then
+			# the process is running fine
+			echo -n
+		else
+			# the process is not running any more
+			echo restarting peerslave number $index
+			start_peerslave ${peermem[$index]} $index
+		fi
+	else
+		# the process is not running any more
+		echo restarting peerslave number $index
+		start_peerslave ${peermem[$index]} $index
+	fi
+
+	let "index = $index + 1"
+done
+;;
+
+status)
+length=${#peermem[@]}
+index=0
+while [ "$index" -lt "$length" ] ; do
+	PIDFILE=$PIDDIR/peerslave.$index
+	if [[ -e $PIDFILE ]] ; then
+		PEERPID=`cat $PIDFILE`
+		if ( check_peerslave $PEERPID ) ; then
+			echo peerslave $index is running with pid $PEERPID
+		else
+			# the process is not running any more
+			echo peerslave $index seems to have stopped running
+		fi
+	else
+		# the process is not running any more
+		echo peerslave $index is not running
+	fi
+	let "index = $index + 1"
+done
 ;;
 
 stop)
-killall $EXECUTABLE
+# find the pid of each peerslave and kill it
+length=${#peermem[@]}
+index=0
+while [ "$index" -lt "$length" ] ; do
+	PIDFILE=$PIDDIR/peerslave.$index
+	if [[ -e $PIDFILE ]] ; then
+		PEERPID=`cat $PIDFILE`
+		if [[ -e /proc/$PEERPID ]] ; then
+			echo stopping peerslave number $index
+			rm -f $PIDFILE
+			kill $PEERPID
+		else
+			# the process is not running any more
+			rm -f $PIDFILE
+		fi
+	else
+		# the process is not running any more
+		echo -n
+	fi
+	let "index = $index + 1"
+done
+;;
+
+kill)
+killall -q peerslave.$MATLABARCH
+rm -f $PIDDIR/peerslave.[0-9]
+rm -f $PIDDIR/peerslave.[0-9][0-9]
+rm -f $PIDDIR/peerslave.[0-9][0-9][0-9]
 ;;
 
 *)
-echo Use as $0 "<start|stop>"
+echo Use as $0 "<start|stop|status|restart|kill>"
 ;;
 esac
 
