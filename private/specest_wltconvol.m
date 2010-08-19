@@ -54,7 +54,7 @@ dattime = ndatsample / fsample; % total time in seconds of input data
 
 
 % Zero padding
-if pad < dattime
+if round(pad * fsample) < ndatsample
   error('the padding that you specified is shorter than the data');
 end
 if isempty(pad) % if no padding is specified padding is equal to current data length
