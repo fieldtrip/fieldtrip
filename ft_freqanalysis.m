@@ -180,7 +180,13 @@ else
   cfg.channel = ft_channelselection(cfg.channel, data.label);
   if isfield(cfg, 'channelcmb')
     cfg.channelcmb = ft_channelcombination(cfg.channelcmb, data.label);
+    selchan = unique([cfg.channel(:); cfg.channelcmb(:)]);  
+  else
+    selchan = cfg.channel;
   end
+  
+  % subselect the required channels
+  data = selectdata(data, 'channel', selchan);
   
   % determine the corresponding indices of all channels
   chanind    = match_str(data.label, cfg.channel);
@@ -201,7 +207,7 @@ else
     end
   end
   
-  % determine trail characteristics
+  % determine trial characteristics
   ntrials = numel(data.trial);
   trllength = zeros(1, ntrials);
   for itrial = 1:ntrials
