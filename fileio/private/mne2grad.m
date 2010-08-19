@@ -133,7 +133,10 @@ if nEEG>0
     % channels (thanks to Rik Henson)
     
     dig_eeg = find([orig.dig.kind]==3);  % Find EEG digitisations
-    dig_eeg(1) = [];                     % Remove reference
+    
+    if ~isempty(dig_eeg)
+        dig_eeg(1) = [];                     % Remove reference
+    end
     
     chn_eeg = find([orig.chs.kind]==2);  % Find EEG channels
 
