@@ -76,6 +76,18 @@ switch type
     [B, A] = fir1(N, max(Fhp)/Fn, 'high');
 end  
 
+
+% SK: Check whether the calculated filter coefficients make sense.
+% If there are poles outside the unit circle, it will not be stable.
+% Might actually be worthwhile to check for sth. like 1-(1e-12) here.
+poles = roots(A);
+if any(abs(poles) >= 1)
+  poles
+  error(['Calculated filter coefficients have poles on or outside ' ...
+        'the unit circle and will not be stable. Try a higher cutoff ' ...
+        'frequency or a different type/order of filter.']);
+end
+
 % apply filter to the data
 switch dir
   case 'onepass'
