@@ -135,20 +135,21 @@ switch ft_senstype(sens)
       ch3 = sprintf('MEG %03d3', i);
       sel = match_str(sens.label, {ch1, ch2, ch3});
       % the try MEG channels without a space
-      if (length(sel)~=3)
+      if isempty(sel)
         ch1 = sprintf('MEG%03d1', i);
         ch2 = sprintf('MEG%03d2', i);
         ch3 = sprintf('MEG%03d3', i);
         sel = match_str(sens.label, {ch1, ch2, ch3});
       end
       % then try to determine the channel locations
-      if (length(sel)==3)
+      if (~isempty(sel) && length(sel)<=3)
         ind = [ind; i];
-        lab(i,:) = {ch1, ch2, ch3};
-        meanpnt1 = mean(sens.pnt(abs(sens.tra(sel(1),:))>0.5,:), 1);
-        meanpnt2 = mean(sens.pnt(abs(sens.tra(sel(2),:))>0.5,:), 1);
-        meanpnt3 = mean(sens.pnt(abs(sens.tra(sel(3),:))>0.5,:), 1);
-        pnt(i,:) = mean([meanpnt1; meanpnt2; meanpnt3], 1);
+        lab(i,:) = sens.label(sel)';
+        meanpnt  = [];
+        for j = 1:length(sel)
+           meanpnt  = [meanpnt; mean(sens.pnt(abs(sens.tra(sel(j),:))>0.5,:), 1)];
+        end
+        pnt(i,:) = mean(meanpnt, 1);
       end
     end
     lab = lab(ind,:);

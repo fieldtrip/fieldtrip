@@ -286,13 +286,13 @@ else
       type = 'yokogawa160';
     elseif (mean(ismember(ft_senslabel('yokogawa160_planar'), sens.label)) > 0.4)
       type = 'yokogawa160_planar';
-    elseif (mean(ismember(ft_senslabel('neuromag306'),   sens.label)) > 0.8)
+    elseif any(mean(ismember(ft_senslabel('neuromag306'),   sens.label)) > 0.8)
       type = 'neuromag306';
-    elseif (mean(ismember(ft_senslabel('neuromag306alt'),sens.label)) > 0.8)  % an alternative set without spaces in the name
+    elseif any(mean(ismember(ft_senslabel('neuromag306alt'),sens.label)) > 0.8)  % an alternative set without spaces in the name
       type = 'neuromag306';
-    elseif (mean(ismember(ft_senslabel('neuromag122'),   sens.label)) > 0.8)
+    elseif any(mean(ismember(ft_senslabel('neuromag122'),   sens.label)) > 0.8)
       type = 'neuromag122';
-    elseif (mean(ismember(ft_senslabel('neuromag122alt'),sens.label)) > 0.8)  % an alternative set without spaces in the name
+    elseif any(mean(ismember(ft_senslabel('neuromag122alt'),sens.label)) > 0.8)  % an alternative set without spaces in the name
       type = 'neuromag122';
     elseif (mean(ismember(ft_senslabel('biosemi256'),    sens.label)) > 0.8)
       type = 'biosemi256';
