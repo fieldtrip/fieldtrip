@@ -35,7 +35,7 @@ if ~isfield(cfg, 'keeptapers'), cfg.keeptapers = 'yes';          end
 if ~isfield(cfg, 'feedback'),   cfg.feedback   = 'none';         end
 
 if strcmp(cfg.foi, 'all'),
-  cfg.foi = [0:1:data.fsampleorig./2];
+  cfg.foi = (0:1:data.fsampleorig./2);
 end
 
 cfg.channel    = ft_channelselection(cfg.channel,      data.label);
@@ -50,7 +50,11 @@ cfg.channel    = ft_channelselection(cfg.channel,      data.label);
 %if dojack && keeprpt, error('you cannot simultaneously keep trials and do jackknifing'); end
 
 nfoi     = length(cfg.foi);
-ntoi     = length(data.time);
+if isfield(data, 'time')
+  ntoi = numel(data.time);
+else
+  ntoi = 1;
+end
 nlag     = size(data.coeffs,3); %change in due course
 chanindx = match_str(data.label, cfg.channel);
 nchan    = length(chanindx);
@@ -85,16 +89,20 @@ progress('close');
 freq          = [];
 freq.label    = label;
 freq.freq     = cfg.foi;
-freq.time     = data.time;
 %freq.cumtapcnt= ones(ntrl, 1)*ntap;
-freq.dimord    = 'chan_chan_freq_time';
+if ntoi>1
+  freq.time   = data.time;
+  freq.dimord = 'chan_chan_freq_time';
+else
+  freq.dimord = 'chan_chan_freq';
+end
 freq.transfer  = h;
 freq.itransfer = a;
 freq.noisecov  = data.noisecov;
 freq.crsspctrm = crsspctrm;
 freq.dof       = data.dof;
 
-try,
+try
   cfg.previous = data.cfg;
 end
 freq.cfg     = cfg; 
@@ -117,7 +125,8 @@ zar = complex(zeros(ncmb, nfoi), zeros(ncmb, nfoi));
 for k = 1:ncmb
   zar(k,:) = polyval(ar(k,:),zfoi);
 end
-zar = reshape(zar, [nchan nchan nfoi]); 
+zar = reshape(zar, [nchan nchan nfoi]);
+h   = zeros(size(zar));
 for k = 1:nfoi
   h(:,:,k) = inv(zar(:,:,k)); 
 end

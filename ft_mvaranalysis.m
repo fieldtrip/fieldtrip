@@ -236,7 +236,7 @@ for k = 1:ntrl
   maxtim = max(maxtim, data.time{k}(end));
   mintim = min(mintim, data.time{k}(1));
 end
-timeaxis = mintim:1./data.fsample:maxtim;
+timeaxis = mintim:1/data.fsample:maxtim;
 
 %---allocate memory
 if keeprpt || dojack
@@ -266,6 +266,7 @@ for j = 1:ntoi
   rpt  = {};
   nrpt = numel(tmpdata.trial);
   if dojack
+    rpt = cell(nrpt,1);
     for k = 1:nrpt
       rpt{k,1} = setdiff(1:nrpt,k);
     end
@@ -315,16 +316,13 @@ progress('close');
 
 %---create output-structure
 mvardata          = [];
-mvardata.label    = label;
-mvardata.time     = cfg.toi;
-mvardata.fsampleorig = data.fsample;
 
 if dojack,
-  mvardata.dimord = 'rptjck_chan_chan_lag_time';
+  mvardata.dimord = 'rptjck_chan_chan_lag';
 elseif keeprpt
-  mvardata.dimord = 'rpt_chan_chan_lag_time';
+  mvardata.dimord = 'rpt_chan_chan_lag';
 else
-  mvardata.dimord = 'chan_chan_lag_time';
+  mvardata.dimord = 'chan_chan_lag';
   siz    = size(coeffs);
   coeffs = reshape(coeffs, siz(2:end));
   siz    = size(noisecov);
@@ -333,11 +331,30 @@ end
 mvardata.coeffs   = coeffs;
 mvardata.noisecov = noisecov;
 mvardata.dof      = dof;
+mvardata.label    = label;
+if numel(cfg.toi)>1
+  mvardata.time   = cfg.toi;
+  mvardata.dimord = [mvardata.dimord,'_time'];
+end
+mvardata.fsampleorig = data.fsample;
+
+% accessing this field here is needed for the configuration tracking
+% by accessing it once, it will not be removed from the output cfg
+cfg.outputfile;
+
+% get the output cfg
+cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+
+% add version information to the configuration
+cfg.version.name = mfilename('fullpath');
+cfg.version.id   = '$Id$';
 
 % remember the configuration details of the input data
-try, cfg.previous = data.cfg; end
+try 
+  cfg.previous = data.cfg;
+end
 
-mvardata.cfg     = cfg;
+mvardata.cfg = cfg;
 
 % the output data should be saved to a MATLAB file
 if ~isempty(cfg.outputfile)
@@ -371,5 +388,5 @@ end
 %---subfunction to ensure that the first two input arguments are of double
 % precision this prevents an instability (bug) in the computation of the
 % tapers for Matlab 6.5 and 7.0
-function [tap] = double_dpss(a, b, varargin);
+function [tap] = double_dpss(a, b, varargin)
 tap = dpss(double(a), double(b), varargin{:});
