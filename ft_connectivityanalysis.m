@@ -310,7 +310,7 @@ switch cfg.method
     % coherency
     
     tmpcfg             = [];
-    tmpcfg.cmplx       = cfg.complex;
+    tmpcfg.complex     = cfg.complex;
     tmpcfg.feedback    = cfg.feedback;
     tmpcfg.dimord      = data.dimord;
     tmpcfg.pownorm     = normpow;
@@ -327,7 +327,7 @@ switch cfg.method
     % cross-spectral density (only useful if partialisation is required)
     
     tmpcfg             = [];
-    tmpcfg.cmplx       = cfg.complex;
+    tmpcfg.complex     = cfg.complex;
     tmpcfg.feedback    = cfg.feedback;
     tmpcfg.dimord      = data.dimord;
     tmpcfg.pownorm     = normpow;
@@ -344,7 +344,7 @@ switch cfg.method
     % phase locking value
     
     tmpcfg           = [];
-    tmpcfg.cmplx     = cfg.complex;
+    tmpcfg.complex   = cfg.complex;
     tmpcfg.feedback  = cfg.feedback;
     tmpcfg.dimord    = data.dimord;
     tmpcfg.pownorm     = normpow;
