@@ -53,7 +53,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %
 % $Id$
 
-fieldtripdefs
+%fieldtripdefs
 
 % check if the input cfg is valid for this function
 cfg = checkconfig(cfg, 'trackconfig', 'on');
@@ -310,7 +310,7 @@ switch cfg.method
     % coherency
     
     tmpcfg             = [];
-    tmpcfg.complex     = cfg.complex;
+    tmpcfg.cmplx       = cfg.complex;
     tmpcfg.feedback    = cfg.feedback;
     tmpcfg.dimord      = data.dimord;
     tmpcfg.pownorm     = normpow;
@@ -327,7 +327,7 @@ switch cfg.method
     % cross-spectral density (only useful if partialisation is required)
     
     tmpcfg             = [];
-    tmpcfg.complex     = cfg.complex;
+    tmpcfg.cmplx       = cfg.complex;
     tmpcfg.feedback    = cfg.feedback;
     tmpcfg.dimord      = data.dimord;
     tmpcfg.pownorm     = normpow;
@@ -344,7 +344,7 @@ switch cfg.method
     % phase locking value
     
     tmpcfg           = [];
-    tmpcfg.complex   = cfg.complex;
+    tmpcfg.cmplx     = cfg.complex;
     tmpcfg.feedback  = cfg.feedback;
     tmpcfg.dimord    = data.dimord;
     tmpcfg.pownorm     = normpow;
@@ -369,7 +369,7 @@ switch cfg.method
     tmpcfg             = [];
     tmpcfg.feedback    = cfg.feedback;
     tmpcfg.dimord      = data.dimord;
-    tmpcfg.complex     = 'real';
+    tmpcfg.cmplx       = 'real';
     tmpcfg.pownorm     = 1;
     tmpcfg.pchanindx   = [];
     tmpcfg.hasjack     = hasjack;
@@ -385,7 +385,7 @@ switch cfg.method
     tmpcfg             = [];
     tmpcfg.feedback    = cfg.feedback;
     tmpcfg.dimord      = data.dimord;
-    tmpcfg.complex     = 'real';
+    tmpcfg.cmplx       = 'real';
     tmpcfg.hasjack     = hasjack;
     if exist('powindx', 'var'), tmpcfg.powindx = powindx; end
     optarg             = cfg2keyval(tmpcfg);
@@ -462,7 +462,7 @@ switch cfg.method
     %total interdependence
     
     tmpcfg           = [];
-    tmpcfg.complex   = cfg.complex;
+    tmpcfg.cmplx     = 'abs';
     tmpcfg.feedback  = cfg.feedback;
     tmpcfg.dimord    = data.dimord;
     tmpcfg.pownorm   = normpow;
@@ -785,23 +785,6 @@ for k = 1:nchan
   indx(sel2,2) = autoindx;
 end
 
-%----------------------------------
-function [c] = complexeval(c, str)
-
-switch str
-  case 'complex'
-    %do nothing
-  case 'abs'
-    c = abs(c);
-  case 'angle'
-    c = angle(c);
-  case 'imag'
-    c = imag(c);
-  case 'real'
-    c = real(c);
-  otherwise
-    error('cfg.complex = ''%s'' not supported', cfg.complex);
-end
 
 %------------------------------------------------------------------------------------------------------------------
 function [data, powindx, hasrpt] = univariate2bivariate(data, inparam, outparam, dtype, demeanflag, cmb, sqrtflag, keeprpt)
