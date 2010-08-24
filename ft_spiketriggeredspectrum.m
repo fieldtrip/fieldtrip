@@ -40,6 +40,11 @@ function [freq] = ft_spiketriggeredspectrum(cfg, data)
 %
 % $Id$
 
+% This function uses a NaN-aware spectral estimation technique, which will
+% default to the standard Matlab FFT routine if no NaNs are present. The
+% fft_along_rows subfunction below demonstrates the expected function
+% behaviour.
+
 fieldtripdefs
 
 % set the defaults
@@ -54,13 +59,6 @@ if ~isfield(cfg, 'feedback'),     cfg.feedback = 'no';        end
 if strcmp(cfg.taper, 'dpss') && strcmp(cfg.taper, 'sine')
   error('sorry, multitapering is not yet implemented');
 end
-
-% see subfunction below, which demonstrates the expected function behaviour
-% my_fft = @fft_along_rows; 
-
-% use a NaN-aware spectral estimation technique, which will default to the
-% standard Matlab FFT routine if no NaNs are present
-my_fft = @specest_nanfft;
 
 % autodetect the spike channels
 ntrial = length(data.trial);
@@ -118,8 +116,9 @@ cfg.foilim(2) = freqaxis(fend);
 
 % make a representation of the spike, this is used for the phase rotation
 spike = zeros(1,numsmp);
+time  = randn(1,numsmp); % this is actually not used
 spike(1-begpad) = 1;
-spike_fft = my_fft(spike);
+spike_fft = specest_nanfft(spike, time);
 spike_fft = spike_fft(fbeg:fend);
 spike_fft = spike_fft./abs(spike_fft);
 rephase   = sparse(diag(conj(spike_fft)));
@@ -171,8 +170,10 @@ for i=1:ntrial
       segment = data.trial{i}(chansel,begsmp:endsmp);
     end
 
+    time  = randn(size(segment)); % this is actually not used
+
     % taper the data segment around the spike and compute the fft
-    segment_fft = my_fft(segment * taper);
+    segment_fft = specest_nanfft(segment * taper, time);
 
     % select the desired output frquencies and normalize
     segment_fft = segment_fft(:,fbeg:fend) ./ sqrt(numsmp/2);
@@ -223,8 +224,8 @@ try, cfg.previous = data.cfg; end
 freq.cfg = cfg;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
+% SUBFUNCTION for demonstration purpose
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = fft_along_rows(x)
-y = fft(x, [], 2); % use normal Matlab function to compute the fft along 2nd dimension 
+y = fft(x, [], 2); % use normal Matlab function to compute the fft along 2nd dimension
 
