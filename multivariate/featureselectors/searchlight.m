@@ -41,17 +41,68 @@ classdef searchlight < featureselector
       
       obj = obj@featureselector(varargin{:});
       
-      assert(~isempty(obj.procedure));
-      
       if isempty(obj.validator)
         obj.validator = crossvalidator('verbose',true,'compact',true,'model',true,'nfolds',5);
       end
       
-      obj.validator.procedure = mva(obj.procedure);
-
+      if ~isempty(obj.procedure)
+        obj.validator.procedure = mva(obj.procedure);
+      end
+      
     end
     
     function p = estimate(obj,X,Y)
+
+      % estimate spheres
+      
+      if ~isfield(obj.params,'spheres')
+        
+        p = obj.estimate_spheres();
+      
+      else
+        
+        p = obj.params;
+      
+      end
+      
+      % test each sphere
+      
+      p.value = zeros(length(p.spheres),1);
+      p.pvalue = zeros(length(p.spheres),1);
+      p.vld = cell(length(p.spheres),1);
+      for c=1:length(p.spheres)
+
+        vld = obj.validator;
+        vld = vld.validate(X(:,p.spheres{c}),Y);
+           
+        p.value(c) = vld.evaluate('metric',obj.metric); 
+
+        try % also try to report significance 
+          p.pvalue(c) = vld.significance();
+        end
+        
+        if obj.verbose
+          fprintf('performance for sphere %d of %d using metric %s: %g (p-value: %g)\n',c,length(p.spheres),obj.metric,p.value(c),p.pvalue(c));
+        end
+
+        % save validator
+        if ~obj.compact
+          p.vld{c} = vld;
+        end
+        
+      end
+      
+      [a,b] = sort(p.value,'descend');
+      if obj.center
+        p.subset = unique(subv2ind(obj.indims,p.centers(b(1:obj.nspheres),:)));
+      else
+        p.subset = unique(cell2mat(p.spheres(b(1:obj.nspheres))));
+      end
+      
+      
+    end
+    
+    function p = estimate_spheres(obj)
       
       % dimensions are retrieved from mask
       if ~isempty(obj.mask)
@@ -172,44 +223,13 @@ classdef searchlight < featureselector
           
         end
         
+        % original sphere indices
+        p.original = tmp;
+        
       end
       
       if obj.verbose
         fprintf('average sphere volume: %g\n',sum(cellfun(@(x)(numel(x)),p.spheres))/length(p.spheres));
-      end
-      
-      % test each sphere
-      
-      p.value = zeros(length(p.spheres),1);
-      p.vld = cell(length(p.spheres),1);
-      for c=1:length(p.spheres)
-
-        vld = obj.validator;
-        vld = vld.validate(X(:,p.spheres{c}),Y);
-           
-        p.value(c) = vld.evaluate('metric',obj.metric); 
-
-        if obj.verbose
-          fprintf('performance for sphere %d of %d using metric %s: %g\n',c,length(p.spheres),obj.metric,p.value(c));
-        end
-
-        % save validator
-        if ~obj.compact
-          p.vld{c} = vld;
-        end
-        
-      end
-      
-      [a,b] = sort(p.value,'descend');
-      if obj.center
-        p.subset = unique(subv2ind(obj.indims,p.centers(b(1:obj.nspheres),:)));
-      else
-        p.subset = unique(cell2mat(p.spheres(b(1:obj.nspheres))));
-      end
-      
-      % spheres as original indices
-      if ~isempty(obj.mask)
-        p.spheres = tmp;
       end
       
     end

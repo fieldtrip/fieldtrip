@@ -22,7 +22,13 @@ classdef linreg < regressor
         end        
         
         function p = estimate(obj,X,Y)
-                    
+          
+          % handle zero vector
+          if ~any(Y)
+            p.model = zeros(size(X,2)+1,1);
+            return;
+          end
+          
           if obj.L1 == 0 && all(obj.L2(:) == 0)
             % unregularized 
             

@@ -55,6 +55,10 @@ classdef pcanalyzer < preprocessor
     
     function p = estimate(obj,X,Y)
       
+      if obj.verbose
+        fprintf('estimating principal components\n');
+      end
+      
       if obj.proportion >= 1
         % use specialized fast approximation
         

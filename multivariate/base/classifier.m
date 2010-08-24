@@ -396,12 +396,12 @@ classdef classifier < predictor
           
           [r,p{c},level] = classifier.binomial_test(post{c},design{c},rndpost,design{c},'twosided',false,'bonferroni',length(post));
           
-          if r
-            fprintf('dataset %d: null hypothesis rejected (%g<%g);\nsignificant difference from ',c,p{c},level);
-          else
-            fprintf('dataset %d: null hypothesis not rejected (%g>%g);\nno significant difference from ',c,p{c},level);
-          end
-          fprintf('majority classification (class %d with prior of %g)\n',clss,mxx/sum(priors));
+%           if r
+%             fprintf('dataset %d: null hypothesis rejected (%g<%g);\nsignificant difference from ',c,p{c},level);
+%           else
+%             fprintf('dataset %d: null hypothesis not rejected (%g>%g);\nno significant difference from ',c,p{c},level);
+%           end
+%           fprintf('majority classification (class %d with prior of %g)\n',clss,mxx/sum(priors));
           
         end
       end

@@ -3,7 +3,7 @@ classdef optimizer < predictor
 %
 %   Usage:
 %
-%    optimizer('mvmethod',l1lr,'validator',crossvalidator(),'vars','lambda','vals',[1 10 100],'metric','accuracy')
+%    optimizer('mvmethod',glmlogreg,'validator',crossvalidator('nfolds',0.8),'vars',{'lambda' 'alpha'},'vals',{[1e-2 1e-1 1] [1e-2 1e-1 1]},'metric','accuracy');
 %
 %     will act as if it is l1lr method but will optimize the variable
 %     lambda in the range [1 10 100] using the specified validator and metric.
@@ -77,13 +77,13 @@ classdef optimizer < predictor
          nv = length(obj.vars);
 
          maxresult = -Inf;
-
-         vld = obj.validator; % the procedure used by the validator
-      
+  
          % iterate over configurations
          p.configs = cartprod(obj.vals{:});
          for i=1:size(p.configs,1)
 
+           vld = obj.validator; % the procedure used by the validator
+    
            % set parameters
            if iscell(vld.procedure)
            % happens when the vld has already been validated
