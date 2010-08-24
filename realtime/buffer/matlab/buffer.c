@@ -230,7 +230,11 @@ int open_connection_with_list(const char *hostname, int port) {
 	if (verbose>0) 
 		printf("Trying to open new connection...\n");
 
-	sock = open_connection(hostname, port);
+	if (port == 0) {
+		sock = open_unix_connection(hostname);
+	} else {
+		sock = open_connection(hostname, port);
+	}
 	if (sock>0) {
 		if (verbose>0)
 			printf("open_connection: connected to %s:%d on socket %d\n", hostname, port, sock);

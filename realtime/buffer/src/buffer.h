@@ -96,6 +96,7 @@ void print_buf(void *, int);
 
 /* definition of even more helper functions, see util.c */
 int open_connection(const char*, int);
+int open_unix_connection(const char *name);
 int close_connection(int);
 unsigned int append(void **, unsigned int, void *, unsigned int);
 unsigned int bufread(int, void *, unsigned int);

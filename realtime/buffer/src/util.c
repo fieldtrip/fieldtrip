@@ -300,3 +300,51 @@ int check_event_array(unsigned int size, const void *buf) {
 error:
 	return -(1+numEvents);
 }
+
+
+
+
+
+#ifdef WIN32
+int open_unix_connection(const char *name) {
+	return -1;
+}
+#else
+int open_unix_connection(const char *name) {
+	int verbose = 0;
+	int s, retry;
+	struct sockaddr_un sa;
+
+	bzero(&sa, sizeof(sa));
+	sa.sun_family = AF_UNIX;
+	strncpy(sa.sun_path, name, sizeof(sa.sun_path));
+		
+	s = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (s < 0) {
+		perror("open_unix_connection, socket");
+		return -1;
+	}
+
+	retry = 10;
+	while (retry>0) {
+		if (connect(s, (struct sockaddr *)&sa, sizeof(sa))<0) {
+			/* wait 5 miliseconds and try again */
+			perror("open_connection");
+			usleep(5000);
+			retry--;
+		} else {
+			/* this signals that the connection has been made */
+			retry = -1;
+			}
+		}
+	if (retry==0) {
+		/* it failed on mutliple attempts, give up */
+		return -2;
+	}
+
+	if (verbose>0)
+		fprintf(stderr, "open_unix_connection: connected to %s on socket %d\n", name,  s);
+        
+	return s;
+}
+#endif
