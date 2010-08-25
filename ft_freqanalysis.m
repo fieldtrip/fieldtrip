@@ -242,8 +242,8 @@ else
     end
   end
   
+
   
-  % correct t_ftimwin to proper foi
   
   % tapsmofrq compatibility between functions (make it into a vector if it's not)
   if isfield(cfg,'tapsmofrq')
