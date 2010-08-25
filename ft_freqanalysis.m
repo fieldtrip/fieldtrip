@@ -357,8 +357,9 @@ else
         % for now, there is a lot of redundancy, as each method has it's own case statement
         % when fully implemented, this can be cut down, perhaps in a separate switch, or perhaps as a time and a non-time if-loop
         foinumsmp = cfg.t_ftimwin .* data.fsample;
+        foinumsmp = foinumsmp(:);
         foinumsmp = repmat(foinumsmp,[1, ntap, nchan, ntoi]);
-        foinumsmp = permute(foinumsmp,[1 3 2 4]);
+        foinumsmp = permute(foinumsmp,[2 3 1 4]);
         if powflg
           powdum = 2.* abs(spectrum) .^ 2 ./ foinumsmp;
           if strcmp(cfg.taper, 'sine') % THIS IS NOT DONE IN THE MTMFFT CASE IN THE OLD IMPLEMENTATION, WHY?
