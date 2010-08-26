@@ -91,6 +91,11 @@ fallback     = keyval('fallback',     varargin);
 cache        = keyval('cache',        varargin);
 retry        = keyval('retry',        varargin); if isempty(retry), retry = false; end % for fcdc_buffer
 
+% SK: I added this as a temporary fix to prevent 1000000 voxel names
+% to be checked for uniqueness. fMRI users will probably never use
+% channel names for anything.
+checkUniqueLabels = true;
+
 % determine the filetype
 if isempty(headerformat)
   headerformat = ft_filetype(filename);
@@ -766,7 +771,9 @@ switch headerformat
           for i=1:hdr.nChans
             hdr.label{i} = sprintf('%d', i);
           end
-        end
+        else
+		  checkUniqueLabels = false;
+		end
       end
     end
 	hdr.orig.bufsize = orig.bufsize;
@@ -1275,14 +1282,16 @@ switch headerformat
     end
 end
 
-if length(hdr.label)~=length(unique(hdr.label))
-  % all channels must have unique names
-  warning('all channels must have unique labels, creating unique labels');
-  for i=1:hdr.nChans
-    sel = find(strcmp(hdr.label{i}, hdr.label));
-    if length(sel)>1
-      for j=1:length(sel)
-        hdr.label{sel(j)} = sprintf('%s-%d', hdr.label{sel(j)}, j);
+if checkUniqueLabels 
+  if length(hdr.label)~=length(unique(hdr.label))
+    % all channels must have unique names
+    warning('all channels must have unique labels, creating unique labels');
+    for i=1:hdr.nChans
+      sel = find(strcmp(hdr.label{i}, hdr.label));
+      if length(sel)>1
+        for j=1:length(sel)
+          hdr.label{sel(j)} = sprintf('%s-%d', hdr.label{sel(j)}, j);
+        end
       end
     end
   end
