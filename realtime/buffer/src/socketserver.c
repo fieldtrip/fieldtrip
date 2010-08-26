@@ -27,7 +27,6 @@ void *_buffer_socket_func(void *arg) {
 	int canRead, canWrite;
 	UINT16_T reqCommand;
 	UINT32_T respBufSize;
-	struct timeval tv;
 	fd_set readSet, writeSet;
 
 	if (arg==NULL) return NULL;
@@ -52,14 +51,13 @@ void *_buffer_socket_func(void *arg) {
 	bytesTotal = sizeof(messagedef_t);
 	curPtr = (char *) request.def;
 	
-	tv.tv_sec = 0;
-	tv.tv_usec = 10000;
 	
 
 	/* keep processing messages untill the connection is closed */
 	while (SC->keepRunning) {
 		int sel, res, n;
-
+		struct timeval tv = {0, 10000}; /* 10ms */
+	
 		FD_ZERO(&readSet);
 		FD_ZERO(&writeSet);
 		if (state < 2) {
@@ -211,7 +209,6 @@ void *_buffer_socket_func(void *arg) {
  ***********************************************************************/
 void *_buffer_server_func(void *arg) {
 	ft_buffer_server_t *SC = (ft_buffer_server_t *) arg;
-	struct timeval tv;			/* for select timeout */
 	int n;
 	
 	if (SC == NULL) {
@@ -219,8 +216,6 @@ void *_buffer_server_func(void *arg) {
 		return NULL;
 	}
 	
-	tv.tv_sec = 0;
-	tv.tv_usec = 10000; /* 10 ms */
 	
 	while (SC->keepRunning) {
 		SOCKET c;
@@ -228,6 +223,8 @@ void *_buffer_server_func(void *arg) {
 		int sel, rc, merge;
 		pthread_t tid;
 		ft_buffer_socket_t *CC;
+		struct timeval tv = {0,10000};	/* 10 ms for select timeout */
+
 		
 		/*
 		 * If no pending connections are present on the queue, and the socket
@@ -239,7 +236,7 @@ void *_buffer_server_func(void *arg) {
 		 
 		FD_ZERO(&readSet);
 		FD_SET(SC->serverSocket, &readSet);
-		
+
 		sel = select(SC->serverSocket + 1, &readSet, NULL, NULL, &tv);
 		
 		if (sel == 0) continue;
