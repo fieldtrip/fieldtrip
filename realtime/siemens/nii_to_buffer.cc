@@ -35,6 +35,17 @@ bool isRelative(const char *fn) {
 	return true;
 }
 
+bool areEqual(const nifti_1_header &A, const nifti_1_header &B) {
+	if (A.datatype != B.datatype) return false;
+	if (A.bitpix != B.bitpix) return false;
+	for (int i=0;i<8;i++) {
+		if (A.dim[i] != B.dim[i]) return false;
+		if (A.pixdim[i] != B.pixdim[i]) return false;
+	}
+	// everything else, we don't care
+	return true;
+}
+
 int readAndCheckScannerFile(const char *filename) {
 	nifti_1_header thisHeader;
 	std::string path;
@@ -82,7 +93,7 @@ int readAndCheckScannerFile(const char *filename) {
 				commonHeader = thisHeader;
 				niiFiles.push_back(fullname);
 			} else {
-				if (memcmp(&thisHeader, &commonHeader, sizeof(thisHeader))) {
+				if (!areEqual(thisHeader, commonHeader)) {
 					fprintf(stderr, "Header of %s does not equal header of %s\n",fullname.c_str(), niiFiles[0].c_str());
 				} else {
 					niiFiles.push_back(fullname);
