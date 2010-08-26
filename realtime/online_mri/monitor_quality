@@ -1,0 +1,17 @@
+#!/bin/sh
+
+case `arch` in
+    i686)
+		bufex="./ft_buffer_32 1972"
+        ;;
+    x86_64)
+		bufex="./ft_buffer_64 1972"
+        ;;
+esac
+
+xterm -T "Runnig FieldTrip buffer - press CTRL-C when done" -e $bufex &
+matlab -r "addpath('/home/common/matlab/fieldtrip','/home/common/matlab/spm8');fieldtripdefs;ft_omri_quality;"
+
+
+
+
