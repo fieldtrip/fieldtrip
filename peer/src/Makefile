@@ -17,6 +17,14 @@ CFLAGS	 = $(INCPATH) -Wunused -pedantic -O1 -fPIC -fpack-struct
 # CXXFLAGS = $(INCPATH) -Wunused -pedantic -O1
 CFLAGS	 = $(INCPATH) -Wall -pthread
 
+ifeq "$(PLATFORM)" "i386-redhat-linux"
+	# this is only for the peerslave command line executable -> mentat068
+	MATLABARCH = glnx86
+	MATLABPATH = /opt/matlab75
+	MATLABLIBS = -L$(MATLABPATH)/bin/$(MATLABARCH) -leng -lmx
+	MATLABINC  = -I$(MATLABPATH)/extern/include
+endif
+
 ifeq "$(PLATFORM)" "x86_64-redhat-linux"
 	# this is only for the peerslave command line executable -> mentat001
 	MATLABARCH = glnxa64
