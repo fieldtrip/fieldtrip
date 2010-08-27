@@ -114,7 +114,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		char command[STRLEN];
 		char argument[STRLEN];
 		int i, n, rc, t, found, handshake, success, count, server;
-		unsigned int peerid, jobid, memreq, cpureq, timreq;
+		UINT64_T peerid, jobid, memreq, cpureq, timreq;
 		int tmp;
 
 		jobdef_t    *def;
@@ -304,6 +304,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				mexPrintf("host.group      = %s\n", host->group);
 				mexPrintf("host.status     = %d\n", host->status);
 				mexPrintf("host.id         = %d\n", host->id);
+				mexPrintf("host.memavail   = %llu\n", host->memavail);
+				mexPrintf("host.timavail   = %llu\n", host->timavail);
+				mexPrintf("host.cpuavail   = %llu\n", host->cpuavail);
 				pthread_mutex_unlock(&mutexhost);
 
 				pthread_mutex_lock(&mutexsmartmem);
@@ -341,9 +344,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mexPrintf("  host.user     = %s\n", peer->host->user);
 						mexPrintf("  host.group    = %s\n", peer->host->group);
 						mexPrintf("  host.status   = %d\n", peer->host->status);
-						mexPrintf("  host.memavail = %u\n", peer->host->memavail);
-						mexPrintf("  host.cpuavail = %u\n", peer->host->cpuavail);
-						mexPrintf("  host.timavail = %u\n", peer->host->timavail);
+						mexPrintf("  host.memavail = %llu\n", peer->host->memavail);
+						mexPrintf("  host.cpuavail = %llu\n", peer->host->cpuavail);
+						mexPrintf("  host.timavail = %llu\n", peer->host->timavail);
 						mexPrintf("  ipaddr        = %s\n", peer->ipaddr);
 						mexPrintf("  time          = %s",   ctime(&(peer->time)));
 						peer = peer->next ;       
@@ -428,7 +431,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				if (!mxIsScalar(prhs[1]))
 						mexErrMsgTxt ("invalid input argument #2");
 				pthread_mutex_lock(&mutexhost);
-				host->memavail = (UINT32_T)mxGetScalar(prhs[1]);
+				host->memavail = (UINT64_T)mxGetScalar(prhs[1]);
 				pthread_mutex_unlock(&mutexhost);
 		}
 
@@ -442,7 +445,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				if (!mxIsScalar(prhs[1]))
 						mexErrMsgTxt ("invalid input argument #2");
 				pthread_mutex_lock(&mutexhost);
-				host->cpuavail = (UINT32_T)mxGetScalar(prhs[1]);
+				host->cpuavail = (UINT64_T)mxGetScalar(prhs[1]);
 				pthread_mutex_unlock(&mutexhost);
 		}
 
@@ -456,7 +459,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				if (!mxIsScalar(prhs[1]))
 						mexErrMsgTxt ("invalid input argument #2");
 				pthread_mutex_lock(&mutexhost);
-				host->timavail = (UINT32_T)mxGetScalar(prhs[1]);
+				host->timavail = (UINT64_T)mxGetScalar(prhs[1]);
 				pthread_mutex_unlock(&mutexhost);
 		}
 
@@ -934,9 +937,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mxSetFieldByNumber(plhs[0], i, 3, mxCreateString(peer->host->group));
 						mxSetFieldByNumber(plhs[0], i, 4, mxCreateDoubleScalar((UINT32_T)(peer->host->port)));
 						mxSetFieldByNumber(plhs[0], i, 5, mxCreateDoubleScalar((UINT32_T)(peer->host->status)));
-						mxSetFieldByNumber(plhs[0], i, 6, mxCreateDoubleScalar((UINT32_T)(peer->host->memavail)));
-						mxSetFieldByNumber(plhs[0], i, 7, mxCreateDoubleScalar((UINT32_T)(peer->host->cpuavail)));
-						mxSetFieldByNumber(plhs[0], i, 8, mxCreateDoubleScalar((UINT32_T)(peer->host->timavail)));
+						mxSetFieldByNumber(plhs[0], i, 6, mxCreateDoubleScalar((UINT64_T)(peer->host->memavail)));
+						mxSetFieldByNumber(plhs[0], i, 7, mxCreateDoubleScalar((UINT64_T)(peer->host->cpuavail)));
+						mxSetFieldByNumber(plhs[0], i, 8, mxCreateDoubleScalar((UINT64_T)(peer->host->timavail)));
 						i++;
 						peer = peer->next ;
 				}

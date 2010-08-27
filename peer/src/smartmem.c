@@ -5,7 +5,7 @@
 #include "extern.h"
 #include "platform_includes.h"
 
-int meminfo(int *MemTotal, int *MemFree) {
+int smartmem_info(UINT64_T *MemTotal, UINT64_T *MemFree) {
 		void *fp;
 		char str[256];
 
@@ -55,9 +55,9 @@ int meminfo(int *MemTotal, int *MemFree) {
 
 		while (fscanf(fp, "%s", str) != EOF) {
 				if (strcmp(str, "MemTotal:")==0) 
-						fscanf(fp, "%d", MemTotal);
+						fscanf(fp, "%llu", MemTotal);
 				if (strcmp(str, "MemFree:")==0) 
-						fscanf(fp, "%d", MemFree);
+						fscanf(fp, "%llu", MemFree);
 
 		} /* while */
 
@@ -72,16 +72,17 @@ int meminfo(int *MemTotal, int *MemFree) {
 		return -1;
 #endif
 
-} /* meminfo */
+} /* smartmem_info */
 
-int smartmem_avail(void) {
+int smartmem_update(void) {
 		peerlist_t* peer;
-		int NumPeers=0, MemSuggested=0, MemReserved=0, MemTotal=0, MemFree=0;
+		unsigned int NumPeers=0;
+		UINT64_T MemSuggested=0, MemReserved=0, MemTotal=0, MemFree=0;
 		float scale;
 		int verbose = 0, status;
 
 		/* determine the amount of memory available on this computer */
-		if ((status = meminfo(&MemTotal, &MemFree)) < 0)
+		if ((status = smartmem_info(&MemTotal, &MemFree)) < 0)
 				return -1;
 
 		pthread_mutex_lock(&mutexhost);
@@ -108,7 +109,7 @@ int smartmem_avail(void) {
 		NumPeers++;
 
 		/* determine the scale of the memory update (for iterative improvements) */
-		scale = ((float)host->memavail) / MemFree;
+		scale = ((float)host->memavail) / ((float)MemFree);
 
 		/* apply a heuristic adjustment to improve total memory usage (in case of few peers) and to speed up convergence (in case of many peers) */
 		switch (NumPeers)
@@ -131,16 +132,29 @@ int smartmem_avail(void) {
 		} /* switch */
 
 		/* determine the suggested amount of memory for this slave */
-		MemSuggested = (MemFree - MemReserved) / (1 + scale);
-		MemSuggested = (MemSuggested < 0 ? 0 : MemSuggested);
+		MemReserved  = (MemReserved > MemFree ? MemFree : MemReserved );
+		MemSuggested = ((float)(MemFree - MemReserved)) / (1.0 + scale);
 
-		if (verbose>0) {
-				fprintf(stderr, "NumPeers     = %d\n", NumPeers);
-				fprintf(stderr, "MemFree      = %d\n", MemFree);
-				fprintf(stderr, "MemReserved  = %d\n", MemReserved);
-				fprintf(stderr, "MemSuggested = %d\n", MemSuggested);
+		/* status = 0 means zombie mode, don't accept anything   */
+		/* status = 1 means master mode, accept everything       */
+		/* status = 2 means idle slave, accept only a single job */
+		/* status = 3 means busy slave, don't accept a new job   */
+		/* any other status is interpreted as zombie mode        */
+
+		pthread_mutex_lock(&mutexsmartmem);
+		pthread_mutex_lock(&mutexhost);
+		if ((smartmem.enabled==1) && (host->status==2)) {
+				host->memavail = MemSuggested;
+
+				if (verbose>0) {
+						fprintf(stderr, "NumPeers     = %u\n",   NumPeers);
+						fprintf(stderr, "MemFree      = %llu\n", MemFree);
+						fprintf(stderr, "MemReserved  = %llu\n", MemReserved);
+						fprintf(stderr, "MemSuggested = %llu (%f GB)\n", MemSuggested, ((float)MemSuggested)/(1024*1024*1024));
+				}
 		}
+		pthread_mutex_unlock(&mutexhost);
+		pthread_mutex_unlock(&mutexsmartmem);
+		return 0;
 
-		return MemSuggested;
 }
-

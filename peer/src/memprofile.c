@@ -58,6 +58,8 @@ pthread_mutex_t mutexstatus  = PTHREAD_MUTEX_INITIALIZER;
 pthread_t memprofileThread;
 int memprofileStatus = 0;
 
+/* FIXME the memory should allow for >4GB, i.e. more than can be addressed in a uint32 */
+
 #if defined (PLATFORM_OSX)
 int getmem (unsigned int *rss, unsigned int *vs) {
 		task_t task = MACH_PORT_NULL;

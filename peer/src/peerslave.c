@@ -7,7 +7,12 @@
  *   allowgroup  = {...}
  *   group       = string
  *   hostname    = string
- *     matlab    = string
+ *   matlab      = string
+ *   timeout     = number, time to keep the engine running after the job finished
+ *   fairshare   = 0|1
+ *   smartmem    = 0|1
+ *   daemon
+ *   verbose
  */
 
 #include <pthread.h>
@@ -28,12 +33,14 @@ mxArray *mxSerialize(const mxArray*);
 mxArray *mxDeserialize(const void*, size_t);
 
 #define panic(X) {fprintf(stderr, X); exit(1);}
-#define MAXIDLETIME 10     /* in seconds */
-#define SLEEPTIME   10000  /* in microseconds */
+#define ENGINETIMEOUT     30     /* in seconds */
+#define ZOMBIETIMEOUT     300    /* in seconds */
+#define SLEEPTIME         10000  /* in microseconds */
 
 #define STARTCMD "matlab -nosplash"
 
-static int verbose_flag = 0;
+int verbose_flag;
+int daemon_flag;
 
 int main(int argc, char *argv[]) {
 		Engine *en;
@@ -41,9 +48,12 @@ int main(int argc, char *argv[]) {
 		joblist_t  *job  = NULL;
 		peerlist_t *peer = NULL;
 		jobdef_t   *def  = NULL;
+		pid_t childpid;
 
-		int matlabRunning = 0, matlabStart, matlabFinished;
-		int c, n, rc, found, handshake, success, server, verbose = 0, jobnum = 0;
+		int matlabRunning = 0, matlabStart, matlabFinished, engineFailed = 0;
+		int c, n, rc, found, handshake, success, server, jobnum = 0;
+		unsigned int enginetimeout = ENGINETIMEOUT;
+		unsigned int zombietimeout = ZOMBIETIMEOUT;
 		unsigned int peerid, jobid;
 		char *str = NULL, *startcmd = NULL;
 
@@ -64,7 +74,8 @@ int main(int argc, char *argv[]) {
 		{
 				static struct option long_options[] =
 				{
-						{"verbose",   no_argument, &verbose_flag, 0},
+						{"verbose",   no_argument, &verbose_flag, 1},
+						{"daemon",    no_argument, &daemon_flag, 1},
 						{"memavail",  required_argument, 0, 'a'}, /* numeric argument */
 						{"cpuavail",  required_argument, 0, 'b'}, /* numeric argument */
 						{"timavail",  required_argument, 0, 'c'}, /* numeric argument */
@@ -76,31 +87,30 @@ int main(int argc, char *argv[]) {
 						{"matlab",    required_argument, 0, 'i'}, /* single string argument */
 						{"smartmem",  required_argument, 0, 'j'}, /* numeric, 0 or 1 */
 						{"fairshare", required_argument, 0, 'k'}, /* numeric, 0 or 1 */
+						{"timeout",   required_argument, 0, 'l'}, /* numeric argument */
 						{0, 0, 0, 0}
 				};
+
 				/* getopt_long stores the option index here. */
 				int option_index = 0;
 
 				c = getopt_long (argc, argv, "", long_options, &option_index); 
 
-				/* Detect the end of the options. */
+				/* detect the end of the options. */
 				if (c == -1)
 						break;
 
 				switch (c)
 				{
 						case 0:
-								/* If this option set a flag, do nothing else now. */
+								/* if this option set a flag, do nothing else now. */
 								if (long_options[option_index].flag != 0)
 										break;
-								printf ("option %s", long_options[option_index].name);
-								if (optarg)
-										printf (" with arg %s", optarg);
-								printf ("\n");
 								break;
 
 						case 'a':
-								printf ("option --memavail with value `%s'\n", optarg);
+								if (verbose_flag)
+										printf ("option --memavail with value `%s'\n", optarg);
 								pthread_mutex_lock(&mutexhost);
 								host->memavail = atol(optarg);
 								pthread_mutex_unlock(&mutexhost);
@@ -110,35 +120,40 @@ int main(int argc, char *argv[]) {
 								break;
 
 						case 'b':
-								printf ("option --cpuavail with value `%s'\n", optarg);
+								if (verbose_flag)
+										printf ("option --cpuavail with value `%s'\n", optarg);
 								pthread_mutex_lock(&mutexhost);
 								host->cpuavail = atol(optarg);
 								pthread_mutex_unlock(&mutexhost);
 								break;
 
 						case 'c':
-								printf ("option --timavail with value `%s'\n", optarg);
+								if (verbose_flag)
+										printf ("option --timavail with value `%s'\n", optarg);
 								pthread_mutex_lock(&mutexhost);
 								host->timavail = atol(optarg);
 								pthread_mutex_unlock(&mutexhost);
 								break;
 
 						case 'd':
-								printf ("option --hostname with value `%s'\n", optarg);
+								if (verbose_flag)
+										printf ("option --hostname with value `%s'\n", optarg);
 								pthread_mutex_lock(&mutexhost);
 								strncpy(host->name, optarg, STRLEN);
 								pthread_mutex_unlock(&mutexhost);
 								break;
 
 						case 'e':
-								printf ("option --group with value `%s'\n", optarg);
+								if (verbose_flag)
+										printf ("option --group with value `%s'\n", optarg);
 								pthread_mutex_lock(&mutexhost);
 								strncpy(host->group, optarg, STRLEN);
 								pthread_mutex_unlock(&mutexhost);
 								break;
 
 						case 'f':
-								printf ("option --allowuser with value `%s'\n", optarg);
+								if (verbose_flag)
+										printf ("option --allowuser with value `%s'\n", optarg);
 								str = strtok(optarg, ",");
 								while (str) {
 										allowuser = (userlist_t *)malloc(sizeof(userlist_t));
@@ -151,7 +166,8 @@ int main(int argc, char *argv[]) {
 								break;
 
 						case 'g':
-								printf ("option --allowhost with value `%s'\n", optarg);
+								if (verbose_flag)
+										printf ("option --allowhost with value `%s'\n", optarg);
 								str = strtok(optarg, ",");
 								while (str) {
 										allowhost = (hostlist_t *)malloc(sizeof(hostlist_t));
@@ -164,7 +180,8 @@ int main(int argc, char *argv[]) {
 								break;
 
 						case 'h':
-								printf ("option --allowgroup with value `%s'\n", optarg);
+								if (verbose_flag)
+										printf ("option --allowgroup with value `%s'\n", optarg);
 								str = strtok(optarg, ",");
 								while (str) {
 										allowgroup = (grouplist_t *)malloc(sizeof(grouplist_t));
@@ -177,23 +194,32 @@ int main(int argc, char *argv[]) {
 								break;
 
 						case 'i':
-								printf ("option --matlab with value `%s'\n", optarg);
+								if (verbose_flag)
+										printf ("option --matlab with value `%s'\n", optarg);
 								startcmd = malloc(STRLEN);
 								strncpy(startcmd, optarg, STRLEN);
 								break;
 
 						case 'j':
-								printf ("option --smartmem with value `%s'\n", optarg);
+								if (verbose_flag)
+										printf ("option --smartmem with value `%s'\n", optarg);
 								pthread_mutex_lock(&mutexsmartmem);
 								smartmem.enabled = atol(optarg);
 								pthread_mutex_unlock(&mutexsmartmem);
 								break;
 
 						case 'k':
-								printf ("option --fairshare with value `%s'\n", optarg);
+								if (verbose_flag)
+										printf ("option --fairshare with value `%s'\n", optarg);
 								pthread_mutex_lock(&mutexfairshare);
 								fairshare.enabled = atol(optarg);
 								pthread_mutex_unlock(&mutexfairshare);
+
+						case 'l':
+								if (verbose_flag)
+										printf ("option --timeout with value `%s'\n", optarg);
+								enginetimeout = atol(optarg);
+								break;
 
 								break;
 
@@ -204,6 +230,37 @@ int main(int argc, char *argv[]) {
 						default:
 								fprintf(stderr, "invalid command line options\n");
 								exit(1);
+				}
+		}
+
+
+		if (daemon_flag) {
+				/* now create new process */
+				childpid = fork();
+
+				if (childpid >= 0) /* fork succeeded */
+				{
+						if (childpid == 0) /* fork() returns 0 to the child process */
+						{
+								printf("CHILD: I am the child process!\n");
+								printf("CHILD: Here's my PID: %d\n", getpid());
+								printf("CHILD: My parent's PID is: %d\n", getppid());
+								printf("CHILD: The value of my copy of childpid is: %d\n", childpid);
+								/* the child continues as the actual executable */
+						}
+						else /* fork() returns new pid to the parent process */
+						{
+								printf("PARENT: I am the parent process!\n");
+								printf("PARENT: Here's my PID: %d\n", getpid());
+								printf("PARENT: The value of my copy of childpid is %d\n", childpid);
+								/* parent exits */ 
+								return 0;
+						}
+				}
+				else /* fork returns -1 on failure */
+				{
+						perror("fork"); /* display error message */
+						exit(0); 
 				}
 		}
 
@@ -218,7 +275,8 @@ int main(int argc, char *argv[]) {
 				exit(1);
 		}
 		else {
-				fprintf(stderr, "started tcpserver thread\n");
+				if (verbose_flag)
+						fprintf(stderr, "started tcpserver thread\n");
 		}
 
 		if ((rc = pthread_create(&announceThread, NULL, announce, (void *)NULL))>0) {
@@ -226,7 +284,8 @@ int main(int argc, char *argv[]) {
 				exit(1);
 		}
 		else {
-				fprintf(stderr, "started announce thread\n");
+				if (verbose_flag)
+						fprintf(stderr, "started announce thread\n");
 		}
 
 		if ((rc = pthread_create(&discoverThread, NULL, discover, (void *)NULL))>0) {
@@ -234,7 +293,8 @@ int main(int argc, char *argv[]) {
 				exit(1);
 		}
 		else {
-				fprintf(stderr, "started discover thread\n");
+				if (verbose_flag)
+						fprintf(stderr, "started discover thread\n");
 		}
 
 		if ((rc = pthread_create(&expireThread, NULL, expire, (void *)NULL))>0) {
@@ -242,7 +302,8 @@ int main(int argc, char *argv[]) {
 				exit(1);
 		}
 		else {
-				fprintf(stderr, "started expire thread\n");
+				if (verbose_flag)
+						fprintf(stderr, "started expire thread\n");
 		}
 
 		/* status = 0 means zombie mode, don't accept anything   */
@@ -254,13 +315,33 @@ int main(int argc, char *argv[]) {
 
 		while (1) {
 
-				if (jobcount()>0) {
+				if (jobcount()>0 && !engineFailed) {
 
 						/* there is a job to be executed */
 						if (matlabRunning==0) {
 								fprintf(stderr, "starting MATLAB engine\n");
 								if ((en = engOpen(startcmd)) == NULL) {
-										panic("failed to start MATLAB engine\n");
+										/* this may be due to a licensing problem */
+										/* do not attempt to start again during the timeout period */
+										pthread_mutex_lock(&mutexhost);
+										fprintf(stderr, "failed to start MATLAB engine\n");
+										fprintf(stderr, "switching to zombie mode\n");
+										engineFailed = time(NULL);
+										host->status = 0; /* zombie */
+										pthread_mutex_unlock(&mutexhost);
+
+										/* remove the first job from the joblist */
+										fprintf(stderr, "deleting job\n");
+										pthread_mutex_lock(&mutexjoblist);
+										job = joblist;
+										joblist = job->next; 
+										FREE(job->job);
+										FREE(job->host);
+										FREE(job->arg);
+										FREE(job->opt);
+										FREE(job);
+										pthread_mutex_unlock(&mutexjoblist);
+										continue;
 								}
 								else {
 										matlabRunning = 1;
@@ -268,7 +349,7 @@ int main(int argc, char *argv[]) {
 						}
 
 						/* switch the mode to busy slave */
-						host->status = 3;
+						host->status = 3; /* busy */
 						matlabStart = time(NULL);
 
 						/* get the first job input arguments and options */
@@ -445,7 +526,7 @@ int main(int argc, char *argv[]) {
 				} /* if jobcount */
 
 				/* test that the matlab engine is not idle for too long */
-				if ((matlabRunning==1) && (time(NULL)-matlabFinished)>MAXIDLETIME) {
+				if ((matlabRunning==1) && (time(NULL)-matlabFinished)>enginetimeout) {
 						if (engClose(en)!=0) {
 								panic("could not stop the MATLAB engine\n");
 						}
@@ -453,6 +534,17 @@ int main(int argc, char *argv[]) {
 								fprintf(stderr, "stopped idle MATLAB engine\n");
 								matlabRunning = 0;
 						}
+				}
+
+				/* don't try to restart the engine immediately after a failure */
+				if (engineFailed && (time(NULL)-engineFailed)>zombietimeout) {
+						pthread_mutex_lock(&mutexhost);
+						fprintf(stderr, "switching to idle mode\n");
+						engineFailed = 0;
+						host->status = 2;  /* idle slave */
+						pthread_mutex_unlock(&mutexhost);
+						sleep(1);
+						continue;
 				}
 
 		} /* while */

@@ -30,15 +30,8 @@ case "$PLATFORM" in
 	;;
 esac
 
-TMP=`which peerslave.$MATLABARCH 2> /dev/null`
-if [[ -z $TMP ]] ; then
-	# use the centrally installed version
-	EXECDIR=/home/common/matlab/fieldtrip/peer
-else
-	# use the version that is on the user's path
-	EXECDIR=`dirname $TMP`
-fi
-
+EXECDIR=`dirname $0`
+MATLABCMD=/opt/cluster/`basename $MATLABPATH`
 export LD_LIBRARY_PATH=$MATLABPATH/bin/$MATLABARCH/ 
 
 ##############################################################################
@@ -74,11 +67,11 @@ mentat003|mentat004)
 mentat005)
 	# has 48GB of RAM, 2 CPUs and 12 cores in total
 	peermem[ 0]=8589934592
-	peermem[ 1]=8589934592
+	peermem[ 1]=4294967296
 	peermem[ 2]=4294967296
 	peermem[ 3]=4294967296
 	peermem[ 4]=4294967296
-	peermem[ 5]=4294967296
+	peermem[ 5]="auto"
 	peermem[ 6]="auto"
 	peermem[ 7]="auto"
 	peermem[ 8]="auto"
@@ -148,12 +141,13 @@ function start_peerslave {
 	fi
 
 	if [[ "$1" -eq "auto" ]] ; then
-		OPTIONS="--matlab /opt/matlab77/bin/matlab --allowgroup coherence --smartmem 1"
+		OPTIONS="--matlab $MATLABCMD --smartmem 1"
 	else
-		OPTIONS="--matlab /opt/matlab77/bin/matlab --allowgroup coherence --smartmem 0 --memavail $1"
+		OPTIONS="--matlab $MATLABCMD --smartmem 0 --memavail $1"
 	fi
 
 	PIDFILE=$PIDDIR/peerslave.$SLAVENUM
+    echo $EXECUTABLE $OPTIONS
 	$EXECUTABLE $OPTIONS &
 	PID=$!
 	if ( check_peerslave $PID ) ; then

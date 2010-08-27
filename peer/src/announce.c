@@ -69,7 +69,7 @@ void *announce(void *arg) {
 		hostdef_t *message = NULL;
 		unsigned char ttl = 3;
 		unsigned char one = 1;
-		int memavail;
+		UINT64_T memavail;
 
 		threadlocal_t threadlocal;
 		threadlocal.message = NULL;
@@ -137,25 +137,11 @@ void *announce(void *arg) {
 		/* now just sendto() our destination */
 		while (1) {
 
+
 				/* this should be done while the mutexhost is unlocked */
-				/* it returns -1 if the memory estimate is not available */
-				memavail = smartmem_avail();
+				smartmem_update();
 
 				pthread_mutex_lock(&mutexhost);
-
-				pthread_mutex_lock(&mutexsmartmem);
-
-				/* status = 0 means zombie mode, don't accept anything   */
-				/* status = 1 means master mode, accept everything       */
-				/* status = 2 means idle slave, accept only a single job */
-				/* status = 3 means busy slave, don't accept a new job   */
-				/* any other status is interpreted as zombie mode        */
-
-				if ((smartmem.enabled==1) && (host->status==2) && !(memavail<0)) {
-						/* update the available memory */
-						host->memavail = memavail;
-				}
-				pthread_mutex_unlock(&mutexsmartmem);
 
 				/* the host details can change over time */
 				memcpy(message, host, sizeof(hostdef_t));

@@ -62,7 +62,7 @@ if nargout==0
       otherwise
         error('unknown status');
     end
-    fprintf('%s at %s@%s:%d, group = %s, memavail = %u, hostid = %u\n', status, list(i).user, list(i).hostname, list(i).hostport, list(i).group, list(i).hostmemavail, list(i).hostid);
+    fprintf('%s at %s@%s:%d, group = %s, memavail = %6.1f MB, hostid = %u\n', status, list(i).user, list(i).hostname, list(i).hostport, list(i).group, list(i).hostmemavail/(1024*1024), list(i).hostid);
   end
   clear list
 end

@@ -35,7 +35,7 @@
 #define SO_REUSEPORT      SO_REUSEADDR
 #endif
 
-#define VERSION           0x0008
+#define VERSION           0x0009
 #define ANNOUNCE_GROUP    "225.0.0.88"
 #define ANNOUNCE_PORT 	  1700				/* it will auto-increment if the port is not available */
 #define DEFAULT_GROUP     "unknown"
@@ -126,17 +126,17 @@ typedef struct {
 		char group[STRLEN];
 		UINT32_T port;
 		UINT32_T status;
-		UINT32_T timavail; 
-		UINT32_T memavail; 
-		UINT32_T cpuavail; 
+		UINT64_T timavail; 
+		UINT64_T memavail; 
+		UINT64_T cpuavail; 
 } hostdef_t;
 
 typedef struct {
 		UINT32_T version;
 		UINT32_T id;
-		UINT32_T timreq; 
-		UINT32_T memreq; 
-		UINT32_T cpureq; 
+		UINT64_T timreq; 
+		UINT64_T memreq; 
+		UINT64_T cpureq; 
 		UINT32_T argsize;   	/* size of the job arguments in bytes */
 		UINT32_T optsize;   	/* size of the job options in bytes */
 } jobdef_t;
@@ -206,8 +206,9 @@ int  fairshare_check   (float timreq, int hostid);
 void fairshare_history (jobdef_t *job);
 
 /* fnuctions from smartmem.c */
-int meminfo(int *MemTotal, int *MemFree);
-int smartmem_avail(void);
+int meminfo(UINT64_T *MemTotal, UINT64_T *MemFree);
+int smartmem_update(void);
+UINT64_T smartmem_avail(void);
 
 /* functions from security.c */
 int security_check(hostdef_t *host);
