@@ -4,14 +4,42 @@
 
 source /etc/rc.d/init.d/functions
 
-COMMAND=$1
-PIDDIR=/tmp/run
-EXECDIR=.
-
-mkdir -p $PIDDIR
-
 PLATFORM=`gcc -dumpmachine`
 HOSTNAME=`hostname -s`
+
+case "$PLATFORM" in
+"x86_64-redhat-linux")
+	MATLABARCH=glnxa64
+	MATLABPATH=/opt/matlab77
+	;;
+"i386-redhat-linux")
+	MATLABARCH=glnx86
+	MATLABPATH=/opt/matlab77
+	;;
+"i686-apple-darwin9")
+	MATLABARCH=maci
+	MATLABPATH=/opt/matlab77
+	;;
+"i686-apple-darwin10")
+	MATLABARCH=maci
+	MATLABPATH=/opt/matlab77
+	;;
+*)
+	MATLABARCH=unknown
+	MATLABPATH=unknown
+	;;
+esac
+
+TMP=`which peerslave.$MATLABARCH 2> /dev/null`
+if [[ -z $TMP ]] ; then
+	# use the centrally installed version
+	EXECDIR=/home/common/matlab/fieldtrip/peer
+else
+	# use the version that is on the user's path
+	EXECDIR=`dirname $TMP`
+fi
+
+export LD_LIBRARY_PATH=$MATLABPATH/bin/$MATLABARCH/ 
 
 ##############################################################################
 # machine definitions
@@ -86,31 +114,6 @@ mentat235|mentat236|mentat237|mentat238|mentat239|mentat240|mentat241|mentat242|
 	;;
 esac
 
-case "$PLATFORM" in
-"x86_64-redhat-linux")
-	MATLABARCH=glnxa64
-	MATLABPATH=/opt/matlab77
-	;;
-"i386-redhad-linux")
-	MATLABARCH=glnx86
-	MATLABPATH=/opt/matlab77
-	;;
-"i686-apple-darwin9")
-	MATLABARCH=maci
-	MATLABPATH=/opt/matlab77
-	;;
-"i686-apple-darwin10")
-	MATLABARCH=maci
-	MATLABPATH=/opt/matlab77
-	;;
-*)
-	MATLABARCH=unknown
-	MATLABPATH=unknown
-	;;
-esac
-
-export LD_LIBRARY_PATH=$MATLABPATH/bin/$MATLABARCH/ 
-
 ##############################################################################
 # functions
 ##############################################################################
@@ -145,9 +148,9 @@ function start_peerslave {
 	fi
 
 	if [[ "$1" -eq "auto" ]] ; then
-		OPTIONS="--smartmem 1"
+		OPTIONS="--matlab /opt/matlab77/bin/matlab --allowgroup coherence --smartmem 1"
 	else
-		OPTIONS="--smartmem 0 --memavail $1"
+		OPTIONS="--matlab /opt/matlab77/bin/matlab --allowgroup coherence --smartmem 0 --memavail $1"
 	fi
 
 	PIDFILE=$PIDDIR/peerslave.$SLAVENUM
@@ -164,6 +167,10 @@ function start_peerslave {
 # execution
 ##############################################################################
 
+PIDDIR=/tmp/run.$USER
+mkdir -p $PIDDIR
+
+COMMAND=$1
 case $COMMAND in
 
 start)
