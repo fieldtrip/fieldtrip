@@ -131,7 +131,7 @@ while isempty(jobid)
   % only peers with enough memory are interesting
   peerlist = peerlist([peerlist.hostmemavail] >= memreq);
   if isempty(peerlist)
-    error('there are no slave peers available that meet the memory requirements');
+    error('FieldTrip:Peer:NotEnoughMemoryAvailableOnSlave', 'there are no slave peers available that meet the memory requirements');
   end
   
   % only peers with enough CPU speed are interesting

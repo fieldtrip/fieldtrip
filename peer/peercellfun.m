@@ -161,11 +161,25 @@ while ~all(submitted) || ~all(collected)
     end
     
     % submit the job for execution
+try
     [jobid(submit) puttime(submit)] = peerfeval(fname, argin{:}, 'timeout', inf, 'memreq', memreq, 'timreq', timreq, 'diary', diary);
-    
     % fprintf('submitted job %d\n', submit);
     submitted(submit)  = true;
     submittime(submit) = toc(stopwatch);
+    catch me
+      if strcmp(me.identifier, 'FieldTrip:Peer:NotEnoughMemoryAvailableOnSlave')
+        l = peerlist;
+        if any([l.hoststatus]==1 & [l.hostmemavail]>memreq)
+          % there is a busy slave with enough memory, which may become available later
+          warning('there are currently no slave peers available that meet the memory requirements'); 
+        else
+          rethrow(me);
+        end
+      else
+        rethrow(me);
+      end
+    end % catch
+    
     clear argin
   end % if ~isempty(submit)
   
