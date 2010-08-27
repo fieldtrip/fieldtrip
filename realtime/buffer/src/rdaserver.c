@@ -626,7 +626,8 @@ void *_rdaserver_thread(void *arg) {
 	
 	headerdef_t ftHdr;			/* contains header information */
 	int i,typeOk;				/* typeOk is only interesting for 16-bit servers */
-	int ftTimeout = 20;			/* wait up to 20ms for new data/events */
+	int ftTimeout = 20;			/* in milliseconds, wait up to 20ms for new data/events */
+	int selTimeout = 0;			/* in microseconds, for select */
 	unsigned int numBlock = 0;	/* running count of data blocks received */
 	samples_events_t lastNum = {0,0};	/* number of samples + events handled so far */
 	samples_events_t curNum = {0,0};	/* ... currently available */
@@ -661,16 +662,14 @@ void *_rdaserver_thread(void *arg) {
 			startItem = rda_aux_get_hdr_prep_start(SC->ft_buffer, &ftHdr);
 			if (startItem == NULL) {
 				/* no header yet, wait in select call for clients connecting */
-				tv.tv_sec  = 0; 
-				tv.tv_usec = 100000;
+				selTimeout = 100000;
 			} else {
 				/* yeah, we got it */
 				if (SC->verbosity > 4) {
 					printf("Picked up FieldTrip header: %i channels @ %.1f Hz, datatype=%i\n",ftHdr.nchans, ftHdr.fsample, ftHdr.data_type); 
 				}
 				/* don't wait in select call, but inside FT polling */
-				tv.tv_sec = 0;
-				tv.tv_usec = 0;
+				selTimeout = 0;
 				/* set 'typeOk' flag if we're running a 16 bit server */
 				if (SC->use16bit) {
 					typeOk = (ftHdr.data_type == DATATYPE_INT16) || (ftHdr.data_type == DATATYPE_UINT16);
@@ -710,6 +709,8 @@ void *_rdaserver_thread(void *arg) {
 		}
 
 		/* Check server and client sockets for possible read and write operations */
+		tv.tv_sec  = 0; 
+		tv.tv_usec = selTimeout;
 		sel = select(fdMax + 1, &readSet, &writeSet, NULL, &tv);
 		if (sel == -1) {
 			perror("rdaserver_thread -- select");
