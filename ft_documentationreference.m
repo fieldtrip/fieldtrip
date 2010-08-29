@@ -51,7 +51,10 @@ f7 = {f7.name}';
 f8 = dir(fullfile(p, 'realtime', 'datasource', '*.m'));
 f8 = {f8.name}';
 
-funname = cat(1, f1, f2, f3, f4, f5, f6, f7, f8);
+f9 = dir(fullfile(p, 'peer', '*.m'));
+f9 = {f9.name}';
+
+funname = cat(1, f1, f2, f3, f4, f5, f6, f7, f8, f9);
 
 for i=1:length(funname)
   [p, funname{i}, x] = fileparts(funname{i});
