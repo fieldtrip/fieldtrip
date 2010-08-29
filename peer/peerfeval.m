@@ -48,7 +48,7 @@ function [jobid, puttime] = peerfeval(varargin)
 
 % these are used to speed up the processing of multiple function calls with
 % the same input arguments (e.g. from peercellfun)
-persistent previous_argin previous_optarg
+persistent previous_argin
 
 % check that the required peer server threads are running
 status = true;
@@ -74,12 +74,12 @@ strargin(~cellfun(@ischar, strargin)) = {''};
 % locate the begin of the optional key-value arguments
 optbeg = false(size(strargin));
 optbeg = optbeg | strcmp('timeout', strargin);
-optbeg = optbeg | strcmp('sleep', strargin);
-optbeg = optbeg | strcmp('memreq', strargin);
-optbeg = optbeg | strcmp('cpureq', strargin);
-optbeg = optbeg | strcmp('timreq', strargin);
-optbeg = optbeg | strcmp('hostid', strargin);
-optbeg = optbeg | strcmp('diary',  strargin);
+optbeg = optbeg | strcmp('sleep',   strargin);
+optbeg = optbeg | strcmp('memreq',  strargin);
+optbeg = optbeg | strcmp('cpureq',  strargin);
+optbeg = optbeg | strcmp('timreq',  strargin);
+optbeg = optbeg | strcmp('hostid',  strargin);
+optbeg = optbeg | strcmp('diary',   strargin);
 optbeg = find(optbeg);
 optarg = varargin(optbeg:end);
 
@@ -120,51 +120,51 @@ while isempty(jobid)
     % it took too long to find a peer that was willing to execute the job
     break;
   end
-  
+
   % get the full list of peers
   peerlist = peer('peerlist');
-  
+
   if ~isempty(hostid)
     % only consider peers in the user specified list
     peerlist = peerlist(ismember([peerlist.hostid], hostid));
   end
-  
+
   % only peers in slave mode are interesting
   peerlist = peerlist([peerlist.status]==2 | [peerlist.status]==3);
   if isempty(peerlist)
     error('there is no peer available as slave');
   end
-  
+
   % only peers with enough memory are interesting
   peerlist = peerlist([peerlist.memavail] >= memreq);
   if isempty(peerlist)
     error('FieldTrip:Peer:NotEnoughMemoryAvailableOnSlave', 'there are no slave peers available that meet the memory requirements');
   end
-  
+
   % only peers with enough CPU speed are interesting
   peerlist = peerlist([peerlist.cpuavail] >= cpureq);
   if isempty(peerlist)
     error('there are no slave peers available that meet the CPU requirements');
   end
-  
+
   % only peers with enough time for a single job are interesting
   peerlist = peerlist([peerlist.timavail] >= timreq);
   if isempty(peerlist)
     error('there are no slave peers available to execute a job of this duration');
   end
-  
+
   % FIXME the heuristic rule for finding the best match needs to be improved
   mempenalty = scale([peerlist.memavail] - memreq);
   cpupenalty = scale([peerlist.cpuavail] - cpureq);
   timpenalty = scale([peerlist.timavail] - timreq);
   penalty    = mempenalty + 0.1* rand(1, length(peerlist)) + ([peerlist.status]==3);
-  
+
   % select the slave peer that has the best match with the job requirements
   [penalty, indx] = sort(penalty);
-  
+
   % sort the peerlist according to the penalty
   peerlist = peerlist(indx);
-  
+
   for i=1:length(peerlist)
     try
       jobid   = [];
@@ -178,12 +178,12 @@ while isempty(jobid)
       % probably the selected peer is busy, try the next peer in line
     end
   end % for
-  
+
   if isempty(jobid)
     % another attempt is needed, give the network some time to recover
     pause(sleep);
   end
-  
+
 end % while isempty(jobid)
 
 if isempty(jobid)

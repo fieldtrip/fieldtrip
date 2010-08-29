@@ -2,7 +2,9 @@
 #
 # helper script to start multiple peers in slave mode
 
+if [[ -e /etc/rc.d/init.d/functions ]]; then 
 source /etc/rc.d/init.d/functions
+fi
 
 PLATFORM=`gcc -dumpmachine`
 HOSTNAME=`hostname -s`
@@ -11,18 +13,22 @@ case "$PLATFORM" in
 "x86_64-redhat-linux")
 	MATLABARCH=glnxa64
 	MATLABPATH=/opt/matlab77
+	MATLABCMD=/opt/cluster/`basename $MATLABPATH`
 	;;
 "i386-redhat-linux")
 	MATLABARCH=glnx86
 	MATLABPATH=/opt/matlab77
+	MATLABCMD=/opt/cluster/`basename $MATLABPATH`
 	;;
 "i686-apple-darwin9")
 	MATLABARCH=maci
-	MATLABPATH=/opt/matlab77
+	MATLABPATH=/Applications/MATLAB-2009a
+	MATLABCMD=$MATLABPATH/bin/matlab
 	;;
 "i686-apple-darwin10")
 	MATLABARCH=maci
-	MATLABPATH=/opt/matlab77
+	MATLABPATH=/Applications/MATLAB-2009a
+	MATLABCMD=$MATLABPATH/bin/matlab
 	;;
 *)
 	MATLABARCH=unknown
@@ -31,7 +37,6 @@ case "$PLATFORM" in
 esac
 
 EXECDIR=`dirname $0`
-MATLABCMD=/opt/cluster/`basename $MATLABPATH`
 export LD_LIBRARY_PATH=$MATLABPATH/bin/$MATLABARCH/ 
 
 ##############################################################################
@@ -101,9 +106,17 @@ mentat235|mentat236|mentat237|mentat238|mentat239|mentat240|mentat241|mentat242|
 	peermem[2]="auto"
 	peermem[3]="auto"
 	;;
+manzana)
+	# Mac OS X computer with 10B of RAM, two CPUs and 4 cores
+	# Dual-Core Intel Xeon 2.66 GHz
+	peermem[0]="auto"
+	peermem[1]="auto"
+	peermem[2]="auto"
+	peermem[3]="auto"
+	;;
 *)
 	# the default configuration for all other machines is a single peerslave 
-	peermem[3]="auto"
+	peermem[0]="auto"
 	;;
 esac
 
@@ -115,6 +128,8 @@ function check_peerslave {
 	PEERPID=$1
 	if [[ -d /proc/$PEERPID ]] ; then
 		if ( grep -s -q peerslave /proc/$PEERPID/cmdline ) ; then
+			return 0
+		elif ( grep $PEERPID ) ; then
 			return 0
 		else
 			return 1
@@ -147,7 +162,7 @@ function start_peerslave {
 	fi
 
 	PIDFILE=$PIDDIR/peerslave.$SLAVENUM
-    echo $EXECUTABLE $OPTIONS
+	echo $EXECUTABLE $OPTIONS
 	$EXECUTABLE $OPTIONS &
 	PID=$!
 	if ( check_peerslave $PID ) ; then
