@@ -22,6 +22,7 @@ function peer
 % peer('allowgroup',  {'group1', 'group2', ...})
 % joblist    = peer('joblist')
 % peerlist   = peer('peerlist')
+% peerinfo   = peer('peerinfo')
 % job        = peer('put', peerid, arg, opt, ...)
 % [arg, opt] = peer('get', jobid)
 

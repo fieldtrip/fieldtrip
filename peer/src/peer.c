@@ -27,14 +27,17 @@
 mxArray *mxSerialize(const mxArray*);
 mxArray *mxDeserialize(const void*, size_t);
 
-#define NUMJOBSTRUCTFIELDS 4
-const char* jobstructfieldnames[NUMJOBSTRUCTFIELDS] = {"version", "jobid", "argsize", "optsize"};
+#define JOB_FIELDNUMBER 4
+const char* job_fieldnames[JOB_FIELDNUMBER] = {"version", "jobid", "argsize", "optsize"};
 
-#define NUMPEERSTRUCTFIELDS 9
-const char* peerstructfieldnames[NUMPEERSTRUCTFIELDS] = {"hostid", "hostname", "user", "group", "hostport", "hoststatus", "hostmemavail", "hostcpuavail", "hosttimavail"};
+#define JOBLIST_FIELDNUMBER 6
+const char* joblist_fieldnames[JOBLIST_FIELDNUMBER] = {"version", "jobid", "argsize", "optsize", "hostid", "hostname"};
 
-#define NUMJOBPEERSTRUCTFIELDS 6
-const char* jobpeerstructfieldnames[NUMJOBPEERSTRUCTFIELDS] = {"version", "jobid", "argsize", "optsize", "hostid", "hostname"};
+#define PEERINFO_FIELDNUMBER 12
+const char* peerinfo_fieldnames[PEERINFO_FIELDNUMBER] = {"hostid", "hostname", "user", "group", "port", "status", "memavail", "cpuavail", "timavail", "allowuser", "allowgroup", "allowhost"};
+
+#define PEERLIST_FIELDNUMBER 9
+const char* peerlist_fieldnames[PEERLIST_FIELDNUMBER] = {"hostid", "hostname", "user", "group", "port", "status", "memavail", "cpuavail", "timavail"};
 
 int peerInitialized = 0;
 
@@ -298,12 +301,12 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				pthread_mutex_unlock(&mutexstatus);
 
 				pthread_mutex_lock(&mutexhost);
-				mexPrintf("host.name       = %s\n", host->name);
+				mexPrintf("host.hostid     = %d\n", host->id);
+				mexPrintf("host.hostname   = %s\n", host->name);
 				mexPrintf("host.port       = %d\n", host->port);
 				mexPrintf("host.user       = %s\n", host->user);
 				mexPrintf("host.group      = %s\n", host->group);
 				mexPrintf("host.status     = %d\n", host->status);
-				mexPrintf("host.id         = %d\n", host->id);
 				mexPrintf("host.memavail   = %llu\n", host->memavail);
 				mexPrintf("host.timavail   = %llu\n", host->timavail);
 				mexPrintf("host.cpuavail   = %llu\n", host->cpuavail);
@@ -338,8 +341,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				peer = peerlist;
 				while(peer) {
 						mexPrintf("peerlist[%d] = \n", i);
-						mexPrintf("  host.id       = %d\n", peer->host->id);
-						mexPrintf("  host.name     = %s\n", peer->host->name);
+						mexPrintf("  host.hostid   = %d\n", peer->host->id);
+						mexPrintf("  host.hostname = %s\n", peer->host->name);
 						mexPrintf("  host.port     = %d\n", peer->host->port);
 						mexPrintf("  host.user     = %s\n", peer->host->user);
 						mexPrintf("  host.group    = %s\n", peer->host->group);
@@ -377,103 +380,125 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		/****************************************************************************/
 		else if (strcasecmp(command, "status")==0) {
 				/* the input arguments should be "status <number>" */
-				if (nrhs<2)
+				if (nrhs<2) {
 						mexErrMsgTxt ("invalid number of input arguments");
-				if (!mxIsNumeric(prhs[1]))
-						mexErrMsgTxt ("invalid input argument #2");
-				if (!mxIsScalar(prhs[1]))
-						mexErrMsgTxt ("invalid input argument #2");
-				pthread_mutex_lock(&mutexhost);
-				host->status = (UINT32_T)mxGetScalar(prhs[1]);
-				pthread_mutex_unlock(&mutexhost);
-				announce_once();
+				}
+				else {
+						if (!mxIsNumeric(prhs[1]))
+								mexErrMsgTxt ("invalid input argument #2");
+						if (!mxIsScalar(prhs[1]))
+								mexErrMsgTxt ("invalid input argument #2");
+
+						pthread_mutex_lock(&mutexhost);
+						host->status = (UINT32_T)mxGetScalar(prhs[1]);
+						pthread_mutex_unlock(&mutexhost);
+						announce_once();
+				}
 		}
 
 		/****************************************************************************/
 		else if (strcasecmp(command, "smartmem")==0) {
 				/* the input arguments should be "smartmem <0|1> */
-				if (nrhs<2)
+				if (nrhs<2) {
 						mexErrMsgTxt ("invalid number of input arguments");
+				}
+				else {
 
-				if (!mxIsNumeric(prhs[1]))
-						mexErrMsgTxt ("invalid input argument #2");
-				if (!mxIsScalar(prhs[1]))
-						mexErrMsgTxt ("invalid input argument #2");
+						if (!mxIsNumeric(prhs[1]))
+								mexErrMsgTxt ("invalid input argument #2");
+						if (!mxIsScalar(prhs[1]))
+								mexErrMsgTxt ("invalid input argument #2");
 
-				pthread_mutex_lock(&mutexsmartmem);
-				smartmem.enabled = mxGetScalar(prhs[1]);
-				pthread_mutex_unlock(&mutexsmartmem);
+						pthread_mutex_lock(&mutexsmartmem);
+						smartmem.enabled = mxGetScalar(prhs[1]);
+						pthread_mutex_unlock(&mutexsmartmem);
+				}
 		}
 
 		/****************************************************************************/
 		else if (strcasecmp(command, "fairshare")==0) {
 				/* the input arguments should be "fairshare <0|1> */
-				if (nrhs<2)
+				if (nrhs<2) {
 						mexErrMsgTxt ("invalid number of input arguments");
+				}
+				else {
 
-				if (!mxIsNumeric(prhs[1]))
-						mexErrMsgTxt ("invalid input argument #2");
-				if (!mxIsScalar(prhs[1]))
-						mexErrMsgTxt ("invalid input argument #2");
+						if (!mxIsNumeric(prhs[1]))
+								mexErrMsgTxt ("invalid input argument #2");
+						if (!mxIsScalar(prhs[1]))
+								mexErrMsgTxt ("invalid input argument #2");
 
-				pthread_mutex_lock(&mutexfairshare);
-				fairshare.enabled = mxGetScalar(prhs[1]);
-				pthread_mutex_unlock(&mutexfairshare);
+						pthread_mutex_lock(&mutexfairshare);
+						fairshare.enabled = mxGetScalar(prhs[1]);
+						pthread_mutex_unlock(&mutexfairshare);
+				}
 		}
 
 		/****************************************************************************/
 		else if (strcasecmp(command, "memavail")==0) {
 				/* the input arguments should be "memavail <number>" */
-				if (nrhs<2)
+				if (nrhs<2) {
 						mexErrMsgTxt ("invalid number of input arguments");
-				if (!mxIsNumeric(prhs[1]))
-						mexErrMsgTxt ("invalid input argument #2");
-				if (!mxIsScalar(prhs[1]))
-						mexErrMsgTxt ("invalid input argument #2");
-				pthread_mutex_lock(&mutexhost);
-				host->memavail = (UINT64_T)mxGetScalar(prhs[1]);
-				pthread_mutex_unlock(&mutexhost);
+				}
+				else {
+						if (!mxIsNumeric(prhs[1]))
+								mexErrMsgTxt ("invalid input argument #2");
+						if (!mxIsScalar(prhs[1]))
+								mexErrMsgTxt ("invalid input argument #2");
+
+						pthread_mutex_lock(&mutexhost);
+						host->memavail = (UINT64_T)mxGetScalar(prhs[1]);
+						pthread_mutex_unlock(&mutexhost);
+				}
 		}
 
 		/****************************************************************************/
 		else if (strcasecmp(command, "cpuavail")==0) {
 				/* the input arguments should be "cpuavail <number>" */
-				if (nrhs<2)
+				if (nrhs<2) {
 						mexErrMsgTxt ("invalid number of input arguments");
-				if (!mxIsNumeric(prhs[1]))
-						mexErrMsgTxt ("invalid input argument #2");
-				if (!mxIsScalar(prhs[1]))
-						mexErrMsgTxt ("invalid input argument #2");
-				pthread_mutex_lock(&mutexhost);
-				host->cpuavail = (UINT64_T)mxGetScalar(prhs[1]);
-				pthread_mutex_unlock(&mutexhost);
+				}
+				else {
+						if (!mxIsNumeric(prhs[1]))
+								mexErrMsgTxt ("invalid input argument #2");
+						if (!mxIsScalar(prhs[1]))
+								mexErrMsgTxt ("invalid input argument #2");
+
+						pthread_mutex_lock(&mutexhost);
+						host->cpuavail = (UINT64_T)mxGetScalar(prhs[1]);
+						pthread_mutex_unlock(&mutexhost);
+				}
 		}
 
 		/****************************************************************************/
 		else if (strcasecmp(command, "timavail")==0) {
 				/* the input arguments should be "timavail <number>" */
-				if (nrhs<2)
+				if (nrhs<2) {
 						mexErrMsgTxt ("invalid number of input arguments");
-				if (!mxIsNumeric(prhs[1]))
-						mexErrMsgTxt ("invalid input argument #2");
-				if (!mxIsScalar(prhs[1]))
-						mexErrMsgTxt ("invalid input argument #2");
-				pthread_mutex_lock(&mutexhost);
-				host->timavail = (UINT64_T)mxGetScalar(prhs[1]);
-				pthread_mutex_unlock(&mutexhost);
+				}
+				else {
+						if (!mxIsNumeric(prhs[1]))
+								mexErrMsgTxt ("invalid input argument #2");
+						if (!mxIsScalar(prhs[1]))
+								mexErrMsgTxt ("invalid input argument #2");
+
+						pthread_mutex_lock(&mutexhost);
+						host->timavail = (UINT64_T)mxGetScalar(prhs[1]);
+						pthread_mutex_unlock(&mutexhost);
+				}
 		}
 
 		/****************************************************************************/
 		else if (strcasecmp(command, "tcpport")==0) {
 				/* the input arguments should be "tcpport <number>" */
-				if (tcpserverStatus)
-						mexErrMsgTxt ("cannot change the port while the tcpserver is running");
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
 				if (!mxIsNumeric(prhs[1]))
 						mexErrMsgTxt ("invalid input argument #2");
 				if (!mxIsScalar(prhs[1]))
 						mexErrMsgTxt ("invalid input argument #2");
+				if (tcpserverStatus) 
+						mexErrMsgTxt ("cannot change the port while the tcpserver is running");
 				pthread_mutex_lock(&mutexhost);
 				host->port = (UINT32_T)mxGetScalar(prhs[1]);
 				pthread_mutex_unlock(&mutexhost);
@@ -511,6 +536,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				if (mxIsEmpty(prhs[1])) {
 						/* set the default, i.e. the hostname of this computer */
 						if (gethostname(host->name, STRLEN))
+								/* FIXME this causes a deadlock */
 								mexErrMsgTxt("FIXME: could not get hostname");
 				}
 				else {
@@ -807,7 +833,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 
 				if (success) {
 						/* return the job details */
-						plhs[0] = mxCreateStructMatrix(1, 1, NUMJOBSTRUCTFIELDS, jobstructfieldnames);
+						plhs[0] = mxCreateStructMatrix(1, 1, JOB_FIELDNUMBER, job_fieldnames);
 						mxSetFieldByNumber(plhs[0], 0, 0, mxCreateDoubleScalar((UINT32_T)(def->version)));
 						mxSetFieldByNumber(plhs[0], 0, 1, mxCreateDoubleScalar((UINT32_T)(def->id)));
 						mxSetFieldByNumber(plhs[0], 0, 2, mxCreateDoubleScalar((UINT32_T)(def->argsize)));
@@ -918,6 +944,93 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
+		else if (strcasecmp(command, "peerinfo")==0) {
+				pthread_mutex_lock(&mutexhost);
+				plhs[0] = mxCreateStructMatrix(1, 1, PEERINFO_FIELDNUMBER, peerinfo_fieldnames);
+				mxSetFieldByNumber(plhs[0], 0, 0, mxCreateDoubleScalar((UINT32_T)(host->id)));
+				mxSetFieldByNumber(plhs[0], 0, 1, mxCreateString(host->name));
+				mxSetFieldByNumber(plhs[0], 0, 2, mxCreateString(host->user));
+				mxSetFieldByNumber(plhs[0], 0, 3, mxCreateString(host->group));
+				mxSetFieldByNumber(plhs[0], 0, 4, mxCreateDoubleScalar((UINT32_T)(host->port)));
+				mxSetFieldByNumber(plhs[0], 0, 5, mxCreateDoubleScalar((UINT32_T)(host->status)));
+				mxSetFieldByNumber(plhs[0], 0, 6, mxCreateDoubleScalar((UINT64_T)(host->memavail)));
+				mxSetFieldByNumber(plhs[0], 0, 7, mxCreateDoubleScalar((UINT64_T)(host->cpuavail)));
+				mxSetFieldByNumber(plhs[0], 0, 8, mxCreateDoubleScalar((UINT64_T)(host->timavail)));
+				pthread_mutex_unlock(&mutexhost);
+
+				/* create a cell-array for allowgroup */
+				pthread_mutex_lock(&mutexuserlist);
+				i = 0;
+				allowuser = userlist;
+				while (allowuser) {
+						/* count the number of items */
+						i++;
+						allowuser = allowuser->next;
+				}
+				if (i==0)
+						val= mxCreateCellMatrix(0, 0);
+				else 
+						val= mxCreateCellMatrix(1, i);
+				/* loop over the list to assign the items to a cell-array */
+				allowuser = userlist;
+				while (allowuser) {
+						/* start assigning at the back, to keep them in the original order */
+						mxSetCell(val, --i, mxCreateString(allowuser->name));
+						allowuser = allowuser->next;
+				}
+				mxSetFieldByNumber(plhs[0], 0, 9, val);
+				pthread_mutex_unlock(&mutexuserlist);
+
+				/* create a cell-array for allowgroup */
+				pthread_mutex_lock(&mutexgrouplist);
+				i = 0;
+				allowgroup = grouplist;
+				while (allowgroup) {
+						/* count the number of items */
+						i++;
+						allowgroup = allowgroup->next;
+				}
+				if (i==0)
+						val= mxCreateCellMatrix(0, 0);
+				else 
+						val= mxCreateCellMatrix(1, i);
+				/* loop over the list to assign the items to a cell-array */
+				allowgroup = grouplist;
+				while (allowgroup) {
+						/* start assigning at the back, to keep them in the original order */
+						mxSetCell(val, --i, mxCreateString(allowgroup->name));
+						allowgroup = allowgroup->next;
+				}
+				mxSetFieldByNumber(plhs[0], 0, 10, val);
+				pthread_mutex_unlock(&mutexgrouplist);
+
+				/* create a cell-array for allowhost */
+				pthread_mutex_lock(&mutexhostlist);
+				i = 0;
+				allowhost = hostlist;
+				while (allowhost) {
+						/* count the number of items */
+						i++;
+						allowhost = allowhost->next;
+				}
+				if (i==0)
+						val= mxCreateCellMatrix(0, 0);
+				else 
+						val= mxCreateCellMatrix(1, i);
+				/* loop over the list to assign the items to a cell-array */
+				allowhost = hostlist;
+				while (allowhost) {
+						/* start assigning at the back, to keep them in the original order */
+						mxSetCell(val, --i, mxCreateString(allowhost->name));
+						allowhost = allowhost->next;
+				}
+				mxSetFieldByNumber(plhs[0], 0, 11, val);
+				pthread_mutex_unlock(&mutexhostlist);
+
+				return;
+		}
+
+		/****************************************************************************/
 		else if (strcasecmp(command, "peerlist")==0) {
 				pthread_mutex_lock(&mutexpeerlist);
 				/* count the number of peers */
@@ -927,7 +1040,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						i++;
 						peer = peer->next ;
 				}
-				plhs[0] = mxCreateStructMatrix(i, 1, NUMPEERSTRUCTFIELDS, peerstructfieldnames);
+				plhs[0] = mxCreateStructMatrix(i, 1, PEERLIST_FIELDNUMBER, peerlist_fieldnames);
 				i = 0;
 				peer = peerlist;
 				while(peer) {
@@ -957,7 +1070,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						i++;
 						job = job->next ;
 				}
-				plhs[0] = mxCreateStructMatrix(i, 1, NUMJOBPEERSTRUCTFIELDS, jobpeerstructfieldnames);
+				plhs[0] = mxCreateStructMatrix(i, 1, JOBLIST_FIELDNUMBER, joblist_fieldnames);
 				i = 0;
 				job = joblist;
 				while(job) {

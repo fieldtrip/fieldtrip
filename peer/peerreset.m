@@ -1,9 +1,13 @@
 function peerreset
 
 % PEERRESET clears all jobs on the local peer server and switches to
-% zombie mode.
+% zombie mode. If you also want to erase the settings for group, allowuser,
+% allowgroup and allowhost, then you should execute "clear peer".
 %
-% See also PEERMASTER, PEERSLAVE
+% Use as
+%   peerreset
+%
+% See also PEERMASTER, PEERSLAVE, PEERZOMBIE
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld

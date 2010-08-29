@@ -1,18 +1,25 @@
 function peerzombie(varargin)
 
-% PEERZOMBIE starts the low-level peer services and switches to
-% zombie mode.
+% PEERZOMBIE starts the low-level peer servicesand switches to zombie
+% mode. As a zombie, the peer will not allow any job requests or job results
+% to be written to it. It still announces itself to the other peers in the
+% network and you can think of this as the "default" or "unspecified" mode.
 %
 % Use as
 %   peermaster(...)
 %
-% Optional input arguments should be specified as key-value pairs
-% and can include
-%   group      = string
-%   hostname   = string
-%   allowhost  = {...}
-%   allowuser  = {...}
-%   allowgroup = {...}
+% Optional input arguments should be passed as key-value pairs. The
+% following options are available to limit the peer network, i.e. to
+% form sub-networks.
+%   group       = string
+%   allowhost   = {...}
+%   allowuser   = {...}
+%   allowgroup  = {...}
+% The allow options will prevent peers that do not match the requirements
+% to be added to the (dynamic) list of known peers. Consequently, these
+% options limit which peers know each other. A master will not send jobs
+% to peers that it does not know. A slave will not accept jobs from a peer
+% that it does not know.
 %
 % See also PEERMASTER, PEERSLAVE, PEERRESET
 
@@ -34,7 +41,6 @@ function peerzombie(varargin)
 % -----------------------------------------------------------------------
 
 % get the optional input arguments
-hostname   = keyval('hostname',   varargin);
 group      = keyval('group',      varargin);
 allowhost  = keyval('allowhost',  varargin); if isempty(allowhost), allowhost = {}; end
 allowuser  = keyval('allowuser',  varargin); if isempty(allowuser), allowuser = {}; end
@@ -59,10 +65,17 @@ peer('discover',  'start');
 peer('expire',    'start');
 warning(ws)
 
-if ~isempty(hostname)
-  peer('hostname', hostname);
-end
+% this should not be user-configurable
+% if ~isempty(user)
+%   peer('user', user);
+% end
 
+% this should not be user-configurable
+% if ~isempty(hostname)
+%   peer('hostname', hostname);
+% end
+
+% the group can be specified by the user
 if ~isempty(group)
   peer('group', group);
 end

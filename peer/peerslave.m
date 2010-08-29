@@ -6,22 +6,36 @@ function peerslave(varargin)
 % Use as
 %   peerslave(...)
 %
-% Optional input arguments should be passed as key-value pairs and can include
-%   maxnum      = number (default = inf)
-%   maxtime     = number (default = inf)
-%   maxidle     = number (default = inf)
-%   sleep       = number in seconds (default = 0.01)
-%   memavail    = number, amount of memory available       (default = inf)
-%   cpuavail    = number, speed of the CPU                 (default = inf)
-%   timavail    = number, maximum duration of a single job (default = inf)
-%   threads     = number, maximum number of threads to use (default = automatic)
+% Optional input arguments should be passed as key-value pairs. The
+% following options are available to limit the peer network, i.e. to
+% form sub-networks.
+%   group       = string
 %   allowhost   = {...}
 %   allowuser   = {...}
 %   allowgroup  = {...}
-%   group       = string
-%   hostname    = string
+% The allow options will prevent peers that do not match the requirements
+% to be added to the (dynamic) list of known peers. Consequently, these
+% options limit which peers know each other. A master will not send jobs
+% to peers that it does not know. A slave will not accept jobs from a peer
+% that it does not know.
+%
+% The following options are available to limit the number and duration
+% of the jobs that the slave will execute.
+%   maxnum      = number (default = inf)
+%   maxtime     = number (default = inf)
+%   maxidle     = number (default = inf)
+%
+% The following options are available to limit the available resources
+% that available for job execution.
+%   memavail    = number, amount of memory available       (default = inf)
+%   cpuavail    = number, speed of the CPU                 (default = inf)
+%   timavail    = number, maximum duration of a single job (default = inf)
 %
 % See also PEERMASTER, PEERRESET, PEERFEVAL, PEERCELLFUN
+
+% Undocumented options
+%   sleep       = number in seconds (default = 0.01)
+%   threads     = number, maximum number of threads to use (default = automatic)
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
@@ -53,7 +67,6 @@ allowhost  = keyval('allowhost',  varargin); if isempty(allowhost), allowhost = 
 allowuser  = keyval('allowuser',  varargin); if isempty(allowuser), allowuser = {}; end
 allowgroup = keyval('allowgroup', varargin); if isempty(allowgroup), allowgroup = {}; end
 group      = keyval('group',      varargin);
-hostname   = keyval('hostname',   varargin);
 
 % these should be cell arrays
 if ~iscell(allowhost) && ischar(allowhost)
@@ -74,10 +87,17 @@ peer('discover',  'start');
 peer('expire',    'start');
 warning(ws);
 
-if ~isempty(hostname)
-  peer('hostname', hostname);
-end
+% this should not be user-configurable
+% if ~isempty(user)
+%   peer('user', user);
+% end
 
+% this should not be user-configurable
+% if ~isempty(hostname)
+%   peer('hostname', hostname);
+% end
+
+% the group can be specified by the user
 if ~isempty(group)
   peer('group', group);
 end

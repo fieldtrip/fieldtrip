@@ -1,7 +1,11 @@
-function peerinfo
+function info = peerinfo
 
-% PEERINFO displays information about the peers in the network and about
-% the jobs that are present in this peer
+% PEERINFO displays information about the current peer, e.g. whether the
+% maintenance threads are running, the network, group and user configuration
+% and the specification of the peers that are allowed to be discovered.
+%
+% Use as
+%   peerinfo
 %
 % See also PEERLIST
 
@@ -22,38 +26,81 @@ function peerinfo
 % along with this program.  If not, see <http://www.gnu.org/licenses/
 % -----------------------------------------------------------------------
 
-% check that the required peer server threads are running
-status = true;
-status = status & peer('tcpserver', 'status');
-status = status & peer('announce',  'status');
-status = status & peer('discover',  'status');
-status = status & peer('expire',    'status');
-if ~status
-  % start the maintenance threads
-  ws = warning('off');
-  peer('tcpserver', 'start');
-  peer('announce',  'start');
-  peer('discover',  'start');
-  peer('expire',    'start');
-  warning(ws)
-  peer('status', 0);    % switch to zombie mode
-  pause(1.5);           % give the announce and discover some time
-end
+info = peer('peerinfo');
 
-list = peer('peerlist');
-jobs = peer('joblist');
+if nargout==0
+% display the information on screen
 
-% give a summary
-fprintf('there are %3d peers running as master\n', sum([list.hoststatus]==1));
-fprintf('there are %3d peers running as idle slave\n', sum([list.hoststatus]==2));
-fprintf('there are %3d peers running as busy slave\n', sum([list.hoststatus]==3));
-fprintf('there are %3d peers running as zombie\n', sum([list.hoststatus]==0));
+  % reformat the status
+  switch info.status
+  case 0
+    status = 'zombie';
+  case 1
+    status = 'master';
+  case 2
+    status = 'idle slave';
+  case 3
+    status = 'busy slave';
+  otherwise
+    status = 'unknown';
+  end
 
-% display the hosts on screen, using the peerlist function
-peerlist;
+  % reformat the cell-arrays
+  allowuser  = sprintf('%s, ', info.allowuser{:});
+  allowgroup = sprintf('%s, ', info.allowgroup{:});
+  allowhost  = sprintf('%s, ', info.allowhost{:});
+  allowuser  = sprintf('{%s}', allowuser(1:end-2));
+  allowgroup = sprintf('{%s}', allowgroup(1:end-2));
+  allowhost  = sprintf('{%s}', allowhost(1:end-2));
 
-for i=1:numel(jobs)
-  sel = find([list.hostid] == jobs(i).hostid);
-  hostname = sprintf('%s@%s:%d', list(sel).user, list(sel).hostname, list(sel).hostport);
-  fprintf('job from %s with jobid %d\n',  hostname, jobs(i).jobid);
-end
+  fprintf('hostid     = %d\n', info.hostid       );
+  fprintf('hostname   = %s\n', info.hostname     );
+  fprintf('user       = %s\n', info.user         );
+  fprintf('group      = %s\n', info.group        );
+  fprintf('port       = %d\n', info.port         );
+  fprintf('status     = %s\n', status            );
+  fprintf('memavail   = %d\n', info.memavail     );
+  fprintf('cpuavail   = %d\n', info.cpuavail     );
+  fprintf('timavail   = %d\n', info.timavail     );
+  fprintf('allowuser  = %s\n', allowuser         );
+  fprintf('allowgroup = %s\n', allowgroup        );
+  fprintf('allowhost  = %s\n', allowhost         );
+
+  % give a summary of the threads
+  if peer('tcpserver', 'status')
+    fprintf('tcpserver thread is running\n');
+  else
+    fprintf('tcpserver thread is NOT running\n');
+  end
+
+  if peer('announce', 'status')
+    fprintf('announce thread is running\n');
+  else
+    fprintf('announce thread is NOT running\n');
+  end
+
+  if peer('discover', 'status')
+    fprintf('discover thread is running\n');
+  else
+    fprintf('discover thread is NOT running\n');
+  end
+
+  if peer('expire', 'status')
+    fprintf('expire thread is running\n');
+  else
+    fprintf('expire thread is NOT running\n');
+  end
+
+  % give a summary of the jobs
+  jobs = peer('joblist');
+  list = peer('peerlist');
+  fprintf('there are %d jobs in this peer''s buffer\n', length(jobs));
+  for i=1:numel(jobs)
+    sel = find([list.hostid] == jobs(i).hostid);
+    hostname = sprintf('%s@%s:%d', list(sel).user, list(sel).hostname, list(sel).port);
+    fprintf('job %d from %s with jobid %d\n', i, hostname, jobs(i).jobid);
+  end
+
+  clear info
+end % if nargout
+

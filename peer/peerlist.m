@@ -1,7 +1,13 @@
 function list = peerlist
 
-% PEERLIST returns the list of peers as a structure or prints it
-% to screen
+% PEERLIST gives information about all peers in the network, e.g. the
+% number of slaves, their network configuration, etc.
+%
+% Use as
+%   peerlist
+% to get a summary of the information displayed on screen, or
+%   list = peerlist
+% to get all information represented in a structure.
 %
 % See also PEERINFO
 
@@ -42,15 +48,21 @@ end
 
 list = peer('peerlist');
 
+% give a summary
+fprintf('there are %3d peers running as master\n',     sum([list.status]==1));
+fprintf('there are %3d peers running as idle slave\n', sum([list.status]==2));
+fprintf('there are %3d peers running as busy slave\n', sum([list.status]==3));
+fprintf('there are %3d peers running as zombie\n',     sum([list.status]==0));
+
 if nargout==0
   % display the hosts on screen, sort them by the hostid
   [dum, indx] = sort([list.hostid]);
   list = list(indx);
   % also sort them by status
-  [dum, indx] = sort([list.hoststatus]);
+  [dum, indx] = sort([list.status]);
   list = list(indx);
   for i=1:numel(list)
-    switch list(i).hoststatus
+    switch list(i).status
       case 0
         status = 'zombie     ';
       case 1
@@ -62,7 +74,8 @@ if nargout==0
       otherwise
         error('unknown status');
     end
-    fprintf('%s at %s@%s:%d, group = %s, memavail = %6.1f MB, hostid = %u\n', status, list(i).user, list(i).hostname, list(i).hostport, list(i).group, list(i).hostmemavail/(1024*1024), list(i).hostid);
+    fprintf('%s at %s@%s:%d, group = %s, memavail = %6.1f MB, hostid = %u\n', status, list(i).user, list(i).hostname, list(i).port, list(i).group, list(i).memavail/(1024*1024), list(i).hostid);
   end
   clear list
 end
+

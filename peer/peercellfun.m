@@ -169,7 +169,7 @@ try
     catch me
       if strcmp(me.identifier, 'FieldTrip:Peer:NotEnoughMemoryAvailableOnSlave')
         l = peerlist;
-        if any([l.hoststatus]==1 & [l.hostmemavail]>memreq)
+        if any([l.status]==1 & [l.memavail]>memreq)
           % there is a busy slave with enough memory, which may become available later
           warning('there are currently no slave peers available that meet the memory requirements'); 
         else
