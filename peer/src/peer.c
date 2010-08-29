@@ -33,15 +33,16 @@ const char* job_fieldnames[JOB_FIELDNUMBER] = {"version", "jobid", "argsize", "o
 #define JOBLIST_FIELDNUMBER 6
 const char* joblist_fieldnames[JOBLIST_FIELDNUMBER] = {"version", "jobid", "argsize", "optsize", "hostid", "hostname"};
 
-#define PEERINFO_FIELDNUMBER 12
-const char* peerinfo_fieldnames[PEERINFO_FIELDNUMBER] = {"hostid", "hostname", "user", "group", "port", "status", "memavail", "cpuavail", "timavail", "allowuser", "allowgroup", "allowhost"};
+#define PEERINFO_FIELDNUMBER 13
+const char* peerinfo_fieldnames[PEERINFO_FIELDNUMBER] = {"hostid", "hostname", "user", "group", "socket", "port", "status", "memavail", "cpuavail", "timavail", "allowuser", "allowgroup", "allowhost"};
 
-#define PEERLIST_FIELDNUMBER 9
-const char* peerlist_fieldnames[PEERLIST_FIELDNUMBER] = {"hostid", "hostname", "user", "group", "port", "status", "memavail", "cpuavail", "timavail"};
+#define PEERLIST_FIELDNUMBER 10
+const char* peerlist_fieldnames[PEERLIST_FIELDNUMBER] = {"hostid", "hostname", "user", "group", "socket", "port", "status", "memavail", "cpuavail", "timavail"};
 
 int peerInitialized = 0;
 
 /* the thread IDs are needed for cancelation at cleanup */
+pthread_t udsserverThread;
 pthread_t tcpserverThread;
 pthread_t announceThread;
 pthread_t discoverThread;
@@ -62,6 +63,17 @@ void initFun(void) {
 void exitFun(void) {
 		mexPrintf("peer: exit\n");
 		/* tell all threads to stop running */
+
+		pthread_mutex_lock(&mutexstatus);
+		if (udsserverStatus) {
+				pthread_mutex_unlock(&mutexstatus);
+				mexPrintf("peer: requesting cancelation of udsserver thread\n");
+				pthread_cancel(udsserverThread);
+				pthread_join(udsserverThread, NULL);
+		}
+		else {
+				pthread_mutex_unlock(&mutexstatus);
+		}
 
 		pthread_mutex_lock(&mutexstatus);
 		if (tcpserverStatus) {
@@ -139,6 +151,49 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				mexErrMsgTxt ("invalid input argument #1");
 		if (mxGetString(prhs[0], command, STRLEN-1))
 				mexErrMsgTxt ("invalid input argument #1");
+
+		/****************************************************************************/
+		if (strcasecmp(command, "udsserver")==0) {
+				/* the input arguments should be "udsserver <start|stop|status>" */
+				if (nrhs<2)
+						mexErrMsgTxt ("invalid number of input arguments");
+				if (!mxIsChar(prhs[1]))
+						mexErrMsgTxt ("invalid input argument #2");
+				if (mxGetString(prhs[1], argument, STRLEN-1))
+						mexErrMsgTxt ("invalid input argument #2");
+				if (strcasecmp(argument, "start")==0) {
+						if (udsserverStatus) {
+								mexWarnMsgTxt("thread is already running");
+								return;
+						}
+						mexPrintf("peer: spawning udsserver thread\n");
+						rc = pthread_create(&udsserverThread, NULL, udsserver, (void *)NULL);
+						if (rc)
+								mexErrMsgTxt("problem with return code from pthread_create()");
+						else
+								/* inform the other peers of the updated unix domain socket */
+								announce_once();
+				}
+				else if (strcasecmp(argument, "stop")==0) {
+						if (!udsserverStatus) {
+								mexWarnMsgTxt("thread is not running");
+								return;
+						}
+						mexPrintf("peer: requesting cancelation of udsserver thread\n");
+						rc = pthread_cancel(udsserverThread);
+						if (rc)
+								mexErrMsgTxt("problem with return code from pthread_cancel()");
+						else
+								/* inform the other peers of the updated unix domain socket */
+								announce_once();
+				}
+				else if (strcasecmp(argument, "status")==0) {
+						plhs[0] = mxCreateDoubleScalar(udsserverStatus);
+				}
+				else
+						mexErrMsgTxt ("invalid input argument #2");
+				return;
+		}
 
 		/****************************************************************************/
 		if (strcasecmp(command, "tcpserver")==0) {
@@ -713,11 +768,22 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mexErrMsgTxt("failed to locate specified peer\n");
 				}
 
-				/* open the TCP socket */
-				if ((server = open_connection(peer->ipaddr, peer->host->port)) < 0) {
-						pthread_mutex_unlock(&mutexpeerlist);
-						mexErrMsgTxt("failed to create socket\n");
+				pthread_mutex_lock(&mutexhost);
+				if (strlen(peer->host->socket)>0 && strcmp(peer->host->name, host->name)==0) {
+						/* open the UDS socket */
+						if ((server = open_uds_connection(peer->host->socket)) < 0) {
+								pthread_mutex_unlock(&mutexpeerlist);
+								mexErrMsgTxt("failed to create socket\n");
+						}
 				}
+				else {
+						/* open the TCP socket */
+						if ((server = open_tcp_connection(peer->ipaddr, peer->host->port)) < 0) {
+								pthread_mutex_unlock(&mutexpeerlist);
+								mexErrMsgTxt("failed to create socket\n");
+						}
+				}
+				pthread_mutex_unlock(&mutexhost);
 
 				pthread_mutex_unlock(&mutexpeerlist);
 
@@ -948,11 +1014,12 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				mxSetFieldByNumber(plhs[0], 0, 1, mxCreateString(host->name));
 				mxSetFieldByNumber(plhs[0], 0, 2, mxCreateString(host->user));
 				mxSetFieldByNumber(plhs[0], 0, 3, mxCreateString(host->group));
-				mxSetFieldByNumber(plhs[0], 0, 4, mxCreateDoubleScalar((UINT32_T)(host->port)));
-				mxSetFieldByNumber(plhs[0], 0, 5, mxCreateDoubleScalar((UINT32_T)(host->status)));
-				mxSetFieldByNumber(plhs[0], 0, 6, mxCreateDoubleScalar((UINT64_T)(host->memavail)));
-				mxSetFieldByNumber(plhs[0], 0, 7, mxCreateDoubleScalar((UINT64_T)(host->cpuavail)));
-				mxSetFieldByNumber(plhs[0], 0, 8, mxCreateDoubleScalar((UINT64_T)(host->timavail)));
+				mxSetFieldByNumber(plhs[0], 0, 4, mxCreateString(host->socket));
+				mxSetFieldByNumber(plhs[0], 0, 5, mxCreateDoubleScalar((UINT32_T)(host->port)));
+				mxSetFieldByNumber(plhs[0], 0, 6, mxCreateDoubleScalar((UINT32_T)(host->status)));
+				mxSetFieldByNumber(plhs[0], 0, 7, mxCreateDoubleScalar((UINT64_T)(host->memavail)));
+				mxSetFieldByNumber(plhs[0], 0, 8, mxCreateDoubleScalar((UINT64_T)(host->cpuavail)));
+				mxSetFieldByNumber(plhs[0], 0, 9, mxCreateDoubleScalar((UINT64_T)(host->timavail)));
 				pthread_mutex_unlock(&mutexhost);
 
 				/* create a cell-array for allowgroup */
@@ -975,7 +1042,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mxSetCell(val, --i, mxCreateString(allowuser->name));
 						allowuser = allowuser->next;
 				}
-				mxSetFieldByNumber(plhs[0], 0, 9, val);
+				mxSetFieldByNumber(plhs[0], 0, 10, val);
 				pthread_mutex_unlock(&mutexuserlist);
 
 				/* create a cell-array for allowgroup */
@@ -998,7 +1065,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mxSetCell(val, --i, mxCreateString(allowgroup->name));
 						allowgroup = allowgroup->next;
 				}
-				mxSetFieldByNumber(plhs[0], 0, 10, val);
+				mxSetFieldByNumber(plhs[0], 0, 11, val);
 				pthread_mutex_unlock(&mutexgrouplist);
 
 				/* create a cell-array for allowhost */
@@ -1021,7 +1088,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mxSetCell(val, --i, mxCreateString(allowhost->name));
 						allowhost = allowhost->next;
 				}
-				mxSetFieldByNumber(plhs[0], 0, 11, val);
+				mxSetFieldByNumber(plhs[0], 0, 12, val);
 				pthread_mutex_unlock(&mutexhostlist);
 
 				return;
@@ -1045,11 +1112,12 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mxSetFieldByNumber(plhs[0], i, 1, mxCreateString(peer->host->name));
 						mxSetFieldByNumber(plhs[0], i, 2, mxCreateString(peer->host->user));
 						mxSetFieldByNumber(plhs[0], i, 3, mxCreateString(peer->host->group));
-						mxSetFieldByNumber(plhs[0], i, 4, mxCreateDoubleScalar((UINT32_T)(peer->host->port)));
-						mxSetFieldByNumber(plhs[0], i, 5, mxCreateDoubleScalar((UINT32_T)(peer->host->status)));
-						mxSetFieldByNumber(plhs[0], i, 6, mxCreateDoubleScalar((UINT64_T)(peer->host->memavail)));
-						mxSetFieldByNumber(plhs[0], i, 7, mxCreateDoubleScalar((UINT64_T)(peer->host->cpuavail)));
-						mxSetFieldByNumber(plhs[0], i, 8, mxCreateDoubleScalar((UINT64_T)(peer->host->timavail)));
+						mxSetFieldByNumber(plhs[0], i, 4, mxCreateString(peer->host->socket));
+						mxSetFieldByNumber(plhs[0], i, 5, mxCreateDoubleScalar((UINT32_T)(peer->host->port)));
+						mxSetFieldByNumber(plhs[0], i, 6, mxCreateDoubleScalar((UINT32_T)(peer->host->status)));
+						mxSetFieldByNumber(plhs[0], i, 7, mxCreateDoubleScalar((UINT64_T)(peer->host->memavail)));
+						mxSetFieldByNumber(plhs[0], i, 8, mxCreateDoubleScalar((UINT64_T)(peer->host->cpuavail)));
+						mxSetFieldByNumber(plhs[0], i, 9, mxCreateDoubleScalar((UINT64_T)(peer->host->timavail)));
 						i++;
 						peer = peer->next ;
 				}

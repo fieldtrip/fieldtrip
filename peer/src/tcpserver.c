@@ -132,13 +132,13 @@ void *tcpserver(void *arg) {
 		 */
 
 		/* prevend "bind: Address already in use" */
-    /*
-	  	optval = 1;
-	  	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&optval, sizeof(optval)) < 0) {
-  				perror("tcpserver setsockopt");
-  				goto cleanup;
-  		}
-     */
+		/*
+		   optval = 1;
+		   if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&optval, sizeof(optval)) < 0) {
+		   perror("tcpserver setsockopt");
+		   goto cleanup;
+		   }
+		 */
 
 		/* set larger buffer */
 		optval = SO_RCVBUF_SIZE;

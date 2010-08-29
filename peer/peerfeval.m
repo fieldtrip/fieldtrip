@@ -53,6 +53,7 @@ persistent previous_argin
 % check that the required peer server threads are running
 status = true;
 status = status & peer('tcpserver', 'status');
+% status = status & peer('udsserver', 'status');
 status = status & peer('announce',  'status');
 status = status & peer('discover',  'status');
 status = status & peer('expire',    'status');
@@ -61,11 +62,11 @@ if ~status
   peermaster
 end
 
-% keep track of the time
-stopwatch = tic;
-
 % the peer server must be running in master mode
 peer('status', 1);
+
+% keep track of the time
+stopwatch = tic;
 
 % convert the input arguments into something that strmatch can work with
 strargin = varargin;

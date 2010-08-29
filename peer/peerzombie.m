@@ -60,6 +60,7 @@ end
 % start the maintenance threads
 ws = warning('off');
 peer('tcpserver', 'start');
+% peer('udsserver', 'start');
 peer('announce',  'start');
 peer('discover',  'start');
 peer('expire',    'start');

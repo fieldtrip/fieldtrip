@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
 						fprintf(stderr, "test_send: peerlist[%d].host.port = %d\n", i, peer->host->port);
 
 						/* open the TCP socket */
-						server = open_connection(peer->host->name, peer->host->port);
+						server = open_tcp_connection(peer->host->name, peer->host->port);
 
 						if (server<0) {
 								fprintf(stderr, "test_send: failed to create socket\n");

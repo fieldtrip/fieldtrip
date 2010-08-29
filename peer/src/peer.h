@@ -35,7 +35,7 @@
 #define SO_REUSEPORT      SO_REUSEADDR
 #endif
 
-#define VERSION           0x0009
+#define VERSION           0x0010
 #define ANNOUNCE_GROUP    "225.0.0.88"
 #define ANNOUNCE_PORT 	  1700				/* it will auto-increment if the port is not available */
 #define DEFAULT_GROUP     "unknown"
@@ -118,12 +118,14 @@ typedef uint64_t UINT64_T;
 #define WORDSIZE_FLOAT32 sizeof(FLOAT32_T)
 #define WORDSIZE_FLOAT64 sizeof(FLOAT64_T)
 
+/* this is the binary packet that is announced over the network */
 typedef struct {
 		UINT32_T version;
 		UINT32_T id;
 		char name[STRLEN];
 		char user[STRLEN];
 		char group[STRLEN];
+		char socket[STRLEN];  /* name of the unix domain socket, or empty if not available */
 		UINT32_T port;
 		UINT32_T status;
 		UINT64_T timavail; 
@@ -191,6 +193,7 @@ extern "C" {
 #endif
 
 /* core function definitions */
+void *udsserver (void *);
 void *tcpserver (void *);
 void *tcpsocket (void *);
 void *announce  (void *);
@@ -220,7 +223,8 @@ int ismember_hostlist(char *);
 int  append(void **buf1, int bufsize1, void *buf2, int bufsize2);
 int  bufread(int s, void *buf, int numel);
 int  bufwrite(int s, void *buf, int numel);
-int  open_connection(const char *hostname, int port);
+int  open_uds_connection(const char *socketname);
+int  open_tcp_connection(const char *hostname, int port);
 int  close_connection(int s);
 void check_datatypes(void);
 int  jobcount(void);

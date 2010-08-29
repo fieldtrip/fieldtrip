@@ -19,6 +19,7 @@
 #include "peer.h"
 
 pthread_mutex_t mutexstatus = PTHREAD_MUTEX_INITIALIZER;
+int udsserverStatus = 0;
 int tcpserverStatus = 0;
 int announceStatus  = 0;
 int discoverStatus  = 0;

@@ -127,7 +127,34 @@ int close_connection(int s) {
 		return status;
 }
 
-int open_connection(const char *hostname, int port) {
+int open_uds_connection(const char *socketname) {
+#ifdef WIN32
+		/* not yet implemented */
+#else
+		int s, len, verbose = 0;
+		struct sockaddr_un remote;
+
+		if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+				perror("open_uds_connection socket");
+				return 1;
+		}
+
+		remote.sun_family = AF_UNIX;
+		strcpy(remote.sun_path, socketname);
+		len = strlen(remote.sun_path) + sizeof(remote.sun_family);
+		if (connect(s, (struct sockaddr *)&remote, len) == -1) {
+				perror("open_uds_connection connect");
+				return 1;
+		}
+
+		if (verbose>0)
+				fprintf(stderr, "open_uds_connection: connected to %s on socket %d\n", socketname, s);
+		return s;
+#endif
+}
+
+
+int open_tcp_connection(const char *hostname, int port) {
 		int verbose = 0;
 		int s, retry;
 		struct sockaddr_in sa;
@@ -139,28 +166,28 @@ int open_connection(const char *hostname, int port) {
 
 		if (port==0) {
 				if (verbose>0)
-						fprintf(stderr, "open_connection: using direct memory copy\n");
+						fprintf(stderr, "open_tcp_connection: using direct memory copy\n");
 				return 0;
 		}
 		else {
 				if (verbose>0)
-						fprintf(stderr, "open_connection: server = %s, port = %d\n", hostname, port);
+						fprintf(stderr, "open_tcp_connection: server = %s, port = %d\n", hostname, port);
 		}
 
 #ifdef WIN32
 		if(WSAStartup(MAKEWORD(1, 1), &wsa)) {
-				fprintf(stderr, "open_connection: cannot start sockets\n");
+				fprintf(stderr, "open_tcp_connection: cannot start sockets\n");
 				/* FIXME should this exception be handled more explicitely?  */
 		}
 #endif
 
 		if ((host = gethostbyname(hostname)) == NULL) {
-				fprintf(stderr, "open_connection: nslookup1 failed on '%s'\n", hostname);
+				fprintf(stderr, "open_tcp_connection: nslookup1 failed on '%s'\n", hostname);
 				return -1;
 		}
 
 		if (host->h_length == 0) {
-				fprintf(stderr, "open_connection: nslookup2 failed on '%s'\n", hostname);
+				fprintf(stderr, "open_tcp_connection: nslookup2 failed on '%s'\n", hostname);
 				return -1;
 		}
 
@@ -171,9 +198,9 @@ int open_connection(const char *hostname, int port) {
 
 		s = socket(PF_INET, SOCK_STREAM, 0);
 		if (verbose>0)
-				fprintf(stderr, "open_connection: socket = %d\n", s);
+				fprintf(stderr, "open_tcp_connection: socket = %d\n", s);
 		if (s<0) {
-				perror("open_connection");
+				perror("open_tcp_connection");
 				return -1;
 		}
 
@@ -181,7 +208,7 @@ int open_connection(const char *hostname, int port) {
 		while (retry>0) {
 				if (connect(s, (struct sockaddr *)&sa, sizeof sa)<0) {
 						/* wait 5 miliseconds and try again */
-						perror("open_connection");
+						perror("open_tcp_connection");
 						usleep(5000);
 						retry--;
 				}
@@ -197,7 +224,7 @@ int open_connection(const char *hostname, int port) {
 
 		/*
 		   while (connect(s, (struct sockaddr *)&sa, sizeof sa) < 0) {
-		   perror("open_connection connect");
+		   perror("open_tcp_connection connect");
 		   usleep(1000000);
 		   }
 		 */
@@ -205,12 +232,12 @@ int open_connection(const char *hostname, int port) {
 		if (verbose>1) {
 				pthread_mutex_lock(&mutexconnectioncount);
 				connectioncount++;
-				fprintf(stderr, "open_connection: connectioncount = %d\n", connectioncount);
+				fprintf(stderr, "open_tcp_connection: connectioncount = %d\n", connectioncount);
 				pthread_mutex_unlock(&mutexconnectioncount);
 		}
 
 		if (verbose>0)
-				fprintf(stderr, "open_connection: connected to %s:%d on socket %d\n", hostname, port, s);
+				fprintf(stderr, "open_tcopen_tcpnnection: connected to %s:%d on socket %d\n", hostname, port, s);
 		return s;
 }
 

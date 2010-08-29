@@ -2,6 +2,7 @@
 #define EXTERN_H
 
 extern pthread_mutex_t mutexstatus;
+extern int udsserverStatus;
 extern int tcpserverStatus;
 extern int announceStatus;
 extern int discoverStatus;

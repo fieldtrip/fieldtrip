@@ -12,6 +12,10 @@
 #include <ifaddrs.h>
 #include <pwd.h>           /* for getpwuid and geteuid */
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+
 /* closesocket exists on windows and is used in the code */
 #define closesocket(s) (close(s))
 

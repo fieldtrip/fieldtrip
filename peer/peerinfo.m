@@ -57,6 +57,7 @@ if nargout==0
   fprintf('hostname   = %s\n', info.hostname     );
   fprintf('user       = %s\n', info.user         );
   fprintf('group      = %s\n', info.group        );
+  fprintf('socket     = %s\n', info.socket       );
   fprintf('port       = %d\n', info.port         );
   fprintf('status     = %s\n', status            );
   fprintf('memavail   = %u bytes\n',   info.memavail);
@@ -70,6 +71,12 @@ if nargout==0
     fprintf('tcpserver thread is running\n');
   else
     fprintf('tcpserver thread is NOT running\n');
+  end
+
+  if peer('udsserver', 'status')
+    fprintf('udsserver thread is running\n');
+  else
+    fprintf('udsserver thread is NOT running\n');
   end
 
   if peer('announce', 'status')

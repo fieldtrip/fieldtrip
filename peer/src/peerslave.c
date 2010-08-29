@@ -1,7 +1,20 @@
 /*
+ * Copyright (C) 2010, Robert Oostenveld
  * 
- */
-
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/
+ *
+ */ 
 
 #include <pthread.h>
 #include <stdio.h>
@@ -76,6 +89,7 @@ int main(int argc, char *argv[]) {
 		hostlist_t  *allowhost;
 
 		/* the thread IDs are needed for cancelation at cleanup */
+		pthread_t udsserverThread;
 		pthread_t tcpserverThread;
 		pthread_t announceThread;
 		pthread_t discoverThread;
@@ -290,6 +304,15 @@ int main(int argc, char *argv[]) {
 				strncpy(startcmd, STARTCMD, STRLEN);
 		}
 
+		if ((rc = pthread_create(&udsserverThread, NULL, udsserver, (void *)NULL))>0) {
+				fprintf(stderr, "failed to start udsserver thread\n");
+				exit(1);
+		}
+		else {
+				if (verbose_flag)
+						fprintf(stderr, "started udsserver thread\n");
+		}
+
 		if ((rc = pthread_create(&tcpserverThread, NULL, tcpserver, (void *)NULL))>0) {
 				fprintf(stderr, "failed to start tcpserver thread\n");
 				exit(1);
@@ -424,11 +447,22 @@ int main(int argc, char *argv[]) {
 								panic("failed to locate specified peer\n");
 						}
 
-						/* open the TCP socket */
-						if ((server = open_connection(peer->ipaddr, peer->host->port)) < 0) {
-								pthread_mutex_unlock(&mutexpeerlist);
-								panic("failed to create socket\n");
+						pthread_mutex_lock(&mutexhost);
+						if (strlen(peer->host->socket)>0 && strcmp(peer->host->name, host->name)==0) {
+								/* open the UDS socket */
+								if ((server = open_uds_connection(peer->host->socket)) < 0) {
+										pthread_mutex_unlock(&mutexpeerlist);
+										panic("failed to create socket\n");
+								}
 						}
+						else {
+								/* open the TCP socket */
+								if ((server = open_tcp_connection(peer->ipaddr, peer->host->port)) < 0) {
+										pthread_mutex_unlock(&mutexpeerlist);
+										panic("failed to create socket\n");
+								}
+						}
+						pthread_mutex_unlock(&mutexhost);
 
 						pthread_mutex_unlock(&mutexpeerlist);
 
