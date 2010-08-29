@@ -1,19 +1,7 @@
 /*
- *   memavail    = number, amount of memory available       (default = inf)
- *   cpuavail    = number, speed of the CPU                 (default = inf)
- *   timavail    = number, maximum duration of a single job (default = inf)
- *   allowhost   = {...}
- *   allowuser   = {...}
- *   allowgroup  = {...}
- *   group       = string
- *   hostname    = string
- *   matlab      = string
- *   timeout     = number, time to keep the engine running after the job finished
- *   fairshare   = 0|1
- *   smartmem    = 0|1
- *   daemon
- *   verbose
+ * 
  */
+
 
 #include <pthread.h>
 #include <stdio.h>
@@ -39,6 +27,32 @@ mxArray *mxDeserialize(const void*, size_t);
 
 #define STARTCMD "matlab -nosplash"
 
+void print_help(char *argv[]) {
+		printf("\n");
+		printf("This starts a FieldTrip peer-to-peer distributed computing peer, which\n");
+		printf("will wait for an incoming job and subsequently start the MATLAB engine and\n");
+		printf("evaluate the job. Use as\n");
+		printf("  %s [options]\n", argv[0]);
+		printf("where the options can include\n");
+		printf("  --memavail    = number, amount of memory available       (default = inf)\n");
+		printf("  --cpuavail    = number, speed of the CPU                 (default = inf)\n");
+		printf("  --timavail    = number, maximum duration of a single job (default = inf)\n");
+		printf("  --allowhost   = {...}\n");
+		printf("  --allowuser   = {...}\n");
+		printf("  --allowgroup  = {...}\n");
+		printf("  --group       = string\n");
+		printf("  --hostname    = string\n");
+		printf("  --matlab      = string\n");
+		printf("  --timeout     = number, time to keep the engine running after the job finished\n");
+		printf("  --fairshare   = 0|1\n");
+		printf("  --smartmem    = 0|1\n");
+		printf("  --daemon\n");
+		printf("  --verbose\n");
+		printf("  --help\n");
+		printf("\n");
+}
+
+int help_flag;
 int verbose_flag;
 int daemon_flag;
 
@@ -74,20 +88,21 @@ int main(int argc, char *argv[]) {
 		{
 				static struct option long_options[] =
 				{
-						{"verbose",   no_argument, &verbose_flag, 1},
-						{"daemon",    no_argument, &daemon_flag, 1},
-						{"memavail",  required_argument, 0, 'a'}, /* numeric argument */
-						{"cpuavail",  required_argument, 0, 'b'}, /* numeric argument */
-						{"timavail",  required_argument, 0, 'c'}, /* numeric argument */
-						{"hostname",  required_argument, 0, 'd'}, /* single string argument */
-						{"group",     required_argument, 0, 'e'}, /* single string argument */
-						{"allowuser", required_argument, 0, 'f'}, /* single or multiple string argument */
-						{"allowhost", required_argument, 0, 'g'}, /* single or multiple string argument */
-						{"allowgroup",required_argument, 0, 'h'}, /* single or multiple string argument */
-						{"matlab",    required_argument, 0, 'i'}, /* single string argument */
-						{"smartmem",  required_argument, 0, 'j'}, /* numeric, 0 or 1 */
-						{"fairshare", required_argument, 0, 'k'}, /* numeric, 0 or 1 */
-						{"timeout",   required_argument, 0, 'l'}, /* numeric argument */
+						{"verbose",    no_argument, &verbose_flag, 1},
+						{"daemon",     no_argument, &daemon_flag, 1},
+						{"help",       no_argument, &help_flag, 1},
+						{"memavail",   required_argument, 0, 'a'}, /* numeric argument */
+						{"cpuavail",   required_argument, 0, 'b'}, /* numeric argument */
+						{"timavail",   required_argument, 0, 'c'}, /* numeric argument */
+						{"hostname",   required_argument, 0, 'd'}, /* single string argument */
+						{"group",      required_argument, 0, 'e'}, /* single string argument */
+						{"allowuser",  required_argument, 0, 'f'}, /* single or multiple string argument */
+						{"allowhost",  required_argument, 0, 'g'}, /* single or multiple string argument */
+						{"allowgroup", required_argument, 0, 'h'}, /* single or multiple string argument */
+						{"matlab",     required_argument, 0, 'i'}, /* single string argument */
+						{"smartmem",   required_argument, 0, 'j'}, /* numeric, 0 or 1 */
+						{"fairshare",  required_argument, 0, 'k'}, /* numeric, 0 or 1 */
+						{"timeout",    required_argument, 0, 'l'}, /* numeric argument */
 						{0, 0, 0, 0}
 				};
 
@@ -233,6 +248,11 @@ int main(int argc, char *argv[]) {
 				}
 		}
 
+		if (help_flag) {
+				/* display the help message and return to the command line */
+				print_help(argv);
+				exit(0);
+		}
 
 		if (daemon_flag) {
 				/* now create new process */
