@@ -53,15 +53,14 @@ if nargout==0
   allowgroup = sprintf('{%s}', allowgroup(1:end-2));
   allowhost  = sprintf('{%s}', allowhost(1:end-2));
 
-  fprintf('hostid     = %d\n', info.hostid       );
+  fprintf('hostid     = %u\n', info.hostid       );
   fprintf('hostname   = %s\n', info.hostname     );
   fprintf('user       = %s\n', info.user         );
   fprintf('group      = %s\n', info.group        );
   fprintf('port       = %d\n', info.port         );
   fprintf('status     = %s\n', status            );
-  fprintf('memavail   = %d\n', info.memavail     );
-  fprintf('cpuavail   = %d\n', info.cpuavail     );
-  fprintf('timavail   = %d\n', info.timavail     );
+  fprintf('memavail   = %u bytes\n',   info.memavail);
+  fprintf('timavail   = %u seconds\n', info.timavail);
   fprintf('allowuser  = %s\n', allowuser         );
   fprintf('allowgroup = %s\n', allowgroup        );
   fprintf('allowhost  = %s\n', allowhost         );

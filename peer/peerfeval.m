@@ -19,6 +19,13 @@ function [jobid, puttime] = peerfeval(varargin)
 %
 % See also FEVAL, PEERMASTER, PEERGET, PEERCELLFUN
 
+% Undocumented options
+%   memreq   default = 0
+%   cpureq   default = 0
+%   timreq   default = 0
+%   hostid
+%   diary
+
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
 %
