@@ -137,15 +137,15 @@ int open_connection(const char *hostname, int port) {
 		WSADATA wsa;
 #endif
 
-        if (port==0) {
-                if (verbose>0)
-                        fprintf(stderr, "open_connection: using direct memory copy\n");
-                return 0;
-        }
-        else {
-                if (verbose>0)
-                        fprintf(stderr, "open_connection: server = %s, port = %d\n", hostname, port);
-        }
+		if (port==0) {
+				if (verbose>0)
+						fprintf(stderr, "open_connection: using direct memory copy\n");
+				return 0;
+		}
+		else {
+				if (verbose>0)
+						fprintf(stderr, "open_connection: server = %s, port = %d\n", hostname, port);
+		}
 
 #ifdef WIN32
 		if(WSAStartup(MAKEWORD(1, 1), &wsa)) {
@@ -247,6 +247,86 @@ int hoststatus(void) {
 				status = host->status;
 		pthread_mutex_unlock(&mutexhost);
 		return status;
+}
+
+void clear_peerlist(void) {
+		peerlist_t *peer = NULL;
+		pthread_mutex_lock(&mutexpeerlist);
+		peer = peerlist;
+		while (peer) {
+				peerlist = peer->next;
+				FREE(peer->host);
+				FREE(peer);
+				peer = peerlist;
+		}
+		pthread_mutex_unlock(&mutexpeerlist);
+}
+
+void clear_joblist(void) {
+		joblist_t *job = NULL;
+		pthread_mutex_lock(&mutexjoblist);
+		job = joblist;
+		while (job) {
+				joblist = job->next;
+				FREE(job->job);
+				FREE(job->host);
+				FREE(job->arg);
+				FREE(job->opt);
+				FREE(job);
+				job = joblist;
+		}
+		pthread_mutex_unlock(&mutexjoblist);
+}
+
+void clear_userlist(void) {
+		userlist_t *user = NULL;
+		pthread_mutex_lock(&mutexuserlist);
+		user = userlist;
+		while (user) {
+				userlist = user->next;
+				FREE(user->name);
+				FREE(user);
+				user = userlist;
+		}
+		pthread_mutex_unlock(&mutexuserlist);
+}
+
+void clear_grouplist(void) {
+		grouplist_t *group = NULL;
+		pthread_mutex_lock(&mutexgrouplist);
+		group = grouplist;
+		while (group) {
+				grouplist = group->next;
+				FREE(group->name);
+				FREE(group);
+				group = grouplist;
+		}
+		pthread_mutex_unlock(&mutexgrouplist);
+}
+
+void clear_hostlist(void) {
+		hostlist_t *listitem = NULL;
+		pthread_mutex_lock(&mutexhostlist);
+		listitem = hostlist;
+		while (listitem) {
+				hostlist = listitem->next;
+				FREE(listitem->name);
+				FREE(listitem);
+				listitem = hostlist;
+		}
+		pthread_mutex_unlock(&mutexhostlist);
+}
+
+void clear_fairsharelist(void) {
+		fairsharelist_t *listitem = NULL;
+		pthread_mutex_lock(&mutexfairshare);
+		listitem = fairsharelist;
+		while (listitem) {
+				fairsharelist = listitem->next;
+				FREE(listitem);
+				listitem = fairsharelist;
+		}
+		pthread_mutex_unlock(&mutexfairshare);
 }
 
 void check_datatypes() {

@@ -227,7 +227,12 @@ int  jobcount(void);
 int  peercount(void);
 int  hoststatus(void);
 int  localhost(const char *ipaddr);
-
+void clear_peerlist(void);
+void clear_joblist(void);
+void clear_userlist(void);
+void clear_grouplist(void);
+void clear_hostlist(void);
+void clear_fairsharelist(void);
 
 #ifdef __cplusplus
 }

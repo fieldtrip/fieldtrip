@@ -140,11 +140,6 @@ void peerinit(void *arg) {
 /* free the dynamical memory that is shared between the threads               */
 void peerexit(void *arg) {
 		int verbose = 0;
-		peerlist_t *peer = NULL;
-		joblist_t *job = NULL;
-		userlist_t *user = NULL;
-		grouplist_t *group = NULL;
-		fairsharelist_t *listitem = NULL;
 
 		if (verbose)
 				fprintf(stderr, "peerexit\n");
@@ -153,57 +148,12 @@ void peerexit(void *arg) {
 		FREE(host);
 		pthread_mutex_unlock(&mutexhost);
 
-		pthread_mutex_lock(&mutexpeerlist);
-		peer = peerlist;
-		while (peer) {
-				peerlist = peer->next;
-				FREE(peer->host);
-				FREE(peer);
-				peer = peerlist;
-		}
-		pthread_mutex_unlock(&mutexpeerlist);
-
-		pthread_mutex_lock(&mutexjoblist);
-		job = joblist;
-		while (job) {
-				joblist = job->next;
-				FREE(job->job);
-				FREE(job->host);
-				FREE(job->arg);
-				FREE(job->opt);
-				FREE(job);
-				job = joblist;
-		}
-		pthread_mutex_unlock(&mutexjoblist);
-
-		pthread_mutex_lock(&mutexuserlist);
-		user = userlist;
-		while (user) {
-				userlist = user->next;
-				FREE(user->name);
-				FREE(user);
-				user = userlist;
-		}
-		pthread_mutex_unlock(&mutexuserlist);
-
-		pthread_mutex_lock(&mutexgrouplist);
-		group = grouplist;
-		while (group) {
-				grouplist = group->next;
-				FREE(group->name);
-				FREE(group);
-				group = grouplist;
-		}
-		pthread_mutex_unlock(&mutexgrouplist);
-
-		pthread_mutex_lock(&mutexfairshare);
-		listitem = fairsharelist;
-		while (listitem) {
-				fairsharelist = listitem->next;
-				FREE(listitem);
-				listitem = fairsharelist;
-		}
-		pthread_mutex_unlock(&mutexfairshare);
+		clear_peerlist();
+		clear_joblist();
+		clear_userlist();
+		clear_grouplist();
+		clear_hostlist();
+		clear_fairsharelist();
 
 		return;
 }

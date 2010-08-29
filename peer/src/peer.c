@@ -564,16 +564,12 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						if (!mxIsChar(arg))
 								mexErrMsgTxt ("invalid input argument #2, the cell-array should contain strings");
 				}
-				pthread_mutex_lock(&mutexuserlist);
+
 				/* erase the existing list */
-				allowuser = userlist;
-				while (allowuser) {
-						userlist = allowuser->next;
-						FREE(allowuser->name);
-						FREE(allowuser);
-						allowuser = userlist;
-				}
+				clear_userlist();
+
 				/* add all elements to the list */
+				pthread_mutex_lock(&mutexuserlist);
 				for (i=0; i<mxGetNumberOfElements(prhs[1]); i++) {
 						arg = mxGetCell(prhs[1], i);
 						allowuser = (userlist_t *)malloc(sizeof(userlist_t));
@@ -584,6 +580,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						userlist = allowuser;
 				}
 				pthread_mutex_unlock(&mutexuserlist);
+
+				/* erase the list of known peers, the updated filtering will be done upon discovery */
+				clear_peerlist();
 		}
 
 		/****************************************************************************/
@@ -599,16 +598,12 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						if (!mxIsChar(arg))
 								mexErrMsgTxt ("invalid input argument #2, the cell-array should contain strings");
 				}
-				pthread_mutex_lock(&mutexgrouplist);
+
 				/* erase the existing list */
-				allowgroup = grouplist;
-				while (allowgroup) {
-						grouplist = allowgroup->next;
-						FREE(allowgroup->name);
-						FREE(allowgroup);
-						allowgroup = grouplist;
-				}
+				clear_grouplist();
+
 				/* add all elements to the list */
+				pthread_mutex_lock(&mutexgrouplist);
 				for (i=0; i<mxGetNumberOfElements(prhs[1]); i++) {
 						arg = mxGetCell(prhs[1], i);
 						allowgroup = (grouplist_t *)malloc(sizeof(grouplist_t));
@@ -619,6 +614,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						grouplist = allowgroup;
 				}
 				pthread_mutex_unlock(&mutexgrouplist);
+
+				/* flush the list of known peers, the updated filtering will be done upon discovery */
+				clear_peerlist();
 		}
 
 		/****************************************************************************/
@@ -634,16 +632,12 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						if (!mxIsChar(arg))
 								mexErrMsgTxt ("invalid input argument #2, the cell-array should contain strings");
 				}
-				pthread_mutex_lock(&mutexhostlist);
+
 				/* erase the existing list */
-				allowhost = hostlist;
-				while (allowhost) {
-						hostlist = allowhost->next;
-						FREE(allowhost->name);
-						FREE(allowhost);
-						allowhost = hostlist;
-				}
+				clear_hostlist();
+
 				/* add all elements to the list */
+				pthread_mutex_lock(&mutexhostlist);
 				for (i=0; i<mxGetNumberOfElements(prhs[1]); i++) {
 						arg = mxGetCell(prhs[1], i);
 						allowhost = (hostlist_t *)malloc(sizeof(hostlist_t));
@@ -654,6 +648,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						hostlist = allowhost;
 				}
 				pthread_mutex_unlock(&mutexhostlist);
+
+				/* flush the list of known peers, the updated filtering will be done upon discovery */
+				clear_peerlist();
 		}
 
 		/****************************************************************************/
