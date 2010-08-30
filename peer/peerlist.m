@@ -48,13 +48,13 @@ end
 
 list = peer('peerlist');
 
-% give a summary
-fprintf('there are %3d peers running as master\n',     sum([list.status]==1));
-fprintf('there are %3d peers running as idle slave\n', sum([list.status]==2));
-fprintf('there are %3d peers running as busy slave\n', sum([list.status]==3));
-fprintf('there are %3d peers running as zombie\n',     sum([list.status]==0));
-
 if nargout==0
+  % give a summary
+  fprintf('there are %3d peers running as master\n',     sum([list.status]==1));
+  fprintf('there are %3d peers running as idle slave\n', sum([list.status]==2));
+  fprintf('there are %3d peers running as busy slave\n', sum([list.status]==3));
+  fprintf('there are %3d peers running as zombie\n',     sum([list.status]==0));
+
   % the peers are listed in a random order
   % create a list which will be sorted afterward for a nice display
   strlist = cell(1,numel(list));
