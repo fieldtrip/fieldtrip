@@ -55,12 +55,9 @@ fprintf('there are %3d peers running as busy slave\n', sum([list.status]==3));
 fprintf('there are %3d peers running as zombie\n',     sum([list.status]==0));
 
 if nargout==0
-  % display the hosts on screen, sort them by the hostid
-  [dum, indx] = sort([list.hostid]);
-  list = list(indx);
-  % also sort them by status
-  [dum, indx] = sort([list.status]);
-  list = list(indx);
+  % the peers are listed in a random order
+  % create a list which will be sorted afterward for a nice display
+  strlist = cell(1,numel(list));
   for i=1:numel(list)
     switch list(i).status
       case 0
@@ -74,8 +71,13 @@ if nargout==0
       otherwise
         error('unknown status');
     end
-    fprintf('%s at %s@%s:%d, group = %s, memavail = %6.1f MB, hostid = %u\n', status, list(i).user, list(i).hostname, list(i).port, list(i).group, list(i).memavail/(1024*1024), list(i).hostid);
+    strlist{i} = sprintf('%s at %s@%s:%d, group = %s, memavail = %6.1f MB, hostid = %u\n', status, list(i).user, list(i).hostname, list(i).port, list(i).group, list(i).memavail/(1024*1024), list(i).hostid);
+  end % for i
+  strlist = sort(strlist);
+  for i=1:numel(list)
+    fprintf('%s', strlist{i});
   end
   clear list
 end
+
 

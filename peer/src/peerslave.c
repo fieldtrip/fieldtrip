@@ -60,14 +60,18 @@ void print_help(char *argv[]) {
 		printf("  --fairshare   = 0|1\n");
 		printf("  --smartmem    = 0|1\n");
 		printf("  --daemon\n");
+		printf("  --udsserver\n");
 		printf("  --verbose\n");
 		printf("  --help\n");
 		printf("\n");
 }
 
 int help_flag;
-int verbose_flag;
 int daemon_flag;
+int verbose_flag;
+int tcpserver_flag = 1;
+int udpserver_flag = 0;
+int udsserver_flag = 0;
 
 int main(int argc, char *argv[]) {
 		Engine *en;
@@ -102,9 +106,10 @@ int main(int argc, char *argv[]) {
 		{
 				static struct option long_options[] =
 				{
-						{"verbose",    no_argument, &verbose_flag, 1},
-						{"daemon",     no_argument, &daemon_flag, 1},
 						{"help",       no_argument, &help_flag, 1},
+						{"daemon",     no_argument, &daemon_flag, 1},
+						{"verbose",    no_argument, &verbose_flag, 1},
+						{"udsserver",  no_argument, &udsserver_flag, 1},
 						{"memavail",   required_argument, 0, 'a'}, /* numeric argument */
 						{"cpuavail",   required_argument, 0, 'b'}, /* numeric argument */
 						{"timavail",   required_argument, 0, 'c'}, /* numeric argument */
@@ -304,22 +309,26 @@ int main(int argc, char *argv[]) {
 				strncpy(startcmd, STARTCMD, STRLEN);
 		}
 
-		if ((rc = pthread_create(&udsserverThread, NULL, udsserver, (void *)NULL))>0) {
-				fprintf(stderr, "failed to start udsserver thread\n");
-				exit(1);
-		}
-		else {
-				if (verbose_flag)
-						fprintf(stderr, "started udsserver thread\n");
+		if (udsserver_flag) {
+				if ((rc = pthread_create(&udsserverThread, NULL, udsserver, (void *)NULL))>0) {
+						fprintf(stderr, "failed to start udsserver thread\n");
+						exit(1);
+				}
+				else {
+						if (verbose_flag)
+								fprintf(stderr, "started udsserver thread\n");
+				}
 		}
 
-		if ((rc = pthread_create(&tcpserverThread, NULL, tcpserver, (void *)NULL))>0) {
-				fprintf(stderr, "failed to start tcpserver thread\n");
-				exit(1);
-		}
-		else {
-				if (verbose_flag)
-						fprintf(stderr, "started tcpserver thread\n");
+		if (tcpserver_flag) {
+				if ((rc = pthread_create(&tcpserverThread, NULL, tcpserver, (void *)NULL))>0) {
+						fprintf(stderr, "failed to start tcpserver thread\n");
+						exit(1);
+				}
+				else {
+						if (verbose_flag)
+								fprintf(stderr, "started tcpserver thread\n");
+				}
 		}
 
 		if ((rc = pthread_create(&announceThread, NULL, announce, (void *)NULL))>0) {
