@@ -8,16 +8,20 @@
 #include <signal.h>
 #include <pthread.h>
 #include <string.h>
+#ifndef WIN32
+#include <sys/time.h>
+#endif
+
 
 #define MAXLINE 256
 #define MAX_PRINT_CHN  300
 
 typedef struct {
-	int numSamples;	/* 0 for writing events, > 0 for samples */
-	int numEvents;
-	long offset;    /* offset into events file */
-	int size;       /* number of bytes to transmit for events */
-	double time;    /* time when this needs to be sent, relative to PUT_HDR */
+	int numSamples;	/* number of samples (or 0 for a write-events-operation)  */
+	int numEvents;  /* number of events  (or 0 for a write-samples-operation) */
+	long offset;    /* offset into events file and eventBuffer memory blob    */
+	int size;       /* number of bytes to transmit for events or samples      */
+	double time;    /* time when this needs to be sent, relative to PUT_HDR   */
 } WriteOperation;
 
 int ftSocket = -1;
@@ -33,6 +37,16 @@ char *eventBuffer = NULL;
 UINT32_T headerSize;
 
 static char usage[] = "Usage: playback <directory> [hostname=localhost [port=1972]]\n";
+
+double getCurrentTime() {
+#ifdef WIN32
+	return timeGetTime() * 0.001;
+#else
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return tv.tv_sec + tv.tv_usec*1e-6;
+#endif
+}
 
 int readHeader(const char *directory) {
 	char filename[MAXLINE];
@@ -179,12 +193,14 @@ int readAllEvents(const char *directory) {
 	fseek(f, 0, SEEK_END);
 	sizeEvents = ftell(f);
 	fseek(f, 0, SEEK_SET);	
-	eventBuffer = (char *) malloc(sizeEvents);
-	if (eventBuffer == NULL) {
-		fprintf(stderr, "Cannot allocate %li bytes for reading events\n", sizeEvents);
-	}
+	if (sizeEvents > 0) {
+		eventBuffer = (char *) malloc(sizeEvents);
+		if (eventBuffer == NULL) {
+			fprintf(stderr, "Cannot allocate %li bytes for reading events\n", sizeEvents);
+		}
 	
-	fread(eventBuffer, 1, sizeEvents, f);
+		fread(eventBuffer, 1, sizeEvents, f);
+	}
 	fclose(f);
 	return sizeEvents;
 }
@@ -196,7 +212,6 @@ void run() {
 	int nextSampleOp = numWriteOps;
 	messagedef_t reqdef;
 	message_t request, *response;
-	struct timeval tv;
 	double T0, t;
 	int op;
 	
@@ -234,8 +249,7 @@ void run() {
 	reqdef.bufsize = headerSize;
 	request.buf = header;
 	
-	gettimeofday(&tv, NULL);
-	T0 = tv.tv_sec + tv.tv_usec*1e-6;
+	T0 = getCurrentTime();
 	printf("Writing header...\n");
 	r = clientrequest(ftSocket, &request, &response);
 
@@ -249,19 +263,17 @@ void run() {
 	op=0;
 	
 	for (op=0;op<numWriteOps;op++) {
-		gettimeofday(&tv, NULL);
-		t = tv.tv_sec + tv.tv_usec*1e-6 - T0;
+		t = getCurrentTime() - T0;
 		if (writeOps[op].time > t) {
 			usleep(1.0e6*(writeOps[op].time -  t));
-			gettimeofday(&tv, NULL);
-			t = tv.tv_sec + tv.tv_usec*1e-6 - T0;
+			t = getCurrentTime() - T0;
 		}
 		
 		if (writeOps[op].numSamples > 0) {
 			reqdef.command = PUT_DAT;
 			reqdef.bufsize = sizeof(datadef_t) + writeOps[op].size;
 			request.buf = ddef;
-			printf("%.3f: Writing %i samples\n", t, writeOps[op].numSamples);
+			printf("%.3f: Writing %i sample(s)\n", t, writeOps[op].numSamples);
 		} else {
 			reqdef.command = PUT_EVT;
 			reqdef.bufsize = writeOps[op].size;
@@ -298,6 +310,10 @@ int main(int argc, char **argv) {
 	char hostname[MAXLINE] = "localhost";
 	char directory[MAXLINE];
 	int port, nops;
+	
+	#ifdef WIN32
+	timeBeginPeriod(1);
+	#endif
 	
 	if (argc<2) {
 		fputs(usage, stderr);
@@ -359,6 +375,11 @@ int main(int argc, char **argv) {
 	fclose(fSamples);
 	free(writeOps);
 	free(header);
+	if (eventBuffer != NULL) free(eventBuffer);
 	
+	#ifdef WIN32
+	timeEndPeriod(1);
+	#endif
+
 	return 0;
 }

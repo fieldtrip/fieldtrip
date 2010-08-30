@@ -19,10 +19,16 @@ endif
 
 CFLAGS = $(INCPATH) -Wunused -Wall -pedantic
 
-all: playback$(SUFFIX)
+all: playback$(SUFFIX) saving_buffer$(SUFFIX)
 
 playback.o: playback.c
 	gcc -c playback.c $(CFLAGS)
+	
+saving_buffer.o: saving_buffer.c
+	gcc -c $^ $(CFLAGS)
 			
 playback$(SUFFIX): playback.o
-	gcc -o playback$(SUFFIX) playback.o $(LDFLAGS)
+	gcc -o $@ $^ $(LDFLAGS)
+		
+saving_buffer$(SUFFIX): saving_buffer.o ../buffer/src/socketserver.o
+	gcc -o $@ $^ $(LDFLAGS)	
