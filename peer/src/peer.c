@@ -769,22 +769,30 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				}
 
 				pthread_mutex_lock(&mutexhost);
-				if (strlen(peer->host->socket)>0 && strcmp(peer->host->name, host->name)==0) {
+				int hasuds = (strlen(peer->host->socket)>0 && strcmp(peer->host->name, host->name)==0);
+				int hastcp = (peer->host->port>0);
+				pthread_mutex_unlock(&mutexhost);
+
+				if (hasuds) {
 						/* open the UDS socket */
 						if ((server = open_uds_connection(peer->host->socket)) < 0) {
 								pthread_mutex_unlock(&mutexpeerlist);
 								mexErrMsgTxt("failed to create socket\n");
 						}
 				}
-				else {
+				else if (hastcp) {
 						/* open the TCP socket */
 						if ((server = open_tcp_connection(peer->ipaddr, peer->host->port)) < 0) {
 								pthread_mutex_unlock(&mutexpeerlist);
 								mexErrMsgTxt("failed to create socket\n");
 						}
 				}
-				pthread_mutex_unlock(&mutexhost);
+				else {
+						pthread_mutex_unlock(&mutexpeerlist);
+						mexErrMsgTxt("failed to create socket\n");
+				}
 
+				/* the connection was opened without error */
 				pthread_mutex_unlock(&mutexpeerlist);
 
 				if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {

@@ -139,10 +139,19 @@ while ~all(submitted) || ~all(collected)
       timreq = nanmax(timused);
       memreq = nanmax(memused);
       if timreq~=prev_timreq
-        fprintf('updating timreq to %d\n', timreq);
+        if timreq<100
+          fprintf('updating timreq to %.3f s\n', timreq);
+        else
+          fprintf('updating timreq to %.0f s\n', timreq);
+        end
       end
       if memreq~=prev_memreq
-        fprintf('updating memreq to %d\n', memreq);
+        memreq_in_mb = memreq/(1024*1024);
+        if memreq_in_mb<100
+          fprintf('updating memreq to %.3f MB\n', memreq_in_mb);
+        else
+          fprintf('updating memreq to %.0f MB\n', memreq_in_mb);
+        end
       end
     elseif ~any(collected) && any(submitted)
       prev_timreq = timreq;

@@ -79,7 +79,7 @@ int smartmem_update(void) {
 		unsigned int NumPeers=0;
 		UINT64_T MemSuggested=0, MemReserved=0, MemTotal=0, MemFree=0;
 		float scale;
-		int verbose = 0, status;
+		int verbose = 1, status;
 
 		/* determine the amount of memory available on this computer */
 		if ((status = smartmem_info(&MemTotal, &MemFree)) < 0)
