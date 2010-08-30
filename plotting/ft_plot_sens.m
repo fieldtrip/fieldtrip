@@ -41,7 +41,7 @@ warning('on', 'MATLAB:divideByZero');
 keyvalcheck(varargin, 'optional', {'style', 'coil', 'label'});
 style = keyval('style', varargin); if isempty(style), style = 'k.'; end
 coil  = keyval('coil',  varargin); if isempty(coil), coil = false; end
-label = keyval('label', varargin); if isempty(coil), coil = false; end
+label = keyval('label', varargin); if isempty(label), label = 'off'; end
 
 % convert yes/no string into boolean value
 coil = istrue(coil);
