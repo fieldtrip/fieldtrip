@@ -162,7 +162,6 @@ function start_peerslave {
 	fi
 
 	PIDFILE=$PIDDIR/peerslave.$SLAVENUM
-	echo $EXECUTABLE $OPTIONS
 	$EXECUTABLE $OPTIONS &
 	PID=$!
 	if ( check_peerslave $PID ) ; then
@@ -183,45 +182,31 @@ COMMAND=$1
 case $COMMAND in
 
 start)
+# start all peerslaves
 length=${#peermem[@]}
 index=0
 while [ "$index" -lt "$length" ] ; do
-	PIDFILE=$PIDDIR/peerslave.$index
-	if [[ -e $PIDFILE ]] ; then
-		echo warning: peerslave number $index appears already to be running with pid `cat $PIDFILE`
-	else
-		echo starting peerslave number $index
-		start_peerslave ${peermem[$index]} $index
-	fi
-	let "index = $index + 1"
+    PIDFILE=$PIDDIR/peerslave.$index
+    if [[ -e $PIDFILE ]] ; then
+        PEERPID=`cat $PIDFILE`
+        if [[ -d /proc/$PEERPID ]] ; then
+            # the process is running fine
+            echo -n
+        else
+            # the process is not running any more
+            echo starting peerslave number $index
+            start_peerslave ${peermem[$index]} $index
+        fi
+    else
+        # the process is not running any more
+        echo starting peerslave number $index
+        start_peerslave ${peermem[$index]} $index
+    fi
+
+    let "index = $index + 1"
 done
 ;;
 
-restart)
-# find the pid of each peerslave, see whether it still is running, if not start it again
-length=${#peermem[@]}
-index=0
-while [ "$index" -lt "$length" ] ; do
-	PIDFILE=$PIDDIR/peerslave.$index
-	if [[ -e $PIDFILE ]] ; then
-		PEERPID=`cat $PIDFILE`
-		if [[ -d /proc/$PEERPID ]] ; then
-			# the process is running fine
-			echo -n
-		else
-			# the process is not running any more
-			echo restarting peerslave number $index
-			start_peerslave ${peermem[$index]} $index
-		fi
-	else
-		# the process is not running any more
-		echo restarting peerslave number $index
-		start_peerslave ${peermem[$index]} $index
-	fi
-
-	let "index = $index + 1"
-done
-;;
 
 status)
 length=${#peermem[@]}
@@ -266,6 +251,11 @@ while [ "$index" -lt "$length" ] ; do
 	fi
 	let "index = $index + 1"
 done
+;;
+
+restart)
+$0 stop
+$0 start
 ;;
 
 kill)
