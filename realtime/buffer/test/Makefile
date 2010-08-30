@@ -50,9 +50,6 @@ demo_buffer_rda: demo_buffer_rda.o ../src/libbuffer.a ../src/rdaserver.o
 	
 demo_buffer_unix: demo_buffer_unix.o ../src/libbuffer.a ../src/socketserver.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)	
-	
-saving_buffer: saving_buffer.o ../src/libbuffer.a ../src/socketserver.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)	
 
 test_gethdr: test_gethdr.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
