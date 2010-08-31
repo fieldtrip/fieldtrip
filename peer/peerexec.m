@@ -174,3 +174,7 @@ close all hidden;
 % clear any global variables
 clear global
 
+% clear the previous warning and error messages
+lastwarn('');
+lasterr('');
+
