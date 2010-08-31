@@ -90,6 +90,13 @@ int smartmem_update(void) {
 		float scale;
 		int verbose = 0, status;
 
+		pthread_mutex_lock(&mutexsmartmem);
+		if (!smartmem_enabled) {
+				pthread_mutex_unlock(&mutexsmartmem);
+				return 0;
+		}
+		pthread_mutex_unlock(&mutexsmartmem);
+
 		/* determine the amount of memory available on this computer */
 		if ((status = smartmem_info(&MemTotal, &MemFree, &Buffers, &Cached)) < 0)
 				return -1;
@@ -160,11 +167,9 @@ int smartmem_update(void) {
 		/* it does not make sense to suggest less than 100MB */
 		MemSuggested = (MemSuggested > 1024*1024*100 ? MemSuggested : 1024*1024*100 );
 
-		pthread_mutex_lock(&mutexsmartmem);
 		pthread_mutex_lock(&mutexhost);
-		if ((smartmem.enabled==1) && (host->status==2)) {
+		if (host->status==2) {
 				host->memavail = MemSuggested;
-
 				if (verbose>0) {
 						fprintf(stderr, "NumPeers     = %u\n",   NumPeers);
 						fprintf(stderr, "MemFree      = %llu (%f GB)\n", MemFree     , ((float)MemFree     )/(1024*1024*1024));
@@ -173,7 +178,6 @@ int smartmem_update(void) {
 				}
 		}
 		pthread_mutex_unlock(&mutexhost);
-		pthread_mutex_unlock(&mutexsmartmem);
 		return 0;
 
 }

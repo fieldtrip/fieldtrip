@@ -59,6 +59,7 @@ void print_help(char *argv[]) {
 		printf("  --timeout     = number, time to keep the engine running after the job finished\n");
 		printf("  --fairshare   = 0|1\n");
 		printf("  --smartmem    = 0|1\n");
+		printf("  --smartcpu    = 0|1\n");
 		printf("  --daemon\n");
 		printf("  --udsserver\n");
 		printf("  --verbose\n");
@@ -120,8 +121,9 @@ int main(int argc, char *argv[]) {
 						{"allowgroup", required_argument, 0, 'h'}, /* single or multiple string argument */
 						{"matlab",     required_argument, 0, 'i'}, /* single string argument */
 						{"smartmem",   required_argument, 0, 'j'}, /* numeric, 0 or 1 */
-						{"fairshare",  required_argument, 0, 'k'}, /* numeric, 0 or 1 */
-						{"timeout",    required_argument, 0, 'l'}, /* numeric argument */
+						{"smartcpu",   required_argument, 0, 'k'}, /* numeric, 0 or 1 */
+						{"fairshare",  required_argument, 0, 'l'}, /* numeric, 0 or 1 */
+						{"timeout",    required_argument, 0, 'm'}, /* numeric argument */
 						{0, 0, 0, 0}
 				};
 
@@ -149,7 +151,7 @@ int main(int argc, char *argv[]) {
 								host->memavail = atol(optarg);
 								pthread_mutex_unlock(&mutexhost);
 								pthread_mutex_lock(&mutexsmartmem);
-								smartmem.enabled = 0;
+								smartmem_enabled = 0;
 								pthread_mutex_unlock(&mutexsmartmem);
 								break;
 
@@ -238,18 +240,26 @@ int main(int argc, char *argv[]) {
 								if (verbose_flag)
 										printf ("option --smartmem with value `%s'\n", optarg);
 								pthread_mutex_lock(&mutexsmartmem);
-								smartmem.enabled = atol(optarg);
+								smartmem_enabled = atol(optarg);
 								pthread_mutex_unlock(&mutexsmartmem);
 								break;
 
 						case 'k':
+								if (verbose_flag)
+										printf ("option --smartcpu with value `%s'\n", optarg);
+								pthread_mutex_lock(&mutexsmartcpu);
+								smartcpu_enabled = atol(optarg);
+								pthread_mutex_unlock(&mutexsmartcpu);
+								break;
+
+						case 'l':
 								if (verbose_flag)
 										printf ("option --fairshare with value `%s'\n", optarg);
 								pthread_mutex_lock(&mutexfairshare);
 								fairshare.enabled = atol(optarg);
 								pthread_mutex_unlock(&mutexfairshare);
 
-						case 'l':
+						case 'm':
 								if (verbose_flag)
 										printf ("option --timeout with value `%s'\n", optarg);
 								enginetimeout = atol(optarg);

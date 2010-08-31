@@ -39,11 +39,10 @@ extern pthread_mutex_t mutexhostlist;
 extern hostlist_t *hostlist;
 
 extern pthread_mutex_t mutexsmartmem;
-extern struct {
-/*		int minavail; */
-/*		int maxavail; */
-		int enabled;
-} smartmem;
+extern int smartmem_enabled;
+
+extern pthread_mutex_t mutexsmartcpu;
+extern int smartcpu_enabled;
 
 extern pthread_mutex_t mutexfairshare;
 extern struct {

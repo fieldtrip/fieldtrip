@@ -78,6 +78,10 @@ void peerinit(void *arg) {
 
 		/* get the user name */
 		pwd = getpwuid(geteuid());
+		if (pwd==NULL) {
+				fprintf(stderr, "error: announce getpwuid\n");
+				exit(1);
+		}
 		strncpy(host->user, pwd->pw_name, STRLEN);
 
 		/* set the default group name */
@@ -125,8 +129,12 @@ void peerinit(void *arg) {
 		pthread_mutex_unlock(&mutexhost);
 
 		pthread_mutex_lock(&mutexsmartmem);
-		smartmem.enabled  = 1;
+		smartmem_enabled  = 0;
 		pthread_mutex_unlock(&mutexsmartmem);
+
+		pthread_mutex_lock(&mutexsmartcpu);
+		smartcpu_enabled  = 0;
+		pthread_mutex_unlock(&mutexsmartcpu);
 
 		pthread_mutex_lock(&mutexfairshare);
 		fairshare.n             = 0;

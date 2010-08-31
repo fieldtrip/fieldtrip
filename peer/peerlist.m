@@ -68,6 +68,8 @@ if nargout==0
         status = 'idle slave ';
       case 3
         status = 'busy slave ';
+      case 4
+        status = 'paused slave ';
       otherwise
         error('unknown status');
     end

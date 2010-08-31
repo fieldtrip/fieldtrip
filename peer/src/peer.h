@@ -49,7 +49,7 @@
 #define FAIRSHARE_PREVHOSTCOUNT 3	/* number of times that a host has to "knock" */
 #define FAIRSHARE_TIMER         3	/* idle time in seconds after which fairshare is disabled */
 #define FAIRSHARE_HISTORY       2	/* number if history items peer peer */
-#define EXPIRATION        5
+#define EXPIRATION        3
 #define BACKLOG           16
 #define SO_RCVBUF_SIZE    16384
 #define SO_SNDBUF_SIZE    16384
@@ -209,9 +209,8 @@ int  fairshare_check   (float timreq, int hostid);
 void fairshare_history (jobdef_t *job);
 
 /* fnuctions from smartmem.c */
-int meminfo(UINT64_T *MemTotal, UINT64_T *MemFree);
 int smartmem_update(void);
-UINT64_T smartmem_avail(void);
+int smartcpu_update(void);
 
 /* functions from security.c */
 int security_check(hostdef_t *host);

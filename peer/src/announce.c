@@ -108,8 +108,8 @@ void *announce(void *arg) {
 		if (verbose>0) {
 				pthread_mutex_lock(&mutexhost);
 				fprintf(stderr, "announce: host.name = %s\n", host->name);
-				fprintf(stderr, "announce: host.port = %d\n", host->port);
-				fprintf(stderr, "announce: host.id   = %d\n", host->id);
+				fprintf(stderr, "announce: host.port = %u\n", host->port);
+				fprintf(stderr, "announce: host.id   = %u\n", host->id);
 				pthread_mutex_unlock(&mutexhost);
 		}
 
@@ -137,9 +137,9 @@ void *announce(void *arg) {
 		/* now just sendto() our destination */
 		while (1) {
 
-
-				/* this should be done while the mutexhost is unlocked */
+				/* this should be done while the mutexhost and the mutexpeerlist are unlocked */
 				smartmem_update();
+				smartcpu_update();
 
 				pthread_mutex_lock(&mutexhost);
 

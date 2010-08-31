@@ -59,7 +59,7 @@ TARGET   = test_announce test_discover test_send test_recv peerslave.$(MATLABARC
 
 all: $(TARGET)
 
-libpeer.a: tcpserver.o udsserver.o tcpsocket.o discover.o announce.o expire.o util.o extern.o peerinit.o fairshare.o security.o localhost.o smartmem.o connect.o
+libpeer.a: tcpserver.o udsserver.o tcpsocket.o discover.o announce.o expire.o util.o extern.o peerinit.o fairshare.o security.o localhost.o smartmem.o smartcpu.o connect.o
 	ar rv $@ $^
 
 peer: peer.o libpeer.a
