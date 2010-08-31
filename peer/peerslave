@@ -13,11 +13,11 @@ case "$PLATFORM" in
 "x86_64-redhat-linux")
 	MATLABARCH=glnxa64
 	MATLABPATH=/opt/matlab77
-	MATLABCMD=/opt/cluster/`basename $MATLABPATH`
+	MATLABCMD='"/opt/cluster/matlab78 -nodisplay -singleCompThread"'
 	;;
 "i386-redhat-linux")
 	MATLABARCH=glnx86
-	MATLABPATH=/opt/matlab77
+	MATLABPATH=/opt/matlab75
 	MATLABCMD=/opt/cluster/`basename $MATLABPATH`
 	;;
 "i686-apple-darwin9")
@@ -155,6 +155,7 @@ function start_peerslave {
 		exit 1
 	fi
 
+	# note that all spaces in the full matlab startup command have to be in ''
 	if [[ "$1" -eq "auto" ]] ; then
 		OPTIONS="--matlab $MATLABCMD --smartmem 1"
 	else
@@ -162,7 +163,7 @@ function start_peerslave {
 	fi
 
 	PIDFILE=$PIDDIR/peerslave.$SLAVENUM
-	$EXECUTABLE $OPTIONS &
+	eval $EXECUTABLE $OPTIONS &
 	PID=$!
 	if ( check_peerslave $PID ) ; then
 		echo -n $PID > $PIDFILE

@@ -37,6 +37,14 @@
 #define USE_MULTICAST
 #define USE_LOCALHOST
 
+float frand(float min, float max) {
+		float val;
+		val = rand();				/* ranging from 0 to RAND_MAX */
+		val = val/RAND_MAX;			/* ranging from 0 to 1 */
+		val = min + val*(max-min);	/* ranging from min to max */
+		return val;
+}
+
 typedef struct {
 		void *message;
 		int fd;
@@ -187,7 +195,8 @@ void *announce(void *arg) {
 
 				/* note that this is a thread cancelation point */
 				pthread_testcancel();
-				usleep(ANNOUNCESLEEP);
+				/* avoid peers from perfectly synchronizing their announce packets */
+				usleep(ANNOUNCESLEEP + frand(-10000, 10000));
 		}
 
 cleanup:
