@@ -121,6 +121,8 @@ while 1
 	end
 	hdrOut.nifti_1 = encode_nifti1(niftiOut);
 	
+	ft_write_data(cfg.output, single([]), 'header', hdrOut);
+	
 	% reset motion estimates
 	motEst = [];
 	
@@ -261,11 +263,7 @@ while 1
 			procSample = single(procScan(:));
 		end
 		
-		if numProper == 1
-			ft_write_data(cfg.output, procSample, 'header', hdrOut);
-		else 
-			ft_write_data(cfg.output, procSample, 'header', hdrOut, 'append', true);
-		end
+		ft_write_data(cfg.output, procSample, 'header', hdrOut, 'append', true);
 		
 		fprintf('Done -- total time = %f\n', toc(GrabSampleT));
 
