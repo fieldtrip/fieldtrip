@@ -26,7 +26,7 @@
 #include "platform_includes.h"
 
 int open_uds_connection(const char *socketname) {
-#ifdef WIN32
+#if defined (PLATFORM_WIN32) || defined (PLATFORM_WIN64)
 		/* not yet implemented */
 #else
 		int s, len, verbose = 0;
@@ -34,16 +34,23 @@ int open_uds_connection(const char *socketname) {
 
 		if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
 				perror("open_uds_connection socket");
-				return 1;
+				return -1;
 		}
 
 		remote.sun_family = AF_UNIX;
 		strcpy(remote.sun_path, socketname);
 		len = strlen(remote.sun_path) + sizeof(remote.sun_family);
+#ifdef USE_ABSTRACT_UDS_NAMES
+		remote.sun_path[0] = 0;
+#endif
 		if (connect(s, (struct sockaddr *)&remote, len) == -1) {
 				perror("open_uds_connection connect");
-				return 1;
+				return -1;
 		}
+
+		pthread_mutex_lock(&mutexconnectioncount);
+		connectioncount++;
+		pthread_mutex_unlock(&mutexconnectioncount);
 
 		if (verbose>0)
 				fprintf(stderr, "open_uds_connection: connected to %s on socket %d\n", socketname, s);
@@ -127,15 +134,44 @@ int open_tcp_connection(const char *hostname, int port) {
 		   }
 		 */
 
-		if (verbose>1) {
-				pthread_mutex_lock(&mutexconnectioncount);
-				connectioncount++;
+		pthread_mutex_lock(&mutexconnectioncount);
+		connectioncount++;
+		pthread_mutex_unlock(&mutexconnectioncount);
+
+		if (verbose>1)
 				fprintf(stderr, "open_tcp_connection: connectioncount = %d\n", connectioncount);
-				pthread_mutex_unlock(&mutexconnectioncount);
-		}
 
 		if (verbose>0)
 				fprintf(stderr, "open_tcopen_tcpnnection: connected to %s:%d on socket %d\n", hostname, port, s);
 		return s;
+}
+
+int close_connection(int s) {
+		int retval, verbose = 0;
+
+		if (verbose>0)
+				fprintf(stderr, "close_connection: socket = %d\n", s);
+
+		if (s==0)
+				/* for a DMA connection */
+				retval = 0;	
+		else if (s>0)
+				/* for a TPC or UDS socket connection */
+				retval = closesocket(s);
+		else
+				/* unkown connection */
+				retval = -1;
+
+		if (retval<0)
+				perror("close_connection");
+
+		pthread_mutex_lock(&mutexconnectioncount);
+		connectioncount--;
+		pthread_mutex_unlock(&mutexconnectioncount);
+
+		if (verbose>1)
+				fprintf(stderr, "close_connection: connectioncount = %d\n", connectioncount);
+
+		return retval;
 }
 

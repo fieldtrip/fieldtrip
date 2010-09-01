@@ -129,20 +129,33 @@ void peerinit(void *arg) {
 		pthread_mutex_unlock(&mutexhost);
 
 		pthread_mutex_lock(&mutexsmartmem);
-		smartmem_enabled  = 0;
+		smartmem.enabled  = 0;
 		pthread_mutex_unlock(&mutexsmartmem);
 
 		pthread_mutex_lock(&mutexsmartcpu);
-		smartcpu_enabled  = 0;
+		smartcpu.enabled    = 0;
+		smartcpu.prevstatus = STATUS_ZOMBIE;
+		smartcpu.evidence   = 0;
 		pthread_mutex_unlock(&mutexsmartcpu);
 
-		pthread_mutex_lock(&mutexfairshare);
-		fairshare.n             = 0;
-		fairshare.t0            = time(NULL);
-		fairshare.prevhostid    = 0;
-		fairshare.prevhostcount = 0;
-		fairshare.enabled       = 1;
-		pthread_mutex_unlock(&mutexfairshare);
+		pthread_mutex_lock(&mutexprevcpu);
+		prevcpu.user    = 0;
+		prevcpu.nice    = 0;
+		prevcpu.system  = 0;
+		prevcpu.idle    = 0;
+		prevcpu.iowait  = 0;
+		prevcpu.irq     = 0;
+		prevcpu.softirq = 0;
+		prevcpu.unknown = 0;
+		pthread_mutex_unlock(&mutexprevcpu);
+
+		pthread_mutex_lock(&mutexsmartshare);
+		smartshare.n             = 0;
+		smartshare.t0            = time(NULL);
+		smartshare.prevhostid    = 0;
+		smartshare.prevhostcount = 0;
+		smartshare.enabled       = 1;
+		pthread_mutex_unlock(&mutexsmartshare);
 
 		return;
 }
@@ -164,7 +177,7 @@ void peerexit(void *arg) {
 		clear_userlist();
 		clear_grouplist();
 		clear_hostlist();
-		clear_fairsharelist();
+		clear_smartsharelist();
 
 		return;
 }

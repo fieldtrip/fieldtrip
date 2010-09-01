@@ -35,28 +35,39 @@
 #define SO_REUSEPORT      SO_REUSEADDR
 #endif
 
-#define VERSION           0x0010
-#define ANNOUNCE_GROUP    "225.0.0.88"
-#define ANNOUNCE_PORT 	  1700				/* it will auto-increment if the port is not available */
-#define DEFAULT_GROUP     "unknown"
-#define DEFAULT_USER      "unknown"
-#define DEFAULT_HOST      "localhost"
-#define DEFAULT_PORT      1701
-#define DEFAULT_STATUS    0
-#define DEFAULT_MEMAVAIL  UINT32_MAX
-#define DEFAULT_CPUAVAIL  UINT32_MAX
-#define DEFAULT_TIMAVAIL  UINT32_MAX
-#define FAIRSHARE_PREVHOSTCOUNT 3	/* number of times that a host has to "knock" */
-#define FAIRSHARE_TIMER         3	/* idle time in seconds after which fairshare is disabled */
-#define FAIRSHARE_HISTORY       2	/* number if history items peer peer */
-#define EXPIRATION        3
-#define BACKLOG           16
-#define SO_RCVBUF_SIZE    16384
-#define SO_SNDBUF_SIZE    16384
-#define ACCEPTSLEEP       10000    /* in usec */
-#define ANNOUNCESLEEP     1000000  /* in usec */
-#define EXPIRESLEEP       1000000  /* in usec */
-#define FAIRSHARE_TIMEOUT 5        /* in sec  */
+/* this is UNIX only, and may not work on all flavours */
+#define USE_ABSTRACT_UDS_NAMES
+
+#define VERSION                  0x0010
+#define ANNOUNCE_GROUP           "225.0.0.88"
+#define ANNOUNCE_PORT 	         1700		/* it will auto-increment if the port is not available */
+#define DEFAULT_GROUP            "unknown"
+#define DEFAULT_USER             "unknown"
+#define DEFAULT_HOST             "localhost"
+#define DEFAULT_PORT             1701
+#define DEFAULT_STATUS           0
+#define DEFAULT_MEMAVAIL         UINT32_MAX
+#define DEFAULT_CPUAVAIL         UINT32_MAX
+#define DEFAULT_TIMAVAIL         UINT32_MAX
+
+#define ACCEPTSLEEP              10000		/* in usec */
+#define ANNOUNCESLEEP            1000000	/* in usec */
+#define ANNOUNCEJITTER           10000 		/* in usec */
+#define BACKLOG                  16
+#define EXPIRATION               3
+#define EXPIRESLEEP              1000000	/* in usec */
+#define SMARTMEM_MINIMUM         104857600	/* 100 MB  */
+#define SMARTSHARE_HISTORY       2			/* number if history items peer peer */
+#define SMARTSHARE_PREVHOSTCOUNT 3			/* number of times that a host has to "knock" */
+#define SMARTSHARE_TIMEOUT       5			/* in sec  */
+#define SMARTSHARE_TIMER         3			/* idle time in seconds after which smartshare is disabled */
+#define SMARTCPU_TOLERANCE       0.05		/* the ideal load of a computer is N+0.05, with N the number of CPUs */
+#define SO_RCVBUF_SIZE           16384
+#define SO_SNDBUF_SIZE           16384
+#define STATUS_ZOMBIE            0			/* status = 0 means zombie mode, don't accept anything   */
+#define STATUS_MASTER            1			/* status = 1 means master mode, accept everything       */
+#define STATUS_IDLE              2			/* status = 2 means idle slave, accept only a single job */
+#define STATUS_BUSY              3 			/* status = 3 means busy slave, don't accept a new job   */
 
 #define MAXPWDSIZE		  16384
 #define MAXPATHSIZE		  16384
@@ -158,10 +169,10 @@ typedef struct peerlist_s {
 		struct peerlist_s *next;
 } peerlist_t;
 
-typedef struct fairsharelist_s {
+typedef struct smartsharelist_s {
 		UINT32_T timreq; 
-		struct fairsharelist_s *next;
-} fairsharelist_t;
+		struct smartsharelist_s *next;
+} smartsharelist_t;
 
 /* this is for restricting the access to a peer to one user or a list of users */
 typedef struct userlist_s {
@@ -203,10 +214,10 @@ void  peerinit (void *);
 void  peerexit (void *);
 int   announce_once(void);
 
-/* functions from fairshare.c */
-void fairshare_reset   (void);
-int  fairshare_check   (float timreq, int hostid);
-void fairshare_history (jobdef_t *job);
+/* functions from smartshare.c */
+void smartshare_reset   (void);
+int  smartshare_check   (float timreq, int hostid);
+void smartshare_history (jobdef_t *job);
 
 /* fnuctions from smartmem.c */
 int smartmem_update(void);
@@ -235,7 +246,7 @@ void clear_joblist(void);
 void clear_userlist(void);
 void clear_grouplist(void);
 void clear_hostlist(void);
-void clear_fairsharelist(void);
+void clear_smartsharelist(void);
 
 #ifdef __cplusplus
 }

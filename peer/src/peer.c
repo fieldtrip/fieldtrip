@@ -368,16 +368,16 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				pthread_mutex_unlock(&mutexhost);
 
 				pthread_mutex_lock(&mutexsmartmem);
-				mexPrintf("smartmem.enabled = %d\n", smartmem_enabled);
+				mexPrintf("smartmem.enabled = %d\n", smartmem.enabled);
 				pthread_mutex_unlock(&mutexsmartmem);
 
 				pthread_mutex_lock(&mutexsmartmem);
-				mexPrintf("smartcpu.enabled = %d\n", smartcpu_enabled);
+				mexPrintf("smartcpu.enabled = %d\n", smartcpu.enabled);
 				pthread_mutex_unlock(&mutexsmartmem);
 
-				pthread_mutex_lock(&mutexfairshare);
-				mexPrintf("fairshare.enabled = %d\n", fairshare.enabled);
-				pthread_mutex_unlock(&mutexfairshare);
+				pthread_mutex_lock(&mutexsmartshare);
+				mexPrintf("smartshare.enabled = %d\n", smartshare.enabled);
+				pthread_mutex_unlock(&mutexsmartshare);
 
 				pthread_mutex_lock(&mutexuserlist);
 				allowuser = userlist;
@@ -455,7 +455,6 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				}
 		}
 
-#ifdef UNUSED_CODE_XXX
 		/****************************************************************************/
 		else if (strcasecmp(command, "smartmem")==0) {
 				/* the input arguments should be "smartmem <0|1> */
@@ -470,7 +469,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 								mexErrMsgTxt ("invalid input argument #2");
 
 						pthread_mutex_lock(&mutexsmartmem);
-						smartmem_enabled = mxGetScalar(prhs[1]);
+						smartmem.enabled = mxGetScalar(prhs[1]);
 						pthread_mutex_unlock(&mutexsmartmem);
 				}
 		}
@@ -489,15 +488,14 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 								mexErrMsgTxt ("invalid input argument #2");
 
 						pthread_mutex_lock(&mutexsmartcpu);
-						smartcpu_enabled = mxGetScalar(prhs[1]);
+						smartcpu.enabled = mxGetScalar(prhs[1]);
 						pthread_mutex_unlock(&mutexsmartcpu);
 				}
 		}
-#endif
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "fairshare")==0) {
-				/* the input arguments should be "fairshare <0|1> */
+		else if (strcasecmp(command, "smartshare")==0) {
+				/* the input arguments should be "smartshare <0|1> */
 				if (nrhs<2) {
 						mexErrMsgTxt ("invalid number of input arguments");
 				}
@@ -508,9 +506,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						if (!mxIsScalar(prhs[1]))
 								mexErrMsgTxt ("invalid input argument #2");
 
-						pthread_mutex_lock(&mutexfairshare);
-						fairshare.enabled = mxGetScalar(prhs[1]);
-						pthread_mutex_unlock(&mutexfairshare);
+						pthread_mutex_lock(&mutexsmartshare);
+						smartshare.enabled = mxGetScalar(prhs[1]);
+						pthread_mutex_unlock(&mutexsmartshare);
 				}
 		}
 
@@ -1033,7 +1031,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mexWarnMsgTxt("failed to locate specified job\n");
 				}
 
-				fairshare_reset();
+				smartshare_reset();
 
 				pthread_mutex_unlock(&mutexjoblist);
 				return;

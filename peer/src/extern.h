@@ -39,20 +39,31 @@ extern pthread_mutex_t mutexhostlist;
 extern hostlist_t *hostlist;
 
 extern pthread_mutex_t mutexsmartmem;
-extern int smartmem_enabled;
+extern struct {
+		int enabled;
+} smartmem;
 
 extern pthread_mutex_t mutexsmartcpu;
-extern int smartcpu_enabled;
+extern struct {
+		int enabled;
+		int prevstatus;
+		int evidence;
+} smartcpu;
 
-extern pthread_mutex_t mutexfairshare;
+extern pthread_mutex_t mutexprevcpu;
+extern struct {
+		int user, nice, system, idle, iowait, irq, softirq, unknown;
+} prevcpu;
+
+extern pthread_mutex_t mutexsmartshare;
+extern smartsharelist_t *smartsharelist;
 extern struct {
 		int    n;
 		time_t t0;
 		int prevhostcount;
 		int prevhostid;
 		int enabled;
-} fairshare;
+} smartshare;
 
-extern fairsharelist_t *fairsharelist;
 
 #endif

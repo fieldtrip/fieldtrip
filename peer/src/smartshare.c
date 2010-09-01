@@ -24,70 +24,70 @@
 #include "platform_includes.h"
 
 /* reset the timer */
-void fairshare_reset(void) {
-		pthread_mutex_lock(&mutexfairshare);
-		fairshare.n             = 0;
-		fairshare.t0            = time(NULL);
-		fairshare.prevhostid    = 0;
-		fairshare.prevhostcount = 0;
-		pthread_mutex_unlock(&mutexfairshare);
+void smartshare_reset(void) {
+		pthread_mutex_lock(&mutexsmartshare);
+		smartshare.n             = 0;
+		smartshare.t0            = time(NULL);
+		smartshare.prevhostid    = 0;
+		smartshare.prevhostcount = 0;
+		pthread_mutex_unlock(&mutexsmartshare);
 }
 
 /* use a probabilistic approach to determine whether the connection should be dropped */
-int fairshare_check(float t, int hostid) {
+int smartshare_check(float t, int hostid) {
 		int verbose = 0;
 		float p, r, baseline = 1;
-		fairsharelist_t *listitem;
+		smartsharelist_t *listitem;
 
 		if (verbose)
-				fprintf(stderr, "fairshare_check\n");
+				fprintf(stderr, "smartshare_check\n");
 
-		pthread_mutex_lock(&mutexfairshare);
+		pthread_mutex_lock(&mutexsmartshare);
 
-		/* always accept jobs when fairshare is disabled */
-		if (fairshare.enabled!=1) {
-				pthread_mutex_unlock(&mutexfairshare);
+		/* always accept jobs when smartshare is disabled */
+		if (smartshare.enabled!=1) {
+				pthread_mutex_unlock(&mutexsmartshare);
 				return 1;
 		}
 
 		/* always accept jobs when running in master mode */
-		if (hoststatus()==2) {
-				pthread_mutex_unlock(&mutexfairshare);
+		if (hoststatus()==STATUS_MASTER) {
+				pthread_mutex_unlock(&mutexsmartshare);
 				return 1;
 		}
 
 		/* always accept jobs that don't take any time, e.g. writing results back to the master */
 		if (t<=0) {
-				pthread_mutex_unlock(&mutexfairshare);
+				pthread_mutex_unlock(&mutexsmartshare);
 				return 1;
 		}
 
-		if (fairshare.prevhostid==hostid)
-				fairshare.prevhostcount++;
+		if (smartshare.prevhostid==hostid)
+				smartshare.prevhostcount++;
 		else
-				fairshare.prevhostcount = 0;
+				smartshare.prevhostcount = 0;
 
-		fairshare.n++;
-		fairshare.prevhostid = hostid;
+		smartshare.n++;
+		smartshare.prevhostid = hostid;
 
-		if (fairshare.prevhostcount >= FAIRSHARE_PREVHOSTCOUNT) {
+		if (smartshare.prevhostcount >= SMARTSHARE_PREVHOSTCOUNT) {
 				if (verbose)
-						fprintf(stderr, "fairshare_check: prevhostcount exceeded\n");
-				fairshare.prevhostcount = 0;
-				pthread_mutex_unlock(&mutexfairshare);
+						fprintf(stderr, "smartshare_check: prevhostcount exceeded\n");
+				smartshare.prevhostcount = 0;
+				pthread_mutex_unlock(&mutexsmartshare);
 				return 1;
 		}
 
-		if ((time(NULL)-fairshare.t0) >= FAIRSHARE_TIMER) {
+		if ((time(NULL)-smartshare.t0) >= SMARTSHARE_TIMER) {
 				if (verbose)
-						fprintf(stderr, "fairshare_check: timer has elapsed\n");
-				pthread_mutex_unlock(&mutexfairshare);
+						fprintf(stderr, "smartshare_check: timer has elapsed\n");
+				pthread_mutex_unlock(&mutexsmartshare);
 				return 1;
 		}
 
 		/* determine the baseline for the time, based on the recent job history */
-		if (fairsharelist) {
-				listitem = fairsharelist;
+		if (smartsharelist) {
+				listitem = smartsharelist;
 				baseline = listitem->timreq;
 				while (listitem) {
 						if (listitem->timreq < baseline)
@@ -110,41 +110,41 @@ int fairshare_check(float t, int hostid) {
 		r = (float)rand() / (float)INT32_MAX;
 
 		if (verbose)
-				fprintf(stderr, "fairshare_check: t = %f, p = %f, r = %f, n = %d\n", t, p, r, fairshare.n);
+				fprintf(stderr, "smartshare_check: t = %f, p = %f, r = %f, n = %d\n", t, p, r, smartshare.n);
 
-		pthread_mutex_unlock(&mutexfairshare);
+		pthread_mutex_unlock(&mutexsmartshare);
 
 		/* return 1 if the connection should be accepted, 0 if it should not be accepted */
 		p = (p>r);
 		if (verbose>0)
-				fprintf(stderr, "fairshare_check: return value = %d\n", p);
+				fprintf(stderr, "smartshare_check: return value = %d\n", p);
 		return p;
 }
 
 
 /* keep a short history of the jobs that are currently submidded */
-void fairshare_history(jobdef_t *job) {
+void smartshare_history(jobdef_t *job) {
 		int verbose = 0;
 		int historycount = 0;
 		int peercount = 0;
-		fairsharelist_t *listitem;
+		smartsharelist_t *listitem;
 		peerlist_t *peer;
 
-		listitem = malloc(sizeof(fairsharelist_t));
+		listitem = malloc(sizeof(smartsharelist_t));
 		listitem->timreq = job->timreq;
 
-		pthread_mutex_lock(&mutexfairshare);
-		if (fairsharelist==NULL) {
+		pthread_mutex_lock(&mutexsmartshare);
+		if (smartsharelist==NULL) {
 				listitem->next = NULL;
-				fairsharelist = listitem;
+				smartsharelist = listitem;
 		}
 		else {
-				listitem->next = fairsharelist;
-				fairsharelist = listitem;
+				listitem->next = smartsharelist;
+				smartsharelist = listitem;
 		}
 
 		/* count the number of history items */
-		listitem = fairsharelist;
+		listitem = smartsharelist;
 		while (listitem) {
 				historycount++;
 				listitem = listitem->next;
@@ -160,11 +160,11 @@ void fairshare_history(jobdef_t *job) {
 		pthread_mutex_unlock(&mutexpeerlist);
 
 		if (verbose)
-				fprintf(stderr, "fairshare_history: historycount = %d, peercount = %d\n", historycount, peercount);
+				fprintf(stderr, "smartshare_history: historycount = %d, peercount = %d\n", historycount, peercount);
 
-		while (historycount > peercount*FAIRSHARE_HISTORY) {
+		while (historycount > peercount*SMARTSHARE_HISTORY) {
 				/* remove the oldest item from the history */
-				listitem = fairsharelist;
+				listitem = smartsharelist;
 				while (listitem && listitem->next && listitem->next->next)
 						listitem = listitem->next;
 
@@ -173,5 +173,5 @@ void fairshare_history(jobdef_t *job) {
 				historycount--;
 		}
 
-		pthread_mutex_unlock(&mutexfairshare);
+		pthread_mutex_unlock(&mutexsmartshare);
 }

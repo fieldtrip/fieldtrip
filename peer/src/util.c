@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, Robert Oostenveld
+ * Copyright (C) 2008-2010, Robert Oostenveld
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -110,23 +110,6 @@ int append(void **buf1, int bufsize1, void *buf2, int bufsize2) {
 		return (bufsize1+bufsize2);
 }
 
-int close_connection(int s) {
-		int status = 0, verbose = 0;
-		if (verbose>0)
-				fprintf(stderr, "close_connection: socket = %d\n", s);
-		if (s>0)
-				status = closesocket(s);	/* it is a TCP connection */
-		if (status!=0)
-				perror("close_connection");
-		if (verbose>1) {
-				pthread_mutex_lock(&mutexconnectioncount);
-				connectioncount--;
-				fprintf(stderr, "close_connection: connectioncount = %d\n", connectioncount);
-				pthread_mutex_unlock(&mutexconnectioncount);
-		}
-		return status;
-}
-
 int jobcount(void) {
 		int jobcount = 0;
 		joblist_t *job;
@@ -230,16 +213,16 @@ void clear_hostlist(void) {
 		pthread_mutex_unlock(&mutexhostlist);
 }
 
-void clear_fairsharelist(void) {
-		fairsharelist_t *listitem = NULL;
-		pthread_mutex_lock(&mutexfairshare);
-		listitem = fairsharelist;
+void clear_smartsharelist(void) {
+		smartsharelist_t *listitem = NULL;
+		pthread_mutex_lock(&mutexsmartshare);
+		listitem = smartsharelist;
 		while (listitem) {
-				fairsharelist = listitem->next;
+				smartsharelist = listitem->next;
 				FREE(listitem);
-				listitem = fairsharelist;
+				listitem = smartsharelist;
 		}
-		pthread_mutex_unlock(&mutexfairshare);
+		pthread_mutex_unlock(&mutexsmartshare);
 }
 
 void check_datatypes() {

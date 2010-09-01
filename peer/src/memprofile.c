@@ -116,7 +116,7 @@ void memprofile_cleanup(void *arg) {
 void memprofile_sample(void) {
 		unsigned int rss, vs;
 		memlist_t *memitem;
-    
+
 		if (getmem(&rss, &vs)!=0) {
 				rss = 0;
 				vs  = 0;
@@ -126,7 +126,7 @@ void memprofile_sample(void) {
 		memitem->rss  = rss;
 		memitem->vs   = vs;
 		memitem->time = time(NULL) - reftime;
-    
+
 		pthread_mutex_lock(&mutexmemlist);
 		memitem->next = memlist;
 		memlist       = memitem;
@@ -138,7 +138,7 @@ void *memprofile(void *arg) {
 		int count;
 		int pause = 1;
 		memlist_t *memitem, *next;
-    
+
 		pthread_mutex_lock(&mutexstatus);	
 		if (memprofileStatus) {
 				/* only a single instance should be running */
@@ -193,7 +193,7 @@ void *memprofile(void *arg) {
 /* this function will be called upon unloading of the mex file */
 void exitFun(void) {
 		if (memprofileStatus) {
-        memprofileStatus = 0;
+				memprofileStatus = 0;
 				pthread_cancel(memprofileThread);
 				pthread_join(memprofileThread, NULL);
 		}
@@ -201,10 +201,10 @@ void exitFun(void) {
 
 void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) {
 		char *command = NULL;
-    int rc, i;
-    memlist_t *memitem = NULL;
-    const char *fieldnames[3] = {"time", "mem"};
-    int numfields = 2;
+		int rc, i;
+		memlist_t *memitem = NULL;
+		const char *fieldnames[3] = {"time", "mem"};
+		int numfields = 2;
 
 		/* this function will be called upon unloading of the mex file */
 		mexAtExit(exitFun);

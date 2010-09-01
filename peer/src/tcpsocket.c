@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, Robert Oostenveld
+ * Copyright (C) 2008-2010, Robert Oostenveld
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -97,16 +97,10 @@ void *tcpsocket(void *arg) {
 		if (verbose>1)
 				fprintf(stderr, "tcpsocket: fd = %d, socketcount = %d, threadcount = %d\n", fd, socketcount, threadcount);
 
-		/* status = 0 means zombie mode, don't accept anything   */
-		/* status = 1 means master mode, accept everything       */
-		/* status = 2 means idle slave, accept only a single job */
-		/* status = 3 means busy slave, don't accept a new job   */
-		/* any other status is interpreted as zombie mode        */
-
-		if (hoststatus()==1) {
+		if (hoststatus()==STATUS_MASTER) {
 				connect_accept = 1;
 		}
-		else if (hoststatus()==2 && jobcount()==0) {
+		else if (hoststatus()==STATUS_IDLE && jobcount()==0) {
 				connect_accept = 1;
 		}
 		else {
@@ -223,13 +217,13 @@ void *tcpsocket(void *arg) {
 				connect_accept = 0;
 		}
 
-		/* remember the job characteristics for the fairshare algorithm */
-		fairshare_history(message->job);
+		/* remember the job characteristics for the smartshare algorithm */
+		smartshare_history(message->job);
 
 		/* use a probabilistic approach to determine whether the connection should be dropped */
-		if (!fairshare_check(message->job->timreq, message->host->id)) {
+		if (!smartshare_check(message->job->timreq, message->host->id)) {
 				if (verbose>0)
-						fprintf(stderr, "tcpsocket: fairshare_check returned zero\n");
+						fprintf(stderr, "tcpsocket: smartshare_check returned zero\n");
 				connect_accept = 0;
 		}
 

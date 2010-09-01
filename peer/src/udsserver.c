@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/stat.h> /* for chmod */
 #include <sys/un.h>
 #include <pthread.h>
 #endif
@@ -118,19 +119,30 @@ void *udsserver(void *arg) {
 		bzero(&local, sizeof local);
 		bzero(&remote, sizeof remote);
 
-		local.sun_family = AF_UNIX;
-		sprintf(local.sun_path, "%s.%d", SOCK_PATH, getpid());
-		unlink(local.sun_path);
-
 		pthread_mutex_lock(&mutexhost);
-		sprintf(host->socket, "%s.%d", SOCK_PATH, getpid());
+		local.sun_family = AF_UNIX;
+		sprintf(local.sun_path, "%s-%s.%d", SOCK_PATH, host->user, getpid());  /* for example "/tmp/peer-roboos.1436" */
+		strncpy(host->socket, local.sun_path, STRLEN);
 		pthread_mutex_unlock(&mutexhost);
 
+		/* remove the file if it already exists */
+		unlink(local.sun_path);
+
 		len = strlen(local.sun_path) + sizeof(local.sun_family);
+#ifdef USE_ABSTRACT_UDS_NAMES
+		/* abstract unix domain socket namea do not show up in the file system */
+		local.sun_path[0] = 0;
+#endif
 		if (bind(fd, (struct sockaddr *)&local, len) == -1) {
 				perror("udsserver bind");
 				goto cleanup;
 		}
+
+#ifndef USE_ABSTRACT_UDS_NAMES
+		/* this is required to allow other users to read and write to the socket through the file system*/
+		if (chmod(local.sun_path, 0777)!=0)
+				perror('chmod');
+#endif
 
 		if (listen(fd, BACKLOG)<0) {
 				perror("udsserver listen");

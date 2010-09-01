@@ -196,7 +196,7 @@ void *announce(void *arg) {
 				/* note that this is a thread cancelation point */
 				pthread_testcancel();
 				/* avoid peers from perfectly synchronizing their announce packets */
-				usleep(ANNOUNCESLEEP + frand(-10000, 10000));
+				usleep(ANNOUNCESLEEP + frand(-ANNOUNCEJITTER, ANNOUNCEJITTER));
 		}
 
 cleanup:

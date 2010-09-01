@@ -56,19 +56,30 @@ pthread_mutex_t mutexhostlist = PTHREAD_MUTEX_INITIALIZER;
 hostlist_t *hostlist = NULL;
 
 pthread_mutex_t mutexsmartmem = PTHREAD_MUTEX_INITIALIZER;
-int smartmem_enabled;
+struct {
+		int enabled;
+} smartmem;
 
 pthread_mutex_t mutexsmartcpu = PTHREAD_MUTEX_INITIALIZER;
-int smartcpu_enabled;
+struct {
+		int enabled;
+		int prevstatus;
+		int evidence;
+} smartcpu;
 
-pthread_mutex_t mutexfairshare = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutexprevcpu = PTHREAD_MUTEX_INITIALIZER;
+struct {
+		int user, nice, system, idle, iowait, irq, softirq, unknown;
+} prevcpu;
+
+pthread_mutex_t mutexsmartshare = PTHREAD_MUTEX_INITIALIZER;
+smartsharelist_t *smartsharelist = NULL;
 struct {
 		int    n;
 		time_t t0;
 		int prevhostcount;
 		int prevhostid;
 		int enabled;
-} fairshare;
+} smartshare;
 
-fairsharelist_t *fairsharelist = NULL;
 

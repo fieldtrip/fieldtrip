@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2010, Robert Oostenveld
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -88,36 +106,33 @@ int smartmem_update(void) {
 		UINT64_T MemSuggested=0, MemReserved=0;
 		UINT64_T MemTotal=0, MemFree=0, Buffers=0, Cached=0;
 		float scale;
-		int verbose = 0, status;
+		int verbose = 0, ok;
 
 		pthread_mutex_lock(&mutexsmartmem);
-		if (!smartmem_enabled) {
+		if (!smartmem.enabled) {
 				pthread_mutex_unlock(&mutexsmartmem);
 				return 0;
 		}
 		pthread_mutex_unlock(&mutexsmartmem);
 
+		if (hoststatus()!=STATUS_IDLE)
+				return 0;
+
 		/* determine the amount of memory available on this computer */
-		if ((status = smartmem_info(&MemTotal, &MemFree, &Buffers, &Cached)) < 0)
+		if ((ok = smartmem_info(&MemTotal, &MemFree, &Buffers, &Cached)) < 0)
 				return -1;
 
 		pthread_mutex_lock(&mutexhost);
 		pthread_mutex_lock(&mutexpeerlist);
 
-		/* status = 0 means zombie mode, don't accept anything   */
-		/* status = 1 means master mode, accept everything       */
-		/* status = 2 means idle slave, accept only a single job */
-		/* status = 3 means busy slave, don't accept a new job   */
-		/* any other status is interpreted as zombie mode        */
-
-		/* determine the amount of memory that is reserved by the other peers on this computer */
+		/* determine the amount of memory that is reserved by the idle slaves on this computer */
 		peer = peerlist;
 		while(peer) {
-				status = 1;
-				status = status & (strcmp(peer->ipaddr, "127.0.0.1")==0);
-				status = status & (peer->host->id != host->id);
-				status = status & (peer->host->status == 2 | peer->host->status == 3); /* include idle and busy slaves */
-				if (status) {
+				ok = 1;
+				ok = ok & (strcmp(peer->ipaddr, "127.0.0.1")==0);
+				ok = ok & (peer->host->id != host->id);
+				ok = ok & (peer->host->status == STATUS_IDLE);
+				if (ok) {
 						MemReserved += peer->host->memavail;
 						NumPeers++;
 				}
@@ -127,7 +142,7 @@ int smartmem_update(void) {
 		pthread_mutex_unlock(&mutexhost);
 		pthread_mutex_unlock(&mutexpeerlist);
 
-		/* also count this peer */
+		/* include this peer in the count */
 		NumPeers++;
 
 		/* determine the scale of the memory update (for iterative improvements) */
@@ -164,20 +179,19 @@ int smartmem_update(void) {
 		/* this asymptotically approaches the free memory          */
 		MemSuggested = ((float)(MemFree - MemReserved)) / (1.0 + scale);
 
-		/* it does not make sense to suggest less than 100MB */
-		MemSuggested = (MemSuggested > 1024*1024*100 ? MemSuggested : 1024*1024*100 );
+		/* it does not make sense to suggest less than a certain minimum amount */
+		MemSuggested = (MemSuggested > SMARTMEM_MINIMUM ? MemSuggested : SMARTMEM_MINIMUM );
 
 		pthread_mutex_lock(&mutexhost);
-		if (host->status==2) {
-				host->memavail = MemSuggested;
-				if (verbose>0) {
-						fprintf(stderr, "NumPeers     = %u\n",   NumPeers);
-						fprintf(stderr, "MemFree      = %llu (%f GB)\n", MemFree     , ((float)MemFree     )/(1024*1024*1024));
-						fprintf(stderr, "MemReserved  = %llu (%f GB)\n", MemReserved , ((float)MemReserved )/(1024*1024*1024));
-						fprintf(stderr, "MemSuggested = %llu (%f GB)\n", MemSuggested, ((float)MemSuggested)/(1024*1024*1024));
-				}
-		}
+		host->memavail = MemSuggested;
 		pthread_mutex_unlock(&mutexhost);
-		return 0;
 
+		if (verbose>0) {
+				fprintf(stderr, "NumPeers     = %u\n",   NumPeers);
+				fprintf(stderr, "MemFree      = %llu (%f GB)\n", MemFree     , ((float)MemFree     )/(1024*1024*1024));
+				fprintf(stderr, "MemReserved  = %llu (%f GB)\n", MemReserved , ((float)MemReserved )/(1024*1024*1024));
+				fprintf(stderr, "MemSuggested = %llu (%f GB)\n", MemSuggested, ((float)MemSuggested)/(1024*1024*1024));
+		}
+
+		return 0;
 }
