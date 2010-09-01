@@ -220,7 +220,7 @@ void *tcpserver(void *arg) {
 			/* place the socket back in blocking mode, this is needed for tcpsocket  */
 #ifdef WIN32
 			enable = 0;
-			ioctlsocket(s, FIONBIO, &enable);
+			ioctlsocket(c, FIONBIO, &enable);
 #else
 			optval = fcntl(c, F_GETFL, NULL);
 			optval = optval & (!O_NONBLOCK);
