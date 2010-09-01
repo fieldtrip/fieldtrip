@@ -72,17 +72,17 @@ mentat003|mentat004)
 mentat005)
 	# has 48GB of RAM, 2 CPUs and 12 cores in total
 	peermem[ 0]=8589934592
-	peermem[ 1]=4294967296
-	peermem[ 2]=4294967296
+	peermem[ 1]=8589934592
+	peermem[ 2]=8589934592
 	peermem[ 3]=4294967296
 	peermem[ 4]=4294967296
-	peermem[ 5]="auto"
-	peermem[ 6]="auto"
-	peermem[ 7]="auto"
-	peermem[ 8]="auto"
-	peermem[ 9]="auto"
-	peermem[10]="auto"
-	peermem[11]="auto"
+	peermem[ 5]=4294967296
+	peermem[ 6]=2147483648
+	peermem[ 7]=2147483648
+	peermem[ 8]=2147483648
+	peermem[ 9]=2147483648
+	peermem[10]=2147483648
+	peermem[11]=2147483648
 	;;
 mentat068|mentat069)
 	# this is an old 32 bit machine which has 4GB of RAM, a single CPU with a single core
@@ -97,7 +97,6 @@ mentat193|mentat194|mentat195|mentat196|mentat197|mentat198|mentat199|mentat200|
 	peermem[2]="auto"
 	peermem[3]="auto"
 	;;
-
 mentat235|mentat236|mentat237|mentat238|mentat239|mentat240|mentat241|mentat242|mentat243|mentat244|mentat245)
 	# has 12GB of RAM, one CPU and 4 cores
 	# Intel(R) Xeon(R) CPU W3530 @ 2.80GHz
@@ -157,9 +156,9 @@ function start_peerslave {
 
 	# note that all spaces in the full matlab startup command have to be in ''
 	if [[ "$1" -eq "auto" ]] ; then
-		OPTIONS="--matlab $MATLABCMD --smartmem 1"
+		OPTIONS="--matlab $MATLABCMD --smartcpu 1 --smartmem 1"
 	else
-		OPTIONS="--matlab $MATLABCMD --smartmem 0 --memavail $1"
+		OPTIONS="--matlab $MATLABCMD --smartcpu 1 --smartmem 0 --memavail $1"
 	fi
 
 	PIDFILE=$PIDDIR/peerslave.$SLAVENUM
