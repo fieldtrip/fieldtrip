@@ -157,7 +157,7 @@ switch dataformat
 		  packet.nifti_1 = hdr.nifti_1;
 		else
           try
-            packet.nifti_1 = decode_nifti1(hdr.nifti_1);
+            packet.nifti_1 = encode_nifti1(hdr.nifti_1);
 		  catch
 		    warning 'Ignoring field "nifti_1"';
           end
