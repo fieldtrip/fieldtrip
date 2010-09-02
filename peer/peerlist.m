@@ -50,10 +50,16 @@ list = peer('peerlist');
 
 if nargout==0
   % give a summary
-  fprintf('there are %3d peers running as master\n',     sum([list.status]==1));
-  fprintf('there are %3d peers running as idle slave\n', sum([list.status]==2));
-  fprintf('there are %3d peers running as busy slave\n', sum([list.status]==3));
-  fprintf('there are %3d peers running as zombie\n',     sum([list.status]==0));
+  sel = 1:numel(list);
+  fprintf('there are %3d peers running in total (%d hosts, %d users)\n',length(sel), length(unique({list(sel).hostname})), length(unique({list(sel).user}))); 
+  sel = find([list.status]==1);
+  fprintf('there are %3d peers running on %2d hosts as master\n',     length(sel), length(unique({list(sel).hostname})));
+  sel = find([list.status]==2);
+  fprintf('there are %3d peers running on %2d hosts as idle slave with %5s memory available\n', length(sel), length(unique({list(sel).hostname})), print_mem(sum([list(sel).memavail])));
+  sel = find([list.status]==3);
+  fprintf('there are %3d peers running on %2d hosts as busy slave with %5s memory required\n', length(sel), length(unique({list(sel).hostname})), print_mem(sum([list(sel).memavail])));
+  sel = find([list.status]==0);
+  fprintf('there are %3d peers running on %2d hosts as zombie\n',     length(sel), length(unique({list(sel).hostname})));
 
   % the peers are listed in a random order
   % create a list which will be sorted afterward for a nice display
@@ -73,7 +79,8 @@ if nargout==0
       otherwise
         error('unknown status');
     end
-    strlist{i} = sprintf('%s at %s@%s:%d, group = %s, memavail = %6.1f MB, hostid = %u\n', status, list(i).user, list(i).hostname, list(i).port, list(i).group, list(i).memavail/(1024*1024), list(i).hostid);
+    strlist{i} = sprintf('%s at %s@%s:%d, group = %s, memavail = %5s, hostid = %u\n', status, list(i).user, list(i).hostname, list(i).port, list(i).group, print_mem(list(i).memavail), list(i).hostid);
+    % strlist{i} = sprintf('%s at %s@%s:%d, group = %s, memavail = %5s, timavail = %10s, hostid = %u\n', status, list(i).user, list(i).hostname, list(i).port, list(i).group, print_mem(list(i).memavail), print_tim(list(i).timavail), list(i).hostid);
   end % for i
   strlist = sort(strlist);
   for i=1:numel(list)
@@ -82,4 +89,46 @@ if nargout==0
   clear list
 end
 
+function str = print_mem(val)
+if val<1024
+  str = sprintf('%d bytes', val);
+elseif val<1024^2
+  str = sprintf('%.1f KB', val/1024);
+elseif val<1024^3
+  str = sprintf('%.1f MB', val/1024^2);
+else
+  str = sprintf('%.1f GB', val/1024^3);
+end
+
+function str = print_tim(tim)
+% partition the time in seconds into years, months, etc.
+year   = 60*60*24*7*356.25;
+month  = 60*60*24*356.25/12;
+week   = 60*60*24*7;
+day    = 60*60*24;
+hour   = 60*60;
+minute = 60;
+org = tim; % remember the original time in seconds
+y = floor(tim/year  ); tim = tim - y*year;
+m = floor(tim/month ); tim = tim - m*month;
+w = floor(tim/week  ); tim = tim - w*week;
+d = floor(tim/day   ); tim = tim - d*day;
+h = floor(tim/hour  ); tim = tim - h*hour;
+m = floor(tim/minute); tim = tim - m*minute;
+s = tim;
+if y>=1
+  str = sprintf('%.1f years', org/year);
+elseif m>=1
+  str = sprintf('%.1f months', org/month);
+elseif w>=1
+  str = sprintf('%.1f weeks', org/week);
+elseif d>=1
+  str = sprintf('%.1f days', org/day);
+elseif h>=1
+  str = sprintf('%.1f hours', org/hour);
+elseif m>=1
+  str = sprintf('%.1f minutes', org/minute);
+else
+  str = sprintf('%.1f seconds', org);
+end
 

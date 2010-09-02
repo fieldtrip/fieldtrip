@@ -68,8 +68,8 @@ void peerinit(void *arg) {
 		host->port     = DEFAULT_PORT;
 		host->status   = DEFAULT_STATUS;
 		host->memavail = DEFAULT_MEMAVAIL;
-		host->cpuavail = DEFAULT_TIMAVAIL;
-		host->timavail = DEFAULT_CPUAVAIL;
+		host->cpuavail = DEFAULT_CPUAVAIL;
+		host->timavail = DEFAULT_TIMAVAIL;
 
 		/* initialize the unix domain socket as empty */
 		bzero(host->socket, STRLEN);

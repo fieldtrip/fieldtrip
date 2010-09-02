@@ -48,8 +48,8 @@ optarg = varargin(optbeg:end);
 
 % get the optional input arguments
 UniformOutput = keyval('UniformOutput', optarg); if isempty(UniformOutput), UniformOutput = true; end
-memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=1024*1024*100;  end % assume 100MB
-timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=3600;           end % assume that it will take one hour
+memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=1024^3;         end % assume 1 GB
+timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=3600;           end % assume 1 hour
 sleep   = keyval('sleep',   optarg); if isempty(sleep),  sleep=0.01;            end
 diary   = keyval('diary',   optarg); if isempty(diary),  diary='error';         end
 timcv   = keyval('timcv',   optarg); % default is empty, which will cause the range to be estimated

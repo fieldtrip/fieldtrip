@@ -47,8 +47,8 @@
 #define DEFAULT_PORT             1701
 #define DEFAULT_STATUS           0
 #define DEFAULT_MEMAVAIL         UINT32_MAX
-#define DEFAULT_CPUAVAIL         UINT32_MAX
-#define DEFAULT_TIMAVAIL         UINT32_MAX
+#define DEFAULT_CPUAVAIL         0
+#define DEFAULT_TIMAVAIL         (24*3600)
 
 #define ACCEPTSLEEP              10000		/* in usec */
 #define ANNOUNCESLEEP            1000000	/* in usec */
