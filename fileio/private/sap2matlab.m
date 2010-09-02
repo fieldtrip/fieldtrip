@@ -19,7 +19,7 @@ oldDir = pwd;
 [srcDir, srcName] = fileparts(mfilename('fullpath'));
 try
   cd(srcDir);			% we're now in private
-  cd('../../realtime/siemens');
+  cd('../../realtime/datasource/siemens');
   mex -outdir ../../fileio/private sap2matlab.c siemensap.c -I.
   cd(oldDir);
   SP = sap2matlab(blob);
