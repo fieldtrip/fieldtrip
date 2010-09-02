@@ -7,8 +7,8 @@
 CC = gcc
 CXX = g++
 
-LDFLAGS = pthreadGC2.dll ../buffer/src/libbuffer.a -lws2_32 
-CXXFLAGS = -I../buffer/src -I../buffer/cpp -I. -Wunused -Wall -pedantic -O3 -I../buffer/pthreads-win32/include
+LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -lws2_32 
+CXXFLAGS = -I../../buffer/src -I../../buffer/cpp -I. -Wunused -Wall -pedantic -O3 -I../../buffer/pthreads-win32/include
 
 all: nlx2ft.exe
 	
