@@ -129,11 +129,11 @@ for i=dip.inside
 end
 dipout.mom(dip.outside) = {nan};
 
-% for convenience also compute power at each location
+% for convenience also compute power (over the three orientations) at each location and for each time
+dipout.pow = nan( size(dipout.mom,2), size(dat,2));
 for i=dip.inside
   dipout.pow(i,:) = sum(dipout.mom{i}.^2, 1);
 end
-dipout.pow(dip.outside,:) = nan;
 
 % add other descriptive information to the output source model
 dipout.pos     = dip.pos;
