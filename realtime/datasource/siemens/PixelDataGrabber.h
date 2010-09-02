@@ -196,6 +196,11 @@ class PixelDataGrabber {
 		in memory). If errors occur, the sliceBuffer will be empty.		
 	*/
 	void reshapeToSlices();
+	
+	/** This function reshapes the contents of pixBuffer and adds it to the sliceBuffer.
+	*/
+	void addEchoToSlices();
+	
 
 	std::string sourceDir;	/**< Contains the path of the directory that is being monitored */
 	std::string fullName;	/**< Contains the full path of the latest read file */
@@ -214,6 +219,8 @@ class PixelDataGrabber {
 	unsigned int numSlices;			/**< Number of slices */
 	unsigned int TR;                /**< Repetition time in microseconds */
 	unsigned int numEchos;          /**< Number of echos per scan */
+	unsigned int curFileIndex;      /**< Count files per scan: 0 for magnitude part of first echo, ... */
+	unsigned int filesPerEcho;		/**< =1 normally, =2 for Magnitude-Phase reconstruction etc., we ignore the phase part */
 	double phaseFOV, readoutFOV;	/**< Size of the field of view in mm */
 	Action lastAction;				/**< Contains last action or error that occured */
 	

@@ -71,16 +71,9 @@ void updatePiBox() {
 	int ne = pdg.getNumEchos();
 	int nt = pdg.getNumWritten();
 	
-	if (ne>1) {
-		int ns = nt/ne;
-		snprintf(msg, 200, "Format: %i x %i x %i  -  Scans/Echos: %4i/%i", 
+	snprintf(msg, 200, "Format: %i x %i x %i  -  Echos: %i  -  Scans: %i", 
 					pdg.getReadoutResolution(), pdg.getPhaseResolution(), 
-					pdg.getNumSlices(), ns, nt);
-	} else {
-		snprintf(msg, 200, "Format: %i x %i x %i  -  Scans: %4i", 
-					pdg.getReadoutResolution(), pdg.getPhaseResolution(), 
-					pdg.getNumSlices(), nt);
-	}
+					pdg.getNumSlices(), ne, nt);
 	piBox->copy_label(msg);
 	piBox->redraw();
 }

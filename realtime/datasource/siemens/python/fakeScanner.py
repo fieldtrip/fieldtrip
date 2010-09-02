@@ -54,6 +54,11 @@ while 1:
 	shutil.copy(srcdir + PixFN[idxSrc], '%s/Scan%04i.PixelData'%(destdir,idxDest))
 	info = '%16.4f  %04i  %s\n'%(T,idxDest,PixFN[idxSrc])
 	print info
+	
+	shutil.copy(srcdir + PixFN[idxSrc], '%s/Scan%04ip.PixelData'%(destdir,idxDest))
+	info = '%16.4f  %04ip  %s\n'%(T,idxDest,PixFN[idxSrc])
+	print info
+	
 	logFile.write(info)
 	logFile.flush()
 	

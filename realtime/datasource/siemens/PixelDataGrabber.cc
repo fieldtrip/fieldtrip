@@ -17,6 +17,9 @@ PixelDataGrabber::PixelDataGrabber() {
 	samplesWritten = 0;
 	readResolution = 0;
 	numSlices = 0;
+	numEchos = 1;
+	curFileIndex = 0;
+	filesPerEcho = 1;
 	TR = 0;
 	lastAction = Nothing;
 	protInfo = NULL;
@@ -246,6 +249,23 @@ void PixelDataGrabber::handleProtocol(const char *info, unsigned int sizeInBytes
 	} else {
 		numEchos = 1;
 	}		
+	
+	// ucReconstructionMode --> single or two files per echo?
+	// From the IDEA documentation:
+	//  1 -> Single magnitude image
+	//  2 -> Single phase image
+	//  4 -> Real part only (single image)
+	//  8 -> Magnitude+phase image (we need to skip the phase)
+	// 10 -> Real part+phase (we need to skip the phase)
+	// 20 -> PSIR (also need to skip every second image)
+	item = sap_search_deep(PI, "ucReconstructionMode");
+	if (item!=NULL && item->type == SAP_LONG) {
+		long reconMode = ((long *) item->value)[0];
+		filesPerEcho = (reconMode >= 8) ? 2 : 1;
+		if (verbosity>2) printf("Reconstruction mode: %i\n", reconMode);
+	} else {
+		filesPerEcho = 1;
+	}			
 	
 	// sKSpace.lBaseResolution => number of pixels in readout direction
 	item = sap_search_deep(PI, "sKSpace.lBaseResolution");
@@ -629,17 +649,29 @@ void PixelDataGrabber::tryFolderToBuffer() {
 			if (!tryReadFile(fullName.c_str(), pixBuffer)) continue;
 			
 			if (protInfo == NULL) tryReadProtocol();
-			reshapeToSlices();
+			
+			if (curFileIndex == 0) {
+				reshapeToSlices();
+			} else {
+				if (filesPerEcho==1 || (curFileIndex & 1) == 0) {
+					addEchoToSlices();
+				}
+			}
 			if (sliceBuffer.size()==0) continue;
+			curFileIndex++;
+			printf("curFileIndex = %i\n", curFileIndex);
 			lastName = fullName;
 			if (ftbSocket == -1) continue;
-			sendFrameToBuffer(tv);
-			
+			if (curFileIndex == filesPerEcho * numEchos) {
+				sendFrameToBuffer(tv);
+				curFileIndex = 0;
+			}
 		} 
 		else if (vfn[i].compare(vfn[i].size()-10,10, "mrprot.txt") == 0) {
 			if (!tryReadFile(fullName.c_str(), protBuffer)) return;
 	
 			handleProtocol((char *) protBuffer.data(), protBuffer.size());
+			curFileIndex = 0;
 			if (ftbSocket != -1) writeHeader();
 			lastAction = ProtocolRead;
 		} 
@@ -706,6 +738,51 @@ void PixelDataGrabber::reshapeToSlices() {
 					++i;
 					j = 0;
 				}
+			}
+		}
+	}
+}
+
+
+void PixelDataGrabber::addEchoToSlices() {
+	// In contrast to reshapeToSlices, this is only called when 
+	// a) we have protocol information (otherwise we wouldn't know about echos and
+	// b) the sliceBuffer is already big enough
+	unsigned int pixels = pixBuffer.size() >> 1;
+	unsigned int tiles  = pixels / (readResolution * phaseResolution);
+	unsigned int mosw   = (unsigned int) round(sqrt(tiles));
+		
+	if ((pixels != readResolution * phaseResolution * tiles) || (mosw*mosw != tiles) || (numSlices > tiles)) {
+		// mosaic does not match readResolution, or is too small - do nothing...
+		if (verbosity>0) fprintf(stderr, "PixelData (%i) does not match protocol information (%i x %i x %i)\n",pixels,readResolution,phaseResolution,numSlices);
+		sliceBuffer.resize(0);
+		lastAction = BadPixelData;
+	} else {
+		const int16_t *src	= (const int16_t *) pixBuffer.data();
+		int16_t *dest   	= (int16_t *) sliceBuffer.data();
+			
+		// row and column in source mosaic
+		unsigned int i = 0, j = 0;
+			
+		for (unsigned int n=0; n<numSlices; n++) {
+			int16_t *dest_n = dest + readResolution*phaseResolution*n;
+			const int16_t *src_n = src + readResolution*(phaseResolution*mosw*i + j);
+				
+			// add one line (=readResolution pixels) at a time
+			for (unsigned int m=0; m<phaseResolution; m++) {
+				int16_t      *dest_mn = dest_n + m*readResolution;
+				const int16_t *src_mn = src_n  + m*mosw*readResolution;
+			
+				for (unsigned int v=0; v<readResolution; v++) {
+					dest_mn[v] += src_mn[v];
+				}
+			}
+				
+			// increase source column index
+			if (++j == mosw) {
+				// and shift to next row eventually
+				++i;
+				j = 0;
 			}
 		}
 	}
