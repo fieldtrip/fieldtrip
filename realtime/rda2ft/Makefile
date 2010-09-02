@@ -24,5 +24,5 @@ all: rda2ft$(SUFFIX)
 rda2ft.o: rda2ft.c
 	gcc -c rda2ft.c $(CFLAGS)
 	
-rda2ft$(SUFFIX): rda2ft.o
-	gcc -o rda2ft$(SUFFIX) rda2ft.o $(LDFLAGS)
+rda2ft$(SUFFIX): rda2ft.o ../buffer/src/socketserver.o
+	gcc -o $@ $^ $(LDFLAGS)

@@ -2,13 +2,17 @@
  * (C) 2010 Stefan Klanke
  */
 #include <buffer.h>
+#include <socketserver.h>
 #include <rdadefs.h>
 #include <signal.h>
-#include <pthread.h>
 #include <string.h>
 
 #define MAXLINE 256
 #define MAX_PRINT_CHN  300
+
+const UINT8_T _rda_guid[16]={
+	0x8E,0x45,0x58,0x43,0x96,0xC9,0x86,0x4C,0xAF,0x4A,0x98,0xBB,0xF6,0xC9,0x14,0x50
+};
 
 int keepRunning = 1;
 int numChannels, ftSocket = -1, goodToSend = 0;
@@ -145,7 +149,7 @@ void handleDataPacket(int ftSocket, int size, void *buf) {
 	isInt = (header->hdr.nType == RDA_INT_MSG) ? 1 : 0;
 	sizeData = (isInt ? sizeof(INT16_T) : sizeof(float)) * header->nPoints * numChannels;
 	
-	printf("RDA data block %4i:  %4i samples, %2i markers\n", header->nBlock, header->nPoints, header->nMarkers);	
+	printf("RDA data block %4i (%i bytes):  %4i samples, %2i markers\n", header->nBlock, header->hdr.nSize, header->nPoints, header->nMarkers);	
 	
 	if (header->nMarkers > 0) {
 		char *evbuf;
@@ -244,8 +248,14 @@ void handleDataPacket(int ftSocket, int size, void *buf) {
 int main(int argc, char **argv) {
 	host_t ftHost, rdaHost;
 	int rdaSocket;
-	pthread_t tcpserverThread;
+	ft_buffer_server_t *S;
 	
+	if (sizeof(rda_msg_hdr_t)!=24) {
+		fprintf(stderr, "Compiled-in datatypes do not match RDA protocol\n");
+		exit(1);
+	}
+
+		
 	if (argc!=5 && argc!=3) {
 		fputs(usage, stderr);
 		exit(1);
@@ -273,11 +283,9 @@ int main(int argc, char **argv) {
 				
 	/* Spawn tcpserver or connect to remote buffer */
 	if (strcmp(ftHost.name, "-") == 0) {
-		int rc;
-		
-		rc = pthread_create(&tcpserverThread, NULL, tcpserver, &ftHost);
-		if (rc) {
-			fprintf(stderr, "Could not spawn tcpserver thread (%d)\n", rc);
+		S = ft_start_buffer_server(ftHost.port, NULL, NULL, NULL);
+		if (S==NULL) {
+			fprintf(stderr, "Could not start up a FieldTrip buffer serving at port %i\n", ftHost.port);
 			return 1;
 		}
 		ftSocket = 0; 
@@ -299,7 +307,7 @@ int main(int argc, char **argv) {
 
 	while (keepRunning) {
 		rda_msg_hdr_t header;
-		void *buf;
+		char *buf;
 		int n,s;
 		
 		n = bufread(rdaSocket, &header, sizeof(header));
@@ -309,7 +317,16 @@ int main(int argc, char **argv) {
 			break;
 		}
 		
-		buf = malloc(header.nSize);
+		if (memcmp(_rda_guid, header.guid, 16)!=0) {
+			int i;
+			fprintf(stderr, "Incorrect GUID in received packet:\n");
+			for (i=0;i<16;i++) {
+				fprintf(stderr, "0x%02x   should be 0x%02x\n", header.guid[i], _rda_guid[i]);
+			}
+			break;
+		}
+		
+		buf = (char *) malloc(header.nSize);
 		if (buf == NULL) {
 			fprintf(stderr, "Out of memory\n");
 			break;
@@ -317,7 +334,7 @@ int main(int argc, char **argv) {
 		
 		memcpy(buf, &header, sizeof(header));
 		s = header.nSize - sizeof(header);
-		n = bufread(rdaSocket, (char *) buf + sizeof(header), s);
+		n = bufread(rdaSocket, buf + sizeof(header), s);
 		if (s!=n) {
 			fprintf(stderr, "Error while reading packet remainder from the RDA server\n");
 			free(buf);
@@ -336,7 +353,7 @@ int main(int argc, char **argv) {
 				printf("\nRemote Data Acquisition stopped\n\n");
 				break;
 			default:
-				fprintf(stderr, "Unrecognized packet type - exiting\n");
+				fprintf(stderr, "Unrecognized packet type (%i), has size %i - exiting\n", header.nType, header.nSize);
 				keepRunning = 0;
 				break;
 		}
@@ -349,8 +366,7 @@ int main(int argc, char **argv) {
 	if (ftSocket > 0) {
 		close_connection(ftSocket);
 	} else {
-		pthread_cancel(tcpserverThread);
-		pthread_detach(tcpserverThread);
+		ft_stop_buffer_server(S);
 	}
 	
 	return 0;
