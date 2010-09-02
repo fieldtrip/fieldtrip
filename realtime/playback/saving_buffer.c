@@ -184,12 +184,27 @@ void abortHandler(int sig) {
 int write_contents() {
 	char name[512];
 	FILE *f;
+	int r;
 	
 	#ifdef WIN32
-	mkdir(baseDirectory);
-	#else
-	mkdir(baseDirectory, 0700);
+	r = GetFileAttributes(baseDirectory);
+	#else 
+	r = access(baseDirectory, F_OK);
 	#endif
+	if (r!=-1) {
+		fprintf(stderr, "ERROR: %s already exists in path\n", baseDirectory);
+		return 0;
+	}
+	
+	#ifdef WIN32
+	r = mkdir(baseDirectory);
+	#else
+	r = mkdir(baseDirectory, 0700);
+	#endif
+	if (r==-1) {
+		fprintf(stderr, "ERROR: cannot create directory %s\n", name);
+		return 0;
+	}
 	
 	snprintf(name, sizeof(name), "%s/contents.txt", baseDirectory);
 	f = fopen(name, "w");
@@ -294,7 +309,11 @@ int write_header_to_disk() {
 		fprintf(stderr, "ERROR: cannot create file %s\n", name);
 	}
 cleanup:
-	cleanup_message((void *) response);
+	if (response!=NULL) {
+		if (response->def != NULL) free(response->def);
+		if (response->buf != NULL) free(response->buf);
+		free(response);
+	}
 	return r;
 }
 
@@ -333,7 +352,11 @@ int write_samples_to_disk(int nsamps, double t) {
 	}
 	
 cleanup:
-	cleanup_message((void *) response);
+	if (response!=NULL) {
+		if (response->def != NULL) free(response->def);
+		if (response->buf != NULL) free(response->buf);
+		free(response);
+	}
 	return r;
 }
 
@@ -367,7 +390,11 @@ int write_events_to_disk(int nevs, double t) {
 		fprintf(fTime, "E %i %f\n", nevs, t);
 	}
 cleanup:
-	cleanup_message((void *) response);
+	if (response!=NULL) {
+		if (response->def != NULL) free(response->def);
+		if (response->buf != NULL) free(response->buf);
+		free(response);
+	}
 	return r;
 }
 
@@ -401,10 +428,11 @@ int main(int argc, char *argv[]) {
 	}
 	
 	memset(queue, sizeof(queue), 0);
+
+	if (!write_contents()) goto cleanup;
 	
 	S = ft_start_buffer_server(port, name, my_request_handler, NULL);
 	if (S==NULL) return 1;
-	write_contents();
 	
 	signal(SIGINT, abortHandler);
 	while (keepRunning) {
@@ -433,6 +461,7 @@ int main(int argc, char *argv[]) {
 	ft_stop_buffer_server(S);
 	printf("Done.\n");
 
+cleanup:	
 	#ifdef WIN32
 	timeEndPeriod(1);
 	#endif	

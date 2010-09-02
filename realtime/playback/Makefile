@@ -17,7 +17,7 @@ else
    SUFFIX = 
 endif
 
-CFLAGS = $(INCPATH) -Wunused -Wall -pedantic
+CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -g
 
 all: playback$(SUFFIX) saving_buffer$(SUFFIX)
 
