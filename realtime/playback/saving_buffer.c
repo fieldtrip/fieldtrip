@@ -16,6 +16,7 @@
 #include <direct.h>
 #else
 #include <sys/stat.h>
+#include <sys/time.h>
 #endif
 
 #define QUEUE_SIZE  100
@@ -358,6 +359,9 @@ int write_events_to_disk(int nevs, double t) {
 		fprintf(stderr, "ERROR: Cannot retrieve events for writing to disk\n");
 		goto cleanup;
 	}
+	
+	eventCounter += nevs;
+	
 	fwrite(response->buf, 1, response->def->bufsize, fEvents);
 	if (fTime != NULL) {
 		fprintf(fTime, "E %i %f\n", nevs, t);
