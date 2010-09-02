@@ -10,14 +10,14 @@ CXX = g++
 PLATFORM = $(shell gcc -dumpmachine)
 
 ifeq "$(PLATFORM)" "mingw32"
-   LDFLAGS = pthreadGC2.dll ../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
+   LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
    FLFLAGS = -IC:/msys/1.0/local/include 
    LDFL = -mno-cygwin -lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32
    LDGL = -lfltk_gl -lopengl32 -lglu32 $(LDFL)
    SUFFIX = .exe
    WINONLY = gui_streamer.exe pixeldata_to_remote_buffer.exe 
 else
-   LDFLAGS = -lpthread ../buffer/src/libbuffer.a
+   LDFLAGS = -lpthread ../../buffer/src/libbuffer.a
    FLFLAGS = `fltk-config --cxxflags`
    LDFL = `fltk-config --ldflags`
    LDGL = `fltk-config --ldflags --use-gl`
@@ -25,7 +25,7 @@ else
    WINONLY = 
 endif
 
-CXXFLAGS = $(FLFLAGS) -I../buffer/src -I../buffer/cpp -I. -Wunused -Wall -pedantic
+CXXFLAGS = $(FLFLAGS) -I../../buffer/src -I../../buffer/cpp -I. -Wunused -Wall -pedantic
  
 
 all: nii_to_buffer$(SUFFIX) opengl_client$(SUFFIX) gui_buffer_client$(SUFFIX) $(WINONLY)
