@@ -55,6 +55,13 @@ else
 	end
 end
 
+% prepare "ready" event data structure
+evr = [];
+evr.type = 'scan';
+evr.value = 'ready';
+evr.offset = 0;
+evr.duration = 0;
+evr.sample = 0;
 
 history = struct('S',[], 'RRM', [], 'motion', []);
 
@@ -264,6 +271,9 @@ while 1
 		end
 		
 		ft_write_data(cfg.output, procSample, 'header', hdrOut, 'append', true);
+		
+		evr.sample = numProper;
+		ft_write_event(cfg.output, evr);
 		
 		fprintf('Done -- total time = %f\n', toc(GrabSampleT));
 
