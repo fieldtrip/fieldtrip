@@ -21,7 +21,7 @@ if vol.skin==length(vol.bnd) && vol.source==1
     vol.bnd    = fliplr(vol.bnd(:)');
     vol.skin   = 1;
     vol.source = length(vol.bnd);
-else
+elseif vol.skin ~= 1
     error('the first compartment should be the skin, the last the source');
 end
 
