@@ -57,7 +57,7 @@ void *tcpserver(void *arg) {
 
 #ifdef WIN32
     unsigned long enable = 0;
-	WSADATA wsa;
+	static WSADATA wsa = {0,0};
 #endif
 
 	/* these variables are for the threading */
@@ -90,9 +90,11 @@ void *tcpserver(void *arg) {
     }
 
 #ifdef WIN32
- 	if(WSAStartup(MAKEWORD(1, 1), &wsa))
-	{
-		if (verbose>0) fprintf(stderr, "tcpserver: cannot start sockets\n");
+	/* We only need to do this once ... and actually have a corresponding WSACleanup call somewhere */
+	if (wsa.wVersion == 0) {
+		if(WSAStartup(MAKEWORD(1, 1), &wsa)) {
+			if (verbose>0) fprintf(stderr, "tcpserver: cannot start sockets\n");
+		}
 	}
 #endif
 

@@ -117,9 +117,8 @@ int open_connection(const char *hostname, int port) {
 		int s, retry;
 		struct sockaddr_in sa;
 		struct hostent *host;
-
 #ifdef WIN32
-		WSADATA wsa;
+		static WSADATA wsa = {0,0}; /* check version fields to only initialise once */
 #endif
 
 		if (port==0) {
@@ -133,9 +132,12 @@ int open_connection(const char *hostname, int port) {
 		}
 
 #ifdef WIN32
-		if(WSAStartup(MAKEWORD(1, 1), &wsa)) {
+		if (wsa.wVersion == 0) {
+			/* We only need to do this once ... and actually have a corresponding WSACleanup call somewhere */
+			if(WSAStartup(MAKEWORD(1, 1), &wsa)) {
 				fprintf(stderr, "open_connection: cannot start sockets\n");
 				/* FIXME should this exception be handled more explicitely?  */
+			}
 		}
 #endif
 

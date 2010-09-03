@@ -351,11 +351,13 @@ ft_buffer_server_t *ft_start_buffer_server(int port, const char *name, ft_reques
 
 #ifdef WIN32
 	{
-		WSADATA wsa;
-		if(WSAStartup(MAKEWORD(1, 1), &wsa))
-		{
-			fprintf(stderr, "ft_start_buffer_server: cannot start WIN32 sockets.\n");
-			goto cleanup;
+		/* We only need to do this once ... and actually have a corresponding WSACleanup call somewhere */
+		static WSADATA wsa = {0,0};
+		if (wsa.wVersion == 0) {
+			if(WSAStartup(MAKEWORD(1, 1), &wsa)) {
+				fprintf(stderr, "ft_start_buffer_server: cannot start WIN32 sockets.\n");
+				goto cleanup;
+			}
 		}
 	}
 #endif

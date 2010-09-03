@@ -82,7 +82,7 @@ void addTimedMsg(const char *s) {
 	char msg[300];
 	SYSTEMTIME sysT;
 	
-	GetSystemTime(&sysT);
+	GetLocalTime(&sysT);
 	snprintf(msg, 300, "%02u:%02u:%02u %s", sysT.wHour, sysT.wMinute, sysT.wSecond, s);
 	msgBrowser->add(msg);
 	msgBrowser->bottomline(msgBrowser->size());
@@ -203,6 +203,12 @@ void listenCallback(Fl_Widget *widget) {
 int main(int argc, char *argv[]) {
 	bool autoLogin;
 	char portAsChar[8];
+	WSADATA wsa;
+
+	if (WSAStartup(MAKEWORD(1, 1), &wsa)) {
+		fprintf(stderr, "WSAStartup failed!\n");
+		exit(1);
+	}	
 	
 	udpSocket = INVALID_SOCKET;
 	
@@ -305,6 +311,8 @@ int main(int argc, char *argv[]) {
 	}
 	
 	delete window;
+	
+	WSACleanup();
 	
 	return 0;
 }
