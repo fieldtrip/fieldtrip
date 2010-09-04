@@ -53,7 +53,7 @@ ifeq "$(PLATFORM)" "i686-apple-darwin10"
     CFLAGS	 = $(INCPATH) -Wall -pthread -arch i386
 endif
 
-TARGET   = test_announce test_discover test_send test_recv peerslave.$(MATLABARCH)
+TARGET   = peerslave.$(MATLABARCH)
 
 ##############################################################################
 
@@ -80,13 +80,13 @@ test_announce: test_announce.o libpeer.a
 test_discover: test_discover.o libpeer.a
 	$(CC) $(CFLAGS) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
 
-sender: sender.o
+test_sender: test_sender.o
 	$(CC) $(CFLAGS) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
 
-listener: listener.o
+test_listener: test_listener.o
 	$(CC) $(CFLAGS) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
 
-linkedlist: linkedlist.o
+test_linkedlist: test_linkedlist.o
 	$(CC) $(CFLAGS) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
 
 %.o: %.c peer.h extern.h
