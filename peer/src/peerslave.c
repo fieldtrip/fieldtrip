@@ -309,7 +309,6 @@ int main(int argc, char *argv[]) {
 				else /* fork returns -1 on failure */
 				{
 						perror("fork"); /* display error message */
-						syslog(LOG_ERR, "error: fork"); /* display error message */
 						exit(0); 
 				}
 		}
