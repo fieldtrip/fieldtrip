@@ -31,6 +31,9 @@ typedef struct {
 void cleanup_tcpserver(void *arg) {
 		threadlocal_t *threadlocal;
 		threadlocal = (threadlocal_t *)arg;
+
+        syslog(LOG_DEBUG, "cleanup_tcpserver()");
+
 		if (threadlocal && threadlocal->fd>0) {
 				closesocket(threadlocal->fd);
 				threadlocal->fd = -1;
@@ -70,6 +73,8 @@ void *tcpserver(void *arg) {
 		threadlocal_t threadlocal;
 		threadlocal.fd = -1;
 
+		syslog(LOG_NOTICE, "tcpserver()");
+
 		/* this is for debugging */
 		pthread_mutex_lock(&mutexthreadcount);
 		threadcount++;
@@ -91,16 +96,15 @@ void *tcpserver(void *arg) {
 #ifdef WIN32
 		if(WSAStartup(MAKEWORD(1, 1), &wsa))
 		{
-				if (verbose>0) fprintf(stderr, "tcpserver: cannot start sockets\n");
+				if (verbose>0) fprintf(stderr, "tcpserver: cannot start sockets");
+				/* FIXME should this be handled more explicitely? */
 		}
 #endif
-
-		if (verbose>1)
-				fprintf(stderr, "tcpserver: port = %d\n", host->port);
 
 		/* setup socket */
 		if ((fd = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
 				perror("tcpserver socket");
+				syslog(LOG_ERR, "error: tcpserver socket");
 				goto cleanup;
 		}
 
@@ -116,6 +120,7 @@ void *tcpserver(void *arg) {
 		optval = optval | O_NONBLOCK;
 		if (fcntl(fd, F_SETFL, optval)<0) {
 				perror("tcpserver fcntl");
+				syslog(LOG_ERR, "error: tcpserver fcntl");
 				goto cleanup;
 		}
 #endif
@@ -126,7 +131,7 @@ void *tcpserver(void *arg) {
 		   timeout.tv_usec = 1;
 		   if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(optval)) < 0) {
 		   perror("tcpserver setsockopt");
-		   if (verbose>0) fprintf(stderr, "tcpserver: errno = %d\n", errno);
+		   syslog(LOG_ERR, "error: tcpserver setsockopt");
 		   goto cleanup;
 		   }
 		 */
@@ -136,6 +141,7 @@ void *tcpserver(void *arg) {
 		   optval = 1;
 		   if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&optval, sizeof(optval)) < 0) {
 		   perror("tcpserver setsockopt");
+		   syslog(LOG_ERR, "error: tcpserver setsockopt");
 		   goto cleanup;
 		   }
 		 */
@@ -144,6 +150,7 @@ void *tcpserver(void *arg) {
 		optval = SO_RCVBUF_SIZE;
 		if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (const char*)&optval, sizeof(optval)) < 0) {
 				perror("tcpserver setsockopt");
+				syslog(LOG_ERR, "error: tcpserver setsockopt");
 				goto cleanup;
 		}
 
@@ -151,6 +158,7 @@ void *tcpserver(void *arg) {
 		optval = SO_SNDBUF_SIZE;
 		if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (const char*)&optval, sizeof(optval)) < 0) {
 				perror("tcpserver setsockopt");
+				syslog(LOG_ERR, "error: tcpserver setsockopt");
 				goto cleanup;
 		}
 
@@ -159,6 +167,7 @@ void *tcpserver(void *arg) {
 		   optval = 1;
 		   if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &optval, sizeof(optval)) < 0) {
 		   perror("tcpserver setsockopt");
+		   syslog(LOG_ERR, "error: tcpserver setsockopt");
 		   goto cleanup;
 		   }
 		 */
@@ -188,11 +197,13 @@ void *tcpserver(void *arg) {
 		if (retry==0) {
 				/* it failed on mutliple attempts, give up */
 				perror("tcpserver bind");
+				syslog(LOG_ERR, "error: tcpserver bind");
 				goto cleanup;
 		}
 
 		if (listen(fd, BACKLOG)<0) {
 				perror("tcpserver listen");
+				syslog(LOG_ERR, "error: tcpserver listen");
 				goto cleanup;
 		}
 
@@ -207,9 +218,6 @@ void *tcpserver(void *arg) {
 
 				c = accept(fd, (struct sockaddr *)&sa, &b);
 
-				if (verbose>1)
-						fprintf(stderr, "tcpserver: c = %d\n", c);
-
 				if (c<0) {
 #ifdef WIN32
 						if(errno==0) {
@@ -218,6 +226,7 @@ void *tcpserver(void *arg) {
 						}
 						else {
 								perror("tcpserver accept");
+								syslog(LOG_ERR, "error: tcpserver accept");
 								goto cleanup;
 						}
 #else
@@ -227,13 +236,14 @@ void *tcpserver(void *arg) {
 						}
 						else {
 								perror("tcpserver accept");
+								perror("tcpserver accept");
 								goto cleanup;
 						}
 #endif
 				}
 
 				else {
-						if (verbose>0) fprintf(stderr, "tcpserver: opened connection to client on socket %d\n", c);
+						syslog(LOG_INFO, "tcpserver: opened connection to client on socket %d", c);
 
 						/* place the socket back in blocking mode, this is needed for tcpsocket  */
 #ifdef WIN32
@@ -243,6 +253,7 @@ void *tcpserver(void *arg) {
 						optval = fcntl(c, F_GETFL, NULL);
 						optval = optval & (!O_NONBLOCK);
 						if (fcntl(c, F_SETFL, optval)<0) {
+								perror("tcpserver fcntl");
 								perror("tcpserver fcntl");
 								goto cleanup;
 						}
@@ -254,11 +265,11 @@ void *tcpserver(void *arg) {
 
 						if (rc) {
 								/* the code should never arrive here */
-								if (verbose>0) fprintf(stderr, "tcpserver: return code from pthread_create() is %d\n", rc);
+								syslog(LOG_ERR, "tcpserver: return code from pthread_create() is %d", rc);
 								goto cleanup;
 						}
 
-						if (verbose>0) fprintf(stderr, "tcpserver: c = %d, threadcount = %d\n", c, threadcount);
+						syslog(LOG_DEBUG, "tcpserver: c = %d, threadcount = %d", c, threadcount);
 						pthread_detach(tid);
 				}
 		}

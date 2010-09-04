@@ -37,8 +37,10 @@ void cleanup_tcpsocket(void *arg) {
 				FREE(threadlocal->message);
 		}
 		if (threadlocal && threadlocal->fd>0) {
-				if (closesocket(threadlocal->fd)!=0)
+				if (closesocket(threadlocal->fd)!=0) {
 						perror("cleanup_tcpsocket");
+						syslog(LOG_ERR, "error: cleanup_tcpsocket");
+				}
 				threadlocal->fd = -1;
 		}
 
@@ -91,11 +93,8 @@ void *tcpsocket(void *arg) {
 		 */
 		pthread_mutex_unlock(&mutexsocketcount);
 
-		if (verbose>1)
-				fprintf(stderr, "tcpsocket: hoststatus = %d, jobcount = %d\n", hoststatus(), jobcount());
-
-		if (verbose>1)
-				fprintf(stderr, "tcpsocket: fd = %d, socketcount = %d, threadcount = %d\n", fd, socketcount, threadcount);
+		syslog(LOG_DEBUG, "tcpsocket: hoststatus = %d, jobcount = %d", hoststatus(), jobcount());
+		syslog(LOG_DEBUG, "tcpsocket: fd = %d, socketcount = %d, threadcount = %d", fd, socketcount, threadcount);
 
 		if (hoststatus()==STATUS_MASTER) {
 				connect_accept = 1;
@@ -110,14 +109,12 @@ void *tcpsocket(void *arg) {
 		/* give a handshake */
 		handshake = connect_accept | connect_continue;
 		if ((n = bufwrite(fd, &handshake, sizeof(int))) != sizeof(int)) {
-				if (verbose>0)
-						fprintf(stderr, "tcpsocket: could not write handshake, n = %d, should be %d\n", n, sizeof(int));
+				syslog(LOG_ERR, "tcpsocket: could not write handshake, n = %d, should be %d", n, sizeof(int));
 				goto cleanup;
 		}
 
 		if (!connect_accept)
-				if (verbose>1)
-						fprintf(stderr, "tcpsocket: dropping connection based on status\n");
+				syslog(LOG_NOTICE, "tcpsocket: dropping connection based on status");
 		if (!connect_continue)
 				goto cleanup;
 
@@ -132,88 +129,74 @@ void *tcpsocket(void *arg) {
 
 		/* read the host details */
 		if ((n = bufread(fd, message->host, sizeof(hostdef_t))) != sizeof(hostdef_t)) {
-				if (verbose>0)
-						fprintf(stderr, "tcpsocket: read size = %d, should be %d\n", n, sizeof(hostdef_t));
+				syslog(LOG_DEBUG, "tcpsocket: read size = %d, should be %d", n, sizeof(hostdef_t));
 				goto cleanup;
 		}
 
-		if (verbose>1) {
-				fprintf(stderr, "tcpsocket: ismember_userlist  = %d\n", ismember_userlist(message->host->user));
-				fprintf(stderr, "tcpsocket: ismember_grouplist = %d\n", ismember_grouplist(message->host->group));
-				fprintf(stderr, "tcpsocket: ismember_hostlist  = %d\n", ismember_hostlist(message->host->name));
-		}
+		syslog(LOG_DEBUG, "tcpsocket: ismember_userlist  = %d", ismember_userlist(message->host->user));
+		syslog(LOG_DEBUG, "tcpsocket: ismember_grouplist = %d", ismember_grouplist(message->host->group));
+		syslog(LOG_DEBUG, "tcpsocket: ismember_hostlist  = %d", ismember_hostlist(message->host->name));
 
 		/* test whether the version is compatible */
 		if (message->host->version!=VERSION) {
-				if (verbose>0)
-						fprintf(stderr, "tcpsocket: incorrect version (%d, %d)\n", message->host->version, VERSION);
+				syslog(LOG_ERR, "tcpsocket: incorrect host version (%d, %d)", message->host->version, VERSION);
 				connect_accept   = 0;
 				connect_continue = 0;
 		}
 
 		/* determine whether the host, group and user is allowed to execute a job */
 		if (!security_check(message->host)) {
-				if (verbose>0)
-						fprintf(stderr, "tcpsocket: security_check returned zero\n");
+				syslog(LOG_INFO, "tcpsocket: failed security check");
 				connect_accept = 0;
 		}
 
 		/* give a handshake */
 		handshake = connect_accept | connect_continue;
 		if ((n = bufwrite(fd, &handshake, sizeof(int))) != sizeof(int)) {
-				if (verbose>0)
-						fprintf(stderr, "tcpsocket: could not write handshake, n = %d, should be %d\n", n, sizeof(int));
+				syslog(LOG_ERR, "tcpsocket: could not write handshake, n = %d, should be %d", n, sizeof(int));
 				goto cleanup;
 		}
 
 		if (!connect_accept)
-				if (verbose>1)
-						fprintf(stderr, "tcpsocket: dropping connection based on host details\n");
+				syslog(LOG_NOTICE, "tcpsocket: dropping connection based on host details");
 		if (!connect_continue)
 				goto cleanup;
 
 		/* read the job details */
 		if ((n = bufread(fd, message->job, sizeof(jobdef_t))) != sizeof(jobdef_t)) {
-				if (verbose>0)
-						fprintf(stderr, "tcpsocket: packet size = %d, should be %d\n", n, sizeof(jobdef_t));
+				syslog(LOG_ERR, "tcpsocket: packet size = %d, should be %d", n, sizeof(jobdef_t));
 				goto cleanup;
 		}
 
 		/* test whether the request can be accepted based on the job characteristics */
 		if (message->job->version!=VERSION) {
-				if (verbose>0)
-						fprintf(stderr, "tcpsocket: incorrect version\n");
+				syslog(LOG_ERR, "tcpsocket: incorrect job version");
 				connect_accept   = 0;
 				connect_continue = 0;
 		}
 
 		pthread_mutex_lock(&mutexhost);
 		if (message->job->memreq > host->memavail) {
-				if (verbose>0)
-						fprintf(stderr, "tcpsocket: memory request too large\n");
+				syslog(LOG_INFO, "tcpsocket: memory request too large");
 				connect_accept = 0;
 		}
 		if (message->job->cpureq > host->cpuavail) {
-				if (verbose>0)
-						fprintf(stderr, "tcpsocket: cpu request too large\n");
+				syslog(LOG_INFO, "tcpsocket: cpu request too large");
 				connect_accept = 0;
 		}
 		if (message->job->timreq > host->timavail) {
-				if (verbose>0)
-						fprintf(stderr, "tcpsocket: time request too large\n");
+				syslog(LOG_INFO, "tcpsocket: time request too large");
 				connect_accept = 0;
 		}
 		pthread_mutex_unlock(&mutexhost);
 
 		if (message->job->argsize>MAXARGSIZE) {
-				if (verbose>0)
-						fprintf(stderr, "tcpsocket: argsize too large\n");
+				syslog(LOG_ERR, "tcpsocket: argsize too large");
 				connect_accept = 0;
 		}
 
 		if (message->job->optsize>MAXARGSIZE) {
-				if (verbose>0)
-						fprintf(stderr, "tcpsocket: optsize too large\n");
+				syslog(LOG_ERR, "tcpsocket: optsize too large");
 				connect_accept = 0;
 		}
 
@@ -222,8 +205,7 @@ void *tcpsocket(void *arg) {
 
 		/* use a probabilistic approach to determine whether the connection should be dropped */
 		if (!smartshare_check(message->job->timreq, message->host->id)) {
-				if (verbose>0)
-						fprintf(stderr, "tcpsocket: smartshare_check returned zero\n");
+				syslog(LOG_INFO, "tcpsocket: smartshare_check returned zero");
 				connect_accept = 0;
 		}
 
@@ -234,14 +216,12 @@ void *tcpsocket(void *arg) {
 		/* give a handshake */
 		handshake = connect_accept | connect_continue;
 		if ((n = bufwrite(fd, &handshake, sizeof(int))) != sizeof(int)) {
-				if (verbose>0)
-						fprintf(stderr, "tcpsocket: could not write handshake, n = %d, should be %d\n", n, sizeof(int));
+				syslog(LOG_ERR, "tcpsocket: could not write handshake, n = %d, should be %d", n, sizeof(int));
 				goto cleanup;
 		}
 
 		if (!connect_accept)
-				if (verbose>1)
-						fprintf(stderr, "tcpsocket: dropping connection based on job details\n");
+				syslog(LOG_NOTICE, "tcpsocket: dropping connection based on job details");
 		if (!connect_continue)
 				goto cleanup;
 
@@ -249,8 +229,7 @@ void *tcpsocket(void *arg) {
 		if (message->job->argsize>0) {
 				message->arg = malloc(message->job->argsize);
 				if ((n = bufread(fd, message->arg, message->job->argsize)) != message->job->argsize) {
-						if (verbose>0)
-								fprintf(stderr, "tcpsocket: read size = %d, should be %d\n", n, message->job->argsize);
+						syslog(LOG_ERR, "tcpsocket: read size = %d, should be %d", n, message->job->argsize);
 						goto cleanup;
 				}
 		}
@@ -258,14 +237,12 @@ void *tcpsocket(void *arg) {
 		/* give a handshake */
 		handshake = connect_accept | connect_continue;
 		if ((n = bufwrite(fd, &handshake, sizeof(int))) != sizeof(int)) {
-				if (verbose>0)
-						fprintf(stderr, "tcpsocket: could not write handshake, n = %d, should be %d\n", n, sizeof(int));
+				syslog(LOG_ERR, "tcpsocket: could not write handshake, n = %d, should be %d", n, sizeof(int));
 				goto cleanup;
 		}
 
 		if (!connect_accept)
-				if (verbose>1)
-						fprintf(stderr, "tcpsocket: dropping connection based on host details\n");
+				syslog(LOG_NOTICE, "tcpsocket: dropping connection based on host details");
 		if (!connect_continue)
 				goto cleanup;
 
@@ -273,8 +250,7 @@ void *tcpsocket(void *arg) {
 		if (message->job->optsize>0) {
 				message->opt = malloc(message->job->optsize);
 				if ((n = bufread(fd, message->opt, message->job->optsize)) != message->job->optsize) {
-						if (verbose>0)
-								fprintf(stderr, "tcpsocket: read size = %d, should be %d\n", n, message->job->optsize);
+						syslog(LOG_ERR, "tcpsocket: read size = %d, should be %d", n, message->job->optsize);
 						goto cleanup;
 				}
 		}
@@ -282,14 +258,12 @@ void *tcpsocket(void *arg) {
 		/* give a handshake */
 		handshake = connect_accept | connect_continue;
 		if ((n = bufwrite(fd, &handshake, sizeof(int))) != sizeof(int)) {
-				if (verbose>0)
-						fprintf(stderr, "tcpsocket: could not write handshake, n = %d, should be %d\n", n, sizeof(int));
+				syslog(LOG_ERR, "tcpsocket: could not write handshake, n = %d, should be %d", n, sizeof(int));
 				goto cleanup;
 		}
 
 		if (!connect_accept)
-				if (verbose>1)
-						fprintf(stderr, "tcpsocket: dropping connection based on host details\n");
+				syslog(LOG_NOTICE, "tcpsocket: dropping connection based on host details");
 		if (!connect_continue)
 				goto cleanup;
 
@@ -310,15 +284,13 @@ void *tcpsocket(void *arg) {
 		/* the responsibility for the dynamical memory of the message content has been
 		   reassigned to the joblist and should not be deallocated here */
 
-		if (verbose>2) {
-				fprintf(stderr, "tcpsocket: job.version  = %d\n", job->job->version);
-				fprintf(stderr, "tcpsocket: job.id       = %d\n", job->job->id);
-				fprintf(stderr, "tcpsocket: job.argsize  = %d\n", job->job->argsize);
-				fprintf(stderr, "tcpsocket: job.optsize  = %d\n", job->job->optsize);
-				fprintf(stderr, "tcpsocket: host.name    = %s\n", job->host->name);
-				fprintf(stderr, "tcpsocket: host.port    = %d\n", job->host->port);
-				fprintf(stderr, "tcpsocket: host.id      = %d\n", job->host->id);
-		}
+		syslog(LOG_DEBUG, "tcpsocket: job.version  = %d", job->job->version);
+		syslog(LOG_DEBUG, "tcpsocket: job.id       = %d", job->job->id);
+		syslog(LOG_DEBUG, "tcpsocket: job.argsize  = %d", job->job->argsize);
+		syslog(LOG_DEBUG, "tcpsocket: job.optsize  = %d", job->job->optsize);
+		syslog(LOG_DEBUG, "tcpsocket: host.name    = %s", job->host->name);
+		syslog(LOG_DEBUG, "tcpsocket: host.port    = %d", job->host->port);
+		syslog(LOG_DEBUG, "tcpsocket: host.id      = %d", job->host->id);
 
 		pthread_mutex_unlock(&mutexjoblist);
 

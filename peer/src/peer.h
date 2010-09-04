@@ -8,6 +8,7 @@
 #include "win32/stdint.h"
 #else
 #include <stdint.h>
+#include <syslog.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -74,7 +75,9 @@
 #define MAXARGSIZE		  INT32_MAX
 #define STRLEN			  256
 
-#define FREE(x) {if (x) {free(x); x=NULL;}}
+#define FREE(x)					{if (x) {free(x); x=NULL;}}
+#define PANIC(format, args...)	{syslog(LOG_ERR, format, ## args); exit(-1);}
+
 
 /* FIXME these are obvious at the moment, but should be formally defined */
 typedef char      CHAR_T;

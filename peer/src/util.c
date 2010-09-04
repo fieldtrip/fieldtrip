@@ -33,76 +33,71 @@ int bufread(int s, void *buf, int numel) {
 				numthis = recv(s, (char*)buf+numread, numel-numread, 0);
 				if (numthis<0) {
 						perror("bufread");
+						syslog(LOG_ERR, "error: bufread");
 						break;
 				}
 				else if (numthis == 0)
 						break;
 
-				if (verbose>0)
-						fprintf(stderr, "bufread: read %d bytes\n", numthis);
+				syslog(LOG_DEBUG, "bufread: read %d bytes", numthis);
 				numread += numthis;
 				numcall++;
 				usleep(1000);
 		}
-		if (verbose>1)
-				fprintf(stderr, "bufread: reading the complete buffer required %d calls\n", numcall);
+		syslog(LOG_DEBUG, "bufread: reading the complete buffer required %d calls", numcall);
 		return numread;
 }
 
 int bufwrite(int s, void *buf, int numel) {
 		int numcall = 0, numthis = 0, numwrite = 0, verbose = 0;
 
-		if (verbose)
-				fprintf(stderr, "bufwrite: request for %d bytes\n", numel);
+		syslog(LOG_DEBUG, "bufwrite: request for %d bytes", numel);
 
 		while (numwrite<numel) {
 
 				numthis = send(s, (char*)buf+numwrite, numel-numwrite, 0);
 				if (numthis<0) {
 						perror("bufwrite");
+						syslog(LOG_ERR, "error: bufwrite");
 						break;
 				}
 				else if(numthis == 0)
 						break;
 
-				if (verbose)
-						fprintf(stderr, "bufwrite: wrote %d bytes\n", numthis);
+				syslog(LOG_DEBUG, "bufwrite: wrote %d bytes", numthis);
 				numwrite += numthis;
 				numcall++;
 				usleep(1000);
 		}
-		if (verbose>1)
-				fprintf(stderr, "bufwrite: writing the complete buffer required %d calls\n", numcall);
+		syslog(LOG_DEBUG, "bufwrite: writing the complete buffer required %d calls", numcall);
 		return numwrite;
 }
 
 int append(void **buf1, int bufsize1, void *buf2, int bufsize2) {
 		int verbose = 0;
 
-		if (verbose>1) {
-				pthread_mutex_lock(&mutexappendcount);
-				appendcount++;
-				fprintf(stderr, "append: appendcount = %d\n", appendcount);
-				pthread_mutex_unlock(&mutexappendcount);
-		}
+		pthread_mutex_lock(&mutexappendcount);
+		appendcount++;
+		syslog(LOG_DEBUG, "append: appendcount = %d", appendcount);
+		pthread_mutex_unlock(&mutexappendcount);
 
 		if (((*buf1)!=NULL) && (bufsize1==0)) {
 				perror("append err1");
+				syslog(LOG_ERR, "error: append err1");
 				return -1;
 		}
 		else if (((*buf1)==NULL) && (bufsize1!=0)) {
 				perror("append err2");
+				syslog(LOG_ERR, "error: append err2");
 				return -1;
 		}
 
 		if ((*buf1)==NULL) {
-				if (verbose>0)
-						fprintf(stderr, "append: allocating %d bytes\n", bufsize2);
+				syslog(LOG_DEBUG, "append: allocating %d bytes", bufsize2);
 				(*buf1) = malloc(bufsize2);
 		}
 		else if ((*buf1)!=NULL) {
-				if (verbose>0)
-						fprintf(stderr, "append: reallocating from %d to %d bytes\n", bufsize1, bufsize1+bufsize2);
+				syslog(LOG_DEBUG, "append: reallocating from %d to %d bytes", bufsize1, bufsize1+bufsize2);
 				(*buf1) = realloc((*buf1), bufsize1+bufsize2);
 		}
 
@@ -227,16 +222,16 @@ void clear_smartsharelist(void) {
 
 void check_datatypes() {
 		/* check datatypes */
-		if (WORDSIZE_CHAR    !=1) { fprintf(stderr, "invalid size of CHAR    (%d)\n", WORDSIZE_CHAR   ); exit(-1); }
-		if (WORDSIZE_UINT8   !=1) { fprintf(stderr, "invalid size of UINT8   (%d)\n", WORDSIZE_UINT8  ); exit(-1); }
-		if (WORDSIZE_UINT16  !=2) { fprintf(stderr, "invalid size of UINT16  (%d)\n", WORDSIZE_UINT16 ); exit(-1); }
-		if (WORDSIZE_UINT32  !=4) { fprintf(stderr, "invalid size of UINT32  (%d)\n", WORDSIZE_UINT32 ); exit(-1); }
-		if (WORDSIZE_UINT64  !=8) { fprintf(stderr, "invalid size of UINT64  (%d)\n", WORDSIZE_UINT64 ); exit(-1); }
-		if (WORDSIZE_INT8    !=1) { fprintf(stderr, "invalid size of INT8    (%d)\n", WORDSIZE_INT8   ); exit(-1); }
-		if (WORDSIZE_INT16   !=2) { fprintf(stderr, "invalid size of INT16   (%d)\n", WORDSIZE_INT16  ); exit(-1); }
-		if (WORDSIZE_INT32   !=4) { fprintf(stderr, "invalid size of INT32   (%d)\n", WORDSIZE_INT32  ); exit(-1); }
-		if (WORDSIZE_INT64   !=8) { fprintf(stderr, "invalid size of INT64   (%d)\n", WORDSIZE_INT64  ); exit(-1); }
-		if (WORDSIZE_FLOAT32 !=4) { fprintf(stderr, "invalid size of FLOAT32 (%d)\n", WORDSIZE_FLOAT32); exit(-1); }
-		if (WORDSIZE_FLOAT64 !=8) { fprintf(stderr, "invalid size of FLOAT64 (%d)\n", WORDSIZE_FLOAT64); exit(-1); }
+		if (WORDSIZE_CHAR    !=1) { PANIC("invalid size of CHAR    (%d)", WORDSIZE_CHAR   );  }
+		if (WORDSIZE_UINT8   !=1) { PANIC("invalid size of UINT8   (%d)", WORDSIZE_UINT8  );  }
+		if (WORDSIZE_UINT16  !=2) { PANIC("invalid size of UINT16  (%d)", WORDSIZE_UINT16 );  }
+		if (WORDSIZE_UINT32  !=4) { PANIC("invalid size of UINT32  (%d)", WORDSIZE_UINT32 );  }
+		if (WORDSIZE_UINT64  !=8) { PANIC("invalid size of UINT64  (%d)", WORDSIZE_UINT64 );  }
+		if (WORDSIZE_INT8    !=1) { PANIC("invalid size of INT8    (%d)", WORDSIZE_INT8   );  }
+		if (WORDSIZE_INT16   !=2) { PANIC("invalid size of INT16   (%d)", WORDSIZE_INT16  );  }
+		if (WORDSIZE_INT32   !=4) { PANIC("invalid size of INT32   (%d)", WORDSIZE_INT32  );  }
+		if (WORDSIZE_INT64   !=8) { PANIC("invalid size of INT64   (%d)", WORDSIZE_INT64  );  }
+		if (WORDSIZE_FLOAT32 !=4) { PANIC("invalid size of FLOAT32 (%d)", WORDSIZE_FLOAT32);  }
+		if (WORDSIZE_FLOAT64 !=8) { PANIC("invalid size of FLOAT64 (%d)", WORDSIZE_FLOAT64);  }
 }
 

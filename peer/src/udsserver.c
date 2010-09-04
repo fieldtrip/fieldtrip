@@ -44,6 +44,9 @@ typedef struct {
 void cleanup_udsserver(void *arg) {
 		threadlocal_t *threadlocal;
 		threadlocal = (threadlocal_t *)arg;
+
+        syslog(LOG_DEBUG, "cleanup_expire()");
+
 		if (threadlocal && threadlocal->fd>0) {
 				closesocket(threadlocal->fd);
 				threadlocal->fd = -1;
@@ -86,6 +89,8 @@ void *udsserver(void *arg) {
 		threadlocal_t threadlocal;
 		threadlocal.fd = -1;
 
+		syslog(LOG_NOTICE, "udsserver()");
+
 		/* this is for debugging */
 		pthread_mutex_lock(&mutexthreadcount);
 		threadcount++;
@@ -104,12 +109,10 @@ void *udsserver(void *arg) {
 				goto cleanup;
 		}
 
-		if (verbose>1)
-				fprintf(stderr, "udsserver: port = %d\n", host->port);
-
 		/* setup socket */
 		if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
 				perror("udsserver socket");
+				syslog(LOG_ERR, "error: udsserver socket");
 				goto cleanup;
 		}
 
@@ -135,17 +138,20 @@ void *udsserver(void *arg) {
 #endif
 		if (bind(fd, (struct sockaddr *)&local, len) == -1) {
 				perror("udsserver bind");
+				syslog(LOG_ERR, "error: udsserver bind");
 				goto cleanup;
 		}
 
 #ifndef USE_ABSTRACT_UDS_NAMES
 		/* this is required to allow other users to read and write to the socket through the file system*/
 		if (chmod(local.sun_path, 0777)!=0)
-				perror('chmod');
+				perror("chmod");
+		syslog(LOG_ERR, "error: chmod");
 #endif
 
 		if (listen(fd, BACKLOG)<0) {
 				perror("udsserver listen");
+				syslog(LOG_ERR, "error: udsserver listen");
 				goto cleanup;
 		}
 
@@ -161,8 +167,7 @@ void *udsserver(void *arg) {
 				len = sizeof remote;
 				c = accept(fd, (struct sockaddr *)&remote, &len);
 
-				if (verbose>1)
-						fprintf(stderr, "udsserver: c = %d\n", c);
+				syslog(LOG_DEBUG, "udsserver: c = %d", c);
 
 				if (c<0) {
 						if (errno==EWOULDBLOCK) {
@@ -171,12 +176,13 @@ void *udsserver(void *arg) {
 						}
 						else {
 								perror("udsserver accept");
+								syslog(LOG_ERR, "error: udsserver accept");
 								goto cleanup;
 						}
 				}
 
 				else {
-						if (verbose>0) fprintf(stderr, "udsserver: opened connection to client on socket %d\n", c);
+						syslog(LOG_DEBUG, "udsserver: opened connection to client on socket %d", c);
 
 						/* deal with the incoming connection on the UDS socket in a seperate thread */
 						/* rc = pthread_create(&tid, &attr, udssocket, (void *)c); */
@@ -184,11 +190,11 @@ void *udsserver(void *arg) {
 
 						if (rc) {
 								/* the code should never arrive here */
-								if (verbose>0) fprintf(stderr, "udsserver: return code from pthread_create() is %d\n", rc);
+								syslog(LOG_ERR, "udsserver: return code from pthread_create() is %d", rc);
 								goto cleanup;
 						}
 
-						if (verbose>0) fprintf(stderr, "udsserver: c = %d, threadcount = %d\n", c, threadcount);
+						syslog(LOG_DEBUG, "udsserver: c = %d, threadcount = %d", c, threadcount);
 						pthread_detach(tid);
 				}
 		}

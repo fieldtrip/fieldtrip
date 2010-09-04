@@ -39,8 +39,7 @@ int smartshare_check(float t, int hostid) {
 		float p, r, baseline = 1;
 		smartsharelist_t *listitem;
 
-		if (verbose)
-				fprintf(stderr, "smartshare_check\n");
+		syslog(LOG_INFO, "smartshare_check()");
 
 		pthread_mutex_lock(&mutexsmartshare);
 
@@ -71,16 +70,14 @@ int smartshare_check(float t, int hostid) {
 		smartshare.prevhostid = hostid;
 
 		if (smartshare.prevhostcount >= SMARTSHARE_PREVHOSTCOUNT) {
-				if (verbose)
-						fprintf(stderr, "smartshare_check: prevhostcount exceeded\n");
+						syslog(LOG_DEBUG, "smartshare_check: prevhostcount exceeded");
 				smartshare.prevhostcount = 0;
 				pthread_mutex_unlock(&mutexsmartshare);
 				return 1;
 		}
 
 		if ((time(NULL)-smartshare.t0) >= SMARTSHARE_TIMER) {
-				if (verbose)
-						fprintf(stderr, "smartshare_check: timer has elapsed\n");
+				syslog(LOG_DEBUG, "smartshare_check: timer has elapsed");
 				pthread_mutex_unlock(&mutexsmartshare);
 				return 1;
 		}
@@ -109,15 +106,13 @@ int smartshare_check(float t, int hostid) {
 
 		r = (float)rand() / (float)INT32_MAX;
 
-		if (verbose)
-				fprintf(stderr, "smartshare_check: t = %f, p = %f, r = %f, n = %d\n", t, p, r, smartshare.n);
+		syslog(LOG_DEBUG, "smartshare_check: t = %f, p = %f, r = %f, n = %d", t, p, r, smartshare.n);
 
 		pthread_mutex_unlock(&mutexsmartshare);
 
 		/* return 1 if the connection should be accepted, 0 if it should not be accepted */
 		p = (p>r);
-		if (verbose>0)
-				fprintf(stderr, "smartshare_check: return value = %d\n", p);
+		syslog(LOG_INFO, "smartshare_check: return value = %d", p);
 		return p;
 }
 
@@ -159,8 +154,7 @@ void smartshare_history(jobdef_t *job) {
 		}
 		pthread_mutex_unlock(&mutexpeerlist);
 
-		if (verbose)
-				fprintf(stderr, "smartshare_history: historycount = %d, peercount = %d\n", historycount, peercount);
+		syslog(LOG_DEBUG, "smartshare_history: historycount = %d, peercount = %d", historycount, peercount);
 
 		while (historycount > peercount*SMARTSHARE_HISTORY) {
 				/* remove the oldest item from the history */

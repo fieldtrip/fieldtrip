@@ -33,7 +33,6 @@
 mxArray *mxSerialize(const mxArray*);
 mxArray *mxDeserialize(const void*, size_t);
 
-#define panic(X) {fprintf(stderr, X); exit(1);}
 #define ENGINETIMEOUT     30     /* in seconds */
 #define ZOMBIETIMEOUT     300    /* in seconds */
 #define SLEEPTIME         10000  /* in microseconds */
@@ -100,6 +99,7 @@ int main(int argc, char *argv[]) {
 		pthread_t discoverThread;
 		pthread_t expireThread;
 
+		openlog("peerslave", 0, LOG_USER);
 		peerinit(NULL);
 
 		/* use GNU getopt_long for the command-line options */
@@ -309,6 +309,7 @@ int main(int argc, char *argv[]) {
 				else /* fork returns -1 on failure */
 				{
 						perror("fork"); /* display error message */
+						syslog(LOG_ERR, "error: fork"); /* display error message */
 						exit(0); 
 				}
 		}
@@ -463,7 +464,7 @@ int main(int argc, char *argv[]) {
 
 						if (!found) {
 								pthread_mutex_unlock(&mutexpeerlist);
-								panic("failed to locate specified peer\n");
+								PANIC("failed to locate specified peer\n");
 						}
 
 						pthread_mutex_lock(&mutexhost);
@@ -475,30 +476,30 @@ int main(int argc, char *argv[]) {
 								/* open the UDS socket */
 								if ((server = open_uds_connection(peer->host->socket)) < 0) {
 										pthread_mutex_unlock(&mutexpeerlist);
-										panic("failed to create socket\n");
+										PANIC("failed to create socket\n");
 								}
 						}
 						else if (hastcp) {
 								/* open the TCP socket */
 								if ((server = open_tcp_connection(peer->ipaddr, peer->host->port)) < 0) {
 										pthread_mutex_unlock(&mutexpeerlist);
-										panic("failed to create socket\n");
+										PANIC("failed to create socket\n");
 								}
 						}
 						else {
 								pthread_mutex_unlock(&mutexpeerlist);
-								panic("failed to create socket\n");
+								PANIC("failed to create socket\n");
 						}
 
 						/* the connection was opened without error */
 						pthread_mutex_unlock(&mutexpeerlist);
 
 						if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
-								panic("could not write handshake");
+								PANIC("could not write handshake");
 						}
 						else if (!handshake) {
 								close_connection(server);
-								panic("failed to negociate connection");
+								PANIC("failed to negociate connection");
 						}
 
 						/* the message that will be written consists of
@@ -512,15 +513,15 @@ int main(int argc, char *argv[]) {
 						opt = (mxArray *) mxSerialize(options);
 
 						if (!arg)
-								panic("could not serialize job arguments");
+								PANIC("could not serialize job arguments");
 
 						if (!opt)
-								panic("could not serialize job options");
+								PANIC("could not serialize job options");
 
 						def = (jobdef_t *)malloc(sizeof(jobdef_t));
 
 						if (!def)
-								panic("could not allocate memory");
+								PANIC("could not allocate memory");
 
 						def->version  = VERSION;
 						def->id       = jobid;
@@ -540,44 +541,44 @@ int main(int argc, char *argv[]) {
 						pthread_mutex_unlock(&mutexhost);
 
 						if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
-								panic("could not write handshake");
+								PANIC("could not write handshake");
 						}
 						else if (!handshake) {
 								close_connection(server);
-								panic("failed to write hostdef");
+								PANIC("failed to write hostdef");
 						}
 
 						if (success)
 								success = (bufwrite(server, def, sizeof(jobdef_t)) == sizeof(jobdef_t));
 
 						if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
-								panic("could not write handshake");
+								PANIC("could not write handshake");
 						}
 						else if (!handshake) {
 								close_connection(server);
-								panic("failed to write jobdef");
+								PANIC("failed to write jobdef");
 						}
 
 						if (success) 
 								success = (bufwrite(server, (void *)mxGetData(arg), def->argsize) == def->argsize);
 
 						if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
-								panic("could not write handshake");
+								PANIC("could not write handshake");
 						}
 						else if (!handshake) {
 								close_connection(server);
-								panic("failed to write arg");
+								PANIC("failed to write arg");
 						}
 
 						if (success) 
 								success = (bufwrite(server, (void *)mxGetData(opt), def->optsize) == def->optsize);
 
 						if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
-								panic("could not write handshake");
+								PANIC("could not write handshake");
 						}
 						else if (!handshake) {
 								close_connection(server);
-								panic("failed to write opt");
+								PANIC("failed to write opt");
 						}
 
 						close_connection(server);
@@ -609,7 +610,7 @@ int main(int argc, char *argv[]) {
 				/* test that the matlab engine is not idle for too long */
 				if ((matlabRunning==1) && (time(NULL)-matlabFinished)>enginetimeout) {
 						if (engClose(en)!=0) {
-								panic("could not stop the MATLAB engine\n");
+								PANIC("could not stop the MATLAB engine\n");
 						}
 						else {
 								fprintf(stderr, "stopped idle MATLAB engine\n");

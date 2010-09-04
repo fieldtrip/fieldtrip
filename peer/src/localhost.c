@@ -35,6 +35,7 @@ int localhost(const char *ipaddr)
 
 		if (getifaddrs(&ifaddr) == -1) {
 				perror("getifaddrs");
+				syslog(LOG_ERR, "error: getifaddrs");
 		}
 		else {
 				/* Walk through linked list, maintaining head pointer so we can free list later */
@@ -60,12 +61,8 @@ int localhost(const char *ipaddr)
 				freeifaddrs(ifaddr);
 		} /* if getifaddrs */
 
-		if (verbose>0) {
-				if (found)
-						printf("<%s> == localhost\n", ipaddr);
-				else
-						printf("<%s> != localhost\n", ipaddr);
-		}
+		if (found)
+				syslog(LOG_DEBUG, "localhost: <%s>", ipaddr);
 
 		return found;
 #endif

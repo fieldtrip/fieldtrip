@@ -52,6 +52,7 @@ pthread_t expireThread;
 void initFun(void) {
 		/* check whether the host has been initialized */
 		if (!peerInitialized) {
+				openlog("peer.mex", 0, LOG_USER);
 				mexPrintf("peer: init\n");
 				peerinit(NULL);
 				peerInitialized = 1;
@@ -61,7 +62,9 @@ void initFun(void) {
 
 /* this function is called upon unloading of the mex-file */
 void exitFun(void) {
+		closelog();
 		mexPrintf("peer: exit\n");
+
 		/* tell all threads to stop running */
 
 		pthread_mutex_lock(&mutexstatus);

@@ -45,8 +45,7 @@ void peerinit(void *arg) {
 		DWORD nStrLen; 
 #endif
 
-		if (verbose)
-				fprintf(stderr, "peerinit\n");
+		syslog(LOG_NOTICE, "peerinit()");
 
 		pthread_mutex_lock(&mutexhost);
 		if (host) {
@@ -59,8 +58,7 @@ void peerinit(void *arg) {
 		check_datatypes();
 
 		if ((host = malloc(sizeof(hostdef_t)))==NULL) {
-				perror("announce malloc");
-				exit(1);
+				PANIC("announce malloc");
 		}
 
 		/* specify the host parameters */
@@ -79,8 +77,7 @@ void peerinit(void *arg) {
 		/* get the user name */
 		pwd = getpwuid(geteuid());
 		if (pwd==NULL) {
-				fprintf(stderr, "error: announce getpwuid\n");
-				exit(1);
+				PANIC("announce getpwuid");
 		}
 		strncpy(host->user, pwd->pw_name, STRLEN);
 
@@ -89,8 +86,7 @@ void peerinit(void *arg) {
 
 		/* get the host name */
 		if (gethostname(host->name, STRLEN)) {
-				perror("announce gethostname");
-				exit(1);
+				PANIC("announce gethostname");
 		}
 
 #else
@@ -120,11 +116,9 @@ void peerinit(void *arg) {
 		host->id += hash(host->user);
 		host->id += hash(host->group);
 
-		if (verbose>0) {
-				fprintf(stderr, "peerinit: host.name =  %s\n", host->name);
-				fprintf(stderr, "peerinit: host.port =  %d\n", host->port);
-				fprintf(stderr, "peerinit: host.id   =  %d\n", host->id);
-		}
+		syslog(LOG_INFO, "peerinit: host.name =  %s", host->name);
+		syslog(LOG_INFO, "peerinit: host.port =  %d", host->port);
+		syslog(LOG_INFO, "peerinit: host.id   =  %d", host->id);
 
 		pthread_mutex_unlock(&mutexhost);
 
@@ -165,8 +159,7 @@ void peerinit(void *arg) {
 void peerexit(void *arg) {
 		int verbose = 0;
 
-		if (verbose)
-				fprintf(stderr, "peerexit\n");
+		syslog(LOG_NOTICE, "peerexit()");
 
 		pthread_mutex_lock(&mutexhost);
 		FREE(host);
