@@ -77,7 +77,7 @@
 
 #define FREE(x)					{if (x) {free(x); x=NULL;}}
 #define PANIC(format, args...)	{syslog(LOG_ERR, format, ## args); exit(-1);}
-
+#define DEBUG(level, format, args...)	{ if (level<=syslog_level) {syslog(level, format, ## args);}}
 
 /* FIXME these are obvious at the moment, but should be formally defined */
 typedef char      CHAR_T;

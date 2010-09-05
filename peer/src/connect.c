@@ -34,7 +34,7 @@
 
 				if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
 						perror("open_uds_connection socket");
-						syslog(LOG_ERR, "error: open_uds_connection socket");
+						DEBUG(LOG_ERR, "error: open_uds_connection socket");
 						return -1;
 				}
 
@@ -46,7 +46,7 @@
 #endif
 				if (connect(s, (struct sockaddr *)&remote, len) == -1) {
 						perror("open_uds_connection connect");
-						syslog(LOG_ERR, "error: open_uds_connection connect");
+						DEBUG(LOG_ERR, "error: open_uds_connection connect");
 						return -1;
 				}
 
@@ -54,7 +54,7 @@
 				connectioncount++;
 				pthread_mutex_unlock(&mutexconnectioncount);
 
-				syslog(LOG_INFO, "open_uds_connection: connected to %s on socket %d", socketname, s);
+				DEBUG(LOG_INFO, "open_uds_connection: connected to %s on socket %d", socketname, s);
 				return s;
 #endif
 		}
@@ -71,11 +71,11 @@ int open_tcp_connection(const char *hostname, int port) {
 #endif
 
 		if (port==0) {
-				syslog(LOG_INFO, "open_tcp_connection: using direct memory copy");
+				DEBUG(LOG_INFO, "open_tcp_connection: using direct memory copy");
 				return 0;
 		}
 		else {
-				syslog(LOG_INFO, "open_tcp_connection: server = %s, port = %d", hostname, port);
+				DEBUG(LOG_INFO, "open_tcp_connection: server = %s, port = %d", hostname, port);
 		}
 
 #ifdef WIN32
@@ -86,12 +86,12 @@ int open_tcp_connection(const char *hostname, int port) {
 #endif
 
 		if ((host = gethostbyname(hostname)) == NULL) {
-				syslog(LOG_ERR, "open_tcp_connection: nslookup1 failed on '%s'", hostname);
+				DEBUG(LOG_ERR, "open_tcp_connection: nslookup1 failed on '%s'", hostname);
 				return -1;
 		}
 
 		if (host->h_length == 0) {
-				syslog(LOG_ERR, "open_tcp_connection: nslookup2 failed on '%s'", hostname);
+				DEBUG(LOG_ERR, "open_tcp_connection: nslookup2 failed on '%s'", hostname);
 				return -1;
 		}
 
@@ -101,10 +101,10 @@ int open_tcp_connection(const char *hostname, int port) {
 		memcpy(&(sa.sin_addr.s_addr), host->h_addr_list[0], sizeof(sa.sin_addr.s_addr));
 
 		s = socket(PF_INET, SOCK_STREAM, 0);
-		syslog(LOG_DEBUG, "open_tcp_connection: socket = %d", s);
+		DEBUG(LOG_DEBUG, "open_tcp_connection: socket = %d", s);
 		if (s<0) {
 				perror("open_tcp_connection");
-				syslog(LOG_ERR, "error: open_tcp_connection");
+				DEBUG(LOG_ERR, "error: open_tcp_connection");
 				return -1;
 		}
 
@@ -113,7 +113,7 @@ int open_tcp_connection(const char *hostname, int port) {
 				if (connect(s, (struct sockaddr *)&sa, sizeof sa)<0) {
 						/* wait 5 miliseconds and try again */
 						perror("open_tcp_connection");
-						syslog(LOG_ERR, "error: open_tcp_connection");
+						DEBUG(LOG_ERR, "error: open_tcp_connection");
 						usleep(5000);
 						retry--;
 				}
@@ -130,7 +130,7 @@ int open_tcp_connection(const char *hostname, int port) {
 		/*
 		   while (connect(s, (struct sockaddr *)&sa, sizeof sa) < 0) {
 		   perror("open_tcp_connection connect");
-		   syslog(LOG_ERR, "error: open_tcp_connection connect");
+		   DEBUG(LOG_ERR, "error: open_tcp_connection connect");
 		   usleep(1000000);
 		   }
 		 */
@@ -139,15 +139,15 @@ int open_tcp_connection(const char *hostname, int port) {
 		connectioncount++;
 		pthread_mutex_unlock(&mutexconnectioncount);
 
-		syslog(LOG_DEBUG, "open_tcp_connection: connectioncount = %d", connectioncount);
-		syslog(LOG_INFO, "open_tcopen_tcpnnection: connected to %s:%d on socket %d", hostname, port, s);
+		DEBUG(LOG_DEBUG, "open_tcp_connection: connectioncount = %d", connectioncount);
+		DEBUG(LOG_INFO, "open_tcopen_tcpnnection: connected to %s:%d on socket %d", hostname, port, s);
 		return s;
 }
 
 int close_connection(int s) {
 		int retval, verbose = 0;
 
-		syslog(LOG_INFO, "close_connection: socket = %d", s);
+		DEBUG(LOG_INFO, "close_connection: socket = %d", s);
 
 		if (s==0)
 				/* for a DMA connection */
@@ -161,14 +161,14 @@ int close_connection(int s) {
 
 		if (retval<0) {
 				perror("close_connection");
-				syslog(LOG_ERR, "error: close_connection");
+				DEBUG(LOG_ERR, "error: close_connection");
 		}
 
 		pthread_mutex_lock(&mutexconnectioncount);
 		connectioncount--;
 		pthread_mutex_unlock(&mutexconnectioncount);
 
-		syslog(LOG_DEBUG, "close_connection: connectioncount = %d", connectioncount);
+		DEBUG(LOG_DEBUG, "close_connection: connectioncount = %d", connectioncount);
 
 		return retval;
 }

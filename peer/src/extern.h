@@ -1,6 +1,8 @@
 #ifndef EXTERN_H
 #define EXTERN_H
 
+extern int syslog_level;
+
 extern pthread_mutex_t mutexstatus;
 extern int udsserverStatus;
 extern int tcpserverStatus;

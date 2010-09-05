@@ -32,7 +32,7 @@ void cleanup_tcpserver(void *arg) {
 		threadlocal_t *threadlocal;
 		threadlocal = (threadlocal_t *)arg;
 
-        syslog(LOG_DEBUG, "cleanup_tcpserver()");
+        DEBUG(LOG_DEBUG, "cleanup_tcpserver()");
 
 		if (threadlocal && threadlocal->fd>0) {
 				closesocket(threadlocal->fd);
@@ -73,7 +73,7 @@ void *tcpserver(void *arg) {
 		threadlocal_t threadlocal;
 		threadlocal.fd = -1;
 
-		syslog(LOG_NOTICE, "tcpserver()");
+		DEBUG(LOG_NOTICE, "tcpserver()");
 
 		/* this is for debugging */
 		pthread_mutex_lock(&mutexthreadcount);
@@ -104,7 +104,7 @@ void *tcpserver(void *arg) {
 		/* setup socket */
 		if ((fd = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
 				perror("tcpserver socket");
-				syslog(LOG_ERR, "error: tcpserver socket");
+				DEBUG(LOG_ERR, "error: tcpserver socket");
 				goto cleanup;
 		}
 
@@ -120,7 +120,7 @@ void *tcpserver(void *arg) {
 		optval = optval | O_NONBLOCK;
 		if (fcntl(fd, F_SETFL, optval)<0) {
 				perror("tcpserver fcntl");
-				syslog(LOG_ERR, "error: tcpserver fcntl");
+				DEBUG(LOG_ERR, "error: tcpserver fcntl");
 				goto cleanup;
 		}
 #endif
@@ -131,7 +131,7 @@ void *tcpserver(void *arg) {
 		   timeout.tv_usec = 1;
 		   if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(optval)) < 0) {
 		   perror("tcpserver setsockopt");
-		   syslog(LOG_ERR, "error: tcpserver setsockopt");
+		   DEBUG(LOG_ERR, "error: tcpserver setsockopt");
 		   goto cleanup;
 		   }
 		 */
@@ -141,7 +141,7 @@ void *tcpserver(void *arg) {
 		   optval = 1;
 		   if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&optval, sizeof(optval)) < 0) {
 		   perror("tcpserver setsockopt");
-		   syslog(LOG_ERR, "error: tcpserver setsockopt");
+		   DEBUG(LOG_ERR, "error: tcpserver setsockopt");
 		   goto cleanup;
 		   }
 		 */
@@ -150,7 +150,7 @@ void *tcpserver(void *arg) {
 		optval = SO_RCVBUF_SIZE;
 		if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (const char*)&optval, sizeof(optval)) < 0) {
 				perror("tcpserver setsockopt");
-				syslog(LOG_ERR, "error: tcpserver setsockopt");
+				DEBUG(LOG_ERR, "error: tcpserver setsockopt");
 				goto cleanup;
 		}
 
@@ -158,7 +158,7 @@ void *tcpserver(void *arg) {
 		optval = SO_SNDBUF_SIZE;
 		if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (const char*)&optval, sizeof(optval)) < 0) {
 				perror("tcpserver setsockopt");
-				syslog(LOG_ERR, "error: tcpserver setsockopt");
+				DEBUG(LOG_ERR, "error: tcpserver setsockopt");
 				goto cleanup;
 		}
 
@@ -167,7 +167,7 @@ void *tcpserver(void *arg) {
 		   optval = 1;
 		   if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &optval, sizeof(optval)) < 0) {
 		   perror("tcpserver setsockopt");
-		   syslog(LOG_ERR, "error: tcpserver setsockopt");
+		   DEBUG(LOG_ERR, "error: tcpserver setsockopt");
 		   goto cleanup;
 		   }
 		 */
@@ -197,13 +197,13 @@ void *tcpserver(void *arg) {
 		if (retry==0) {
 				/* it failed on mutliple attempts, give up */
 				perror("tcpserver bind");
-				syslog(LOG_ERR, "error: tcpserver bind");
+				DEBUG(LOG_ERR, "error: tcpserver bind");
 				goto cleanup;
 		}
 
 		if (listen(fd, BACKLOG)<0) {
 				perror("tcpserver listen");
-				syslog(LOG_ERR, "error: tcpserver listen");
+				DEBUG(LOG_ERR, "error: tcpserver listen");
 				goto cleanup;
 		}
 
@@ -226,7 +226,7 @@ void *tcpserver(void *arg) {
 						}
 						else {
 								perror("tcpserver accept");
-								syslog(LOG_ERR, "error: tcpserver accept");
+								DEBUG(LOG_ERR, "error: tcpserver accept");
 								goto cleanup;
 						}
 #else
@@ -243,7 +243,7 @@ void *tcpserver(void *arg) {
 				}
 
 				else {
-						syslog(LOG_INFO, "tcpserver: opened connection to client on socket %d", c);
+						DEBUG(LOG_DEBUG, "tcpserver: opened connection to client on socket %d", c);
 
 						/* place the socket back in blocking mode, this is needed for tcpsocket  */
 #ifdef WIN32
@@ -265,11 +265,11 @@ void *tcpserver(void *arg) {
 
 						if (rc) {
 								/* the code should never arrive here */
-								syslog(LOG_ERR, "tcpserver: return code from pthread_create() is %d", rc);
+								DEBUG(LOG_ERR, "tcpserver: return code from pthread_create() is %d", rc);
 								goto cleanup;
 						}
 
-						syslog(LOG_DEBUG, "tcpserver: c = %d, threadcount = %d", c, threadcount);
+						DEBUG(LOG_DEBUG, "tcpserver: c = %d, threadcount = %d", c, threadcount);
 						pthread_detach(tid);
 				}
 		}

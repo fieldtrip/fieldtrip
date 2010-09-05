@@ -123,54 +123,54 @@ while isempty(jobid)
   end
 
   % get the full list of peers
-  peerlist = peer('peerlist');
+  list = peerlist;
 
   if ~isempty(hostid)
     % only consider peers in the user specified list
-    peerlist = peerlist(ismember([peerlist.hostid], hostid));
+    list = list(ismember([list.hostid], hostid));
   end
 
   % only peers in slave mode are interesting
-  peerlist = peerlist([peerlist.status]==2 | [peerlist.status]==3);
-  if isempty(peerlist)
+  list = list([list.status]==2 | [list.status]==3);
+  if isempty(list)
     error('there is no peer available as slave');
   end
 
   % only peers with enough memory are interesting
-  peerlist = peerlist([peerlist.memavail] >= memreq);
-  if isempty(peerlist)
+  list = list([list.memavail] >= memreq);
+  if isempty(list)
     error('FieldTrip:Peer:NotEnoughMemoryAvailableOnSlave', 'there are no slave peers available that meet the memory requirements');
   end
 
   % only peers with enough CPU speed are interesting
-  peerlist = peerlist([peerlist.cpuavail] >= cpureq);
-  if isempty(peerlist)
+  list = list([list.cpuavail] >= cpureq);
+  if isempty(list)
     error('there are no slave peers available that meet the CPU requirements');
   end
 
   % only peers with enough time for a single job are interesting
-  peerlist = peerlist([peerlist.timavail] >= timreq);
-  if isempty(peerlist)
+  list = list([list.timavail] >= timreq);
+  if isempty(list)
     error('there are no slave peers available to execute a job of this duration');
   end
 
   % FIXME the heuristic rule for finding the best match needs to be improved
-  mempenalty = scale([peerlist.memavail] - memreq);
-  cpupenalty = scale([peerlist.cpuavail] - cpureq);
-  timpenalty = scale([peerlist.timavail] - timreq);
-  penalty    = mempenalty + 0.1* rand(1, length(peerlist)) + ([peerlist.status]==3);
+  mempenalty = scale([list.memavail] - memreq);
+  cpupenalty = scale([list.cpuavail] - cpureq);
+  timpenalty = scale([list.timavail] - timreq);
+  penalty    = mempenalty + 0.1* rand(1, length(list)) + ([list.status]==3);
 
   % select the slave peer that has the best match with the job requirements
   [penalty, indx] = sort(penalty);
 
-  % sort the peerlist according to the penalty
-  peerlist = peerlist(indx);
+  % sort the list according to the penalty
+  list = list(indx);
 
-  for i=1:length(peerlist)
+  for i=1:length(list)
     try
       jobid   = [];
       puttime = toc(stopwatch);
-      result  = peer('put', peerlist(i).hostid, varargin, options, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq);
+      result  = peer('put', list(i).hostid, varargin, options, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq);
       puttime = toc(stopwatch) - puttime;
       jobid   = result.jobid;
       % the peer accepted the job, there is no need to continue with the for loop

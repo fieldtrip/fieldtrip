@@ -54,7 +54,7 @@ void cleanup_announce(void *arg) {
 		threadlocal_t *threadlocal;
 		threadlocal = (threadlocal_t *)arg;
 
-		syslog(LOG_DEBUG, "cleanup_announce()");
+		DEBUG(LOG_DEBUG, "cleanup_announce()");
 
 		if (threadlocal && threadlocal->message) {
 				FREE(threadlocal->message);
@@ -87,7 +87,7 @@ void *announce(void *arg) {
 		threadlocal.message = NULL;
 		threadlocal.fd = -1;
 
-		syslog(LOG_NOTICE, "announce()");
+		DEBUG(LOG_NOTICE, "announce()");
 
 		/* this is for debugging */
 		pthread_mutex_lock(&mutexthreadcount);
@@ -110,25 +110,25 @@ void *announce(void *arg) {
 		/* allocate memory for the message */
 		if ((message = (hostdef_t *)malloc(sizeof(hostdef_t))) == NULL) {
 				perror("announce malloc");
-				syslog(LOG_ERR, "error: announce malloc");
+				DEBUG(LOG_ERR, "error: announce malloc");
 				goto cleanup;
 		}
 
 		/* this will be deallocated at cleanup */
 		threadlocal.message = message;
 
-		syslog(LOG_DEBUG, "announce: threadcount = %d", threadcount);
+		DEBUG(LOG_DEBUG, "announce: threadcount = %d", threadcount);
 
 		pthread_mutex_lock(&mutexhost);
-		syslog(LOG_INFO, "announce: host.name = %s", host->name);
-		syslog(LOG_INFO, "announce: host.port = %u", host->port);
-		syslog(LOG_INFO, "announce: host.id   = %u", host->id);
+		DEBUG(LOG_INFO, "announce: host.name = %s", host->name);
+		DEBUG(LOG_INFO, "announce: host.port = %u", host->port);
+		DEBUG(LOG_INFO, "announce: host.id   = %u", host->id);
 		pthread_mutex_unlock(&mutexhost);
 
 		/* create what looks like an ordinary UDP socket */
 		if ((fd=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP)) < 0) {
 				perror("announce socket");
-				syslog(LOG_ERR, "error: announce socket");
+				DEBUG(LOG_ERR, "error: announce socket");
 				goto cleanup;
 		}
 
@@ -176,7 +176,7 @@ void *announce(void *arg) {
 
 				if ((setsockopt(fd, IPPROTO_IP, IP_MULTICAST_TTL, (void*)&ttl, sizeof(ttl))) < 0) {
 						perror("setsockopt");
-						syslog(LOG_ERR, "error: setsockopt");
+						DEBUG(LOG_ERR, "error: setsockopt");
 				}
 
 				pthread_mutex_unlock(&mutexhost);
@@ -185,7 +185,7 @@ void *announce(void *arg) {
 				/* note that this is a thread cancelation point */
 				if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &multicastAddr,sizeof(multicastAddr)) < 0) {
 						perror("announce sendto (multicast)");
-						syslog(LOG_ERR, "error: announce sendto (multicast)");
+						DEBUG(LOG_ERR, "error: announce sendto (multicast)");
 						goto cleanup;
 				}
 #endif
@@ -194,7 +194,7 @@ void *announce(void *arg) {
 				/* note that this is a thread cancelation point */
 				if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &localhostAddr,sizeof(localhostAddr)) < 0) {
 						perror("announce sendto (localhost)");
-						syslog(LOG_ERR, "error: announce sendto (localhost)");
+						DEBUG(LOG_ERR, "error: announce sendto (localhost)");
 						goto cleanup;
 				}
 #endif
@@ -227,14 +227,14 @@ int announce_once(void) {
 		/* create what looks like an ordinary UDP socket */
 		if ((fd=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP)) < 0) {
 				perror("announce_once socket");
-				syslog(LOG_ERR, "error: announce_once socket");
+				DEBUG(LOG_ERR, "error: announce_once socket");
 				goto cleanup;
 		}
 
 		/* allocate memory for the message */
 		if ((message = (hostdef_t *)malloc(sizeof(hostdef_t))) == NULL) {
 				perror("announce_once malloc");
-				syslog(LOG_ERR, "error: announce_once malloc");
+				DEBUG(LOG_ERR, "error: announce_once malloc");
 				goto cleanup;
 		}
 
@@ -274,13 +274,13 @@ int announce_once(void) {
 
 		if ((setsockopt(fd, IPPROTO_IP, IP_MULTICAST_TTL, (void*)&ttl, sizeof(ttl))) < 0) {
 				perror("announce_once setsockopt");
-				syslog(LOG_ERR, "error: announce_once setsockopt");
+				DEBUG(LOG_ERR, "error: announce_once setsockopt");
 		}
 
 #ifdef USE_MULTICAST
 		if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &multicastAddr,sizeof(multicastAddr)) < 0) {
 				perror("announce_once sendto (multicast)");
-				syslog(LOG_ERR, "error: announce_once sendto (multicast)");
+				DEBUG(LOG_ERR, "error: announce_once sendto (multicast)");
 				goto cleanup;
 		}
 #endif
@@ -288,7 +288,7 @@ int announce_once(void) {
 #ifdef USE_LOCALHOST
 		if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &localhostAddr,sizeof(localhostAddr)) < 0) {
 				perror("announce_once sendto (localhost)");
-				syslog(LOG_ERR, "error: announce_once sendto (localhost)");
+				DEBUG(LOG_ERR, "error: announce_once sendto (localhost)");
 				goto cleanup;
 		}
 #endif

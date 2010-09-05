@@ -61,7 +61,7 @@ int smartcpu_info(int *ProcessorCount, float *BogoMips, float *AvgLoad, float *C
 		 */
 
 		if ((fp = fopen("/proc/cpuinfo", "r")) == NULL) {
-				syslog(LOG_ERR, "smartcpu_info: could not open /proc/cpuinfo");
+				DEBUG(LOG_ERR, "smartcpu_info: could not open /proc/cpuinfo");
 				return -1;
 		}
 
@@ -79,7 +79,7 @@ int smartcpu_info(int *ProcessorCount, float *BogoMips, float *AvgLoad, float *C
 		 */
 
 		if ((fp = fopen("/proc/loadavg", "r")) == NULL) {
-				syslog(LOG_ERR, "smartcpu_info: could not open /proc/loadavg");
+				DEBUG(LOG_ERR, "smartcpu_info: could not open /proc/loadavg");
 				return -1;
 		}
 
@@ -100,7 +100,7 @@ int smartcpu_info(int *ProcessorCount, float *BogoMips, float *AvgLoad, float *C
 		 */
 
 		if ((fp = fopen("/proc/stat", "r")) == NULL) {
-				syslog(LOG_ERR, "smartcpu_info: could not open /proc/stat");
+				DEBUG(LOG_ERR, "smartcpu_info: could not open /proc/stat");
 				return -1;
 		}
 
@@ -109,7 +109,7 @@ int smartcpu_info(int *ProcessorCount, float *BogoMips, float *AvgLoad, float *C
 		float load;
 		while (!feof(fp)) {
 				if (fscanf(fp, "%s ", str) != 1) {
-						syslog(LOG_ERR, "smartcpu_info: problem reading from /proc/stat");
+						DEBUG(LOG_ERR, "smartcpu_info: problem reading from /proc/stat");
 						continue;
 				}
 
@@ -124,7 +124,7 @@ int smartcpu_info(int *ProcessorCount, float *BogoMips, float *AvgLoad, float *C
 						ok = ok & (fscanf(fp, "%d", &softirq ) == 1);
 						ok = ok & (fscanf(fp, "%d", &unknown ) == 1);
 						if (!ok) {
-								syslog(LOG_ERR, "smartcpu_info: problem reading from /proc/stat");
+								DEBUG(LOG_ERR, "smartcpu_info: problem reading from /proc/stat");
 								return -1;
 						}
 
@@ -164,14 +164,14 @@ int smartcpu_info(int *ProcessorCount, float *BogoMips, float *AvgLoad, float *C
 						ok = ok & (fscanf(fp, "%d", &softirq ) == 1);
 						ok = ok & (fscanf(fp, "%d", &unknown ) == 1);
 						if (!ok) {
-								syslog(LOG_ERR, "smartcpu_info: problem reading from /proc/stat");
+								DEBUG(LOG_ERR, "smartcpu_info: problem reading from /proc/stat");
 								return -1;
 						}
 				}
 		} /* while */
 
 		*CpuLoad =  load*numcpu;
-		syslog(LOG_INFO, "smartcpu_info: load = %f %%, numcpu = %d", 100*load, numcpu);
+		DEBUG(LOG_INFO, "smartcpu_info: load = %f %%, numcpu = %d", 100*load, numcpu);
 
 		fclose(fp);
 
@@ -237,26 +237,26 @@ int smartcpu_update(void) {
 				smartcpu.evidence   = 0;
 				smartcpu.prevstatus = STATUS_IDLE;
 				host->status        = STATUS_ZOMBIE;
-				syslog(LOG_NOTICE, "smartcpu_update: switching to zombie");
-				syslog(LOG_DEBUG, "smartcpu_update: ProcessorCount = %d", ProcessorCount);
-				syslog(LOG_DEBUG, "smartcpu_update: NumPeers       = %d", NumPeers);
-				syslog(LOG_DEBUG, "smartcpu_update: BogoMips       = %.2f", BogoMips);
-				syslog(LOG_DEBUG, "smartcpu_update: AvgLoad        = %.2f", AvgLoad);
-				syslog(LOG_DEBUG, "smartcpu_update: CpuLoad        = %.2f %%", CpuLoad*100);
-				syslog(LOG_DEBUG, "smartcpu_update: host->status   = %d", host->status);
+				DEBUG(LOG_NOTICE, "smartcpu_update: switching to zombie");
+				DEBUG(LOG_DEBUG, "smartcpu_update: ProcessorCount = %d", ProcessorCount);
+				DEBUG(LOG_DEBUG, "smartcpu_update: NumPeers       = %d", NumPeers);
+				DEBUG(LOG_DEBUG, "smartcpu_update: BogoMips       = %.2f", BogoMips);
+				DEBUG(LOG_DEBUG, "smartcpu_update: AvgLoad        = %.2f", AvgLoad);
+				DEBUG(LOG_DEBUG, "smartcpu_update: CpuLoad        = %.2f %%", CpuLoad*100);
+				DEBUG(LOG_DEBUG, "smartcpu_update: host->status   = %d", host->status);
 		} /* if evidence */
 
 		if (smartcpu.evidence>1) {
 				smartcpu.evidence++;
 				smartcpu.prevstatus = STATUS_ZOMBIE;
 				host->status        = STATUS_IDLE;
-				syslog(LOG_NOTICE, "smartcpu_update: switching to idle");
-				syslog(LOG_DEBUG, "smartcpu_update: ProcessorCount = %d", ProcessorCount);
-				syslog(LOG_DEBUG, "smartcpu_update: NumPeers       = %d", NumPeers);
-				syslog(LOG_DEBUG, "smartcpu_update: BogoMips       = %.2f", BogoMips);
-				syslog(LOG_DEBUG, "smartcpu_update: AvgLoad        = %.2f", AvgLoad);
-				syslog(LOG_DEBUG, "smartcpu_update: CpuLoad        = %.2f %%", CpuLoad*100);
-				syslog(LOG_DEBUG, "smartcpu_update: host->status   = %d", host->status);
+				DEBUG(LOG_NOTICE, "smartcpu_update: switching to idle");
+				DEBUG(LOG_DEBUG, "smartcpu_update: ProcessorCount = %d", ProcessorCount);
+				DEBUG(LOG_DEBUG, "smartcpu_update: NumPeers       = %d", NumPeers);
+				DEBUG(LOG_DEBUG, "smartcpu_update: BogoMips       = %.2f", BogoMips);
+				DEBUG(LOG_DEBUG, "smartcpu_update: AvgLoad        = %.2f", AvgLoad);
+				DEBUG(LOG_DEBUG, "smartcpu_update: CpuLoad        = %.2f %%", CpuLoad*100);
+				DEBUG(LOG_DEBUG, "smartcpu_update: host->status   = %d", host->status);
 		} /* if evidence */
 
 		pthread_mutex_unlock(&mutexhost);

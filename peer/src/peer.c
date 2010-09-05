@@ -52,7 +52,7 @@ pthread_t expireThread;
 void initFun(void) {
 		/* check whether the host has been initialized */
 		if (!peerInitialized) {
-				openlog("peer.mex", 0, LOG_USER);
+				openlog("peer.mex", LOG_PID, LOG_USER);
 				mexPrintf("peer: init\n");
 				peerinit(NULL);
 				peerInitialized = 1;

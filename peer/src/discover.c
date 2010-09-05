@@ -35,7 +35,7 @@ void cleanup_discover(void *arg) {
 		threadlocal_t *threadlocal = NULL;
 		threadlocal = (threadlocal_t *)arg;
 
-		syslog(LOG_DEBUG, "cleanup_discover()");
+		DEBUG(LOG_DEBUG, "cleanup_discover()");
 
 		if (threadlocal && threadlocal->discovery) {
 				FREE(threadlocal->discovery);
@@ -80,7 +80,7 @@ void *discover(void *arg) {
 		struct ip_mreq mreq;
 		int optval;
 
-		syslog(LOG_NOTICE, "discover()");
+		DEBUG(LOG_NOTICE, "discover()");
 
 		threadlocal_t threadlocal;
 		threadlocal.discovery = NULL;
@@ -107,7 +107,7 @@ void *discover(void *arg) {
 		/* create what looks like an ordinary UDP socket */
 		if ((fd=socket(AF_INET,SOCK_DGRAM,0)) < 0) {
 				perror("discover socket");
-				syslog(LOG_ERR, "error: discover socket");
+				DEBUG(LOG_ERR, "error: discover socket");
 				goto cleanup;
 		}
 
@@ -117,7 +117,7 @@ void *discover(void *arg) {
 		/* allow multiple sockets to use the same PORT number */
 		if (setsockopt(fd,SOL_SOCKET,SO_REUSEPORT,&one,sizeof(one)) < 0) {
 				perror("discover setsockopt so_reuseaddr");
-				syslog(LOG_ERR, "error: discover setsockopt so_reuseaddr");
+				DEBUG(LOG_ERR, "error: discover setsockopt so_reuseaddr");
 				goto cleanup;
 		}
 
@@ -131,14 +131,14 @@ void *discover(void *arg) {
 		optval = 1;
 		if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&optval, sizeof(optval)) < 0) {
 				perror("discover setsockopt");
-				syslog(LOG_ERR, "error: discover setsockopt");
+				DEBUG(LOG_ERR, "error: discover setsockopt");
 				goto cleanup;
 		}
 
 		/* bind to receive address */
 		if (bind(fd,(struct sockaddr *)&addr,sizeof(addr)) < 0) {
 				perror("discover bind");
-				syslog(LOG_ERR, "error: discover bind");
+				DEBUG(LOG_ERR, "error: discover bind");
 				goto cleanup;
 		}
 
@@ -147,7 +147,7 @@ void *discover(void *arg) {
 		mreq.imr_interface.s_addr=htonl(INADDR_ANY);
 		if (setsockopt(fd,IPPROTO_IP,IP_ADD_MEMBERSHIP,&mreq,sizeof(mreq)) < 0) {
 				perror("discover setsockopt ip_add_membership");
-				syslog(LOG_ERR, "error: discover setsockopt ip_add_membership");
+				DEBUG(LOG_ERR, "error: discover setsockopt ip_add_membership");
 				goto cleanup;
 		}
 
@@ -156,7 +156,7 @@ void *discover(void *arg) {
 
 				if ((discovery = malloc(sizeof(hostdef_t)))==NULL) {
 						perror("discover malloc");
-						syslog(LOG_ERR, "error: discover malloc");
+						DEBUG(LOG_ERR, "error: discover malloc");
 						goto cleanup;
 				}
 
@@ -167,7 +167,7 @@ void *discover(void *arg) {
 				addrlen=sizeof(addr);
 				if ((nbytes=recvfrom(fd,discovery,sizeof(hostdef_t),0,(struct sockaddr *)&addr,&addrlen)) < 0) {
 						perror("discover recvfrom");
-						syslog(LOG_ERR, "error: discover recvfrom");
+						DEBUG(LOG_ERR, "error: discover recvfrom");
 						goto cleanup;
 				}
 
@@ -179,10 +179,10 @@ void *discover(void *arg) {
 				char ipaddr[INET_ADDRSTRLEN];
 				inet_ntop(AF_INET, &addr.sin_addr, ipaddr, INET_ADDRSTRLEN);
 
-				syslog(LOG_DEBUG, "discover: host->name = %s", discovery->name);
-				syslog(LOG_DEBUG, "discover: host->port = %d", discovery->port);
-				syslog(LOG_DEBUG, "discover: host->id   = %d", discovery->id);
-				syslog(LOG_DEBUG, "discover: IP address = %s", ipaddr);
+				DEBUG(LOG_DEBUG, "discover: host->name = %s", discovery->name);
+				DEBUG(LOG_DEBUG, "discover: host->port = %d", discovery->port);
+				DEBUG(LOG_DEBUG, "discover: host->id   = %llu", discovery->id);
+				DEBUG(LOG_DEBUG, "discover: IP address = %s", ipaddr);
 
 				/* check whether the peer should be listed */
 				accept = 1;
@@ -191,12 +191,12 @@ void *discover(void *arg) {
 				accept = (accept & ismember_hostlist (discovery->name));
 
 				if (!accept) {
-						syslog(LOG_INFO, "discover: rejecting %s:%d, id = %d", discovery->name, discovery->port, discovery->id);
+						DEBUG(LOG_DEBUG, "discover: rejecting %s:%d, id = %llu", discovery->name, discovery->port, discovery->id);
 						FREE(discovery);
 						continue;
 				}
 				else {
-						syslog(LOG_INFO, "discover: accepting %s:%d, id = %d", discovery->name, discovery->port, discovery->id);
+						DEBUG(LOG_INFO, "discover: accepting %s:%d, id = %llu", discovery->name, discovery->port, discovery->id);
 				}
 
 				pthread_mutex_lock(&mutexpeerlist);
@@ -252,12 +252,12 @@ void *discover(void *arg) {
 						i = 0;
 						peer = peerlist;
 						while(peer) {
-								syslog(LOG_DEBUG, "discover: peerlist[%d] =", i);
-								syslog(LOG_DEBUG, "discover:   host.name = %s", peer->host->name);
-								syslog(LOG_DEBUG, "discover:   host.port = %d", peer->host->port);
-								syslog(LOG_DEBUG, "discover:   host.id   = %d", peer->host->id);
-								syslog(LOG_DEBUG, "discover:   IP addr.  = %s", peer->ipaddr);
-								syslog(LOG_DEBUG, "discover:   time      = %s", ctime(&(peer->time)));
+								DEBUG(LOG_DEBUG, "discover: peerlist[%d] =", i);
+								DEBUG(LOG_DEBUG, "discover:   host.name = %s", peer->host->name);
+								DEBUG(LOG_DEBUG, "discover:   host.port = %d", peer->host->port);
+								DEBUG(LOG_DEBUG, "discover:   host.id   = %llu", peer->host->id);
+								DEBUG(LOG_DEBUG, "discover:   IP addr.  = %s", peer->ipaddr);
+								DEBUG(LOG_DEBUG, "discover:   time      = %s", ctime(&(peer->time)));
 								peer = peer->next ;
 								i++;
 						}

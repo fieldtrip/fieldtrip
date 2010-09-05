@@ -33,43 +33,43 @@ int bufread(int s, void *buf, int numel) {
 				numthis = recv(s, (char*)buf+numread, numel-numread, 0);
 				if (numthis<0) {
 						perror("bufread");
-						syslog(LOG_ERR, "error: bufread");
+						DEBUG(LOG_ERR, "error: bufread");
 						break;
 				}
 				else if (numthis == 0)
 						break;
 
-				syslog(LOG_DEBUG, "bufread: read %d bytes", numthis);
+				DEBUG(LOG_DEBUG, "bufread: read %d bytes", numthis);
 				numread += numthis;
 				numcall++;
 				usleep(1000);
 		}
-		syslog(LOG_DEBUG, "bufread: reading the complete buffer required %d calls", numcall);
+		DEBUG(LOG_DEBUG, "bufread: reading the complete buffer required %d calls", numcall);
 		return numread;
 }
 
 int bufwrite(int s, void *buf, int numel) {
 		int numcall = 0, numthis = 0, numwrite = 0, verbose = 0;
 
-		syslog(LOG_DEBUG, "bufwrite: request for %d bytes", numel);
+		DEBUG(LOG_DEBUG, "bufwrite: request for %d bytes", numel);
 
 		while (numwrite<numel) {
 
 				numthis = send(s, (char*)buf+numwrite, numel-numwrite, 0);
 				if (numthis<0) {
 						perror("bufwrite");
-						syslog(LOG_ERR, "error: bufwrite");
+						DEBUG(LOG_ERR, "error: bufwrite");
 						break;
 				}
 				else if(numthis == 0)
 						break;
 
-				syslog(LOG_DEBUG, "bufwrite: wrote %d bytes", numthis);
+				DEBUG(LOG_DEBUG, "bufwrite: wrote %d bytes", numthis);
 				numwrite += numthis;
 				numcall++;
 				usleep(1000);
 		}
-		syslog(LOG_DEBUG, "bufwrite: writing the complete buffer required %d calls", numcall);
+		DEBUG(LOG_DEBUG, "bufwrite: writing the complete buffer required %d calls", numcall);
 		return numwrite;
 }
 
@@ -78,26 +78,26 @@ int append(void **buf1, int bufsize1, void *buf2, int bufsize2) {
 
 		pthread_mutex_lock(&mutexappendcount);
 		appendcount++;
-		syslog(LOG_DEBUG, "append: appendcount = %d", appendcount);
+		DEBUG(LOG_DEBUG, "append: appendcount = %d", appendcount);
 		pthread_mutex_unlock(&mutexappendcount);
 
 		if (((*buf1)!=NULL) && (bufsize1==0)) {
 				perror("append err1");
-				syslog(LOG_ERR, "error: append err1");
+				DEBUG(LOG_ERR, "error: append err1");
 				return -1;
 		}
 		else if (((*buf1)==NULL) && (bufsize1!=0)) {
 				perror("append err2");
-				syslog(LOG_ERR, "error: append err2");
+				DEBUG(LOG_ERR, "error: append err2");
 				return -1;
 		}
 
 		if ((*buf1)==NULL) {
-				syslog(LOG_DEBUG, "append: allocating %d bytes", bufsize2);
+				DEBUG(LOG_DEBUG, "append: allocating %d bytes", bufsize2);
 				(*buf1) = malloc(bufsize2);
 		}
 		else if ((*buf1)!=NULL) {
-				syslog(LOG_DEBUG, "append: reallocating from %d to %d bytes", bufsize1, bufsize1+bufsize2);
+				DEBUG(LOG_DEBUG, "append: reallocating from %d to %d bytes", bufsize1, bufsize1+bufsize2);
 				(*buf1) = realloc((*buf1), bufsize1+bufsize2);
 		}
 

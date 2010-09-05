@@ -45,7 +45,7 @@ void peerinit(void *arg) {
 		DWORD nStrLen; 
 #endif
 
-		syslog(LOG_NOTICE, "peerinit()");
+		DEBUG(LOG_NOTICE, "peerinit()");
 
 		pthread_mutex_lock(&mutexhost);
 		if (host) {
@@ -116,9 +116,9 @@ void peerinit(void *arg) {
 		host->id += hash(host->user);
 		host->id += hash(host->group);
 
-		syslog(LOG_INFO, "peerinit: host.name =  %s", host->name);
-		syslog(LOG_INFO, "peerinit: host.port =  %d", host->port);
-		syslog(LOG_INFO, "peerinit: host.id   =  %d", host->id);
+		DEBUG(LOG_INFO, "peerinit: host.name =  %s", host->name);
+		DEBUG(LOG_INFO, "peerinit: host.port =  %d", host->port);
+		DEBUG(LOG_INFO, "peerinit: host.id   =  %d", host->id);
 
 		pthread_mutex_unlock(&mutexhost);
 
@@ -159,7 +159,7 @@ void peerinit(void *arg) {
 void peerexit(void *arg) {
 		int verbose = 0;
 
-		syslog(LOG_NOTICE, "peerexit()");
+		DEBUG(LOG_NOTICE, "peerexit()");
 
 		pthread_mutex_lock(&mutexhost);
 		FREE(host);

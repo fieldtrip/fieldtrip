@@ -69,7 +69,7 @@ int smartmem_info(UINT64_T *MemTotal, UINT64_T *MemFree, UINT64_T *Buffers, UINT
 		 */
 
 		if ((fp = fopen("/proc/meminfo", "r")) == NULL) {
-				syslog(LOG_ERR, "smartmem_info: could not open /proc/meminfo");
+				DEBUG(LOG_ERR, "smartmem_info: could not open /proc/meminfo");
 				return -1;
 		}
 
@@ -184,13 +184,13 @@ int smartmem_update(void) {
 
 		pthread_mutex_lock(&mutexhost);
 		host->memavail = MemSuggested;
-		syslog(LOG_NOTICE, "smartmem: host->memavail = %llu", host->memavail);
+		DEBUG(LOG_NOTICE, "smartmem: host->memavail = %llu", host->memavail);
 		pthread_mutex_unlock(&mutexhost);
 
-		syslog(LOG_DEBUG, "NumPeers     = %u",   NumPeers);
-		syslog(LOG_DEBUG, "MemFree      = %llu (%f GB)", MemFree     , ((float)MemFree     )/(1024*1024*1024));
-		syslog(LOG_DEBUG, "MemReserved  = %llu (%f GB)", MemReserved , ((float)MemReserved )/(1024*1024*1024));
-		syslog(LOG_DEBUG, "MemSuggested = %llu (%f GB)", MemSuggested, ((float)MemSuggested)/(1024*1024*1024));
+		DEBUG(LOG_DEBUG, "NumPeers     = %u",   NumPeers);
+		DEBUG(LOG_DEBUG, "MemFree      = %llu (%f GB)", MemFree     , ((float)MemFree     )/(1024*1024*1024));
+		DEBUG(LOG_DEBUG, "MemReserved  = %llu (%f GB)", MemReserved , ((float)MemReserved )/(1024*1024*1024));
+		DEBUG(LOG_DEBUG, "MemSuggested = %llu (%f GB)", MemSuggested, ((float)MemSuggested)/(1024*1024*1024));
 
 		return 0;
 }

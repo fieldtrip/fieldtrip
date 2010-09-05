@@ -26,7 +26,7 @@
 #include "platform_includes.h"
 
 void cleanup_expire(void *arg) {
-        syslog(LOG_DEBUG, "cleanup_expire()");
+        DEBUG(LOG_DEBUG, "cleanup_expire()");
 
 		pthread_mutex_lock(&mutexstatus);
 		expireStatus = 0;
@@ -41,7 +41,7 @@ void *expire(void *arg) {
 		int found, verbose = 0;
 		peerlist_t *peer = NULL, *next = NULL;
 
-		syslog(LOG_NOTICE, "expire()");
+		DEBUG(LOG_NOTICE, "expire()");
 
 		/* this is for debugging */
 		pthread_mutex_lock(&mutexthreadcount);
@@ -74,9 +74,9 @@ void *expire(void *arg) {
 						found = found | !ismember_grouplist(peerlist->host->group);
 						found = found | !ismember_hostlist (peerlist->host->name);
 						if (found) {
-								syslog(LOG_INFO, "expire: name = %s", peerlist->host->name);
-								syslog(LOG_INFO, "expire: port = %d", peerlist->host->port);
-								syslog(LOG_INFO, "expire: time = %s", ctime(&(peerlist->time)));
+								DEBUG(LOG_INFO, "expire: name = %s", peerlist->host->name);
+								DEBUG(LOG_INFO, "expire: port = %d", peerlist->host->port);
+								DEBUG(LOG_INFO, "expire: time = %s", ctime(&(peerlist->time)));
 								/* delete the first item in the list */
 								next = peerlist->next;
 								FREE(peerlist->host);
@@ -97,9 +97,9 @@ void *expire(void *arg) {
 								found = found | !ismember_grouplist(next->host->group);
 								found = found | !ismember_hostlist (next->host->name);
 								if (found) {
-										syslog(LOG_INFO, "expire: name = %s\n", next->host->name);
-										syslog(LOG_INFO, "expire: port = %d\n", next->host->port);
-										syslog(LOG_INFO, "expire: time = %s", ctime(&(next->time)));
+										DEBUG(LOG_INFO, "expire: name = %s\n", next->host->name);
+										DEBUG(LOG_INFO, "expire: port = %d\n", next->host->port);
+										DEBUG(LOG_INFO, "expire: time = %s", ctime(&(next->time)));
 										/* delete the next item in the list */
 										peer->next = next->next;
 										FREE(next->host);

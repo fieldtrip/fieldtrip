@@ -18,6 +18,8 @@
 
 #include "peer.h"
 
+int syslog_level = 0;
+
 pthread_mutex_t mutexstatus = PTHREAD_MUTEX_INITIALIZER;
 int udsserverStatus = 0;
 int tcpserverStatus = 0;

@@ -69,7 +69,6 @@ int ismember_grouplist(char *str) {
 int ismember_hostlist(char *str) {
 		int ismember = 1; 
 		hostlist_t *host = NULL;
-		pthread_mutex_lock(&mutexhostlist);
 		if (hostlist) {
 				ismember = 0;
 				host = hostlist;
@@ -79,6 +78,5 @@ int ismember_hostlist(char *str) {
 						host = host->next;
 				}
 		}
-		pthread_mutex_unlock(&mutexhostlist);
 		return ismember;
 }

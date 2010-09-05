@@ -18,7 +18,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "peer.h"
+#include "extern.h"
 
 /* this function returns 1 if the IP address corresponds with the local host
    or false if the IP address cannot be associated with the local host */
@@ -35,7 +37,7 @@ int localhost(const char *ipaddr)
 
 		if (getifaddrs(&ifaddr) == -1) {
 				perror("getifaddrs");
-				syslog(LOG_ERR, "error: getifaddrs");
+				DEBUG(LOG_ERR, "error: getifaddrs");
 		}
 		else {
 				/* Walk through linked list, maintaining head pointer so we can free list later */
@@ -62,7 +64,7 @@ int localhost(const char *ipaddr)
 		} /* if getifaddrs */
 
 		if (found)
-				syslog(LOG_DEBUG, "localhost: <%s>", ipaddr);
+				DEBUG(LOG_DEBUG, "localhost: <%s>", ipaddr);
 
 		return found;
 #endif
