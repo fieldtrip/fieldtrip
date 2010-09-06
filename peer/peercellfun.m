@@ -50,7 +50,7 @@ optarg = varargin(optbeg:end);
 UniformOutput = keyval('UniformOutput', optarg); if isempty(UniformOutput), UniformOutput = true; end
 memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=1024^3;         end % assume 1 GB
 timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=3600;           end % assume 1 hour
-sleep   = keyval('sleep',   optarg); if isempty(sleep),  sleep=0.01;            end
+sleep   = keyval('sleep',   optarg); if isempty(sleep),  sleep=0.05;            end
 diary   = keyval('diary',   optarg); if isempty(diary),  diary='error';         end
 timcv   = keyval('timcv',   optarg); % default is empty, which will cause the range to be estimated
 
@@ -114,6 +114,12 @@ submittime  = inf(1, numjob);
 collecttime = inf(1, numjob);
 resubmitted = [];    % this will contain a growing list with structures
 
+% remove any remains from an aborted previous call
+joblist = peer('joblist');
+for i=1:length(joblist)
+  peer('clear', joblist(i).jobid);
+end
+
 % start the timer
 stopwatch = tic;
 
@@ -123,15 +129,15 @@ prevnumcollected = 0;
 
 % post all jobs and gather their results
 while ~all(submitted) || ~all(collected)
-  
+
   % select one of the jobs to be submitted
   submit = find(~submitted);                % select all jobs that still need to be submitted
   submit = submit(randperm(numel(submit))); % randomize the order of the list of jobs
-  
+
   if ~isempty(submit)
     % take the first job from the list
     submit = submit(1);
-    
+
     if any(collected)
       prev_timreq = timreq;
       prev_memreq = memreq;
@@ -162,19 +168,19 @@ while ~all(submitted) || ~all(collected)
         fprintf('updating timreq to %d\n', timreq);
       end
     end
-    
+
     % redistribute the input arguments
     argin = cell(1, numargin);
     for j=1:numargin
       argin{j} = varargin{j}{submit};
     end
-    
+
     % submit the job for execution
-try
-    [jobid(submit) puttime(submit)] = peerfeval(fname, argin{:}, 'timeout', inf, 'memreq', memreq, 'timreq', timreq, 'diary', diary);
-    % fprintf('submitted job %d\n', submit);
-    submitted(submit)  = true;
-    submittime(submit) = toc(stopwatch);
+    try
+      [jobid(submit) puttime(submit)] = peerfeval(fname, argin{:}, 'timeout', inf, 'memreq', memreq, 'timreq', timreq, 'diary', diary);
+      % fprintf('submitted job %d\n', submit);
+      submitted(submit)  = true;
+      submittime(submit) = toc(stopwatch);
     catch me
       if strcmp(me.identifier, 'FieldTrip:Peer:NotEnoughMemoryAvailableOnSlave')
         l = peerlist;
@@ -187,24 +193,26 @@ try
       else
         rethrow(me);
       end
-    end % catch
-    
+    end % try-catch
+
     clear argin
   end % if ~isempty(submit)
-  
+
   if sum(submitted)>prevnumsubmitted
     % give an update of the progress
     fprintf('submitted %d/%d, collected %d/%d, busy %d\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(submitted)-sum(collected));
   end
-  
+
+  % to avoid the mutexes from being constantly locked, give the peer some time to pause
+  pause(sleep);
   joblist = peer('joblist');
-  
+
   % get the results of all jobs that have finished
   for i=1:numel(joblist)
-    
+
     % figure out to which job these results belong
     collect = find(jobid == joblist(i).jobid);
-    
+
     if isempty(collect) && ~isempty(resubmitted)
       % it might be that these results are from a previously resubmitted job
       collect = [resubmitted([resubmitted.jobid] == joblist(i).jobid).jobnum];
@@ -213,55 +221,55 @@ try
         warning('the original job %d did return, reverting to its original results', collect);
       end
     end
-    
+
     if isempty(collect)
       % this job is not interesting to collect, probably it reflects some junk
       % from a previous call or a failed resubmission
       peer('clear', joblist(i).jobid);
       continue;
     end
-    
+
     % collect the output arguments
     [argout, options] = peerget(joblist(i).jobid, 'timeout', inf, 'output', 'cell', 'diary', diary);
-    
+
     % fprintf('collected job %d\n', collect);
     collected(collect)   = true;
     collecttime(collect) = toc(stopwatch);
-    
+
     % redistribute the output arguments
     for j=1:numargout
       varargout{j}{collect} = argout{j};
     end
-    
+
     % gather the job statistics
     timused(collect) = keyval('timused', options);
     memused(collect) = keyval('memused', options);
-  end
-  
+  end % for joblist
+
   if sum(collected)>prevnumcollected
     % give an update of the progress
     fprintf('submitted %d/%d, collected %d/%d, busy %d\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(submitted)-sum(collected));
   end
-  
+
   if all(submitted) && ~all(collected)
     % wait a little bit and try to collect another job
     pause(sleep);
   end
-  
+
   prevnumsubmitted = sum(submitted);
   prevnumcollected = sum(collected);
-  
+
   % check for jobs that are taking too long to finish
   if all(submitted) && any(collected) && ~all(collected)
     % test whether one of the jobs should be resubmitted
     sel = find(~collected, 1);
     elapsed = toc(stopwatch) - submittime(sel);
-    
+
     % estimate the time that it took the other jobs to finish
     estimated_min = min(collecttime(collected) - submittime(collected));
     estimated_max = max(collecttime(collected) - submittime(collected));
     estimated_avg = estimated_max; % the maximum is used instead of the mean
-    
+
     % the rationale for the estimate is the mean plus 2x the standard deviation
     if isempty(timcv)
       % instead of the standard deviation the min-max range (divided by two) is used
@@ -273,7 +281,7 @@ try
       % it is defined as the ratio of the standard deviation to the mean
       estimated = estimated_avg + 2*timcv*estimated_avg;
     end
-    
+
     if elapsed>estimated
       warning('resubmitting job %d because it takes too long to finish (estimated = %f, elapsed = %f)', sel, estimated, elapsed);
       % remember the job that will be resubmitted, it still might return its results
@@ -290,7 +298,7 @@ try
       collecttime(sel) = inf;
     end
   end % resubmitting
-  
+
 end % while not all jobs have finished
 
 if numargout>0 && UniformOutput
@@ -303,7 +311,7 @@ if numargout>0 && UniformOutput
       end
     end
   end
-  
+
   % convert the output to a uniform one
   for i=1:numargout
     varargout{i} = [varargout{i}{:}];
