@@ -74,7 +74,7 @@ while ~feof(F)
   end
     
   num=num+1;
-  E(num).sample = sample;
+  E(num).sample = sample + 1; % offset are 1-based in Matlab
   E(num).offset = offset;
   E(num).duration = duration;
   if type_type==0
