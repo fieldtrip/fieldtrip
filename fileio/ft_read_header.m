@@ -193,6 +193,9 @@ switch headerformat
     [path, file, ext] = fileparts(filename);
     headerfile = fullfile(path, [file '.mat']);
     datafile   = fullfile(path, [file '.bin']);
+  case 'fcdc_buffer_offline'
+    [path, file, ext] = fileparts(filename);
+    headerfile = fullfile(path, [file '/header']);
   case {'tdt_tsq' 'tdt_tev'}
     [path, file, ext] = fileparts(filename);
     headerfile = fullfile(path, [file '.tsq']);
@@ -205,7 +208,7 @@ switch headerformat
     headerfile = filename;
 end
 
-if ~strcmp(filename, headerfile) && ~ft_filetype(filename, 'ctf_ds')
+if ~strcmp(filename, headerfile) && ~ft_filetype(filename, 'ctf_ds') && ~ft_filetype(filename, 'fcdc_buffer_offline')
   filename     = headerfile;                % this function will read the header
   headerformat = ft_filetype(filename);        % update the filetype
 end
@@ -777,6 +780,25 @@ switch headerformat
       end
     end
 	hdr.orig.bufsize = orig.bufsize;
+	
+  case 'fcdc_buffer_offline'
+    [hdr, nameFlag] = read_buffer_offline_header(headerfile);
+	switch nameFlag
+	  case 0
+	    % no labels generated (fMRI etc)
+		checkUniqueLabels = false; % no need to check these
+	  case 1
+		% hase generated fake channels
+	  	if isempty(fakechannelwarning) || ~fakechannelwarning
+          % give this warning only once
+          warning('creating fake channel names');
+          fakechannelwarning = true;
+        end
+		checkUniqueLabels = false; % no need to check these
+	  case 2
+	    % got labels from chunk, check those
+		checkUniqueLabels = true;
+	end
 
   case 'fcdc_matbin'
     % this is multiplexed data in a *.bin file, accompanied by a matlab file containing the header

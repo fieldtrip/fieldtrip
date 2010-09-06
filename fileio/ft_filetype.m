@@ -536,6 +536,11 @@ elseif isdir(filename) && most(filetype_check_extension({ls.name}, '.nte'))
   type = 'neuralynx_ds';
   manufacturer = 'Neuralynx';
   content = 'spike timestamps';
+  
+elseif isdir(filename) && exist(fullfile(filename, ['header'])) && exist(fullfile(filename, ['events']))
+  type = 'fcdc_buffer_offline';
+  manufacturer = 'F.C. Donders Centre';
+  content = 'FieldTrip buffer offline dataset';  
 
   % these are formally not Neuralynx file formats, but at the FCDC we use them together with Neuralynx
 elseif isdir(filename) && any(ft_filetype({ls.name}, 'neuralynx_ds'))
@@ -570,7 +575,7 @@ elseif isdir(filename) && filetype_check_extension(filename, '.sdma')
   type = 'neuralynx_sdma';
   manufacturer = 'F.C. Donders Centre';
   content = 'split DMA log file';
-
+ 
   % known Plexon file types
 elseif filetype_check_extension(filename, '.nex')  && filetype_check_header(filename, 'NEX1')
   type = 'plexon_nex';
