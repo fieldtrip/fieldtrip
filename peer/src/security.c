@@ -22,13 +22,12 @@
 #include "peer.h"
 #include "extern.h"
 
+/* returns 1 if the host is in the userlist, grouplist and hostlist, 0 if not */
 int security_check(hostdef_t *host) {
 		int ismember = 1;
-
 		ismember = ismember && ismember_userlist(host->user);
 		ismember = ismember && ismember_grouplist(host->group);
 		ismember = ismember && ismember_hostlist(host->name);
-
 		return ismember;
 }
 
@@ -80,3 +79,4 @@ int ismember_hostlist(char *str) {
 		}
 		return ismember;
 }
+

@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
 		pid_t childpid;
 
 		int matlabRunning = 0, matlabStart, matlabFinished, engineFailed = 0;
-		int c, n, rc, found, handshake, success, server, jobnum = 0;
+		int c, n, rc, found, handshake, success, server, jobnum = 0, jobcount;
 		unsigned int enginetimeout = ENGINETIMEOUT;
 		unsigned int zombietimeout = ZOMBIETIMEOUT;
 		unsigned int peerid, jobid;
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
 								break;
 
 						case 'a':
-								DEBUG(LOG_NOTICE, "option --memavail with value `%s'\n", optarg);
+								DEBUG(LOG_NOTICE, "option --memavail with value `%s'", optarg);
 								pthread_mutex_lock(&mutexhost);
 								host->memavail = atol(optarg);
 								pthread_mutex_unlock(&mutexhost);
@@ -154,35 +154,35 @@ int main(int argc, char *argv[]) {
 								break;
 
 						case 'b':
-								DEBUG(LOG_NOTICE, "option --cpuavail with value `%s'\n", optarg);
+								DEBUG(LOG_NOTICE, "option --cpuavail with value `%s'", optarg);
 								pthread_mutex_lock(&mutexhost);
 								host->cpuavail = atol(optarg);
 								pthread_mutex_unlock(&mutexhost);
 								break;
 
 						case 'c':
-								DEBUG(LOG_NOTICE, "option --timavail with value `%s'\n", optarg);
+								DEBUG(LOG_NOTICE, "option --timavail with value `%s'", optarg);
 								pthread_mutex_lock(&mutexhost);
 								host->timavail = atol(optarg);
 								pthread_mutex_unlock(&mutexhost);
 								break;
 
 						case 'd':
-								DEBUG(LOG_NOTICE, "option --hostname with value `%s'\n", optarg);
+								DEBUG(LOG_NOTICE, "option --hostname with value `%s'", optarg);
 								pthread_mutex_lock(&mutexhost);
 								strncpy(host->name, optarg, STRLEN);
 								pthread_mutex_unlock(&mutexhost);
 								break;
 
 						case 'e':
-								DEBUG(LOG_NOTICE, "option --group with value `%s'\n", optarg);
+								DEBUG(LOG_NOTICE, "option --group with value `%s'", optarg);
 								pthread_mutex_lock(&mutexhost);
 								strncpy(host->group, optarg, STRLEN);
 								pthread_mutex_unlock(&mutexhost);
 								break;
 
 						case 'f':
-								DEBUG(LOG_NOTICE, "option --allowuser with value `%s'\n", optarg);
+								DEBUG(LOG_NOTICE, "option --allowuser with value `%s'", optarg);
 								str = strtok(optarg, ",");
 								while (str) {
 										allowuser = (userlist_t *)malloc(sizeof(userlist_t));
@@ -195,7 +195,7 @@ int main(int argc, char *argv[]) {
 								break;
 
 						case 'g':
-								DEBUG(LOG_NOTICE, "option --allowhost with value `%s'\n", optarg);
+								DEBUG(LOG_NOTICE, "option --allowhost with value `%s'", optarg);
 								str = strtok(optarg, ",");
 								while (str) {
 										allowhost = (hostlist_t *)malloc(sizeof(hostlist_t));
@@ -208,7 +208,7 @@ int main(int argc, char *argv[]) {
 								break;
 
 						case 'h':
-								DEBUG(LOG_NOTICE, "option --allowgroup with value `%s'\n", optarg);
+								DEBUG(LOG_NOTICE, "option --allowgroup with value `%s'", optarg);
 								str = strtok(optarg, ",");
 								while (str) {
 										allowgroup = (grouplist_t *)malloc(sizeof(grouplist_t));
@@ -221,39 +221,39 @@ int main(int argc, char *argv[]) {
 								break;
 
 						case 'i':
-								DEBUG(LOG_NOTICE, "option --matlab with value `%s'\n", optarg);
+								DEBUG(LOG_NOTICE, "option --matlab with value `%s'", optarg);
 								startcmd = malloc(STRLEN);
 								strncpy(startcmd, optarg, STRLEN);
 								break;
 
 						case 'j':
-								DEBUG(LOG_NOTICE, "option --smartmem with value `%s'\n", optarg);
+								DEBUG(LOG_NOTICE, "option --smartmem with value `%s'", optarg);
 								pthread_mutex_lock(&mutexsmartmem);
 								smartmem.enabled = atol(optarg);
 								pthread_mutex_unlock(&mutexsmartmem);
 								break;
 
 						case 'k':
-								DEBUG(LOG_NOTICE, "option --smartcpu with value `%s'\n", optarg);
+								DEBUG(LOG_NOTICE, "option --smartcpu with value `%s'", optarg);
 								pthread_mutex_lock(&mutexsmartcpu);
 								smartcpu.enabled = atol(optarg);
 								pthread_mutex_unlock(&mutexsmartcpu);
 								break;
 
 						case 'l':
-								DEBUG(LOG_NOTICE, "option --smartshare with value `%s'\n", optarg);
+								DEBUG(LOG_NOTICE, "option --smartshare with value `%s'", optarg);
 								pthread_mutex_lock(&mutexsmartshare);
 								smartshare.enabled = atol(optarg);
 								pthread_mutex_unlock(&mutexsmartshare);
 								break;
 
 						case 'm':
-								DEBUG(LOG_NOTICE, "option --timeout with value `%s'\n", optarg);
+								DEBUG(LOG_NOTICE, "option --timeout with value `%s'", optarg);
 								enginetimeout = atol(optarg);
 								break;
 
 						case 'n':
-								DEBUG(LOG_NOTICE, "option --verbose with value `%s'\n", optarg);
+								DEBUG(LOG_NOTICE, "option --verbose with value `%s'", optarg);
 								syslog_level = atol(optarg);
 								break;
 
@@ -314,7 +314,7 @@ int main(int argc, char *argv[]) {
 						PANIC("failed to start udsserver thread\n");
 				}
 				else {
-						DEBUG(LOG_NOTICE, "started udsserver thread\n");
+						DEBUG(LOG_NOTICE, "started udsserver thread");
 				}
 		}
 
@@ -323,7 +323,7 @@ int main(int argc, char *argv[]) {
 						PANIC("failed to start tcpserver thread\n");
 				}
 				else {
-						DEBUG(LOG_NOTICE, "started tcpserver thread\n");
+						DEBUG(LOG_NOTICE, "started tcpserver thread");
 				}
 		}
 
@@ -331,22 +331,22 @@ int main(int argc, char *argv[]) {
 				PANIC("failed to start announce thread\n");
 		}
 		else {
-				DEBUG(LOG_NOTICE, "started announce thread\n");
+				DEBUG(LOG_NOTICE, "started announce thread");
 		}
 
 		if ((rc = pthread_create(&discoverThread, NULL, discover, (void *)NULL))>0) {
 				PANIC("failed to start discover thread\n");
 		}
 		else {
-				DEBUG(LOG_NOTICE, "started discover thread\n");
+				DEBUG(LOG_NOTICE, "started discover thread");
 		}
 
 		if ((rc = pthread_create(&expireThread, NULL, expire, (void *)NULL))>0) {
-				DEBUG(LOG_NOTICE, "failed to start expire thread\n");
+				DEBUG(LOG_NOTICE, "failed to start expire thread");
 				exit(1);
 		}
 		else {
-				DEBUG(LOG_NOTICE, "started expire thread\n");
+				DEBUG(LOG_NOTICE, "started expire thread");
 		}
 
 		/* start as idle slave */
@@ -354,17 +354,26 @@ int main(int argc, char *argv[]) {
 
 		while (1) {
 
-				if (jobcount()>0 && !engineFailed) {
+				pthread_mutex_lock(&mutexjoblist);
+				jobcount = 0;
+				job = joblist;
+				while (job) {
+						jobcount++;
+						job = job->next;
+				}
+				pthread_mutex_unlock(&mutexjoblist);
+
+				if (jobcount>0 && !engineFailed) {
 
 						/* there is a job to be executed */
 						if (matlabRunning==0) {
-								DEBUG(LOG_NOTICE, "starting MATLAB engine\n");
+								DEBUG(LOG_NOTICE, "starting MATLAB engine");
 								if ((en = engOpen(startcmd)) == NULL) {
 										/* this may be due to a licensing problem */
 										/* do not attempt to start again during the timeout period */
 										pthread_mutex_lock(&mutexhost);
-										DEBUG(LOG_ERR, "failed to start MATLAB engine\n");
-										DEBUG(LOG_NOTICE, "deleting job and switching to zombie mode\n");
+										DEBUG(LOG_ERR, "failed to start MATLAB engine");
+										DEBUG(LOG_NOTICE, "deleting job and switching to zombie mode");
 										engineFailed = time(NULL);
 										host->status = STATUS_ZOMBIE;
 										pthread_mutex_unlock(&mutexhost);
@@ -397,7 +406,7 @@ int main(int argc, char *argv[]) {
 						options = (mxArray *)mxDeserialize(job->opt, job->job->optsize);
 						jobid   = job->job->id;
 						peerid  = job->host->id;
-						DEBUG(LOG_NOTICE, "executing job %d from %s@%s (jobid=%d)\n", ++jobnum, job->host->user, job->host->name, jobid);
+						DEBUG(LOG_NOTICE, "executing job %d from %s@%s (jobid=%d)", ++jobnum, job->host->user, job->host->name, jobid);
 						pthread_mutex_unlock(&mutexjoblist);
 
 						/* copy them over to the engine */
@@ -439,7 +448,7 @@ int main(int argc, char *argv[]) {
 
 						if (!found) {
 								pthread_mutex_unlock(&mutexpeerlist);
-								PANIC("failed to locate specified peer\n");
+								PANIC("failed to locate specified peer");
 						}
 
 						pthread_mutex_lock(&mutexhost);
@@ -451,19 +460,19 @@ int main(int argc, char *argv[]) {
 								/* open the UDS socket */
 								if ((server = open_uds_connection(peer->host->socket)) < 0) {
 										pthread_mutex_unlock(&mutexpeerlist);
-										PANIC("failed to create socket\n");
+										PANIC("failed to create socket");
 								}
 						}
 						else if (hastcp) {
 								/* open the TCP socket */
 								if ((server = open_tcp_connection(peer->ipaddr, peer->host->port)) < 0) {
 										pthread_mutex_unlock(&mutexpeerlist);
-										PANIC("failed to create socket\n");
+										PANIC("failed to create socket");
 								}
 						}
 						else {
 								pthread_mutex_unlock(&mutexpeerlist);
-								PANIC("failed to create socket\n");
+								PANIC("failed to create socket");
 						}
 
 						/* the connection was opened without error */
@@ -576,7 +585,7 @@ int main(int argc, char *argv[]) {
 
 						host->status = STATUS_IDLE;
 						matlabFinished = time(NULL);
-						DEBUG(LOG_NOTICE, "executing job %d took %d seconds\n", jobnum, matlabFinished - matlabStart);
+						DEBUG(LOG_NOTICE, "executing job %d took %d seconds", jobnum, matlabFinished - matlabStart);
 				}
 				else {
 						usleep(SLEEPTIME);
@@ -585,10 +594,10 @@ int main(int argc, char *argv[]) {
 				/* test that the matlab engine is not idle for too long */
 				if ((matlabRunning!=0) && ((time(NULL)-matlabFinished)>enginetimeout)) {
 						if (engClose(en)!=0) {
-								PANIC("could not stop the MATLAB engine\n");
+								PANIC("could not stop the MATLAB engine");
 						}
 						else {
-								DEBUG(LOG_NOTICE, "stopped idle MATLAB engine\n");
+								DEBUG(LOG_NOTICE, "stopped idle MATLAB engine");
 								matlabRunning = 0;
 						}
 				}
@@ -596,7 +605,7 @@ int main(int argc, char *argv[]) {
 				/* don't try to restart the engine immediately after a failure */
 				if ((engineFailed!=0) && ((time(NULL)-engineFailed)>zombietimeout)) {
 						pthread_mutex_lock(&mutexhost);
-						DEBUG(LOG_NOTICE, "switching to idle mode\n");
+						DEBUG(LOG_NOTICE, "switching to idle mode");
 						engineFailed = 0;
 						host->status = STATUS_IDLE;
 						pthread_mutex_unlock(&mutexhost);

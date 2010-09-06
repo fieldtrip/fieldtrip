@@ -23,6 +23,7 @@
 #include "extern.h"
 #include "platform_includes.h"
 
+/* return value 0 if ok, -1 if error or unsupported platform */
 int smartmem_info(UINT64_T *MemTotal, UINT64_T *MemFree, UINT64_T *Buffers, UINT64_T *Cached) {
 		void *fp;
 		char str[256];
@@ -97,9 +98,9 @@ int smartmem_info(UINT64_T *MemTotal, UINT64_T *MemFree, UINT64_T *Buffers, UINT
 #else
 		return -1;
 #endif
-
 } /* smartmem_info */
 
+/* return value 0 if ok, -1 if error or unsupported platform */
 int smartmem_update(void) {
 		peerlist_t* peer;
 		unsigned int NumPeers=0;
@@ -124,11 +125,10 @@ int smartmem_update(void) {
 		}
 
 		/* determine the amount of memory available on this computer */
-		if ((ok = smartmem_info(&MemTotal, &MemFree, &Buffers, &Cached)) < 0)
+		if (smartmem_info(&MemTotal, &MemFree, &Buffers, &Cached) < 0)
 				return -1;
 
 		pthread_mutex_lock(&mutexpeerlist);
-
 		/* determine the amount of memory that is reserved by the idle slaves on this computer */
 		peer = peerlist;
 		while(peer) {
@@ -142,8 +142,6 @@ int smartmem_update(void) {
 				}
 				peer = peer->next ;
 		}
-
-		pthread_mutex_unlock(&mutexhost);
 		pthread_mutex_unlock(&mutexpeerlist);
 
 		/* include this peer in the count */
@@ -188,14 +186,13 @@ int smartmem_update(void) {
 
 		host->memavail = MemSuggested;
 		DEBUG(LOG_NOTICE, "smartmem: host->memavail = %llu", host->memavail);
+		DEBUG(LOG_DEBUG, "smartmem: NumPeers       = %u",   NumPeers);
+		DEBUG(LOG_DEBUG, "smartmem: MemFree        = %llu (%f GB)", MemFree     , ((float)MemFree     )/(1024*1024*1024));
+		DEBUG(LOG_DEBUG, "smartmem: MemReserved    = %llu (%f GB)", MemReserved , ((float)MemReserved )/(1024*1024*1024));
+		DEBUG(LOG_DEBUG, "smartmem: MemSuggested   = %llu (%f GB)", MemSuggested, ((float)MemSuggested)/(1024*1024*1024));
 
 		pthread_mutex_unlock(&mutexhost);
 		pthread_mutex_unlock(&mutexsmartcpu);
 
-		DEBUG(LOG_DEBUG, "NumPeers     = %u",   NumPeers);
-		DEBUG(LOG_DEBUG, "MemFree      = %llu (%f GB)", MemFree     , ((float)MemFree     )/(1024*1024*1024));
-		DEBUG(LOG_DEBUG, "MemReserved  = %llu (%f GB)", MemReserved , ((float)MemReserved )/(1024*1024*1024));
-		DEBUG(LOG_DEBUG, "MemSuggested = %llu (%f GB)", MemSuggested, ((float)MemSuggested)/(1024*1024*1024));
-
 		return 0;
-}
+} /* smartmem_update */

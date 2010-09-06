@@ -23,6 +23,7 @@
 #include "extern.h"
 #include "platform_includes.h"
 
+/* return value 0 if ok, -1 if error or unsupported platform */
 int smartcpu_info(int *ProcessorCount, float *BogoMips, float *AvgLoad, float *CpuLoad) {
 		int verbose = 0;
 		void *fp;
@@ -182,6 +183,8 @@ int smartcpu_info(int *ProcessorCount, float *BogoMips, float *AvgLoad, float *C
 
 } /* smartcpu_info */
 
+/* return value 0 if ok, -1 if error or unsupported platform */
+/* this function modifies host->status */
 int smartcpu_update(void) {
 		peerlist_t *peer;
 		int ProcessorCount, NumPeers=0;
@@ -194,6 +197,20 @@ int smartcpu_update(void) {
 				pthread_mutex_unlock(&mutexsmartcpu);
 				return 0;
 		}
+
+		/* HACK for testing
+		if (((float)rand()/RAND_MAX)<0.5) {
+				DEBUG(LOG_NOTICE, "smartcpu_update: switching to zombie");
+				smartcpu.prevstatus = STATUS_IDLE;
+				host->status        = STATUS_ZOMBIE;
+		}
+		else {
+				DEBUG(LOG_NOTICE, "smartcpu_update: switching to idle");
+				smartcpu.prevstatus = STATUS_ZOMBIE;
+				host->status        = STATUS_IDLE;
+		}
+		pthread_mutex_unlock(&mutexsmartcpu);
+		END HACK */
 
 		pthread_mutex_lock(&mutexhost);
 		if (host->status!=STATUS_IDLE && smartcpu.prevstatus!=STATUS_IDLE) {
@@ -219,6 +236,7 @@ int smartcpu_update(void) {
 
 		/* determine the CPU and load details of this computer */
 		if (smartcpu_info(&ProcessorCount, &BogoMips, &AvgLoad, &CpuLoad) < 0) {
+				pthread_mutex_unlock(&mutexsmartcpu);
 				pthread_mutex_unlock(&mutexhost);
 				return -1;
 		}
@@ -265,4 +283,4 @@ int smartcpu_update(void) {
 		pthread_mutex_unlock(&mutexsmartcpu);
 
 		return 0;
-}
+} /* smartcpu_update */

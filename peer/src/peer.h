@@ -55,7 +55,7 @@
 #define ANNOUNCESLEEP            1000000	/* in usec */
 #define ANNOUNCEJITTER           10000 		/* in usec */
 #define BACKLOG                  16
-#define EXPIRATION               3
+#define EXPIRATION               3			/* in sec  */
 #define EXPIRESLEEP              1000000	/* in usec */
 #define SMARTMEM_MINIMUM         104857600	/* 100 MB  */
 #define SMARTSHARE_HISTORY       2			/* number if history items peer peer */
