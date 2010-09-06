@@ -15,5 +15,3 @@ type2type = [hdr.orig.data_type '=>' hdr.orig.data_type];
 fseek(F, nStart, 'bof');
 dat = fread(F,[hdr.nChans nRead], type2type);
 fclose(F);
-
-size(dat)
