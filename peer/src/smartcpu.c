@@ -242,7 +242,7 @@ int smartcpu_update(void) {
 		}
 
 		/* the numer of idle slaves should not exceed the available free CPUs */
-		/* to avoid a race condition with the other idle slaves, the decision is based on two observations */
+		/* to avoid a race condition with the other idle slaves, the decision is based on multiple observations */
 		if (host->status==STATUS_IDLE && ((float)ProcessorCount-(float)NumPeers-CpuLoad+0.05) < (0-SMARTCPU_TOLERANCE))
 				/* increase the evidence to switch from idle to zombie */
 				smartcpu.evidence--;
@@ -253,7 +253,7 @@ int smartcpu_update(void) {
 				/* the current status is fine */
 				smartcpu.evidence=0;
 
-		if (smartcpu.evidence<-1) {
+		if (smartcpu.evidence <= -NumPeers) {
 				smartcpu.evidence   = 0;
 				smartcpu.prevstatus = STATUS_IDLE;
 				host->status        = STATUS_ZOMBIE;
@@ -266,7 +266,7 @@ int smartcpu_update(void) {
 				DEBUG(LOG_DEBUG, "smartcpu_update: host->status   = %d", host->status);
 		} /* if evidence */
 
-		if (smartcpu.evidence>1) {
+		if (smartcpu.evidence >= NumPeers) {
 				smartcpu.evidence++;
 				smartcpu.prevstatus = STATUS_ZOMBIE;
 				host->status        = STATUS_IDLE;
