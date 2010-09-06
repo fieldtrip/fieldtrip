@@ -110,28 +110,32 @@ int smartmem_update(void) {
 
 		pthread_mutex_lock(&mutexsmartmem);
 		if (!smartmem.enabled) {
+				/* don't update if smartmem is disabled */
 				pthread_mutex_unlock(&mutexsmartmem);
 				return 0;
 		}
-		pthread_mutex_unlock(&mutexsmartmem);
 
-		if (hoststatus()!=STATUS_IDLE)
+		pthread_mutex_lock(&mutexhost);
+		if (host->status!=STATUS_IDLE) {
+				/* don't update if the status is something else than IDLE */
+				pthread_mutex_unlock(&mutexhost);
+				pthread_mutex_unlock(&mutexsmartcpu);
 				return 0;
+		}
 
 		/* determine the amount of memory available on this computer */
 		if ((ok = smartmem_info(&MemTotal, &MemFree, &Buffers, &Cached)) < 0)
 				return -1;
 
-		pthread_mutex_lock(&mutexhost);
 		pthread_mutex_lock(&mutexpeerlist);
 
 		/* determine the amount of memory that is reserved by the idle slaves on this computer */
 		peer = peerlist;
 		while(peer) {
 				ok = 1;
-				ok = ok & (strcmp(peer->ipaddr, "127.0.0.1")==0);
-				ok = ok & (peer->host->id != host->id);
-				ok = ok & (peer->host->status == STATUS_IDLE);
+				ok = ok && (strcmp(peer->ipaddr, "127.0.0.1")==0);
+				ok = ok && (peer->host->id != host->id);
+				ok = ok && (peer->host->status == STATUS_IDLE);
 				if (ok) {
 						MemReserved += peer->host->memavail;
 						NumPeers++;
@@ -182,10 +186,11 @@ int smartmem_update(void) {
 		/* it does not make sense to suggest less than a certain minimum amount */
 		MemSuggested = (MemSuggested > SMARTMEM_MINIMUM ? MemSuggested : SMARTMEM_MINIMUM );
 
-		pthread_mutex_lock(&mutexhost);
 		host->memavail = MemSuggested;
 		DEBUG(LOG_NOTICE, "smartmem: host->memavail = %llu", host->memavail);
+
 		pthread_mutex_unlock(&mutexhost);
+		pthread_mutex_unlock(&mutexsmartcpu);
 
 		DEBUG(LOG_DEBUG, "NumPeers     = %u",   NumPeers);
 		DEBUG(LOG_DEBUG, "MemFree      = %llu (%f GB)", MemFree     , ((float)MemFree     )/(1024*1024*1024));

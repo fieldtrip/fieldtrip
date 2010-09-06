@@ -349,12 +349,8 @@ int main(int argc, char *argv[]) {
 				DEBUG(LOG_NOTICE, "started expire thread\n");
 		}
 
-		/* status = 0 means zombie mode, don't accept anything   */
-		/* status = 1 means master mode, accept everything       */
-		/* status = 2 means idle slave, accept only a single job */
-		/* status = 3 means busy slave, don't accept a new job   */
-		/* any other status is interpreted as zombie mode        */
-		host->status = 2;
+		/* start as idle slave */
+		host->status = STATUS_IDLE;
 
 		while (1) {
 
@@ -370,7 +366,7 @@ int main(int argc, char *argv[]) {
 										DEBUG(LOG_ERR, "failed to start MATLAB engine\n");
 										DEBUG(LOG_NOTICE, "deleting job and switching to zombie mode\n");
 										engineFailed = time(NULL);
-										host->status = 0; /* zombie */
+										host->status = STATUS_ZOMBIE;
 										pthread_mutex_unlock(&mutexhost);
 
 										/* remove the failed job from the joblist */
@@ -391,7 +387,7 @@ int main(int argc, char *argv[]) {
 						}
 
 						/* switch the mode to busy slave */
-						host->status = 3; /* busy */
+						host->status = STATUS_BUSY;
 						matlabStart = time(NULL);
 
 						/* get the first job input arguments and options */
@@ -578,7 +574,7 @@ int main(int argc, char *argv[]) {
 						job = joblist;
 						pthread_mutex_unlock(&mutexjoblist);
 
-						host->status = 2; /* idle slave */
+						host->status = STATUS_IDLE;
 						matlabFinished = time(NULL);
 						DEBUG(LOG_NOTICE, "executing job %d took %d seconds\n", jobnum, matlabFinished - matlabStart);
 				}
@@ -587,7 +583,7 @@ int main(int argc, char *argv[]) {
 				} /* if jobcount */
 
 				/* test that the matlab engine is not idle for too long */
-				if ((matlabRunning==1) && ((time(NULL)-matlabFinished)>enginetimeout)) {
+				if ((matlabRunning!=0) && ((time(NULL)-matlabFinished)>enginetimeout)) {
 						if (engClose(en)!=0) {
 								PANIC("could not stop the MATLAB engine\n");
 						}
@@ -598,11 +594,11 @@ int main(int argc, char *argv[]) {
 				}
 
 				/* don't try to restart the engine immediately after a failure */
-				if (engineFailed && (time(NULL)-engineFailed)>zombietimeout) {
+				if ((engineFailed!=0) && ((time(NULL)-engineFailed)>zombietimeout)) {
 						pthread_mutex_lock(&mutexhost);
 						DEBUG(LOG_NOTICE, "switching to idle mode\n");
 						engineFailed = 0;
-						host->status = 2;  /* idle slave */
+						host->status = STATUS_IDLE;
 						pthread_mutex_unlock(&mutexhost);
 						sleep(1);
 						continue;

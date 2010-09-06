@@ -186,9 +186,9 @@ void *discover(void *arg) {
 
 				/* check whether the peer should be listed */
 				accept = 1;
-				accept = (accept & ismember_userlist (discovery->user));
-				accept = (accept & ismember_grouplist(discovery->group));
-				accept = (accept & ismember_hostlist (discovery->name));
+				accept = (accept && ismember_userlist (discovery->user));
+				accept = (accept && ismember_grouplist(discovery->group));
+				accept = (accept && ismember_hostlist (discovery->name));
 
 				if (!accept) {
 						DEBUG(LOG_DEBUG, "discover: rejecting %s:%d, id = %llu", discovery->name, discovery->port, discovery->id);

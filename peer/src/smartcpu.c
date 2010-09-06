@@ -115,14 +115,14 @@ int smartcpu_info(int *ProcessorCount, float *BogoMips, float *AvgLoad, float *C
 
 				if (strcmp(str, "cpu")==0) {
 						ok = 1;
-						ok = ok & (fscanf(fp, "%d", &user    ) == 1);
-						ok = ok & (fscanf(fp, "%d", &nice    ) == 1);
-						ok = ok & (fscanf(fp, "%d", &system  ) == 1);
-						ok = ok & (fscanf(fp, "%d", &idle    ) == 1);
-						ok = ok & (fscanf(fp, "%d", &iowait  ) == 1);
-						ok = ok & (fscanf(fp, "%d", &irq     ) == 1);
-						ok = ok & (fscanf(fp, "%d", &softirq ) == 1);
-						ok = ok & (fscanf(fp, "%d", &unknown ) == 1);
+						ok = ok && (fscanf(fp, "%d", &user    ) == 1);
+						ok = ok && (fscanf(fp, "%d", &nice    ) == 1);
+						ok = ok && (fscanf(fp, "%d", &system  ) == 1);
+						ok = ok && (fscanf(fp, "%d", &idle    ) == 1);
+						ok = ok && (fscanf(fp, "%d", &iowait  ) == 1);
+						ok = ok && (fscanf(fp, "%d", &irq     ) == 1);
+						ok = ok && (fscanf(fp, "%d", &softirq ) == 1);
+						ok = ok && (fscanf(fp, "%d", &unknown ) == 1);
 						if (!ok) {
 								DEBUG(LOG_ERR, "smartcpu_info: problem reading from /proc/stat");
 								return -1;
@@ -155,14 +155,14 @@ int smartcpu_info(int *ProcessorCount, float *BogoMips, float *AvgLoad, float *C
 				else if (strncmp(str, "cpu", 3)==0) {
 						numcpu++;
 						ok = 1;
-						ok = ok & (fscanf(fp, "%d", &user    ) == 1);
-						ok = ok & (fscanf(fp, "%d", &nice    ) == 1);
-						ok = ok & (fscanf(fp, "%d", &system  ) == 1);
-						ok = ok & (fscanf(fp, "%d", &idle    ) == 1);
-						ok = ok & (fscanf(fp, "%d", &iowait  ) == 1);
-						ok = ok & (fscanf(fp, "%d", &irq     ) == 1);
-						ok = ok & (fscanf(fp, "%d", &softirq ) == 1);
-						ok = ok & (fscanf(fp, "%d", &unknown ) == 1);
+						ok = ok && (fscanf(fp, "%d", &user    ) == 1);
+						ok = ok && (fscanf(fp, "%d", &nice    ) == 1);
+						ok = ok && (fscanf(fp, "%d", &system  ) == 1);
+						ok = ok && (fscanf(fp, "%d", &idle    ) == 1);
+						ok = ok && (fscanf(fp, "%d", &iowait  ) == 1);
+						ok = ok && (fscanf(fp, "%d", &irq     ) == 1);
+						ok = ok && (fscanf(fp, "%d", &softirq ) == 1);
+						ok = ok && (fscanf(fp, "%d", &unknown ) == 1);
 						if (!ok) {
 								DEBUG(LOG_ERR, "smartcpu_info: problem reading from /proc/stat");
 								return -1;
@@ -190,12 +190,14 @@ int smartcpu_update(void) {
 
 		pthread_mutex_lock(&mutexsmartcpu);
 		if (!smartcpu.enabled) {
+				/* don't update if smartcpu is disabled */
 				pthread_mutex_unlock(&mutexsmartcpu);
 				return 0;
 		}
 
 		pthread_mutex_lock(&mutexhost);
-		if (host->status!=STATUS_IDLE & smartcpu.prevstatus!=STATUS_IDLE) {
+		if (host->status!=STATUS_IDLE && smartcpu.prevstatus!=STATUS_IDLE) {
+				/* don't update if the status is something else than IDLE */
 				pthread_mutex_unlock(&mutexhost);
 				pthread_mutex_unlock(&mutexsmartcpu);
 				return 0;
@@ -206,8 +208,8 @@ int smartcpu_update(void) {
 		peer = peerlist;
 		while(peer) {
 				ok = 1;
-				ok = ok & (strcmp(peer->ipaddr, "127.0.0.1")==0);
-				ok = ok & (peer->host->status == STATUS_IDLE);
+				ok = ok && (strcmp(peer->ipaddr, "127.0.0.1")==0);
+				ok = ok && (peer->host->status == STATUS_IDLE);
 				if (ok) {
 						NumPeers++;
 				}
@@ -223,10 +225,10 @@ int smartcpu_update(void) {
 
 		/* the numer of idle slaves should not exceed the available free CPUs */
 		/* to avoid a race condition with the other idle slaves, the decision is based on two observations */
-		if (host->status==STATUS_IDLE & ((float)ProcessorCount-(float)NumPeers-CpuLoad+0.05) < (0-SMARTCPU_TOLERANCE))
+		if (host->status==STATUS_IDLE && ((float)ProcessorCount-(float)NumPeers-CpuLoad+0.05) < (0-SMARTCPU_TOLERANCE))
 				/* increase the evidence to switch from idle to zombie */
 				smartcpu.evidence--;
-		else if (host->status==STATUS_ZOMBIE & ((float)ProcessorCount-(float)NumPeers-CpuLoad) > (1-SMARTCPU_TOLERANCE)) 
+		else if (host->status==STATUS_ZOMBIE && ((float)ProcessorCount-(float)NumPeers-CpuLoad) > (1-SMARTCPU_TOLERANCE)) 
 				/* increase the evidence to switch from zombie to idle */
 				smartcpu.evidence++;
 		else

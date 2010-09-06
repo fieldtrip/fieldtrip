@@ -25,9 +25,9 @@
 int security_check(hostdef_t *host) {
 		int ismember = 1;
 
-		ismember = ismember & ismember_userlist(host->user);
-		ismember = ismember & ismember_grouplist(host->group);
-		ismember = ismember & ismember_hostlist(host->name);
+		ismember = ismember && ismember_userlist(host->user);
+		ismember = ismember && ismember_grouplist(host->group);
+		ismember = ismember && ismember_hostlist(host->name);
 
 		return ismember;
 }
