@@ -192,7 +192,7 @@ int smartmem_update(void) {
 		DEBUG(LOG_DEBUG, "smartmem: MemSuggested   = %llu (%f GB)", MemSuggested, ((float)MemSuggested)/(1024*1024*1024));
 
 		pthread_mutex_unlock(&mutexhost);
-		pthread_mutex_unlock(&mutexsmartcpu);
+		pthread_mutex_unlock(&mutexsmartmem);
 
 		return 0;
 } /* smartmem_update */
