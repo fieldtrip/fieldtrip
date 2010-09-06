@@ -120,7 +120,7 @@ int smartmem_update(void) {
 		if (host->status!=STATUS_IDLE) {
 				/* don't update if the status is something else than IDLE */
 				pthread_mutex_unlock(&mutexhost);
-				pthread_mutex_unlock(&mutexsmartcpu);
+				pthread_mutex_unlock(&mutexsmartmem);
 				return 0;
 		}
 
