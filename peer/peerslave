@@ -163,13 +163,13 @@ function start_peerslave {
 
 	# note that all spaces in the full matlab startup command have to be in ''
 	if [[ "$1" -eq "auto" ]] ; then
-		OPTIONS="$OPTIONS --smartmem 1"
+		PEEROPTIONS="$OPTIONS --smartmem 1"
 	else
-		OPTIONS="$OPTIONS --smartmem 0 --memavail $1"
+		PEEROPTIONS="$OPTIONS --smartmem 0 --memavail $1"
 	fi
 
 	PIDFILE=$PIDDIR/peerslave.$SLAVENUM
-	( eval $EXECUTABLE $OPTIONS --matlab "$MATLABCMD" ) &
+	( eval $EXECUTABLE $PEEROPTIONS --matlab "$MATLABCMD" ) &
 	PID=$!
 	if ( check_peerslave $PID ) ; then
 		echo -n $PID > $PIDFILE
