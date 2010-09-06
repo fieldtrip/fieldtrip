@@ -118,8 +118,8 @@ if timedelay ~= 0
   for ifreqoi = 1:nfreqoi
     missedsamples = round(timedelay * fsample);
     % determine angle of freqoi if oscillation started at 0
-    % the angle of wavelet(cos,sin) = 0 at the first point of a cycle, with sin being in upgoing flank, which is the same convention as in mtmconvol
-    anglein = (missedsamples-1) .* ((2.*pi./fsample) .* freqoi(ifreqoi));
+    % the angle of wavelet(cos,sin) = 0 at the first point of a cycle, with sine being in upgoing flank, which is the same convention as in mtmconvol
+    anglein = (missedsamples) .* ((2.*pi./fsample) .* freqoi(ifreqoi));
     coswav  = cos(anglein);
     sinwav  = sin(anglein);
     angletransform(ifreqoi) = angle(complex(coswav,sinwav));
@@ -134,7 +134,7 @@ for itap = 1:ntaper
     dum = dum(:,freqboi);
     % phase-shift according to above angles
     if timedelay ~= 0
-      dum = dum .* exp(1i*angletransform);
+      dum = dum .* exp(-1i*angletransform);
     end
     spectrum{itap} = dum;
 end
