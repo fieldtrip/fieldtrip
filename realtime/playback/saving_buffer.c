@@ -59,6 +59,7 @@ char baseDirectory[512];
 int setCounter = 0;
 int sampleCounter = 0;
 int eventCounter = 0;
+char endianness[10];
 
 double getCurrentTime() {
 #ifdef WIN32
@@ -217,6 +218,34 @@ int write_contents() {
 	return 1;
 }
 
+void update_header() {
+	char name[512];
+	FILE *f;
+	
+	if (setCounter == 0) return;
+	
+	snprintf(name, sizeof(name), "%s/%04i/header", baseDirectory, setCounter);
+	f = fopen(name, "r+b");
+	if (f==NULL) {
+		fprintf(stderr, "ERROR: cannot re-open file %s\n", name);
+	} else {
+		fseek(f, 4, SEEK_SET);
+		fwrite(&sampleCounter, 4, 1, f);
+		fwrite(&eventCounter, 4, 1, f);
+		fclose(f);
+	}
+	
+	snprintf(name, sizeof(name), "%s/%04i/header.txt", baseDirectory, setCounter);
+	f = fopen(name, "a");
+	if (f==NULL) {
+		fprintf(stderr," WARNING: cannot write plain text header file\n");
+	} else {
+		fprintf(f, "nSamples=%i\n", sampleCounter);
+		fprintf(f, "nEvents=%i\n", eventCounter);
+		fclose(f);
+	}
+}
+
 int write_header_to_disk() {
 	char name[512];
 	FILE *f;
@@ -273,15 +302,16 @@ int write_header_to_disk() {
 	if (f!=NULL) {
 		const ft_chunk_t *cnc;
 		headerdef_t *hdef = (headerdef_t *) response->buf;
-		fprintf(f, "Number of channels..: %i\n", hdef->nchans);
-		fprintf(f, "Data type...........: %s\n", datatype_names[hdef->data_type]);
-		fprintf(f, "Sampling frequency..: %f Hz\n", hdef->fsample);
+		fprintf(f, "version=%i\n", VERSION);
+		fprintf(f, "endian=%s\n", endianness);
+		fprintf(f, "dataType=%s\n", datatype_names[hdef->data_type]);
+		fprintf(f, "fSample=%f\n", hdef->fsample);		
+		fprintf(f, "nChans=%i\n", hdef->nchans);
 		
 		cnc = find_chunk(response->buf, sizeof(headerdef_t), response->def->bufsize, FT_CHUNK_CHANNEL_NAMES);
 		if (cnc) {
 			int i;
 			const char *ni = (const char *) cnc->data;
-			fprintf(f,"Channel numbers and names:\n");
 			for (i=0;i<hdef->nchans;i++) {
 				int n = strlen(ni);
 				fprintf(f, "%i:%s\n", i+1, ni);
@@ -403,26 +433,39 @@ cleanup:
 int main(int argc, char *argv[]) {
 	int port;
 	char *name = NULL;
+	union {
+		short word;
+		char bytes[2];
+	} endianTest;
 	
-    /* verify that all datatypes have the expected syze in bytes */
-    check_datatypes();
+	endianTest.bytes[0] = 1;
+	endianTest.bytes[1] = 0;
+
+	if (endianTest.word == 1) {
+		strcpy(endianness, "little");
+	} else {
+		strcpy(endianness, "big");
+	}
+
+	/* verify that all datatypes have the expected syze in bytes */
+	check_datatypes();
 	
 	#ifdef WIN32
 	timeBeginPeriod(1);
-	#endif	
-	
+	#endif
+
 	if (argc<2) {
 		fprintf(stderr, "Usage: saving_buffer directory [port/unix socket]\n");
 		return 1;
 	}
-	
+
 	strncpy(baseDirectory, argv[1], sizeof(baseDirectory));
 
 	if (argc>2) {
 		port = atoi(argv[2]);
 		if (port == 0) {
 			name = argv[2];
-		}	
+		}
 	} else {
 		port = 1972;
 	}
@@ -430,10 +473,10 @@ int main(int argc, char *argv[]) {
 	memset(queue, sizeof(queue), 0);
 
 	if (!write_contents()) goto cleanup;
-	
+
 	S = ft_start_buffer_server(port, name, my_request_handler, NULL);
 	if (S==NULL) return 1;
-	
+
 	signal(SIGINT, abortHandler);
 	while (keepRunning) {
 		if (queue[qReadPos].command == 0) {
@@ -441,6 +484,7 @@ int main(int argc, char *argv[]) {
 		} else {
 			switch(queue[qReadPos].command) {
 				case PUT_HDR:
+					if (setCounter>0) update_header();
 					write_header_to_disk();
 					break;
 				case PUT_DAT:
@@ -455,17 +499,18 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	printf("Ctrl-C pressed -- stopping buffer server...\n");
+	if (setCounter>0) update_header();
 	if (fSamples != NULL) fclose(fSamples);
 	if (fEvents != NULL) fclose(fEvents);
 	if (fTime != NULL) fclose(fTime);
 	ft_stop_buffer_server(S);
 	printf("Done.\n");
 
-cleanup:	
+cleanup:
 	#ifdef WIN32
 	timeEndPeriod(1);
-	#endif	
-	
+	#endif
+
 	return 0;
 }
 
