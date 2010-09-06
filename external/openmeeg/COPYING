@@ -16,23 +16,14 @@ kybic.AT.fel.cvut.cz, papadop.AT.sophia.inria.fr, Alexandre.Gramfort.AT.inria.fr
 
 Cite this software:
 
-author = A Gramfort and T Papadopoulo and M Clerc
-title  = OpenMEEG
-month  = January
-year   = 2009
-timestamp = 2009.01.01
-url = http://www-sop.inria.fr/odyssee/software/OpenMEEG 
+OpenMEEG: opensource software for quasistatic bioelectromagnetics
+Alexandre Gramfort, Theodore Papadopoulo, Emmanuel Olivi and Maureen Clerc
+BioMedical Engineering OnLine 2010, 9:45 (6 September 2010)
+doi     = 10.1186/1475-925X-9-45
+ISSN    = 1475-925X
 
-
-Related publications:
-
-author	= J. Kybic and M. Clerc and T. Abboud and O. Faugeras and R. Keriven and T. Papadopoulo
-title		= A Common Formalism for the Integral Formulations of the Forward {EEG} Problem
-journal	= IEEE Transactions on Medical Imaging
-year		= 2005
-volume	= 24
-pages		= 12-28
-month		= jan
-url		= ftp://ftp-sop.inria.fr/odyssee/Publications/2005/kybic-clerc-etal:05.pdf
-keywords	= EEG; Boundary Element Method; Symmetric BEM
+A Common Formalism for the Integral Formulations of the Forward {EEG} Problem
+J. Kybic and M. Clerc and T. Abboud and O. Faugeras and R. Keriven and T. Papadopoulo
+IEEE Transactions on Medical Imaging, 2005 (24), 12-28
+ftp://ftp-sop.inria.fr/odyssee/Publications/2005/kybic-clerc-etal:05.pdf
 

@@ -62,6 +62,7 @@ try
     % Exe file
     status = system(['om_check_geom -g ',geomfile]);
     cleaner(vol,bndfile,geomfile)
+    cd(tmpfolder)
 catch
     cleaner(vol,bndfile,geomfile)
     cd(tmpfolder)
