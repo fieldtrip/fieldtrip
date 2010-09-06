@@ -310,7 +310,7 @@ switch cfg.method
     % coherency
     
     tmpcfg             = [];
-    tmpcfg.cmplx       = cfg.complex;
+    tmpcfg.complex     = cfg.complex;
     tmpcfg.feedback    = cfg.feedback;
     tmpcfg.dimord      = data.dimord;
     tmpcfg.pownorm     = normpow;
@@ -327,7 +327,7 @@ switch cfg.method
     % cross-spectral density (only useful if partialisation is required)
     
     tmpcfg             = [];
-    tmpcfg.cmplx       = cfg.complex;
+    tmpcfg.complex     = cfg.complex;
     tmpcfg.feedback    = cfg.feedback;
     tmpcfg.dimord      = data.dimord;
     tmpcfg.pownorm     = normpow;
@@ -344,7 +344,7 @@ switch cfg.method
     % phase locking value
     
     tmpcfg           = [];
-    tmpcfg.cmplx     = cfg.complex;
+    tmpcfg.complex   = cfg.complex;
     tmpcfg.feedback  = cfg.feedback;
     tmpcfg.dimord    = data.dimord;
     tmpcfg.pownorm     = normpow;
@@ -369,7 +369,7 @@ switch cfg.method
     tmpcfg             = [];
     tmpcfg.feedback    = cfg.feedback;
     tmpcfg.dimord      = data.dimord;
-    tmpcfg.cmplx       = 'real';
+    tmpcfg.complex     = 'real';
     tmpcfg.pownorm     = 1;
     tmpcfg.pchanindx   = [];
     tmpcfg.hasjack     = hasjack;
@@ -385,7 +385,7 @@ switch cfg.method
     tmpcfg             = [];
     tmpcfg.feedback    = cfg.feedback;
     tmpcfg.dimord      = data.dimord;
-    tmpcfg.cmplx       = 'real';
+    tmpcfg.complex     = 'real';
     tmpcfg.hasjack     = hasjack;
     if exist('powindx', 'var'), tmpcfg.powindx = powindx; end
     optarg             = cfg2keyval(tmpcfg);
@@ -462,7 +462,7 @@ switch cfg.method
     %total interdependence
     
     tmpcfg           = [];
-    tmpcfg.cmplx     = 'abs';
+    tmpcfg.complex   = 'abs';
     tmpcfg.feedback  = cfg.feedback;
     tmpcfg.dimord    = data.dimord;
     tmpcfg.pownorm   = normpow;
