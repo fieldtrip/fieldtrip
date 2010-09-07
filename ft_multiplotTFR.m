@@ -140,6 +140,7 @@ if ~isfield(cfg,'renderer'),        cfg.renderer = [];                 end % let
 if ~isfield(cfg,'masknans'),        cfg.masknans = 'yes';              end
 if ~isfield(cfg,'maskparameter'),   cfg.maskparameter = [];            end
 if ~isfield(cfg,'maskstyle'),       cfg.maskstyle = 'opacity';         end
+if ~isfield(cfg, 'matrixside'),     cfg.matrixside = 'feedforward';    end
 if ~isfield(cfg,'box')             
   if ~isempty(cfg.maskparameter)
     cfg.box = 'yes';
@@ -186,8 +187,13 @@ cfg = checkconfig(cfg, 'unused',  {'cohtargetchannel'});
 lay = ft_prepare_layout(cfg, data);
 cfg.layout = lay;
 
-% Check for unconverted coherence spectrum data:
-if (strcmp(cfg.zparam,'cohspctrm')),
+% Check for unconverted coherence spectrum data or any other bivariate metric:
+dimtok  = tokenize(data.dimord, '_');
+selchan = strmatch('chan', dimtok);
+isfull  = length(selchan)>1;
+if (strcmp(cfg.zparam,'cohspctrm') && isfield(data, 'labelcmb')) || ...
+    (isfull && isfield(data, cfg.zparam)),
+
   % A reference channel is required:
   if ~isfield(cfg,'cohrefchannel'),
     error('no reference channel specified');
@@ -207,14 +213,38 @@ if (strcmp(cfg.zparam,'cohspctrm')),
     return
   end
 
-  % Convert 2-dimensional channel matrix to a single dimension:
-  sel1           = strmatch(cfg.cohrefchannel, data.labelcmb(:,2));
-  sel2           = strmatch(cfg.cohrefchannel, data.labelcmb(:,1));
-  fprintf('selected %d channels for coherence\n', length(sel1)+length(sel2));
-  data.cohspctrm = data.cohspctrm([sel1;sel2],:,:);
-  data.label     = [data.labelcmb(sel1,1);data.labelcmb(sel2,2)];
-  data.labelcmb  = data.labelcmb([sel1;sel2],:);
-  data           = rmfield(data, 'labelcmb');
+  if ~isfull,
+    % only works explicitly with coherence FIXME
+    % Convert 2-dimensional channel matrix to a single dimension:
+    sel1           = strmatch(cfg.cohrefchannel, data.labelcmb(:,2));
+    sel2           = strmatch(cfg.cohrefchannel, data.labelcmb(:,1));
+    fprintf('selected %d channels for coherence\n', length(sel1)+length(sel2));
+    data.cohspctrm = data.cohspctrm([sel1;sel2],:,:);
+    data.label     = [data.labelcmb(sel1,1);data.labelcmb(sel2,2)];
+    data.labelcmb  = data.labelcmb([sel1;sel2],:);
+    data           = rmfield(data, 'labelcmb');
+  else
+    % general solution
+    
+    sel               = match_str(data.label, cfg.cohrefchannel);
+    siz               = [size(data.(cfg.zparam)) 1];
+    if strcmp(cfg.matrixside, 'feedback')
+      %data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
+      sel1 = 1:siz(1);
+      sel2 = sel;
+      meandir = 2;
+    elseif strcmp(cfg.matrixside, 'feedforward')
+      %data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
+      sel1 = sel;
+      sel2 = 1:siz(1);
+      meandir = 1;
+    elseif strcmp(cfg.matrixside, 'ff-fd')
+      %FIXME don't know how to handle this
+      data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]) - reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
+    elseif strcmp(cfg.matrixside, 'fd-ff')
+      data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]) - reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
+    end
+  end
 end
 
 % Apply baseline correction:
@@ -272,7 +302,14 @@ if isempty(seldat)
   error('labels in data and labels in layout do not match'); 
 end
 
-datavector = data.(cfg.zparam)(seldat,yidc,xidc);
+if isfull,
+  siz = size(data.(cfg.zparam));
+  siz(meandir) = [];
+  datavector = reshape(mean(data.(cfg.zparam)(seldat(sel1),seldat(sel2),yidc,xidc),meandir),siz);
+else
+  datavector = data.(cfg.zparam)(seldat,yidc,xidc);
+end
+
 chanX = lay.pos(sellay, 1);
 chanY = lay.pos(sellay, 2);
 chanWidth  = lay.width(sellay);
@@ -459,7 +496,7 @@ fprintf('selected cfg.cohrefchannel = ''%s''\n', cfg.cohrefchannel);
 p = get(gcf, 'Position');
 f = figure;
 set(f, 'Position', p);
-ft_multiplotTFR(cfg, varargin{:});
+ft_multiplotTFR_JM(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting channels in case of cfg.interactive='yes'

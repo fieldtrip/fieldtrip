@@ -90,6 +90,7 @@ if ~isfield(cfg,'renderer'),        cfg.renderer = [];                 end
 if ~isfield(cfg,'masknans'),        cfg.masknans = 'yes';              end
 if ~isfield(cfg,'maskparameter'),   cfg.maskparameter = [];            end
 if ~isfield(cfg,'maskstyle'),       cfg.maskstyle = 'opacity';         end
+if ~isfield(cfg, 'matrixside'),     cfg.matrixside = 'feedforward';    end
 
 % Set x/y/zparam defaults according to data.dimord value:
 if strcmp(data.dimord, 'chan_freq_time')
@@ -131,8 +132,20 @@ if ~isfield(cfg,'channel')
   cfg = checkconfig(cfg, 'renamed', {'channelname',   'channel'});
 end
 
-% Check for unconverted coherence spectrum data
-if (strcmp(cfg.zparam,'cohspctrm')) && (isfield(data, 'labelcmb'))
+cfg.channel = ft_channelselection(cfg.channel, data.label);
+if isempty(cfg.channel)
+  error('no channels selected');
+else
+  chansel = match_str(data.label, cfg.channel);
+end
+
+% Check for unconverted coherence spectrum data or any other bivariate metric:
+dimtok  = tokenize(data.dimord, '_');
+selchan = strmatch('chan', dimtok);
+isfull  = length(selchan)>1;
+if (strcmp(cfg.zparam,'cohspctrm')) && (isfield(data, 'labelcmb')) || ...
+    (isfull && isfield(data, cfg.zparam)),
+
   % A reference channel is required:
   if ~isfield(cfg,'cohrefchannel'),
     error('no reference channel specified');
@@ -155,21 +168,41 @@ if (strcmp(cfg.zparam,'cohspctrm')) && (isfield(data, 'labelcmb'))
     return
   end
 
-  % Convert 2-dimensional channel matrix to a single dimension:
-  sel1                  = strmatch(cfg.cohrefchannel, data.labelcmb(:,2));
-  sel2                  = strmatch(cfg.cohrefchannel, data.labelcmb(:,1));
-  fprintf('selected %d channels for coherence\n', length(sel1)+length(sel2));
-  data.cohspctrm = data.cohspctrm([sel1;sel2],:,:);
-  data.label     = [data.labelcmb(sel1,1);data.labelcmb(sel2,2)];
-  data.labelcmb  = data.labelcmb([sel1;sel2],:);
-  data           = rmfield(data, 'labelcmb');
-end
 
-cfg.channel = ft_channelselection(cfg.channel, data.label);
-if isempty(cfg.channel)
-  error('no channels selected');
-else
-  chansel = match_str(data.label, cfg.channel);
+  if ~isfull,
+    % only works explicitly with coherence FIXME
+    % Convert 2-dimensional channel matrix to a single dimension:
+    sel1           = strmatch(cfg.cohrefchannel, data.labelcmb(:,2));
+    sel2           = strmatch(cfg.cohrefchannel, data.labelcmb(:,1));
+    fprintf('selected %d channels for coherence\n', length(sel1)+length(sel2));
+    data.cohspctrm = data.cohspctrm([sel1;sel2],:,:);
+    data.label     = [data.labelcmb(sel1,1);data.labelcmb(sel2,2)];
+    data.labelcmb  = data.labelcmb([sel1;sel2],:);
+    data           = rmfield(data, 'labelcmb');
+  else
+    % general solution
+    
+    sel               = match_str(data.label, cfg.cohrefchannel);
+    siz               = [size(data.(cfg.zparam)) 1];
+    if strcmp(cfg.matrixside, 'feedback')
+      %data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
+      %sel1 = 1:siz(1);
+      sel1 = chansel;
+      sel2 = sel;
+      meandir = 2;
+    elseif strcmp(cfg.matrixside, 'feedforward')
+      %data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
+      sel1 = sel;
+      %sel2 = 1:siz(1);
+      sel2 = chansel;
+      meandir = 1;
+    elseif strcmp(cfg.matrixside, 'ff-fd')
+      %FIXME don't know how to handle this
+      data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]) - reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
+    elseif strcmp(cfg.matrixside, 'fd-ff')
+      data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]) - reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
+    end
+  end
 end
 
 % cfg.maskparameter only possible for single channel
@@ -216,11 +249,17 @@ ymin = data.(cfg.yparam)(yidc(1));
 ymax = data.(cfg.yparam)(yidc(end));
 
 % Get TFR data averaged across selected channels, within the selected x/y-range:
-dat = getsubfield(data, cfg.zparam);
-TFR = squeeze(mean(dat(chansel,yidc,xidc), 1));
-if ~isempty(cfg.maskparameter)
-  mas = getsubfield(data, cfg.maskparameter);
-  mdata = squeeze(mas(chansel,yidc,xidc));
+if ~isfull
+  dat = getsubfield(data, cfg.zparam);
+  TFR = squeeze(mean(dat(chansel,yidc,xidc), 1));
+  if ~isempty(cfg.maskparameter)
+    mas = getsubfield(data, cfg.maskparameter);
+    mdata = squeeze(mas(chansel,yidc,xidc));
+  end
+elseif isfull,
+  %siz = size(data.(cfg.zparam));
+  %siz(meandir) = [];
+  TFR = squeeze(mean(mean(data.(cfg.zparam)(sel1,sel2,yidc,xidc),1),2));
 end
 
 % Get physical z-axis range (color axis):
