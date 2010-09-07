@@ -140,11 +140,11 @@ cmd = sprintf('mex -outdir .. %s %s peer.c %s %s',cflags,extra_cflags,allObjects
 disp(cmd);
 eval(cmd);
 
-cmd = sprintf('mex -outdir .. %s %s memprofile.c %s',cflags,extra_cflags,ldflags);
+cmd = sprintf('mex -outdir ../private %s %s memprofile.c %s',cflags,extra_cflags,ldflags);
 disp(cmd);
 eval(cmd);
 
-cmd = sprintf('mex -outdir .. %s %s delayedexit.c %s',cflags,extra_cflags,ldflags);
+cmd = sprintf('mex -outdir ../private %s %s delayedexit.c %s',cflags,extra_cflags,ldflags);
 disp(cmd);
 eval(cmd);
 
