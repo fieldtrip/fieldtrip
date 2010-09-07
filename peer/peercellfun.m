@@ -132,7 +132,7 @@ while ~all(submitted) || ~all(collected)
 
   % select one of the jobs to be submitted
   submit = find(~submitted);                % select all jobs that still need to be submitted
-  submit = submit(randperm(numel(submit))); % randomize the order of the list of jobs
+  % submit = submit(randperm(numel(submit))); % randomize the order of the list of jobs
 
   if ~isempty(submit)
     % take the first job from the list
@@ -228,6 +228,7 @@ while ~all(submitted) || ~all(collected)
     % gather the job statistics
     timused(collect) = keyval('timused', options);
     memused(collect) = keyval('memused', options);
+
   end % for joblist
 
   if sum(collected)>prevnumcollected
@@ -240,11 +241,11 @@ while ~all(submitted) || ~all(collected)
 
   % check for jobs that are taking too long to finish
   if all(submitted) && any(collected) && ~all(collected)
-    % test whether one of the jobs should be resubmitted
-    sel = find(~collected, 1);
-    elapsed = toc(stopwatch) - submittime(sel);
 
-    % estimate the time that it took the other jobs to finish
+    % estimate the elapsed time for all jobs
+    elapsed = toc(stopwatch) - submittime;
+
+    % estimate the time that it took the collected jobs to finish
     estimated_min = min(collecttime(collected) - submittime(collected));
     estimated_max = max(collecttime(collected) - submittime(collected));
     estimated_avg = estimated_max; % the maximum is used instead of the mean
@@ -254,27 +255,30 @@ while ~all(submitted) || ~all(collected)
       % instead of the standard deviation the min-max range (divided by two) is used
       estimated = estimated_avg + (estimated_max - estimated_min);
       % take into account that the estimate is inaccurate in case of few collected jobs
-      estimated = (1 + 2^(-sum(collected))) * estimated;
+      estimated = estimated * (1 + 1/(1+log10(sum(collected))));
     else
       % the coefficient of variation (CV) is a normalized measure of dispersion of a distribution
       % it is defined as the ratio of the standard deviation to the mean
       estimated = estimated_avg + 2*timcv*estimated_avg;
     end
 
-    if elapsed>estimated
-      warning('resubmitting job %d because it takes too long to finish (estimated = %f, elapsed = %f)', sel, estimated, elapsed);
+    % test whether one of the submitted jobs should be resubmitted
+    sel = find(submitted & ~collected & (elapsed>estimated));
+
+    for i=1:length(sel)
+      warning('resubmitting job %d because it takes too long to finish (estimated = %f, elapsed = %f)', sel(i), estimated, elapsed(sel(i)));
       % remember the job that will be resubmitted, it still might return its results
-      resubmitted(end+1).jobnum = sel;
-      resubmitted(end  ).jobid  = jobid(sel);
+      resubmitted(end+1).jobnum = sel(i);
+      resubmitted(end  ).jobid  = jobid(sel(i));
       % reset all job information, this will cause it to be automatically resubmitted
-      jobid      (sel) = nan;
-      puttime    (sel) = nan;
-      timused    (sel) = nan;
-      memused    (sel) = nan;
-      submitted  (sel) = false;
-      collected  (sel) = false;
-      submittime (sel) = inf;
-      collecttime(sel) = inf;
+      jobid      (sel(i)) = nan;
+      puttime    (sel(i)) = nan;
+      timused    (sel(i)) = nan;
+      memused    (sel(i)) = nan;
+      submitted  (sel(i)) = false;
+      collected  (sel(i)) = false;
+      submittime (sel(i)) = inf;
+      collecttime(sel(i)) = inf;
     end
   end % resubmitting
 

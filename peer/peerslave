@@ -268,6 +268,7 @@ $0 start
 
 kill)
 killall -q peerslave.$MATLABARCH
+killall -q MATLAB
 rm -f $PIDDIR/peerslave.[0-9]
 rm -f $PIDDIR/peerslave.[0-9][0-9]
 rm -f $PIDDIR/peerslave.[0-9][0-9][0-9]
