@@ -192,8 +192,9 @@ int smartcpu_update(void) {
 		float BogoMips, AvgLoad, CpuLoad;
 
 		pthread_mutex_lock(&mutexsmartcpu);
-		if (!smartcpu.enabled) {
+		if (!smartcpu.enabled || smartcpu.freeze) {
 				/* don't update if smartcpu is disabled */
+				/* the freeze flag is enabled during the processing of an incoming job in tcpsocket */
 				pthread_mutex_unlock(&mutexsmartcpu);
 				return 0;
 		}
@@ -243,7 +244,7 @@ int smartcpu_update(void) {
 
 		/* the numer of idle slaves should not exceed the available free CPUs */
 		/* to avoid a race condition with the other idle slaves, the decision is based on multiple observations */
-		if (host->status==STATUS_IDLE && ((float)ProcessorCount-(float)NumPeers-CpuLoad+0.05) < (0-SMARTCPU_TOLERANCE))
+		if (host->status==STATUS_IDLE && ((float)ProcessorCount-(float)NumPeers-CpuLoad) < (0-SMARTCPU_TOLERANCE))
 				/* increase the evidence to switch from idle to zombie */
 				smartcpu.evidence--;
 		else if (host->status==STATUS_ZOMBIE && ((float)ProcessorCount-(float)NumPeers-CpuLoad) > (1-SMARTCPU_TOLERANCE)) 
@@ -253,7 +254,7 @@ int smartcpu_update(void) {
 				/* the current status is fine */
 				smartcpu.evidence=0;
 
-		if (smartcpu.evidence <= -NumPeers) {
+		if (smartcpu.evidence <= -NumPeers-1) {
 				smartcpu.evidence   = 0;
 				smartcpu.prevstatus = STATUS_IDLE;
 				host->status        = STATUS_ZOMBIE;
@@ -266,7 +267,7 @@ int smartcpu_update(void) {
 				DEBUG(LOG_DEBUG, "smartcpu_update: host->status   = %d", host->status);
 		} /* if evidence */
 
-		if (smartcpu.evidence >= NumPeers) {
+		if (smartcpu.evidence >= NumPeers+1) {
 				smartcpu.evidence++;
 				smartcpu.prevstatus = STATUS_ZOMBIE;
 				host->status        = STATUS_IDLE;

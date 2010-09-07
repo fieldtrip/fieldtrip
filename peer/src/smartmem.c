@@ -110,8 +110,9 @@ int smartmem_update(void) {
 		int verbose = 0, ok;
 
 		pthread_mutex_lock(&mutexsmartmem);
-		if (!smartmem.enabled) {
+		if (!smartmem.enabled || smartmem.freeze) {
 				/* don't update if smartmem is disabled */
+				/* the freeze flag is enabled during the processing of an incoming job in tcpsocket */
 				pthread_mutex_unlock(&mutexsmartmem);
 				return 0;
 		}

@@ -86,6 +86,16 @@ void *tcpsocket(void *arg) {
 		socketcount++;
 		pthread_mutex_unlock(&mutexsocketcount);
 
+		/* prevent smartcpu_update during the negociation and reading of the job */
+		pthread_mutex_lock(&mutexsmartcpu);
+		smartcpu.freeze = 0;
+		pthread_mutex_unlock(&mutexsmartcpu);
+
+		/* prevent smartmem_update during the negociation and reading of the job */
+		pthread_mutex_lock(&mutexsmartmem);
+		smartmem.freeze = 0;
+		pthread_mutex_unlock(&mutexsmartmem);
+
 		DEBUG(LOG_DEBUG, "tcpsocket: fd = %d, socketcount = %d, threadcount = %d", fd, socketcount, threadcount);
 
 		pthread_mutex_lock(&mutexjoblist);
@@ -293,6 +303,17 @@ void *tcpsocket(void *arg) {
 		pthread_mutex_unlock(&mutexjoblist);
 
 cleanup:
+
+		/* from now on it is again allowed to use smartcpu_update */
+		pthread_mutex_lock(&mutexsmartcpu);
+		smartcpu.freeze = 0;
+		pthread_mutex_unlock(&mutexsmartcpu);
+
+		/* from now on it is again allowed to use smartcpu_update */
+		pthread_mutex_lock(&mutexsmartmem);
+		smartmem.freeze = 0;
+		pthread_mutex_unlock(&mutexsmartmem);
+
 		printf(""); /* otherwise the pthread_cleanup_pop won't compile */
 		pthread_cleanup_pop(1);
 		return NULL;

@@ -176,24 +176,10 @@ while ~all(submitted) || ~all(collected)
     end
 
     % submit the job for execution
-    try
-      [jobid(submit) puttime(submit)] = peerfeval(fname, argin{:}, 'timeout', inf, 'memreq', memreq, 'timreq', timreq, 'diary', diary);
-      % fprintf('submitted job %d\n', submit);
-      submitted(submit)  = true;
-      submittime(submit) = toc(stopwatch);
-    catch me
-      if strcmp(me.identifier, 'FieldTrip:Peer:NotEnoughMemoryAvailableOnSlave')
-        l = peerlist;
-        if any([l.status]==1 & [l.memavail]>memreq)
-          % there is a busy slave with enough memory, which may become available later
-          warning('there are currently no slave peers available that meet the memory requirements'); 
-        else
-          rethrow(me);
-        end
-      else
-        rethrow(me);
-      end
-    end % try-catch
+    [jobid(submit) puttime(submit)] = peerfeval(fname, argin{:}, 'timeout', inf, 'memreq', memreq, 'timreq', timreq, 'diary', diary);
+    % fprintf('submitted job %d\n', submit);
+    submitted(submit)  = true;
+    submittime(submit) = toc(stopwatch);
 
     clear argin
   end % if ~isempty(submit)
@@ -203,8 +189,6 @@ while ~all(submitted) || ~all(collected)
     fprintf('submitted %d/%d, collected %d/%d, busy %d\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(submitted)-sum(collected));
   end
 
-  % to avoid the mutexes from being constantly locked, give the peer some time to pause
-  pause(sleep);
   joblist = peer('joblist');
 
   % get the results of all jobs that have finished
@@ -251,11 +235,6 @@ while ~all(submitted) || ~all(collected)
     fprintf('submitted %d/%d, collected %d/%d, busy %d\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(submitted)-sum(collected));
   end
 
-  if all(submitted) && ~all(collected)
-    % wait a little bit and try to collect another job
-    pause(sleep);
-  end
-
   prevnumsubmitted = sum(submitted);
   prevnumcollected = sum(collected);
 
@@ -298,6 +277,11 @@ while ~all(submitted) || ~all(collected)
       collecttime(sel) = inf;
     end
   end % resubmitting
+
+  if ~all(collected)
+    % wait a little bit, then try again to submit or collect a job
+    pause(sleep);
+  end
 
 end % while not all jobs have finished
 

@@ -60,11 +60,13 @@ hostlist_t *hostlist = NULL;
 pthread_mutex_t mutexsmartmem = PTHREAD_MUTEX_INITIALIZER;
 struct {
 		int enabled;
+		int freeze;
 } smartmem;
 
 pthread_mutex_t mutexsmartcpu = PTHREAD_MUTEX_INITIALIZER;
 struct {
 		int enabled;
+		int freeze;
 		int prevstatus;
 		int evidence;
 } smartcpu;
@@ -77,11 +79,11 @@ struct {
 pthread_mutex_t mutexsmartshare = PTHREAD_MUTEX_INITIALIZER;
 smartsharelist_t *smartsharelist = NULL;
 struct {
-		int    n;
-		time_t t0;
+		int enabled;
 		int prevhostcount;
 		int prevhostid;
-		int enabled;
+		int n;
+		time_t t0;
 } smartshare;
 
 

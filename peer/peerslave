@@ -90,7 +90,7 @@ mentat005)
 mentat068|mentat069)
 	# this is an old 32 bit machine which has 4GB of RAM, a single CPU with a single core
 	# Intel(R) Pentium(R) 4 CPU 3.20GHz
-	peermem[3]="auto"
+	peermem[0]="auto"
 	OPTIONS="--smartcpu 0"
 	;;
 mentat193|mentat194|mentat195|mentat196|mentat197|mentat198|mentat199|mentat200|mentat201|mentat202|mentat203|mentat204|mentat205|mentat206|mentat207|mentat208|mentat209|mentat210|mentat211|mentat212|mentat213|mentat214|mentat215|mentat216|mentat217|mentat218|mentat219|mentat220|mentat221|mentat222|mentat223|mentat224|mentat225|mentat226|mentat227|mentat228|mentat229|mentat230|mentat231|mentat232|mentat233|mentat234)
@@ -169,7 +169,7 @@ function start_peerslave {
 	fi
 
 	PIDFILE=$PIDDIR/peerslave.$SLAVENUM
-	( eval $EXECUTABLE $PEEROPTIONS --matlab "$MATLABCMD" ) &
+	eval $EXECUTABLE $PEEROPTIONS --matlab "$MATLABCMD" &
 	PID=$!
 	if ( check_peerslave $PID ) ; then
 		echo -n $PID > $PIDFILE
@@ -196,6 +196,7 @@ while [ "$index" -lt "$length" ] ; do
     PIDFILE=$PIDDIR/peerslave.$index
     if [[ -e $PIDFILE ]] ; then
         PEERPID=`cat $PIDFILE`
+		# FIXME use check_ function
         if [[ -d /proc/$PEERPID ]] ; then
             # the process is running fine
             echo -n

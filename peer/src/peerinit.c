@@ -124,10 +124,12 @@ void peerinit(void *arg) {
 
 		pthread_mutex_lock(&mutexsmartmem);
 		smartmem.enabled  = 0;
+		smartmem.freeze   = 0;
 		pthread_mutex_unlock(&mutexsmartmem);
 
 		pthread_mutex_lock(&mutexsmartcpu);
 		smartcpu.enabled    = 0;
+		smartcpu.freeze     = 0;
 		smartcpu.prevstatus = STATUS_ZOMBIE;
 		smartcpu.evidence   = 0;
 		pthread_mutex_unlock(&mutexsmartcpu);
@@ -144,11 +146,11 @@ void peerinit(void *arg) {
 		pthread_mutex_unlock(&mutexprevcpu);
 
 		pthread_mutex_lock(&mutexsmartshare);
-		smartshare.n             = 0;
-		smartshare.t0            = time(NULL);
+		smartshare.enabled       = 1;
 		smartshare.prevhostid    = 0;
 		smartshare.prevhostcount = 0;
-		smartshare.enabled       = 1;
+		smartshare.n             = 0;
+		smartshare.t0            = time(NULL);
 		pthread_mutex_unlock(&mutexsmartshare);
 
 		return;

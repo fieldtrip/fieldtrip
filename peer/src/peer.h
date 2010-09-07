@@ -39,6 +39,11 @@
 /* this is UNIX only, and may not work on all flavours */
 #define USE_ABSTRACT_UDS_NAMES
 
+#define STATUS_ZOMBIE            0			/* status = 0 means zombie mode, don't accept anything   */
+#define STATUS_MASTER            1			/* status = 1 means master mode, accept everything       */
+#define STATUS_IDLE              2			/* status = 2 means idle slave, accept only a single job */
+#define STATUS_BUSY              3 			/* status = 3 means busy slave, don't accept a new job   */
+
 #define VERSION                  0x0010
 #define ANNOUNCE_GROUP           "225.0.0.88"
 #define ANNOUNCE_PORT 	         1700		/* it will auto-increment if the port is not available */
@@ -46,7 +51,7 @@
 #define DEFAULT_USER             "unknown"
 #define DEFAULT_HOST             "localhost"
 #define DEFAULT_PORT             1701
-#define DEFAULT_STATUS           0
+#define DEFAULT_STATUS           STATUS_ZOMBIE
 #define DEFAULT_MEMAVAIL         UINT32_MAX
 #define DEFAULT_CPUAVAIL         0
 #define DEFAULT_TIMAVAIL         (24*3600)
@@ -65,10 +70,6 @@
 #define SMARTCPU_TOLERANCE       0.05		/* the ideal load of a computer is N+0.05, with N the number of CPUs */
 #define SO_RCVBUF_SIZE           16384
 #define SO_SNDBUF_SIZE           16384
-#define STATUS_ZOMBIE            0			/* status = 0 means zombie mode, don't accept anything   */
-#define STATUS_MASTER            1			/* status = 1 means master mode, accept everything       */
-#define STATUS_IDLE              2			/* status = 2 means idle slave, accept only a single job */
-#define STATUS_BUSY              3 			/* status = 3 means busy slave, don't accept a new job   */
 
 #define MAXPWDSIZE		  16384
 #define MAXPATHSIZE		  16384

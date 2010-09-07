@@ -86,7 +86,7 @@ optarg = varargin(optbeg:end);
 
 % get the optional input arguments
 timeout = keyval('timeout', optarg); if isempty(timeout), timeout = inf; end
-sleep   = keyval('sleep',   optarg); if isempty(sleep), sleep=0.01; end
+sleep   = keyval('sleep',   optarg); if isempty(sleep), sleep=0.05; end
 memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=0; end
 cpureq  = keyval('cpureq',  optarg); if isempty(cpureq), cpureq=0; end
 timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=0; end
@@ -116,7 +116,13 @@ jobid = [];
 % pass some options that may influence remote execution
 options = {'pwd', getcustompwd, 'path', getcustompath, 'diary', diary};
 
+% status = 0 means zombie mode, don't accept anything
+% status = 1 means master mode, accept everything
+% status = 2 means idle slave, accept only a single job
+% status = 3 means busy slave, don't accept a new job
+
 while isempty(jobid)
+
   if toc(stopwatch)>timeout
     % it took too long to find a peer that was willing to execute the job
     break;
@@ -130,7 +136,7 @@ while isempty(jobid)
     list = list(ismember([list.hostid], hostid));
   end
 
-  % only peers in slave mode are interesting
+  % only peers that are currently in idle or busy slave mode are interesting
   list = list([list.status]==2 | [list.status]==3);
   if isempty(list)
     error('there is no peer available as slave');
@@ -139,7 +145,7 @@ while isempty(jobid)
   % only peers with enough memory are interesting
   list = list([list.memavail] >= memreq);
   if isempty(list)
-    error('FieldTrip:Peer:NotEnoughMemoryAvailableOnSlave', 'there are no slave peers available that meet the memory requirements');
+    error('FieldTrip:Peer:InsufficientMemoryAvailable', 'there are no slave peers available that meet the memory requirements');
   end
 
   % only peers with enough CPU speed are interesting
@@ -154,11 +160,18 @@ while isempty(jobid)
     error('there are no slave peers available to execute a job of this duration');
   end
 
+  % only the idle slaves are interesting from now on
+  % the busy slaves may again become relevant on the next attempt
+  list = list([list.status] == 2);
+  if isempty(list)
+    continue;
+  end
+
   % FIXME the heuristic rule for finding the best match needs to be improved
   mempenalty = scale([list.memavail] - memreq);
   cpupenalty = scale([list.cpuavail] - cpureq);
   timpenalty = scale([list.timavail] - timreq);
-  penalty    = mempenalty + 0.1* rand(1, length(list)) + ([list.status]==3);
+  penalty    = mempenalty + 0.1* rand(1, length(list));
 
   % select the slave peer that has the best match with the job requirements
   [penalty, indx] = sort(penalty);
@@ -176,12 +189,12 @@ while isempty(jobid)
       % the peer accepted the job, there is no need to continue with the for loop
       break;
     catch
-      % probably the selected peer is busy, try the next peer in line
+      % the peer rejected the job, perhaps because it is busy or perhaps because of allowuser/allowgroup/allowhost 
     end
   end % for
 
   if isempty(jobid)
-    % another attempt is needed, give the network some time to recover
+    % the job was not submitted and another attempt is needed, give the network some time to recover
     pause(sleep);
   end
 

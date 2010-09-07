@@ -22,6 +22,9 @@ extern int threadcount;
 extern pthread_mutex_t mutexconnectioncount;
 extern int connectioncount;
 
+extern pthread_mutex_t mutexsmartfreeze;
+extern int smartfreeze;
+
 extern pthread_mutex_t mutexhost;
 extern hostdef_t *host;
 
@@ -43,11 +46,13 @@ extern hostlist_t *hostlist;
 extern pthread_mutex_t mutexsmartmem;
 extern struct {
 		int enabled;
+		int freeze;
 } smartmem;
 
 extern pthread_mutex_t mutexsmartcpu;
 extern struct {
 		int enabled;
+		int freeze;
 		int prevstatus;
 		int evidence;
 } smartcpu;
@@ -60,11 +65,11 @@ extern struct {
 extern pthread_mutex_t mutexsmartshare;
 extern smartsharelist_t *smartsharelist;
 extern struct {
-		int    n;
-		time_t t0;
+		int enabled;
 		int prevhostcount;
 		int prevhostid;
-		int enabled;
+		int n;
+		time_t t0;
 } smartshare;
 
 
