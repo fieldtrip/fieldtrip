@@ -115,7 +115,7 @@ void *tcpsocket(void *arg) {
 				connect_accept = 1;
 		}
 		else {
-				DEBUG(LOG_INFO, "tcpsocket: failed on status and/or jobcount");
+				DEBUG(LOG_INFO, "tcpsocket: failed on status (%d) and/or jobcount (%d)", host->status, jobcount);
 				connect_accept = 0;
 		}
 		pthread_mutex_unlock(&mutexhost);

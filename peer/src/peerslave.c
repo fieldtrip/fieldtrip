@@ -350,7 +350,9 @@ int main(int argc, char *argv[]) {
 		}
 
 		/* start as idle slave */
+		pthread_mutex_lock(&mutexhost);
 		host->status = STATUS_IDLE;
+		pthread_mutex_unlock(&mutexhost);
 
 		while (1) {
 
@@ -371,10 +373,10 @@ int main(int argc, char *argv[]) {
 								if ((en = engOpen(startcmd)) == NULL) {
 										/* this may be due to a licensing problem */
 										/* do not attempt to start again during the timeout period */
-										pthread_mutex_lock(&mutexhost);
 										DEBUG(LOG_ERR, "failed to start MATLAB engine");
 										DEBUG(LOG_NOTICE, "deleting job and switching to zombie mode");
 										engineFailed = time(NULL);
+										pthread_mutex_lock(&mutexhost);
 										host->status = STATUS_ZOMBIE;
 										pthread_mutex_unlock(&mutexhost);
 
@@ -396,8 +398,13 @@ int main(int argc, char *argv[]) {
 						}
 
 						/* switch the mode to busy slave */
+						pthread_mutex_lock(&mutexhost);
 						host->status = STATUS_BUSY;
+						pthread_mutex_unlock(&mutexhost);
 						matlabStart = time(NULL);
+
+						/* inform the other peers of the updated status */
+						announce_once();
 
 						/* get the first job input arguments and options */
 						pthread_mutex_lock(&mutexjoblist);
@@ -583,7 +590,14 @@ int main(int argc, char *argv[]) {
 						job = joblist;
 						pthread_mutex_unlock(&mutexjoblist);
 
+						/* make the slave available again */
+						pthread_mutex_lock(&mutexhost);
 						host->status = STATUS_IDLE;
+						pthread_mutex_unlock(&mutexhost);
+
+						/* inform the other peers of the updated status */
+						announce_once();
+
 						matlabFinished = time(NULL);
 						DEBUG(LOG_NOTICE, "executing job %d took %d seconds", jobnum, matlabFinished - matlabStart);
 				}
@@ -591,7 +605,7 @@ int main(int argc, char *argv[]) {
 						usleep(SLEEPTIME);
 				} /* if jobcount */
 
-				/* test that the matlab engine is not idle for too long */
+				/* switch the engine off if it is idle for too long */
 				if ((matlabRunning!=0) && ((time(NULL)-matlabFinished)>enginetimeout)) {
 						if (engClose(en)!=0) {
 								PANIC("could not stop the MATLAB engine");
@@ -602,14 +616,13 @@ int main(int argc, char *argv[]) {
 						}
 				}
 
-				/* don't try to restart the engine immediately after a failure */
+				/* switch back to the default state after having waiting some time */
 				if ((engineFailed!=0) && ((time(NULL)-engineFailed)>zombietimeout)) {
-						pthread_mutex_lock(&mutexhost);
 						DEBUG(LOG_NOTICE, "switching to idle mode");
-						engineFailed = 0;
+						pthread_mutex_lock(&mutexhost);
 						host->status = STATUS_IDLE;
 						pthread_mutex_unlock(&mutexhost);
-						sleep(1);
+						engineFailed = 0;
 						continue;
 				}
 

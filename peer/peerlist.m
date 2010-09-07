@@ -28,22 +28,24 @@ function list = peerlist
 % along with this program.  If not, see <http://www.gnu.org/licenses/
 % -----------------------------------------------------------------------
 
-% check that the required peer server threads are running
+% check that the  peer server threads are running
 status = true;
-status = status & peer('tcpserver', 'status');
-status = status & peer('announce',  'status');
-status = status & peer('discover',  'status');
-status = status & peer('expire',    'status');
+% status = status & peer('tcpserver', 'status');
+% status = status & peer('udsserver', 'status');
+status = status & peer('announce', 'status');
+status = status & peer('discover', 'status');
+status = status & peer('expire',   'status');
 if ~status
-  % start the maintenance threads
   ws = warning('off');
-  peer('tcpserver', 'start');
+  % start the required maintenance threads
+  % peer('tcpserver', 'start');
+  % peer('udsserver', 'start');
   peer('announce',  'start');
   peer('discover',  'start');
   peer('expire',    'start');
   warning(ws)
-  peer('status',0);     % switch to zombie mode
-  pause(1.5);           % give the announce and discover some time
+  peer('status', 0);    % switch to zombie mode
+  pause(1.5);           % wait for the discoveries
 end
 
 list = peer('peerlist');
@@ -51,7 +53,7 @@ list = peer('peerlist');
 if nargout==0
   % give a summary
   sel = 1:numel(list);
-  fprintf('there are %3d peers running in total (%d hosts, %d users)\n',length(sel), length(unique({list(sel).hostname})), length(unique({list(sel).user}))); 
+  fprintf('there are %3d peers running in total (%d hosts, %d users)\n',length(sel), length(unique({list(sel).hostname})), length(unique({list(sel).user})));
   sel = find([list.status]==1);
   fprintf('there are %3d peers running on %2d hosts as master\n',     length(sel), length(unique({list(sel).hostname})));
   sel = find([list.status]==2);

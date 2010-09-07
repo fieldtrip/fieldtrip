@@ -145,7 +145,7 @@ while isempty(jobid)
   % only peers with enough memory are interesting
   list = list([list.memavail] >= memreq);
   if isempty(list)
-    error('FieldTrip:Peer:InsufficientMemoryAvailable', 'there are no slave peers available that meet the memory requirements');
+    error('there are no slave peers available that meet the memory requirements');
   end
 
   % only peers with enough CPU speed are interesting
@@ -164,6 +164,9 @@ while isempty(jobid)
   % the busy slaves may again become relevant on the next attempt
   list = list([list.status] == 2);
   if isempty(list)
+    % at the moment all the appropriate slaves are busy
+    % give the peer network some time to recover
+    pause(sleep);
     continue;
   end
 
@@ -189,12 +192,13 @@ while isempty(jobid)
       % the peer accepted the job, there is no need to continue with the for loop
       break;
     catch
-      % the peer rejected the job, perhaps because it is busy or perhaps because of allowuser/allowgroup/allowhost 
+      % the peer rejected the job, perhaps because it is busy or perhaps because of allowuser/allowgroup/allowhost
     end
   end % for
 
   if isempty(jobid)
-    % the job was not submitted and another attempt is needed, give the network some time to recover
+    % the job was not submitted succesfully and another attempt is needed
+    % give the peer network some time to recover
     pause(sleep);
   end
 

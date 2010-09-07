@@ -186,7 +186,7 @@ while ~all(submitted) || ~all(collected)
 
   if sum(submitted)>prevnumsubmitted
     % give an update of the progress
-    fprintf('submitted %d/%d, collected %d/%d, busy %d\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(submitted)-sum(collected));
+    fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(submitted)-sum(collected), sum(timused(collected))/toc(stopwatch));
   end
 
   joblist = peer('joblist');
@@ -233,7 +233,7 @@ while ~all(submitted) || ~all(collected)
 
   if sum(collected)>prevnumcollected
     % give an update of the progress
-    fprintf('submitted %d/%d, collected %d/%d, busy %d\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(submitted)-sum(collected));
+    fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(submitted)-sum(collected), sum(timused(collected))/toc(stopwatch));
   end
 
   prevnumsubmitted = sum(submitted);
