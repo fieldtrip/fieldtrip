@@ -107,7 +107,7 @@ int smartmem_update(void) {
 		UINT64_T MemSuggested=0, MemReserved=0;
 		UINT64_T MemTotal=0, MemFree=0, Buffers=0, Cached=0;
 		float scale;
-		int verbose = 0, ok;
+		int ok;
 
 		pthread_mutex_lock(&mutexsmartmem);
 		if (!smartmem.enabled || smartmem.freeze) {

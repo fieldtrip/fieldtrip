@@ -26,7 +26,7 @@
 #include "platform_includes.h"
 
 int bufread(int s, void *buf, int numel) {
-		int numcall = 0, numthis = 0, numread = 0, verbose = 0;
+		int numcall = 0, numthis = 0, numread = 0;
 
 		while (numread<numel) {
 
@@ -49,7 +49,7 @@ int bufread(int s, void *buf, int numel) {
 }
 
 int bufwrite(int s, void *buf, int numel) {
-		int numcall = 0, numthis = 0, numwrite = 0, verbose = 0;
+		int numcall = 0, numthis = 0, numwrite = 0;
 
 		DEBUG(LOG_DEBUG, "bufwrite: request for %d bytes", numel);
 
@@ -74,7 +74,6 @@ int bufwrite(int s, void *buf, int numel) {
 }
 
 int append(void **buf1, int bufsize1, void *buf2, int bufsize2) {
-		int verbose = 0;
 
 		pthread_mutex_lock(&mutexappendcount);
 		appendcount++;

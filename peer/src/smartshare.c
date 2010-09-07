@@ -35,8 +35,8 @@ void smartshare_reset(void) {
 
 /* use a probabilistic approach to determine whether the connection should be dropped */
 int smartshare_check(float t, int hostid) {
-		int verbose = 0;
-		float p, r, baseline = 1;
+		float p, r;
+		UINT64_T mintimreq;
 		smartsharelist_t *listitem;
 
 		DEBUG(LOG_DEBUG, "smartshare_check()");
@@ -85,26 +85,29 @@ int smartshare_check(float t, int hostid) {
 		/* determine the baseline for the time, based on the recent job history */
 		if (smartsharelist) {
 				listitem = smartsharelist;
-				baseline = listitem->timreq;
+				mintimreq = (float)listitem->timreq;
 				while (listitem) {
-						if (listitem->timreq < baseline)
-								baseline = listitem->timreq;
+						if (listitem->timreq < mintimreq)
+								mintimreq = listitem->timreq;
 						listitem = listitem->next;
 				}
+				/* scale the time of this job request with the minimal time required */
+				t = t/(float)mintimreq;
 		}
 		else {
-				baseline = t;
+				/* the scale factor cannot be determined from the list of known jobs */
+				t = 1;
 		}  
 
-		/* scale the time of this job request with the baseline */
-		t = t/baseline;
 
+		/* compute the probability of accepting the job */
 		if (t<=1)
 				p = 1;
 		else
 				p = 1.0 / t;
 
-		r = (float)rand() / (float)INT32_MAX;
+		/* compute random number between 0 and 1 */
+		r = (float)rand() / (float)RAND_MAX;
 
 		DEBUG(LOG_DEBUG, "smartshare_check: t = %f, p = %f, r = %f, n = %d", t, p, r, smartshare.n);
 
@@ -119,7 +122,6 @@ int smartshare_check(float t, int hostid) {
 
 /* keep a short history of the jobs that are currently submidded */
 void smartshare_history(jobdef_t *job) {
-		int verbose = 0;
 		int historycount = 0;
 		int peercount = 0;
 		smartsharelist_t *listitem;

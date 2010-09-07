@@ -174,7 +174,7 @@ typedef struct peerlist_s {
 } peerlist_t;
 
 typedef struct smartsharelist_s {
-		UINT32_T timreq; 
+		UINT64_T timreq; 
 		struct smartsharelist_s *next;
 } smartsharelist_t;
 

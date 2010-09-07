@@ -31,7 +31,7 @@ int localhost(const char *ipaddr)
 		return 0;
 
 #elif defined (PLATFORM_LINUX) || defined(PLATFORM_OSX)
-		int family, s, found = 0, verbose = 0;
+		int family, s, found = 0;
 		struct ifaddrs *ifaddr, *ifa;
 		char host[NI_MAXHOST];
 

@@ -76,18 +76,13 @@ void cleanup_announce(void *arg) {
 
 void *announce(void *arg) {
 		int fd = 0;
-		int verbose = 0;
 		struct sockaddr_in multicastAddr, localhostAddr;
 		hostdef_t *message = NULL;
 		unsigned char ttl = 3;
-		unsigned char one = 1;
-		UINT64_T memavail;
 
 		threadlocal_t threadlocal;
 		threadlocal.message = NULL;
 		threadlocal.fd = -1;
-
-		DEBUG(LOG_NOTICE, "announce()");
 
 		/* this is for debugging */
 		pthread_mutex_lock(&mutexthreadcount);
@@ -218,11 +213,9 @@ cleanup:
 
 int announce_once(void) {
 		int fd = 0;
-		int verbose = 0;
 		struct sockaddr_in multicastAddr, localhostAddr;
 		hostdef_t *message = NULL;
 		unsigned char ttl = 3;
-		unsigned char one = 1;
 
 		/* create what looks like an ordinary UDP socket */
 		if ((fd=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP)) < 0) {

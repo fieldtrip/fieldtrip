@@ -38,10 +38,8 @@ void cleanup_expire(void *arg) {
 }
 
 void *expire(void *arg) {
-		int found, verbose = 0;
+		int found;
 		peerlist_t *peer = NULL, *next = NULL;
-
-		DEBUG(LOG_NOTICE, "expire()");
 
 		/* this is for debugging */
 		pthread_mutex_lock(&mutexthreadcount);
@@ -75,7 +73,7 @@ void *expire(void *arg) {
 						found = found | !ismember_hostlist (peerlist->host->name);
 						if (found) {
 								DEBUG(LOG_INFO, "expire: name = %s", peerlist->host->name);
-								DEBUG(LOG_INFO, "expire: port = %d", peerlist->host->port);
+								DEBUG(LOG_INFO, "expire: port = %u", peerlist->host->port);
 								DEBUG(LOG_INFO, "expire: time = %s", ctime(&(peerlist->time)));
 								/* delete the first item in the list */
 								next = peerlist->next;
@@ -97,8 +95,8 @@ void *expire(void *arg) {
 								found = found | !ismember_grouplist(next->host->group);
 								found = found | !ismember_hostlist (next->host->name);
 								if (found) {
-										DEBUG(LOG_INFO, "expire: name = %s\n", next->host->name);
-										DEBUG(LOG_INFO, "expire: port = %d\n", next->host->port);
+										DEBUG(LOG_INFO, "expire: name = %s", next->host->name);
+										DEBUG(LOG_INFO, "expire: port = %u", next->host->port);
 										DEBUG(LOG_INFO, "expire: time = %s", ctime(&(next->time)));
 										/* delete the next item in the list */
 										peer->next = next->next;

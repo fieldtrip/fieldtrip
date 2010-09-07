@@ -80,8 +80,6 @@ void *discover(void *arg) {
 		struct ip_mreq mreq;
 		int optval;
 
-		DEBUG(LOG_NOTICE, "discover()");
-
 		threadlocal_t threadlocal;
 		threadlocal.discovery = NULL;
 		threadlocal.fd = -1;
@@ -180,8 +178,8 @@ void *discover(void *arg) {
 				inet_ntop(AF_INET, &addr.sin_addr, ipaddr, INET_ADDRSTRLEN);
 
 				DEBUG(LOG_DEBUG, "discover: host->name = %s", discovery->name);
-				DEBUG(LOG_DEBUG, "discover: host->port = %d", discovery->port);
-				DEBUG(LOG_DEBUG, "discover: host->id   = %llu", discovery->id);
+				DEBUG(LOG_DEBUG, "discover: host->port = %u", discovery->port);
+				DEBUG(LOG_DEBUG, "discover: host->id   = %u", discovery->id);
 				DEBUG(LOG_DEBUG, "discover: IP address = %s", ipaddr);
 
 				/* check whether the peer should be listed */
@@ -191,12 +189,12 @@ void *discover(void *arg) {
 				accept = (accept && ismember_hostlist (discovery->name));
 
 				if (!accept) {
-						DEBUG(LOG_DEBUG, "discover: rejecting %s:%d, id = %llu", discovery->name, discovery->port, discovery->id);
+						DEBUG(LOG_DEBUG, "discover: rejecting %s:%u, id = lu", discovery->name, discovery->port, discovery->id);
 						FREE(discovery);
 						continue;
 				}
 				else {
-						DEBUG(LOG_INFO, "discover: accepting %s:%d, id = %llu", discovery->name, discovery->port, discovery->id);
+						DEBUG(LOG_INFO, "discover: accepting %s:%u, id = %u", discovery->name, discovery->port, discovery->id);
 				}
 
 				pthread_mutex_lock(&mutexpeerlist);
@@ -254,9 +252,9 @@ void *discover(void *arg) {
 						while(peer) {
 								DEBUG(LOG_DEBUG, "discover: peerlist[%d] =", i);
 								DEBUG(LOG_DEBUG, "discover:   host.name = %s", peer->host->name);
-								DEBUG(LOG_DEBUG, "discover:   host.port = %d", peer->host->port);
-								DEBUG(LOG_DEBUG, "discover:   host.id   = %llu", peer->host->id);
-								DEBUG(LOG_DEBUG, "discover:   IP addr.  = %s", peer->ipaddr);
+								DEBUG(LOG_DEBUG, "discover:   host.port = %u", peer->host->port);
+								DEBUG(LOG_DEBUG, "discover:   host.id   = %u", peer->host->id);
+								DEBUG(LOG_DEBUG, "discover:   ipaddr    = %s", peer->ipaddr);
 								DEBUG(LOG_DEBUG, "discover:   time      = %s", ctime(&(peer->time)));
 								peer = peer->next ;
 								i++;

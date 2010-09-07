@@ -25,7 +25,6 @@
 
 /* return value 0 if ok, -1 if error or unsupported platform */
 int smartcpu_info(int *ProcessorCount, float *BogoMips, float *AvgLoad, float *CpuLoad) {
-		int verbose = 0;
 		void *fp;
 		char str[256];
 		float AvgLoad1 = 0, AvgLoad5 = 0, AvgLoad15 = 0;
@@ -187,8 +186,7 @@ int smartcpu_info(int *ProcessorCount, float *BogoMips, float *AvgLoad, float *C
 /* this function modifies host->status */
 int smartcpu_update(void) {
 		peerlist_t *peer;
-		int ProcessorCount, NumPeers=0;
-		int ok, verbose = 0;
+		int ProcessorCount, NumPeers=0, ok;
 		float BogoMips, AvgLoad, CpuLoad;
 
 		pthread_mutex_lock(&mutexsmartcpu);
@@ -264,7 +262,7 @@ int smartcpu_update(void) {
 				DEBUG(LOG_DEBUG, "smartcpu_update: BogoMips       = %.2f", BogoMips);
 				DEBUG(LOG_DEBUG, "smartcpu_update: AvgLoad        = %.2f", AvgLoad);
 				DEBUG(LOG_DEBUG, "smartcpu_update: CpuLoad        = %.2f %%", CpuLoad*100);
-				DEBUG(LOG_DEBUG, "smartcpu_update: host->status   = %d", host->status);
+				DEBUG(LOG_DEBUG, "smartcpu_update: host->status   = %u", host->status);
 		} /* if evidence */
 
 		if (smartcpu.evidence >= NumPeers+1) {
@@ -277,7 +275,7 @@ int smartcpu_update(void) {
 				DEBUG(LOG_DEBUG, "smartcpu_update: BogoMips       = %.2f", BogoMips);
 				DEBUG(LOG_DEBUG, "smartcpu_update: AvgLoad        = %.2f", AvgLoad);
 				DEBUG(LOG_DEBUG, "smartcpu_update: CpuLoad        = %.2f %%", CpuLoad*100);
-				DEBUG(LOG_DEBUG, "smartcpu_update: host->status   = %d", host->status);
+				DEBUG(LOG_DEBUG, "smartcpu_update: host->status   = %u", host->status);
 		} /* if evidence */
 
 		pthread_mutex_unlock(&mutexhost);

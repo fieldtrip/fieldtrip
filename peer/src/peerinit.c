@@ -30,7 +30,7 @@ unsigned long hash(unsigned char *str)
 		unsigned long hash = 5381;
 		int c;
 
-		while (c = *str++)
+		while (c = (*str++))
 				hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
 
 		return hash;
@@ -39,13 +39,10 @@ unsigned long hash(unsigned char *str)
 /******************************************************************************/
 void peerinit(void *arg) {
 		struct passwd *pwd;
-		int s, verbose = 0;
 
 #if defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64)
 		DWORD nStrLen; 
 #endif
-
-		DEBUG(LOG_NOTICE, "peerinit()");
 
 		pthread_mutex_lock(&mutexhost);
 		if (host) {
@@ -117,8 +114,8 @@ void peerinit(void *arg) {
 		host->id += hash(host->group);
 
 		DEBUG(LOG_INFO, "peerinit: host.name =  %s", host->name);
-		DEBUG(LOG_INFO, "peerinit: host.port =  %d", host->port);
-		DEBUG(LOG_INFO, "peerinit: host.id   =  %d", host->id);
+		DEBUG(LOG_INFO, "peerinit: host.port =  %u", host->port);
+		DEBUG(LOG_INFO, "peerinit: host.id   =  %u", host->id);
 
 		pthread_mutex_unlock(&mutexhost);
 
@@ -159,9 +156,6 @@ void peerinit(void *arg) {
 /******************************************************************************/
 /* free the dynamical memory that is shared between the threads               */
 void peerexit(void *arg) {
-		int verbose = 0;
-
-		DEBUG(LOG_NOTICE, "peerexit()");
 
 		pthread_mutex_lock(&mutexhost);
 		FREE(host);

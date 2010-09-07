@@ -74,13 +74,11 @@ void *udsserver(void *arg) {
 #ifdef WIN32
 		/* this is not yet implemented on windows */
 #else
-		int verbose = 0;
-		int c, fd, retry;
+		int c, fd;
 
 		/* these variables are for the socket */
 		struct sockaddr_un local, remote;
-		int len;
-		int optval;
+		socklen_t len;
 
 		/* these variables are for the threading */
 		int rc;
@@ -88,8 +86,6 @@ void *udsserver(void *arg) {
 
 		threadlocal_t threadlocal;
 		threadlocal.fd = -1;
-
-		DEBUG(LOG_NOTICE, "udsserver()");
 
 		/* this is for debugging */
 		pthread_mutex_lock(&mutexthreadcount);

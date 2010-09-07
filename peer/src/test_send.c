@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
 		if (verbose>2) {
 				pthread_mutex_lock(&mutexhost);
 				fprintf(stderr, "test_send: host.name =  %s\n", host->name);
-				fprintf(stderr, "test_send: host.port =  %d\n", host->port);
+				fprintf(stderr, "test_send: host.port =  %u\n", host->port);
 				pthread_mutex_unlock(&mutexhost);
 		}
 
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 				while(peer) {
 						fprintf(stderr, "-------------------------------------------------\n");
 						fprintf(stderr, "test_send: peerlist[%d].host.name = %s\n", i, peer->host->name);
-						fprintf(stderr, "test_send: peerlist[%d].host.port = %d\n", i, peer->host->port);
+						fprintf(stderr, "test_send: peerlist[%d].host.port = %u\n", i, peer->host->port);
 
 						/* open the TCP socket */
 						server = open_tcp_connection(peer->host->name, peer->host->port);

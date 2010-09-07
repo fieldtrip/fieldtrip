@@ -359,12 +359,12 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				pthread_mutex_unlock(&mutexstatus);
 
 				pthread_mutex_lock(&mutexhost);
-				mexPrintf("host.hostid     = %d\n", host->id);
-				mexPrintf("host.hostname   = %s\n", host->name);
-				mexPrintf("host.port       = %d\n", host->port);
+				mexPrintf("host.id         = %u\n", host->id);
+				mexPrintf("host.name       = %s\n", host->name);
+				mexPrintf("host.port       = %u\n", host->port);
 				mexPrintf("host.user       = %s\n", host->user);
 				mexPrintf("host.group      = %s\n", host->group);
-				mexPrintf("host.status     = %d\n", host->status);
+				mexPrintf("host.status     = %u\n", host->status);
 				mexPrintf("host.memavail   = %llu\n", host->memavail);
 				mexPrintf("host.timavail   = %llu\n", host->timavail);
 				mexPrintf("host.cpuavail   = %llu\n", host->cpuavail);
@@ -403,12 +403,12 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				peer = peerlist;
 				while(peer) {
 						mexPrintf("peerlist[%d] = \n", i);
-						mexPrintf("  host.hostid   = %d\n", peer->host->id);
-						mexPrintf("  host.hostname = %s\n", peer->host->name);
-						mexPrintf("  host.port     = %d\n", peer->host->port);
+						mexPrintf("  host.id       = %u\n", peer->host->id);
+						mexPrintf("  host.name     = %s\n", peer->host->name);
+						mexPrintf("  host.port     = %u\n", peer->host->port);
 						mexPrintf("  host.user     = %s\n", peer->host->user);
 						mexPrintf("  host.group    = %s\n", peer->host->group);
-						mexPrintf("  host.status   = %d\n", peer->host->status);
+						mexPrintf("  host.status   = %u\n", peer->host->status);
 						mexPrintf("  host.memavail = %llu\n", peer->host->memavail);
 						mexPrintf("  host.cpuavail = %llu\n", peer->host->cpuavail);
 						mexPrintf("  host.timavail = %llu\n", peer->host->timavail);
@@ -424,14 +424,14 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				job = joblist;
 				while(job) {
 						mexPrintf("joblist[%d] = \n", i);
-						mexPrintf("  job.version = %d\n", job->job->version);
-						mexPrintf("  job.id      = %d\n", job->job->id);
-						mexPrintf("  job.memreq  = %u\n", job->job->memreq);
-						mexPrintf("  job.cpureq  = %u\n", job->job->cpureq);
-						mexPrintf("  job.timreq  = %u\n", job->job->timreq);
-						mexPrintf("  job.argsize = %d\n", job->job->argsize);
-						mexPrintf("  job.optsize = %d\n", job->job->optsize);
-						mexPrintf("  job.host.id = %d\n", job->host->id);
+						mexPrintf("  job.version = %u\n", job->job->version);
+						mexPrintf("  job.id      = %u\n", job->job->id);
+						mexPrintf("  job.memreq  = %llu\n", job->job->memreq);
+						mexPrintf("  job.cpureq  = %llu\n", job->job->cpureq);
+						mexPrintf("  job.timreq  = %llu\n", job->job->timreq);
+						mexPrintf("  job.argsize = %u\n", job->job->argsize);
+						mexPrintf("  job.optsize = %u\n", job->job->optsize);
+						mexPrintf("  job.host.id = %u\n", job->host->id);
 						job = job->next ;
 						i++;
 				}

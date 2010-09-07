@@ -53,7 +53,6 @@ void cleanup_tcpserver(void *arg) {
  * if a connection is made by a client, it starts the tcpsocket function
  ***********************************************************************/
 void *tcpserver(void *arg) {
-		int verbose = 0;
 		int c, fd, retry;
 
 		/* these variables are for the socket */
@@ -72,8 +71,6 @@ void *tcpserver(void *arg) {
 
 		threadlocal_t threadlocal;
 		threadlocal.fd = -1;
-
-		DEBUG(LOG_NOTICE, "tcpserver()");
 
 		/* this is for debugging */
 		pthread_mutex_lock(&mutexthreadcount);

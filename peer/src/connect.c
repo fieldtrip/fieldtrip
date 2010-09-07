@@ -25,43 +25,43 @@
 #include "extern.h"
 #include "platform_includes.h"
 
-		int open_uds_connection(const char *socketname) {
+int open_uds_connection(const char *socketname) {
 #if defined (PLATFORM_WIN32) || defined (PLATFORM_WIN64)
-				/* not yet implemented */
+		/* not yet implemented */
 #else
-				int s, len, verbose = 0;
-				struct sockaddr_un remote;
+		int s;
+		struct sockaddr_un remote;
+		socklen_t len;
 
-				if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
-						perror("open_uds_connection socket");
-						DEBUG(LOG_ERR, "error: open_uds_connection socket");
-						return -1;
-				}
-
-				remote.sun_family = AF_UNIX;
-				strcpy(remote.sun_path, socketname);
-				len = strlen(remote.sun_path) + sizeof(remote.sun_family);
-#ifdef USE_ABSTRACT_UDS_NAMES
-				remote.sun_path[0] = 0;
-#endif
-				if (connect(s, (struct sockaddr *)&remote, len) == -1) {
-						perror("open_uds_connection connect");
-						DEBUG(LOG_ERR, "error: open_uds_connection connect");
-						return -1;
-				}
-
-				pthread_mutex_lock(&mutexconnectioncount);
-				connectioncount++;
-				pthread_mutex_unlock(&mutexconnectioncount);
-
-				DEBUG(LOG_INFO, "open_uds_connection: connected to %s on socket %d", socketname, s);
-				return s;
-#endif
+		if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+				perror("open_uds_connection socket");
+				DEBUG(LOG_ERR, "error: open_uds_connection socket");
+				return -1;
 		}
+
+		remote.sun_family = AF_UNIX;
+		strcpy(remote.sun_path, socketname);
+		len = strlen(remote.sun_path) + sizeof(remote.sun_family);
+#ifdef USE_ABSTRACT_UDS_NAMES
+		remote.sun_path[0] = 0;
+#endif
+		if (connect(s, (struct sockaddr *)&remote, len) == -1) {
+				perror("open_uds_connection connect");
+				DEBUG(LOG_ERR, "error: open_uds_connection connect");
+				return -1;
+		}
+
+		pthread_mutex_lock(&mutexconnectioncount);
+		connectioncount++;
+		pthread_mutex_unlock(&mutexconnectioncount);
+
+		DEBUG(LOG_INFO, "open_uds_connection: connected to %s on socket %d", socketname, s);
+		return s;
+#endif
+}
 
 
 int open_tcp_connection(const char *hostname, int port) {
-		int verbose = 0;
 		int s, retry;
 		struct sockaddr_in sa;
 		struct hostent *host = NULL;
@@ -75,7 +75,7 @@ int open_tcp_connection(const char *hostname, int port) {
 				return 0;
 		}
 		else {
-				DEBUG(LOG_INFO, "open_tcp_connection: server = %s, port = %d", hostname, port);
+				DEBUG(LOG_INFO, "open_tcp_connection: server = %s, port = %u", hostname, port);
 		}
 
 #ifdef WIN32
@@ -140,12 +140,12 @@ int open_tcp_connection(const char *hostname, int port) {
 		pthread_mutex_unlock(&mutexconnectioncount);
 
 		DEBUG(LOG_DEBUG, "open_tcp_connection: connectioncount = %d", connectioncount);
-		DEBUG(LOG_INFO, "open_tcopen_tcpnnection: connected to %s:%d on socket %d", hostname, port, s);
+		DEBUG(LOG_INFO, "open_tcp_connection: connected to %s:%u on socket %d", hostname, port, s);
 		return s;
 }
 
 int close_connection(int s) {
-		int retval, verbose = 0;
+		int retval;
 
 		DEBUG(LOG_INFO, "close_connection: socket = %d", s);
 

@@ -13,7 +13,7 @@ BINDIR	 = .
 INCPATH  = -I.
 LIBPATH  = -L.
 LIBS 	 = -lm -lpthread -lpeer
-CFLAGS	 = $(INCPATH) -Wunused -pedantic -O1 -fPIC -fpack-struct
+CFLAGS	 = $(INCPATH) -Wall -pedantic -O1 -fPIC -fpack-struct
 # CXXFLAGS = $(INCPATH) -Wunused -pedantic -O1
 CFLAGS	 = $(INCPATH) -Wall -pthread
 

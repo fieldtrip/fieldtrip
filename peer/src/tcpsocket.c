@@ -56,7 +56,7 @@ void cleanup_tcpsocket(void *arg) {
 /* this function deals with the incoming message */
 /* the return value is always NULL */
 void *tcpsocket(void *arg) {
-		int n, verbose = 0, jobcount;
+		int n, jobcount;
 		int connect_accept = 1, connect_continue = 1, handshake;
 		joblist_t *job;
 
@@ -149,7 +149,7 @@ void *tcpsocket(void *arg) {
 
 		/* test whether the version is compatible */
 		if (message->host->version!=VERSION) {
-				DEBUG(LOG_ERR, "tcpsocket: incorrect host version (%d, %d)", message->host->version, VERSION);
+				DEBUG(LOG_ERR, "tcpsocket: incorrect host version (%u, %u)", message->host->version, VERSION);
 				connect_accept   = 0;
 				connect_continue = 0; /* prevent another read request */
 		}
@@ -183,7 +183,7 @@ void *tcpsocket(void *arg) {
 
 		/* test whether the request can be accepted based on the job characteristics */
 		if (message->job->version!=VERSION) {
-				DEBUG(LOG_ERR, "tcpsocket: incorrect job version (%d, %d)", message->job->version, VERSION);
+				DEBUG(LOG_ERR, "tcpsocket: incorrect job version (%u, %u)", message->job->version, VERSION);
 				connect_accept   = 0;
 				connect_continue = 0; /* prevent another read request */
 		}
@@ -292,13 +292,13 @@ void *tcpsocket(void *arg) {
 		job->next = joblist;
 		joblist = job;
 
-		DEBUG(LOG_DEBUG, "tcpsocket: job.version  = %d", job->job->version);
-		DEBUG(LOG_DEBUG, "tcpsocket: job.id       = %d", job->job->id);
-		DEBUG(LOG_DEBUG, "tcpsocket: job.argsize  = %d", job->job->argsize);
-		DEBUG(LOG_DEBUG, "tcpsocket: job.optsize  = %d", job->job->optsize);
+		DEBUG(LOG_DEBUG, "tcpsocket: job.version  = %u", job->job->version);
+		DEBUG(LOG_DEBUG, "tcpsocket: job.id       = %u", job->job->id);
+		DEBUG(LOG_DEBUG, "tcpsocket: job.argsize  = %u", job->job->argsize);
+		DEBUG(LOG_DEBUG, "tcpsocket: job.optsize  = %u", job->job->optsize);
 		DEBUG(LOG_DEBUG, "tcpsocket: host.name    = %s", job->host->name);
-		DEBUG(LOG_DEBUG, "tcpsocket: host.port    = %d", job->host->port);
-		DEBUG(LOG_DEBUG, "tcpsocket: host.id      = %d", job->host->id);
+		DEBUG(LOG_DEBUG, "tcpsocket: host.port    = %u", job->host->port);
+		DEBUG(LOG_DEBUG, "tcpsocket: host.id      = %u", job->host->id);
 
 		pthread_mutex_unlock(&mutexjoblist);
 
