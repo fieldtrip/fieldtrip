@@ -130,13 +130,19 @@ prevnumcollected = 0;
 % post all jobs and gather their results
 while ~all(submitted) || ~all(collected)
 
-  % select one of the jobs to be submitted
-  submit = find(~submitted);                % select all jobs that still need to be submitted
-  % submit = submit(randperm(numel(submit))); % randomize the order of the list of jobs
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % PART 1: submit the jobs
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  % select all jobs that still need to be submitted
+  submit = find(~submitted);
 
   if ~isempty(submit)
-    % take the first job from the list
-    submit = submit(1);
+
+    % pick the first job, or alternatively pick a random job
+    % pick = 1;
+    pick = ceil(rand(1)*length(submit));
+    submit = submit(pick);
 
     if any(collected)
       prev_timreq = timreq;
@@ -182,16 +188,21 @@ while ~all(submitted) || ~all(collected)
     submittime(submit) = toc(stopwatch);
 
     clear argin
-  end % if ~isempty(submit)
+  end % if ~isempty(submitlist)
 
   if sum(submitted)>prevnumsubmitted
     % give an update of the progress
     fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(submitted)-sum(collected), sum(timused(collected))/toc(stopwatch));
   end
 
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % PART 2: collect the job results that have finished sofar
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  % get the list of job results
   joblist = peer('joblist');
 
-  % get the results of all jobs that have finished
+  % get the output of all jobs that have finished
   for i=1:numel(joblist)
 
     % figure out to which job these results belong
@@ -238,6 +249,10 @@ while ~all(submitted) || ~all(collected)
 
   prevnumsubmitted = sum(submitted);
   prevnumcollected = sum(collected);
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % PART 3: flag jobs that take too long for resubmission
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   % check for jobs that are taking too long to finish
   if all(submitted) && any(collected) && ~all(collected)
