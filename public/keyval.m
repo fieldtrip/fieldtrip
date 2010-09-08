@@ -28,7 +28,7 @@ function [val, remaining] = keyval(key, varargin)
 %
 % $Id$
 
-if length(varargin)==1 && iscell(varargin{1})
+if nargin==2 && iscell(varargin{1})
   varargin = varargin{1};
 end
 
