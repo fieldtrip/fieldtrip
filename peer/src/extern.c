@@ -57,6 +57,12 @@ grouplist_t *grouplist = NULL;
 pthread_mutex_t mutexhostlist = PTHREAD_MUTEX_INITIALIZER;
 hostlist_t *hostlist = NULL;
 
+pthread_mutex_t mutexkillswitch = PTHREAD_MUTEX_INITIALIZER;
+struct {
+		int enabled;
+		UINT32_T masterid;
+} killswitch;
+
 pthread_mutex_t mutexsmartmem = PTHREAD_MUTEX_INITIALIZER;
 struct {
 		int enabled;

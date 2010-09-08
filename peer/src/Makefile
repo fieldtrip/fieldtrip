@@ -59,7 +59,7 @@ TARGET   = peerslave.$(MATLABARCH)
 
 all: $(TARGET)
 
-libpeer.a: tcpserver.o udsserver.o tcpsocket.o discover.o announce.o expire.o util.o extern.o peerinit.o security.o localhost.o smartshare.o smartmem.o smartcpu.o connect.o
+libpeer.a: tcpserver.o udsserver.o tcpsocket.o discover.o announce.o expire.o util.o extern.o peerinit.o security.o localhost.o smartshare.o smartmem.o smartcpu.o connect.o killswitch.o
 	ar rv $@ $^
 
 peer: peer.o libpeer.a

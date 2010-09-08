@@ -43,6 +43,12 @@ extern grouplist_t *grouplist;
 extern pthread_mutex_t mutexhostlist;
 extern hostlist_t *hostlist;
 
+extern pthread_mutex_t mutexkillswitch;
+extern struct {
+		int enabled;
+		UINT32_T masterid;
+} killswitch;
+
 extern pthread_mutex_t mutexsmartmem;
 extern struct {
 		int enabled;

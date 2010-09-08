@@ -110,6 +110,9 @@ void *expire(void *arg) {
 
 				pthread_mutex_unlock(&mutexpeerlist);
 
+				/* check whether the kill switch should be triggered */
+				check_killswitch();
+
 				/* note that this is a thread cancelation point */
 				pthread_testcancel();
 				usleep(EXPIRESLEEP);

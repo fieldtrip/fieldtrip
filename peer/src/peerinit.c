@@ -119,6 +119,11 @@ void peerinit(void *arg) {
 
 		pthread_mutex_unlock(&mutexhost);
 
+		pthread_mutex_lock(&mutexkillswitch);
+		killswitch.enabled  = 0;
+		killswitch.masterid = 0;
+		pthread_mutex_unlock(&mutexkillswitch);
+
 		pthread_mutex_lock(&mutexsmartmem);
 		smartmem.enabled  = 0;
 		smartmem.freeze   = 0;

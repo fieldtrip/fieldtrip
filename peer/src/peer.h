@@ -233,24 +233,25 @@ int ismember_userlist(char *);
 int ismember_grouplist(char *);
 int ismember_hostlist(char *);
 
-/* functions from util.c */
+/* functions from util.c and elsewhere */
 int  append(void **buf1, int bufsize1, void *buf2, int bufsize2);
 int  bufread(int s, void *buf, int numel);
 int  bufwrite(int s, void *buf, int numel);
-int  open_uds_connection(const char *socketname);
-int  open_tcp_connection(const char *hostname, int port);
 int  close_connection(int s);
-void check_datatypes(void);
-int  jobcount(void);
-int  peercount(void);
 int  hoststatus(void);
+int  jobcount(void);
 int  localhost(const char *ipaddr);
-void clear_peerlist(void);
-void clear_joblist(void);
-void clear_userlist(void);
+int  open_tcp_connection(const char *hostname, int port);
+int  open_uds_connection(const char *socketname);
+int  peercount(void);
+int  check_killswitch(void);
+void check_datatypes(void);
 void clear_grouplist(void);
 void clear_hostlist(void);
+void clear_joblist(void);
+void clear_peerlist(void);
 void clear_smartsharelist(void);
+void clear_userlist(void);
 
 #ifdef __cplusplus
 }

@@ -54,6 +54,12 @@ function peerslave(varargin)
 % along with this program.  If not, see <http://www.gnu.org/licenses/
 % -----------------------------------------------------------------------
 
+if matlabversion>=7.8
+  % switch to zombie when finished or when ctrl-c gets pressed
+  % the onCleanup function does not exist for older versions
+  onCleanup(@peerzombie);
+end
+
 % get the optional input arguments
 maxnum     = keyval('maxnum',     varargin); if isempty(maxnum),   maxnum=inf; end
 maxtime    = keyval('maxtime',    varargin); if isempty(maxtime),  maxtime=inf; end

@@ -58,15 +58,6 @@ if ~iscell(allowgroup) && ischar(allowgroup)
   allowgroup = {allowgroup};
 end
 
-% start the maintenance threads
-ws = warning('off');
-peer('tcpserver', 'start');
-% peer('udsserver', 'start');
-peer('announce',  'start');
-peer('discover',  'start');
-peer('expire',    'start');
-warning(ws)
-
 % this should not be user-configurable
 % if ~isempty(user)
 %   peer('user', user);
@@ -90,6 +81,23 @@ peer('allowgroup', allowgroup);
 % switch to master mode
 peer('status', 1);
 
-% wait some time to ensure that all current peers have been found
-pause(1.5);
+% check that the required maintenance threads are running
+status = true;
+status = status && peer('announce', 'status');
+status = status && peer('discover', 'status');
+status = status && peer('expire',   'status');
+status = status && peer('tcpserver', 'status');
+% status = status && peer('udsserver', 'status');
+if ~status
+  % start the maintenance threads
+  ws = warning('off');
+  peer('announce',  'start');
+  peer('discover',  'start');
+  peer('expire',    'start');
+  peer('tcpserver', 'start');
+  % peer('udsserver', 'start');
+  warning(ws)
+  % wait some time to ensure that all peers on the network have been found
+  pause(1.5);
+end
 

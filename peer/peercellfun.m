@@ -42,6 +42,12 @@ function varargout = peercellfun(fname, varargin)
 % along with this program.  If not, see <http://www.gnu.org/licenses/
 % -----------------------------------------------------------------------
 
+if matlabversion>=7.8
+  % switch to zombie when finished or when ctrl-c gets pressed
+  % the onCleanup function does not exist for older versions
+  onCleanup(@peerzombie);
+end
+
 % locate the begin of the optional key-value arguments
 optbeg = find(cellfun(@ischar, varargin));
 optarg = varargin(optbeg:end);
