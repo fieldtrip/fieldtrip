@@ -116,8 +116,9 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
     nrpt = 1;
     flag = 1;
   end
-  if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq);      else nfrq = 1; end
-  if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time);      else ntim = 1; end
+  if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq); else nfrq = 1; end
+  if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time); else ntim = 1; end
+  
   ncmb      = size(channelcmb,1);
   cmbindx   = zeros(ncmb,2);
   labelcmb  = cell(ncmb,2);
@@ -130,13 +131,30 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
     end
   end
 
-  crsspctrm = zeros(nrpt,ncmb,nfrq,ntim)+i.*zeros(nrpt,ncmb,nfrq,ntim);
   sumtapcnt = [0;cumsum(data.cumtapcnt(:))];
-  for p = 1:nrpt
-    indx    = (sumtapcnt(p)+1):sumtapcnt(p+1);
-    tmpdat1 = data.fourierspctrm(indx,cmbindx(:,1),:,:);
-    tmpdat2 = data.fourierspctrm(indx,cmbindx(:,2),:,:);
-    crsspctrm(p,:,:,:) = (sum(tmpdat1.*conj(tmpdat2),1))./data.cumtapcnt(p);
+  fastflag  = all(data.cumtapcnt(:)==data.cumtapcnt(1));
+  if fastflag && nrpt>1
+    ntap = data.cumtapcnt(1);
+    
+    % compute running sum across tapers
+    for p = 1:ntap
+      indx      = p:ntap:nrpt*ntap;
+      if p==1
+        crsspctrm = data.fourierspctrm(indx,cmbindx(:,1),:,:).*  ...
+               conj(data.fourierspctrm(indx,cmbindx(:,2),:,:));
+      else
+        crsspctrm = data.fourierspctrm(indx,cmbindx(:,1),:,:).*  ...
+               conj(data.fourierspctrm(indx,cmbindx(:,2),:,:)) + crsspctrm;
+      end
+    end
+    crsspctrm = crsspctrm./ntap;
+  else
+    for p = 1:nrpt
+      indx    = (sumtapcnt(p)+1):sumtapcnt(p+1);
+      tmpdat1 = data.fourierspctrm(indx,cmbindx(:,1),:,:);
+      tmpdat2 = data.fourierspctrm(indx,cmbindx(:,2),:,:);
+      crsspctrm(p,:,:,:) = (sum(tmpdat1.*conj(tmpdat2),1))./data.cumtapcnt(p);
+    end
   end
   data.crsspctrm = crsspctrm;
   data.labelcmb  = labelcmb;
