@@ -64,7 +64,6 @@
 % TO DO
 % 
 % - check EM code for mixture models
-% - integrate utility functions in relevant classes
 % - test dynamic_clf and also make dynamic_regr/static_regr
 % - repeated calls to train should allow for online learning as much as possible
 % - rethink significance testing (binomial,wilcoxon,permutation) and also implement for regressor

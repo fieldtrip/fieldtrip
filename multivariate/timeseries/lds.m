@@ -19,6 +19,8 @@ classdef lds < regressor & timeseries & transfer_learner
 %  thresh = 1e-4; % EM convergence threshold    
 %  diagQ = 0; % regularize state noise to diagonal (0 <= diagQ <=1)
 %  diagR = 0; % regularize measurement noise to diagonal (0 <= diagR <=1)
+%  epsilon = 0 % added to the diagonal of the covariance matrices for numerical
+%                stability (e.g. 1e-7);
 %
 % parameters:
 %
@@ -34,8 +36,6 @@ classdef lds < regressor & timeseries & transfer_learner
 % R     % M x M measurement noise covariance
 % Q     % K x K state noise covariance
 % 
-% epsilon % added to the diagonal of the covariance matrices for numerical
-%           stability
 %
 % NOTE: X and Y are swapped wrt the Kalman filter conventions
 %
@@ -70,7 +70,7 @@ classdef lds < regressor & timeseries & transfer_learner
     
     inference = 'smooth'; % filter / smooth
     
-    epsilon = 1e-7;
+    epsilon = 0; % numerical stability
     
   end
 
