@@ -139,37 +139,56 @@ if hdr.nSamples == 0
 end
 
 % TODO: add chunk handling
-if 0
-	% add the contents of attached .res4 file to the .orig field similar to offline data
-	if isfield(orig, 'ctf_res4')
-		tmp_name = tempname;
-		F = fopen(tmp_name, 'wb');
-		fwrite(F, orig.ctf_res4, 'uint8');
-		fclose(F);
-		R4F = read_ctf_res4(tmp_name);
-		delete(tmp_name);
-		% copy over the labels
-		hdr.label = R4F.label;
-		% copy over the 'original' header
-		hdr.orig = R4F;
-		% add the raw chunk as well
-		hdr.orig.ctf_res4 = orig.ctf_res4;
+while ~feof(F)
+	typeAndSize = fread(F, 2, 'uint32');
+	if numel(typeAndSize) < 2
+		break
 	end
-	
-	% add the contents of attached NIFTI-1 chunk after decoding to Matlab structure
-    if isfield(orig, 'nifti_1')
-      hdr.nifti_1 = decode_nifti1(orig.nifti_1);
-	  % add the raw chunk as well
-	  hdr.orig.nifti_1 = orig.nifti_1;
-    end
-	
-	% add the contents of attached SiemensAP chunk after decoding to Matlab structure
-    if isfield(orig, 'siemensap') && exist('sap2matlab')==3 % only run this if MEX file is present
-      hdr.siemensap = sap2matlab(orig.siemensap);
-	  % add the raw chunk as well
-	  hdr.orig.siemensap = orig.siemensap;
-    end
+	switch typeAndSize(1)
+		case 1 % channel names
+			% already dealt with, TODO: maybe check consistency with ASCII stuff
+			dummy = fread(F, typeAndSize(2), 'uint8=>uint8');
+		case 2 % FT_CHUNK_CHANNEL_FLAGS 
+			% FIXME: ignored for now
+			dummy = fread(F, typeAndSize(2), 'uint8=>uint8');
+		case 3 % FT_CHUNK_RESOLUTIONS 
+			if typeAndSize(2) == 8*hdr.nChans
+				hdr.resolutions = fread(F, [hdr.nChans, 1], 'double');
+			else
+				warning('Invalid size of RESOLUTIONS chunk - skipping');
+				dummy = fread(F, typeAndSize(2), 'uint8=>uint8');
+			end
+		case 4 % FT_CHUNK_ASCII_KEYVAL
+			dummy = fread(F, typeAndSize(2), 'uint8');
+			% FIXME: ignore for now
+		case 5 % FT_CHUNK_NIFTI1
+			hdr.orig.nifti_1 = fread(F, [1, typeAndSize(2)], 'uint8=>uint8');
+			if typeAndSize(2) == 348
+				hdr.nifti_1 = decode_nifti1(hdr.orig.nifti_1);
+			else
+				warning('Invalid size of NIFTI_1 chunk - skipping');
+			end
+		case 6 % FT_CHUNK_SIEMENS_AP = 6
+			hdr.orig.siemensap = fread(F, typeAndSize(2), 'uint8=>uint8');
+			if exist('sap2matlab')==3
+				hdr.siemensap = sap2matlab(hdr.orig.siemensap);
+			end
+		case 7 % FT_CHUNK_CTF_RES4 = 7
+			hdr.orig.ctf_res4 = fread(F, typeAndSize(2), 'uint8=>uint8');
+			tmp_name = tempname;
+			FT = fopen(tmp_name, 'wb');
+			fwrite(FT, orig.ctf_res4, 'uint8');
+			fclose(FT);
+			R4F = read_ctf_res4(tmp_name);
+			delete(tmp_name);
+			% copy over the labels
+			hdr.label = R4F.label;
+			% copy over the 'original' header
+			hdr.orig = R4F;
+	end
 end
+
+fclose(F);
 
 if nameFlag < 2 && hdr.nChans < 2000
   nameFlag = 1; % fake labels generated - these are unique
@@ -178,4 +197,3 @@ if nameFlag < 2 && hdr.nChans < 2000
   end
 end
 
-fclose(F);
