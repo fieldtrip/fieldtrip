@@ -496,7 +496,7 @@ fprintf('selected cfg.cohrefchannel = ''%s''\n', cfg.cohrefchannel);
 p = get(gcf, 'Position');
 f = figure;
 set(f, 'Position', p);
-ft_multiplotTFR_JM(cfg, varargin{:});
+ft_multiplotTFR(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting channels in case of cfg.interactive='yes'
