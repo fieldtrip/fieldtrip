@@ -88,7 +88,7 @@ end
 % its name here (without the .c suffix)
 helpers = {'announce' 'discover' 'expire' 'extern' ...
     'peerinit' 'util' 'udsserver' 'tcpserver' 'tcpsocket' ...
-    'security' 'localhost' 'smartshare' 'smartmem' 'smartcpu' 'connect' 'killswitch'};
+    'security' 'localhost' 'smartshare' 'smartmem' 'smartcpu' 'connect'};
 
 headers = {'compiler' 'peer' 'platform_includes' 'extern' 'platform' ...
     'swapbytes'};
@@ -137,6 +137,10 @@ end
 % This is for compiling peer.c and linking everything into the MEX file.
 fprintf(1,'Compiling and linking MEX file:\n');
 cmd = sprintf('mex -outdir .. %s %s peer.c %s %s',cflags,extra_cflags,allObjects,ldflags);
+disp(cmd);
+eval(cmd);
+
+cmd = sprintf('mex -outdir ../private %s %s killswitch.c %s %s',cflags,extra_cflags,allObjects,ldflags);
 disp(cmd);
 eval(cmd);
 

@@ -59,7 +59,6 @@ void print_help(char *argv[]) {
 		printf("  --smartshare  = 0|1\n");
 		printf("  --smartmem    = 0|1\n");
 		printf("  --smartcpu    = 0|1\n");
-		printf("  --killswitch  = 0|1\n");
 		printf("  --daemon\n");
 		printf("  --udsserver\n");
 		printf("  --verbose\n");
@@ -124,7 +123,6 @@ int main(int argc, char *argv[]) {
 						{"smartshare", required_argument, 0, 'l'}, /* numeric, 0 or 1 */
 						{"timeout",    required_argument, 0, 'm'}, /* numeric argument */
 						{"verbose",    required_argument, 0, 'n'}, /* numeric argument */
-						{"killswitch", required_argument, 0, 'o'}, /* numeric, 0 or 1 */
 						{0, 0, 0, 0}
 				};
 
@@ -257,13 +255,6 @@ int main(int argc, char *argv[]) {
 						case 'n':
 								DEBUG(LOG_NOTICE, "option --verbose with value `%s'", optarg);
 								syslog_level = atol(optarg);
-								break;
-
-						case 'o':
-								DEBUG(LOG_NOTICE, "option --killswitch with value `%s'", optarg);
-								pthread_mutex_lock(&mutexkillswitch);
-								killswitch.enabled = atol(optarg);
-								pthread_mutex_unlock(&mutexkillswitch);
 								break;
 
 						case '?':
@@ -431,14 +422,8 @@ int main(int argc, char *argv[]) {
 						mxDestroyArray(argin);
 						mxDestroyArray(options);
 
-						/* arm the killswitch */
-						killswitch.masterid = peerid;
-
 						/* execute the job */
 						engEvalString(en, "[argout, options] = peerexec(argin, options);");
-
-						/* disarm the killswitch */
-						killswitch.masterid = 0;
 
 						/* get the job output arguments and options */
 						if ((argout = engGetVariable(en, "argout")) == NULL) {

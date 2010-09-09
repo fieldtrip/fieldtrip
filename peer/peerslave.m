@@ -185,6 +185,11 @@ while true
     % get the input arguments and options
     [argin, options] = peer('get', joblist.jobid);
 
+    % remove the masterid, because that is used to arm the killswitch
+    sel = find(strcmp(options, 'masterid'));
+    options(sel) = [];  % remove the masterid key
+    options(sel) = [];  % remove the masterid value
+
     % evaluate the job
     [argout, options] = peerexec(argin, options);
 
@@ -208,5 +213,9 @@ while true
 
 end % while true
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION this masks the regular version, this one only updates the status
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function peerzombie
 peer('status', 0);
 

@@ -47,6 +47,12 @@ try
     error('input options should be a cell-array');
   end
 
+  % check whether a kill switch should be set on the master host id
+  masterid = keyval('masterid', optin);
+  if ~isempty(masterid)
+    killswitch(masterid);
+  end
+
   % check whether a diary file should be created
   usediary = keyval('diary', optin);
   usediary = any(strcmp(usediary, {'always', 'warning', 'error'}));
@@ -173,6 +179,9 @@ close all hidden;
 
 % clear any global variables
 clear global
+
+% clear the optional kill switch, which is loaded into memory as a mex file
+clear killswitch
 
 % clear the previous warning and error messages
 lastwarn('');

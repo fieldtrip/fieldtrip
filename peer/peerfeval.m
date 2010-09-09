@@ -113,8 +113,10 @@ end
 % start with an empty return value
 jobid = [];
 
+
 % pass some options that may influence remote execution
-options = {'pwd', getcustompwd, 'path', getcustompath, 'diary', diary};
+master  = peerinfo;
+options = {'pwd', getcustompwd, 'path', getcustompath, 'diary', diary, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq, 'masterid', master.hostid};
 
 % status = 0 means zombie mode, don't accept anything
 % status = 1 means master mode, accept everything
@@ -186,7 +188,7 @@ while isempty(jobid)
     try
       jobid   = [];
       puttime = toc(stopwatch);
-      result  = peer('put', list(i).hostid, varargin, options, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq);
+      result  = peer('put', list(i).hostid, varargin, options);
       puttime = toc(stopwatch) - puttime;
       jobid   = result.jobid;
       % the peer accepted the job, there is no need to continue with the for loop
@@ -200,6 +202,7 @@ while isempty(jobid)
     % the job was not submitted succesfully and another attempt is needed
     % give the peer network some time to recover
     pause(sleep);
+    continue;
   end
 
 end % while isempty(jobid)

@@ -108,10 +108,31 @@ void *expire(void *arg) {
 						peer = peer->next;
 				}
 
-				pthread_mutex_unlock(&mutexpeerlist);
+				pthread_mutex_lock(&mutexkillswitch);
 
 				/* check whether the kill switch should be triggered */
-				check_killswitch();
+				if (killswitch.enabled && killswitch.masterid) {
+						found = 0;
+
+						/* look whether the master is stil available */
+						peer = peerlist;
+						while(peer && !found) {
+								found = 1;
+								found = found && (peer->host->id == killswitch.masterid);
+								found = found && (peer->host->status == STATUS_MASTER);
+								peer = peer->next;
+						}
+
+						if (!found) {
+								/* the master is not available any more */
+								DEBUG(LOG_NOTICE, "expire: killswitch triggered");
+								exit(0);
+						}
+
+				} /* if killswitch enabled */
+
+				pthread_mutex_unlock(&mutexkillswitch);
+				pthread_mutex_unlock(&mutexpeerlist);
 
 				/* note that this is a thread cancelation point */
 				pthread_testcancel();
@@ -124,3 +145,4 @@ cleanup:
 		pthread_cleanup_pop(1);
 		return NULL;
 }
+
