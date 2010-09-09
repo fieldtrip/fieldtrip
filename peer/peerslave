@@ -12,8 +12,13 @@ HOSTNAME=`hostname -s`
 case "$PLATFORM" in
 "x86_64-redhat-linux")
 	MATLABARCH=glnxa64
+	if [ -e /opt/matlab ] ; then
 	MATLABPATH=/opt/matlab77
 	MATLABCMD='"/opt/cluster/matlab78 -nodisplay -singleCompThread"'
+	else
+	MATLABPATH=/opt/matlab-2009b
+	MATLABCMD='"/opt/bin/matlab -nodisplay -singleCompThread"'
+	fi
 	;;
 "i386-redhat-linux")
 	MATLABARCH=glnx86
@@ -119,6 +124,18 @@ manzana)
 	memavail[2]="auto"; timavail[2]=86399
 	memavail[3]="auto"; timavail[3]=86399
 	OPTIONS="--verbose 4 --smartcpu 0"
+	;;
+esi-hpc1-1|esi-hpc1-2|esi-hpc1-3|esi-hpc1-4|esi-hpc1-5|esi-hpc1-6|esi-hpc1-7|esi-hpc1-8)
+	# has 48GB of RAM, 2 CPUs and 12 cores in total
+	memavail[ 0]=8589934592; timavail[ 0]=86399
+	memavail[ 1]=8589934592; timavail[ 1]=86399
+	memavail[ 2]=8589934592; timavail[ 2]=3599
+	memavail[ 3]=4294967296; timavail[ 3]=86399
+	memavail[ 4]=4294967296; timavail[ 4]=86399
+	memavail[ 5]=4294967296; timavail[ 5]=3599
+	memavail[ 6]=2147483648; timavail[ 6]=86399
+	memavail[ 7]=2147483648; timavail[ 7]=3599
+	OPTIONS="--verbose 4 --smartcpu 1"
 	;;
 *)
 	# the default configuration for all other machines is a single peerslave 
