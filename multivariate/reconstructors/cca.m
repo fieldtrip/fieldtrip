@@ -1,5 +1,5 @@
-classdef cca_recon < reconstructor
-% CCA_RECON canonical correlation analysis reconstructor class
+classdef cca < reconstructor
+% CCA canonical correlation analysis reconstructor class
 %
 % both data and design will be whitened and reduced in dimensions such that
 % they are not rank deficient; dimensions can be further reduced through
@@ -8,7 +8,7 @@ classdef cca_recon < reconstructor
 % EXAMPLES:
 %
 % load 69data; X = response; Y = stimuli;
-% p = mva({cca_recon('indim',50,'outdim',50,'verbose',true)});
+% p = mva({cca('indim',50,'outdim',50,'verbose',true)});
 % p = p.train(X(1:100,:),Y(1:100,:));
 % r = p.test(X(101:111,:));
 % images(r,1:10,[2 5]);
@@ -35,7 +35,7 @@ classdef cca_recon < reconstructor
 
   methods
         
-    function obj = cca_recon(varargin)
+    function obj = cca(varargin)
       
       obj = obj@reconstructor(varargin{:});
       

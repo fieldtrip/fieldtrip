@@ -77,7 +77,8 @@ classdef linreg < regressor
               w_init = R\(R'\(X'*Y)); % Initial value for iterative optimizer
             end
             
-            p.model = L1GeneralProjection(funObj,w_init,lambdas);
+            opt.verbose = 0;
+            p.model = L1GeneralProjection(funObj,w_init,lambdas,opt);
             
           else % elastic net
             

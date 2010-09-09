@@ -68,6 +68,10 @@ classdef pcanalyzer < preprocessor
 
         [U,S,V] = pca(X,obj.proportion);
         p.pc = V;
+        
+        if obj.verbose
+          fprintf('quality of the approximation (estimate of spectral norm): %f\n',diffsnorm(X,U,S,V));
+        end
                 
       else
         % in terms of variance accounted for

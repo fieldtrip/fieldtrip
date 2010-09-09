@@ -100,3 +100,5 @@
 %   (compact true moet toch alle modellen aankunnen)
 % - one_against_* should pass input dimensions to inner method
 % - elasticlr for multinomial classes should be implemented
+% - make evaluators and significance separate (arbitrary) functions that
+%   operate on the design matrix; same holds for filter in feature selector

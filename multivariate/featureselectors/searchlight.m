@@ -73,10 +73,21 @@ classdef searchlight < featureselector
       for c=1:length(p.spheres)
 
         vld = obj.validator;
-        vld = vld.validate(X(:,p.spheres{c}),Y);
-           
-        p.value(c) = vld.evaluate('metric',obj.metric); 
-
+        
+        if iscell(X)
+          XX = cell(size(X));
+          for cc=1:length(X)
+            XX{cc} = X{c}(:,p.spheres{c});
+          end
+          vld = vld.validate(XX,Y);
+        else
+          vld = vld.validate(X(:,p.spheres{c}),Y);
+        end
+        
+        try
+          p.value(c) = vld.evaluate('metric',obj.metric); 
+        end
+        
         try % also try to report significance 
           p.pvalue(c) = vld.significance();
         end
