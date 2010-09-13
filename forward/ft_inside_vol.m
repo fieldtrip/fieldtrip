@@ -107,4 +107,5 @@ switch ft_voltype(vol)
 end
 
 % ensure that these are column vectors
+inside(find(isnan(inside(:)))) = 0;
 inside  = logical(inside(:));
