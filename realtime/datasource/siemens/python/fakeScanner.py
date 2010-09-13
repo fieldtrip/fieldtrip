@@ -41,7 +41,7 @@ logFile = file(destdir + '-logging.txt','w')
 
 shutil.copy(srcdir + 'mrprot.txt', 'D:/watch/image/mrprot.txt')
 
-echoTimes = [1.5, 0.01, 0.03, 0.2, 0.25]
+echoTimes = [1.5, 0.01, 0.03, 0.25]
 curEcho = 0;
 
 while 1:
@@ -55,9 +55,9 @@ while 1:
 	info = '%16.4f  %04i  %s\n'%(T,idxDest,PixFN[idxSrc])
 	print info
 	
-	shutil.copy(srcdir + PixFN[idxSrc], '%s/Scan%04ip.PixelData'%(destdir,idxDest))
-	info = '%16.4f  %04ip  %s\n'%(T,idxDest,PixFN[idxSrc])
-	print info
+	#shutil.copy(srcdir + PixFN[idxSrc], '%s/Scan%04ip.PixelData'%(destdir,idxDest))
+	#info = '%16.4f  %04ip  %s\n'%(T,idxDest,PixFN[idxSrc])
+	#print info
 	
 	logFile.write(info)
 	logFile.flush()
