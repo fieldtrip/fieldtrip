@@ -81,7 +81,7 @@ int readHeader(const char *directory) {
 }
 
 
-int readTiming(const char *directory) {
+int readTiming(const char *directory, double speedup) {
 	FILE *f;
 	char filename[MAXLINE];
 	long offEvts = 0;
@@ -126,7 +126,7 @@ int readTiming(const char *directory) {
 		}
 
 		wop = writeOps + numWriteOps;
-		wop->time = time;
+		wop->time = time / speedup;
 		switch(type) {
 			case 'S':
 				wop->numSamples = num;
@@ -145,7 +145,7 @@ int readTiming(const char *directory) {
 					evdef = (eventdef_t *) (eventBuffer+offEvts);
 					siz = sizeof(eventdef_t) + evdef->bufsize;
 					
-					totalEvents++;					
+					totalEvents++;
 					printf("%i. event:  %i bytes @ %li\n", totalEvents, siz, offEvts);
 
 					wop->size += siz;
@@ -310,6 +310,7 @@ int main(int argc, char **argv) {
 	char hostname[MAXLINE] = "localhost";
 	char directory[MAXLINE];
 	int port, nops;
+	double speed = 1.0;
 	
 	#ifdef WIN32
 	timeBeginPeriod(1);
@@ -330,6 +331,14 @@ int main(int argc, char **argv) {
 		port = 1972;
 	}
 	
+	if (argc>4) {
+		speed = strtod(argv[4], NULL);
+		if (speed <= 0.0) {
+			fprintf(stderr, "4th argument, if given, must be positive speedup-factor\n");
+			exit(1);
+		}	
+	}
+	
 	if (readHeader(directory) < 0) {
 		exit(1);
 	}
@@ -341,7 +350,7 @@ int main(int argc, char **argv) {
 	if (readAllEvents(directory) < 0) {
 		exit(1);
 	}	
-	nops = readTiming(directory);
+	nops = readTiming(directory, speed);
 	if (nops < 0) {
 		exit(1);
 	}
