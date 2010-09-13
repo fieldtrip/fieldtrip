@@ -262,7 +262,7 @@ void PixelDataGrabber::handleProtocol(const char *info, unsigned int sizeInBytes
 	if (item!=NULL && item->type == SAP_LONG) {
 		long reconMode = ((long *) item->value)[0];
 		filesPerEcho = (reconMode >= 8) ? 2 : 1;
-		if (verbosity>2) printf("Reconstruction mode: %i\n", reconMode);
+		if (verbosity>2) printf("Reconstruction mode: %i\n", (int) reconMode);
 	} else {
 		filesPerEcho = 1;
 	}			
@@ -351,7 +351,7 @@ void PixelDataGrabber::handleProtocol(const char *info, unsigned int sizeInBytes
 	nifti.dim[0] = 3;
 	nifti.dim[1] = (short) readResolution;
 	nifti.dim[2] = (short) phaseResolution;
-	nifti.pixdim[0] = 1.0f;		// TODO: this is qfac - check if this needs to be -1 
+	nifti.pixdim[0] = -1.0f; // this is qfac
 	nifti.pixdim[1] = (float) (readoutFOV / readResolution);
 	nifti.pixdim[2] = (float) (phaseFOV / phaseResolution);
 
@@ -470,7 +470,7 @@ void PixelDataGrabber::fillXFormFromSAP(const double *pos, const double *norm, d
 			
 			Rx[0] = ca*sb;	Ry[0] = -sa;	Rz[0] = ca*cb;
 			Rx[1] = sa*sb;	Ry[1] = ca;		Rz[1] = sa*cb;
-			Rx[2] = -cb;		Ry[2] = 0;		Rz[2] = sb;								
+			Rx[2] = -cb;	Ry[2] = 0;		Rz[2] = sb;
 		} else if (ax > az) {
 			// ay > ax > az)
 			letters = "CST";
@@ -480,11 +480,11 @@ void PixelDataGrabber::fillXFormFromSAP(const double *pos, const double *norm, d
 			double ca = cos(angA);
 			double sa = sin(angA);
 			double cb = cos(angB);
-			double sb = sin(angB);			
+			double sb = sin(angB);
  
 			Rx[0] = -sa*sb;	Ry[0] = ca;		Rz[0] = sa*cb;
 			Rx[1] = -ca*sb;	Ry[1] = -sa;	Rz[1] = ca*cb;
-			Rx[2] = cb;		Ry[2] = 0;		Rz[2] = sb;					
+			Rx[2] = cb;		Ry[2] = 0;		Rz[2] = sb;
 		} else {
 			// ay > az >= ax
 			letters = "CTS";
@@ -498,7 +498,7 @@ void PixelDataGrabber::fillXFormFromSAP(const double *pos, const double *norm, d
 			
 			Rx[0] = 0;		Ry[0] = cb;		Rz[0] = sb;
 			Rx[1] = -sa;	Ry[1] = -sb*ca;	Rz[1] = cb*ca;
-			Rx[2] = cb;		Ry[2] = -sb*sa;	Rz[2] = cb*sa;					
+			Rx[2] = cb;		Ry[2] = -sb*sa;	Rz[2] = cb*sa;
 		}
 	}
 	
@@ -555,41 +555,57 @@ void PixelDataGrabber::fillXFormFromSAP(const double *pos, const double *norm, d
 		printf("%f  %f\n%f  %f\n%f  %f\n", Vx[0], Vy[0], Vx[1], Vy[1], Vx[2], Vy[2]);
 	}
 	
-	// A bit unclear from the NIFTI standard: Should only one of these two methods be used?
-	nifti.sform_code = NIFTI_XFORM_SCANNER_ANAT;
-	nifti.qform_code = NIFTI_XFORM_SCANNER_ANAT;
-
+	double Pos0[3];
 	// Calculate position of voxel (0,0,0)
 	// Input 'pos' is center of slice 0, so we need to 
 	// subtract half readoutFOV + phaseFOV along proper directions 
-	nifti.srow_x[3] = nifti.qoffset_x = (float) pos[0] - 0.5*readoutFOV*Vx[0] - 0.5*phaseFOV*Vy[0];
-	nifti.srow_y[3] = nifti.qoffset_y = (float) pos[1] - 0.5*readoutFOV*Vx[1] - 0.5*phaseFOV*Vy[1];
-	nifti.srow_z[3] = nifti.qoffset_z = (float) pos[2] - 0.5*readoutFOV*Vx[2] - 0.5*phaseFOV*Vy[2];
+	for (int i=0;i<3;i++) {
+		Pos0[i] = pos[i] - 0.5*readoutFOV*Vx[i] - 0.5*phaseFOV*Vy[i];
+	}
+	// Slice orientation + position matrix in DICOM format:
+	// (Vx Vy Rz Vp)      -- Vz=Rz (same axis)
+	// (0  0  0  1 )
 	
+	// In NIFTI-1 format, a different convention is used
+	// The rotation part of the above matrix becomes
+	// -Vx[0]  Vy[0] -Rz[0]
+	// -Vx[1]  Vy[1] -Rz[1]
+	//  Vx[2] -Vy[2]  Rz[2]
+	
+	// A bit unclear from the NIFTI standard: Should only one of these two methods be used?
+	nifti.sform_code = NIFTI_XFORM_SCANNER_ANAT;
+	nifti.qform_code = 0; // NIFTI_XFORM_SCANNER_ANAT; -- TODO: think about this again
+	
+	// NIFTI standard says the SFORM matrix should include pixdim scaling
+	nifti.srow_x[0] = -Vx[0]*nifti.pixdim[1];
+	nifti.srow_y[0] = -Vx[1]*nifti.pixdim[1];
+	nifti.srow_z[0] =  Vx[2]*nifti.pixdim[1];
+	
+	nifti.srow_x[1] =  Vy[0]*nifti.pixdim[2];
+	nifti.srow_y[1] =  Vy[1]*nifti.pixdim[2];
+	nifti.srow_z[1] = -Vy[2]*nifti.pixdim[2];
+	
+	nifti.srow_x[2] = -Rz[0]*nifti.pixdim[3];
+	nifti.srow_y[2] = -Rz[1]*nifti.pixdim[3];
+	nifti.srow_z[2] =  Rz[2]*nifti.pixdim[3];
+	
+	double offY = phaseFOV - nifti.pixdim[2];  // ==phaseResolution*pixdim[2]
+	nifti.srow_x[3] = -Vy[0]*offY - Pos0[0];
+	nifti.srow_y[3] = -Vy[1]*offY - Pos0[1];
+	nifti.srow_z[3] =  Vy[2]*offY + Pos0[2];
+	
+	/*
 	// Quaternion from matrix -- see nifti1.h
 	// Rotation matrix is composed from columns, R=(Vx Vy Rz)
-
     // a = 0.5  * sqrt(1+R11+R22+R33)    (not stored)
 	double a = 0.5 * sqrt(1.0 + Vx[0] + Vy[1] + Rz[2]);
 	// b = 0.25 * (R32-R23) / a       => quatern_b
 	nifti.quatern_b = 0.25 * (Vy[2] - Rz[1]) / a;
 	// c = 0.25 * (R13-R31) / a       => quatern_c
 	nifti.quatern_c = 0.25 * (Rz[0] - Vx[2]) / a;
-    // d = 0.25 * (R21-R12) / a       => quatern_d	
+    // d = 0.25 * (R21-R12) / a       => quatern_d
 	nifti.quatern_c = 0.25 * (Vx[1] - Vy[0]) / a;
-	
-	// NIFTI standard says the SFORM matrix should include pixdim scaling
-	nifti.srow_x[0] = Vx[0]*nifti.pixdim[1];	
-	nifti.srow_y[0] = Vx[1]*nifti.pixdim[1];	
-	nifti.srow_z[0] = Vx[2]*nifti.pixdim[1];	
-	
-	nifti.srow_x[1] = Vy[0]*nifti.pixdim[2];	
-	nifti.srow_y[1] = Vy[1]*nifti.pixdim[2];	
-	nifti.srow_z[1] = Vy[2]*nifti.pixdim[2];
-	
-	nifti.srow_x[2] = Rz[0]*nifti.pixdim[3];
-	nifti.srow_y[2] = Rz[1]*nifti.pixdim[3];
-	nifti.srow_z[2] = Rz[2]*nifti.pixdim[3];
+	*/
 }
 
 bool PixelDataGrabber::tryReadFile(const char *filename, SimpleStorage &sBuf) {
@@ -729,7 +745,8 @@ void PixelDataGrabber::reshapeToSlices() {
 				
 				// copy one line (=readResolution pixels) at a time
 				for (unsigned int m=0; m<phaseResolution; m++) {
-					memcpy(dest_n + readResolution*m, src_n + mosw*readResolution*m, sizeof(INT16_T) * readResolution);
+					int off_m = readResolution*(phaseResolution-1-m);	// flip along phase direction !
+					memcpy(dest_n + off_m, src_n + mosw*readResolution*m, sizeof(INT16_T) * readResolution);
 				}
 				
 				// increase source column index
@@ -770,7 +787,7 @@ void PixelDataGrabber::addEchoToSlices() {
 				
 			// add one line (=readResolution pixels) at a time
 			for (unsigned int m=0; m<phaseResolution; m++) {
-				int16_t      *dest_mn = dest_n + m*readResolution;
+				int16_t      *dest_mn = dest_n + readResolution*(phaseResolution-1-m);	// flip along phase direction !
 				const int16_t *src_mn = src_n  + m*mosw*readResolution;
 			
 				for (unsigned int v=0; v<readResolution; v++) {
