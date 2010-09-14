@@ -35,6 +35,9 @@ if ispc
 
 	if nargin<1	        % this is just to make sure the switch statement works
 		cc = 'NONE';    % but you can also put a default entry here
+		if strcmp(computer,'PCWIN64')
+		   cc = 'VC64'; % seems to be the only supported one on 64-bit 
+		end
 	end
 	switch upper(cc)
 		case 'BCB'
