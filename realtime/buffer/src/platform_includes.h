@@ -29,8 +29,19 @@
 	#define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
 	#define usleep(x)    (Sleep((x)/1000))
 	#define strcasecmp(a,b) (strcmpi(a,b))
+#elif defined (COMPILER_MINGW)
+	#include <winsock2.h>
+	#include <sys/time.h>
+	#include <stdint.h>
+
+	#define bzero(b,len) memset(b,0,len)
+	#define usleep(x)    (Sleep((x)/1000))
+		
+	#ifndef strcasecmp
+		#define strcasecmp(a,b) (strcmpi(a,b))
+	#endif
 #else
-	#error "Only Microsoft Visual C is supported on Win64 so far"
+	#error "Unsupported compiler"
 #endif
 
 #elif defined (PLATFORM_WIN32)
@@ -42,7 +53,6 @@
     #define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
 	#define usleep(x)    (Sleep((x)/1000))
 	#define strcasecmp(a,b) (strcmpi(a,b))
-
 	/* without the following, compilation with the Borland command line tools fails -- SK */
 	typedef __int8            int8_t;
 	typedef __int16           int16_t;

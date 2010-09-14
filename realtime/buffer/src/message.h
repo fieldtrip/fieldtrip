@@ -162,6 +162,8 @@ enum {
 	FT_CHUNK_CTF_RES4 = 7
 };
 
+#pragma pack(push,1)
+
 /* a packet that is sent over the network (or to disk) should contain the following */
 typedef struct {
 	UINT16_T version;   /* see VERSION */
@@ -248,6 +250,8 @@ typedef struct {
 	ft_chunkdef_t def;	/* See above. Note that this is not a pointer! */
 	char data[1];		/* Data contained in this chunk */
 } ft_chunk_t;
+
+#pragma pack(pop)
 
 #ifdef __cplusplus
 }

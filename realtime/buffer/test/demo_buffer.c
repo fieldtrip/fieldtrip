@@ -17,11 +17,11 @@ int main(int argc, char *argv[]) {
     check_datatypes();
 
 	if (argc>2) {
-		sprintf(host.name, argv[1]);
+		//sprintf(host.name, argv[1]);
 		host.port = atoi(argv[2]);
 	}
 	else {
-		sprintf(host.name, DEFAULT_HOSTNAME);
+		//sprintf(host.name, DEFAULT_HOSTNAME);
 		host.port = DEFAULT_PORT;
 	}
 

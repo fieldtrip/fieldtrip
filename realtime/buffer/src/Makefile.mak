@@ -8,8 +8,8 @@ PLATFORM = $(PROCESSOR_ARCHITECTURE)
 CFLAGS = -nologo -GS
 !IF "$(PLATFORM)" == "AMD64"
 INCPATH	 = -I. -I../pthreads-win64/include
-CFLAGS	 = $(CFLAGS) $(INCPATH) /Zi -D_AMD64_=1 -DWIN64 -D_WIN64  -DWIN32 -D_WIN32 -W3
-LIBFLAGS = /MACHINE:X64
+CFLAGS	 = $(CFLAGS) $(INCPATH) -D_AMD64_=1 -DWIN64 -D_WIN64  -DWIN32 -D_WIN32 -W3 /MT
+LIBFLAGS = /MACHINE:X64 /NODEFAULTLIB:libcmt
 !ELSEIF "$(PLATFORM)" == "x64"
 # USE THIS FOR CROSS-COMPILING!
 INCPATH	 = -I. -I../pthreads-win64/include
@@ -26,7 +26,7 @@ LIBFLAGS = /MACHINE:X86
 
 all: libbuffer.lib
 
-libbuffer.lib: tcpserver.obj tcpsocket.obj tcprequest.obj clientrequest.obj dmarequest.obj cleanup.obj util.obj printstruct.obj swapbytes.obj gettimeofday.obj extern.obj
+libbuffer.lib: tcpserver.obj tcpsocket.obj tcprequest.obj clientrequest.obj dmarequest.obj cleanup.obj util.obj printstruct.obj swapbytes.obj gettimeofday.obj extern.obj endianutil.obj
 	lib $(LIBFLAGS) /OUT:libbuffer.lib $**
 
 gettimeofday.obj: win32/gettimeofday.c

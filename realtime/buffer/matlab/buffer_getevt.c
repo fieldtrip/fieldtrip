@@ -106,9 +106,11 @@ int buffer_getevt(int server, mxArray *plhs[], const mxArray *prhs[])
       
       offset = 0;
       for (i=0; i<nevents; i++) {
+	  	char *buf_type,*buf_value;
+		
         event_def = (eventdef_t *) ((char *)response->buf + offset);
-		char *buf_type = (char *) response->buf + offset + sizeof(eventdef_t);
-		char *buf_value = buf_type + event_def->type_numel * wordsize_from_type(event_def->type_type);
+		buf_type = (char *) response->buf + offset + sizeof(eventdef_t);
+		buf_value = buf_type + event_def->type_numel * wordsize_from_type(event_def->type_type);
                 
 		mxSetFieldByNumber(plhs[0], i, 0, matrix_from_ft_type_data(event_def->type_type, 1, event_def->type_numel, buf_type));
 		mxSetFieldByNumber(plhs[0], i, 1, matrix_from_ft_type_data(event_def->value_type, 1, event_def->value_numel, buf_value));

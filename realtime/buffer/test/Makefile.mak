@@ -8,8 +8,8 @@ PLATFORM = $(PROCESSOR_ARCHITECTURE)
 CFLAGS = -nologo -GS
 !IF "$(PLATFORM)" == "AMD64"
 INCPATH	 = -I../src -I../pthreads-win64/include
-CFLAGS	 = $(CFLAGS) $(INCPATH) /Zi -D_AMD64_=1 -DWIN64 -D_WIN64  -DWIN32 -D_WIN32 -W3 /MTd
-LIBS 	 = ../pthreads-win64/lib/pthreadVC64.lib ../src/libbuffer.lib ws2_32.lib mswsock.lib /INCREMENTAL:NO 
+CFLAGS	 = $(CFLAGS) $(INCPATH) -D_AMD64_=1 -DWIN64 -D_WIN64  -DWIN32 -D_WIN32 -W3 /MT
+LIBS 	 = ../pthreads-win64/lib/pthreadVC2.lib ../src/libbuffer.lib ws2_32.lib mswsock.lib /INCREMENTAL:NO /NODEFAULTLIB:libcmtd
 LD = link
 !ELSEIF "$(PLATFORM)" == "x64"
 CC =  "C:\Program Files\Microsoft Visual Studio 9.0\VC\bin\x86_amd64\cl.exe"
@@ -46,6 +46,9 @@ demo_event.exe: demo_event.obj event.obj
 	$(LD) $** $(LIBS) 
 
 demo_buffer.exe: demo_buffer.obj 
+	$(LD) $** $(LIBS) 
+	
+demo_buffer_unix.exe: demo_buffer_unix.obj ../src/socketserver.obj
 	$(LD) $** $(LIBS) 
 
 test_gethdr.exe: test_gethdr.obj

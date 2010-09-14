@@ -6,9 +6,9 @@
 #ifndef __socketserver_h
 #define __socketserver_h
 
-#include <pthread.h>
+
 #include "buffer.h"
-#include "extern.h"
+#include <pthread.h>
 
 #define MERGE_THRESHOLD      4096    /* TODO: optimize this value? Maybe look at MTU size */
 

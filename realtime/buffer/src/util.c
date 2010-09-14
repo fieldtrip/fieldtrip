@@ -154,6 +154,7 @@ int open_connection(const char *hostname, int port) {
 		bzero(&sa, sizeof sa);
 		sa.sin_family = AF_INET;
 		sa.sin_port = htons(port);
+
 		memcpy(&(sa.sin_addr.s_addr), host->h_addr_list[0], sizeof(sa.sin_addr.s_addr));
 
 		if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {

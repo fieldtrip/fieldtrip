@@ -73,7 +73,7 @@ void *_buffer_socket_func(void *arg) {
     pthread_mutex_lock(&SC->lock);
     SC->numClients++;
     pthread_mutex_unlock(&SC->lock);
-	
+
 	request.def = &reqdef;
 	request.buf = NULL;
 	bytesDone = 0;
@@ -454,7 +454,7 @@ ft_buffer_server_t *ft_start_buffer_server(int port, const char *name, ft_reques
 cleanup:
 	if (SC != NULL) free(SC);
 	if (s != INVALID_SOCKET) {
-		#ifdef PLATFORM_WIN32
+		#ifdef WIN32
 		shutdown(s, SD_BOTH);
 		#else
 		shutdown(s, SHUT_RDWR);

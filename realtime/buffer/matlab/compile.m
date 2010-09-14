@@ -47,6 +47,8 @@ if ispc
 			ldflags = '../src/libbuffer.a ../pthreads-win32/lib/libpthreadGC2.a C:/mingw/lib/libws2_32.a';
 		case 'VC'
 			ldflags = '-L../src -L../pthreads-win32/lib -lbuffer -lpthreadVC2 ';
+		case 'VC64'
+			ldflags = '-L../src -L../pthreads-win64/lib -lbuffer -lpthreadVC2 ws2_32.lib';
 		otherwise
 			error 'On a PC, you must call this function with a string argument to select a compiler';
 	end

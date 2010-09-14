@@ -31,14 +31,14 @@ PLATFORM = $(shell gcc -dumpmachine)
 INCPATH	 = -I.
 LIBPATH  = -L.
 LIBS 	 = -lbuffer -lm -lpthread
-CFLAGS	 = $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -fpack-struct -g
+CFLAGS	 = $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -g
 
 ifeq "$(PLATFORM)" "i686-apple-darwin10"
     # override the defaults
 	INCPATH	 = -I.
 	LIBPATH  = -L.
 	LIBS 	 = -lbuffer -lm -lpthread
-	CFLAGS	 = $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -fpack-struct -g -arch i386
+	CFLAGS	 = $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -g -arch i386
 endif
 
 ifeq "$(PLATFORM)" "mingw32"
@@ -46,7 +46,15 @@ ifeq "$(PLATFORM)" "mingw32"
 	INCPATH	 = -I. -I../pthreads-win32/include
 	LIBPATH  = -L. -L../pthreads-win32/lib
 	LIBS 	 = -lbuffer -lm -lpthreadGC2
-	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -fpack-struct -g
+	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -g
+endif
+
+ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
+    # override the defaults
+	INCPATH	 = -I. -I../pthreads-win64/include
+	LIBPATH  = -L. -L../pthreads-win64/lib
+	LIBS 	 = -lbuffer -lm -lpthread
+	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -g 
 endif
 
 BINDIR	 = .
@@ -67,6 +75,8 @@ libclient.a: tcprequest.o util.o
 
 clean:
 ifeq "$(PLATFORM)" "mingw32"
+	del *.o *.a
+else ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
 	del *.o *.a
 else
 	rm -f core *.o *.obj *.a *~
