@@ -80,7 +80,7 @@ if ispc
 else
     % On POSIX systems such as MacOS X and Linux, the following should work without tweaking
     ldflags = '';
-    extra_cflags = '';
+    extra_cflags = '-DSYSLOG=0';
     suffix = 'o';
 end
 

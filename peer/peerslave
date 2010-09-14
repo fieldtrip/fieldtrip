@@ -296,7 +296,10 @@ rm -f $PIDDIR/peerslave.[0-9][0-9][0-9]
 ;;
 
 *)
-echo Use as $0 "<start|stop|status|restart|kill>"
+# just start a single peerslave, pass the user's arguments
+EXECUTABLE=$EXECDIR/peerslave.$MATLABARCH
+$EXECUTABLE "$@"
+
 ;;
 esac
 

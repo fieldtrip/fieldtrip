@@ -66,8 +66,12 @@ void peerinit(void *arg) {
 		host->cpuavail = DEFAULT_CPUAVAIL;
 		host->timavail = DEFAULT_TIMAVAIL;
 
-		/* initialize the unix domain socket as empty */
+		/* initialize the string elements as empty */
+		bzero(host->name, STRLEN);
+		bzero(host->user, STRLEN);
+		bzero(host->group, STRLEN);
 		bzero(host->socket, STRLEN);
+		bzero(host->descr, STRLEN);
 
 #if defined (PLATFORM_LINUX) || defined (PLATFORM_OSX)
 
