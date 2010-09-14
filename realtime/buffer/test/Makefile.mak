@@ -9,19 +9,11 @@ CFLAGS = -nologo -GS
 !IF "$(PLATFORM)" == "AMD64"
 INCPATH	 = -I../src -I../pthreads-win64/include
 CFLAGS	 = $(CFLAGS) $(INCPATH) -D_AMD64_=1 -DWIN64 -D_WIN64  -DWIN32 -D_WIN32 -W3 /MT
-LIBS 	 = ../pthreads-win64/lib/pthreadVC2.lib ../src/libbuffer.lib ws2_32.lib mswsock.lib /INCREMENTAL:NO /NODEFAULTLIB:libcmtd
+LIBS 	 = ../pthreads-win64/lib/pthreadVC2.lib ../src/libbuffer.lib ws2_32.lib mswsock.lib
 LD = link
-!ELSEIF "$(PLATFORM)" == "x64"
-CC =  "C:\Program Files\Microsoft Visual Studio 9.0\VC\bin\x86_amd64\cl.exe"
-LD =  "C:\Program Files\Microsoft Visual Studio 9.0\VC\bin\x86_amd64\link.exe"
-# USE THIS FOR CROSS-COMPILING!
-INCPATH	 = -I../src -I../pthreads-win64/include
-CFLAGS	 = $(CFLAGS) $(INCPATH) /Zi -D_AMD64_=1 -DWIN64 -D_WIN64  -DWIN32 -D_WIN32 -W3
-Lib = C:\WinSDK7\lib\x64;C:\Program Files\Microsoft Visual Studio 9.0\VC\lib\amd64
-LIBS = ../pthreads-win64/lib/pthreadVC64.lib ../src/libbuffer.lib ws2_32.lib mswsock.lib /INCREMENTAL:NO msvcrt.lib /NODEFAULTLIB:libcmtd
 !ELSEIF "$(PLATFORM)" == "x86"
 INCPATH	 = -I../src -I../pthreads-win32/include
-CFLAGS	 = $(CFLAGS) $(INCPATH) /Zi -D_X86_=1  -DWIN32 -D_WIN32 -W3 /MTd
+CFLAGS	 = $(CFLAGS) $(INCPATH) /Zi -D_X86_=1  -DWIN32 -D_WIN32 -W3 /MT
 LIBS 	 = ../pthreads-win32/lib/pthreadVC2.lib ../src/libbuffer.lib ws2_32.lib mswsock.lib
 LD = link
 !ELSE
