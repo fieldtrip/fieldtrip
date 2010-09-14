@@ -44,7 +44,7 @@
 #define STATUS_IDLE              2			/* status = 2 means idle slave, accept only a single job */
 #define STATUS_BUSY              3 			/* status = 3 means busy slave, don't accept a new job   */
 
-#define VERSION                  0x0011
+#define VERSION                  0x0010
 #define ANNOUNCE_GROUP           "225.0.0.88"
 #define ANNOUNCE_PORT 	         1700		/* it will auto-increment if the port is not available */
 #define DEFAULT_GROUP            "unknown"
@@ -76,13 +76,9 @@
 #define MAXARGSIZE		  INT32_MAX
 #define STRLEN			  256
 
-#define FREE(x)					{if (x) {free(x); x=NULL;}}
-#define PANIC(format, args...)	{syslog(LOG_ERR, format, ## args); exit(-1);}
-#if SYSLOG
-#define DEBUG(level, format, args...)	{if (level<=syslog_level) {syslog(level, format, ## args);}}
-#else
-#define DEBUG(level, format, args...)	{}
-#endif
+#define FREE(x)							{if (x) {free(x); x=NULL;}}
+#define PANIC(format, args...)			{syslog(LOG_ERR, format, ## args); exit(-1);}
+#define DEBUG(level, format, args...)	{syslog(level, format, ## args);}
 
 /* FIXME these are obvious at the moment, but should be formally defined */
 typedef char      CHAR_T;
@@ -145,7 +141,6 @@ typedef struct {
 		char user[STRLEN];
 		char group[STRLEN];
 		char socket[STRLEN];  /* name of the unix domain socket, or empty if not available */
-		char descr[STRLEN];   /* description, to be used in busy slave mode */
 		UINT32_T port;
 		UINT32_T status;
 		UINT64_T timavail; 

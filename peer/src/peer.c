@@ -50,9 +50,13 @@ pthread_t expireThread;
 
 /* this is called the first time that the mex-file is loaded */
 void initFun(void) {
-		/* check whether the host has been initialized */
+		/* check whether the host has been initialized already */
 		if (!peerInitialized) {
+
+				/* open the logging facility and set the default level */
 				openlog("peer.mex", LOG_PID, LOG_USER);
+				setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT));
+
 				mexPrintf("peer: init\n");
 				peerinit(NULL);
 				peerInitialized = 1;
@@ -62,7 +66,6 @@ void initFun(void) {
 
 /* this function is called upon unloading of the mex-file */
 void exitFun(void) {
-		closelog();
 		mexPrintf("peer: exit\n");
 
 		/* tell all threads to stop running */
@@ -125,6 +128,10 @@ void exitFun(void) {
 		/* free the shared dynamical memory */
 		peerexit(NULL);
 		peerInitialized = 0;
+
+		/* switch off the logging facility */
+		closelog();
+
 		return;
 }
 

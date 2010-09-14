@@ -96,7 +96,7 @@ peerslave.o: peerslave.c peer.h extern.h libpeer.a
 	$(CC) $(CFLAGS) $(INCPATH) $(MATLABINC) -c $*.c
 
 clean:
-	rm -f core *.o *.obj *.a $(TARGET) *~
+	rm -f core *.o *.obj *.a ../$(TARGET) *~
 
 distclean:
 

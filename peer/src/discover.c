@@ -194,7 +194,7 @@ void *discover(void *arg) {
 						continue;
 				}
 				else {
-						DEBUG(LOG_INFO, "discover: accepting %s:%u, id = %u", discovery->name, discovery->port, discovery->id);
+						DEBUG(LOG_DEBUG, "discover: accepting %s:%u, id = %u", discovery->name, discovery->port, discovery->id);
 				}
 
 				pthread_mutex_lock(&mutexpeerlist);

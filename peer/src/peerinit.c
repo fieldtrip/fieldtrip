@@ -117,6 +117,7 @@ void peerinit(void *arg) {
 		host->id += hash(host->user);
 		host->id += hash(host->group);
 
+		DEBUG(LOG_CRIT, "peerinit: %s@%s, id = %llu", host->user, host->name, host->id);
 		DEBUG(LOG_INFO, "peerinit: host.name =  %s", host->name);
 		DEBUG(LOG_INFO, "peerinit: host.port =  %u", host->port);
 		DEBUG(LOG_INFO, "peerinit: host.id   =  %u", host->id);
@@ -176,6 +177,8 @@ void peerexit(void *arg) {
 		clear_grouplist();
 		clear_hostlist();
 		clear_smartsharelist();
+
+		DEBUG(LOG_CRIT, "peerexit: cleaning up");
 
 		return;
 }
