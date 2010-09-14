@@ -112,7 +112,7 @@ int buffer_getevt(int server, mxArray *plhs[], const mxArray *prhs[])
                 
 		mxSetFieldByNumber(plhs[0], i, 0, matrix_from_ft_type_data(event_def->type_type, 1, event_def->type_numel, buf_type));
 		mxSetFieldByNumber(plhs[0], i, 1, matrix_from_ft_type_data(event_def->value_type, 1, event_def->value_numel, buf_value));
-        mxSetFieldByNumber(plhs[0], i, 2, mxCreateDoubleScalar((double)event_def->sample));
+        mxSetFieldByNumber(plhs[0], i, 2, mxCreateDoubleScalar((double)event_def->sample+1)); /* 1-based in Matlab, 0-based in protocol */
         mxSetFieldByNumber(plhs[0], i, 3, mxCreateDoubleScalar((double)event_def->offset));
         mxSetFieldByNumber(plhs[0], i, 4, mxCreateDoubleScalar((double)event_def->duration));
         offset += sizeof(eventdef_t) + event_def->bufsize;

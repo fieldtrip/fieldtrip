@@ -84,12 +84,12 @@ unsigned int add_event_from_matlab(unsigned int bufsize, void **buf, const mxArr
 	field = mxGetFieldByNumber(E, index, fieldnum_sample);
 	if (!mxIsNumeric(field) || mxIsEmpty(field)) 
 		mexErrMsgTxt("invalid data type for 'sample'");
-	evdef.sample = (UINT32_T) mxGetScalar(field);
+	evdef.sample = (UINT32_T) mxGetScalar(field) - 1; /* 0-based index on protocol level */
 	
 	field = mxGetFieldByNumber(E, index, fieldnum_offset);
 	if (!mxIsNumeric(field) || mxIsEmpty(field)) 
 		mexErrMsgTxt("invalid data type for 'offset'");
-	evdef.offset = (INT32_T) mxGetScalar(field);		
+	evdef.offset = (INT32_T) mxGetScalar(field);
 	
 	field = mxGetFieldByNumber(E, index, fieldnum_duration);
 	if (!mxIsNumeric(field) || mxIsEmpty(field)) 
