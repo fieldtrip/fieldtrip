@@ -18,7 +18,7 @@
 
 #include "peer.h"
 
-int syslog_level = 0;
+int syslog_level = LOG_CRIT;
 
 pthread_mutex_t mutexstatus = PTHREAD_MUTEX_INITIALIZER;
 int udsserverStatus = 0;

@@ -99,6 +99,7 @@ int main(int argc, char *argv[]) {
 		pthread_t expireThread;
 
 		openlog("peerslave", LOG_PID | LOG_PERROR, LOG_USER);
+		setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT));
 		peerinit(NULL);
 
 		/* use GNU getopt_long for the command-line options */
@@ -267,6 +268,33 @@ int main(int argc, char *argv[]) {
 				}
 		}
 
+		switch (syslog_level) {
+				case 0:
+						setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT) | LOG_MASK(LOG_ERR) | LOG_MASK(LOG_WARNING) | LOG_MASK(LOG_NOTICE) | LOG_MASK(LOG_INFO) | LOG_MASK(LOG_DEBUG));
+						break;
+				case 1:
+						setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT) | LOG_MASK(LOG_ERR) | LOG_MASK(LOG_WARNING) | LOG_MASK(LOG_NOTICE) | LOG_MASK(LOG_INFO));
+						break;
+				case 2:
+						setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT) | LOG_MASK(LOG_ERR) | LOG_MASK(LOG_WARNING) | LOG_MASK(LOG_NOTICE));
+						break;
+				case 3:
+						setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT) | LOG_MASK(LOG_ERR) | LOG_MASK(LOG_WARNING));
+						break;
+				case 4:
+						setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT) | LOG_MASK(LOG_ERR));
+						break;
+				case 5:
+						setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT));
+						break;
+				case 6:
+						setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT));
+						break;
+				case 7:
+						setlogmask(LOG_MASK(LOG_EMERG));
+						break;
+		}
+
 		if (help_flag) {
 				/* display the help message and return to the command line */
 				print_help(argv);
@@ -352,6 +380,7 @@ int main(int argc, char *argv[]) {
 		/* start as idle slave */
 		pthread_mutex_lock(&mutexhost);
 		host->status = STATUS_IDLE;
+		bzero(host->descr, STRLEN);
 		pthread_mutex_unlock(&mutexhost);
 
 		while (1) {
@@ -369,12 +398,11 @@ int main(int argc, char *argv[]) {
 
 						/* there is a job to be executed */
 						if (matlabRunning==0) {
-								DEBUG(LOG_NOTICE, "starting MATLAB engine");
+								DEBUG(LOG_CRIT, "starting MATLAB engine");
 								if ((en = engOpen(startcmd)) == NULL) {
 										/* this may be due to a licensing problem */
 										/* do not attempt to start again during the timeout period */
-										DEBUG(LOG_ERR, "failed to start MATLAB engine");
-										DEBUG(LOG_NOTICE, "deleting job and switching to zombie mode");
+										DEBUG(LOG_ERR, "failed to start MATLAB engine, deleting job and switching to zombie");
 										engineFailed = time(NULL);
 										pthread_mutex_lock(&mutexhost);
 										host->status = STATUS_ZOMBIE;
@@ -397,23 +425,27 @@ int main(int argc, char *argv[]) {
 								}
 						}
 
+						/* get the first job input arguments and options */
+						pthread_mutex_lock(&mutexjoblist);
+						job = joblist;
+
 						/* switch the mode to busy slave */
 						pthread_mutex_lock(&mutexhost);
 						host->status = STATUS_BUSY;
+						/* update the description */
+						snprintf(host->descr, STRLEN, "%s@%s, memreq = %llu, timreq = %llu", job->host->user, job->host->name, job->job->memreq, job->job->timreq);
 						pthread_mutex_unlock(&mutexhost);
+
 						matlabStart = time(NULL);
 
 						/* inform the other peers of the updated status */
 						announce_once();
 
-						/* get the first job input arguments and options */
-						pthread_mutex_lock(&mutexjoblist);
-						job = joblist;
 						argin   = (mxArray *)mxDeserialize(job->arg, job->job->argsize);
 						options = (mxArray *)mxDeserialize(job->opt, job->job->optsize);
 						jobid   = job->job->id;
 						peerid  = job->host->id;
-						DEBUG(LOG_NOTICE, "executing job %d from %s@%s (jobid=%u)", ++jobnum, job->host->user, job->host->name, jobid);
+						DEBUG(LOG_CRIT, "executing job %d from %s@%s (jobid=%u)", ++jobnum, job->host->user, job->host->name, jobid);
 						pthread_mutex_unlock(&mutexjoblist);
 
 						/* copy them over to the engine */
@@ -593,13 +625,14 @@ int main(int argc, char *argv[]) {
 						/* make the slave available again */
 						pthread_mutex_lock(&mutexhost);
 						host->status = STATUS_IDLE;
+						bzero(host->descr, STRLEN);
 						pthread_mutex_unlock(&mutexhost);
 
 						/* inform the other peers of the updated status */
 						announce_once();
 
 						matlabFinished = time(NULL);
-						DEBUG(LOG_NOTICE, "executing job %d took %d seconds", jobnum, matlabFinished - matlabStart);
+						DEBUG(LOG_CRIT, "executing job %d took %d seconds", jobnum, matlabFinished - matlabStart);
 				}
 				else {
 						usleep(SLEEPTIME);
@@ -611,16 +644,17 @@ int main(int argc, char *argv[]) {
 								PANIC("could not stop the MATLAB engine");
 						}
 						else {
-								DEBUG(LOG_NOTICE, "stopped idle MATLAB engine");
+								DEBUG(LOG_CRIT, "stopped idle MATLAB engine");
 								matlabRunning = 0;
 						}
 				}
 
 				/* switch back to the default state after having waiting some time */
 				if ((engineFailed!=0) && ((time(NULL)-engineFailed)>zombietimeout)) {
-						DEBUG(LOG_NOTICE, "switching to idle mode");
+						DEBUG(LOG_NOTICE, "switching back to idle mode");
 						pthread_mutex_lock(&mutexhost);
 						host->status = STATUS_IDLE;
+						bzero(host->descr, STRLEN);
 						pthread_mutex_unlock(&mutexhost);
 						engineFailed = 0;
 						continue;

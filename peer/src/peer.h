@@ -76,9 +76,25 @@
 #define MAXARGSIZE		  INT32_MAX
 #define STRLEN			  256
 
-#define FREE(x)							{if (x) {free(x); x=NULL;}}
+#ifndef SYSLOG
+#define SYSLOG 1
+#endif
+
+#if   SYSLOG == 0
+#define PANIC(format, args...)			{exit(-1);}
+#define DEBUG(level, format, args...)	{ }
+#elif SYSLOG == 1
 #define PANIC(format, args...)			{syslog(LOG_ERR, format, ## args); exit(-1);}
 #define DEBUG(level, format, args...)	{syslog(level, format, ## args);}
+#elif SYSLOG == 2
+#define PANIC(format, args...)			{fprintf(stderr, format"\n", ## args); exit(-1);}
+#define DEBUG(level, format, args...)	{if (level<=syslog_level) fprintf(stderr, format"\n", ## args);}
+#elif SYSLOG == 3
+#define PANIC(format, args...)			{mexPrintf(format"\n", ## args); exit(-1);}
+#define DEBUG(level, format, args...)	{if (level<=syslog_level) mexPrintf(format"\n", ## args);}
+#endif
+
+#define FREE(x)							{if (x) {free(x); x=NULL;}}
 
 /* FIXME these are obvious at the moment, but should be formally defined */
 typedef char      CHAR_T;
@@ -141,6 +157,7 @@ typedef struct {
 		char user[STRLEN];
 		char group[STRLEN];
 		char socket[STRLEN];  /* name of the unix domain socket, or empty if not available */
+		char descr[STRLEN];
 		UINT32_T port;
 		UINT32_T status;
 		UINT64_T timavail; 
