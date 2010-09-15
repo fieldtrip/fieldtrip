@@ -445,7 +445,7 @@ int main(int argc, char *argv[]) {
 						options = (mxArray *)mxDeserialize(job->opt, job->job->optsize);
 						jobid   = job->job->id;
 						peerid  = job->host->id;
-						DEBUG(LOG_CRIT, "executing job %d from %s@%s (jobid=%u)", ++jobnum, job->host->user, job->host->name, jobid);
+						DEBUG(LOG_CRIT, "executing job %d from %s@%s (jobid=%u, memreq=%llu, timreq=%llu)", ++jobnum, job->host->user, job->host->name, job->job->id, job->job->memreq, job->job->timreq);
 						pthread_mutex_unlock(&mutexjoblist);
 
 						/* copy them over to the engine */

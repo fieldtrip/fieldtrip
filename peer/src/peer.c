@@ -30,8 +30,8 @@ mxArray *mxDeserialize(const void*, size_t);
 #define JOB_FIELDNUMBER 4
 const char* job_fieldnames[JOB_FIELDNUMBER] = {"version", "jobid", "argsize", "optsize"};
 
-#define JOBLIST_FIELDNUMBER 6
-const char* joblist_fieldnames[JOBLIST_FIELDNUMBER] = {"version", "jobid", "argsize", "optsize", "hostid", "hostname"};
+#define JOBLIST_FIELDNUMBER 9
+const char* joblist_fieldnames[JOBLIST_FIELDNUMBER] = {"version", "jobid", "argsize", "optsize", "hostid", "hostname", "user", "memreq", "timreq"};
 
 #define PEERINFO_FIELDNUMBER 14
 const char* peerinfo_fieldnames[PEERINFO_FIELDNUMBER] = {"hostid", "hostname", "user", "group", "socket", "descr", "port", "status", "memavail", "cpuavail", "timavail", "allowuser", "allowgroup", "allowhost"};
@@ -1189,7 +1189,10 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mxSetFieldByNumber(plhs[0], i, 3, mxCreateDoubleScalar((UINT32_T)(job->job->optsize)));
 						mxSetFieldByNumber(plhs[0], i, 4, mxCreateDoubleScalar((UINT32_T)(job->host->id)));
 						mxSetFieldByNumber(plhs[0], i, 5, mxCreateString(job->host->name));
-						job = job->next ;
+						mxSetFieldByNumber(plhs[0], i, 6, mxCreateString(job->host->user));
+						mxSetFieldByNumber(plhs[0], i, 7, mxCreateDoubleScalar((UINT64_T)(job->job->memreq)));
+						mxSetFieldByNumber(plhs[0], i, 8, mxCreateDoubleScalar((UINT64_T)(job->job->timreq)));
+						job = job->next;
 						i++;
 				}
 				pthread_mutex_unlock(&mutexjoblist);

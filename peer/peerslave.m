@@ -180,7 +180,7 @@ while true
     % get the last job from the list, which will be the oldest
     joblist = joblist(end);
 
-    fprintf('executing job %d from %s (jobid=%d)\n', jobnum, joblist.hostname, joblist.jobid);
+    fprintf('executing job %d from %s@%s (jobid=%d, memreq=%d, timreq=%d)\n', jobnum, joblist.user, joblist.hostname, joblist.jobid, joblist.memreq, joblist.timreq);
     
     % get the input arguments and options
     [argin, options] = peer('get', joblist.jobid);
