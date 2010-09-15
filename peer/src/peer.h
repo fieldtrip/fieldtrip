@@ -44,7 +44,7 @@
 #define STATUS_IDLE              2			/* status = 2 means idle slave, accept only a single job */
 #define STATUS_BUSY              3 			/* status = 3 means busy slave, don't accept a new job   */
 
-#define VERSION                  0x0010
+#define VERSION                  0x0011
 #define ANNOUNCE_GROUP           "225.0.0.88"
 #define ANNOUNCE_PORT 	         1700		/* it will auto-increment if the port is not available */
 #define DEFAULT_GROUP            "unknown"
