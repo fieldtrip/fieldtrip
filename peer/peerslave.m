@@ -187,8 +187,8 @@ while true
 
     % remove the masterid, because that is used to arm the killswitch
     sel = find(strcmp(options, 'masterid'));
-    % options(sel) = [];  % remove the masterid key
-    % options(sel) = [];  % remove the masterid value
+    options(sel) = [];  % remove the masterid key
+    options(sel) = [];  % remove the masterid value
 
     % evaluate the job
     [argout, options] = peerexec(argin, options);
