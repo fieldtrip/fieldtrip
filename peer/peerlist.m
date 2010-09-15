@@ -76,12 +76,10 @@ if nargout==0
         status = 'idle slave ';
       case 3
         status = 'busy slave ';
-      case 4
-        status = 'paused slave ';
       otherwise
         error('unknown status');
     end
-    strlist{i} = sprintf('%s at %s@%s:%d, group = %s, memavail = %5s, hostid = %u\n', status, list(i).user, list(i).hostname, list(i).port, list(i).group, print_mem(list(i).memavail), list(i).hostid);
+    strlist{i} = sprintf('%s at %s@%s:%d, memavail = %5s, timavail = %u\n', status, list(i).user, list(i).hostname, list(i).port, print_mem(list(i).memavail), list(i).timavail);
     % strlist{i} = sprintf('%s at %s@%s:%d, group = %s, memavail = %5s, timavail = %10s, hostid = %u\n', status, list(i).user, list(i).hostname, list(i).port, list(i).group, print_mem(list(i).memavail), print_tim(list(i).timavail), list(i).hostid);
   end % for i
   strlist = sort(strlist);

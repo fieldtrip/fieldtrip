@@ -485,7 +485,7 @@ int main(int argc, char *argv[]) {
 						/* send the results back to the master */
 
 						/*****************************************************************************
-						 * the following code is largely shared with the get-option in the peer mex file
+						 * the following code is largely shared with the put-option in the peer mex file
 						 *****************************************************************************/
 						pthread_mutex_lock(&mutexpeerlist);
 						found = 0;
@@ -501,7 +501,8 @@ int main(int argc, char *argv[]) {
 
 						if (!found) {
 								pthread_mutex_unlock(&mutexpeerlist);
-								PANIC("failed to locate specified peer");
+								DEBUG(LOG_ERR, "failed to locate specified peer");
+								goto cleanup;
 						}
 
 						pthread_mutex_lock(&mutexhost);
@@ -513,30 +514,34 @@ int main(int argc, char *argv[]) {
 								/* open the UDS socket */
 								if ((server = open_uds_connection(peer->host->socket)) < 0) {
 										pthread_mutex_unlock(&mutexpeerlist);
-										PANIC("failed to create socket");
+										DEBUG(LOG_ERR, "failed to create socket");
+										goto cleanup;
 								}
 						}
 						else if (hastcp) {
 								/* open the TCP socket */
 								if ((server = open_tcp_connection(peer->ipaddr, peer->host->port)) < 0) {
 										pthread_mutex_unlock(&mutexpeerlist);
-										PANIC("failed to create socket");
+										DEBUG(LOG_ERR, "failed to create socket");
+										goto cleanup;
 								}
 						}
 						else {
 								pthread_mutex_unlock(&mutexpeerlist);
-								PANIC("failed to create socket");
+								DEBUG(LOG_ERR, "failed to create socket");
+								goto cleanup;
 						}
 
 						/* the connection was opened without error */
 						pthread_mutex_unlock(&mutexpeerlist);
 
 						if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
-								PANIC("could not write handshake");
+								DEBUG(LOG_ERR, "could not write handshake");
+								goto cleanup;
 						}
 						else if (!handshake) {
-								close_connection(server);
-								PANIC("failed to negociate connection");
+								DEBUG(LOG_ERR, "failed to negociate connection");
+								goto cleanup;
 						}
 
 						/* the message that will be written consists of
@@ -546,19 +551,20 @@ int main(int argc, char *argv[]) {
 						   message->opt
 						 */
 
-						arg = (mxArray *) mxSerialize(argout);
-						opt = (mxArray *) mxSerialize(options);
+						if ((arg = (mxArray *) mxSerialize(argout))==NULL) {
+								DEBUG(LOG_ERR, "could not serialize job arguments");
+								goto cleanup;
+						}
 
-						if (!arg)
-								PANIC("could not serialize job arguments");
+						if ((opt = (mxArray *) mxSerialize(options))==NULL) {
+								DEBUG(LOG_ERR, "could not serialize job options");
+								goto cleanup;
+						}
 
-						if (!opt)
-								PANIC("could not serialize job options");
-
-						def = (jobdef_t *)malloc(sizeof(jobdef_t));
-
-						if (!def)
-								PANIC("could not allocate memory");
+						if ((def = (jobdef_t *)malloc(sizeof(jobdef_t)))==NULL) {
+								DEBUG(LOG_ERR, "could not allocate memory");
+								goto cleanup;
+						}
 
 						def->version  = VERSION;
 						def->id       = jobid;
@@ -578,52 +584,68 @@ int main(int argc, char *argv[]) {
 						pthread_mutex_unlock(&mutexhost);
 
 						if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
-								PANIC("could not write handshake");
+								DEBUG(LOG_ERR, "could not write handshake");
+								goto cleanup;
 						}
 						else if (!handshake) {
-								close_connection(server);
-								PANIC("failed to write hostdef");
+								DEBUG(LOG_ERR, "failed to write hostdef");
+								goto cleanup;
 						}
 
 						if (success)
 								success = (bufwrite(server, def, sizeof(jobdef_t)) == sizeof(jobdef_t));
 
 						if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
-								PANIC("could not write handshake");
+								DEBUG(LOG_ERR, "could not write handshake");
+								goto cleanup;
 						}
 						else if (!handshake) {
-								close_connection(server);
-								PANIC("failed to write jobdef");
+								DEBUG(LOG_ERR, "failed to write jobdef");
+								goto cleanup;
 						}
 
 						if (success) 
 								success = (bufwrite(server, (void *)mxGetData(arg), def->argsize) == def->argsize);
 
 						if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
-								PANIC("could not write handshake");
+								DEBUG(LOG_ERR, "could not write handshake");
+								goto cleanup;
 						}
 						else if (!handshake) {
-								close_connection(server);
-								PANIC("failed to write arg");
+								DEBUG(LOG_ERR, "failed to write arg");
+								goto cleanup;
 						}
 
 						if (success) 
 								success = (bufwrite(server, (void *)mxGetData(opt), def->optsize) == def->optsize);
 
 						if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
-								PANIC("could not write handshake");
+								DEBUG(LOG_ERR, "could not write handshake");
+								goto cleanup;
 						}
 						else if (!handshake) {
-								close_connection(server);
-								PANIC("failed to write opt");
+								DEBUG(LOG_ERR, "failed to write opt");
+								goto cleanup;
 						}
 
-						close_connection(server);
+cleanup:
+						if (server>0) {
+								close_connection(server);
+								server = 0;
+						}
 
-						mxDestroyArray(arg);
-						mxDestroyArray(opt);
+						if (arg) {
+								mxDestroyArray(arg);
+								arg = NULL;
+						}
 
-skipwrite:
+						if (opt) {
+								mxDestroyArray(opt);
+								opt = NULL;
+						}
+
+						FREE(def);
+
 						/*****************************************************************************/
 
 						/* remove the first job from the joblist */
