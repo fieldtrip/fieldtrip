@@ -119,9 +119,6 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				pthread_mutex_unlock(&mutexstatus);
 		}
 
-		/* wait some time for the discovery thread to pick up the other peers */
-		usleep(2*ANNOUNCESLEEP);
-
 		/* enable the kill switch: the expire thread will exit if the master is not seen any more */
 		pthread_mutex_lock(&mutexkillswitch);
 		killswitch.enabled  = 1;

@@ -46,6 +46,7 @@ extern hostlist_t *hostlist;
 extern pthread_mutex_t mutexkillswitch;
 extern struct {
 		int enabled;
+		int evidence;
 		UINT32_T masterid;
 } killswitch;
 

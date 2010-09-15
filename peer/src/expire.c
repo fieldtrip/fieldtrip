@@ -123,7 +123,12 @@ void *expire(void *arg) {
 								peer = peer->next;
 						}
 
-						if (!found) {
+						if (!found)
+								killswitch.evidence++;
+						else
+								killswitch.evidence==0;
+
+						if (killswitch.evidence>2) {
 								/* the master is not available any more */
 								DEBUG(LOG_NOTICE, "expire: killswitch triggered");
 								exit(0);

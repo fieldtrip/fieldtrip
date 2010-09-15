@@ -60,6 +60,7 @@ hostlist_t *hostlist = NULL;
 pthread_mutex_t mutexkillswitch = PTHREAD_MUTEX_INITIALIZER;
 struct {
 		int enabled;
+		int evidence;
 		UINT32_T masterid;
 } killswitch;
 

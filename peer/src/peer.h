@@ -59,9 +59,9 @@
 #define ACCEPTSLEEP              10000		/* in usec */
 #define ANNOUNCESLEEP            1000000	/* in usec */
 #define ANNOUNCEJITTER           10000 		/* in usec */
+#define EXPIRESLEEP              1500000	/* in usec, should be longer than ANNOUNCESLEEP+ANNOUNCEJITTER */
 #define BACKLOG                  16
 #define EXPIRATION               3			/* in sec  */
-#define EXPIRESLEEP              1000000	/* in usec */
 #define SMARTMEM_MINIMUM         104857600	/* 100 MB  */
 #define SMARTSHARE_HISTORY       2			/* number if history items peer peer */
 #define SMARTSHARE_PREVHOSTCOUNT 3			/* number of times that a host has to "knock" */
