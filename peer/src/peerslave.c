@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "engine.h"
+#include "matrix.h"
 
 #include "peer.h"
 #include "extern.h"
@@ -81,7 +82,7 @@ int main(int argc, char *argv[]) {
 		pid_t childpid;
 
 		int matlabRunning = 0, matlabStart, matlabFinished, engineFailed = 0;
-		int c, n, rc, found, handshake, success, server, jobnum = 0, jobcount;
+		int c, n, rc, found, handshake, success, server, jobnum = 0, jobcount, jobfailed;
 		unsigned int enginetimeout = ENGINETIMEOUT;
 		unsigned int zombietimeout = ZOMBIETIMEOUT;
 		unsigned int peerid, jobid;
@@ -456,19 +457,32 @@ int main(int argc, char *argv[]) {
 
 						/* execute the job */
 						engEvalString(en, "[argout, options] = peerexec(argin, options);");
+						jobfailed = 0;
 
 						/* get the job output arguments and options */
 						if ((argout = engGetVariable(en, "argout")) == NULL) {
 								DEBUG(LOG_ERR, "error getting argout");
-								exit(1);
+								jobfailed = 1;
 						}
 
 						if ((options = engGetVariable(en, "options")) == NULL) {
 								DEBUG(LOG_ERR, "error getting options");
-								exit(1);
+								jobfailed = 1;
 						}
 
-						/* send them back to the master */
+						if (jobfailed) {
+								/* create an empty ouptut argument */
+								argout = mxCreateCellMatrix(1,1);
+								/* specify the error in the options */
+								options = mxCreateCellMatrix(1,2);
+								mxSetCell(options, 0, mxCreateString("lasterr\0"));
+								mxSetCell(options, 1, mxCreateString("the matlab engine crashed\0"));
+								/* try to close the engine */
+								engClose(en);
+								matlabRunning = 0;
+						};
+
+						/* send the results back to the master */
 
 						/*****************************************************************************
 						 * the following code is largely shared with the get-option in the peer mex file
@@ -609,6 +623,7 @@ int main(int argc, char *argv[]) {
 						mxDestroyArray(arg);
 						mxDestroyArray(opt);
 
+skipwrite:
 						/*****************************************************************************/
 
 						/* remove the first job from the joblist */
@@ -641,7 +656,8 @@ int main(int argc, char *argv[]) {
 				/* switch the engine off if it is idle for too long */
 				if ((matlabRunning!=0) && ((time(NULL)-matlabFinished)>enginetimeout)) {
 						if (engClose(en)!=0) {
-								PANIC("could not stop the MATLAB engine");
+								DEBUG(LOG_CRIT, "could not stop the MATLAB engine");
+								matlabRunning = 0;
 						}
 						else {
 								DEBUG(LOG_CRIT, "stopped idle MATLAB engine");
