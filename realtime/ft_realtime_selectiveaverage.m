@@ -6,7 +6,7 @@ function realtime_selectiveaverage(cfg)
 % Use as
 %   realtime_selectiveaverage(cfg)
 % with the following configuration options
-%   cfg.channel    = cell-array, see CHANNELSELECTION (default = 'all')
+%   cfg.channel    = cell-array, see FT_CHANNELSELECTION (default = 'all')
 %   cfg.trialfun   = string with the trial function
 %
 % The source of the data is configured as

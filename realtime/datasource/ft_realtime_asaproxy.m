@@ -13,7 +13,7 @@ function realtime_asaproxy(cfg)
 %   realtime_asaproxy(cfg)
 %
 % The configuration should contain
-%   cfg.channel              = cell-array, see CHANNELSELECTION (default = 'all')
+%   cfg.channel              = cell-array, see FT_CHANNELSELECTION (default = 'all')
 %
 % The target to write the data to is configured as
 %   cfg.target.datafile      = string, target destination for the data (default = 'buffer://localhost:1972')

@@ -12,8 +12,8 @@ function realtime_packettimer(cfg)
 %   cfg.rellim = y limits of subplot 1 (default = [-100 100])
 %
 % SEE ALSO:
-%   realtime_process
-%
+%   FT_REALTIME_PROCESS
+
 % TO DO:
 %   jitter in het binnenhalen van de data; scatterplot!
 %   triggers sturen en herhalen (loop closen)

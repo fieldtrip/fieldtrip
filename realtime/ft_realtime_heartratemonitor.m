@@ -7,7 +7,7 @@ function realtime_signalviewer(cfg)
 %   realtime_signalviewer(cfg)
 % with the following configuration options
 %   cfg.blocksize  = number, size of the blocks/chuncks that are processed (default = 1 second)
-%   cfg.channel    = cell-array, see CHANNELSELECTION (default = 'all')
+%   cfg.channel    = cell-array, see FT_CHANNELSELECTION (default = 'all')
 %   cfg.bufferdata = whether to start on the 'first or 'last' data that is available (default = 'last')
 %
 % The source of the data is configured as

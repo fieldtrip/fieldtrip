@@ -15,7 +15,7 @@ function realtime_brainampproxy(cfg)
 % The configuration should contain
 %   cfg.host                 = string, name of computer running the recorder software (default = 'eeg002')
 %   cfg.port                 = number, TCP port to connect to (default = 51244)
-%   cfg.channel              = cell-array, see CHANNELSELECTION (default = 'all')
+%   cfg.channel              = cell-array, see FT_CHANNELSELECTION (default = 'all')
 %   cfg.feedback             = 'yes' or 'no' (default = 'no')
 %
 % The target to write the data to is configured as

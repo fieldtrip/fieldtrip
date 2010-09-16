@@ -7,7 +7,7 @@ function realtime_process(cfg)
 % Use as
 %   realtime_process(cfg)
 % with the following configuration options
-%   cfg.channel    = cell-array, see CHANNELSELECTION (default = 'all')
+%   cfg.channel    = cell-array, see FT_CHANNELSELECTION (default = 'all')
 %   cfg.trialfun   = string with the trial function
 %   cfg.bcifun     = string with the realtime analysis function
 %   cfg.readevent  = {'yes' 'no'}; no reading is useful in asychronous

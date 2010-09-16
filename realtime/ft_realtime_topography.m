@@ -8,7 +8,7 @@ function realtime_topography(cfg)
 % with the following configuration options
 %   cfg.blocksize            = number, size of the blocks/chuncks that are processed (default = 1 second)
 %   cfg.overlap              = number, amojunt of overlap between chunks (default = 0 seconds)
-%   cfg.layout               = specification of the layout, see PREPARE_LAYOUT
+%   cfg.layout               = specification of the layout, see FT_PREPARE_LAYOUT
 %
 % The source of the data is configured as
 %   cfg.dataset       = string

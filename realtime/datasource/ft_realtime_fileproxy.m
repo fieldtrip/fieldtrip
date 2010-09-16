@@ -14,7 +14,7 @@ function realtime_fileproxy(cfg)
 % with the following configuration options
 %   cfg.minblocksize         = number, in seconds (default = 0)
 %   cfg.maxblocksize         = number, in seconds (default = 1)
-%   cfg.channel              = cell-array, see CHANNELSELECTION (default = 'all')
+%   cfg.channel              = cell-array, see FT_CHANNELSELECTION (default = 'all')
 %   cfg.jumptoeof            = jump to end of file at initialization (default = 'no')
 %   cfg.readevent            = whether or not to copy events (default = 'no'; event type can also be specified; e.g., 'UPPT002')
 %   cfg.speed                = relative speed at which data is written (default = inf)

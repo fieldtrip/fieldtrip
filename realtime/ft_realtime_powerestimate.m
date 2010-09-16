@@ -6,7 +6,7 @@ function realtime_powerestimate(cfg)
 % Use as
 %   realtime_powerestimate(cfg)
 % with the following configuration options
-%   cfg.channel    = cell-array, see CHANNELSELECTION (default = 'all')
+%   cfg.channel    = cell-array, see FT_CHANNELSELECTION (default = 'all')
 %   cfg.foilim     = [Flow Fhigh] (default = [0 120])
 %   cfg.blocksize  = number, size of the blocks/chuncks that are processed (default = 1 second)
 %   cfg.bufferdata = whether to start on the 'first or 'last' data that is available (default = 'last')
