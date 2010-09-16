@@ -136,7 +136,7 @@ end
 
 % This is for compiling peer.c and linking everything into the MEX file.
 fprintf(1,'Compiling and linking MEX file:\n');
-cmd = sprintf('mex -outdir .. %s %s peer.c %s %s',cflags,extra_cflags,allObjects,ldflags);
+cmd = sprintf('mex -outdir ../private %s %s peer.c %s %s',cflags,extra_cflags,allObjects,ldflags);
 disp(cmd);
 eval(cmd);
 

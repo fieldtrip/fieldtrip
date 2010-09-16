@@ -477,7 +477,7 @@ int main(int argc, char *argv[]) {
 								options = mxCreateCellMatrix(1,2);
 								mxSetCell(options, 0, mxCreateString("lasterr\0"));
 								mxSetCell(options, 1, mxCreateString("the matlab engine crashed\0"));
-								/* try to close the engine */
+								/* try to close the engine, probably this will fail */
 								engClose(en);
 								matlabRunning = 0;
 						};
@@ -509,6 +509,12 @@ int main(int argc, char *argv[]) {
 						int hasuds = (strlen(peer->host->socket)>0 && strcmp(peer->host->name, host->name)==0);
 						int hastcp = (peer->host->port>0);
 						pthread_mutex_unlock(&mutexhost);
+
+						/* these have to be initialized to NULL to ensure that the cleanup works */
+						server = 0;
+						def = NULL;
+						arg = NULL;
+						opt = NULL;
 
 						if (hasuds) {
 								/* open the UDS socket */
