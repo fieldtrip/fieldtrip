@@ -205,7 +205,7 @@ datspectrum = transpose(fft(transpose([dat repmat(postpad,[nchan, 1])]))); % dou
 spectrum = cell(max(ntaper), nfreqoi); % assumes fixed number of tapers
 for ifreqoi = 1:nfreqoi
   fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
-  for itap = 1:ntaper(ifreqoi)
+  for itap = 1:max(ntaper)
     % compute indices that will be used to extracted the requested fft output
     nsamplefreqoi    = timwin(ifreqoi) .* fsample;
     reqtimeboiind    = find((timeboi >=  (nsamplefreqoi ./ 2)) & (timeboi <    ndatsample - (nsamplefreqoi ./2)));
@@ -213,7 +213,7 @@ for ifreqoi = 1:nfreqoi
     
     % compute datspectrum*wavelet, if there are reqtimeboi's that have data
     % create a matrix of NaNs if there is no taper for this current frequency-taper-number
-    if itap > ntaper(itap)
+    if itap > ntaper(ifreqoi)
       spectrum{itap,ifreqoi} = complex(nan(nchan,ntimeboi));
     else
       dum = fftshift(transpose(ifft(transpose(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1])))),2); % double explicit transpose to speedup fft
