@@ -86,7 +86,7 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 % FT_TOPOPLOTTFR calls the function FT_TOPOPLOTER to do the plotting.
 %
 % See also:
-%   ft_topoplotER, ft_singleplotTFR, ft_multiplotTFR, ft_prepare_layout
+%   FT_TOPOPLOTER, FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR, FT_PREPARE_LAYOUT
 
 % Undocumented local options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)

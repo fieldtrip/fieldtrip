@@ -61,8 +61,8 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 % of the subplots, you should create your own layout file.
 %
 % See also:
-%   ft_multiplotTFR, ft_singleplotER, ft_singleplotTFR, ft_topoplotER, ft_topoplotTFR,
-%   ft_prepare_layout.
+%   FT_MULTIPLOTTFR, FT_SINGLEPLOTER, FT_SINGLEPLOTTFR, FT_TOPOPLOTER, FT_TOPOPLOTTFR,
+%   FT_PREPARE_LAYOUT
 
 % Undocumented local options:
 % cfg.layoutname

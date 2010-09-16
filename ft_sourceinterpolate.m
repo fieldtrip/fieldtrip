@@ -15,14 +15,14 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical);
 % where
 %   source is the output of FT_SOURCEANALYSIS
 %   stat   is the output of FT_SOURCESTATISTICS
-%   mri    is the output of FT_READ_FCDC_MRI or the filename of a MRI
+%   mri    is the output of FT_READ_MRI or the filename of a MRI
 % and cfg is a structure with any of the following fields
 %   cfg.parameter     = string, default is 'all'
 %   cfg.interpmethod  = 'linear', 'cubic', 'nearest' or 'spline'
 %   cfg.downsample    = integer number (default = 1, i.e. no downsampling)
 %
-% See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS, FT_READ_FCDC_MRI
-%
+% See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS, FT_READ_MRI
+
 % Undocumented options
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
 %   cfg.outputfile = one can specify output as file to save to disk

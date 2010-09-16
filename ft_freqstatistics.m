@@ -31,7 +31,7 @@ function [stat] = ft_freqstatistics(cfg, varargin)
 % explanation of each method.
 %
 % See also FT_FREQANALYSIS, FT_FREQDESCRIPTIVES, FT_FREQGRANDAVERAGE
-%
+
 % Undocumented local options:
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
 %                     The data should be provided in a cell array

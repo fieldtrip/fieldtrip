@@ -10,7 +10,7 @@ function [freq] = ft_freqbaseline(cfg, freq)
 %   cfg.baselinetype = 'absolute' 'relchange' 'relative' (default = 'absolute')
 %
 % See also FT_FREQANALYSIS, FT_TIMELOCKBASELINE, FT_FREQCOMPARISON
-%
+
 % Undocumented local options:
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
 %   cfg.outputfile = one can specify output as file to save to disk

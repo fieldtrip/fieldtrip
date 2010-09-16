@@ -29,7 +29,7 @@ function [vol, cfg] = ft_prepare_singleshell(cfg, mri)
 %   G. Nolte, "The magnetic lead field theorem in the quasi-static
 %   approximation and its use for magnetoencephalography forward calculation
 %   in realistic volume conductors", Phys Med Biol. 2003 Nov 21;48(22):3637-52.
-%
+
 % Undocumented local options:
 %   cfg.inputfile        = one can specifiy preanalysed saved data as input
 %

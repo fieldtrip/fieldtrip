@@ -37,7 +37,7 @@ function [lay] = ft_prepare_layout(cfg, data);
 %   cfg.layout = 'vertical' will give you a Nx1 ordered layout
 %   cfg.layout = 'butterfly'  will give you a layout with all channels on top of each other
 %
-% See also ft_layoutplot, ft_topoplotER, ft_topoplotTFR, ft_multiplotER, ft_multiplotTFR
+% See also FT_LAYOUTPLOT, FT_TOPOPLOTER, FT_TOPOPLOTTFR, FT_MULTIPLOTER, FT_MULTIPLOTTFR
 
 % TODO switch to using planarchannelset function
 

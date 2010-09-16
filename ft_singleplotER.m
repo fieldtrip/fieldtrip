@@ -41,7 +41,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %                     alternatively, colors can be specified as Nx3 matrix of RGB values
 %
 % See also:
-%   ft_singleplotTFR, ft_multiplotER, ft_multiplotTFR, ft_topoplotER, ft_topoplotTFR
+%   FT_SINGLEPLOTTFR, FT_MULTIPLOTER, FT_MULTIPLOTTFR, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
 % This function depends on FT_TIMELOCKBASELINE which has the following options:
 % cfg.baseline, documented

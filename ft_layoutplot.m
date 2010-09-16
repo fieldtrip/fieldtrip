@@ -41,7 +41,7 @@ function ft_layoutplot(cfg, data)
 % which will give you a 2-D ordered layout. Note that this is only suited
 % for multiplotting and not for topoplotting.
 %
-% See also ft_prepare_layout, ft_topoplotER, ft_topoplotTFR, ft_multiplotER, ft_multiplotTFR
+% See also FT_PREPARE_LAYOUT, FT_TOPOPLOTER, FT_TOPOPLOTTFR, FT_MULTIPLOTER, FT_MULTIPLOTTFR
 
 % Undocumented options
 %   cfg.montage

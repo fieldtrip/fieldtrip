@@ -38,7 +38,6 @@ function [stat] = ft_sourcestatistics(cfg, varargin)
 % for the corresponding configuration options and for a detailed
 % explanation of each method.
 %
-%
 % See also FT_SOURCEANALYSIS, FT_SOURCEDESCRIPTIVES, FT_SOURCEGRANDAVERAGE
 
 % Undocumented local options:

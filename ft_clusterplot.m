@@ -2,8 +2,8 @@ function ft_clusterplot(cfg, stat)
 
 % FT_CLUSTERPLOT plots a series of topoplots with found clusters highlighted.
 % stat is 2D or 1D data from FT_TIMELOCKSTATISTICS or FT_FREQSTATISTICS with 'cluster'
-% as cfg.correctmc. 2D: stat from timelockstatistics not averaged over
-% time, or stat from freqstatistics averaged over frequency not averaged over
+% as cfg.correctmc. 2D: stat from FT_TIMELOCKSTATISTICS not averaged over
+% time, or stat from FT_FREQSTATISTICS averaged over frequency not averaged over
 % time. 1D: averaged over time as well.
 %
 % use as: ft_clusterplot(cfg,stat)
@@ -29,11 +29,10 @@ function ft_clusterplot(cfg, stat)
 % options, cfg.comment and cfg.commentpos.
 %
 % See also:
-%   ft_topoplotER, ft_singleplotER
-%
+%   FT_TOPOPLOTER, FT_SINGLEPLOTER
+
 % Undocumented local option:
 % cfg.inputfile  = one can specifiy preanalysed saved data as input
-
 
 % Copyright (C) 2007, Ingrid Nieuwenhuis, F.C. Donders Centre
 %

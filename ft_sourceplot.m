@@ -108,7 +108,7 @@ function [cfg] = ft_sourceplot(cfg, data)
 %   cfg.camlight       = 'yes' or 'no' (default = 'yes')
 %   cfg.renderer       = 'painters', 'zbuffer',' opengl' or 'none' (default = 'opengl')
 %                        When using opacity the OpenGL renderer is required.
-%
+
 % Undocumented local option:
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
 

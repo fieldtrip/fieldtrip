@@ -38,7 +38,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 % cfg.masknans      = 'yes' or 'no' (default = 'yes')
 %
 % See also:
-%   ft_singleplotER, ft_multiplotER, ft_multiplotTFR, ft_topoplotER, ft_topoplotTFR
+%   FT_SINGLEPLOTER, FT_MULTIPLOTER, FT_MULTIPLOTTFR, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
 % This function depends on FT_FREQBASELINE which has the following options:
 % cfg.baseline, documented

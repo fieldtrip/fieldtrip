@@ -60,8 +60,8 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 % over the layout of the subplots, you should create your own layout file.
 %
 % See also:
-%   ft_multiplotER, ft_singleplotER, ft_singleplotTFR, ft_topoplotER, ft_topoplotTFR,
-%   ft_prepare_layout
+%   FT_MULTIPLOTER, FT_SINGLEPLOTER, FT_SINGLEPLOTTFR, FT_TOPOPLOTER, FT_TOPOPLOTTFR,
+%   FT_PREPARE_LAYOUT
 
 % Undocumented local options:
 % cfg.channel

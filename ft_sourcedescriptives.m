@@ -36,7 +36,7 @@ function [source] = ft_sourcedescriptives(cfg, source)
 % on the power and projected noise.
 %
 % See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS
-%
+
 % Undocumented local options:
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
 %   cfg.outputfile = one can specify output as file to save to disk
