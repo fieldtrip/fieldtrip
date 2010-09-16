@@ -125,6 +125,7 @@ if timedelay ~= 0
     angletransform(ifreqoi) = angle(complex(coswav,sinwav));
   end
 end
+angletransform = repmat(angletransform,[nchan,1]);
 
 
 % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
