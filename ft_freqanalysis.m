@@ -180,7 +180,7 @@ else
   cfg.channel = ft_channelselection(cfg.channel, data.label);
   if isfield(cfg, 'channelcmb')
     cfg.channelcmb = ft_channelcombination(cfg.channelcmb, data.label);
-    selchan = unique([cfg.channel(:); cfg.channelcmb(:)]);  
+    selchan = unique([cfg.channel(:); cfg.channelcmb(:)]);
   else
     selchan = cfg.channel;
   end
@@ -242,7 +242,7 @@ else
     end
   end
   
-
+  
   
   
   % tapsmofrq compatibility between functions (make it into a vector if it's not)
@@ -263,9 +263,12 @@ else
   end
   
   
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% Main loop over trials, inside fourierspectra are obtained and transformed into the appropriate outputs
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % this is done on trial basis to save memory
   for itrial = 1:ntrials
     disp(['processing trial ' num2str(itrial) ': ' num2str(size(data.trial{itrial},2)) ' samples']);
@@ -277,7 +280,11 @@ else
     if itrial == 1
       % minimal specest call, bookkeeping and such is in a second switch below here
       switch cfg.method
+        
+        
         case 'mtmconvol'
+          %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+          %%% MTMCONVOL
           [spectrum,ntaper,foi,toi] = specest_mtmconvol(dat, time, 'timeoi', cfg.toi, 'timwin', cfg.t_ftimwin, options{:});
           nfoi = numel(foi);
           ntoi = numel(toi);
@@ -305,8 +312,16 @@ else
             if fftflg, fourierspctrm = complex(zeros(ntrials*ntap,nchan,nfoi,ntoi,cfg.precision));    end
             dimord    = 'rpttap_chan_freq_time';
           end
+          %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+          
+          
+          
+          
+          
           
         case 'mtmfft'
+          %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+          %%% MTMFFT
           [spectrum,ntaper,foi] = specest_mtmfft(dat, time, options{:});
           nfoi = numel(foi);
           ntap = size(spectrum,1);
@@ -333,6 +348,11 @@ else
             if fftflg, fourierspctrm = complex(zeros(ntrials*ntap,nchan,nfoi,cfg.precision));    end
             dimord    = 'rpttap_chan_freq';
           end
+          %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+          
+          
+          
+          
         otherwise
           error('method %s is unknown', cfg.method);
       end % switch
@@ -342,10 +362,14 @@ else
     
     
     
+    
+    
     % do the spectral decompisition of this trial and put it into output variables
     switch cfg.method
       
       case 'mtmconvol'
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%% MTMCONVOL
         if itrial ~= 1
           [spectrum,ntaper,foi,toi] = specest_mtmconvol(dat, time, 'timeoi', cfg.toi, options{:},'timwin',cfg.t_ftimwin);
           nfoi = numel(foi);
@@ -410,10 +434,14 @@ else
           acttimboiind = ~isnan(squeeze(spectrum(1,1,:,:)));
           dof(itrial,:,:) = repmat(ntaper,[1, ntoi]) .* acttimboiind;
         end
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
         
         
         
       case 'mtmfft'
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%% MTMFFT
         if itrial ~= 1
           [spectrum,ntaper,foi] = specest_mtmfft(dat, time, options{:});
           nfoi = numel(foi);
@@ -473,7 +501,12 @@ else
         if strcmp(cfg.calcdof,'yes')
           dof(itrial,:) = ntaper;
         end
-
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
+        
+        
+        
+        
         
       otherwise
         error('method %s is unknown or not yet implemented with new low level functions', cfg.method);
@@ -484,10 +517,13 @@ else
     
     
     
+    
   end % for ntrials
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% END: Main loop over trials
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  
   
   
   
@@ -505,7 +541,7 @@ else
     % correct the 0 Hz bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
     if ~isempty(hasdc)
       if keeprpt>1
-        powspctrm(:,:,hasdc,:) = powspctrm(:,:,hasdc,:)./2;      
+        powspctrm(:,:,hasdc,:) = powspctrm(:,:,hasdc,:)./2;
       else
         powspctrm(:,hasdc,:) = powspctrm(:,hasdc,:)./2;
       end
@@ -516,7 +552,7 @@ else
     % correct the 0 Hz bin if present
     if ~isempty(hasdc)
       if keeprpt>1
-        fourierspctrm(:,:,hasdc,:) = fourierspctrm(:,:,hasdc,:)./sqrt(2);      
+        fourierspctrm(:,:,hasdc,:) = fourierspctrm(:,:,hasdc,:)./sqrt(2);
       else
         fourierspctrm(:,hasdc,:) = fourierspctrm(:,hasdc,:)./sqrt(2);
       end
@@ -527,7 +563,7 @@ else
     % correct the 0 Hz bin if present
     if ~isempty(hasdc)
       if keeprpt>1
-        crsspctrm(:,:,hasdc,:) = crsspctrm(:,:,hasdc,:)./2;      
+        crsspctrm(:,:,hasdc,:) = crsspctrm(:,:,hasdc,:)./2;
       else
         crsspctrm(:,hasdc,:) = crsspctrm(:,hasdc,:)./2;
       end
