@@ -6,6 +6,10 @@ if [[ -e /etc/rc.d/init.d/functions ]]; then
 source /etc/rc.d/init.d/functions
 fi
 
+if [[ "$USER" == "public" ]]; then
+  umask 0111
+fi
+
 PLATFORM=`gcc -dumpmachine`
 HOSTNAME=`hostname -s`
 
