@@ -130,7 +130,7 @@ for ifreqoi = 1:nfreqoi
       
       % give error/warning about number of tapers
       if isempty(tap)
-        error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',ndatsample/fsample,tapsmofrq(ifreqoi),fsample/fsample);
+        error('%.3f Hz: datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',freqoi(ifreqoi), timwinsample(ifreqoi)/fsample,tapsmofrq(ifreqoi),fsample/timwinsample(ifreqoi));
       elseif size(tap,1) == 1
         warning('using only one taper for specified smoothing')
       end
@@ -225,8 +225,6 @@ for ifreqoi = 1:nfreqoi
 end
 spectrum = reshape(vertcat(spectrum{:}),[nchan max(ntaper) nfreqoi ntimeboi]); % collecting in a cell-array and later reshaping provides significant speedups
 spectrum = permute(spectrum, [2 1 3 4]);
-
-
 
 
 
