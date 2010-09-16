@@ -391,6 +391,10 @@ else
           end
         end
         if csdflg
+          foinumsmp = cfg.t_ftimwin .* data.fsample;
+          foinumsmp = foinumsmp(:);
+          foinumsmp = repmat(foinumsmp,[1, ntap, nchancmb, ntoi]);
+          foinumsmp = permute(foinumsmp,[2 3 1 4]);
           csddum = 2.* (spectrum(:,cutdatindcmb(:,1),:,:) .* conj(spectrum(:,cutdatindcmb(:,2),:,:))) ./ foinumsmp;
           if keeprpt == 1
             crsspctrm = crsspctrm + (reshape(nanmean(csddum,1),[nchancmb nfoi ntoi]) ./ ntrials);
@@ -423,7 +427,7 @@ else
         foinumsmp = repmat(foinumsmp,[ntap, nchan, nfoi]);
         if powflg
           powdum = 2.* abs(spectrum) .^ 2 ./ foinumsmp;
-          % In freqanalysis_mtmfft, sine tapers are NOT scaled (they are in mtmconvol). below code performs the scaling for cfg.method = mtmfft
+          % In freqanalysis_mtmfft, sine tapers are NOT scaled (they are in mtmconvol). below code should perform the scaling for cfg.method = mtmfft (not tested)
           %           if strcmp(cfg.taper, 'sine')
           %             sinetapscale = zeros(ntap,nfoi);  % assumes fixed number of tapers
           %             for isinetap = 1:ntaper(1)  % assumes fixed number of tapers
@@ -453,6 +457,8 @@ else
           end
         end
         if csdflg
+          foinumsmp = cfg.pad * data.fsample;
+          foinumsmp = repmat(foinumsmp,[ntap, nchancmb, nfoi]);
           csddum = 2.* (spectrum(:,cutdatindcmb(:,1),:,:) .* conj(spectrum(:,cutdatindcmb(:,2),:,:))) ./ foinumsmp;
           if keeprpt == 1
             crsspctrm = crsspctrm + (reshape(nanmean(csddum,1),[nchancmb nfoi]) ./ ntrials);
@@ -467,14 +473,10 @@ else
         if strcmp(cfg.calcdof,'yes')
           dof(itrial,:) = ntaper;
         end
-        
-        
-        %       case 'wltconvol' % not testest yet
-        %         [spectrum,foi,toi] = specest_wltconvol(dat, time, options{:});
-        
+
         
       otherwise
-        error('method %s is unknown', cfg.method);
+        error('method %s is unknown or not yet implemented with new low level functions', cfg.method);
     end % switch
     
     
