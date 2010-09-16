@@ -65,15 +65,15 @@ if ~isdir(outdir)
     mkdir(outdir);
 end
 
+
+funname = flipdim(funname,1); % to avoid problems with overlapping function names
 for i=1:length(funname)
     filename = fullfile(outdir, [funname{i} '.txt']);
     str = help(funname{i});
     
     % add crossrefs
     for f=1:length(funname)
-        if f~=i % skip the current function
-            str = strrep(str, upper(funname{f}), ['<a href=/reference/', funname{f}, '><font color=green>', upper(funname{f}),'</font></a>']);
-        end
+        str = strrep(str, [' ', upper(funname{f})], [' <a href=/reference/', funname{f}, '><font color=green>', upper(funname{f}),'</font></a>']);
     end
     
     fid = fopen(filename, 'wt');
@@ -84,5 +84,3 @@ for i=1:length(funname)
     fprintf(fid, '</pre></html>\n'); % required for docuwiki
     fclose(fid);
 end
-
-
