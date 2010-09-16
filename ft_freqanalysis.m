@@ -148,6 +148,11 @@ else
   elseif strcmp(cfg.keeptrials,'yes') &&  strcmp(cfg.keeptapers,'yes')
     keeprpt = 4;
   end
+  if strcmp(cfg.keeptrials,'yes') && strcmp(cfg.keeptapers,'yes')
+    if ~strcmp(cfg.output, 'fourier'),
+      error('Keeping trials AND tapers is only possible with fourier as the output.');
+    end
+  end
   
   % Set flags for output
   if strcmp(cfg.output,'pow')
@@ -261,7 +266,6 @@ else
   else
     options = {'pad', cfg.pad, 'taper', cfg.taper, 'freqoi', cfg.foi};
   end
-  
   
   
   
@@ -522,9 +526,10 @@ else
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% END: Main loop over trials
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ 
   
-  
-  
+    
   
   
   
@@ -616,12 +621,6 @@ end % IF OLD OR NEW IMPLEMENTATION
 
 
 
-
-
-
-
-
-
 % copy the trial specific information into the output
 if isfield(data, 'trialinfo'),
   freq.trialinfo = data.trialinfo;
@@ -631,9 +630,6 @@ end
 if ~isempty(cfg.outputfile)
   savevar(cfg.outputfile, 'data', freq); % use the variable name "data" in the output file
 end
-
-
-
 
 
 
