@@ -110,7 +110,7 @@ switch toolbox
   case 'AFNI'
     status = (exist('BrikLoad') && exist('BrikInfo'));
   case 'DSS'
-    status = exist('dss', 'file') && exist('dss_create_state', 'file');
+    status = exist('denss', 'file') && exist('dss_create_state', 'file');
   case 'EEGLAB'
     status = exist('runica', 'file');
   case 'NWAY'
