@@ -290,6 +290,7 @@ int main(int argc, char *argv[]) {
 					} else {
 						triggerState[i] = false;
 					}
+					bv<<=1; 
 				}
 			}
 			
