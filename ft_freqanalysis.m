@@ -362,7 +362,7 @@ else
         foinumsmp = permute(foinumsmp,[2 3 1 4]);
         if powflg
           powdum = 2.* abs(spectrum) .^ 2 ./ foinumsmp;
-          if strcmp(cfg.taper, 'sine') % THIS IS NOT DONE IN THE MTMFFT CASE IN THE OLD IMPLEMENTATION, WHY?
+          if strcmp(cfg.taper, 'sine') % THIS IS NOT DONE IN THE MTMFFT CASE IN THE OLD IMPLEMENTATION, WHY? - roevdmei
             sinetapscale = zeros(ntap,nfoi);  % assumes fixed number of tapers
             for isinetap = 1:ntaper(1)  % assumes fixed number of tapers
               sinetapscale(isinetap,:) = (1 - (((isinetap - 1) ./ ntaper) .^ 2));
