@@ -43,7 +43,7 @@ function [interp] = ft_megplanar(cfg, data)
 % of the volume conduction model.
 %
 % See also FT_COMBINEPLANAR
-%
+
 % Undocumented local options:
 %   cfg.inputfile        = one can specifiy preanalysed saved data as input
 %   cfg.outputfile       = one can specify output as file to save to disk

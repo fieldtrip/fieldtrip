@@ -64,8 +64,8 @@ function [interp] = ft_megrealign(cfg, data);
 % of whole-head MEG recordings between different sensor positions.
 % Biomed Tech (Berl). 2002 Mar;47(3):59-62.
 %
-% See also FT_MEGINTERPOLATE, FT_PREPARE_LOCALSPHERES, FT_PREPARE_SINGLESHELL
-%
+% See also FT_PREPARE_LOCALSPHERES, FT_PREPARE_SINGLESHELL
+
 % Undocumented local options:
 % cfg.inputfile        = one can specifiy preanalysed saved data as input
 % cfg.outputfile       = one can specify output as file to save to disk

@@ -39,7 +39,7 @@ function [data] = ft_resampledata(cfg, data)
 %   data.time
 %
 % See also FT_PREPROCESSING
-%
+
 % Undocumented local options:
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
 %   cfg.outputfile = one can specify output as file to save to disk

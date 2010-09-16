@@ -29,7 +29,7 @@ function [stat] = ft_timelockstatistics(cfg, varargin)
 % explanation of each method.
 %
 % See also FT_TIMELOCKANALYSIS, FT_TIMELOCKGRANDAVERAGE
-%
+
 % Undocumented local options:
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
 %                     The data should be provided in a cell array

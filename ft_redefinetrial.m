@@ -37,7 +37,7 @@ function [data] = ft_redefinetrial(cfg, data)
 %   cfg.trl       = Nx3 matrix with the trial definition, see FT_DEFINETRIAL
 %
 % See also FT_DEFINETRIAL, FT_RECODEEVENT, FT_PREPROCESSING
-%
+
 % Undocumented local options:
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
 %   cfg.outputfile = one can specify output as file to save to disk

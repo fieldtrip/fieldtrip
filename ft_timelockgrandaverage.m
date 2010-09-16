@@ -17,7 +17,7 @@ function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 %  cfg.normalizevar   = 'N' or 'N-1' (default = 'N-1')
 %
 % See also FT_TIMELOCKANALYSIS, FT_TIMELOCKSTATISTICS
-%
+
 % Undocumented local options:
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
 %                     The data should be provided in a cell array

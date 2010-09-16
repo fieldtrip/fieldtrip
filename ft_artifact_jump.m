@@ -30,7 +30,7 @@ function [cfg, artifact] = ft_artifact_jump(cfg,data)
 %   cfg.artfctdef.jump.artpadding    = automatically determined based on the filter padding (cfg.padding)
 %
 % The output argument "artifact" is a Nx2 matrix comparable to the
-% "trl" matrix of DEFINETRIAL. The first column of which specifying the
+% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
 % beginsamples of an artifact period, the second column contains the
 % endsamples of the artifactperiods.
 %
