@@ -95,7 +95,7 @@ int sap_handle_line(sap_item_t **first, const char *line, const char *line_end) 
 		}
 	}
 	/* length of the fieldname is given by difference between pointers */
-	len_name = name_end - name;
+	len_name = (int) (name_end - name);
 		
 	if (isArray) {
 		/* try to parse the index */
@@ -163,7 +163,7 @@ int sap_handle_line(sap_item_t **first, const char *line, const char *line_end) 
 				return 0;
 			}
 			typ = SAP_TEXT;
-			size_value = val_end - val_start + 1; /* +1 for trailing 0 */
+			size_value = (int) (val_end - val_start + 1); /* +1 for trailing 0 */
 		} else if (aux[0]=='x' && aux[-1]=='0') {
 			/* must be hexadecimal */
 			val_start = aux+1;
@@ -361,13 +361,13 @@ const sap_item_t *sap_search_deep(const sap_item_t *list, const char *fieldname)
 	
 	if (fieldname == NULL) return NULL;
 	
-	len = strlen(fieldname);
+	len = (int) strlen(fieldname);
 	
 	dotPos = strchr(fieldname, '.');
-	dotLen = (dotPos==NULL) ? len : (dotPos - fieldname);
+	dotLen = (dotPos==NULL) ? len : (int) (dotPos - fieldname);
 	
 	brkPos = strchr(fieldname, '[');
-	brkLen = (brkPos==NULL) ? len : (brkPos - fieldname);
+	brkLen = (brkPos==NULL) ? len : (int) (brkPos - fieldname);
 	
 	slen = (dotLen<brkLen) ? dotLen : brkLen;
 	item = sap_search_field(list, slen, fieldname);
@@ -444,7 +444,7 @@ int sap_get_essentials(const sap_item_t *list, sap_essentials_t *E) {
 	}
 	
 	if (E->phaseFOV > 0.0 && E->readoutFOV > 0.0) {
-		E->phasePixels = (unsigned int) round(E->readoutPixels * E->phaseFOV / E->readoutFOV);
+		E->phasePixels = (unsigned int) (E->readoutPixels * E->phaseFOV / E->readoutFOV + 0.5);
 		numFound++;
 	}
 	

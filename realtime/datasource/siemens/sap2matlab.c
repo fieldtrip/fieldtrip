@@ -80,7 +80,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	
 	if (nrhs!=1) mexErrMsgTxt("This function needs exactly one (string or uint8) argument.");
 	
-	size = mxGetNumberOfElements(prhs[0]);
+	size = (int) mxGetNumberOfElements(prhs[0]);
 	
 	if ((sizeof(char) == sizeof(mxChar) && mxIsChar(prhs[0])) || mxIsUint8(prhs[0]))  {
 		buffer = (char *) mxGetData(prhs[0]);
