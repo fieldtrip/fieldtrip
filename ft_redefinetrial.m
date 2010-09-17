@@ -36,6 +36,12 @@ function [data] = ft_redefinetrial(cfg, data)
 % samples relative to the original recording
 %   cfg.trl       = Nx3 matrix with the trial definition, see FT_DEFINETRIAL
 %
+% Alternatively you can specify the data to be cut into (non-)overlapping 
+% segments, starting from the beginning of each trial. This may lead to loss
+% of data at the end of the trials
+%   cfg.length    = single number (in unit of time, typically seconds) of the required snippets
+%   cfg.overlap   = single number (between 0 and 1 (exclusive)) specifying the fraction of overlap between snippets (0 = no overlap)
+%
 % See also FT_DEFINETRIAL, FT_RECODEEVENT, FT_PREPROCESSING
 
 % Undocumented local options:
@@ -73,6 +79,8 @@ if ~isfield(cfg, 'minlength'),  cfg.minlength = [];   end
 if ~isfield(cfg, 'trials'),     cfg.trials = 'all';   end
 if ~isfield(cfg, 'feedback'),   cfg.feedback = 'yes'; end
 if ~isfield(cfg, 'trl'),        cfg.trl =  [];        end
+if ~isfield(cfg, 'length'),     cfg.length = [];      end
+if ~isfield(cfg, 'overlap'),    cfg.overlap = 0;      end
 if ~isfield(cfg, 'inputfile'),  cfg.inputfile = [];   end
 if ~isfield(cfg, 'outputfile'), cfg.outputfile = [];  end
 
@@ -108,7 +116,7 @@ end
 Ntrial = numel(data.trial);
 
 % check the input arguments, only one method for processing is allowed
-numoptions = ~isempty(cfg.toilim) + ~isempty(cfg.offset) + (~isempty(cfg.begsample) || ~isempty(cfg.endsample)) + ~isempty(cfg.trl);
+numoptions = ~isempty(cfg.toilim) + ~isempty(cfg.offset) + (~isempty(cfg.begsample) || ~isempty(cfg.endsample)) + ~isempty(cfg.trl) + ~isempty(cfg.length);
 if numoptions>1
   error('you should specify only one of the options for redefining the data segments');
 end
@@ -202,17 +210,32 @@ elseif ~isempty(cfg.trl)
   % make new data structure
   trl = cfg.trl;
   remove = 0;
+  data.trial = cell(1,size(trl,1));
+  data.time  = cell(1,size(trl,1));
   for iTrl=1:length(trl(:,1))
+    
     begsample = trl(iTrl,1);
     endsample = trl(iTrl,2);
     offset    = trl(iTrl,3);
-    trllength        = endsample - begsample + 1;
-    data.trial{iTrl} = fetch_data(dataold, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', 1:hdr.nChans, 'docheck', 0);
+    trllength = endsample - begsample + 1;
+    
+    % original trial
+    iTrlorig  = find(dataold.sampleinfo(:,1)<=begsample & dataold.sampleinfo(:,2)>=endsample);
+   
+    % used to speed up fetch_data
+    if iTrl==1,
+      tmpdata = dataold;
+    end
+    tmpdata.trial = dataold.trial(iTrlorig);
+    tmpdata.time  = dataold.time(iTrlorig);
+    tmpdata.sampleinfo = dataold.sampleinfo(iTrlorig,:);
+    if isfield(dataold, 'trialinfo'), tmpdata.trialinfo = dataold.trialinfo(iTrlorig,:); end;  
+   
+    data.trial{iTrl} = fetch_data(tmpdata, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', 1:hdr.nChans, 'docheck', 0);
     data.time{iTrl}  = offset2time(offset, dataold.fsample, trllength);
     
     % ensure correct handling of trialinfo
     if isfield(dataold, 'sampleinfo'),
-      iTrlorig = find(dataold.sampleinfo(:,1)>=begsample & dataold.sampleinfo(:,2)<=endsample);
       if numel(iTrlorig)==1 && isfield(dataold, 'trialinfo'),
         data.trialinfo(iTrl,:) = dataold.trialinfo(iTrlorig,:);
       elseif isfield(dataold, 'trialinfo'),
@@ -236,6 +259,28 @@ elseif ~isempty(cfg.trl)
     % adjust the trial definition
     data.sampleinfo  = trl(:, 1:2);
   end
+elseif ~isempty(cfg.length)
+  
+  data = checkdata(data, 'hastrialdef', 'yes');
+  
+  %create dummy trl-matrix and recursively call ft_redefinetrial
+  nsmp    = round(cfg.length*data.fsample);
+  nshift  = round((1-cfg.overlap)*nsmp);
+
+  newtrl = zeros(0,3);
+  for k = 1:numel(data.trial)
+    offset = time2offset(data.time{k}, data.fsample);
+    tmp1   = [data.sampleinfo(k,:) offset];
+    tmp2   = (tmp1(1):nshift:(tmp1(2)+1-nsmp))';
+    tmp2(:,2) = tmp2 + nsmp - 1;
+    tmp2(:,3) = tmp2(:,1) + offset - tmp2(1,1);
+    newtrl = [newtrl; tmp2];
+  end
+
+  tmpcfg = [];
+  tmpcfg.trl = newtrl;
+  data   = ft_redefinetrial(tmpcfg, data);
+
 end % processing the realignment or data selection
 
 if ~isempty(cfg.minlength)
