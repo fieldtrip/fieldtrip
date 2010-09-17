@@ -280,7 +280,8 @@ end
 if removesampleinfo
     fprintf('removing trial definition from output\n');
     data            = rmfield(data, 'sampleinfo');
-    cfg.trl(:, 1:2) = nan;
+    %cfg.trl(:, 1:2) = nan;
+    if isfield(cfg, 'trl'), cfg = rmfield(cfg, 'trl'); end
 end
 
 % add version information to the configuration
