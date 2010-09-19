@@ -47,11 +47,10 @@ try
     error('input options should be a cell-array');
   end
 
-  % check whether a kill switch should be set on the master host id
+  % check whether a kill switch should be set
   masterid = keyval('masterid', optin);
-  if ~isempty(masterid)
-    killswitch(masterid);
-  end
+  timallow = keyval('timallow', optin);
+  killswitch(masterid, time+timallow);
 
   % check whether a diary file should be created
   usediary = keyval('diary', optin);

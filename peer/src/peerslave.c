@@ -476,7 +476,7 @@ int main(int argc, char *argv[]) {
 								/* specify the error in the options */
 								options = mxCreateCellMatrix(1,2);
 								mxSetCell(options, 0, mxCreateString("lasterr\0"));
-								mxSetCell(options, 1, mxCreateString("the matlab engine crashed\0"));
+								mxSetCell(options, 1, mxCreateString("the matlab engine aborted\0"));
 								/* try to close the engine, probably this will fail */
 								engClose(en);
 								matlabRunning = 0;

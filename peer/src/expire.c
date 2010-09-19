@@ -110,7 +110,21 @@ void *expire(void *arg) {
 
 				pthread_mutex_lock(&mutexkillswitch);
 
-				/* check whether the kill switch should be triggered */
+/*
+fprintf(stderr, "killswitch: time = %d, now = %d\n", killswitch.time, time(NULL));
+fprintf(stderr, "killswitch: masterid = %d\n", killswitch.masterid);
+*/
+
+				/* check whether the kill switch should be triggered for the time */
+				if (killswitch.enabled && killswitch.time) {
+						if (difftime(time(NULL), killswitch.time)>0) {
+								/* the maximum allowed time has elapsed */
+								DEBUG(LOG_NOTICE, "expire: time has elapsed, killswitch triggered");
+								exit(0);
+						}
+				}
+
+				/* check whether the kill switch should be triggered for the masterid */
 				if (killswitch.enabled && killswitch.masterid) {
 						found = 0;
 
@@ -130,7 +144,7 @@ void *expire(void *arg) {
 
 						if (killswitch.evidence>2) {
 								/* the master is not available any more */
-								DEBUG(LOG_NOTICE, "expire: killswitch triggered");
+								DEBUG(LOG_NOTICE, "expire: master has gone, killswitch triggered");
 								exit(0);
 						}
 

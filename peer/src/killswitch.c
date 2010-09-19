@@ -41,6 +41,7 @@ void exitFun(void) {
 		pthread_mutex_lock(&mutexkillswitch);
 		killswitch.enabled  = 0;
 		killswitch.masterid = 0;
+		killswitch.time     = 0;
 		mexPrintf("killswitched: disabled\n");
 		pthread_mutex_unlock(&mutexkillswitch);
 
@@ -77,15 +78,27 @@ void exitFun(void) {
 
 void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) {
 		int rc;
+		unsigned int time = 0, masterid = 0;
+
+		if (nrhs<2)
+				mexErrMsgTxt ("invalid number of input arguments");
+
+		if (mxIsScalar(prhs[0]))
+				masterid = mxGetScalar(prhs[0]);
+		else if (mxIsEmpty(prhs[0]))
+				masterid = 0;
+		else
+				mexErrMsgTxt ("invalid input argument #1");
+
+		if (mxIsScalar(prhs[1]))
+				time = mxGetScalar(prhs[1]);
+		else if (mxIsEmpty(prhs[1]))
+				time = 0;
+		else
+				mexErrMsgTxt ("invalid input argument #2");
 
 		/* this function will be called upon unloading of the mex file */
 		mexAtExit(exitFun);
-
-		if (nrhs<1)
-				mexErrMsgTxt ("invalid number of input arguments");
-
-		if (!mxIsScalar(prhs[0]))
-				mexErrMsgTxt ("invalid input argument #1");
 
 		if (!peerInitialized) {
 				mexPrintf("killswitch: init\n");
@@ -122,7 +135,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		/* enable the kill switch: the expire thread will exit if the master is not seen any more */
 		pthread_mutex_lock(&mutexkillswitch);
 		killswitch.enabled  = 1;
-		killswitch.masterid = mxGetScalar(prhs[0]);
+		killswitch.masterid = masterid;
+		killswitch.time     = time;
 		mexPrintf("killswitch: enabled\n");
 		pthread_mutex_unlock(&mutexkillswitch);
 

@@ -62,6 +62,7 @@ struct {
 		int enabled;
 		int evidence;
 		UINT32_T masterid;
+		time_t time;
 } killswitch;
 
 pthread_mutex_t mutexsmartmem = PTHREAD_MUTEX_INITIALIZER;

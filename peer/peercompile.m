@@ -152,6 +152,10 @@ cmd = sprintf('mex -outdir ../private %s %s delayedexit.c %s',cflags,extra_cflag
 disp(cmd);
 eval(cmd);
 
+cmd = sprintf('mex -outdir ../private %s %s time.c %s',cflags,extra_cflags,ldflags);
+disp(cmd);
+eval(cmd);
+
 % change back to the original directory
 cd(cwd);
 

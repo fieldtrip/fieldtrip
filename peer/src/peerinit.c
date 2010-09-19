@@ -128,6 +128,7 @@ void peerinit(void *arg) {
 		killswitch.enabled  = 0;
 		killswitch.evidence = 0;
 		killswitch.masterid = 0;
+		killswitch.time     = 0;
 		pthread_mutex_unlock(&mutexkillswitch);
 
 		pthread_mutex_lock(&mutexsmartmem);
