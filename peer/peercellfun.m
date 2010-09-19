@@ -23,7 +23,7 @@ function varargout = peercellfun(fname, varargin)
 %   x2    = {2, 2, 2, 2, 2};
 %   y     = peercellfun(fname, x1, x2);
 %
-% See also CELLFUN, PEERMASTER, PEERFEVAL, PEERGET
+% See also CELLFUN, PEERMASTER, PEERFEVAL, PEERLIST, PEERINFO
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld

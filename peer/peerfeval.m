@@ -116,7 +116,8 @@ jobid = [];
 
 % pass some options that may influence remote execution
 master  = peerinfo;
-options = {'pwd', getcustompwd, 'path', getcustompath, 'diary', diary, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq, 'masterid', master.hostid, 'timallow', 3*(timreq+1)};
+% options = {'pwd', getcustompwd, 'path', getcustompath, 'diary', diary, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq, 'masterid', master.hostid, 'timallow', 3*(timreq+1)};
+options = {'pwd', getcustompwd, 'path', getcustompath, 'diary', diary, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq};
 
 % status = 0 means zombie mode, don't accept anything
 % status = 1 means master mode, accept everything
