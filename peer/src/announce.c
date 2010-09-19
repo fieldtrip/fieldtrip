@@ -95,6 +95,8 @@ void *announce(void *arg) {
 		pthread_mutex_lock(&mutexstatus);
 		if (announceStatus==0) {
 				announceStatus = 1;
+				/* signal that this thread has started */
+				pthread_cond_signal(&condstatus);
 				pthread_mutex_unlock(&mutexstatus);
 		}
 		else {

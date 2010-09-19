@@ -95,6 +95,8 @@ void *discover(void *arg) {
 		pthread_mutex_lock(&mutexstatus);
 		if (discoverStatus==0) {
 				discoverStatus = 1;
+				/* signal that this thread has started */
+				pthread_cond_signal(&condstatus);
 				pthread_mutex_unlock(&mutexstatus);
 		}
 		else {

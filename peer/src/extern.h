@@ -3,6 +3,7 @@
 
 extern int syslog_level;
 
+extern pthread_cond_t condstatus;
 extern pthread_mutex_t mutexstatus;
 extern int udsserverStatus;
 extern int tcpserverStatus;

@@ -72,6 +72,9 @@ void exitFun(void) {
 		/* free the shared dynamical memory */
 		peerexit(NULL);
 		peerInitialized = 0;
+
+		pthread_cond_destroy(&condstatus);
+		pthread_mutex_destroy(&mutexstatus);
 		return;
 
 } /* exitFun */
@@ -114,6 +117,13 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				rc = pthread_create(&discoverThread, NULL, discover, (void *)NULL);
 				if (rc)
 						mexErrMsgTxt("problem with return code from pthread_create()");
+				else {
+						/* wait until the thread has properly started */
+						pthread_mutex_lock(&mutexstatus);
+						if (!discoverStatus)
+								pthread_cond_wait(&condstatus, &mutexstatus);
+						pthread_mutex_unlock(&mutexstatus);
+				}
 		}
 		else {
 				pthread_mutex_unlock(&mutexstatus);
@@ -127,6 +137,13 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				rc = pthread_create(&expireThread, NULL, expire, (void *)NULL);
 				if (rc)
 						mexErrMsgTxt("problem with return code from pthread_create()");
+				else {
+						/* wait until the thread has properly started */
+						pthread_mutex_lock(&mutexstatus);
+						if (!expireStatus)
+								pthread_cond_wait(&condstatus, &mutexstatus);
+						pthread_mutex_unlock(&mutexstatus);
+				}
 		}
 		else {
 				pthread_mutex_unlock(&mutexstatus);

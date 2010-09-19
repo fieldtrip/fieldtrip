@@ -180,9 +180,15 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						rc = pthread_create(&udsserverThread, NULL, udsserver, (void *)NULL);
 						if (rc)
 								mexErrMsgTxt("problem with return code from pthread_create()");
-						else
+						else {
+								/* wait until the thread has properly started */
+								pthread_mutex_lock(&mutexstatus);
+								if (!udsserverStatus)
+										pthread_cond_wait(&condstatus, &mutexstatus);
+								pthread_mutex_unlock(&mutexstatus);
 								/* inform the other peers of the updated unix domain socket */
 								announce_once();
+						}
 				}
 				else if (strcasecmp(argument, "stop")==0) {
 						if (!udsserverStatus) {
@@ -223,6 +229,13 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						rc = pthread_create(&tcpserverThread, NULL, tcpserver, (void *)NULL);
 						if (rc)
 								mexErrMsgTxt("problem with return code from pthread_create()");
+						else {
+								/* wait until the thread has properly started */
+								pthread_mutex_lock(&mutexstatus);
+								if (!tcpserverStatus)
+										pthread_cond_wait(&condstatus, &mutexstatus);
+								pthread_mutex_unlock(&mutexstatus);
+						}
 				}
 				else if (strcasecmp(argument, "stop")==0) {
 						if (!tcpserverStatus) {
@@ -260,6 +273,13 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						rc = pthread_create(&announceThread, NULL, announce, (void *)NULL);
 						if (rc)
 								mexErrMsgTxt("problem with return code from pthread_create()");
+						else {
+								/* wait until the thread has properly started */
+								pthread_mutex_lock(&mutexstatus);
+								if (!announceStatus)
+										pthread_cond_wait(&condstatus, &mutexstatus);
+								pthread_mutex_unlock(&mutexstatus);
+						}
 				}
 				else if (strcasecmp(argument, "stop")==0) {
 						if (!announceStatus) {
@@ -297,6 +317,13 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						rc = pthread_create(&discoverThread, NULL, discover, (void *)NULL);
 						if (rc)
 								mexErrMsgTxt("problem with return code from pthread_create()");
+						else {
+								/* wait until the thread has properly started */
+								pthread_mutex_lock(&mutexstatus);
+								if (!discoverStatus)
+										pthread_cond_wait(&condstatus, &mutexstatus);
+								pthread_mutex_unlock(&mutexstatus);
+						}
 				}
 				else if (strcasecmp(argument, "stop")==0) {
 						if (!discoverStatus) {
@@ -334,6 +361,13 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						rc = pthread_create(&expireThread, NULL, expire, (void *)NULL);
 						if (rc)
 								mexErrMsgTxt("problem with return code from pthread_create()");
+						else {
+								/* wait until the thread has properly started */
+								pthread_mutex_lock(&mutexstatus);
+								if (!expireStatus)
+										pthread_cond_wait(&condstatus, &mutexstatus);
+								pthread_mutex_unlock(&mutexstatus);
+						}
 				}
 				else if (strcasecmp(argument, "stop")==0) {
 						if (!expireStatus) {

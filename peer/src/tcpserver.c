@@ -83,6 +83,8 @@ void *tcpserver(void *arg) {
 		pthread_mutex_lock(&mutexstatus);
 		if (tcpserverStatus==0) {
 				tcpserverStatus = 1;
+				/* signal that this thread has started */
+				pthread_cond_signal(&condstatus);
 				pthread_mutex_unlock(&mutexstatus);
 		}
 		else {

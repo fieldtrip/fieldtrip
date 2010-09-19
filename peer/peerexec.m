@@ -50,7 +50,7 @@ try
   % check whether a kill switch should be set
   masterid = keyval('masterid', optin);
   timallow = keyval('timallow', optin);
-  % killswitch(masterid, time+timallow);
+  killswitch(masterid, time+timallow);
 
   % check whether a diary file should be created
   usediary = keyval('diary', optin);

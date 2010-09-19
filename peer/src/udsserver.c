@@ -98,6 +98,8 @@ void *udsserver(void *arg) {
 		pthread_mutex_lock(&mutexstatus);
 		if (udsserverStatus==0) {
 				udsserverStatus = 1;
+				/* signal that this thread has started */
+				pthread_cond_signal(&condstatus);
 				pthread_mutex_unlock(&mutexstatus);
 		}
 		else {
