@@ -77,7 +77,7 @@
 #define STRLEN			  256
 
 #ifndef SYSLOG
-#define SYSLOG 2
+#define SYSLOG 1
 #endif
 
 #if   SYSLOG == 0
