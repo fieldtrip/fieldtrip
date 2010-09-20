@@ -116,6 +116,7 @@ Preprocessors are used to preprocess the input data \t{X} in such a way that it 
 \bf{preprocessor} & \bf{functionality}\\
 \hline
 \t{ft\_mv\_standardizer} & Standardizes the data to have mean zero and a standard deviation of one.\\
+\t{ft\_mv\_csp} & common spatial pattern
 \end{tabular}
 \label{preprocessors}
 \end{table}
@@ -150,7 +151,9 @@ Predictors are used to predict new outputs \t{Y} based on input data \t{X}. Tabl
 \t{ft\_mv\_svm} & Support vector machine; inherits from \t{ft\_mv\_kernelmethod}.\\
 \t{ft\_mv\_rkls} & Regularized kernel least squares; inherits from \t{ft\_mv\_kernelmethod}.\\
 \t{ft\_mv\_klr}  &  Kernel logistic regression;  inherits from \t{ft\_mv\_kernelmethod}.\\
-\t{ft\_mv\_ensemble} & Ensemble method class that takes uses multiple mvmethods in parallel to achieve some goal.
+\t{ft\_mv\_ensemble} & Ensemble method class that takes uses multiple mvmethods in parallel to achieve some goal.\\
+\t{ft\_mv\_logreg} & logistic regression with L1 and/or L2 regularization\\
+\t{ft\_mv\_glmlogreg} & efficient implementation of elastic net logistic regression
 \end{tabular}
 \label{predictors}
 \end{table}

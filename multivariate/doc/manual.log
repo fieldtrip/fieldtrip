@@ -1,4 +1,4 @@
-This is pdfTeXk, Version 3.1415926-1.40.9 (Web2C 7.5.7) (format=pdflatex 2009.10.21)  20 SEP 2010 11:59
+This is pdfTeXk, Version 3.1415926-1.40.9 (Web2C 7.5.7) (format=pdflatex 2009.10.21)  20 SEP 2010 21:20
 entering extended mode
 \write18 enabled.
  %&-line parsing enabled.
@@ -124,33 +124,33 @@ Overfull \hbox (6.64323pt too wide) in paragraph at lines 118--118
  []
 
 [3] [4] [5] [6] [7]
-Overfull \hbox (0.66005pt too wide) in paragraph at lines 390--390
+Overfull \hbox (0.66005pt too wide) in paragraph at lines 393--393
 []\OT1/cmtt/m/n/10 dataset 1: validating fold 10 of 10 using 90 training sample
 s and 10 test samples[] 
  []
 
-[8] (./manual.bbl) [9] (./manual.aux) ) 
+[8] (./manual.bbl [9]) [10] (./manual.aux) ) 
 Here is how much of TeX's memory you used:
  972 strings out of 493886
  12687 string characters out of 1151098
- 66415 words of memory out of 3000000
+ 67415 words of memory out of 3000000
  4276 multiletter control sequences out of 10000+50000
  8409 words of font info for 30 fonts, out of 3000000 for 5000
  714 hyphenation exceptions out of 8191
- 25i,10n,19p,912b,242s stack positions out of 5000i,500n,10000p,200000b,50000s
-</usr/local/texlive/2008/texmf-dist/font
-s/type1/bluesky/cm/cmbx10.pfb></usr/local/texlive/2008/texmf-dist/fonts/type1/b
-luesky/cm/cmbx12.pfb></usr/local/texlive/2008/texmf-dist/fonts/type1/bluesky/cm
-/cmmi10.pfb></usr/local/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmr10.pf
-b></usr/local/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmr12.pfb></usr/lo
-cal/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmr17.pfb></usr/local/texliv
-e/2008/texmf-dist/fonts/type1/bluesky/cm/cmsy10.pfb></usr/local/texlive/2008/te
-xmf-dist/fonts/type1/bluesky/cm/cmsy7.pfb></usr/local/texlive/2008/texmf-dist/f
-onts/type1/bluesky/cm/cmti10.pfb></usr/local/texlive/2008/texmf-dist/fonts/type
-1/bluesky/cm/cmtt10.pfb>
-Output written on manual.pdf (9 pages, 236719 bytes).
+ 25i,10n,19p,912b,245s stack positions out of 5000i,500n,10000p,200000b,50000s
+</usr/local/texlive/2008/texmf-dist
+/fonts/type1/bluesky/cm/cmbx10.pfb></usr/local/texlive/2008/texmf-dist/fonts/ty
+pe1/bluesky/cm/cmbx12.pfb></usr/local/texlive/2008/texmf-dist/fonts/type1/blues
+ky/cm/cmmi10.pfb></usr/local/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmr
+10.pfb></usr/local/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmr12.pfb></u
+sr/local/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmr17.pfb></usr/local/t
+exlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmsy10.pfb></usr/local/texlive/20
+08/texmf-dist/fonts/type1/bluesky/cm/cmsy7.pfb></usr/local/texlive/2008/texmf-d
+ist/fonts/type1/bluesky/cm/cmti10.pfb></usr/local/texlive/2008/texmf-dist/fonts
+/type1/bluesky/cm/cmtt10.pfb>
+Output written on manual.pdf (10 pages, 237565 bytes).
 PDF statistics:
- 99 PDF objects out of 1000 (max. 8388607)
+ 102 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 131072)
  11 words of extra memory for PDF output out of 10000 (max. 10000000)
 
