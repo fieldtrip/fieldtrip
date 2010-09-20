@@ -551,8 +551,12 @@ classdef ft_mv_crossvalidator
        
      end
      
-     function res = performance(obj)
-       
+     function res = performance(obj,M)
+
+       if exist('M','var')
+         obj.metric = M;
+       end
+
        % concatenate all folds
        tpost = cell(1,size(obj.post,1));
        tdesign = cell(1,size(obj.design,1));
@@ -566,7 +570,11 @@ classdef ft_mv_crossvalidator
        
      end
      
-     function res = significance(obj)
+     function res = significance(obj,T)
+       
+       if exist('T','var')
+         obj.sigtest = T;
+       end
        
         % concatenate all folds
        tpost = cell(1,size(obj.post,1));
