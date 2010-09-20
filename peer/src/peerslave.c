@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
 		pid_t childpid;
 
 		int matlabRunning = 0, matlabStart, matlabFinished, engineFailed = 0;
-		int c, n, rc, found, handshake, success, server, jobnum = 0, jobcount, jobfailed;
+		int c, rc, found, handshake, success, server, jobnum = 0, jobcount, jobfailed, timallow;
 		unsigned int enginetimeout = ENGINETIMEOUT;
 		unsigned int zombietimeout = ZOMBIETIMEOUT;
 		unsigned int peerid, jobid;
@@ -430,9 +430,11 @@ int main(int argc, char *argv[]) {
 						pthread_mutex_lock(&mutexjoblist);
 						job = joblist;
 
-						/* switch the mode to busy slave */
 						pthread_mutex_lock(&mutexhost);
+						/* switch the mode to busy slave */
 						host->status = STATUS_BUSY;
+						/* determine the maximum allowed job duration */
+						timallow = 2*(host->timavail+1);
 						/* update the description */
 						snprintf(host->descr, STRLEN, "%s@%s, memreq = %llu, timreq = %llu", job->host->user, job->host->name, job->job->memreq, job->job->timreq);
 						pthread_mutex_unlock(&mutexhost);
@@ -448,6 +450,19 @@ int main(int argc, char *argv[]) {
 						peerid  = job->host->id;
 						DEBUG(LOG_CRIT, "executing job %d from %s@%s (jobid=%u, memreq=%llu, timreq=%llu)", ++jobnum, job->host->user, job->host->name, job->job->id, job->job->memreq, job->job->timreq);
 						pthread_mutex_unlock(&mutexjoblist);
+
+						/* create a copy of the optin cell-array */
+						int n, i;
+						n = mxGetM(options) * mxGetN(options);
+						mxArray *previous = options;
+						options = mxCreateCellMatrix(1, n+4);
+						for (i=0; i<n; i++)
+								mxSetCell(options, i, mxGetCell(previous, i));
+						/* add the masterid and timallow options, these are used by peerexec for the killswitch */
+						mxSetCell(options, n+0, mxCreateString("masterid\0"));
+						mxSetCell(options, n+1, mxCreateDoubleScalar(peerid));
+						mxSetCell(options, n+2, mxCreateString("timallow\0"));
+						mxSetCell(options, n+3, mxCreateDoubleScalar(timallow));
 
 						/* copy them over to the engine */
 						engPutVariable(en, "argin", argin);

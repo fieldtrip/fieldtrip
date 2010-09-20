@@ -121,7 +121,7 @@ fprintf(stderr, "killswitch: masterid = %d\n", killswitch.masterid);
 				if (killswitch.enabled && killswitch.time) {
 						if (difftime(time(NULL), killswitch.time)>0) {
 								/* the maximum allowed time has elapsed */
-								DEBUG(LOG_NOTICE, "expire: time has elapsed, killswitch triggered");
+								DEBUG(LOG_CRIT, "expire: killswitch triggered (time)");
 								exit(0);
 						}
 				}
@@ -146,7 +146,7 @@ fprintf(stderr, "killswitch: masterid = %d\n", killswitch.masterid);
 
 						if (killswitch.evidence>2) {
 								/* the master is not available any more */
-								DEBUG(LOG_NOTICE, "expire: master has gone, killswitch triggered");
+								DEBUG(LOG_CRIT, "expire: killswitch triggered (master)");
 								exit(0);
 						}
 
