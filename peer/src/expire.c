@@ -104,7 +104,7 @@ void *expire(void *arg) {
 										peer->next = next->next;
 										FREE(next->host);
 										FREE(next);
-										break;
+										continue;
 								}
 						}
 						peer = peer->next;
