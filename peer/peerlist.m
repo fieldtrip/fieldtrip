@@ -59,7 +59,13 @@ if nargout==0
   sel = find([list.status]==2);
   fprintf('there are %3d peers running on %2d hosts as idle slave with %5s memory available\n', length(sel), length(unique({list(sel).hostname})), print_mem(sum([list(sel).memavail])));
   sel = find([list.status]==3);
-  fprintf('there are %3d peers running on %2d hosts as busy slave with %5s memory required\n', length(sel), length(unique({list(sel).hostname})), print_mem(sum([list(sel).memavail])));
+  current = [list(sel).current];
+  if ~isempty(current)
+    memreq = sum([current.memreq]);
+  else
+    memreq = 0;
+  end
+  fprintf('there are %3d peers running on %2d hosts as busy slave with %5s memory required\n', length(sel), length(unique({list(sel).hostname})), print_mem(memreq));
   sel = find([list.status]==0);
   fprintf('there are %3d peers running on %2d hosts as zombie\n',     length(sel), length(unique({list(sel).hostname})));
 

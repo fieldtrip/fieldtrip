@@ -71,7 +71,7 @@ void peerinit(void *arg) {
 		bzero(host->user, STRLEN);
 		bzero(host->group, STRLEN);
 		bzero(host->socket, STRLEN);
-		bzero(host->descr, STRLEN);
+		bzero(&(host->current), sizeof(current_t));
 
 #if defined (PLATFORM_LINUX) || defined (PLATFORM_OSX)
 

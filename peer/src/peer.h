@@ -44,7 +44,7 @@
 #define STATUS_IDLE              2			/* status = 2 means idle slave, accept only a single job */
 #define STATUS_BUSY              3 			/* status = 3 means busy slave, don't accept a new job   */
 
-#define VERSION                  0x0011
+#define VERSION                  0x0012
 #define ANNOUNCE_GROUP           "225.0.0.88"
 #define ANNOUNCE_PORT 	         1700		/* it will auto-increment if the port is not available */
 #define DEFAULT_GROUP            "unknown"
@@ -71,10 +71,10 @@
 #define SO_RCVBUF_SIZE           16384
 #define SO_SNDBUF_SIZE           16384
 
-#define MAXPWDSIZE		  16384
-#define MAXPATHSIZE		  16384
-#define MAXARGSIZE		  INT32_MAX
-#define STRLEN			  256
+#define MAXPWDSIZE		 		 16384
+#define MAXPATHSIZE		 		 16384
+#define MAXARGSIZE				 INT32_MAX
+#define STRLEN			 		 128
 
 #ifndef SYSLOG
 #define SYSLOG 1
@@ -149,20 +149,34 @@ typedef uint64_t UINT64_T;
 #define WORDSIZE_FLOAT32 sizeof(FLOAT32_T)
 #define WORDSIZE_FLOAT64 sizeof(FLOAT64_T)
 
-/* this is the binary packet that is announced over the network */
+/* this describes the details of the current job (applies only to busy slave) */
 typedef struct {
-		UINT32_T version;
-		UINT32_T id;
-		char name[STRLEN];
+		UINT32_T pid;			/* UNIX process identifier of the peerslave */
+		UINT32_T id;            /* identifier of the peer where the job originates from */
+		char name[STRLEN];      /* hostname of the peer where the job originates from */
 		char user[STRLEN];
 		char group[STRLEN];
+		UINT64_T timreq; 
+		UINT64_T memreq; 
+		UINT64_T cpureq; 
+		UINT32_T argsize;   	/* size of the job arguments in bytes */
+		UINT32_T optsize;   	/* size of the job options in bytes */
+} current_t;
+
+/* this is the binary packet that is announced over the network */
+typedef struct {
+		UINT32_T version;	   
+		UINT32_T id;	   
+		char name[STRLEN]; 
+		char user[STRLEN]; 
+		char group[STRLEN];
 		char socket[STRLEN];  /* name of the unix domain socket, or empty if not available */
-		char descr[STRLEN];
 		UINT32_T port;
 		UINT32_T status;
 		UINT64_T timavail; 
 		UINT64_T memavail; 
 		UINT64_T cpuavail; 
+		current_t current;
 } hostdef_t;
 
 typedef struct {

@@ -109,6 +109,18 @@ for i=1:numargin
   end
 end
 
+% check the availability of peer slaves
+list = peerlist;
+list = list([list.status]==2 | [list.status]==3);
+if isempty(list)
+  warning('there is no peer available as slave, reverting to local cellfun');
+  % prepare the output arguments
+  varargout = cell(1,numargout);
+  % use the standard cellfun
+  [varargout{:}] = cellfun(str2func(fname), varargin{:}, 'UniformOutput', UniformOutput);
+  return
+end
+
 % prepare some arrays that are used for bookkeeping
 jobid       = nan(1, numjob);
 puttime     = nan(1, numjob);

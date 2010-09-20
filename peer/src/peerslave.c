@@ -381,7 +381,8 @@ int main(int argc, char *argv[]) {
 		/* start as idle slave */
 		pthread_mutex_lock(&mutexhost);
 		host->status = STATUS_IDLE;
-		bzero(host->descr, STRLEN);
+		/* update the current job description */
+		bzero(&(host->current), sizeof(current_t));
 		pthread_mutex_unlock(&mutexhost);
 
 		while (1) {
@@ -435,8 +436,18 @@ int main(int argc, char *argv[]) {
 						host->status = STATUS_BUSY;
 						/* determine the maximum allowed job duration */
 						timallow = 2*(host->timavail+1);
-						/* update the description */
-						snprintf(host->descr, STRLEN, "%s@%s, memreq = %llu, timreq = %llu", job->host->user, job->host->name, job->job->memreq, job->job->timreq);
+						/* update the current job description */
+						bzero(&(host->current), sizeof(current_t));
+						// FIXME
+						host->current.pid = getpid();
+						host->current.id  = job->host->id;
+						strncpy(host->current.name, job->host->name, STRLEN);
+						strncpy(host->current.user, job->host->user, STRLEN);
+						strncpy(host->current.group, job->host->group, STRLEN);
+						host->current.timreq  = job->job->timreq;
+						host->current.memreq  = job->job->memreq;
+						host->current.cpureq  = job->job->cpureq;
+
 						pthread_mutex_unlock(&mutexhost);
 
 						matlabStart = time(NULL);
@@ -448,7 +459,7 @@ int main(int argc, char *argv[]) {
 						options = (mxArray *)mxDeserialize(job->opt, job->job->optsize);
 						jobid   = job->job->id;
 						peerid  = job->host->id;
-						DEBUG(LOG_CRIT, "executing job %d from %s@%s (jobid=%u, memreq=%llu, timreq=%llu)", ++jobnum, job->host->user, job->host->name, job->job->id, job->job->memreq, job->job->timreq);
+						DEBUG(LOG_CRIT, "executing job %d from %s@%s (jobid=%u, memreq=%lu, timreq=%lu)", ++jobnum, job->host->user, job->host->name, job->job->id, job->job->memreq, job->job->timreq);
 						pthread_mutex_unlock(&mutexjoblist);
 
 						/* create a copy of the optin cell-array */
@@ -683,7 +694,8 @@ cleanup:
 						/* make the slave available again */
 						pthread_mutex_lock(&mutexhost);
 						host->status = STATUS_IDLE;
-						bzero(host->descr, STRLEN);
+						/* update the current job description */
+						bzero(&(host->current), sizeof(current_t));
 						pthread_mutex_unlock(&mutexhost);
 
 						/* inform the other peers of the updated status */
@@ -713,7 +725,8 @@ cleanup:
 						DEBUG(LOG_NOTICE, "switching back to idle mode");
 						pthread_mutex_lock(&mutexhost);
 						host->status = STATUS_IDLE;
-						bzero(host->descr, STRLEN);
+						/* update the current job description */
+						bzero(&(host->current), sizeof(current_t));
 						pthread_mutex_unlock(&mutexhost);
 						engineFailed = 0;
 						continue;
