@@ -1,0 +1,19 @@
+\begin{thebibliography}{1}
+
+\bibitem{gerven2010}
+M.~A.~J. van Gerven, B.~Cseke, F.~P. de~Lange, and T.~Heskes.
+\newblock Efficient {B}ayesian multivariate {fMRI} analysis using a sparsifying
+  spatio-temporal prior.
+\newblock {\em NeuroImage}, 50(1):150--161, 2010.
+
+\bibitem{gerven2010a}
+M.~A.~J. van Gerven, F.~P. de~Lange, and T.~Heskes.
+\newblock A hierarchical generative model for percept reconstruction.
+\newblock In {\em Human Brain Mapping}, 2010.
+
+\bibitem{gerven2010b}
+M.~A.~J. van Gerven and I.~Simanova.
+\newblock Concept classification with {B}ayesian multi-task learning.
+\newblock In {\em NAACL-HLT workshop on Computational Neurolinguistics}, 2010.
+
+\end{thebibliography}
