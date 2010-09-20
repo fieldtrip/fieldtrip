@@ -39,11 +39,11 @@ BioSemiClient::BioSemiClient() {
 	if (!(lv_close_driver_async   = (CLOSE_DRIVER_ASYNC_T)   GetProcAddress(hLib,"CLOSE_DRIVER_ASYNC"))) return;
 	
 	// Use VirtualAlloc on Windows as done in Biosemi's synctest code
-	ringBuffer = (char *) VirtualAlloc(NULL, BUFFER_SIZE, MEM_COMMIT, PAGE_READWRITE);
+	ringBuffer = (int32_t *) VirtualAlloc(NULL, BUFFER_SIZE, MEM_COMMIT, PAGE_READWRITE);
 	if (ringBuffer != NULL) ZeroMemory(ringBuffer, BUFFER_SIZE);
 #else
 	// TODO: use dlopen + dlsym on Linux
-	ringBuffer = (char *) calloc(BUFFER_SIZE, 1);
+	ringBuffer = (int32_t *) calloc(BUFFER_SIZE/sizeof(int32_t), sizeof(int32_t));
 #endif
 	if (ringBuffer == NULL) {
 		fprintf(stderr, "Cannot allocate %i bytes for internal ringbuffer\n", BUFFER_SIZE);
@@ -66,7 +66,7 @@ BioSemiClient::~BioSemiClient() {
 
 bool BioSemiClient::openDevice() {
 	char bytes[64];
-	intptr_t pointer;
+	int pointer;
 	
 	if (!driverOk) return false;
 	if (deviceOpen) closeDevice();
@@ -91,7 +91,7 @@ bool BioSemiClient::openDevice() {
 	
 	printf("Before lv_read_multiple_sweeps\n");
 	
-	lv_read_multiple_sweeps(deviceHandle, ringBuffer, BUFFER_SIZE);
+	lv_read_multiple_sweeps(deviceHandle, (char *) ringBuffer, BUFFER_SIZE);
 	
 	memset(bytes, 0, sizeof(bytes));
 	bytes[0] = 0xFF;
@@ -111,7 +111,7 @@ bool BioSemiClient::openDevice() {
 			return false;
 		}
 		
-		if (pointer > 8) break;
+		if (pointer > 2) break;
 		
 		msleep(10);
 		if (getCurrentTime() - timeHandshake > DEVICE_TIMEOUT) {
@@ -121,14 +121,14 @@ bool BioSemiClient::openDevice() {
 		}
 	}
 	
-	int32_t sync   = *((int32_t *) ringBuffer);
+	int32_t sync = ringBuffer[0];
 	if (sync != SYNC_BV) {
 		fprintf(stderr, "Device is not in sync\n");
 		closeDevice();
 		return false;
 	}	
 	
-	int32_t status = *((int32_t *) (ringBuffer+4));
+	int32_t status = ringBuffer[1];
 	
 	deviceIsMk2 = (status & MK2_BV) ? true : false;
 	speedMode = 0;
@@ -149,7 +149,7 @@ bool BioSemiClient::openDevice() {
 		numChannels = sNumChannelsMk1[speedMode];
 	}
 	numChanAIB = (speedMode == 8) ? 32 : 0;
-	bytesPerSample = (numChannels+numChanAIB+2) * sizeof(int32_t);
+	stride = numChannels + numChanAIB + 2;
 	
 	switch(speedMode) {
 		case 0:
@@ -179,8 +179,6 @@ bool BioSemiClient::openDevice() {
 		int val = *((int *) (ringBuffer+i));
 		if (val==SYNC_BV) printf("Sync at %i\n", i);
 	}
-	printf("Bytes per sample=%i\n",bytesPerSample);
-	
 	return true;
 }
 
@@ -210,13 +208,13 @@ int BioSemiClient::getCurPointer() const {
 		return -1;
 	}
 	
-	return pointer; 
+	return pointer/sizeof(int32_t); 
 }
 
 bool BioSemiClient::checkNewBlock(BioSemiBlock &block) {
 	int pointer, numSamples, nextStartPtr;
 	
-	pointer = (int) getCurPointer();
+	pointer = getCurPointer();
 	
 	// If the pointer hasn't changed, there is no new data
 	if (pointer==lastPointerRead) return false;	
@@ -226,37 +224,37 @@ bool BioSemiClient::checkNewBlock(BioSemiBlock &block) {
 	// Apparently, the pointers we retrieve do not have to fall
 	// on whole sample boundaries, so we maintain a lastStartPtr
 	// as well.
-	if (pointer > lastPointerRead) {
+	//printf("now/last: %6i / %6i -- ", pointer, lastPointerRead);
+	if (pointer > lastStartPtr) {
 		// no wrap around happened
-		numSamples = (pointer - lastStartPtr) / bytesPerSample;
+		numSamples = (pointer - lastStartPtr) / stride;
 	} else {
 		// has wrapped at BUFFER_SIZE bytes
-		numSamples = (pointer + BUFFER_SIZE - lastStartPtr) / bytesPerSample;
+		numSamples = (pointer + BUFFER_LEN - lastStartPtr) / stride;
 	}
 	
 	// new bytes, but not a complete sample - this is unlikely...
 	if (numSamples == 0) return false;
 	
 	// Calculate the next start ptr and wrap around, if needed
-	nextStartPtr = lastStartPtr + numSamples * bytesPerSample;
-	if (nextStartPtr >= BUFFER_SIZE) nextStartPtr -= BUFFER_SIZE;
+	nextStartPtr = lastStartPtr + numSamples * stride;
+	if (nextStartPtr >= BUFFER_LEN) nextStartPtr -= BUFFER_LEN;
 	
-	block.startPtr   = lastStartPtr;
+	block.startIndex = lastStartPtr;
 	block.numSamples = numSamples;
 	block.numInSync  = 0;
-	block.stride     = bytesPerSample;
+	block.stride     = stride;
 	block.batteryLow = false;
 	
-	int ptr = lastStartPtr;
-	
+	int idx = lastStartPtr;
 	for (int i=0;i<numSamples;i++) {
-		int sync   = getValue(ptr);
-		int status = getValue(ptr+4);
+		int sync   = getValue(idx);
+		int status = getValue(idx+1);
 		
 		if (sync==SYNC_BV)     block.numInSync++;
 		if (status&BATTERY_BV) block.batteryLow=true;
 		
-		ptr+=bytesPerSample;
+		idx+=stride;
 	}
 	
 	lastPointerRead = pointer;

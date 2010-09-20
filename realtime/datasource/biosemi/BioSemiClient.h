@@ -4,9 +4,10 @@
 #include <Labview_DLL.h>
 
 #define BUFFER_SIZE   32*1024*1024  // 32 MByte as suggested by BioSemi
+#define BUFFER_LEN    8*1024*1024   // in int32 units
 
 struct BioSemiBlock {
-	int startPtr;
+	int startIndex;
 	int numSamples;
 	int numInSync;
 	int stride;	
@@ -39,11 +40,9 @@ class BioSemiClient {
 	}
 	
 	
-	int getValue(int pointer) const {
-	    return *((int *) (ringBuffer + (pointer % BUFFER_SIZE)));
+	int getValue(int index) const {
+	    return ringBuffer[index > BUFFER_LEN ? index - BUFFER_LEN : index];
 	}	
-	
-	protected:
 	
 	double getCurrentTime() {
 		#ifdef WIN32
@@ -54,6 +53,14 @@ class BioSemiClient {
 		return tv.tv_sec + tv.tv_usec*1e-6;
 		#endif
 	}
+	
+	const int32_t *getRingbuffer() {
+		return ringBuffer;
+	}
+
+	
+	protected:
+	
 
 	
 	bool driverOk, deviceOpen;
@@ -63,7 +70,7 @@ class BioSemiClient {
 	int sampleFreq;
 	bool deviceIsMk2;
 	bool cmsInRange;
-	int bytesPerSample;
+	int stride;
 	int lastPointerRead;
 	int lastStartPtr;
 	
@@ -73,7 +80,7 @@ class BioSemiClient {
 	READ_POINTER_T         lv_read_pointer;
 	CLOSE_DRIVER_ASYNC_T   lv_close_driver_async;
 	HANDLE deviceHandle;
-	char *ringBuffer;
+	int32_t *ringBuffer;
 
 #ifdef WIN32
 	HINSTANCE hLib; // handle to Labview_DLL.dll

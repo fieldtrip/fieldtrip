@@ -131,6 +131,7 @@ class SampleBlock {
 		ddef->nsamples  = numSamples;
 		ddef->data_type = DATATYPE_INT32;
 		ddef->bufsize   = numChannels * numSamples * sizeof(INT32_T);
+		reqdef.bufsize = ddef->bufsize + sizeof(datadef_t);
 		return (int *) (ddef+1); // first bytes after datadef_t
 	}
 	
@@ -213,6 +214,8 @@ int main(int argc, char *argv[]) {
 	
 	if (!BS.openDevice()) return 1;
 	
+	double T0 = BS.getCurrentTime();
+	
 	if (BS.getNumChannels() < numEEG) numEEG = BS.getNumChannels();
 	if (BS.getNumChanAIB() < numAIB)  numAIB = BS.getNumChanAIB();
 	
@@ -237,6 +240,7 @@ int main(int argc, char *argv[]) {
 	/* register CTRL-C handler */
 	signal(SIGINT, abortHandler);
 	printf("Starting to listen - press CTRL-C to quit\n");
+
 	
 	while (keepRunning) {
 		BioSemiBlock block;
@@ -250,7 +254,7 @@ int main(int argc, char *argv[]) {
 			continue;
 		}
 		
-		printf("Ptr = %6i,  samples = %4i,   synced = %4i\n", block.startPtr, block.numSamples, block.numInSync);
+		printf("T = %8.3f  Ptr = %8i,  samples = %3i,  synced = %3i\n", BS.getCurrentTime() - T0, block.startIndex, block.numSamples, block.numInSync);
 		
 		if (block.numSamples != block.numInSync) continue; // replace by break later
 		
@@ -261,12 +265,12 @@ int main(int argc, char *argv[]) {
 				break;
 			}
 			for (int j=0;j<block.numSamples;j++) {
-				int ptr = block.startPtr + 8 + j*block.stride;
+				int idx = block.startIndex + 2 + j*block.stride;
 				for (int i=0;i<numEEG;i++) {
-					dest[i + j*numChan] = BS.getValue(ptr + i*4);
+					dest[i + j*numChan] = BS.getValue(idx + i);
 				}
 				for (int i=0;i<numAIB;i++) {
-					dest[i+numEEG+j*numChan] = BS.getValue(ptr + (i+BS.getNumChannels())*4);
+					dest[i+numEEG + j*numChan] = BS.getValue(idx + i + BS.getNumChannels());
 				}
 			}
 			int err = clientrequest(ftSocket, sampleBlock.asRequest(), resp.in());
@@ -278,7 +282,7 @@ int main(int argc, char *argv[]) {
 		if (numTrigger > 0) {
 			eventChain.clear();
 			for (int j=0;j<block.numSamples;j++) {
-				int value = BS.getValue(block.startPtr + 4 + j*block.stride);
+				int value = BS.getValue(block.startIndex + 1 + j*block.stride);
 				int bv = 0x100; // trig channel 1
 				for (int i=0;i<numTrigger;i++) {
 					if (value & bv) {
@@ -293,9 +297,9 @@ int main(int argc, char *argv[]) {
 					bv<<=1; 
 				}
 			}
-			
+
 			if (eventChain.count() > 0) {
-				int err = clientrequest(ftSocket, sampleBlock.asRequest(), resp.in());
+				int err = clientrequest(ftSocket, eventChain.asRequest(), resp.in());
 				if (err || !resp.checkPut()) {
 					fprintf(stderr, "Could not write events to FieldTrip buffer\n.");
 				}
