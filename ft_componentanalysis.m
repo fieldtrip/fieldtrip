@@ -7,7 +7,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 % Use as
 %   [comp] =ft_componentanalysis(cfg, data)
 %
-% where the data comes from FT_PREPROCESING or FT_TIMELOCKANALYSIS and the
+% where the data comes from FT_PREPROCESSING or FT_TIMELOCKANALYSIS and the
 % configuration structure can contain
 %   cfg.method       = 'runica', 'fastica', 'binica', 'pca', 'jader', 'varimax', 'dss', 'cca', 'sobi' (default = 'runica')
 %   cfg.channel      = cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
@@ -28,7 +28,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.topolabel    = Nx1 cell-array with the channel labels
 %
 % See also FASTICA, RUNICA, SVD, JADER, VARIMAX, DSS, CCA, SOBI
-%
+
 % Undocumented local options:
 %   cfg.inputfile        = one can specifiy preanalysed saved data as input
 %   cfg.outputfile       = one can specify output as file to save to disk

@@ -14,7 +14,7 @@ function [timelock] = ft_spiketriggeredaverage(cfg, data)
 %                      see FT_CHANNELSELECTION for details
 %   cfg.keeptrials   = 'yes' or 'no', return individual trials or average (default = 'no')
 %   cfg.feedback     = 'no', 'text', 'textbar', 'gui' (default = 'no')
-%
+
 % Undocumented local options:
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
 %   cfg.outputfile = one can specify output as file to save to disk

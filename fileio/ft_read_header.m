@@ -48,7 +48,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   CED - Cambridge Electronic Design (*.smr)
 %   MPI - Max Planck Institute (*.dap)
 %
-% See also READ_DATA, READ_EVENT, WRITE_DATA, WRITE_EVENT
+% See also FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT
 
 % Copyright (C) 2003-2010 Robert Oostenveld
 %

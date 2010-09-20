@@ -59,7 +59,8 @@ function [event] = ft_read_event(filename, varargin)
 %   t=26; samples_trials = [event(find(strcmp('trial', {event.type}))).sample];
 %   find([event.sample]>samples_trials(t) & [event.sample]<samples_trials(t+1))
 %
-% See also FT_READ_HEADER, FT_READ_DATA, FT_WRITE_DATA, FT_WRITE_EVENT, FT_FILTER_EVENT
+% See also: 
+%   FT_READ_HEADER, FT_READ_DATA, FT_WRITE_DATA, FT_WRITE_EVENT, FT_FILTER_EVENT
 
 % Copyright (C) 2004-2010 Robert Oostenveld
 %

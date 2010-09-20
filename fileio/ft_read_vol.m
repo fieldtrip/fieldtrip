@@ -1,6 +1,6 @@
 function [vol] = ft_read_vol(filename, varargin)
 
-% READ_VOL reads a volume conduction model from various manufacturer
+% FT_READ_VOL reads a volume conduction model from various manufacturer
 % specific files. Currently supported are ASA, CTF, Neuromag, MBFYS
 % and Matlab.
 %

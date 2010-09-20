@@ -37,7 +37,7 @@ function lrp = ft_lateralizedpotential(cfg, avgL, avgR);
 %   Brain symmetry and topographic analysis of lateralized event-related
 %   potentials. Clin Neurophysiol. 114(7):1194-202, 2003.
 %
-% See also FT_LATERALIZEDFIELD, FT_TIMELOCKANALYSIS, FT_MULTIPLOTER
+% See also FT_TIMELOCKANALYSIS, FT_MULTIPLOTER
 
 % Copyright (C) 2004, Robert Oostenveld
 %

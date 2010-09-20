@@ -11,7 +11,7 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 %    [data] = ft_rejectcomponent(cfg, comp, data)
 %
 % where the input comp is the result of FT_COMPONENTANALYSIS. The output
-% data will have the same format as the output of FT_PREFPROCESSING.
+% data will have the same format as the output of FT_PREPROCESSING.
 % An optional input argument data can be provided. In that case 
 % componentanalysis will do a subspace projection of the input data
 % onto the space which is spanned by the topographies in the unmixing
@@ -20,8 +20,8 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 % The configuration should contain
 %   cfg.component = list of components to remove, e.g. [1 4 7]
 % 
-% See also FT_COMPONENTANALYSIS, FT_PREFPROCESSING
-%
+% See also FT_COMPONENTANALYSIS, FT_PREPROCESSING
+
 % Undocumented local options:
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
 %   cfg.outputfile = one can specify output as file to save to disk

@@ -37,8 +37,8 @@ function [mri] = ft_volumerealign(cfg, mri);
 % - the Z-axis goes approximately towards the vertex, orthogonal to X and Y
 %
 %
-% See also READ_MRI, FT_ELECTRODEREALIGN
-%
+% See also FT_READ_MRI, FT_ELECTRODEREALIGN
+
 % Undocumented local options:
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
 %   cfg.outputfile = one can specify output as file to save to disk

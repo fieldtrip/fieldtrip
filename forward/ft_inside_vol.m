@@ -12,7 +12,7 @@ function [inside] = ft_inside_vol(pos, vol)
 %   inside   list of dipoles inside the brain compartment
 %            (1=inside, 0=outisde)
 %
-% Additional optional input arguments shoudl be given in key value pairs
+% Additional optional input arguments should be given in key value pairs
 % and can include
 %   <none>
 

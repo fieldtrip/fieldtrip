@@ -12,8 +12,8 @@ function mri = ft_volumereslice(cfg, mri)
 %   cfg.zrange     = [min max], in physical units
 %   cfg.resolution = number, in physical units
 %
-% See also FT_VOLUMEDOWNSAMPLE, FT_SOURCEINTREPOLATE
-%
+% See also FT_VOLUMEDOWNSAMPLE, FT_SOURCEINTERPOLATE
+
 % Undocumented local options:
 %   cfg.inputfile        = one can specifiy preanalysed saved data as input
 %   cfg.outputfile       = one can specify output as file to save to disk

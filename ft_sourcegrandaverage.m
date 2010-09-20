@@ -1,6 +1,6 @@
 function [grandavg] = ft_sourcegrandaverage(cfg, varargin);
 
-% FT_SOUREGRANDAVERAGE averages source reconstructions over either multiple
+% FT_SOURCEGRANDAVERAGE averages source reconstructions over either multiple
 % subjects or conditions. It computes the average and variance for all
 % known source parameters. The output can be used in FT_SOURCESTATISTICS
 % with the method 'parametric'.

@@ -33,7 +33,7 @@ function [cfg, artifact] = ft_artifact_threshold(cfg,data)
 % function does not support artifact- or filterpadding.
 %
 % See also FT_REJECTARTIFACT
-%
+
 % Undocumented local options:
 % cfg.inputfile
 % cfg.outputfile

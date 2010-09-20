@@ -1,6 +1,6 @@
 function [spike] = ft_read_spike(filename, varargin);
 
-% READ_SPIKE reads spike timestamps and waveforms from various data
+% FT_READ_SPIKE reads spike timestamps and waveforms from various data
 % formats.
 %
 % Use as

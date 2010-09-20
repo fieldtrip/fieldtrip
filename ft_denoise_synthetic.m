@@ -11,8 +11,8 @@ function [data] = ft_denoise_synthetic(cfg, data);
 %                  type to which the data should be changed
 %   cfg.trials   = 'all' or a selection given as a 1xN vector (default = 'all')
 %
-% See also FT_PREPROCESSING, FT_DENOISE_SNS, FT_DENOISE_TSR, FT_DENOISE_PCA
-%
+% See also FT_PREPROCESSING
+
 % Undocumented local options:
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
 %   cfg.outputfile = one can specify output as file to save to disk

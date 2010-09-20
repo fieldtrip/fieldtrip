@@ -25,7 +25,7 @@ function [data] = ft_spiketriggeredinterpolation(cfg, data)
 % selected channels will be interpolated or replaced with NaNs.
 %
 % See also FT_SPIKETRIGGEREDSPECTRUM, FT_SPIKETRIGGEREDAVERAGE
-%
+
 % Undocumented local options:
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
 %   cfg.outputfile = one can specify output as file to save to disk

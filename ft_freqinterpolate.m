@@ -1,4 +1,3 @@
-
 function [freq] = ft_freqinterpolate(cfg, freq)
 
 % FT_FREQINTERPOLATE interpolates frequencies by looking at neighbouring
@@ -11,7 +10,7 @@ function [freq] = ft_freqinterpolate(cfg, freq)
 %   cfg.method   = 'nan', 'linear' (default = 'nan')
 %   cfg.foilim   = Nx2 matrix with begin and end of each interval to be
 %                  interpolated (default = [49 51; 99 101; 149 151])
-%
+
 % Undocumented local options:
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
 %   cfg.outputfile = one can specify output as file to save to disk

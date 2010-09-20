@@ -1,6 +1,6 @@
 function [filt] = ft_preproc_dftfilter(dat, Fs, Fl)
 
-% PREPROC_DFTFILTER applies a notch filter to the data to remove the 50Hz
+% FT_PREPROC_DFTFILTER applies a notch filter to the data to remove the 50Hz
 % or 60Hz line noise components. This is done by fitting a sine and cosine
 % at the specified frequency to the data and subsequently subtracting the
 % estimated components. The longer the data is, the sharper the spectral

@@ -10,8 +10,8 @@ function [down] = ft_volumedownsample(cfg, source);
 %   cfg.downsample = integer number (default = 1, i.e. no downsampling)
 %   cfg.smooth     = 'no' or the FWHM of the gaussian kernel in voxels (default = 'no')
 %
-% This function is used by FT_SOUREINTERPOLATE, FT_SOURCEREAD and FT_SOURCENORMALIZE.
-%
+% This function is used by FT_SOURCEINTERPOLATE, FT_VOLUMEWRITE and FT_VOLUMENORMALISE.
+
 % Undocumented local options:
 %   cfg.inputfile        = one can specifiy preanalysed saved data as input
 %   cfg.outputfile       = one can specify output as file to save to disk

@@ -10,7 +10,7 @@ function [timelock] = ft_timelockbaseline(cfg, timelock);
 %   cfg.channel      = cell-array, see FT_CHANNELSELECTION
 %
 % See also FT_TIMELOCKANALYSIS, FT_FREQBASELINE
-%
+
 % Undocumented local options:
 %   cfg.blcwindow
 %   cfg.previous

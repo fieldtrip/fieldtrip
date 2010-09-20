@@ -25,7 +25,7 @@ function [data] = ft_appenddata(cfg, varargin);
 % channels in one of the data structures). The function will then return a data
 % structure containing only the channels which are present in all inputs.
 % See also FT_PREPROCESSING
-%
+
 % Undocumented local options:
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
 %                     The data should be provided in a cell array

@@ -9,10 +9,10 @@ function [data] = ft_appendspike(cfg, varargin);
 %
 % Use as
 %   [spike] = ft_appendspike(cfg, spike1, spike2, spike3, ...)
-% where the input structures come from FT_READ_FCDC_SPIKE, or as
+% where the input structures come from FT_READ_SPIKE, or as
 %   [data]  = ft_appendspike(cfg, data, spike1, spike2, ...)
 % where the first data structure is the result of FT_PREPROCESSING
-% and the subsequent ones come from FT_READ_FCDC_SPIKE.
+% and the subsequent ones come from FT_READ_SPIKE.
 %
 % See also FT_APPENDDATA, FT_PREPROCESSING
 

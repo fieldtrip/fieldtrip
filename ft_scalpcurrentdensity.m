@@ -47,7 +47,7 @@ function [scd] = ft_scalpcurrentdensity(cfg, data);
 %   B. Hjort; An on-line transformation of EEG ccalp potentials into
 %   orthogonal source derivation. Electroencephalography and Clinical
 %   Neurophysiology 39:526-530, 1975.
-%
+
 % Undocumented local options:
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
 %   cfg.outputfile = one can specify output as file to save to disk
