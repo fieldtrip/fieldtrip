@@ -40,10 +40,10 @@ function [acc,sig,tim,cv] = ft_mv_test(varargin)
   end
   S.cv.sigtest = S.sigtest;
   
-  tstart = tic;
-  cv    = S.cv.train(S.X,S.Y);
-  tim = toc-tstart;
-  acc   = cv.performance; 
-  sig   = cv.significance;
+  tstart  = tic;
+  cv      = S.cv.train(S.X,S.Y);
+  tim     = toc(tstart);
+  acc     = cv.performance; 
+  sig     = cv.significance;
   
 end
