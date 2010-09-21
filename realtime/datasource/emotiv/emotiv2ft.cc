@@ -39,7 +39,7 @@ const char *labels[TOTAL_CHANNELS] = {
 	"AF4",
 	"GYROX", 
 	"GYROY",
-	"TIMESTAMP"
+	"TIMESTAMP",
 	"FUNC_ID", 
 	"FUNC_VALUE", 
 	"MARKER", 
@@ -125,6 +125,8 @@ bool writeHeader(int ftSocket, float fSample) {
 	req.prepPutHeader(TOTAL_CHANNELS, DATATYPE_FLOAT64, fSample);
 	req.prepPutHeaderAddChunk(FT_CHUNK_CHANNEL_NAMES, N, chunk_data);
 	
+	delete[] chunk_data;
+	
 	int err = clientrequest(ftSocket, req.out(), resp.in());
 	if (err || !resp.checkPut()) {
 		fprintf(stderr, "Could not write header to FieldTrip buffer\n.");
@@ -202,8 +204,6 @@ int main(int argc, char** argv) {
 
 			// Log the EmoState if it has been updated
 			if (eventType == EE_UserAdded) {
-				printf("EDK: User added\n");
-				
 				if (EE_DataGetSamplingRate(userID, &samplingRate) != EDK_OK) {
 					fprintf(stderr, "Cannot retrieve sampling rate\n");
 					break;
@@ -213,6 +213,7 @@ int main(int argc, char** argv) {
 				
 				EE_DataAcquisitionEnable(userID,true);
 				readyToCollect = true;
+				printf("EDK: User added, will now start acquisition.\n");
 			}
 		}
 
