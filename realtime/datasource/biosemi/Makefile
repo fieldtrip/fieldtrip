@@ -12,7 +12,7 @@ ifeq "$(PLATFORM)" "mingw32"
    INCPATH = -I../../buffer/src -I../../buffer/cpp -I. -I../../buffer/pthreads-win32/include
    SUFFIX = .exe
 else
-   LDFLAGS = -lpthread ../../buffer/src/libbuffer.a
+   LDFLAGS = -lpthread ../../buffer/src/libbuffer.a -ldl
    INCPATH = -I../../buffer/src -I../../buffer/cpp -I. 
    SUFFIX = 
 endif

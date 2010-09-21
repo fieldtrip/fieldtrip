@@ -1,6 +1,13 @@
 #ifndef __BioSemiClient_h
 #define __BioSemiClient_h
 
+#ifndef WIN32
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/time.h>
+#endif
+
 #include <Labview_DLL.h>
 
 #define BUFFER_SIZE   32*1024*1024  // 32 MByte as suggested by BioSemi

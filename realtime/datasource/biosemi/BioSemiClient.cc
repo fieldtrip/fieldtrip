@@ -1,6 +1,10 @@
 #include <BioSemiClient.h>
 #include <stdio.h>
 
+#ifndef WIN32
+#include <dlfcn.h>
+#endif
+
 
 #define DEVICE_TIMEOUT   1.0		// in seconds
 
@@ -42,6 +46,20 @@ BioSemiClient::BioSemiClient() {
 	ringBuffer = (int32_t *) VirtualAlloc(NULL, BUFFER_SIZE, MEM_COMMIT, PAGE_READWRITE);
 	if (ringBuffer != NULL) ZeroMemory(ringBuffer, BUFFER_SIZE);
 #else
+   
+   hLib = dlopen("./liblabview_dll.so", RTLD_LAZY);
+	if (hLib == NULL) {
+		fprintf(stderr, "Cannot load liblabview_dll.so\n");
+		return;
+	}
+		
+	if (!(lv_open_driver_async    = (OPEN_DRIVER_ASYNC_T)    dlsym(hLib,"OPEN_DRIVER_ASYNC"))) return;
+	if (!(lv_usb_write            = (USB_WRITE_T)            dlsym(hLib,"USB_WRITE"))) return;
+	if (!(lv_read_multiple_sweeps = (READ_MULTIPLE_SWEEPS_T) dlsym(hLib,"READ_MULTIPLE_SWEEPS"))) return;
+	if (!(lv_read_pointer         = (READ_POINTER_T)         dlsym(hLib,"READ_POINTER"))) return;
+	if (!(lv_close_driver_async   = (CLOSE_DRIVER_ASYNC_T)   dlsym(hLib,"CLOSE_DRIVER_ASYNC"))) return;
+	
+   
 	// TODO: use dlopen + dlsym on Linux
 	ringBuffer = (int32_t *) calloc(BUFFER_SIZE/sizeof(int32_t), sizeof(int32_t));
 #endif
@@ -60,6 +78,7 @@ BioSemiClient::~BioSemiClient() {
 	if (ringBuffer != NULL) VirtualFree(ringBuffer, 0, MEM_RELEASE);
 	#else
 	// TODO: dlclose
+   if (hLib!=NULL) dlclose(hLib);
 	if (ringBuffer != NULL) free(ringBuffer);
 	#endif
 }
@@ -77,11 +96,11 @@ bool BioSemiClient::openDevice() {
 		return false;
 	}
 	
-	printf("Ok so far\n");
+	//printf("Ok so far\n");
 	
 	memset(bytes, 0, sizeof(bytes));
 	
-	printf("Before lv_usb_write\n");
+	//printf("Before lv_usb_write\n");
 	
 	if (!lv_usb_write(deviceHandle, bytes)) {
 		fprintf(stderr, "Cannot write to/initialize USB device!\n");
@@ -89,12 +108,14 @@ bool BioSemiClient::openDevice() {
 		return false;
 	}
 	
-	printf("Before lv_read_multiple_sweeps\n");
+	//printf("Before lv_read_multiple_sweeps\n");
 	
 	lv_read_multiple_sweeps(deviceHandle, (char *) ringBuffer, BUFFER_SIZE);
 	
 	memset(bytes, 0, sizeof(bytes));
-	bytes[0] = 0xFF;
+	bytes[0] = (char) 0xFF;
+   
+   usleep(500);
 	
 	if (!lv_usb_write(deviceHandle, bytes)) {
 		fprintf(stderr, "Cannot enable handshake!\n");
