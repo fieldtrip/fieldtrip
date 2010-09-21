@@ -154,7 +154,7 @@ void abortHandler(int sig) {
 }
 
 int main(int argc, char *argv[]) {
-	int numEEG, numAIB, numTrigger;
+	int numEEG, numAIB;
 	int port, ftSocket;
 	int sampleCounter = 0;
 	char hostname[256];
@@ -162,12 +162,10 @@ int main(int argc, char *argv[]) {
 	FtBufferResponse resp;
 	EventChain  eventChain("TRIGGER");
 	SampleBlock sampleBlock;
-	bool triggerState[16];
+	int triggerState = 0;
 	
-	for (int i=0;i<16;i++) triggerState[i] = false;
-	
-	if (argc<4) {
-		printf("Usage: biosemi2ft <#EEG-channels> <#AIB-channels> <#trigger-channels> [hostname=localhost [port=1972]]\n");
+	if (argc<3) {
+		printf("Usage: biosemi2ft <#EEG-channels> <#AIB-channels> [hostname=localhost [port=1972]]\n");
 		return 0;
 	}
 	
@@ -183,25 +181,19 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 	
-	numTrigger = atoi(argv[3]);
-	if (numTrigger < 0 || numTrigger>16) {
-		fprintf(stderr, "Number of trigger channels (third parameter) must be between 0 and 16\n");
-		return 1;
-	}
-	
 	if (argc>4) {
-		strncpy(hostname, argv[4], sizeof(hostname));
+		strncpy(hostname, argv[3], sizeof(hostname));
 	} else {
 		strcpy(hostname, "localhost");
 	}
 	
 	if (argc>5) {
-		port = atoi(argv[5]);
+		port = atoi(argv[4]);
 	} else {
 		port = 1972;
 	}
 	
-	if (numEEG + numAIB + numTrigger > 0) {
+	if (numEEG + numAIB > 0) {
 		ftSocket = open_connection(hostname, port);
 		if (ftSocket < 0) {
 			fprintf(stderr, "Could not connect to FieldTrip buffer on %s:%i\n", hostname, port);
@@ -279,30 +271,23 @@ int main(int argc, char *argv[]) {
 			}
 			
 		}
-		if (numTrigger > 0) {
-			eventChain.clear();
-			for (int j=0;j<block.numSamples;j++) {
-				int value = BS.getValue(block.startIndex + 1 + j*block.stride);
-				int bv = 0x100; // trig channel 1
-				for (int i=0;i<numTrigger;i++) {
-					if (value & bv) {
-						if (!triggerState[i]) {
-							eventChain.addTrigger(sampleCounter+j, i+1);
-							triggerState[i] = true;
-							printf("-!- Trigger at sample %i, channel %i\n", sampleCounter+j, i+1);
-						}
-					} else {
-						triggerState[i] = false;
-					}
-					bv<<=1; 
-				}
-			}
 
-			if (eventChain.count() > 0) {
-				int err = clientrequest(ftSocket, eventChain.asRequest(), resp.in());
-				if (err || !resp.checkPut()) {
-					fprintf(stderr, "Could not write events to FieldTrip buffer\n.");
-				}
+		eventChain.clear();
+		for (int j=0;j<block.numSamples;j++) {
+			int value = BS.getValue(block.startIndex + 1 + j*block.stride);
+			value = (value & 0x00FFFF00) >> 8;
+			
+			if (value && value!=triggerState) {
+				eventChain.addTrigger(sampleCounter+j, value);
+				printf("-!- Trigger at sample %i => %i\n", sampleCounter+j, value);
+			}
+			triggerState = value;
+		}
+
+		if (ftSocket != -1 && eventChain.count() > 0) {
+			int err = clientrequest(ftSocket, eventChain.asRequest(), resp.in());
+			if (err || !resp.checkPut()) {
+				fprintf(stderr, "Could not write events to FieldTrip buffer\n.");
 			}
 		}
 		

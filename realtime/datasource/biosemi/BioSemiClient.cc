@@ -47,7 +47,7 @@ BioSemiClient::BioSemiClient() {
 	if (ringBuffer != NULL) ZeroMemory(ringBuffer, BUFFER_SIZE);
 #else
    
-   hLib = dlopen("./liblabview_dll.so", RTLD_LAZY);
+	hLib = dlopen("./liblabview_dll.so", RTLD_LAZY);
 	if (hLib == NULL) {
 		fprintf(stderr, "Cannot load liblabview_dll.so\n");
 		return;
@@ -59,8 +59,6 @@ BioSemiClient::BioSemiClient() {
 	if (!(lv_read_pointer         = (READ_POINTER_T)         dlsym(hLib,"READ_POINTER"))) return;
 	if (!(lv_close_driver_async   = (CLOSE_DRIVER_ASYNC_T)   dlsym(hLib,"CLOSE_DRIVER_ASYNC"))) return;
 	
-   
-	// TODO: use dlopen + dlsym on Linux
 	ringBuffer = (int32_t *) calloc(BUFFER_SIZE/sizeof(int32_t), sizeof(int32_t));
 #endif
 	if (ringBuffer == NULL) {
@@ -78,7 +76,7 @@ BioSemiClient::~BioSemiClient() {
 	if (ringBuffer != NULL) VirtualFree(ringBuffer, 0, MEM_RELEASE);
 	#else
 	// TODO: dlclose
-   if (hLib!=NULL) dlclose(hLib);
+	if (hLib!=NULL) dlclose(hLib);
 	if (ringBuffer != NULL) free(ringBuffer);
 	#endif
 }
@@ -115,7 +113,7 @@ bool BioSemiClient::openDevice() {
 	memset(bytes, 0, sizeof(bytes));
 	bytes[0] = (char) 0xFF;
    
-   usleep(500);
+    //usleep(500);
 	
 	if (!lv_usb_write(deviceHandle, bytes)) {
 		fprintf(stderr, "Cannot enable handshake!\n");
@@ -195,11 +193,12 @@ bool BioSemiClient::openDevice() {
 	lastPointerRead  = 0;
 	lastStartPtr  = 0;
 	deviceOpen = true;
-	
+	/*
 	for (int i=0;i<pointer;i+=4) {
 		int val = *((int *) (ringBuffer+i));
 		if (val==SYNC_BV) printf("Sync at %i\n", i);
 	}
+	*/
 	return true;
 }
 
