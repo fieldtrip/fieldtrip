@@ -124,14 +124,16 @@ class SampleBlock {
 			ddef = (datadef_t *) malloc(newSize);
 			if (ddef == NULL) {
 				reqdef.bufsize = 0;
+				sizeAlloc = 0;
 				return NULL;
 			}
+			sizeAlloc = newSize;
 		}
 		ddef->nchans    = numChannels;
 		ddef->nsamples  = numSamples;
 		ddef->data_type = DATATYPE_INT32;
 		ddef->bufsize   = numChannels * numSamples * sizeof(INT32_T);
-		reqdef.bufsize = ddef->bufsize + sizeof(datadef_t);
+		reqdef.bufsize  = ddef->bufsize + sizeof(datadef_t);
 		return (int *) (ddef+1); // first bytes after datadef_t
 	}
 	
@@ -251,7 +253,8 @@ int main(int argc, char *argv[]) {
 		if (block.numSamples != block.numInSync) continue; // replace by break later
 		
 		if (numChan > 0) {
-			int *dest = sampleBlock.getMatrix(numEEG + numAIB, block.numSamples);
+			int *dest = sampleBlock.getMatrix(numChan, block.numSamples);
+			//printf(" dest = %lx  \n", dest);
 			if (dest==NULL) {
 				printf("Out of memory\n");
 				break;
@@ -262,7 +265,8 @@ int main(int argc, char *argv[]) {
 					dest[i + j*numChan] = BS.getValue(idx + i);
 				}
 				for (int i=0;i<numAIB;i++) {
-					dest[i+numEEG + j*numChan] = BS.getValue(idx + i + BS.getNumChannels());
+					int v = BS.getValue(idx + i + BS.getNumChannels());
+					dest[i+numEEG + j*numChan] = v; 
 				}
 			}
 			int err = clientrequest(ftSocket, sampleBlock.asRequest(), resp.in());

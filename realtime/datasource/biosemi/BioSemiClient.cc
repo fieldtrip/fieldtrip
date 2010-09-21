@@ -47,11 +47,19 @@ BioSemiClient::BioSemiClient() {
 	if (ringBuffer != NULL) ZeroMemory(ringBuffer, BUFFER_SIZE);
 #else
    
+    #ifdef __APPLE__
+	hLib = dlopen("./liblabview_dll.dylib", RTLD_LAZY);
+	if (hLib == NULL) {
+		fprintf(stderr, "Cannot load liblabview_dll.dylib\n");
+		return;
+	}
+	#else
 	hLib = dlopen("./liblabview_dll.so", RTLD_LAZY);
 	if (hLib == NULL) {
 		fprintf(stderr, "Cannot load liblabview_dll.so\n");
 		return;
 	}
+	#endif
 		
 	if (!(lv_open_driver_async    = (OPEN_DRIVER_ASYNC_T)    dlsym(hLib,"OPEN_DRIVER_ASYNC"))) return;
 	if (!(lv_usb_write            = (USB_WRITE_T)            dlsym(hLib,"USB_WRITE"))) return;
@@ -83,7 +91,7 @@ BioSemiClient::~BioSemiClient() {
 
 bool BioSemiClient::openDevice() {
 	char bytes[64];
-	int pointer;
+	intptr_t pointer;
 	
 	if (!driverOk) return false;
 	if (deviceOpen) closeDevice();
