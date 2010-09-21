@@ -157,7 +157,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		killswitch.enabled  = 1;
 		killswitch.masterid = masterid;
 		killswitch.time     = time;
-		mexPrintf("killswitch: enabled\n");
+		mexPrintf("killswitch: enabled (%lu, %d)\n", masterid, time);
 		pthread_mutex_unlock(&mutexkillswitch);
 
 		return;

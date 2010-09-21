@@ -74,6 +74,14 @@ allowuser  = keyval('allowuser',  varargin); if isempty(allowuser), allowuser = 
 allowgroup = keyval('allowgroup', varargin); if isempty(allowgroup), allowgroup = {}; end
 group      = keyval('group',      varargin);
 
+if ~isempty(threads) && exist('maxNumCompThreads')
+  % this function is only available from Matlab version 7.5 (R2007b) upward
+  % and has become deprecated in Matlab version 7.9 (R2009b)
+  ws = warning('off', 'MATLAB:maxNumCompThreads:Deprecated');
+  maxNumCompThreads(threads);
+  warning(ws);
+end
+
 % these should be cell arrays
 if ~iscell(allowhost) && ischar(allowhost)
   allowhost = {allowhost};
@@ -84,15 +92,6 @@ end
 if ~iscell(allowgroup) && ischar(allowgroup)
   allowgroup = {allowgroup};
 end
-
-% start the maintenance threads
-ws = warning('off');
-peer('tcpserver', 'start');
-% peer('udsserver', 'start');
-peer('announce',  'start');
-peer('discover',  'start');
-peer('expire',    'start');
-warning(ws);
 
 % this should not be user-configurable
 % if ~isempty(user)
@@ -109,26 +108,46 @@ if ~isempty(group)
   peer('group', group);
 end
 
-% impose access restrictions
-peer('allowhost',  allowhost);
-peer('allowuser',  allowuser);
-peer('allowgroup', allowgroup);
+% switch to idle slave mode
+peer('status', 2);
+
+% check the current access restrictions
+info   = peerinfo;
+access = true;
+access = access && isequal(info.allowhost, allowhost);
+access = access && isequal(info.allowuser, allowuser);
+access = access && isequal(info.allowgroup, allowgroup);
+
+if ~access
+  % impose the updated access restrictions
+  peer('allowhost',  allowhost);
+  peer('allowuser',  allowuser);
+  peer('allowgroup', allowgroup);
+end
+
+% check the current status of the maintenance threads
+threads = true;
+threads = threads && peer('announce', 'status');
+threads = threads && peer('discover', 'status');
+threads = threads && peer('expire',   'status');
+% threads = threads && peer('tcpserver', 'status');
+% threads = threads && peer('udsserver', 'status');
+
+if ~threads
+  % start the maintenance threads
+  ws = warning('off');
+  peer('announce',  'start');
+  peer('discover',  'start');
+  peer('expire',    'start');
+  peer('tcpserver', 'start');
+  % peer('udsserver', 'start');
+  warning(ws);
+end
 
 % the available resources will be announced and are used to drop requests that are too large
 if ~isempty(memavail), peer('memavail', memavail); end
 if ~isempty(cpuavail), peer('cpuavail', cpuavail); end
 if ~isempty(timavail), peer('timavail', timavail); end
-
-if ~isempty(threads) && exist('maxNumCompThreads')
-  % this function is only available from Matlab version 7.5 (R2007b) upward
-  % and has become deprecated in Matlab version 7.9 (R2009b)
-  ws = warning('off', 'MATLAB:maxNumCompThreads:Deprecated');
-  maxNumCompThreads(threads);
-  warning(ws);
-end
-
-% switch to idle slave mode
-peer('status', 2);
 
 % keep track of the time and number of jobs
 stopwatch = tic;
@@ -185,10 +204,9 @@ while true
     % get the input arguments and options
     [argin, options] = peer('get', joblist.jobid);
 
-    % remove the masterid, because that is used to arm the killswitch
-    sel = find(strcmp(options, 'masterid'));
-    options(sel) = [];  % remove the masterid key
-    options(sel) = [];  % remove the masterid value
+    % set the options that will be used in the killswitch
+    % options = {options{:}, 'masterid', joblist.hostid}; % add the masterid as option
+    % options = {options{:}, 'timavail', 2*(timavail+1)}; % add the timavail as option, empty is ok
 
     % evaluate the job
     [argout, options] = peerexec(argin, options);

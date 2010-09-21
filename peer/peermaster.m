@@ -77,7 +77,7 @@ end
 peer('status', 1);
 
 % check the current access restrictions
-info = peerinfo;
+info   = peerinfo;
 access = true;
 access = access && isequal(info.allowhost, allowhost);
 access = access && isequal(info.allowuser, allowuser);
