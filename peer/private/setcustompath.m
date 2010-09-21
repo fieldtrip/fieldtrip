@@ -16,7 +16,7 @@ if ~isempty(option_path)
   % and that the peer functions are maintained on the path
   path(d);
   path(option_path, path);
-  path(fileparts(which('peer')), path);
+  path(fileparts(which('peerfeval')), path);
 end
 
 % remember the current settings for the next call
