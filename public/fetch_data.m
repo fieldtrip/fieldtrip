@@ -1,12 +1,12 @@
 function [dat] = fetch_data(data, varargin)
 
-% FETCH_DATA mimics the behaviour of READ_DATA, but for a FieldTrip
+% FETCH_DATA mimics the behaviour of FT_READ_DATA, but for a FieldTrip
 % raw data structure instead of a file on disk.
 %
 % Use as
 %   [dat] = fetch_data(data, ...)
 %
-% See also READ_DATA, FETCH_HEADER, FETCH_EVENT
+% See also FT_READ_DATA, FETCH_HEADER, FETCH_EVENT
 
 % Copyright (C) 2008, Esther Meeuwissen
 %

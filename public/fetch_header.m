@@ -1,12 +1,12 @@
 function [hdr] = fetch_header(data)
 
-% FETCH_HEADER mimics the behaviour of READ_HEADER, but for a FieldTrip
+% FETCH_HEADER mimics the behaviour of FT_READ_HEADER, but for a FieldTrip
 % raw data structure instead of a file on disk.
 %
 % Use as
 %   [hdr] = fetch_header(data)
 %
-% See also READ_HEADER, FETCH_DATA, FETCH_EVENT
+% See also FT_READ_HEADER, FETCH_DATA, FETCH_EVENT
 
 % Copyright (C) 2008, Esther Meeuwissen
 %

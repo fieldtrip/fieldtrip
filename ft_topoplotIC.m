@@ -1,4 +1,3 @@
-
 function [cfg] = ft_topoplotIC(cfg, varargin)
 
 % FT_TOPOPLOTIC plots the topographic distribution of an independent
@@ -70,7 +69,7 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 % of the subplots, you should create your own layout file.
 %
 % See also:
-%   FT_TOPOPLOTER, FT_SINGLEPLOTTFR, FT_MULTI0PLOTFR, FT_PREPARE_LAYOUT
+%   FT_TOPOPLOTER, FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR, FT_PREPARE_LAYOUT
 
 % Undocumented local options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)
