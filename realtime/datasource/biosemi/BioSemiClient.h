@@ -48,7 +48,7 @@ class BioSemiClient {
 	
 	
 	int getValue(int index) const {
-	    return ringBuffer[index > BUFFER_LEN ? index - BUFFER_LEN : index];
+	    return ringBuffer[index & (BUFFER_LEN-1)]; //  ? index - BUFFER_LEN : index];
 	}	
 	
 	double getCurrentTime() {

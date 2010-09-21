@@ -264,9 +264,9 @@ int main(int argc, char *argv[]) {
 				for (int i=0;i<numEEG;i++) {
 					dest[i + j*numChan] = BS.getValue(idx + i);
 				}
+				idx+=BS.getNumChannels(); // skip to AIB channels
 				for (int i=0;i<numAIB;i++) {
-					int v = BS.getValue(idx + i + BS.getNumChannels());
-					dest[i+numEEG + j*numChan] = v; 
+					dest[i+numEEG + j*numChan] = BS.getValue(idx + i); 
 				}
 			}
 			int err = clientrequest(ftSocket, sampleBlock.asRequest(), resp.in());
