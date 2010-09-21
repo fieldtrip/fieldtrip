@@ -13,8 +13,8 @@ function [acc,sig,tim,cv] = ft_mv_test(varargin)
     S.(varargin{i}) = varargin{i+1};  
   end
         
-  if ~isfield(S,'mva')
-    error('please specify mva');
+  if ~isfield(S,'mva') && ~isfield(S,'cv')
+    error('please specify mva or cv');
   end
   if ~isfield(S,'X') || ~isfield(S,'Y')
     fprintf('using default dataset 69digits\n');
