@@ -72,22 +72,32 @@ if ~isempty(group)
   peer('group', group);
 end
 
-% impose access restrictions
-peer('allowhost',  allowhost);
-peer('allowuser',  allowuser);
-peer('allowgroup', allowgroup);
-
 % switch to zombie mode
 peer('status', 0);
 
-% check that the required maintenance threads are running
-status = true;
-status = status && peer('announce', 'status');
-status = status && peer('discover', 'status');
-status = status && peer('expire',   'status');
-% status = status && peer('tcpserver', 'status');
-% status = status && peer('udsserver', 'status');
-if ~status
+% check the current access restrictions
+info = peerinfo;
+access = true;
+access = access && isequal(info.allowhost, allowhost);
+access = access && isequal(info.allowuser, allowuser);
+access = access && isequal(info.allowgroup, allowgroup);
+
+if ~access
+  % impose the updated access restrictions
+  peer('allowhost',  allowhost);
+  peer('allowuser',  allowuser);
+  peer('allowgroup', allowgroup);
+end
+
+% check the current status of the maintenance threads
+threads = true;
+threads = threads && peer('announce', 'status');
+threads = threads && peer('discover', 'status');
+threads = threads && peer('expire',   'status');
+% threads = threads && peer('tcpserver', 'status');
+% threads = threads && peer('udsserver', 'status');
+
+if ~threads
   % start the maintenance threads
   ws = warning('off');
   peer('announce',  'start');
@@ -95,7 +105,10 @@ if ~status
   peer('expire',    'start');
   % peer('tcpserver', 'start');
   % peer('udsserver', 'start');
-  warning(ws)
+  warning(ws);
+end
+
+if ~access || ~threads
   % wait some time to ensure that all peers on the network have been found
   pause(1.5);
 end
