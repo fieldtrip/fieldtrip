@@ -50,16 +50,25 @@ function [jobid, puttime] = peerfeval(varargin)
 % the same input arguments (e.g. from peercellfun)
 persistent previous_argin
 
-% check that the required peer server threads are running
-status = true;
-status = status & peer('tcpserver', 'status');
-% status = status & peer('udsserver', 'status');
-status = status & peer('announce',  'status');
-status = status & peer('discover',  'status');
-status = status & peer('expire',    'status');
-if ~status
-  warning('executing peermaster');
-  peermaster
+% check the current status of the maintenance threads
+threads = true;
+threads = threads && peer('announce', 'status');
+threads = threads && peer('discover', 'status');
+threads = threads && peer('expire',   'status');
+threads = threads && peer('tcpserver', 'status');
+% threads = threads && peer('udsserver', 'status');
+
+if ~threads
+  % start the maintenance threads
+  ws = warning('off');
+  peer('announce',  'start');
+  peer('discover',  'start');
+  peer('expire',    'start');
+  peer('tcpserver', 'start');
+  % peer('udsserver', 'start');
+  warning(ws);
+  % wait some time to ensure that all peers on the network have been found
+  pause(1.5);
 end
 
 % the peer server must be running in master mode
@@ -110,9 +119,9 @@ if ~isempty(previous_argin) && ~isequal(varargin{1}, previous_argin{1})
   end
 end
 
-% start with an empty return value
-jobid = [];
-
+% start with empty return values
+jobid   = [];
+puttime = [];
 
 % pass some options that may influence remote execution
 options = {'pwd', getcustompwd, 'path', getcustompath, 'diary', diary, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq};
@@ -207,7 +216,7 @@ while isempty(jobid)
 end % while isempty(jobid)
 
 if isempty(jobid)
-  warning('none of the slave peers was willing to accept the job');
+  warning('FieldTrip:peer:noSlaveAvailable', 'none of the slave peers was willing to accept the job');
 end
 
 % remember the input arguments to speed up subsequent calls

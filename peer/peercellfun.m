@@ -199,11 +199,34 @@ while ~all(submitted) || ~all(collected)
       argin{j} = varargin{j}{submit};
     end
 
+    % get a list of the busy slaves, used for feedback in case peerfeval times out
+    busy = peerlist('busy');
+
     % submit the job for execution
-    [jobid(submit) puttime(submit)] = peerfeval(fname, argin{:}, 'timeout', inf, 'memreq', memreq, 'timreq', timreq, 'diary', diary);
-    % fprintf('submitted job %d\n', submit);
-    submitted(submit)  = true;
-    submittime(submit) = toc(stopwatch);
+    ws = warning('off', 'FieldTrip:peer:noSlaveAvailable');
+    % peerfeval will give a warning if the submission timed out
+    [curjobid curputtime] = peerfeval(fname, argin{:}, 'timeout', 5, 'memreq', memreq, 'timreq', timreq, 'diary', diary);
+    warning(ws);
+
+    if ~isempty(curjobid)
+      % fprintf('submitted job %d\n', submit);
+      jobid(submit)      = curjobid;
+      puttime(submit)    = curputtime;
+      submitted(submit)  = true;
+      submittime(submit) = toc(stopwatch);
+      clear curjobid curputtime
+    else
+      if ~isempty(busy)
+        % select only the slaves that are busy with your jobs
+        current = [busy.current];
+        info = peerinfo;
+        busy = busy([current.hostid]==info.hostid);
+        clear current info
+      end
+      if isempty(busy)
+        warning('none of the slaves seems to be busy with your jobs');
+      end
+    end
 
     clear argin
   end % if ~isempty(submitlist)

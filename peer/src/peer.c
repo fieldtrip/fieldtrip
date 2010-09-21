@@ -1213,7 +1213,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 								mxSetFieldByNumber(current, 0, 9, mxCreateDoubleScalar(peer->host->current.optsize));
 						}
 						else {
-								current = mxCreateStructMatrix(0,0, CURRENT_FIELDNUMBER, current_fieldnames);
+								current = mxCreateStructMatrix(0, 0, CURRENT_FIELDNUMBER, current_fieldnames);
 						}
 						mxSetFieldByNumber(plhs[0], i, j++, current);
 						i++;

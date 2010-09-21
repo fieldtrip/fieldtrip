@@ -1,4 +1,4 @@
-function list = peerlist
+function list = peerlist(status)
 
 % PEERLIST gives information about all peers in the network, e.g. the
 % number of slaves, their network configuration, etc.
@@ -29,23 +29,25 @@ function list = peerlist
 % -----------------------------------------------------------------------
 
 % check that the  peer server threads are running
-status = true;
-% status = status & peer('tcpserver', 'status');
-% status = status & peer('udsserver', 'status');
-status = status & peer('announce', 'status');
-status = status & peer('discover', 'status');
-status = status & peer('expire',   'status');
-if ~status
-  ws = warning('off');
+threads = true;
+threads = threads && peer('announce', 'status');
+threads = threads && peer('discover', 'status');
+threads = threads && peer('expire',   'status');
+% threads = threads && peer('tcpserver', 'status');
+% threads = threads && peer('udsserver', 'status');
+if ~threads
+  % switch to zombie mode
+  peer('status', 0);
   % start the required maintenance threads
-  % peer('tcpserver', 'start');
-  % peer('udsserver', 'start');
+  ws = warning('off');
   peer('announce',  'start');
   peer('discover',  'start');
   peer('expire',    'start');
-  warning(ws)
-  peer('status', 0);    % switch to zombie mode
-  pause(1.5);           % wait for the discoveries
+  % peer('tcpserver', 'start');
+  % peer('udsserver', 'start');
+  warning(ws);
+  % wait some time to ensure that all peers on the network have been found
+  pause(1.5);
 end
 
 list = peer('peerlist');
@@ -68,7 +70,23 @@ if nargout==0
   fprintf('there are %3d peers running on %2d hosts as busy slave with %5s memory required\n', length(sel), length(unique({list(sel).hostname})), print_mem(memreq));
   sel = find([list.status]==0);
   fprintf('there are %3d peers running on %2d hosts as zombie\n',     length(sel), length(unique({list(sel).hostname})));
+end
 
+if nargin>0
+  % continue with a subset of the peers
+  switch status
+    case 'zombie'
+      list = list([list.status]==0);
+    case 'master'
+      list = list([list.status]==1);
+    case 'idle'
+      list = list([list.status]==2);
+    case 'busy'
+      list = list([list.status]==3);
+  end
+end
+
+if nargout==0
   % the peers are listed in a random order
   % create a list which will be sorted afterward for a nice display
   strlist = cell(1,numel(list));
