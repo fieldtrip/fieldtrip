@@ -22,46 +22,45 @@
 #include "peer.h"
 #include "extern.h"
 
-/* this function returns 1 if the IP address corresponds with the local host
-   or false if the IP address cannot be associated with the local host */
 
-int localhost(const char *ipaddr)
+/* this function returns 1 if the IP address corresponds with the local host
+   or 0 if the IP address cannot be associated with the local host */
+int check_localhost(const char *ipaddr)
 {
 #if defined (PLATFORM_WIN32) || defined(PLATFORM_WIN64)
 		return 0;
 
 #elif defined (PLATFORM_LINUX) || defined(PLATFORM_OSX)
 		int family, s, found = 0;
-		struct ifaddrs *ifaddr, *ifa;
+		struct ifaddrs *ifaddr = NULL;
+		struct ifaddrs *ifa;
 		char host[NI_MAXHOST];
 
+		/* get the list with network interfaces */
 		if (getifaddrs(&ifaddr) == -1) {
 				perror("getifaddrs");
 				DEBUG(LOG_ERR, "error: getifaddrs");
 		}
-		else {
-				/* Walk through linked list, maintaining head pointer so we can free list later */
 
-				for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-						family = ifa->ifa_addr->sa_family;
+		/* walk through the linked list, maintaining head pointer so we can free list later */
+		for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+				family = ifa->ifa_addr->sa_family;
 
-						if (family == AF_INET || family == AF_INET6) {
-								s = getnameinfo(ifa->ifa_addr,
-												(family == AF_INET) ? sizeof(struct sockaddr_in) :
-												sizeof(struct sockaddr_in6),
-												host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+				if (family == AF_INET)
+						s = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in ), host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+				else if (family == AF_INET6)
+						s = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in6), host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+				else
+						s = -1;
 
-								if (s == 0) {
-										/* compare this hosts address with the user-specified address */
-										found = (strcmp(host, ipaddr)==0);
-										if (found)
-												break; /* no reason to search further */
-								}
-						}
-				} /* for looping over list */
+				/* compare this hosts address with the user-specified address */
+				found = (s==0) && (strcmp(host, ipaddr)==0);
 
-				freeifaddrs(ifaddr);
-		} /* if getifaddrs */
+				if (found)
+						break;
+		} /* for looping over list */
+
+		freeifaddrs(ifaddr);
 
 		if (found)
 				DEBUG(LOG_DEBUG, "localhost: <%s>", ipaddr);

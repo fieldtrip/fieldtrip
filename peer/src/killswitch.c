@@ -37,6 +37,9 @@ pthread_t expireThread;
 /* this function will be called upon unloading of the mex file */
 void exitFun(void) {
 
+		if (!peerInitialized)
+				return;
+
 		/* disable the kill switch */
 		pthread_mutex_lock(&mutexkillswitch);
 		killswitch.enabled  = 0;
@@ -83,6 +86,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		int rc;
 		unsigned int time = 0, masterid = 0;
 
+		/* this function will be called upon unloading of the mex file */
+		mexAtExit(exitFun);
+
 		if (nrhs<2)
 				mexErrMsgTxt ("invalid number of input arguments");
 
@@ -100,16 +106,13 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		else
 				mexErrMsgTxt ("invalid input argument #2");
 
-		/* this function will be called upon unloading of the mex file */
-		mexAtExit(exitFun);
-
 		if (!peerInitialized) {
 				mexPrintf("killswitch: init\n");
 				peerinit(NULL);
 				peerInitialized = 1;
 		}
 
-		/* start the maintenance thread */
+		/* start the discover thread */
 		pthread_mutex_lock(&mutexstatus);
 		if (!discoverStatus) {
 				pthread_mutex_unlock(&mutexstatus);
@@ -129,7 +132,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				pthread_mutex_unlock(&mutexstatus);
 		}
 
-		/* start the maintenance thread */
+		/* start the expire thread */
 		pthread_mutex_lock(&mutexstatus);
 		if (!expireStatus) {
 				pthread_mutex_unlock(&mutexstatus);

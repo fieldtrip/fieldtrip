@@ -26,22 +26,21 @@
 #include "platform_includes.h"
 
 typedef struct {
-		void *message;
-		int fd;
+		void **message;
+		int *fd;
 } threadlocal_t;
 
 void cleanup_tcpsocket(void *arg) {
 		threadlocal_t *threadlocal;
 		threadlocal = (threadlocal_t *)arg;
-		if (threadlocal && threadlocal->message) {
-				FREE(threadlocal->message);
+
+		if (threadlocal && *threadlocal->message) {
+				FREE(*threadlocal->message);
 		}
-		if (threadlocal && threadlocal->fd>0) {
-				if (closesocket(threadlocal->fd)!=0) {
-						perror("cleanup_tcpsocket");
-						DEBUG(LOG_ERR, "error: cleanup_tcpsocket");
-				}
-				threadlocal->fd = -1;
+
+		if (threadlocal && (*threadlocal->fd)>0) {
+				closesocket(*threadlocal->fd);
+				*threadlocal->fd = 0;
 		}
 
 		pthread_mutex_lock(&mutexsocketcount);
@@ -65,14 +64,11 @@ void *tcpsocket(void *arg) {
 		message_t *message = NULL;
 
 		threadlocal_t threadlocal;
-		threadlocal.message = NULL;
-		threadlocal.fd = -1;
+		threadlocal.message = &message;
+		threadlocal.fd      = &fd;
 
 		/* the connection to the client has been made by the server */
 		fd = ((int)arg);
-
-		/* this will be closed at cleanup */
-		threadlocal.fd = fd;
 
 		pthread_cleanup_push(cleanup_tcpsocket, &threadlocal);
 
@@ -137,9 +133,6 @@ void *tcpsocket(void *arg) {
 		message->job  = (jobdef_t*)malloc(sizeof(jobdef_t));
 		message->arg  = NULL;
 		message->opt  = NULL;
-
-		/* this will be deallocated at cleanup */
-		threadlocal.message = message;
 
 		/* read the host details */
 		if ((n = bufread(fd, message->host, sizeof(hostdef_t))) != sizeof(hostdef_t)) {

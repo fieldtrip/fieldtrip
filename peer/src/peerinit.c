@@ -107,15 +107,19 @@ void peerinit(void *arg) {
 
 		/* initialize the random number generator */
 		/* this is used for creating host and job IDs */
-		srand(getpid());
+		srand(time(NULL));
 
 		/* this turns out not to be sufficiently random in the case of many peers */
-		host->id       = rand();
+		host->id  = rand();
 
 		/* increasse the host ID with some host specific details */
+		host->id += getpid();
 		host->id += hash(host->name);
 		host->id += hash(host->user);
 		host->id += hash(host->group);
+		host->id += hash(host->socket);
+		host->id += host->port;
+		host->id += host->port;
 
 		DEBUG(LOG_CRIT, "peerinit: %s@%s, id = %llu", host->user, host->name, host->id);
 		DEBUG(LOG_INFO, "peerinit: host.name =  %s", host->name);

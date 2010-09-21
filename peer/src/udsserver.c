@@ -38,7 +38,7 @@
 #include "platform_includes.h"
 
 typedef struct {
-		int fd;
+		int *fd;
 } threadlocal_t;
 
 void cleanup_udsserver(void *arg) {
@@ -47,9 +47,12 @@ void cleanup_udsserver(void *arg) {
 
         DEBUG(LOG_DEBUG, "cleanup_expire()");
 
-		if (threadlocal && threadlocal->fd>0) {
-				closesocket(threadlocal->fd);
-				threadlocal->fd = -1;
+		if (udsserverStatus==0)
+				return;
+
+		if (threadlocal && (*threadlocal->fd)>0) {
+				closesocket(*threadlocal->fd);
+				*threadlocal->fd = 0;
 		}
 
 		pthread_mutex_lock(&mutexhost);
@@ -74,7 +77,8 @@ void *udsserver(void *arg) {
 #ifdef WIN32
 		/* this is not yet implemented on windows */
 #else
-		int c, fd;
+		int c;
+		int fd = 0;
 
 		/* these variables are for the socket */
 		struct sockaddr_un local, remote;
@@ -85,7 +89,7 @@ void *udsserver(void *arg) {
 		pthread_t tid;
 
 		threadlocal_t threadlocal;
-		threadlocal.fd = -1;
+		threadlocal.fd = &fd;
 
 		/* this is for debugging */
 		pthread_mutex_lock(&mutexthreadcount);
@@ -113,9 +117,6 @@ void *udsserver(void *arg) {
 				DEBUG(LOG_ERR, "error: udsserver socket");
 				goto cleanup;
 		}
-
-		/* this will be closed at cleanup */
-		threadlocal.fd = fd;
 
 		bzero(&local, sizeof local);
 		bzero(&remote, sizeof remote);

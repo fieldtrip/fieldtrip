@@ -28,6 +28,9 @@
 void cleanup_expire(void *arg) {
         DEBUG(LOG_DEBUG, "cleanup_expire()");
 
+		if (expireStatus==0)
+				return;
+
 		pthread_mutex_lock(&mutexstatus);
 		expireStatus = 0;
 		pthread_mutex_unlock(&mutexstatus);

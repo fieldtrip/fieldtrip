@@ -89,6 +89,9 @@ test_listener: test_listener.o
 test_linkedlist: test_linkedlist.o
 	$(CC) $(CFLAGS) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
 
+test_localhost: test_localhost.o
+	$(CC) $(CFLAGS) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
+
 %.o: %.c peer.h extern.h
 	$(CC) $(CFLAGS) $(INCPATH) -c $*.c
 

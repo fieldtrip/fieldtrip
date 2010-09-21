@@ -25,7 +25,7 @@
 #include "platform_includes.h"
 
 typedef struct {
-		int fd;
+		int *fd;
 } threadlocal_t;
 
 void cleanup_tcpserver(void *arg) {
@@ -34,9 +34,12 @@ void cleanup_tcpserver(void *arg) {
 
         DEBUG(LOG_DEBUG, "cleanup_tcpserver()");
 
-		if (threadlocal && threadlocal->fd>0) {
-				closesocket(threadlocal->fd);
-				threadlocal->fd = -1;
+		if (tcpserverStatus==0)
+				return;
+
+		if (threadlocal && (*threadlocal->fd)>0) {
+				closesocket(*threadlocal->fd);
+				*threadlocal->fd = 0;
 		}
 
 		pthread_mutex_lock(&mutexstatus);
@@ -53,7 +56,8 @@ void cleanup_tcpserver(void *arg) {
  * if a connection is made by a client, it starts the tcpsocket function
  ***********************************************************************/
 void *tcpserver(void *arg) {
-		int c, fd, retry;
+		int c, retry;
+		int fd = 0;
 
 		/* these variables are for the socket */
 		struct sockaddr_in sa;
@@ -70,7 +74,7 @@ void *tcpserver(void *arg) {
 #endif
 
 		threadlocal_t threadlocal;
-		threadlocal.fd = -1;
+		threadlocal.fd = &fd;
 
 		/* this is for debugging */
 		pthread_mutex_lock(&mutexthreadcount);
@@ -106,9 +110,6 @@ void *tcpserver(void *arg) {
 				DEBUG(LOG_ERR, "error: tcpserver socket");
 				goto cleanup;
 		}
-
-		/* this will be closed at cleanup */
-		threadlocal.fd = fd;
 
 		/* place the socket in non-blocking mode, required to do thread cancelation */
 #ifdef WIN32

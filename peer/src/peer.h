@@ -77,7 +77,7 @@
 #define STRLEN			 		 128
 
 #ifndef SYSLOG
-#define SYSLOG 1
+#define SYSLOG 1 /* should be 1 for command-line peerslave, 0 or 3 for MATLAB */
 #endif
 
 #if   SYSLOG == 0
@@ -271,10 +271,10 @@ int  bufwrite(int s, void *buf, int numel);
 int  close_connection(int s);
 int  hoststatus(void);
 int  jobcount(void);
-int  localhost(const char *ipaddr);
 int  open_tcp_connection(const char *hostname, int port);
 int  open_uds_connection(const char *socketname);
 int  peercount(void);
+int  check_localhost(const char *ipaddr);
 int  check_killswitch(void);
 void check_datatypes(void);
 void clear_grouplist(void);

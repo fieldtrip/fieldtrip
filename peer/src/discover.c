@@ -26,8 +26,8 @@
 #include "platform_includes.h"
 
 typedef struct {
-		void *discovery;
-		int fd;
+		void **discovery;
+		int *fd;
 } threadlocal_t;
 
 void cleanup_discover(void *arg) {
@@ -37,12 +37,16 @@ void cleanup_discover(void *arg) {
 
 		DEBUG(LOG_DEBUG, "cleanup_discover()");
 
-		if (threadlocal && threadlocal->discovery) {
-				FREE(threadlocal->discovery);
+		if (discoverStatus==0)
+				return;
+
+		if (threadlocal && *threadlocal->discovery) {
+				FREE(*threadlocal->discovery);
 		}
-		if (threadlocal && threadlocal->fd>0) {
-				closesocket(threadlocal->fd);
-				threadlocal->fd = -1;
+
+		if (threadlocal && (*threadlocal->fd)>0) {
+				closesocket(*threadlocal->fd);
+				*threadlocal->fd = 0;
 		}
 
 		pthread_mutex_lock(&mutexpeerlist);
@@ -69,9 +73,10 @@ void *discover(void *arg) {
 		int i = 0;
 		int fd = 0;
 		unsigned int addrlen;
-		int nbytes, verbose = 0, found = 0;
+		int nbytes, found = 0;
 		int one = 1;
 		int accept = 1;
+		int localhost = 0;
 		peerlist_t *peer = NULL, *next = NULL;
 		hostdef_t  *discovery = NULL;
 
@@ -81,15 +86,15 @@ void *discover(void *arg) {
 		int optval;
 
 		threadlocal_t threadlocal;
-		threadlocal.discovery = NULL;
-		threadlocal.fd = -1;
+		threadlocal.discovery = &discovery;
+		threadlocal.fd        = &fd;
 
 		/* this is for debugging */
 		pthread_mutex_lock(&mutexthreadcount);
 		threadcount++;
 		pthread_mutex_unlock(&mutexthreadcount);
 
-		pthread_cleanup_push(cleanup_discover, NULL);
+		pthread_cleanup_push(cleanup_discover, &threadlocal);
 
 		/* the status contains the thread id when running, or zero when not running */
 		pthread_mutex_lock(&mutexstatus);
@@ -110,9 +115,6 @@ void *discover(void *arg) {
 				DEBUG(LOG_ERR, "error: discover socket");
 				goto cleanup;
 		}
-
-		/* this will be closed at cleanup */
-		threadlocal.fd = fd;
 
 		/* allow multiple sockets to use the same PORT number */
 		if (setsockopt(fd,SOL_SOCKET,SO_REUSEPORT,&one,sizeof(one)) < 0) {
@@ -160,9 +162,6 @@ void *discover(void *arg) {
 						goto cleanup;
 				}
 
-				/* this will be deallocated at cleanup */
-				threadlocal.discovery = discovery;
-
 				/* note that this might be thread cancelation point, but I am not sure */
 				addrlen=sizeof(addr);
 				if ((nbytes=recvfrom(fd,discovery,sizeof(hostdef_t),0,(struct sockaddr *)&addr,&addrlen)) < 0) {
@@ -176,8 +175,13 @@ void *discover(void *arg) {
 						continue;
 				}
 
+				/* the UDP packet specifies the IP address of the sender */
 				char ipaddr[INET_ADDRSTRLEN];
 				inet_ntop(AF_INET, &addr.sin_addr, ipaddr, INET_ADDRSTRLEN);
+
+				/* there seems to be a thread cancelation point inside check_localhost  */
+				/* therefore it should be called only when all mutexes are unlocked */
+				localhost = check_localhost(ipaddr);
 
 				DEBUG(LOG_DEBUG, "discover: host->name = %s", discovery->name);
 				DEBUG(LOG_DEBUG, "discover: host->port = %u", discovery->port);
@@ -237,37 +241,38 @@ void *discover(void *arg) {
 				peer       = (peerlist_t *)malloc(sizeof(peerlist_t));
 				peer->host = (hostdef_t *)malloc(sizeof(hostdef_t));
 				memcpy(peer->host, discovery, sizeof(hostdef_t));
+
 				FREE(discovery);
 
-				/* the UDP packet specifies the IP address of the sender */
-				inet_ntop(AF_INET, &addr.sin_addr, peer->ipaddr, INET_ADDRSTRLEN);
-				/* if possible use the loopback IP address instead of external IP address */
-				if (localhost(peer->ipaddr)==1)
+				if (localhost)
+						/* use the loopback IP address instead of the external IP address */
 						strncpy(peer->ipaddr, "127.0.0.1", INET_ADDRSTRLEN);
+				else
+						/* use the external IP address */
+						strncpy(peer->ipaddr, ipaddr, INET_ADDRSTRLEN);
+
 				peer->time      = time(NULL);
 				peer->next      = peerlist;
 				peerlist        = peer;
 
-				if (verbose>1) {
-						i = 0;
-						peer = peerlist;
-						while(peer) {
-								DEBUG(LOG_DEBUG, "discover: peerlist[%d] =", i);
-								DEBUG(LOG_DEBUG, "discover:   host.name = %s", peer->host->name);
-								DEBUG(LOG_DEBUG, "discover:   host.port = %u", peer->host->port);
-								DEBUG(LOG_DEBUG, "discover:   host.id   = %u", peer->host->id);
-								DEBUG(LOG_DEBUG, "discover:   ipaddr    = %s", peer->ipaddr);
-								DEBUG(LOG_DEBUG, "discover:   time      = %s", ctime(&(peer->time)));
-								peer = peer->next ;
-								i++;
-						}
+				/* give some debug output */
+				i = 0;
+				peer = peerlist;
+				while(peer) {
+						DEBUG(LOG_DEBUG, "discover: peerlist[%d] =", i);
+						DEBUG(LOG_DEBUG, "discover:   host.name = %s", peer->host->name);
+						DEBUG(LOG_DEBUG, "discover:   host.port = %u", peer->host->port);
+						DEBUG(LOG_DEBUG, "discover:   host.id   = %u", peer->host->id);
+						DEBUG(LOG_DEBUG, "discover:   ipaddr    = %s", peer->ipaddr);
+						DEBUG(LOG_DEBUG, "discover:   time      = %s", ctime(&(peer->time)));
+						peer = peer->next ;
+						i++;
 				}
 
 				pthread_mutex_unlock(&mutexpeerlist);
 
 				/* note that this is a thread cancelation point */
 				pthread_testcancel();
-
 
 		} /* while (1) */
 

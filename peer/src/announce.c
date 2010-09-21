@@ -46,8 +46,8 @@ float frand(float min, float max) {
 }
 
 typedef struct {
-		void *message;
-		int fd;
+		void **message;
+		int *fd;
 } threadlocal_t;
 
 void cleanup_announce(void *arg) {
@@ -56,13 +56,16 @@ void cleanup_announce(void *arg) {
 
 		DEBUG(LOG_DEBUG, "cleanup_announce()");
 
-		if (threadlocal && threadlocal->message) {
-				FREE(threadlocal->message);
+		if (announceStatus==0)
+				return;
+
+		if (threadlocal && *threadlocal->message) {
+				FREE(*threadlocal->message);
 		}
 
-		if (threadlocal && threadlocal->fd>0) {
-				closesocket(threadlocal->fd);
-				threadlocal->fd = -1;
+		if (threadlocal && (*threadlocal->fd)>0) {
+				closesocket(*threadlocal->fd);
+				*threadlocal->fd = 0;
 		}
 
 		pthread_mutex_lock(&mutexstatus);
@@ -77,12 +80,12 @@ void cleanup_announce(void *arg) {
 void *announce(void *arg) {
 		int fd = 0;
 		struct sockaddr_in multicastAddr, localhostAddr;
-		hostdef_t *message = NULL;
 		unsigned char ttl = 3;
+		hostdef_t *message = NULL;
 
 		threadlocal_t threadlocal;
-		threadlocal.message = NULL;
-		threadlocal.fd = -1;
+		threadlocal.message = &message;
+		threadlocal.fd      = &fd;
 
 		/* this is for debugging */
 		pthread_mutex_lock(&mutexthreadcount);
@@ -111,9 +114,6 @@ void *announce(void *arg) {
 				goto cleanup;
 		}
 
-		/* this will be deallocated at cleanup */
-		threadlocal.message = message;
-
 		DEBUG(LOG_DEBUG, "announce: threadcount = %d", threadcount);
 
 		pthread_mutex_lock(&mutexhost);
@@ -128,9 +128,6 @@ void *announce(void *arg) {
 				DEBUG(LOG_ERR, "error: announce socket");
 				goto cleanup;
 		}
-
-		/* this will be closed at cleanup */
-		threadlocal.fd = fd;
 
 		/* set up destination address for localhost announce packet */
 		memset(&localhostAddr,0,sizeof(localhostAddr));
