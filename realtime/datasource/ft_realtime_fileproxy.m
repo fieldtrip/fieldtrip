@@ -1,6 +1,6 @@
-function realtime_fileproxy(cfg)
+function ft_realtime_fileproxy(cfg)
 
-% REALTIME_FILEPROXY reads continuous data from an EEG/MEG file and writes it to
+% FT_REALTIME_FILEPROXY reads continuous data from an EEG/MEG file and writes it to
 % a FieldTrip buffer. This works for any file format that is supported by
 % FieldTrip.
 %
@@ -10,7 +10,7 @@ function realtime_fileproxy(cfg)
 % each analyzing a specific aspect of the data concurrently.
 %
 % Use as
-%   realtime_fileproxy(cfg)
+%   ft_realtime_fileproxy(cfg)
 % with the following configuration options
 %   cfg.minblocksize         = number, in seconds (default = 0)
 %   cfg.maxblocksize         = number, in seconds (default = 1)

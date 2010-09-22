@@ -1,6 +1,6 @@
-function realtime_signalproxy(cfg)
+function ft_realtime_signalproxy(cfg)
 
-% REALTIME_SIGNALPROXY creates some random data and writes it to a FieldTrip buffer.
+% FT_REALTIME_SIGNALPROXY creates some random data and writes it to a FieldTrip buffer.
 %
 % The FieldTrip buffer is a network transparent server that allows the
 % acquisition client to stream data to it. An analysis client can connect
@@ -8,7 +8,7 @@ function realtime_signalproxy(cfg)
 % each analyzing a specific aspect of the data concurrently.
 %
 % Use as
-%   realtime_signalproxy(cfg)
+%   ft_realtime_signalproxy(cfg)
 % with the following configuration options
 %   cfg.blocksize            = number, in seconds (default = 1)
 %   cfg.channel              = cell-array with channel names

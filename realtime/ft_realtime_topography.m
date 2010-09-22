@@ -1,10 +1,10 @@
-function realtime_topography(cfg)
+function ft_realtime_topography(cfg)
 
-% REALTIME_TOPOGRAPHY reads continuous data from a file or from a data stream,
+% FT_REALTIME_TOPOGRAPHY reads continuous data from a file or from a data stream,
 % estimates the power and plots the scalp topography in real time.
 %
 % Use as
-%   realtime_topography(cfg)
+%   ft_realtime_topography(cfg)
 % with the following configuration options
 %   cfg.blocksize            = number, size of the blocks/chuncks that are processed (default = 1 second)
 %   cfg.overlap              = number, amojunt of overlap between chunks (default = 0 seconds)
@@ -32,7 +32,7 @@ function realtime_topography(cfg)
 %   cfg.blc       = 'yes';
 %   cfg.bpfilter  = [15 25];
 %   cfg.bpfreq    =	 'yes';
-%   realtime_topography(cfg);
+%   ft_realtime_topography(cfg);
 
 % Copyright (C) 2008, Robert Oostenveld
 %

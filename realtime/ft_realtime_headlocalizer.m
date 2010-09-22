@@ -4,7 +4,7 @@ function ft_realtime_headlocalizer(cfg)
 % visualization of the head localization coils in a CTF275 system.
 %
 % Use as
-%   realtime_headlocalizer(cfg)
+%   ft_realtime_headlocalizer(cfg)
 % with the following configuration options
 %   cfg.template        = string, name of the original data set to be used as template (default = [])
 %   cfg.blocksize       = number, size of the blocks/chuncks that are processed (default = 1 second)

@@ -1,11 +1,11 @@
-function realtime_onlineprocess(cfg)
+function ft_realtime_onlineprocess(cfg)
 
-% REALTIME_ONLINEPROCESS calculates the alpha lateralization index
+% FT_REALTIME_ONLINEPROCESS calculates the alpha lateralization index
 % and based on the thresholding scheme, sends the outputs to the
 % presentation machine as 1 for left, 2 for right and 3 for no move.
 %
 % Use as
-%   realtime_average(cfg)
+%   ft_realtime_onlineprocess(cfg)
 % with the following configuration options
 %   cfg.blocksize  = number, size of the blocks/chuncks that are processed (default = 1 second)
 %   cfg.channel    = cell-array, see CHANNELSELECTION (default = {'MLO' 'MRO'}')

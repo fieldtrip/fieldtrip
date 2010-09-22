@@ -1,9 +1,9 @@
-function realtime_fmriviewer(cfg)
+function ft_realtime_fmriviewer(cfg)
 
-% REALTIME_FMRIVIEWER
+% FT_REALTIME_FMRIVIEWER
 %
 % Use as
-%   realtime_fmriviewer(cfg)
+%   ft_realtime_fmriviewer(cfg)
 % with the following configuration options
 %   cfg.bufferdata = whether to start on the 'first or 'last' data that is available (default = 'last')
 %

@@ -1,9 +1,9 @@
-function realtime_packettimer(cfg)
+function ft_realtime_packettimer(cfg)
 
-% REALTIME_PACKETTIMER can be used to time the rate at which data can be processed
+% FT_REALTIME_PACKETTIMER can be used to time the rate at which data can be processed
 %
 % Use as
-%   realtime_packettimer(cfg)
+%   ft_realtime_packettimer(cfg)
 % with the following configuration options
 %   cfg.bcifun    = processing of the data (default = @bcifun_timer)
 %   cfg.npackets  = the number of packets shown in one plot (default=1000)

@@ -1,10 +1,10 @@
-function realtime_signalviewer(cfg)
+function ft_realtime_signalviewer(cfg)
 
-% REALTIME_SIGNALVIEWER is an example realtime application for online
+% FT_REALTIME_SIGNALVIEWER is an example realtime application for online
 % viewing of the data. It should work both for EEG and MEG.
 %
 % Use as
-%   realtime_signalviewer(cfg)
+%   ft_realtime_signalviewer(cfg)
 % with the following configuration options
 %   cfg.blocksize  = number, size of the blocks/chuncks that are processed (default = 1 second)
 %   cfg.channel    = cell-array, see FT_CHANNELSELECTION (default = 'all')

@@ -1,10 +1,10 @@
-function realtime_selectiveaverage(cfg)
+function ft_realtime_selectiveaverage(cfg)
 
-% REALTIME_SELECTIVEAVERAGE is an example realtime application for online
+% FT_REALTIME_SELECTIVEAVERAGE is an example realtime application for online
 % averaging of the data. It should work both for EEG and MEG.
 %
 % Use as
-%   realtime_selectiveaverage(cfg)
+%   ft_realtime_selectiveaverage(cfg)
 % with the following configuration options
 %   cfg.channel    = cell-array, see FT_CHANNELSELECTION (default = 'all')
 %   cfg.trialfun   = string with the trial function

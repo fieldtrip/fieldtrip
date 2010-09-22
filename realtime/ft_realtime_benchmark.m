@@ -1,8 +1,8 @@
-function [TW, TPW, TR, TPR] = realtime_benchmark(target)
-% REALTIME_BENCHMARK
+function [TW, TPW, TR, TPR] = ft_realtime_benchmark(target)
+% FT_REALTIME_BENCHMARK
 %
 % Use as
-%   realtime_benchmark(target)
+%   ft_realtime_benchmark(target)
 %
 % where target is the location of the buffer or file 
 % (e.g. 'buffer://localhost:1972').

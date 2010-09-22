@@ -1,10 +1,10 @@
-function realtime_powerestimate(cfg)
+function ft_realtime_powerestimate(cfg)
 
-% REALTIME_POWERESTIMATE is an example realtime application for online
+% FT_REALTIME_POWERESTIMATE is an example realtime application for online
 % power estimation. It should work both for EEG and MEG.
 %
 % Use as
-%   realtime_powerestimate(cfg)
+%   ft_realtime_powerestimate(cfg)
 % with the following configuration options
 %   cfg.channel    = cell-array, see FT_CHANNELSELECTION (default = 'all')
 %   cfg.foilim     = [Flow Fhigh] (default = [0 120])

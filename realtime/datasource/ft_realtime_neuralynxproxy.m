@@ -1,6 +1,6 @@
-function realtime_neuralynxproxy(cfg)
+function ft_realtime_neuralynxproxy(cfg)
 
-% REALTIME_NEURALYNXPROXY reads continuous data from a Neuralynx Cheetah
+% FT_REALTIME_NEURALYNXPROXY reads continuous data from a Neuralynx Cheetah
 % acquisition system and writes it to a FieldTrip buffer.
 %
 % The FieldTrip buffer is a network transparent server that allows the
@@ -9,7 +9,7 @@ function realtime_neuralynxproxy(cfg)
 % each analyzing a specific aspect of the data concurrently.
 %
 % Use as
-%   realtime_neuralynxproxy(cfg)
+%   ft_realtime_neuralynxproxy(cfg)
 %
 % The configuration should contain
 %   cfg.acquisition          = string, name of computer running the Cheetah software (default = 'fcdc284')

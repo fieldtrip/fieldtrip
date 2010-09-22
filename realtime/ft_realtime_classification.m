@@ -1,10 +1,10 @@
-function realtime_classification(cfg)
+function ft_realtime_classification(cfg)
 
-% REALTIME_CLASSIFICATION is an example realtime application for online
+% FT_REALTIME_CLASSIFICATION is an example realtime application for online
 % classification of the data. It should work both for EEG and MEG.
 %
 % Use as
-%   realtime_classification(cfg)
+%   ft_realtime_classification(cfg)
 % with the following configuration options
 %   cfg.channel    = cell-array, see FT_CHANNELSELECTION (default = 'all')
 %   cfg.trialfun   = string with the trial function
@@ -33,7 +33,7 @@ function realtime_classification(cfg)
 %   cfg = [];
 %   cfg.dataset  = 'Subject01.ds';
 %   cfg.trialfun = 'trialfun_Subject01';
-%   realtime_classification(cfg);
+%   ft_realtime_classification(cfg);
 %
 % To stop the realtime function, you have to press Ctrl-C
 
