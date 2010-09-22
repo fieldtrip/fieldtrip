@@ -363,7 +363,7 @@ if numargout>0 && UniformOutput
 end
 
 % compare the time used inside this function with the total execution time
-fprintf('approximate speedup ratio %f\n', sum(timused)/toc(stopwatch));
+fprintf('computational time = %.1f sec, elapsed time = %.1f sec, approximate speedup %.1f x\n', sum(timused), toc(stopwatch), sum(timused)/toc(stopwatch));
 
 if all(puttime>timused)
   % FIXME this could be detected in the loop above, and the strategy could automatically
