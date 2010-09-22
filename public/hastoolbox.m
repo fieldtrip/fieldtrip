@@ -10,7 +10,10 @@ function [status] = hastoolbox(toolbox, autoadd, silent)
 % autoadd = 0 means that it will not be added
 % autoadd = 1 means that give an error if it cannot be added
 % autoadd = 2 means that give a warning if it cannot be added
-% autoadd = 3 means that it try to add it silently
+% autoadd = 3 means that it remains silent if it cannot be added
+%
+% silent = 0 means that it will give some feedback about adding the toolbox
+% silent = 1 means that it will not give feedback
 
 % Copyright (C) 2005-2010, Robert Oostenveld
 %
