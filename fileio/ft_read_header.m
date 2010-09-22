@@ -28,7 +28,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %
 % The following MEG dataformats are supported
 %   CTF - VSM MedTech (*.ds, *.res4, *.meg4)
-%   Neuromag - Elektra (*.m4d, *.pdf, *.xyz)
+%   Neuromag - Elekta (*.fif)
 %   BTi - 4D Neuroimaging (*.m4d, *.pdf, *.xyz)
 %   Yokogawa (*.ave, *.con, *.raw)
 %
