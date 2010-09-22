@@ -129,7 +129,15 @@ manzana)
 	memavail[3]="auto"; timavail[3]=86399
 	OPTIONS="--verbose 4 --smartcpu 0"
 	;;
-esi-hpc1-1|esi-hpc1-2|esi-hpc1-3|esi-hpc1-4|esi-hpc1-5|esi-hpc1-6|esi-hpc1-7|esi-hpc1-8)
+esi-hpc1-1)
+	# has 48GB of RAM, 2 CPUs and 12 cores in total, this one also serves as the head node
+	memavail[ 0]=4294967296; timavail[ 0]=3599
+	memavail[ 1]=4294967296; timavail[ 1]=3599
+	memavail[ 2]=4294967296; timavail[ 2]=599
+	memavail[ 3]=4294967296; timavail[ 3]=599
+	OPTIONS="--verbose 4 --smartcpu 1"
+	;;
+esi-hpc1-2|esi-hpc1-3|esi-hpc1-4|esi-hpc1-5|esi-hpc1-6|esi-hpc1-7|esi-hpc1-8)
 	# has 48GB of RAM, 2 CPUs and 12 cores in total
 	memavail[ 0]=8589934592; timavail[ 0]=86399
 	memavail[ 1]=8589934592; timavail[ 1]=86399
