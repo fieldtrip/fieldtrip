@@ -57,19 +57,21 @@ if nargout==0
   sel = 1:numel(list);
   fprintf('there are %3d peers running in total (%d hosts, %d users)\n',length(sel), length(unique({list(sel).hostname})), length(unique({list(sel).user})));
   sel = find([list.status]==1);
-  fprintf('there are %3d peers running on %2d hosts as master\n',     length(sel), length(unique({list(sel).hostname})));
+  fprintf('there are %3d peers running on %2d hosts as master\n', length(sel), length(unique({list(sel).hostname})));
   sel = find([list.status]==2);
-  fprintf('there are %3d peers running on %2d hosts as idle slave with %5s memory available\n', length(sel), length(unique({list(sel).hostname})), print_mem(sum([list(sel).memavail])));
+  fprintf('there are %3d peers running on %2d hosts as idle slave with %s memory available\n', length(sel), length(unique({list(sel).hostname})), print_mem(sum([list(sel).memavail])));
   sel = find([list.status]==3);
   current = [list(sel).current];
   if ~isempty(current)
     memreq = sum([current.memreq]);
+    timreq = sum([current.timreq]);
   else
     memreq = 0;
+    timreq = 0;
   end
-  fprintf('there are %3d peers running on %2d hosts as busy slave with %5s memory required\n', length(sel), length(unique({list(sel).hostname})), print_mem(memreq));
+  fprintf('there are %3d peers running on %2d hosts as busy slave with %s and %s required\n', length(sel), length(unique({list(sel).hostname})), print_mem(memreq), print_tim(timreq));
   sel = find([list.status]==0);
-  fprintf('there are %3d peers running on %2d hosts as zombie\n',     length(sel), length(unique({list(sel).hostname})));
+  fprintf('there are %3d peers running on %2d hosts as zombie\n', length(sel), length(unique({list(sel).hostname})));
 end
 
 if nargin>0
@@ -83,6 +85,9 @@ if nargin>0
       list = list([list.status]==2);
     case 'busy'
       list = list([list.status]==3);
+    otherwise
+      % this is usefull if you only want the summary
+      list = [];
   end
 end
 
@@ -93,26 +98,27 @@ if nargout==0
   for i=1:numel(list)
     switch list(i).status
       case 0
-        status = 'zombie     ';
+        strlist{i} = sprintf('zombie     at %s@%s:%d\n', list(i).user, list(i).hostname, list(i).port);
       case 1
-        status = 'master     ';
+        strlist{i} = sprintf('master     at %s@%s:%d\n', list(i).user, list(i).hostname, list(i).port);
       case 2
-        status = 'idle slave ';
+        strlist{i} = sprintf('idle slave at %s@%s:%d, memavail = %5s, timavail = %s\n', list(i).user, list(i).hostname, list(i).port, print_mem(list(i).memavail), print_tim(list(i).timavail));
       case 3
-        status = 'busy slave ';
+        strlist{i} = sprintf('busy slave at %s@%s:%d, working for %s, memreq = %5s, timreq = %s\n', list(i).user, list(i).hostname, list(i).port, list(i).current.user, print_mem(list(i).current.memreq), print_tim(list(i).current.timreq));
       otherwise
         error('unknown status');
     end
-    strlist{i} = sprintf('%s at %s@%s:%d, memavail = %5s, timavail = %u\n', status, list(i).user, list(i).hostname, list(i).port, print_mem(list(i).memavail), list(i).timavail);
-    % strlist{i} = sprintf('%s at %s@%s:%d, group = %s, memavail = %5s, timavail = %10s, hostid = %u\n', status, list(i).user, list(i).hostname, list(i).port, list(i).group, print_mem(list(i).memavail), print_tim(list(i).timavail), list(i).hostid);
   end % for i
   strlist = sort(strlist);
   for i=1:numel(list)
     fprintf('%s', strlist{i});
   end
   clear list
-end
+end % if nargout
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION for pretty-printing
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function str = print_mem(val)
 if val<1024
   str = sprintf('%d bytes', val);
@@ -124,6 +130,10 @@ else
   str = sprintf('%.1f GB', val/1024^3);
 end
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION for pretty-printing
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function str = print_tim(tim)
 % partition the time in seconds into years, months, etc.
 year   = 60*60*24*7*356.25;
@@ -133,16 +143,16 @@ day    = 60*60*24;
 hour   = 60*60;
 minute = 60;
 org = tim; % remember the original time in seconds
-y = floor(tim/year  ); tim = tim - y*year;
-m = floor(tim/month ); tim = tim - m*month;
+Y = floor(tim/year  ); tim = tim - Y*year;
+M = floor(tim/month ); tim = tim - M*month;   % note capital M
 w = floor(tim/week  ); tim = tim - w*week;
 d = floor(tim/day   ); tim = tim - d*day;
 h = floor(tim/hour  ); tim = tim - h*hour;
-m = floor(tim/minute); tim = tim - m*minute;
+m = floor(tim/minute); tim = tim - m*minute;  % note small m
 s = tim;
-if y>=1
+if Y>=1
   str = sprintf('%.1f years', org/year);
-elseif m>=1
+elseif M>=1
   str = sprintf('%.1f months', org/month);
 elseif w>=1
   str = sprintf('%.1f weeks', org/week);
@@ -153,6 +163,7 @@ elseif h>=1
 elseif m>=1
   str = sprintf('%.1f minutes', org/minute);
 else
-  str = sprintf('%.1f seconds', org);
+  % note that timreq and timavail are implemented as integers
+  str = sprintf('%.0f seconds', org);
 end
 
