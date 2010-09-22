@@ -7,7 +7,7 @@ source /etc/rc.d/init.d/functions
 fi
 
 if [[ "$USER" == "public" ]]; then
-  umask 0111
+  umask 0000
 fi
 
 PLATFORM=`gcc -dumpmachine`
@@ -137,7 +137,7 @@ esi-hpc1-1)
 	memavail[ 3]=4294967296; timavail[ 3]=599
 	OPTIONS="--verbose 4 --smartcpu 1"
 	;;
-esi-hpc1-2|esi-hpc1-3|esi-hpc1-4|esi-hpc1-5|esi-hpc1-6|esi-hpc1-7|esi-hpc1-8)
+esi-hpc1-2|esi-hpc1-3|esi-hpc1-4|esi-hpc1-5|esi-hpc1-6|esi-hpc1-7|esi-hpc1-8|esi-hpc1-9|esi-hpc1-10)
 	# has 48GB of RAM, 2 CPUs and 12 cores in total
 	memavail[ 0]=8589934592; timavail[ 0]=86399
 	memavail[ 1]=8589934592; timavail[ 1]=86399
