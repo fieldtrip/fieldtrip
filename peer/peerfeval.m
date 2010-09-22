@@ -50,6 +50,9 @@ function [jobid, puttime] = peerfeval(varargin)
 % the same input arguments (e.g. from peercellfun)
 persistent previous_argin
 
+% the peer server must be running in master mode
+peer('status', 1);
+
 % check the current status of the maintenance threads
 threads = true;
 threads = threads && peer('announce', 'status');
@@ -70,9 +73,6 @@ if ~threads
   % wait some time to ensure that all peers on the network have been found
   pause(1.5);
 end
-
-% the peer server must be running in master mode
-peer('status', 1);
 
 % keep track of the time
 stopwatch = tic;
