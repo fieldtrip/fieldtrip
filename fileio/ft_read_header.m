@@ -1,7 +1,7 @@
 function [hdr] = ft_read_header(filename, varargin)
 
 % FT_READ_HEADER reads header information from a variety of EEG, MEG and LFP
-% files and represents the header information in a common data-indepentend
+% files and represents the header information in a common data-independent
 % format. The supported formats are listed below.
 %
 % Use as
