@@ -115,12 +115,16 @@ else
   labelnew = comp.topolabel(selcomp);
   
   %create data structure
+  if isfield(data, 'trialinfo'),  trialinfo  = data.trialinfo;  end
+  if isfield(data, 'sampleinfo'), sampleinfo = data.sampleinfo; end 
   data         = [];
   data.trial   = comp.trial;
   data.time    = comp.time;
   data.label   = comp.label;
   data.fsample = comp.fsample;
-  try, data.grad = comp.grad; end
+  try, data.grad       = comp.grad;  end
+  try, data.trialinfo  = trialinfo;  end
+  try, data.sampleinfo = sampleinfo; end
   
   keepunused = 'no'; %don't need to keep the original rejected components
 end
