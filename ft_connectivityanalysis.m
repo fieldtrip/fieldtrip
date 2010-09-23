@@ -95,10 +95,6 @@ normpow = 1; % default, has to be overruled e.g. in csd,
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
   data = selectdata(data, 'rpt', cfg.trials);
-  if isfield(data, 'cfg'),
-    cfg.trl    = findcfg(data.cfg, 'trl');
-    cfg.trlold = findcfg(data.cfg, 'trlold');
-  end
 end
 
 % FIXME check which methods require hasrpt
