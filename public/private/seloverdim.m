@@ -129,19 +129,6 @@ switch seldim
       data.trialinfo = data.trialinfo(tmpsel, :);
     end
    
-    % The following should NOT be done 
-    %% also try to adjust the trl description in the configuration
-    %if isfield(data, 'cfg'), %try to locate the trl in the nested configuration
-    %  trl = findcfg(data.cfg, 'trl');
-    %else
-    %  trl = [];  
-    %end
-    %if isempty(trl) || size(trl,1)<length(tmpsel)
-    %  warning('could not locate the correct trial definition ''trl'' in the data structure');
-    %else
-    %  data.cfg.trlold = trl;
-    %  data.cfg.trl    = trl(tmpsel,:);
-    %end
   case 'rpttap'
     % nothing to do
   case 'chan'

@@ -13,20 +13,6 @@ if selectrpt,
   if isfield(data, 'trialinfo'),  data.trialinfo  = data.trialinfo(selrpt,  :); end
   if isfield(data, 'offset'),     data.offset     = data.offset(selrpt);        end
 
-%   % this is old style keeping track of trl-matrix, not needed anymore
-%   if isfield(data, 'cfg')
-%     trl = findcfg(data.cfg, 'trl');
-%   else
-%     trl = [];
-%   end
-% 
-%   if isempty(trl)
-%     warning('could not locate the correct trial definition ''trl'' in the data structure');
-%   else
-%     data.cfg.trlold = trl;
-%     data.cfg.trl    = trl(selrpt,:); 
-%   end
-  
 end
 
 if selectchan,
