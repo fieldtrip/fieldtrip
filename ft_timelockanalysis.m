@@ -31,6 +31,8 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 %       the available samples in every trial will be used for the
 %       average and covariance computation. Missing values are replaced
 %       by NaN and are not included in the computation.
+%
+% See also FT_TIMELOCKGRANDAVERAGE, FT_TIMELOCKSTATISTICS
 
 % FIXME if input is one raw trial, the covariance is not computed correctly
 % 

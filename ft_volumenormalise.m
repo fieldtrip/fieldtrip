@@ -38,6 +38,8 @@ function [normalise] = ft_volumenormalise(cfg, interp)
 %   cfg.spmparams        = one can feed in parameters from a prior normalisation
 %   cfg.inputfile        = one can specifiy preanalysed saved data as input
 %   cfg.outputfile       = one can specify output as file to save to disk
+%
+% See also FT_SOURCEINTERPOLATE, FT_READ_MRI
 
 % Copyright (C) 2004-2006, Jan-Mathijs Schoffelen
 %

@@ -56,6 +56,8 @@ function [segment] = ft_volumesegment(cfg, mri)
 % 
 % As a third and optional step, you can perform a smoothing of the segmented
 % volumes.
+%
+% See also FT_READ_MRI
 
 % undocumented options
 %   cfg.keepintermediate = 'yes' or 'no'

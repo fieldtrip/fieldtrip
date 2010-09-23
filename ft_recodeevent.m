@@ -46,6 +46,8 @@ function [ev] = ft_recodeevent(cfg, event, trl)
 %                     'samplefromoffset'  number of samples from t=0 (c.f. response time)
 %                     'samplefrombegin'   number of samples from the begin of the trial
 %                     'samplefromend'     number of samples from the end   of the trial
+%
+% See also FT_DEFINETRIAL, FT_REDEFINETRIAL, FT_PREPROCESSING
 
 % Copyright (C) 2005, Robert Oostenveld
 %

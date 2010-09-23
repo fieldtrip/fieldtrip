@@ -55,6 +55,8 @@ function [output] = ft_volumelookup(cfg, volume)
 % Dependent on the input coordinates and the coordinates of the atlas, the
 % input MRI is transformed betweem MNI and Talairach-Tournoux coordinates
 % See http://www.mrc-cbu.cam.ac.uk/Imaging/Common/mnispace.shtml for more details.
+%
+% See also FT_PREPARE_ATLAS, FT_SOURCEPLOT
 
 % Copyright (C) 2008, Robert Oostenveld, Ingrid Nieuwenhuis
 %

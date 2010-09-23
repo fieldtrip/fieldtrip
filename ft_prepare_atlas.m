@@ -9,7 +9,7 @@ function [atlas] = ft_prepare_atlas(filename)
 % Use as:
 %   [atlas] = ft_prepare_atlas(filename)
 %
-% See also FT_VOLUMELOOKUP FT_SOURCEPLOT
+% See also FT_VOLUMELOOKUP, FT_SOURCEPLOT
 
 % Copyright (C) 2005-2008, Robert Oostenveld, Ingrid Nieuwenhuis
 %

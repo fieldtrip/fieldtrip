@@ -24,6 +24,7 @@ function [data] = ft_appenddata(cfg, varargin);
 % there's a slight discrepancy in the channels in the input data (e.g. missing
 % channels in one of the data structures). The function will then return a data
 % structure containing only the channels which are present in all inputs.
+%
 % See also FT_PREPROCESSING
 
 % Undocumented local options:
