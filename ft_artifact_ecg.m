@@ -83,9 +83,17 @@ if nargin == 1,
   hdr = ft_read_header(cfg.headerfile,'headerformat', cfg.headerformat);
   trl = cfg.trl;
 elseif nargin == 2,
-  cfg = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
-  hdr = fetch_header(data);
-  trl = findcfg(data.cfg, 'trl');
+  data = checkdata(data, 'hastrialdef', 'yes');
+  cfg  = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
+  hdr  = fetch_header(data);
+  if isfield(data, 'sampleinfo'), 
+    trl = data.sampleinfo;
+    for k = 1:numel(data.trial)
+      trl(k,3) = time2offset(data.time{k}, data.fsample);
+    end
+  else
+    error('the input data does not contain a valid description of the sampleinfo');
+  end  
 end
 artfctdef     = cfg.artfctdef.ecg;
 padsmp        = round(artfctdef.padding*hdr.Fs);
@@ -126,28 +134,6 @@ for j = 1:ntrl
   end
   ecg{j} = preproc(ecg{j}, artfctdef.channel, hdr.Fs, artfctdef, [], fltpadding, fltpadding);
   ecg{j} = ecg{j}.^2;
-end
-
-if nargin==2 && ~isempty(findcfg(data.cfg,'resamplefs')) && ~isempty(findcfg(data.cfg,'resampletrl')),
-  %the data have been resampled along the way, the trl is in the original sampling rate
-  %adjust this
-  warning('the data have been resampled along the way, the trl-definition is in the original sampling rate, attempt to adjust for this may introduce some timing inaccuracies');
-  trlold     = trl;
-  trl = findcfg(data.cfg,'resampletrl');
-%  fsampleold = findcfg(data.cfg,'origfs');
-%  fsamplenew = findcfg(data.cfg,'resamplefs');
-%  dfs        = fsamplenew./fsampleold;
-%  trl(:,1) = round((trlold(:,1)-1).*dfs)+1;
-%  trl(:,2) = round((trlold(:,2)-1).*dfs)+1;
-%  %I don't know how to deal with some rounding errors brought about by strange values of sampling rates etc
-%  %allow slips of 1 sample
-%  trllen   = cellfun('size',data.trial,2)';
-%  trllen2  = trl(:,2)-trl(:,1)+1;
-%  toolong  = trllen2-trllen==1;
-%  tooshort = trllen2-trllen==-1;
-%  trl(toolong,2)  = trl(toolong,2)-1;
-%  trl(tooshort,2) = trl(tooshort,2)+1;
-%  data.cfg.trl = trl;
 end
 
 tmp   = cell2mat(ecg);
