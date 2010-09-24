@@ -771,6 +771,8 @@ data.fsample = 1/(data.time{seln}(2)-data.time{seln}(1));
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [data] = raw2timelock(data)
+
+data   = checkdata(data, 'hastrialdef', 'yes');
 ntrial = numel(data.trial);
 nchan  = numel(data.label);
 if ntrial==1
@@ -792,18 +794,13 @@ else
     tmptrial(i,:,begsmp(i):endsmp(i)) = data.trial{i};
   end
 
-  % update the trial definition
-  trl = findcfg(data.cfg, 'trl');
-  if ~isempty(trl)
-    begpad = begsmp - min(begsmp);   % number of nan-samples added to the begin
-    endpad = max(endsmp) - endsmp;   % number of nan-samples added to the end
-    data.cfg.trlold = trl;
-    trl(:,1) = trl(:,1) - begpad(:);
-    trl(:,2) = trl(:,2) + endpad(:);
-    trl(:,3) = trl(:,3) - begpad(:);
-    data.cfg.trl = trl;
+  % update the sampleinfo
+  begpad = begsmp - min(begsmp);
+  endpad = max(endsmp) - endsmp;
+  if isfield(data, 'sampleinfo')
+    data.sampleinfo = data.sampleinfo + [-begpad(:) endpad(:)];
   end
-
+  
   % construct the output timelocked data
   % data.avg     = reshape(nanmean(tmptrial,     1), nchan, length(tmptime));
   % data.var     = reshape(nanvar (tmptrial, [], 1), nchan, length(tmptime))
