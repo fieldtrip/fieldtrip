@@ -26,9 +26,12 @@ playback.o: playback.c
 	
 saving_buffer.o: saving_buffer.c
 	gcc -c $^ $(CFLAGS)
+	
+ft_offline.o: ft_offline.c
+	gcc -c $^ $(CFLAGS)
 			
 playback$(SUFFIX): playback.o
 	gcc -o $@ $^ $(LDFLAGS)
 		
-saving_buffer$(SUFFIX): saving_buffer.o ../buffer/src/socketserver.o
+saving_buffer$(SUFFIX): saving_buffer.o ft_offline.o ../buffer/src/socketserver.o
 	gcc -o $@ $^ $(LDFLAGS)	

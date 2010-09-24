@@ -24,11 +24,13 @@ typedef struct {
 	double time;    /* time when this needs to be sent, relative to PUT_HDR   */
 } WriteOperation;
 
+char directory[MAXLINE];
 int ftSocket = -1;
 int numWriteOps, allocedWriteOps;
-int totalSamples, totalEvents;
-long sizeSamples, sizeEvents;
-int bytesPerSample; 
+INT64_T totalSamples, totalEvents;
+INT64_T sizeSamples, sizeEvents;
+int curSamplesFile = 0, numSamplesFiles = 1;
+unsigned int bytesPerSample; 
 
 WriteOperation *writeOps = NULL;
 FILE *fSamples;
@@ -146,7 +148,7 @@ int readTiming(const char *directory, double speedup) {
 					siz = sizeof(eventdef_t) + evdef->bufsize;
 					
 					totalEvents++;
-					printf("%i. event:  %i bytes @ %li\n", totalEvents, siz, offEvts);
+					printf("%li. event:  %i bytes @ %li\n", (long) totalEvents, siz, offEvts);
 
 					wop->size += siz;
 					offEvts += siz;
@@ -162,22 +164,28 @@ int readTiming(const char *directory, double speedup) {
 	return numWriteOps;
 }
 
-int openSamplesFile(const char *directory) {
+INT64_T openSamplesFile(const char *directory, int counter) {
 	char filename[MAXLINE];
+	long size;
 	
-	snprintf(filename, MAXLINE, "%s/samples", directory);
+	if (counter < 1) {
+		snprintf(filename, MAXLINE, "%s/samples", directory);
+	} else {
+		snprintf(filename, MAXLINE, "%s/samples%i", directory, counter);
+	}
 	fSamples = fopen(filename, "rb");
 	if (fSamples == NULL) {
-		fprintf(stderr, "Can not read file %s\n", filename);
+		if (counter < numSamplesFiles) {
+			fprintf(stderr, "Can not read file %s\n", filename);
+		}
 		return -1;
 	}
 	
 	fseek(fSamples, 0, SEEK_END);
-	sizeSamples = ftell(fSamples);
+	size = ftell(fSamples);
 	fseek(fSamples, 0, SEEK_SET);	
-	return sizeSamples;
+	return size;
 }
-
 
 int readAllEvents(const char *directory) {
 	char filename[MAXLINE];
@@ -196,7 +204,7 @@ int readAllEvents(const char *directory) {
 	if (sizeEvents > 0) {
 		eventBuffer = (char *) malloc(sizeEvents);
 		if (eventBuffer == NULL) {
-			fprintf(stderr, "Cannot allocate %li bytes for reading events\n", sizeEvents);
+			fprintf(stderr, "Cannot allocate %li bytes for reading events\n", (long) sizeEvents);
 		}
 	
 		fread(eventBuffer, 1, sizeEvents, f);
@@ -295,11 +303,35 @@ void run() {
 				if (writeOps[nextSampleOp].numSamples > 0) break;
 			}
 			if (nextSampleOp < numWriteOps) {
+				INT64_T numSamplesRead;
+				char *sampleBuffer;
+				
 				ddef->nchans    = header->nchans;
 				ddef->data_type = header->data_type;
 				ddef->bufsize   = writeOps[nextSampleOp].numSamples * bytesPerSample;
 				ddef->nsamples  = writeOps[nextSampleOp].numSamples;
-				fread(ddef+1, bytesPerSample, writeOps[nextSampleOp].numSamples, fSamples);
+				
+				sampleBuffer = (char *) (ddef+1);
+				
+				numSamplesRead = fread(sampleBuffer, bytesPerSample, writeOps[nextSampleOp].numSamples, fSamples);
+				if (numSamplesRead < writeOps[nextSampleOp].numSamples) {
+					if (curSamplesFile == numSamplesFiles) {
+						fprintf(stderr, "Error reading samples!\n");
+						break;
+					} else {
+						int remain = writeOps[nextSampleOp].numSamples - numSamplesRead;
+						
+						fclose(fSamples);
+						if (openSamplesFile(directory, ++curSamplesFile) < 0) break;
+						
+						sampleBuffer += bytesPerSample * numSamplesRead;
+						numSamplesRead = fread(sampleBuffer, bytesPerSample, remain, fSamples);
+						if (numSamplesRead < remain) {
+							fprintf(stderr, "Error reading samples!\n");
+							break;
+						}
+					}
+				}
 			}
 		}
 	}
@@ -308,7 +340,6 @@ void run() {
 
 int main(int argc, char **argv) {
 	char hostname[MAXLINE] = "localhost";
-	char directory[MAXLINE];
 	int port, nops;
 	double speed = 1.0;
 	
@@ -344,12 +375,24 @@ int main(int argc, char **argv) {
 	}
 	bytesPerSample = header->nchans * wordsize_from_type(header->data_type);
 	
-	if (openSamplesFile(directory) < 0) {
+	sizeSamples = openSamplesFile(directory, 0);
+	if (sizeSamples < 0) {
 		exit(1);
 	}
-	if (readAllEvents(directory) < 0) {
-		exit(1);
-	}	
+	fclose(fSamples);
+	while (1) {
+		INT64_T addSize = openSamplesFile(directory, numSamplesFiles);
+		if (addSize < 0) break;
+		numSamplesFiles++;
+		sizeSamples += addSize;
+		fclose(fSamples);
+	}
+	printf("Total size of samples: %li MB\n", (long) (sizeSamples >> 20));
+	/* re-open first samples file */
+	if (openSamplesFile(directory, 0) < 0) exit(1);
+	
+	if (readAllEvents(directory) < 0) exit(1);
+
 	nops = readTiming(directory, speed);
 	if (nops < 0) {
 		exit(1);
@@ -358,16 +401,16 @@ int main(int argc, char **argv) {
 		printf("No samples or events defined\n");
 		exit(0);
 	} else {
-		long siz = totalSamples * bytesPerSample;
+		INT64_T siz = totalSamples * (INT64_T) bytesPerSample;
 		
-		printf("Total samples: %i  events: %i\n", totalSamples, totalEvents);	
+		printf("Total samples: %li  events: %li\n", (long) totalSamples, (long) totalEvents);	
 		
 		if (siz > sizeSamples) {
-			fputs("Error: 'samples' file too small for given 'timing' definition\n", stderr);
+			fputs("Error: 'samples' file(s) too small for given 'timing' definition\n", stderr);
 			exit(1);
 		}
 		if (siz < sizeSamples) {
-			printf("Warning: 'samples' file contains %li bytes, but 'timing' definition specifies %li bytes\n", sizeSamples, siz);
+			printf("Warning: 'samples' file contains %li bytes, but 'timing' definition specifies %li bytes\n", (long) sizeSamples, (long) siz);
 		}
 	}
 	

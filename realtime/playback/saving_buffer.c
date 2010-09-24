@@ -11,6 +11,7 @@
 #include "buffer.h"
 #include "socketserver.h"
 #include <signal.h>
+#include <ft_offline.h>
 
 #ifdef WIN32
 #include <direct.h>
@@ -20,8 +21,6 @@
 #endif
 
 #define QUEUE_SIZE  100
-
-char *datatype_names[]={"char","uint8","uint16","uint32","uint64","int8","int16","int32","int64","float32","float64"};
 
 char content_descr[]=
 "This directory contains FieldTrip buffer data in V1 format.\n" \
@@ -50,11 +49,9 @@ int qWritePos = 0, qReadPos = 0;
 pthread_mutex_t qMutex = PTHREAD_MUTEX_INITIALIZER;
 
 ft_buffer_server_t *S;
+ft_storage_t *OS = NULL;
 volatile int keepRunning = 1;
 double timePutHeader = 0.0;
-FILE *fSamples = NULL;
-FILE *fEvents = NULL;
-FILE *fTime = NULL;
 char baseDirectory[512];
 int setCounter = 0;
 int sampleCounter = 0;
@@ -218,57 +215,16 @@ int write_contents() {
 	return 1;
 }
 
-void update_header() {
-	char name[512];
-	FILE *f;
-	
-	if (setCounter == 0) return;
-	
-	snprintf(name, sizeof(name), "%s/%04i/header", baseDirectory, setCounter);
-	f = fopen(name, "r+b");
-	if (f==NULL) {
-		fprintf(stderr, "ERROR: cannot re-open file %s\n", name);
-	} else {
-		fseek(f, 4, SEEK_SET);
-		fwrite(&sampleCounter, 4, 1, f);
-		fwrite(&eventCounter, 4, 1, f);
-		fclose(f);
-	}
-	
-	snprintf(name, sizeof(name), "%s/%04i/header.txt", baseDirectory, setCounter);
-	f = fopen(name, "a");
-	if (f==NULL) {
-		fprintf(stderr," WARNING: cannot write plain text header file\n");
-	} else {
-		fprintf(f, "nSamples=%i\n", sampleCounter);
-		fprintf(f, "nEvents=%i\n", eventCounter);
-		fclose(f);
-	}
-}
-
 int write_header_to_disk() {
 	char name[512];
-	FILE *f;
 	messagedef_t reqdef = {VERSION, GET_HDR, 0};
 	message_t request;
 	message_t *response;
+	headerdef_t *hdef;
 	int r;
 	
 	request.def = &reqdef;
 	request.buf = NULL;
-	
-	if (fSamples != NULL) {
-		fclose(fSamples);
-		fSamples = NULL;
-	}
-	if (fEvents != NULL) {
-		fclose(fEvents);
-		fEvents = NULL;
-	}
-	if (fTime != NULL) {
-		fclose(fTime);
-		fTime = NULL;
-	}		
 	
 	r = dmarequest(&request, &response);
 	if (r!=0 || response == NULL || response->def == NULL || response->buf == NULL) {
@@ -276,68 +232,14 @@ int write_header_to_disk() {
 		goto cleanup;
 	}
 	
+	hdef = (headerdef_t *) response->buf;
+	
 	setCounter++;
 	sampleCounter = eventCounter = 0;
 	snprintf(name, sizeof(name), "%s/%04i", baseDirectory, setCounter);
-	#ifdef WIN32
-	r=mkdir(name);
-	#else
-	r=mkdir(name, 0700);
-	#endif
-	if (r==-1) {
-		fprintf(stderr, "ERROR: cannot create directory %s\n", name);
-		goto cleanup;
-	}
-	snprintf(name, sizeof(name), "%s/%04i/header", baseDirectory, setCounter);
-	f = fopen(name, "wb");
-	if (f==NULL) {
-		fprintf(stderr, "ERROR: cannot create file %s\n", name);
-		goto cleanup;
-	}
-	fwrite(response->buf, 1, response->def->bufsize, f);
-	fclose(f);
 	
-	snprintf(name, sizeof(name), "%s/%04i/header.txt", baseDirectory, setCounter);
-	f = fopen(name, "w");
-	if (f!=NULL) {
-		const ft_chunk_t *cnc;
-		headerdef_t *hdef = (headerdef_t *) response->buf;
-		fprintf(f, "version=%i\n", VERSION);
-		fprintf(f, "endian=%s\n", endianness);
-		fprintf(f, "dataType=%s\n", datatype_names[hdef->data_type]);
-		fprintf(f, "fSample=%f\n", hdef->fsample);		
-		fprintf(f, "nChans=%i\n", hdef->nchans);
-		
-		cnc = find_chunk(response->buf, sizeof(headerdef_t), response->def->bufsize, FT_CHUNK_CHANNEL_NAMES);
-		if (cnc) {
-			int i;
-			const char *ni = (const char *) cnc->data;
-			for (i=0;i<hdef->nchans;i++) {
-				int n = strlen(ni);
-				fprintf(f, "%i:%s\n", i+1, ni);
-				ni+=n+1;
-			}
-		}
-		fclose(f);	
-	} else {
-		fprintf(stderr," WARNING: cannot write plain text header file\n");
-	}
+	OS = ft_storage_create(name, hdef, hdef+1, &r);
 	
-	snprintf(name, sizeof(name), "%s/%04i/samples", baseDirectory, setCounter);
-	fSamples = fopen(name, "wb");
-	if (fSamples == NULL) {
-		fprintf(stderr, "ERROR: cannot create file %s\n", name);
-	}
-	snprintf(name, sizeof(name), "%s/%04i/events", baseDirectory, setCounter);
-	fEvents = fopen(name, "wb");
-	if (fEvents == NULL) {
-		fprintf(stderr, "ERROR: cannot create file %s\n", name);
-	}
-	snprintf(name, sizeof(name), "%s/%04i/timing", baseDirectory, setCounter);
-	fTime = fopen(name, "wb");
-	if (fTime == NULL) {
-		fprintf(stderr, "ERROR: cannot create file %s\n", name);
-	}
 cleanup:
 	if (response!=NULL) {
 		if (response->def != NULL) free(response->def);
@@ -355,9 +257,7 @@ int write_samples_to_disk(int nsamps, double t) {
 	message_t *response;
 	datadef_t *ddef;
 	int r;
-	
-	if (fSamples == NULL) return 1;
-	
+		
 	ds.begsample = sampleCounter;
 	ds.endsample = sampleCounter + nsamps - 1;
 	reqdef.version = VERSION;
@@ -373,14 +273,17 @@ int write_samples_to_disk(int nsamps, double t) {
 	}
 	
 	sampleCounter += nsamps;
-	
+
 	ddef = (datadef_t *) response->buf;
-	fwrite(ddef + 1, ddef->nchans*wordsize_from_type(ddef->data_type), nsamps, fSamples);
-	
-	if (fTime != NULL) {
-		fprintf(fTime, "S %i %f\n", nsamps, t);
+	r = ft_storage_add_samples(OS, nsamps, ddef+1);
+	if (r==0) {
+		ft_timing_element_t te;
+		te.numSamples = nsamps;
+		te.numEvents = 0;
+		te.time = t;
+		r = ft_storage_add_timing(OS, &te);
 	}
-	
+			
 cleanup:
 	if (response!=NULL) {
 		if (response->def != NULL) free(response->def);
@@ -396,8 +299,6 @@ int write_events_to_disk(int nevs, double t) {
 	message_t request;
 	message_t *response;
 	int r;
-	
-	if (fSamples == NULL) return 1;
 	
 	es.begevent = eventCounter;
 	es.endevent = eventCounter + nevs - 1;
@@ -415,9 +316,13 @@ int write_events_to_disk(int nevs, double t) {
 	
 	eventCounter += nevs;
 	
-	fwrite(response->buf, 1, response->def->bufsize, fEvents);
-	if (fTime != NULL) {
-		fprintf(fTime, "E %i %f\n", nevs, t);
+	r = ft_storage_add_events(OS, response->def->bufsize, response->buf);
+	if (r==0) {
+		ft_timing_element_t te;
+		te.numSamples = 0;
+		te.numEvents = nevs;
+		te.time = t;
+		r = ft_storage_add_timing(OS, &te);
 	}
 cleanup:
 	if (response!=NULL) {
@@ -484,14 +389,19 @@ int main(int argc, char *argv[]) {
 		} else {
 			switch(queue[qReadPos].command) {
 				case PUT_HDR:
-					if (setCounter>0) update_header();
+					if (setCounter>0) ft_storage_close(OS);
 					write_header_to_disk();
+					if (OS==NULL) {
+						fprintf(stderr, "!!!!!!!!!!!!! WARNING !!!!!!!!!!\n");
+						fprintf(stderr, "!! will NOT save this dataset !!\n");
+						fprintf(stderr, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+					}
 					break;
 				case PUT_DAT:
-					write_samples_to_disk(queue[qReadPos].quantity, queue[qReadPos].t);
+					if (OS) write_samples_to_disk(queue[qReadPos].quantity, queue[qReadPos].t);
 					break;
 				case PUT_EVT:
-					write_events_to_disk(queue[qReadPos].quantity, queue[qReadPos].t);
+					if (OS) write_events_to_disk(queue[qReadPos].quantity, queue[qReadPos].t);
 					break;
 			}
 			queue[qReadPos].command = 0;
@@ -499,10 +409,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	printf("Ctrl-C pressed -- stopping buffer server...\n");
-	if (setCounter>0) update_header();
-	if (fSamples != NULL) fclose(fSamples);
-	if (fEvents != NULL) fclose(fEvents);
-	if (fTime != NULL) fclose(fTime);
+	if (setCounter>0 && OS!=NULL) ft_storage_close(OS);
 	ft_stop_buffer_server(S);
 	printf("Done.\n");
 
