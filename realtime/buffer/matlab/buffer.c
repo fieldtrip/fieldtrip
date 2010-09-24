@@ -13,8 +13,6 @@
 #include <pthread.h>
 #include "extern.h"
 
-//#include <pthread.h>
-
 #define DEFAULT_HOST "localhost"
 #define DEFAULT_PORT 1972
 
