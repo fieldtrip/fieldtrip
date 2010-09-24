@@ -73,7 +73,7 @@ function [norm] = ft_electroderealign(cfg)
 %   cfg.template.pnt(1,:) = [110 0 0]  % location of the nose
 %   cfg.template.pnt(2,:) = [0  90 0]  % left ear
 %   cfg.template.pnt(3,:) = [0 -90 0]  % right ear
-%   cfg.template.label    = {''nasion', 'lpa', 'rpa'}
+%   cfg.template.label    = {'nasion', 'lpa', 'rpa'}
 %
 % If you want to align existing electrodes to the head surface or position
 % new electrodes on the head surface, you should specify the head surface as
