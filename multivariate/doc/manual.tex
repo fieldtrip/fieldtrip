@@ -259,7 +259,7 @@ disp(cv.significance);
 \end{verbatim}
 In the example, a ten-fold cross-validation is performed by standardizing the data and applying a support vector machine. Subsequently, the classification accuracy (proportion of correctly classified trials) is computed. Finally, an approximate binomial test (McNemar test) is computed which compares the predictions with that of a naive classifier that assigns all outcomes to the majority class. The different performance measures and significance tests can be examined by consulting the help for \t{ft\_mv\_performance} and \t{ft\_mv\_significance}.
 
-We have not yet mentioned how to determine which features where responsible for the predictions. This is realized throught the \t{model} field of the cross-validator. It produces the averaged model that is produced by the last method in the specified MVA; in our case, the model of a SVM. It is up to each multivariate method to  specify how its model is defined. For example, for the above example, assuming we used only five features, we have:
+We have not yet mentioned how to determine which features were responsible for the predictions. This is realized throught the \t{model} field of the cross-validator. It produces the averaged model that is produced by the last method in the specified MVA; in our case, the model of a SVM. It is up to each multivariate method to  specify how its model is defined. For example, for the above example, assuming we used only five features, we have:
 \begin{verbatim}
 
 disp(cv.model);
@@ -415,16 +415,34 @@ Note that this improvement in performance using a very coarse search over values
 It can be of interest to use the output of several predictors as input to another predictor. This is realized as follows:
 \begin{verbatim}
 m = ft_mv_ensemble('mvas',{ft_mv_naive ft_mv_svm},'combfun',@(x)(cell2mat(x)));
-[a,b] = ft_mv_test('mva',{ft_mv_standardizer m ft_mv_naive});
+a = ft_mv_test('mva',{ft_mv_standardizer m ft_mv_naive});
+
 >> disp(a)
     0.8600
-
->> disp(b)
-     1
 \end{verbatim}
 
 
 \section{External toolboxes}
+
+The following external toolboxes are used:
+
+\begin{table}[ht]
+\centering
+\caption{External toolboxes.}
+\begin{tabular}{llll}
+{\bf name} & {\bf function} & {\bf author}\\
+\hline
+bahramisharif & elastic net & Ali Bahramisharif  \\
+farquhar & kernel methods & Jason Faquhar\\
+gerven & Bayesian methods & Marcel van Gerven\\
+glmnet & Fortran version of elastic net & Jerome Friedman\\
+herman & common spatial patterns & Pawel Herman\\
+L1General & L1 regularization & Mark Schmidt\\
+utilities & global functions & Marcel van Gerven
+\end{tabular}
+\label{measure}
+\end{table}
+
 
 \bibliographystyle{plain}
 \def\refname{}

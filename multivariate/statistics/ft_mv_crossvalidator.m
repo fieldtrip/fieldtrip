@@ -35,8 +35,8 @@ classdef ft_mv_crossvalidator
       parallel    = false;  % run in parallel mode 
       
       mva                   % multivariate analysis
-      design                % real outputs
-      post                  % predicted outputs
+      design                % real outputs of size datasets x nr of folds
+      post                  % predicted outputs of size datasets x nr of folds
             
       trainfolds;           % partitioning of the training examples 
       testfolds;            % partitioning of the test examples
@@ -238,8 +238,8 @@ classdef ft_mv_crossvalidator
         function train_parallel()
            
           % we need to construct all trainsets beforehand
-          trainX = cell(nf,1);
-          trainY = cell(nf,1);
+          trainX = cell(1,nf);
+          trainY = cell(1,nf);
           for f=1:nf 
             
             if nsets == 1
@@ -264,13 +264,13 @@ classdef ft_mv_crossvalidator
               
             end
           end
-          tproc = peercellfun(@run_parallel,obj.mva,repmat({'train'},[1 nf]),trainX,trainY,'UniformOutput',false);
+          tproc = peercellfun(@run_parallel,obj.mva',repmat({'train'},[1 nf]),trainX,trainY,'UniformOutput',false);
           clear trainX
           clear trainY
             
           % we need to construct all testsets beforehand
-          testX  = cell(nf,1);
-          testY  = cell(nf,1);
+          testX  = cell(1,nf);
+          testY  = cell(1,nf);
           for f=1:nf
             
             if nsets == 1
@@ -295,10 +295,10 @@ classdef ft_mv_crossvalidator
               
             end
           end
-          res = peercellfun(@run_parallel,tproc,repmat({'test'},[1 nf]),testX,'UniformOutput',false);
+          res = peercellfun(@run_parallel,tproc,repmat({'test'},[nf 1]),testX,'UniformOutput',false);
           if ~iscell(res), res = {res}; end
           obj.post = res;
-          obj.design = testY';
+          obj.design = testY;
           clear testX
           clear testY
           
