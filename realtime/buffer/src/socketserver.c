@@ -91,7 +91,7 @@ void *_buffer_socket_func(void *arg) {
 		} else {
 			FD_SET(sock, &writeSet);
 		}
-		sel = select(sock+1, &readSet, &writeSet, NULL, &tv);
+		sel = select((int) sock+1, &readSet, &writeSet, NULL, &tv);
 		if (sel == 0) continue;
 		if (sel < 0) {
 			fprintf(stderr, "Error in 'select' operation - closing client connection.\n");
@@ -270,7 +270,7 @@ void *_buffer_server_func(void *arg) {
 		FD_ZERO(&readSet);
 		FD_SET(SC->serverSocket, &readSet);
 
-		sel = select(SC->serverSocket + 1, &readSet, NULL, NULL, &tv);
+		sel = select((int) SC->serverSocket + 1, &readSet, NULL, NULL, &tv);
 		
 		if (sel == 0) continue;
 		

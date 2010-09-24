@@ -80,7 +80,11 @@
 #  ifdef PTW32_BUILD
 #    define PTW32_DLLPORT __declspec (dllexport)
 #  else
-#    define PTW32_DLLPORT __declspec (dllimport)
+#  	 ifdef __LCC__
+#      define PTW32_DLLPORT __cdecl
+#    else
+#      define PTW32_DLLPORT __declspec (dllimport)
+#    endif
 #  endif
 #else
 #  define PTW32_DLLPORT

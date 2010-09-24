@@ -85,7 +85,52 @@
 	#include <winsock2.h>
 
 	#define strcasecmp(a,b) (strcmpi(a,b))
+#elif defined (COMPILER_LCC)
+	#include <winsock2.h>
+	#include <windows.h>
+	#include "win32/gettimeofday.h"
+	
+	#define strcasecmp(a,b) (strcmpi(a,b))
+	
+	#define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
+	#define usleep(x)    (Sleep((x)/1000))
 
+	#ifndef UINT8_T	
+		#define UINT8_T   unsigned char
+	#endif
+	
+	#ifndef INT8_T		
+		#define INT8_T    char
+	#endif
+
+	#ifndef UINT16_T		
+		#define UINT16_T  unsigned short
+	#endif
+
+	#ifndef INT16_T		
+		#define INT16_T   short
+	#endif
+
+	#ifndef UINT32_T		
+		#define UINT32_T  unsigned int
+	#endif
+	
+	#ifndef INT32_T		
+		#define INT32_T   int
+	#endif
+	
+	#ifndef UINT64_T		
+		#define UINT64_T  unsigned long long
+	#endif
+	
+	#ifndef INT64_T		
+		#define INT64_T   long long
+	#endif
+	
+/*	#define PTW32_STATIC_LIB 
+	#define __cdecl
+	#define PTW_CDECL
+*/
 #endif /* compiler */
 
 #endif /* platform */

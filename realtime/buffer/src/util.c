@@ -14,8 +14,9 @@
 #include "extern.h"
 
 unsigned int bufread(int s, void *buf, unsigned int numel) {
-		unsigned int numcall = 0, numthis = 0, numread = 0, verbose = 0;
-
+		unsigned int numcall = 0, numread = 0, verbose = 0;
+		int numthis = 0;
+		
 		while (numread<numel) {
 
 				numthis = recv(s, (char*)buf+numread, numel-numread, 0);
@@ -41,7 +42,8 @@ unsigned int bufread(int s, void *buf, unsigned int numel) {
 }
 
 unsigned int bufwrite(int s, const void *buf, unsigned int numel) {
-		unsigned int numcall = 0, numthis = 0, numwrite = 0, verbose = 0;
+		int numthis = 0;
+		unsigned int numcall = 0, numwrite = 0, verbose = 0;
 
 		while (numwrite<numel) {
 
@@ -249,8 +251,8 @@ unsigned int wordsize_from_type(UINT32_T data_type) {
 	return 0;
 }
 
-const ft_chunk_t *find_chunk(const void *buf, int offset0, int size, UINT32_T chunk_type) {
-	int bufpos = offset0;
+const ft_chunk_t *find_chunk(const void *buf, unsigned int offset0, unsigned int size, UINT32_T chunk_type) {
+	unsigned int bufpos = offset0;
 	while (bufpos + sizeof(ft_chunkdef_t) <= size) {
 		const ft_chunk_t *chunk = (ft_chunk_t *) ((char *)buf + bufpos);
 		if (chunk->def.type == chunk_type) return chunk;
@@ -350,4 +352,62 @@ int open_unix_connection(const char *name) {
         
 	return s;
 }
+#endif
+
+
+
+#ifdef WIN32
+#ifndef COMPILER_MINGW
+
+/*
+ * timeval.h    1.0 01/12/19
+ *
+ * Defines gettimeofday, timeval, etc. for Win32
+ *
+ * By Wu Yongwei
+ *
+ */
+
+//#define EPOCHFILETIME (116444736000000000i64)
+#define EPOCHFILETIME ((INT64_T) 116444736000000000LL)
+
+#ifdef COMPILER_LCC
+VOID STDCALL GetSystemTimeAsFileTime(LPFILETIME);
+#endif
+
+int gettimeofday(struct timeval *tv, struct timezone *tz)
+{
+    FILETIME        ft;
+    LARGE_INTEGER   li;
+    INT64_T         t;
+    static int      tzflag;
+    
+    if (tv) {
+        GetSystemTimeAsFileTime(&ft);
+        li.LowPart  = ft.dwLowDateTime;
+        li.HighPart = ft.dwHighDateTime;
+        t  = li.QuadPart;       /* In 100-nanosecond intervals */
+        t -= EPOCHFILETIME;     /* Offset to the Epoch time */
+        t /= 10;                /* In microseconds */
+        tv->tv_sec  = (long)(t / 1000000);
+        tv->tv_usec = (long)(t % 1000000);
+    }
+    
+	#ifndef COMPILER_LCC
+	/* LCC that comes with Matlab has problems with _timezone and _daylight, 
+		and we don't need it anyway */
+    if (tz) {
+        if (!tzflag) {
+            _tzset();
+            tzflag++;
+        }
+        tz->tz_minuteswest = _timezone / 60;
+        tz->tz_dsttime = _daylight;
+    }
+	#endif
+
+    return 0;
+}
+
+#endif
 #endif

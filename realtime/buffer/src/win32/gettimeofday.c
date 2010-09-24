@@ -1,3 +1,5 @@
+/* SK: This has now been moved into util.c for simplification of compile scripts and Makefiles */
+
 /*
  * timeval.h    1.0 01/12/19
  *

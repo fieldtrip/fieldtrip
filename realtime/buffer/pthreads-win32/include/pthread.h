@@ -537,7 +537,11 @@ extern "C"
 #  ifdef PTW32_BUILD
 #    define PTW32_DLLPORT __declspec (dllexport)
 #  else
-#    define PTW32_DLLPORT __declspec (dllimport)
+#  	 ifdef __LCC__
+#      define PTW32_DLLPORT __cdecl
+#    else
+#      define PTW32_DLLPORT __declspec (dllimport)
+#    endif
 #  endif
 #else
 #  define PTW32_DLLPORT
@@ -572,7 +576,11 @@ typedef ptw32_handle_t pthread_t;
 typedef struct pthread_attr_t_ * pthread_attr_t;
 typedef struct pthread_once_t_ pthread_once_t;
 typedef struct pthread_key_t_ * pthread_key_t;
+#ifdef __LCC__
+typedef void * pthread_mutex_t;
+#else
 typedef struct pthread_mutex_t_ * pthread_mutex_t;
+#endif
 typedef struct pthread_mutexattr_t_ * pthread_mutexattr_t;
 typedef struct pthread_cond_t_ * pthread_cond_t;
 typedef struct pthread_condattr_t_ * pthread_condattr_t;

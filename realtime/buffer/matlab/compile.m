@@ -1,17 +1,18 @@
-function compile(cc)
+function compile(cc, libpath)
 
 % COMPILE  This script/function is used for compiling and linking the 'buffer' MEX file.
 %
 % On Linux and MacOS X, you should just be able to call this function without arguments.
 % 
-% On Windows, you need to select a compiler using one of the following options:
-%   compile('bcb')   - Borland C++ Builder
+% On Windows, you can select a compiler using one of the following options:
+%   compile('lcc')   - LCC compiler (shipped with Matlab on 32bit platforms)
+%   compile('bcb')   - Borland C++ Builder 
 %   compile('bcc55') - Borland C++ 5.5 (free command line tools)
 %   compile('mingw') - MinGW (GCC port without cygwin dependency)
 %   compile('vc')    - Visual Studio C++ 2005 or 2008
 %
 % Please note that this script does NOT set up your MEX environment for you, so in case
-% you haven't selected a C compiler on Windows yet, you need to type 'mex -setup' first
+% you haven't selected the C compiler on Windows yet, you need to type 'mex -setup' first
 % to choose either the Borland or Microsoft compiler. If you want to use MinGW, you also
 % need to install Gnumex (http://gnumex.sourceforget.net), which comes with its own
 % procedure for setting up the MEX environment.
@@ -29,38 +30,76 @@ if ispc
 	% If you are having problems compiling the buffer, you can try to tweak
 	% the variables 'extra_cflags' and 'ldflags' specific to your compiler,
 	% or you can add your own compiler flags.
-
-	extra_cflags = '-I../pthreads-win32/include';
+	
+	if strcmp(computer,'PCWIN64')
+		extra_cflags = '-I../pthreads-win64/include';	
+		amd64 = true;
+	else
+		extra_cflags = '-I../pthreads-win32/include';
+		amd64 = false;
+	end
 	suffix = 'obj';
 
-	if nargin<1	        % this is just to make sure the switch statement works
-		cc = 'NONE';    % but you can also put a default entry here
-		if strcmp(computer,'PCWIN64')
-		   cc = 'VC64'; % seems to be the only supported one on 64-bit 
+	if nargin<1
+		cc = 'LCC';
+		if amd64
+			error('Running on 64-bit Windows. Please setup your compiler environment for either Visual C++ or MinGW64, and then call compile(''vc'') or compile(''mingw'').');
 		end
 	end
 	switch upper(cc)
 		case 'BCB'
-			ldflags = '-L../src -L../pthreads-win32/lib -lbuffer -lpthreadVC2.bcb';
+			ldflags = '-L../pthreads-win32/lib -lpthreadVC2.bcb';
 		case 'BCC55'
-			ldflags = '-L../src -L../pthreads-win32/lib -lbuffer -lpthreadVC2_bcc55';
+			ldflags = '-L../pthreads-win32/lib -lpthreadVC2_bcc55';
 		case 'MINGW'
-			%ldflags = '-L../src -L../pthreads-win32/lib -lbuffer -lpthreadGC2';
-			% For MinGW/Gnumex, it seems to be easier to just directly refer to the archives
-			ldflags = '../src/libbuffer.a ../pthreads-win32/lib/libpthreadGC2.a C:/mingw/lib/libws2_32.a';
+			% For MinGW/Gnumex, it seems to be easier to just directly refer to the archives, since
+			% the MEX tools expect libraries to end with .lib, whereas MinGW uses the .a suffix.
+			if amd64
+				ldflags = '../pthreads-win64/lib/libpthread.a';
+				ws2lib = 'C:/mingw64/x86_64-w64-mingw32/lib/libws2_32.a';
+			else
+				ldflags = '../pthreads-win32/lib/libpthreadGC2.a';
+				ws2lib = 'C:/mingw/lib/libws2_32.a';
+			end
+			if nargin<2
+				if ~exist(ws2lib,'file')
+					fprintf(1,'Library file WS2_32 does not exist in guessed location %s.\n', ws2lib);
+					fprintf(1,'Please re-run this script with a second argument pointing to your MinGW\n');
+					fprintf(1,'installation''s LIB folder, e.g.,   compile(''mingw'',''D:\MinGW\lib''\n');
+					error('unsuccesful');
+				end				
+			else
+				ws2lib = [libpath '/libws2_32.a'];
+				if ~exist(ws2lib,'file')
+					fprintf(1,'Library file %s does not exist.\n', ws2lib);
+					error('unsuccesful');
+				end
+			end
+			ldflags = [ldflags ' ' ws2lib];
 		case 'VC'
-			ldflags = '-L../src -L../pthreads-win32/lib -lbuffer -lpthreadVC2 ';
-		case 'VC64'
-			ldflags = '-L../src -L../pthreads-win64/lib -lbuffer -lpthreadVC2 ws2_32.lib';
+			if amd64
+				ldflags = '-L../pthreads-win64/lib -lpthreadVC2 ws2_32.lib';			
+			else
+				ldflags = '-L../pthreads-win32/lib -lpthreadVC2 ws2_32.lib ';
+			end
+		case 'LCC'
+			ldflags = '-L../pthreads-win32/lib  -lpthreadGC2_lcc';			
+			ldflags = [ldflags ' "' matlabroot '\sys\lcc\lib\wsock32.lib"'];
+			%ldflags = [ldflags ' "' matlabroot '\sys\lcc\lib\kernel32.lib"'];
 		otherwise
-			error 'On a PC, you must call this function with a string argument to select a compiler';
+			error 'Unsupported compile - select one of LCC, VC, MINGW, BCC55, BCB';
 	end
 else
 	% On POSIX systems such as MacOS X and Linux, the following should work without tweaking
-	ldflags = '-lbuffer -L../src';
+	ldflags = '-lpthread';
 	extra_cflags = '';
 	suffix = 'o';
 end
+
+% This is the list of C files from the low-level buffer implementation that we need
+libfuncs = {'util', 'printstruct', 'clientrequest', ...
+			'tcprequest', 'tcpserver', 'tcpsocket', ...
+			'extern', 'dmarequest', 'endianutil', 'cleanup'};
 
 % If you want to add a new helper function to the MEX file, you should just add 
 % its name here (without the .c suffix)
@@ -75,9 +114,21 @@ helpers = {'buffer_gethdr', 'buffer_getdat', 'buffer_getevt', ...
 % this will become the list of objects files for inclusion during linking
 allObjects = '';
 
+% This is for compiling all the library functions (no linking yet).
+for i=1:length(libfuncs)
+	fprintf(1,'Compiling library functions in %s.c ...\n', libfuncs{i});
+	cmd = sprintf('mex -c %s %s ../src/%s.c', cflags, extra_cflags, libfuncs{i});
+	eval(cmd);
+
+	% append newly created object file to the list of files we need to link
+	allObjects = sprintf('%s %s.%s', allObjects, libfuncs{i}, suffix);
+end
+
+fprintf(1,'\n');
+
 % This is for compiling all the helper functions (no linking yet).
 for i=1:length(helpers)
-	fprintf(1,'Compiling helper functions in %s ...\n', helpers{i});
+	fprintf(1,'Compiling helper functions in %s.c ...\n', helpers{i});
 	cmd = sprintf('mex -c %s %s %s.c', cflags, extra_cflags, helpers{i});
 	eval(cmd);
 

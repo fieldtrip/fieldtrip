@@ -5,20 +5,24 @@
  *
  */
 
-#include <pthread.h>
 #include <string.h>
 
 #include "mex.h"
 #include "matrix.h"
 #include "buffer.h"
+#include <pthread.h>
 #include "extern.h"
+
+//#include <pthread.h>
 
 #define DEFAULT_HOST "localhost"
 #define DEFAULT_PORT 1972
 
 
-#ifdef WIN32
-#define sleep(x)   Sleep((x)*1000)
+#ifdef WIN32 
+#  ifndef COMPILER_LCC
+#    define sleep(x)   Sleep((x)*1000)
+#  endif
 #endif
 
 /* This struct is used for keeping a linked list of hostnames / ports / sockets.

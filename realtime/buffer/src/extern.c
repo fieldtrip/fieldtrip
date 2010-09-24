@@ -16,6 +16,7 @@
  *
  */
 
+#include "buffer.h"
 #include <pthread.h>
 
 pthread_mutex_t mutexstatus = PTHREAD_MUTEX_INITIALIZER;

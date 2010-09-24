@@ -166,10 +166,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\gettimeofday.h"
-				>
-			</File>
-			<File
 				RelativePath=".\message.h"
 				>
 			</File>
@@ -214,10 +210,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\win32\gettimeofday.c"
-				>
-			</File>
-			<File
 				RelativePath=".\printstruct.c"
 				>
 			</File>
@@ -239,6 +231,10 @@
 			</File>
 			<File
 				RelativePath=".\util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\endianutil.c"
 				>
 			</File>
 		</Filter>
