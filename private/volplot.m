@@ -250,7 +250,9 @@ else
 
   fprintf('value of %f in voxel %d at [%.02f %.02f %.02f]\n', double(dat(xi, yi, zi)), sub2ind(dim, xi, yi, zi), x(xi), y(yi), z(zi));
 
+  warning off
   delete(subplot(2,2,4));   % delete the old colorbar
+  warning on
   h1 = subplot(2,2,1);
   h2 = subplot(2,2,2);
   h3 = subplot(2,2,3);
