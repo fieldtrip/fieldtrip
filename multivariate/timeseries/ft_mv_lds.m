@@ -323,7 +323,7 @@ classdef ft_mv_lds < ft_mv_timeseries
           V{n-1} = V1{n-1} + J{n-1} * (V{n} - P)*J{n-1}';
 
           if n<T
-            VP{n}=V{n}*J{n-1}'+J{n}*(VP{n+1}-A*V1{n})*J{n-1}';
+            VP{n}=V1{n}*J{n-1}'+J{n}*(VP{n+1}-A*V1{n})*J{n-1}';
           end
           
         else
