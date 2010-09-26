@@ -41,7 +41,7 @@ classdef ft_mv_lds < ft_mv_timeseries
 %
 % EXAMPLE:
 %
-% rand('seed',3); randn('seed',3);
+% rand('seed',4); randn('seed',3);
 % 
 % nsamples = 1000; ncov = 10; ncycles = 10;
 % Y = sin(ncycles * 2 * pi * (1:nsamples) ./ nsamples)';
@@ -147,16 +147,17 @@ classdef ft_mv_lds < ft_mv_timeseries
       obj.R   = (obj.R + obj.R') ./ 2 + obj.epsilon*eye(size(obj.R));
       obj.Q   = (obj.Q + obj.Q') ./ 2 + obj.epsilon*eye(size(obj.Q));
         
-      % DEBUG
+%       % DEBUG
 %       [obj.A, obj.C, obj.Q, obj.R, obj.mu0, obj.V0, obj.loglik] = learn_kalman(X,obj.A,obj.C,obj.Q,obj.R,obj.mu0,obj.V0);
+%       obj.loglik = obj.loglik(2:end);
 %       return;
       
-      oldLL = -inf;
-      LL = 0;
+      oldLL = 0;
+      LL = -inf;
       loglik = [];
       iter = 0;
       while abs(LL - oldLL) > obj.thresh && iter < obj.maxiter
-        
+    
         oldLL = LL;
         
         % E step

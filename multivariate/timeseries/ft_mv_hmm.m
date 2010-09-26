@@ -48,17 +48,19 @@ classdef ft_mv_hmm < ft_mv_timeseries
               
       % flip
       if iscell(X)
+        nclasses = 0;
         for c=1:length(X)
           X{c} = X{c}';
           Y{c} = Y{c}';
+          nclasses = max(nclasses,max(Y{1}));        
         end
-        nobs = size(X{1},1);
+        nobs = size(X{1},1);        
       else
         X = X';
         Y = Y';
         nobs = size(X,1);
+        nclasses = max(Y);
       end
-      nclasses = max(Y);
       
       cov_prior = repmat(obj.cov_prior*eye(nobs,nobs), [1 1 nclasses]);
       [obj.prior, obj.transmat, obj.mu, obj.Sigma] = gausshmm_train_observed(X, Y, nclasses,'cov_type',obj.cov_type,...
