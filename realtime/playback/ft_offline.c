@@ -15,7 +15,6 @@ static char *datatype_names[]={"char","uint8","uint16","uint32","uint64","int8",
 
 ft_storage_t *ft_storage_create(const char *directory, const headerdef_t *hdef, const void *chunks, int *errCode) {
 	ft_storage_t *S;
-	FILE *f;
 	int r;
 	char endianness[10];
 	union {
@@ -87,7 +86,7 @@ ft_storage_t *ft_storage_create(const char *directory, const headerdef_t *hdef, 
 	fprintf(S->fHeaderTxt, "dataType=%s\n", datatype_names[hdef->data_type]);
 	fprintf(S->fHeaderTxt, "fSample=%f\n", hdef->fsample);		
 	fprintf(S->fHeaderTxt, "nChans=%i\n", hdef->nchans);
-	
+
 	if (hdef->bufsize>0 && chunks) {
 		const ft_chunk_t *cnc;
 		/* write all chunks to binary header */
@@ -100,7 +99,7 @@ ft_storage_t *ft_storage_create(const char *directory, const headerdef_t *hdef, 
 			const char *ni = (const char *) cnc->data;
 			for (i=0;i<hdef->nchans;i++) {
 				int n = strlen(ni);
-				fprintf(f, "%i:%s\n", i+1, ni);
+				fprintf(S->fHeaderTxt, "%i:%s\n", i+1, ni);
 				ni+=n+1;
 			}
 		}
