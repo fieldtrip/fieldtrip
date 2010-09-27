@@ -115,8 +115,8 @@ else
   labelnew = comp.topolabel(selcomp);
   
   %create data structure
-  if isfield(data, 'trialinfo'),  trialinfo  = data.trialinfo;  end
-  if isfield(data, 'sampleinfo'), sampleinfo = data.sampleinfo; end 
+  if nargin==3 && isfield(data, 'trialinfo'),  trialinfo  = data.trialinfo;  end
+  if nargin==3 && isfield(data, 'sampleinfo'), sampleinfo = data.sampleinfo; end 
   data         = [];
   data.trial   = comp.trial;
   data.time    = comp.time;
