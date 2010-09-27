@@ -1,13 +1,13 @@
-function ft_realtime_synchronous(cfg)
+function cmd = ft_realtime_synchronous(cfg)
 
 % FT_REALTIME_SYNCHRONOUS is an example realtime application for
 % synchronous (trigger-based) brain-computer interfaces
 %
 % Use as
 %
-%   ft_realtime_synchronous(cfg)
+%   cmd = ft_realtime_synchronous(cfg)
 %
-% with the following configuration options
+% where cmd is the last processed command and cfg has the following configuration options
 %   cfg.bcifun     = the BCI function that is called
 %   cfg.trigger    = the trigger values that should be processed (default = 'all')
 %   cfg.blocksize  = number, size of the blocks/chuncks that are processed in seconds (default = 1)
@@ -17,6 +17,9 @@ function ft_realtime_synchronous(cfg)
 %                    available when the function _starts_ (default = 'last')
 %   cfg.jumptoeof  = whether to start on the 'first or 'last' data that is
 %                    available when the function _starts_ (default = 'last')
+%
+%   cfg.ostream    = the output stream that is used to send a command via
+%                     write_event (default = []
 %
 % The source of the data is configured as
 %   cfg.dataset       = string
@@ -29,9 +32,9 @@ function ft_realtime_synchronous(cfg)
 %   cfg.eventformat   = string, default is determined automatic
 %
 % trials that correspond to any of the triggers in the vector cfg.trigger will be
-% processed. By default all triggers will be processed (cfg.trigger = 'all');
-% The condition to which a data segment belongs is passed to bcifun using
-% cfg.condition.
+% processed. By default all trigger values will be processed (cfg.trigger =
+% 'all') and may be of any type (cfg.type = 'all'). The condition to which a 
+% data segment belongs is passed to bcifun using cfg.condition.
 %
 % The bcifun must be of the form
 %   
@@ -65,7 +68,8 @@ function ft_realtime_synchronous(cfg)
 % set the default configuration options
 
 if ~isfield(cfg, 'bcifun'),         cfg.bcifun = @bcifun_latidx; end % example function computes lateralization index
-if ~isfield(cfg, 'trigger'),        cfg.trigger = 'all';         end % triggers to process
+if ~isfield(cfg, 'trigger'),        cfg.trigger = 'all';         end % trigger values to process
+if ~isfield(cfg, 'type'),           cfg.type = 'all';            end % trigger type to process
 if ~isfield(cfg, 'nsamples'),       cfg.nsamples = inf;          end % number of samples to process
 if ~isfield(cfg, 'blocksize'),      cfg.blocksize = 1;           end % in seconds
 if ~isfield(cfg, 'offset'),         cfg.offset = 0;              end % in seconds
@@ -78,6 +82,7 @@ if ~isfield(cfg, 'eventformat'),    cfg.eventformat = [];        end % default i
 if ~isfield(cfg, 'dataset') && ~isfield(cfg, 'header') && ~isfield(cfg, 'datafile')
   cfg.dataset = 'buffer://localhost:1972';
 end
+if ~isfield(cfg, 'ostream'),        cfg.ostream = [];            end % no output by default
 
 % translate dataset into datafile+headerfile
 cfg = checkconfig(cfg, 'dataset2files', 'yes');
@@ -116,50 +121,72 @@ while cfg.count < cfg.nsamples
 
   % read new events
   event = read_event(cfg.dataset, 'minsample', minsample+1);  
- 
+
+  if ~isempty(event)
+    fprintf('found %d events\n',length(event));
+  end
+  
   for j=1:length(event)
       
-      if strcmp(cfg.trigger,'all')
-          cfg.condition = event(j).value;
-      else
-          [m1,cfg.condition] = ismember(event(j).value,cfg.trigger);
-      end    
-      if isempty(cfg.condition), cfg.condition = nan; end
-      
-      if strcmp(cfg.trigger,'all') || (~isempty(m1) && m1)
-          % catched a trigger of interest
+     bprocess = (strcmp(cfg.type,'all') | strcmp(event(j).type,cfg.type)) & ...
+                (strcmp(cfg.trigger,'all') | ismember(event(j).value,cfg.trigger));
+        
+     if bprocess % catched a trigger of interest
           
-          % we do not consider samples < 1
-          begsample = max(1,event(j).sample + offset);
-          endsample = max(1,begsample + blocksize);
-                    
-          % remember up to where the data was read
-          minsample = endsample;
-          cfg.count = cfg.count + 1;
-          fprintf('processing segment %d from sample %d to %d, trigger = %d\n', cfg.count, begsample, endsample, cfg.condition);
-          
-          % read data segment from buffer
-          dat = double(read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample,...
-            'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false));
+       cfg.condition = event(j).value;
+       
+       % we do not consider samples < 1
+       begsample = max(1,event(j).sample + offset);
+       endsample = max(1,begsample + blocksize);
+       
+       % remember up to where the data was read
+       minsample = endsample;
+       cfg.count = cfg.count + 1;
+       fprintf('processing segment %d from sample %d to %d, trigger = %d\n', cfg.count, begsample, endsample, cfg.condition);
+       
+       % read data segment from buffer
+       dat = double(read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample,...
+         'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false));
 
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        % from here onward it is specific to the display of the data
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        
-        % put the data in a fieldtrip-like raw structure
-        data.trial{1} = dat;
-        data.time{1}  = offset2time(0, hdr.Fs, endsample-begsample+1);
-        data.label    = hdr.label(chanindx);
-        data.hdr      = hdr;
-        data.fsample  = hdr.Fs;
-        data.grad     = [];
-        
-        % apply BCI function
-        cmd = cfg.bcifun(cfg,data);
-        fprintf('%s\n',num2str(cmd));
-        
-        cfg.count = cfg.count +  1;
-
-      end % trigger of interest
+       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+       % from here onward it is specific to the display of the data
+       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+       
+       % put the data in a fieldtrip-like raw structure
+       data.trial{1} = dat;
+       data.time{1}  = offset2time(0, hdr.Fs, endsample-begsample+1);
+       data.label    = hdr.label(chanindx);
+       data.hdr      = hdr;
+       data.fsample  = hdr.Fs;
+       data.grad     = [];
+       
+       % apply BCI function
+       cmd = cfg.bcifun(cfg,data);
+       
+       if ~isempty(cfg.ostream)
+         
+         fprintf('writing command %s to %s\n',num2str(cmd),cfg.ostream);
+         
+         % send command
+         evt.type = 'uint';
+         evt.offset = [];
+         evt.duration = [];
+         evt.sample = abs(data.time{1}(1)*hdr.Fs);
+         evt.timestamp = data.time{1}(1);
+         evt.value = cmd;
+         
+         write_event(cfg.ostream,cmdevent);
+         
+       else
+         fprintf('generated command %s\n',num2str(cmd));
+       end
+       
+       cfg.count = cfg.count +  1;
+       
+       if cfg.count == cfg.nsamples
+         break;
+       end
+       
+     end % trigger of interest
   end % if event
 end % while true

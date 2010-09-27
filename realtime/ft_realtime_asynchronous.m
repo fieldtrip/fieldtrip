@@ -1,13 +1,13 @@
-function ft_realtime_asynchronous(cfg)
+function cmd = ft_realtime_asynchronous(cfg)
 
 % FT_REALTIME_ASYNCHRONOUS is an example realtime application for
 % asynchronous brain-computer interfaces
 %
 % Use as
 %
-%   ft_realtime_asynchronous(cfg)
+%   cmd = ft_realtime_asynchronous(cfg)
 %
-% with the following configuration options
+% where cmd is the last processed command and cfg has the following configuration options
 %   cfg.bcifun     = the BCI function that is called
 %   cfg.blocksize  = number, size of the blocks/chuncks that are processed in seconds (default = 1)
 %   cfg.overlap    = overlap between blocks in seconds (default = 0)
@@ -26,6 +26,9 @@ function ft_realtime_asynchronous(cfg)
 %   cfg.dataformat    = string, default is determined automatic
 %   cfg.headerformat  = string, default is determined automatic
 %   cfg.eventformat   = string, default is determined automatic
+%
+%   cfg.ostream    = the output stream that is used to send a command via
+%                     write_event (default = []
 %
 % The bcifun must be of the form
 %   
@@ -71,6 +74,7 @@ if ~isfield(cfg, 'eventformat'),    cfg.eventformat = [];        end % default i
 if ~isfield(cfg, 'dataset') && ~isfield(cfg, 'header') && ~isfield(cfg, 'datafile')
   cfg.dataset = 'buffer://localhost:1972';
 end
+if ~isfield(cfg, 'ostream'),        cfg.ostream = [];            end % no output by default
 
 % translate dataset into datafile+headerfile
 cfg = checkconfig(cfg, 'dataset2files', 'yes');
@@ -151,7 +155,24 @@ while cfg.count < cfg.nsamples
 
     % apply BCI function
     cmd = cfg.bcifun(cfg,data);    
-    fprintf('%s\n',num2str(cmd));
+    
+    if ~isempty(cfg.ostream)
+
+      fprintf('writing command %s to %s\n',num2str(cmd),cfg.ostream);
+      
+      % send command
+      evt.type = 'uint';
+      evt.offset = [];
+      evt.duration = [];
+      evt.sample = abs(data.time{1}(1)*data.fsample);
+      evt.timestamp = data.time{1}(1);
+      evt.value = cmd;
+
+      write_event(cfg.ostream,cmdevent);
+
+    else
+      fprintf('generated command %s\n',num2str(cmd));
+    end
     
     cfg.count = cfg.count +  1;
     
