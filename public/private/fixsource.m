@@ -269,11 +269,11 @@ switch fname
   case 'filter'
     dimord = [dimord,'_ori_chan']; 
   case 'leadfield'
-    if hasori,
+    %if hasori,
       dimord = [dimord,'_chan_ori'];
-    else
-      dimord = [dimord,'_chan'];
-    end
+    %else
+    %  dimord = [dimord,'_chan'];
+    %end
   case 'mom'
     if isfield(output, 'cumtapcnt') && sum(output.cumtapcnt)==size(tmp{output.inside(1)},1)
       if hasori,
@@ -315,6 +315,12 @@ switch fname
     if isfield(output, 'freq') && numel(output.freq)>1 && numel(output.freq)==size(tmp,dimnum)
       dimord = [dimord,'_freq'];
     end
-  otherwise
-    error(sprintf('unknown fieldname %s', fname));
+    
+    if isfield(output, 'time') && numel(output.time)>1 && numel(output.time)==size(tmp,dimnum)
+      dimord = [dimord,'_time'];
+    end
+    
+    otherwise
+      warning(sprintf('skipping unknown fieldname %s', fname));
+      %error(sprintf('unknown fieldname %s', fname));
 end
