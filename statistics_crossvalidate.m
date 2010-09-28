@@ -14,9 +14,8 @@ function stat = statistics_crossvalidate(cfg, dat, design)
 %   cfg.model       = whether or not to save the average model (true)
 %
 % Returns:
-% stat.prob         = computed using the specified metric
-% stat.significance = w.r.t. the null-hypothesis that we do no better than a
-%                     majority classifier
+% stat.performance  = computed using the specified metric
+% stat.pvalue       = p-value for the specified significance test
 % stat.cv           = the trained crossvalidator
 %
 % See also CROSSVALIDATE, MVA
@@ -105,7 +104,7 @@ cv = cv.train(dat,design);
 stat.performance = cv.performance();
 
 % null-hypothesis rejected?
-stat.reject = cv.significance();
+stat.pvalue = cv.significance();
 
 % get the models
 
