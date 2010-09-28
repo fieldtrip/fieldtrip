@@ -6,8 +6,14 @@ end
 
 % get all XXXdimord fields
 fn    = fieldnames(data);
-selfn = find(~cellfun('isempty', strfind(fn, 'dimord')));
+selfn = ~cellfun('isempty', strfind(fn, 'dimord'));
 fn    = fn(selfn);
+
+% determine this to see whether just a dimord, or XXXdimord has to be
+% created in the output
+onedimord = numel(fn)==1 & all(cell2mat(strfind(fn, 'dimord'))==1);
+
+% determine the dimord of the functional parameters
 for k = 1:numel(fn)
   fndimord{k} = data.(fn{k});
 end
@@ -90,11 +96,11 @@ switch avgdim
       tmp = reshape(tmp, [reduceddim{i}(2:end) 1]);
       data.(param{i}) = tmp;
     end
-    data.dimord = '';
+    dimord = '';
     for i = 2:length(dimtok)
-      data.dimord = [data.dimord,'_',dimtok{i}];
+      dimord = [dimord,'_',dimtok{i}];
     end
-    data.dimord = data.dimord(2:end);
+    dimord = dimord(2:end);
     if isfield(data, 'cumsumcnt'), data.cumsumcnt = sum(data.cumsumcnt); end
     if isfield(data, 'cumtapcnt'), data.cumtapcnt = sum(data.cumtapcnt); end
   
@@ -106,24 +112,36 @@ switch avgdim
       tmp = reshape(tmp, [reduceddim{i}(2:end) 1]);
       data.(param{i}) = tmp;
     end
-    data.dimord = '';
+    dimord = '';
     for i=2:length(dimtok)
-      data.dimord = [data.dimord,'_',dimtok{i}];
+      dimord = [dimord,'_',dimtok{i}];
     end
-    data.dimord = data.dimord(2:end);
+    dimord = dimord(2:end);
     if isfield(data, 'cumsumcnt'), data.cumsumcnt = sum(data.cumsumcnt); end
     if isfield(data, 'cumtapcnt'), data.cumtapcnt = sum(data.cumtapcnt); end
   
   case 'chan'
     data.label = avgoverlabel(data.label);
+    dimord     = data.dimord;
   case 'freq'
     data.freq = mean(data.freq);
+    dimord    = data.dimord;
   case 'time'
     data.time = mean(data.time);
+    dimord    = data.dimord;
   otherwise
     error('unknown dimension "%s"', avgdim);
 end
 
 if isfield(data, 'dim'),
   data.dim(avgdimnum{1}) = [];
+end
+
+% append the correct dimord, or XXXdimord to the output
+if onedimord,
+  data.dimord = dimord;
+else
+  for i=1:length(param)
+    data.([param{i},'dimord']) = dimord;
+  end
 end
