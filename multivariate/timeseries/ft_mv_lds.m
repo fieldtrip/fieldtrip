@@ -6,9 +6,6 @@ classdef ft_mv_lds < ft_mv_timeseries
 % observations are normally distributed conditional on the state.
 % multiple observations sequences are supported
 %
-% bias term is *NOT* automatically added to the model
-%
-%
 % refs
 % Pattern Recognition and Machine Learning, Bishop
 % A unifying review of linear dynamical systems, Gharamani 
@@ -41,7 +38,7 @@ classdef ft_mv_lds < ft_mv_timeseries
 %
 % EXAMPLE:
 %
-% rand('seed',4); randn('seed',3);
+% rand('seed',5); randn('seed',5);
 % 
 % nsamples = 1000; ncov = 10; ncycles = 10;
 % Y = sin(ncycles * 2 * pi * (1:nsamples) ./ nsamples)';
@@ -60,7 +57,7 @@ classdef ft_mv_lds < ft_mv_timeseries
 % Z = k.test(zscore(X));
 % plot(Z,'ko');
 % disp(mean(abs(Z - Y)));
-% 
+%
 %
 % Copyright (c) 2010, Marcel van Gerven
   
@@ -310,11 +307,7 @@ classdef ft_mv_lds < ft_mv_timeseries
       J = cell(1,T-1); % needed to compute transition matrix A in EM
       for n=T:-1:2
         
-%         if n==1
-%           P = V0;
-%         else
-          P = A * V1{n-1} * A' + Q;
-%        end
+        P = A * V1{n-1} * A' + Q;
         
         if ~all(V{n}(:)==0)
           
@@ -364,6 +357,9 @@ classdef ft_mv_lds < ft_mv_timeseries
       V = cell(1,T);
       I = eye(K);      
 
+      Xpred = mu;
+      Vpred = V;
+      
       % take measurements into account
       if isempty(X) || all(isnan(X(:,1)))
        
@@ -371,6 +367,9 @@ classdef ft_mv_lds < ft_mv_timeseries
         V{1} = V0;
       
       else
+        
+        Xpred(:,1) = mu0;
+        Vpred{1} = V0;
         
         obs = ~isnan(X(:,1));
         Cb = C(obs,:); % emission matrix for observed measurements
@@ -399,6 +398,9 @@ classdef ft_mv_lds < ft_mv_timeseries
         
         else
           
+          Xpred(:,t) = AM;
+          Vpred{t}   = P;
+          
           obs = ~isnan(X(:,t));
           Cb = C(obs,:); % emission matrix for observed measurements
           
@@ -419,7 +421,8 @@ classdef ft_mv_lds < ft_mv_timeseries
       
       % compute log likelihood using error decomposition ignoring constant terms  
       if nargout >= 3
-        LL = obj.compute_loglik(X,mu,V);
+        %LL = obj.compute_loglik(X,mu,V);
+        LL = obj.compute_loglik(X,Xpred,Vpred);
       end
       
     end

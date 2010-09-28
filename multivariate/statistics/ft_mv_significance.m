@@ -1,6 +1,6 @@
 function res = ft_mv_significance(design,post,sigtest)
 % FT_MV_SIGNIFICANCE signficance tests for a real outcome (design) and predicted
-% outcome (post)
+% outcome (post) and returns a p-value
 %
 % Copyright (c) 2010, Marcel van Gerven
 
@@ -19,8 +19,7 @@ function res = ft_mv_significance(design,post,sigtest)
     switch lower(sigtest)
       
       case 'mcnemar'
-        % bonferroni-corrected one-sided approximate binomial test at
-        % p<0.05 which compares outcome with that of a majority classifier
+        % one-sided approximate binomial test which compares outcome with that of a majority classifier
         
         % create majority classifier results
         nclasses = size(post{c},2);
@@ -32,7 +31,7 @@ function res = ft_mv_significance(design,post,sigtest)
         rndpost = zeros(size(post{c}));
         rndpost(:,clss) = 1;
         
-        res{c} = ft_mv_mcnemar(design{c},post{c},rndpost,'twosided',false,'bonferroni',length(post));
+        res{c} = ft_mv_mcnemar(design{c},post{c},rndpost,'twosided',false);
         
     end
     

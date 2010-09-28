@@ -571,6 +571,7 @@ classdef ft_mv_crossvalidator
      end
      
      function res = significance(obj,T)
+       % return p-value using some significance test
        
        if exist('T','var')
          obj.sigtest = T;

@@ -131,7 +131,8 @@ Selectors are used to perform feature selection on the input data \t{X}. Table~\
 \begin{tabular}{p{0.2\textwidth}|p{0.7\textwidth}}
 \bf{selector} & \bf{functionality}\\
 \hline
-\t{ft\_mv\_filterer} & Performs feature selection by computing a univariate measure for each feature and taking the best $N$ features based on a crossvalidator.
+\t{ft\_mv\_filterer} & Performs feature selection by computing a univariate measure for each feature and taking the best $N$ features based on a crossvalidator.\\
+\t{ft\_mv\_searchlight} & Performs a searchlight analysis.
 \end{tabular}
 \label{selectors}
 \end{table}
@@ -358,7 +359,7 @@ Some of the described methods can be resource intensive. Most notably, cross-val
 \section{Examples}
 \label{examples}
 
-In the following examples, we will use the \t{69digits} dataset which is included in this module. It is a subset of the data used in~\cite{gerven2010,gerven2010a}. It consists of the V1 BOLD measurements for 50 handwritten sixes and 50 handwritten nines as shown in a 3T MRI scanner. The dataset consists of the BOLD data \t{X}, the labels \t{Y} (1 stands for 6 and 2 stands for 9) and \t{images} (the presented handwritten digits). In order to test a multivariate analysis we can make use of \t{ft\_mv\_test}. It accepts an MVA and tests it by default on the example dataset using ten-fold cross-validation.
+In the following examples, we will use the \t{69digits} dataset which is included in this module. It is a subset of the data used in~\cite{gerven2010,gerven2010a}. It consists of the V1 BOLD measurements for 50 handwritten sixes and 50 handwritten nines as shown in a 3T MRI scanner. The dataset consists of the BOLD data \t{X}, the labels \t{Y} (1 stands for 6 and 2 stands for 9) and \t{images} (the presented handwritten digits). The variable \t{zmask} contains the used region of interest in native space. In order to test a multivariate analysis we can make use of \t{ft\_mv\_test}. It accepts an MVA and tests it by default on the example dataset using ten-fold cross-validation.
 
 \subsubsection*{A simple example}
 We start with a simple example to get some baseline performance:
@@ -421,6 +422,48 @@ a = ft_mv_test('mva',{ft_mv_standardizer m ft_mv_naive});
     0.8600
 \end{verbatim}
 
+\subsubsection*{Using the searchlight method}
+
+In this example, we show how we can compute the performance of individual spheres in a searchlight method using the default dataset. 
+\begin{verbatim}
+load 69digits;
+\end{verbatim}
+We first need to specify a cross-validator with which to test performance. We compute accuracy and a McNemar significance test by training on 80\% of the data and testing on 20\% of the data:
+\begin{verbatim}
+cv = ft_mv_crossvalidator('nfolds',0.8,'mva',{ft_mv_standardizer ft_mv_naive},...
+           'metric','accuracy','sigtest','mcnemar');
+\end{verbatim}
+Now we may specify the searchlight. We need to specify the sphere radius and the step size. Furthermore, we may use a logical mask which specifies how where the used data features are in native space (e.g., when using a region of interest as in case of the default dataset). Finally, we need to specify the original dimensions of the input data (in this case the size of the mask). The searchlight will use the cross-validator to test performance in each sphere:
+\begin{verbatim}
+sl = ft_mv_searchlight('radius',3,'step',3,'mask',zmask,'validator',cv,'...
+        indims',size(zmask),'verbose',true);
+sl = sl.train(X,Y);
+>> sl = sl.train(X,Y);
+estimating 39 spheres with radius 3 with 3 steps for a...
+volume of size [110  110   37]
+estimating sphere 1 of 39
+estimating sphere 2 of 39
+estimating sphere 3 of 39
+estimating sphere 4 of 39
+...
+average sphere volume: 52.2308
+performance for sphere 1 of 39: 0.736842 (p-value: 0.342782)
+performance for sphere 2 of 39: 0.842105 (p-value: 0.148915)
+performance for sphere 3 of 39: 0.789474 (p-value: 0.267257)
+performance for sphere 4 of 39: 0.684211 (p-value: 0.546494)
+performance for sphere 5 of 39: 0.421053 (p-value: 0.75183)
+performance for sphere 6 of 39: 0.736842 (p-value: 0.386476)
+performance for sphere 7 of 39: 0.578947 (p-value: 1)
+performance for sphere 8 of 39: 0.736842 (p-value: 0.342782)
+performance for sphere 9 of 39: 0.578947 (p-value: 1)
+performance for sphere 10 of 39: 0.684211 (p-value: 0.504985)
+...
+\end{verbatim}
+In order to check how well each data feature  does in discriminating the classes, we may call \t{sl.model}. This projects back the average sphere results in native space.
+
+\subsubsection*{Using the searchlight method for feature selection}
+
+work in progress.
 
 \section{External toolboxes}
 
@@ -429,7 +472,7 @@ The following external toolboxes are used:
 \begin{table}[ht]
 \centering
 \caption{External toolboxes.}
-\begin{tabular}{llll}
+\begin{tabular}{l|l|l}
 {\bf name} & {\bf function} & {\bf author}\\
 \hline
 bahramisharif & elastic net & Ali Bahramisharif  \\
@@ -438,6 +481,7 @@ gerven & Bayesian methods & Marcel van Gerven\\
 glmnet & Fortran version of elastic net & Jerome Friedman\\
 herman & common spatial patterns & Pawel Herman\\
 L1General & L1 regularization & Mark Schmidt\\
+murphy & LDS/HMM toolbox & Kevin Murphy\\
 utilities & global functions & Marcel van Gerven
 \end{tabular}
 \label{measure}

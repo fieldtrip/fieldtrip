@@ -19,6 +19,10 @@ classdef ft_mv_selector < ft_mv_method
     function obj = ft_mv_selector(varargin)
       
       obj = obj@ft_mv_method(varargin{:});
+      
+      if isempty(obj.validator)
+        error('validator must be specified');
+      end
             
     end
     

@@ -1,4 +1,4 @@
-function [reject,pvalue,level] = ft_mv_mcnemar(design,post1,post2,varargin)
+function [pvalue,reject,level] = ft_mv_mcnemar(design,post1,post2,varargin)
 % FT_MV_MCNEMAR performs a mcnemar test which is an approximate binomial
 % test. It compares if two predicted posteriors (post1 and post2) are significantly different 
 % given the real outcome (design). 
