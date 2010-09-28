@@ -1,4 +1,4 @@
-function [data] = ft_appenddata(cfg, varargin);
+function [data] = ft_appenddata(cfg, varargin)
 
 % FT_APPENDDATA combines multiple datasets that have been preprocessed separately
 % into a single large dataset.
@@ -143,10 +143,12 @@ for j=1:Ndata
 end
 
 % check consistency of sensor positions across inputs
-haselec = isfield(varargin{1}, 'elec');
-hasgrad = isfield(varargin{1}, 'grad');
+for j=1:Ndata
+  haselec(j) = isfield(varargin{j}, 'elec');
+  hasgrad(j) = isfield(varargin{j}, 'grad');
+end
 removesens = 0;
-if haselec || hasgrad,
+if all(haselec==1) || all(hasgrad==1),
   for j=1:Ndata
     if haselec, sens{j} = getfield(varargin{j}, 'elec'); end
     if hasgrad, sens{j} = getfield(varargin{j}, 'grad'); end
@@ -158,6 +160,11 @@ if haselec || hasgrad,
       end
     end
   end
+elseif haselec(1)==1 || hasgrad(1)==1,
+  % apparently the first input has a grad or elec, but not all the other
+  % ones. because the output data will be initialized to be the first input
+  % data structure, this should be removed
+  removesens = 1;   
 end
 
 % check whether the data are obtained from the same datafile
