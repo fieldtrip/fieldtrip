@@ -1,32 +1,35 @@
 function [data] = selectdata(varargin)
 
-% this function serves to concatenate the input data-structures along the
-% compatible dimensions and thus is a more general implementation of
-% appenddata, which deals only with raw data. Moreover, it can be used to equate the
-% data of different conditions to match e.g. in channels time-axis etc
-% Moreover, it can be used as a generalization to ...average with 'keepindividual'
+% SELECTDATA serves to subselect regions-of-interest from the input data,
+% with or without averaging across the specified dimensions. It also
+% concatenates multiple input data structures along the compatible
+% dimension and is thus a more general implementation of ft_appenddata,
+% which deals only with raw data.
 %
-% Finally, this function serves to subselect regions-of-interest from the input data,
-% either or not averaging across the specified dimensions.
+% Use as
+%  [data] = selectdata(data1, data2, ..., key1, value1, key2, value2, ...)
 %
 % Supported input data:
 %   freq
 %   timelock
 %   source  
 %   volume   (not yet)
+%   raw      only for subselection of channels and replicates. this is the
+%              same functionality as ft_preprocessing
 %
-% supported options:
-%   foilim
-%   toilim
-%   roi
-%   channel (FIXME this is also done by preprocessing?)
-%   avgoverchan
-%   avgoverfreq
-%   avgovertime
-%   avgoverroi
-%   avgoverrpt
+% Supported keys:
+%   foilim        [begin end]  edges of frequency band to be retained 
+%   toilim        [begin end]  edges of time window to be retained
+%   roi           [Nx1]        indices of voxels of region-of-interest
+%   rpt           [Nx1]        indices of replicates to be retained
+%   channel       {Nx1}        list of channels labels to be retained 
+%   avgoverchan   'no' ('yes') average across channels
+%   avgoverfreq   'no' ('yes') average across frequency bins
+%   avgovertime   'no' ('yes') average across time points
+%   avgoverroi    'no' ('yes') average across voxels in ROI
+%   avgoverrpt    'no' ('yes') average across replicates
 
-% Copyright (C) 2009, Jan-Mathijs Schoffelen
+% Copyright (C) 2009-2010, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -45,6 +48,8 @@ function [data] = selectdata(varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+% FIXME ROI selection is not yet implemented
 
 % check the input data and options
 isdata  = find(cellfun(@isstruct,varargin));
@@ -99,9 +104,9 @@ avgoverrpt   = keyval('avgoverrpt',   kvp); if isempty(avgoverrpt),  avgoverrpt 
 dojack       = keyval('jackknife',    kvp); if isempty(dojack),      dojack      = false; end
 
 fb       = keyval('feedback', kvp); if isempty(fb), fb = 'yes'; end
-if isstr(fb) && strcmp(fb, 'yes'), 
+if ischar(fb) && strcmp(fb, 'yes'), 
   fb = 1;
-elseif isstr(fb) && strcmp(fb, 'no'),
+elseif ischar(fb) && strcmp(fb, 'no'),
   fb = 0;
 end
 
@@ -130,6 +135,8 @@ end
 
 if length(data)>1 && ~israw,
   % determine the way to concatenate
+  
+  % force inside field for source data to be indices
   if issource,
     if isfield(data{1}, 'inside')
       isboolean = islogical(data{1}.inside); 
@@ -140,7 +147,8 @@ if length(data)>1 && ~israw,
       end
     end
   end
-   
+  
+  
   %if issource || isvolume,
   %  param = parameterselection(param, data{1}); % FIXME check consistency across input data of presence of specific parameters
   %else
@@ -236,14 +244,57 @@ if length(data)>1 && ~israw,
   end %for k = 1:numel(param)
   
   if catdim==0,
-    %a dimension has been prepended
+    % a dimension has been prepended
     dimtok    = ['rpt' dimtok];
     catdim    = 1;
     dimord{1} = ['rpt_',dimord{1}];
+    
+    % adjust dim-field
     if issubfield(data{1}, 'dim'),
       dim       = [length(data) data{1}.dim];
     end
-  else 
+
+    % adjust inside-field according to intersection
+    if isfield(data{1}, 'inside')
+      isboolean = islogical(data{1}.inside);
+      for k = 1:numel(data)
+        if k==1,
+          if isboolean
+            inside = double(data{k}.inside);
+          else
+            inside = zeros(numel(data{k}.inside)+numel(data{k}.outside),1);
+            inside(data{k}.inside) = inside(data{k}.inside) + 1;
+          end
+        else
+          if isboolean
+            inside = double(data{k}.inside) + inside;
+          else
+            inside(data{k}.inside) = inside(data{k}.inside) + 1;
+          end
+        end
+      end
+
+      % determine which sources were inside or outside the brain in all subjects
+      nalloutside = sum(inside(:)==0);  
+      nsomeinside = sum(inside(:)>0 & inside(:)~=numel(data));
+      inside      = inside==numel(data);
+      nallinside  = sum(inside(:));
+      
+      fprintf('%d voxels are inside the brain of all subjects\n',               nallinside);
+      fprintf('%d voxels are inside the brain of some, but not all subjects\n', nsomeinside);
+      fprintf('%d voxels are outside the brain of all subjects\n',              nalloutside);
+      warning('marking only voxels inside the brain of all subjects as ''inside''');
+      
+      if isboolean
+        data{1}.inside = inside;
+      else
+        data{1}.inside  = find(inside);
+        data{1}.outside = setdiff((1:numel(inside))', data{1}.inside);
+      end
+      
+    end
+   
+  else
     if issubfield(data{1}, 'dim'),
       dim       = data{1}.dim;
     end
@@ -254,20 +305,20 @@ if length(data)>1 && ~israw,
     for k = 1:length(data)
       if k==1,
         tmp       = getsubfield(data{k}, dimtok{catdim})';
-	if isfield(data{k}, 'inside'),
-	  tmpnvox   = numel(data{k}.inside)+numel(data{k}.outside);
-	  tmpinside = data{k}.inside(:);
-	end
+	    if isfield(data{k}, 'inside'),
+	      tmpnvox   = numel(data{k}.inside)+numel(data{k}.outside);
+	      tmpinside = data{k}.inside(:);
+	    end
       else
         if strcmp(dimtok{catdim},'pos')
-	  tmp       = [tmp;       getsubfield(data{k}, dimtok{catdim})];
-	  tmpinside = [tmpinside; data{k}.inside(:)+tmpnvox];
-	  tmpnvox   = tmpnvox+numel(data{k}.inside)+numel(data{k}.outside);
-	  sortflag  = 0;
-	else
+	      tmp       = [tmp;       getsubfield(data{k}, dimtok{catdim})];
+	      tmpinside = [tmpinside; data{k}.inside(:)+tmpnvox];
+	      tmpnvox   = tmpnvox+numel(data{k}.inside)+numel(data{k}.outside);
+	      sortflag  = 0;
+        else
           tmp       = [tmp       getsubfield(data{k}, dimtok{catdim})'];
-	  sortflag  = 1;
-	end
+          sortflag  = 1;
+	    end
       end
     end
     data{1} = setsubfield(data{1}, dimtok{catdim}, tmp);
@@ -286,7 +337,7 @@ if length(data)>1 && ~israw,
   
   % concatenate the relevant descriptive fields in the data-structure (continued)
   for k = 1:length(tryfields)
-    try,
+    try
       for m = 1:length(data)
         if m==1,
           tmpfield = getfield(data{m}, tryfields{k});
@@ -321,9 +372,9 @@ if length(data)>1 && ~israw,
   end
   % remove unspecified parameters
   if ~issource,
-    rmparam = setdiff(parameterselection('all',data{1}),[param 'pos' 'inside' 'outside']);
+    rmparam = setdiff(parameterselection('all',data{1}),[param 'pos' 'inside' 'outside' 'freq' 'time']);
   else
-    rmparam = setdiff(fieldnames(data{1}), [param(:)' paramdimord(:)' 'pos' 'inside' 'outside' 'dim' 'cfg' 'vol' 'cumtapcnt' 'orilabel']);
+    rmparam = setdiff(fieldnames(data{1}), [param(:)' paramdimord(:)' 'pos' 'inside' 'outside' 'dim' 'cfg' 'vol' 'cumtapcnt' 'orilabel' 'time' 'freq']);
   end
   for k = 1:length(rmparam)
     data{1} = rmfield(data{1}, rmparam{k});
@@ -443,7 +494,7 @@ if israw,
 
 elseif isfreq,
   if isfield(data, 'labelcmb') && isfield(data, 'label') && (selectchan || avgoverchan)
-    error('selection of or averaging across channels in the presence of both label and labelcmb is ambiguous');
+    error('selection of or averaging across channels in the presence of both label and labelcmb is not possible');
   end
   
   if isfield(data, 'labelcmb'),
