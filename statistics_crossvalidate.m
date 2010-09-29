@@ -106,6 +106,11 @@ stat.performance = cv.performance();
 % null-hypothesis rejected?
 stat.pvalue = cv.significance();
 
+if ~cfg.compact
+  stat.X = dat;
+  stat.Y = design;
+end
+
 % get the models
 
 m = cv.model;
