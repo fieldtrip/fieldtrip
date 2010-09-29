@@ -1,9 +1,9 @@
-function plot_lay(lay, varargin)
+function ft_plot_lay(lay, varargin)
 
-% PLOT_LAY plots a two-dimensional layout
+% FT_PLOT_LAY plots a two-dimensional layout
 %
 % Use as
-%   plot_lay(layout, ...)
+%   ft_plot_lay(layout, ...)
 % where the layout is a FieldTrip structure obtained from PREPARE_LAYOUT.
 %
 % Additional options should be specified in key-value pairs and can be
