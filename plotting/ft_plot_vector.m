@@ -1,10 +1,10 @@
-function [varargout] = plot_vector(varargin)
+function [varargout] = ft_plot_vector(varargin)
 
-% PLOT_VECTOR
+% FT_PLOT_VECTOR
 %
 % Use as
-%   plot_vector(Y, ...)
-%   plot_vector(X, Y, ...)
+%   ft_plot_vector(Y, ...)
+%   ft_plot_vector(X, Y, ...)
 % where X and Y are similar as the input to the Matlab plot function.
 %
 % Additional options should be specified in key-value pairs and can be
@@ -27,7 +27,7 @@ function [varargout] = plot_vector(varargin)
 %   'markerfacecolor'
 %
 % Example use
-%   plot_vector(randn(1,100), 'width', 1, 'height', 1, 'hpos', 0, 'vpos', 0)
+%   ft_plot_vector(randn(1,100), 'width', 1, 'height', 1, 'hpos', 0, 'vpos', 0)
 
 % Copyrights (C) 2009, Robert Oostenveld
 %
@@ -188,7 +188,7 @@ if ~isempty(highlight)
       for i=1:length(begsample)
         begx = hdat(begsample(i));
         endx = hdat(endsample(i));
-        plot_box([begx endx vpos-height/2 vpos+height/2], 'facecolor', [.6 .6 .6], 'edgecolor', 'none');
+        ft_plot_box([begx endx vpos-height/2 vpos+height/2], 'facecolor', [.6 .6 .6], 'edgecolor', 'none');
       end
       % plotting lines again, otherwise box will always be on top
       if isempty(color)
@@ -262,14 +262,14 @@ if box
   %   boxposition(2) = hpos + width/2;
   %   boxposition(3) = vpos - height/2;
   %   boxposition(4) = vpos + height/2;
-  %   plot_box(boxposition, 'facecolor', 'none', 'edgecolor', 'k');
+  %   ft_plot_box(boxposition, 'facecolor', 'none', 'edgecolor', 'k');
 
   % this plots a box around the complete data
   % boxposition(1) = hlim(1);
   % boxposition(2) = hlim(2);
   % boxposition(3) = vlim(1);
   % boxposition(4) = vlim(2);
-  % plot_box(boxposition, 'hpos', hpos, 'vpos', vpos, 'width', width, 'height', height, 'hlim', hlim, 'vlim', vlim);
+  % ft_plot_box(boxposition, 'hpos', hpos, 'vpos', vpos, 'width', width, 'height', height, 'hlim', hlim, 'vlim', vlim);
 end
 
 if axis
@@ -279,15 +279,15 @@ if axis
 
   X = [hpos-width/2  hpos+width/2];
   Y = [y0 y0];
-  plot_line(X, Y);
-  % str = sprintf('%g', hlim(1)); plot_text(X(1), Y(1), str);
-  % str = sprintf('%g', hlim(2)); plot_text(X(2), Y(2), str);
+  ft_plot_line(X, Y);
+  % str = sprintf('%g', hlim(1)); ft_plot_text(X(1), Y(1), str);
+  % str = sprintf('%g', hlim(2)); ft_plot_text(X(2), Y(2), str);
 
   X = [x0 x0];
   Y = [vpos-height/2 vpos+height/2];
-  plot_line(X, Y);
-  % str = sprintf('%g', vlim(1)); plot_text(X(1), Y(1), str);
-  % str = sprintf('%g', vlim(2)); plot_text(X(2), Y(2), str);
+  ft_plot_line(X, Y);
+  % str = sprintf('%g', vlim(1)); ft_plot_text(X(1), Y(1), str);
+  % str = sprintf('%g', vlim(2)); ft_plot_text(X(2), Y(2), str);
 end
 
 % the (optional) output is the handle
