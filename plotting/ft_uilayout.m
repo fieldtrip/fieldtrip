@@ -1,6 +1,6 @@
-function uilayout(h, varargin)
+function ft_uilayout(h, varargin)
 
-% UILAYOUT is a helper function to facilitate the layout of multiple
+% FT_UILAYOUT is a helper function to facilitate the layout of multiple
 % usercontrol elements
 
 % Copyright (C) 2009, Robert Oostenveld
