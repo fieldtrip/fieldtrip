@@ -1,6 +1,6 @@
-function select_contour
+function ft_select_contour
 
-% SELECT_CONTOUR
+% FT_SELECT_CONTOUR
 
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
