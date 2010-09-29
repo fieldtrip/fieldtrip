@@ -1,18 +1,18 @@
-function plot_topo3d(pnt, val, varargin)
+function ft_plot_topo3d(pnt, val, varargin)
 
-% PLOT_TOPO3D makes a 3-D topographic representation of the electric
+% FT_PLOT_TOPO3D makes a 3-D topographic representation of the electric
 % potential or field at the sensor locations
 %
 % Use as
-%   plot_topo3d(pos, val, ...);
+%   ft_plot_topo3d(pos, val, ...);
 % where the channel positions are given as a Nx3 matrix and the values are
 % given as Nx1 vector.
 
 % Optional input arguments should be specified in key-value pairs and can include
 %   ...
 %
-% See also PLOT_TOPO2D, PLOTTING
-
+% See also FT_PLOT_TOPO
+%
 % Copyright (C) 2009, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
