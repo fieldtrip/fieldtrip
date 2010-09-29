@@ -1,10 +1,10 @@
-function [x, y] = select_box(handle, eventdata, varargin)
+function [x, y] = ft_select_box(handle, eventdata, varargin)
 
-% SELECT_BOX helper function for selecting a rectangular region
+% FT_SELECT_BOX helper function for selecting a rectangular region
 % in the current figure using the mouse.
 %
 % Use as
-%   [x, y] = select_box(...)
+%   [x, y] = ft_select_box(...)
 %
 % It returns a 2-element vector x and a 2-element vector y
 % with the corners of the selected region.
