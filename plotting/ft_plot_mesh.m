@@ -1,14 +1,14 @@
-function plot_mesh(bnd, varargin)
+function ft_plot_mesh(bnd, varargin)
 
-% PLOT_MESH visualizes the information of a mesh contained in the first
+% FT_PLOT_MESH visualizes the information of a mesh contained in the first
 % argument bnd. The boundary argument (bnd) contains typically 2 fields
 % called .pnt and .tri referring to vertices and triangulation of a mesh.
 %
 % Use as
-%   plot_mesh(bnd, ...)
+%   ft_plot_mesh(bnd, ...)
 %
 % PLOT_MESH also allows to plot only vertices by
-%   plot_mesh(pnt)
+%   ft_plot_mesh(pnt)
 % where pnt is a list of 3d points cartesian coordinates.
 %
 % Graphic facilities are available for vertices, edges and faces. A list of
@@ -28,7 +28,7 @@ function plot_mesh(bnd, varargin)
 %   [pnt, tri] = icosahedron162;
 %   bnd.pnt = pnt;
 %   bnd.tri = tri;
-%   plot_mesh(bnd, 'facecolor', 'skin', 'edgecolor', 'none')
+%   ft_plot_mesh(bnd, 'facecolor', 'skin', 'edgecolor', 'none')
 %   camlight
 %
 % See also TRIMESH
@@ -55,7 +55,7 @@ function plot_mesh(bnd, varargin)
 
 warning('on', 'MATLAB:divideByZero');
 
-% FIXME: introduce option for color coding (see sourceplot)
+% FIXME: introduce option for color coding (see ft_sourceplot)
 keyvalcheck(varargin, 'forbidden', {'faces', 'edges', 'vertices'});
 
 if ~isstruct(bnd) && isnumeric(bnd) && size(bnd,2)==3
