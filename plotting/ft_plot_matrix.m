@@ -1,11 +1,11 @@
-function plot_matrix(varargin)
+function ft_plot_matrix(varargin)
 
-% PLOT_MATRIX
+% FT_PLOT_MATRIX
 %
 % Use as
-%   plot_matrix(C, ...)
+%   ft_plot_matrix(C, ...)
 % where C is a 2 dimensional MxN matrix, or
-%   plot_matrix(X, Y, C, ...)
+%   ft_plot_matrix(X, Y, C, ...)
 % where X and Y describe the 1xN horizontal and 1xM vertical axes 
 % respectively.
 %
@@ -23,7 +23,7 @@ function plot_matrix(varargin)
 %   'tag'
 %
 % Example use
-%   plot_matrix(randn(30,50), 'width', 1, 'height', 1, 'hpos', 0, 'vpos', 0)
+%   ft_plot_matrix(randn(30,50), 'width', 1, 'height', 1, 'hpos', 0, 'vpos', 0)
 
 % Copyrights (C) 2009, Robert Oostenveld
 %
@@ -238,5 +238,5 @@ if box
   boxposition(2) = hpos + width/2;
   boxposition(3) = vpos - height/2;
   boxposition(4) = vpos + height/2;
-  plot_box(boxposition);
+  ft_plot_box(boxposition);
 end
