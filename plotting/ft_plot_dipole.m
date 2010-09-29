@@ -1,6 +1,6 @@
-function plot_dipole(pos, ori, varargin)
+function ft_plot_dipole(pos, ori, varargin)
 
-% PLOT_DIPOLE makes a 3-D representation of a dipole using a small sphere
+% FT_PLOT_DIPOLE makes a 3-D representation of a dipole using a small sphere
 % and a stick pointing along the dipole orientation
 %
 % Use as
@@ -15,7 +15,7 @@ function plot_dipole(pos, ori, varargin)
 %   'scale'       scale the dipole with the amplitude, can be 'none',  'both', 'diameter', 'length' (default = 'none')
 %
 % Example
-%   plot_dipole([0 0 0], [1 2 3])
+%   ft_plot_dipole([0 0 0], [1 2 3])
 
 % Copyright (C) 2009, Robert Oostenveld
 %
@@ -143,8 +143,8 @@ for i=1:size(pos,1)
   stick.pnt = warp_apply(translate([tx ty tz]), stick.pnt, 'homogeneous');
 
   % plot the sphere and the stick
-  plot_mesh(sphere, 'vertexcolor', 'none', 'edgecolor', false, 'facecolor', color);
-  plot_mesh(stick,  'vertexcolor', 'none', 'edgecolor', false, 'facecolor', color);
+  ft_plot_mesh(sphere, 'vertexcolor', 'none', 'edgecolor', false, 'facecolor', color);
+  ft_plot_mesh(stick,  'vertexcolor', 'none', 'edgecolor', false, 'facecolor', color);
 
 end % for each dipole
 
