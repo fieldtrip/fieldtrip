@@ -1,9 +1,9 @@
-function plot_slice(data,varargin)
+function ft_plot_slice(data,varargin)
 %
-% PLOT_SLICE visualizes the slices of a MRI 3D volume
+% FT_PLOT_SLICE visualizes the slices of a MRI 3D volume
 %
 % Use as
-%   plot_slice(data, varargin)
+%   ft_plot_slice(data, varargin)
 %
 % Some defaults for the additional arguments:
 %
@@ -25,8 +25,8 @@ function plot_slice(data,varargin)
 %   'opacitymap'
 %
 % Example
-%   mri = read_mri('Subject01.mri');
-%   figure, plot_slice(mri,'title','3D volume','colorbar','yes','map','jet')
+%   mri = ft_read_mri('Subject01.mri');
+%   figure, ft_plot_slice(mri,'title','3D volume','colorbar','yes','map','jet')
 
 % Copyright (C) 2009, Cristiano Micheli 
 %
@@ -264,13 +264,13 @@ if hasana
   % convert anatomy into RGB values
   ana = cat(3, ana, ana, ana);
 %   ha = imagesc(ana);
-  plot_matrix(ana)
+  ft_plot_matrix(ana)
 end
 hold on
 
 if hasfun
 %   hf = imagesc(fun);
-  plot_matrix(fun)
+  ft_plot_matrix(fun)
   caxis(scales{2});
   % apply the opacity mask to the functional data
   if hasmsk
