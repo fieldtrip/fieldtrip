@@ -1,10 +1,10 @@
-function plot_vol(vol, varargin)
+function ft_plot_vol(vol, varargin)
 
-% PLOT_VOL visualizes the boundaries in the vol structure constituting the
+% FT_PLOT_VOL visualizes the boundaries in the vol structure constituting the
 % geometrical information of the forward model
 %
 % Use as
-%   hs = plot_vol(vol, varargin)
+%   hs = ft_plot_vol(vol, varargin)
 %
 % Graphic facilities are available for vertices, edges and faces. A list of
 % the arguments is given below with the correspondent admitted choices.
@@ -18,7 +18,7 @@ function plot_vol(vol, varargin)
 % Example
 %   vol.r = [86 88 92 100];
 %   vol.o = [0 0 40];
-%   figure, plot_vol(vol)
+%   figure, ft_plot_vol(vol)
 
 % Copyright (C) 2009, Cristiano Micheli
 %
@@ -91,7 +91,7 @@ end
  
 % plot the triangulated surfaces of the volume conduction model
 for i=1:length(bnd)
-  plot_mesh(bnd(i),'faceindex',faceindex,'vertexindex',vertexindex, ...
+  ft_plot_mesh(bnd(i),'faceindex',faceindex,'vertexindex',vertexindex, ...
     'vertexsize',vertexsize,'facecolor',facecolor,'edgecolor',edgecolor, ...
     'vertexcolor',vertexcolor,'facealpha',facealpha);
 end
