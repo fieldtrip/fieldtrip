@@ -1,10 +1,10 @@
-function [selected] = select_point3d(bnd, varargin)
+function [selected] = ft_select_point3d(bnd, varargin)
 
-% SELECT_POINT3D helper function for selecting one or multiple points
+% FT_SELECT_POINT3D helper function for selecting one or multiple points
 % on a 3D mesh using the mouse.
 %
 % Use as
-%   [selected] = select_point3d(bnd, ...)
+%   [selected] = ft_select_point3d(bnd, ...)
 %
 % It returns a list of the [x y z] coordinates of the selected points.
 %
@@ -16,7 +16,7 @@ function [selected] = select_point3d(bnd, varargin)
 %   [pnt, tri] = icosahedron162;
 %   bnd.pnt = pnt;
 %   bnd.tri = tri;
-%   plot_mesh(bnd)
+%   ft_plot_mesh(bnd)
 %   camlight
 %   ... do something here
 
@@ -68,9 +68,9 @@ h = h(iscorrect);
 
 if isempty(h) && ~isempty(bnd)
   figure
-  plot_mesh(bnd);
+  ft_plot_mesh(bnd);
   camlight
-  selected = select_point3d(bnd, varargin{:});
+  selected = ft_select_point3d(bnd, varargin{:});
   return
 end
 
