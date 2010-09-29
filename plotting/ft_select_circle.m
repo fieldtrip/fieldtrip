@@ -1,6 +1,6 @@
-function select_circle
+function ft_select_circle
 
-% SELECT_CIRCLE
+% FT_SELECT_CIRCLE
 
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
