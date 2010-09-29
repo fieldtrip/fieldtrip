@@ -1,9 +1,9 @@
-function fiducial=plot_ortho(data)
+function fiducial=ft_plot_ortho(data)
 %
-% PLOT_ORTHO visualizes an MRI 3D volume in 3 orthogonal projections
+% FT_PLOT_ORTHO visualizes an MRI 3D volume in 3 orthogonal projections
 %
 % Use as
-%   hs = plot_ortho(data, varargin)
+%   hs = ft_plot_ortho(data, varargin)
 %
 % Some defaults for the additional arguments:
 %
@@ -32,7 +32,7 @@ function fiducial=plot_ortho(data)
 %   'colorbar'            = 'yes' or 'no' (default = 'yes')
 %
 % Example
-%   figure, plot_ortho(data,'colorbar','no','interactive','yes','axis','off')
+%   figure, ft_plot_ortho(data,'colorbar','no','interactive','yes','axis','off')
 
 % Copyright (C) 2009, Cristiano Micheli 
 %
