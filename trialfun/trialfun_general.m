@@ -92,6 +92,7 @@ end
 
 sel = [];
 trl = [];
+val = [];
 if strcmp(cfg.trialdef.eventtype, '?')
   % no trials should be added, show event information using subfunction and exit
   show_event(event);
@@ -116,8 +117,14 @@ end
 for i=find(strcmp(cfg.trialdef.eventtype, {event.type}))
   if isempty(cfg.trialdef.eventvalue)
     sel = [sel i];
+    if isnumeric(event(i).value)
+      val = [val event(i).value];
+    end
   elseif ~isempty(intersect(event(i).value, cfg.trialdef.eventvalue))
     sel = [sel i];
+    if isnumeric(event(i).value)
+      val = [val event(i).value];
+    end  
   end
 end
 
@@ -176,6 +183,9 @@ for i=sel
   if trlbeg>0 && trlend<=hdr.nSamples.*hdr.nTrials,
     trl = [trl; [trlbeg trlend trloff]];
   end
+end
+if ~isempty(val)
+  trl = [trl val(:)];
 end
 
 if usegui
