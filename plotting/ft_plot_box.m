@@ -1,6 +1,6 @@
-function [varargout] = plot_box(position, varargin);
+function [varargout] = ft_plot_box(position, varargin);
 
-% PLOT_BOX plots the outline of a box that is specified by its lower
+% FT_PLOT_BOX plots the outline of a box that is specified by its lower
 % left and upper right corner
 %
 % Use as
@@ -18,7 +18,7 @@ function [varargout] = plot_box(position, varargin);
 %   'vlim'        =
 %
 % Example
-%   plot_box([-1 1 2 3], 'facecolor', 'b')
+%   ft_plot_box([-1 1 2 3], 'facecolor', 'b')
 %   axis([-4 4 -4 4])
 
 % Copyrights (C) 2009, Robert Oostenveld
