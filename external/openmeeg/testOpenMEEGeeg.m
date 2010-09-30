@@ -12,37 +12,37 @@ pos = [0 0 70];
 r = [85 88 92 100];
 c = [1 1/20 1/80 1];
 
-rdms = run_bem_computation(r,c,pos);
-
-assertTrue(all(rdms < 0.12))
+[rdms,mags] = run_bem_computation(r,c,pos);
+assertElementsAlmostEqual(rdms, [0.019963 0.019962 0.10754], 'absolute', 1e-4)
+assertElementsAlmostEqual(mags, [0.84467 0.84469 0.83887], 'absolute', 1e-4)
 
 % 3 Layers
 r = [88 92 100];
 c = [1 1/80 1];
 
-rdms = run_bem_computation(r,c,pos);
-
-assertTrue(all(rdms < 0.15))
+[rdms,mags] = run_bem_computation(r,c,pos);
+assertElementsAlmostEqual(rdms, [0.064093 0.064092 0.13532], 'absolute', 1e-4)
+assertElementsAlmostEqual(mags, [1.0498 1.0498 1.0207], 'absolute', 1e-4)
 
 % 2 Layers
 r = [92 100];
 c = [1 1/4];
 
-rdms = run_bem_computation(r,c,pos);
-
-assertTrue(all(rdms < 0.3))
+[rdms,mags] = run_bem_computation(r,c,pos);
+assertElementsAlmostEqual(rdms, [0.15514 0.15514 0.12858], 'absolute', 1e-4)
+assertElementsAlmostEqual(mags, [1.8211 1.8211 1.3593], 'absolute', 1e-4)
 
 % 1 Layers
 r = [100];
 c = [1];
 
-rdms = run_bem_computation(r,c,pos);
-
-assertTrue(all(rdms < 0.2))
+[rdms,mags] = run_bem_computation(r,c,pos);
+assertElementsAlmostEqual(rdms, [0.18934 0.18931 0.086394], 'absolute', 1e-4)
+assertElementsAlmostEqual(mags, [1.3584 1.3583 1.2138], 'absolute', 1e-4)
 
 end %  function
 
-function rdms = run_bem_computation(r,c,pos)
+function [rdms,mags] = run_bem_computation(r,c,pos)
 
     %% Description of the spherical mesh
     [pnt, tri] = icosahedron42;
@@ -54,7 +54,7 @@ function rdms = run_bem_computation(r,c,pos)
     sens.label = {};
     nsens = size(sens.pnt,1);
     for ii=1:nsens
-      sens.label{ii} = sprintf('vertex%03d', ii);
+        sens.label{ii} = sprintf('vertex%03d', ii);
     end
 
     %% Create a BEM volume conduction model
@@ -78,7 +78,8 @@ function rdms = run_bem_computation(r,c,pos)
 
     lf_openmeeg = grid.leadfield{1};
 
-    % Rq : ft_compute_leadfield centers the forward fields by default (average reference)
+    % Rq : ft_compute_leadfield centers the forward fields by default
+    % (average reference)
     % lf_openmeeg = lf_openmeeg - repmat(mean(lf_openmeeg),size(lf_openmeeg,1),1);
 
     %% Compute the analytic leadfield
@@ -89,7 +90,7 @@ function rdms = run_bem_computation(r,c,pos)
     %% Evaluate the quality of the result using RDM and MAG
     rdms = zeros(1,size(lf_openmeeg,2));
     for ii=1:size(lf_openmeeg,2)
-        rdms(ii) = norm(lf_openmeeg(:,ii)/norm(lf_openmeeg(:,ii)) - lf_sphere(:,ii)/norm(lf_sphere(:,ii)));
+        rdms(ii) = norm(lf_openmeeg(:,ii)/norm(lf_openmeeg(:,ii)) - lf_sphere(:,ii) / norm(lf_sphere(:,ii)));
     end
     mags = sqrt(sum(lf_openmeeg.^2))./sqrt(sum(lf_sphere.^2));
     disp(['RDMs: ',num2str(rdms)]);

@@ -10,8 +10,7 @@ function om_checkombin
 
 [status,result] = system('om_assemble');
 if status
-    web('http://gforge.inria.fr/frs/?group_id=435')
-    clc
+    web('http://openmeeg.gforge.inria.fr')
     disp('---------------------------------------------')
     disp('---------------------------------------------')
     disp('OpenMEEG binaries are not correctly installed')

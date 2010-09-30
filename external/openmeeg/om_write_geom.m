@@ -1,78 +1,56 @@
-function om_write_geom(geomfile,bndfile)
+function om_write_geom(geomfile,bndfile,names)
 %   OM_WRITE_COND
 %       [] = OM_WRITE_GEOM(GEOMFILE,BNDFILE)
+%       [] = OM_WRITE_GEOM(GEOMFILE,BNDFILE,NAMES)
 %
 %   Write geometry file for OpenMEEG
 %
-%   Created by Alexandre Gramfort on 2009-03-30.
-%   Copyright (c)  Alexandre Gramfort. All rights reserved.
+%   Authors: Alexandre Gramfort alexandre.gramfort@inria.fr
+%            Paul Czienskowski
 
-if length(bndfile) == 4
-    gfid = fopen(geomfile, 'w');
-    fprintf(gfid,'# Domain Description 1.0\n');
-    fprintf(gfid,'                        \n');
-    fprintf(gfid,'Interfaces 4 Mesh       \n');
-    fprintf(gfid,'                        \n');
-    fprintf(gfid,'%s                      \n',bndfile{2});
-    fprintf(gfid,'%s                      \n',bndfile{3});
-    fprintf(gfid,'%s                      \n',bndfile{4});
-    fprintf(gfid,'%s                      \n',bndfile{1});
-    fprintf(gfid,'                        \n');
-    fprintf(gfid,'Domains 5               \n');
-    fprintf(gfid,'                        \n');
-    fprintf(gfid,'Domain Skin 1 -4        \n');
-    fprintf(gfid,'Domain Skull 2 -1       \n');
-    fprintf(gfid,'Domain CSF 3 -2         \n');
-    fprintf(gfid,'Domain Brain -3         \n');
-    fprintf(gfid,'Domain Air 4            \n');
-    fclose(gfid);
-elseif length(bndfile) == 3
-    gfid = fopen(geomfile, 'w');
-    fprintf(gfid,'# Domain Description 1.0\n');
-    fprintf(gfid,'                        \n');
-    fprintf(gfid,'Interfaces 3 Mesh       \n');
-    fprintf(gfid,'                        \n');
-    fprintf(gfid,'%s                      \n',bndfile{2});
-    fprintf(gfid,'%s                      \n',bndfile{3});
-    fprintf(gfid,'%s                      \n',bndfile{1});
-    fprintf(gfid,'                        \n');
-    fprintf(gfid,'Domains 4               \n');
-    fprintf(gfid,'                        \n');
-    fprintf(gfid,'Domain Skin 1 -3        \n');
-    fprintf(gfid,'Domain Brain -2         \n');
-    fprintf(gfid,'Domain Air 3            \n');
-    fprintf(gfid,'Domain Skull 2 -1       \n');
-    fclose(gfid);
-elseif length(bndfile) == 2
-    gfid = fopen(geomfile, 'w');
-    fprintf(gfid,'# Domain Description 1.0\n');
-    fprintf(gfid,'                        \n');
-    fprintf(gfid,'Interfaces 2 Mesh       \n');
-    fprintf(gfid,'                        \n');
-    fprintf(gfid,'%s                      \n',bndfile{2});
-    fprintf(gfid,'%s                      \n',bndfile{1});
-    fprintf(gfid,'                        \n');
-    fprintf(gfid,'Domains 3               \n');
-    fprintf(gfid,'                        \n');
-    fprintf(gfid,'Domain Skin 1 -2        \n');
-    fprintf(gfid,'Domain Air 2            \n');
-    fprintf(gfid,'Domain Skull -1       \n');
-    fclose(gfid);
-elseif length(bndfile) == 1
-    gfid = fopen(geomfile, 'w');
-    fprintf(gfid,'# Domain Description 1.0\n');
-    fprintf(gfid,'                        \n');
-    fprintf(gfid,'Interfaces 1 Mesh       \n');
-    fprintf(gfid,'                        \n');
-    fprintf(gfid,'%s                      \n',bndfile{1});
-    fprintf(gfid,'                        \n');
-    fprintf(gfid,'Domains 2               \n');
-    fprintf(gfid,'                        \n');
-    fprintf(gfid,'Domain Air 1            \n');
-    fprintf(gfid,'Domain Head -1          \n');
-    fclose(gfid);
-else
-    error('OpenMEEG only supports geometry with 4 or less interfaces')
+numbnd = length(bndfile);
+
+if nargin < 3
+    names = {};
+    for k=1:numbnd
+        names{k} = ['domain', num2str(k)];
+    end
 end
+
+if numbnd ~= length(names)
+    error('Number of boundary files is not equal to the number of domain names.');
+end
+
+gfid = fopen(geomfile, 'w');
+
+if gfid == -1
+    error(['Failed to open file ''',geomfile,'''.']);
+end
+
+fprintf(gfid,'# Domain Description 1.0\n');
+fprintf(gfid,'                        \n');
+fprintf(gfid,'Interfaces %d Mesh      \n', numbnd);
+fprintf(gfid,'                        \n');
+
+for i=1:numbnd
+    ind = mod(i,numbnd)+1;
+    fprintf(gfid,'%s                  \n', bndfile{ind});
+end
+
+fprintf(gfid,'                        \n');
+fprintf(gfid,'Domains %d              \n', numbnd+1);
+fprintf(gfid,'                        \n');
+
+for i=1:numbnd
+    ind = mod(i-2,numbnd) + 1;
+    if i < numbnd
+        fprintf(gfid,'Domain %s %d -%d\n', names{i}, i, ind);
+    else
+        fprintf(gfid,'Domain %s -%d   \n', names{i}, ind);
+    end
+end
+
+fprintf(gfid,'Domain Air %d           \n', numbnd);
+fclose(gfid);
 
 end %  function

@@ -1,50 +1,36 @@
-function om_write_cond(condfile,c)
-%   OM_WRITE_COND   
+function om_write_cond(condfile,c,names)
+%   OM_WRITE_COND
 %       [] = OM_WRITE_COND(CONDFILE,C)
-% 
+%
 %   Write conductivity file for OpenMEEG
-%   
-%   Created by Alexandre Gramfort on 2009-03-30.
-%   Copyright (c)  Alexandre Gramfort. All rights reserved.
+%
+%   Authors: Alexandre Gramfort alexandre.gramfort@inria.fr
 
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailed information
+ndomains = length(c);
 
-if length(c) == 4
-    cfid = fopen(condfile, 'w');
-    fprintf(cfid,'# Properties Description 1.0 (Conductivities)\n');
-    fprintf(cfid,'                                             \n');
-    fprintf(cfid,'Air         0.0                              \n');
-    fprintf(cfid,'Brain       %f                               \n',c(1));
-    fprintf(cfid,'Skin        %f                               \n',c(4));
-    fprintf(cfid,'Skull       %f                               \n',c(3));
-    fprintf(cfid,'CSF         %f                               \n',c(2));
-    fclose(cfid);
-elseif length(c) == 3
-    cfid = fopen(condfile, 'w');
-    fprintf(cfid,'# Properties Description 1.0 (Conductivities)\n');
-    fprintf(cfid,'                                             \n');
-    fprintf(cfid,'Air         0.0                              \n');
-    fprintf(cfid,'Skin        %f                               \n',c(3));
-    fprintf(cfid,'Brain       %f                               \n',c(1));
-    fprintf(cfid,'Skull       %f                               \n',c(2));
-    fclose(cfid);
-elseif length(c) == 2
-    cfid = fopen(condfile, 'w');
-    fprintf(cfid,'# Properties Description 1.0 (Conductivities)\n');
-    fprintf(cfid,'                                             \n');
-    fprintf(cfid,'Air         0.0                              \n');
-    fprintf(cfid,'Skin        %f                               \n',c(2));
-    fprintf(cfid,'Skull       %f                               \n',c(1));
-    fclose(cfid);
-elseif length(c) == 1
-    cfid = fopen(condfile, 'w');
-    fprintf(cfid,'# Properties Description 1.0 (Conductivities)\n');
-    fprintf(cfid,'                                             \n');
-    fprintf(cfid,'Air         0.0                              \n');
-    fprintf(cfid,'Head        %f                               \n',c(1));
-    fclose(cfid);
-else
-    error('OpenMEEG only supports geometry with 4 or less interfaces')
+if nargin < 3
+    names = {};
+    for k=1:ndomains
+        names{k} = ['domain', num2str(k)];
+    end
 end
+
+if ndomains ~= length(names)
+    error('Number of conductivities is not equal to the number of domain names.');
+end
+
+cfid = fopen(condfile, 'w');
+if cfid == -1
+    error(['Failed to open file ''',condfile,'''.']);
+end
+
+fprintf(cfid,'# Properties Description 1.0 (Conductivities)\n\n');
+fprintf(cfid,'Air         0.0\n');
+
+for k=1:ndomains
+    fprintf(cfid, '%s       %f\n', names{k}, c(ndomains-k+1));
+end
+
+fclose(cfid);
 
 end %  function

@@ -19,9 +19,9 @@ r = [88 92 100];
 c = [1 1/80 1];
 
 % % 2 Layers
-% %  r = [92 100];
-%  c = [1/4 1];
-% 
+% r = [92 100];
+% c = [1/4 1];
+
 % % 1 Layers
 % r = [100];
 % c = [1];
@@ -32,12 +32,12 @@ c = [1 1/80 1];
 % [pnt, tri] = icosahedron642;
 
 %% Create a set of magnetometers outside the outer surface
-sens.pnt = max(r) * pnt*1.2;
+sens.pnt = max(r) * pnt * 1.2;
 sens.ori = pnt;
 sens.label = {};
-nsens = size(sens.pnt,1);
+nsens = size(sens.pnt, 1);
 for ii=1:nsens
-  sens.label{ii} = sprintf('vertex%03d', ii);
+    sens.label{ii} = sprintf('vertex%03d', ii);
 end
 
 %% Set the position of the probe dipole
@@ -50,7 +50,7 @@ for ii=1:length(r)
     vol.bnd(ii).pnt = pnt * r(ii);
     vol.bnd(ii).tri = tri;
     if (ii==1);
-        vol1.bnd(ii).pnt= pnt * r(ii);
+        vol1.bnd(ii).pnt = pnt * r(ii);
         vol1.bnd(ii).tri = tri;
     end
 end
