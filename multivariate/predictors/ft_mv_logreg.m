@@ -25,13 +25,30 @@ classdef ft_mv_logreg < ft_mv_predictor
     
     function obj = train(obj,X,Y)
      
+      % multiple datasets
+      if iscell(X) || iscell(Y)
+        obj = ft_mv_ndata('mvmethod',obj);
+        obj = obj.train(X,Y);
+        return;
+      end
+      
+      % missing data
+      if any(isnan(X(:))) || any(isnan(Y(:))), error('method does not handle missing data'); end
+     
+      % multiple outputs
+      if size(Y,2) > 1
+        obj = ft_mv_noutput('mvmethod',obj);
+        obj = obj.train(X,Y);
+        return;
+      end
+      
       X = [ones(size(X,1),1) X];
     
       nvars = size(X,2);
     
       opt.display = 0;
       
-      nclasses = numel(unique(Y(:,1)));
+      nclasses = max(Y(:));
       
       if nclasses == 2
         % convert to -1 / + 1
@@ -44,7 +61,24 @@ classdef ft_mv_logreg < ft_mv_predictor
         % initial model has been specified
         w_init = obj.weights;
       else
+
+        % class 1 only
+        if nclasses == 1
+          obj.weights = zeros(nvars,1);
+          obj.weights(1) = 1;
+          return;
+        end
+        
+        % deal with only one class as input
+        u = unique(Y);
+        if length(u) == 1
+          obj.weights = zeros(nvars,nclasses-1);
+          obj.weights(1,u-1) = -1;
+          return;
+        end
+        
         w_init = zeros(nvars,nclasses-1);
+
       end
       w_init = w_init(:);
       

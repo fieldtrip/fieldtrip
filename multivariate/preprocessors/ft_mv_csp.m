@@ -88,6 +88,23 @@ classdef ft_mv_csp < ft_mv_preprocessor
       
       function obj = train(obj,X,Y)
                 
+        % multiple datasets
+        if iscell(X) || iscell(Y)
+          obj = ft_mv_ndata('mvmethod',obj);
+          obj = obj.train(X,Y);
+          return;
+        end
+        
+        % missing data
+        if any(isnan(X(:))) || any(isnan(Y(:))), error('method does not handle missing data'); end
+        
+        % multiple outputs
+        if size(Y,2) > 1
+          obj = ft_mv_noutput('mvmethod',obj);
+          obj = obj.train(X,Y);
+          return;
+        end
+        
         if isempty(obj.numchan)
           error('number of channels not specified');
         end

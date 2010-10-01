@@ -69,7 +69,7 @@ such that \t{V} contains the predictions. The MVA object will sequentially call 
 
 \section{Multivariate methods}
 
-Multivariate methods are organized into different subclasses according to the way they transform input data \t{X} to output data \t{Y}. Currently supported methods are {\em preprocessors}, which preprocess the data, {\em selectors}, which perform some kind of feature selection, {\em predictors}, which make predictions for new data, and {\em timeseries} methods, which perform some kind of timeseries analysis on the data. All methods handle missing data, multiple datasets and online (sample by sample) learning or throw an error if not (yet) available.
+Multivariate methods are organized into different subclasses according to the way they transform input data \t{X} to output data \t{Y}. Currently supported methods are {\em preprocessors}, which preprocess the data, {\em selectors}, which perform some kind of feature selection, {\em predictors}, which make predictions for new data, and {\em timeseries} methods, which perform some kind of timeseries analysis on the data. Many methods handle missing data, multiple outputs, multiple datasets and online (sample by sample) learning. If a method does not handle any of these situations then it will throw an error. Handling of some of these situations can be done by invoking a wrapper function. E.g, multiple outputs can be handled by invoking the \t{ft\_mv\_noutput} method.
 
 All \t{mvmethod} classes are structured as follows (here we show an example of a predictor):
 \begin{verbatim}

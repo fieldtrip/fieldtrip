@@ -30,7 +30,24 @@ classdef ft_mv_kernelmethod < ft_mv_predictor
     function obj = train(obj,X,Y)
       % simply stores input data and design
       
-      if max(Y(:)) ~= 2, error('kernel method only makes binary classifications'); end
+      % multiple datasets
+      if iscell(X) || iscell(Y)
+        obj = ft_mv_ndata('mvmethod',obj);
+        obj = obj.train(X,Y);
+        return;
+      end
+      
+      % missing data
+      if any(isnan(X(:))) || any(isnan(Y(:))), error('method does not handle missing data'); end
+     
+      % multiple outputs
+      if size(Y,2) > 1
+        obj = ft_mv_noutput('mvmethod',obj);
+        obj = obj.train(X,Y);
+        return;
+      end
+      
+      if max(Y(:)) > 2, error('kernel method only makes binary classifications'); end
       
       % transform elements of the design matrix to class labels
       idx1 = (Y==1);

@@ -6,6 +6,9 @@ classdef ft_mv_naive < ft_mv_predictor
 % UPDATING FORMULAE AND A PAIRWISE ALGORITHM FOR COMPUTING SAMPLE VARIANCES
 % by Tony F. Chan Gene H. Golub Randall J. LeVeque
 %
+% Note: sometimes we get complex values for sigma; to-be-solved; caused by
+% instability of the online algorithm
+% 
 % Copyright (c) 2010, Marcel van Gerven
 
   properties
@@ -26,7 +29,22 @@ classdef ft_mv_naive < ft_mv_predictor
     
     function obj = train(obj,X,Y)
   
-      nclasses = max(Y);
+      % multiple datasets
+      if iscell(X) || iscell(Y)
+        obj = ft_mv_ndata('mvmethod',obj);
+        obj = obj.train(X,Y);
+        return;
+      end  
+     
+      % multiple outputs
+      if size(Y,2) > 1
+        obj = ft_mv_noutput('mvmethod',obj);
+        obj = obj.train(X,Y);
+        return;
+      end
+        
+      % at least two classes
+      nclasses = max(2,max(Y));
       nfeatures = size(X,2);
    
       % initialize if not yet done
@@ -34,26 +52,33 @@ classdef ft_mv_naive < ft_mv_predictor
         obj.n = zeros(nclasses,nfeatures); 
         obj.S = zeros(nclasses,nfeatures);
         obj.SS = zeros(nclasses,nfeatures);
+        binit = true;
       else
         if obj.verbose, fprintf('online learning\n'); end
+        binit = false;
       end
       
       for k=1:nclasses
         
         % estimate class priors while taking nan into account
-        obj.n(k,:) = obj.n(k,:) + sum(~isnan(X(Y==k,:)));
+        obj.n(k,:) = obj.n(k,:) + sum(~isnan(X(Y==k,:)),1);
         
         % estimate class-conditional sum
-        obj.S(k,:) = obj.S(k,:) + nansum(X(Y == k,:));
+        obj.S(k,:) = obj.S(k,:) + nansum(X(Y == k,:),1);
         
         % estimate class-conditional sum of squares
         mu    = obj.S ./ obj.n;
        
-        %obj.SS(k,:) = obj.SS(k,:) + nansum(X(Y == k,:).^2);
-        % use Eq 1.4 in UPDATING FORMULAE AND A PAIRWISE ALGORITHM FOR COMPUTING SAMPLE VARIANCES
-        % by Tony F. Chan Gene H. Golub Randall J. LeVeque
-        obj.SS(k,:) = obj.SS(k,:) + nansum(bsxfun(@minus,X(Y==k,:),mu(k,:)).^2) - ...
-          bsxfun(@rdivide,(nansum(bsxfun(@minus,X(Y==k,:),mu(k,:))).^2),obj.n(k,:));
+        if binit
+        
+          obj.SS(k,:) = sum(bsxfun(@minus,X(Y==k,:),mean(X(Y==k,:))).^2,1);
+          
+        else
+          % use Eq 1.4 in UPDATING FORMULAE AND A PAIRWISE ALGORITHM FOR COMPUTING SAMPLE VARIANCES
+          % by Tony F. Chan Gene H. Golub Randall J. LeVeque
+          obj.SS(k,:) = obj.SS(k,:) + nansum(bsxfun(@minus,X(Y==k,:),mu(k,:)).^2,1) - ...
+            bsxfun(@rdivide,(nansum(bsxfun(@minus,X(Y==k,:),mu(k,:)),1).^2),obj.n(k,:));
+        end
         
       end
       
@@ -62,42 +87,40 @@ classdef ft_mv_naive < ft_mv_predictor
     function Y = test(obj,X)
 
       prior = sum(obj.n,2)./sum(obj.n(:));
+
+      % handle degenerate cases
+      nzidx = find(prior ~= 0);
+
+      % compute means and variances
       mu    = obj.S ./ obj.n;
-      sigma = sqrt((obj.SS ./ obj.n) - mu.^2);
-      
+      %sigma = (obj.SS ./ obj.n); % biased estimator
+      sigma = obj.SS ./ (obj.n - 1);
+
       nclasses = length(prior);
       
-      Y = nan(size(X,1),nclasses);
+      Y = zeros(size(X,1),nclasses);
 
       for m=1:size(Y,1) % iterate over examples
 
-        for c=1:nclasses
+        for cc=1:length(nzidx)
+          
+          c = nzidx(cc);
 
-          conditional = 1./(sqrt(2*pi)*sigma(c,:)) .* exp(- (X(m,:) - mu(c,:)).^2./(2*sigma(c,:).^2));
-
-          % degenerate cases
-          if ~prior(c) || any(isinf(conditional)) || ~all(conditional)
-            Y(m,c) = 0;
-            break
-          end
+          conditional = 1./sqrt(2*pi*sigma(c,:)) .* exp(- (X(m,:) - mu(c,:)).^2./(2*sigma(c,:)));
 
           % compute probability
           Y(m,c) = log(prior(c)) + nansum(log(conditional));
 
         end
-
+        
         % compute normalizing term using log-sum-exp trick
 
-        mx = max(Y(m,:));
+        mx = max(Y(m,nzidx));
 
-        nt = 0;
-        for c=1:nclasses
-          nt = nt + exp(Y(m,c) - mx);
-        end
-        nt = log(nt) + mx;
+        nt = log(sum(exp(Y(m,nzidx)-mx))) + mx;
 
         % normalize
-        Y(m,:) = exp(Y(m,:) - nt);
+        Y(m,nzidx) = exp(Y(m,nzidx) - nt);
 
       end
       
@@ -107,7 +130,7 @@ classdef ft_mv_naive < ft_mv_predictor
       % return the parameters wrt a class label in some shape
 
       mu    = obj.S ./ obj.n;
-      sigma = sqrt((obj.SS ./ obj.n).^2 - mu.^2);
+      sigma = (obj.SS ./ obj.n).^2 - mu.^2;
       
       % return model for all classes; i.e., their means and standard
       % deviations
@@ -130,8 +153,8 @@ classdef ft_mv_naive < ft_mv_predictor
         desc{2} = 'symmetricized KL divergence'; % Bhattacharyya distance alternative
         desc{3} = 'means for condition 1';
         desc{4} = 'means for condition 2';
-        desc{5} = 'SD for condition 1';
-        desc{6} = 'SD for condition 2';
+        desc{5} = 'variance for condition 1';
+        desc{6} = 'variance for condition 2';
         
       else
         m = {};

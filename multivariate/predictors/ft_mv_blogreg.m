@@ -106,7 +106,17 @@ classdef ft_mv_blogreg < ft_mv_predictor
        end
        
        function obj = train(obj,X,Y)
-
+         
+         % missing data
+         if any(isnan(X(:))) || any(isnan(Y(:))), error('method does not handle missing data'); end
+         
+         % multiple outputs
+         if size(Y,2) > 1
+           obj = ft_mv_noutput('mvmethod',obj);
+           obj = obj.train(X,Y);
+           return;
+         end
+         
          % transfer learning
          transfer = iscell(X);
          

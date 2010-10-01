@@ -22,6 +22,23 @@ classdef ft_mv_glmlogreg < ft_mv_predictor
     
     function obj = train(obj,X,Y)
      
+          % multiple datasets
+      if iscell(X) || iscell(Y)
+        obj = ft_mv_ndata('mvmethod',obj);
+        obj = obj.train(X,Y);
+        return;
+      end
+      
+      % missing data
+      if any(isnan(X(:))) || any(isnan(Y(:))), error('method does not handle missing data'); end
+     
+      % multiple outputs
+      if size(Y,2) > 1
+        obj = ft_mv_noutput('mvmethod',obj);
+        obj = obj.train(X,Y);
+        return;
+      end
+      
       nclasses = numel(unique(Y(:,1)));
       
       opts = glmnetSet;
