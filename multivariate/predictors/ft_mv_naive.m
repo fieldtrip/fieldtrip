@@ -130,8 +130,9 @@ classdef ft_mv_naive < ft_mv_predictor
       % return the parameters wrt a class label in some shape
 
       mu    = obj.S ./ obj.n;
-      sigma = (obj.SS ./ obj.n).^2 - mu.^2;
-      
+      %sigma = (obj.SS ./ obj.n); % biased estimator
+      sigma = obj.SS ./ (obj.n - 1);
+
       % return model for all classes; i.e., their means and standard
       % deviations
       if size(obj.n,1) == 2
