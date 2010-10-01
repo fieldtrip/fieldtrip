@@ -34,6 +34,13 @@ classdef ft_mv_filterer < ft_mv_selector
     
     function obj = train(obj,X,Y)
       
+      % multiple datasets
+      if iscell(X) || iscell(Y)
+        obj = ft_mv_ndata('mvmethod',obj);
+        obj = obj.train(X,Y);
+        return;
+      end
+            
       maxf = min(obj.maxfeatures,size(X,2));
       
       if obj.verbose
