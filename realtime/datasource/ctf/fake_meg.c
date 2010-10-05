@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
 	int currentPacket = 0;
 	int numChannels = 356;
 	int blockSize = 60;  /* this is too much for regular operation! */
-	int numPackets = 42;
+	int numPackets = 420000;
 	int sampleNumber = 0;
 	int i;
 		
@@ -69,8 +69,8 @@ int main(int argc, char **argv) {
 		packet[currentPacket].numSamples = blockSize;
 		packet[currentPacket].numChannels = numChannels;
 		memset(packet[currentPacket].data, 0, numChannels * blockSize * sizeof(int));
-		packet[currentPacket].data[0] = i+1;
-		packet[currentPacket].data[10*numChannels] = 10;
+		//packet[currentPacket].data[0] = i+1;
+		//packet[currentPacket].data[10*numChannels] = 10;
 		packet[currentPacket].numChannels = numChannels;
 		packet[currentPacket].message_type = ACQ_MSGQ_DATA;
 		

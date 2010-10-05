@@ -115,7 +115,7 @@ struct {
 ACQ_MessagePacketType *createSharedMem();
 void closeSharedMem(ACQ_MessagePacketType *packet);
 void initSharedMem(ACQ_MessagePacketType *packet);
-ACQ_MessageType waitPacket(volatile ACQ_MessageType *msgtyp);
+ACQ_MessageType waitPacket(volatile ACQ_MessageType *msgtyp,struct timeval *tv);
 void abortHandler(int sig);
 void *dataToFieldTripThread(void *arg);
 ft_chunk_t *handleRes4(const char *dsname, int *numChannels, float *fSample);
@@ -319,7 +319,7 @@ int main(int argc, char **argv) {
 	while (keepRunning) {
 		int size;
 		char *dataset;
-		int code = waitPacket(&packet[currentPacket].message_type);
+		int code = waitPacket(&packet[currentPacket].message_type, &tv);
 		
 		switch(code) {
 			case ACQ_MSGQ_SETUP_COLLECTION:
@@ -353,7 +353,6 @@ int main(int argc, char **argv) {
 				numSamples   = packet[currentPacket].numSamples;
 				sampleNumber = packet[currentPacket].sampleNumber;
 				
-				gettimeofday(&tv, NULL);
 				tNow = ((double) tv.tv_sec) * 1000 + ((double) tv.tv_usec)*0.001;
 			
 				if (numT > 0) {
@@ -474,13 +473,18 @@ void initSharedMem(ACQ_MessagePacketType *packet) {
 }
 
 /* wait up to 1 second for new packet */
-ACQ_MessageType waitPacket(volatile ACQ_MessageType *msgtyp) {
-	int i;
+ACQ_MessageType waitPacket(volatile ACQ_MessageType *msgtyp, struct timeval *tv) {
+	struct timeval tv0;
 	volatile ACQ_MessageType t;
-	for (i=0;i<1000 && keepRunning;i++) {
+	
+	gettimeofday(&tv0, NULL);
+	
+	while (keepRunning) {
+		gettimeofday(tv, NULL);
 		t = *msgtyp;
 		if (t != ACQ_MSGQ_INVALID) break;
-		usleep(1000);
+		if (tv->tv_sec > tv0.tv_sec && tv->tv_usec > tv0.tv_usec) break;
+		usleep(0);
 	}
 	return t;
 }
@@ -538,16 +542,19 @@ void *dataToFieldTripThread(void *arg) {
 			/* clear internal ringbuffer slot */
 			pack->message_type = ACQ_MSGQ_INVALID;
 			
-			if (chunk == NULL) continue;	/* problem while picking up header -- ignore this packet */
-			
-			numChannels = nChans;
-			
-			matchChannels(numChannels);
-			for (i=0;i<numOutputs;i++) {
-				writeHeader(&outConf[i], nChans, fSample, chunk);
+			if (chunk == NULL) {
+				/* problem while picking up header -- ignore this packet */
+				numChannels = 0;
+				fprintf(stderr, "SETUP packet received, but could not read .res4 file!\n");
+			} else {
+				numChannels = nChans;
+				matchChannels(numChannels);
+				for (i=0;i<numOutputs;i++) {
+					writeHeader(&outConf[i], nChans, fSample, chunk);
+				}
+				warningGiven = 0;
+				free(chunk);
 			}
-			warningGiven = 0;
-			free(chunk);
 		} else if (pack->message_type == ACQ_MSGQ_DATA) {
 			int sampleNumber;
 			
@@ -733,7 +740,7 @@ ft_chunk_t *handleRes4(const char *dsname, int *numChannels, float *fSample) {
 	
 	for (i=0;i<numFilters;i++) {
 		len = (chunk->data[offset+16] << 8) + chunk->data[offset+17];
-		offset += 18 + len;
+		offset += 18 + 8*len;
 		/* printf("Filter %i: offset = %i,  len = %i\n", i, offset, len); */
 	}
 	
@@ -831,10 +838,10 @@ void addTriggerEvent(EventChain *EC, int trigChan, UINT32_T sample, int value) {
 	ne->type_numel  = triggerChannelNameLen[trigChan];
 	ne->value_type  = DATATYPE_INT32;
 	ne->value_numel = 1;
-	ne->sample = sample;
-	ne->offset = 0;
-	ne->duration = 0;
-	ne->bufsize = triggerChannelNameLen[trigChan] + sizeof(int);
+	ne->sample      = sample;
+	ne->offset      = 0;
+	ne->duration    = 0;
+	ne->bufsize     = triggerChannelNameLen[trigChan] + sizeof(int);
 	memcpy(ntype, triggerChannelName[trigChan], triggerChannelNameLen[trigChan]);
 	memcpy(ntype + triggerChannelNameLen[trigChan], &value, sizeof(int));
 }
