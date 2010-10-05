@@ -78,7 +78,7 @@ extern struct {
 		int prevhostcount;
 		int prevhostid;
 		int n;
-		time_t t0;
+		time_t time;
 } smartshare;
 
 

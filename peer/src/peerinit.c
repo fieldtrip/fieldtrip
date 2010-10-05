@@ -163,7 +163,7 @@ void peerinit(void *arg) {
 		smartshare.prevhostid    = 0;
 		smartshare.prevhostcount = 0;
 		smartshare.n             = 0;
-		smartshare.t0            = time(NULL);
+		smartshare.time          = time(NULL);
 		pthread_mutex_unlock(&mutexsmartshare);
 
 		return;

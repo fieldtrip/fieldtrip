@@ -57,7 +57,7 @@ void *checktimer(void *arg) {
 		while (1) {
 				/* test whether the timer has elapsed */
 				pthread_mutex_lock(&mutextimer);
-				if (time(NULL)>timer) {
+				if (difftime(time(NULL), timer)>0) {
 						/* do a brute force exit */
 						exit(0);
 				}
@@ -98,7 +98,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				pthread_mutex_lock(&mutextimer);
 				pthread_mutex_lock(&mutexstatus);
 				if (timerStatus) {
-						delay = (double)timer-(double)time(NULL);
+						delay = difftime(timer-time(NULL));
 						if (nlhs<1)
 								mexPrintf("delayed exit scheduled at %d seconds\n", (int)delay);
 						else

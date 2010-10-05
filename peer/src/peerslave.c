@@ -709,7 +709,7 @@ cleanup:
 				} /* if jobcount */
 
 				/* switch the engine off if it is idle for too long */
-				if ((matlabRunning!=0) && ((time(NULL)-matlabFinished)>enginetimeout)) {
+				if ((matlabRunning!=0) && (difftime(time(NULL), matlabFinished)>enginetimeout)) {
 						if (engClose(en)!=0) {
 								DEBUG(LOG_CRIT, "could not stop the MATLAB engine");
 								matlabRunning = 0;
@@ -721,7 +721,7 @@ cleanup:
 				}
 
 				/* switch back to the default state after having waiting some time */
-				if ((engineFailed!=0) && ((time(NULL)-engineFailed)>zombietimeout)) {
+				if ((engineFailed!=0) && (difftime(time(NULL), engineFailed)>zombietimeout)) {
 						DEBUG(LOG_NOTICE, "switching back to idle mode");
 						pthread_mutex_lock(&mutexhost);
 						host->status = STATUS_IDLE;
