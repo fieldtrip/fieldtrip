@@ -231,8 +231,10 @@ switch submethod
         filt = pinv(lf' * invCf * lf) * lf' * invCf;
         [u, s, v] = svd(real(filt * Cf * ctranspose(filt)));
         eta = u(:,1);
+        alpha = s(1,1)./s(2,2);
         lf  = lf * eta;
         dipout.ori{i} = eta;
+        dipout.orithr{i} = alpha;
       end
       if isfield(dip, 'filter')
         % use the provided filter
