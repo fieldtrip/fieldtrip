@@ -56,18 +56,18 @@
 #define DEFAULT_CPUAVAIL         0
 #define DEFAULT_TIMAVAIL         (24*3600)
 
-#define ACCEPTSLEEP              10000		/* in usec */
-#define ANNOUNCESLEEP            1000000	/* in usec */
-#define ANNOUNCEJITTER           10000 		/* in usec */
-#define EXPIRESLEEP              1500000	/* in usec, should be longer than ANNOUNCESLEEP+ANNOUNCEJITTER */
+#define ACCEPTSLEEP              0.010		/* float, in seconds */
+#define ANNOUNCESLEEP            1.000		/* float, in seconds */
+#define ANNOUNCEJITTER           0.010 		/* float, in seconds */
+#define EXPIRESLEEP              1.500		/* float, in seconds, should be longer than ANNOUNCESLEEP+ANNOUNCEJITTER */
+#define EXPIRETIME               3.000		/* float, in seconds */
+
 #define BACKLOG                  16
-#define EXPIRATION               3			/* in sec  */
-#define SMARTMEM_MINIMUM         104857600	/* 100 MB  */
-#define SMARTSHARE_HISTORY       2			/* number if history items peer peer */
-#define SMARTSHARE_PREVHOSTCOUNT 3			/* number of times that a host has to "knock" */
-#define SMARTSHARE_TIMEOUT       5			/* in sec  */
-#define SMARTSHARE_TIMER         3			/* idle time in seconds after which smartshare is disabled */
-#define SMARTCPU_TOLERANCE       0.05		/* the ideal load of a computer is N+0.05, with N the number of CPUs */
+#define SMARTMEM_MINIMUM         104857600	/* int, lower boundary in bytes */
+#define SMARTSHARE_HISTORY       2			/* int, number if history items peer peer */
+#define SMARTSHARE_PREVHOSTCOUNT 3			/* int, number of times that a host has to "knock" */
+#define SMARTSHARE_TIMEOUT       3			/* int, idle time in seconds after which smartshare is disabled */
+#define SMARTCPU_TOLERANCE       0.05		/* float, the ideal load of a computer is N+0.05, with N the number of CPUs */
 #define SO_RCVBUF_SIZE           16384
 #define SO_SNDBUF_SIZE           16384
 
@@ -283,6 +283,7 @@ void clear_joblist(void);
 void clear_peerlist(void);
 void clear_smartsharelist(void);
 void clear_userlist(void);
+int threadsleep(float);
 
 #ifdef __cplusplus
 }

@@ -76,7 +76,7 @@ int smartshare_check(float t, int hostid) {
 				return 1;
 		}
 
-		if ((time(NULL)-smartshare.t0) >= SMARTSHARE_TIMER) {
+		if ((time(NULL)-smartshare.t0) >= SMARTSHARE_TIMEOUT) {
 				DEBUG(LOG_DEBUG, "smartshare_check: timer has elapsed");
 				pthread_mutex_unlock(&mutexsmartshare);
 				return 1;

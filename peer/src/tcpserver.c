@@ -222,7 +222,7 @@ void *tcpserver(void *arg) {
 #ifdef WIN32
 						if(errno==0) {
 								pthread_testcancel();
-								usleep(ACCEPTSLEEP);
+								threadsleep(ACCEPTSLEEP);
 						}
 						else {
 								perror("tcpserver accept");
@@ -232,7 +232,7 @@ void *tcpserver(void *arg) {
 #else
 						if (errno==EWOULDBLOCK) {
 								pthread_testcancel();
-								usleep(ACCEPTSLEEP);
+								threadsleep(ACCEPTSLEEP);
 						}
 						else {
 								perror("tcpserver accept");

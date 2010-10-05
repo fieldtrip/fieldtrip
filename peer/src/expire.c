@@ -72,7 +72,7 @@ void *expire(void *arg) {
 				/* test the first item on the list */
 				if (peerlist)
 				{
-						found = (difftime(time(NULL), peerlist->time)>EXPIRATION);
+						found = (difftime(time(NULL), peerlist->time)>EXPIRETIME);
 						found = found | !ismember_userlist (peerlist->host->user);
 						found = found | !ismember_grouplist(peerlist->host->group);
 						found = found | !ismember_hostlist (peerlist->host->name);
@@ -95,7 +95,7 @@ void *expire(void *arg) {
 						/* test the next item on the list, remember the current one */
 						next = peer->next;
 						if (next) {
-								found = (difftime(time(NULL), next->time)>EXPIRATION);
+								found = (difftime(time(NULL), next->time)>EXPIRETIME);
 								found = found | !ismember_userlist (next->host->user);
 								found = found | !ismember_grouplist(next->host->group);
 								found = found | !ismember_hostlist (next->host->name);
@@ -160,7 +160,7 @@ fprintf(stderr, "killswitch: masterid = %d\n", killswitch.masterid);
 
 				/* note that this is a thread cancelation point */
 				pthread_testcancel();
-				usleep(EXPIRESLEEP);
+				threadsleep(EXPIRESLEEP);
 
 		} /* while (1) */
 

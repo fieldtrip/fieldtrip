@@ -34,9 +34,9 @@
 mxArray *mxSerialize(const mxArray*);
 mxArray *mxDeserialize(const void*, size_t);
 
-#define ENGINETIMEOUT     30     /* in seconds */
-#define ZOMBIETIMEOUT     300    /* in seconds */
-#define SLEEPTIME         10000  /* in microseconds */
+#define ENGINETIMEOUT     30     /* int, in seconds */
+#define ZOMBIETIMEOUT     300    /* int, in seconds */
+#define SLEEPTIME         0.010  /* float, in seconds */
 
 #define STARTCMD "matlab -nosplash"
 
@@ -705,7 +705,7 @@ cleanup:
 						DEBUG(LOG_CRIT, "executing job %d took %d seconds", jobnum, matlabFinished - matlabStart);
 				}
 				else {
-						usleep(SLEEPTIME);
+						threadsleep(SLEEPTIME);
 				} /* if jobcount */
 
 				/* switch the engine off if it is idle for too long */
