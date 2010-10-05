@@ -17,7 +17,7 @@ function [jobid, puttime] = peerfeval(varargin)
 %   argout = peerget(jobid, 'timeout', inf);
 %   disp(argout);
 %
-% See also FEVAL, PEERMASTER, PEERGET, PEERCELLFUN
+% See also PEERGET, PEERCELLFUN, PEERMASTER, PEERSLAVE, FEVAL, DFEVAL, DFEVALASYNC
 
 % Undocumented options
 %   memreq   default = 0

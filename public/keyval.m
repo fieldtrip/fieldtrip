@@ -8,6 +8,9 @@ function [val, remaining] = keyval(key, varargin)
 %
 % See also VARARGIN
 
+% Undocumented option
+%   [val] = keyval(key, varargin, default)
+
 % Copyright (C) 2005-2007, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -27,6 +30,14 @@ function [val, remaining] = keyval(key, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+% what to return if the key is not found
+emptyval = [];
+
+if nargin==3 && iscell(varargin{1})
+  emptyval = varargin{2};
+  varargin = varargin{1};
+end
 
 if nargin==2 && iscell(varargin{1})
   varargin = varargin{1};
@@ -53,7 +64,7 @@ end
 hit = find(strcmpi(key, keys));
 if isempty(hit)
   % the requested key was not found
-  val = [];
+  val = emptyval;
 elseif length(hit)==1  
   % the requested key was found
   val = vals{hit};

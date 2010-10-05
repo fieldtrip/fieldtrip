@@ -6,10 +6,11 @@ function varargout = peerget(jobid, varargin)
 %   argout = peerget(jobid, ...)
 %
 % Optional arguments can be specified in key-value pairs and can include
-%   timeout  = number, in seconds (default = 1)
-%   sleep    = number, in seconds (default = 0.01)
-%   output   = string, 'varargout' or 'cell' (default = 'varargout')
-%   diary    = string, can be 'always', 'warning', 'error' (default = 'error')
+%   StopOnError    = boolean (default = true)
+%   timeout        = number, in seconds (default = 1)
+%   sleep          = number, in seconds (default = 0.01)
+%   output         = string, 'varargout' or 'cell' (default = 'varargout')
+%   diary          = string, can be 'always', 'warning', 'error' (default = 'error')
 %
 % See also PEERFEVAL, PEERCELLFUN
 
@@ -31,21 +32,23 @@ function varargout = peerget(jobid, varargin)
 % -----------------------------------------------------------------------
 
 % the following are to speed up subsequent calls
-persistent previous_varargin previous_timeout previous_sleep previous_output previous_diary
+persistent previous_varargin previous_timeout previous_sleep previous_output previous_diary previous_StopOnError
 
 if isequal(previous_varargin, varargin)
   % prevent the keyval function from being called, because it is slow
   % reuse the values from the previous call
-  timeout = previous_timeout;
-  sleep   = previous_sleep;
-  output  = previous_output;
-  diary   = previous_diary;
+  timeout     = previous_timeout;
+  sleep       = previous_sleep;
+  output      = previous_output;
+  diary       = previous_diary;
+  StopOnError = previous_StopOnError;
 else
   % get the optional arguments
-  timeout = keyval('timeout', varargin); if isempty(timeout), timeout=1;          end
-  sleep   = keyval('sleep',   varargin); if isempty(sleep),   sleep=0.01;         end
-  output  = keyval('output',  varargin); if isempty(output),  output='varargout'; end
-  diary   = keyval('diary',   varargin); if isempty(diary),   diary='error';      end
+  timeout     = keyval('timeout', varargin); if isempty(timeout), timeout=1;          end
+  sleep       = keyval('sleep',   varargin); if isempty(sleep),   sleep=0.01;         end
+  output      = keyval('output',  varargin); if isempty(output),  output='varargout'; end
+  diary       = keyval('diary',   varargin); if isempty(diary),   diary='error';      end
+  StopOnError = keyval('StopOnError', varargin); if isempty(StopOnError), StopOnError = true; end
 end
 
 % keep track of the time
@@ -102,17 +105,26 @@ if success
   if ~isempty(warn)
     warning(warn);
   end
-  if ~isempty(err) 
+  if ~isempty(err)
     if ischar(err)
       % it only contains the description
-      error(err);
+      if StopOnError
+        error(err);
+      else
+        warning(sprintf('error during remote execution: %s', err));
+      end
     else
-      % it contains the full details
       ws = warning('off', 'MATLAB:structOnObject');
-      rethrow(struct(err));
+      err = struct(err);
       warning(ws);
+      if StopOnError
+        % it contains the full details
+        rethrow(err);
+      else
+        warning(sprintf('error during remote execution: %s', err.message));
+      end
     end
-  end
+  end % ~isempty(err)
   if closeline
     fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
   end
@@ -145,8 +157,9 @@ else
 end
 
 % remember the input arguments to speed up subsequent calls
-previous_varargin = varargin;
-previous_timeout  = timeout;
-previous_sleep    = sleep;
-previous_output   = output;
-previous_diary    = diary;
+previous_varargin    = varargin;
+previous_timeout     = timeout;
+previous_sleep       = sleep;
+previous_output      = output;
+previous_diary       = diary;
+previous_StopOnError = StopOnError;
