@@ -16,9 +16,6 @@ function compile(cc, libpath)
 % to choose either the Borland or Microsoft compiler. If you want to use MinGW, you also
 % need to install Gnumex (http://gnumex.sourceforget.net), which comes with its own
 % procedure for setting up the MEX environment.
-%
-% Please also note that you can only use this function, AFTER you have compiled the
-% 'buffer' library from '../src' with the SAME compiler you use here.
 
 % You can tweak this a bit for setting platform-independent options, e.g for optimisation 
 % or debugging. The default is to enable debug information (-g).
@@ -87,7 +84,7 @@ if ispc
 			ldflags = [ldflags ' "' matlabroot '\sys\lcc\lib\wsock32.lib"'];
 			%ldflags = [ldflags ' "' matlabroot '\sys\lcc\lib\kernel32.lib"'];
 		otherwise
-			error 'Unsupported compile - select one of LCC, VC, MINGW, BCC55, BCB';
+			error 'Unsupported compiler - select one of LCC, VC, MINGW, BCC55, BCB';
 	end
 else
 	% On POSIX systems such as MacOS X and Linux, the following should work without tweaking
