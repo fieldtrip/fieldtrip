@@ -7,10 +7,15 @@ function ft_compile_mex
 % need to install Gnumex (http://gnumex.sourceforget.net), which comes with its own
 % procedure for setting up the MEX environment.
 
-% You can tweak this a bit for setting platform-independent options, e.g for optimisation 
-% or debugging. The default is to enable debug information (-g).
+% The logic in this script is to first build a list of files that actually need compilation for the
+% particular platform that Matlab is running on, and then to go through that list.
+% Functions are added to the list by giving their destination directory and (relative to that) the 
+% name of the source file (without the .c). Optionally, you can specify a list of platform this
+% file needs to be compiled on only, and a list of platforms where you don't compile it on.
+% Finally, you can give extra arguments to the MEX command, e.g., for including other c-sources or
+% giving compiler flags.
+% (C) 2010 S. Klanke
 
-% The -I../src is for including the header files of the buffer C library.
 
 
 %Possible COMPUTER types
