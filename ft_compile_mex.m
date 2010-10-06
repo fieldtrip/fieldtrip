@@ -1,4 +1,4 @@
-function ft_compile_mex
+function ft_compile_mex(force)
 % FT_COMPILE_MEX  This script/function is used for compiling the various MEX files used in FieldTrip
 %
 % Please note that this script does NOT set up your MEX environment for you, so in case
@@ -16,7 +16,9 @@ function ft_compile_mex
 % giving compiler flags.
 % (C) 2010 S. Klanke
 
-
+if nargin<1
+   force=false;
+end
 
 %Possible COMPUTER types
 %GLNX86
@@ -57,12 +59,27 @@ oldDir = pwd;
 [baseDir, myName] = fileparts(mfilename('fullpath'));
 
 for i=1:length(L)
-	[relDir, name] = fileparts(L(i).relName);
-	fprintf(1,'Compiling MEX file %s/%s ...\n', L(i).dir, name);
-	
-	cd([baseDir '/' L(i).dir]);
-	cmd = sprintf('mex %s.c %s', L(i). relName, L(i).extras);
-	eval(cmd);
+   [relDir, name] = fileparts(L(i).relName);
+
+   sfname = [baseDir filesep L(i).dir filesep L(i).relName '.c'];
+   SF = dir(sfname);
+   if numel(SF)<1
+      fprintf(1,'Error: source file %s cannot be found.', sfname);
+      continue;
+   end
+
+   if ~force
+      mfname = [baseDir filesep L(i).dir filesep name '.' mexext];
+      MF = dir(mfname);
+      if numel(MF)==1 & SF.datenum <= MF.datenum
+         fprintf(1,'Skipping up-to-date MEX file %s/%s\n', L(i).dir, name);
+         continue;
+      end 
+   end
+   fprintf(1,'Compiling MEX file %s/%s ...\n', L(i).dir, name);
+   cd([baseDir '/' L(i).dir]);
+   cmd = sprintf('mex %s.c %s', L(i). relName, L(i).extras);
+   eval(cmd);
 end
 
 cd(oldDir);
