@@ -15,8 +15,13 @@ if ~isfield(data, 'cfg')
   data.cfg = [];
 end
 
-hastrial = isfield(data, 'trial');
-hastime  = isfield(data, 'time');
+hastrial   = isfield(data, 'trial');
+hastime    = isfield(data, 'time');
+hasfsample = isfield(data, 'fsample');
+
+if ~hasfsample
+  data.fsample = median(1./diff(data.time{1}));
+end
 
 if hastrial,
   ntrial = length(data.trial);
@@ -25,7 +30,7 @@ else
   if ~isfinite(ntrial) && strcmp(data.dimord(1:6), 'rpttap') && isfield(data, 'cumtapcnt'),
     ntrial = numel(data.cumtapcnt);
   elseif ~isfinite(ntrial)
-    ntrial = 1; 
+    ntrial = 1;
   end
 end
 
@@ -50,7 +55,7 @@ if isempty(trl)
     begsample = cat(1, 0, cumsum(nsmp(1:end-1))) + 1;
   end
   endsample = begsample + nsmp - 1;
-  
+
   offset    = zeros(ntrial,1);
   if hastime,
     for i=1:ntrial
@@ -74,7 +79,7 @@ elseif ~isfield(data, 'sampleinfo') && isempty(trl)
 end
 
 if (~isfield(data, 'trialinfo') || isempty(data.trialinfo)) && ~isempty(trl) && size(trl, 2) > 3,
-    data.trialinfo = trl(:, 4:end); 
+  data.trialinfo = trl(:, 4:end);
 end
 
 % if data is not raw then it does not make sense to keep the sampleinfo
