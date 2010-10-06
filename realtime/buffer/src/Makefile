@@ -38,7 +38,7 @@ ifeq "$(PLATFORM)" "i686-apple-darwin10"
 	INCPATH	 = -I.
 	LIBPATH  = -L.
 	LIBS 	 = -lbuffer -lm -lpthread
-	CFLAGS	 = $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -g -arch i386
+	CFLAGS	 = $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -g
 endif
 
 ifeq "$(PLATFORM)" "mingw32"
