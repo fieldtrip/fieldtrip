@@ -70,6 +70,19 @@ classdef ft_mv_noutput < ft_mv_method
       
     end
     
+    function [m,d] = model(obj)
+      
+      ny = length(obj.mvmethod);
+      
+      m = cell(1,ny);
+      for c=1:ny
+        
+        [m{c},d] = obj.mvmethod{c}.model;
+        
+      end
+      
+    end
+    
   end
 
 end

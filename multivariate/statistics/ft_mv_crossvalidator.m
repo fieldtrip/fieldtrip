@@ -153,7 +153,13 @@ classdef ft_mv_crossvalidator
         end
    
         for mm=1:numel(obj.model)
-          obj.model{mm} = obj.model{mm}./nf;
+          if iscell(obj.model{mm})
+            for cc=1:length(obj.model{mm}) % occurs for nested methods
+              obj.model{mm}{cc} = obj.model{mm}{cc}./nf;
+            end
+          else
+            obj.model{mm} = obj.model{mm}./nf;
+          end
         end
        
         % local function

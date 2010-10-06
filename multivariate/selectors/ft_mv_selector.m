@@ -19,11 +19,12 @@ classdef ft_mv_selector < ft_mv_method
     function obj = ft_mv_selector(varargin)
       
       obj = obj@ft_mv_method(varargin{:});
+                  
+    end
+    
+    function obj = train(obj,X,Y)
+      % in case the subset is manually specified
       
-      if isempty(obj.validator)
-        error('validator must be specified');
-      end
-            
     end
     
     function Y = test(obj,X)

@@ -85,6 +85,19 @@ classdef ft_mv_ndata < ft_mv_method
       
     end
     
+    function [m,d] = model(obj)
+      
+      nx = length(obj.mvmethod);
+      
+      m = cell(size(X));
+      for c=1:nx
+        
+        [m{c},d] = obj.mvmethod{c}.model;
+        
+      end
+      
+    end
+    
   end
 
 end
