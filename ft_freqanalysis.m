@@ -300,20 +300,20 @@ else
           
           % allocate memory to output variables
           if keeprpt == 1 % cfg.keeptrials,'no' &&  cfg.keeptapers,'no'
-            if powflg, powspctrm     = zeros(nchan,nfoi,ntoi,cfg.precision);             end
-            if csdflg, crsspctrm     = complex(zeros(nchancmb,nfoi,ntoi,cfg.precision)); end
-            if fftflg, fourierspctrm = complex(zeros(nchan,nfoi,ntoi,cfg.precision));    end
+            if powflg, powspctrm     = nan(nchan,nfoi,ntoi,cfg.precision);             end
+            if csdflg, crsspctrm     = complex(nan(nchancmb,nfoi,ntoi,cfg.precision)); end
+            if fftflg, fourierspctrm = complex(nan(nchan,nfoi,ntoi,cfg.precision));    end
             dimord    = 'chan_freq_time';
           elseif keeprpt == 2 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'no'
-            if powflg, powspctrm     = zeros(ntrials,nchan,nfoi,ntoi,cfg.precision);             end
-            if csdflg, crsspctrm     = complex(zeros(ntrials,nchancmb,nfoi,ntoi,cfg.precision)); end
-            if fftflg, fourierspctrm = complex(zeros(ntrials,nchan,nfoi,ntoi,cfg.precision));    end
+            if powflg, powspctrm     = nan(ntrials,nchan,nfoi,ntoi,cfg.precision);             end
+            if csdflg, crsspctrm     = complex(nan(ntrials,nchancmb,nfoi,ntoi,cfg.precision)); end
+            if fftflg, fourierspctrm = complex(nan(ntrials,nchan,nfoi,ntoi,cfg.precision));    end
             dimord    = 'rpt_chan_freq_time';
           elseif keeprpt == 4 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'yes'
             % FIXME this works only if all frequencies have the same number of tapers (ancient fixme)
-            if powflg, powspctrm     = zeros(ntrials*ntap,nchan,nfoi,ntoi,cfg.precision);             end
-            if csdflg, crsspctrm     = complex(zeros(ntrials*ntap,nchancmb,nfoi,ntoi,cfg.precision)); end
-            if fftflg, fourierspctrm = complex(zeros(ntrials*ntap,nchan,nfoi,ntoi,cfg.precision));    end
+            if powflg, powspctrm     = nan(ntrials*ntap,nchan,nfoi,ntoi,cfg.precision);             end
+            if csdflg, crsspctrm     = complex(nan(ntrials*ntap,nchancmb,nfoi,ntoi,cfg.precision)); end
+            if fftflg, fourierspctrm = complex(nan(ntrials*ntap,nchan,nfoi,ntoi,cfg.precision));    end
             dimord    = 'rpttap_chan_freq_time';
           end
           %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -336,20 +336,20 @@ else
           
           % allocate memory to output variables
           if keeprpt == 1 % cfg.keeptrials,'no' &&  cfg.keeptapers,'no'
-            if powflg, powspctrm     = zeros(nchan,nfoi,cfg.precision);             end
-            if csdflg, crsspctrm     = complex(zeros(nchancmb,nfoi,cfg.precision)); end
-            if fftflg, fourierspctrm = complex(zeros(nchan,nfoi,cfg.precision));    end
+            if powflg, powspctrm     = nan(nchan,nfoi,cfg.precision);             end
+            if csdflg, crsspctrm     = complex(nan(nchancmb,nfoi,cfg.precision)); end
+            if fftflg, fourierspctrm = complex(nan(nchan,nfoi,cfg.precision));    end
             dimord    = 'chan_freq';
           elseif keeprpt == 2 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'no'
-            if powflg, powspctrm     = zeros(ntrials,nchan,nfoi,cfg.precision);             end
-            if csdflg, crsspctrm     = complex(zeros(ntrials,nchancmb,nfoi,cfg.precision)); end
-            if fftflg, fourierspctrm = complex(zeros(ntrials,nchan,nfoi,cfg.precision));    end
+            if powflg, powspctrm     = nan(ntrials,nchan,nfoi,cfg.precision);             end
+            if csdflg, crsspctrm     = complex(nan(ntrials,nchancmb,nfoi,cfg.precision)); end
+            if fftflg, fourierspctrm = complex(nan(ntrials,nchan,nfoi,cfg.precision));    end
             dimord    = 'rpt_chan_freq';
           elseif keeprpt == 4 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'yes'
             % FIXME this works only if all frequencies have the same number of tapers
-            if powflg, powspctrm     = zeros(ntrials*ntap,nchan,nfoi,cfg.precision);             end
-            if csdflg, crsspctrm     = complex(zeros(ntrials*ntap,nchancmb,nfoi,cfg.precision)); end
-            if fftflg, fourierspctrm = complex(zeros(ntrials*ntap,nchan,nfoi,cfg.precision));    end
+            if powflg, powspctrm     = nan(ntrials*ntap,nchan,nfoi,cfg.precision);             end
+            if csdflg, crsspctrm     = complex(nan(ntrials*ntap,nchancmb,nfoi,cfg.precision)); end
+            if fftflg, fourierspctrm = complex(nan(ntrials*ntap,nchan,nfoi,cfg.precision));    end
             dimord    = 'rpttap_chan_freq';
           end
           %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
