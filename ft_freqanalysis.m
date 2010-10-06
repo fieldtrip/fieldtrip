@@ -457,10 +457,11 @@ else
         % get output in correct format
         % for now, there is a lot of redundancy, as each method has it's own case statement
         % when fully implemented, this can be cut down, perhaps in a separate switch, or perhaps as a time and a non-time if-loop
-        foinumsmp = cfg.pad * data.fsample;
-        foinumsmp = repmat(foinumsmp,[ntap, nchan, nfoi]);
+        %         % old, kept for the moment
+        %         foinumsmp = cfg.pad * data.fsample;
+        %         foinumsmp = repmat(foinumsmp,[ntap, nchan, nfoi]);
         if powflg
-          powdum = 2.* abs(spectrum) .^ 2 ./ foinumsmp;
+          powdum = abs(spectrum) .^ 2; % old: powdum = 2.* abs(spectrum) .^ 2 ./ foinumsmp;
           % In freqanalysis_mtmfft, sine tapers are NOT scaled (they are in mtmconvol). below code should perform the scaling for cfg.method = mtmfft (not tested)
           %           if strcmp(cfg.taper, 'sine')
           %             sinetapscale = zeros(ntap,nfoi);  % assumes fixed number of tapers
@@ -480,7 +481,7 @@ else
           end
         end
         if fftflg
-          fourierdum = spectrum .* sqrt(2 ./ foinumsmp); %cf Numercial Receipes 13.4.9
+          fourierdum = spectrum; %cf Numercial Receipes 13.4.9; old: fourierdum = spectrum .* sqrt(2 ./ foinumsmp);
           if keeprpt == 1
             fourierspctrm = fourierspctrm + (reshape(nanmean(fourierdum,1),[nchan nfoi]) ./ ntrials);
           elseif keeprpt == 2
@@ -491,9 +492,10 @@ else
           end
         end
         if csdflg
-          foinumsmp = cfg.pad * data.fsample;
-          foinumsmp = repmat(foinumsmp,[ntap, nchancmb, nfoi]);
-          csddum = 2.* (spectrum(:,cutdatindcmb(:,1),:,:) .* conj(spectrum(:,cutdatindcmb(:,2),:,:))) ./ foinumsmp;
+          %           % old, kept for the moment
+          %           foinumsmp = cfg.pad * data.fsample;
+          %           foinumsmp = repmat(foinumsmp,[ntap, nchancmb, nfoi]);
+          csddum = (spectrum(:,cutdatindcmb(:,1),:,:) .* conj(spectrum(:,cutdatindcmb(:,2),:,:))); % old: 2.* (spectrum(:,cutdatindcmb(:,1),:,:) .* conj(spectrum(:,cutdatindcmb(:,2),:,:))) ./ foinumsmp;
           if keeprpt == 1
             crsspctrm = crsspctrm + (reshape(nanmean(csddum,1),[nchancmb nfoi]) ./ ntrials);
           elseif keeprpt == 2
