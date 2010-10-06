@@ -71,7 +71,7 @@ for i=1:length(L)
    if ~force
       mfname = [baseDir filesep L(i).dir filesep name '.' mexext];
       MF = dir(mfname);
-      if numel(MF)==1 & SF.datenum <= MF.datenum
+      if numel(MF)==1 && SF.datenum <= MF.datenum
          fprintf(1,'Skipping up-to-date MEX file %s/%s\n', L(i).dir, name);
          continue;
       end 
@@ -89,7 +89,7 @@ cd(oldDir);
 function L = addSource(L, directory, relName, matchPlatform, excludePlatform, extras)
 
 % Check if this file only needs compilation on certain platforms (including this one)
-if nargin > 3 & ~isempty(matchPlatform) 
+if nargin>3 && ~isempty(matchPlatform) 
    ok = false;
    for k=1:numel(matchPlatform)
        if strcmp(matchPlatform{k}, computer)
@@ -103,7 +103,7 @@ if nargin > 3 & ~isempty(matchPlatform)
 end
 
 % Check if this file cannot be compiled on certain platforms (including this one)
-if nargin > 4 & ~isempty(excludePlatform) 
+if nargin>4 && ~isempty(excludePlatform) 
    ok = true;
    for k=1:numel(excludePlatform)
       if strcmp(excludePlatform{k}, computer)
