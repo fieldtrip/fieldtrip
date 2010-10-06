@@ -816,6 +816,10 @@ elseif length(filename)>4 && exist([filename(1:(end-4)) '.mat'], 'file') && exis
   type = 'fcdc_matbin';
   manufacturer = 'F.C. Donders Centre';
   content = 'multiplexed electrophysiology data';
+elseif filetype_check_extension(filename, '.mgz')
+  type = 'freesurfer_mgz';
+  manufacturer = 'FreeSurfer';
+  content = 'anatomical MRI';
 elseif filetype_check_extension(filename, '.lay')
   type = 'layout';
   manufacturer = 'Ole Jensen';
