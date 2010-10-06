@@ -380,17 +380,11 @@ else
           ntoi = numel(toi);
           ntap = size(spectrum,1);
         end
-        
         % get output in correct format
         % for now, there is a lot of redundancy, as each method has it's own case statement
         % when fully implemented, this can be cut down, perhaps in a separate switch, or perhaps as a time and a non-time if-loop
-        %         % old, kept for the moment
-        %         foinumsmp = cfg.t_ftimwin .* data.fsample;
-        %         foinumsmp = foinumsmp(:);
-        %         foinumsmp = repmat(foinumsmp,[1, ntap, nchan, ntoi]);
-        %         foinumsmp = permute(foinumsmp,[2 3 1 4]);
         if powflg
-          powdum = abs(spectrum) .^2;%old: powdum = 2.* abs(spectrum) .^ 2 ./ foinumsmp;
+          powdum = abs(spectrum) .^2;
           if strcmp(cfg.taper, 'sine') % THIS IS NOT DONE IN THE MTMFFT CASE IN THE OLD IMPLEMENTATION, WHY? - roevdmei
             sinetapscale = zeros(ntap,nfoi);  % assumes fixed number of tapers
             for isinetap = 1:ntaper(1)  % assumes fixed number of tapers
@@ -409,7 +403,7 @@ else
           end
         end
         if fftflg
-          fourierdum = spectrum;% old: fourierdum = spectrum .* sqrt(2 ./ foinumsmp); %cf Numercial Receipes 13.4.9
+          fourierdum = spectrum;
           if keeprpt == 1
             fourierspctrm = fourierspctrm + (reshape(nanmean(fourierdum,1),[nchan nfoi ntoi]) ./ ntrials);
           elseif keeprpt == 2
@@ -420,12 +414,9 @@ else
           end
         end
         if csdflg
-          %           % old, kept for the moment
-          %           foinumsmp = cfg.t_ftimwin .* data.fsample;
-          %           foinumsmp = foinumsmp(:);
-          %           foinumsmp = repmat(foinumsmp,[1, ntap, nchancmb, ntoi]);
-          %           foinumsmp = permute(foinumsmp,[2 3 1 4]);
-          csddum = (spectrum(:,cutdatindcmb(:,1),:,:) .* conj(spectrum(:,cutdatindcmb(:,2),:,:))); % old: csddum = 2.* (spectrum(:,cutdatindcmb(:,1),:,:) .* conj(spectrum(:,cutdatindcmb(:,2),:,:))) ./ foinumsmp;
+          csddum = squeeze((spectrum(itap,cutdatindcmb(:,1),ifoi,:) .* conj(spectrum(itap,cutdatindcmb(:,2),ifoi,:))));
+          acttboi = isnan(csddum(1,:));
+          nacttboi = numel(acttboi);
           if keeprpt == 1
             crsspctrm = crsspctrm + (reshape(nanmean(csddum,1),[nchancmb nfoi ntoi]) ./ ntrials);
           elseif keeprpt == 2
@@ -453,15 +444,11 @@ else
           nfoi = numel(foi);
           ntap = size(spectrum,1); % assumes fixed number of tapers
         end
-        
         % get output in correct format
         % for now, there is a lot of redundancy, as each method has it's own case statement
         % when fully implemented, this can be cut down, perhaps in a separate switch, or perhaps as a time and a non-time if-loop
-        %         % old, kept for the moment
-        %         foinumsmp = cfg.pad * data.fsample;
-        %         foinumsmp = repmat(foinumsmp,[ntap, nchan, nfoi]);
         if powflg
-          powdum = abs(spectrum) .^ 2; % old: powdum = 2.* abs(spectrum) .^ 2 ./ foinumsmp;
+          powdum = abs(spectrum) .^ 2;
           % In freqanalysis_mtmfft, sine tapers are NOT scaled (they are in mtmconvol). below code should perform the scaling for cfg.method = mtmfft (not tested)
           %           if strcmp(cfg.taper, 'sine')
           %             sinetapscale = zeros(ntap,nfoi);  % assumes fixed number of tapers
@@ -472,34 +459,31 @@ else
           %             powdum = powdum .* sinetapscale;
           %           end
           if keeprpt == 1 % cfg.keeptrials,'no' &&  cfg.keeptapers,'no'
-            powspctrm = powspctrm + (reshape(nanmean(powdum,1),[nchan nfoi]) ./ ntrials);
+            powspctrm = powspctrm + (reshape(mean(powdum,1),[nchan nfoi]) ./ ntrials);
           elseif keeprpt == 2  % cfg.keeptrials,'yes' &&  cfg.keeptapers,'no'
-            powspctrm(itrial,:,:) = reshape(nanmean(powdum,1),[nchan nfoi]);
+            powspctrm(itrial,:,:) = reshape(mean(powdum,1),[nchan nfoi]);
           elseif keeprpt == 4 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'yes'
             rptind = reshape(1:ntrials * ntap,[ntap ntrials]);
             powspctrm(rptind(:,itrial),:,:) = reshape(powdum,[ntap nchan nfoi]);
           end
         end
         if fftflg
-          fourierdum = spectrum; %cf Numercial Receipes 13.4.9; old: fourierdum = spectrum .* sqrt(2 ./ foinumsmp);
+          fourierdum = spectrum;
           if keeprpt == 1
-            fourierspctrm = fourierspctrm + (reshape(nanmean(fourierdum,1),[nchan nfoi]) ./ ntrials);
+            fourierspctrm = fourierspctrm + (reshape(mean(fourierdum,1),[nchan nfoi]) ./ ntrials);
           elseif keeprpt == 2
-            fourierspctrm(itrial,:,:) = reshape(nanmean(fourierdum,1), [nchan nfoi]);
+            fourierspctrm(itrial,:,:) = reshape(mean(fourierdum,1), [nchan nfoi]);
           elseif keeprpt == 4
             rptind = reshape(1:ntrials * ntap,[ntap ntrials]);
             fourierspctrm(rptind(:,itrial),:,:) = reshape(fourierdum,[ntap nchan nfoi]);
           end
         end
         if csdflg
-          %           % old, kept for the moment
-          %           foinumsmp = cfg.pad * data.fsample;
-          %           foinumsmp = repmat(foinumsmp,[ntap, nchancmb, nfoi]);
-          csddum = (spectrum(:,cutdatindcmb(:,1),:,:) .* conj(spectrum(:,cutdatindcmb(:,2),:,:))); % old: 2.* (spectrum(:,cutdatindcmb(:,1),:,:) .* conj(spectrum(:,cutdatindcmb(:,2),:,:))) ./ foinumsmp;
+          csddum = (spectrum(:,cutdatindcmb(:,1),:,:) .* conj(spectrum(:,cutdatindcmb(:,2),:,:)));
           if keeprpt == 1
-            crsspctrm = crsspctrm + (reshape(nanmean(csddum,1),[nchancmb nfoi]) ./ ntrials);
+            crsspctrm = crsspctrm + (reshape(mean(csddum,1),[nchancmb nfoi]) ./ ntrials);
           elseif keeprpt == 2
-            crsspctrm(itrial,:,:) = reshape(nanmean(csddum,1), [nchancmb nfoi]);
+            crsspctrm(itrial,:,:) = reshape(mean(csddum,1), [nchancmb nfoi]);
           elseif keeprpt == 4
             rptind = reshape(1:ntrials * ntap,[ntap ntrials]);
             crsspctrm(rptind(:,itrial),:,:) = reshape(csddum,[ntap nchancmb nfoi]);
@@ -530,10 +514,10 @@ else
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% END: Main loop over trials
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
- 
   
-    
+  
+  
+  
   
   
   
