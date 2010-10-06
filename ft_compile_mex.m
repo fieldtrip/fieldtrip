@@ -52,6 +52,11 @@ L = addSource(L,'forward/private','lmoutr',[],[],'geometry.c -I.');
 L = addSource(L,'forward/private','solid_angle',[],[],'geometry.c -I.');
 L = addSource(L,'forward/private','ptriproj',[],[],'geometry.c -I.');
 
+L = addSource(L,'private','splint_gh');
+L = addSource(L,'private','ltrisect',[],[],'geometry.c -I.');
+L = addSource(L,'private','routlm',[],[],'geometry.c -I.');
+L = addSource(L,'private','plinproj',[],[],'geometry.c -I.');
+
 L = addSource(L,'realtime/online_mri','ft_omri_smooth_volume');
 
 
