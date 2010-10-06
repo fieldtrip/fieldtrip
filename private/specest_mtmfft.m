@@ -137,6 +137,7 @@ for itap = 1:ntaper
     if timedelay ~= 0
       dum = dum .* exp(-1i*angletransform);
     end
+    dum = dum .* sqrt(2 ./ endnsample);
     spectrum{itap} = dum;
 end
 spectrum = reshape(vertcat(spectrum{:}),[nchan ntaper nfreqboi]);% collecting in a cell-array and later reshaping provides significant speedups
