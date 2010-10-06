@@ -532,11 +532,13 @@ classdef ft_mv_lds < ft_mv_timeseries
         
         obs = ~isnan(X(:,t));
         
-        e = X(obs,t) - C(obs,:)*Y(:,t); % innovation (measurement error)
-        S = C(obs,:)*V{t}*C(obs,:)' + R(obs,obs); % covariance of the innovation
-        LL = LL - log(det(S)) ./ 2 - ((e' / S) * e) ./ 2;      
-        LL = LL - (numel(obs)/2) * log(2*pi);
-    
+        if ~isempty(obs)
+          e = X(obs,t) - C(obs,:)*Y(:,t); % innovation (measurement error)
+          S = C(obs,:)*V{t}*C(obs,:)' + R(obs,obs); % covariance of the innovation
+          LL = LL - log(det(S)) ./ 2 - ((e' / S) * e) ./ 2;     
+          LL = LL - (numel(obs)/2) * log(2*pi);
+        end
+        
       end
       
       
