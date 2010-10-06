@@ -219,6 +219,7 @@ for ifreqoi = 1:nfreqoi
       dum = fftshift(transpose(ifft(transpose(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1])))),2); % double explicit transpose to speedup fft
       tmp = complex(nan(nchan,ntimeboi));
       tmp(:,reqtimeboiind) = dum(:,reqtimeboi);
+      tmp = tmp .* sqrt(2 ./ timwinsample(ifreqoi));
       spectrum{itap,ifreqoi} = tmp;
     end
   end
