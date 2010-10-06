@@ -384,12 +384,13 @@ else
         % get output in correct format
         % for now, there is a lot of redundancy, as each method has it's own case statement
         % when fully implemented, this can be cut down, perhaps in a separate switch, or perhaps as a time and a non-time if-loop
-        foinumsmp = cfg.t_ftimwin .* data.fsample;
-        foinumsmp = foinumsmp(:);
-        foinumsmp = repmat(foinumsmp,[1, ntap, nchan, ntoi]);
-        foinumsmp = permute(foinumsmp,[2 3 1 4]);
+        %         % old, kept for the moment
+        %         foinumsmp = cfg.t_ftimwin .* data.fsample;
+        %         foinumsmp = foinumsmp(:);
+        %         foinumsmp = repmat(foinumsmp,[1, ntap, nchan, ntoi]);
+        %         foinumsmp = permute(foinumsmp,[2 3 1 4]);
         if powflg
-          powdum = 2.* abs(spectrum) .^ 2 ./ foinumsmp;
+          powdum = abs(spectrum) .^2;%old: powdum = 2.* abs(spectrum) .^ 2 ./ foinumsmp;
           if strcmp(cfg.taper, 'sine') % THIS IS NOT DONE IN THE MTMFFT CASE IN THE OLD IMPLEMENTATION, WHY? - roevdmei
             sinetapscale = zeros(ntap,nfoi);  % assumes fixed number of tapers
             for isinetap = 1:ntaper(1)  % assumes fixed number of tapers
@@ -408,7 +409,7 @@ else
           end
         end
         if fftflg
-          fourierdum = spectrum .* sqrt(2 ./ foinumsmp); %cf Numercial Receipes 13.4.9
+          fourierdum = spectrum;% old: fourierdum = spectrum .* sqrt(2 ./ foinumsmp); %cf Numercial Receipes 13.4.9
           if keeprpt == 1
             fourierspctrm = fourierspctrm + (reshape(nanmean(fourierdum,1),[nchan nfoi ntoi]) ./ ntrials);
           elseif keeprpt == 2
@@ -419,11 +420,12 @@ else
           end
         end
         if csdflg
-          foinumsmp = cfg.t_ftimwin .* data.fsample;
-          foinumsmp = foinumsmp(:);
-          foinumsmp = repmat(foinumsmp,[1, ntap, nchancmb, ntoi]);
-          foinumsmp = permute(foinumsmp,[2 3 1 4]);
-          csddum = 2.* (spectrum(:,cutdatindcmb(:,1),:,:) .* conj(spectrum(:,cutdatindcmb(:,2),:,:))) ./ foinumsmp;
+          %           % old, kept for the moment
+          %           foinumsmp = cfg.t_ftimwin .* data.fsample;
+          %           foinumsmp = foinumsmp(:);
+          %           foinumsmp = repmat(foinumsmp,[1, ntap, nchancmb, ntoi]);
+          %           foinumsmp = permute(foinumsmp,[2 3 1 4]);
+          csddum = (spectrum(:,cutdatindcmb(:,1),:,:) .* conj(spectrum(:,cutdatindcmb(:,2),:,:))); % old: csddum = 2.* (spectrum(:,cutdatindcmb(:,1),:,:) .* conj(spectrum(:,cutdatindcmb(:,2),:,:))) ./ foinumsmp;
           if keeprpt == 1
             crsspctrm = crsspctrm + (reshape(nanmean(csddum,1),[nchancmb nfoi ntoi]) ./ ntrials);
           elseif keeprpt == 2
