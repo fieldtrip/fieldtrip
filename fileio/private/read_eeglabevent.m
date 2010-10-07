@@ -48,6 +48,25 @@ end;
 event    = [];                % these will be the output in FieldTrip format
 oldevent = hdr.orig.event;    % these are in EEGLAB format
 
+missingFieldFlag=false;
+
+if ~isfield(oldevent,'code') && ~isfield(oldevent,'value')
+    disp('Warning: No ''value'' field in the events structure.');
+    missingFieldFlag=true;
+end;
+    
+if ~isfield(oldevent,'type')
+    disp('Warning: No ''type'' field in the events structure.');
+    missingFieldFlag=true;
+end;
+
+if missingFieldFlag
+    disp('EEGlab data files should have both a ''value'' field');
+    disp('to denote the generic type of event, as in ''trigger'', and a ''type'' field');
+    disp('to denote the nature of this generic event, as in the condition of the experiment.');
+    disp('Note also that this is the reverse of the FieldTrip convention.');    
+end;
+
 for index = 1:length(oldevent)
 
   if isfield(oldevent,'code')
@@ -59,7 +78,11 @@ for index = 1:length(oldevent)
   end;
 
   % events can have a numeric or a string value
-  value  = oldevent(index).type;
+  if isfield(oldevent,'type')
+    value  = oldevent(index).type;
+  else
+    value = 'default';
+  end;
 
   % this is the sample number of the concatenated data to which the event corresponds
   sample = oldevent(index).latency;
