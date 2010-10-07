@@ -153,6 +153,10 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	
+	/* Block the ALARM signal here in order to make sure that any client thread we start (converterThread + tcpserver)
+	   will not receive it. Child thread inherit the signal mask of the parent. We will unblock the signal later
+	   once the child threads have started.
+	*/
     sigemptyset(&signal_mask);
     sigaddset(&signal_mask, SIGALRM);
     rc = pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
@@ -325,6 +329,7 @@ int main(int argc, char **argv) {
 	}
 	initSharedMem(packet);
 	
+	/* Unblock the ALARM signal in this (the main) thread */
     sigemptyset(&signal_mask);
     sigaddset(&signal_mask, SIGALRM);
     rc = pthread_sigmask(SIG_UNBLOCK, &signal_mask, NULL);
@@ -466,7 +471,11 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-
+/** Create the shared memory segment that Acq can write data to.
+	In order to overcome a bug in Acq, we overallocate the segment
+	by OVERALLOC*sizeof(int), so Acq doesn't segfault when it tries
+	to write too much data into the last shared memory slot.
+*/
 ACQ_MessagePacketType *createSharedMem() {
 	void *ptr;
 	int shmid;
@@ -493,6 +502,8 @@ void closeSharedMem(ACQ_MessagePacketType *packet) {
 	shmdt(packet);
 }
 
+/** Clear all slots by setting the message_type to INVALID
+*/
 void initSharedMem(ACQ_MessagePacketType *packet) {
 	int i;
 	for (i=0;i<ACQ_MSGQ_SIZE;i++) {
@@ -500,7 +511,8 @@ void initSharedMem(ACQ_MessagePacketType *packet) {
 	}	
 }
 
-/* wait up to 1 second = 100 loops for new packet */
+/** Wait up to 1 second = 100 loops for new packet from Acq.
+*/
 ACQ_MessageType waitPacket(volatile ACQ_MessageType *msgtyp, double *time) {
 	volatile ACQ_MessageType t;
 	struct timeval tv;
@@ -522,8 +534,13 @@ ACQ_MessageType waitPacket(volatile ACQ_MessageType *msgtyp, double *time) {
 	exits smoothly.
 */
 void abortHandler(int sig) {
+	static int cancelCount = 0;
+	
 	printf("Ctrl-C pressed -- stopping acq2ft...\n");
 	keepRunning = 0;
+	
+	/* In case something goes wrong, exit the hard way */
+	if (++cancelCount > 4) exit(1);
 }
 
 /** Does not do anything by itself, but having a 100 Hz alarm timer means that
