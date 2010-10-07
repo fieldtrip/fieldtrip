@@ -27,11 +27,12 @@
 #include <unistd.h>
 #include <signal.h>
 #include <pthread.h>
+#include <math.h>
 
 #define CTF_TRIGGER_TYPE   11
 
 #define OVERALLOC   1000    /* to overcome Acq bug */
-#define INT_RB_SIZE   10	/* Length of internal ring buffer of (overallocated) packets */
+#define INT_RB_SIZE   10    /* Length of internal ring buffer of (overallocated) packets */
 #define MAX_CHANNEL  512
 #define MAX_TRIGGER   16
 #define MAX_OUT        4
@@ -115,8 +116,9 @@ struct {
 ACQ_MessagePacketType *createSharedMem();
 void closeSharedMem(ACQ_MessagePacketType *packet);
 void initSharedMem(ACQ_MessagePacketType *packet);
-ACQ_MessageType waitPacket(volatile ACQ_MessageType *msgtyp,struct timeval *tv);
+ACQ_MessageType waitPacket(volatile ACQ_MessageType *msgtyp, double *time);
 void abortHandler(int sig);
+void alarmHandler(int sig);
 void *dataToFieldTripThread(void *arg);
 ft_chunk_t *handleRes4(const char *dsname, int *numChannels, float *fSample);
 void addTriggerEvent(EventChain *EC, int trigChan, UINT32_T sample, int value);
@@ -131,11 +133,17 @@ int main(int argc, char **argv) {
 	int lastId;
 	int numChannels, numSamples, sampleNumber;
 	pthread_t tcpserverThread, convertThread;
-	int i;
-	struct timeval tv;
+	int i, rc;
 	double sumT, sumT2;
 	int numT;
 	double tNow, tLast;
+	struct timeval timerInterval = {0, 10000}; /*  10ms */
+	struct timeval timerValue    = {0, 10000}; /*  10ms */
+	struct itimerval timerOpts;
+	sigset_t   signal_mask;
+	
+	timerOpts.it_value    = timerValue;
+	timerOpts.it_interval = timerInterval;	
 	
 	/* clear all output definitions */
 	memset(outConf, sizeof(outConf), 0);
@@ -143,6 +151,14 @@ int main(int argc, char **argv) {
 	if (argc==1) {
 		fputs(usage, stderr);
 		return 1;
+	}
+	
+    sigemptyset(&signal_mask);
+    sigaddset(&signal_mask, SIGALRM);
+    rc = pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
+	if (rc!=0) {
+		fprintf(stderr, "Cannot change signal mask to block ALARM\n");
+		exit(1);
 	}
 	
 	for (i=1;i<argc;i++) {
@@ -309,8 +325,19 @@ int main(int argc, char **argv) {
 	}
 	initSharedMem(packet);
 	
+    sigemptyset(&signal_mask);
+    sigaddset(&signal_mask, SIGALRM);
+    rc = pthread_sigmask(SIG_UNBLOCK, &signal_mask, NULL);
+	if (rc!=0) {
+		fprintf(stderr, "Cannot change signal mask to unblock ALARM in main thread\n");
+		exit(1);
+	}
+	
 	/* register CTRL-C handler */
-	signal(SIGINT, abortHandler);
+	signal(SIGINT,  abortHandler);
+	/* setup ALARM timer and handler */
+	setitimer(ITIMER_REAL, &timerOpts, NULL);
+	signal(SIGALRM, alarmHandler);
 	
 	/* Both ringbuffers start at 0 */
 	currentPacket = intSlot = 0;
@@ -319,7 +346,7 @@ int main(int argc, char **argv) {
 	while (keepRunning) {
 		int size;
 		char *dataset;
-		int code = waitPacket(&packet[currentPacket].message_type, &tv);
+		int code = waitPacket(&packet[currentPacket].message_type, &tNow);
 		
 		switch(code) {
 			case ACQ_MSGQ_SETUP_COLLECTION:
@@ -353,8 +380,6 @@ int main(int argc, char **argv) {
 				numSamples   = packet[currentPacket].numSamples;
 				sampleNumber = packet[currentPacket].sampleNumber;
 				
-				tNow = ((double) tv.tv_sec) * 1000 + ((double) tv.tv_usec)*0.001;
-			
 				if (numT > 0) {
 					double deltaTM; 
 					double deltaT = tNow - tLast;
@@ -362,7 +387,7 @@ int main(int argc, char **argv) {
 					deltaTM = (deltaT - sumT/numT); 
 					sumT2 += deltaTM*deltaTM;
 					printf("Data | %3i samples | ID=%4i | slot=%3i | dT=%5.1f  mT=%5.1f  sT=%5.1f\n", 
-						numSamples, lastId, currentPacket, deltaT, sumT/numT, sumT2/numT);
+						numSamples, lastId, currentPacket, deltaT, sumT/numT, sqrt(sumT2/numT));
 				} else {
 					printf("Data | %3i samples | ID=%4i | slot=%3i\n", 
 						numSamples, lastId, currentPacket);
@@ -403,6 +428,9 @@ int main(int argc, char **argv) {
 				break;
 			case ACQ_MSGQ_CLOSE_CONNECTION:
 				printf("Stop | ID=%i \n", lastId);
+				sumT = 0.0;
+				sumT2 = 0.0;
+				numT = 0;
 				
 				/* Does this mean anything for the buffer as well ? */
 				
@@ -472,20 +500,20 @@ void initSharedMem(ACQ_MessagePacketType *packet) {
 	}	
 }
 
-/* wait up to 1 second for new packet */
-ACQ_MessageType waitPacket(volatile ACQ_MessageType *msgtyp, struct timeval *tv) {
-	struct timeval tv0;
+/* wait up to 1 second = 100 loops for new packet */
+ACQ_MessageType waitPacket(volatile ACQ_MessageType *msgtyp, double *time) {
 	volatile ACQ_MessageType t;
-	
-	gettimeofday(&tv0, NULL);
+	struct timeval tv;
+	int iter = 0;
 	
 	while (keepRunning) {
-		gettimeofday(tv, NULL);
 		t = *msgtyp;
 		if (t != ACQ_MSGQ_INVALID) break;
-		if (tv->tv_sec > tv0.tv_sec && tv->tv_usec > tv0.tv_usec) break;
-		usleep(0);
+		if (++iter >= 100) break;
+		sleep(1); /* will actually only sleep max. 10ms due to ALARM signal */
 	}
+	gettimeofday(&tv, NULL);
+	*time = tv.tv_sec * 1000 + tv.tv_usec * 0.001;
 	return t;
 }
 
@@ -496,6 +524,13 @@ ACQ_MessageType waitPacket(volatile ACQ_MessageType *msgtyp, struct timeval *tv)
 void abortHandler(int sig) {
 	printf("Ctrl-C pressed -- stopping acq2ft...\n");
 	keepRunning = 0;
+}
+
+/** Does not do anything by itself, but having a 100 Hz alarm timer means that
+    the sleep() in waitPacket is interrupted after 10ms maximum. This is a
+	workaround to cope with the low timer resolution on Odin's 2.4 Linux kernel.
+*/
+void alarmHandler(int sig) {
 }
 
 /** Background thread for grabbing setup and data packets from the internal, overallocated ringbuffer.
@@ -846,15 +881,18 @@ void addTriggerEvent(EventChain *EC, int trigChan, UINT32_T sample, int value) {
 	memcpy(ntype + triggerChannelNameLen[trigChan], &value, sizeof(int));
 }
 
+/** Iterates through all output definitions and sets up a table of indices for selected channels.
+    Gets called after channel labels are available (handleRes4).
+*/
 void matchChannels(int numChannels) {
 	int i,j,k;
 	
 	for (i=0;i<numOutputs;i++) {
 		OutputConfig *oc = &outConf[i];
 		if (oc->numChannelsGiven <= 0) continue;
-
+		/*
 		printf("%i. output definition:\n", i+1);
-		
+		*/
 		oc->numChannelsFound = 0;
 		for (j=0;j<oc->numChannelsGiven;j++) {
 			for (k=0;k<numChannels;k++) {
@@ -869,6 +907,10 @@ void matchChannels(int numChannels) {
 	}
 }
 
+/** Writes a FieldTrip header to the buffer pointed to by the given output configuration.
+    Will transmit the basic header, the channel names chunk, and the res4-file chunk if
+	specified by the 'R' flag.
+*/
 void writeHeader(OutputConfig *oc, int numChannels, float fSample, const ft_chunk_t *res4chunk) {
 	int j,res;
 	int lenNames = 0, totalLen;
@@ -958,6 +1000,9 @@ void writeHeader(OutputConfig *oc, int numChannels, float fSample, const ft_chun
 	free(buffer);
 }
 
+/** Writes samples to the buffer pointed to by the given output configuration.
+	Will downsample (without filtering!) if specified by the decimation value.
+*/
 void writeSamples(OutputConfig *oc, const ACQ_OverAllocType *pack) {
 	int nsamp, nchans;
 	messagedef_t reqdef;
@@ -976,7 +1021,7 @@ void writeSamples(OutputConfig *oc, const ACQ_OverAllocType *pack) {
 		
 		if (oc->numChannelsFound == -1) {
 			/* transmit all channels, but with gains applied */
-			nchans = putDatBuf.ddef.nchans = pack->numChannels;
+			nchans = pack->numChannels;
 			for (j=oc->skipSamples; j<pack->numSamples; j+=oc->downSample) {
 				const int *source_j = pack->data + j*pack->numChannels;
 				for (i=0;i<nchans;i++) {
@@ -986,7 +1031,7 @@ void writeSamples(OutputConfig *oc, const ACQ_OverAllocType *pack) {
 			}
 		} else {
 			/* only transmit selected channels with gains applied */
-			nchans = putDatBuf.ddef.nchans = oc->numChannelsFound;
+			nchans = oc->numChannelsFound;
 			for (j=oc->skipSamples; j<pack->numSamples; j+=oc->downSample) {
 				const int *source_j = pack->data + j*pack->numChannels;
 				for (i=0;i<nchans;i++) {
@@ -1004,7 +1049,7 @@ void writeSamples(OutputConfig *oc, const ACQ_OverAllocType *pack) {
 		
 		if (oc->numChannelsFound == -1) {
 			/* transmit all channels without gains */
-			nchans = putDatBuf.ddef.nchans = pack->numChannels;
+			nchans = pack->numChannels;
 			for (j=oc->skipSamples; j<pack->numSamples; j+=oc->downSample) {
 				const int *source_j = pack->data + j*pack->numChannels;
 				for (i=0;i<nchans;i++) {
@@ -1014,7 +1059,7 @@ void writeSamples(OutputConfig *oc, const ACQ_OverAllocType *pack) {
 			}
 		} else {
 			/* only transmit selected channels without gains */
-			nchans = putDatBuf.ddef.nchans = oc->numChannelsFound;
+			nchans = oc->numChannelsFound;
 			for (j=oc->skipSamples; j<pack->numSamples; j+=oc->downSample) {
 				const int *source_j = pack->data + j*pack->numChannels;
 				for (i=0;i<nchans;i++) {
@@ -1025,6 +1070,7 @@ void writeSamples(OutputConfig *oc, const ACQ_OverAllocType *pack) {
 		}
 	}
 	oc->skipSamples = j - pack->numSamples;
+	putDatBuf.ddef.nchans   = nchans;
 	putDatBuf.ddef.nsamples = nsamp;
 	putDatBuf.ddef.bufsize  = 4 * nsamp * nchans; /* both int32 + float32 are 4 bytes wide */
 			
@@ -1047,6 +1093,11 @@ void writeSamples(OutputConfig *oc, const ACQ_OverAllocType *pack) {
 	}	
 }
 
+/** Writes events to the buffer pointed to by the given output configuration.
+	Will correct sample indices according to the specified decimation value.
+	The logic here is that first the EventChain (list of events) will be
+	duplicated into ECd (which should be pre-allocated most of the time).
+*/
 void writeEvents(OutputConfig *oc, const EventChain *EC, EventChain *ECd) {
 	messagedef_t reqdef;
 	message_t request, *response;

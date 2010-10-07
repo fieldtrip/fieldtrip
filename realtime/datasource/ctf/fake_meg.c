@@ -10,6 +10,7 @@
 #include "AcqBuffer.h"
 #include <sys/shm.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <sys/ipc.h>
 #include <unistd.h>
 #include <signal.h>
@@ -27,6 +28,9 @@ ACQ_MessagePacketType *createSharedMem();
 void closeSharedMem(ACQ_MessagePacketType *packet);
 void initSharedMem(ACQ_MessagePacketType *packet);
 
+void doNothing(int signal) {
+}
+
 int main(int argc, char **argv) {
 	ACQ_MessagePacketType *packet;
 	int currentPacket = 0;
@@ -35,6 +39,13 @@ int main(int argc, char **argv) {
 	int numPackets = 420000;
 	int sampleNumber = 0;
 	int i;
+	
+	struct timeval timerInterval = {0,10000}; /*  50ms */
+	struct timeval timerValue    = {0,10000};  /* 200ms */
+	struct itimerval timerOpts;
+	
+	timerOpts.it_value = timerValue;
+	timerOpts.it_interval = timerInterval;
 		
 	printf("Trying to set up shared memory...\n");
 	packet = createSharedMem();
@@ -55,7 +66,11 @@ int main(int argc, char **argv) {
 	
 	printf("Wrote setup packet at 0\n");
 	
-	usleep(200000); /* 0.2 sec */
+	
+	usleep(200000);  /* 0.2 sec */
+	setitimer(ITIMER_REAL, &timerOpts, NULL);
+	signal(SIGALRM, doNothing);
+	
 	
 	for (i=0;i<numPackets;i++) {
       
@@ -80,7 +95,8 @@ int main(int argc, char **argv) {
 		
 		if (++currentPacket == ACQ_MSGQ_SIZE) currentPacket = 0;
 		
-		usleep(50000);
+		/*usleep(50000);*/
+		sleep(1);
 	}
 	
 	packet[currentPacket].message_type = ACQ_MSGQ_CLOSE_CONNECTION;

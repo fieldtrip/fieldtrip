@@ -15,7 +15,7 @@ acq2ft: acq2ft.c
 	gcc -o acq2ft acq2ft.c  -I../../buffer/src -Wall ../../buffer/src/libbuffer.a  -lpthread
 
 acq2ftx: acq2ftx.c 
-	gcc -o acq2ftx acq2ftx.c  -I../../buffer/src -Wall ../../buffer/src/libbuffer.a  -lpthread
+	gcc -o acq2ftx acq2ftx.c  -I../../buffer/src -Wall ../../buffer/src/libbuffer.a  -lpthread -lm
 	
 fake_meg: fake_meg.c
 	gcc -o fake_meg fake_meg.c -I. -Wall
