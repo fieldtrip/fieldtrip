@@ -27,25 +27,47 @@
 ACQ_MessagePacketType *createSharedMem();
 void closeSharedMem(ACQ_MessagePacketType *packet);
 void initSharedMem(ACQ_MessagePacketType *packet);
+volatile int keepRunning = 1;
 
-void doNothing(int signal) {
+void alarmHandler(int signal) {
 }
+
+/** Sets 'keepRunning' to 0 in case the uses presses CTRL-C - this makes
+    the main thread leave its processing loop, after which the program
+	exits smoothly.
+*/
+void abortHandler(int sig) {
+	static int cancelCount = 0;
+	
+	printf("Ctrl-C pressed -- stopping acq2ft...\n");
+	keepRunning = 0;
+	
+	/* In case something goes wrong, exit the hard way */
+	if (++cancelCount > 4) exit(1);
+}
+
 
 int main(int argc, char **argv) {
 	ACQ_MessagePacketType *packet;
 	int currentPacket = 0;
 	int numChannels = 356;
-	int blockSize = 60;  /* this is too much for regular operation! */
-	int numPackets = 420000;
+	int blockSize = 70;  /* > 28160/356 is too much for regular operation! */
 	int sampleNumber = 0;
-	int i;
-	
-	struct timeval timerInterval = {0,10000}; /*  50ms */
-	struct timeval timerValue    = {0,10000};  /* 200ms */
+	int ID = 0;
+	int sampleFreq = 1200;
+	struct timeval timerInterval = {0,50000}; /*  50ms */
+	struct timeval timerValue    = {0,50000};  /* 200ms */
 	struct itimerval timerOpts;
 	
 	timerOpts.it_value = timerValue;
 	timerOpts.it_interval = timerInterval;
+	
+	if (argc>=2) {
+		sampleFreq = atoi(argv[1]);
+		if (sampleFreq>0) {
+			timerOpts.it_interval.tv_usec = timerOpts.it_value.tv_usec = 1000000*blockSize/sampleFreq;
+		}
+	}
 		
 	printf("Trying to set up shared memory...\n");
 	packet = createSharedMem();
@@ -69,17 +91,20 @@ int main(int argc, char **argv) {
 	
 	usleep(200000);  /* 0.2 sec */
 	setitimer(ITIMER_REAL, &timerOpts, NULL);
-	signal(SIGALRM, doNothing);
+	signal(SIGALRM, alarmHandler);
+	/* register CTRL-C handler */
+	signal(SIGINT,  abortHandler);
+
 	
-	
-	for (i=0;i<numPackets;i++) {
+	while (keepRunning) {
+		++ID;
       
 		if (packet[currentPacket].message_type != ACQ_MSGQ_INVALID) {
 			printf("Packet #%i not free...\n", currentPacket);
 			break;
 		}
 	
-		packet[currentPacket].messageId = i+1;
+		packet[currentPacket].messageId = ID;
 		packet[currentPacket].sampleNumber = sampleNumber;
 		packet[currentPacket].numSamples = blockSize;
 		packet[currentPacket].numChannels = numChannels;
@@ -89,13 +114,12 @@ int main(int argc, char **argv) {
 		packet[currentPacket].numChannels = numChannels;
 		packet[currentPacket].message_type = ACQ_MSGQ_DATA;
 		
-		printf("Wrote data packet %i at %i\n", i, currentPacket);
+		printf("Wrote data packet %i at %i\n", ID, currentPacket);
 		
 		sampleNumber += blockSize;
 		
 		if (++currentPacket == ACQ_MSGQ_SIZE) currentPacket = 0;
 		
-		/*usleep(50000);*/
 		sleep(1);
 	}
 	

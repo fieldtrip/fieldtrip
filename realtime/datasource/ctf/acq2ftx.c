@@ -37,12 +37,13 @@
 #define MAX_TRIGGER   16
 #define MAX_OUT        4
 
-/*	 uncomment this for testing on different machines with fake_meg
+#ifdef FAKE_MEG
+/* modify the definitions for testing on different machines with fake_meg */
 #undef  ACQ_MSGQ_SIZE   
 #define ACQ_MSGQ_SIZE 10
 #undef  ACQ_MSGQ_SHMKEY 
 #define ACQ_MSGQ_SHMKEY    0x08150842 
-*/
+#endif
 
 static char usage[] = 
 "Usage: acq2ftx hostname:port:flags:decimation:channels\n";
