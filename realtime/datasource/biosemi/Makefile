@@ -11,7 +11,7 @@ ifeq "$(PLATFORM)" "mingw32"
    LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
    INCPATH = -I../../buffer/src -I../../buffer/cpp -I. -I../../buffer/pthreads-win32/include
    SUFFIX = .exe
-else
+else 
    LDFLAGS = -lpthread ../../buffer/src/libbuffer.a -ldl
    INCPATH = -I../../buffer/src -I../../buffer/cpp -I. 
    SUFFIX = 

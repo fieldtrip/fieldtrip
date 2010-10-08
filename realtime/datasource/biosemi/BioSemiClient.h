@@ -65,6 +65,7 @@ class BioSemiClient {
 		return ringBuffer;
 	}
 
+	bool isDriverOk() const { return driverOk; }
 	
 	protected:
 	

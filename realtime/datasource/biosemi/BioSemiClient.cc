@@ -78,6 +78,7 @@ BioSemiClient::BioSemiClient() {
 }
 
 BioSemiClient::~BioSemiClient() {
+	if (deviceOpen) closeDevice();
 	#ifdef WIN32
 	if (hLib != NULL) FreeLibrary(hLib);
 	timeEndPeriod(1);
