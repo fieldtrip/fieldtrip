@@ -234,7 +234,10 @@ elseif ft_filetype(filename, 'dicom')
   end
 elseif ft_filetype(filename, 'freesurfer_mgz') && hastoolbox('freesurfer'),
   tmp = MRIread(filename);
-  img = tmp.vol;
+  img = permute(tmp.vol, [2 1 3]); %FIXME although this is probably correct
+  %see the help of MRIread, anecdotally columns and rows seem to need a swap
+  %in order to match the transform matrix (alternatively a row switch of the
+  %latter can be done)
   hdr = rmfield(tmp, 'vol');
   transform = tmp.vox2ras1;
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
