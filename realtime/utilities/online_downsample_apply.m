@@ -17,5 +17,5 @@ startIdx = 1+DM.numSkip;
 endIdx   = 1+DM.numSkip + (K-1)*DM.factor;
 
 xd = x(:,startIdx:DM.factor:endIdx);
-DM.numSkip = DM.decimate-1-(N-endIdx); % for next time
+DM.numSkip = DM.factor-1-(N-endIdx); % for next time
 	
