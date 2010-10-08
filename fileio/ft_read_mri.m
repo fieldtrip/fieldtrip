@@ -232,7 +232,11 @@ elseif ft_filetype(filename, 'dicom')
     transform(2,2) = dy;
     transform(3,3) = dz;
   end
-
+elseif ft_filetype(filename, 'freesurfer_mgz') && hastoolbox('freesurfer'),
+  tmp = MRIread(filename);
+  img = tmp.vol;
+  hdr = rmfield(tmp, 'vol');
+  transform = tmp.vox2ras1;
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 else
   error(sprintf('unrecognized filetype of ''%s''', filename));
