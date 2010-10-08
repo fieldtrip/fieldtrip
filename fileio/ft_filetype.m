@@ -42,6 +42,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - EEProbe
 %  - Elektra/Neuromag
 %  - LORETA
+%  - MGZ
 %  - MINC
 %  - Neuralynx
 %  - Neuroscan
