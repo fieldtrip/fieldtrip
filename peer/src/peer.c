@@ -1203,7 +1203,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 								current = mxCreateStructMatrix(1, 1, CURRENT_FIELDNUMBER, current_fieldnames);
 								mxSetFieldByNumber(current, 0, 0, mxCreateDoubleScalar(peer->host->current.pid));
 								mxSetFieldByNumber(current, 0, 1, mxCreateDoubleScalar(peer->host->current.hostid));
-								mxSetFieldByNumber(current, 0, 2, mxCreateDoubleScalar(peer->host->current.jobid));
+								/* mxSetFieldByNumber(current, 0, 2, mxCreateDoubleScalar(peer->host->current.jobid)); */
+								mxSetFieldByNumber(current, 0, 2, 0); /* FIXME */
 								mxSetFieldByNumber(current, 0, 3, mxCreateString(peer->host->current.name));
 								mxSetFieldByNumber(current, 0, 4, mxCreateString(peer->host->current.user));
 								mxSetFieldByNumber(current, 0, 5, mxCreateString(peer->host->current.group));
