@@ -440,7 +440,8 @@ int main(int argc, char *argv[]) {
 						bzero(&(host->current), sizeof(current_t));
 						// FIXME
 						host->current.pid = getpid();
-						host->current.id  = job->host->id;
+						host->current.hostid= job->host->id;
+						host->current.jobid = job->job->id;
 						strncpy(host->current.name, job->host->name, STRLEN);
 						strncpy(host->current.user, job->host->user, STRLEN);
 						strncpy(host->current.group, job->host->group, STRLEN);

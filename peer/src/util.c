@@ -244,5 +244,6 @@ void check_datatypes() {
 		if (WORDSIZE_FLOAT32 !=4) { PANIC("invalid size of FLOAT32 (%d)", WORDSIZE_FLOAT32);  }
 		if (WORDSIZE_FLOAT64 !=8) { PANIC("invalid size of FLOAT64 (%d)", WORDSIZE_FLOAT64);  }
 		if (sizeof(hostdef_t)!=976) { PANIC("invalid size of hostdef_t (%d)", sizeof(hostdef_t) );  }
+		if (sizeof(current_t)!=428) { PANIC("invalid size of current_t (%d)", sizeof(current_t) );  }
 }
 

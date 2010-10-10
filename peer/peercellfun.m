@@ -374,6 +374,8 @@ if all(puttime>timused)
   warning('copying the jobs over the network took more time than their execution');
 end
 
+keyboard
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION this masks the regular version, this one only updates the status
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
