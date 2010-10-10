@@ -86,8 +86,12 @@ if nargin>0
     case 'busy'
       list = list([list.status]==3);
     otherwise
-      % this is usefull if you only want the summary
-      list = [];
+      % make a subset based on the host name 
+      sel = zeros(size(list));
+      for i=1:length(list)
+        sel(i) = ~isempty(regexp(list(i).hostname, status));
+      end
+      list = list(find(sel));
   end
 end
 
