@@ -154,6 +154,7 @@ typedef struct {
 		UINT32_T pid;			/* UNIX process identifier of the peerslave */
 		UINT32_T hostid;        /* identifier of the peer where the job originates from */
 		UINT32_T jobid;         /* identifier of the job */
+		UINT32_T padding;		/* pad to the next 8-byte boundary */
 		char name[STRLEN];      /* hostname of the peer where the job originates from */
 		char user[STRLEN];
 		char group[STRLEN];
