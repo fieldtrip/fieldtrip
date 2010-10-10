@@ -301,6 +301,9 @@ while ~all(submitted) || ~all(collected)
   % check for jobs that are taking too long to finish
   if all(submitted) && any(collected) && ~all(collected)
 
+    % one criterium for resubmission is that the job is not being handled by a busy slave
+    % another criterium is that the job takes longer than expected
+
     % estimate the elapsed time for all jobs
     elapsed = toc(stopwatch) - submittime;
 
@@ -373,8 +376,6 @@ if all(puttime>timused)
   % be adjusted from using the peers to local execution
   warning('copying the jobs over the network took more time than their execution');
 end
-
-keyboard
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION this masks the regular version, this one only updates the status
