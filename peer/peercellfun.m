@@ -296,13 +296,25 @@ while ~all(submitted) || ~all(collected)
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % PART 3: flag jobs that take too long for resubmission
+  % one criterium for resubmission is that the job is not being handled by a busy slave
+  % another criterium is that the job takes longer than expected
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   % check for jobs that are taking too long to finish
   if all(submitted) && any(collected) && ~all(collected)
 
-    % one criterium for resubmission is that the job is not being handled by a busy slave
-    % another criterium is that the job takes longer than expected
+%    busy = peerlist('busy');
+%    if ~isempty(busy)
+%      current = [busy.current];
+%    else
+%      current  = []
+%    end
+%    sel1 = setdiff(jobid(submitted & ~collected), [current.jobid]);
+%
+%    for i=1:length(sel1)
+%      warning('resubmitting job %d because it failed to finish', sel1(i));
+%    end
+sel1 = [];
 
     % estimate the elapsed time for all jobs
     elapsed = toc(stopwatch) - submittime;
@@ -325,10 +337,16 @@ while ~all(submitted) || ~all(collected)
     end
 
     % test whether one of the submitted jobs should be resubmitted
-    sel = find(submitted & ~collected & (elapsed>estimated));
+    sel2 = find(submitted & ~collected & (elapsed>estimated));
+
+    for i=1:length(sel2)
+      warning('resubmitting job %d because it takes too long to finish (estimated = %f, elapsed = %f)', sel2(i), estimated, elapsed(sel2(i)));
+    end
+
+    % combine the two selections
+    sel = union(sel1, sel2);
 
     for i=1:length(sel)
-      warning('resubmitting job %d because it takes too long to finish (estimated = %f, elapsed = %f)', sel(i), estimated, elapsed(sel(i)));
       % remember the job that will be resubmitted, it still might return its results
       resubmitted(end+1).jobnum = sel(i);
       resubmitted(end  ).jobid  = jobid(sel(i));
