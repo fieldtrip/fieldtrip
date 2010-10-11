@@ -125,6 +125,7 @@ end
 
 % prepare some arrays that are used for bookkeeping
 jobid       = nan(1, numjob);
+busytime    = nan(1, numjob);
 puttime     = nan(1, numjob);
 timused     = nan(1, numjob);
 memused     = nan(1, numjob);
@@ -216,21 +217,9 @@ while ~all(submitted) || ~all(collected)
       puttime(submit)    = curputtime;
       submitted(submit)  = true;
       submittime(submit) = toc(stopwatch);
-      clear curjobid curputtime
-    else
-      if ~isempty(busy)
-        % select only the slaves that are busy with your jobs
-        current = [busy.current];
-        info = peerinfo;
-        busy = busy([current.hostid]==info.hostid);
-        clear current info
-      end
-      if isempty(busy)
-        warning('none of the slaves seems to be busy with your jobs');
-      end
     end
 
-    clear argin
+    clear curjobid curputtime argin
   end % if ~isempty(submitlist)
 
   if sum(submitted)>prevnumsubmitted
@@ -299,22 +288,32 @@ while ~all(submitted) || ~all(collected)
   % one criterium for resubmission is that the job is not being handled by a busy slave
   % another criterium is that the job takes longer than expected
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  sel1 = [];
+  sel2 = [];
+
+% busy = peerlist('busy');
+% if ~isempty(busy)
+%   current = [busy.current];
+%
+%   % these jobs have been submitted but are not (yet) busy
+%   selindx = setdiff(jobid(submitted & ~collected), [current.jobid]);
+%   for i=selindx
+%     j = find(jobid==i);
+%     if isnan(busytime(j))
+%       failtime(j) = toc(stopwatch);
+%     end
+%   end
+%
+%   % select the submitted jobs that have not been busy for the last 3 seconds
+%   % the updated announce packet should not take more than 1 second to arrive
+%   sel1 = find(busytime(submitted & ~collected) - submittime(submitted & ~collected)>2);
+%   for i=sel1
+%     warning('resubmitting job %d because it failed to execute', i);
+%   end
+% end
 
   % check for jobs that are taking too long to finish
   if all(submitted) && any(collected) && ~all(collected)
-
-%    busy = peerlist('busy');
-%    if ~isempty(busy)
-%      current = [busy.current];
-%    else
-%      current  = []
-%    end
-%    sel1 = setdiff(jobid(submitted & ~collected), [current.jobid]);
-%
-%    for i=1:length(sel1)
-%      warning('resubmitting job %d because it failed to finish', sel1(i));
-%    end
-sel1 = [];
 
     % estimate the elapsed time for all jobs
     elapsed = toc(stopwatch) - submittime;
@@ -339,28 +338,29 @@ sel1 = [];
     % test whether one of the submitted jobs should be resubmitted
     sel2 = find(submitted & ~collected & (elapsed>estimated));
 
-    for i=1:length(sel2)
-      warning('resubmitting job %d because it takes too long to finish (estimated = %f, elapsed = %f)', sel2(i), estimated, elapsed(sel2(i)));
+    for i=sel2
+      warning('resubmitting job %d because it takes too long to finish (estimated = %f, elapsed = %f)', i, estimated, elapsed(i));
     end
+  end % determine jobs for resubmission based on time
 
-    % combine the two selections
-    sel = union(sel1, sel2);
+  % combine the two selections
+  sel = union(sel1, sel2);
 
-    for i=1:length(sel)
-      % remember the job that will be resubmitted, it still might return its results
-      resubmitted(end+1).jobnum = sel(i);
-      resubmitted(end  ).jobid  = jobid(sel(i));
-      % reset all job information, this will cause it to be automatically resubmitted
-      jobid      (sel(i)) = nan;
-      puttime    (sel(i)) = nan;
-      timused    (sel(i)) = nan;
-      memused    (sel(i)) = nan;
-      submitted  (sel(i)) = false;
-      collected  (sel(i)) = false;
-      submittime (sel(i)) = inf;
-      collecttime(sel(i)) = inf;
-    end
-  end % resubmitting
+  % resubmit the selected jobs
+  for i=1:length(sel)
+    % remember the job that will be resubmitted, it still might return its results
+    resubmitted(end+1).jobnum = sel(i);
+    resubmitted(end  ).jobid  = jobid(sel(i));
+    % reset all job information, this will cause it to be automatically resubmitted
+    jobid      (sel(i)) = nan;
+    puttime    (sel(i)) = nan;
+    timused    (sel(i)) = nan;
+    memused    (sel(i)) = nan;
+    submitted  (sel(i)) = false;
+    collected  (sel(i)) = false;
+    submittime (sel(i)) = inf;
+    collecttime(sel(i)) = inf;
+  end
 
   if ~all(collected)
     % wait a little bit, then try again to submit or collect a job

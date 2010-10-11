@@ -436,18 +436,6 @@ int main(int argc, char *argv[]) {
 						host->status = STATUS_BUSY;
 						/* determine the maximum allowed job duration */
 						timallow = 2*(host->timavail+1);
-						/* update the current job description */
-						bzero(&(host->current), sizeof(current_t));
-						// FIXME
-						host->current.pid = getpid();
-						host->current.hostid= job->host->id;
-						/* host->current.jobid = job->job->id; */
-						strncpy(host->current.name, job->host->name, STRLEN);
-						strncpy(host->current.user, job->host->user, STRLEN);
-						strncpy(host->current.group, job->host->group, STRLEN);
-						host->current.timreq  = job->job->timreq;
-						host->current.memreq  = job->job->memreq;
-						host->current.cpureq  = job->job->cpureq;
 
 						pthread_mutex_unlock(&mutexhost);
 

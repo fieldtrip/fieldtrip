@@ -79,8 +79,6 @@ void cleanup_announce(void *arg) {
 
 void *announce(void *arg) {
 		int fd = 0;
-		struct sockaddr_in multicastAddr, localhostAddr;
-		unsigned char ttl = 3;
 		hostdef_t *message = NULL;
 
 		threadlocal_t threadlocal;
@@ -122,25 +120,6 @@ void *announce(void *arg) {
 		DEBUG(LOG_INFO, "announce: host.id   = %u", host->id);
 		pthread_mutex_unlock(&mutexhost);
 
-		/* create what looks like an ordinary UDP socket */
-		if ((fd=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP)) < 0) {
-				perror("announce socket");
-				DEBUG(LOG_ERR, "error: announce socket");
-				goto cleanup;
-		}
-
-		/* set up destination address for localhost announce packet */
-		memset(&localhostAddr,0,sizeof(localhostAddr));
-		localhostAddr.sin_family      = AF_INET;
-		localhostAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-		localhostAddr.sin_port        = htons(ANNOUNCE_PORT);
-
-		/* set up destination address for multicast announce packet */
-		memset(&multicastAddr,0,sizeof(multicastAddr));
-		multicastAddr.sin_family      = AF_INET;
-		multicastAddr.sin_addr.s_addr = inet_addr(ANNOUNCE_GROUP);
-		multicastAddr.sin_port        = htons(ANNOUNCE_PORT);
-
 		/* now just sendto() our destination */
 		while (1) {
 
@@ -148,53 +127,11 @@ void *announce(void *arg) {
 				smartmem_update();
 				smartcpu_update();
 
-				pthread_mutex_lock(&mutexhost);
-
-				/* the host details can change over time */
-				memcpy(message, host, sizeof(hostdef_t));
-
-				if (strncasecmp(host->name, "localhost", STRLEN)==0)
-						ttl = 0;
-				else
-						ttl = 1;
-
-				/*  the TTL (time to live/hop count) for the send can be
-				 *  ----------------------------------------------------------------------
-				 *  0      Restricted to the same host. Won't be output by any interface.
-				 *  1      Restricted to the same subnet. Won't be forwarded by a router.
-				 *  <32    Restricted to the same site, organization or department.
-				 *  <64    Restricted to the same region.
-				 *  <128   Restricted to the same continent.
-				 *  <255   Unrestricted in scope. Global.
-				 */
-
-				if ((setsockopt(fd, IPPROTO_IP, IP_MULTICAST_TTL, (void*)&ttl, sizeof(ttl))) < 0) {
-						perror("setsockopt");
-						DEBUG(LOG_ERR, "error: setsockopt");
-				}
-
-				pthread_mutex_unlock(&mutexhost);
-
-#ifdef USE_MULTICAST
-				/* note that this is a thread cancelation point */
-				if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &multicastAddr,sizeof(multicastAddr)) < 0) {
-						perror("announce sendto (multicast)");
-						DEBUG(LOG_ERR, "error: announce sendto (multicast)");
-						goto cleanup;
-				}
-#endif
-
-#ifdef USE_LOCALHOST
-				/* note that this is a thread cancelation point */
-				if (sendto(fd,message,sizeof(hostdef_t),0,(struct sockaddr *) &localhostAddr,sizeof(localhostAddr)) < 0) {
-						perror("announce sendto (localhost)");
-						DEBUG(LOG_ERR, "error: announce sendto (localhost)");
-						goto cleanup;
-				}
-#endif
+				announce_once();
 
 				/* note that this is a thread cancelation point */
 				pthread_testcancel();
+
 				/* avoid peers from perfectly synchronizing their announce packets */
 				threadsleep(ANNOUNCESLEEP + frand(-ANNOUNCEJITTER, ANNOUNCEJITTER));
 		}
@@ -215,6 +152,7 @@ int announce_once(void) {
 		struct sockaddr_in multicastAddr, localhostAddr;
 		hostdef_t *message = NULL;
 		unsigned char ttl = 3;
+		joblist_t  *job  = NULL;
 
 		/* create what looks like an ordinary UDP socket */
 		if ((fd=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP)) < 0) {
@@ -247,6 +185,21 @@ int announce_once(void) {
 		/* the host details can change over time */
 		memcpy(message, host, sizeof(hostdef_t));
 
+		bzero(&(message->current), sizeof(current_t));
+		if (host->status==STATUS_BUSY) {
+				/* the peer is busy with the first job */
+				job = joblist;
+				/* update the current job description */
+				message->current.pid = getpid();
+				message->current.hostid= job->host->id;
+				message->current.jobid = job->job->id;
+				strncpy(message->current.name, job->host->name, STRLEN);
+				strncpy(message->current.user, job->host->user, STRLEN);
+				strncpy(message->current.group, job->host->group, STRLEN);
+				message->current.timreq  = job->job->timreq;
+				message->current.memreq  = job->job->memreq;
+				message->current.cpureq  = job->job->cpureq;
+		}
 		pthread_mutex_unlock(&mutexhost);
 
 		if (strncasecmp(host->name, "localhost", STRLEN)==0)
