@@ -1,0 +1,5 @@
+Gustavo Sudre (University of Pittsburg) has implemented the FieldTrip
+buffer for the Elekta/Neuromag Vectorview MEG system. His implementation
+will be made available under an open source license. Until then,
+please contact him if you would like to use the FieldTrip buffer
+on your Neuromag scanner.
