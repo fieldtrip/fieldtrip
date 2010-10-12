@@ -232,7 +232,8 @@ elseif ft_filetype(filename, 'dicom')
     transform(2,2) = dy;
     transform(3,3) = dz;
   end
-elseif ft_filetype(filename, 'freesurfer_mgz') && hastoolbox('freesurfer'),
+elseif ft_filetype(filename, 'freesurfer_mgz')
+  hastoolbox('freesurfer', 1);
   tmp = MRIread(filename);
   img = permute(tmp.vol, [2 1 3]); %FIXME although this is probably correct
   %see the help of MRIread, anecdotally columns and rows seem to need a swap
