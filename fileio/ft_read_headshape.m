@@ -251,6 +251,18 @@ switch fileformat
       error('no headshape found in Matlab file');
     end
 
+  case {'freesurfer_triangle_binary', 'freesurfer_quadrangle'}
+    % the freesurfer toolbox is required for this
+    hastoolbox('freesurfer', 1);
+    [pnt, tri] = read_surf(filename);
+    if min(tri(:)) == 0
+      % start counting from 1
+      tri = tri + 1;
+    end
+    shape.pnt = pnt;
+    shape.tri = tri;
+    shape = rmfield(shape, 'fid');  
+ 
   otherwise
 
     success = 0;
