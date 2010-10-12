@@ -95,6 +95,7 @@ url = {
   'ITAB'       'contact Stefania Della Penna'
   'BSMART'     'see http://www.brain-smart.org'
   'PEER'       'see http://fieldtrip.fcdonders.nl/development/peer'
+  'FREESURFER' 'see http://surfer.nmr.mgh.harvard.edu/fswiki'
   };
 
 if nargin<2
@@ -200,6 +201,8 @@ switch toolbox
     status  = exist('peerslave', 'file') && exist('peermaster', 'file');
   case 'CONNECTIVITY'
     status  = exist('ft_connectivity_corr', 'file') && exist('ft_connectivity_granger', 'file');
+  case 'FREESURFER'
+    status  = exist('MRIread', 'file') && exist('vox2ras_0to1', 'file');
   otherwise
     if ~silent, warning(sprintf('cannot determine whether the %s toolbox is present', toolbox)); end
     status = 0;
