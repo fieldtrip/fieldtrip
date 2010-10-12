@@ -809,6 +809,31 @@ elseif (filetype_check_extension(filename, '.sbin') || filetype_check_extension(
   manufacturer = 'Electrical Geodesics Incorporated';
   content = 'averaged EEG data';
 
+% FreeSurfer file formats, see also http://www.grahamwideman.com/gw/brain/fs/surfacefileformats.htm
+elseif filetype_check_extension(filename, '.mgz')
+  type = 'freesurfer_mgz';
+  manufacturer = 'FreeSurfer';
+  content = 'anatomical MRI';
+elseif filetype_check_header(filename, [255 255 254])
+  % FreeSurfer Triangle Surface Binary Format
+  type = 'freesurfer_triangle_binary';	% there is also an ascii triangle format
+  manufacturer = 'FreeSurfer';
+  content = 'surface description';
+elseif filetype_check_header(filename, [255 255 255])
+  % Quadrangle File
+  type = 'freesurfer_quadrangle'; % there is no ascii quadrangle format
+  manufacturer = 'FreeSurfer';
+  content = 'surface description';
+elseif filetype_check_header(filename, [255 255 253])
+  % "New" Quadrangle File
+  type = 'freesurfer_quadrangle_new';
+  manufacturer = 'FreeSurfer';
+  content = 'surface description';
+elseif filetype_check_extension(filename, '.curv') && filetype_check_header(filename, [255 255 255])
+  % "New" Curv File
+  type = 'freesurfer_curv_new';
+  manufacturer = 'FreeSurfer';
+  content = 'surface description';
 
   % some other known file types
 elseif length(filename)>4 && exist([filename(1:(end-4)) '.mat'], 'file') && exist([filename(1:(end-4)) '.bin'], 'file')
@@ -817,10 +842,6 @@ elseif length(filename)>4 && exist([filename(1:(end-4)) '.mat'], 'file') && exis
   type = 'fcdc_matbin';
   manufacturer = 'F.C. Donders Centre';
   content = 'multiplexed electrophysiology data';
-elseif filetype_check_extension(filename, '.mgz')
-  type = 'freesurfer_mgz';
-  manufacturer = 'FreeSurfer';
-  content = 'anatomical MRI';
 elseif filetype_check_extension(filename, '.lay')
   type = 'layout';
   manufacturer = 'Ole Jensen';
