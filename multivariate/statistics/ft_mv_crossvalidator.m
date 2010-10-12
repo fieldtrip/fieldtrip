@@ -500,7 +500,7 @@ classdef ft_mv_crossvalidator
          
          % make sure outcomes are evenly represented whenever possible
          [unq,tmp,idx] = unique(Y,'rows');
-         
+                  
          mx = max(idx);
          if mx == nsamples % unique labeled samples
            res{1} = idxs(1:round((1-obj.nfolds)*nsamples));

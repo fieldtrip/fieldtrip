@@ -23,6 +23,10 @@ for c=1:length(design)
       tmp = contingency(design{c},post{c});
       res{c} = sum(diag(tmp))./size(design{c},1);
       
+    case 'correlation'
+      
+      res{c} = corr(design{c},post{c});
+      
     case 'contingency'
       
       % return contingency table
@@ -37,6 +41,10 @@ for c=1:length(design)
       tmp = tmp ./ repmat(sum(tmp,2),[1 size(tmp,2)]);
       tmp(isnan(tmp)) = 0;
       res{c} = tmp;
+      
+    otherwise
+      
+      error('unknown performance metric');
       
   end
   

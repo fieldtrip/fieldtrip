@@ -64,12 +64,12 @@ we can train our MVA on input \t{X} and output \t{Y}. Finally, we can test on ne
 \begin{verbatim}
 V = obj.test(U)
 \end{verbatim}
-such that \t{V} contains the predictions. The MVA object will sequentially call each \t{ft\_mv\_method} in the pipeline where output of the previous method will be input to the next method. The method \t{name} will return the MVA as a string and the method \t{model} will return the associated model, in this case the model of the last method in the pipeline (more on this later).
+such that \t{V} contains the predictions. The MVA object will sequentially call each \t{ft\_mv\_method} in the pipeline where output of the previous method will be input to the next method. The \t{obj.name} will return the MVA as a string and the method \t{obj.model} will return the associated model, in this case the model of the last method in the pipeline (more on this later).
 
 
 \section{Multivariate methods}
 
-Multivariate methods are organized into different subclasses according to the way they transform input data \t{X} to output data \t{Y}. Currently supported methods are {\em preprocessors}, which preprocess the data, {\em selectors}, which perform some kind of feature selection, {\em predictors}, which make predictions for new data, and {\em timeseries} methods, which perform some kind of timeseries analysis on the data. Many methods handle missing data, multiple outputs, multiple datasets and online (sample by sample) learning. If a method does not handle any of these situations then it will throw an error. Handling of some of these situations can be done by invoking a wrapper function. E.g, multiple outputs can be handled by invoking the \t{ft\_mv\_noutput} method.
+Multivariate methods are organized into different subclasses according to the way they transform input data \t{X} to output data \t{Y}. Currently supported methods are {\em preprocessors}, which preprocess the data, {\em selectors}, which perform some kind of feature selection, {\em predictors}, which make predictions for new data, and {\em timeseries} methods, which perform timeseries analysis on the data. Many methods handle missing data, multiple outputs, multiple datasets and online (sample by sample) learning. If a method does not handle any of these situations then it will throw an error. Handling of some of these situations can be done by invoking a wrapper function.\footnote{E.g, multiple outputs can be handled by invoking an \t{ft\_mv\_noutput} object and multiple datasets can be handled by invoking the \t{ft\_mv\_ndata} object.}
 
 All \t{mvmethod} classes are structured as follows (here we show an example of a predictor):
 \begin{verbatim}
@@ -89,14 +89,12 @@ classdef mymethod < ft_mv_predictor
         end
  
         function Y = test(obj,X)
-        	 % compute output
-     
+        	 % compute output     
         end
  
         function [m,d] = model(obj)
           % return the model parameters as a cell-array m
-          % desc contains a description of each element of m
- 
+          % desc contains a description of each element of m 
         end
     end
  
@@ -115,8 +113,8 @@ Preprocessors are used to preprocess the input data \t{X} in such a way that it 
 \begin{tabular}{p{0.2\textwidth}|p{0.7\textwidth}}
 \bf{preprocessor} & \bf{functionality}\\
 \hline
-\t{ft\_mv\_standardizer} & Standardizes the data to have mean zero and a standard deviation of one.\\
-\t{ft\_mv\_csp} & common spatial pattern
+\t{ft\_mv\_standardizer} & Spheres and centers the data such that it has mean zero and a standard deviation of one.\\
+\t{ft\_mv\_csp} & common spatial pattern algorithm
 \end{tabular}
 \label{preprocessors}
 \end{table}
@@ -153,8 +151,9 @@ Predictors are used to predict new outputs \t{Y} based on input data \t{X}. Tabl
 \t{ft\_mv\_rkls} & Regularized kernel least squares; inherits from \t{ft\_mv\_kernelmethod}.\\
 \t{ft\_mv\_klr}  &  Kernel logistic regression;  inherits from \t{ft\_mv\_kernelmethod}.\\
 \t{ft\_mv\_ensemble} & Ensemble method class that takes uses multiple mvmethods in parallel to achieve some goal.\\
-\t{ft\_mv\_logreg} & logistic regression with L1 and/or L2 regularization\\
-\t{ft\_mv\_glmnet} & wrapper class for efficient implementation of elastic net linear and logistic regression
+\t{ft\_mv\_logreg} & Logistic regression with L1 and/or L2 regularization.\\
+\t{ft\_mv\_linreg} & Linear regression with L1 and/or L2 regularization.\\
+\t{ft\_mv\_glmnet} & Wrapper class for efficient implementation of elastic net linear and logistic regression.
 \end{tabular}
 \label{predictors}
 \end{table}
@@ -169,6 +168,8 @@ Timeseries methods are used to predict new outputs \t{Y} based on input data \t{
 \begin{tabular}{p{0.2\textwidth}|p{0.7\textwidth}}
 \bf{timeseries} & \bf{functionality}\\
 \hline
+\t{ft\_mv\_hmm} & Hidden Markov model\\
+\t{ft\_mv\_lds} & Linear dynamical system
 \end{tabular}
 \label{timeseries}
 \end{table}
@@ -260,7 +261,7 @@ disp(cv.significance);
 \end{verbatim}
 In the example, a ten-fold cross-validation is performed by standardizing the data and applying a support vector machine. Subsequently, the classification accuracy (proportion of correctly classified trials) is computed. Finally, an approximate binomial test (McNemar test) is computed which compares the predictions with that of a naive classifier that assigns all outcomes to the majority class. The different performance measures and significance tests can be examined by consulting the help for \t{ft\_mv\_performance} and \t{ft\_mv\_significance}.
 
-We have not yet mentioned how to determine which features were responsible for the predictions. This is realized throught the \t{model} field of the cross-validator. It produces the averaged model that is produced by the last method in the specified MVA; in our case, the model of a SVM. It is up to each multivariate method to  specify how its model is defined. For example, for the above example, assuming we used only five features, we have:
+We have not yet mentioned how to determine which features were responsible for the predictions. This is realized throught the \t{model} field of the cross-validator. It returns the average model that is produced by the last method in the specified MVA; in our case, the model of a SVM. It is up to each multivariate method to  specify how its model is defined. For example, for the above example, assuming we used only five features, we have:
 \begin{verbatim}
 
 disp(cv.model);
@@ -278,7 +279,10 @@ Supported performance measures and statistical tests are described in Tables~\re
 \begin{tabular}{p{0.2\textwidth}|p{0.7\textwidth}}
 {\bf measure} & {\bf output}\\
 \hline
-accuracy &proportion of correctly classified cases
+accuracy &proportion of correctly classified cases\\
+contingency & contingency table with true class as rows and predicted class as colums\\
+cfmatrix & confusion matrix with true class as rows and predicted class as colums\\
+correlation & correlation between real and predicted output
 \end{tabular}
 \label{measure}
 \end{table}

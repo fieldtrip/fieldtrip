@@ -58,11 +58,11 @@ classdef ft_mv_glmnet < ft_mv_predictor
         return;
       end
       
-      nclasses = max(2,max(Y(:)));
-      
       if strcmp(obj.type,'linear')
         family = 'gaussian';
+        nclasses = 1;
       else
+        nclasses = max(2,max(Y(:)));
         if nclasses > 2
           family = 'multinomial';
         else
@@ -89,9 +89,13 @@ classdef ft_mv_glmnet < ft_mv_predictor
 
         for j=1:(nsolutions/nclasses)
           
-          post = cellfun(@(x)(x(:,(j-1)*2 + (1:2))),obj.cv.post,'UniformOutput',false);
+          post = cellfun(@(x)(x(:,(j-1)*nclasses + (1:nclasses))),obj.cv.post,'UniformOutput',false);
           
-          obj.performance(:,j) = cell2mat(ft_mv_performance(obj.cv.design,post,obj.cv.metric));
+          perf = ft_mv_performance(obj.cv.design,post,obj.cv.metric);
+          
+          if iscell(perf), perf = cell2mat(perf); end
+          
+          obj.performance(:,j) = perf;
           
         end
         
@@ -129,7 +133,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
        else
          
          res = glmnet(X,Y,family,opts);
-         obj.weights = [res.beta(:,end); res.a0(:,end)]; 
+         obj.weights = [res.beta(:,end); res.a0(end)]; 
        
        end
        
@@ -153,7 +157,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
           res.lambda = nan;
         else
           res = glmnet(X,Y,family,opts);
-          obj.weights = [res.beta; res.a0];
+          obj.weights = [res.beta; res.a0(:)'];
         end
         
       end
