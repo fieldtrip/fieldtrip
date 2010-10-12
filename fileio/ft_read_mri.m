@@ -259,4 +259,7 @@ try
   % if present, store the homogenous transformation matrix
   mri.transform = transform;
 end
-
+try
+  % try to add units
+  mri = ft_convert_units(mri);
+end
