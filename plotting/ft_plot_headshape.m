@@ -62,7 +62,7 @@ pnt = headshape.pnt;
 bnd.pnt = pnt;
 bnd.tri = [];
 
-ft_plot_mesh(bnd, 'vertices', 'yes', 'vertexcolor',vertexcolor,'vertexsize',10);
+ft_plot_mesh(bnd, 'vertexcolor',vertexcolor,'vertexsize',10);
 
 if isfield(headshape, 'fid')
   fid = headshape.fid;
