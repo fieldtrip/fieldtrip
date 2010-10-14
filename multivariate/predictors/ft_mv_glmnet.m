@@ -163,7 +163,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
       end
       
       obj.lambda  = res.lambda;
-      
+          
     end
     
     function Y = test(obj,X)
