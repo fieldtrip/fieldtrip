@@ -117,3 +117,8 @@ try
   hastoolbox('realtime', 3, 1);             % not required
   hastoolbox('realtime/datasource', 3, 1);  % not required
 end
+
+try 
+  % this contains intermediate-level functions for spectral analysis
+  hastoolbox('specest', 1, 1);
+end
