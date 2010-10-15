@@ -159,7 +159,7 @@ for ifreqoi = 1:nfreqoi
   postzero = zeros(1,round(endnsample) - ((tappad-1) + timwinsample(ifreqoi))-1);
   
   % phase consistency: cos must always be 1  and sin must always be centered in upgoing flank, so the centre of the wavelet (untapered) has angle = 0
-  anglein  = (-(timwinsample(ifreqoi)-2)/2 : (timwinsample(ifreqoi)-0)/2)'   .*  ((2.*pi./fsample) .* freqoi(ifreqoi));
+  anglein  = (-(timwinsample(ifreqoi)-1)/2 : (timwinsample(ifreqoi)-1)/2)'   .*  ((2.*pi./fsample) .* freqoi(ifreqoi));
   wltspctrm{ifreqoi} = complex(zeros(size(tap,1),round(endnsample)));
   
   for itap = 1:ntaper(ifreqoi)
