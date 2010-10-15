@@ -1,4 +1,4 @@
-classdef ft_mv_ldsMixed < ft_mv_timeseries
+classdef ft_mv_lds < ft_mv_timeseries
 %FT_MV_LDS linear dynamical system 
 %
 % state can be partially observed/unobserved during training.
@@ -7,7 +7,6 @@ classdef ft_mv_ldsMixed < ft_mv_timeseries
 % multiple observations sequences are supported
 %
 % bias term is *NOT* automatically added to the model
-%
 %
 % refs
 % Pattern Recognition and Machine Learning, Bishop
