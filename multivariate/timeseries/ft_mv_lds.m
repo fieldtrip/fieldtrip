@@ -87,7 +87,7 @@ classdef ft_mv_lds < ft_mv_timeseries
 
   methods
     
-    function obj = ft_mv_ldsMixed(varargin)
+    function obj = ft_mv_lds(varargin)
       
       obj = obj@ft_mv_timeseries(varargin{:});
     end
