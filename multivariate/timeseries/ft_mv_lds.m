@@ -6,8 +6,6 @@ classdef ft_mv_lds < ft_mv_timeseries
 % observations are normally distributed conditional on the state.
 % multiple observations sequences are supported
 %
-% bias term is *NOT* automatically added to the model
-%
 % refs
 % Pattern Recognition and Machine Learning, Bishop
 % A unifying review of linear dynamical systems, Gharamani 
@@ -61,7 +59,7 @@ classdef ft_mv_lds < ft_mv_timeseries
 % disp(mean(abs(Z - Y)));
 % 
 %
-% Copyright (c) 2010, Marcel van Gerven
+% Copyright (c) 2010, Marcel van Gerven, Ali Bahramisharif
   
   properties
     
@@ -310,12 +308,14 @@ classdef ft_mv_lds < ft_mv_timeseries
       J = cell(1,T-1); % needed to compute transition matrix A in EM
       for n=T:-1:2
 
-          P = A * V1{n-1} * A' + Q;
+        P = A * V1{n-1} * A' + Q;
+        
         if det(P)<0
-            disp('bad predictive covariance')
-            lambda=max(svd(P));
-            P=P+(lambda+obj.epsilon)*eye(size(P));
+          disp('bad predictive covariance')
+          lambda=max(svd(P));
+          P=P+(lambda+obj.epsilon)*eye(size(P));
         end
+        
         if ~all(V{n}(:)==0)
           
           J{n-1} = (V1{n-1} * A') / P;
@@ -392,8 +392,6 @@ classdef ft_mv_lds < ft_mv_timeseries
 
       Xpred=mu;
       Vpred=V; 
-
-
 
       % take measurements into account
       if isempty(X) || all(isnan(X(:,1)))
