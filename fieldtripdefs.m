@@ -93,11 +93,6 @@ end
 
 try
   % numerous functions depend on this module
-  hastoolbox('forwinv', 1, 1);
-end
-
-try
-  % numerous functions depend on this module
   hastoolbox('inverse', 1, 1);
 end
 
