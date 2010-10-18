@@ -155,22 +155,26 @@ switch toolbox
     status  = (exist('SONFileHeader') && exist('SONChanList') && exist('SONGetChannel'));
   case '4D-VERSION'
     status  = (exist('read4d') && exist('read4dhdr'));
+  case {'STATS', 'STATISTICS'}
+    status = license('checkout', 'statistics_toolbox');         % also check the availability of a toolbox license
+  case {'OPTIM', 'OPTIMIZATION'}
+    status = license('checkout', 'optimization_toolbox');       % also check the availability of a toolbox license
+  case {'SPLINES', 'CURVE_FITTING'}
+    status = license('checkout', 'curve_fitting_toolbox');      % also check the availability of a toolbox license
   case 'SIGNAL'
-    status = hasfunction('medfilt1', toolbox) && exist('butter', 'file');   % also check the availability of a toolbox license
-  case 'OPTIM'
-    status  = hasfunction('fmincon', toolbox) && exist('fminunc', 'file');  % also check the availability of a toolbox license
-  case 'SPLINES'
-    status  = hasfunction('bspline', toolbox) && exist('csape', 'file');    % also check the availability of a toolbox license
+    status = license('checkout', 'signal_toolbox');             % also check the availability of a toolbox license
   case 'IMAGE'
-    status = hasfunction('bwlabeln', toolbox);                              % also check the availability of a toolbox license
+    status = license('checkout', 'image_toolbox');              % also check the availability of a toolbox license
+  case 'DCT'
+    status = license('checkout', 'distrib_computing_toolbox');  % also check the availability of a toolbox license
   case 'FASTICA'
     status  = exist('fastica', 'file');
   case 'BRAINSTORM'
     status  = exist('bem_xfer');
   case 'FILEIO'
-    status  = (exist('read_header') && exist('read_data') && exist('read_event') && exist('read_sens'));
-  case 'FORWINV'
-    status  = (exist('compute_leadfield') && exist('prepare_vol_sens'));
+    status  = (exist('ft_read_header') && exist('ft_read_data') && exist('ft_read_event') && exist('ft_read_sens'));
+  case 'FORMWARD'
+    status  = (exist('ft_compute_leadfield') && exist('ft_prepare_vol_sens'));
   case 'DENOISE'
     status  = (exist('tsr') && exist('sns'));
   case 'CTF'
@@ -190,7 +194,7 @@ switch toolbox
   case 'OPENMEEG'
     status = exist('openmeeg.m', 'file');
   case 'PLOTTING'
-    status  = (exist('plot_topo', 'file') && exist('plot_mesh', 'file') && exist('plot_matrix', 'file'));
+    status  = (exist('ft_plot_topo', 'file') && exist('ft_plot_mesh', 'file') && exist('ft_plot_matrix', 'file'));
   case 'PRTOOLS'
     status  = (exist('prversion', 'file') && exist('dataset', 'file') && exist('svc', 'file'));
   case 'ITAB'
