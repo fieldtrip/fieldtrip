@@ -34,7 +34,9 @@ classdef ft_mv_lds < ft_mv_timeseries
 % Q     % K x K state noise covariance
 % 
 %
-% NOTE: X and Y are swapped wrt the Kalman filter conventions
+% NOTES: 
+% - X and Y are swapped wrt the Kalman filter conventions
+% - obj.A = zeros(K,K) will remove the dynamics from the model
 %
 % EXAMPLE:
 %
@@ -207,7 +209,9 @@ classdef ft_mv_lds < ft_mv_timeseries
           obj.R = (1-obj.diagR) * obj.R + obj.diagR * diag(diag(obj.R));
         end
         
-        obj.A = G4 / G3;
+        if ~all(obj.A==0) 
+          obj.A = G4 / G3;
+        end
         
         obj.Q = (G2 - obj.A * G4') ./ (T-N);
         obj.Q = (obj.Q + obj.Q') ./ 2;
