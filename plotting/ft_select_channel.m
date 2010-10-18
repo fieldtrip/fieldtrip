@@ -68,9 +68,9 @@ multiple  = istrue(multiple);
 
 if multiple
   % the selection is done using select_range, which will subsequently call select_channel_multiple
-  set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', true, 'callback', {@ft_select_channel_multiple, callback}, 'event', 'WindowButtonDownFcn'});
-  set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', true, 'callback', {@ft_select_channel_multiple, callback}, 'event', 'WindowButtonUpFcn'});
-  set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', true, 'callback', {@ft_select_channel_multiple, callback}, 'event', 'WindowButtonMotionFcn'});
+  set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', true, 'callback', {@select_channel_multiple, callback}, 'event', 'WindowButtonDownFcn'});
+  set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', true, 'callback', {@select_channel_multiple, callback}, 'event', 'WindowButtonUpFcn'});
+  set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', true, 'callback', {@select_channel_multiple, callback}, 'event', 'WindowButtonMotionFcn'});
 else
   % the selection is done using select_channel_single
   pos = get(gca, 'CurrentPoint');
