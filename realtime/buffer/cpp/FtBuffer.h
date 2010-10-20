@@ -301,6 +301,8 @@ class FtBufferResponse {
 	message_t *m_response;
 };
 
+
+/*
 class FtChunkIterator {
 	public:
 	
@@ -319,5 +321,197 @@ class FtChunkIterator {
 	SimpleStorage &store;
 	int pos;
 };
+*/
+
+
+/** Small class for generating PUT_EVT requests.
+	In comparison to the prepPutEvent method in FtBufferRequest,
+	this class allows multiple events in one request.
+	The class is designed to be used in realtime acquisition loops, 
+	and	will keep and recycle allocated memory until explicitly disposed().
+*/
+class FtEventList {
+	public:
+	
+	/* Creates an empty event list */
+	FtEventList() {
+		numEvs=sizeAlloc=0;
+		buf=NULL;
+		request.def = &reqdef;
+		reqdef.command = PUT_EVT;
+		reqdef.version = VERSION;
+		reqdef.bufsize = 0;
+	}
+
+	~FtEventList() {
+		if (buf!=NULL) free(buf);
+	}
+
+	/* Clears all events from the list, but does not free the memory */
+	void clear() {
+		reqdef.bufsize = 0;
+		numEvs = 0;
+	}
+	
+	/* Clears all events from the list and frees used memory */
+	void dispose() {
+		if (buf!=NULL) free(buf);
+		buf = 0;
+		reqdef.bufsize = 0;
+		numEvs = 0;
+	}
+	
+	/* Add an event of general type to the list, will silently ignore invalid types */
+	void add(int sample, UINT32_T type_type, UINT32_T type_numel, const void *type, UINT32_T value_type, UINT32_T value_numel, const void *value) {
+		eventdef_t *ne;
+		unsigned int typeSize  = type_numel*wordsize_from_type(type_type);
+		unsigned int valueSize = value_numel*wordsize_from_type(value_type);
+		unsigned int newSize   = reqdef.bufsize + sizeof(eventdef_t) + typeSize + valueSize;
+		
+		if (typeSize == 0 || valueSize == 0) return;
+		
+		if (sizeAlloc < newSize) {
+			char *newBuf;
+			if (sizeAlloc == 0) {
+				newBuf = (char *) malloc(newSize);
+			} else {
+				newBuf = (char *) realloc(buf, newSize);
+			}
+			if (newBuf == NULL) {
+				fprintf(stderr, "Warning: out of memory in re-allocating event list.\n");
+				return;
+			}
+			sizeAlloc = newSize;
+			buf = newBuf;
+		}
+		
+		ne = (eventdef_t *) (buf + reqdef.bufsize);
+		ne->type_type   = type_type;
+		ne->type_numel  = type_numel;
+		ne->value_type  = value_type;
+		ne->value_numel = value_numel;
+		ne->sample = sample;
+		ne->offset = 0;
+		ne->duration = 0;
+		ne->bufsize = typeSize + valueSize;
+		memcpy(buf + reqdef.bufsize + sizeof(eventdef_t), type, typeSize);
+		memcpy(buf + reqdef.bufsize + sizeof(eventdef_t) + typeSize, value, valueSize);
+		reqdef.bufsize = newSize;
+		numEvs++;
+	}
+	
+	/* Add an event where both type and value are C strings */
+	void add(int sample, const char *type, const char *value) {
+		add(sample, DATATYPE_CHAR, strlen(type), type, DATATYPE_CHAR, strlen(value), value);
+	}
+	/* Add an event with a string type, and signed 16-bit value */
+	void add(int sample, const char *type, INT16_T value) {
+		add(sample, DATATYPE_CHAR, strlen(type), type, DATATYPE_INT16, 1, &value);
+	}
+	/* Add an event with a string type, and signed 32-bit value */
+	void add(int sample, const char *type, INT32_T value) {
+		add(sample, DATATYPE_CHAR, strlen(type), type, DATATYPE_INT32, 1, &value);
+	}
+	/* Add an event with a string type, and double precision value */
+	void add(int sample, const char *type, double value) {
+		add(sample, DATATYPE_CHAR, strlen(type), type, DATATYPE_FLOAT64, 1, &value);
+	}
+	/* Add an event with a string type, and single precision value */
+	void add(int sample, const char *type, float value) {
+		add(sample, DATATYPE_CHAR, strlen(type), type, DATATYPE_FLOAT32, 1, &value);
+	}
+	
+	/* Returns the request corresponding to PUT_EVT of the current list */
+	const message_t *asRequest() { 
+		request.buf = (reqdef.bufsize == 0) ? NULL : buf;
+		return &request; 
+	}	
+	
+	/* Returns the number of events currently in the list */
+	int count() const {
+		return numEvs;
+	}
+	
+	protected:
+	
+	messagedef_t reqdef;
+	message_t request;
+	char *buf;
+	unsigned int numEvs, sizeAlloc;
+};
+
+/** Small class for generating PUT_DAT requests.
+	The class is designed to be used in realtime acquisition loops, 
+	and	will keep and recycle allocated memory until explicitly disposed().
+*/
+class FtSampleBlock {
+	public:
+	/* Create a sample block class for the given data type */
+	FtSampleBlock(UINT32_T datatype) {
+		sizeAlloc=0;
+		request.def = &reqdef;
+		reqdef.command = PUT_DAT;
+		reqdef.version = VERSION;
+		reqdef.bufsize = 0;
+		this->datatype = datatype;
+		wordsize = wordsize_from_type(datatype);
+		ddef = NULL;
+	}
+	
+	~FtSampleBlock() {
+		if (ddef!=NULL) free(ddef);
+	}
+	
+	/* force free'ing memory */
+	void dispose() {
+		if (ddef!=NULL) free(ddef);
+		ddef = 0;
+		reqdef.bufsize = 0;
+	}
+	
+	/* Tries to allocate memory for a block for numChannels x numSamples for the
+		data type specified during construction, or recycles already existing
+		memory. Returns a pointer to the first byte of the sample block, or NULL
+		in case memory could not be allocated.
+	*/
+	void *getMatrix(int numChannels, int numSamples) {
+		unsigned int newSize = sizeof(datadef_t) + numChannels*numSamples*wordsize;
+		
+		if (newSize <= sizeof(datadef_t)) return NULL;
+		
+		if (newSize > sizeAlloc) {
+			if (ddef!=NULL) free(ddef);
+			ddef = (datadef_t *) malloc(newSize);
+			if (ddef == NULL) {
+				reqdef.bufsize = 0;
+				sizeAlloc = 0;
+				return NULL;
+			}
+			sizeAlloc = newSize;
+		}
+		ddef->nchans    = numChannels;
+		ddef->nsamples  = numSamples;
+		ddef->data_type = datatype;
+		ddef->bufsize   = numChannels * numSamples * wordsize;
+		reqdef.bufsize  = ddef->bufsize + sizeof(datadef_t);
+		return (void *) (ddef+1); // first byte after datadef_t
+	}
+	
+	const message_t *asRequest() { 
+		request.buf = (reqdef.bufsize == 0) ? NULL : ddef;
+		return &request; 
+	}		
+	
+	protected:
+	
+	UINT32_T datatype;
+	UINT32_T wordsize;
+	datadef_t *ddef;
+	unsigned int sizeAlloc;
+	messagedef_t reqdef;
+	message_t request;
+};
+
+
 
 #endif

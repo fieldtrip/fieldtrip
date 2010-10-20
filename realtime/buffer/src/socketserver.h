@@ -12,6 +12,12 @@
 
 #define MERGE_THRESHOLD      4096    /* TODO: optimize this value? Maybe look at MTU size */
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #ifndef WIN32
 #define INVALID_SOCKET  -1
 typedef int SOCKET;
@@ -71,5 +77,11 @@ ft_buffer_server_t *ft_start_buffer_server(int port, const char *name, ft_reques
 	S cannot be used anymore after this call. 
 */
 void ft_stop_buffer_server(ft_buffer_server_t *S);
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif
