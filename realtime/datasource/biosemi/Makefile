@@ -19,7 +19,7 @@ endif
 
 CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3 -g
 
-all: biosemi2ft$(SUFFIX)
+all: biosemi2ft$(SUFFIX) fakebiosemi2ft$(SUFFIX)
 	
 biosemi2ft.o: biosemi2ft.cc MultiChannelFilter.h
 	g++ -c biosemi2ft.cc $(CFLAGS)
@@ -37,6 +37,8 @@ SignalConfiguration.o: SignalConfiguration.cc SignalConfiguration.h
 GdfWriter.o: GdfWriter.cc GdfWriter.h 
 	g++ -c  GdfWriter.cc $(CFLAGS)	
 	
-biosemi2ft$(SUFFIX): biosemi2ft.o FakeBioSemiClient.o SignalConfiguration.o GdfWriter.o 
+biosemi2ft$(SUFFIX): biosemi2ft.o BioSemiClient.o SignalConfiguration.o GdfWriter.o 
 	g++ -o $@ $^ $(LDFLAGS) 
 
+fakebiosemi2ft$(SUFFIX): biosemi2ft.o FakeBioSemiClient.o SignalConfiguration.o GdfWriter.o 
+	g++ -o $@ $^ $(LDFLAGS) 

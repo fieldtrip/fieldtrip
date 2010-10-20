@@ -1,3 +1,7 @@
+/** Biosemi acqusition tool to stream (downsampled) data to a FieldTrip buffer,
+	and write full-rate data to one or multiple GDF files.
+	(C) 2010 S. Klanke
+*/
 #include <BioSemiClient.h>
 #include <SignalConfiguration.h>
 #include <stdio.h>
@@ -8,6 +12,12 @@
 #include <LocalPipe.h>
 #include <GdfWriter.h>
 #include <MultiChannelFilter.h>
+
+/* TODOs: 
+	- add proper clean-up (instead of return 1; in main routine)
+	- add TCP command server mechanism to START and STOP acquisition etc.
+	- add documentation
+*/
 
 double chebyCoefsB[32][5] = {
   {  1.00000000,  0.00000000,  0.00000000,  0.00000000,  0.00000000},
@@ -82,9 +92,7 @@ volatile bool keepRunning = true;
 
 static const double fixedGain = 1.0e-6/8192.0;
 
-// the number of HW channels (excluding sync + status)
-int numChanHW;
-int64_t maxFileSize = 1024*1024; // 1MB for testing
+int64_t maxFileSize = 1024*1024*1024; // 1GB for testing
 // lock-free FIFO for saving thread
 int32_t *rbInt;
 int rbIntSize, rbIntChans;
@@ -285,7 +293,8 @@ int main(int argc, char *argv[]) {
 	
 	double T0 = BS.getCurrentTime();
 	
-	numChanHW = BS.getNumChannels() + BS.getNumChanAIB();
+	// the number of HW channels (excluding sync + status)
+	int numChanHW = BS.getNumChannels() + BS.getNumChanAIB();
 	
 	auxVec = new float[numChanHW];
 	

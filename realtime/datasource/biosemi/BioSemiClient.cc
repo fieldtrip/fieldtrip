@@ -240,7 +240,7 @@ void BioSemiClient::closeDevice() {
 	deviceOpen = false;
 }
 
-int BioSemiClient::getCurPointer() const {
+int BioSemiClient::getCurPointer() {
 	intptr_t pointer;
 	
 	if (!deviceOpen) return -1;
