@@ -1,6 +1,12 @@
 #ifndef __MultiChannelFilter_h
 #define __MultiChannelFilter_h
 
+#include <math.h>
+
+#ifndef M_PI
+#define M_PI 3.141592653589793
+#endif
+
 template <typename T> 
 class MultiChannelFilter {
 	public:
@@ -10,8 +16,8 @@ class MultiChannelFilter {
 	~MultiChannelFilter();
 	
 	// Calculate Butterworth lowpass filter coefficients
-	// from normalised cutoff frequency (TODO)
-	void setButterLP(double cutoff);
+	// from normalised cutoff frequency (0<cutoff<1=Fnyquist)
+	void setButterLP(double cutoff); 
 	
 	// Copy coefficients. A and B must point to 1+order doubles
 	void setCoefficients(const double *B, const double *A) {
@@ -161,7 +167,61 @@ void MultiChannelFilter<T>::clear() {
 
 template <typename T> 
 void MultiChannelFilter<T>::setButterLP(double cutoff) {
+	int n;
 	
+	// warping factor for bilinear transform
+	// number inside tan( ) is pi/2
+	double f = 1.0/tan(0.5*M_PI*cutoff);
+
+	// nominator is sth. like prodB0*[1 4 6 4 1] later
+	double prodB0;
+
+	// init coefficients with unit response
+	A[0] = 1.0;
+	B[0] = 1.0;
+	for (int i=1;i<=order;i++) A[i]=B[i]=0.0;
+
+	// if odd order, handle 1. pole separately
+	if (order & 1) {
+		prodB0 = 1.0/(1.0+f);
+		A[1] = (1-f)/(1.0+f);
+		B[1] = 1.0;
+		n=1;
+	} else {
+		prodB0 = 1.0;
+		n=0;
+	}	
+
+	// add 2 poles at a time (complex conjugates)
+	for (int i=n;i<order;i+=2) {
+		// location of pole on analog unit circle
+		double ang = M_PI * (1.0 - (double)(i+1)/(double)(2*order));
+		// analog twopole denominator => (1 + q*s + s^2)
+		double q = -2.0*cos(ang);
+	
+		// bilinear transformation 
+		// s -> f*(z+1)/(z-1)
+		// 
+		// 1 + 2z^-1 + z-^2
+		// --------------------------------------------
+		// (1+qf+f^2) + (2-2f^2)*z-^1 + (1-qf+f^2)*z-^2
+		double b0 = 1.0/(1.0 + q*f + f*f);
+		//double b1 = 2.0*b0; 
+		//double b2 = b0;
+		double a0 = 1.0;
+		double a1 = (2.0-2.0*f*f)*b0;
+		double a2 = (1.0-q*f+f*f)*b0;
+		// convolve A by [a0 a1 a2] and B by b0*[1 2 1]
+		// we can do this in place if we start at the back
+		for (int j=i;j>=0;j--) {
+			A[j+2] += a2*A[j];
+			A[j+1] += a1*A[j];
+			B[j+2] += B[j];
+			B[j+1] += 2*B[j];
+		}
+		prodB0 *= b0;
+	}
+	for (int i=0;i<=order;i++) B[i] *= prodB0;
 }
 
 #endif
