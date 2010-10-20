@@ -99,7 +99,7 @@ int rbIntSize, rbIntChans;
 int rbIntWritePos;
 int rbIntReadPos;
 // pipe or socketpair for inter-thread communication
-LocalPipe pipe;
+LocalPipe locPipe;
 // GDF writing object
 GDF_Writer *gdfWriter = NULL;
 // Name of file to write to
@@ -150,7 +150,7 @@ void *savingThreadFunction(void *arg) {
 		int32_t *rbIntPtr;
 		int64_t newSize;
 		
-		n = pipe.read(sizeof(int), &writePtr);
+		n = locPipe.read(sizeof(int), &writePtr);
 		if (n!=sizeof(int)) {
 			// this should never happen for blocking sockets/pipes
 			fprintf(stderr, "Unexpected error in pipe communication\n");
@@ -269,7 +269,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	if (argc>4) {
-		port = atoi(argv[5]);
+		port = atoi(argv[4]);
 	} else {
 		port = 1972;
 	}
@@ -288,7 +288,7 @@ int main(int argc, char *argv[]) {
 		}
 		ftSocket = 0;
 	}
-	
+   
 	if (!BS.openDevice()) return 1;
 	
 	double T0 = BS.getCurrentTime();
@@ -393,7 +393,7 @@ int main(int argc, char *argv[]) {
 				}
 				if (++rbIntWritePos == rbIntSize) rbIntWritePos = 0;
 			}
-			pipe.write(sizeof(int), static_cast<void *>(&rbIntWritePos)); 
+			locPipe.write(sizeof(int), static_cast<void *>(&rbIntWritePos)); 
 		}
 		
 		if (nStream > 0) {
@@ -450,7 +450,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	skipSamples = -1;
-	pipe.write(sizeof(int), &skipSamples);
+	locPipe.write(sizeof(int), &skipSamples);
 	
 	BS.closeDevice();
 	if (ftSocket > 0) close_connection(ftSocket);

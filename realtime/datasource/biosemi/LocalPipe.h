@@ -41,7 +41,7 @@ class LocalPipe {
 			if (!ReadFile(pipeRead, data, size, &numRead, NULL)) return -1;
 			return numRead;
 		#else
-			return read(sockets[0], data, size);
+			return recv(sockets[0], data, size,0);
 		#endif
 	}
 
@@ -51,7 +51,7 @@ class LocalPipe {
 			if (!WriteFile(pipeWrite, data, size, &numWritten, NULL)) return -1;
 			return numWritten;
 		#else
-			return write(sockets[1], data, size);
+			return send(sockets[1], data, size,0);
 		#endif
 	}
 	
