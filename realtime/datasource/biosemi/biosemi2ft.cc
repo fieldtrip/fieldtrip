@@ -5,13 +5,14 @@
 #include <BioSemiClient.h>
 #include <SignalConfiguration.h>
 #include <stdio.h>
-#include <signal.h>
+//#include <signal.h>
 #include <FtBuffer.h>
 #include <socketserver.h>
 #include <pthread.h>
 #include <LocalPipe.h>
 #include <GdfWriter.h>
 #include <MultiChannelFilter.h>
+#include <ConsoleInput.h>
 
 /* TODOs: 
 	- add proper clean-up (instead of return 1; in main routine)
@@ -54,6 +55,7 @@ double chebyCoefsB[32][5] = {
   {  0.09505199, -0.37838155,  0.56666351, -0.37838155,  0.09505199}
 };
 double chebyCoefsA[32][5] = {
+
   {  1.00000000,  0.00000000,  0.00000000,  0.00000000,  0.00000000},
   {  1.00000000, -2.18401672,  2.06596957, -0.89798564,  0.16469484},
   {  1.00000000, -2.79930569,  3.08123529, -1.54853970,  0.30261806},
@@ -88,7 +90,7 @@ double chebyCoefsA[32][5] = {
   {  1.00000000, -3.88880893,  5.67273465, -3.67884179,  0.89492046}
 };
 
-volatile bool keepRunning = true;
+//volatile bool keepRunning = true;
 
 static const double fixedGain = 1.0e-6/8192.0;
 
@@ -99,12 +101,14 @@ int rbIntSize, rbIntChans;
 int rbIntWritePos;
 int rbIntReadPos;
 // pipe or socketpair for inter-thread communication
-LocalPipe locPipe;
+LocalPipe pipe;
 // GDF writing object
 GDF_Writer *gdfWriter = NULL;
 // Name of file to write to
 char baseFilename[1024];
 char curFilename[1024];
+int fileCounter = 0;
+
 
 bool writeHeader(int ftSocket, float fSample, const ChannelSelection &streamSel) {
 	FtBufferRequest req;
@@ -141,23 +145,20 @@ bool writeHeader(int ftSocket, float fSample, const ChannelSelection &streamSel)
 void *savingThreadFunction(void *arg) {
 	int writePtr,n;
 	int64_t fileSize = 256*(1+rbIntChans);
-	int fileCount = 0;
 
-	printf("SAVING THREAD\n");
-	
 	while (1) {
 		int newSamplesA, newSamplesB;
 		int32_t *rbIntPtr;
 		int64_t newSize;
 		
-		n = locPipe.read(sizeof(int), &writePtr);
+		n = pipe.read(sizeof(int), &writePtr);
 		if (n!=sizeof(int)) {
 			// this should never happen for blocking sockets/pipes
 			fprintf(stderr, "Unexpected error in pipe communication\n");
 			break;
 		}
 		if (writePtr < 0) {
-			printf("Saving thread received %i - stopping\n", writePtr);
+			printf("\nSaving thread received %i - exiting...\n", writePtr);
 			break;
 		}
 		
@@ -174,9 +175,9 @@ void *savingThreadFunction(void *arg) {
 		if (newSize > maxFileSize) {
 			gdfWriter->close();
 			
-			fileCount++;
+			fileCounter++;
 			
-			snprintf(curFilename, sizeof(curFilename), "%s_%i.gdf", baseFilename, fileCount);
+			snprintf(curFilename, sizeof(curFilename), "%s_%i.gdf", baseFilename, fileCounter);
 			if (!gdfWriter->createAndWriteHeader(curFilename)) {
 				fprintf(stderr, "Error: could not create GDF file %s\n", curFilename);
 				break;
@@ -201,11 +202,12 @@ void *savingThreadFunction(void *arg) {
 	return NULL;
 }
 
-
+/*
 void abortHandler(int sig) {
 	printf("Ctrl-C pressed -- stopping...\n");
 	keepRunning = false;
 }
+*/
 
 
 int main(int argc, char *argv[]) {
@@ -223,6 +225,11 @@ int main(int argc, char *argv[]) {
 	float *auxVec;
 	int skipSamples = 0;
 	MultiChannelFilter<float> *lpFilter = NULL;
+	ConsoleInput ConIn;
+	int acqState = 0; // 0 = stopped, 1 = running, 2 = paused
+	static char *stateDescr[3] = {"INACTIVE", "RUNNING ", "PAUSED  "};
+	bool handleEvents = true;
+	int lenBaseFilename, sessionCount=0;
 	
 	if (argc<3) {
 		printf("Usage: biosemi2ft <config-file> <gdf-file> [hostname=localhost [port=1972]]\n");
@@ -261,6 +268,7 @@ int main(int argc, char *argv[]) {
 			*lastDotPos = 0;
 		}
 	}
+	lenBaseFilename = strlen(baseFilename);
 	
 	if (argc>3) {
 		strncpy(hostname, argv[3], sizeof(hostname));
@@ -269,7 +277,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	if (argc>4) {
-		port = atoi(argv[4]);
+		port = atoi(argv[5]);
 	} else {
 		port = 1972;
 	}
@@ -288,7 +296,7 @@ int main(int argc, char *argv[]) {
 		}
 		ftSocket = 0;
 	}
-   
+	
 	if (!BS.openDevice()) return 1;
 	
 	double T0 = BS.getCurrentTime();
@@ -312,9 +320,6 @@ int main(int argc, char *argv[]) {
 	const ChannelSelection& saveSel = signalConf.getSavingSelection();
 	
 	if (streamSel.getSize() > 0) {
-		if (!writeHeader(ftSocket, BS.getSamplingFreq() / signalConf.getDownsampling(), streamSel)) {
-			return 1;
-		}
 		lpFilter = new MultiChannelFilter<float>(streamSel.getSize(), 4);
 		int coefInd = signalConf.getDownsampling() - 1;
 		if (coefInd > 31) {
@@ -335,12 +340,6 @@ int main(int argc, char *argv[]) {
 			gdfWriter->setPhysicalLimits(1+i, -0.262144, 0.26214399987792969);
 			gdfWriter->setPhysDimCode(1+i, GDF_VOLT);
 		}
-		strcpy(curFilename, baseFilename);
-		strcat(curFilename, ".gdf");
-		if (!gdfWriter->createAndWriteHeader(curFilename)) {
-			fprintf(stderr, "Could not open GDF file %s for writing\n", curFilename);
-			return 1;
-		}
 	}
 	
 	rbIntSize = 5*BS.getSamplingFreq();	// enough space for 5 seconds of data
@@ -356,25 +355,69 @@ int main(int argc, char *argv[]) {
 	}
 		
 	/* register CTRL-C handler */
-	signal(SIGINT, abortHandler);
-	printf("Starting to listen - press CTRL-C to quit\n");
+	//signal(SIGINT, abortHandler);
+	//printf("Starting to listen - press CTRL-C to quit\n");
 	
-	while (keepRunning) {
+	printf("Press <S> to start/stop acquisition, <P> to pause/unpause, <Ctrl-Q> to quit\n\n");
+	
+	//while (keepRunning) {
+	while (1) {
 		BioSemiBlock block;
 		bool newBlock;
-		int nStream = streamSel.getSize();
+		int nStream = (ftSocket >= 0) ? streamSel.getSize() : 0;
 		int nSave = signalConf.getSavingSelection().getSize();
 		
-		newBlock = BS.checkNewBlock(block);
+		if (ConIn.checkKey()) {
+			int c = ConIn.getKey();
+			if (c==17) break; // quit
+			
+			if (c=='s' || c=='S') {
+				if (acqState == 0) {
+					// start acquisition
+					++sessionCount;
+					fileCounter = 0;
+					sprintf(baseFilename + lenBaseFilename, "_S%i", sessionCount);
+					strcpy(curFilename, baseFilename);
+					strcat(curFilename, ".gdf");
+					if (!gdfWriter->createAndWriteHeader(curFilename)) {
+						fprintf(stderr, "Could not open GDF file %s for writing\n", curFilename);
+						break;
+					}
+					if (!writeHeader(ftSocket, BS.getSamplingFreq() / signalConf.getDownsampling(), streamSel)) {
+						break;
+					}
+					acqState = 1;
+				} else {
+					// stop acquisition: first wait for writing thread to finish
+					while (rbIntReadPos != rbIntWritePos) {
+						BS.msleep(1);
+					}
+					// then close the file
+					gdfWriter->close();
+					acqState = 0;
+				}
+			} else if (c=='p' || c=='P') {
+				if (acqState == 1) {
+					acqState = 2;
+				} else if (acqState == 2) {
+					acqState = 1;
+				}
+			}
+		}
 		
+		newBlock = BS.checkNewBlock(block);
 		if (!newBlock) {
 			BS.msleep(1);
 			continue;
 		}
 		
-		printf("T = %8.3f  Ptr = %8i,  samples = %3i,  synced = %3i\r", BS.getCurrentTime() - T0, block.startIndex, block.numSamples, block.numInSync);
+		printf("%s T=%8.3f Ptr=%8i, samples=%3i\r", stateDescr[acqState], BS.getCurrentTime() - T0, block.startIndex, block.numSamples);
+		if (block.numSamples != block.numInSync) {
+			fprintf(stderr, "USB device out of sync (%i / %i) -- exiting\n", block.numInSync, block.numSamples);
+			break;
+		}
 		
-		if (block.numSamples != block.numInSync) continue; // replace by break later
+		if (acqState != 1) continue;
 		
 		if (nSave > 0) {
 			for (int j=0;j<block.numSamples;j++) {
@@ -393,7 +436,7 @@ int main(int argc, char *argv[]) {
 				}
 				if (++rbIntWritePos == rbIntSize) rbIntWritePos = 0;
 			}
-			locPipe.write(sizeof(int), static_cast<void *>(&rbIntWritePos)); 
+			pipe.write(sizeof(int), static_cast<void *>(&rbIntWritePos)); 
 		}
 		
 		if (nStream > 0) {
@@ -426,23 +469,24 @@ int main(int argc, char *argv[]) {
 				fprintf(stderr, "Could not write samples to FieldTrip buffer\n.");
 			}
 		}
-
-		eventChain.clear();
-		for (int j=0;j<block.numSamples;j++) {
-			int value = BS.getValue(block.startIndex + 1 + j*block.stride);
-			value = (value & 0x00FFFF00) >> 8;
-			
-			if (value && value!=triggerState) {
-				eventChain.add(sampleCounter+j, "TRIGGER", value);
-				printf("-!- Trigger at sample %i => %i\n", (sampleCounter+j) / signalConf.getDownsampling(), value);
+		
+		if (handleEvents) {
+			eventChain.clear();
+			for (int j=0;j<block.numSamples;j++) {
+				int value = BS.getValue(block.startIndex + 1 + j*block.stride);
+				value = (value & 0x00FFFF00) >> 8;
+				
+				if (value && value!=triggerState) {
+					eventChain.add(sampleCounter+j, "TRIGGER", value);
+					printf("\n-!- Trigger at sample %i => %i\n", (sampleCounter+j) / signalConf.getDownsampling(), value);
+				}
+				triggerState = value;
 			}
-			triggerState = value;
-		}
-
-		if (ftSocket != -1 && eventChain.count() > 0) {
-			int err = clientrequest(ftSocket, eventChain.asRequest(), resp.in());
-			if (err || !resp.checkPut()) {
-				fprintf(stderr, "Could not write events to FieldTrip buffer\n.");
+			if (ftSocket != -1 && eventChain.count() > 0) {
+				int err = clientrequest(ftSocket, eventChain.asRequest(), resp.in());
+				if (err || !resp.checkPut()) {
+					fprintf(stderr, "Could not write events to FieldTrip buffer\n.");
+				}
 			}
 		}
 		
@@ -450,7 +494,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	skipSamples = -1;
-	locPipe.write(sizeof(int), &skipSamples);
+	pipe.write(sizeof(int), &skipSamples);
 	
 	BS.closeDevice();
 	if (ftSocket > 0) close_connection(ftSocket);
