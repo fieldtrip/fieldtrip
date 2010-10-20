@@ -1,0 +1,36 @@
+# comments start with a hash
+; ... or with a semicolon
+; empty lines are fine as well
+
+# Write n=label to select hardware channel number n (starting from 1)
+# and attach a label to it. This will show up in the Fieldtrip buffer
+# and the GDF file.
+# Currently, there is no check for double inclusion of channels.
+# That is, if you define 1=FOO and 1=BAR, the first hardware channel
+# will show up twice, with different names.
+# Channels listed before the first [save] or [stream] line will be added
+# to both saving and streaming selections. Write [select] to enable 
+# selection for both saving and streaming.
+[select]
+1=A1
+2=A2
+64=C1
+257=EXG1
+281=AIB1
+
+# Now we add some more channel for saving only
+[save]
+3=A3
+4=A4
+
+# And some channels we only want to stream
+[stream]
+65=C2
+66=C3
+
+# Please take note that the channels will be written out in the order specified here,
+# that is, they will not be sorted according to the hardware channel number!
+
+# Write "downsample X" with a positive number X to set the downsampling
+# factor for streaming. The GDF file will receive full-rate data.
+downsample 1

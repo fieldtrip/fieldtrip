@@ -12,6 +12,7 @@
 
 #define BUFFER_SIZE   32*1024*1024  // 32 MByte as suggested by BioSemi
 #define BUFFER_LEN    8*1024*1024   // in int32 units
+#define SYNC_BV       (int32_t) 0xFFFFFF00
 
 struct BioSemiBlock {
 	int startIndex;
@@ -34,7 +35,7 @@ class BioSemiClient {
 	int  getNumChanAIB()   const { return numChanAIB; };
 	int  getSpeedMode()    const { return speedMode; };
 	int  getSamplingFreq() const { return sampleFreq; };
-	int  getCurPointer()  const;
+	int  getCurPointer()  ;
 	
 	bool checkNewBlock(BioSemiBlock &block);
 	

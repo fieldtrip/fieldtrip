@@ -1,5 +1,6 @@
 #include <BioSemiClient.h>
 #include <stdio.h>
+#include <math.h>
 
 #ifndef WIN32
 #include <dlfcn.h>
@@ -21,6 +22,8 @@
 static const int sNumChannelsMk1[9] = { 256, 128,  64,  32, 256, 138, 64, 32, 256};
 static const int sNumChannelsMk2[9] = { 608, 608, 608, 608, 280, 152, 88, 56, 280};
 static const int sSamplingFreq[9]   = {2048, 4096, 8192, 16384, 2048, 4096, 8192, 16384, 2048};
+
+static int64_t samplesSoFar;
 
 
 BioSemiClient::BioSemiClient() {
@@ -109,57 +112,13 @@ bool BioSemiClient::openDevice() {
 	if (!driverOk) return false;
 	if (deviceOpen) closeDevice();
 	
-	deviceHandle = lv_open_driver_async();
-	if (deviceHandle == NULL) {
-		fprintf(stderr, "Cannot open the USB driver!\n");
-		return false;
-	}
-	
-	//printf("Ok so far\n");
-	
-	memset(bytes, 0, sizeof(bytes));
-	
-	//printf("Before lv_usb_write\n");
-	
-	if (!lv_usb_write(deviceHandle, bytes)) {
-		fprintf(stderr, "Cannot write to/initialize USB device!\n");
-		lv_close_driver_async(deviceHandle);
-		return false;
-	}
-	
-	//printf("Before lv_read_multiple_sweeps\n");
-	
-	lv_read_multiple_sweeps(deviceHandle, (char *) ringBuffer, BUFFER_SIZE);
-	
-	memset(bytes, 0, sizeof(bytes));
-	bytes[0] = (char) 0xFF;
-   
-    //usleep(500);
-	
-	if (!lv_usb_write(deviceHandle, bytes)) {
-		fprintf(stderr, "Cannot enable handshake!\n");
-		lv_close_driver_async(deviceHandle);
-		return false;
-	}
-	
 	timeHandshake = getCurrentTime();
-	while (1) {
-		
-		if (!lv_read_pointer(deviceHandle, &pointer)) {
-			fprintf(stderr, "Cannot read ring buffer pointer!\n");
-			closeDevice();
-			return false;
-		}
-		
-		if (pointer > 2) break;
-		
-		msleep(10);
-		if (getCurrentTime() - timeHandshake > DEVICE_TIMEOUT) {
-			fprintf(stderr, "Timeout for reading initial samples - power down?\n");
-			closeDevice();
-			return false;
-		}
-	}
+	
+	ringBuffer[0] = SYNC_BV;
+	ringBuffer[1] = SPEED_BIT3 | MK2_BV;
+	samplesSoFar = 0;
+	
+	
 	
 	int32_t sync = ringBuffer[0];
 	if (sync != SYNC_BV) {
@@ -225,31 +184,34 @@ bool BioSemiClient::openDevice() {
 
 
 void BioSemiClient::closeDevice() {
-	char bytes[64];
-	
 	if (!deviceOpen) return;
 	
-	memset(bytes, 0, sizeof(bytes));
-	if (!lv_usb_write(deviceHandle, bytes)) {
-		fprintf(stderr, "Cannot disable handshake!\n");
-	}
-	if (!lv_close_driver_async(deviceHandle)) {
-		fprintf(stderr, "Error when closing device!\n");
-		// well, what can we do?
-	}
 	deviceOpen = false;
 }
 
-int BioSemiClient::getCurPointer() const {
+int BioSemiClient::getCurPointer() {
 	intptr_t pointer;
 	
 	if (!deviceOpen) return -1;
-
-	if (!lv_read_pointer(deviceHandle, &pointer)) {
-		return -1;
-	}
+	double tNow = getCurrentTime();
+	double predSamples = (tNow - timeHandshake) * 2048.0;
+	intptr_t newSamples = (int64_t) predSamples - samplesSoFar;
 	
-	return pointer/sizeof(int32_t); 
+	newSamples /= 64;
+	newSamples *= 64;
+	
+	pointer = lastPointerRead;
+	if (newSamples > 0) {
+		for (intptr_t i=0;i<newSamples;i++) {
+			ringBuffer[pointer & (BUFFER_LEN-1)] = SYNC_BV;
+			ringBuffer[(pointer+1) & (BUFFER_LEN-1)] = SPEED_BIT3 | MK2_BV;
+			ringBuffer[(pointer+2) & (BUFFER_LEN-1)] = i << 16;
+			ringBuffer[(pointer+3) & (BUFFER_LEN-1)] = (int) (1.0e8 * sin(i*2.0*M_PI/64.0));
+			pointer += stride;
+		}
+		samplesSoFar += newSamples;
+	}
+	return pointer & (BUFFER_LEN-1);
 }
 
 bool BioSemiClient::checkNewBlock(BioSemiBlock &block) {
