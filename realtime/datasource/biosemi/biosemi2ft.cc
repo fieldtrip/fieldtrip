@@ -277,7 +277,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	if (argc>4) {
-		port = atoi(argv[5]);
+		port = atoi(argv[4]);
 	} else {
 		port = 1972;
 	}
@@ -320,13 +320,18 @@ int main(int argc, char *argv[]) {
 	const ChannelSelection& saveSel = signalConf.getSavingSelection();
 	
 	if (streamSel.getSize() > 0) {
-		lpFilter = new MultiChannelFilter<float>(streamSel.getSize(), 4);
-		int coefInd = signalConf.getDownsampling() - 1;
-		if (coefInd > 31) {
-			fprintf(stderr, "Warning, no filter coefficients for more than 32x downsampling\n");
-			coefInd = 31;
+		if (signalConf.getBandwidth() <= 0) {
+			lpFilter = new MultiChannelFilter<float>(streamSel.getSize(), 4);
+			int coefInd = signalConf.getDownsampling() - 1;
+			if (coefInd > 31) {
+				fprintf(stderr, "Warning, no filter coefficients for more than 32x downsampling\n");
+				coefInd = 31;
+			}
+			lpFilter->setCoefficients(chebyCoefsB[coefInd], chebyCoefsA[coefInd]);
+		} else {
+			lpFilter = new MultiChannelFilter<float>(streamSel.getSize(), signalConf.getOrder());
+			lpFilter->setButterLP(signalConf.getBandwidth() / (0.5*BS.getSamplingFreq()));
 		}
-		lpFilter->setCoefficients(chebyCoefsB[coefInd], chebyCoefsA[coefInd]);
 	}
 	
 	if (saveSel.getSize() > 0) {

@@ -92,3 +92,10 @@
 # Write "downsample X" with a positive number X to set the downsampling
 # factor for streaming. The GDF file will receive full-rate data.
 downsample 1
+
+# Write "bandwidth X" with a positive real number X to set the cutoff frequency
+# of a Butterworth low-pass filter.
+bandwidth 50
+
+# Write "bworder N" to set the order of the lowpass Butterworth filter for downsampling
+bworder 4

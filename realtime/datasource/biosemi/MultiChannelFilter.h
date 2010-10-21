@@ -168,7 +168,7 @@ void MultiChannelFilter<T>::clear() {
 template <typename T> 
 void MultiChannelFilter<T>::setButterLP(double cutoff) {
 	int n;
-	
+		
 	// warping factor for bilinear transform
 	// number inside tan( ) is pi/2
 	double f = 1.0/tan(0.5*M_PI*cutoff);
@@ -180,7 +180,10 @@ void MultiChannelFilter<T>::setButterLP(double cutoff) {
 	A[0] = 1.0;
 	B[0] = 1.0;
 	for (int i=1;i<=order;i++) A[i]=B[i]=0.0;
-
+	
+	// for safety: very high cutoff-frequency (almost Nyquist) -> unit response
+	if (cutoff > 0.95) return;
+	
 	// if odd order, handle 1. pole separately
 	if (order & 1) {
 		prodB0 = 1.0/(1.0+f);
@@ -208,7 +211,7 @@ void MultiChannelFilter<T>::setButterLP(double cutoff) {
 		double b0 = 1.0/(1.0 + q*f + f*f);
 		//double b1 = 2.0*b0; 
 		//double b2 = b0;
-		double a0 = 1.0;
+		//double a0 = 1.0;
 		double a1 = (2.0-2.0*f*f)*b0;
 		double a2 = (1.0-q*f+f*f)*b0;
 		// convolve A by [a0 a1 a2] and B by b0*[1 2 1]

@@ -48,6 +48,22 @@ int SignalConfiguration::parseFile(const char *filename) {
 				continue;
 			}
 		}
+		if (!strncasecmp(lp, "bworder", 7)) {
+			int bwOrder = atoi(lp+7);
+			if (bwOrder>=1) {
+				order = bwOrder;
+				continue;
+			}
+		}	
+		if (!strncasecmp(lp, "bandwidth", 9)) {
+			char *endptr;
+			double bw;
+			bw = strtod(lp+9, &endptr);
+			if (endptr != lp+9) {
+				bandwidth = bw;
+				continue;
+			}
+		}
 		if (!strncasecmp(lp, "[select]", 8)) {
 			addStream = addSave = 1;
 			continue;

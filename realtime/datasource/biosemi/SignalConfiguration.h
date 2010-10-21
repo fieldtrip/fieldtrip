@@ -30,7 +30,7 @@ struct ChannelSelection {
 class SignalConfiguration {
 	public:
 	
-	SignalConfiguration() : chanSelSave(), chanSelStream(), downSample(1), maxChanSave(0), maxChanStream(0) {};
+	SignalConfiguration() : chanSelSave(), chanSelStream(), downSample(1), maxChanSave(0), maxChanStream(0), order(4), bandwidth(-1.0) {};
 	~SignalConfiguration() {};
 	
 	/** Parse given configuration file for options, returns number of errors */
@@ -42,12 +42,24 @@ class SignalConfiguration {
 		return true;
 	}
 	
-	int getDownsampling() const { return downSample; };
-	int getMaxSavingChannel() const { return maxChanSave; };
-	int getMaxStreamingChannel() const { return maxChanStream; };
+	void setBandwidth(double bandwidth) {
+		this->bandwidth=bandwidth;
+	}
 	
-	const ChannelSelection& getSavingSelection() const { return chanSelSave; };
-	const ChannelSelection& getStreamingSelection() const { return chanSelStream; };
+	void setOrder(int order) {
+		if (order>0) {
+			this->order = order;
+		}
+	}
+
+	int getDownsampling() const { return downSample; }
+	double getBandwidth() const { return bandwidth; }
+	int getOrder() const { return order; }
+	int getMaxSavingChannel() const { return maxChanSave; }
+	int getMaxStreamingChannel() const { return maxChanStream; }
+	
+	const ChannelSelection& getSavingSelection() const { return chanSelSave; }
+	const ChannelSelection& getStreamingSelection() const { return chanSelStream; }
 	
 	protected:
 	
@@ -56,6 +68,8 @@ class SignalConfiguration {
 	int downSample;
 	int maxChanSave;
 	int maxChanStream;
+	int order;
+	double bandwidth;
 };
 
 #endif
