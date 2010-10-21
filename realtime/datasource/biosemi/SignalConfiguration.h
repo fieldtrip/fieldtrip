@@ -30,7 +30,10 @@ struct ChannelSelection {
 class SignalConfiguration {
 	public:
 	
-	SignalConfiguration() : chanSelSave(), chanSelStream(), downSample(1), maxChanSave(0), maxChanStream(0), order(4), bandwidth(-1.0) {};
+	SignalConfiguration() : chanSelSave(), chanSelStream(), 
+							downSample(1), maxChanSave(0), maxChanStream(0), 
+							order(4), bandwidth(-1.0),
+							batteryRefresh(10), statusRefresh(2) {};
 	~SignalConfiguration() {};
 	
 	/** Parse given configuration file for options, returns number of errors */
@@ -55,6 +58,8 @@ class SignalConfiguration {
 	int getDownsampling() const { return downSample; }
 	double getBandwidth() const { return bandwidth; }
 	int getOrder() const { return order; }
+	int getBatteryRefresh() const { return batteryRefresh; }
+	int getStatusRefresh() const { return statusRefresh; }
 	int getMaxSavingChannel() const { return maxChanSave; }
 	int getMaxStreamingChannel() const { return maxChanStream; }
 	
@@ -70,6 +75,7 @@ class SignalConfiguration {
 	int maxChanStream;
 	int order;
 	double bandwidth;
+	int batteryRefresh, statusRefresh;
 };
 
 #endif

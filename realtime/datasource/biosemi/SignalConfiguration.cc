@@ -64,6 +64,20 @@ int SignalConfiguration::parseFile(const char *filename) {
 				continue;
 			}
 		}
+			if (!strncasecmp(lp, "batteryrefresh", 14)) {
+			int br = atoi(lp+14);
+			if (br>=0) {
+				batteryRefresh = br;
+				continue;
+			}
+		}	
+		if (!strncasecmp(lp, "statusrefresh", 13)) {
+			int sr = atoi(lp+13);
+			if (sr>=0) {
+				statusRefresh = sr;
+				continue;
+			}
+		}	
 		if (!strncasecmp(lp, "[select]", 8)) {
 			addStream = addSave = 1;
 			continue;

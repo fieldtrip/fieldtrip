@@ -228,8 +228,9 @@ int main(int argc, char *argv[]) {
 	ConsoleInput ConIn;
 	int acqState = 0; // 0 = stopped, 1 = running, 2 = paused
 	static char *stateDescr[3] = {"INACTIVE", "RUNNING ", "PAUSED  "};
-	bool handleEvents = true;
 	int lenBaseFilename, sessionCount=0;
+	int nsBattery = 0, nsCMS = 0;
+	int cmsInRange = 0;
 	
 	if (argc<3) {
 		printf("Usage: biosemi2ft <config-file> <gdf-file> [hostname=localhost [port=1972]]\n");
@@ -246,7 +247,8 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 	
-	{
+	// enable for debugging if you like
+	if (0) {
 		const ChannelSelection& streamSel = signalConf.getStreamingSelection();
 		const ChannelSelection& saveSel = signalConf.getSavingSelection();
 		
@@ -319,6 +321,8 @@ int main(int argc, char *argv[]) {
 	const ChannelSelection& streamSel = signalConf.getStreamingSelection();
 	const ChannelSelection& saveSel = signalConf.getSavingSelection();
 	
+	printf("Selected %i channels for streaming, %i channels for saving to GDF.\n", streamSel.getSize(), saveSel.getSize());
+	
 	if (streamSel.getSize() > 0) {
 		if (signalConf.getBandwidth() <= 0) {
 			lpFilter = new MultiChannelFilter<float>(streamSel.getSize(), 4);
@@ -363,7 +367,7 @@ int main(int argc, char *argv[]) {
 	//signal(SIGINT, abortHandler);
 	//printf("Starting to listen - press CTRL-C to quit\n");
 	
-	printf("Press <S> to start/stop acquisition, <P> to pause/unpause, <Ctrl-Q> to quit\n\n");
+	printf("\nPress <S> to start/stop acquisition, <P> to pause/unpause, <Esc> to quit\n\n");
 	
 	//while (keepRunning) {
 	while (1) {
@@ -374,7 +378,7 @@ int main(int argc, char *argv[]) {
 		
 		if (ConIn.checkKey()) {
 			int c = ConIn.getKey();
-			if (c==17) break; // quit
+			if (c==27) break; // quit
 			
 			if (c=='s' || c=='S') {
 				if (acqState == 0) {
@@ -391,6 +395,7 @@ int main(int argc, char *argv[]) {
 					if (!writeHeader(ftSocket, BS.getSamplingFreq() / signalConf.getDownsampling(), streamSel)) {
 						break;
 					}
+					nsBattery = nsCMS = 0;
 					acqState = 1;
 				} else {
 					// stop acquisition: first wait for writing thread to finish
@@ -416,10 +421,52 @@ int main(int argc, char *argv[]) {
 			continue;
 		}
 		
-		printf("%s T=%8.3f Ptr=%8i, samples=%3i\r", stateDescr[acqState], BS.getCurrentTime() - T0, block.startIndex, block.numSamples);
+		double batt = BS.getValue(block.startIndex + 279);
+		batt=(batt/2097152)-175.5;
+		if (batt < 0) batt = 0;
+		if (batt > 100) batt = 100;
+		
+		printf("%s T=%8.3f Ptr=%8i, samples=%3i, batt=%5.1f%%\r", stateDescr[acqState], BS.getCurrentTime() - T0, block.startIndex, block.numSamples, batt);
 		if (block.numSamples != block.numInSync) {
 			fprintf(stderr, "USB device out of sync (%i / %i) -- exiting\n", block.numInSync, block.numSamples);
 			break;
+		}
+		
+		eventChain.clear();
+		if (nsBattery >= 0) {
+			if (nsBattery<block.numSamples) {
+				// we're due a report of the battery level
+				eventChain.add(sampleCounter, "BATTERY", (float) batt);
+				//printf("\n-!- Battery level = %4.1f\n", batt);
+				// next report in getBatteryRefresh() seconds
+				nsBattery = signalConf.getBatteryRefresh() * BS.getSamplingFreq();
+				// if this is zero, user doesn't want events,
+				// so prevent further output by setting it to -1
+				if (nsBattery == 0) nsBattery = -1; 
+			} else {
+				nsBattery -= block.numSamples;
+			}
+		}
+		
+		for (int j=0;j<block.numSamples;j++) {
+			int value  = BS.getValue(block.startIndex + 1 + j*block.stride);
+			int cmsBit = (value & 0x10000000) ? 1:0;
+			
+			if (nsCMS == 0 || cmsBit != cmsInRange) {
+				eventChain.add(sampleCounter+j, "CMS_IN_RANGE", cmsBit);
+				//printf("\n-!- CMS in range: %i\n", cmsBit);
+				cmsInRange = cmsBit;
+				nsCMS = signalConf.getStatusRefresh() * BS.getSamplingFreq();
+			} else {
+				--nsCMS;
+			}
+			
+			value = (value & 0x00FFFF00) >> 16;
+			if (value && value!=triggerState) {
+				eventChain.add(sampleCounter+j, "TRIGGER", value);
+				printf("\n-!- Trigger at sample %i => %i\n", (sampleCounter+j) / signalConf.getDownsampling(), value);
+			}
+			triggerState = value;
 		}
 		
 		if (acqState != 1) continue;
@@ -474,24 +521,11 @@ int main(int argc, char *argv[]) {
 				fprintf(stderr, "Could not write samples to FieldTrip buffer\n.");
 			}
 		}
-		
-		if (handleEvents) {
-			eventChain.clear();
-			for (int j=0;j<block.numSamples;j++) {
-				int value = BS.getValue(block.startIndex + 1 + j*block.stride);
-				value = (value & 0x00FFFF00) >> 8;
-				
-				if (value && value!=triggerState) {
-					eventChain.add(sampleCounter+j, "TRIGGER", value);
-					printf("\n-!- Trigger at sample %i => %i\n", (sampleCounter+j) / signalConf.getDownsampling(), value);
-				}
-				triggerState = value;
-			}
-			if (ftSocket != -1 && eventChain.count() > 0) {
-				int err = clientrequest(ftSocket, eventChain.asRequest(), resp.in());
-				if (err || !resp.checkPut()) {
-					fprintf(stderr, "Could not write events to FieldTrip buffer\n.");
-				}
+
+		if (ftSocket != -1 && eventChain.count() > 0) {
+			int err = clientrequest(ftSocket, eventChain.asRequest(), resp.in());
+			if (err || !resp.checkPut()) {
+				fprintf(stderr, "Could not write events to FieldTrip buffer\n.");
 			}
 		}
 		

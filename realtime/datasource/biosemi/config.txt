@@ -99,3 +99,10 @@ bandwidth 50
 
 # Write "bworder N" to set the order of the lowpass Butterworth filter for downsampling
 bworder 4
+
+# Refresh period (in seconds) for inserting extra events. 
+# Battery events are sent out in a fixed interval (set 0 to disable).
+# Status events are sent out when the status changes, OR when the specified
+# time has elapsed after the last event was sent out.
+statusrefresh 2
+batteryrefresh 10
