@@ -197,7 +197,7 @@ if length(data)>1 && ~israw,
     catdim = 0;
   elseif isempty(catdim) && (~isempty(strmatch('rpt',dimtok)) || ~isempty(strmatch('rpttap',dimtok)))
     %append observations
-    catdim = 1;
+    catdim = find(~cellfun('isempty',strfind(dimtok, 'rpt')));
   elseif ~isempty(strfind(dimtok{catdim},'pos'))
     dimtok{catdim} = 'pos';
   elseif isempty(catdim)
@@ -304,21 +304,21 @@ if length(data)>1 && ~israw,
   if ~strcmp(dimtok{catdim},'rpt') && ~strcmp(dimtok{catdim},'rpttap'),
     for k = 1:length(data)
       if k==1,
-        tmp       = getsubfield(data{k}, dimtok{catdim})';
-	    if isfield(data{k}, 'inside'),
-	      tmpnvox   = numel(data{k}.inside)+numel(data{k}.outside);
-	      tmpinside = data{k}.inside(:);
-	    end
+        tmp = getsubfield(data{k}, dimtok{catdim})';
+	if isfield(data{k}, 'inside'),
+	  tmpnvox   = numel(data{k}.inside)+numel(data{k}.outside);
+	  tmpinside = data{k}.inside(:);
+	end
       else
         if strcmp(dimtok{catdim},'pos')
-	      tmp       = [tmp;       getsubfield(data{k}, dimtok{catdim})];
-	      tmpinside = [tmpinside; data{k}.inside(:)+tmpnvox];
-	      tmpnvox   = tmpnvox+numel(data{k}.inside)+numel(data{k}.outside);
-	      sortflag  = 0;
+	  tmp       = [tmp;       getsubfield(data{k}, dimtok{catdim})];
+	  tmpinside = [tmpinside; data{k}.inside(:)+tmpnvox];
+	  tmpnvox   = tmpnvox+numel(data{k}.inside)+numel(data{k}.outside);
+	  sortflag  = 0;
         else
           tmp       = [tmp       getsubfield(data{k}, dimtok{catdim})'];
           sortflag  = 1;
-	    end
+	end
       end
     end
     data{1} = setsubfield(data{1}, dimtok{catdim}, tmp);
