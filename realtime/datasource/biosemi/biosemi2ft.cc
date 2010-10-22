@@ -92,7 +92,8 @@ double chebyCoefsA[32][5] = {
 
 //volatile bool keepRunning = true;
 
-static const double fixedGain = 1.0e-6/8192.0;
+// scale streamed data to microvolts
+static const double fixedGain = 1.0/8192.0; 
 
 int64_t maxFileSize = 1024*1024*1024; // 1GB for testing
 // lock-free FIFO for saving thread
@@ -101,7 +102,7 @@ int rbIntSize, rbIntChans;
 int rbIntWritePos;
 int rbIntReadPos;
 // pipe or socketpair for inter-thread communication
-LocalPipe pipe;
+LocalPipe locPipe;
 // GDF writing object
 GDF_Writer *gdfWriter = NULL;
 // Name of file to write to
@@ -151,7 +152,7 @@ void *savingThreadFunction(void *arg) {
 		int32_t *rbIntPtr;
 		int64_t newSize;
 		
-		n = pipe.read(sizeof(int), &writePtr);
+		n = locPipe.read(sizeof(int), &writePtr);
 		if (n!=sizeof(int)) {
 			// this should never happen for blocking sockets/pipes
 			fprintf(stderr, "Unexpected error in pipe communication\n");
@@ -344,10 +345,10 @@ int main(int argc, char *argv[]) {
 		for (int i=0;i<saveSel.getSize();i++) {
 			//int idx = saveSel.getLabel(i);
 			gdfWriter->setLabel(1+i, saveSel.getLabel(i));
-			// min:  (-2^31)/8192000000.0  (int32 -> Volt)
-			// max: (2^31-1)/8192000000.0  (int32 -> Volt)
-			gdfWriter->setPhysicalLimits(1+i, -0.262144, 0.26214399987792969);
-			gdfWriter->setPhysDimCode(1+i, GDF_VOLT);
+			// min:  (-2^31)/8192.0  (int32 -> microVolt)
+			// max: (2^31-1)/8192.0  (int32 -> microVolt)
+			gdfWriter->setPhysicalLimits(1+i, -262144.0, 262143.99987792969);
+			gdfWriter->setPhysDimCode(1+i, GDF_MICRO + GDF_VOLT);
 		}
 	}
 	
@@ -488,7 +489,7 @@ int main(int argc, char *argv[]) {
 				}
 				if (++rbIntWritePos == rbIntSize) rbIntWritePos = 0;
 			}
-			pipe.write(sizeof(int), static_cast<void *>(&rbIntWritePos)); 
+			locPipe.write(sizeof(int), static_cast<void *>(&rbIntWritePos)); 
 		}
 		
 		if (nStream > 0) {
@@ -533,7 +534,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	skipSamples = -1;
-	pipe.write(sizeof(int), &skipSamples);
+	locPipe.write(sizeof(int), &skipSamples);
 	
 	BS.closeDevice();
 	if (ftSocket > 0) close_connection(ftSocket);
