@@ -388,9 +388,9 @@ if length(data)>1 && ~israw,
   else
     data.([param{1},'dimord']) = dimord;
   end
-  if isfield(data, 'dim') & ~issource,
-    %data.dim    = dim;
-    data.dim = size(data.(param{1}));
+  if isfield(data, 'dim'),
+    data.dim    = dim;
+    %data.dim = size(data.(param{1}));
   elseif isfield(data, 'dim')
     data     = rmfield(data, 'dim'); %source data should not contain a dim
     %FIXME this should be handled by checkdata once the source structure is
