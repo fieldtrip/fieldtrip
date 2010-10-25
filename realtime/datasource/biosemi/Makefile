@@ -17,7 +17,8 @@ else
    SUFFIX = 
 endif
 
-CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3 -g
+CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3 -g $(FLAGS)
+LDFLAGS += $(FLAGS)
 
 all: biosemi2ft$(SUFFIX) fakebiosemi2ft$(SUFFIX)
 	

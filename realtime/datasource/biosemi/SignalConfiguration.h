@@ -62,12 +62,17 @@ class SignalConfiguration {
 	int getStatusRefresh() const { return statusRefresh; }
 	int getMaxSavingChannel() const { return maxChanSave; }
 	int getMaxStreamingChannel() const { return maxChanStream; }
+	bool useSplittedTrigger() const { return splitTrigger; }
+	const char *getLowTriggerName() const { return lowTriggerName.c_str(); }
+	const char *getHighTriggerName() const { return highTriggerName.c_str(); }
 	
 	const ChannelSelection& getSavingSelection() const { return chanSelSave; }
 	const ChannelSelection& getStreamingSelection() const { return chanSelStream; }
 	
 	protected:
-	
+
+	std::string lowTriggerName, highTriggerName;
+	bool splitTrigger;
 	ChannelSelection chanSelSave;
 	ChannelSelection chanSelStream;
 	int downSample;

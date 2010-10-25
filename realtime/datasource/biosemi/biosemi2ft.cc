@@ -376,6 +376,7 @@ int main(int argc, char *argv[]) {
 		bool newBlock;
 		int nStream = (ftSocket >= 0) ? streamSel.getSize() : 0;
 		int nSave = signalConf.getSavingSelection().getSize();
+		int deci = signalConf.getDownsampling();
 		
 		if (ConIn.checkKey()) {
 			int c = ConIn.getKey();
@@ -436,8 +437,10 @@ int main(int argc, char *argv[]) {
 		eventChain.clear();
 		if (nsBattery >= 0) {
 			if (nsBattery<block.numSamples) {
+				int dSamC = (sampleCounter + deci - 1)/deci;
+
 				// we're due a report of the battery level
-				eventChain.add(sampleCounter, "BATTERY", (float) batt);
+				eventChain.add(dSamC, "BATTERY", (float) batt);
 				//printf("\n-!- Battery level = %4.1f\n", batt);
 				// next report in getBatteryRefresh() seconds
 				nsBattery = signalConf.getBatteryRefresh() * BS.getSamplingFreq();
@@ -451,10 +454,11 @@ int main(int argc, char *argv[]) {
 		
 		for (int j=0;j<block.numSamples;j++) {
 			int value  = BS.getValue(block.startIndex + 1 + j*block.stride);
-			int cmsBit = (value & 0x10000000) ? 1:0;
+			int cmsBit = (value & 0x10000000) ? 0:1;
+			int dSamC = (sampleCounter + j + deci - 1)/deci;
 			
 			if (nsCMS == 0 || cmsBit != cmsInRange) {
-				eventChain.add(sampleCounter+j, "CMS_IN_RANGE", cmsBit);
+				eventChain.add(dSamC, "CMS_IN_RANGE", cmsBit);
 				//printf("\n-!- CMS in range: %i\n", cmsBit);
 				cmsInRange = cmsBit;
 				nsCMS = signalConf.getStatusRefresh() * BS.getSamplingFreq();
@@ -462,10 +466,21 @@ int main(int argc, char *argv[]) {
 				--nsCMS;
 			}
 			
-			value = (value & 0x00FFFF00) >> 16;
+			value = (value & 0x00FFFF00) >> 8;
 			if (value && value!=triggerState) {
-				eventChain.add(sampleCounter+j, "TRIGGER", value);
-				printf("\n-!- Trigger at sample %i => %i\n", (sampleCounter+j) / signalConf.getDownsampling(), value);
+				if (!signalConf.useSplittedTrigger())  {
+					eventChain.add(dSamC, "TRIGGER", value);
+					printf("\n-!- Trigger at sample %i => %i\n", dSamC, value);
+				} else {
+					if ((value & 0xFF00) != (triggerState & 0xFF00)) {
+						eventChain.add(dSamC, signalConf.getHighTriggerName(), value >> 8);
+						printf("\n-!- %s at sample %i => %i\n", signalConf.getHighTriggerName(), dSamC, value >> 8);
+					}
+					if ((value & 0x00FF) != (triggerState & 0x00FF)) {
+						eventChain.add(dSamC, signalConf.getLowTriggerName(), value & 0x00FF);
+						printf("\n-!- %s at sample %i => %i\n", signalConf.getLowTriggerName(), dSamC, value & 0x00FF);
+					}
+				}
 			}
 			triggerState = value;
 		}

@@ -1,3 +1,5 @@
+splittrigger stimulus response
+
 # comments start with a hash
 ; ... or with a semicolon
 ; empty lines are fine as well
@@ -91,7 +93,7 @@
 
 # Write "downsample X" with a positive number X to set the downsampling
 # factor for streaming. The GDF file will receive full-rate data.
-downsample 1
+downsample 8
 
 # Write "bandwidth X" with a positive real number X to set the cutoff frequency
 # of a Butterworth low-pass filter.
@@ -104,5 +106,5 @@ bworder 4
 # Battery events are sent out in a fixed interval (set 0 to disable).
 # Status events are sent out when the status changes, OR when the specified
 # time has elapsed after the last event was sent out.
-statusrefresh 2
-batteryrefresh 10
+statusrefresh 4
+batteryrefresh 20

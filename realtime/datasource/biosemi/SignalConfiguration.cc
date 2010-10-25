@@ -77,6 +77,17 @@ int SignalConfiguration::parseFile(const char *filename) {
 				statusRefresh = sr;
 				continue;
 			}
+		}
+		if (!strncasecmp(lp, "splittrigger", 12)) {
+			char nameA[256], nameB[256];
+			int n;
+			n = sscanf(lp+13, "%255s%255s", nameA, nameB);
+			if (n==2) {
+				splitTrigger = true;
+				lowTriggerName  = nameA;
+				highTriggerName = nameB;
+				continue;
+			}
 		}	
 		if (!strncasecmp(lp, "[select]", 8)) {
 			addStream = addSave = 1;
