@@ -824,7 +824,7 @@ elseif filetype_check_header(filename, [255 255 255])
   type = 'freesurfer_quadrangle'; % there is no ascii quadrangle format
   manufacturer = 'FreeSurfer';
   content = 'surface description';
-elseif filetype_check_header(filename, [255 255 253])
+elseif filetype_check_header(filename, [255 255 253]) && ~exist([filename(1:(end-4)) '.mat'], 'file')
   % "New" Quadrangle File
   type = 'freesurfer_quadrangle_new';
   manufacturer = 'FreeSurfer';
