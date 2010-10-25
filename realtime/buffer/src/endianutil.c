@@ -138,7 +138,11 @@ int ft_swap_buf_to_native(UINT16_T command, UINT32_T bufsize, void *buf) {
 			return 0;
 		case GET_DAT:
 			/* buf contains a datsel_t = 2x UINT32_T */
-			ft_swap32(2, buf);
+			if (bufsize == 8) ft_swap32(2, buf);
+			return 0;
+		case GET_EVT:
+			/* buf contains a datsel_t = 2x UINT32_T */
+			if (bufsize == 8) ft_swap32(2, buf);
 			return 0;
 		case WAIT_DAT:
 			/* buf contains a waitdef_t = 3x UINT32_T */
