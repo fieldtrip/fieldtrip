@@ -46,11 +46,11 @@ elseif ~iscell(powindx) && ~isstruct(powindx)
       iauto2  = find(sum(powindx==powindx(k,2),2)==2);
       icross1 = k;
       icross2 = find(sum(powindx==powindx(ones(Nc,1)*k,[2 1]),2)==2);
-      zc      = Z(j,iauto2,:) - Z(j,icross1,:).^2./Z(j,iauto1,:);
-      numer   = abs(S(j,iauto1,:));
-      denom   = abs(S(j,iauto1,:)-zc.*abs(H(j,icross1,:)).^2./fs);
-      outsum(icross2,:) = outsum(icross2,:) + reshape(log(numer./denom), [1 siz(3:end)]);
-      outssq(icross2,:) = outssq(icross2,:) + reshape((log(numer./denom)).^2, [1 siz(3:end)]);
+      zc      = Z(j,iauto2,:,:) - Z(j,icross1,:,:).^2./Z(j,iauto1,:,:);
+      numer   = abs(S(j,iauto1,:,:));
+      denom   = abs(S(j,iauto1,:,:)-zc(:,:,ones(1,size(H,3)),:).*abs(H(j,icross1,:,:)).^2./fs);
+      outsum(icross2,:,:) = outsum(icross2,:,:) + reshape(log(numer./denom), [1 siz(3:end)]);
+      outssq(icross2,:,:) = outssq(icross2,:,:) + reshape((log(numer./denom)).^2, [1 siz(3:end)]);
     end
   end
 elseif iscell(powindx)
