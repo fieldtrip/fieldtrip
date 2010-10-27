@@ -116,7 +116,7 @@ thresholdsum = strcmp(cfg.artfctdef.zvalue.cumulative, 'yes');
 if nargin > 1
   % data given as input
   isfetch = 1;
-  hdr = fetch_header(data);
+  hdr = ft_fetch_header(data);
 elseif nargin == 1
   % only cfg given
   isfetch = 0;

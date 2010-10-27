@@ -266,7 +266,7 @@ if nargin ==1
     hdr = ft_read_header(cfg.headerfile);
   end
 elseif nargin ==2
-  hdr = fetch_header(data);
+  hdr = ft_fetch_header(data);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -85,7 +85,7 @@ if nargin == 1,
 elseif nargin == 2,
   data = ft_checkdata(data, 'hastrialdef', 'yes');
   cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
-  hdr  = fetch_header(data);
+  hdr  = ft_fetch_header(data);
   if isfield(data, 'sampleinfo'), 
     trl = data.sampleinfo;
     for k = 1:numel(data.trial)

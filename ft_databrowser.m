@@ -132,7 +132,7 @@ end
 % get some initial parameters from the data
 if hasdata
   % fetch the header
-  hdr = fetch_header(data);
+  hdr = ft_fetch_header(data);
   
   % fetch the events
   event = ft_fetch_event(data);

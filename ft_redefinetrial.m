@@ -205,7 +205,7 @@ elseif ~isempty(cfg.trl)
   clear data        % this line is very important, we want to completely reconstruct the data from the old data!
   
   % make header
-  hdr = fetch_header(dataold);
+  hdr = ft_fetch_header(dataold);
   
   % make new data structure
   trl = cfg.trl;

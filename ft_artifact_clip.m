@@ -87,7 +87,7 @@ if hasdata
   % read the header
   % isfetch = 1;
   cfg = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
-  hdr = fetch_header(data);
+  hdr = ft_fetch_header(data);
 else
   %   isfetch = 0;
   cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
