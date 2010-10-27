@@ -1,4 +1,4 @@
-function [data] = checkdata(data, varargin)
+function [data] = ft_checkdata(data, varargin)
 
 % CHECKDATA checks the input data of the main FieldTrip functions, e.g. whether
 % the type of data strucure corresponds with the required data. If neccessary
@@ -11,7 +11,7 @@ function [data] = checkdata(data, varargin)
 % the user to external documentation (link to website).
 %
 % Use as
-%   [data] = checkdata(data, ...)
+%   [data] = ft_checkdata(data, ...)
 %
 % Optional input arguments should be specified as key-value pairs and can include
 %   feedback           = yes, no
@@ -29,8 +29,8 @@ function [data] = checkdata(data, varargin)
 %   cmbrepresentation  = sparse, full (applies to covariance and cross-spectral density)
 %
 % For some options you can specify multiple values, e.g.
-%   [data] = checkdata(data, 'senstype', {'ctf151', 'ctf275'}), e.g. in megrealign
-%   [data] = checkdata(data, 'datatype', {'timelock', 'freq'}), e.g. in sourceanalysis
+%   [data] = ft_checkdata(data, 'senstype', {'ctf151', 'ctf275'}), e.g. in megrealign
+%   [data] = ft_checkdata(data, 'ft_datatype', {'timelock', 'freq'}), e.g. in sourceanalysis
 
 % Copyright (C) 2007-2009, Robert Oostenveld
 %
@@ -77,7 +77,7 @@ function [data] = checkdata(data, varargin)
 
 % get the optional input arguments
 feedback      = keyval('feedback',      varargin); if isempty(feedback), feedback = 'no'; end
-dtype         = keyval('datatype',      varargin); % should not conflict with the datatype function
+dtype         = keyval('ft_datatype',      varargin); % should not conflict with the ft_datatype function
 dimord        = keyval('dimord',        varargin);
 stype         = keyval('senstype',      varargin); % senstype is a function name which should not be masked
 ismeg         = keyval('ismeg',         varargin);
@@ -98,16 +98,16 @@ keepoutside   = keyval('keepoutside',  varargin);
 
 % determine the type of input data
 % this can be raw, freq, timelock, comp, spike, source, volume, dip
-israw      = datatype(data, 'raw');
-isfreq     = datatype(data, 'freq');
-istimelock = datatype(data, 'timelock');
-iscomp     = datatype(data, 'comp');
-isspike    = datatype(data, 'spike');
-isvolume   = datatype(data, 'volume');
-issource   = datatype(data, 'source');
-isdip      = datatype(data, 'dip');
-ismvar     = datatype(data, 'mvar');
-isfreqmvar = datatype(data, 'freqmvar');
+israw      = ft_datatype(data, 'raw');
+isfreq     = ft_datatype(data, 'freq');
+istimelock = ft_datatype(data, 'timelock');
+iscomp     = ft_datatype(data, 'comp');
+isspike    = ft_datatype(data, 'spike');
+isvolume   = ft_datatype(data, 'volume');
+issource   = ft_datatype(data, 'source');
+isdip      = ft_datatype(data, 'dip');
+ismvar     = ft_datatype(data, 'mvar');
+isfreqmvar = ft_datatype(data, 'freqmvar');
 
 % FIXME use the istrue function on ismeg and hasxxx options
 
@@ -186,7 +186,7 @@ if ~isempty(dtype)
 
   okflag = 0;
   for i=1:length(dtype)
-    % check that the data matches with one or more of the required datatypes
+    % check that the data matches with one or more of the required ft_datatypes
     switch dtype{i}
       case 'raw'
         okflag = okflag + israw;
@@ -570,7 +570,7 @@ if isequal(hasoffset, 'yes')
       data.offset(i) = time2offset(data.time{i}, data.fsample);
     end
     okflag = 1;
-  elseif ~okflag && datatype(data, 'mvar')
+  elseif ~okflag && ft_datatype(data, 'mvar')
     data.offset = 0;
     okflag = 1;
   end
@@ -609,7 +609,7 @@ end % cmbrepresentation
 
 if issource && strcmp(keepoutside, 'no'),
   % remove all grid points that are marked as outside
-  data = source2sparse(data);
+  data = ft_source2sparse(data);
 end
 
 if issource && ~isempty(sourcerepresentation)
@@ -656,7 +656,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% convert between datatypes
+% convert between ft_datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = comp2raw(data)
 % just remove the component topographies
@@ -664,7 +664,7 @@ data = rmfield(data, 'topo');
 data = rmfield(data, 'topolabel');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% convert between datatypes
+% convert between ft_datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = volume2source(data)
 if isfield(data, 'dimord')
@@ -679,7 +679,7 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% convert between datatypes
+% convert between ft_datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = source2volume(data)
 
@@ -725,7 +725,7 @@ if isfield(data, 'zgrid'),  data = rmfield(data, 'zgrid');  end
 data = fixinside(data, 'logical');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% convert between datatypes
+% convert between ft_datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = freq2raw(freq)
 
@@ -768,11 +768,11 @@ seln = find(nsmp>1,1, 'first');
 data.fsample = 1/(data.time{seln}(2)-data.time{seln}(1));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% convert between datatypes
+% convert between ft_datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [data] = raw2timelock(data)
 
-data   = checkdata(data, 'hastrialdef', 'yes');
+data   = ft_checkdata(data, 'hastrialdef', 'yes');
 ntrial = numel(data.trial);
 nchan  = numel(data.label);
 if ntrial==1
@@ -811,7 +811,7 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% convert between datatypes
+% convert between ft_datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [data] = timelock2raw(data)
 switch data.dimord

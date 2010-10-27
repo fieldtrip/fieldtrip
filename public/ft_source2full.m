@@ -1,4 +1,4 @@
-function [source] = source2full(source);
+function [source] = ft_source2full(source);
 
 % SOURCE2FULL recreates the grid locations outside the brain in the source 
 % reconstruction, so that the source volume again describes the full grid.
@@ -7,7 +7,7 @@ function [source] = source2full(source);
 % external file.
 %
 % Use as
-%   [source] = source2full(source)
+%   [source] = ft_source2full(source)
 %
 % See also SOURCE2SPARSE
 

@@ -1,12 +1,12 @@
-function [type, dimord] = datatype(data, desired)
+function [type, dimord] = ft_datatype(data, desired)
 
 % DATATYPE determines the type of data represented in a FieldTrip data
 % structure and returns a string with raw, freq, timelock source, comp,
 % spike, source, volume, dip.
 %
 % Use as
-%   [type, dimord] = datatype(data)
-%   [type, dimord] = datatype(data, desired)
+%   [type, dimord] = ft_datatype(data)
+%   [type, dimord] = ft_datatype(data, desired)
 %
 % See also CHANTYPE, FILETYPE, SENSTYPE, VOLTYPE
 
@@ -44,11 +44,11 @@ isfreqmvar = isfield(data, 'freq') && isfield(data, 'transfer');
 
 if iscomp
   type = 'comp';  
-  %comp should conditionally go before raw, otherwise the returned datatype
+  %comp should conditionally go before raw, otherwise the returned ft_datatype
   %will be raw
 elseif isfreqmvar
   type = 'freqmvar';
-  %freqmvar should conditionally go before freq, otherwise the returned datatype
+  %freqmvar should conditionally go before freq, otherwise the returned ft_datatype
   %will be freq in the case of frequency mvar data
 elseif ismvar
   type = 'mvar';

@@ -1,4 +1,4 @@
-function [data] = selectdata(varargin)
+function [data] = ft_selectdata(varargin)
 
 % SELECTDATA serves to subselect regions-of-interest from the input data,
 % with or without averaging across the specified dimensions. It also
@@ -7,7 +7,7 @@ function [data] = selectdata(varargin)
 % which deals only with raw data.
 %
 % Use as
-%  [data] = selectdata(data1, data2, ..., key1, value1, key2, value2, ...)
+%  [data] = ft_selectdata(data1, data2, ..., key1, value1, key2, value2, ...)
 %
 % Supported input data:
 %   freq
@@ -61,14 +61,14 @@ dtype  = cell(1,length(data));
 dimord = cell(1,length(data));
 
 for k = 1:length(data)
-  data{k} = checkdata(data{k}, 'datatype', {'freq' 'timelock' 'source', 'volume', 'freqmvar', 'raw'});
-  [dtype{k}, dimord{k}]  = datatype(data{k});
+  data{k} = ft_checkdata(data{k}, 'ft_datatype', {'freq' 'timelock' 'source', 'volume', 'freqmvar', 'raw'});
+  [dtype{k}, dimord{k}]  = ft_datatype(data{k});
   if strcmp(dtype{k}, 'raw'),
     %ensure it to have an offset
-    data{k} = checkdata(data{k}, 'datatype', 'raw', 'hasoffset', 'yes');
+    data{k} = ft_checkdata(data{k}, 'ft_datatype', 'raw', 'hasoffset', 'yes');
   end
   if strcmp(dtype{k}, 'source'),
-    data{k} = checkdata(data{k}, 'sourcerepresentation', 'new');
+    data{k} = ft_checkdata(data{k}, 'sourcerepresentation', 'new');
   end
 end
 
@@ -156,7 +156,7 @@ if length(data)>1 && ~israw,
   %end
   if issource || isvolume
     if numel(param)>1,
-      error('selectdata for source inputs works only for one parameter at a time');
+      error('ft_selectdata for source inputs works only for one parameter at a time');
     end
     dimord(:) = {getfield(data{1}, [param{1},'dimord'])};
   end
@@ -393,7 +393,7 @@ if length(data)>1 && ~israw,
     %data.dim = size(data.(param{1}));
   elseif isfield(data, 'dim')
     data     = rmfield(data, 'dim'); %source data should not contain a dim
-    %FIXME this should be handled by checkdata once the source structure is
+    %FIXME this should be handled by ft_checkdata once the source structure is
     %unequivocally defined
   end
 

@@ -1,10 +1,10 @@
-function [dat] = fetch_data(data, varargin)
+function [dat] = ft_fetch_data(data, varargin)
 
 % FETCH_DATA mimics the behaviour of FT_READ_DATA, but for a FieldTrip
 % raw data structure instead of a file on disk.
 %
 % Use as
-%   [dat] = fetch_data(data, ...)
+%   [dat] = ft_fetch_data(data, ...)
 %
 % See also FT_READ_DATA, FETCH_HEADER, FETCH_EVENT
 
@@ -29,7 +29,7 @@ function [dat] = fetch_data(data, varargin)
 % $Id$
     
 % check whether input is data
-data = checkdata(data, 'datatype', 'raw', 'hastrialdef', 'yes');
+data = ft_checkdata(data, 'ft_datatype', 'raw', 'hastrialdef', 'yes');
     
 % get the options
 hdr           = keyval('header',        varargin);

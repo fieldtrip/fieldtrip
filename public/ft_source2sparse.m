@@ -1,4 +1,4 @@
-function [source] = source2sparse(source);
+function [source] = ft_source2sparse(source);
 
 % SOURCE2SPARSE removes the grid locations outside the brain from the source 
 % reconstruction, thereby saving memory.
@@ -8,7 +8,7 @@ function [source] = source2sparse(source);
 % The original source structure can be recreated using SOURCE2FULL.
 %
 % Use as
-%   [source] = source2sparse(source)
+%   [source] = ft_source2sparse(source)
 %
 % See also SOURCE2FULL
 
