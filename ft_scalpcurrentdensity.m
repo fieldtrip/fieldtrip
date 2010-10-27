@@ -93,7 +93,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'ismeg', 'no');
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'ismeg', 'no');
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')

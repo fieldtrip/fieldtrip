@@ -87,7 +87,7 @@ fieldtripdefs
 
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
-%% checkdata see below!!! %%
+%% ft_checkdata see below!!! %%
 
 
 % set the defaults
@@ -148,7 +148,7 @@ if hasdata
 end
 
 % check if the input data is valid for this function
-mri = checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
+mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
 
 % remember the original transformation matrix
 original.transform = mri.transform;

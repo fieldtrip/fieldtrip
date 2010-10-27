@@ -55,7 +55,7 @@ if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end
 
 if nargin==3 
   ntrials = length(data.trial);
-  data    = checkdata(data, 'datatype', 'raw');
+  data    = ft_checkdata(data, 'datatype', 'raw');
   label   = data.label;
 elseif nargin==2 
   ntrials = length(comp.trial);
@@ -66,7 +66,7 @@ else nargin<2 % only cfg is given; inputfile is expected
     label   = comp.topolabel;
 end
 
-comp    = checkdata(comp, 'datatype', 'comp');
+comp    = ft_checkdata(comp, 'datatype', 'comp');
 ncomps  = length(comp.label);
 
 if min(cfg.component)<1

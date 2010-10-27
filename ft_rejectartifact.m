@@ -183,7 +183,7 @@ if ~isempty(cfg.inputfile)
 end
 
 if hasdata
-  data = checkdata(data, 'hastrialdef', 'yes', 'hasoffset', 'yes');
+  data = ft_checkdata(data, 'hastrialdef', 'yes', 'hasoffset', 'yes');
   if isfield(data, 'sampleinfo')
     trl = [data.sampleinfo data.offset(:)];
     if isfield(data, 'trialinfo')

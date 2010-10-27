@@ -84,7 +84,7 @@ end
 for i=1:length(varargin)
   % FIXME at this moment (=2 April) this does not work, because the input might not always have a powspctrm o.i.d.
   % See email from Juriaan
-  % varargin{i} = checkdata(varargin{i}, 'datatype', 'freq', 'feedback', 'no');
+  % varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'freq', 'feedback', 'no');
 end
 
 % the low-level data selection function does not know how to deal with other parameters, so work around it

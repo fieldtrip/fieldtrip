@@ -45,8 +45,8 @@ end
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
 % check if the input data is valid for this function
-varargin{1} = checkdata(varargin{1}, 'datatype', 'freq', 'feedback', 'yes');
-varargin{2} = checkdata(varargin{2}, 'datatype', 'freq', 'feedback', 'yes');
+varargin{1} = ft_checkdata(varargin{1}, 'datatype', 'freq', 'feedback', 'yes');
+varargin{2} = ft_checkdata(varargin{2}, 'datatype', 'freq', 'feedback', 'yes');
 
 % set the defaults
 if ~isfield(cfg, 'baselinetype'), cfg.baselinetype = 'absolute';     end

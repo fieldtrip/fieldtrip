@@ -107,13 +107,13 @@ switch cfg.method
         error('partialisation on single trial observations is not supported');
       end
       try
-        data    = checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbrepresentation', 'full');
+        data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbrepresentation', 'full');
         inparam = 'crsspctrm';
       catch
         error('partial coherence/csd is only supported for input allowing for a all-to-all csd representation');
       end
     else
-      data    = checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
+      data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
       inparam = 'crsspctrm';
     end
     
@@ -132,13 +132,13 @@ switch cfg.method
     % FIXME think of accommodating partial coherence for source data with only a few references
     
   case {'plv'}
-    data    = checkdata(data, 'datatype', {'freqmvar' 'freq'});
+    data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';
     normrpt = 1;
   case {'corr' 'xcorr'}
-    data = checkdata(data, 'datatype', 'raw');
+    data = ft_checkdata(data, 'datatype', 'raw');
   case {'amplcorr' 'powcorr'}
-    data    = checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
+    data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
     dtype   = datatype(data);
     switch dtype
       case {'freq' 'freqmvar'}
@@ -150,21 +150,21 @@ switch cfg.method
       otherwise
     end
   case {'granger'}
-    data    = checkdata(data, 'datatype', {'mvar' 'freqmvar' 'freq'});
+    data    = ft_checkdata(data, 'datatype', {'mvar' 'freqmvar' 'freq'});
     inparam = {'transfer', 'noisecov', 'crsspctrm'};
     % FIXME could also work with time domain data
   case {'instantaneous_causality'}
-    data    = checkdata(data, 'datatype', {'mvar' 'freqmvar' 'freq'});
+    data    = ft_checkdata(data, 'datatype', {'mvar' 'freqmvar' 'freq'});
     inparam = {'transfer', 'noisecov', 'crsspctrm'};
   case {'total_interdependence'}
-    data    = checkdata(data, 'datatype', {'freqmvar' 'freq'});
+    data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';
   case {'dtf' 'pdc'}
-    data    = checkdata(data, 'datatype', {'freqmvar' 'freq'});
+    data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'transfer';
   case {'psi'}
     if ~isfield(cfg, 'normalize'),  cfg.normalize  = 'no';  end
-    data    = checkdata(data, 'datatype', {'freqmvar' 'freq'});
+    data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';
   case {'di'}
     %wat eigenlijk?
@@ -175,7 +175,7 @@ dtype = datatype(data);
 
 % ensure that source data is in 'new' representation
 if strcmp(dtype, 'source'),
-  data = checkdata(data, 'sourcerepresentation', 'new');
+  data = ft_checkdata(data, 'sourcerepresentation', 'new');
 end
 
 % FIXME throw an error if cfg.complex~='abs', and dojack==1
@@ -220,7 +220,7 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
         [data, powindx, hasrpt] = univariate2bivariate(data, 'mom', 'crsspctrm', dtype, 'cmb', cfg.refindx, 'keeprpt', 0);
         %[data, powindx, hasrpt] = univariate2bivariate(data, 'fourierspctrm', 'crsspctrm', dtype, 0, cfg.refindx, [], 1);
       elseif strcmp(inparam, 'powcov')
-        data            = checkdata(data, 'haspow', 'yes');
+        data            = ft_checkdata(data, 'haspow', 'yes');
         [data, powindx] = univariate2bivariate(data, 'pow', 'powcov', dtype, 'demeanflag', strcmp(cfg.removemean,'yes'), 'cmb', cfg.refindx, 'sqrtflag', strcmp(cfg.method,'amplcorr'), 'keeprpt', 0);
       end
     otherwise

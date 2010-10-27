@@ -70,7 +70,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-data = checkdata(data, 'datatype', {'raw', 'freq', 'timelock'}, 'feedback', 'yes', 'senstype', {'ctf151_planar', 'ctf275_planar', 'neuromag122', 'neuromag306', 'bti248_planar', 'bti148_planar', 'itab153_planar'});
+data = ft_checkdata(data, 'datatype', {'raw', 'freq', 'timelock'}, 'feedback', 'yes', 'senstype', {'ctf151_planar', 'ctf275_planar', 'neuromag122', 'neuromag306', 'bti248_planar', 'bti148_planar', 'itab153_planar'});
 
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 cfg = checkconfig(cfg, 'forbidden', {'combinegrad'});
@@ -89,7 +89,7 @@ try, dimord = data.dimord; end
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
-  error('trial selection has not been implemented yet') % first fix checkdata (see above)
+  error('trial selection has not been implemented yet') % first fix ft_checkdata (see above)
 end
 
 % find the combination of horizontal and vertical channels that should be combined
@@ -195,7 +195,7 @@ if isfreq
 elseif (israw || istimelock)
   if istimelock,
     % convert timelock to raw
-    data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
+    data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
   end
   
   switch cfg.combinemethod
@@ -238,7 +238,7 @@ elseif (israw || istimelock)
   
   if istimelock,
     % convert raw to timelock
-    data = checkdata(data, 'datatype', 'timelock', 'feedback', 'yes');
+    data = ft_checkdata(data, 'datatype', 'timelock', 'feedback', 'yes');
   end
   
 else

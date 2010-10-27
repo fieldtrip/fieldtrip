@@ -65,7 +65,7 @@ fieldtripdefs
 
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
-%% checkdata see below!!! %%
+%% ft_checkdata see below!!! %%
 
 % set the defaults
 if ~isfield(cfg,'spmversion'),       cfg.spmversion = 'spm8';                     end
@@ -155,7 +155,7 @@ if ischar(interp),
 end
 
 % check if the input data is valid for this function
-interp = checkdata(interp, 'datatype', 'volume', 'feedback', 'yes');
+interp = ft_checkdata(interp, 'datatype', 'volume', 'feedback', 'yes');
 
 % select the parameters that should be normalised
 cfg.parameter = parameterselection(cfg.parameter, interp);

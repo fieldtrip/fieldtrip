@@ -52,7 +52,7 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical);
 
 fieldtripdefs
 
-%% checkdata see below!!! %%
+%% ft_checkdata see below!!! %%
 
 % check if the input cfg is valid for this function
 cfg = checkconfig(cfg, 'trackconfig', 'on');
@@ -90,8 +90,8 @@ if ischar(anatomical)
 end
 
 % check if the input data is valid for this function and ensure that the structures correctly describes a volume
-functional = checkdata(functional, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
-anatomical = checkdata(anatomical, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
+functional = ft_checkdata(functional, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
+anatomical = ft_checkdata(anatomical, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
 
 if isfield(cfg, 'sourceunits') && ~isempty(cfg.sourceunits)
   % this uses a deprecated option

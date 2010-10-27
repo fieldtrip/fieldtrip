@@ -150,7 +150,7 @@ fieldtripdefs
 
 cfg = checkconfig(cfg, 'trackconfig', 'on');
 
-%%% checkdata see below!!! %%%
+%%% ft_checkdata see below!!! %%%
 
 % set default for inputfile
 if ~isfield(cfg, 'inputfile'), cfg.inputfile                  = [];    end
@@ -240,7 +240,7 @@ if ischar(data)
 end
 
 % check if the input data is valid for this function
-data = checkdata(data, 'datatype', 'volume', 'feedback', 'yes');
+data = ft_checkdata(data, 'datatype', 'volume', 'feedback', 'yes');
 
 % select the functional and the mask parameter
 cfg.funparameter  = parameterselection(cfg.funparameter, data);

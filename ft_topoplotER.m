@@ -166,7 +166,7 @@ else
 end
 
 % For backward compatibility with old data structures:
-data = checkdata(data);
+data = ft_checkdata(data);
 
 % check for option-values to be renamed
 cfg = checkconfig(cfg, 'renamedval',     {'electrodes',   'dotnum',    'numbers'});

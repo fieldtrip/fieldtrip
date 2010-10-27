@@ -59,7 +59,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function and ensure that the structures correctly describes a volume
-mri = checkdata(mri, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
+mri = ft_checkdata(mri, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
 
 cfg = checkconfig(cfg, 'required', {'xrange', 'yrange', 'zrange'});
 

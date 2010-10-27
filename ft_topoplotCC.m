@@ -55,7 +55,7 @@ fieldtripdefs
 
 
 % check if the input data is valid for this function
-freq = checkdata(freq, 'cmbrepresentation', 'sparse');
+freq = ft_checkdata(freq, 'cmbrepresentation', 'sparse');
 
 % check if the input configuration is valid for this function
 cfg = checkconfig(cfg, 'trackconfig', 'on');

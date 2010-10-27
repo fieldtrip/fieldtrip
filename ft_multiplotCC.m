@@ -45,7 +45,7 @@ if ~isfield(cfg, 'xlim'),      cfg.xlim   = 'all';               end;
 if ~isfield(cfg, 'zparam'),    cfg.zparam = 'avg.icohspctrm';    end;
 
 % for backward compatibility with old data structures
-data = checkdata(data);
+data = ft_checkdata(data);
 
 if strcmp(cfg.zparam, 'avg.icohspctrm') && ~issubfield(data, 'avg.icohspctrm'),
   data.avg.icohspctrm = abs(imag(data.avg.cohspctrm));

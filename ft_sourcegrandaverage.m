@@ -96,7 +96,7 @@ if 1,
 
   % check if the input data is valid for this function
   for i=1:length(varargin)
-    varargin{i} = checkdata(varargin{i}, 'datatype', {'source', 'volume'}, 'feedback', 'no');
+    varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'source', 'volume'}, 'feedback', 'no');
   end
 
   Nsubject = length(varargin);
@@ -317,7 +317,7 @@ else
 
   % check if the input data is valid for this function
   for i=1:length(varargin)
-    varargin{i} = checkdata(varargin{i}, 'datatype', {'source'}, 'feedback', 'no', ...
+    varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'source'}, 'feedback', 'no', ...
                                          'sourcerepresentation', 'new');
     %FIXME also allow volume structures to be used
   end

@@ -71,7 +71,7 @@ cfg = checkconfig(cfg, 'trackconfig', 'on');
 cla
 
 % For backward compatibility with old data structures:
-data = checkdata(data);
+data = ft_checkdata(data);
 
 % check if the input cfg is valid for this function
 cfg = checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});

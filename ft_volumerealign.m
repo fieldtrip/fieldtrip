@@ -86,7 +86,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-mri = checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
+mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
 
 if ~isfield(cfg, 'method')
   if ~isempty(cfg.fiducial)

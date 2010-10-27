@@ -96,7 +96,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-data = checkdata(data, 'datatype', 'raw', 'feedback', cfg.feedback);
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', cfg.feedback);
 fb   = strcmp(cfg.feedback, 'yes');
 
 % select trials of interest
@@ -199,7 +199,7 @@ elseif ~isempty(cfg.trl)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   % ensure that sampleinfo is present, if this fails fetch_data will crash
-  data = checkdata(data, 'hastrialdef', 'yes');  
+  data = ft_checkdata(data, 'hastrialdef', 'yes');  
 
   dataold = data;   % make a copy of the old data
   clear data        % this line is very important, we want to completely reconstruct the data from the old data!
@@ -261,7 +261,7 @@ elseif ~isempty(cfg.trl)
   end
 elseif ~isempty(cfg.length)
   
-  data = checkdata(data, 'hastrialdef', 'yes');
+  data = ft_checkdata(data, 'hastrialdef', 'yes');
   
   %create dummy trl-matrix and recursively call ft_redefinetrial
   nsmp    = round(cfg.length*data.fsample);

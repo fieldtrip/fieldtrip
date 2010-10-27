@@ -104,7 +104,7 @@ function [outim]=ft_sliceinterp(cfg, ininterp)
 fieldtripdefs
 
 % check if the input data is valid for this function
-ininterp = checkdata(ininterp, 'datatype', 'volume', 'feedback', 'yes');
+ininterp = ft_checkdata(ininterp, 'datatype', 'volume', 'feedback', 'yes');
 
 if ~isfield(cfg, 'clipmin');      cfg.clipmin = 'auto';        end
 if ~isfield(cfg, 'clipmax');      cfg.clipmax = 'auto';        end

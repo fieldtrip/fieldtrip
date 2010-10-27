@@ -38,7 +38,7 @@ function [down] = ft_volumedownsample(cfg, source);
 
 fieldtripdefs
 
-%% checkdata see below!!! %%
+%% ft_checkdata see below!!! %%
 
 % check if the input cfg is valid for this function
 cfg = checkconfig(cfg, 'trackconfig', 'on');
@@ -73,7 +73,7 @@ if strcmp(cfg.keepinside, 'yes')
 end
 
 % check if the input data is valid for this function
-source = checkdata(source, 'datatype', 'volume', 'feedback', 'no');
+source = ft_checkdata(source, 'datatype', 'volume', 'feedback', 'no');
 
 %make local copy of source and remove all functional parameters
 param = parameterselection('all', source);

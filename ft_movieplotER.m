@@ -66,7 +66,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % Checkdata
-timelock = checkdata(timelock, 'datatype', 'timelock');
+timelock = ft_checkdata(timelock, 'datatype', 'timelock');
 
 % check if the input cfg is valid for this function
 cfg = checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});

@@ -46,7 +46,7 @@ fieldtripdefs
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % check that the data comes from componentanalysis
-comp = checkdata(comp, 'datatype', 'comp');
+comp = ft_checkdata(comp, 'datatype', 'comp');
 
 % set the defaults:
 if ~isfield(cfg, 'comp'),   cfg.comp  = 1:10; end

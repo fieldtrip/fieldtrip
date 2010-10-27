@@ -78,9 +78,9 @@ if strcmp(cfg.implementation, 'old'),
   % check if the input data is valid for this function
   for i=1:length(varargin)
     if isfield(cfg, 'roi') && ~isempty(cfg.roi)
-      varargin{i} = checkdata(varargin{i}, 'datatype', 'source', 'feedback', 'no', 'inside', 'index');
+      varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'source', 'feedback', 'no', 'inside', 'index');
     else
-      varargin{i} = checkdata(varargin{i}, 'datatype', {'source', 'volume'}, 'feedback', 'no', 'inside', 'index');
+      varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'source', 'volume'}, 'feedback', 'no', 'inside', 'index');
     end
   end
   
@@ -152,11 +152,11 @@ elseif strcmp(cfg.implementation, 'new')
       % FIXME implement roi-based statistics for the new implementation
       % (code is copied over from the old implementation but not yet tested
       error('roi based sourcestatistics is not yet implemented for the new implementation');
-      varargin{i} = checkdata(varargin{i}, 'datatype', 'source', 'feedback', 'no', 'inside', 'index');
+      varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'source', 'feedback', 'no', 'inside', 'index');
     else
-      varargin{i} = checkdata(varargin{i}, 'datatype', {'source', 'volume'}, 'feedback', 'no', 'inside', 'index', 'sourcerepresentation', 'new');
+      varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'source', 'volume'}, 'feedback', 'no', 'inside', 'index', 'sourcerepresentation', 'new');
       if strcmp(cfg.parameter, 'pow') && ~isfield(varargin{i}, 'pow'),
-        varargin{i} = checkdata(varargin{i}, 'sourcerepresentation', 'new', 'haspow', 'yes');
+        varargin{i} = ft_checkdata(varargin{i}, 'sourcerepresentation', 'new', 'haspow', 'yes');
       end
     end
   end
@@ -182,7 +182,7 @@ elseif strcmp(cfg.implementation, 'new')
   if ismember('cfg.method', {'parametric' 'randomization' 'randcluster'}),
     % FIXME only supported for old-style source representation
     for i = 1:numel(varargin)
-      varargin{i} = checkdata(varargin{i}, 'sourcerepresentation', 'old');
+      varargin{i} = ft_checkdata(varargin{i}, 'sourcerepresentation', 'old');
     end
     
     if exist(['statistics_',cfg.method]),
@@ -196,7 +196,7 @@ elseif strcmp(cfg.implementation, 'new')
     
     % convert representation of input data to new style
     for i = 1:numel(varargin)
-      varargin{i} = checkdata(varargin{i}, 'sourcerepresentation', 'new');
+      varargin{i} = ft_checkdata(varargin{i}, 'sourcerepresentation', 'new');
     end
 
     % check the input configuration

@@ -102,7 +102,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-freq = checkdata(freq, 'datatype', {'freq', 'freqmvar'}, 'feedback', 'yes');
+freq = ft_checkdata(freq, 'datatype', {'freq', 'freqmvar'}, 'feedback', 'yes');
 
 % determine some specific details of the input data
 hasrpt   = ~isempty(strfind(freq.dimord, 'rpt')) || ~isempty(strfind(freq.dimord, 'subj'));
@@ -129,7 +129,7 @@ if ~strcmp(cfg.channel, 'all'),
 end
 
 % get data in the correct representation
-freq = checkdata(freq, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
+freq = ft_checkdata(freq, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
 
 if jckflg,
   freq = ft_selectdata(freq, 'jackknife', 1);

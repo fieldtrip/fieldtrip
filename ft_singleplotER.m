@@ -78,7 +78,7 @@ cla
 
 % for backward compatibility with old data structures
 for i=1:length(varargin)
-  varargin{i} = checkdata(varargin{i});
+  varargin{i} = ft_checkdata(varargin{i});
 end
 
 % set the defaults:

@@ -90,7 +90,7 @@ if ~isempty(cfg.inputfile)
 end
 
 if hasdata
-  data = checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hastrialdef', 'yes', 'hasoffset', 'yes');
+  data = ft_checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hastrialdef', 'yes', 'hasoffset', 'yes');
   if ~isfield(cfg, 'continuous') && length(data.trial) == 1
     cfg.continuous = 'yes';
   end

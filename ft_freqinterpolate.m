@@ -59,7 +59,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-freq = checkdata(freq, 'datatype', 'freq', 'feedback', 'yes');
+freq = ft_checkdata(freq, 'datatype', 'freq', 'feedback', 'yes');
 
 for i = 1:size(cfg.foilim,1)
   % determine the exact frequency bins to interpolate

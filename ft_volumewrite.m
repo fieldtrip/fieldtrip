@@ -71,7 +71,7 @@ function ft_volumewrite(cfg, volume)
 
 fieldtripdefs
 
-%% checkdata see below!!! %%
+%% ft_checkdata see below!!! %%
 
 % check some of the cfg fields
 if ~isfield(cfg, 'filename'),    error('No output filename specified'); end
@@ -117,7 +117,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-volume = checkdata(volume, 'datatype', 'volume', 'feedback', 'yes');
+volume = ft_checkdata(volume, 'datatype', 'volume', 'feedback', 'yes');
 
 % select the parameter that should be written
 cfg.parameter = parameterselection(cfg.parameter, volume);
