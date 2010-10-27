@@ -135,7 +135,7 @@ if hasdata
   hdr = fetch_header(data);
   
   % fetch the events
-  event = fetch_event(data);
+  event = ft_fetch_event(data);
   
   cfg.channel = ft_channelselection(cfg.channel, data.label);
   chansel = match_str(data.label, cfg.channel);
