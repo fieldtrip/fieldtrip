@@ -321,11 +321,11 @@ if (strcmp(cfg.keeptrials,'yes'))
   singtrial = nan*zeros(ntrial, nchan, maxwin);
 end
 
-progress('init', cfg.feedback, 'averaging trials');
+ft_progress('init', cfg.feedback, 'averaging trials');
 % do all the computations
 for i=1:ntrial
   % fprintf('averaging trial %d of %d\n', i, ntrial);
-  progress(i/ntrial, 'averaging trial %d of %d\n', i, ntrial);
+  ft_progress(i/ntrial, 'averaging trial %d of %d\n', i, ntrial);
 
   % determine whether the data in this trial can be used for all the requested computations
   switch cfg.vartrllength
@@ -404,7 +404,7 @@ for i=1:ntrial
     end
   end
 end % for ntrial
-progress('close');
+ft_progress('close');
 
 % compute the average
 if ~any(numsamples)

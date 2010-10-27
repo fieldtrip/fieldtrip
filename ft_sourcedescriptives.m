@@ -190,9 +190,9 @@ if ispccdata
 
   if projectmom
     source.avg.ori = cell(1, Ndipole);
-    progress('init', cfg.feedback, 'projecting dipole moment');
+    ft_progress('init', cfg.feedback, 'projecting dipole moment');
     for diplop=1:length(source.inside)
-      progress(diplop/length(source.inside), 'projecting dipole moment %d/%d\n', diplop, length(source.inside));
+      ft_progress(diplop/length(source.inside), 'projecting dipole moment %d/%d\n', diplop, length(source.inside));
       i       = source.inside(diplop);
       mom     = source.avg.mom{i}(dipsel,     :);
       ref     = source.avg.mom{i}(refdipsel,  :);
@@ -246,7 +246,7 @@ if ispccdata
         source.leadfield{i}    = source.leadfield{i} * rotmat(1:n2, 1:n1)'; 
       end
     end %for diplop
-    progress('close');
+    ft_progress('close');
 
     % remember what the interpretation is of all CSD output components
     scandiplabel = repmat({'scandip'}, 1, cfg.numcomp);          % only one dipole orientation remains
@@ -271,12 +271,12 @@ if ispccdata
     sumtapcnt = cumsum([0;cumtapcnt]);
     Ntrial = length(cumtapcnt);
 
-    progress('init', cfg.feedback, 'computing singletrial voxel-level cross-spectral densities');
+    ft_progress('init', cfg.feedback, 'computing singletrial voxel-level cross-spectral densities');
     for triallop = 1:Ntrial
       source.trial(triallop).csd = cell(Ndipole, 1);  % allocate memory for this trial
       source.trial(triallop).mom = cell(Ndipole, 1);  % allocate memory for this trial
 
-      progress(triallop/Ntrial, 'computing singletrial voxel-level cross-spectral densities %d%d\n', triallop, Ntrial);
+      ft_progress(triallop/Ntrial, 'computing singletrial voxel-level cross-spectral densities %d%d\n', triallop, Ntrial);
       for diplop=1:length(source.inside)
         i   = source.inside(diplop);
         dat = source.avg.mom{i};
@@ -286,7 +286,7 @@ if ispccdata
         source.trial(triallop).csd{i} = tmpcsd;
       end %for diplop
     end % for triallop
-    progress('close');
+    ft_progress('close');
     % remove the average, continue with separate trials
     source = rmfield(source, 'avg');
   else
@@ -309,7 +309,7 @@ if ispccdata
     if hassupdip,  supdipselcell  = mat2cell(repmat(supdipsel(:)',  [Ndipole 1]), ones(Ndipole,1), length(supdipsel));  end
     if hassupchan, supchanselcell = mat2cell(repmat(supchansel(:)', [Ndipole 1]), ones(Ndipole,1), length(supchansel)); end
     
-    progress('init', cfg.feedback, 'computing singletrial voxel-level power');
+    ft_progress('init', cfg.feedback, 'computing singletrial voxel-level power');
     for triallop = 1:Ntrial
       %initialize the variables
       source.trial(triallop).pow = zeros(Ndipole, 1);
@@ -318,7 +318,7 @@ if ispccdata
       if hassupdip,  source.trial(triallop).supdippow     = zeros(Ndipole, 1); end
       if hassupchan, source.trial(triallop).supchanpow    = zeros(Ndipole, 1); end
 
-      progress(triallop/Ntrial, 'computing singletrial voxel-level power %d%d\n', triallop, Ntrial);
+      ft_progress(triallop/Ntrial, 'computing singletrial voxel-level power %d%d\n', triallop, Ntrial);
       source.trial(triallop).pow(source.inside) = cellfun(powmethodfun, source.trial(triallop).csd(source.inside), dipselcell(source.inside));
       if hasrefdip,  source.trial(triallop).refdippow(source.inside) = cellfun(powmethodfun,source.trial(triallop).csd(source.inside), refdipselcell(source.inside));  end
       if hassupdip,  source.trial(triallop).supdippow(source.inside) = cellfun(powmethodfun,source.trial(triallop).csd(source.inside), supdipselcell(source.inside));  end
@@ -334,7 +334,7 @@ if ispccdata
         if hassupchan, source.trial(triallop).supchannoise = cellfun(powmethodfun,source.trial(triallop).noisecsd, supchanselcell); end
       end % if isnoise
     end % for triallop
-    progress('close');
+    ft_progress('close');
 
     if strcmp(cfg.keepcsd, 'no')
       source.trial = rmfield(source.trial, 'csd');
@@ -471,15 +471,15 @@ elseif islcmvavg
   % the source reconstruction was computed using the lcmv beamformer and contains an average timecourse
   
   if projectmom
-    progress('init', cfg.feedback, 'projecting dipole moment');
+    ft_progress('init', cfg.feedback, 'projecting dipole moment');
     for diplop=1:length(source.inside)
-      progress(diplop/length(source.inside), 'projecting dipole moment %d/%d\n', diplop, length(source.inside));
+      ft_progress(diplop/length(source.inside), 'projecting dipole moment %d/%d\n', diplop, length(source.inside));
       mom = source.avg.mom{source.inside(diplop)};
       [mom, rmom] = svdfft(mom, 1);
       source.avg.mom{source.inside(diplop)} = mom;
       source.avg.ori{source.inside(diplop)} = rmom;
     end
-    progress('close');
+    ft_progress('close');
   end
 
   if ~strcmp(cfg.powmethod, 'none')
@@ -510,9 +510,9 @@ elseif islcmvtrl
   
   if projectmom && strcmp(cfg.fixedori, 'within_trials')
     % the dipole orientation is re-determined for each trial
-    progress('init', cfg.feedback, 'projecting dipole moment');
+    ft_progress('init', cfg.feedback, 'projecting dipole moment');
     for trllop=1:ntrial
-      progress(trllop/ntrial, 'projecting dipole moment %d/%d\n', trllop, ntrial);
+      ft_progress(trllop/ntrial, 'projecting dipole moment %d/%d\n', trllop, ntrial);
       for diplop=1:length(source.inside)
         mom = source.trial(trllop).mom{source.inside(diplop)};
         [mom, rmom] = svdfft(mom, 1);
@@ -520,9 +520,9 @@ elseif islcmvtrl
         source.trial(trllop).ori{source.inside(diplop)} = rmom;  % remember the orientation
       end
     end
-    progress('close');
+    ft_progress('close');
   elseif projectmom && strcmp(cfg.fixedori, 'over_trials')
-    progress('init', cfg.feedback, 'projecting dipole moment');
+    ft_progress('init', cfg.feedback, 'projecting dipole moment');
     % compute average covariance over all trials
     for trllop=1:ntrial
       for diplop=1:length(source.inside)
@@ -540,7 +540,7 @@ elseif islcmvtrl
     end
     % project the data in each trial
     for trllop=1:ntrial
-      progress(trllop/ntrial, 'projecting dipole moment %d/%d\n', trllop, ntrial);
+      ft_progress(trllop/ntrial, 'projecting dipole moment %d/%d\n', trllop, ntrial);
       for diplop=1:length(source.inside)
         mom = source.trial(trllop).mom{source.inside(diplop)};
         mom = ori{diplop}*mom;
@@ -548,7 +548,7 @@ elseif islcmvtrl
         source.trial(trllop).ori{source.inside(diplop)} = ori{diplop};
       end
     end
-    progress('close');
+    ft_progress('close');
   end
 
   if ~strcmp(cfg.powmethod, 'none')
@@ -827,16 +827,16 @@ if strcmp(cfg.resolutionmatrix, 'yes')
   allfilter    = zeros(Ninside,Nchan);
   allleadfield = zeros(Nchan,Ninside);
   dipsel       = match_str(source.avg.csdlabel, 'scandip');
-  progress('init', cfg.feedback, 'computing resolution matrix');
+  ft_progress('init', cfg.feedback, 'computing resolution matrix');
   for diplop=1:length(source.inside)
-    progress(diplop/length(source.inside), 'computing resolution matrix %d/%d\n', diplop, length(source.inside));
+    ft_progress(diplop/length(source.inside), 'computing resolution matrix %d/%d\n', diplop, length(source.inside));
     i = source.inside(diplop);
     % concatenate all filters
     allfilter(diplop,:) = source.avg.filter{i}(dipsel,:);
     % concatenate all leadfields
     allleadfield(:,diplop) = source.leadfield{i};
   end
-  progress('close');
+  ft_progress('close');
   % multiply the filters and leadfields to obtain the resolution matrix
   % see equation 1 and 2 in De Peralta-Menendez RG, Gonzalez-Andino SL: A critical analysis of linear inverse solutions to the neuroelectromagnetic inverse problem. IEEE Transactions on Biomedical Engineering 45: 440-448, 1998.
   source.resolution = nan*zeros(Ndipole, Ndipole);

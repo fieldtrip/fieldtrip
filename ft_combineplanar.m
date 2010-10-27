@@ -159,9 +159,9 @@ if isfreq
         Ntim   = size(data.fourierspctrm,4);
         %fourier= complex(zeros(Nrpt,Nsgn,Nfrq,Ntim),zeros(Nrpt,Nsgn,Nfrq,Ntim));
         fourier= zeros(Nrpt,Nsgn,Nfrq,Ntim)+nan;
-        progress('init', cfg.feedback, 'computing the svd');
+        ft_progress('init', cfg.feedback, 'computing the svd');
         for j = 1:Nsgn
-          progress(j/Nsgn, 'computing the svd of signal %d/%d\n', j, Nsgn);
+          ft_progress(j/Nsgn, 'computing the svd of signal %d/%d\n', j, Nsgn);
           for k = 1:Nfrq
             dum = reshape(data.fourierspctrm(:,[sel_dH(j) sel_dV(j)],fbin(k),:), [Nrpt 2 Ntim]);
             dum = permute(dum, [2 3 1]);
@@ -179,7 +179,7 @@ if isfreq
             %end
           end
         end
-        progress('close');
+        ft_progress('close');
         other              = data.fourierspctrm(:,sel_other,fbin,:);
         data               = rmfield(data,'fourierspctrm');
         data.fourierspctrm = cat(2, fourier, other);

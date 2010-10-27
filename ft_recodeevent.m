@@ -91,8 +91,8 @@ if nargin==2
   % event and trl are not specified in the function call, but the data is given ->
   % try to locate event and trl in the configuration
   data  = event;                       % rename the input variable
-  event = findcfg(data.cfg, 'event');  % search for the event field
-  trl   = findcfg(data.cfg, 'trl');    % search for the trl field
+  event = ft_findcfg(data.cfg, 'event');  % search for the event field
+  trl   = ft_findcfg(data.cfg, 'trl');    % search for the trl field
   if isempty(event)
     error('could not locate event structure in the data');
   elseif isempty(trl)

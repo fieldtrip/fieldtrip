@@ -140,16 +140,16 @@ if varflg,
   outsum = zeros(siz(2:end));
   outssq = zeros(siz(2:end));
   n      = zeros(siz(2:end));
-  progress('init', cfg.feedback, 'computing power...');
+  ft_progress('init', cfg.feedback, 'computing power...');
   for j = 1:siz(1)
-    progress(j/siz(1), 'computing power for replicate %d from %d\n', j, siz(1));
+    ft_progress(j/siz(1), 'computing power for replicate %d from %d\n', j, siz(1));
     tmp    = reshape(freq.powspctrm(j,:,:,:), siz(2:end));
     n      = n + double(isfinite(tmp));
     tmp(~isfinite(tmp)) = 0;
     outsum = outsum + tmp;
     outssq = outssq + tmp.^2;
   end
-  progress('close');
+  ft_progress('close');
   
   if jckflg,
     bias = (n-1).^2;

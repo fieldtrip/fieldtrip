@@ -79,7 +79,7 @@ else
     error('not all channel labels are unique');
   end
 
-  trl = findcfg(data.cfg, 'trl');
+  trl = ft_findcfg(data.cfg, 'trl');
   if isempty(trl);
     error('could not find the trial information in the continuous data');
   end

@@ -144,9 +144,9 @@ for i=1:ntrial
     singletrial{i} = nan*zeros(length(spikesmp), nchansel, numsmp);
   end
   
-  progress('init', cfg.feedback, 'averaging spikes');
+  ft_progress('init', cfg.feedback, 'averaging spikes');
   for j=1:length(spikesmp)
-    progress(i/ntrial, 'averaging spike %d of %d\n', j, length(spikesmp));
+    ft_progress(i/ntrial, 'averaging spike %d of %d\n', j, length(spikesmp));
     begsmp = spikesmp(j) + begpad;
     endsmp = spikesmp(j) + endpad;
     
@@ -169,7 +169,7 @@ for i=1:ntrial
     cumcnt = cumcnt + spikecnt(j);
     
   end % for each spike in this trial
-  progress('close');
+  ft_progress('close');
   
 end % for each trial
 

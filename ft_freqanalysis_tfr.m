@@ -123,11 +123,11 @@ end
 
 M = waveletfam(cfg.foi,data.fsample,cfg.waveletwidth);
 
-progress('init', cfg.feedback, 'convolving wavelets');
+ft_progress('init', cfg.feedback, 'convolving wavelets');
 
 for i=1:ntrial
   indicvect = data.time{i};
-  progress(i/ntrial, 'convolving wavelets, trial %d of %d\n', i, ntrial);
+  ft_progress(i/ntrial, 'convolving wavelets, trial %d of %d\n', i, ntrial);
 
   %for average and variance
   begsampl = nearest(indicvect,cfg.latency(1));
@@ -161,7 +161,7 @@ for i=1:ntrial
 
 end %for ntrial
 
-progress('close');
+ft_progress('close');
 
 if strcmp(cfg.keeptrials, 'yes')
   freq.dimord    = 'rpt_chan_freq_time';

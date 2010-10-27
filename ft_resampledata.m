@@ -144,7 +144,7 @@ if usefsample
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   ntr = length(data.trial);
   
-  progress('init', cfg.feedback, 'resampling data');
+  ft_progress('init', cfg.feedback, 'resampling data');
   [fsorig, fsres] = rat(cfg.origfs./cfg.resamplefs);%account for non-integer fs
   cfg.resamplefs  = cfg.origfs.*(fsres./fsorig);%get new fs exact
   
@@ -166,7 +166,7 @@ if usefsample
   end
   
   for itr = 1:ntr
-    progress(itr/ntr, 'resampling data in trial %d from %d\n', itr, ntr);
+    ft_progress(itr/ntr, 'resampling data in trial %d from %d\n', itr, ntr);
     if strcmp(cfg.blc,'yes')
       data.trial{itr} = ft_preproc_baselinecorrect(data.trial{itr});
     end
@@ -195,7 +195,7 @@ if usefsample
     data.trial{itr} = data.trial{itr}(:, begindx:end);
     
   end % for itr
-  progress('close');
+  ft_progress('close');
   
   % specify the new sampling frequency in the output
   data.fsample = cfg.resamplefs;
@@ -206,9 +206,9 @@ elseif usetime
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   ntr = length(data.trial);
   
-  progress('init', cfg.feedback, 'resampling data');
+  ft_progress('init', cfg.feedback, 'resampling data');
   for itr = 1:ntr
-    progress(itr/ntr, 'resampling data in trial %d from %d\n', itr, ntr);
+    ft_progress(itr/ntr, 'resampling data in trial %d from %d\n', itr, ntr);
     if strcmp(cfg.blc,'yes')
       data.trial{itr} = ft_preproc_baselinecorrect(data.trial{itr});
     end
@@ -224,7 +224,7 @@ elseif usetime
     % update the time axis
     data.time{itr} = cfg.time{itr};
   end % for itr
-  progress('close');
+  ft_progress('close');
   
   % specify the new sampling frequency in the output
   t1 = cfg.time{1}(1);

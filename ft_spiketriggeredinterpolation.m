@@ -128,9 +128,9 @@ for i=1:ntrial
 
   fprintf('processing trial %d of %d (%d spikes)\n', i, ntrial, length(spikesmp));
 
-  progress('init', cfg.feedback, 'interpolating spikes');
+  ft_progress('init', cfg.feedback, 'interpolating spikes');
   for j=1:length(spikesmp)
-    progress(i/ntrial, 'interpolating spike %d of %d\n', j, length(spikesmp));
+    ft_progress(i/ntrial, 'interpolating spike %d of %d\n', j, length(spikesmp));
     begsmp = spikesmp(j) + begpad;
     endsmp = spikesmp(j) + endpad;
 
@@ -168,7 +168,7 @@ for i=1:ntrial
     end % if strcmp(cfg.method)
 
   end % for each spike in this trial
-  progress('close');
+  ft_progress('close');
 
 end % for each trial
 

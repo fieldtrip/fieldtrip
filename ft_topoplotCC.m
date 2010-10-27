@@ -164,7 +164,7 @@ end % if newfigure
 % fix the limits for the axis
 axis(axis);
 
-progress('init', cfg.feedback, 'plotting connections...');
+ft_progress('init', cfg.feedback, 'plotting connections...');
 
 for i=1:ncmb
 
@@ -173,7 +173,7 @@ for i=1:ncmb
     continue
   end
 
-  progress(i/ncmb, 'plotting connection %d from %d (%s -> %s)\n', i, ncmb, beglabel{i}, endlabel{i});
+  ft_progress(i/ncmb, 'plotting connection %d from %d (%s -> %s)\n', i, ncmb, beglabel{i}, endlabel{i});
 
   if widthparam(i)>0
     begindx = strmatch(beglabel{i}, lay.label);
@@ -218,7 +218,7 @@ for i=1:ncmb
 
   end
 end
-progress('close');
+ft_progress('close');
 
 % improve the fit in the axis
 axis tight

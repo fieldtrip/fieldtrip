@@ -248,9 +248,9 @@ else
 end
 
 %---loop over the tois
-progress('init', cfg.feedback, 'computing MAR-model');
+ft_progress('init', cfg.feedback, 'computing MAR-model');
 for j = 1:ntoi
-  progress(j/ntoi, 'processing timewindow %d from %d\n', j, ntoi);
+  ft_progress(j/ntoi, 'processing timewindow %d from %d\n', j, ntoi);
   sample        = nearest(timeaxis, cfg.toi(j));
   cfg.toi(j)    = timeaxis(sample);
   
@@ -312,7 +312,7 @@ for j = 1:ntoi
   end %---replicates
 
 end %---tois 
-progress('close');
+ft_progress('close');
 
 %---create output-structure
 mvardata          = [];

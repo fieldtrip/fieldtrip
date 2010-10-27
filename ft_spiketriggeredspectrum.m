@@ -156,9 +156,9 @@ for i=1:ntrial
 
   spectrum{i} = zeros(length(spikesmp), nchansel, fend-fbeg+1);
 
-  progress('init', cfg.feedback, 'spectrally decomposing data around spikes');
+  ft_progress('init', cfg.feedback, 'spectrally decomposing data around spikes');
   for j=1:length(spikesmp)
-    progress(i/ntrial, 'spectrally decomposing data around spike %d of %d\n', j, length(spikesmp));
+    ft_progress(i/ntrial, 'spectrally decomposing data around spike %d of %d\n', j, length(spikesmp));
     begsmp = spikesmp(j) + begpad;
     endsmp = spikesmp(j) + endpad;
 
@@ -185,7 +185,7 @@ for i=1:ntrial
     spectrum{i}(j,:,:) = segment_fft;
 
   end % for each spike in this trial
-  progress('close');
+  ft_progress('close');
 
 end % for each trial
 

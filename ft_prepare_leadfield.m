@@ -170,10 +170,10 @@ if ft_voltype(vol, 'openmeeg')
   clear lf
   
 else
-  progress('init', cfg.feedback, 'computing leadfield');
+  ft_progress('init', cfg.feedback, 'computing leadfield');
   for i=1:length(grid.inside)
     % compute the leadfield on all grid positions inside the brain
-    progress(i/length(grid.inside), 'computing leadfield %d/%d\n', i, length(grid.inside));
+    ft_progress(i/length(grid.inside), 'computing leadfield %d/%d\n', i, length(grid.inside));
     dipindx = grid.inside(i);
     grid.leadfield{dipindx} = ft_compute_leadfield(grid.pos(dipindx,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
     
@@ -182,7 +182,7 @@ else
       grid.leadfield{dipindx} = grid.leadfield{dipindx} * grid.mom(:,dipindx);
     end
   end % for all grid locations inside the brain
-  progress('close');
+  ft_progress('close');
 end
 
 

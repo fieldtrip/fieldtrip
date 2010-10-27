@@ -236,12 +236,12 @@ if normrpt && hasrpt,
   if strcmp(inparam, 'crsspctrm'),
     tmp  = data.(inparam);
     nrpt = size(tmp,1);
-    progress('init', cfg.feedback, 'normalising...');
+    ft_progress('init', cfg.feedback, 'normalising...');
     for k = 1:nrpt
-      progress(k/nrpt, 'normalising amplitude of replicate %d from %d to 1\n', k, nrpt);
+      ft_progress(k/nrpt, 'normalising amplitude of replicate %d from %d to 1\n', k, nrpt);
       tmp(k,:,:,:,:) = tmp(k,:,:,:,:)./abs(tmp(k,:,:,:,:));
     end
-    progress('close');
+    ft_progress('close');
     data.(inparam) = tmp;
   end
 end

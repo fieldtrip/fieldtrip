@@ -360,9 +360,9 @@ switch cfg.filetype
     avw.img = data;
 
     % orientation 0 means transverse unflipped (axial, radiological)
-    % X direction first,  progressing from patient right to left,
-    % Y direction second, progressing from patient posterior to anterior,
-    % Z direction third,  progressing from patient inferior to superior.
+    % X direction first,  ft_progressing from patient right to left,
+    % Y direction second, ft_progressing from patient posterior to anterior,
+    % Z direction third,  ft_progressing from patient inferior to superior.
     avw.hdr.hist.orient = 0;
 
     % specify voxel size

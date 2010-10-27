@@ -304,9 +304,9 @@ num = numel(ax);            % total number of voxels
 blocksize = floor(num/20);  % number of voxels to interpolate at once, split it into 20 chuncks
 lastblock = 0;              % boolean flag for while loop
 sel = 1:blocksize;          % selection of voxels that are interpolated, this is the first chunck
-progress('init', feedback, 'interpolating');
+ft_progress('init', feedback, 'interpolating');
 while (1)
-  progress(sel(1)/num, 'interpolating %.1f%%\n', 100*sel(1)/num);
+  ft_progress(sel(1)/num, 'interpolating %.1f%%\n', 100*sel(1)/num);
   if sel(end)>num
     sel = sel(1):num;
     lastblock = 1;
@@ -317,5 +317,5 @@ while (1)
   end
   sel = sel + blocksize;
 end
-progress('close');
+ft_progress('close');
 

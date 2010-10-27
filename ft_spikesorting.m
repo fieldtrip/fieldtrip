@@ -149,11 +149,11 @@ end
 function [dist] = ward_distance(cfg, waveform);
 nspike = size(waveform,2);
 dist = zeros(nspike, nspike);
-progress('init', cfg.feedback, 'computing distance');
+ft_progress('init', cfg.feedback, 'computing distance');
 switch lower(cfg.ward.distance)
   case 'l1'
     for i=1:nspike
-      progress((i-1)/nspike, 'computing distance for spike %d/%d', i, nspike);
+      ft_progress((i-1)/nspike, 'computing distance for spike %d/%d', i, nspike);
       for j=2:nspike
         dist(i,j) = sum(abs(waveform(:,j)-waveform(:,i)));
         dist(j,i) = dist(i,j);
@@ -161,7 +161,7 @@ switch lower(cfg.ward.distance)
     end
   case 'l2'
     for i=1:nspike
-      progress((i-1)/nspike, 'computing distance for spike %d/%d', i, nspike);
+      ft_progress((i-1)/nspike, 'computing distance for spike %d/%d', i, nspike);
       for j=2:nspike
         dist(i,j) = sqrt(sum((waveform(:,j)-waveform(:,i)).^2));
         dist(j,i) = dist(i,j);
@@ -169,7 +169,7 @@ switch lower(cfg.ward.distance)
     end
   case 'correlation'
     for i=1:nspike
-      progress((i-1)/nspike, 'computing distance for spike %d/%d', i, nspike);
+      ft_progress((i-1)/nspike, 'computing distance for spike %d/%d', i, nspike);
       for j=2:nspike
         dist(i,j) = corrcoef(waveform(:,j),waveform(:,i));
         dist(j,i) = dist(i,j);
@@ -177,7 +177,7 @@ switch lower(cfg.ward.distance)
     end
   case 'cosine'
     for i=1:nspike
-      progress((i-1)/nspike, 'computing distance for spike %d/%d', i, nspike);
+      ft_progress((i-1)/nspike, 'computing distance for spike %d/%d', i, nspike);
       for j=2:nspike
         x = waveform(:,j);
         y = waveform(:,i);
@@ -191,4 +191,4 @@ switch lower(cfg.ward.distance)
   otherwise
     error('unsupported distance metric');
 end
-progress('close');
+ft_progress('close');

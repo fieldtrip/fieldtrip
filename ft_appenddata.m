@@ -96,7 +96,7 @@ end
 hastrialinfo = 0;
 for i=1:Ndata
   if isfield(varargin{i}, 'cfg')
-    trl{i} = findcfg(varargin{i}.cfg, 'trl');
+    trl{i} = ft_findcfg(varargin{i}.cfg, 'trl');
   else
     trl{i} = [];
   end
@@ -168,10 +168,10 @@ elseif haselec(1)==1 || hasgrad(1)==1,
 end
 
 % check whether the data are obtained from the same datafile
-origfile1      = findcfg(varargin{1}.cfg, 'datafile');
+origfile1      = ft_findcfg(varargin{1}.cfg, 'datafile');
 removesampleinfo = 0;
 for j=2:Ndata
-    if ~strcmp(origfile1, findcfg(varargin{j}.cfg, 'datafile')),
+    if ~strcmp(origfile1, ft_findcfg(varargin{j}.cfg, 'datafile')),
         removesampleinfo = 1;
         warning('input data comes from different datafiles');
         break;

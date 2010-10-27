@@ -80,12 +80,12 @@ case {'ttest', 'ttest_samples_vs_const'}
   fprintf('number of observations %d\n', Nobs);
   fprintf('number of replications %d\n', Nrepl);
 
-  progress('init', cfg.feedback);
+  ft_progress('init', cfg.feedback);
   for chan = 1:Nobs
-    progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
+    ft_progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
     [h(chan), p(chan), ci(chan, :)] = ttest(dat(chan, :), cfg.constantvalue, cfg.alpha, cfg.tail);
   end
-  progress('close');
+  ft_progress('close');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 case {'ttest2', 'ttest_2samples_by_timepoint'}
@@ -112,13 +112,13 @@ case {'ttest2', 'ttest_2samples_by_timepoint'}
   fprintf('number of observations %d\n', Nobs);
   fprintf('number of replications %d and %d\n', Nrepl(1), Nrepl(2));
 
-  progress('init', cfg.feedback);
+  ft_progress('init', cfg.feedback);
   for chan = 1:Nobs
-    progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
+    ft_progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
     [h(chan), p(chan), ci(chan, :), stats] = ttest2(dat(chan, selA), dat(chan, selB), cfg.alpha, cfg.tail);
     s(chan) = stats.tstat;
   end
-  progress('close');
+  ft_progress('close');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 case {'paired-ttest'}
@@ -148,12 +148,12 @@ case {'paired-ttest'}
   fprintf('number of observations %d\n', Nobs);
   fprintf('number of replications %d and %d\n', Nrepl(1), Nrepl(2));
 
-  progress('init', cfg.feedback);
+  ft_progress('init', cfg.feedback);
   for chan = 1:Nobs
-    progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
+    ft_progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
     [h(chan), p(chan), ci(chan, :)] = ttest(dat(chan, selA)-dat(chan, selB), 0, cfg.alpha, cfg.tail);
   end
-  progress('close');
+  ft_progress('close');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 case {'anova1'}
@@ -172,12 +172,12 @@ case {'anova1'}
   fprintf('number of replications %d\n', Nrepl);
   fprintf('number of levels %d\n', Ncond);
 
-  progress('init', cfg.feedback);
+  ft_progress('init', cfg.feedback);
   for chan = 1:Nobs
-    progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
+    ft_progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
     p(chan) = anova1(dat(chan, :), design(:), 'off');
   end
-  progress('close');
+  ft_progress('close');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 case {'kruskalwallis'}
@@ -196,12 +196,12 @@ case {'kruskalwallis'}
   fprintf('number of replications %d\n', Nrepl);
   fprintf('number of levels %d\n', Ncond);
 
-  progress('init', cfg.feedback);
+  ft_progress('init', cfg.feedback);
   for chan = 1:Nobs
-    progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
+    ft_progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
     p(chan) = kruskalwallis(dat(chan, :), design(:), 'off');
   end
-  progress('close');
+  ft_progress('close');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % case {'anovan'}
@@ -222,13 +222,13 @@ case {'kruskalwallis'}
 %     group{i} = design(i,:);
 %   end
 % 
-%   progress('init', cfg.feedback);
+%   ft_progress('init', cfg.feedback);
 %   for chan = 1:Nobs
-%     progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
+%     ft_progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
 %     % FIXME, the probability is returned for each factor separately
 %     p = anovan(dat(chan, :), group, 'display', 'off');
 %   end
-%   progress('close');
+%   ft_progress('close');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 case 'ttest_window_avg_vs_const'

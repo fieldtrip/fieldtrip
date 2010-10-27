@@ -181,9 +181,9 @@ end
 
 simulated.trial  = {};
 simulated.time   = {};
-progress('init', cfg.feedback, 'computing simulated data');
+ft_progress('init', cfg.feedback, 'computing simulated data');
 for trial=1:Ntrials
-  progress(trial/Ntrials, 'computing simulated data for trial %d\n', trial);
+  ft_progress(trial/Ntrials, 'computing simulated data for trial %d\n', trial);
   lf = ft_compute_leadfield(dippos{trial}, sens, vol);
   nsamples = size(dipsignal{trial},2);
   nchannels = size(lf,1);
@@ -194,7 +194,7 @@ for trial=1:Ntrials
   end
   simulated.time{trial}   = time{trial};
 end
-progress('close');
+ft_progress('close');
 
 if ft_senstype(sens, 'meg')
   simulated.grad = sens;

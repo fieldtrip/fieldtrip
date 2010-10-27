@@ -223,7 +223,7 @@ if strcmp(cfg.correctm, 'cluster')
 end
 
 % compute the statistic for the observed data
-progress('init', cfg.feedback, 'computing statistic');
+ft_progress('init', cfg.feedback, 'computing statistic');
 % get an estimate of the time required per evaluation of the statfun
 time_pre = cputime;
 
@@ -274,7 +274,7 @@ end
 
 % compute the statistic for the randomized data and count the outliers
 for i=1:Nrand
-  progress(i/Nrand, 'computing statistic %d from %d\n', i, Nrand);
+  ft_progress(i/Nrand, 'computing statistic %d from %d\n', i, Nrand);
   if strcmp(cfg.resampling, 'permutation')
     tmpdesign = design(:,resample(i,:));     % the columns in the design matrix are reshufled by means of permutation
     tmpdat    = dat;                        % the data itself is not shuffled
@@ -314,7 +314,7 @@ for i=1:Nrand
     end
   end
 end
-progress('close');
+ft_progress('close');
 
 if strcmp(cfg.correctm, 'cluster')
   % do the cluster postprocessing

@@ -324,9 +324,9 @@ if strcmp(cfg.gridsearch, 'yes')
   
   % construct the grid on which the scanning will be done
   [grid, cfg] = prepare_dipole_grid(cfg, vol, sens);
-  progress('init', cfg.feedback, 'scanning grid');
+  ft_progress('init', cfg.feedback, 'scanning grid');
   for i=1:length(grid.inside)
-    progress(i/length(grid.inside), 'scanning grid location %d/%d\n', i, length(grid.inside));
+    ft_progress(i/length(grid.inside), 'scanning grid location %d/%d\n', i, length(grid.inside));
     indx = grid.inside(i);
     if isfield(grid, 'leadfield')
       % reuse the previously computed leadfield
@@ -348,7 +348,7 @@ if strcmp(cfg.gridsearch, 'yes')
         error('unsupported cfg.model');
     end % switch model
   end % looping over the grid
-  progress('close');
+  ft_progress('close');
   
   switch cfg.model
     case 'regional'

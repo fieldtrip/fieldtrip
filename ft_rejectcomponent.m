@@ -174,7 +174,7 @@ elseif nargin==3,
   try, cfg.previous{2} = comp.cfg; end
   try, cfg.previous{1} = data.cfg; end
   %the configuration of the data is relatively more important
-  %potential use of findcfg in subsequent analysis steps looks into 
+  %potential use of ft_findcfg in subsequent analysis steps looks into 
   %the previous{1} first
 end
 

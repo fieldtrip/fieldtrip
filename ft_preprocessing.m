@@ -295,16 +295,16 @@ if hasdata
   if isfield(data, 'sampleinfo'),  dataout.sampleinfo  = data.sampleinfo;  end
   if isfield(data, 'trialinfo'), dataout.trialinfo = data.trialinfo; end
   
-  progress('init', cfg.feedback, 'preprocessing');
+  ft_progress('init', cfg.feedback, 'preprocessing');
   ntrl = length(data.trial);
   dataout.trial = cell(1, ntrl);
   dataout.time  = cell(1, ntrl);
   for i=1:ntrl
-    progress(i/ntrl, 'preprocessing trial %d from %d\n', i, ntrl);
+    ft_progress(i/ntrl, 'preprocessing trial %d from %d\n', i, ntrl);
     % do the preprocessing on the selected channels
     [dataout.trial{i}, dataout.label, dataout.time{i}, cfg] = preproc(data.trial{i}(rawindx,:), data.label(rawindx), data.fsample, cfg, data.offset(i));
   end % for all trials
-  progress('close');
+  ft_progress('close');
 
 else
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -445,9 +445,9 @@ else
 
     fprintf('processing channel { %s}\n', sprintf('''%s'' ', hdr.label{rawindx}));
 
-    progress('init', cfg.feedback, 'reading and preprocessing');
+    ft_progress('init', cfg.feedback, 'reading and preprocessing');
     for i=1:ntrl
-      progress(i/ntrl, 'reading and preprocessing trial %d from %d\n', i, ntrl);
+      ft_progress(i/ntrl, 'reading and preprocessing trial %d from %d\n', i, ntrl);
       % non-zero padding is used for filtering and line noise removal
       nsamples = cfg.trl(i,2)-cfg.trl(i,1)+1;
       if nsamples>padding
@@ -507,7 +507,7 @@ else
       end
 
     end % for all trials
-    progress('close');
+    ft_progress('close');
 
     dataout                    = [];
     dataout.hdr                = hdr;                  % header details of the datafile
