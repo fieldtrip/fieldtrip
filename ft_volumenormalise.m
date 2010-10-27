@@ -95,9 +95,9 @@ end
 
 % check if the required spm is in your path:
 if strcmpi(cfg.spmversion, 'spm2'),
-  hastoolbox('SPM2',1);
+  ft_hastoolbox('SPM2',1);
 elseif strcmpi(cfg.spmversion, 'spm8'),
-  hastoolbox('SPM8',1);
+  ft_hastoolbox('SPM8',1);
 end
 
 if ~isfield(cfg, 'template'),

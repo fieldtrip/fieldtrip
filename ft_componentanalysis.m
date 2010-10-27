@@ -138,13 +138,13 @@ if ~isfield(cfg.dss.denf, 'params'),      cfg.dss.denf.params   = [];           
 % check whether the required low-level toolboxes are installed
 switch cfg.method
   case 'fastica'
-    hastoolbox('fastica', 1);       % see http://www.cis.hut.fi/projects/ica/fastica
+    ft_hastoolbox('fastica', 1);       % see http://www.cis.hut.fi/projects/ica/fastica
   case {'runica', 'jader', 'varimax', 'binica', 'sobi'}
-    hastoolbox('eeglab', 1);        % see http://www.sccn.ucsd.edu/eeglab
+    ft_hastoolbox('eeglab', 1);        % see http://www.sccn.ucsd.edu/eeglab
   case 'parafac'
-    hastoolbox('nway', 1);          % see http://www.models.kvl.dk/source/nwaytoolbox
+    ft_hastoolbox('nway', 1);          % see http://www.models.kvl.dk/source/nwaytoolbox
   case 'dss'
-    hastoolbox('dss', 1);           % see http://www.cis.hut.fi/projects/dss
+    ft_hastoolbox('dss', 1);           % see http://www.cis.hut.fi/projects/dss
 end % cfg.method
 
 % default is to compute just as many components as there are channels in the data

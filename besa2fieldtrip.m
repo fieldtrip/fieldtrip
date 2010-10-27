@@ -154,7 +154,7 @@ elseif ischar(input)
   % (with contributions from Karsten, Vladimir and Robert), or the official
   % released functions by Karsten Hoechstetter from BESA. The functions in the
   % official toolbox have precedence.
-  hasbesa = hastoolbox('besa',1, 1);
+  hasbesa = ft_hastoolbox('besa',1, 1);
 
   type = filetype(input);
 

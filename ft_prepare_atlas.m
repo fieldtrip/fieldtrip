@@ -46,7 +46,7 @@ end
 
 if useafni
   % check whether the required AFNI toolbox is available
-  hastoolbox('afni', 1);
+  ft_hastoolbox('afni', 1);
 
   atlas = ft_read_mri(filename);
 

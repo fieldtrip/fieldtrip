@@ -96,10 +96,10 @@ if ~isfield(cfg, 'outputfile'), cfg.outputfile = [];             end
 %check whether the requested toolbox is present
 switch cfg.toolbox
   case 'biosig'
-    hastoolbox('biosig', 1); 
+    ft_hastoolbox('biosig', 1); 
     nnans  = cfg.order;
   case 'bsmart'
-    hastoolbox('bsmart', 1);
+    ft_hastoolbox('bsmart', 1);
     nnans  = 0;
   otherwise
     error('toolbox %s is not yet supported', cfg.toolbox);
