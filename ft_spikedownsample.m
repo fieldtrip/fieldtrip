@@ -84,7 +84,7 @@ function [cfg] = ft_spikedownsample(cfg)
 % $Id$
 
 fieldtripdefs
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the general defaults
 if ~isfield(cfg, 'dataset'),            cfg.dataset = [];                 end
@@ -108,11 +108,11 @@ if ~isfield(cfg, 'calibration')
 end
 
 % check that the input cfg is valid for this function
-cfg = checkconfig(cfg, 'required', {'method', 'calibration', 'dataformat'});
-cfg = checkconfig(cfg, 'forbidden', {'ADtoUV'});
+cfg = ft_checkconfig(cfg, 'required', {'method', 'calibration', 'dataformat'});
+cfg = ft_checkconfig(cfg, 'forbidden', {'ADtoUV'});
 
 % ensure that the preproc specific options are located in the preproc substructure
-cfg = checkconfig(cfg, 'createsubcfg',  {'preproc'});
+cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
 
 status = mkdir(cfg.output);
 if ~status
@@ -274,7 +274,7 @@ for i=chansel(:)'
 end % for each file
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
 
 % add the version details of this function call to the configuration
 try

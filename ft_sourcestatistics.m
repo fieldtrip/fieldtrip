@@ -200,9 +200,9 @@ elseif strcmp(cfg.implementation, 'new')
     end
 
     % check the input configuration
-    cfg = checkconfig(cfg, 'renamed',     {'approach',   'method'});
-    cfg = checkconfig(cfg, 'required',    {'method', 'parameter'});
-    cfg = checkconfig(cfg, 'forbidden',   {'transform'});
+    cfg = ft_checkconfig(cfg, 'renamed',     {'approach',   'method'});
+    cfg = ft_checkconfig(cfg, 'required',    {'method', 'parameter'});
+    cfg = ft_checkconfig(cfg, 'forbidden',   {'transform'});
 
     % set the defaults
     if ~isfield(cfg, 'channel'),     cfg.channel = 'all';            end

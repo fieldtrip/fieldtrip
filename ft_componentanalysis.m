@@ -63,8 +63,8 @@ fieldtripdefs
 tic;
 
 % check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'trackconfig', 'on');
-cfg = checkconfig(cfg, 'forbidden', {'detrend'});
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'forbidden', {'detrend'});
 
 % set the defaults
 if ~isfield(cfg, 'method'),        cfg.method  = 'runica';     end
@@ -422,7 +422,7 @@ comp.topolabel = data.label(:);
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add the version details of this function call to the configuration
 try

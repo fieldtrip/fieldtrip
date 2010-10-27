@@ -43,7 +43,7 @@ function [interp] = ft_channelrepair(cfg, data);
 
 fieldtripdefs
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the default configuration
 if ~isfield(cfg, 'neighbourdist'), cfg.neighbourdist = 4;         end
@@ -144,7 +144,7 @@ end
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % store the configuration of this function call, including that of the previous function call
 try

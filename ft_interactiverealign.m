@@ -47,8 +47,8 @@ function cfg = ft_interactiverealign(cfg)
 fieldtripdefs
 
 % check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'trackconfig', 'on');
-cfg = checkconfig(cfg, 'required',    {'individual', 'template'});
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'required',    {'individual', 'template'});
 
 if ~isfield(cfg.individual, 'vol'),              cfg.individual.vol = [];                   end
 if ~isfield(cfg.individual, 'elec'),             cfg.individual.elec = [];                  end
@@ -103,7 +103,7 @@ norm = tmp;
 clear tmp
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
 
 % add version information to the configuration
 try

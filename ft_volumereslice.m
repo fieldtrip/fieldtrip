@@ -39,7 +39,7 @@ function mri = ft_volumereslice(cfg, mri)
 % $Id$
 
 % check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the defaults
 if ~isfield(cfg, 'resolution');   cfg.resolution   = 1;         end % in physical units
@@ -61,7 +61,7 @@ end
 % check if the input data is valid for this function and ensure that the structures correctly describes a volume
 mri = ft_checkdata(mri, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
 
-cfg = checkconfig(cfg, 'required', {'xrange', 'yrange', 'zrange'});
+cfg = ft_checkconfig(cfg, 'required', {'xrange', 'yrange', 'zrange'});
 
 if ~isequal(cfg.downsample, 1)
   % downsample the anatomical volume

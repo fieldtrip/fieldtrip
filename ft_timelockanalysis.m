@@ -122,8 +122,8 @@ end
 data = ft_checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hastrialdef', 'yes', 'hasoffset', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'trackconfig', 'on');
-cfg = checkconfig(cfg, 'deprecated',  {'normalizecov', 'normalizevar'});
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'deprecated',  {'normalizecov', 'normalizevar'});
 
 % convert average to raw data for convenience, the output will be an average again
 % the purpose of this is to allow for repeated baseline correction, filtering and other preproc options that timelockanalysis supports
@@ -138,7 +138,7 @@ end
 ntrial = length(data.trial);
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure
-cfg = checkconfig(cfg, 'createsubcfg',  {'preproc'});
+cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
 
 % preprocess the data, i.e. apply filtering, baselinecorrection, etc.
 fprintf('applying preprocessing options\n');
@@ -499,7 +499,7 @@ end
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
 
 % add version information to the configuration
 try

@@ -34,7 +34,7 @@ function [dataout] = ft_channelnormalise(cfg, data);
 
 fieldtripdefs
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the defaults
 if ~isfield(cfg, 'trials'),        cfg.trials = 'all';            end
@@ -96,7 +96,7 @@ end
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % store the configuration of this function call, including that of the previous function call
 try

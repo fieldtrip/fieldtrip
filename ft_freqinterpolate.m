@@ -39,7 +39,7 @@ function [freq] = ft_freqinterpolate(cfg, freq)
 fieldtripdefs
 
 % check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the default values
 if ~isfield(cfg, 'method'),     cfg.method = 'nan';                     end
@@ -96,7 +96,7 @@ end % for each frequency range
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add the version details of this function call to the configuration
 try

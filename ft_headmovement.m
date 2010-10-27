@@ -38,7 +38,7 @@ fieldtripdefs
 if ~isfield(cfg, 'numclusters'), cfg.numclusters = 12; end
 
 % if neccessary convert dataset into headerfile and datafile
-cfg = checkconfig(cfg, 'dataset2files', {'yes'});
+cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
 hdr = ft_read_header(cfg.headerfile);
 
 %work with gradiometers in dewar coordinates, since HLCs are also 

@@ -128,7 +128,7 @@ function [data] = ft_rejectvisual(cfg, data);
 
 fieldtripdefs
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 if ~isfield(cfg, 'channel'),     cfg.channel = 'all';          end
 if ~isfield(cfg, 'trials'),      cfg.trials = 'all';           end
@@ -159,8 +159,8 @@ end
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hastrialdef', 'yes', 'hasoffset', 'yes');
 
 % for backward compatibility
-cfg = checkconfig(cfg, 'renamedval',  {'metric',  'absmax',  'maxabs'});
-cfg = checkconfig(cfg, 'renamedval',  {'method',  'absmax',  'maxabs'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'metric',  'absmax',  'maxabs'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'method',  'absmax',  'maxabs'});
 if ~isfield(cfg, 'metric') && any(strcmp(cfg.method, {'var', 'min', 'max', 'maxabs', 'range'}))
   cfg.metric = cfg.method;
   cfg.method = 'summary';
@@ -206,7 +206,7 @@ elseif (strcmp(cfg.latency, 'poststim'))
 end
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure
-cfg = checkconfig(cfg, 'createsubcfg',  {'preproc'});
+cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
 
 % apply scaling to the selected channel types to equate the absolute numbers (i.e. fT and uV)
 % make a seperate copy to prevent the original data from being scaled
@@ -350,7 +350,7 @@ end
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 try

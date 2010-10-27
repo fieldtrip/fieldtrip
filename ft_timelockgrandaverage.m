@@ -45,7 +45,7 @@ function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 
 fieldtripdefs
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the defaults
 if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];          end
@@ -173,7 +173,7 @@ end
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 try

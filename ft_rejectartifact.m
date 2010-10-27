@@ -87,8 +87,8 @@ if 0
 end
 
 % check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'trackconfig', 'on');
-cfg = checkconfig(cfg, 'dataset2files', {'yes'});
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
 
 % set the defaults
 if ~isfield(cfg, 'artfctdef'),              cfg.artfctdef        = [];         end
@@ -404,7 +404,7 @@ else
 end
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the artfctdef substructure
 try

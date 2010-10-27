@@ -76,22 +76,22 @@ if isfield(stat,'freq') && length(stat.freq) > 1
 end
 
 % old config options
-cfg = checkconfig(cfg, 'renamed',     {'hlmarkerseries',       'highlightsymbolseries'});
-cfg = checkconfig(cfg, 'renamed',     {'hlmarkersizeseries',   'highlightsizeseries'});
-cfg = checkconfig(cfg, 'renamed',     {'hlcolorpos',           'highlightcolorpos'});
-cfg = checkconfig(cfg, 'renamed',     {'hlcolorneg',           'highlightcolorneg'});
-cfg = checkconfig(cfg, 'deprecated',  {'hllinewidthseries'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'hlmarkerseries',       'highlightsymbolseries'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'hlmarkersizeseries',   'highlightsizeseries'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'hlcolorpos',           'highlightcolorpos'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'hlcolorneg',           'highlightcolorneg'});
+cfg = ft_checkconfig(cfg, 'deprecated',  {'hllinewidthseries'});
 
 % added several forbidden options  
-cfg = checkconfig(cfg, 'forbidden',  {'highlight'});
-cfg = checkconfig(cfg, 'forbidden',  {'highlightchannel'});
-cfg = checkconfig(cfg, 'forbidden',  {'highlightsymbol'});
-cfg = checkconfig(cfg, 'forbidden',  {'highlightcolor'});
-cfg = checkconfig(cfg, 'forbidden',  {'highlightsize'});
-cfg = checkconfig(cfg, 'forbidden',  {'highlightfontsize'});
-cfg = checkconfig(cfg, 'forbidden',  {'xlim'});
-cfg = checkconfig(cfg, 'forbidden',  {'comment'});
-cfg = checkconfig(cfg, 'forbidden',  {'commentpos'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'highlight'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'highlightchannel'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'highlightsymbol'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'highlightcolor'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'highlightsize'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'highlightfontsize'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'xlim'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'comment'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'commentpos'});
 
 
 % set the defaults

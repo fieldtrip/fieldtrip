@@ -96,10 +96,10 @@ if hasdata
   end
 else
   % check if the input cfg is valid for this function
-  cfg = checkconfig(cfg, 'dataset2files', {'yes'});
-  cfg = checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-  cfg = checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
-  cfg = checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
+  cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
+  cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
+  cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
+  cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 end
 
 % this is the default for cfg.channelcolormap

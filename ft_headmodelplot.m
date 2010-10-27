@@ -120,7 +120,7 @@ elseif nargin<2
 end
 
 % put the low-level options pertaining to the dipole grid in their own field
-cfg = checkconfig(cfg, 'createsubcfg',  {'grid'});
+cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 
 if ~isfield(cfg, 'vol') && ~isfield(cfg, 'hdmfile')
   cfg.vol = [];  % FIXME why is this empty setting neccessary?

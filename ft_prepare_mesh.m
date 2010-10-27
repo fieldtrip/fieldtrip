@@ -48,7 +48,7 @@ function bnd = ft_prepare_mesh(cfg, mri)
 %
 % $Id$
 
-cfg = checkconfig(cfg, 'forbidden', 'numcompartments');
+cfg = ft_checkconfig(cfg, 'forbidden', 'numcompartments');
 
 % set the defaults
 if ~isfield(cfg, 'downsample'),      cfg.downsample = 1;         end

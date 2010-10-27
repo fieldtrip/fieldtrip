@@ -66,7 +66,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 
 fieldtripdefs
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 cla
 
@@ -74,7 +74,7 @@ cla
 data = ft_checkdata(data);
 
 % check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});
 
 % Set the defaults:
 if ~isfield(cfg,'baseline'),        cfg.baseline = 'no';               end
@@ -128,8 +128,8 @@ if ~isfield(cfg,'channel')
   % set the default
   cfg.channel = 'all';
   % for backward compatibility
-  cfg = checkconfig(cfg, 'renamed', {'channelindex',  'channel'});
-  cfg = checkconfig(cfg, 'renamed', {'channelname',   'channel'});
+  cfg = ft_checkconfig(cfg, 'renamed', {'channelindex',  'channel'});
+  cfg = ft_checkconfig(cfg, 'renamed', {'channelname',   'channel'});
 end
 
 cfg.channel = ft_channelselection(cfg.channel, data.label);
@@ -349,7 +349,7 @@ end
 
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

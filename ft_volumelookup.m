@@ -98,11 +98,11 @@ if roi2mask
   if ~isfield(cfg, 'round2nearestvoxel'),  cfg.round2nearestvoxel = 'no';  end
 
   if iscell(cfg.roi) || ischar(cfg.roi)
-    checkconfig(cfg, 'forbidden', {'sphere' 'box'}, 'required', {'atlas' 'inputcoord'});
+    ft_checkconfig(cfg, 'forbidden', {'sphere' 'box'}, 'required', {'atlas' 'inputcoord'});
     isatlas = 1;
     ispoi = 0;
   elseif isnumeric(cfg.roi)
-    checkconfig(cfg, 'forbidden', {'atlas' 'inputcoord'});
+    ft_checkconfig(cfg, 'forbidden', {'atlas' 'inputcoord'});
     isatlas = 0;
     ispoi = 1;
   else
@@ -212,7 +212,7 @@ if roi2mask
 elseif mask2label
   % convert to source representation (easier to work with)
   volume = ft_checkdata(volume, 'datatype', 'source');
-  checkconfig(cfg, 'required', {'atlas' 'inputcoord'});
+  ft_checkconfig(cfg, 'required', {'atlas' 'inputcoord'});
 
   % set defaults
   if ~isfield(cfg, 'maxqueryrange'),  cfg.maxqueryrange = 1;  end

@@ -58,8 +58,8 @@ function [vol, cfg] = ft_prepare_singleshell(cfg, mri)
 
 fieldtripdefs
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
-cfg = checkconfig(cfg, 'renamed', {'spheremesh', 'numvertices'});
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'renamed', {'spheremesh', 'numvertices'});
 
 % set the defaults
 if ~isfield(cfg, 'smooth');        cfg.smooth = 5;          end % in voxels
@@ -90,4 +90,4 @@ end
 vol.type = 'nolte';
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');

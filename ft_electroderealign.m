@@ -116,9 +116,9 @@ if ~isfield(cfg, 'headshape'),     cfg.headshape = [];        end % for triangul
 if ~isfield(cfg, 'template'),      cfg.template = [];         end % for electrodes or fiducials, always with labels
 if ~isfield(cfg, 'warp'),          cfg.warp = 'rigidbody';    end
 
-cfg = checkconfig(cfg, 'renamedval', {'method', 'realignfiducials', 'fiducial'});
-cfg = checkconfig(cfg, 'renamedval', {'method', 'realignfiducial',  'fiducial'});
-cfg = checkconfig(cfg, 'forbidden', 'outline');
+cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducials', 'fiducial'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducial',  'fiducial'});
+cfg = ft_checkconfig(cfg, 'forbidden', 'outline');
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure

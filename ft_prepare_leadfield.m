@@ -105,7 +105,7 @@ function [grid, cfg] = ft_prepare_leadfield(cfg, data)
 % $Id$
 
 fieldtripdefs
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -133,7 +133,7 @@ else
 end
 
 % put the low-level options pertaining to the dipole grid in their own field
-cfg = checkconfig(cfg, 'createsubcfg',  {'grid'});
+cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 
 if strcmp(cfg.sel50p, 'yes') && strcmp(cfg.lbex, 'yes')
   error('subspace projection with either lbex or sel50p is mutually exclusive');
@@ -212,7 +212,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 try

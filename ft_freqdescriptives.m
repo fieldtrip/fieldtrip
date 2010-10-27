@@ -64,19 +64,19 @@ function [output] = ft_freqdescriptives(cfg, freq)
 fieldtripdefs
 
 % check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'trackconfig', 'on');
-cfg = checkconfig(cfg, 'renamed',     {'jacknife',   'jackknife'});
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'renamed',     {'jacknife',   'jackknife'});
 
 % throw warnings for the deprecated options
-cfg = checkconfig(cfg, 'deprecated', 'biascorrect');
-cfg = checkconfig(cfg, 'deprecated', 'channelcmb');
-cfg = checkconfig(cfg, 'deprecated', 'cohmethod');
-cfg = checkconfig(cfg, 'deprecated', 'combinemethod');
-cfg = checkconfig(cfg, 'deprecated', 'complex');
-cfg = checkconfig(cfg, 'deprecated', 'combinechan');
-cfg = checkconfig(cfg, 'deprecated', 'keepfourier');
-cfg = checkconfig(cfg, 'deprecated', 'partchan');
-cfg = checkconfig(cfg, 'deprecated', 'pseudovalue');
+cfg = ft_checkconfig(cfg, 'deprecated', 'biascorrect');
+cfg = ft_checkconfig(cfg, 'deprecated', 'channelcmb');
+cfg = ft_checkconfig(cfg, 'deprecated', 'cohmethod');
+cfg = ft_checkconfig(cfg, 'deprecated', 'combinemethod');
+cfg = ft_checkconfig(cfg, 'deprecated', 'complex');
+cfg = ft_checkconfig(cfg, 'deprecated', 'combinechan');
+cfg = ft_checkconfig(cfg, 'deprecated', 'keepfourier');
+cfg = ft_checkconfig(cfg, 'deprecated', 'partchan');
+cfg = ft_checkconfig(cfg, 'deprecated', 'pseudovalue');
 
 % set the defaults
 if ~isfield(cfg, 'feedback'),    cfg.feedback      = 'textbar'; end
@@ -198,7 +198,7 @@ try, output.powspctrmsem = powspctrmsem; end;
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 try

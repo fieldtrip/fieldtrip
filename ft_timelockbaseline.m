@@ -40,7 +40,7 @@ function [timelock] = ft_timelockbaseline(cfg, timelock);
 
 fieldtripdefs
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the defaults
 if ~isfield(cfg, 'baseline'),   cfg.baseline    = 'no';   end
@@ -151,7 +151,7 @@ end % ~strcmp(cfg.baseline, 'no')
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 try

@@ -55,7 +55,7 @@ function [vol, cfg] = ft_prepare_concentricspheres(cfg)
 
 fieldtripdefs
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the defaults
 if ~isfield(cfg, 'fitind'),        cfg.fitind = 'all';                            end
@@ -68,7 +68,7 @@ if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   cfg.headshape = struct(cfg.headshape);
 end
 
-cfg = checkconfig(cfg, 'forbidden', 'nonlinear');
+cfg = ft_checkconfig(cfg, 'forbidden', 'nonlinear');
 
 % get the surface describing the head shape
 headshape = prepare_mesh_headshape(cfg);
@@ -142,5 +142,5 @@ end
 vol.type = 'concentric';
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
 

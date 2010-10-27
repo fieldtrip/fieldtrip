@@ -122,7 +122,7 @@ data = ft_checkdata(data, 'datatype', 'raw', 'hastrialdef', 'yes');
 %check configurations
 switch cfg.toolbox
   case 'biosig'
-    cfg = checkconfig(cfg, 'required', 'mvarmethod');
+    cfg = ft_checkconfig(cfg, 'required', 'mvarmethod');
   case 'bsmart'
     %nothing extra required
 end
@@ -343,7 +343,7 @@ mvardata.fsampleorig = data.fsample;
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 cfg.version.name = mfilename('fullpath');

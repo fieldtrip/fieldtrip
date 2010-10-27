@@ -56,11 +56,11 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %fieldtripdefs
 
 % check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the defaults
 
-%FIXME do method specific calls to checkconfig
+%FIXME do method specific calls to ft_checkconfig
 if ~isfield(cfg, 'feedback'),   cfg.feedback   = 'none'; end
 if ~isfield(cfg, 'channel'),    cfg.channel    = 'all'; end
 if ~isfield(cfg, 'channelcmb'), cfg.channelcmb = {'all' 'all'};    end
@@ -629,7 +629,7 @@ if exist('nrpt', 'var'),  stat.dof  = nrpt;      end
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 cfg.version.name = mfilename('fullpath');

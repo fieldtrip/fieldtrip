@@ -143,7 +143,7 @@ function [source] = ft_dipolefitting(cfg, data)
 % $Id$
 
 fieldtripdefs
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the defaults
 if ~isfield(cfg, 'channel'),     cfg.channel = 'all';        end
@@ -172,7 +172,7 @@ end
 data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
 
 % put the low-level options pertaining to the dipole grid (used for initial scanning) in their own field
-cfg = checkconfig(cfg, 'createsubcfg',  {'grid'});
+cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 
 % the default for this depends on the data type
 if ~isfield(cfg, 'model'),
@@ -560,7 +560,7 @@ end
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add the version details of this function call to the configuration
 try

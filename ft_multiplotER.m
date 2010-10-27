@@ -103,7 +103,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 
 fieldtripdefs
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 clf
 
@@ -205,7 +205,7 @@ elseif (~isfield(cfg, 'yparam')) && (isfield(cfg, 'zparam'))
 end
 
 % Old style coherence plotting with cohtargetchannel is no longer supported
-cfg = checkconfig(cfg, 'unused',  {'cohtargetchannel'});
+cfg = ft_checkconfig(cfg, 'unused',  {'cohtargetchannel'});
 
 % Read or create the layout that will be used for plotting
 lay = ft_prepare_layout(cfg, varargin{1});
@@ -413,7 +413,7 @@ end
 
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

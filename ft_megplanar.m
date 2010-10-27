@@ -85,7 +85,7 @@ function [interp] = ft_megplanar(cfg, data)
 
 fieldtripdefs
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set defaults
 if ~isfield(cfg, 'inputfile'),      cfg.inputfile  = [];          end
@@ -146,8 +146,8 @@ if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
 end
 
 % put the low-level options pertaining to the dipole grid in their own field
-cfg = checkconfig(cfg, 'createsubcfg',  {'grid'});
-cfg = checkconfig(cfg, 'renamedvalue',  {'headshape', 'headmodel', []});
+cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
+cfg = ft_checkconfig(cfg, 'renamedvalue',  {'headshape', 'headmodel', []});
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
@@ -276,7 +276,7 @@ end
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % store the configuration of this function call, including that of the previous function call
 try

@@ -61,7 +61,7 @@ function [vol, cfg] = ft_prepare_localspheres(cfg, mri)
 
 fieldtripdefs
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the defaults
 if ~isfield(cfg, 'radius'),        cfg.radius = 8.5;        end
@@ -208,4 +208,4 @@ end % for all channels
 vol.type = 'multisphere';
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');

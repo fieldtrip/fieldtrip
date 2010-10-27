@@ -63,7 +63,7 @@ function [normalise] = ft_volumenormalise(cfg, interp)
 
 fieldtripdefs
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 %% ft_checkdata see below!!! %%
 
@@ -312,7 +312,7 @@ end
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % remember the normalisation parameters in the configuration
 cfg.spmparams = params;

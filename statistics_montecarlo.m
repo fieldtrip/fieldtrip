@@ -102,14 +102,14 @@ function [stat, cfg] = statistics_montecarlo(cfg, dat, design, varargin)
 fieldtripdefs
 
 % check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'renamed',     {'factor',           'ivar'});
-cfg = checkconfig(cfg, 'renamed',     {'unitfactor',       'uvar'});
-cfg = checkconfig(cfg, 'renamed',     {'repeatedmeasures', 'uvar'});
-cfg = checkconfig(cfg, 'renamedval',  {'clusterthreshold', 'nonparametric', 'nonparametric_individual'});
-cfg = checkconfig(cfg, 'renamedval',  {'correctm', 'yes', 'max'});
-cfg = checkconfig(cfg, 'required',    {'statistic'});
-cfg = checkconfig(cfg, 'forbidden',   {'ztransform', 'removemarginalmeans', 'randomfactor'});
-cfg = checkconfig(cfg, 'forbidden',   {'voxelthreshold', 'voxelstatistic'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'factor',           'ivar'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'unitfactor',       'uvar'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'repeatedmeasures', 'uvar'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'clusterthreshold', 'nonparametric', 'nonparametric_individual'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'yes', 'max'});
+cfg = ft_checkconfig(cfg, 'required',    {'statistic'});
+cfg = ft_checkconfig(cfg, 'forbidden',   {'ztransform', 'removemarginalmeans', 'randomfactor'});
+cfg = ft_checkconfig(cfg, 'forbidden',   {'voxelthreshold', 'voxelstatistic'});
 
 % set the defaults for the main function
 if ~isfield(cfg, 'alpha'),               cfg.alpha    = 0.05;            end
@@ -134,7 +134,7 @@ if strcmp(cfg.correctm, 'cluster')
   if ~isfield(cfg, 'clustertail'),         cfg.clustertail = cfg.tail;          end
 else
   % these options only apply to clustering, to ensure appropriate configs they are forbidden when _not_ clustering
-  cfg = checkconfig(cfg, 'unused', {'clusterstatistic', 'clusteralpha', 'clustercritval', 'clusterthreshold', 'clustertail', 'neighbours'});
+  cfg = ft_checkconfig(cfg, 'unused', {'clusterstatistic', 'clusteralpha', 'clustercritval', 'clusterthreshold', 'clustertail', 'neighbours'});
 end
 
 % for backward compatibility and other warnings relating correcttail
@@ -144,7 +144,7 @@ if isfield(cfg,'correctp') && strcmp(cfg.correctp,'yes')
   cfg.correcttail = 'prob';
   cfg = rmfield(cfg,'correctp');
 elseif isfield(cfg,'correctp') && strcmp(cfg.correctp,'no')
-  cfg = checkconfig(cfg, 'renamed', {'correctp', 'correcttail'});
+  cfg = ft_checkconfig(cfg, 'renamed', {'correctp', 'correcttail'});
 elseif strcmp(cfg.correcttail,'no') && cfg.tail==0 && cfg.alpha==0.05
   warning('doing a two-sided test without correcting p-values or alpha-level, p-values and alpha-level will reflect one-sided tests per tail')
 end

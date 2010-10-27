@@ -79,7 +79,7 @@ function [cfg, spike] = ft_spikedetection(cfg)
 % $Id$
 
 fieldtripdefs
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the general defaults
 if ~isfield(cfg, 'dataset'),            cfg.dataset = [];             end
@@ -116,7 +116,7 @@ switch cfg.method
 end
 
 % ensure that the preproc specific options are located in the preproc substructure
-cfg = checkconfig(cfg, 'createsubcfg',  {'preproc'});
+cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
 
 status = mkdir(cfg.output);
 if ~status
@@ -465,7 +465,7 @@ for i=chansel(:)'
 end % for each file
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
 
 % add the version details of this function call to the configuration
 try

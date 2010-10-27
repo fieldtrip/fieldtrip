@@ -66,7 +66,7 @@ if 1,
 
   fieldtripdefs
 
-  cfg = checkconfig(cfg, 'trackconfig', 'on');
+  cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
   % set the defaults
   if ~isfield(cfg, 'parameter'),      cfg.parameter = 'pow';     end
@@ -265,7 +265,7 @@ if 1,
 
   cfg.outputfile;
   % get the output cfg
-  cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+  cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
   % add version information to the configuration
   try
@@ -295,8 +295,8 @@ else
 
   fieldtripdefs
 
-  cfg = checkconfig(cfg, 'trackconfig', 'on');
-  cfg = checkconfig(cfg, 'deprecated', {'concatenate', 'randomization', 'permutation', 'c1', 'c2'});
+  cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+  cfg = ft_checkconfig(cfg, 'deprecated', {'concatenate', 'randomization', 'permutation', 'c1', 'c2'});
   
   % set the defaults
   if ~isfield(cfg, 'parameter'),      cfg.parameter = 'pow';     end
@@ -348,7 +348,7 @@ else
  
   cfg.outputfile;
   % get the output cfg
-  cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+  cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
   % add version information to the configuration
   try

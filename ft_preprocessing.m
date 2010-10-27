@@ -182,7 +182,7 @@ elseif nargin==1 && isequal(cfg, 'guidelines')
   return
 end
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the defaults
 if ~isfield(cfg, 'method'),       cfg.method = 'trial';         end
@@ -231,11 +231,11 @@ if isfield(cfg, 'lnfilter') && strcmp(cfg.lnfilter, 'yes')
 end
 
 % this option has been renamed?
-cfg = checkconfig(cfg, 'renamed', {'output', 'export'});
+cfg = ft_checkconfig(cfg, 'renamed', {'output', 'export'});
 
 %this relates to a previous fix to handle 32 bit neuroscan data
 if isfield(cfg, 'nsdf'),
-  %FIXME this should be handled by checkconfig, but checkconfig does not allow yet for
+  %FIXME this should be handled by ft_checkconfig, but ft_checkconfig does not allow yet for
   %specific errors in the case of forbidden fields
   error('the use of cfg.nsdf is deprecated. fieldtrip tries to determine the bit resolution automatically. you can overrule this by specifying cfg.dataformat and cfg.headerformat. see: http://fieldtrip.fcdonders.nl/faq/i_have_problems_reading_in_neuroscan_.cnt_files._how_can_i_fix_this');
 end
@@ -267,7 +267,7 @@ if hasdata
   data = ft_checkdata(data, 'datatype', 'raw', 'hasoffset', 'yes', 'hastrialdef', 'yes');
 
   % check if the input cfg is valid for this function
-  cfg = checkconfig(cfg, 'forbidden',   {'trl', 'dataset', 'datafile', 'headerfile'});
+  cfg = ft_checkconfig(cfg, 'forbidden',   {'trl', 'dataset', 'datafile', 'headerfile'});
 
   if cfg.padding>0
     error('cfg.padding should be zero, since filter padding is only possible while reading the data from file');
@@ -316,10 +316,10 @@ else
   end
 
   % check if the input cfg is valid for this function
-  cfg = checkconfig(cfg, 'dataset2files', {'yes'});
-  cfg = checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-  cfg = checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
-  cfg = checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
+  cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
+  cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
+  cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
+  cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
   % read the header
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
@@ -532,7 +532,7 @@ end % if hasdata
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add the version details of this function call to the configuration
 try

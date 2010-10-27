@@ -100,7 +100,7 @@ function [data] = ft_connectivitysimulation(cfg)
 % $Id$
 
 % check input configuration for the generally applicable options
-cfg = checkconfig(cfg, 'required', {'nsignal' 'ntrials' 'triallength' 'fsample' 'method'});
+cfg = ft_checkconfig(cfg, 'required', {'nsignal' 'ntrials' 'triallength' 'fsample' 'method'});
 
 % method specific defaults
 switch cfg.method
@@ -110,15 +110,15 @@ case {'linear_mix'}
   if ~isfield(cfg, 'bpfreq'),   cfg.bpfreq   = [15 25]; end
   if ~isfield(cfg, 'blc'),      cfg.blc      = 'yes';   end
   if ~isfield(cfg, 'absnoise'), cfg.absnoise = 1;       end
-  cfg = checkconfig(cfg, 'required', {'mix' 'delay'});
+  cfg = ft_checkconfig(cfg, 'required', {'mix' 'delay'});
 case {'mvnrnd'}
   if ~isfield(cfg, 'bpfilter'), cfg.bpfilter = 'yes';   end
   if ~isfield(cfg, 'bpfreq'),   cfg.bpfreq   = [15 25]; end
   if ~isfield(cfg, 'blc'),      cfg.blc      = 'yes';   end
   if ~isfield(cfg, 'absnoise'), cfg.absnoise = 1;       end
-  cfg = checkconfig(cfg, 'required', {'covmat' 'delay'}); 
+  cfg = ft_checkconfig(cfg, 'required', {'covmat' 'delay'}); 
 case {'ar'}
-  cfg = checkconfig(cfg, 'required', {'params' 'noisecov'});
+  cfg = ft_checkconfig(cfg, 'required', {'params' 'noisecov'});
 otherwise
 end
 

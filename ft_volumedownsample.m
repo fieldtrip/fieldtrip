@@ -41,8 +41,8 @@ fieldtripdefs
 %% ft_checkdata see below!!! %%
 
 % check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'trackconfig', 'on');
-cfg = checkconfig(cfg, 'unused',  {'voxelcoord'});
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'unused',  {'voxelcoord'});
 
 if ~isfield(cfg, 'spmversion'), cfg.spmversion = 'spm8'; end
 if ~isfield(cfg, 'downsample'), cfg.downsample = 1;     end
@@ -145,7 +145,7 @@ end
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 try

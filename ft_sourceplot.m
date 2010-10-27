@@ -148,7 +148,7 @@ function [cfg] = ft_sourceplot(cfg, data)
 
 fieldtripdefs
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 %%% ft_checkdata see below!!! %%%
 
@@ -1031,7 +1031,7 @@ title(cfg.title);
 set(gcf, 'renderer', cfg.renderer);
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % handle_ortho makes an overlay of 3D anatomical, functional and probability

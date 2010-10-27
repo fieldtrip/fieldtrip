@@ -69,7 +69,7 @@ end
 timelock = ft_checkdata(timelock, 'datatype', 'timelock');
 
 % check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});
 
 % Read or create the layout that will be used for plotting:
 lay = ft_prepare_layout(cfg, timelock);

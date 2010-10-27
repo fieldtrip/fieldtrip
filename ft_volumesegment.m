@@ -85,7 +85,7 @@ function [segment] = ft_volumesegment(cfg, mri)
 
 fieldtripdefs
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 %% ft_checkdata see below!!! %%
 
@@ -345,7 +345,7 @@ if length(V)>2, segment.csf       = V(3).dat; end
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
 
 % add version information to the configuration
 try

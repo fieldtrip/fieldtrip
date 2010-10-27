@@ -84,8 +84,8 @@ function [cfg] = ft_definetrial(cfg);
 fieldtripdefs
 
 % check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'trackconfig', 'on');
-cfg = checkconfig(cfg, 'dataset2files', {'yes'});
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
 
 if ~isfield(cfg, 'trl') && (~isfield(cfg, 'trialfun') || isempty(cfg.trialfun))
   % there used to be other system specific trialfuns in previous versions
@@ -143,7 +143,7 @@ fprintf('created %d trials\n', size(trl,1));
 cfg.trl = trl;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
 
 % add information about the version of this function to the configuration
 try

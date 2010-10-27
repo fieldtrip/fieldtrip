@@ -42,7 +42,7 @@ if nargin ~= 3
     error('two conditions required for input');
 end
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % check if the input data is valid for this function
 varargin{1} = ft_checkdata(varargin{1}, 'datatype', 'freq', 'feedback', 'yes');

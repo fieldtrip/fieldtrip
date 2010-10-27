@@ -72,9 +72,9 @@ end
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', {'raw', 'freq', 'timelock'}, 'feedback', 'yes', 'senstype', {'ctf151_planar', 'ctf275_planar', 'neuromag122', 'neuromag306', 'bti248_planar', 'bti148_planar', 'itab153_planar'});
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
-cfg = checkconfig(cfg, 'forbidden', {'combinegrad'});
-cfg = checkconfig(cfg, 'deprecated', {'baseline'});
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'forbidden', {'combinegrad'});
+cfg = ft_checkconfig(cfg, 'deprecated', {'baseline'});
 
 if isfield(cfg, 'baseline')
   warning('only supporting cfg.baseline for backwards compatibility, please update your cfg');
@@ -254,7 +254,7 @@ try, data = rmfield(data, 'labelcmb');    end
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % store the configuration of this function call, including that of the previous function call
 try

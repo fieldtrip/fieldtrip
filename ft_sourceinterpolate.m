@@ -55,8 +55,8 @@ fieldtripdefs
 %% ft_checkdata see below!!! %%
 
 % check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'trackconfig', 'on');
-cfg = checkconfig(cfg, 'unused',  {'keepinside'});
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'unused',  {'keepinside'});
 
 % set the defaults
 if ~isfield(cfg, 'parameter'),    cfg.parameter    = 'all';     end
@@ -69,7 +69,7 @@ if ~isfield(cfg, 'outputfile'),   cfg.outputfile   = [];        end
 
 % if ~isfield(cfg, 'sourceunits');  cfg.sourceunits  = [];        end % this is deprecated, since now autodetermined
 % if ~isfield(cfg, 'mriunits');     cfg.mriunits     = [];        end % this is deprecated, since now autodetermined
-cfg = checkconfig(cfg, 'deprecated', {'sourceunits', 'mriunits'});
+cfg = ft_checkconfig(cfg, 'deprecated', {'sourceunits', 'mriunits'});
 
 hasdata = (nargin>2);
 
@@ -234,7 +234,7 @@ end
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 try

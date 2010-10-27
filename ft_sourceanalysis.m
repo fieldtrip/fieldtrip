@@ -191,7 +191,7 @@ fieldtripdefs
 % set a timer to determine how long the sourceanalysis takes in total
 tic;
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set defaults for optional cfg.inputfile, cfg.outputfile
 if ~isfield(cfg, 'inputfile'),  cfg.inputfile                   = [];    end
@@ -215,14 +215,14 @@ if nargin>2
 end
 
 % check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'renamed',     {'jacknife',   'jackknife'});
-cfg = checkconfig(cfg, 'renamed',     {'refchannel', 'refchan'});
-cfg = checkconfig(cfg, 'renamedval',  {'method', 'power',           'dics'});
-cfg = checkconfig(cfg, 'renamedval',  {'method', 'coh_refchan',     'dics'});
-cfg = checkconfig(cfg, 'renamedval',  {'method', 'coh_refdip',      'dics'});
-cfg = checkconfig(cfg, 'renamedval',  {'method', 'dics_cohrefchan', 'dics'});
-cfg = checkconfig(cfg, 'renamedval',  {'method', 'dics_cohrefdip',  'dics'});
-cfg = checkconfig(cfg, 'forbidden',   {'parallel'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'jacknife',   'jackknife'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'refchannel', 'refchan'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'power',           'dics'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'coh_refchan',     'dics'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'coh_refdip',      'dics'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'dics_cohrefchan', 'dics'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'dics_cohrefdip',  'dics'});
+cfg = ft_checkconfig(cfg, 'forbidden',   {'parallel'});
 
 % determine the type of input data
 if isfield(data, 'freq')
@@ -273,7 +273,7 @@ if ~isfield(cfg, 'prewhiten'),        cfg.prewhiten = 'no';       end
 
 % put the low-level options pertaining to the source reconstruction method in their own field
 % put the low-level options pertaining to the dipole grid in their own field
-cfg = checkconfig(cfg, 'createsubcfg',  {cfg.method, 'grid'});
+cfg = ft_checkconfig(cfg, 'createsubcfg',  {cfg.method, 'grid'});
 
 convertfreq = 0;
 convertcomp = 0;
@@ -1004,7 +1004,7 @@ end
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 try

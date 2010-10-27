@@ -104,7 +104,7 @@ function [interp] = ft_megrealign(cfg, data);
 
 fieldtripdefs
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the default configuration
 if ~isfield(cfg, 'headshape'),     cfg.headshape = [];            end
@@ -133,15 +133,15 @@ end
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hastrialdef', 'yes', 'ismeg', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'renamed',     {'plot3d',      'feedback'});
-cfg = checkconfig(cfg, 'renamedval',  {'headshape',   'headmodel', []});
-cfg = checkconfig(cfg, 'required',    {'inwardshift', 'template'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'plot3d',      'feedback'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'headshape',   'headmodel', []});
+cfg = ft_checkconfig(cfg, 'required',    {'inwardshift', 'template'});
 
 %do realignment per trial
 pertrial = all(ismember({'nasX';'nasY';'nasZ';'lpaX';'lpaY';'lpaZ';'rpaX';'rpaY';'rpaZ'}, data.label));
 
 % put the low-level options pertaining to the dipole grid in their own field
-cfg = checkconfig(cfg, 'createsubcfg',  {'grid'});
+cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
@@ -472,7 +472,7 @@ end
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % store the configuration of this function call, including that of the previous function call
 try

@@ -87,14 +87,14 @@ end
 data = ft_checkdata(data, 'datatype', {'raw', 'comp', 'mvar'}, 'feedback', 'yes', 'hasoffset', 'yes', 'hastrialdef', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'trackconfig', 'on');
-cfg = checkconfig(cfg, 'renamed',     {'label', 'channel'});
-cfg = checkconfig(cfg, 'renamed',     {'sgn',   'channel'});
-cfg = checkconfig(cfg, 'renamed',     {'labelcmb', 'channelcmb'});
-cfg = checkconfig(cfg, 'renamed',     {'sgncmb',   'channelcmb'});
-cfg = checkconfig(cfg, 'required',    {'method'});
-cfg = checkconfig(cfg, 'renamedval',  {'method', 'fft',    'mtmfft'});
-cfg = checkconfig(cfg, 'renamedval',  {'method', 'convol', 'mtmconvol'});
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'renamed',     {'label', 'channel'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'sgn',   'channel'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'labelcmb', 'channelcmb'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'sgncmb',   'channelcmb'});
+cfg = ft_checkconfig(cfg, 'required',    {'method'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'fft',    'mtmfft'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'convol', 'mtmconvol'});
 
 % select trials of interest
 if ~isfield(cfg, 'trials'),   cfg.trials = 'all';  end % set the default
@@ -490,7 +490,7 @@ else
   cfg.outputfile;
   
   % get the output cfg
-  cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+  cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
   
   try, freq.grad = data.grad; end   % remember the gradiometer array
   try, freq.elec = data.elec; end   % remember the electrode array

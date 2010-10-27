@@ -67,7 +67,7 @@ function [data] = ft_resampledata(cfg, data)
 
 fieldtripdefs
 
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the defaults
 if ~isfield(cfg, 'resamplefs'), cfg.resamplefs = [];      end
@@ -240,7 +240,7 @@ fprintf('original sampling rate = %d Hz\nnew sampling rate = %d Hz\n', cfg.origf
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 try

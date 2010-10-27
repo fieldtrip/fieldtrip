@@ -61,9 +61,9 @@ function [cfg, artifact] = ft_artifact_threshold(cfg,data)
 fieldtripdefs
 
 % check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'trackconfig', 'on');
-cfg = checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
-cfg = checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
 % set default rejection parameters for clip artifacts if necessary
 if ~isfield(cfg, 'artfctdef'),          cfg.artfctdef            = [];  end
@@ -113,12 +113,12 @@ end
 
 if hasdata 
     %   isfetch = 1; 
-  cfg = checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
+  cfg = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
   hdr = fetch_header(data);
 else
     %   isfetch = 0;
-  cfg = checkconfig(cfg, 'dataset2files', {'yes'});
-  cfg = checkconfig(cfg, 'required', {'headerfile', 'datafile'});
+  cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
+  cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
 end 
 
@@ -174,7 +174,7 @@ cfg.artfctdef.threshold.artifact = artifact;        % detected artifacts
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
 
 % add version information to the configuration
 try

@@ -65,8 +65,8 @@ function [mri] = ft_volumerealign(cfg, mri);
 
 fieldtripdefs
 
-cfg = checkconfig(cfg, 'renamedval', {'method', 'realignfiducial', 'fiducial'});
-cfg = checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducial', 'fiducial'});
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the defaults
 if ~isfield(cfg, 'fiducial'),  cfg.fiducial = [];         end
@@ -221,7 +221,7 @@ mri.transform = realign * mri.transform;
 cfg.outputfile;
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add version information to the configuration
 try

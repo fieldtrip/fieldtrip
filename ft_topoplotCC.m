@@ -58,8 +58,8 @@ fieldtripdefs
 freq = ft_checkdata(freq, 'cmbrepresentation', 'sparse');
 
 % check if the input configuration is valid for this function
-cfg = checkconfig(cfg, 'trackconfig', 'on');
-cfg = checkconfig(cfg, 'required', {'foi', 'layout'});
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'required', {'foi', 'layout'});
 
 % set the defaults
 if ~isfield(cfg, 'feedback'),   cfg.feedback = 'text';        end
@@ -224,7 +224,7 @@ progress('close');
 axis tight
 
 % get the output cfg
-cfg = checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 if nargout<1
   clear cfg
