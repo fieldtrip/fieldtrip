@@ -23,7 +23,7 @@ function [dipout] = beamformer_lcmv(dip, grad, vol, dat, Cy, varargin)
 % Additional options should be specified in key-value pairs and can be
 %  'lambda'           = regularisation parameter
 %  'powmethod'        = can be 'trace' or 'lambda1'
-%  'feedback'         = give progress indication, can be 'text', 'gui' or 'none' (default)
+%  'feedback'         = give ft_progress indication, can be 'text', 'gui' or 'none' (default)
 %  'fixedori'         = use fixed or free orientation,                 can be 'yes' or 'no'
 %  'projectnoise'     = project noise estimate through filter,         can be 'yes' or 'no'
 %  'projectmom'       = project the dipole moment timecourse on the direction of maximal power, can be 'yes' or 'no'
@@ -192,7 +192,7 @@ elseif ~isempty(subspace)
 end
 
 % start the scanning with the proper metric
-progress('init', feedback, 'scanning grid');
+ft_progress('init', feedback, 'scanning grid');
 
 for i=1:size(dip.pos,1)
   if isfield(dip, 'leadfield') && isfield(dip, 'mom')
@@ -295,10 +295,10 @@ for i=1:size(dip.pos,1)
       dipout.leadfield{i} = lf;
     end
   end
-  progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
+  ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
 end
 
-progress('close');
+ft_progress('close');
 
 dipout.inside  = dip.originside;
 dipout.outside = dip.origoutside;

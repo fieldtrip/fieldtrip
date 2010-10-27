@@ -26,10 +26,10 @@ if isfield(dip, 'subspace')
   fprintf('using subspace projection\n');
 end
 
-progress('init', feedback, 'computing inverse');
+ft_progress('init', feedback, 'computing inverse');
 for i=1:length(dip.inside)
 
-  progress(i/length(dip.inside), 'computing inverse %d/%d\n', i, length(dip.inside));
+  ft_progress(i/length(dip.inside), 'computing inverse %d/%d\n', i, length(dip.inside));
   i = dip.inside(i);
   
   if isfield(dip, 'leadfield')
@@ -56,7 +56,7 @@ for i=1:length(dip.inside)
   % FIXME is this normalization correct?
   pow(i) = mean(sum(mom{i}(:).^2, 1));
 end
-progress('close');
+ft_progress('close');
 
 % locations outside the head get assigned an 
 for i=dip.outside

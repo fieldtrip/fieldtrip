@@ -60,10 +60,10 @@ ps = us * us';
 % allocate space to hold the result
 jr = zeros(length(dip.inside)+length(dip.outside),1);
 
-progress('init', feedback, 'computing music metric');
+ft_progress('init', feedback, 'computing music metric');
 for i=1:length(dip.inside)
 
-  progress(i/length(dip.inside), 'computing music metric %d/%d\n', i, length(dip.inside));
+  ft_progress(i/length(dip.inside), 'computing music metric %d/%d\n', i, length(dip.inside));
   i = dip.inside(i);
 
   if isfield(dip, 'leadfield')
@@ -84,7 +84,7 @@ for i=1:length(dip.inside)
   % and look for p sharp spikes..."
 
 end
-progress('close');
+ft_progress('close');
 
 % locations outside the head get assigned a nan
 jr(dip.outside) = nan;

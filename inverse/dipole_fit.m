@@ -71,7 +71,7 @@ weight         = keyval('weight',         varargin); % for maximum likelihood es
 
 if isempty(optimfun)
   % determine whether the Matlab Optimization toolbox is available and can be used
-  if hastoolbox('optim')
+  if ft_hastoolbox('optim')
     optimfun = @fminunc;
   else
     optimfun = @fminsearch;

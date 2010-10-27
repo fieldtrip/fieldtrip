@@ -26,7 +26,7 @@ function [dipout] = beamformer_dics(dip, grad, vol, dat, Cf, varargin)
 %  'refdip'           = location of dipole with which coherence is computed
 %  'lambda'           = regularisation parameter
 %  'powmethod'        = can be 'trace' or 'lambda1'
-%  'feedback'         = give progress indication, can be 'text', 'gui' or 'none'
+%  'feedback'         = give ft_progress indication, can be 'text', 'gui' or 'none'
 %  'fixedori'         = use fixed or free orientation,                 can be 'yes' or 'no'
 %  'projectnoise'     = project noise estimate through filter,         can be 'yes' or 'no'
 %  'realfilter'       = construct a real-valued filter,                can be 'yes' or 'no'
@@ -199,7 +199,7 @@ if isfield(dip, 'subspace')
 end
 
 % start the scanning with the proper metric
-progress('init', feedback, 'scanning grid');
+ft_progress('init', feedback, 'scanning grid');
 switch submethod
 
   case 'dics_power'
@@ -268,7 +268,7 @@ switch submethod
       if keepleadfield
         dipout.leadfield{i} = lf;
       end
-      progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
+      ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
     end
 
   case 'dics_refchan'
@@ -340,7 +340,7 @@ switch submethod
       if keepleadfield
         dipout.leadfield{i} = lf;
       end
-      progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
+      ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
     end
 
   case 'dics_refdip'
@@ -406,12 +406,12 @@ switch submethod
       if keepleadfield
         dipout.leadfield{i} = lf2;
       end
-      progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
+      ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
     end
 
 end % switch submethod
 
-progress('close');
+ft_progress('close');
 
 dipout.inside  = dip.originside;
 dipout.outside = dip.origoutside;
