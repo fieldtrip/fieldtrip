@@ -187,7 +187,7 @@ switch spikeformat
     
   case 'neuroshare' % NOTE: still under development
     % check that the required neuroshare toolbox is available
-    hastoolbox('neuroshare', 1);
+    ft_hastoolbox('neuroshare', 1);
 
     tmp = read_neuroshare(filename, 'readspike', 'yes');
     spike.label = {tmp.hdr.entityinfo(tmp.list.segment).EntityLabel};

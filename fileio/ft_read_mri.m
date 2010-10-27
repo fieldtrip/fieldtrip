@@ -34,12 +34,12 @@ function [mri] = ft_read_mri(filename)
 % $Id$
 
 % test for the presence of some external functions from other toolboxes
-hasmri  = hastoolbox('mri');     % from Darren Weber, see http://eeg.sourceforge.net/
-hasspm2 = hastoolbox('spm2');    % see http://www.fil.ion.ucl.ac.uk/spm/
-hasspm5 = hastoolbox('spm5');    % see http://www.fil.ion.ucl.ac.uk/spm/
-hasspm8 = hastoolbox('spm8');    % see http://www.fil.ion.ucl.ac.uk/spm/
+hasmri  = ft_hastoolbox('mri');     % from Darren Weber, see http://eeg.sourceforge.net/
+hasspm2 = ft_hastoolbox('spm2');    % see http://www.fil.ion.ucl.ac.uk/spm/
+hasspm5 = ft_hastoolbox('spm5');    % see http://www.fil.ion.ucl.ac.uk/spm/
+hasspm8 = ft_hastoolbox('spm8');    % see http://www.fil.ion.ucl.ac.uk/spm/
 hasspm = (hasspm2 || hasspm5 || hasspm8);
-hasafni = hastoolbox('afni');    % see http://afni.nimh.nih.gov/
+hasafni = ft_hastoolbox('afni');    % see http://afni.nimh.nih.gov/
 
 % test whether the file exists
 if ~exist(filename)
@@ -136,7 +136,7 @@ elseif (ft_filetype(filename, 'afni_brik') || ft_filetype(filename, 'afni_head')
   transform(2,4) = -dim(2) - transform(2,4);
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif ft_filetype(filename, 'neuromag_fif') && hastoolbox('mne')
+elseif ft_filetype(filename, 'neuromag_fif') && ft_hastoolbox('mne')
   % use the mne functions to read the Neuromag MRI
   hdr = fiff_read_mri(filename);
   img = cat(3, hdr.slices.data);
@@ -149,7 +149,7 @@ elseif ft_filetype(filename, 'neuromag_fif') && hastoolbox('mne')
   end
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif ft_filetype(filename, 'neuromag_fif') && hastoolbox('meg_pd')
+elseif ft_filetype(filename, 'neuromag_fif') && ft_hastoolbox('meg_pd')
   % use the meg_pd functions to read the Neuromag MRI
   [img,coords] = loadmri(filename);
   dev = loadtrans(filename,'MRI','HEAD');
@@ -233,7 +233,7 @@ elseif ft_filetype(filename, 'dicom')
     transform(3,3) = dz;
   end
 elseif ft_filetype(filename, 'freesurfer_mgz')
-  hastoolbox('freesurfer', 1);
+  ft_hastoolbox('freesurfer', 1);
   tmp = MRIread(filename);
   img = permute(tmp.vol, [2 1 3]); %FIXME although this is probably correct
   %see the help of MRIread, anecdotally columns and rows seem to need a swap

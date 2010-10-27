@@ -253,7 +253,7 @@ switch fileformat
 
   case {'freesurfer_triangle_binary', 'freesurfer_quadrangle'}
     % the freesurfer toolbox is required for this
-    hastoolbox('freesurfer', 1);
+    ft_hastoolbox('freesurfer', 1);
     [pnt, tri] = read_surf(filename);
     if min(tri(:)) == 0
       % start counting from 1

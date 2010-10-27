@@ -269,7 +269,7 @@ switch headerformat
 
   case 'bci2000_dat'
     % this requires the load_bcidat mex file to be present on the path
-    hastoolbox('BCI2000', 1);
+    ft_hastoolbox('BCI2000', 1);
     % this is inefficient, since it reads the complete data
     [signal, states, parameters, total_samples] = load_bcidat(filename);
     % convert into a FieldTrip-like header
@@ -338,7 +338,7 @@ switch headerformat
 
   case {'biosig' 'gdf'}
     % use the biosig toolbox if available
-    hastoolbox('BIOSIG', 1);
+    ft_hastoolbox('BIOSIG', 1);
     hdr = read_biosig_header(filename);
 
   case {'biosemi_bdf', 'bham_bdf'}
@@ -387,7 +387,7 @@ switch headerformat
 
   case 'ced_son'
     % check that the required low-level toolbox is available
-    hastoolbox('neuroshare', 1);
+    ft_hastoolbox('neuroshare', 1);
     % use the reading function supplied by Gijs van Elswijk
     orig = read_ced_son(filename,'readevents','no','readdata','no');
     orig = orig.header;
@@ -415,7 +415,7 @@ switch headerformat
 
   case {'ctf_ds', 'ctf_meg4', 'ctf_res4'}
     % check the presence of the required low-level toolbox
-    hastoolbox('ctf', 1);
+    ft_hastoolbox('ctf', 1);
     orig             = readCTFds(filename);
     hdr.Fs           = orig.res4.sample_rate;
     hdr.nChans       = orig.res4.no_channels;
@@ -525,7 +525,7 @@ switch headerformat
 
   case 'ctf_read_res4'
     % check that the required low-level toolbos ix available
-    hastoolbox('eegsf', 1);
+    ft_hastoolbox('eegsf', 1);
     % read it using the CTF importer from the NIH and Daren Weber
     orig = ctf_read_res4(filename, 0);
     % convert the header into a structure that FieldTrip understands
@@ -562,7 +562,7 @@ switch headerformat
 
   case 'eep_avr'
     % check that the required low-level toolbox is available
-    hastoolbox('eeprobe', 1);
+    ft_hastoolbox('eeprobe', 1);
     % read the whole average and keep only header info (it is a bit silly, but the easiest to do here)
     hdr = read_eep_avr(filename);
     hdr.Fs          = hdr.rate;
@@ -610,7 +610,7 @@ switch headerformat
 
   case 'eep_cnt'
     % check that the required low-level toolbox is available
-    hastoolbox('eeprobe', 1);
+    ft_hastoolbox('eeprobe', 1);
     % read the first sample from the continous data, which will also return the header
     hdr = read_eep_cnt(filename, 1, 1);
     hdr.Fs          = hdr.rate;
@@ -952,7 +952,7 @@ switch headerformat
 
   case {'neuromag_fif' 'neuromag_mne'}
     % check that the required low-level toolbox is available
-    hastoolbox('mne', 1);
+    ft_hastoolbox('mne', 1);
 
     orig = fiff_read_meas_info(filename);
     % convert to fieldtrip format header
@@ -1044,7 +1044,7 @@ switch headerformat
 
   case 'neuromag_mex'
     % check that the required low-level toolbox is available
-    hastoolbox('meg-pd', 1);
+    ft_hastoolbox('meg-pd', 1);
     rawdata('any',filename);
     rawdata('goto', 0);
     megmodel('head',[0 0 0],filename);
@@ -1308,7 +1308,7 @@ switch headerformat
 
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'yokogawa_mrk'}
     % chek that the required low-level toolbox is available
-    hastoolbox('yokogawa', 1);
+    ft_hastoolbox('yokogawa', 1);
     hdr = read_yokogawa_header(filename);
     % add a gradiometer structure for forward and inverse modelling
     hdr.grad = yokogawa2grad(hdr);
@@ -1318,7 +1318,7 @@ switch headerformat
 
   case 'neuroshare' % NOTE: still under development
     % check that the required neuroshare toolbox is available
-    hastoolbox('neuroshare', 1);
+    ft_hastoolbox('neuroshare', 1);
 
     tmp = read_neuroshare(filename);
     hdr.Fs          = tmp.hdr.seginfo(1).SampleRate; % take the sampling freq from the first channel (assuming this is the same for all chans)
@@ -1330,7 +1330,7 @@ switch headerformat
     hdr.orig        = tmp; % remember the original header
 
   otherwise
-    if strcmp(fallback, 'biosig') && hastoolbox('BIOSIG', 1)
+    if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
       hdr = read_biosig_header(filename);
     else
       error('unsupported header format (%s)', headerformat);

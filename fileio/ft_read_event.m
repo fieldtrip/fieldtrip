@@ -182,7 +182,7 @@ switch eventformat
 
   case 'bci2000_dat'
     % this requires the load_bcidat mex file to be present on the path
-    hastoolbox('BCI2000', 1);
+    ft_hastoolbox('BCI2000', 1);
 
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -382,7 +382,7 @@ switch eventformat
 
   case 'ced_son'
     % check that the required low-level toolbox is available
-    hastoolbox('neuroshare', 1);
+    ft_hastoolbox('neuroshare', 1);
     orig = read_ced_son(filename,'readevents','yes');
     event = struct('type',     {orig.events.type},...
       'sample',   {orig.events.sample},...
@@ -504,7 +504,7 @@ switch eventformat
 
   case 'eep_avr'
     % check that the required low-level toolbox is available
-    hastoolbox('eeprobe', 1);
+    ft_hastoolbox('eeprobe', 1);
     % the headerfile and datafile are the same
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -517,7 +517,7 @@ switch eventformat
 
   case 'eep_cnt'
     % check that the required low-level toolbox is available
-    hastoolbox('eeprobe', 1);
+    ft_hastoolbox('eeprobe', 1);
     % try to read external trigger file in EEP format
     trgfile = [filename(1:(end-3)), 'trg'];
     if exist(trgfile, 'file')
@@ -735,7 +735,7 @@ switch eventformat
 
   case 'fcdc_tcp'
     % requires tcp/udp/ip-toolbox
-    hastoolbox('TCP_UDP_IP', 1);
+    ft_hastoolbox('TCP_UDP_IP', 1);
     [host, port] = filetype_check_uri(filename);
     if isempty(sock)
       sock=pnet('tcpsocket',port);
@@ -758,7 +758,7 @@ switch eventformat
 
   case 'fcdc_udp'
     % requires tcp/udp/ip-toolbox
-    hastoolbox('TCP_UDP_IP', 1);
+    ft_hastoolbox('TCP_UDP_IP', 1);
     [host, port] = filetype_check_uri(filename);
     try
       % read from localhost
@@ -857,12 +857,12 @@ switch eventformat
     end
     if strcmp(eventformat, 'neuromag_mex')
       % check that the required low-level toolbox is available
-      hastoolbox('meg-pd', 1);
+      ft_hastoolbox('meg-pd', 1);
       if isempty(headerformat), headerformat = eventformat; end
       if isempty(dataformat),   dataformat   = eventformat; end
     elseif strcmp(eventformat, 'neuromag_mne')
       % check that the required low-level toolbox is available
-      hastoolbox('mne', 1);
+      ft_hastoolbox('mne', 1);
       if isempty(headerformat), headerformat = eventformat; end
       if isempty(dataformat),   dataformat   = eventformat; end
     end
@@ -1213,7 +1213,7 @@ switch eventformat
 
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
     % check that the required low-level toolbox is available
-    hastoolbox('yokogawa', 1);
+    ft_hastoolbox('yokogawa', 1);
     % allow the user to specify custom trigger channels
     event = read_yokogawa_event(filename, 'trigindx', trigindx);
 
@@ -1222,7 +1222,7 @@ switch eventformat
 
   case 'neuroshare' % NOTE: still under development
     % check that the required neuroshare toolbox is available
-    hastoolbox('neuroshare', 1);
+    ft_hastoolbox('neuroshare', 1);
 
     tmp = read_neuroshare(filename, 'readevent', 'yes');
     for i=1:length(tmp.hdr.eventinfo)
