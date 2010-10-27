@@ -166,7 +166,7 @@ if isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
     montage.tra       = [eye(nmeg, nmeg), -hdr.BalanceCoefs.G2BR.alphaMEG'; zeros(nref, nmeg), eye(nref, nref)];
     grad.balance.G2BR = montage;
   end
-
+  
   if isfield(hdr.BalanceCoefs, 'G3BR')
     meglabel          = label(hdr.BalanceCoefs.G3BR.MEGlist);
     reflabel          = label(hdr.BalanceCoefs.G3BR.Refindex);
