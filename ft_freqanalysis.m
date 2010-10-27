@@ -1,4 +1,4 @@
-function [freq] =ft_freqanalysis(cfg, data, flag);
+function [freq] = ft_freqanalysis(cfg, data, flag)
 
 % FT_FREQANALYSIS performs frequency and time-frequency analysis
 % on time series data over multiple trials
@@ -516,6 +516,7 @@ end % IF OLD OR NEW IMPLEMENTATION
 % copy the trial specific information into the output
 if isfield(data, 'trialinfo'),
   freq.trialinfo = data.trialinfo;
+  % FIXME this strictly only allowed for frequency data with repetitions
 end
 
 % the output data should be saved to a MATLAB file
