@@ -198,7 +198,7 @@ elseif ~isempty(cfg.trl)
   % select new trials from the existing data
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
-  % ensure that sampleinfo is present, if this fails fetch_data will crash
+  % ensure that sampleinfo is present, if this fails ft_fetch_data will crash
   data = ft_checkdata(data, 'hastrialdef', 'yes');  
 
   dataold = data;   % make a copy of the old data
@@ -222,7 +222,7 @@ elseif ~isempty(cfg.trl)
     % original trial
     iTrlorig  = find(dataold.sampleinfo(:,1)<=begsample & dataold.sampleinfo(:,2)>=endsample);
    
-    % used to speed up fetch_data
+    % used to speed up ft_fetch_data
     if iTrl==1,
       tmpdata = dataold;
     end
@@ -231,7 +231,7 @@ elseif ~isempty(cfg.trl)
     tmpdata.sampleinfo = dataold.sampleinfo(iTrlorig,:);
     if isfield(dataold, 'trialinfo'), tmpdata.trialinfo = dataold.trialinfo(iTrlorig,:); end;  
    
-    data.trial{iTrl} = fetch_data(tmpdata, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', 1:hdr.nChans, 'docheck', 0);
+    data.trial{iTrl} = ft_fetch_data(tmpdata, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', 1:hdr.nChans, 'docheck', 0);
     data.time{iTrl}  = offset2time(offset, dataold.fsample, trllength);
     
     % ensure correct handling of trialinfo

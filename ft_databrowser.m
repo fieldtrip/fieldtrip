@@ -459,7 +459,7 @@ else
     thissample = thistrlbeg;
   end
   % look at opt.cfg.blocksize and make opt.trl accordingly
-  % if original data contains more than one trial, it will fail in fetch_data
+  % if original data contains more than one trial, it will fail in ft_fetch_data
   datbegsample = min(opt.trlorg(:,1));
   datendsample = max(opt.trlorg(:,2));
   smppertrl  = round(opt.fsample * opt.cfg.blocksize);
@@ -586,7 +586,7 @@ elseif strcmp(opt.cfg.selectmode, 'eval')
   % cut out the requested data segment
   seldata.label    = opt.curdat.label;
   seldata.time{1}  = offset2time(offset+begsel-begsample, opt.fsample, endsel-begsel+1);
-  seldata.trial{1} = fetch_data(opt.curdat, 'begsample', begsel, 'endsample', endsel);
+  seldata.trial{1} = ft_fetch_data(opt.curdat, 'begsample', begsel, 'endsample', endsel);
   seldata.fsample  = opt.fsample;
   seldata.cfg.trl  = [begsel endsel offset];
   
@@ -837,12 +837,12 @@ if isempty(opt.orgdata)
   dat = ft_read_data(opt.cfg.datafile, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', strcmp(opt.cfg.continuous, 'no'), 'dataformat', opt.cfg.dataformat, 'headerformat', opt.cfg.headerformat);
 else
   fprintf('fetching data... ');
-  dat = fetch_data(opt.orgdata, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx);
+  dat = ft_fetch_data(opt.orgdata, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx);
 end
 fprintf('done\n');
 
 fprintf('fetching artifacts... ');
-art = fetch_data(opt.artdata, 'begsample', begsample, 'endsample', endsample);
+art = ft_fetch_data(opt.artdata, 'begsample', begsample, 'endsample', endsample);
 fprintf('done\n');
 
 % apply preprocessing and determine the time axis

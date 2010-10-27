@@ -212,7 +212,7 @@ if ~isempty(sgnind)
       dat = dat + ft_preproc_baselinecorrect(dum);
       ntrlok = ntrlok + 1;
     elseif nargin==2,
-      dum = fetch_data(data, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'docheck', 0);
+      dum = ft_fetch_data(data, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'docheck', 0);
       if any(~isfinite(dum(:))),
       else
         ntrlok = ntrlok + 1;
