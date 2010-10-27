@@ -244,7 +244,7 @@ elseif ismeg
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % use code from OpenMEEG
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      hastoolbox('openmeeg', 1);
+      ft_hastoolbox('openmeeg', 1);
 
       dsm = openmeeg_dsm(pos,vol);
       [h2mm,s2mm]= openmeeg_megm(pos,vol,sens);
