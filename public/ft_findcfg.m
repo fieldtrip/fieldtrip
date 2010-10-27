@@ -1,4 +1,4 @@
-function [val, status] = findcfg(cfg, var);
+function [val, status] = ft_findcfg(cfg, var);
 
 % FINDCFG searches for an element in the cfg structure
 % or in the nested previous cfgs
@@ -44,11 +44,11 @@ while ~status
     val = getsubfield(cfg, var);
     status = 1;
   elseif issubfield(cfg, '.previous');
-    [val, status] = findcfg(cfg.previous, var);
+    [val, status] = ft_findcfg(cfg.previous, var);
      if status, break; end;
   elseif iscell(cfg) 
     for i=1:length(cfg)
-      [val, status] = findcfg(cfg{i}, var);
+      [val, status] = ft_findcfg(cfg{i}, var);
       if status, break; end;
     end
   else
