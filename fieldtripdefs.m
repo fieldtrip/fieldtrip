@@ -4,7 +4,7 @@ function fieldtripdefs
 % contains some defaults and path settings
 %
 % Note that this should be a function and not a script, otherwise the
-% hastoolbox function appears not be found in fieldtrip/private.
+% ft_hastoolbox function appears not be found in fieldtrip/private.
 
 % Copyright (C) 2009, Robert Oostenveld
 %
@@ -47,73 +47,78 @@ if length(list)>1
   end
 end
 
-if isempty(which('hastoolbox'))
-  % the fieldtrip/public directory contains the hastoolbox function
+if isempty(which('ft_hastoolbox'))
+  % the fieldtrip/public directory contains the ft_hastoolbox function
   % which is required for the remainder of this script
   addpath(fullfile(fileparts(which('fieldtripdefs')), 'public'));
 end
 
 try
   % this directory contains the backward compatibility wrappers for the ft_xxx function name change
-  hastoolbox('compat', 3, 1); % not required
+  ft_hastoolbox('compat', 3, 1); % not required
+end
+
+try 
+  % this directory contains the backward compatibility wrappers for the fieldtrip/public functions
+  ft_hastoolbox('public/compat', 3, 1);
 end
 
 try
   % this contains layouts and cortical meshes
-  hastoolbox('template', 1, 1);
+  ft_hastoolbox('template', 1, 1);
 end
 
 try
   % this is used in statistics
-  hastoolbox('statfun', 1, 1);
+  ft_hastoolbox('statfun', 1, 1);
 end
 
 try
   % this is used in definetrial
-  hastoolbox('trialfun', 1, 1);
+  ft_hastoolbox('trialfun', 1, 1);
 end
 
 try
   % this contains the low-level reading functions
-  hastoolbox('fileio', 1, 1);
-  hastoolbox('fileio/compat', 3, 1); % not required
+  ft_hastoolbox('fileio', 1, 1);
+  ft_hastoolbox('fileio/compat', 3, 1); % not required
 end
 
 try
   % this is for filtering time-series data
-  hastoolbox('preproc', 1, 1);
-  hastoolbox('preproc/compat', 3, 1); % not required
+  ft_hastoolbox('preproc', 1, 1);
+  ft_hastoolbox('preproc/compat', 3, 1); % not required
 end
 
 try
   % this contains forward models for the EEG and MEG volume conduction problem
-  hastoolbox('forward', 1, 1);
-  hastoolbox('forward/compat', 3, 1); % not required
+  ft_hastoolbox('forward', 1, 1);
+  ft_hastoolbox('forward/compat', 3, 1); % not required
 end
 
 try
   % numerous functions depend on this module
-  hastoolbox('inverse', 1, 1);
+  ft_hastoolbox('inverse', 1, 1);
 end
 
 try
   % this contains intermediate-level plotting functions, e.g. multiplots and 3-d objects
-  hastoolbox('plotting', 1, 1);
-  hastoolbox('plotting/compat', 1, 1);
+  ft_hastoolbox('plotting', 1, 1);
+  ft_hastoolbox('plotting/compat', 1, 1);
 end
 
 try 
   % this contains the functions to compute connecitivy metrics
-  hastoolbox('connectivity', 1,1);
+  ft_hastoolbox('connectivity', 1,1);
 end
 
 try
   % this contains specific code and examples for realtime processing
-  hastoolbox('realtime', 3, 1);             % not required
-  hastoolbox('realtime/datasource', 3, 1);  % not required
+  ft_hastoolbox('realtime', 3, 1);             % not required
+  ft_hastoolbox('realtime/datasource', 3, 1);  % not required
 end
 
 try 
   % this contains intermediate-level functions for spectral analysis
-  hastoolbox('specest', 1, 1);
+  ft_hastoolbox('specest', 1, 1);
 end
