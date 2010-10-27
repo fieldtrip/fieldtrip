@@ -61,11 +61,11 @@ dtype  = cell(1,length(data));
 dimord = cell(1,length(data));
 
 for k = 1:length(data)
-  data{k} = ft_checkdata(data{k}, 'ft_datatype', {'freq' 'timelock' 'source', 'volume', 'freqmvar', 'raw'});
+  data{k} = ft_checkdata(data{k}, 'datatype', {'freq' 'timelock' 'source', 'volume', 'freqmvar', 'raw'});
   [dtype{k}, dimord{k}]  = ft_datatype(data{k});
   if strcmp(dtype{k}, 'raw'),
     %ensure it to have an offset
-    data{k} = ft_checkdata(data{k}, 'ft_datatype', 'raw', 'hasoffset', 'yes');
+    data{k} = ft_checkdata(data{k}, 'datatype', 'raw', 'hasoffset', 'yes');
   end
   if strcmp(dtype{k}, 'source'),
     data{k} = ft_checkdata(data{k}, 'sourcerepresentation', 'new');
