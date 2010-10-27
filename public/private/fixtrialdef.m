@@ -34,7 +34,7 @@ else
   end
 end
 
-trl = findcfg(data.cfg, 'trl');
+trl = ft_findcfg(data.cfg, 'trl');
 
 nsmp = zeros(ntrial,1);
 if hastrial,
