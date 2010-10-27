@@ -409,7 +409,7 @@ end % switch model
 
 if isfield(cfg, 'dipfit')
   % convert the structure with the additional low-level options into key-value pairs
-  optarg = cfg2keyval(getfield(cfg, 'dipfit'));
+  optarg = ft_cfg2keyval(getfield(cfg, 'dipfit'));
 else
   % no additional low-level options were specified
   optarg = {};

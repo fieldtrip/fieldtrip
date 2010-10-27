@@ -568,7 +568,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc'}))
   end
   
   % get the relevant low level options from the cfg and convert into key-value pairs
-  optarg = cfg2keyval(getfield(cfg, cfg.method));
+  optarg = ft_cfg2keyval(getfield(cfg, cfg.method));
   
   for i=1:Nrepetitions
     fprintf('scanning repetition %d\n', i);
@@ -787,7 +787,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'loreta', 'rv
   end
   
   % get the relevant low level options from the cfg and convert into key-value pairs
-  optarg = cfg2keyval(getfield(cfg, cfg.method));
+  optarg = ft_cfg2keyval(getfield(cfg, cfg.method));
   
   if strcmp(cfg.method, 'lcmv') && ~isfield(grid, 'filter'),
     for i=1:Nrepetitions

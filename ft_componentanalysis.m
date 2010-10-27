@@ -231,7 +231,7 @@ switch cfg.method
     
     try
       % construct key-value pairs for the optional arguments
-      optarg = cfg2keyval(cfg.fastica);
+      optarg = ft_cfg2keyval(cfg.fastica);
       [A, W] = fastica(dat, optarg{:});
       weights = W;
       sphere = eye(size(W,2));
@@ -248,12 +248,12 @@ switch cfg.method
     
   case 'runica'
     % construct key-value pairs for the optional arguments
-    optarg = cfg2keyval(cfg.runica);
+    optarg = ft_cfg2keyval(cfg.runica);
     [weights, sphere] = runica(dat, optarg{:});
     
   case 'binica'
     % construct key-value pairs for the optional arguments
-    optarg = cfg2keyval(cfg.binica);
+    optarg = ft_cfg2keyval(cfg.binica);
     [weights, sphere] = binica(dat, optarg{:});
     
   case 'jader'

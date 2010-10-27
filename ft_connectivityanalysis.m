@@ -314,7 +314,7 @@ switch cfg.method
     tmpcfg.allchanindx = cfg.allchanindx;
     tmpcfg.hasjack     = hasjack;
     if exist('powindx', 'var'), tmpcfg.powindx     = powindx; end
-    optarg             = cfg2keyval(tmpcfg);
+    optarg             = ft_cfg2keyval(tmpcfg);
     
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg);
     outparam = 'cohspctrm';
@@ -331,7 +331,7 @@ switch cfg.method
     tmpcfg.allchanindx = cfg.allchanindx;
     tmpcfg.hasjack     = hasjack;
     if exist('powindx', 'var'), tmpcfg.powindx     = powindx; end
-    optarg             = cfg2keyval(tmpcfg);
+    optarg             = ft_cfg2keyval(tmpcfg);
     
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg);
     outparam = 'crsspctrm';
@@ -348,7 +348,7 @@ switch cfg.method
     tmpcfg.allchanindx = cfg.allchanindx;
     tmpcfg.hasjack     = hasjack;
     if exist('powindx', 'var'), tmpcfg.powindx     = powindx; end
-    optarg             = cfg2keyval(tmpcfg);
+    optarg             = ft_cfg2keyval(tmpcfg);
     
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg);
     outparam         = 'plvspctrm';
@@ -370,7 +370,7 @@ switch cfg.method
     tmpcfg.pchanindx   = [];
     tmpcfg.hasjack     = hasjack;
     if exist('powindx', 'var'), tmpcfg.powindx = powindx; end
-    optarg             = cfg2keyval(tmpcfg);
+    optarg             = ft_cfg2keyval(tmpcfg);
     
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg);
     outparam        = 'amplcorrspctrm';
@@ -384,7 +384,7 @@ switch cfg.method
     tmpcfg.complex     = 'real';
     tmpcfg.hasjack     = hasjack;
     if exist('powindx', 'var'), tmpcfg.powindx = powindx; end
-    optarg             = cfg2keyval(tmpcfg);
+    optarg             = ft_cfg2keyval(tmpcfg);
     
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg);
     outparam        = 'powcorrspctrm';
@@ -467,7 +467,7 @@ switch cfg.method
     tmpcfg.hasrpt      = hasrpt;
     tmpcfg.hasjack     = hasjack;
     if exist('powindx', 'var'), tmpcfg.powindx     = powindx; end
-    optarg             = cfg2keyval(tmpcfg);
+    optarg             = ft_cfg2keyval(tmpcfg);
     
     [datout, varout, nrpt] = ft_connectivity_toti(tmpcfg, data.(inparam), hasrpt, hasjack);
     outparam         = 'totispctrm';
@@ -485,7 +485,7 @@ switch cfg.method
     tmpcfg.feedback = cfg.feedback;
     tmpcfg.powindx  = powindx;
     tmpcfg.hasjack  = hasjack;
-    optarg          = cfg2keyval(tmpcfg);
+    optarg          = ft_cfg2keyval(tmpcfg);
     
     hasrpt = ~isempty(strfind(data.dimord, 'rpt'));
     if hasrpt,
@@ -511,7 +511,7 @@ switch cfg.method
     tmpcfg.feedback = cfg.feedback;
     tmpcfg.powindx  = powindx;
     tmpcfg.hasjack  = hasjack;
-    optarg          = cfg2keyval(tmpcfg);
+    optarg          = ft_cfg2keyval(tmpcfg);
     
     hasrpt = ~isempty(strfind(data.dimord, 'rpt'));
     if hasrpt,
@@ -538,7 +538,7 @@ switch cfg.method
     tmpcfg.hasrpt      = hasrpt;
     tmpcfg.hasjack     = hasjack;
     if exist('powindx', 'var'), tmpcfg.powindx     = powindx; end
-    optarg             = cfg2keyval(tmpcfg);
+    optarg             = ft_cfg2keyval(tmpcfg);
     
     [datout, varout, nrpt] = ft_connectivity_psi(data.(inparam), optarg);
     outparam         = 'psispctrm';
@@ -655,7 +655,7 @@ function [c, v, n] = ft_connectivity_toti(cfg, input, hasrpt, hasjack)
 
 cfg.hasrpt  = hasrpt;
 cfg.hasjack = hasjack;
-optarg = cfg2keyval(cfg);
+optarg = ft_cfg2keyval(cfg);
 
 [c, v, n] = ft_connectivity_corr(input, optarg);
 c = -log(1-c.^2);
