@@ -102,7 +102,7 @@ fb   = strcmp(cfg.feedback, 'yes');
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
   if fb, fprintf('selecting %d trials\n', length(cfg.trials)); end
-  data = selectdata(data, 'rpt', cfg.trials);
+  data = ft_selectdata(data, 'rpt', cfg.trials);
   if length(cfg.offset)>1 && length(cfg.offset)~=length(cfg.trials)
     cfg.offset=cfg.offset(cfg.trials);
   end

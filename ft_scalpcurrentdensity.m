@@ -98,7 +98,7 @@ data = checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'ismeg', 'no');
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
-  data = selectdata(data, 'rpt', cfg.trials);
+  data = ft_selectdata(data, 'rpt', cfg.trials);
 end
 
 % get the electrode positions

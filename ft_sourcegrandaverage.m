@@ -341,9 +341,9 @@ else
   end
 
   if strcmp(cfg.keepindividual, 'yes')
-    grandavg = selectdata(varargin{:}, 'param', cfg.parameter);
+    grandavg = ft_selectdata(varargin{:}, 'param', cfg.parameter);
   else
-    grandavg = selectdata(varargin{:}, 'param', cfg.parameter, 'avgoverrpt', 'yes');  
+    grandavg = ft_selectdata(varargin{:}, 'param', cfg.parameter, 'avgoverrpt', 'yes');  
   end
  
   cfg.outputfile;

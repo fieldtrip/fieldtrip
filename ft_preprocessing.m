@@ -278,7 +278,7 @@ if hasdata
 
   % select trials of interest
   if ~strcmp(cfg.trials, 'all')
-    data = selectdata(data, 'rpt', cfg.trials);
+    data = ft_selectdata(data, 'rpt', cfg.trials);
   end
 
   % translate the channel groups (like 'all' and 'MEG') into real labels

@@ -227,11 +227,11 @@ elseif strcmp(cfg.implementation, 'new')
     Nsource = length(varargin);
     Nvoxel  = length(varargin{1}.inside) + length(varargin{1}.outside);
 
-    %FIXME selectdata should be used for the subselection
-    %FIXME selectdata has to be adjusted to work with new style source data
+    %FIXME ft_selectdata should be used for the subselection
+    %FIXME ft_selectdata has to be adjusted to work with new style source data
     %if isfield(varargin{1}, 'freq') && ~strcmp(cfg.frequency, 'all'),
     %  for i=1:length(varargin)
-    %    varargin{i} = selectdata(varargin{i}, 'foilim', cfg.frequency, ...
+    %    varargin{i} = ft_selectdata(varargin{i}, 'foilim', cfg.frequency, ...
     %                             'avgoverfreq', cfg.avgoverfreq);
     %  end
     %end

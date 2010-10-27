@@ -100,7 +100,7 @@ cfg = checkconfig(cfg, 'renamedval',  {'method', 'convol', 'mtmconvol'});
 if ~isfield(cfg, 'trials'),   cfg.trials = 'all';  end % set the default
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
-  data = selectdata(data, 'rpt', cfg.trials);
+  data = ft_selectdata(data, 'rpt', cfg.trials);
 end
 
 if ~flag
@@ -191,7 +191,7 @@ else
   end
   
   % subselect the required channels
-  data = selectdata(data, 'channel', selchan);
+  data = ft_selectdata(data, 'channel', selchan);
   
   % determine the corresponding indices of all channels
   chanind    = match_str(data.label, cfg.channel);

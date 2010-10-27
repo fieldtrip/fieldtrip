@@ -119,20 +119,20 @@ if ~hasrpt && ~strcmp(cfg.trials, 'all'), error('trial selection requires input 
 if ~varflg && jckflg,                     warning('you specified cfg.jackknife = ''yes'' and cfg.variance = ''no'': no variance will be computed');           end
 
 % select data of interest
-if            ~strcmp(cfg.foilim,  'all'), freq = selectdata(freq, 'foilim', cfg.foilim); end
-if hastim, if ~strcmp(cfg.toilim,  'all'), freq = selectdata(freq, 'toilim', cfg.toilim); end; end
-if hasrpt, if ~strcmp(cfg.trials,  'all'), freq = selectdata(freq, 'rpt',    cfg.trials); end; end
+if            ~strcmp(cfg.foilim,  'all'), freq = ft_selectdata(freq, 'foilim', cfg.foilim); end
+if hastim, if ~strcmp(cfg.toilim,  'all'), freq = ft_selectdata(freq, 'toilim', cfg.toilim); end; end
+if hasrpt, if ~strcmp(cfg.trials,  'all'), freq = ft_selectdata(freq, 'rpt',    cfg.trials); end; end
 
 if ~strcmp(cfg.channel, 'all'),
   channel = ft_channelselection(cfg.channel, freq.label);
-  freq    = selectdata(freq, 'channel', channel);
+  freq    = ft_selectdata(freq, 'channel', channel);
 end
 
 % get data in the correct representation
 freq = checkdata(freq, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
 
 if jckflg,
-  freq = selectdata(freq, 'jackknife', 1);
+  freq = ft_selectdata(freq, 'jackknife', 1);
 end
 
 if varflg,

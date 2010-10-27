@@ -107,7 +107,7 @@ end
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
-  data       = selectdata(data, 'rpt', cfg.trials);
+  data       = ft_selectdata(data, 'rpt', cfg.trials);
 end
 
 % trl is not specified in the function call, but the data is given ->

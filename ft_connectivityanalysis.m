@@ -94,7 +94,7 @@ normpow = 1; % default, has to be overruled e.g. in csd,
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
-  data = selectdata(data, 'rpt', cfg.trials);
+  data = ft_selectdata(data, 'rpt', cfg.trials);
 end
 
 % FIXME check which methods require hasrpt
@@ -276,10 +276,10 @@ if hasrpt && dojack && hasjack,
   % do nothing
 elseif hasrpt && dojack,
   % compute leave-one-outs
-  data    = selectdata(data, 'jackknife', 'yes');
+  data    = ft_selectdata(data, 'jackknife', 'yes');
   hasjack = 1;
 elseif hasrpt
-  data   = selectdata(data, 'avgoverrpt', 'yes');
+  data   = ft_selectdata(data, 'avgoverrpt', 'yes');
   hasrpt = 0;
 else
   % nothing required

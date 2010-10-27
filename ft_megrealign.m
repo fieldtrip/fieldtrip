@@ -146,7 +146,7 @@ cfg = checkconfig(cfg, 'createsubcfg',  {'grid'});
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
-  data = selectdata(data, 'rpt', cfg.trials);
+  data = ft_selectdata(data, 'rpt', cfg.trials);
 end
 
 Ntrials = length(data.trial);
