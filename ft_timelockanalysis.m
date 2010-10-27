@@ -490,7 +490,7 @@ if isfield(data, 'elec')
 end
 if isfield(data, 'trialinfo') && strcmp(cfg.keeptrials, 'yes')
   % copy the trialinfo into the output
-  % but not the trialdef
+  % but not the sampleinfo
   timelock.trialinfo = data.trialinfo;
 end
 
