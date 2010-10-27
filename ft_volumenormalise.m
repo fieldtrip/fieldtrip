@@ -155,7 +155,7 @@ if ischar(interp),
 end
 
 % check if the input data is valid for this function
-interp = ft_checkdata(interp, 'datatype', 'volume', 'feedback', 'yes');
+interp = ft_checkdata(interp, 'ft_datatype', 'volume', 'feedback', 'yes');
 
 % select the parameters that should be normalised
 cfg.parameter = parameterselection(cfg.parameter, interp);

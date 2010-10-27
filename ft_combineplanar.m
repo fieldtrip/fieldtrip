@@ -70,7 +70,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', {'raw', 'freq', 'timelock'}, 'feedback', 'yes', 'senstype', {'ctf151_planar', 'ctf275_planar', 'neuromag122', 'neuromag306', 'bti248_planar', 'bti148_planar', 'itab153_planar'});
+data = ft_checkdata(data, 'ft_datatype', {'raw', 'freq', 'timelock'}, 'feedback', 'yes', 'senstype', {'ctf151_planar', 'ctf275_planar', 'neuromag122', 'neuromag306', 'bti248_planar', 'bti148_planar', 'itab153_planar'});
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'forbidden', {'combinegrad'});
@@ -82,9 +82,9 @@ if isfield(cfg, 'baseline')
   cfg.blcwindow = cfg.baseline;
 end
 
-israw      = datatype(data, 'raw');
-isfreq     = datatype(data, 'freq');
-istimelock = datatype(data, 'timelock');
+israw      = ft_datatype(data, 'raw');
+isfreq     = ft_datatype(data, 'freq');
+istimelock = ft_datatype(data, 'timelock');
 try, dimord = data.dimord; end
 
 % select trials of interest
@@ -195,7 +195,7 @@ if isfreq
 elseif (israw || istimelock)
   if istimelock,
     % convert timelock to raw
-    data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
+    data = ft_checkdata(data, 'ft_datatype', 'raw', 'feedback', 'yes');
   end
   
   switch cfg.combinemethod
@@ -238,12 +238,12 @@ elseif (israw || istimelock)
   
   if istimelock,
     % convert raw to timelock
-    data = ft_checkdata(data, 'datatype', 'timelock', 'feedback', 'yes');
+    data = ft_checkdata(data, 'ft_datatype', 'timelock', 'feedback', 'yes');
   end
   
 else
   error('unsupported input data');
-end % which datatype
+end % which ft_datatype
 
 % remove the fields for which the planar gradient could not be combined
 try, data = rmfield(data, 'crsspctrm');   end

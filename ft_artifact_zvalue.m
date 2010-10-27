@@ -22,7 +22,7 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg,data)
 %   cfg.headerfile
 %   cfg.headerfile
 %   cfg.datafile
-%   cfg.datatype
+%   cfg.ft_datatype
 %
 % If you are calling FT_ARTIFACT_ZVALUE with also the second input argument
 % "data", then that should contain data that was already read from file in

@@ -64,7 +64,7 @@ end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'no');
+  varargin{i} = ft_checkdata(varargin{i}, 'ft_datatype', 'timelock', 'feedback', 'no');
 end
 
 % set the defaults

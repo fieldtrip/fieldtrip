@@ -102,12 +102,12 @@ if ~isempty(cfg.inputfile)
   end
 end
 
-isfreq = datatype(data, 'freq');
-israw  = datatype(data, 'raw');
-istlck = datatype(data, 'timelock');  % this will be temporary converted into raw
+isfreq = ft_datatype(data, 'freq');
+israw  = ft_datatype(data, 'raw');
+istlck = ft_datatype(data, 'timelock');  % this will be temporary converted into raw
 
 % check if the input data is valid for this function
-data  = ft_checkdata(data, 'datatype', {'raw' 'freq'}, 'feedback', 'yes', 'hastrialdef', 'yes', 'ismeg', 'yes', 'senstype', {'ctf151', 'ctf275', 'bti148', 'bti248', 'itab153'});
+data  = ft_checkdata(data, 'ft_datatype', {'raw' 'freq'}, 'feedback', 'yes', 'hastrialdef', 'yes', 'ismeg', 'yes', 'senstype', {'ctf151', 'ctf275', 'bti148', 'bti248', 'itab153'});
 
 if istlck
   % the timelocked data has just been converted to a raw representation
@@ -267,7 +267,7 @@ end
 
 if istlck
   % convert the raw structure back into a timelock structure
-  interp = ft_checkdata(interp, 'datatype', 'timelock');
+  interp = ft_checkdata(interp, 'ft_datatype', 'timelock');
   israw  = false;
 end
 

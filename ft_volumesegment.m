@@ -148,7 +148,7 @@ if hasdata
 end
 
 % check if the input data is valid for this function
-mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
+mri = ft_checkdata(mri, 'ft_datatype', 'volume', 'feedback', 'yes');
 
 % remember the original transformation matrix
 original.transform = mri.transform;

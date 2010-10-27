@@ -24,7 +24,7 @@ function [cfg, artifact] = ft_artifact_ecg(cfg, data)
 % See also FT_REJECTARTIFACT
 
 % Undocumented local options:
-% cfg.datatype
+% cfg.ft_datatype
 
 % Copyright (c) 2005, Jan-Mathijs Schoffelen
 %
@@ -50,7 +50,7 @@ fieldtripdefs
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'ft_datatype', 'continuous'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
 % set default rejection parameters for eog artifacts if necessary.

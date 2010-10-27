@@ -77,7 +77,7 @@ end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'raw', 'feedback', 'no', 'hastrialdef', 'yes');
+  varargin{i} = ft_checkdata(varargin{i}, 'ft_datatype', 'raw', 'feedback', 'no', 'hastrialdef', 'yes');
 end
 
 % determine the dimensions of the data

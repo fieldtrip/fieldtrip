@@ -1,6 +1,6 @@
 function [cfg] = ft_topoplotTFR(cfg, varargin)
 
-% FT_TOPOPLOTTFR plots the topographic distribution of 3-Dimensional datatypes as 
+% FT_TOPOPLOTTFR plots the topographic distribution of 3-Dimensional ft_datatypes as 
 % the time-frequency representation of power or coherence that was computed
 % using the FT_FREQANALYSIS or FT_FREQDESCRIPTIVES functions, as a 2-D circular
 % view (looking down at the top of the head).

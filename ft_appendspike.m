@@ -47,7 +47,7 @@ end
 if all(isspike)
   spike = {};
   for i=1:length(varargin)
-    spike{i} = ft_checkdata(varargin{i}, 'datatype', 'spike');
+    spike{i} = ft_checkdata(varargin{i}, 'ft_datatype', 'spike');
   end
 
   % check the validity of the channel labels
@@ -70,7 +70,7 @@ if all(isspike)
 
 else
   % this checks the validity of the input data and simultaneously renames it for convenience
-  data  = varargin{1}; % ft_checkdata(varargin{1}, 'datatype', 'raw');
+  data  = varargin{1}; % ft_checkdata(varargin{1}, 'ft_datatype', 'raw');
   spike = ft_appendspike([], varargin{2:end}); 
 
   % check the validity of the channel labels

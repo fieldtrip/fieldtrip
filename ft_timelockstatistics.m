@@ -79,7 +79,7 @@ end
 % for i=1:length(varargin)
 %   % FIXME at this moment (=10 May) this does not work, because the input might not always have an avg
 %   % See freqstatistics
-%   %varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'no');
+%   %varargin{i} = ft_checkdata(varargin{i}, 'ft_datatype', 'timelock', 'feedback', 'no');
 % end
 
 % the low-level data selection function does not know how to deal with other parameters, so work around it

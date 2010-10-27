@@ -78,9 +78,9 @@ if strcmp(cfg.implementation, 'old'),
   % check if the input data is valid for this function
   for i=1:length(varargin)
     if isfield(cfg, 'roi') && ~isempty(cfg.roi)
-      varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'source', 'feedback', 'no', 'inside', 'index');
+      varargin{i} = ft_checkdata(varargin{i}, 'ft_datatype', 'source', 'feedback', 'no', 'inside', 'index');
     else
-      varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'source', 'volume'}, 'feedback', 'no', 'inside', 'index');
+      varargin{i} = ft_checkdata(varargin{i}, 'ft_datatype', {'source', 'volume'}, 'feedback', 'no', 'inside', 'index');
     end
   end
   
@@ -143,8 +143,8 @@ elseif strcmp(cfg.implementation, 'new')
   
   %---------------------------
   % use the new implementation
-  issource = datatype(varargin{1}, 'source');
-  isvolume = datatype(varargin{1}, 'volume'); 
+  issource = ft_datatype(varargin{1}, 'source');
+  isvolume = ft_datatype(varargin{1}, 'volume'); 
  
   % check if the input data is valid for this function
   for i=1:length(varargin)
@@ -152,9 +152,9 @@ elseif strcmp(cfg.implementation, 'new')
       % FIXME implement roi-based statistics for the new implementation
       % (code is copied over from the old implementation but not yet tested
       error('roi based sourcestatistics is not yet implemented for the new implementation');
-      varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'source', 'feedback', 'no', 'inside', 'index');
+      varargin{i} = ft_checkdata(varargin{i}, 'ft_datatype', 'source', 'feedback', 'no', 'inside', 'index');
     else
-      varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'source', 'volume'}, 'feedback', 'no', 'inside', 'index', 'sourcerepresentation', 'new');
+      varargin{i} = ft_checkdata(varargin{i}, 'ft_datatype', {'source', 'volume'}, 'feedback', 'no', 'inside', 'index', 'sourcerepresentation', 'new');
       if strcmp(cfg.parameter, 'pow') && ~isfield(varargin{i}, 'pow'),
         varargin{i} = ft_checkdata(varargin{i}, 'sourcerepresentation', 'new', 'haspow', 'yes');
       end

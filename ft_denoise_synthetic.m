@@ -56,7 +56,7 @@ if ~isempty(cfg.inputfile)
   end
 end
 
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hastrialdef', 'yes');
+data = ft_checkdata(data, 'ft_datatype', 'raw', 'feedback', 'yes', 'hastrialdef', 'yes');
 
 if ~ft_senstype(data, 'ctf')
   error('synthetic gradients can only be computed for CTF data');

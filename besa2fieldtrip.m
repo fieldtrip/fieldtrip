@@ -126,8 +126,8 @@ if isstruct(input)
   elseif strcmp(input.structtype, 'besa_channels')
     %fprintf('BESA data export\n');
 
-    if isfield(input,'datatype')
-      switch input.datatype
+    if isfield(input,'ft_datatype')
+      switch input.ft_datatype
         case {'Raw_Data','Epoched_Data','Segment'}
           data.fsample    = input.samplingrate;
           data.label      = input.channellabels';
@@ -136,7 +136,7 @@ if isstruct(input)
             data.trial{1,k} = input.data(k).amplitudes';
           end
         otherwise
-          fprintf('datatype other than Raw_Data, Epoched or Segment');
+          fprintf('ft_datatype other than Raw_Data, Epoched or Segment');
       end
     else
       fprintf('workspace created with earlier MATLAB version');

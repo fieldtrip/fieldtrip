@@ -1,6 +1,6 @@
 function [cfg] = ft_topoplotER(cfg, varargin)
 
-% FT_TOPOPLOTER plots the topographic distribution of 2-Dimensional datatypes as
+% FT_TOPOPLOTER plots the topographic distribution of 2-Dimensional ft_datatypes as
 % event-related fields (ERF), potentials (ERP), the powerspectrum or coherence spectum
 % that was computed using the FT_TIMELOCKANALYSIS, FT_TIMELOCKGRANDAVERAGE, FT_FREQANALYSIS or
 % FT_FREQDESCRIPTIVES functions, as a 2-D circular view (looking down at the top of the head).

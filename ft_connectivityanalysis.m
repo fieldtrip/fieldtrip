@@ -107,13 +107,13 @@ switch cfg.method
         error('partialisation on single trial observations is not supported');
       end
       try
-        data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbrepresentation', 'full');
+        data    = ft_checkdata(data, 'ft_datatype', {'freqmvar' 'freq'}, 'cmbrepresentation', 'full');
         inparam = 'crsspctrm';
       catch
         error('partial coherence/csd is only supported for input allowing for a all-to-all csd representation');
       end
     else
-      data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
+      data    = ft_checkdata(data, 'ft_datatype', {'freqmvar' 'freq' 'source'});
       inparam = 'crsspctrm';
     end
     
@@ -122,7 +122,7 @@ switch cfg.method
       % warning('cfg.complex for requested csd is set to %s, do you really want this?', cfg.complex);
     end
     
-    dtype   = datatype(data);
+    dtype   = ft_datatype(data);
     switch dtype
       case 'source'
         if isempty(cfg.refindx), error('indices of reference voxels need to be specified'); end
@@ -132,14 +132,14 @@ switch cfg.method
     % FIXME think of accommodating partial coherence for source data with only a few references
     
   case {'plv'}
-    data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
+    data    = ft_checkdata(data, 'ft_datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';
     normrpt = 1;
   case {'corr' 'xcorr'}
-    data = ft_checkdata(data, 'datatype', 'raw');
+    data = ft_checkdata(data, 'ft_datatype', 'raw');
   case {'amplcorr' 'powcorr'}
-    data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
-    dtype   = datatype(data);
+    data    = ft_checkdata(data, 'ft_datatype', {'freqmvar' 'freq' 'source'});
+    dtype   = ft_datatype(data);
     switch dtype
       case {'freq' 'freqmvar'}
         inparam = 'powcovspctrm';
@@ -150,28 +150,28 @@ switch cfg.method
       otherwise
     end
   case {'granger'}
-    data    = ft_checkdata(data, 'datatype', {'mvar' 'freqmvar' 'freq'});
+    data    = ft_checkdata(data, 'ft_datatype', {'mvar' 'freqmvar' 'freq'});
     inparam = {'transfer', 'noisecov', 'crsspctrm'};
     % FIXME could also work with time domain data
   case {'instantaneous_causality'}
-    data    = ft_checkdata(data, 'datatype', {'mvar' 'freqmvar' 'freq'});
+    data    = ft_checkdata(data, 'ft_datatype', {'mvar' 'freqmvar' 'freq'});
     inparam = {'transfer', 'noisecov', 'crsspctrm'};
   case {'total_interdependence'}
-    data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
+    data    = ft_checkdata(data, 'ft_datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';
   case {'dtf' 'pdc'}
-    data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
+    data    = ft_checkdata(data, 'ft_datatype', {'freqmvar' 'freq'});
     inparam = 'transfer';
   case {'psi'}
     if ~isfield(cfg, 'normalize'),  cfg.normalize  = 'no';  end
-    data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
+    data    = ft_checkdata(data, 'ft_datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';
   case {'di'}
     %wat eigenlijk?
   otherwise
     error('unknown method %s', cfg.method);
 end
-dtype = datatype(data);
+dtype = ft_datatype(data);
 
 % ensure that source data is in 'new' representation
 if strcmp(dtype, 'source'),
@@ -392,7 +392,7 @@ switch cfg.method
   case 'granger'
     % granger causality
     
-    if sum(datatype(data, {'freq' 'freqmvar'})),
+    if sum(ft_datatype(data, {'freq' 'freqmvar'})),
     
       if isfield(data, 'labelcmb') && isempty(cfg.conditional),
         % multiple pairwise non-parametric transfer functions
@@ -429,7 +429,7 @@ switch cfg.method
     
   case 'instantaneous_causality'
     % instantaneous ft_connectivity between the series, requires the same elements as granger
-    if sum(datatype(data, {'freq' 'freqmvar'})),
+    if sum(ft_datatype(data, {'freq' 'freqmvar'})),
       
       if isfield(data, 'labelcmb'),
         % multiple pairwise non-parametric transfer functions

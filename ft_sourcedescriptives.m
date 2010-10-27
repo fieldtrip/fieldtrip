@@ -94,7 +94,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
+source = ft_checkdata(source, 'ft_datatype', 'source', 'feedback', 'yes');
 
 % this is required for backward compatibility with the old sourceanalysis
 if isfield(source, 'method') && strcmp(source.method, 'randomized')

@@ -93,7 +93,7 @@ end
 
 % check if the input data is valid for this function
 % ensure sampleinfo and trialinfo (if present) to be in the data
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hastrialdef', 'yes');
+data = ft_checkdata(data, 'ft_datatype', 'raw', 'feedback', 'yes', 'hastrialdef', 'yes');
 
 if isempty(cfg.detrend)
   error('The previous default to apply detrending has been changed. Recommended is to apply a baseline correction instead of detrending. See the help of this function for more details.');

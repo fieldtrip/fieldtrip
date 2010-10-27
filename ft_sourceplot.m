@@ -240,7 +240,7 @@ if ischar(data)
 end
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', 'volume', 'feedback', 'yes');
+data = ft_checkdata(data, 'ft_datatype', 'volume', 'feedback', 'yes');
 
 % select the functional and the mask parameter
 cfg.funparameter  = parameterselection(cfg.funparameter, data);

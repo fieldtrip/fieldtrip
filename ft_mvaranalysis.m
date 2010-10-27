@@ -9,7 +9,7 @@ function [mvardata] = ft_mvaranalysis(cfg, data)
 % The input data should be organised in a structure as obtained from 
 % the FT_PREPROCESSING function. The configuration depends on the type 
 % of computation that you want to perform.
-% The output is a data structure of datatype 'mvar' which contains the
+% The output is a data structure of ft_datatype 'mvar' which contains the
 % multivariate autoregressive coefficients in the field coeffs, and the
 % covariance of the residuals in the field noisecov. 
 %
@@ -117,7 +117,7 @@ if ~isempty(cfg.inputfile)
 end
 
 %check the input-data
-data = ft_checkdata(data, 'datatype', 'raw', 'hastrialdef', 'yes');
+data = ft_checkdata(data, 'ft_datatype', 'raw', 'hastrialdef', 'yes');
 
 %check configurations
 switch cfg.toolbox
