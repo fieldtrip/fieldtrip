@@ -46,7 +46,7 @@ Fl_Check_Button *hpButton;
 Fl_Button *conButton;
 Fl_Input *addrField;
 Fl_Box *scaleBox;
-boolean useHighpass;
+bool useHighpass;
 MultiChannelFilter<float> *hpFilter = NULL;
 FtConnection ftCon;
 
@@ -439,7 +439,11 @@ void idleCall(void *dummy) {
 	
 	if (numChannels == 0) {
 		if (!readHeader()) {
+			#ifdef WIN32
 			Sleep(50);
+			#else
+			usleep(50000);
+			#endif
 			return;
 		}
 	}
