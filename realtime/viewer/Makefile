@@ -11,6 +11,7 @@ CXX = g++
 
 PLATFORM = $(shell gcc -dumpmachine)
 
+# Windows doesn't know "uname", so we need to check for the GCC platform first 
 ifeq "$(PLATFORM)" "mingw32"
 	FLPREFIX = C:/msys/1.0/local
 	LDFLAGS  = pthreadGC2.dll ../buffer/src/libbuffer.a	
@@ -19,8 +20,8 @@ ifeq "$(PLATFORM)" "mingw32"
 	SUFFIX   = .exe
 else
 	LDFLAGS = -lpthread ../buffer/src/libbuffer.a
-	FLFLAGS = `fltk-config --cxxflags`
-	LDFL    = `fltk-config --ldflags`
+	FLFLAGS = $(shell fltk-config --cxxflags)
+	LDFL    = $(shell fltk-config --ldflags)
 	UNAME   = $(shell uname)
 	MACHINE = $(shell uname -m)
 	SUFFIX  = 
@@ -28,15 +29,15 @@ else
 		ifeq "$(MACHINE)" "i686"
 			SUFFIX = .glnx86
 		endif
-		ifeq "$(MACHINE)" "x68_64"
-			SUFFIX = .glnx86
+		ifeq "$(MACHINE)" "x86_64"
+			SUFFIX = .glnxa64
 		endif
 	endif
 	ifeq "$(UNAME)" "Darwin"
 		ifeq "$(MACHINE)" "i386"
 			SUFFIX = .maci
 		endif
-		ifeq "$(MACHINE)" "x68_64"
+		ifeq "$(MACHINE)" "x86_64"
 			SUFFIX = .maci64
 		endif
 	endif
