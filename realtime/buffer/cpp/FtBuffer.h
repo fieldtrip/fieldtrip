@@ -513,5 +513,45 @@ class FtSampleBlock {
 };
 
 
+class FtConnection {
+	public:
+	
+	FtConnection(int retry=0) {
+		this->retry  = (retry < 0) ? 0 : retry;
+		this->sock   = -1;
+		this->type   = -1;
+		++numConnections;
+	}
+	
+	~FtConnection();
+	
+	void setRetry(int retry) 	{ this->retry = (retry < 0) ? 0 : retry; }
+	int getSocket() const 		{ return sock; }
+	int getType() const 		{ return type; }
+	bool isOpen() const 		{ return (sock > -1); }
+	
+	bool connect(const char *address);
+	bool connectDirect() {
+		disconnect();
+		sock = type = 0;
+		return true;
+	}
+	
+	bool connectTcp(const char *hostname, int port);
+	bool connectUnix(const char *pathname);
+	void disconnect() {
+		if (sock > 0) closesocket(sock);
+		sock = -1;
+		type = -1;
+	}
+	
+	protected:
+	
+	#ifdef WIN32
+	static WSADATA wsa;
+	#endif
+	static int numConnections;
+	int sock, type, retry;
+};
 
 #endif
