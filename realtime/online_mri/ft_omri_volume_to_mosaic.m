@@ -18,7 +18,7 @@ for n = 1:ns
 	js = 1 + (col-1)*w;
 	je = col*w;
 		
-	M(is:ie, js:je) = V(:,:,n)';
+	M(is:ie, js:je) = rot90(V(:,:,n));
 	col = col + 1;
 	if col>nn
 	   row = row + 1;

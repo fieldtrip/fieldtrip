@@ -118,7 +118,7 @@ x3   = x3(:);
 % Possibly mask an area of the sample volume.
 %-----------------------------------------------------------------------
 if ~isempty(model.PW),
-    [y1,y2,y3]=coords([0 0 0  0 0 0],model.mat, model.PW.mat ,x1,x2,x3);
+	[y1,y2,y3]=coords([0 0 0  0 0 0],model.mat, model.PW.mat ,x1,x2,x3);
     wt  = spm_sample_vol(model.PW,y1,y2,y3,1);
     msk = find(wt>0.01);
     x1  = x1(msk);
