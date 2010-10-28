@@ -21,7 +21,25 @@ else
 	LDFLAGS = -lpthread ../buffer/src/libbuffer.a
 	FLFLAGS = `fltk-config --cxxflags`
 	LDFL    = `fltk-config --ldflags`
+	UNAME   = $(shell uname)
+	MACHINE = $(shell uname -m)
 	SUFFIX  = 
+	ifeq "$(UNAME)" "Linux"
+		ifeq "$(MACHINE)" "i686"
+			SUFFIX = .glnx86
+		endif
+		ifeq "$(MACHINE)" "x68_64"
+			SUFFIX = .glnx86
+		endif
+	endif
+	ifeq "$(UNAME)" "Darwin"
+		ifeq "$(MACHINE)" "i386"
+			SUFFIX = .maci
+		endif
+		ifeq "$(MACHINE)" "x68_64"
+			SUFFIX = .maci64
+		endif
+	endif
 endif
 
 CXXFLAGS = $(FLFLAGS) -I../buffer/src -I../buffer/cpp -I. -Wunused -Wall -pedantic
