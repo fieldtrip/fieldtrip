@@ -109,6 +109,7 @@ void startStopCallback(Fl_Widget *widget) {
 		fSample = atof(inpFSample->value());
 		if (fSample < 1) fSample = 1;
 		if (fSample > 100000) fSample = 100000;
+		// sliFreq->range(0.01, 0.5*fSample);
 	
 		snprintf(lab, 20, "%.2f", fSample);
 		inpFSample->value(lab);

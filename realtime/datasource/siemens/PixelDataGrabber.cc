@@ -41,6 +41,8 @@ bool PixelDataGrabber::monitorDirectory(const char *directory) {
 		protInfo = NULL;
 	}
 	
+	curFileIndex = 0;
+	
 	if (FW) {
 		FW->stopListenForChanges();
 		delete FW;
@@ -68,7 +70,7 @@ bool PixelDataGrabber::connectToFieldTrip(const char *hostname, int port) {
 	} else {
 		ftbSocket = -1;
 	}
-	headerWritten = false;
+	headerWritten = false;		
 	return (ftbSocket > 0);
 }
 	
@@ -677,9 +679,8 @@ void PixelDataGrabber::tryFolderToBuffer() {
 			curFileIndex++;
 			printf("curFileIndex = %i\n", curFileIndex);
 			lastName = fullName;
-			if (ftbSocket == -1) continue;
 			if (curFileIndex == filesPerEcho * numEchos) {
-				sendFrameToBuffer(tv);
+				if (ftbSocket != -1) sendFrameToBuffer(tv);
 				curFileIndex = 0;
 			}
 		} 
@@ -687,8 +688,8 @@ void PixelDataGrabber::tryFolderToBuffer() {
 			if (!tryReadFile(fullName.c_str(), protBuffer)) return;
 	
 			handleProtocol((char *) protBuffer.data(), protBuffer.size());
-			curFileIndex = 0;
 			if (ftbSocket != -1) writeHeader();
+			curFileIndex = 0;
 			lastAction = ProtocolRead;
 		} 
 		else {
