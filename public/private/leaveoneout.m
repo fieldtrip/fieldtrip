@@ -15,6 +15,8 @@ end
 if numel(fn)==1 && strcmp(fn{1}, 'dimord'),
   %data is not source data
   reduceddim = reduceddim{1};
+else
+  error('jackknife not yet supported for source level data');
 end
 reduceddim(rptdim) = 1;
 
