@@ -196,7 +196,7 @@ if strcmp(cfg.correctm, 'cluster')
     fprintf('using a nonparmetric threshold for clustering\n');
     cfg.clustercritval = [];  % this will be determined later
   elseif strcmp(cfg.clusterthreshold, 'parametric') && isempty(cfg.clustercritval)
-    fprintf('computing a parmetric threshold for clustering\n');
+    fprintf('computing a parametric threshold for clustering\n');
     tmpcfg = [];
     tmpcfg.dimord         = cfg.dimord;
     tmpcfg.dim            = cfg.dim;
