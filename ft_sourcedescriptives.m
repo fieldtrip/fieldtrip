@@ -1,6 +1,6 @@
 function [source] = ft_sourcedescriptives(cfg, source)
 
-% FT_SOURCEDESCRIPTIVES computes descriptive parameters of the beamformer source
+% FT_SOURCEDESCRIPTIVES computes descriptive parameters of the source
 % analysis results.
 %
 % Use as:
@@ -27,7 +27,7 @@ function [source] = ft_sourcedescriptives(cfg, source)
 % The nai, i.e. neural activity index (power divided by projected noise),
 % is computed prior to applying the optional transformation.  Subsequently,
 % the transformation is applied on the power and on the projected noise
-% using "feval". A usefull transformation is for example 'log' or 'log10'.
+% using "feval". A useful transformation is for example 'log' or 'log10'.
 %
 % If repeated trials are present that have undergone some sort of
 % resampling (i.e. jackknife, bootstrap, singletrial or rawtrial), the mean,
@@ -42,6 +42,8 @@ function [source] = ft_sourcedescriptives(cfg, source)
 %   cfg.outputfile = one can specify output as file to save to disk
 %
 % Copyright (C) 2004-2007, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2010, Jan-Mathijs Schoffelen
+
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
