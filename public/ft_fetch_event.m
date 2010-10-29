@@ -29,7 +29,7 @@ function [event]=ft_fetch_event(data)
 % $Id$
 
 % check whether input is data
-data = ft_checkdata(data, 'ft_datatype', 'raw');
+data = ft_checkdata(data, 'datatype', 'raw');
 
 % locate the event structure
 event = findcfg(data.cfg, 'event');

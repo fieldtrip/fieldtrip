@@ -30,7 +30,7 @@ function [data] = ft_checkdata(data, varargin)
 %
 % For some options you can specify multiple values, e.g.
 %   [data] = ft_checkdata(data, 'senstype', {'ctf151', 'ctf275'}), e.g. in megrealign
-%   [data] = ft_checkdata(data, 'ft_datatype', {'timelock', 'freq'}), e.g. in sourceanalysis
+%   [data] = ft_checkdata(data, 'datatype', {'timelock', 'freq'}), e.g. in sourceanalysis
 
 % Copyright (C) 2007-2009, Robert Oostenveld
 %
@@ -77,7 +77,7 @@ function [data] = ft_checkdata(data, varargin)
 
 % get the optional input arguments
 feedback      = keyval('feedback',      varargin); if isempty(feedback), feedback = 'no'; end
-dtype         = keyval('ft_datatype',      varargin); % should not conflict with the ft_datatype function
+dtype         = keyval('datatype',      varargin); % should not conflict with the ft_datatype function
 dimord        = keyval('dimord',        varargin);
 stype         = keyval('senstype',      varargin); % senstype is a function name which should not be masked
 ismeg         = keyval('ismeg',         varargin);
