@@ -107,13 +107,13 @@ switch cfg.method
         error('partialisation on single trial observations is not supported');
       end
       try
-        data    = ft_checkdata(data, 'ft_datatype', {'freqmvar' 'freq'}, 'cmbrepresentation', 'full');
+        data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbrepresentation', 'full');
         inparam = 'crsspctrm';
       catch
         error('partial coherence/csd is only supported for input allowing for a all-to-all csd representation');
       end
     else
-      data    = ft_checkdata(data, 'ft_datatype', {'freqmvar' 'freq' 'source'});
+      data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
       inparam = 'crsspctrm';
     end
     
@@ -132,13 +132,13 @@ switch cfg.method
     % FIXME think of accommodating partial coherence for source data with only a few references
     
   case {'plv'}
-    data    = ft_checkdata(data, 'ft_datatype', {'freqmvar' 'freq'});
+    data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';
     normrpt = 1;
   case {'corr' 'xcorr'}
-    data = ft_checkdata(data, 'ft_datatype', 'raw');
+    data = ft_checkdata(data, 'datatype', 'raw');
   case {'amplcorr' 'powcorr'}
-    data    = ft_checkdata(data, 'ft_datatype', {'freqmvar' 'freq' 'source'});
+    data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
     dtype   = ft_datatype(data);
     switch dtype
       case {'freq' 'freqmvar'}
@@ -150,21 +150,21 @@ switch cfg.method
       otherwise
     end
   case {'granger'}
-    data    = ft_checkdata(data, 'ft_datatype', {'mvar' 'freqmvar' 'freq'});
+    data    = ft_checkdata(data, 'datatype', {'mvar' 'freqmvar' 'freq'});
     inparam = {'transfer', 'noisecov', 'crsspctrm'};
     % FIXME could also work with time domain data
   case {'instantaneous_causality'}
-    data    = ft_checkdata(data, 'ft_datatype', {'mvar' 'freqmvar' 'freq'});
+    data    = ft_checkdata(data, 'datatype', {'mvar' 'freqmvar' 'freq'});
     inparam = {'transfer', 'noisecov', 'crsspctrm'};
   case {'total_interdependence'}
-    data    = ft_checkdata(data, 'ft_datatype', {'freqmvar' 'freq'});
+    data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';
   case {'dtf' 'pdc'}
-    data    = ft_checkdata(data, 'ft_datatype', {'freqmvar' 'freq'});
+    data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'transfer';
   case {'psi'}
     if ~isfield(cfg, 'normalize'),  cfg.normalize  = 'no';  end
-    data    = ft_checkdata(data, 'ft_datatype', {'freqmvar' 'freq'});
+    data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';
   case {'di'}
     %wat eigenlijk?

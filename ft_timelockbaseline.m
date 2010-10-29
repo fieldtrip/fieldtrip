@@ -59,7 +59,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-timelock = ft_checkdata(timelock, 'ft_datatype', 'timelock', 'feedback', 'yes');
+timelock = ft_checkdata(timelock, 'datatype', 'timelock', 'feedback', 'yes');
 
 % the cfg.blc/blcwindow options are used in preprocessing and in
 % ft_timelockanalysis (i.e. in private/preproc), hence make sure that

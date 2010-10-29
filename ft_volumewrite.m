@@ -80,7 +80,7 @@ if isempty(cfg.filename),        error('Empty output filename');        end
 
 % set the defaults
 if ~isfield(cfg, 'filetype'),    cfg.filetype     = 'spm';      end
-if ~isfield(cfg, 'ft_datatype')     cfg.ft_datatype     = 'int16';    end
+if ~isfield(cfg, 'datatype')     cfg.ft_datatype     = 'int16';    end
 if ~isfield(cfg, 'downsample'),  cfg.downsample   = 1;          end
 if ~isfield(cfg, 'markorigin')   cfg.markorigin   = 'no';       end
 if ~isfield(cfg, 'markfiducial') cfg.markfiducial = 'no';       end
@@ -117,7 +117,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-volume = ft_checkdata(volume, 'ft_datatype', 'volume', 'feedback', 'yes');
+volume = ft_checkdata(volume, 'datatype', 'volume', 'feedback', 'yes');
 
 % select the parameter that should be written
 cfg.parameter = parameterselection(cfg.parameter, volume);

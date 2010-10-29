@@ -126,7 +126,7 @@ if isstruct(input)
   elseif strcmp(input.structtype, 'besa_channels')
     %fprintf('BESA data export\n');
 
-    if isfield(input,'ft_datatype')
+    if isfield(input,'datatype')
       switch input.ft_datatype
         case {'Raw_Data','Epoched_Data','Segment'}
           data.fsample    = input.samplingrate;

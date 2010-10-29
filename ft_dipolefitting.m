@@ -169,7 +169,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'ft_datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
+data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
 
 % put the low-level options pertaining to the dipole grid (used for initial scanning) in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});

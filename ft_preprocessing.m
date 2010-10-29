@@ -264,7 +264,7 @@ if hasdata
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   % the input data must be raw
-  data = ft_checkdata(data, 'ft_datatype', 'raw', 'hasoffset', 'yes', 'hastrialdef', 'yes');
+  data = ft_checkdata(data, 'datatype', 'raw', 'hasoffset', 'yes', 'hastrialdef', 'yes');
 
   % check if the input cfg is valid for this function
   cfg = ft_checkconfig(cfg, 'forbidden',   {'trl', 'dataset', 'datafile', 'headerfile'});
@@ -318,7 +318,7 @@ else
   % check if the input cfg is valid for this function
   cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
   cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-  cfg = ft_checkconfig(cfg, 'renamed',    {'ft_datatype', 'continuous'});
+  cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
   cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
   % read the header

@@ -209,9 +209,9 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'ft_datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
+data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
 if nargin>2
-  baseline = ft_checkdata(baseline, 'ft_datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
+  baseline = ft_checkdata(baseline, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
 end
 
 % check if the input cfg is valid for this function

@@ -59,7 +59,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-freq = ft_checkdata(freq, 'ft_datatype', 'freq', 'feedback', 'yes');
+freq = ft_checkdata(freq, 'datatype', 'freq', 'feedback', 'yes');
 
 % give a warning if the input is inconsistent
 if ischar(cfg.baseline) && strcmp(cfg.baseline, 'no') && ~isempty(cfg.baselinetype)

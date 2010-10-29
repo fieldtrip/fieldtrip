@@ -92,7 +92,7 @@ end
 
 if roi2mask
   % only for volume data
-  volume = ft_checkdata(volume, 'ft_datatype', 'volume');
+  volume = ft_checkdata(volume, 'datatype', 'volume');
 
   % set the defaults
   if ~isfield(cfg, 'round2nearestvoxel'),  cfg.round2nearestvoxel = 'no';  end
@@ -211,7 +211,7 @@ if roi2mask
 
 elseif mask2label
   % convert to source representation (easier to work with)
-  volume = ft_checkdata(volume, 'ft_datatype', 'source');
+  volume = ft_checkdata(volume, 'datatype', 'source');
   ft_checkconfig(cfg, 'required', {'atlas' 'inputcoord'});
 
   % set defaults

@@ -90,7 +90,7 @@ if ~isempty(cfg.inputfile)
 end
 
 if hasdata
-  data = ft_checkdata(data, 'ft_datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hastrialdef', 'yes', 'hasoffset', 'yes');
+  data = ft_checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hastrialdef', 'yes', 'hasoffset', 'yes');
   if ~isfield(cfg, 'continuous') && length(data.trial) == 1
     cfg.continuous = 'yes';
   end
@@ -98,7 +98,7 @@ else
   % check if the input cfg is valid for this function
   cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
   cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-  cfg = ft_checkconfig(cfg, 'renamed',    {'ft_datatype', 'continuous'});
+  cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
   cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 end
 

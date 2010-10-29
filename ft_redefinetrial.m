@@ -96,7 +96,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'ft_datatype', 'raw', 'feedback', cfg.feedback);
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', cfg.feedback);
 fb   = strcmp(cfg.feedback, 'yes');
 
 % select trials of interest

@@ -90,8 +90,8 @@ if ischar(anatomical)
 end
 
 % check if the input data is valid for this function and ensure that the structures correctly describes a volume
-functional = ft_checkdata(functional, 'ft_datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
-anatomical = ft_checkdata(anatomical, 'ft_datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
+functional = ft_checkdata(functional, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
+anatomical = ft_checkdata(anatomical, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
 
 if isfield(cfg, 'sourceunits') && ~isempty(cfg.sourceunits)
   % this uses a deprecated option

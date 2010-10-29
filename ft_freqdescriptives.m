@@ -102,7 +102,7 @@ if ~isempty(cfg.inputfile)
 end
 
 % check if the input data is valid for this function
-freq = ft_checkdata(freq, 'ft_datatype', {'freq', 'freqmvar'}, 'feedback', 'yes');
+freq = ft_checkdata(freq, 'datatype', {'freq', 'freqmvar'}, 'feedback', 'yes');
 
 % determine some specific details of the input data
 hasrpt   = ~isempty(strfind(freq.dimord, 'rpt')) || ~isempty(strfind(freq.dimord, 'subj'));
