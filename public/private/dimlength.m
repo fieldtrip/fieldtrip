@@ -3,8 +3,8 @@ function [n, fn] = dimlength(data, seldim, fld)
 % DIMLENGTH(DATA, SELDIM, FLD) is a helper function to obtain n, the number of elements
 % along dimension seldim from the appropriate field from the input data containing 
 % functional data. The output n It can be called with one input argument only. In that case 
-% If called with one input argument only, it will output two cell arrays containing the size
-% of the functional fields, based on the XXXdimord, and the corresponding XXXdimord fields.
+% it will output two cell arrays containing the size of the functional fields, based on the 
+% XXXdimord, and the corresponding XXXdimord fields.
 % When the data contains a single dimord field (everything except source data), the cell-arrays
 % in the output only contain one element.
  
