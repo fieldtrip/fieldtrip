@@ -4,13 +4,13 @@ function [output] = fixsource(input, varargin)
 % other way around
 %
 % Use as:
-%   sourcerestyle(input, type)
+%   fixsource(input, type)
 %    where input is a source structure,
 %
 % Typically, old style source structures contain
 %   avg.XXX or trial.XXX fields
 %
-% The ne wstyle source structure contains:
+% The new style source structure contains:
 %   source.pos
 %   source.dim (optional, if the list of positions describes a 3D volume
 %   source.XXX the old style subfields in avg/trial
