@@ -16,8 +16,8 @@ HOSTNAME=`hostname -s`
 case "$PLATFORM" in
 "x86_64-redhat-linux")
 	MATLABARCH=glnxa64
-	if [ -e /opt/matlab ] ; then
-	MATLABPATH=/opt/matlab77
+	if [ -e /opt/matlab78 ] ; then
+	MATLABPATH=/opt/matlab78
 	MATLABCMD='"/opt/cluster/matlab78 -nodisplay -singleCompThread"'
 	else
 	MATLABPATH=/opt/matlab-2009b
