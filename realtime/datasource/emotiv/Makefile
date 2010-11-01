@@ -10,7 +10,7 @@
 PLATFORM = $(shell gcc -dumpmachine)
 
 ifeq "$(PLATFORM)" "mingw32"
-   LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm edk.dll
+   LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -lws2_32 -lwinmm edk.dll
    INCPATH = -I../../buffer/src -I../../buffer/cpp -I. -I../../buffer/pthreads-win32/include -Iinclude
    SUFFIX = .exe
 else
@@ -26,5 +26,5 @@ all: emotiv2ft$(SUFFIX)
 emotiv2ft.o: emotiv2ft.cc
 	g++ -c emotiv2ft.cc $(CFLAGS)
 	
-emotiv2ft$(SUFFIX): emotiv2ft.o
+emotiv2ft$(SUFFIX): emotiv2ft.o ../../buffer/src/socketserver.o
 	g++ -o $@ $^ $(LDFLAGS) 

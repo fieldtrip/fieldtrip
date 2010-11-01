@@ -6,6 +6,7 @@
 #include <map>
 #include <signal.h>
 #include <FtBuffer.h>
+#include <socketserver.h>
 
 #include "edk.h"
 #include "edkErrorCode.h"
@@ -19,7 +20,6 @@ EE_DataChannel_t targetChannelList[TOTAL_CHANNELS] = {
 		ED_FC6, ED_F4, ED_F8, ED_AF4, ED_GYROX, ED_GYROY, ED_TIMESTAMP, 
 		ED_FUNC_ID, ED_FUNC_VALUE, ED_MARKER, ED_SYNC_SIGNAL
 };
-
 
 const char *labels[TOTAL_CHANNELS] = {
 	"COUNTER",
@@ -48,60 +48,6 @@ const char *labels[TOTAL_CHANNELS] = {
 
 
 volatile bool keepRunning = true;
-
-
-class SampleBlock {
-	public:
-	SampleBlock() {
-		sizeAlloc=0;
-		request.def = &reqdef;
-		reqdef.command = PUT_DAT;
-		reqdef.version = VERSION;
-		reqdef.bufsize = 0;
-		ddef = NULL;
-	}
-	
-	~SampleBlock() {
-		if (ddef!=NULL) free(ddef);
-	}
-	
-	void dispose() {
-		if (ddef!=NULL) free(ddef);
-		ddef = 0;
-		reqdef.bufsize = 0;
-	}
-	
-	double *getMatrix(int numChannels, int numSamples) {
-		unsigned int newSize = sizeof(datadef_t) + numChannels*numSamples*sizeof(double);
-		
-		if (newSize > sizeAlloc) {
-			if (ddef!=NULL) free(ddef);
-			ddef = (datadef_t *) malloc(newSize);
-			if (ddef == NULL) {
-				reqdef.bufsize = 0;
-				return NULL;
-			}
-		}
-		ddef->nchans    = numChannels;
-		ddef->nsamples  = numSamples;
-		ddef->data_type = DATATYPE_FLOAT64;
-		ddef->bufsize   = numChannels * numSamples * sizeof(double);
-		reqdef.bufsize = ddef->bufsize + sizeof(datadef_t);
-		return (double *) (ddef+1); // first bytes after datadef_t
-	}
-	
-	const message_t *asRequest() { 
-		request.buf = (reqdef.bufsize == 0) ? NULL : ddef;
-		return &request; 
-	}		
-	
-	protected:
-	
-	datadef_t *ddef;
-	unsigned int sizeAlloc;
-	messagedef_t reqdef;
-	message_t request;
-};
 
 bool writeHeader(int ftSocket, float fSample) {
 	FtBufferRequest req;
@@ -141,7 +87,6 @@ void abortHandler(int sig) {
 	keepRunning = false;
 }
 
-
 					  
 int main(int argc, char** argv) {
 
@@ -152,12 +97,12 @@ int main(int argc, char** argv) {
 	float secs							= 1;
 	unsigned int samplingRate = 0;
 	bool readyToCollect	= false;
-	
+	ft_buffer_server_t *server = NULL;
 	int port, ftSocket;
 	int sampleCounter = 0;
 	char hostname[256];
 	FtBufferResponse resp;
-	SampleBlock sampleBlock;
+	FtSampleBlock sampleBlock(DATATYPE_FLOAT64);
 	
 	if (argc>1) {
 		strncpy(hostname, argv[1], sizeof(hostname));
@@ -171,10 +116,19 @@ int main(int argc, char** argv) {
 		port = 1972;
 	}	
 	
-	ftSocket = open_connection(hostname, port);
-	if (ftSocket < 0) {
-		fprintf(stderr, "Could not connect to FieldTrip buffer on %s:%i\n", hostname, port);
-		return 1;
+	if (strcmp(hostname, "-")) {
+		ftSocket = open_connection(hostname, port);
+		if (ftSocket < 0) {
+			fprintf(stderr, "Could not connect to FieldTrip buffer on %s:%i\n", hostname, port);
+			return 1;
+		}
+	} else {
+		server = ft_start_buffer_server(port, NULL, NULL, NULL);
+		if (server == NULL) {
+			fprintf(stderr, "Could not spawn FieldTrip buffer on port %i\n", port);
+			return 1;
+		}
+		ftSocket = 0;
 	}
 	
 	eEvent = EE_EmoEngineEventCreate();
@@ -218,7 +172,6 @@ int main(int argc, char** argv) {
 		}
 
 		if (readyToCollect) {
-					
 			EE_DataUpdateHandle(0, hData);
 
 			unsigned int nSamplesTaken=0;
@@ -226,7 +179,7 @@ int main(int argc, char** argv) {
 	
 			if (nSamplesTaken != 0) {
 				double* data = new double[nSamplesTaken];
-				double* dest = sampleBlock.getMatrix(TOTAL_CHANNELS, nSamplesTaken); 
+				double* dest = (double *) sampleBlock.getMatrix(TOTAL_CHANNELS, nSamplesTaken); 
 				for (int i=0;i<TOTAL_CHANNELS;i++) {
 					EE_DataGet(hData, targetChannelList[i], data, nSamplesTaken);
 						
@@ -246,7 +199,8 @@ int main(int argc, char** argv) {
 		Sleep(10);
 	}
 	EE_DataFree(hData);
-	close_connection(ftSocket);
+	if (ftSocket > 0) close_connection(ftSocket);
+	if (server != NULL) ft_stop_buffer_server(server);
 
 	EE_EngineDisconnect();
 	EE_EmoStateFree(eState);
