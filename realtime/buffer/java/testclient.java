@@ -8,7 +8,7 @@ import java.io.*;
 import java.nio.*;
 import nl.fcdonders.fieldtrip.*;
 
-class testclient_pkg {
+class testclient {
 	public static void main(String[] args) throws IOException {
 		String hostname = "localhost";
 		int port = 1972;
