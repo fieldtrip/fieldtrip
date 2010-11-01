@@ -6,8 +6,9 @@
  */
 import java.io.*;
 import java.nio.*;
+import nl.fcdonders.fieldtrip.*;
 
-class testclient {
+class testclient_pkg {
 	public static void main(String[] args) throws IOException {
 		String hostname = "localhost";
 		int port = 1972;
@@ -28,7 +29,7 @@ class testclient {
 			}
 		}
 		
-		Client C = new Client();
+		BufferClient C = new BufferClient();
 
 		System.out.println("Connecting to "+hostname+":"+port);
 		C.connect(hostname, port);
@@ -67,7 +68,7 @@ class testclient {
 		*/
 		
 		if (hdr.nEvents > 0) {
-			Event[] evs = C.getEvents(0,hdr.nEvents-1);
+			BufferEvent[] evs = C.getEvents(0,hdr.nEvents-1);
 			for (int n=0;n<evs.length;n++) {
 				System.out.println("Ev: "+n+" TYPE="+evs[n].getTypeString()+" VALUE="+evs[n].getValueString());
 			}
