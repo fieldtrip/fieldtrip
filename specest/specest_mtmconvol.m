@@ -229,7 +229,37 @@ spectrum = permute(spectrum, [2 1 3 4]);
 
 
 
-% Below the code used to implement variable amount of tapers in a different way, kept here for future use
+
+% % below code does the exact same as above, but without the trick of converting to cell-arrays for speed increases, kept here for testing, please do not remove
+% % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
+% datspectrum = transpose(fft(transpose([dat repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
+% spectrum = complex(zeros([max(ntaper) nchan nfreqoi ntimeboi])); % assumes fixed number of tapers
+% for ifreqoi = 1:nfreqoi
+%   fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
+%   for itap = 1:max(ntaper)
+%     % compute indices that will be used to extracted the requested fft output
+%     nsamplefreqoi    = timwin(ifreqoi) .* fsample;
+%     reqtimeboiind    = find((timeboi >=  (nsamplefreqoi ./ 2)) & (timeboi <    ndatsample - (nsamplefreqoi ./2)));
+%     reqtimeboi       = timeboi(reqtimeboiind);
+%     
+%     % compute datspectrum*wavelet, if there are reqtimeboi's that have data
+%     % create a matrix of NaNs if there is no taper for this current frequency-taper-number
+%     if itap > ntaper(ifreqoi)
+%       spectrum(itap,:,ifreqoi,:) = complex(nan(nchan,ntimeboi));
+%     else
+%       dum = fftshift(transpose(ifft(transpose(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1])))),2); % double explicit transpose to speedup fft
+%       tmp = complex(nan(nchan,ntimeboi));
+%       tmp(:,reqtimeboiind) = dum(:,reqtimeboi);
+%       tmp = tmp .* sqrt(2 ./ timwinsample(ifreqoi));
+%       spectrum(itap,:,ifreqoi,:) = tmp;
+%     end
+%   end
+% end
+
+
+
+
+% Below the code used to implement variable amount of tapers in a different way, kept here for testing, please do not remove
 % % build tapfreq vector
 % tapfreq = [];
 % for ifreqoi = 1:nfreqoi
