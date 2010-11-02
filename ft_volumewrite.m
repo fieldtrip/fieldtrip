@@ -376,22 +376,22 @@ switch cfg.filetype
     % specify the data type
     switch lower(cfg.ft_datatype)
       case 'bit1'
-        avw.hdr.dime.ft_datatype = 1;
+        avw.hdr.dime.datatype = 1;
         avw.hdr.dime.bitpix   = 1;
       case 'uint8'
-        avw.hdr.dime.ft_datatype = 2;
+        avw.hdr.dime.datatype = 2;
         avw.hdr.dime.bitpix   = 8;
       case 'int16'
-        avw.hdr.dime.ft_datatype = 4;
+        avw.hdr.dime.datatype = 4;
         avw.hdr.dime.bitpix   = 16;
       case 'int32'
-        avw.hdr.dime.ft_datatype = 8;
+        avw.hdr.dime.datatype = 8;
         avw.hdr.dime.bitpix   = 32;
       case 'float'
-        avw.hdr.dime.ft_datatype = 16;
+        avw.hdr.dime.datatype = 16;
         avw.hdr.dime.bitpix   = 32;
       case 'double'
-        avw.hdr.dime.ft_datatype = 64;
+        avw.hdr.dime.datatype = 64;
         avw.hdr.dime.bitpix   = 64;
       otherwise
         error('unknown ft_datatype');
