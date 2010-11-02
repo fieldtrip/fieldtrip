@@ -80,7 +80,7 @@ if isempty(cfg.filename),        error('Empty output filename');        end
 
 % set the defaults
 if ~isfield(cfg, 'filetype'),    cfg.filetype     = 'spm';      end
-if ~isfield(cfg, 'datatype')     cfg.ft_datatype     = 'int16';    end
+if ~isfield(cfg, 'ft_datatype'), cfg.ft_datatype  = 'int16';    end
 if ~isfield(cfg, 'downsample'),  cfg.downsample   = 1;          end
 if ~isfield(cfg, 'markorigin')   cfg.markorigin   = 'no';       end
 if ~isfield(cfg, 'markfiducial') cfg.markfiducial = 'no';       end
