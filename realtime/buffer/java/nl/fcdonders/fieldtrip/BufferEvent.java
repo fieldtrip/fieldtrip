@@ -22,29 +22,68 @@ public class BufferEvent {
 		offset     = buf.getInt();
 		duration   = buf.getInt();
 		int size = buf.getInt();
-		int sizeType  = valueNumEl * Header.wordsize[valueType];
-		int sizeValue = typeNumEl * Header.wordsize[typeType];
+		int sizeType  = typeNumEl * DataType.wordSize[typeType];
+		int sizeValue = valueNumEl * DataType.wordSize[valueType];	
 	
-		value = new byte[sizeType];
-		type  = new byte[sizeValue];
+		type  = DataType.getObject(typeType, typeNumEl, buf);
+		value = DataType.getObject(valueType, valueNumEl, buf);
 	
-		buf.get(type);
-		buf.get(value);
 		size -= sizeType + sizeValue;
 		if (size != 0) {
 			buf.position(buf.position() + size);
 		}
 	}
 	
-	public String getTypeString() {
-		if (typeType != Header.DATATYPE_CHAR) return null;
-		return new String(type);
+	public Object getType() {
+		return type;
 	}
 	
-	public String getValueString() {
-		if (valueType != Header.DATATYPE_CHAR) return null;
-		return new String(value);
-	}	
+	public Object getValue() {
+		return value;
+	}		
+		
+	public void setType(Object typeObj) {
+		type = typeObj;
+	}
+	
+	public void setValue(Object valueObj) {
+		value = valueObj;
+	}
+		
+	public int size() {
+		int sizeType  = typeNumEl * DataType.wordSize[typeType];
+		int sizeValue = valueNumEl * DataType.wordSize[valueType];
+	
+		return 32 + sizeType + sizeValue;
+	}
+	
+	public static int count(ByteBuffer buf) {
+		int num = 0;
+		int pos = buf.position();
+	
+		while (buf.remaining() >= 32) {
+			int typeType   = buf.getInt();
+			int typeNumEl  = buf.getInt();
+			int valueType  = buf.getInt();
+			int valueNumEl = buf.getInt();
+			buf.getInt(); // sample
+			buf.getInt(); // offset
+			buf.getInt(); // duration
+			int size = buf.getInt();
+			int sizeType  = typeNumEl * DataType.wordSize[typeType];
+			int sizeValue = valueNumEl * DataType.wordSize[valueType];
+		
+			if (sizeType < 0 || sizeValue < 0 || sizeType + sizeValue > size) {
+				return -(1+num);
+			}
+		
+			buf.position(buf.position() + size);
+			num++;
+		}
+		buf.position(pos);
+		return num;
+	}
+	
 	
 	public int sample;
 	public int offset;
@@ -53,6 +92,6 @@ public class BufferEvent {
 	public int typeNumEl;
 	public int valueType;
 	public int valueNumEl;
-	byte[] value;
-	byte[] type;
+	Object value;
+	Object type;
 }

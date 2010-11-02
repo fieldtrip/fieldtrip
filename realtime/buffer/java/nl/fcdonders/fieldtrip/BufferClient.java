@@ -97,14 +97,14 @@ public class BufferClient {
 		short[][] data = new short[nSamples][nChans];
 		
 		switch (dataType) {
-			case Header.DATATYPE_UINT8:
+			case DataType.UINT8:
 				for (int i=0;i<nSamples;i++) {
 					for (int j=0;j<nChans;j++) {
 						data[i][j] = (short) buf.get();
 					}
 				}
 				break;
-			case Header.DATATYPE_INT16:
+			case DataType.INT16:
 				ShortBuffer sBuf = buf.asShortBuffer();
 				for (int n=0;n<nSamples;n++) sBuf.get(data[n]);
 				break;
@@ -135,21 +135,21 @@ public class BufferClient {
 		int[][] data = new int[nSamples][nChans];
 		
 		switch (dataType) {
-			case Header.DATATYPE_UINT8:
+			case DataType.UINT8:
 				for (int i=0;i<nSamples;i++) {
 					for (int j=0;j<nChans;j++) {
 						data[i][j] = (int) buf.get();
 					}
 				}
 				break;
-			case Header.DATATYPE_INT16:
+			case DataType.INT16:
 				for (int i=0;i<nSamples;i++) {
 					for (int j=0;j<nChans;j++) {
 						data[i][j] = (int) buf.getShort();
 					}
 				}
 				break;
-			case Header.DATATYPE_INT32:
+			case DataType.INT32:
 				IntBuffer iBuf = buf.asIntBuffer();
 				for (int n=0;n<nSamples;n++) iBuf.get(data[n]);
 				break;
@@ -179,32 +179,32 @@ public class BufferClient {
 		float[][] data = new float[nSamples][nChans];
 		
 		switch (dataType) {
-			case Header.DATATYPE_UINT8:
+			case DataType.UINT8:
 				for (int i=0;i<nSamples;i++) {
 					for (int j=0;j<nChans;j++) {
 						data[i][j] = (float) buf.get();
 					}
 				}
 				break;
-			case Header.DATATYPE_INT16:
+			case DataType.INT16:
 				for (int i=0;i<nSamples;i++) {
 					for (int j=0;j<nChans;j++) {
 						data[i][j] = (float) buf.getShort();
 					}
 				}
 				break;
-			case Header.DATATYPE_INT32:
+			case DataType.INT32:
 				for (int i=0;i<nSamples;i++) {
 					for (int j=0;j<nChans;j++) {
 						data[i][j] = (float) buf.getInt();
 					}
 				}
 				break;
-			case Header.DATATYPE_FLOAT32:
+			case DataType.FLOAT32:
 				FloatBuffer fBuf = buf.asFloatBuffer();
 				for (int n=0;n<nSamples;n++) fBuf.get(data[n]);
 				break;
-			case Header.DATATYPE_FLOAT64:
+			case DataType.FLOAT64:
 				for (int i=0;i<nSamples;i++) {
 					for (int j=0;j<nChans;j++) {
 						data[i][j] = (float) buf.getDouble();
@@ -237,42 +237,42 @@ public class BufferClient {
 		double[][] data = new double[nSamples][nChans];
 		
 		switch (dataType) {
-			case Header.DATATYPE_UINT8:
+			case DataType.UINT8:
 				for (int i=0;i<nSamples;i++) {
 					for (int j=0;j<nChans;j++) {
 						data[i][j] = (double) buf.get();
 					}
 				}
 				break;
-			case Header.DATATYPE_INT16:
+			case DataType.INT16:
 				for (int i=0;i<nSamples;i++) {
 					for (int j=0;j<nChans;j++) {
 						data[i][j] = (double) buf.getShort();
 					}
 				}
 				break;
-			case Header.DATATYPE_INT32:
+			case DataType.INT32:
 				for (int i=0;i<nSamples;i++) {
 					for (int j=0;j<nChans;j++) {
 						data[i][j] = (double) buf.getInt();
 					}
 				}
 				break;		
-			case Header.DATATYPE_INT64:
+			case DataType.INT64:
 				for (int i=0;i<nSamples;i++) {
 					for (int j=0;j<nChans;j++) {
 						data[i][j] = (double) buf.getLong();
 					}
 				}
 				break;		
-			case Header.DATATYPE_FLOAT32:
+			case DataType.FLOAT32:
 				for (int i=0;i<nSamples;i++) {
 					for (int j=0;j<nChans;j++) {
 						data[i][j] = buf.getFloat();
 					}
 				}
 				break;
-			case Header.DATATYPE_FLOAT64:
+			case DataType.FLOAT64:
 				DoubleBuffer dBuf = buf.asDoubleBuffer();
 				for (int n=0;n<nSamples;n++) dBuf.get(data[n]);
 				break;
@@ -304,6 +304,28 @@ public class BufferClient {
 	}	
 	
 	
+	public BufferEvent[] getEvents() throws IOException {
+		ByteBuffer buf;
+
+		buf = ByteBuffer.allocate(8);
+		buf.order(myOrder); 
+	
+		buf.putShort(VERSION).putShort(GET_EVT).putInt(0).rewind();
+	
+		writeAll(buf);
+		buf = readResponse(GET_OK);
+	
+		int numEvt = BufferEvent.count(buf);
+		if (numEvt < 0) throw new IOException("Invalid event definitions in response.");
+	
+		BufferEvent[] evs = new BufferEvent[numEvt];
+		for (int n=0;n<numEvt;n++) {
+			evs[n] = new BufferEvent(buf);
+		}
+		return evs;
+	}	
+	
+	
 	public BufferEvent[] getEvents(int first, int last) throws IOException {
 		ByteBuffer buf;
 
@@ -316,12 +338,41 @@ public class BufferClient {
 		writeAll(buf);
 		buf = readResponse(GET_OK);
 	
-		BufferEvent[] evs = new BufferEvent[last - first + 1];
+		int numEvt = BufferEvent.count(buf);
+		if (numEvt != (last-first+1)) throw new IOException("Invalid event definitions in response.");
 	
-		for (int n=0;n<(last-first+1);n++) {
+		BufferEvent[] evs = new BufferEvent[numEvt];
+		for (int n=0;n<numEvt;n++) {
 			evs[n] = new BufferEvent(buf);
 		}
 		return evs;
+	}
+	
+	public SamplesEventsCount wait(int nSamples, int nEvents, int timeout) throws IOException {
+		ByteBuffer buf;
+
+		buf = ByteBuffer.allocate(20);
+		buf.order(myOrder); 
+	
+		buf.putShort(VERSION).putShort(WAIT_DAT).putInt(12);
+		buf.putInt(nSamples).putInt(nEvents).putInt(timeout).rewind();
+	
+		writeAll(buf);
+		buf = readResponse(WAIT_OK);
+	
+		return new SamplesEventsCount(buf.getInt(), buf.getInt());
+	}
+	
+	public SamplesEventsCount waitForSamples(int nSamples, int timeout) throws IOException {
+		return wait(nSamples, -1, timeout);
+	}	
+	
+	public SamplesEventsCount waitForEvents(int nEvents, int timeout) throws IOException {
+		return wait(-1, nEvents, timeout);
+	}		
+	
+	public SamplesEventsCount poll() throws IOException {
+		return wait(0,0,0);
 	}
 	
 	//*********************************************************************

@@ -14,20 +14,6 @@ import java.nio.*;
 	provide function for serialization (for writing).
 */
 public class Header {
-	public static final int DATATYPE_CHAR   = 0;
-	public static final int DATATYPE_UINT8  = 1;
-	public static final int DATATYPE_INT8   = 2;
-	public static final int DATATYPE_UINT16 = 3;
-	public static final int DATATYPE_INT16  = 4;
-	public static final int DATATYPE_UINT32 = 5;
-	public static final int DATATYPE_INT32  = 6;
-	public static final int DATATYPE_UINT64 = 7;
-	public static final int DATATYPE_INT64  = 8;
-	public static final int DATATYPE_FLOAT32= 9;
-	public static final int DATATYPE_FLOAT64= 10;
-
-	public static final int[] wordsize = {1,1,1,2,2,4,4,8,8,4,8};
-
 	public static final int CHUNK_UNKNOWN = 0;
 	public static final int CHUNK_CHANNEL_NAMES = 1;
 	public static final int CHUNK_CHANNEL_FLAGS = 2;

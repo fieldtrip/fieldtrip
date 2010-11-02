@@ -70,7 +70,7 @@ class testclient {
 		if (hdr.nEvents > 0) {
 			BufferEvent[] evs = C.getEvents(0,hdr.nEvents-1);
 			for (int n=0;n<evs.length;n++) {
-				System.out.println("Ev: "+n+" TYPE="+evs[n].getTypeString()+" VALUE="+evs[n].getValueString());
+				System.out.println("Ev: "+n+" TYPE="+evs[n].getType()+" VALUE="+evs[n].getValue());
 			}
 		}
 			
