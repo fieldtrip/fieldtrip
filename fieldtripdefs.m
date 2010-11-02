@@ -29,7 +29,7 @@ function fieldtripdefs
 % set the global defaults, the ft_checkconfig function will copy these into the local configurations
 global ft_default
 if ~isfield(ft_default, 'trackconfig'), ft_default.trackconfig = 'off';    end % cleanup, report, off
-if ~isfield(ft_default, 'ft_checkconfig'), ft_default.ft_checkconfig = 'loose';  end % pedantic, loose, silent
+if ~isfield(ft_default, 'checkconfig'), ft_default.checkconfig = 'loose';  end % pedantic, loose, silent
 if ~isfield(ft_default, 'checksize'),   ft_default.checksize   = 1e5;      end % number in bytes, can be inf
 
 % this is for Matlab version specific backward compatibility support
