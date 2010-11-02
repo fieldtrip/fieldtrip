@@ -28,7 +28,7 @@ function [spectrum,ntaper,freqoi] = specest_mtmfft(dat, time, varargin)
 % 
 %
 %
-% See also SPECEST_MTMCONVOL, SPECEST_CONVOL, SPECEST_HILBERT, SPECEST_NANFFT, SPECEST_MVAR, SPECEST_WAVELET
+% See also SPECEST_MTMCONVOL, SPECEST_CONVOL, SPECEST_HILBERT, SPECEST_WAVELET
 
 
 % get the optional input arguments
