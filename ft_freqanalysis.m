@@ -281,6 +281,7 @@ else
     time = data.time{itrial};
     
     % Perform specest call and set some specifics
+    clear spectrum % in case of very large trials, this lowers peak mem usage a bit
     switch cfg.method
       case 'mtmconvol'
         [spectrum,ntaper,foi,toi] = specest_mtmconvol(dat, time, 'timeoi', cfg.toi, 'timwin', cfg.t_ftimwin, options{:});
