@@ -1,7 +1,6 @@
 """
 FieldTrip buffer (V1) client in pure Python
 
-Not complete yet - only GET_xxx and PUT_xxx calls implemented.
 (C) 2010 S. Klanke
 """
 
