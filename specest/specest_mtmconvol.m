@@ -231,10 +231,11 @@ spectrum = permute(spectrum, [2 1 3 4]);
 
 
 
-% % below code does the exact same as above, but without the trick of converting to cell-arrays for speed increases, kept here for testing, please do not remove
+% % below code does the exact same as above, but without the trick of converting to cell-arrays for speed increases. however, when there is a huge variability in number of tapers per freqoi
+% % than this approach can benefit from the fact that the array can be precreated containing nans
 % % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
 % datspectrum = transpose(fft(transpose([dat repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
-% spectrum = complex(zeros([max(ntaper) nchan nfreqoi ntimeboi])); % assumes fixed number of tapers
+% spectrum = complex(nan([max(ntaper) nchan nfreqoi ntimeboi]),nan([max(ntaper) nchan nfreqoi ntimeboi])); % assumes fixed number of tapers
 % for ifreqoi = 1:nfreqoi
 %   fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
 %   for itap = 1:max(ntaper)
@@ -245,14 +246,14 @@ spectrum = permute(spectrum, [2 1 3 4]);
 %     
 %     % compute datspectrum*wavelet, if there are reqtimeboi's that have data
 %     % create a matrix of NaNs if there is no taper for this current frequency-taper-number
-%     if itap > ntaper(ifreqoi)
-%       spectrum(itap,:,ifreqoi,:) = complex(nan(nchan,ntimeboi));
-%     else
+%     if itap <= ntaper(ifreqoi)
 %       dum = fftshift(transpose(ifft(transpose(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1])))),2); % double explicit transpose to speedup fft
 %       tmp = complex(nan(nchan,ntimeboi));
 %       tmp(:,reqtimeboiind) = dum(:,reqtimeboi);
 %       tmp = tmp .* sqrt(2 ./ timwinsample(ifreqoi));
 %       spectrum(itap,:,ifreqoi,:) = tmp;
+%     else
+%       break
 %     end
 %   end
 % end
