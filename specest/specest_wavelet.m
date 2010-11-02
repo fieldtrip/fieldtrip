@@ -30,7 +30,7 @@ function [spectrum,freqoi,timeoi] = specest_wavelet(dat, time, varargin)
 % SHOULD FREQOI = 'ALL' BE REMOVED OR NOT?
 %
 %
-% See also SPECEST_MTMCONVOL, SPECEST_CONVOL, SPECEST_HILBERT, SPECEST_NANFFT, SPECEST_MVAR, SPECEST_MTMCONVOL
+% See also SPECEST_MTMCONVOL, SPECEST_CONVOL, SPECEST_HILBERT, SPECEST_MTMFFT
 
 
 % get the optional input arguments
