@@ -340,65 +340,87 @@ else
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% Create output
-    % set ingredients for below
-    if powflg
-      powdum = abs(spectrum) .^2;
-      % sinetaper scaling, not checked whether it works if hastime = 0
-      if strcmp(cfg.taper, 'sine')
-        sinetapscale = zeros(ntap,nfoi);  % assumes fixed number of tapers
-        for isinetap = 1:ntaper(1)  % assumes fixed number of tapers
-          sinetapscale(isinetap,:) = (1 - (((isinetap - 1) ./ ntaper) .^ 2));
-        end
-        sinetapscale = reshape(repmat(sinetapscale,[1 1 nchan ntoi]),[ntap nchan nfoi ntoi]);
-        powdum = powdum .* sinetapscale;
+    for ifoi = 1:nfoi
+      % set ingredients for below
+      acttboi = squeeze(~isnan(spectrum(1,1,ifoi,:)));
+      nacttboi = sum(acttboi);
+      if ~hastime
+        acttboi = 1;
+        nacttboi = 1;
       end
-    end
-    if fftflg
-      fourierdum = spectrum;
-    end
-    if csdflg
-      csddum = spectrum(:,cutdatindcmb(:,1),:,:) .* conj(spectrum(:,cutdatindcmb(:,2),:,:));
-    end
-    
-    % switch between keep's
-    switch keeprpt
+      acttap = squeeze(~isnan(spectrum(:,1,ifoi,find(acttboi,1))));
+
+      if powflg
+        powdum = abs(spectrum(acttap,:,ifoi,acttboi)) .^2;
+        % sinetaper scaling, not checked whether it works if hastime = 0
+        if strcmp(cfg.taper, 'sine')
+          sinetapscale = zeros(ntaper(ifoi),nfoi);  % assumes fixed number of tapers
+          for isinetap = 1:ntaper(ifoi)  % assumes fixed number of tapers
+            sinetapscale(isinetap,:) = (1 - (((isinetap - 1) ./ ntaper(ifoi)) .^ 2));
+          end
+          sinetapscale = reshape(repmat(sinetapscale,[1 1 nchan ntoi]),[ntaper(ifoi) nchan 1 ntoi]);
+          powdum = powdum .* sinetapscale;
+        end
+      end
+      if fftflg
+        fourierdum = spectrum(acttap,:,ifoi,acttboi);
+      end
+      if csdflg
+        csddum = spectrum(acttap,cutdatindcmb(:,1),ifoi,acttboi) .* conj(spectrum(acttap,cutdatindcmb(:,2),ifoi,acttboi));
+      end
       
-      case 1 % cfg.keeptrials,'no' &&  cfg.keeptapers,'no'
-        if powflg
-          powspctrm = powspctrm + (reshape(nanmean(powdum,1),[nchan nfoi ntoi]) ./ ntrials);
-        end
-        if fftflg
-          fourierspctrm = fourierspctrm + (reshape(nanmean(fourierdum,1),[nchan nfoi ntoi]) ./ ntrials);
-        end
-        if csdflg
-          crsspctrm = crsspctrm + (reshape(nanmean(csddum,1),[nchancmb nfoi ntoi]) ./ ntrials);
-        end
+      % switch between keep's
+      switch keeprpt
         
-      case 2 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'no'
-        if powflg
-          powspctrm(itrial,:,:,:) = reshape(nanmean(powdum,1),[nchan nfoi ntoi]);
-        end
-        if fftflg
-          fourierspctrm(itrial,:,:,:) = reshape(nanmean(fourierdum,1), [nchan nfoi ntoi]);
-        end
-        if csdflg
-          crsspctrm(itrial,:,:,:) = reshape(nanmean(csddum,1), [nchancmb nfoi ntoi]);
-        end
-        
-      case 4 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'yes'
-        rptind = reshape(1:ntrials .* ntap,[ntap ntrials]);
-        if powflg
-          powspctrm(rptind(:,itrial),:,:,:) = reshape(powdum,[ntap nchan nfoi ntoi]);
-        end
-        if fftflg
-          fourierspctrm(rptind(:,itrial),:,:,:) = reshape(fourierdum,[ntap nchan nfoi ntoi]);
-        end
-        if csdflg
-          crsspctrm(rptind(:,itrial),:,:,:) = reshape(csddum,[ntap nchancmb nfoi ntoi]);
-        end
-        
-    end % switch keeprpt
+        case 1 % cfg.keeptrials,'no' &&  cfg.keeptapers,'no'
+          if powflg
+            powspctrm(:,ifoi,acttboi) = powspctrm(:,ifoi,acttboi) + (reshape(mean(powdum,1),[nchan 1 nacttboi]) ./ ntrials);
+            powspctrm(:,ifoi,~acttboi) = NaN;
+          end
+          if fftflg
+            fourierspctrm(:,ifoi,acttboi) = fourierspctrm(:,ifoi,acttboi) + (reshape(mean(fourierdum,1),[nchan 1 nacttboi]) ./ ntrials);
+            fourierspctrm(:,ifoi,~acttboi) = NaN;
+          end
+          if csdflg
+            crsspctrm(:,ifoi,acttboi) = crsspctrm(:,ifoi,acttboi) + (reshape(mean(csddum,1),[nchancmb 1 nacttboi]) ./ ntrials);
+            crsspctrm(:,ifoi,~acttboi) = NaN;
+          end
+          
+        case 2 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'no'
+          if powflg
+            powspctrm(itrial,:,ifoi,acttboi) = reshape(mean(powdum,1),[nchan 1 nacttboi]);
+            powspctrm(itrial,:,ifoi,~acttboi) = NaN;
+          end
+          if fftflg
+            fourierspctrm(itrial,:,ifoi,acttboi) = reshape(mean(fourierdum,1), [nchan 1 nacttboi]);
+            fourierspctrm(itrial,:,ifoi,~acttboi) = NaN;
+          end
+          if csdflg
+            crsspctrm(itrial,:,ifoi,acttboi) = reshape(mean(csddum,1), [nchancmb 1 nacttboi]);
+            crsspctrm(itrial,:,ifoi,~acttboi) = NaN;
+          end
+          
+        case 4 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'yes'
+          rptind = reshape(1:ntrials .* ntap,[ntap ntrials]);
+          currrptind = rptind(:,itrial);
+          if powflg
+            powspctrm(currrptind(acttap),:,ifoi,acttboi) = reshape(powdum,[ntaper(ifoi) nchan 1 nacttboi]);
+            powspctrm(~currrptind(acttap),:,ifoi,~acttboi) = NaN;
+          end
+          if fftflg
+            fourierspctrm(currrptind(acttap),:,ifoi,acttboi) = reshape(fourierdum,[ntaper(ifoi) nchan 1 nacttboi]);
+            fourierspctrm(~currrptind(acttap),:,ifoi,~acttboi) = NaN;
+          end
+          if csdflg
+            crsspctrm(currrptind(acttap),:,ifoi,acttboi) = reshape(csddum,[ntaper(ifoi) nchancmb 1 nacttboi]);
+            crsspctrm(~currrptind(acttap),:,ifoi,~acttboi) = NaN;
+          end
+          
+      end % switch keeprpt
+    end %ifoi
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    
     
     % do calcdof
     if hastime
