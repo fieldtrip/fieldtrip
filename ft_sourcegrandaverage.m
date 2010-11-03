@@ -370,7 +370,7 @@ else
 
   % the output data should be saved to a MATLAB file
   if ~isempty(cfg.outputfile)
-    savevar(cfg.outputfile, 'data', grandavg); % use the variable name "data" in the output file
+    savevar(cfg.outputfile, 'source', grandavg); % use the variable name "data" in the output file
   end
 
 end
