@@ -185,6 +185,13 @@ else
   cfg.channel = ft_channelselection(cfg.channel, data.label);
   if isfield(cfg, 'channelcmb')
     cfg.channelcmb = ft_channelcombination(cfg.channelcmb, data.label);
+    % check whether there are channels in channelcmb that are not in cfg.channel
+    tmpcmbchan = unique(cfg.channelcmb);
+    for ichan = 1:length(tmpcmbchan)
+      if any(strcmp(tmpcmbchan{ichan},cfg.channel))
+        error('channels in cfg.channelcmb not present in cfg.channel')
+      end
+    end
     selchan = unique([cfg.channel(:); cfg.channelcmb(:)]);
   else
     selchan = cfg.channel;
