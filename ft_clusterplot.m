@@ -66,7 +66,7 @@ if ~isempty(cfg.inputfile)
   if hasdata
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
-    stat = loadvar(cfg.inputfile, 'data');
+    stat = loadvar(cfg.inputfile, 'stat');
   end
 end
 
