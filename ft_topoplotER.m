@@ -299,9 +299,11 @@ elseif strcmp(data.dimord, 'chan_freq')
   if ~isfield(cfg, 'yparam'),      cfg.yparam='';             end
   if ~isfield(cfg, 'zparam'),      cfg.zparam='powspctrm';    end
 elseif strcmp(data.dimord, 'subj_chan_time') || strcmp(data.dimord, 'rpt_chan_time')
-  tmpcfg = [];
-  tmpcfg.trials = cfg.trials;
-  data = ft_timelockanalysis(tmpcfg, data);
+  if ~isfield(data,'avg')
+    tmpcfg = [];
+    tmpcfg.trials = cfg.trials;
+    data = ft_timelockanalysis(tmpcfg, data);
+  end
   if ~isfield(cfg, 'xparam'),      cfg.xparam='time';         end
   if ~isfield(cfg, 'yparam'),      cfg.yparam='';             end
   if ~isfield(cfg, 'zparam'),      cfg.zparam='avg';          end
