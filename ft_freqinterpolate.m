@@ -54,7 +54,7 @@ if ~isempty(cfg.inputfile)
   if hasdata
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
-    freq = loadvar(cfg.inputfile, 'data');
+    freq = loadvar(cfg.inputfile, 'freq');
   end
 end
 
