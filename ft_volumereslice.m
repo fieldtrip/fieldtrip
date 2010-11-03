@@ -54,7 +54,7 @@ if ~isempty(cfg.inputfile)
   if hasdata
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
-    mri = loadvar(cfg.inputfile, 'data');
+    mri = loadvar(cfg.inputfile, 'mri');
   end
 end
 
