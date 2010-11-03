@@ -70,7 +70,7 @@ elseif  hasdata &&  isempty(cfg.inputfile)
   % this is ok
 elseif ~hasdata && ~isempty(cfg.inputfile)
   % the input data should be read from file
-  mri = loadvar(cfg.inputfile, 'data');
+  mri = loadvar(cfg.inputfile, 'mri');
 elseif ~hasdata &&  isempty(cfg.inputfile)
   mri = [];
 end
