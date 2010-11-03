@@ -89,7 +89,7 @@ if 1,
       error('cfg.inputfile should not be used in conjunction with giving input data to this function');
     else
       for i=1:numel(cfg.inputfile)
-        varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets from array inputfile
+        varargin{i} = loadvar(cfg.inputfile{i}, 'source'); % read datasets from array inputfile
       end
     end
   end
@@ -310,7 +310,7 @@ else
       error('cfg.inputfile should not be used in conjunction with giving input data to this function');
     else
       for i=1:numel(cfg.inputfile)
-        varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets from array inputfile
+        varargin{i} = loadvar(cfg.inputfile{i}, 'source'); % read datasets from array inputfile
       end
     end
   end
