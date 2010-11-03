@@ -61,7 +61,7 @@ elseif nargin==2
   ntrials = length(comp.trial);
   label   = comp.topolabel;
 else nargin<2 % only cfg is given; inputfile is expected
-    comp = loadvar(cfg.inputfile, 'data');
+    comp = loadvar(cfg.inputfile, 'comp');
     ntrials = length(comp.trial);
     label   = comp.topolabel;
 end
