@@ -112,7 +112,7 @@ if ~isempty(cfg.inputfile)
   if hasdata
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
-    volume = loadvar(cfg.inputfile, 'data');
+    volume = loadvar(cfg.inputfile, 'volume');
   end
 end
 
