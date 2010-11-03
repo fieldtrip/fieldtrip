@@ -88,7 +88,7 @@ if ~isempty(cfg.inputfile)
   if hasdata
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
-    interp = loadvar(cfg.inputfile, 'data');
+    interp = loadvar(cfg.inputfile, 'interp');
     hasdata = true;
   end
 end
