@@ -142,6 +142,6 @@ stat.cfg = cfg;
 
 % the output data should be saved to a MATLAB file
 if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'data', stat); % use the variable name "data" in the output file
+  savevar(cfg.outputfile, 'stat', stat); % use the variable name "data" in the output file
 end
 
