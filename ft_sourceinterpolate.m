@@ -79,7 +79,7 @@ if ~isempty(cfg.inputfile)
   if hasdata
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
-    anatomical = loadvar(cfg.inputfile, 'data');
+    anatomical = loadvar(cfg.inputfile, 'mri');
   end
 end
 
