@@ -59,7 +59,7 @@ if ~isempty(cfg.inputfile)
   if hasdata
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
-    source = loadvar(cfg.inputfile, 'data');
+    source = loadvar(cfg.inputfile, 'source');
   end
 end
 
