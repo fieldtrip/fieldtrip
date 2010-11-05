@@ -489,7 +489,42 @@ switch eventformat
     % contact Robert Oostenveld if you are interested in real-time acquisition on the CTF system
     % read the events from shared memory
     event = read_shm_event(filename, varargin{:});
-
+    
+  case 'edf'
+    % EDF itself does not contain events, but EDF+ does define an annotation channel
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+    
+    if issubfield(hdr, 'orig.annotation') && ~isempty(hdr.orig.annotation)
+      % read the data of the annotation channel as 16 bit
+      evt = read_edf(filename, hdr);
+      % undo the faulty calibration
+      evt = (evt - hdr.orig.Off(hdr.orig.annotation)) ./ hdr.orig.Cal(hdr.orig.annotation);
+      % convert the 16 bit format into the seperate bytes
+      evt = typecast(int16(evt), 'uint8');
+      % construct the Time-stamped Annotations Lists (TAL)
+      tal  = tokenize(evt, char(0), true);
+      
+      event = [];
+      for i=1:length(tal)
+        tok  = tokenize(tal{i}, char(20));
+        time = str2double(char(tok{1}));
+        % there can be multiple annotations per time, the last cell is always empty
+        for j=2:length(tok)-1
+          anot = char(tok{j});
+          % represent the annotation as event
+          event(end+1).type    = 'annotation';
+          event(end ).value    = anot;
+          event(end ).sample   = round(time*hdr.Fs) + 1;
+          event(end ).duration = 0;
+          event(end ).offset   = 0;
+        end
+      end
+    else
+      event = [];
+    end
+    
   case 'eeglab_set'
     if isempty(hdr)
        hdr = ft_read_header(filename);
@@ -548,14 +583,14 @@ switch eventformat
     fcom   = hdr.orig.fcom;
     ftext  = hdr.orig.ftext;
     eventCount=0;
-    for cell=1:fhdr(18)
-      for trial=1:chdr(cell,2)
+    for cel=1:fhdr(18)
+      for trial=1:chdr(cel,2)
         eventCount=eventCount+1;
         event(eventCount).type     = 'trial';
         event(eventCount).sample   = (eventCount-1)*hdr.nSamples + 1;
         event(eventCount).offset   = -hdr.nSamplesPre;
         event(eventCount).duration =  hdr.nSamples;
-        event(eventCount).value    =  cnames{cell};
+        event(eventCount).value    =  cnames{cel};
       end
     end
 
@@ -570,14 +605,14 @@ switch eventformat
     fcom   = hdr.orig.fcom;
     ftext  = hdr.orig.ftext;
     eventCount=0;
-    for cell=1:fhdr(18)
-      for subject=1:chdr(cell,2)
+    for cel=1:fhdr(18)
+      for subject=1:chdr(cel,2)
         eventCount=eventCount+1;
         event(eventCount).type     = 'trial';
         event(eventCount).sample   = (eventCount-1)*hdr.nSamples + 1;
         event(eventCount).offset   = -hdr.nSamplesPre;
         event(eventCount).duration =  hdr.nSamples;
-        event(eventCount).value    =  ['Sub' sprintf('%03d',subject) cnames{cell}];
+        event(eventCount).value    =  ['Sub' sprintf('%03d',subject) cnames{cel}];
       end
     end
 
@@ -714,8 +749,6 @@ switch eventformat
 
 
   case 'fcdc_fifo'
-
-
     fifo = filetype_check_uri(filename);
 
     if ~exist(fifo,'file')

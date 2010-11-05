@@ -1,4 +1,4 @@
-function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx);
+function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
 
 % READ_EDF reads specified samples from an EDF continous datafile
 % It neglects all trial boundaries as if the data was acquired in
@@ -47,7 +47,11 @@ function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx);
 %
 % $Id$
 
-if nargin==1
+needhdr = (nargin==1);
+needevt = (nargin==2);
+needdat = (nargin>3);
+
+if needhdr
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % read the header, this code is from EEGLAB's openbdf
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -216,6 +220,7 @@ if nargin==1
     hdr.nSamplesPre  = 0;
     hdr.nTrials      = EDF.NRec;
     hdr.orig         = EDF;
+    
   elseif all(EDF.SampleRate(1:end-1)==EDF.SampleRate(1))
     % only the last channel has a deviant sampling frequency
     % this is the case for EGI recorded datasets that have been converted
@@ -224,7 +229,7 @@ if nargin==1
     % continue with the subset of channels that has a consistent sampling frequency
     hdr.Fs           = EDF.SampleRate(chansel(1));
     hdr.nChans       = length(chansel);
-    warning('using a subset of %d channels with a consistent sampling frequency (%g Hz)', hdr.nChans, hdr.Fs);
+    warning('Skipping "%s" as continuous data channel because of inconsistent sampling frequency (%g Hz)', deblank(EDF.Label(end,:)), EDF.SampleRate(end));
     hdr.label        = cellstr(EDF.Label);
     hdr.label        = hdr.label(chansel);
     % it is continuous data, therefore append all records in one trial
@@ -233,25 +238,56 @@ if nargin==1
     hdr.nTrials      = EDF.NRec;
     hdr.orig         = EDF;
     % this will be used on subsequent reading of data
-    hdr.orig.chansel = chansel; 
+    hdr.orig.chansel    = chansel; 
+    hdr.orig.annotation = find(strcmp(cellstr(hdr.orig.Label), 'EDF Annotations'));
+
   else
-    error('channels with different sampling rate not supported');
+    % select the sampling rate that results in the most channels
+    [a, b, c] = unique(EDF.SampleRate);
+    for i=1:length(a)
+      chancount(i) = sum(c==i);
+    end
+    [dum, indx] = max(chancount);
+    chansel = find(EDF.SampleRate == a(indx));
+    
+    % continue with the subset of channels that has a consistent sampling frequency
+    hdr.Fs           = EDF.SampleRate(chansel(1));
+    hdr.nChans       = length(chansel);
+    hdr.label        = cellstr(EDF.Label);
+    hdr.label        = hdr.label(chansel);
+    % it is continuous data, therefore append all records in one trial
+    hdr.nSamples     = EDF.Dur * EDF.SampleRate(chansel(1));
+    hdr.nSamplesPre  = 0;
+    hdr.nTrials      = EDF.NRec;
+    hdr.orig         = EDF;
+    % this will be used on subsequent reading of data
+    hdr.orig.chansel    = chansel;
+    hdr.orig.annotation = find(strcmp(cellstr(hdr.orig.Label), 'EDF Annotations'));
+
+    warning('channels with different sampling rate not supported, using a subselection of %d channels at %f Hz', length(hdr.label), hdr.Fs);
   end
 
   % return the header
   dat = hdr;
 
-else
+elseif needdat || needevt
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % read the data
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % retrieve the original header
   EDF = hdr.orig;
-
+ 
   % determine whether a subset of channels should be used
   % which is the case if channels have a variable sampling frequency
   variableFs = isfield(EDF, 'chansel');
 
+  if variableFs && needevt
+    % read the annotation channel, not the data channels
+    EDF.chansel = EDF.annotation;
+    begsample = 1;
+    endsample = EDF.SampleRate(end)*EDF.NRec*EDF.Dur;
+  end
+  
   if variableFs
     epochlength = EDF.Dur * EDF.SampleRate(EDF.chansel(1));   % in samples for the selected channel
     blocksize   = sum(EDF.Dur * EDF.SampleRate);              % in samples for all channels
@@ -346,7 +382,7 @@ else
   [buf,num] = fread(fp,numwords,'bit16=>double');
   fclose(fp);
   if (num<numwords)
-    error(['failed opening ' filename]);
+    error(['failed reading ' filename]);
     return
   end
 end
