@@ -43,7 +43,7 @@ function [data] = fixdimord(data, keepsourcedimord);
 
 if nargin<2, keepsourcedimord = 0; end
 
-if strcmp('volume', datatype(data)) || strcmp('source', datatype(data));
+if strcmp('volume', ft_datatype(data)) || strcmp('source', ft_datatype(data));
   if isfield(data, 'dimord') && ~keepsourcedimord
     % data should not have a dimord (is not implemented yet, but some
     % functions add a dimord to these data which leads to unexpected behavior)
