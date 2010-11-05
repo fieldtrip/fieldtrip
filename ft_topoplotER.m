@@ -166,7 +166,7 @@ else
 end
 
 % For backward compatibility with old data structures:
-data = ft_checkdata(data);
+data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'});
 
 % check for option-values to be renamed
 cfg = ft_checkconfig(cfg, 'renamedval',     {'electrodes',   'dotnum',    'numbers'});
@@ -203,40 +203,41 @@ cfg = ft_checkconfig(cfg, 'forbidden',  {'showlabels'});
 cfg = ft_checkconfig(cfg, 'forbidden',  {'hllinewidth'});
 
 % Set other config defaults:
-if ~isfield(cfg, 'xlim'),                  cfg.xlim = 'maxmin';           end
-if ~isfield(cfg, 'ylim'),                  cfg.ylim = 'maxmin';           end
-if ~isfield(cfg, 'zlim'),                  cfg.zlim = 'maxmin';           end
-if ~isfield(cfg, 'style'),                 cfg.style = 'both';            end
-if ~isfield(cfg, 'gridscale'),             cfg.gridscale = 67;            end
-if ~isfield(cfg, 'interplimits'),          cfg.interplimits = 'head';     end
-if ~isfield(cfg, 'interpolation'),         cfg.interpolation = 'v4';      end
-if ~isfield(cfg, 'contournum'),            cfg.contournum = 6;            end
-if ~isfield(cfg, 'colorbar'),              cfg.colorbar = 'no';           end
-if ~isfield(cfg, 'shading'),               cfg.shading = 'flat';          end
-if ~isfield(cfg, 'comment'),               cfg.comment = 'auto';          end
-if ~isfield(cfg, 'commentpos'),            cfg.commentpos = 'leftbottom'; end
-if ~isfield(cfg, 'fontsize'),              cfg.fontsize = 8;              end
-if ~isfield(cfg, 'baseline'),              cfg.baseline = 'no';           end   %to avoid warning in timelock/freqbaseline
-if ~isfield(cfg, 'trials'),                cfg.trials = 'all';            end
-if ~isfield(cfg, 'interactive'),           cfg.interactive = 'no';        end
-if ~isfield(cfg, 'renderer'),              cfg.renderer = [];             end   % matlab sets the default
-if ~isfield(cfg, 'marker'),                cfg.marker = 'on';             end
-if ~isfield(cfg, 'markersymbol'),          cfg.markersymbol = 'o';        end
-if ~isfield(cfg, 'markercolor'),           cfg.markercolor = [0 0 0];     end
-if ~isfield(cfg, 'markersize'),            cfg.markersize = 2;            end
-if ~isfield(cfg, 'markerfontsize'),        cfg.markerfontsize = 8;        end
-if ~isfield(cfg, 'highlight'),             cfg.highlight = 'off';         end
-if ~isfield(cfg, 'highlightchannel'),      cfg.highlightchannel = 'all';  end
-if ~isfield(cfg, 'highlightsymbol'),       cfg.highlightsymbol = '*';     end
-if ~isfield(cfg, 'highlightcolor'),        cfg.highlightcolor = [0 0 0];  end
-if ~isfield(cfg, 'highlightsize'),         cfg.highlightsize = 6;         end
-if ~isfield(cfg, 'highlightfontsize'),     cfg.highlightfontsize = 8;     end
-if ~isfield(cfg, 'labeloffset'),           cfg.labeloffset = 0.005;       end
-if ~isfield(cfg, 'maskparameter'),         cfg.maskparameter = [];        end
-if ~isfield(cfg, 'component'),             cfg.component = [];            end
-if ~isfield(cfg, 'matrixside'),            cfg.matrixside = 'feedforward'; end
+if ~isfield(cfg, 'xlim'),             cfg.xlim = 'maxmin';           end
+if ~isfield(cfg, 'ylim'),             cfg.ylim = 'maxmin';           end
+if ~isfield(cfg, 'zlim'),             cfg.zlim = 'maxmin';           end
+if ~isfield(cfg, 'style'),            cfg.style = 'both';            end
+if ~isfield(cfg, 'gridscale'),        cfg.gridscale = 67;            end
+if ~isfield(cfg, 'interplimits'),     cfg.interplimits = 'head';     end
+if ~isfield(cfg, 'interpolation'),    cfg.interpolation = 'v4';      end
+if ~isfield(cfg, 'contournum'),       cfg.contournum = 6;            end
+if ~isfield(cfg, 'colorbar'),         cfg.colorbar = 'no';           end
+if ~isfield(cfg, 'shading'),          cfg.shading = 'flat';          end
+if ~isfield(cfg, 'comment'),          cfg.comment = 'auto';          end
+if ~isfield(cfg, 'commentpos'),       cfg.commentpos = 'leftbottom'; end
+if ~isfield(cfg, 'fontsize'),         cfg.fontsize = 8;              end
+if ~isfield(cfg, 'baseline'),         cfg.baseline = 'no';           end   %to avoid warning in timelock/freqbaseline
+if ~isfield(cfg, 'trials'),           cfg.trials = 'all';            end
+if ~isfield(cfg, 'interactive'),      cfg.interactive = 'no';        end
+if ~isfield(cfg, 'renderer'),         cfg.renderer = [];             end   % matlab sets the default
+if ~isfield(cfg, 'marker'),           cfg.marker = 'on';             end
+if ~isfield(cfg, 'markersymbol'),     cfg.markersymbol = 'o';        end
+if ~isfield(cfg, 'markercolor'),      cfg.markercolor = [0 0 0];     end
+if ~isfield(cfg, 'markersize'),       cfg.markersize = 2;            end
+if ~isfield(cfg, 'markerfontsize'),   cfg.markerfontsize = 8;        end
+if ~isfield(cfg, 'highlight'),        cfg.highlight = 'off';         end
+if ~isfield(cfg, 'highlightchannel'), cfg.highlightchannel = 'all';  end
+if ~isfield(cfg, 'highlightsymbol'),  cfg.highlightsymbol = '*';     end
+if ~isfield(cfg, 'highlightcolor'),   cfg.highlightcolor = [0 0 0];  end
+if ~isfield(cfg, 'highlightsize'),    cfg.highlightsize = 6;         end
+if ~isfield(cfg, 'highlightfontsize'),cfg.highlightfontsize = 8;     end
+if ~isfield(cfg, 'labeloffset'),      cfg.labeloffset = 0.005;       end
+if ~isfield(cfg, 'maskparameter'),    cfg.maskparameter = [];        end
+if ~isfield(cfg, 'component'),        cfg.component = [];            end
+if ~isfield(cfg, 'matrixside'),       cfg.matrixside = '';           end
+%FIXME rename matrixside and cohrefchannel in more meaningful options
 
-% compatability for previous highlighting option
+% compatibility for previous highlighting option
 if isnumeric(cfg.highlight)
   cfg.highlightchannel = cfg.highlight;
   cfg.highlight = 'on';
@@ -289,33 +290,75 @@ if isfield(cfg,'colormap')
   colormap(cfg.colormap);
 end;
 
-% Set x/y/zparam defaults according to data.dimord value:
-if strcmp(data.dimord, 'chan_time')
-  if ~isfield(cfg, 'xparam'),      cfg.xparam='time';         end
-  if ~isfield(cfg, 'yparam'),      cfg.yparam='';             end
-  if ~isfield(cfg, 'zparam'),      cfg.zparam='avg';          end
-elseif strcmp(data.dimord, 'chan_freq')
-  if ~isfield(cfg, 'xparam'),      cfg.xparam='freq';         end
-  if ~isfield(cfg, 'yparam'),      cfg.yparam='';             end
-  if ~isfield(cfg, 'zparam'),      cfg.zparam='powspctrm';    end
-elseif strcmp(data.dimord, 'subj_chan_time') || strcmp(data.dimord, 'rpt_chan_time')
-  if ~isfield(data,'avg')
-    tmpcfg = [];
-    tmpcfg.trials = cfg.trials;
-    data = ft_timelockanalysis(tmpcfg, data);
-  end
-  if ~isfield(cfg, 'xparam'),      cfg.xparam='time';         end
-  if ~isfield(cfg, 'yparam'),      cfg.yparam='';             end
-  if ~isfield(cfg, 'zparam'),      cfg.zparam='avg';          end
-elseif strcmp(data.dimord, 'subj_chan_freq') || strcmp(data.dimord, 'rpt_chan_freq')
-  if isfield(data, 'crsspctrm'), data = rmfield(data, 'crsspctrm'); end % on the fly computation of coherence spectrum is not supported
-  tmpcfg = [];
+dtype  = ft_datatype(data);
+
+% identify the interpretation of the functional data
+switch dtype
+  case  {'timelock' 'freq'}
+    dimord = data.dimord;
+  case 'comp'
+    dimord = 'chan_comp';  
+  otherwise
+end
+dimtok = tokenize(dimord, '_');
+
+% Set x/y/zparam defaults according to datatype and dimord
+switch dtype
+  case 'timelock'
+    if ~isfield(cfg, 'xparam'),      cfg.xparam = 'time';         end
+    if ~isfield(cfg, 'yparam'),      cfg.yparam = '';             end
+    if ~isfield(cfg, 'zparam'),      cfg.zparam = 'avg';          end
+  case 'freq'
+    if sum(ismember(dimtok, 'time'))
+      if ~isfield(cfg, 'xparam'),    cfg.xparam = 'time';         end
+      if ~isfield(cfg, 'yparam'),    cfg.yparam = 'freq';         end
+      if ~isfield(cfg, 'zparam'),    cfg.zparam = 'powspctrm';    end
+    else
+      if ~isfield(cfg, 'xparam'),    cfg.xparam = 'freq';         end
+      if ~isfield(cfg, 'yparam'),    cfg.yparam = '';             end
+      if ~isfield(cfg, 'zparam'),    cfg.zparam = 'powspctrm';    end
+    end
+  case 'comp'
+    % Add a pseudo-axis with the component numbers:
+    data.comp = 1:size(data.topo,2);
+    % Specify the components
+    if ~isempty(cfg.component)
+      data.comp = cfg.component;
+      data.topo = data.topo(:,cfg.component);
+    end
+    % Rename the field with topographic label information:
+    data.label = data.topolabel;
+    if ~isfield(cfg, 'xparam'),      cfg.xparam='comp';         end
+    if ~isfield(cfg, 'yparam'),      cfg.yparam='';             end
+    if ~isfield(cfg, 'zparam'),      cfg.zparam='topo';         end
+  otherwise
+      
+end
+
+% user specified own fields, but no yparam (which is not asked in help)
+if isfield(cfg, 'xparam') && isfield(cfg, 'zparam') && ~isfield(cfg, 'yparam')
+  cfg.yparam = '';
+end
+
+% check whether rpt/subj is present and remove if necessary and whether
+hasrpt = sum(ismember(dimtok, {'rpt' 'subj'}));
+if strcmp(dtype, 'timelock') && hasrpt,
+  tmpcfg        = [];
   tmpcfg.trials = cfg.trials;
+  data          = ft_timelockanalysis(tmpcfg, data);
+  dimord        = data.dimord;
+  dimtok        = tokenize(dimord, '_');
+elseif strcmp(dtype, 'freq') && hasrpt,
+  % this also deals with fourier-spectra in the input
+  % or with multiple subjects in a frequency domain stat-structure
+  % on the fly computation of coherence spectrum is not supported
+  if isfield(data, 'crsspctrm'), data = rmfield(data, 'crsspctrm'); end 
+  tmpcfg           = [];
+  tmpcfg.trials    = cfg.trials;
   tmpcfg.jackknife = 'no';
-  if isfield(cfg, 'zparam') && strcmp(cfg.zparam,'cohspctrm')
-    % on the fly computation of coherence spectrum is not supported
-  elseif isfield(cfg, 'zparam') && ~strcmp(cfg.zparam,'powspctrm')
-    % freqdesctiptives will only work on the powspctrm field, hence a temporary copy of the data is needed
+  if isfield(cfg, 'zparam') && ~strcmp(cfg.zparam,'powspctrm')
+    % freqdesctiptives will only work on the powspctrm field
+    % hence a temporary copy of the data is needed
     tempdata.dimord    = data.dimord;
     tempdata.freq      = data.freq;
     tempdata.label     = data.label;
@@ -327,55 +370,8 @@ elseif strcmp(data.dimord, 'subj_chan_freq') || strcmp(data.dimord, 'rpt_chan_fr
   else
     data = ft_freqdescriptives(tmpcfg, data);
   end
-  if ~isfield(cfg, 'xparam'),      cfg.xparam='freq';         end
-  if ~isfield(cfg, 'yparam'),      cfg.yparam='';             end
-  if ~isfield(cfg, 'zparam'),      cfg.zparam='powspctrm';    end
-elseif strcmp(data.dimord, 'chan_freq_time')
-  if ~isfield(cfg, 'xparam'),      cfg.xparam='time';         end
-  if ~isfield(cfg, 'yparam'),      cfg.yparam='freq';         end
-  if ~isfield(cfg, 'zparam'),      cfg.zparam='powspctrm';    end
-elseif strcmp(data.dimord, 'subj_chan_freq_time') || strcmp(data.dimord, 'rpt_chan_freq_time')
-  if isfield(data, 'crsspctrm'), data = rmfield(data, 'crsspctrm'); end % on the fly computation of coherence spectrum is not supported
-  tmpcfg = [];
-  tmpcfg.trials = cfg.trials;
-  tmpcfg.jackknife = 'no';
-  if isfield(cfg, 'zparam') && strcmp(cfg.zparam,'cohspctrm')
-    % on the fly computation of coherence spectrum is not supported
-  elseif isfield(cfg, 'zparam') && ~strcmp(cfg.zparam,'powspctrm')
-    % freqdesctiptives will only work on the powspctrm field, hence a temporary copy of the data is needed
-    tempdata.dimord    = data.dimord;
-    tempdata.freq      = data.freq;
-    tempdata.time      = data.time;
-    tempdata.label     = data.label;
-    tempdata.powspctrm = data.(cfg.zparam);
-    tempdata.cfg       = data.cfg;
-    tempdata           = ft_freqdescriptives(tmpcfg, tempdata);
-    data.(cfg.zparam)  = tempdata.powspctrm;
-    clear tempdata
-  else
-    data = ft_freqdescriptives(tmpcfg, data);
-  end
-  if ~isfield(cfg, 'xparam'),      cfg.xparam='time';         end
-  if ~isfield(cfg, 'yparam'),      cfg.yparam='freq';         end
-  if ~isfield(cfg, 'zparam'),      cfg.zparam='powspctrm';    end
-elseif strcmp(data.dimord, 'chan_comp')
-  % Add a pseudo-axis with the component numbers:
-  data.comp = 1:size(data.topo,2);
-  % Specify the components
-  if ~isempty(cfg.component)
-    data.comp = cfg.component;
-    data.topo = data.topo(:,cfg.component);
-  end
-  % Rename the field with topographic label information:
-  data.label = data.topolabel;
-  if ~isfield(cfg, 'xparam'),      cfg.xparam='comp';         end
-  if ~isfield(cfg, 'yparam'),      cfg.yparam='';             end
-  if ~isfield(cfg, 'zparam'),      cfg.zparam='topo';         end
-else
-  if isfield(cfg, 'xparam') && isfield(cfg, 'zparam') && ~isfield(cfg, 'yparam')
-    % user specified own fields, but no yparam (which is not asked in help)
-    cfg.yparam = '';
-  end
+  dimord = data.dimord;
+  dimtok = tokenize(dimord, '_');
 end
 
 % Read or create the layout that will be used for plotting:
@@ -396,18 +392,31 @@ if ~ischar(cfg.xlim) && length(cfg.xlim)>2
   return
 end
 
-% Check for unconverted coherence spectrum data or any other bivariate metric:
-dimtok  = tokenize(data.dimord, '_');
+% Apply baseline correction:
+if ~strcmp(cfg.baseline, 'no')
+  if strcmp(cfg.xparam, 'freq') || strcmp(cfg.yparam, 'freq')
+    data = ft_freqbaseline(cfg, data);
+  else
+    data = ft_timelockbaseline(cfg, data);
+  end
+end
+
+% Handle the bivariate case
+
+% Check for bivariate metric with 'chan_chan' in the dimord:
 selchan = strmatch('chan', dimtok);
 isfull  = length(selchan)>1;
-if (strcmp(cfg.zparam,'cohspctrm') && isfield(data, 'labelcmb')) || ...
-    (isfull && isfield(data, cfg.zparam)),
-  
+
+% Check for bivariate metric with a labelcmb field:
+haslabelcmb = isfield(data, 'labelcmb');
+
+if (isfull || haslabelcmb) && isfield(data, cfg.zparam)
   % A reference channel is required:
-  if ~isfield(cfg,'cohrefchannel'),
-    error('no reference channel specified');
+  if ~isfield(cfg, 'cohrefchannel')
+    error('no reference channel is specified');
   end
   
+  % Interactively select the reference channel
   if strcmp(cfg.cohrefchannel, 'gui')
     % Open a single figure with the channel layout, the user can click on a reference channel
     h = clf;
@@ -427,21 +436,29 @@ if (strcmp(cfg.zparam,'cohspctrm') && isfield(data, 'labelcmb')) || ...
   end
   
   if ~isfull,
-    % only works explicitly with coherence FIXME
     % Convert 2-dimensional channel matrix to a single dimension:
-    sel1           = strmatch(cfg.cohrefchannel, data.labelcmb(:,2));
-    sel2           = strmatch(cfg.cohrefchannel, data.labelcmb(:,1));
-    fprintf('selected %d channels for coherence\n', length(sel1)+length(sel2));
-    data.cohspctrm = data.cohspctrm([sel1;sel2],:,:);
+    if isempty(cfg.matrixside)
+      sel1 = strmatch(cfg.cohrefchannel, data.labelcmb(:,2));
+      sel2 = strmatch(cfg.cohrefchannel, data.labelcmb(:,1));
+    elseif strcmp(cfg.matrixside, 'feedforward')
+      sel1 = [];
+      sel2 = strmatch(cfg.cohrefchannel, data.labelcmb(:,1));
+    elseif strcmp(cfg.matrixside, 'feedback')
+      sel1 = strmatch(cfg.cohrefchannel, data.labelcmb(:,2));
+      sel2 = [];
+    end
+    fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.zparam);
+    data.(cfg.zparam) = data.(cfg.zparam)([sel1;sel2],:,:);
     data.label     = [data.labelcmb(sel1,1);data.labelcmb(sel2,2)];
     data.labelcmb  = data.labelcmb([sel1;sel2],:);
     data           = rmfield(data, 'labelcmb');
   else
-    % general solution
-    
+    % General case
     sel               = match_str(data.label, cfg.cohrefchannel);
     siz               = [size(data.(cfg.zparam)) 1];
-    if strcmp(cfg.matrixside, 'feedback')
+    if strcmp(cfg.matrixside, 'feedback') || isempty(cfg.matrixside)
+      %FIXME the interpretation of 'feedback' and 'feedforward' depend on
+      %the definition in the bivariate representation of the data
       %data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
       sel1 = 1:siz(1);
       sel2 = sel;
@@ -451,21 +468,12 @@ if (strcmp(cfg.zparam,'cohspctrm') && isfield(data, 'labelcmb')) || ...
       sel1 = sel;
       sel2 = 1:siz(1);
       meandir = 1;
+      
     elseif strcmp(cfg.matrixside, 'ff-fd')
-      %FIXME don't know how to handle this
-      data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]) - reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
+      error('cfg.matrixside = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_topoplotER');
     elseif strcmp(cfg.matrixside, 'fd-ff')
-      data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]) - reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
+      error('cfg.matrixside = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_topoplotER');
     end
-  end
-end
-
-% Apply baseline correction:
-if ~strcmp(cfg.baseline, 'no')
-  if strcmp(cfg.xparam, 'freq') || strcmp(cfg.yparam, 'freq')
-    data = ft_freqbaseline(cfg, data);
-  else
-    data = ft_timelockbaseline(cfg, data);
   end
 end
 
@@ -497,21 +505,31 @@ if ~isempty(cfg.yparam)
   ymax = nearest(getsubfield(data, cfg.yparam), ymax);
 end
 
-% make dat vector with one value for each channel
-dat = getsubfield(data, cfg.zparam);
-if isfull
-  siz = [size(dat) 1];
-  siz(meandir) = [];
-  dat = reshape(mean(dat(sel1,sel2,:,:),meandir), siz);
-end
-if ~isempty(cfg.yparam),
-  dat = dat(:, ymin:ymax, xmin:xmax);
-  dat = nanmean(nanmean(dat, 2), 3);
-  % if a component is specified, do nothing
-elseif ~isempty(cfg.component),
+% Make vector dat with one value for each channel
+dat = data.(cfg.zparam);
+if ~isempty(cfg.yparam)
+  if isfull
+    dat = dat(sel1, sel2, ymin:ymax, xmin:xmax);
+    dat = nanmean(nanmean(nanmean(dat, meandir), 4), 3);
+  elseif haslabelcmb
+    dat = dat(:, ymin:ymax, xmin:xmax);
+    dat = nanmean(nanmean(dat, 3), 2);
+  else
+    dat = dat(:, ymin:ymax, xmin:xmax);
+    dat = nanmean(nanmean(dat, 3), 2);
+  end
+elseif ~isempty(cfg.component)
 else
-  dat = dat(:, xmin:xmax);
-  dat = nanmean(dat, 2);
+  if isfull
+    dat = dat(sel1, sel2, xmin:xmax);
+    dat = nanmean(nanmean(dat, meandir), 3);
+  elseif haslabelcmb
+    dat = dat(:, xmin:xmax);
+    dat = nanmean(dat, 2);
+  else
+    dat = dat(:, xmin:xmax);
+    dat = nanmean(dat, 2);
+  end
 end
 dat = dat(:);
 
