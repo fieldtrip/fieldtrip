@@ -179,6 +179,10 @@ elseif issubfield(input, 'orig.sys_name')
   % this is a complete header that was read from a Yokogawa dataset
   type = 'yokogawa160';
 
+elseif issubfield(input, 'orig.FILE.Ext') && strcmp(input.orig.FILE.Ext, 'edf')
+  % this is a complete header that was read from an EDF or EDF+ dataset
+  type = 'electrode';
+
 else
   % start with unknown, then try to determine the proper type by looking at the labels
   type = 'unknown';
