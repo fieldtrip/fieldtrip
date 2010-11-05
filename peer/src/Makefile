@@ -15,7 +15,7 @@ LIBPATH  = -L.
 LIBS 	 = -lm -lpthread -lpeer
 # CFLAGS   = $(INCPATH) -fPIC -Wall -pedantic -O1 -fpack-struct
 # CXXFLAGS = $(INCPATH) -fPIC -Wunused -pedantic -O1
-CFLAGS	 = $(INCPATH) -fPIC -Wall -pthread -g
+CFLAGS	 = $(INCPATH) -fPIC -Wall -pthread 
 
 ifeq "$(PLATFORM)" "i386-redhat-linux"
 	# this is only for the peerslave command line executable -> mentat068

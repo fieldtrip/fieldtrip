@@ -19,9 +19,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "platform_includes.h"
 #include "peer.h"
 #include "extern.h"
+
 
 /* this function returns 1 if the IP address corresponds with the local host
    or 0 if the IP address cannot be associated with the local host */
@@ -44,7 +44,6 @@ int check_localhost(const char *ipaddr)
 
 		/* walk through the linked list, maintaining head pointer so we can free list later */
 		for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-				/* the following line fails when -fpack-struct is used during compilation */
 				family = ifa->ifa_addr->sa_family;
 
 				if (family == AF_INET)

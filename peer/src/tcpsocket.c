@@ -35,8 +35,6 @@ void cleanup_tcpsocket(void *arg) {
 		threadlocal = (threadlocal_t *)arg;
 
 		if (threadlocal && *threadlocal->message) {
-				FREE(((message_t *)(*threadlocal->message))->host);
-				FREE(((message_t *)(*threadlocal->message))->job);
 				FREE(*threadlocal->message);
 		}
 

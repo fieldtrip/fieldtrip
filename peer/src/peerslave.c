@@ -403,7 +403,6 @@ int main(int argc, char *argv[]) {
 								DEBUG(LOG_CRIT, "starting MATLAB engine");
 								if ((en = engOpen(startcmd)) == NULL) {
 										/* this may be due to a licensing problem */
-
 										/* do not attempt to start again during the timeout period */
 										DEBUG(LOG_ERR, "failed to start MATLAB engine, deleting job and switching to zombie");
 										engineFailed = time(NULL);
@@ -411,20 +410,16 @@ int main(int argc, char *argv[]) {
 										host->status = STATUS_ZOMBIE;
 										pthread_mutex_unlock(&mutexhost);
 
-										/* clear the joblist */
+										/* remove the failed job from the joblist */
 										pthread_mutex_lock(&mutexjoblist);
 										job = joblist;
-										while (job) {
-												joblist = job->next;
-												FREE(job->job);
-												FREE(job->host);
-												FREE(job->arg);
-												FREE(job->opt);
-												FREE(job);
-												job = joblist;
-										}
+										joblist = job->next; 
+										FREE(job->job);
+										FREE(job->host);
+										FREE(job->arg);
+										FREE(job->opt);
+										FREE(job);
 										pthread_mutex_unlock(&mutexjoblist);
-
 										continue;
 								}
 								else {
@@ -441,6 +436,17 @@ int main(int argc, char *argv[]) {
 						host->status = STATUS_BUSY;
 						/* determine the maximum allowed job duration */
 						timallow = 2*(host->timavail+1);
+						/* update the current job description */
+						bzero(&(host->current), sizeof(current_t));
+						// FIXME
+						host->current.pid = getpid();
+						host->current.id  = job->host->id;
+						strncpy(host->current.name, job->host->name, STRLEN);
+						strncpy(host->current.user, job->host->user, STRLEN);
+						strncpy(host->current.group, job->host->group, STRLEN);
+						host->current.timreq  = job->job->timreq;
+						host->current.memreq  = job->job->memreq;
+						host->current.cpureq  = job->job->cpureq;
 
 						pthread_mutex_unlock(&mutexhost);
 
@@ -610,7 +616,7 @@ int main(int argc, char *argv[]) {
 						pthread_mutex_unlock(&mutexhost);
 
 						if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
-								DEBUG(LOG_ERR, "could not read handshake");
+								DEBUG(LOG_ERR, "could not write handshake");
 								goto cleanup;
 						}
 						else if (!handshake) {
@@ -622,7 +628,7 @@ int main(int argc, char *argv[]) {
 								success = (bufwrite(server, def, sizeof(jobdef_t)) == sizeof(jobdef_t));
 
 						if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
-								DEBUG(LOG_ERR, "could not read handshake");
+								DEBUG(LOG_ERR, "could not write handshake");
 								goto cleanup;
 						}
 						else if (!handshake) {
@@ -634,7 +640,7 @@ int main(int argc, char *argv[]) {
 								success = (bufwrite(server, (void *)mxGetData(arg), def->argsize) == def->argsize);
 
 						if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
-								DEBUG(LOG_ERR, "could not read handshake");
+								DEBUG(LOG_ERR, "could not write handshake");
 								goto cleanup;
 						}
 						else if (!handshake) {
@@ -646,7 +652,7 @@ int main(int argc, char *argv[]) {
 								success = (bufwrite(server, (void *)mxGetData(opt), def->optsize) == def->optsize);
 
 						if ((n = bufread(server, &handshake, sizeof(int))) != sizeof(int)) {
-								DEBUG(LOG_ERR, "could not read handshake");
+								DEBUG(LOG_ERR, "could not write handshake");
 								goto cleanup;
 						}
 						else if (!handshake) {
@@ -674,18 +680,15 @@ cleanup:
 
 						/*****************************************************************************/
 
-						/* clear the joblist */
+						/* remove the first job from the joblist */
 						pthread_mutex_lock(&mutexjoblist);
+						joblist = job->next;
+						FREE(job->job);
+						FREE(job->host);
+						FREE(job->arg);
+						FREE(job->opt);
+						FREE(job);
 						job = joblist;
-						while (job) {
-								joblist = job->next;
-								FREE(job->job);
-								FREE(job->host);
-								FREE(job->arg);
-								FREE(job->opt);
-								FREE(job);
-								job = joblist;
-						}
 						pthread_mutex_unlock(&mutexjoblist);
 
 						/* make the slave available again */
@@ -705,7 +708,7 @@ cleanup:
 						threadsleep(SLEEPTIME);
 				} /* if jobcount */
 
-				/* switch the engine off after being idle for a ceirtain time */
+				/* switch the engine off if it is idle for too long */
 				if ((matlabRunning!=0) && (difftime(time(NULL), matlabFinished)>enginetimeout)) {
 						if (engClose(en)!=0) {
 								DEBUG(LOG_CRIT, "could not stop the MATLAB engine");
