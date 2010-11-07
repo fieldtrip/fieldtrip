@@ -34,9 +34,9 @@
 mxArray *mxSerialize(const mxArray*);
 mxArray *mxDeserialize(const void*, size_t);
 
-#define ENGINETIMEOUT     30     /* int, in seconds */
-#define ZOMBIETIMEOUT     300    /* int, in seconds */
-#define SLEEPTIME         0.010  /* float, in seconds */
+#define ENGINETIMEOUT     30     /* in seconds */
+#define ZOMBIETIMEOUT     300    /* in seconds */
+#define SLEEPTIME         10000  /* in microseconds */
 
 #define STARTCMD "matlab -nosplash"
 
@@ -705,11 +705,11 @@ cleanup:
 						DEBUG(LOG_CRIT, "executing job %d took %d seconds", jobnum, matlabFinished - matlabStart);
 				}
 				else {
-						threadsleep(SLEEPTIME);
+						usleep(SLEEPTIME);
 				} /* if jobcount */
 
 				/* switch the engine off if it is idle for too long */
-				if ((matlabRunning!=0) && (difftime(time(NULL), matlabFinished)>enginetimeout)) {
+				if ((matlabRunning!=0) && ((time(NULL)-matlabFinished)>enginetimeout)) {
 						if (engClose(en)!=0) {
 								DEBUG(LOG_CRIT, "could not stop the MATLAB engine");
 								matlabRunning = 0;
@@ -721,7 +721,7 @@ cleanup:
 				}
 
 				/* switch back to the default state after having waiting some time */
-				if ((engineFailed!=0) && (difftime(time(NULL), engineFailed)>zombietimeout)) {
+				if ((engineFailed!=0) && ((time(NULL)-engineFailed)>zombietimeout)) {
 						DEBUG(LOG_NOTICE, "switching back to idle mode");
 						pthread_mutex_lock(&mutexhost);
 						host->status = STATUS_IDLE;

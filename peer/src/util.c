@@ -19,22 +19,11 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <string.h>       /* for strerror */
 
 #include "peer.h"
 #include "extern.h"
 #include "platform_includes.h"
-
-int threadsleep(float t) {
-		int retval = 0;  
-		struct timespec req, rem;
-		/* split in seconds and nanoseconds */
-		req.tv_sec  = (int)t;
-		req.tv_nsec = (int)(1000000000.0 * (t - (int)t));
-		retval = nanosleep(&req, &rem);
-		return retval;
-}
 
 int bufread(int s, void *buf, int numel) {
 		int numcall = 0, numthis = 0, numread = 0;
@@ -53,7 +42,7 @@ int bufread(int s, void *buf, int numel) {
 				DEBUG(LOG_DEBUG, "bufread: read %d bytes", numthis);
 				numread += numthis;
 				numcall++;
-				threadsleep(0.001);
+				usleep(1000);
 		}
 		DEBUG(LOG_DEBUG, "bufread: reading the complete buffer required %d calls", numcall);
 		return numread;
@@ -78,7 +67,7 @@ int bufwrite(int s, void *buf, int numel) {
 				DEBUG(LOG_DEBUG, "bufwrite: wrote %d bytes", numthis);
 				numwrite += numthis;
 				numcall++;
-				threadsleep(0.001);
+				usleep(1000);
 		}
 		DEBUG(LOG_DEBUG, "bufwrite: writing the complete buffer required %d calls", numcall);
 		return numwrite;

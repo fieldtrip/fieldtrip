@@ -10,8 +10,7 @@ function varargout = peercellfun(fname, varargin)
 % as key-value pairs at the end of the list of input arguments. All other
 % input arguments (including other key-value pairs) will be passed to the
 % function to be evaluated.
-%   UniformOutput  = boolean (default = true)
-%   StopOnError    = boolean (default = true)
+%   UniformOutput  = boolean (default = false)
 %   memreq         = number
 %   timreq         = number
 %   sleep          = number
@@ -24,7 +23,7 @@ function varargout = peercellfun(fname, varargin)
 %   x2    = {2, 2, 2, 2, 2};
 %   y     = peercellfun(fname, x1, x2);
 %
-% See also PEERMASTER, PEERSLAVE, PEERLIST, PEERINFO, PEERFEVAL, CELLFUN, DFEVAL
+% See also CELLFUN, PEERMASTER, PEERFEVAL, PEERLIST, PEERINFO
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
@@ -55,7 +54,6 @@ optarg = varargin(optbeg:end);
 
 % get the optional input arguments
 UniformOutput = keyval('UniformOutput', optarg); if isempty(UniformOutput), UniformOutput = true; end
-StopOnError   = keyval('StopOnError', optarg); if isempty(StopOnError), StopOnError = true; end
 memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=1024^3;         end % assume 1 GB
 timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=3600;           end % assume 1 hour
 sleep   = keyval('sleep',   optarg); if isempty(sleep),  sleep=0.05;            end
@@ -235,7 +233,7 @@ while ~all(submitted) || ~all(collected)
 
   if sum(submitted)>prevnumsubmitted
     % give an update of the progress
-    fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(submitted)-sum(collected), nansum(timused(collected))/toc(stopwatch));
+    fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(submitted)-sum(collected), sum(timused(collected))/toc(stopwatch));
   end
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -268,7 +266,7 @@ while ~all(submitted) || ~all(collected)
     end
 
     % collect the output arguments
-    [argout, options] = peerget(joblist(i).jobid, 'timeout', inf, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
+    [argout, options] = peerget(joblist(i).jobid, 'timeout', inf, 'output', 'cell', 'diary', diary);
 
     % fprintf('collected job %d\n', collect);
     collected(collect)   = true;
@@ -280,15 +278,14 @@ while ~all(submitted) || ~all(collected)
     end
 
     % gather the job statistics
-    % these are empty in case an error happened during remote evaluation, therefore the default value of NaN is specified
-    timused(collect) = keyval('timused', options, nan); 
-    memused(collect) = keyval('memused', options, nan);
+    timused(collect) = keyval('timused', options);
+    memused(collect) = keyval('memused', options);
 
   end % for joblist
 
   if sum(collected)>prevnumcollected
     % give an update of the progress
-    fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(submitted)-sum(collected), nansum(timused(collected))/toc(stopwatch));
+    fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(submitted)-sum(collected), sum(timused(collected))/toc(stopwatch));
   end
 
   prevnumsubmitted = sum(submitted);
@@ -366,7 +363,7 @@ if numargout>0 && UniformOutput
 end
 
 % compare the time used inside this function with the total execution time
-fprintf('computational time = %.1f sec, elapsed time = %.1f sec, approximate speedup %.1f x\n', nansum(timused), toc(stopwatch), nansum(timused)/toc(stopwatch));
+fprintf('computational time = %.1f sec, elapsed time = %.1f sec, approximate speedup %.1f x\n', sum(timused), toc(stopwatch), sum(timused)/toc(stopwatch));
 
 if all(puttime>timused)
   % FIXME this could be detected in the loop above, and the strategy could automatically
@@ -405,11 +402,4 @@ y = mean(x);
 function y = nanstd(x)
 x = x(~isnan(x(:)));
 y = std(x);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function y = nansum(x)
-x = x(~isnan(x(:)));
-y = sum(x);
 

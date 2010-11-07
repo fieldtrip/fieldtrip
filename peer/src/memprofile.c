@@ -125,7 +125,7 @@ void memprofile_sample(void) {
 		memitem = (memlist_t *)malloc(sizeof(memlist_t));
 		memitem->rss  = rss;
 		memitem->vs   = vs;
-		memitem->time = difftime(time(NULL), reftime);
+		memitem->time = time(NULL) - reftime;
 
 		pthread_mutex_lock(&mutexmemlist);
 		memitem->next = memlist;
