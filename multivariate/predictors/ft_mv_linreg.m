@@ -89,9 +89,9 @@ classdef ft_mv_linreg < ft_mv_predictor
             
             funObj = @(w)GaussianLoss(w,X,Y); % Loss function that L1 regularization is applied to
             
-            if ~isempty(obj.params) && isfield(obj.params,'weights') && ~isempty(obj.params.weights)
+            if ~isempty(obj.weights)
               % warm start
-              w_init = obj.params.weights;
+              w_init = obj.weights;
             else
               w_init = R\(R'\(X'*Y)); % Initial value for iterative optimizer
             end
@@ -101,9 +101,9 @@ classdef ft_mv_linreg < ft_mv_predictor
             
           else % elastic net
             
-            if ~isempty(obj.params) && isfield(obj.params,'weights') && ~isempty(obj.params.weights)
+            if ~isempty(obj.weights)
               % warm start
-              w_init = obj.params.weights;
+              w_init = obj.weights;
               [beta,beta0] = elastic(X',Y',obj.L1,obj.L2,[],w_init(1:(end-1)),w_init(end));
             else
               [beta,beta0] = elastic(X',Y',obj.L1,obj.L2);

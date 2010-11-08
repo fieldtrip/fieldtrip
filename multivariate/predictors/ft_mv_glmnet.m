@@ -73,6 +73,9 @@ classdef ft_mv_glmnet < ft_mv_predictor
       opts = glmnetSet;
       
       opts.alpha = obj.alpha; % mixing parameter
+
+      opts.lambda_min = obj.lambda_min;
+      opts.nlambda = obj.nlambda;
       
       if ~isempty(obj.lambda), opts.lambda = obj.lambda; end 
 
