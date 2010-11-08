@@ -108,9 +108,9 @@ if (length(strfind(dimord, 'chan'))~=2 || length(strfind(dimord, 'pos'))>0) && ~
   outsum = zeros(siz(2:end));
   outssq = zeros(siz(2:end));
   
-  progress('init', feedback, 'computing metric...');
+  ft_progress('init', feedback, 'computing metric...');
   for j = 1:siz(1)
-    progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
+    ft_progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
     if pownorm
       p1    = reshape(input(j,powindx(:,1),:,:,:), siz(2:end));
       p2    = reshape(input(j,powindx(:,2),:,:,:), siz(2:end));
@@ -121,16 +121,16 @@ if (length(strfind(dimord, 'chan'))~=2 || length(strfind(dimord, 'pos'))>0) && ~
     outsum = outsum + complexeval(reshape(input(j,:,:,:,:), siz(2:end))./denom, cmplx);
     outssq = outssq + complexeval(reshape(input(j,:,:,:,:), siz(2:end))./denom, cmplx).^2;
   end
-  progress('close');
+  ft_progress('close');
   
 elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2,
   % crossterms are described by chan_chan_therest
   
   outsum = zeros(siz(2:end));
   outssq = zeros(siz(2:end));
-  progress('init', feedback, 'computing metric...');
+  ft_progress('init', feedback, 'computing metric...');
   for j = 1:siz(1)
-    progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
+    ft_progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
     if pownorm
       p1  = zeros([siz(2) 1 siz(4:end)]);
       p2  = zeros([1 siz(3) siz(4:end)]);
@@ -147,7 +147,7 @@ elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2,
     outsum = outsum + complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./denom, cmplx);
     outssq = outssq + complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./denom, cmplx).^2;
   end
-  progress('close');
+  ft_progress('close');
   
 end
 n = siz(1);

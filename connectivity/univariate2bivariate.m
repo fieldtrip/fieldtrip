@@ -26,18 +26,18 @@ switch dtype
     if strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'crsspctrm'),
       %fourier coefficients -> cross-spectral density
       if dofull
-        data    = checkdata(data, 'cmbrepresentation', 'full');
+        data    = ft_checkdata(data, 'cmbrepresentation', 'full');
       else
-        data    = checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
+        data    = ft_checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
       end
     elseif strcmp(inparam, 'powandcsd') && strcmp(outparam, 'crsspctrm'),
       if ~isempty(cmb),
-        data    = checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
+        data    = ft_checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
         
         %ensure getting powindx later on to prevent crash
         getpowindx = 1;
       else
-        %data    = checkdata(data, 'cmbrepresentation', 'full');
+        %data    = ft_checkdata(data, 'cmbrepresentation', 'full');
         %this should not be possible
         error('cannot convert to a full csd representation');
         
@@ -45,25 +45,25 @@ switch dtype
       end
     elseif strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'powcovspctrm'),
       %fourier coefficients -> power covariance
-      data = checkdata(data, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
+      data = ft_checkdata(data, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
       
       if sqrtflag, data.powspctrm = sqrt(data.powspctrm); end
       
-      %get covariance by using checkdata
+      %get covariance by using ft_checkdata
       if demeanflag,
         nrpt = size(data.powspctrm,1);
         mdat = nanmean(data.powspctrm,1);
         data.powspctrm = data.powspctrm - mdat(ones(1,nrpt),:,:,:,:,:);
       end
-      data.fourierspctrm = data.powspctrm; %this is necessary for checkdata to work
+      data.fourierspctrm = data.powspctrm; %this is necessary for ft_checkdata to work
       data.dimord        = ['rpttap',data.dimord(4:end)];
       data               = rmfield(data, 'powspctrm');
       data.cumtapcnt(:)  = 1;
       data.cumsumcnt(:)  = 1;
       if ncmb < (nchan-1)*nchan*0.5,
-        data    = checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
+        data    = ft_checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
       else
-        data    = checkdata(data, 'cmbrepresentation', 'full');
+        data    = ft_checkdata(data, 'cmbrepresentation', 'full');
       end
       data.powcovspctrm = data.crsspctrm;
       data              = rmfield(data, 'crsspctrm');
@@ -72,21 +72,21 @@ switch dtype
       
       if sqrtflag, data.powspctrm = sqrt(data.powspctrm); end
       
-      %get covariance by using checkdata
+      %get covariance by using ft_checkdata
       if demeanflag,
         nrpt = size(data.powspctrm,1);
         mdat = nanmean(data.powspctrm,1);
         data.powspctrm = data.powspctrm - mdat(ones(1,nrpt),:,:,:,:,:);
       end
-      data.fourierspctrm = data.powspctrm; %this is necessary for checkdata to work
+      data.fourierspctrm = data.powspctrm; %this is necessary for ft_checkdata to work
       data.dimord        = ['rpttap',data.dimord(4:end)];
       data               = rmfield(data, 'powspctrm');
       data.cumtapcnt(:)  = 1;
       data.cumsumcnt(:)  = 1;
       if ncmb < (nchan-1)*nchan*0.5,
-        data    = checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
+        data    = ft_checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
       else
-        data    = checkdata(data, 'cmbrepresentation', 'full');
+        data    = ft_checkdata(data, 'cmbrepresentation', 'full');
       end
       data.powcovspctrm = data.crsspctrm;
       data = rmfield(data, 'crsspctrm');
