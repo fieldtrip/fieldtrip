@@ -36,7 +36,26 @@ The organization of FMM's directory structure is shown in Figure~\ref{dir}. The 
 \item \t{examples}: example scripts and datasets
 \end{itemize}
 
-The basic philosophy of FMM is that new methods can be added as toolboxes which are called through generic wrapper code. This makes it easy to extend the toolbox to fit your own needs. Different multivariate methods can be concatenated together in a processing pipeline, constituting a multivariate analysis \t{ft\_mv\_analysis}, or MVA for short. Finally, an \t{ft\_mv\_analysis} object can either be used standalone or be evaluated on data using a \t{ft\_mv\_crossvalidator} object. This automates the whole process of analyzing (neuroimaging) data. Figure~\ref{class} shows a diagram of FMM classes, to which will be referred later on. 
+\begin{table}[ht]
+\centering
+\caption{External toolboxes.}
+\begin{tabular}{l|l|l}
+{\bf name} & {\bf function} & {\bf author}\\
+\hline
+bahramisharif & elastic net & Ali Bahramisharif  \\
+farquhar & kernel methods & Jason Faquhar\\
+gerven & Bayesian methods & Marcel van Gerven\\
+glmnet & Fortran version of elastic net & Jerome Friedman\\
+herman & common spatial patterns & Pawel Herman\\
+L1General & L1 regularization & Mark Schmidt\\
+murphy & LDS/HMM toolbox & Kevin Murphy\\
+utilities & global functions & Marcel van Gerven
+\end{tabular}
+\label{tab:external}
+\end{table}
+
+
+The basic philosophy of FMM is that new methods can be added as toolboxes which are called through generic wrapper code. This makes it easy to extend the toolbox to fit your own needs. The currently used external toolboxes are listed in Table~\ref{tab:external}. Different multivariate methods can be concatenated together in a processing pipeline, constituting a multivariate analysis \t{ft\_mv\_analysis}, or MVA for short. Finally, an \t{ft\_mv\_analysis} object can either be used standalone or be evaluated on data using a \t{ft\_mv\_crossvalidator} object. This automates the whole process of analyzing (neuroimaging) data. Figure~\ref{class} shows a diagram of FMM classes, to which will be referred later on. 
 
 \begin{figure}[ht]
 \begin{center}
@@ -48,7 +67,7 @@ The basic philosophy of FMM is that new methods can be added as toolboxes which 
 
 \section{Data handling}
 
-In FMM, a dataset is represented as a multidimensional array, where the first dimension indexes datapoints and the remaining dimensions are arbitrarily chosen. An exception to this rule holds for \t{ft\_mv\_timeseries} objects, where the first dimension indexes time. Multiple datasets are represented as a cell-array of multidimensional arrays. Missing values are represented using \t{NaN}.
+In FMM, a dataset is represented as a multidimensional array, where the first dimension indexes datapoints and the remaining dimensions are arbitrarily chosen. Multiple datasets are represented as a cell-array of multidimensional arrays. An exception to this rule holds for \t{ft\_mv\_timeseries} objects, where the first dimension indexes time and multiple timeseries are represented as a cell-array. Missing values are represented using \t{NaN}.
 
 \section{Multivariate analysis}
 
@@ -91,6 +110,11 @@ classdef mymethod < ft_mv_predictor
         function Y = test(obj,X)
         	 % compute output     
         end
+ 	
+        function X = invert(obj,Y)
+        % optional function which inverts the mapping performed by this class
+        
+        end
  
         function [m,d] = model(obj)
           % return the model parameters as a cell-array m
@@ -113,8 +137,10 @@ Preprocessors are used to preprocess the input data \t{X} in such a way that it 
 \begin{tabular}{p{0.2\textwidth}|p{0.7\textwidth}}
 \bf{preprocessor} & \bf{functionality}\\
 \hline
-\t{ft\_mv\_standardizer} & Spheres and centers the data such that it has mean zero and a standard deviation of one.\\
-\t{ft\_mv\_csp} & common spatial pattern algorithm
+\t{ft\_mv\_standardizer} & Spheres and centers the data such that it has mean zero and a standard deviation of one\\
+\t{ft\_mv\_whitener} & standardizes and whitens the data\\
+\t{ft\_mv\_csp} & common spatial pattern algorithm\\
+\t{ft\_mv\_pca} & principal component analysis
 \end{tabular}
 \label{preprocessors}
 \end{table}
@@ -129,8 +155,8 @@ Selectors are used to perform feature selection on the input data \t{X}. Table~\
 \begin{tabular}{p{0.2\textwidth}|p{0.7\textwidth}}
 \bf{selector} & \bf{functionality}\\
 \hline
-\t{ft\_mv\_filterer} & Performs feature selection by computing a univariate measure for each feature and taking the best $N$ features based on a crossvalidator.\\
-\t{ft\_mv\_searchlight} & Performs a searchlight analysis.
+\t{ft\_mv\_filterer} & Performs feature selection by computing a univariate measure for each feature and taking the best $N$ features based on a crossvalidator\\
+\t{ft\_mv\_searchlight} & Performs a searchlight analysis
 \end{tabular}
 \label{selectors}
 \end{table}
@@ -145,15 +171,17 @@ Predictors are used to predict new outputs \t{Y} based on input data \t{X}. Tabl
 \begin{tabular}{p{0.2\textwidth}|p{0.7\textwidth}}
 \bf{predictor} & \bf{functionality}\\
 \hline
-\t{ft\_mv\_blogreg} & Bayesian logistic regression with a multivariate Laplace prior.\\
-\t{ft\_mv\_naive} & Naive Bayes classifier with normally distributed feature values.\\
-\t{ft\_mv\_svm} & Support vector machine; inherits from \t{ft\_mv\_kernelmethod}.\\
-\t{ft\_mv\_rkls} & Regularized kernel least squares; inherits from \t{ft\_mv\_kernelmethod}.\\
-\t{ft\_mv\_klr}  &  Kernel logistic regression;  inherits from \t{ft\_mv\_kernelmethod}.\\
-\t{ft\_mv\_ensemble} & Ensemble method class that takes uses multiple mvmethods in parallel to achieve some goal.\\
-\t{ft\_mv\_logreg} & Logistic regression with L1 and/or L2 regularization.\\
-\t{ft\_mv\_linreg} & Linear regression with L1 and/or L2 regularization.\\
-\t{ft\_mv\_glmnet} & Wrapper class for efficient implementation of elastic net linear and logistic regression.
+\t{ft\_mv\_blogreg} & Bayesian logistic regression with a multivariate Laplace prior\\
+\t{ft\_mv\_naive} & Naive Bayes classifier with normally distributed feature values\\
+\t{ft\_mv\_svm} & Support vector machine; inherits from \t{ft\_mv\_kernelmethod}\\
+\t{ft\_mv\_rkls} & Regularized kernel least squares; inherits from \t{ft\_mv\_kernelmethod}\\
+\t{ft\_mv\_klr}  &  Kernel logistic regression;  inherits from \t{ft\_mv\_kernelmethod}\\
+\t{ft\_mv\_ensemble} & Ensemble method class that uses multiple mvmethods in parallel to achieve some goal\\
+\t{ft\_mv\_logreg} & Logistic regression with L1 and/or L2 regularization\\
+\t{ft\_mv\_linreg} & Linear regression with L1 and/or L2 regularization\\
+\t{ft\_mv\_glmnet} & Wrapper class for efficient implementation of elastic net linear and logistic regression\\
+\t{ft\_mv\_rfda} & Regularized Fisher discriminant analysis\\
+\t{ft\_mv\_rls} & Recursive least squares regression
 \end{tabular}
 \label{predictors}
 \end{table}
@@ -257,9 +285,11 @@ disp(cv.performance);
 % display outcome of mcnemar test
 cv.sigtest = 'mcnemar';
 disp(cv.significance);
->> 1 % null-hypothesis rejected
+>> 1e-4 % p-value; null-hypothesis rejected
 \end{verbatim}
-In the example, a ten-fold cross-validation is performed by standardizing the data and applying a support vector machine. Subsequently, the classification accuracy (proportion of correctly classified trials) is computed. Finally, an approximate binomial test (McNemar test) is computed which compares the predictions with that of a naive classifier that assigns all outcomes to the majority class. The different performance measures and significance tests can be examined by consulting the help for \t{ft\_mv\_performance} and \t{ft\_mv\_significance}.
+In the example, a ten-fold cross-validation is performed by standardizing the data and applying a support vector machine. Subsequently, the classification accuracy (proportion of correctly classified trials) is computed. Finally, an approximate binomial test (McNemar test) is computed which compares the predictions with that of a naive classifier that assigns all outcomes to the majority class. The different performance measures and significance tests can be examined by consulting the help for \t{ft\_mv\_performance} and \t{ft\_mv\_significance}. 
+
+One may change \t{nfolds} to any number of folds, with \t{nfolds = inf} implementing leave-one-out cross-validation. Specifying a proportion for \t{nfolds} will use that proportion for training and the remaining data for testing. Finally, specifying \t{nfolds = 'online'} will simulate an online session by taking all trials in sequence where we train on trials $1,\ldots,n$ and test on trial $n+1$ for $n=0,\ldots,N-1$.
 
 We have not yet mentioned how to determine which features were responsible for the predictions. This is realized throught the \t{model} field of the cross-validator. It returns the average model that is produced by the last method in the specified MVA; in our case, the model of a SVM. It is up to each multivariate method to  specify how its model is defined. For example, for the above example, assuming we used only five features, we have:
 \begin{verbatim}
@@ -272,7 +302,7 @@ disp(cv.description)
 
 \end{verbatim}
 
-Supported performance measures and statistical tests are described in Tables~\ref{measure} and \ref{test}.
+Supported performance measures and statistical tests are described in Tables~\ref{tab:measure} and \ref{tab:test}.
 \begin{table}[ht]
 \centering
 \caption{Performance measures.}
@@ -284,7 +314,7 @@ contingency & contingency table with true class as rows and predicted class as c
 cfmatrix & confusion matrix with true class as rows and predicted class as colums\\
 correlation & correlation between real and predicted output
 \end{tabular}
-\label{measure}
+\label{tab:measure}
 \end{table}
 
 \begin{table}[ht]
@@ -295,7 +325,7 @@ correlation & correlation between real and predicted output
 \hline
 mcnemar & approximate binomial test
 \end{tabular}
-\label{test}
+\label{tab:test}
 \end{table}
 
 
@@ -314,7 +344,7 @@ cv = ft_mv_crossvalidator('nfolds',0.8,'metric','accuracy');
 opt = ft_mv_optimizer('verbose',true,'mva',svm,'validator',cv,...
 'vars','C','vals',logspace(-3,3,7))
 
-% from here on its standard behavior
+% standard behavior from here on
 opt = opt.train(X,Y) 
 ...
 \end{verbatim}
@@ -469,27 +499,7 @@ In order to check how well each data feature  does in discriminating the classes
 
 work in progress.
 
-\section{External toolboxes}
 
-The following external toolboxes are used:
-
-\begin{table}[ht]
-\centering
-\caption{External toolboxes.}
-\begin{tabular}{l|l|l}
-{\bf name} & {\bf function} & {\bf author}\\
-\hline
-bahramisharif & elastic net & Ali Bahramisharif  \\
-farquhar & kernel methods & Jason Faquhar\\
-gerven & Bayesian methods & Marcel van Gerven\\
-glmnet & Fortran version of elastic net & Jerome Friedman\\
-herman & common spatial patterns & Pawel Herman\\
-L1General & L1 regularization & Mark Schmidt\\
-murphy & LDS/HMM toolbox & Kevin Murphy\\
-utilities & global functions & Marcel van Gerven
-\end{tabular}
-\label{measure}
-\end{table}
 
 
 \bibliographystyle{plain}

@@ -1,4 +1,4 @@
-This is pdfTeXk, Version 3.1415926-1.40.9 (Web2C 7.5.7) (format=pdflatex 2009.10.21)  12 OCT 2010 19:43
+This is pdfTeXk, Version 3.1415926-1.40.9 (Web2C 7.5.7) (format=pdflatex 2009.10.21)  8 NOV 2010 16:44
 entering extended mode
 \write18 enabled.
  %&-line parsing enabled.
@@ -60,11 +60,7 @@ Package: a4wide 1994/08/30
 
 (/usr/local/texlive/2008/texmf-dist/tex/latex/ntgclass/a4.sty
 Package: a4 2004/04/15 v1.2g A4 based page layout
-)) (./manual.aux
-
-LaTeX Warning: Label `measure' multiply defined.
-
-)
+)) (./manual.aux)
 \openout1 = `manual.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 11.
@@ -79,7 +75,8 @@ LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 11.
 LaTeX Font Info:    ... okay on input line 11.
 LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 11.
 LaTeX Font Info:    ... okay on input line 11.
- (/usr/local/texlive/2008/texmf-dist/tex/context/base/supp-pdf.tex
+
+(/usr/local/texlive/2008/texmf-dist/tex/context/base/supp-pdf.tex
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count88
 \scratchdimen=\dimen105
@@ -109,67 +106,61 @@ File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 28.
-
-<figures/classes.pdf, id=2, 1138.2525pt x 303.1325pt>
-File: figures/classes.pdf Graphic file (type pdf)
-
-<use figures/classes.pdf> [1
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 42.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 42.
+ [1
 
 {/usr/local/texlive/2008/texmf-var/fonts/map/pdftex/updmap/pdftex.map} <./figur
-es/organization.pdf>]
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 72.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 72.
- [2 <./figures/classes.pdf>]
-Overfull \hbox (6.64323pt too wide) in paragraph at lines 116--116
+es/organization.pdf>] <figures/classes.pdf, id=26, 1138.2525pt x 303.1325pt>
+File: figures/classes.pdf Graphic file (type pdf)
+
+<use figures/classes.pdf> [2 <./figures/classes.pdf>]
+Overfull \hbox (6.64323pt too wide) in paragraph at lines 140--140
 []\OT1/cmtt/m/n/10 ft[]mv[]standardizer| 
  []
 
-
-Overfull \hbox (1.39328pt too wide) in paragraph at lines 133--133
+[3]
+Overfull \hbox (1.39328pt too wide) in paragraph at lines 159--159
 []\OT1/cmtt/m/n/10 ft[]mv[]searchlight| 
  []
 
-[3] [4] [5] [6] [7]
-Overfull \hbox (0.66005pt too wide) in paragraph at lines 398--398
+[4] [5] [6] [7] [8]
+Overfull \hbox (0.66005pt too wide) in paragraph at lines 428--428
 []\OT1/cmtt/m/n/10 dataset 1: validating fold 10 of 10 using 90 training sample
 s and 10 test samples[] 
  []
 
-[8] [9]
-Overfull \hbox (0.66005pt too wide) in paragraph at lines 439--439
+[9]
+Overfull \hbox (0.66005pt too wide) in paragraph at lines 469--469
 []\OT1/cmtt/m/n/10 cv = ft_mv_crossvalidator('nfolds',0.8,'mva',{ft_mv_standard
 izer ft_mv_naive},...[] 
  []
 
-(./manual.bbl [10]) [11] (./manual.aux)
-
-LaTeX Warning: There were multiply-defined labels.
-
- ) 
+[10] (./manual.bbl) [11] (./manual.aux) ) 
 Here is how much of TeX's memory you used:
- 974 strings out of 493886
- 12706 string characters out of 1151098
- 67455 words of memory out of 3000000
- 4277 multiletter control sequences out of 10000+50000
+ 975 strings out of 493886
+ 12728 string characters out of 1151098
+ 68423 words of memory out of 3000000
+ 4278 multiletter control sequences out of 10000+50000
  8577 words of font info for 31 fonts, out of 3000000 for 5000
  714 hyphenation exceptions out of 8191
  25i,10n,19p,912b,245s stack positions out of 5000i,500n,10000p,200000b,50000s
-</usr/local/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmbx10.pfb></usr/l
-ocal/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmbx12.pfb></usr/local/texl
-ive/2008/texmf-dist/fonts/type1/bluesky/cm/cmmi10.pfb></usr/local/texlive/2008/
-texmf-dist/fonts/type1/bluesky/cm/cmr10.pfb></usr/local/texlive/2008/texmf-dist
-/fonts/type1/bluesky/cm/cmr12.pfb></usr/local/texlive/2008/texmf-dist/fonts/typ
-e1/bluesky/cm/cmr17.pfb></usr/local/texlive/2008/texmf-dist/fonts/type1/bluesky
-/cm/cmr6.pfb></usr/local/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmr7.pf
-b></usr/local/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmr8.pfb></usr/loc
-al/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmsy10.pfb></usr/local/texliv
-e/2008/texmf-dist/fonts/type1/bluesky/cm/cmsy7.pfb></usr/local/texlive/2008/tex
-mf-dist/fonts/type1/bluesky/cm/cmti10.pfb></usr/local/texlive/2008/texmf-dist/f
-onts/type1/bluesky/cm/cmtt10.pfb></usr/local/texlive/2008/texmf-dist/fonts/type
-1/bluesky/cm/cmtt8.pfb>
-Output written on manual.pdf (11 pages, 254921 bytes).
+</usr/local/texlive/2008/texmf-dist/fo
+nts/type1/bluesky/cm/cmbx10.pfb></usr/local/texlive/2008/texmf-dist/fonts/type1
+/bluesky/cm/cmbx12.pfb></usr/local/texlive/2008/texmf-dist/fonts/type1/bluesky/
+cm/cmmi10.pfb></usr/local/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmr10.
+pfb></usr/local/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmr12.pfb></usr/
+local/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmr17.pfb></usr/local/texl
+ive/2008/texmf-dist/fonts/type1/bluesky/cm/cmr6.pfb></usr/local/texlive/2008/te
+xmf-dist/fonts/type1/bluesky/cm/cmr7.pfb></usr/local/texlive/2008/texmf-dist/fo
+nts/type1/bluesky/cm/cmr8.pfb></usr/local/texlive/2008/texmf-dist/fonts/type1/b
+luesky/cm/cmsy10.pfb></usr/local/texlive/2008/texmf-dist/fonts/type1/bluesky/cm
+/cmsy7.pfb></usr/local/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmti10.pf
+b></usr/local/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmtt10.pfb></usr/l
+ocal/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmtt8.pfb>
+Output written on manual.pdf (11 pages, 256578 bytes).
 PDF statistics:
  121 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 131072)

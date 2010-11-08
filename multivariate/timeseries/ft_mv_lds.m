@@ -46,8 +46,9 @@ classdef ft_mv_lds < ft_mv_timeseries
 % Y = sin(ncycles * 2 * pi * (1:nsamples) ./ nsamples)';
 % 
 % k = ft_mv_lds('inference','smooth','verbose',true);
+% % k.A = 0; % no dynamics
 % X = repmat(Y,[1 ncov]) + randn(size(Y,1),ncov); 
-% k = k.train(zscore(X),zscore(Y)); % everything assumed observed
+% k = k.train(zscore(X),zscore(Y)); % everything assumed observed 
 % X = repmat(Y,[1 ncov]) + randn(size(Y,1),ncov); 
 % Z = k.test(zscore(X));
 % plot(Z,'ko');

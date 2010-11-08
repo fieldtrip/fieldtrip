@@ -7,6 +7,7 @@ classdef ft_mv_crossvalidator
 %       - 0 <= nfolds < 1  : stratified proportion of training data
 %       - nfolds = inf     : leave-one-out crossvalidation
 %       - nfolds = N       : stratified N-fold crossvalidation
+%       - 'online'         : simulated online crossvalidation (sequential)
 %
 %   alternatively the user can override this by explicitly
 %   speciyfing train and/or testfolds
@@ -88,6 +89,12 @@ classdef ft_mv_crossvalidator
         if ~iscell(X), X = {X}; end
         if ~iscell(Y), Y = {Y}; end
 
+        % create testfolds in sequential order
+        if strcmp(obj.nfolds,'online')
+          obj.nfolds = [];
+          obj.testfolds = 1:size(X{1},1);
+        end    
+        
         % determine maximum number of folds for leave-one-out
         if isinf(obj.nfolds), obj.nfolds = min(cellfun(@(x)(size(x,1)),Y)); end
     
@@ -215,7 +222,11 @@ classdef ft_mv_crossvalidator
             else
               m = tproc.model();
               for mm=1:numel(obj.model)
-                obj.model{mm} = obj.model{mm} + m{mm};
+                try
+                  obj.model{mm} = obj.model{mm} + m{mm};
+                catch
+                  warning('individual model dimensions do not match\n');
+                end
               end
               clear m;
             end
