@@ -61,15 +61,7 @@ if nargout==0
   sel = find([list.status]==2);
   fprintf('there are %3d peers running on %2d hosts as idle slave with %s memory available\n', length(sel), length(unique({list(sel).hostname})), print_mem(sum([list(sel).memavail])));
   sel = find([list.status]==3);
-  current = [list(sel).current];
-  if ~isempty(current)
-    memreq = sum([current.memreq]);
-    timreq = sum([current.timreq]);
-  else
-    memreq = 0;
-    timreq = 0;
-  end
-  fprintf('there are %3d peers running on %2d hosts as busy slave with %s and %s required\n', length(sel), length(unique({list(sel).hostname})), print_mem(memreq), print_tim(timreq));
+  fprintf('there are %3d peers running on %2d hosts as busy slave\n', length(sel), length(unique({list(sel).hostname})));
   sel = find([list.status]==0);
   fprintf('there are %3d peers running on %2d hosts as zombie\n', length(sel), length(unique({list(sel).hostname})));
 end
@@ -104,7 +96,7 @@ if nargout==0
       case 2
         strlist{i} = sprintf('idle slave at %s@%s:%d, memavail = %5s, timavail = %s\n', list(i).user, list(i).hostname, list(i).port, print_mem(list(i).memavail), print_tim(list(i).timavail));
       case 3
-        strlist{i} = sprintf('busy slave at %s@%s:%d, working for %s, memreq = %5s, timreq = %s\n', list(i).user, list(i).hostname, list(i).port, list(i).current.user, print_mem(list(i).current.memreq), print_tim(list(i).current.timreq));
+        strlist{i} = sprintf('busy slave at %s@%s:%d, memavail = %5s, timavail = %s\n', list(i).user, list(i).hostname, list(i).port, print_mem(list(i).memavail), print_tim(list(i).timavail));
       otherwise
         error('unknown status');
     end

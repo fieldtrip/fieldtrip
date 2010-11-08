@@ -25,6 +25,16 @@
 #include "extern.h"
 #include "platform_includes.h"
 
+int threadsleep(float t) {
+		int retval = 0;
+		struct timespec req, rem;
+		/* split in seconds and nanoseconds */
+		req.tv_sec  = (int)t;
+		req.tv_nsec = (int)(1000000000.0 * (t - (int)t));
+		retval = nanosleep(&req, &rem);
+		return retval;
+}
+
 int bufread(int s, void *buf, int numel) {
 		int numcall = 0, numthis = 0, numread = 0;
 
@@ -42,7 +52,7 @@ int bufread(int s, void *buf, int numel) {
 				DEBUG(LOG_DEBUG, "bufread: read %d bytes", numthis);
 				numread += numthis;
 				numcall++;
-				usleep(1000);
+				threadsleep(0.001);
 		}
 		DEBUG(LOG_DEBUG, "bufread: reading the complete buffer required %d calls", numcall);
 		return numread;
@@ -67,7 +77,7 @@ int bufwrite(int s, void *buf, int numel) {
 				DEBUG(LOG_DEBUG, "bufwrite: wrote %d bytes", numthis);
 				numwrite += numthis;
 				numcall++;
-				usleep(1000);
+				threadsleep(0.001);
 		}
 		DEBUG(LOG_DEBUG, "bufwrite: writing the complete buffer required %d calls", numcall);
 		return numwrite;
@@ -232,6 +242,6 @@ void check_datatypes() {
 		if (WORDSIZE_INT64   !=8) { PANIC("invalid size of INT64   (%d)", WORDSIZE_INT64  );  }
 		if (WORDSIZE_FLOAT32 !=4) { PANIC("invalid size of FLOAT32 (%d)", WORDSIZE_FLOAT32);  }
 		if (WORDSIZE_FLOAT64 !=8) { PANIC("invalid size of FLOAT64 (%d)", WORDSIZE_FLOAT64);  }
-		if (sizeof(hostdef_t)!=976) { PANIC("invalid size of hostdef_t (%d)", sizeof(hostdef_t) );  }
+		if (sizeof(hostdef_t)!=552) { PANIC("invalid size of hostdef_t (%d)", sizeof(hostdef_t) );  }
 }
 

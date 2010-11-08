@@ -36,12 +36,11 @@ const char* joblist_fieldnames[JOBLIST_FIELDNUMBER] = {"version", "jobid", "args
 #define PEERINFO_FIELDNUMBER 13
 const char* peerinfo_fieldnames[PEERINFO_FIELDNUMBER] = {"hostid", "hostname", "user", "group", "socket", "port", "status", "timavail", "memavail", "cpuavail", "allowuser", "allowgroup", "allowhost"};
 
-#define PEERLIST_FIELDNUMBER 11
-const char* peerlist_fieldnames[PEERLIST_FIELDNUMBER] = {"hostid", "hostname", "user", "group", "socket", "port", "status", "timavail", "memavail", "cpuavail", "current"};
+#define PEERLIST_FIELDNUMBER 10
+const char* peerlist_fieldnames[PEERLIST_FIELDNUMBER] = {"hostid", "hostname", "user", "group", "socket", "port", "status", "timavail", "memavail", "cpuavail"};
 
 #define CURRENT_FIELDNUMBER 10
 const char* current_fieldnames[CURRENT_FIELDNUMBER] = {"pid", "hostid", "hostname", "user", "group", "timreq", "memreq", "cpureq", "argsize", "optsize"};
-
 
 int peerInitialized = 0;
 
@@ -1199,23 +1198,6 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mxSetFieldByNumber(plhs[0], i, j++, mxCreateDoubleScalar((UINT64_T)(peer->host->timavail)));
 						mxSetFieldByNumber(plhs[0], i, j++, mxCreateDoubleScalar((UINT64_T)(peer->host->memavail)));
 						mxSetFieldByNumber(plhs[0], i, j++, mxCreateDoubleScalar((UINT64_T)(peer->host->cpuavail)));
-						if (peer->host->status==STATUS_BUSY) {
-								current = mxCreateStructMatrix(1, 1, CURRENT_FIELDNUMBER, current_fieldnames);
-								mxSetFieldByNumber(current, 0, 0, mxCreateDoubleScalar(peer->host->current.pid));
-								mxSetFieldByNumber(current, 0, 1, mxCreateDoubleScalar(peer->host->current.id));
-								mxSetFieldByNumber(current, 0, 2, mxCreateString(peer->host->current.name));
-								mxSetFieldByNumber(current, 0, 3, mxCreateString(peer->host->current.user));
-								mxSetFieldByNumber(current, 0, 4, mxCreateString(peer->host->current.group));
-								mxSetFieldByNumber(current, 0, 5, mxCreateDoubleScalar(peer->host->current.timreq));
-								mxSetFieldByNumber(current, 0, 6, mxCreateDoubleScalar(peer->host->current.memreq));
-								mxSetFieldByNumber(current, 0, 7, mxCreateDoubleScalar(peer->host->current.cpureq));
-								mxSetFieldByNumber(current, 0, 8, mxCreateDoubleScalar(peer->host->current.argsize));
-								mxSetFieldByNumber(current, 0, 9, mxCreateDoubleScalar(peer->host->current.optsize));
-						}
-						else {
-								current = mxCreateStructMatrix(0, 0, CURRENT_FIELDNUMBER, current_fieldnames);
-						}
-						mxSetFieldByNumber(plhs[0], i, j++, current);
 						i++;
 						peer = peer->next ;
 				}

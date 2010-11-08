@@ -217,17 +217,6 @@ while ~all(submitted) || ~all(collected)
       submitted(submit)  = true;
       submittime(submit) = toc(stopwatch);
       clear curjobid curputtime
-    else
-      if ~isempty(busy)
-        % select only the slaves that are busy with your jobs
-        current = [busy.current];
-        info = peerinfo;
-        busy = busy([current.hostid]==info.hostid);
-        clear current info
-      end
-      if isempty(busy)
-        warning('none of the slaves seems to be busy with your jobs');
-      end
     end
 
     clear argin

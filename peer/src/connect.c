@@ -114,7 +114,7 @@ int open_tcp_connection(const char *hostname, int port) {
 						/* wait 5 miliseconds and try again */
 						perror("open_tcp_connection");
 						DEBUG(LOG_ERR, "error: open_tcp_connection");
-						usleep(5000);
+						threadsleep(0.005);
 						retry--;
 				}
 				else {
@@ -131,7 +131,7 @@ int open_tcp_connection(const char *hostname, int port) {
 		   while (connect(s, (struct sockaddr *)&sa, sizeof sa) < 0) {
 		   perror("open_tcp_connection connect");
 		   DEBUG(LOG_ERR, "error: open_tcp_connection connect");
-		   usleep(1000000);
+		   threadsleep(1.000);
 		   }
 		 */
 

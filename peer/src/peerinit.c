@@ -71,7 +71,6 @@ void peerinit(void *arg) {
 		bzero(host->user, STRLEN);
 		bzero(host->group, STRLEN);
 		bzero(host->socket, STRLEN);
-		bzero(&(host->current), sizeof(current_t));
 
 #if defined (PLATFORM_LINUX) || defined (PLATFORM_OSX)
 
@@ -163,7 +162,7 @@ void peerinit(void *arg) {
 		smartshare.prevhostid    = 0;
 		smartshare.prevhostcount = 0;
 		smartshare.n             = 0;
-		smartshare.t0            = time(NULL);
+		smartshare.time          = time(NULL);
 		pthread_mutex_unlock(&mutexsmartshare);
 
 		return;

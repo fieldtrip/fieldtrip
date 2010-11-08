@@ -15,7 +15,7 @@ LIBPATH  = -L.
 LIBS 	 = -lm -lpthread -lpeer
 # CFLAGS   = $(INCPATH) -fPIC -Wall -pedantic -O1 -fpack-struct
 # CXXFLAGS = $(INCPATH) -fPIC -Wunused -pedantic -O1
-CFLAGS	 = $(INCPATH) -fPIC -Wall -pthread 
+CFLAGS	 = $(INCPATH) -fPIC -Wall -pthread -g
 
 ifeq "$(PLATFORM)" "i386-redhat-linux"
 	# this is only for the peerslave command line executable -> mentat068
@@ -68,6 +68,12 @@ peer: peer.o libpeer.a
 peerslave.$(MATLABARCH): peerslave.o libpeer.a
 	$(CC) $(CFLAGS) $(LIBPATH) $(MATLABLIBS) -o ../$@ $^ $(LIBS)
 
+test_peerslave: test_peerslave.o
+	$(CC) $(CFLAGS) $(LIBPATH) $(MATLABLIBS) -o $@ $^ $(LIBS)
+
+test_engine: test_engine.o
+	$(CC) $(CFLAGS) $(LIBPATH) $(MATLABLIBS) -o $@ $^ $(LIBS)
+
 test_send: test_send.o libpeer.a
 	$(CC) $(CFLAGS) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
 
@@ -96,6 +102,12 @@ test_localhost: test_localhost.o
 	$(CC) $(CFLAGS) $(INCPATH) -c $*.c
 
 peerslave.o: peerslave.c peer.h extern.h libpeer.a
+	$(CC) $(CFLAGS) $(INCPATH) $(MATLABINC) -c $*.c
+
+test_peerslave.o: test_peerslave.c peer.h extern.h libpeer.a
+	$(CC) $(CFLAGS) $(INCPATH) $(MATLABINC) -c $*.c
+
+test_engine.o: test_engine.c
 	$(CC) $(CFLAGS) $(INCPATH) $(MATLABINC) -c $*.c
 
 clean:

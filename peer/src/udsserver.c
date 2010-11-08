@@ -171,7 +171,7 @@ void *udsserver(void *arg) {
 				if (c<0) {
 						if (errno==EWOULDBLOCK) {
 								pthread_testcancel();
-								usleep(ACCEPTSLEEP);
+								threadsleep(ACCEPTSLEEP);
 						}
 						else {
 								perror("udsserver accept");

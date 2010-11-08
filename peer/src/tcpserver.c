@@ -175,6 +175,7 @@ void *tcpserver(void *arg) {
 		bzero(&sa, sizeof sa);
 		b = sizeof sa;
 
+		pthread_mutex_lock(&mutexhost);
 		sa.sin_family = AF_INET;
 		sa.sin_port   = htons(host->port);
 
@@ -194,6 +195,8 @@ void *tcpserver(void *arg) {
 						retry = -1;
 				}
 		}
+		pthread_mutex_unlock(&mutexhost);
+
 		if (retry==0) {
 				/* it failed on mutliple attempts, give up */
 				perror("tcpserver bind");
@@ -222,7 +225,7 @@ void *tcpserver(void *arg) {
 #ifdef WIN32
 						if(errno==0) {
 								pthread_testcancel();
-								usleep(ACCEPTSLEEP);
+								threadsleep(ACCEPTSLEEP);
 						}
 						else {
 								perror("tcpserver accept");
@@ -232,7 +235,7 @@ void *tcpserver(void *arg) {
 #else
 						if (errno==EWOULDBLOCK) {
 								pthread_testcancel();
-								usleep(ACCEPTSLEEP);
+								threadsleep(ACCEPTSLEEP);
 						}
 						else {
 								perror("tcpserver accept");
