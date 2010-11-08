@@ -23,7 +23,7 @@ classdef ft_mv_standardizer < ft_mv_preprocessor
     
     function obj = train(obj,X,Y)
       
-      % multiple datasets
+          % multiple datasets
       if iscell(X) || iscell(Y)
         obj = ft_mv_ndata('mvmethod',obj);
         obj = obj.train(X,Y);
@@ -56,8 +56,8 @@ classdef ft_mv_standardizer < ft_mv_preprocessor
     
     function X = invert(obj,Y)
 
-      X = bsxfun(@times,Y,obj.sigma);
-      X = bsxfun(@plus,X,obj.mu);
+      U = bsxfun(@times,M,obj.sigma);
+      U = bsxfun(@plus,U,obj.mu);
       
     end
     

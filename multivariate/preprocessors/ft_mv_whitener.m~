@@ -1,0 +1,56 @@
+classdef ft_mv_whitener < ft_mv_standardizer
+%WHITENER whitens the data; standardizes the data first
+%
+% Copyright (c) 2009, Marcel van Gerven
+   
+SLOW SPHERING?
+
+  properties
+    
+    wmat  % whitening matrix
+    uwmat % unwhitening matrix
+    
+  end
+
+    methods
+      
+      function obj = ft_mv_whitener(varargin)
+        
+        obj = obj@ft_mv_standardizer(varargin{:});
+        
+      end
+      
+      function obj = train(obj,X,Y)
+        
+        if nargin<3, Y = []; end
+        
+        obj = train@ft_mv_standardizer(obj,X,Y);
+        
+        if obj.verbose, fprintf('whitening data\n'); end
+        
+        [E, D] = eig(cov(X,1));
+        
+        obj.wmat = sqrt(D) \ E';
+        obj.uwmat = E * sqrt(D);
+        
+      end
+      
+      function Y = test(obj,X)
+        % whiten
+        
+        Y = test@ft_mv_standardizer(obj,X);
+        
+        Y = Y*obj.wmat';
+                 
+      end
+            
+      function X = invert(obj,Y)
+        % invert mapping
+        
+        X = Y*obj.uwmat';
+        
+      end
+      
+    end
+
+end
