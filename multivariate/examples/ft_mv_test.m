@@ -1,9 +1,9 @@
-function [acc,sig,tim,cv] = ft_mv_test(varargin)
+function [acc,sig,cv] = ft_mv_test(varargin)
 % FT_MV_TEST tests a multivariate analysis procedure. It uses a default
 % dataset about digit decoding using V1 BOLD response but this can be
 % overridden. It handles different types of decoding problems.
 %
-%   [metric,sigtest,cputime,cv] = ft_test_mva(varargin)
+%   [metric,sigtest,cv] = ft_test_mva(varargin)
 %
 % options:
 % 'mva'       multivariate analysis
@@ -68,9 +68,7 @@ function [acc,sig,tim,cv] = ft_mv_test(varargin)
   end
   S.cv.sigtest = S.sigtest;
   
-  tstart  = tic;
   cv      = S.cv.train(S.X,S.Y);
-  tim     = toc(tstart);
   acc     = cv.performance; 
   sig     = cv.significance;
   

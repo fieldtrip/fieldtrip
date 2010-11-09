@@ -393,7 +393,7 @@ Some of the described methods can be resource intensive. Most notably, cross-val
 \section{Examples}
 \label{examples}
 
-In the following examples, we will use the \t{69digits} dataset which is included in this module. It is a subset of the data used in~\cite{gerven2010,gerven2010a}. It consists of the V1 BOLD measurements for 50 handwritten sixes and 50 handwritten nines as shown in a 3T MRI scanner. The dataset consists of the BOLD data \t{X}, the labels \t{Y} (1 stands for 6 and 2 stands for 9) and \t{images} (the presented handwritten digits). The variable \t{zmask} contains the used region of interest in native space. In order to test a multivariate analysis we can make use of \t{ft\_mv\_test}. It accepts an MVA and tests it by default on the example dataset using ten-fold cross-validation.
+In the following examples, we will use the \t{69digits} dataset which is included in this module. It is a subset of the data used in~\cite{gerven2010,gerven2010a}. It consists of the BOLD measurements for 50 handwritten sixes and 50 handwritten nines as shown in a 3T MRI scanner. The dataset consists of the BOLD data \t{X}, the labels \t{Y} (1 stands for 6 and 2 stands for 9) and \t{digits} (the presented handwritten digits). The variables \t{funloc} an \t{masks} contain the functional localizers and the associated mask in native space. The data pertains to the primary mask but subsets of features may be selected by using the other masks. In order to test a multivariate analysis we can make use of \t{ft\_mv\_test}. It accepts an MVA and tests it by default on the example dataset using ten-fold cross-validation.
 
 \subsubsection*{A simple example}
 We start with a simple example to get some baseline performance:
@@ -418,42 +418,29 @@ dataset 1: validating fold 9 of 10 using 90 training samples and 10 test samples
 dataset 1: validating fold 10 of 10 using 90 training samples and 10 test samples
 
 >> disp(a)
-    0.7800
+    0.8300
 
 >> disp(b)
-     1
+     1.1050e-05
 
->> disp(c)
-    0.4695    
 \end{verbatim}
-Hence, baseline performance with a non-optimized SVM is 78\% of the trials classified correctly (output a) which is signficant as the null-hypothesis is rejected (output b). It took 0.47 seconds to generate this results (output c).
+Hence, baseline performance with a non-optimized SVM is 78\% of the trials classified correctly (output a) which is signficant as the null-hypothesis is rejected (output b). Output c returns the employed cross-validator.
 
 \subsubsection*{Using the optimizer}
 
 In case we want to optimize the SVM then we can use \t{ft\_mv\_optimizer}:
 \begin{verbatim}
->> [a,b,c] = ft_mv_test('mva',{ft_mv_standardizer 
+>> [a,b] = ft_mv_test('mva',{ft_mv_standardizer 
       ft_mv_optimizer('mva',{ft_mv_svm},'vars','C','vals',logspace(-3,3,7))});
 
->> disp(a)
-    0.7900
-
->> disp(b)
-     1
-
->> disp(c)
-  155.8623
 \end{verbatim}
-Note that this improvement in performance using a very coarse search over values for the $C$ parameter  over a fixed default setting required a computing time that is about  300 times longer. The reason for this is that for each value in the search (seven in this case) it performs an inner ten-fold cross-validation within each outer cross-validation run. That is, we need to perform $7 \cdot 10 \cdot 10=700$ instead of $10$ SVM estimations. There are various ways to speed this up. For one, we can use less outer and inner folds for cross-validation (or even just a percentage of the data). Furthermore, we can parallelize the outer and inner cross-validation as well as the optimization. Note however that if we parallelize everything then the cluster may be too busy with broadcasting events instead of doing the actual computations! The optimal combination often is more an art than a science.
+Here we may obtain performance increases by searching over values for the $C$ parameter. Computing time in this case is about  300 times longer. The reason for this is that for each value in the search (seven in this case) it performs an inner ten-fold cross-validation within each outer cross-validation run. That is, we need to perform $7 \cdot 10 \cdot 10=700$ instead of $10$ SVM estimations. There are various ways to speed this up. For one, we can use less outer and inner folds for cross-validation (or even just a percentage of the data). Furthermore, we can parallelize the outer and inner cross-validation as well as the optimization. Note however that if we parallelize everything then the cluster may be too busy with broadcasting events instead of doing the actual computations! The optimal combination often is more an art than a science.
 
 \subsubsection*{Using a predictor to combine ensemble method output}
 It can be of interest to use the output of several predictors as input to another predictor. This is realized as follows:
 \begin{verbatim}
 m = ft_mv_ensemble('mvas',{ft_mv_naive ft_mv_svm},'combfun',@(x)(cell2mat(x)));
 a = ft_mv_test('mva',{ft_mv_standardizer m ft_mv_naive});
-
->> disp(a)
-    0.8600
 \end{verbatim}
 
 \subsubsection*{Using the searchlight method}
