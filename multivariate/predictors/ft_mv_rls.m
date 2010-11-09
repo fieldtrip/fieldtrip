@@ -43,9 +43,12 @@ classdef ft_mv_rls < ft_mv_predictor
         error 'X and Y must have the same number of rows';
       end
       
-      if isempty(obj.params)
-        invH = eye(dx) / obj.L2;
-        beta = zeros(dx,dy);
+      if isempty(obj.invH)
+%        invH = eye(dx) / obj.L2;
+%        beta = zeros(dx,dy);
+        obj.invH = inv(X'*X + obj.L2*eye(size(X,2),size(X,2)));
+        obj.beta = inv(X'*X + obj.L2*eye(size(X,2),size(X,2)))*X'*Y;
+        return;
       else
         invH = obj.invH;
         beta = obj.beta;
@@ -69,8 +72,7 @@ classdef ft_mv_rls < ft_mv_predictor
       Y = X*obj.beta;
     end
     
-    function [m,desc] = getmodel(obj)
-      % SK: not sure whether this matches the desired semantics
+    function [m,desc] = model(obj)
       m = {obj.invH obj.beta};
       desc = {'Inverse Hessian' 'beta'};
     end
