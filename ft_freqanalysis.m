@@ -353,11 +353,13 @@ else
       acttboi = squeeze(~isnan(spectrum(1,1,ifoi,:)));
       nacttboi = sum(acttboi);
       if ~hastime
-        acttboi = 1;
+        acttboi  = 1;
         nacttboi = 1;
+      elseif sum(acttboi)==0
+        %nacttboi = 1;
       end
       acttap = squeeze(~isnan(spectrum(:,1,ifoi,find(acttboi,1))));
-
+      acttap = logical([ones(ntaper(ifoi),1);zeros(size(spectrum,1)-ntaper(ifoi),1)]);
       if powflg
         powdum = abs(spectrum(acttap,:,ifoi,acttboi)) .^2;
         % sinetaper scaling, not checked whether it works if hastime = 0
@@ -414,14 +416,20 @@ else
           if powflg
             powspctrm(currrptind(acttap),:,ifoi,acttboi) = reshape(powdum,[ntaper(ifoi) nchan 1 nacttboi]);
             powspctrm(~currrptind(acttap),:,ifoi,~acttboi) = NaN;
+            powspctrm( currrptind(acttap),:,ifoi,~acttboi) = NaN;
+            powspctrm(~currrptind(acttap),:,ifoi, acttboi) = NaN;
           end
           if fftflg
             fourierspctrm(currrptind(acttap),:,ifoi,acttboi) = reshape(fourierdum,[ntaper(ifoi) nchan 1 nacttboi]);
             fourierspctrm(~currrptind(acttap),:,ifoi,~acttboi) = NaN;
+            fourierspctrm( currrptind(acttap),:,ifoi,~acttboi) = NaN;
+            fourierspctrm(~currrptind(acttap),:,ifoi, acttboi) = NaN;
           end
           if csdflg
             crsspctrm(currrptind(acttap),:,ifoi,acttboi) = reshape(csddum,[ntaper(ifoi) nchancmb 1 nacttboi]);
             crsspctrm(~currrptind(acttap),:,ifoi,~acttboi) = NaN;
+            crsspctrm( currrptind(acttap),:,ifoi,~acttboi) = NaN;
+            crsspctrm(~currrptind(acttap),:,ifoi, acttboi) = NaN;
           end
           
       end % switch keeprpt
