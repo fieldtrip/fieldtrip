@@ -1,5 +1,5 @@
 classdef ft_mv_klr < ft_mv_kernelmethod
-%FT_MV_KLR kernel logistic regression
+% FT_MV_KLR kernel logistic regression
 %
 % Copyright (c) 2008, Marcel van Gerven, Jason Farquhar
   
