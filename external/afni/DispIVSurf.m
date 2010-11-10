@@ -198,7 +198,7 @@ FigHndls = [];
 	end
 
 %check for inconsistent input
-	if (isrow(DispOpt.Grid) < 0 | length(DispOpt.Grid) ~= 3),
+	if (is_row(DispOpt.Grid) < 0 | length(DispOpt.Grid) ~= 3),
 		err = ErrEval(FuncName,'Err_Bad .Grid vector size');	return
 	end
 	

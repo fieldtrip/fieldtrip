@@ -46,7 +46,7 @@ err = 1;
 
 if (nargin == 1), 	verbose = 1;	end
 
-if (isrow(Triplets) == -1),	err = ErrEval(FuncName,'Err_Triplets must be an Nx1 vector');	return;	end
+if (is_row(Triplets) == -1),	err = ErrEval(FuncName,'Err_Triplets must be an Nx1 vector');	return;	end
 
 Triplets = Triplets(:);
 Nplanes = size(Triplets,1);

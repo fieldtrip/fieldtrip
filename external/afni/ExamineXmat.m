@@ -32,7 +32,12 @@ function ExamineXmat(fname, polort, dt, nrun, nmot)
 verb = 0;
 
 if (nargin < 1 | isempty(fname) | (ischar(fname) & ~filexist(fname))),
-   fname = uigetfile('*.xmat.1D','Pick an Xmat');
+   [fname, pname] = uigetfile('*.xmat.1D','Pick an Xmat');
+   fname = sprintf('%s%c%s', pname, filesep, fname);
+   if (~filexist(fname)),
+      fprintf(2,'File %s not found\n', fname);
+      return;
+   end
 end
 if (nargin < 2),
    csstims = cellstr('');
@@ -225,7 +230,7 @@ while (~isempty(s)),
          else
             inz = [inz v(i)];
          end
-         if (length(v) < 60),
+         if (length(v) < 75),
             xt = get(gca,'XTick');
             text( xt(1)-0.1.*xt(2), offs, char(cs(v(i))), ...
                   'HorizontalAlignment', 'right',...
@@ -245,6 +250,21 @@ while (~isempty(s)),
              CondNoMotionNoBase, cond(mshow(:, [v])),...
              cond(mshow(:, [inz]))),...
             'interpreter', 'none'); 
+   
+   if (1), %show correlation matrix for Assaf
+      figure(2); clf
+      ccm = corrcoef(mshow(:,v)); 
+      ccm = ccm.*(1-diag(diag(ccm,0)));
+      mmm = max(abs(ccm(:)));
+      imagesc(ccm, [-mmm , mmm]); colorbar;
+      ima = gca; 
+      title('Correlation matrix of selected regressors. Diagonal set to 0');
+      set (ima, 'YTick', [1:1:size(ccm,1)]');
+      set (ima, 'YTickLabel', cellstr(cs(v)));
+      set (ima, 'XTick', [1:1:size(ccm,1)]');
+      set (ima, 'XTickLabel', cellstr(cs(v)));
+      xticklabel_rotate([], 90);
+   end
    
    smpl = char(csstims(1));
    if (length(csstims)>2),
@@ -334,3 +354,4 @@ while (~isempty(s)),
       end
    end
 end
+

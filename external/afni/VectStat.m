@@ -45,7 +45,7 @@ Stat.V = NaN;
 
 
 
-if (isrow(M) ~= -1),
+if (is_row(M) ~= -1),
 	sZ = 1;
 	sz2 = length(M);
 	M = M(:)'; %turn M into a row vector

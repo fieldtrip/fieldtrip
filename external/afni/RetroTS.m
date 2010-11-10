@@ -214,6 +214,13 @@ else,
          for (i=2:2:Opt.Nslices),
             Opt.SliceOffset(i) = tt; tt = tt+dtt;
          end
+      elseif(strcmpi(Opt.SliceOrder, 'alt+z2'))
+         for (i=2:2:Opt.Nslices),
+            Opt.SliceOffset(i) = tt; tt = tt+dtt;
+         end
+         for (i=1:2:Opt.Nslices),
+            Opt.SliceOffset(i) = tt; tt = tt+dtt;
+         end
       elseif(strcmpi(Opt.SliceOrder, 'seq+z'))
          for (i=1:1:Opt.Nslices),
             Opt.SliceOffset(i) = tt; tt = tt+dtt;
