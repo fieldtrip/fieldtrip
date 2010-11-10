@@ -1,5 +1,5 @@
-function ans = isrow (v);
-% ans = isrow (v);
+function ans = is_row (v);
+% ans = is_row (v);
 %returns 1 if v is a row vector
 %returns 0 if v is a column vector
 %returns -1 if v is a matrix
