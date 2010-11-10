@@ -532,18 +532,14 @@ else
   
   try, freq.grad = data.grad; end   % remember the gradiometer array
   try, freq.elec = data.elec; end   % remember the electrode array
+
   % add information about the version of this function to the configuration
-  try
-    % get the full name of the function
-    cfg.version.name = mfilename('fullpath');
-  catch
-    % required for compatibility with Matlab versions prior to release 13 (6.5)
-    [st, i1] = dbstack;
-    cfg.version.name = st(i1);
-  end
+  cfg.version.name = mfilename('fullpath');
   cfg.version.id = '$Id$';
+
   % remember the configuration details of the input data
   try, cfg.previous = data.cfg; end
+
   % remember the exact configuration details in the output
   freq.cfg = cfg;
   

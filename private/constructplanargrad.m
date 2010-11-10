@@ -166,15 +166,10 @@ try
   planar.unit  = grad.unit;
 end
 
-% rememeber the configuration of this function call, including its version details
-try
-  % get the full name of the function
-  cfg.version.name = mfilename('fullpath');
-catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
-  [st, i] = dbstack;
-  cfg.version.name = st(i);
-end
+% add information about the version of this function to the configuration
+cfg.version.name = mfilename('fullpath');
 cfg.version.id   = '$Id$';
+
+% rememember the exact configuration details in the output
 planar.cfg = cfg;
 

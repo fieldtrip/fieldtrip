@@ -146,14 +146,7 @@ cfg.trl = trl;
 cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
 
 % add information about the version of this function to the configuration
-try
-  % get the full name of the function
-  cfg.version.name = mfilename('fullpath');
-catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
-  [st, i1] = dbstack;
-  cfg.version.name = st(i1);
-end
+cfg.version.name = mfilename('fullpath');
 cfg.version.id = '$Id$';
 
 % % remember the exact configuration details in the output

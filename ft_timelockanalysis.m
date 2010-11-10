@@ -502,18 +502,12 @@ cfg.outputfile;
 cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
 
 % add version information to the configuration
-try
-  % get the full name of the function
-  cfg.version.name = mfilename('fullpath');
-catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
-  [st, i] = dbstack;
-  cfg.version.name = st(i);
-end
+cfg.version.name = mfilename('fullpath');
 cfg.version.id = '$Id$';
 
 % remember the configuration details of the input data
-try cfg.previous = data.cfg; end
+try, cfg.previous = data.cfg; end
+
 % remember the exact configuration details in the output 
 timelock.cfg = cfg;
 
@@ -521,3 +515,4 @@ timelock.cfg = cfg;
 if ~isempty(cfg.outputfile)
   savevar(cfg.outputfile, 'data', timelock); % use the variable name "data" in the output file
 end
+

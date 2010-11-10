@@ -117,17 +117,12 @@ if isempty(output.crsspctrm), output = rmfield(output, 'crsspctrm'); end;
 if isempty(output.labelcmb ), output = rmfield(output, 'labelcmb' ); end;
 
 % add information about the version of this function to the configuration
-try
-  % get the full name of the function
-  cfg.version.name = mfilename('fullpath');
-catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
-  [st, i1] = dbstack;
-  cfg.version.name = st(i1);
-end
+cfg.version.name = mfilename('fullpath');
 cfg.version.id = '$Id$';
+
 % remember the configuration details of the input data
 try, cfg.previous = freq.cfg; end
+
 % remember the exact configuration details in the output 
 output.cfg = cfg;
 

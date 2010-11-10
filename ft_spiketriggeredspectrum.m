@@ -209,17 +209,12 @@ freq.origtime       = freq.origtime(~sel);
 freq.origtrial      = freq.origtrial(~sel);
 
 % add version information to the configuration
-try
-  % get the full name of the function
-  cfg.version.name = mfilename('fullpath');
-catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
-  [st, i] = dbstack;
-  cfg.version.name = st(i);
-end
+cfg.version.name = mfilename('fullpath');
 cfg.version.id = '$Id$';
+
 % remember the configuration details of the input data
 try, cfg.previous = data.cfg; end
+
 % remember the exact configuration details in the output
 freq.cfg = cfg;
 

@@ -348,14 +348,6 @@ cfg.artfctdef.zvalue.artifact = artifact;
 fprintf('detected %d artifacts\n', size(artifact,1));
 
 % add version information to the configuration
-try
-  % get the full name of the function
-  cfg.artfctdef.zvalue.version.name = mfilename('fullpath');
-catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
-  [st, i] = dbstack;
-  cfg.artfctdef.zvalue.version.name = st(i);
-end
+cfg.artfctdef.zvalue.version.name = mfilename('fullpath');
 cfg.artfctdef.zvalue.version.id = '$Id$';
-
 
