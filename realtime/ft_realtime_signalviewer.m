@@ -1,7 +1,7 @@
 function ft_realtime_signalviewer(cfg)
 
 % FT_REALTIME_SIGNALVIEWER is an example realtime application for online
-% viewing of the data. It should work both for EEG and MEG.
+% viewing of the data. It should work both for EEG and MEG. 
 %
 % Use as
 %   ft_realtime_signalviewer(cfg)
