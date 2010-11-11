@@ -767,6 +767,8 @@ nsmp = cellfun('size',data.time,2);
 seln = find(nsmp>1,1, 'first');
 data.fsample = 1/(data.time{seln}(2)-data.time{seln}(1));
 
+if isfield(freq, 'trialinfo'), data.trialinfo = freq.trialinfo; end;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between ft_datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
