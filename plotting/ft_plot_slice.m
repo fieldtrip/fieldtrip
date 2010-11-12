@@ -14,12 +14,12 @@ function [h] = ft_plot_slice(dat, varargin)
 %                    data will be plotted. location defines the origin of the plane 
 %   'orientation'  a 1x3 vector specifying the direction orthogonal through the plane
 %                    which will be plotted.
+%   'datmask'      a 3D-matrix with the same size as the matrix dat, serving as opacitymap
+%   'interpmethod' a string specifying the method for the interpolation, default = 'nearest' 
+%                    see INTERPN
+%   'colormap'    
 %
-%   'mask'
 %   'interplim'
-%   'interpmethod'
-%   'style'
-%   'datmask'
 
 % Copyrights (C) 2010, Jan-Mathijs Schoffelen
 %
@@ -48,13 +48,27 @@ transform = keyval('transform',   varargin); if isempty(transform),  transform  
 loc       = keyval('location',    varargin); if isempty(loc),        loc        = [0 0 0];   end;
 ori       = keyval('orientation', varargin); if isempty(ori),        ori        = [0 0 1];   end;
 resolution = keyval('resolution', varargin); if isempty(resolution), resolution = 1;         end
+mask       = keyval('datmask',    varargin);
+interpmethod = keyval('interpmethod', varargin); if isempty(interpmethod), interpmethod = 'nearest'; end
+cmap       = keyval('colormap',   varargin); 
 if ~strcmp(class(dat), 'double'),
   origclass = class(dat);
   dat       = cast(dat, 'double');
 end
 
+% norm normalise the ori vector
 ori = ori./sqrt(sum(ori.^2));
+
+% dimensionality of the input data
 dim = size(dat);
+
+% check whether mask is ok
+domask = ~isempty(mask);
+if domask,
+  if ~all(dim==size(mask)),
+    error('the mask data should have the same dimensionality as the functional data');
+  end
+end
 
 % determine whether interpolation is needed
 dointerp = false;
@@ -85,7 +99,10 @@ if dointerp
   Xi         = reshape(pos(:,1), siz);
   Yi         = reshape(pos(:,2), siz);
   Zi         = reshape(pos(:,3), siz);
-  V          = interpn(X,Y,Z,dat,Xi,Yi,Zi,'nearest');
+  V          = interpn(X,Y,Z,dat,Xi,Yi,Zi,interpmethod);
+  if domask,
+    Vmask    = interpn(X,Y,Z,mask,Xi,Yi,Zi,interpmethod);
+  end
 
 else
   if all(ori==[1 0 0]), xplane = loc(1); yplane = 1:dim(2); zplane = 1:dim(3); end
@@ -97,6 +114,9 @@ else
   Yi         = reshape(Yi, siz);
   Zi         = reshape(Zi, siz);
   V          = dat(xplane, yplane, zplane);
+  if domask,
+    Vmask    = mask(xplane, yplane, zplane);
+  end
 
 end
 
@@ -106,9 +126,26 @@ Xh   = reshape(posh(:,1), siz);
 Yh   = reshape(posh(:,2), siz);
 Zh   = reshape(posh(:,3), siz);
 
-h = surf(Xh, Yh, Zh, V); axis equal
-%set(h, 'linestyle', 'none', 'facealpha', 0.9);
+if isempty(cmap),
+  %treat as gray value: scale and convert to rgb
+  dmin = min(dat(:));
+  dmax = max(dat(:));
+  V    = (V-dmin)./(dmax-dmin);
+  clear dmin dmax;
+  % convert anatomy into RGB values
+  V = cat(3, V, V, V);
+end
+
+h = surface(Xh, Yh, Zh, V); axis equal; axis vis3d
 set(h, 'linestyle', 'none');
+if domask,
+  set(h, 'FaceAlpha', 'flat');
+  set(h, 'AlphaDataMapping', 'scaled');
+  set(h, 'AlphaData', Vmask);
+end
+if ~isempty(cmap)
+  colormap(cmap);
+end
 
 function [x, y] = projplane(z)
 
