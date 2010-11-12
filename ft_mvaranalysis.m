@@ -237,7 +237,7 @@ data          = ft_redefinetrial(tmpcfg, data);
 if strcmp(cfg.blc, 'yes'),
     tmpcfg           = [];
     tmpcfg.blc       = 'yes';
-    %tmpcfg.blcwindow = cfg.toi([1 end]) + cfg.t_ftimwin.*[-0.5 0.5];
+    tmpcfg.blcwindow = cfg.toi([1 end]) + cfg.t_ftimwin.*[-0.5 0.5];
     data             = ft_preprocessing(tmpcfg, data);
 else
     %do nothing
