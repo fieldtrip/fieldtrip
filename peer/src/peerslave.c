@@ -381,6 +381,8 @@ int main(int argc, char *argv[]) {
 		pthread_mutex_lock(&mutexhost);
 		/* switch the peer to idle slave */
 		host->status = STATUS_IDLE;
+		/* update the current job description */
+		bzero(&(host->current), sizeof(current_t));
 		pthread_mutex_unlock(&mutexhost);
 
 		while (1) {
@@ -398,6 +400,8 @@ int main(int argc, char *argv[]) {
 										engineFailed = time(NULL);
 										pthread_mutex_lock(&mutexhost);
 										host->status = STATUS_ZOMBIE;
+										/* update the current job description */
+										bzero(&(host->current), sizeof(current_t));
 										pthread_mutex_unlock(&mutexhost);
 
 										/* clear the joblist */
@@ -417,6 +421,17 @@ int main(int argc, char *argv[]) {
 						pthread_mutex_lock(&mutexhost);
 						/* switch the mode to busy slave */
 						host->status = STATUS_BUSY;
+						/* update the current job description */
+						bzero(&(host->current), sizeof(current_t));
+						host->current.hostid= job->host->id;
+						host->current.jobid = job->job->id;
+						strncpy(host->current.name, job->host->name, STRLEN);
+						strncpy(host->current.user, job->host->user, STRLEN);
+						strncpy(host->current.group, job->host->group, STRLEN);
+						host->current.timreq  = job->job->timreq;
+						host->current.memreq  = job->job->memreq;
+						host->current.cpureq  = job->job->cpureq;
+
 						/* determine the maximum allowed job duration */
 						timallow = 2*(host->timavail+1);
 						pthread_mutex_unlock(&mutexhost);
@@ -657,6 +672,8 @@ cleanup:
 						pthread_mutex_lock(&mutexhost);
 						/* make the slave available again */
 						host->status = STATUS_IDLE;
+						/* update the current job description */
+						bzero(&(host->current), sizeof(current_t));
 						pthread_mutex_unlock(&mutexhost);
 
 						/* inform the other peers of the updated status */
@@ -686,6 +703,8 @@ cleanup:
 						DEBUG(LOG_NOTICE, "switching back to idle mode");
 						pthread_mutex_lock(&mutexhost);
 						host->status = STATUS_IDLE;
+						/* update the current job description */
+						bzero(&(host->current), sizeof(current_t));
 						pthread_mutex_unlock(&mutexhost);
 						engineFailed = 0;
 						continue;

@@ -44,7 +44,7 @@
 #define STATUS_IDLE              2			/* status = 2 means idle slave, accept only a single job */
 #define STATUS_BUSY              3 			/* status = 3 means busy slave, don't accept a new job   */
 
-#define VERSION                  20			/* this should be a decimal number, not a hex */
+#define VERSION                  21			/* this should be a decimal number, not a hex */
 #define ANNOUNCE_GROUP           "225.0.0.88"
 #define ANNOUNCE_PORT 	         1700		/* it will auto-increment if the port is not available */
 #define DEFAULT_GROUP            "unknown"
@@ -149,6 +149,18 @@ typedef uint64_t UINT64_T;
 #define WORDSIZE_FLOAT32 sizeof(FLOAT32_T)
 #define WORDSIZE_FLOAT64 sizeof(FLOAT64_T)
 
+/* this describes the details of the current job on a busy slave */
+typedef struct {
+		UINT32_T hostid;        /* identifier of the peer where the job originates from */
+		UINT32_T jobid;         /* identifier of the job */
+		char name[STRLEN];      /* hostname of the peer where the job originates from */
+		char user[STRLEN];
+		char group[STRLEN];
+		UINT64_T timreq; 
+		UINT64_T memreq; 
+		UINT64_T cpureq; 
+} current_t;
+
 /* this is the binary packet that is announced over the network */
 typedef struct {
 		UINT32_T version;	   
@@ -156,12 +168,13 @@ typedef struct {
 		char name[STRLEN]; 
 		char user[STRLEN]; 
 		char group[STRLEN];
-		char socket[STRLEN];  /* name of the unix domain socket, or empty if not available */
+		char socket[STRLEN];	/* name of the unix domain socket, or empty if not available */
 		UINT32_T port;
 		UINT32_T status;
 		UINT64_T timavail; 
 		UINT64_T memavail; 
 		UINT64_T cpuavail; 
+		current_t current;		/* details of the current job when busy */
 } hostdef_t;
 
 typedef struct {

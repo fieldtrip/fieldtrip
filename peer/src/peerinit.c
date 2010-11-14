@@ -72,6 +72,9 @@ void peerinit(void *arg) {
 		bzero(host->group, STRLEN);
 		bzero(host->socket, STRLEN);
 
+		/* initialize the current job details as empty */
+		bzero(&(host->current), sizeof(current_t));
+
 #if defined (PLATFORM_LINUX) || defined (PLATFORM_OSX)
 
 		/* get the user name */
