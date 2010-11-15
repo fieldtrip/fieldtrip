@@ -175,7 +175,7 @@ while cfg.count < cfg.nsamples
          evt.timestamp = data.time{1}(1);
          evt.value = cmd;
          
-         write_event(cfg.ostream,cmdevent);
+         write_event(cfg.ostream,evt);
          
        else
          fprintf('generated command %s\n',num2str(cmd));
