@@ -431,6 +431,24 @@ elseif iseeg
       else
         error('No system matrix is present, BEM head model not calculated yet')
       end
+
+      case 'metufem'
+        p3 = zeros(Ndipoles * 3, 6);
+        for i = 1:Ndipoles
+          p3((3*i - 2) : (3 * i), 1:3) = [pos(i,:); pos(i,:); pos(i,:)];
+          p3((3*i - 2) : (3 * i), 4:6) = [1 0 0; 0 1 0; 0 0 1];
+        end
+        lf = metufem('pot', p3');
+
+      case 'metubem'
+        session = vol.session;
+        p3 = zeros(Ndipoles * 3, 6);
+        for i = 1:Ndipoles
+          p3((3*i - 2) : (3 * i), 1:3) = [pos(i,:); pos(i,:); pos(i,:)];
+          p3((3*i - 2) : (3 * i), 4:6) = [1 0 0; 0 1 0; 0 0 1];
+        end
+        [lf, session] = bem_solve_lfm_eeg(session, p3);
+
     case 'infinite'
       % the conductivity of the medium is not known
       if isempty(warning_issued)
