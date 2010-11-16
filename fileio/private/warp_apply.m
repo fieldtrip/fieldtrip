@@ -1,16 +1,19 @@
-function [warped] = warp_apply(M, input, method);
+function [warped] = warp_apply(M, input, method, tol);
 
 % WARP_APPLY performs a 3D linear or nonlinear transformation on the input
 % coordinates, similar to those in AIR 3.08. You can find technical
 % documentation on warping in general at http://bishopw.loni.ucla.edu/AIR3
 %
 % Use as
-%   [warped] = warp_apply(M, input, method)
+%   [warped] = warp_apply(M, input, method, tol)
 % where
 %   M        vector or matrix with warping parameters
 %   input    Nx3 matrix with coordinates
 %   warped   Nx3 matrix with coordinates
 %   method   string describing the warping method
+%   tol      (optional) value determining the numerical precision of the
+%             output, to deal with numerical round off imprecisions due to
+%             the warping
 %
 % The methods 'nonlin0', 'nonlin2' ... 'nonlin5' specify a
 % polynomial transformation. The size of the transformation matrix
@@ -55,6 +58,10 @@ function [warped] = warp_apply(M, input, method);
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+if nargin<4
+  tol = [];
+end
 
 if nargin<3 && all(size(M)==4)
   % no specific transformation mode has been selected
@@ -164,3 +171,6 @@ if ~input3d
   warped = warped(:,1:2);
 end
 
+if ~isempty(tol) || tol>0
+  warped = fix(warped./tol)*tol;
+end
