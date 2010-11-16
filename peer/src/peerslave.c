@@ -396,7 +396,7 @@ int main(int argc, char *argv[]) {
 								if ((en = engOpen(startcmd)) == NULL) {
 										/* this may be due to a licensing problem */
 										/* do not attempt to start again during the timeout period */
-										DEBUG(LOG_ERR, "failed to start MATLAB engine, deleting job and switching to zombie");
+										DEBUG(LOG_ERR, "could not start MATLAB engine, deleting job and switching to zombie");
 										engineFailed = time(NULL);
 										pthread_mutex_lock(&mutexhost);
 										host->status = STATUS_ZOMBIE;
