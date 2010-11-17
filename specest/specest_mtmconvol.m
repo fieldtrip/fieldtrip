@@ -144,7 +144,11 @@ for ifreqoi = 1:nfreqoi
     case 'alpha'
       tap = alpha_taper(timwinsample(ifreqoi), freqoi(ifreqoi)./ fsample)';
       tap = tap./norm(tap)';
-      
+    
+    case 'hanning'
+      tap = hanning(timwinsample(ifreqoi))'; 
+      tap = tap./norm(tap, 'fro');
+
     otherwise
       % create a single taper according to the window specification as a replacement for the DPSS (Slepian) sequence
       tap = window(taper, timwinsample(ifreqoi))';
