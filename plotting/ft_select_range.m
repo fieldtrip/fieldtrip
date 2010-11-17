@@ -44,6 +44,7 @@ multiple = keyval('multiple', varargin); if isempty(multiple), multiple = false;
 xrange   = keyval('xrange',   varargin); if isempty(xrange), xrange = true; end
 yrange   = keyval('yrange',   varargin); if isempty(yrange), yrange = true; end
 clear    = keyval('clear',   varargin);  if isempty(clear),  clear = false; end
+contextmenu = keyval('contextmenu', varargin); % this will be displayed following a right mouse click
 
 % convert 'yes/no' string to boolean value
 multiple  = istrue(multiple);
