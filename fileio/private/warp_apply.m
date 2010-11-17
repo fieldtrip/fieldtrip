@@ -171,6 +171,8 @@ if ~input3d
   warped = warped(:,1:2);
 end
 
-if ~isempty(tol) || tol>0
-  warped = fix(warped./tol)*tol;
+if ~isempty(tol)
+  if tol>0
+    warped = fix(warped./tol)*tol;
+  end
 end
