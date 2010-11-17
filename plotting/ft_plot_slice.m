@@ -1,4 +1,4 @@
-function [h] = ft_plot_slice(dat, varargin)
+function [h, T2] = ft_plot_slice(dat, varargin)
 
 % FT_PLOT_SLICE cuts a 2-D slice from a 3-D volume and interpolates
 % if necessary
@@ -18,6 +18,7 @@ function [h] = ft_plot_slice(dat, varargin)
 %   'interpmethod' a string specifying the method for the interpolation, default = 'nearest' 
 %                    see INTERPN
 %   'colormap'    
+%   'style'        'flat' or '3D'
 %
 %   'interplim'
 
@@ -41,18 +42,17 @@ function [h] = ft_plot_slice(dat, varargin)
 %
 % $Id$
 
-% these are for speeding up the plotting on subsequent calls
-persistent previous_argin previous_maskimage
+persistent previous_dim X Y Z;
 
 transform = keyval('transform',   varargin); if isempty(transform),  transform  = eye(4);    end;
 loc       = keyval('location',    varargin); if isempty(loc),        loc        = [0 0 0];   end;
 ori       = keyval('orientation', varargin); if isempty(ori),        ori        = [0 0 1];   end;
-resolution = keyval('resolution', varargin); if isempty(resolution), resolution = 1;         end
+resolution = keyval('resolution', varargin); if isempty(resolution), resolution = 1;         end;
 mask       = keyval('datmask',    varargin);
 interpmethod = keyval('interpmethod', varargin); if isempty(interpmethod), interpmethod = 'nearest'; end
 cmap       = keyval('colormap',   varargin); 
+
 if ~strcmp(class(dat), 'double'),
-  origclass = class(dat);
   dat       = cast(dat, 'double');
 end
 
@@ -60,7 +60,10 @@ end
 ori = ori./sqrt(sum(ori.^2));
 
 % dimensionality of the input data
-dim = size(dat);
+dim          = size(dat);
+if isempty(previous_dim),
+  previous_dim = [0 0 0];
+end
 
 % check whether mask is ok
 domask = ~isempty(mask);
@@ -78,50 +81,73 @@ if ~dointerp && sum(ori)~=1,             dointerp = true; end
 if ~dointerp && ~(resolution==round(resolution)), dointerp = true; end
 
 if dointerp
+  %--------cut a slice using interpn
+  
   % get voxel indices
-  [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
-
+  if all(dim==previous_dim)
+    % for speeding up the plotting on subsequent calls
+    % use persistent variables X Y Z
+  else
+    [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+  end
+ 
   % define 'x' and 'y' axis in projection plane.
   % this is more or less arbitrary
   [x, y] = projplane(ori);
-  
-  % get transformation matrix from projection space to plotting space.
-  T = inv([ [x; y; ori; [0 0 0]] [loc(:); 1]]);
- 
-  m      = max(dim)./1.5; %1.5 is arbitrary
+  m      = max(dim)./1; 
   xplane = -m:resolution:m;
   yplane = -m:resolution:m;
   zplane = 0;
-  [X2,Y2,Z2] = ndgrid(xplane, yplane, zplane); %2D cartesian grid of projection plane
+  
+  [X2,Y2,Z2] = ndgrid(xplane, yplane, zplane); %2D cartesian grid of projection plane in plane voxels
   siz        = size(squeeze(X2));
   pos        = [X2(:) Y2(:) Z2(:)]; clear X2 Y2 Z2;
-  pos        = warp_apply(inv(T*transform), pos); % gives the positions of the required plane in voxel space
+  
+  % get the transformation matrix from plotting space to voxel space
+  T1 = inv(transform);
+
+  % get the transformation matrix from to get the projection plane at the right location and orientation into plotting space.
+  T2  = [x(:) y(:) ori(:) loc(:); 0 0 0 1];
+ 
+  % get the transformation matrix from projection plane to voxel space
+  M   = T1*T2;
+
+  pos = warp_apply(M, pos);   % gives the positions of the required plane in voxel space
+  
   Xi         = reshape(pos(:,1), siz);
   Yi         = reshape(pos(:,2), siz);
   Zi         = reshape(pos(:,3), siz);
   V          = interpn(X,Y,Z,dat,Xi,Yi,Zi,interpmethod);
+  [V,Xi,Yi,Zi] = tight(V,Xi,Yi,Zi);
+  siz        = size(Xi);
+  
   if domask,
-    Vmask    = interpn(X,Y,Z,mask,Xi,Yi,Zi,interpmethod);
+    Vmask    = tight(interpn(X,Y,Z,mask,Xi,Yi,Zi,interpmethod));
   end
 
 else
+  %-------cut a slice without interpolation
+  [x, y] = projplane(ori);
+  T2     = [x(:) y(:) ori(:) loc(:); 0 0 0 1];
+  
   if all(ori==[1 0 0]), xplane = loc(1); yplane = 1:dim(2); zplane = 1:dim(3); end
   if all(ori==[0 1 0]), xplane = 1:dim(1); yplane = loc(2); zplane = 1:dim(3); end
   if all(ori==[0 0 1]), xplane = 1:dim(1); yplane = 1:dim(2); zplane = loc(3); end
+  
   [Xi,Yi,Zi] = ndgrid(xplane, yplane, zplane);
   siz        = size(squeeze(Xi));
   Xi         = reshape(Xi, siz);
   Yi         = reshape(Yi, siz);
   Zi         = reshape(Zi, siz);
-  V          = dat(xplane, yplane, zplane);
+  V          = reshape(dat(xplane, yplane, zplane), siz);
   if domask,
     Vmask    = mask(xplane, yplane, zplane);
   end
 
 end
 
-% get positions of the plane in head space
-posh = warp_apply(transform, [Xi(:) Yi(:) Zi(:)]);
+% get positions of the plane in plotting space
+posh = warp_apply(transform, [Xi(:) Yi(:) Zi(:)], 'homogeneous', 1e-8);
 Xh   = reshape(posh(:,1), siz);
 Yh   = reshape(posh(:,2), siz);
 Zh   = reshape(posh(:,3), siz);
@@ -136,7 +162,8 @@ if isempty(cmap),
   V = cat(3, V, V, V);
 end
 
-h = surface(Xh, Yh, Zh, V); axis equal; axis vis3d
+h      = surface(Xh, Yh, Zh, V);
+
 set(h, 'linestyle', 'none');
 if domask,
   set(h, 'FaceAlpha', 'flat');
@@ -147,9 +174,25 @@ if ~isempty(cmap)
   colormap(cmap);
 end
 
+% store for future reference
+previous_dim = dim;
+
 function [x, y] = projplane(z)
 
 [u,s,v] = svd([eye(3) z(:)]);
 
 x = u(:,2)';
 y = u(:,3)';
+
+
+function [V,Xi,Yi,Zi] = tight(V,Xi,Yi,Zi)
+
+% cut off the nans at the edges
+x = sum(~isfinite(V),1)<size(V,1);
+y = sum(~isfinite(V),2)<size(V,2);
+
+V = V(y,x);
+
+if nargin>1, Xi = Xi(y,x); end
+if nargin>2, Yi = Yi(y,x); end
+if nargin>3, Zi = Zi(y,x); end
