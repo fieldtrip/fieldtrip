@@ -69,19 +69,19 @@ case 'subplot'
   varargin{sel+1} = ori(1,:);
   hx = ft_plot_slice(dat, varargin{:});
   view([90 0]);
-  axis tight;
+  axis equal;axis tight
   
   Hy = subplot(2,2,2);
   varargin{sel+1} = ori(2,:);
   hy = ft_plot_slice(dat, varargin{:});
   view([0 0]);
-  axis tight;
+  axis equal;axis tight
   
   Hz = subplot(2,2,4);
   varargin{sel+1} = ori(3,:);
   hz = ft_plot_slice(dat, varargin{:});
   view([0 90]);
-  axis tight;
+  axis equal;axis tight
   
 case 'intersect'
   hold on;

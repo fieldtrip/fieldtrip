@@ -157,6 +157,7 @@ if isempty(cmap),
   dmin = min(dat(:));
   dmax = max(dat(:));
   V    = (V-dmin)./(dmax-dmin);
+  V(isnan(V)) = 0;
   clear dmin dmax;
   % convert anatomy into RGB values
   V = cat(3, V, V, V);
