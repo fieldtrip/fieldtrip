@@ -172,21 +172,21 @@ end
 
 hasrpt  = (isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'rpt')));
 
-%----------------------------------------
-function [indx] = labelcmb2indx(labelcmb)
-
-%identify the auto-combinations
-ncmb = size(labelcmb,1);
-indx = zeros(ncmb,2);
-
-label = unique(labelcmb(:));
-nchan = numel(label);
-autoindx = zeros(nchan,1);
-for k = 1:nchan
-  sel1 = strcmp(label{k}, labelcmb(:,1));
-  sel2 = strcmp(label{k}, labelcmb(:,2));
-  autoindx = find(sel1 & sel2);
-  
-  indx(sel1,1) = autoindx;
-  indx(sel2,2) = autoindx;
-end
+%%----------------------------------------
+%function [indx] = labelcmb2indx(labelcmb)
+%
+%%identify the auto-combinations
+%ncmb = size(labelcmb,1);
+%indx = zeros(ncmb,2);
+%
+%label = unique(labelcmb(:));
+%nchan = numel(label);
+%autoindx = zeros(nchan,1);
+%for k = 1:nchan
+%  sel1 = strcmp(label{k}, labelcmb(:,1));
+%  sel2 = strcmp(label{k}, labelcmb(:,2));
+%  autoindx = find(sel1 & sel2);
+%  
+%  indx(sel1,1) = autoindx;
+%  indx(sel2,2) = autoindx;
+%end
