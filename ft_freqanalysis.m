@@ -188,7 +188,7 @@ else
     % check whether there are channels in channelcmb that are not in cfg.channel
     tmpcmbchan = unique(cfg.channelcmb);
     for ichan = 1:length(tmpcmbchan)
-      if any(strcmp(tmpcmbchan{ichan},cfg.channel))
+      if ~any(strcmp(tmpcmbchan{ichan},cfg.channel))
         error('channels in cfg.channelcmb not present in cfg.channel')
       end
     end
@@ -291,8 +291,14 @@ else
     clear spectrum % in case of very large trials, this lowers peak mem usage a bit
     switch cfg.method
       case 'mtmconvol'
-        [spectrum,ntaper,foi,toi] = specest_mtmconvol(dat, time, 'timeoi', cfg.toi, 'timwin', cfg.t_ftimwin, options{:});
+        [spectrum_mtmconvol,ntaper,foi,toi] = specest_mtmconvol(dat, time, 'timeoi', cfg.toi, 'timwin', cfg.t_ftimwin, options{:}, 'dimord', 'chan_time_freqtap');
         hastime = true;
+        % create tapfreqind for later indexing
+        freqtapind = [];
+        tempntaper = [0; cumsum(ntaper(:))];
+        for iindfoi = 1:numel(foi)
+          freqtapind{iindfoi} = tempntaper(iindfoi)+1:tempntaper(iindfoi+1);
+        end
       case 'mtmfft'
         [spectrum,ntaper,foi] = specest_mtmfft(dat, time, options{:});
         hastime = false;
@@ -302,7 +308,7 @@ else
     
     % Set n's
     nfoi = numel(foi);
-    ntap = size(spectrum,1);
+    ntap = max(ntaper);
     if hastime
       ntoi = numel(toi);
       if strcmp(cfg.calcdof,'yes')
@@ -349,8 +355,18 @@ else
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% Create output
     for ifoi = 1:nfoi
+      
+      % mtmconvol is a special case and needs special processing
+      if strcmp(cfg.method,'mtmconvol')
+        spectrum = reshape(permute(spectrum_mtmconvol(:,:,freqtapind{ifoi}),[3 1 2]),[ntaper(ifoi) nchan 1 ntoi]);
+        foiind = ones(1,nfoi);
+      else
+        foiind = 1:nfoi; % by using this vector below for indexing, the below code does not need to be duplicated for mtmconvol
+      end
+      
+      
       % set ingredients for below
-      acttboi = squeeze(~isnan(spectrum(1,1,ifoi,:)));
+      acttboi = squeeze(~isnan(spectrum(1,1,foiind(ifoi),:)));
       nacttboi = sum(acttboi);
       if ~hastime
         acttboi  = 1;
@@ -358,10 +374,10 @@ else
       elseif sum(acttboi)==0
         %nacttboi = 1;
       end
-      acttap = squeeze(~isnan(spectrum(:,1,ifoi,find(acttboi,1))));
+      acttap = squeeze(~isnan(spectrum(:,1,foiind(ifoi),find(acttboi,1))));
       acttap = logical([ones(ntaper(ifoi),1);zeros(size(spectrum,1)-ntaper(ifoi),1)]);
       if powflg
-        powdum = abs(spectrum(acttap,:,ifoi,acttboi)) .^2;
+        powdum = abs(spectrum(acttap,:,foiind(ifoi),acttboi)) .^2;
         % sinetaper scaling, not checked whether it works if hastime = 0
         if strcmp(cfg.taper, 'sine')
           sinetapscale = zeros(ntaper(ifoi),nfoi);  % assumes fixed number of tapers
@@ -373,10 +389,10 @@ else
         end
       end
       if fftflg
-        fourierdum = spectrum(acttap,:,ifoi,acttboi);
+        fourierdum = spectrum(acttap,:,foiind(ifoi),acttboi);
       end
       if csdflg
-        csddum = spectrum(acttap,cutdatindcmb(:,1),ifoi,acttboi) .* conj(spectrum(acttap,cutdatindcmb(:,2),ifoi,acttboi));
+        csddum = spectrum(acttap,cutdatindcmb(:,1),foiind(ifoi),acttboi) .* conj(spectrum(acttap,cutdatindcmb(:,2),foiind(ifoi),acttboi));
       end
       
       % switch between keep's
@@ -435,13 +451,21 @@ else
       end % switch keeprpt
     end %ifoi
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+    
     
     
     % do calcdof
     if hastime
       if strcmp(cfg.calcdof,'yes')
-        acttimboiind = ~isnan(squeeze(spectrum(1,1,:,:)));
+        if strcmp(cfg.method, 'mtmconvol')
+          tempind = [];
+          for ifoi = 1:nfoi
+            tempind = [tempind; freqtapind{ifoi}(1)];
+          end
+          acttimboiind = ~isnan(squeeze(spectrum_mtmconvol(1,:,tempind))');
+        else
+          acttimboiind = ~isnan(squeeze(spectrum(1,1,:,:)));
+        end
         dof(itrial,:,:) = repmat(ntaper,[1, ntoi]) .* acttimboiind;
       end
     else
@@ -532,14 +556,14 @@ else
   
   try, freq.grad = data.grad; end   % remember the gradiometer array
   try, freq.elec = data.elec; end   % remember the electrode array
-
+  
   % add information about the version of this function to the configuration
   cfg.version.name = mfilename('fullpath');
   cfg.version.id = '$Id$';
-
+  
   % remember the configuration details of the input data
   try, cfg.previous = data.cfg; end
-
+  
   % remember the exact configuration details in the output
   freq.cfg = cfg;
   
