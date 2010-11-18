@@ -462,7 +462,7 @@ else
           for ifoi = 1:nfoi
             tempind = [tempind; freqtapind{ifoi}(1)];
           end
-          acttimboiind = ~isnan(squeeze(spectrum_mtmconvol(1,:,tempind))');
+          acttimboiind = ~isnan(flipud(squeeze(spectrum_mtmconvol(1,:,tempind))'));
         else
           acttimboiind = ~isnan(squeeze(spectrum(1,1,:,:)));
         end
