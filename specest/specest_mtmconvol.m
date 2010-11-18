@@ -23,7 +23,7 @@ function [spectrum,ntaper,freqoi,timeoi] = specest_mtmconvol(dat, time, varargin
 %   timwin    = vector, containing length of time windows (in seconds)
 %   freqoi    = vector, containing frequencies (in Hz)
 %   tapsmofrq = number, the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
-%
+%   dimord    = 'tap_chan_freq_time' (default) or 'chan_time_freqtap' for memory efficiency
 %
 %
 %
@@ -35,13 +35,14 @@ function [spectrum,ntaper,freqoi,timeoi] = specest_mtmconvol(dat, time, varargin
 % See also SPECEST_MTMFFT, SPECEST_CONVOL, SPECEST_HILBERT, SPECEST_WAVELET
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'taper','pad','timeoi','timwin','freqoi','tapsmofrq'});
-taper     = keyval('taper',       varargin); if isempty(taper),    taper   = 'dpss';     end
+keyvalcheck(varargin, 'optional', {'taper','pad','timeoi','timwin','freqoi','tapsmofrq','dimord'});
+taper     = keyval('taper',       varargin); if isempty(taper),    taper   = 'dpss';                  end
 pad       = keyval('pad',         varargin);
-timeoi    = keyval('timeoi',      varargin); if isempty(timeoi),   timeoi  = 'all';      end
+timeoi    = keyval('timeoi',      varargin); if isempty(timeoi),   timeoi  = 'all';                   end
 timwin    = keyval('timwin',      varargin);
-freqoi    = keyval('freqoi',      varargin); if isempty(freqoi),   freqoi  = 'all';      end
+freqoi    = keyval('freqoi',      varargin); if isempty(freqoi),   freqoi  = 'all';                   end
 tapsmofrq = keyval('tapsmofrq',   varargin);
+dimord    = keyval('dimord',      varargin); if isempty(dimord),   dimord  = 'tap_chan_freq_time';    end
 
 % throw errors for required input
 if isempty(tapsmofrq) && strcmp(taper, 'dpss')
@@ -132,7 +133,7 @@ for ifreqoi = 1:nfreqoi
       if isempty(tap)
         error('%.3f Hz: datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',freqoi(ifreqoi), timwinsample(ifreqoi)/fsample,tapsmofrq(ifreqoi),fsample/timwinsample(ifreqoi));
       elseif size(tap,1) == 1
-        warning('using only one taper for specified smoothing')
+        disp([num2str(freqoi(ifreqoi)) ' Hz: WARNING: using only one taper for specified smoothing'])
       end
       
       
@@ -144,11 +145,11 @@ for ifreqoi = 1:nfreqoi
     case 'alpha'
       tap = alpha_taper(timwinsample(ifreqoi), freqoi(ifreqoi)./ fsample)';
       tap = tap./norm(tap)';
-    
+      
     case 'hanning'
-      tap = hanning(timwinsample(ifreqoi))'; 
+      tap = hanning(timwinsample(ifreqoi))';
       tap = tap./norm(tap, 'fro');
-
+      
     otherwise
       % create a single taper according to the window specification as a replacement for the DPSS (Slepian) sequence
       tap = window(taper, timwinsample(ifreqoi))';
@@ -203,34 +204,71 @@ for ifreqoi = 1:nfreqoi
   end
 end
 
-
-% compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
-datspectrum = transpose(fft(transpose([dat repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
-spectrum = cell(max(ntaper), nfreqoi); % assumes fixed number of tapers
-for ifreqoi = 1:nfreqoi
-  fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
-  for itap = 1:max(ntaper)
-    % compute indices that will be used to extracted the requested fft output
-    nsamplefreqoi    = timwin(ifreqoi) .* fsample;
-    reqtimeboiind    = find((timeboi >=  (nsamplefreqoi ./ 2)) & (timeboi <    ndatsample - (nsamplefreqoi ./2)));
-    reqtimeboi       = timeboi(reqtimeboiind);
-    
-    % compute datspectrum*wavelet, if there are reqtimeboi's that have data
-    % create a matrix of NaNs if there is no taper for this current frequency-taper-number
-    if itap > ntaper(ifreqoi)
-      spectrum{itap,ifreqoi} = complex(nan(nchan,ntimeboi));
-    else
-      dum = fftshift(transpose(ifft(transpose(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1])))),2); % double explicit transpose to speedup fft
-      tmp = complex(nan(nchan,ntimeboi));
-      tmp(:,reqtimeboiind) = dum(:,reqtimeboi);
-      tmp = tmp .* sqrt(2 ./ timwinsample(ifreqoi));
-      spectrum{itap,ifreqoi} = tmp;
+% Switch between memory efficient representation or intuitive default representation
+switch dimord
+  
+  
+  case 'tap_chan_freq_time' % default
+    % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
+    datspectrum = transpose(fft(transpose([dat repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
+    spectrum = cell(max(ntaper), nfreqoi);
+    for ifreqoi = 1:nfreqoi
+      fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
+      for itap = 1:max(ntaper)
+        % compute indices that will be used to extracted the requested fft output
+        nsamplefreqoi    = timwin(ifreqoi) .* fsample;
+        reqtimeboiind    = find((timeboi >=  (nsamplefreqoi ./ 2)) & (timeboi <    ndatsample - (nsamplefreqoi ./2)));
+        reqtimeboi       = timeboi(reqtimeboiind);
+        
+        % compute datspectrum*wavelet, if there are reqtimeboi's that have data
+        % create a matrix of NaNs if there is no taper for this current frequency-taper-number
+        if itap > ntaper(ifreqoi)
+          spectrum{itap,ifreqoi} = complex(nan(nchan,ntimeboi));
+        else
+          dum = fftshift(transpose(ifft(transpose(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1])))),2); % double explicit transpose to speedup fft
+          tmp = complex(nan(nchan,ntimeboi));
+          tmp(:,reqtimeboiind) = dum(:,reqtimeboi);
+          tmp = tmp .* sqrt(2 ./ timwinsample(ifreqoi));
+          spectrum{itap,ifreqoi} = tmp;
+        end
+      end
     end
-  end
+    spectrum = reshape(vertcat(spectrum{:}),[nchan max(ntaper) nfreqoi ntimeboi]); % collecting in a cell-array and later reshaping provides significant speedups
+    spectrum = permute(spectrum, [2 1 3 4]);
+    
+    
+  case 'chan_time_freqtap' % memory efficient representation
+    % create tapfreqind
+    freqtapind = [];
+    tempntaper = [0; cumsum(ntaper(:))];
+    for ifreqoi = 1:nfreqoi
+      freqtapind{ifreqoi} = tempntaper(ifreqoi)+1:tempntaper(ifreqoi+1);
+    end
+    
+    % start fft'ing
+    datspectrum = transpose(fft(transpose([dat repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
+    spectrum = complex(zeros([nchan ntimeboi sum(ntaper)]));
+    for ifreqoi = 1:nfreqoi
+      fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
+      for itap = 1:ntaper(ifreqoi)
+        % compute indices that will be used to extracted the requested fft output
+        nsamplefreqoi    = timwin(ifreqoi) .* fsample;
+        reqtimeboiind    = find((timeboi >=  (nsamplefreqoi ./ 2)) & (timeboi <    ndatsample - (nsamplefreqoi ./2)));
+        reqtimeboi       = timeboi(reqtimeboiind);
+        
+        % compute datspectrum*wavelet, if there are reqtimeboi's that have data
+        dum = fftshift(transpose(ifft(transpose(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1])))),2); % double explicit transpose to speedup fft
+        tmp = complex(nan(nchan,ntimeboi));
+        tmp(:,reqtimeboiind) = dum(:,reqtimeboi);
+        tmp = tmp .* sqrt(2 ./ timwinsample(ifreqoi));
+        spectrum(:,:,freqtapind{ifreqoi}(itap)) = tmp;
+      end
+    end
+    
+    
+    
+    
 end
-spectrum = reshape(vertcat(spectrum{:}),[nchan max(ntaper) nfreqoi ntimeboi]); % collecting in a cell-array and later reshaping provides significant speedups
-spectrum = permute(spectrum, [2 1 3 4]);
-
 
 
 
@@ -247,7 +285,7 @@ spectrum = permute(spectrum, [2 1 3 4]);
 %     nsamplefreqoi    = timwin(ifreqoi) .* fsample;
 %     reqtimeboiind    = find((timeboi >=  (nsamplefreqoi ./ 2)) & (timeboi <    ndatsample - (nsamplefreqoi ./2)));
 %     reqtimeboi       = timeboi(reqtimeboiind);
-%     
+%
 %     % compute datspectrum*wavelet, if there are reqtimeboi's that have data
 %     % create a matrix of NaNs if there is no taper for this current frequency-taper-number
 %     if itap <= ntaper(ifreqoi)
@@ -299,10 +337,6 @@ spectrum = permute(spectrum, [2 1 3 4]);
 %   end
 % end
 % spectrum = reshape(vertcat(spectrum{:}),[numel(tapfreq) nchan ntimeboi]);
-
-
-
-
 
 
 
