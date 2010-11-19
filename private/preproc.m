@@ -291,7 +291,7 @@ if strcmp(cfg.polyremoval, 'yes')
   % the begin and endsample of the polyremoval period correspond to the complete data minus padding
   begsample = 1        + begpadding;
   endsample = nsamples - endpadding;
-  dat = polyremoval(dat, cfg.polyorder, begsample, endsample);
+  dat = ft_preproc_polyremoval(dat, cfg.polyorder, begsample, endsample);
 end
 if strcmp(cfg.detrend, 'yes')
   nsamples     = size(dat,2);
@@ -377,15 +377,3 @@ if begpadding~=0 || endpadding~=0
   end
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%subfunction which does the polyremoval on the data without filter-padding
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function dat = polyremoval(dat, polyorder, begsample, endsample);
-nsamples = size(dat,2);
-basis = [1:nsamples];
-x = zeros(polyorder+1,nsamples);
-for i = 0:polyorder
-  x(i+1,:) = basis.^(i);
-end
-a = dat(:,begsample:endsample)/x(:,begsample:endsample);
-dat = dat - a*x;
