@@ -17,6 +17,7 @@ function stat = statistics_crossvalidate(cfg, dat, design)
 % stat.performance  = computed using the specified metric
 % stat.pvalue       = p-value for the specified significance test
 % stat.cv           = the trained crossvalidator
+% stat.model<n>     = the n-th model associated with this multivariate analysis
 %
 % See also CROSSVALIDATE, MVA
 %
@@ -67,6 +68,8 @@ else
    cv = ft_mv_crossvalidator('mva',cfg.mva,'nfolds',cfg.nfolds,'compact',cfg.compact,'verbose',true);
 
 end
+
+assert(isfield(cfg,'design'));
 
 if ~isfield(cfg,'metric'), cv.metric = 'accuracy'; end
 if ~isfield(cfg,'sigtest'), cv.sigtest = 'mcnemar'; end
@@ -140,3 +143,6 @@ end
   
 % save crossvalidator object
 stat.cv = cv;
+
+% required
+stat.trial = [];

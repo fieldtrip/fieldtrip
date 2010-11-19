@@ -59,8 +59,10 @@ function [acc,sig,cv] = ft_mv_test(varargin)
   if ~isfield(S,'cv')
      S.cv = ft_mv_crossvalidator('parallel',S.parallel,'balance',false,'mva',S.mva,'nfolds',S.nfolds,'verbose',true,'compact',true,'init',1);
   end
-  if ~isfield(S,'metric')
+  if ~isfield(S,'metric') && strcmp(S.type,'classification')
     S.metric = 'accuracy';
+  else
+    S.metric = 'correlation';
   end
   S.cv.metric = S.metric;
   if ~isfield(S,'sigtest')

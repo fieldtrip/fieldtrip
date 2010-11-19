@@ -16,7 +16,11 @@ classdef ft_mv_noutput < ft_mv_method
 
      obj@ft_mv_method(varargin{:});
 
-     obj.verbose = obj.mvmethod.verbose;
+     if ~iscell(obj.mvmethod)
+       obj.verbose = obj.mvmethod.verbose;
+     else
+       obj.verbose = obj.mvmethod{1}.verbose;
+     end
      
     end
 

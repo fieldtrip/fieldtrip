@@ -232,7 +232,7 @@ classdef ft_mv_crossvalidator
             end
             
             % attempt to reshape to original dimensions
-            sz = size(X); sz = sz(2:end);
+            sz = size(X); sz = sz(2:end); if numel(sz)==1, sz = [1 sz]; end
             for c=1:length(obj.model)
               if numel(obj.model{c}) == sz
                 obj.model{c} = reshape(obj.model{c},sz);

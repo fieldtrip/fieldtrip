@@ -24,6 +24,8 @@ classdef ft_mv_glmnet < ft_mv_predictor
     
     type = 'logistic'   % 'linear' or 'logistic' regression
     
+    standardize = true; % can be set to false (FINISH!!!)
+    
     weights             % regression coefficients
     
     cv                  % crossvalidator object if a whole path is specified    
@@ -209,10 +211,9 @@ classdef ft_mv_glmnet < ft_mv_predictor
       desc = cell(length(m),1);
       for j=1:length(m)
 
-        % RETURNS ABSOLUTE VALUES
-        m{j} = abs(m{j}(:,1:(size(m{j},2)-1)));
+        m{j} = m{j}(:,1:(size(m{j},2)-1));
         
-        desc{j} = sprintf('magnitude of the regression coefficients for class %d',j);
+        desc{j} = sprintf('regression coefficients for class %d',j);
       end
       
     end
