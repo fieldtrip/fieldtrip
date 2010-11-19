@@ -311,13 +311,7 @@ else
     ntap = max(ntaper);
     if hastime
       ntoi = numel(toi);
-      if strcmp(cfg.calcdof,'yes')
-        dof = zeros(ntrials,nfoi,ntoi);
-      end
     else
-      if strcmp(cfg.calcdof,'yes')
-        dof = zeros(ntrials,nfoi);
-      end
       ntoi = 1; % this makes the same code compatible for hastime = false, as time is always the last dimension, and if singleton will dissappear
     end
     
@@ -347,6 +341,17 @@ else
       if ~hastime
         dimord = dimord(1:end-5); % cut _time
       end
+      
+      % prepare calcdof
+      if strcmp(cfg.calcdof,'yes')
+        if hastime
+          dof = zeros(ntrials,nfoi,ntoi);
+        else
+          dof = zeros(ntrials,nfoi);
+        end
+      end
+      
+      
     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
@@ -449,30 +454,22 @@ else
           end
           
       end % switch keeprpt
+      
+      
+      % do calcdof  dof = zeros(numper,numfoi,numtoi);
+      if strcmp(cfg.calcdof,'yes')
+        if hastime
+          acttimboiind = ~isnan(squeeze(spectrum(1,1,foiind(ifoi),:)));
+          dof(itrial,ifoi,acttimboiind) = ntaper(ifoi);
+        else % hastime = false
+          dof(itrial,ifoi) = ntaper;
+        end
+      end
+      
+      
+      
     end %ifoi
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-    
-    
-    % do calcdof
-    if hastime
-      if strcmp(cfg.calcdof,'yes')
-        if strcmp(cfg.method, 'mtmconvol')
-          tempind = [];
-          for ifoi = 1:nfoi
-            tempind = [tempind; freqtapind{ifoi}(1)];
-          end
-          acttimboiind = ~isnan(flipud(squeeze(spectrum_mtmconvol(1,:,tempind))'));
-        else
-          acttimboiind = ~isnan(squeeze(spectrum(1,1,:,:)));
-        end
-        dof(itrial,:,:) = repmat(ntaper,[1, ntoi]) .* acttimboiind;
-      end
-    else
-      if strcmp(cfg.calcdof,'yes')
-        dof(itrial,:) = ntaper;
-      end
-    end
     
     
     
