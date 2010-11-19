@@ -8,7 +8,7 @@ function write_off(filename, pnt, plc)
 %
 % See also READ_OFF
 
-% Copyright (C) 2006, Cristiano Micheli
+% Copyright (C) 2010, Cristiano Micheli
 % 
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -26,7 +26,7 @@ function write_off(filename, pnt, plc)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: $
+% $Id$
 
 nedges = 0;
 fid  = fopen(filename, 'wb');
