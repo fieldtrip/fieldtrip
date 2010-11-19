@@ -291,7 +291,7 @@ else
     clear spectrum % in case of very large trials, this lowers peak mem usage a bit
     switch cfg.method
       case 'mtmconvol'
-        [spectrum_mtmconvol,ntaper,foi,toi] = specest_mtmconvol(dat, time, 'timeoi', cfg.toi, 'timwin', cfg.t_ftimwin, options{:}, 'dimord', 'chan_time_freqtap');
+        [spectrum_mtmconvol,ntaper,foi,toi] = ft_specest_mtmconvol(dat, time, 'timeoi', cfg.toi, 'timwin', cfg.t_ftimwin, options{:}, 'dimord', 'chan_time_freqtap');
         hastime = true;
         % create tapfreqind for later indexing
         freqtapind = [];
@@ -300,7 +300,7 @@ else
           freqtapind{iindfoi} = tempntaper(iindfoi)+1:tempntaper(iindfoi+1);
         end
       case 'mtmfft'
-        [spectrum,ntaper,foi] = specest_mtmfft(dat, time, options{:});
+        [spectrum,ntaper,foi] = ft_specest_mtmfft(dat, time, options{:});
         hastime = false;
       otherwise
         error('method %s is unknown or not yet implemented with new low level functions', cfg.method);
