@@ -312,9 +312,8 @@ else
     if hastime
       ntoi = numel(toi);
     else
-      ntoi = 1; % this makes the same code compatible for hastime = false, as time is always the last dimension, and if singleton will dissappear
+      ntoi = 1; % this makes the same code compatible for hastime = false, as time is always the last dimension, and if singleton will disappear
     end
-    
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% Memory allocation
@@ -327,9 +326,9 @@ else
         if fftflg, fourierspctrm = complex(zeros(nchan,nfoi,ntoi,cfg.precision));    end
         dimord    = 'chan_freq_time';
       elseif keeprpt == 2 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'no'
-        if powflg, powspctrm     = zeros(ntrials,nchan,nfoi,ntoi,cfg.precision);             end
-        if csdflg, crsspctrm     = complex(zeros(ntrials,nchancmb,nfoi,ntoi,cfg.precision)); end
-        if fftflg, fourierspctrm = complex(zeros(ntrials,nchan,nfoi,ntoi,cfg.precision));    end
+        if powflg, powspctrm     = nan+zeros(ntrials,nchan,nfoi,ntoi,cfg.precision);             end
+        if csdflg, crsspctrm     = nan+complex(zeros(ntrials,nchancmb,nfoi,ntoi,cfg.precision)); end
+        if fftflg, fourierspctrm = nan+complex(zeros(ntrials,nchan,nfoi,ntoi,cfg.precision));    end
         dimord    = 'rpt_chan_freq_time';
       elseif keeprpt == 4 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'yes'
         % FIXME this works only if all frequencies have the same number of tapers (ancient fixme)
@@ -436,21 +435,12 @@ else
           currrptind = rptind(:,itrial);
           if powflg
             powspctrm(currrptind(acttap),:,ifoi,acttboi) = reshape(powdum,[ntaper(ifoi) nchan 1 nacttboi]);
-            powspctrm(~currrptind(acttap),:,ifoi,~acttboi) = NaN;
-            powspctrm( currrptind(acttap),:,ifoi,~acttboi) = NaN;
-            powspctrm(~currrptind(acttap),:,ifoi, acttboi) = NaN;
           end
           if fftflg
             fourierspctrm(currrptind(acttap),:,ifoi,acttboi) = reshape(fourierdum,[ntaper(ifoi) nchan 1 nacttboi]);
-            fourierspctrm(~currrptind(acttap),:,ifoi,~acttboi) = NaN;
-            fourierspctrm( currrptind(acttap),:,ifoi,~acttboi) = NaN;
-            fourierspctrm(~currrptind(acttap),:,ifoi, acttboi) = NaN;
           end
           if csdflg
             crsspctrm(currrptind(acttap),:,ifoi,acttboi) = reshape(csddum,[ntaper(ifoi) nchancmb 1 nacttboi]);
-            crsspctrm(~currrptind(acttap),:,ifoi,~acttboi) = NaN;
-            crsspctrm( currrptind(acttap),:,ifoi,~acttboi) = NaN;
-            crsspctrm(~currrptind(acttap),:,ifoi, acttboi) = NaN;
           end
           
       end % switch keeprpt
