@@ -107,22 +107,18 @@ switch cfg.method
   case 'mtmfft'
     cfg.method = [cfg.method '_old'];
   case 'mtmwelch'
+    error('''mtmwelch'' has not been implemented yet in the specest module, please use ft_freqanalys.m')
     cfg.method = [cfg.method '_old'];
-  case 'wltconvol'
-    cfg = ft_checkconfig(cfg, 'renamedval', {'method','wltconvol','wavelet'});
+  case 'wavelet'
+    error('''wavelet'' has not been implemented yet in the specest module, please use ft_freqanalys.m')
     cfg.method = [cfg.method '_old'];
-  case 'tfr'
-    cfg = ft_checkconfig(cfg, 'renamedval', {'method','tfr','convol'});
+  case 'convol'
+    error('''convol'' has not been implemented yet in the specest module, please use ft_freqanalys.m')
     cfg.method = [cfg.method '_old'];
   case 'mvar'
+    error('''mvar'' has not been implemented yet in the specest module, please use ft_freqanalys.m')
     cfg.method = [cfg.method '_old'];
 end
-
-
-
-
-
-
 
 
 
@@ -130,9 +126,6 @@ end
 % call old functions
 [freq] = feval(sprintf('ft_freqanalysis_%s',lower(cfg.method)), cfg, data);
   
-
-
-
 
 % copy the trial specific information into the output
 if isfield(data, 'trialinfo'),
