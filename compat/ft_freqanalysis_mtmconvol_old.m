@@ -78,6 +78,8 @@ function [freq] = ft_freqanalysis_mtmconvol(cfg, data)
 % $Id: ft_freqanalysis_mtmconvol.m 1974 2010-10-27 10:36:50Z jansch $
 
 fieldtripdefs
+warning('this version of ft_freqanalysis_mtmconvol is deprecated, it is no longer being maintained')
+
 
 % ensure that this function is started as a subfunction of the FT_FREQANALYSIS wrapper
 if ~exist('OCTAVE_VERSION')
