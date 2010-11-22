@@ -1,6 +1,6 @@
-function [freq] = ft_freqanalysis_wltconvol(cfg, data);
+function [freq] = ft_freqanalysis_wavelet_old(cfg, data);
 
-% FT_FREQANALYSIS_WLTCONVOL performs time-frequency analysis on any time series trial data
+% FT_FREQANALYSIS_WAVELET performs time-frequency analysis on any time series trial data
 % using the 'wavelet method' based on Morlet wavelets.
 %
 % Use as
