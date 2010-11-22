@@ -76,6 +76,7 @@ while 1
 			hdr = ft_read_header(cfg.input);
 			break;
 		catch 
+			disp(lasterror);
 			disp('Waiting for header');
 			pause(0.5);
 		end
@@ -126,7 +127,7 @@ while 1
 	else
 		hdrOut.nChans = prod(S.voxels);
 	end
-	hdrOut.nifti_1 = encode_nifti1(niftiOut);
+	hdrOut.nifti_1 = niftiOut; %encode_nifti1(niftiOut);
 	
 	ft_write_data(cfg.output, single([]), 'header', hdrOut);
 	
@@ -272,8 +273,8 @@ while 1
 		
 		ft_write_data(cfg.output, procSample, 'header', hdrOut, 'append', true);
 		
-		evr.sample = numProper;
-		ft_write_event(cfg.output, evr);
+		%evr.sample = numProper;
+		%ft_write_event(cfg.output, evr);
 		
 		fprintf('Done -- total time = %f\n', toc(GrabSampleT));
 

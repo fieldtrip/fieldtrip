@@ -33,7 +33,8 @@ if ~isempty(SSap)
 	if ~isempty(SNif)
 		if ~isequal(SNif.voxels,SSap.voxels)
 			warning('Conflicting information in NIFTI and SiemensAP - trusting SiemensAP...');
-	    end
+    end
+		S.mat0 = SNif.mat0;
 	end
 else
 	if ~isempty(SNif)
@@ -52,7 +53,11 @@ S.vz = double(NH.dim(3));
 S.voxels = [S.vx S.vy S.vz];
 S.voxdim = double(NH.pixdim(1:3));
 S.size = S.voxels .* S.voxdim;
-S.mat0 = [double([NH.srow_x; NH.srow_y; NH.srow_z]) ; 0 0 0 1];
+VoxToWorld = double([NH.srow_x; NH.srow_y; NH.srow_z]);
+M = VoxToWorld(1:3,1:3);
+P = VoxToWorld(1:3,4);
+% correct Mat0 in the same way SPM does (voxel index starts at 1)
+S.mat0 = [M (P-M*[1;1;1]); 0 0 0 1];
 S.numEchos = 1;	% can't detect this from NIFTI :-(
 
 switch NH.slice_code
@@ -93,7 +98,7 @@ phaseFOV   = SP.sSliceArray.asSlice{1}.dPhaseFOV;
 readoutFOV = SP.sSliceArray.asSlice{1}.dReadoutFOV;
 sliceThick = SP.sSliceArray.asSlice{1}.dThickness;
 distFactor = SP.sGroupArray.asGroup{1}.dDistFact;
-				
+
 S.vx = double(SP.sKSpace.lBaseResolution);
 S.vy = S.vx * phaseFOV / readoutFOV;
 S.vz = double(SP.sSliceArray.lSize);

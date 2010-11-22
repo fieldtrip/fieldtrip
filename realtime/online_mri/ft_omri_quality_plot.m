@@ -26,6 +26,7 @@ title('blue = X/readout dir.  |  green = Y/phase dir.  |  red = Z/slice axis');
 A2 = subplot(2,2,2);
 plot(rot);
 ylabel('Rotation (deg)');
+xlabel('scan number');
 
 A3 = subplot(2,2,3);
 imagesc(ft_omri_volume_to_mosaic(curScan), [0 maxVal]);
@@ -44,5 +45,5 @@ title('Variation');
 set(A1,'Position',[0.07 0.75 0.9 0.2])
 set(A2,'Position',[0.07 0.50 0.9 0.2])
 
-set(A3,'Position',[0.05 0.02 0.4 0.4])
-set(A4,'Position',[0.55 0.02 0.4 0.4])
+set(A3,'Position',[0.05 0.001 0.45 0.45])
+set(A4,'Position',[0.55 0.001 0.45 0.45])

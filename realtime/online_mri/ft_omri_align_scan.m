@@ -66,7 +66,7 @@ for iter=1:64,
 	end
 end;
 
-mat_r = model.mat/mat_a;
+mat_r = mat_a/model.mat;
 
 if nargout > 3
 	Mpix  = mat_a\model.mat;
