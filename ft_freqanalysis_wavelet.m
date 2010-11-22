@@ -80,7 +80,7 @@ if ~exist('OCTAVE_VERSION')
 end
 
 % set all the defaults
-if ~isfield(cfg, 'method'),        cfg.method     = 'wltconvol';  end
+if ~isfield(cfg, 'method'),        cfg.method     = 'wavelet';  end
 if ~isfield(cfg, 'keeptrials'),    cfg.keeptrials = 'no';         end
 if ~isfield(cfg, 'output'),        cfg.output     = 'powandcsd';  end
 if ~isfield(cfg, 'pad'),           cfg.pad        = 'maxperlen';  end
