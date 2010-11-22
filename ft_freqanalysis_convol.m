@@ -63,7 +63,7 @@ if ~exist('OCTAVE_VERSION')
 end
 
 % set the defaults
-if ~isfield(cfg, 'method'),         cfg.method  = 'tfr';          end
+if ~isfield(cfg, 'method'),         cfg.method  = 'convol';       end
 if ~isfield(cfg, 'channel'),        cfg.channel = 'all';          end
 if ~isfield(cfg, 'latency'),        cfg.latency = 'minperlength'; end
 if ~isfield(cfg, 'keeptrials'),     cfg.keeptrials   = 'no';      end
