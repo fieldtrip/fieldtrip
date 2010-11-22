@@ -18,9 +18,9 @@ function [freq] = ft_freqanalysis_old(cfg, data)
 %                     based on multiplication in the frequency domain
 %                    'mtmwelch', performs frequency analysis using Welch's averaged
 %                     modified periodogram method of spectral estimation
-%                    'wltconvol', implements wavelet time frequency transformation
+%                    'wavelet', implements wavelet time frequency transformation
 %                     (using Morlet wavelets) based on multiplication in the frequency domain
-%                    'tfr', implements wavelet time frequency transformation
+%                    'convol', implements wavelet time frequency transformation
 %                     (using Morlet wavelets) based on convolution in the time domain
 %
 %
