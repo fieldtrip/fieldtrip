@@ -95,6 +95,8 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'sgncmb',   'channelcmb'});
 cfg = ft_checkconfig(cfg, 'required',    {'method'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'fft',    'mtmfft'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'convol', 'mtmconvol'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'method',  'tfr',      'convol'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'method',  'wltconvol','wavelet'});
 
 % select trials of interest
 if ~isfield(cfg, 'trials'),   cfg.trials = 'all';  end % set the default
