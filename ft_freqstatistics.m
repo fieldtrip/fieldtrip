@@ -121,14 +121,8 @@ elseif isfield(cfg, 'parameter')
   end
 end
 
-[status,output] = system('whoami');
-if isempty(strfind(output,'jan')),
-  % call the general function
-  [stat, cfg] = statistics_wrapper(cfg, varargin{:});
-else
-  % call the general function
-  [stat, cfg] = statistics_wrapperJM(cfg, varargin{:});
-end
+% call the general function
+[stat, cfg] = statistics_wrapper(cfg, varargin{:});
 
 % add version information to the configuration
 cfg.version.name = mfilename('fullpath');
