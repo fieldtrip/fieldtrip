@@ -1,6 +1,6 @@
-function [freq] = ft_freqanalysis_convol(cfg, data);
+function [freq] = ft_freqanalysis_tfr(cfg, data);
 
-% FT_FREQANALYSIS_CONVOL computes time-frequency representations of single-trial
+% FT_FREQANALYSIS_TFR computes time-frequency representations of single-trial
 % data using a convolution in the time-domain with Morlet's wavelets.
 %
 % Use as
@@ -63,7 +63,7 @@ if ~exist('OCTAVE_VERSION')
 end
 
 % set the defaults
-if ~isfield(cfg, 'method'),         cfg.method  = 'convol';       end
+if ~isfield(cfg, 'method'),         cfg.method  = 'tfr';       end
 if ~isfield(cfg, 'channel'),        cfg.channel = 'all';          end
 if ~isfield(cfg, 'latency'),        cfg.latency = 'minperlength'; end
 if ~isfield(cfg, 'keeptrials'),     cfg.keeptrials   = 'no';      end

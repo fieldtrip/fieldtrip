@@ -1,6 +1,6 @@
-function [freq] = ft_freqanalysis_wavelet(cfg, data);
+function [freq] = ft_freqanalysis_wltconvol(cfg, data);
 
-% FT_FREQANALYSIS_WAVELET performs time-frequency analysis on any time series trial data
+% FT_FREQANALYSIS_WLTCONVOL performs time-frequency analysis on any time series trial data
 % using the 'wavelet method' based on Morlet wavelets.
 %
 % Use as
@@ -80,7 +80,7 @@ if ~exist('OCTAVE_VERSION')
 end
 
 % set all the defaults
-if ~isfield(cfg, 'method'),        cfg.method     = 'wavelet';  end
+if ~isfield(cfg, 'method'),        cfg.method     = 'wltconvol';  end
 if ~isfield(cfg, 'keeptrials'),    cfg.keeptrials = 'no';         end
 if ~isfield(cfg, 'output'),        cfg.output     = 'powandcsd';  end
 if ~isfield(cfg, 'pad'),           cfg.pad        = 'maxperlen';  end
