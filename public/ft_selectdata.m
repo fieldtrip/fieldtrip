@@ -158,7 +158,7 @@ if length(data)>1 && ~israw,
     if numel(param)>1,
       error('ft_selectdata for source inputs works only for one parameter at a time');
     end
-    dimord(:) = {getfield(data{1}, [param{1},'dimord'])};
+    dimord(:) = {data{1}.([param{1},'dimord'])};
   end
   dimtok                           = tokenize(dimord{1}, '_');
   dimtok(strmatch('chan', dimtok)) = {'label'}; % data.chan does not exist
@@ -167,21 +167,21 @@ if length(data)>1 && ~israw,
   dimmat(:,1) = 1;
   for k = 1:length(dimtok)
     if isempty(strfind(dimtok{k},'rpt')) && isempty(strfind(dimtok{k},'{pos}')) && isempty(strfind(dimtok{k},'ori')),
-      dimdat = getfield(data{1}, dimtok{k});
+      dimdat = data{1}.(dimtok{k});
     elseif ~isempty(strfind(dimtok{k},'{pos}')),
-      dimdat = getfield(data{1}, dimtok{k}(2:end-1)); 
+      dimdat = data{1}.(dimtok{k}(2:end-1)); 
     elseif isempty(strfind(dimtok{k},'ori')),
       % dimtok is 'rpt' or 'rpttap'
-      dimdat = size(getfield(data{1}, param{1}),1);
+      dimdat = size(data{1}.(param{1}),1);
     end
     for m = 2:length(data)
       if isempty(strfind(dimtok{k},'rpt')) && isempty(strfind(dimtok{k}, '{pos}')) && isempty(strfind(dimtok{k},'ori')),
-        dimdat2 = getfield(data{m},dimtok{k});
+        dimdat2 = data{m}.(dimtok{k});
       elseif ~isempty(strfind(dimtok{k},'{pos}')),
-        dimdat2 = getfield(data{m},dimtok{k}(2:end-1));
+        dimdat2 = data{m}.(dimtok{k}(2:end-1));
       elseif isempty(strfind(dimtok{k},'ori')),
         % dimtok is 'rpt' or 'rpttap'
-        dimdat2 = size(getfield(data{m}, param{1}),1);
+        dimdat2 = size(data{m}.(param{1}),1);
       end
       try, dimmat(k,m) = all(dimdat(:)==dimdat2(:));            catch end;
       try, dimmat(k,m) = all(cellfun(@isequal,dimdat,dimdat2)); catch end;
@@ -209,15 +209,15 @@ if length(data)>1 && ~israw,
   for k = 1:length(param)
     tmp = cell(1,length(data));
     for m = 1:length(tmp)
-      tmp{m} = getfield(data{m},param{k});
+      tmp{m} = data{m}.(param{k});
     end
     if ~iscell(tmp{1}),
       % this is for the 'normal' case
       if catdim==0,
         ndim    = length(size(tmp{1}));
-        data{1} = setfield(data{1}, param{k}, permute(cat(ndim+1,tmp{:}),[ndim+1 1:ndim]));
+        data{1}.(param{k}) = permute(cat(ndim+1,tmp{:}),[ndim+1 1:ndim]);
       else
-        data{1} = setfield(data{1}, param{k}, cat(catdim,tmp{:}));
+        data{1}.(param{k}) = cat(catdim,tmp{:});
       end
     else
       % this is for source data with the positions in a cell-array
@@ -340,12 +340,12 @@ if length(data)>1 && ~israw,
     try
       for m = 1:length(data)
         if m==1,
-          tmpfield = getfield(data{m}, tryfields{k});
+          tmpfield = data{m}.(tryfields{k});
         else
-          tmpfield = [tmpfield; getfield(data{m}, tryfields{k})];
+          tmpfield = [tmpfield; data{m}.(tryfields{k})];
         end
       end
-      data{1} = setfield(data{1}, tryfields{k}, tmpfield);
+      data{1}.(tryfields{k}) = tmpfield;
     catch
     end
   end
@@ -360,12 +360,12 @@ if length(data)>1 && ~israw,
   % FIXME if functional data in cell-array no sorting takes place
   if sortflag && ~iscell(tmp) && ~iscell(data{1}.(param{1})),
     [srt, ind] = sort(tmp, 2);
-    data{1} = setfield(data{1}, dimtok{catdim}, tmp(ind));
+    data{1}.(dimtok{catdim}) = tmp(ind);
     for k = 1:length(param)
       tmp     = getsubfield(data{1}, param{k});
       tmp     = permute(tmp, [catdim setdiff(1:length(size(tmp)), catdim)]);
       tmp     = ipermute(tmp(ind,:,:,:,:), [catdim setdiff(1:length(size(tmp)), catdim)]);
-      data{1} = setfield(data{1}, param{k}, tmp);
+      data{1}.(param{k}) = tmp;
     end
   elseif exist('tmp', 'var') && iscell(tmp)
     %in this case (ugly!) tmp is probably a cell-array containing functional data
@@ -467,6 +467,7 @@ if selectfoi,
     selfoi = nearest(data.freq, selfoi(1)):nearest(data.freq, selfoi(2));
   else
     %treat selfoi as a list of frequencies
+    tmpfoi = zeros(1,numel(selfoi));
     for k=1:length(selfoi)
       tmpfoi(k) = nearest(data.freq, selfoi(k));
     end
