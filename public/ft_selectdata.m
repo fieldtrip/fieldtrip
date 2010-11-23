@@ -439,9 +439,11 @@ if selectrpt && ~israw
     endtapcnt = endtapcnt(selrpt);
     tapers = zeros(1,sumtapcnt(end));
     for k = 1:length(begtapcnt)
-      tapers(begtapcnt(k):endtapcnt(k)) = 1;
+      tapers(begtapcnt(k):endtapcnt(k)) = k;
     end
-    selrpt = find(tapers);
+    selrpt   = find(tapers);
+    [srt,ix] = sort(tapers(tapers~=0));
+    selrpt   = selrpt(ix);
   else
     % do nothing
   end
