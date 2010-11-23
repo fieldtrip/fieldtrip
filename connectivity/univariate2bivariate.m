@@ -8,7 +8,7 @@ function [data, powindx, hasrpt] = univariate2bivariate(data, inparam, outparam,
 demeanflag = keyval('demeanflag', varargin{:}); if isempty(demeanflag), demeanflag = 0; end
 cmb        = keyval('cmb',     varargin{:});
 sqrtflag   = keyval('sqrtflag', varargin{:}); if isempty(sqrtflag), sqrtflag = 0;       end
-keeprpt    = keyval('keeprt',  varargin{:});  if isempty(keeprpt),  keeprpt  = 1;       end
+keeprpt    = keyval('keeprpt',  varargin{:});  if isempty(keeprpt),  keeprpt  = 1;       end
 
 switch dtype
   case 'freq'

@@ -69,7 +69,7 @@ if isempty(dimord)
   error('input parameters should contain a dimord'); 
 end
 
-siz = size(input);
+siz = [size(input) 1];
 
 % do partialisation if necessary
 if ~isempty(pchanindx),
