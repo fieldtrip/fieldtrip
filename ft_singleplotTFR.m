@@ -123,21 +123,6 @@ elseif strcmp(data.dimord, 'subj_chan_freq_time') || strcmp(data.dimord, 'rpt_ch
   if ~isfield(cfg, 'zparam'),      cfg.zparam='powspctrm';             end
 end
 
-% Pick the channel(s)
-if ~isfield(cfg,'channel')
-  % set the default
-  cfg.channel = 'all';
-  % for backward compatibility
-  cfg = ft_checkconfig(cfg, 'renamed', {'channelindex',  'channel'});
-  cfg = ft_checkconfig(cfg, 'renamed', {'channelname',   'channel'});
-end
-
-cfg.channel = ft_channelselection(cfg.channel, data.label);
-if isempty(cfg.channel)
-  error('no channels selected');
-else
-  chansel = match_str(data.label, cfg.channel);
-end
 
 % Check for unconverted coherence spectrum data or any other bivariate metric:
 dimtok  = tokenize(data.dimord, '_');
@@ -203,6 +188,22 @@ if (strcmp(cfg.zparam,'cohspctrm')) && (isfield(data, 'labelcmb')) || ...
       data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]) - reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
     end
   end
+end
+
+% Pick the channel(s)
+if ~isfield(cfg,'channel')
+  % set the default
+  cfg.channel = 'all';
+  % for backward compatibility
+  cfg = ft_checkconfig(cfg, 'renamed', {'channelindex',  'channel'});
+  cfg = ft_checkconfig(cfg, 'renamed', {'channelname',   'channel'});
+end
+
+cfg.channel = ft_channelselection(cfg.channel, data.label);
+if isempty(cfg.channel)
+  error('no channels selected');
+else
+  chansel = match_str(data.label, cfg.channel);
 end
 
 % cfg.maskparameter only possible for single channel
