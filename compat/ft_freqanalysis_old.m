@@ -109,11 +109,11 @@ switch cfg.method
   case 'mtmwelch'
     error('''mtmwelch'' has not been implemented yet in the specest module, please use ft_freqanalys.m')
     cfg.method = [cfg.method '_old'];
-  case 'wavelet'
-    error('''wavelet'' has not been implemented yet in the specest module, please use ft_freqanalys.m')
+  case 'wltconvol'
+    error('''wltconvol'' has not been implemented yet in the specest module, please use ft_freqanalys.m')
     cfg.method = [cfg.method '_old'];
-  case 'convol'
-    error('''convol'' has not been implemented yet in the specest module, please use ft_freqanalys.m')
+  case 'tfr'
+    error('''tfr'' has not been implemented yet in the specest module, please use ft_freqanalys.m')
     cfg.method = [cfg.method '_old'];
   case 'mvar'
     error('''mvar'' has not been implemented yet in the specest module, please use ft_freqanalys.m')
