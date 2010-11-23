@@ -29,7 +29,7 @@ function [freq] = ft_freqanalysis(cfg, data, flag)
 % corresponding parameter options and for a detailed explanation of each method.
 %
 % See also FT_FREQANALYSIS_MTMFFT, FT_FREQANALYSIS_MTMCONVOL, FT_FREQANALYSIS_MTMWELCH
-% FT_FREQANALYSIS_WAVELT, FT_FREQANALYSIS_CONVOL
+% FT_FREQANALYSIS_WLTCONVOL, FT_FREQANALYSIS_TFR
 
 % Undocumented local options:
 % cfg.correctt_ftimwin (set to yes to try to determine new t_ftimwins based on correct cfg.foi)
