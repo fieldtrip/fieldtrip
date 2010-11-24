@@ -36,11 +36,11 @@ public class BufferClient {
 	public static final short WAIT_ERR = 0x405;
 
 
-	public BufferClient() throws IOException {
+	public BufferClient() {
 		myOrder = ByteOrder.nativeOrder();
 	}
 	
-	public BufferClient(ByteOrder order) throws IOException {
+	public BufferClient(ByteOrder order) {
 		myOrder = order;
 	}
 	
@@ -113,8 +113,7 @@ public class BufferClient {
 		}
 	
 		return data;
-	}	
-		
+	}
 	
 	public int[][] getIntData(int first, int last) throws IOException {
 		ByteBuffer buf;
@@ -348,6 +347,165 @@ public class BufferClient {
 		return evs;
 	}
 	
+	public void putData(byte[][] data) throws IOException {
+		int nSamples = data.length;
+		if (nSamples == 0) return;
+		int nChans = data[0].length;
+		if (nChans == 0) return;
+	
+		for (int i=1;i<nSamples;i++) {
+			if (nChans != data[i].length) {
+				throw new IOException("Cannot write non-rectangular data array");
+			}
+		}
+		
+		ByteBuffer buf = preparePutData(nChans, nSamples, DataType.INT8);
+		for (int i=0;i<nSamples;i++) {
+			buf.put(data[i]);
+		}
+		buf.rewind();
+		writeAll(buf);
+		readResponse(PUT_OK);
+	}
+	
+	public void putData(short[][] data) throws IOException {
+		int nSamples = data.length;
+		if (nSamples == 0) return;
+		int nChans = data[0].length;
+		if (nChans == 0) return;
+	
+		for (int i=1;i<nSamples;i++) {
+			if (nChans != data[i].length) {
+				throw new IOException("Cannot write non-rectangular data array");
+			}
+		}
+		
+		ByteBuffer buf = preparePutData(nChans, nSamples, DataType.INT16);
+		for (int i=0;i<nSamples;i++) {
+			buf.asShortBuffer().put(data[i]);
+		}
+		buf.rewind();
+		writeAll(buf);
+		readResponse(PUT_OK);
+	}	
+	
+	public void putData(int[][] data) throws IOException {
+		int nSamples = data.length;
+		if (nSamples == 0) return;
+		int nChans = data[0].length;
+		if (nChans == 0) return;
+	
+		for (int i=1;i<nSamples;i++) {
+			if (nChans != data[i].length) {
+				throw new IOException("Cannot write non-rectangular data array");
+			}
+		}
+		
+		ByteBuffer buf = preparePutData(nChans, nSamples, DataType.INT32);
+		for (int i=0;i<nSamples;i++) {
+			buf.asIntBuffer().put(data[i]);
+		}
+		buf.rewind();
+		writeAll(buf);
+		readResponse(PUT_OK);
+	}
+	
+	public void putData(long[][] data) throws IOException {
+		int nSamples = data.length;
+		if (nSamples == 0) return;
+		int nChans = data[0].length;
+		if (nChans == 0) return;
+	
+		for (int i=1;i<nSamples;i++) {
+			if (nChans != data[i].length) {
+				throw new IOException("Cannot write non-rectangular data array");
+			}
+		}
+		
+		ByteBuffer buf = preparePutData(nChans, nSamples, DataType.INT64);
+		for (int i=0;i<nSamples;i++) {
+			buf.asLongBuffer().put(data[i]);
+		}
+		buf.rewind();
+		writeAll(buf);
+		readResponse(PUT_OK);
+	}	
+		
+	public void putData(float[][] data) throws IOException {
+		int nSamples = data.length;
+		if (nSamples == 0) return;
+		int nChans = data[0].length;
+		if (nChans == 0) return;
+	
+		for (int i=1;i<nSamples;i++) {
+			if (nChans != data[i].length) {
+				throw new IOException("Cannot write non-rectangular data array");
+			}
+		}
+		
+		ByteBuffer buf = preparePutData(nChans, nSamples, DataType.FLOAT32);
+		for (int i=0;i<nSamples;i++) {
+			buf.asFloatBuffer().put(data[i]);
+		}
+		buf.rewind();
+		writeAll(buf);
+		readResponse(PUT_OK);
+	}	
+	
+	public void putData(double[][] data) throws IOException {
+		int nSamples = data.length;
+		if (nSamples == 0) return;
+		int nChans = data[0].length;
+		if (nChans == 0) return;
+	
+		for (int i=1;i<nSamples;i++) {
+			if (nChans != data[i].length) {
+				throw new IOException("Cannot write non-rectangular data array");
+			}
+		}
+		
+		ByteBuffer buf = preparePutData(nChans, nSamples, DataType.FLOAT64);
+		for (int i=0;i<nSamples;i++) {
+			buf.asDoubleBuffer().put(data[i]);
+		}
+		buf.rewind();
+		writeAll(buf);
+		readResponse(PUT_OK);
+	}	
+
+	public void putEvent(BufferEvent e) throws IOException {
+		ByteBuffer buf;
+
+		buf = ByteBuffer.allocate(8+e.size());
+		buf.order(myOrder); 
+	
+		buf.putShort(VERSION).putShort(PUT_EVT).putInt(e.size());
+		e.serialize(buf);
+		buf.rewind();
+		writeAll(buf);
+		readResponse(PUT_OK);
+	}
+
+	public void putEvents(BufferEvent[] e) throws IOException {
+		ByteBuffer buf;
+		int bufsize = 0;
+	
+		for (int i=0;i<e.length;i++) {
+			bufsize += e[i].size();
+		}
+
+		buf = ByteBuffer.allocate(8+bufsize);
+		buf.order(myOrder); 
+	
+		buf.putShort(VERSION).putShort(PUT_EVT).putInt(bufsize);
+		for (int i=0;i<e.length;i++) {
+			e[i].serialize(buf);
+		}
+		buf.rewind();
+		writeAll(buf);
+		readResponse(PUT_OK);
+	}		
+	
 	public SamplesEventsCount wait(int nSamples, int nEvents, int timeout) throws IOException {
 		ByteBuffer buf;
 
@@ -413,6 +571,16 @@ public class BufferClient {
 		}
 		return dst;
 	}	
+	
+	protected ByteBuffer preparePutData(int nChans, int nSamples, int type) {
+		int bufsize = DataType.wordSize[type]*nSamples*nChans;
+		
+		ByteBuffer buf = ByteBuffer.allocate(8+16+bufsize);
+		buf.order(myOrder);
+		buf.putShort(VERSION).putShort(PUT_DAT).putInt(16+bufsize);
+		buf.putInt(nChans).putInt(nSamples).putInt(type).putInt(bufsize);
+		return buf;
+	}
 	
 	protected SocketChannel sockChan;
 	protected ByteOrder myOrder;

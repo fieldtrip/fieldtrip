@@ -13,6 +13,7 @@ import java.nio.*;
 	conversion to Java objects.
 */
 public class DataType {
+	public static final int UNKNOWN = -1;
 	public static final int CHAR    = 0;
 	public static final int UINT8   = 1;
 	public static final int INT8    = 2;
@@ -33,7 +34,7 @@ public class DataType {
 				byte[] strBytes = new byte[numel];
 				buf.get(strBytes);
 				return new String(strBytes);
-
+			
 			case INT8:
 			case UINT8:
 				byte[] int8array = new byte[numel];
@@ -43,33 +44,36 @@ public class DataType {
 			case INT16:
 			case UINT16:
 				short[] int16array = new short[numel];
-				buf.asShortBuffer().get(int16array);
+				// The following would be faster, but DOES NOT
+				// increment the position of the original ByteBuffer!!!
+				// buf.asShortBuffer().get(int16array);
+				for (int i=0;i<numel;i++) int16array[i] = buf.getShort();
 				return int16array;
 
 			case INT32:
 			case UINT32:
 				int[] int32array = new int[numel];
-				buf.asIntBuffer().get(int32array);
+				for (int i=0;i<numel;i++) int32array[i] = buf.getInt();
 				return int32array;
 			
 			case INT64:
 			case UINT64:
 				long[] int64array = new long[numel];
-				buf.asLongBuffer().get(int64array);
+				for (int i=0;i<numel;i++) int64array[i] = buf.getLong();
 				return int64array;	
-
+			
 			case FLOAT32:
 				float[] float32array = new float[numel];
-				buf.asFloatBuffer().get(float32array);
+				for (int i=0;i<numel;i++) float32array[i] = buf.getFloat();
 				return float32array;			
 			
 			case FLOAT64:
 				double[] float64array = new double[numel];
-				buf.asDoubleBuffer().get(float64array);
+				for (int i=0;i<numel;i++) float64array[i] = buf.getDouble();
 				return float64array;			
 
 			default:
 				return null;
 		}
 	}
-}
+}	

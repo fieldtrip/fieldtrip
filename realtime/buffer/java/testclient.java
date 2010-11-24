@@ -70,10 +70,21 @@ class testclient {
 		if (hdr.nEvents > 0) {
 			BufferEvent[] evs = C.getEvents(0,hdr.nEvents-1);
 			for (int n=0;n<evs.length;n++) {
-				System.out.println("Ev: "+n+" TYPE="+evs[n].getType()+" VALUE="+evs[n].getValue());
+				System.out.println("Ev: "+n);
+				evs[n].print();
 			}
 		}
-			
+		
+		/* The following 4 lines have the same effect as the one after this block
+		BufferEvent E = new BufferEvent();		
+		E.sample = hdr.nSamples-1; // latest sample
+		E.setType("Marker"); // string type
+		E.setValue(42);      // integer value
+		*/
+		
+		BufferEvent E = new BufferEvent("Marker", 42, hdr.nSamples-1);		
+		C.putEvent(E);		
+		
 		C.disconnect();
 	}
 }
