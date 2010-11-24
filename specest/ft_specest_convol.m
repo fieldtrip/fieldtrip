@@ -1,4 +1,4 @@
-function [spectrum, freqoi, timeoi] = specest_convol(dat, time, varargin)
+function [spectrum, freqoi, timeoi] = ft_specest_convol(dat, time, varargin)
 
 % SPECEST_CONVOL performs wavelet convolution in the time domain by convolution with Morlet's wavelets.
 %

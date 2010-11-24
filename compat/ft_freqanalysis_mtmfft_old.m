@@ -1,4 +1,4 @@
-function [freq] = ft_freqanalysis_mtmfft(cfg, data);
+function [freq] = ft_freqanalysis_mtmfft_old(cfg, data);
 
 % FT_FREQANALYSIS_MTMFFT performs frequency analysis on any time series
 % trial data using the 'multitaper method' (MTM) based on discrete
@@ -88,7 +88,7 @@ if ~exist('OCTAVE_VERSION')
 end
 
 % set all the defaults
-if ~isfield(cfg, 'method'),        cfg.method     = 'mtmfft';               end
+if ~isfield(cfg, 'method'),        cfg.method     = 'mtmfft_old';           end
 if ~isfield(cfg, 'keeptapers'),    cfg.keeptapers = 'no';                   end
 if ~isfield(cfg, 'keeptrials'),    cfg.keeptrials = 'no';                   end
 if ~isfield(cfg, 'calcdof'),       cfg.calcdof    = 'no';                   end
@@ -109,7 +109,7 @@ if strcmp(cfg.output, 'fourier'),
   cfg.keeptapers = 'yes';
 end
 
-if ~strcmp(cfg.method,'mtmfft')
+if ~strcmp(cfg.method,'mtmfft_old')
   error('unsupported method');
 end
 

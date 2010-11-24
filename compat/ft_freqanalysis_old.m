@@ -103,21 +103,17 @@ end
 % Switch for the old implementation (will be in ft_freqanalysis.m in a while)
 switch cfg.method
   case 'mtmconvol'
-    cfg.method = [cfg.method '_old'];
+    cfg = ft_checkconfig(cfg, 'renamedval', {'method','mtmconvol', 'mtmconvol_old'});
   case 'mtmfft'
-    cfg.method = [cfg.method '_old'];
+    cfg = ft_checkconfig(cfg, 'renamedval', {'method','mtmfft', 'mtmfft_old'});
   case 'mtmwelch'
     error('''mtmwelch'' has not been implemented yet in the specest module, please use ft_freqanalysis.m')
-    cfg.method = [cfg.method '_old'];
   case 'wltconvol'
     error('''wltconvol'' has not been implemented yet in the specest module, please use ft_freqanalysis.m')
-    cfg.method = [cfg.method '_old'];
   case 'tfr'
     error('''tfr'' has not been implemented yet in the specest module, please use ft_freqanalysis.m')
-    cfg.method = [cfg.method '_old'];
   case 'mvar'
     error('''mvar'' has not been implemented yet in the specest module, please use ft_freqanalysis.m')
-    cfg.method = [cfg.method '_old'];
 end
 
 

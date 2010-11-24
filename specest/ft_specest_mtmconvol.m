@@ -1,4 +1,4 @@
-function [spectrum,ntaper,freqoi,timeoi] = specest_mtmconvol(dat, time, varargin)
+function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varargin)
 
 % SPECEST_MTMCONVOL performs wavelet convolution in the time domain by multiplication in the frequency domain
 %

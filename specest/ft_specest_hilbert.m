@@ -1,4 +1,4 @@
-function [spectrum,freqoi,timeoi] = specest_hilbert(dat, time, varargin)
+function [spectrum,freqoi,timeoi] = ft_specest_hilbert(dat, time, varargin)
 
 % SPECEST_HILBERT performs a spectral estimation of data by repeatedly
 % applying a bandpass filter and then doing a hilbert transform.

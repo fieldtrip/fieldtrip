@@ -1,4 +1,4 @@
-function [freq] = ft_freqanalysis_mtmconvol(cfg, data)
+function [freq] = ft_freqanalysis_mtmconvol_old(cfg, data)
 
 % FT_FREQANALYSIS_MTMCONVOL performs time-frequency analysis on any time series trial data
 % using the 'multitaper method' (MTM) based on Slepian sequences as tapers. Alternatively,
@@ -97,7 +97,7 @@ if ~exist('OCTAVE_VERSION')
     end
 end
 % set all the defaults
-if ~isfield(cfg, 'method'),        cfg.method     = 'mtmconvol';  end
+if ~isfield(cfg, 'method'),        cfg.method     = 'mtmconvol_old';  end
 if ~isfield(cfg, 'keeptapers'),    cfg.keeptapers = 'no';         end
 if ~isfield(cfg, 'keeptrials'),    cfg.keeptrials = 'no';         end
 if ~isfield(cfg, 'calcdof'),       cfg.calcdof    = 'no';         end

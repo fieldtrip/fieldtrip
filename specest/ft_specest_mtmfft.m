@@ -1,4 +1,4 @@
-function [spectrum,ntaper,freqoi] = specest_mtmfft(dat, time, varargin) 
+function [spectrum,ntaper,freqoi] = ft_specest_mtmfft(dat, time, varargin) 
 
 % SPECEST_MTMFFT computes a fast Fourier transform using many possible tapers
 %
