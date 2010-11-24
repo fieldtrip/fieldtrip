@@ -55,6 +55,25 @@ public class BufferClient {
 		return sockChan.isConnected();
 	}
 	
+	public boolean connect(String address) throws IOException {
+		int colonPos = address.lastIndexOf(':');
+		if (colonPos != -1) {
+			String hostname = address.substring(0,colonPos);
+			Integer port;
+		
+			try {
+				port = new Integer(address.substring(colonPos+1));
+			}
+			catch (NumberFormatException e) {
+				System.out.println(e);
+				return false;
+			}
+			return connect(hostname, port.intValue());
+		}
+		// other addresses not recognised yet
+		return false;
+	}
+	
 	public void disconnect() throws IOException {
 		sockChan.socket().close();
 		sockChan = null;
