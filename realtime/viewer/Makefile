@@ -14,8 +14,8 @@ PLATFORM = $(shell gcc -dumpmachine)
 # Windows doesn't know "uname", so we need to check for the GCC platform first 
 ifeq "$(PLATFORM)" "mingw32"
 	FLPREFIX = C:/msys/1.0/local
-	LDFLAGS  = pthreadGC2.dll ../buffer/src/libbuffer.a	
-	FLFLAGS  = -I$(FLPREFIX)/include 
+	LDFLAGS  = pthreadGC2.dll ../buffer/src/libbuffer.a	-mwindows
+	FLFLAGS  = -I$(FLPREFIX)/include -mwindows
 	LDFL     = -mno-cygwin -lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32 -L$(FLPREFIX)/lib
 	SUFFIX   = .exe
 else

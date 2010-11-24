@@ -158,7 +158,7 @@ void OnlineDataDisplay::draw() {
 		
 		fl_push_matrix();
 		fl_translate(x()+42, ypos);
-		fl_scale(xScale, yScale*ySpace);
+		fl_scale(xScale, -yScale*ySpace);
 
 		fl_begin_line();
 		for (int j=0;j<numDraw;j++) {
@@ -298,7 +298,7 @@ class ColorBrowser : public Fl_Multi_Browser {
 
 void hpCallback(Fl_Widget*, void*) {
 	useHighpass = hpButton->value();
-	if (useHighpass) hpFilter->clear();
+	if (useHighpass && hpFilter) hpFilter->clear();
 }
 
 void generalCallback(Fl_Widget*, void*)  {
