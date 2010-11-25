@@ -72,11 +72,11 @@ for i=1:length(L)
       fprintf(1,'Error: source file %s cannot be found.', sfname);
       continue;
    end
-
+   
    if ~force
       mfname = [baseDir filesep L(i).dir filesep name '.' mexext];
       MF = dir(mfname);
-      if numel(MF)==1 && SF.datenum <= MF.datenum
+      if numel(MF)==1 && datenum(SF.date) <= datenum(MF.date)
          fprintf(1,'Skipping up-to-date MEX file %s/%s\n', L(i).dir, name);
          continue;
       end 
