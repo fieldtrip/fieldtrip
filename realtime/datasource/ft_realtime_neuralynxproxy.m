@@ -89,7 +89,7 @@ evtIndex = find(strcmp('EventAcqEnt', cheetahTypes))';
 evtCount = length(evtIndex);
 
 % select a subset of channels
-cfg.channel = channelselection(cfg.channel, cheetahObjects(cscIndex));
+cfg.channel = ft_channelselection(cfg.channel, cheetahObjects(cscIndex));
 selIndex    = match_str(cheetahObjects, cfg.channel)';
 
 hdr = []; % FIXME
@@ -132,7 +132,7 @@ while again
           event(i).duration = 0;
         end
         % write the events
-        write_event(cfg.target.eventfile, event, 'eventformat', cfg.target.eventformat);
+        ft_write_event(cfg.target.eventfile, event, 'eventformat', cfg.target.eventformat);
       end
     end % if succeeded
   end % for all event streams
@@ -270,11 +270,11 @@ while again
 
       if numSamples==0
         % write the header and write data of this record to the buffer
-        write_data(cfg.target.datafile, alldata, 'dataformat', cfg.target.dataformat, 'header', hdr, 'append', false);
+        ft_write_data(cfg.target.datafile, alldata, 'dataformat', cfg.target.dataformat, 'header', hdr, 'append', false);
         targethdr.FirstSampleTimeStamp = uint64(recordPool(1).timeStamp); % this is only defined once
       else
         % write the data of this record to the buffer
-        write_data(cfg.target.datafile, alldata, 'dataformat', cfg.target.dataformat, 'append', true);
+        ft_write_data(cfg.target.datafile, alldata, 'dataformat', cfg.target.dataformat, 'append', true);
       end
       targethdr.TimeStampPerSample   = double(uint64(recordPool(i).timeStamp) - targethdr.FirstSampleTimeStamp)/numSamples;
       numSamples                     = numSamples + size(recordPool(i).dat,2);

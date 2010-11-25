@@ -93,9 +93,9 @@ while isempty(hdr)
       hdr.nChans  = msg.nChannels;
       hdr.Fs      = 1/(msg.dSamplingInterval/1e6);
       hdr.label   = msg.sChannelNames;
-	  hdr.resolutions = msg.dResolutions;
+	    hdr.resolutions = msg.dResolutions;
       % determine the selection of channels to be transmitted
-      cfg.channel = channelselection(cfg.channel, hdr.label);
+      cfg.channel = ft_channelselection(cfg.channel, hdr.label);
       chanindx = match_str(hdr.label, cfg.channel);
       % remember the original header details for the next iteration
       hdr.orig = msg;
@@ -190,10 +190,10 @@ while (true)
     fprintf('writing %d channels, %d samples\n', size(dat,1), size(dat,2));
     if count==1
       % flush the file, write the header and subsequently write the data segment
-      write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'chanindx', chanindx, 'append', false);
+      ft_write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'chanindx', chanindx, 'append', false);
     else
       % write the data segment
-      write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'chanindx', chanindx, 'append', true);
+      ft_write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'chanindx', chanindx, 'append', true);
     end
     dat = [];
   end
@@ -201,7 +201,7 @@ while (true)
   if ~isempty(event)
     % write the events
     fprintf('writing %d events\n', length(event));
-    write_event(cfg.target.eventfile, event, 'eventformat', cfg.target.eventformat, 'append', true);
+    ft_write_event(cfg.target.eventfile, event, 'eventformat', cfg.target.eventformat, 'append', true);
     event = [];
   end
 

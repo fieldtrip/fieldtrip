@@ -97,12 +97,12 @@ while true
 	count = count+1;
 	
 	if count==1
-      % flush the file, write the header and subsequently write the data segment
-      write_data(cfg.target.datafile, x', 'header', hdr, 'dataformat', cfg.target.dataformat, 'append', false);
-    else
-      % write the data segment
-	  write_data(cfg.target.datafile, x', 'append', true);
-    end % if count==1
+    % flush the file, write the header and subsequently write the data segment
+    ft_write_data(cfg.target.datafile, x', 'header', hdr, 'dataformat', cfg.target.dataformat, 'append', false);
+  else
+    % write the data segment
+    ft_write_data(cfg.target.datafile, x', 'append', true);
+  end % if count==1
 
 	hdr.nSamples = endsample;
 	

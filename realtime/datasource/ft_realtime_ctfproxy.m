@@ -36,5 +36,5 @@ cfg.jumptoeof = 'yes';
 cfg.readevent = 'yes';
 cfg.source.datafile   = 'shm://';
 cfg.source.dataformat = 'ctf_shm';
-realtime_fileproxy(cfg);
+ft_realtime_fileproxy(cfg);
 

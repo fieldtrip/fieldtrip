@@ -69,13 +69,13 @@ if ~isfield(cfg.target,'eventfile') || isempty(cfg.target.eventfile)
 end
 
 % ensure that the persistent variables related to caching are cleared
-clear read_header
+clear ft_read_header
 % read the header for the first time
-hdr = read_header(cfg.source.headerfile);
+hdr = ft_read_header(cfg.source.headerfile);
 fprintf('updating the header information, %d samples available\n', hdr.nSamples*hdr.nTrials);
 
 % define a subset of channels for reading
-cfg.channel = channelselection(cfg.channel, hdr.label);
+cfg.channel = ft_channelselection(cfg.channel, hdr.label);
 chanindx    = match_str(hdr.label, cfg.channel);
 nchan       = length(chanindx);
 if nchan==0
@@ -101,7 +101,7 @@ evt = [];
 while true
 
     % determine number of samples available in buffer
-    hdr = read_header(cfg.source.headerfile, 'cache', true);
+    hdr = ft_read_header(cfg.source.headerfile, 'cache', true);
 
     % see whether new samples are available
     newsamples = (hdr.nSamples*hdr.nTrials-prevSample);
@@ -116,14 +116,14 @@ while true
         fprintf('processing segment %d from sample %d to %d\n', count, begsample, endsample);
 
         % read data segment
-        dat = read_data(cfg.source.datafile,'header', hdr, 'dataformat', cfg.source.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
+        dat = ft_read_data(cfg.source.datafile,'header', hdr, 'dataformat', cfg.source.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
 
         % it only makes sense to read those events associated with the currently processed data
         if ~strcmp(cfg.readevent,'no')
-          evt = read_event(cfg.source.eventfile, 'header', hdr, 'minsample', begsample, 'maxsample', endsample);
+          evt = ft_read_event(cfg.source.eventfile, 'header', hdr, 'minsample', begsample, 'maxsample', endsample);
 
           if ~strcmp(cfg.readevent,'yes')
-            evt = filter_event(evt, 'type', cfg.readevent);
+            evt = ft_filter_event(evt, 'type', cfg.readevent);
           end
           
         end
@@ -138,12 +138,12 @@ while true
             % the input file may have a different offset than the output file
             offset = begsample - 1;
             % flush the file, write the header and subsequently write the data segment
-            write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'chanindx', chanindx, 'append', false);
+            ft_write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'chanindx', chanindx, 'append', false);
             if ~strcmp(cfg.readevent,'no')
                 for i=1:numel(evt)
                     evt(i).sample = evt(i).sample - offset;
                 end
-                write_event(cfg.target.eventfile,evt,'append',false);
+                ft_write_event(cfg.target.eventfile,evt,'append',false);
             end
         else
             % write the data segment
@@ -152,7 +152,7 @@ while true
                 for i=1:numel(evt)
                     evt(i).sample = evt(i).sample - offset;
                 end
-                write_event(cfg.target.eventfile,evt,'append',true);
+                ft_write_event(cfg.target.eventfile,evt,'append',true);
             end
         end % if count==1
 

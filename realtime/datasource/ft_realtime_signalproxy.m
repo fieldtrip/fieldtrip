@@ -99,9 +99,9 @@ while true
   pause(((endsample-begsample+1)/hdr.Fs)/cfg.speed);
 
   % apply some filters
-  if strcmp(cfg.lpfilter, 'yes'),     dat = preproc_lowpassfilter (dat, hdr.Fs, cfg.lpfreq, cfg.lpfiltord, cfg.lpfilttype, cfg.lpfiltdir); end
-  if strcmp(cfg.hpfilter, 'yes'),     dat = preproc_highpassfilter(dat, hdr.Fs, cfg.hpfreq, cfg.hpfiltord, cfg.hpfilttype, cfg.hpfiltdir); end
-  if strcmp(cfg.bpfilter, 'yes'),     dat = preproc_bandpassfilter(dat, hdr.Fs, cfg.bpfreq, cfg.bpfiltord, cfg.bpfilttype, cfg.bpfiltdir); end
+  if strcmp(cfg.lpfilter, 'yes'),     dat = ft_preproc_lowpassfilter (dat, hdr.Fs, cfg.lpfreq, cfg.lpfiltord, cfg.lpfilttype, cfg.lpfiltdir); end
+  if strcmp(cfg.hpfilter, 'yes'),     dat = ft_preproc_highpassfilter(dat, hdr.Fs, cfg.hpfreq, cfg.hpfiltord, cfg.hpfilttype, cfg.hpfiltdir); end
+  if strcmp(cfg.bpfilter, 'yes'),     dat = ft_preproc_bandpassfilter(dat, hdr.Fs, cfg.bpfreq, cfg.bpfiltord, cfg.bpfilttype, cfg.bpfiltdir); end
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % from here onward it is specific to writing the data to another stream
@@ -113,10 +113,10 @@ while true
 
   if count==1
     % flush the file, write the header and subsequently write the data segment
-    write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'append', false);
+    ft_write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'append', false);
   else
     % write the data segment
-    write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'append', true);
+    ft_write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'append', true);
   end % if count==1
 
 end % while true
