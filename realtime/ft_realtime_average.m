@@ -37,12 +37,12 @@ cfg = checkconfig(cfg, 'dataset2files', 'yes');
 cfg = checkconfig(cfg, 'required', {'datafile' 'headerfile'});
 
 % ensure that the persistent variables related to caching are cleared
-clear read_header
+clear ft_read_header
 % start by reading the header from the realtime buffer
-hdr = read_header(cfg.headerfile, 'cache', true);
+hdr = ft_read_header(cfg.headerfile, 'cache', true);
 
 % define a subset of channels for reading
-cfg.channel = channelselection(cfg.channel, hdr.label);
+cfg.channel = ft_channelselection(cfg.channel, hdr.label);
 chanindx    = match_str(hdr.label, cfg.channel);
 nchan       = length(chanindx);
 if nchan==0
@@ -64,8 +64,8 @@ figure
 while true
 
   % determine latest header and event information
-  event     = read_event(cfg.dataset, 'minsample', prevSample+1);  % only consider events that are later than the data processed sofar
-  hdr       = read_header(cfg.dataset, 'cache', true);             % the trialfun might want to use this, but it is not required
+  event     = ft_read_event(cfg.dataset, 'minsample', prevSample+1);  % only consider events that are later than the data processed sofar
+  hdr       = ft_read_header(cfg.dataset, 'cache', true);             % the trialfun might want to use this, but it is not required
   cfg.event = event;                                               % store it in the configuration, so that it can be passed on to the trialfun
   cfg.hdr   = hdr;                                                 % store it in the configuration, so that it can be passed on to the trialfun
 
@@ -87,14 +87,14 @@ while true
     fprintf('processing segment %d from sample %d to %d\n', count, begsample, endsample);
 
     % read data segment from buffer
-    dat = read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
+    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % from here onward it is specific to the processing of the data
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     % apply some preprocessing options
-    dat = preproc_baselinecorrect(dat);
+    dat = ft_preproc_baselinecorrect(dat);
 
     if isempty(average)
       % initialize the accumulating variables on the first call

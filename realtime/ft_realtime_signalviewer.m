@@ -65,12 +65,12 @@ cfg = checkconfig(cfg, 'dataset2files', 'yes');
 cfg = checkconfig(cfg, 'required', {'datafile' 'headerfile'});
 
 % ensure that the persistent variables related to caching are cleared
-clear read_header
+clear ft_read_header
 % start by reading the header from the realtime buffer
-hdr = read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', true, 'retry', true);
+hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', true, 'retry', true);
 
 % define a subset of channels for reading
-cfg.channel = channelselection(cfg.channel, hdr.label);
+cfg.channel = ft_channelselection(cfg.channel, hdr.label);
 chanindx    = match_str(hdr.label, cfg.channel);
 nchan       = length(chanindx);
 if nchan==0
@@ -94,7 +94,7 @@ count       = 0;
 while true
 
   % determine number of samples available in buffer
-  hdr = read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', true);
+  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', true);
 
   % see whether new samples are available
   newsamples = (hdr.nSamples*hdr.nTrials-prevSample);
@@ -124,11 +124,11 @@ while true
     fprintf('processing segment %d from sample %d to %d\n', count, begsample, endsample);
 
     % read data segment from buffer
-    dat = read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
+    dat = ft_read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
 
     % it only makes sense to read those events associated with the currently processed data
     if strcmp(cfg.readevent, 'yes')
-      evt = read_event(cfg.eventfile, 'header', hdr, 'minsample', begsample, 'maxsample', endsample);
+      evt = ft_read_event(cfg.eventfile, 'header', hdr, 'minsample', begsample, 'maxsample', endsample);
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -144,7 +144,7 @@ while true
 
     % apply some preprocessing options
     if strcmp(cfg.blc, 'yes')
-      data.trial{1} = preproc_baselinecorrect(data.trial{1});
+      data.trial{1} = ft_preproc_baselinecorrect(data.trial{1});
     end
 
     % plot the data just like a standard FieldTrip raw data strucute

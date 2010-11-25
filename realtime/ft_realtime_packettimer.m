@@ -36,7 +36,7 @@ set(f1,'units','normalized','outerposition',[0 0 1 1]);
 cfg.bcifun();
 
 try
-  realtime_process(cfg);
+  ft_realtime_process(cfg);
 catch
   fprintf('%s\n',lasterr);
   close;

@@ -89,12 +89,12 @@ cfg = checkconfig(cfg, 'dataset2files', 'yes');
 cfg = checkconfig(cfg, 'required', {'datafile' 'headerfile'});
 
 % ensure that the persistent variables related to caching are cleared
-clear read_header
+clear ft_read_header
 % start by reading the header from the realtime buffer
-hdr = read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', true, 'retry', true);
+hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', true, 'retry', true);
 
 % define a subset of channels for reading
-cfg.channel = channelselection(cfg.channel, hdr.label);
+cfg.channel = ft_channelselection(cfg.channel, hdr.label);
 chanindx    = match_str(hdr.label, cfg.channel);
 nchan       = length(chanindx);
 if nchan==0, error('no channels were selected'); end
@@ -117,10 +117,10 @@ minsample = 0; % only consider events that are later than the data processed sof
 while cfg.count < cfg.nsamples
 
   % determine number of samples available in buffer
-  hdr = read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', true);
+  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', true);
 
   % read new events
-  event = read_event(cfg.dataset, 'minsample', minsample+1);  
+  event = ft_read_event(cfg.dataset, 'minsample', minsample+1);  
 
   if ~isempty(event)
     fprintf('found %d events\n',length(event));
@@ -145,7 +145,7 @@ while cfg.count < cfg.nsamples
        fprintf('processing segment %d from sample %d to %d, trigger = %d\n', cfg.count, begsample, endsample, cfg.condition);
        
        % read data segment from buffer
-       dat = double(read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample,...
+       dat = double(ft_read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample,...
          'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false));
 
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -175,7 +175,7 @@ while cfg.count < cfg.nsamples
          evt.timestamp = data.time{1}(1);
          evt.value = cmd;
          
-         write_event(cfg.ostream,evt);
+         ft_write_event(cfg.ostream,evt);
          
        else
          fprintf('generated command %s\n',num2str(cmd));

@@ -29,9 +29,9 @@ cfg = checkconfig(cfg, 'dataset2files', 'yes');
 cfg = checkconfig(cfg, 'required', {'datafile' 'headerfile'});
 
 % ensure that the persistent variables related to caching are cleared
-clear read_header
+clear ft_read_header
 % start by reading the header from the realtime buffer
-hdr = read_header(cfg.headerfile);
+hdr = ft_read_header(cfg.headerfile);
 
 disp(hdr);
 
@@ -73,7 +73,7 @@ kern = kern/sum(kern(:));
 while true
   
   % determine number of samples available in buffer
-  hdr = read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', true);
+  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', true);
   
   if hdr.nSamples > prevSample
     % determine the samples to process
@@ -91,10 +91,10 @@ while true
     fprintf('\nprocessing scan %d\n', begsample);
     
     % read data from buffer (only the last scan)
-    dat = read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample, 'endsample', endsample);
+    dat = ft_read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample, 'endsample', endsample);
     
     % read events from buffer
-    ev = read_event(cfg.eventfile, 'header', hdr);
+    ev = ft_read_event(cfg.eventfile, 'header', hdr);
     if ~isempty(ev)
       ev_sam = [ev.sample];
       ind = find(ev_sam==begsample-1);

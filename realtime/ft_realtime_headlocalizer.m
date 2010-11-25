@@ -41,15 +41,15 @@ cfg = checkconfig(cfg, 'dataset2files', 'yes');
 
 % read the template coil positions
 if ~isempty(cfg.template)
-    template = read_headshape(cfg.template, 'coordinates', 'dewar');
+    template = ft_read_headshape(cfg.template, 'coordinates', 'dewar');
 else
     template = [];
 end
 
 % ensure that the persistent variables related to caching are cleared
-clear read_header
+clear ft_read_header
 % start by reading the header from the realtime buffer
-hdr = read_header(cfg.headerfile, 'cache', true);
+hdr = ft_read_header(cfg.headerfile, 'cache', true);
 
 % define a subset of channels for reading, only "headloc" type channels are relevant
 if strcmp(cfg.dataset, 'buffer://odin:1972');
@@ -75,7 +75,7 @@ UpdatedReference = [];
 while true
     
     % determine number of samples available in buffer
-    hdr = read_header(cfg.headerfile, 'cache', true);
+    hdr = ft_read_header(cfg.headerfile, 'cache', true);
     
     % see whether new samples are available
     newsamples = (hdr.nSamples*hdr.nTrials-prevSample);
@@ -98,7 +98,7 @@ while true
         fprintf('processing segment %d from sample %d to %d\n', count, begsample, endsample);
         
         % read data segment from buffer
-        dat = read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
+        dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % from here onward it is specific to the headlocalization in the CTF system

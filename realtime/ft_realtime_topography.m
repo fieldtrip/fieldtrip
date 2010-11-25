@@ -51,16 +51,16 @@ cfg = checkconfig(cfg, 'dataset2files', 'yes');
 cfg = checkconfig(cfg, 'required', {'datafile' 'headerfile'});
 
 % ensure that the persistent variables related to caching are cleared
-clear read_header
+clear ft_read_header
 % read the header for the first time
-hdr = read_header(cfg.headerfile);
+hdr = ft_read_header(cfg.headerfile);
 fprintf('updating the header information, %d samples available\n', hdr.nSamples*hdr.nTrials);
 
-cfg.channel = channelselection(cfg.channel, hdr.label);
+cfg.channel = ft_channelselection(cfg.channel, hdr.label);
 chanindx    = match_str(hdr.label, cfg.channel);
 
 % prepare the layout, also implements channel selection
-lay = prepare_layout(cfg);
+lay = ft_prepare_layout(cfg);
 
 % determine the size of blocks to process
 blocksize = round(cfg.blocksize*hdr.Fs);
@@ -82,7 +82,7 @@ count       = 0;
 while true
 
   % determine number of samples available in buffer
-  hdr = read_header(cfg.headerfile, 'cache', true);
+  hdr = ft_read_header(cfg.headerfile, 'cache', true);
 
   % see whether new samples are available
   newsamples = (hdr.nSamples*hdr.nTrials-prevSample);
@@ -112,7 +112,7 @@ while true
     fprintf('processing segment %d from sample %d to %d\n', count, begsample, endsample);
 
     % read data segment
-    dat = read_data(cfg.datafile, 'dataformat', cfg.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
+    dat = ft_read_data(cfg.datafile, 'dataformat', cfg.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % from here onward it is specific to the power estimation from the data
