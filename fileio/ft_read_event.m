@@ -82,10 +82,10 @@ function [event] = ft_read_event(filename, varargin)
 %
 % $Id$
 
-persistent sock           % for fcdc_tcp
-
 global event_queue        % for fcdc_global
+persistent sock           % for fcdc_tcp
 persistent db_blob        % for fcdc_mysql
+
 if isempty(db_blob)
   db_blob = 0;
 end
@@ -118,7 +118,6 @@ flt_mintimestamp = keyval('mintimestamp', varargin);
 flt_maxtimestamp = keyval('maxtimestamp', varargin);
 flt_minnumber    = keyval('minnumber', varargin);
 flt_maxnumber    = keyval('maxnumber', varargin);
-
 
 % determine the filetype
 if isempty(eventformat)
