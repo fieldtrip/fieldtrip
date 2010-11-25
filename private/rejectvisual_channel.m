@@ -56,31 +56,59 @@ h = figure;
 axis([0 1 0 1]);
 axis off
 
-% the info structure will be attached to the figure 
-% and passed around between the callback functions 
-info         = [];
-info.ncols   = ceil(sqrt(ntrl));
-info.nrows   = ceil(sqrt(ntrl));
-info.trlop   = 1;
-info.chanlop = 1;
-info.quit    = 0;
-info.ntrl    = ntrl;
-info.nchan   = nchan;
-info.data    = data;
-info.cfg     = cfg;
-info.offset  = offset;
-info.chansel = chansel;
-info.trlsel  = trlsel;
-% determine the position of each subplot within the axis
-for row=1:info.nrows
-  for col=1:info.ncols
-    indx = (row-1)*info.ncols + col;
-    if indx>info.ntrl
-      continue
+% the info structure will be attached to the figure
+% and passed around between the callback functions
+if strcmp(cfg.plotlayout,'1col') % hidden config option for plotting trials differently
+  info         = [];
+  info.ncols   = 1;
+  info.nrows   = ntrl;
+  info.trlop   = 1;
+  info.chanlop = 1;
+  info.quit    = 0;
+  info.ntrl    = ntrl;
+  info.nchan   = nchan;
+  info.data    = data;
+  info.cfg     = cfg;
+  info.offset  = offset;
+  info.chansel = chansel;
+  info.trlsel  = trlsel;
+  % determine the position of each subplot within the axis
+  for row=1:info.nrows
+    for col=1:info.ncols
+      indx = (row-1)*info.ncols + col;
+      if indx>info.ntrl
+        continue
+      end
+      info.x(indx)     = (col-0.9)/info.ncols;
+      info.y(indx)     = 1 - (row-0.45)/(info.nrows+1);
+      info.label{indx} = sprintf('trial %03d', indx);
     end
-    info.x(indx)     = (col-0.9)/info.ncols;
-    info.y(indx)     = 1 - (row-0.45)/(info.nrows+1);
-    info.label{indx} = sprintf('trial %03d', indx);
+  end
+elseif strcmp(cfg.plotlayout,'square')
+  info         = [];
+  info.ncols   = ceil(sqrt(ntrl));
+  info.nrows   = ceil(sqrt(ntrl));
+  info.trlop   = 1;
+  info.chanlop = 1;
+  info.quit    = 0;
+  info.ntrl    = ntrl;
+  info.nchan   = nchan;
+  info.data    = data;
+  info.cfg     = cfg;
+  info.offset  = offset;
+  info.chansel = chansel;
+  info.trlsel  = trlsel;
+  % determine the position of each subplot within the axis
+  for row=1:info.nrows
+    for col=1:info.ncols
+      indx = (row-1)*info.ncols + col;
+      if indx>info.ntrl
+        continue
+      end
+      info.x(indx)     = (col-0.9)/info.ncols;
+      info.y(indx)     = 1 - (row-0.45)/(info.nrows+1);
+      info.label{indx} = sprintf('trial %03d', indx);
+    end
   end
 end
 

@@ -126,6 +126,9 @@ function [data] = ft_rejectvisual(cfg, data);
 %
 % $Id$
 
+% Undocumented options
+% cfg.plotlayout = 'square' (default) or '1col', plotting every channel/trial under each other
+
 fieldtripdefs
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
@@ -143,6 +146,8 @@ if ~isfield(cfg, 'ecgscale'),    cfg.ecgscale = [];            end
 if ~isfield(cfg, 'megscale'),    cfg.megscale = [];            end
 if ~isfield(cfg, 'inputfile'),   cfg.inputfile = [];           end
 if ~isfield(cfg, 'outputfile'),  cfg.outputfile = [];          end
+if ~isfield(cfg, 'plotlayout'),  cfg.plotlayout = 'square';    end
+
 
 % load optional given inputfile as data
 hasdata = (nargin>1);
