@@ -5,13 +5,10 @@
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  */
 package nl.fcdonders.fieldtrip;
-
 import java.nio.*;
 
-
 /** A class for wrapping a FieldTrip buffer header structure.
-	TODO: also handle chunks other than "channel names",
-	provide function for serialization (for writing).
+	TODO: also handle chunks other than "channel names".
 */
 public class Header {
 	public static final int CHUNK_UNKNOWN = 0;
@@ -68,6 +65,47 @@ public class Header {
 		this.labels   = new String[nChans]; // allocate, but do not fill
 	}
 	
+	protected int getSerialSize() {
+		int size = 24;
+	
+		if (labels.length == nChans) {
+			channelNameSize = 0;
+			for (int i=0;i<nChans;i++) {
+				channelNameSize++;
+				if (labels[i] != null) {
+					channelNameSize += labels[i].getBytes().length;
+				}
+			}
+			if (channelNameSize > nChans) {
+				// we've got more than just empty string
+				size += 8 + channelNameSize;
+			}
+		}
+		return size;
+	}
+	
+	protected void serialize(ByteBuffer buf) {
+		buf.putInt(nChans);
+		buf.putInt(nSamples);
+		buf.putInt(nEvents);
+		buf.putFloat(fSample);
+		buf.putInt(dataType);
+		if (channelNameSize <= nChans) {
+			// channel names are all empty or array length does not match
+			buf.putInt(0);
+		} else {
+			buf.putInt(8 + channelNameSize);	// 8 bytes for chunk def
+			buf.putInt(CHUNK_CHANNEL_NAMES);
+			buf.putInt(channelNameSize);
+			for (int i=0;i<nChans;i++) {
+				if (labels[i] != null) buf.put(labels[i].getBytes());
+				buf.put((byte) 0);
+			}
+		} 
+	}
+	
+	protected int channelNameSize;
+
 	public int dataType;
 	public float fSample;
 	public int nChans;

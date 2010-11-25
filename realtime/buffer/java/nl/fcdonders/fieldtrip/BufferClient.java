@@ -97,6 +97,22 @@ public class BufferClient {
 		return new Header(buf);
 	}
 	
+	/** Returns true if channel names were written */
+	public boolean putHeader(Header hdr) throws IOException {
+		ByteBuffer buf;
+		int bufsize = hdr.getSerialSize();
+
+		buf = ByteBuffer.allocate(8 + bufsize);
+		buf.order(myOrder);
+	
+		buf.putShort(VERSION).putShort(PUT_HDR).putInt(bufsize);
+		hdr.serialize(buf);
+		buf.rewind();
+		writeAll(buf);
+		readResponse(PUT_OK);
+		return hdr.channelNameSize > hdr.nChans;
+	}
+	
 	public short[][] getShortData(int first, int last) throws IOException {
 		ByteBuffer buf;
 

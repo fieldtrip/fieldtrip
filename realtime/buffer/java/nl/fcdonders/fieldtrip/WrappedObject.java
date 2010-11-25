@@ -85,22 +85,35 @@ public class WrappedObject {
 			
 			if        (name == "[D") {
 				type = DataType.FLOAT64;
+				array = ((double[]) obj).clone();
+				numel = ((double[]) obj).length;
 			} else if (name == "[F") {
 				type = DataType.FLOAT32;
+				array = ((float[]) obj).clone();
+				numel = ((float[]) obj).length;
 			} else if (name == "[J") {
 				type = DataType.INT64;
+				array = ((long[]) obj).clone();
+				numel = ((long[]) obj).length;
 			} else if (name == "[I") {
 				type = DataType.INT32;
+				array = ((int[]) obj).clone();
+				numel = ((int[]) obj).length;
+			
 			} else if (name == "[S") {
 				type = DataType.INT16;
+				array = ((short[]) obj).clone();
+				numel = ((short[]) obj).length;
+			
 			} else if (name == "[B") {
 				type = DataType.INT8;
+				array = ((byte[]) obj).clone();
+				numel = ((byte[]) obj).length;
+			
 			} else {
-				return; // UNKNOWN
+				return; // keep as unknown
 			}
-			numel = java.lang.reflect.Array.getLength(obj);
 			size  = numel * DataType.wordSize[type];
-			// wo.array = (double[]) obj.clone();
 			return;
 		} else if (name == "java.lang.String") {
 			type = DataType.CHAR;
