@@ -10,7 +10,6 @@ classdef ft_mv_glmnet < ft_mv_predictor
 %
 % [a,b,c,d] = ft_mv_test('mva',{ft_mv_glmnet('cv',ft_mv_crossvalidator('nfolds',5,'metric','accuracy'))})
 %
-%
 %   Copyright (c) 2010, Marcel van Gerven
 
   properties
@@ -24,7 +23,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
     
     type = 'logistic'   % 'linear' or 'logistic' regression
     
-    standardize = true; % can be set to false (FINISH!!!)
+    standardize = 1;    % can be set to false
     
     weights             % regression coefficients
     
@@ -75,7 +74,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
       opts = glmnetSet;
       
       opts.alpha = obj.alpha; % mixing parameter
-
+      opts.standardize  = obj.standardize;
       opts.lambda_min = obj.lambda_min;
       opts.nlambda = obj.nlambda;
       
@@ -160,7 +159,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
           end
            
           res.lambda = nan;
-        else
+        else          
           res = glmnet(X,Y,family,opts);
           obj.weights = [res.beta; res.a0(:)'];
         end
@@ -195,7 +194,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
           Y = 1 - bsxfun(@rdivide,Y,sum(Y,2));
         end
         
-        % MULTINOMIAL NOT SUPPORTED
+        % MULTINOMIAL NOT (YET) SUPPORTED
       
       end
       

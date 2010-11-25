@@ -1,6 +1,7 @@
 classdef ft_mv_logreg < ft_mv_predictor
 % FT_MV_LOGREG logistic regression; various flavours using Mark Schmidt's L1General
-% package; elastic net implementation based on Friedman et al
+% package; elastic net implementation based on Friedman et al (but see
+% ft_mv_glmnet for a faster implementation.
 %
 %   Copyright (c) 2010, Marcel van Gerven, Ali Bahramisharif
 
