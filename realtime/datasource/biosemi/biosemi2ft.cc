@@ -499,7 +499,7 @@ int main(int argc, char *argv[]) {
 				
 				rbInt[doff++] = BS.getValue(soff + 1);
 				for (int i=0;i<nSave;i++) {
-					int ihw = 2 + streamSel.getIndex(i);
+					int ihw = 2 + saveSel.getIndex(i);
 					rbInt[doff+i] = BS.getValue(soff + ihw);
 				}
 				if (++rbIntWritePos == rbIntSize) rbIntWritePos = 0;
