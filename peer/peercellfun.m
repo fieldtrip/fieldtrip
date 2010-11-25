@@ -10,7 +10,7 @@ function varargout = peercellfun(fname, varargin)
 % as key-value pairs at the end of the list of input arguments. All other
 % input arguments (including other key-value pairs) will be passed to the
 % function to be evaluated.
-%   UniformOutput  = boolean (default = true)
+%   UniformOutput  = boolean (default = false)
 %   StopOnError    = boolean (default = true)
 %   memreq         = number
 %   timreq         = number
@@ -54,7 +54,7 @@ optbeg = find(cellfun(@ischar, varargin));
 optarg = varargin(optbeg:end);
 
 % get the optional input arguments
-UniformOutput = keyval('UniformOutput', optarg); if isempty(UniformOutput), UniformOutput = true; end
+UniformOutput = keyval('UniformOutput', optarg); if isempty(UniformOutput), UniformOutput = false; end
 StopOnError   = keyval('StopOnError', optarg); if isempty(StopOnError), StopOnError = true; end
 memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=1024^3;         end % assume 1 GB
 timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=3600;           end % assume 1 hour
