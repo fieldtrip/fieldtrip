@@ -12,8 +12,8 @@ CXX = g++
 PLATFORM = $(shell gcc -dumpmachine)
 
 ifeq "$(PLATFORM)" "mingw32"
-   LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
-   FLFLAGS = -IC:/msys/1.0/local/include 
+   LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm  -mwindows
+   FLFLAGS = -IC:/msys/1.0/local/include -mwindows
    LDFL = -mno-cygwin -lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32
    SUFFIX = .exe
 else
