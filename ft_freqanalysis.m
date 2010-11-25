@@ -79,7 +79,7 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                    should be centered (in seconds)
 %
 %  WLTCONVOL
-%   WAVELET performs time-frequency analysis on any time series trial data
+%   WLTCONVOL performs time-frequency analysis on any time series trial data
 %   using the 'wavelet method' based on Morlet wavelets.
 %   cfg.foi        = vector 1 x numfoi, frequencies of interest
 %   cfg.toi        = vector 1 x numtoi, the times on which the analysis windows
@@ -98,7 +98,7 @@ function [freq] = ft_freqanalysis(cfg, data)
 %
 %
 %  TFR
-%   CONVOL computes time-frequency representations of single-trial
+%   TFR computes time-frequency representations of single-trial
 %   data using a convolution in the time-domain with Morlet's wavelets.
 %   cfg.foi           = vector 1 x numfoi, frequencies of interest
 %   cfg.waveletwidth  = 'width' of wavelets expressed in cycles (default = 7)
