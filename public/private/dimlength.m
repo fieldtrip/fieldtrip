@@ -56,7 +56,7 @@ switch seldim
       n  = size(tmp, ix);
 
    elseif strcmp(data.(fld), 'rpt_pos')
-      %HACK to be fixed
+      %FIXME HACK to be fixed
       x = setdiff(fld(data),'inside');
       for k = 1:length(x)
         dims = size(getsubfield(data,x{k}));
@@ -67,7 +67,7 @@ switch seldim
       end
 
     elseif strcmp(data.(fld), 'rpt_pos_freq'),
-      %HACK to be fixed
+      %FIXME HACK to be fixed
       x = fld(data);
       for k = 1:length(x)
         dims = size(getsubfield(data,x{k}));
@@ -78,7 +78,7 @@ switch seldim
       end
       
     elseif strcmp(data.(fld), 'rpt_pos_time'),
-      %HACK to be fixed
+      %FIXME HACK to be fixed
       x = fld(data);
       for k = 1:length(x)
         dims = size(getsubfield(data,x{k}));
@@ -135,6 +135,18 @@ switch seldim
       %error('cannot determine number of repetitions for dim "%s"', seldim);
       n = nan;
     end
+
+  case 'subj'
+    n  = [];
+    if isfield(data, 'cov'),           n = [n size(data.cov,           1)]; end
+    if isfield(data, 'crsspctrm'),     n = [n size(data.crsspctrm,     1)]; end
+    if isfield(data, 'powcovspctrm'),  n = [n size(data.powcovspctrm,  1)]; end 
+    if isfield(data, 'powspctrm'),     n = [n size(data.powspctrm,     1)]; end
+    if isfield(data, 'trial'),         n = [n size(data.trial,         1)]; end
+    if isfield(data, 'fourierspctrm'), n = [n size(data.fourierspctrm, 1)]; end
+    
+    if ~all(n==n(1)), error('inconsistent number of repetitions for dim "%s"', seldim); end
+    n = n(1);
 
   case 'chan'
     if ~isfield(data, 'inside'), 
