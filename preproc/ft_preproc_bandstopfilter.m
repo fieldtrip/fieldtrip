@@ -88,3 +88,15 @@ switch dir
     filt = filtfilt(B, A, dat')';
 end
 
+% check for filter instabilities and try to solve them
+result_instable = any(isnan(filt(:))) || (max(range(filt,2))/max(range(dat,2))>2);
+if result_instable && N>1
+  warning('instable filter detected, applying two sequential filters');
+  step1 = floor(N/2);  
+  step2 = N - step1;
+  % apply the filter in two steps, note that this is recursive
+  filt = dat;
+  filt = ft_preproc_bandstopfilter(filt,Fs,Fbp,step1,type,dir);
+  filt = ft_preproc_bandstopfilter(filt,Fs,Fbp,step2,type,dir);
+end
+
