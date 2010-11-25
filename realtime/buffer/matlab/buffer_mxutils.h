@@ -10,6 +10,15 @@
 #include "matrix.h"
 #include "buffer.h"
 
+
+/* This is a fix to allow compilation on very old Matlab versions (e.g., 7.1), 
+   where mwSize is not available yet and int's are used instead.
+*/
+#ifndef mwSize
+#define mwSize int
+#endif
+
+
 /* Like the normal fieldtrip append, but using mxMalloc and mxRealloc. This gives automatic
    error reporting and automated cleanup after a call to mxErrMsgTxt elsewhere. 
    If you free the memory yourself pointed to by *buf yourself, use mxFree !

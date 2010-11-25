@@ -94,10 +94,13 @@ mxArray *matrix_from_ft_type_data(UINT32_T type, UINT32_T rows, UINT32_T cols, c
 	switch (type) {
 		case DATATYPE_CHAR:
 			{
-				/* TODO: is there a proper opposite of mxArrayToString that we could use here??? */
+				/* TODO: is there a proper opposite of mxArrayToString that we could use here??? 
+					DATATYPE_CHAR in the FieldTrip buffer is defined to be 8 bits, but 
+					mxChar elements are 16-bit unicode (I think).
+				*/
 				mxChar *dest;
-				const char *src = (const char *) data;
 				mwSize dim[2];
+				const char *src = (const char *) data;
 				UINT32_T n;
 				
 				dim[0] = rows;
