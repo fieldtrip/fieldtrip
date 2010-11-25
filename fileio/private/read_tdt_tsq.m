@@ -2,6 +2,9 @@ function tsq = read_tdt_tsq(filename, begblock, endblock)
 
 % READ_TDT_TSQ reads the headers from a Tucker_Davis_technologies TSQ file
 %
+% tsq file is a heap of event headers, which is ?40 byte each,
+% ordered strictly by time
+%
 % Use as
 %   tsq = read_tdt_tsq(filename, begblock, endblock)
 
@@ -57,19 +60,19 @@ buf_offset    = buf(25:32,:);
 buf_format    = buf(33:36,:);
 buf_frequency = buf(37:40,:);
 
-tsq_size       = typecast(buf_size     (:), 'int32');
-tsq_type       = typecast(buf_type     (:), 'int32');
-tsq_code       = typecast(buf_code     (:), 'int32'); % this can sometimes be interpreted as 4 chars
-tsq_channel    = typecast(buf_channel  (:), 'int16');
-tsq_sortcode   = typecast(buf_sortcode (:), 'int16');
+tsq_size       = typecast(buf_size     (:), 'uint32');
+tsq_type       = typecast(buf_type     (:), 'uint32');
+tsq_code       = char(buf_code');  % this can sometimes be interpreted as 4 chars
+tsq_channel    = typecast(buf_channel  (:), 'uint16');
+tsq_sortcode   = typecast(buf_sortcode (:), 'uint16');
 tsq_timestamp  = typecast(buf_timestamp(:), 'double');
-tsq_offset     = typecast(buf_offset   (:), 'int64');  % or double
-tsq_format     = typecast(buf_format   (:), 'int32');
+tsq_offset     = typecast(buf_offset   (:), 'uint64');  % or double
+tsq_format     = typecast(buf_format   (:), 'uint32');
 tsq_frequency  = typecast(buf_frequency(:), 'single');
 
 tsq = struct(  'size'      , num2cell(tsq_size      ), ... 
                'type'      , num2cell(tsq_type      ), ... 
-               'code'      , num2cell(tsq_code      ), ... 
+               'code'      , cellstr(tsq_code      ), ... 
                'channel'   , num2cell(tsq_channel   ), ... 
                'sortcode'  , num2cell(tsq_sortcode  ), ... 
                'timestamp' , num2cell(tsq_timestamp ), ... 
