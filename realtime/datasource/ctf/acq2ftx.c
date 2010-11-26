@@ -662,6 +662,28 @@ void *dataToFieldTripThread(void *arg) {
 }
 
 
+short getInt16(char *src) {
+	union {
+		short s;
+		char b[2];
+	} u;
+	u.b[0] = src[1];
+	u.b[1] = src[0];
+	return u.s;
+}
+
+int getInt32(char *src) {
+	union {
+		int  i;
+		char b[4];
+	} u;
+	u.b[0] = src[3];
+	u.b[1] = src[2];
+	u.b[2] = src[1];
+	u.b[3] = src[0];
+	return u.i;
+}
+
 /** Parses .res4 file corresponding to dsname and returns a headerdef and
 	chunks suitable for sending off to FieldTrip. Also returns size of that
 	message payload in 'size'. Returns NULL on error.
@@ -754,8 +776,9 @@ ft_chunk_t *handleRes4(const char *dsname, int *numChannels, float *fSample) {
 	} 
 	fclose(f);			
 	
+	
 	/* .res4 file is big-endian, but we assume this machine to be little-endian */
-	nchans = 256*chunk->data[1292] + chunk->data[1293];
+	nchans = getInt16(chunk->data + 1292);
 	printf("Number of channels: %i\n", nchans);
 	
 	if (numChannels != NULL) *numChannels = nchans;
@@ -780,19 +803,19 @@ ft_chunk_t *handleRes4(const char *dsname, int *numChannels, float *fSample) {
 	*/
 	
 	/* set rlen to "run description length", see read_ctf_res4, line 92f */
-	rlen = (chunk->data[1836] << 24) + (chunk->data[1837] << 16) + (chunk->data[1838] << 8) + chunk->data[1839];
+	rlen = getInt32(chunk->data + 1836);
 	
 	/* offset points at first byte after run_desc */
 	offset = rlen + 1844;
 	
 	/* "number of filters" */
-	numFilters = (chunk->data[offset] << 8) + chunk->data[offset+1];
+	numFilters = getInt16(chunk->data + offset);
 	offset += 2;
 	
 	/* printf("numFilters = %i\n", numFilters); */
 	
 	for (i=0;i<numFilters;i++) {
-		len = (chunk->data[offset+16] << 8) + chunk->data[offset+17];
+		len = getInt16(chunk->data +offset + 16);
 		offset += 18 + 8*len;
 		/* printf("Filter %i: offset = %i,  len = %i\n", i, offset, len); */
 	}

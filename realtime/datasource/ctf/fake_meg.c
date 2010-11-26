@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 	packet[0].sampleNumber = 0;
 	packet[0].numSamples   = 0;
 	packet[0].numChannels  = numChannels;
-	strcpy((char *)(packet[0].data), "/home/mrphys/stekla/meg/buffertest_1200hz_20100503_01.ds");
+	strcpy((char *)(packet[0].data), "test.ds");
 	packet[0].message_type = ACQ_MSGQ_SETUP_COLLECTION;
 
 	currentPacket = 1;
