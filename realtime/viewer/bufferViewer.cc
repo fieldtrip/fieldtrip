@@ -47,7 +47,7 @@ Fl_Button *conButton;
 Fl_Input *addrField;
 Fl_Box *scaleBox;
 bool useHighpass;
-MultiChannelFilter<float> *hpFilter = NULL;
+MultiChannelFilter<float,float> *hpFilter = NULL;
 FtConnection ftCon;
 
 /** This is the widget on which the channels are drawn. 
@@ -419,7 +419,7 @@ bool readHeader() {
 		delete hpFilter;
 		hpFilter = NULL;
 	}
-	hpFilter = new MultiChannelFilter<float>(numChannels, 2);
+	hpFilter = new MultiChannelFilter<float,float>(numChannels, 2);
 	hpFilter->setButterHP(5.0/header_def.fsample);
 	generalCallback(NULL, 0);
 	
