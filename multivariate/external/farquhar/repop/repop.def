@@ -1,0 +1,876 @@
+/* -*- mode:c -*- */
+/*
+
+  Function templates for the replicating operator code.  Depending on the
+  status of the hash-defined variables this will generate code for the
+  different operator and for the different combinations of real and complex
+  inputs.
+
+  $Id: repop.def,v 1.16 2007-09-21 10:24:55 jdrf Exp $
+
+ Copyright 2006-     by Jason D.R. Farquhar (jdrf@zepler.org)
+ Permission is granted for anyone to copy, use, or modify this
+ software and accompanying documents for any uncommercial
+ purposes, provided this copyright notice is retained, and note is
+ made of any changes that have been made. This software and
+ documents are distributed without any warranty, express or
+ implied
+
+ */
+
+/* check everything we need is defined */
+#ifndef OPNM
+#error We need the op name to be defined 
+#endif
+#ifndef OPID
+#error We need the op id corrospending to the name to be defined too
+#endif
+
+/*---------------------------------------------------------------------------*/
+/* Compute the type of the arguments */
+#undef COMPLEXSTR /* just so the compilier doesn't complain */
+#if defined(XISCOMPLEX) && defined(YISCOMPLEX)
+#define COMPLEXSTR cxcy
+#elif defined(XISCOMPLEX)
+#define COMPLEXSTR cxry
+#elif defined(YISCOMPLEX)
+#define COMPLEXSTR rxcy
+#else
+#define COMPLEXSTR rxry
+#endif
+
+/*---------------------------------------------------------------------------*/
+/* Add the matrix type to the function name generation */
+#undef FNNMEXT
+#define FNNMEXT CAT(TYPESTR,COMPLEXSTR)
+
+/*---------------------------------------------------------------------------*/
+/* some utility conditional macros to add/remove code */
+#undef XCOMPCODE
+#undef XCOMPASSIGN
+#ifdef XISCOMPLEX
+#define XCOMPCODE(A) A
+#define XCOMPASSIGN(R,I,V) R V; I V
+#else
+#define XCOMPCODE(A)
+#define XCOMPASSIGN(R,I,V) R V
+#endif
+
+#undef YCOMPCODE
+#undef YCOMPASSIGN
+#ifdef YISCOMPLEX
+#define YCOMPCODE(A) A
+#define YCOMPASSIGN(R,I,V) R V; I V
+#else
+#define YCOMPCODE(A)
+#define YCOMPASSIGN(R,I,V) R V
+#endif
+
+#undef ZCOMPCODE
+#undef ZCOMPASSIGN
+#if (defined(XISCOMPLEX) || defined(YISCOMPLEX) || OPID==POWER) && !defined(RELOP)
+#define ZCOMPCODE(A) A
+#define ZCOMPASSIGN(R,I,V) R V; I V
+#else
+#define ZCOMPCODE(A)
+#define ZCOMPASSIGN(R,I,V) R V
+#endif
+
+#define OPNM_ CAT(OPNM,_)
+#define repOPNM_ CAT(rep,OPNM_)
+/*--------------------------------------------------------------------------*/
+/* The operators themselves for the different input cases */
+/*--------------------------------------------------------------------------*/
+
+#if OPID==PLUS
+#if !defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(plus_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+										 ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp=*xrp+*yrp;
+}
+#endif
+#if defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(plus_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+							 ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = *xrp + *yrp;
+  *zip = *xip + *yip;
+}
+#endif
+#if defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(plus_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+							 ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = *xrp + *yrp;
+  *zip = *xip;
+}
+#endif
+#if !defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(plus_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+							 ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = *xrp + *yrp;
+  *zip = *yip;
+}
+#endif
+
+#if defined(__VEC__) && defined(VECREPOP)
+#if !defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(vplus_,FNNMEXT)(vZTYPE *zrp, const vXTYPE *xrp, const vYTYPE *yrp, 
+										 vZTYPE *zip, const vXTYPE *xip, const vYTYPE *yip){
+  *zrp=*xrp+*yrp;
+}
+#endif
+#if defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(plus_,FNNMEXT)(vZTYPE *zrp, const vXTYPE *xrp, const vYTYPE *yrp, 
+							 vZTYPE *zip, const vXTYPE *xip, const vYTYPE *yip){
+  *zrp = *xrp + *yrp;
+  *zip = *xip + *yip;
+}
+#endif
+#if defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(vplus_,FNNMEXT)(vZTYPE *zrp, const vXTYPE *xrp, const vYTYPE *yrp, 
+							 vZTYPE *zip, const vXTYPE *xip, const vYTYPE *yip){
+  *zrp = *xrp + *yrp;
+  *zip = *xip;
+}
+#endif
+#if !defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(vplus_,FNNMEXT)(vZTYPE *zrp, const vXTYPE *xrp, const vYTYPE *yrp, 
+							 vZTYPE *zip, const vXTYPE *xip, const vYTYPE *yip){
+  *zrp = *xrp + *yrp;
+  *zip = *yip;
+}
+#endif
+#endif
+
+#endif
+ 
+#if OPID==MINUS
+#if !defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(minus_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+							  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = *xrp - *yrp;
+}
+#endif
+#if defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(minus_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+							  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = *xrp - *yrp;
+  *zip = *xip - *yip;
+}
+#endif
+#if defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(minus_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+							  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = *xrp - *yrp;
+  *zip = *xip;
+}
+#endif
+#if !defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(minus_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+							  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = *xrp - *yrp;
+  *zip = -*yip;
+}
+#endif
+#endif
+
+#if OPID==TIMES
+#if !defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(times_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+							  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = *xrp * *yrp;
+}
+#endif
+#if defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(times_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+							  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  ZTYPE tmp=*xrp; /* N.B. bodge so in-place operations work! */
+  *zrp =  tmp * *yrp - *xip * *yip;
+  *zip =  *xip * *yrp + *yip * tmp;
+}
+#endif
+#if defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(times_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+							  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = *xrp * *yrp;
+  *zip = *xip * *yrp;
+}
+#endif
+#if !defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(times_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+							  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = *xrp * *yrp;
+  *zip = *yip * *xrp;
+}
+#endif
+#endif
+
+#if OPID==RDIVIDE
+#if !defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(rdivide_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+								 ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = *xrp / *yrp;
+}
+#endif
+#if defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(rdivide_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+								 ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  ZTYPE denom = *yrp * *yrp + *yip * *yip;
+  ZTYPE tmp=*xrp; /* for inplace */
+  *zrp = (tmp * *yrp + *xip * *yip)/denom;
+  *zip = (*xip * *yrp - tmp * *yip)/denom;
+}
+#endif
+#if defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(rdivide_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+								 ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = *xrp / *yrp;
+  *zip = *xip / *yrp;
+}
+#endif
+#if !defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(rdivide_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+								 ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  ZTYPE denom = *yrp * *yrp + *yip * *yip;
+  ZTYPE tmp = *xrp; /* for inplace */
+  *zrp = (tmp * *yrp)/denom;
+  *zip = (-tmp * *yip)/denom;
+}
+#endif
+#endif
+
+
+
+#if OPID==LDIVIDE
+#if !defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(ldivide_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+								 ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = *yrp / *xrp;
+}
+#endif
+#if defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(ldivide_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+								 ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  ZTYPE tmp = *xrp; /* for inplace */
+  ZTYPE denom = tmp * tmp + *xip * *xip;
+  *zrp = (tmp * *yrp + *xip * *yip)/denom;
+  *zip = (tmp * *yip - *xip * *yrp)/denom;
+}
+#endif
+#if defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(ldivide_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+								 ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  ZTYPE denom = *xrp * *xrp + *xip * *xip;
+  *zrp = (*xrp * *yrp)/denom;
+  *zip = (-*xip * *yrp)/denom;
+
+}
+#endif
+#if !defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(ldivide_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+								 ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = *yrp / *xrp;
+  *zip = *yip / *xrp;
+}
+#endif
+#endif
+
+#if OPID==POWER
+#include <math.h>
+#ifndef M_PI  /* not defined in conforming C */
+#define M_PI 3.14159265358979323846
+#endif
+
+#if !defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(power_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+							  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  ZTYPE mag, theta;
+  if (*xrp < 0.0 && *yrp != floor(*yrp)){
+	 mag = pow(-*xrp,*yrp);
+	 theta = M_PI * *yrp;
+	 *zrp = mag*cos(theta);
+	 *zip = mag*sin(theta);
+  } else {
+	 *zrp = pow(*xrp,*yrp);
+	 *zip = 0.0;
+  }
+}
+#endif
+#if defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(power_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+							  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  ZTYPE mag, magx, theta, phi;
+  if (*xip == 0.0 && *yip == 0.0) {
+	 if (*xrp < 0.0 && *yrp != floor(*yrp)) {
+		mag = pow(-*xrp,*yrp);
+		theta = M_PI * *yrp;
+		*zrp = mag*cos(theta);
+		*zip = mag*sin(theta);
+	 } else {
+		*zrp = pow(*xrp,*yrp);
+		*zip = 0.0;
+	 }
+  } else if (*xip == 0.0) {
+	 if (*xrp < 0.0) {
+		mag = pow(-*xrp,*yrp)*exp(-M_PI * *yip);
+		theta = *yip * log(-*xrp) + M_PI * *yrp;
+		*zrp = mag*cos(theta);
+		*zip = mag*sin(theta);
+	 } else {
+		mag = pow(*xrp,*yrp);
+		theta = *yip * log(*xrp);
+		*zrp = mag*cos(theta);
+		*zip = mag*sin(theta);
+	 }
+  } else if (*yip == 0.0) {
+	 mag = pow(*xrp * *xrp + *xip * *xip,0.5 * *yrp);
+	 theta = *yrp * atan2(*xip,*xrp);
+	 *zrp = mag*cos(theta);
+	 *zip = mag*sin(theta);
+  }  else {
+	 magx = sqrt(*xrp * *xrp + *xip * *xip);
+	 phi = atan2(*xip,*xrp);
+	 mag = pow(magx,*yrp)*exp(-*yip * phi);
+	 theta = *yip * log(magx) + *yrp * phi;
+	 *zrp = mag*cos(theta);
+	 *zip = mag*sin(theta);
+  }
+}
+#endif
+#if defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(power_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+							  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  ZTYPE mag, theta;
+  if (*xip == 0.0) {
+	 if (*xrp < 0.0 && *yrp != floor(*yrp)) {
+		mag = pow(-*xrp,*yrp);
+		theta = M_PI * *yrp;
+		*zrp = mag*cos(theta);
+		*zip = mag*sin(theta);
+	 } else {
+		*zrp = pow(*xrp,*yrp);
+		*zip = 0.0;
+	 }
+  } else {
+	 mag = pow(*xrp * *xrp + *xip * *xip,0.5 * *yrp);
+	 theta = *yrp*atan2(*xip,*xrp);
+	 *zrp = mag*cos(theta);
+	 *zip = mag*sin(theta);
+  }
+}
+#endif
+#if !defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(power_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+							  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  ZTYPE mag, theta;
+  if (*yip == 0.0) {
+	 if (*xrp < 0.0 && *yrp != floor(*yrp)) {
+		mag = pow(-*xrp,*yrp);
+		theta = M_PI * *yrp;
+		*zrp = mag*cos(theta);
+		*zip = mag*sin(theta);
+	 } else {
+		*zrp = pow(*xrp,*yrp);
+		*zip = 0.0;
+	 }
+  } else {
+	 if (*xrp < 0.0) {
+		mag = pow(-*xrp,*yrp)*exp(-M_PI * *yip);
+		theta = *yip * log(-*xrp) + M_PI * *yrp;
+		*zrp = mag*cos(theta);
+		*zip = mag*sin(theta);
+	 }else  {
+		mag = pow(*xrp,*yrp);
+		theta = *yip * log(*xrp);
+		*zrp = mag*cos(theta);
+		*zip = mag*sin(theta);
+	 }
+  }
+}
+#endif
+#endif
+
+#if OPID==MOD
+#if !defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(mod_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+										ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  ZTYPE tmp;
+  #if ( OZDTYPE == DOUBLE_DTYPE )  
+    *zrp = modf(*xrp / *yrp, &tmp ) * *yrp;
+  #else
+    *zrp = modff(*xrp / *yrp, &tmp ) * *yrp;
+  #endif
+}
+#endif
+#if defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(mod_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+										ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  ZTYPE tmp;
+  #if ( OZDTYPE == DOUBLE_DTYPE )  
+    *zrp = modf(*xrp / *yrp, &tmp ) * *yrp;
+  #else
+    *zrp = modff(*xrp / *yrp, &tmp ) * *yrp;
+  #endif
+  *zip = 0;
+}
+#endif
+#if defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(mod_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+										ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  ZTYPE tmp;
+  #if ( OZDTYPE == DOUBLE_DTYPE )  
+    *zrp = modf(*xrp / *yrp, &tmp ) * *yrp;
+  #else
+    *zrp = modff(*xrp / *yrp, &tmp ) * *yrp;
+  #endif
+  *zip = 0;
+}
+#endif
+#if !defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(mod_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+										ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  ZTYPE tmp;
+  #if ( OZDTYPE == DOUBLE_DTYPE )  
+    *zrp = modf(*xrp / *yrp, &tmp ) * *yrp;
+  #else
+    *zrp = modff(*xrp / *yrp, &tmp ) * *yrp;
+  #endif
+  *zip = 0;
+}
+#endif
+#endif
+
+#if OPID==EQ
+#if !defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(eq_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+						  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = (*xrp == *yrp);
+}
+#endif
+#if defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(eq_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+						  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = (*xrp == *yrp) && (*xip == *yip);
+}
+#endif
+#if defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(eq_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+						  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = (*xrp == *yrp) && (*xip == 0.0);
+}
+#endif
+#if !defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(eq_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+						  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = (*xrp == *yrp) && (*yip == 0.0);
+}
+#endif
+#endif
+
+#if OPID==NE
+#if !defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(ne_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+						  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = (*xrp != *yrp);
+}
+#endif
+#if defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(ne_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+						  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = (*xrp != *yrp) || (*xip != *yip);
+}
+#endif
+#if defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(ne_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+						  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = (*xrp != *yrp) || (*xip != 0.0);
+}
+#endif
+#if !defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(ne_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+						  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = (*xrp != *yrp) || (*yip != 0.0);
+}
+#endif
+#endif
+
+#if  OPID==LT
+#if !defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(lt_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+						  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = (*xrp < *yrp);
+}
+#endif
+#if defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(lt_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+						  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  XTYPE argx = *xrp * *xrp + *xip * *xip;
+  XTYPE argy = *yrp * *yrp + *yip * *yip;
+  *zrp = (argx < argy);
+}
+#endif
+#if defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(lt_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+						  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  XTYPE argx = *xrp * *xrp + *xip * *xip;
+  XTYPE argy = *yrp * *yrp;
+  *zrp = (argx < argy);
+}
+#endif
+#if !defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(lt_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+						  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  XTYPE argx = *xrp * *xrp ;
+  XTYPE argy = *yrp * *yrp + *yip * *yip;
+  *zrp = (argx < argy);
+}
+#endif
+#endif
+
+#if OPID==GT
+#if !defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(gt_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+						  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = (*xrp > *yrp);
+}
+#endif
+#if defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(gt_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+						  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  XTYPE argx = *xrp * *xrp + *xip * *xip;
+  XTYPE argy = *yrp * *yrp + *yip * *yip;
+  *zrp = (argx > argy);
+}
+#endif
+#if defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(gt_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+						  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  XTYPE argx = *xrp * *xrp + *xip * *xip;
+  XTYPE argy = *yrp * *yrp;
+  *zrp = (argx > argy);
+}
+#endif
+#if !defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(gt_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+									  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  XTYPE argx = *xrp * *xrp ;
+  XTYPE argy = *yrp * *yrp + *yip * *yip;
+  *zrp = (argx > argy);
+}
+#endif
+#endif
+
+#if OPID==LE
+#if !defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(le_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+									  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = (*xrp <= *yrp);
+}
+#endif
+#if defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(le_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+									  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  XTYPE argx = *xrp * *xrp + *xip * *xip;
+  XTYPE argy = *yrp * *yrp + *yip * *yip;
+  *zrp = (argx <= argy);
+}
+#endif
+#if defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(le_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+									  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  XTYPE argx = *xrp * *xrp + *xip * *xip;
+  XTYPE argy = *yrp * *yrp;
+  *zrp = (argx <= argy);
+}
+#endif
+#if !defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(le_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+									  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  XTYPE argx = *xrp * *xrp ;
+  XTYPE argy = *yrp * *yrp + *yip * *yip;
+  *zrp = (argx <= argy);
+}
+#endif
+#endif
+
+#if OPID==GE
+#if !defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(ge_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+									  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp = (*xrp >= *yrp);
+}
+#endif
+#if defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(ge_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+									  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  XTYPE argx = *xrp * *xrp + *xip * *xip;
+  XTYPE argy = *yrp * *yrp + *yip * *yip;
+  *zrp = (argx >= argy);
+}
+#endif
+#if defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(ge_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+									  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  XTYPE argx = *xrp * *xrp + *xip * *xip;
+  XTYPE argy = *yrp * *yrp;
+  *zrp = (argx >= argy);
+}
+#endif
+#if !defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(ge_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+									  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  XTYPE argx = *xrp * *xrp ;
+  XTYPE argy = *yrp * *yrp + *yip * *yip;
+  *zrp = (argx >= argy);
+}
+#endif
+#endif
+
+#if OPID==MINOP
+#if !defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(min_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+										ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  if ( *xrp > *yrp ) *zrp = *yrp ; else *zrp = *xrp;
+}
+#endif
+#if defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(min_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+										ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  XTYPE argx = *xrp * *xrp + *xip * *xip;
+  XTYPE argy = *yrp * *yrp + *yip * *yip;
+  if (argx > argy) { *zrp=*yrp; *zip=*yip; } else { *zrp=*xrp; *zip=*xip; }
+}
+#endif
+#if defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(min_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+										ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  XTYPE argx = *xrp * *xrp + *xip * *xip;
+  XTYPE argy = *yrp * *yrp;
+  if (argx > argy) { *zrp=*yrp; *zip=0; } else { *zrp=*xrp; *zip=*xip; }
+}
+#endif
+#if !defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(min_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+										ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  XTYPE argx = *xrp * *xrp ;
+  XTYPE argy = *yrp * *yrp + *yip * *yip;
+  if (argx > argy) { *zrp=*yrp; *zip=*yip; } else { *zrp=*xrp; *zip=0; }
+}
+#endif
+#endif
+
+#if OPID==MAXOP
+#if !defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(max_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+										ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  if ( *xrp < *yrp ) *zrp = *yrp ; else *zrp = *xrp;
+}
+#endif
+#if defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(max_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+										ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  XTYPE argx = *xrp * *xrp + *xip * *xip;
+  XTYPE argy = *yrp * *yrp + *yip * *yip;
+  if (argx < argy) { *zrp=*yrp; *zip=*yip; } else { *zrp=*xrp; *zip=*xip; }
+}
+#endif
+#if defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(max_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+										ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  XTYPE argx = *xrp * *xrp + *xip * *xip;
+  XTYPE argy = *yrp * *yrp;
+  if (argx < argy) { *zrp=*yrp; *zip=0; } else { *zrp=*xrp; *zip=*xip; }
+}
+#endif
+#if !defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(max_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+										ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  XTYPE argx = *xrp * *xrp ;
+  XTYPE argy = *yrp * *yrp + *yip * *yip;
+  if (argx < argy) { *zrp=*yrp; *zip=*yip; } else { *zrp=*xrp; *zip=0; }
+}
+#endif
+#endif
+
+#if defined(__VEC__) && defined(VECREPOP)
+
+/* 2x2 version of the above */
+INLINE void CAT(b41ry_,FNNMEXT)/*_rxry*/
+             (ZTYPE *zrp0, ZTYPE *zrp1, ZTYPE *zrp2, ZTYPE *zrp3,     
+				  const XTYPE *xrp0, const XTYPE *xrp1, 
+				  const XTYPE *xrp2, const XTYPE *xrp3,
+				  const YTYPE *yrp0,
+				  ZTYPE *zip0, ZTYPE *zip1, ZTYPE *zip2, ZTYPE *zip3,     
+				  const XTYPE *xip0, const XTYPE *xip1, 
+				  const XTYPE *xip2, const XTYPE *xip3,
+				  const YTYPE *yip0){
+  vZTYPE zrpv=vLoad(*zrp0,*zrp1,*zrp2,*zrp3); /* get data into vecs */
+  vXTYPE xrpv=vLoad(*xrp0,*xrp1,*xrp2,*xrp3);
+  vYTYPE yrpv=vLoad(*yrp0,*yrp0,*yrp0,*yrp0);
+  ZCOMPCODE( zipv=vLoad(*zip0,*zip1,*zip2,*zip3) );  
+  XCOMPCODE( xipv=vLoad(*xip0,*xip1,*xip2,*xip3) );  
+  YCOMPCODE( yipv=vLoad(*yip0,*yxp0,*yip0,*yip0) );  
+  CAT(b41v_FNNMEXT)(zrpv,xrpv,yrpv,zipv,xipv,yipv); /* do the call */
+}
+
+INLINE void CAT(b41x1ry_,FNNMEXT) /* unit step X, rep Y */
+	  (ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+		ZTYPE *zip, const XTYPE *xip, const YTYPE *yip,
+		const int xstride, const int ystride){
+  vXTYPE xrpv, xipv;
+  vYTYPE yrpv, yipv; 
+  vZTYPE zrpv, zipv; 
+  /* get data into vecs */
+  xrpv=vLoad(xrp); 
+  yrpv.s[0]=*yrp; yrpv=vSplat(yrpv,0);
+  XCOMPCODE( xipv=vLoad(xip) );  
+  YCOMPCODE( yipv.s[0]=*yip; yipv=vSplat(yipv,0) );  
+  CAT(b41v_FNNMEXT)(zrpv,xrpv,yrpv,zipv,xipv,yipv);  /* do the call */
+  vStore(zrpv,zrp); ZCOMCODE(vStore(zipv,zip));      /* save the result */
+}
+
+INLINE void CAT(b41xsry_,FNNMEXT) /* unit step X, rep Y */
+	  (ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+		ZTYPE *zip, const XTYPE *xip, const YTYPE *yip,
+		const int xstride, const int ystride){
+  vXTYPE xrpv, xipv;
+  vYTYPE yrpv, yipv; 
+  vZTYPE zrpv, zipv; 
+  /* get data into vecs */
+  xrpv.s[0]=*(xrp);xrpv.s[1]=*(xrp+=xstride);xrpv.s[2]=*(xrp+=xstride);xrpv.s[3]=*(xrp+=xstride);
+  yrpv.s[0]=*yrp; yrpv=vSplat(yrpv,0);
+  XCOMPCODE( xipv.s[0]=*(xip);xipv.s[1]=*(xip+=xstride);xipv.s[2]=*(xip+=xstride);xipv.s[3]=*(xip+=xstride); );
+  YCOMPCODE( yipv.s[0]=*yip; yipv=vSplat(yipv,0) );  
+  CAT(b41v_FNNMEXT)(zrpv,xrpv,yrpv,zipv,xipv,yipv);  /* do the call */
+  vStore(zrpv,zrp); ZCOMPCODE(vStore(zipv,zip));      /* save the result */
+}
+
+#endif   /* vectorised code */
+
+/*--------------------------------------------------------------------------*/
+/* The main loop which runs over the inputs doing the implicit repmats as 
+ * necessary
+ *--------------------------------------------------------------------------*/
+RepopErrorCode CAT(repOPNM_,FNNMEXT)(MxInfo zinfo,const MxInfo xinfo, const MxInfo yinfo,
+									int *repxy){
+  int i;
+
+  /* outer loop veriables */
+  int *zsubs   = (int *)CALLOC(zinfo.nd*2,sizeof(int));
+  int *repsubs = zsubs+zinfo.nd; /* position in the replicated dims only */
+  const XTYPE *xrp   = (XTYPE*)xinfo.rp;
+  const XTYPE *xip   = (XTYPE*)xinfo.ip;
+
+  const YTYPE *yrp   = (YTYPE*)yinfo.rp;
+  const YTYPE *yip   = (YTYPE*)yinfo.ip;
+
+  ZTYPE *zrp   = (ZTYPE*)zinfo.rp;
+  ZTYPE *zip   = (ZTYPE*)zinfo.ip;
+  ZTYPE *zrend = zrp + zinfo.numel;
+
+  /* unrolled inner loop variables */
+  const XTYPE *xipi = xip;
+  const YTYPE *yipi = yip;
+  const int xstride0=xinfo.stride[0];
+  const int ystride0=yinfo.stride[0];
+  const int znd = zinfo.nd; /* cache loop constant */
+  const XTYPE *xrpi;
+  const YTYPE *yrpi;
+  ZTYPE* zrendi;
+  RepopErrorCode retVal=OK ;
+
+  /* Check that the inputs have a type which matches what we're compilied to
+	  use */
+  if ( zinfo.dtype != ZDTYPE ) {
+	 retVal = ZTYPEMISMATCH;
+  } else if ( xinfo.dtype != XDTYPE ) {
+	 retVal = XTYPEMISMATCH;
+  } else if ( yinfo.dtype != YDTYPE ) {
+	 retVal = YTYPEMISMATCH; 
+  } 
+  if ( retVal != OK ) {
+	 FREE(zsubs); return retVal ;
+  }
+
+  /* loop over the output array computing the required result value */
+  while (zrp < zrend) {
+
+	 /* unroll the inner loop */
+	 xrpi = xrp; XCOMPCODE( xipi = xip );
+	 yrpi = yrp; YCOMPCODE( yipi = yip );
+	 
+	 zrendi=zrp + zinfo.sz[0]; /* z stride is always 1*/
+	 /* deal with the different cases */
+	 if ( repxy[0]==0 ) { /* no reps just run like stink */
+		/*while ( zrp < zrendi ) { */
+		for ( ; zrp < zrendi ; zrp++ ){
+		  CAT(OPNM_,FNNMEXT)(zrp,xrpi,yrpi,zip,xipi,yipi);
+
+		  XCOMPASSIGN( xrpi, xipi,    += xstride0 );
+		  YCOMPASSIGN( yrpi, yipi,    += ystride0 );
+		  /*		  ZCOMPASSIGN( zrp,  zip,     += 1);*/
+		  ZCOMPCODE(zip++);
+		} 
+
+	 } else if (repxy[0]>0 ){ /* x rep */
+		/* run this as 2 nested loops, inner within rep, outer over reps */
+		while ( zrp < zrendi ) {
+		  ZTYPE* const zrendj=min(zrp+xinfo.sz[0],zrendi);
+		  while ( zrp < zrendj ) {
+			 CAT(OPNM_,FNNMEXT)(zrp,xrpi,yrpi,zip,xipi,yipi);
+
+			 XCOMPASSIGN(xrpi, xipi,   += xstride0 );
+			 YCOMPASSIGN(yrpi, yipi,   += ystride0 );
+			 ZCOMPASSIGN(zrp,  zip,    += 1 );
+		  }
+		  XCOMPASSIGN(xrpi, xipi,    -= xstride0*xinfo.sz[0] );/* replicate x */
+		}
+
+	 } else { /* y rep */
+		/* run this as 2 nested loops, inner within rep, outer over reps */
+		while ( zrp < zrendi ) {
+		  ZTYPE* const zrendj=min(zrp+yinfo.sz[0],zrendi);
+		  while ( zrp < zrendj ) {
+			 CAT(OPNM_,FNNMEXT)(zrp,xrpi,yrpi,zip,xipi,yipi);
+
+			 XCOMPASSIGN(xrpi, xipi,    += xstride0 ); 
+			 YCOMPASSIGN(yrpi, yipi,    += ystride0 );			 
+			 ZCOMPASSIGN(zrp,  zip,     +=1 );
+		  }
+		  YCOMPASSIGN(yrpi, yipi,    -= ystride0*yinfo.sz[0] );/* replicate y */
+		}
+	 }
+
+	 /* step over the rest of the dimensions */
+	 /* step forward and compute the new indices of the x and y's */
+	 for( i=1; i < znd; i++ ){  /* N.B. from dim 1 */
+		XCOMPASSIGN(xrp, xip,    += xinfo.stride[i] );
+		YCOMPASSIGN(yrp, yip,    += yinfo.stride[i] );
+		zsubs[i]++;  
+		/* stop when have moved z on at least 1 co-ord */
+		if( zsubs[i]<zinfo.sz[i] ){
+		  /* loop the x or y coords when necessary */
+		  if ( repxy[i]==0 ) ; /* no reps to do */
+		  else {
+			 repsubs[i]++; 
+			 if ( repxy[i]>0 ){ /* rep on X */
+				if ( repsubs[i]==xinfo.sz[i] ) { 
+				  repsubs[i]=0; 
+				  XCOMPASSIGN(xrp, xip, -=xinfo.stride[i]*xinfo.sz[i] );
+				}
+			 } else if ( repsubs[i]==yinfo.sz[i] ) { /* rep on Y */
+				repsubs[i]=0;   
+				YCOMPASSIGN(yrp, yip, -=yinfo.sz[i]*yinfo.stride[i] );
+			 }
+		  }
+		  break;  
+		} else {
+		  zsubs[i]=0; repsubs[i]=0;
+		  XCOMPASSIGN(xrp, xip, -=xinfo.sz[i]*xinfo.stride[i] );
+		  YCOMPASSIGN(yrp, yip, -=yinfo.sz[i]*yinfo.stride[i] );
+		}
+	 }
+  }
+
+  FREE(zsubs);
+  return retVal;
+}
