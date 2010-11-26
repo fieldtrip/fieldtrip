@@ -4,6 +4,12 @@ function vol = ft_headmodel_bem_dipoli(geom, varargin)
 %
 % Use as
 %   vol = ft_headmodel_bem_dipoli(geom, ...)
+%
+% Optional input arguments should be specified in key-value pairs and can
+% include
+%   isolatedsource   = string, 'yes' or 'no'
+%   hdmfile          = string, filename with BEM headmodel
+%   conductivity     = vector, conductivity of each compartment
 
 ft_hastoolbox('dipoli', 1);
 
@@ -12,11 +18,18 @@ isolatedsource  = keyval('isolatedsource', varargin);
 hdmfile         = keyval('hdmfile', varargin);
 conductivity    = keyval('conductivity', varargin);
 
+% start with an empty volume conductor
+vol = [];
+
 if ~isempty(hdmfile)
-  vol = ft_read_vol(hdmfile);l
+  hdm = ft_read_vol(hdmfile);
+  % copy the boundary of the head model file into the volume conduction model
+  vol.bnd = hdm.bnd;
+  if isfield(hdm, 'cond')
+    % also copy the conductivities
+    vol.cond = hdm.cond;
+  end
 else
-  % start with an empty volume conductor
-  vol = [];
   % copy the boundaries from the geometry into the volume conduction model
   vol.bnd = geom.bnd;
 end
@@ -44,24 +57,30 @@ end
 % determine the nesting of the compartments
 nesting = zeros(numboundaries);
 for i=1:numboundaries
-  for j=(i+1):numboundaries
-    % determine for a single vertex on each surface if it is inside or outside the other surfaces
-    curpos = vol.bnd(i).pnt(1,:); % any point on the boundary is ok
-    curpnt = vol.bnd(j).pnt;
-    curtri = vol.bnd(j).tri;
-    nesting(i,j) = bounding_mesh(curpos, curpnt, curtri);
+  for j=1:numboundaries
+    if i~=j
+      % determine for a single vertex on each surface if it is inside or outside the other surfaces
+      curpos = vol.bnd(i).pnt(1,:); % any point on the boundary is ok
+      curpnt = vol.bnd(j).pnt;
+      curtri = vol.bnd(j).tri;
+      nesting(i,j) = bounding_mesh(curpos, curpnt, curtri);
+    end
   end
+end
+
+if sum(nesting(:))~=(numboundaries*(numboundaries-1)/2)
+  error('the compartment nesting cannot be determined');
 end
 
 % for a three compartment model, the nesting matrix should look like
 %    0 0 0     the first is the most outside, i.e. the skin
 %    0 0 1     the second is nested inside the 3rd, i.e. the outer skull
 %    0 1 1     the third is nested inside the 2nd and 3rd, i.e. the inner skull
-[dum, order] = sort(sum(nesting,2));
+[~, order] = sort(sum(nesting,2));
 
-fprintf('reordering the boundaries to [ ');
+fprintf('reordering the boundaries to: ');
 fprintf('%d ', order);
-fprintf(']\n');
+fprintf('\n');
 
 % update the order of the compartments
 vol.bnd    = vol.bnd(order);
@@ -79,6 +98,17 @@ end
 str = which('dipoli');
 [p, f, x] = fileparts(str);
 dipoli = fullfile(p, f);  % without the .m extension
+switch mexext
+  case {'mexmaci' 'mexmaci64'}
+    % apple computer
+    dipoli = [dipoli '.maci'];
+  case {'mexglnx86' 'mexa64'}
+    % linux computer
+    dipoli = [dipoli '.glnx86'];
+  otherwise
+    error('there is no dipoli executable for your platform');
+end
+fprintf('using the executable "%s"\n', dipoli);
 
 % write the triangulations to file
 bndfile = {};
