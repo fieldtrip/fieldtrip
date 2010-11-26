@@ -28,7 +28,9 @@ classdef ft_mv_noutput < ft_mv_method
       
       ny = size(Y,2);
       
-      obj.mvmethod = repmat({obj.mvmethod},[1 ny]);
+      if ~iscell(obj.mvmethod)
+        obj.mvmethod = repmat({obj.mvmethod},[1 ny]);
+      end
       
       for c=1:ny
         

@@ -23,6 +23,8 @@ classdef ft_mv_standardizer < ft_mv_preprocessor
     
     function obj = train(obj,X,Y)
       
+      if nargin<3, Y = []; end;
+      
       % multiple datasets
       if iscell(X) || iscell(Y)
         obj = ft_mv_ndata('mvmethod',obj);
@@ -32,14 +34,7 @@ classdef ft_mv_standardizer < ft_mv_preprocessor
       
       % missing data
       if any(isnan(X(:))) || any(isnan(Y(:))), error('method does not handle missing data'); end
-     
-      % multiple outputs
-      if size(Y,2) > 1
-        obj = ft_mv_noutput('mvmethod',obj);
-        obj = obj.train(X,Y);
-        return;
-      end
-      
+           
       obj.mu = nanmean(X);
       obj.sigma = nanstd(X);
       obj.sigma(obj.sigma==0) = 1; % bug fix

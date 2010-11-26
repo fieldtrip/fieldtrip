@@ -137,7 +137,7 @@ Preprocessors are used to preprocess the input data \t{X} in such a way that it 
 \begin{tabular}{p{0.2\textwidth}|p{0.7\textwidth}}
 \bf{preprocessor} & \bf{functionality}\\
 \hline
-\t{ft\_mv\_standardizer} & Spheres and centers the data such that it has mean zero and a standard deviation of one\\
+\t{ft\_mv\_standardizer} &  centers and scales the data such that it has mean zero and a standard deviation of one\\
 \t{ft\_mv\_whitener} & standardizes and whitens the data\\
 \t{ft\_mv\_csp} & common spatial pattern algorithm\\
 \t{ft\_mv\_pca} & principal component analysis
@@ -329,11 +329,11 @@ mcnemar & approximate binomial test
 \end{table}
 
 
-\subsection{Optimization}
+\subsection{Grid search}
 
-For many of the described methods there are free parameters which need to be optimized. For instance, the $C$ parameter of the SVM or  the regularization parameters $L1$ and $L2$ for the elastic net.  In those cases, it is useful to employ the \t{ft\_mv\_optimizer}.  This object can be used to optimize free parameters of a multivariate analysis in a fully automated way. The optimizer is called as folllows:
+For many of the described methods there are free parameters which need to be optimized. For instance, the $C$ parameter of the SVM or  the regularization parameters $L1$ and $L2$ for the elastic net.  In those cases, it is useful to employ the \t{ft\_mv\_gridsearch}.  This object can be used to optimize free parameters of a multivariate analysis in a fully automated way. The optimizer is called as folllows:
 \begin{verbatim}
-ft_mv_optimizer('mva',mymva,'validator',ft_mv_crossvalidator...
+ft_mv_gridsearch('mva',mymva,'validator',ft_mv_crossvalidator...
 	('metric',mymetric),'mvidx',myidx,'vars',myvars,'vals',myvals)
 \end{verbatim}
 where \t{mymva} is the employed MVA, \t{mymetric} the employed performance measure to test which configuration is optimal, \t{myidx} the index of the method in \t{mymva} that is to be optimized, \t{myvars} the variable of mymva{myidx} that needs to be optimized and \t{myvals} the values which that variable may assume. This sounds complicated but it is not. Let's clarify with some examples. Suppose we wish to optimize the $C$ parameter of an SVM in the range \t{logspace(-3,3,7)}. Then, we can use 
@@ -341,7 +341,7 @@ where \t{mymva} is the employed MVA, \t{mymetric} the employed performance measu
 % crossvalidator with 80% of the data and accuracy as the metric
 cv = ft_mv_crossvalidator('nfolds',0.8,'metric','accuracy'); 
 
-opt = ft_mv_optimizer('verbose',true,'mva',svm,'validator',cv,...
+opt = ft_mv_gridsearch('verbose',true,'mva',svm,'validator',cv,...
 'vars','C','vals',logspace(-3,3,7))
 
 % standard behavior from here on
@@ -431,7 +431,7 @@ Hence, baseline performance with a non-optimized SVM is 78\% of the trials class
 In case we want to optimize the SVM then we can use \t{ft\_mv\_optimizer}:
 \begin{verbatim}
 >> [a,b] = ft_mv_test('mva',{ft_mv_standardizer 
-      ft_mv_optimizer('mva',{ft_mv_svm},'vars','C','vals',logspace(-3,3,7))});
+      ft_mv_gridsearch('mva',{ft_mv_svm},'vars','C','vals',logspace(-3,3,7))});
 
 \end{verbatim}
 Here we may obtain performance increases by searching over values for the $C$ parameter. Computing time in this case is about  300 times longer. The reason for this is that for each value in the search (seven in this case) it performs an inner ten-fold cross-validation within each outer cross-validation run. That is, we need to perform $7 \cdot 10 \cdot 10=700$ instead of $10$ SVM estimations. There are various ways to speed this up. For one, we can use less outer and inner folds for cross-validation (or even just a percentage of the data). Furthermore, we can parallelize the outer and inner cross-validation as well as the optimization. Note however that if we parallelize everything then the cluster may be too busy with broadcasting events instead of doing the actual computations! The optimal combination often is more an art than a science.

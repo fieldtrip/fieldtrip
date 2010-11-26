@@ -1,6 +1,6 @@
-classdef ft_mv_pca < ft_mv_standardizer
-%PCANALYZER standardizes the data and performs a principal component
-%analysis
+classdef ft_mv_pca < ft_mv_preprocessor
+%PCANALYZER performs a principal component analysis. Input data should be
+%zero mean.
 %
 %   Options:
 %    'proportion' : proportion of pc's or number of pc's. If < 1 then
@@ -37,12 +37,8 @@ classdef ft_mv_pca < ft_mv_standardizer
     
     function obj = ft_mv_pca(varargin)
       
-      % check availability
-      if ~license('test','statistics_toolbox')
-        error('requires Matlab statistics toolbox');
-      end
-      
-      obj = obj@ft_mv_standardizer(varargin{:});
+      obj = obj@ft_mv_preprocessor(varargin{:});
+
     end
     
     function obj = train(obj,X,Y)
@@ -59,7 +55,8 @@ classdef ft_mv_pca < ft_mv_standardizer
       % missing data
       if any(isnan(X(:))) || any(isnan(Y(:))), error('method does not handle missing data'); end
      
-      obj = train@ft_mv_standardizer(obj,X,Y);
+      % data should be zero mean
+      assert(all(abs(mean(X))<1e-6));
         
       if obj.verbose
         fprintf('estimating principal components\n');
@@ -82,6 +79,11 @@ classdef ft_mv_pca < ft_mv_standardizer
                 
       else
         
+        % check availability
+        if ~license('test','statistics_toolbox')
+          error('requires Matlab statistics toolbox');
+        end
+
         % in terms of variance accounted for
         
         [obj.pc,score,obj.ev] = princomp(X);
@@ -115,9 +117,7 @@ classdef ft_mv_pca < ft_mv_standardizer
     
     function Y = test(obj,X)
       
-      Y = test@ft_mv_standardizer(obj,X);
-      
-      Y = Y * obj.pc;
+      Y = X * obj.pc;
       
     end
     
@@ -125,8 +125,6 @@ classdef ft_mv_pca < ft_mv_standardizer
       
        X = Y * obj.pc';
      
-       X = invert@ft_mv_standardizer(obj,X);       
-      
     end
      
   end

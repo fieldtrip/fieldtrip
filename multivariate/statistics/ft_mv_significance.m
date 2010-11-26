@@ -5,7 +5,8 @@ function res = ft_mv_significance(design,post,sigtest)
 % Copyright (c) 2010, Marcel van Gerven
 
   if isempty(sigtest)
-    error('significance test undefined');
+    res = 1;
+    return
   end
   
   if ~iscell(design)

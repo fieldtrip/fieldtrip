@@ -1,15 +1,14 @@
-classdef ft_mv_optimizer < ft_mv_predictor
-%FT_MV_OPTIMIZER can be used to optimize certain parameters of a multivariate
-%analysis
+classdef ft_mv_gridsearch < ft_mv_predictor
+%FT_MV_GRIDSEARCH can be used to optimize certain parameters of a multivariate analysis
 %
 %   EXAMPLES:
 %  
-%   ft_mv_optimizer('verbose',true,'mva',svm,'validator',ft_mv_crossvalidator('nfolds',0.8,'metric','accuracy'),'vars','C','vals',logspace(-3,3,7))
+%   ft_mv_gridsearch('verbose',true,'mva',svm,'validator',ft_mv_crossvalidator('nfolds',0.8,'metric','accuracy'),'vars','C','vals',logspace(-3,3,7))
 %
 %     will act as an svm but will optimize the variable
 %     C in the range logspace(-3,3,7) using the specified validator.
 %
-%   ft_mv_optimizer('verbose',true,'mva',{ft_mv_filterer ft_mv_svm},'validator',ft_mv_crossvalidator('nfolds',0.8,'metric','accuracy'),'mvidx',[1 2],'vars',...
+%   ft_mv_gridsearch('verbose',true,'mva',{ft_mv_filterer ft_mv_svm},'validator',ft_mv_crossvalidator('nfolds',0.8,'metric','accuracy'),'mvidx',[1 2],'vars',...
 %         {'maxfeatures' 'C'},'vals',{1:10 [1 10]})
 %
 %     will optimize the combined assignments of both the filterer and the svm
@@ -41,7 +40,7 @@ classdef ft_mv_optimizer < ft_mv_predictor
 
     methods
       
-       function obj = ft_mv_optimizer(varargin)
+       function obj = ft_mv_gridsearch(varargin)
          
           obj = obj@ft_mv_predictor(varargin{:});
          

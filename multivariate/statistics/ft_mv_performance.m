@@ -27,6 +27,12 @@ for c=1:length(design)
       
       res{c} = corr(design{c},post{c});
       
+    case 'invresvar'
+      % 1 / residual variance; inverse because large values should indicate
+      % better performance
+      
+      res{c} = 1 ./ mean((design{c} - post{c}).^2);
+      
     case 'contingency'
       
       % return contingency table

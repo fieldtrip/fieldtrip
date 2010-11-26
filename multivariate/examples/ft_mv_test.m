@@ -43,13 +43,27 @@ function [acc,sig,cv] = ft_mv_test(varargin)
         S.X = X; % BOLD response
         S.Y = Y; % digit class
       case 'regression'
-        S.X = images; % digit images
+        S.X = I; % digit images
         S.Y = X(:,500); % BOLD response for one voxel
       case 'reconstruction'
         S.X = X; % BOLD response
-        S.Y = images; % digit images        
+        S.Y = I; % images
+
     end
   end
+  
+  if strcmp(S.type,'reconstruction') && size(S.Y,2) > 256
+    % downsample images
+    Z = S.Y;
+    res = 16; % image resolution
+    ores = sqrt(size(Z,2));
+    I = zeros(size(Z,1),res^2);
+    for j=1:size(Z,1)
+      I(j,:) = reshape((imresize(double(reshape(Z(j,:),[ores ores])),[res res],'nearest')),[1 res^2]);
+    end
+    %S.Y = zscore(I);
+  end
+  
   if ~isfield(S,'nfolds')
     S.nfolds = 10;
   end
@@ -59,14 +73,17 @@ function [acc,sig,cv] = ft_mv_test(varargin)
   if ~isfield(S,'cv')
      S.cv = ft_mv_crossvalidator('parallel',S.parallel,'balance',false,'mva',S.mva,'nfolds',S.nfolds,'verbose',true,'compact',true,'init',1);
   end
-  if ~isfield(S,'metric') && strcmp(S.type,'classification')
+  if ~isfield(S,'metric')
+  if strcmp(S.type,'classification')
     S.metric = 'accuracy';
+  elseif strcmp(S.type,'regression')
+    S.metric = 'invresvar';
   else
     S.metric = 'correlation';
   end
   S.cv.metric = S.metric;
   if ~isfield(S,'sigtest')
-    S.sigtest = 'mcnemar';
+    S.sigtest = [];
   end
   S.cv.sigtest = S.sigtest;
   
