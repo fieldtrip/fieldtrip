@@ -1,7 +1,12 @@
-function vol = ft_headmodel_infinite(geom, sens, ...)
+function vol = ft_headmodel_infinite(varargin)
 
-% FT_HEADMODEL_XXX
+% FT_HEADMODEL_INFINITE returns an infinitely large homogenous
+% volume conduction model.
 % 
 % Use as
-%   vol = ft_headmodel_xxx(geom, sens, ...)
+%   vol = ft_headmodel_infinite;
+
+% this is an easy one
+vol = [];
+vol.type = 'infinite';
 

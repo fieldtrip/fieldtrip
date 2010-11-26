@@ -1,7 +1,7 @@
-function vol = ft_headmodel_bem_asa(geom, sens, ...)
+function vol = ft_headmodel_asa(filename, ...)
 
-% FT_HEADMODEL_XXX
+% FT_HEADMODEL_ASA
 % 
 % Use as
-%   vol = ft_headmodel_xxx(geom, sens, ...)
+%   vol = ft_headmodel_asa(filename)
 

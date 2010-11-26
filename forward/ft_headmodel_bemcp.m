@@ -1,6 +1,6 @@
-function vol = ft_headmodel_bem_cp(geom, varargin)
+function vol = ft_headmodel_bemcp(geom, varargin)
 
-% FT_HEADMODEL_BEM_CP
+% FT_HEADMODEL_BEMCP
 %
 % Use as
 %   vol = ft_headmodel_bem_cp(geom, ...)

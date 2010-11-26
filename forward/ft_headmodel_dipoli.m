@@ -1,6 +1,6 @@
-function vol = ft_headmodel_bem_dipoli(geom, varargin)
+function vol = ft_headmodel_dipoli(geom, varargin)
 
-% FT_HEADMODEL_BEM_DIPOLI
+% FT_HEADMODEL_DIPOLI
 %
 % Use as
 %   vol = ft_headmodel_bem_dipoli(geom, ...)

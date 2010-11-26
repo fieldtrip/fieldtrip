@@ -4,7 +4,7 @@ function vol = ft_headmodel_bem_openmeeg(geom, varargin)
 %
 % Use as
 %   vol = ft_headmodel_openmeeg(geom, ...)
-
+%
 % Optional input arguments should be specified in key-value pairs and can
 % include
 %   isolatedsource   = string, 'yes' or 'no'

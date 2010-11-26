@@ -10,7 +10,6 @@ function vol = ft_headmodel_localspheres(geom, grad, ...)
 headshape    = keyval('headshape', varargin);
 feedback     = keyval('feedback',  varargin); if isempty(feedback), feedback = true; end
 
-
 % set the defaults
 if ~isfield(cfg, 'radius'),        cfg.radius = 8.5;        end
 if ~isfield(cfg, 'maxradius'),     cfg.maxradius = 20;      end
