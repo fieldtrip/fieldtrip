@@ -9,12 +9,18 @@
 #define __MultiChannelFilter_h
 
 #include <math.h>
+#include <TemplateVectorMath.h>
 
 #ifndef M_PI
 #define M_PI 3.141592653589793
 #endif
 
-template <typename T> 
+/** Templated class for IIR filtering of a multi-channel signal.
+    Tex is the type of the externally used signal (say, "float").
+	Tin is the internally used type for the filter states (say, "double").
+*/
+
+template <typename Tex, typename Tin> 
 class MultiChannelFilter {
 	public:
 	
@@ -25,6 +31,8 @@ class MultiChannelFilter {
 	// Calculate Butterworth lowpass filter coefficients
 	// from normalised cutoff frequency (0<cutoff<1=Fnyquist)
 	void setButterLP(double cutoff); 
+	// Calculate Butterworth highpass filter coefficients
+	// from normalised cutoff frequency (0<cutoff<1=Fnyquist)
 	void setButterHP(double cutoff); 
 	
 	// Copy coefficients. A and B must point to 1+order doubles
@@ -44,31 +52,31 @@ class MultiChannelFilter {
 	
 	// Run single input sample through filter without computing
 	// output. This is mostly useful for downsampling purposes.
-	void process(const T *source) {
+	void process(const Tex *source) {
 		for (int j=0;j<=order;j++) {
 			z[j] = states + pos*nChans;
 			if (++pos>order) pos=0;
 		}
 	
-		for (int i=0;i<nChans;i++) z[0][i] = source[i];
+		for (int i=0;i<nChans;i++) z[0][i] = (Tin) source[i];
 		for (int j=1;j<=order;j++) {
-			add_scalar_vector(z[0], -A[j], z[j], nChans);
+			tvmAddScaledVector<Tin,double,Tin>(z[0], -A[j], z[j], nChans);
 		}
 		if (--pos < 0) pos=order;
 	}
 	
 	// Run single input sample through filter and write output
 	// to "dest". Both source and dest must point to an nChans-array of T.
-	void process(T *dest, const T *source) {
+	void process(Tex *dest, const Tex *source) {
 		process(source);
-		set_scalar_vector(dest, B[0], z[0], nChans);
+		tvmSetScaledVector<Tex,double,Tin>(dest, B[0], z[0], nChans);
 		for (int j=1;j<=order;j++) {
-			add_scalar_vector(dest, B[j], z[j], nChans);
+			tvmAddScaledVector<Tex,double,Tin>(dest, B[j], z[j], nChans);
 		}
 	}
 	
 	// Process multiple samples and write output to "dest"
-	void process(int nSamples, T *dest, const T *source) {
+	void process(int nSamples, Tex *dest, const Tex *source) {
 		for (int i=0;i<nSamples;i++) {
 			process(dest + i*nChans, source + i*nChans);
 		}
@@ -77,104 +85,45 @@ class MultiChannelFilter {
 	// Clear internal filter states (all zero)
 	void clear();
 	
-	// helper functions with loop-unrolling
-	static void set_scalar_vector(T *y, double a,const T *x,int n);
-	static void add_scalar_vector(T *y, double a,const T *x,int n);
-	
 	protected:
 	
-	T **z;
-	T *states;
+	Tin **z;
+	Tin *states;
 	double *B, *A;
 	int order, nChans, pos;
 };
 
-template <typename T> void MultiChannelFilter<T>::set_scalar_vector(T *y, double a,const T *x,int n) {
-   /* for (i=0;i<n;i++) y[i] = a*x[i]; */
-   while (n>=8) {
-      y[0] = a*x[0];
-      y[1] = a*x[1];
-      y[2] = a*x[2];
-      y[3] = a*x[3];
-      y[4] = a*x[4];
-      y[5] = a*x[5];
-      y[6] = a*x[6];
-      y[7] = a*x[7];
-      n-=8;
-      y+=8;
-      x+=8;
-   }
-   switch(n) {
-      case 7: y[6] = a*x[6];
-      case 6: y[5] = a*x[5];
-      case 5: y[4] = a*x[4];
-      case 4: y[3] = a*x[3];
-      case 3: y[2] = a*x[2];
-      case 2: y[1] = a*x[1];
-      case 1: y[0] = a*x[0];
-   }         
-}
-
-template <typename T> void MultiChannelFilter<T>::add_scalar_vector(T *y, double a,const T *x,int n) {
-   /*
-   DAXPY_SSE2(X,n,a,x,y);
-   */
-   /* for (i=0;i<n;i++) y[i] += a*x[i]; */
-   while (n>=8) {
-      y[0] += a*x[0];
-      y[1] += a*x[1];
-      y[2] += a*x[2];
-      y[3] += a*x[3];
-      y[4] += a*x[4];
-      y[5] += a*x[5];
-      y[6] += a*x[6];
-      y[7] += a*x[7];
-      n-=8;
-      y+=8;
-      x+=8;
-   }
-   switch(n) {
-      case 7: y[6] += a*x[6];
-      case 6: y[5] += a*x[5];
-      case 5: y[4] += a*x[4];
-      case 4: y[3] += a*x[3];
-      case 3: y[2] += a*x[2];
-      case 2: y[1] += a*x[1];
-      case 1: y[0] += a*x[0];
-   }      
-}
-
-template <typename T> 
-MultiChannelFilter<T>::MultiChannelFilter(int nChans, int order) {
+template <typename Tex, typename Tin> 
+MultiChannelFilter<Tex,Tin>::MultiChannelFilter(int nChans, int order) {
 	this->nChans = nChans;
 	this->order = order;
 	this->pos = 0;
 
-	states = new T[nChans*(1+order)];
+	states = new Tin[nChans*(1+order)];
 	clear();
 	B = new double[1+order];
 	A = new double[1+order];
-	z = new T*[1+order];
+	z = new Tin*[1+order];
 	B[0] = 1.0;
 	A[0] = 1.0;
 }
 
-template <typename T> 
-MultiChannelFilter<T>::~MultiChannelFilter() {
+template <typename Tex, typename Tin> 
+MultiChannelFilter<Tex,Tin>::~MultiChannelFilter() {
 	delete[] states;
 	delete[] A;
 	delete[] B;
 	delete[] z;
 }
 
-template <typename T> 
-void MultiChannelFilter<T>::clear() {
-	for (int i=0;i<nChans*(1+order);i++) states[i]=0.0;
+template <typename Tex, typename Tin> 
+void MultiChannelFilter<Tex,Tin>::clear() {
+	for (int i=0;i<nChans*(1+order);i++) states[i]=0;
 	pos = 0;
 }
 
-template <typename T> 
-void MultiChannelFilter<T>::setButterLP(double cutoff) {
+template <typename Tex, typename Tin> 
+void MultiChannelFilter<Tex,Tin>::setButterLP(double cutoff) {
 	int n;
 		
 	// warping factor for bilinear transform
@@ -235,9 +184,8 @@ void MultiChannelFilter<T>::setButterLP(double cutoff) {
 	for (int i=0;i<=order;i++) B[i] *= prodB0;
 }
 
-
-template <typename T> 
-void MultiChannelFilter<T>::setButterHP(double cutoff) {
+template <typename Tex, typename Tin> 
+void MultiChannelFilter<Tex,Tin>::setButterHP(double cutoff) {
 	int n;
 	
 	// see setButterLP for explanation
@@ -283,5 +231,5 @@ void MultiChannelFilter<T>::setButterHP(double cutoff) {
 }
 
 
-
 #endif
+
