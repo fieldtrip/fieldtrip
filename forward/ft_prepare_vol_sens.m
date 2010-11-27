@@ -317,8 +317,8 @@ elseif iseeg
         else
           fprintf('projecting electrodes on skin surface\n');
           % compute linear interpolation from triangle vertices towards electrodes
-          el   = project_elec(sens.pnt, vol.bnd(vol.skin).pnt, vol.bnd(vol.skin).tri);
-          tra  = transfer_elec(vol.bnd(vol.skin).pnt, vol.bnd(vol.skin).tri, el);
+          [el, prj] = project_elec(sens.pnt, vol.bnd(vol.skin).pnt, vol.bnd(vol.skin).tri);
+          tra       = transfer_elec(vol.bnd(vol.skin).pnt, vol.bnd(vol.skin).tri, el);
           if size(vol.mat,1)==size(vol.bnd(vol.skin).pnt,1)
             % construct the transfer from only the skin vertices towards electrodes
             interp = tra;

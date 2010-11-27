@@ -1,11 +1,13 @@
-function [el] = project_elec(elc, pnt, tri)
+function [el, prj] = project_elec(elc, pnt, tri)
 
 % PROJECT_ELEC projects electrodes on a triangulated surface
 % and returns triangle index, la/mu parameters and distance
 %
-% [el] = project_elec(elc, pnt, tri)
-%
-% it returns a Nx4 matrix with [tri, la, mu, dist] for each electrode
+% Use as
+%   [el, prj] = project_elec(elc, pnt, tri)
+% which returns 
+%   el    = Nx4 matrix with [tri, la, mu, dist] for each electrode
+%   prj   = Nx3 matrix with the projected electrode position
 %
 % See also TRANSFER_ELEC 
 
@@ -51,5 +53,17 @@ for i=1:Nelc
 
   % store the projection for this electrode
   el(i,:) = [smallest_tri smallest_la smallest_mu smallest_dist];
+end
+
+if nargout>1
+  prj = zeros(size(elc));
+  for i=1:Nelc
+    v1 = pnt(tri(el(i,1),1),:);
+    v2 = pnt(tri(el(i,1),2),:);
+    v3 = pnt(tri(el(i,1),3),:);
+    la = el(i,2);
+    mu = el(i,3);
+    prj(i,:) = routlm(v1, v2, v3, la, mu);
+  end
 end
 
