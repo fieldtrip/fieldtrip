@@ -208,7 +208,7 @@ function [Out1, Out2, Out3] = fastica(mixedsig, varargin)
 %
 %   See also FASTICAG
 
-% @(#)$Id: fastica.m,v 1.14 2005/10/19 13:05:34 jarmo Exp $
+% @(#)$Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check some basic requirements of the data

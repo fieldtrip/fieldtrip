@@ -5,7 +5,7 @@ function gui_l (x, y)
 % The load dialog for loading new data
 % and new initial guess.
 
-% @(#)$Id: gui_l.m,v 1.4 2004/07/27 13:09:26 jarmo Exp $
+% @(#)$Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Global variables

@@ -57,7 +57,7 @@ function [freq] = ft_freqanalysis_old(cfg, data)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_freqanalysis.m 2145 2010-11-22 13:28:48Z jansch $
+% $Id$
 
 fieldtripdefs
 

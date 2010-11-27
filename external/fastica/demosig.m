@@ -6,7 +6,7 @@ function [sig,mixedsig]=demosig();
 % signals, mixedsig. Signals are row vectors of
 % matrices. Input mixedsig to FastICA to see how it works.
 
-% @(#)$Id: demosig.m,v 1.2 2003/04/05 14:23:57 jarmo Exp $
+% @(#)$Id$
 
 %create source signals (independent components)
 N=500; %data size

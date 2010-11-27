@@ -27,7 +27,7 @@ function hdr = load_nifti(niftifile,hdronly)
 % CVS Revision Info:
 %    $Author: nicks $
 %    $Date: 2007/12/10 15:52:36 $
-%    $Revision: 1.13.2.1 $
+%    $Revision$
 %
 % Copyright (C) 2002-2007,
 % The General Hospital Corporation (Boston, MA). 

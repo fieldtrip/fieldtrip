@@ -1,7 +1,7 @@
 % Script to compile C code for EEG-BEM
 
 % Christophe Phillips
-% $Id: make.m 2718 2009-02-09 19:14:20Z vladimir $
+% $Id$
 
 mex -O bem_Cii_cog.c
 mex -O bem_Cii_cst.c

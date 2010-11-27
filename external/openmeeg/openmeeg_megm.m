@@ -10,8 +10,8 @@ function [h2mm, s2mm] = openmeeg_megm(pos, vol, sens)
 % INRIA Athena Project Team
 
 % $Id$
-% $LastChangedBy$
-% $LastChangedDate$
+% $LastChangedBy: alegra $
+% $LastChangedDate: 2010-06-24 14:49:11 +0200 (Thu, 24 Jun 2010) $
 % $Revision$
 
 % store the current path and change folder to the temporary one

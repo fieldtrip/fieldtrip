@@ -36,7 +36,7 @@ function [tap] = hanning(n, str)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_denoise_pca.m 2097 2010-11-10 09:20:18Z roboos $
+% $Id$
 
 if nargin==1,
   str = 'symmetric';

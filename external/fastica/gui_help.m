@@ -6,7 +6,7 @@ function gui_help(which_help)
 % Make changes here.
 % Also displays the helpwindow with the selected text
 
-% @(#)$Id: gui_help.m,v 1.6 2005/10/19 13:05:34 jarmo Exp $
+% @(#)$Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 switch which_help

@@ -48,7 +48,7 @@ function Answer=zinputdlg(Prompt, Title, NumLines, DefAns, Resize)
 %    QUESTDLG, TEXTWRAP, UIWAIT, WARNDLG .
 
 %  Copyright 1994-2007 The MathWorks, Inc.
-%  $Revision: 1.2 $
+%  $Revision$
 
 %%%%%%%%%%%%%%%%%%%%
 %%% Nargin Check %%%
@@ -464,7 +464,7 @@ function figure_size = zgetnicedialoglocation(figure_size, figure_units)
 % or into the upper 3rd of the screen
 
 %  Copyright 1999-2006 The MathWorks, Inc.
-%  $Revision: 1.2 $
+%  $Revision$
 
 %%%%%% PLEASE NOTE %%%%%%%%%
 %%%%%% This file has also been copied into:

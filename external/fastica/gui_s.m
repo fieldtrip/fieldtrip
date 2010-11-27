@@ -4,7 +4,7 @@ function gui_s (x, y)
 
 % The save dialog for saving the results
 
-% @(#)$Id: gui_s.m,v 1.4 2004/07/27 13:09:26 jarmo Exp $
+% @(#)$Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Global variables

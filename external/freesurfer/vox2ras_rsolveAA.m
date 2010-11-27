@@ -10,7 +10,7 @@ function [M_R] = vox2ras_rsolveAA(Vc_C, inPlaneRotation, varargin)
 %%
 %% VERSION
 %%
-%% 	$Id: vox2ras_rsolveAA.m,v 1.4 2007/01/10 22:55:10 nicks Exp $
+%% 	$Id$
 %%
 %% SYNOPSIS
 %%
@@ -73,7 +73,7 @@ function [M_R] = vox2ras_rsolveAA(Vc_C, inPlaneRotation, varargin)
 % CVS Revision Info:
 %    $Author: nicks $
 %    $Date: 2007/01/10 22:55:10 $
-%    $Revision: 1.4 $
+%    $Revision$
 %
 % Copyright (C) 2002-2007,
 % The General Hospital Corporation (Boston, MA). 

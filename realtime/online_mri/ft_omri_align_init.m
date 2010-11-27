@@ -79,7 +79,7 @@ function model = ft_omri_align_init(Vr,flags)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_realign.m 1265 2008-03-28 11:45:04Z john $
+% $Id$
 
 
 if nargin==0, return; end;

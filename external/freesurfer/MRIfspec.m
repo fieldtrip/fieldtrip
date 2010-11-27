@@ -28,7 +28,7 @@ function [fspec, fstem, fmt] = MRIfspec(fstring,checkdisk)
 % CVS Revision Info:
 %    $Author: nicks $
 %    $Date: 2007/01/10 22:55:09 $
-%    $Revision: 1.6 $
+%    $Revision$
 %
 % Copyright (C) 2002-2007,
 % The General Hospital Corporation (Boston, MA). 

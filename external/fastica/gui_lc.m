@@ -4,7 +4,7 @@ function gui_lc (action)
 
 % This file holds the callbacks for load-dialog
 
-% @(#)$Id: gui_lc.m,v 1.4 2003/09/11 12:01:19 jarmo Exp $
+% @(#)$Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Global variables

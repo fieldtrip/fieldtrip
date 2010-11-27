@@ -4,7 +4,7 @@ function gui_cb(action)
 
 % This file holds the callbacks to the main window
 
-% @(#)$Id: gui_cb.m,v 1.5 2003/09/10 10:33:41 jarmo Exp $
+% @(#)$Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Global variables

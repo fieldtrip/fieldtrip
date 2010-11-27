@@ -46,7 +46,7 @@ function [sens] = ft_apply_montage(sens, montage, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id$
+% $Id: ft_apply_montage.m 1139 2010-05-26 12:55:57Z roboos $
 
 % get optional input arguments
 keepunused    = keyval('keepunused',    varargin{:}); if isempty(keepunused),    keepunused    = 'no';  end

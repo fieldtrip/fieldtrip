@@ -49,7 +49,7 @@ function ft_select_voxel(handle, eventdata, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_select_channel.m 2122 2010-11-17 11:53:53Z jansch $
+% $Id$
 
 % get optional input arguments
 callback = keyval('callback', varargin);

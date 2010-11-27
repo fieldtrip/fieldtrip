@@ -51,7 +51,7 @@ function [c, v, n] = ft_connectivity_psi(input, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_freqanalysis.m 1528 2010-08-19 10:55:07Z jansch $
+% $Id$
 
 hasjack   = keyval('hasjack',   varargin{:}); if isempty(hasjack),  hasjack = 0; end
 feedback  = keyval('feedback',  varargin{:}); if isempty(feedback), feedback = 'none'; end

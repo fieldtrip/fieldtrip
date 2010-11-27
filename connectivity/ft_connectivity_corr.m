@@ -54,7 +54,7 @@ function [c, v, n] = ft_connectivity_corr(input, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_freqanalysis.m 1528 2010-08-19 10:55:07Z jansch $
+% $Id$
 
 hasjack  = keyval('hasjack',  varargin{:}); if isempty(hasjack),  hasjack  = 0;      end
 cmplx    = keyval('complex',  varargin{:}); if isempty(cmplx),    cmplx    = 'abs';  end

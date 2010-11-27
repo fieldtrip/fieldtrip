@@ -25,7 +25,7 @@ function crc = neuralynx_crc(dat, dim)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id$
+% $Id: neuralynx_crc.m 945 2010-04-21 17:41:20Z roboos $
 
 
 nchans   = size(dat,1);

@@ -8,8 +8,8 @@ function status = om_check_vol(vol)
 % Copyright (C) 2010, Alexandre Gramfort, INRIA
 
 % $Id$
-% $LastChangedBy$
-% $LastChangedDate$
+% $LastChangedBy: alegra $
+% $LastChangedDate: 2010-09-06 13:58:49 +0200 (Mon, 06 Sep 2010) $
 % $Revision$
 
 openmeeg_license

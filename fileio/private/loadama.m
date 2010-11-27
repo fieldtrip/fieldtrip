@@ -26,7 +26,7 @@ function [ama] = loadama(filename);
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id$
+% $Id: loadama.m 945 2010-04-21 17:41:20Z roboos $
 
 fid = fopen(filename, 'rb', 'ieee-le');
 

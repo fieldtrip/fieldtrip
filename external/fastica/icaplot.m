@@ -88,7 +88,7 @@ function icaplot(mode, varargin);
 %     have to give values for the signal matrices (s1, s2) and the
 %     indexes (n1, n2)
 
-% @(#)$Id: icaplot.m,v 1.2 2003/04/05 14:23:58 jarmo Exp $
+% @(#)$Id$
 
 switch mode
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

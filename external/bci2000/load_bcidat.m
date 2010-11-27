@@ -53,6 +53,6 @@ function [ signal, states, parameters, total_samples ] = load_bcidat( varargin )
 
 %  This is a help file documenting the functionality contained in
 %  load_bcimat.mex.
-%  $Id: load_bcidat.m,v 1.1 2008/10/01 19:05:00 roboos Exp $
+%  $Id$
 %
 error( 'There is no load_bcidat mex file for your platform available.' );

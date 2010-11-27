@@ -12,7 +12,7 @@ function [M_Ru1, M_Ru2, M_v1, M_v2] = vox2ras_rsolve(Vc_C, inPlaneRotation)
 %%
 %% VERSION
 %%
-%% 	$Id: vox2ras_rsolve.m,v 1.5 2007/01/10 22:55:10 nicks Exp $
+%% 	$Id$
 %%
 %% SYNOPSIS
 %%
@@ -115,7 +115,7 @@ v2	= zeros(3, 3);
 % CVS Revision Info:
 %    $Author: nicks $
 %    $Date: 2007/01/10 22:55:10 $
-%    $Revision: 1.5 $
+%    $Revision$
 %
 % Copyright (C) 2002-2007,
 % The General Hospital Corporation (Boston, MA). 

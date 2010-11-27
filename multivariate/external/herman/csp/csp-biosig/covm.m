@@ -29,8 +29,8 @@ function [CC,NN] = covm(X,Y,Mode);
 %	C is not scaled, provides the scaling factor N  
 %	C./N gives the scaled version. 
 
-%	$Revision: 1.18 $
-%	$Id: covm.m,v 1.18 2003/09/15 14:07:49 schloegl Exp $
+%	$Revision$
+%	$Id$
 %	CopyLeft (C) 2000-2002 by Alois Schloegl <a.schloegl@ieee.org>	
 
 %    This program is free software; you can redistribute it and/or modify

@@ -75,7 +75,7 @@ function [freq] = ft_freqanalysis_mtmconvol_old(cfg, data)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_freqanalysis_mtmconvol.m 1974 2010-10-27 10:36:50Z jansch $
+% $Id$
 
 fieldtripdefs
 warning('this version of ft_freqanalysis_mtmconvol is deprecated, it is no longer being maintained')
@@ -487,7 +487,7 @@ catch
     [st, i1] = dbstack;
     cfg.version.name = st(i1);
 end
-cfg.version.id = '$Id: ft_freqanalysis_mtmconvol.m 1974 2010-10-27 10:36:50Z jansch $';
+cfg.version.id = '$Id$';
 % remember the configuration details of the input data
 try, cfg.previous = data.cfg; end
 % remember the exact configuration details in the output

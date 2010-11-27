@@ -16,7 +16,7 @@ function [vertex_coords, faces] = read_surf(fname)
 % CVS Revision Info:
 %    $Author: nicks $
 %    $Date: 2007/01/10 22:55:10 $
-%    $Revision: 1.3 $
+%    $Revision$
 %
 % Copyright (C) 2002-2007,
 % The General Hospital Corporation (Boston, MA). 

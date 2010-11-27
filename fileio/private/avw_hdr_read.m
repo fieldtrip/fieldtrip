@@ -28,7 +28,7 @@ function [ avw, machine ] = avw_hdr_read(fileprefix, machine, verbose)
 % See also avw_hdr_write, avw_hdr_make, avw_view_hdr, avw_view
 % 
 
-% $Revision$ $Date: 2009/01/14 09:24:45 $
+% $Revision: 883 $ $Date: 2009/01/14 09:24:45 $
 
 % Licence:  GNU GPL, no express or implied warranties
 % History:  05/2002, Darren.Weber@flinders.edu.au
@@ -40,7 +40,7 @@ function [ avw, machine ] = avw_hdr_read(fileprefix, machine, verbose)
 if ~exist('verbose','var'), verbose = 1; end
 
 if verbose,
-    version = '[$Revision$]';
+    version = '[$Revision: 883 $]';
     fprintf('\nAVW_HDR_READ [v%s]\n',version(12:16));  tic;
 end
 

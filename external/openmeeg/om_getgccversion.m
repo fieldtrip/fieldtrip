@@ -3,8 +3,8 @@ function version = om_getgccversion
 % Copyright (C) 2010, Alexandre Gramfort, INRIA
 
 % $Id$
-% $LastChangedBy$
-% $LastChangedDate$
+% $LastChangedBy: alegra $
+% $LastChangedDate: 2010-04-19 11:03:39 +0200 (Mon, 19 Apr 2010) $
 % $Revision$
 
 tmpdir = pwd;

@@ -37,4 +37,4 @@
 %   dispsig   - plots the data vectors
 %               replaced by icaplot
 
-% @(#)$Id: Contents.m,v 1.7 2005/10/19 13:05:33 jarmo Exp $
+% @(#)$Id$

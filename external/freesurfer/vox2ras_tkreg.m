@@ -16,7 +16,7 @@ function T = vox2ras_tkregmtx(voldim, voxres)
 % CVS Revision Info:
 %    $Author: nicks $
 %    $Date: 2007/01/10 22:55:10 $
-%    $Revision: 1.2 $
+%    $Revision$
 %
 % Copyright (C) 2002-2007,
 % The General Hospital Corporation (Boston, MA). 

@@ -10,7 +10,7 @@ function [M_V] = vox2ras_ksolve(M_R, Vc_Ps, varargin)
 %%
 %% VERSION
 %%
-%%	$Id: vox2ras_ksolve.m,v 1.6 2007/01/10 22:55:10 nicks Exp $
+%%	$Id$
 %%
 %% SYNOPSIS
 %%
@@ -72,7 +72,7 @@ function [M_V] = vox2ras_ksolve(M_R, Vc_Ps, varargin)
 % CVS Revision Info:
 %    $Author: nicks $
 %    $Date: 2007/01/10 22:55:10 $
-%    $Revision: 1.6 $
+%    $Revision$
 %
 % Copyright (C) 2002-2007,
 % The General Hospital Corporation (Boston, MA). 

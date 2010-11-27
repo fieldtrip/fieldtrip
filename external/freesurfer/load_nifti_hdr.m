@@ -15,7 +15,7 @@ function hdr = load_nifti_hdr(niftifile)
 % reading hdr.glmin = ncols when hdr.dim(2) < 0. This
 % is FreeSurfer specific, for handling surfaces.
 %
-% $Id: load_nifti_hdr.m,v 1.8 2007/05/22 05:24:11 greve Exp $
+% $Id$
 
 
 %
@@ -25,7 +25,7 @@ function hdr = load_nifti_hdr(niftifile)
 % CVS Revision Info:
 %    $Author: greve $
 %    $Date: 2007/05/22 05:24:11 $
-%    $Revision: 1.8 $
+%    $Revision$
 %
 % Copyright (C) 2002-2007,
 % The General Hospital Corporation (Boston, MA). 

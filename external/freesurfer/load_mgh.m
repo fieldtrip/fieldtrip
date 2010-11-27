@@ -31,7 +31,7 @@ function [vol, M, mr_parms, volsz] = load_mgh(fname,slices,frames,headeronly)
 % CVS Revision Info:
 %    $Author: nicks $
 %    $Date: 2007/12/10 15:52:36 $
-%    $Revision: 1.16.2.1 $
+%    $Revision$
 %
 % Copyright (C) 2002-2007,
 % The General Hospital Corporation (Boston, MA). 

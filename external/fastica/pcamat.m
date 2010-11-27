@@ -41,7 +41,7 @@ function [E, D] = pcamat(vectors, firstEig, lastEig, s_interactive, ...
 % whitening is almost in reversed order. (That means, they usually are,
 % but sometime they are not - depends on the EIG-command of matlab.)
 
-% @(#)$Id: pcamat.m,v 1.5 2003/12/15 18:24:32 jarmo Exp $
+% @(#)$Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Default values:

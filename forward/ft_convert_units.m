@@ -38,7 +38,7 @@ function [obj] = ft_convert_units(obj, target);
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id$
+% $Id: ft_convert_units.m 946 2010-04-21 17:51:16Z roboos $
 
 % This function consists of three parts:
 %   1) determine the input units

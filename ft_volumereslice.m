@@ -93,7 +93,7 @@ cfg.outputfile;
 
 % add version information to the configuration
 cfg.version.name = mfilename('fullpath');
-cfg.version.id = '$Id: ft_sourceinterpolate.m 715 2010-03-09 10:57:27Z roboos $';
+cfg.version.id = '$Id$';
 
 % remember the configuration details of the input data
 try cfg.previous = mri.cfg; end

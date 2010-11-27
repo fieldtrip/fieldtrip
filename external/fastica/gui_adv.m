@@ -4,7 +4,7 @@ function gui_adv(x, y)
 
 % This is the advanced options -dialog
 
-% @(#)$Id: gui_adv.m,v 1.4 2004/07/27 13:09:26 jarmo Exp $
+% @(#)$Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Global variables

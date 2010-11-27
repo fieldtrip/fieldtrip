@@ -21,7 +21,7 @@ function bemcp_example
 % I used it only to ensure a quick & dirty check of the BEM module...
 
 % Christophe Phillips
-% $Id: bemcp_example.m 2801 2009-02-27 17:26:22Z christophe $
+% $Id$
 
 % create volume conductor starting from unit sphere
 [pnt, tri] = icosahedron162;

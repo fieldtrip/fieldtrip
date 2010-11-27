@@ -26,7 +26,7 @@ function [V,d] = csp(ECM,k_pat,Mode)
 % 	Volume 52,  Issue 9,  Sept. 2005 Page(s):1541 - 1548
 %	Digital Object Identifier 10.1109/TBME.2005.851521 
 
-%	$Id: csp.m,v 1.2 2008/10/02 13:28:44 schloegl Exp $
+%	$Id$
 %	Copyright (C) 2007 by Alois Schloegl <a.schloegl@ieee.org>
 %	This is part of the BIOSIG-toolbox http://biosig.sf.net/
 

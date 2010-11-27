@@ -8,7 +8,7 @@ function [newVectors, meanValue] = remmean(vectors);
 %
 % This function is needed by FASTICA and FASTICAG
 
-% @(#)$Id: remmean.m,v 1.2 2003/04/05 14:23:58 jarmo Exp $
+% @(#)$Id$
 
 newVectors = zeros (size (vectors));
 meanValue = mean (vectors')';

@@ -24,7 +24,7 @@ function [newVectors, whiteningMatrix, dewhiteningMatrix] = whitenv ...
 %
 %   See also PCAMAT
 
-% @(#)$Id: whitenv.m,v 1.3 2003/10/12 09:04:43 jarmo Exp $
+% @(#)$Id$
 
 % ========================================================
 % Default value for 'verbose'

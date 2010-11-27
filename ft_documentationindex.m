@@ -21,7 +21,7 @@ function index = ft_documentationindex(filename)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_preprocessing.m 948 2010-04-21 18:02:21Z roboos $
+% $Id$
 
 fieldtripdefs
 

@@ -5,7 +5,7 @@ function dispsig(signalMatrix, range, titlestr);
 %
 %   See also ICAPLOT
 
-% @(#)$Id: dispsig.m,v 1.2 2003/04/05 14:23:57 jarmo Exp $
+% @(#)$Id$
 
 fprintf('\nNote: DISPSIG is now deprecated! Please use ICAPLOT.\n');
 

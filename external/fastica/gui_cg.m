@@ -5,7 +5,7 @@ function gui_cg()
 % This file just removes the global variables
 % that are used in FASTICAG from the memory
 
-% @(#)$Id: gui_cg.m,v 1.2 2003/04/05 14:23:57 jarmo Exp $
+% @(#)$Id$
 
 clear global c_FastICA_appr_strD;
 clear global c_FastICA_appr_strV;

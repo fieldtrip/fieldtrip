@@ -27,7 +27,7 @@ function [bad_flags, epochs, rejected, trial_pos_ms, trial_cond_ind, scanned_ran
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id$
+% $Id: read_besa_pdg.m 945 2010-04-21 17:41:20Z roboos $
 
 data_type=1; % needs to be 1 for EEG, 2 for MEG
 

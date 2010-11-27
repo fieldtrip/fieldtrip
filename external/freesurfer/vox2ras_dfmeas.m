@@ -10,7 +10,7 @@ function [M_V] = vox2ras_dfmeas(str_filename, varargin)
 %%
 %% VERSION
 %%
-%%	$Id: vox2ras_dfmeas.m,v 1.9 2007/01/10 22:55:10 nicks Exp $
+%%	$Id$
 %%
 %% SYNOPSIS
 %%
@@ -127,7 +127,7 @@ function [M_V] = vox2ras_dfmeas(str_filename, varargin)
 % CVS Revision Info:
 %    $Author: nicks $
 %    $Date: 2007/01/10 22:55:10 $
-%    $Revision: 1.9 $
+%    $Revision$
 %
 % Copyright (C) 2002-2007,
 % The General Hospital Corporation (Boston, MA). 

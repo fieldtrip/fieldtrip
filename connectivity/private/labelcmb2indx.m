@@ -44,7 +44,7 @@ function [indx] = labelcmb2indx(labelcmb, label)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_freqanalysis.m 1528 2010-08-19 10:55:07Z jansch $
+% $Id$
 
 if nargin==1,
   label = unique(labelcmb(:));

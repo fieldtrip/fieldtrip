@@ -36,7 +36,7 @@ function hdr = load_analyze(imgfile,hdronly)
 % CVS Revision Info:
 %    $Author: greve $
 %    $Date: 2007/05/10 04:02:15 $
-%    $Revision: 1.4 $
+%    $Revision$
 %
 % Copyright (C) 2002-2007,
 % The General Hospital Corporation (Boston, MA). 

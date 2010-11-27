@@ -4,8 +4,8 @@ function om_checkombin
 % Copyright (C) 2010, Alexandre Gramfort, INRIA
 
 % $Id$
-% $LastChangedBy$
-% $LastChangedDate$
+% $LastChangedBy: alegra $
+% $LastChangedDate: 2010-09-30 11:15:51 +0200 (Thu, 30 Sep 2010) $
 % $Revision$
 
 [status,result] = system('om_assemble');

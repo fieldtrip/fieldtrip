@@ -4,7 +4,7 @@ function gui_sc (action)
 
 % This file holds the callbacks for save-dialog
 
-% @(#)$Id: gui_sc.m,v 1.3 2003/09/08 11:28:59 jarmo Exp $
+% @(#)$Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Global variables

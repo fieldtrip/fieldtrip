@@ -46,7 +46,7 @@ function [A, W] = fpica(X, whiteningMatrix, dewhiteningMatrix, approach, ...
 %
 %   See also FASTICA, FASTICAG, WHITENV, PCAMAT
 
-% @(#)$Id: fpica.m,v 1.7 2005/06/16 12:52:55 jarmo Exp $
+% @(#)$Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Global variable for stopping the ICA calculations from the GUI

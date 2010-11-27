@@ -18,7 +18,7 @@ function fasticag(mixedsig, InitialGuess)
 %
 %   See also FASTICA
 
-% @(#)$Id: fasticag.m,v 1.5 2005/10/19 13:05:34 jarmo Exp $
+% @(#)$Id$
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
