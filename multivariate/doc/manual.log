@@ -1,4 +1,4 @@
-This is pdfTeXk, Version 3.1415926-1.40.9 (Web2C 7.5.7) (format=pdflatex 2009.10.21)  26 NOV 2010 22:42
+This is pdfTeXk, Version 3.1415926-1.40.9 (Web2C 7.5.7) (format=pdflatex 2009.10.21)  27 NOV 2010 00:54
 entering extended mode
 \write18 enabled.
  %&-line parsing enabled.
@@ -127,13 +127,13 @@ Overfull \hbox (1.39328pt too wide) in paragraph at lines 159--159
  []
 
 [4] [5] [6] [7] [8]
-Overfull \hbox (0.66005pt too wide) in paragraph at lines 426--426
+Overfull \hbox (0.66005pt too wide) in paragraph at lines 429--429
 []\OT1/cmtt/m/n/10 dataset 1: validating fold 10 of 10 using 90 training sample
 s and 10 test samples[] 
  []
 
 [9]
-Overfull \hbox (0.66005pt too wide) in paragraph at lines 456--456
+Overfull \hbox (0.66005pt too wide) in paragraph at lines 459--459
 []\OT1/cmtt/m/n/10 cv = ft_mv_crossvalidator('nfolds',0.8,'mva',{ft_mv_standard
 izer ft_mv_naive},...[] 
  []
@@ -160,7 +160,7 @@ luesky/cm/cmsy10.pfb></usr/local/texlive/2008/texmf-dist/fonts/type1/bluesky/cm
 /cmsy7.pfb></usr/local/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmti10.pf
 b></usr/local/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmtt10.pfb></usr/l
 ocal/texlive/2008/texmf-dist/fonts/type1/bluesky/cm/cmtt8.pfb>
-Output written on manual.pdf (11 pages, 256824 bytes).
+Output written on manual.pdf (11 pages, 256669 bytes).
 PDF statistics:
  121 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 131072)

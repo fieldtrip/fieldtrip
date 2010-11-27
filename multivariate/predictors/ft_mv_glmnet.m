@@ -8,7 +8,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
 %
 % EXAMPLE:
 %
-% [a,b,c,d] = ft_mv_test('mva',{ft_mv_glmnet('cv',ft_mv_crossvalidator('nfolds',5,'metric','accuracy'))})
+% [a,b,c,d] = ft_mv_test('mva',{ft_mv_glmnet('validator',ft_mv_crossvalidator('nfolds',5,'metric','accuracy'))})
 %
 %   Copyright (c) 2010, Marcel van Gerven
 
@@ -27,7 +27,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
     
     weights             % regression coefficients
     
-    cv                  % crossvalidator object if a whole path is specified    
+    validator           % crossvalidator object if a whole path is specified    
     performance         % performance results for the crossvalidator
     
   end
@@ -80,22 +80,22 @@ classdef ft_mv_glmnet < ft_mv_predictor
       
       if ~isempty(obj.lambda), opts.lambda = obj.lambda; end 
 
-      if isempty(obj.lambda) && ~isempty(obj.cv)
+      if isempty(obj.lambda) && ~isempty(obj.validator)
 
-        obj.cv.mva = obj;
-        obj.cv.mva.cv = [];
+        obj.validator.mva = obj;
+        obj.validator.mva.validator = [];
         
-        obj.cv = obj.cv.train(X,Y);
+        obj.validator = obj.validator.train(X,Y);
         
-        nsolutions = size(obj.cv.post{1},2);
+        nsolutions = size(obj.validator.post{1},2);
         
-        obj.performance = zeros(length(obj.cv.design),nsolutions/nclasses);
+        obj.performance = zeros(length(obj.validator.design),nsolutions/nclasses);
 
         for j=1:(nsolutions/nclasses)
           
-          post = cellfun(@(x)(x(:,(j-1)*nclasses + (1:nclasses))),obj.cv.post,'UniformOutput',false);
+          post = cellfun(@(x)(x(:,(j-1)*nclasses + (1:nclasses))),obj.validator.post,'UniformOutput',false);
           
-          perf = ft_mv_performance(obj.cv.design,post,obj.cv.metric);
+          perf = ft_mv_performance(obj.validator.design,post,obj.validator.metric);
           
           if iscell(perf), perf = cell2mat(perf); end
           
@@ -109,8 +109,8 @@ classdef ft_mv_glmnet < ft_mv_predictor
        lbest = zeros(1,length(b));
        lmax = zeros(1,length(b));
        for j=1:length(b)
-         lbest(j) = obj.cv.mva{j}.mvmethods{end}.lambda(b(j));
-         lmax(j) = obj.cv.mva{j}.mvmethods{end}.lambda(1);
+         lbest(j) = obj.validator.mva{j}.mvmethods{end}.lambda(b(j));
+         lmax(j) = obj.validator.mva{j}.mvmethods{end}.lambda(1);
        end
        
        

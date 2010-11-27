@@ -1,11 +1,12 @@
-classdef ft_mv_whitener < ft_mv_standardizer
-%WHITENER standardizes and whitens the data
+classdef ft_mv_whitener < ft_mv_preprocessor
+%WHITENER whitens the data; input data should be standardized
 %
-% Copyright (c) 2009, Marcel van Gerven
+% Copyright (c) 2009, Jason Farquhar, Marcel van Gerven
    
   properties
     
-    wmat  % whitening matrix
+    W     % whitening matrix
+    invW  % inverse whitening matrix
     
   end
 
@@ -13,12 +14,12 @@ classdef ft_mv_whitener < ft_mv_standardizer
     
     function obj = ft_mv_whitener(varargin)
       
-      obj = obj@ft_mv_standardizer(varargin{:});
+      obj = obj@ft_mv_preprocessor(varargin{:});
       
     end
     
     function obj = train(obj,X,Y)
-      
+       
       if nargin<3, Y = []; end
       
       % multiple datasets
@@ -31,30 +32,30 @@ classdef ft_mv_whitener < ft_mv_standardizer
       % missing data
       if any(isnan(X(:))) || any(isnan(Y(:))), error('method does not handle missing data'); end
      
-      obj = train@ft_mv_standardizer(obj,X,Y);
+      % check for standardize
+      assert(all(abs(mean(X)<1e-3)));
+      assert(all(abs(std(X)>0.9)) & all(abs(std(X)<1.1)));
       
       if obj.verbose, fprintf('whitening data\n'); end
       
-      [E, D] = eig(cov(X,1));
-      obj.wmat = sqrt(D) \ E';
+      % N.B. whitening matrix: W = U*diag(D.^order);
+      %      and inverse whitening matrix: W^-1 = U*diag(D.^-order);
+      [obj.W,D,wX,U] = whiten(X',1,1,0,0,0,[],1e-6,1,-.5);
+      obj.invW = (U * diag(D.^(.5)))';
       
     end
     
     function Y = test(obj,X)
       % whiten
-      
-      Y = test@ft_mv_standardizer(obj,X);
-      
-      Y = Y*obj.wmat';
+         
+      Y = X*obj.W;
       
     end
     
     function X = invert(obj,Y)
       % invert mapping
       
-      X = Y*inv(obj.wmat)';
-      
-      X = invert@ft_mv_standardizer(obj,X);
+      X = Y*obj.invW;
       
     end
     

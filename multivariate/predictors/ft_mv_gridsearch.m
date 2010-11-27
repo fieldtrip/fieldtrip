@@ -3,7 +3,7 @@ classdef ft_mv_gridsearch < ft_mv_predictor
 %
 %   EXAMPLES:
 %  
-%   ft_mv_gridsearch('verbose',true,'mva',svm,'validator',ft_mv_crossvalidator('nfolds',0.8,'metric','accuracy'),'vars','C','vals',logspace(-3,3,7))
+%   ft_mv_gridsearch('verbose',true,'mva',ft_mv_svm,'validator',ft_mv_crossvalidator('nfolds',0.8,'metric','accuracy'),'vars','C','vals',logspace(-3,3,7))
 %
 %     will act as an svm but will optimize the variable
 %     C in the range logspace(-3,3,7) using the specified validator.
@@ -106,7 +106,8 @@ classdef ft_mv_gridsearch < ft_mv_predictor
          end
          
          % we now know the optimal configuration. Now we retrieve the
-         % method of interest with this configuration and retrain
+         % method of interest with this configuration and retrain with all
+         % data
       
          for j=1:nv
            obj.mva.mvmethods{obj.mvidx(j)}.(obj.vars{j}) = obj.configs(obj.optimum,j);
@@ -115,9 +116,9 @@ classdef ft_mv_gridsearch < ft_mv_predictor
          
          function train_sequential()
            
-           for i=1:size(obj.configs,1)
+           vld = obj.validator; % the mva used by the validator
              
-             vld = obj.validator; % the mva used by the validator
+           for i=1:size(obj.configs,1)
              
              % set parameters
              if iscell(vld.mva)
@@ -142,6 +143,7 @@ classdef ft_mv_gridsearch < ft_mv_predictor
              end
              
              vld = vld.train(X,Y);
+             
              obj.results(i) = vld.performance;
              
              if obj.verbose

@@ -204,7 +204,7 @@ classdef ft_mv_blogreg < ft_mv_predictor
                    'fraction',obj.fraction,'niter',obj.niter,'temperature',obj.temperature,'lambda',obj.scale(j),...
                    'tol',obj.tolerance,'degenerate',obj.degenerate,'verbose',obj.verbose);
                end
-                 
+               
                lgp(j) = tlogp - log(obj.scale(j)); % uniform prior on log scale
                if lgp(j) == max(lgp)
                    

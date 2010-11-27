@@ -14,7 +14,11 @@ classdef ft_mv_klr < ft_mv_kernelmethod
     function [weights,f,J] = estimate(obj,K,Y)
       % this kernelmethod's estimation function
       
-      [weights,f,J] = klr_cg(K,Y,obj.C,'verb',-1);
+       if ~isempty(obj.weights)
+        [weights,f,J] = klr_cg(K,Y,obj.C,'verb',-1,'alphab',obj.weights);
+      else
+        [weights,f,J] = klr_cg(K,Y,obj.C,'verb',-1);
+      end
       
     end
     

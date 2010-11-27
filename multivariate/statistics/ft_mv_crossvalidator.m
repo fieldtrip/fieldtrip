@@ -80,7 +80,7 @@ classdef ft_mv_crossvalidator
         
         if isempty(obj.mva), error('mva not specified'); end
       
-        if ~isa(obj.mva,'ft_mv_analysis')
+        if ~isa(obj.mva,'ft_mv_analysis') && ~(iscell(obj.mva) && isa(obj.mva{1},'ft_mv_analysis'))
           % try to create mva if input is a cell array or a predictor
           obj.mva = ft_mv_analysis(obj.mva);
         end
