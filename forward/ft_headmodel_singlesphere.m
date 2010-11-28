@@ -1,7 +1,8 @@
 function vol = ft_headmodel_singlesphere(pnt, varargin)
 
-% FT_HEADMODEL_SINGLESPHERE fits a spherical model to a set of points that
-% describe the head surface.
+% FT_HEADMODEL_SINGLESPHERE creates a volume conduction model oif the
+% head by fitting a spherical model to a set of points that describe
+% the head surface.
 %
 % Use as
 %   vol = ft_headmodel_singlesphere(pnt, ...)
@@ -10,6 +11,8 @@ function vol = ft_headmodel_singlesphere(pnt, varargin)
 % include
 %   headshape        = string, filename with headshape
 %   conductivity     = number, conductivity of the sphere
+%
+% See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
 % get the optional arguments
 headshape    = keyval('headshape', varargin);

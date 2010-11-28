@@ -4,8 +4,15 @@ function vol = ft_headmodel_localspheres(geom, grad, ...)
 % with a local sphere fitted to the head or brain surface for each seperate
 % channel
 %
+% This implements
+%   Huang MX, Mosher JC, Leahy RM. "A sensor-weighted overlapping-sphere
+%   head model and exhaustive head model comparison for MEG." Phys Med
+%   Biol. 1999 Feb;44(2):423-40
+%
 % Use as
 %   vol = ft_headmodel_localspheres(geom, grad, ...)
+%
+% See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
 headshape    = keyval('headshape', varargin);
 feedback     = keyval('feedback',  varargin); if isempty(feedback), feedback = true; end
@@ -124,3 +131,4 @@ for chan=1:Nchan
 end % for all channels
 
 vol.type = 'multisphere';
+
