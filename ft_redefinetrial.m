@@ -272,9 +272,11 @@ elseif ~isempty(cfg.length)
     offset = time2offset(data.time{k}, data.fsample);
     tmp1   = [data.sampleinfo(k,:) offset];
     tmp2   = (tmp1(1):nshift:(tmp1(2)+1-nsmp))';
-    tmp2(:,2) = tmp2 + nsmp - 1;
-    tmp2(:,3) = tmp2(:,1) + offset - tmp2(1,1);
-    newtrl = [newtrl; tmp2];
+    if ~isempty(tmp2)
+      tmp2(:,2) = tmp2 + nsmp - 1;
+      tmp2(:,3) = tmp2(:,1) + offset - tmp2(1,1);
+      newtrl = [newtrl; tmp2];
+    end
   end
 
   tmpcfg = [];
