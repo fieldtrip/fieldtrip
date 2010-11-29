@@ -140,9 +140,8 @@ if strcmp(cfg.analyze,'yes')
         
         % determine noise
         freq                        = spectralestimate(data);
-        foi                         = freq.freq;
-        spec(:,:,t)                 = findpower(0, 400, freq);
-        lowfreqnoise(1,t)           = mean(mean(findpower(0.1, 2, freq)));
+        [spec(:,:,t), foi]          = findpower(1, 400, freq);
+        lowfreqnoise(1,t)           = mean(mean(findpower(0, 2, freq)));
         linenoise_prefilt           = mean(findpower(49, 51, freq),2); clear freq;
         
         % preproc with noise filter
@@ -182,6 +181,7 @@ if strcmp(cfg.analyze,'yes')
     output.time         = (1:ntrials)*cfgdef.trialdef.poststim-.5*cfgdef.trialdef.poststim;
     output.hpos         = hpos;
     output.hmotion      = hmotion;
+    %output.grad         = 
     
     % save to .mat
     if strcmp(cfg.savemat,'yes')
@@ -552,22 +552,29 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [freqoutput] = spectralestimate(data)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+cfgredef             = [];
+cfgredef.length      = 1;
+cfgredef.overlap     = 0;
+redef                = ft_redefinetrial(cfgredef, data);
+
 cfgfreq              = [];
 cfgfreq.output       = 'pow';
 cfgfreq.channel      = 'MEG';
 cfgfreq.method       = 'mtmfft';
 cfgfreq.taper        = 'hanning';
+cfgfreq.keeptrials   = 'no';
 cfgfreq.foilim       = [0 400]; % Fr ~ .1 hz
-freqoutput           = ft_freqanalysis(cfgfreq, data);
+freqoutput           = ft_freqanalysis(cfgfreq, redef);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [power] = findpower(low, high, freqinput)
+function [power, freq] = findpower(low, high, freqinput)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % replace value with the index of the nearest bin
 xmin  = nearest(getsubfield(freqinput, 'freq'), low);
 xmax  = nearest(getsubfield(freqinput, 'freq'), high);
 % select the freq range
 power = freqinput.powspctrm(:,xmin:xmax);
+freq = freqinput.freq(:,xmin:xmax);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function plot_REF(dat)
