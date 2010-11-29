@@ -81,10 +81,21 @@ unsigned int add_event_from_matlab(unsigned int bufsize, void **buf, const mxArr
 
 	evdef.bufsize = type_bytes + value_bytes;
 	
-	field = mxGetFieldByNumber(E, index, fieldnum_sample);
-	if (!mxIsNumeric(field) || mxIsEmpty(field)) 
-		mexErrMsgTxt("invalid data type for 'sample'");
-	evdef.sample = (UINT32_T) mxGetScalar(field) - 1; /* 0-based index on protocol level */
+	if (fieldnum_sample < 0) {
+		/* "sample" field not given? -> will be inserted by server */
+		evdef.sample = EVENT_AUTO_SAMPLE;  
+	} else {
+		field = mxGetFieldByNumber(E, index, fieldnum_sample);
+		if (mxIsEmpty(field)) {
+			/* also empty "sample" fields will be auto-translated */
+			evdef.sample = EVENT_AUTO_SAMPLE;  
+		} else {
+			if (!mxIsNumeric(field)) {
+				mexErrMsgTxt("invalid data type for 'sample'");
+			}
+			evdef.sample = (UINT32_T) mxGetScalar(field) - 1; /* 0-based index on protocol level */
+		}
+	}
 	
 	field = mxGetFieldByNumber(E, index, fieldnum_offset);
 	if (!mxIsNumeric(field) || mxIsEmpty(field)) 
@@ -146,8 +157,14 @@ int buffer_putevt(int server, mxArray * plhs[], const mxArray * prhs[])
 	if (fieldnum_value < 0) mexErrMsgTxt("field 'value' is missing");
 	
 	fieldnum_sample = mxGetFieldNumber(prhs[0], "sample");
-	if (fieldnum_sample < 0) mexErrMsgTxt("field 'sample' is missing");
-	
+	/*
+		If no "sample" field is given, we use EVENT_AUTO_SAMPLE and have 
+		the server insert the right number automatically.
+		
+		Old code:
+		if (fieldnum_sample < 0) mexErrMsgTxt("field 'sample' is missing");
+	*/
+	 
 	fieldnum_offset = mxGetFieldNumber(prhs[0], "offset");
 	if (fieldnum_offset < 0) mexErrMsgTxt("field 'offset' is missing");
 	
