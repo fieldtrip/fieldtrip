@@ -45,28 +45,19 @@ function [lf] = ft_compute_leadfield(pos, sens, vol, varargin)
 %   single sphere (Cuffin and Cohen, 1977)
 %   multiple spheres with one sphere per channel (Huang et al, 1999)
 %   realistic single shell using superposition of basis functions (Nolte, 2003)
-%   using leadfield interpolation on precomputed grid
-%   Boundary Element Method (BEM) using Neuromag meg_calc toolbox
+%   leadfield interpolation using a precomputed grid
+%   boundary element method (BEM)
 %
 % The supported forward solutions for EEG are
 %   single sphere
-%   multiple concentric spheres (max. 4)
-%   using leadfield interpolation on precomputed grid
-%   Boundary Element Method (BEM) using ASA to precompute the sytem matrix
-%   Boundary Element Method (BEM) using Neuromag meg_calc toolbox
+%   multiple concentric spheres (up to 4 spheres)
+%   leadfield interpolation using a precomputed grid
+%   boundary element method (BEM)
 %
-% References to implemented methods:
-%   Cuffin BN, Cohen D.
-%   Magnetic fields of a dipole in special volume conductor shapes
-%   IEEE Trans Biomed Eng. 1977 Jul;24(4):372-81.
-%
-%   Nolte G.
-%   The magnetic lead field theorem in the quasi-static approximation and its use for magnetoencephalography forward calculation in realistic volume conductors
-%   Phys Med Biol. 2003 Nov 21;48(22):3637-52
-%
-%   Huang MX, Mosher JC, Leahy RM.
-%   A sensor-weighted overlapping-sphere head model and exhaustive head model comparison for MEG
-%   Phys Med Biol. 1999 Feb;44(2):423-40
+% See also FT_PREPARE_VOL_SENS, FT_HEADMODEL_ASA, FT_HEADMODEL_BEMCP,
+% FT_HEADMODEL_CONCENTRICSPHERES, FT_HEADMODEL_DIPOLI, FT_HEADMODEL_HALFSPACE,
+% FT_HEADMODEL_INFINITE, FT_HEADMODEL_LOCALSPHERES, FT_HEADMODEL_OPENMEEG,
+% FT_HEADMODEL_SINGLESHELL, FT_HEADMODEL_SINGLESPHERE
 
 % Copyright (C) 2004-2010, Robert Oostenveld
 %

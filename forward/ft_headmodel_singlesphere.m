@@ -4,6 +4,10 @@ function vol = ft_headmodel_singlesphere(pnt, varargin)
 % head by fitting a spherical model to a set of points that describe
 % the head surface.
 %
+% For MEG this implements Cuffin BN, Cohen D.  "Magnetic fields of
+% a dipole in special volume conductor shapes" IEEE Trans Biomed Eng.
+% 1977 Jul;24(4):372-81.
+%
 % Use as
 %   vol = ft_headmodel_singlesphere(pnt, ...)
 %
