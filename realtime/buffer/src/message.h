@@ -122,6 +122,12 @@ typedef uint64_t UINT64_T;
 #define EVENTSEL_MINSAMPLE 4
 #define EVENTSEL_MAXSAMPLE 5
 
+
+/*  if event->def->sample == EVENT_AUTO_SAMPLE, automatically insert
+	current sample index instead
+*/
+#define EVENT_AUTO_SAMPLE   -1
+
 /** The following enumeration is for specifying types of chunks that may be present
 	in the "buf" part of the Fieldtrip header.
 */

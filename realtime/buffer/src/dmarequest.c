@@ -294,6 +294,14 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 					event[thisevent].def = (eventdef_t*)malloc(sizeof(eventdef_t));
 					DIE_BAD_MALLOC(event[thisevent].def);
 					memcpy(event[thisevent].def, (char*)request->buf+offset, sizeof(eventdef_t));
+					
+					/* automatically convert event->def->sample to current sample number
+						(thus this event "belongs" to the first sample of the next block from PUT_DAT)
+					*/
+					if (event[thisevent].def->sample == EVENT_AUTO_SAMPLE) {
+						event[thisevent].def->sample = header->def->nsamples;
+					}
+					
 					offset += sizeof(eventdef_t);
 					event[thisevent].buf = malloc(eventdef->bufsize);
 					DIE_BAD_MALLOC(event[thisevent].buf);
