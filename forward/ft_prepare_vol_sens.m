@@ -110,9 +110,18 @@ elseif ~ismeg && ~iseeg
   error('the input does not look like EEG, nor like MEG');
 
 elseif ismeg
+  
+  % keep a copy of the original sensor array, this is needed for the MEG multisphere model
+  sens_orig = sens;
+  
   % always ensure that there is a linear transfer matrix for combining the coils into gradiometers
   if ~isfield(sens, 'tra');
-    sens.tra = sparse(eye(length(sens.label)));
+    Nchans = length(sens.label);
+    Ncoils = size(sens.pnt,1);
+    if Nchans~=Ncoils
+      error('inconsistent number of channels and coils');
+    end
+    sens.tra = sparse(eye(Nchans, Ncoils));
   end
 
   % select the desired channels from the gradiometer array
@@ -154,8 +163,19 @@ elseif ismeg
       % conduction model.
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      % the initial multisphere volume conductor has a single sphere per
-      % channel, whereas it should have a sphere for each coil
+      % use the original sensor array instead of the one with a subset of
+      % channels, because we need the complete mapping of coils to channels 
+      sens = sens_orig;
+      
+      % remove the coils that do not contribute to any channel output
+      % since these do not have a corresponding sphere
+      selcoil  = find(sum(sens.tra,1)~=0);
+      sens.pnt = sens.pnt(selcoil,:);
+      sens.ori = sens.ori(selcoil,:);
+      sens.tra = sens.tra(:,selcoil);
+
+      % the initial multisphere volume conductor has a local sphere per
+      % channel, whereas it should have a local sphere for each coil
       if size(vol.r,1)==size(sens.pnt,1) && ~isfield(vol, 'label')
         % it appears that each coil already has a sphere, which suggests
         % that the volume conductor already has been prepared to match the
@@ -174,19 +194,12 @@ elseif ismeg
         return
       end
 
-      % select the desired channels from the multisphere volume conductor
-      % order them according to the users specification
-      [selchan, selvol] = match_str(channel, vol.label);
-      vol.label = vol.label(selvol);
-      vol.r     = vol.r(selvol);
-      vol.o     = vol.o(selvol,:);
-
       % the CTF way of representing the headmodel is one-sphere-per-channel
       % whereas the FieldTrip way of doing the forward computation is one-sphere-per-coil
       Nchans   = size(sens.tra,1);
       Ncoils   = size(sens.tra,2);
       Nspheres = size(vol.label);
-
+      
       if isfield(vol, 'orig')
         % these are present in a CTF *.hdm file
         singlesphere.o(1,1) = vol.orig.MEG_Sphere.ORIGIN_X;
@@ -195,11 +208,6 @@ elseif ismeg
         singlesphere.r      = vol.orig.MEG_Sphere.RADIUS;
         % ensure consistent units
         singlesphere = ft_convert_units(singlesphere, vol.unit);
-      else
-        singlesphere = [];
-      end
-
-      if ~isempty(singlesphere)
         % determine the channels that do not have a corresponding sphere
         % and use the globally fitted single sphere for those
         missing = setdiff(sens.label, vol.label);
@@ -214,21 +222,37 @@ elseif ismeg
       end
 
       multisphere = [];
-      % for each coil in the MEG helmet, determine the corresponding local sphere
+      % for each coil in the MEG helmet, determine the corresponding channel and from that the corresponding local sphere 
       for i=1:Ncoils
-        coilindex = find(sens.tra(:,i)~=0); % to which channel does the coil belong
+        coilindex = find(sens.tra(:,i)~=0); % to which channel does this coil belong
         if length(coilindex)>1
           % this indicates that there are multiple channels to which this coil contributes,
           % which happens if the sensor array represents a synthetic higher-order gradient.
           [dum, coilindex] = max(abs(sens.tra(:,i)));
         end
 
-        coillabel = sens.label{coilindex};  % what is the label of the channel
-        chanindex = strmatch(coillabel, vol.label, 'exact');
+        coillabel = sens.label{coilindex};                    % what is the label of this channel
+        chanindex = strmatch(coillabel, vol.label, 'exact');  % what is the index of this channel in the list of local spheres
         multisphere.r(i,:) = vol.r(chanindex);
         multisphere.o(i,:) = vol.o(chanindex,:);
       end
       vol = multisphere;
+      
+      % finally do the selection of channels and coils
+      % order them according to the users specification
+      [selchan, selsens] = match_str(channel, sens.label);
+      
+      % first only modify the linear combination of coils into channels
+      sens.label = sens.label(selsens);
+      sens.tra   = sens.tra(selsens,:);
+      % subsequently remove the coils that do not contribute to any sensor output
+      selcoil  = find(sum(sens.tra,1)~=0);
+      sens.pnt = sens.pnt(selcoil,:);
+      sens.ori = sens.ori(selcoil,:);
+      sens.tra = sens.tra(:,selcoil);
+      % make the same selection of coils in the multisphere model
+      vol.r = vol.r(selcoil);
+      vol.o = vol.o(selcoil,:);
 
     case 'nolte'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
