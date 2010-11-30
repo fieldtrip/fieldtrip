@@ -156,7 +156,6 @@ public class BufferEvent {
 	}
 	
 	public void serialize(ByteBuffer buf) {
-		System.out.println(buf.position());
 		buf.putInt(wType.type);
 		buf.putInt(wType.numel);
 		buf.putInt(wValue.type);
@@ -167,7 +166,6 @@ public class BufferEvent {
 		buf.putInt(wType.size+wValue.size);
 		wType.serialize(buf);
 		wValue.serialize(buf);
-		System.out.println(buf.position());
 	}
 	
 	public void print() {

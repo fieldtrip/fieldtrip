@@ -57,18 +57,21 @@ class MidiToBuffer implements Receiver {
 	}
 	
 	public void close() {
-		System.out.println("Closing MIDI receiver");
+		System.out.println("Closing MIDI receiver.");
 	}
 
 	public void send(MidiMessage message, long timeStamp) {
-		if (timeStamp == 0) {
-			System.out.println("Ignoring MIDI message with timestamp = 0");
-			return;
-		}
 		BufferEvent E = new BufferEvent("MIDI", 0, -1);
 		E.setValueUnsigned(message.getMessage());
-		E.print();
+		System.out.println("\nLength = " + message.getLength());
+		System.out.println("Status = " + message.getStatus());
 		try {
+			// the next three lines can be removed if your buffer 
+		    // server runs the auto-sample translation 
+			SamplesEventsCount count = ftClient.poll();
+			E.sample = count.nSamples;
+			System.out.println("Sample = " + E.sample);
+		
 			ftClient.putEvent(E);
 		}
 		catch (IOException e) {
