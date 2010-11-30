@@ -1,6 +1,6 @@
 function [type, dimord] = ft_datatype(data, desired)
 
-% DATATYPE determines the type of data represented in a FieldTrip data
+% FT_DATATYPE determines the type of data represented in a FieldTrip data
 % structure and returns a string with raw, freq, timelock source, comp,
 % spike, source, volume, dip.
 %
@@ -8,7 +8,7 @@ function [type, dimord] = ft_datatype(data, desired)
 %   [type, dimord] = ft_datatype(data)
 %   [type, dimord] = ft_datatype(data, desired)
 %
-% See also CHANTYPE, FILETYPE, SENSTYPE, VOLTYPE
+% See also FT_CHANTYPE, FT_FILETYPE, FT_SENSTYPE, FT_VOLTYPE
 
 % Copyright (C) 2008, Robert Oostenveld
 %
