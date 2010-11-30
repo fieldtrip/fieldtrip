@@ -109,10 +109,19 @@ public class BufferEvent {
 		wType = new WrappedObject(typeObj);
 		return wType.type != DataType.UNKNOWN;
 	}
-
+	
 	public boolean setValue(Object valueObj) {
 		wValue = new WrappedObject(valueObj);
 		return wValue.type != DataType.UNKNOWN;
+	}
+	
+	public boolean setValueUnsigned(byte[] array) {
+		wValue = new WrappedObject();
+		wValue.array = array.clone();
+		wValue.numel = array.length;
+		wValue.size  = array.length;
+		wValue.type  = DataType.UINT8;
+		return true;
 	}
 
 	public int size() {
@@ -147,6 +156,7 @@ public class BufferEvent {
 	}
 	
 	public void serialize(ByteBuffer buf) {
+		System.out.println(buf.position());
 		buf.putInt(wType.type);
 		buf.putInt(wType.numel);
 		buf.putInt(wValue.type);
@@ -157,6 +167,7 @@ public class BufferEvent {
 		buf.putInt(wType.size+wValue.size);
 		wType.serialize(buf);
 		wValue.serialize(buf);
+		System.out.println(buf.position());
 	}
 	
 	public void print() {
