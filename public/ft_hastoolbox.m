@@ -1,11 +1,11 @@
-function [status] = hastoolbox(toolbox, autoadd, silent)
+function [status] = ft_hastoolbox(toolbox, autoadd, silent)
 
-% HASTOOLBOX tests whether an external toolbox is installed. Optionally
+% FT_HASTOOLBOX tests whether an external toolbox is installed. Optionally
 % it will try to determine the path to the toolbox and install it
 % automatically.
 %
 % Use as
-%   [status] = hastoolbox(toolbox, autoadd, silent)
+%   [status] = ft_hastoolbox(toolbox, autoadd, silent)
 %
 % autoadd = 0 means that it will not be added
 % autoadd = 1 means that give an error if it cannot be added

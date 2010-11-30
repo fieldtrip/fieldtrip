@@ -1,6 +1,6 @@
 function [data] = ft_selectdata(varargin)
 
-% SELECTDATA serves to subselect regions-of-interest from the input data,
+% FT_SELECTDATA serves to subselect regions-of-interest from the input data,
 % with or without averaging across the specified dimensions. It also
 % concatenates multiple input data structures along the compatible
 % dimension and is thus a more general implementation of ft_appenddata,

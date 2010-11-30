@@ -1,14 +1,15 @@
 function [dat] = ft_fetch_data(data, varargin)
 
-% FETCH_DATA mimics the behaviour of FT_READ_DATA, but for a FieldTrip
+% FT_FETCH_DATA mimics the behaviour of FT_READ_DATA, but for a FieldTrip
 % raw data structure instead of a file on disk.
 %
 % Use as
 %   [dat] = ft_fetch_data(data, ...)
 %
-% See also FT_READ_DATA, FETCH_HEADER, FETCH_EVENT
+% See also FT_READ_DATA, FT_FETCH_HEADER, FT_FETCH_EVENT
 
 % Copyright (C) 2008, Esther Meeuwissen
+% Copyright (C) 2009-2010, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.

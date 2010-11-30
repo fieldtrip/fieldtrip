@@ -1,11 +1,11 @@
-function [x] = struct2double(x, maxdepth);
+function [x] = ft_struct2double(x, maxdepth);
 
-% STRUCT2DOUBLE converts all single precision numeric data in a structure 
+% FT_STRUCT2DOUBLE converts all single precision numeric data in a structure 
 % into double precision. It will also convert plain matrices and
 % cell-arrays.
 %
 % Use as
-%    x = struct2double(x);
+%    x = ft_struct2double(x);
 %
 % Starting from Matlab 7.0, you can use single precision data in your
 % computations, i.e. you do not have to convert back to double precision.
@@ -15,7 +15,7 @@ function [x] = struct2double(x, maxdepth);
 % precision data. Therefore you should converted your data from single to
 % double precision after reading from file.
 %
-% See also STRUCT2SINGLE
+% See also FT_STRUCT2SINGLE
 
 % Copyright (C) 2005, Robert Oostenveld
 %

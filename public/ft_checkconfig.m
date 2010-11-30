@@ -1,6 +1,6 @@
-function [cfg] = checkconfig(cfg, varargin)
+function [cfg] = ft_checkconfig(cfg, varargin)
 
-% CHECKCONFIG checks the input cfg of the main FieldTrip functions.
+% FT_CHECKCONFIG checks the input cfg of the main FieldTrip functions.
 %
 % 1: It checks whether the cfg contains all the required options, it gives
 % a warning when renamed or deprecated options are used, and it makes sure
@@ -19,7 +19,7 @@ function [cfg] = checkconfig(cfg, varargin)
 % This part of the functionality is still under construction!
 %
 % Use as
-%   [cfg] = checkconfig(cfg, ...)
+%   [cfg] = ft_checkconfig(cfg, ...)
 %
 % The behaviour of checkconfig can be controlled by the following cfg options,
 % which can be set as global fieldtrip defaults (see FIELDTRIPDEFS):
@@ -39,7 +39,7 @@ function [cfg] = checkconfig(cfg, varargin)
 %   checksize       = 'yes', 'no'            % remove large fields from the cfg
 %   trackconfig     = 'on', 'off'            % start/end config tracking
 %
-% See also CHECKDATA, FIELDTRIPDEFS
+% See also FT_CHECKDATA, FIELDTRIPDEFS
 
 % Copyright (C) 2007-2008, Robert Oostenveld, Saskia Haegens
 %

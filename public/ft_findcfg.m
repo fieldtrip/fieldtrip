@@ -1,15 +1,15 @@
 function [val, status] = ft_findcfg(cfg, var);
 
-% FINDCFG searches for an element in the cfg structure
+% FT_FINDCFG searches for an element in the cfg structure
 % or in the nested previous cfgs
 %
 % Use as
-%   [val] = findcfg(cfg, var)
+%   [val] = ft_findcfg(cfg, var)
 % where the name of the variable should be specified as string.
 %
 % e.g.
-%   trl   = findcfg(cfg, 'trl')
-%   event = findcfg(cfg, 'event')
+%   trl   = ft_findcfg(cfg, 'trl')
+%   event = ft_findcfg(cfg, 'event')
 
 % Copyright (C) 2006, Robert Oostenveld
 %
