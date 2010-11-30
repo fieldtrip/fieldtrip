@@ -10,6 +10,13 @@
 
 \begin{document}
 \maketitle
+\thispagestyle{empty}
+
+\newpage
+
+\tableofcontents
+
+\newpage
 
 \section{Module layout}
 
@@ -46,7 +53,7 @@ bahramisharif & elastic net & Ali Bahramisharif  \\
 farquhar & kernel methods & Jason Faquhar\\
 gerven & Bayesian methods & Marcel van Gerven\\
 glmnet & Fortran version of elastic net & Jerome Friedman\\
-herman & common spatial patterns & Pawel Herman\\
+herman & common spatial pattern & Pawel Herman\\
 L1General & L1 regularization & Mark Schmidt\\
 murphy & LDS/HMM toolbox & Kevin Murphy\\
 utilities & global functions & Marcel van Gerven
@@ -64,6 +71,8 @@ The basic philosophy of FMM is that new methods can be added as toolboxes which 
 \end{center}
 \label{class}
 \end{figure}
+
+\newpage
 
 \section{Data handling}
 
@@ -85,6 +94,7 @@ V = obj.test(U)
 \end{verbatim}
 such that \t{V} contains the predictions. The MVA object will sequentially call each \t{ft\_mv\_method} in the pipeline where output of the previous method will be input to the next method. The \t{obj.name} will return the MVA as a string and the method \t{obj.model} will return the associated model, in this case the model of the last method in the pipeline (more on this later).
 
+\newpage
 
 \section{Multivariate methods}
 
@@ -138,7 +148,7 @@ Preprocessors are used to preprocess the input data \t{X} in such a way that it 
 \bf{preprocessor} & \bf{functionality}\\
 \hline
 \t{ft\_mv\_standardizer} &  centers and scales the data such that it has mean zero and a standard deviation of one\\
-\t{ft\_mv\_whitener} & standardizes and whitens the data\\
+\t{ft\_mv\_whitener} & whitens the data\\
 \t{ft\_mv\_csp} & common spatial pattern algorithm\\
 \t{ft\_mv\_pca} & principal component analysis
 \end{tabular}
@@ -174,14 +184,14 @@ Predictors are used to predict new outputs \t{Y} based on input data \t{X}. Tabl
 \t{ft\_mv\_blogreg} & Bayesian logistic regression with a multivariate Laplace prior\\
 \t{ft\_mv\_naive} & Naive Bayes classifier with normally distributed feature values\\
 \t{ft\_mv\_svm} & Support vector machine; inherits from \t{ft\_mv\_kernelmethod}\\
-\t{ft\_mv\_rkls} & Regularized kernel least squares; inherits from \t{ft\_mv\_kernelmethod}\\
 \t{ft\_mv\_klr}  &  Kernel logistic regression;  inherits from \t{ft\_mv\_kernelmethod}\\
-\t{ft\_mv\_ensemble} & Ensemble method class that uses multiple mvmethods in parallel to achieve some goal\\
-\t{ft\_mv\_logreg} & Logistic regression with L1 and/or L2 regularization\\
-\t{ft\_mv\_linreg} & Linear regression with L1 and/or L2 regularization\\
-\t{ft\_mv\_glmnet} & Wrapper class for efficient implementation of elastic net linear and logistic regression\\
 \t{ft\_mv\_rfda} & Regularized Fisher discriminant analysis\\
-\t{ft\_mv\_rls} & Recursive least squares regression
+\t{ft\_mv\_logreg} & Logistic regression with L1 and/or L2 regularization\\
+\t{ft\_mv\_glmnet} & Wrapper class for efficient implementation of elastic net linear and logistic regression\\
+\t{ft\_mv\_linreg} & Linear regression with L1 and/or L2 regularization\\
+\t{ft\_mv\_rkls} & Regularized kernel least squares; inherits from \t{ft\_mv\_kernelmethod}\\
+\t{ft\_mv\_rls} & Recursive least squares regression\\
+\t{ft\_mv\_ensemble} & Ensemble method class that uses multiple mvmethods in parallel to achieve some goal
 \end{tabular}
 \label{predictors}
 \end{table}
@@ -293,6 +303,9 @@ Hence, if we apply multitask learning then the results per dataset are influence
    0.9999
 \end{verbatim}
 Weaker coupling will cause weaker correlations between the models.
+
+\newpage
+
 \section{Statistics}
 
 We can either use a MVA to perform online state estimation or to perform an offline analysis of neuroimaging data. The former is used in BCI applications (prediction) whereas the latter is used in offline analysis of BCI data or MVPA (model inference). Online state estimation is handled in the next section. Here, we describe statistics for models learned on offline data.
@@ -360,6 +373,7 @@ mcnemar & approximate binomial test
 \label{tab:test}
 \end{table}
 
+\newpage
 
 \section{Online state estimation}
 
@@ -387,11 +401,14 @@ clf = ft_mv_analysis({ft_mv_standardizer ...
 \end{verbatim}
 creates a MVA which first standardizes the data, then performs feature selection and finally applies a support vector machine.
 
+\newpage
+
 \section{Parallelization}
 \label{parallel}
 
 Some of the described methods can be resource intensive. Most notably, cross-validation, optimization, feature selection and the application of ensemble methods since they all require iterating over a collection of multivariate analyses. These methods all support parallel computing as implemented through FieldTrip's peer distributed computing module.
 
+\newpage
 
 \section{Examples}
 \label{examples}
@@ -448,7 +465,7 @@ a = ft_mv_test('mva',{ft_mv_standardizer m ft_mv_naive});
 
 \subsubsection*{Using the searchlight method}
 
-In this example, we show how we can compute the performance of individual spheres in a searchlight method using the default dataset. 
+In this example, we show how we can compute the performance of individual spheres in a searchlight method using the default dataset. Note that we use a separate predictor within each sphere instead of the Mahalanobis distance as used by Kriegeskorte et al.
 \begin{verbatim}
 load 69digits;
 \end{verbatim}
@@ -485,12 +502,10 @@ performance for sphere 10 of 39: 0.684211 (p-value: 0.504985)
 \end{verbatim}
 In order to check how well each data feature  does in discriminating the classes, we may call \t{sl.model}. This projects back the average sphere results in native space.
 
-\subsubsection*{Using the searchlight method for feature selection}
 
-work in progress.
+\newpage
 
-
-
+\section{References}
 
 \bibliographystyle{plain}
 \def\refname{}

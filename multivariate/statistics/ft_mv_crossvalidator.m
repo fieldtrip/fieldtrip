@@ -225,7 +225,7 @@ classdef ft_mv_crossvalidator
                 try
                   obj.model{mm} = obj.model{mm} + m{mm};
                 catch
-                  warning('individual model dimensions do not match\n');
+                  warning('individual model dimensions do not match');
                 end
               end
               clear m;

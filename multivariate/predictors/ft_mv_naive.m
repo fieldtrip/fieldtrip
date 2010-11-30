@@ -159,7 +159,7 @@ classdef ft_mv_naive < ft_mv_predictor
         
       else
         m = {};
-        desc = {};
+        desc = {'no model for multiple classes'};
       end
         
     end

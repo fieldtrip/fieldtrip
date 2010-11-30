@@ -59,28 +59,31 @@ function [acc,sig,cv] = ft_mv_test(varargin)
     ores = sqrt(size(Z,2));
     I = zeros(size(Z,1),res^2);
     for j=1:size(Z,1)
+      %I(j,:) = reshape(im2bw(imresize(double(reshape(Z(j,:),[ores ores])),[res res],'nearest')),[1 res^2]);
       I(j,:) = reshape((imresize(double(reshape(Z(j,:),[ores ores])),[res res],'nearest')),[1 res^2]);
     end
-    %S.Y = zscore(I);
+    %S.Y = I+1;
+    S.Y = I;
   end
   
-  if ~isfield(S,'nfolds')
-    S.nfolds = 10;
-  end
-  if ~isfield(S,'parallel')
-    S.parallel = false;
-  end
+  if ~isfield(S,'nfolds'), S.nfolds = 10; end
+  
+  if ~isfield(S,'parallel'), S.parallel = false; end
+  
   if ~isfield(S,'cv')
      S.cv = ft_mv_crossvalidator('parallel',S.parallel,'balance',false,'mva',S.mva,'nfolds',S.nfolds,'verbose',true,'compact',true,'init',1);
   end
+  
   if ~isfield(S,'metric')
-  if strcmp(S.type,'classification')
-    S.metric = 'accuracy';
-  elseif strcmp(S.type,'regression')
-    S.metric = 'invresvar';
-  else
-    S.metric = 'correlation';
+    if strcmp(S.type,'classification')
+      S.metric = 'accuracy';
+    elseif strcmp(S.type,'regression')
+      S.metric = 'invresvar';
+    else
+      S.metric = 'correlation';
+    end
   end
+  
   S.cv.metric = S.metric;
   if ~isfield(S,'sigtest')
     S.sigtest = [];
@@ -91,4 +94,26 @@ function [acc,sig,cv] = ft_mv_test(varargin)
   acc     = cv.performance; 
   sig     = cv.significance;
   
+  if strcmp(S.type,'reconstruction')
+
+    design = cell2mat(cv.design');
+    post = cell2mat(cv.post');
+    
+    for j=1:size(design,1)
+      subplot(1,2,1);
+      imagesc(reshape(design(j,:),[res res]));
+      title('stimulus');
+      colormap(gray);
+      axis off; axis square
+      subplot(1,2,2);
+      imagesc(reshape(post(j,:),[res res]));
+      title('prediction');
+      colormap(gray);
+      axis off; axis square
+      drawnow
+      pause
+    end
+    
+  end
+    
 end

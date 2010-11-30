@@ -23,9 +23,22 @@ for c=1:length(design)
       tmp = contingency(design{c},post{c});
       res{c} = sum(diag(tmp))./size(design{c},1);
       
+    case 'logprob'
+      
+      % compute summed log probability of the real class
+      res{c} = 0;
+      for j=1:size(post{c},1)
+        res{c} = res{c} - log(post{c}(j,design{c}(j)));
+      end
+      
     case 'correlation'
       
-      res{c} = corr(design{c},post{c});
+      res{c} = ones(1,size(design{c},2));
+      idx = find(~all(design{c} == post{c}));
+      for i=1:length(idx)
+        res{c}(idx(i)) = corr(design{c}(:,idx(i)),post{c}(:,idx(i)));
+      end      
+      res{c}(isnan(res{c})) = 0;
       
     case 'invresvar'
       % 1 / residual variance; inverse because large values should indicate
