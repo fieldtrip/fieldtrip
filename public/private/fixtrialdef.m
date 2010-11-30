@@ -19,7 +19,7 @@ hastrial   = isfield(data, 'trial');
 hastime    = isfield(data, 'time');
 hasfsample = isfield(data, 'fsample');
 
-if ~hasfsample
+if ~hasfsample && isfield(data, 'time')
   data.fsample = median(1./diff(data.time{1}));
 end
 
