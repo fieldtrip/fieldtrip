@@ -26,9 +26,18 @@
 #include "platform_includes.h"
 
 #ifdef COMPILER_MINGW
-void inet_ntop(socklen_t salen, const struct sockaddr *sa, char *ipaddr, int maxlen) {
-	strcpy(ipaddr, "xxx.xxx.xxx.xxx");
-	//getnameinfo(sa, salen, ipaddr, maxlen, NULL, 0, 0);
+/* TODO: replace inet_ntop by getnameinfo(sa, salen, ipaddr, maxlen, NULL, 0, 0)
+   for all platforms
+*/
+char *inet_ntop(int af, const void *src, char *dst, socklen_t maxlen) {
+	if (af != AF_INET || maxlen < INET_ADDRSTRLEN) {
+		dst[0] = 0;
+		return NULL;
+	} else {
+		unsigned char *addr = (unsigned char *) src;
+		snprintf(dst, maxlen, "%u.%u.%u.%u", addr[0], addr[1], addr[2], addr[3]);
+		return dst;
+	}
 }
 #endif
 
