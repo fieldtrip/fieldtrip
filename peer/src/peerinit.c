@@ -42,6 +42,14 @@ void peerinit(void *arg) {
 
 #if defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64)
 		DWORD nStrLen; 
+		
+		WSADATA wsa;
+		if(WSAStartup(MAKEWORD(1, 1), &wsa))
+		{
+				DEBUG(LOG_ERR, "peerinit: cannot start WSA sockets");
+				/* FIXME should this be handled more explicitely? */
+		}
+		/* FIXME: put a corresponding WSACleanup call somewhere */
 #endif
 
 		pthread_mutex_lock(&mutexhost);
