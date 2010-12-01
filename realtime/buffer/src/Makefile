@@ -39,6 +39,7 @@ ifeq "$(PLATFORM)" "i686-apple-darwin10"
 	LIBPATH  = -L.
 	LIBS 	 = -lbuffer -lm -lpthread
 	CFLAGS	 = $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -g
+	RM       = rm -f
 endif
 
 ifeq "$(PLATFORM)" "mingw32"
@@ -47,6 +48,7 @@ ifeq "$(PLATFORM)" "mingw32"
 	LIBPATH  = -L. -L../pthreads-win32/lib
 	LIBS 	 = -lbuffer -lm -lpthreadGC2
 	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -g
+	RM       = del
 endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
@@ -55,6 +57,7 @@ ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
 	LIBPATH  = -L. -L../pthreads-win64/lib
 	LIBS 	 = -lbuffer -lm -lpthread
 	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -g 
+	RM       = del
 endif
 
 BINDIR	 = .
@@ -74,10 +77,4 @@ libclient.a: tcprequest.o util.o
 	$(CC) $(CFLAGS) -c $*.c
 
 clean:
-ifeq "$(PLATFORM)" "mingw32"
-	del *.o *.a
-else ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
-	del *.o *.a
-else
-	rm -f core *.o *.obj *.a *~
-endif
+	$(RM) *.o *.a *.obj core

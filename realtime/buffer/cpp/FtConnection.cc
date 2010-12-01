@@ -98,7 +98,7 @@ bool FtConnection::connectUnix(const char *pathname) {
 		}
 		if (r==retry) break;
 		/* wait 5 miliseconds and try again */
-		perror("connectTcp:connect");
+		perror("connectUnix:connect");
 		usleep(5000);
 	}
 	closesocket(sock);
