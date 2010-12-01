@@ -55,6 +55,17 @@ ifeq "$(PLATFORM)" "i686-apple-darwin10"
     CFLAGS	 = $(INCPATH) -Wall -pthread -arch i386
 endif
 
+ifeq "$(PLATFORM)" "mingw32"
+	# this is only for the peerslave command line executable -> 32-bit Matlab on Windows 7 (DCCN511)
+	MATLABARCH = exe
+	MATLABPATH = "C:\Program Files (x86)\Matlab\R2009b32bit"
+	MATLABLIBS = -L$(MATLABPATH)/bin/$(MATLABARCH) libeng.dll libmx.dll
+	MATLABINC  = -I$(MATLABPATH)/extern/include
+	LIBS 	 = -lm -lpeer pthreadGC2.dll -lws2_32 -lwininet
+    # override the architecture defaults
+    CFLAGS	 = $(INCPATH) -Wall -I../pthreads-win32/include -DSYSLOG=2 -DLOG_DEBUG=0 -DLOG_ERR=0
+endif
+
 TARGET   = peerslave.$(MATLABARCH)
 
 ##############################################################################

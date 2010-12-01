@@ -25,6 +25,13 @@
 #include "extern.h"
 #include "platform_includes.h"
 
+#ifdef COMPILER_MINGW
+void inet_ntop(socklen_t salen, const struct sockaddr *sa, char *ipaddr, int maxlen) {
+	strcpy(ipaddr, "xxx.xxx.xxx.xxx");
+	//getnameinfo(sa, salen, ipaddr, maxlen, NULL, 0, 0);
+}
+#endif
+
 typedef struct {
 		void **discovery;
 		int *fd;
@@ -155,7 +162,8 @@ void *discover(void *arg) {
 
 		/* now just enter an infinite loop */
 		while (1) {
-
+				char ipaddr[INET_ADDRSTRLEN];
+				
 				if ((discovery = malloc(sizeof(hostdef_t)))==NULL) {
 						perror("discover malloc");
 						DEBUG(LOG_ERR, "error: discover malloc");
@@ -176,7 +184,7 @@ void *discover(void *arg) {
 				}
 
 				/* the UDP packet specifies the IP address of the sender */
-				char ipaddr[INET_ADDRSTRLEN];
+				
 				inet_ntop(AF_INET, &addr.sin_addr, ipaddr, INET_ADDRSTRLEN);
 
 				/* there seems to be a thread cancelation point inside check_localhost  */

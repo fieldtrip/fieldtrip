@@ -57,8 +57,11 @@ typedef unsigned __int64  uint64_t;
 
 #elif defined (COMPILER_MINGW)
 #include <windows.h>
-#include <win32compat.h>
+#include <ws2tcpip.h>
+#include <stdint.h>
+//#include <win32compat.h>
 #define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
+#define sleep(x)     (Sleep((x)*1000))
 #define usleep(x)    (Sleep((x)/1000))
 
 #elif defined (COMPILER_CYGWIN)

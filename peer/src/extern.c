@@ -18,7 +18,9 @@
 
 #include "peer.h"
 
+#if SYSLOG == 1
 int syslog_level = LOG_CRIT;
+#endif
 
 pthread_cond_t condstatus = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutexstatus = PTHREAD_MUTEX_INITIALIZER;

@@ -39,7 +39,7 @@
 
 float frand(float min, float max) {
 		float val;
-		val = rand();				/* ranging from 0 to RAND_MAX */
+		val = (float) rand();		/* ranging from 0 to RAND_MAX */
 		val = val/RAND_MAX;			/* ranging from 0 to 1 */
 		val = min + val*(max-min);	/* ranging from min to max */
 		return val;

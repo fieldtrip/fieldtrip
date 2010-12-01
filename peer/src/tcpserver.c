@@ -99,7 +99,7 @@ void *tcpserver(void *arg) {
 #ifdef WIN32
 		if(WSAStartup(MAKEWORD(1, 1), &wsa))
 		{
-				if (verbose>0) fprintf(stderr, "tcpserver: cannot start sockets");
+				DEBUG(LOG_ERR, "tcpserver: cannot start sockets");
 				/* FIXME should this be handled more explicitely? */
 		}
 #endif

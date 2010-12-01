@@ -26,6 +26,10 @@
 #include "platform_includes.h"
 
 int threadsleep(float t) {
+	#ifdef WIN32
+		Sleep((int) (t*1000.0));
+		return 0;
+	#else
 		int retval = 0;
 		struct timespec req, rem;
 		/* split in seconds and nanoseconds */
@@ -33,6 +37,7 @@ int threadsleep(float t) {
 		req.tv_nsec = (int)(1000000000.0 * (t - (int)t));
 		retval = nanosleep(&req, &rem);
 		return retval;
+	#endif
 }
 
 int bufread(int s, void *buf, int numel) {

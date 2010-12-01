@@ -5,7 +5,12 @@
 #include <pthread.h>
 #include "platform_includes.h"
 #if defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64)
-#include "win32/stdint.h"
+
+	#if defined(COMPILER_MINGW)
+		#include "stdint.h"
+	#else
+		#include "win32/stdint.h"
+	#endif
 #else
 #include <stdint.h>
 #include <syslog.h>
@@ -81,17 +86,17 @@
 #endif
 
 #if   SYSLOG == 0
-#define PANIC(format, args...)			{exit(-1);}
-#define DEBUG(level, format, args...)	{ }
+#define PANIC(format, ...)			{exit(-1);}
+#define DEBUG(level, format, ...)	{ }
 #elif SYSLOG == 1
-#define PANIC(format, args...)			{syslog(LOG_ERR, format, ## args); exit(-1);}
-#define DEBUG(level, format, args...)	{syslog(level, format, ## args);}
+#define PANIC(format, ...)			{syslog(LOG_ERR, format, ## __VA_ARGS__); exit(-1);}
+#define DEBUG(level, format, ...)	{syslog(level, format, ## __VA_ARGS__);}
 #elif SYSLOG == 2
-#define PANIC(format, args...)			{fprintf(stderr, format"\n", ## args); exit(-1);}
-#define DEBUG(level, format, args...)	{if (level<=syslog_level) fprintf(stderr, format"\n", ## args);}
+#define PANIC(format, ...)			{fprintf(stderr, format"\n", ## __VA_ARGS__); exit(-1);}
+#define DEBUG(level, format, ...)	{fprintf(stderr, format"\n", ## __VA_ARGS__);}
 #elif SYSLOG == 3
-#define PANIC(format, args...)			{mexPrintf(format"\n", ## args); exit(-1);}
-#define DEBUG(level, format, args...)	{if (level<=syslog_level) mexPrintf(format"\n", ## args);}
+#define PANIC(format, ...)			{mexPrintf(format"\n", ## __VA_ARGS__); exit(-1);}
+#define DEBUG(level, format, ...)	{if (level<=syslog_level) mexPrintf(format"\n", ## __VA_ARGS__);}
 #endif
 
 #define FREE(x)							{if (x) {free(x); x=NULL;}}

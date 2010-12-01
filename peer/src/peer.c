@@ -57,9 +57,10 @@ void initFun(void) {
 		if (!peerInitialized) {
 
 				/* open the logging facility and set the default level */
+				#if SYSLOG ==1
 				openlog("peer.mex", LOG_PID, LOG_USER);
 				setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT));
-
+				#endif
 				mexPrintf("peer: init\n");
 				peerinit(NULL);
 				peerInitialized = 1;
@@ -133,7 +134,9 @@ void exitFun(void) {
 		peerInitialized = 0;
 
 		/* switch off the logging facility */
+		#if SYSLOG == 1
 		closelog();
+		#endif
 
 		return;
 }
@@ -780,6 +783,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 
 		/****************************************************************************/
 		else if (strcasecmp(command, "put")==0) {
+				int hasuds, hastcp;
 				/* the input arguments should be "put <peerid> <arg> <opt> ... "   */
 				/* where additional options should be specified as key-value pairs */
 
@@ -839,8 +843,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				}
 
 				pthread_mutex_lock(&mutexhost);
-				int hasuds = (strlen(peer->host->socket)>0 && strcmp(peer->host->name, host->name)==0);
-				int hastcp = (peer->host->port>0);
+				hasuds = (strlen(peer->host->socket)>0 && strcmp(peer->host->name, host->name)==0);
+				hastcp = (peer->host->port>0);
 				pthread_mutex_unlock(&mutexhost);
 
 				if (hasuds) {

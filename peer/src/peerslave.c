@@ -99,8 +99,10 @@ int main(int argc, char *argv[]) {
 		pthread_t discoverThread;
 		pthread_t expireThread;
 
+		#if SYSLOG==1
 		openlog("peerslave", LOG_PID | LOG_PERROR, LOG_USER);
 		setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT));
+		#endif
 		peerinit(NULL);
 
 		/* use GNU getopt_long for the command-line options */
@@ -253,11 +255,12 @@ int main(int argc, char *argv[]) {
 								DEBUG(LOG_NOTICE, "option --timeout with value `%s'", optarg);
 								enginetimeout = atol(optarg);
 								break;
-
+					#if SYSLOG ==1
 						case 'n':
 								DEBUG(LOG_NOTICE, "option --verbose with value `%s'", optarg);
 								syslog_level = atol(optarg);
 								break;
+					#endif
 
 						case '?':
 								/* getopt_long already printed an error message. */
@@ -268,7 +271,8 @@ int main(int argc, char *argv[]) {
 								break;
 				}
 		}
-
+		
+		#if SYSLOG == 1
 		switch (syslog_level) {
 				case 0:
 						setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT) | LOG_MASK(LOG_ERR) | LOG_MASK(LOG_WARNING) | LOG_MASK(LOG_NOTICE) | LOG_MASK(LOG_INFO) | LOG_MASK(LOG_DEBUG));
@@ -295,6 +299,7 @@ int main(int argc, char *argv[]) {
 						setlogmask(LOG_MASK(LOG_EMERG));
 						break;
 		}
+		#endif
 
 		if (help_flag) {
 				/* display the help message and return to the command line */
@@ -302,6 +307,7 @@ int main(int argc, char *argv[]) {
 				exit(0);
 		}
 
+		#ifndef WIN32
 		if (daemon_flag) {
 				/* now create new process */
 				childpid = fork();
@@ -331,6 +337,8 @@ int main(int argc, char *argv[]) {
 						exit(0); 
 				}
 		}
+		#endif
+		
 
 		/* set the default command to start matlab */
 		if (!startcmd) {
