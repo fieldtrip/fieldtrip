@@ -16,6 +16,7 @@ ifeq "$(PLATFORM)" "mingw32"
    LDGL = -lfltk_gl -lopengl32 -lglu32 $(LDFL)
    SUFFIX = .exe
    WINONLY = gui_streamer.exe pixeldata_to_remote_buffer.exe 
+   CFLAGS  = -I../../buffer/src -I../../buffer/pthreads-win32/include -I. -Wunused -Wall -pedantic
 else
    LDFLAGS = -lpthread ../../buffer/src/libbuffer.a
    FLFLAGS = `fltk-config --cxxflags`
@@ -62,6 +63,12 @@ nii_to_buffer.o: nii_to_buffer.cc
 
 nii_to_buffer$(SUFFIX): nii_to_buffer.o
 	g++ -o nii_to_buffer$(SUFFIX) nii_to_buffer.o $(LDFLAGS)
+	
+save_as_nifti.o: save_as_nifti.c
+	gcc -c save_as_nifti.c $(CFLAGS)
+	
+save_as_nifti$(SUFFIX): save_as_nifti.o ../../buffer/src/socketserver.o
+	gcc -o save_as_nifti$(SUFFIX) save_as_nifti.o ../../buffer/src/socketserver.o $(LDFLAGS)
 
 ###############################################################################
 # Windows specific components / acquisition software
