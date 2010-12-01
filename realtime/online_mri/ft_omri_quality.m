@@ -23,27 +23,27 @@ function ft_omri_quality(cfg)
 %addpath('/home/common/matlab/spm8');
 
 if nargin<1
-	cfg = [];
+  cfg = [];
 end
 
 if ~isfield(cfg, 'showRawVariation')
-	cfg.showRawVariation = 1;
+  cfg.showRawVariation = 1;
 end
 
 if ~isfield(cfg, 'clipVar')
-	cfg.clipVar = 0.2;
+  cfg.clipVar = 0.2;
 end
 
 if ~isfield(cfg, 'lambda')
-	cfg.lambda = 0.9;
+  cfg.lambda = 0.9;
 end
 
 if ~isfield(cfg, 'input')
-	cfg.input = 'buffer://localhost:1972';
+  cfg.input = 'buffer://localhost:1972';
 end
 
 if ~isfield(cfg, 'numDummy')
-	cfg.numDummy = 0;
+  cfg.numDummy = 0;
 end
 
 if ~isfield(cfg, 'baudrate')
@@ -64,8 +64,15 @@ end
 
 if ~isempty(cfg.serial)
   try
-    serPort = serial(cfg.serial, 'BaudRate', cfg.baudrate);
-    fopen(serPort);
+    serPort = serial(cfg.serial);
+    existPort = instrfind('Name',serPort.name, 'Status', 'open');
+    if ~isempty(existPort)
+       set(existPort, 'BaudRate', cfg.baudrate);
+       serPort = existPort;
+    else
+       set(serPort, 'BaudRate', cfg.baudrate);
+       fopen(serPort);
+    end
   catch me
     serPort = [];
     disp(me.message);
@@ -77,107 +84,107 @@ end
 
 % Loop this forever (until user cancels)
 while 1
-	clear ft_read_header
-	% start by reading the header from the realtime buffer
-	while 1
-		try
-			hdr = ft_read_header(cfg.input);
-			break;
-		catch 
-			disp('Waiting for header');
-			pause(0.5);
-		end
-	end
-	
-	% Ok, we got the header, try to make sense out of it
-	S = ft_omri_info_from_header(hdr);
-	if isempty(S)
-		warning('No protocol information found!')
-		% restart loop
-		pause(0.5);
-		continue;
-	end
-			
-	% reset motion estimates
-	motEst  = [];
-	maxVal  = 0;
-	maxDiff = 1e-6; % zero is not possible here (for imagesc range)
-	
-	% Wait for numDummy scans (and drop them)
-	fprintf(1,'Waiting for %i dummy samples to come in...\n', cfg.numDummy);
-	while 1
-		threshold = struct('nsamples', cfg.numDummy);
-		newNum = ft_poll_buffer(cfg.input, threshold, 500);
-		if newNum.nsamples >= cfg.numDummy
-		   break
-		end
-		pause(0.01);
-	end
+  clear ft_read_header
+  % start by reading the header from the realtime buffer
+  while 1
+    try
+      hdr = ft_read_header(cfg.input);
+      break;
+    catch 
+      disp('Waiting for header');
+      pause(0.5);
+    end
+  end
+  
+  % Ok, we got the header, try to make sense out of it
+  S = ft_omri_info_from_header(hdr);
+  if isempty(S)
+    warning('No protocol information found!')
+    % restart loop
+    pause(0.5);
+    continue;
+  end
+      
+  % reset motion estimates
+  motEst  = [];
+  maxVal  = 0;
+  maxDiff = 1e-6; % zero is not possible here (for imagesc range)
+  
+  % Wait for numDummy scans (and drop them)
+  fprintf(1,'Waiting for %i dummy samples to come in...\n', cfg.numDummy);
+  while 1
+    threshold = struct('nsamples', cfg.numDummy);
+    newNum = ft_poll_buffer(cfg.input, threshold, 500);
+    if newNum.nsamples >= cfg.numDummy
+       break
+    end
+    pause(0.01);
+  end
 
-	fprintf(1,'Starting to process\n');
-	numTotal  = cfg.numDummy;
-	numProper = 0;
-	discNum = 0;
-		
-	% Loop this as long as the experiment runs with the same protocol (= data keeps coming in)
-	while 1
-		% determine number of samples available in buffer / wait for more than numTotal
-		threshold.nsamples = numTotal;
-		newNum = ft_poll_buffer(cfg.input, threshold, 500);
-		
-		if newNum.nsamples < numTotal
-			% scanning seems to have stopped - re-read header to continue with next trial
-			break;
-		end
-		if newNum.nsamples < numTotal
-			% timeout -- go back to start of (inner) loop
-			drawnow;
-		    continue;
-		end
-		
-		% this is necessary for ft_read_data
-		hdr.nSamples = newNum.nsamples;
-		
-		index = (cfg.numDummy + numProper) + 1;
-		fprintf('\nTrying to read %i. proper scan at sample index %d\n', numProper+1, index);
-		GrabSampleT = tic;
-		
-		try
-			% read data from buffer (only the last scan)
-			dat = ft_read_data(cfg.input, 'header', hdr, 'begsample', index, 'endsample', index);
-		catch
-			warning('Problems reading data - going back to poll operation...');
-			continue;
-		end
-		
-		numProper = numProper + 1;
-		numTotal  = numTotal + 1;
-		
-		maxdat = max(dat);
-		if maxdat > maxVal
-			maxVal = maxdat;
-			maxDiff = cfg.clipVar * double(maxVal);
-		end
-		rawScan = single(reshape(dat, S.voxels));
-				
-		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-		% motion correction
-		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-		if numProper == 1
-			% set up reference model for registration
-			flags = struct('mat', S.mat0);
-			fprintf(1,'Setting up first non-dummy scan as reference volume...\n');
-			RRM = ft_omri_align_init(rawScan, flags);
-			motEst = zeros(1,6);
-			procScan = single(rawScan);
-      lastPos = zeros(1,3);
-		else
-			fprintf('%-30s','Registration...');
-			tic; 
-			[RRM, M, Mabs, procScan] = ft_omri_align_scan(RRM, rawScan); 
-			toc
-			motPars = spm_imatrix(M);
-			motEst = [motEst; motPars(1:6).*[1 1 1 180/pi 180/pi 180/pi]];
+  fprintf(1,'Starting to process\n');
+  numTotal  = cfg.numDummy;
+  numProper = 0;
+  discNum = 0;
+    
+  % Loop this as long as the experiment runs with the same protocol (= data keeps coming in)
+  while 1
+    % determine number of samples available in buffer / wait for more than numTotal
+    threshold.nsamples = numTotal;
+    newNum = ft_poll_buffer(cfg.input, threshold, 500);
+    
+    if newNum.nsamples < numTotal
+      % scanning seems to have stopped - re-read header to continue with next trial
+      break;
+    end
+    if newNum.nsamples == numTotal
+      % timeout -- go back to start of (inner) loop
+      drawnow;
+        continue;
+    end
+    
+    % this is necessary for ft_read_data
+    hdr.nSamples = newNum.nsamples;
+    
+    index = (cfg.numDummy + numProper) + 1;
+    fprintf('\nTrying to read %i. proper scan at sample index %d\n', numProper+1, index);
+    GrabSampleT = tic;
+    
+    try
+      % read data from buffer (only the last scan)
+      dat = ft_read_data(cfg.input, 'header', hdr, 'begsample', index, 'endsample', index);
+    catch
+      warning('Problems reading data - going back to poll operation...');
+      continue;
+    end
+    
+    numProper = numProper + 1;
+    numTotal  = numTotal + 1;
+    
+    maxdat = max(dat);
+    if maxdat > maxVal
+      maxVal = maxdat;
+      maxDiff = cfg.clipVar * double(maxVal);
+    end
+    rawScan = single(reshape(dat, S.voxels));
+        
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % motion correction
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if numProper == 1
+      % set up reference model for registration
+      flags = struct('mat', S.mat0);
+      fprintf(1,'Setting up first non-dummy scan as reference volume...\n');
+      RRM = ft_omri_align_init(rawScan, flags);
+      motEst = zeros(1,6);
+      procScan = single(rawScan);
+                        lastPos = zeros(1,3);
+    else
+      fprintf('%-30s','Registration...');
+      tic; 
+      [RRM, M, Mabs, procScan] = ft_omri_align_scan(RRM, rawScan); 
+      toc
+      motPars = spm_imatrix(M);
+      motEst = [motEst; motPars(1:6).*[1 1 1 180/pi 180/pi 180/pi]];
       
       if ~isempty(serPort)
         curPos = motPars(1:3);
@@ -199,45 +206,45 @@ while 1
         end
         lastPos = curPos;
       end
-		end
-		
-		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-		% difference with previous image, after motion correction
-		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-		if numProper == 1
-			diffScan = zeros(size(procScan));
-			if cfg.showRawVariation
-				lastScan = rawScan;
-			else
-				lastScan = procScan;
-			end
-		else
-			if cfg.showRawVariation
-				% Calculation based on raw scans
-				diffScan = max(cfg.lambda*diffScan, abs(rawScan - lastScan));
-				lastScan = rawScan;
-			else
-				% Calculation based on the processed scans
-				diffScan = max(cfg.lambda*diffScan, abs(procScan - lastScan));
-				lastScan = procScan;
-			end
-			
-			discNum = cfg.lambda*discNum + 1;
-		end
+    end
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % difference with previous image, after motion correction
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if numProper == 1
+      diffScan = zeros(size(procScan));
+      if cfg.showRawVariation
+        lastScan = rawScan;
+      else
+        lastScan = procScan;
+      end
+    else
+      if cfg.showRawVariation
+        % Calculation based on raw scans
+        diffScan = max(cfg.lambda*diffScan, abs(rawScan - lastScan));
+        lastScan = rawScan;
+      else
+        % Calculation based on the processed scans
+        diffScan = max(cfg.lambda*diffScan, abs(procScan - lastScan));
+        lastScan = procScan;
+      end
+      
+      discNum = cfg.lambda*discNum + 1;
+    end
 
-		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-		% done with pre-processing, write output
-		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%		
-		fprintf('Done -- total time = %f\n', toc(GrabSampleT));
-		
-		clippedDiff = max(diffScan, maxDiff);
-		
-		% NOTE: the following line plots "rawScan" as the current volume
-		% If you'd like to see the processed scan (motion corrected) 
-		% instead, exchange "rawScan" by "procScan"
-		ft_omri_quality_plot(motEst, rawScan, diffScan, maxVal, maxDiff);
-		
-		% force Matlab to update the figure
-		drawnow
-	end % while true	
-end	
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % done with pre-processing, write output
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+    fprintf('Done -- total time = %f\n', toc(GrabSampleT));
+    
+    clippedDiff = max(diffScan, maxDiff);
+    
+    % NOTE: the following line plots "rawScan" as the current volume
+    % If you'd like to see the processed scan (motion corrected) 
+    % instead, exchange "rawScan" by "procScan"
+    ft_omri_quality_plot(motEst, rawScan, diffScan, maxVal, maxDiff);
+    
+    % force Matlab to update the figure
+    drawnow
+  end % while true  
+end  
