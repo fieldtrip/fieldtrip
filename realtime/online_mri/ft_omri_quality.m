@@ -10,6 +10,11 @@ function ft_omri_quality(cfg)
 %  cfg.showRawVariation - 1 to show variation in raw scans (default), 0 to show var. in processed scans
 %  cfg.clipVar          - threshold to clip variation plot with as a fraction of signal magnitude (default=0.2)
 %  cfg.lambda           - forgetting factor for the variaton plot (default=0.9)
+%
+%  cfg.serial           - serial port (default = /dev/ttyS0), set [] to disable motion reporting
+%  cfg.baudrate         - serial port baudrate (default = 19200)
+%  cfg.maxAbs           - threshold (mm) for absolute motion before 'A' is sent to serial port, default = Inf
+%  cfg.maxRel           - threshold (mm) for relative motion before 'B' is sent to serial port, default = Inf
 
 % (C) 2010 Stefan Klanke
 
@@ -40,6 +45,35 @@ end
 if ~isfield(cfg, 'numDummy')
 	cfg.numDummy = 0;
 end
+
+if ~isfield(cfg, 'baudrate')
+  cfg.baudrate = 19200;
+end
+
+if ~isfield(cfg, 'serial')
+  cfg.serial = '/dev/ttyS0';
+end
+
+if ~isfield(cfg, 'maxAbs')
+  cfg.maxAbs = inf;
+end
+
+if ~isfield(cfg, 'maxRel')
+  cfg.maxRel = inf;
+end
+
+if ~isempty(cfg.serial)
+  try
+    serPort = serial(cfg.serial, 'BaudRate', cfg.baudrate);
+    fopen(serPort);
+  catch me
+    serPort = [];
+    disp(me.message);
+  end
+else
+  serPort = [];
+end
+
 
 % Loop this forever (until user cancels)
 while 1
@@ -136,6 +170,7 @@ while 1
 			RRM = ft_omri_align_init(rawScan, flags);
 			motEst = zeros(1,6);
 			procScan = single(rawScan);
+      lastPos = zeros(1,3);
 		else
 			fprintf('%-30s','Registration...');
 			tic; 
@@ -143,6 +178,27 @@ while 1
 			toc
 			motPars = spm_imatrix(M);
 			motEst = [motEst; motPars(1:6).*[1 1 1 180/pi 180/pi 180/pi]];
+      
+      if ~isempty(serPort)
+        curPos = motPars(1:3);
+        if any(abs(curPos) > cfg.maxAbs)
+          try
+            fprintf(serPort, 'A');
+          catch me
+            disp(me.message);
+          end
+          fprintf(1, 'A - too much absolute motion');
+        end
+        if any(abs(curPos - lastPos) > cfg.maxRel)
+          try
+            fprintf(serPort, 'B');
+          catch me
+            disp(me.message);
+          end
+          fprintf(1, 'B - too much relative motion');
+        end
+        lastPos = curPos;
+      end
 		end
 		
 		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
