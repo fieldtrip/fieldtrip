@@ -52,7 +52,7 @@ if ispc
     if strcmp(computer, 'PCWIN')
         extra_cflags = '-I../pthreads-win32/include -DSYSLOG=2';
     elseif strcmp(computer, 'PCWIN64')
-        extra_cflags = '-I../pthreads-win32/include -DSYSLOG=2';
+        extra_cflags = '-I../pthreads-win64/include -DSYSLOG=2';
     end
     suffix = 'obj';
     
@@ -67,7 +67,11 @@ if ispc
         case 'MINGW'
             %ldflags = '-L../src -L../pthreads-win32/lib -lpthreadGC2';
             % For MinGW/Gnumex, it seems to be easier to just directly refer to the archives
-            ldflags = '../pthreads-win32/lib/libpthreadGC2.a C:/mingw/lib/libws2_32.a';
+            if strcmp(computer, 'PCWIN')
+                ldflags = '../pthreads-win32/lib/libpthreadGC2.a C:/mingw/lib/libws2_32.a';
+            elseif strcmp(computer, 'PCWIN64')
+                ldflags = '../pthreads-win64/lib/libpthread.a C:/MinGW64/x86_64-w64-mingw32/lib/libws2_32.a';            
+            end
         case 'VC'
             if strcmp(computer, 'PCWIN')
                 ldflags = '-L../src -L../pthreads-win32/lib -lpthreadVC2';

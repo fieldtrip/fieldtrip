@@ -56,8 +56,8 @@ typedef unsigned __int64  uint64_t;
 #define strncasecmp strnicmp
 
 #elif defined (COMPILER_MINGW)
-#include <windows.h>
 #include <ws2tcpip.h>
+#include <windows.h>
 #include <stdint.h>
 //#include <win32compat.h>
 #define bzero(b,len) (memset((b), '\0', (len)), (void) 0)

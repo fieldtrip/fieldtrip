@@ -59,12 +59,24 @@ ifeq "$(PLATFORM)" "mingw32"
 	# this is only for the peerslave command line executable -> 32-bit Matlab on Windows 7 (DCCN511)
 	MATLABARCH = exe
 	MATLABPATH = "C:\Program Files (x86)\Matlab\R2009b32bit"
-	MATLABLIBS = -L$(MATLABPATH)/bin/$(MATLABARCH) libeng.dll libmx.dll
+	MATLABLIBS = $(MATLABPATH)/bin/win32/libeng.dll $(MATLABPATH)/bin/win32/libmx.dll
 	MATLABINC  = -I$(MATLABPATH)/extern/include
-	LIBS 	 = -lm -lpeer pthreadGC2.dll -lws2_32 -lwininet
+	LIBS 	 = -lm -lpeer ../pthreadGC2.dll -lws2_32 -lwininet
     # override the architecture defaults
     CFLAGS	 = $(INCPATH) -Wall -I../pthreads-win32/include -DSYSLOG=2 -DLOG_DEBUG=0 -DLOG_ERR=0
 endif
+
+ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
+	# this is only for the peerslave command line executable -> 32-bit Matlab on Windows 7 (DCCN511)
+	MATLABARCH = w64.exe
+	MATLABPATH = "C:\Program Files\Matlab\R2009b"
+	MATLABLIBS = $(MATLABPATH)/bin/win64/libeng.dll $(MATLABPATH)/bin/win64/libmx.dll
+	MATLABINC  = -I$(MATLABPATH)/extern/include
+	LIBS 	 = -lm -lpeer ../pthreadGC2-w64.dll -lws2_32 -lwininet
+    # override the architecture defaults
+    CFLAGS	 = $(INCPATH) -Wall -I../pthreads-win64/include -DSYSLOG=2 -DLOG_DEBUG=0 -DLOG_ERR=0
+endif
+
 
 TARGET   = peerslave.$(MATLABARCH)
 
