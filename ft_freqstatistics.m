@@ -67,7 +67,7 @@ fieldtripdefs
 % set the defaults
 if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];          end
 if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];         end
-
+if ~isfield(cfg, 'parameter'),   cfg.parameter = 'powspctrm';       end
 hasdata = nargin>1;
 
 if ~isempty(cfg.inputfile) % the input data should be read from file
