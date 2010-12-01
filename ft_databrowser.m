@@ -888,7 +888,7 @@ switch opt.cfg.viewmode
     % plot a line with text for each event
     for i=1:length(event)
       try
-        eventstr = sprintf('%s=%d', event(i).type, event(i).value);
+        eventstr = sprintf('%s=%s', event(i).type, num2str(event(i).value)); %value can be both number and string
       catch
         eventstr = 'unknown';
       end
@@ -952,6 +952,20 @@ switch opt.cfg.viewmode
       end
     end % for each of the artifact channels
     
+    % plot a line with text for each event
+    for k=1:length(event)
+      try
+        eventstr = sprintf('%s=%s', event(k).type, num2str(event(k).value)); %value can be both number and string
+      catch
+        eventstr = 'unknown';
+      end
+      eventtim = (event(k).sample-begsample+offset)/opt.fsample;
+      eventtim = (eventtim - opt.hlim(1)) / (opt.hlim(2) - opt.hlim(1));   % convert to value relative to box, i.e. from 0 to 1
+      eventtim = eventtim * (opt.hpos(2) - opt.hpos(1)) + opt.hpos(1);     % convert from relative to actual value along the horizontal figure axis
+      ft_plot_line([eventtim eventtim], [-opt.cfg.zscale opt.cfg.zscale]);
+      ft_plot_text(eventtim, ax(4)-0.01, eventstr);
+    end
+        
     for i = 1:length(chanindx)
       datsel = i;
       laysel = match_str(laytime.label, opt.hdr.label(chanindx(i)));
