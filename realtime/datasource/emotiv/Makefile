@@ -9,14 +9,15 @@
 
 PLATFORM = $(shell gcc -dumpmachine)
 
+#defaults, might be over-written further down
+LDFLAGS = -lpthread ../../buffer/src/libbuffer.a
+INCPATH = -I../buffer/src -I../../buffer/cpp -I. 
+SUFFIX = 
+
 ifeq "$(PLATFORM)" "mingw32"
    LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -lws2_32 -lwinmm edk.dll
    INCPATH = -I../../buffer/src -I../../buffer/cpp -I. -I../../buffer/pthreads-win32/include -Iinclude
    SUFFIX = .exe
-else
-   LDFLAGS = -lpthread ../../buffer/src/libbuffer.a
-   INCPATH = -I../buffer/src -I../../buffer/cpp -I. 
-   SUFFIX = 
 endif
 
 CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3 -g
