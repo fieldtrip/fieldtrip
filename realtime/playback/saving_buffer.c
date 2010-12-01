@@ -1,5 +1,7 @@
 /*
- * Copyright (C) 2008, Christian Hesse & Robert Oostenveld
+ * Buffer server that also writes the incoming data to disk.
+ *
+ * Copyright (C) 2010, Stefan Klanke
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
