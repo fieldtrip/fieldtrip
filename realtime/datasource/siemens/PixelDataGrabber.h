@@ -204,7 +204,8 @@ class PixelDataGrabber {
 
 	std::string sourceDir;	/**< Contains the path of the directory that is being monitored */
 	std::string fullName;	/**< Contains the full path of the latest read file */
-	std::string lastName;	/**< Contains the full path of the last pixeldata file transmitted */
+	std::vector<std::string> lastName;	/**< Contains the full path of the last pixeldata files transmitted */
+	unsigned int lastNamePos; /**< The current position within the lastName array (acts like a ring buffer) */
 	FolderWatcher *FW;		/**< Points to a FolderWatcher object */
 	HANDLE fwEventHandle;	/**< WIN32 event handle used for the FolderWatcher */
 	int ftbSocket;			/**< Socket identifying the remote FieldTrip buffer, or -1 if unconnected */

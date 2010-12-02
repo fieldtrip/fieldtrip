@@ -9,7 +9,7 @@
 #include <math.h>
 #include <FolderWatcher.h>
 
-PixelDataGrabber::PixelDataGrabber() {
+PixelDataGrabber::PixelDataGrabber() : lastName(10) { // keep 10 file names for comparision
 	ftbSocket = -1;
 	FW = NULL;
 	
@@ -26,6 +26,7 @@ PixelDataGrabber::PixelDataGrabber() {
 	fwActive = false;
 	headerWritten = false;
 	verbosity = 1;
+	lastNamePos = 0;
 }
 
 PixelDataGrabber::~PixelDataGrabber() {
@@ -128,6 +129,7 @@ bool PixelDataGrabber::writeHeader() {
 bool PixelDataGrabber::writePixelData() {
 	FtBufferResponse resp;
 	UINT32_T nchans = numSlices*readResolution*phaseResolution;
+	static DWORD tFirst;
 	
 	if (!ftReq.prepPutData(nchans, 1, DATATYPE_INT16, sliceBuffer.data())) {
 		if (verbosity > 0) fprintf(stderr, "Out of memory!\n");
@@ -139,7 +141,8 @@ bool PixelDataGrabber::writePixelData() {
 	DWORD t0 = timeGetTime();
 	int result = tcprequest(ftbSocket, ftReq.out(), resp.in());
 	DWORD t1 = timeGetTime();	
-	if (verbosity>2) printf("Time lapsed while writing data: %li ms\n", t1-t0);
+	
+	if (samplesWritten == 0) tFirst = t0;
 	
 	if (result < 0) {
 		if (verbosity>0) fprintf(stderr, "Communication error when sending pixel data to fieldtrip buffer\n");
@@ -152,6 +155,12 @@ bool PixelDataGrabber::writePixelData() {
 		return false;
 	}
 	samplesWritten++;
+	if (verbosity>2) {
+		DWORD dT = t0 - tFirst;
+		double inTR = dT * 1000.0 / TR;
+		
+		printf("Wrote %i. sample at t = %li ms = %.2f TR, took %li ms\n", samplesWritten, dT, inTR, (int) t1-t0);
+	}
 	lastAction = PixelsTransmitted;
 	return true;
 }	
@@ -659,12 +668,28 @@ void PixelDataGrabber::tryFolderToBuffer() {
 		if (vfn[i].compare(vfn[i].size()-10,10, ".PixelData") == 0) {
 			struct timeval tv;
 			
-			if (lastName == fullName) {
-				printf("Warning: 2nd change on file %s detected - ignoring\n", fullName.c_str());
+			// first, check if this modification in the monitored directory
+			// really corresponds to a new file
+			boolean newFile = true;
+			for (unsigned int k=0;k<lastName.size();k++) {
+				//printf("%s\n", lastName[k].c_str());
+				if (lastName[k] == fullName) {
+					printf("Warning: another change on file %s detected - ignoring\n", fullName.c_str());
+					newFile = false;
+					break;
+				}
+			}
+			if (!newFile) {
+				// if this was not a new filename, continue with 
+				// looping through list of modifications
 				continue;
 			}
+			
+
 			gettimeofday(&tv, NULL);
 			if (!tryReadFile(fullName.c_str(), pixBuffer)) continue;
+			
+			printf("%4i,%2i, %50s\n", samplesWritten, curFileIndex, fullName.c_str());
 			
 			if (protInfo == NULL) tryReadProtocol();
 			
@@ -677,8 +702,13 @@ void PixelDataGrabber::tryFolderToBuffer() {
 			}
 			if (sliceBuffer.size()==0) continue;
 			curFileIndex++;
-			printf("curFileIndex = %i\n", curFileIndex);
-			lastName = fullName;
+			// printf("curFileIndex = %i\n", curFileIndex);
+
+			// add current file name to ring buffer of processed names
+			// just overwrite old entries if buffer wraps around
+			lastName[lastNamePos] = fullName;
+			if (++lastNamePos == lastName.size()) lastNamePos = 0;
+			
 			if (curFileIndex == filesPerEcho * numEchos) {
 				if (ftbSocket != -1) sendFrameToBuffer(tv);
 				curFileIndex = 0;

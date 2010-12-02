@@ -92,7 +92,7 @@ int FolderWatcher::processChanges(int which) {
         }
 		#endif
 		vecFilenames.push_back(filename);
-		printf("%i: %s\n", vecFilenames.size(), filename);
+		// printf("%i: %s\n", vecFilenames.size(), filename);
 	} while (info->NextEntryOffset > 0);
 	
 	return vecFilenames.size();
