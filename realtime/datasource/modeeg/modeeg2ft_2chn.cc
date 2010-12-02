@@ -129,7 +129,7 @@ int main(int argc, char *argv[]) {
 		gdfWriter = new GDF_Writer(3, FSAMPLE, GDF_INT16);
 		gdfWriter->setLabel(0, "Switches");
 		gdfWriter->setLabel(1, "ModEeg1");
-		gdfWriter->setLabel(1, "ModEeg2");
+		gdfWriter->setLabel(2, "ModEeg2");
 		//gdfWriter->setPhysicalLimits(1+i, -0.262144, 0.26214399987792969);
 		//gdfWriter->setPhysDimCode(1+i, GDF_VOLT);
 	
