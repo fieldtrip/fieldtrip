@@ -610,6 +610,18 @@ switch dataformat
     end
     write_gdf(filename, hdr, dat);
     
+  case 'edf'
+    if append
+      error('appending data is not yet supported for this data format');
+    end
+    if ~isempty(chanindx)
+      % assume that the header corresponds to the original multichannel
+      % file and that the data represents a subset of channels
+      hdr.label  = hdr.label(chanindx);
+      hdr.nChans = length(chanindx);
+    end
+    write_edf(filename, hdr, dat);    
+    
   otherwise
     error('unsupported data format');
 end % switch dataformat
