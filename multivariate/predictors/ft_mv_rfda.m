@@ -26,6 +26,10 @@ classdef ft_mv_rfda < ft_mv_predictor
       
       function obj = train(obj,X,Y)
         
+        if max(Y)>2
+          error('FT_MV_RFDA only suitable for binary classification');
+        end
+        
         Y(Y == 1) = -1;
         Y(Y == 2) = 1;
         

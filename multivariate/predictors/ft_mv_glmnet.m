@@ -6,6 +6,15 @@ classdef ft_mv_glmnet < ft_mv_predictor
 % If obj.lambda is empty then a whole regularization path is estimated.
 % Optimal performance is computed using a crossvalidator.
 %
+% Please use help glmnetSet to determine the possible options. Some
+% examples:
+%
+% options.alpha   = 1;        % mixing parameter; alpha = 1 => L1, alpha < 1 => elastic net
+% options.lambda  = [];       % L1 parameter; empty returns a whole path depending on nlambda and lambda_min
+% options.nlambda = 100;      % number of models to evaluate in the regularization path
+% options.lambda_min = 0.05;  % smallest value of lambda as a fraction of lambda_max
+% options.standardize = 1;    % can be set to false
+%
 % EXAMPLE:
 %
 % [a,b,c,d] = ft_mv_test('mva',{ft_mv_glmnet('validator',ft_mv_crossvalidator('nfolds',5,'metric','accuracy'))})
@@ -14,18 +23,11 @@ classdef ft_mv_glmnet < ft_mv_predictor
 
   properties
     
-    alpha   = 1;        % mixing parameter; alpha = 1 => L1, alpha < 1 => elastic net
+    options             % glmnetSet options
+   
+    type = 'logistic'   % 'linear' or 'logistic' regression; sets glmnet family parameter
     
-    lambda  = [];       % L1 parameter; empty returns a whole path depending on nlambda and lambda_min
-  
-    nlambda = 100;      % number of models to evaluate in the regularization path
-    lambda_min = 0.05;  % smallest value of lambda as a fraction of lambda_max
-    
-    type = 'logistic'   % 'linear' or 'logistic' regression
-    
-    standardize = 1;    % can be set to false
-    
-    weights             % regression coefficients
+    weights             % estimated regression coefficients
     
     validator           % crossvalidator object if a whole path is specified    
     performance         % performance results for the crossvalidator
@@ -73,14 +75,14 @@ classdef ft_mv_glmnet < ft_mv_predictor
       
       opts = glmnetSet;
       
-      opts.alpha = obj.alpha; % mixing parameter
-      opts.standardize  = obj.standardize;
-      opts.lambda_min = obj.lambda_min;
-      opts.nlambda = obj.nlambda;
-      
-      if ~isempty(obj.lambda), opts.lambda = obj.lambda; end 
+      if ~isempty(obj.options)
+        F = fieldnames(obj.options);
+        for j=1:length(F)
+          opts.(F{j}) = obj.options.(F{j});
+        end
+      end
 
-      if isempty(obj.lambda) && ~isempty(obj.validator)
+      if isempty(opts.lambda) && ~isempty(obj.validator)
 
         obj.validator.mva = obj;
         obj.validator.mva.validator = [];
@@ -115,7 +117,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
        
        
        opts.lambda = linspace(mean(lmax),mean(lbest),20);
-       obj.lambda = opts.lambda;
+       obj.options.lambda = opts.lambda;
        
        u = unique(Y);
        
@@ -166,7 +168,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
         
       end
       
-      obj.lambda  = res.lambda;
+      obj.options.lambda  = res.lambda;
           
     end
     
