@@ -20,7 +20,7 @@ endif
 
 CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3 -g
 
-all: modeeg2ft$(SUFFIX)
+all: modeeg2ft$(SUFFIX)  modeeg2ft_2chn$(SUFFIX)
 
 serial.o: serial.c
 	gcc -c serial.c -I.
@@ -30,3 +30,10 @@ modeeg2ft.o: modeeg2ft.cc
 	
 modeeg2ft$(SUFFIX): modeeg2ft.o serial.o
 	g++ -o $@ $^ $(LDFLAGS) $(CFLAGS) $(CPPDIR)/SignalConfiguration.cc $(CPPDIR)/GdfWriter.cc
+
+
+modeeg2ft_2chn.o: modeeg2ft_2chn.cc
+	g++ -c modeeg2ft_2chn.cc $(CFLAGS)
+	
+modeeg2ft_2chn$(SUFFIX): modeeg2ft_2chn.o serial.o
+	g++ -o $@ $^ $(LDFLAGS) $(CFLAGS) $(CPPDIR)/GdfWriter.cc
