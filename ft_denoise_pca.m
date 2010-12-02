@@ -272,9 +272,10 @@ cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 cfg.version.name = mfilename('fullpath');
 cfg.version.id   = '$Id$';
 % remember the configuration details of the input data
-try, cfg.previous = data.cfg; end
-% remember the exact configuration details in the output
-data.cfg = cfg;
+cfg.previous = [];
+for i=1:numel(varargin)
+  try, cfg.previous{i} = varargin{i}.cfg; end
+end
 
 %-----cellcov
 function [c] = cellcov(x, y, dim, flag)
