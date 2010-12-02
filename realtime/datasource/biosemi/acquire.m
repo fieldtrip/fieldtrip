@@ -81,7 +81,6 @@ while 1
 	
 	ft_write_data(cfg.ftOutput, dsig, 'header', hdr, 'append', true);
 	HDR = swrite(HDR, dat');
-	flush;
 	numBlocks = numBlocks + 1;
 	numSamples = numSamples + N;
 	fprintf(1,'%i blocks, %i samples\n', numBlocks, numSamples);

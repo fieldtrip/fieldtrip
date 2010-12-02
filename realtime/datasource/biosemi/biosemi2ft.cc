@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) {
 	pthread_t savingThread;
 	float *auxVec;
 	int skipSamples = 0;
-	MultiChannelFilter<float> *lpFilter = NULL;
+	MultiChannelFilter<float,double> *lpFilter = NULL;
 	ConsoleInput ConIn;
 	int acqState = 0; // 0 = stopped, 1 = running, 2 = paused
 	static char *stateDescr[3] = {"INACTIVE", "RUNNING ", "PAUSED  "};
@@ -326,7 +326,7 @@ int main(int argc, char *argv[]) {
 	
 	if (streamSel.getSize() > 0) {
 		if (signalConf.getBandwidth() <= 0) {
-			lpFilter = new MultiChannelFilter<float>(streamSel.getSize(), 4);
+			lpFilter = new MultiChannelFilter<float,double>(streamSel.getSize(), 4);
 			int coefInd = signalConf.getDownsampling() - 1;
 			if (coefInd > 31) {
 				fprintf(stderr, "Warning, no filter coefficients for more than 32x downsampling\n");
@@ -334,7 +334,7 @@ int main(int argc, char *argv[]) {
 			}
 			lpFilter->setCoefficients(chebyCoefsB[coefInd], chebyCoefsA[coefInd]);
 		} else {
-			lpFilter = new MultiChannelFilter<float>(streamSel.getSize(), signalConf.getOrder());
+			lpFilter = new MultiChannelFilter<float,double>(streamSel.getSize(), signalConf.getOrder());
 			lpFilter->setButterLP(signalConf.getBandwidth() / (0.5*BS.getSamplingFreq()));
 		}
 	}
