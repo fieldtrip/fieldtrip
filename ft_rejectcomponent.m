@@ -161,15 +161,12 @@ cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 cfg.version.name = mfilename('fullpath'); 
 cfg.version.id = '$Id$';
 
-if nargin==2 || nargin < 2 
+if nargin < 3 
   % remember the configuration details of the input data 
   try, cfg.previous = comp.cfg; end
 elseif nargin==3,
-  try, cfg.previous{2} = comp.cfg; end
-  try, cfg.previous{1} = data.cfg; end
-  %the configuration of the data is relatively more important
-  %potential use of ft_findcfg in subsequent analysis steps looks into 
-  %the previous{1} first
+  try, cfg.previous{1} = comp.cfg; end
+  try, cfg.previous{2} = data.cfg; end
 end
 
 % keep the configuration in the output
