@@ -77,6 +77,14 @@ ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
     CFLAGS	 = $(INCPATH) -Wall -I../pthreads-win64/include -DSYSLOG=2 -DLOG_DEBUG=0 -DLOG_ERR=0
 endif
 
+## to override the compilation defaults, please specify below where
+## your MATLAB is installed and the architecture details
+# MATLABARCH = --- string with your matlab platform architecture ---
+# MATLABPATH = --- location of your matlab installation ---
+# MATLABLIBS = -L$(MATLABPATH)/bin/$(MATLABARCH) -leng -lmx
+# MATLABINC  = -I$(MATLABPATH)/extern/include
+## to compile the 32-bit version with a 64-bit compiler, you will have to add the following
+# CFLAGS += -arch i386
 
 TARGET   = peerslave.$(MATLABARCH)
 
@@ -139,6 +147,11 @@ clean:
 	rm -f core *.o *.obj *.a ../$(TARGET) *~
 
 distclean:
+	rm -f core *.o *.obj *.a ../$(TARGET) *~
+	rm -f ../peerslave.glnx86
+	rm -f ../peerslave.glnxa64
+	rm -f ../peerslave.maci
+	rm -f ../peerslave.maci64
 
 %.o: %.c buffer.h message.h swapbytes.h socket_includes.h unix_includes.h
 	$(CC) $(CFLAGS) -c $*.c
