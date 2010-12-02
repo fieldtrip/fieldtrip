@@ -5,7 +5,7 @@ function [chansel, trlsel, cfg] = rejectvisual_trial(cfg, data);
 % determine the initial selection of trials and channels
 nchan = length(data.label);
 ntrl  = length(data.trial);
-cfg.channel = channelselection(cfg.channel, data.label);
+cfg.channel = ft_channelselection(cfg.channel, data.label);
 trlsel  = logical(ones(1,ntrl));
 chansel = logical(zeros(1,nchan));
 chansel(match_str(data.label, cfg.channel)) = 1;
@@ -16,12 +16,12 @@ for i=1:ntrl
   offset(i) = time2offset(data.time{i}, data.fsample);
 end
 
-progress('init', cfg.feedback, 'filtering data');
+ft_progress('init', cfg.feedback, 'filtering data');
 for i=1:ntrl
-  progress(i/ntrl, 'filtering data in trial %d of %d\n', i, ntrl);
+  ft_progress(i/ntrl, 'filtering data in trial %d of %d\n', i, ntrl);
   [data.trial{i}, label, time, cfg.preproc] = preproc(data.trial{i}, data.label, data.fsample, cfg.preproc, offset(i));
 end
-progress('close');
+ft_progress('close');
 
 % select the specified latency window from the data
 % this is done AFTER the filtering to prevent edge artifacts

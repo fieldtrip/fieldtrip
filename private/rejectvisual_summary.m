@@ -27,10 +27,10 @@ end
 
 interactive = 1;
 h = figure;
-progress('init', cfg.feedback, 'computing metric');
+ft_progress('init', cfg.feedback, 'computing metric');
 level = zeros(sum(chansel), ntrl);
 for i=1:ntrl
-  progress(i/ntrl, 'computing metric %d of %d\n', i, ntrl);
+  ft_progress(i/ntrl, 'computing metric %d of %d\n', i, ntrl);
   [dat, label, time, cfg.preproc] = preproc(data.trial{i}(chansel,:), data.label(chansel), data.fsample, cfg.preproc, offset(i));
   switch cfg.metric
     case 'var'
@@ -51,7 +51,7 @@ for i=1:ntrl
       error('unsupported method');
   end
 end
-progress('close');
+ft_progress('close');
 % reinsert the data for the selected channels
 dum = nan*zeros(nchan, ntrl);
 dum(chansel,:) = level;
