@@ -231,6 +231,9 @@ class PixelDataGrabber {
 	SimpleStorage sliceBuffer;	/**< Simple buffer that contains slice-shaped pixel data */
 	SimpleStorage protBuffer;	/**< Simple buffer that contains ASCII protocol information */
 	FtBufferRequest ftReq;		/**< For sending request to the buffer */
+	
+	LARGE_INTEGER timeFirstScan; /**< File time of (last echo) of first scan */
+	LARGE_INTEGER timeLastFile;  /**< File time of last file we looked at */
 };
 
 #endif

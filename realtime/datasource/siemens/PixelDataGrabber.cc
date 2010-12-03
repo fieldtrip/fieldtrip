@@ -27,6 +27,7 @@ PixelDataGrabber::PixelDataGrabber() : lastName(10) { // keep 10 file names for 
 	headerWritten = false;
 	verbosity = 1;
 	lastNamePos = 0;
+	timeFirstScan.QuadPart = timeLastFile.QuadPart = 0;
 }
 
 PixelDataGrabber::~PixelDataGrabber() {
@@ -142,7 +143,10 @@ bool PixelDataGrabber::writePixelData() {
 	int result = tcprequest(ftbSocket, ftReq.out(), resp.in());
 	DWORD t1 = timeGetTime();	
 	
-	if (samplesWritten == 0) tFirst = t0;
+	if (samplesWritten == 0) {
+		tFirst = t0;
+		timeFirstScan = timeLastFile;
+	}
 	
 	if (result < 0) {
 		if (verbosity>0) fprintf(stderr, "Communication error when sending pixel data to fieldtrip buffer\n");
@@ -159,7 +163,10 @@ bool PixelDataGrabber::writePixelData() {
 		DWORD dT = t0 - tFirst;
 		double inTR = dT * 1000.0 / TR;
 		
+		long dTft = (long) ((timeLastFile.QuadPart - timeFirstScan.QuadPart)/10);
+		
 		printf("Wrote %i. sample at t = %li ms = %.2f TR, took %li ms\n", samplesWritten, dT, inTR, (int) t1-t0);
+		printf("dT from file creation time: %li us = %.2f TR\n", dTft, (double) dTft/(double) TR);
 	}
 	lastAction = PixelsTransmitted;
 	return true;
@@ -621,11 +628,24 @@ void PixelDataGrabber::fillXFormFromSAP(const double *pos, const double *norm, d
 
 bool PixelDataGrabber::tryReadFile(const char *filename, SimpleStorage &sBuf) {
 	HANDLE fHandle;
+	LARGE_INTEGER timeThisFile;
 
 	fHandle = CreateFile(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	
 	if (fHandle != INVALID_HANDLE_VALUE) {
 		DWORD read, size;
+		FILETIME creationTime;
+		
+		GetFileTime(fHandle, &creationTime, NULL, NULL);
+		timeThisFile.LowPart = creationTime.dwLowDateTime;
+		timeThisFile.HighPart = creationTime.dwHighDateTime;
+		
+		if (timeThisFile.QuadPart <= timeLastFile.QuadPart) {
+			printf("Warning: file %s is older than another we've read - ignoring\n", filename);
+			CloseHandle(fHandle);
+			return false;
+		}
+		timeLastFile = timeThisFile;
 			
 		size = GetFileSize(fHandle, NULL);  // ignore higher DWORD - our files are not that big
 		
