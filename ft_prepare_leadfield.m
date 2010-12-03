@@ -31,7 +31,7 @@ function [grid, cfg] = ft_prepare_leadfield(cfg, data)
 %   cfg.grid.outside    = vector with indices of the sources outside the brain (optional)
 %
 % You should specify the volume conductor model with
-%   cfg.hdmfile         = string, file containing the volume conduction model
+%   cfg.headshape       = string, file containing the volume conduction model
 % or alternatively
 %   cfg.vol             = structure with volume conduction model
 %
