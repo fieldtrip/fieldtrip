@@ -227,8 +227,8 @@ int main(int argc, char *argv[]) {
 		gdfWriter->setLabel(0, "Switches");
 		for (int i=0;i<saveSel.getSize();i++) {
 			gdfWriter->setLabel(1+i, saveSel.getLabel(i));
-			//gdfWriter->setPhysicalLimits(1+i, -0.262144, 0.26214399987792969);
-			//gdfWriter->setPhysDimCode(1+i, GDF_VOLT);
+			gdfWriter->setPhysicalLimits(1+i, -256.0, 255.5);
+			gdfWriter->setPhysDimCode(1+i, GDF_MICRO + GDF_VOLT);
 		}
 		if (!gdfWriter->createAndWriteHeader(curFilename)) {
 			fprintf(stderr, "Could not open GDF file %s for writing\n", curFilename);
@@ -347,6 +347,8 @@ int main(int argc, char *argv[]) {
 				
 			for (int i=0;i<NUM_HW_CHAN;i++) {
 				sampleData[i+doff] = serialBuffer[soff+4+2*i]*256 + serialBuffer[soff+5+2*i];
+				
+
 			}
 		
 			switchData[j] = serialBuffer[soff+16];
@@ -385,7 +387,8 @@ int main(int argc, char *argv[]) {
 			}
 			for (int j=0;j<numBlocks;j++) {
 				for (int i=0;i<nStream;i++) {
-					dest[i + j*nStream] = sampleData[streamSel.getIndex(i) + j*NUM_HW_CHAN];
+					short s = sampleData[streamSel.getIndex(i) + j*NUM_HW_CHAN];
+					dest[i + j*nStream] = (float) (s-512) * 0.5;
 				}
 			}
 			int err = clientrequest(ftSocket, sampleBlock.asRequest(), resp.in());

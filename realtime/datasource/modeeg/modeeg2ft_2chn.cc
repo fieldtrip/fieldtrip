@@ -131,8 +131,11 @@ int main(int argc, char *argv[]) {
 		gdfWriter->setLabel(0, "Switches");
 		gdfWriter->setLabel(1, "ModEeg1");
 		gdfWriter->setLabel(2, "ModEeg2");
-		//gdfWriter->setPhysicalLimits(1+i, -0.262144, 0.26214399987792969);
-		//gdfWriter->setPhysDimCode(1+i, GDF_VOLT);
+		gdfWriter->setPhysicalLimits(1, -256.0, 255.5);
+		gdfWriter->setPhysicalLimits(2, -256.0, 255.5);
+		gdfWriter->setPhysDimCode(1, GDF_MICRO + GDF_VOLT);
+		gdfWriter->setPhysDimCode(2, GDF_MICRO + GDF_VOLT);
+			
 	
 		char *lastDotPos = strrchr(baseFilename, '.');
 		// cut off .gdf suffix, if given
@@ -337,8 +340,8 @@ int main(int argc, char *argv[]) {
 				break;
 			}
 			for (int j=0;j<numSamples;j++) {
-				dest[0 + 2*j] = sampleData[0 + j*NUM_HW_CHAN];
-				dest[1 + 2*j] = sampleData[1 + j*NUM_HW_CHAN];
+				dest[0 + 2*j] = (float) (sampleData[0 + j*NUM_HW_CHAN] - 512) * 0.5;
+				dest[1 + 2*j] = (float) (sampleData[1 + j*NUM_HW_CHAN] - 512) * 0.5;
 			}
 			err = clientrequest(ftSocket, sampleBlock.asRequest(), resp.in());
 			if (err || !resp.checkPut()) {
