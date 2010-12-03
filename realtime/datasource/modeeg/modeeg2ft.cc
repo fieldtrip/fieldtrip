@@ -330,7 +330,10 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 		
-		if (numBlocks == 0) continue;
+		if (numBlocks == 0) {
+			leftOverBytes += numRead;
+			continue;
+		}
 		
 		// first decode into switchData + sampleData arrays
 		for (int j=0;j<numBlocks;j++) {

@@ -109,6 +109,7 @@ int main(int argc, char *argv[]) {
 	pthread_t savingThread;
 	ConsoleInput ConIn;
 	SerialPort SP;
+	int keepRunning = 1;
 	
 	unsigned char serialBuffer[1024];  // for reading raw bytes from serial port
 	int16_t sampleData[NUM_HW_CHAN * FSAMPLE]; // holds up to 1 seconds of data
@@ -245,8 +246,7 @@ int main(int argc, char *argv[]) {
 	
 	printf("Got synchronization bytes - starting acquisition\n");
 	
-	//while (keepRunning) {
-	while (1) {
+	while (keepRunning) {
 		int numRead, numTotal, numSamples;
 		
 		if (ConIn.checkKey()) {
@@ -262,6 +262,11 @@ int main(int argc, char *argv[]) {
 		}
 		if (numRead == 0) continue;
 		
+		for (int i=0;i<numRead;i++) {
+			printf("%02X ", serialBuffer[leftOverBytes + i]);
+		}
+		printf("\n");
+		
 		// remove any events in our list
 		eventChain.clear();
 		
@@ -273,7 +278,10 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 		
-		if (numSamples == 0) continue;
+		if (numSamples == 0) {
+			leftOverBytes += numRead;
+			continue;
+		}
 		
 		// first decode into switchData + sampleData arrays
 		for (int j=0;j<numSamples;j++) {
@@ -282,6 +290,7 @@ int main(int argc, char *argv[]) {
 			
 			if (serialBuffer[soff] != 0xA5 || serialBuffer[soff+1] != 0x5A) {
 				fprintf(stderr, "ModularEEG out of sync in sample %i - exiting.\n", sampleCounter + j);
+				keepRunning = 0;
 				break;
 			}
 				
