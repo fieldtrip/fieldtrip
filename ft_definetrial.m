@@ -10,6 +10,8 @@ function [cfg] = ft_definetrial(cfg);
 % where the configuration structure should contain either
 %   cfg.trialdef   = structure with details of trial definition, see below
 %   cfg.trialfun   = function name, see below
+% and also
+%   cfg.dataset    = pathname to dataset
 %
 % A call to FT_DEFINETRIAL results in the trial definition "trl" being added
 % to the output configuration structure. The trials are defined according
