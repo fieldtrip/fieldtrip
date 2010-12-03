@@ -11,7 +11,7 @@ function [channel] = ft_channelselection(channel, datachannel)
 % labels. Channels that are not present in the raw datafile are
 % automatically removed from the channel list.
 %
-% E.g.
+% E.g. the input 'channel' can be:
 %  'all'     is replaced by all channels in the datafile
 %  'gui'     a graphical user interface will pop up to select the channels
 %  'C*'      is replaced by all channels that match the wildcard, e.g. C1, C2, C3, ...
