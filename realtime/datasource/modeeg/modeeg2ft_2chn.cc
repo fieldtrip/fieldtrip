@@ -262,10 +262,12 @@ int main(int argc, char *argv[]) {
 		}
 		if (numRead == 0) continue;
 		
+		/*
 		for (int i=0;i<numRead;i++) {
 			printf("%02X ", serialBuffer[leftOverBytes + i]);
 		}
 		printf("\n");
+		*/
 		
 		// remove any events in our list
 		eventChain.clear();
