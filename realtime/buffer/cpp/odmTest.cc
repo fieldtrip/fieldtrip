@@ -5,19 +5,11 @@
 #define NCHAN  6
 #define NBLK   237
 
-class DummyHandler : public StringRequestHandler {
-	virtual void handleStringRequest(const std::string& request, std::string& response) {
-		printf("REQ: %s\n", request.c_str());
-		response = "Ok\n";
-	}
-};
-
 int main() {
 	ConsoleInput conIn;
 	StringServer ctrlServ;
-	DummyHandler dhan;
 	int counter = 0;
-	
+				
 	OnlineDataManager<int, float> ODM(1, NCHAN, 2000.0, GDF_INT32, DATATYPE_FLOAT32);
 	int value[NCHAN];
 	int speed[NCHAN];
@@ -48,7 +40,7 @@ int main() {
 			if (c==27) break; // quit
 		}
 		
-		ctrlServ.checkRequests(dhan);
+		ctrlServ.checkRequests(ODM);
 		
 		int *block = ODM.provideBlock(NBLK);
 		for (int j=0;j<NBLK;j++) {
@@ -62,7 +54,7 @@ int main() {
 				block[1+i+j*(1+NCHAN)] = value[i];
 			}
 		}
-		// printf("Block %i : %i\n", ++counter, ODM.handleBlock());
+		//printf("Block %i : %i\n", ++counter, ODM.handleBlock());
 		conIn.milliSleep(100);
 	}
 	

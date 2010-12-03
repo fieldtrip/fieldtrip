@@ -6,9 +6,31 @@
 #include <pthread.h>
 #include <LocalPipe.h>
 #include <MultiChannelFilter.h>
+#include <StringServer.h>
+
+bool convertToInt(const std::string& in, int& value) {
+	const char *start = in.c_str();
+	char *end;
+	long v = strtol(start, &end, 10);
+	if (start == end) return false;
+	if (*end!=0) return false;
+	value = (int) v;
+	return true;
+} 
+
+bool convertToDouble(const std::string& in, double& value) {
+	const char *start = in.c_str();
+	char *end;
+	double v = strtod(start, &end);
+	if (start == end) return false;
+	if (*end!=0) return false;
+	value = v;
+	return true;
+} 
+
 
 template <typename To, typename Ts> 
-class OnlineDataManager {
+class OnlineDataManager : public StringRequestHandler {
 	public:
 	
 	OnlineDataManager(int nStatus, int nCont, float fSample, GDF_Type gdfType, int ftType) : sampleBlock(ftType) {
@@ -43,7 +65,7 @@ class OnlineDataManager {
 		fileCounter = 0;
 	}
 	
-	~OnlineDataManager() {
+	virtual ~OnlineDataManager() {
 		// stop saving thread
 		int64_t minusOne = -1;
 		locPipe.write(sizeof(int64_t), &minusOne);
@@ -63,6 +85,90 @@ class OnlineDataManager {
 		delete[] auxVec;
 		delete[] pBlock;
 		delete[] rbData;
+	}
+	
+	virtual std::string handleStringRequest(const std::string& request) {
+		static const std::string ok("OK\n");
+		static const std::string unknown("ERROR: UNKNOWN COMMAND\n");
+		static const std::string malform("ERROR: MALFORMED COMMAND\n");
+		static const std::string stopFirst("ERROR: STOP FIRST\n");
+		int target = 0; // 1 = STREAM, 2= SAVE
+		unsigned int pos = 0;
+		
+		std::string token1 = StringServer::getNextToken(request, pos);
+		if (token1.empty()) return ok; // empty command -> nothing to do
+		
+		if (token1.compare("STREAM") == 0) {
+			target = 1;
+		} else if (token1.compare("SAVE") == 0) {
+			target = 2;
+		} else {
+			return unknown;
+		}
+		
+		std::string token2 = StringServer::getNextToken(request, pos);
+		
+		if (token2.compare("START") == 0) {
+			if (!StringServer::getNextToken(request, pos).empty()) return malform;
+			if (target == 1) {
+				if (streamingEnabled) return ok; // silently ignore that it's already running
+			
+			} else {
+				if (savingEnabled) return ok; // silently ignore that it's already running
+			
+			}
+			return ok;
+		} else if (token2.compare("STOP") == 0) {
+			if (!StringServer::getNextToken(request, pos).empty()) return malform;
+			if (target == 1) {
+				if (!streamingEnabled) return ok; // silently ignore that it's already stopped
+			
+			} else {
+				if (!savingEnabled) return ok; // silently ignore that it's already stopped
+			
+			}
+			return ok;
+		} else if (token2.compare("SELECT") == 0) {
+			if ((target==1 && streamingEnabled) || (target==2 && savingEnabled)) {
+				return stopFirst;
+			}
+			ChannelSelection cs;
+			if (!cs.parseString(request.size() - pos, request.data() + pos)) return malform;
+
+			printf("New selection:\n");
+			for (int i=0;i<cs.getSize();i++) {
+				printf("%i : '%s'\n", cs.index[i], cs.label[i].c_str());
+			}
+			return ok;
+
+		} else if (target == 2 && token2.compare("FILE") == 0) {
+			if (savingEnabled) return stopFirst;
+			
+			std::string filename = StringServer::getNextToken(request, pos);
+			if (!StringServer::getNextToken(request, pos).empty()) return malform;
+			
+			printf("new filename: %s\n", filename.c_str());
+			return ok;
+		} else if (target == 1 && token2.compare("FILTER") == 0) {
+			if (streamingEnabled) return stopFirst;
+			
+			double bandwidth;
+			int order;
+			int factor;
+						
+			if (convertToDouble(StringServer::getNextToken(request, pos), bandwidth) 
+					&& convertToInt(StringServer::getNextToken(request, pos), order)
+					&& convertToInt(StringServer::getNextToken(request, pos), factor)
+					&& StringServer::getNextToken(request, pos).empty()) {
+							
+				printf("stream filter %f , %i , %i\n", bandwidth, order, factor);
+				return ok;
+			} else {
+				return malform;
+			}
+		} 
+		
+		return unknown;
 	}
 	
 	bool connectToServer(char *address) {
@@ -427,6 +533,6 @@ class OnlineDataManager {
 	char curFilename[1024];
 	int fileCounter;
 	
-	bool savingEnabled;
+	bool savingEnabled, streamingEnabled;
 	bool isValid, isRunning;
 };

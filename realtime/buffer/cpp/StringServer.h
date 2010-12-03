@@ -8,7 +8,7 @@
 
 class StringRequestHandler {
 	public:
-	virtual void handleStringRequest(const std::string& request, std::string& response)=0;
+	virtual std::string handleStringRequest(const std::string& request)=0;
 };
 
 struct StringServerClientCtrl;
@@ -24,6 +24,19 @@ class StringServer {
 	void stopListening();
 	
 	int checkRequests(StringRequestHandler& handler, int milliSeconds = 0);
+	
+	static std::string getNextToken(const std::string& in, unsigned int& pos) {
+		while (isspace(in[pos])) {
+			if (++pos == in.size()) {
+				return std::string();
+			}
+		}
+		unsigned int p0 = pos;
+		while (!isspace(in[pos])) {
+			if (++pos == in.size()) break;
+		}
+		return in.substr(p0, pos-p0);
+	}
 		
 	protected:
 	

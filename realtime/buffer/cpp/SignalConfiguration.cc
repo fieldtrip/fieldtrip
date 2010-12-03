@@ -3,6 +3,49 @@
 #include <string.h>
 #include <stdlib.h>
 
+bool ChannelSelection::parseString(int len, const char *str) {
+	int pos = 0;
+	index.clear();
+	label.clear();
+	
+	while (pos < len) {
+		int idx;
+		int start;
+		
+		// skip white space
+		while (isspace(str[pos])) {
+			if (++pos == len) return true;
+		}
+		
+		// next character should be 0-9
+		if (!isdigit(str[pos])) return false;
+		idx = str[pos] - '0';
+		if (++pos == len) return false;
+		
+		while (isdigit(str[pos])) {
+			idx = 10*idx + (str[pos] - '0');
+			if (++pos == len) return false;
+		}
+		
+		// next character should be =
+		if (str[pos] != '=') return false;
+		if (++pos == len) return false;
+		
+		// mark label start
+		start = pos;
+		
+		// search next white space
+		while (!isspace(str[pos]) && pos < len) pos++;
+		if (start == pos) return false;
+		
+		// got one
+		index.push_back(idx);
+		label.push_back(std::string(str + start, pos-start));
+	} 
+	return true;
+}
+
+
 int SignalConfiguration::parseFile(const char *filename) {
 	FILE *fp;
 	char line[2048];

@@ -166,6 +166,7 @@ int StringServer::checkRequests(StringRequestHandler& handler, int milliSeconds)
 		if (FD_ISSET(cli->sock, &readSet)) {
 			int r = recv(cli->sock, rcvBuf, sizeof(rcvBuf), 0);
 			if (r<=0) {
+				// printf("Closing client %i\n", idx);
 				closeClient(idx);
 				continue;
 			}
@@ -217,9 +218,7 @@ bool StringServer::checkCompletion(StringRequestHandler& handler, StringServerCl
 		if (p0 == cli->req.npos) return newResp;
 	
 		std::string out(cli->req, 0, p0);
-		std::string in;
-		
-		handler.handleStringRequest(out, in);
+		std::string in = handler.handleStringRequest(out);
 		cli->req.erase(0, p0+1);
 		if (!in.empty()) {
 			newResp = true;

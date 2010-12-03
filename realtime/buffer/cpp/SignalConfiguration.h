@@ -8,6 +8,8 @@ struct ChannelSelection {
 	std::vector<int> index;
 	std::vector<std::string> label;
 	
+	bool parseString(int len, const char *str);
+	
 	void clear() {
 		index.clear();
 		label.clear();
