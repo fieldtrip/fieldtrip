@@ -1,12 +1,21 @@
 #include <OnlineDataManager.h>
 #include <ConsoleInput.h>
-//#include <ControlServer.h>
+#include <StringServer.h>
 
 #define NCHAN  6
 #define NBLK   237
 
+class DummyHandler : public StringRequestHandler {
+	virtual void handleStringRequest(const std::string& request, std::string& response) {
+		printf("REQ: %s\n", request.c_str());
+		response = "Ok\n";
+	}
+};
+
 int main() {
 	ConsoleInput conIn;
+	StringServer ctrlServ;
+	DummyHandler dhan;
 	int counter = 0;
 	
 	OnlineDataManager<int, float> ODM(1, NCHAN, 2000.0, GDF_INT32, DATATYPE_FLOAT32);
@@ -28,6 +37,8 @@ int main() {
 		return 0;
 	}
 	
+	ctrlServ.startListening(8000);
+	
 	ODM.start();
 	ODM.enableSaving("test6");
 	printf("Starting - press ESC to quit\n");
@@ -36,6 +47,8 @@ int main() {
 			int c = conIn.getKey();
 			if (c==27) break; // quit
 		}
+		
+		ctrlServ.checkRequests(dhan);
 		
 		int *block = ODM.provideBlock(NBLK);
 		for (int j=0;j<NBLK;j++) {
@@ -49,7 +62,7 @@ int main() {
 				block[1+i+j*(1+NCHAN)] = value[i];
 			}
 		}
-		printf("Block %i : %i\n", ++counter, ODM.handleBlock());
+		// printf("Block %i : %i\n", ++counter, ODM.handleBlock());
 		conIn.milliSleep(100);
 	}
 	

@@ -29,11 +29,14 @@ FtConnection.o: FtConnection.cc FtBuffer.h
 SignalConfiguration.o: SignalConfiguration.cc SignalConfiguration.h
 	g++ -c SignalConfiguration.cc $(CFLAGS)	
 	
+StringServer.o: StringServer.cc StringServer.h
+	g++ -c StringServer.cc $(CFLAGS)	
+	
 GdfWriter.o: GdfWriter.cc GdfWriter.h 
 	g++ -c  GdfWriter.cc $(CFLAGS)	
 	
-odmTest.o: odmTest.cc OnlineDataManager.h
+odmTest.o: odmTest.cc OnlineDataManager.h StringServer.o
 	g++ -c odmTest.cc $(CFLAGS)
 
-odmTest$(SUFFIX): odmTest.o SignalConfiguration.o GdfWriter.o FtConnection.o
+odmTest$(SUFFIX): odmTest.o SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o
 	g++ -o $@ $^ $(LDFLAGS) 
