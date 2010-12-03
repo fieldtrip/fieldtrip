@@ -35,6 +35,11 @@ function [dat, baseline] = ft_preproc_baselinecorrect(dat, begsample, endsample)
 %
 % $Id$
 
+persistent hasbsxfun
+if isempty(hasbsxfun)
+  hasbsxfun = exist('bsxfun', 'builtin')==5;
+end
+
 % determine the size of the data
 [Nchans, Nsamples] = size(dat);
 
@@ -49,14 +54,16 @@ end
 % estimate the baseline and subtract it
 baseline = mean(dat(:,begsample:endsample), 2);
 
-% it is faster to loop over samples than over channels due to the internal memory representation of Matlab
-% for chan=1:Nchans
-%  dat(chan,:) = dat(chan,:) - baseline(chan);
-% end
-
-% for sample=1:Nsamples
-%   dat(:,sample) = dat(:,sample) - baseline;
-% end
-
-% it is even faster to do this
-dat = bsxfun(@minus,dat,baseline);
+if hasbsxfun
+  % it is even faster to do this
+  dat = bsxfun(@minus,dat,baseline);
+else
+  % it is faster to loop over samples than over channels due to the internal memory representation of Matlab
+  % for chan=1:Nchans
+  %  dat(chan,:) = dat(chan,:) - baseline(chan);
+  % end
+  
+  for sample=1:Nsamples
+    dat(:,sample) = dat(:,sample) - baseline;
+  end
+end
