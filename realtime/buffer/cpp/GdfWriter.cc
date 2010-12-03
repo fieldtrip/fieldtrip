@@ -14,9 +14,8 @@ GDF_Writer::GDF_Writer(int nChans, int sampleRate, GDF_Type gdfType) {
 	double minV, maxV;
 	
 	// slightly stupid hack to work around missing NAN definition in Visual C
-	int32_t nanBits = 0x7F800000;
-	nanValue = *((float *) &nanBits);
-	
+	nanValue.asInt = 0x7FC00000;
+   
 	this->nChans = nChans;
 	memset(&hdr, 0, sizeof(hdr));
 	
@@ -91,7 +90,7 @@ GDF_Writer::GDF_Writer(int nChans, int sampleRate, GDF_Type gdfType) {
 	
 	for (int i=0;i<nChans;i++) {
 		sprintf(mLabels + i*16, "Ch.%03i", i+1);
-		mLowpass[i] = mHighpass[i] = mNotch[i] = nanValue;
+		mLowpass[i] = mHighpass[i] = mNotch[i] = nanValue.asFloat;
 		mGdfType[i] = gdfType;
 		mSamplesPerRecord[i] = 1; // continuous
 		mPhysMin[i] = mDigMin[i] = minV;

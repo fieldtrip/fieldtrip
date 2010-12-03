@@ -108,7 +108,7 @@ bool FtConnection::connectUnix(const char *pathname) {
 }
 
 bool FtConnection::connect(const char *address) {
-	char *colPos = strchr(address, ':');
+	const char *colPos = strchr(address, ':');
 	if (colPos != NULL) {
 		int len = colPos - address;
 		char *hostname = new char[len+1];

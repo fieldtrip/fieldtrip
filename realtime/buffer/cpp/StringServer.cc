@@ -8,7 +8,14 @@
 #include <windows.h>
 #define socklen_t       int
 #else
+#include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/select.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <fcntl.h>
+
 #define SOCKET          int
 #define INVALID_SOCKET  -1
 #define closesocket     close
@@ -132,8 +139,8 @@ bool StringServer::startListening(int port) {
 
 
 int StringServer::checkRequests(StringRequestHandler& handler, int milliSeconds) {
-	FD_SET readSet;
-	FD_SET writeSet;
+	fd_set readSet;
+	fd_set writeSet;
 	struct timeval tv;
 	int requests = 0;
 	

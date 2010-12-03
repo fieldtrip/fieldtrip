@@ -24,7 +24,7 @@ int main() {
 		return 0;
 	}
 	
-	if (ODM.configureFromFile("config6.txt") > 0) {
+	if (ODM.configureFromFile("config6.txt") != 0) {
 		fprintf(stderr, "Configuration file is invalid\n");
 		return 0;
 	}
@@ -33,6 +33,7 @@ int main() {
 	
 	ODM.start();
 	ODM.enableSaving("test6");
+   
 	printf("Starting - press ESC to quit\n");
 	while (1) {
 		if (conIn.checkKey()) {

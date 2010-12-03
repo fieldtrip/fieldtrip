@@ -152,9 +152,9 @@ class OnlineDataManager : public StringRequestHandler {
 		} else if (target == 1 && token2.compare("FILTER") == 0) {
 			if (streamingEnabled) return stopFirst;
 			
-			double bandwidth;
-			int order;
-			int factor;
+			double bandwidth = 0.0;
+			int order = 0;
+			int factor = 0;
 						
 			if (convertToDouble(StringServer::getNextToken(request, pos), bandwidth) 
 					&& convertToInt(StringServer::getNextToken(request, pos), order)
@@ -452,7 +452,7 @@ class OnlineDataManager : public StringRequestHandler {
 			int writePtr = newWritePos % rbSize;
 			int readPtr  = rbReadPos % rbSize;
 			
-			printf("Saving %8lli [%i; %i(\n", newWritePos, readPtr, writePtr);
+			//printf("Saving %8lli [%i; %i(\n", newWritePos, readPtr, writePtr);
 			
 			rbPtr = rbData + readPtr*rbChans;
 			if (writePtr > readPtr) {

@@ -165,7 +165,10 @@ class GDF_Writer {
 	
 	protected:
 	
-	float nanValue;
+   union {
+      float asFloat;
+      int32_t asInt;
+   } nanValue;
 	int nChans, bytesPerSample;
 	FILE *fp;
 	
