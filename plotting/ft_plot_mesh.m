@@ -63,15 +63,26 @@ if ~isstruct(bnd) && isnumeric(bnd) && size(bnd,2)==3
   bnd.pnt = bnd;
 end
 
+haspnt = isfield(bnd, 'pnt');
+hastri = isfield(bnd, 'tri');
+
 % get the optional input arguments
 facecolor   = keyval('facecolor',   varargin); if isempty(facecolor),   facecolor='white';end
-vertexcolor = keyval('vertexcolor', varargin); if isempty(vertexcolor), vertexcolor='none';end
+vertexcolor = keyval('vertexcolor', varargin); 
 edgecolor   = keyval('edgecolor',   varargin); if isempty(edgecolor),   edgecolor='k';end
 faceindex   = keyval('faceindex',   varargin); if isempty(faceindex),   faceindex=false;end
 vertexindex = keyval('vertexindex', varargin); if isempty(vertexindex), vertexindex=false;end
 vertexsize  = keyval('vertexsize',  varargin); if isempty(vertexsize),  vertexsize=10;end
 facealpha   = keyval('facealpha',   varargin); if isempty(facealpha),   facealpha=1;end
 tag         = keyval('tag',         varargin); if isempty(tag),         tag='';end
+
+if isempty(vertexcolor)
+  if haspnt && hastri
+    vertexcolor='none';
+  else
+    vertexcolor='k';
+  end
+end
 
 % convert string into boolean values
 faceindex   = istrue(faceindex);
