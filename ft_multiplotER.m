@@ -124,9 +124,9 @@ else
   data = varargin{1};
 end
 
-% For backward compatibility with old data structures:
+% ensure that hte input is correct, also backward compatibility with old data structures:
 for i=1:length(varargin)
-  varargin{i} = ft_checkdata(varargin{i});
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'freq'});
 end
 
 % set the defaults:
