@@ -45,7 +45,7 @@ flt_minnumber    = keyval('minnumber', varargin);
 flt_maxnumber    = keyval('maxnumber', varargin);
 implementation   = keyval('implementation', varargin); if isempty(implementation), implementation = 3; end
 
-if filetype(filename, 'neuralynx_ds')
+if ft_filetype(filename, 'neuralynx_ds')
   % replace the directory name by the filename
   if     exist(fullfile(filename, 'Events.Nev'))
     filename = fullfile(filename, 'Events.Nev');

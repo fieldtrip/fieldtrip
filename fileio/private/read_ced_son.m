@@ -88,7 +88,7 @@ for idx=1:length(fields)
 end;
 
 % First, check if NeuroShare DLL can be loaded
-if filetype(datafile, 'ced_son')
+if ft_filetype(datafile, 'ced_son')
     % TODO other DLLs for other binary formats could be supported here as well
     ns_RESULT = ns_SetLibrary(which('nsCedSon.dll'));
 end

@@ -66,7 +66,7 @@ if isempty(dataformat)
   if filetype_check_extension(filename, '.nev') % to prevent confusion with neuralynx nev files
     dataformat = 'nev';
   else
-    dataformat = filetype(filename);
+    dataformat = ft_filetype(filename);
   end
 end
 

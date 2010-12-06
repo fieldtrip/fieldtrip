@@ -54,7 +54,7 @@ elseif ~isempty(file)
 elseif isempty(file) && (~ischar(data) || ~filetype(data, 'matlab'))
   % data is already present in memory, and does not originate from a file
   % do nothing
-elseif isempty(file) && ischar(data) && filetype(data, 'matlab')
+elseif isempty(file) && ischar(data) && ft_filetype(data, 'matlab')
   % data is not present in memory but should be read from a Matlab file
   % remember the filename from which the data originates
   file = data;

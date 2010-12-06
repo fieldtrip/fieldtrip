@@ -25,7 +25,7 @@ function [t] = neuralynx_timestamp(filename, num)
 % $Id: neuralynx_timestamp.m 945 2010-04-21 17:41:20Z roboos $
 
 headersize = 16384;
-switch filetype(filename)
+switch ft_filetype(filename)
   case 'neuralynx_ncs'
     recordsize = 1044;  % in bytes
   case 'neuralynx_nse'

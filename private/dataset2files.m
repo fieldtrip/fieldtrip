@@ -56,7 +56,7 @@ if ~isempty(cfg.dataset)
   
     
   
-  switch filetype(cfg.dataset)
+  switch ft_filetype(cfg.dataset)
     case 'ctf_ds'
       % convert CTF dataset into filenames
       [path, file, ext] = fileparts(cfg.dataset);

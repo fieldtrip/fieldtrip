@@ -48,7 +48,7 @@ if needhdr
 
   for i=1:nfiles
     fname{i} = fullfile(dirname, ls(i).name);
-    ftype{i} = filetype(fname{i});
+    ftype{i} = ft_filetype(fname{i});
     sel(i)   = any(strcmp(ftype{i}, supported));
     [p, f, x] = fileparts(fname{i});
     if filetype_check_extension(fname{i}, '.mat')
