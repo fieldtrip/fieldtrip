@@ -301,8 +301,8 @@ while ~all(submitted) || ~all(collected)
     % the rationale for the estimate is the mean plus 2x the standard deviation
     if isempty(timcv)
       % instead of the standard deviation the min-max range (divided by two) is used
-      estimated = estimated_avg + (estimated_max - estimated_min);
-      % take into account that the estimate is inaccurate in case of few collected jobs
+      estimated = estimated_avg + 2*(estimated_max - estimated_min);
+      % take into account that the estimate is less accurate in case of only few collected jobs
       estimated = estimated * (1 + 1/(1+log10(sum(collected))));
     else
       % the coefficient of variation (CV) is a normalized measure of dispersion of a distribution
