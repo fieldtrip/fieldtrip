@@ -70,6 +70,13 @@ try
   option_global = keyval('global', optin);
   setglobal(option_global);
 
+  % seed the random number generator
+  option_randomseed = keyval('randomseed', optin);
+  if ~isempty(option_randomseed)
+    rand ('seed', option_randomseed);
+    randn('seed', option_randomseed);
+  end
+
   % there are potentially errors to catch from the which() function
   if isempty(which(fname))
     error('Not a valid M-file (%s).', fname);

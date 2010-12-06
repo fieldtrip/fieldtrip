@@ -196,7 +196,7 @@ while isempty(jobid)
     try
       jobid   = [];
       puttime = toc(stopwatch);
-      result  = peer('put', list(i).hostid, varargin, options, 'memreq', memreq, 'timreq', timreq);
+      result  = peer('put', list(i).hostid, varargin, options, 'memreq', memreq, 'timreq', timreq, 'randomseed', rand(1)*double(intmax));
       puttime = toc(stopwatch) - puttime;
       jobid   = result.jobid;
       % the peer accepted the job, there is no need to continue with the for loop
