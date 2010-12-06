@@ -42,6 +42,10 @@ void cleanup_tcpserver(void *arg) {
 				*threadlocal->fd = 0;
 		}
 
+		pthread_mutex_lock(&mutexhost);
+		host->port = 0;
+		pthread_mutex_unlock(&mutexhost);
+
 		pthread_mutex_lock(&mutexstatus);
 		tcpserverStatus = 0;
 		pthread_mutex_unlock(&mutexstatus);
@@ -176,6 +180,8 @@ void *tcpserver(void *arg) {
 		b = sizeof sa;
 
 		pthread_mutex_lock(&mutexhost);
+		if (host->port==0)
+		  host->port = DEFAULT_PORT;
 		sa.sin_family = AF_INET;
 		sa.sin_port   = htons(host->port);
 

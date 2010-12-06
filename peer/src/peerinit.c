@@ -68,7 +68,7 @@ void peerinit(void *arg) {
 
 		/* specify the host parameters */
 		host->version  = VERSION;
-		host->port     = DEFAULT_PORT;
+		host->port     = 0;
 		host->status   = DEFAULT_STATUS;
 		host->memavail = DEFAULT_MEMAVAIL;
 		host->cpuavail = DEFAULT_CPUAVAIL;
