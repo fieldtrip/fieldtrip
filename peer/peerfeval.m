@@ -123,8 +123,8 @@ end
 jobid   = [];
 puttime = [];
 
-% pass some options that may influence remote execution
-options = {'pwd', getcustompwd, 'path', getcustompath, 'diary', diary, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq};
+% pass some options that influence the remote execution
+options = {'pwd', getcustompwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq};
 
 % status = 0 means zombie mode, don't accept anything
 % status = 1 means master mode, accept everything

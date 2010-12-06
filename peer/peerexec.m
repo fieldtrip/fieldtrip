@@ -66,6 +66,10 @@ try
   option_pwd = keyval('pwd', optin);
   setcustompwd(option_pwd);
 
+  % try assigning the same global variables
+  option_global = keyval('global', optin);
+  setglobal(option_global);
+
   % there are potentially errors to catch from the which() function
   if isempty(which(fname))
     error('Not a valid M-file (%s).', fname);
