@@ -172,10 +172,11 @@ class PixelDataGrabber {
 		otherwise, sBuf is resized to the number of bytes that could actually be read.
 		@param filename		Name of the file to be read
 		@param sBuf			SimpleBuffer to receive the contents
+		@param checkAge     Whether to check if file is newer than other ones we've read
 		@return	true		On success (the file could be read completely)
 				false		In case of errors
 	*/
-	bool tryReadFile(const char *filename, SimpleStorage &sBuf);
+	bool tryReadFile(const char *filename, SimpleStorage &sBuf, bool checkAge);
 	
 	/** Try to read the protocol from the default location,which is <watch_directory>/mrprot.txt.
 		@return true 	on success (irrespective of the protocol contents)
@@ -201,6 +202,11 @@ class PixelDataGrabber {
 	*/
 	void addEchoToSlices();
 	
+	/** This function is for writing a message into the log file for each file we 
+		picked up (and possibly streamed out)
+	*/
+	void writeLogMessage(bool sentOut);
+	
 
 	std::string sourceDir;	/**< Contains the path of the directory that is being monitored */
 	std::string fullName;	/**< Contains the full path of the latest read file */
@@ -219,6 +225,7 @@ class PixelDataGrabber {
 	unsigned int phaseResolution;	/**< Number of pixels in phase direction (Y) */
 	unsigned int numSlices;			/**< Number of slices */
 	unsigned int TR;                /**< Repetition time in microseconds */
+	double TR_in_ms;                /**< Repetition time in milliseconds */
 	unsigned int numEchos;          /**< Number of echos per scan */
 	unsigned int curFileIndex;      /**< Count files per scan: 0 for magnitude part of first echo, ... */
 	unsigned int filesPerEcho;		/**< =1 normally, =2 for Magnitude-Phase reconstruction etc., we ignore the phase part */
@@ -232,8 +239,11 @@ class PixelDataGrabber {
 	SimpleStorage protBuffer;	/**< Simple buffer that contains ASCII protocol information */
 	FtBufferRequest ftReq;		/**< For sending request to the buffer */
 	
-	LARGE_INTEGER timeFirstScan; /**< File time of (last echo) of first scan */
-	LARGE_INTEGER timeLastFile;  /**< File time of last file we looked at */
+	LARGE_INTEGER tCreateFirstFile;	/**< File time of (first echo of) first scan */
+	LARGE_INTEGER tCreateLastFile; 	/**< Creation time of the last file we looked at */
+	LARGE_INTEGER tAccessLastFile; 	/**< Time when we finished accessing the last file */
+	
+	FILE *logFile; 		/**< File handle to log file, or NULL, if logging not enabled */
 };
 
 #endif

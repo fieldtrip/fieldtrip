@@ -27,7 +27,16 @@ PixelDataGrabber::PixelDataGrabber() : lastName(10) { // keep 10 file names for 
 	headerWritten = false;
 	verbosity = 1;
 	lastNamePos = 0;
-	timeFirstScan.QuadPart = timeLastFile.QuadPart = 0;
+	tCreateFirstFile.QuadPart = tCreateLastFile.QuadPart = -1;
+
+	char logname[128];
+	SYSTEMTIME LT;
+	
+	GetLocalTime(&LT);
+	snprintf(logname, 128, "PixGrabberLog_%04i_%02i_%02i_%02i_%02i_%02i.txt", 
+		LT.wYear, LT.wMonth, LT.wDay, LT.wHour, LT.wMinute, LT.wSecond);
+		
+	logFile = fopen(logname, "w");
 }
 
 PixelDataGrabber::~PixelDataGrabber() {
@@ -35,6 +44,7 @@ PixelDataGrabber::~PixelDataGrabber() {
 		
 	if (ftbSocket > 0) close_connection(ftbSocket);
 	sap_destroy(protInfo);
+	if (logFile != NULL) fclose(logFile);
 }
 	
 bool PixelDataGrabber::monitorDirectory(const char *directory) {
@@ -130,7 +140,6 @@ bool PixelDataGrabber::writeHeader() {
 bool PixelDataGrabber::writePixelData() {
 	FtBufferResponse resp;
 	UINT32_T nchans = numSlices*readResolution*phaseResolution;
-	static DWORD tFirst;
 	
 	if (!ftReq.prepPutData(nchans, 1, DATATYPE_INT16, sliceBuffer.data())) {
 		if (verbosity > 0) fprintf(stderr, "Out of memory!\n");
@@ -139,15 +148,8 @@ bool PixelDataGrabber::writePixelData() {
 	}
 	
 	/* write the request, read the response */
-	DWORD t0 = timeGetTime();
 	int result = tcprequest(ftbSocket, ftReq.out(), resp.in());
-	DWORD t1 = timeGetTime();	
-	
-	if (samplesWritten == 0) {
-		tFirst = t0;
-		timeFirstScan = timeLastFile;
-	}
-	
+		
 	if (result < 0) {
 		if (verbosity>0) fprintf(stderr, "Communication error when sending pixel data to fieldtrip buffer\n");
 		lastAction = TransmissionError;
@@ -158,24 +160,12 @@ bool PixelDataGrabber::writePixelData() {
 		lastAction = TransmissionError;
 		return false;
 	}
-	samplesWritten++;
-	if (verbosity>2) {
-		DWORD dT = t0 - tFirst;
-		double inTR = dT * 1000.0 / TR;
-		
-		long dTft = (long) ((timeLastFile.QuadPart - timeFirstScan.QuadPart)/10);
-		
-		printf("Wrote %i. sample at t = %li ms = %.2f TR, took %li ms\n", samplesWritten, dT, inTR, (int) t1-t0);
-		printf("dT from file creation time: %li us = %.2f TR\n", dTft, (double) dTft/(double) TR);
-	}
-	lastAction = PixelsTransmitted;
 	return true;
 }	
 	
 bool PixelDataGrabber::writeTimestampEvent(const struct timeval &tv) {
 	FtBufferResponse resp;
 	char ts[20];
-	DWORD t0, t1;
 	
 	sprintf(ts, "%11li.%06li", tv.tv_sec, tv.tv_usec);
 	
@@ -185,10 +175,7 @@ bool PixelDataGrabber::writeTimestampEvent(const struct timeval &tv) {
 		return false;
 	}
 
-	t0 = timeGetTime();
 	int result = tcprequest(ftbSocket, ftReq.out(), resp.in());
-	t1 = timeGetTime();
-	if (verbosity>2) printf("Time lapsed while writing event: %li ms\n", t1-t0);
 	
 	if (result < 0) {
 		if (verbosity>0) fprintf(stderr, "Communication error when sending pixel data to fieldtrip buffer\n");
@@ -208,6 +195,10 @@ bool PixelDataGrabber::sendFrameToBuffer(const struct timeval &tv) {
 		if (!writeHeader()) return false;
 	}
 	if (!writePixelData()) return false;
+	
+	if (logFile != NULL) writeLogMessage(true);
+	samplesWritten++;
+	lastAction = PixelsTransmitted;
 	// if (!writeTimestampEvent(tv)) return false;
 	return true;
 }
@@ -225,6 +216,8 @@ void PixelDataGrabber::handleProtocol(const char *info, unsigned int sizeInBytes
 	
 	
 	if (PI == NULL) return;
+	
+	tCreateFirstFile.QuadPart = -1;
 	
 	phaseResolution = readResolution = numSlices = 0;
 	phaseFOV = readoutFOV = 0.0;
@@ -252,10 +245,11 @@ void PixelDataGrabber::handleProtocol(const char *info, unsigned int sizeInBytes
 	item = sap_search_deep(PI, "alTR");
 	if (item!=NULL && item->type == SAP_LONG) {
 		TR = ((long *) item->value)[0];
-		if (verbosity>2) printf("TR: %i microsec.\n", TR);
+		if (logFile != NULL) fprintf(logFile, "TR: %i microsec.\n", TR);
 	} else {
 		TR = 2000000;
-	}	
+	}
+	TR_in_ms = TR * 0.001;
 	// TODO: Does the following make sense?
 	nifti.pixdim[4] = TR*1e-6f;	// repetition time in seconds 
 
@@ -263,7 +257,7 @@ void PixelDataGrabber::handleProtocol(const char *info, unsigned int sizeInBytes
 	item = sap_search_deep(PI, "lContrasts");
 	if (item!=NULL && item->type == SAP_LONG) {
 		numEchos = ((long *) item->value)[0];
-		if (verbosity>2) printf("Multi-echo: %i\n", numEchos);
+		if (logFile != NULL) fprintf(logFile, "Multi-echo: %i\n", numEchos);
 	} else {
 		numEchos = 1;
 	}		
@@ -280,7 +274,7 @@ void PixelDataGrabber::handleProtocol(const char *info, unsigned int sizeInBytes
 	if (item!=NULL && item->type == SAP_LONG) {
 		long reconMode = ((long *) item->value)[0];
 		filesPerEcho = (reconMode >= 8) ? 2 : 1;
-		if (verbosity>2) printf("Reconstruction mode: %i\n", (int) reconMode);
+		if (logFile != NULL) fprintf(logFile, "Reconstruction mode: %i\n", (int) reconMode);
 	} else {
 		filesPerEcho = 1;
 	}			
@@ -350,20 +344,20 @@ void PixelDataGrabber::handleProtocol(const char *info, unsigned int sizeInBytes
 	item = sap_search_deep(slice0, "dPhaseFOV");
 	if (item!=NULL && item->type == SAP_DOUBLE) {
 		phaseFOV = *((double *) item->value);
-		if (verbosity>2) printf("PhaseFOV: %f\n", phaseFOV);
+		if (logFile != NULL) fprintf(logFile, "PhaseFOV: %f\n", phaseFOV);
 	}
 
 	// sSliceArray.asSlice[0].dPhaseFOV => field of view in readout (X) direction
 	item = sap_search_deep(slice0, "dReadoutFOV");
 	if (item!=NULL && item->type == SAP_DOUBLE) {
 		readoutFOV = *((double *) item->value);
-		if (verbosity>2) printf("ReadoutFOV: %f\n", readoutFOV);
+		if (logFile != NULL) fprintf(logFile, "ReadoutFOV: %f\n", readoutFOV);
 	}
 
 	if (phaseFOV > 0.0 && readoutFOV > 0.0) {
 		phaseResolution = (unsigned int) round(readResolution * phaseFOV / readoutFOV);
 	}
-	if (verbosity>2) printf("Resolution: %i x %i x %i\n", readResolution, phaseResolution, numSlices);
+	if (logFile != NULL) fprintf(logFile, "Resolution: %i x %i x %i\n", readResolution, phaseResolution, numSlices);
 	
 	// Fill in the resolution- and FOV-dependent NIFTI fields
 	nifti.dim[0] = 3;
@@ -535,10 +529,7 @@ void PixelDataGrabber::fillXFormFromSAP(const double *pos, const double *norm, d
 		}
 	}
 	
-	if (verbosity > 2) {
-		// this should print something similar to the way the slice orientation is defined in POET
-		printf("POET definition:\n%c > %c %.1f > %c %.1f\n", letters[0], letters[1], -angA*180.0/M_PI, letters[2], -angB*180.0/M_PI);
-		
+	if (logFile != NULL) {
 		double pex = fabs(Vy[0]);
 		double pey = fabs(Vy[1]);
 		double pez = fabs(Vy[2]);
@@ -546,31 +537,33 @@ void PixelDataGrabber::fillXFormFromSAP(const double *pos, const double *norm, d
 		if (pez >= pey && pez >= pex) {
 			// z is dominant
 			if (Vy[2] > 0) {
-				printf("F >> H\n");
+				fprintf(logFile, "F >> H\n");
 			} else {
-				printf("H >> F\n");
+				fprintf(logFile, "H >> F\n");
 			}
 		} else if (pey > pez && pey >= pex) {
 			// y is dominant
 			if (Vy[1] > 0) {
-				printf("A >> P\n");
+				fprintf(logFile, "A >> P\n");
 			} else {
-				printf("P >> A\n");
+				fprintf(logFile, "P >> A\n");
 			}
 		} else {
 			// x is dominant
 			if (Vy[0] > 0) {
-				printf("R >> L\n");
+				fprintf(logFile, "R >> L\n");
 			} else {
-				printf("L >> R\n");
+				fprintf(logFile, "L >> R\n");
 			}
 		}
 		
-		printf("\nParsed normal vector versus calculated version (should be equal):\n");
-		printf("%f  %f\n%f  %f\n%f  %f\n", norm[0], Rz[0], norm[1], Rz[1], norm[2], Rz[2]);
-		
-		printf("\nReadout direction and phase encoding direction:\n");
-		printf("%f  %f\n%f  %f\n%f  %f\n", Vx[0], Vy[0], Vx[1], Vy[1], Vx[2], Vy[2]);
+		// this should print something similar to the way the slice orientation is defined in POET
+		fprintf(logFile, "POET definition:\n%c > %c %.1f > %c %.1f\n", letters[0], letters[1], -angA*180.0/M_PI, letters[2], -angB*180.0/M_PI);
+		fprintf(logFile, "\nParsed normal vector versus calculated version (should be equal):\n");
+		fprintf(logFile, "%f  %f\n%f  %f\n%f  %f\n", norm[0], Rz[0], norm[1], Rz[1], norm[2], Rz[2]);
+	
+		fprintf(logFile, "\nReadout direction and phase encoding direction:\n");
+		fprintf(logFile, "%f  %f\n%f  %f\n%f  %f\n", Vx[0], Vy[0], Vx[1], Vy[1], Vx[2], Vy[2]);
 	}
 	
 	double Pos0[3];
@@ -626,26 +619,25 @@ void PixelDataGrabber::fillXFormFromSAP(const double *pos, const double *norm, d
 	*/
 }
 
-bool PixelDataGrabber::tryReadFile(const char *filename, SimpleStorage &sBuf) {
+bool PixelDataGrabber::tryReadFile(const char *filename, SimpleStorage &sBuf, bool checkAge) {
 	HANDLE fHandle;
-	LARGE_INTEGER timeThisFile;
+	LARGE_INTEGER creationThisFile;
 
 	fHandle = CreateFile(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	
 	if (fHandle != INVALID_HANDLE_VALUE) {
 		DWORD read, size;
-		FILETIME creationTime;
+		FILETIME fileTime;
 		
-		GetFileTime(fHandle, &creationTime, NULL, NULL);
-		timeThisFile.LowPart = creationTime.dwLowDateTime;
-		timeThisFile.HighPart = creationTime.dwHighDateTime;
+		GetFileTime(fHandle, &fileTime, NULL, NULL);
+		creationThisFile.LowPart  = fileTime.dwLowDateTime;
+		creationThisFile.HighPart = fileTime.dwHighDateTime;
 		
-		if (timeThisFile.QuadPart <= timeLastFile.QuadPart) {
+		if (checkAge && creationThisFile.QuadPart <= tCreateLastFile.QuadPart) {
 			printf("Warning: file %s is older than another we've read - ignoring\n", filename);
 			CloseHandle(fHandle);
 			return false;
 		}
-		timeLastFile = timeThisFile;
 			
 		size = GetFileSize(fHandle, NULL);  // ignore higher DWORD - our files are not that big
 		
@@ -657,7 +649,15 @@ bool PixelDataGrabber::tryReadFile(const char *filename, SimpleStorage &sBuf) {
 			
 		ReadFile(fHandle, sBuf.data(), size, &read, NULL);
 		CloseHandle(fHandle);
-		if (size==read) return true;
+				
+		if (size==read) {
+			tCreateLastFile = creationThisFile;
+			
+			GetSystemTimeAsFileTime(&fileTime);
+			tAccessLastFile.LowPart  = fileTime.dwLowDateTime;
+			tAccessLastFile.HighPart = fileTime.dwHighDateTime;	
+			return true;
+		}
 
 		if (verbosity>0) fprintf(stderr, "Error reading file contents from disk.\n");
 		sBuf.resize(read);
@@ -669,7 +669,7 @@ bool PixelDataGrabber::tryReadFile(const char *filename, SimpleStorage &sBuf) {
 bool PixelDataGrabber::tryReadProtocol() {
 	std::string defProtFile = sourceDir + "mrprot.txt";
 	
-	if (!tryReadFile(defProtFile.c_str(), protBuffer)) return false;
+	if (!tryReadFile(defProtFile.c_str(), protBuffer, false)) return false;
 	
 	handleProtocol((char *) protBuffer.data(), protBuffer.size());
 	return true;
@@ -707,10 +707,8 @@ void PixelDataGrabber::tryFolderToBuffer() {
 			
 
 			gettimeofday(&tv, NULL);
-			if (!tryReadFile(fullName.c_str(), pixBuffer)) continue;
-			
-			printf("%4i,%2i, %50s\n", samplesWritten, curFileIndex, fullName.c_str());
-			
+			if (!tryReadFile(fullName.c_str(), pixBuffer, true)) continue;
+						
 			if (protInfo == NULL) tryReadProtocol();
 			
 			if (curFileIndex == 0) {
@@ -721,6 +719,12 @@ void PixelDataGrabber::tryFolderToBuffer() {
 				}
 			}
 			if (sliceBuffer.size()==0) continue;
+			
+			if  (tCreateFirstFile.QuadPart == -1) {
+				tCreateFirstFile = tCreateLastFile;
+			}
+			
+			if (logFile != NULL) writeLogMessage(false);
 			curFileIndex++;
 			// printf("curFileIndex = %i\n", curFileIndex);
 
@@ -735,7 +739,7 @@ void PixelDataGrabber::tryFolderToBuffer() {
 			}
 		} 
 		else if (vfn[i].compare(vfn[i].size()-10,10, "mrprot.txt") == 0) {
-			if (!tryReadFile(fullName.c_str(), protBuffer)) return;
+			if (!tryReadFile(fullName.c_str(), protBuffer, false)) return;
 	
 			handleProtocol((char *) protBuffer.data(), protBuffer.size());
 			if (ftbSocket != -1) writeHeader();
@@ -747,6 +751,38 @@ void PixelDataGrabber::tryFolderToBuffer() {
 		}
 	}
 }
+
+void PixelDataGrabber::writeLogMessage(bool sentOut) {
+	
+	int dt_file = (int) ((tCreateLastFile.QuadPart - tCreateFirstFile.QuadPart)/10000L);
+	double dt_file_in_TR = (double) dt_file / TR_in_ms;
+	int dt_fileproc = (int) ((tAccessLastFile.QuadPart - tCreateLastFile.QuadPart)/10000L);
+	
+	if (sentOut) {
+		FILETIME fileTime;
+		LARGE_INTEGER tDone;
+	
+		GetSystemTimeAsFileTime(&fileTime);
+		tDone.LowPart  = fileTime.dwLowDateTime;
+		tDone.HighPart = fileTime.dwHighDateTime;	
+	
+		int dt_stream = (int) ((tDone.QuadPart - tCreateLastFile.QuadPart)/10000L);
+		
+		// sample index, dt_file_creation, dt_fileproc, dt_file_creation in TR, dt_stream, dt_streamproc, dt_stream_in_TR
+		fprintf(logFile, "%4i %2i  %8i %6i %8.3f  # streaming took %i ms\n", 
+					samplesWritten, -1,
+					dt_file, dt_fileproc, dt_file_in_TR, 
+					dt_stream);
+	} else {
+		// sample index, dt_file_creation, dt_fileproc, dt_file_creation in TR, curFileIndex, file name
+		fprintf(logFile, "%4i %2i  %8i %6i %8.3f  # %s\n", 
+					samplesWritten, curFileIndex,
+					dt_file, dt_fileproc, dt_file_in_TR, 
+					fullName.c_str());
+	}
+	fflush(logFile);
+}
+
 
 void PixelDataGrabber::reshapeToSlices() {
 	unsigned int pixels = pixBuffer.size() >> 1;
