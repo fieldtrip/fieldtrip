@@ -230,6 +230,7 @@ if ~isfield(cfg, 'sphereradius'),       cfg.sphereradius = [];               end
 if ~isfield(cfg, 'projvec'),            cfg.projvec = [1];               end
 if ~isfield(cfg, 'projweight'),         cfg.projweight = ones(size(cfg.projvec));               end
 if ~isfield(cfg, 'projcomb'),           cfg.projcomb = 'mean';               end %or max
+if ~isfield(cfg, 'projthresh'),         cfg.projthresh = [];                 end 
 if ~isfield(cfg, 'distmat'),            cfg.distmat = [];                    end
 if ~isfield(cfg, 'camlight'),           cfg.camlight = 'yes';                end
 if ~isfield(cfg, 'renderer'),           cfg.renderer = 'opengl';             end
