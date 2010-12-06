@@ -1,4 +1,4 @@
-function [cfg] = ft_sourceplot(cfg, data)
+function [cfg] = ft_sourceplot2(cfg, data)
 
 % FT_SOURCEPLOT plots functional source reconstruction data on slices or on a
 % surface, optionally as an overlay on anatomical MRI data, where
@@ -100,8 +100,17 @@ function [cfg] = ft_sourceplot(cfg, data)
 %                         SPM anatomical template in MNI coordinates
 %   cfg.surfinflated   = string, file that contains the inflated surface (default = [])
 %   cfg.surfdownsample = number (default = 1, i.e. no downsampling)
-%   cfg.projmethod     = projection method, how functional volume data is projected onto surface
-%                        'nearest', 'sphere_avg', 'sphere_weighteddistance'
+%   cfg.projmethod     = projection method, how functional volume data is
+%   projected onto surface
+%                        'nearest', 'project', 'sphere_avg', 'sphere_weighteddistance'
+%   cfg.projvec        = vector (in mm) to allow different projections that
+%   are combined with the method specified in cfg.projcomb
+%   cfg.projcomb       = 'mean', 'max', method to combine the different
+% projections
+%   cfg.projweight     = vector of weights for the different projections
+%   (default: 1)
+%   cfg.projthresh      = implements thresholding on the surface level
+%   (cfg.projthresh = 0.7 means 70% of maximum)
 %   cfg.sphereradius   = maximum distance from each voxel to the surface to be
 %                        included in the sphere projection methods, expressed in mm
 %   cfg.distmat        = precomputed distance matrix (default = [])
@@ -218,6 +227,9 @@ if ~isfield(cfg, 'surfdownsample'),     cfg.surfdownsample = 1;              end
 if ~isfield(cfg, 'surffile'),           cfg.surffile = 'single_subj_T1.mat'; end % use a triangulation that corresponds with the collin27 anatomical template in MNI coordinates
 if ~isfield(cfg, 'surfinflated'),       cfg.surfinflated = [];               end
 if ~isfield(cfg, 'sphereradius'),       cfg.sphereradius = [];               end
+if ~isfield(cfg, 'projvec'),            cfg.projvec = [1];               end
+if ~isfield(cfg, 'projweight'),         cfg.projweight = ones(size(cfg.projvec));               end
+if ~isfield(cfg, 'projcomb'),           cfg.projcomb = 'mean';               end %or max
 if ~isfield(cfg, 'distmat'),            cfg.distmat = [];                    end
 if ~isfield(cfg, 'camlight'),           cfg.camlight = 'yes';                end
 if ~isfield(cfg, 'renderer'),           cfg.renderer = 'opengl';             end
@@ -860,19 +872,60 @@ elseif isequal(cfg.method,'surface')
 
   fprintf('%d voxels in functional data\n', prod(dim));
   fprintf('%d vertices in cortical surface\n', size(surf.pnt,1));
-
-  if hasfun
-    [interpmat, cfg.distmat] = interp_gridded(data.transform, fun, surf.pnt, 'projmethod', cfg.projmethod, 'distmat', cfg.distmat, 'sphereradius', cfg.sphereradius, 'inside', data.inside);
-    % interpolate the functional data
-    val = interpmat * fun(data.inside(:));
-    if hasmsk
-      % also interpolate the opacity mask
-      maskval = interpmat * msk(data.inside(:));
-    end
+  
+  if (hasfun  && strcmp(cfg.projmethod,'project')),
+	  val=zeros(size(surf.pnt,1),1);
+	  if hasmsk
+		  maskval = val;
+	  end;
+	  %convert projvec in mm to a factor, assume mean distance of 70mm
+	  cfg.projvec=(70-cfg.projvec)/70;
+	  for iproj = 1:length(cfg.projvec),
+		  sub = round(warp_apply(inv(data.transform), surf.pnt*cfg.projvec(iproj), 'homogenous'));  % express
+		  sub(sub(:)<1) = 1;
+		  sub(sub(:,1)>dim(1),1) = dim(1);
+		  sub(sub(:,2)>dim(2),2) = dim(2);
+		  sub(sub(:,3)>dim(3),3) = dim(3);
+		  disp('projecting...')
+		  ind = sub2ind(dim, sub(:,1), sub(:,2), sub(:,3));
+		  if strcmp(cfg.projcomb,'mean')
+			  val = val + cfg.projweight(iproj) * fun(ind);
+			  if hasmsk
+				  maskval = maskval + cfg.projweight(iproj) * msk(ind);
+			  end
+		  elseif strcmp(cfg.projcomb,'max')
+			  val = max([val cfg.projweight(iproj) * fun(ind)],[],2);
+			  if hasmsk
+				  maskval = max([maskval cfg.projweight(iproj) * fun(ind)],[],2);
+			  end
+		  else
+			  error('undefined method to combine projections; use cfg.projcomb= mean or max')
+		  end
+	  end
+	  if strcmp(cfg.projcomb,'mean'),
+		  val=val/length(cfg.projvec);
+		  if hasmsk
+			  maskval = max([maskval cfg.projweight(iproj) * fun(ind)],[],2);
+		  end
+	  end;
+	  if ~isempty(cfg.projthresh),
+		  mm=max(val(:));
+		  maskval(val < cfg.projthresh*mm) = 0;
+	  end
   end
-
+  
+  if (hasfun && ~strcmp(cfg.projmethod,'project')),
+	  [interpmat, cfg.distmat] = interp_gridded2(data.transform, fun, surf.pnt, 'projmethod', cfg.projmethod, 'distmat', cfg.distmat, 'sphereradius', cfg.sphereradius, 'inside', data.inside);
+	  % interpolate the functional data
+	  val = interpmat * fun(data.inside(:));
+  end;
+  if (hasmsk && ~strcmp(cfg.projmethod,'project')),
+	  % also interpolate the opacity mask
+	  maskval = interpmat * msk(data.inside(:));
+  end
+  
   if ~isempty(cfg.surfinflated)
-    % read the inflated triangulated cortical surface from file
+	  % read the inflated triangulated cortical surface from file
     tmp = load(cfg.surfinflated, 'bnd');
     surf = tmp.bnd;
     if isfield(surf, 'transform'),
