@@ -10,6 +10,8 @@ function var = getglobal
 
 list = whos('global');
 
+var = [];
+
 for i=1:length(list)
   eval(sprintf('global %s', list(i).name));
   var.(list(i).name) = eval(list(i).name);

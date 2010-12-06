@@ -17,6 +17,7 @@ function varargout = peercellfun(fname, varargin)
 %   memreq         = number
 %   timreq         = number
 %   sleep          = number
+%   order          = string, can be 'random' or 'original' (default = 'random')
 %
 % Example
 %   fname = 'power';
@@ -64,6 +65,7 @@ memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=1024^3;         
 timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=3600;           end % assume 1 hour
 sleep   = keyval('sleep',   optarg); if isempty(sleep),  sleep=0.05;            end
 diary   = keyval('diary',   optarg); if isempty(diary),  diary='error';         end
+order   = keyval('order',   optarg); if isempty(order),  order='random';        end
 
 % convert from 'yes'/'no' into boolean value
 UniformOutput = istrue(UniformOutput);
@@ -161,10 +163,17 @@ while ~all(submitted) || ~all(collected)
   submit = find(~submitted);
   
   if ~isempty(submit)
-    
-    % pick the first job, or alternatively pick a random job
-    % pick = 1;
-    pick = ceil(rand(1)*length(submit));
+
+    % determine the job to submit
+    if strcmp(order, 'random')
+      % pick a random job
+      pick = ceil(rand(1)*length(submit));
+    elseif strcmp(order, 'original')
+      % pick the first job
+      pick = 1;
+    else
+      error('unsupported order');
+    end
     submit = submit(pick);
     
     if any(collected)
