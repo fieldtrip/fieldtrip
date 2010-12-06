@@ -275,8 +275,8 @@ for i=1:length(cfg.selectfeature)
   end
 end
 
-if length(artlabel) > 8
-  error('only upto 8 artifacts groups supported')
+if length(artlabel) > 9
+  error('only upto 9 artifacts groups supported')
 end
 
 % make artdata representing all artifacts in a "raw data" format
@@ -329,7 +329,7 @@ opt.trlop    = 1;          % active trial being displayed
 opt.ftsel    = find(strcmp(artlabel,cfg.selectfeature)); % current artifact/feature being selected
 opt.trlorg   = trlorg;
 opt.fsample  = fsample;
-opt.artcol   = [0.9686 0.7608 0.7686; 0.7529 0.7098 0.9647; 0.7373 0.9725 0.6824;0.8118 0.8118 0.8118; 0.9725 0.6745 0.4784; 0.9765 0.9176 0.5686; 0.6863 1 1; 1 0.6863 1];
+opt.artcol   = [0.9686 0.7608 0.7686; 0.7529 0.7098 0.9647; 0.7373 0.9725 0.6824;0.8118 0.8118 0.8118; 0.9725 0.6745 0.4784; 0.9765 0.9176 0.5686; 0.6863 1 1; 1 0.6863 1; 0 1 0.6000];
 opt.chan_colors = chan_colors;
 opt.cleanup  = false;      % this is needed for a corrent handling if the figure is closed (either in the corner or by "q")
 if strcmp(cfg.continuous, 'yes')
@@ -365,9 +365,9 @@ uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbut
 
 % legend artifacts/features
 for iArt = 1:length(artlabel)
-  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', artlabel{iArt}, 'userdata', num2str(iArt), 'position', [0.91, 0.9 - ((iArt-1)*0.1), 0.08, 0.04], 'backgroundcolor', opt.artcol(iArt,:))
-  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', ['shift+' num2str(iArt)], 'position', [0.91, 0.85 - ((iArt-1)*0.1), 0.03, 0.04], 'backgroundcolor', opt.artcol(iArt,:))
-  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', ['control+' num2str(iArt)], 'position', [0.96, 0.85 - ((iArt-1)*0.1), 0.03, 0.04], 'backgroundcolor', opt.artcol(iArt,:))
+  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', artlabel{iArt}, 'userdata', num2str(iArt), 'position', [0.91, 0.9 - ((iArt-1)*0.09), 0.08, 0.04], 'backgroundcolor', opt.artcol(iArt,:))
+  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', ['shift+' num2str(iArt)], 'position', [0.91, 0.85 - ((iArt-1)*0.09), 0.03, 0.04], 'backgroundcolor', opt.artcol(iArt,:))
+  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', ['control+' num2str(iArt)], 'position', [0.96, 0.85 - ((iArt-1)*0.09), 0.03, 0.04], 'backgroundcolor', opt.artcol(iArt,:))
 end
 
 if strcmp(cfg.viewmode, 'butterfly')
@@ -638,7 +638,7 @@ switch key
       guidata(h, opt);
       redraw_cb(h, eventdata);
     end
-  case {'control+1' 'control+2' 'control+3' 'control+4' 'control+5' 'control+6' 'control+7' 'control+8'}
+  case {'control+1' 'control+2' 'control+3' 'control+4' 'control+5' 'control+6' 'control+7' 'control+8' 'control+9'}
     % go to next artifact
     opt.ftsel = str2double(key(end));
     cursam = opt.trlvis(opt.trlop,2);
@@ -979,7 +979,26 @@ switch opt.cfg.viewmode
     set(gca, 'xTick', linspace(ax(1), ax(2), nticks))
     xTickLabel = cellstr(num2str( linspace(tim(1), tim(end), nticks)' , '%1.2f'))';
     set(gca, 'xTickLabel', xTickLabel)
+    
     set(gca, 'yTick', [])
+    if length(chanindx)<7
+      % two ticks per channel
+      set(gca, 'yTick', sort([laytime.pos(:,2)+(laytime.height(laysel)/2); laytime.pos(:,2)+(laytime.height(laysel)/4); laytime.pos(:,2)-(laytime.height(laysel)/4); laytime.pos(:,2)-(laytime.height(laysel)/2)]))
+      yTickLabel = {num2str(-vlim(2)), num2str(-vlim(2)/2), num2str(vlim(2)/2), num2str(vlim(2))};
+    elseif length(chanindx)> 6 && length(chanindx)< 20
+      % one tick per channel
+      set(gca, 'yTick', sort([laytime.pos(:,2)+(laytime.height(laysel)/4); laytime.pos(:,2)-(laytime.height(laysel)/4)]))
+      yTickLabel = {num2str(-vlim(2)/2), num2str(vlim(2)/2)};
+    else
+      % no space for xticks
+      yTickLabel = [];
+    end    
+    tmp = yTickLabel;
+    for chanloop = 2:length(chanindx)
+      yTickLabel = [yTickLabel tmp];
+    end
+    set(gca, 'yTickLabel', yTickLabel)
+    
     title(sprintf('%s %d, time from %g to %g s', opt.trialname, opt.trlop, tim(1), tim(end)));
     
   case 'component'
