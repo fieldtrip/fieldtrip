@@ -575,7 +575,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 								mexErrMsgTxt ("invalid input argument #2");
 
 						pthread_mutex_lock(&mutexhost);
-						host->memavail = (UINT64_T)mxGetScalar(prhs[1]);
+						host->memavail = (UINT64_T)(mxGetScalar(prhs[1])+0.5);
 						pthread_mutex_unlock(&mutexhost);
 				}
 		}
@@ -593,7 +593,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 								mexErrMsgTxt ("invalid input argument #2");
 
 						pthread_mutex_lock(&mutexhost);
-						host->cpuavail = (UINT64_T)mxGetScalar(prhs[1]);
+						host->cpuavail = (UINT64_T)(mxGetScalar(prhs[1])+0.5);
 						pthread_mutex_unlock(&mutexhost);
 				}
 		}
@@ -611,7 +611,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 								mexErrMsgTxt ("invalid input argument #2");
 
 						pthread_mutex_lock(&mutexhost);
-						host->timavail = (UINT64_T)mxGetScalar(prhs[1]);
+						host->timavail = (UINT64_T)(mxGetScalar(prhs[1])+0.5);
 						pthread_mutex_unlock(&mutexhost);
 				}
 		}
@@ -818,11 +818,11 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						if      (strcasecmp(argument, "jobid")==0)
 								jobid = (UINT32_T)mxGetScalar(val);
 						else if (strcasecmp(argument, "memreq")==0)
-								memreq = (UINT32_T)mxGetScalar(val);
+								memreq = (UINT32_T)(mxGetScalar(val)+0.5);
 						else if (strcasecmp(argument, "cpureq")==0)
-								cpureq = (UINT32_T)mxGetScalar(val);
+								cpureq = (UINT32_T)(mxGetScalar(val)+0.5);
 						else if (strcasecmp(argument, "timreq")==0)
-								timreq = (UINT32_T)mxGetScalar(val);
+								timreq = (UINT32_T)(mxGetScalar(val)+0.5);
 				}
 
 				pthread_mutex_lock(&mutexpeerlist);
