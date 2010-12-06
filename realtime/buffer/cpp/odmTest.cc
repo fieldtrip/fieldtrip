@@ -41,7 +41,7 @@ int main() {
 			if (c==27) break; // quit
 		}
 		
-		ctrlServ.checkRequests(ODM);
+		// ctrlServ.checkRequests(ODM);
 		
 		int *block = ODM.provideBlock(NBLK);
 		for (int j=0;j<NBLK;j++) {
@@ -55,7 +55,7 @@ int main() {
 				block[1+i+j*(1+NCHAN)] = value[i];
 			}
 		}
-		//printf("Block %i : %i\n", ++counter, ODM.handleBlock());
+		printf("Block %i : %i\n", ++counter, ODM.handleBlock());
 		conIn.milliSleep(100);
 	}
 	

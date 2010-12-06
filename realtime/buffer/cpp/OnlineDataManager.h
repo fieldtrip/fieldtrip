@@ -1,10 +1,8 @@
-#include <GdfWriter.h>
+#include <GDF_BackgroundWriter.h>
 #include <SignalConfiguration.h>
 #include <stdio.h>
 #include <FtBuffer.h>
 #include <socketserver.h>
-#include <pthread.h>
-#include <LocalPipe.h>
 #include <MultiChannelFilter.h>
 #include <StringServer.h>
 
@@ -50,25 +48,14 @@ class OnlineDataManager : public StringRequestHandler {
 		sampleCounter = 0;
 		skipSamples = 0;
 		
-		gdfWriter = 0;
+		curWriter = 0;
 		lpFilter = 0;
-		
-		rbWritePos = rbReadPos = 0;
-		rbChans = rbSize = 0;
-		rbData = 0;
-		rbMaxSize = (int) (5*fSample); // 5 seconds of data for saving ring buffer
-		
+				
 		savingEnabled = false;
 		isValid = false;
-		
-		maxFileSize = 1024*1024*1024; // 1GB
-		fileCounter = 0;
 	}
 	
 	virtual ~OnlineDataManager() {
-		// stop saving thread
-		int64_t minusOne = -1;
-		locPipe.write(sizeof(int64_t), &minusOne);
 		// TODO: some more of this
 	
 		// stop buffer server, if spawned
@@ -76,15 +63,14 @@ class OnlineDataManager : public StringRequestHandler {
 		// FtConnection is cleaned up automatically, if needed
 		
 		// clean up GDF writer, if needed
-		if (gdfWriter) {
-			gdfWriter->close();
-			delete gdfWriter;
+		if (curWriter) {
+			curWriter->stopSync();
+			delete curWriter;
 		}
 		// clean up variables
 		delete lpFilter;
 		delete[] auxVec;
 		delete[] pBlock;
-		delete[] rbData;
 	}
 	
 	virtual std::string handleStringRequest(const std::string& request) {
@@ -216,7 +202,6 @@ class OnlineDataManager : public StringRequestHandler {
 	
 	bool handleBlock() {
 		if (!isRunning) return false;
-		
 		if (ftSocket != -1) {
 			if (!handleStreaming()) return false;
 		}
@@ -228,39 +213,19 @@ class OnlineDataManager : public StringRequestHandler {
 	}
 	
 	bool enableSaving(const char *filename) {
-		strcpy(baseFilename, filename);
-		char *lastDotPos = strrchr(baseFilename, '.');
-		// cut off .gdf suffix, if given
-		if (lastDotPos != NULL) {
-			if (!strcasecmp(lastDotPos, ".gdf")) {
-				*lastDotPos = 0;
-			}
-		}
-		
-		fileCounter = 0;
-		strcpy(curFilename, baseFilename);
-		strcat(curFilename, ".gdf");
-		if (!gdfWriter->createAndWriteHeader(curFilename)) {
-			fprintf(stderr, "Could not open GDF file %s for writing\n", curFilename);
-			return false;
-		}
-		
-		if (rbData) delete[] rbData;
-		rbChans = nStatus + signalConf.getSavingSelection().getSize();
-		rbData = new To[rbMaxSize*rbChans];
-		rbSize = rbMaxSize;
-		rbWritePos = rbReadPos = 0;
-		
+		curWriter->start(filename);
 		savingEnabled = true;
 		return true;
 	}
 	
-	bool start() {
-		if (pthread_create(&savingThread, NULL, savingThreadFunction, this)) {
-			fprintf(stderr, "Could not spawn GDF saving thread.\n");
-			return false;
-		}
+	void disableSaving() {
+		savingEnabled = false;
+		if (!curWriter) return;
+		curWriter->stopAsync();
+		curWriter = 0;
+	}
 	
+	bool start() {
 		if (writeHeader()) {
 			return false;
 		}
@@ -374,15 +339,15 @@ class OnlineDataManager : public StringRequestHandler {
 		int nSave  = saveSel.getSize();
 		int stride = nStatus + nCont;
 		
-		if (rbWritePos - rbReadPos > rbSize - nThisBlock) {
+		if (curWriter == 0) return false;
+		
+		if (!curWriter->checkFreeBlock(nThisBlock)) {
 			fprintf(stderr, "Error: saving thread does not keep up with load\n");
 			return false;
 		}
 		
-		int wrappedPos = rbWritePos % rbSize;
-		
 		for (int j=0;j<nThisBlock;j++) {
-			To *dest = rbData + rbChans*wrappedPos;
+			To *dest = curWriter->getSampleSlot();
 			To *src  = pBlock  + j*stride;
 				
 			for (int i=0;i<nStatus;i++) {
@@ -391,29 +356,25 @@ class OnlineDataManager : public StringRequestHandler {
 			for (int i=0;i<nSave;i++) {
 				dest[i] = src[saveSel.getIndex(i)];
 			}
-			if (++wrappedPos == rbSize) wrappedPos = 0;
 		}
-		rbWritePos += nThisBlock;
-		locPipe.write(sizeof(int64_t), static_cast<void *>(&rbWritePos));
+		curWriter->commitBlock();
 		return true;
 	}
 	
 	void configureSaving() {
 		const ChannelSelection& saveSel = signalConf.getSavingSelection();
 		
-		delete gdfWriter;
-		
 		int nSave = saveSel.getSize();
 		if (nStatus + nSave == 0) return;
 		
-		gdfWriter = new GDF_Writer(nStatus + nSave, (int) fSample, gdfType);
+		curWriter = new GDF_BackgroundWriter<To>(nStatus + nSave, (int) fSample, gdfType);
 		for (int i=0;i<nStatus;i++) {
 			char lab[16];
 			sprintf(lab, "Status_%i", i+1);
-			gdfWriter->setLabel(i, lab);
+			curWriter->gdf().setLabel(i, lab);
 		}
 		for (int i=0;i<nSave;i++) {
-			gdfWriter->setLabel(nStatus+i, saveSel.getLabel(i));
+			curWriter->gdf().setLabel(nStatus+i, saveSel.getLabel(i));
 			// gdfWriter->setPhysicalLimits(1+i, -262144.0, 262143.99987792969);
 			// gdfWriter->setPhysDimCode(1+i, GDF_MICRO + GDF_VOLT);
 		}
@@ -429,74 +390,8 @@ class OnlineDataManager : public StringRequestHandler {
 			lpFilter = 0;
 		}
 	}
-	
-	void savingThreadFunc() {
-		int64_t fileSize = 256*(1+rbChans);
-
-		while (1) {
-			int newSamplesA, newSamplesB;
-			To *rbPtr;
-			int64_t newSize, newWritePos;
 		
-			int n = locPipe.read(sizeof(int64_t), &newWritePos);
-			if (n!=sizeof(int64_t)) {
-				// this should never happen for blocking sockets/pipes
-				fprintf(stderr, "Unexpected error in pipe communication\n");
-				break;
-			}
-			if (newWritePos < 0) {
-				printf("\nSaving thread received %i - exiting...\n", (int) newWritePos);
-				break;
-			}
-			
-			int writePtr = newWritePos % rbSize;
-			int readPtr  = rbReadPos % rbSize;
-			
-			//printf("Saving %8lli [%i; %i(\n", newWritePos, readPtr, writePtr);
-			
-			rbPtr = rbData + readPtr*rbChans;
-			if (writePtr > readPtr) {
-				newSamplesA = writePtr - readPtr;
-				newSamplesB = 0;
-			} else {
-				newSamplesA = rbSize - readPtr;
-				newSamplesB = writePtr;
-			}
-			
-			int64_t addSize = (newSamplesA+newSamplesB) * rbChans * sizeof(To);
-		
-			newSize = fileSize + addSize;
-			if (newSize > maxFileSize) {
-				gdfWriter->close();
-				fileCounter++;
-			
-				snprintf(curFilename, sizeof(curFilename), "%s_%i.gdf", baseFilename, fileCounter);
-				if (!gdfWriter->createAndWriteHeader(curFilename)) {
-					fprintf(stderr, "Error: could not create GDF file %s\n", curFilename);
-					break;
-				}
-				newSize = 256*(1+rbChans) + addSize;
-			}
-		
-			gdfWriter->addSamples(newSamplesA, rbPtr);
-			if (newSamplesB > 0) {
-				gdfWriter->addSamples(newSamplesB, rbData);
-			}
-			rbReadPos = newWritePos;
-			readPtr   = writePtr;
-			fileSize  = newSize;
-		}
-	}
-	
-	static void *savingThreadFunction(void *arg) {
-		if (arg == 0) return NULL;
-		
-		OnlineDataManager<To,Ts> *ODM = (OnlineDataManager<To,Ts> *) arg;
-		ODM->savingThreadFunc();
-		return NULL;
-	}
-	
-	GDF_Writer *gdfWriter;
+	GDF_BackgroundWriter<To> *curWriter;
 	MultiChannelFilter<Ts,Ts> *lpFilter;
 
 	int ftType;
@@ -510,28 +405,17 @@ class OnlineDataManager : public StringRequestHandler {
 	To *pBlock;
 	Ts *auxVec;
 	
-	To *rbData;
-	int rbSize, rbMaxSize, rbChans;
-	int64_t rbReadPos, rbWritePos;
-	
 	int ftSocket;
 	int sampleCounter;
 	
-	LocalPipe locPipe;
 	FtConnection ftConnection;
 	FtBufferResponse resp;
 	FtEventList eventList;
 	FtSampleBlock sampleBlock;
 	SignalConfiguration signalConf;
 	ft_buffer_server_t *ftServer;
-	pthread_t savingThread;
 	
 	int skipSamples;
-	
-	int64_t maxFileSize;
-	char baseFilename[1024];
-	char curFilename[1024];
-	int fileCounter;
 	
 	bool savingEnabled, streamingEnabled;
 	bool isValid, isRunning;

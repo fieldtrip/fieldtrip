@@ -35,7 +35,7 @@ StringServer.o: StringServer.cc StringServer.h
 GdfWriter.o: GdfWriter.cc GdfWriter.h 
 	g++ -c  GdfWriter.cc $(CFLAGS)	
 	
-odmTest.o: odmTest.cc OnlineDataManager.h StringServer.o
+odmTest.o: odmTest.cc OnlineDataManager.h StringServer.o GDF_BackgroundWriter.h
 	g++ -c odmTest.cc $(CFLAGS)
 
 odmTest$(SUFFIX): odmTest.o SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o
