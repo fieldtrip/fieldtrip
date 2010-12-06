@@ -31,7 +31,7 @@ int main() {
 	
 	ctrlServ.startListening(8000);
 	
-	ODM.start();
+	ODM.enableStreaming();
 	ODM.enableSaving("test6");
    
 	printf("Starting - press ESC to quit\n");
@@ -59,6 +59,7 @@ int main() {
 		conIn.milliSleep(100);
 	}
 	
-	ODM.stop();
+	ODM.disableStreaming();
+   ODM.disableSaving();
 }
 

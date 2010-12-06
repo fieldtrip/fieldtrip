@@ -201,11 +201,9 @@ class OnlineDataManager : public StringRequestHandler {
 	}
 	
 	bool handleBlock() {
-		if (!isRunning) return false;
-		if (ftSocket != -1) {
+		if (streamingEnabled) {
 			if (!handleStreaming()) return false;
 		}
-		
 		if (savingEnabled) {
 			return handleSaving();
 		}
@@ -225,22 +223,26 @@ class OnlineDataManager : public StringRequestHandler {
 		curWriter = 0;
 	}
 	
-	bool start() {
-		if (writeHeader()) {
-			return false;
-		}
-		isRunning = true;
+	bool enableStreaming() {
+      if (streamingEnabled) return true; // silently ignore      
+		if (!writeHeader()) return false;
+		streamingEnabled = true;
 		return true;
 	}
 	
-	void stop() {
-		if (!isRunning) return;
-		isRunning = false;
+	void disableStreaming() {
+		// if (!streamingEnabled) return;
+      streamingEnabled = false;
 	}
 	
 	FtEventList& getEventList() {
 		return eventList;
 	}
+   
+   GDF_Writer *getCurrentGDF() {
+      if (curWriter) return curWriter->gdf();
+      return 0;
+   }
 		
 	protected:
 	
@@ -418,5 +420,5 @@ class OnlineDataManager : public StringRequestHandler {
 	int skipSamples;
 	
 	bool savingEnabled, streamingEnabled;
-	bool isValid, isRunning;
+	bool isValid;
 };

@@ -9,7 +9,7 @@ class GDF_BackgroundWriter {
 	public:
 	
 	GDF_BackgroundWriter(int nChans,  int sampleRate, GDF_Type gdfType, int seconds=5) : gdfWriter(nChans, sampleRate, gdfType) {
-		running = false;
+		running = threadStarted = false;
 		this->nChans = nChans;
 		rbSize = seconds*sampleRate; // 5 seconds of data for saving ring buffer
 		rbData = new To[rbSize*nChans];
@@ -51,13 +51,13 @@ class GDF_BackgroundWriter {
 		filename.reserve(lenBasename + 8); // some extra space for numbers + .gdf
 		filename.append(name, lenBasename);
 		
-		printf("Basename = %s\n", filename.c_str());
 		fileCounter = 0;
 
 		if (pthread_create(&savingThread, NULL, staticSavingThreadFunction, this)) {
 			fprintf(stderr, "Could not spawn GDF saving thread.\n");
 			return false;
 		}
+      threadStarted = true;
 		return true;
 	}
 	
@@ -68,6 +68,7 @@ class GDF_BackgroundWriter {
 			locPipe.write(sizeof(int64_t), &minusOne);
 		}
 		pthread_join(savingThread, 0);
+      threadStarted = false;
 	}
 	
 	void stopAsync() {
@@ -90,12 +91,18 @@ class GDF_BackgroundWriter {
 	
 	void commitBlock() {
 		int n = locPipe.write(sizeof(int64_t), &rbWritePos);
-		printf("wrote to pipe: %i\n", n);
+      if (n!=sizeof(int64_t)) {
+         fprintf(stderr, "GDF_BackgroundWriter.commitBlock: Error when writing to pipe.\n");
+      }
 	}
 	
 	bool isRunning() const { 
 		return running; 
 	}
+   
+   bool threadWasStarted() const {
+      return threadStarted;
+   }
 	
 	protected:
 	
@@ -123,16 +130,12 @@ class GDF_BackgroundWriter {
 		
 		running = true;
 		
-		printf("Entering saving thread loop\n");
-
 		while (1) {
 			int newSamplesA, newSamplesB;
 			To *rbPtr;
 			int64_t newSize, newWritePos;
 		
-			printf("reading from pipe\n");
 			int n = locPipe.read(sizeof(int64_t), &newWritePos);
-			printf("done-pipe\n");
 			
 			if (n!=sizeof(int64_t)) {
 				// this should never happen for blocking sockets/pipes
@@ -156,7 +159,7 @@ class GDF_BackgroundWriter {
 			int writePtr = newWritePos % rbSize;
 			int readPtr  = rbReadPos % rbSize;
 			
-			printf("Saving %8lli [%i; %i(\n", newWritePos, readPtr, writePtr);
+			//printf("Saving %8lli [%i; %i(\n", newWritePos, readPtr, writePtr);
 			
 			rbPtr = rbData + readPtr*nChans;
 			if (writePtr > readPtr) {
@@ -198,7 +201,7 @@ class GDF_BackgroundWriter {
 	
 	GDF_Writer gdfWriter;
 	int nChans;
-	bool running;
+	bool running, threadStarted;
 
 	To *rbData;
 	int rbSize;
