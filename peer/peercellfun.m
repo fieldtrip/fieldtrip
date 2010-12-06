@@ -12,11 +12,11 @@ function varargout = peercellfun(fname, varargin)
 % function to be evaluated.
 %   UniformOutput  = boolean (default = false)
 %   StopOnError    = boolean (default = true)
+%   ResubmitTime   = number, amount of time for a job to be resubmitted (default is automatic)
+%   diary          = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
 %   memreq         = number
 %   timreq         = number
 %   sleep          = number
-%   diary          = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
-%   timcv          = coefficient of variation of the time required for the jobs (default is automatic)
 %
 % Example
 %   fname = 'power';
@@ -53,14 +53,17 @@ end
 optbeg = find(cellfun(@ischar, varargin));
 optarg = varargin(optbeg:end);
 
+% assert that the user does not specify obsolete options
+keyvalcheck(optarg, 'forbidden', {'timcv'});
+
 % get the optional input arguments
 UniformOutput = keyval('UniformOutput', optarg); if isempty(UniformOutput), UniformOutput = false; end
 StopOnError   = keyval('StopOnError', optarg); if isempty(StopOnError), StopOnError = true; end
+ResubmitTime  = keyval('ResubmitTime', optarg);
 memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=1024^3;         end % assume 1 GB
 timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=3600;           end % assume 1 hour
 sleep   = keyval('sleep',   optarg); if isempty(sleep),  sleep=0.05;            end
 diary   = keyval('diary',   optarg); if isempty(diary),  diary='error';         end
-timcv   = keyval('timcv',   optarg); % default is empty, which will cause the range to be estimated
 
 % convert from 'yes'/'no' into boolean value
 UniformOutput = istrue(UniformOutput);
@@ -149,21 +152,21 @@ prevnumcollected = 0;
 
 % post all jobs and gather their results
 while ~all(submitted) || ~all(collected)
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % PART 1: submit the jobs
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
   % select all jobs that still need to be submitted
   submit = find(~submitted);
-
+  
   if ~isempty(submit)
-
+    
     % pick the first job, or alternatively pick a random job
     % pick = 1;
     pick = ceil(rand(1)*length(submit));
     submit = submit(pick);
-
+    
     if any(collected)
       prev_timreq = timreq;
       prev_memreq = memreq;
@@ -194,22 +197,22 @@ while ~all(submitted) || ~all(collected)
         fprintf('updating timreq to %d\n', timreq);
       end
     end
-
+    
     % redistribute the input arguments
     argin = cell(1, numargin);
     for j=1:numargin
       argin{j} = varargin{j}{submit};
     end
-
+    
     % get a list of the busy slaves, used for feedback in case peerfeval times out
     busy = peerlist('busy');
-
+    
     % submit the job for execution
     ws = warning('off', 'FieldTrip:peer:noSlaveAvailable');
     % peerfeval will give a warning if the submission timed out
     [curjobid curputtime] = peerfeval(fname, argin{:}, 'timeout', 5, 'memreq', memreq, 'timreq', timreq, 'diary', diary);
     warning(ws);
-
+    
     if ~isempty(curjobid)
       % fprintf('submitted job %d\n', submit);
       jobid(submit)      = curjobid;
@@ -218,28 +221,28 @@ while ~all(submitted) || ~all(collected)
       submittime(submit) = toc(stopwatch);
       clear curjobid curputtime
     end
-
+    
     clear argin
   end % if ~isempty(submitlist)
-
+  
   if sum(submitted)>prevnumsubmitted
     % give an update of the progress
     fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(submitted)-sum(collected), nansum(timused(collected))/toc(stopwatch));
   end
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % PART 2: collect the job results that have finished sofar
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
   % get the list of job results
   joblist = peer('joblist');
-
+  
   % get the output of all jobs that have finished
   for i=1:numel(joblist)
-
+    
     % figure out to which job these results belong
     collect = find(jobid == joblist(i).jobid);
-
+    
     if isempty(collect) && ~isempty(resubmitted)
       % it might be that these results are from a previously resubmitted job
       collect = [resubmitted([resubmitted.jobid] == joblist(i).jobid).jobnum];
@@ -248,71 +251,81 @@ while ~all(submitted) || ~all(collected)
         warning('the original job %d did return, reverting to its original results', collect);
       end
     end
-
+    
     if isempty(collect)
       % this job is not interesting to collect, probably it reflects some junk
       % from a previous call or a failed resubmission
       peer('clear', joblist(i).jobid);
       continue;
     end
-
+    
     % collect the output arguments
     [argout, options] = peerget(joblist(i).jobid, 'timeout', inf, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
-
+    
     % fprintf('collected job %d\n', collect);
     collected(collect)   = true;
     collecttime(collect) = toc(stopwatch);
-
+    
     % redistribute the output arguments
     for j=1:numargout
       varargout{j}{collect} = argout{j};
     end
-
+    
     % gather the job statistics
     % these are empty in case an error happened during remote evaluation, therefore the default value of NaN is specified
-    timused(collect) = keyval('timused', options, nan); 
+    timused(collect) = keyval('timused', options, nan);
     memused(collect) = keyval('memused', options, nan);
-
+    
   end % for joblist
-
+  
   if sum(collected)>prevnumcollected
     % give an update of the progress
     fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(submitted)-sum(collected), nansum(timused(collected))/toc(stopwatch));
   end
-
+  
   prevnumsubmitted = sum(submitted);
   prevnumcollected = sum(collected);
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % PART 3: flag jobs that take too long for resubmission
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
   % check for jobs that are taking too long to finish
-  if all(submitted) && any(collected) && ~all(collected)
-
+  if all(submitted) && ~all(collected)
+    
     % estimate the elapsed time for all jobs
     elapsed = toc(stopwatch) - submittime;
-
+    
     % estimate the time that it took the collected jobs to finish
     estimated_min = min(collecttime(collected) - submittime(collected));
     estimated_max = max(collecttime(collected) - submittime(collected));
     estimated_avg = estimated_max; % the maximum is used instead of the mean
-
-    % the rationale for the estimate is the mean plus 2x the standard deviation
-    if isempty(timcv)
-      % instead of the standard deviation the min-max range (divided by two) is used
+    
+    if ~isempty(ResubmitTime)
+      % use the user-specified amount
+      estimated = ResubmitTime;
+    elseif any(collected)
+      % estimate the expected time of the jobs, assuming a "normal" distribution
+      % the rationale for the estimate is the mean plus X times the standard deviation
+      % instead of the standard deviation the min-max range is used
       estimated = estimated_avg + 2*(estimated_max - estimated_min);
       % take into account that the estimate is less accurate in case of only few collected jobs
       estimated = estimated * (1 + 1/(1+log10(sum(collected))));
+      % add some time to allow the matlab engine to start
+      estimated = estimated + 10;
+    elseif ~isempty(timreq)
+      % assume that it will not take more than 2x the required time
+      estimated = 2*timreq;
+      % add some time to allow the matlab engine to start
+      estimated = estimated + 10;
     else
-      % the coefficient of variation (CV) is a normalized measure of dispersion of a distribution
-      % it is defined as the ratio of the standard deviation to the mean
-      estimated = estimated_avg + 2*timcv*estimated_avg;
+      % it is not possible to estimate the time that a job will take
+      estimated = inf;
     end
-
+    
     % test whether one of the submitted jobs should be resubmitted
     sel = find(submitted & ~collected & (elapsed>estimated));
-
+    
     for i=1:length(sel)
       warning('resubmitting job %d because it takes too long to finish (estimated = %f, elapsed = %f)', sel(i), estimated, elapsed(sel(i)));
       % remember the job that will be resubmitted, it still might return its results
@@ -329,12 +342,12 @@ while ~all(submitted) || ~all(collected)
       collecttime(sel(i)) = inf;
     end
   end % resubmitting
-
+  
   if ~all(collected)
     % wait a little bit, then try again to submit or collect a job
     pause(sleep);
   end
-
+  
 end % while not all jobs have finished
 
 if numargout>0 && UniformOutput
@@ -347,7 +360,7 @@ if numargout>0 && UniformOutput
       end
     end
   end
-
+  
   % convert the output to a uniform one
   for i=1:numargout
     varargout{i} = [varargout{i}{:}];
