@@ -34,7 +34,7 @@
 mxArray *mxSerialize(const mxArray*);
 mxArray *mxDeserialize(const void*, size_t);
 
-#define ENGINETIMEOUT     30     /* int, in seconds */
+#define ENGINETIMEOUT     120    /* int, in seconds */
 #define ZOMBIETIMEOUT     300    /* int, in seconds */
 #define SLEEPTIME         0.010  /* float, in seconds */
 
@@ -47,6 +47,7 @@ void print_help(char *argv[]) {
 		printf("evaluate the job. Use as\n");
 		printf("  %s [options]\n", argv[0]);
 		printf("where the options can include\n");
+		printf("  --number      = number, number of slaves to start        (default = 1)\n");
 		printf("  --memavail    = number, amount of memory available       (default = inf)\n");
 		printf("  --cpuavail    = number, speed of the CPU                 (default = inf)\n");
 		printf("  --timavail    = number, maximum duration of a single job (default = inf)\n");
@@ -82,10 +83,10 @@ int main(int argc, char *argv[]) {
 		pid_t childpid;
 
 		int matlabRunning = 0, matlabStart, matlabFinished, engineFailed = 0;
-		int c, rc, found, handshake, success, server, jobnum = 0, jobfailed, timallow;
+		int c, rc, found, handshake, success, server, jobnum = 0, jobfailed = 0, timallow;
 		unsigned int enginetimeout = ENGINETIMEOUT;
 		unsigned int zombietimeout = ZOMBIETIMEOUT;
-		unsigned int peerid, jobid;
+		unsigned int peerid, jobid, numpeer = 1;
 		char *str = NULL, *startcmd = NULL;
 
 		userlist_t  *allowuser;
@@ -99,10 +100,10 @@ int main(int argc, char *argv[]) {
 		pthread_t discoverThread;
 		pthread_t expireThread;
 
-		#if SYSLOG==1
+#if SYSLOG==1
 		openlog("peerslave", LOG_PID | LOG_PERROR, LOG_USER);
 		setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT));
-		#endif
+#endif
 		peerinit(NULL);
 
 		/* use GNU getopt_long for the command-line options */
@@ -113,20 +114,21 @@ int main(int argc, char *argv[]) {
 						{"help",       no_argument, &help_flag, 1},
 						{"daemon",     no_argument, &daemon_flag, 1},
 						{"udsserver",  no_argument, &udsserver_flag, 1},
-						{"memavail",   required_argument, 0, 'a'}, /* numeric argument */
-						{"cpuavail",   required_argument, 0, 'b'}, /* numeric argument */
-						{"timavail",   required_argument, 0, 'c'}, /* numeric argument */
-						{"hostname",   required_argument, 0, 'd'}, /* single string argument */
-						{"group",      required_argument, 0, 'e'}, /* single string argument */
-						{"allowuser",  required_argument, 0, 'f'}, /* single or multiple string argument */
-						{"allowhost",  required_argument, 0, 'g'}, /* single or multiple string argument */
-						{"allowgroup", required_argument, 0, 'h'}, /* single or multiple string argument */
-						{"matlab",     required_argument, 0, 'i'}, /* single string argument */
-						{"smartmem",   required_argument, 0, 'j'}, /* numeric, 0 or 1 */
-						{"smartcpu",   required_argument, 0, 'k'}, /* numeric, 0 or 1 */
-						{"smartshare", required_argument, 0, 'l'}, /* numeric, 0 or 1 */
-						{"timeout",    required_argument, 0, 'm'}, /* numeric argument */
-						{"verbose",    required_argument, 0, 'n'}, /* numeric argument */
+						{"memavail",   required_argument, 0,  1}, /* numeric argument */
+						{"cpuavail",   required_argument, 0,  2}, /* numeric argument */
+						{"timavail",   required_argument, 0,  3}, /* numeric argument */
+						{"hostname",   required_argument, 0,  4}, /* single string argument */
+						{"group",      required_argument, 0,  5}, /* single string argument */
+						{"allowuser",  required_argument, 0,  6}, /* single or multiple string argument */
+						{"allowhost",  required_argument, 0,  7}, /* single or multiple string argument */
+						{"allowgroup", required_argument, 0,  8}, /* single or multiple string argument */
+						{"matlab",     required_argument, 0,  9}, /* single string argument */
+						{"smartmem",   required_argument, 0, 10}, /* numeric, 0 or 1 */
+						{"smartcpu",   required_argument, 0, 11}, /* numeric, 0 or 1 */
+						{"smartshare", required_argument, 0, 12}, /* numeric, 0 or 1 */
+						{"timeout",    required_argument, 0, 13}, /* numeric argument */
+						{"verbose",    required_argument, 0, 14}, /* numeric argument */
+						{"number",     required_argument, 0, 15}, /* numeric argument */
 						{0, 0, 0, 0}
 				};
 
@@ -147,7 +149,7 @@ int main(int argc, char *argv[]) {
 										break;
 								break;
 
-						case 'a':
+						case 1:
 								DEBUG(LOG_NOTICE, "option --memavail with value `%s'", optarg);
 								pthread_mutex_lock(&mutexhost);
 								host->memavail = atol(optarg);
@@ -157,35 +159,35 @@ int main(int argc, char *argv[]) {
 								pthread_mutex_unlock(&mutexsmartmem);
 								break;
 
-						case 'b':
+						case 2:
 								DEBUG(LOG_NOTICE, "option --cpuavail with value `%s'", optarg);
 								pthread_mutex_lock(&mutexhost);
 								host->cpuavail = atol(optarg);
 								pthread_mutex_unlock(&mutexhost);
 								break;
 
-						case 'c':
+						case 3:
 								DEBUG(LOG_NOTICE, "option --timavail with value `%s'", optarg);
 								pthread_mutex_lock(&mutexhost);
 								host->timavail = atol(optarg);
 								pthread_mutex_unlock(&mutexhost);
 								break;
 
-						case 'd':
+						case 4:
 								DEBUG(LOG_NOTICE, "option --hostname with value `%s'", optarg);
 								pthread_mutex_lock(&mutexhost);
 								strncpy(host->name, optarg, STRLEN);
 								pthread_mutex_unlock(&mutexhost);
 								break;
 
-						case 'e':
+						case 5:
 								DEBUG(LOG_NOTICE, "option --group with value `%s'", optarg);
 								pthread_mutex_lock(&mutexhost);
 								strncpy(host->group, optarg, STRLEN);
 								pthread_mutex_unlock(&mutexhost);
 								break;
 
-						case 'f':
+						case 6:
 								DEBUG(LOG_NOTICE, "option --allowuser with value `%s'", optarg);
 								str = strtok(optarg, ",");
 								while (str) {
@@ -198,7 +200,7 @@ int main(int argc, char *argv[]) {
 								}
 								break;
 
-						case 'g':
+						case 7:
 								DEBUG(LOG_NOTICE, "option --allowhost with value `%s'", optarg);
 								str = strtok(optarg, ",");
 								while (str) {
@@ -211,7 +213,7 @@ int main(int argc, char *argv[]) {
 								}
 								break;
 
-						case 'h':
+						case 8:
 								DEBUG(LOG_NOTICE, "option --allowgroup with value `%s'", optarg);
 								str = strtok(optarg, ",");
 								while (str) {
@@ -224,46 +226,48 @@ int main(int argc, char *argv[]) {
 								}
 								break;
 
-						case 'i':
+						case 9:
 								DEBUG(LOG_NOTICE, "option --matlab with value `%s'", optarg);
 								startcmd = malloc(STRLEN);
 								strncpy(startcmd, optarg, STRLEN);
 								break;
 
-						case 'j':
+						case 10:
 								DEBUG(LOG_NOTICE, "option --smartmem with value `%s'", optarg);
 								pthread_mutex_lock(&mutexsmartmem);
 								smartmem.enabled = atol(optarg);
 								pthread_mutex_unlock(&mutexsmartmem);
 								break;
 
-						case 'k':
+						case 11:
 								DEBUG(LOG_NOTICE, "option --smartcpu with value `%s'", optarg);
 								pthread_mutex_lock(&mutexsmartcpu);
 								smartcpu.enabled = atol(optarg);
 								pthread_mutex_unlock(&mutexsmartcpu);
 								break;
 
-						case 'l':
+						case 12:
 								DEBUG(LOG_NOTICE, "option --smartshare with value `%s'", optarg);
 								pthread_mutex_lock(&mutexsmartshare);
 								smartshare.enabled = atol(optarg);
 								pthread_mutex_unlock(&mutexsmartshare);
 								break;
 
-						case 'm':
+						case 13:
 								DEBUG(LOG_NOTICE, "option --timeout with value `%s'", optarg);
 								enginetimeout = atol(optarg);
 								break;
-					#if SYSLOG ==1
-						case 'n':
+
+						case 14:
+#if SYSLOG ==1
 								DEBUG(LOG_NOTICE, "option --verbose with value `%s'", optarg);
 								syslog_level = atol(optarg);
+#endif
 								break;
-					#endif
 
-						case '?':
-								/* getopt_long already printed an error message. */
+						case 15:
+								DEBUG(LOG_NOTICE, "option --numpeer with value `%s'", optarg);
+								numpeer = atol(optarg);
 								break;
 
 						default:
@@ -271,8 +275,8 @@ int main(int argc, char *argv[]) {
 								break;
 				}
 		}
-		
-		#if SYSLOG == 1
+
+#if SYSLOG == 1
 		switch (syslog_level) {
 				case 0:
 						setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT) | LOG_MASK(LOG_ERR) | LOG_MASK(LOG_WARNING) | LOG_MASK(LOG_NOTICE) | LOG_MASK(LOG_INFO) | LOG_MASK(LOG_DEBUG));
@@ -299,7 +303,7 @@ int main(int argc, char *argv[]) {
 						setlogmask(LOG_MASK(LOG_EMERG));
 						break;
 		}
-		#endif
+#endif
 
 		if (help_flag) {
 				/* display the help message and return to the command line */
@@ -307,28 +311,34 @@ int main(int argc, char *argv[]) {
 				exit(0);
 		}
 
-		#ifndef WIN32
-		if (daemon_flag) {
-				/* now create new process */
+		/* set the default command to start matlab */
+		if (!startcmd) {
+				startcmd = malloc(STRLEN);
+				strncpy(startcmd, STARTCMD, STRLEN);
+		}
+
+#ifndef WIN32
+		while (numpeer>0) {
+				/* increment the host id, this should be unique */
+				pthread_mutex_lock(&mutexhost);
+				host->id++;
+				pthread_mutex_unlock(&mutexhost);
+
+				/* create a new process for each peer */
 				childpid = fork();
 
 				if (childpid >= 0) /* fork succeeded */
 				{
 						if (childpid == 0) /* fork() returns 0 to the child process */
 						{
-								printf("CHILD: I am the child process!\n");
-								printf("CHILD: Here's my PID: %d\n", getpid());
-								printf("CHILD: My parent's PID is: %d\n", getppid());
-								printf("CHILD: The value of my copy of childpid is: %d\n", childpid);
-								/* the child continues as the actual executable */
+								/* the child continues as the actual slave */
+								numpeer = 0;
 						}
 						else /* fork() returns new pid to the parent process */
 						{
-								printf("PARENT: I am the parent process!\n");
-								printf("PARENT: Here's my PID: %d\n", getpid());
-								printf("PARENT: The value of my copy of childpid is %d\n", childpid);
-								/* parent exits */ 
-								return 0;
+								DEBUG(LOG_NOTICE, "started child process %d", childpid);
+								/* the parent keeps monitoring the slaves */ 
+								numpeer--; 
 						}
 				}
 				else /* fork returns -1 on failure */
@@ -336,15 +346,19 @@ int main(int argc, char *argv[]) {
 						perror("fork"); /* display error message */
 						exit(0); 
 				}
-		}
-		#endif
-		
 
-		/* set the default command to start matlab */
-		if (!startcmd) {
-				startcmd = malloc(STRLEN);
-				strncpy(startcmd, STARTCMD, STRLEN);
+				if (numpeer==0 && childpid) {
+						int status;
+						/* wait for one of the children to stop */
+						wait(&status);
+						/* the following will cause it to be restarted */
+						numpeer++;
+				}
 		}
+#else
+		if (numpeer!=1)
+				PANIC("more than one slave not supported on windows");
+#endif
 
 		if (udsserver_flag) {
 				if ((rc = pthread_create(&udsserverThread, NULL, udsserver, (void *)NULL))>0) {
@@ -393,8 +407,8 @@ int main(int argc, char *argv[]) {
 		bzero(&(host->current), sizeof(current_t));
 		pthread_mutex_unlock(&mutexhost);
 
-		while (1) {
-
+		while (!jobfailed) {
+				/* job failure indicates that MATLAB crashed, in which case the peerslave exits */
 
 				if (jobcount()>0 && !engineFailed) {
 
@@ -448,6 +462,7 @@ int main(int argc, char *argv[]) {
 
 						/* inform the other peers of the updated status */
 						announce_once();
+
 
 						argin   = (mxArray *)mxDeserialize(job->arg, job->job->argsize);
 						options = (mxArray *)mxDeserialize(job->opt, job->job->optsize);
@@ -720,6 +735,6 @@ cleanup:
 
 		} /* while */
 
-		return 0;
+		return jobfailed;
 } /* main */
 

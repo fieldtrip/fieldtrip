@@ -62,7 +62,7 @@ int open_uds_connection(const char *socketname) {
 
 
 int open_tcp_connection(const char *hostname, int port) {
-		int s, retry;
+		int s, status;
 		struct sockaddr_in sa;
 		struct hostent *host = NULL;
 
@@ -108,22 +108,11 @@ int open_tcp_connection(const char *hostname, int port) {
 				return -1;
 		}
 
-		retry = 3;
-		while (retry>0) {
-				if (connect(s, (struct sockaddr *)&sa, sizeof sa)<0) {
-						/* wait 5 miliseconds and try again */
-						perror("open_tcp_connection");
-						DEBUG(LOG_ERR, "error: open_tcp_connection");
-						threadsleep(0.005);
-						retry--;
-				}
-				else {
-						/* this signals that the connection has been made */
-						retry = -1;
-				}
-		}
-		if (retry==0) {
-				/* it failed on mutliple attempts, give up */
+
+		status = connect(s, (struct sockaddr *)&sa, sizeof sa);
+		if (status<0) {
+				perror("open_tcp_connection");
+				DEBUG(LOG_ERR, "error: open_tcp_connection");
 				return -2;
 		}
 

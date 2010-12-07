@@ -45,7 +45,7 @@ void exitFun(void) {
 		killswitch.enabled  = 0;
 		killswitch.masterid = 0;
 		killswitch.time     = 0;
-		mexPrintf("killswitched: disabled\n");
+		mexPrintf("killswitch: disabled\n");
 		pthread_mutex_unlock(&mutexkillswitch);
 
 		/* stop the maintenance thread */

@@ -7,6 +7,7 @@
 ##############################################################################
 
 PLATFORM = $(shell gcc -dumpmachine)
+PLATFORM = i686-apple-darwin9
 
 CC		 = gcc
 BINDIR	 = .
@@ -37,7 +38,7 @@ ifeq "$(PLATFORM)" "i686-apple-darwin9"
 	# this is only for the peerslave command line executable -> manzana
 	MATLABARCH = maci
 	# matlab version 2009a is a 32 bit application
-	MATLABPATH = /Applications/MATLAB-2009a
+	MATLABPATH = /Applications/MATLAB_R2009a.app
 	MATLABLIBS = -L$(MATLABPATH)/bin/$(MATLABARCH) -leng -lmx
 	MATLABINC  = -I$(MATLABPATH)/extern/include
     # override the architecture defaults, required for 32 bit

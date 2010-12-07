@@ -201,6 +201,7 @@ void *tcpserver(void *arg) {
 						retry = -1;
 				}
 		}
+		DEBUG(LOG_DEBUG, "tcpserver: started on port %d, id = %\n", host->port, host->id);
 		pthread_mutex_unlock(&mutexhost);
 
 		if (retry==0) {
