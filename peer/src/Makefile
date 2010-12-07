@@ -7,7 +7,6 @@
 ##############################################################################
 
 PLATFORM = $(shell gcc -dumpmachine)
-PLATFORM = i686-apple-darwin9
 
 CC		 = gcc
 BINDIR	 = .
