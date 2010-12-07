@@ -418,7 +418,12 @@ avg = s ./ repmat(dof(:)', [nchan 1]);
 % tmp2 = repmat(dof(:)', [nchan 1])-1;
 % var = (ss - (s.^2)./tmp1) ./ tmp2;
 dof = repmat(dof(:)', [nchan 1]);
-var = (ss - (s.^2)./dof) ./ (dof-1);
+
+if (dof > 1)
+  var = (ss - (s.^2)./dof) ./ (dof-1);
+else
+  var = 0;
+end
 
 % normalize the covariance over all trials by the total number of samples in all trials
 if strcmp(cfg.covariance, 'yes')
