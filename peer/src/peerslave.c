@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <string.h>
+#include <sys/wait.h>
 
 #include "engine.h"
 #include "matrix.h"
