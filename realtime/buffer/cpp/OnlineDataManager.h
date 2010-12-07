@@ -52,7 +52,6 @@ class OnlineDataManager : public StringRequestHandler {
 		lpFilter = 0;
 				
 		savingEnabled = false;
-		isValid = false;
 	}
 	
 	virtual ~OnlineDataManager() {
@@ -78,6 +77,9 @@ class OnlineDataManager : public StringRequestHandler {
 		static const std::string unknown("ERROR: UNKNOWN COMMAND\n");
 		static const std::string malform("ERROR: MALFORMED COMMAND\n");
 		static const std::string stopFirst("ERROR: STOP FIRST\n");
+		static const std::string emptyFilename("ERROR: NO FILENAME SET\n");
+		static const std::string chanOutOfRange("ERROR: CHANNEL INDEX OUTSIDE HARDWARE LIMITS\n");
+		static const std::string cannotSave("ERROR: COULD NOT START SAVING\n");
 		int target = 0; // 1 = STREAM, 2= SAVE
 		unsigned int pos = 0;
 		
@@ -98,20 +100,22 @@ class OnlineDataManager : public StringRequestHandler {
 			if (!StringServer::getNextToken(request, pos).empty()) return malform;
 			if (target == 1) {
 				if (streamingEnabled) return ok; // silently ignore that it's already running
-			
+				enableStreaming();
 			} else {
 				if (savingEnabled) return ok; // silently ignore that it's already running
-			
+				if (curFilename.empty()) return emptyFilename;
+				if (!enableSaving()) return cannotSave;
 			}
 			return ok;
 		} else if (token2.compare("STOP") == 0) {
 			if (!StringServer::getNextToken(request, pos).empty()) return malform;
 			if (target == 1) {
 				if (!streamingEnabled) return ok; // silently ignore that it's already stopped
+				disableStreaming();
 			
 			} else {
 				if (!savingEnabled) return ok; // silently ignore that it's already stopped
-			
+				disableSaving();
 			}
 			return ok;
 		} else if (token2.compare("SELECT") == 0) {
@@ -120,20 +124,21 @@ class OnlineDataManager : public StringRequestHandler {
 			}
 			ChannelSelection cs;
 			if (!cs.parseString(request.size() - pos, request.data() + pos)) return malform;
-
-			printf("New selection:\n");
-			for (int i=0;i<cs.getSize();i++) {
-				printf("%i : '%s'\n", cs.index[i], cs.label[i].c_str());
+			if (cs.getMaxIndex() >= nCont) return chanOutOfRange;
+						
+			if (target==1) {
+				signalConf.setStreamingSelection(cs);
+			} else {
+				signalConf.setSavingSelection(cs);
 			}
 			return ok;
-
 		} else if (target == 2 && token2.compare("FILE") == 0) {
 			if (savingEnabled) return stopFirst;
 			
 			std::string filename = StringServer::getNextToken(request, pos);
 			if (!StringServer::getNextToken(request, pos).empty()) return malform;
 			
-			printf("new filename: %s\n", filename.c_str());
+			setFilename(filename);
 			return ok;
 		} else if (target == 1 && token2.compare("FILTER") == 0) {
 			if (streamingEnabled) return stopFirst;
@@ -143,11 +148,22 @@ class OnlineDataManager : public StringRequestHandler {
 			int factor = 0;
 						
 			if (convertToDouble(StringServer::getNextToken(request, pos), bandwidth) 
+					&& (bandwidth >= 0)
 					&& convertToInt(StringServer::getNextToken(request, pos), order)
+					&& (order >= 0)
 					&& convertToInt(StringServer::getNextToken(request, pos), factor)
+					&& (factor >= 1)
 					&& StringServer::getNextToken(request, pos).empty()) {
-							
-				printf("stream filter %f , %i , %i\n", bandwidth, order, factor);
+					
+				signalConf.setDownsampling(factor);
+				if (bandwidth < 0.5*fSample) {
+					signalConf.setBandwidth(bandwidth);
+					signalConf.setOrder(order);
+				} else {
+					signalConf.setOrder(0);
+				}
+				configureStreaming();
+				
 				return ok;
 			} else {
 				return malform;
@@ -178,11 +194,7 @@ class OnlineDataManager : public StringRequestHandler {
 	int configureFromFile(const char *filename) {
 		int numErr = signalConf.parseFile(filename);
 		if (numErr == 0) {
-			configureSaving();
 			configureStreaming();
-			isValid = true;
-		} else {
-			isValid = false;
 		}
 		return numErr;
 	}
@@ -210,8 +222,23 @@ class OnlineDataManager : public StringRequestHandler {
 		return true;
 	}
 	
-	bool enableSaving(const char *filename) {
-		curWriter->start(filename);
+	bool enableSaving() {
+		if (curFilename.empty()) return false;
+		if (curWriter == 0) {
+			configureSaving();
+			if (curWriter == 0) return false;
+			printf("Reconfigured saving\n");
+		}
+		if (fileCounter == 0) {
+			curWriter->start(curFilename.c_str());
+		} else {
+			char *compName = new char[curFilename.size() + 20];
+			sprintf(compName, "%s_S%i", curFilename.c_str(), fileCounter);
+			printf("COMPOSED: %s\n", compName);
+			curWriter->start(compName);
+			delete[] compName;
+		}
+		fileCounter++;		
 		savingEnabled = true;
 		return true;
 	}
@@ -224,7 +251,7 @@ class OnlineDataManager : public StringRequestHandler {
 	}
 	
 	bool enableStreaming() {
-      if (streamingEnabled) return true; // silently ignore      
+		if (streamingEnabled) return true; // silently ignore      
 		if (!writeHeader()) return false;
 		streamingEnabled = true;
 		return true;
@@ -232,17 +259,22 @@ class OnlineDataManager : public StringRequestHandler {
 	
 	void disableStreaming() {
 		// if (!streamingEnabled) return;
-      streamingEnabled = false;
+		streamingEnabled = false;
 	}
 	
 	FtEventList& getEventList() {
 		return eventList;
 	}
    
-   GDF_Writer *getCurrentGDF() {
-      if (curWriter) return curWriter->gdf();
-      return 0;
-   }
+	GDF_Writer *getCurrentGDF() {
+		if (curWriter) return curWriter->gdf();
+		return 0;
+	}
+	
+	void setFilename(const std::string& filename) {
+		curFilename = filename;
+		fileCounter = 0;
+	}
 		
 	protected:
 	
@@ -393,32 +425,36 @@ class OnlineDataManager : public StringRequestHandler {
 		}
 	}
 		
-	GDF_BackgroundWriter<To> *curWriter;
-	MultiChannelFilter<Ts,Ts> *lpFilter;
+	////////////////////////////////////////////////////////////////
+	// Class members
+	////////////////////////////////////////////////////////////////
+	GDF_BackgroundWriter<To> *curWriter;	/**< currently active GDF writer (in background thread) */
+	MultiChannelFilter<Ts,Ts> *lpFilter;	/**< currently active low-pass filter */
 
-	int ftType;
-	GDF_Type gdfType;
-	int nStatus, nCont;
-	float fSample;
+	int ftType;			/**< FieldTrip buffer data type */
+	GDF_Type gdfType;	/**< GDF data type */
+	int nStatus, nCont; /**< Number of status + continuously sampled channels */
+	float fSample;		/**< Sampling rate */
 
-	int nThisBlock;
-	int allocSizeBlock;
+	int nThisBlock;		/**< Number of samples in this block (as requested by provideBlock) */
+	int allocSizeBlock; /**< Size of buffer that is allocated for providing blocks */
+	To *pBlock;			/**< Points to buffer that is allocated for providing blocks */
+	Ts *auxVec;			/**< Big enough for keeping one sample of data (streaming format) */
 	
-	To *pBlock;
-	Ts *auxVec;
-	
-	int ftSocket;
-	int sampleCounter;
+	int ftSocket;		/**< The FT buffer socket identifier or 0 for dmarequests, -1 for none */
+	int sampleCounter;	/**< Number of samples streamed out since last writeHeader */
+	int skipSamples;	/**< Helper variable to keep track of downsampling operation */
 	
 	FtConnection ftConnection;
 	FtBufferResponse resp;
 	FtEventList eventList;
 	FtSampleBlock sampleBlock;
-	SignalConfiguration signalConf;
 	ft_buffer_server_t *ftServer;
 	
-	int skipSamples;
+	SignalConfiguration signalConf;
 	
 	bool savingEnabled, streamingEnabled;
-	bool isValid;
+	
+	std::string curFilename;
+	int fileCounter;
 };

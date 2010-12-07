@@ -27,20 +27,36 @@ bool ChannelSelection::parseString(int len, const char *str) {
 			if (++pos == len) return false;
 		}
 		
+		if (idx==0) return false;
+		
 		// next character should be =
 		if (str[pos] != '=') return false;
 		if (++pos == len) return false;
+				
+		if (str[pos] == '"') {
+			start = ++pos;
+			
+			// search next white space
+			while (pos < len && str[pos]!='"') pos++;
+			// check for empty "" or unterminated "....
+			if (pos == len || pos == start) return false;
+			
+			// got a label "like this"
+			index.push_back(idx-1);
+			label.push_back(std::string(str + start, pos-start));
+			pos++;
+		} else {
+			// mark label start
+			start = pos;
 		
-		// mark label start
-		start = pos;
-		
-		// search next white space
-		while (!isspace(str[pos]) && pos < len) pos++;
-		if (start == pos) return false;
-		
-		// got one
-		index.push_back(idx);
-		label.push_back(std::string(str + start, pos-start));
+			// search next white space
+			while (!isspace(str[pos]) && pos < len) pos++;
+			if (start == pos) return false;
+			
+			// got a plain label
+			index.push_back(idx-1);
+			label.push_back(std::string(str + start, pos-start));
+		}
 	} 
 	return true;
 }

@@ -45,6 +45,23 @@ struct ChannelSelection {
 		}
 		return cs;
 	}
+	
+	int getMinIndex() const {
+		if (index.empty()) return -1;
+		int idx = index[0];
+		for (unsigned int i=1;i<index.size();i++) {
+			if (index[i] < idx) idx = index[i];
+		}
+		return idx;
+	}	
+	
+	int getMaxIndex() const {
+		int idx = -1;
+		for (unsigned int i=0;i<index.size();i++) {
+			if (index[i] > idx) idx = index[i];
+		}
+		return idx;
+	}
 };
 
 class SignalConfiguration {
@@ -88,6 +105,19 @@ class SignalConfiguration {
 	
 	const ChannelSelection& getSavingSelection() const { return chanSelSave; }
 	const ChannelSelection& getStreamingSelection() const { return chanSelStream; }
+	
+	bool setSavingSelection(const ChannelSelection& sel) {
+		if (sel.index.size() != sel.label.size()) return false;
+		chanSelSave = sel;
+		maxChanSave = sel.getMaxIndex();
+		return true;
+	}
+	bool setStreamingSelection(const ChannelSelection& sel) {
+		if (sel.index.size() != sel.label.size()) return false;
+		chanSelStream = sel;
+		maxChanStream = sel.getMaxIndex();
+		return true;
+	}
 	
 	protected:
 

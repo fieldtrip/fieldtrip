@@ -9,7 +9,7 @@ int main() {
 	ConsoleInput conIn;
 	StringServer ctrlServ;
 	int counter = 0;
-				
+	
 	OnlineDataManager<int, float> ODM(1, NCHAN, 2000.0, GDF_INT32, DATATYPE_FLOAT32);
 	int value[NCHAN];
 	int speed[NCHAN];
@@ -32,7 +32,6 @@ int main() {
 	ctrlServ.startListening(8000);
 	
 	ODM.enableStreaming();
-	ODM.enableSaving("test6");
    
 	printf("Starting - press ESC to quit\n");
 	while (1) {
@@ -41,25 +40,27 @@ int main() {
 			if (c==27) break; // quit
 		}
 		
-		// ctrlServ.checkRequests(ODM);
+		ctrlServ.checkRequests(ODM);
 		
 		int *block = ODM.provideBlock(NBLK);
 		for (int j=0;j<NBLK;j++) {
 			// status
 			block[j*(1+NCHAN)] = 0;
 			for (int i=0;i<NCHAN;i++) {
-			
 				value[i] += speed[i];
 				if (value[i] > 1023) value[i]-=2048;
-			
 				block[1+i+j*(1+NCHAN)] = value[i];
 			}
 		}
-		printf("Block %i : %i\n", ++counter, ODM.handleBlock());
+		if (!ODM.handleBlock()) {
+			fprintf(stderr, "Error in handling this data block - stopping\n");
+			break;
+		}
+		printf("Block %i\n", ++counter);
 		conIn.milliSleep(100);
 	}
 	
 	ODM.disableStreaming();
-   ODM.disableSaving();
+	ODM.disableSaving();
 }
 

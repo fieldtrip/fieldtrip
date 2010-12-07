@@ -57,7 +57,7 @@ class GDF_BackgroundWriter {
 			fprintf(stderr, "Could not spawn GDF saving thread.\n");
 			return false;
 		}
-      threadStarted = true;
+		threadStarted = true;
 		return true;
 	}
 	
