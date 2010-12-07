@@ -432,6 +432,17 @@ class FtEventList {
 		return numEvs;
 	}
 	
+	/* Transforms sample indices of events by first adding "offset", then dividing by divisor */
+	void transform(int offset, int divisor) {
+		unsigned int pos = 0;
+		for (unsigned int i=0;i<numEvs;i++) {
+			eventdef_t *ne = (eventdef_t *) buf + pos;
+			
+			ne->sample = (ne->sample + offset) / divisor;
+			pos += sizeof(eventdef_t) + ne->bufsize;
+		}
+	}
+	
 	protected:
 	
 	messagedef_t reqdef;

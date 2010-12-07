@@ -307,6 +307,7 @@ class OnlineDataManager : public StringRequestHandler {
 			fprintf(stderr, "Could not write header to FieldTrip buffer\n.");
 			return false;
 		}
+		sampleCounter = 0;
 		return true;
 	}
 	
@@ -318,12 +319,15 @@ class OnlineDataManager : public StringRequestHandler {
 			
 		// write events, if any
 		if (eventList.count() > 0) {
+			eventList.transform(sampleCounter, signalConf.getDownsampling());
 			err = clientrequest(ftSocket, eventList.asRequest(), resp.in());
 			if (err || !resp.checkPut()) {
 				fprintf(stderr, "Could not write events to FieldTrip buffer.\n");
 				return false;
 			}
 		}
+		
+		sampleCounter += nThisBlock; // sampleCounter ticks at original speed
 			
 		// write samples, if channels selected
 		if (nStream == 0) return true;
