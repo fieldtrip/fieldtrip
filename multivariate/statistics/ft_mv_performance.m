@@ -28,7 +28,7 @@ for c=1:length(design)
       % compute summed log probability of the real class
       res{c} = 0;
       for j=1:size(post{c},1)
-        res{c} = res{c} - log(post{c}(j,design{c}(j)));
+        res{c} = res{c} + log(post{c}(j,design{c}(j)));
       end
       
     case 'correlation'

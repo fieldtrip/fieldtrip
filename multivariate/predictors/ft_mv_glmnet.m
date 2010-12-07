@@ -9,15 +9,15 @@ classdef ft_mv_glmnet < ft_mv_predictor
 % Please use help glmnetSet to determine the possible options. Some
 % examples:
 %
-% options.alpha   = 1;        % mixing parameter; alpha = 1 => L1, alpha < 1 => elastic net
-% options.lambda  = [];       % L1 parameter; empty returns a whole path depending on nlambda and lambda_min
-% options.nlambda = 100;      % number of models to evaluate in the regularization path
-% options.lambda_min = 0.05;  % smallest value of lambda as a fraction of lambda_max
-% options.standardize = 1;    % can be set to false
+% alpha   = 1;        % mixing parameter; alpha = 1 => L1, alpha < 1 => elastic net
+% lambda  = [];       % L1 parameter; empty returns a whole path depending on nlambda and lambda_min
+% nlambda = 100;      % number of models to evaluate in the regularization path
+% lambda_min = 0.05;  % smallest value of lambda as a fraction of lambda_max
+% standardize = 1;    % can be set to false
 %
 % EXAMPLE:
 %
-% [a,b,c,d] = ft_mv_test('mva',{ft_mv_glmnet('validator',ft_mv_crossvalidator('nfolds',5,'metric','accuracy'))})
+% [a,b,c,d] = ft_mv_test('mva',{ft_mv_glmnet('validator',ft_mv_crossvalidator('nfolds',5,'metric','logprob'))})
 %
 %   Copyright (c) 2010, Marcel van Gerven
 
@@ -55,7 +55,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
     end
     
     function obj = train(obj,X,Y)
-     
+
       % multiple datasets
       if iscell(X) || iscell(Y)
         obj = ft_mv_ndata('mvmethod',obj);
@@ -99,7 +99,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
       opts.maxit = obj.maxit;
       opts.HessianExact = obj.HessianExact;
       opts.type = obj.type;
-      
+     
       if isempty(opts.lambda) && ~isempty(obj.validator)
 
         % use dummy classifier to determine the lambda path for all folds
@@ -204,7 +204,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
 
       X = [X ones(size(X,1),1)];
       
-      if strcmp('linear',obj.type)
+      if strcmp('gaussian',obj.family)
 
         Y = X * obj.weights;
         

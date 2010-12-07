@@ -1,6 +1,9 @@
 classdef ft_mv_kernelmethod < ft_mv_predictor
 %FT_MV_KERNELMETHOD abstract kernel method class
 %
+% Note: this is not the most efficient implementation since the kernel is
+% recomputed each time. 
+%
 % Copyright (c) 2008, Marcel van Gerven, Jason Farquhar
 
 
