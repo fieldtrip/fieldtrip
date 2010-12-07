@@ -12,7 +12,7 @@ function [acc,sig,cv] = ft_mv_test(varargin)
 % 'type'      decoding problem {'classification','regression','reconstruction'}
 % 'nfolds'    number of crossvalidation folds
 % 'parallel'  parallel cross-validation
-% 'cv'        cross-validation object
+% 'validator' cross-validation object
 % 'metric'    decoding metric
 % 'sigtest'   significance test
 % 
@@ -27,8 +27,8 @@ function [acc,sig,cv] = ft_mv_test(varargin)
     S.(varargin{i}) = varargin{i+1};  
   end
         
-  if ~isfield(S,'mva') && ~isfield(S,'cv')
-    error('please specify mva or cv');
+  if ~isfield(S,'mva') && ~isfield(S,'validator')
+    error('please specify mva or validator');
   end
   if ~isfield(S,'type')
     S.type = 'classification';
@@ -70,8 +70,8 @@ function [acc,sig,cv] = ft_mv_test(varargin)
   
   if ~isfield(S,'parallel'), S.parallel = false; end
   
-  if ~isfield(S,'cv')
-     S.cv = ft_mv_crossvalidator('parallel',S.parallel,'balance',false,'mva',S.mva,'nfolds',S.nfolds,'verbose',true,'compact',true,'init',1);
+  if ~isfield(S,'validator')
+     S.validator = ft_mv_crossvalidator('parallel',S.parallel,'balance',false,'mva',S.mva,'nfolds',S.nfolds,'verbose',true,'compact',true,'init',1);
   end
   
   if ~isfield(S,'metric')
@@ -84,13 +84,13 @@ function [acc,sig,cv] = ft_mv_test(varargin)
     end
   end
   
-  S.cv.metric = S.metric;
+  S.validator.metric = S.metric;
   if ~isfield(S,'sigtest')
     S.sigtest = [];
   end
-  S.cv.sigtest = S.sigtest;
+  S.validator.sigtest = S.sigtest;
   
-  cv      = S.cv.train(S.X,S.Y);
+  cv      = S.validator.train(S.X,S.Y);
   acc     = cv.performance; 
   sig     = cv.significance;
   

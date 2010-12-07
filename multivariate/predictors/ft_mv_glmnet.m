@@ -23,15 +23,27 @@ classdef ft_mv_glmnet < ft_mv_predictor
 
   properties
     
-    options             % glmnetSet options
-   
-    type = 'logistic'   % 'linear' or 'logistic' regression; sets glmnet family parameter
-    
-    weights             % estimated regression coefficients
+    family = 'binomial' % 'gaussian' (linear regression), 'binomial' or 'multinomial' (logistic regression)
     
     validator           % crossvalidator object if a whole path is specified    
     performance         % performance results for the crossvalidator
-    
+   
+    % replicated glmnetSet options (see help glmnetSet)
+    weights
+    alpha = 0.99
+    nlambda = 100
+    lambda_min = 0
+    lambda = [];
+    standardize = 1
+    thresh = 1.0000e-04
+    dfmax = 0
+    pmax = 0
+    exclude = []
+    penalty_factor = []
+    maxit = 100
+    HessianExact = 0
+    type = 'covariance'
+ 
   end
 
   methods
@@ -39,7 +51,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
     function obj = ft_mv_glmnet(varargin)
       
       obj = obj@ft_mv_predictor(varargin{:});
-      
+            
     end
     
     function obj = train(obj,X,Y)
@@ -61,39 +73,55 @@ classdef ft_mv_glmnet < ft_mv_predictor
         return;
       end
       
-      if strcmp(obj.type,'linear')
-        family = 'gaussian';
+      if strcmp(obj.family,'gaussian')
         nclasses = 1;
       else
         nclasses = max(2,max(Y(:)));
         if nclasses > 2
-          family = 'multinomial';
+          obj.family = 'multinomial';
         else
-          family = 'binomial';
+          obj.family = 'binomial';
         end
       end
       
-      opts = glmnetSet;
+      opts = [];
+      opts.weights = obj.weights;
+      opts.alpha = obj.alpha;
+      opts.nlambda = obj.nlambda;
+      opts.lambda_min = obj.lambda_min;
+      opts.lambda = obj.lambda;
+      opts.standardize = obj.standardize;
+      opts.thresh = obj.thresh;
+      opts.dfmax = obj.dfmax;
+      opts.pmax = obj.pmax;
+      opts.exclude = obj.exclude;
+      opts.penalty_factor = obj.penalty_factor;
+      opts.maxit = obj.maxit;
+      opts.HessianExact = obj.HessianExact;
+      opts.type = obj.type;
       
-      if ~isempty(obj.options)
-        F = fieldnames(obj.options);
-        for j=1:length(F)
-          opts.(F{j}) = obj.options.(F{j});
-        end
-      end
-
       if isempty(opts.lambda) && ~isempty(obj.validator)
 
+        % use dummy classifier to determine the lambda path for all folds
+        % otherwise we get different lambdas for different folds which
+        % makes everything hard to compare
+        dum = obj;
+        dum.validator = [];
+        dum = dum.train(X,Y);
+        obj.lambda = dum.lambda;
+        
         obj.validator.mva = obj;
         obj.validator.mva.validator = [];
         
         obj.validator = obj.validator.train(X,Y);
         
-        nsolutions = size(obj.validator.post{1},2);
+        % sometimes lambda is cut off by glmnet; this ensures the solutions
+        % exist
+        nsolutions = min(cellfun(@(x)(size(x,2)),obj.validator.post)) / nclasses;
         
-        obj.performance = zeros(length(obj.validator.design),nsolutions/nclasses);
+        obj.performance = zeros(length(obj.validator.design),nsolutions);
 
-        for j=1:(nsolutions/nclasses)
+        for j=1:nsolutions
           
           post = cellfun(@(x)(x(:,(j-1)*nclasses + (1:nclasses))),obj.validator.post,'UniformOutput',false);
           
@@ -107,17 +135,17 @@ classdef ft_mv_glmnet < ft_mv_predictor
         
        % find best lambda
        [a,b] = max(obj.performance,[],2);
-       
+
+       % create lambda path with the best lambda (mean(lbest)) at the end
+       % in order to ensure proper convergence to the correct solution
        lbest = zeros(1,length(b));
        lmax = zeros(1,length(b));
        for j=1:length(b)
          lbest(j) = obj.validator.mva{j}.mvmethods{end}.lambda(b(j));
          lmax(j) = obj.validator.mva{j}.mvmethods{end}.lambda(1);
        end
-       
-       
-       opts.lambda = linspace(mean(lmax),mean(lbest),20);
-       obj.options.lambda = opts.lambda;
+       opts.lambda = linspace(max(lmax),mean(lbest),50);
+       obj.lambda = opts.lambda;
        
        u = unique(Y);
        
@@ -138,7 +166,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
           
        else
          
-         res = glmnet(X,Y,family,opts);
+         res = glmnet(X,Y,obj.family,opts);
          obj.weights = [res.beta(:,end); res.a0(end)]; 
        
        end
@@ -162,13 +190,13 @@ classdef ft_mv_glmnet < ft_mv_predictor
            
           res.lambda = nan;
         else          
-          res = glmnet(X,Y,family,opts);
+          res = glmnet(X,Y,obj.family,opts);
           obj.weights = [res.beta; res.a0(:)'];
         end
         
       end
       
-      obj.options.lambda  = res.lambda;
+      obj.lambda  = res.lambda;
           
     end
     
