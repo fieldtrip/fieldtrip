@@ -24,6 +24,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 % cfg.xlim             = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.ylim             = 'maxmin' or [ymin ymax] (default = 'maxmin')
 % cfg.zlim             = 'maxmin','maxabs' or [zmin zmax] (default = 'maxmin')
+% cfg.channel          = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 % cfg.cohrefchannel    = name of reference channel for visualising coherence, can be 'gui'
 % cfg.baseline         = 'yes','no' or [time1 time2] (default = 'no'), see FT_FREQBASELINE
 % cfg.baselinetype     = 'absolute' or 'relative' (default = 'absolute')
@@ -140,7 +141,8 @@ if ~isfield(cfg,'renderer'),        cfg.renderer = [];                 end % let
 if ~isfield(cfg,'masknans'),        cfg.masknans = 'yes';              end
 if ~isfield(cfg,'maskparameter'),   cfg.maskparameter = [];            end
 if ~isfield(cfg,'maskstyle'),       cfg.maskstyle = 'opacity';         end
-if ~isfield(cfg, 'matrixside'),     cfg.matrixside = 'feedforward';    end
+if ~isfield(cfg,'matrixside'),      cfg.matrixside = 'feedforward';    end
+if ~isfield(cfg,'channel'),         cfg.channel       = 'all';         end
 if ~isfield(cfg,'box')             
   if ~isempty(cfg.maskparameter)
     cfg.box = 'yes';
@@ -183,6 +185,11 @@ end
 % Old style coherence plotting with cohtargetchannel is no longer supported:
 cfg = ft_checkconfig(cfg, 'unused',  {'cohtargetchannel'});
 
+% perform channel selection
+cfg.channel = ft_channelselection(cfg.channel, data.label);
+data        = ft_selectdata(data, 'channel', cfg.channel);
+
+
 % Read or create the layout that will be used for plotting:
 lay = ft_prepare_layout(cfg, data);
 cfg.layout = lay;
@@ -199,6 +206,13 @@ if (strcmp(cfg.zparam,'cohspctrm') && isfield(data, 'labelcmb')) || ...
     error('no reference channel specified');
   end
 
+  % check for cohrefchannel being part of selection
+  if ~strcmp(cfg.cohrefchannel,'gui')
+    if ~any(strcmp(cfg.cohrefchannel,cfg.channel))
+      error('cfg.cohrefchannel is a not present in the (selected) channels)')
+    end
+  end
+  
   if strcmp(cfg.cohrefchannel, 'gui')
     % Open a single figure with the channel layout, the user can click on a reference channel
     h = clf;
