@@ -16,7 +16,7 @@ function [vol, cfg] = ft_prepare_concentricspheres(cfg)
 %
 % Example:
 %
-%   % first create 4 surfaces that represent the brain, csf, skull and skin
+%   % first create 4 surfaces that represent the inner_skull_surface, csf, outer_skull_surface and skin_surface
 %   radius = [86 88 92 100];
 %   headshape = [];
 %   for i=1:4
