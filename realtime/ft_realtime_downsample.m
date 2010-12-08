@@ -1,11 +1,13 @@
 function ft_realtime_downsample(cfg)
-
 % FT_REALTIME_DOWNSAMPLE
 %
 % Use as
 %   ft_realtime_downsample(cfg)
 % with the following configuration options
 %   cfg.channel              = cell-array, see FT_CHANNELSELECTION (default = 'all')
+%   cfg.decimation           = integer, downsampling factor (default = 1, no downsampling)
+%   cfg.order                = interger, order of butterworth lowpass filter (default = 4)
+%   cfg.cutoff               = double, cutoff frequency of lowpass filter (default = 0.8*Nyquist-freq.)
 %
 % The source of the data is configured as
 %   cfg.source.dataset       = string
@@ -23,7 +25,7 @@ function ft_realtime_downsample(cfg)
 %
 % To stop this realtime function, you have to press Ctrl-C
 
-% Copyright (C) 2008, Robert Oostenveld
+% Copyright (C) 2008, Robert Oostenveld  / 2010, S. Klanke
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
@@ -39,6 +41,13 @@ if ~isfield(cfg, 'minblocksize'),         cfg.minblocksize = 0;                 
 if ~isfield(cfg, 'maxblocksize'),         cfg.maxblocksize = 1;                             end % in seconds
 if ~isfield(cfg, 'channel'),              cfg.channel = 'all';                              end
 
+if ~isfield(cfg, 'decimation'),           cfg.decimation = 1;                               end
+if ~isfield(cfg, 'order'),                cfg.order = 4;                                    end
+
+if cfg.decimation < 1 || cfg.decimation~=round(cfg.decimation)
+  error 'Decimation factor must be integer quantity >= 1';
+end
+
 % translate dataset into datafile+headerfile
 cfg.source = checkconfig(cfg.source, 'dataset2files', 'yes');
 cfg.target = checkconfig(cfg.target, 'dataset2files', 'yes');
@@ -46,13 +55,24 @@ checkconfig(cfg.source, 'required', {'datafile' 'headerfile'});
 checkconfig(cfg.target, 'required', {'datafile' 'headerfile'});
 
 % ensure that the persistent variables related to caching are cleared
-clear read_header
+clear ft_read_header
 % read the header for the first time
-hdr = read_header(cfg.source.headerfile);
+hdr = ft_read_header(cfg.source.headerfile);
 fprintf('updating the header information, %d samples available\n', hdr.nSamples*hdr.nTrials);
 
 targethdr = hdr;
-targethdr.Fs = targethdr.Fs/
+targethdr.Fs = targethdr.Fs/cfg.decimation;
+
+% Calculate cutoff frequency expressed in Nyquist freq of original signal
+if ~isfield(cfg, 'cutoff')
+  cutoff = 0.8/cfg.decimation;
+else
+  cutoff = cfg.cutoff / (0.5*hdr.Fs);
+  if cutoff >= 1
+    error('Cutoff frequency too high');
+  end
+end
+[B,A] = butter(cfg.order, cutoff, 'low');
 
 % define a subset of channels for reading
 cfg.channel = channelselection(cfg.channel, hdr.label);
@@ -67,6 +87,10 @@ minblocksmp = max(minblocksmp, 1);
 maxblocksmp = round(cfg.maxblocksize*hdr.Fs);
 prevSample  = 0;
 count       = 0;
+
+% create filter model and downsampling model
+FM = online_filter_init(B, A, zeros(nchan, 1));
+DM = online_downsample_init(cfg.decimation);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the general BCI loop where realtime incoming data is handled
@@ -97,17 +121,22 @@ while true
     % from here onward it is specific to the downsampling
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % put the data in a fieldtrip-like raw structure
-    data.trial{1} = dat;
-    data.time{1}  = offset2time(begsample, hdr.Fs, endsample-begsample+1);
-    data.label    = hdr.label(chanindx);
-    data.hdr      = hdr;
-    data.fsample  = hdr.Fs;
-
-    % apply preprocessing options
-    dat = preproc(data.trial{1}, data.label, data.fsample, cfg);
-    % do the downsampling
-    dat = preproc_resample(dat, hdr.Fs, cfg.fsample, cfg.method);
+    % THE FOLLOWING LINES USE THE OLD GENERAL PREPROC FUNCTION
+    % AND WILL NOT WORK PROPERLY, SINCE THE SIGNAL IS CHOPPED
+    % BEFORE FILTERING
+    %    % put the data in a fieldtrip-like raw structure
+    %   data.trial{1} = dat;
+    %   data.time{1}  = offset2time(begsample, hdr.Fs, endsample-begsample+1);
+    %   data.label    = hdr.label(chanindx);
+    %   data.hdr      = hdr;
+    %   data.fsample  = hdr.Fs;
+    %   % apply preprocessing options
+    %   dat = preproc(data.trial{1}, data.label, data.fsample, cfg);
+    %   % do the downsampling
+    %   dat = preproc_resample(dat, hdr.Fs, cfg.fsample, cfg.method);
+    
+    [FM, dat] = online_filter_apply(FM, dat);
+    [DM, xd] = online_downsample_apply(DM, dat);
 
     if count==1
       % flush the file, write the header and subsequently write the data segment
