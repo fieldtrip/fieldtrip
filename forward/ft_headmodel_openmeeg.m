@@ -109,7 +109,7 @@ fprintf('\n');
 % update the order of the compartments
 vol.bnd    = vol.bnd(order);
 vol.cond   = vol.cond(order);
-vol.skin   = 1;
+vol.skin_surface   = 1;
 vol.source = numboundaries;
 
 if isolatedsource
@@ -128,7 +128,7 @@ openmeeg_license
 % check that the binaries are ok
 om_checkombin;
 
-if vol.skin ~= 1
+if vol.skin_surface ~= 1
   error('the first compartment should be the skin, the last the source');
 end
 
