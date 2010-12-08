@@ -201,7 +201,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	// last parameter is timeout in 1/10 of a second
-	if (!serialSetParameters(&SP, 57600, 8, 0, 1, 1)) {
+	if (!serialSetParameters(&SP, 57600, 8, 0, 1, 0)) {
 		fprintf(stderr, "Could not modify serial port parameters\n");
 		return 1;
 	}
@@ -212,12 +212,11 @@ int main(int argc, char *argv[]) {
 			return 1;
 		}
 	}
-			
-	printf("\nPress <Esc> to quit\n\n");
+	
+	// printf("Looking for sync bytes 0xA5 0x5A (%c%c)\n", 0xA5, 0x5A);
 	
 	// read bytes until we get 0xA5,0x5A,...
 	for (int iter = 0;iter < 200; iter++) {
-		// with a 0.1s timeout, this will run 20 seconds max
 		unsigned char byte;
 		int nr;
 		
@@ -228,8 +227,11 @@ int main(int argc, char *argv[]) {
 		} 
 		if (nr==0) {
 			printf(".");
+			usleep(10000);	// sleep for 10 ms if no byte received
 			continue;
 		}
+		
+		//printf("%02X %c\n", byte, byte);
 		
 		if (byte == 0xA5) {
 			serialBuffer[0] = byte;
@@ -248,30 +250,37 @@ int main(int argc, char *argv[]) {
 	}
 	
 	printf("Got synchronization bytes - starting acquisition\n");
+	printf("\nPress <Esc> to quit\n\n");
 	
 	while (keepRunning) {
-		int numRead, numTotal, numSamples;
+		int numRead, numTotal, numSamples, numPending, maxReadNow;
 		
 		if (ConIn.checkKey()) {
 			int c = ConIn.getKey();
 			if (c==27) break; // quit
 		}
 		
-		//numRead = serialRead(&SP, sizeof(serialBuffer) - leftOverBytes, serialBuffer + leftOverBytes);
-		numRead = serialRead(&SP, PACKET_LEN - leftOverBytes, serialBuffer + leftOverBytes);
-		if (numRead < 0) {
+		numPending = serialInputPending(&SP);
+		if (numPending < 0) {
 			fprintf(stderr, "Error when reading from serial port - exiting\n");
 			break;
 		}
-		if (numRead == 0) continue;
-		
-		/*
-		for (int i=0;i<numRead;i++) {
-			printf("%02X ", serialBuffer[leftOverBytes + i]);
+		if (numPending == 0) {
+			usleep(10000);
+			continue;
 		}
-		printf("\n");
-		*/
 		
+		maxReadNow = sizeof(serialBuffer) - leftOverBytes;
+		if (numPending > maxReadNow) {
+			numPending = maxReadNow;
+		}
+		
+		numRead = serialRead(&SP, numPending, serialBuffer + leftOverBytes);
+		if (numRead != numPending) {
+		    fprintf(stderr, "Error when reading from serial port - exiting\n");
+			break;
+		}
+				
 		// remove any events in our list
 		eventChain.clear();
 		
@@ -287,6 +296,8 @@ int main(int argc, char *argv[]) {
 			leftOverBytes += numRead;
 			continue;
 		}
+		
+		// printf("%i sample(s) , %i bytes\n", numSamples, numTotal);
 		
 		// first decode into switchData + sampleData arrays
 		for (int j=0;j<numSamples;j++) {

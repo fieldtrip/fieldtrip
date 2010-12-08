@@ -20,7 +20,7 @@ endif
 
 CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3 -g
 
-all: modeeg2ft$(SUFFIX)  modeeg2ft_2chn$(SUFFIX)
+all: modeeg2ft$(SUFFIX)  modeeg2ft_2chn$(SUFFIX) setupbluesmirf$(SUFFIX)
 
 serial.o: serial.c
 	gcc -c serial.c -I.
@@ -37,3 +37,6 @@ modeeg2ft_2chn.o: modeeg2ft_2chn.cc
 	
 modeeg2ft_2chn$(SUFFIX): modeeg2ft_2chn.o serial.o
 	g++ -o $@ $^ $(LDFLAGS) $(CFLAGS) $(CPPDIR)/GdfWriter.cc
+
+setupbluesmirf$(SUFFIX): setupbluesmirf.c serial.o
+	gcc -o $@ $^ -I.

@@ -42,6 +42,7 @@ int serialRead(SerialPort *SP, int size, void *buffer);
 int serialSetParameters(SerialPort *SP, int baudrate, int bits, int parity, int stops, int timeout);
 void serialFlushInput(SerialPort *SP);
 void serialFlushOutput(SerialPort *SP);
+int serialInputPending(SerialPort *SP);
 
 #ifdef __cplusplus
 }

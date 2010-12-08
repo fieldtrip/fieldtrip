@@ -143,6 +143,7 @@ int main(int argc, char *argv[]) {
 	int16_t switchData[FSAMPLE]; // again, 1 second of data (switches)
 	int leftOverBytes = 0;
 	int nStream, nSave;
+	int keepRunning = 1;
 	
 	if (argc<4) {
 		printf("Usage: modeeg2ft <device> <config-file> <gdf-file> [hostname=localhost [port=1972]]\n");
@@ -222,7 +223,7 @@ int main(int argc, char *argv[]) {
 	
 	printf("Selected %i channels for streaming, %i channels for saving to GDF.\n", streamSel.getSize(), saveSel.getSize());
 		
-	if (saveSel.getSize() > 0) {
+	if (saveSel.getSize() > 0 && strcmp(baseFilename, "-")) {
 		gdfWriter = new GDF_Writer(1+saveSel.getSize(), FSAMPLE, GDF_INT16);
 		gdfWriter->setLabel(0, "Switches");
 		for (int i=0;i<saveSel.getSize();i++) {
@@ -254,14 +255,16 @@ int main(int argc, char *argv[]) {
 	}
 	
 	// last parameter is timeout in 1/10 of a second
-	if (!serialSetParameters(&SP, 57600, 8, 0, 1, 1)) {
+	if (!serialSetParameters(&SP, 57600, 8, 0, 1, 0)) {
 		fprintf(stderr, "Could not modify serial port parameters\n");
 		return 1;
 	}
 	
-	if (pthread_create(&savingThread, NULL, savingThreadFunction, NULL)) {
-		fprintf(stderr, "Could not spawn GDF saving thread.\n");
-		return 1;
+	if (gdfWriter) {
+		if (pthread_create(&savingThread, NULL, savingThreadFunction, NULL)) {
+			fprintf(stderr, "Could not spawn GDF saving thread.\n");
+			return 1;
+		}
 	}
 			
 	printf("\nPress <Esc> to quit\n\n");
@@ -269,9 +272,10 @@ int main(int argc, char *argv[]) {
 	nStream = streamSel.getSize();
 	nSave   = saveSel.getSize();
 	
+	// printf("Looking for sync bytes 0xA5 0x5A (%c%c)\n", 0xA5, 0x5A);
+	
 	// read bytes until we get 0xA5,0x5A,...
 	for (int iter = 0;iter < 200; iter++) {
-		// with a 0.1s timeout, this will run 20 seconds max
 		unsigned char byte;
 		int nr;
 		
@@ -282,8 +286,11 @@ int main(int argc, char *argv[]) {
 		} 
 		if (nr==0) {
 			printf(".");
+			usleep(10000);	// sleep for 10 ms if no byte received
 			continue;
 		}
+		
+		//printf("%02X %c\n", byte, byte);
 		
 		if (byte == 0xA5) {
 			serialBuffer[0] = byte;
@@ -303,52 +310,62 @@ int main(int argc, char *argv[]) {
 	
 	printf("Got synchronization bytes - starting acquisition\n");
 	
-	//while (keepRunning) {
-	while (1) {
-		int numRead, numTotal, numBlocks;
+	while (keepRunning) {
+		int numRead, numTotal, numSamples, numPending, maxReadNow;
 		
 		if (ConIn.checkKey()) {
 			int c = ConIn.getKey();
 			if (c==27) break; // quit
 		}
 		
-		//numRead = serialRead(&SP, sizeof(serialBuffer) - leftOverBytes, serialBuffer + leftOverBytes);
-		numRead = serialRead(&SP, PACKET_LEN - leftOverBytes, serialBuffer + leftOverBytes);
-		if (numRead < 0) {
+		numPending = serialInputPending(&SP);
+		if (numPending < 0) {
 			fprintf(stderr, "Error when reading from serial port - exiting\n");
 			break;
 		}
-		if (numRead == 0) continue;
+		if (numPending == 0) {
+			usleep(10000);
+			continue;
+		}
 		
+		maxReadNow = sizeof(serialBuffer) - leftOverBytes;
+		if (numPending > maxReadNow) {
+			numPending = maxReadNow;
+		}
+		
+		numRead = serialRead(&SP, numPending, serialBuffer + leftOverBytes);
+		if (numRead != numPending) {
+		    fprintf(stderr, "Error when reading from serial port - exiting\n");
+			break;
+		}	
 		eventChain.clear();
 		
-		numTotal = leftOverBytes + numRead;
-		numBlocks = numTotal / PACKET_LEN;
+		numTotal   = leftOverBytes + numRead;
+		numSamples = numTotal / PACKET_LEN;
 		
-		if (numBlocks > FSAMPLE) {
+		if (numSamples > FSAMPLE) {
 			fprintf(stderr, "Received too much data from serial port - exiting.\n");
 			break;
 		}
 		
-		if (numBlocks == 0) {
+		if (numSamples == 0) {
 			leftOverBytes += numRead;
 			continue;
 		}
 		
 		// first decode into switchData + sampleData arrays
-		for (int j=0;j<numBlocks;j++) {
+		for (int j=0;j<numSamples;j++) {
 			int soff = j*PACKET_LEN;
 			int doff = j*NUM_HW_CHAN;
 			
 			if (serialBuffer[soff] != 0xA5 || serialBuffer[soff+1] != 0x5A) {
 				fprintf(stderr, "ModularEEG out of sync in sample %i - exiting.\n", sampleCounter + j);
+				keepRunning = 0;
 				break;
 			}
 				
 			for (int i=0;i<NUM_HW_CHAN;i++) {
 				sampleData[i+doff] = serialBuffer[soff+4+2*i]*256 + serialBuffer[soff+5+2*i];
-				
-
 			}
 		
 			switchData[j] = serialBuffer[soff+16];
@@ -361,12 +378,13 @@ int main(int argc, char *argv[]) {
 		}
 	
 		// if saving is enabled, append to GDF file
-		if (nSave > 0) {
-			for (int j=0;j<numBlocks;j++) {
+		if (gdfWriter) {
+			for (int j=0;j<numSamples;j++) {
 				int doff = rbIntWritePos * rbIntChans;
 
 				if (rbInt[doff] != -1) {
 					fprintf(stderr, "Error: saving thread does not keep up with load\n");
+					keepRunning = 0;
 					break;
 				}
 			
@@ -380,12 +398,12 @@ int main(int argc, char *argv[]) {
 		}
 	
 		if (nStream > 0) {
-			float *dest = (float *) sampleBlock.getMatrix(nStream, numBlocks);
+			float *dest = (float *) sampleBlock.getMatrix(nStream, numSamples);
 			if (dest==NULL) {
 				fprintf(stderr, "Out of memory\n");
 				break;
 			}
-			for (int j=0;j<numBlocks;j++) {
+			for (int j=0;j<numSamples;j++) {
 				for (int i=0;i<nStream;i++) {
 					short s = sampleData[streamSel.getIndex(i) + j*NUM_HW_CHAN];
 					dest[i + j*nStream] = (float) (s-512) * 0.5;
@@ -404,11 +422,12 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
-		sampleCounter += numBlocks;
-		leftOverBytes = numTotal - numBlocks * PACKET_LEN;
+		sampleCounter += numSamples;
+		leftOverBytes = numTotal - numSamples * PACKET_LEN;
 		
+		// copy left-over bytes to the beginning of the serialBuffer
 		if (leftOverBytes > 0) {
-			memcpy(serialBuffer, serialBuffer + numBlocks*PACKET_LEN, leftOverBytes);
+			memcpy(serialBuffer, serialBuffer + numSamples*PACKET_LEN, leftOverBytes);
 		}
 	}
 

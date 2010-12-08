@@ -135,6 +135,15 @@ int serialRead(SerialPort *SP, int size, void *buffer) {
    return numRead;
 }
 
+int serialInputPending(SerialPort *SP) {
+   DWORD numErrors;
+   COMSTAT stat;
+   
+   if (!ClearCommError(SP->comPort, &numErrors, &stat)) return -1;
+   if (numErrors > 0) return -1;
+   return stat.cbInQue;
+}
+
 #else /* Linux, POSIX */
 
 #include <sys/types.h>
@@ -244,6 +253,13 @@ void serialFlushInput(SerialPort *SP) {
 
 void serialFlushOutput(SerialPort *SP) {
    tcflush(SP->comPort, TCOFLUSH);
+}
+
+int serialInputPending(SerialPort *SP) {
+	int bytesWaiting, res;
+	res = ioctl(SP->comPORT, FIONREAD, &bytesWaiting);
+	if (res < 0) return res;
+	return bytesWaiting;
 }
 
 #endif
