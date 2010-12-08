@@ -71,20 +71,20 @@ iseeg = ft_senstype(sens, 'eeg');
 ismeg = ft_senstype(sens, 'meg');
 
 % determine the skin compartment
-if ~isfield(vol, 'skin')
+if ~isfield(vol, 'skin_surface')
   if isfield(vol, 'bnd')
-    vol.skin   = find_outermost_boundary(vol.bnd);
+    vol.skin_surface   = find_outermost_boundary(vol.bnd);
   elseif isfield(vol, 'r') && length(vol.r)<=4
-    [dum, vol.skin] = max(vol.r);
+    [dum, vol.skin_surface] = max(vol.r);
   end
 end
 
-% determine the brain compartment
-if ~isfield(vol, 'brain')
+% determine the inner_skull_surface compartment
+if ~isfield(vol, 'inner_skull_surface')
   if isfield(vol, 'bnd')
-    vol.brain  = find_innermost_boundary(vol.bnd);
+    vol.inner_skull_surface  = find_innermost_boundary(vol.bnd);
   elseif isfield(vol, 'r') && length(vol.r)<=4
-    [dum, vol.brain] = min(vol.r);
+    [dum, vol.inner_skull_surface] = min(vol.r);
   end
 end
 
@@ -327,10 +327,10 @@ elseif iseeg
 
       % project the electrodes on the skin and determine the bilinear interpolation matrix
       if ~isfield(vol, 'tra')
-        % determine boundary corresponding with skin and brain
-        if ~isfield(vol, 'skin')
-          vol.skin = find_outermost_boundary(vol.bnd);
-          fprintf('determining skin compartment (%d)\n', vol.skin);
+        % determine boundary corresponding with skin and inner_skull_surface
+        if ~isfield(vol, 'skin_surface')
+          vol.skin_surface = find_outermost_boundary(vol.bnd);
+          fprintf('determining skin compartment (%d)\n', vol.skin_surface);
         end
         if ~isfield(vol, 'source')
           vol.source = find_innermost_boundary(vol.bnd);
@@ -341,20 +341,20 @@ elseif iseeg
         else
           fprintf('projecting electrodes on skin surface\n');
           % compute linear interpolation from triangle vertices towards electrodes
-          [el, prj] = project_elec(sens.pnt, vol.bnd(vol.skin).pnt, vol.bnd(vol.skin).tri);
-          tra       = transfer_elec(vol.bnd(vol.skin).pnt, vol.bnd(vol.skin).tri, el);
+          [el, prj] = project_elec(sens.pnt, vol.bnd(vol.skin_surface).pnt, vol.bnd(vol.skin_surface).tri);
+          tra       = transfer_elec(vol.bnd(vol.skin_surface).pnt, vol.bnd(vol.skin_surface).tri, el);
           
           % replace the original electrode positions by the projected positions
           sens.pnt = prj;
 
-          if size(vol.mat,1)==size(vol.bnd(vol.skin).pnt,1)
+          if size(vol.mat,1)==size(vol.bnd(vol.skin_surface).pnt,1)
             % construct the transfer from only the skin vertices towards electrodes
             interp = tra;
           else
-            % construct the transfer from all vertices (also brain/skull) towards electrodes
+            % construct the transfer from all vertices (also inner_skull_surface/outer_skull_surface) towards electrodes
             interp = [];
             for i=1:length(vol.bnd)
-              if i==vol.skin
+              if i==vol.skin_surface
                 interp = [interp, tra];
               else
                 interp = [interp, zeros(size(el,1), size(vol.bnd(i).pnt,1))];
@@ -366,7 +366,7 @@ elseif iseeg
           % this speeds up the subsequent repeated leadfield computations
           fprintf('combining electrode transfer and system matrix\n');
           if strcmp(ft_voltype(vol), 'openmeeg')
-            nb_points_external_surface = size(vol.bnd(vol.skin).pnt,1);
+            nb_points_external_surface = size(vol.bnd(vol.skin_surface).pnt,1);
             vol.mat = vol.mat((end-nb_points_external_surface+1):end,:);            
             vol.mat = interp(:,1:nb_points_external_surface) * vol.mat;
           else
