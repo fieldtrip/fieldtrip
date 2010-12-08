@@ -101,6 +101,11 @@ elseif strcmp(cfg.output,'powandcsd')
   csdflg = 1;
 end
 
+% check for fourier as output and throw an error
+if strcmp(cfg.output,'fourier')
+  error('fourier as output is not allowed for this implementation of wltconvol')
+end
+
 if ~isfield(cfg, 'channelcmb') && csdflg
   %set the default for the channelcombination
   cfg.channelcmb = {'all' 'all'};
