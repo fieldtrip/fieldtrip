@@ -39,7 +39,7 @@ else
 end
 
 % usually a headshape only describes a single surface boundaries, but there are cases
-% that multiple surfaces are included, e.g. skin, skull, brain
+% that multiple surfaces are included, e.g. skin_surface, outer_skull_surface, inner_skull_surface
 nbnd = numel(headshape);
 
 if ~isfield(headshape, 'tri')
