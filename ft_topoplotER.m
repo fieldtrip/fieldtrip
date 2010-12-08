@@ -14,6 +14,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %                         'avg', 'powspctrm' or 'cohspctrm' (default depends on data.dimord)
 % cfg.xlim               = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.zlim               = 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
+% cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 % cfg.cohrefchannel      = name of reference channel for visualising coherence, can be 'gui'
 % cfg.baseline           = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
 % cfg.baselinetype       = 'absolute' or 'relative' (default = 'absolute')
@@ -235,6 +236,8 @@ if ~isfield(cfg, 'labeloffset'),      cfg.labeloffset = 0.005;       end
 if ~isfield(cfg, 'maskparameter'),    cfg.maskparameter = [];        end
 if ~isfield(cfg, 'component'),        cfg.component = [];            end
 if ~isfield(cfg, 'matrixside'),       cfg.matrixside = '';           end
+if ~isfield(cfg,'channel'),           cfg.channel    = 'all';        end
+
 %FIXME rename matrixside and cohrefchannel in more meaningful options
 
 % compatibility for previous highlighting option
@@ -254,6 +257,11 @@ elseif iscell(cfg.highlight)
     end
   end
 end
+
+% perform channel selection
+cfg.channel = ft_channelselection(cfg.channel, data.label);
+data        = ft_selectdata(data, 'channel', cfg.channel);
+
 
 % Converting all higlight options to cell-arrays if they're not cell-arrays, to make defaulting and checking for backwards compatability and error
 % checking much, much easier
@@ -414,6 +422,13 @@ if (isfull || haslabelcmb) && isfield(data, cfg.zparam)
   % A reference channel is required:
   if ~isfield(cfg, 'cohrefchannel')
     error('no reference channel is specified');
+  end
+  
+  % check for cohrefchannel being part of selection
+  if ~strcmp(cfg.cohrefchannel,'gui')
+    if ~any(strcmp(cfg.cohrefchannel,cfg.channel))
+      error('cfg.cohrefchannel is a not present in the (selected) channels)')
+    end
   end
   
   % Interactively select the reference channel
