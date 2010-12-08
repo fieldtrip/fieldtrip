@@ -60,7 +60,7 @@ ncmp = length(vol.bnd);
 % the number of electrodes, to the number of vertices of the skin
 % compartment or to the total number of vertices
 nelc  = size(elc, 1);
-nskin = size(vol.bnd(vol.skin).pnt,1);
+nskin = size(vol.bnd(vol.skin_surface).pnt,1);
 nall  = 0;
 for i=1:ncmp
   nall = nall + size(vol.bnd(i).pnt,1);
