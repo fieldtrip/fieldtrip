@@ -147,12 +147,20 @@ if ~isfield(cfg,'maskparameter'), cfg.maskparameter = [];                       
 if ~isfield(cfg,'linestyle'),     cfg.linestyle     = '-';                         end
 if ~isfield(cfg,'linewidth'),     cfg.linewidth     = 0.5;                         end
 if ~isfield(cfg,'maskstyle'),     cfg.maskstyle     = 'box';                       end
+if ~isfield(cfg,'channel'),       cfg.channel       = 'all';                       end
 
 if ischar(cfg.graphcolor)
   GRAPHCOLOR = ['k' cfg.graphcolor];
 elseif isnumeric(cfg.graphcolor)
   GRAPHCOLOR = [0 0 0; cfg.graphcolor];
 end
+
+% perform channel selection
+cfg.channel = ft_channelselection(cfg.channel, data.label);
+for iargin = 1:length(varargin)
+  varargin{iargin} = ft_selectdata(varargin{iargin}, 'channel', cfg.channel);
+end
+
 
 % Set x/y/zparam defaults according to varargin{1}.dimord value:
 if strcmp(varargin{1}.dimord, 'chan_time')
