@@ -1,3 +1,9 @@
+/* Simple class wrapping up functions for checking key presses in a console,
+ * tested on Windows + Linux.
+ * (C) 2010 Stefan Klanke
+ */
+
+
 #ifndef __ConsoleInput_h
 #define __ConsoleInput_h
 

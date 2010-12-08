@@ -1,3 +1,8 @@
+/* Two small classes for handling configurations for channel selection,
+ * downsampling, and similar purposes.
+ * (C) 2010 Stefan Klanke
+ */
+
 #ifndef __SignalConfiguration_h
 #define __SignalConfiguration_h
 
@@ -69,7 +74,7 @@ class SignalConfiguration {
 	
 	SignalConfiguration() : chanSelSave(), chanSelStream(), 
 							downSample(1), maxChanSave(0), maxChanStream(0), 
-							order(4), bandwidth(-1.0),
+							order(0), bandwidth(-1.0),
 							batteryRefresh(10), statusRefresh(2) {};
 	~SignalConfiguration() {};
 	
