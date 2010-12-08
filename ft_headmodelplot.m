@@ -94,13 +94,13 @@ function [cfg] = ft_headmodelplot(cfg, data)
 fieldtripdefs
 
 % these are suitable RGB colors
-skin   = [255 213 119]/255;
-skull  = [140  85  85]/255;
-brain  = [202 100 100]/255;
+skin_surface   = [255 213 119]/255;
+outer_skull_surface  = [140  85  85]/255;
+inner_skull_surface  = [202 100 100]/255;
 cortex = [255 213 119]/255;
 
 % set the defaults
-if ~isfield(cfg, 'surface_facecolor'), cfg.surface_facecolor = skin;   end
+if ~isfield(cfg, 'surface_facecolor'), cfg.surface_facecolor = skin_surface;   end
 if ~isfield(cfg, 'surface_edgecolor'), cfg.surface_edgecolor = 'none'; end
 if ~isfield(cfg, 'surface_facealpha'), cfg.surface_facealpha = 0.7;    end
 if ~isfield(cfg, 'surftype'),          cfg.surftype = 'faces';         end
@@ -242,7 +242,7 @@ if iseeg
     end
     Nvertices = size(pnt0,1);
     
-    colors = {cortex, brain, skull, skin};
+    colors = {cortex, inner_skull_surface, outer_skull_surface, skin_surface};
     
     for i=1:Nspheres
       % scale and shift the unit sphere to the proper location
@@ -267,7 +267,7 @@ if iseeg
     
     Nbnd = numel(vol.bnd);
     
-    colors = {skin, skull, brain};
+    colors = {skin_surface, outer_skull_surface, inner_skull_surface};
     
     for i=1:Nbnd
       h = triplot(vol.bnd(i).pnt, vol.bnd(i).tri, [], cfg.surftype);
@@ -288,21 +288,21 @@ if iseeg
   if strcmp(cfg.plotlines, 'yes') && ~isempty(vol)
     if isbem
       % project the electrodes on the skin surface, on the nearest triangle
-      [el] = project_elec(sens.pnt, vol.bnd(vol.skin).pnt, vol.bnd(vol.skin).tri);
+      [el] = project_elec(sens.pnt, vol.bnd(vol.skin_surface).pnt, vol.bnd(vol.skin_surface).tri);
       % this returns [tri, la, mu]
       tri = el(:,1);
       la  = el(:,2);
       mu  = el(:,3);
       for i=1:Nsensors
-        v1  = vol.bnd(vol.skin).pnt(vol.bnd(vol.skin).tri(tri(i),1),:);
-        v2  = vol.bnd(vol.skin).pnt(vol.bnd(vol.skin).tri(tri(i),2),:);
-        v3  = vol.bnd(vol.skin).pnt(vol.bnd(vol.skin).tri(tri(i),3),:);
+        v1  = vol.bnd(vol.skin_surface).pnt(vol.bnd(vol.skin_surface).tri(tri(i),1),:);
+        v2  = vol.bnd(vol.skin_surface).pnt(vol.bnd(vol.skin_surface).tri(tri(i),2),:);
+        v3  = vol.bnd(vol.skin_surface).pnt(vol.bnd(vol.skin_surface).tri(tri(i),3),:);
         prj(i,:) = routlm(v1, v2, v3, la(i), mu(i));
       end
     elseif issphere
       % project the electrodes onto the sphere surface, towards the origin
       nrm = sqrt(sum(sens.pnt.^2,2));
-      prj = vol.r(vol.skin) * sens.pnt ./ [nrm nrm nrm];
+      prj = vol.r(vol.skin_surface) * sens.pnt ./ [nrm nrm nrm];
     else
       % in case that no known volume conductor is specified
       prj = sens.pnt;
@@ -403,7 +403,7 @@ elseif ismeg
     h = triplot(vol.bnd.pnt, vol.bnd.tri, [], cfg.surftype);
     % set(h, 'FaceVertexCData', 0.5*ones(length(distance),30));
     % set(h, 'FaceVertexCData', [0 0 1]);
-    set(h, 'edgecolor', brain)
+    set(h, 'edgecolor', inner_skull_surface)
     % set(h, 'edgealpha', 1)
     if strcmp(cfg.surftype, 'faces')
       % set(h, 'AlphaDataMapping', 'direct');
