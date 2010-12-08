@@ -133,18 +133,31 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
 
   sumtapcnt = [0;cumsum(data.cumtapcnt(:))];
   fastflag  = all(data.cumtapcnt(:)==data.cumtapcnt(1));
+  
   if fastflag && nrpt>1
     ntap = data.cumtapcnt(1);
     
     % compute running sum across tapers
+    siz = [size(data.fourierspctrm) 1];
+    
     for p = 1:ntap
       indx      = p:ntap:nrpt*ntap;
+      
+      if p==1.
+
+        tmpc = zeros(numel(indx), size(cmbindx,1), siz(3), siz(4)) + ... 
+           1i.*zeros(numel(indx), size(cmbindx,1), siz(3), siz(4)); 
+      end
+      
+      for k = 1:size(cmbindx,1)
+        tmpc(:,k,:,:) = data.fourierspctrm(indx,cmbindx(k,1),:,:).*  ...
+                   conj(data.fourierspctrm(indx,cmbindx(k,2),:,:));
+      end
+
       if p==1
-        crsspctrm = data.fourierspctrm(indx,cmbindx(:,1),:,:).*  ...
-               conj(data.fourierspctrm(indx,cmbindx(:,2),:,:));
+        crsspctrm = tmpc;
       else
-        crsspctrm = data.fourierspctrm(indx,cmbindx(:,1),:,:).*  ...
-               conj(data.fourierspctrm(indx,cmbindx(:,2),:,:)) + crsspctrm;
+        crsspctrm = tmpc + crsspctrm;
       end
     end
     crsspctrm = crsspctrm./ntap;
