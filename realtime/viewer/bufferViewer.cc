@@ -50,6 +50,8 @@ bool useHighpass;
 MultiChannelFilter<float,float> *hpFilter = NULL;
 FtConnection ftCon;
 
+bool readHeader();
+
 /** This is the widget on which the channels are drawn. 
 	It maintains its own little ringbuffer and includes a
 	scrollbar widget.
@@ -341,6 +343,7 @@ void connectCallback(Fl_Widget*, void*) {
 			addrField->textcolor(FL_DARK_GREEN);
 			addrField->redraw();
 			conButton->label("Disconnect");
+         readHeader();
 		}
 	}
 }
@@ -361,6 +364,7 @@ void freeTables() {
 
 void errDisconnect(const char *msg) {
 	ftCon.disconnect();
+   numChannels = 0; // reset to enforce reading header next time
 	addrField->textcolor(FL_BLACK);
 	addrField->redraw();
 	conButton->label("Connect");
@@ -426,7 +430,19 @@ bool readHeader() {
 	return true;
 }
 
-
+         
+         
+template<typename T> 
+void convertToFloat(float *dest, const void *src, unsigned int nsamp, unsigned int nchans) {
+   const T *srcT = static_cast<const T *>(src);
+ 	for (unsigned int j=0;j<nsamp;j++) {
+		for (unsigned int i=0;i<nchans;i++) {
+         dest[i] = (float) srcT[i];
+		}
+      dest += nchans;
+      srcT += nchans;
+	}
+}
 
 // this will get called repeatedly from the GUI loop, use this to poll for new data
 void idleCall(void *dummy) {
@@ -448,6 +464,7 @@ void idleCall(void *dummy) {
 		}
 	}
 	
+   // wait for new samples, don't care about events, up to 40ms
 	request.prepWaitData(numSamples, 0xFFFFFFFF, 40);
 	
 	if (tcprequest(ftCon.getSocket(), request.out(), response.in()) < 0) {
@@ -489,11 +506,35 @@ void idleCall(void *dummy) {
 		}
 	} else {
 		float *fdata = (float *) floatStore.data();
-		for (unsigned int j=0;j<ddef.nsamples;j++) {
-			for (unsigned int i=0;i<ddef.nchans;i++) {
-			}
-		}
-		fdata = (float *) floatStore.data();
+      switch(ddef.data_type) {
+         case DATATYPE_UINT8:
+            convertToFloat<uint8_t>(fdata, rawStore.data(), ddef.nsamples, ddef.nchans);
+            break;
+         case DATATYPE_INT8:
+            convertToFloat<int8_t>(fdata, rawStore.data(), ddef.nsamples, ddef.nchans);
+            break;
+         case DATATYPE_UINT16:
+            convertToFloat<uint16_t>(fdata, rawStore.data(), ddef.nsamples, ddef.nchans);
+            break;
+         case DATATYPE_INT16:
+            convertToFloat<int16_t>(fdata, rawStore.data(), ddef.nsamples, ddef.nchans);
+            break;
+         case DATATYPE_UINT32:
+            convertToFloat<uint32_t>(fdata, rawStore.data(), ddef.nsamples, ddef.nchans);
+            break;
+         case DATATYPE_INT32:
+            convertToFloat<int32_t>(fdata, rawStore.data(), ddef.nsamples, ddef.nchans);
+            break;
+         case DATATYPE_UINT64:
+            convertToFloat<uint64_t>(fdata, rawStore.data(), ddef.nsamples, ddef.nchans);
+            break;
+         case DATATYPE_INT64:
+            convertToFloat<int64_t>(fdata, rawStore.data(), ddef.nsamples, ddef.nchans);
+            break;
+         case DATATYPE_FLOAT64:
+            convertToFloat<double>(fdata, rawStore.data(), ddef.nsamples, ddef.nchans);
+            break;
+      }
 		if (useHighpass) {
 			hpFilter->process(ddef.nsamples, fdata, fdata); // in place
 		}
