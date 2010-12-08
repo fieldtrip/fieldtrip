@@ -106,6 +106,18 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		else
 				mexErrMsgTxt ("invalid input argument #2");
 
+		if (masterid!=0 || time!=0) {
+				/* in this case the mex file is not allowed to be cleared from memory */
+				if (!mexIsLocked())
+						mexLock(); 
+		}
+
+		if (masterid==0 && time==0) {
+				/* in this case the mex file is again allowed to be cleared from memory */
+				if (mexIsLocked())
+						mexUnlock(); 
+		}
+
 		if (!peerInitialized) {
 				mexPrintf("killswitch: init\n");
 				peerinit(NULL);
@@ -157,7 +169,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		killswitch.enabled  = 1;
 		killswitch.masterid = masterid;
 		killswitch.time     = time;
-		mexPrintf("killswitch: enabled (%lu, %d)\n", masterid, time);
+		mexPrintf("killswitch: enabled for masterid = %lu and time = %d\n", masterid, time);
 		pthread_mutex_unlock(&mutexkillswitch);
 
 		return;
