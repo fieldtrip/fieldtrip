@@ -176,34 +176,35 @@ while ~all(submitted) || ~all(collected)
     end
     submit = submit(pick);
     
+    prev_timreq = timreq;
+    prev_memreq = memreq;
+
     if any(collected)
-      prev_timreq = timreq;
-      prev_memreq = memreq;
       % update the estimate of the time and memory that will be needed for the next job
       timreq = nanmax(timused);
       memreq = nanmax(memused);
-      if timreq~=prev_timreq
-        if timreq<100
-          fprintf('updating timreq to %.3f s\n', timreq);
-        else
-          fprintf('updating timreq to %.0f s\n', timreq);
-        end
-      end
-      if memreq~=prev_memreq
-        memreq_in_mb = memreq/(1024*1024);
-        if memreq_in_mb<100
-          fprintf('updating memreq to %.3f MB\n', memreq_in_mb);
-        else
-          fprintf('updating memreq to %.0f MB\n', memreq_in_mb);
-        end
-      end
     elseif ~any(collected) && any(submitted)
-      prev_timreq = timreq;
       % update based on the time spent waiting sofar for the first job to return
       elapsed = toc(stopwatch) - min(submittime(submitted));
       timreq  = max(timreq, elapsed);
-      if timreq~=prev_timreq
-        fprintf('updating timreq to %d\n', timreq);
+    end
+
+    % give some feedback
+    if memreq~=prev_memreq
+      memreq_in_mb = memreq/(1024*1024);
+      if memreq_in_mb<100
+        fprintf('updating memreq to %.3f MB\n', memreq_in_mb);
+      else
+        fprintf('updating memreq to %.0f MB\n', memreq_in_mb);
+      end
+    end
+
+    % give some feedback
+    if timreq~=prev_timreq
+      if timreq<100
+        fprintf('updating timreq to %.3f s\n', timreq);
+      else
+        fprintf('updating timreq to %.0f s\n', timreq);
       end
     end
     

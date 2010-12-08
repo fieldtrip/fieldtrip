@@ -184,10 +184,11 @@ while isempty(jobid)
   end
 
   % FIXME the heuristic rule for finding the best match needs to be improved
-  mempenalty = scale([list.memavail] - memreq);
-  cpupenalty = scale([list.cpuavail] - cpureq);
-  timpenalty = scale([list.timavail] - timreq);
-  penalty    = mempenalty + 0.1* rand(1, length(list));
+  memavail = [list.memavail];
+  % the first penalty measure is based on the excess memory
+  penalty = memavail - memreq;
+  % increase the penalty for slaves with less than 1GB
+  penalty = penalty + (memavail<1e9)*1e9;
 
   % select the slave peer that has the best match with the job requirements
   [penalty, indx] = sort(penalty);
@@ -203,6 +204,7 @@ while isempty(jobid)
       puttime = toc(stopwatch) - puttime;
       jobid   = result.jobid;
       % the peer accepted the job, there is no need to continue with the for loop
+	  % fprintf('submitted job to %s@%s:%d\n', list(i).user, list(i).hostname, list(i).port);
       break;
     catch
       % the peer rejected the job, perhaps because it is busy or perhaps because of allowuser/allowgroup/allowhost

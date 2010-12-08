@@ -31,7 +31,10 @@ end
 d = p(~s);
 p = p( s);
 % remove the directory containing the peer code, the slave should use its own
-p = setdiff(p, fileparts(mfilename('fullpath')));
+f = mfilename('fullpath'); % this is .../peer/private/getcustompath.m
+f = fileparts(f);          % this is .../peer/private
+f = fileparts(f);          % this is .../peer
+p = setdiff(p, f);
 % concatenate the path, using the platform specific seperator
 if ispc
   p = sprintf('%s;', p{:});

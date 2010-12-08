@@ -53,8 +53,13 @@ end
 list = peer('peerlist');
 % the current field contains the job details on the busy slaves
 current = [list.current];
-membusy = sum([current.memreq]);
-timbusy = sum([current.timreq]);
+if isempty(current)
+  membusy = 0;
+  timbusy = 0;
+else
+  membusy = sum([current.memreq]);
+  timbusy = sum([current.timreq]);
+end
 
 if nargout==0
   % give a summary
