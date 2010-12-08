@@ -86,7 +86,7 @@ int send_header_to_FT()
   ft_chunk_t    *chunk    = NULL;
   
   // collect the channel names
-  for (c = 0; c < nchan; c++) {
+/*  for (c = 0; c < nchan; c++) {
     name = ch_info[c]->ch_name;
     printf("Found channel name '%s'\n", name);
     namevec = realloc(namevec, namelen + strlen(name) + 1);
@@ -97,7 +97,7 @@ int send_header_to_FT()
   chunk->def.type = FT_CHUNK_CHANNEL_NAMES;
   chunk->def.size = namelen;
   memcpy(chunk->data, namevec, namelen);
-
+*/
   // allocate the elements that will be used in the communication 
   request      = malloc(sizeof(message_t));
   request->def = malloc(sizeof(messagedef_t));

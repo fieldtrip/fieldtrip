@@ -39,7 +39,7 @@
 #define COLLECTOR_DOSETUP "setu"
 #define COLLECTOR_BUFVAR  "maxBuflen"
 
-#define MIN_BUFLEN      2*28    /* DSP units send packets of 28 samples, which is the ultimate lower bound */
+#define MIN_BUFLEN      28+1//2*28    /* DSP units send packets of 28 samples, which is the ultimate lower bound */
 
 #define CLIENT_ID       14013   /* A unique ID for us as a shared memory client. Should be more than 10000 */ 
 #define SOCKET_UMASK    0x000	/* Acquisition system UNIX domain socket file must be world-writable */
