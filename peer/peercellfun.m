@@ -13,6 +13,7 @@ function varargout = peercellfun(fname, varargin)
 %   UniformOutput  = boolean (default = false)
 %   StopOnError    = boolean (default = true)
 %   ResubmitTime   = number, amount of time for a job to be resubmitted (default is automatic)
+%   MaxBusy        = number, amount of slaves allowed to be busy (default = inf)
 %   diary          = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
 %   memreq         = number
 %   timreq         = number
@@ -60,6 +61,7 @@ keyvalcheck(optarg, 'forbidden', {'timcv'});
 % get the optional input arguments
 UniformOutput = keyval('UniformOutput', optarg); if isempty(UniformOutput), UniformOutput = false; end
 StopOnError   = keyval('StopOnError', optarg); if isempty(StopOnError), StopOnError = true; end
+MaxBusy       = keyval('MaxBusy', optarg); if isempty(MaxBusy), MaxBusy = inf; end
 ResubmitTime  = keyval('ResubmitTime', optarg);
 memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=1024^3;         end % assume 1 GB
 timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=3600;           end % assume 1 hour
@@ -162,7 +164,7 @@ while ~all(submitted) || ~all(collected)
   % select all jobs that still need to be submitted
   submit = find(~submitted);
   
-  if ~isempty(submit)
+  if ~isempty(submit) && (sum(submitted)-sum(collected))<MaxBusy
 
     % determine the job to submit
     if strcmp(order, 'random')
