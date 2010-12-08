@@ -199,13 +199,14 @@ switch cfg.method
     specestflg = 1;
     if ~isfield(cfg, 'taper'),            cfg.taper            =  'dpss';      end
     % check for foi above Nyquist
-    if any(cfg.foi > (data.fsample/2))
-      error('frequencies in cfg.foi are above Nyquist')
+    if isfield(cfg,'foi')
+      if any(cfg.foi > (data.fsample/2))
+        error('frequencies in cfg.foi are above Nyquist')
+      end
+      if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))
+        error('you must specify a smoothing parameter with taper = dpss');
+      end
     end
-    if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))
-      error('you must specify a smoothing parameter with taper = dpss');
-    end
-    
     
     
   case 'mtmfft'
