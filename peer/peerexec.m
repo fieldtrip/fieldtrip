@@ -73,8 +73,11 @@ try
   % seed the random number generator
   option_randomseed = keyval('randomseed', optin);
   if ~isempty(option_randomseed)
+    % avoid the warning: Using 'seed' to set RAND's internal state causes RAND, RANDI, and RANDN to use legacy random number generators. 
+    ws = warning('off');
     rand ('seed', option_randomseed);
     randn('seed', option_randomseed);
+    warning(ws);
   end
 
   % there are potentially errors to catch from the which() function

@@ -123,8 +123,11 @@ end
 jobid   = [];
 puttime = [];
 
+% each job should have a different random number sequence
+randomseed = rand(1)*double(intmax);
+
 % pass some options that influence the remote execution
-options = {'pwd', getcustompwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq};
+options = {'pwd', getcustompwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq, 'randomseed', randomseed};
 
 % status = 0 means zombie mode, don't accept anything
 % status = 1 means master mode, accept everything
@@ -196,7 +199,7 @@ while isempty(jobid)
     try
       jobid   = [];
       puttime = toc(stopwatch);
-      result  = peer('put', list(i).hostid, varargin, options, 'memreq', memreq, 'timreq', timreq, 'randomseed', rand(1)*double(intmax));
+      result  = peer('put', list(i).hostid, varargin, options, 'memreq', memreq, 'timreq', timreq);
       puttime = toc(stopwatch) - puttime;
       jobid   = result.jobid;
       % the peer accepted the job, there is no need to continue with the for loop
