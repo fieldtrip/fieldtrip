@@ -75,14 +75,14 @@ fprintf('\n');
 % update the order of the compartments
 vol.bnd    = vol.bnd(order);
 vol.cond   = vol.cond(order);
-vol.skin   = numboundaries;
+vol.skin_surface   = numboundaries;
 vol.source = 1;
 
 % do some sanity checks
 if length(vol.bnd)~=3
   error('this only works for three surfaces');
 end
-if vol.skin~=3
+if vol.skin_surface~=3
   error('the third surface should be the skin');
 end
 if vol.source~=1
@@ -94,7 +94,7 @@ vol = triangle4pt(vol);
 
 % 2. BEM model estimation, only for the scalp surface
 
-defl =[ 0 0 1/size(vol.bnd(vol.skin).pnt,1)];
+defl =[ 0 0 1/size(vol.bnd(vol.skin_surface).pnt,1)];
 % ensure deflation for skin surface, i.e. average reference over skin
 
 % NOTE:
