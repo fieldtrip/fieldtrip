@@ -57,7 +57,16 @@ f9 = {f9.name}';
 f10 = dir(fullfile(p, 'plotting', '*.m'));
 f10 = {f10.name}';
 
-funname = cat(1, f1, f2, f3, f4, f5, f6, f7, f8, f9,f10);
+f11 = dir(fullfile(p, 'statfun', '*.m'));
+f11 = {f11.name}';
+
+f12 = dir(fullfile(p, 'specest', '*.m'));
+f12 = {f12.name}';
+
+f13 = dir(fullfile(p, 'connectivity', '*.m'));
+f13 = {f13.name}';
+
+funname = cat(1, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11);
 
 for i=1:length(funname)
   [p, funname{i}, x] = fileparts(funname{i});
