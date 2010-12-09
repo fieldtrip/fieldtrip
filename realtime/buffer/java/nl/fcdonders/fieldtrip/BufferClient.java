@@ -115,25 +115,16 @@ public class BufferClient {
 	}
 	
 	public short[][] getShortData(int first, int last) throws IOException {
-		ByteBuffer buf;
-
-		buf = ByteBuffer.allocate(16);
-		buf.order(myOrder);
+		DataDescription dd = new DataDescription();
+		ByteBuffer buf = getRawData(first, last, dd);
 	
-		buf.putShort(VERSION).putShort(GET_DAT).putInt(8);
-		buf.putInt(first).putInt(last).rewind();
-		writeAll(buf);
-		buf = readResponse(GET_OK);
-	
-		int nChans = buf.getInt();
-		int nSamples = buf.getInt();
-		int dataType = buf.getInt();
-		int datSize = buf.getInt();
+		int nSamples = dd.nSamples;
+		int nChans = dd.nChans;
 		
 		short[][] data = new short[nSamples][nChans];
 		
-		switch (dataType) {
-			case DataType.UINT8:
+		switch (dd.dataType) {
+			case DataType.INT8:
 				for (int i=0;i<nSamples;i++) {
 					for (int j=0;j<nChans;j++) {
 						data[i][j] = (short) buf.get();
@@ -152,25 +143,16 @@ public class BufferClient {
 	}
 	
 	public int[][] getIntData(int first, int last) throws IOException {
-		ByteBuffer buf;
-
-		buf = ByteBuffer.allocate(16);
-		buf.order(myOrder);
+		DataDescription dd = new DataDescription();
+		ByteBuffer buf = getRawData(first, last, dd);
 	
-		buf.putShort(VERSION).putShort(GET_DAT).putInt(8);
-		buf.putInt(first).putInt(last).rewind();
-		writeAll(buf);
-		buf = readResponse(GET_OK);
-	
-		int nChans = buf.getInt();
-		int nSamples = buf.getInt();
-		int dataType = buf.getInt();
-		int datSize = buf.getInt();
+		int nSamples = dd.nSamples;
+		int nChans = dd.nChans;
 		
 		int[][] data = new int[nSamples][nChans];
 		
-		switch (dataType) {
-			case DataType.UINT8:
+		switch (dd.dataType) {
+			case DataType.INT8:
 				for (int i=0;i<nSamples;i++) {
 					for (int j=0;j<nChans;j++) {
 						data[i][j] = (int) buf.get();
@@ -193,28 +175,61 @@ public class BufferClient {
 		}
 	
 		return data;
-	}	
+	}
+	
+	public long[][] getLongData(int first, int last) throws IOException {
+		DataDescription dd = new DataDescription();
+		ByteBuffer buf = getRawData(first, last, dd);
+	
+		int nSamples = dd.nSamples;
+		int nChans = dd.nChans;
+		
+		long[][] data = new long[nSamples][nChans];
+		
+		switch (dd.dataType) {
+			case DataType.INT8:
+				for (int i=0;i<nSamples;i++) {
+					for (int j=0;j<nChans;j++) {
+						data[i][j] = (int) buf.get();
+					}
+				}
+				break;
+			case DataType.INT16:
+				for (int i=0;i<nSamples;i++) {
+					for (int j=0;j<nChans;j++) {
+						data[i][j] = (int) buf.getShort();
+					}
+				}
+				break;
+			case DataType.INT32:
+				for (int i=0;i<nSamples;i++) {
+					for (int j=0;j<nChans;j++) {
+						data[i][j] = (int) buf.getInt();
+					}
+				}
+				break;
+			case DataType.INT64:
+				LongBuffer lBuf = buf.asLongBuffer();
+				for (int n=0;n<nSamples;n++) lBuf.get(data[n]);
+				break;
+			default:
+				System.out.println("Not supported yet - returning zeros.");
+		}
+	
+		return data;
+	}		
 	
 	public float[][] getFloatData(int first, int last) throws IOException {
-		ByteBuffer buf;
-
-		buf = ByteBuffer.allocate(16);
-		buf.order(myOrder);
+		DataDescription dd = new DataDescription();
+		ByteBuffer buf = getRawData(first, last, dd);
 	
-		buf.putShort(VERSION).putShort(GET_DAT).putInt(8);
-		buf.putInt(first).putInt(last).rewind();
-		writeAll(buf);
-		buf = readResponse(GET_OK);
-	
-		int nChans = buf.getInt();
-		int nSamples = buf.getInt();
-		int dataType = buf.getInt();
-		int datSize = buf.getInt();
+		int nSamples = dd.nSamples;
+		int nChans = dd.nChans;
 		
 		float[][] data = new float[nSamples][nChans];
 		
-		switch (dataType) {
-			case DataType.UINT8:
+		switch (dd.dataType) {
+			case DataType.INT8:
 				for (int i=0;i<nSamples;i++) {
 					for (int j=0;j<nChans;j++) {
 						data[i][j] = (float) buf.get();
@@ -254,25 +269,16 @@ public class BufferClient {
 	}
 	
 	public double[][] getDoubleData(int first, int last) throws IOException {
-		ByteBuffer buf;
-
-		buf = ByteBuffer.allocate(16);
-		buf.order(myOrder);
+		DataDescription dd = new DataDescription();
+		ByteBuffer buf = getRawData(first, last, dd);
 	
-		buf.putShort(VERSION).putShort(GET_DAT).putInt(8);
-		buf.putInt(first).putInt(last).rewind();
-		writeAll(buf);
-		buf = readResponse(GET_OK);
-	
-		int nChans = buf.getInt();
-		int nSamples = buf.getInt();
-		int dataType = buf.getInt();
-		int datSize = buf.getInt();
+		int nSamples = dd.nSamples;
+		int nChans = dd.nChans;
 		
 		double[][] data = new double[nSamples][nChans];
 		
-		switch (dataType) {
-			case DataType.UINT8:
+		switch (dd.dataType) {
+			case DataType.INT8:
 				for (int i=0;i<nSamples;i++) {
 					for (int j=0;j<nChans;j++) {
 						data[i][j] = (double) buf.get();
@@ -334,6 +340,12 @@ public class BufferClient {
 		descr.nSamples  = buf.getInt();
 		descr.dataType  = buf.getInt();
 		descr.sizeBytes = buf.getInt();
+	
+		int dataSize = descr.nChans * descr.nSamples * DataType.wordSize[descr.dataType];
+	
+		if (dataSize > descr.sizeBytes || descr.sizeBytes > buf.remaining()) {
+			throw new IOException("Invalid size definitions in response from GET DATA request");
+		}
 	
 		return buf.slice();
 	}	
@@ -556,6 +568,33 @@ public class BufferClient {
 		writeAll(buf);
 		readResponse(PUT_OK);
 	}		
+	
+	public void flushHeader() throws IOException {
+		ByteBuffer buf = ByteBuffer.allocate(8);
+		buf.order(myOrder); 
+	
+		buf.putShort(VERSION).putShort(FLUSH_HDR).putInt(0).rewind();
+		writeAll(buf);
+		buf = readResponse(FLUSH_OK);
+	}	
+	
+	public void flushData() throws IOException {
+		ByteBuffer buf = ByteBuffer.allocate(8);
+		buf.order(myOrder); 
+	
+		buf.putShort(VERSION).putShort(FLUSH_DAT).putInt(0).rewind();
+		writeAll(buf);
+		buf = readResponse(FLUSH_OK);
+	}	
+	
+	public void flushEvents() throws IOException {
+		ByteBuffer buf = ByteBuffer.allocate(8);
+		buf.order(myOrder); 
+	
+		buf.putShort(VERSION).putShort(FLUSH_EVT).putInt(0).rewind();
+		writeAll(buf);
+		buf = readResponse(FLUSH_OK);
+	}	
 	
 	public SamplesEventsCount wait(int nSamples, int nEvents, int timeout) throws IOException {
 		ByteBuffer buf;
