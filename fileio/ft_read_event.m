@@ -657,19 +657,21 @@ switch eventformat
       end
     end
 
-    if sum(strcmp('trial',{event.type})) ~= hdr.nTrials
-        for segment=1:hdr.nTrials  % cell information
-            eventCount=eventCount+1;
-            event(eventCount).type     = 'trial';
-            event(eventCount).sample   = (segment-1)*hdr.nSamples + 1;
-            event(eventCount).offset   = -hdr.nSamplesPre;
-            event(eventCount).duration =  hdr.nSamples;
-            if unsegmented,
-                event(eventCount).value    = [];
-            else
-                event(eventCount).value    =  char([CateNames{segHdr(segment,1)}(1:CatLengths(segHdr(segment,1)))]);
+    if eventCount > 0
+        if sum(strcmp('trial',{event.type})) ~= hdr.nTrials
+            for segment=1:hdr.nTrials  % cell information
+                eventCount=eventCount+1;
+                event(eventCount).type     = 'trial';
+                event(eventCount).sample   = (segment-1)*hdr.nSamples + 1;
+                event(eventCount).offset   = -hdr.nSamplesPre;
+                event(eventCount).duration =  hdr.nSamples;
+                if unsegmented,
+                    event(eventCount).value    = [];
+                else
+                    event(eventCount).value    =  char([CateNames{segHdr(segment,1)}(1:CatLengths(segHdr(segment,1)))]);
+                end
             end
-        end
+        end;
     end;
 
   case 'eyelink_asc'
