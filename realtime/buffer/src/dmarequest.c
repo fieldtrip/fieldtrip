@@ -239,11 +239,15 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			else {
 				unsigned int i;
 				unsigned int wordsize = wordsize_from_type(header->def->data_type);
+				unsigned int datasize = wordsize * datadef->nsamples * datadef->nchans;
 				
 				response->def->command = PUT_OK;
 				
 				if (wordsize == 0) {
 					fprintf(stderr, "dmarequest: unsupported data type (%d)\n", datadef->data_type);
+					response->def->command = PUT_ERR;
+				} else if (datasize > datadef->bufsize || (datadef->bufsize + sizeof(datadef_t)) > request->def->bufsize) {
+					fprintf(stderr, "dmarequest: invalid size definitions in PUT_DAT request\n");
 					response->def->command = PUT_ERR;
 				} else {
 					/* number of bytes per sample (all channels) is given by wordsize x number of channels */

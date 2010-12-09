@@ -40,7 +40,7 @@ int my_request_handler(const message_t *request, message_t **response, void *use
 		case PUT_DAT:
 			{
 				const datadef_t *ddef = (const datadef_t *) request->buf;
-				printf("Put data, %i channels, %i samples, type=%i ... ", ddef->nchans, ddef->nsamples, ddef->data_type);
+				printf("Put data, %i channels, %i samples, type=%i, size=%i ... ", ddef->nchans, ddef->nsamples, ddef->data_type, ddef->bufsize);
 			}
 			break;
 		case GET_DAT:
