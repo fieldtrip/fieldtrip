@@ -70,6 +70,7 @@ public class BufferClient {
 			}
 			return connect(hostname, port.intValue());
 		}
+		System.out.println("Address format not recognized / supported yet.");
 		// other addresses not recognised yet
 		return false;
 	}
@@ -381,6 +382,21 @@ public class BufferClient {
 		}
 		return evs;
 	}
+	
+	public void putRawData(int nSamples, int nChans, int dataType, byte[] data) throws IOException {
+		if (nSamples == 0) return;
+		if (nChans == 0) return;
+	
+		if (data.length != nSamples*nChans*DataType.wordSize[dataType]) {
+			throw new IOException("Raw buffer does not match data description");
+		}
+		
+		ByteBuffer buf = preparePutData(nChans, nSamples, dataType);
+		buf.put(data);
+		buf.rewind();
+		writeAll(buf);
+		readResponse(PUT_OK);
+	}	
 	
 	public void putData(byte[][] data) throws IOException {
 		int nSamples = data.length;
