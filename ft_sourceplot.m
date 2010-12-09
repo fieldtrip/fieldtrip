@@ -1,4 +1,4 @@
-function [cfg] = ft_sourceplot2(cfg, data)
+function [cfg] = ft_sourceplot(cfg, data)
 
 % FT_SOURCEPLOT plots functional source reconstruction data on slices or on a
 % surface, optionally as an overlay on anatomical MRI data, where
@@ -676,7 +676,6 @@ if isequal(cfg.method,'ortho')
       error('no anatomy is present and no functional data is selected, please check your cfg.funparameter');
     end
     
-    
     h1 = subplot(2,2,1);
     [vols2D] = handle_ortho(vols, [xi yi zi qi], 2, dim, doimage);
     plot2D(vols2D, scales, doimage);
@@ -916,7 +915,7 @@ elseif isequal(cfg.method,'surface')
   end
   
   if (hasfun && ~strcmp(cfg.projmethod,'project')),
-	  [interpmat, cfg.distmat] = interp_gridded2(data.transform, fun, surf.pnt, 'projmethod', cfg.projmethod, 'distmat', cfg.distmat, 'sphereradius', cfg.sphereradius, 'inside', data.inside);
+	  [interpmat, cfg.distmat] = interp_gridded(data.transform, fun, surf.pnt, 'projmethod', cfg.projmethod, 'distmat', cfg.distmat, 'sphereradius', cfg.sphereradius, 'inside', data.inside);
 	  % interpolate the functional data
 	  val = interpmat * fun(data.inside(:));
   end;
