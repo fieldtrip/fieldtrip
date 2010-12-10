@@ -822,6 +822,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
     end
     crsspctrm = crsspctrm./ntap;
   else
+    crsspctrm = zeros(nrpt, ncmb, nfrq, ntim);
     for p = 1:nrpt
       indx    = (sumtapcnt(p)+1):sumtapcnt(p+1);
       tmpdat1 = data.fourierspctrm(indx,cmbindx(:,1),:,:);
