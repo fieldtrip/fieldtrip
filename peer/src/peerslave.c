@@ -428,6 +428,7 @@ int main(int argc, char *argv[]) {
 										pthread_mutex_unlock(&mutexhost);
 
 										/* clear the joblist */
+										/* note that the master is not informed about the job having failed */
 										clear_joblist();
 
 										continue;

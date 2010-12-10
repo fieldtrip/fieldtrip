@@ -61,13 +61,13 @@ keyvalcheck(optarg, 'forbidden', {'timcv'});
 % get the optional input arguments
 UniformOutput = keyval('UniformOutput', optarg); if isempty(UniformOutput), UniformOutput = false; end
 StopOnError   = keyval('StopOnError', optarg); if isempty(StopOnError), StopOnError = true; end
+ResubmitTime  = keyval('ResubmitTime', optarg); if isempty(ResubmitTime), ResubmitTime = inf; end
 MaxBusy       = keyval('MaxBusy', optarg); if isempty(MaxBusy), MaxBusy = inf; end
-ResubmitTime  = keyval('ResubmitTime', optarg);
 memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=1024^3;         end % assume 1 GB
 timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=3600;           end % assume 1 hour
 sleep   = keyval('sleep',   optarg); if isempty(sleep),  sleep=0.05;            end
 diary   = keyval('diary',   optarg); if isempty(diary),  diary='error';         end
-order   = keyval('order',   optarg); if isempty(order),  order='random';        end
+order   = keyval('order',   optarg); if isempty(order),  order='random';        end % 'random' or 'original'
 
 % convert from 'yes'/'no' into boolean value
 UniformOutput = istrue(UniformOutput);
@@ -137,6 +137,8 @@ timused     = nan(1, numjob);
 memused     = nan(1, numjob);
 submitted   = false(1, numjob);
 collected   = false(1, numjob);
+busy        = false(1, numjob);
+busyonce    = false(1, numjob);
 submittime  = inf(1, numjob);
 collecttime = inf(1, numjob);
 resubmitted = [];    % this will contain a growing list with structures
@@ -153,6 +155,7 @@ stopwatch = tic;
 % these are used for printing feedback on screen
 prevnumsubmitted = 0;
 prevnumcollected = 0;
+prevnumbusy      = 0;
 
 % post all jobs and gather their results
 while ~all(submitted) || ~all(collected)
@@ -165,7 +168,7 @@ while ~all(submitted) || ~all(collected)
   submit = find(~submitted);
   
   if ~isempty(submit) && (sum(submitted)-sum(collected))<MaxBusy
-
+    
     % determine the job to submit
     if strcmp(order, 'random')
       % pick a random job
@@ -180,17 +183,17 @@ while ~all(submitted) || ~all(collected)
     
     prev_timreq = timreq;
     prev_memreq = memreq;
-
+    
     if any(collected)
       % update the estimate of the time and memory that will be needed for the next job
       timreq = nanmax(timused);
       memreq = nanmax(memused);
-    elseif ~any(collected) && any(submitted)
+    elseif ~any(collected) && any(submitted) && any(busy)
       % update based on the time spent waiting sofar for the first job to return
-      elapsed = toc(stopwatch) - min(submittime(submitted));
+      elapsed = toc(stopwatch) - min(submittime(submitted(busy)));
       timreq  = max(timreq, elapsed);
     end
-
+    
     % give some feedback
     if memreq~=prev_memreq
       memreq_in_mb = memreq/(1024*1024);
@@ -200,7 +203,7 @@ while ~all(submitted) || ~all(collected)
         fprintf('updating memreq to %.0f MB\n', memreq_in_mb);
       end
     end
-
+    
     % give some feedback
     if timreq~=prev_timreq
       if timreq<100
@@ -215,9 +218,6 @@ while ~all(submitted) || ~all(collected)
     for j=1:numargin
       argin{j} = varargin{j}{submit};
     end
-    
-    % get a list of the busy slaves, used for feedback in case peerfeval times out
-    busy = peerlist('busy');
     
     % submit the job for execution
     ws = warning('off', 'FieldTrip:peer:noSlaveAvailable');
@@ -239,7 +239,7 @@ while ~all(submitted) || ~all(collected)
   
   if sum(submitted)>prevnumsubmitted
     % give an update of the progress
-    fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(submitted)-sum(collected), nansum(timused(collected))/toc(stopwatch));
+    fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(busy), nansum(timused(collected))/toc(stopwatch));
   end
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -260,7 +260,7 @@ while ~all(submitted) || ~all(collected)
       collect = [resubmitted([resubmitted.jobid] == joblist(i).jobid).jobnum];
       if ~isempty(collect)
         % forget the resubmitted job, take these results instead
-        warning('the original job %d did return, reverting to its original results', collect);
+        % warning('the original job %d did return, reverting to its original results', collect);
       end
     end
     
@@ -290,70 +290,102 @@ while ~all(submitted) || ~all(collected)
     
   end % for joblist
   
-  if sum(collected)>prevnumcollected
+  busylist = peerlist('busy');
+  busy(:)  = false;
+  for i=1:length(busylist)
+    busy(jobid == busylist(i).current.jobid) = true;
+    busyonce(jobid == busylist(i).current.jobid) = true;
+  end
+  
+  if sum(collected)>prevnumcollected || sum(busy)~=prevnumbusy
     % give an update of the progress
-    fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(submitted)-sum(collected), nansum(timused(collected))/toc(stopwatch));
+    fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(busy), nansum(timused(collected))/toc(stopwatch));
   end
   
   prevnumsubmitted = sum(submitted);
   prevnumcollected = sum(collected);
+  prevnumbusy      = sum(busy);
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % PART 3: flag jobs that take too long for resubmission
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
-  % check for jobs that are taking too long to finish
-  if all(submitted) && ~all(collected)
+  % search for jobs that were submitted but that are still not busy after 30 seconds
+  % this happens if the peerslave is not able to get a matlab license
+  elapsed = toc(stopwatch) - submittime;
+  elapsed(~submitted) = 0;
+  elapsed(collected)  = 0;
+  elapsed(busy)       = 0;
+  sel = find(elapsed>30);
+  
+  for i=1:length(sel)
+    % warning('resubmitting job %d because it takes too long to get started', sel(i));
+    % remember the job that will be resubmitted, it still might return its results
+    resubmitted(end+1).jobnum = sel(i);
+    resubmitted(end  ).jobid  = jobid(sel(i));
+    resubmitted(end  ).time   = toc(stopwatch);
+    resubmitted(end  ).reason = 'startup';
     
-    % estimate the elapsed time for all jobs
-    elapsed = toc(stopwatch) - submittime;
-    
+    % reset all job information, this will cause it to be automatically resubmitted
+    jobid      (sel(i)) = nan;
+    puttime    (sel(i)) = nan;
+    timused    (sel(i)) = nan;
+    memused    (sel(i)) = nan;
+    submitted  (sel(i)) = false;
+    collected  (sel(i)) = false;
+    busy       (sel(i)) = false;
+    submittime (sel(i)) = inf;
+    collecttime(sel(i)) = inf;
+  end
+  
+  % search for jobs that take too long to return their results
+  % use an estimate of the time it requires a job to complete
+  
+  if ~isinf(ResubmitTime)
+    % use the user-specified amount
+    estimated = ResubmitTime;
+  elseif any(collected)
     % estimate the time that it took the collected jobs to finish
     estimated_min = min(collecttime(collected) - submittime(collected));
     estimated_max = max(collecttime(collected) - submittime(collected));
-    estimated_avg = estimated_max; % the maximum is used instead of the mean
+    estimated_avg = max(collecttime(collected) - submittime(collected));
+    % estimate the expected time of the jobs, assuming a "normal" distribution
+    % the rationale for the estimate is the average plus N times the standard deviation
+    estimated = estimated_avg + 2*(estimated_max - estimated_min);
+  elseif ~isempty(timreq)
+    % assume that it will not take more than 3x the required time
+    estimated = 3*timreq;
+  else
+    % it is not possible to estimate the time that a job will take
+    estimated = inf;
+  end
+  
+  % add some time to allow the matlab engine to start
+  estimated = estimated + 30;
+  
+  % test whether one of the submitted jobs should be resubmitted
+  elapsed = toc(stopwatch) - submittime;
+  sel = find(submitted & ~collected & (elapsed>estimated));
+  
+  for i=1:length(sel)
+    warning('resubmitting job %d because it takes too long to finish (estimated = %f, elapsed = %f)', sel(i), estimated, elapsed(sel(i)));
+    % remember the job that will be resubmitted, it still might return its results
+    resubmitted(end+1).jobnum = sel(i);
+    resubmitted(end  ).jobid  = jobid(sel(i));
+    resubmitted(end  ).time   = toc(stopwatch);
+    resubmitted(end  ).reason = 'duration';
     
-    if ~isempty(ResubmitTime)
-      % use the user-specified amount
-      estimated = ResubmitTime;
-    elseif any(collected)
-      % estimate the expected time of the jobs, assuming a "normal" distribution
-      % the rationale for the estimate is the mean plus X times the standard deviation
-      % instead of the standard deviation the min-max range is used
-      estimated = estimated_avg + 2*(estimated_max - estimated_min);
-      % take into account that the estimate is less accurate in case of only few collected jobs
-      estimated = estimated * (1 + 1/(1+log10(sum(collected))));
-      % add some time to allow the matlab engine to start
-      estimated = estimated + 10;
-    elseif ~isempty(timreq)
-      % assume that it will not take more than 2x the required time
-      estimated = 2*timreq;
-      % add some time to allow the matlab engine to start
-      estimated = estimated + 10;
-    else
-      % it is not possible to estimate the time that a job will take
-      estimated = inf;
-    end
-    
-    % test whether one of the submitted jobs should be resubmitted
-    sel = find(submitted & ~collected & (elapsed>estimated));
-    
-    for i=1:length(sel)
-      warning('resubmitting job %d because it takes too long to finish (estimated = %f, elapsed = %f)', sel(i), estimated, elapsed(sel(i)));
-      % remember the job that will be resubmitted, it still might return its results
-      resubmitted(end+1).jobnum = sel(i);
-      resubmitted(end  ).jobid  = jobid(sel(i));
-      % reset all job information, this will cause it to be automatically resubmitted
-      jobid      (sel(i)) = nan;
-      puttime    (sel(i)) = nan;
-      timused    (sel(i)) = nan;
-      memused    (sel(i)) = nan;
-      submitted  (sel(i)) = false;
-      collected  (sel(i)) = false;
-      submittime (sel(i)) = inf;
-      collecttime(sel(i)) = inf;
-    end
-  end % resubmitting
+    % reset all job information, this will cause it to be automatically resubmitted
+    jobid      (sel(i)) = nan;
+    puttime    (sel(i)) = nan;
+    timused    (sel(i)) = nan;
+    memused    (sel(i)) = nan;
+    submitted  (sel(i)) = false;
+    collected  (sel(i)) = false;
+    busy       (sel(i)) = false;
+    submittime (sel(i)) = inf;
+    collecttime(sel(i)) = inf;
+  end
   
   if ~all(collected)
     % wait a little bit, then try again to submit or collect a job
