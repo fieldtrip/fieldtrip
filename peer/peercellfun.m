@@ -59,15 +59,15 @@ optarg = varargin(optbeg:end);
 keyvalcheck(optarg, 'forbidden', {'timcv'});
 
 % get the optional input arguments
-UniformOutput = keyval('UniformOutput', optarg); if isempty(UniformOutput), UniformOutput = false; end
-StopOnError   = keyval('StopOnError', optarg); if isempty(StopOnError), StopOnError = true; end
-ResubmitTime  = keyval('ResubmitTime', optarg); if isempty(ResubmitTime), ResubmitTime = inf; end
-MaxBusy       = keyval('MaxBusy', optarg); if isempty(MaxBusy), MaxBusy = inf; end
-memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=1024^3;         end % assume 1 GB
-timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=3600;           end % assume 1 hour
-sleep   = keyval('sleep',   optarg); if isempty(sleep),  sleep=0.05;            end
-diary   = keyval('diary',   optarg); if isempty(diary),  diary='error';         end
-order   = keyval('order',   optarg); if isempty(order),  order='random';        end % 'random' or 'original'
+UniformOutput = keyval('UniformOutput', optarg); if isempty(UniformOutput), UniformOutput=false; end
+StopOnError   = keyval('StopOnError',   optarg); if isempty(StopOnError),   StopOnError=true;    end
+ResubmitTime  = keyval('ResubmitTime',  optarg); if isempty(ResubmitTime),  ResubmitTime=inf;    end
+MaxBusy       = keyval('MaxBusy',       optarg); if isempty(MaxBusy),       MaxBusy=inf;         end
+memreq        = keyval('memreq',        optarg); if isempty(memreq),        memreq=1024^3;       end % assume 1 GB
+timreq        = keyval('timreq',        optarg); if isempty(timreq),        timreq=3600;         end % assume 1 hour
+sleep         = keyval('sleep',         optarg); if isempty(sleep),         sleep=0.05;          end
+diary         = keyval('diary',         optarg); if isempty(diary),         diary='error';       end
+order         = keyval('order',         optarg); if isempty(order),         order='random';      end % 'random' or 'original'
 
 % convert from 'yes'/'no' into boolean value
 UniformOutput = istrue(UniformOutput);

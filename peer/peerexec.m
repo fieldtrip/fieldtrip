@@ -196,8 +196,10 @@ close all hidden;
 clear global
 
 % clear the optional kill switch, which is loaded into memory as a mex file
-killswitch(0,0); % this is required to unlock it from memory
-clear killswitch
+if ~isempty(masterid) || ~isempty(timallow)
+  killswitch(0,0); % this is required to unlock it from memory
+  clear killswitch
+end
 
 % clear the previous warning and error messages
 lastwarn('');

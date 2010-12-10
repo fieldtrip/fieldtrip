@@ -11,12 +11,16 @@ if isequal(previous_argin, option_path) && isequal(previous_path, path)
 end
 
 if ~isempty(option_path)
+  f = mfilename('fullpath'); % this is .../peer/private/getcustompath.m
+  f = fileparts(f);          % this is .../peer/private
+  f = fileparts(f);          % this is .../peer
   [p, d] = getcustompath;
   % ensure that the default path is maintained
-  % and that the peer functions are maintained on the path
   path(d);
+  % add the custom path
   path(option_path, path);
-  path(fileparts(which('peerfeval')), path);
+  % ensure that the peer functions are maintained on the path
+  path(f, path);
 end
 
 % remember the current settings for the next call
