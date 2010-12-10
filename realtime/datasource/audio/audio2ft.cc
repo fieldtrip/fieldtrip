@@ -5,7 +5,6 @@
 */
 
 #include <portaudio.h>
-#include <windows.h>
 #include <stdio.h>
 #include <OnlineDataManager.h>
 #include <ConsoleInput.h>
@@ -104,6 +103,7 @@ int main(int argc, char *argv[]) {
 	ConsoleInput conIn;
 	char hostname[256] = "localhost";
 	int port = 1972;
+   int device;
 	
 	err = Pa_Initialize();
 	if( err != paNoError ) {
@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
 		goto cleanup;
 	}
 	
-	int device = atoi(argv[1]);
+	device = atoi(argv[1]);
 	if (!openDevice(device)) {
 		goto cleanup;
 	}
