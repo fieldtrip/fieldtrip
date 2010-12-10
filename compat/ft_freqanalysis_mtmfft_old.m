@@ -427,11 +427,11 @@ if csdflg
   freq.crsspctrm  = crsspctrm;
 end
 
-if strcmp(cfg.method,'mtmfft') && (keeprpt == 2 || keeprpt == 4)
+if strcmp(cfg.method,'mtmfft_old') && (keeprpt == 2 || keeprpt == 4)
   freq.cumsumcnt = cumsumcnt;
 end
 
-if strcmp(cfg.method,'mtmfft') && (keeprpt == 2 || keeprpt == 4)
+if strcmp(cfg.method,'mtmfft_old') && (keeprpt == 2 || keeprpt == 4)
   freq.cumtapcnt = cumtapcnt;
 end
 
