@@ -51,6 +51,7 @@ class OnlineDataManager : public StringRequestHandler {
 		curWriter = 0;
 		lpFilter = 0;
 				
+		streamingEnabled = false;
 		savingEnabled = false;
 	}
 	
@@ -173,13 +174,21 @@ class OnlineDataManager : public StringRequestHandler {
 		return unknown;
 	}
 	
-	bool connectToServer(char *address) {
+	bool connectToServer(const char *address) {
 		if (ftSocket != -1) return false;
 		
 		if (!ftConnection.connect(address)) return false;
 		ftSocket = ftConnection.getSocket();
 		return true;
 	}
+	
+	bool connectToServer(const char *hostname, int port) {
+		if (ftSocket != -1) return false;
+		
+		if (!ftConnection.connectTcp(hostname, port)) return false;
+		ftSocket = ftConnection.getSocket();
+		return true;
+	}	
 	
 	bool useOwnServer(int port) {
 		if (ftSocket != -1) return false;
