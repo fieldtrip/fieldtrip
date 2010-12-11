@@ -144,7 +144,7 @@ void exitFun(void) {
 void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) {
 		char command[STRLEN];
 		char argument[STRLEN];
-		int i, j, n, rc, t, found, handshake, success, count, server;
+		int i, j, n, rc, t, found, handshake, success, count, server, status;
 		UINT64_T peerid, jobid, memreq, cpureq, timreq;
 
 		jobdef_t    *def;
@@ -1179,18 +1179,35 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 
 		/****************************************************************************/
 		else if (strcasecmp(command, "peerlist")==0) {
+				/* it can be followed by an optional input argument "peerlist <status>" */
+				if (nrhs>1) {
+						/* only return the list for the desired status */
+						if (!mxIsNumeric(prhs[1]))
+								mexErrMsgTxt ("invalid input argument #2");
+						else
+								status = (UINT32_T)mxGetScalar(prhs[1]);
+				}
+				else {
+						/* this is to be interpreted as "any status" */
+						status = -1;
+				}
+
 				pthread_mutex_lock(&mutexpeerlist);
 				/* count the number of peers */
 				i = 0;
 				peer = peerlist;
 				while(peer) {
-						i++;
+						i += (status==-1 ? 1 : (peer->host->status==status));
 						peer = peer->next ;
 				}
 				plhs[0] = mxCreateStructMatrix(i, 1, PEERLIST_FIELDNUMBER, peerlist_fieldnames);
 				i = 0;
 				peer = peerlist;
 				while(peer) {
+						if (status!=-1 && peer->host->status!=status) {
+								peer = peer->next;
+								continue;
+						}
 						j = 0;
 						mxSetFieldByNumber(plhs[0], i, j++, mxCreateDoubleScalar((UINT32_T)(peer->host->id)));
 						mxSetFieldByNumber(plhs[0], i, j++, mxCreateString(peer->host->name));

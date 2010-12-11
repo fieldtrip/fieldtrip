@@ -49,18 +49,19 @@ int smartshare_check(float t, int hostid) {
 				return 1;
 		}
 
-		/* always accept jobs when running in master mode */
+		/* accept the job when running in master mode */
 		if (hoststatus()==STATUS_MASTER) {
 				pthread_mutex_unlock(&mutexsmartshare);
 				return 1;
 		}
 
-		/* always accept jobs that don't take any time, e.g. writing results back to the master */
+		/* accept the job if it does not take any time, e.g. writing results back to the master */
 		if (t<=0) {
 				pthread_mutex_unlock(&mutexsmartshare);
 				return 1;
 		}
 
+        /* count the number of subsequent requests from the same host */
 		if (smartshare.prevhostid==hostid)
 				smartshare.prevhostcount++;
 		else
@@ -69,6 +70,7 @@ int smartshare_check(float t, int hostid) {
 		smartshare.n++;
 		smartshare.prevhostid = hostid;
 
+		/* accept the job if all previous requests originated from the same host */
 		if (smartshare.prevhostcount >= SMARTSHARE_PREVHOSTCOUNT) {
 						DEBUG(LOG_DEBUG, "smartshare_check: prevhostcount exceeded");
 				smartshare.prevhostcount = 0;
@@ -76,6 +78,7 @@ int smartshare_check(float t, int hostid) {
 				return 1;
 		}
 
+		/* accept the job if all previous jobs were too long ago */
 		if (difftime(time(NULL), smartshare.time) > SMARTSHARE_TIMEOUT) {
 				DEBUG(LOG_DEBUG, "smartshare_check: timer has elapsed");
 				pthread_mutex_unlock(&mutexsmartshare);
@@ -92,22 +95,21 @@ int smartshare_check(float t, int hostid) {
 						listitem = listitem->next;
 				}
 				/* scale the time of this job request with the minimal time required */
-				t = t/(float)mintimreq;
+				t = t/((float)mintimreq);
 		}
 		else {
 				/* the scale factor cannot be determined from the list of known jobs */
 				t = 1;
 		}  
 
-
 		/* compute the probability of accepting the job */
 		if (t<=1)
-				p = 1;
+				p = 1.0;
 		else
 				p = 1.0 / t;
 
 		/* compute random number between 0 and 1 */
-		r = (float)rand() / (float)RAND_MAX;
+		r = ((float)rand()) / ((float)RAND_MAX);
 
 		DEBUG(LOG_DEBUG, "smartshare_check: t = %f, p = %f, r = %f, n = %d", t, p, r, smartshare.n);
 
@@ -139,6 +141,9 @@ void smartshare_history(jobdef_t *job) {
 				listitem->next = smartsharelist;
 				smartsharelist = listitem;
 		}
+
+		/* remember the time at which the last job request was observed */
+		smartshare.time = time(NULL);
 
 		/* count the number of history items */
 		listitem = smartsharelist;

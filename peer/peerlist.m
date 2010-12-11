@@ -50,18 +50,18 @@ if ~threads
   pause(1.5);
 end
 
-list = peer('peerlist');
-% the current field contains the job details on the busy slaves
-current = [list.current];
-if isempty(current)
-  membusy = 0;
-  timbusy = 0;
-else
-  membusy = sum([current.memreq]);
-  timbusy = sum([current.timreq]);
-end
-
 if nargout==0
+  % this requires a complete list of all peers
+  list = peer('peerlist');
+  % the current field contains the job details on the busy slaves
+  current = [list.current];
+  if isempty(current)
+    membusy = 0;
+    timbusy = 0;
+  else
+    membusy = sum([current.memreq]);
+    timbusy = sum([current.timreq]);
+  end
   % give a summary
   sel = 1:numel(list);
   fprintf('there are %3d peers running in total (%d hosts, %d users)\n',length(sel), length(unique({list(sel).hostname})), length(unique({list(sel).user})));
@@ -79,14 +79,16 @@ if nargin>0
   % continue with a subset of the peers
   switch status
     case 'zombie'
-      list = list([list.status]==0);
+      list = peer('peerlist', 0);
     case 'master'
-      list = list([list.status]==1);
+      list = peer('peerlist', 1);
     case 'idle'
-      list = list([list.status]==2);
+      list = peer('peerlist', 2);
     case 'busy'
-      list = list([list.status]==3);
+      list = peer('peerlist', 3);
     otherwise
+      % this requires a complete list of all peers
+      list = peer('peerlist');
       % make a subset based on the host name 
       sel = zeros(size(list));
       for i=1:length(list)
@@ -94,6 +96,9 @@ if nargin>0
       end
       list = list(find(sel));
   end
+else
+  % this requires a complete list of all peers
+  list = peer('peerlist');
 end
 
 if nargout==0
