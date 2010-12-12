@@ -298,9 +298,11 @@ while ~all(submitted) || ~all(collected)
 
   busylist = peerlist('busy');
   busy(:)  = false;
-  current  = [busylist.current];
-  [dum, sel] = intersect(jobid, [current.jobid]); 
-  busy(sel) = true;
+  if ~isempty(busylist)
+    current  = [busylist.current];
+    [dum, sel] = intersect(jobid, [current.jobid]);
+    busy(sel) = true;
+  end
 
   if sum(collected)>prevnumcollected || sum(busy)~=prevnumbusy
     % give an update of the progress
