@@ -137,7 +137,6 @@ timused     = nan(1, numjob);
 memused     = nan(1, numjob);
 submitted   = false(1, numjob);
 collected   = false(1, numjob);
-started     = false(1, numjob);
 busy        = false(1, numjob);
 submittime  = inf(1, numjob);
 collecttime = inf(1, numjob);
@@ -205,11 +204,6 @@ while ~all(submitted) || ~all(collected)
 
     clear argin
   end % if ~isempty(submitlist)
-
-  if sum(submitted)>prevnumsubmitted
-    % give an update of the progress
-    fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(busy), nansum(timused(collected))/toc(stopwatch));
-  end
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % PART 2: collect the job results that have finished sofar
@@ -297,24 +291,6 @@ while ~all(submitted) || ~all(collected)
 
   end % for joblist
 
-  busylist = peerlist('busy');
-  busy(:)  = false;
-  if ~isempty(busylist)
-    current      = [busylist.current];
-    [dum, sel]   = intersect(jobid, [current.jobid]);
-    started(sel) = true; % this indicates that the job execution started
-    busy(sel)    = true; % this indicates that the job execution is currently busy
-  end
-
-  if sum(collected)>prevnumcollected || sum(busy)~=prevnumbusy
-    % give an update of the progress
-    fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(busy), nansum(timused(collected))/toc(stopwatch));
-  end
-
-  prevnumsubmitted = sum(submitted);
-  prevnumcollected = sum(collected);
-  prevnumbusy      = sum(busy);
-
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % PART 3: flag jobs that take too long for resubmission
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -324,7 +300,7 @@ while ~all(submitted) || ~all(collected)
   elapsed = toc(stopwatch) - submittime;
   elapsed(~submitted) = 0;
   elapsed(collected)  = 0;
-  elapsed(started)    = 0;
+  elapsed(busy)       = 0;
   sel = find(elapsed>30);
 
   for i=1:length(sel)
@@ -408,6 +384,24 @@ while ~all(submitted) || ~all(collected)
     % wait a little bit, then try again to submit or collect a job
     pause(sleep);
   end
+
+  % get the list of jobs that are busy
+  busylist = peerlist('busy');
+  busy(:)  = false;
+  if ~isempty(busylist)
+    current    = [busylist.current];
+    [dum, sel] = intersect(jobid, [current.jobid]);
+    busy(sel)  = true; % this indicates that the job execution is currently busy
+  end
+
+  if sum(collected)>prevnumcollected || sum(busy)~=prevnumbusy
+    % give an update of the progress
+    fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(busy), nansum(timused(collected))/toc(stopwatch));
+  end
+
+  prevnumsubmitted = sum(submitted);
+  prevnumcollected = sum(collected);
+  prevnumbusy      = sum(busy);
 
 end % while not all jobs have finished
 
