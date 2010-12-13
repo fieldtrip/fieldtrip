@@ -111,6 +111,7 @@ int open_tcp_connection(const char *hostname, int port) {
 
 		status = connect(s, (struct sockaddr *)&sa, sizeof sa);
 		if (status<0) {
+				close(s);
 				perror("open_tcp_connection");
 				DEBUG(LOG_ERR, "error: open_tcp_connection");
 				return -2;
