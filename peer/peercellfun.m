@@ -137,6 +137,7 @@ timused     = nan(1, numjob);
 memused     = nan(1, numjob);
 submitted   = false(1, numjob);
 collected   = false(1, numjob);
+started     = false(1, numjob);
 busy        = false(1, numjob);
 submittime  = inf(1, numjob);
 collecttime = inf(1, numjob);
@@ -180,38 +181,6 @@ while ~all(submitted) || ~all(collected)
     % determine the job to submit, the one with the smallest priority number goes first
     [dum, sel] = min(priority(submit));
     submit = submit(sel(1));
-
-    prev_timreq = timreq;
-    prev_memreq = memreq;
-
-    if any(collected)
-      % update the estimate of the time and memory that will be needed for the next job
-      timreq = nanmax(timused);
-      memreq = nanmax(memused);
-    elseif ~any(collected) && any(submitted) && any(busy)
-      % update based on the time spent waiting sofar for the first job to return
-      elapsed = toc(stopwatch) - min(submittime(submitted(busy)));
-      timreq  = max(timreq, elapsed);
-    end
-
-    % give some feedback
-    if memreq~=prev_memreq
-      memreq_in_mb = memreq/(1024*1024);
-      if memreq_in_mb<100
-        fprintf('updating memreq to %.3f MB\n', memreq_in_mb);
-      else
-        fprintf('updating memreq to %.0f MB\n', memreq_in_mb);
-      end
-    end
-
-    % give some feedback
-    if timreq~=prev_timreq
-      if timreq<100
-        fprintf('updating timreq to %.3f s\n', timreq);
-      else
-        fprintf('updating timreq to %.0f s\n', timreq);
-      end
-    end
 
     % redistribute the input arguments
     argin = cell(1, numargin);
@@ -294,14 +263,47 @@ while ~all(submitted) || ~all(collected)
     timused(collect) = keyval('timused', options, nan);
     memused(collect) = keyval('memused', options, nan);
 
+    prev_timreq = timreq;
+    prev_memreq = memreq;
+
+    if any(collected)
+      % update the estimate of the time and memory that will be needed for the next job
+      timreq = nanmax(timused);
+      memreq = nanmax(memused);
+    elseif ~any(collected) && any(submitted) && any(busy)
+      % update based on the time spent waiting sofar for the first job to return
+      elapsed = toc(stopwatch) - min(submittime(submitted(busy)));
+      timreq  = max(timreq, elapsed);
+    end
+
+    % give some feedback
+    if memreq~=prev_memreq
+      memreq_in_mb = memreq/(1024*1024);
+      if memreq_in_mb<100
+        fprintf('updating memreq to %.3f MB\n', memreq_in_mb);
+      else
+        fprintf('updating memreq to %.0f MB\n', memreq_in_mb);
+      end
+    end
+
+    % give some feedback
+    if timreq~=prev_timreq
+      if timreq<100
+        fprintf('updating timreq to %.3f s\n', timreq);
+      else
+        fprintf('updating timreq to %.0f s\n', timreq);
+      end
+    end
+
   end % for joblist
 
   busylist = peerlist('busy');
   busy(:)  = false;
   if ~isempty(busylist)
-    current  = [busylist.current];
-    [dum, sel] = intersect(jobid, [current.jobid]);
-    busy(sel) = true;
+    current      = [busylist.current];
+    [dum, sel]   = intersect(jobid, [current.jobid]);
+    started(sel) = true; % this indicates that the job execution started
+    busy(sel)    = true; % this indicates that the job execution is currently busy
   end
 
   if sum(collected)>prevnumcollected || sum(busy)~=prevnumbusy
@@ -322,11 +324,11 @@ while ~all(submitted) || ~all(collected)
   elapsed = toc(stopwatch) - submittime;
   elapsed(~submitted) = 0;
   elapsed(collected)  = 0;
-  elapsed(busy)       = 0;
+  elapsed(started)    = 0;
   sel = find(elapsed>30);
 
   for i=1:length(sel)
-    % warning('resubmitting job %d because it takes too long to get started', sel(i));
+    warning('resubmitting job %d because it takes too long to get started', sel(i));
     % remember the job that will be resubmitted, it still might return its results
     resubmitted(end+1).jobnum = sel(i);
     resubmitted(end  ).jobid  = jobid(sel(i));
@@ -427,7 +429,7 @@ if numargout>0 && UniformOutput
 end
 
 % compare the time used inside this function with the total execution time
-fprintf('computational time = %.1f sec, elapsed time = %.1f sec, approximate speedup %.1f x\n', nansum(timused), toc(stopwatch), nansum(timused)/toc(stopwatch));
+fprintf('computational time = %.1f sec, elapsed = %.1f sec, speedup %.1f x (memreq = %s, timreq = %s)\n', nansum(timused), toc(stopwatch), nansum(timused)/toc(stopwatch), print_mem(memreq), print_tim(timreq));
 
 if all(puttime>timused)
   % FIXME this could be detected in the loop above, and the strategy could automatically
