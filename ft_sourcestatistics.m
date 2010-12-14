@@ -119,6 +119,9 @@ if strcmp(cfg.implementation, 'old'),
   cfg.version.name = mfilename('fullpath');
   cfg.version.id = '$Id$';
   
+  % add information about the Matlab version used to the configuration
+  cfg.version.matlab = version();
+  
   % remember the configuration of the input data
   cfg.previous = [];
   for i=1:length(varargin)
@@ -468,6 +471,9 @@ elseif strcmp(cfg.implementation, 'new')
   % add version information to the configuration
   cfg.version.name = mfilename('fullpath');
   cfg.version.id = '$Id$';
+  
+  % add information about the Matlab version used to the configuration
+  cfg.version.matlab = version();
   
   % remember the configuration of the input data
   cfg.previous = [];

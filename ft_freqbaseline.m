@@ -149,6 +149,9 @@ cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 cfg.version.name = mfilename('fullpath');
 cfg.version.id = '$Id$';
 
+% add information about the Matlab version used to the configuration
+cfg.version.matlab = version();
+
 % remember the configuration details of the input data
 try, cfg.previous = freq.cfg; end
 

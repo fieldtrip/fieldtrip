@@ -378,6 +378,10 @@ end
 % add the version details of this function call to the configuration
 cfg.version.name = mfilename('fullpath');
 cfg.version.id = '$Id$';
+
+% add information about the Matlab version used to the configuration
+cfg.version.matlab = version();
+
 data.cfg = cfg;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

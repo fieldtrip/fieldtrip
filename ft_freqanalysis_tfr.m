@@ -186,6 +186,10 @@ catch
   cfg.version.name = st(i);
 end
 cfg.version.id = '$Id$';
+
+% add information about the Matlab version used to the configuration
+cfg.version.matlab = version();
+
 % remember the configuration details of the input data
 try, cfg.previous = data.cfg; end
 % remember the exact configuration details in the output
