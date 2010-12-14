@@ -343,7 +343,7 @@ void connectCallback(Fl_Widget*, void*) {
 			addrField->textcolor(FL_DARK_GREEN);
 			addrField->redraw();
 			conButton->label("Disconnect");
-         readHeader();
+			readHeader();
 		}
 	}
 }
@@ -480,10 +480,18 @@ void idleCall(void *dummy) {
 	if (newSamples < numSamples) {
 		// oops ? do we have a new header?
 		if (!readHeader()) return;
+		if (numSamples == 0) return; // no data yet
+		if (numSamples > 1024 || numChannels > 512) {			
+			// "lots" of data already in the buffer
+			// -> don't do anything with that data
+			//    continue next idleCall
+			return;
+		}
+		// read data from the start of the buffer up to newSamples right away
+		newSamples = numSamples;			
+		numSamples = 0;
 	}
-	if (newSamples == 0) return; // no data yet
-	
-	
+
 	request.prepGetData(numSamples, newSamples-1);
 	
 	if (tcprequest(ftCon.getSocket(), request.out(), response.in()) < 0) {
