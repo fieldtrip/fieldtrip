@@ -116,18 +116,29 @@ if ~isempty(cfg.inputfile) % the input data should be read from file
   if hasdata
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
+    if ischar(cfg.inputfile)
+      % only one file is needed
+      cfg.inputfile = {cfg.inputfile};
+    end
     for i=1:numel(cfg.inputfile)
       varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets from array inputfile
-      data = varargin{i};
     end
   end
 else
-  data = varargin{1};
+  % do nothing
 end
+data = varargin{1};
 
 % ensure that hte input is correct, also backward compatibility with old data structures:
 for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'freq'});
+  
+  % this is needed for correct treatment of GRAPHCOLOR later on
+  if nargin>1,
+    iname{i+1} = inputname(i);
+  else 
+    iname{i+1} = cfg.inputfile{i};
+  end
 end
 
 % set the defaults:
@@ -347,8 +358,8 @@ for k=1:length(varargin)
   Labels     = getfield(varargin{k}, 'label');
   
   if length(varargin) > 1
-    if ischar(GRAPHCOLOR);        colorLabels = [colorLabels inputname(k+1) '=' GRAPHCOLOR(k+1) '\n'];
-    elseif isnumeric(GRAPHCOLOR); colorLabels = [colorLabels inputname(k+1) '=' num2str(GRAPHCOLOR(k+1,:)) '\n'];
+    if ischar(GRAPHCOLOR);        colorLabels = [colorLabels iname{k+1} '=' GRAPHCOLOR(k+1) '\n'];
+    elseif isnumeric(GRAPHCOLOR); colorLabels = [colorLabels iname{k+1} '=' num2str(GRAPHCOLOR(k+1,:)) '\n'];
     end
   end
   
