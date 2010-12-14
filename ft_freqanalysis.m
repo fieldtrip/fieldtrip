@@ -227,6 +227,7 @@ switch cfg.method
   otherwise
     specestflg = 0;
     if ~isempty(strfind(cfg.method,'_old'))
+      disp(['using old implementation of ' cfg.method(1:end-4)])
     else
       disp(['''' cfg.method ''' has not been implemented yet in the specest toolbox, the old implementation is being used'])
     end
@@ -424,6 +425,12 @@ else
       case 'mtmconvol'
         [spectrum_mtmconvol,ntaper,foi,toi] = ft_specest_mtmconvol(dat, time, 'timeoi', cfg.toi, 'timwin', cfg.t_ftimwin, options{:}, 'dimord', 'chan_time_freqtap');
         hastime = true;
+        % error for different number of tapers per trial
+        if (keeprpt == 4) && any(ntaper(:) ~= ntaper(1))
+          error('currently you can only keep trials AND tapers, when using the number of tapers per frequency is equal across frequency')
+        end
+          
+        
         % create tapfreqind for later indexing
         freqtapind = [];
         tempntaper = [0; cumsum(ntaper(:))];
@@ -483,6 +490,13 @@ else
         end
       end
       
+      % prepare cumtapcnt
+      switch cfg.method %% IMPORTANT, SHOULD WE KEEP THIS SPLIT UP PER METHOD OR GO FOR A GENERAL SOLUTION NOW THAT WE HAVE SPECEST
+        case 'mtmconvol'
+          cumtapcnt = zeros(ntrials,nfoi);
+        case 'mtmfft'
+          cumtapcnt = zeros(ntrials,1);
+      end
       
     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -585,11 +599,6 @@ else
         end %ifoi
         
     else
-        % mtmconvol is a special case and needs special processing
-        if ~all(ntaper==ntaper(1)),
-          error('if cfg.keeptapers=''yes'' all fois need an equal amount of tapers');
-        end
-        
         if strcmp(cfg.method,'mtmconvol')
           spectrum = permute(reshape(spectrum_mtmconvol,[nchan ntoi ntaper(1) nfoi]),[3 1 4 2]);
         end
@@ -611,6 +620,13 @@ else
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     
+    % set cumptapcnt
+    switch cfg.method %% IMPORTANT, SHOULD WE KEEP THIS SPLIT UP PER METHOD OR GO FOR A GENERAL SOLUTION NOW THAT WE HAVE SPECEST
+      case 'mtmconvol'
+          cumtapcnt(itrial,:) = ntaper;
+      case 'mtmfft'
+        cumtapcnt(itrial) = ntaper(1); % fixed number of tapers? for the moment, yes, as specest_mtmfft computes only one set of tapers
+    end
     
   end % for ntrials
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -672,10 +688,8 @@ else
   if strcmp(cfg.method,'mtmfft') && (keeprpt == 2 || keeprpt == 4)
     freq.cumsumcnt = trllength';
   end
-  if keeprpt == 2,
-    freq.cumtapcnt = repmat(ntaper(:)', [size(powspctrm,1) 1]);
-  elseif keeprpt == 4,
-    freq.cumtapcnt = repmat(ntaper(1), [size(fourierspctrm,1)./ntaper(1) 1]); % assumes fixed number of tapers
+  if exist('cumtapcnt','var')
+    freq.cumtapcnt = cumtapcnt;
   end
   
   
