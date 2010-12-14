@@ -362,12 +362,11 @@ switch dataformat
     if length(chanindx)==1
       % only one channel was selected, which is managed by the code above
       % nothing to do
-    elseif length(chanindx)==hdr.nChans
+    elseif ~isequal(chanindx(:)', 1:hdr.nChans)
+      dat = dat(chanindx,:);  % select the desired channels
+    else
       % all channels have been selected
       % nothing to do
-    else
-      % select the desired channel(s)
-      dat = dat(chanindx,:);
     end
     % determine how to calibrate the data
     switch sampletype
@@ -448,7 +447,9 @@ switch dataformat
 
   case {'brainvision_eeg', 'brainvision_dat', 'brainvision_seg'}
     dat = read_brainvision_eeg(filename, hdr.orig, begsample, endsample);
-    dat = dat(chanindx,:);  % select the desired channels
+    if ~isequal(chanindx(:)', 1:hdr.nChans)
+      dat = dat(chanindx,:);  % select the desired channels
+    end
 
   case 'ced_son'
     % chek the availability of the required low-level toolbox
@@ -504,7 +505,9 @@ switch dataformat
     tmp(tmp==0) = 1;
     dat = dat ./ tmp(:,ones(1,size(dat,2)));
     % select the subset of visible channels that the user requested
-    dat = dat(chanindx, :);
+    if ~isequal(chanindx(:)', 1:hdr.nChans)
+      dat = dat(chanindx,:);  % select the desired channels
+    end
 
   case  'combined_ds'
     dat = read_combined_ds(filename, hdr, begsample, endsample, chanindx);
@@ -590,7 +593,9 @@ switch dataformat
   case 'fcdc_buffer_offline'
     % read from a offline FieldTrip buffer data files
     dat = read_buffer_offline_data(datafile, hdr, [begsample endsample]);
-    dat = dat(chanindx,:);
+    if ~isequal(chanindx(:)', 1:hdr.nChans)
+      dat = dat(chanindx,:);  % select the desired channels
+    end    
 
   case 'fcdc_matbin'
     % multiplexed data in a *.bin file, accompanied by a matlab file containing the header
@@ -622,12 +627,11 @@ switch dataformat
     if length(chanindx)==1
       % only one channel was selected, which is managed by the code above
       % nothing to do
-    elseif length(chanindx)==hdr.nChans
+    elseif ~isequal(chanindx(:)', 1:hdr.nChans)
+      dat = dat(chanindx,:);  % select the desired channels
+    else
       % all channels have been selected
       % nothing to do
-    else
-      % select the desired channel(s)
-      dat = dat(chanindx,:);
     end
 
   case 'fcdc_mysql'
@@ -664,7 +668,9 @@ switch dataformat
 
   case 'micromed_trc'
     dat = read_micromed_trc(filename, begsample, endsample);
-    dat = dat(chanindx,:);
+    if ~isequal(chanindx(:)', 1:hdr.nChans)
+      dat = dat(chanindx,:);  % select the desired channels
+    end
     dimord = 'chans_samples';
 
   case {'mpi_ds', 'mpi_dap'}
