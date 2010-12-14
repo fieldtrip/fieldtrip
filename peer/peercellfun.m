@@ -138,6 +138,7 @@ memused     = nan(1, numjob);
 submitted   = false(1, numjob);
 collected   = false(1, numjob);
 busy        = false(1, numjob);
+started     = false(1, numjob);
 submittime  = inf(1, numjob);
 collecttime = inf(1, numjob);
 resubmitted = [];    % this will contain a growing list with structures
@@ -300,7 +301,8 @@ while ~all(submitted) || ~all(collected)
   elapsed = toc(stopwatch) - submittime;
   elapsed(~submitted) = 0;
   elapsed(collected)  = 0;
-  elapsed(busy)       = 0;
+  elapsed(started)    = 0; % once started there is no reason to resubmit "because it takes too long to get started"
+  end
   sel = find(elapsed>30);
 
   for i=1:length(sel)
@@ -319,6 +321,7 @@ while ~all(submitted) || ~all(collected)
     submitted  (sel(i)) = false;
     collected  (sel(i)) = false;
     busy       (sel(i)) = false;
+    started    (sel(i)) = false;
     submittime (sel(i)) = inf;
     collecttime(sel(i)) = inf;
 
@@ -372,6 +375,7 @@ while ~all(submitted) || ~all(collected)
     submitted  (sel(i)) = false;
     collected  (sel(i)) = false;
     busy       (sel(i)) = false;
+    started    (sel(i)) = false;
     submittime (sel(i)) = inf;
     collecttime(sel(i)) = inf;
 
@@ -389,9 +393,10 @@ while ~all(submitted) || ~all(collected)
   busylist = peerlist('busy');
   busy(:)  = false;
   if ~isempty(busylist)
-    current    = [busylist.current];
-    [dum, sel] = intersect(jobid, [current.jobid]);
-    busy(sel)  = true; % this indicates that the job execution is currently busy
+    current      = [busylist.current];
+    [dum, sel]   = intersect(jobid, [current.jobid]);
+    busy(sel)    = true; % this indicates that the job execution is currently busy
+    started(sel) = true; % this indicates that the job execution has started
   end
 
   if sum(collected)>prevnumcollected || sum(busy)~=prevnumbusy
