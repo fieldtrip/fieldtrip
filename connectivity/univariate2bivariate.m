@@ -103,21 +103,26 @@ switch dtype
     ncmb = numel(cmb);
     
     if strcmp(inparam, 'pow') && strcmp(outparam, 'powcov'),
-      [nrpt,nvox] = size(data.pow);
+      [nvox,nrpt] = size(data.pow);
       if sqrtflag, data.pow = sqrt(data.pow); end
       if demeanflag,
-        mdat = nanmean(data.pow,1);
-        data.pow = data.pow - mdat(ones(1,nrpt),:); %FIXME only works for 1 frequency
+        mdat = nanmean(data.pow,2);
+        data.pow = data.pow - mdat(:,ones(1,nrpt)); %FIXME only works for 1 frequency
       end
-      
-      data.powcov = [data.pow .* data.pow(:,ones(1,nvox)*cmb) data.pow.*data.pow];
+      data.powcov = [reshape(data.pow * data.pow(cmb,:)', [ncmb*nvox 1]); sum(data.pow.^2,2)];
       data        = rmfield(data, 'pow');
-      powindx     = [nvox+(1:nvox) nvox+(1:nvox); cmb*ones(1,nvox) nvox+(1:nvox)]';
+      data        = rmfield(data, 'powdimord');
+      %powindx     = [nvox+(1:nvox) nvox+(1:nvox); cmb*ones(1,nvox) nvox+(1:nvox)]';
+      powindx     = [repmat(ncmb*nvox+(1:nvox)',[ncmb 1]) reshape(repmat(ncmb*nvox+cmb(:)', [nvox 1]),[nvox*ncmb 1]); ...
+                            ncmb*nvox+(1:nvox)' ncmb*nvox+(1:nvox)'];
       
-      data.pos    = [data.pos repmat(data.pos(cmb,:),[nvox 1]);data.pos data.pos];
-      data.inside = [data.inside(:); data.inside(:)+nvox];
-      data.outside = [data.outside(:); data.outside(:)+nvox];
-      data.dim(2) = size(data.pos,1);
+      data.pos    = [repmat(data.pos, [ncmb+1 1])];%FIXME come up with something reshape( repmat(data.pos(cmb,:),[nvox 1]);data.pos data.pos];
+      data.inside = reshape(repmat(data.inside(:), [1 ncmb+1])+repmat(nvox*(0:ncmb), [nvox 1]), [nvox*(ncmb+1) 1]);
+      if ~isempty(data.outside)
+        data.outside = reshape(repmat(data.outside(:), [1 ncmb+1])+repmat(nvox*(0:ncmb), [nvox 1]), [nvox*(ncmb+1) 1]);
+      end
+      data.powcovdimord = 'pos';
+      %data.dim(2) = size(data.pos,1);
     elseif strcmp(inparam, 'mom') && strcmp(outparam, 'crsspctrm'),
       %get mom as rpttap_pos_freq matrix
       %FIXME this assumes only 1 freq bin
@@ -170,7 +175,8 @@ switch dtype
   otherwise
 end
 
-hasrpt  = (isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'rpt')));
+hasrpt  = (isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'rpt'))) || ... 
+          (isfield(data, [outparam,'dimord']) && ~isempty(strfind(data.([outparam,'dimord']), 'rpt')));
 
 %%----------------------------------------
 %function [indx] = labelcmb2indx(labelcmb)
