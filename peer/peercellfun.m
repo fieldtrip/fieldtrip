@@ -45,7 +45,7 @@ function varargout = peercellfun(fname, varargin)
 % along with this program.  If not, see <http://www.gnu.org/licenses/
 % -----------------------------------------------------------------------
 
-if matlabversion>=7.8
+if matlabversion(7.8, Inf)
   % switch to zombie when finished or when ctrl-c gets pressed
   % the onCleanup function does not exist for older versions
   onCleanup(@peerzombie);
