@@ -103,12 +103,14 @@ classdef ft_mv_blogreg < ft_mv_predictor
           obj.taskcoupling = -obj.taskcoupling;
         end
         
+        if isempty(obj.indims) && ~isempty(obj.mask)
+          % infer input dimensions from optional mask
+          obj.indims = size(obj.mask);
+        end
+        
        end
        
        function obj = train(obj,X,Y)
-         
-         % missing data
-         if any(isnan(X(:))) || any(isnan(Y(:))), error('method does not handle missing data'); end
          
          % multiple outputs
          if size(Y,2) > 1
@@ -552,8 +554,11 @@ classdef ft_mv_blogreg < ft_mv_predictor
           obj.coupling(obj.coupling > 0) = -obj.coupling(obj.coupling > 0);
           
           if obj.verbose
-            fprintf('using prior with coupling [ ');
-            fprintf('%g]\n',obj.coupling);
+            fprintf('using prior with coupling [');
+            for j=1:length(obj.coupling)
+              fprintf(' %g',obj.coupling(j));
+            end
+            fprintf(' ]\n');
           end
           
           prior = construct_prior(obj.indims,obj.coupling,'mask',find(obj.mask(:)),'circulant',[0 0 0 0]);

@@ -89,8 +89,14 @@ classdef ft_mv_gridsearch < ft_mv_predictor
          maxresult = -Inf;
   
          % iterate over configurations
-         obj.configs = cartprod(obj.vals{:});
-  
+         if length(obj.vals)==1
+           % allows ordering from high to low
+           % can be faster in some cases with warm restarts
+           obj.configs = obj.vals{1}(:);
+         else
+           obj.configs = cartprod(obj.vals{:});
+         end
+         
          if obj.parallel
            train_parallel();
          else
@@ -108,6 +114,10 @@ classdef ft_mv_gridsearch < ft_mv_predictor
          % we now know the optimal configuration. Now we retrieve the
          % method of interest with this configuration and retrain with all
          % data
+         
+         if isempty(obj.optimum)
+           error('no optimum configuration found; check performance measure');
+         end
       
          for j=1:nv
            obj.mva.mvmethods{obj.mvidx(j)}.(obj.vars{j}) = obj.configs(obj.optimum,j);
