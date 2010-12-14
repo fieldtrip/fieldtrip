@@ -64,10 +64,21 @@ StopOnError   = keyval('StopOnError',   optarg); if isempty(StopOnError),   Stop
 ResubmitTime  = keyval('ResubmitTime',  optarg);
 MaxBusy       = keyval('MaxBusy',       optarg); if isempty(MaxBusy),       MaxBusy=inf;         end
 memreq        = keyval('memreq',        optarg); if isempty(memreq),        memreq=1024^3;       end % assume 1 GB
-timreq        = keyval('timreq',        optarg); if isempty(timreq),        timreq=3600;         end % assume 1 hour
+timreq        = keyval('timreq',        optarg); 
 sleep         = keyval('sleep',         optarg); if isempty(sleep),         sleep=0.05;          end
-diary         = keyval('diary',         optarg); if isempty(diary),         diary='error';       end % 'always', 'never', 'warning', 'error' 
+diary         = keyval('diary',         optarg); if isempty(diary),         diary='error';       end % 'always', 'never', 'warning', 'error'
 order         = keyval('order',         optarg); if isempty(order),         order='random';      end % 'random', 'original'
+
+if isempty(timreq)
+  % assume a default job duration of one hour
+  timreq    = 3600;
+  % the estimated time that a job requires will be auto-adjusted
+  mintimreq = 0;
+else
+  % use the specified time as the minimum that a job required
+  % it will be auto-adjusted to larger values, not to smaller values
+  mintimreq = timreq;
+end
 
 % convert from 'yes'/'no' into boolean value
 UniformOutput = istrue(UniformOutput);
@@ -206,6 +217,25 @@ while ~all(submitted) || ~all(collected)
     clear argin
   end % if ~isempty(submitlist)
 
+  % get the list of jobs that are busy
+  busylist = peerlist('busy');
+  busy(:)  = false;
+  if ~isempty(busylist)
+    current      = [busylist.current];
+    [dum, sel]   = intersect(jobid, [current.jobid]);
+    busy(sel)    = true; % this indicates that the job execution is currently busy
+    started(sel) = true; % this indicates that the job execution has started
+  end
+
+  if sum(collected)>prevnumcollected || sum(busy)~=prevnumbusy
+    % give an update of the progress
+    fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(busy), nansum(timused(collected))/toc(stopwatch));
+  end
+
+  prevnumsubmitted = sum(submitted);
+  prevnumcollected = sum(collected);
+  prevnumbusy      = sum(busy);
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % PART 2: collect the job results that have finished sofar
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -263,12 +293,14 @@ while ~all(submitted) || ~all(collected)
 
     if any(collected)
       % update the estimate of the time and memory that will be needed for the next job
-      timreq = nanmax(timused);
       memreq = nanmax(memused);
+      timreq = nanmax(timused);
+      timreq = max(timreq, mintimreq);
     elseif ~any(collected) && any(submitted) && any(busy)
       % update based on the time spent waiting sofar for the first job to return
       elapsed = toc(stopwatch) - min(submittime(submitted(busy)));
       timreq  = max(timreq, elapsed);
+      timreq  = max(timreq, mintimreq);
     end
 
     % give some feedback
@@ -291,6 +323,25 @@ while ~all(submitted) || ~all(collected)
     end
 
   end % for joblist
+
+  % get the list of jobs that are busy
+  busylist = peerlist('busy');
+  busy(:)  = false;
+  if ~isempty(busylist)
+    current      = [busylist.current];
+    [dum, sel]   = intersect(jobid, [current.jobid]);
+    busy(sel)    = true; % this indicates that the job execution is currently busy
+    started(sel) = true; % this indicates that the job execution has started
+  end
+
+  if sum(collected)>prevnumcollected || sum(busy)~=prevnumbusy
+    % give an update of the progress
+    fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(busy), nansum(timused(collected))/toc(stopwatch));
+  end
+
+  prevnumsubmitted = sum(submitted);
+  prevnumcollected = sum(collected);
+  prevnumbusy      = sum(busy);
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % PART 3: flag jobs that take too long for resubmission
@@ -359,7 +410,7 @@ while ~all(submitted) || ~all(collected)
   sel = find(submitted & ~collected & (elapsed>estimated));
 
   for i=1:length(sel)
-    warning('resubmitting job %d because it takes too long to finish (estimated = %f, elapsed = %f)', sel(i), estimated, elapsed(sel(i)));
+    warning('resubmitting job %d because it takes too long to finish (estimated = %s)', sel(i), print_tim(estimated));
     % remember the job that will be resubmitted, it still might return its results
     resubmitted(end+1).jobnum = sel(i);
     resubmitted(end  ).jobid  = jobid(sel(i));
