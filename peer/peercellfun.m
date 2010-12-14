@@ -302,7 +302,6 @@ while ~all(submitted) || ~all(collected)
   elapsed(~submitted) = 0;
   elapsed(collected)  = 0;
   elapsed(started)    = 0; % once started there is no reason to resubmit "because it takes too long to get started"
-  end
   sel = find(elapsed>30);
 
   for i=1:length(sel)
