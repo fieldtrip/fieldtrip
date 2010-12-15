@@ -47,7 +47,7 @@ classdef ft_mv_logreg < ft_mv_predictor
     
       nvars = size(X,2);
     
-      opt.display = 0;
+      opt.display = obj.verbose;
       
       nclasses = max(Y(:));
       
@@ -85,9 +85,12 @@ classdef ft_mv_logreg < ft_mv_predictor
       
       if obj.L1 == 0 && obj.L2 == 0
         % unregularized logistic regression
+        % uses kernel logistic regression with a linear kernel
+        % see: ft_mv_klr
         
-        opt.Method = 'newton';
-        obj.weights = minFunc(funObj,w_init,opt);
+        m = ft_mv_klr;
+        m = m.train(X,Y);
+        obj.weights = m.primal;
         
       elseif obj.L1 == 0 && obj.L2 ~= 0
         % L2 regularized logistic regression
