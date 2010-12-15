@@ -10,6 +10,7 @@
 
 #define NUMCHANS    7
 #define FSAMPLE     128.0
+#define MAXBLOCK    20
 
 /*
 	// printf("Looking for sync bytes 0xA5 0x5A (%c%c)\n", 0xA5, 0x5A);
@@ -244,6 +245,9 @@ int main(int argc, char *argv[]) {
    
 	printf("Starting - press ESC to quit\n");
 	while (1) {
+      short samples[MAXBLOCK*NUMCHANS];
+      int nSamples = 0;
+      
 		if (conIn.checkKey()) {
 			int c = conIn.getKey();
 			if (c==27) break; // quit
@@ -251,16 +255,16 @@ int main(int argc, char *argv[]) {
 		
 		ctrlServ.checkRequests(ODM);
       
-      int len = tryReadPacket(&SP);
+      do {
+         int len = tryReadPacket(&SP);
       
-      if (len == 16 && packet[0] == 0xB0 && packet[1] == 14) {
-         /*
-         printf("%02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X\n", 
-            packet[0],packet[1],packet[2],packet[3],packet[4],packet[5],packet[6],
-             packet[7],packet[8],packet[9],packet[10],packet[11],packet[12],packet[13]);
-         */
-         short *block = ODM.provideBlock(1);
-         for (int i=0;i<7;i++) {
+         if (len != 2*NUMCHANS+2 || packet[0] != 0xB0 || packet[1] != 2*NUMCHANS) {
+            printf("Unrecognized packet: %2d %02X %02X\n", len, packet[0], packet[1]);
+            continue;
+         }
+         short *dest = samples + nSamples * NUMCHANS;
+         
+         for (int i=0;i<NUMCHANS;i++) {
             short high = packet[2+i*2];
             short low  = packet[3+i*2];
             if (high & 0x10) {
@@ -268,16 +272,19 @@ int main(int argc, char *argv[]) {
             }
             high &= 0x8F;
             short val = (high << 8) | low;
-            block[i] = val;
+            dest[i] = val;
          }
-         if (!ODM.handleBlock()) {
-            fprintf(stderr, "Error in handling this data block - stopping\n");
-            break;
-         }
-         printf("Samples: %i\r", ++counter);
-      } else {
-         printf("Unrecognized packet: %2d %02X %02X\n", len, packet[0], packet[1]);
+         nSamples++;
+      } while (nSamples < MAXBLOCK && serialInputPending(&SP)>=6+2*NUMCHANS);
+      
+      short *block = ODM.provideBlock(nSamples);
+      memcpy(block, samples, nSamples*NUMCHANS*sizeof(short));
+      if (!ODM.handleBlock()) {
+         fprintf(stderr, "Error in handling this data block - stopping\n");
+         break;
       }
+      counter+=nSamples;
+      printf("Samples: %i\r", counter);
 	}
 	
 	ODM.disableStreaming();
