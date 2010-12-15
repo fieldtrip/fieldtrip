@@ -29,7 +29,7 @@ function ft_realtime_topography(cfg)
 %   cfg.channel   = 'MEG';
 %   cfg.blocksize = 0.5;
 %   cfg.overlap   = 0.25;
-%   cfg.blc       = 'yes';
+%   cfg.demean    = 'yes';
 %   cfg.bpfilter  = [15 25];
 %   cfg.bpfreq    =	 'yes';
 %   ft_realtime_topography(cfg);

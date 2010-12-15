@@ -10,7 +10,7 @@ function ft_realtime_signalviewer(cfg)
 %   cfg.channel    = cell-array, see FT_CHANNELSELECTION (default = 'all')
 %   cfg.bufferdata = whether to start on the 'first or 'last' data that is available (default = 'last')
 %   cfg.readevent  = whether or not to copy events (default = 'no')
-%   cfg.blc        = 'no' or 'yes', whether to apply baseline correction (default = 'yes')
+%   cfg.demean     = 'no' or 'yes', whether to apply baseline correction (default = 'yes')
 %
 % The source of the data is configured as
 %   cfg.dataset       = string
@@ -54,7 +54,7 @@ if ~isfield(cfg, 'channel'),        cfg.channel = 'all';      end
 if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'last';  end % first or last
 if ~isfield(cfg, 'readevent'),      cfg.readevent = 'no';     end % capture events?
 if ~isfield(cfg, 'jumptoeof'),      cfg.jumptoeof = 'no';     end % jump to end of file at initialization
-if ~isfield(cfg, 'blc'),            cfg.blc = 'yes';          end % baseline correction
+if ~isfield(cfg, 'demean'),         cfg.demean = 'yes';          end % baseline correction
 
 if ~isfield(cfg, 'dataset') && ~isfield(cfg, 'header') && ~isfield(cfg, 'datafile')
   cfg.dataset = 'buffer://localhost:1972';
@@ -143,7 +143,7 @@ while true
     data.fsample  = hdr.Fs;
 
     % apply some preprocessing options
-    if strcmp(cfg.blc, 'yes')
+    if strcmp(cfg.demean, 'yes')
       data.trial{1} = ft_preproc_baselinecorrect(data.trial{1});
     end
 
