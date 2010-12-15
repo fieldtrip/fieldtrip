@@ -91,7 +91,7 @@ function [cfg] = ft_headmodelplot(cfg, data)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % these are suitable RGB colors
 skin_surface   = [255 213 119]/255;

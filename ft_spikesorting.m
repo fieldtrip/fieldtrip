@@ -45,7 +45,7 @@ function [spike] = ft_spikesorting(cfg, spike);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'feedback'),       cfg.feedback = 'textbar';    end

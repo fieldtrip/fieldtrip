@@ -70,7 +70,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 

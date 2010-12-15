@@ -68,7 +68,7 @@ function [data] = ft_redefinetrial(cfg, data)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'offset'),     cfg.offset = [];      end

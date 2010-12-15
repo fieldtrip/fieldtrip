@@ -44,7 +44,7 @@ function [data] = besa2fieldtrip(input)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 if isstruct(input) && numel(input)>1
   % use a recursive call to convert multiple inputs

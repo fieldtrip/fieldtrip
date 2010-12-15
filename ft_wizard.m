@@ -31,7 +31,7 @@ function varargout = ft_wizard(wizard_filename)
 %
 % $Log: wizard.m,v $
 % Revision 1.3  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
+% added call to ft_defaults to the begin of the function
 %
 % Revision 1.2  2007/05/14 08:30:56  roboos
 % renamed wizard_gui to wizard_base, updated help
@@ -40,7 +40,7 @@ function varargout = ft_wizard(wizard_filename)
 % initial version
 %
 
-fieldtripdefs
+ft_defaults
 
 % this function is a wrapper around the actual GUI function
 % the main purpose of this function is to provide a workspace where the

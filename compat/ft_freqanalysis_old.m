@@ -59,7 +59,7 @@ function [freq] = ft_freqanalysis_old(cfg, data)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % deprecated
 warning('this version of ft_freqanalysis is deprecated, it is no longer being maintained')

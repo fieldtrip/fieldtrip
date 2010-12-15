@@ -32,7 +32,7 @@ function [grad] = ft_headmovement(cfg)
 % $Id$
 
 
-fieldtripdefs
+ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'numclusters'), cfg.numclusters = 12; end

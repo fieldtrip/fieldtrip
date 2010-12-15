@@ -83,7 +83,7 @@ function [interp] = ft_megplanar(cfg, data)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 

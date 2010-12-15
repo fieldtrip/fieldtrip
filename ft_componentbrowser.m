@@ -39,7 +39,7 @@ function [varargout] = ft_componentbrowser(cfg, comp)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Prepare the data

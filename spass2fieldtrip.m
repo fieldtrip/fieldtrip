@@ -31,7 +31,7 @@ function [lfp, spike, stm, bhv] = spass2fieldtrip(dirname);
 %
 % $Log: spass2fieldtrip.m,v $
 % Revision 1.3  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
+% added call to ft_defaults to the begin of the function
 %
 % Revision 1.2  2007/10/08 13:01:12  roboos
 % added glue to link spike timestamps and lfp continuous channels
@@ -41,7 +41,7 @@ function [lfp, spike, stm, bhv] = spass2fieldtrip(dirname);
 % first implementation
 %
 
-fieldtripdefs
+ft_defaults
 
 fsample_ana = 1000;
 fsample_swa = 32000;

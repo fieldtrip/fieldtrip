@@ -66,7 +66,7 @@ function ft_layoutplot(cfg, data)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % basic check/initialization of input arguments

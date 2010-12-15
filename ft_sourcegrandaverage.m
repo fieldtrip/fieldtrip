@@ -64,7 +64,7 @@ function [grandavg] = ft_sourcegrandaverage(cfg, varargin);
 if 1,
   % original implementation
 
-  fieldtripdefs
+  ft_defaults
 
   cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
@@ -294,7 +294,7 @@ if 1,
 else
   % new implementation (with restricted functionality)
 
-  fieldtripdefs
+  ft_defaults
 
   cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
   cfg = ft_checkconfig(cfg, 'deprecated', {'concatenate', 'randomization', 'permutation', 'c1', 'c2'});

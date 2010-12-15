@@ -63,7 +63,7 @@ function [mri] = ft_volumerealign(cfg, mri);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducial', 'fiducial'});
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');

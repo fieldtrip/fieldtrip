@@ -61,7 +61,7 @@ function [normalise] = ft_volumenormalise(cfg, interp)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 

@@ -71,7 +71,7 @@ function [freq] = ft_freqanalysis_mtmwelch(cfg, data);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % ensure that this function is started as a subfunction of the FT_FREQANALYSIS wrapper
 if ~exist('OCTAVE_VERSION')

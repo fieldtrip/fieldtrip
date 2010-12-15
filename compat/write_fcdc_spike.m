@@ -6,7 +6,7 @@ function write_fcdc_spike(varargin)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-fieldtripdefs
+ft_defaults
 
 warning('this function is deprecated, please use the write_spike function instead');
 

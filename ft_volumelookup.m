@@ -78,7 +78,7 @@ function [output] = ft_volumelookup(cfg, volume)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 roi2mask = 0;
 mask2label = 0;

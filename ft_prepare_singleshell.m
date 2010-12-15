@@ -56,7 +56,7 @@ function [vol, cfg] = ft_prepare_singleshell(cfg, mri)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'renamed', {'spheremesh', 'numvertices'});

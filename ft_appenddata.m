@@ -53,7 +53,7 @@ function [data] = ft_appenddata(cfg, varargin)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'inputfile'),    cfg.inputfile  = [];          end

@@ -149,7 +149,7 @@ function [freq] = ft_freqanalysis(cfg, data)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % defaults for optional input/ouputfile
 if ~isfield(cfg, 'inputfile'),  cfg.inputfile               = [];    end

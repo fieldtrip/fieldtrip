@@ -72,7 +72,7 @@ function [cfg] = ft_rejectartifact(cfg,data)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 if 0
   % this code snippet ensures that these functions are included in the

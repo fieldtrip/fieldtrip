@@ -57,7 +57,7 @@ function neighbours = ft_neighbourselection(cfg,data)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'feedback'),       cfg.feedback = 'no';   end

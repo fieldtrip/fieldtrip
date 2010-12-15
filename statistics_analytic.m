@@ -58,7 +58,7 @@ function [stat, cfg] = statistics_analytic(cfg, dat, design);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'correctm'), cfg.correctm = 'no'; end

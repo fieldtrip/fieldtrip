@@ -31,7 +31,7 @@ function [atlas] = ft_prepare_atlas(filename)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 useafni = 0;
 usewfu  = 0;

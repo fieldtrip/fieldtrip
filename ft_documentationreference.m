@@ -23,7 +23,7 @@ function ft_documentationreference(outdir)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 p = fileparts(which(mfilename));
 

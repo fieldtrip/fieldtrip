@@ -36,7 +36,7 @@ function [data] = ft_appendspike(cfg, varargin);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 isspike = zeros(size(varargin));
 for i=1:length(varargin)

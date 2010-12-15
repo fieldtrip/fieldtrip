@@ -69,7 +69,7 @@ function ft_volumewrite(cfg, volume)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 %% ft_checkdata see below!!! %%
 

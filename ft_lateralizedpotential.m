@@ -59,7 +59,7 @@ function lrp = ft_lateralizedpotential(cfg, avgL, avgR);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'inputfile'),  cfg.inputfile                   = [];    end

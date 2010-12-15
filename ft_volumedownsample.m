@@ -36,7 +36,7 @@ function [down] = ft_volumedownsample(cfg, source);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 %% ft_checkdata see below!!! %%
 

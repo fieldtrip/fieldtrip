@@ -59,7 +59,7 @@ function [cfg, artifact] = ft_artifact_manual(cfg);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');

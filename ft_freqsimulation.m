@@ -148,7 +148,7 @@ function [data] = ft_freqsimulation(cfg)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set defaults
 if ~isfield(cfg, 'method'),        cfg.method = 'phalow_amphigh';         end

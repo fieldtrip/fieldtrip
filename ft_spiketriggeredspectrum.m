@@ -45,7 +45,7 @@ function [freq] = ft_spiketriggeredspectrum(cfg, data)
 % fft_along_rows subfunction below demonstrates the expected function
 % behaviour.
 
-fieldtripdefs
+ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'timwin'),       cfg.timwin = [-0.1 0.1];    end

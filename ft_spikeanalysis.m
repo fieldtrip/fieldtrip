@@ -54,7 +54,7 @@ function [spike] = ft_spikeanalysis(cfg, data);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'method'),       cfg.method = 'rate';             end

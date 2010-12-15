@@ -83,7 +83,7 @@ function [segment] = ft_volumesegment(cfg, mri)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 

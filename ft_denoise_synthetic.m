@@ -37,7 +37,7 @@ function [data] = ft_denoise_synthetic(cfg, data);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'gradient'),   error('cfg.gradient must be specified'); end

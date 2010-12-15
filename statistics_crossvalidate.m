@@ -44,7 +44,7 @@ function stat = statistics_crossvalidate(cfg, dat, design)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % specify classification procedure
 if isfield(cfg,'cv')

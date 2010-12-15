@@ -46,7 +46,7 @@ function [vol, cfg] = ft_prepare_bemmodel(cfg, mri)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 if ~isfield(cfg, 'tissue'),         cfg.tissue = [8 12 14];                  end
 if ~isfield(cfg, 'numvertices'),    cfg.numvertices = [1 2 3] * 500;         end

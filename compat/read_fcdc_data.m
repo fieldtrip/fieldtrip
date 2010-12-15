@@ -6,7 +6,7 @@ function [dat] = read_fcdc_data(filename, header, begsample, endsample, chanindx
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-fieldtripdefs
+ft_defaults
 
 warning('this function is deprecated, please use the read_data function instead');
 

@@ -66,7 +66,7 @@ function [channel] = ft_channelselection(channel, datachannel)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 if length(datachannel)~=length(unique(datachannel))
   error('data with non-unique channel names is not supported');

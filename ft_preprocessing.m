@@ -169,7 +169,7 @@ function [dataout] = ft_preprocessing(cfg, data)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 if nargin==0
   help(mfilename);

@@ -51,7 +51,7 @@ function cfg = ft_topoplotCC(cfg, freq)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 
 % check if the input data is valid for this function

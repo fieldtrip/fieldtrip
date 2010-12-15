@@ -69,7 +69,7 @@ function [ev] = ft_recodeevent(cfg, event, trl)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'eventtype'),  cfg.eventtype   = [];             end

@@ -37,7 +37,7 @@ function ft_multiplotCC(cfg, data)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 if ~isfield(cfg, 'layout'),    cfg.layout = 'CTF151s.lay';       end;
 if ~isfield(cfg, 'xparam'),    cfg.xparam = 'foi';               end;

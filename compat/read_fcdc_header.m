@@ -6,7 +6,7 @@ function [hdr] = read_fcdc_header(filename)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-fieldtripdefs
+ft_defaults
 
 warning('this function is deprecated, please use the read_header function instead');
 

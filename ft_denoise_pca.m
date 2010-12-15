@@ -39,7 +39,7 @@ function [data, pca, stdpre, stdpst] = ft_denoise_pca(cfg, varargin)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});

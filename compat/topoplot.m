@@ -120,7 +120,7 @@ function [handle] = topoplot(varargin)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 
 % deprecation warning

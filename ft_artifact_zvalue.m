@@ -84,7 +84,7 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg,data)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set default rejection parameters
 if ~isfield(cfg,'artfctdef'),                   cfg.artfctdef                    = [];       end

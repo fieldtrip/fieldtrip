@@ -28,7 +28,7 @@ function data = ft_spikesimulation(cfg)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'trlduration'),  cfg.trlduration = 1; end %  in seconds

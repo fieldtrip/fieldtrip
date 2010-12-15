@@ -101,7 +101,7 @@ function [outim]=ft_sliceinterp(cfg, ininterp)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % check if the input data is valid for this function
 ininterp = ft_checkdata(ininterp, 'datatype', 'volume', 'feedback', 'yes');

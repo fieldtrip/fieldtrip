@@ -83,7 +83,7 @@ function [cfg] = ft_definetrial(cfg);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');

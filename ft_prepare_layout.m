@@ -67,7 +67,7 @@ function [lay] = ft_prepare_layout(cfg, data);
 % Undocumented option:
 % cfg.layout can contain a lay structure which is simply returned as is
 
-fieldtripdefs
+ft_defaults
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % basic check/initialization of input arguments

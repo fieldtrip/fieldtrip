@@ -46,7 +46,7 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set defaults
 if ~isfield(cfg, 'component'), cfg.component = [];      end

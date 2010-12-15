@@ -71,7 +71,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set defaults for optional cfg.input and or cfg.outputfile
 if ~isfield(cfg, 'inputfile'),       cfg.inputfile = [];               end

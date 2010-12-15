@@ -65,7 +65,7 @@ function [data] = ft_resampledata(cfg, data)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});

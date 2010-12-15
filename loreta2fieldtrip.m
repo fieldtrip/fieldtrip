@@ -33,7 +33,7 @@ function [source] = loreta2fieldtrip(filename, varargin)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % get the optional input arguments
 timeframe  =  keyval('timeframe', varargin); % will be empty if not specified

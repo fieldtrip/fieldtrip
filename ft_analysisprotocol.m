@@ -71,7 +71,7 @@ persistent branch  % this corresponds to the horizontal direction in the figure
 persistent parent
 persistent info
 
-fieldtripdefs
+ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'filename'),    cfg.filename    = [];   end

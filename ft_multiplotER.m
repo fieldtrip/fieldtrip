@@ -102,7 +102,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 

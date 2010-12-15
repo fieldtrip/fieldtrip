@@ -104,7 +104,7 @@ function [grid, cfg] = ft_prepare_leadfield(cfg, data)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

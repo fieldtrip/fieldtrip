@@ -56,7 +56,7 @@ function [cfg] = surfaceplot(cfg, vol, surf)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'funparameter'),   error('cfg.funparameter should be specified'); end

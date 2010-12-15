@@ -44,7 +44,7 @@ function [grandavg] = ft_freqgrandaverage(cfg, varargin);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 

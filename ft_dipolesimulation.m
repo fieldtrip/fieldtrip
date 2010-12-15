@@ -76,7 +76,7 @@ function [simulated] = ft_dipolesimulation(cfg)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'dip'),        cfg.dip = [];             end

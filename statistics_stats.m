@@ -43,7 +43,7 @@ function [stat, cfg] = statistics_stats(cfg, dat, design);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % test for the presence of the statistics toolbox
 hasstats = (exist('ttest') & exist('ttest2'));

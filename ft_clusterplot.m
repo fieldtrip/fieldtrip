@@ -54,7 +54,7 @@ function ft_clusterplot(cfg, stat)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % default for inputfile
 if ~isfield(cfg, 'inputfile'),  cfg.inputfile                   = [];    end

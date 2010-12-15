@@ -67,7 +67,7 @@ function [freq] = ft_freqanalysis_mtmfft_old(cfg, data);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 warning('this version of ft_freqanalysis_mtmfft is deprecated, it is no longer being maintained')
 
 

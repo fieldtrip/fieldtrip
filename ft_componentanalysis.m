@@ -57,7 +57,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set a timer to determine how long this function takes
 tic;

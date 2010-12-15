@@ -46,7 +46,7 @@ function [data] = ft_combineplanar(cfg, data)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'demean'),        cfg.demean         = 'no';       end

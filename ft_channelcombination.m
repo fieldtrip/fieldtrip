@@ -44,7 +44,7 @@ function [collect] = ft_channelcombination(channelcmb, datachannel, includeauto)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 if nargin==2,
   includeauto = 0;

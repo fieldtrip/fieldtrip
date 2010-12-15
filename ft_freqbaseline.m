@@ -36,7 +36,7 @@ function [freq] = ft_freqbaseline(cfg, freq)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 

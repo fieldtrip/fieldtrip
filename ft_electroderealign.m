@@ -103,7 +103,7 @@ function [norm] = ft_electroderealign(cfg)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % this is used for feedback of the lower-level functions
 global fb

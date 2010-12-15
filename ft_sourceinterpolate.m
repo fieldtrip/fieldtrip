@@ -50,7 +50,7 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 %% ft_checkdata see below!!! %%
 

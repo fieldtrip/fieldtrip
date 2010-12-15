@@ -72,7 +72,7 @@ function [scd] = ft_scalpcurrentdensity(cfg, data);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'method'),        cfg.method = 'spline';    end

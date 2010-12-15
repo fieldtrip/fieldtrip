@@ -23,7 +23,7 @@ function index = ft_documentationindex(filename)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 p = fileparts(which(mfilename));
 

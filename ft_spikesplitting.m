@@ -43,7 +43,7 @@ function [cfg] = ft_spikesplitting(cfg);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set the general defaults
 if ~isfield(cfg, 'dataset'),          cfg.dataset = [];                 end

@@ -83,7 +83,7 @@ function [cfg] = ft_spikedownsample(cfg)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the general defaults

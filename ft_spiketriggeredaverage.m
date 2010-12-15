@@ -39,7 +39,7 @@ function [timelock] = ft_spiketriggeredaverage(cfg, data)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'timwin'),       cfg.timwin = [-0.1 0.1];    end

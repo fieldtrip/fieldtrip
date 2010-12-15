@@ -38,7 +38,7 @@ function [timelock] = ft_timelockbaseline(cfg, timelock)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});

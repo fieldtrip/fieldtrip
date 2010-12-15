@@ -186,7 +186,7 @@ function [source] = ft_sourceanalysis(cfg, data, baseline);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % set a timer to determine how long the sourceanalysis takes in total
 tic;

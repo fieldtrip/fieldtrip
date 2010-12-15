@@ -59,7 +59,7 @@ function [vol, cfg] = ft_prepare_localspheres(cfg, mri)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 

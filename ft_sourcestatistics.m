@@ -63,7 +63,7 @@ function [stat] = ft_sourcestatistics(cfg, varargin)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % this wrapper should be compatible with the already existing statistical
 % functions that only work for source input data
