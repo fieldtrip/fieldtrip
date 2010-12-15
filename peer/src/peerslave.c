@@ -462,7 +462,9 @@ int main(int argc, char *argv[]) {
 						host->current.cpureq  = job->job->cpureq;
 
 						/* determine the maximum allowed job duration */
-						timallow = 2*(host->timavail+1);
+						timallow = 3*job->job->timreq;
+						if (host->timavail < timallow)
+								timallow = host->timavail;
 						pthread_mutex_unlock(&mutexhost);
 
 						/* inform the other peers of the updated status */
