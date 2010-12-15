@@ -29,7 +29,7 @@ function [cfg, artifact] = ft_artifact_manual(cfg);
 % Set to yes defines the time axes relative to trialstart. Set to no defines it
 % relative to the beginning of the experiment.
 %
-%   cfg.artfctdef.manual.blc       = 'no' (default) or 'yes' apply baseline correction
+%   cfg.artfctdef.manual.demean    = 'no' (default) or 'yes' apply baseline correction
 %   cfg.artfctdef.manual.bpfilter  = 'no' (default) or 'yes' apply bandpass filter
 %   cfg.artfctdef.manual.bpfreq    = [0.3 30] in Hz
 %   cfg.artfctdef.manual.bpfiltord = 2
@@ -84,6 +84,8 @@ if isfield(cfg.artfctdef.manual,'sgn')
   cfg.artfctdef.manual.channel = cfg.artfctdef.manual.sgn;
   cfg.artfctdef.manual         = rmfield(cfg.artfctdef.manual, 'sgn');
 end
+cfg.artfctdef = ft_checkconfig(cfg.artfctdef, 'renamed',    {'blc', 'demean'});
+cfg.artfctdef = ft_checkconfig(cfg.artfctdef, 'renamed',    {'blcwindow' 'baselinewindow'});
 
 if ~isfield(cfg.artfctdef.manual,'channel'),
   % set an unusual default because all crashes the program.

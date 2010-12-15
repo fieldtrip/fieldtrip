@@ -138,7 +138,9 @@ while interactive
       figure
       % the data being displayed here is NOT filtered
       %plot(data.time{toggle(i)}, data.trial{toggle(i)}(chansel,:));
-      plot(data.time{toggle(i)}, blc(data.trial{toggle(i)}(chansel,:)));
+      tmp = data.trial{toggle(i)}(chansel,:);
+      tmp = tmp - repmat(mean(tmp,2), [1 size(tmp,2)]);
+      plot(data.time{toggle(i)}, tmp);
       title(sprintf('trial %d', toggle(i)));
     end
     continue;

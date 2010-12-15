@@ -1,4 +1,4 @@
-function [timelock] = ft_timelockbaseline(cfg, timelock);
+function [timelock] = ft_timelockbaseline(cfg, timelock)
 
 % FT_TIMELOCKBASELINE performs baseline correction for ERF and ERP data
 %
@@ -12,7 +12,7 @@ function [timelock] = ft_timelockbaseline(cfg, timelock);
 % See also FT_TIMELOCKANALYSIS, FT_FREQBASELINE
 
 % Undocumented local options:
-%   cfg.blcwindow
+%   cfg.baselinewindow
 %   cfg.previous
 %   cfg.version
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
@@ -41,6 +41,8 @@ function [timelock] = ft_timelockbaseline(cfg, timelock);
 fieldtripdefs
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
+cfg = ft_checkconfig(cfg, 'renamed', {'blcwindow', 'baselinewindow'});
 
 % set the defaults
 if ~isfield(cfg, 'baseline'),   cfg.baseline    = 'no';   end
@@ -64,16 +66,16 @@ timelock = ft_checkdata(timelock, 'datatype', 'timelock', 'feedback', 'yes');
 % the cfg.blc/blcwindow options are used in preprocessing and in
 % ft_timelockanalysis (i.e. in private/preproc), hence make sure that
 % they can also be used here for consistency
-if isfield(cfg, 'baseline') && (isfield(cfg, 'blc') || isfield(cfg, 'blcwindow'))
+if isfield(cfg, 'baseline') && (isfield(cfg, 'demean') || isfield(cfg, 'baselinewindow'))
   error('conflicting configuration options, you should use cfg.baseline');
-elseif isfield(cfg, 'blc') && strcmp(cfg.blc, 'no')
+elseif isfield(cfg, 'demean') && strcmp(cfg.demean, 'no')
   cfg.baseline = 'no';
-  cfg = rmfield(cfg, 'blc');
-  cfg = rmfield(cfg, 'blcwindow');
-elseif isfield(cfg, 'blc') && strcmp(cfg.blc, 'yes')
-  cfg.baseline = cfg.blcwindow;
-  cfg = rmfield(cfg, 'blc');
-  cfg = rmfield(cfg, 'blcwindow');
+  cfg = rmfield(cfg, 'demean');
+  cfg = rmfield(cfg, 'baselinewindow');
+elseif isfield(cfg, 'demean') && strcmp(cfg.demean, 'yes')
+  cfg.baseline = cfg.baselinewindow;
+  cfg = rmfield(cfg, 'demean');
+  cfg = rmfield(cfg, 'baselinewindow');
 end
 
 if ischar(cfg.baseline)

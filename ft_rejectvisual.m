@@ -76,8 +76,8 @@ function [data] = ft_rejectvisual(cfg, data);
 %
 % This function depends on PREPROC which has the following options:
 % cfg.absdiff
-% cfg.blc
-% cfg.blcwindow
+% cfg.demean
+% cfg.baselinewindow
 % cfg.boxcar
 % cfg.bpfilter
 % cfg.bpfiltord

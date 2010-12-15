@@ -9,7 +9,7 @@ function [data] = ft_resampledata(cfg, data)
 % the FT_PREPROCESSING function. The configuration should contain
 %   cfg.resamplefs = frequency at which the data will be resampled (default = 256 Hz)
 %   cfg.detrend    = 'no' or 'yes', detrend the data prior to resampling (no default specified, see below)
-%   cfg.blc        = 'no' or 'yes', baseline correct the data prior to resampling (default = 'no')
+%   cfg.demean     = 'no' or 'yes', baseline correct the data prior to resampling (default = 'no')
 %   cfg.feedback   = 'no', 'text', 'textbar', 'gui' (default = 'text')
 %   cfg.trials     = 'all' or a selection given as a 1xN vector (default = 'all')
 %
@@ -68,12 +68,13 @@ function [data] = ft_resampledata(cfg, data)
 fieldtripdefs
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
 
 % set the defaults
 if ~isfield(cfg, 'resamplefs'), cfg.resamplefs = [];      end
 if ~isfield(cfg, 'time'),       cfg.time       = {};      end
 if ~isfield(cfg, 'detrend'),    cfg.detrend    = [];      end  % no default to enforce people to consider backward compatibility problem, see below
-if ~isfield(cfg, 'blc'),        cfg.blc        = 'no';    end
+if ~isfield(cfg, 'demean'),     cfg.demean     = 'no';    end
 if ~isfield(cfg, 'feedback'),   cfg.feedback   = 'text';  end
 if ~isfield(cfg, 'trials'),     cfg.trials     = 'all';   end
 if ~isfield(cfg, 'method'),     cfg.method     = 'pchip'; end  % interpolation method
@@ -167,7 +168,7 @@ if usefsample
   
   for itr = 1:ntr
     ft_progress(itr/ntr, 'resampling data in trial %d from %d\n', itr, ntr);
-    if strcmp(cfg.blc,'yes')
+    if strcmp(cfg.demean,'yes')
       data.trial{itr} = ft_preproc_baselinecorrect(data.trial{itr});
     end
     if strcmp(cfg.detrend,'yes')
@@ -209,7 +210,7 @@ elseif usetime
   ft_progress('init', cfg.feedback, 'resampling data');
   for itr = 1:ntr
     ft_progress(itr/ntr, 'resampling data in trial %d from %d\n', itr, ntr);
-    if strcmp(cfg.blc,'yes')
+    if strcmp(cfg.demean,'yes')
       data.trial{itr} = ft_preproc_baselinecorrect(data.trial{itr});
     end
     if strcmp(cfg.detrend,'yes')

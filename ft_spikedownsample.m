@@ -58,8 +58,8 @@ function [cfg] = ft_spikedownsample(cfg)
 %   cfg.preproc.hpfiltdir     = filter direction, 'twopass' (default) or 'onepass'
 %   cfg.preproc.bpfiltdir     = filter direction, 'twopass' (default) or 'onepass'
 %   cfg.preproc.detrend       = 'no' or 'yes'
-%   cfg.preproc.blc           = 'no' or 'yes'
-%   cfg.preproc.blcwindow     = [begin end] in seconds, the default is the complete trial
+%   cfg.preproc.demean        = 'no' or 'yes'
+%   cfg.preproc.baselinewindow = [begin end] in seconds, the default is the complete trial
 %   cfg.preproc.hilbert       = 'no' or 'yes'
 %   cfg.preproc.rectify       = 'no' or 'yes'
 
@@ -113,6 +113,8 @@ cfg = ft_checkconfig(cfg, 'forbidden', {'ADtoUV'});
 
 % ensure that the preproc specific options are located in the preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
+cfg.preproc = ft_checkconfig(cfg.preproc, 'renamed', {'blc', 'demean'});
+cfg.preproc = ft_checkconfig(cfg.preproc, 'renamed', {'blcwindow', 'baselinewindow'});
 
 status = mkdir(cfg.output);
 if ~status

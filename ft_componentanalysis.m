@@ -13,7 +13,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.channel      = cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.numcomponent = 'all' or number (default = 'all')
-%   cfg.blc          = 'no' or 'yes' (default = 'yes')
+%   cfg.demean       = 'no' or 'yes' (default = 'yes')
 %   cfg.runica       = substructure with additional low-level options for this method
 %   cfg.binica       = substructure with additional low-level options for this method
 %   cfg.dss          = substructure with additional low-level options for this method
@@ -65,10 +65,11 @@ tic;
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'forbidden', {'detrend'});
+cfg = ft_checkconfig(cfg, 'renamed',   {'blc', 'demean'});
 
 % set the defaults
 if ~isfield(cfg, 'method'),        cfg.method  = 'runica';     end
-if ~isfield(cfg, 'blc'),           cfg.blc     = 'yes';        end
+if ~isfield(cfg, 'demean'),        cfg.demean  = 'yes';        end
 if ~isfield(cfg, 'trials'),        cfg.trials  = 'all';        end
 if ~isfield(cfg, 'channel'),       cfg.channel = 'all';        end
 if ~isfield(cfg, 'numcomponent'),  cfg.numcomponent = 'all';   end
@@ -107,7 +108,7 @@ if isfield(cfg, 'topo') && isfield(cfg, 'topolabel')
   
   % remove all cfg settings  that do not apply
   tmpcfg              = [];
-  tmpcfg.blc          = cfg.blc;
+  tmpcfg.demean       = cfg.demean;
   tmpcfg.trials       = cfg.trials;
   tmpcfg.topo         = cfg.topo;        % the MxN mixing matrix (M channels, N components)
   tmpcfg.topolabel    = cfg.topolabel;   % the Mx1 labels of the data that was used in determining the mixing matrix
@@ -174,7 +175,7 @@ for trial=1:Ntrials
   Nsamples(trial) = size(data.trial{trial},2);
 end
 
-if strcmp(cfg.blc, 'yes')
+if strcmp(cfg.demean, 'yes')
   % optionally perform baseline correction on each trial
   fprintf('baseline correcting data \n');
   for trial=1:Ntrials

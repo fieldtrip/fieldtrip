@@ -9,8 +9,8 @@ function [data] = ft_combineplanar(cfg, data)
 % where data contains an averaged planar gradient (either ERF or TFR).
 %
 % In the case of ERFs, the configuration can contain
-%   cfg.blc       = 'yes' or 'no' (default)
-%   cfg.blcwindow = [begin end]
+%   cfg.demean         = 'yes' or 'no' (default)
+%   cfg.baselinewindow = [begin end]
 %
 % After combining the planar data, the planar gradiometer definition does not
 % match the data any more and therefore it is removed from the data. With
@@ -20,7 +20,6 @@ function [data] = ft_combineplanar(cfg, data)
 % See also FT_MEGPLANAR
 
 % Undocumented local options:
-% cfg.baseline
 % cfg.combinemethod
 % cfg.foilim
 % cfg.trials
@@ -50,9 +49,9 @@ function [data] = ft_combineplanar(cfg, data)
 fieldtripdefs
 
 % set the defaults
-if ~isfield(cfg, 'blc'),           cfg.blc            = 'no';       end
+if ~isfield(cfg, 'demean'),        cfg.demean         = 'no';       end
 if ~isfield(cfg, 'foilim'),        cfg.foilim         = [-inf inf]; end
-if ~isfield(cfg, 'blcwindow'),     cfg.blcwindow      = [-inf inf]; end
+if ~isfield(cfg, 'baselinewindow'), cfg.baselinewindow = [-inf inf]; end
 if ~isfield(cfg, 'combinemethod'), cfg.combinemethod  = 'sum';      end
 if ~isfield(cfg, 'trials'),        cfg.trials         = 'all';      end
 if ~isfield(cfg, 'feedback'),      cfg.feedback       = 'none';     end
@@ -73,13 +72,15 @@ end
 data = ft_checkdata(data, 'datatype', {'raw', 'freq', 'timelock'}, 'feedback', 'yes', 'senstype', {'ctf151_planar', 'ctf275_planar', 'neuromag122', 'neuromag306', 'bti248_planar', 'bti148_planar', 'itab153_planar'});
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-cfg = ft_checkconfig(cfg, 'forbidden', {'combinegrad'});
-cfg = ft_checkconfig(cfg, 'deprecated', {'baseline'});
+cfg = ft_checkconfig(cfg, 'forbidden',   {'combinegrad'});
+cfg = ft_checkconfig(cfg, 'deprecated',  {'baseline'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'blc', 'demean'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', baselinewindow'});
 
 if isfield(cfg, 'baseline')
   warning('only supporting cfg.baseline for backwards compatibility, please update your cfg');
-  cfg.blc       = 'yes';
-  cfg.blcwindow = cfg.baseline;
+  cfg.demean         = 'yes';
+  cfg.baselinewindow = cfg.baseline;
 end
 
 israw      = ft_datatype(data, 'raw');
@@ -113,19 +114,19 @@ lab_other = data.label(sel_other);
 lab_comb          = planar(sel_planar,3);
 
 % perform baseline correction
-if strcmp(cfg.blc, 'yes')
+if strcmp(cfg.demean, 'yes')
   if ~(istimelock || israw)
     error('baseline correction is only supported for timelocked or raw input data')
   end
-  if ischar(cfg.blcwindow) && strcmp(cfg.blcwindow, 'all')
-    cfg.blcwindow = [-inf inf];
+  if ischar(cfg.baselinewindow) && strcmp(cfg.baselinewindow, 'all')
+    cfg.baselinewindow = [-inf inf];
   end
   % find the timebins corresponding to the baseline interval
-  tbeg = nearest(data.time, cfg.blcwindow(1));
-  tend = nearest(data.time, cfg.blcwindow(2));
-  cfg.blcwindow(1) = data.time(tbeg);
-  cfg.blcwindow(2) = data.time(tend);
-  data.avg = blc(data.avg, tbeg, tend);
+  tbeg = nearest(data.time, cfg.baselinewindow(1));
+  tend = nearest(data.time, cfg.baselinewindow(2));
+  cfg.baselinewindow(1) = data.time(tbeg);
+  cfg.baselinewindow(2) = data.time(tend);
+  data.avg = ft_preproc_baselinecorrect(data.avg, tbeg, tend);
 end
 
 if isfreq

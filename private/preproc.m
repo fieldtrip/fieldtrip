@@ -1,4 +1,4 @@
-function [dat, label, time, cfg] = preproc(dat, label, fsample, cfg, offset, begpadding, endpadding);
+function [dat, label, time, cfg] = preproc(dat, label, fsample, cfg, offset, begpadding, endpadding)
 
 % PREPROC applies various preprocessing steps on a piece of EEG/MEG data
 % that already has been read from a data file.
@@ -73,8 +73,8 @@ function [dat, label, time, cfg] = preproc(dat, label, fsample, cfg, offset, beg
 %   cfg.hpfiltdir     = filter direction, 'twopass' (default), 'onepass' or 'onepass-reverse'
 %   cfg.bpfiltdir     = filter direction, 'twopass' (default), 'onepass' or 'onepass-reverse'
 %   cfg.bsfiltdir     = filter direction, 'twopass' (default), 'onepass' or 'onepass-reverse'
-%   cfg.blc           = 'no' or 'yes'
-%   cfg.blcwindow     = [begin end] in seconds, the default is the complete trial
+%   cfg.demean        = 'no' or 'yes'
+%   cfg.baselinewindow = [begin end] in seconds, the default is the complete trial
 %   cfg.detrend       = 'no' or 'yes', this is done on the complete trial
 %   cfg.polyremoval   = 'no' or 'yes', this is done on the complete trial
 %   cfg.polyorder     = polynome order (default = 2)
@@ -113,6 +113,8 @@ function [dat, label, time, cfg] = preproc(dat, label, fsample, cfg, offset, beg
 %
 % $Id$
 
+
+
 if nargin<5 || isempty(offset)
   offset = 0;
 end
@@ -145,6 +147,12 @@ if iscell(cfg)
   return
 end
 
+% this is for backward compatibility related to the renaming of blc into
+% demean, and blcwindow into baselinewindow. to avoid having to create an
+% svn external for ft_checkconfig in fieldtrip/private, do the check
+% manually
+if isfield(cfg, 'blc'),       cfg.demean         = cfg.blc;       cfg = rmfield(cfg, 'blc'); end
+if isfield(cfg, 'blcwindow'), cfg.baselinewindow = cfg.blcwindow; cfg = rmfield(cfg, 'blcwindow'); end
 % set the defaults for the rereferencing options
 if ~isfield(cfg, 'reref'),        cfg.reref = 'no';             end
 if ~isfield(cfg, 'refchannel'),   cfg.refchannel = {};          end
@@ -153,8 +161,8 @@ if ~isfield(cfg, 'implicitref'),  cfg.implicitref = [];         end
 if ~isfield(cfg, 'polyremoval'),  cfg.polyremoval = 'no';       end
 if ~isfield(cfg, 'polyorder'),    cfg.polyorder = 2;            end
 if ~isfield(cfg, 'detrend'),      cfg.detrend = 'no';           end
-if ~isfield(cfg, 'blc'),          cfg.blc = 'no';               end
-if ~isfield(cfg, 'blcwindow'),    cfg.blcwindow = 'all';        end
+if ~isfield(cfg, 'demean'),       cfg.demean  = 'no';           end
+if ~isfield(cfg, 'baselinewindow'), cfg.baselinewindow = 'all'; end
 if ~isfield(cfg, 'dftfilter'),    cfg.dftfilter = 'no';         end
 if ~isfield(cfg, 'lpfilter'),     cfg.lpfilter = 'no';          end
 if ~isfield(cfg, 'hpfilter'),     cfg.hpfilter = 'no';          end
@@ -174,7 +182,7 @@ if ~isfield(cfg, 'bpfiltdir'),    cfg.bpfiltdir = 'twopass';    end
 if ~isfield(cfg, 'bsfiltdir'),    cfg.bsfiltdir = 'twopass';    end
 if ~isfield(cfg, 'medianfilter'), cfg.medianfilter  = 'no';     end
 if ~isfield(cfg, 'medianfiltord'),cfg.medianfiltord = 9;        end
-if ~isfield(cfg, 'dftfreq')       cfg.dftfreq = [50 100 150];   end
+if ~isfield(cfg, 'dftfreq'),      cfg.dftfreq = [50 100 150];   end
 if ~isfield(cfg, 'hilbert'),      cfg.hilbert = 'no';           end
 if ~isfield(cfg, 'derivative'),   cfg.derivative = 'no';        end
 if ~isfield(cfg, 'rectify'),      cfg.rectify = 'no';           end
@@ -300,23 +308,23 @@ if strcmp(cfg.detrend, 'yes')
   endsample = nsamples - endpadding;
   dat = ft_preproc_detrend(dat, begsample, endsample);
 end
-if strcmp(cfg.blc, 'yes') || nargout>2
+if strcmp(cfg.demean, 'yes') || nargout>2
   % determine the complete time axis for the baseline correction
   % but only construct it when really needed, since it takes up a large amount of memory
   % the time axis should include the filter padding
   nsamples = size(dat,2);
   time = (offset - begpadding + (0:(nsamples-1)))/fsample;
 end
-if strcmp(cfg.blc, 'yes')
-  if isstr(cfg.blcwindow) && strcmp(cfg.blcwindow, 'all')
+if strcmp(cfg.demean, 'yes')
+  if ischar(cfg.baselinewindow) && strcmp(cfg.baselinewindow, 'all')
     % the begin and endsample of the baseline period correspond to the complete data minus padding
     begsample = 1        + begpadding;
     endsample = nsamples - endpadding;
     dat       = ft_preproc_baselinecorrect(dat, begsample, endsample);
   else
     % determine the begin and endsample of the baseline period and baseline correct for it
-    begsample = nearest(time, cfg.blcwindow(1));
-    endsample = nearest(time, cfg.blcwindow(2));
+    begsample = nearest(time, cfg.baselinewindow(1));
+    endsample = nearest(time, cfg.baselinewindow(2));
     dat       = ft_preproc_baselinecorrect(dat, begsample, endsample);
   end
 end
@@ -343,7 +351,7 @@ if isnumeric(cfg.boxcar)
   dat = convn(dat, kernel, 'same');
 end
 if isnumeric(cfg.conv)
-  kernel = [cfg.conv(:)'./sum(cfg.conv)];
+  kernel = (cfg.conv(:)'./sum(cfg.conv));
   if ~rem(length(kernel),2)
     kernel = [kernel 0];
   end
@@ -372,7 +380,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if begpadding~=0 || endpadding~=0
   dat = dat(:, (1+begpadding):(end-endpadding));
-  if strcmp(cfg.blc, 'yes') || nargout>2
+  if strcmp(cfg.demean, 'yes') || nargout>2
     time = time((1+begpadding):(end-endpadding));
   end
 end

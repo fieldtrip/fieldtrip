@@ -814,9 +814,25 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'loreta', 'rv
       dip(i).inside  = tmpdip.inside;
       dip(i).outside = tmpdip.outside;
       dip(i).mom     = cell(1,size(tmpdip.pos,1));
+      dip(i).cov     = cell(1,size(tmpdip.pos,1));
+      dip(i).pow     = zeros(size(tmpdip.pos,1),1)*nan;
       for ii=1:length(tmpdip.inside)
         indx             = tmpdip.inside(ii);
-        dip(i).mom{indx} = reshape(tmpdip.mom{indx}(i,:,:),[sizmom(1) siz(3)]);
+        tmpmom           = reshape(tmpdip.mom{indx}(i,:,:),[sizmom(1) siz(3)]);
+        dip(i).mom{indx} = tmpmom;
+       
+        % the following recovers the single trial power and covariance, but
+        % importantly the latency over which the power is defined is the
+        % latency of the event-related field in the input and not the
+        % latency of the covariance window, which can differ from the
+        % former
+        dip(i).cov{indx} = (tmpmom*tmpmom')./siz(3);
+        if isempty(cfg.lcmv.powmethod) || strcmp(cfg.lcmv.powmethod, 'trace')
+          dip(i).pow(indx) = trace(dip(i).cov{indx});
+        else
+          [tmpu,tmps,tmpv] = svd(dip(i).cov{indx});
+          dip(i).pow(indx) = tmps(1);
+        end
       end
     end
   elseif strcmp(cfg.method, 'sam')

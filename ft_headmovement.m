@@ -60,7 +60,7 @@ tmpcfg.channel      = {'HLC0011' 'HLC0012' 'HLC0013'...
 tmpcfg.continuous   = 'yes';
 data                = ft_preprocessing(tmpcfg);
 
-%resample doesn't work, because data will be blc'ed
+%resample doesn't work, because data will be demeaned
 %tmpcfg              = [];
 %tmpcfg.resamplefs   = 100;
 %data                = resampledata(tmpcfg, data);

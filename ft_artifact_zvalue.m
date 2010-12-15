@@ -57,8 +57,8 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg,data)
 %   cfg.artfctdef.zvalue.hpfilttype    = digital filter type, 'but' (default) or 'fir'
 %   cfg.artfctdef.zvalue.bpfilttype    = digital filter type, 'but' (default) or 'fir'
 %   cfg.artfctdef.zvalue.detrend       = 'no' or 'yes'
-%   cfg.artfctdef.zvalue.blc           = 'no' or 'yes'
-%   cfg.artfctdef.zvalue.blcwindow     = [begin end] in seconds, the default is the complete trial
+%   cfg.artfctdef.zvalue.demean        = 'no' or 'yes'
+%   cfg.artfctdef.zvalue.baselinewindow = [begin end] in seconds, the default is the complete trial
 %   cfg.artfctdef.zvalue.hilbert       = 'no' or 'yes'
 %   cfg.artfctdef.zvalue.rectify       = 'no' or 'yes'
 %
@@ -97,6 +97,8 @@ if isfield(cfg.artfctdef.zvalue,'sgn')
   cfg.artfctdef.zvalue.channel = cfg.artfctdef.zvalue.sgn;
   cfg.artfctdef.zvalue         = rmfield(cfg.artfctdef.zvalue, 'sgn');
 end
+cfg.artfctdef = ft_checkconfig(cfg.artfctdef, 'renamed',    {'blc', 'demean'});
+cfg.artfctdef = ft_checkconfig(cfg.artfctdef, 'renamed',    {'blcwindow' 'baselinewindow'});
 
 if isfield(cfg.artfctdef.zvalue, 'artifact')
   fprintf('zvalue artifact detection has already been done, retaining artifacts\n');

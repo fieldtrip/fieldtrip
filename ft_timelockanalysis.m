@@ -45,13 +45,13 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 
 % This function depends on PREPROC which has the following options:
 % cfg.absdiff
-% cfg.blc
-% cfg.blcwindow
 % cfg.boxcar
 % cfg.bpfilter
 % cfg.bpfiltord
 % cfg.bpfilttype
 % cfg.bpfreq
+% cfg.demean
+% cfg.baselinewindow
 % cfg.derivative
 % cfg.detrend
 % cfg.dftfilter
@@ -124,6 +124,8 @@ data = ft_checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hastr
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'deprecated',  {'normalizecov', 'normalizevar'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'blc', 'demean'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', 'baselinewindow'});
 
 % convert average to raw data for convenience, the output will be an average again
 % the purpose of this is to allow for repeated baseline correction, filtering and other preproc options that timelockanalysis supports
@@ -422,7 +424,7 @@ dof = repmat(dof(:)', [nchan 1]);
 if (dof > 1)
   var = (ss - (s.^2)./dof) ./ (dof-1);
 else
-  var = 0;
+  var = zeros(size(avg));
 end
 
 % normalize the covariance over all trials by the total number of samples in all trials

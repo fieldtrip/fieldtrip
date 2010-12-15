@@ -111,7 +111,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 % This function depends on FT_TIMELOCKBASELINE which has the following options:
 % cfg.baseline, documented
 % cfg.channel
-% cfg.blcwindow
+% cfg.baselinewindow
 %
 % This function depends on FT_FREQBASELINE which has the following options:
 % cfg.baseline, documented

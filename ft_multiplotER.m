@@ -74,7 +74,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 % This function depends on FT_TIMELOCKBASELINE which has the following options:
 % cfg.baseline, documented
 % cfg.channel
-% cfg.blcwindow
+% cfg.baselinewindow
 % cfg.previous
 % cfg.version
 %

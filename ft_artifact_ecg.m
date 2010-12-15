@@ -67,6 +67,10 @@ if ~isfield(cfg.artfctdef.ecg,'mindist'), cfg.artfctdef.ecg.mindist  = 0.5;     
 if ~isfield(cfg, 'headerformat'),         cfg.headerformat           = [];            end
 if ~isfield(cfg, 'dataformat'),           cfg.dataformat             = [];            end
 
+cfg.artfctdef = ft_checkconfig(cfg.artfctdef, 'renamed',    {'blc', 'demean'});
+cfg.artfctdef = ft_checkconfig(cfg.artfctdef, 'renamed',    {'blcwindow' 'baselinewindow'});
+
+
 % for backward compatibility
 if isfield(cfg.artfctdef.ecg,'sgn')
   cfg.artfctdef.ecg.channel = cfg.artfctdef.ecg.sgn;
@@ -100,7 +104,7 @@ padsmp        = round(artfctdef.padding*hdr.Fs);
 ntrl          = size(trl,1);
 artfctdef.trl = trl;
 artfctdef.channel = ft_channelselection(artfctdef.channel, hdr.label);
-artfctdef.blc = 'yes';
+artfctdef.demean  = 'yes';
 sgnind        = match_str(hdr.label, artfctdef.channel);
 numecgsgn     = length(sgnind);
 fltpadding    = 0;
@@ -120,7 +124,7 @@ if ~isfield(cfg, 'continuous')
     end
 end
 
-% read in the ecg-channel and do blc and squaring
+% read in the ecg-channel and do demean and squaring
 if nargin==2,
   tmpcfg = [];
   tmpcfg.channel = artfctdef.channel;
