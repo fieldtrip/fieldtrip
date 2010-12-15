@@ -69,12 +69,21 @@ overlap   = round(cfg.overlap*hdr.Fs);
 % initialize some stuff
 cmin = -1;
 cmax =  1;
-recurz;
+clear recurz
+recurz; % initialize the persistent variables
+
 % open a new figure
 h = figure;
 
 prevSample  = 0;
 count       = 0;
+
+lay = ft_prepare_layout(cfg);
+[laysel, datsel] = match_str(lay.label, hdr.label);
+% get the 2D position of the channels
+x = lay.pos(laysel,1);
+y = lay.pos(laysel,2);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the general BCI loop where realtime incoming data is handled
@@ -119,6 +128,7 @@ while true
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     % put the data in a fieldtrip-like raw structure
+    data          = [];
     data.trial{1} = dat;
     data.time{1}  = offset2time(begsample, hdr.Fs, endsample-begsample+1);
     data.label    = hdr.label(chanindx);
@@ -126,7 +136,7 @@ while true
     data.fsample  = hdr.Fs;
 
     % apply preprocessing options
-    data.trial{1} = preproc(data.trial{1}, data.label, data.fsample, cfg);
+    data = ft_preprocessing(cfg, data);
 
     % estimate power
     powest = sum(data.trial{1}.^2, 2);
@@ -143,13 +153,10 @@ while true
     powest = recurz(powest);
 
     % plot the topography
-    tmpcfg            = [];
-    tmpcfg.layout     = lay;
-    tmpcfg.style      = 'straight';
-    tmpcfg.electrodes = 'off';
-    tmpcfg.update     = 'no';
-    tmpcfg.gridscale  = 35;
-    topoplot(tmpcfg, powest);
+    ft_plot_topo(x, y, powest(datsel), 'outline', lay.outline, 'mask', lay.mask);
+    hold on
+    plot(x, y, 'k.');
+    hold off
 
     c = caxis;
     cmin = min(cmin, c(1));
@@ -161,3 +168,58 @@ while true
 
   end % if enough new samples
 end % while true
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function time = offset2time(offset, fsample, nsamples);
+time = (offset + (0:(nsamples-1)))/fsample;
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION recursive computation of z-transformed data by means of persistent variables
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function z = recurz(x)
+
+persistent n
+persistent s
+persistent ss
+
+if nargin==0 || isempty(x)
+  % re-initialize
+  n  = [];
+  s  = [];
+  ss = [];
+  return
+end
+
+if isempty(n)
+  n = 1;
+else
+  n = n + 1;
+end
+
+if isempty(s)
+  s = x;
+else
+  s = s + x;
+end
+
+if isempty(ss)
+  ss = x.^2;
+else
+  ss = ss + x.^2;
+end
+
+if n==1
+  % standard deviation cannot be computed yet
+  z = zeros(size(x));
+elseif all(s(:)==ss(:))
+  % standard deviation is zero anyway
+  z = zeros(size(x));
+else
+  % compute standard deviation and z-transform of the input data
+  sd = sqrt((ss - (s.^2)./n) ./ (n-1));
+  z  = (x-s/n)./ sd;
+end
