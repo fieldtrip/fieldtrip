@@ -75,7 +75,7 @@ cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'forbidden',   {'combinegrad'});
 cfg = ft_checkconfig(cfg, 'deprecated',  {'baseline'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'blc', 'demean'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', baselinewindow'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', 'baselinewindow'});
 
 if isfield(cfg, 'baseline')
   warning('only supporting cfg.baseline for backwards compatibility, please update your cfg');
