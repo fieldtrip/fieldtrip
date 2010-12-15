@@ -1,4 +1,4 @@
-function vol = ft_headmodel_singleshell(geom, sens, ...)
+function vol = ft_headmodel_singleshell(geom, varargin)
 
 % FT_HEADMODEL_SINGLESHELL creates a volume conduction model of the
 % head for MEG based on a realistic shaped surface of the inside of
@@ -16,7 +16,12 @@ function vol = ft_headmodel_singleshell(geom, sens, ...)
 %   in realistic volume conductors", Phys Med Biol. 2003 Nov 21;48(22):3637-52.
 % 
 % Use as
-%   vol = ft_headmodel_singleshell(geom, sens, ...)
+%   vol = ft_headmodel_singleshell(geom, ...)
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
+vol      = geom;
+vol.type = 'nolte';
+if ~isfield(vol, 'unit')
+  vol = ft_estimate_units(vol);
+end
