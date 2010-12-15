@@ -99,7 +99,7 @@ function [stat, cfg] = statistics_montecarlo(cfg, dat, design, varargin)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',     {'factor',           'ivar'});
