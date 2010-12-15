@@ -144,26 +144,26 @@ cfg = ft_checkconfig(cfg, 'unused',  {'cohtargetchannel'});
 
 cla
 
-% Multiple data sets are not supported for topoplot:
-if length(varargin)>1
-  error('Multiple data sets are not supported for topoplotER/topoplotTFR.');
-end
-
 % set default for inputfile
 if ~isfield(cfg, 'inputfile'),  cfg.inputfile = [];    end
 
-hasdata = nargin>1;
-if ~isempty(cfg.inputfile) % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    for i=1:numel(cfg.inputfile)
-      varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets from array inputfile
-      data = varargin{i};
-    end
-  end
-else
+hasdata      = nargin>1;
+hasinputfile = ~isempty(cfg.inputfile); 
+
+if hasdata && hasinputfile
+  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+end
+
+% Multiple data sets are not supported for topoplot:
+if length(varargin)>1 || (iscell(cfg.inputfile) && numel(cfg.inputfile)>1)
+  error('Multiple data sets are not supported for topoplotER/topoplotTFR.');
+end
+
+if hasdata
   data = varargin{1};
+elseif hasinputfile
+  if iscell(cfg.inputfile), cfg.inputfile = cfg.inputfile{1}; end
+  data = loadvar(cfg.inputfile, 'data');
 end
 
 % For backward compatibility with old data structures:
