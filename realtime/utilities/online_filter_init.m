@@ -41,4 +41,16 @@ FM.B  = B;
 FM.A2 = A(2:end);
 FM.B1 = B(1);
 FM.B2 = B(2:end);
-FM.z = x*(ones(1,FM.N)/sum(B));
+
+% this would be for direct form II, but Matlab filter uses direct form II transpose
+% FM.z = x*(ones(1,FM.N)/sum(B));
+
+% there might be a faster way to compute this, but I can't think of any right now
+% M is the matrix that describes the evolution of the filter in a 2+N-dim space
+% composed of [output; delay states; input].
+% We want to find the delay states corresponding to constant input (=1).
+M = [[0; -A(2:end); 0],[eye(FM.N);zeros(2,FM.N)],[B;1]];
+n = null(M-eye(2+FM.N));  % = eigenvector of M corresponding to eigenvalue=1, that is n=M*n
+z = n(2:end-1);           % delay state part of it
+z = z*(1-B(1))/z(1);      % scale appropiately
+FM.z = x*z;
