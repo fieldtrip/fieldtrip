@@ -63,7 +63,7 @@ function [source] = ft_sourcedescriptives(cfg, source)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
