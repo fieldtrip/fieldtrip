@@ -219,13 +219,13 @@ status = (status~=0);
 if autoadd>0 && ~status
 
   % for core fieldtrip modules
-  prefix = fileparts(which('fieldtripdefs'));
+  prefix = fileparts(which('ft_defaults'));
   if ~status
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
 
   % for external fieldtrip modules
-  prefix = fullfile(fileparts(which('fieldtripdefs')), 'external');
+  prefix = fullfile(fileparts(which('ft_defaults')), 'external');
   if ~status
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
