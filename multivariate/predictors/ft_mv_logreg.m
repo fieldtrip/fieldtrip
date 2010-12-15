@@ -1,6 +1,6 @@
 classdef ft_mv_logreg < ft_mv_predictor
-% FT_MV_LOGREG logistic regression; various flavours using Mark Schmidt's L1General
-% package; elastic net implementation based on Friedman et al (but see
+% FT_MV_LOGREG logistic regression; various flavours
+% elastic net implementation based on Friedman et al (but see
 % ft_mv_glmnet for a faster implementation.
 %
 %   Copyright (c) 2010, Marcel van Gerven, Ali Bahramisharif
@@ -88,9 +88,7 @@ classdef ft_mv_logreg < ft_mv_predictor
         % uses kernel logistic regression with a linear kernel
         % see: ft_mv_klr
         
-        m = ft_mv_klr;
-        m = m.train(X,Y);
-        obj.weights = m.primal;
+        obj.weights = -logist2(Y-1,X);
         
       elseif obj.L1 == 0 && obj.L2 ~= 0
         % L2 regularized logistic regression

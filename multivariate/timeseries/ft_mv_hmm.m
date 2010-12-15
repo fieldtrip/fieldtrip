@@ -52,7 +52,7 @@ classdef ft_mv_hmm < ft_mv_timeseries
         for c=1:length(X)
           X{c} = X{c}';
           Y{c} = Y{c}';
-          nclasses = max(nclasses,max(Y{1}));        
+          nclasses = max(nclasses,max(Y{c}));        
         end
         nobs = size(X{1},1);        
       else
@@ -73,14 +73,16 @@ classdef ft_mv_hmm < ft_mv_timeseries
       
       % flip
       if iscell(X)
+        post = cell(size(X));
         for c=1:length(X)
-          X{c} = X{c}';
+          post{c} = obj.test(X{c});
         end
+        return
       else
         X = X';
       end
       
-      if ~isempty(X)      
+      if ~isempty(X)     
         B = mixgauss_prob(X, obj.mu, obj.Sigma);
       else
         B = ones(numel(obj.prior),size(X,2))/numel(obj.prior);

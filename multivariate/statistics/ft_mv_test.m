@@ -15,6 +15,7 @@ function [acc,sig,cv] = ft_mv_test(varargin)
 % 'validator' cross-validation object
 % 'metric'    decoding metric
 % 'sigtest'   significance test
+% 'compact'   only keep model (true)
 % 
 %
 % EXAMPLE:
@@ -32,6 +33,9 @@ function [acc,sig,cv] = ft_mv_test(varargin)
   end
   if ~isfield(S,'type')
     S.type = 'classification';
+  end
+  if ~isfield(S,'compact')
+    S.compact = true;
   end
   if ~isfield(S,'X') || ~isfield(S,'Y')
     
@@ -71,7 +75,7 @@ function [acc,sig,cv] = ft_mv_test(varargin)
   if ~isfield(S,'parallel'), S.parallel = false; end
   
   if ~isfield(S,'validator')
-     S.validator = ft_mv_crossvalidator('parallel',S.parallel,'balance',false,'mva',S.mva,'nfolds',S.nfolds,'verbose',true,'compact',true,'init',1);
+     S.validator = ft_mv_crossvalidator('parallel',S.parallel,'balance',false,'mva',S.mva,'nfolds',S.nfolds,'verbose',true,'compact',S.compact,'init',1);
   end
   
   if ~isfield(S,'metric')

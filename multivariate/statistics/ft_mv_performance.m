@@ -1,4 +1,17 @@
 function res = ft_mv_performance(design,post,metric)
+% FT_MV_PERFORMANCE computes performance for a certain design and posterior
+% given a particular metric.
+%
+% Supported metrics:
+% 'acuracy'
+% 'logprob'
+% 'correlation'
+% 'invresvar'
+% 'contingency'
+% 'cfmatrix'
+%
+%   Copyright (c) 2010, Marcel van Gerven
+%
 
 if isempty(metric)
   error('performance metric undefined');
