@@ -22,7 +22,7 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 %   [cfg] = ft_checkconfig(cfg, ...)
 %
 % The behaviour of checkconfig can be controlled by the following cfg options,
-% which can be set as global fieldtrip defaults (see FIELDTRIPDEFS):
+% which can be set as global fieldtrip defaults (see FT_DEFAULTS):
 %   cfg.checkconfig = 'pedantic', 'loose' or 'silent' (control the feedback behaviour of checkconfig)
 %   cfg.trackconfig = 'cleanup', 'report' or 'off'
 %   cfg.checksize   = number in bytes, can be inf (set max size allowed for output cfg fields)
@@ -39,7 +39,7 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 %   checksize       = 'yes', 'no'            % remove large fields from the cfg
 %   trackconfig     = 'on', 'off'            % start/end config tracking
 %
-% See also FT_CHECKDATA, FIELDTRIPDEFS
+% See also FT_CHECKDATA, FT_DEFAULTS
 
 % Copyright (C) 2007-2008, Robert Oostenveld, Saskia Haegens
 %
