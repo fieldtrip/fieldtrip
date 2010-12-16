@@ -20,7 +20,7 @@ endif
 
 CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3 -g
 
-all: thinkgear2ft $(SUFFIX) 
+all: thinkgear2ft$(SUFFIX) 
 
 serial.o: serial.c
 	gcc -c serial.c -I.
@@ -29,4 +29,4 @@ thinkgear2ft.o: thinkgear2ft.cc
 	g++ -c thinkgear2ft.cc $(CFLAGS)
 	
 thinkgear2ft$(SUFFIX): thinkgear2ft.o serial.o
-	g++ -o $@ $^ $(LDFLAGS) $(CFLAGS) $(CPPDIR)/SignalConfiguration.cc $(CPPDIR)/GdfWriter.o $(CPPDIR)/FtConnection.o $(CPPDIR)/StringServer.o
+	g++ -o $@ $^ $(CFLAGS) $(CPPDIR)/SignalConfiguration.cc $(CPPDIR)/GdfWriter.o $(CPPDIR)/FtConnection.o $(CPPDIR)/StringServer.o $(LDFLAGS)
