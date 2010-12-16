@@ -9,7 +9,7 @@
 #include <StringServer.h>
 
 #define NUMCHANS    7
-#define FSAMPLE     128.0
+#define FSAMPLE     256.0
 #define MAXBLOCK    20
 
 
@@ -148,10 +148,10 @@ int main(int argc, char *argv[]) {
 			for (int i=0;i<NUMCHANS;i++) {
 				short high = packet[2+i*2];
 				short low  = packet[3+i*2];
-				if (high & 0x10) {
-					low--;
+				if (high & 0x10 && low==3) {
+					low=2;
 				}
-				high &= 0x8F;
+				high &= 0x0F;
 				short val = (high << 8) | low;
 				dest[i] = val;
 			}
