@@ -57,7 +57,7 @@ n2  = length(sel2);
 if (n1+n2)<size(design,2) || (n1~=n2)
   error('Invalid specification of the design array.');
 end;
-nunits = max(design(cfg.uvar,:));
+nunits = length(design(cfg.uvar,:));
 df = nunits - 1;
 if nunits<2
     error('The data must contain at least two units (usually subjects).')
@@ -81,8 +81,8 @@ if strcmp(cfg.computestat,'yes')
     diffmat=zeros(nsmpls,nunits);
     diffmat=dat(:,poslabelsperunit(:,1))-dat(:,poslabelsperunit(:,2));
     % calculate the dependent samples t-statistics
-    avgdiff=mean(diffmat,2);
-    vardiff=var(diffmat,0,2);
+    avgdiff=nanmean(diffmat,2);
+    vardiff=nanvar(diffmat,0,2);
     s.stat=sqrt(nunits)*avgdiff./sqrt(vardiff);
 end;
 
