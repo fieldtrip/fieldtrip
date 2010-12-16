@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="9.00"
 	Name="tmsidriver"
 	ProjectGUID="{A49B0D74-5A19-490C-BF38-F643A9E61E5B}"
 	RootNamespace="tmsidriver"
 	Keyword="Win32Proj"
-	AssemblyReferenceSearchPaths="&quot;..\..\buffer\src&quot;"
+	AssemblyReferenceSearchPaths="..\..\buffer\src"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -41,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="%quot;$(ProjectDir)\..\..\buffer\pthreads-win32\include&quot;;&quot;$(ProjectDir)\..\..\buffer\src&quot;"
+				AdditionalIncludeDirectories="..\..\buffer\pthreads-win32\include;..\..\buffer\src"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_MSC_"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -67,10 +68,13 @@
 				AdditionalDependencies="ws2_32.lib pthreadVC2.lib libbuffer.lib"
 				ShowProgress="0"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="%quot;$(ProjectDir)\..\..\buffer\pthreads-win32\lib&quot;;&quot;$(ProjectDir)\..\..\buffer\src&quot;"
+				AdditionalLibraryDirectories="..\..\buffer\pthreads-win32\lib;..\..\buffer\src"
+				GenerateManifest="false"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
 				SubSystem="1"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 				ErrorReporting="0"
 			/>
@@ -91,9 +95,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -124,7 +125,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="%quot;$(ProjectDir)\..\..\buffer\pthreads-win32\include&quot;;&quot;$(ProjectDir)\..\..\buffer\src&quot;"
+				AdditionalIncludeDirectories="..\..\buffer\src;..\..\buffer\pthreads-win32\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -145,12 +146,14 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="ws2_32.lib pthreadVC2.lib libbuffer.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="%quot;$(ProjectDir)\..\..\buffer\pthreads-win32\lib&quot;;&quot;$(ProjectDir)\..\..\buffer\src&quot;"
+				AdditionalLibraryDirectories="..\..\buffer\src;..\..\buffer\pthreads-win32\lib"
 				IgnoreDefaultLibraryNames="LIBCMT.lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -170,9 +173,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
