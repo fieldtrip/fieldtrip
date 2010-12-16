@@ -77,15 +77,4 @@ switch type
     [B, A] = fir1(N, [min(Fbp)/Fn max(Fbp)/Fn]);
 end
 
-% apply filter to the data
-switch dir
-  case 'onepass'
-    filt = filter(B, A, dat')';
-  case 'onepass-reverse'
-    dat  = fliplr(dat);
-    filt = filter(B, A, dat')';
-    filt = fliplr(filt);
-  case 'twopass'
-    filt = filtfilt(B, A, dat')';
-end
-
+filt = filter_with_correction(B,A,dat,dir);
