@@ -20,8 +20,14 @@ classdef ft_mv_searchlight < ft_mv_selector
     neighbours            % a sparse adjacency matrix specifying the neighbourhood structure for irregular data (don't use in conjunction with mask)
     
     center = false;       % only selects center features if true
-    nspheres = 1;         % select the union of the best nspheres spheres
     compact = true;       % save validator if compact = false
+
+    nspheres = [];        % select the union of the best nspheres spheres; 
+                          % if empty then use the validator to compute the
+                          % best n; if array then test all values and
+                          % select best n
+
+    performance = [];     % performance as function of number of selected spheres (or sphere centers)
     
     centers               % centers of each sphere
     spheres               % the features belonging to each sphere
@@ -50,12 +56,15 @@ classdef ft_mv_searchlight < ft_mv_selector
         return;
       end
       
+      % dimensions are retrieved from optional mask
+      if ~isempty(obj.mask)
+        obj.indims = size(obj.mask);
+      end
+      
       % estimate spheres
       
       if isempty(obj.spheres)
-        
         [obj.centers,obj.spheres,obj.original] = obj.estimate_spheres();
-      
       end
       
       % test each sphere
@@ -87,7 +96,7 @@ classdef ft_mv_searchlight < ft_mv_selector
         if obj.verbose
           fprintf('performance for sphere %d of %d: %g (p-value: %g)\n',c,length(obj.spheres),obj.value(c),obj.pvalue(c));
         end
-
+        
         % save validator
         if ~obj.compact
           obj.vld{c} = vld;
@@ -95,13 +104,67 @@ classdef ft_mv_searchlight < ft_mv_selector
         
       end
       
+      % sort spheres according to performance
       [a,b] = sort(obj.value,'descend');
-      if obj.center
-        obj.subset = unique(subv2ind(obj.indims,obj.centers(b(1:obj.nspheres),:)));
-      else
-        obj.subset = unique(cell2mat(obj.spheres(b(1:obj.nspheres))));
+      
+      % use validator to compute best spheres
+      if isempty(obj.nspheres)
+        obj.nspheres = 1:length(obj.spheres);
       end
       
+      if length(obj.nspheres) > 1
+        
+        if obj.verbose
+          fprintf('determining optimal number of spheres\n');
+        end
+        
+        obj.performance = zeros(1,length(obj.nspheres));
+        for nn=1:length(obj.nspheres)
+          
+          n = obj.nspheres(nn);
+          
+          if obj.center
+            obj.subset = unique(subv2ind(obj.indims,obj.centers(b(1:n),:)));
+          else
+            obj.subset = unique(cell2mat(obj.spheres(b(1:n))));
+          end
+          
+          if iscell(X)
+            XX = cell(size(X));
+            for cc=1:length(X)
+              XX{cc} = X{c}(:,obj.subset);
+            end
+            v = obj.validator.train(XX,Y);
+          else
+            v = obj.validator.train(X(:,obj.subset),Y);
+          end
+          
+          obj.performance(n) = v.performance();
+          
+          if obj.verbose
+            fprintf('%d spheres : %f performance\n',n,obj.performance(nn));
+          end
+          
+        end
+        
+        [tmp,optn] = max(obj.performance);
+        
+        optn = obj.nspheres(optn);
+        
+      else
+        optn = obj.nspheres;
+      end
+      
+      % get final subset
+      if obj.center
+        obj.subset = unique(subv2ind(obj.indims,obj.centers(b(1:optn),:)));
+      else
+        obj.subset = unique(cell2mat(obj.spheres(b(1:optn))));
+      end
+      
+      if obj.verbose
+        fprintf('selected %d spheres\n',optn);
+      end
       
     end
     
@@ -109,7 +172,6 @@ classdef ft_mv_searchlight < ft_mv_selector
       
       % dimensions are retrieved from mask
       if ~isempty(obj.mask)
-        obj.indims = size(obj.mask);
         midx = find(obj.mask(:));
       end
       
