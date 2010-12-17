@@ -8,14 +8,14 @@
 PLATFORM = $(shell gcc -dumpmachine)
 CPPDIR   = ../../buffer/cpp
 
+LDFLAGS = -lpthread ../../buffer/src/socketserver.o ../../buffer/src/libbuffer.a -ldl 
+INCPATH = -I../../buffer/src -I. -I$(CPPDIR)
+SUFFIX = 
+
 ifeq "$(PLATFORM)" "mingw32"
    LDFLAGS = pthreadGC2.dll ../../buffer/src/socketserver.o ../../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
    INCPATH = -I../../buffer/src -I. -I$(CPPDIR) -I../../buffer/pthreads-win32/include
    SUFFIX = .exe
-else 
-   LDFLAGS = -lpthread ../../buffer/src/socketserver.o ../../buffer/src/libbuffer.a -ldl 
-   INCPATH = -I../../buffer/src -I. -I$(CPPDIR)
-   SUFFIX = 
 endif
 
 CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3 -g
@@ -29,8 +29,7 @@ modeeg2ft.o: modeeg2ft.cc
 	g++ -c modeeg2ft.cc $(CFLAGS)
 	
 modeeg2ft$(SUFFIX): modeeg2ft.o serial.o
-	g++ -o $@ $^ $(LDFLAGS) $(CFLAGS) $(CPPDIR)/SignalConfiguration.cc $(CPPDIR)/GdfWriter.cc
-
+	g++ -o $@ $^ $(CPPDIR)/SignalConfiguration.o $(CPPDIR)/GdfWriter.o $(CPPDIR)/FtConnection.o $(CPPDIR)/StringServer.o $(LDFLAGS) 
 
 modeeg2ft_2chn.o: modeeg2ft_2chn.cc
 	g++ -c modeeg2ft_2chn.cc $(CFLAGS)

@@ -74,8 +74,7 @@ int main(int argc, char *argv[]) {
 	char hostname[256];
 	int port;
 	int counter = 0;
-	OnlineDataManager<short, float> ODM(0, NUMCHANS, FSAMPLE, GDF_INT16, DATATYPE_FLOAT32);
-
+	OnlineDataManager<short, float> ODM(0, NUMCHANS, FSAMPLE);
 
 	if (argc<3) {
 		printf("Usage: thinkgear2ft <device> <config-file> [hostname=localhost [port=1972]]\n");
