@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
 		port = atoi(argv[3]);
 	}
 	
-	ODM = new OnlineDataManager<float, float>(0, numInputs, 44100.0, GDF_FLOAT32, DATATYPE_FLOAT32);
+	ODM = new OnlineDataManager<float, float>(0, numInputs, 44100.0);
 	
 	if (0==strcmp(hostname, "-")) {
 		if (!ODM->useOwnServer(port)) {
