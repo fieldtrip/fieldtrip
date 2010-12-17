@@ -1,5 +1,9 @@
 classdef ft_mv_logreg < ft_mv_predictor
 % FT_MV_LOGREG logistic regression; various flavours
+%
+% L2 version based on Mark Schmidt's code:
+% http://www.cs.ubc.ca/~schmidtm/Software
+%
 % elastic net implementation based on Friedman et al (but see
 % ft_mv_glmnet for a faster implementation.
 %
