@@ -4,10 +4,19 @@
 #include <stdint.h>
 #include <string.h>
 
-#ifdef WIN32
+#ifdef WIN32 
+
 #include <windows.h>
 #define socklen_t       int
+
+#ifndef SD_BOTH
+#define SD_BOTH   0x02
+#endif
+
+#define shutdown_rw(s)  shutdown(s, SD_BOTH)
+
 #else
+
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/select.h>
@@ -19,7 +28,8 @@
 #define SOCKET          int
 #define INVALID_SOCKET  -1
 #define closesocket     close
-#define SD_BOTH         SHUT_RDWR     
+#define shutdown_rw(s)  shutdown(s, SHUT_RDWR)
+
 #endif
 
 #define MAXCLIENTS 32
@@ -70,7 +80,7 @@ void StringServer::stopListening() {
 	if (!listening) return;
 	
 	for (int i=0;i<numClients;i++) {
-		shutdown(client[i]->sock, SD_BOTH);
+		shutdown_rw(client[i]->sock);
 		closesocket(client[i]->sock);
 		delete client[i];
 		client[i] = NULL;
@@ -220,8 +230,7 @@ int StringServer::checkRequests(StringRequestHandler& handler, int milliSeconds)
 bool StringServer::checkCompletion(StringRequestHandler& handler, StringServerClientCtrl *cli) {
 	bool newResp = false;
 	while (1) {
-		unsigned int p0 = cli->req.find('\n');
-	
+		size_t p0 = cli->req.find('\n');
 		if (p0 == cli->req.npos) return newResp;
 	
 		std::string out(cli->req, 0, p0);
@@ -235,7 +244,7 @@ bool StringServer::checkCompletion(StringRequestHandler& handler, StringServerCl
 }
 
 void StringServer::closeClient(int idx) {
-	shutdown(client[idx]->sock, SD_BOTH);
+	shutdown_rw(client[idx]->sock);
 	closesocket(client[idx]->sock);
 	delete client[idx];
 	

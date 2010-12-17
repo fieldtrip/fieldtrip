@@ -45,42 +45,10 @@ GDF_Writer::GDF_Writer(int nChans, int sampleRate, GDF_Type gdfType) {
 	nSamplesWritten = 0;
 	fp = NULL;
 	
-	switch(gdfType) {
-		case GDF_INT8:
-			bytesPerSample = nChans;
-			minV = -128.0; maxV = 127.0; break;
-		case GDF_UINT8:
-			bytesPerSample = nChans;
-			minV = 0.0; maxV = 255.0; break;
-		case GDF_INT16:
-			bytesPerSample = 2*nChans;
-			minV = -32768.0; maxV = 32767.0; break;
-		case GDF_UINT16:
-			bytesPerSample = 2*nChans;
-			minV = 0.0; maxV = 65535.0; break;
-		case GDF_INT32:
-			bytesPerSample = 4*nChans;
-			minV = -2147483648.0; maxV = 2147483647.0; break;
-		case GDF_UINT32:
-			bytesPerSample = 4*nChans;
-			minV = 0.0; maxV = 4294967295.0; break;
-		case GDF_INT64:
-			bytesPerSample = 8*nChans;
-			minV = -9223372036854775808.0; maxV = -9223372036854775807.0; break;
-		case GDF_UINT64:
-			bytesPerSample = 8*nChans;
-			minV = 0.0; maxV = 18446744073709551615.0; break;
-		case GDF_FLOAT32:
-			bytesPerSample = 4*nChans;
-			minV = FLT_MIN; maxV = FLT_MAX; break;
-		case GDF_FLOAT64:
-			bytesPerSample = 8*nChans;
-			minV = DBL_MIN; maxV = DBL_MAX; break;
-		default:
-			bytesPerSample = 0;
-			minV = maxV = 0.0;
-			fprintf(stderr, "Warning: Invalid GDF type specified in constructor\n");
-			break;
+	bytesPerSample = nChans * getSizeAndRangeByType(gdfType, minV, maxV);
+
+	if (bytesPerSample == 0) {
+		fprintf(stderr, "Warning: Invalid GDF type specified in constructor\n");
 	}
 	
 	memset(mLabels, 0, 16*nChans);
@@ -167,4 +135,33 @@ int GDF_Writer::close() {
 	fp = NULL;
 	
 	return nw;
+}
+
+
+	
+int GDF_Writer::getSizeAndRangeByType(GDF_Type gdfType, double& minV, double& maxV) {
+	switch(gdfType) {
+		case GDF_INT8:
+			minV = -128.0; maxV = 127.0; return 1;
+		case GDF_UINT8:
+			minV = 0.0; maxV = 255.0; return 1;
+		case GDF_INT16:
+			minV = -32768.0; maxV = 32767.0; return 2;
+		case GDF_UINT16:
+			minV = 0.0; maxV = 65535.0; return 2;
+		case GDF_INT32:
+			minV = -2147483648.0; maxV = 2147483647.0; return 4;
+		case GDF_UINT32:
+			minV = 0.0; maxV = 4294967295.0; return 4;
+		case GDF_INT64:
+			minV = -9223372036854775808.0; maxV = -9223372036854775807.0; return 8;
+		case GDF_UINT64:
+			minV = 0.0; maxV = 18446744073709551615.0; return 8;
+		case GDF_FLOAT32:
+			minV = FLT_MIN; maxV = FLT_MAX; return 4;
+		case GDF_FLOAT64:
+			minV = DBL_MIN; maxV = DBL_MAX; return 8;
+		default:
+			minV = maxV = 0.0; return 0;
+	}
 }

@@ -1,11 +1,14 @@
-#include <GDF_BackgroundWriter.h>
-#include <SignalConfiguration.h>
-#include <stdio.h>
 #include <FtBuffer.h>
 #include <socketserver.h>
 #include <MultiChannelFilter.h>
 #include <StringServer.h>
+#include <GDF_BackgroundWriter.h>
+#include <SignalConfiguration.h>
 
+/** Simple C++ style wrapper around strtol, converts a string to an integer.
+	Returns true on success, false on error. The second parameter value receives
+	the result of a successful conversion.
+*/
 bool convertToInt(const std::string& in, int& value) {
 	const char *start = in.c_str();
 	char *end;
@@ -16,6 +19,10 @@ bool convertToInt(const std::string& in, int& value) {
 	return true;
 } 
 
+/** Simple C++ style wrapper around strtod, converts a string to a double precision number.
+	Returns true on success, false on error. The second parameter value receives
+	the result of a successful conversion.
+*/
 bool convertToDouble(const std::string& in, double& value) {
 	const char *start = in.c_str();
 	char *end;
@@ -26,21 +33,75 @@ bool convertToDouble(const std::string& in, double& value) {
 	return true;
 } 
 
-
+/** To is type of original data, e.g. as coming out of the AD-converter
+    Ts is the data type used for streaming, e.g. float
+	
+	The GDF_Type for writing to disk and the FieldTrip data type for streaming
+	will be automatically deduced from these template parameters.
+*/
 template <typename To, typename Ts> 
 class OnlineDataManager : public StringRequestHandler {
+	typedef char labelType[16];
+
 	public:
 	
-	OnlineDataManager(int nStatus, int nCont, float fSample, GDF_Type gdfType, int ftType) : sampleBlock(ftType) {
+	OnlineDataManager(int nStatus, int nCont, float fSample) {
 		this->nStatus = nStatus;
 		this->nCont   = nCont;
-		this->gdfType = gdfType;
-		this->ftType  = ftType;
 		this->fSample = fSample;
+		
+		// automatically determine GDF_Type and Fieldtrip data type from template parameters
+		gdfType = GDF_Header::getType((To) 0);
+		ftType  = FtDataType::getType((Ts) 0);
+		
+		assert(ftType != DATATYPE_UNKNOWN);
+
+		sampleBlock = new FtSampleBlock(ftType);
 		
 		pBlock = 0;
 		allocSizeBlock = 0;
 		auxVec = new Ts[nCont];
+		
+		gdfPhysMin = new double[nStatus + nCont];
+		gdfPhysMax = new double[nStatus + nCont];
+		gdfDigMin  = new double[nStatus + nCont];
+		gdfDigMax  = new double[nStatus + nCont];
+		gdfPhysDimCode = new uint16_t[nStatus + nCont];
+		
+		if (nStatus > 0) {
+			statusLabels = new labelType[nStatus];
+		} else {
+			statusLabels = 0;
+		}
+		
+		int sizeTo;
+		double minV,maxV;
+		
+		sizeTo = GDF_Writer::getSizeAndRangeByType(gdfType, minV, maxV);
+		
+		if (sizeTo != sizeof(To)) {
+			fprintf(stderr, "Warning: GDF type specified in constructor does not match template parameter.\n");
+		}
+		
+		for (int i=0;i<nStatus+nCont;i++) {
+			gdfPhysMin[i] = minV;
+			gdfPhysMax[i] = maxV;
+			gdfDigMin[i]  = minV;
+			gdfDigMax[i]  = maxV;
+			gdfPhysDimCode[i] = 0;
+		}
+		
+		for (int i=0;i<nStatus;i++) {
+			sprintf(statusLabels[i], "Status_%i", i+1);
+			gdfPhysDimCode[i] = GDF_DIMLESS;
+		}
+		
+		offset = new Ts[nCont];
+		slope  = new Ts[nCont];
+		for (int i=0;i<nCont;i++) {
+			offset[i] = 0.0;
+			slope[i]  = 1.0;
+		}
 		
 		ftSocket = -1;
 		ftServer = 0;
@@ -71,6 +132,17 @@ class OnlineDataManager : public StringRequestHandler {
 		delete lpFilter;
 		delete[] auxVec;
 		delete[] pBlock;
+		delete[] gdfPhysMin;
+		delete[] gdfPhysMax;
+		delete[] gdfDigMin;
+		delete[] gdfDigMax;
+		delete[] gdfPhysDimCode;
+		delete[] offset;
+		delete[] slope;
+		if (nStatus > 0) {
+			delete[] statusLabels;
+		}
+		delete sampleBlock;
 	}
 	
 	virtual std::string handleStringRequest(const std::string& request) {
@@ -174,6 +246,99 @@ class OnlineDataManager : public StringRequestHandler {
 		return unknown;
 	}
 	
+	/** Set label of i-th status channel (starting with 0).
+		The default is Status_1, Status_2, ...
+		A maxiumum of 16 characters is allowed (as in GDF).
+	*/
+	void setStatusLabel(int i, const char *name) {
+		if (i<0 || i>=nStatus) return;
+		strncpy(statusLabels[i], name, sizeof(labelType));
+	}
+	
+	/** Set physical dimension code for all continuous channels
+		for writing to GDF. See GdfWriter.h for an enumeration
+		of possible values.
+	*/
+	void setPhysicalDimCode(uint16_t code) {
+		for (int i=0;i<nCont;i++) {
+			gdfPhysDimCode[nStatus + i] = code;
+		}
+	}
+	
+	/** Set physical dimension code for the i-th continuous channel,
+		starting from 0, for writing to GDF. See GdfWriter.h for an 
+		enumeration	of possible values.
+	*/
+	void setPhysicalDimCode(int i, uint16_t code) {
+		if (i>=0 && i<nCont) {
+			gdfPhysDimCode[nStatus + i] = code;
+		}
+	}	
+	
+	/** Set the physical limits for all continuous channels for writing	to GDF.
+	*/
+	void setPhysicalLimits(double minV, double maxV) {
+		for (int i=0;i<nCont;i++) {
+			gdfPhysMin[nStatus + i] = minV;
+			gdfPhysMax[nStatus + i] = maxV;
+		}
+	}
+	
+	/** Set the physical limits for the i-th continuous channel (starting from 0)
+		for writing	to GDF.
+	*/
+	void setPhysicalLimit(int i, double minV, double maxV) {
+		if (i<0 || i>=nCont) return;
+		gdfPhysMin[nStatus + i] = minV;
+		gdfPhysMax[nStatus + i] = maxV;
+	}	
+	
+	/** Set the digital limits for all continuous channels for writing to GDF.
+	*/
+	void setDigitalLimits(double minV, double maxV) {
+		for (int i=0;i<nCont;i++) {
+			gdfDigMin[nStatus + i] = minV;
+			gdfDigMax[nStatus + i] = maxV;
+		}
+	}
+	
+	/** Set the digital limits for the i-th continuous channel (starting from 0)
+		for writing	to GDF.
+	*/	
+	void setDigitalLimit(int i, double minV, double maxV) {
+		if (i<0 || i>=nCont) return;
+		gdfDigMin[nStatus + i] = minV;
+		gdfDigMax[nStatus + i] = maxV;
+	}	
+	
+	/** Set the affine transformation of the i-th continuous channel. The signal
+		will first be subtracted 'offset', then multiplied by 'slope'. Note that
+		this transformation does not affect the data that is saved to GDF files,
+		but only the streamed channels.
+	*/
+	void setSlopeAndOffset(int i, Ts slope, Ts offset) {
+		if (i<0 || i>=nCont) return;
+		this->slope[i] = slope;
+		this->offset[i] = offset;
+	}
+	
+	/** Set the affine transformation for all continuous channels. The signals
+		will first be subtracted 'offset', then multiplied by 'slope'. Note that
+		this transformation does not affect the data that is saved to GDF files,
+		but only the streamed channels.
+	*/
+	void setSlopeAndOffset(Ts slope, Ts offset) {
+		for (int i=0;i<nCont;i++) {
+			this->slope[i] = slope;
+			this->offset[i] = offset;
+		}
+	}
+	
+	/** Connect to a remove FieldTrip buffer server on the given address. TCP-IP
+		address must be given in the form hostname:port. Otherwise, the address
+		will be interpreted as a UNIX domain socket name. Returns true on success,
+		false if errors occured.
+	*/
 	bool connectToServer(const char *address) {
 		if (ftSocket != -1) return false;
 		
@@ -182,6 +347,9 @@ class OnlineDataManager : public StringRequestHandler {
 		return true;
 	}
 	
+	/** Connect to a remove FieldTrip buffer server on the given address over 
+		TCP-IP. Returns true on success, false if errors occured.
+	*/
 	bool connectToServer(const char *hostname, int port) {
 		if (ftSocket != -1) return false;
 		
@@ -190,6 +358,10 @@ class OnlineDataManager : public StringRequestHandler {
 		return true;
 	}	
 	
+	/** Spawn an internal buffer server on the given TCP-IP port, and subsequently
+		use "dma" requests to the buffer. Returns true on success, false if errors
+		occured (i.e. port not available).
+	*/
 	bool useOwnServer(int port) {
 		if (ftSocket != -1) return false;
 		
@@ -199,7 +371,11 @@ class OnlineDataManager : public StringRequestHandler {
 		ftSocket = 0; // => dma
 		return true;
 	}
-	
+
+	/** Read channel selections and other parameters from the given configuration file,
+		and configure the streaming of data on success. Returns the number of parsing
+		errors (0 on success).
+	*/
 	int configureFromFile(const char *filename) {
 		int numErr = signalConf.parseFile(filename);
 		if (numErr == 0) {
@@ -208,6 +384,10 @@ class OnlineDataManager : public StringRequestHandler {
 		return numErr;
 	}
 	
+	/** This function should be called by the acquisition driver to ask the OnlineDataManager
+		to prepare a new block of N samples. It will try to allocate the necessary space for 
+		it (all HW channels), and return a pointer to that memory.
+	*/
 	To *provideBlock(int N) {
 		int needed = N * (nStatus + nCont);
 		if (needed > allocSizeBlock) {
@@ -221,6 +401,10 @@ class OnlineDataManager : public StringRequestHandler {
 		return pBlock;
 	}
 	
+	/** This function should be called by the acquisition driver after data has been filled
+		into the provided block, in order to stream out and save the selected channels.
+		Returns true on success, false if errors occured.
+	*/
 	bool handleBlock() {
 		if (streamingEnabled) {
 			if (!handleStreaming()) return false;
@@ -231,6 +415,11 @@ class OnlineDataManager : public StringRequestHandler {
 		return true;
 	}
 	
+	/** Call this to enable saving to a GDF file. You must have called "setFilename"
+		before. Once a filename is set, multiple calls to enableSaving() will increase
+		a file counter which is appended to the name of the target GDF file.
+		Returns true on success, false on errors.
+	*/
 	bool enableSaving() {
 		if (curFilename.empty()) return false;
 		if (curWriter == 0) {
@@ -243,7 +432,7 @@ class OnlineDataManager : public StringRequestHandler {
 		} else {
 			char *compName = new char[curFilename.size() + 20];
 			sprintf(compName, "%s_S%i", curFilename.c_str(), fileCounter);
-			printf("COMPOSED: %s\n", compName);
+			// printf("COMPOSED: %s\n", compName);
 			curWriter->start(compName);
 			delete[] compName;
 		}
@@ -252,6 +441,7 @@ class OnlineDataManager : public StringRequestHandler {
 		return true;
 	}
 	
+	/** Call this to disable saving to GDF. */
 	void disableSaving() {
 		savingEnabled = false;
 		if (!curWriter) return;
@@ -259,6 +449,7 @@ class OnlineDataManager : public StringRequestHandler {
 		curWriter = 0;
 	}
 	
+	/** Call this to enable streaming to a FieldTrip buffer. */
 	bool enableStreaming() {
 		if (streamingEnabled) return true; // silently ignore      
 		if (!writeHeader()) return false;
@@ -266,20 +457,32 @@ class OnlineDataManager : public StringRequestHandler {
 		return true;
 	}
 	
+	/** Call this to disable streaming */
 	void disableStreaming() {
 		// if (!streamingEnabled) return;
 		streamingEnabled = false;
 	}
 	
+	/** Returns a reference to the event list, which the acquisition driver
+		should add events to. The event list will be flushed after every call
+		to handleBlock()
+	*/
 	FtEventList& getEventList() {
 		return eventList;
 	}
    
+	/** Returns a pointer to the current GDF_Writer object, or NULL if there is
+		no instance at the moment. This should probably not be called by users
+		without a very good cause.
+	*/
 	GDF_Writer *getCurrentGDF() {
 		if (curWriter) return curWriter->gdf();
 		return 0;
 	}
 	
+	/** Set the filename for writing to GDF. Changes will note take effect
+		before calling enableSaving()
+	*/
 	void setFilename(const std::string& filename) {
 		curFilename = filename;
 		fileCounter = 0;
@@ -287,6 +490,10 @@ class OnlineDataManager : public StringRequestHandler {
 		
 	protected:
 	
+	/** Helper function for writing a header to the FieldTrip buffer that corresponds
+		to the current channel selection for streaming. Returns true on success,
+		false on error.
+	*/
 	bool writeHeader() {
 		const ChannelSelection& streamSel = signalConf.getStreamingSelection();
 		FtBufferRequest req;
@@ -320,6 +527,11 @@ class OnlineDataManager : public StringRequestHandler {
 		return true;
 	}
 	
+	/** Called by handleBlock() to deal with streaming out samples and events.
+		The raw data are first transformed by subtracting offsets and multiplying
+		slope factors. If selected, the signal will then be filtered and optionally
+		downsampled.
+	*/
 	bool handleStreaming() {
 		int stride = nStatus + nCont;
 		int err;
@@ -344,13 +556,14 @@ class OnlineDataManager : public StringRequestHandler {
 		int deci        = signalConf.getDownsampling();
 		int numThisTime = (nThisBlock - skipSamples + deci - 1)/deci;
 	
-		Ts *dest = (Ts *) sampleBlock.getMatrix(nStream, numThisTime);
+		Ts *dest = (Ts *) sampleBlock->getMatrix(nStream, numThisTime);
 			
 		if (lpFilter != 0) {
 			for (int j=0;j<nThisBlock;j++) {
 				To *src = pBlock + nStatus + j*stride;
 				for (int i=0;i<nStream;i++) {
-					auxVec[i] = src[streamSel.getIndex(i)];
+					int idx = streamSel.getIndex(i);
+					auxVec[i] = slope[idx]*(src[idx] - offset[idx]);
 				}
 			
 				if (skipSamples == 0) {
@@ -366,14 +579,15 @@ class OnlineDataManager : public StringRequestHandler {
 				To *src = pBlock + nStatus + j*stride;
 				if (skipSamples == 0) {
 					for (int i=0;i<nStream;i++) {
-						dest[i] = src[streamSel.getIndex(i)];
+						int idx = streamSel.getIndex(i);
+						dest[i] = slope[idx]*(src[idx] - offset[idx]);
 					}
 					dest += nStream;
 				}
 				if (--skipSamples < 0) skipSamples = deci-1;
 			}
 		}
-		err = clientrequest(ftSocket, sampleBlock.asRequest(), resp.in());
+		err = clientrequest(ftSocket, sampleBlock->asRequest(), resp.in());
 		if (err || !resp.checkPut()) {
 			fprintf(stderr, "Could not write samples to FieldTrip buffer.\n");
 			return false;
@@ -381,6 +595,10 @@ class OnlineDataManager : public StringRequestHandler {
 		return true;
 	}
 	
+	/** Called by handleBlock to deal with saving data to GDF. Actually this function
+		doesn't save to disk itself, but copies the relevant channels to the
+		internal ring buffer of the current GDF_BackgroundWriter instance.
+	*/
 	bool handleSaving() {
 		const ChannelSelection& saveSel = signalConf.getSavingSelection();
 		int nSave  = saveSel.getSize();
@@ -408,6 +626,9 @@ class OnlineDataManager : public StringRequestHandler {
 		return true;
 	}
 	
+	/** Create a new GDF_BackgroundWriter with the proper channels selected
+		The old one (if any) will automatically terminate and delete itself
+	*/
 	void configureSaving() {
 		const ChannelSelection& saveSel = signalConf.getSavingSelection();
 		
@@ -415,18 +636,25 @@ class OnlineDataManager : public StringRequestHandler {
 		if (nStatus + nSave == 0) return;
 		
 		curWriter = new GDF_BackgroundWriter<To>(nStatus + nSave, (int) fSample, gdfType);
+		
 		for (int i=0;i<nStatus;i++) {
-			char lab[16];
-			sprintf(lab, "Status_%i", i+1);
-			curWriter->gdf().setLabel(i, lab);
+			curWriter->gdf().setLabel(i, statusLabels[i]);
+			curWriter->gdf().setPhysicalLimits(i, gdfPhysMin[i], gdfPhysMax[i]);
+			curWriter->gdf().setDigitalLimits(i, gdfDigMin[i], gdfDigMax[i]);
+			curWriter->gdf().setPhysDimCode(i, gdfPhysDimCode[i]);
 		}
 		for (int i=0;i<nSave;i++) {
+			int idx = nStatus + saveSel.getIndex(i);
 			curWriter->gdf().setLabel(nStatus+i, saveSel.getLabel(i));
-			// gdfWriter->setPhysicalLimits(1+i, -262144.0, 262143.99987792969);
-			// gdfWriter->setPhysDimCode(1+i, GDF_MICRO + GDF_VOLT);
+			curWriter->gdf().setPhysicalLimits(nStatus+i, gdfPhysMin[idx], gdfPhysMax[idx]);
+			curWriter->gdf().setDigitalLimits(nStatus+i, gdfDigMin[idx], gdfDigMax[idx]);
+			curWriter->gdf().setPhysDimCode(nStatus+i, gdfPhysDimCode[idx]);
 		}
 	}
 	
+	/** Set up lowpass filter with the correct characteristics and number of channels.
+		Delete the current filter first, if any.
+	*/
 	void configureStreaming() {
 		delete lpFilter;
 		
@@ -444,7 +672,7 @@ class OnlineDataManager : public StringRequestHandler {
 	GDF_BackgroundWriter<To> *curWriter;	/**< currently active GDF writer (in background thread) */
 	MultiChannelFilter<Ts,Ts> *lpFilter;	/**< currently active low-pass filter */
 
-	int ftType;			/**< FieldTrip buffer data type */
+	UINT32_T ftType;	/**< FieldTrip buffer data type */
 	GDF_Type gdfType;	/**< GDF data type */
 	int nStatus, nCont; /**< Number of status + continuously sampled channels */
 	float fSample;		/**< Sampling rate */
@@ -453,21 +681,30 @@ class OnlineDataManager : public StringRequestHandler {
 	int allocSizeBlock; /**< Size of buffer that is allocated for providing blocks */
 	To *pBlock;			/**< Points to buffer that is allocated for providing blocks */
 	Ts *auxVec;			/**< Big enough for keeping one sample of data (streaming format) */
+	Ts *offset;         /**< Offset subtracted from raw data before streaming */
+	Ts *slope;          /**< Factor to multiply data with before streaming (after subtracting offset) */
 	
 	int ftSocket;		/**< The FT buffer socket identifier or 0 for dmarequests, -1 for none */
 	int sampleCounter;	/**< Number of samples streamed out since last writeHeader */
 	int skipSamples;	/**< Helper variable to keep track of downsampling operation */
 	
-	FtConnection ftConnection;
-	FtBufferResponse resp;
-	FtEventList eventList;
-	FtSampleBlock sampleBlock;
-	ft_buffer_server_t *ftServer;
+	double *gdfPhysMin;		/**< Physical minimum for status + continuous channels, written to GDF */
+	double *gdfPhysMax;		/**< Physical maximum for status + continuous channels, written to GDF */
+	double *gdfDigMin;		/**< Digital minimum for status + continuous channels, written to GDF */
+	double *gdfDigMax;      /**< Digital maximum for status + continuous channels, written to GDF */
+	uint16_t *gdfPhysDimCode; 	/**< Dimension code for status + continuous channels, written to GDF */
+	labelType *statusLabels;	/**< Labels of the status channels, up to 16 characters each, written to GDF */
 	
-	SignalConfiguration signalConf;
+	FtConnection ftConnection;	/**< Handles the connection to the FieldTrip buffer (either socket or dma) */
+	FtBufferResponse resp;		/**< Receives responses from the buffer server */
+	FtEventList eventList;		/**< Used for writing events to the buffer server, is flushed after each handleBlock() */
+	FtSampleBlock *sampleBlock;	/**< Used for writing data to the buffer server */
+	ft_buffer_server_t *ftServer;	/**< Handles the server sockets and background threads in case an own server is spawned */
 	
-	bool savingEnabled, streamingEnabled;
+	SignalConfiguration signalConf;	/**< Maintains the channel selection for streaming and saving, as well as a few other parameters */
 	
-	std::string curFilename;
-	int fileCounter;
+	bool savingEnabled, streamingEnabled;	/**< Flags that determine the current mode of operation */
+	
+	std::string curFilename;	/**< Current filename for writing GDF to disk */
+	int fileCounter;			/**< Current running ID for the file name, auto-incremented after every disableSaving() call */
 };

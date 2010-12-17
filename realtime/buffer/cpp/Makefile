@@ -8,14 +8,23 @@
 PLATFORM = $(shell gcc -dumpmachine)
 
 #defaults, might be over-written further down
-LDFLAGS = -lpthread ../src/socketserver.o ../src/libbuffer.a -ldl 
+LDFLAGS = -lpthread ../src/libbuffer.a -ldl 
 INCPATH = -I../src -I. 
 SUFFIX = 
+RM = rm -f
 
 ifeq "$(PLATFORM)" "mingw32"
-   LDFLAGS = pthreadGC2.dll ../src/socketserver.o ../src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
+   LDFLAGS = pthreadGC2.dll ../src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
    INCPATH = -I../src -I. -I../pthreads-win32/include
    SUFFIX = .exe
+   RM = del
+endif
+
+ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
+   LDFLAGS = pthreadGC2-w64.dll ../src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
+   INCPATH = -I../src -I. -I../pthreads-win64/include
+   SUFFIX = .exe
+   RM = del
 endif
 
 CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3 -g $(FLAGS)
@@ -33,10 +42,13 @@ StringServer.o: StringServer.cc StringServer.h
 	g++ -c StringServer.cc $(CFLAGS)	
 	
 GdfWriter.o: GdfWriter.cc GdfWriter.h 
-	g++ -c  GdfWriter.cc $(CFLAGS)	
+	g++ -c GdfWriter.cc $(CFLAGS)	
 	
 odmTest.o: odmTest.cc OnlineDataManager.h StringServer.o GDF_BackgroundWriter.h
 	g++ -c odmTest.cc $(CFLAGS)
 
 odmTest$(SUFFIX): odmTest.o SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o
 	g++ -o $@ $^ $(LDFLAGS) 
+
+clean:
+	$(RM) *.o *.exe

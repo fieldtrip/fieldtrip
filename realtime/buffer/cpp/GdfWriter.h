@@ -97,6 +97,25 @@ struct GDF_Header {
 	uint32_t durDataRecord[2];
 	uint16_t numChannels;
 	uint16_t reserved3;
+		
+	// compiling this function will always yield an error, which is what we want!
+	template<typename T> static GDF_Type getType(T dummy) { 
+		return 0; 
+	}
+
+	// "specialised versions" of the above template function, returning the
+	// right GDF_Type for the given input argument
+	static GDF_Type getType(int8_t dummy)   { return GDF_INT8; }
+	static GDF_Type getType(uint8_t dummy)  { return GDF_UINT8; }
+	static GDF_Type getType(int16_t dummy)  { return GDF_INT16; }
+	static GDF_Type getType(uint16_t dummy) { return GDF_UINT16; }
+	static GDF_Type getType(int32_t dummy)  { return GDF_INT32; }
+	static GDF_Type getType(uint32_t dummy) { return GDF_UINT32; }
+	static GDF_Type getType(int64_t dummy)  { return GDF_INT64; }
+	static GDF_Type getType(uint64_t dummy) { return GDF_UINT64; }
+	static GDF_Type getType(float dummy)    { return GDF_FLOAT32; }
+	static GDF_Type getType(double dummy)   { return GDF_FLOAT64; }
+	
 };
 
 #pragma pack(pop)
@@ -125,9 +144,7 @@ class GDF_Writer {
 	
 	/** Update the sample counter (=number of records) and close the file */
 	int close();
-	
-	GDF_Header hdr;
-	
+		
 	void setPhysicalLimits(int channel, double minV, double maxV) {
 		mPhysMin[channel] = minV;
 		mPhysMax[channel] = maxV;
@@ -162,13 +179,16 @@ class GDF_Writer {
 		strncpy(mLabels + 16*channel, label, 16);
 	}
 	
+	static int getSizeAndRangeByType(GDF_Type gdfType, double& minV, double& maxV);
 	
+	GDF_Header hdr;
+
 	protected:
 	
-   union {
-      float asFloat;
-      int32_t asInt;
-   } nanValue;
+	union {
+		float asFloat;
+		int32_t asInt;
+	} nanValue;
 	int nChans, bytesPerSample;
 	FILE *fp;
 	

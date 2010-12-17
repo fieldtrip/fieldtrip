@@ -9,8 +9,12 @@ int main() {
 	ConsoleInput conIn;
 	StringServer ctrlServ;
 	int counter = 0;
+			
+	OnlineDataManager<int, float> ODM(1, NCHAN, 2000.0);
 	
-	OnlineDataManager<int, float> ODM(1, NCHAN, 2000.0, GDF_INT32, DATATYPE_FLOAT32);
+	ODM.setPhysicalDimCode(GDF_VOLT + GDF_MILLI);
+	ODM.setSlopeAndOffset(0.001, 0);
+	
 	int value[NCHAN];
 	int speed[NCHAN];
 	

@@ -11,6 +11,26 @@
 #include <buffer.h>
 #include <SimpleStorage.h>
 
+struct FtDataType {
+	template<typename T> static UINT32_T getType(T dummy) { 
+		return DATATYPE_UNKNOWN; 
+	}
+	
+	// "specialised versions" of the above template function, returning the
+	// right GDF_Type for the given input argument
+	static UINT32_T getType(INT8_T dummy)   { return DATATYPE_INT8; }
+	static UINT32_T getType(UINT8_T dummy)  { return DATATYPE_UINT8; }
+	static UINT32_T getType(INT16_T dummy)  { return DATATYPE_INT16; }
+	static UINT32_T getType(UINT16_T dummy) { return DATATYPE_UINT16; }
+	static UINT32_T getType(INT32_T dummy)  { return DATATYPE_INT32; }
+	static UINT32_T getType(UINT32_T dummy) { return DATATYPE_UINT32; }
+	static UINT32_T getType(INT64_T dummy)  { return DATATYPE_INT64; }
+	static UINT32_T getType(UINT64_T dummy) { return DATATYPE_UINT64; }
+	static UINT32_T getType(float dummy)    { return DATATYPE_FLOAT32; }
+	static UINT32_T getType(double dummy)   { return DATATYPE_FLOAT64; }
+};
+
+
 /** Simple wrapper class for FieldTrip buffer requests and responses.
 */
 
