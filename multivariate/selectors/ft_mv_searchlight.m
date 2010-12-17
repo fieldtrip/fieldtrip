@@ -5,6 +5,9 @@ classdef ft_mv_searchlight < ft_mv_selector
 % stepsize in order to scan a volume and classify based on elements inside
 % the sphere.
 %
+% EXAMPLE:
+% [a,b,c] = ft_mv_test('mva',{ft_mv_searchlight('step',5,'radius',5,'mask',masks{1},'validator',ft_mv_crossvalidator('sigtest','mcnemar','metric','accuracy','mva',ft_mv_svm,'nfolds',5),'verbose',true) ft_mv_svm},'nfolds',5)
+%
 % NOTE:
 % A searchlight only returns the feature subset. Subsequently a predictor
 % must be applied to it.
