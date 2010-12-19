@@ -285,14 +285,25 @@ elseif ismeg
 elseif iseeg
   % select the desired channels from the electrode array
   % order them according to the users specification
+  
+  Nchans    = size(sens.tra,1);
+  Ncontacts = size(sens.tra,2);
+  
   [selchan, selsens] = match_str(channel, sens.label);
   sens.label = sens.label(selsens);
-  sens.pnt   = sens.pnt(selsens,:);
-
+  
+  % in case of Nchans~=Ncontacts it is difficult to determine 
+  % how to deal with contacts positions (keep the original positions)
+  if Nchans == Ncontacts
+    sens.pnt = sens.pnt(selsens,:);
+  else
+    warning('A sub-selection of channels will not be taken into account')
+  end
+  
   % create a 2D projection and triangulation
   sens.prj   = elproj(sens.pnt);
   sens.tri   = delaunay(sens.prj(:,1), sens.prj(:,2));
-
+  
   switch ft_voltype(vol)
     case 'infinite'
       % nothing to do
