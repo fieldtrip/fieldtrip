@@ -285,16 +285,14 @@ elseif ismeg
 elseif iseeg
   % select the desired channels from the electrode array
   % order them according to the users specification
-  
   Nchans    = size(sens.tra,1);
   Ncontacts = size(sens.tra,2);
-  
-  [selchan, selsens] = match_str(channel, sens.label);
-  sens.label = sens.label(selsens);
-  
-  % in case of Nchans~=Ncontacts it is difficult to determine 
+   
+  % In case of Nchans~=Ncontacts it is difficult to determine 
   % how to deal with contacts positions (keep the original positions)
   if Nchans == Ncontacts
+    [selchan, selsens] = match_str(channel, sens.label);
+    sens.label = sens.label(selsens);
     sens.pnt = sens.pnt(selsens,:);
   else
     warning('A sub-selection of channels will not be taken into account')
