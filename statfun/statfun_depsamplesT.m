@@ -57,7 +57,7 @@ n2  = length(sel2);
 if (n1+n2)<size(design,2) || (n1~=n2)
   error('Invalid specification of the design array.');
 end;
-nunits = length(design(cfg.uvar,:));
+nunits = length(design(cfg.uvar,sel1));
 df = nunits - 1;
 if nunits<2
     error('The data must contain at least two units (usually subjects).')
