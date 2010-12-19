@@ -140,10 +140,11 @@ switch seldim
     n  = [];
     if isfield(data, 'cov'),           n = [n size(data.cov,           1)]; end
     if isfield(data, 'crsspctrm'),     n = [n size(data.crsspctrm,     1)]; end
+    if isfield(data, 'fourierspctrm'), n = [n size(data.fourierspctrm, 1)]; end
+    if isfield(data, 'individual'),    n = [n size(data.individual,    1)]; end
     if isfield(data, 'powcovspctrm'),  n = [n size(data.powcovspctrm,  1)]; end 
     if isfield(data, 'powspctrm'),     n = [n size(data.powspctrm,     1)]; end
     if isfield(data, 'trial'),         n = [n size(data.trial,         1)]; end
-    if isfield(data, 'fourierspctrm'), n = [n size(data.fourierspctrm, 1)]; end
     
     if ~all(n==n(1)), error('inconsistent number of repetitions for dim "%s"', seldim); end
     n = n(1);
