@@ -456,7 +456,11 @@ elseif iseeg
   % compute average reference for EEG leadfield
   avg = mean(lf, 1);
   lf  = lf - repmat(avg, size(lf,1), 1);
-
+  % apply the correct montage to the leadfield
+  if isfield(sens,'tra')
+    lf = sens.tra*lf;
+  end
+  
 end % iseeg or ismeg
 
 % optionally apply leadfield rank reduction
