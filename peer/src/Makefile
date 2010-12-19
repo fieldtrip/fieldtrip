@@ -141,10 +141,9 @@ test_engine.o: test_engine.c
 	$(CC) $(CFLAGS) $(INCPATH) $(MATLABINC) -c $*.c
 
 clean:
-	rm -f core *.o *.obj *.a ../$(TARGET) *~
+	rm -f core *.o *.obj *.a *~
 
-distclean:
-	rm -f core *.o *.obj *.a ../$(TARGET) *~
+distclean: clean
 	rm -f ../peerslave.glnx86
 	rm -f ../peerslave.glnxa64
 	rm -f ../peerslave.maci

@@ -111,7 +111,12 @@ mentat193|mentat194|mentat195|mentat196|mentat197|mentat198|mentat199|mentat200|
 	memavail[3]="auto"; timavail[3]=599
 	OPTIONS="--verbose 4 --smartcpu 1"
 	;;
-mentat235|mentat236|mentat237|mentat238|mentat239|mentat240|mentat241|mentat242|mentat243|mentat244|mentat245|mentat246|mentat247|mentat248|mentat249|mentat250|mentat251|mentat252|mentat253|mentat254|mentat255|mentat256|mentat257|mentat258|mentat259|mentat260|mentat261|mentat262|mentat263|mentat264|mentat265|mentat266|mentat267|mentat268|mentat269|mentat270|mentat271|mentat272|mentat273)
+mentat235|mentat236|mentat237|mentat238|mentat239|\
+mentat240|mentat241|mentat242|mentat243|mentat244|mentat245|mentat246|mentat247|mentat248|mentat249|\
+mentat250|mentat251|mentat252|mentat253|mentat254|mentat255|mentat256|mentat257|mentat258|mentat259|\
+mentat260|mentat261|mentat262|mentat263|mentat264|mentat265|mentat266|mentat267|mentat268|mentat269|\
+mentat270|mentat271|mentat272|mentat273|mentat274|mentat275|mentat276|mentat277|mentat278|mentat279|\
+mentat280|mentat281|mentat282|mentat283|mentat284|mentat285|mentat286|mentat287|mentat288|mentat289)
 	# has 12GB of RAM, one CPU and 4 cores
 	# Intel(R) Xeon(R) CPU W3530 @ 2.80GHz
 	memavail[0]="auto"; timavail[0]=86399

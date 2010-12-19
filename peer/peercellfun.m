@@ -277,6 +277,7 @@ while ~all(submitted) || ~all(collected)
     catch ME
       if strcmp(ME.message, 'could not start the matlab engine')
         % this is due to a license problem
+        warning('resubmitting job %d because the matlab engine could not get a license', sel(i));
         % reset all job information, this will cause it to be automatically resubmitted
         jobid      (collect) = nan;
         puttime    (collect) = nan;
@@ -448,7 +449,7 @@ while ~all(submitted) || ~all(collected)
     priority(sel(i)) = max(priority)+1;
   end
 
-  if ~all(collected)
+  if all(submitted)
     % wait a little bit, then try again to submit or collect a job
     pause(sleep);
   end

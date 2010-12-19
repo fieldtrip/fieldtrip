@@ -200,10 +200,12 @@ void *discover(void *arg) {
 				/* therefore it should be called only when all mutexes are unlocked */
 				localhost = check_localhost(ipaddr);
 
-				DEBUG(LOG_DEBUG, "discover: host->name = %s", discovery->name);
-				DEBUG(LOG_DEBUG, "discover: host->port = %u", discovery->port);
-				DEBUG(LOG_DEBUG, "discover: host->id   = %u", discovery->id);
-				DEBUG(LOG_DEBUG, "discover: IP address = %s", ipaddr);
+				/*
+				   DEBUG(LOG_DEBUG, "discover: host->name = %s", discovery->name);
+				   DEBUG(LOG_DEBUG, "discover: host->port = %u", discovery->port);
+				   DEBUG(LOG_DEBUG, "discover: host->id   = %u", discovery->id);
+				   DEBUG(LOG_DEBUG, "discover: IP address = %s", ipaddr);
+				 */
 
 				/* check whether the peer should be listed */
 				accept = 1;
@@ -272,19 +274,20 @@ void *discover(void *arg) {
 				peer->next      = peerlist;
 				peerlist        = peer;
 
-				/* give some debug output */
-				i = 0;
-				peer = peerlist;
-				while(peer) {
-						DEBUG(LOG_DEBUG, "discover: peerlist[%d] =", i);
-						DEBUG(LOG_DEBUG, "discover:   host.name = %s", peer->host->name);
-						DEBUG(LOG_DEBUG, "discover:   host.port = %u", peer->host->port);
-						DEBUG(LOG_DEBUG, "discover:   host.id   = %u", peer->host->id);
-						DEBUG(LOG_DEBUG, "discover:   ipaddr    = %s", peer->ipaddr);
-						DEBUG(LOG_DEBUG, "discover:   time      = %s", ctime(&(peer->time)));
-						peer = peer->next ;
-						i++;
-				}
+				/* give some debug output
+				   i = 0;
+				   peer = peerlist;
+				   while(peer) {
+				   DEBUG(LOG_DEBUG, "discover: peerlist[%d] =", i);
+				   DEBUG(LOG_DEBUG, "discover:   host.name = %s", peer->host->name);
+				   DEBUG(LOG_DEBUG, "discover:   host.port = %u", peer->host->port);
+				   DEBUG(LOG_DEBUG, "discover:   host.id   = %u", peer->host->id);
+				   DEBUG(LOG_DEBUG, "discover:   ipaddr    = %s", peer->ipaddr);
+				   DEBUG(LOG_DEBUG, "discover:   time      = %s", ctime(&(peer->time)));
+				   peer = peer->next ;
+				   i++;
+				   }
+				 */
 
 				pthread_mutex_unlock(&mutexpeerlist);
 

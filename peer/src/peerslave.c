@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
 		pid_t childpid;
 
 		int matlabRunning = 0, matlabStart, matlabFinished, engineFailed = 0;
-		int i, n, c, rc, found, handshake, success, server, jobnum = 0, jobFailed = 0, timallow;
+		int i, n, c, rc, status, found, handshake, success, server, jobnum = 0, engineAborted = 0, jobFailed = 0, timallow;
 		unsigned int enginetimeout = ENGINETIMEOUT;
 		unsigned int zombietimeout = ZOMBIETIMEOUT;
 		unsigned int peerid, jobid, numpeer = 1;
@@ -349,7 +349,6 @@ int main(int argc, char *argv[]) {
 				}
 
 				if (numpeer==0 && childpid) {
-						int status;
 						/* wait for one of the children to stop */
 						wait(&status);
 						/* the following will cause it to be restarted */
@@ -410,8 +409,8 @@ int main(int argc, char *argv[]) {
 		/* inform the other peers of the updated status */
 		announce_once();
 
-		/* job failure indicates that matlab crashed, in which case the peerslave exits */
-		while (!jobFailed) {
+		/* engine aborted indicates that matlab crashed, in which case the peerslave should exit */
+		while (!engineAborted) {
 
 				/* switch the engine off after being idle for a certain time */
 				if ((matlabRunning!=0) && (difftime(time(NULL), matlabFinished)>enginetimeout)) {
@@ -517,42 +516,53 @@ int main(int argc, char *argv[]) {
 								mxSetCell(options, n+2, mxCreateString("timallow\0"));
 								mxSetCell(options, n+3, mxCreateDoubleScalar(timallow));
 
-								/* copy them over to the engine */
-								engPutVariable(en, "argin", argin);
-								engPutVariable(en, "options", options);
+								jobFailed = 0;
+
+								/* copy the input arguments and options over to the engine */
+								if (!jobFailed && (engPutVariable(en, "argin", argin) != 0)) {
+										DEBUG(LOG_ERR, "error copying argin variable to engine");
+										jobFailed = 1;
+								}
+
+								if (!jobFailed && (engPutVariable(en, "options", options) != 0)) {
+										DEBUG(LOG_ERR, "error copying options variable to engine");
+										jobFailed = 2;
+								}
+
 								mxDestroyArray(argin);
 								mxDestroyArray(options);
 
 								/* execute the job */
-								engEvalString(en, "[argout, options] = peerexec(argin, options);");
-								jobFailed = 0;
+								if (!jobFailed && (engEvalString(en, "[argout, options] = peerexec(argin, options);") != 0)) {
+										DEBUG(LOG_ERR, "error evaluating string in engine");
+										jobFailed = 3;
+										engineAborted = 1;
+								}
 
-								/* get the job output arguments and options */
-								if ((argout = engGetVariable(en, "argout")) == NULL) {
+								/* get the output arguments and options */
+								if (!jobFailed && (argout = engGetVariable(en, "argout")) == NULL) {
 										DEBUG(LOG_ERR, "error getting argout");
-										jobFailed = 1;
+										jobFailed = 4;
+										engineAborted = 1;
 								}
 
-								if ((options = engGetVariable(en, "options")) == NULL) {
+								if (!jobFailed && (options = engGetVariable(en, "options")) == NULL) {
 										DEBUG(LOG_ERR, "error getting options");
-										jobFailed = 1;
+										jobFailed = 5;
+										engineAborted = 1;
 								}
 
-								if (jobFailed) {
-										/* try to close the engine, probably this will fail */
-										engClose(en);
-										matlabRunning = 0;
-								}
-						}
-						else {
-								/* matlab failed to start */
+						} /* if matlabRunning */
+
+						if (engineFailed || jobFailed) {
+								/* there was a problem executing the job */
 								pthread_mutex_lock(&mutexjoblist);
 								job     = joblist;
 								jobid   = job->job->id;
 								peerid  = job->host->id;
 								DEBUG(LOG_CRIT, "failed to execute job %d from %s@%s (jobid=%u, memreq=%lu, timreq=%lu)", ++jobnum, job->host->user, job->host->name, job->job->id, job->job->memreq, job->job->timreq);
 								pthread_mutex_unlock(&mutexjoblist);
-						} /* if matlabRunning */
+						}
 
 						if (engineFailed) {
 								/* create the ouptut argument containing an error */
@@ -568,9 +578,19 @@ int main(int argc, char *argv[]) {
 								/* specify the error in the options */
 								options = mxCreateCellMatrix(1,2);
 								mxSetCell(options, 0, mxCreateString("lasterr\0"));
-								mxSetCell(options, 1, mxCreateString("the matlab engine aborted\0"));
-						};
-
+								if (jobFailed==1)
+										mxSetCell(options, 1, mxCreateString("failed to execute the job (argin)0"));
+								else if (jobFailed==2)
+										mxSetCell(options, 1, mxCreateString("failed to execute the job (optin)\0"));
+								else if (jobFailed==3)
+										mxSetCell(options, 1, mxCreateString("failed to execute the job (eval)\0"));
+								else if (jobFailed==4)
+										mxSetCell(options, 1, mxCreateString("failed to execute the job (argout)\0"));
+								else if (jobFailed==5)
+										mxSetCell(options, 1, mxCreateString("failed to execute the job (optout)\0"));
+								else
+										mxSetCell(options, 1, mxCreateString("failed to execute the job\0"));
+						}
 
 						/*****************************************************************************
 						 * send the results back to the master
@@ -764,8 +784,8 @@ cleanup:
 						threadsleep(SLEEPTIME);
 				} /* if jobcount */
 
-		} /* while not jobFailed */
+		} /* while not engineAborted */
 
-		return jobFailed;
+		return engineAborted;
 } /* main */
 

@@ -186,7 +186,7 @@ int smartmem_update(void) {
 		MemSuggested = (MemSuggested > SMARTMEM_MINIMUM ? MemSuggested : SMARTMEM_MINIMUM );
 
 		host->memavail = MemSuggested;
-		DEBUG(LOG_NOTICE, "smartmem: host->memavail = %llu", host->memavail);
+		DEBUG(LOG_INFO, "smartmem: host->memavail = %llu", host->memavail);
 		DEBUG(LOG_DEBUG, "smartmem: NumPeers       = %u",   NumPeers);
 		DEBUG(LOG_DEBUG, "smartmem: MemFree        = %llu (%f GB)", MemFree     , ((float)MemFree     )/(1024*1024*1024));
 		DEBUG(LOG_DEBUG, "smartmem: MemReserved    = %llu (%f GB)", MemReserved , ((float)MemReserved )/(1024*1024*1024));
