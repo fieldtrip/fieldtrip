@@ -35,8 +35,8 @@
 mxArray *mxSerialize(const mxArray*);
 mxArray *mxDeserialize(const void*, size_t);
 
-#define ENGINETIMEOUT     120    /* int, in seconds */
-#define ZOMBIETIMEOUT     300    /* int, in seconds */
+#define ENGINETIMEOUT     180    /* int, in seconds */
+#define ZOMBIETIMEOUT     900    /* int, in seconds */
 #define SLEEPTIME         0.010  /* float, in seconds */
 
 #define STARTCMD "matlab -nosplash"
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
 		pid_t childpid;
 
 		int matlabRunning = 0, matlabStart, matlabFinished, engineFailed = 0;
-		int c, rc, found, handshake, success, server, jobnum = 0, jobfailed = 0, timallow;
+		int i, n, c, rc, found, handshake, success, server, jobnum = 0, jobFailed = 0, timallow;
 		unsigned int enginetimeout = ENGINETIMEOUT;
 		unsigned int zombietimeout = ZOMBIETIMEOUT;
 		unsigned int peerid, jobid, numpeer = 1;
@@ -410,19 +410,48 @@ int main(int argc, char *argv[]) {
 		/* inform the other peers of the updated status */
 		announce_once();
 
-		while (!jobfailed) {
-				/* job failure indicates that MATLAB crashed, in which case the peerslave exits */
+		/* job failure indicates that matlab crashed, in which case the peerslave exits */
+		while (!jobFailed) {
 
-				if (jobcount()>0 && !engineFailed) {
+				/* switch the engine off after being idle for a certain time */
+				if ((matlabRunning!=0) && (difftime(time(NULL), matlabFinished)>enginetimeout)) {
+						if (engClose(en)!=0) {
+								DEBUG(LOG_CRIT, "could not stop the MATLAB engine");
+								matlabRunning = 0;
+						}
+						else {
+								DEBUG(LOG_CRIT, "stopped idle MATLAB engine");
+								matlabRunning = 0;
+						}
+				}
 
+				/* switch from zombie to idle slave after waiting a certain time */
+				if ((engineFailed!=0) && (difftime(time(NULL), engineFailed)>zombietimeout)) {
+						DEBUG(LOG_NOTICE, "switching back to idle mode");
+						pthread_mutex_lock(&mutexhost);
+						/* make the slave available again, note that this should be followed by an announce_once() */
+						host->status = STATUS_IDLE;
+						/* update the current job description */
+						bzero(&(host->current), sizeof(current_t));
+						pthread_mutex_unlock(&mutexhost);
+						/* inform the other peers of the updated status */
+						announce_once();
+						engineFailed  = 0;
+						continue;
+				}
+
+				if (jobcount()>0) {
 						/* there is a job to be executed */
+
 						if (matlabRunning==0) {
+								/* start the matlab engine */
 								DEBUG(LOG_CRIT, "starting MATLAB engine");
 								if ((en = engOpen(startcmd)) == NULL) {
-										/* this may be due to a licensing problem */
-										/* do not attempt to start again during the timeout period */
+										/* this is probably due to a licensing problem */
+										/* do not start again during the timeout period */
 										DEBUG(LOG_ERR, "could not start MATLAB engine, deleting job and switching to zombie");
-										engineFailed = time(NULL);
+										engineFailed  = time(NULL);
+										matlabRunning = 0;
 
 										pthread_mutex_lock(&mutexhost);
 										/* switch the mode to busy slave, note that this should be followed by an announce_once() */
@@ -432,102 +461,119 @@ int main(int argc, char *argv[]) {
 										pthread_mutex_unlock(&mutexhost);
 										/* inform the other peers of the updated status */
 										announce_once();
-
-										/* clear the joblist, note that the master is not explicitely informed about the job having failed */ 
-										clear_joblist();
-
-										continue;
 								}
 								else {
+										engineFailed  = 0;
 										matlabRunning = 1;
 								}
 						}
 
-						/* get the first job input arguments and options */
-						pthread_mutex_lock(&mutexjoblist);
-						job = joblist;
+						if (matlabRunning) {
+								/* get the first job input arguments and options */
+								pthread_mutex_lock(&mutexjoblist);
+								job = joblist;
 
-						pthread_mutex_lock(&mutexhost);
-						/* switch the mode to busy slave, note that this should be followed by an announce_once() */
-						host->status = STATUS_BUSY;
-						/* update the current job description */
-						bzero(&(host->current), sizeof(current_t));
-						host->current.hostid= job->host->id;
-						host->current.jobid = job->job->id;
-						strncpy(host->current.name, job->host->name, STRLEN);
-						strncpy(host->current.user, job->host->user, STRLEN);
-						strncpy(host->current.group, job->host->group, STRLEN);
-						host->current.timreq  = job->job->timreq;
-						host->current.memreq  = job->job->memreq;
-						host->current.cpureq  = job->job->cpureq;
+								pthread_mutex_lock(&mutexhost);
+								/* switch the mode to busy slave, note that this should be followed by an announce_once() */
+								host->status = STATUS_BUSY;
+								/* update the current job description */
+								bzero(&(host->current), sizeof(current_t));
+								host->current.hostid= job->host->id;
+								host->current.jobid = job->job->id;
+								strncpy(host->current.name, job->host->name, STRLEN);
+								strncpy(host->current.user, job->host->user, STRLEN);
+								strncpy(host->current.group, job->host->group, STRLEN);
+								host->current.timreq  = job->job->timreq;
+								host->current.memreq  = job->job->memreq;
+								host->current.cpureq  = job->job->cpureq;
 
-						/* determine the maximum allowed job duration */
-						timallow = 3*job->job->timreq;
-						if (host->timavail < timallow)
-								timallow = host->timavail;
-						pthread_mutex_unlock(&mutexhost);
+								/* determine the maximum allowed job duration */
+								timallow = 3*job->job->timreq;
+								if (host->timavail < timallow)
+										timallow = host->timavail;
+								pthread_mutex_unlock(&mutexhost);
 
-						/* inform the other peers of the updated status */
-						announce_once();
+								/* inform the other peers of the updated status */
+								announce_once();
 
-						matlabStart = time(NULL);
+								matlabStart = time(NULL);
 
-						argin   = (mxArray *)mxDeserialize(job->arg, job->job->argsize);
-						options = (mxArray *)mxDeserialize(job->opt, job->job->optsize);
-						jobid   = job->job->id;
-						peerid  = job->host->id;
-						DEBUG(LOG_CRIT, "executing job %d from %s@%s (jobid=%u, memreq=%lu, timreq=%lu)", ++jobnum, job->host->user, job->host->name, job->job->id, job->job->memreq, job->job->timreq);
-						pthread_mutex_unlock(&mutexjoblist);
+								argin   = (mxArray *)mxDeserialize(job->arg, job->job->argsize);
+								options = (mxArray *)mxDeserialize(job->opt, job->job->optsize);
+								jobid   = job->job->id;
+								peerid  = job->host->id;
+								DEBUG(LOG_CRIT, "executing job %d from %s@%s (jobid=%u, memreq=%lu, timreq=%lu)", ++jobnum, job->host->user, job->host->name, job->job->id, job->job->memreq, job->job->timreq);
+								pthread_mutex_unlock(&mutexjoblist);
 
-						/* create a copy of the optin cell-array */
-						int n, i;
-						n = mxGetM(options) * mxGetN(options);
-						mxArray *previous = options;
-						options = mxCreateCellMatrix(1, n+4);
-						for (i=0; i<n; i++)
-								mxSetCell(options, i, mxGetCell(previous, i));
-						/* add the masterid and timallow options, these are used by peerexec for the killswitch */
-						mxSetCell(options, n+0, mxCreateString("masterid\0"));
-						mxSetCell(options, n+1, mxCreateDoubleScalar(peerid));
-						mxSetCell(options, n+2, mxCreateString("timallow\0"));
-						mxSetCell(options, n+3, mxCreateDoubleScalar(timallow));
+								/* create a copy of the optin cell-array */
+								n = mxGetM(options) * mxGetN(options);
+								mxArray *previous = options;
+								options = mxCreateCellMatrix(1, n+4);
+								for (i=0; i<n; i++)
+										mxSetCell(options, i, mxGetCell(previous, i));
+								/* add the masterid and timallow options, these are used by peerexec for the killswitch */
+								mxSetCell(options, n+0, mxCreateString("masterid\0"));
+								mxSetCell(options, n+1, mxCreateDoubleScalar(peerid));
+								mxSetCell(options, n+2, mxCreateString("timallow\0"));
+								mxSetCell(options, n+3, mxCreateDoubleScalar(timallow));
 
-						/* copy them over to the engine */
-						engPutVariable(en, "argin", argin);
-						engPutVariable(en, "options", options);
-						mxDestroyArray(argin);
-						mxDestroyArray(options);
+								/* copy them over to the engine */
+								engPutVariable(en, "argin", argin);
+								engPutVariable(en, "options", options);
+								mxDestroyArray(argin);
+								mxDestroyArray(options);
 
-						/* execute the job */
-						engEvalString(en, "[argout, options] = peerexec(argin, options);");
-						jobfailed = 0;
+								/* execute the job */
+								engEvalString(en, "[argout, options] = peerexec(argin, options);");
+								jobFailed = 0;
 
-						/* get the job output arguments and options */
-						if ((argout = engGetVariable(en, "argout")) == NULL) {
-								DEBUG(LOG_ERR, "error getting argout");
-								jobfailed = 1;
+								/* get the job output arguments and options */
+								if ((argout = engGetVariable(en, "argout")) == NULL) {
+										DEBUG(LOG_ERR, "error getting argout");
+										jobFailed = 1;
+								}
+
+								if ((options = engGetVariable(en, "options")) == NULL) {
+										DEBUG(LOG_ERR, "error getting options");
+										jobFailed = 1;
+								}
+
+								if (jobFailed) {
+										/* try to close the engine, probably this will fail */
+										engClose(en);
+										matlabRunning = 0;
+								}
 						}
+						else {
+								/* matlab failed to start */
+								pthread_mutex_lock(&mutexjoblist);
+								job     = joblist;
+								jobid   = job->job->id;
+								peerid  = job->host->id;
+								DEBUG(LOG_CRIT, "failed to execute job %d from %s@%s (jobid=%u, memreq=%lu, timreq=%lu)", ++jobnum, job->host->user, job->host->name, job->job->id, job->job->memreq, job->job->timreq);
+								pthread_mutex_unlock(&mutexjoblist);
+						} /* if matlabRunning */
 
-						if ((options = engGetVariable(en, "options")) == NULL) {
-								DEBUG(LOG_ERR, "error getting options");
-								jobfailed = 1;
+						if (engineFailed) {
+								/* create the ouptut argument containing an error */
+								argout = mxCreateCellMatrix(1,1);
+								/* specify the error in the options */
+								options = mxCreateCellMatrix(1,2);
+								mxSetCell(options, 0, mxCreateString("lasterr\0"));
+								mxSetCell(options, 1, mxCreateString("could not start the matlab engine\0"));
 						}
-
-						if (jobfailed) {
-								/* create an empty ouptut argument */
+						else if (jobFailed) {
+								/* create the ouptut argument containing an error */
 								argout = mxCreateCellMatrix(1,1);
 								/* specify the error in the options */
 								options = mxCreateCellMatrix(1,2);
 								mxSetCell(options, 0, mxCreateString("lasterr\0"));
 								mxSetCell(options, 1, mxCreateString("the matlab engine aborted\0"));
-								/* try to close the engine, probably this will fail */
-								engClose(en);
-								matlabRunning = 0;
 						};
 
-						/* send the results back to the master */
 
 						/*****************************************************************************
+						 * send the results back to the master
 						 * the following code is largely shared with the put-option in the peer mex file
 						 *****************************************************************************/
 						pthread_mutex_lock(&mutexpeerlist);
@@ -700,52 +746,26 @@ cleanup:
 						/* clear the joblist */
 						clear_joblist();
 
-						pthread_mutex_lock(&mutexhost);
-						/* make the slave available again, note that this should be followed by an announce_once() */
-						host->status = STATUS_IDLE;
-						/* update the current job description */
-						bzero(&(host->current), sizeof(current_t));
-						pthread_mutex_unlock(&mutexhost);
-						/* inform the other peers of the updated status */
-						announce_once();
+						if (!engineFailed) {
+								pthread_mutex_lock(&mutexhost);
+								/* make the slave available again, note that this should be followed by an announce_once() */
+								host->status = STATUS_IDLE;
+								/* update the current job description */
+								bzero(&(host->current), sizeof(current_t));
+								pthread_mutex_unlock(&mutexhost);
+								/* inform the other peers of the updated status */
+								announce_once();
 
-						matlabFinished = time(NULL);
-						DEBUG(LOG_CRIT, "executing job %d took %d seconds", jobnum, matlabFinished - matlabStart);
+								matlabFinished = time(NULL);
+								DEBUG(LOG_CRIT, "executing job %d took %d seconds", jobnum, matlabFinished - matlabStart);
+						}
 				}
 				else {
 						threadsleep(SLEEPTIME);
 				} /* if jobcount */
 
-				/* switch the engine off after being idle for a certain time */
-				if ((matlabRunning!=0) && (difftime(time(NULL), matlabFinished)>enginetimeout)) {
-						if (engClose(en)!=0) {
-								DEBUG(LOG_CRIT, "could not stop the MATLAB engine");
-								matlabRunning = 0;
-						}
-						else {
-								DEBUG(LOG_CRIT, "stopped idle MATLAB engine");
-								matlabRunning = 0;
-						}
-				}
+		} /* while not jobFailed */
 
-				/* switch back to the default state after having waiting some time */
-				if ((engineFailed!=0) && (difftime(time(NULL), engineFailed)>zombietimeout)) {
-						DEBUG(LOG_NOTICE, "switching back to idle mode");
-						pthread_mutex_lock(&mutexhost);
-						/* make the slave available again, note that this should be followed by an announce_once() */
-						host->status = STATUS_IDLE;
-						/* update the current job description */
-						bzero(&(host->current), sizeof(current_t));
-						pthread_mutex_unlock(&mutexhost);
-						/* inform the other peers of the updated status */
-						announce_once();
-
-						engineFailed = 0;
-						continue;
-				}
-
-		} /* while */
-
-		return jobfailed;
+		return jobFailed;
 } /* main */
 

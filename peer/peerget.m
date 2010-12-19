@@ -81,7 +81,7 @@ if success
   err         = keyval('lasterr',  options);
   diarystring = keyval('diary',    options);
 
-  if strcmp(diary, 'error') && ~isempty(err)
+  if strcmp(diary, 'error') && ~isempty(err) && ~strcmp(err, 'could not start the matlab engine')
     fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
     fprintf('%% an error was detected, the diary output of the remote execution follows \n');
     fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');

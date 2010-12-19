@@ -272,8 +272,29 @@ while ~all(submitted) || ~all(collected)
     end
 
     % collect the output arguments
-    [argout, options] = peerget(joblist(i).jobid, 'timeout', inf, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
-
+    try
+      [argout, options] = peerget(joblist(i).jobid, 'timeout', inf, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
+    catch ME
+      if strcmp(ME.message, 'could not start the matlab engine')
+        % this is due to a license problem
+        % reset all job information, this will cause it to be automatically resubmitted
+        jobid      (collect) = nan;
+        puttime    (collect) = nan;
+        timused    (collect) = nan;
+        memused    (collect) = nan;
+        submitted  (collect) = false;
+        collected  (collect) = false;
+        busy       (collect) = false;
+        started    (collect) = false;
+        submittime (collect) = inf;
+        collecttime(collect) = inf;
+        continue
+      else
+	    fprintf('an error was detected during the execution of job %d\n', collect);
+        rethrow(ME);
+      end
+    end
+    
     % fprintf('collected job %d\n', collect);
     collected(collect)   = true;
     collecttime(collect) = toc(stopwatch);
@@ -386,16 +407,9 @@ while ~all(submitted) || ~all(collected)
   if ~isempty(ResubmitTime)
     % use the user-specified amount
     estimated = ResubmitTime;
-  elseif any(collected)
-    % estimate the time that it took the collected jobs to finish
-    estimated_min = min(collecttime(collected) - submittime(collected));
-    estimated_max = max(collecttime(collected) - submittime(collected));
-    estimated_avg = max(collecttime(collected) - submittime(collected));
-    % estimate the expected time of the jobs, assuming a "normal" distribution
-    % the rationale for the estimate is the average plus N times the standard deviation
-    estimated = estimated_avg + 2*(estimated_max - estimated_min);
   elseif ~isempty(timreq)
     % assume that it will not take more than 3x the required time
+    % this is also what is used by the peerslave to kill the job
     estimated = 3*timreq;
   else
     % it is not possible to estimate the time that a job will take
