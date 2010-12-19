@@ -149,7 +149,7 @@ memused     = nan(1, numjob);
 submitted   = false(1, numjob);
 collected   = false(1, numjob);
 busy        = false(1, numjob);
-started     = false(1, numjob);
+lastseen    = inf(1, numjob);
 submittime  = inf(1, numjob);
 collecttime = inf(1, numjob);
 resubmitted = [];    % this will contain a growing list with structures
@@ -221,10 +221,10 @@ while ~all(submitted) || ~all(collected)
   busylist = peerlist('busy');
   busy(:)  = false;
   if ~isempty(busylist)
-    current      = [busylist.current];
-    [dum, sel]   = intersect(jobid, [current.jobid]);
-    busy(sel)    = true; % this indicates that the job execution is currently busy
-    started(sel) = true; % this indicates that the job execution has started
+    current       = [busylist.current];
+    [dum, sel]    = intersect(jobid, [current.jobid]);
+    busy(sel)     = true;           % this indicates that the job execution is currently busy
+    lastseen(sel) = toc(stopwatch); % keep track of when the job was seen the last time
   end
 
   if sum(collected)>prevnumcollected || sum(busy)~=prevnumbusy
@@ -286,7 +286,7 @@ while ~all(submitted) || ~all(collected)
         submitted  (collect) = false;
         collected  (collect) = false;
         busy       (collect) = false;
-        started    (collect) = false;
+        lastseen   (collect) = inf;
         submittime (collect) = inf;
         collecttime(collect) = inf;
         continue
@@ -350,10 +350,10 @@ while ~all(submitted) || ~all(collected)
   busylist = peerlist('busy');
   busy(:)  = false;
   if ~isempty(busylist)
-    current      = [busylist.current];
-    [dum, sel]   = intersect(jobid, [current.jobid]);
-    busy(sel)    = true; % this indicates that the job execution is currently busy
-    started(sel) = true; % this indicates that the job execution has started
+    current       = [busylist.current];
+    [dum, sel]    = intersect(jobid, [current.jobid]);
+    busy(sel)     = true;           % this indicates that the job execution is currently busy
+    lastseen(sel) = toc(stopwatch); % keep track of when the job was seen the last time
   end
 
   if sum(collected)>prevnumcollected || sum(busy)~=prevnumbusy
@@ -369,12 +369,18 @@ while ~all(submitted) || ~all(collected)
   % PART 3: flag jobs that take too long for resubmission
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+  % this is only a warning, no action is taken here
+  % sel = find((toc(stopwatch)-lastseen)>30);
+  % for i=1:length(sel)
+  %   warning('job %d has not been seen for 30 seconds\n', sel(i));
+  % end
+
   % search for jobs that were submitted but that are still not busy after 30 seconds
   % this happens if the peerslave is not able to get a matlab license
   elapsed = toc(stopwatch) - submittime;
-  elapsed(~submitted) = 0;
-  elapsed(collected)  = 0;
-  elapsed(started)    = 0; % once started there is no reason to resubmit "because it takes too long to get started"
+  elapsed(~submitted)       = 0;
+  elapsed(collected)        = 0;
+  elapsed(~isinf(lastseen)) = 0; % once started there is no reason to resubmit "because it takes too long to get started"
   sel = find(elapsed>30);
 
   for i=1:length(sel)
@@ -393,7 +399,7 @@ while ~all(submitted) || ~all(collected)
     submitted  (sel(i)) = false;
     collected  (sel(i)) = false;
     busy       (sel(i)) = false;
-    started    (sel(i)) = false;
+    lastseen   (sel(i)) = inf;
     submittime (sel(i)) = inf;
     collecttime(sel(i)) = inf;
 
@@ -440,7 +446,7 @@ while ~all(submitted) || ~all(collected)
     submitted  (sel(i)) = false;
     collected  (sel(i)) = false;
     busy       (sel(i)) = false;
-    started    (sel(i)) = false;
+    lastseen   (sel(i)) = inf;
     submittime (sel(i)) = inf;
     collecttime(sel(i)) = inf;
 
@@ -458,10 +464,10 @@ while ~all(submitted) || ~all(collected)
   busylist = peerlist('busy');
   busy(:)  = false;
   if ~isempty(busylist)
-    current      = [busylist.current];
-    [dum, sel]   = intersect(jobid, [current.jobid]);
-    busy(sel)    = true; % this indicates that the job execution is currently busy
-    started(sel) = true; % this indicates that the job execution has started
+    current       = [busylist.current];
+    [dum, sel]    = intersect(jobid, [current.jobid]);
+    busy(sel)     = true;           % this indicates that the job execution is currently busy
+    lastseen(sel) = toc(stopwatch); % keep track of when the job was seen the last time
   end
 
   if sum(collected)>prevnumcollected || sum(busy)~=prevnumbusy
