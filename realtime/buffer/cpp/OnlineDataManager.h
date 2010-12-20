@@ -487,6 +487,10 @@ class OnlineDataManager : public StringRequestHandler {
 		curFilename = filename;
 		fileCounter = 0;
 	}
+	
+	
+	/** Retrieve reference to SignalConfiguration object */
+	const SignalConfiguration& getSignalConfiguration() { return signalConf; }
 		
 	protected:
 	
@@ -524,6 +528,7 @@ class OnlineDataManager : public StringRequestHandler {
 			return false;
 		}
 		sampleCounter = 0;
+		skipSamples = 0;
 		return true;
 	}
 	
