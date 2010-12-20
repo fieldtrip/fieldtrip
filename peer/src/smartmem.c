@@ -126,8 +126,11 @@ int smartmem_update(void) {
 		}
 
 		/* determine the amount of memory available on this computer */
-		if (smartmem_info(&MemTotal, &MemFree, &Buffers, &Cached) < 0)
+		if (smartmem_info(&MemTotal, &MemFree, &Buffers, &Cached) < 0) {
+				pthread_mutex_unlock(&mutexhost);
+				pthread_mutex_unlock(&mutexsmartmem);
 				return -1;
+		}
 
 		pthread_mutex_lock(&mutexpeerlist);
 		/* determine the amount of memory that is reserved by the idle slaves on this computer */
@@ -147,6 +150,10 @@ int smartmem_update(void) {
 
 		/* include this peer in the count */
 		NumPeers++;
+
+		/* the Buffers and Cached memory are also available to the system */
+		MemFree += Buffers;
+		MemFree += Cached;
 
 		/* determine the scale of the memory update (for iterative improvements) */
 		scale = ((float)host->memavail) / ((float)MemFree);
@@ -171,11 +178,7 @@ int smartmem_update(void) {
 						break;
 		} /* switch */
 
-		/* the Buffers and Cached memory are also available to the system */
-		MemFree += Buffers;
-		MemFree += Cached;
-
-		/* the reserved memory cannot be more than the available memory */
+		/* the reserved memory by the other idle slaves should not be more than the available memory */
 		MemReserved  = (MemReserved > MemFree ? MemFree : MemReserved );
 
 		/* determine the suggested amount of memory for this slave */

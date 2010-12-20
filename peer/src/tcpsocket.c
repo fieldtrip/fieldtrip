@@ -89,12 +89,12 @@ void *tcpsocket(void *arg) {
 
 		/* prevent smartcpu_update during the negociation and reading of the job */
 		pthread_mutex_lock(&mutexsmartcpu);
-		smartcpu.freeze = 0;
+		smartcpu.freeze = 1;
 		pthread_mutex_unlock(&mutexsmartcpu);
 
 		/* prevent smartmem_update during the negociation and reading of the job */
 		pthread_mutex_lock(&mutexsmartmem);
-		smartmem.freeze = 0;
+		smartmem.freeze = 1;
 		pthread_mutex_unlock(&mutexsmartmem);
 
 		DEBUG(LOG_DEBUG, "tcpsocket: fd = %d, socketcount = %d, threadcount = %d", fd, socketcount, threadcount);
