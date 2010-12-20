@@ -253,7 +253,7 @@ switch dimord
       for itap = 1:ntaper(ifreqoi)
         % compute indices that will be used to extracted the requested fft output
         nsamplefreqoi    = timwin(ifreqoi) .* fsample;
-        reqtimeboiind    = find((timeboi >=  (nsamplefreqoi ./ 2)) & (timeboi <    ndatsample - (nsamplefreqoi ./2)));
+        reqtimeboiind    = find((timeboi >=  (nsamplefreqoi ./ 2)) & (timeboi <    (ndatsample - (nsamplefreqoi ./2))));
         reqtimeboi       = timeboi(reqtimeboiind);
         
         % compute datspectrum*wavelet, if there are reqtimeboi's that have data
