@@ -579,7 +579,7 @@ int main(int argc, char *argv[]) {
 								options = mxCreateCellMatrix(1,2);
 								mxSetCell(options, 0, mxCreateString("lasterr\0"));
 								if (jobFailed==1)
-										mxSetCell(options, 1, mxCreateString("failed to execute the job (argin)0"));
+										mxSetCell(options, 1, mxCreateString("failed to execute the job (argin)\0"));
 								else if (jobFailed==2)
 										mxSetCell(options, 1, mxCreateString("failed to execute the job (optin)\0"));
 								else if (jobFailed==3)

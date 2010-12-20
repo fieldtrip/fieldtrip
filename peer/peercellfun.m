@@ -295,9 +295,21 @@ while ~all(submitted) || ~all(collected)
     try
       [argout, options] = peerget(joblist(i).jobid, 'timeout', inf, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
     catch ME
-      if strcmp(ME.message, 'could not start the matlab engine')
+      % the peerslave command line executable itself can return a number of errors
+      %  1) could not start the matlab engine
+      %  2) failed to execute the job (argin)
+      %  3) failed to execute the job (optin)
+      %  4) failed to execute the job (eval)
+      %  5) failed to execute the job (argout)
+      %  6) failed to execute the job (optout)
+      %  7) failed to execute the job
+      % errors 1-3 are not the users fault and happen prior to execution, therefore they should always result in a resubmission
+
+      if strcmp(ME.message, 'could not start the matlab engine') || ...
+         strcmp(ME.message, 'failed to execute the job (argin)') || ...
+         strcmp(ME.message, 'failed to execute the job (optin)')
         % this is due to a license problem
-        warning('resubmitting job %d because the matlab engine could not get a license', sel(i));
+        warning('resubmitting job %d because the matlab engine could not get a license', collect);
         % reset all job information, this will cause it to be automatically resubmitted
         jobid      (collect) = nan;
         puttime    (collect) = nan;
