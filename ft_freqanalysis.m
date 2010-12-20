@@ -69,6 +69,8 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   cfg.tapsmofrq  = vector 1 x numfoi, the amount of spectral smoothing through
 %                    multi-tapering. Note that 4 Hz smoothing means
 %                    plus-minus 4 Hz, i.e. a 8 Hz smoothing box.
+%   cfg.foilim     = [begin end], frequency band of interest
+%       OR
 %   cfg.foi        = vector 1 x numfoi, frequencies of interest
 %   cfg.taper      = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
 %                     For cfg.output='powandcsd', you should specify the channel combinations
@@ -82,6 +84,8 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   WLTCONVOL performs time-frequency analysis on any time series trial data
 %   using the 'wavelet method' based on Morlet wavelets.
 %   cfg.foi        = vector 1 x numfoi, frequencies of interest
+%   cfg.foilim     = [begin end], frequency band of interest
+%       OR
 %   cfg.toi        = vector 1 x numtoi, the times on which the analysis windows
 %                    should be centered (in seconds)
 %   cfg.width      = 'width' of the wavelet, determines the temporal and spectral
