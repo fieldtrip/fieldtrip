@@ -12,12 +12,12 @@ function varargout = peercellfun(fname, varargin)
 % function to be evaluated.
 %   UniformOutput  = boolean (default = false)
 %   StopOnError    = boolean (default = true)
-%   ResubmitTime   = number, amount of time for a job to be resubmitted (default is automatic)
 %   MaxBusy        = number, amount of slaves allowed to be busy (default = inf)
 %   diary          = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
-%   memreq         = number
-%   timreq         = number
-%   sleep          = number
+%   timreq         = number, initial estimate for the time required to run a single job (default = 3600)
+%   mintimreq      = number, minimum time required to run a single job (default is automatic)
+%   memreq         = number, initial estimate for the memory required to run a single job (default = 1e9)
+%   minmemreq      = number, minimum memory required to run a single job (default is automatic)
 %   order          = string, can be 'random' or 'original' (default = 'random')
 %
 % Example
@@ -56,28 +56,48 @@ optbeg = find(cellfun(@ischar, varargin));
 optarg = varargin(optbeg:end);
 
 % assert that the user does not specify obsolete options
-keyvalcheck(optarg, 'forbidden', {'timcv'});
+keyvalcheck(optarg, 'forbidden', {'timcv', 'ResubmitTime'});
 
 % get the optional input arguments
 UniformOutput = keyval('UniformOutput', optarg); if isempty(UniformOutput), UniformOutput=false; end
 StopOnError   = keyval('StopOnError',   optarg); if isempty(StopOnError),   StopOnError=true;    end
-ResubmitTime  = keyval('ResubmitTime',  optarg);
 MaxBusy       = keyval('MaxBusy',       optarg); if isempty(MaxBusy),       MaxBusy=inf;         end
-memreq        = keyval('memreq',        optarg); if isempty(memreq),        memreq=1024^3;       end % assume 1 GB
 timreq        = keyval('timreq',        optarg); 
+mintimreq     = keyval('mintimreq',     optarg); 
+memreq        = keyval('memreq',        optarg);
+minmemreq     = keyval('minmemreq',     optarg); 
 sleep         = keyval('sleep',         optarg); if isempty(sleep),         sleep=0.05;          end
 diary         = keyval('diary',         optarg); if isempty(diary),         diary='error';       end % 'always', 'never', 'warning', 'error'
 order         = keyval('order',         optarg); if isempty(order),         order='random';      end % 'random', 'original'
 
-if isempty(timreq)
-  % assume a default job duration of one hour
+if isempty(timreq) && isempty(mintimreq)
+  % assume an initial job duration of 1 hour
+  % the time required by the jobs will be estimated and timreq will be auto-adjusted
   timreq    = 3600;
-  % the estimated time that a job requires will be auto-adjusted
   mintimreq = 0;
-else
-  % use the specified time as the minimum that a job required
+elseif isempty(timreq)
+  % use the specified mimimum as the initial value that a job required
   % it will be auto-adjusted to larger values, not to smaller values
-  mintimreq = timreq;
+  timreq    = mintimreq;
+elseif isempty(mintimreq)
+  % jobs will be killed by the slave if they take more than 3 times the estimated time at submission
+  % use the user-supplied initial value, the minimum should not be less than 1/3 of that
+  mintimreq = timreq/3;
+end
+
+if isempty(memreq) && isempty(minmemreq)
+  % assume an initial memory requirement of 1 GB
+  % the memory required by the jobs will be estimated and memreq will be auto-adjusted
+  memreq    = 1024^3;
+  minmemreq = 0;
+elseif isempty(memreq)
+  % use the specified mimimum as the initial value that a job required
+  % it will be auto-adjusted to larger values, not to smaller values
+  memreq    = minmemreq;
+elseif isempty(minmemreq)
+  % jobs will be killed by the slave if they take more than 1.5 times the estimated time at submission
+  % use the user-supplied initial value, the minimum should not be less than 1/1.5 times that
+  minmemreq = memreq/1.5;
 end
 
 % convert from 'yes'/'no' into boolean value
@@ -315,9 +335,10 @@ while ~all(submitted) || ~all(collected)
 
     if any(collected)
       % update the estimate of the time and memory that will be needed for the next job
-      memreq = nanmax(memused);
       timreq = nanmax(timused);
       timreq = max(timreq, mintimreq);
+      memreq = nanmax(memused);
+      memreq = max(memreq, minmemreq);
     elseif ~any(collected) && any(submitted) && any(busy)
       % update based on the time spent waiting sofar for the first job to return
       elapsed = toc(stopwatch) - min(submittime(submitted(busy)));
@@ -327,21 +348,12 @@ while ~all(submitted) || ~all(collected)
 
     % give some feedback
     if memreq~=prev_memreq
-      memreq_in_mb = memreq/(1024*1024);
-      if memreq_in_mb<100
-        fprintf('updating memreq to %.3f MB\n', memreq_in_mb);
-      else
-        fprintf('updating memreq to %.0f MB\n', memreq_in_mb);
-      end
+      fprintf('updating memreq to %s\n', print_mem(memreq));
     end
 
     % give some feedback
     if timreq~=prev_timreq
-      if timreq<100
-        fprintf('updating timreq to %.3f s\n', timreq);
-      else
-        fprintf('updating timreq to %.0f s\n', timreq);
-      end
+      fprintf('updating timreq to %s\n', print_tim(timreq));
     end
 
   end % for joblist
@@ -411,17 +423,9 @@ while ~all(submitted) || ~all(collected)
   % search for jobs that take too long to return their results
   % use an estimate of the time it requires a job to complete
 
-  if ~isempty(ResubmitTime)
-    % use the user-specified amount
-    estimated = ResubmitTime;
-  elseif ~isempty(timreq)
-    % assume that it will not take more than 3x the required time
-    % this is also what is used by the peerslave to kill the job
-    estimated = 3*timreq;
-  else
-    % it is not possible to estimate the time that a job will take
-    estimated = inf;
-  end
+  % assume that it will not take more than 3x the required time
+  % this is also what is used by the peerslave to kill the job
+  estimated = 3*timreq;
 
   % add some time to allow the matlab engine to start
   estimated = estimated + 30;
