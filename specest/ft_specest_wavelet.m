@@ -9,7 +9,7 @@ function [spectrum,freqoi,timeoi] = ft_specest_wavelet(dat, time, varargin)
 %
 %   dat      = matrix of chan*sample 
 %   time     = vector, containing time in seconds for each sample
-%   spectrum = matrix of chan*freqoi*timeoi of fourier coefficients
+%   spectrum = array of chan*freqoi*timeoi of fourier coefficients
 %   freqoi   = vector of frequencies in spectrum
 %   timeoi   = vector of timebins in spectrum
 %
@@ -26,8 +26,8 @@ function [spectrum,freqoi,timeoi] = ft_specest_wavelet(dat, time, varargin)
 %
 %
 %
-% FFT SPEED NOT YET OPTIMIZED (e.g. matlab version, transpose or not)
-% SHOULD FREQOI = 'ALL' BE REMOVED OR NOT?
+% 
+%
 %
 %
 % See also SPECEST_MTMCONVOL, SPECEST_CONVOL, SPECEST_HILBERT, SPECEST_MTMFFT
@@ -51,8 +51,6 @@ pad       = keyval('pad',         varargin);
 fsample = 1/(time(2)-time(1));
 dattime = ndatsample / fsample; % total time in seconds of input data
 
-
-
 % Zero padding
 if round(pad * fsample) < ndatsample
   error('the padding that you specified is shorter than the data');
@@ -60,8 +58,7 @@ end
 if isempty(pad) % if no padding is specified padding is equal to current data length
   pad = dattime;
 end
-prepad  = zeros(1,floor((pad - dattime) * fsample ./ 2));
-postpad = zeros(1,ceil((pad - dattime) * fsample ./ 2));
+postpad = zeros(1,round((pad - dattime) * fsample));
 endnsample = pad * fsample;  % total number of samples of padded data
 endtime    = pad;            % total time in seconds of padded data
 
@@ -83,10 +80,6 @@ if freqoi(1)==0
 end
 nfreqboi = length(freqboi);
 nfreqoi  = length(freqoi);
-% expand width to array if constant width
-if numel(width) == 1
-  width = ones(1,nfreqoi) * width;
-end
 
 
 % Set timeboi and timeoi
@@ -102,15 +95,12 @@ elseif strcmp(timeoi,'all') % if input was 'all'
 end
 
 
-% minoffset = min(data.offset);
-% timboi = round(cfg.toi .* data.fsample - minoffset);
-% toi = round(cfg.toi .* data.fsample) ./ data.fsample;
-% numtoi = length(toi);
-% numfoi = length(cfg.foi);
-
-
 
 % Creating wavelets
+% expand width to array if constant width
+if numel(width) == 1
+  width = ones(1,nfreqoi) * width;
+end
 wltspctrm = cell(nfreqoi,1);
 for ifreqoi = 1:nfreqoi
   dt = 1/fsample;
@@ -130,28 +120,24 @@ for ifreqoi = 1:nfreqoi
 end
 
 
+
 % Compute fft
-spectrum = complex(nchan,nfreqoi,ntimeboi);
-datspectrum = fft([repmat(prepad,[nchan, 1]) dat repmat(postpad,[nchan, 1])],[],2);
+spectrum = complex(nan(nchan,nfreqoi,ntimeboi),nan(nchan,nfreqoi,ntimeboi));
+datspectrum = transpose(fft(transpose([dat repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
 for ifreqoi = 1:nfreqoi
   fprintf('processing frequency %d (%.2f Hz)\n', ifreqoi,freqoi(ifreqoi));
-  for ichan = 1:nchan
-    % compute indices that will be used to extracted the requested fft output
-    nsamplefreqoi    = taplen(ifreqoi) .* fsample;
-    reqtimeboiind    = find((timeboi >=  (nsamplefreqoi ./ 2)) & (timeboi <    ndatsample - (nsamplefreqoi ./2)));
-    reqtimeboi       = timeboi(reqtimeboiind);
-    
-    % compute datspectrum*wavelet, if there are reqtimeboi's that have data
-    if ~isempty(reqtimeboi)
-      dum = fftshift(ifft(datspectrum(ichan,:) .* wltspctrm{ifreqoi},[],2)); % why is this fftshift necessary?
-      spectrum(ichan,ifreqoi,reqtimeboiind) = dum(reqtimeboi);
-    end
+  % compute indices that will be used to extracted the requested fft output
+  nsamplefreqoi    = taplen(ifreqoi);
+  reqtimeboiind    = find((timeboi >=  (nsamplefreqoi ./ 2)) & (timeboi < (ndatsample - (nsamplefreqoi ./2))));
+  reqtimeboi       = timeboi(reqtimeboiind);
+  
+  % compute datspectrum*wavelet, if there are reqtimeboi's that have data
+  if ~isempty(reqtimeboi)
+    dum = fftshift(transpose(ifft(transpose(datspectrum .* repmat(wltspctrm{ifreqoi},[nchan 1])))),2); % double explicit transpose to speedup fft
+    dum = dum .* sqrt(2 ./ fsample);
+    spectrum(:,ifreqoi,reqtimeboiind) = dum(:,reqtimeboi);
   end
 end
-
-
-
-
 
 
 
