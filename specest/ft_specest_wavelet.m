@@ -5,7 +5,7 @@ function [spectrum,freqoi,timeoi] = ft_specest_wavelet(dat, time, varargin)
 %
 %
 % Use as
-%   [spectrum,freqoi,timoei] = specest_wavelet(dat,time...)   
+%   [spectrum,freqoi,timeoi] = specest_wavelet(dat,time...)   
 %
 %   dat      = matrix of chan*sample 
 %   time     = vector, containing time in seconds for each sample
