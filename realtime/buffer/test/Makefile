@@ -63,7 +63,7 @@ demo_buffer$(SUFFIX): demo_buffer.o ../src/libbuffer.a
 demo_buffer_rda$(SUFFIX): demo_buffer_rda.o ../src/libbuffer.a ../src/rdaserver.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)	
 	
-demo_buffer_unix$(SUFFIX): demo_buffer_unix.o ../src/libbuffer.a ../src/socketserver.o
+demo_buffer_unix$(SUFFIX): demo_buffer_unix.o ../src/libbuffer.a 
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)	
 
 test_gethdr: test_gethdr.o

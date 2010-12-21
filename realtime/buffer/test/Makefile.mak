@@ -42,7 +42,7 @@ demo_event$(SUFFIX): demo_event.obj event.obj
 demo_buffer$(SUFFIX): demo_buffer.obj 
 	$(LD) /OUT:$@ $** $(LIBS) 
 	
-demo_buffer_unix$(SUFFIX): demo_buffer_unix.obj ../src/socketserver.obj
+demo_buffer_unix$(SUFFIX): demo_buffer_unix.obj
 	$(LD) /OUT:$@ $** $(LIBS) 
 
 test_gethdr.exe: test_gethdr.obj
