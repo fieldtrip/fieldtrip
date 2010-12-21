@@ -18,9 +18,9 @@ LIBFLAGS = /MACHINE:X86
 !ERROR  Processor architecture unknown: Must specify PLATFORM=AMD64 or PLATFROM=x86
 !ENDIF
 
-all: libbuffer.lib socketserver.obj
+all: libbuffer.lib
 
-libbuffer.lib: tcpserver.obj tcpsocket.obj tcprequest.obj clientrequest.obj dmarequest.obj cleanup.obj util.obj printstruct.obj swapbytes.obj extern.obj endianutil.obj
+libbuffer.lib: tcpserver.obj tcpsocket.obj tcprequest.obj clientrequest.obj dmarequest.obj cleanup.obj util.obj printstruct.obj swapbytes.obj extern.obj endianutil.obj  socketserver.obj
 	lib $(LIBFLAGS) /OUT:libbuffer.lib $**
 	
 %.obj: %.c buffer.h message.h swapbytes.h socket_includes.h unix_includes.h
