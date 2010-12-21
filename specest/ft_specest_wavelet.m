@@ -96,6 +96,7 @@ end
 
 
 
+
 % Creating wavelets
 % expand width to array if constant width
 if numel(width) == 1
@@ -138,13 +139,6 @@ for ifreqoi = 1:nfreqoi
     spectrum(:,ifreqoi,reqtimeboiind) = dum(:,reqtimeboi);
   end
 end
-
-
-
-
-
-
-
 
 
 
