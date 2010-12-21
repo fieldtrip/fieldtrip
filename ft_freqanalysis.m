@@ -241,6 +241,15 @@ switch cfg.method
     if ~isfield(cfg, 'width'),         cfg.width      = 7;            end
     if ~isfield(cfg, 'gwidth'),        cfg.gwidth     = 3;            end
     cfg.method = 'wavelet';
+     
+  case 'hilbert_devel'
+    specestflg = 1;
+    if ~isfield(cfg, 'filttype'),         cfg.filttype      = 'but';        end
+    if ~isfield(cfg, 'filtorder'),        cfg.filtorder     = 4;            end
+    if ~isfield(cfg, 'filtdir'),          cfg.filtdir       = 'twopass';    end
+    if ~isfield(cfg, 'width'),            cfg.width         = 1;            end
+    cfg.method = 'hilbert';
+
     
   otherwise
     specestflg = 0;
@@ -435,6 +444,8 @@ else
     % Perform specest call and set some specifics
     clear spectrum % in case of very large trials, this lowers peak mem usage a bit
     switch cfg.method
+           
+      
       case 'mtmconvol'
         [spectrum_mtmconvol,ntaper,foi,toi] = ft_specest_mtmconvol(dat, time, 'timeoi', cfg.toi, 'timwin', cfg.t_ftimwin, 'taper', cfg.taper, options{:}, 'dimord', 'chan_time_freqtap');
         hastime = true;
@@ -448,11 +459,13 @@ else
         for iindfoi = 1:numel(foi)
           freqtapind{iindfoi} = tempntaper(iindfoi)+1:tempntaper(iindfoi+1);
         end
+     
         
       case 'mtmfft'
         [spectrum,ntaper,foi] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, options{:});
         hastime = false;
      
+        
       case 'wavelet'  
         [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:});
         hastime = true;
@@ -460,6 +473,16 @@ else
         ntaper = ones(1,numel(foi));
         % modify spectrum for same reason as fake ntaper
         spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
+          
+        
+      case 'hilbert'  
+        [spectrum,foi,toi] = ft_specest_hilbert(dat, time, 'timeoi', cfg.toi, 'filttype', cfg.filttype, 'filtorder', cfg.filtorder, 'filtdir', cfg.filtdir, 'width', cfg.width, options{:});
+        hastime = true;
+        % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
+        ntaper = ones(1,numel(foi));
+        % modify spectrum for same reason as fake ntaper
+        spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
+        
         
       otherwise
         error('method %s is unknown or not yet implemented with new low level functions', cfg.method);
