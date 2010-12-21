@@ -30,95 +30,43 @@ end
 %MACI64
 
 L = [];
-L = addSource(L,'fileio/@uint64','abs');
-L = addSource(L,'fileio/@uint64','min');
-L = addSource(L,'fileio/@uint64','max');
-L = addSource(L,'fileio/@uint64','plus');
-L = addSource(L,'fileio/@uint64','minus');
-L = addSource(L,'fileio/@uint64','times');
-L = addSource(L,'fileio/@uint64','rdivide');
+L = add_mex_source(L,'fileio/@uint64','abs');
+L = add_mex_source(L,'fileio/@uint64','min');
+L = add_mex_source(L,'fileio/@uint64','max');
+L = add_mex_source(L,'fileio/@uint64','plus');
+L = add_mex_source(L,'fileio/@uint64','minus');
+L = add_mex_source(L,'fileio/@uint64','times');
+L = add_mex_source(L,'fileio/@uint64','rdivide');
 
-L = addSource(L,'fileio/private','read_16bit');
-L = addSource(L,'fileio/private','read_24bit');
-L = addSource(L,'fileio/private','mxSerialize');
-L = addSource(L,'fileio/private','mxDeserialize');
-L = addSource(L,'fileio/private','read_ctf_shm', {'GLNX86'});  % only compile on GLNX86
-L = addSource(L,'fileio/private','write_ctf_shm', {'GLNX86'}); % only compile on GLNX86
-L = addSource(L,'fileio/private','../../realtime/datasource/siemens/sap2matlab',[],[],'../../realtime/datasource/siemens/siemensap.c -I../../realtime/datasource/siemens/');
+L = add_mex_source(L,'fileio/private','read_16bit');
+L = add_mex_source(L,'fileio/private','read_24bit');
+L = add_mex_source(L,'fileio/private','mxSerialize');
+L = add_mex_source(L,'fileio/private','mxDeserialize');
+L = add_mex_source(L,'fileio/private','read_ctf_shm', {'GLNX86'});  % only compile on GLNX86
+L = add_mex_source(L,'fileio/private','write_ctf_shm', {'GLNX86'}); % only compile on GLNX86
+L = add_mex_source(L,'fileio/private','../../realtime/datasource/siemens/sap2matlab',[],[],'../../realtime/datasource/siemens/siemensap.c -I../../realtime/datasource/siemens/');
 
-L = addSource(L,'forward/private','plgndr');
-L = addSource(L,'forward/private','meg_leadfield1');
-L = addSource(L,'forward/private','lmoutr',[],[],'geometry.c -I.');
-L = addSource(L,'forward/private','solid_angle',[],[],'geometry.c -I.');
-L = addSource(L,'forward/private','ptriproj',[],[],'geometry.c -I.');
+L = add_mex_source(L,'forward/private','plgndr');
+L = add_mex_source(L,'forward/private','meg_leadfield1');
+L = add_mex_source(L,'forward/private','lmoutr',[],[],'geometry.c -I.');
+L = add_mex_source(L,'forward/private','solid_angle',[],[],'geometry.c -I.');
+L = add_mex_source(L,'forward/private','ptriproj',[],[],'geometry.c -I.');
 
-L = addSource(L,'private','splint_gh');
-L = addSource(L,'private','ltrisect',[],[],'geometry.c -I.');
-L = addSource(L,'private','routlm',[],[],'geometry.c -I.');
-L = addSource(L,'private','plinproj',[],[],'geometry.c -I.');
+L = add_mex_source(L,'private','splint_gh');
+L = add_mex_source(L,'private','ltrisect',[],[],'geometry.c -I.');
+L = add_mex_source(L,'private','routlm',[],[],'geometry.c -I.');
+L = add_mex_source(L,'private','plinproj',[],[],'geometry.c -I.');
 
-L = addSource(L,'realtime/online_mri','ft_omri_smooth_volume');
+L = add_mex_source(L,'realtime/online_mri','ft_omri_smooth_volume');
 
 
 oldDir = pwd;
 [baseDir, myName] = fileparts(mfilename('fullpath'));
-
-for i=1:length(L)
-   [relDir, name] = fileparts(L(i).relName);
-
-   sfname = [baseDir filesep L(i).dir filesep L(i).relName '.c'];
-   SF = dir(sfname);
-   if numel(SF)<1
-      fprintf(1,'Error: source file %s cannot be found.', sfname);
-      continue;
-   end
-   
-   if ~force
-      mfname = [baseDir filesep L(i).dir filesep name '.' mexext];
-      MF = dir(mfname);
-      if numel(MF)==1 && datenum(SF.date) <= datenum(MF.date)
-         fprintf(1,'Skipping up-to-date MEX file %s/%s\n', L(i).dir, name);
-         continue;
-      end 
-   end
-   fprintf(1,'Compiling MEX file %s/%s ...\n', L(i).dir, name);
-   cd([baseDir '/' L(i).dir]);
-   cmd = sprintf('mex %s.c %s', L(i). relName, L(i).extras);
-   eval(cmd);
+try
+  compile_mex_list(L, baseDir, force);
+catch me
+  cd(oldDir);
+  rethrow(me);
 end
-
 cd(oldDir);
 
-
-
-function L = addSource(L, directory, relName, matchPlatform, excludePlatform, extras)
-
-% Check if this file only needs compilation on certain platforms (including this one)
-if nargin>3 && ~isempty(matchPlatform) 
-   ok = false;
-   for k=1:numel(matchPlatform)
-       if strcmp(matchPlatform{k}, computer)
-		  ok = true;
-		  break;
-	   end
-	end
-	if ~ok
-	   return
-	end
-end
-
-% Check if this file cannot be compiled on certain platforms (including this one)
-if nargin>4 && ~isempty(excludePlatform) 
-   ok = true;
-   for k=1:numel(excludePlatform)
-      if strcmp(excludePlatform{k}, computer)
-         return;
-      end
-   end
-end
-
-L(end+1).dir   = directory;
-L(end).relName = relName;
-if nargin>5
-  L(end).extras = extras;
-end
