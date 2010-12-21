@@ -8,7 +8,7 @@ function [spectrum,freqoi,timeoi] = ft_specest_hilbert(dat, time, varargin)
 %
 %   dat      = matrix of chan*sample
 %   time     = vector, containing time in seconds for each sample
-%   spectrum = matrix of taper*chan*freqoi*timeoi of fourier coefficients
+%   spectrum = matrix of chan*freqoi*timeoi of fourier coefficients
 %   freqoi   = vector of frequencies in spectrum
 %   timeoi   = vector of timebins in spectrum
 %
@@ -18,6 +18,7 @@ function [spectrum,freqoi,timeoi] = ft_specest_hilbert(dat, time, varargin)
 % Optional arguments should be specified in key-value pairs and can include:
 %   timeoi    = vector, containing time points of interest (in seconds)
 %   freqoi    = vector, containing frequencies (in Hz)
+%   pad       = number, indicating time-length of data to be padded out to in seconds
 %   width     = 
 %   filttype  = 
 %   filtorder = 
@@ -33,14 +34,14 @@ function [spectrum,freqoi,timeoi] = ft_specest_hilbert(dat, time, varargin)
 % $Rev$
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'freqoi','timeoi','width','filttype','filtorder','filtdir'});
-freqoi    = keyval('freqoi',    varargin);
+keyvalcheck(varargin, 'optional', {'freqoi','timeoi','width','filttype','filtorder','filtdir','pad'});
+freqoi    = keyval('freqoi',    varargin);   
 timeoi    = keyval('timeoi',    varargin);   if isempty(timeoi),   timeoi  = 'all';      end
 width     = keyval('width',     varargin);   if isempty(width),    width   = 1;          end
-filttype  = keyval('filttype',  varargin);
-filtorder = keyval('filtorder', varargin);
-filtdir   = keyval('filtdir',   varargin);
-
+filttype  = keyval('filttype',  varargin);   if isempty(filttype),  error('you need to specify filter type'),         end
+filtorder = keyval('filtorder', varargin);   if isempty(filtorder), error('you need to specify filter order'),        end
+filtdir   = keyval('filtdir',   varargin);   if isempty(filtdir),   error('you need to specify filter direction'),    end
+pad       = keyval('pad',       varargin);
 
 % Set n's
 [nchan,ndatsample] = size(dat);
@@ -48,6 +49,19 @@ filtdir   = keyval('filtdir',   varargin);
 
 % Determine fsample and set total time-length of data
 fsample = 1/(time(2)-time(1));
+dattime = ndatsample / fsample; % total time in seconds of input data
+
+% Zero padding
+if round(pad * fsample) < ndatsample
+  error('the padding that you specified is shorter than the data');
+end
+if isempty(pad) % if no padding is specified padding is equal to current data length
+  pad = dattime;
+end
+prepad  = zeros(1,floor(((pad - dattime) * fsample)./2));
+postpad = zeros(1,ceil(((pad - dattime) * fsample)./2));
+endnsample = pad * fsample;  % total number of samples of padded data
+endtime    = pad;            % total time in seconds of padded data
 
 
 % set a default sampling for the frequencies-of-interest
@@ -58,13 +72,13 @@ end
 if any(freqoi==0)
   freqoi(freqoi==0) = [];
 end
-nfreq = length(freqoi);
+nfreqoi = length(freqoi);
 
 
 % Set timeboi and timeoi
 offset = round(time(1)*fsample);
 if isnumeric(timeoi) % if input is a vector
-  timeboi  = round(timeoi .* fsample - offset);
+  timeboi  = round(timeoi .* fsample - offset) + 1;
   ntimeboi = length(timeboi);
   timeoi   = round(timeoi .* fsample) ./ fsample;
 elseif strcmp(timeoi,'all') % if input was 'all'
@@ -73,22 +87,36 @@ elseif strcmp(timeoi,'all') % if input was 'all'
   timeoi   = time;
 end
 
-
-% each frequency can have its own width
-if numel(width)==1
-  width = width*ones(size(freqoi));
+% expand width to array if constant width
+if numel(width) == 1
+  width = ones(1,nfreqoi) * width;
 end
 
-% preallocate the result
-spectrum = complex(zeros(nchans, nfreq, ntime));
 
-for i=1:nfreq
-  flt = preproc_bandpassfilter(dat, fsample, [freqoi(i)-width(i) freqoi(i)+width(i)], filtorder, filttype, filtdir);
-  spectrum(:,i,:) = transpose(hilbert(transpose(flt)));
+% create filter frequencies and check validity
+filtfreq = [];
+for ifreqoi = 1:nfreqoi
+  tmpfreq = [freqoi(ifreqoi)+width(ifreqoi) freqoi(ifreqoi)-width(ifreqoi)];
+  if all((sign(tmpfreq) == 1))
+    filtfreq(end+1,:) = tmpfreq;
+  end
+end
+nfreqoi = size(filtfreq,1);
+
+% preallocate the result and perform the transform
+spectrum = complex(nan(nchan, nfreqoi, ntimeboi), nan(nchan, nfreqoi, ntimeboi));
+for ifreqoi = 1:nfreqoi
+  fprintf('processing frequency %d (%.2f Hz)\n', ifreqoi,freqoi(ifreqoi));
+  
+  % filter
+  flt = ft_preproc_bandpassfilter(dat, fsample, filtfreq(ifreqoi,:), filtorder, filttype, filtdir);
+  
+  % transform and insert
+  dum = transpose(hilbert(transpose([repmat(prepad,[nchan, 1]) flt repmat(postpad,[nchan, 1])])));
+  spectrum(:,ifreqoi,:) = dum(:,timeboi);
 end
 
-% get timeboi out of spectrum
-spectrum = spectrum(:,:,timeboi);
+
 
 
 
