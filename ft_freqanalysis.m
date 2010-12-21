@@ -243,6 +243,7 @@ switch cfg.method
     cfg.method = 'wavelet';
      
   case 'hilbert_devel'
+    warning('the hilbert implementation is under heavy development, do not use it for analysis purposes')
     specestflg = 1;
     if ~isfield(cfg, 'filttype'),         cfg.filttype      = 'but';        end
     if ~isfield(cfg, 'filtorder'),        cfg.filtorder     = 4;            end
