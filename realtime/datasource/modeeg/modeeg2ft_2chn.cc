@@ -35,6 +35,51 @@ char curFilename[1024];
 int fileCounter = 0;
 
 
+unsigned char serialBuffer[1024];
+int leftOverBytes = 0;
+
+/** Read data from serial port until 0xA5 0x5A shows up.
+    Those two bytes will be written to the beginning of
+	the global array "serialBuffer". Also, leftOverBytes
+	will be set to 2 if this functions returns successfully.
+	Returns 2 on success, 0 or 1 on error.
+*/
+int readSyncBytes(SerialPort *SP) {
+	// printf("Looking for sync bytes 0xA5 0x5A (%c%c)\n", 0xA5, 0x5A);
+	
+	// read bytes until we get 0xA5,0x5A,...
+	for (int iter = 0;iter < 200; iter++) {
+		unsigned char byte;
+		int nr;
+		
+		nr = serialRead(SP, 1, &byte);
+		if (nr<0) {
+			fprintf(stderr, "Error when reading from serial port - exiting\n");
+			return 1;
+		} 
+		if (nr==0) {
+			printf(".");
+			usleep(10000);	// sleep for 10 ms if no byte received
+			continue;
+		}
+		
+		//printf("%02X %c\n", byte, byte);
+		
+		if (byte == 0xA5) {
+			serialBuffer[0] = byte;
+			leftOverBytes = 1;
+		} else if (leftOverBytes == 1 && byte == 0x5A) {
+			serialBuffer[1] = byte;
+			leftOverBytes = 2;
+			break; // success !
+		} else {
+			leftOverBytes = 0;
+		}
+	}
+	return leftOverBytes;
+}
+
+
 void *savingThreadFunction(void *arg) {
 	int writePtr,n;
 	int64_t fileSize = 256*(1+rbIntChans);
@@ -110,11 +155,10 @@ int main(int argc, char *argv[]) {
 	ConsoleInput ConIn;
 	SerialPort SP;
 	int keepRunning = 1;
+	int numTimeouts = 0;
 	
-	unsigned char serialBuffer[1024];  // for reading raw bytes from serial port
 	int16_t sampleData[NUM_HW_CHAN * FSAMPLE]; // holds up to 1 seconds of data
 	int16_t switchData[FSAMPLE];       // again, 1 second of data (switches)
-	int leftOverBytes = 0;
 	
 	if (argc<3) {
 		printf("Usage: modeeg2ft_2chn <device> <gdf-file> [hostname=localhost [port=1972]]\n\n");
@@ -213,38 +257,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	
-	// printf("Looking for sync bytes 0xA5 0x5A (%c%c)\n", 0xA5, 0x5A);
-	
-	// read bytes until we get 0xA5,0x5A,...
-	for (int iter = 0;iter < 200; iter++) {
-		unsigned char byte;
-		int nr;
-		
-		nr = serialRead(&SP, 1, &byte);
-		if (nr<0) {
-			fprintf(stderr, "Error when reading from serial port - exiting\n");
-			return 1;
-		} 
-		if (nr==0) {
-			printf(".");
-			usleep(10000);	// sleep for 10 ms if no byte received
-			continue;
-		}
-		
-		//printf("%02X %c\n", byte, byte);
-		
-		if (byte == 0xA5) {
-			serialBuffer[0] = byte;
-			leftOverBytes = 1;
-		} else if (leftOverBytes == 1 && byte == 0x5A) {
-			serialBuffer[1] = byte;
-			leftOverBytes = 2;
-			break; // success !
-		} else {
-			leftOverBytes = 0;
-		}
-	}
-	if (leftOverBytes != 2) {
+	if (readSyncBytes(&SP) != 2) {
 		fprintf(stderr, "Could not read synchronisation bytes from ModularEEG\n");
 		goto cleanup;
 	}
@@ -265,10 +278,42 @@ int main(int argc, char *argv[]) {
 			fprintf(stderr, "Error when reading from serial port - exiting\n");
 			break;
 		}
+		
 		if (numPending == 0) {
-			usleep(10000);
+			if (++numTimeouts > 100) {
+				// write a timeout event
+				
+				eventChain.clear();
+				eventChain.add(sampleCounter, "TIMEOUT", 0);
+				
+				clientrequest(ftSocket, eventChain.asRequest(), resp.in());
+				// silently ignore errors here
+			
+				fprintf(stderr, "Timeout -- re-opening serial port\n");
+				serialClose(&SP);
+				
+				if (!serialOpenByName(&SP, argv[1])) {
+					fprintf(stderr, "Could not open serial port %s\n", argv[1]);
+					break;
+				}
+				if (!serialSetParameters(&SP, 57600, 8, 0, 1, 0)) {
+					fprintf(stderr, "Could not modify serial port parameters\n");
+					break;
+				}
+				if (readSyncBytes(&SP) != 2) {
+					fprintf(stderr, "Got synchronization bytes - re-starting acquisition\n");
+					continue;
+				} else {
+					fprintf(stderr, "Could not read synchronization bytes - exiting.\n");				
+					break;
+				}
+				numTimeouts = 0;
+			} else {
+				usleep(10000);
+			}
 			continue;
 		}
+		numTimeouts = 0; // we read something, so reset timeout counter
 		
 		maxReadNow = sizeof(serialBuffer) - leftOverBytes;
 		if (numPending > maxReadNow) {
