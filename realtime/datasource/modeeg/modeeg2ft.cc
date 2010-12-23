@@ -12,6 +12,21 @@
 #define FSAMPLE     256
 #define PACKET_LEN  17
 
+
+static char usageInfo[]=
+"\nUsage: modeeg2ft <device> <config> [hostname=localhost [port=1972]]\n" \
+"\n" \
+"<device> is the name of the serial port the ModularEEG is attached to,\n" \
+"  for example, COM5: on Windows, or /dev/ttyUSB0 on Linux\n" \
+"\n" \
+"<config> can either be the number of channels (typically 2)\n" \
+"  or the name of a configuration file for detailed setups.\n" \
+"\n" \
+"<hostname> and <port> are optional parameters and determine\n" \
+"  the address of a FieldTrip buffer to connect to. You can also\n" \
+"  spawn a buffer server within this application by passing a minus (-)\n" \
+"  instead of the hostname parameter.\n";
+
 unsigned char serialBuffer[1024];
 int leftOverBytes = 0;
 
@@ -67,23 +82,45 @@ int main(int argc, char *argv[]) {
 	SerialPort SP;
 	int keepRunning = 1;
 	int numTimeouts = 0;
+	int numChannels;
 	
 	if (argc<3) {
-		printf("Usage: modeeg2ft <device> <config-file> [hostname=localhost [port=1972]]\n");
+		puts(usageInfo);
 		return 0;
 	}
 	
 	OnlineDataManager<short,float> ODM(1, NUM_HW_CHAN, FSAMPLE);
 	ctrlServ.startListening(8000);
 	
-	int err = ODM.configureFromFile(argv[2]);
-	if (err == -1) {
-		fprintf(stderr, "Could not read configuration file %s\n", argv[2]);
-		return 1;
-	}
-	if (err > 0) {
-		fprintf(stderr, "Encountered %i errors in configuration file - aborting\n", err);
-		return 1;
+	if (convertToInt(argv[2], numChannels)) {
+		// user gave the number of channels instead of a configuration file
+		char label[16];
+		SignalConfiguration sigConf;
+		
+		if (numChannels<1 || numChannels > NUM_HW_CHAN) {
+			fprintf(stderr, "Number of channels must be within 1..%i\n", NUM_HW_CHAN);
+			return 1;
+		}	
+		for (int i=0;i<numChannels;i++) {
+			sprintf(label, "ModEEG%i", i+1);
+			sigConf.selectForStreaming(i,label);
+			sigConf.selectForSaving(i,label);
+		}
+		if (!ODM.setSignalConfiguration(sigConf)) {
+			fprintf(stderr, "Could not set configuration - weird!\n");
+			return 1;
+		}	
+	} else {
+		// user specified something else as configuration, treat it as a filename
+		int err = ODM.configureFromFile(argv[2]);
+		if (err == -1) {
+			fprintf(stderr, "Could not read configuration file %s\n", argv[2]);
+			return 1;
+		}
+		if (err > 0) {
+			fprintf(stderr, "Encountered %i errors in configuration file - aborting\n", err);
+			return 1;
+		}
 	}
 
 	if (argc>3) {
