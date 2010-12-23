@@ -491,6 +491,25 @@ class OnlineDataManager : public StringRequestHandler {
 	
 	/** Retrieve reference to SignalConfiguration object */
 	const SignalConfiguration& getSignalConfiguration() { return signalConf; }
+	
+	/** Configure signals for streaming and saving from C++ object */
+	
+	bool setSignalConfiguration(const SignalConfiguration& newCfg) {
+		if (savingEnabled) return false;
+		if (streamingEnabled) return false;
+		if (newCfg.getMaxSavingChannel() >= nCont) return false;
+		if (newCfg.getMaxStreamingChannel() >= nCont) return false;
+		
+		signalConf = newCfg;
+		
+		// check if selected bandwidth is beyond Nyquist
+		// and if so, disable filtering silently
+		float bw = signalConf.getBandwidth();
+		if (bw < 0 || bw >= 0.5*fSample) {
+			signalConf.setOrder(0);
+		}
+		return true;
+	}
 		
 	protected:
 	

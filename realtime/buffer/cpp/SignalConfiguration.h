@@ -92,7 +92,7 @@ class SignalConfiguration {
 	}
 	
 	void setOrder(int order) {
-		if (order>0) {
+		if (order>=0) {
 			this->order = order;
 		}
 	}
@@ -122,6 +122,16 @@ class SignalConfiguration {
 		chanSelStream = sel;
 		maxChanStream = sel.getMaxIndex();
 		return true;
+	}
+	
+	void selectForStreaming(int index, const char *label) {
+		chanSelStream.add(index, label);
+		if (index > maxChanStream) maxChanStream = index;
+	}
+	
+	void selectForSaving(int index, const char *label) {
+		chanSelSave.add(index, label);
+		if (index > maxChanSave) maxChanSave = index;
 	}
 	
 	protected:

@@ -202,6 +202,14 @@ class FtBufferRequest {
 		m_extras.ds.begsample = begsample;
 		m_extras.ds.endsample = endsample;
 	}
+	
+	void prepGetEvents(UINT32_T begevent, UINT32_T endevent) {
+		m_def.command = GET_EVT;
+		m_msg.buf = &m_extras.es;
+		m_def.bufsize = sizeof(eventsel_t);
+		m_extras.es.begevent = begevent;
+		m_extras.es.endevent = endevent;
+	}	
 		
 	void prepWaitData(UINT32_T nSamples, UINT32_T nEvents, UINT32_T milliseconds) {
 		m_def.command = WAIT_DAT;
@@ -226,6 +234,7 @@ class FtBufferRequest {
 	union {	
 		waitdef_t wd;
 		datasel_t ds;
+		eventsel_t es;
 	} m_extras;
 };
 
@@ -274,6 +283,21 @@ class FtBufferResponse {
 		}		
 		return true;
 	}
+	
+	int checkGetEvents(SimpleStorage *evtStore = NULL) const {
+		if (m_response == NULL) return false;
+		if (m_response->def == NULL) return false;
+		if (m_response->def->version != VERSION) return false;
+		if (m_response->def->command != GET_OK) return false;
+		
+		int check = check_event_array(m_response->def->bufsize, m_response->buf);
+		if (check < 0) return check;
+		
+		if (evtStore != NULL && evtStore->resize(m_response->def->bufsize)) {
+			memcpy(evtStore->data(), m_response->buf, m_response->def->bufsize);
+		}		
+		return check;
+	}	
 	
 	bool checkWait(unsigned int &nSamples, unsigned int &nEvents) const {
 		if (m_response == NULL) return false;
