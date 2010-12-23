@@ -15,5 +15,6 @@ function varargout = funname(varargin)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
+warning(['FIELDTRIPDEFS is only a compatibility wrapper, which will soon be removed. Please instead call FT_DEFAULTS.']);
 funhandle = str2func('ft_defaults');
 [varargout{1:nargout}] = funhandle(varargin{:});

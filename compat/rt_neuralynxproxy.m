@@ -14,5 +14,6 @@ function varargout = funname(varargin)
 prefix    = 'ft_realtime';
 funname   = mfilename;
 funname   = funname(3:end); % strip the rt_ prefix, keep the underscore
+warning([upper(mfilename) ' is only a compatibility wrapper, which will soon be removed. Please instead call ' upper(prefix) upper(funname) '.']);
 funhandle = str2func([prefix funname]);
 [varargout{1:nargout}] = funhandle(varargin{:});
