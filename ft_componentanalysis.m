@@ -276,7 +276,7 @@ switch cfg.method
     % eigenvalue decomposition (EVD)
     [E,D] = eig(C);
     % sort eigenvectors in descending order of eigenvalues
-    d = cat(2,[1:1:Nchans]',diag(D));
+    d = cat(2,(1:1:Nchans)',diag(D));
     d = sortrows(d,[-2]);
     % return the desired number of principal components
     weights = E(:,d(1:cfg.numcomponent,1))';
@@ -381,8 +381,8 @@ end % switch method
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % collect the results
-try, comp.fsample = data.fsample; end
-try, comp.time    = data.time;    end
+if isfield(data, 'fsample'), comp.fsample = data.fsample; end
+if isfield(data, 'time'),    comp.time    = data.time;    end
 
 % compute the activations in each trial
 for trial=1:Ntrials
@@ -394,7 +394,7 @@ for trial=1:Ntrials
   end
 end
 
-%get the mixing matrix
+% get the mixing matrix
 if strcmp(cfg.method, 'parafac')
   comp.topo = f{2};
   comp.f1   = f{1}; %FIXME, this is not properly supported yet
@@ -406,7 +406,7 @@ else
   comp.topo = pinv(weights*sphere); %allow fewer sources than sensors
 end
 
-%get the labels
+% get the labels
 if strcmp(cfg.method, 'predetermined mixing matrix'),
   prefix = 'component';
 else
@@ -417,6 +417,21 @@ for k = 1:size(comp.topo,2)
   comp.label{k,1} = sprintf('%s%03d', prefix, k);
 end
 comp.topolabel = data.label(:);
+
+% apply the montage also to the elec/grad, if present
+if isfield(data, 'grad') || (isfield(data, 'elec') && isfield(data.elec, 'tra'))
+  fprintf('applying the mixing matrix to the sensor description\n');
+  if isfield(data, 'grad')
+    sensfield = 'grad';
+  else
+    sensfield = 'elec';
+  end
+  montage          = [];
+  montage.labelorg = data.label;
+  montage.labelnew = comp.label;
+  montage.tra      = weights * sphere;
+  comp.(sensfield) = ft_apply_montage(data.(sensfield), montage);
+end
 
 % accessing this field here is needed for the configuration tracking
 % by accessing it once, it will not be removed from the output cfg
@@ -433,7 +448,7 @@ cfg.version.id   = '$Id$';
 cfg.version.matlab = version();
 
 % remember the configuration details of the input data
-try, cfg.previous = data.cfg; end
+if isfield(data, 'cfg'), cfg.previous = data.cfg; end
 
 % remember the exact configuration details in the output
 comp.cfg = cfg;
