@@ -167,7 +167,7 @@ elseif hasinputfile
 end
 
 % For backward compatibility with old data structures:
-data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'});
+%data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'});
 
 % check for option-values to be renamed
 cfg = ft_checkconfig(cfg, 'renamedval',     {'electrodes',   'dotnum',    'numbers'});
@@ -236,7 +236,7 @@ if ~isfield(cfg, 'labeloffset'),      cfg.labeloffset = 0.005;       end
 if ~isfield(cfg, 'maskparameter'),    cfg.maskparameter = [];        end
 if ~isfield(cfg, 'component'),        cfg.component = [];            end
 if ~isfield(cfg, 'matrixside'),       cfg.matrixside = '';           end
-if ~isfield(cfg,'channel'),           cfg.channel    = 'all';        end
+if ~isfield(cfg, 'channel'),          cfg.channel = 'all';           end
 
 %FIXME rename matrixside and cohrefchannel in more meaningful options
 
@@ -258,13 +258,22 @@ elseif iscell(cfg.highlight)
   end
 end
 
-% perform channel selection
-cfg.channel = ft_channelselection(cfg.channel, data.label);
-data        = ft_selectdata(data, 'channel', cfg.channel);
+if isfield(cfg, 'channel') && isfield(data, 'label')
+  cfg.channel = ft_channelselection(cfg.channel, data.label);
+elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
+  cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
+end
 
+% perform channel selection but only allow this when cfg.interactive = 'no'
+if isfield(data, 'label') && strcmp(cfg.interactive, 'no')
+  selchannel = ft_channelselection(cfg.channel, data.label);
+elseif isfield(data, 'labelcmb') && strcmp(cfg.interactive, 'no')
+  selchannel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
+end
 
-% Converting all higlight options to cell-arrays if they're not cell-arrays, to make defaulting and checking for backwards compatability and error
-% checking much, much easier
+% Converting all higlight options to cell-arrays if they're not cell-arrays, 
+% to make defaulting, checking for backwards compatability and error
+% checking easier
 if ~iscell(cfg.highlight),            cfg.highlight         = {cfg.highlight};            end
 if ~iscell(cfg.highlightchannel),     cfg.highlightchannel  = {cfg.highlightchannel};     end
 if ischar(cfg.highlightchannel{1}),   cfg.highlightchannel  = {cfg.highlightchannel};     end % {'all'} is valid input to channelselection, {1:5} isn't
@@ -283,7 +292,7 @@ for icell = 1:ncellhigh
   if isempty(cfg.highlightsymbol{icell}),    cfg.highlightsymbol{icell} = 'o';     end
   if isempty(cfg.highlightcolor{icell}),     cfg.highlightcolor{icell} = [0 0 0];  end
   if isempty(cfg.highlightsize{icell}),      cfg.highlightsize{icell} = 6;         end
-  if isempty(cfg.highlightfontsize{icell}),  cfg.highlightfontsize{icell} = 8;     end
+  if isempty(cfg.highlightfontsize{icell}),  cfg.h1tighlightfontsize{icell} = 8;     end
 end
 
 % for backwards compatability
@@ -302,7 +311,11 @@ dtype  = ft_datatype(data);
 
 % identify the interpretation of the functional data
 switch dtype
-  case  {'timelock' 'freq'}
+  case 'raw'
+    data   = ft_checkdata(data, 'datatype', 'timelock');
+    dtype  = ft_datatype(data);
+    dimord = data.dimord;
+  case  {'timelock' 'freq' 'unknown'}
     dimord = data.dimord;
   case 'comp'
     dimord = 'chan_comp';  
@@ -339,8 +352,17 @@ switch dtype
     if ~isfield(cfg, 'xparam'),      cfg.xparam='comp';         end
     if ~isfield(cfg, 'yparam'),      cfg.yparam='';             end
     if ~isfield(cfg, 'zparam'),      cfg.zparam='topo';         end
-  otherwise
-      
+    otherwise
+      % if the input data is not one of the standard data types, or if
+      % the functional data is just one value per channel
+      % in this case xparam, yparam are not defined
+      % and the user should define the zparam
+      if ~isfield(data, 'label'), error('the input data should at least contain a label-field'); end
+      if ~isfield(cfg, 'zparam'), error('the configuration should at least contain a ''zparam'' field'); end
+      if ~isfield(cfg, 'xparam'), 
+        cfg.xlim   = [1 1]; 
+        cfg.xparam = '';
+      end
 end
 
 % user specified own fields, but no yparam (which is not asked in help)
@@ -426,7 +448,8 @@ if (isfull || haslabelcmb) && isfield(data, cfg.zparam)
   
   % check for cohrefchannel being part of selection
   if ~strcmp(cfg.cohrefchannel,'gui')
-    if ~any(strcmp(cfg.cohrefchannel,cfg.channel))
+    if (isfull      && ~any(ismember(data.label, cfg.cohrefchannel))) || ...
+       (haslabelcmb && ~any(ismember(data.labelcmb(:), cfg.cohrefchannel)))
       error('cfg.cohrefchannel is a not present in the (selected) channels)')
     end
   end
@@ -494,43 +517,55 @@ end
 
 % Get physical min/max range of x:
 if strcmp(cfg.xlim,'maxmin')
-  xmin = min(getsubfield(data, cfg.xparam));
-  xmax = max(getsubfield(data, cfg.xparam));
+  xmin = min(data.(cfg.xparam));
+  xmax = max(data.(cfg.xparam));
 else
   xmin = cfg.xlim(1);
   xmax = cfg.xlim(2);
 end
 
 % Replace value with the index of the nearest bin
-xmin = nearest(getsubfield(data, cfg.xparam), xmin);
-xmax = nearest(getsubfield(data, cfg.xparam), xmax);
+if ~isempty(cfg.xparam)
+  xmin = nearest(data.(cfg.xparam), xmin);
+  xmax = nearest(data.(cfg.xparam), xmax);
+end
 
 % Get physical min/max range of y:
-if ~isempty(cfg.yparam)
+if isfield(cfg, 'yparam') && ~isempty(cfg.yparam)
   if strcmp(cfg.ylim,'maxmin')
-    ymin = min(getsubfield(data, cfg.yparam));
-    ymax = max(getsubfield(data, cfg.yparam));
+    ymin = min(data.(cfg.yparam));
+    ymax = max(data.(cfg.yparam));
   else
     ymin = cfg.ylim(1);
     ymax = cfg.ylim(2);
   end
   
   % Replace value with the index of the nearest bin:
-  ymin = nearest(getsubfield(data, cfg.yparam), ymin);
-  ymax = nearest(getsubfield(data, cfg.yparam), ymax);
+  ymin = nearest(data.(cfg.yparam), ymin);
+  ymax = nearest(data.(cfg.yparam), ymax);
+end
+
+% Take subselection of channels, this only works
+% in the interactive mode
+if exist('selchannel', 'var')
+  sellab = match_str(data.label, selchannel);
+  label  = data.label(sellab);
+else
+  sellab = 1:numel(data.label);
+  label  = data.label;
 end
 
 % Make vector dat with one value for each channel
-dat = data.(cfg.zparam);
+dat    = data.(cfg.zparam);
 if ~isempty(cfg.yparam)
   if isfull
     dat = dat(sel1, sel2, ymin:ymax, xmin:xmax);
     dat = nanmean(nanmean(nanmean(dat, meandir), 4), 3);
   elseif haslabelcmb
-    dat = dat(:, ymin:ymax, xmin:xmax);
+    dat = dat(sellab, ymin:ymax, xmin:xmax);
     dat = nanmean(nanmean(dat, 3), 2);
   else
-    dat = dat(:, ymin:ymax, xmin:xmax);
+    dat = dat(sellab, ymin:ymax, xmin:xmax);
     dat = nanmean(nanmean(dat, 3), 2);
   end
 elseif ~isempty(cfg.component)
@@ -539,17 +574,17 @@ else
     dat = dat(sel1, sel2, xmin:xmax);
     dat = nanmean(nanmean(dat, meandir), 3);
   elseif haslabelcmb
-    dat = dat(:, xmin:xmax);
+    dat = dat(sellab, xmin:xmax);
     dat = nanmean(dat, 2);
   else
-    dat = dat(:, xmin:xmax);
+    dat = dat(sellab, xmin:xmax);
     dat = nanmean(dat, 2);
   end
 end
 dat = dat(:);
 
 % Select the channels in the data that match with the layout:
-[seldat, sellay] = match_str(data.label, cfg.layout.label);
+[seldat, sellay] = match_str(label, cfg.layout.label);
 if isempty(seldat)
   error('labels in data and labels in layout do not match');
 end
@@ -562,13 +597,14 @@ chanLabels = cfg.layout.label(sellay);
 
 % make datmask structure with one value for each channel
 if ~isempty(cfg.maskparameter)
-  datmask = getsubfield(data, cfg.maskparameter);
+  datmask = data.(cfg.maskparameter);
   if min(size(datmask)) ~= 1 || max(size(datmask)) ~= length(data.label)
     error('data in cfg.maskparameter should be vector with one value per channel')
   end
   datmask = datmask(:);
   % Select the channels in the maskdata that match with the layout:
-  maskdatavector = datmask(seldat);
+  maskdatavector = datmask(sellab(seldat));
+  %maskdatavector = datmask(seldat);
 else
   maskdatavector = [];
 end
@@ -683,7 +719,7 @@ if ~strcmp(cfg.style,'blank')
   ft_plot_topo(chanX,chanY,datavector,'interpmethod',cfg.interpolation,...
     'interplim',interplimits,...
     'gridscale',cfg.gridscale,...
-    'outline',lay.outline,...
+    'outline',cfg.layout.outline,...
     'shading',cfg.shading,...
     'isolines',cfg.contournum,...
     'mask',cfg.layout.mask,...
@@ -780,7 +816,8 @@ hold on;
 
 % Make the figure interactive
 if strcmp(cfg.interactive, 'yes')
-  % add the channel information to the figure
+  % add the channel position information to the figure
+  % this section is required for ft_select_channel to do its work
   info       = guidata(gcf);
   info.x     = lay.pos(:,1);
   info.y     = lay.pos(:,2);
