@@ -157,6 +157,7 @@ switch cfg.method
       fprintf('============================================================\n');
       fprintf('click with mouse button to reslice the display to a new position\n');
       fprintf('press n/l/r on keyboard to record the current position as fiducial location\n');
+      fprintf('press a/p/z on keyboard to record the current position as anatomical landmark\n');
       fprintf('press i,j,k or I,J,K on the keyboard to increment or decrement the slice number by one\n');
       fprintf('press c or C on the keyboard to show or hide the crosshair\n');
       fprintf('press q on keyboard to quit interactive mode\n');
