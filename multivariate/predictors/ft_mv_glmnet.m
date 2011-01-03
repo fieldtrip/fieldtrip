@@ -6,6 +6,8 @@ classdef ft_mv_glmnet < ft_mv_predictor
 % If obj.lambda is empty then a whole regularization path is estimated.
 % Optimal performance is computed using a crossvalidator.
 %
+% 'family' can be 'gaussian' (linear regression), 'binomial' or 'multinomial' (logistic regression)
+%
 % Please use help glmnetSet to determine the possible options. Some
 % examples:
 %
@@ -43,6 +45,8 @@ classdef ft_mv_glmnet < ft_mv_predictor
     maxit = 100
     HessianExact = 0
     type = 'covariance'
+    
+    deregularize = 0; % retrain using unregularized regresson (not advised)
  
   end
 
@@ -197,7 +201,23 @@ classdef ft_mv_glmnet < ft_mv_predictor
       end
       
       obj.lambda  = res.lambda;
-          
+        
+      if obj.deregularize
+        W = obj.weights;
+        for k=1:size(W,2)
+          widx = W(1:(end-1),k) ~= 0;
+          if any(widx)
+            Xt = X(:,widx);
+            if strcmp(obj.family,'gaussian')
+              W([widx; true],k) = regress(Y,[Xt ones(size(Xt,1),1)]); % X \ Y
+            else
+              W([widx; true],k) = -logist2(Y-1,[Xt ones(size(Xt,1),1)]);
+            end
+          end
+        end
+        obj.weights = W;
+      end
+      
     end
     
     function Y = test(obj,X)
