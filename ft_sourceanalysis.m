@@ -903,13 +903,6 @@ else
   source.dim   = [size(grid.pos,1) 1];
 end
 
-source.vol = vol;
-if exist('grad', 'var')
-  source.grad = grad;
-elseif exist('elec', 'var')
-  source.elec = elec;
-end
-
 if istimelock
   % add the time axis to the output
   source.time = data.time;
@@ -918,10 +911,10 @@ elseif iscomp
 elseif isfreq
   % add the frequency axis to the output
   cfg.frequency    = data.freq(nearest(data.freq, cfg.frequency));
-  source.frequency = cfg.frequency;
+  source.freq = cfg.frequency;
   if isfield(data, 'time') && isfield(cfg, 'latency')
     cfg.latency    = data.time(nearest(data.time, cfg.latency));
-    source.latency = cfg.latency;
+    source.time    = cfg.latency;
   end
   if isfield(data, 'cumtapcnt'),
     source.cumtapcnt = data.cumtapcnt;
