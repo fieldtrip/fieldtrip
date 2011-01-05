@@ -66,8 +66,8 @@ datmask       = keyval('datmask',      varargin);
 holdflag = ishold;
 hold on
 
-chanX = chanX * width  + hpos;
-chanY = chanY * height + vpos;
+chanX = chanX(:) * width  + hpos;
+chanY = chanY(:) * height + vpos;
 
 if strcmp(interplim, 'electrodes'),
   hlim = [min(chanX) max(chanX)];
@@ -126,17 +126,16 @@ else
   maskimage = [];
 end
 
-
 % adjust maskimage to also mask channels as specified in maskdat
 if ~isempty(datmask)
   xi           = linspace(hlim(1), hlim(2), gridscale);   % x-axis for interpolation (row vector)
   yi           = linspace(vlim(1), vlim(2), gridscale);   % y-axis for interpolation (row vector)
-  maskimagetmp = griddata(chanX', chanY, datmask, xi', yi, 'nearest'); % interpolate the mask data
+  maskimagetmp = griddata(chanX', chanY, datmask, xi', yi, interpmethod); % interpolate the mask data
   if isempty(maskimage)
     maskimage = maskimagetmp;
   else
-    maskimagetmp = maskimage + maskimagetmp;
-    maskimage = maskimagetmp > 1;
+    maskimagetmp2 = maskimage + maskimagetmp;
+    maskimage = maskimagetmp2 > 1;
   end
 end
   
@@ -149,6 +148,9 @@ if ~isempty(maskimage)
   Zi(~maskimage) = NaN;
 end
 
+if exist('maskimagetmp')
+  maskimagetmp(~maskimage) = NaN;
+end
 
 % plot the outline of the head, ears and nose
 for i=1:length(outline)
@@ -169,7 +171,13 @@ end
 if strcmp(style,'surf') || strcmp(style,'surfiso')
   deltax = xi(2)-xi(1); % length of grid entry
   deltay = yi(2)-yi(1); % length of grid entry
-  h = surface(Xi-deltax/2,Yi-deltay/2,zeros(size(Zi)), Zi, 'EdgeColor', 'none', 'FaceColor', shading);
+  h = surf(Xi-deltax/2,Yi-deltay/2,zeros(size(Zi)), Zi, 'EdgeColor', 'none', 'FaceColor', shading);
+  
+  %if exist('maskimagetmp')
+  %  set(h, 'facealpha', 'flat');
+  %  set(h, 'alphadatamapping', 'scaled');
+  %  set(h, 'alphadata', maskimagetmp);
+  %end
 end
 
 % Plot filled contours
