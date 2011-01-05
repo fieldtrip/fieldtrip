@@ -30,7 +30,7 @@ function [mri] = ft_volumerealign(cfg, mri)
 %                                     the Z-axis goes approximately towards the vertex,
 %                                       orthogonal to X and Y
 %                        'landmark' realign the volume to anatomical landmarks,
-%                                     using RAS_MNI convention, i.e.
+%                                     using RAS_Tal convention, i.e.
 %                                     the origin corresponds with the anterior commissure
 %                                     the Y-axis is along the line from the posterior
 %                                       commissure to the anterior commissure
@@ -50,7 +50,7 @@ function [mri] = ft_volumerealign(cfg, mri)
 % landmarks in voxel indices.
 %   cfg.landmark.ac      = [i j k], position of anterior commissure
 %   cfg.landmark.pc      = [i j k], position of posterior commissure
-%   cfg.landmark.xzpoint = [i j k], point on the XZ-plane with positive Z-coordinate,
+%   cfg.landmark.xzpoint = [i j k], point on the midsagittal-plane with positive Z-coordinate,
 %                                     i.e. interhemispheric point above ac and pc
 %
 % See also FT_READ_MRI, FT_ELECTRODEREALIGN

@@ -1,4 +1,4 @@
-function [h, flag] = headcoordinates(nas, lpa, rpa, flag);
+function [h, flag] = headcoordinates(nas, lpa, rpa, flag)
 
 % HEADCOORDINATES returns the homogeneous coordinate transformation matrix
 % that converts the specified fiducials in any coordinate system (e.g. MRI)
@@ -12,7 +12,7 @@ function [h, flag] = headcoordinates(nas, lpa, rpa, flag);
 % according to CTF conventions: flag = 'ALS_CTF', or flag = 0 (default)
 % according to ASA conventions: flag = 'ALS'ASA', or flag = 1 
 % according to FTG conventions: flag = 'FTG', or flag = 2 
-% according to MNI conventions: flag = 'RAS_MNI'
+% according to Talairach conventions: flag = 'RAS_TAL'
 % 
 % The headcoordinate system in CTF is defined as follows:
 % the origin is exactly between lpa and rpa
@@ -31,11 +31,11 @@ function [h, flag] = headcoordinates(nas, lpa, rpa, flag);
 % the x-axis is along the line from pt1 to pt2
 % the z-axis is orthogonal to the plane spanned by pt1, pt2 and pt3
 % 
-% The headcoordinate system in MNI is defined as:
+% The headcoordinate system in Talairach is defined as:
 % the origin corresponds with the anterior commissure
 % the Y-axis is along the line from the posterior commissure to the anterior commissure
 % the Z-axis is towards the vertex, in between the hemispheres
-% the X-axis is orthogonal to the YZ-plane, positive to the right
+% the X-axis is orthogonal to the midsagittal-plane, positive to the right
 %
 % See also WARPING, WARP3D
 
@@ -84,7 +84,7 @@ nas = nas(:)';
 switch flag 
 case 'ALS_CTF'
   % follow CTF convention
-  origin = [lpa+rpa]/2;
+  origin = (lpa+rpa)/2;
   dirx = nas-origin;
   dirx = dirx/norm(dirx);
   dirz = cross(dirx,lpa-rpa);
@@ -110,7 +110,7 @@ case 'FTG'
   dirz = cross(dirx,diry);
   dirz = dirz/norm(dirz);
   diry = cross(dirz,dirx);
-case 'RAS_MNI'
+case 'RAS_TAL'
   % rename the marker points for convenience
   ac = nas; pc = lpa; xzpoint = rpa;
   origin = ac;

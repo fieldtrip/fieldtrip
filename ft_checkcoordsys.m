@@ -176,7 +176,7 @@ str = upper(cat(2, str{:}));
 switch str2
   case 'a'
     if strcmp(str, 'RAS')
-      str = [str,'_MNI'];
+      str = [str,'_TAL'];
     else
     end
   case 'i'
