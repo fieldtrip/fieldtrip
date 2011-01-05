@@ -272,7 +272,7 @@ elseif strcmp(stype, 'new')
           tmp(1,inside)  = source.(fn{i});
           source.(fn{i}) = tmp;
         else
-          warning(sprintf('sparse to full conversion failed for field %s\n', fn{i}));
+          warning('sparse to full conversion failed for field %s\n', fn{i});
         end
       else
         indx = find(size(source.(fn{i}))==Nsparse);
@@ -290,7 +290,7 @@ elseif strcmp(stype, 'new')
           tmp    = zeros([Nfull Nfull tmpsiz(3:end)]) + nan;
           tmp(inside,inside,:,:,:) = source.(fn{i});
         else
-          warning(sprintf('sparse to full conversion failed for field %s\n', fn{i}));
+          warning('sparse to full conversion failed for field %s\n', fn{i});
         end
       end
       % nothing to do

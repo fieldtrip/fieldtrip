@@ -159,7 +159,7 @@ if ~isempty(ChannelIndex)
     sel = find(sel);
 
     if isempty(sel)
-      warning(sprintf('spike channel %d contains no data', ChannelIndex(i)));
+      warning('spike channel %d contains no data', ChannelIndex(i));
       varargin{end+1} = [];
       continue;
     end
@@ -223,7 +223,7 @@ if ~isempty(SlowChannelIndex)
 
     if isempty(sel)
       error(sprintf('Continuous channel %d contains no data', SlowChannelIndex(i)));
-      % warning(sprintf('Continuous channel %d contains no data', SlowChannelIndex(i)));
+      % warning('Continuous channel %d contains no data', SlowChannelIndex(i));
       % varargin{end+1} = [];
       % continue;
     end
@@ -279,7 +279,7 @@ if ~isempty(EventIndex)
     sel = find(sel);
 
     if isempty(sel)
-      warning(sprintf('event channel %d contains no data', EventIndex(i)));
+      warning('event channel %d contains no data', EventIndex(i));
       varargin{end+1} = [];
       continue;
     end

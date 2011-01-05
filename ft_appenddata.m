@@ -102,7 +102,7 @@ for i=1:Ndata
   end
   if isempty(trl{i})
     % a trial definition is expected in each continuous data set
-    warning(sprintf('could not locate the trial definition ''trl'' in data structure %d', i));
+    warning('could not locate the trial definition ''trl'' in data structure %d', i);
   end
   hastrialinfo = isfield(varargin{i}, 'trialinfo') + hastrialinfo;
 end
@@ -117,7 +117,7 @@ for i=1:Ndata
   end
   if isempty(sampleinfo{i})
     % a sample definition is expected in each data set
-    warning(sprintf('no ''sampleinfo'' field in data structure %d', i));
+    warning('no ''sampleinfo'' field in data structure %d', i);
   end
   hassampleinfo = isfield(varargin{i}, 'sampleinfo') + hassampleinfo;
 end

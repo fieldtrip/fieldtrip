@@ -121,7 +121,7 @@ is_perspective = strcmp(get(ax,'projection'),'perspective');
 [a b] = view(ax); 
 xform = viewmtx(a,b);
 if is_perspective
-    warning(sprintf('%s does not support perspective axes projection.',mfilename));
+    warning('%s does not support perspective axes projection.',mfilename);
     d = norm(camtarget(ax)-campos(ax))
     P = [1 0 0 0; 
          0 1 0 0;
@@ -173,7 +173,7 @@ end
 nan_inf_test1 = isnan(faces) | isinf(faces);
 nan_inf_test2 = isnan(vert) | isinf(vert);
 if any(nan_inf_test1(:)) | any(nan_inf_test2(:))
-    warning(sprintf('%s does not support NaNs or Infs in face/vertex data.',mfilename));
+    warning('%s does not support NaNs or Infs in face/vertex data.',mfilename);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

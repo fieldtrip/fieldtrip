@@ -53,7 +53,7 @@ switch headerformat
 
   case 'matlab'
     if exist(filename, 'file')
-      warning(sprintf('deleting existing file ''%s''', filename));
+      warning('deleting existing file ''%s''', filename);
       delete(filename);
     end
 

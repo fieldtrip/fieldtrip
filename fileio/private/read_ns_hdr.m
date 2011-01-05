@@ -310,7 +310,7 @@ elseif hdr.domain==1
   % data in frequency domain
 else
   % probably old datafile, assume the data to be in time domain
-  warning(sprintf('assuming the data to be in time domain (domain was %d)', hdr.domain));
+  warning('assuming the data to be in time domain (domain was %d)', hdr.domain);
   hdr.domain=0;
 end
 

@@ -112,7 +112,7 @@ for i=1:2:length(args)
   end
   if (~found)
     if (warn)
-      warning(sprintf('Option ''%s'' not used.', args{i}));
+      warning('Option ''%s'' not used.', args{i});
       args{i}
     else
       nunused = nunused + 1;

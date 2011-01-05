@@ -208,7 +208,7 @@ switch toolbox
   case 'FREESURFER'
     status  = exist('MRIread', 'file') && exist('vox2ras_0to1', 'file');
   otherwise
-    if ~silent, warning(sprintf('cannot determine whether the %s toolbox is present', toolbox)); end
+    if ~silent, warning('cannot determine whether the %s toolbox is present', toolbox); end
     status = 0;
 end
 
@@ -281,7 +281,7 @@ previouspath = matlabpath;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = myaddpath(toolbox, silent)
 if exist(toolbox, 'dir')
-  if ~silent, warning(sprintf('adding %s toolbox to your Matlab path', toolbox)); end
+  if ~silent, warning('adding %s toolbox to your Matlab path', toolbox); end
   addpath(toolbox);
   status = 1;
 else

@@ -124,7 +124,7 @@ if ~isempty(renamed)
     if silent
       % don't mention it
     elseif loose
-      warning(sprintf('use cfg.%s instead of cfg.%s', renamed{2}, renamed{1}));
+      warning('use cfg.%s instead of cfg.%s', renamed{2}, renamed{1});
     elseif pedantic
       error(sprintf('use cfg.%s instead of cfg.%s', renamed{2}, renamed{1}));
     end
@@ -140,7 +140,7 @@ if ~isempty(renamedval) && isfield(cfg, renamedval{1})
     if silent
       % don't mention it
     elseif loose
-      warning(sprintf('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2}));
+      warning('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2});
     elseif pedantic
       error(sprintf('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2}));
     end
@@ -167,7 +167,7 @@ if ~isempty(deprecated)
     if silent
       % don't mention it
     elseif loose
-      warning(sprintf('The option cfg.%s is deprecated, support is no longer guaranteed\n', deprecated{ismember(deprecated, fieldsused)}));
+      warning('The option cfg.%s is deprecated, support is no longer guaranteed\n', deprecated{ismember(deprecated, fieldsused)});
     elseif pedantic
       error(sprintf('The option cfg.%s is deprecated, support is no longer guaranteed\n', deprecated{ismember(deprecated, fieldsused)}));
     end
@@ -184,7 +184,7 @@ if ~isempty(unused)
     if silent
       % don't mention it
     elseif loose
-      warning(sprintf('The field cfg.%s is unused, it will be removed from your configuration\n', unused{ismember(unused, fieldsused)}));
+      warning('The field cfg.%s is unused, it will be removed from your configuration\n', unused{ismember(unused, fieldsused)});
     elseif pedantic
       error(sprintf('The field cfg.%s is unused\n', unused{ismember(unused, fieldsused)}));
     end
@@ -201,7 +201,7 @@ if ~isempty(forbidden)
     if silent
       % don't mention it
     elseif loose
-      warning(sprintf('The field cfg.%s is forbidden, it will be removed from your configuration\n', forbidden{ismember(forbidden, fieldsused)}));
+      warning('The field cfg.%s is forbidden, it will be removed from your configuration\n', forbidden{ismember(forbidden, fieldsused)});
     elseif pedantic
       error(sprintf('The field cfg.%s is forbidden\n', forbidden{ismember(forbidden, fieldsused)}));
     end

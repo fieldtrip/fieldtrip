@@ -1485,7 +1485,7 @@ switch fname
     end
     
     otherwise
-      warning(sprintf('skipping unknown fieldname %s', fname));
+      warning('skipping unknown fieldname %s', fname);
       %error(sprintf('unknown fieldname %s', fname));
 end
 

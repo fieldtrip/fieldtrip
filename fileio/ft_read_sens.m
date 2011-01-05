@@ -112,12 +112,12 @@ switch fileformat
     elpfile = fullfile(p, [f '.elp']);
     elafile = fullfile(p, [f '.ela']);
     if exist(elpfile, 'file')
-      warning(sprintf('reading channel labels from %s', elpfile));
+      warning('reading channel labels from %s', elpfile);
       % read the channel names from the accompanying ELP file
       lbl = importdata(elpfile);
       sens.label = strrep(lbl.textdata(:,2) ,'''', '');
     elseif exist(elafile, 'file')
-      warning(sprintf('reading channel labels from %s', elafile));
+      warning('reading channel labels from %s', elafile);
       % read the channel names from the accompanying ELA file
       lbl = importdata(elafile);
       lbl = strrep(lbl, 'MEG ', ''); % remove the channel type

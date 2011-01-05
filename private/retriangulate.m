@@ -74,7 +74,7 @@ warning(ws)
 
 exception=find(count==0);
 if ~isempty(exception)
-  % warning(sprintf('treating %d vertices as exception', length(exception)));
+  % warning('treating %d vertices as exception', length(exception));
   [m, indx] = min(cosangle, [], 1);
   for i=exception(:)'
     sel = find_vertex_neighbours(pnt3, tri3, i);

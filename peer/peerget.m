@@ -111,7 +111,7 @@ if success
       if StopOnError
         error(err);
       else
-        warning(sprintf('error during remote execution: %s', err));
+        warning('error during remote execution: %s', err);
       end
     else
       ws = warning('off', 'MATLAB:structOnObject');
@@ -121,7 +121,7 @@ if success
         % it contains the full details
         rethrow(err);
       else
-        warning(sprintf('error during remote execution: %s', err.message));
+        warning('error during remote execution: %s', err.message);
       end
     end
   end % ~isempty(err)

@@ -1309,7 +1309,7 @@ if ~isempty(event)
   [dum, indx] = sort([event.sample]);
   event = event(indx);
   % else
-  %   warning(sprintf('no events found in %s', filename));
+  %   warning('no events found in %s', filename);
 end
 
 % apply the optional filters

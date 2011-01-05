@@ -362,7 +362,7 @@ switch dataformat
     elseif  append && ~exist(filename, 'file')
       % file does not yet exist, which is not a problem
     elseif ~append &&  exist(filename, 'file')
-      warning(sprintf('deleting existing file ''%s''', filename));
+      warning('deleting existing file ''%s''', filename);
       delete(filename);
     elseif ~append && ~exist(filename, 'file')
       % file does not yet exist, which is not a problem
