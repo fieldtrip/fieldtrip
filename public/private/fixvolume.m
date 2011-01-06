@@ -10,10 +10,13 @@ function data = fixvolume(data)
 % See also FT_CHECKDATA, FIXSOURCE
 
 % remove the unwanted fields
-if isfield(data, 'pos'),    data = rmfield(data, 'pos');    end
-if isfield(data, 'xgrid'),  data = rmfield(data, 'xgrid');  end
-if isfield(data, 'ygrid'),  data = rmfield(data, 'ygrid');  end
-if isfield(data, 'zgrid'),  data = rmfield(data, 'zgrid');  end
+if isfield(data, 'pos'),     data = rmfield(data, 'pos');     end
+if isfield(data, 'xgrid'),   data = rmfield(data, 'xgrid');   end
+if isfield(data, 'ygrid'),   data = rmfield(data, 'ygrid');   end
+if isfield(data, 'zgrid'),   data = rmfield(data, 'zgrid');   end
+
+% volume data is always 3-D and therefore does not need a dimord
+if isfield(data, 'dimord'),  data = rmfield(data, 'dimord');  end
 
 % although volume data should be 3D, better do this conversion anyway
 % old data structures may use latency/frequency instead of time/freq
@@ -37,4 +40,3 @@ end
 if hasfreq
   error('the volume data representation should be 3-D and is not allowed to contain a freq field');
 end
-
