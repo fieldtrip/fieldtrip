@@ -25,6 +25,7 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                   OR, if you want to use the old implementation (not from the specest module)
 %                   'mtmfft_old' 
 %                   'mtmconvol_old'
+%                   'wltconvol_old'
 %   cfg.output     = 'pow'       return the power-spectra
 %                    'powandcsd' return the power and the cross-spectra
 %                    'fourier'   return the complex Fourier-spectra
@@ -80,8 +81,8 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   cfg.toi        = vector 1 x numtoi, the times on which the analysis windows
 %                    should be centered (in seconds)
 %
-%  WLTCONVOL
-%   WLTCONVOL performs time-frequency analysis on any time series trial data
+%  WAVELET
+%   WAVELET performs time-frequency analysis on any time series trial data
 %   using the 'wavelet method' based on Morlet wavelets.
 %   cfg.foi        = vector 1 x numfoi, frequencies of interest
 %   cfg.foilim     = [begin end], frequency band of interest
@@ -195,6 +196,8 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'convol', 'mtmconvol'});
 
 % NEW OR OLD - switch for selecting which function to call and when to do it - this will change when the development of specest proceeds
 % ALSO: Check for all cfg options that are defaulted in the old functions
+cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'wltconvol', 'wavelet'});
+
 switch cfg.method
   
   
@@ -236,11 +239,11 @@ switch cfg.method
       error('you must specify a smoothing parameter with taper = dpss');
     end
     
-  case 'wavelet_devel'
+  case 'wavelet'
     specestflg = 1;
     if ~isfield(cfg, 'width'),         cfg.width      = 7;            end
     if ~isfield(cfg, 'gwidth'),        cfg.gwidth     = 3;            end
-    cfg.method = 'wavelet';
+
      
   case 'hilbert_devel'
     warning('the hilbert implementation is under heavy development, do not use it for analysis purposes')

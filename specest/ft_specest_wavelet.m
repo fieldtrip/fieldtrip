@@ -19,8 +19,8 @@ function [spectrum,freqoi,timeoi] = ft_specest_wavelet(dat, time, varargin)
 %   pad        = number, total length of data after zero padding (in seconds)
 %   freqoi     = vector, containing frequencies of interest                                           
 %   timeoi     = vector, containing time points of interest (in seconds)
-%   width      = 
-%   gwidth     = 
+%   width      = number or vector, width of the wavelet, determines the temporal and spectral resolution
+%   gwidth     = number, determines the length of the used wavelets in standard deviations of the implicit Gaussian kernel
 %
 %
 %
