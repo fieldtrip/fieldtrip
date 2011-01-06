@@ -185,6 +185,7 @@ if isempty(cfg.coordinates)
 end
 
 % ensure that the input MRI volume is approximately aligned with the SPM template
+flipflags = zeros(1, 3);
 if strcmp(cfg.coordinates, 'ctf')
   fprintf('assuming CTF coordinates for input, i.e. positive X-axis towards nasion and Y-axis through ears\n');
   % flip, rotate and translate the CTF mri so that it approximately corresponds with SPM coordinates
@@ -192,7 +193,7 @@ if strcmp(cfg.coordinates, 'ctf')
   mri = align_ctf2spm(mri);
   % also flip and permute the 3D volume itself, so that the voxel and headcoordinates approximately correspond
   % this seems to improve the convergence of the segmentation algorithm
-  mri = align_ijk2xyz(mri);
+  [mri,flipflags] = align_ijk2xyz(mri);
 elseif strcmp(cfg.coordinates, 'spm')
   fprintf('assuming that the input MRI is already approximately aligned with SPM coordinates\n');
   % nothing needs to be done
@@ -268,7 +269,12 @@ if strcmp(cfg.segment, 'yes')
   elseif strcmpi(cfg.spmversion, 'spm8'),
     
     fprintf('performing the segmentation on the specified volume\n');
-    p        = spm_preproc(Va);
+    if isfield(cfg, 'tpm')
+      px.tpm   = cfg.tpm;
+      p        = spm_preproc(Va, px);
+    else
+      p        = spm_preproc(Va);
+    end
     [po,pin] = spm_prep2sn(p);
     
     % I took these settings from a batch
@@ -339,6 +345,15 @@ segment.transform = original.transform;           % use the original transformat
 segment.gray      = V(1).dat;
 if length(V)>1, segment.white     = V(2).dat; end
 if length(V)>2, segment.csf       = V(3).dat; end
+
+% flip the volumes back according to the changes introduced by align_ijk2xyz
+for k = 1:3
+  if flipflags(k)
+    segment.gray = flipdim(segment.gray, k);
+    if isfield(segment, 'white'), segment.white = flipdim(segment.white, k); end
+    if isfield(segment, 'csf'),   segment.csf   = flipdim(segment.csf, k);   end
+  end
+end
 
 % accessing this field here is needed for the configuration tracking
 % by accessing it once, it will not be removed from the output cfg

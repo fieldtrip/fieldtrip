@@ -1,4 +1,4 @@
-function [interp] = align_ijk2xyz(interp)
+function [interp, flipflags] = align_ijk2xyz(interp)
 
 % ALIGN_IJK2XYZ flips and permutes the 3D volume data such that the
 % voxel indices and the headcorodinates approximately correspond. The
@@ -45,22 +45,26 @@ if isfield(interp, 'xgrid')
 end
 
 % subsequently flip the volume along each direction, so that the diagonal of the transformation matrix is positive
+flipflags = zeros(1,3);
 flipx = eye(4); flipx(1,1) = -1; flipx(1,4) = interp.dim(1)+1;
 flipy = eye(4); flipy(2,2) = -1; flipy(2,4) = interp.dim(2)+1;
 flipz = eye(4); flipz(3,3) = -1; flipz(3,4) = interp.dim(3)+1;
 if interp.transform(1,1)<0
+  flipflags(1) = 1;
   for i=1:length(param)
     interp = setsubfield(interp, param{i}, flipdim(getsubfield(interp, param{i}), 1));
   end
   interp.transform = interp.transform * flipx;
 end
 if interp.transform(2,2)<0
+  flipflags(2) = 1;
   for i=1:length(param)
     interp = setsubfield(interp, param{i}, flipdim(getsubfield(interp, param{i}), 2));
   end
   interp.transform = interp.transform * flipy;
 end
 if interp.transform(3,3)<0
+  flipflags(3) = 1;
   for i=1:length(param)
     interp = setsubfield(interp, param{i}, flipdim(getsubfield(interp, param{i}), 3));
   end
