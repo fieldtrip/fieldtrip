@@ -19,9 +19,8 @@ function field=meg_forward(dip_par,forwpar)
 % field  mxn matrix where the i.th column is the field in m channels
 %        of the i.th dipole
 %
-% note: it is assumed that locations are in cm, and dipole moments in nAm.
-%       Then the field is in fT. 
-
+% note:  No assumptions about units made (i.e. no scaling factors)
+%
 % Copyright (C) 2003, Guido Nolte
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip

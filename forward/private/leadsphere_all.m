@@ -47,7 +47,7 @@ A3=crossproduct(xlocrep,sensororirep);
 A4=scal2vec(dotproduct(gradf,sensororirep));
 A5=crossproduct(xlocrep,sensorlocrep);
 
-out=1000*(A3.*A1-(A4.*A2).*A5);
+out=1e-7*(A3.*A1-(A4.*A2).*A5); %%GRB change
 
 return;
 
