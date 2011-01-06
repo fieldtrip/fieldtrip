@@ -286,10 +286,6 @@ else
   if ~isfield(cfg, 'channel'),          cfg.channel          = 'all';        end
   if ~isfield(cfg, 'precision'),        cfg.precision        = 'double';     end
   if ~isfield(cfg, 'output'),           cfg.output           = 'powandcsd';  end
-  if strcmp(cfg.output, 'fourier'),
-    cfg.keeptrials = 'yes';
-    cfg.keeptapers = 'yes';
-  end
   if ~isfield(cfg, 'foi'),              cfg.foi              = [];           end
   if ~isfield(cfg, 'foilim'),           cfg.foilim           = [];           end
   if ~isfield(cfg, 'correctt_ftimwin'), cfg.correctt_ftimwin = 'no';         end
