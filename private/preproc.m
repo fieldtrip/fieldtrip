@@ -236,7 +236,7 @@ if ~isempty(cfg.implicitref) && ~any(strmatch(cfg.implicitref,label))
 end
 
 if strcmp(cfg.reref, 'yes'),
-  cfg.refchannel = channelselection(cfg.refchannel, label);
+  cfg.refchannel = ft_channelselection(cfg.refchannel, label);
   refindx = match_str(label, cfg.refchannel);
   if isempty(refindx)
     error('reference channel was not found')
