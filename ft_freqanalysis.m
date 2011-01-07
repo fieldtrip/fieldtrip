@@ -209,7 +209,6 @@ switch cfg.method
     if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))
       error('you must specify a smoothing parameter with taper = dpss');
     end
-    if ~isfield(cfg, 'keeptapers'),       cfg.keeptapers       = 'no';         end
     % check for foi above Nyquist
     if isfield(cfg,'foi')
       if any(cfg.foi > (data.fsample/2))
@@ -228,7 +227,6 @@ switch cfg.method
     if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))
       error('you must specify a smoothing parameter with taper = dpss');
     end
-    if ~isfield(cfg, 'keeptapers'),       cfg.keeptapers       = 'no';         end
     % check for foi above Nyquist
     if isfield(cfg,'foi')
       if any(cfg.foi > (data.fsample/2))
@@ -280,7 +278,6 @@ else
   % set all the defaults
   if ~isfield(cfg, 'pad'),              cfg.pad              = 'maxperlen';  end
   if ~isfield(cfg, 'output'),           cfg.output           = 'pow';        end
-  if ~isfield(cfg, 'keeptrials'),       cfg.keeptrials       = 'no';         end
   if ~isfield(cfg, 'calcdof'),          cfg.calcdof          = 'no';         end
   
   if ~isfield(cfg, 'channel'),          cfg.channel          = 'all';        end
@@ -290,7 +287,16 @@ else
   if ~isfield(cfg, 'foilim'),           cfg.foilim           = [];           end
   if ~isfield(cfg, 'correctt_ftimwin'), cfg.correctt_ftimwin = 'no';         end
   
-  
+  % keeptrials and keeptapers should be conditional on cfg.output, cfg.output = 'fourier' should always output tapers
+  if strcmp(cfg.output, 'fourier')
+    if ~isfield(cfg, 'keeptrials'), cfg.keeptrials = 'yes'; end
+    if ~isfield(cfg, 'keeptapers'), cfg.keeptapers = 'yes'; end
+  else
+    if ~isfield(cfg, 'keeptrials'), cfg.keeptrials = 'no'; end
+    if ~isfield(cfg, 'keeptapers'), cfg.keeptapers = 'no'; end
+  end 
+ 
+  if ~isfield(cfg, 'keeptrials'),       cfg.keeptrials       = 'no';         end
   % set flags for keeping trials and/or tapers
   if strcmp(cfg.keeptrials,'no') &&  strcmp(cfg.keeptapers,'no')
     keeprpt = 1;
