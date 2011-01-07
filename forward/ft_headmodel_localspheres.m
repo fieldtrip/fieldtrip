@@ -12,7 +12,17 @@ function vol = ft_headmodel_localspheres(geometry, grad, varargin)
 % Use as
 %   vol = ft_headmodel_localspheres(geom, grad, ...)
 %
-% See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
+% Optional input arguments should be specified in key-value pairs and can
+% include
+%   feedback = boolean, true or false
+%   radius   = number, radius of sphere within which headshape points will
+%     be included for the fitting algorithm
+%   maxradius = number, if for a given sensor the fitted radius exceeds
+%     this value, the radius and origin will be replaced witht the single
+%     sphere fit
+%   baseline  = number
+%
+% See also FT_PREPARE_HEADMODEL, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
 % get the additional inputs and set the defaults
 % headshape    = keyval('headshape', varargin);
