@@ -94,6 +94,14 @@ if trlnum>1,
       % skip it to speed up the indexing of the trial and sample numbers
       continue
     end
+    if trlbeg >= begsample && trlend <= endsample 
+        % all data is in this trial!
+        % get the indices of the current trial and break the loop
+        trlidx = trllop;
+        begindx = begsample - trl(trlidx) + 1;
+        endindx = endsample - trl(trlidx) + 1;         
+        break;
+    end
     % make vector with 0= no sample of old data, 1= one sample of old data, 2= two samples of old data, etc
     count(trlbeg:trlend) = count(trlbeg:trlend) + 1;
     % make vector with 1's if samples belong to trial 1, 2's if samples belong to trial 2 etc. overlap/ no data --> Nan
@@ -102,50 +110,55 @@ if trlnum>1,
     samplenum(trlbeg:trlend) = 1:trllen(trllop);
   end
   
-  % overlap --> NaN
-  %trialnum(count>1)  = NaN;
-  %samplenum(count>1) = NaN;
-  
-  % make a subselection for the desired samples
-  count     = count(begsample:endsample);
-  trialnum  = trialnum(begsample:endsample);
-  samplenum = samplenum(begsample:endsample);
-  
-  % check if all samples are present and are not present twice or more 
-  if any(count==0)
-    warning('not all requested samples are present in the data, filling with NaNs');
-  elseif any(count>1)
-    error('some of the requested samples occur twice in the data');
-  end
-  
-  % construct the output data array
-  %dat = nan(length(chanindx), length(samplenum));
-  %for smplop=1:length(samplenum)
-  %  if samplenum(smplop)==0
-  %   dat(:, smplop) = nan; 
-  %  else
-  %   dat(:, smplop) = data.trial{trialnum(smplop)}(chanindx,samplenum(smplop)); 
-  %  end
-  %end
-  
-  % the following piece of code achieves the same as the commented code above,
-  % but much smaller. rather than looping over samples it loops over the blocks
-  % of samples defined by the original trials
-  utrl = unique(trialnum);
-  utrl(~isfinite(utrl)) = 0;
-  utrl(utrl==0) = [];
-  if length(utrl)==1,
-    ok   = trialnum==utrl;
-    smps = samplenum(ok);
-    dat(:,ok) = data.trial{utrl}(chanindx,smps);
+  if exist('trlidx', 'var') && exist('begindx', 'var') && exist('endindx', 'var')
+    % fetch the data and return
+    dat = data.trial{trlidx}(chanindx,begindx:endindx);
+    clear count trialnum samplenum;
   else
-    for xlop=1:length(utrl)
-      ok   = trialnum==utrl(xlop);
-      smps = samplenum(ok);
-      dat(:,ok) = data.trial{utrl(xlop)}(chanindx,smps);
-    end
-  end
+      % overlap --> NaN
+      %trialnum(count>1)  = NaN;
+      %samplenum(count>1) = NaN;
 
+      % make a subselection for the desired samples
+      count     = count(begsample:endsample);
+      trialnum  = trialnum(begsample:endsample);
+      samplenum = samplenum(begsample:endsample);
+
+      % check if all samples are present and are not present twice or more 
+      if any(count==0)
+        warning('not all requested samples are present in the data, filling with NaNs');
+      elseif any(count>1)
+        error('some of the requested samples occur twice in the data');
+      end
+
+      % construct the output data array
+      %dat = nan(length(chanindx), length(samplenum));
+      %for smplop=1:length(samplenum)
+      %  if samplenum(smplop)==0
+      %   dat(:, smplop) = nan; 
+      %  else
+      %   dat(:, smplop) = data.trial{trialnum(smplop)}(chanindx,samplenum(smplop)); 
+      %  end
+      %end
+
+      % the following piece of code achieves the same as the commented code above,
+      % but much smaller. rather than looping over samples it loops over the blocks
+      % of samples defined by the original trials
+      utrl = unique(trialnum);
+      utrl(~isfinite(utrl)) = 0;
+      utrl(utrl==0) = [];
+      if length(utrl)==1,
+        ok   = trialnum==utrl;
+        smps = samplenum(ok);
+        dat(:,ok) = data.trial{utrl}(chanindx,smps);
+      else
+        for xlop=1:length(utrl)
+          ok   = trialnum==utrl(xlop);
+          smps = samplenum(ok);
+          dat(:,ok) = data.trial{utrl(xlop)}(chanindx,smps);
+        end
+      end
+  end
 else
   % only 1 trial present in the input data, so it's quite simple
   % and can be done fast
