@@ -35,8 +35,8 @@ if ~exist(filename)
 end
 
 % get the options
-fileformat = keyval('fileformat',  varargin);
-coordinates = keyval('coordinates',  varargin); if isempty(coordinates), coordinates = 'head'; end
+fileformat  = keyval('format',      varargin);
+coordinates = keyval('coordinates', varargin); if isempty(coordinates), coordinates = 'head'; end
 
 if isempty(fileformat)
   fileformat = ft_filetype(filename);
@@ -106,7 +106,7 @@ switch fileformat
     if ~isempty(rest),
       for i = 4:size(fid,1)
         shape.fid.label{i} = ['fiducial' num2str(i)];
-        %in a 5 coil configuration this corresponds with Cz and Inion
+        % in a 5 coil configuration this corresponds with Cz and Inion
       end
     end
 
@@ -176,6 +176,7 @@ switch fileformat
       otherwise
         error('Incorrect coordinates specified');
     end
+
   case {'yokogawa_mrk', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw' }
 
     hdr = read_yokogawa_header(filename);
@@ -203,6 +204,7 @@ switch fileformat
 
     % Convert to the units of the grad.
     shape = ft_convert_units(shape, 'cm');
+
   case 'yokogawa_coregis'
 
     in_str = textread(filename, '%s');
@@ -261,11 +263,20 @@ switch fileformat
     end
     shape.pnt = pnt;
     shape.tri = tri;
-    shape = rmfield(shape, 'fid');  
- 
-  otherwise
+    shape = rmfield(shape, 'fid');
 
-    success = 0;
+  case 'mne_tri'
+    % FIXME this should be implemented, consistent with ft_write_headshape
+    keyboard
+
+  case 'mne_pos'
+    % FIXME this should be implemented, consistent with ft_write_headshape
+    keyboard
+
+  otherwise
+    % try reading it from an electrode of volume conduction model file
+    success = false;
+
     if ~success
       % try reading it as electrode positions
       % and treat those as fiducials
@@ -278,7 +289,9 @@ switch fileformat
           shape.fid.label = elec.label;
           success = 1;
         end
-      end
+      catch
+        success = false;
+      end % try
     end
 
     if ~success
@@ -296,7 +309,9 @@ switch fileformat
           shape.tri = vol.bnd(vol.skin).tri; % also return the triangulation
           success = 1;
         end
-      end
+      catch
+        success = false;
+      end % try
     end
 
     if ~success

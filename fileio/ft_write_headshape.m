@@ -26,7 +26,7 @@ function ft_write_headshape(filename, bnd, varargin)
 %
 % $Rev$
 
-format = keyval('format', varargin);
+fileformat = keyval('format', varargin);
 
 if ~isstruct(bnd)
   bnd.pnt = bnd;
@@ -34,7 +34,7 @@ end
 
 fid = fopen(filename, 'wt');
 
-switch format
+switch fileformat
   case 'mne_pos'
     % convert to milimeter
     bnd = ft_convert_units(bnd, 'mm');
