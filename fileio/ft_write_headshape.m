@@ -26,7 +26,7 @@ function ft_write_headshape(filename, bnd, varargin)
 %
 % $Rev$
 
-format = ft_keyval('format', varargin);
+format = keyval('format', varargin);
 
 if ~isstruct(bnd)
   bnd.pnt = bnd;
