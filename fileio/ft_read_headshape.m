@@ -7,7 +7,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 % Use as
 %   [shape] = ft_read_headshape(filename)
 %
-% See also FT_READ_VOL, FT_READ_SENS
+% See also FT_READ_VOL, FT_READ_SENS, FT_WRITE_HEADSHAPE
 
 % Copyright (C) 2008-2010 Robert Oostenveld
 %
@@ -118,13 +118,23 @@ switch fileformat
     fid = co(:,find(ki==1))';
 
     [junk, NZ] = max(fid(:,2));
-    [junk, L] = min(fid(:,1));
-    [junk, R] = max(fid(:,1));
+    [junk, L]  = min(fid(:,1));
+    [junk, R]  = max(fid(:,1));
 
     shape.fid.pnt = fid([NZ L R], :);
     shape.fid.label = {'NZ', 'L', 'R'};
 
+  case {'mne_source'}
+    % read the source space from an MNE file
+    ft_hastoolbox('mne', 1);
+    
+    src = mne_read_source_spaces(filename);
+    shape = [];
+    shape.pnt=[src(1).rr;       src(2).rr];
+    shape.tri=[src(1).use_tris; src(2).use_tris + size(src(1).rr,1)];
+
   case {'neuromag_mne', 'neuromag_fif'}
+    % read the headshape and fiducials from an MNE file
     hdr = ft_read_header(filename,'headerformat','neuromag_mne');
     nFid = size(hdr.orig.dig,2); %work out number of fiducials
     switch coordinates

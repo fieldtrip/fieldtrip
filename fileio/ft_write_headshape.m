@@ -17,8 +17,8 @@ function ft_write_headshape(filename, bnd, varargin)
 %   format		= string, see below
 %
 % Supported output formats are
-%   mne_tri		MNE surface desciption
-%   mne_pos		MNE source grid, described as 3D points
+%   'mne_tri'		MNE surface desciption in ascii format
+%   'mne_pos'		MNE source grid in ascii format, described as 3D points
 %
 % See also FT_READ_HEADSHAPE
 
