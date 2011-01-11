@@ -53,7 +53,7 @@ switch dataformat
 
     V = volumewrite_spm(filename, dat, transform, spmversion);
 
-  case 'mgz'
+  case {'freesurfer_mgz' 'mgz'}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % mgz-volume using freesurfer
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
