@@ -8,7 +8,7 @@ function ft_realtime_dicomroxy(cfg)
 % an artificial delay of 1.3*TR between the two events.
 %
 % Use as
-%   ft_realtime_fmriproxy(cfg)
+%   ft_realtime_dicomproxy(cfg)
 %
 % The target to write the data to is configured as
 %   cfg.target.datafile      = string, target destination for the data (default = 'buffer://localhost:1972')
