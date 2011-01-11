@@ -9,8 +9,11 @@ function [V] = ft_write_volume(filename, dat, varargin)
 % but that is not required since it will be added automatically.
 %
 % Additional options should be specified in key-value pairs and can be
-%   'spmversion'     spmversion to be used
+%   'spmversion'     spmversion to be used (in case data needs to be
+%                      written in analyze format
 %   'dataformat'     string, see below
+%   'transform'      transformation matrix, specifying the transformation
+%                      from voxel coordinates to head coordinates
 %
 % The supported dataformats are
 %   analyze
