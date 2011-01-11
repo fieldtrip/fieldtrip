@@ -2,11 +2,6 @@ function ft_realtime_dicomroxy(cfg)
 % FT_REALTIME_DICOMPROXY simulates an fMRI acquisition system by reading a series
 % of DICOM files from disk, and streaming them to a FieldTrip buffer.
 %
-% This function also writes out events of type='scan' and value='pulse' when the simulated
-% scanner initiates a scan, and value='ready' when a hypothetical processing pipeline 
-% is finished with that scan, just after writing out the volume data itself. There is
-% an artificial delay of 1.3*TR between the two events.
-%
 % Use as
 %   ft_realtime_dicomproxy(cfg)
 %
