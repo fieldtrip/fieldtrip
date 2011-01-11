@@ -203,7 +203,7 @@ end
 
 if strcmp(cfg.segment, 'yes')
   % convert and write the volume to an analyze format, so that it can be handled by spm
-  Va = volumewrite_spm([cfg.name,'.img'], mri.anatomy, mri.transform, cfg.spmversion);
+  Va = ft_write_volume([cfg.name,'.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion);
 
   % spm is quite noisy, prevent the warnings from displaying on screen
   % warning off;

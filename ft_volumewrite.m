@@ -21,7 +21,7 @@ function ft_volumewrite(cfg, volume)
 %   cfg.coordinates   = 'spm, 'ctf' or empty for interactive (default = [])
 %
 % The default fileformat is 'spm', which means that a *.hdr and *.img file
-% will be written using the SPM2 toolbox. The SPM format supports a
+% will be written using the SPM8 toolbox. The SPM format supports a
 % homogenous transformation matrix, the other file formats do not support a
 % homogenous coordinate transformation matrix and hence will be written in
 % their native coordinate system.
@@ -402,10 +402,10 @@ switch cfg.filetype
 
   case 'spm'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % write in SPM format, using functions from  the SPM2 toolbox
+    % write in SPM format, using functions from  the SPM8 toolbox
     % this format supports a homogenous transformation matrix
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    volumewrite_spm(cfg.filename, data, transform);
+    ft_write_volume(cfg.filename, data, 'transform', transform, 'spmversion', 'SPM8');
 
   otherwise
     fprintf('unknown fileformat\n');
