@@ -22,14 +22,15 @@ else
 endif
 
 CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3 -g
+CPPOBJS = $(CPPDIR)/GdfWriter.o $(CPPDIR)/SignalConfiguration.o $(CPPDIR)/FtConnection.o $(CPPDIR)/StringServer.o
 
-all: audio2ft$(SUFFIX)
+all: audio2ft$(SUFFIX) ft2audio$(SUFFIX)
 
 audio2ft.o: audio2ft.cc 
 	g++ -c $^ $(CFLAGS) 
 
-audio2ft$(SUFFIX): audio2ft.o ../../buffer/src/socketserver.o
-	g++ -o $@ $^ $(CFLAGS) $(CPPDIR)/GdfWriter.cc $(CPPDIR)/SignalConfiguration.cc $(CPPDIR)/FtConnection.cc $(CPPDIR)/StringServer.cc $(LDFLAGS)
+audio2ft$(SUFFIX): audio2ft.o 
+	g++ -o $@ $^ $(CFLAGS) $(CPPOBJS) $(LDFLAGS)
 
 clean:
 	$(RM) *.o
