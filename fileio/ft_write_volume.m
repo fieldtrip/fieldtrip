@@ -1,6 +1,6 @@
 function [V] = ft_write_volume(filename, dat, varargin)
 
-% FT_WRITE_DATA exports volumetric data to a file.
+% FT_WRITE_VOLUME exports volumetric data to a file.
 %
 % Use as
 %   V = ft_write_volume(filename, dat, ...)
@@ -40,7 +40,7 @@ function [V] = ft_write_volume(filename, dat, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_write_data.m 2528 2011-01-05 14:12:08Z eelspa $
+% $Id:$
 
 % get the options
 dataformat    = keyval('dataformat',    varargin); if isempty(dataformat), dataformat = ft_filetype(filename); end
