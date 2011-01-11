@@ -41,7 +41,7 @@ function [V] = ft_write_volume(filename, dat, varargin)
 
 % get the options
 dataformat    = keyval('dataformat',    varargin); if isempty(dataformat), dataformat = ft_filetype(filename); end
-transform     = keyval('transform',     varargin); if isempty(transform,   transform  = eye(4);                end
+transform     = keyval('transform',     varargin); if isempty(transform),  transform  = eye(4);                end
 spmversion    = keyval('spmversion',    varargin);
 
 switch dataformat
