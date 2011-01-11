@@ -258,19 +258,6 @@ elseif iscell(cfg.highlight)
   end
 end
 
-if isfield(cfg, 'channel') && isfield(data, 'label')
-  cfg.channel = ft_channelselection(cfg.channel, data.label);
-elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
-  cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
-end
-
-% perform channel selection but only allow this when cfg.interactive = 'no'
-if isfield(data, 'label') && strcmp(cfg.interactive, 'no')
-  selchannel = ft_channelselection(cfg.channel, data.label);
-elseif isfield(data, 'labelcmb') && strcmp(cfg.interactive, 'no')
-  selchannel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
-end
-
 % Converting all higlight options to cell-arrays if they're not cell-arrays, 
 % to make defaulting, checking for backwards compatability and error
 % checking easier
@@ -402,6 +389,19 @@ elseif strcmp(dtype, 'freq') && hasrpt,
   end
   dimord = data.dimord;
   dimtok = tokenize(dimord, '_');
+end
+
+if isfield(cfg, 'channel') && isfield(data, 'label')
+  cfg.channel = ft_channelselection(cfg.channel, data.label);
+elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
+  cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
+end
+
+% perform channel selection but only allow this when cfg.interactive = 'no'
+if isfield(data, 'label') && strcmp(cfg.interactive, 'no')
+  selchannel = ft_channelselection(cfg.channel, data.label);
+elseif isfield(data, 'labelcmb') && strcmp(cfg.interactive, 'no')
+  selchannel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
 end
 
 % Read or create the layout that will be used for plotting:
