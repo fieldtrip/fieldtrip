@@ -293,7 +293,9 @@ while ~all(submitted) || ~all(collected)
 
     % collect the output arguments
     try
+      ws = warning('Off','Backtrace');
       [argout, options] = peerget(joblist(i).jobid, 'timeout', inf, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
+      warning(ws);
     catch ME
       % the peerslave command line executable itself can return a number of errors
       %  1) could not start the matlab engine
