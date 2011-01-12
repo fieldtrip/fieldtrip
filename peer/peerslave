@@ -82,18 +82,18 @@ mentat003|mentat004)
 	;;
 mentat005)
 	# has 48GB of RAM, 2 CPUs and 12 cores in total
-	memavail[ 0]=8589934592; timavail[ 0]=86399
-	memavail[ 1]=8589934592; timavail[ 1]=86399
-	memavail[ 2]=8589934592; timavail[ 2]=3599
+	memavail[ 0]=4294967296; timavail[ 0]=86399
+	memavail[ 1]=4294967296; timavail[ 1]=86399
+	memavail[ 2]=4294967296; timavail[ 2]=86399
 	memavail[ 3]=4294967296; timavail[ 3]=86399
 	memavail[ 4]=4294967296; timavail[ 4]=86399
-	memavail[ 5]=4294967296; timavail[ 5]=3599
-	memavail[ 6]=2147483648; timavail[ 6]=86399
-	memavail[ 7]=2147483648; timavail[ 7]=86399
-	memavail[ 8]=2147483648; timavail[ 8]=3599
-	memavail[ 9]=2147483648; timavail[ 9]=3599
-	memavail[10]=2147483648; timavail[10]=599
-	memavail[11]=2147483648; timavail[11]=599
+	memavail[ 5]=4294967296; timavail[ 5]=86399
+	memavail[ 6]=4294967296; timavail[ 6]=86399
+	memavail[ 7]=4294967296; timavail[ 7]=86399
+	memavail[ 8]=4294967296; timavail[ 8]=3599
+	memavail[ 9]=4294967296; timavail[ 9]=3599
+	memavail[10]=4294967296; timavail[10]=3599
+	memavail[11]=4294967296; timavail[11]=3599
 	OPTIONS="--verbose 4 --smartcpu 0"
 	;;
 mentat068|mentat069)
