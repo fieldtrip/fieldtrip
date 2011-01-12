@@ -40,19 +40,19 @@ void exitFun(void) {
 		if (!peerInitialized)
 				return;
 
-		/* disable the kill switch */
-		pthread_mutex_lock(&mutexkillswitch);
-		killswitch.enabled  = 0;
-		killswitch.masterid = 0;
-		killswitch.time     = 0;
-		mexPrintf("killswitch: disabled\n");
-		pthread_mutex_unlock(&mutexkillswitch);
+		/* disable the watchdog */
+		pthread_mutex_lock(&mutexwatchdog);
+		watchdog.enabled  = 0;
+		watchdog.masterid = 0;
+		watchdog.time     = 0;
+		mexPrintf("watchdog: disabled\n");
+		pthread_mutex_unlock(&mutexwatchdog);
 
 		/* stop the maintenance thread */
 		pthread_mutex_lock(&mutexstatus);
 		if (discoverStatus) {
 				pthread_mutex_unlock(&mutexstatus);
-				mexPrintf("killswitch: requesting cancelation of discover thread\n");
+				mexPrintf("watchdog: requesting cancelation of discover thread\n");
 				pthread_cancel(discoverThread);
 				pthread_join(discoverThread, NULL);
 		}
@@ -64,7 +64,7 @@ void exitFun(void) {
 		pthread_mutex_lock(&mutexstatus);
 		if (expireStatus) {
 				pthread_mutex_unlock(&mutexstatus);
-				mexPrintf("killswitch: requesting cancelation of expire thread\n");
+				mexPrintf("watchdog: requesting cancelation of expire thread\n");
 				pthread_cancel(expireThread);
 				pthread_join(expireThread, NULL);
 		}
@@ -119,7 +119,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		if (!peerInitialized) {
-				mexPrintf("killswitch: init\n");
+				mexPrintf("watchdog: init\n");
 				peerinit(NULL);
 				peerInitialized = 1;
 		}
@@ -128,7 +128,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		pthread_mutex_lock(&mutexstatus);
 		if (!discoverStatus) {
 				pthread_mutex_unlock(&mutexstatus);
-				mexPrintf("killswitch: spawning discover thread\n");
+				mexPrintf("watchdog: spawning discover thread\n");
 				rc = pthread_create(&discoverThread, NULL, discover, (void *)NULL);
 				if (rc)
 						mexErrMsgTxt("problem with return code from pthread_create()");
@@ -148,7 +148,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		pthread_mutex_lock(&mutexstatus);
 		if (!expireStatus) {
 				pthread_mutex_unlock(&mutexstatus);
-				mexPrintf("killswitch: spawning expire thread\n");
+				mexPrintf("watchdog: spawning expire thread\n");
 				rc = pthread_create(&expireThread, NULL, expire, (void *)NULL);
 				if (rc)
 						mexErrMsgTxt("problem with return code from pthread_create()");
@@ -164,13 +164,13 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				pthread_mutex_unlock(&mutexstatus);
 		}
 
-		/* enable the kill switch: the expire thread will exit if the master is not seen any more */
-		pthread_mutex_lock(&mutexkillswitch);
-		killswitch.enabled  = 1;
-		killswitch.masterid = masterid;
-		killswitch.time     = time;
-		mexPrintf("killswitch: enabled for masterid = %lu and time = %d\n", masterid, time);
-		pthread_mutex_unlock(&mutexkillswitch);
+		/* enable the watchdog: the expire thread will exit if the master is not seen any more */
+		pthread_mutex_lock(&mutexwatchdog);
+		watchdog.enabled  = 1;
+		watchdog.masterid = masterid;
+		watchdog.time     = time;
+		mexPrintf("watchdog: enabled for masterid = %lu and time = %d\n", masterid, time);
+		pthread_mutex_unlock(&mutexwatchdog);
 
 		return;
 } /* main */

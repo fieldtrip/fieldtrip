@@ -204,7 +204,7 @@ while true
     % get the input arguments and options
     [argin, options] = peer('get', joblist.jobid);
 
-    % set the options that will be used in the killswitch
+    % set the options that will be used in the watchdog
     % options = {options{:}, 'masterid', joblist.hostid}; % add the masterid as option
     % options = {options{:}, 'timavail', 2*(timavail+1)}; % add the timavail as option, empty is ok
 

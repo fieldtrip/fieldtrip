@@ -47,11 +47,11 @@ try
     error('input options should be a cell-array');
   end
 
-  % check whether a kill switch should be set
+  % check whether a watchdog should be set
   masterid = keyval('masterid', optin);
   timallow = keyval('timallow', optin);
   if ~isempty(masterid) || ~isempty(timallow)
-    killswitch(masterid, time+timallow);
+    watchdog(masterid, time+timallow);
   end
 
   % check whether a diary file should be created
@@ -195,10 +195,10 @@ close all hidden;
 % clear any global variables
 clear global
 
-% clear the optional kill switch, which is loaded into memory as a mex file
+% clear the optional watchdog, which is loaded into memory as a mex file
 if ~isempty(masterid) || ~isempty(timallow)
-  killswitch(0,0); % this is required to unlock it from memory
-  clear killswitch
+  watchdog(0,0); % this is required to unlock it from memory
+  clear watchdog
 end
 
 % clear the previous warning and error messages

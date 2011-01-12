@@ -510,7 +510,7 @@ int main(int argc, char *argv[]) {
 								options = mxCreateCellMatrix(1, n+4);
 								for (i=0; i<n; i++)
 										mxSetCell(options, i, mxGetCell(previous, i));
-								/* add the masterid and timallow options, these are used by peerexec for the killswitch */
+								/* add the masterid and timallow options, these are used by peerexec for the watchdog */
 								mxSetCell(options, n+0, mxCreateString("masterid\0"));
 								mxSetCell(options, n+1, mxCreateDoubleScalar(peerid));
 								mxSetCell(options, n+2, mxCreateString("timallow\0"));

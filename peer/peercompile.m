@@ -148,7 +148,7 @@ cmd = sprintf('mex -outdir ../private %s %s memprofile.c %s',cflags,extra_cflags
 disp(cmd);
 eval(cmd);
 
-cmd = sprintf('mex -outdir ../private %s %s killswitch.c %s %s',cflags,extra_cflags,allObjects,ldflags);
+cmd = sprintf('mex -outdir ../private %s %s watchdog.c %s %s',cflags,extra_cflags,allObjects,ldflags);
 disp(cmd);
 eval(cmd);
 

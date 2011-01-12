@@ -113,49 +113,49 @@ void *expire(void *arg) {
 						peer = peer->next;
 				}
 
-				pthread_mutex_lock(&mutexkillswitch);
+				pthread_mutex_lock(&mutexwatchdog);
 
 /*
-fprintf(stderr, "killswitch: time = %d, now = %d\n", killswitch.time, time(NULL));
-fprintf(stderr, "killswitch: masterid = %d\n", killswitch.masterid);
+fprintf(stderr, "watchdog: time = %d, now = %d\n", watchdog.time, time(NULL));
+fprintf(stderr, "watchdog: masterid = %d\n", watchdog.masterid);
 */
 
-				/* check whether the kill switch should be triggered for the time */
-				if (killswitch.enabled && killswitch.time) {
-						if (difftime(time(NULL), killswitch.time)>0) {
+				/* check whether the watchdog should be triggered for the time */
+				if (watchdog.enabled && watchdog.time) {
+						if (difftime(time(NULL), watchdog.time)>0) {
 								/* the maximum allowed time has elapsed */
-								DEBUG(LOG_CRIT, "expire: killswitch triggered (time)");
+								DEBUG(LOG_CRIT, "expire: watchdog triggered (time)");
 								exit(0);
 						}
 				}
 
-				/* check whether the kill switch should be triggered for the masterid */
-				if (killswitch.enabled && killswitch.masterid) {
+				/* check whether the watchdog should be triggered for the masterid */
+				if (watchdog.enabled && watchdog.masterid) {
 						found = 0;
 
 						/* look whether the master is stil available */
 						peer = peerlist;
 						while(peer && !found) {
 								found = 1;
-								found = found && (peer->host->id == killswitch.masterid);
+								found = found && (peer->host->id == watchdog.masterid);
 								found = found && (peer->host->status == STATUS_MASTER);
 								peer = peer->next;
 						}
 
 						if (!found)
-								killswitch.evidence++;
+								watchdog.evidence++;
 						else
-								killswitch.evidence==0;
+								watchdog.evidence==0;
 
-						if (killswitch.evidence>2) {
+						if (watchdog.evidence>2) {
 								/* the master is not available any more */
-								DEBUG(LOG_CRIT, "expire: killswitch triggered (master)");
+								DEBUG(LOG_CRIT, "expire: watchdog triggered (master)");
 								exit(0);
 						}
 
-				} /* if killswitch enabled */
+				} /* if watchdog enabled */
 
-				pthread_mutex_unlock(&mutexkillswitch);
+				pthread_mutex_unlock(&mutexwatchdog);
 				pthread_mutex_unlock(&mutexpeerlist);
 
 				/* note that this is a thread cancelation point */

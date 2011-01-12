@@ -44,13 +44,13 @@ extern grouplist_t *grouplist;
 extern pthread_mutex_t mutexhostlist;
 extern hostlist_t *hostlist;
 
-extern pthread_mutex_t mutexkillswitch;
+extern pthread_mutex_t mutexwatchdog;
 extern struct {
 		int enabled;
 		int evidence;
 		UINT32_T masterid;
 		time_t time;
-} killswitch;
+} watchdog;
 
 extern pthread_mutex_t mutexsmartmem;
 extern struct {

@@ -60,13 +60,13 @@ grouplist_t *grouplist = NULL;
 pthread_mutex_t mutexhostlist = PTHREAD_MUTEX_INITIALIZER;
 hostlist_t *hostlist = NULL;
 
-pthread_mutex_t mutexkillswitch = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutexwatchdog = PTHREAD_MUTEX_INITIALIZER;
 struct {
 		int enabled;
 		int evidence;
 		UINT32_T masterid;
 		time_t time;
-} killswitch;
+} watchdog;
 
 pthread_mutex_t mutexsmartmem = PTHREAD_MUTEX_INITIALIZER;
 struct {
