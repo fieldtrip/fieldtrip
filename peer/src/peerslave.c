@@ -560,7 +560,27 @@ int main(int argc, char *argv[]) {
 								job     = joblist;
 								jobid   = job->job->id;
 								peerid  = job->host->id;
-								DEBUG(LOG_CRIT, "failed to execute job %d from %s@%s (jobid=%u, memreq=%lu, timreq=%lu)", ++jobnum, job->host->user, job->host->name, job->job->id, job->job->memreq, job->job->timreq);
+								if (engineFailed) {
+										DEBUG(LOG_CRIT, "failed to execute job %d from %s@%s (engine)", jobnum, job->host->user, job->host->name);
+								}
+								else if (jobFailed==1) {
+										DEBUG(LOG_CRIT, "failed to execute job %d from %s@%s (argin)", jobnum, job->host->user, job->host->name);
+								}
+								else if (jobFailed==2) {
+										DEBUG(LOG_CRIT, "failed to execute job %d from %s@%s (optin)", jobnum, job->host->user, job->host->name);
+								}
+								else if (jobFailed==3) {
+										DEBUG(LOG_CRIT, "failed to execute job %d from %s@%s (eval)", jobnum, job->host->user, job->host->name);
+								}
+								else if (jobFailed==4) {
+										DEBUG(LOG_CRIT, "failed to execute job %d from %s@%s (argout)", jobnum, job->host->user, job->host->name);
+								}
+								else if (jobFailed==5) {
+										DEBUG(LOG_CRIT, "failed to execute job %d from %s@%s (optout)", jobnum, job->host->user, job->host->name);
+								}
+								else {
+										DEBUG(LOG_CRIT, "failed to execute job %d from %s@%s", jobnum, job->host->user, job->host->name);
+								}
 								pthread_mutex_unlock(&mutexjoblist);
 						}
 
