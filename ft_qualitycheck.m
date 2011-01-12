@@ -36,7 +36,7 @@ function [varargout] = ft_qualitycheck(cfg, varargin)
 
 % set the defaults:
 if ~isfield(cfg,'analyze'),        cfg.analyze = 'yes';                           end
-if ~isfield(cfg,'savemat'),        cfg.savemat = 'no';                           end
+if ~isfield(cfg,'savemat'),        cfg.savemat = 'yes';                           end
 if ~isfield(cfg,'visualize'),      cfg.visualize = 'yes';                         end
 if ~isfield(cfg,'saveplot'),       cfg.saveplot = 'yes';                          end
 
@@ -80,7 +80,7 @@ if strcmp(cfg.analyze,'yes')
     cfgdef.trialdef.poststim       = 10; % 10 seconds of data
     cfgdef                         = ft_definetrial(cfgdef);
     
-    %% TRIAL LOOP; preproc trial by trial
+    %% TRIAL LOOP; process trial by trial
     ntrials = size(cfgdef.trl,1);
     for t = 1:ntrials
         fprintf('analyzing trial %s of %s \n', num2str(t), num2str(ntrials));
@@ -89,6 +89,11 @@ if strcmp(cfg.analyze,'yes')
         cfgpreproc                  = cfgdef;
         cfgpreproc.trl              = cfgdef.trl(t,:);
         data                        = ft_preprocessing(cfgpreproc); clear cfgpreproc;
+        
+        % store grad file once
+        if t == 1
+            gradfile = data.grad;
+        end            
         
         % determine headposition
         x1i = strmatch('HLC0011', data.label); % x nasion
@@ -111,7 +116,7 @@ if strcmp(cfg.analyze,'yes')
         hpos(8,t) = mean(data.trial{1,1}(y3i,:) * 100);
         hpos(9,t) = mean(data.trial{1,1}(z3i,:) * 100);
         
-        % determine headmotion: diffrence from initial trial
+        % determine headmotion: diffrence from initial trial (in cm)
         hmotion(1,t) = sqrt((hpos(1,t)-hpos(1,1)).^2 + (hpos(2,t)-hpos(2,1)).^2 + (hpos(3,t)-hpos(3,1)).^2); % Na
         hmotion(2,t) = sqrt((hpos(4,t)-hpos(4,1)).^2 + (hpos(5,t)-hpos(5,1)).^2 + (hpos(6,t)-hpos(6,1)).^2); % L
         hmotion(3,t) = sqrt((hpos(7,t)-hpos(7,1)).^2 + (hpos(8,t)-hpos(8,1)).^2 + (hpos(9,t)-hpos(9,1)).^2); % R
@@ -181,7 +186,7 @@ if strcmp(cfg.analyze,'yes')
     output.time         = (1:ntrials)*cfgdef.trialdef.poststim-.5*cfgdef.trialdef.poststim;
     output.hpos         = hpos;
     output.hmotion      = hmotion;
-    %output.grad         = 
+    output.grad         = gradfile;
     
     % save to .mat
     if strcmp(cfg.savemat,'yes')
@@ -220,7 +225,7 @@ if strcmp(cfg.visualize,'yes')
         'FontSize',10,...
         'String','Topographic artefact distribution',...
         'Backgroundcolor','white',...
-        'Position',[.02 .61 .22 .02]);
+        'Position',[.02 .46 .22 .02]);
     
     h.MainText3 = uicontrol(...
         'Parent',h.MainFigure,...
@@ -257,22 +262,22 @@ if strcmp(cfg.visualize,'yes')
         'Style','text',...
         'Units','normalized',...
         'FontSize',10,...
-        'String',[artchans(1:end)],...
+        'String',['Top 5'; artchans(1:end)],...
         'Backgroundcolor','white',...
-        'Position',[.2 .31 .05 .12]);
+        'Position',[.2 .24 .05 .14]);
     
     % Headmotion
     h.HmotionPanel = uipanel(...
         'Parent',h.MainFigure,...
         'Units','normalized',...
         'Backgroundcolor','white',...
-        'Position',[.01 .65 .25 .32]);
+        'Position',[.01 .5 .25 .47]);
     
     h.HmotionAxes = axes(...
         'Parent',h.HmotionPanel,...
         'Units','normalized',...
         'color','white',...
-        'Position',[.1 .15 .85 .45]);
+        'Position',[.05 .08 .9 .52]);
        
     h.DataText = uicontrol(...
         'Parent',h.HmotionPanel,...
@@ -281,7 +286,7 @@ if strcmp(cfg.visualize,'yes')
         'FontSize',10,...
         'String',output.datasetname,...
         'Backgroundcolor','white',...
-        'Position',[.01 .8 .99 .1]);
+        'Position',[.01 .85 .99 .1]);
     
     h.TimeText = uicontrol(...
         'Parent',h.HmotionPanel,...
@@ -290,7 +295,7 @@ if strcmp(cfg.visualize,'yes')
         'FontSize',10,...
         'String',[output.starttime ' - ' output.stoptime],...
         'Backgroundcolor','white',...
-        'Position',[.01 .7 .99 .1]);
+        'Position',[.01 .78 .99 .1]);
     
     h.DataText2 = uicontrol(...
         'Parent',h.HmotionPanel,...
@@ -299,19 +304,30 @@ if strcmp(cfg.visualize,'yes')
         'FontSize',10,...
         'String',['fs: ' output.fsample ', nchans: ' num2str(size(output.label,1))],...
         'Backgroundcolor','white',...
-        'Position',[.01 .6 .99 .1]);
+        'Position',[.01 .71 .99 .1]);
+    
+    allchans = ft_senslabel('ctf275');
+    misschans = setdiff(output.label, allchans);
+    h.DataText3 = uicontrol(...
+        'Parent',h.HmotionPanel,...
+        'Style','text',...
+        'Units','normalized',...
+        'FontSize',10,...
+        'String',['missing chans: ' misschans'],...
+        'Backgroundcolor','white',...
+        'Position',[.01 .64 .99 .1]);    
     
     % Topo artefact plot
     h.TopoPanel = uipanel(...
         'Parent',h.MainFigure,...
         'Units','normalized',...
         'Backgroundcolor','white',...
-        'Position',[.01 .01 .25 .61]); 
+        'Position',[.01 .01 .25 .46]); 
     
     h.TopoREF = axes(...
         'Parent',h.TopoPanel,...
         'color','white',...
-        'Position',[0.01 0.72 0.99 0.25]);
+        'Position',[0.05 0.86 0.9 0.06]);
     
     h.TopoMEG = axes(...
         'Parent',h.TopoPanel,...
@@ -481,7 +497,7 @@ if strcmp(cfg.visualize,'yes')
     cfgtopo.comment       = '# Artifacts';
     cfgtopo.style         = 'straight';
     cfgtopo.layout        = 'CTF275.lay';
-    cfgtopo.colormap      = dutch(512);
+    cfgtopo.colormap      = hot;
     cfgtopo.zlim          = 'maxmin';
     cfgtopo.interpolation = 'nearest';
     data.label            = output.label;
@@ -495,16 +511,16 @@ if strcmp(cfg.visualize,'yes')
     data.label     = output.reflabel;
     data.powspctrm = output.refjumps;
     axes(h.TopoREF);
-    plot_REF(data); clear data;
-        
-    % barplot headmotion (*10; cm-> mm) per coil, exclude last trial in max
-    hmotions = ([median(output.hmotion(3,:)) max(output.hmotion(3,1:end-1))-median(output.hmotion(3,:)); ...
-                 median(output.hmotion(2,:)) max(output.hmotion(2,1:end-1))-median(output.hmotion(2,:)); ...
-                 median(output.hmotion(1,:)) max(output.hmotion(1,1:end-1))-median(output.hmotion(1,:))])*10;
-    barh(h.HmotionAxes,hmotions,'stack');
-    xlabel(h.HmotionAxes, 'Median and maximum headmotion [mm]');
+    plot_REF(data, h); clear data;
+    
+    % boxplot headmotion (*10; cm-> mm) per coil
+    hmotions = ([output.hmotion(3,:)'  output.hmotion(2,:)' output.hmotion(1,:)'])*10;
+    boxplot(h.HmotionAxes, hmotions, 'orientation', 'horizontal', 'notch', 'on');
+
     set(h.HmotionAxes,'YTick',[1:3]);
-    set(h.HmotionAxes,'YTickLabel',{'R','L','Na'});     
+    set(h.HmotionAxes,'YTickLabel',{'R','L','N'}); 
+    xlim(h.HmotionAxes, [0 10]);
+    xlabel(h.HmotionAxes, 'Headposition from origin (mm)');
     
     % plot powerspectrum
     loglog(h.SpectrumAxes, output.freq, squeeze(mean(mean(output.powspctrm,1),3)),'r','LineWidth',2);
@@ -577,7 +593,7 @@ power = freqinput.powspctrm(:,xmin:xmax);
 freq = freqinput.freq(:,xmin:xmax);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plot_REF(dat)
+function plot_REF(dat, h)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Prepare sensors
 cfgref            = [];
@@ -590,18 +606,20 @@ cfgref.layout     = rmfield(cfgref.layout,'outline');
 if isempty(seldat)
     error('labels in data and labels in layout do not match');
 end
+datavector = dat.powspctrm(seldat,:);
+labelvector = cfgref.layout.label(sellay);
 
-datavector = dat.powspctrm(seldat);
-% Select x and y coordinates and labels of the channels in the data
-chanX = cfgref.layout.pos(sellay,1);
-chanY = cfgref.layout.pos(sellay,2);
-chanLabels = cfgref.layout.label(sellay);
-
-% Plot the sensors without the head
-ft_plot_topo(chanX,chanY,datavector,'interpmethod','v4',...
-    'interplim','electrodes',...
-    'gridscale',67,...
-    'isolines',6,...
-    'mask',cfgref.layout.mask,...
-    'style','surf');
-hold on; ft_plot_lay(cfgref.layout,'box','no','mask',false,'verbose',true);
+% Plotting
+imagesc(sum(datavector,2)');
+colormap(hot);
+set(h.TopoREF,'XTick',[1:length(labelvector)]);
+for l = 1:length(labelvector)
+    if sum(datavector(l,:),2) > 0
+        Xlab{l} = labelvector{l};
+    else
+        Xlab{l} = '';
+    end
+end
+set(h.TopoREF,'XTickLabel',Xlab);
+set(h.TopoREF,'YTickLabel',{''});
+title(h.TopoREF,'Reference sensors');
