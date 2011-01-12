@@ -2,7 +2,7 @@ function ft_defaults
 
 % FT_DEFAULTS is called at the begin of all FieldTrip functions and
 % contains some defaults and path settings
-% (formally known as fieldtripdefs.m)
+% (formerly known as fieldtripdefs.m)
 %
 % Note that this should be a function and not a script, otherwise the
 % ft_hastoolbox function appears not be found in fieldtrip/private.
