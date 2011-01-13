@@ -119,7 +119,13 @@ if ~isfield(bnd, 'tri')
   bnd.tri = [];
 end
 
-pnt = bnd.pnt;
+if isfield(bnd, 'pnt')
+  % this is normal
+  pnt = bnd.pnt;
+elseif isfield(bnd, 'pos')
+  % this is the case for a cortical sheet source model from ft_prepare_sourcemodel
+  pnt = bnd.pos;
+end
 tri = bnd.tri;
 
 if ~isempty(pnt)
