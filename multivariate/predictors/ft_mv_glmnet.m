@@ -28,9 +28,8 @@ classdef ft_mv_glmnet < ft_mv_predictor
     family = 'binomial' % 'gaussian' (linear regression), 'binomial' or 'multinomial' (logistic regression)
     
     validator           % crossvalidator object if a whole path is specified    
-    performance         % performance results for the crossvalidator   
-    lambdapath          % followed lambda regularization path during crossvalidation
-    
+    performance         % performance results for the crossvalidator
+   
     % replicated glmnetSet options (see help glmnetSet)
     weights
     alpha = 0.99
@@ -136,8 +135,6 @@ classdef ft_mv_glmnet < ft_mv_predictor
           
           obj.performance(:,j) = perf;
           
-          obj.lambdapath = cell2mat(cellfun(@(x)(x.mvmethods{end}.lambda(1:nsolutions)),obj.validator.mva,'UniformOutput',false)')'; 
-          
         end
         
        % find best lambda
@@ -152,7 +149,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
          lmax(j) = obj.validator.mva{j}.mvmethods{end}.lambda(1);
        end
        opts.lambda = linspace(max(lmax),mean(lbest),50);
-       %obj.lambda = opts.lambda;
+       obj.lambda = opts.lambda;
        
        u = unique(Y);
        
@@ -202,9 +199,9 @@ classdef ft_mv_glmnet < ft_mv_predictor
         end
         
       end
-
-      obj.lambda  = res.lambda; 
-
+      
+      obj.lambda  = res.lambda;
+        
       if obj.deregularize
         W = obj.weights;
         for k=1:size(W,2)
