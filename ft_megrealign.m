@@ -324,7 +324,22 @@ else
 end
 
 % create the dipole grid on which the data will be projected
-grid = prepare_dipole_grid(cfg, volold, data.grad);
+tmpcfg = [];
+tmpcfg.vol  = volold;
+tmpcfg.grad = data.grad;
+% copy all options that are potentially used in ft_prepare_sourcemodel
+try, tmpcfg.grid        = cfg.grid;         end
+try, tmpcfg.mri         = cfg.mri;          end
+try, tmpcfg.headshape   = cfg.headshape;    end
+try, tmpcfg.tightgrid   = cfg.tightgrid;    end
+try, tmpcfg.symmetry    = cfg.symmetry;     end
+try, tmpcfg.smooth      = cfg.smooth;       end
+try, tmpcfg.threshold   = cfg.threshold;    end
+try, tmpcfg.spheremesh  = cfg.spheremesh;   end
+try, tmpcfg.inwardshift = cfg.inwardshift;  end
+try, tmpcfg.mriunits    = cfg.mriunits;     end
+try, tmpcfg.sourceunits = cfg.sourceunits;  end
+[grid, tmpcfg] = ft_prepare_sourcemodel(tmpcfg);
 pos = grid.pos;
 
 % sometimes some of the dipole positions are nan, due to problems with the headsurface triangulation

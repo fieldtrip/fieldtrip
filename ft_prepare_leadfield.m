@@ -153,8 +153,23 @@ if ~isfield(cfg, 'reducerank')
   end
 end
 
-% construct the grid on which the scanning will be done
-[grid, cfg] = prepare_dipole_grid(cfg, vol, sens);
+% construct the dipole grid according to the configuration
+tmpcfg = [];
+tmpcfg.vol  = vol;
+tmpcfg.grad = sens; % this can be electrodes or gradiometers
+% copy all options that are potentially used in ft_prepare_sourcemodel
+try, tmpcfg.grid        = cfg.grid;         end
+try, tmpcfg.mri         = cfg.mri;          end
+try, tmpcfg.headshape   = cfg.headshape;    end
+try, tmpcfg.tightgrid   = cfg.tightgrid;    end
+try, tmpcfg.symmetry    = cfg.symmetry;     end
+try, tmpcfg.smooth      = cfg.smooth;       end
+try, tmpcfg.threshold   = cfg.threshold;    end
+try, tmpcfg.spheremesh  = cfg.spheremesh;   end
+try, tmpcfg.inwardshift = cfg.inwardshift;  end
+try, tmpcfg.mriunits    = cfg.mriunits;     end
+try, tmpcfg.sourceunits = cfg.sourceunits;  end
+[sourcegrid, tmpcfg] = ft_prepare_sourcemodel(tmpcfg);
 
 if ft_voltype(vol, 'openmeeg')
   % the system call to the openmeeg executable makes it rather slow

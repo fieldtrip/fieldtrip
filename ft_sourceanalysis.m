@@ -354,8 +354,23 @@ elseif (strcmp(cfg.permutation,   'yes') || ...
   fprintf('precomputing leadfields for efficient handling of multiple trials\n');
   [grid, cfg] = ft_prepare_leadfield(cfg, data);
 else
-  % only prepare the grid positions, the leadfield will be computed on the fly if not present
-  [grid, cfg] = prepare_dipole_grid(cfg, vol, sens);
+  % only prepare the dipole grid positions, the leadfield will be computed on the fly if not present
+  tmpcfg = [];
+  tmpcfg.vol  = vol;
+  tmpcfg.grad = sens; % this can be electrodes or gradiometers
+  % copy all options that are potentially used in ft_prepare_sourcemodel
+  try, tmpcfg.grid        = cfg.grid;         end
+  try, tmpcfg.mri         = cfg.mri;          end
+  try, tmpcfg.headshape   = cfg.headshape;    end
+  try, tmpcfg.tightgrid   = cfg.tightgrid;    end
+  try, tmpcfg.symmetry    = cfg.symmetry;     end
+  try, tmpcfg.smooth      = cfg.smooth;       end
+  try, tmpcfg.threshold   = cfg.threshold;    end
+  try, tmpcfg.spheremesh  = cfg.spheremesh;   end
+  try, tmpcfg.inwardshift = cfg.inwardshift;  end
+  try, tmpcfg.mriunits    = cfg.mriunits;     end
+  try, tmpcfg.sourceunits = cfg.sourceunits;  end
+  [grid, tmpcfg] = ft_prepare_sourcemodel(tmpcfg);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -321,9 +321,25 @@ if strcmp(cfg.gridsearch, 'yes')
   else
     error('dipole scanning is only possible for a single dipole or a symmetric dipole pair');
   end
-  
-  % construct the grid on which the scanning will be done
-  [grid, cfg] = prepare_dipole_grid(cfg, vol, sens);
+
+  % construct the dipole grid on which the gridsearch will be done
+  tmpcfg = [];
+  tmpcfg.vol  = vol;
+  tmpcfg.grad = sens; % this can be electrodes or gradiometers
+  % copy all options that are potentially used in ft_prepare_sourcemodel
+  try, tmpcfg.grid        = cfg.grid;         end
+  try, tmpcfg.mri         = cfg.mri;          end
+  try, tmpcfg.headshape   = cfg.headshape;    end
+  try, tmpcfg.tightgrid   = cfg.tightgrid;    end
+  try, tmpcfg.symmetry    = cfg.symmetry;     end
+  try, tmpcfg.smooth      = cfg.smooth;       end
+  try, tmpcfg.threshold   = cfg.threshold;    end
+  try, tmpcfg.spheremesh  = cfg.spheremesh;   end
+  try, tmpcfg.inwardshift = cfg.inwardshift;  end
+  try, tmpcfg.mriunits    = cfg.mriunits;     end
+  try, tmpcfg.sourceunits = cfg.sourceunits;  end
+  [grid, tmpcfg] = ft_prepare_sourcemodel(tmpcfg);
+
   ft_progress('init', cfg.feedback, 'scanning grid');
   for i=1:length(grid.inside)
     ft_progress(i/length(grid.inside), 'scanning grid location %d/%d\n', i, length(grid.inside));
