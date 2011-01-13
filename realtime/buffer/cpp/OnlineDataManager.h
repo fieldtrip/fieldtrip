@@ -153,6 +153,13 @@ class OnlineDataManager : public StringRequestHandler {
 		static const std::string emptyFilename("ERROR: NO FILENAME SET\n");
 		static const std::string chanOutOfRange("ERROR: CHANNEL INDEX OUTSIDE HARDWARE LIMITS\n");
 		static const std::string cannotSave("ERROR: COULD NOT START SAVING\n");
+		char response[200];
+		static const char trueStr[] = "true";
+		static const char falseStr[] = "false";
+		static const char noFile[] = "";
+		const char *saveTrueFalse;
+		const char *filenameStr;
+		
 		int target = 0; // 1 = STREAM, 2= SAVE
 		unsigned int pos = 0;
 		
@@ -163,6 +170,27 @@ class OnlineDataManager : public StringRequestHandler {
 			target = 1;
 		} else if (token1.compare("SAVE") == 0) {
 			target = 2;
+		} else if (token1.compare("STATUS") == 0) {
+			if (savingEnabled && curWriter!=NULL && curWriter->isRunning()) {
+				saveTrueFalse = trueStr;
+				filenameStr   = curWriter->getFilename().c_str();
+			} else {
+				saveTrueFalse = falseStr;
+				filenameStr   = noFile;
+			}
+			
+			snprintf(response, sizeof(response)-1, 
+				"numacquired=%d numsaved=%d numstreamed=%d saving=%s savingto=\"%s\" downsample=%d bandwidth=%f bworder=%d\n",
+				nCont, // number of continuous channels from hardware
+				signalConf.getSavingSelection().getSize(),
+				signalConf.getStreamingSelection().getSize(),
+				saveTrueFalse,
+				filenameStr,
+				signalConf.getDownsampling(),
+				signalConf.getBandwidth(),
+				signalConf.getOrder());
+			
+			return static_cast<std::string>(response);
 		} else {
 			return unknown;
 		}
@@ -241,7 +269,35 @@ class OnlineDataManager : public StringRequestHandler {
 			} else {
 				return malform;
 			}
-		} 
+		} else if (token2.compare("STATUS") == 0) {
+			if (target == 1) {
+				// STREAM STATUS
+				snprintf(response, sizeof(response)-1, 
+					"numacquired=%d numstreamed=%d downsample=%d bandwidth=%f bworder=%d\n",
+					nCont, // number of continuous channels from hardware
+					signalConf.getStreamingSelection().getSize(),
+					signalConf.getDownsampling(),
+					signalConf.getBandwidth(),
+					signalConf.getOrder());				
+			} else {
+				// SAVE STATUS
+				if (savingEnabled && curWriter!=NULL && curWriter->isRunning()) {
+					saveTrueFalse = trueStr;
+					filenameStr   = curWriter->getFilename().c_str();
+				} else {
+					saveTrueFalse = falseStr;
+					filenameStr   = noFile;
+				}
+			
+				snprintf(response, sizeof(response)-1, 
+					"numacquired=%d numsaved=%d saving=%s savingto=\"%s\"\n",
+					nCont, // number of continuous channels from hardware
+					signalConf.getSavingSelection().getSize(),
+					saveTrueFalse,
+					filenameStr);
+			}
+			return static_cast<std::string>(response);
+		}
 		
 		return unknown;
 	}

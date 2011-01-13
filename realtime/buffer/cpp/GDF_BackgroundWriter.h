@@ -68,7 +68,7 @@ class GDF_BackgroundWriter {
 			locPipe.write(sizeof(int64_t), &minusOne);
 		}
 		pthread_join(savingThread, 0);
-      threadStarted = false;
+		threadStarted = false;
 	}
 	
 	void stopAsync() {
@@ -91,18 +91,22 @@ class GDF_BackgroundWriter {
 	
 	void commitBlock() {
 		int n = locPipe.write(sizeof(int64_t), &rbWritePos);
-      if (n!=sizeof(int64_t)) {
-         fprintf(stderr, "GDF_BackgroundWriter.commitBlock: Error when writing to pipe.\n");
-      }
+		if (n!=sizeof(int64_t)) {
+			fprintf(stderr, "GDF_BackgroundWriter.commitBlock: Error when writing to pipe.\n");
+		}
 	}
 	
 	bool isRunning() const { 
 		return running; 
 	}
    
-   bool threadWasStarted() const {
-      return threadStarted;
-   }
+	bool threadWasStarted() const {
+		return threadStarted;
+	}
+	
+	const std::string& getFilename() const {
+		return filename;
+	}
 	
 	protected:
 	
