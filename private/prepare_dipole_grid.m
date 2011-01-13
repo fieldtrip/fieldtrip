@@ -37,6 +37,9 @@ function [grid, cfg] = prepare_dipole_grid(cfg, vol, sens)
 %   cfg.smooth        = 5, smoothing in voxels
 %
 % Other configuration options
+%   cfg.vol          = volume conduction model
+%   cfg.grad         = gradiometer definition
+%   cfg.elec         = electrode definition
 %   cfg.grid.tight   = 'yes' or 'no' (default is automatic)
 %   cfg.inwardshift  = depth of the bounding layer for the source space, relative to the head model surface (default = 0)
 %   cfg.symmetry     = 'x', 'y' or 'z' symmetry for two dipoles, can be empty (default = [])
@@ -46,13 +49,38 @@ function [grid, cfg] = prepare_dipole_grid(cfg, vol, sens)
 %
 % See also SOURCEANALYSIS, MEGREALIGN, DIPOLEFITTING, PREPARE_LEADFIELD
 
-% Copyright (C) 2004-2009, Robert Oostenveld
+% Searching through the code, it seems that the following cfg fields are being used
+% cfg.grid
+% cfg.mri
+% cfg.headshape
+% cfg.tightgrid
+% cfg.symmetry
+% cfg.smooth
+% cfg.threshold
+% cfg.spheremesh
+% cfg.inwardshift
+% cfg.mriunits
+% cfg.sourceunits
+
+% Copyright (C) 2004-2011, Robert Oostenveld
 %
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
+% %Log$
 
 % set the defaults
 if ~isfield(cfg, 'symmetry'),         cfg.symmetry    = [];       end
 if ~isfield(cfg, 'grid'),             cfg.grid        = [];       end
+
+if ~isfield(cfg, 'vol') && nargin>1
+  % put it in the configuration structure
+  % this is for backward compatibility, 13 Januari 2011
+  cfg.vol = vol;
+end
+
+if ~isfield(cfg, 'sens') && nargin>2
+  % put it in the configuration structure
+  % this is for backward compatibility, 13 Januari 2011
+  cfg.grad = sens;
+end
 
 % for backward compatibility
 if isfield(cfg, 'tightgrid')
@@ -83,7 +111,7 @@ if basedongrid && basedonpos
   basedongrid = 0;
 end
 
-if ~any([basedonauto basedongrid basedonpos basedonshape basedonmri]) && nargin>1 && ~isempty(vol)
+if ~any([basedonauto basedongrid basedonpos basedonshape basedonmri]) && nargin>1 && ~isempty(cfg.vol)
   % fall back to default behaviour, which is to create a surface grid (e.g. used in MEGRELIGN)
   basedonvol = 1;
 end
@@ -155,6 +183,17 @@ end
 
 % start with an empty grid
 grid = [];
+
+% copy the volume conductor and sensor array out of the cfg
+if isfield(cfg, 'vol')
+  vol = cfg.vol
+end
+% these are mutually exclusive
+if isfield(cfg, 'grad')
+  sens = cfg.grad;
+elseif isfield(cfg, 'elec')
+  sens = cfg.elec;
+end
 
 if basedonauto
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
