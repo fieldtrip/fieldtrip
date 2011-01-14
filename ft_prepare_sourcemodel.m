@@ -116,7 +116,7 @@ basedonpos    = isfield(cfg.grid, 'pos');                               % using 
 basedonshape  = isfield(cfg, 'headshape') && ~isempty(cfg.headshape);   % surface grid based on inward shifted head surface from external file
 basedonmri    = isfield(cfg, 'mri');                                    % regular 3D grid, based on segmented MRI, restricted to gray matter
 basedonvol    = false;                                                  % surface grid based on inward shifted brain surface from volume conductor
-basedoncortex = isfield(cfg, 'headshape') && (ft_filetype(cfg.headshape, 'neuromag_fif') || ft_filetype(cfg.headshape, 'freesurfer_triangle_binary')); % cortical sheet from MNE or Freesurfer
+basedoncortex = isfield(cfg, 'headshape') && (iscell(cfg.headshape) || ft_filetype(cfg.headshape, 'neuromag_fif') || ft_filetype(cfg.headshape, 'freesurfer_triangle_binary')); % cortical sheet from MNE or Freesurfer, also in case of multiple files/hemispheres
 
 if basedonshape && basedoncortex
   % treating it as cortical sheet has preference
@@ -438,6 +438,10 @@ if basedoncortex
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % read it from a *.fif file that was created using Freesurfer and MNE
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  if iscell(cfg.headshape)
+    % FIXME loop over all files, this should be two hemispheres
+    keyboard
+  end
   switch ft_filetype(cfg.headshape)
     case 'freesurfer_triangle_binary'
       % it contains a cortical sheet which was created by the Freesurfer software

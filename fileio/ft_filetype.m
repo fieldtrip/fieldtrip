@@ -104,14 +104,23 @@ end
 % end
 
 if iscell(filename)
-  % perform the test for each filename, return a boolean vector
-  type = false(size(filename));
+  if ~isempty(desired)
+    % perform the test for each filename, return a boolean vector
+    type = false(size(filename));
+  else
+    % return a string with the type for each filename
+    type = cell(size(filename));
+  end
   for i=1:length(filename)
     if strcmp(filename{i}(end), '.')
       % do not recurse into this directory or the parent directory
       continue
     else
-      type(i) = ft_filetype(filename{i}, desired);
+      if iscell(type)
+        type{i} = ft_filetype(filename{i}, desired);
+      else
+        type(i) = ft_filetype(filename{i}, desired);
+      end
     end
   end
   return
