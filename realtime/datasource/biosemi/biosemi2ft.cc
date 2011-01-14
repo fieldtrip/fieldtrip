@@ -11,7 +11,7 @@
 StringServer ctrlServ;
 ConsoleInput conIn;
 char hostname[256];
-int port;
+int port, ctrlPort;
 char gdfname[1024];
 char cfgname[1024];
 bool haveGDF;
@@ -199,7 +199,7 @@ int main(int argc, char *argv[]) {
 	BioSemiClient BS;
 	
 	if (argc<2) {
-		printf("Usage: biosemi2ft <config-file> [gdf-file] [hostname=localhost [port=1972]]\n");
+		printf("Usage: biosemi2ft <config-file> [gdf-file] [hostname=localhost [port=1972 [ctrlPort=8000]]]\n");
 		return 0;
 	}
 	
@@ -233,8 +233,14 @@ int main(int argc, char *argv[]) {
 		port = 1972;
 	}
 	
-	if (!ctrlServ.startListening(8000)) {
-		fprintf(stderr, "Cannot listen on port 8000 for configuration commands\n");
+	if (argc>5) {
+		ctrlPort = atoi(argv[5]);
+	} else {
+		ctrlPort = 8000;
+	}
+	
+	if (!ctrlServ.startListening(ctrlPort)) {
+		fprintf(stderr, "Cannot listen on port %d for configuration commands\n", ctrlPort);
 		return 1;
 	}
 	

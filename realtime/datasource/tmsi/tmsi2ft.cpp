@@ -1,10 +1,11 @@
-// tmsidriver.cpp : Defines the entry point for the console application.
-//
-
-
-
+/** TMSI2FT acquisition tool, based on OnlineDataManager and code from
+    Bart Nienhuis' tmsidriver, as well as TMSi sample code.
+	Hacked together by S. Klanke, 2010
+*/
 
 /*++
+
+Parts of the code (TMSi examples)
  
 Copyright (c) 2000 TMS International
 
@@ -54,6 +55,7 @@ Revision History:
 
 #include <OnlineDataManager.h>
 #include <StringServer.h>
+#include <ConsoleInput.h>
 
 
 using namespace std;
@@ -61,9 +63,11 @@ using namespace std;
 #define MAX_DEVICE			1	//Max number of devices supported by this demo
 #define USE_MASTER_SLAVE	FALSE
 
+#define MY_BUFFER_SIZE      10000
 
 
-
+// The following function is from Bart Niehuises tmsidriver application,
+// or from the TMSi example code.
 ULONG UseMasterSlave( RTDeviceEx **Devices , ULONG Max )
 {	ULONG NrOfDevices; 
 	ULONG x;
@@ -107,7 +111,8 @@ ULONG UseMasterSlave( RTDeviceEx **Devices , ULONG Max )
 	return NrOfDevices;
 }
 
-
+// The following function is from Bart Niehuises tmsidriver application,
+// or from the TMSi example code.
 RTDeviceEx *SelectDevice( IN BOOLEAN Present )
 {	ULONG Count = 0; 
 	ULONG Max = 0; 
@@ -182,7 +187,8 @@ RTDeviceEx *SelectDevice( IN BOOLEAN Present )
 	return Device; 
 }
 
-
+// The following function is from Bart Niehuises tmsidriver application,
+// or from the TMSi example code.
 // Get handle to my device and init the device 
 RTDeviceEx *InitDevice( ULONG SampRate) {
 	ULONG Index;	
@@ -211,36 +217,46 @@ RTDeviceEx *InitDevice( ULONG SampRate) {
 	return MasterL;
 }
 
-
-ULONG getTotalNumChannels(RTDeviceEx *Master) {
-	ULONG numChan;
-	
-	SIGNAL_FORMAT sf;
+/** Retrieve number of channels and the index of the trigger channel.
+    If there is more than one trigger channnel (digital input), only
+	the last one is used. TODO: maybe change this in a later version.
+*/
+int getTotalNumberOfChannels(RTDeviceEx *Master, int& triggerChannel) {
+	int numChan;
     PSIGNAL_FORMAT psf;
+
+	psf = Master->GetSignalFormat(NULL);
+	if (psf == NULL) return 0;
 	
-	memset(&sf, 0, sizeof(SIGNAL_FORMAT));
-	sf.Elements = 1; 
-	sf.Size = sizeof(SIGNAL_FORMAT); 
-
-	psf = (SIGNAL_FORMAT *) LocalAlloc( LMEM_FIXED | LMEM_ZEROINIT , sf.Size * sf.Elements); 
-	if( psf == NULL ) {
-		fprintf(stderr, "Cannot allocate memory for SignalFormat structure\n");
-		exit(1);
-	}
-	psf[0].Size = sf.Size; 
-	psf[0].Elements = sf.Elements;
-	Master->GetSignalFormat(psf);
-
+	// printf("%i x %i\n", (int) psf[0].Size, (int) psf[0].Elements);
 	numChan = psf[0].Elements;
-	LocalFree(psf); 
+	triggerChannel = -1;
 	
+	for (int i=0;i<numChan;i++) {
+		printf("Channel %i: %i %i ", i+1, (int) psf[i].Type, (int) psf[i].SubType);
+		wprintf(psf[i].Name); // .Name field is of WCHAR type (unicode)
+		printf("\n");
+		
+		// the documentation gives 0x13 for the type, but at least
+		// for the Porti we need a "4".
+		if (psf[i].Type == 4) triggerChannel = i;
+	}
+	// do we need to free this? or did we get static memory?
+	// LocalFree(psf);   
 	return numChan;
 }
 
-
 int main(int argc, char* argv[]) {	
 	StringServer ctrlServ;
+	ConsoleInput conIn;
 	OnlineDataManager<int32_t, float> *ODM;
+	
+	char hostname[256];
+	int port;
+	int ctrlPort;
+	
+	int triggerChannel = -1;
+	int triggerStatus  = 0;
 	
 	RTDeviceEx *Master;
 	ULONG SampleRate = MAX_SAMPLE_RATE;
@@ -252,70 +268,105 @@ int main(int argc, char* argv[]) {
 	ULONG numHwChans;
 
 	// Buffer for storing the samples; 
-	ULONG SignalBuffer[1000];
+	ULONG SignalBuffer[MY_BUFFER_SIZE];
+	
+	if (argc<2) {
+		fprintf(stderr, "Usage: tmsi2ft configfile [hostname=localhost [port=1972 [ctrlPort=8000]]]\n");
+		fprintf(stderr, "\nUse a minus (-) for the hostname parameter to spawn a local buffer server.\n");
+		return 1;
+	}
+	
+	if (argc>2) {
+		strncpy(hostname, argv[2], sizeof(hostname));
+	} else {
+		strcpy(hostname, "localhost");
+	}
+	
+	if (argc>3) {
+		port = atoi(argv[3]);
+	} else {
+		port = 1972;
+	}
+	
+	if (argc>4) {
+		ctrlPort = atoi(argv[4]);
+	} else {
+		ctrlPort = 8000;
+	}
+	
+	if (!ctrlServ.startListening(ctrlPort)) {
+		fprintf(stderr, "Cannot listen on port %d for configuration commands\n", ctrlPort);
+		return 1;
+	}
 
 	Master=InitDevice(SampleRate);
 	if (Master == 0) {
 		fprintf(stderr, "Cannot initialise device\n");
-		return 0;
+		return 1;
 	}
 	Master->SetSignalBuffer(&SampleRate,&BufferSize);
 
-	numHwChans = getTotalNumChannels(Master);
+	numHwChans = getTotalNumberOfChannels(Master, triggerChannel);
 	BytesPerSample = 4*numHwChans;
 
-	if( BytesPerSample == 0 ) 
-	{	printf( "\nDevice returns no samples" ); 
-		_getch();
-		return 0; 
+	if( BytesPerSample == 0 ) {	
+		fprintf(stderr, "Device returns no samples\n"); 
+		return 1; 
 	}
 
-	wprintf(L"\nMaximum sample rate = %d Hz",SampleRate  / 1000 );
-	wprintf(L"\nMaximum Buffer size = %d Samples",BufferSize);
-	        
-	//Set sample rate 
-	//SampleRate = 500000 ;     
-	//Set buffer size;
-	BufferSize = 1000; 
+	printf("Maximum sample rate   = %.3f Hz\n",(float) SampleRate / 1000.0);
+	printf("Maximum Buffer size   = %d Samples\n",(int) BufferSize);
+	printf("Number of HW channels = %d\n", (int) numHwChans);        
 
+	BufferSize = MY_BUFFER_SIZE; 
 	Master->SetSignalBuffer(&SampleRate ,&BufferSize);
 
-	wprintf(L"\nSelected sample rate = %d Hz",SampleRate  / 1000 );
-	wprintf(L"\nSelected Buffer size = %d Samples",BufferSize);
+	//printf("Selected sample rate = %.3f Hz\n", (float) SampleRate / 1000.0);
+	printf("Selected Buffer size = %d Samples\n", (int) BufferSize);
 
 	/* these represent the acquisition system properties */
-	float fSample        = SampleRate/1000.0;
+	float fSample      = SampleRate/1000.0;
 	int nBufferSamp	   = 0;
 	int nTotalSamp	   = 0;
 	
-	ctrlServ.startListening(8000);
-	ODM = new OnlineDataManager<int32_t, float>(0, numHwChans, fSample, GDF_INT32, DATATYPE_FLOAT32);
+	ODM = new OnlineDataManager<int32_t, float>(0, numHwChans, fSample);
 
 	if (!Master->Start()) {
 		fprintf(stderr, "Unable to start the Device\n");
 		return 1;
 	}
-
-	if (!ODM->useOwnServer(1972)) {
-		fprintf(stderr, "Could not spawn buffer server.\n");
-		return 0;
+	if (!strcmp(hostname, "-")) {
+		if (!ODM->useOwnServer(port)) {
+			fprintf(stderr, "Could not spawn buffer server on port %d.\n",port);
+			goto cleanup;
+		}
+	} else {
+		if (!ODM->connectToServer(hostname, port)) {
+			fprintf(stderr, "Could not connect to buffer server at %s:%d.\n",hostname, port);
+			goto cleanup;
+		}
 	}
-	if (ODM->configureFromFile("config.txt") != 0) {
+	if (ODM->configureFromFile(argv[1]) != 0) {
 		fprintf(stderr, "Configuration file is invalid\n");
-		return 0;
+		goto cleanup;
 	}	
 	ODM->enableStreaming();
 	
-	wprintf(L"\nPress any key to quit \n");
-
-	// Stop the program if we hit any key
-	while(!_kbhit()) {
+	printf("\nPress [Escape] to quit...\n");
+	
+	while (1) {
+		if (conIn.checkKey()) {	
+			int c = conIn.getKey();
+			if (c==27) break; // quit
+		}
+		// Process any incoming request on the control port
 		ctrlServ.checkRequests(*ODM);
+		
 		//Get Signal buffer information
 		Master->GetBufferInfo(&Overflow,&PercentFull);
 			
 		if (PercentFull > 0) {
-			// if there is data available get samples from the device
+			// If there is data available, get samples from the device
 			// GetSamples returns the number of bytes written in the signal buffer
 			// This will always be a multiple op BytesPerSample. 
 			
@@ -333,20 +384,33 @@ int main(int argc, char* argv[]) {
 					break;
 				}
 				memcpy(data, SignalBuffer, nBufferSamp * BytesPerSample);
+				
+				// TODO: allow for multiple trigger channels
+				if (triggerChannel >= 0) {
+					for (int j=0;j<nBufferSamp;j++) {
+						int trigVal = SignalBuffer[triggerChannel + j*numHwChans];
+						
+						if (trigVal != triggerStatus && trigVal != 0) {
+							// TODO: maybe use the channel label as the event type instead of "Digi"
+							ODM->getEventList().add(j, "Digi", trigVal);
+						}
+						triggerStatus = trigVal;
+					}
+				}
+				
 				ODM->handleBlock();
-			} else {
-				//allow other applications some extra process time 
-				Sleep(10);
 			}
-		}//end PercentFull	
-	}//endwhile
+		} else {
+			Sleep(1);
+		}
+	}
 
+cleanup:
 	//Stop the device
-
 	if (Master->Stop()) {	
-		wprintf(L"\nDevice stop\n");
+		printf("Device stopped.\n");
 	} else {	
-		wprintf(L"\nUnable to stop the device\n");
+		fprintf(stderr, "Unable to stop the device!\n");
 	}
 		
 	//Unchain any slave devices 
