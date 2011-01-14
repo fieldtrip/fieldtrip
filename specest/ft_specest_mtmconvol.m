@@ -60,7 +60,7 @@ end
 
 
 % Determine fsample and set total time-length of data
-fsample = 1/(time(2)-time(1));
+fsample = round(1/(time(2)-time(1)));
 dattime = ndatsample / fsample; % total time in seconds of input data
 
 % Zero padding
