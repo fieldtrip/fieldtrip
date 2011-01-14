@@ -1,4 +1,7 @@
-/* Convert incoming characters on a serial port to an event in a remote FieldTrip buffer
+/* Convert incoming characters on a serial port to an event in a remote FieldTrip buffer.
+ * Errors when writing to the buffer will be printed, but otherwise ignored.
+ * Please look at serial_event.conf for an example of how to set up the tool,
+ * e.g., which port to listen on, and how to write events.
  * (C) 2010 Stefan Klanke
  */
 #include <serial.h>
@@ -42,7 +45,14 @@ pthread_mutex_t sampleMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_t udpThread;
 
 
-/* returns 0 if ok, -1 if C==NULL, -2 if file can't be opened, positive number = #errors */
+/* The following function is used for turning a configuration file (see serial_event.conf)
+   into a SerialEventConfig struct as defined above.
+   Returns 
+	 0 if ok, 
+	-1 if C==NULL, 
+	-2 if file can't be opened, 
+	positive number = #errors 
+*/
 int parseConfig(SerialEventConfig *C, const char *filename) {
 	FILE *f;
 	char line[MAXLINE];
@@ -356,8 +366,12 @@ int parseConfig(SerialEventConfig *C, const char *filename) {
 }
 
 
-
-
+/* Creates a UDP socket and starts listening on the given port number.
+   The purpose of this is to detect "RESET" messages (5 characters)
+   that might be send, e.g., from the gui_streamer fMRI export tool,
+   such that this tool knows that the internal sample counter should
+   be reset.
+*/
 int create_udp_receiver(int port) {
 	struct sockaddr_in addr;
 	int sock;
@@ -398,7 +412,13 @@ int create_udp_receiver(int port) {
 	return sock;
 }
 
-
+/** Main function of background thread that listens for UDP messages
+    on the socket that has been setup by the function above. Resets
+	the sample counter to conf.sample_start in case a "RESET" message
+	comes in. Note that there is no further synchronisation between
+	this thread and the main thread, that is, "sample" is just overwritten
+	here. This is ok because the operation is atomic.
+*/
 void *_udp_thread(void *arg) {
 	fd_set readSet;
 	struct timeval tv;
@@ -433,7 +453,7 @@ void *_udp_thread(void *arg) {
 }
 
 
-
+/** Function that is called when the user presses CTRL-C */
 void abortHandler(int sig) {
 	printf("Ctrl-C pressed -- stopping...\n");
 	keepRunning = 0;
