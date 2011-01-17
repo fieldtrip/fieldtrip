@@ -592,7 +592,7 @@ class OnlineDataManager : public StringRequestHandler {
 			P+=Ln;
 		}
 
-		req.prepPutHeader(streamSel.getSize(), DATATYPE_FLOAT32, fSample / signalConf.getDownsampling());
+		req.prepPutHeader(streamSel.getSize(), ftType, fSample / signalConf.getDownsampling());
 		req.prepPutHeaderAddChunk(FT_CHUNK_CHANNEL_NAMES, N, chunk_data);
 	
 		delete[] chunk_data;

@@ -5,16 +5,32 @@
 #define NCHAN  6
 #define NBLK   237
 
-int main() {
+int main(int argc, char *argv[]) {
 	ConsoleInput conIn;
 	StringServer ctrlServ;
 	int counter = 0;
+	char hostname[256];
+	int port;
 			
 	OnlineDataManager<int, float> ODM(1, NCHAN, 2000.0);
 	
 	ODM.setPhysicalDimCode(GDF_VOLT + GDF_MILLI);
 	ODM.setSlopeAndOffset(0.001, 0);
 	
+	if (argc>1) {
+		strncpy(hostname, argv[1], sizeof(hostname));
+	} else {
+		strcpy(hostname, "localhost");
+	}
+	
+	if (argc>2) {
+		port = atoi(argv[2]);
+	} else {
+		port = 1972;
+	}
+		
+
+	/* used for generating various sawtooth signals */
 	int value[NCHAN];
 	int speed[NCHAN];
 	
@@ -23,9 +39,16 @@ int main() {
 		speed[i] = 4*(1+i);
 	}
 	
-	if (!ODM.useOwnServer(1972)) {
-		fprintf(stderr, "Could not spawn buffer server.\n");
-		return 0;
+	if (!strcmp(hostname, "-")) {
+		if (!ODM.useOwnServer(port)) {
+			fprintf(stderr, "Could not spawn buffer server on port %d.\n",port);
+			return 1;
+		}
+	} else {
+		if (!ODM.connectToServer(hostname, port)) {
+			fprintf(stderr, "Could not connect to buffer server at %s:%d.\n",hostname, port);
+			return 1;
+		}
 	}
 	
 	if (ODM.configureFromFile("config6.txt") != 0) {
