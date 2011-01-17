@@ -9,6 +9,18 @@
 #include <vector>
 #include <string>
 
+/** Simple C++ style wrapper around strtol, converts a string to an integer.
+	Returns true on success, false on error. The second parameter value receives
+	the result of a successful conversion.
+*/
+bool convertToInt(const std::string& in, int& value);
+
+/** Simple C++ style wrapper around strtod, converts a string to a double precision number.
+	Returns true on success, false on error. The second parameter value receives
+	the result of a successful conversion.
+*/
+bool convertToDouble(const std::string& in, double& value);
+
 struct ChannelSelection {
 	std::vector<int> index;
 	std::vector<std::string> label;
@@ -24,6 +36,11 @@ struct ChannelSelection {
 		index.push_back(newIndex);
 		label.push_back(newLabel);
 	}
+	
+	void add(int newIndex, const std::string& newLabel) {
+		index.push_back(newIndex);
+		label.push_back(newLabel);
+	}	
 	
 	int getSize() const {
 		return index.size();

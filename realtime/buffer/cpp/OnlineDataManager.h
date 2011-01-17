@@ -5,33 +5,6 @@
 #include <GDF_BackgroundWriter.h>
 #include <SignalConfiguration.h>
 
-/** Simple C++ style wrapper around strtol, converts a string to an integer.
-	Returns true on success, false on error. The second parameter value receives
-	the result of a successful conversion.
-*/
-bool convertToInt(const std::string& in, int& value) {
-	const char *start = in.c_str();
-	char *end;
-	long v = strtol(start, &end, 10);
-	if (start == end) return false;
-	if (*end!=0) return false;
-	value = (int) v;
-	return true;
-} 
-
-/** Simple C++ style wrapper around strtod, converts a string to a double precision number.
-	Returns true on success, false on error. The second parameter value receives
-	the result of a successful conversion.
-*/
-bool convertToDouble(const std::string& in, double& value) {
-	const char *start = in.c_str();
-	char *end;
-	double v = strtod(start, &end);
-	if (start == end) return false;
-	if (*end!=0) return false;
-	value = v;
-	return true;
-} 
 
 /** To is type of original data, e.g. as coming out of the AD-converter
     Ts is the data type used for streaming, e.g. float
