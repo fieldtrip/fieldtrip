@@ -580,7 +580,8 @@ else
                 % sinetaper scaling, not checked whether it works if hastime = 0
                 % FIXME why does the scaling only has to be done for power?
                 if isfield(cfg,'taper') && strcmp(cfg.taper, 'sine')
-                    sinetapscale = zeros(ntaper(ifoi),nfoi);  % assumes fixed number of tapers
+                    %sinetapscale = zeros(ntaper(ifoi),nfoi);  % assumes fixed number of tapers
+                    sinetapscale = zeros(ntaper(ifoi),1);  % assumes fixed number of tapers
                     for isinetap = 1:ntaper(ifoi)  % assumes fixed number of tapers
                         sinetapscale(isinetap,:) = (1 - (((isinetap - 1) ./ ntaper(ifoi)) .^ 2));
                     end
