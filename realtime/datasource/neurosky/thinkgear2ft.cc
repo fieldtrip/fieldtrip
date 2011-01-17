@@ -72,12 +72,12 @@ int main(int argc, char *argv[]) {
 	StringServer ctrlServ;
 	SerialPort SP;
 	char hostname[256];
-	int port;
+	int port, ctrlPort;
 	int counter = 0;
 	OnlineDataManager<short, float> ODM(0, NUMCHANS, FSAMPLE);
 
 	if (argc<3) {
-		printf("Usage: thinkgear2ft <device> <config-file> [hostname=localhost [port=1972]]\n");
+		printf("Usage: thinkgear2ft <device> <config-file> [hostname=localhost [port=1972 [[ctrlPort=8000]]]\n");
 		return 0;
 	}
 
@@ -91,6 +91,12 @@ int main(int argc, char *argv[]) {
 		port = atoi(argv[4]);
 	} else {
 		port = 1972;
+	}
+
+	if (argc>5) {
+		ctrlPort = atoi(argv[5]);
+	} else {
+		ctrlPort = 8000;
 	}
 
 	if (!serialOpenByName(&SP, argv[1])) {
@@ -120,7 +126,7 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 
-	ctrlServ.startListening(8000);
+	ctrlServ.startListening(ctrlPort);
 	ODM.enableStreaming();
 
 	printf("Starting - press ESC to quit\n");
