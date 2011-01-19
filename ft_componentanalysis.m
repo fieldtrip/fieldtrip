@@ -453,6 +453,15 @@ if isfield(data, 'cfg'), cfg.previous = data.cfg; end
 % remember the exact configuration details in the output
 comp.cfg = cfg;
 
+% copy the sampleinfo into the output
+if isfield(data, 'sampleinfo')
+  comp.sampleinfo = data.sampleinfo;
+end
+% copy the trialinfo into the output
+if isfield(data, 'trialinfo')
+  comp.trialinfo = data.trialinfo;
+end
+
 fprintf('total time in componentanalysis %.1f seconds\n', toc);
 
 % the output data should be saved to a MATLAB file

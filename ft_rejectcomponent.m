@@ -171,8 +171,16 @@ cfg.version.id = '$Id$';
 cfg.version.matlab = version();
 
 if ~hasdata 
-  % remember the configuration details of the input data 
+  % remember the configuration details of the input data
   if isfield(comp, 'cfg'), cfg.previous = comp.cfg; end
+  % copy the sampleinfo into the output
+  if isfield(comp, 'sampleinfo')
+    data.sampleinfo = comp.sampleinfo;
+  end
+  % copy the trialinfo into the output
+  if isfield(comp, 'trialinfo')
+    data.trialinfo = comp.trialinfo;
+  end
 elseif hasdata
   if isfield(comp, 'cfg'), cfg.previous{1} = comp.cfg; end
   if isfield(comp, 'cfg'), cfg.previous{2} = data.cfg; end
