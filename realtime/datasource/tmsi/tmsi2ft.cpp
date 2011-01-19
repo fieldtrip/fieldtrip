@@ -250,6 +250,7 @@ int main(int argc, char* argv[]) {
 	StringServer ctrlServ;
 	ConsoleInput conIn;
 	OnlineDataManager<int32_t, float> *ODM;
+	SignalConfiguration sigConf;
 	
 	char hostname[256];
 	int port;
@@ -294,6 +295,11 @@ int main(int argc, char* argv[]) {
 		ctrlPort = 8000;
 	}
 	
+	if (sigConf.parseFile(argv[1]) != 0) {
+		fprintf(stderr, "Configuration file %s is invalid\n", argv[1]);
+		return 1;
+	}	
+	
 	if (!ctrlServ.startListening(ctrlPort)) {
 		fprintf(stderr, "Cannot listen on port %d for configuration commands\n", ctrlPort);
 		return 1;
@@ -319,9 +325,14 @@ int main(int argc, char* argv[]) {
 	printf("Number of HW channels = %d\n", (int) numHwChans);        
 
 	BufferSize = MY_BUFFER_SIZE; 
+	if (sigConf.getSampleRate() != 0.0) {
+		// override SampleRate if configured this way
+		SampleRate = (int) (sigConf.getSampleRate() * 1000.0);
+	}
+	
 	Master->SetSignalBuffer(&SampleRate ,&BufferSize);
 
-	//printf("Selected sample rate = %.3f Hz\n", (float) SampleRate / 1000.0);
+	printf("Selected sample rate = %.3f Hz\n", (float) SampleRate / 1000.0);
 	printf("Selected Buffer size = %d Samples\n", (int) BufferSize);
 
 	/* these represent the acquisition system properties */
@@ -346,10 +357,12 @@ int main(int argc, char* argv[]) {
 			goto cleanup;
 		}
 	}
-	if (ODM->configureFromFile(argv[1]) != 0) {
-		fprintf(stderr, "Configuration file is invalid\n");
+	
+	if (!ODM->setSignalConfiguration(sigConf)) {
+		fprintf(stderr, "Could not set OnlineDataManager configuration. Did you specify more channels than the HW provides?\n");
 		goto cleanup;
-	}	
+	}
+		
 	ODM->enableStreaming();
 	
 	printf("\nPress [Escape] to quit...\n");
