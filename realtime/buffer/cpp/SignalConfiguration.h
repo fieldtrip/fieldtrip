@@ -91,7 +91,7 @@ class SignalConfiguration {
 	
 	SignalConfiguration() : chanSelSave(), chanSelStream(), 
 							downSample(1), maxChanSave(0), maxChanStream(0), 
-							order(0), bandwidth(-1.0),
+							order(0), bandwidth(-1.0), sampleRate(0.0), 
 							batteryRefresh(10), statusRefresh(2) {};
 	~SignalConfiguration() {};
 	
@@ -108,6 +108,10 @@ class SignalConfiguration {
 		this->bandwidth=bandwidth;
 	}
 	
+	void setSampleRate(double sampleRate) {
+		this->sampleRate = sampleRate;
+	}
+	
 	void setOrder(int order) {
 		if (order>=0) {
 			this->order = order;
@@ -116,6 +120,7 @@ class SignalConfiguration {
 
 	int getDownsampling() const { return downSample; }
 	double getBandwidth() const { return bandwidth; }
+	double getSampleRate() const { return sampleRate; }
 	int getOrder() const { return order; }
 	int getBatteryRefresh() const { return batteryRefresh; }
 	int getStatusRefresh() const { return statusRefresh; }
@@ -162,6 +167,7 @@ class SignalConfiguration {
 	int maxChanStream;
 	int order;
 	double bandwidth;
+	double sampleRate;
 	int batteryRefresh, statusRefresh;
 };
 

@@ -537,6 +537,7 @@ class OnlineDataManager : public StringRequestHandler {
 		if (bw < 0 || bw >= 0.5*fSample) {
 			signalConf.setOrder(0);
 		}
+		configureStreaming();
 		return true;
 	}
 		
