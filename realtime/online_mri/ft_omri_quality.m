@@ -139,7 +139,7 @@ while 1
     if newNum.nsamples == numTotal
       % timeout -- go back to start of (inner) loop
       drawnow;
-        continue;
+      continue;
     end
     
     % this is necessary for ft_read_data

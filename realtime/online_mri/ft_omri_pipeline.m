@@ -9,7 +9,6 @@ function ft_omri_pipeline(cfg)
 %  cfg.output     - where to write processed scans to     (default 'buffer://localhost:1973')
 %  cfg.numDummy   - how many scans to ignore initially    (default 0)
 %  cfg.smoothFWHM - kernel width in mm (Full Width Half Maximum) for smoothing (default = 0 => no smoothing)
-%  cfg.whichEcho  - which echo to process for multi-echo sequences (default = 1)
 %  cfg.correctMotion 	- flag indicating whether to correct motion artifacts (default = 1 = yes)
 %  cfg.correctSliceTime - flag indicating whether to correct slice timing (default = 1 = yes)
 %
