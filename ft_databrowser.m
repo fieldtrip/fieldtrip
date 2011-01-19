@@ -492,13 +492,16 @@ end
 function help_cb(h, eventdata)
 fprintf('------------------------------------------------------------------------------------\n')
 fprintf('You can use the following buttons in the data viewer\n')
-fprintf('1-9                : select artifact number 1-9\n');
+fprintf('1-9                : select artifact type 1-9\n');
+fprintf('shift 1-9          : select previous artifact of type 1-9\n');
+fprintf('control 1-9        : select next artifact of type 1-9\n');
+fprintf('alt 1-9            : select next artifact of type 1-9\n');
 fprintf('arrow-left         : previous trial\n');
 fprintf('arrow-right        : next trial\n');
 fprintf('shift arrow-up     : increase vertical scaling\n');
 fprintf('shift arrow-down   : decrease vertical scaling\n');
-fprintf('shift arrow-left   : increase cfg.blocksize\n');
-fprintf('shift arrow-down   : decrease cfg.blocksize\n');
+fprintf('shift arrow-left   : increase horizontal scaling\n');
+fprintf('shift arrow-down   : decrease horizontal scaling\n');
 fprintf('q            : quit\n');
 fprintf('------------------------------------------------------------------------------------\n')
 fprintf('\n')
@@ -617,47 +620,62 @@ else
 end
 
 switch key
-  case {'1' '2' '3' '4' '5' '6' '7' '8'}
+  case {'1' '2' '3' '4' '5' '6' '7' '8' '9'}
     % switch to another artifact type
     opt.ftsel = str2double(key);
-    guidata(h, opt);
-    fprintf('switching to the "%s" artifact\n', opt.artdata.label{opt.ftsel});
-    redraw_cb(h, eventdata);
-  case {'shift+1' 'shift+2' 'shift+3' 'shift+4' 'shift+5' 'shift+6' 'shift+7' 'shift+8'}
+    numart = size(opt.artdata.trial{1}, 1);
+    if opt.ftsel > numart
+        fprintf('data has no artifact type %i \n', opt.ftsel)
+    else
+        guidata(h, opt);
+        fprintf('switching to the "%s" artifact\n', opt.artdata.label{opt.ftsel});
+        redraw_cb(h, eventdata);
+    end
+  case {'shift+1' 'shift+2' 'shift+3' 'shift+4' 'shift+5' 'shift+6' 'shift+7' 'shift+8' 'shift+9'}
     % go to previous artifact
     opt.ftsel = str2double(key(end));
-    cursam = opt.trlvis(opt.trlop,1);
-    artsam = find(opt.artdata.trial{1}(opt.ftsel,1:cursam-1), 1, 'last');
-    if isempty(artsam)
-      fprintf('no earlier "%s" artifact found\n', opt.artdata.label{opt.ftsel});
-    else
-      fprintf('going to previous "%s" artifact\n', opt.artdata.label{opt.ftsel});
-      if opt.trlvis(nearest(opt.trlvis(:,1),artsam),1) < artsam
-        arttrl = nearest(opt.trlvis(:,1),artsam);
-      else
-        arttrl = nearest(opt.trlvis(:,1),artsam)-1;
-      end
-      opt.trlop = arttrl;
-      guidata(h, opt);
-      redraw_cb(h, eventdata);
+    numart = size(opt.artdata.trial{1}, 1);
+    if opt.ftsel > numart
+        fprintf('data has no artifact type %i \n', opt.ftsel)
+    else        
+        cursam = opt.trlvis(opt.trlop,1);
+        artsam = find(opt.artdata.trial{1}(opt.ftsel,1:cursam-1), 1, 'last');
+        if isempty(artsam)
+            fprintf('no earlier "%s" artifact found\n', opt.artdata.label{opt.ftsel});
+        else
+            fprintf('going to previous "%s" artifact\n', opt.artdata.label{opt.ftsel});
+            if opt.trlvis(nearest(opt.trlvis(:,1),artsam),1) < artsam
+                arttrl = nearest(opt.trlvis(:,1),artsam);
+            else
+                arttrl = nearest(opt.trlvis(:,1),artsam)-1;
+            end
+            opt.trlop = arttrl;
+            guidata(h, opt);
+            redraw_cb(h, eventdata);
+        end
     end
-  case {'control+1' 'control+2' 'control+3' 'control+4' 'control+5' 'control+6' 'control+7' 'control+8' 'control+9'}
+  case {'control+1' 'control+2' 'control+3' 'control+4' 'control+5' 'control+6' 'control+7' 'control+8' 'control+9' 'alt+1' 'alt+2' 'alt+3' 'alt+4' 'alt+5' 'alt+6' 'alt+7' 'alt+8' 'alt+9'}
     % go to next artifact
     opt.ftsel = str2double(key(end));
-    cursam = opt.trlvis(opt.trlop,2);
-    artsam = find(opt.artdata.trial{1}(opt.ftsel,cursam+1:end), 1, 'first') + cursam;
-    if isempty(artsam)
-      fprintf('no later "%s" artifact found\n', opt.artdata.label{opt.ftsel});
+    numart = size(opt.artdata.trial{1}, 1);
+    if opt.ftsel > numart
+        fprintf('data has no artifact type %i \n', opt.ftsel)
     else
-      fprintf('going to next "%s" artifact\n', opt.artdata.label{opt.ftsel});
-      if opt.trlvis(nearest(opt.trlvis(:,1),artsam),1) < artsam
-        arttrl = nearest(opt.trlvis(:,1),artsam);
-      else
-        arttrl = nearest(opt.trlvis(:,1),artsam)-1;
-      end
-      opt.trlop = arttrl;
-      guidata(h, opt);
-      redraw_cb(h, eventdata);
+        cursam = opt.trlvis(opt.trlop,2);
+        artsam = find(opt.artdata.trial{1}(opt.ftsel,cursam+1:end), 1, 'first') + cursam;
+        if isempty(artsam)
+          fprintf('no later "%s" artifact found\n', opt.artdata.label{opt.ftsel});
+        else
+          fprintf('going to next "%s" artifact\n', opt.artdata.label{opt.ftsel});
+          if opt.trlvis(nearest(opt.trlvis(:,1),artsam),1) < artsam
+            arttrl = nearest(opt.trlvis(:,1),artsam);
+          else
+            arttrl = nearest(opt.trlvis(:,1),artsam)-1;
+          end
+          opt.trlop = arttrl;
+          guidata(h, opt);
+          redraw_cb(h, eventdata);
+        end
     end
   case 'leftarrow'
     opt.trlop = max(opt.trlop - 1, 1); % should not be smaller than 1
@@ -773,6 +791,8 @@ switch key
   case 'control+control'
     % do nothing
   case 'shift+shift'
+    % do nothing
+  case 'alt+alt'
     % do nothing
   otherwise
     guidata(h, opt);
