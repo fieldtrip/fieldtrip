@@ -79,10 +79,10 @@ else
 end
 si(1) = [];
 
+y  = zeros(size(x));
 for c = 1:size(x, 2)	% filter all columns, one by one
     v = [2*x(1,c)-x((lrefl+1):-1:2,c); x(:,c);
         2*x(end,c)-x((end-1):-1:end-lrefl,c)]; % a column vector
-    
     % Do forward and reverse filtering
     v = filter(b,a,v,si*v(1));		       % forward filter
     v = flipud(filter(b,a,flipud(v),si*v(end))); % reverse filter
