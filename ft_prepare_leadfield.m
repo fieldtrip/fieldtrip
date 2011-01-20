@@ -169,7 +169,7 @@ try, tmpcfg.spheremesh  = cfg.spheremesh;   end
 try, tmpcfg.inwardshift = cfg.inwardshift;  end
 try, tmpcfg.mriunits    = cfg.mriunits;     end
 try, tmpcfg.sourceunits = cfg.sourceunits;  end
-[sourcegrid, tmpcfg] = ft_prepare_sourcemodel(tmpcfg);
+[grid, tmpcfg] = ft_prepare_sourcemodel(tmpcfg);
 
 if ft_voltype(vol, 'openmeeg')
   % the system call to the openmeeg executable makes it rather slow
