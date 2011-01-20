@@ -51,7 +51,7 @@ function hdr = read_yokogawa_header(filename)
 %  txt -> m
 %  fopen iee-le
 
-if ~hasyokogawa('16bitBeta6')
+if ~ft_hastoolbox('yokogawa')
     error('cannot determine whether Yokogawa toolbox is present');
 end
 

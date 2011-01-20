@@ -30,7 +30,7 @@ function [event] = read_yokogawa_event(filename, varargin)
 %
 % $Id$
 
-if ~hasyokogawa('16bitBeta6')
+if ~ft_hastoolbox('yokogawa')
     error('cannot determine whether Yokogawa toolbox is present');
 end
 

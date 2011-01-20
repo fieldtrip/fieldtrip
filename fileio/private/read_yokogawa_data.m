@@ -34,7 +34,7 @@ function [dat] = read_yokogawa_data(filename, hdr, begsample, endsample, chanind
 %
 % $Id$
 
-if ~hasyokogawa('16bitBeta6')
+if ~ft_hastoolbox('yokogawa')
     error('cannot determine whether Yokogawa toolbox is present');
 end
 
