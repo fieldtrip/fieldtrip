@@ -57,7 +57,7 @@ function out = nan_mean(in, dim)
     end;
     tmpin = in;
     tmpin(find(isnan(in(:)))) = 0;
-    warning('off', 'MATLAB:divideByZero');
+    ws = warning('off', 'MATLAB:divideByZero');
     out = sum(tmpin, dim) ./ sum(~isnan(in),dim);
-    warning('on', 'MATLAB:divideByZero');
+    warning(ws);
     

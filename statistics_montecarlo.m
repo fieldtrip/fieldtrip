@@ -188,7 +188,7 @@ resample = resampledesign(cfg, design);
 Nrand = size(resample,1);
 
 % most of the statfuns result in this warning, which is not interesting
-warning('off', 'MATLAB:warn_r14_stucture_assignment');
+ws = warning('off', 'MATLAB:warn_r14_stucture_assignment');
 
 if strcmp(cfg.correctm, 'cluster')
   % determine the critical value for cluster thresholding
@@ -407,3 +407,5 @@ for i=1:length(fn)
     stat = setfield(stat, fn{i}, getfield(statfull, fn{i}));
   end
 end
+
+warning(ws); % revert to original state

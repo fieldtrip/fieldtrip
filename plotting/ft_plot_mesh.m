@@ -53,7 +53,7 @@ function ft_plot_mesh(bnd, varargin)
 %
 % $Id$
 
-warning('on', 'MATLAB:divideByZero');
+ws = warning('on', 'MATLAB:divideByZero');
 
 keyvalcheck(varargin, 'forbidden', {'faces', 'edges', 'vertices'});
 
@@ -191,3 +191,4 @@ if ~holdflag
   hold off
 end
 
+warning(ws); %revert to original state

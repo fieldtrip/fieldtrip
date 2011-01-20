@@ -71,8 +71,8 @@ prevState = [];
 pad = [];
 count = 0;
 
-warning('off', 'signal:findpeaks:noPeaks');
-warning('off', 'signal:findpeaks:largeMinPeakHeight');
+ws_noPeaks = warning('off', 'signal:findpeaks:noPeaks');
+ws_PeakHeight = warning('off', 'signal:findpeaks:largeMinPeakHeight');
 
 % start the timer
 tic
@@ -194,3 +194,5 @@ while true
 
   end % if enough new samples
 end % while true
+
+

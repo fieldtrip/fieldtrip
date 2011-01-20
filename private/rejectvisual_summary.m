@@ -10,6 +10,10 @@ trlsel  = logical(ones(1,ntrl));
 chansel = logical(zeros(1,nchan));
 chansel(match_str(data.label, cfg.channel)) = 1;
 
+% compute the sampling frequency from the first two timepoints
+fsample = 1/(data.time{1}(2) - data.time{1}(1));
+
+
 % select the specified latency window from the data
 % here it is done BEFORE filtering and metric computation
 for i=1:ntrl
@@ -22,7 +26,7 @@ end
 % compute the offset from the time axes
 offset = zeros(ntrl,1);
 for i=1:ntrl
-  offset(i) = time2offset(data.time{i}, data.fsample);
+  offset(i) = time2offset(data.time{i}, fsample);
 end
 
 interactive = 1;
@@ -31,7 +35,7 @@ ft_progress('init', cfg.feedback, 'computing metric');
 level = zeros(sum(chansel), ntrl);
 for i=1:ntrl
   ft_progress(i/ntrl, 'computing metric %d of %d\n', i, ntrl);
-  [dat, label, time, cfg.preproc] = preproc(data.trial{i}(chansel,:), data.label(chansel), data.fsample, cfg.preproc, offset(i));
+  [dat, label, time, cfg.preproc] = preproc(data.trial{i}(chansel,:), data.label(chansel), fsample, cfg.preproc, offset(i));
   switch cfg.metric
     case 'var'
       level(:,i) = std(dat, [], 2).^2;
