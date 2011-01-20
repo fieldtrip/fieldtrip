@@ -1,4 +1,4 @@
-splittrigger stimulus response
+splittrigger=stimulus,response
 
 # comments start with a hash
 ; ... or with a semicolon
@@ -91,20 +91,20 @@ splittrigger stimulus response
 # Please take note that the channels will be written out in the order specified here,
 # that is, they will not be sorted according to the hardware channel number!
 
-# Write "downsample X" with a positive number X to set the downsampling
+# Write "downsample=X" with a positive number X to set the downsampling
 # factor for streaming. The GDF file will receive full-rate data.
-downsample 1
+downsample=1
 
-# Write "bandwidth X" with a positive real number X to set the cutoff frequency
+# Write "bandwidth=X" with a positive real number X to set the cutoff frequency
 # of a Butterworth low-pass filter.
-bandwidth 50
+bandwidth=50
 
 # Write "bworder N" to set the order of the lowpass Butterworth filter for downsampling
-bworder 0
+bworder=0
 
 # Refresh period (in seconds) for inserting extra events. 
 # Battery events are sent out in a fixed interval (set 0 to disable).
 # Status events are sent out when the status changes, OR when the specified
 # time has elapsed after the last event was sent out.
-statusrefresh 4
-batteryrefresh 20
+statusrefresh=4
+batteryrefresh=20

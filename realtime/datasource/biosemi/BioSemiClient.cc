@@ -59,13 +59,13 @@ BioSemiClient::BioSemiClient() {
 	} else {
 		dllName = "./liblabview_dll.dylib";
 	}
-	#else // should be Linux then
+    #else // should be Linux then
 	if (sizeof(void *)==8) {
 		dllName = "./liblabview_dll64.so";
 	} else {
 		dllName = "./liblabview_dll.so";
 	}
-	#endif
+    #endif
 	
 	hLib = dlopen(dllName, RTLD_LAZY);
 	if (hLib == NULL) {
@@ -73,7 +73,7 @@ BioSemiClient::BioSemiClient() {
 		return;
 	}
 		
-	if (!(lv_open_driver_async    = (OPEN_DRIVER_ASYNC_T)    dlsym(hLib,"OPEN_DRIVER_ASYNC"))) return;
+	if (!(lv_open_driver_async    = (OPEN_DRIVER_ASYNC_T) 	 dlsym(hLib,"OPEN_DRIVER_ASYNC"))) return;
 	if (!(lv_usb_write            = (USB_WRITE_T)            dlsym(hLib,"USB_WRITE"))) return;
 	if (!(lv_read_multiple_sweeps = (READ_MULTIPLE_SWEEPS_T) dlsym(hLib,"READ_MULTIPLE_SWEEPS"))) return;
 	if (!(lv_read_pointer         = (READ_POINTER_T)         dlsym(hLib,"READ_POINTER"))) return;
