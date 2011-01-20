@@ -285,8 +285,13 @@ elseif ismeg
 elseif iseeg
   % select the desired channels from the electrode array
   % order them according to the users specification
-  Nchans    = size(sens.tra,1);
-  Ncontacts = size(sens.tra,2);
+  if ~isfield(sens, 'tra')
+     Nchans    = length(sens.label);
+     Ncontacts = length(sens.label);
+  else
+     Nchans    = size(sens.tra,1);
+     Ncontacts = size(sens.tra,2);
+  end;
    
   % In case of Nchans~=Ncontacts it is difficult to determine 
   % how to deal with contacts positions (keep the original positions)
