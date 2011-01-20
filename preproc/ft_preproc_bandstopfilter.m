@@ -83,7 +83,9 @@ filt = filter_with_correction(B,A,dat,dir);
 % will most likely give you very bad accuracy.
 
 % check for filter instabilities and try to solve them
-result_instable = any(isnan(filt(:))) || (max(range(filt,2))/max(range(dat,2))>2);
+rangedat  = max(dat,[],2)  - min(dat,[],2);
+rangefilt = max(filt,[],2) - min(filt,[],2);
+result_instable = any(isnan(filt(:))) || (max(rangefilt)/max(rangedat)>2);
 if result_instable && N>1
   warning('instable filter detected, applying two sequential filters');
   step1 = floor(N/2);  
