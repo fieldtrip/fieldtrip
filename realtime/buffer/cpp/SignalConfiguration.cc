@@ -235,11 +235,12 @@ int SignalConfiguration::parseFile(const char *filename) {
 		if (numTok == 0) goto reportError;
 		if (TS[numTok-1].separator != 0) goto reportError;
 		
+		/*
 		for (unsigned int i=0;i<TS.size();i++) {
 			printf("(%s)%c", TS[i].text.c_str(), TS[i].separator);
 		}
 		printf("\n");
-		
+		*/
 		if (numTok == 1) {
 			if (TS[0].equals("[select]")) {
 				addStream = addSave = 1;
