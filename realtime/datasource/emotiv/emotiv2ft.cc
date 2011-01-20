@@ -4,9 +4,10 @@
 #include <sstream>
 #include <windows.h>
 #include <map>
-#include <signal.h>
-#include <FtBuffer.h>
-#include <socketserver.h>
+
+#include <OnlineDataManager.h>
+#include <ConsoleInput.h>
+#include <StringServer.h>
 
 #include "edk.h"
 #include "edkErrorCode.h"
@@ -20,7 +21,7 @@ EE_DataChannel_t targetChannelList[TOTAL_CHANNELS] = {
 		ED_FC6, ED_F4, ED_F8, ED_AF4, ED_GYROX, ED_GYROY, ED_TIMESTAMP, 
 		ED_FUNC_ID, ED_FUNC_VALUE, ED_MARKER, ED_SYNC_SIGNAL
 };
-
+/*
 const char *labels[TOTAL_CHANNELS] = {
 	"COUNTER",
 	"AF3",
@@ -45,90 +46,109 @@ const char *labels[TOTAL_CHANNELS] = {
 	"MARKER", 
 	"SYNC_SIGNAL"
 };
+*/
 
+EmoEngineEventHandle eEvent;
+EmoStateHandle eState;	
+unsigned int userID	= 0;
 
-volatile bool keepRunning = true;
+int port, ctrlPort;
+char hostname[256];
+StringServer ctrlServ;
+ConsoleInput conIn;
 
-bool writeHeader(int ftSocket, float fSample) {
-	FtBufferRequest req;
-	FtBufferResponse resp;
-	char *chunk_data;
-	int N=0,P;
+void acquisition(const char *configFile, unsigned int fSample) {
+	int sampleCounter = 0;
 	
-	for (int n=0;n<TOTAL_CHANNELS;n++) {
-		N+=strlen(labels[n])+1;
+	OnlineDataManager<double, double> ODM(0, TOTAL_CHANNELS, (float) fSample);
+	
+	if (ODM.configureFromFile(configFile) != 0) {
+		fprintf(stderr, "Configuration %s file is invalid\n", configFile);
+		return;
+	} else {
+		printf("Streaming %i out of %i channels\n", ODM.getSignalConfiguration().getStreamingSelection().getSize(), TOTAL_CHANNELS);
 	}
-	chunk_data = new char[N];
-	
-	P=0;
-	for (int n=0;n<TOTAL_CHANNELS;n++) {
-		int Ln = strlen(labels[n])+1;
-		memcpy(chunk_data + P, labels[n], Ln);
-		P+=Ln;
+	if (!strcmp(hostname, "-")) {
+		if (!ODM.useOwnServer(port)) {
+			fprintf(stderr, "Could not spawn buffer server on port %d.\n",port);
+			return;
+		}
+	} else {
+		if (!ODM.connectToServer(hostname, port)) {
+			fprintf(stderr, "Could not connect to buffer server at %s:%d.\n",hostname, port);
+			return;
+		}
 	}
 	
+	ODM.enableStreaming();
 
-	req.prepPutHeader(TOTAL_CHANNELS, DATATYPE_FLOAT64, fSample);
-	req.prepPutHeaderAddChunk(FT_CHUNK_CHANNEL_NAMES, N, chunk_data);
+	DataHandle hData = EE_DataCreate();
+	EE_DataSetBufferSizeInSec(1.0);
 	
-	delete[] chunk_data;
+	printf("Starting to transfer data - press [Escape] to quit\n");
+
+	while (1) {
+		if (conIn.checkKey() && conIn.getKey()==27) break;	
+		ctrlServ.checkRequests(ODM);
 	
-	int err = clientrequest(ftSocket, req.out(), resp.in());
-	if (err || !resp.checkPut()) {
-		fprintf(stderr, "Could not write header to FieldTrip buffer\n.");
-		return false;
+		EE_DataUpdateHandle(0, hData);
+
+		unsigned int nSamplesTaken=0;
+		EE_DataGetNumberOfSample(hData,&nSamplesTaken);
+
+		if (nSamplesTaken != 0) {
+			double* data = new double[nSamplesTaken];
+			double* dest = ODM.provideBlock(nSamplesTaken); 
+			for (int i=0;i<TOTAL_CHANNELS;i++) {
+				EE_DataGet(hData, targetChannelList[i], data, nSamplesTaken);
+					
+				for (unsigned int j=0;j<nSamplesTaken;j++) {
+					dest[i + j*TOTAL_CHANNELS] = data[j];
+				}
+			}
+			delete[] data;
+			
+			if (!ODM.handleBlock()) break;
+			sampleCounter += nSamplesTaken;
+			printf("Wrote %2i samples (%i total)\n", nSamplesTaken, sampleCounter);
+		}
+		Sleep(10);
 	}
-	return true;
-}
-
-
-void abortHandler(int sig) {
-	printf("Ctrl-C pressed -- stopping...\n");
-	keepRunning = false;
+	EE_DataFree(hData);
 }
 
 					  
 int main(int argc, char** argv) {
-
-	EmoEngineEventHandle eEvent;
-	EmoStateHandle eState;
-	unsigned int userID					= 0;
 	//const unsigned short composerPort	= 1726;
-	float secs							= 1;
 	unsigned int samplingRate = 0;
-	bool readyToCollect	= false;
-	ft_buffer_server_t *server = NULL;
-	int port, ftSocket;
-	int sampleCounter = 0;
-	char hostname[256];
-	FtBufferResponse resp;
-	FtSampleBlock sampleBlock(DATATYPE_FLOAT64);
 	
-	if (argc>1) {
-		strncpy(hostname, argv[1], sizeof(hostname));
+	if (argc<2) {
+		fprintf(stderr, "Usage:  emotiv2ft <config-file> [hostname=localhost [port=1972 [ctrlPort=8000]]]\n");
+		fprintf(stderr, "Passing a minus (-) for the hostname tells this application to spawn its own buffer server\n");
+		return 1;
+	}
+	
+	if (argc>2) {
+		strncpy(hostname, argv[2], sizeof(hostname));
 	} else {
 		strcpy(hostname, "localhost");
 	}
 	
-	if (argc>2) {
-		port = atoi(argv[2]);
+	if (argc>3) {
+		port = atoi(argv[3]);
 	} else {
 		port = 1972;
 	}	
-	
-	if (strcmp(hostname, "-")) {
-		ftSocket = open_connection(hostname, port);
-		if (ftSocket < 0) {
-			fprintf(stderr, "Could not connect to FieldTrip buffer on %s:%i\n", hostname, port);
-			return 1;
-		}
+
+	if (argc>4) {
+		ctrlPort = atoi(argv[4]);
 	} else {
-		server = ft_start_buffer_server(port, NULL, NULL, NULL);
-		if (server == NULL) {
-			fprintf(stderr, "Could not spawn FieldTrip buffer on port %i\n", port);
-			return 1;
-		}
-		ftSocket = 0;
+		ctrlPort = 8000;
+	}	
+	
+	if (!ctrlServ.startListening(ctrlPort)) {
+		fprintf(stderr, "Cannot listen on port %d for configuration commands\n", ctrlPort);
+		return 1;
 	}
 	
 	eEvent = EE_EmoEngineEventCreate();
@@ -141,18 +161,13 @@ int main(int argc, char** argv) {
 	// TODO: provide alternative connection
 	// ...	if (EE_EngineRemoteConnect(input.c_str(), composerPort) != EDK_OK) {
 	
-	DataHandle hData = EE_DataCreate();
-	EE_DataSetBufferSizeInSec(secs);
-	
-	/* register CTRL-C handler */
-	signal(SIGINT, abortHandler);
-	printf("Starting to transfer data - press CTRL-C to quit\n");
-
-	while (keepRunning) {
+	// Loop here until acquisition can start and sampling rate is known
+		
+	printf("Waiting for the device to become ready - press [Escape] to quit\n");
+	while (1) {
 		int state = EE_EngineGetNextEvent(eEvent);
 
 		if (state == EDK_OK) {
-
 			EE_Event_t eventType = EE_EmoEngineEventGetType(eEvent);
 			EE_EmoEngineEventGetUserId(eEvent, &userID);
 
@@ -161,47 +176,21 @@ int main(int argc, char** argv) {
 				if (EE_DataGetSamplingRate(userID, &samplingRate) != EDK_OK) {
 					fprintf(stderr, "Cannot retrieve sampling rate\n");
 					break;
+				} else {
+					EE_DataAcquisitionEnable(userID,true);
+					printf("EDK: User added, will now start acquisition.\n");
 				}
-				
-				if (!writeHeader(ftSocket, (float) samplingRate)) return 1;
-				
-				EE_DataAcquisitionEnable(userID,true);
-				readyToCollect = true;
-				printf("EDK: User added, will now start acquisition.\n");
+				break;
 			}
 		}
-
-		if (readyToCollect) {
-			EE_DataUpdateHandle(0, hData);
-
-			unsigned int nSamplesTaken=0;
-			EE_DataGetNumberOfSample(hData,&nSamplesTaken);
-	
-			if (nSamplesTaken != 0) {
-				double* data = new double[nSamplesTaken];
-				double* dest = (double *) sampleBlock.getMatrix(TOTAL_CHANNELS, nSamplesTaken); 
-				for (int i=0;i<TOTAL_CHANNELS;i++) {
-					EE_DataGet(hData, targetChannelList[i], data, nSamplesTaken);
-						
-					for (unsigned int j=0;j<nSamplesTaken;j++) {
-						dest[i + j*TOTAL_CHANNELS] = data[j];
-					}
-				}
-				delete[] data;
-				int err = clientrequest(ftSocket, sampleBlock.asRequest(), resp.in());
-				if (err || !resp.checkPut()) {
-					fprintf(stderr, "Could not write samples to FieldTrip buffer\n.");
-				}
-				sampleCounter += nSamplesTaken;
-				printf("Wrote %2i samples (%i total)\n", nSamplesTaken, sampleCounter);
-			}
-		}
-		Sleep(10);
+		
+		if (conIn.checkKey() && conIn.getKey()==27) break;		
 	}
-	EE_DataFree(hData);
-	if (ftSocket > 0) close_connection(ftSocket);
-	if (server != NULL) ft_stop_buffer_server(server);
-
+	
+	if (samplingRate!=0) {
+		acquisition(argv[1], samplingRate);
+	}
+	
 	EE_EngineDisconnect();
 	EE_EmoStateFree(eState);
 	EE_EmoEngineEventFree(eEvent);
