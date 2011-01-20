@@ -1,4 +1,3 @@
-splittrigger=stimulus,response
 
 # comments start with a hash
 ; ... or with a semicolon
@@ -99,8 +98,10 @@ downsample=1
 # of a Butterworth low-pass filter.
 bandwidth=50
 
-# Write "bworder N" to set the order of the lowpass Butterworth filter for downsampling
+# Write "bworder=N" to set the order of the lowpass Butterworth filter for downsampling
 bworder=0
+
+# Some options specific to the Biosemi device (will be ignored otherwise)
 
 # Refresh period (in seconds) for inserting extra events. 
 # Battery events are sent out in a fixed interval (set 0 to disable).
@@ -108,3 +109,9 @@ bworder=0
 # time has elapsed after the last event was sent out.
 statusrefresh=4
 batteryrefresh=20
+
+# splittrigger=namelow,namehigh can be used to split the 16-bit trigger
+# channel into two 8-bit trigger channels, and setting names for the 
+# event.type in FieldTrip. Note that the GDF file will still receive the
+# (unsplitted) status channel as coming from the driver.
+splittrigger=stimulus,response
