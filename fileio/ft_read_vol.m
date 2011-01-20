@@ -51,9 +51,9 @@ end
 switch fileformat
   case 'matlab'
     matfile = filename;   % this solves a problem with the matlab compiler v3
-    warning('off', 'MATLAB:load:variableNotFound');
+    ws = warning('off', 'MATLAB:load:variableNotFound');
     tmp = load(matfile, 'vol');
-    warning('on', 'MATLAB:load:variableNotFound');
+    warning(ws);
     vol = getfield(tmp, 'vol');
 
   case 'ctf_hdm'

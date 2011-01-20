@@ -204,9 +204,9 @@ switch fileformat
   
   case 'matlab'
     matfile = filename;   % this solves a problem with the matlab compiler v3
-    warning('off', 'MATLAB:load:variableNotFound');
+    ws = warning('off', 'MATLAB:load:variableNotFound');
     tmp = load(matfile, 'elec', 'grad', 'sens', 'elc');
-    warning('on', 'MATLAB:load:variableNotFound');
+    warning(ws);
     if isfield(tmp, 'grad')
       sens = getfield(tmp, 'grad');
     elseif isfield(tmp, 'elec')
