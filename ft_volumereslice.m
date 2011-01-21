@@ -1,24 +1,29 @@
 function mri = ft_volumereslice(cfg, mri)
 
-% FT_VOLUMERESLICE reslices a volume along the principal axes of the
-% coordinate system according to a specified resolution.
+% FT_VOLUMERESLICE interpolates and reslices a volume along the
+% principal axes of the coordinate system according to a specified
+% resolution.
 %
 % Use as
 %   mri = ft_volumereslice(cfg, mri)
 % where the mri contains an anatomical or functional volume and cfg is a
 % configuration structure containing
+%   cfg.resolution = number, in physical units
+% The new spatial extent can be specified with
 %   cfg.xrange     = [min max], in physical units
 %   cfg.yrange     = [min max], in physical units
 %   cfg.zrange     = [min max], in physical units
-%   cfg.resolution = number, in physical units
+% or alternatively with
+%   cfg.dim        = [nx ny nz], size of the volume in each direction
 %
 % See also FT_VOLUMEDOWNSAMPLE, FT_SOURCEINTERPOLATE
 
 % Undocumented local options:
 %   cfg.inputfile        = one can specifiy preanalysed saved data as input
 %   cfg.outputfile       = one can specify output as file to save to disk
+%   cfg.downsample
 
-% Copyright (C) 2010, Robert Oostenveld
+% Copyright (C) 2010-2011, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -46,6 +51,13 @@ if ~isfield(cfg, 'resolution');   cfg.resolution   = 1;         end % in physica
 if ~isfield(cfg, 'downsample');   cfg.downsample   = 1;         end
 if ~isfield(cfg, 'inputfile'),    cfg.inputfile    = [];        end
 if ~isfield(cfg, 'outputfile'),   cfg.outputfile   = [];        end
+
+if isfield(cfg, 'dim')
+  % a dimension of 2 should result in voxels at -0.5 and 0.5, i.e. two voxels centered at zero
+  cfg.xrange = [cfg.dim(1)+0.5 cfg.dim(1)-0.5] * cfg.resolution;
+  cfg.yrange = [cfg.dim(2)+0.5 cfg.dim(2)-0.5] * cfg.resolution;
+  cfg.zrange = [cfg.dim(3)+0.5 cfg.dim(3)-0.5] * cfg.resolution;
+end
 
 % load optional given inputfile as data
 hasdata = (nargin>1);
