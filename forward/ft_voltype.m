@@ -8,9 +8,21 @@ function [type] = ft_voltype(vol, desired)
 %   [flag] = ft_voltype(vol, desired)
 % to get a boolean value.
 %
+% The volume conduction model types that are recognized are
+%
+%  singlesphere    analytical single sphere model for EEG or MEG
+%  multisphere     local spheres model for MEG, one sphere per channel
+%  concentric      analytical 4-sphere model for EEG
+%  infinite        infinite homogenous medium
+%  bem             boundary element model, can be any of the methods below
+%  openmeeg        boundary element method based on the OpenMEEG implementation
+%  bemcp           boundary element method based on the implementation from Christophe Phillips
+%  dipoli          boundary element method based on the implementation from Thom Oostendorp
+%  asa             boundary element method based on the (commercial) ASA software
+%
 % See also FT_READ_VOL, FT_COMPUTE_LEADFIELD
 
-% Copyright (C) 2007-2008, Robert Oostenveld
+% Copyright (C) 2007-2010, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
