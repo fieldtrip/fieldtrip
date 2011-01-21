@@ -45,11 +45,6 @@
 
 % Copyright : Jean-Francois Cardoso.  cardoso@sig.enst.fr
 
-% $Log: jader.m,v $
-% Revision 1.1  2002/04/05 17:36:45  jorn
-% Initial revision
-%
-
 function B =  jadeR(X,m)
 
 verbose	= 1 ;	% Set to 0 for quiet operation

@@ -23,8 +23,6 @@
 %
 % See also: pcexpand(), svd()
 
-%123456789012345678901234567890123456789012345678901234567890123456789012
-
 % Copyright (C) 2000 Tzyy-Ping Jung & Scott Makeig, SCCN/INC/UCSD, 
 % scott@sccn.ucsd.edu
 %
@@ -41,11 +39,6 @@
 % You should have received a copy of the GNU General Public License
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-% $Log: pcsquash.m,v $
-% Revision 1.1  2002/04/05 17:36:45  jorn
-% Initial revision
-%
 
 % 01-25-02 reformated help & license, added links -ad 
 
@@ -70,10 +63,10 @@ data = matrix';                    % transpose data
 [n,p]=size(data);                  % now p chans,n time points
 if ncomps > p
    fprintf('pcsquash(): components must be <= number of data rows (%d).\n',p);
-   help pcsquash
+   return;
 end
 
-Datamean = mean(data);  % remove column (channel) means
+Datamean = mean(data,1);  % remove column (channel) means
 data = data-ones(n,1)*Datamean;    % remove column (channel) means
 out=data'*data/n;
 [V,D] = eig(out);                  % get eigenvectors/eigenvalues
@@ -84,5 +77,5 @@ EigenValues=rot90(rot90(eigenval))';
 EigenVectors=V(:,index);
 
 if nargout >= 3
-   Compressed = EigenVectors(:,1:ncomps)'*matrix;
+   Compressed = EigenVectors(:,1:ncomps)'*data';
 end

@@ -32,7 +32,10 @@
 %                  'lrate' arg (above) when resuming training, and/or 
 %                  to reduce the 'stop' arg (above). By default, binary 
 %                  ica begins with the identity matrix after sphering. 
-%   'verbose     - 'on'/'off'    {default: 'off'}    
+%   'verbose'    - 'on'/'off'    {default: 'off'}
+%   'filenum'    - the number to be used in the name of the output files.  
+%                  Otherwise chosen randomly. Will choose random number 
+%                  if file with that number already exists.
 %
 % Less frequently used input flags:
 %   'posact'     - ('on'/'off') Make maximum value for each comp positive.
@@ -55,8 +58,6 @@
 
 % Calls binary translation of runica() by Sigurd Enghoff
 
-%123456789012345678901234567890123456789012345678901234567890123456789012
-
 % Copyright (C) 2000 Scott Makeig, SCCN/INC/UCSD, scott@sccn.ucsd.edu
 %
 % This program is free software; you can redistribute it and/or modify
@@ -72,66 +73,6 @@
 % You should have received a copy of the GNU General Public License
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-% $Log: binica.m,v $
-% Revision 1.19  2006/11/07 02:37:18  arno
-% add third dim compatibility
-%
-% Revision 1.18  2006/05/27 03:21:03  toby
-% bugs
-%
-% Revision 1.17  2006/01/29 18:20:02  scott
-% help msg -sm
-%
-% Revision 1.16  2006/01/14 18:04:35  scott
-% added 'stem' output -sm
-%
-% Revision 1.15  2006/01/14 17:37:11  scott
-% implemented 'weightsin' flag  -sm
-%
-% Revision 1.14  2006/01/03 20:05:26  scott
-% added 'weightsin' argument (not yet tested), reformed help message -sm
-%
-% Revision 1.13  2005/03/14 19:43:45  arno
-% fixing argument passing
-%
-% Revision 1.12  2005/03/13 19:03:45  scott
-% trying to read flag,arg pairs - FAILS!!!
-% Arno/Hilit - PLEASE CHECK LINE 219 and etc. ! -Scott
-%
-% Revision 1.11  2005/03/13 17:14:40  peter
-% comments
-%
-% Revision 1.10  2004/08/19 19:10:41  arno
-% did not change anything
-%
-% Revision 1.9  2004/02/28 00:00:22  arthur
-% edit commandline output text
-%
-% Revision 1.8  2003/10/25 23:52:05  arno
-% remove asking for permission to remove file
-%
-% Revision 1.7  2003/10/07 18:55:03  arno
-% undo changes
-%
-% Revision 1.6  2003/10/07 18:54:30  arno
-% testing
-%
-% Revision 1.5  2002/11/15 01:44:18  arno
-% header for web
-%
-% Revision 1.4  2002/08/05 18:17:06  arno
-% debugging directory finding
-%
-% Revision 1.3  2002/06/25 02:38:49  scott
-% calrified error msgs -sm
-%
-% Revision 1.2  2002/05/01 18:22:36  arno
-% making binica available from everywhere
-%
-% Revision 1.1  2002/04/05 17:36:45  jorn
-% Initial revision
-%
 
 % 08/07/00 Added warning to update icadefs.m -sm
 % 09/08/00 Added tmpint to script, weights and sphere files to avoid
@@ -175,59 +116,20 @@ else
 	end;
 end
 
-%
-% select random integer 1-10000 to index the binica data files
-% make sure no such script file already exists in the pwd
-%
-scriptfile = SC;
-tmpint = 1000;
-while exist(scriptfile)
-  tmpints = randperm(10000);
-  tmpint = int2str(tmpints(tmpint));
-  scriptfile = ['binica' tmpint '.sc'];
-end
-fprintf('scriptfile = %s\n',scriptfile);
-
-nchans = 0;
-tmpdata = [];
-if ~isstr(data) % data variable given
-  if ~exist('data')
-    fprintf('\nbinica(): Variable name data not found.\n');
-    return
-  end
-  nchans = size(data,1);
-  nframes = size(data,2);
-  tmpdata = ['binica' tmpint '.fdt'];
-  floatwrite(data,tmpdata);
-  datafile = tmpdata;
-  firstarg = 2;
-
-else % data filename given
-  if ~exist(data)
-    fprintf('\nbinica(): File data not found.\n')
-    return
-  end
-  datafile = data;
-  if nargin<3
-    fprintf(...
-'\nbinica(): Data file name must be followed by chans, frames\n');
-    return
-  end
-  nchans = var2;
-  nframes = var3;
-  if isstr(nchans) | isstr(nframes)
-    fprintf(...
-'\nbinica(): chans, frames args must be given after data file name\n');
-    return
-  end
-  firstarg = 4;
-end
-
 [flags,args] = read_sc(SC); % read flags and args in master SC file
 
 %
 % substitute the flags/args pairs in the .sc file
 %
+
+tmpint=[];
+
+if ~ischar(data) % data variable given
+  firstarg = 2;
+else % data filename given
+  firstarg = 4;
+end
+
 arg = firstarg;
 if arg > nargin
    fprintf('binica(): no optional (flag, argument) pairs received.\n');
@@ -266,6 +168,16 @@ else
            return
         end
   end
+  
+  if strcmpi(OPTIONFLAG,'filenum')
+        tmpint = Arg; % get number for name of output files
+        if ~isnumeric(tmpint)
+            fprintf('\nbinica(): FileNum argument needs to be a number.  Will use random number instead.\n')
+            tmpint=[];
+        end;
+        tmpint=int2str(tmpint);
+  end
+
   arg = arg+2;
 
   nflags = length(flags);
@@ -279,6 +191,54 @@ else
 end
 
 %
+% select random integer 1-10000 to index the binica data files
+% make sure no such script file already exists in the pwd
+%
+scriptfile = ['binica' tmpint '.sc'];
+while exist(scriptfile)
+    tmpint = int2str(round(rand*10000));
+    scriptfile = ['binica' tmpint '.sc'];
+end
+fprintf('scriptfile = %s\n',scriptfile);
+
+nchans = 0;
+tmpdata = [];
+if ~ischar(data) % data variable given
+  if ~exist('data')
+    fprintf('\nbinica(): Variable name data not found.\n');
+    return
+  end
+  nchans = size(data,1);
+  nframes = size(data,2);
+  tmpdata = ['binica' tmpint '.fdt'];
+  if strcmpi(computer, 'MAC')
+      floatwrite(data,tmpdata,'ieee-be');
+  else
+      floatwrite(data,tmpdata);
+  end;
+  datafile = tmpdata;
+
+else % data filename given
+  if ~exist(data)
+    fprintf('\nbinica(): File data not found.\n')
+    return
+  end
+  datafile = data;
+  if nargin<3
+    fprintf(...
+'\nbinica(): Data file name must be followed by chans, frames\n');
+    return
+  end
+  nchans = var2;
+  nframes = var3;
+  if ischar(nchans) | ischar(nframes)
+    fprintf(...
+'\nbinica(): chans, frames args must be given after data file name\n');
+    return
+  end
+end
+
+%
 % insert name of data files, chans and frames
 %
 for x=1:length(flags)
@@ -287,6 +247,10 @@ for x=1:length(flags)
      args{x} = datafile;
   elseif strcmp(flags{x},'WeightsOutFile')
      weightsfile = ['binica' tmpint '.wts'];
+     weightsfile =  [pwd '/' weightsfile];
+     args{x} = weightsfile;
+  elseif strcmp(flags{x},'WeightsTempFile')
+     weightsfile = ['binicatmp' tmpint '.wts'];
      weightsfile =  [pwd '/' weightsfile];
      args{x} = weightsfile;
   elseif strcmp(flags{x},'SphereFile')
@@ -310,7 +274,11 @@ end
 if exist('wtsin') % specify WeightsInfile from 'weightsin' flag, arg
      if exist('wtsin') == 1 % variable
        winfn = [pwd '/binica' tmpint '.inwts'];
-       floatwrite(wtsin,winfn);
+       if strcmpi(computer, 'MAC')
+           floatwrite(wtsin,winfn,'ieee-be');
+       else
+           floatwrite(wtsin,winfn);
+       end;
        fprintf('   saving input weights:\n  ');
        weightsinfile = winfn; % weights in file name
      elseif exist(wtsin) == 2 % file
@@ -350,12 +318,17 @@ if ~exist('ncomps')
   ncomps = nchans;
 end
 
-wts = floatread(weightsfile,[ncomps Inf],[],0);
+if strcmpi(computer, 'MAC')
+    wts = floatread(weightsfile,[ncomps Inf],'ieee-be',0);
+    sph = floatread(spherefile,[nchans Inf],'ieee-be',0);
+else
+    wts = floatread(weightsfile,[ncomps Inf],[],0);
+    sph = floatread(spherefile,[nchans Inf],[],0);
+end;    
 if isempty(wts)
    fprintf('\nbinica(): weight matrix not read.\n')
    return
 end
-sph = floatread(spherefile,[nchans Inf],[],0);
 if isempty(sph)
    fprintf('\nbinica():  sphere matrix not read.\n')
    return
@@ -367,7 +340,7 @@ if exist('wtsin')
 end
 fprintf('\n');
 
-if isstr(data)
+if ischar(data)
   whos wts sph
 else
   whos data wts sph
