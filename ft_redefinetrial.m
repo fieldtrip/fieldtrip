@@ -290,7 +290,7 @@ if ~isempty(cfg.minlength)
   trllength = zeros(Ntrial, 1);
   % determine the length of each trial
   for i=1:Ntrial
-    trllength(i) = data.time{i}(end) - data.time{i}(1);
+    trllength(i) = data.time{i}(end) - data.time{i}(1) + 1/data.fsample; % this is the DURATION of the selected samples
   end
   if ischar(cfg.minlength) && strcmp(cfg.minlength, 'maxperlen')
     minlength = max(trllength);
