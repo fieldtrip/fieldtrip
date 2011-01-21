@@ -284,6 +284,7 @@ elseif basedonmrk
 end
 
 % combine the additional transformation with the original one
+mri.transformorig = mri.transform;
 mri.transform = realign * mri.transform;
 mri.coordsys  = coordsys;
 
