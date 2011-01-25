@@ -472,7 +472,6 @@ ft_plot_text( x2,y2,num2str(ylim(2),3),'HorizontalAlignment','Left','VerticalAli
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function plotWnd(x,y,xidc,xlim,ylim,xpos,ypos,width,height,label,cfg,color,mask)
-set(gca,'FontSize',cfg.fontsize);
 
 x = x(xidc);
 y = y(xidc);
