@@ -470,8 +470,11 @@ end
 % apply the spatial transformation to all electrodes, and replace the
 % electrode labels by their case-sensitive original values
 switch cfg.method
-  case {'template' 'fiducial', 'interactive'}
+  case {'template' 'fiducial'}
     norm.pnt   = warp_apply(norm.m, orig.pnt, cfg.warp);
+  case 'interactive'
+    % the transformation is a 4x4 homogenous transformation matrix
+    norm.pnt   = warp_apply(norm.m, orig.pnt, 'homogenous');
   case 'manual'
     % the positions are already assigned in correspondence with the mesh
     norm = orig;
