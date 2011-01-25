@@ -1,20 +1,22 @@
-#!/bin/sh
+#!/bin/bash
+# requires bash, because of array use and for (( )) construct 
 #
 # helper script to start multiple peers in slave mode
 
-if [[ -e /etc/rc.d/init.d/functions ]]; then 
-source /etc/rc.d/init.d/functions
-fi
+#where are these functions used?
+#if [[ -e /etc/rc.d/init.d/functions ]]; then 
+#source /etc/rc.d/init.d/functions
+#fi
 
 if [[ "$USER" == "public" ]]; then
-  umask 0000
+ umask 0000
 fi
 
-PLATFORM=`gcc -dumpmachine`
-HOSTNAME=`hostname -s`
+PLATFORM=$(gcc -dumpmachine)
+HOSTNAME=$(hostname -s)
 
 case "$PLATFORM" in
-"x86_64-redhat-linux")
+x86_64-redhat-linux)
 	MATLABARCH=glnxa64
 	if [ -e /opt/matlab77 ] ; then
 	MATLABPATH=/opt/matlab77
@@ -24,28 +26,18 @@ case "$PLATFORM" in
 	MATLABCMD='"/opt/bin/matlab -nodisplay -singleCompThread"'
 	fi
 	;;
-"i386-redhat-linux")
+i386-redhat-linux)
 	MATLABARCH=glnx86
 	MATLABPATH=/opt/matlab75
-	MATLABCMD=/opt/cluster/`basename $MATLABPATH`
-	;;
-"i686-apple-darwin9")
-	MATLABARCH=maci
-	MATLABPATH=/Applications/MATLAB-2009a
-	MATLABCMD=$MATLABPATH/bin/matlab
-	;;
-"i686-apple-darwin10")
-	MATLABARCH=maci
-	MATLABPATH=/Applications/MATLAB-2009a
-	MATLABCMD=$MATLABPATH/bin/matlab
+	MATLABCMD=/opt/cluster/$(basename $MATLABPATH)
 	;;
 *)
-	MATLABARCH=unknown
-	MATLABPATH=unknown
+	echo error: error unknown architecture and platform >&2
+	exit 1
 	;;
 esac
 
-EXECDIR=`dirname $0`
+EXECDIR=$(dirname $0)
 export LD_LIBRARY_PATH=$MATLABPATH/bin/$MATLABARCH/ 
 
 ##############################################################################
@@ -57,107 +49,88 @@ export LD_LIBRARY_PATH=$MATLABPATH/bin/$MATLABARCH/
 # 4GB   = 4294967296 
 # 8GB   = 8589934592 
 
+GIB1=1073741824
+GIB2=2147483648
+GIB4=4294967296
+GIB8=8589934592
+
+TIM_TENMIN=$((10*60-1))
+TIM_HOUR=$((60*60-1))
+TIM_DAY=$((3600*24-1))
+
+#determine the number of cpu's (not counting hyperthreading ones)
+#assuming all physical packages are equal
+NUMCPU=$(cat /proc/cpuinfo | awk '
+/physical id/ {
+	maxpackage = $4 > maxpackage ? $4 : maxpackage
+	}
+/cpu cores/ {cpucores = $4}
+END {
+	print (1+maxpackage)*cpucores
+}')
+
+#load default values per cpu core
+memavail=( $( for i in $(seq $NUMCPU); do echo "auto" ; done) )
+timavail=( $( for i in $(seq $NUMCPU); do echo $TIM_DAY ; done) )
+
 case "$HOSTNAME" in 
 mentat001|mentat002)
 	# has 16GB of RAM, 2 CPUs and 4 cores in total
 	# Dual Core AMD Opteron(tm) Processor 270
-	memavail[0]="auto"; timavail[0]=86399
-	memavail[1]="auto"; timavail[1]=3599
-	memavail[2]="auto"; timavail[2]=3599
-	memavail[3]="auto"; timavail[3]=599
+	timavail[0]=$TIM_DAY
+	timavail[1]=$TIM_HOUR
+	timavail[2]=$TIM_HOUR
+	timavail[3]=$TIM_TENMIN
 	OPTIONS="--verbose 4 --smartcpu 1"
 	;;
 mentat003|mentat004)
 	# has 32GB of RAM, 2 CPUs and 8 cores in total
 	# Intel(R) Xeon(R) CPU E5520 @ 2.27GHz
-	memavail[0]="auto"
-	memavail[1]="auto"
-	memavail[2]="auto"
-	memavail[3]="auto"
-	memavail[4]="auto"
-	memavail[5]="auto"
-	memavail[6]="auto"
-	memavail[7]="auto"
 	OPTIONS="--verbose 4 --smartcpu 1"
 	;;
 mentat005)
 	# has 48GB of RAM, 2 CPUs and 12 cores in total
-	memavail[ 0]=4294967296; timavail[ 0]=86399
-	memavail[ 1]=4294967296; timavail[ 1]=86399
-	memavail[ 2]=4294967296; timavail[ 2]=86399
-	memavail[ 3]=4294967296; timavail[ 3]=86399
-	memavail[ 4]=4294967296; timavail[ 4]=86399
-	memavail[ 5]=4294967296; timavail[ 5]=86399
-	memavail[ 6]=4294967296; timavail[ 6]=86399
-	memavail[ 7]=4294967296; timavail[ 7]=86399
-	memavail[ 8]=4294967296; timavail[ 8]=3599
-	memavail[ 9]=4294967296; timavail[ 9]=3599
-	memavail[10]=4294967296; timavail[10]=3599
-	memavail[11]=4294967296; timavail[11]=3599
+	memavail=( $( for i in $(seq $NUMCPU); do echo $GIB4 ; done) )
+	timavail=( $( for i in $(seq 8); do echo $TIM_DAY ; done) )
+	timavail=( ${timavail[@]} $( for i in $(seq 4); do echo $TIM_HOUR ; done) )
 	OPTIONS="--verbose 4 --smartcpu 0"
 	;;
 mentat068|mentat069)
 	# this is an old 32 bit machine which has 4GB of RAM, a single CPU with a single core
 	# Intel(R) Pentium(R) 4 CPU 3.20GHz
-	memavail[0]="auto"; timavail[0]=599
+	timavail[0]=$TIM_TENMIN
 	OPTIONS="--verbose 4 --smartcpu 0"
 	;;
-mentat193|mentat194|mentat195|mentat196|mentat197|mentat198|mentat199|mentat200|mentat201|mentat202|mentat203|mentat204|mentat205|mentat206|mentat207|mentat208|mentat209|mentat210|mentat211|mentat212|mentat213|mentat214|mentat215|mentat216|mentat217|mentat218|mentat219|mentat220|mentat221|mentat222|mentat223|mentat224|mentat225|mentat226|mentat227|mentat228|mentat229|mentat230|mentat231|mentat232|mentat233|mentat234)
-	# has 8GB of RAM, one CPU and 4 cores
+mentat2??)
+	# has 8GB-12GB of RAM, one CPU and 4 cores
 	# Intel(R) Core(TM)2 Quad CPU Q9550 @ 2.83GHz
-	memavail[0]="auto"; timavail[0]=86399
-	memavail[1]="auto"; timavail[1]=3599
-	memavail[2]="auto"; timavail[2]=3599
-	memavail[3]="auto"; timavail[3]=599
-	OPTIONS="--verbose 4 --smartcpu 1"
-	;;
-mentat235|mentat236|mentat237|mentat238|mentat239|\
-mentat240|mentat241|mentat242|mentat243|mentat244|mentat245|mentat246|mentat247|mentat248|mentat249|\
-mentat250|mentat251|mentat252|mentat253|mentat254|mentat255|mentat256|mentat257|mentat258|mentat259|\
-mentat260|mentat261|mentat262|mentat263|mentat264|mentat265|mentat266|mentat267|mentat268|mentat269|\
-mentat270|mentat271|mentat272|mentat273|mentat274|mentat275|mentat276|mentat277|mentat278|mentat279|\
-mentat280|mentat281|mentat282|mentat283|mentat284|mentat285|mentat286|mentat287|mentat288|mentat289)
-	# has 12GB of RAM, one CPU and 4 cores
-	# Intel(R) Xeon(R) CPU W3530 @ 2.80GHz
-	memavail[0]="auto"; timavail[0]=86399
-	memavail[1]="auto"; timavail[1]=3599
-	memavail[2]="auto"; timavail[2]=3599
-	memavail[3]="auto"; timavail[3]=599
+	timavail=($TIM_DAY $TIM_HOUR $TIM_HOUR $TIM_TENMIN)
 	OPTIONS="--verbose 4 --smartcpu 1"
 	;;
 manzana)
 	# Mac OS X computer with 10B of RAM, two CPUs and 4 cores
 	# Dual-Core Intel Xeon 2.66 GHz
-	memavail[0]="auto"; timavail[0]=86399
-	memavail[1]="auto"; timavail[1]=86399
-	memavail[2]="auto"; timavail[2]=86399
-	memavail[3]="auto"; timavail[3]=86399
+	timavail=( $( for i in $(seq 4); do echo $TIM_DAY ; done) )
 	OPTIONS="--verbose 4 --smartcpu 0"
 	;;
 esi-hpc1-1)
 	# has 48GB of RAM, 2 CPUs and 12 cores in total, this one also serves as the head node
-	memavail[ 0]=4294967296; timavail[ 0]=3599
-	memavail[ 1]=4294967296; timavail[ 1]=3599
-	memavail[ 2]=4294967296; timavail[ 2]=599
-	memavail[ 3]=4294967296; timavail[ 3]=599
+	memavail=( $( for i in $(seq $NUMCPU); do echo $GIB4 ; done) )
+	timavail=( $TIM_HOUR $TIM_HOUR $TIM_TENMIN $TIM_TENMIN )
 	OPTIONS="--verbose 4 --smartcpu 1"
 	;;
-esi-hpc1-2|esi-hpc1-3|esi-hpc1-4|esi-hpc1-5|esi-hpc1-6|esi-hpc1-7|esi-hpc1-8|esi-hpc1-9|esi-hpc1-10)
+esi-hpc1-[2-9]|esi-hpc1-10)
 	# has 48GB of RAM, 2 CPUs and 12 cores in total
-	memavail[ 0]=8589934592; timavail[ 0]=86399
-	memavail[ 1]=8589934592; timavail[ 1]=86399
-	memavail[ 2]=8589934592; timavail[ 2]=3599
-	memavail[ 3]=4294967296; timavail[ 3]=86399
-	memavail[ 4]=4294967296; timavail[ 4]=86399
-	memavail[ 5]=4294967296; timavail[ 5]=3599
-	memavail[ 6]=2147483648; timavail[ 6]=86399
-	memavail[ 7]=2147483648; timavail[ 7]=3599
+	memavail=( $GIB8    $GIB8    $GIB8       $GIB4    $GIB4    $GIB4       $GIB2    $GIB2)
+	timavail=( $TIM_DAY $TIM_DAY $TIM_TENMIN $TIM_DAY $TIM_DAY $TIM_TENMIN $TIM_DAY $TIM_TENMIN )
 	OPTIONS="--verbose 4 --smartcpu 1"
 	;;
 *)
 	# the default configuration for all other machines is a single peerslave 
-	memavail[0]="auto"
-	timavail[0]="86400"
+	unset timavail
+	unset memavail
+	memavail=( auto )
+	timavail=( $TIM_DAY )
 	;;
 esac
 
@@ -165,19 +138,17 @@ esac
 # functions
 ##############################################################################
 
-function check_peerslave {
-	PEERPID=$1
-	if [[ -d /proc/$PEERPID ]] ; then
-		if ( grep -s -q peerslave /proc/$PEERPID/cmdline ) ; then
+function check_process_running {
+	pid=$1
+	procname=$2
+	if [ -d /proc/$pid ]
+	then
+		if grep -- "$procname" /proc/$pid/cmdline >/dev/null 2>&1
+		then
 			return 0
-		elif ( grep $PEERPID ) ; then
-			return 0
-		else
-			return 1
 		fi
-	else
-		return 1
 	fi
+	return 1
 }
 
 function start_peerslave {
@@ -188,7 +159,7 @@ function start_peerslave {
 		MEMAVAIL=auto
 	fi
 	if [[ -z "$TIMAVAIL" ]] ; then
-		TIMAVAIL=3599
+		TIMAVAIL=$TIM_HOUR
 	fi
 	if [[ -z "$SLAVENUM" ]] ; then
 		SLAVENUM=0
@@ -196,12 +167,12 @@ function start_peerslave {
 
 	EXECUTABLE=$EXECDIR/peerslave.$MATLABARCH
 	if [ ! -e $EXECUTABLE ] ; then
-		echo error: could not locate peerslave command-line executable
+		echo error: could not locate peerslave command-line executable >&2
 		exit 1
 	fi
 
 	# note that all spaces in the full matlab startup command have to be in ''
-	if [[ "$1" -eq "auto" ]] ; then
+	if [[ "$1" = "auto" ]] ; then
 		PEEROPTIONS="$OPTIONS --smartmem 1               --timavail $2"
 	else
 		PEEROPTIONS="$OPTIONS --smartmem 0 --memavail $1 --timavail $2"
@@ -210,12 +181,13 @@ function start_peerslave {
 	PIDFILE=$PIDDIR/peerslave.$SLAVENUM
 	eval $EXECUTABLE $PEEROPTIONS --matlab "$MATLABCMD" &
 	PID=$!
-	if ( check_peerslave $PID ) ; then
+	if check_process_running $PID peerslave  ; then
 		echo -n $PID > $PIDFILE
 	else
 		echo warning: failed to start peerslave $SLAVENUM
 	fi
 }
+
 
 ##############################################################################
 # execution
@@ -226,97 +198,81 @@ mkdir -p $PIDDIR
 
 COMMAND=$1
 case $COMMAND in
-
 start)
-# start all peerslaves
-length=${#memavail[@]}
-index=0
-while [ "$index" -lt "$length" ] ; do
-    PIDFILE=$PIDDIR/peerslave.$index
-    if [[ -e $PIDFILE ]] ; then
-        PEERPID=`cat $PIDFILE`
-		# FIXME use check_ function
-        if [[ -d /proc/$PEERPID ]] ; then
-            # the process is running fine
-            echo -n
-        else
-            # the process is not running any more
-            echo starting peerslave number $index
-            start_peerslave ${memavail[$index]} ${timavail[$index]} $index
-        fi
-    else
-        # the process is not running any more
-        echo starting peerslave number $index
-        start_peerslave ${memavail[$index]} ${timavail[$index]} $index
-    fi
-
-    let "index = $index + 1"
-done
+	# start all peerslaves
+	for ((index=0; index < ${#memavail[@]}; index++))
+	do
+		PIDFILE=$PIDDIR/peerslave.$index
+		if [[ -e $PIDFILE ]] ; then
+			if check_process_running $(cat $PIDFILE) peerslave ; then
+				echo "peerslave still running" >/dev/null
+			else
+				# the process is not running any more
+				echo starting peerslave number $index
+				start_peerslave ${memavail[$index]} ${timavail[$index]} $index
+			fi
+		fi
+	done
 ;;
 
 
 status)
-length=${#memavail[@]}
-index=0
-while [ "$index" -lt "$length" ] ; do
-	PIDFILE=$PIDDIR/peerslave.$index
-	if [[ -e $PIDFILE ]] ; then
-		PEERPID=`cat $PIDFILE`
-		if ( check_peerslave $PEERPID ) ; then
-			echo peerslave $index is running with pid $PEERPID
+	for ((index=0; index < ${#memavail[@]}; index++))
+	do
+		if [[ -e $PIDFILE ]] ; then
+			PEERPID=$(cat $PIDFILE)
+			if check_process_running $PEERPID peerslave ; then
+				echo peerslave $index is running with pid $PEERPID
+			else
+				# the process is not running any more
+				echo peerslave $index seems to have stopped running
+			fi
 		else
 			# the process is not running any more
-			echo peerslave $index seems to have stopped running
+			echo peerslave $index is not running
 		fi
-	else
-		# the process is not running any more
-		echo peerslave $index is not running
-	fi
-	let "index = $index + 1"
-done
+	done
 ;;
 
 stop)
-# find the pid of each peerslave and kill it
-length=${#memavail[@]}
-index=0
-while [ "$index" -lt "$length" ] ; do
-	PIDFILE=$PIDDIR/peerslave.$index
-	if [[ -e $PIDFILE ]] ; then
-		PEERPID=`cat $PIDFILE`
-		if [[ -e /proc/$PEERPID ]] ; then
-			echo stopping peerslave number $index
-			rm -f $PIDFILE
-			kill $PEERPID
+	# find the pid of each peerslave and kill it
+	for ((index=0; index < ${#memavail[@]}; index++))
+	do
+		PIDFILE=$PIDDIR/peerslave.$index
+		if [[ -e $PIDFILE ]] ; then
+			PEERPID=$(cat $PIDFILE)
+			if [[ -e /proc/$PEERPID ]] ; then
+				echo stopping peerslave number $index
+				rm -f $PIDFILE
+				kill $PEERPID
+			else
+				# the process is not running any more
+				rm -f $PIDFILE
+			fi
 		else
 			# the process is not running any more
-			rm -f $PIDFILE
+			echo -n
 		fi
-	else
-		# the process is not running any more
-		echo -n
-	fi
-	let "index = $index + 1"
-done
+	done
 ;;
 
 restart)
-$0 stop
-$0 start
+	$0 stop
+	$0 start
 ;;
 
 kill)
-killall -q peerslave.$MATLABARCH
-killall -q MATLAB
-rm -f $PIDDIR/peerslave.[0-9]
-rm -f $PIDDIR/peerslave.[0-9][0-9]
-rm -f $PIDDIR/peerslave.[0-9][0-9][0-9]
+	killall -q peerslave.$MATLABARCH
+	killall -q MATLAB
+	rm -f $PIDDIR/peerslave.[0-9]
+	rm -f $PIDDIR/peerslave.[0-9][0-9]
+	rm -f $PIDDIR/peerslave.[0-9][0-9][0-9]
 ;;
 
 *)
-# just start a single peerslave, pass the user's arguments
-EXECUTABLE=$EXECDIR/peerslave.$MATLABARCH
-$EXECUTABLE "$@"
+	# just start a single peerslave, pass the user's arguments
+	EXECUTABLE=$EXECDIR/peerslave.$MATLABARCH
+	$EXECUTABLE "$@"
 
 ;;
 esac
