@@ -1,4 +1,4 @@
-function [H] = scale(S);
+function [H] = scale(f)
 
 % SCALE returns the homogenous coordinate transformation matrix
 % corresponding to a scaling along the x, y and z-axis
@@ -43,10 +43,14 @@ function [H] = scale(S);
 %
 % $Id$
 
+if numel(f)~=3
+  error('incorrect input vector');
+end
+
 H = [
-  S(1) 0    0    0 
-  0    S(2) 0    0
-  0    0    S(3) 0
+  f(1) 0    0    0 
+  0    f(2) 0    0
+  0    0    f(3) 0
   0    0    0    1
   ];
 
