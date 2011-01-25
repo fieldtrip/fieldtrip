@@ -225,9 +225,13 @@ elseif strcmp(cfg.method, 'openmeeg')
     web('http://gforge.inria.fr/frs/?group_id=435')
     error('OpenMEEG toolbox needs to be installed!')
   else
-    % use the openmeeg wrapper function
-    vol = openmeeg(vol,cfg.isolatedsource);
-    vol.type = 'openmeeg';
+    if size(vol.bnd(1).pnt,1)>10000
+      error('OpenMEEG does not manage meshes with more than 10000 vertices (use reducepatch)')
+    else
+      % use the openmeeg wrapper function
+      vol = openmeeg(vol,cfg.isolatedsource);
+      vol.type = 'openmeeg';
+    end
   end
   
 elseif strcmp(cfg.method, 'brainstorm')
