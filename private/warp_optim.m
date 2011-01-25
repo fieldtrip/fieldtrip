@@ -1,4 +1,4 @@
-function [result, M] = warp_pnt(input, target, method)
+function [result, M] = warp_optim(input, target, method)
 
 % WARP_PNT determine intermediate positions using warping (deformation)
 % the input cloud of points is warped to match the target.

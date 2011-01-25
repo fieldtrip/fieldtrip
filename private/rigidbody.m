@@ -1,4 +1,4 @@
-function [H] = rigidbody(f);
+function [H] = rigidbody(f)
 
 % RIGIDBODY creates the homogenous spatial transformation matrix
 % for a 6 parameter rigid-body transformation 
@@ -48,6 +48,10 @@ function [H] = rigidbody(f);
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+if numel(f)~=6
+  error('incorrect input vector');
+end
 
 % compute the homogenous transformation matrix for the translation
 T = translate(f([1 2 3]));

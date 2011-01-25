@@ -1,4 +1,4 @@
-function [dist] = warp_error(M, input, target, varargin);
+function [dist] = warp_error(M, input, target, varargin)
 
 % WARP_ERROR computes the mean distance after linear or non-linear warping
 % and can be used as the goalfunction in a 3D warping minimalisation
