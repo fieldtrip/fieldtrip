@@ -1,4 +1,4 @@
-function [H] = translate(T);
+function [H] = translate(f)
 
 % TRANSLATE returns the homogenous coordinate transformation matrix
 % corresponding to a translation along the x, y and z-axis
@@ -43,9 +43,13 @@ function [H] = translate(T);
 %
 % $Id$
 
+if numel(f)~=3
+  error('incorrect input vector');
+end
+
 H = [
-  1 0 0 T(1)
-  0 1 0 T(2)
-  0 0 1 T(3)
+  1 0 0 f(1)
+  0 1 0 f(2)
+  0 0 1 f(3)
   0 0 0 1
   ];
