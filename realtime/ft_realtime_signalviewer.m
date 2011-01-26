@@ -155,11 +155,11 @@ while true
       for i=1:length(evt)
         % draw a line and some text to indicate the event
         time = offset2time(evt(i).sample, hdr.Fs, 1);
-        if isstr(evt(i).type) && isempty(evt(i).type)
+        if ischar(evt(i).type) && isempty(evt(i).type)
           description = sprintf('%s', evt(i).type);
-        elseif isstr(evt(i).type) && isstr(evt(i).type)
+        elseif ischar(evt(i).type) && ischar(evt(i).type)
           description = sprintf('%s %s', evt(i).type, evt(i).value);
-        elseif isstr(evt(i).type) && isnumeric(evt(i).type)
+        elseif ischar(evt(i).type) && isnumeric(evt(i).type)
           description = sprintf('%s %s', evt(i).type, num2str(evt(i).value));
         else
           description = 'event';
