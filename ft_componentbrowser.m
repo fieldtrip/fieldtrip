@@ -168,12 +168,11 @@ for k = cfg.comp
   % write number of the component on the left
   h_text(cnt) = ft_plot_text(-2.5, -cnt*cfg.shift, ['n. ' num2str(cfg.comp(cnt))]);
 
-  % plot only topography (no layout)
-  ft_plot_topo(cfg.layout.pos(cfg.chanidx.lay,1), cfg.layout.pos(cfg.chanidx.lay,2), ...
+  % plot only topography (*and* layout)
+    ft_plot_topo(cfg.layout.pos(cfg.chanidx.lay,1), cfg.layout.pos(cfg.chanidx.lay,2), ...
     comp.topo(cfg.chanidx.comp, k)./max(abs(comp.topo(cfg.chanidx.comp, k))), ... % for proper scaling
-    'hpos', -1, 'vpos', -cnt*cfg.shift, 'mask', cfg.layout.mask);
-  % plot layout
-  ft_plot_lay(cfg.layout, 'hpos', -1, 'vpos', -cnt*cfg.shift, 'point', false, 'box', false, 'label', false, 'mask', true, 'verbose', false);
+    'hpos', -1, 'vpos', -cnt*cfg.shift, 'mask', cfg.layout.mask, ...
+    'interplim','mask', 'outline',cfg.layout.outline);
 end
 
 h_topo = findobj(cfg.h, 'type', 'surface');
