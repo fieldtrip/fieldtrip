@@ -13,5 +13,6 @@ function varargout = funname(varargin)
 
 prefix    = 'ft_';
 funname   = mfilename;
+warning([upper(mfilename) ' is only a compatibility wrapper, which will soon be removed. Please instead call ' upper(prefix) upper(funname) '.']);
 funhandle = str2func([prefix funname]);
 [varargout{1:nargout}] = funhandle(varargin{:});
