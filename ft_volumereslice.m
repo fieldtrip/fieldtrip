@@ -43,6 +43,8 @@ function mri = ft_volumereslice(cfg, mri)
 %
 % $Id$
 
+ft_defaults
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
@@ -54,9 +56,9 @@ if ~isfield(cfg, 'outputfile'),   cfg.outputfile   = [];        end
 
 if isfield(cfg, 'dim')
   % a dimension of 2 should result in voxels at -0.5 and 0.5, i.e. two voxels centered at zero
-  cfg.xrange = [cfg.dim(1)+0.5 cfg.dim(1)-0.5] * cfg.resolution;
-  cfg.yrange = [cfg.dim(2)+0.5 cfg.dim(2)-0.5] * cfg.resolution;
-  cfg.zrange = [cfg.dim(3)+0.5 cfg.dim(3)-0.5] * cfg.resolution;
+  cfg.xrange = [-cfg.dim(1)/2+0.5 cfg.dim(1)/2-0.5] * cfg.resolution;
+  cfg.yrange = [-cfg.dim(2)/2+0.5 cfg.dim(2)/2-0.5] * cfg.resolution;
+  cfg.zrange = [-cfg.dim(3)/2+0.5 cfg.dim(3)/2-0.5] * cfg.resolution;
 end
 
 % load optional given inputfile as data
@@ -89,7 +91,7 @@ zgrid = cfg.zrange(1):cfg.resolution:cfg.zrange(2);
 
 pseudomri           = [];
 pseudomri.dim       = [length(xgrid) length(ygrid) length(zgrid)];
-pseudomri.transform = translate([cfg.xrange(1) cfg.yrange(1) cfg.zrange(1)]) * scale([cfg.resolution cfg.resolution cfg.resolution]);
+pseudomri.transform = translate([cfg.xrange(1) cfg.yrange(1) cfg.zrange(1)]) * scale([cfg.resolution cfg.resolution cfg.resolution]) * translate([-1 -1 -1]);
 pseudomri.anatomy   = zeros(pseudomri.dim, 'int8');
 
 clear xgrid ygrid zgrid
