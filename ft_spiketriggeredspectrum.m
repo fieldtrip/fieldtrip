@@ -11,6 +11,10 @@ function [freq] = ft_spiketriggeredspectrum(cfg, data)
 %   cfg.timwin       = [begin end], time around each spike (default = [-0.1 0.1])
 %   cfg.foilim       = [begin end], frequency band of interest (default = [0 150])
 %   cfg.taper        = 'dpss', 'hanning' or many others, see WINDOW (default = 'hanning')
+%   cfg.tapsmofrq    = number, the amount of spectral smoothing through
+%                      multi-tapering. Note that 4 Hz smoothing means
+%                      plus-minus 4 Hz, i.e. a 8 Hz smoothing box.
+%                      Note: multitapering rotates phases (no problem for consistency)
 %   cfg.spikechannel = string, name of single spike channel to trigger on
 %   cfg.channel      = Nx1 cell-array with selection of channels (default = 'all'),
 %                      see FT_CHANNELSELECTION for details
@@ -19,7 +23,9 @@ function [freq] = ft_spiketriggeredspectrum(cfg, data)
 % If the triggered spike leads a spike in another channel, then the angle
 % of the Fourier spectrum of that other channel will be negative. NOTE that
 % this should be checked for consistency.
-
+%
+% NOTE: Function should be merged with ft_spike_triggeredspectrum
+%
 % Copyright (C) 2008, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -53,11 +59,11 @@ if ~isfield(cfg, 'foilim'),       cfg.foilim = [0 150];       end
 if ~isfield(cfg, 'taper'),        cfg.taper = 'hanning';      end
 if ~isfield(cfg, 'channel'),      cfg.channel = 'all';        end
 if ~isfield(cfg, 'spikechannel'), cfg.spikechannel = [];      end
-% if ~isfield(cfg, 'keeptrials'),   cfg.keeptrials = 'no';      end
 if ~isfield(cfg, 'feedback'),     cfg.feedback = 'no';        end
+if ~isfield(cfg, 'tapsmofrq'),    cfg.tapsmofrq = 4;          end
 
-if strcmp(cfg.taper, 'dpss') && strcmp(cfg.taper, 'sine')
-  error('sorry, multitapering is not yet implemented');
+if strcmp(cfg.taper, 'sine')
+  error('sorry, sine taper is not yet implemented');
 end
 
 % autodetect the spike channels
@@ -96,8 +102,15 @@ end
 begpad = round(cfg.timwin(1)*data.fsample);
 endpad = round(cfg.timwin(2)*data.fsample);
 numsmp = endpad - begpad + 1;
-taper  = window(cfg.taper, numsmp);
-taper  = taper./norm(taper);
+if ~strcmp(cfg.taper,'dpss')
+  taper  = window(cfg.taper, numsmp);
+  taper  = taper./norm(taper);
+else
+  % not implemented yet: keep tapers, or selecting only a subset of them.
+  taper  = dpss(numsmp, cfg.tapsmofrq);
+  taper  = taper(:,1:end-1);            % we get 2*NW-1 tapers
+  taper  = sum(taper,2)./size(taper,2); % using the linearity of multitapering
+end
 taper  = sparse(diag(taper));
 
 spectrum    = cell(1,ntrial);
