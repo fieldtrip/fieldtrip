@@ -94,7 +94,6 @@ cmbrepresentation = keyval('cmbrepresentation',  varargin);
 channelcmb    = keyval('channelcmb',   varargin);
 sourcedimord  = keyval('sourcedimord', varargin);
 sourcerepresentation = keyval('sourcerepresentation', varargin);
-keepoutside   = keyval('keepoutside',  varargin);
 
 % determine the type of input data
 % this can be raw, freq, timelock, comp, spike, source, volume, dip
@@ -607,11 +606,6 @@ if ~isempty(cmbrepresentation)
     error('This function requires data with a covariance, coherence or cross-spectrum');
   end
 end % cmbrepresentation
-
-if issource && strcmp(keepoutside, 'no'),
-  % remove all grid points that are marked as outside
-  data = ft_source2sparse(data);
-end
 
 if issource && ~isempty(sourcerepresentation)
   data = fixsource(data, 'type', sourcerepresentation);
