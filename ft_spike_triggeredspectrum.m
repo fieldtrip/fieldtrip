@@ -197,7 +197,11 @@ for iTrial = 1:nTrials
         begsmp = spikesmp(iSpike) + begpad;
         endsmp = spikesmp(iSpike) + endpad;
         segment = data.trial{iTrial}(chansel,begsmp:endsmp);
-
+        
+        % substract the DC component from every segment, to avoid any leakage of the taper
+        segmentMean = repmat(nanmean(segment,2),1,numsmp); % nChan x Numsmp
+        segment     = segment - segmentMean; % LFP has average of zero now (no DC)
+        
         % taper the data segment around the spike and compute the fft
         segment_fft = my_fft(segment * sparse(diag(taper)));
 
