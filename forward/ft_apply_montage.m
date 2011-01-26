@@ -49,8 +49,9 @@ function [sens] = ft_apply_montage(sens, montage, varargin)
 % $Id: ft_apply_montage.m 1139 2010-05-26 12:55:57Z roboos $
 
 % get optional input arguments
-keepunused    = keyval('keepunused',    varargin{:}); if isempty(keepunused),    keepunused    = 'no';  end
-inverse       = keyval('inverse',       varargin{:}); if isempty(inverse),       inverse       = 'no';  end
+keepunused = keyval('keepunused', varargin{:}); if isempty(keepunused), keepunused = 'no';  end
+inverse    = keyval('inverse',    varargin{:}); if isempty(inverse),    inverse    = 'no';  end
+feedback   = keyval('feedback',   varargin{:}); if isempty(feedback),   feedback   = 'text'; end
 
 % check the consistency of the input sensor array or data
 if isfield(sens, 'labelorg') && isfield(sens, 'labelnew')
@@ -161,8 +162,9 @@ elseif isfield(sens, 'trial')
   clear sens
 
   Ntrials = numel(data.trial);
+  ft_progress('init', feedback, 'processing trials');
   for i=1:Ntrials
-    fprintf('processing trial %d from %d\n', i, Ntrials);
+    ft_progress(i/Ntrials, 'processing trial %d from %d\n', i, Ntrials);
     if isa(data.trial{i}, 'single')
       % sparse matrices and single precision do not match
       data.trial{i}   = full(montage.tra) * data.trial{i};
@@ -170,6 +172,8 @@ elseif isfield(sens, 'trial')
       data.trial{i}   = montage.tra * data.trial{i};
     end
   end
+  ft_progress('close');
+
   data.label = montage.labelnew;
 
   % rename the output variable
