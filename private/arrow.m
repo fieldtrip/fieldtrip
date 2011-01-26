@@ -115,13 +115,13 @@ if isempty(ARROW_PERSP_WARN  ), ARROW_PERSP_WARN  =1; end;
 if isempty(ARROW_STRETCH_WARN), ARROW_STRETCH_WARN=1; end;
 
 % Handle callbacks
-if (nargin>0 & isstr(varargin{1}) & strcmp(lower(varargin{1}),'callback')),
+if (nargin>0 & ischar(varargin{1}) & strcmp(lower(varargin{1}),'callback')),
     arrow_callback(varargin{2:end}); return;
 end;
 
 % Are we doing the demo?
 c = sprintf('\n');
-if (nargin==1 & isstr(varargin{1})),
+if (nargin==1 & ischar(varargin{1})),
     arg1 = lower(varargin{1});
     if strncmp(arg1,'prop',4), arrow_props;
     elseif strncmp(arg1,'demo',4)
@@ -156,7 +156,7 @@ lastnumeric = firstprop-1;
 if (firstprop<=nargin),
     for k=firstprop:2:nargin,
         curarg = varargin{k};
-        if ~isstr(curarg) | sum(size(curarg)>1)>1,
+        if ~ischar(curarg) | sum(size(curarg)>1)>1,
             error([upper(mfilename) ' requires that a property name be a single string.']);
         end;
     end;
@@ -225,7 +225,7 @@ for k=firstprop:2:nargin,
     elseif strncmp(prop,'wid'   ,3),   wid        = val(:);
     elseif strncmp(prop,'page'  ,4),   page       = val;
     elseif strncmp(prop,'cross' ,5),   crossdir   = val;
-    elseif strncmp(prop,'norm'  ,4),   if (isstr(val)), crossdir=val; else, crossdir=val*sqrt(-1); end;
+    elseif strncmp(prop,'norm'  ,4),   if (ischar(val)), crossdir=val; else, crossdir=val*sqrt(-1); end;
     elseif strncmp(prop,'end'   ,3),   ends       = val;
     elseif strncmp(prop,'object',6),   oldh       = val(:);
     elseif strncmp(prop,'handle',6),   oldh       = val(:);
@@ -262,7 +262,7 @@ ispatch   = arrow_defcheck(ispatch  ,defispatch  ,''             );
 [m,n]=size(crossdir);   if any(m==[2 3])&(n==1|n>3),   crossdir = crossdir';   end;
 
 % convert strings to numbers
-if ~isempty(ends) & isstr(ends),
+if ~isempty(ends) & ischar(ends),
     endsorig = ends;
     [m,n] = size(ends);
     col = lower([ends(:,1:min(3,n)) ones(m,max(0,3-n))*' ']);
@@ -279,7 +279,7 @@ if ~isempty(ends) & isstr(ends),
 else,
     ends = ends(:);
 end;
-if ~isempty(ispatch) & isstr(ispatch),
+if ~isempty(ispatch) & ischar(ispatch),
     col = lower(ispatch(:,1));
     patchchar='p'; linechar='l'; defchar=' ';
     mask = col~=patchchar & col~=linechar & col~=defchar;
@@ -957,7 +957,7 @@ end;
 function out = arrow_defcheck(in,def,prop)
 % check if we got 'default' values
     out = in;
-    if ~isstr(in), return; end;
+    if ~ischar(in), return; end;
     if size(in,1)==1 & strncmp(lower(in),'def',3),
         out = def;
     elseif ~isempty(prop),
@@ -1045,7 +1045,7 @@ function arrow_callback(varargin)
 % handle redrawing callbacks
     if nargin==0, return; end;
     str = varargin{1};
-    if ~isstr(str), error([upper(mfilename) ' got an invalid Callback command.']); end;
+    if ~ischar(str), error([upper(mfilename) ' got an invalid Callback command.']); end;
     s = lower(str);
     if strcmp(s,'motion'),
         % motion callback

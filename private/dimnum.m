@@ -38,7 +38,7 @@ function [num,dims]=dimnum(dimord, dim)
 %
 % $Id$
 
-if(~isstr(dimord)||~isstr(dim))error('Both dimord and dim must be strings');end;
+if(~ischar(dimord)||~ischar(dim))error('Both dimord and dim must be strings');end;
 
 dims=tokenize(dimord,'_'); % splits the dimord string in parts using '_' as a delimiter
 dim=lower(dim); % makes the function case unsensitive.

@@ -84,21 +84,21 @@ else
 end
 
 % convert the selection to the indices of the x/y/z intersection 
-if isstr(sel) & strcmp(sel, 'min')
+if ischar(sel) & strcmp(sel, 'min')
   [minval, minindx] = min(dat(:));
   [xi, yi, zi] = ind2sub(size(dat), minindx);
-elseif isstr(sel) & strcmp(sel, 'max')
+elseif ischar(sel) & strcmp(sel, 'max')
   [maxval, maxindx] = max(dat(:));
   [xi, yi, zi] = ind2sub(size(dat), maxindx);
-elseif isstr(sel) & strcmp(sel, 'center')
+elseif ischar(sel) & strcmp(sel, 'center')
   xi = round(length(x)/2);
   yi = round(length(y)/2);
   zi = round(length(z)/2);
-elseif isstr(sel) & strcmp(sel, 'interactive')
+elseif ischar(sel) & strcmp(sel, 'interactive')
   xi = round(length(x)/2);
   yi = round(length(y)/2);
   zi = round(length(z)/2);
-elseif ~isstr(sel) && length(sel)==1
+elseif ~ischar(sel) && length(sel)==1
   [xi, yi, zi] = ind2sub(dim, sel);
 else
   xi = nearest(x, sel(1));

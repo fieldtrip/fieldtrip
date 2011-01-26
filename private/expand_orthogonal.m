@@ -76,7 +76,7 @@ if (flg~=0) && (flg~=1)
 end
 
 % method must be a string
-if ~isstr(method)
+if ~ischar(method)
    error('input argument ''method'' must be a string');
 end
 

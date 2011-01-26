@@ -15,7 +15,7 @@ f = fopen(name, 'rt');
 markfile = {};
 while true
     l = fgetl(f);
-    if ~isstr(l)
+    if ~ischar(l)
     break
     end
     markfile{end + 1} = l;
