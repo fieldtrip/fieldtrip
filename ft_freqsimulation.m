@@ -263,9 +263,9 @@ if strcmp(cfg.method,'superimposed')
 
   % make data
   for iTr = 1 : length(timevec)
-    if isstr(cfg.s1.phase); phase_s1 = rand * 2 *pi; else phase_s1 = cfg.s1.phase; end
-    if isstr(cfg.s2.phase); phase_s2 = rand * 2 *pi; else phase_s2 = cfg.s2.phase; end
-    if isstr(cfg.s3.phase); phase_s3 = rand * 2 *pi; else phase_s3 = cfg.s3.phase; end
+    if ischar(cfg.s1.phase); phase_s1 = rand * 2 *pi; else phase_s1 = cfg.s1.phase; end
+    if ischar(cfg.s2.phase); phase_s2 = rand * 2 *pi; else phase_s2 = cfg.s2.phase; end
+    if ischar(cfg.s3.phase); phase_s3 = rand * 2 *pi; else phase_s3 = cfg.s3.phase; end
 
     s1    = cfg.s1.ampl*cos(2*pi*cfg.s1.freq*timevec{iTr} + phase_s1);
     s2    = cfg.s2.ampl*cos(2*pi*cfg.s2.freq*timevec{iTr} + phase_s2);
@@ -339,9 +339,9 @@ elseif strcmp(cfg.method,'phalow_amphigh')
   % make data
   for iTr = 1 : length(timevec)
 
-    if isstr(cfg.s1.phase); phase_AM = rand * 2 *pi;  else phase_AM = cfg.s1.phase;  end
-    if isstr(cfg.s2.phase); phase_high = rand * 2 *pi; else phase_high = cfg.s2.phase; end
-    if isstr(cfg.s3.phase); phase_DC = rand * 2 *pi;   else phase_DC = cfg.s3.phase;   end
+    if ischar(cfg.s1.phase); phase_AM = rand * 2 *pi;  else phase_AM = cfg.s1.phase;  end
+    if ischar(cfg.s2.phase); phase_high = rand * 2 *pi; else phase_high = cfg.s2.phase; end
+    if ischar(cfg.s3.phase); phase_DC = rand * 2 *pi;   else phase_DC = cfg.s3.phase;   end
     high  = cfg.s2.ampl*cos(2*pi*cfg.s2.freq*timevec{iTr} + phase_high);
     AM   = cfg.s1.ampl*cos(2*pi*cfg.s1.freq*timevec{iTr} + phase_AM);
     DC    = cfg.s3.ampl*cos(2*pi*0*timevec{iTr} + phase_DC);
@@ -387,10 +387,10 @@ elseif strcmp(cfg.method,'amplow_amphigh')
   % make data
   for iTr = 1 : length(timevec)
 
-    if isstr(cfg.s1.phase); phase_low = rand * 2 *pi;    else phase_low = cfg.s1.phase;    end
-    if isstr(cfg.s2.phase); phase_high = rand * 2 *pi;   else phase_high = cfg.s2.phase;   end
-    if isstr(cfg.s3.phase); phase_DC = rand * 2 *pi;     else phase_DC = cfg.s3.phase;     end
-    if isstr(cfg.s4.phase); phase_AM = rand * 2 *pi;     else phase_AM = cfg.s4.phase; end
+    if ischar(cfg.s1.phase); phase_low = rand * 2 *pi;    else phase_low = cfg.s1.phase;    end
+    if ischar(cfg.s2.phase); phase_high = rand * 2 *pi;   else phase_high = cfg.s2.phase;   end
+    if ischar(cfg.s3.phase); phase_DC = rand * 2 *pi;     else phase_DC = cfg.s3.phase;     end
+    if ischar(cfg.s4.phase); phase_AM = rand * 2 *pi;     else phase_AM = cfg.s4.phase; end
     high     = cfg.s2.ampl*cos(2*pi*cfg.s2.freq*timevec{iTr} + phase_high);
     low      = cfg.s1.ampl*cos(2*pi*cfg.s1.freq*timevec{iTr} + phase_low);
     AM       = cfg.s4.ampl*cos(2*pi*cfg.s4.freq*timevec{iTr} + phase_AM);
@@ -436,8 +436,8 @@ elseif strcmp(cfg.method,'phalow_freqhigh')
   % make data
   for iTr = 1 : length(timevec)
 
-    if isstr(cfg.s1.phase); phase_s1  = rand * 2 *pi;    else phase_s1 = cfg.s1.phase;    end
-    if isstr(cfg.s2.phase); phase_s2 = rand * 2 *pi;     else phase_s2= cfg.s2.phase;    end
+    if ischar(cfg.s1.phase); phase_s1  = rand * 2 *pi;    else phase_s1 = cfg.s1.phase;    end
+    if ischar(cfg.s2.phase); phase_s2 = rand * 2 *pi;     else phase_s2= cfg.s2.phase;    end
     s1            = cfg.s1.ampl .* cos(2*pi*cfg.s1.freq * timevec{iTr} + phase_s1); % to be modulated signal
     s2            = cfg.s2.ampl .* cos(2*pi*cfg.s2.freq * timevec{iTr} + phase_s2); % modulation of instantaneous phase
     inst_pha_base = 2*pi*cfg.s1.freq * timevec{iTr} + phase_s1; % unmodulated instantaneous phase s1 (linear)
@@ -474,7 +474,7 @@ elseif strcmp(cfg.method,'asymmetric')
 
   % make data
   for iTr = 1 : length(timevec)
-    if isstr(cfg.s1.phase); phase_s1 = rand * 2 *pi; else phase_s1 = cfg.s1.phase; end
+    if ischar(cfg.s1.phase); phase_s1 = rand * 2 *pi; else phase_s1 = cfg.s1.phase; end
 
     s1    = cfg.s1.ampl*cos(2*pi*cfg.s1.freq*timevec{iTr} + phase_s1);
     tmp   = cos(2*pi*cfg.s1.freq*timevec{iTr} + phase_s1);  % same signal but with unit amplitude
