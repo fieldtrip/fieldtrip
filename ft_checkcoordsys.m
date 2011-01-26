@@ -13,7 +13,7 @@ if ~isfield(cfg, 'interactive'), cfg.interactive = 'yes'; end
 dointeractive = strcmp(cfg.interactive, 'yes');
 doplot        = 1;
 
-dtype = datatype(data);
+dtype = ft_datatype(data);
 data  = ft_convert_units(data);
 unit  = data.unit;
 
