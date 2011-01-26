@@ -145,7 +145,8 @@ if isfield(cfg,'correctp') && strcmp(cfg.correctp,'yes')
   cfg = rmfield(cfg,'correctp');
 elseif isfield(cfg,'correctp') && strcmp(cfg.correctp,'no')
   cfg = ft_checkconfig(cfg, 'renamed', {'correctp', 'correcttail'});
-elseif strcmp(cfg.correcttail,'no') && cfg.tail==0 && cfg.alpha==0.05
+end
+if strcmp(cfg.correcttail,'no') && cfg.tail==0 && cfg.alpha==0.05
   warning('doing a two-sided test without correcting p-values or alpha-level, p-values and alpha-level will reflect one-sided tests per tail')
 end
 
@@ -343,16 +344,27 @@ end
 % rule whether the null-hopothesis should be rejected given the observed
 % probability therefore should consider alpha divided by two, to correspond
 % with the probability in one of the tails (the most extreme tail). This
-% is conceptually equivalent to performing a Bonferoni correction for the
+% is conceptually equivalent to performing a Bonferroni correction for the
 % two tails.
 % 
-% An alternative solution to distributed the alpha level over both tails is
+% An alternative solution to distribute the alpha level over both tails is
 % achieved by multiplying the probability with a factor of two, prior to
 % thresholding it wich cfg.alpha.  The advantage of this solution is that
 % it results in a p-value that corresponds with a parametric probability.
 % Below both options are realized
 if strcmp(cfg.correcttail, 'prob') && cfg.tail==0
   stat.prob = stat.prob .* 2;
+  % also correct the probabilities in the pos/negcluster fields
+  if isfield(stat, 'posclusters')
+    for i=1:length(stat.posclusters)
+      stat.posclusters(i).prob = stat.posclusters(i).prob*2;
+    end
+  end
+  if isfield(stat, 'negclusters')
+    for i=1:length(stat.negclusters)
+      stat.negclusters(i).prob = stat.negclusters(i).prob*2;
+    end
+  end
 elseif strcmp(cfg.correcttail, 'alpha') && cfg.tail==0
   cfg.alpha = cfg.alpha / 2;
 end
