@@ -1,4 +1,4 @@
-function [data] = fixdimord(data, keepsourcedimord);
+function [data] = fixdimord(data)
 
 % FIXDIMORD ensures consistency between the dimord string and the axes
 % that describe the data dimensions. The main purpose of this function
@@ -15,13 +15,17 @@ function [data] = fixdimord(data, keepsourcedimord);
 %  'time'
 %  'freq'
 %  'chan'
-%  'refchan'
-%  'rpt'
-%  'subj'
 %  'chancmb'
+%  'refchan'
+%  'subj'
+%  'rpt'
 %  'rpttap'
+%  'pos'
+%  'ori'
+%  'comp'
+%  'voxel'
 
-% Copyright (C) 2009, Robert Oostenveld, Jan-Mathijs Schoffelen
+% Copyright (C) 2009-2010, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -41,79 +45,107 @@ function [data] = fixdimord(data, keepsourcedimord);
 %
 % $Id$
 
-if nargin<2, keepsourcedimord = 0; end
-
-if strcmp('volume', ft_datatype(data)) || strcmp('source', ft_datatype(data));
-  if isfield(data, 'dimord') && ~keepsourcedimord
-    % data should not have a dimord (is not implemented yet, but some
-    % functions add a dimord to these data which leads to unexpected behavior)
-    warning('unexpected dimord "%s", dimord is removed from data', data.dimord);
-    data = rmfield(data, 'dimord');
-    return
-  else
-    %is okay
-    return
-  end
-end
+% if nargin<2, keepsourcedimord = 0; end
+%
+% if any(ft_datatype(data, {'source', 'volume'})) && isfield(data, 'dimord') && ~keepsourcedimord
+%   % the old source data representation does not have a dimord, whereas the new source data representation does have a dimord
+%   warning(sprintf('removing dimord "%s" from source representation data', data.dimord));
+%   data = rmfield(data, 'dimord');
+%   return
+% else
+%   % it is ok
+%   return
+% end
 
 if ~isfield(data, 'dimord')
-  if ~isfield(data, 'trial') || ~iscell(data.trial) || ...
-     ~isfield(data, 'time')  || ~iscell(data.time)  || ...
-     ~isfield(data, 'label') || ~iscell(data.label)
-    error('The data does not contain a dimord, but it also does not resemble raw data');
-  elseif isfield(data, 'topo')
-    % the data resembles a component decomposition
-    data.dimord = 'chan_comp';
+  if ft_datatype(data, 'raw')
+    % it is raw data, which does not have a dimord -> this is ok
+    return
+  elseif ft_datatype(data, 'comp')
+    % it is component data, which resembles raw data -> this is ok
+    return
+  elseif ft_datatype(data, 'volume')
+    % it is volume data, which does not have a dimord -> this is ok
+    return
   else
-    % the data does not contain a dimord, but it resembles raw data -> that's ok
+    fn = fieldnames(data);
+    sel = true(size(fn));
+    for i=1:length(fn)
+      sel(i) = ~isempty(strfind(fn{i}, 'dimord'));
+    end
+    df = fn(sel);
+    
+    if isempty(df)
+      if ft_datatype(data, 'source')
+        % it is old-style source data -> this is ok
+        % ft_checkdata will convert it to new-style
+        return
+      else
+        error('the data does not contain a dimord, but it also does not resemble raw or component data');
+      end
+    end
+    
+    % use this function recursively on the XXXdimord fields
+    for i=1:length(df)
+      data.dimord = data.(df{i});
+      data = fixdimord(data);
+      data.(df{i}) = data.dimord;
+      data = rmfield(data, 'dimord');
+    end
+    % after the recursive call it should be ok
     return
   end
 end
 
 dimtok = tokenize(data.dimord, '_');
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 for i=1:length(dimtok)
   switch dimtok{i}
     case {'tim' 'time' 'toi' 'latency'}
       dimtok{i} = 'time';
-
+      
     case {'frq' 'freq' 'foi' 'frequency'}
       dimtok{i} = 'freq';
-
+      
     case {'sgn' 'label' 'chan'}
       dimtok{i} = 'chan';
-
+      
     case {'rpt' 'trial'}
       dimtok{i} = 'rpt';
-
+      
     case {'subj' 'subject'}
       dimtok{i} = 'subj';
-
+      
     case {'comp'}
       % don't change, it is ok
-
+      
     case {'sgncmb' 'labelcmb' 'chancmb'}
       dimtok{i} = 'chan';
-
+      
     case {'rpttap'}
       % this is a 2-D field, coding trials and tapers along the same dimension
       % don't change, it is ok
-
+      
     case {'refchan'}
       % don't change, it is ok
-
+      
+    case {'ori'}
+      % don't change, it is ok
+      
     case {'vox' 'repl' 'wcond'}
       % these are used in some fieldtrip functions, but are not considered standard
       warning('unexpected dimord "%s"', data.dimord);
-
+      
     case {'pos'}
-      % this will be the future default for simple sources
-
+      % this is for source data on a 3-d grid, a cortical sheet, or unstructured positions
+      
+    case {'{pos}'}
+      % this is for source data on a 3-d grid, a cortical sheet, or unstructured positions
+      % the data itself is represented in a cell-array, e.g. source.mom or source.leadfield
+      
     otherwise
       error(sprintf('unexpected dimord "%s"', data.dimord));
-
+      
   end % switch dimtok
 end % for length dimtok
 
