@@ -37,6 +37,9 @@ if ~isfield(cfg, 'foilim'),         cfg.foilim = [0 120];     end
 if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'last';  end % first or last
 
 % translate dataset into datafile+headerfile
+if ~isfield(cfg, 'dataset') && ~isfield(cfg, 'header') && ~isfield(cfg, 'datafile')
+  cfg.dataset = 'buffer://localhost:1972';
+end
 cfg = checkconfig(cfg, 'dataset2files', 'yes');
 cfg = checkconfig(cfg, 'required', {'datafile' 'headerfile'});
 
@@ -152,3 +155,11 @@ while true
 
   end % if enough new samples
 end % while true
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [time] = offset2time(offset, fsample, nsamples)
+offset   = double(offset);
+nsamples = double(nsamples);
+time = (offset + (0:(nsamples-1)))/fsample;

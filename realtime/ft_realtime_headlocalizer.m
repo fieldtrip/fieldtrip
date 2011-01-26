@@ -106,8 +106,7 @@ while true
         
         % put the data in a fieldtrip-like raw structure
         data.trial{1} = double(dat);
-        %data.time{1}  = offset2time(begsample, hdr.Fs, endsample-begsample+1);
-        data.time{1}  = (double(begsample) + (0:(double(endsample-begsample))))/hdr.Fs;
+        data.time{1}  = offset2time(begsample, hdr.Fs, endsample-begsample+1);
         data.label    = hdr.label(chanindx);
         data.hdr      = hdr;
         data.fsample  = hdr.Fs;
@@ -508,13 +507,10 @@ while true
     end % if enough new samples
 end % while true
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION compute the circumcenter(x,y,z) of the 3D triangle (3 coils)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [cc] = circumcenter(coil1,coil2,coil3)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% compute the circumcenter of our 3D triangle (3 coils)
-% output: cc(x,y,z)
 
 % use coordinates relative to point `a' of the triangle
 xba = coil2(1,end) - coil1(1,end);
@@ -544,3 +540,11 @@ zcirca = ((balength * xca - calength * xba) * ycrossbc - (balength * yca - calen
 cc(1) = xcirca + coil1(1,end);
 cc(2) = ycirca + coil1(2,end);
 cc(3) = zcirca + coil1(3,end);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [time] = offset2time(offset, fsample, nsamples)
+offset   = double(offset);
+nsamples = double(nsamples);
+time = (offset + (0:(nsamples-1)))/fsample;
