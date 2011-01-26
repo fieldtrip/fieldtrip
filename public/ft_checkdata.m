@@ -148,7 +148,8 @@ end % give feedback
 
 if isfreq || istimelock || iscomp || issource || isvolume
   % ensure consistency between the dimord string and the axes that describe the data dimensions
-  data = fixdimord(data, strcmp(sourcerepresentation, 'new'));
+  %data = fixdimord(data, strcmp(sourcerepresentation, 'new'));
+  data = fixdimord(data);
 end
 
 if istimelock
@@ -1478,10 +1479,12 @@ switch fname
     
     if isfield(output, 'freq') && numel(output.freq)>1 && numel(output.freq)==size(tmp,dimnum)
       dimord = [dimord,'_freq'];
+      dimnum = dimnum+1;
     end
     
     if isfield(output, 'time') && numel(output.time)>1 && numel(output.time)==size(tmp,dimnum)
       dimord = [dimord,'_time'];
+      dimnum = dimnum+1;
     end
     
     otherwise
