@@ -164,6 +164,9 @@ if hasdata
 elseif hasinputfile
   if iscell(cfg.inputfile), cfg.inputfile = cfg.inputfile{1}; end
   data = loadvar(cfg.inputfile, 'data');
+  if isfield(cfg, 'interactive') && strcmp(cfg.interactive, 'yes'),
+    warning('switching off interactive mode, this is not supported when loading an inputfile from disk');
+  end
 end
 
 % For backward compatibility with old data structures:
