@@ -11,8 +11,11 @@ function [freq] = ft_spike_triggeredspectrum(cfg, data, spike)
 %   Configurations:
 %   cfg.timwin       = [begin end], time around each spike (default = [-0.1 0.1])
 %   cfg.foilim       = [begin end], frequency band of interest (default = [0 150])
-%   cfg.taper        = 'hanning' or many others, see WINDOW (default = 'hanning'). Multi-tapering is
-%                       not implemented since this will rotate the phases. 
+%   cfg.taper        = 'hanning' or many others, see WINDOW (default = 'hanning'). 
+%   cfg.tapsmofrq    = number, the amount of spectral smoothing through
+%                      multi-tapering. Note that 4 Hz smoothing means
+%                      plus-minus 4 Hz, i.e. a 8 Hz smoothing box.
+%                      Note: multitapering rotates phases (no problem for consistency)
 %   cfg.spikechannel = string, name of single spike channel to trigger on. See FT_CHANNELSELECTION
 %   cfg.channel      = Nx1 cell-array with selection of channels (default = 'all'),
 %                      see FT_CHANNELSELECTION for details
@@ -75,8 +78,8 @@ if ~isfield(cfg, 'channel'),        cfg.channel        = 'all';        end
 if ~isfield(cfg, 'spikechannel'),   cfg.spikechannel   = [];           end
 if ~isfield(cfg, 'feedback'),       cfg.feedback       = 'no';         end
 
-if strcmp(cfg.taper, 'dpss') || strcmp(cfg.taper, 'sine') 
-    error('sorry, multitapering is not yet implemented');
+if strcmp(cfg.taper, 'sine')
+  error('sorry, sine taper is not yet implemented');
 end
 
 % check whether a third input is specified
@@ -108,8 +111,15 @@ nTrials    = length(data.trial); % number of trials
 begpad = round(cfg.timwin(1)*data.fsample); % number of samples before spike
 endpad = round(cfg.timwin(2)*data.fsample); % number of samples after spike
 numsmp = endpad - begpad + 1;               % number of samples of segment
-taper  = window(cfg.taper, numsmp);         % create a hanning taper
-taper  = taper./norm(taper);                % normalize the taper
+if ~strcmp(cfg.taper,'dpss')
+  taper  = window(cfg.taper, numsmp);
+  taper  = taper./norm(taper);
+else
+  % not implemented yet: keep tapers, or selecting only a subset of them.
+  taper  = dpss(numsmp, cfg.tapsmofrq);
+  taper  = taper(:,1:end-1);            % we get 2*NW-1 tapers
+  taper  = sum(taper,2)./size(taper,2); % using the linearity of multitapering
+end
 
 % frequency selection
 freqaxis = linspace(0, data.fsample, numsmp);
