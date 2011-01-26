@@ -170,6 +170,10 @@ for i=1:ntrial
       segment = data.trial{i}(chansel,begsmp:endsmp);
     end
 
+    % substract the DC component from every segment, to avoid any leakage of the taper       
+    segmentMean = repmat(nanmean(segment,2),1,numsmp); % nChan x Numsmp
+    segment     = segment - segmentMean; % LFP has average of zero now (no DC)
+        
     time  = randn(size(segment)); % this is actually not used
 
     % taper the data segment around the spike and compute the fft
