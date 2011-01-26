@@ -42,9 +42,11 @@ persistent signalpath
 % results in different versions of SPM or other other toolboxes on the path
 list = which('spm', '-all');
 if length(list)>1
-  warning('multiple versions of SPM on your path will confuse FieldTrip');
-  for i=1:length(list)
-    warning('one version of SPM is found here: %s', list{i});
+  [ws warned] = warning_once('multiple versions of SPM on your path will confuse FieldTrip');
+  if warned % only throw the warning once
+      for i=1:length(list)
+          warning('one version of SPM is found here: %s', list{i});
+      end
   end
 end
 
