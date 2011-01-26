@@ -44,7 +44,7 @@ list = which('spm', '-all');
 if length(list)>1
   warning('multiple versions of SPM on your path will confuse FieldTrip');
   for i=1:length(list)
-    warning('spm is found here: %s', list{i});
+    warning('one version of SPM is found here: %s', list{i});
   end
 end
 
