@@ -32,7 +32,7 @@ function [s] = rmsubfield(s, f, v);
 %
 % $Id: rmsubfield.m 951 2010-04-21 18:24:01Z roboos $
 
-if ~isstr(f)
+if ~ischar(f)
   error('incorrect input argument for fieldname');
 end
 

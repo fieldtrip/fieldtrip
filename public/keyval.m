@@ -51,7 +51,7 @@ end
 keys = varargin(1:2:end);
 vals = varargin(2:2:end);
 
-% the following is faster than cellfun(@isstr, keys)
+% the following is faster than cellfun(@ischar, keys)
 valid = false(size(keys));
 for i=1:numel(keys)
   valid = ischar(keys{i});

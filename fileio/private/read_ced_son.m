@@ -82,7 +82,7 @@ if ~isfield(pars,'channels'),       pars = setfield(pars,'channels',[]);        
 % set all fields string values to lowercase
 fields = fieldnames(pars);
 for idx=1:length(fields)
-    if isstr(getfield(pars,fields{idx})),
+    if ischar(getfield(pars,fields{idx})),
         pars=setfield(pars,fields{idx},lower(getfield(pars,fields{idx})));
     end;
 end;
