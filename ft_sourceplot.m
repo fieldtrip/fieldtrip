@@ -894,9 +894,12 @@ elseif isequal(cfg.method,'surface')
 				  maskval = maskval + cfg.projweight(iproj) * msk(ind);
 			  end
 		  elseif strcmp(cfg.projcomb,'max')
-			  val = max([val cfg.projweight(iproj) * fun(ind)],[],2);
+			  val =  max([val cfg.projweight(iproj) * fun(ind)],[],2);
+			  tmp2 = min([val cfg.projweight(iproj) * fun(ind)],[],2);
+			  fi = find(val < max(tmp2));
+			  val(fi) = tmp2(fi);
 			  if hasmsk
-				  maskval = max([maskval cfg.projweight(iproj) * fun(ind)],[],2);
+				  maskval = max(abs([maskval cfg.projweight(iproj) * fun(ind)]),[],2);
 			  end
 		  else
 			  error('undefined method to combine projections; use cfg.projcomb= mean or max')
@@ -905,12 +908,12 @@ elseif isequal(cfg.method,'surface')
 	  if strcmp(cfg.projcomb,'mean'),
 		  val=val/length(cfg.projvec);
 		  if hasmsk
-			  maskval = max([maskval cfg.projweight(iproj) * fun(ind)],[],2);
+			  maskval = max(abs([maskval cfg.projweight(iproj) * fun(ind)]),[],2);
 		  end
 	  end;
 	  if ~isempty(cfg.projthresh),
-		  mm=max(val(:));
-		  maskval(val < cfg.projthresh*mm) = 0;
+		  mm=max(abs(val(:)));
+		  maskval(abs(val) < cfg.projthresh*mm) = 0;
 	  end
   end
   
