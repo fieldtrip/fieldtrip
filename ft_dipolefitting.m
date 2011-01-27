@@ -353,6 +353,11 @@ if strcmp(cfg.gridsearch, 'yes')
     % the model is V=lf*mom+noise, therefore mom=pinv(lf)*V estimates the
     % dipole moment this makes the model potential U=lf*pinv(lf)*V and the
     % model error is norm(V-U) = norm(V-lf*pinv(lf)*V) = norm((eye-lf*pinv(lf))*V)
+    if any(isnan(lf(:)))
+        % this might happen if one of the dipole locations of the grid is
+        % outside the brain compartment
+        lf(:) = 0;
+    end
     switch cfg.model
       case 'regional'
         % sum the error over all latencies
