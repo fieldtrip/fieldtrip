@@ -174,7 +174,11 @@ for i=1:numel(varargin)
   
   % this is needed for correct treatment of GRAPHCOLOR later on
   if nargin>1,
-    iname{i+1} = ['input',num2str(i,'%02d')];
+    if ~isempty(inputname(i+1))
+      iname{i+1} = inputname(i+1);
+    else
+      iname{i+1} = ['input',num2str(i,'%02d')];
+    end
   else 
     iname{i+1} = cfg.inputfile{i};
   end
