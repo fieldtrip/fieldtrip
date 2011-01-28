@@ -62,8 +62,12 @@ switch dataformat
 
   case {'freesurfer_mgz' 'mgz'}
     % mgz-volume using freesurfer
-    ft_hastoolbox('freesurfer', 1);  
-    save_mgh(dat, filename, transform); %FIXME think about transform being 0 or 1 based
+    ft_hastoolbox('freesurfer', 1);
+
+    % in matlab the transformation matrix assumes the voxel indices to be 1-based
+    % freesurfer assumes the voxel indices to be 0-based
+    transform = vox2ras_1to0(transform);  
+    save_mgh(dat, filename, transform);
     V = [];
  
   case {'nifti'}
