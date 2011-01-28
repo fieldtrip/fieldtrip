@@ -57,7 +57,8 @@ function [lf] = ft_compute_leadfield(pos, sens, vol, varargin)
 % See also FT_PREPARE_VOL_SENS, FT_HEADMODEL_ASA, FT_HEADMODEL_BEMCP,
 % FT_HEADMODEL_CONCENTRICSPHERES, FT_HEADMODEL_DIPOLI, FT_HEADMODEL_HALFSPACE,
 % FT_HEADMODEL_INFINITE, FT_HEADMODEL_LOCALSPHERES, FT_HEADMODEL_OPENMEEG,
-% FT_HEADMODEL_SINGLESHELL, FT_HEADMODEL_SINGLESPHERE
+% FT_HEADMODEL_SINGLESHELL, FT_HEADMODEL_SINGLESPHERE,
+% FT_HEADMODEL_HALFSPACE
 
 % Copyright (C) 2004-2010, Robert Oostenveld
 %
@@ -416,19 +417,23 @@ elseif iseeg
       lf = eeg_leadfieldb(pos, sens.pnt, vol);
     
     case 'openmeeg'
-      try 
-        dsm = openmeeg_dsm(pos,vol);
-        if isfield(vol,'mat')
-          lf = vol.mat*dsm;
-        else
-          error('No system matrix is present, BEM head model not calculated yet')
-        end        
-      catch
-        warning('The number of dipoles is too high: the algorithm will run for 10 dipoles at a time')
-        tmp = peercellfun(@openmeeg_helper,{pos},{vol},{10},'StopOnError', false);
-        lf = tmp{1};
+      if ft_hastoolbox('openmeeg', 1);
+        try
+          dsm = openmeeg_dsm(pos,vol);
+          if isfield(vol,'mat')
+            lf = vol.mat*dsm;
+          else
+            error('No system matrix is present, BEM head model not calculated yet')
+          end
+        catch
+          warning('The number of dipoles is too high: the algorithm will run for less dipoles at a time')
+          % split factor = 500
+          lf = openmeeg_helper(pos,vol,500);
+        end
+      else
+        error('Openmeeg toolbox not installed')
       end
-      
+  
       case 'metufem'
         p3 = zeros(Ndipoles * 3, 6);
         for i = 1:Ndipoles
@@ -454,7 +459,10 @@ elseif iseeg
         warning_issued = 1;
       end
       lf = inf_medium_leadfield(pos, sens.pnt, 1);
-
+  
+    case 'halfspace'
+      error('not implemented yet');
+           
     otherwise
       error('unsupported volume conductor model for EEG');
   end % switch voltype for EEG
