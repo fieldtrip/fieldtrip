@@ -75,7 +75,7 @@ for i=1:Ndipoles
   elseif condition
     lf(:,(1:3) + 3*(i-1)) = zeros(size(r,1),3);
   else
-    lf(:,(1:3) + 3*(i-1)) = (r ./ [R1 R1 R1]) + (r ./ [R2 R2 R2]);
+    lf(:,(1:3) + 3*(i-1)) = (r ./ [R1 R1 R1]) + (rp ./ [R2 R2 R2]);
   end
   
 end
