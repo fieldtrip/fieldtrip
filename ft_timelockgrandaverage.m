@@ -48,17 +48,17 @@ ft_defaults
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the defaults
-if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];          end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];         end
+if ~isfield(cfg, 'inputfile'),    cfg.inputfile  = []; end
+if ~isfield(cfg, 'outputfile'),   cfg.outputfile = []; end
 
-hasdata = nargin>2;
-if ~isempty(cfg.inputfile) % the input data should be read from file
-  if hasdata
+hasdata      = nargin>2;
+hasinputfile = ~isempty(cfg.inputfile); 
+
+if hasdata && hasinputfile
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    for i=1:numel(cfg.inputfile)
-      varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets from array inputfile
-    end
+elseif hasinputfile
+  for i=1:numel(cfg.inputfile)
+    varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets from array inputfile
   end
 end
 
@@ -68,10 +68,10 @@ for i=1:length(varargin)
 end
 
 % set the defaults
-if ~isfield(cfg, 'channel'),        cfg.channel = 'all';           end
-if ~isfield(cfg, 'keepindividual'), cfg.keepindividual = 'no'; end
-if ~isfield(cfg, 'latency'),        cfg.latency = 'all';         end
-if ~isfield(cfg, 'normalizevar'),   cfg.normalizevar = 'N-1';  end
+if ~isfield(cfg, 'channel'),        cfg.channel        = 'all'; end
+if ~isfield(cfg, 'keepindividual'), cfg.keepindividual = 'no';  end
+if ~isfield(cfg, 'latency'),        cfg.latency        = 'all'; end
+if ~isfield(cfg, 'normalizevar'),   cfg.normalizevar   = 'N-1'; end
 
 % varargin{1} ... varargin{end} contain the individual ERFs
 Nsubj = length(varargin);
@@ -102,7 +102,8 @@ end
 %SELECT TIME WINDOW
 idxs = nearest(varargin{1}.time, min(cfg.latency));
 idxe = nearest(varargin{1}.time, max(cfg.latency));
-% shift start and end index in case of flipped time axis (potentially introduced for response time locked data)
+% shift start and end index in case of flipped time axis
+% (potentially introduced for response time locked data)
 if idxe < idxs
   ResultsTimeSelectCases = idxe:idxs;
 else
@@ -136,30 +137,32 @@ for s = 1:Nsubj
   avgmat(s, :, :) = varargin{s}.avg(:, ResultsTimeSelectCases);
 end
 
-%AVERAGE ACROSS SUBJECT DIMENSION
-ResultGrandavg = mean(avgmat, 1);
-ResultGrandavg = reshape(ResultGrandavg, [ResultNChannels, ResultsNTimePoints]);
+if strcmp(cfg.keepindividual, 'no')
+  %AVERAGE ACROSS SUBJECT DIMENSION
+  ResultGrandavg = mean(avgmat, 1);
+  ResultGrandavg = reshape(ResultGrandavg, [ResultNChannels, ResultsNTimePoints]);
 
-%COMPUTE VARIANCE ACROSS SUBJECT DIMENSION
-%THIS LOOKS AWKWARD (std.^2) BUT IS FAST DUE TO BUILT IN FUNCTIONS
-switch cfg.normalizevar
-  case 'N-1'
-    sdflag = 0;
-  case 'N'
-    sdflag = 1;
+  %COMPUTE VARIANCE ACROSS SUBJECT DIMENSION
+  %THIS LOOKS AWKWARD (std.^2) BUT IS FAST DUE TO BUILT IN FUNCTIONS
+  switch cfg.normalizevar
+    case 'N-1'
+      sdflag = 0;
+    case 'N'
+      sdflag = 1;
+  end
+  ResultVar = std(avgmat, sdflag, 1).^2;
+  ResultVar = reshape(ResultVar, [ResultNChannels, ResultsNTimePoints]);
+else
+  % do nothing
 end
-ResultVar = std(avgmat, sdflag, 1).^2;
-ResultVar = reshape(ResultVar, [ResultNChannels, ResultsNTimePoints]);
 
 %--------------------------------------------
 % % collect the results
 %--------------------------------------------
 
-%SWITCH CHANNEL TO LABEL?
+grandavg           = [];
 grandavg.label     = cfg.channel;       % cell-array
 grandavg.fsample   = varargin{1}.fsample;
-grandavg.avg       = ResultGrandavg;        % Nchan x Nsamples
-grandavg.var       = ResultVar;           % Nchan x Nsamples
 grandavg.time      = ResultsTime;       % 1 x Nsamples
 
 %KEEP INDIVIDUAL MEANS?
@@ -167,6 +170,8 @@ if strcmp(cfg.keepindividual, 'yes')
   grandavg.individual = avgmat;         % Nsubj x Nchan x Nsamples
   grandavg.dimord = 'subj_chan_time';
 else
+  grandavg.avg    = ResultGrandavg;     % Nchan x Nsamples
+  grandavg.var    = ResultVar;          % Nchan x Nsamples
   grandavg.dimord = 'chan_time';
 end
 
