@@ -68,7 +68,7 @@ for i=1:Ndipoles
   % condition of dipoles falling in the non conductive halfspace  
   condition = get_dip_halfspace(rd((1:3) + 3*(i-1),vol);
   
-  if any(R1)
+  if any(R1)==0
     warning('dipole lies on boundary of volume model');
   elseif condition
     lf(:,(1:3) + 3*(i-1)) = zeros(size(r,1),3);
