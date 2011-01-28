@@ -311,6 +311,9 @@ elseif iseeg
     case 'infinite'
       % nothing to do
 
+    case 'halfspace'
+      % nothing to do
+      
     case {'singlesphere', 'concentric'}
       % ensure that the electrodes ly on the skin surface
       radius = max(vol.r);
