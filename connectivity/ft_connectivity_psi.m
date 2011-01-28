@@ -5,12 +5,12 @@ function [c, v, n] = ft_connectivity_psi(input, varargin)
 %
 % Use as
 %   [c, v, n] = ft_connectivity_psi(input, varargin)
-% 
+%
 % The input data input should be organized as:
 %   Repetitions x Channel x Channel (x Frequency) (x Time)
 % or
 %   Repetitions x Channelcombination (x Frequency) (x Time)
-% 
+%
 % The first dimension should be singleton if the input already contains
 % an average
 %
@@ -28,9 +28,9 @@ function [c, v, n] = ft_connectivity_psi(input, varargin)
 % The output c contains the correlation/coherence, v is a variance estimate
 % which only can be computed if the data contains leave-one-out samples,
 % and n is the number of repetitions in the input data.
-% 
+%
 % This is a helper function to FT_CONNECTIVITYANALYSIS
-% 
+%
 % See also FT_CONNECTIVITYANALYSIS
 
 % Copyright (C) 2009-2010 Donders Institute, Jan-Mathijs Schoffelen
@@ -61,7 +61,7 @@ normalize = keyval('normalize', varargin{:}); if isempty(normalize), normalize =
 nbin      = keyval('nbin',      varargin{:});
 
 if isempty(dimord)
-  error('input parameters should contain a dimord'); 
+  error('input parameters should contain a dimord');
 end
 
 if (length(strfind(dimord, 'chan'))~=2 || ~isempty(strfind(dimord, 'pos'))>0) && ~isempty(powindx),
@@ -73,10 +73,10 @@ if (length(strfind(dimord, 'chan'))~=2 || ~isempty(strfind(dimord, 'pos'))>0) &&
   outssq = zeros(siz(2:end));
   pvec   = [2 setdiff(1:numel(siz),2)];
   
-  progress('init', feedback, 'computing metric...');
+  ft_progress('init', feedback, 'computing metric...');
   %first compute coherency and then phaseslopeindex
   for j = 1:siz(1)
-    progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
+    ft_progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
     c      = reshape(input(j,:,:,:,:), siz(2:end));
     p1     = abs(reshape(input(j,powindx(:,1),:,:,:), siz(2:end)));
     p2     = abs(reshape(input(j,powindx(:,2),:,:,:), siz(2:end)));
@@ -86,7 +86,7 @@ if (length(strfind(dimord, 'chan'))~=2 || ~isempty(strfind(dimord, 'pos'))>0) &&
     outsum = outsum + p;
     outssq = outssq + p.^2;
   end
-  progress('close');
+  ft_progress('close');
   
 elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2,
   %crossterms are described by chan_chan_therest
@@ -97,9 +97,9 @@ elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2,
   outssq = zeros(siz(2:end));
   pvec   = [3 setdiff(1:numel(siz),3)];
   
-  progress('init', feedback, 'computing metric...');
+  ft_progress('init', feedback, 'computing metric...');
   for j = 1:siz(1)
-    progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
+    ft_progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
     p1  = zeros([siz(2) 1 siz(4:end)]);
     p2  = zeros([1 siz(3) siz(4:end)]);
     for k = 1:siz(2)
@@ -113,7 +113,7 @@ elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2,
     outsum = outsum + p;
     outssq = outssq + p.^2;
   end
-  progress('close');
+  ft_progress('close');
   
 end
 
