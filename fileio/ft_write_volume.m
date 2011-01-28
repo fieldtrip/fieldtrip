@@ -49,6 +49,10 @@ spmversion    = keyval('spmversion',    varargin);
 
 if isempty(spmversion), spmversion = 'SPM8'; end
 
+if strcmp(dataformat, 'nifti') && strcmp(spmversion, 'SPM2') 
+  error('nifti can only be written by spm versions newer than spm2');
+end
+
 switch dataformat
    
   case {'analyze_img' 'analyze_hdr' 'analyze'}
