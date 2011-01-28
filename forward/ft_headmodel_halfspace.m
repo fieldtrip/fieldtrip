@@ -23,3 +23,8 @@ vol.ori = orientation; % a unit vector pointing towards the air
 vol.ori = vol.ori/norm(vol.ori);
 vol.type = 'halfspace';
 
+% angle = acos(dot(vol.ori,[0 0 1]));
+
+cond = keyval('conductivity', varargin); 
+if isempty(cond), cond = 1; warning('Unknown conductivity value (set to 1)'), end
+vol.cond = cond;
