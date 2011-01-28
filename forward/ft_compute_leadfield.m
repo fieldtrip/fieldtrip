@@ -461,8 +461,8 @@ elseif iseeg
       lf = inf_medium_leadfield(pos, sens.pnt, 1);
   
     case 'halfspace'
-      error('not implemented yet');
-           
+      lf = halfspace_medium_leadfield(pos, sens.pnt, vol);
+    
     otherwise
       error('unsupported volume conductor model for EEG');
   end % switch voltype for EEG
