@@ -1149,8 +1149,8 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
 
 elseif strcmp(current, 'sparsewithpow') && strcmp(desired, 'full')
   % this is how is currently done in prepare_freq_matrices
-  data = checkdata(data, 'cmbrepresentation', 'sparse');
-  data = checkdata(data, 'cmbrepresentation', 'full');
+  data = ft_checkdata(data, 'cmbrepresentation', 'sparse');
+  data = ft_checkdata(data, 'cmbrepresentation', 'full');
 
 end
 

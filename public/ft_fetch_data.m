@@ -39,7 +39,7 @@ endsample     = keyval('endsample',     varargin);
 chanindx      = keyval('chanindx',      varargin);
     
 if isempty(hdr)
-  hdr = fetch_header(data);
+  hdr = ft_fetch_header(data);
 end
     
 if isempty(begsample) || isempty(endsample)
