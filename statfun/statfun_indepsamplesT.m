@@ -1,4 +1,4 @@
-function [s,cfg] = statfun_indepsamplesT(cfg, dat, design);
+function [s, cfg] = statfun_indepsamplesT(cfg, dat, design)
 
 % STATFUN_indepsamplesT calculates the independent samples T-statistic 
 % on the biological data in dat (the dependent variable), using the information on 
@@ -35,11 +35,11 @@ function [s,cfg] = statfun_indepsamplesT(cfg, dat, design);
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set defaults
-if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end;
-if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end;
-if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end;
-if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end;
-if ~isfield(cfg, 'tail'),              cfg.tail=1;                end;
+if ~isfield(cfg, 'computestat'),    cfg.computestat    = 'yes'; end
+if ~isfield(cfg, 'computecritval'), cfg.computecritval = 'no';  end
+if ~isfield(cfg, 'computeprob'),    cfg.computeprob    = 'no';  end
+if ~isfield(cfg, 'alpha'),          cfg.alpha          = 0.05;  end
+if ~isfield(cfg, 'tail'),           cfg.tail           = 1;     end
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
@@ -62,12 +62,24 @@ end;
 df = nrepl - 2;
 
 if strcmp(cfg.computestat, 'yes')
-  % compute the statistic
-  avg1 = nanmean(dat(:,sel1), 2);
-  avg2 = nanmean(dat(:,sel2), 2);
-  var1 = nanstd(dat(:,sel1), 0, 2).^2;
-  var2 = nanstd(dat(:,sel2), 0, 2).^2;
+  % compute the statistic use nanmean only if necessary
+  if sum(any(isnan(dat(:,sel1))))
+    avg1 = nanmean(dat(:,sel1), 2);
+    var1 = nanstd(dat(:,sel1), 0, 2).^2;
+  else
+    avg1 = mean(dat(:,sel1), 2);
+    var1 = std(dat(:,sel1), 0, 2).^2;
+  end
+  if sum(any(isnan(dat(:,sel2))))
+    avg2 = nanmean(dat(:,sel2), 2);
+    var2 = nanstd(dat(:,sel2), 0, 2).^2;
+  else
+    avg2 = mean(dat(:,sel2), 2);
+    var2 = std(dat(:,sel2), 0, 2).^2;
+  end
+ 
   varc = (1./nreplc1 + 1./nreplc2).*((nreplc1-1).*var1 + (nreplc2-1).*var2)./df;
+  
   %in the case of non-equal triallengths, and tfrs as input-data nreplc are
   %vectors with different values. when the triallengths are equal, and the
   %input is a tfr, nreplc are vectors with either zeros (all trials contain nan
@@ -85,7 +97,7 @@ if strcmp(cfg.computecritval,'yes')
     s.critval = [tinv(cfg.alpha/2,df),tinv(1-cfg.alpha/2,df)];
   elseif cfg.tail==1
     s.critval = tinv(1-cfg.alpha,df);
-  end;
+  end
 end
 
 if strcmp(cfg.computeprob,'yes')
@@ -97,5 +109,5 @@ if strcmp(cfg.computeprob,'yes')
     s.prob = 2*tcdf(-abs(s.stat),s.df);
   elseif cfg.tail==1
     s.prob = 1-tcdf(s.stat,s.df);
-  end;
+  end
 end
