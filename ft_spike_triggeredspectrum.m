@@ -201,9 +201,9 @@ for iTrial = 1:nTrials
     if nVld<1,continue,end % continue to the next trial if this one does not contain valid spikes
 
     my_fft = @specest_nanfft;
-    progress('init', cfg.feedback, 'spectrally decomposing data around spikes');
+    ft_progress('init', cfg.feedback, 'spectrally decomposing data around spikes');
     for iSpike = vldSpikes
-        progress(iTrial/nTrials, 'spectrally decomposing data around spike %d of %d\n', iSpike, length(spikesmp));
+        ft_progress(iTrial/nTrials, 'spectrally decomposing data around spike %d of %d\n', iSpike, length(spikesmp));
         begsmp = spikesmp(iSpike) + begpad;
         endsmp = spikesmp(iSpike) + endpad;
         segment = data.trial{iTrial}(chansel,begsmp:endsmp);
@@ -231,7 +231,7 @@ for iTrial = 1:nTrials
         spectrum{iTrial}(iSpike,:,:) = segment_fft;
 
     end % for each spike in this trial
-    progress('close');
+    ft_progress('close');
 end % for each trial
 
 % collect the results

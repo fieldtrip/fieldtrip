@@ -190,16 +190,18 @@ end
 
 needspm = isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no');
 if needspm
-  % check if SPM is in path and if not add
-  hasspm2 = hastoolbox('SPM2');
-  hasspm8 = hastoolbox('SPM8');
+  % check if SPM is in path, do not add any of them to the path yet
+  hasspm2 = ft_hastoolbox('SPM2');
+  hasspm8 = ft_hastoolbox('SPM8');
   
   if ~hasspm2 && ~hasspm8
-    try, hasspm8 = hastoolbox('SPM8', 1); end
+    % is neither is on the path, try adding SPM8
+    try, hasspm8 = ft_hastoolbox('SPM8', 1); end
   end
   
   if ~hasspm8
-    try, hastoolbox('SPM2', 1); end
+    % if SPM8 could not be added, try adding SPM2
+    try, ft_hastoolbox('SPM2', 1); end
   end
 end
 
@@ -360,7 +362,7 @@ if basedonmri
   
   if ischar(cfg.mri)
     % read the segmentation from file
-    mri      = read_fcdc_mri(cfg.mri);
+    mri      = ft_read_mri(cfg.mri);
     mri.gray = double(mri.anatomy);
   elseif isstruct(cfg.mri) && ~isfield(cfg.mri, 'gray')
     % looks like a segmentation that has already been loaded in memory
@@ -473,7 +475,7 @@ if basedonshape
     headshape.pnt = cfg.headshape;
   elseif ischar(cfg.headshape)
     % read the headshape from file
-    headshape = read_headshape(cfg.headshape);
+    headshape = ft_read_headshape(cfg.headshape);
   else
     error('cfg.headshape is not specified correctly')
   end

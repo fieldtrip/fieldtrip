@@ -44,7 +44,7 @@ if ~isfield(cfg,'saveplot'),       cfg.saveplot = 'yes';                        
 %% READ HISTORY FILE in order to extract date & time
 cfghist                     = [];
 cfghist.dataset             = varargin{1};
-cfghist                     = checkconfig(cfghist, 'dataset2files', 'yes'); % translate into datafile+headerfile
+cfghist                     = ft_checkconfig(cfghist, 'dataset2files', 'yes'); % translate into datafile+headerfile
 
 logfile                     = strcat(cfghist.datafile(1:end-5),'.hist');
 fileline                    = 0;
