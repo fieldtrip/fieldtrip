@@ -55,7 +55,6 @@ for i=1:Ndipoles
   
   % Method of mirror dipoles:
   % Defines the position of mirror dipoles being symmetric to the plane
-  % FIXME: implement get_mirror_pos
   rdp = get_mirror_pos(rd((1:3) + 3*(i-1)),vol);
   
   % distances sensors - mirror dipole
@@ -67,7 +66,6 @@ for i=1:Ndipoles
   R2 = -(4*pi*cond) * (sum(rp' .^2 ) .^ 1.5)';
   
   % condition of dipoles falling in the non conductive halfspace  
-  % FIXME: implement get_dip_halfspace
   condition = get_dip_halfspace(rd((1:3) + 3*(i-1),vol);
   
   if any(R1)
@@ -77,6 +75,4 @@ for i=1:Ndipoles
   else
     lf(:,(1:3) + 3*(i-1)) = (r ./ [R1 R1 R1]) + (rp ./ [R2 R2 R2]);
   end
-  
 end
-
