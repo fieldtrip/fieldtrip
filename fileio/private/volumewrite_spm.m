@@ -1,21 +1,22 @@
 function [Va] = volumewrite_spm(filename, data, transform, spmversion)
 
-% VOLUMEWRITE_SPM write a anatomical or functional volume to img/hdr file
+% VOLUMEWRITE_SPM write a anatomical or functional volume to img/hdr, or nifti file
 % using the SPM toolbox
 %
 % Use as
 %   [Va] = volumewrite_spm(filename, data, transform)
 
 % Copyright (C) 2006, Robert Oostenveld
+% Copyright (C) 2011, Jan-Mathijs Schoffelen
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<4,
-  spmversion = 'SPM2';
+  spmversion = 'SPM8';
 end
 
 % check whether the required SPM toolbox is available
-hastoolbox(upper(spmversion), 1);
+ft_hastoolbox(upper(spmversion), 1);
 
 if 0
   % not all datatypes are supported by SPM, this can be checked with

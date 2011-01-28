@@ -47,23 +47,24 @@ dataformat    = keyval('dataformat',    varargin); if isempty(dataformat), dataf
 transform     = keyval('transform',     varargin); if isempty(transform),  transform  = eye(4);                end
 spmversion    = keyval('spmversion',    varargin);
 
+if isempty(spmversion), spmversion = 'SPM8'; end
+
 switch dataformat
    
   case {'analyze_img' 'analyze_hdr' 'analyze'}
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %analyze data, using SPM
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+    %analyze data, using SPM
     V = volumewrite_spm(filename, dat, transform, spmversion);
 
   case {'freesurfer_mgz' 'mgz'}
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % mgz-volume using freesurfer
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
     ft_hastoolbox('freesurfer', 1);  
     save_mgh(dat, filename, transform); %FIXME think about transform being 0 or 1 based
     V = [];
+ 
+  case {'nifti'}
+    %nifti data, using SPM
+    V = volumewrite_spm(filename, dat, transform, spmversion); 
   
   otherwise
     error('unsupported data format');
