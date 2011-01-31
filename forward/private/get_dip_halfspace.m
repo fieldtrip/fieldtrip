@@ -30,6 +30,6 @@ is_in_empty = false;
 ori = vol.ori;
 pnt = vol.pnt;
 
-if dot(ori,(P-pnt)) < pi/2
+if acos(dot(ori,(P-pnt)./norm(P-pnt))) < pi/2
   is_in_empty = true;
 end
