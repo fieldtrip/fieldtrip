@@ -34,8 +34,8 @@ end
 
 vol.cond  = cond;
 vol.Pvoid = Pvoid;
-vol.pnt   = P; % a point that lies in the plane that separates the conductive tissue from the air
-vol.ori   = N; % a unit vector pointing towards the air
+vol.pnt   = P(:)'; % a point that lies in the plane that separates the conductive tissue from the air
+vol.ori   = N(:)'; % a unit vector pointing towards the air
 vol.ori   = vol.ori/norm(vol.ori);
 vol.type  = 'halfspace';
 
