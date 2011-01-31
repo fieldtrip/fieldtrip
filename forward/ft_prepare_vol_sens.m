@@ -312,7 +312,39 @@ elseif iseeg
       % nothing to do
 
     case 'halfspace'
-      % nothing to do
+      pnt    = sens.pnt;
+      if ft_voltype(vol,'halfspace')
+        d = dist(pnt);
+        % scan the electrodes and reposition the ones which are in the
+        % wrong halfspace (projected on the plane)
+        for i=1:size(pnt,1)
+          P = pnt(i,:);
+          is_in_empty = get_dip_halfspace(P,vol);
+          if is_in_empty
+            d = dist(P); 
+            dPplane = -dot(vol.ori, vol.pnt-P, 2);
+            if dPplane>median(d(:))
+              error('Some electrodes are too distant from the plane: consider repositioning them')
+            else
+              % project point on plane
+              Ppr  = [0 0 0];
+              line = [P vol.ori];
+              % get indices of line and plane which are parallel
+              par = abs(dot(vol.ori, line(:,4:6), 2))<1e-14;
+              % difference between origins of plane and line
+              dp = vol.pnt - line(:, 1:3);
+              % Divide only for non parallel vectors (DL)
+              t = dot(vol.ori(~par,:), dp(~par,:), 2)./dot(vol.ori(~par,:), line(~par,4:6), 2);
+              % compute coord of intersection point
+              Ppr(~par, :) = line(~par,1:3) + repmat(t,1,3).*line(~par,4:6);
+              pnt(i,:) = Ppr;
+            end
+          end
+        end
+        sens.pnt = pnt;
+      else
+        error('Wrong volume type')
+      end
       
     case {'singlesphere', 'concentric'}
       % ensure that the electrodes ly on the skin surface
