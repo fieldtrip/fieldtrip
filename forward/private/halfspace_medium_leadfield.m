@@ -61,12 +61,12 @@ for i=1:Ndipoles
   rp = pnt - ones(Npnt,1) * rdp;
   
   % denominator
-  R1 =  (4*pi*cond) * (sum(r' .^2 ) .^ 1.5)';
+  R1 =  (4*pi*vol.cond) * (sum(r' .^2 ) .^ 1.5)';
   % denominator, mirror term
-  R2 = -(4*pi*cond) * (sum(rp' .^2 ) .^ 1.5)';
+  R2 = -(4*pi*vol.cond) * (sum(rp' .^2 ) .^ 1.5)';
   
   % condition of dipoles falling in the non conductive halfspace  
-  condition = get_dip_halfspace(rd((1:3) + 3*(i-1),vol);
+  condition = get_dip_halfspace(rd((1:3) + 3*(i-1)),vol);
   
   if any(R1)==0
     warning('dipole lies on boundary of volume model');
