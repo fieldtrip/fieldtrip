@@ -304,8 +304,12 @@ elseif iseeg
   end
   
   % create a 2D projection and triangulation
-  sens.prj   = elproj(sens.pnt);
-  sens.tri   = delaunay(sens.prj(:,1), sens.prj(:,2));
+  try 
+    sens.prj   = elproj(sens.pnt);
+    sens.tri   = delaunay(sens.prj(:,1), sens.prj(:,2));
+  catch
+    warning('2D projection not done')
+  end
   
   switch ft_voltype(vol)
     case 'infinite'
