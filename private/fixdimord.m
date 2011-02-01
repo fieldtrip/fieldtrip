@@ -132,9 +132,9 @@ for i=1:length(dimtok)
     case {'ori'}
       % don't change, it is ok
       
-    case {'vox' 'repl' 'wcond'}
+    case {'voxel' 'vox' 'repl' 'wcond'}
       % these are used in some fieldtrip functions, but are not considered standard
-      warning('unexpected dimord "%s"', data.dimord);
+      warning_once('unexpected dimord "%s"', data.dimord);
       
     case {'pos'}
       % this is for source data on a 3-d grid, a cortical sheet, or unstructured positions
