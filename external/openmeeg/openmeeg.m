@@ -4,9 +4,14 @@ function [vol] = openmeeg(vol, isolated)
 %
 % Use as
 %   [vol] = openmeeg(vol, isolated)
+% 
+% Attention: the normals of the mesh describing the volume conductor are by
+%  FieldTrip convention pointing outwards (with respect to the mesh center), 
+%  whereas OpenMEEG binaries expect them to be poiting inwards.
 
 % Copyright (C) 2009, Alexandre Gramfort
 % INRIA Odyssee Project Team
+
 
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailed information
 
