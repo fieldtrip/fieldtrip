@@ -439,9 +439,9 @@ if strcmp(cfg.covariance, 'yes')
     end
   else
     if strcmp(cfg.removemean, 'yes')
-      covsig = squeeze(nan_sum(covsig, 1)) / (sum(numcovsigsamples)-ntrial);
+      covsig = squeeze(nansum(covsig, 1)) / (sum(numcovsigsamples)-ntrial);
     else
-      covsig = squeeze(nan_sum(covsig, 1)) / sum(numcovsigsamples);
+      covsig = squeeze(nansum(covsig, 1)) / sum(numcovsigsamples);
     end
   end
 end
