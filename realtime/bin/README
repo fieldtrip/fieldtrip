@@ -1,0 +1,6 @@
+This is the realtime/bin directory, which contains a number of
+command-line executable applications to work with the FieldTrip
+buffer.
+
+See http://fieldtrip.fcdonders.nl/development/realtime for details.
+
