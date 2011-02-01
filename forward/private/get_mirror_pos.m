@@ -33,7 +33,7 @@ P2 = [];
 pnt = vol.pnt;
 ori = vol.ori; % already normalized
 
-if dot(P1-pnt,ori)<eps
+if abs(dot(P1-pnt,ori))<eps
   warning(sprintf ('point %f %f %f lies in the symmetry plane',P1(1),P1(2),P1(3)))
   P2 = P1;
 else
