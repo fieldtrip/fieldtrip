@@ -229,7 +229,7 @@ if 1,
     if strcmp(cfg.concatenate, 'no'),
       % compute a plain average and variance over all input source structures
       grandavg.avg    = setsubfield([], cfg.parameter, nanmean(dat,2));
-      grandavg.var    = setsubfield([], cfg.parameter, nan_std(dat')'.^2);  % nan_std operates over the first dimension
+      grandavg.var    = setsubfield([], cfg.parameter, nanstd(dat,[],2).^2);
       grandavg.dimord = 'voxel';
     else
       grandavg.avg    = setsubfield([], cfg.parameter, dat);
