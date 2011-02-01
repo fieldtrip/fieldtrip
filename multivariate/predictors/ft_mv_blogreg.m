@@ -419,6 +419,14 @@ classdef ft_mv_blogreg < ft_mv_predictor
          meanbeta = obj.Gauss.m(1:(end-1));
          varbeta = obj.Gauss.diagC(1:(end-1));
          
+         % the mean and variance can be used to create eg 100(1-alpha)% credible
+         % interval: ci(k,:) = [ ...
+         % mu(k) - norminv(1-alpha/2)*sigma(k) ...
+         % mu(k) + norminv(1-alpha/2)*sigma(k)
+         % ]
+         % with mu(k) = meanbeta(k) and sigma(k) = sqrt(varbeta(k)) such that 
+         % the alpha-importance map is defined as M_alpha = ci(:,1) < 0 & ci(:,2) > 0
+         
          % model is posterior variance divided by prior variance of the
          % auxiliary variables; chose minus because of interpretation
          % problems...

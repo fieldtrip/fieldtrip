@@ -281,7 +281,7 @@ switch eventformat
 
     % find the STATUS channel and read the values from it
     schan = find(strcmpi(hdr.label,'STATUS'));
-    sdata = ft_read_data(filename, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', schan);
+    sdata = ft_read_data(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', schan);
 
     % find indices of negative numbers
     bit24i = find(sdata < 0);

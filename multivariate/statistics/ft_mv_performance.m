@@ -7,6 +7,7 @@ function res = ft_mv_performance(design,post,metric)
 % 'logprob'
 % 'correlation'
 % 'invresvar'
+% 'coefdet'
 % 'contingency'
 % 'cfmatrix'
 %
@@ -58,6 +59,14 @@ for c=1:length(design)
       % better performance
       
       res{c} = 1 ./ mean((design{c} - post{c}).^2);
+      
+    case 'coefdet'
+      % coefficient of determination. In case of linear regression this
+      % equals the squared correlation coefficient. It can be interpreted
+      % as the proportion of explained variance
+      
+      resvar = mean((design{c} - post{c}).^2);      
+      res{c} = 1 - resvar ./ var(design{c});
       
     case 'contingency'
       

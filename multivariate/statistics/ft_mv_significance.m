@@ -5,7 +5,7 @@ function res = ft_mv_significance(design,post,sigtest)
 % Copyright (c) 2010, Marcel van Gerven
 
   if isempty(sigtest)
-    res = 1;
+    res = nan;
     return
   end
   

@@ -70,6 +70,9 @@ classdef ft_mv_glmnet < ft_mv_predictor
       % missing data
       if any(isnan(X(:))) || any(isnan(Y(:))), error('method does not handle missing data'); end
      
+      % convert logical data to double (otherwise we get numerical problems)
+      if islogical(X), X = double(X); end
+      
       % multiple outputs
       if size(Y,2) > 1
         obj = ft_mv_noutput('mvmethod',obj);

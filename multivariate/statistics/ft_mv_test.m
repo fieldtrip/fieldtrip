@@ -95,8 +95,15 @@ function [acc,sig,cv] = ft_mv_test(varargin)
   S.validator.sigtest = S.sigtest;
   
   cv      = S.validator.train(S.X,S.Y);
-  acc     = cv.performance; 
-  sig     = cv.significance;
+
+  try
+    acc     = cv.performance; 
+    sig     = cv.significance;
+  catch
+    fprintf('incorrect metric/sigtest\n');
+    acc     = nan;
+    sig     = nan;
+  end
   
   if strcmp(S.type,'reconstruction')
 

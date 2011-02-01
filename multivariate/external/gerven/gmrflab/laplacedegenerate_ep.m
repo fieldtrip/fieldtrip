@@ -144,6 +144,8 @@ if ~ok,
    error('improper cavity distributions\n');
 end
 
+prior = Gauss; % save prior Gauss
+
 %% enter the iterations 
 
 logp     = 0;
@@ -237,6 +239,8 @@ comptime = toc;
 if opt.verbose
   fprintf('EP finished in %s seconds\n',num2str(comptime));
 end
+
+Gauss.prior = prior;
 
 %%% END MAIN
 
