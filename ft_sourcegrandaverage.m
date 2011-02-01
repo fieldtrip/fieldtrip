@@ -210,14 +210,14 @@ if 1,
       selA = find(res(i,:)==1);
       selB = find(res(i,:)==2);
       % create the randomized averaged data
-      trialA(i) = setsubfield([], cfg.parameter, nan_mean(dat(:,selA),2));
-      trialB(i) = setsubfield([], cfg.parameter, nan_mean(dat(:,selB),2));
+      trialA(i) = setsubfield([], cfg.parameter, nanmean(dat(:,selA),2));
+      trialB(i) = setsubfield([], cfg.parameter, nanmean(dat(:,selB),2));
     end
     % create the observed average data
     selA = find(design==1);
     selB = find(design==2);
-    avgA = setsubfield([], cfg.parameter, nan_mean(dat(:,selA),2));
-    avgB = setsubfield([], cfg.parameter, nan_mean(dat(:,selB),2));
+    avgA = setsubfield([], cfg.parameter, nanmean(dat(:,selA),2));
+    avgB = setsubfield([], cfg.parameter, nanmean(dat(:,selB),2));
   
     % construct a source structure that can be fed into SOURCESTATISTICS_RANDOMIZATION or SOURCESTATISTICS_RANDCLUSTER
     grandavg.trialA  = trialA;
@@ -228,7 +228,7 @@ if 1,
   else
     if strcmp(cfg.concatenate, 'no'),
       % compute a plain average and variance over all input source structures
-      grandavg.avg    = setsubfield([], cfg.parameter, nan_mean(dat,2));
+      grandavg.avg    = setsubfield([], cfg.parameter, nanmean(dat,2));
       grandavg.var    = setsubfield([], cfg.parameter, nan_std(dat')'.^2);  % nan_std operates over the first dimension
       grandavg.dimord = 'voxel';
     else

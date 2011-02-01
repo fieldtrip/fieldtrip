@@ -195,7 +195,7 @@ end
 
 for k=1:size(TFdata,2) % loop frequencies
   for l=1:size(TFdata,1) % loop channels
-    TFbl(l,k) = nan_mean(TFdata(l,k,tidx),3);%compute average baseline power
+    TFbl(l,k) = nanmean(TFdata(l,k,tidx),3);%compute average baseline power
     
     if TFbl(l,k) == 0,
       error('Average baseline power is zero');
@@ -222,7 +222,7 @@ end
 
 for k=1:size(TFdata,2) % loop frequencies
   for l=1:size(TFdata,1) % loop channels
-    TFbl(l,k) = nan_mean(TFdata(l,k,tidx),3); %compute average baseline power
+    TFbl(l,k) = nanmean(TFdata(l,k,tidx),3); %compute average baseline power
     
     if TFbl(l,k) == 0,
       error('Average baseline power is zero');
@@ -250,7 +250,7 @@ end
 
 for k=1:size(TFdata,2) % loop frequencies
   for l=1:size(TFdata,1) % loop channels
-    TFbl(l,k) = nan_mean(TFdata(l,k,tidx),3); %compute average baseline power
+    TFbl(l,k) = nanmean(TFdata(l,k,tidx),3); %compute average baseline power
   end
 end
 for k=1:size(TFdata,2) % loop frequencies

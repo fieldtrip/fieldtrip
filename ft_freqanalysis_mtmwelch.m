@@ -119,9 +119,9 @@ end
 % NOTE: the degrees of freedom should be returned by freqanalysis_mtmconvol, 
 % and used here to weigh every trial and timepoint accordingly. But
 % currently that is not yet possible.
-freq.powspctrm = nan_mean(freq.powspctrm, timedim);
+freq.powspctrm = nanmean(freq.powspctrm, timedim);
 if isfield(freq, 'crsspctrm')
-  freq.crsspctrm = nan_mean(freq.crsspctrm, timedim);
+  freq.crsspctrm = nanmean(freq.crsspctrm, timedim);
 end
 
 % remove the time axis
