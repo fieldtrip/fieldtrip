@@ -97,6 +97,11 @@ if ~isfield(data, 'dimord')
   end
 end
 
+if strcmp(data.dimord, 'voxel')
+  % this means that it is position
+  data.dimord = 'pos';
+end
+
 dimtok = tokenize(data.dimord, '_');
 
 for i=1:length(dimtok)
