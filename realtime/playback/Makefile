@@ -19,12 +19,12 @@ endif
 
 CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -g
 
-all: playback$(SUFFIX) saving_buffer$(SUFFIX)
+all: playback$(SUFFIX) recording$(SUFFIX)
 
 playback.o: playback.c
 	gcc -c playback.c $(CFLAGS)
 	
-saving_buffer.o: saving_buffer.c
+recording.o: recording.c
 	gcc -c $^ $(CFLAGS)
 	
 ft_offline.o: ft_offline.c
@@ -33,5 +33,5 @@ ft_offline.o: ft_offline.c
 playback$(SUFFIX): playback.o
 	gcc -o $@ $^ $(LDFLAGS)
 		
-saving_buffer$(SUFFIX): saving_buffer.o ft_offline.o ../buffer/src/socketserver.o
+recording$(SUFFIX): recording.o ft_offline.o ../buffer/src/socketserver.o
 	gcc -o $@ $^ $(LDFLAGS)	
