@@ -386,17 +386,11 @@ elseif iseeg
     
     case 'openmeeg'
       if ft_hastoolbox('openmeeg', 1);
-        try
-          dsm = openmeeg_dsm(pos,vol);
-          if isfield(vol,'mat')
-            lf = vol.mat*dsm;
-          else
-            error('No system matrix is present, BEM head model not calculated yet')
-          end
-        catch
-          warning('The number of dipoles is too high: the algorithm will run for less dipoles at a time')
-          % split factor = 500
-          lf = openmeeg_helper(pos,vol,500);
+        dsm = openmeeg_dsm(pos,vol);
+        if isfield(vol,'mat')
+          lf = vol.mat*dsm;
+        else
+          error('No system matrix is present, BEM head model not calculated yet')
         end
       else
         error('Openmeeg toolbox not installed')
