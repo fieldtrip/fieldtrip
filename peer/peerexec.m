@@ -29,6 +29,10 @@ function [argout, optout] = peerexec(argin, optin)
 % keep track of the time
 stopwatch = tic;
 
+% these variables will be used when an error is caught
+usediary  = false;
+diaryfile = '';
+
 % there are many reasons why the execution may fail, hence the elaborate try-catch
 try
 
@@ -47,16 +51,16 @@ try
     error('input options should be a cell-array');
   end
 
+  % check whether a diary file should be created
+  usediary = keyval('diary', optin);
+  usediary = any(strcmp(usediary, {'always', 'warning', 'error'}));
+
   % check whether a watchdog should be set
   masterid = keyval('masterid', optin);
   timallow = keyval('timallow', optin);
   if ~isempty(masterid) || ~isempty(timallow)
     watchdog(masterid, time+timallow);
   end
-
-  % check whether a diary file should be created
-  usediary = keyval('diary', optin);
-  usediary = any(strcmp(usediary, {'always', 'warning', 'error'}));
 
   % try setting the same path directory
   option_path = keyval('path', optin);
@@ -73,11 +77,18 @@ try
   % seed the random number generator
   option_randomseed = keyval('randomseed', optin);
   if ~isempty(option_randomseed)
-    % avoid the warning: Using 'seed' to set RAND's internal state causes RAND, RANDI, and RANDN to use legacy random number generators. 
-    ws = warning('off');
-    rand ('seed', option_randomseed);
-    randn('seed', option_randomseed);
-    warning(ws);
+    if matlabversion(-inf, '2008a')
+      % in older Matlab versions it worked like this
+      rand ('seed', option_randomseed);
+      randn('seed', option_randomseed);
+    else
+      % this is according to http://www.mathworks.com/help/techdoc/math/bsn94u0-1.html
+      % and is needed to avoid a warning about Using 'seed' to set RAND's internal state causes RAND, RANDI, and RANDN to use legacy random number generators. 
+      s = RandStream('mt19937ar','Seed', option_randomseed);
+      RandStream.setDefaultStream(s);
+      s = RandStream('mcg16807', 'Seed',0);
+      RandStream.setDefaultStream(s);
+    end
   end
 
   % there are potentially errors to catch from the which() function
