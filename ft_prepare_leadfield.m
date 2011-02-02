@@ -190,7 +190,7 @@ if ft_voltype(vol, 'openmeeg')
       lf = ft_compute_leadfield(grid.pos(grid.inside(batch),:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
       ok(batch) = true;
     catch ME
-      if strcmp(ME, 'something')
+      if ~isempty(findstr(ME.message, 'Output argument "dsm" (and maybe others) not assigned during call to'))
         % it does not fit in memory, split the problem in two halves and try once more
         batchsize = floor(batchsize/2);
         continue
@@ -210,9 +210,6 @@ if ft_voltype(vol, 'openmeeg')
     
   end % while
     
-  
-  
-  
 else
   ft_progress('init', cfg.feedback, 'computing leadfield');
   for i=1:length(grid.inside)
