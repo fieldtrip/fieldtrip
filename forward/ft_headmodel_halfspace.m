@@ -36,7 +36,7 @@ end
 [N,P] = fit_plane(pnt);
 
 % checks if Pc is in the conductive part. If not, flip
-incond = acos(dot(N,(Pc-P)./norm(Pc-P))) < pi/2;
+incond = acos(dot(N,(Pc-P)./norm(Pc-P))) > pi/2;
 if ~incond
   N = -N;
 end
