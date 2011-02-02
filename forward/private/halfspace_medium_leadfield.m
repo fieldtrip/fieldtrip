@@ -1,11 +1,11 @@
-function [lf] = halfspace_medium_leadfield(rd, pnt, vol);
+function [lf] = halfspace_medium_leadfield(rd, elc, vol)
 
 % HALFSPACE_MEDIUM_LEADFIELD calculate the halfspace medium leadfield
 % on positions pnt for a dipole at position rd and conductivity cond
 % The halfspace solution requires a plane dividing a conductive zone of
 % conductivity cond, from a non coductive zone (cond = 0)
 %       
-% [lf] = halfspace_medium_leadfield(rd, pnt, cond)
+% [lf] = halfspace_medium_leadfield(rd, elc, cond)
 
 % Copyright (C) 2011, Cristiano Micheli and Robert Oostenveld
 %
@@ -31,47 +31,49 @@ siz = size(rd);
 if any(siz==1)
   % positions are specified as a single vector
   Ndipoles = prod(siz)/3;
+  rd = rd(:)'; % ensure that it is a row vector
 elseif siz(2)==3
   % positions are specified as a Nx3 matrix -> reformat to a single vector
   Ndipoles = siz(1);
   rd = rd';
-  rd = rd(:);
+  rd = rd(:)'; % ensure that it is a row vector
 else
   error('incorrect specification of dipole locations');
 end
 
-Npnt     = size(pnt,1);
-lf       = zeros(Npnt,3*Ndipoles);
-s1       = size(rd);
-
-if s1(1)>s1(2)
-  % make sure that the dipole position is a row-vector
-  rd = rd';
-end
+Nelc     = size(elc,1);
+lf       = zeros(Nelc,3*Ndipoles);
 
 for i=1:Ndipoles
-  % distances sensors - dipole
-  r = pnt - ones(Npnt,1) * rd((1:3) + 3*(i-1));
+  % this is the position of dipole "i"
+  dip1 = rd((1:3) + 3*(i-1));
+  
+  % distances electrodes - dipole
+  r1 = elc - ones(Nelc,1) * dip1;
   
   % Method of mirror dipoles:
   % Defines the position of mirror dipoles being symmetric to the plane
-  rdp = get_mirror_pos(rd((1:3) + 3*(i-1)),vol);
+  dip2 = get_mirror_pos(dip,vol);
   
-  % distances sensors - mirror dipole
-  rp = pnt - ones(Npnt,1) * rdp;
+  % distances electrodes - mirror dipole
+  r2 = elc - ones(Nelc,1) * dip2;
   
   % denominator
-  R1 =  (4*pi*vol.cond) * (sum(r' .^2 ) .^ 1.5)';
+  R1 =  (4*pi*vol.cond) * (sum(r1' .^2 ) .^ 1.5)';
   % denominator, mirror term
-  R2 = -(4*pi*vol.cond) * (sum(rp' .^2 ) .^ 1.5)';
+  R2 = -(4*pi*vol.cond) * (sum(r2' .^2 ) .^ 1.5)';
   
   % condition of dipoles falling in the non conductive halfspace  
-  condition = get_dip_halfspace(rd((1:3) + 3*(i-1)),vol);
+  condition = get_dip_halfspace(dip1,vol);
   
-  if any(R1)==0
-    warning('dipole lies on boundary of volume model');
-  elseif condition
-    lf(:,(1:3) + 3*(i-1)) = zeros(size(r,1),3);
+  invacuum = acos(dot(ori,(P-pnt)./norm(P-pnt))) < pi/2;
+  
+  if invacuum
+    warning('dipole lies on the vacuum side of the plane');
+    lf(:,(1:3) + 3*(i-1)) = NaN(Nelc,3);
+  elseif any(R1)==0
+    warning('dipole coincides with one of the electrodes');
+    lf(:,(1:3) + 3*(i-1)) = NaN(Nelc,3);
   else
     lf(:,(1:3) + 3*(i-1)) = (r ./ [R1 R1 R1]) + (rp ./ [R2 R2 R2]);
   end
