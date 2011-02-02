@@ -175,14 +175,43 @@ if ft_voltype(vol, 'openmeeg')
   % the system call to the openmeeg executable makes it rather slow
   % calling it once is much more efficient
   fprintf('calculating leadfield for all positions at once, this may take a while...\n');
-  lf = ft_compute_leadfield(grid.pos(grid.inside,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
-  % reassign the large leadfield matrix over the single grid locations
-  for i=1:length(grid.inside)
-    sel = (3*i-2):(3*i);           % 1:3, 4:6, ...
-    dipindx = grid.inside(i);
-    grid.leadfield{dipindx} = lf(:,sel);
-  end
-  clear lf
+  
+  ndip = length(grid.inside);
+  ok = false(1,ndip);
+  batchsize = ndip;
+  
+  while ~all(ok)
+    % find the first one that is not yet done
+    begdip = find(~ok, 1);
+    % define a batch of dipoles to jointly deal with
+    enddip = min((begdip+batchsize-1), ndip); % don't go beyond the end
+    batch  = begdip:enddip;
+    try
+      lf = ft_compute_leadfield(grid.pos(grid.inside(batch),:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
+      ok(batch) = true;
+    catch ME
+      if strcmp(ME, 'something')
+        % it does not fit in memory, split the problem in two halves and try once more
+        batchsize = floor(batchsize/2);
+        continue
+      else
+        rethrow(ME);
+      end % handling this particular error
+    end
+    
+    % reassign the large leadfield matrix over the single grid locations
+    for i=1:length(batch)
+      sel = (3*i-2):(3*i);           % 1:3, 4:6, ...
+      dipindx = grid.inside(batch(i));
+      grid.leadfield{dipindx} = lf(:,sel);
+    end
+    
+    clear lf
+    
+  end % while
+    
+  
+  
   
 else
   ft_progress('init', cfg.feedback, 'computing leadfield');
