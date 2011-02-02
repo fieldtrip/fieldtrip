@@ -192,7 +192,7 @@ if ft_voltype(vol, 'openmeeg')
     catch ME
       if ~isempty(findstr(ME.message, 'Output argument "dsm" (and maybe others) not assigned during call to'))
         % it does not fit in memory, split the problem in two halves and try once more
-        batchsize = floor(batchsize/2);
+        batchsize = floor(batchsize/500);
         continue
       else
         rethrow(ME);
