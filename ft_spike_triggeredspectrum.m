@@ -50,7 +50,7 @@ function [freq] = ft_spike_triggeredspectrum(cfg, data, spike)
 % use specest_nanfft as default
 %
 % Revision 1.6  2008/09/22 20:17:44  roboos
-% added call to fieldtripdefs to the begin of the function
+% added call to ft_defaults to the begin of the function
 %
 % Revision 1.5  2008/07/15 18:17:57  roboos
 % fixed documentation
