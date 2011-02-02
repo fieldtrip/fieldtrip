@@ -31,7 +31,7 @@ function [grid] = ft_source2grid(source)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 % these are always supposed to be present
 grid.pos     = source.pos;

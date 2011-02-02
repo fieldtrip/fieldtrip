@@ -31,7 +31,7 @@ function [source] = ft_source2full(source);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 if ~isfield(source, 'inside')  || ...
    ~isfield(source, 'outside') || ...

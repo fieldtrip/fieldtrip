@@ -647,7 +647,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % check the size of fields in the cfg, remove large fields
 % the max allowed size should be specified in cfg.checksize (this can be
-% set with fieldtripdefs)
+% set with ft_defaults)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if strcmp(checksize, 'yes') && ~isinf(cfg.checksize)
   cfg = checksizefun(cfg, cfg.checksize);

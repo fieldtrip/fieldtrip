@@ -32,7 +32,7 @@ function [source] = ft_source2sparse(source);
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
 if ~isfield(source, 'inside')
   warning('no gridpoints defined inside the brain');
