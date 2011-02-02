@@ -1,4 +1,4 @@
-function [lf] = halfspace_medium_leadfield(rd, elc, vol)
+function [lf] = eeg_halfspace_medium_leadfield(rd, elc, vol)
 
 % HALFSPACE_MEDIUM_LEADFIELD calculate the halfspace medium leadfield
 % on positions pnt for a dipole at position rd and conductivity cond
