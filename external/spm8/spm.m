@@ -434,7 +434,7 @@ spm_get_defaults('modality',Modality);
 %-----------------------------------------------------------------------
 if strcmpi(Modality,'EEG') && ~isdeployed
     addpath(fullfile(spm('Dir'),'external','fieldtrip'));
-    fieldtripdefs;
+    ft_defaults;
     addpath(fullfile(spm('Dir'),'external','bemcp'));
     addpath(fullfile(spm('Dir'),'external','ctf'));
     addpath(fullfile(spm('Dir'),'external','eeprobe'));
