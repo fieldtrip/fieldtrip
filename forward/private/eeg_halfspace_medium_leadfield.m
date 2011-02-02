@@ -53,7 +53,7 @@ for i=1:Ndipoles
   
   % Method of mirror dipoles:
   % Defines the position of mirror dipoles being symmetric to the plane
-  dip2 = get_mirror_pos(dip,vol);
+  dip2 = get_mirror_pos(dip1,vol);
   
   % distances electrodes - mirror dipole
   r2 = elc - ones(Nelc,1) * dip2;
@@ -63,10 +63,8 @@ for i=1:Ndipoles
   % denominator, mirror term
   R2 = -(4*pi*vol.cond) * (sum(r2' .^2 ) .^ 1.5)';
   
-  % condition of dipoles falling in the non conductive halfspace  
-  condition = get_dip_halfspace(dip1,vol);
-  
-  invacuum = acos(dot(ori,(P-pnt)./norm(P-pnt))) < pi/2;
+  % condition of dipoles falling in the non conductive halfspace    
+  invacuum = acos(dot(vol.ori,(dip1-vol.pnt)./norm(dip1-vol.pnt))) < pi/2;
   
   if invacuum
     warning('dipole lies on the vacuum side of the plane');
@@ -75,6 +73,6 @@ for i=1:Ndipoles
     warning('dipole coincides with one of the electrodes');
     lf(:,(1:3) + 3*(i-1)) = NaN(Nelc,3);
   else
-    lf(:,(1:3) + 3*(i-1)) = (r ./ [R1 R1 R1]) + (rp ./ [R2 R2 R2]);
+    lf(:,(1:3) + 3*(i-1)) = (r1 ./ [R1 R1 R1]) + (r2 ./ [R2 R2 R2]);
   end
 end
