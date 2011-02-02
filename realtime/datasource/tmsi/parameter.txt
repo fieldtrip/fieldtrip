@@ -1,2 +1,0 @@
-sampleRate(milliHZ)    BufSizeFactor   savedata(0/1)   
-500000                 5               1
