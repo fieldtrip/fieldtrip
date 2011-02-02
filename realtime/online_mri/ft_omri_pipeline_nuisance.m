@@ -19,7 +19,7 @@ function ft_omri_pipeline_nuisance(cfg)
 % (C) 2010 Stefan Klanke
 
 
-%fieldtripdefs
+%ft_defaults
 %addpath('/home/common/matlab/spm8');
 
 if nargin < 1
