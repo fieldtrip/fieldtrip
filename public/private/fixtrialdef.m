@@ -46,7 +46,7 @@ elseif ~isempty(trl)
 end
 
 if isempty(trl)
-  warning('the data does not contain a trial definition, assuming that the trials are consecutive segments of a continuous recording');
+  warning_once('the data does not contain a trial definition, assuming that the trials are consecutive segments of a continuous recording');
   % construct a trial definition on the fly, assume that the trials are
   % consecutive segments of a continuous recording
   if ntrial==1,
@@ -65,17 +65,17 @@ if isempty(trl)
   trl = [begsample endsample offset];
 
 elseif size(trl,1)~=ntrial
-  warning('the trial definition in the configuration is inconsistent with the actual data');
+  warning_once('the trial definition in the configuration is inconsistent with the actual data');
   trl = [];
 elseif nsmp~=(trl(:,2)-trl(:,1)+1)
-  warning('the trial definition in the configuration is inconsistent with the actual data');
+  warning_once('the trial definition in the configuration is inconsistent with the actual data');
   trl = [];
 end
 
 if ~isfield(data, 'sampleinfo') && ~isempty(trl)
   data.sampleinfo = trl(:, 1:2);
 elseif ~isfield(data, 'sampleinfo') && isempty(trl)
-  warning('failed to create sampleinfo field');
+  warning_once('failed to create sampleinfo field');
 end
 
 if (~isfield(data, 'trialinfo') || isempty(data.trialinfo)) && ~isempty(trl) && size(trl, 2) > 3,
