@@ -1,0 +1,117 @@
+
+# comments start with a hash
+; ... or with a semicolon
+; empty lines are fine as well
+
+# Write n=label to select hardware channel number n (starting from 1)
+# and attach a label to it. This will show up in the Fieldtrip buffer
+# and the GDF file.
+# Currently, there is no check for double inclusion of channels.
+# That is, if you define 1=FOO and 1=BAR, the first hardware channel
+# will show up twice, with different names.
+# Channels listed before the first [save] or [stream] line will be added
+# to both saving and streaming selections. Write [select] to enable 
+# selection for both saving and streaming.
+[select]
+1=A1
+2=A2
+3=A3
+4=A4
+5=A5
+6=A6
+7=A7
+8=A8
+9=A9
+10=A10
+11=A11
+12=A12
+13=A13
+14=A14
+15=A15
+16=A16
+17=A17
+18=A18
+19=A19
+20=A20
+21=A21
+22=A22
+23=A23
+24=A24
+25=A25
+26=A26
+27=A27
+28=A28
+29=A29
+30=A30
+31=A31
+32=A32
+
+# Now we add some more channel for saving only
+[save]
+
+33=B1
+34=B2
+35=B3
+36=B4
+37=B5
+38=B6
+39=B7
+40=B8
+41=B9
+42=B10
+43=B11
+44=B12
+45=B13
+46=B14
+47=B15
+48=B16
+49=B17
+50=B18
+51=B19
+52=B20
+53=B21
+54=B22
+55=B23
+56=B24
+57=B25
+58=B26
+59=B27
+60=B28
+61=B29
+62=B30
+63=B31
+64=B32
+
+# And some channels we only want to stream
+[stream]
+65=C1
+66=C2
+
+# Please take note that the channels will be written out in the order specified here,
+# that is, they will not be sorted according to the hardware channel number!
+
+# Write "downsample=X" with a positive number X to set the downsampling
+# factor for streaming. The GDF file will receive full-rate data.
+downsample=1
+
+# Write "bandwidth=X" with a positive real number X to set the cutoff frequency
+# of a Butterworth low-pass filter.
+bandwidth=50
+
+# Write "bworder=N" to set the order of the lowpass Butterworth filter for downsampling
+bworder=0
+
+# Some options specific to the Biosemi device (will be ignored otherwise)
+
+# Refresh period (in seconds) for inserting extra events. 
+# Battery events are sent out in a fixed interval (set 0 to disable).
+# Status events are sent out when the status changes, OR when the specified
+# time has elapsed after the last event was sent out.
+statusrefresh=4
+batteryrefresh=20
+
+# splittrigger=namelow,namehigh can be used to split the 16-bit trigger
+# channel into two 8-bit trigger channels, and setting names for the 
+# event.type in FieldTrip. Note that the GDF file will still receive the
+# (unsplitted) status channel as coming from the driver.
+splittrigger=stimulus,response

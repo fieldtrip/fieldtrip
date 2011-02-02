@@ -1,0 +1,23 @@
+README file for neuromag2ft
+by Gustavo Sudre and Lauri Parkkonen
+gsudre@cmu.edu, lauri@neuro.hut.fi
+
+The neuromag2ft relays the MEG data being acquired in the acquisition
+computer to any computer in the network that hosts a Fieldtrip
+buffer TCP server. Then, the user can read from this server using any
+tools he/she wants. For more information on how to read from a
+Fieldtrip buffer server, please check
+http://fieldtrip.fcdonders.nl/tutorial/realtime and
+http://www.bci2000.org/wiki/index.php/Programming_Tutorial:Working_with_the_FieldTrip_buffer.
+
+You'll need to download the open-source software Fieldtrip to run the
+buffer server and to read from it. The software can be downloaded from
+http://fieldtrip.fcdonders.nl/download or, if you prefer to use a
+subversion repository, get a local copy of the Fieldtrip repository
+using
+
+svn checkout http://fieldtrip.googlecode.com/svn/trunk/ fieldtrip-read-only
+
+More information on how to run and compile neuromag2ft can be found at:
+
+http://fieldtrip.fcdonders.nl/development/realtime/neuromag

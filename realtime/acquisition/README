@@ -1,0 +1,16 @@
+This directory contains MATLAB and compiled software for reading
+data from various EEG, MEG, fMRI and NIRS devices. The realtime
+data is obtained in small blocks and copied to a FieldTrip buffer,
+where MATLAB or another program can access it.
+
+Most of the source code in this directory is 
+Copyright (C) 2009-2011, Donders Institute for Brain, Behaviour and Cognition
+Copyright (C) 2007-2009, F.C. Donders Centre for Cogntive Neuroimaging
+
+Since the software in this directory relies on proprietary interfaces
+and hardware drivers, which are often not released under an open
+source license, the software in this directory in general is also
+not covered by an open source license. Restrictions may apply.
+Please look in the subdirectories and the seperate files for the
+specific details.
+
