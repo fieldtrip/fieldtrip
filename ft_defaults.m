@@ -51,9 +51,9 @@ if length(list)>1
 end
 
 if isempty(which('ft_hastoolbox'))
-  % the fieldtrip/public directory contains the ft_hastoolbox function
+  % the fieldtrip/utilities directory contains the ft_hastoolbox function
   % which is required for the remainder of this script
-  addpath(fullfile(fileparts(which('ft_defaults')), 'public'));
+  addpath(fullfile(fileparts(which('ft_defaults')), 'utilities'));
 end
 
 try
@@ -62,8 +62,8 @@ try
 end
 
 try 
-  % this directory contains the backward compatibility wrappers for the fieldtrip/public functions
-  ft_hastoolbox('public/compat', 3, 1);
+  % this directory contains the backward compatibility wrappers for the fieldtrip/utilities functions
+  ft_hastoolbox('utilities/compat', 3, 1);
 end
 
 try
