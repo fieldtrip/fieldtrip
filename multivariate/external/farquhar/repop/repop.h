@@ -4,7 +4,7 @@
 
   Generic header file for the replicating operators code
 
-  $Id: repop.h,v 1.9 2007-09-21 10:24:55 jdrf Exp $
+  $Id$
 
  Copyright 2006-     by Jason D.R. Farquhar (jdrf@zepler.org)
  Permission is granted for anyone to copy, use, or modify this

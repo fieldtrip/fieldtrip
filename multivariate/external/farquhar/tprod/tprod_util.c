@@ -9,7 +9,7 @@ TODO:
   1) Would be nice to fall back on BLAS calls for the innermost cases when we
   have a standard 2d x 2d matrix multiply.
 
-$Id: tprod.c,v 1.53 2007-09-07 13:56:14 jdrf Exp $
+$Id$
 
  Copyright 2006-     by Jason Farquhar (jdrf@zepler.org)
  Permission is granted for anyone to copy, use, or modify this

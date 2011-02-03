@@ -11,7 +11,7 @@ TODO:
     or 
   [3 x d] start,end,step points for indexing in each col, 0 means all indices
   
-$Id: tprod_mex.c,v 1.10 2007-09-07 13:56:13 jdrf Exp $
+$Id$
 
 */
 

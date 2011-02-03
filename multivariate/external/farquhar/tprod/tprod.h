@@ -6,7 +6,7 @@
   
   Tensor multiplication routine headers.
 
-  $Id: tprod.h,v 1.8 2007-09-07 13:56:13 jdrf Exp $
+  $Id$
 
  Copyright 2006-     by Jason Farquhar (jdrf@zepler.org)
  Permission is granted for anyone to copy, use, or modify this

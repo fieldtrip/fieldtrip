@@ -1,5 +1,5 @@
 /* oneProjectorCore.c
-   $Id: oneProjectorCore.c 800 2008-02-26 22:32:04Z mpf $
+   $Id$
 
    ----------------------------------------------------------------------
    This file is part of SPGL1 (Spectral Projected Gradient for L1).

@@ -4,7 +4,7 @@
 
   Header file for a simple wrapper for matlabs array types.
 
-  $Id: mxInfo.h,v 1.11 2007-09-07 13:41:17 jdrf Exp $
+  $Id$
 
  Copyright 2006-     by Jason D.R. Farquhar (jdrf@zepler.org)
  Permission is granted for anyone to copy, use, or modify this

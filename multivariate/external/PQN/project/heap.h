@@ -1,4 +1,4 @@
-/* $Id: heap.h 800 2008-02-26 22:32:04Z mpf $ */
+/* $Id$ */
 
 #ifndef __HEAP_H__
 #define __HEAP_H__

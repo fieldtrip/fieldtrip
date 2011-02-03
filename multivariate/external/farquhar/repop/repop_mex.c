@@ -19,7 +19,7 @@
  and Adi Vehtari -- but heavily modifed to make it more general, easier to
  understand and faster!
 
- $Id: repop_mex.c,v 1.7 2007-09-21 10:24:55 jdrf Exp $
+ $Id$
 
 TESTCASES
 
