@@ -6,7 +6,7 @@ function V = spm_create_vol(V,varargin)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_create_vol.m 1169 2008-02-26 14:53:43Z volkmar $
+% $Id$
 
 
 for i=1:numel(V),

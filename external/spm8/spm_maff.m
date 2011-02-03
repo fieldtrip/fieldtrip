@@ -21,7 +21,7 @@ function [M,h] = spm_maff(varargin)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_maff.m 1265 2008-03-28 11:45:04Z john $
+% $Id$
 
 [buf,MG] = loadbuf(varargin{1:2});
 M        = affreg(buf, MG, varargin{2:end});

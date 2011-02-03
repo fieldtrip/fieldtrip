@@ -9,7 +9,7 @@ function flip = spm_flip_analyze_images
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_flip_analyze_images.m 1418 2008-04-15 19:15:16Z john $
+% $Id$
 
 flip = 1;
 

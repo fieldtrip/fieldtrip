@@ -43,7 +43,7 @@ function [strout,R2] = spm_str_manip(strin,options)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_str_manip.m 1143 2008-02-07 19:33:33Z spm $
+% $Id$
 
 
 if nargin<2, options=''; end

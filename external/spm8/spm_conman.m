@@ -587,7 +587,7 @@ function varargout=spm_conman(varargin)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % Andrew Holmes
-% $Id: spm_conman.m 3815 2010-04-11 17:03:34Z ged $
+% $Id$
 
 
 %=======================================================================

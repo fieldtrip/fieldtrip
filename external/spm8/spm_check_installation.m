@@ -13,7 +13,7 @@ function spm_check_installation(action)
 % Copyright (C) 2009 Wellcome Trust Centre for Neuroimaging
 
 % Guillaume Flandin
-% $Id: spm_check_installation.m 3756 2010-03-05 18:43:37Z guillaume $
+% $Id$
 
 if isdeployed, return; end
 
@@ -513,7 +513,7 @@ end
 % FUNCTION extract_info
 %==========================================================================
 function svnprops = extract_info(f)
-%Extract Subversion properties ($Id: spm_check_installation.m 3756 2010-03-05 18:43:37Z guillaume $ tag)
+%Extract Subversion properties ($Id$ tag)
 
 svnprops = struct('file',f, 'id',[], 'date','', 'md5','');
 

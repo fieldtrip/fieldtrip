@@ -4,7 +4,7 @@ function obj = subsasgn(obj,subs,dat)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 %
-% $Id: subsasgn.m 1355 2008-04-10 10:52:35Z vladimir $
+% $Id$
 
 
 if isempty(subs)

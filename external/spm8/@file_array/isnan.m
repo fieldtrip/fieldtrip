@@ -6,7 +6,7 @@ function out = isnan(fa)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 %
-% $Id: isnan.m 1301 2008-04-03 13:21:44Z john $
+% $Id$
 
 bs  = 10240;
 m   = size(fa);

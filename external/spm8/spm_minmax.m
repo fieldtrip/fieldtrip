@@ -13,7 +13,7 @@ function [mnv,mxv] = spm_minmax(g)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_minmax.m 2774 2009-02-23 14:40:17Z john $
+% $Id$
 
 
 d   = [size(g) 1];

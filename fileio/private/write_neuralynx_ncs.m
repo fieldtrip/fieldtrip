@@ -26,7 +26,7 @@ function write_neuralynx_ncs(filename, ncs);
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: write_neuralynx_ncs.m 945 2010-04-21 17:41:20Z roboos $
+% $Id$
 
 if ~isa(ncs.TimeStamp, 'uint64')
   error('timestamps should be uint64');

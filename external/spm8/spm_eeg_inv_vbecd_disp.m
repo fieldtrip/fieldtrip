@@ -12,7 +12,7 @@ function spm_eeg_inv_vbecd_disp(action,varargin)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % Christophe Phillips
-% $Id: spm_eeg_inv_vbecd_disp.m 3692 2010-01-21 21:43:31Z guillaume $
+% $Id$
 
 % Note:
 % unfortunately I cannot see how to ensure that when zooming in the image

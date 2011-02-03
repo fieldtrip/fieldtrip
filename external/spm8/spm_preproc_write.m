@@ -11,7 +11,7 @@ function spm_preproc_write(p,opts)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_preproc_write.m 1586 2008-05-08 20:45:20Z john $
+% $Id$
 
 
 if nargin==1,

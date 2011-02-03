@@ -34,7 +34,7 @@ function V = spm_vol(P)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_vol.m 2237 2008-09-29 17:39:53Z guillaume $
+% $Id$
 
 if nargin==0,
     V   = struct('fname', {},...

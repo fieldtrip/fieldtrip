@@ -22,7 +22,7 @@ function varargout = cstructdecode(buf, varargin);
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: cstructdecode.m 945 2010-04-21 17:41:20Z roboos $
+% $Id$
 
 if ~isa(buf, 'uint8')
   error('incorrect type of input data, should be uint8');

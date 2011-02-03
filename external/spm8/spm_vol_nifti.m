@@ -8,7 +8,7 @@ function V = spm_vol_nifti(fname,n)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_vol_nifti.m 1143 2008-02-07 19:33:33Z spm $
+% $Id$
 
 
 if nargin<2,  n = [1 1];      end;

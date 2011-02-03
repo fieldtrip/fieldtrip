@@ -34,7 +34,7 @@ function filt = filter_with_correction(B,A,dat,dir)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: $
+% $Id$
 
 poles = roots(A);
 if any(abs(poles) >= 1)

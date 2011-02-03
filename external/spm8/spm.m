@@ -63,7 +63,7 @@ function varargout=spm(varargin)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % Andrew Holmes
-% $Id: spm.m 3833 2010-04-22 14:49:48Z vladimir $
+% $Id$
 
 
 %=======================================================================

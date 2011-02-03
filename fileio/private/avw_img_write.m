@@ -52,7 +52,7 @@ function avw_img_write(avw, fileprefix, IMGorient, machine, verbose)
 %           avw_read, avw_hdr_read, avw_img_read, avw_view
 % 
 
-% $Revision: 883 $ $Date: 2009/01/14 09:24:45 $
+% $Revision$ $Date: 2009/01/14 09:24:45 $
 
 % Licence:  GNU GPL, no express or implied warranties
 % History:  05/2002, Darren.Weber@flinders.edu.au
@@ -116,7 +116,7 @@ if isempty(verbose), verbose = 1; end
 %------------------------------------------------------------------------
 % MAIN
 if verbose,
-    version = '[$Revision: 883 $]';
+    version = '[$Revision$]';
     fprintf('\nAVW_IMG_WRITE [v%s]\n',version(12:16));  tic;
 end
 

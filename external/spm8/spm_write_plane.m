@@ -16,7 +16,7 @@ function V = spm_write_plane(V,dat,n)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_write_plane.m 1143 2008-02-07 19:33:33Z spm $
+% $Id$
 
 % For performance reasons, on network filesystems one should write
 % out as large contiguous blocks data as possible at once. Therefore,

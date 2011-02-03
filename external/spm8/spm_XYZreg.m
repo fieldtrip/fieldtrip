@@ -320,7 +320,7 @@ function varargout=spm_XYZreg(varargin)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % Andrew Holmes, Chloe Hutton
-% $Id: spm_XYZreg.m 3664 2010-01-07 16:08:51Z volkmar $
+% $Id$
 
 
 

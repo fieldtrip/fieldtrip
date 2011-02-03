@@ -4,7 +4,7 @@ function t = numel(obj)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 %
-% $Id: numel.m 1143 2008-02-07 19:33:33Z spm $
+% $Id$
 
 
 % Should be this, but it causes problems when accessing

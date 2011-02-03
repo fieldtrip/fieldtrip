@@ -15,7 +15,7 @@ function [Y,XYZ] = spm_read_vols(V,mask)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % Andrew Holmes
-% $Id: spm_read_vols.m 3663 2010-01-07 12:26:48Z guillaume $
+% $Id$
 
 
 %-Argument checks

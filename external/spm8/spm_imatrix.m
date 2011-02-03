@@ -7,7 +7,7 @@ function P = spm_imatrix(M)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner & Stefan Kiebel
-% $Id: spm_imatrix.m 1143 2008-02-07 19:33:33Z spm $
+% $Id$
 
 
 % Translations and zooms

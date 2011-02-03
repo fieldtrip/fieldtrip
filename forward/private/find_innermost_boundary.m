@@ -28,7 +28,7 @@ function [innermost, inside] = find_innermost_boundary(bnd)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: find_innermost_boundary.m 946 2010-04-21 17:51:16Z roboos $
+% $Id$
 
 ncmp = length(bnd);
 

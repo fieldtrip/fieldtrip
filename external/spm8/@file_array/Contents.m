@@ -45,6 +45,6 @@
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 %
-% $Id: Contents.m 2696 2009-02-05 20:29:48Z guillaume $
+% $Id$
 
 

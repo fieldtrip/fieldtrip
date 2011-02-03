@@ -92,7 +92,7 @@ function varargout = spm_jobman(varargin)
 % Copyright (C) 2008 Freiburg Brain Imaging
 
 % Volkmar Glauche
-% $Id: spm_jobman.m 3811 2010-04-07 14:30:48Z volkmar $
+% $Id$
 
 
 if nargin==0

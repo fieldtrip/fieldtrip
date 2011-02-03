@@ -9,7 +9,7 @@ function ok = write_hdr_raw(fname,hdr,be)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 %
-% $Id: write_hdr_raw.m 2237 2008-09-29 17:39:53Z guillaume $
+% $Id$
 
 
 [pth,nam,ext] = fileparts(fname);

@@ -4,7 +4,7 @@ function extras = read_extras(fname)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 %
-% $Id: read_extras.m 2237 2008-09-29 17:39:53Z guillaume $
+% $Id$
 
 
 extras = struct;

@@ -60,7 +60,7 @@ function [ avw, machine ] = avw_img_read(fileprefix,IMGorient,machine,verbose)
 % 
 
 
-% $Revision: 883 $ $Date: 2009/01/14 09:24:45 $
+% $Revision$ $Date: 2009/01/14 09:24:45 $
 
 % Licence:  GNU GPL, no express or implied warranties
 % History:  05/2002, Darren.Weber@flinders.edu.au
@@ -129,7 +129,7 @@ if fid < 0,
 end
 
 if verbose,
-    ver = '[$Revision: 883 $]';
+    ver = '[$Revision$]';
     fprintf('\nAVW_IMG_READ [v%s]\n',ver(12:16));  tic;
 end
 

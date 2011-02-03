@@ -53,7 +53,7 @@ function varargout=spm_platform(varargin)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % Matthew Brett
-% $Id: spm_platform.m 2820 2009-03-03 18:59:39Z guillaume $
+% $Id$
 
 
 %-Initialise

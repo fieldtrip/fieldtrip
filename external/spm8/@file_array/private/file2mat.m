@@ -10,7 +10,7 @@ function val = file2mat(a,varargin)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: file2mat.m 1530 2008-04-30 19:28:22Z guillaume $
+% $Id$
 
 %-This is merely the help file for the compiled routine
 error('file2mat.c not compiled - see Makefile');

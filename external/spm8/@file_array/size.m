@@ -4,7 +4,7 @@ function d = size(a,varargin)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 %
-% $Id: size.m 3730 2010-02-17 13:24:26Z john $
+% $Id$
 
 
 sa  = struct(a);

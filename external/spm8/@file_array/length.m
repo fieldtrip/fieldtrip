@@ -4,7 +4,7 @@ function l = length(x)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 %
-% $Id: length.m 1143 2008-02-07 19:33:33Z spm $
+% $Id$
 
 
 l = max(size(x));

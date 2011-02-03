@@ -19,7 +19,7 @@ function C = spm_dctmtx(N,K,n,f)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_dctmtx.m 1143 2008-02-07 19:33:33Z spm $
+% $Id$
 
 
 d = 0;

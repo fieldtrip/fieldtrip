@@ -22,7 +22,7 @@ function T = spm_type(x, arg)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner & Andrew Holmes
-% $Id: spm_type.m 1143 2008-02-07 19:33:33Z spm $
+% $Id$
 
 
 

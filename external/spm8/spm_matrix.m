@@ -42,7 +42,7 @@ function [A] = spm_matrix(P, order)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % Karl Friston
-% $Id: spm_matrix.m 1149 2008-02-14 14:29:04Z volkmar $
+% $Id$
 
 
 % pad P with 'null' parameters

@@ -5,7 +5,7 @@ function Q = M2Q(M)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 %
-% $Id: M2Q.m 1143 2008-02-07 19:33:33Z spm $
+% $Id$
 
 
 d = diag(M(1:3,1:3));

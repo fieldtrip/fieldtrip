@@ -24,7 +24,7 @@ function [nts] = read_neuralynx_nts(filename, begrecord, endrecord);
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: read_neuralynx_nts.m 945 2010-04-21 17:41:20Z roboos $
+% $Id$
 
 if nargin<2
   begrecord = 1;

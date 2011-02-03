@@ -9,7 +9,7 @@ function create(obj,wrt)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 %
-% $Id: create.m 1143 2008-02-07 19:33:33Z spm $
+% $Id$
 
 for i=1:numel(obj)
     create_each(obj(i));

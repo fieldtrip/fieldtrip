@@ -23,7 +23,7 @@ function avw_hdr_write(avw, fileprefix, machine, verbose)
 %           AVW_IMG_READ AVW_IMG_WRITE
 %
 
-% $Revision: 883 $ $Date: 2009/01/14 09:24:45 $
+% $Revision$ $Date: 2009/01/14 09:24:45 $
 
 % Licence:  GNU GPL, no express or implied warranties
 % History:  05/2002, Darren.Weber@flinders.edu.au
@@ -40,7 +40,7 @@ if ~exist('verbose','var'), verbose = 1; end
 if ~exist('machine','var'), machine = 'ieee-le'; end
 
 if verbose,
-    version = '[$Revision: 883 $]';
+    version = '[$Revision$]';
     fprintf('AVW_HDR_WRITE [v%s]\n',version(12:16));  tic;
 end
 

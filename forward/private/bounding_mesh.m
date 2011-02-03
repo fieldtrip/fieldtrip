@@ -30,7 +30,7 @@ function [inside] = bounding_mesh(pos, pnt, tri);
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: bounding_mesh.m 946 2010-04-21 17:51:16Z roboos $
+% $Id$
 
 global fb;
 if isempty(fb)

@@ -27,7 +27,7 @@ function write_brainvision_eeg(filename, hdr, dat);
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: write_brainvision_eeg.m 1350 2010-07-05 06:59:27Z roboos $
+% $Id$
 
 if length(size(dat))>2
   ntrl  = size(dat,1);

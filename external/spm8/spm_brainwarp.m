@@ -68,7 +68,7 @@ function varargout = spm_brainwarp(varargin)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_brainwarp.m 1143 2008-02-07 19:33:33Z spm $
+% $Id$
 
 
 %-This is merely the help file for the compiled routine

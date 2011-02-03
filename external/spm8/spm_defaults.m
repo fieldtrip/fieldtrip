@@ -14,7 +14,7 @@ function spm_defaults
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner, Andrew Holmes
-% $Id: spm_defaults.m 3826 2010-04-21 18:36:44Z ged $
+% $Id$
 
 %-Prevent users from making direct calls to this function
 %-----------------------------------------------------------------------

@@ -4,7 +4,7 @@ function o = horzcat(varargin)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 %
-% $Id: horzcat.m 1143 2008-02-07 19:33:33Z spm $
+% $Id$
 
 o    = cat(2,varargin{:});
 return;

@@ -13,7 +13,7 @@ function L = hh_leadfield(data,compress,node_sizes,row,col, ...
 % col:          Column position of the given node
 % slice:        Slice position of the given node
 %
-% $Id: hh_leadfield.m $
+% $Id$
 % $Date: July 23, 2008$
 % $Copyright (C) 2010 by Hung Dang$
 % $Log: hh_leadfield.m$

@@ -26,7 +26,7 @@ function [src] = read_besa_src(filename);
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: read_besa_src.m 945 2010-04-21 17:41:20Z roboos $
+% $Id$
 
 src = [];
 fid = fopen(filename, 'rt');

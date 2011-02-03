@@ -25,7 +25,7 @@ function P2 = get_mirror_pos(P1,vol)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: get_mirror_pos.m $
+% $Id$
 
 P2 = [];
 

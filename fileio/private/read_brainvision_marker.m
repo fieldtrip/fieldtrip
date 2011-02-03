@@ -26,7 +26,7 @@ function [rej] = read_brainvision_marker(fn);
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: read_brainvision_marker.m 945 2010-04-21 17:41:20Z roboos $
+% $Id$
 
 rej = [];
 

@@ -6,7 +6,7 @@ function spm_normalise_disp(matname,VF)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_normalise_disp.m 1143 2008-02-07 19:33:33Z spm $
+% $Id$
 
 
 fg = spm_figure('FindWin','Graphics');

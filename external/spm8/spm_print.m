@@ -4,7 +4,7 @@ function spm_print(job)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_print.m 3782 2010-03-16 18:33:32Z guillaume $
+% $Id$
 
 % Run spm_print always as job to get configured print options
 if nargin == 0

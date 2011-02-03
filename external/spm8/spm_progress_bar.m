@@ -13,7 +13,7 @@ function spm_progress_bar(action,varargin)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_progress_bar.m 2914 2009-03-20 18:30:31Z guillaume $
+% $Id$
 
 if ~nargin, action = 'Init'; end
 

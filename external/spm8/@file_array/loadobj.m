@@ -4,7 +4,7 @@ function b = loadobj(a)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 %
-% $Id: loadobj.m 1544 2008-05-06 10:34:36Z guillaume $
+% $Id$
 
 if isa(a,'file_array')
     b = a;

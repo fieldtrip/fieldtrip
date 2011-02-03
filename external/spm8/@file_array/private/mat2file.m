@@ -10,7 +10,7 @@ function mat2file(a,val,varargin)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: mat2file.m 1530 2008-04-30 19:28:22Z guillaume $
+% $Id$
 
 %-This is merely the help file for the compiled routine
 error('mat2file.c not compiled - see Makefile');

@@ -171,7 +171,7 @@ function varargout = spm_input(varargin)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % Andrew Holmes
-% $Id: spm_input.m 3756 2010-03-05 18:43:37Z guillaume $
+% $Id$
 
 
 %=======================================================================

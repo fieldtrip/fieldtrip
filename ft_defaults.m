@@ -25,7 +25,7 @@ function ft_defaults
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_defaults.m 2017 2010-11-02 08:19:11Z jansch $
+% $Id$
 
 % set the global defaults, the ft_checkconfig function will copy these into the local configurations
 global ft_default

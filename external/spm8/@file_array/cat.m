@@ -5,7 +5,7 @@ function o = cat(dr,varargin)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 %
-% $Id: cat.m 1143 2008-02-07 19:33:33Z spm $
+% $Id$
 
 
 if dr>32 || dr<0, error('Unknown command option.'); end;

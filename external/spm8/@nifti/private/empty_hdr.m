@@ -5,7 +5,7 @@ function hdr = empty_hdr
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 %
-% $Id: empty_hdr.m 1143 2008-02-07 19:33:33Z spm $
+% $Id$
 
 
 org = niftistruc;

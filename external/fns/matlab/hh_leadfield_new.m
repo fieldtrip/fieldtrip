@@ -11,7 +11,7 @@ function L = hh_leadfield_new(recipdata,compress,node_sizes,nnode)
 % 4. nodesizes:    The sizes of the node volume
 % 5. nnode:        node position in the compress vector
 %
-% $Id: hh_leadfield_new.m $
+% $Id$
 % $Date: July 23, 2008$
 % Copyright 2008 by Hung Dang        
 % $Log: hh_leadfield_new.m$
