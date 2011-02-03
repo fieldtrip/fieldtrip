@@ -10,16 +10,23 @@ function [ama] = loadama(filename);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% $Log: loadama.m,v $
-% Revision 1.1  2008/12/24 10:25:41  roboos
-% cleaned up the dipoli wrapper, replaced the binary by a better one and added a copy of the helper functions (from fileio)
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
 %
-% Revision 1.2  2008/11/12 17:02:03  roboos
-% explicitely specify ieee-le in fopen()
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
 %
-% Revision 1.1  2005/11/16 13:50:51  roboos
-% new implementation
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
 %
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 fid = fopen(filename, 'rb', 'ieee-le');
 
