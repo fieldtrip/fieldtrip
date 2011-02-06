@@ -323,7 +323,7 @@ elseif iseeg
         % wrong halfspace (projected on the plane)
         for i=1:size(pnt,1)
           P = pnt(i,:);
-          is_in_empty = get_dip_halfspace(P,vol);
+          is_in_empty = acos(dot(vol.ori,(P-vol.pnt)./norm(P-vol.pnt))) < pi/2;
           if is_in_empty
             d = dist(P); 
             dPplane = -dot(vol.ori, vol.pnt-P, 2);
