@@ -100,15 +100,15 @@ catch
     rethrow(lasterror)
 end
 
-% keyboard
-
 try
     % execute OpenMEEG and read the resulting file
     if ispc
         dos([exefile]);
-    else
+    elseif ismac
+        dos(['./' exefile]);
+    else % assumes linux by default
         version = om_getgccversion;
-        if version>3
+        if version > 3
           dos(['./' exefile]);
         else
           error('non suitable GCC compiler version (must be superior to gcc3)');
@@ -127,8 +127,8 @@ end
 function cleaner(vol,bndfile,condfile,geomfile,hmfile,hminvfile,exefile)
 
 % delete the temporary files
-for i=1:length(vol.bnd)
-    delete(bndfile{i})
+for ii=1:length(vol.bnd)
+    delete(bndfile{ii})
 end
 
 delete(condfile);
