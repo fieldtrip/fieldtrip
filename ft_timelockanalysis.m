@@ -471,7 +471,7 @@ end
 
 timelock.avg        = avg;
 timelock.var        = var;
-timelock.fsample    = data.fsample;
+%timelock.fsample    = data.fsample; % timelock.fsample is obsolete
 timelock.time       = linspace(cfg.latency(1), cfg.latency(2), size(avg,2));
 timelock.dof        = dof;
 timelock.label      = data.label(chansel);

@@ -146,7 +146,8 @@ if cfg.timwin(1)>0 || cfg.timwin(2)<0 || cfg.timwin(1)>=cfg.timwin(2)
   error('MATLAB:spikestation:density:cfg:timwin:noInclusionTimeZero',...
         'Please specify cfg.timwin(1)<=0 and cfg.timwin(2)>=0 and cfg.timwin(2)>cfg.timwin(1)')
 end
-sampleTime    = 1/data.fsample;
+fsample = 1/(data.time{1}(2) / data.time{1}(2));
+sampleTime    = 1/fsample;
 winTime       = [fliplr(0:-sampleTime:cfg.timwin(1)) (sampleTime):sampleTime:cfg.timwin(2)];
 nLeftSamples  = length(find(winTime<0));  
 nRightSamples = length(find(winTime>0));  
@@ -203,10 +204,10 @@ end
 % calculates the samples we are shifted wrt latency(1)
 samplesShift      = zeros(1,nTrials); 
 sel               = (begTrialLatency-cfg.latency(1))>0; % otherwise 0 samples to be padded
-samplesShift(sel) = round(data.fsample*(begTrialLatency(sel)-cfg.latency(1))); 
+samplesShift(sel) = round(fsample*(begTrialLatency(sel)-cfg.latency(1))); 
 
 % create the time axis for the spike density
-time           = cfg.latency(1):(1/data.fsample):cfg.latency(2); 
+time           = cfg.latency(1):(1/fsample):cfg.latency(2); 
 cfg.latency(2) = time(end);   % this is the used latency that should be stored in cfg again
 maxNumSamples  = length(time);
 
@@ -235,7 +236,7 @@ for iTrial = 1:nTrials
         end
         
         if strcmp(cfg.outputunit, 'rate') 
-          y = y*data.fsample;  % normalize to the sampling rate, to get it in Hz.
+          y = y*fsample;  % normalize to the sampling rate, to get it in Hz.
         else
           y = y*nSamplesWin;   % now maximum becomes N (length window)
         end                
@@ -275,7 +276,7 @@ sdf.avg                  = s ./ dofMat;
 sdf.var                  = (ss - s.^2./dofMat)./(dofMat-1); % sumPsth.^2 ./ dof = dof .* (sumPsth/dof).^2
 sdf.dof                  = dofMat;
 sdf.time                 = time;
-sdf.fsample         	 = data.fsample; 
+sdf.fsample         	 = fsample; 
 sdf.label(1:nUnits)      = data.label(spikesel);
 if (strcmp(cfg.keeptrials,'yes'))
   sdf.trial = singleTrials;
@@ -286,7 +287,7 @@ end
 
 % create a new structure that is a standard raw data spikestation structure itself
 if nargout>1
-    sdfdata.fsample              = data.fsample;
+    sdfdata.fsample              = fsample;
     sdfdata.label(1:nUnits)      = data.label(spikesel);
     sdfdata.hdr                  = data.hdr;
 end

@@ -162,7 +162,7 @@ end
 
 grandavg           = [];
 grandavg.label     = cfg.channel;       % cell-array
-grandavg.fsample   = varargin{1}.fsample;
+%grandavg.fsample   = varargin{1}.fsample; % fsample is obsolete
 grandavg.time      = ResultsTime;       % 1 x Nsamples
 
 %KEEP INDIVIDUAL MEANS?

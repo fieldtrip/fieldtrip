@@ -70,7 +70,7 @@ datssq = zeros(nchan,1);
 % FIXME this can be kept, provided the scaling is built in appropriately
 dataout         = [];
 dataout.label   = data.label;
-dataout.fsample = data.fsample;
+if isfield(data, 'fsample'); dataout.fsample = data.fsample; end;
 dataout.trial   = cell(1,ntrl);
 dataout.time    = data.time;
 if isfield(data, 'sampleinfo'),  dataout.sampleinfo  = data.sampleinfo;  end

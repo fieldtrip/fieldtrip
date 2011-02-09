@@ -218,7 +218,7 @@ end
 scd.elec    = elec;
 scd.time    = data.time;
 scd.label   = data.label;
-scd.fsample = data.fsample;
+scd.fsample = 1/(data.time{1}(2) - data.time{1}(1));
 if isfield(data, 'sampleinfo')
   scd.sampleinfo = data.sampleinfo;
 end
