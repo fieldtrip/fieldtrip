@@ -189,7 +189,7 @@ function [source] = ft_sourceanalysis(cfg, data, baseline);
 ft_defaults
 
 % set a timer to determine how long the sourceanalysis takes in total
-tic;
+stopwatch = tic;
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
@@ -1054,5 +1054,5 @@ if ~isempty(cfg.outputfile)
   savevar(cfg.outputfile, 'source', source); % use the variable name "data" in the output file
 end
 
-fprintf('total time in sourceanalysis %.1f seconds\n', toc);
+fprintf('total time in sourceanalysis %.1f seconds\n', toc(stopwatch));
 
