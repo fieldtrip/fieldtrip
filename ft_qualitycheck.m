@@ -72,7 +72,7 @@ exportname      = strcat(datasetname(end-10:end-3),'_',starttime([1:2 4:5]));
 
 if strcmp(cfg.analyze,'yes')
     %% DEFINE THE SEGMENTS; 10 second trials
-    tic
+    stopwatch=tic;
     cfgdef                         = [];
     cfgdef.dataset                 = varargin{1};
     cfgdef.trialdef.eventtype      = 'trial';
@@ -162,7 +162,7 @@ if strcmp(cfg.analyze,'yes')
             mean((linenoise_prefilt-linenoise_postfilt)./linenoise_prefilt);
         clear linenoise_prefilt; clear linenoise_postfilt;
         
-        toc
+        toc(stopwatch);
     end % end of trial loop
     
     %% EXPORT TO .MAT
