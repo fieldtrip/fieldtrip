@@ -25,7 +25,7 @@ try
         bndfile{i} = [tname '.tri'];
         om_save_tri(bndfile{i}, vol.bnd(i).pnt, vol.bnd(i).tri);
     end
-
+    
     % these will hold the shell script and the inverted system matrix
     [junk,tname] = fileparts(tempname);
     if ~ispc
@@ -76,14 +76,14 @@ end
 try
     % execute OpenMEEG and read the resulting file
     disp(['Assembling OpenMEEG DSM matrix']);
-    tic
+    stopwatch = tic;
     if ispc
         dos([exefile]);
     else
         dos(['./' exefile]);
     end
     dsm = om_load_full(dsmfile,'binary');
-    toc
+    toc(stopwatch);
     cleaner(vol,bndfile,condfile,geomfile,exefile,dipfile,dsmfile)
     cd(tmpfolder)
 catch
