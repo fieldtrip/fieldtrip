@@ -87,7 +87,7 @@ end
 try
     % execute OpenMEEG and read the resulting file
     disp(['Assembling OpenMEEG H2MM and S2MM matrices']);
-    tic
+    stopwatch = tic;
     if ispc
         dos([exefile]);
     else
@@ -95,7 +95,7 @@ try
     end
     h2mm = om_load_full(h2mmfile,'binary');
     s2mm = om_load_full(s2mmfile,'binary');
-    toc
+    toc(stopwatch);
     cleaner(vol,bndfile,condfile,geomfile,exefile,dipfile,h2mmfile,s2mmfile,sqdfile)
     cd(tmpfolder)
 catch
