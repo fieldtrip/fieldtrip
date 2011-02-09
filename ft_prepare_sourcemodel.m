@@ -507,6 +507,18 @@ if ~isfield(grid, 'inside') && ~isfield(grid, 'outside')
     % in an infinite vacuum, i.e. all dipoles can be considered to be inside
     grid.inside = 1:size(grid.pos,1);
     grid.outside = [];
+    outside = zeros(1,size(grid.pos,1));
+    for i =1:size(grid.pos,1);
+      invacuum = false;
+      dip1 = grid.pos(i,:);
+      % condition of dipoles falling in the non conductive halfspace
+      invacuum = acos(dot(vol.ori,(dip1-vol.pnt)./norm(dip1-vol.pnt))) < pi/2;
+      if invacuum
+        outside(i) = 1;
+      end
+    end
+    grid.outside = find(outside);
+    grid.inside  = find(~outside);
   else
     if isfield(sens, 'ori') && isfield(sens, 'pnt') && isfield(sens, 'tra')
       % in case of MEG, make a triangulation of the outermost surface
