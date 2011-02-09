@@ -1676,7 +1676,7 @@ switch data.dimord
     ntime  = size(data.individual,3);
     for i=1:ntrial
       tmptrial{i} = reshape(data.individual(i,:,:), [nchan, ntime]);
-      tmptime{i}  = data.time;
+      tmptime{i}  = data.time{i};
     end
     data       = rmfield(data, 'individual');
     data.trial = tmptrial;
