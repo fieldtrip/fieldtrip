@@ -60,7 +60,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 ft_defaults
 
 % set a timer to determine how long this function takes
-tic;
+stopwatch=tic;
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
@@ -462,7 +462,7 @@ if isfield(data, 'trialinfo')
   comp.trialinfo = data.trialinfo;
 end
 
-fprintf('total time in componentanalysis %.1f seconds\n', toc);
+fprintf('total time in componentanalysis %.1f seconds\n', stopwatch(toc));
 
 % the output data should be saved to a MATLAB file
 if ~isempty(cfg.outputfile)
