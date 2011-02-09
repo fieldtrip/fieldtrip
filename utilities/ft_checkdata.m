@@ -1653,7 +1653,7 @@ switch data.dimord
     data.trial{1} = data.avg;
     data.time     = {data.time};
     data          = rmfield(data, 'avg');
-    data.fsample = 1/(data.time{1}(2)-data.time{1}(1));
+    data.fsample = 1/(data.time(2)-data.time(1));
   case 'rpt_chan_time'
     tmptrial = {};
     tmptime  = {};
@@ -1667,7 +1667,7 @@ switch data.dimord
     data       = rmfield(data, 'trial');
     data.trial = tmptrial;
     data.time  = tmptime;
-    data.fsample = 1/(data.time{1}(2)-data.time{1}(1));
+    data.fsample = 1/(data.time(2)-data.time(1));
   case 'subj_chan_time'
     tmptrial = {};
     tmptime  = {};
@@ -1681,7 +1681,7 @@ switch data.dimord
     data       = rmfield(data, 'individual');
     data.trial = tmptrial;
     data.time  = tmptime;
-    data.fsample = 1/(data.time{1}(2)-data.time{1}(1));    
+    data.fsample = 1/(data.time(2)-data.time(1));    
   otherwise
     error('unsupported dimord');
 end
