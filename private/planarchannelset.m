@@ -29,7 +29,7 @@ function [planar] = planarchannelset(data);
 %
 % $Id$
 
-switch lower(senstype(data))
+switch lower(ft_senstype(data))
   case 'ctf151_planar'
     planar = {
       'MLC11_dH'     'MLC11_dV'     'MLC11'
