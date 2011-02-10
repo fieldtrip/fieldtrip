@@ -11,14 +11,9 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 %   cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'),
 %                            see FT_CHANNELSELECTION for details
 %   cfg.trials             = 'all' or a selection given as a 1xN vector (default = 'all')
-%   cfg.latency            = [begin end] in seconds, or 'minperlength', 'maxperlength', 
-%                            'prestim', 'poststim' (default = 'maxperlength')
 %   cfg.covariance         = 'no' or 'yes'
 %   cfg.covariancewindow   = [begin end]
-%   cfg.blcovariance       = 'no' or 'yes'
-%   cfg.blcovariancewindow = [begin end]
 %   cfg.keeptrials         = 'yes' or 'no', return individual trials or average (default = 'no')
-%   cfg.normalizevar       = 'N' or 'N-1' (default = 'N-1')
 %   cfg.removemean         = 'no' or 'yes' for covariance computation (default = 'yes')
 %   cfg.vartrllength       = 0, 1 or 2 (see below)
 %
@@ -38,10 +33,16 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 % 
 % Undocumented local options:
 % cfg.feedback
-% cfg.normalizecov
 % cfg.preproc
 % cfg.inputfile  = one can specifiy preanalysed saved data as input
 % cfg.outputfile = one can specify output as file to save to disk
+%
+% Deprecated options:
+% cfg.latency
+% cfg.blcovariance
+% cfg.blcovariancewindow
+% cfg.normalizevar
+% cfg.normalizecov
 
 % This function depends on PREPROC which has the following options:
 % cfg.absdiff
@@ -95,35 +96,38 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 
 ft_defaults
 
-% set the defaults
-if ~isfield(cfg, 'channel'),            cfg.channel = 'all';                     end
-if ~isfield(cfg, 'trials'),             cfg.trials = 'all';                      end
-if ~isfield(cfg, 'keeptrials'),         cfg.keeptrials = 'no';                   end
-if ~isfield(cfg, 'latency'),            cfg.latency = 'maxperlength';            end
-if ~isfield(cfg, 'covariance'),         cfg.covariance = 'no';                   end
-if ~isfield(cfg, 'blcovariance'),       cfg.blcovariance = 'no';                 end
-if ~isfield(cfg, 'removemean'),         cfg.removemean = 'yes';                  end
-if ~isfield(cfg, 'vartrllength'),       cfg.vartrllength = 0;                    end
-if ~isfield(cfg, 'feedback'),           cfg.feedback = 'text';                   end
-if ~isfield(cfg, 'inputfile'),          cfg.inputfile = [];                      end
-if ~isfield(cfg, 'outputfile'),         cfg.outputfile = [];                     end
 
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-  end
+% set the defaults
+if ~isfield(cfg, 'channel'),       cfg.channel      = 'all';  end
+if ~isfield(cfg, 'trials'),        cfg.trials       = 'all';  end
+if ~isfield(cfg, 'keeptrials'),    cfg.keeptrials   = 'no';   end
+if ~isfield(cfg, 'covariance'),    cfg.covariance   = 'no';   end
+if ~isfield(cfg, 'removemean'),    cfg.removemean   = 'yes';  end
+if ~isfield(cfg, 'vartrllength'),  cfg.vartrllength = 0;      end
+if ~isfield(cfg, 'feedback'),      cfg.feedback     = 'text'; end
+if ~isfield(cfg, 'inputfile'),     cfg.inputfile    = [];     end
+if ~isfield(cfg, 'outputfile'),    cfg.outputfile   = [];     end
+
+hasdata      = (nargin>1);
+hasinputfile = ~isempty(cfg.inputfile);
+
+if hasinputfile && hasdata
+  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+end
+
+if hasinputfile
+  data = loadvar(cfg.inputfile, 'data');
+else
+  % nothing needed
 end
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hastrialdef', 'yes', 'hasoffset', 'yes');
+data = ft_checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hastrialdef', 'yes');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'deprecated',  {'normalizecov', 'normalizevar'});
+cfg = ft_checkconfig(cfg, 'deprecated',  {'latency', 'blcovariance', 'blcovariancewindow'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', 'baselinewindow'});
 
@@ -144,9 +148,10 @@ cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
 
 % preprocess the data, i.e. apply filtering, baselinecorrection, etc.
 fprintf('applying preprocessing options\n');
-for i=1:ntrial
-  [data.trial{i}, data.label, data.time{i}, cfg.preproc] = preproc(data.trial{i}, data.label, data.fsample, cfg.preproc, data.offset(i));
-end
+data = ft_preprocessing(cfg.preproc, data);
+%for i=1:ntrial
+%  [data.trial{i}, data.label, data.time{i}, cfg.preproc] = preproc(data.trial{i}, data.label, data.fsample, cfg.preproc, data.offset(i));
+%end
 
 % determine the channels of interest
 cfg.channel = ft_channelselection(cfg.channel, data.label);
@@ -158,35 +163,18 @@ numsamples  = zeros(ntrial,1);      % number of selected samples in each trial, 
 for i=1:ntrial
   begsamplatency(i) = min(data.time{i});
   endsamplatency(i) = max(data.time{i});
+  offset(i)         = time2offset(data.time{i}, data.fsample);
 end
 
 % automatically determine the latency window which is possible in all trials
 minperlength = [max(begsamplatency) min(endsamplatency)];
 maxperlength = [min(begsamplatency) max(endsamplatency)];
 maxtrllength = round((max(endsamplatency)-min(begsamplatency))*data.fsample) + 1;       % in samples
-abstimvec    = ([1:maxtrllength] + min(data.offset) -1)./data.fsample;                  % in seconds
+abstimvec    = ([1:maxtrllength] + min(offset) -1)./data.fsample;                  % in seconds
 
-% latency window for averaging and variance computation is given in seconds
-if (strcmp(cfg.latency, 'minperlength'))
-  cfg.latency = [];
-  cfg.latency(1) = minperlength(1);
-  cfg.latency(2) = minperlength(2);
-end
-if (strcmp(cfg.latency, 'maxperlength'))
-  cfg.latency = [];
-  cfg.latency(1) = maxperlength(1);
-  cfg.latency(2) = maxperlength(2);
-end
-if (strcmp(cfg.latency, 'prestim'))
-  cfg.latency = [];
-  cfg.latency(1) = maxperlength(1);
-  cfg.latency(2) = 0;
-end
-if (strcmp(cfg.latency, 'poststim'))
-  cfg.latency = [];
-  cfg.latency(1) = 0;
-  cfg.latency(2) = maxperlength(2);
-end
+latency      = [];
+latency(1)   = maxperlength(1);
+latency(2)   = maxperlength(2);
 
 % check whether trial type (varlength) matches the user-specified type
 switch cfg.vartrllength
@@ -206,100 +194,24 @@ switch cfg.vartrllength
     error('unknown value for vartrllength');
 end
 
-% check whether the time window fits with the data
-if (cfg.latency(1) < maxperlength(1))  cfg.latency(1) = maxperlength(1);
-  warning('Correcting begin latency of averaging window');
-end
-if (cfg.latency(2) > maxperlength(2))  cfg.latency(2) = maxperlength(2);
-  warning('Correcting end latency of averaging window');
-end
-if cfg.latency(1)>cfg.latency(2)
-  error('invalid latency window specified');
-end
-
 if strcmp(cfg.covariance, 'yes')
   if ~isfield(cfg, 'covariancewindow')
-    % this used to be by default 'poststim', but that is not ideal as default
-    error('the option cfg.covariancewindow is required');
+    warning('the option cfg.covariancewindow is not specified, taking all time points');
+    cfg.covariancewindow = latency;
   end
-  % covariance window is given in seconds
-  if (strcmp(cfg.covariancewindow, 'minperlength'))
-    cfg.covariancewindow = [];
-    cfg.covariancewindow(1) = minperlength(1);
-    cfg.covariancewindow(2) = minperlength(2);
-  end
-  if (strcmp(cfg.covariancewindow, 'maxperlength'))
-    cfg.covariancewindow = [];
-    cfg.covariancewindow(1) = maxperlength(1);
-    cfg.covariancewindow(2) = maxperlength(2);
-  end
-  if (strcmp(cfg.covariancewindow, 'prestim'))
-    cfg.covariancewindow = [];
-    cfg.covariancewindow(1) = maxperlength(1);
-    cfg.covariancewindow(2) = 0;
-  end
-  if (strcmp(cfg.covariancewindow, 'poststim'))
-    cfg.covariancewindow = [];
-    cfg.covariancewindow(1) = 0;
-    cfg.covariancewindow(2) = maxperlength(2);
-  end
-  % check whether the time window fits with the data
-  if (cfg.covariancewindow(1) < maxperlength(1))
-    cfg.covariancewindow(1) = maxperlength(1);
-    warning('Correcting begin latency of covariance window');
-  end
-  if (cfg.covariancewindow(2) > maxperlength(2))
-    cfg.covariancewindow(2) = maxperlength(2);
-    warning('Correcting end latency of covariance window');
-  end
-  if cfg.covariancewindow(1)==cfg.covariancewindow(2)
-    error('Cannot compute covariance over a window of only one sample');
-  end
-  if cfg.covariancewindow(1)>cfg.covariancewindow(2)
-    error('Cannot compute covariance over negative timewindow');
-  end
-end
-
-if strcmp(cfg.blcovariance, 'yes')
-  if ~isfield(cfg, 'blcovariancewindow')
-    % this used to be by default 'prestim', but that is not ideal as default
-    error('the option cfg.blcovariancewindow is required');
-  end
-  % covariance window is given in seconds
-  if (strcmp(cfg.blcovariancewindow, 'minperlength'))
-    cfg.blcovariancewindow = [];
-    cfg.blcovariancewindow(1) = minperlength(1);
-    cfg.blcovariancewindow(2) = minperlength(2);
-  end
-  if (strcmp(cfg.blcovariancewindow, 'maxperlength'))
-    cfg.blcovariancewindow = [];
-    cfg.blcovariancewindow(1) = maxperlength(1);
-    cfg.blcovariancewindow(2) = maxperlength(2);
-  end
-  if (strcmp(cfg.blcovariancewindow, 'prestim'))
-    cfg.blcovariancewindow = [];
-    cfg.blcovariancewindow(1) = maxperlength(1);
-    cfg.blcovariancewindow(2) = 0;
-  end
-  if (strcmp(cfg.blcovariancewindow, 'poststim'))
-    cfg.blcovariancewindow = [];
-    cfg.blcovariancewindow(1) = 0;
-    cfg.blcovariancewindow(2) = maxperlength(2);
-  end
-  % check whether the time window fits with the data
-  if (cfg.blcovariancewindow(1) < maxperlength(1))
-    cfg.blcovariancewindow(1) = maxperlength(1);
-    warning('Correcting begin latency of covariance window');
-  end
-  if (cfg.blcovariancewindow(2) > maxperlength(2))
-    cfg.blcovariancewindow(2) = maxperlength(2);
-    warning('Correcting end latency of covariance window');
-  end
-  if cfg.blcovariancewindow(1)==cfg.blcovariancewindow(2)
-    error('Cannot compute covariance over a window of only one sample');
-  end
-  if cfg.blcovariancewindow(1)>cfg.blcovariancewindow(2)
-    error('Cannot compute covariance over negative timewindow');
+  if ischar(cfg.covariancewindow)
+    switch cfg.covariancewindow
+    case 'prestim'
+      cfg.covariancewindow = [latency(1) 0];
+    case 'poststim'
+      cfg.covariancewindow = [0 latency(2)];
+    case 'minperlength'
+      error('cfg.covariancewindow = ''minperlength'' is not supported anymore');
+    case 'maxperlength'
+      error('cfg.covariancewindow = ''maxperlength'' is not supported anymore');
+    otherwise
+      error('unsupported specification of cfg.covariancewindow');
+    end
   end
 end
 
@@ -308,13 +220,9 @@ if strcmp(cfg.covariance, 'yes')
   covsig = nan*zeros(ntrial, nchan, nchan);
   numcovsigsamples = zeros(ntrial,1);
 end
-if strcmp(cfg.blcovariance, 'yes')
-  covbl = nan*zeros(ntrial, nchan, nchan);
-  numcovblsamples = zeros(ntrial,1);
-end
 
-begsampl = nearest(abstimvec, cfg.latency(1));
-endsampl = nearest(abstimvec, cfg.latency(2));
+begsampl = nearest(abstimvec, latency(1));
+endsampl = nearest(abstimvec, latency(2));
 maxwin   = endsampl-begsampl+1;
 s        = zeros(nchan, maxwin);    % this will contain the sum
 ss       = zeros(nchan, maxwin);    % this will contain the squared sum
@@ -337,11 +245,9 @@ for i=1:ntrial
     case 1
       % include this trial only if the data are complete in all specified windows
       usetrial = 1;
-      if (begsamplatency(i)>cfg.latency(1) || endsamplatency(i)<cfg.latency(2))
+      if (begsamplatency(i)>latency(1) || endsamplatency(i)<latency(2))
         usetrial = 0;
       elseif strcmp(cfg.covariance,'yes') && (begsamplatency(i)>cfg.covariancewindow(1) || endsamplatency(i)<cfg.covariancewindow(2))
-        usetrial = 0;
-      elseif strcmp(cfg.blcovariance,'yes') && (begsamplatency(i)>cfg.blcovariancewindow(1) || endsamplatency(i)<cfg.blcovariancewindow(2))
         usetrial = 0;
       end
     case 2
@@ -355,12 +261,12 @@ for i=1:ntrial
   end
 
   % for average and variance
-  if (begsamplatency(i) <= cfg.latency(2)) && (endsamplatency(i) >= cfg.latency(1))
-    begsampl = nearest(data.time{i}, cfg.latency(1));
-    endsampl = nearest(data.time{i}, cfg.latency(2));
+  if (begsamplatency(i) <= latency(2)) && (endsamplatency(i) >= latency(1))
+    begsampl = nearest(data.time{i}, latency(1));
+    endsampl = nearest(data.time{i}, latency(2));
     numsamples(i) = endsampl-begsampl+1;
-    if (cfg.latency(1)<begsamplatency(i))
-      trlshift =round((begsamplatency(i)-cfg.latency(1))*data.fsample);
+    if (latency(1)<begsamplatency(i))
+      trlshift =round((begsamplatency(i)-latency(1))*data.fsample);
     else
       trlshift = 0;
     end
@@ -392,19 +298,6 @@ for i=1:ntrial
     end
   end
 
-  if strcmp(cfg.blcovariance, 'yes')
-    begsampl = nearest(data.time{i}, cfg.blcovariancewindow(1));
-    endsampl = nearest(data.time{i}, cfg.blcovariancewindow(2));
-    numcovblsamples(i) = endsampl-begsampl+1;
-    % select the relevant samples from this trial, do NOT pad with zeros
-    dat = data.trial{i}(chansel, begsampl:endsampl);
-    if ~isempty(dat)  % we did not exlude this case above
-      if strcmp(cfg.removemean, 'yes')
-        dat = ft_preproc_baselinecorrect(dat);
-      end
-      covbl(i,:,:) = dat * dat';
-    end
-  end
 end % for ntrial
 ft_progress('close');
 
@@ -446,25 +339,6 @@ if strcmp(cfg.covariance, 'yes')
   end
 end
 
-% normalize the baseline covariance over all trials by the total number of samples in all trials
-if strcmp(cfg.blcovariance, 'yes')
-  if strcmp(cfg.keeptrials,'yes')
-    for i=1:ntrial
-      if strcmp(cfg.removemean, 'yes')
-        covbl(i,:,:) = covbl(i,:,:) / (numcovblsamples(i)-1);
-      else
-        covbl(i,:,:) = covbl(i,:,:) / numcovblsamples(i);
-      end
-    end
-  else
-    if strcmp(cfg.removemean, 'yes')
-      covbl = squeeze(sum(covbl, 1)) / (sum(numcovblsamples)-ntrial);
-    else
-      covbl = squeeze(sum(covbl, 1)) / sum(numcovblsamples);
-    end
-  end
-end
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % collect the results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -472,7 +346,7 @@ end
 timelock.avg        = avg;
 timelock.var        = var;
 %timelock.fsample    = data.fsample; % timelock.fsample is obsolete
-timelock.time       = linspace(cfg.latency(1), cfg.latency(2), size(avg,2));
+timelock.time       = linspace(latency(1), latency(2), size(avg,2));
 timelock.dof        = dof;
 timelock.label      = data.label(chansel);
 if (strcmp(cfg.keeptrials,'yes'))
@@ -483,9 +357,6 @@ else
 end
 if strcmp(cfg.covariance, 'yes')
   timelock.cov = covsig;
-end
-if strcmp(cfg.blcovariance, 'yes')
-  timelock.blcov = covbl;
 end
 if isfield(data, 'grad')
   % copy the gradiometer array along
@@ -525,4 +396,3 @@ timelock.cfg = cfg;
 if ~isempty(cfg.outputfile)
   savevar(cfg.outputfile, 'data', timelock); % use the variable name "data" in the output file
 end
-
