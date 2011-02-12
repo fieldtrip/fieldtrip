@@ -7,9 +7,9 @@ function [tok] = tokenize(str, sep, rep)
 %   t = tokenize(str, sep)
 %   t = tokenize(str, sep, rep)
 % where
-%   str    = the string that you want to cut into pieces
-%   sep    = the separator at which to cut (default is whitespace)
-%   rep    = whether to treat repeating seperator characters as one (default is false)
+%   str = the string that you want to cut into pieces
+%   sep = the separator at which to cut (default is whitespace)
+%   rep = whether to treat repeating seperator characters as one (default is false)
 %
 % With the optional boolean flag "rep" you can specify whether repeated
 % seperator characters should be squeezed together (e.g. multiple
