@@ -9,7 +9,7 @@
 PLATFORM = $(shell gcc -dumpmachine)
 
 CC		 = gcc
-BINDIR	 = .
+BINDIR	 = ../bin
 INCPATH  = -I.
 LIBPATH  = -L.
 LIBS 	 = -lm -lpthread -lpeer
@@ -96,7 +96,7 @@ peer: peer.o libpeer.a
 	$(CC) $(CFLAGS) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
 
 peerslave.$(MATLABARCH): peerslave.o libpeer.a
-	$(CC) $(CFLAGS) $(LIBPATH) $(MATLABLIBS) -o ../$@ $^ $(LIBS)
+	$(CC) $(CFLAGS) $(LIBPATH) $(MATLABLIBS) -o $(BINDIR)/$@ $^ $(LIBS)
 
 test_peerslave: test_peerslave.o
 	$(CC) $(CFLAGS) $(LIBPATH) $(MATLABLIBS) -o $@ $^ $(LIBS)

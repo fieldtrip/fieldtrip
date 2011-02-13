@@ -45,7 +45,7 @@ case "$PLATFORM" in
 	;;
 esac
 
-EXECDIR=`dirname $0`
+TOOLBOXDIR=`dirname $0`
 export LD_LIBRARY_PATH=$MATLABPATH/bin/$MATLABARCH/ 
 
 ##############################################################################
@@ -194,7 +194,7 @@ function start_peerslave {
 		SLAVENUM=0
 	fi
 
-	EXECUTABLE=$EXECDIR/peerslave.$MATLABARCH
+	EXECUTABLE=$TOOLBOXDIR/bin/peerslave.$MATLABARCH
 	if [ ! -e $EXECUTABLE ] ; then
 		echo error: could not locate peerslave command-line executable
 		exit 1
@@ -315,7 +315,7 @@ rm -f $PIDDIR/peerslave.[0-9][0-9][0-9]
 
 *)
 # just start a single peerslave, pass the user's arguments
-EXECUTABLE=$EXECDIR/peerslave.$MATLABARCH
+EXECUTABLE=$TOOLBOXDIR/bin/peerslave.$MATLABARCH
 $EXECUTABLE "$@"
 
 ;;
