@@ -103,8 +103,8 @@ int main(int argc, char *argv[]) {
 
 #if SYSLOG==1
 		openlog("peerslave", LOG_PID | LOG_PERROR, LOG_USER);
-		/* this corresponds to verbose==4 */
-		setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT));
+		/* this corresponds to verbose level 4 */
+		setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT) | LOG_MASK(LOG_ERR));
 #endif
 		peerinit(NULL);
 
