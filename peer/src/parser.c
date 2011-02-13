@@ -34,6 +34,29 @@ void trimline(char *s) {
 		}
 }
 
+void initconfig(config_t *cconf) {
+		if (cconf) {
+				cconf->pid         = 0;
+				cconf->next        = NULL;
+				/* these should either be NULL or point to a string */
+				cconf->memavail    = NULL;
+				cconf->cpuavail    = NULL;
+				cconf->timavail    = NULL;
+				cconf->allowhost   = NULL;
+				cconf->allowuser   = NULL;
+				cconf->allowgroup  = NULL;
+				cconf->group       = NULL;
+				cconf->hostname    = NULL;
+				cconf->matlab      = NULL;
+				cconf->timeout     = NULL;
+				cconf->smartshare  = NULL;
+				cconf->smartmem    = NULL;
+				cconf->smartcpu    = NULL;
+				cconf->udsserver   = NULL;
+				cconf->verbose     = NULL;
+		}
+}
+
 /* parseline gets a textline and if it finds a key=value pair, 
  * the value will be put in newly allocated memory and 
  * the pointer to it returned, if not found, return NULL */
@@ -62,11 +85,11 @@ char* parseline(char* line, char* key) {
 /* parsefile takes a filename as input and returns a linked list
  * with the configuration for the peer slaves
  * config is a pointer to the start of the configuration list */
-int parsefile(char* fname, slaveconfig_t** config) {
+int parsefile(char* fname, config_t** config) {
 		char line[LINELENGTH];
 		int numread=0;
 		FILE* cf;
-		slaveconfig_t *cconf=NULL, *pconf=NULL;
+		config_t *cconf=NULL, *pconf=NULL;
 
 		if ( (cf = fopen(fname, "r")) ) {
 				while ( fgets(line, LINELENGTH, cf) ) {
@@ -78,28 +101,13 @@ int parsefile(char* fname, slaveconfig_t** config) {
 						/* make a new list item when a [peer] line is found */
 						if ( strstr(line, "[peer]") ) {
 								if (pconf == NULL) {
-										cconf = (slaveconfig_t *)malloc(sizeof(slaveconfig_t));
+										cconf = (config_t *)malloc(sizeof(config_t));
 										pconf = cconf;
 								} else {
-										cconf->next = (slaveconfig_t *)malloc(sizeof(slaveconfig_t));
+										cconf->next = (config_t *)malloc(sizeof(config_t));
 										cconf = cconf->next;
 								}
-								/* these will remain NULL if not specified, or point to a string if specified */
-								cconf->memavail    = NULL;
-								cconf->cpuavail    = NULL;
-								cconf->timavail    = NULL;
-								cconf->allowhost   = NULL;
-								cconf->allowuser   = NULL;
-								cconf->allowgroup  = NULL;
-								cconf->group       = NULL;
-								cconf->hostname    = NULL;
-								cconf->matlab      = NULL;
-								cconf->timeout     = NULL;
-								cconf->smartshare  = NULL;
-								cconf->smartmem    = NULL;
-								cconf->smartcpu    = NULL;
-								cconf->udsserver   = NULL;
-								cconf->verbose     = NULL;
+								initconfig(cconf);
 						}
 						else if (cconf) {
 								/* fill the current configuration structure with specific key=value pairs */
@@ -137,7 +145,7 @@ int parsefile(char* fname, slaveconfig_t** config) {
 
 				} /* while */
 		} else {
-				fprintf(stderr, "readconfig: cannot open file %s\n", fname);
+				fprintf(stderr, "parser: cannot open file %s\n", fname);
 				return 0;
 		} /* if fopen */
 

@@ -349,10 +349,13 @@ while ~all(submitted) || ~all(collected)
 
     if any(collected)
       % update the estimate of the time and memory that will be needed for the next job
-      timreq = nanmax(timused);
-      timreq = max(timreq, mintimreq);
-      memreq = nanmax(memused);
-      memreq = max(memreq, minmemreq);
+      % note that it cannot be updated if all collected jobs have failed (in case of stoponerror=false)
+      if ~isempty(nanmax(timused))
+        timreq = nanmax(timused);
+        timreq = max(timreq, mintimreq);
+        memreq = nanmax(memused);
+        memreq = max(memreq, minmemreq);
+      end
     elseif ~any(collected) && any(submitted) && any(busy)
       % update based on the time spent waiting sofar for the first job to return
       elapsed = toc(stopwatch) - min(submittime(submitted(busy)));

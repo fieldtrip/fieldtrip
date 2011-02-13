@@ -6,7 +6,7 @@
 
 /* this is a linked list that contains the peerslave configuration 
  * after it has been read from the configuration file */
-typedef struct slaveconfig_s {
+typedef struct config_s {
 		unsigned int pid;   /* PID of peerslave, to be set/used by its parent    */
 		char *memavail;
 		char *cpuavail;
@@ -23,10 +23,11 @@ typedef struct slaveconfig_s {
 		char *smartcpu;
 		char *udsserver;
 		char *verbose;
-		struct slaveconfig_s *next; /* pointer to the next record */
-} slaveconfig_t;
+		struct config_s *next; /* pointer to the next record */
+} config_t;
 
-int parsefile(char* fname, slaveconfig_t** config);
+int parsefile(char* fname, config_t** config);
+void initconfig(config_t* config);
 
 #endif
 
