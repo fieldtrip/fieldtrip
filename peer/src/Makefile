@@ -89,7 +89,7 @@ TARGET   = peerslave.$(MATLABARCH)
 
 all: $(TARGET)
 
-libpeer.a: tcpserver.o udsserver.o tcpsocket.o discover.o announce.o expire.o util.o extern.o peerinit.o security.o localhost.o smartshare.o smartmem.o smartcpu.o connect.o
+libpeer.a: tcpserver.o udsserver.o tcpsocket.o discover.o announce.o expire.o util.o extern.o peerinit.o security.o localhost.o smartshare.o smartmem.o smartcpu.o connect.o parser.o
 	ar rv $@ $^
 
 peer: peer.o libpeer.a
@@ -126,6 +126,9 @@ test_linkedlist: test_linkedlist.o
 	$(CC) $(CFLAGS) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
 
 test_localhost: test_localhost.o
+	$(CC) $(CFLAGS) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
+
+test_parser: test_parser.o
 	$(CC) $(CFLAGS) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
 
 %.o: %.c peer.h extern.h

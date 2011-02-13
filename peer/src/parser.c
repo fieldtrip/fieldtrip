@@ -1,151 +1,154 @@
-#include <string.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
+
 #include "peer.h"
+#include "parser.h"
 
-/* 
- *  number      = number, number of slaves to start        (default = 1)
- *  memavail    = number, amount of memory available       (default = inf)
- *  cpuavail    = number, speed of the CPU                 (default = inf)
- *  timavail    = number, maximum duration of a single job (default = inf)
- *  allowhost   = {...}
- *  allowuser   = {...}
- *  allowgroup  = {...}
- *  group       = string
- *  hostname    = string
- *  matlab      = string
- *  timeout     = number, time to keep the engine running after the job finishes
- *  smartshare  = 0|1
- *  smartmem    = 0|1
- *  smartcpu    = 0|1
- *  udsserver   = 0|1
- *  verbose     = number
- */
-
-typedef struct {
-		int option;
-		int memavail;
-		int cpuavail;
-		int timavail;
-		int allowhost;
-		int allowuser;
-		int allowgroup;
-		int group;
-		int hostname;
-		int matlab;
-		int timeout;
-		int smartshare;
-		int smartmem;
-		int smartcpu;
-		int udsserver;
-} setup_t;
-
-void assign_default(setup_t *setup) {
-		setup->option     = 0; 
-		setup->memavail   = 0; 
-		setup->cpuavail   = 0; 
-		setup->timavail   = 0; 
-		setup->allowhost  = 0; 
-		setup->allowuser  = 0; 
-		setup->allowgroup = 0;
-		setup->group      = 0; 
-		setup->hostname   = 0; 
-		setup->matlab     = 0; 
-		setup->timeout    = 0; 
-		setup->smartshare = 0;
-		setup->smartmem   = 0; 
-		setup->smartcpu   = 0; 
-		setup->udsserver  = 0; 
+void backspace(char *s, int pos, int num) {
+		int len_s, p;
+		len_s = strlen(s);
+		if (num > 0) {
+				for (p = pos; p+num < len_s; p++) {
+						s[p]=s[p+num];
+				}
+				s[len_s-num]='\0';
+		}
 }
 
-void cleanup_line(char *line) {
-		char *ptr1 = NULL, *ptr2 = NULL;
-
-		/* remove the newline and any comments*/
-		for (ptr1=line; *ptr1; ptr1++) 
-				if (*ptr1=='\r' || *ptr1=='\n' || *ptr1=='#' || *ptr1=='%')
-						*ptr1 = 0;
-
-		/* convert all characters up to the '=' to lower case */
-		ptr1=line;
-		while (*ptr1) {
-				*ptr1 = tolower(*ptr1);
-				ptr1++;
+void trimline(char *s) {
+		/* trim spaces and tabs from beginning */
+		int i = 0, len_s;
+		len_s = strlen(s);
+		while((s[i]==' ') || (s[i]=='\t')) {
+				i++;
 		}
+		backspace(s,0,i);
 
-		/* remove all spaces and tabs */
-		ptr1 = line;
-		ptr2 = line;
-		for (ptr1=line; *ptr1; ptr1++) {
-				while (*ptr1==' ')
-						ptr1++;
-				*ptr2 = *ptr1;
-				ptr2++;
+		/* trim spaces and tabs from end */
+		i = len_s - 1;
+		while((s[i]==' ') || (s[i]=='\t') || (s[i]=='\r')  || (s[i]=='\n')) {
+				i--;
 		}
-		*ptr2=0;
+		if(i < (len_s - 1)) {
+				s[i+1] = '\0';
+		}
 }
 
-int parser(const char *filename, setup_t **setup, int maxcount) {
-		char line[256];
-		int count = 0;
-		FILE *fp;
+/* parseline gets a textline and if it finds a key=value pair, 
+ * the value will be put in newly allocated memory and 
+ * the pointer to it returned, if not found, return NULL */
+char* parseline(char* line, char* key) {
+		char* keyp = NULL;
+		char* keyis;
+		char* valp;
+		char* valcpy=NULL; /* will be return value */
 
-		if ((fp = fopen(filename, "r"))==0) {
-				perror(filename);
-				return(-1);
+		/* make a copy of the key combined with '=' */
+		keyis = malloc((strlen(key) + 2) * sizeof(char));
+		strcpy(keyis, key);
+		strcat(keyis, "=");
+
+		/* find the occurrance of the key in the line */
+		/* copy the value after the '=' to a newly allocated string */
+		if ( (keyp = strstr(line, keyis)) ) {
+				valp = keyp + strlen(keyis);
+				valcpy = malloc(sizeof(char)*strlen(valp));
+				strcpy(valcpy, valp);
 		}
+		free(keyis);
+		return valcpy;
+}
 
-		while (!feof(fp) && count<maxcount) {
-				if (fgets(line, 256, fp)!=NULL) {
+/* parsefile takes a filename as input and returns a linked list
+ * with the configuration for the peer slaves
+ * config is a pointer to the start of the configuration list */
+int parsefile(char* fname, slaveconfig_t** config) {
+		char line[LINELENGTH];
+		int numread=0;
+		FILE* cf;
+		slaveconfig_t *cconf=NULL, *pconf=NULL;
 
-						/* remove spaces etcetera */
-						cleanup_line(line);
+		if ( (cf = fopen(fname, "r")) ) {
+				while ( fgets(line, LINELENGTH, cf) ) {
 
-						if (strlen(line)==0)
-								/* empty lines are not interesting */
-								continue;
+						trimline(line); /* remove leading/trailing spaces/tabs */
+						if (*line == '#') continue; /* skip lines that start with a comment */
+						if (*line == '%') continue; /* skip lines that start with a comment */
 
-						if (strcmp(line, "[peer]")==0) {
-								setup[count] = malloc(sizeof(setup_t));
-								assign_default(setup[count]);
-								count++;
+						/* make a new list item when a [peer] line is found */
+						if ( strstr(line, "[peer]") ) {
+								if (pconf == NULL) {
+										cconf = (slaveconfig_t *)malloc(sizeof(slaveconfig_t));
+										pconf = cconf;
+								} else {
+										cconf->next = (slaveconfig_t *)malloc(sizeof(slaveconfig_t));
+										cconf = cconf->next;
+								}
+								/* these will remain NULL if not specified, or point to a string if specified */
+								cconf->memavail    = NULL;
+								cconf->cpuavail    = NULL;
+								cconf->timavail    = NULL;
+								cconf->allowhost   = NULL;
+								cconf->allowuser   = NULL;
+								cconf->allowgroup  = NULL;
+								cconf->group       = NULL;
+								cconf->hostname    = NULL;
+								cconf->matlab      = NULL;
+								cconf->timeout     = NULL;
+								cconf->smartshare  = NULL;
+								cconf->smartmem    = NULL;
+								cconf->smartcpu    = NULL;
+								cconf->udsserver   = NULL;
+								cconf->verbose     = NULL;
+						}
+						else if (cconf) {
+								/* fill the current configuration structure with specific key=value pairs */
+								if (!cconf->memavail) 
+										cconf->memavail    = parseline(line, "memavail");
+								if (!cconf->cpuavail) 
+										cconf->cpuavail    = parseline(line, "cpuavail");
+								if (!cconf->timavail) 
+										cconf->timavail    = parseline(line, "timavail");
+								if (!cconf->allowhost) 
+										cconf->allowhost   = parseline(line, "allowhost");
+								if (!cconf->allowuser) 
+										cconf->allowuser   = parseline(line, "allowuser");
+								if (!cconf->allowgroup) 
+										cconf->allowgroup  = parseline(line, "allowgroup");
+								if (!cconf->group) 
+										cconf->group       = parseline(line, "group");
+								if (!cconf->hostname) 
+										cconf->hostname    = parseline(line, "hostname");
+								if (!cconf->matlab) 
+										cconf->matlab      = parseline(line, "matlab");
+								if (!cconf->timeout) 
+										cconf->timeout     = parseline(line, "timeout");
+								if (!cconf->smartshare) 
+										cconf->smartshare  = parseline(line, "smartshare");
+								if (!cconf->smartmem) 
+										cconf->smartmem    = parseline(line, "smartmem");
+								if (!cconf->smartcpu) 
+										cconf->smartcpu    = parseline(line, "smartcpu");
+								if (!cconf->udsserver) 
+										cconf->udsserver   = parseline(line, "udsserver");
+								if (!cconf->verbose) 
+										cconf->verbose     = parseline(line, "verbose");
 						}
 
-						if (count>0) {
-								sscanf(line, "option=%d"     , &(setup[count-1]->option    ));
-								sscanf(line, "memavail=%d"   , &(setup[count-1]->memavail  ));
-								sscanf(line, "cpuavail=%d"   , &(setup[count-1]->cpuavail  ));
-								sscanf(line, "timavail=%d"   , &(setup[count-1]->timavail  ));
-								sscanf(line, "allowhost=%d"  , &(setup[count-1]->allowhost ));
-								sscanf(line, "allowuser=%d"  , &(setup[count-1]->allowuser ));
-								sscanf(line, "allowgroup=%d" , &(setup[count-1]->allowgroup));
-								sscanf(line, "group=%d"      , &(setup[count-1]->group     ));
-								sscanf(line, "hostname=%d"   , &(setup[count-1]->hostname  ));
-								sscanf(line, "matlab=%d"     , &(setup[count-1]->matlab    ));
-								sscanf(line, "timeout=%d"    , &(setup[count-1]->timeout   ));
-								sscanf(line, "smartshare=%d" , &(setup[count-1]->smartshare));
-								sscanf(line, "smartmem=%d"   , &(setup[count-1]->smartmem  ));
-								sscanf(line, "smartcpu=%d"   , &(setup[count-1]->smartcpu  ));
-								sscanf(line, "udsserver=%d"  , &(setup[count-1]->udsserver ));
-						} /* if count */
-				} /* if fgets */
-		} /* while not feof */
+				} /* while */
+		} else {
+				fprintf(stderr, "readconfig: cannot open file %s\n", fname);
+				return 0;
+		} /* if fopen */
 
-		fclose(fp);
-		return(count);
-}
+		/* this will be returned to the calling function */
+		*config = pconf;
 
-void main(void) {
-		int count, i;
-		setup_t *setup[128];
-
-		count = parser("parser.conf", setup, 128);
-
-		for (i=0; i<count; i++) {
-				fprintf(stderr, "setup[%d].option  = %d\n", i, setup[i]->option);
-				fprintf(stderr, "setup[%d].timeout = %d\n", i, setup[i]->timeout);
+		/* count the number of nodes */
+		while (pconf) {
+				numread++;
+				pconf= pconf->next;
 		}
-
-		return;
+		return numread;				
 }
 
