@@ -83,6 +83,9 @@ endif
 ## to compile the 32-bit version with a 64-bit compiler, you will have to add the following
 # CFLAGS += -arch i386
 
+LD_LIBRARY_PATH := $(MATLABPATH)/bin/$(MATLABARCH)
+export LD_LIBRARY_PATH
+
 TARGET   = peerslave.$(MATLABARCH)
 
 ##############################################################################
