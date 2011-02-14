@@ -15,7 +15,8 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.numcomponent = 'all' or number (default = 'all')
 %   cfg.demean       = 'no' or 'yes' (default = 'yes')
 %   cfg.runica       = substructure with additional low-level options for this method
-%   cfg.binica       = substructure with additional low-level options for this method
+%   cfg.binica       = substructure with additional low-level options for
+%   this method
 %   cfg.dss          = substructure with additional low-level options for this method
 %   cfg.fastica      = substructure with additional low-level options for this method
 %
@@ -462,7 +463,7 @@ if isfield(data, 'trialinfo')
   comp.trialinfo = data.trialinfo;
 end
 
-fprintf('total time in componentanalysis %.1f seconds\n', stopwatch(toc));
+fprintf('total time in componentanalysis %.1f seconds\n', toc(stopwatch));
 
 % the output data should be saved to a MATLAB file
 if ~isempty(cfg.outputfile)
