@@ -127,18 +127,25 @@ segHdr = zeros(NSegments,2);
 if unsegmented
     eventData = logical(zeros(NEvent,NSegments*NSamples));
     switch precision
-      case 2
-        dataType = 'int16';
-      case 4
-        dataType = 'single';
-      case 6
-        dataType = 'double';
+        case 2
+            dataType = 'int16';
+            byteSize=2;
+        case 4
+            dataType = 'single';
+            byteSize=4;
+        case 6
+            dataType = 'double';
+            byteSize=8;
     end
-    allData = fread(fid,[NChan+NEvent,NSegments*NSamples],dataType,endian);
-    eventData = logical(allData(NChan+1:end,:));
+    beg_dat = ftell(fid);
+    for ii=1:NEvent
+        fseek(fid,beg_dat+(NChan+ii-1)*byteSize,'bof');
+        eventData(ii,:) = logical(fread(fid, NSamples, ...
+            dataType, (NChan+NEvent-1)*byteSize, endian))';
+    end
 else
     eventData = zeros(NEvent,NSegments*NSamples);
-    for j = 1:NSegments*(NSamples/nsmp)
+    for j = 1:NSegments
         %read miniheader per segment
         [segHdr(j,1), count]    = fread(fid, 1,'int16',endian);    %cell
         [segHdr(j,2), count]    = fread(fid, 1,'int32',endian);    %time stamp
