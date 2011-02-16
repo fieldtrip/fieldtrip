@@ -34,8 +34,10 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %                 'di',        directionality index
 %                 'wpli',          weighted phase lag index
 %                 'wpli_debiased'  debiased weighted phase lag index
+%                 'ppc'        pairwise phase consistency
+%                 'wppc'       weighted pairwise phase consistency
 
-% Copyright (C) 2009, Robert Oostenveld, Jan-Mathijs Schoffelen, Andre Bastos
+% Copyright (C) 2009, Robert Oostenveld, Jan-Mathijs Schoffelen, Andre Bastos, Martin Vinck
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -141,6 +143,16 @@ switch cfg.method
     inparam = 'crsspctrm';
     debiaswpli = 1;       
     if hasjack, error('to compute wpli, data should be in rpt format'); end
+  case {'ppc'}
+    data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
+    inparam = 'crsspctrm';
+    weightppc = 0;
+    if hasjack, error('to compute ppc, data should be in rpt format'); end      
+  case {'wppc'}
+    data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
+    inparam = 'crsspctrm';
+    weightppc = 1;       
+    if hasjack, error('to compute wppc, data should be in rpt format'); end  
   case {'plv'}
     data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';
@@ -284,11 +296,11 @@ end
 % check if jackknife is required
 if hasrpt && dojack && hasjack,
   % do nothing
-elseif hasrpt && dojack && ~(strcmp(cfg.method, 'wpli') || strcmp(cfg.method, 'wpli_debiased')),
+elseif hasrpt && dojack && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var')),
   % compute leave-one-outs
   data    = ft_selectdata(data, 'jackknife', 'yes');
   hasjack = 1;
-elseif hasrpt && ~(strcmp(cfg.method, 'wpli') || strcmp(cfg.method, 'wpli_debiased'))
+elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var'))
   % create dof variable
   if isfield(data, 'dof')
     dof = data.dof;
@@ -357,14 +369,31 @@ switch cfg.method
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg);
     outparam = 'crsspctrm';
   case {'wpli' 'wpli_debiased'}
-    
+    % weighted pli or debiased weighted phase lag index.
     tmpcfg                 = [];
     tmpcfg.feedback        = cfg.feedback;
     tmpcfg.dojack          = dojack;
     tmpcfg.debias          = debiaswpli;
     optarg                 = ft_cfg2keyval(tmpcfg);    
     [datout, varout, nrpt] = ft_connectivity_wpli(data.(inparam), optarg);
-    outparam = 'wplispctrm';          
+    if debiaswpli
+      outparam = 'wplispctrm';     
+    else
+      outparam = 'wpli_debiasedspctrm';
+    end
+  case {'wppc' 'ppc'}
+    % weighted pairwise phase consistency or pairwise phase consistency
+    tmpcfg                 = [];
+    tmpcfg.feedback        = cfg.feedback;
+    tmpcfg.dojack          = dojack;
+    tmpcfg.weighted        = weightppc;
+    optarg                 = ft_cfg2keyval(tmpcfg);    
+    [datout, varout, nrpt] = ft_connectivity_ppc(data.(inparam), optarg);
+    if weightppc
+      outparam = 'wppcspctrm';     
+    else
+      outparam = 'ppcspctrm';
+    end
   case 'plv'
     % phase locking value
     
