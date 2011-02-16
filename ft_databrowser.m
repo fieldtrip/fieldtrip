@@ -295,7 +295,11 @@ if ischar(cfg.zscale) && strcmp(cfg.zscale, 'auto')
     dat = data.trial{1}(chansel,:);
     minval = min(dat(:));
     maxval = max(dat(:));
+    time = data.time{1};
+    mintime = min(time(:));
+    maxtime = max(time(:));
     cfg.zscale = max(abs(minval), abs(maxval));
+    cfg.yscale = max(abs(mintime), abs(maxtime));
   else
     cfg.zscale = 1; % FIXME
   end
@@ -352,8 +356,8 @@ uicontrol('tag', 'group1a', 'parent', h, 'units', 'normalized', 'style', 'pushbu
 uicontrol('tag', 'group2a', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '-', 'userdata', 'shift+leftarrow')
 uicontrol('tag', 'group2a', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '+', 'userdata', 'shift+rightarrow')
 if strcmp(cfg.continuous, 'no')
-  ft_uilayout(h, 'tag', 'group1a', 'visible', 'off', 'retag', 'group1');
-  ft_uilayout(h, 'tag', 'group2a', 'visible', 'off', 'retag', 'group2');
+  ft_uilayout(h, 'tag', 'group1a', 'visible', 'on', 'retag', 'group1');
+  ft_uilayout(h, 'tag', 'group2a', 'visible', 'on', 'retag', 'group2');
 else
   ft_uilayout(h, 'tag', 'group1a', 'visible', 'on', 'retag', 'group1');
   ft_uilayout(h, 'tag', 'group2a', 'visible', 'on', 'retag', 'group2');
@@ -384,10 +388,31 @@ ft_uilayout(h, 'tag', 'group3', 'style', 'pushbutton', 'callback', @keyboard_cb)
 
 ft_uilayout(h, 'tag', 'group1', 'retag', 'viewui');
 ft_uilayout(h, 'tag', 'group2', 'retag', 'viewui');
-ft_uilayout(h, 'tag', 'viewui', 'BackgroundColor', [0.8 0.8 0.8], 'hpos', 'auto', 'vpos', 0.01);
+ft_uilayout(h, 'tag', 'viewui', 'BackgroundColor', [0.8 0.8 0.8], 'hpos', 'auto', 'vpos', 0);
 
 definetrial_cb(h);
 redraw_cb(h);
+
+%% Scrollbar
+
+% set initial scrollbar value
+dx = maxtime;
+
+% set scrollbar position
+fig_pos=get(gca,'position');
+scroll_pos=[fig_pos(1) fig_pos(2) fig_pos(3) 0.02];
+
+% define callback
+S=['set(gca,''xlim'',get(gcbo,''value'')+[ ' num2str(mintime) ',' num2str(maxtime) '])'];
+
+% Creating Uicontrol
+s=uicontrol('style','slider',...
+    'units','normalized','position',scroll_pos,...
+    'callback',S,'min',0,'max',0, ...
+    'visible', 'off'); %'value', xmin
+
+%initialize postion of plot
+% set(gca,'xlim',[xmin xmin+dx]);
 
 if nargout
   % wait until the user interface is closed, get the user data with the updated artifact details
@@ -1066,7 +1091,10 @@ switch opt.cfg.viewmode
         ft_plot_vector(tim, dat(datsel, :), 'hpos', laytime.pos(laysel,1), 'vpos', laytime.pos(laysel,2), 'width', laytime.width(laysel), 'height', laytime.height(laysel), 'hlim', hlim, 'vlim', vlim);
         % plot the topography of this component
         chanz = opt.orgdata.topo(sel1,compindx(i));
-        ft_plot_topo(chanx, chany, chanz, 'mask', laychan.mask, 'outline', laychan.outline, 'hpos', laytopo.pos(laysel,1), 'vpos', laytopo.pos(laysel,2), 'width', laytopo.width(laysel), 'height', laytopo.height(laysel));
+        ft_plot_topo(chanx, chany, chanz, 'hpos', laytopo.pos(laysel,1), ...
+            'vpos', laytopo.pos(laysel,2), 'mask', laychan.mask, ...
+            'interplim', 'mask', 'outline', laychan.outline,  ...
+            'width', laytopo.width(laysel), 'height', laytopo.height(laysel));
         axis equal
         drawnow
       end
