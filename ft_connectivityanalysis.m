@@ -30,7 +30,6 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %                 'pdc',       partial directed coherence, support for freq and freqmvar data
 %                 'granger',   granger causality, support for freq and freqmvar data
 %                 'psi',       phaseslope index, support for freq and freqmvar data
-%                 'pcd',       pairwise circular difference
 %                 'di',        directionality index
 %                 'wpli',          weighted phase lag index
 %                 'wpli_debiased'  debiased weighted phase lag index
@@ -587,8 +586,6 @@ switch cfg.method
     [datout, varout, nrpt] = ft_connectivity_pdc(datin, optarg);
     outparam = 'pdcspctrm';
     
-  case 'pcd'
-    % pairwise circular distance
   case 'psi'
     % phase slope index
     
