@@ -32,6 +32,8 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %                 'psi',       phaseslope index, support for freq and freqmvar data
 %                 'pcd',       pairwise circular difference
 %                 'di',        directionality index
+%                 'wpli',          weighted phase lag index
+%                 'wpli_debiased'  debiased weighted phase lag index
 
 % Copyright (C) 2009, Robert Oostenveld, Jan-Mathijs Schoffelen, Andre Bastos
 %
@@ -129,7 +131,16 @@ switch cfg.method
       otherwise
     end
     % FIXME think of accommodating partial coherence for source data with only a few references
-    
+  case {'wpli'}
+    data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
+    inparam = 'crsspctrm';
+    debiaswpli = 0;
+    if hasjack, error('to compute wpli, data should be in rpt format'); end
+  case {'wpli_debiased'}
+    data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
+    inparam = 'crsspctrm';
+    debiaswpli = 1;       
+    if hasjack, error('to compute wpli, data should be in rpt format'); end
   case {'plv'}
     data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';
@@ -256,7 +267,7 @@ if ~isempty(cfg.partchannel)
   
   cfg.pchanindx   = pchanindx;
   cfg.allchanindx = kchanindx;
-  partstr = '';
+  partstr = ''; 
   for k = 1:numel(cfg.partchannel)
     partstr = [partstr,'-',cfg.partchannel{k}];
   end
@@ -273,11 +284,11 @@ end
 % check if jackknife is required
 if hasrpt && dojack && hasjack,
   % do nothing
-elseif hasrpt && dojack,
+elseif hasrpt && dojack && ~(strcmp(cfg.method, 'wpli') || strcmp(cfg.method, 'wpli_debiased')),
   % compute leave-one-outs
   data    = ft_selectdata(data, 'jackknife', 'yes');
   hasjack = 1;
-elseif hasrpt
+elseif hasrpt && ~(strcmp(cfg.method, 'wpli') || strcmp(cfg.method, 'wpli_debiased'))
   % create dof variable
   if isfield(data, 'dof')
     dof = data.dof;
@@ -345,7 +356,15 @@ switch cfg.method
     
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg);
     outparam = 'crsspctrm';
+  case {'wpli' 'wpli_debiased'}
     
+    tmpcfg                 = [];
+    tmpcfg.feedback        = cfg.feedback;
+    tmpcfg.dojack          = dojack;
+    tmpcfg.debias          = debiaswpli;
+    optarg                 = ft_cfg2keyval(tmpcfg);    
+    [datout, varout, nrpt] = ft_connectivity_wpli(data.(inparam), optarg);
+    outparam = 'wplispctrm';          
   case 'plv'
     % phase locking value
     
