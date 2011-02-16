@@ -48,6 +48,9 @@ classdef ft_mv_blogreg < ft_mv_predictor
       prior
             
       % scale of the bias term (bias term will be appended to the model)
+      % note: internally scale and precbias (scale of bias term) will be
+      % inverted. This is handled automatically but is a concern when
+      % maually specifying and scaling the prior
       precbias = []; 
 
       % (either 'probit' or gaussian 'quadrature' to approximate posterior) 
@@ -113,7 +116,7 @@ classdef ft_mv_blogreg < ft_mv_predictor
        function obj = train(obj,X,Y)
          
          % multiple outputs
-         if size(Y,2) > 1
+         if ~iscell(Y) && size(Y,2) > 1
            obj = ft_mv_noutput('mvmethod',obj);
            obj = obj.train(X,Y);
            return;
@@ -165,13 +168,13 @@ classdef ft_mv_blogreg < ft_mv_predictor
            
            obj.prior = scale_prior(obj.prior,'lambda',obj.scale);
            
+           % add bias term if not yet done
            if transfer
              for j=1:obj.ntasks
-               obj.prior(j*(obj.nfeatures+1),j*(obj.nfeatures+1)) = obj.precbias;
+               obj.prior(j*(obj.nfeatures+1),j*(obj.nfeatures+1)) = 1/obj.precbias;
              end
            elseif size(obj.prior,1)~=size(X,2)
-             % add bias term if not yet done
-             obj.prior(size(X,2),size(X,2)) = obj.precbias;
+             obj.prior(size(X,2),size(X,2)) = 1/obj.precbias;
            end
            
            if obj.niter
@@ -402,52 +405,62 @@ classdef ft_mv_blogreg < ft_mv_predictor
          % we output variances relative to the prior variances
          %
          % other return values:
+         % posterior variance
+         % prior variance
          % mean of the betas
          % variance of the betas
          %
          
-         % Note: bias term must be included in prior
-         varaux = obj.Gauss.auxC(1:(end-1)); % ignore bias term
+         m = cell(5,obj.ntasks);
          
-         % compute variances of the auxiliary variables under the prior
-         [L,dummy,S] = chol(sparse(obj.prior),'lower');
-         invA = fastinvc(L);
-         varprior = full(diag(S*invA*S'));
-         varprior = varprior(1:(end-1));
+         N = (numel(obj.Gauss.auxC) - obj.ntasks) / obj.ntasks; % number of features
+         for j=1:obj.ntasks
          
-         % mean and variance of the regression coefficients
-         meanbeta = obj.Gauss.m(1:(end-1));
-         varbeta = obj.Gauss.diagC(1:(end-1));
-         
-         % the mean and variance can be used to create eg 100(1-alpha)% credible
-         % interval: ci(k,:) = [ ...
-         % mu(k) - norminv(1-alpha/2)*sigma(k) ...
-         % mu(k) + norminv(1-alpha/2)*sigma(k)
-         % ]
-         % with mu(k) = meanbeta(k) and sigma(k) = sqrt(varbeta(k)) such that 
-         % the alpha-importance map is defined as M_alpha = ci(:,1) < 0 & ci(:,2) > 0
-         
-         % model is posterior variance divided by prior variance of the
-         % auxiliary variables; chose minus because of interpretation
-         % problems...
-         
-         m = cell(5,1);
-         m{1} = (varaux - varprior);
-         m{2} = varaux;
-         m{3} = varprior;
-         m{4} = meanbeta;
-         m{5} = varbeta;
-         
-         if ~isempty(obj.mask)
+           % Note: bias term must be included in prior
+           varaux = obj.Gauss.auxC((j-1)*(N+1) + (1:N)); % ignore bias term
            
-           msk = obj.mask(:) ~= 0;
-           mm = nan(obj.indims);
-           for j=1:5
-             mm(msk) = m{j};
-             m{j} = mm;
+           % compute variances of the auxiliary variables under the prior
+           [L,dummy,S] = chol(sparse(obj.prior),'lower');
+           invA = fastinvc(L);
+           varprior = full(diag(S*invA*S'));
+           varprior = varprior((j-1)*(N+1) + (1:N));
+           
+           % mean and variance of the regression coefficients
+           meanbeta = obj.Gauss.m((j-1)*(N+1) + (1:N));
+           varbeta = obj.Gauss.diagC((j-1)*(N+1) + (1:N));
+           
+           % the mean and variance can be used to create eg 100(1-alpha)% credible
+           % interval: ci(k,:) = [ ...
+           % mu(k) - norminv(1-alpha/2)*sigma(k) ...
+           % mu(k) + norminv(1-alpha/2)*sigma(k)
+           % ]
+           % with mu(k) = meanbeta(k) and sigma(k) = sqrt(varbeta(k)) such that
+           % the alpha-importance map is defined as M_alpha = ci(:,1) < 0 & ci(:,2) > 0
+           
+           % model is posterior variance divided by prior variance of the
+           % auxiliary variables; chose minus because of interpretation
+           % problems...
+         
+           m{1,j} = (varaux - varprior);
+           m{2,j} = varaux;
+           m{3,j} = varprior;
+           m{4,j} = meanbeta;
+           m{5,j} = varbeta;
+           
+           if ~isempty(obj.mask)
+             
+             msk = obj.mask(:) ~= 0;
+             mm = nan(obj.indims);
+             for k=1:5
+               mm(msk) = m{k,j};
+               m{k,j} = mm;
+             end
+             
            end
-           
+         
          end
+           
+         
          
          desc = { ...
            'importance values (posterior  - prior variance of auxiliary variables)' ...
@@ -455,26 +468,6 @@ classdef ft_mv_blogreg < ft_mv_predictor
            'prior variance of auxiliary variables' ...
            'means of the regression coefficients; positive values indicate condition one' ...
            'variance of the regression coefficients' }';
-         
-         % split for each task
-         if obj.ntasks > 1
-           mm = cell(5,obj.ntasks);
-           for c=1:5
-             
-             % re-add bias term removed by blogreg
-             m{c} = [m{c}; 1];
-             
-             tmp = reshape(m{c},[numel(m{c})./obj.ntasks obj.ntasks]);
-             
-             % remove bias
-             tmp = tmp(1:(end-1),:);
-             
-             for j=1:obj.ntasks
-               mm{c,j} = tmp(:,j);
-             end
-           end
-           m = mm;
-         end
          
        end
        
