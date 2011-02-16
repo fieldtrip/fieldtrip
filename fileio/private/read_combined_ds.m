@@ -67,7 +67,7 @@ if needhdr
 
   clear filehdr
   for i=1:nfiles
-    filehdr(i) = read_header(fname{i}, 'headerformat', ftype{i});
+    filehdr(i) = ft_read_header(fname{i}, 'headerformat', ftype{i});
   end
 
   if any([filehdr.nChans]~=1)
