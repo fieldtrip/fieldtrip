@@ -15,8 +15,9 @@ function [cfg] = ft_databrowser(cfg, data)
 %
 % The following configuration options are supported:
 %   cfg.trl                     = structure that defines the data segments of interest. See FT_DEFINETRIAL
-%   cfg.continuous              = 'yes' or 'no' whether the file contains continuous data
+%   cfg.continuous              = 'yes' or 'no' wh ether the file contains continuous data
 %   cfg.channel                 = cell-array with channel labels, see FT_CHANNELSELECTION
+%   cfg.comps                   = a vector with the components to plot (ex. 1:10) (optional)
 %   cfg.zscale                  = [zmin zmax] or 'auto' (default = 'auto')
 %   cfg.blocksize               = number (in seconds), only aplicable if data contains only 1 (long) trial
 %   cfg.viewmode                = string, 'butterfly', 'vertical', 'component' (default = 'butterfly')
@@ -106,6 +107,13 @@ end
 lines_color = [0.75 0 0;0 0 1;0 1 0;0.44 0.19 0.63;0 0.13 0.38;0.5 0.5 0.5;1 0.75 0;1 0 0;0.89 0.42 0.04;0.85 0.59 0.58;0.57 0.82 0.31;0 0.69 0.94;1 0 0.4;0 0.69 0.31;0 0.44 0.75];
 
 % set the defaults
+if isfield(data, 'topo')
+    if ~isfield(cfg, 'comp')
+        cfg.comp = 1:10; % to avoid plotting 274 components topographically
+    end
+	cfg.channel = data.label(cfg.comp); 
+end
+
 if ~isfield(cfg, 'channel'),         cfg.channel = 'all';             end
 if ~isfield(cfg, 'zscale'),          cfg.zscale = 'auto';             end
 if ~isfield(cfg, 'artfctdef'),       cfg.artfctdef = struct;          end
@@ -162,7 +170,10 @@ if hasdata
   Ntrials = size(trlorg, 1);
   
   
-  if strcmp(cfg.viewmode, 'component')
+  if strcmp(cfg.viewmode, 'component') 
+    if ~isfield(cfg, 'layout')
+      error('You need to specify a layout-file when browsing through components');
+    end
     % read or create the layout that will be used for the topoplots
     cfg.layout = ft_prepare_layout(cfg, data);
   end
@@ -191,6 +202,9 @@ else
   Ntrials = size(trlorg, 1);
   
   if strcmp(cfg.viewmode, 'component')
+	if ~isfield(cfg, 'layout')
+      error('You need to specify a layout-file when browsing through components');
+    end
     % read or create the layout that will be used for the topoplots
     cfg.layout = ft_prepare_layout(cfg);
   end
@@ -1091,7 +1105,7 @@ switch opt.cfg.viewmode
         ft_plot_vector(tim, dat(datsel, :), 'hpos', laytime.pos(laysel,1), 'vpos', laytime.pos(laysel,2), 'width', laytime.width(laysel), 'height', laytime.height(laysel), 'hlim', hlim, 'vlim', vlim);
         % plot the topography of this component
         chanz = opt.orgdata.topo(sel1,compindx(i));
-        ft_plot_topo(chanx, chany, chanz, 'hpos', laytopo.pos(laysel,1), ...
+        ft_plot_topo(chanx, chany, chanz./max(abs(chanz)), 'hpos', laytopo.pos(laysel,1), ...
             'vpos', laytopo.pos(laysel,2), 'mask', laychan.mask, ...
             'interplim', 'mask', 'outline', laychan.outline,  ...
             'width', laytopo.width(laysel), 'height', laytopo.height(laysel));
