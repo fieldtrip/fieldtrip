@@ -50,7 +50,7 @@ function [data] = ft_checkdata(data, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_checkdata.m 2853 2011-02-09 22:06:20Z crimic $
+% $Id$
 
 % in case of an error this function could use dbstack for more detailled
 % user feedback

@@ -27,7 +27,7 @@ function [lf] = magnetic_dipole(R, pos, ori)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: magnetic_dipole.m 2787 2011-02-03 11:55:33Z roboos $
+% $Id$
 
 u0 = 1e-7;
 nchan = size(pos,1);

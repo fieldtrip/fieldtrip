@@ -25,7 +25,7 @@ function [data] = avgref(data, sel);
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: avgref.m 2787 2011-02-03 11:55:33Z roboos $
+% $Id$
 
 % determine the dimension of the data
 if length(size(data))==3

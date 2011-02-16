@@ -37,7 +37,7 @@ function [inInterval] = matlabversion(min, max)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: matlabversion.m 2827 2011-02-04 09:45:29Z roboos $
+% $Id$
 
 curVer = version();
 

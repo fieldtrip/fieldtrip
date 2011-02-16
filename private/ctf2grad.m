@@ -29,7 +29,7 @@ function [grad] = ctf2grad(hdr, dewar);
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ctf2grad.m 2787 2011-02-03 11:55:33Z roboos $
+% $Id$
 
 % My preferred ordering in the grad structure is:
 %   1st 151 coils are bottom coils of MEG channels

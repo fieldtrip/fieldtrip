@@ -44,7 +44,7 @@ function h = uimage(varargin)
 %   2006/06/12: v1.00, first version.
 %   2006/06/14: v1.03, minor bug fixed; works in ML6.
 %
-% $Id: uimage.m 2787 2011-02-03 11:55:33Z roboos $
+% $Id$
 
 error(nargchk(3,inf,nargin));
 

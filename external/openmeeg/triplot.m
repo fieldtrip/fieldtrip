@@ -53,7 +53,7 @@ function [hs, hc, contour] = triplot(pnt, tri, val, mode, levels)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: triplot.m 952 2010-04-21 18:29:51Z roboos $
+% $Id$
 
 % start with empty return values
 hs      = [];

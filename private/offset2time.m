@@ -33,7 +33,7 @@ function time = offset2time(offset, fsample, nsamples);
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: offset2time.m 2787 2011-02-03 11:55:33Z roboos $
+% $Id$
 
 % ensure that these are not integers
 offset   = double(offset);

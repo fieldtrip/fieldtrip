@@ -26,7 +26,7 @@ function [tri] = projecttri(pnt, method)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: projecttri.m 2787 2011-02-03 11:55:33Z roboos $
+% $Id$
 
 if nargin<2
   method = 'convhull';

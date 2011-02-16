@@ -33,7 +33,7 @@ function [select] = select_channel_list(label, select, titlestr);
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: select_channel_list.m 2787 2011-02-03 11:55:33Z roboos $
+% $Id$
 
 if nargin<3
   titlestr = 'Select';

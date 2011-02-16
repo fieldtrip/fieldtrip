@@ -29,7 +29,7 @@ function [val, remaining] = keyval(key, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: keyval.m 2787 2011-02-03 11:55:33Z roboos $
+% $Id$
 
 % what to return if the key is not found
 emptyval = [];

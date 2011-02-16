@@ -29,7 +29,7 @@ function [varargout] = funname(varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ptriproj.m 2797 2011-02-03 17:12:01Z roboos $
+% $Id$
 
 % compile the missing mex file on the fly
 % remember the original working directory
