@@ -1605,6 +1605,7 @@ if isfield(freq, 'trialinfo'), data.trialinfo = freq.trialinfo; end;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [data] = raw2timelock(data)
 
+nsmp = cellfun('size',data.time,2);
 data   = ft_checkdata(data, 'hastrialdef', 'yes');
 ntrial = numel(data.trial);
 nchan  = numel(data.label);
@@ -1648,12 +1649,18 @@ end
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [data] = timelock2raw(data)
+try
+  nsmp = cellfun('size',data.time,2);
+catch
+  nsmp = size(data.time,2);
+end
 switch data.dimord
   case 'chan_time'
     data.trial{1} = data.avg;
     data.time     = {data.time};
     data          = rmfield(data, 'avg');
-    data.fsample = 1/(data.time{1}(2)-data.time{1}(1));
+    seln = find(nsmp>1,1, 'first');
+    data.fsample = 1/(data.time{seln}(2)-data.time{seln}(1));
   case 'rpt_chan_time'
     tmptrial = {};
     tmptime  = {};
@@ -1667,7 +1674,8 @@ switch data.dimord
     data       = rmfield(data, 'trial');
     data.trial = tmptrial;
     data.time  = tmptime;
-    data.fsample = 1/(data.time{1}(2)-data.time{1}(1));
+    seln = find(nsmp>1,1, 'first');
+    data.fsample = 1/(data.time{seln}(2)-data.time{seln}(1));
   case 'subj_chan_time'
     tmptrial = {};
     tmptime  = {};
@@ -1676,12 +1684,13 @@ switch data.dimord
     ntime  = size(data.individual,3);
     for i=1:ntrial
       tmptrial{i} = reshape(data.individual(i,:,:), [nchan, ntime]);
-      tmptime{i}  = data.time{i};
+      tmptime{i}  = data.time;
     end
     data       = rmfield(data, 'individual');
     data.trial = tmptrial;
     data.time  = tmptime;
-    data.fsample = 1/(data.time{1}(2)-data.time{1}(1));    
+    seln = find(nsmp>1,1, 'first');
+    data.fsample = 1/(data.time{seln}(2)-data.time{seln}(1));    
   otherwise
     error('unsupported dimord');
 end
