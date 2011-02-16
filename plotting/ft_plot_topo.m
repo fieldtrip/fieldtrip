@@ -108,12 +108,14 @@ elseif ~isempty(mask)
   xi        = linspace(hlim(1), hlim(2), gridscale);   % x-axis for interpolation (row vector)
   yi        = linspace(vlim(1), vlim(2), gridscale);   % y-axis for interpolation (row vector)
   [Xi,Yi]   = meshgrid(xi', yi);
-  if ~isempty(newpoints)
+  if ~isempty(newpoints) && (hpos ~= 0 || vpos ~= 0)
     warning('Some points fall outside the outline, please consider using another layout')
 % FIXME: I am not sure about it, to be tested!
 %     tmp = [mask{1};newpoints];
 %     indx = convhull(tmp(:,1),tmp(:,2));
 %     mask{1} = tmp(indx,:);
+% NOTE: if you set hpos and/or vpos, newpoints is not empty, but nothing
+% needs to be fixed (this fixme screws up things, then)
   end 
   for i=1:length(mask)
     mask{i}(:,1) = mask{i}(:,1)+hpos;
