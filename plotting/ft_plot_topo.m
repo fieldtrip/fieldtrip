@@ -76,8 +76,8 @@ elseif strcmp(interplim, 'mask') && ~isempty(mask),
   hlim = [inf -inf];
   vlim = [inf -inf];
   for i=1:length(mask)
-    hlim = [min([hlim(1); mask{i}(:,1)+hpos]) max([hlim(2); mask{i}(:,1)+hpos])];
-    vlim = [min([vlim(1); mask{i}(:,2)+vpos]) max([vlim(2); mask{i}(:,2)+vpos])];
+    hlim = [min([hlim(1); mask{i}(:,1)*width+hpos]) max([hlim(2); mask{i}(:,1)*width+hpos])];
+    vlim = [min([vlim(1); mask{i}(:,2)*width+vpos]) max([vlim(2); mask{i}(:,2)*width+vpos])];
   end
 else
   hlim = [min(chanX) max(chanX)];
@@ -108,7 +108,7 @@ elseif ~isempty(mask)
   xi        = linspace(hlim(1), hlim(2), gridscale);   % x-axis for interpolation (row vector)
   yi        = linspace(vlim(1), vlim(2), gridscale);   % y-axis for interpolation (row vector)
   [Xi,Yi]   = meshgrid(xi', yi);
-  if ~isempty(newpoints) && (hpos ~= 0 || vpos ~= 0)
+  if ~isempty(newpoints) && (hpos == 0 || vpos == 0)
     warning('Some points fall outside the outline, please consider using another layout')
 % FIXME: I am not sure about it, to be tested!
 %     tmp = [mask{1};newpoints];
@@ -118,8 +118,8 @@ elseif ~isempty(mask)
 % needs to be fixed (this fixme screws up things, then)
   end 
   for i=1:length(mask)
-    mask{i}(:,1) = mask{i}(:,1)+hpos;
-    mask{i}(:,2) = mask{i}(:,2)+vpos;
+    mask{i}(:,1) = mask{i}(:,1)*width+hpos;
+    mask{i}(:,2) = mask{i}(:,2)*height+vpos;
     mask{i}(end+1,:) = mask{i}(1,:);                   % force them to be closed
     maskimage(inside_contour([Xi(:) Yi(:)], mask{i})) = true;
   end
@@ -165,7 +165,7 @@ end
 % Create isolines
 if strcmp(style,'iso') || strcmp(style,'surfiso')
   if ~isempty(isolines)
-    contour(Xi,Yi,Zi,isolines,'k');
+    contour(Xi/10,Yi,Zi,isolines,'k');
   end
 end
 
