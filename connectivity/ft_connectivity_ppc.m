@@ -75,15 +75,15 @@ end
 if dojack && n>2 % n needs to be larger than 2 to get a meaningful variance
   for k = 1:n
     % this code works with both formats of input, also if it is 5-D
+    s       = outsum - input(k,:,:,:,:,:,:); % index up to 7-D, this also works for 5-D then.   
     if ~weighted
-      num   = (outsum - input(k,:,:,:,:,:,:)).*conj((outsum - input(k,:,:,:,:,:,:))) - (n-2);
+      num   = s.*conj(s) - (n-2);
       denom = (n-1)*(n-2);
     else
-      sq    = outssq - input(k,:,:,:,:,:,:).*conj(input(k,:,:,:,:,:,:));  
-      s     = (outsum - input(k,:,:,:,:,:,:));
-      sw    = (outsumw - abs(input(k,:,:,:,:,:,:)));
-      num   = s.*conj(s) - sq;
-      denom = (sw.*conj(sw) - sq);
+      sq    = outssq  - input(k,:,:,:,:,:,:).*conj(input(k,:,:,:,:,:,:));  
+      sw    = outsumw - abs(input(k,:,:,:,:,:,:));
+      num   = s.*conj(s)   - sq;
+      denom = sw.*conj(sw) - sq;
     end        
     leave1outsum = leave1outsum + num./denom;
     leave1outssq = leave1outssq + (num./denom).^2;                              
