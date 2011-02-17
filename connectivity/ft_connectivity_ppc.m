@@ -1,7 +1,9 @@
 function [c, v, n] = ft_connectivity_ppc(input, varargin)
 
-% FT_CONNECTIVITY_WPPC computes pairwise phase consistency from a data-matrix
-% containing a cross-spectral density
+% FT_CONNECTIVITY_PPC computes pairwise phase consistency or weighted pairwise phase consistency 
+% from a data-matrix containing a cross-spectral density, according to Vinck et al. (2010),
+% NeuroImage. In the weighted pairwise phase consistency, the influence of every pair of phases 
+% is weighted according to the magnitude of the cross-spectrum, similar as in the WPLI.
 %
 % Use as
 %   [c, v, n] = ft_connectivity_ppc(input, varargin)
