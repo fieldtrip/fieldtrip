@@ -75,9 +75,9 @@ if dojack && n>2 % n needs to be larger than 2 to get a meaningful variance
   for k = 1:n
     % this code works with both formats of input, also if it is 5-D
     if debias
-      sq    = (outssq - input(k,:,:,:,:,:).^2); 
-      num   = (outsum - input(k,:,:,:,:,:)).^2 - sq;
-      denom = (outsumW - abs(input(k,:,:,:,:,:))).^2 - sq;
+      sq    = (outssq - input(k,:,:,:,:,:,:).^2); 
+      num   = (outsum - input(k,:,:,:,:,:,:)).^2 - sq;
+      denom = (outsumW - abs(input(k,:,:,:,:,:,:))).^2 - sq;
     else
       num   = (outsum - input(k,:,:,:,:,:,:));
       denom = (outsumW - abs(input(k,:,:,:,:,:,:)));
