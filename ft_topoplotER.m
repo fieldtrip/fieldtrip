@@ -549,13 +549,18 @@ if isfield(cfg, 'yparam') && ~isempty(cfg.yparam)
 end
 
 % Take subselection of channels, this only works
-% in the interactive mode
+% if the interactive mode is switched off
 if exist('selchannel', 'var')
   sellab = match_str(data.label, selchannel);
   label  = data.label(sellab);
 else
   sellab = 1:numel(data.label);
   label  = data.label;
+end
+
+if isfull
+  sel1 = intersect(sel1, sellab);
+  sel2 = intersect(sel2, sellab);
 end
 
 % Make vector dat with one value for each channel
