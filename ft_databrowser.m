@@ -100,6 +100,7 @@ else
   cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
   cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
   cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
+  cfg = ft_checkconfig(cfg, 'required', {'continuous'});
   cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 end
 
@@ -107,12 +108,6 @@ end
 lines_color = [0.75 0 0;0 0 1;0 1 0;0.44 0.19 0.63;0 0.13 0.38;0.5 0.5 0.5;1 0.75 0;1 0 0;0.89 0.42 0.04;0.85 0.59 0.58;0.57 0.82 0.31;0 0.69 0.94;1 0 0.4;0 0.69 0.31;0 0.44 0.75];
 
 % set the defaults
-if isfield(data, 'topo')
-    if ~isfield(cfg, 'comp')
-        cfg.comp = 1:10; % to avoid plotting 274 components topographically
-    end
-	cfg.channel = data.label(cfg.comp); 
-end
 
 if ~isfield(cfg, 'channel'),         cfg.channel = 'all';             end
 if ~isfield(cfg, 'zscale'),          cfg.zscale = 'auto';             end
@@ -131,6 +126,13 @@ if ~isfield(cfg, 'eegscale'),        cfg.eegscale = [];                   end
 if ~isfield(cfg, 'eogscale'),        cfg.eogscale = [];                   end
 if ~isfield(cfg, 'ecgscale'),        cfg.ecgscale = [];                   end
 if ~isfield(cfg, 'megscale'),        cfg.megscale = [];                   end
+
+if isfield(data, 'topo') && strmatch(cfg.viewmode, 'component')
+    if ~isfield(cfg, 'comp')
+        cfg.comp = 1:10; % to avoid plotting 274 components topographically
+    end
+	cfg.channel = data.label(cfg.comp); 
+end
 
 if ischar(cfg.selectfeature)
   % ensure that it is a cell array
@@ -350,6 +352,8 @@ opt.fsample  = fsample;
 opt.artcol   = [0.9686 0.7608 0.7686; 0.7529 0.7098 0.9647; 0.7373 0.9725 0.6824;0.8118 0.8118 0.8118; 0.9725 0.6745 0.4784; 0.9765 0.9176 0.5686; 0.6863 1 1; 1 0.6863 1; 0 1 0.6000];
 opt.chan_colors = chan_colors;
 opt.cleanup  = false;      % this is needed for a corrent handling if the figure is closed (either in the corner or by "q")
+opt.compindx = [];         % index of components to be drawn (if viewmode = "component")
+
 if strcmp(cfg.continuous, 'yes')
   opt.trialname = 'segment';
 else
@@ -870,7 +874,10 @@ function redraw_cb(h, eventdata)
 h = getparent(h);
 opt = guidata(h);
 figure(h); % ensure that the calling figure is in the front
-cla;       % clear the content in the current axis
+% cla;       % clear the content in the current axis
+% delete time courses
+delete(findobj(h,'tag', 'activations'));
+delete(findobj(h,'tag', 'events'));
 
 fprintf('redrawing with viewmode %s\n', opt.cfg.viewmode);
 
@@ -948,6 +955,8 @@ switch opt.cfg.viewmode
     end
     
     % plot a line with text for each event
+    h_event = zeros(1, length(event));
+    h_event_txt = zeros(1, length(event));
     for i=1:length(event)
       try
         eventstr = sprintf('%s=%s', event(i).type, num2str(event(i).value)); %value can be both number and string
@@ -955,12 +964,17 @@ switch opt.cfg.viewmode
         eventstr = 'unknown';
       end
       eventtim = (event(i).sample-begsample+offset)/opt.fsample;
-      ft_plot_line([eventtim eventtim], [-opt.cfg.zscale opt.cfg.zscale]);
-      ft_plot_text(eventtim, opt.cfg.zscale, eventstr);
+      h_event(i) = ft_plot_line([eventtim eventtim], [-opt.cfg.zscale opt.cfg.zscale]);
+      h_event_txt(i) = ft_plot_text(eventtim, opt.cfg.zscale, eventstr);
     end
+    set(h_event, 'tag', 'events');
+    set(h_event_txt, 'tag', 'events');
     set(gca,'ColorOrder',opt.chan_colors(chanindx,:)) % plot vector does not clear axis, therefore this is possible
+    
     % plot the data on top of the box
-    ft_plot_vector(tim, dat)
+    h_act = ft_plot_vector(tim, dat);
+    set(h_act, 'tag', 'activations');
+    
     ax(1) = tim(1);
     ax(2) = tim(end);
     ax(3) = -opt.cfg.zscale;
@@ -968,6 +982,9 @@ switch opt.cfg.viewmode
     axis(ax);
     title(sprintf('%s %d, time from %g to %g s', opt.trialname, opt.trlop, tim(1), tim(end)));
     xlabel('time');
+    
+    % set tags
+
     
   case 'vertical'
     tmpcfg = [];
@@ -1015,6 +1032,8 @@ switch opt.cfg.viewmode
     end % for each of the artifact channels
     
     % plot a line with text for each event
+    h_event = zeros(1, length(event));
+    h_event_txt = zeros(1, length(event));
     for k=1:length(event)
       try
         eventstr = sprintf('%s=%s', event(k).type, num2str(event(k).value)); %value can be both number and string
@@ -1024,18 +1043,24 @@ switch opt.cfg.viewmode
       eventtim = (event(k).sample-begsample+offset)/opt.fsample;
       eventtim = (eventtim - opt.hlim(1)) / (opt.hlim(2) - opt.hlim(1));   % convert to value relative to box, i.e. from 0 to 1
       eventtim = eventtim * (opt.hpos(2) - opt.hpos(1)) + opt.hpos(1);     % convert from relative to actual value along the horizontal figure axis
-      ft_plot_line([eventtim eventtim], [-opt.cfg.zscale opt.cfg.zscale]);
-      ft_plot_text(eventtim, ax(4)-0.01, eventstr);
+      h_event(k) = ft_plot_line([eventtim eventtim], [-opt.cfg.zscale opt.cfg.zscale]);
+      h_event_txt(k) = ft_plot_text(eventtim, ax(4)-0.01, eventstr);
     end
+    % set tags
+    set(h_event, 'tag', 'events');
+    set(h_event_txt, 'tag', 'events');
         
     for i = 1:length(chanindx)
       datsel = i;
       laysel = match_str(laytime.label, opt.hdr.label(chanindx(i)));
       if ~isempty(datsel)
-        ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'HorizontalAlignment', 'right');
-        ft_plot_vector(tim, dat(datsel, :), 'hpos', laytime.pos(laysel,1), 'vpos', laytime.pos(laysel,2), 'width', laytime.width(laysel), 'height', laytime.height(laysel), 'hlim', hlim, 'vlim', vlim, 'box', false, 'color', opt.chan_colors(chanindx(i),:));
+        h_text = ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'HorizontalAlignment', 'right');
+        h_act = ft_plot_vector(tim, dat(datsel, :), 'hpos', laytime.pos(laysel,1), 'vpos', laytime.pos(laysel,2), 'width', laytime.width(laysel), 'height', laytime.height(laysel), 'hlim', hlim, 'vlim', vlim, 'box', false, 'color', opt.chan_colors(chanindx(i),:));
       end
     end
+    % set tags
+    set(h_text, 'tag', 'activations');
+    set(h_act, 'tag', 'activations');
     
     nticks = 11;
     set(gca, 'xTick', linspace(ax(1), ax(2), nticks))
@@ -1096,26 +1121,51 @@ switch opt.cfg.viewmode
     chanx = laychan.pos(sel2,1);
     chany = laychan.pos(sel2,2);
     
+    % check if topographies need to be redrawn
+    redraw_topo = false;
+    if ~isequal(opt.compindx, compindx)
+        redraw_topo = true;
+        cla;
+    end
+    
+    h_act = zeros(1, length(compindx));
+    h_text = zeros(1, length(compindx));
     for i=1:length(compindx)
       datsel = i;
       laysel = match_str(laytime.label,opt.hdr.label(compindx(i)));
       if ~isempty(datsel)
-        ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(compindx(i)));
-        % plot the timecourse of this component
-        ft_plot_vector(tim, dat(datsel, :), 'hpos', laytime.pos(laysel,1), 'vpos', laytime.pos(laysel,2), 'width', laytime.width(laysel), 'height', laytime.height(laysel), 'hlim', hlim, 'vlim', vlim);
-        % plot the topography of this component
-        chanz = opt.orgdata.topo(sel1,compindx(i));
-        ft_plot_topo(chanx, chany, chanz./max(abs(chanz)), 'hpos', laytopo.pos(laysel,1), ...
-            'vpos', laytopo.pos(laysel,2), 'mask', laychan.mask, ...
-            'interplim', 'mask', 'outline', laychan.outline,  ...
-            'width', laytopo.width(laysel), 'height', laytopo.height(laysel));
-        axis equal
-        drawnow
+          % plot the timecourse of this component
+          h_act(i) = ft_plot_vector(tim, dat(datsel, :), 'hpos', laytime.pos(laysel,1), 'vpos', laytime.pos(laysel,2), 'width', laytime.width(laysel), 'height', laytime.height(laysel), 'hlim', hlim, 'vlim', vlim);
+          
+          if redraw_topo
+              h_text(i) = ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(compindx(i)));
+              
+              % plot the topography of this component
+              chanz = opt.orgdata.topo(sel1,compindx(i));
+              ft_plot_topo(chanx, chany, chanz./max(abs(chanz)), 'hpos', laytopo.pos(laysel,1), ...
+                  'vpos', laytopo.pos(laysel,2), 'mask', laychan.mask, ...
+                  'interplim', 'mask', 'outline', laychan.outline,  ...
+                  'width', laytopo.width(laysel), 'height', laytopo.height(laysel));
+          end
+          
+          axis equal
+          drawnow
       end
     end
+    % set tags
+    set(h_act, 'tag', 'activations');
+    
+    h_topo = findobj(h, 'type', 'surface');    
+    set(h_text, 'tag', 'comptopo')
+    set(h_topo, 'tag', 'comptopo')
+
+    opt.compindx = compindx;
+    
     set(gca, 'xTick', [])
     set(gca, 'yTick', [])
     title(sprintf('%s %d, time from %g to %g s', opt.trialname, opt.trlop, tim(1), tim(end)));
+
+    
     
     ax(1) = min(laytopo.pos(:,1) - laytopo.width/2);
     ax(2) = max(laytime.pos(:,1) + laytime.width/2);
