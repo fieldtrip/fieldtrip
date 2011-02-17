@@ -62,25 +62,26 @@ if n>1
     outssq   = nansum(input.^2);
     wpli     = (outsum.^2 - outssq)./(outsumW.^2 - outssq); % do the pairwise thing in a handy way
   else
-    wpli     = (outsum./outsumW);
+    wpli     = outsum./outsumW; % estimator of E(Im(X))/E(|Im(X)|)
   end    
   wpli = reshape(wpli,siz(2:end)); % remove the first singular dimension
 else
   wpli = NaN(siz(2:end)); % for one observation, we should return NaNs
-  warning('ft_connectivity_wpli:nTrials', 'computation wpli requires >1 trial, returning NaNs')
+  warning('ft_connectivity_wpli:nTrials', 'computation wpli requires >1 trial, returning NaNs');
 end
 
 [leave1outsum, leave1outssq] = deal(0);
 if dojack && n>2 % n needs to be larger than 2 to get a meaningful variance
   for k = 1:n
-    % this code works with both formats of input, also if it is 5-D
+    s  = outsum  - input(k,:,:,:,:,:,:); % works for any array up to 7-D
+    sw = outsumW - abs(input(k,:,:,:,:,:,:));
     if debias
-      sq    = (outssq - input(k,:,:,:,:,:,:).^2); 
-      num   = (outsum - input(k,:,:,:,:,:,:)).^2 - sq;
-      denom = (outsumW - abs(input(k,:,:,:,:,:,:))).^2 - sq;
+      sq    = outssq - input(k,:,:,:,:,:,:).^2; 
+      num   = s.^2  - sq;
+      denom = sw.^2 - sq;
     else
-      num   = (outsum - input(k,:,:,:,:,:,:));
-      denom = (outsumW - abs(input(k,:,:,:,:,:,:)));
+      num   = s; % this is estimator of E(Im(X))
+      denom = sw; % estimator of E(|Im(X)|)
     end        
     leave1outsum = leave1outsum + num./denom;
     leave1outssq = leave1outssq + (num./denom).^2;                              
