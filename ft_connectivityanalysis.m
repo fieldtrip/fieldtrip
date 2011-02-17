@@ -441,8 +441,14 @@ switch cfg.method
     
     tmpcfg             = [];
     tmpcfg.feedback    = cfg.feedback;
-    tmpcfg.dimord      = data.dimord;
+    if isfield(data, 'dimord'),
+      tmpcfg.dimord = data.dimord;
+    else
+      tmpcfg.dimord = data.([inparam,'dimord']); 
+    end
     tmpcfg.complex     = 'real';
+    tmpcfg.pownorm     = 1;
+    tmpcfg.pchanindx   = [];
     tmpcfg.hasjack     = hasjack;
     if exist('powindx', 'var'), tmpcfg.powindx = powindx; end
     optarg             = ft_cfg2keyval(tmpcfg);
