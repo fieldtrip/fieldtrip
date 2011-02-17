@@ -161,11 +161,10 @@ for i=1:length(outline)
   ft_plot_vector(xval, yval, 'Color','k', 'LineWidth',2)
 end
 
-
 % Create isolines
 if strcmp(style,'iso') || strcmp(style,'surfiso')
   if ~isempty(isolines)
-    contour(Xi/10,Yi,Zi,isolines,'k');
+    contour(Xi,Yi,Zi,isolines,'k');
   end
 end
 
