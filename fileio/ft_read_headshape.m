@@ -156,7 +156,7 @@ switch fileformat
     inuse1 = src(1).inuse==1;
     inuse2 = src(2).inuse==1;
     shape.pnt=[src(1).rr(inuse1,:); src(2).rr(inuse2,:)];
-    
+
     % only keep the triangles that are in use; these have to be renumbered
     newtri1 = src(1).use_tris;
     newtri2 = src(2).use_tris;
@@ -166,8 +166,11 @@ switch fileformat
     for i=1:numel(src(2).vertno)
       newtri2(newtri2==src(2).vertno(i)) = i;
     end
-    shape.tri=[newtri1; newtri2 + numel(src(1).vertno)];
-
+    shape.tri  = [newtri1; newtri2 + numel(src(1).vertno)];
+    shape.orig.pnt = [src(1).rr; src(2).rr];
+    shape.orig.tri = [src(1).tris; src(2).tris + src(1).np];    
+    shape.orig.inuse = [src(1).inuse src(2).inuse]';
+  
   case {'neuromag_mne', 'neuromag_fif'}
     % read the headshape and fiducials from an MNE file
     hdr = ft_read_header(filename,'headerformat','neuromag_mne');
