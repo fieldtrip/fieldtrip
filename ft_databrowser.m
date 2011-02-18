@@ -127,13 +127,6 @@ if ~isfield(cfg, 'eogscale'),        cfg.eogscale = [];                   end
 if ~isfield(cfg, 'ecgscale'),        cfg.ecgscale = [];                   end
 if ~isfield(cfg, 'megscale'),        cfg.megscale = [];                   end
 
-if isfield(data, 'topo') && strmatch(cfg.viewmode, 'component')
-    if ~isfield(cfg, 'comp')
-        cfg.comp = 1:10; % to avoid plotting 274 components topographically
-    end
-	cfg.channel = data.label(cfg.comp); 
-end
-
 if ischar(cfg.selectfeature)
   % ensure that it is a cell array
   cfg.selectfeature = {cfg.selectfeature};
@@ -171,13 +164,18 @@ if hasdata
   end
   Ntrials = size(trlorg, 1);
   
-  
   if strcmp(cfg.viewmode, 'component') 
     if ~isfield(cfg, 'layout')
       error('You need to specify a layout-file when browsing through components');
     end
     % read or create the layout that will be used for the topoplots
     cfg.layout = ft_prepare_layout(cfg, data);
+    
+    if ~isfield(cfg, 'comp')
+        cfg.comp = 1:10; % to avoid plotting 274 components topographically
+    end
+    
+	cfg.channel = data.label(cfg.comp); 
   end
   
 else
@@ -192,7 +190,15 @@ else
     event = [];
   end
     
-  cfg.channel = ft_channelselection(cfg.channel, hdr.label);
+  if strcmp(cfg.viewmode, 'component') 
+    if ~isfield(cfg, 'comp')
+      cfg.comp = 1:10; % to avoid plotting 274 components topographically
+    end
+    cfg.channel = hdr.label(cfg.comp);
+  else
+    cfg.channel = ft_channelselection(cfg.channel, hdr.label);
+  end
+  
   chansel = match_str(hdr.label, cfg.channel);
   fsample = hdr.Fs;
   Nchans  = length(chansel);
@@ -204,7 +210,7 @@ else
   Ntrials = size(trlorg, 1);
   
   if strcmp(cfg.viewmode, 'component')
-	if ~isfield(cfg, 'layout')
+    if ~isfield(cfg, 'layout')
       error('You need to specify a layout-file when browsing through components');
     end
     % read or create the layout that will be used for the topoplots
@@ -874,10 +880,6 @@ function redraw_cb(h, eventdata)
 h = getparent(h);
 opt = guidata(h);
 figure(h); % ensure that the calling figure is in the front
-% cla;       % clear the content in the current axis
-% delete time courses
-delete(findobj(h,'tag', 'activations'));
-delete(findobj(h,'tag', 'events'));
 
 fprintf('redrawing with viewmode %s\n', opt.cfg.viewmode);
 
@@ -940,6 +942,7 @@ end
 fprintf('plotting data... ');
 switch opt.cfg.viewmode
   case 'butterfly'
+    cla;       % clear the content in the current axis
     % to assure current feature is plotted on top
     ordervec = 1:length(opt.artdata.label);
     ordervec(opt.ftsel) = [];
@@ -987,6 +990,7 @@ switch opt.cfg.viewmode
 
     
   case 'vertical'
+    cla;       % clear the content in the current axis
     tmpcfg = [];
     tmpcfg.layout = 'vertical';
     tmpcfg.channel = opt.cfg.channel;
@@ -1043,7 +1047,7 @@ switch opt.cfg.viewmode
       eventtim = (event(k).sample-begsample+offset)/opt.fsample;
       eventtim = (eventtim - opt.hlim(1)) / (opt.hlim(2) - opt.hlim(1));   % convert to value relative to box, i.e. from 0 to 1
       eventtim = eventtim * (opt.hpos(2) - opt.hpos(1)) + opt.hpos(1);     % convert from relative to actual value along the horizontal figure axis
-      h_event(k) = ft_plot_line([eventtim eventtim], [-opt.cfg.zscale opt.cfg.zscale]);
+      ft_plot_line([eventtim eventtim], [-opt.cfg.zscale opt.cfg.zscale]);
       h_event_txt(k) = ft_plot_text(eventtim, ax(4)-0.01, eventstr);
     end
     % set tags
@@ -1089,6 +1093,8 @@ switch opt.cfg.viewmode
     title(sprintf('%s %d, time from %g to %g s', opt.trialname, opt.trlop, tim(1), tim(end)));
     
   case 'component'
+    % delete time courses
+    delete(findobj(h,'tag', 'activations'));    
     compindx = chanindx;
     clear chanindx
     
