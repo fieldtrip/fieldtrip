@@ -376,9 +376,9 @@ switch cfg.method
     optarg                 = ft_cfg2keyval(tmpcfg);    
     [datout, varout, nrpt] = ft_connectivity_wpli(data.(inparam), optarg);
     if debiaswpli
-      outparam = 'wplispctrm';     
+      outparam = 'wpli_debiasedspctrm'; 
     else
-      outparam = 'wpli_debiasedspctrm';
+      outparam = 'wplispctrm';    
     end
   case {'wppc' 'ppc'}
     % weighted pairwise phase consistency or pairwise phase consistency
