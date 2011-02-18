@@ -131,7 +131,6 @@ tri = bnd.tri;
 if ~isempty(pnt)
   hs = patch('Vertices', pnt, 'Faces', tri);
   set(hs, 'FaceColor', facecolor);
-  set(hs, 'FaceAlpha', facealpha);
   set(hs, 'EdgeColor', edgecolor);
   set(hs, 'tag', tag);
 end
@@ -139,6 +138,14 @@ end
 % if vertexcolor is an array with number of elements equal to the number of vertices
 if size(pnt,1)==numel(vertexcolor)
   set(hs, 'FaceVertexCData', vertexcolor, 'FaceColor', 'interp'); 
+end
+
+% if facealpha is an array with number of elements equal to the number of vertices
+if size(pnt,1)==numel(facealpha)
+  set(hs, 'FaceVertexAlphaData', facealpha);
+  set(hs, 'FaceAlpha', 'interp');
+elseif numel(facealpha)==1
+  set(hs, 'FaceAlpha', facealpha);
 end
 
 if faceindex
