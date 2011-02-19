@@ -89,6 +89,9 @@ classdef ft_mv_blogreg < ft_mv_predictor
       convergence; % whether or not EP converged
       logp; % approximate log model evidence
      
+      % mixed effects model
+      mixed = false;
+      
     end
 
     methods
@@ -170,11 +173,21 @@ classdef ft_mv_blogreg < ft_mv_predictor
            
            % add bias term if not yet done
            if transfer
-             for j=1:obj.ntasks
-               obj.prior(j*(obj.nfeatures+1),j*(obj.nfeatures+1)) = 1/obj.precbias;
-             end
+             
+              if obj.mixed % no bias for fixed effects
+                 offset = obj.nfeatures;
+               else
+                 offset = 0;
+               end
+               
+               for j=1:obj.ntasks
+                 obj.prior(offset + j*(obj.nfeatures+1),offset + j*(obj.nfeatures+1)) = 1/obj.precbias;
+               end
+             
            elseif size(obj.prior,1)~=size(X,2)
+             
              obj.prior(size(X,2),size(X,2)) = 1/obj.precbias;
+           
            end
            
            if obj.niter
@@ -194,12 +207,20 @@ classdef ft_mv_blogreg < ft_mv_predictor
              tprior = scale_prior(obj.prior,'lambda',obj.scale(j));
              
              if transfer
-               for j=1:obj.ntasks
-                 tprior(j*(obj.nfeatures+1),j*(obj.nfeatures+1)) = obj.precbias;
+
+               if obj.mixed % no bias for fixed effects
+                 offset = obj.nfeatures;
+               else
+                 offset = 0;
                end
+               
+               for j=1:obj.ntasks
+                 tprior(offset + j*(obj.nfeatures+1),offset + j*(obj.nfeatures+1)) = 1/obj.precbias;
+               end
+               
              elseif size(tprior,1)~=size(X,2)
                % add bias term if not yet done
-               tprior(size(X,2),size(X,2)) = obj.precbias;
+               tprior(size(X,2),size(X,2)) = 1/obj.precbias;
              end
  
              try
@@ -342,26 +363,50 @@ classdef ft_mv_blogreg < ft_mv_predictor
            % transform design to +1/-1 representation
            if nargin==3, tdesign = 3-2*Y; end
            
-         else % transfer learning
+         else 
            
-           nf = obj.nfeatures;
-           totsamples = sum(cellfun(@(x)(size(x,1)),X));
-           
-           % sparse might be faster for many tasks...
-           tdata = zeros(totsamples,obj.ntasks*(nf+1));
-           if nargin==3, tdesign = zeros(totsamples,1); end
-           
-           nidx = 0; fidx = 0;
+           % add bias term
            for j=1:obj.ntasks
+             X{j} = [X{j} ones(size(X{j},1),1)];
+           end
+           
+           if nargin==3,
+             tdesign = cell2mat(Y);
+             tdesign = 3-2*tdesign(:,1);
+           end
+           
+           if ~obj.mixed % transfer learning
              
-             tdata((nidx+1):(nidx+size(X{j},1)),(fidx+1):(fidx+nf+1)) = [X{j} ones(size(X{j},1),1)];
-             if nargin==3
-               tdesign((nidx+1):(nidx+size(X{j},1))) = 3-2*Y{j}(:,1);
-             end
+             tdata = blkdiag(X{:});
              
-             nidx = nidx + size(X{j},1);
-             fidx = fidx + nf + 1;
+%                 nf = obj.nfeatures;
+%            totsamples = sum(cellfun(@(x)(size(x,1)),X));    
+%         
+%              % sparse might be faster for many tasks...
+%              tdata = zeros(totsamples,obj.ntasks*(nf+1));
+%              if nargin==3, tdesign = zeros(totsamples,1); end
+%              
+%              nidx = 0; fidx = 0;
+%              for j=1:obj.ntasks
+%                
+%                tdata((nidx+1):(nidx+size(X{j},1)),(fidx+1):(fidx+nf+1)) = [X{j} ones(size(X{j},1),1)];
+%                if nargin==3
+%                  tdesign((nidx+1):(nidx+size(X{j},1))) = 3-2*Y{j}(:,1);
+%                end
+%                
+%                nidx = nidx + size(X{j},1);
+%                fidx = fidx + nf + 1;
+%                
+%              end
              
+           else % mixed effects model
+             
+             % fixed effects without bias
+             fixed = cell2mat(X(:));
+             fixed = fixed(:,1:(end-1));
+             
+             tdata = [fixed blkdiag(X{:})];
+
            end
            
          end
@@ -381,20 +426,29 @@ classdef ft_mv_blogreg < ft_mv_predictor
            prior(nf+1,nf+1) = 1;
          end
          
-         pp = repmat({prior},[1 obj.ntasks]);
-         prior = blkdiag(pp{:});
+         if ~obj.mixed
+           
+           pp = repmat({prior},[1 obj.ntasks]);
+           prior = blkdiag(pp{:});
          
-         % add task coupling
-         if obj.taskcoupling
-           blk = obj.ntasks*(nf+1)^2;
-           didx = (1:(size(prior,1)+1):(size(prior,1)*(nf)));
-           cc = repmat(obj.taskcoupling,[1 length(didx)]);
-           for j=1:obj.ntasks
-             for k=(j+1):obj.ntasks
-               prior(((j-1)*blk+(k-1)*(nf+1))+didx) = cc;
-               prior(((k-1)*blk+(j-1)*(nf+1))+didx) = cc;
+           % add task coupling for transfer learning
+           if obj.taskcoupling
+             blk = obj.ntasks*(nf+1)^2;
+             didx = (1:(size(prior,1)+1):(size(prior,1)*(nf)));
+             cc = repmat(obj.taskcoupling,[1 length(didx)]);
+             for j=1:obj.ntasks
+               for k=(j+1):obj.ntasks
+                 prior(((j-1)*blk+(k-1)*(nf+1))+didx) = cc;
+                 prior(((k-1)*blk+(j-1)*(nf+1))+didx) = cc;
+               end
              end
            end
+        
+         else
+         
+            pp = cat(2,{prior(1:obj.nfeatures,1:obj.nfeatures)},repmat({prior},[1 obj.ntasks]));
+            prior = blkdiag(pp{:});
+         
          end
          
        end
@@ -411,23 +465,35 @@ classdef ft_mv_blogreg < ft_mv_predictor
          % variance of the betas
          %
          
-         m = cell(5,obj.ntasks);
+         G = obj.Gauss;
+
+         % take fixed effects into account
+         if obj.mixed
+           ntasks = obj.ntasks + 1;
+           N = (numel(G.auxC) - ntasks + 1) / ntasks; % number of features
+           offset = [0 N N + ((N+1):(N+1):((ntasks-2)*(N+1)))];
+         else
+           ntasks = obj.ntasks;
+           N = (numel(G.auxC) - ntasks) / ntasks; % number of features
+           offset = 0:(N+1):((ntasks-1)*(N+1));
+         end
          
-         N = (numel(obj.Gauss.auxC) - obj.ntasks) / obj.ntasks; % number of features
-         for j=1:obj.ntasks
+         m = cell(5,ntasks);
+         
+         for j=1:ntasks
          
            % Note: bias term must be included in prior
-           varaux = obj.Gauss.auxC((j-1)*(N+1) + (1:N)); % ignore bias term
+           varaux = G.auxC(offset(j) + (1:N)); % ignore bias term
            
            % compute variances of the auxiliary variables under the prior
            [L,dummy,S] = chol(sparse(obj.prior),'lower');
            invA = fastinvc(L);
            varprior = full(diag(S*invA*S'));
-           varprior = varprior((j-1)*(N+1) + (1:N));
+           varprior = varprior(offset(j) + (1:N));
            
            % mean and variance of the regression coefficients
-           meanbeta = obj.Gauss.m((j-1)*(N+1) + (1:N));
-           varbeta = obj.Gauss.diagC((j-1)*(N+1) + (1:N));
+           meanbeta = G.m(offset(j) + (1:N));
+           varbeta = G.diagC(offset(j) + (1:N));
            
            % the mean and variance can be used to create eg 100(1-alpha)% credible
            % interval: ci(k,:) = [ ...
@@ -459,8 +525,6 @@ classdef ft_mv_blogreg < ft_mv_predictor
            end
          
          end
-           
-         
          
          desc = { ...
            'importance values (posterior  - prior variance of auxiliary variables)' ...
@@ -468,6 +532,9 @@ classdef ft_mv_blogreg < ft_mv_predictor
            'prior variance of auxiliary variables' ...
            'means of the regression coefficients; positive values indicate condition one' ...
            'variance of the regression coefficients' }';
+         
+         % for mixed effects models, the first model is the fixed effects
+         % model!
          
        end
        

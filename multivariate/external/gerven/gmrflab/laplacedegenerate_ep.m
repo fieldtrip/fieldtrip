@@ -114,7 +114,7 @@ LogPriorRestAux2 = (2*sum(log(full(diag(cholK))))); % -nfeatures*log(2*pi)); % r
 % construct term representation
 terms.hatK  = ones(nsamples,1)/10;
 terms.hath  = zeros(nsamples,1);
-terms.diagK = ones(nfeatures,1)/(10*opt.lambda);
+terms.diagK = ones(nfeatures,1)./(10*opt.lambda);
 terms.auxK  = zeros(nfeatures,1);
 terms.h     = zeros(nfeatures,1);
 
