@@ -80,6 +80,7 @@ endtime    = pad;            % total time in seconds of padded data
 % Set freqboi and freqoi
 if isnumeric(freqoi) % if input is a vector
   freqboi   = round(freqoi ./ (fsample ./ endnsample)) + 1;
+  freqboi   = unique(freqboi);
   freqoi    = (freqboi-1) ./ endtime; % boi - 1 because 0 Hz is included in fourier output
 elseif strcmp(freqoi,'all')
   freqboilim = round([0 fsample/2] ./ (fsample ./ endnsample)) + 1;
