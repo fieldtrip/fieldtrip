@@ -94,7 +94,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
       end
       
       % handle some special cases
-      if ~isempty(obj.lambda)
+      if isscalar(obj.lambda)
         
         if obj.lambda == 0 && strcmp(obj.family,'gaussian')
         
@@ -102,7 +102,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
        
         return
         
-        elseif obj.alpha == 0 && strcmp(obj.family,'gaussian') && isscalar(obj.lambda)
+        elseif obj.alpha == 0 && strcmp(obj.family,'gaussian')
           
           lambdas = [obj.lambda*ones(size(X,2),1); 0];
           X = [X ones(size(X,1),1)];
