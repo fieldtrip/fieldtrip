@@ -1,27 +1,30 @@
-function varargout = interp_ungridded(varargin);
+function varargout = interp_ungridded(pntin, pntout, varargin)
 
-% INTERP_UNGRIDDED computes an interpolation matrix for two ungridded
+% INTERP_UNGRIDDED computes an interpolation matrix for two
 % clouds of 3-D points
 %
 % Use as
-%   [val] = interp_ungridded(pnt1, val1, pnt2, ...)
+%   [val] = interp_ungridded(pntin, pntout, 'data', valin, ...)
 % where
-%   pnt1    Nx3 matrix with the vertex positions
-%   val1    Nx1 vector with the values on each vetrex (can also be multiple columns)
-%   pnt2    Mx3 matrix with the vertex positions onto which the data should
+%   pntin   Nx3 matrix with the vertex positions
+%   pntout  Mx3 matrix with the vertex positions onto which the data should
 %           be interpolated
+%   valin   NxK matrix with functional data, defined at the points in pntin
 %
 % Alternatively to get the interpolation matrix itself, you can use it as
-%   [interpmat, distmat] = interp_ungridded(pnt1, pnt2, ...)
+%   [interpmat, distmat] = interp_ungridded(pntin, pntout, ...)
 % 
 %
 % Optional arguments are specified in key-value pairs and can be
-%    projmethod   = 'nearest', 'sphere_avg', 'sphere_weighteddistance'
+%    projmethod   = 'nearest', 'sphere_avg', 'sphere_weighteddistance',
+%                   'smudge'
 %    sphereradius = number
 %    distmat      = NxM matrix with precomputed distances
-%    tri1         = triangulation for the first set of vertices
+%    triin        = triangulation for the first set of vertices
+%    triout       = triangulation for the second set of vertices
+%    data         = NxK matrix with functional data
 
-% Copyright (C) 2007, Jan-Mathijs Schoffelen & Robert Oostenveld
+% Copyright (C) 2007-2011, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -45,28 +48,17 @@ if nargin<3
   error('Not enough input arguments.');
 end
 
-% get the fixed input arguments
-if isnumeric(varargin{1}) && isnumeric(varargin{2}) && isnumeric(varargin{3})
-  pnt1 = varargin{1};
-  val1 = varargin{2};
-  pnt2 = varargin{3};
-  varargin = varargin(4:end);
-  hasval = 1;
-elseif isnumeric(varargin{1}) && isnumeric(varargin{2}) && ischar(varargin{3})
-  pnt1 = varargin{1};
-  pnt2 = varargin{2};
-  varargin = varargin(3:end);
-  hasval = 0;
-end
-
 % get the optional arguments
 projmethod   = keyval('projmethod',    varargin);   % required
 sphereradius = keyval('sphereradius',  varargin);   % required for some projection methods
-distmat      = keyval('distmat',       varargin);   % will be computed if not present
-tri1         = keyval('tri1', varargin);            % not yet implemented
+distmat      = keyval('distmat',       varargin);   % will be computed if needed and not present
+triin        = keyval('triin',         varargin);   % not yet implemented
+triout       = keyval('triout',        varargin);   
+val          = keyval('data',          varargin);   % functional data defined at pntin
 
-npnt1 = size(pnt1, 1);
-npnt2 = size(pnt2, 1);
+hasval  = ~isempty(val);
+npntin  = size(pntin, 1);
+npntout = size(pntout, 1);
 
 if isempty(distmat)
   %------compute a distance matrix
@@ -76,27 +68,42 @@ if isempty(distmat)
         warning('sphereradius is not used for projmethod''nearest''');
       end
       % determine the nearest voxel for each surface point
-      ind = find_nearest(pnt2, pnt1, 5);
-      distmat = sparse(1:npnt2, ind, ones(size(ind)), npnt2, npnt1);
+      ind = find_nearest(pntout, pntin, 5);
+      distmat = sparse(1:npntout, ind, ones(size(ind)), npntout, npntin);
 
-    case {'sphere_avg', 'sphere_weighteddistance', 'sphere_weightedprojection'}
+    case {'sphere_avg', 'sphere_weighteddistance'}
       if isempty(sphereradius)
         error('sphereradius should be specified');
       end
       % compute the distance between voxels and each surface point
-      dpnt1sq  = sum(pnt1.^2,2); % squared distance to origin
-      dpnt2sq  = sum(pnt2.^2,2); % squared distance to origin
-      maxnpnt = double(npnt2*ceil(4/3*pi*(sphereradius/max(dimres))^3)); % initial estimate of nonzero entries
-      distmat = spalloc(npnt2, npnt1, maxnpnt);
+      dpntinsq  = sum(pntin.^2,2); % squared distance to origin
+      dpntoutsq  = sum(pntout.^2,2); % squared distance to origin
+      maxnpnt = double(npntout*ceil(4/3*pi*(sphereradius/max(dimres))^3)); % initial estimate of nonzero entries
+      distmat = spalloc(npntout, npntin, maxnpnt);
       progress('init', 'textbar', 'computing distance matrix');
-      for j = 1:npnt2
-        progress(j/npnt2);
-        d   = sqrt(dpnt2sq(j) + dpnt1sq - 2 * pnt1 * pnt2(j,:)');
+      for j = 1:npntout
+        progress(j/npntout);
+        d   = sqrt(dpntoutsq(j) + dpntinsq - 2 * pntin * pntout(j,:)');
         sel = find(d<sphereradius);
         distmat(j, sel) = single(d(sel)) + eps('single');
       end
       progress('close');
 
+    case 'smudge'
+      if isempty(triout),
+        error('the ''smudge'' method needs a triangle definition');
+      end
+      datin = ismember(pntout, pntin);
+      datin = sum(datin,2)==3;
+      [datout, S1] = smudge(datin, triout, 6); %FIXME 6 is number of iterations, improve here
+    
+      S2  = spalloc(npntout, npntin, npntin);
+      sel = find(datin);
+      for k = 1:npntin
+        S2(sel(k), k) = 1;
+      end
+      distmat = S1 * S2;
+    
     otherwise
       error('unsupported projection method');
   end % case projmethod
@@ -118,22 +125,21 @@ switch projmethod
   case 'sphere_weighteddistance'
     projmat         = distmat;
     [ind1, ind2, d] = find(projmat);
-    projmat         = sparse(ind1, ind2, 1./d, npnt, npnt1);
+    projmat         = sparse(ind1, ind2, 1./d, npnt, npntin);
     [ind1, ind2, d] = find(projmat);
     normnz          = sqrt(full(sum(projmat.^2, 2)));
-    projmat         = sparse(ind1, ind2, d./normnz(ind1), npnt, npnt1);
+    projmat         = sparse(ind1, ind2, d./normnz(ind1), npnt, npntin);
 
-  case 'sphere_weightedprojection'
-    % JM had something in mind for this, but it is not yet implemented
-    error('unsupported projection method');
-
+  case 'smudge'
+    projmat = distmat;
+    
   otherwise
     error('unsupported projection method');
 end  % case projmethod
 
 if hasval
   % return the interpolated values
-  varargout{1} = projmat * val1;
+  varargout{1} = projmat * val;
 else
   % return the interpolation and the distance matrix
   varargout{1} = projmat;
