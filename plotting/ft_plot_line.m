@@ -1,4 +1,4 @@
-function ft_plot_line(X, Y, varargin)
+function h = ft_plot_line(X, Y, varargin)
 
 % FT_PLOT_LINE helper function for plotting a line, which can also be used in
 % combination with the multiple channel layout display in FieldTrip.
