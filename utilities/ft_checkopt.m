@@ -34,7 +34,7 @@ function opt = ft_checkopt(opt, key, allowedtype, allowedval)
 
 % Copyright (C) 2011, Robert Oostenveld
 %
-% $Id: ft_getopt.m 2917 2011-02-21 16:53:27Z roboos $
+% $Id$
 
 if nargin<3
   allowedtype = {};
