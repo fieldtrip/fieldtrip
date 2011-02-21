@@ -294,6 +294,10 @@ switch fileformat
     tmp = load(filename);
     if isfield(tmp, 'shape')
       shape = tmp.shape;
+    elseif isfield(tmp, 'bnd')
+      % the variable in the file is most likely a precomputed triangulation of some
+      % sort
+      shape = tmp.bnd;
     elseif isfield(tmp, 'elec')
       shape.fid.pnt   = tmp.elec.pnt;
       shape.fid.label = tmp.elec.label;
