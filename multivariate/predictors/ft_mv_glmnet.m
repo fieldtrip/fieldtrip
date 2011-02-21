@@ -46,7 +46,9 @@ classdef ft_mv_glmnet < ft_mv_predictor
     HessianExact = 0
     type = 'covariance'
     
-    deregularize = 0; % retrain using unregularized regresson (not advised)
+    % retrain using unregularized regression (not advised; should be
+    % handled by weighted regression)
+    deregularize = 0; 
  
   end
 
@@ -89,6 +91,27 @@ classdef ft_mv_glmnet < ft_mv_predictor
         else
           obj.family = 'binomial';
         end
+      end
+      
+      % handle some special cases
+      if obj.lambda == 0 && strcmp(obj.family,'gaussian')
+        
+        obj.weights = regress(Y,[X ones(size(X,1),1)]); % X \ Y
+        return
+        
+      elseif obj.alpha == 0 && strcmp(obj.family,'gaussian') && isscalar(obj.lambda)
+        
+        lambdas = [obj.lambda*ones(size(X,2),1); 0];
+        
+        X = [X ones(size(X,1),1)];
+        R = chol(X'*X + diag(lambdas));
+        
+        obj.weights = R\(R'\(X'*Y));
+        
+      elseif obj.lambda == 0 && strcmp(obj.family,'binomial')
+        
+        obj.weights = -logist2(Y-1,[X ones(size(X,1),1)]);
+        
       end
       
       opts = [];
