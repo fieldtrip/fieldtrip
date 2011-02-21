@@ -1,8 +1,18 @@
 function val = ft_getopt(optarg, key, default)
 
 % FT_GETOPT gets the value of a specified option from a configuration structure
-% or a cell-array with key-value pairs
+% or from a cell-array with key-value pairs
+%
+% Use as
+%   val = ft_getopt(s, key, default)
+% where s is a structure or a cell array. It will return the value of the option, 
+% or an empty array if the option was not present. 
+%
+% See also FT_SETOPT, FT_CHECKOPT
 
+% Copyright (C) 2011, Robert Oostenveld
+%
+% $Id$
 
 if nargin<3
   default = [];
@@ -46,12 +56,4 @@ elseif length(hit)==1
   val = vals{hit};
 else
   error('multiple input arguments with the same name');
-end
-
-if nargout>1
-  % return the remaining input arguments with the key-value pair removed
-  keys(hit) = [];
-  vals(hit) = [];
-  remaining = cat(1, keys(:)', vals(:)');
-  remaining = remaining(:)';
 end
