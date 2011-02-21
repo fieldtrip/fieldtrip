@@ -139,6 +139,11 @@ while cfg.count < cfg.nsamples
        begsample = max(1,event(j).sample + offset);
        endsample = max(1,begsample + blocksize);
        
+       % keep reading until we acquired enough samples
+       while hdr.nSamples<endsample
+         hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat,'cache', true);
+       end
+       
        % remember up to where the data was read
        minsample = endsample;
        cfg.count = cfg.count + 1;
