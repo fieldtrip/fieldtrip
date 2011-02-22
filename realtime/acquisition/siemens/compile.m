@@ -17,7 +17,7 @@ oldDir = pwd;
 try
   cd(srcDir);			% we're now in private
   cd('../siemens');
-  mex -outdir ../../../fileio/private sap2matlab.c siemensap.c -I.
+  mex sap2matlab.c siemensap.c -I.
   cd(oldDir);
   SP = sap2matlab(blob);
 catch

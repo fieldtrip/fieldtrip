@@ -135,6 +135,6 @@ end
 
 % This is for compiling buffer.c and linking everything into the MEX file.
 fprintf(1,'Compiling and linking MEX file:\n');
-cmd = sprintf('mex -outdir ../../../fileio/private %s %s buffer.c %s %s',cflags,extra_cflags,allObjects,ldflags);
+cmd = sprintf('mex %s %s buffer.c %s %s',cflags,extra_cflags,allObjects,ldflags);
 disp(cmd)
 eval(cmd);
