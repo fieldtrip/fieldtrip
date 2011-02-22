@@ -446,8 +446,11 @@ classdef ft_mv_blogreg < ft_mv_predictor
         
          else
          
-            pp = cat(2,{prior(1:obj.nfeatures,1:obj.nfeatures)},repmat({prior},[1 obj.ntasks]));
-            prior = blkdiag(pp{:});
+           P = zeros(nf+1,nf+1);
+           P(1:(nf+2):end) = prior(1:(nf+2):end);
+           
+           pp = cat(2,{prior(1:nf,1:nf)},repmat({P},[1 obj.ntasks]));
+           prior = blkdiag(pp{:});
          
          end
          
