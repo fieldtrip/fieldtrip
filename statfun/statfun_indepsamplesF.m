@@ -1,10 +1,16 @@
-function [s,cfg] = statfun_indepsamplesF(cfg, dat, design);
+function [s,cfg] = statfun_indepsamplesF(cfg, dat, design)
 
 % STATFUN_indepsamplesT calculates the independent samples F-statistic 
 % on the biological data in dat (the dependent variable), using the information on 
 % the independent variable (iv) in design.
 %
-% The external interface of this function has to be
+% Use this function by calling one of the high-level statistics functions as:
+%   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
+%   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
+%   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
+% see FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
+%
+% For low-level use, the external interface of this function has to be
 %   [s,cfg] = statfun_indepsamplesF(cfg, dat, design);
 % where
 %   dat    contains the biological data, Nsamples x Nreplications

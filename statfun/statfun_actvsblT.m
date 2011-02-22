@@ -1,4 +1,4 @@
-function [s,cfg] = statfun_actvsblT(cfg, dat, design);
+function [s,cfg] = statfun_actvsblT(cfg, dat, design)
 
 % STATFUN_actvsblT calculates the activation-versus-baseline T-statistic 
 % on the biological data in dat (the dependent variable), using the information on 
@@ -10,7 +10,13 @@ function [s,cfg] = statfun_actvsblT(cfg, dat, design);
 % subtract the time average of the combined baseline and activation
 % period.
 %
-% The external interface of this function has to be
+% Use this function by calling one of the high-level statistics functions as:
+%   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
+%   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
+%   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
+% see FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
+%
+% For low-level use, the external interface of this function has to be
 %   [s,cfg] = statfun_actvsblT(cfg, dat, design);
 % where
 %   dat    contains the biological data, Nsamples x Nreplications
