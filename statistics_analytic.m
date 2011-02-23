@@ -7,12 +7,12 @@ function [stat, cfg] = statistics_analytic(cfg, dat, design);
 % data on which you want to perform the test.
 %
 % Use as
-%   stat = timelockstatistics(cfg, data1, data2, data3, ...)
-%   stat = freqstatistics    (cfg, data1, data2, data3, ...)
-%   stat = sourcestatistics  (cfg, data1, data2, data3, ...)
-% where the data is obtained from TIMELOCKANALYSIS, FREQANALYSIS
-% or SOURCEANALYSIS respectively, or from TIMELOCKGRANDAVERAGE,
-% FREQGRANDAVERAGE or SOURCEGRANDAVERAGE respectively.
+%   stat = ft_timelockstatistics(cfg, data1, data2, data3, ...)
+%   stat = ft_freqstatistics    (cfg, data1, data2, data3, ...)
+%   stat = ft_sourcestatistics  (cfg, data1, data2, data3, ...)
+% where the data is obtained from FT_TIMELOCKANALYSIS, FT_FREQANALYSIS
+% or FT_SOURCEANALYSIS respectively, or from FT_TIMELOCKGRANDAVERAGE,
+% FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively.
 % 
 % The configuration can contain
 %   cfg.statistic        = string, statistic to compute for each sample or voxel (see below)
@@ -36,7 +36,7 @@ function [stat, cfg] = statistics_analytic(cfg, dat, design);
 %                         'depsamplesregrT'   dependent samples regression coefficient T-statistic,
 %                         'actvsblT'          activation versus baseline T-statistic.
 %
-% See also TIMELOCKSTATISTICS, FREQSTATISTICS, SOURCESTATISTICS
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS
 
 % Copyright (C) 2006, Robert Oostenveld
 %

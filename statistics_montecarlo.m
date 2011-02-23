@@ -7,13 +7,13 @@ function [stat, cfg] = statistics_montecarlo(cfg, dat, design, varargin)
 % the type of data on which you want to perform the test.
 %
 % Use as:
-%   stat = timelockstatistics(cfg, data1, data2, data3, ...)
-%   stat = freqstatistics    (cfg, data1, data2, data3, ...)
-%   stat = sourcestatistics  (cfg, data1, data2, data3, ...)
+%   stat = ft_timelockstatistics(cfg, data1, data2, data3, ...)
+%   stat = ft_freqstatistics    (cfg, data1, data2, data3, ...)
+%   stat = ft_sourcestatistics  (cfg, data1, data2, data3, ...)
 %
-% Where the data is obtained from TIMELOCKANALYSIS, FREQANALYSIS
-% or SOURCEANALYSIS respectively, or from TIMELOCKGRANDAVERAGE,
-% FREQGRANDAVERAGE or SOURCEGRANDAVERAGE respectively.
+% Where the data is obtained from FT_TIMELOCKANALYSIS, FT_FREQANALYSIS
+% or FT_SOURCEANALYSIS respectively, or from FT_TIMELOCKGRANDAVERAGE,
+% FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively.
 %
 % Required configuration option: cfg.statstic (see below)
 % Forbidden configuration options: cfg.ztransform, cfg.removemarginalmeans,
@@ -68,7 +68,7 @@ function [stat, cfg] = statistics_montecarlo(cfg, dat, design, varargin)
 % Check the private functions statfun_xxx (e.g.  with xxx=tstat) for
 % the correct format of the input and output.
 %
-% See also TIMELOCKSTATISTICS, FREQSTATISTICS, SOURCESTATISTICS
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS
 
 % Undocumented local options:
 %   cfg.resampling       permutation, bootstrap
