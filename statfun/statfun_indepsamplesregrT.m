@@ -1,4 +1,4 @@
-function [s,cfg] = statfun_indepsamplesregrT(cfg, dat, design);
+function [s,cfg] = statfun_indepsamplesregrT(cfg, dat, design)
 
 % STATFUN_indepsamplesregrT calculates independent samples regression coefficient 
 % T-statistics on the biological data in dat (the dependent variable), using the information on 
@@ -8,6 +8,8 @@ function [s,cfg] = statfun_indepsamplesregrT(cfg, dat, design);
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
+% with the following configuration option:
+%   cfg.statistic = 'indepsamplesregrT'
 % see FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
 %
 % For low-level use, the external interface of this function has to be

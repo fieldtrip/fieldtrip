@@ -1,4 +1,4 @@
-function [s] = statfun_indepsamplesZcoh(cfg, dat, design);
+function [s] = statfun_indepsamplesZcoh(cfg, dat, design)
 
 % STATFUN_indepsamplesZcoh calculates the independent samples coherence Z-statistic 
 % on the biological data in dat (the dependent variable), using the information on 
@@ -8,6 +8,8 @@ function [s] = statfun_indepsamplesZcoh(cfg, dat, design);
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
+% with the following configuration option:
+%   cfg.statistic = 'indepsamplesZcoh'
 % see FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
 %
 % For low-level use, the external interface of this function has to be

@@ -8,6 +8,8 @@ function [s,cfg] = statfun_indepsamplesF(cfg, dat, design)
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
+% with the following configuration option:
+%   cfg.statistic = 'indepsamplesF'
 % see FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
 %
 % For low-level use, the external interface of this function has to be
