@@ -211,6 +211,8 @@ switch toolbox
     status  = exist('ft_connectivity_corr', 'file') && exist('ft_connectivity_granger', 'file');
   case 'FREESURFER'
     status  = exist('MRIread', 'file') && exist('vox2ras_0to1', 'file');
+  case 'FNS'
+    status  = exist('elecsfwd', 'file') && exist('img_get_gray', 'file');
   otherwise
     if ~silent, warning('cannot determine whether the %s toolbox is present', toolbox); end
     status = 0;
