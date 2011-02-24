@@ -1,7 +1,3 @@
-=====================
-= OpenMEEG software =
-=====================
-
 The OpenMEEG software is a C++ package for solving the forward
 problem of electroencephalography (EEG) and magnetoencephalography (MEG).
 
