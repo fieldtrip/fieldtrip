@@ -17,7 +17,7 @@ function [V] = ft_write_volume(filename, dat, varargin)
 %
 % The supported dataformats are
 %   analyze
-%   nifti FIXME
+%   nifti
 %   mgz (freesurfer)
 %
 % See also FT_WRITE_DATA 

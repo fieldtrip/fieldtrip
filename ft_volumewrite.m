@@ -14,23 +14,24 @@ function ft_volumewrite(cfg, volume)
 % from FT_SOURCEINTERPOLATE.
 %
 % The configuration structure should contain the following elements
-%   cfg.parameter     = string, describing the functional data to be processed, e.g. 'pow', 'coh' or 'nai'
+%   cfg.parameter     = string, describing the functional data to be processed, 
+%                         e.g. 'pow', 'coh' or 'nai'
 %   cfg.filename      = filename without the extension
-%   cfg.filetype      = 'analyze', 'spm', 'vmp' or 'vmr'
+%   cfg.filetype      = 'analyze', 'analyze_spm', 'nifti', 'mgz', 'vmp' or 'vmr'
 %   cfg.vmpversion    = 1 or 2 (default) version of the vmp-format to use
 %   cfg.coordinates   = 'spm, 'ctf' or empty for interactive (default = [])
 %
-% The default fileformat is 'spm', which means that a *.hdr and *.img file
-% will be written using the SPM8 toolbox. The SPM format supports a
-% homogenous transformation matrix, the other file formats do not support a
-% homogenous coordinate transformation matrix and hence will be written in
-% their native coordinate system.
+% The default filetype is 'analyze_spm', which means that a *.hdr and *.img file
+% will be written using the SPM8 toolbox. 
+% The analyze_spm, nifti, and mgz filetypes support a homogeneous transformation
+% matrix, the other filetypes do not support a homogeneous coordinate transformation
+% matrix and hence will be written in their native coordinate system.
 %
-% You can specify the ft_datatype for the spm and analyze formats using
-%   cfg.ft_datatype      = 'bit1', 'uint8', 'int16', 'int32', 'float' or 'double'
+% You can specify the datatype for the analyze_spm and analyze formats using
+%   cfg.datatype      = 'bit1', 'uint8', 'int16', 'int32', 'float' or 'double'
 %
-% By default, integer ft_datatypes will be scaled to the maximum value of the
-% physical or statistical parameter, floating point ft_datatypes will not be
+% By default, integer datatypes will be scaled to the maximum value of the
+% physical or statistical parameter, floating point datatypes will not be
 % scaled. This can be modified with
 %   cfg.scaling       = 'yes' or 'no'
 %
@@ -73,26 +74,21 @@ ft_defaults
 
 %% ft_checkdata see below!!! %%
 
-% check some of the cfg fields
-if ~isfield(cfg, 'filename'),    error('No output filename specified'); end
-if ~isfield(cfg, 'parameter'),   error('No parameter specified');       end
-if isempty(cfg.filename),        error('Empty output filename');        end
+% check the input cfg
+cfg = ft_checkconfig(cfg, 'required', {'filename', 'parameter'});
 
 % set the defaults
-if ~isfield(cfg, 'filetype'),    cfg.filetype     = 'spm';      end
-if ~isfield(cfg, 'ft_datatype'), cfg.ft_datatype  = 'int16';    end
-if ~isfield(cfg, 'downsample'),  cfg.downsample   = 1;          end
-if ~isfield(cfg, 'markorigin')   cfg.markorigin   = 'no';       end
-if ~isfield(cfg, 'markfiducial') cfg.markfiducial = 'no';       end
-if ~isfield(cfg, 'markcorner')   cfg.markcorner   = 'no';       end
-if ~isfield(cfg, 'inputfile'),   cfg.inputfile = [];            end
+cfg.filetype     = ft_getopt(cfg, 'filetype',     'analyze_spm');
+cfg.datatype     = ft_getopt(cfg, 'datatype',     'int16');
+cfg.downsample   = ft_getopt(cfg, 'downsample',   1);
+cfg.markorigin   = ft_getopt(cfg, 'markorigin',   'no');
+cfg.markfiducial = ft_getopt(cfg, 'markfiducial', 'no');
+cfg.markcorner   = ft_getopt(cfg, 'markcorner',   'no');
+cfg.inputfile    = ft_getopt(cfg, 'inputfile',    []);
+cfg.scaling      = ft_getopt(cfg, 'scaling',      'no');
 
-if ~isfield(cfg, 'scaling'),
-  if any(strmatch(cfg.ft_datatype, {'int8', 'int16', 'int32'}))
-    cfg.scaling = 'yes';
-  else
-    cfg.scaling = 'no';
-  end
+if any(strmatch(cfg.datatype, {'int8', 'int16', 'int32'}))
+  cfg.scaling = 'yes';
 end
 
 if ~isfield(cfg, 'coordinates')
@@ -100,20 +96,20 @@ if ~isfield(cfg, 'coordinates')
   cfg.coordinates = 'ctf';
 end
 
-if ~isfield(cfg, 'vmpversion') & strcmp(cfg.filetype, 'vmp');
+if ~isfield(cfg, 'vmpversion') && strcmp(cfg.filetype, 'vmp');
   fprintf('using BrainVoyager version 2 VMP format\n');
   cfg.vmpversion = 2;
 end
 
 % load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    volume = loadvar(cfg.inputfile, 'volume');
-  end
+hasdata      = (nargin>1);
+hasinputfile = ~isempty(cfg.inputfile);
+if hasdata && hasinputfile
+  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+end
+
+if hasinputfile
+  volume = loadvar(cfg.inputfile, 'volume');
 end
 
 % check if the input data is valid for this function
@@ -121,14 +117,19 @@ volume = ft_checkdata(volume, 'datatype', 'volume', 'feedback', 'yes');
 
 % select the parameter that should be written
 cfg.parameter = parameterselection(cfg.parameter, volume);
+
 % only a single parameter should be selected
-try, cfg.parameter = cfg.parameter{1}; end
+if iscell(cfg.parameter)
+  cfg.parameter = cfg.parameter{1};
+end
 
 % downsample the volume
-tmpcfg = [];
-tmpcfg.downsample = cfg.downsample;
-tmpcfg.parameter  = cfg.parameter;
-volume = ft_volumedownsample(tmpcfg, volume);
+if cfg.downsample > 1
+  tmpcfg = [];
+  tmpcfg.downsample = cfg.downsample;
+  tmpcfg.parameter  = cfg.parameter;
+  volume = ft_volumedownsample(tmpcfg, volume);
+end
 
 % copy the data and convert into double values so that it can be scaled later
 transform = volume.transform;
@@ -143,13 +144,13 @@ if strcmp(cfg.markfiducial, 'yes')
   lpa = cfg.fiducial.lpa;
   rpa = cfg.fiducial.rpa;
   if any(nas<minxyz) || any(nas>maxxyz)
-    warning('nasion does not ly within volume, using nearest voxel');
+    warning('nasion does not lie within volume, using nearest voxel');
   end
   if any(lpa<minxyz) || any(lpa>maxxyz)
-    warning('LPA does not ly within volume, using nearest voxel');
+    warning('LPA does not lie within volume, using nearest voxel');
   end
   if any(rpa<minxyz) || any(rpa>maxxyz)
-    warning('RPA does not ly within volume, using nearest voxel');
+    warning('RPA does not lie within volume, using nearest voxel');
   end
   idx_nas = [nearest(x, nas(1)) nearest(y, nas(2)) nearest(z, nas(3))];
   idx_lpa = [nearest(x, lpa(1)) nearest(y, lpa(2)) nearest(z, lpa(3))];
@@ -187,7 +188,7 @@ data(isnan(data)) = 0;
 
 if strcmp(cfg.scaling, 'yes')
   % scale the data so that it fits in the desired numerical data format
-  switch lower(cfg.ft_datatype)
+  switch lower(cfg.datatype)
     case 'bit1'
       data = (data~=0);
     case 'uint8'
@@ -201,7 +202,7 @@ if strcmp(cfg.scaling, 'yes')
     case 'double'
       data = double(data ./ maxval);
     otherwise
-      error('unknown ft_datatype');
+      error('unknown datatype');
   end
 end
 
@@ -237,7 +238,7 @@ switch cfg.filetype
       data = flipdim(data, 2);
     end
     siz = size(data);
-  case {'analyze'}
+  case 'analyze'
     % the reordering of the Analyze format is according to documentation from Darren Webber
     if strcmp(cfg.coordinates, 'ctf')
       data = permute(data, [2 1 3]);
@@ -245,7 +246,7 @@ switch cfg.filetype
       data = flipdim(data, 1);
     end
     siz = size(data);
-  case 'spm'
+  case {'analyze_spm', 'nifti', 'mgz'}
     % this format supports a homogenous transformation matrix
     % nothing needs to be changed
   otherwise
@@ -330,6 +331,7 @@ switch cfg.filetype
         % write the data
         fwrite(fid, data(minx:maxx,miny:maxy,minz:maxz), 'float');
     end
+    fclose(fid);
 
   case 'vmr'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -374,7 +376,7 @@ switch cfg.filetype
     % avw.hdr.dime.pixdim(2:4) = [resy resx resz];
 
     % specify the data type
-    switch lower(cfg.ft_datatype)
+    switch lower(cfg.datatype)
       case 'bit1'
         avw.hdr.dime.datatype = 1;
         avw.hdr.dime.bitpix   = 1;
@@ -394,19 +396,46 @@ switch cfg.filetype
         avw.hdr.dime.datatype = 64;
         avw.hdr.dime.bitpix   = 64;
       otherwise
-        error('unknown ft_datatype');
+        error('unknown datatype');
     end
 
     % write the header and image data
     avw_img_write(avw, cfg.filename, [], 'ieee-le');
 
-  case 'spm'
+  case 'nifti'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % write in SPM format, using functions from  the SPM8 toolbox
+    % write in nifti format, using functions from  the SPM8 toolbox
     % this format supports a homogenous transformation matrix
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    ft_write_volume(cfg.filename, data, 'transform', transform, 'spmversion', 'SPM8');
-
+    [pathstr, name, ext] = fileparts(cfg.filename);
+    if isempty(ext)
+      cfg.filename = [cfg.filename,'.nii'];
+    end
+    ft_write_volume(cfg.filename, data, 'dataformat', 'nifti', 'transform', transform, 'spmversion', 'SPM8');
+  
+  case 'analyze_spm'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % write in analyze format, using functions from  the SPM8 toolbox
+    % this format supports a homogenous transformation matrix
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    [pathstr, name, ext] = fileparts(cfg.filename);
+    if isempty(ext)
+      cfg.filename = [cfg.filename,'.img'];
+    end
+    ft_write_volume(cfg.filename, data, 'dataformat', 'analyze', 'transform', transform, 'spmversion', 'SPM8');
+  
+  case 'mgz'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % write in freesurfer_mgz format, using functions from  the freesurfer toolbox
+    % this format supports a homogenous transformation matrix
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     [pathstr, name, ext] = fileparts(cfg.filename);
+    if isempty(ext)
+      cfg.filename = [cfg.filename,'.mgz'];
+    end
+    ft_write_volume(cfg.filename, data, 'dataformat', 'mgz', 'transform', transform);
+    
+    
   otherwise
     fprintf('unknown fileformat\n');
 end
