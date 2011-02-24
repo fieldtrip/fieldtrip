@@ -16,7 +16,6 @@ function [stat] = ft_sourcestatistics(cfg, varargin)
 %   cfg.method       = different methods for calculating the probability of the null-hypothesis,
 %                    'montecarlo'    uses a non-parametric randomization test to get a Monte-Carlo estimate of the probability,
 %                    'analytic'      uses a parametric test that results in analytic probability,
-%                    'glm'           uses a general linear model approach,
 %                    'stats'         uses a parametric test from the Matlab statistics toolbox,
 %                    'parametric'    uses the Matlab statistics toolbox (very similar to 'stats'),
 %                    'randomization' uses randomization of the data prior to source reconstruction,

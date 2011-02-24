@@ -23,7 +23,6 @@ function [stat] = ft_freqstatistics(cfg, varargin)
 %                    'montecarlo' get Monte-Carlo estimates of the significance probabilities and/or critical values from the permutation distribution,
 %                    'analytic'   get significance probabilities and/or critical values from the analytic reference distribution (typically, the sampling distribution under the null hypothesis),
 %                    'stats'      use a parametric test from the Matlab statistics toolbox,
-%                    'glm'        use a general linear model approach.
 %
 % The other cfg options depend on the method that you select. You
 % should read the help of the respective subfunction STATISTICS_XXX
