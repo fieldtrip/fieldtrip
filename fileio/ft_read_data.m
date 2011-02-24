@@ -9,7 +9,7 @@ function [dat] = ft_read_data(filename, varargin)
 %   dat = ft_read_data(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can be
-%   'header'         header structure, see READ_HEADER
+%   'header'         header structure, see FT_READ_HEADER
 %   'begsample'      first sample to read
 %   'endsample'      last sample to read
 %   'begtrial'       first trial to read, mutually exclusive with begsample+endsample
@@ -546,6 +546,9 @@ switch dataformat
     % read the data from shared memory
     [dat, dimord] = read_shm_data(hdr, chanindx, begtrial, endtrial);
 
+  case 'dataq_wdq'
+    dat = read_wdq_data(filename, hdr.orig, begsample, endsample, chanindx);
+    
   case 'eeglab_set'
     dat = read_eeglabdata(filename, 'header', hdr, 'begtrial', begtrial, 'endtrial', endtrial, 'chanindx', chanindx);
     dimord = 'chans_samples_trials';

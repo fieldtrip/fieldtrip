@@ -38,6 +38,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - BESA
 %  - BrainVision
 %  - Curry
+%  - Dataq
 %  - EDF
 %  - EEProbe
 %  - Elektra/Neuromag
@@ -660,6 +661,12 @@ elseif exist(fullfile(p, [f '.dat']), 'file') && (exist(fullfile(p, [f '.gen']),
   manufacturer = 'BESA';
   content = 'simple binary channel data with a seperate generic ascii header';
 
+  % known Dataq file formats
+elseif filetype_check_extension(upper(filename), '.WDQ')
+  type         = 'dataq_wdq';
+  manufacturer = 'dataq instruments';
+  content      = 'electrophysiological data';
+  
   % old files from Pascal Fries' PhD research at the MPI
 elseif filetype_check_extension(filename, '.dap') && filetype_check_header(filename, char(1))
   type = 'mpi_dap';
