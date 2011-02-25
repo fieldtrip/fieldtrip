@@ -60,15 +60,17 @@ hasval  = ~isempty(val);
 npntin  = size(pntin, 1);
 npntout = size(pntout, 1);
 
+dimres  = sqrt(sum((pntout(2,:)-pntout(1,:)).^2,2));
+
 if isempty(distmat)
   %------compute a distance matrix
   switch projmethod
     case 'nearest'
       if ~isempty(sphereradius)
-        warning('sphereradius is not used for projmethod''nearest''');
+        warning('sphereradius is not used for projmethod ''nearest''');
       end
       % determine the nearest voxel for each surface point
-      ind = find_nearest(pntout, pntin, 5);
+      ind     = find_nearest(pntout, pntin, 5);
       distmat = sparse(1:npntout, ind, ones(size(ind)), npntout, npntin);
 
     case {'sphere_avg', 'sphere_weighteddistance'}
@@ -79,15 +81,34 @@ if isempty(distmat)
       dpntinsq  = sum(pntin.^2,2); % squared distance to origin
       dpntoutsq  = sum(pntout.^2,2); % squared distance to origin
       maxnpnt = double(npntout*ceil(4/3*pi*(sphereradius/max(dimres))^3)); % initial estimate of nonzero entries
-      distmat = spalloc(npntout, npntin, maxnpnt);
-      progress('init', 'textbar', 'computing distance matrix');
+      %ft_progress('init', 'none', 'computing distance matrix');
+      val = nan+zeros(maxnpnt, 1);
+      indx1 = nan+zeros(maxnpnt, 1);
+      indx2 = nan+zeros(maxnpnt, 1);
+      cnt = 1;
       for j = 1:npntout
-        progress(j/npntout);
-        d   = sqrt(dpntoutsq(j) + dpntinsq - 2 * pntin * pntout(j,:)');
-        sel = find(d<sphereradius);
-        distmat(j, sel) = single(d(sel)) + eps('single');
+        %ft_progress(j/npntout);
+        %d   = dpntoutsq(j) + dpntinsq - 2 * pntin * pntout(j,:)';
+        %sel = find(d<sphereradius.^2);
+        
+        % the following lines are equivalent to the previous 2 but use
+        % fewer flops
+        d    = dpntinsq - 2 * pntin * pntout(j,:)';
+        sel  = find(d < sphereradius.^2 - dpntoutsq(j));
+        
+        nsel = numel(sel);
+        if nsel>0
+        indx1(cnt:(cnt+nsel-1)) = j(ones(nsel,1));
+        indx2(cnt:(cnt+nsel-1)) = sel(:);
+        val(cnt:(cnt+nsel-1))   = d(sel) + eps('double');
+        cnt = cnt + nsel;
+        end
       end
-      progress('close');
+      indx1(isnan(indx1)) = [];
+      indx2(isnan(indx2)) = [];
+      val(isnan(val))     = [];
+      distmat = sparse(indx1, indx2, val, npntout, npntin);
+      %ft_progress('close');
 
     case 'smudge'
       if isempty(triout),
@@ -97,11 +118,12 @@ if isempty(distmat)
       datin = sum(datin,2)==3;
       [datout, S1] = smudge(datin, triout, 6); %FIXME 6 is number of iterations, improve here
     
-      S2  = spalloc(npntout, npntin, npntin);
+      %S2  = spalloc(npntout, npntin, npntin);
       sel = find(datin);
-      for k = 1:npntin
-        S2(sel(k), k) = 1;
-      end
+      %for k = 1:npntin
+      %  S2(sel(k), k) = 1;
+      %end
+      S2  = sparse(sel(:), (1:npntin0)', ones(npntin,1), npntout, npntin);
       distmat = S1 * S2;
     
     otherwise

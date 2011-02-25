@@ -1,4 +1,4 @@
-function [nearest, distance] = find_nearest(pnt1, pnt2, npart);
+function [nearest, distance] = find_nearest(pnt1, pnt2, npart, gridflag)
 
 % FIND_NEAREST finds the nearest vertex in a cloud of points and
 % does this efficiently for many target vertices at once (by means
@@ -32,26 +32,35 @@ if isempty(fb)
   fb = 0;
 end
 
+if nargin<4
+  gridflag = 0;
+end
+
 npnt1 = size(pnt1,1);
 npnt2 = size(pnt2,1);
 
-if all(pnt2(1,:)==1)
-  % it might be gridded, test in more detail
-  dim = max(pnt2);
-  [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
-  if all(pnt2==[X(:) Y(:) Z(:)])
-    % it is gridded, that can be treated much faster
-    if fb, fprintf('pnt2 is gridded\n'); end
-    sub = round(pnt1);
-    sub(sub(:)<1) = 1;
-    sub(sub(:,1)>dim(1),1) = dim(1);
-    sub(sub(:,2)>dim(2),2) = dim(2);
-    sub(sub(:,3)>dim(3),3) = dim(3);
-    ind = sub2ind(dim, sub(:,1), sub(:,2), sub(:,3));
-    nearest = ind(:);
-    distance = sqrt(sum((pnt1-pnt2(ind,:)).^2, 2));
-    return
+if ~gridflag
+  % check whether pnt2 is gridded
+  if all(pnt2(1,:)==1)
+    % it might be gridded, test in more detail
+    dim = max(pnt2, [], 1);
+    [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+    gridflag = all(pnt2(:)==[X(:);Y(:);Z(:)]);
   end
+end
+
+if gridflag
+  % it is gridded, that can be treated much faster
+  if fb, fprintf('pnt2 is gridded\n'); end
+  sub = round(pnt1);
+  sub(sub(:)<1) = 1;
+  sub(sub(:,1)>dim(1),1) = dim(1);
+  sub(sub(:,2)>dim(2),2) = dim(2);
+   sub(sub(:,3)>dim(3),3) = dim(3);
+  ind = sub2ind(dim, sub(:,1), sub(:,2), sub(:,3));
+  nearest = ind(:);
+  distance = sqrt(sum((pnt1-pnt2(ind,:)).^2, 2));
+  return
 end
 
 if npart<1
@@ -73,7 +82,7 @@ while ~isempty(sel)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [nearest, distance] = find_nearest_partition(pnt1, pnt2, npart);
+function [nearest, distance] = find_nearest_partition(pnt1, pnt2, npart)
 
 global fb;
 if isempty(fb)
@@ -164,7 +173,7 @@ if any(sel)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [nearest, distance] = find_nearest_brute_force(pnt1, pnt2);
+function [nearest, distance] = find_nearest_brute_force(pnt1, pnt2)
 % implementation 1 -- brute force
 npnt1 = size(pnt1,1);
 npnt2 = size(pnt2,1);
