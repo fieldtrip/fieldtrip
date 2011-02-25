@@ -1,4 +1,4 @@
-function ft_plot_mesh(bnd, varargin)
+function [hs] = ft_plot_mesh(bnd, varargin)
 
 % FT_PLOT_MESH visualizes the information of a mesh contained in the first
 % argument bnd. The boundary argument (bnd) contains typically 2 fields
@@ -7,7 +7,7 @@ function ft_plot_mesh(bnd, varargin)
 % Use as
 %   ft_plot_mesh(bnd, ...)
 %
-% PLOT_MESH also allows to plot only vertices by
+% FT_PLOT_MESH also allows to plot only vertices by
 %   ft_plot_mesh(pnt)
 % where pnt is a list of 3d points cartesian coordinates.
 %
