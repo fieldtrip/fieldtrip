@@ -1,4 +1,4 @@
-function [down] = ft_volumedownsample(cfg, source);
+function [down] = ft_volumedownsample(cfg, source)
 
 % FT_VOLUMEDOWNSAMPLE downsamples an anatomical MRI or source reconstruction
 % and optionally normalizes its coordinate axes, keeping the homogenous
@@ -156,7 +156,9 @@ cfg.version.matlab = version();
 
 % remember the configuration details of the input data
 
-try, cfg.previous = source.cfg; end
+if isfield(source, 'cfg'),
+  cfg.previous = source.cfg;
+end
 
 % remember the exact configuration details in the output
 down.cfg = cfg;
