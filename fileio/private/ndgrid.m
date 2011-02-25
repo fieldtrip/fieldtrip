@@ -25,7 +25,7 @@ function [varargout] = ndgrid(varargin)
 %
 %   This is a drop-in replacement for the matlab version in elmat, which is
 %   relatively slow for big grids. FIXME this function still only works up
-%   to 4 dimensions
+%   to 5 dimensions
 %
 %   See also MESHGRID, INTERPN.
 
@@ -55,7 +55,8 @@ end
 if nargin==1, varargin = repmat(varargin,[1 max(nargout,2)]); end
 
 ndims = numel(varargin);
-if     ndims==2
+switch ndims
+case 2
   ones1 = ones(1,numel(varargin{1}));
   ones2 = ones(1,numel(varargin{2}));
   
@@ -64,7 +65,7 @@ if     ndims==2
   
   varargout{1} = x(:, ones2);
   varargout{2} = y(ones1, :);
-elseif ndims==3
+case 3
   ones1 = ones(1,numel(varargin{1}));
   ones2 = ones(1,numel(varargin{2}));
   ones3 = ones(1,numel(varargin{3}));
@@ -77,7 +78,7 @@ elseif ndims==3
   varargout{1} = x(:, ones2, ones3);
   varargout{2} = y(ones1, :, ones3);
   varargout{3} = z(ones1, ones2, :);
-elseif ndims==4
+case 4
   ones1 = ones(1,numel(varargin{1}));
   ones2 = ones(1,numel(varargin{2}));
   ones3 = ones(1,numel(varargin{3}));
@@ -87,14 +88,36 @@ elseif ndims==4
   y   = varargin{2}(:)';
   z   = zeros(1,1,numel(varargin{3}));
   z(:) = varargin{3};
-  zz    = zeros(1,1,1,numel(varargin{4}));
-  zz(:) = varargin{4};
+  xx   = zeros(1,1,1,numel(varargin{4}));
+  xx(:) = varargin{4};
   
   varargout{1} = x(:, ones2, ones3, ones4);
   varargout{2} = y(ones1, :, ones3, ones4);
   varargout{3} = z(ones1, ones2, :, ones4);
-  varargout{4} = zz(ones1, ones2, ones3, :);
-else
+  varargout{4} = xx(ones1, ones2, ones3, :);
+case 5
+  ones1 = ones(1,numel(varargin{1}));
+  ones2 = ones(1,numel(varargin{2}));
+  ones3 = ones(1,numel(varargin{3}));
+  ones4 = ones(1,numel(varargin{4}));
+  ones5 = ones(1,numel(varargin{5}));
+  
+  x   = varargin{1}(:);
+  y   = varargin{2}(:)';
+  z   = zeros(1,1,numel(varargin{3}));
+  z(:) = varargin{3};
+  xx   = zeros(1,1,1,numel(varargin{4}));
+  xx(:) = varargin{4};
+  yy   = zeros(1,1,1,1,numel(varargin{5}));
+  yy(:) = varargin{5};
+  
+  varargout{1} = x(:, ones2, ones3, ones4, ones5);
+  varargout{2} = y(ones1, :, ones3, ones4, ones5);
+  varargout{3} = z(ones1, ones2, :, ones4, ones5);
+  varargout{4} = xx(ones1, ones2, ones3, :,ones5);
+  varargout{5} = yy(ones1, ones2, ones3, :,ones5);
+otherwise
+  error('this version of ndgrid supports inputs up to 5 dimensions');
   %call the ndgrid from elmat
   %FIXME this has to be done
 end
