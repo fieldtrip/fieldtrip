@@ -1,4 +1,4 @@
-function [volume] = grid2transform(volume);
+function [volume] = grid2transform(volume)
 
 % GRID2TRANSFORM ensures that the volume contains a homogenous transformation
 % matrix. If needed, a homogenous matrix is constructed from the xgrid/ygrid/zgrid
@@ -71,7 +71,7 @@ else
   % combine all the homogenous transformations in such a way that the new
   % transformation behaves identically on the new x/y/zgrid as the old
   % transformation did on the old x/y/zgrid
-  newtransform = oldtransform * inv(t3 * t2 * t1);
+  newtransform = oldtransform / (t3 * t2 * t1);
 
   % update the definition of the cardinal axes of the volume
   % volume.xgrid = 1:Nx;
