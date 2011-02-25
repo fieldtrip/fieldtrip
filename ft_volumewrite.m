@@ -17,13 +17,14 @@ function ft_volumewrite(cfg, volume)
 %   cfg.parameter     = string, describing the functional data to be processed, 
 %                         e.g. 'pow', 'coh' or 'nai'
 %   cfg.filename      = filename without the extension
-%   cfg.filetype      = 'analyze', 'analyze_spm', 'nifti', 'mgz', 'vmp' or 'vmr'
+%   cfg.filetype      = 'analyze', 'nifti', 'nifti_img', 'mgz', 'vmp' or 'vmr'
 %   cfg.vmpversion    = 1 or 2 (default) version of the vmp-format to use
 %   cfg.coordinates   = 'spm, 'ctf' or empty for interactive (default = [])
 %
-% The default filetype is 'analyze_spm', which means that a *.hdr and *.img file
-% will be written using the SPM8 toolbox. 
-% The analyze_spm, nifti, and mgz filetypes support a homogeneous transformation
+% The default filetype is 'nifti', which means that a single *.nii file
+% will be written using the SPM8 toolbox. The 'nifti_img' filetype uses SPM8 for 
+% a dual file (*.img/*.hdr) nifti-format file.
+% The analyze, nifti, nifti_img and mgz filetypes support a homogeneous transformation
 % matrix, the other filetypes do not support a homogeneous coordinate transformation
 % matrix and hence will be written in their native coordinate system.
 %
@@ -51,6 +52,7 @@ function ft_volumewrite(cfg, volume)
 % cfg.inputfile  = one can specifiy preanalysed saved data as input
 
 % Copyright (C) 2003-2006, Robert Oostenveld, Markus Siegel
+% Copyright (C) 2011, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -78,7 +80,7 @@ ft_defaults
 cfg = ft_checkconfig(cfg, 'required', {'filename', 'parameter'});
 
 % set the defaults
-cfg.filetype     = ft_getopt(cfg, 'filetype',     'analyze_spm');
+cfg.filetype     = ft_getopt(cfg, 'filetype',     'nifti');
 cfg.datatype     = ft_getopt(cfg, 'datatype',     'int16');
 cfg.downsample   = ft_getopt(cfg, 'downsample',   1);
 cfg.markorigin   = ft_getopt(cfg, 'markorigin',   'no');
