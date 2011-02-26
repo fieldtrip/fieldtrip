@@ -49,9 +49,10 @@ end
 % determine the slice range
 if size(loc, 1) == 1 && nslice > 1,
   if isempty(srange) || (ischar(srange) && strcmp(srange, 'auto'))
+    srange = [-50 70];
   else
   end
-  loc = repmat(loc, [nslice 1]) + linspace(srange(1),srange(2),nslice)'*ori;
+  loc = repmat(loc, [nslice 1]) + linspace(srange(1),srange(2),nslice)'*ori;    
 end
 
 % ensure that the ori has the same size as the loc
@@ -70,3 +71,6 @@ for k = 1:nslice
   set(h(k), 'ydata', iy*(siz(2) -1) + repmat((0:siz(2)-1) , [siz(1) 1]));
   set(h(k), 'zdata', zeros(siz));   
 end
+axis equal;
+axis tight;
+axis off;

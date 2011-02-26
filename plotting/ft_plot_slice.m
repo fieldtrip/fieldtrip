@@ -92,6 +92,12 @@ if ~dointerp && ~all(round(loc)==loc),   dointerp = true; end
 if ~dointerp && sum(ori)~=1,             dointerp = true; end
 if ~dointerp && ~(resolution==round(resolution)), dointerp = true; end
 
+% determine the caller function and toggle dointerp to true, if
+% ft_plot_slice has been called from ft_plot_montage
+% this is necessary for the correct allocation of the persistent variables
+st = dbstack;
+if ~dointerp && strcmp(st(2).name, 'ft_plot_montage'), dointerp = true; end
+
 if dointerp
   %--------cut a slice using interpn
   
@@ -102,7 +108,7 @@ if dointerp
   else
     [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
   end
- 
+  
   % define 'x' and 'y' axis in projection plane.
   % this is more or less arbitrary
   [x, y] = projplane(ori);
