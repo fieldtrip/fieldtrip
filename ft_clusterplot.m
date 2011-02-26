@@ -123,7 +123,8 @@ if isfield(cfg, 'interplimits'),          cfgtopo.interplimits   = cfg.interplim
 if isfield(cfg, 'interpolation'),         cfgtopo.interpolation  = cfg.interpolation;   end
 if isfield(cfg, 'contournum'),            cfgtopo.contournum     = cfg.contournum;      end
 if isfield(cfg, 'colorbar'),              cfgtopo.colorbar       = cfg.colorbar;        end
-if isfield(cfg, 'shading'),               cfgtopo.shading        =  cfg.shading';       end
+if isfield(cfg, 'shading'),               cfgtopo.shading        = cfg.shading';        end
+if isfield(cfg, 'zlim'),                  cfgtopo.zlim           = cfg.zlim;            end
 cfgtopo.zparam = cfg.zparam;
 
 % prepare the layout, this only has to be done once
