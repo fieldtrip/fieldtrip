@@ -78,6 +78,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 % cfg.baselinetype, documented
 
 % Copyright (C) 2003-2006, Ole Jensen
+% Copyright (C) 2007-2011, Roemer van der Meij & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -100,28 +101,26 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'unused', {'cohtargetchannel'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});
 
 clf
 
 % set default for inputfile
 if ~isfield(cfg, 'inputfile'),      cfg.inputfile = [];                end
 
-% load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-  end
+hasdata      = (nargin>1);
+hasinputfile = ~isempty(cfg.inputfile);
+
+if hasdata && hasinputfile
+  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
 end
 
-% for backward compatibility with old data structures
-data = ft_checkdata(data);
-
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});
+if hasdata
+  % do nothing
+elseif hasinputfile
+  data = loadvar(cfg.inputfile, 'data');
+end
 
 % Set the defaults:
 if ~isfield(cfg,'baseline'),        cfg.baseline = 'no';               end
@@ -151,23 +150,51 @@ if ~isfield(cfg,'box')
   end
 end
 
-% Set x/y/zparam defaults according to data.dimord value:
-if strcmp(data.dimord, 'chan_freq_time')
+% for backward compatibility with old data structures
+data   = ft_checkdata(data, 'datatype', 'freq');
+dimord = data.dimord;
+dimtok = tokenize(dimord, '_');
+
+% Set x/y/zparam defaults
+if ~sum(ismember(dimtok, 'time'))
+  error('input data needs a time dimension');
+else
   if ~isfield(cfg, 'xparam'),      cfg.xparam='time';                  end
   if ~isfield(cfg, 'yparam'),      cfg.yparam='freq';                  end
   if ~isfield(cfg, 'zparam'),      cfg.zparam='powspctrm';             end
-elseif strcmp(data.dimord, 'subj_chan_freq_time') || strcmp(data.dimord, 'rpt_chan_freq_time')
-  if isfield(data, 'crsspctrm'),  data = rmfield(data, 'crsspctrm');  end % on the fly computation of coherence spectrum is not supported
-  tmpcfg = [];
-  tmpcfg.trials = cfg.trials;
+end
+
+if isfield(cfg, 'channel') && isfield(data, 'label')
+  cfg.channel = ft_channelselection(cfg.channel, data.label);
+elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
+  cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
+end
+
+% perform channel selection but only allow this when cfg.interactive = 'no'
+if isfield(data, 'label') && strcmp(cfg.interactive, 'no')
+  selchannel = ft_channelselection(cfg.channel, data.label);
+elseif isfield(data, 'labelcmb') && strcmp(cfg.interactive, 'no')
+  selchannel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
+end
+
+% check whether rpt/subj is present and remove if necessary and whether
+hasrpt = sum(ismember(dimtok, {'rpt' 'subj'}));
+if hasrpt,
+  % this also deals with fourier-spectra in the input
+  % or with multiple subjects in a frequency domain stat-structure
+  % on the fly computation of coherence spectrum is not supported
+  if isfield(data, 'crsspctrm'),
+    data = rmfield(data, 'crsspctrm'); 
+  end
+  
+  tmpcfg           = [];
+  tmpcfg.trials    = cfg.trials;
   tmpcfg.jackknife = 'no';
-  if isfield(cfg, 'zparam') && strcmp(cfg.zparam,'cohspctrm')
-    % on the fly computation of coherence spectrum is not supported
-  elseif isfield(cfg, 'zparam') && ~strcmp(cfg.zparam,'powspctrm')
-    % freqdesctiptives will only work on the powspctrm field, hence a temporary copy of the data is needed
+  if isfield(cfg, 'zparam') && ~strcmp(cfg.zparam,'powspctrm')
+    % freqdesctiptives will only work on the powspctrm field
+    % hence a temporary copy of the data is needed
     tempdata.dimord    = data.dimord;
     tempdata.freq      = data.freq;
-    tempdata.time      = data.time;
     tempdata.label     = data.label;
     tempdata.powspctrm = data.(cfg.zparam);
     tempdata.cfg       = data.cfg;
@@ -177,72 +204,85 @@ elseif strcmp(data.dimord, 'subj_chan_freq_time') || strcmp(data.dimord, 'rpt_ch
   else
     data = ft_freqdescriptives(tmpcfg, data);
   end
-  if ~isfield(cfg, 'xparam'),      cfg.xparam='time';                  end
-  if ~isfield(cfg, 'yparam'),      cfg.yparam='freq';                  end
-  if ~isfield(cfg, 'zparam'),      cfg.zparam='powspctrm';             end
-end
-
-% Old style coherence plotting with cohtargetchannel is no longer supported:
-cfg = ft_checkconfig(cfg, 'unused',  {'cohtargetchannel'});
-
-% perform channel selection
-cfg.channel = ft_channelselection(cfg.channel, data.label);
-data        = ft_selectdata(data, 'channel', cfg.channel);
-
+  dimord = data.dimord;
+  dimtok = tokenize(dimord, '_');
+end % if hasrpt
 
 % Read or create the layout that will be used for plotting:
 lay = ft_prepare_layout(cfg, data);
 cfg.layout = lay;
 
-% Check for unconverted coherence spectrum data or any other bivariate metric:
-dimtok  = tokenize(data.dimord, '_');
+% Apply baseline correction:
+if ~strcmp(cfg.baseline, 'no')
+  data = ft_freqbaseline(cfg, data);
+end
+
+% Handle the bivariate case
+
+% Check for bivariate metric with 'chan_chan' in the dimord
 selchan = strmatch('chan', dimtok);
 isfull  = length(selchan)>1;
-if (strcmp(cfg.zparam,'cohspctrm') && isfield(data, 'labelcmb')) || ...
-    (isfull && isfield(data, cfg.zparam)),
 
+% Check for bivariate metric with a labelcmb
+haslabelcmb = isfield(data, 'labelcmb');
+
+if (isfull || haslabelcmb) && isfield(data, cfg.zparam)
   % A reference channel is required:
-  if ~isfield(cfg,'cohrefchannel'),
-    error('no reference channel specified');
+  if ~isfield(cfg, 'cohrefchannel')
+    error('no reference channel is specified');
   end
-
+  
   % check for cohrefchannel being part of selection
   if ~strcmp(cfg.cohrefchannel,'gui')
-    if ~any(strcmp(cfg.cohrefchannel,cfg.channel))
+    if (isfull      && ~any(ismember(data.label, cfg.cohrefchannel))) || ...
+       (haslabelcmb && ~any(ismember(data.labelcmb(:), cfg.cohrefchannel)))
       error('cfg.cohrefchannel is a not present in the (selected) channels)')
     end
   end
   
+  % Interactively select the reference channel
   if strcmp(cfg.cohrefchannel, 'gui')
     % Open a single figure with the channel layout, the user can click on a reference channel
     h = clf;
     ft_plot_lay(lay, 'box', false);
-    title('Select the reference channel by clicking on it...');
-    info       = [];
+    title('Select the reference channel by dragging a selection window, more than 1 channel can be selected...');
+    % add the channel information to the figure
+    info       = guidata(gcf);
     info.x     = lay.pos(:,1);
     info.y     = lay.pos(:,2);
     info.label = lay.label;
     guidata(h, info);
-    set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'callback', {@select_multiplotTFR, cfg, data}});
+    %set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'callback', {@select_topoplotER, cfg, data}});
+    set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotTFR, cfg, data}, 'event', 'WindowButtonUpFcn'});
+    set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotTFR, cfg, data}, 'event', 'WindowButtonDownFcn'});
+    set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotTFR, cfg, data}, 'event', 'WindowButtonMotionFcn'});
     return
   end
-
+  
   if ~isfull,
-    % only works explicitly with coherence FIXME
     % Convert 2-dimensional channel matrix to a single dimension:
-    sel1           = strmatch(cfg.cohrefchannel, data.labelcmb(:,2));
-    sel2           = strmatch(cfg.cohrefchannel, data.labelcmb(:,1));
-    fprintf('selected %d channels for coherence\n', length(sel1)+length(sel2));
-    data.cohspctrm = data.cohspctrm([sel1;sel2],:,:);
+    if isempty(cfg.matrixside)
+      sel1 = strmatch(cfg.cohrefchannel, data.labelcmb(:,2));
+      sel2 = strmatch(cfg.cohrefchannel, data.labelcmb(:,1));
+    elseif strcmp(cfg.matrixside, 'feedforward')
+      sel1 = [];
+      sel2 = strmatch(cfg.cohrefchannel, data.labelcmb(:,1));
+    elseif strcmp(cfg.matrixside, 'feedback')
+      sel1 = strmatch(cfg.cohrefchannel, data.labelcmb(:,2));
+      sel2 = [];
+    end
+    fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.zparam);
+    data.(cfg.zparam) = data.(cfg.zparam)([sel1;sel2],:,:);
     data.label     = [data.labelcmb(sel1,1);data.labelcmb(sel2,2)];
     data.labelcmb  = data.labelcmb([sel1;sel2],:);
     data           = rmfield(data, 'labelcmb');
   else
-    % general solution
-    
+    % General case
     sel               = match_str(data.label, cfg.cohrefchannel);
     siz               = [size(data.(cfg.zparam)) 1];
-    if strcmp(cfg.matrixside, 'feedback')
+    if strcmp(cfg.matrixside, 'feedback') || isempty(cfg.matrixside)
+      %FIXME the interpretation of 'feedback' and 'feedforward' depend on
+      %the definition in the bivariate representation of the data
       %data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
       sel1 = 1:siz(1);
       sel2 = sel;
@@ -252,19 +292,15 @@ if (strcmp(cfg.zparam,'cohspctrm') && isfield(data, 'labelcmb')) || ...
       sel1 = sel;
       sel2 = 1:siz(1);
       meandir = 1;
-    elseif strcmp(cfg.matrixside, 'ff-fd')
-      %FIXME don't know how to handle this
-      data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]) - reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
-    elseif strcmp(cfg.matrixside, 'fd-ff')
-      data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]) - reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
-    end
-  end
-end
 
-% Apply baseline correction:
-if ~strcmp(cfg.baseline, 'no')
-  data = ft_freqbaseline(cfg, data);
-end
+    elseif strcmp(cfg.matrixside, 'ff-fd')
+      error('cfg.matrixside = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_topoplotER');
+    elseif strcmp(cfg.matrixside, 'fd-ff')
+      error('cfg.matrixside = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_topoplotER');
+    end %if matrixside
+  end %if ~isfull
+end %handle the bivariate data
+
 
 % Get physical x-axis range:
 if strcmp(cfg.xlim,'maxmin')
@@ -275,12 +311,11 @@ else
   xmax = cfg.xlim(2);
 end
 
-% Find corresponding x-axis bins:
-xidc = find(data.(cfg.xparam) >= xmin & data.(cfg.xparam) <= xmax);
-
-% Align physical x-axis range to the array bins:
-xmin = data.(cfg.xparam)(xidc(1));
-xmax = data.(cfg.xparam)(xidc(end));
+% Replace value with the index of the nearest bin
+if ~isempty(cfg.xparam)
+  xmin = nearest(data.(cfg.xparam), xmin);
+  xmax = nearest(data.(cfg.xparam), xmax);
+end
 
 % Get physical y-axis range:
 if strcmp(cfg.ylim,'maxmin')
@@ -291,16 +326,15 @@ else
   ymax = cfg.ylim(2);
 end
 
-% Find corresponding y-axis bins:
-yidc = find(data.(cfg.yparam) >= ymin & data.(cfg.yparam) <= ymax);
-
-% Align physical y-axis range to the array bins:
-ymin = data.(cfg.yparam)(yidc(1));
-ymax = data.(cfg.yparam)(yidc(end));
+% Replace value with the index of the nearest bin
+if ~isempty(cfg.yparam)
+  ymin = nearest(data.(cfg.yparam), ymin);
+  ymax = nearest(data.(cfg.yparam), ymax);
+end
 
 % test if X and Y are linearly spaced (to within 10^-12): % FROM UIMAGE
-x = data.(cfg.xparam)(xidc);
-y = data.(cfg.yparam)(yidc);
+x = data.(cfg.xparam)(xmin:xmax);
+y = data.(cfg.yparam)(ymin:ymax);
 dx = min(diff(x));  % smallest interval for X
 dy = min(diff(y));  % smallest interval for Y
 evenx = all(abs(diff(x)/dx-1)<1e-12);     % true if X is linearly spaced
@@ -310,28 +344,58 @@ if ~evenx || ~eveny
   warning('(one of the) axis is/are not evenly spaced, but plots are made as if axis are linear')
 end
 
+% Take subselection of channels, this only works
+% in the interactive mode
+if exist('selchannel', 'var')
+  sellab = match_str(data.label, selchannel);
+  label  = data.label(sellab);
+else
+  sellab = 1:numel(data.label);
+  label  = data.label;
+end
+
+dat = data.(cfg.zparam);
+if isfull
+  dat = dat(sel1, sel2, ymin:ymax, xmin:xmax);
+  dat = nanmean(dat, meandir);
+elseif haslabelcmb
+  dat = dat(sellab, ymin:ymax, xmin:xmax);
+else
+  dat = dat(sellab, ymin:ymax, xmin:xmax);
+end
+
+if ~isempty(cfg.maskparameter)
+  mask = data.(cfg.maskparameter);
+  if isfull
+    mask = mask(sel1, sel2, ymin:ymax, xmin:xmax);
+    mask = nanmean(nanmean(nanmean(mask, meandir), 4), 3);
+  elseif haslabelcmb
+    mask = mask(sellab, ymin:ymax, xmin:xmax);
+    mask = nanmean(nanmean(mask, 3), 2);
+  else
+    mask = mask(sellab, ymin:ymax, xmin:xmax);
+    mask = nanmean(nanmean(mask, 3), 2);
+  end
+end
+
 % Select the channels in the data that match with the layout:
 [seldat, sellay] = match_str(data.label, lay.label);
 if isempty(seldat)
   error('labels in data and labels in layout do not match'); 
 end
 
-if isfull,
-  siz = size(data.(cfg.zparam));
-  siz(meandir) = [];
-  datavector = reshape(mean(data.(cfg.zparam)(seldat(sel1),seldat(sel2),yidc,xidc),meandir),siz);
-else
-  datavector = data.(cfg.zparam)(seldat,yidc,xidc);
+datavector = dat(seldat,:,:);
+if ~isempty(cfg.maskparameter)
+  maskvector = mask(seldat,:,:);
 end
 
+% Select x and y coordinates and labels of the channels in the data
 chanX = lay.pos(sellay, 1);
 chanY = lay.pos(sellay, 2);
 chanWidth  = lay.width(sellay);
 chanHeight = lay.height(sellay);
 chanLabels = lay.label(sellay);
-if ~isempty(cfg.maskparameter)
-  maskvector = data.(cfg.maskparameter)(seldat,yidc,xidc);
-end
+
 
 % Get physical z-axis range (color axis):
 if strcmp(cfg.zlim,'maxmin')
