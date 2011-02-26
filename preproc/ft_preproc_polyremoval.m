@@ -21,7 +21,7 @@ function dat = ft_preproc_polyremoval(dat, order, begsample, endsample)
 %
 % See also FT_PREPROC_BASELINECORRECT, FT_PREPROC_DETREND
 
-% Copyright (C) 20082010, Robert Oostenveld
+% Copyright (C) 2008-2010, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -40,6 +40,12 @@ function dat = ft_preproc_polyremoval(dat, order, begsample, endsample)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+% take the whole segment if begsample and endsample are not specified
+if nargin==2,
+  begsample = 1;
+  endsample = size(dat,2);
+end
 
 % construct a "time" axis
 nsamples = size(dat,2);
