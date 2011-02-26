@@ -147,7 +147,8 @@ if isempty(cfg.toi) && isempty(cfg.t_ftimwin)
     %fit model to entire data segment
     ok = 1;
     for k = 1:numel(data.trial)
-        if any(data.time{k}~=data.time{1}),
+        %if any(data.time{k}~=data.time{1}),
+        if size(data.trial{k},2) ~= size(data.trial{1},2)
             ok = 0;
             break
         end
