@@ -283,7 +283,7 @@ for k=2:nargin
     
     refchan = match_str(varargin{k-1}.label,cfg.cohrefchannel);
       
-    if strcmp(cfg.matrixside, 'feedback')
+    if strcmp(cfg.matrixside, 'feedback') || isempty(cfg.matrixside)
       P = squeeze(mean(mean(P(chansel,refchan,:),2),1));
     elseif strcmp(cfg.matrixside, 'feedforward')
       P = squeeze(mean(mean(P(refchan,chansel,:),2),1));
