@@ -83,7 +83,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 % cfg.baselinetype
 
 % Copyright (C) 2003-2006, Ole Jensen
-% Copyright (C) 2007-2010, Roemer van der Meij & Jan-Mathijs Schoffelen
+% Copyright (C) 2007-2011, Roemer van der Meij & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -107,6 +107,7 @@ ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'unused',  {'cohtargetchannel'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
 
 cla
 
@@ -275,7 +276,6 @@ elseif strcmp(dtype, 'freq') && hasrpt,
   dimord = varargin{1}.dimord;
   dimtok = tokenize(dimord, '_');
 end
-
 
 % Read or create the layout that will be used for plotting
 lay = ft_prepare_layout(cfg, varargin{1});
