@@ -223,7 +223,7 @@ elseif ft_filetype(filename, 'dicom')
   img = img(:,:,indx);
   
   try
-    % construct a homgenous transformation matrix that performs the scaling from voxels to mm
+    % construct a homgeneous transformation matrix that performs the scaling from voxels to mm
     dx = hdr(1).PixelSpacing(1);
     dy = hdr(1).PixelSpacing(2);
     dz = hdr(2).SliceLocation - hdr(1).SliceLocation;
