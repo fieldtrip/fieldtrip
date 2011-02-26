@@ -300,7 +300,7 @@ switch cfg.method
     f = parafac(dat, cfg.numcomponent);
     
   case 'dss'
-    params         = cfg.dss;
+    params         = struct(cfg.dss);
     params.denf.h  = str2func(cfg.dss.denf.function);
     if ~ischar(cfg.numcomponent)
       params.sdim = cfg.numcomponent;
