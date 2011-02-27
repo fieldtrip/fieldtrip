@@ -10,9 +10,12 @@ function peerslave(varargin)
 % following options are available to limit the peer network, i.e. to
 % form sub-networks.
 %   group       = string
-%   allowhost   = {...}
 %   allowuser   = {...}
 %   allowgroup  = {...}
+%   allowhost   = {...}
+%   refuseuser   = {...}
+%   refusegroup  = {...}
+%   refusehost   = {...}
 % The allow options will prevent peers that do not match the requirements
 % to be added to the (dynamic) list of known peers. Consequently, these
 % options limit which peers know each other. A master will not send jobs
@@ -61,18 +64,21 @@ if matlabversion(7.8, Inf)
 end
 
 % get the optional input arguments
-maxnum     = keyval('maxnum',     varargin); if isempty(maxnum),   maxnum=inf; end
-maxtime    = keyval('maxtime',    varargin); if isempty(maxtime),  maxtime=inf; end
-maxidle    = keyval('maxidle',    varargin); if isempty(maxidle),  maxidle=inf; end
-sleep      = keyval('sleep',      varargin); if isempty(sleep),    sleep=0.01; end
-memavail   = keyval('memavail',   varargin);
-cpuavail   = keyval('cpuavail',   varargin);
-timavail   = keyval('timavail',   varargin);
-threads    = keyval('threads',    varargin);
-allowhost  = keyval('allowhost',  varargin); if isempty(allowhost), allowhost = {}; end
-allowuser  = keyval('allowuser',  varargin); if isempty(allowuser), allowuser = {}; end
-allowgroup = keyval('allowgroup', varargin); if isempty(allowgroup), allowgroup = {}; end
-group      = keyval('group',      varargin);
+maxnum     = ft_getopt(varargin, 'maxnum', inf);
+maxtime    = ft_getopt(varargin, 'maxtime', inf);
+maxidle    = ft_getopt(varargin, 'maxidle', inf);
+sleep      = ft_getopt(varargin, 'sleep', 0.01);
+memavail   = ft_getopt(varargin, 'memavail');
+cpuavail   = ft_getopt(varargin, 'cpuavail');
+timavail   = ft_getopt(varargin, 'timavail');
+threads    = ft_getopt(varargin, 'threads');
+group       = ft_getopt(varargin, 'group');
+allowuser   = ft_getopt(varargin, 'allowuser', {});
+allowgroup  = ft_getopt(varargin, 'allowgroup', {});
+allowhost   = ft_getopt(varargin, 'allowhost', {});
+refuseuser  = ft_getopt(varargin, 'refuseuser', {});
+refusegroup = ft_getopt(varargin, 'refusegroup', {});
+refusehost  = ft_getopt(varargin, 'refusehost', {});
 
 if ~isempty(threads) && exist('maxNumCompThreads')
   % this function is only available from Matlab version 7.5 (R2007b) upward
@@ -83,14 +89,23 @@ if ~isempty(threads) && exist('maxNumCompThreads')
 end
 
 % these should be cell arrays
-if ~iscell(allowhost) && ischar(allowhost)
-  allowhost = {allowhost};
-end
 if ~iscell(allowuser) && ischar(allowuser)
   allowuser = {allowuser};
 end
 if ~iscell(allowgroup) && ischar(allowgroup)
   allowgroup = {allowgroup};
+end
+if ~iscell(allowhost) && ischar(allowhost)
+  allowhost = {allowhost};
+end
+if ~iscell(refuseuser) && ischar(refuseuser)
+  refuseuser = {refuseuser};
+end
+if ~iscell(refusegroup) && ischar(refusegroup)
+  refusegroup = {refusegroup};
+end
+if ~iscell(refusehost) && ischar(refusehost)
+  refusehost = {refusehost};
 end
 
 % this should not be user-configurable
@@ -114,15 +129,21 @@ peer('status', 2);
 % check the current access restrictions
 info   = peerinfo;
 access = true;
-access = access && isequal(info.allowhost, allowhost);
-access = access && isequal(info.allowuser, allowuser);
+access = access && isequal(info.allowhost,  allowhost);
+access = access && isequal(info.allowuser,  allowuser);
 access = access && isequal(info.allowgroup, allowgroup);
+access = access && isequal(info.refusehost,  refusehost);
+access = access && isequal(info.refuseuser,  refuseuser);
+access = access && isequal(info.refusegroup, refusegroup);
 
 if ~access
   % impose the updated access restrictions
   peer('allowhost',  allowhost);
   peer('allowuser',  allowuser);
   peer('allowgroup', allowgroup);
+  peer('refusehost',  refusehost);
+  peer('refuseuser',  refuseuser);
+  peer('refusegroup', refusegroup);
 end
 
 % check the current status of the maintenance threads

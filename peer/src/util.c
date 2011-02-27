@@ -183,45 +183,6 @@ void clear_joblist(void) {
 		pthread_mutex_unlock(&mutexjoblist);
 }
 
-void clear_userlist(void) {
-		userlist_t *user = NULL;
-		pthread_mutex_lock(&mutexuserlist);
-		user = userlist;
-		while (user) {
-				userlist = user->next;
-				FREE(user->name);
-				FREE(user);
-				user = userlist;
-		}
-		pthread_mutex_unlock(&mutexuserlist);
-}
-
-void clear_grouplist(void) {
-		grouplist_t *group = NULL;
-		pthread_mutex_lock(&mutexgrouplist);
-		group = grouplist;
-		while (group) {
-				grouplist = group->next;
-				FREE(group->name);
-				FREE(group);
-				group = grouplist;
-		}
-		pthread_mutex_unlock(&mutexgrouplist);
-}
-
-void clear_hostlist(void) {
-		hostlist_t *listitem = NULL;
-		pthread_mutex_lock(&mutexhostlist);
-		listitem = hostlist;
-		while (listitem) {
-				hostlist = listitem->next;
-				FREE(listitem->name);
-				FREE(listitem);
-				listitem = hostlist;
-		}
-		pthread_mutex_unlock(&mutexhostlist);
-}
-
 void clear_smartsharelist(void) {
 		smartsharelist_t *listitem = NULL;
 		pthread_mutex_lock(&mutexsmartshare);
@@ -232,6 +193,84 @@ void clear_smartsharelist(void) {
 				listitem = smartsharelist;
 		}
 		pthread_mutex_unlock(&mutexsmartshare);
+}
+
+void clear_allowuserlist(void) {
+		userlist_t *user = NULL;
+		pthread_mutex_lock(&mutexallowuserlist);
+		user = allowuserlist;
+		while (user) {
+				allowuserlist = user->next;
+				FREE(user->name);
+				FREE(user);
+				user = allowuserlist;
+		}
+		pthread_mutex_unlock(&mutexallowuserlist);
+}
+
+void clear_allowgrouplist(void) {
+		grouplist_t *group = NULL;
+		pthread_mutex_lock(&mutexallowgrouplist);
+		group = allowgrouplist;
+		while (group) {
+				allowgrouplist = group->next;
+				FREE(group->name);
+				FREE(group);
+				group = allowgrouplist;
+		}
+		pthread_mutex_unlock(&mutexallowgrouplist);
+}
+
+void clear_allowhostlist(void) {
+		hostlist_t *listitem = NULL;
+		pthread_mutex_lock(&mutexallowhostlist);
+		listitem = allowhostlist;
+		while (listitem) {
+				allowhostlist = listitem->next;
+				FREE(listitem->name);
+				FREE(listitem);
+				listitem = allowhostlist;
+		}
+		pthread_mutex_unlock(&mutexallowhostlist);
+}
+
+void clear_refuseuserlist(void) {
+		userlist_t *user = NULL;
+		pthread_mutex_lock(&mutexrefuseuserlist);
+		user = refuseuserlist;
+		while (user) {
+				refuseuserlist = user->next;
+				FREE(user->name);
+				FREE(user);
+				user = refuseuserlist;
+		}
+		pthread_mutex_unlock(&mutexrefuseuserlist);
+}
+
+void clear_refusegrouplist(void) {
+		grouplist_t *group = NULL;
+		pthread_mutex_lock(&mutexrefusegrouplist);
+		group = refusegrouplist;
+		while (group) {
+				refusegrouplist = group->next;
+				FREE(group->name);
+				FREE(group);
+				group = refusegrouplist;
+		}
+		pthread_mutex_unlock(&mutexrefusegrouplist);
+}
+
+void clear_refusehostlist(void) {
+		hostlist_t *listitem = NULL;
+		pthread_mutex_lock(&mutexrefusehostlist);
+		listitem = refusehostlist;
+		while (listitem) {
+				refusehostlist = listitem->next;
+				FREE(listitem->name);
+				FREE(listitem);
+				listitem = refusehostlist;
+		}
+		pthread_mutex_unlock(&mutexrefusehostlist);
 }
 
 void check_datatypes() {

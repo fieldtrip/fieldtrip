@@ -34,49 +34,81 @@ int security_check(hostdef_t *host) {
 int ismember_userlist(char *str) {
 		int ismember = 1;
 		userlist_t *user = NULL;
-		pthread_mutex_lock(&mutexuserlist);
-		if (userlist) {
+		pthread_mutex_lock(&mutexallowuserlist);
+		if (allowuserlist) {
 				ismember = 0;
-				user = userlist;
+				user = allowuserlist;
 				while (user) {
 						if (strncmp(user->name, str, STRLEN)==0)
 								ismember = 1;
 						user = user->next;
 				}
 		}
-		pthread_mutex_unlock(&mutexuserlist);
+		pthread_mutex_unlock(&mutexallowuserlist);
+		pthread_mutex_lock(&mutexrefuseuserlist);
+		if (refuseuserlist) {
+				user = refuseuserlist;
+				while (user) {
+						if (strncmp(user->name, str, STRLEN)==0)
+								ismember = 0;
+						user = user->next;
+				}
+		}
+		pthread_mutex_unlock(&mutexrefuseuserlist);
 		return ismember;
 }
 
 int ismember_grouplist(char *str) {
 		int ismember = 1; 
 		grouplist_t *group = NULL;
-		pthread_mutex_lock(&mutexgrouplist);
-		if (grouplist) {
+		pthread_mutex_lock(&mutexallowgrouplist);
+		if (allowgrouplist) {
 				ismember = 0;
-				group = grouplist;
+				group = allowgrouplist;
 				while (group) {
 						if (strncmp(group->name, str, STRLEN)==0)
 								ismember = 1;
 						group = group->next;
 				}
 		}
-		pthread_mutex_unlock(&mutexgrouplist);
+		pthread_mutex_unlock(&mutexallowgrouplist);
+		pthread_mutex_lock(&mutexrefusegrouplist);
+		if (refusegrouplist) {
+				group = refusegrouplist;
+				while (group) {
+						if (strncmp(group->name, str, STRLEN)==0)
+								ismember = 0;
+						group = group->next;
+				}
+		}
+		pthread_mutex_unlock(&mutexrefusegrouplist);
 		return ismember;
 }
 
 int ismember_hostlist(char *str) {
 		int ismember = 1; 
 		hostlist_t *host = NULL;
-		if (hostlist) {
+		pthread_mutex_lock(&mutexallowhostlist);
+		if (allowhostlist) {
 				ismember = 0;
-				host = hostlist;
+				host = allowhostlist;
 				while (host) {
 						if (strncmp(host->name, str, STRLEN)==0)
 								ismember = 1;
 						host = host->next;
 				}
 		}
+		pthread_mutex_unlock(&mutexallowhostlist);
+		pthread_mutex_lock(&mutexrefusehostlist);
+		if (refusehostlist) {
+				host = refusehostlist;
+				while (host) {
+						if (strncmp(host->name, str, STRLEN)==0)
+								ismember = 0;
+						host = host->next;
+				}
+		}
+		pthread_mutex_unlock(&mutexrefusehostlist);
 		return ismember;
 }
 

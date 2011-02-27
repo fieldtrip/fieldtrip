@@ -51,14 +51,23 @@ peerlist_t *peerlist = NULL;
 pthread_mutex_t mutexjoblist = PTHREAD_MUTEX_INITIALIZER;
 joblist_t *joblist = NULL;
 
-pthread_mutex_t mutexuserlist = PTHREAD_MUTEX_INITIALIZER;
-userlist_t *userlist = NULL;
+pthread_mutex_t mutexallowuserlist = PTHREAD_MUTEX_INITIALIZER;
+userlist_t *allowuserlist = NULL;
 
-pthread_mutex_t mutexgrouplist = PTHREAD_MUTEX_INITIALIZER;
-grouplist_t *grouplist = NULL;
+pthread_mutex_t mutexrefuseuserlist = PTHREAD_MUTEX_INITIALIZER;
+userlist_t *refuseuserlist = NULL;
 
-pthread_mutex_t mutexhostlist = PTHREAD_MUTEX_INITIALIZER;
-hostlist_t *hostlist = NULL;
+pthread_mutex_t mutexallowgrouplist = PTHREAD_MUTEX_INITIALIZER;
+grouplist_t *allowgrouplist = NULL;
+
+pthread_mutex_t mutexrefusegrouplist = PTHREAD_MUTEX_INITIALIZER;
+grouplist_t *refusegrouplist = NULL;
+
+pthread_mutex_t mutexallowhostlist = PTHREAD_MUTEX_INITIALIZER;
+hostlist_t *allowhostlist = NULL;
+
+pthread_mutex_t mutexrefusehostlist = PTHREAD_MUTEX_INITIALIZER;
+hostlist_t *refusehostlist = NULL;
 
 pthread_mutex_t mutexwatchdog = PTHREAD_MUTEX_INITIALIZER;
 struct {

@@ -53,9 +53,9 @@ void print_help(char *argv[]) {
 		printf("  --memavail    = number, amount of memory available       (default = inf)\n");
 		printf("  --cpuavail    = number, speed of the CPU                 (default = inf)\n");
 		printf("  --timavail    = number, maximum duration of a single job (default = inf)\n");
-		printf("  --allowhost   = {...}\n");
 		printf("  --allowuser   = {...}\n");
 		printf("  --allowgroup  = {...}\n");
+		printf("  --allowhost   = {...}\n");
 		printf("  --group       = string\n");
 		printf("  --hostname    = string\n");
 		printf("  --matlab      = string\n");
@@ -90,9 +90,9 @@ int main(int argc, char *argv[]) {
 
 		config_t *cconf, *pconf; /* for the configuration file or command line options */
 
-		userlist_t  *allowuser;
-		grouplist_t *allowgroup;
-		hostlist_t  *allowhost;
+		userlist_t  *allowuser, *refuseuser;
+		hostlist_t  *allowhost, *refusehost;
+		grouplist_t *allowgroup, *refusegroup;
 
 		/* the thread IDs are needed for cancelation at cleanup */
 		pthread_t udsserverThread;
@@ -127,21 +127,24 @@ int main(int argc, char *argv[]) {
 				{
 						static struct option long_options[] =
 						{
-								{"help",       no_argument, &help_flag, 1},
-								{"memavail",   required_argument, 0,  1}, /* numeric argument */
-								{"cpuavail",   required_argument, 0,  2}, /* numeric argument */
-								{"timavail",   required_argument, 0,  3}, /* numeric argument */
-								{"hostname",   required_argument, 0,  4}, /* single string argument */
-								{"group",      required_argument, 0,  5}, /* single string argument */
-								{"allowuser",  required_argument, 0,  6}, /* single or multiple string argument */
-								{"allowhost",  required_argument, 0,  7}, /* single or multiple string argument */
-								{"allowgroup", required_argument, 0,  8}, /* single or multiple string argument */
-								{"matlab",     required_argument, 0,  9}, /* single string argument */
-								{"smartmem",   required_argument, 0, 10}, /* boolean, 0 or 1 */
-								{"smartcpu",   required_argument, 0, 11}, /* boolean, 0 or 1 */
-								{"smartshare", required_argument, 0, 12}, /* boolean, 0 or 1 */
-								{"timeout",    required_argument, 0, 13}, /* numeric argument */
-								{"verbose",    required_argument, 0, 14}, /* numeric argument */
+								{"help",        no_argument, &help_flag, 1},
+								{"memavail",    required_argument, 0,  1}, /* numeric argument */
+								{"cpuavail",    required_argument, 0,  2}, /* numeric argument */
+								{"timavail",    required_argument, 0,  3}, /* numeric argument */
+								{"hostname",    required_argument, 0,  4}, /* single string argument */
+								{"group",       required_argument, 0,  5}, /* single string argument */
+								{"allowuser",   required_argument, 0,  6}, /* single or multiple string argument */
+								{"allowhost",   required_argument, 0,  7}, /* single or multiple string argument */
+								{"allowgroup",  required_argument, 0,  8}, /* single or multiple string argument */
+								{"refuseuser",  required_argument, 0, 15}, /* single or multiple string argument */
+								{"refusehost",  required_argument, 0, 16}, /* single or multiple string argument */
+								{"refusegroup", required_argument, 0, 17}, /* single or multiple string argument */
+								{"matlab",      required_argument, 0,  9}, /* single string argument */
+								{"smartmem",    required_argument, 0, 10}, /* boolean, 0 or 1 */
+								{"smartcpu",    required_argument, 0, 11}, /* boolean, 0 or 1 */
+								{"smartshare",  required_argument, 0, 12}, /* boolean, 0 or 1 */
+								{"timeout",     required_argument, 0, 13}, /* numeric argument */
+								{"verbose",     required_argument, 0, 14}, /* numeric argument */
 								{0, 0, 0, 0}
 						};
 
@@ -200,6 +203,21 @@ int main(int argc, char *argv[]) {
 								case 8:
 										DEBUG(LOG_NOTICE, "option --allowgroup with value `%s'", optarg);
 										pconf->allowgroup = optarg;
+										break;
+
+								case 15:
+										DEBUG(LOG_NOTICE, "option --refuseuser with value `%s'", optarg);
+										pconf->refuseuser = optarg;
+										break;
+
+								case 16:
+										DEBUG(LOG_NOTICE, "option --refusehost with value `%s'", optarg);
+										pconf->refusehost = optarg;
+										break;
+
+								case 17:
+										DEBUG(LOG_NOTICE, "option --refusegroup with value `%s'", optarg);
+										pconf->refusegroup = optarg;
 										break;
 
 								case 9:
@@ -404,41 +422,92 @@ int main(int argc, char *argv[]) {
 
 		if (cconf->allowuser)
 		{
+				pthread_mutex_lock(&mutexallowuserlist);
 				str = strtok(cconf->allowuser, ",");
 				while (str) {
 						allowuser = (userlist_t *)malloc(sizeof(userlist_t));
 						allowuser->name = malloc(STRLEN);
 						strncpy(allowuser->name, str, STRLEN);
-						allowuser->next = userlist;
-						userlist = allowuser;
+						allowuser->next = allowuserlist;
+						allowuserlist = allowuser;
 						str = strtok(NULL, ",");
 				}
+				pthread_mutex_unlock(&mutexallowuserlist);
 		}
 
 		if (cconf->allowhost)
 		{
+				pthread_mutex_unlock(&mutexallowhostlist);
 				str = strtok(cconf->allowhost, ",");
 				while (str) {
 						allowhost = (hostlist_t *)malloc(sizeof(hostlist_t));
 						allowhost->name = malloc(STRLEN);
 						strncpy(allowhost->name, str, STRLEN);
-						allowhost->next = hostlist;
-						hostlist = allowhost;
+						allowhost->next = allowhostlist;
+						allowhostlist = allowhost;
 						str = strtok(NULL, ",");
 				}
+				pthread_mutex_unlock(&mutexallowhostlist);
 		}
 
 		if (cconf->allowgroup)
 		{
+				pthread_mutex_unlock(&mutexallowgrouplist);
 				str = strtok(cconf->allowgroup, ",");
 				while (str) {
 						allowgroup = (grouplist_t *)malloc(sizeof(grouplist_t));
 						allowgroup->name = malloc(STRLEN);
 						strncpy(allowgroup->name, str, STRLEN);
-						allowgroup->next = grouplist;
-						grouplist = allowgroup;
+						allowgroup->next = allowgrouplist;
+						allowgrouplist = allowgroup;
 						str = strtok(NULL, ",");
 				}
+				pthread_mutex_unlock(&mutexallowgrouplist);
+		}
+
+		if (cconf->refuseuser)
+		{
+				pthread_mutex_lock(&mutexrefuseuserlist);
+				str = strtok(cconf->refuseuser, ",");
+				while (str) {
+						refuseuser = (userlist_t *)malloc(sizeof(userlist_t));
+						refuseuser->name = malloc(STRLEN);
+						strncpy(refuseuser->name, str, STRLEN);
+						refuseuser->next = refuseuserlist;
+						refuseuserlist = refuseuser;
+						str = strtok(NULL, ",");
+				}
+				pthread_mutex_unlock(&mutexrefuseuserlist);
+		}
+
+		if (cconf->refusehost)
+		{
+				pthread_mutex_unlock(&mutexrefusehostlist);
+				str = strtok(cconf->refusehost, ",");
+				while (str) {
+						refusehost = (hostlist_t *)malloc(sizeof(hostlist_t));
+						refusehost->name = malloc(STRLEN);
+						strncpy(refusehost->name, str, STRLEN);
+						refusehost->next = refusehostlist;
+						refusehostlist = refusehost;
+						str = strtok(NULL, ",");
+				}
+				pthread_mutex_unlock(&mutexrefusehostlist);
+		}
+
+		if (cconf->refusegroup)
+		{
+				pthread_mutex_unlock(&mutexrefusegrouplist);
+				str = strtok(cconf->refusegroup, ",");
+				while (str) {
+						refusegroup = (grouplist_t *)malloc(sizeof(grouplist_t));
+						refusegroup->name = malloc(STRLEN);
+						strncpy(refusegroup->name, str, STRLEN);
+						refusegroup->next = refusegrouplist;
+						refusegrouplist = refusegroup;
+						str = strtok(NULL, ",");
+				}
+				pthread_mutex_unlock(&mutexrefusegrouplist);
 		}
 
 		if (cconf->matlab)

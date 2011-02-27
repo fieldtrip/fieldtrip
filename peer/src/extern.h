@@ -35,14 +35,23 @@ extern peerlist_t *peerlist;
 extern pthread_mutex_t mutexjoblist;
 extern joblist_t *joblist;
 
-extern pthread_mutex_t mutexuserlist;
-extern userlist_t *userlist;
+extern pthread_mutex_t mutexallowuserlist;
+extern userlist_t *allowuserlist;
 
-extern pthread_mutex_t mutexgrouplist;
-extern grouplist_t *grouplist;
+extern pthread_mutex_t mutexrefuseuserlist;
+extern userlist_t *refuseuserlist;
 
-extern pthread_mutex_t mutexhostlist;
-extern hostlist_t *hostlist;
+extern pthread_mutex_t mutexallowgrouplist;
+extern grouplist_t *allowgrouplist;
+
+extern pthread_mutex_t mutexrefusegrouplist;
+extern grouplist_t *refusegrouplist;
+
+extern pthread_mutex_t mutexallowhostlist;
+extern hostlist_t *allowhostlist;
+
+extern pthread_mutex_t mutexrefusehostlist;
+extern hostlist_t *refusehostlist;
 
 extern pthread_mutex_t mutexwatchdog;
 extern struct {

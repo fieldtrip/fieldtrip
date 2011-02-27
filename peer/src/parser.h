@@ -11,9 +11,12 @@ typedef struct config_s {
 		char *memavail;
 		char *cpuavail;
 		char *timavail;
-		char *allowhost;
 		char *allowuser;
 		char *allowgroup;
+		char *allowhost;
+		char *refuseuser;
+		char *refusegroup;
+		char *refusehost;
 		char *group;
 		char *hostname;
 		char *matlab;

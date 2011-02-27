@@ -42,9 +42,12 @@ void initconfig(config_t *cconf) {
 				cconf->memavail    = NULL;
 				cconf->cpuavail    = NULL;
 				cconf->timavail    = NULL;
-				cconf->allowhost   = NULL;
 				cconf->allowuser   = NULL;
 				cconf->allowgroup  = NULL;
+				cconf->allowhost   = NULL;
+				cconf->refuseuser   = NULL;
+				cconf->refusegroup  = NULL;
+				cconf->refusehost   = NULL;
 				cconf->group       = NULL;
 				cconf->hostname    = NULL;
 				cconf->matlab      = NULL;

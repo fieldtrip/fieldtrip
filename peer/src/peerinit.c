@@ -189,9 +189,12 @@ void peerexit(void *arg) {
 
 		clear_peerlist();
 		clear_joblist();
-		clear_userlist();
-		clear_grouplist();
-		clear_hostlist();
+		clear_allowuserlist();
+		clear_allowgrouplist();
+		clear_allowhostlist();
+		clear_refuseuserlist();
+		clear_refusegrouplist();
+		clear_refusehostlist();
 		clear_smartsharelist();
 
 		DEBUG(LOG_CRIT, "peerexit: cleaning up");

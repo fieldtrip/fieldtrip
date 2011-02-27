@@ -33,8 +33,8 @@ const char* job_fieldnames[JOB_FIELDNUMBER] = {"version", "jobid", "argsize", "o
 #define JOBLIST_FIELDNUMBER 9
 const char* joblist_fieldnames[JOBLIST_FIELDNUMBER] = {"version", "jobid", "argsize", "optsize", "hostid", "hostname", "user", "memreq", "timreq"};
 
-#define PEERINFO_FIELDNUMBER 13
-const char* peerinfo_fieldnames[PEERINFO_FIELDNUMBER] = {"hostid", "hostname", "user", "group", "socket", "port", "status", "timavail", "memavail", "cpuavail", "allowuser", "allowgroup", "allowhost"};
+#define PEERINFO_FIELDNUMBER 16
+const char* peerinfo_fieldnames[PEERINFO_FIELDNUMBER] = {"hostid", "hostname", "user", "group", "socket", "port", "status", "timavail", "memavail", "cpuavail", "allowuser", "allowgroup", "allowhost", "refuseuser", "refusegroup", "refusehost"};
 
 #define PEERLIST_FIELDNUMBER 11
 const char* peerlist_fieldnames[PEERLIST_FIELDNUMBER] = {"hostid", "hostname", "user", "group", "socket", "port", "status", "timavail", "memavail", "cpuavail", "current"};
@@ -150,9 +150,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		jobdef_t    *def;
 		joblist_t   *job, *nextjob;
 		peerlist_t  *peer;
-		userlist_t  *allowuser;
-		grouplist_t *allowgroup;
-		hostlist_t  *allowhost;
+		userlist_t  *allowuser, *refuseuser;
+		grouplist_t *allowgroup, *refusegroup;
+		hostlist_t  *allowhost, *refusehost;
 		mxArray     *arg, *opt, *key, *val, *current;
 
 		initFun();
@@ -428,21 +428,53 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				mexPrintf("smartshare.enabled = %d\n", smartshare.enabled);
 				pthread_mutex_unlock(&mutexsmartshare);
 
-				pthread_mutex_lock(&mutexuserlist);
-				allowuser = userlist;
+				pthread_mutex_lock(&mutexallowuserlist);
+				allowuser = allowuserlist;
 				while (allowuser) {
 						mexPrintf("allowuser = %s\n", allowuser->name);
 						allowuser = allowuser->next;
 				}
-				pthread_mutex_unlock(&mutexuserlist);
+				pthread_mutex_unlock(&mutexallowuserlist);
 
-				pthread_mutex_lock(&mutexgrouplist);
-				allowgroup = grouplist;
+				pthread_mutex_lock(&mutexallowgrouplist);
+				allowgroup = allowgrouplist;
 				while (allowgroup) {
 						mexPrintf("allowgroup = %s\n", allowgroup->name);
 						allowgroup = allowgroup->next;
 				}
-				pthread_mutex_unlock(&mutexgrouplist);
+				pthread_mutex_unlock(&mutexallowgrouplist);
+
+				pthread_mutex_lock(&mutexallowhostlist);
+				allowhost = allowhostlist;
+				while (allowhost) {
+						mexPrintf("allowhost = %s\n", allowhost->name);
+						allowhost = allowhost->next;
+				}
+				pthread_mutex_unlock(&mutexallowhostlist);
+
+				pthread_mutex_lock(&mutexrefuseuserlist);
+				refuseuser = refuseuserlist;
+				while (refuseuser) {
+						mexPrintf("refuseuser = %s\n", refuseuser->name);
+						refuseuser = refuseuser->next;
+				}
+				pthread_mutex_unlock(&mutexrefuseuserlist);
+
+				pthread_mutex_lock(&mutexrefusegrouplist);
+				refusegroup = refusegrouplist;
+				while (refusegroup) {
+						mexPrintf("refusegroup = %s\n", refusegroup->name);
+						refusegroup = refusegroup->next;
+				}
+				pthread_mutex_unlock(&mutexrefusegrouplist);
+
+				pthread_mutex_lock(&mutexrefusehostlist);
+				refusehost = refusehostlist;
+				while (refusehost) {
+						mexPrintf("refusehost = %s\n", refusehost->name);
+						refusehost = refusehost->next;
+				}
+				pthread_mutex_unlock(&mutexrefusehostlist);
 
 				pthread_mutex_lock(&mutexpeerlist);
 				i = 0;
@@ -694,20 +726,20 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				}
 
 				/* erase the existing list */
-				clear_userlist();
+				clear_allowuserlist();
 
 				/* add all elements to the list */
-				pthread_mutex_lock(&mutexuserlist);
+				pthread_mutex_lock(&mutexallowuserlist);
 				for (i=0; i<mxGetNumberOfElements(prhs[1]); i++) {
 						arg = mxGetCell(prhs[1], i);
 						allowuser = (userlist_t *)malloc(sizeof(userlist_t));
 						allowuser->name = malloc(mxGetNumberOfElements(arg)+1);
-						allowuser->next = userlist;
+						allowuser->next = allowuserlist;
 						if(mxGetString(arg, allowuser->name, mxGetNumberOfElements(arg)+1)!=0)
 								mexErrMsgTxt("FIXME: unexpected error, memory leak");
-						userlist = allowuser;
+						allowuserlist = allowuser;
 				}
-				pthread_mutex_unlock(&mutexuserlist);
+				pthread_mutex_unlock(&mutexallowuserlist);
 
 				/* erase the list of known peers, the updated filtering will be done upon discovery */
 				clear_peerlist();
@@ -728,20 +760,20 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				}
 
 				/* erase the existing list */
-				clear_grouplist();
+				clear_allowgrouplist();
 
 				/* add all elements to the list */
-				pthread_mutex_lock(&mutexgrouplist);
+				pthread_mutex_lock(&mutexallowgrouplist);
 				for (i=0; i<mxGetNumberOfElements(prhs[1]); i++) {
 						arg = mxGetCell(prhs[1], i);
 						allowgroup = (grouplist_t *)malloc(sizeof(grouplist_t));
 						allowgroup->name = malloc(mxGetNumberOfElements(arg)+1);
-						allowgroup->next = grouplist;
+						allowgroup->next = allowgrouplist;
 						if(mxGetString(arg, allowgroup->name, mxGetNumberOfElements(arg)+1)!=0)
 								mexErrMsgTxt("FIXME: unexpected error, memory leak");
-						grouplist = allowgroup;
+						allowgrouplist = allowgroup;
 				}
-				pthread_mutex_unlock(&mutexgrouplist);
+				pthread_mutex_unlock(&mutexallowgrouplist);
 
 				/* flush the list of known peers, the updated filtering will be done upon discovery */
 				clear_peerlist();
@@ -762,20 +794,122 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				}
 
 				/* erase the existing list */
-				clear_hostlist();
+				clear_allowhostlist();
 
 				/* add all elements to the list */
-				pthread_mutex_lock(&mutexhostlist);
+				pthread_mutex_lock(&mutexallowhostlist);
 				for (i=0; i<mxGetNumberOfElements(prhs[1]); i++) {
 						arg = mxGetCell(prhs[1], i);
 						allowhost = (hostlist_t *)malloc(sizeof(hostlist_t));
 						allowhost->name = malloc(mxGetNumberOfElements(arg)+1);
-						allowhost->next = hostlist;
+						allowhost->next = allowhostlist;
 						if(mxGetString(arg, allowhost->name, mxGetNumberOfElements(arg)+1)!=0)
 								mexErrMsgTxt("FIXME: unexpected error, memory leak");
-						hostlist = allowhost;
+						allowhostlist = allowhost;
 				}
-				pthread_mutex_unlock(&mutexhostlist);
+				pthread_mutex_unlock(&mutexallowhostlist);
+
+				/* flush the list of known peers, the updated filtering will be done upon discovery */
+				clear_peerlist();
+		}
+
+		/****************************************************************************/
+		else if (strcasecmp(command, "refuseuser")==0) {
+				/* the input arguments should be "refuseuser {<string>, <string>, ...}" */
+				if (nrhs<2)
+						mexErrMsgTxt ("invalid number of input arguments");
+				if (!mxIsCell(prhs[1]))
+						mexErrMsgTxt ("invalid input argument #2");
+				/* check that all elements of the cell array are strings */
+				for (i=0; i<mxGetNumberOfElements(prhs[1]); i++) {
+						arg = mxGetCell(prhs[1], i);
+						if (!mxIsChar(arg))
+								mexErrMsgTxt ("invalid input argument #2, the cell-array should contain strings");
+				}
+
+				/* erase the existing list */
+				clear_refuseuserlist();
+
+				/* add all elements to the list */
+				pthread_mutex_lock(&mutexrefuseuserlist);
+				for (i=0; i<mxGetNumberOfElements(prhs[1]); i++) {
+						arg = mxGetCell(prhs[1], i);
+						refuseuser = (userlist_t *)malloc(sizeof(userlist_t));
+						refuseuser->name = malloc(mxGetNumberOfElements(arg)+1);
+						refuseuser->next = refuseuserlist;
+						if(mxGetString(arg, refuseuser->name, mxGetNumberOfElements(arg)+1)!=0)
+								mexErrMsgTxt("FIXME: unexpected error, memory leak");
+						refuseuserlist = refuseuser;
+				}
+				pthread_mutex_unlock(&mutexrefuseuserlist);
+
+				/* erase the list of known peers, the updated filtering will be done upon discovery */
+				clear_peerlist();
+		}
+
+		/****************************************************************************/
+		else if (strcasecmp(command, "refusegroup")==0) {
+				/* the input arguments should be "refusegroup {<string>, <string>, ...}" */
+				if (nrhs<2)
+						mexErrMsgTxt ("invalid number of input arguments");
+				if (!mxIsCell(prhs[1]))
+						mexErrMsgTxt ("invalid input argument #2");
+				/* check that all elements of the cell array are strings */
+				for (i=0; i<mxGetNumberOfElements(prhs[1]); i++) {
+						arg = mxGetCell(prhs[1], i);
+						if (!mxIsChar(arg))
+								mexErrMsgTxt ("invalid input argument #2, the cell-array should contain strings");
+				}
+
+				/* erase the existing list */
+				clear_refusegrouplist();
+
+				/* add all elements to the list */
+				pthread_mutex_lock(&mutexrefusegrouplist);
+				for (i=0; i<mxGetNumberOfElements(prhs[1]); i++) {
+						arg = mxGetCell(prhs[1], i);
+						refusegroup = (grouplist_t *)malloc(sizeof(grouplist_t));
+						refusegroup->name = malloc(mxGetNumberOfElements(arg)+1);
+						refusegroup->next = refusegrouplist;
+						if(mxGetString(arg, refusegroup->name, mxGetNumberOfElements(arg)+1)!=0)
+								mexErrMsgTxt("FIXME: unexpected error, memory leak");
+						refusegrouplist = refusegroup;
+				}
+				pthread_mutex_unlock(&mutexrefusegrouplist);
+
+				/* flush the list of known peers, the updated filtering will be done upon discovery */
+				clear_peerlist();
+		}
+
+		/****************************************************************************/
+		else if (strcasecmp(command, "refusehost")==0) {
+				/* the input arguments should be "refusehost {<string>, <string>, ...}" */
+				if (nrhs<2)
+						mexErrMsgTxt ("invalid number of input arguments");
+				if (!mxIsCell(prhs[1]))
+						mexErrMsgTxt ("invalid input argument #2");
+				/* check that all elements of the cell array are strings */
+				for (i=0; i<mxGetNumberOfElements(prhs[1]); i++) {
+						arg = mxGetCell(prhs[1], i);
+						if (!mxIsChar(arg))
+								mexErrMsgTxt ("invalid input argument #2, the cell-array should contain strings");
+				}
+
+				/* erase the existing list */
+				clear_refusehostlist();
+
+				/* add all elements to the list */
+				pthread_mutex_lock(&mutexrefusehostlist);
+				for (i=0; i<mxGetNumberOfElements(prhs[1]); i++) {
+						arg = mxGetCell(prhs[1], i);
+						refusehost = (hostlist_t *)malloc(sizeof(hostlist_t));
+						refusehost->name = malloc(mxGetNumberOfElements(arg)+1);
+						refusehost->next = refusehostlist;
+						if(mxGetString(arg, refusehost->name, mxGetNumberOfElements(arg)+1)!=0)
+								mexErrMsgTxt("FIXME: unexpected error, memory leak");
+						refusehostlist = refusehost;
+				}
+				pthread_mutex_unlock(&mutexrefusehostlist);
 
 				/* flush the list of known peers, the updated filtering will be done upon discovery */
 				clear_peerlist();
@@ -1105,10 +1239,10 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				mxSetFieldByNumber(plhs[0], 0, j++, mxCreateDoubleScalar((UINT64_T)(host->cpuavail)));
 				pthread_mutex_unlock(&mutexhost);
 
-				/* create a cell-array for allowgroup */
-				pthread_mutex_lock(&mutexuserlist);
+				/* create a cell-array for allowuser */
+				pthread_mutex_lock(&mutexallowuserlist);
 				i = 0;
-				allowuser = userlist;
+				allowuser = allowuserlist;
 				while (allowuser) {
 						/* count the number of items */
 						i++;
@@ -1119,19 +1253,19 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				else 
 						val= mxCreateCellMatrix(1, i);
 				/* loop over the list to assign the items to a cell-array */
-				allowuser = userlist;
+				allowuser = allowuserlist;
 				while (allowuser) {
 						/* start assigning at the back, to keep them in the original order */
 						mxSetCell(val, --i, mxCreateString(allowuser->name));
 						allowuser = allowuser->next;
 				}
 				mxSetFieldByNumber(plhs[0], 0, j++, val);
-				pthread_mutex_unlock(&mutexuserlist);
+				pthread_mutex_unlock(&mutexallowuserlist);
 
 				/* create a cell-array for allowgroup */
-				pthread_mutex_lock(&mutexgrouplist);
+				pthread_mutex_lock(&mutexallowgrouplist);
 				i = 0;
-				allowgroup = grouplist;
+				allowgroup = allowgrouplist;
 				while (allowgroup) {
 						/* count the number of items */
 						i++;
@@ -1142,19 +1276,19 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				else 
 						val= mxCreateCellMatrix(1, i);
 				/* loop over the list to assign the items to a cell-array */
-				allowgroup = grouplist;
+				allowgroup = allowgrouplist;
 				while (allowgroup) {
 						/* start assigning at the back, to keep them in the original order */
 						mxSetCell(val, --i, mxCreateString(allowgroup->name));
 						allowgroup = allowgroup->next;
 				}
 				mxSetFieldByNumber(plhs[0], 0, j++, val);
-				pthread_mutex_unlock(&mutexgrouplist);
+				pthread_mutex_unlock(&mutexallowgrouplist);
 
 				/* create a cell-array for allowhost */
-				pthread_mutex_lock(&mutexhostlist);
+				pthread_mutex_lock(&mutexallowhostlist);
 				i = 0;
-				allowhost = hostlist;
+				allowhost = allowhostlist;
 				while (allowhost) {
 						/* count the number of items */
 						i++;
@@ -1165,14 +1299,83 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				else 
 						val= mxCreateCellMatrix(1, i);
 				/* loop over the list to assign the items to a cell-array */
-				allowhost = hostlist;
+				allowhost = allowhostlist;
 				while (allowhost) {
 						/* start assigning at the back, to keep them in the original order */
 						mxSetCell(val, --i, mxCreateString(allowhost->name));
 						allowhost = allowhost->next;
 				}
 				mxSetFieldByNumber(plhs[0], 0, j++, val);
-				pthread_mutex_unlock(&mutexhostlist);
+				pthread_mutex_unlock(&mutexallowhostlist);
+
+				/* create a cell-array for refuseuser */
+				pthread_mutex_lock(&mutexrefuseuserlist);
+				i = 0;
+				refuseuser = refuseuserlist;
+				while (refuseuser) {
+						/* count the number of items */
+						i++;
+						refuseuser = refuseuser->next;
+				}
+				if (i==0)
+						val= mxCreateCellMatrix(0, 0);
+				else 
+						val= mxCreateCellMatrix(1, i);
+				/* loop over the list to assign the items to a cell-array */
+				refuseuser = refuseuserlist;
+				while (refuseuser) {
+						/* start assigning at the back, to keep them in the original order */
+						mxSetCell(val, --i, mxCreateString(refuseuser->name));
+						refuseuser = refuseuser->next;
+				}
+				mxSetFieldByNumber(plhs[0], 0, j++, val);
+				pthread_mutex_unlock(&mutexrefuseuserlist);
+
+				/* create a cell-array for refusegroup */
+				pthread_mutex_lock(&mutexrefusegrouplist);
+				i = 0;
+				refusegroup = refusegrouplist;
+				while (refusegroup) {
+						/* count the number of items */
+						i++;
+						refusegroup = refusegroup->next;
+				}
+				if (i==0)
+						val= mxCreateCellMatrix(0, 0);
+				else 
+						val= mxCreateCellMatrix(1, i);
+				/* loop over the list to assign the items to a cell-array */
+				refusegroup = refusegrouplist;
+				while (refusegroup) {
+						/* start assigning at the back, to keep them in the original order */
+						mxSetCell(val, --i, mxCreateString(refusegroup->name));
+						refusegroup = refusegroup->next;
+				}
+				mxSetFieldByNumber(plhs[0], 0, j++, val);
+				pthread_mutex_unlock(&mutexrefusegrouplist);
+
+				/* create a cell-array for refusehost */
+				pthread_mutex_lock(&mutexrefusehostlist);
+				i = 0;
+				refusehost = refusehostlist;
+				while (refusehost) {
+						/* count the number of items */
+						i++;
+						refusehost = refusehost->next;
+				}
+				if (i==0)
+						val= mxCreateCellMatrix(0, 0);
+				else 
+						val= mxCreateCellMatrix(1, i);
+				/* loop over the list to assign the items to a cell-array */
+				refusehost = refusehostlist;
+				while (refusehost) {
+						/* start assigning at the back, to keep them in the original order */
+						mxSetCell(val, --i, mxCreateString(refusehost->name));
+						refusehost = refusehost->next;
+				}
+				mxSetFieldByNumber(plhs[0], 0, j++, val);
+				pthread_mutex_unlock(&mutexrefusehostlist);
 
 				return;
 		}
