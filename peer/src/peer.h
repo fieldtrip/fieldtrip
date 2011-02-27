@@ -280,12 +280,15 @@ int  peercount(void);
 int  check_localhost(const char *ipaddr);
 int  check_watchdog(void);
 void check_datatypes(void);
-void clear_grouplist(void);
-void clear_hostlist(void);
+void clear_allowuserlist(void);
+void clear_allowgrouplist(void);
+void clear_allowhostlist(void);
+void clear_refuseuserlist(void);
+void clear_refusegrouplist(void);
+void clear_refusehostlist(void);
 void clear_joblist(void);
 void clear_peerlist(void);
 void clear_smartsharelist(void);
-void clear_userlist(void);
 int threadsleep(float);
 
 #ifdef __cplusplus

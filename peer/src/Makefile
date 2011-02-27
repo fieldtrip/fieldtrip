@@ -83,15 +83,6 @@ endif
 ## to compile the 32-bit version with a 64-bit compiler, you will have to add the following
 # CFLAGS += -arch i386
 
-	# this is only for the peerslave command line executable -> manzana
-	MATLABARCH = maci
-	# matlab version 2009a is a 32 bit application
-	MATLABPATH = /Applications/MATLAB_R2009a.app
-	MATLABLIBS = -L$(MATLABPATH)/bin/$(MATLABARCH) -leng -lmx
-	MATLABINC  = -I$(MATLABPATH)/extern/include
-    # override the architecture defaults, required for 32 bit
-    CFLAGS	 = $(INCPATH) -Wall -pthread -arch i386
-
 LD_LIBRARY_PATH := $(MATLABPATH)/bin/$(MATLABARCH)
 export LD_LIBRARY_PATH
 
