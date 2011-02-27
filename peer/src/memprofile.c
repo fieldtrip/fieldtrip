@@ -61,7 +61,7 @@ int memprofileStatus = 0;
 /* FIXME the memory should allow for >4GB, i.e. more than can be addressed in a uint32 */
 
 #if defined (PLATFORM_OSX)
-int getmem (unsigned int *rss, unsigned int *vs) {
+int getmem (uint64_t *rss, uint64_t *vs) {
 		task_t task = MACH_PORT_NULL;
 		struct task_basic_info t_info;
 		mach_msg_type_number_t t_info_count = TASK_BASIC_INFO_COUNT;
@@ -73,14 +73,14 @@ int getmem (unsigned int *rss, unsigned int *vs) {
 		return 0;
 }
 #elif defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64)
-int getmem (unsigned int *rss, unsigned int *vs) {
+int getmem (uint64_t *rss, uint64_t *vs) {
 		/* no idea how to get the memory information on a windows computer */
 		*rss = 0;
 		*vs  = 0;
 		return -1;
 }
 #elif defined(PLATFORM_LINUX)
-int getmem (unsigned int *rss, unsigned int *vs) {
+int getmem (uint64_t *rss, uint64_t *vs) {
 		FILE *fp;
 		if ((fp = fopen("/proc/self/statm", "r")) == NULL) {
 				mexErrMsgTxt("could not open /proc/self/statm");
@@ -114,7 +114,7 @@ void memprofile_cleanup(void *arg) {
 
 /* this function takes a sample of the memory use and adds it to the list */
 void memprofile_sample(void) {
-		unsigned int rss, vs;
+		uint64_t rss, vs;
 		memlist_t *memitem;
 
 		if (getmem(&rss, &vs)!=0) {
@@ -332,7 +332,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 
 		/****************************************************************************/
 		else if (strcasecmp(command, "report")==0) {
-				unsigned int begmem, endmem, minmem, maxmem, num = 0;
+				uint64_t begmem, endmem, minmem, maxmem;
+				int  num = 0;
 				float summem = 0;
 				memprofile_sample();
 

@@ -1,7 +1,6 @@
 /*
- * DELAYEDEXIT is a MATLAB mex file which can be used to exit Matlab
- * after a specified time. A thread is started in the background,
- * which starts a timer and exits when the timer elapses.
+ * WATCHDOG is a MATLAB mex file which is used to exit Matlab
+ * when the running peer process should be aborted.
  *
  * Copyright (C) 2010, Robert Oostenveld
  * 
@@ -84,12 +83,14 @@ void exitFun(void) {
 
 void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) {
 		int rc;
-		unsigned int time = 0, masterid = 0;
+		UINT32_T masterid = 0;
+		time_t time = 0;
+		UINT64_T memory = 0;
 
 		/* this function will be called upon unloading of the mex file */
 		mexAtExit(exitFun);
 
-		if (nrhs<2)
+		if (nrhs<3)
 				mexErrMsgTxt ("invalid number of input arguments");
 
 		if (mxIsScalar(prhs[0]))
@@ -106,13 +107,20 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		else
 				mexErrMsgTxt ("invalid input argument #2");
 
-		if (masterid!=0 || time!=0) {
+		if (mxIsScalar(prhs[2]))
+				memory = mxGetScalar(prhs[2]);
+		else if (mxIsEmpty(prhs[2]))
+				memory = 0;
+		else
+				mexErrMsgTxt ("invalid input argument #3");
+
+		if (masterid!=0 || time!=0 || memory==0) {
 				/* in this case the mex file is not allowed to be cleared from memory */
 				if (!mexIsLocked())
 						mexLock(); 
 		}
 
-		if (masterid==0 && time==0) {
+		if (masterid==0 && time==0 && memory==0) {
 				/* in this case the mex file is again allowed to be cleared from memory */
 				if (mexIsLocked())
 						mexUnlock(); 
@@ -169,7 +177,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		watchdog.enabled  = 1;
 		watchdog.masterid = masterid;
 		watchdog.time     = time;
-		mexPrintf("watchdog: enabled for masterid = %lu and time = %d\n", masterid, time);
+		watchdog.memory   = memory;
+		mexPrintf("watchdog: enabled for masterid = %lu, time = %d, memory = %lu\n", masterid, time, memory);
 		pthread_mutex_unlock(&mutexwatchdog);
 
 		return;

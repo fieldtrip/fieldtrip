@@ -66,6 +66,7 @@
 #define ANNOUNCEJITTER           0.010 		/* float, in seconds */
 #define EXPIRESLEEP              1.500		/* float, in seconds, should be longer than ANNOUNCESLEEP+ANNOUNCEJITTER */
 #define EXPIRETIME               3.000		/* float, in seconds */
+#define MATLABEXECUTABLESIZE     805306368  /* integer, in bytes */
 
 #define BACKLOG                  16
 #define SMARTMEM_MINIMUM         104857600	/* int, lower boundary in bytes */

@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
 		pid_t childpid;
 
 		int matlabRunning = 0, matlabStart, matlabFinished, engineFailed = 0;
-		int i, n, c, rc, status, found, handshake, success, server, jobnum = 0, engineAborted = 0, jobFailed = 0, timallow;
+		int i, n, c, rc, status, found, handshake, success, server, jobnum = 0, engineAborted = 0, jobFailed = 0, timallow, memallow;
 		unsigned int enginetimeout = ENGINETIMEOUT;
 		unsigned int zombietimeout = ZOMBIETIMEOUT;
 		unsigned int peerid, jobid, numpeer;
@@ -678,6 +678,12 @@ int main(int argc, char *argv[]) {
 								timallow = 3*job->job->timreq;
 								if (host->timavail < timallow)
 										timallow = host->timavail;
+
+								/* determine the maximum allowed memory use */
+								memallow = 1.5*(job->job->memreq) + MATLABEXECUTABLESIZE;
+								if (host->memavail < memallow)
+										memallow = host->memavail;
+
 								pthread_mutex_unlock(&mutexhost);
 
 								/* inform the other peers of the updated status */

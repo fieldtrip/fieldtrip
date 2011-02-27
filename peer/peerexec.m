@@ -58,8 +58,9 @@ try
   % check whether a watchdog should be set
   masterid = keyval('masterid', optin);
   timallow = keyval('timallow', optin);
+  memallow = keyval('memallow', optin);
   if ~isempty(masterid) || ~isempty(timallow)
-    watchdog(masterid, time+timallow);
+    watchdog(masterid, time+timallow, memallow);
   end
 
   % try setting the same path directory
@@ -208,7 +209,7 @@ clear global
 
 % clear the optional watchdog, which is loaded into memory as a mex file
 if ~isempty(masterid) || ~isempty(timallow)
-  watchdog(0,0); % this is required to unlock it from memory
+  watchdog(0,0,0); % this is required to unlock it from memory
   clear watchdog
 end
 

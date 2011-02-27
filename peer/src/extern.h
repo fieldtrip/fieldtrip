@@ -59,6 +59,7 @@ extern struct {
 		int evidence;
 		UINT32_T masterid;
 		time_t time;
+		UINT64_T memory;
 } watchdog;
 
 extern pthread_mutex_t mutexsmartmem;
