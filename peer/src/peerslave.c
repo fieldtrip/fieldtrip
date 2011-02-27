@@ -680,7 +680,7 @@ int main(int argc, char *argv[]) {
 										timallow = host->timavail;
 
 								/* determine the maximum allowed memory use */
-								memallow = 1.5*(job->job->memreq) + MATLABEXECUTABLESIZE;
+								memallow = 1.5*(job->job->memreq);
 								if (host->memavail < memallow)
 										memallow = host->memavail;
 

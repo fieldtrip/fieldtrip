@@ -58,8 +58,8 @@ try
   % check whether a watchdog should be set
   masterid = keyval('masterid', optin);
   timallow = keyval('timallow', optin);
-  memallow = keyval('memallow', optin);
-  if ~isempty(masterid) || ~isempty(timallow)
+  memallow = []; % FIXME the memory watching does not yet work
+  if ~isempty(masterid) || ~isempty(timallow) || ~isempty(memallow)
     watchdog(masterid, time+timallow, memallow);
   end
 

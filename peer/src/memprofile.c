@@ -31,14 +31,6 @@
 #include "platform.h"
 #include "platform_includes.h"
 
-#if defined (PLATFORM_OSX)
-#include <mach/task.h>
-#elif defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64)
-#include <windows.h>
-#include <psapi.h>
-#elif defined(PLATFORM_LINUX)
-#endif
-
 #define FREE(x) {if (x) {free(x); x=NULL;}}
 
 /* the list will be thinned out with a factor 2x if it exceeds this length */
@@ -54,62 +46,14 @@ typedef struct memlist_s {
 time_t reftime = 0;
 memlist_t *memlist = NULL;
 pthread_mutex_t mutexmemlist = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mutexstatus  = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutexmemprofile  = PTHREAD_MUTEX_INITIALIZER;
 pthread_t memprofileThread;
 int memprofileStatus = 0;
 
-/* FIXME the memory should allow for >4GB, i.e. more than can be addressed in a uint32 */
-
-#if defined (PLATFORM_OSX)
-int getmem (uint64_t *rss, uint64_t *vs) {
-		task_t task = MACH_PORT_NULL;
-		struct task_basic_info t_info;
-		mach_msg_type_number_t t_info_count = TASK_BASIC_INFO_COUNT;
-		if (KERN_SUCCESS != task_info(mach_task_self(), TASK_BASIC_INFO, (task_info_t)&t_info, &t_info_count)) {
-				return -1;
-		}
-		*rss = t_info.resident_size;
-		*vs  = t_info.virtual_size;
-		return 0;
-}
-#elif defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64)
-int getmem (uint64_t *rss, uint64_t *vs) {
-		/* no idea how to get the memory information on a windows computer */
-		*rss = 0;
-		*vs  = 0;
-		return -1;
-}
-#elif defined(PLATFORM_LINUX)
-int getmem (uint64_t *rss, uint64_t *vs) {
-		FILE *fp;
-		if ((fp = fopen("/proc/self/statm", "r")) == NULL) {
-				mexErrMsgTxt("could not open /proc/self/statm");
-				return -1;
-		}
-		/* read the information from /proc/self/statm
-		   size       total program size
-		   resident   resident set size
-		   share      shared pages
-		   text       text (code)
-		   lib        library
-		   data       data/stack
-		   dt         dirty pages (unused in Linux 2.6)
-		 */
-		if (fscanf(fp, "%u%u", vs, rss )!=2) {
-				mexWarnMsgTxt("could not read all elements from /proc/self/statm");
-		}
-		/* these seem to be in 4096 byte blocks */
-		*vs  = (*vs)  * 4096; 
-		*rss = (*rss) * 4096; 
-		fclose(fp);
-		return 0;
-}
-#endif
-
 void memprofile_cleanup(void *arg) {
-		pthread_mutex_lock(&mutexstatus);	
+		pthread_mutex_lock(&mutexmemprofile);	
 		memprofileStatus = 0;
-		pthread_mutex_unlock(&mutexstatus);	
+		pthread_mutex_unlock(&mutexmemprofile);	
 }
 
 /* this function takes a sample of the memory use and adds it to the list */
@@ -139,15 +83,15 @@ void *memprofile(void *arg) {
 		int pause = 1;
 		memlist_t *memitem, *next;
 
-		pthread_mutex_lock(&mutexstatus);	
+		pthread_mutex_lock(&mutexmemprofile);	
 		if (memprofileStatus) {
 				/* only a single instance should be running */
-				pthread_mutex_unlock(&mutexstatus);	
+				pthread_mutex_unlock(&mutexmemprofile);	
 				return;
 		}
 		else {
 				memprofileStatus = 1;
-				pthread_mutex_unlock(&mutexstatus);	
+				pthread_mutex_unlock(&mutexmemprofile);	
 		}
 
 		pthread_cleanup_push(memprofile_cleanup, NULL);
@@ -235,13 +179,13 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				/* include the current memory use in the list */
 				memprofile_sample();
 
-				pthread_mutex_lock(&mutexstatus);
+				pthread_mutex_lock(&mutexmemprofile);
 				if (memprofileStatus) {
-						pthread_mutex_unlock(&mutexstatus);
+						pthread_mutex_unlock(&mutexmemprofile);
 						return;
 				}
 				else {
-						pthread_mutex_unlock(&mutexstatus);
+						pthread_mutex_unlock(&mutexmemprofile);
 				}
 
 				/* start the thread */
@@ -253,13 +197,13 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		/****************************************************************************/
 		else if (strcasecmp(command, "off")==0) {
 
-				pthread_mutex_lock(&mutexstatus);
+				pthread_mutex_lock(&mutexmemprofile);
 				if (!memprofileStatus) {
-						pthread_mutex_unlock(&mutexstatus);
+						pthread_mutex_unlock(&mutexmemprofile);
 						return;
 				}
 				else {
-						pthread_mutex_unlock(&mutexstatus);
+						pthread_mutex_unlock(&mutexmemprofile);
 				}
 
 				/* stop the thread */
@@ -273,13 +217,13 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		/****************************************************************************/
 		else if (strcasecmp(command, "resume")==0) {
 
-				pthread_mutex_lock(&mutexstatus);
+				pthread_mutex_lock(&mutexmemprofile);
 				if (memprofileStatus) {
-						pthread_mutex_unlock(&mutexstatus);
+						pthread_mutex_unlock(&mutexmemprofile);
 						return;
 				}
 				else {
-						pthread_mutex_unlock(&mutexstatus);
+						pthread_mutex_unlock(&mutexmemprofile);
 				}
 
 				/* start the thread */

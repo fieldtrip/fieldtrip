@@ -10,8 +10,8 @@ function varargout = memprofile(varargin)
 % 
 %  MEMPROFILE CLEAR clears all recorded profile statistics.
 % 
-%  STATS = MEMPROFILE('INFO') suspends the profiler and returns
-%  a structure containing the current profiler statistics.
+%  STATS = MEMPROFILE('INFO') returns a structure containing the 
+% current profiler statistics.
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld

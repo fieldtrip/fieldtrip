@@ -86,6 +86,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		UINT32_T masterid = 0;
 		time_t time = 0;
 		UINT64_T memory = 0;
+		UINT64_T rss, vs;
 
 		/* this function will be called upon unloading of the mex file */
 		mexAtExit(exitFun);
@@ -113,6 +114,12 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				memory = 0;
 		else
 				mexErrMsgTxt ("invalid input argument #3");
+
+		if (memory>0) {
+				/* memory should be in absolute numbers, add the current memory footprint */
+				getmem(&rss, &vs);
+				memory += rss;
+		}
 
 		if (masterid!=0 || time!=0 || memory==0) {
 				/* in this case the mex file is not allowed to be cleared from memory */

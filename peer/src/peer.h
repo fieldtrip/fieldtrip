@@ -291,6 +291,7 @@ void clear_joblist(void);
 void clear_peerlist(void);
 void clear_smartsharelist(void);
 int threadsleep(float);
+int getmem (uint64_t *, uint64_t *);
 
 #ifdef __cplusplus
 }
