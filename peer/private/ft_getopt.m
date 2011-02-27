@@ -29,7 +29,7 @@ if isa(opt, 'struct') || isa(opt, 'config')
     val = opt.(key);
   end
   
-else isa(opt, 'cell')
+elseif isa(opt, 'cell')
   % get the key-value from the cell-array
   if mod(length(opt),2)
     error('optional input arguments should come in key-value pairs, i.e. there should be an even number');
