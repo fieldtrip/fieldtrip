@@ -132,6 +132,17 @@ type         = 'unknown';
 manufacturer = 'unknown';
 content      = 'unknown';
 
+if isempty(filename)
+  if isempty(desired)
+    % return the "unknown" outputs
+    return
+  else
+    % return that it is a non-match
+    type = false;
+    return
+  end
+end
+
 [p, f, x] = fileparts(filename);
 
 % prevent this test if the filename resembles an URI, i.e. like "scheme://"

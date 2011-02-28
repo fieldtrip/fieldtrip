@@ -60,6 +60,9 @@ if nsens == 1
   asens      = sens;
   afiducials = fiducials;
   return;
+else
+  asens = [];
+  afiducials = [];
 end
 
 pnt = detrend(sens(1).pnt, 'constant');
@@ -80,7 +83,7 @@ mean2 = [0 0 0];
 mean3 = [0 0 0];
 
 if istra
-  tra = zeros(size(sens(1).tra));
+  asens.tra = zeros(size(sens(1).tra));
 end
 
 if toplot
@@ -98,7 +101,8 @@ for i=1:nsens
   mean3 = mean3 + weights(i).*sens(i).pnt(ind3, :);
   
   if istra
-    tra = tra + weights(i).*sens(i).tra;
+    % include the weighted averaged linear matrix that combines coils/electrodes into channels
+    asens.tra = asens.tra + weights(i).*sens(i).tra;;
   end
   
   if toplot && ismeg
@@ -135,11 +139,6 @@ elseif iseeg
   
 else
   error('unsupported sensor type');
-end
-
-if istra
-  % include the weighted averaged linear matrix that combines coils/electrodes into channels
-  asens.tra = tra;
 end
 
 if toplot
