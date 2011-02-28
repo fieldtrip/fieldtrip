@@ -52,7 +52,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
 %   cfg.outputfile = one can specify output as file to save to disk
 
-% Copyright (C) 2009, Robert Oostenveld, Ingrid Niewenhuis
+% Copyright (C) 2009-2011, Robert Oostenveld, Ingrid Niewenhuis
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
