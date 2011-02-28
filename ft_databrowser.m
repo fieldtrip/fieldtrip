@@ -52,7 +52,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
 %   cfg.outputfile = one can specify output as file to save to disk
 
-% Copyright (C) 2009-2011, Robert Oostenveld, Ingrid Niewenhuis
+% Copyright (C) 2009, Robert Oostenveld, Ingrid Niewenhuis
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -127,7 +127,6 @@ if ~isfield(cfg, 'eogscale'),        cfg.eogscale = [];                   end
 if ~isfield(cfg, 'ecgscale'),        cfg.ecgscale = [];                   end
 if ~isfield(cfg, 'megscale'),        cfg.megscale = [];                   end
 
-<<<<<<< .mine
 if isfield(data, 'topo') && strmatch(cfg.viewmode, 'component')
   if ~isfield(cfg, 'comp')
     cfg.comp = 1:10; % to avoid plotting 274 components topographically
@@ -135,8 +134,6 @@ if isfield(data, 'topo') && strmatch(cfg.viewmode, 'component')
   cfg.channel = data.label(cfg.comp);
 end
 
-=======
->>>>>>> .r2983
 if ischar(cfg.selectfeature)
   % ensure that it is a cell array
   cfg.selectfeature = {cfg.selectfeature};
@@ -168,11 +165,8 @@ if hasdata
     end
   end
   
-<<<<<<< .mine
-  if strcmp(cfg.viewmode, 'component')
-=======
+
   if strcmp(cfg.viewmode, 'component') 
->>>>>>> .r2983
     if ~isfield(cfg, 'layout')
       error('You need to specify a layout-file when browsing through components');
     end
@@ -450,7 +444,6 @@ redraw_cb(h);
 %     'callback',S,'min',0,'max',0, ...
 %     'visible', 'off'); %'value', xmin
 
-<<<<<<< .mine
 % set initial scrollbar value
 dx = maxtime;
 
@@ -467,8 +460,7 @@ s=uicontrol('style','slider',...
   'callback',S,'min',0,'max',0, ...
   'visible', 'off'); %'value', xmin
 
-=======
->>>>>>> .r2983
+
 %initialize postion of plot
 % set(gca,'xlim',[xmin xmin+dx]);
 
