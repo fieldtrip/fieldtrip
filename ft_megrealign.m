@@ -182,113 +182,11 @@ for i=1:Ntemplate
   end
 end
 
-% to construct the average location of the MEG sensors, 4 channels are needed that should  be sufficiently far apart
-switch ft_senstype(template(1))
-  case {'ctf151' 'ctf275'}
-    labC = 'MZC01';
-    labF = 'MZF03';
-    labL = 'MLC21';
-    labR = 'MRC21';
-  case {'ctf151_planar' 'ctf275_planar'}
-    labC = 'MZC01_dH';
-    labF = 'MZF03_dH';
-    labL = 'MLC21_dH';
-    labR = 'MRC21_dH';
-  case {'bti148'}
-    labC = 'A14';
-    labF = 'A2';
-    labL = 'A15';
-    labR = 'A29';
-  case {'bti248'}
-    labC = 'A19';
-    labF = 'A2';
-    labL = 'A44';
-    labR = 'A54';
-  otherwise
-    % this could in principle be added to the cfg, but better is to have a more exhaustive list here
-    error('unsupported MEG system for realigning, please ask on the mailing list');
-end
-
-templ.meanC = [0 0 0];
-templ.meanF = [0 0 0];
-templ.meanL = [0 0 0];
-templ.meanR = [0 0 0];
-for i=1:Ntemplate
-  % determine the 4 ref sensors for this individual template helmet
-  % FIXME this assumes that coils and sensors coincide, this is generally not
-  % true, however there is not much of a problem, because the points are only
-  % used to get a transformation matrix
-  indxC = strmatch(labC, template(i).label, 'exact');
-  indxF = strmatch(labF, template(i).label, 'exact');
-  indxL = strmatch(labL, template(i).label, 'exact');
-  indxR = strmatch(labR, template(i).label, 'exact');
-  if isempty(indxC) || isempty(indxF) || isempty(indxL) || isempty(indxR)
-    error('not all 4 sensors were found that are needed to rotate/translate');
-  end
-  % add them to the sum, to compute mean location of each ref sensor
-  templ.meanC = templ.meanC + template(i).pnt(indxC,:);
-  templ.meanF = templ.meanF + template(i).pnt(indxF,:);
-  templ.meanL = templ.meanL + template(i).pnt(indxL,:);
-  templ.meanR = templ.meanR + template(i).pnt(indxR,:);
-end
-templ.meanC = templ.meanC / Ntemplate;
-templ.meanF = templ.meanF / Ntemplate;
-templ.meanL = templ.meanL / Ntemplate;
-templ.meanR = templ.meanR / Ntemplate;
-
-% construct two direction vectors that define the helmet orientation
-templ.dirCF = (templ.meanF - templ.meanC);
-templ.dirRL = (templ.meanL - templ.meanR);
-% construct three orthonormal direction vectors
-templ.dirX = normalize(templ.dirCF);
-templ.dirY = normalize(templ.dirRL - dot(templ.dirRL, templ.dirX) * templ.dirX);
-templ.dirZ = cross(templ.dirX, templ.dirY);
-templ.tra = fixedbody(templ.meanC, templ.dirX, templ.dirY, templ.dirZ);
-
-% determine the 4 ref sensors for the helmet that belongs to this dataset
-indxC = strmatch(labC, template(1).label, 'exact');
-indxF = strmatch(labF, template(1).label, 'exact');
-indxL = strmatch(labL, template(1).label, 'exact');
-indxR = strmatch(labR, template(1).label, 'exact');
-if isempty(indxC) || isempty(indxF) || isempty(indxL) || isempty(indxR)
-  error('not all 4 sensors were found that are needed to rotate/translate');
-end
-
-% construct two direction vectors that define the helmet orientation
-orig.dirCF = template(1).pnt(indxF,:) - template(1).pnt(indxC,:);
-orig.dirRL = template(1).pnt(indxL,:) - template(1).pnt(indxR,:);
-% construct three orthonormal direction vectors
-orig.dirX = normalize(orig.dirCF);
-orig.dirY = normalize(orig.dirRL - dot(orig.dirRL, orig.dirX) * orig.dirX);
-orig.dirZ = cross(orig.dirX, orig.dirY);
-orig.tra = fixedbody(template(1).pnt(indxC,:), orig.dirX, orig.dirY, orig.dirZ);
-
-% compute the homogenous transformation matrix and transform the positions
-tra = inv(templ.tra) * orig.tra;
-pnt = template(1).pnt;
-pnt(:,4) = 1;
-pnt = (tra * pnt')';
-pnt = pnt(:,1:3);
-
-% remove the translation from the transformation matrix and rotate the orientations
-tra(:,4) = [0 0 0 1]';
-ori = template(1).ori;
-ori(:,4) = 1;
-ori = (tra * ori')';
-ori = ori(:,1:3);
-
-tmp_label = template(1).label;
-tmp_tra   = template(1).tra;
-tmp_unit  = template(1).unit;
+grad = ft_average_sens(template);
 
 % construct the final template gradiometer definition
 template = [];
-template.grad.pnt = pnt;
-template.grad.ori = ori;
-% keep the same labels and the linear weights of the coils
-template.grad.label = tmp_label;
-template.grad.tra   = tmp_tra;
-template.grad.unit  = tmp_unit;
+template.grad = grad;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FT_PREPARE_VOL_SENS will match the data labels, the gradiometer labels and the
@@ -554,20 +452,3 @@ fprintf('pruning %d from %d, i.e. removing the %d smallest spatial components\n'
 s(p) = 0;
 s(find(s~=0)) = 1./s(find(s~=0));
 lfi = v * s' * u';
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% subfunction that computes the homogenous translation matrix
-% corresponding to a fixed body rotation and translation
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [h] = fixedbody(center, dirx, diry, dirz);
-rot = eye(4);
-rot(1:3,1:3) = inv(eye(3) / [dirx; diry; dirz]);
-tra = eye(4);
-tra(1:4,4)   = [-center 1]';
-h = rot * tra;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% subfunction that scales a vector to unit length
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [v] = normalize(v);
-v = v / sqrt(v * v');
