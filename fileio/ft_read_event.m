@@ -1266,6 +1266,18 @@ switch eventformat
       event(i).sample    = tmp.event.sample(i);
     end
 
+  case 'dataq_wdq'
+    if isempty(hdr)
+      hdr     = ft_read_header(filename, 'headerformat', 'dataq_wdq');
+    end
+    trigger  = read_wdq_data(filename, hdr.orig, 'lowbits');
+    [ix, iy] = find(trigger);
+    for i=1:numel(ix)
+      event(i).type   = num2str(ix(i));
+      event(i).value  = trigger(ix(i),iy(i));
+      event(i).sample = iy(i); 
+    end
+    
   otherwise
     error('unsupported event format (%s)', eventformat);
 end

@@ -4,7 +4,8 @@ function [dat] = read_wdq_data(filename, hdr, begsample, endsample, chanindx)
 %
 % Use as
 %  [dat] = read_wdq_data(filename, hdr, begsample, endsample, chanindx)
-%
+% or
+%  [dat] = read_wdq_data(filename, hdr, 'lowbits')
 
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
 %
@@ -29,6 +30,15 @@ function [dat] = read_wdq_data(filename, hdr, begsample, endsample, chanindx)
 % information about how to interpret the file are taken from the document
 % 'CODAS data storage format'
 
+if nargin==3 && ischar(begsample) && strcmp(begsample, 'lowbits')
+  % read in the whole stretch of data and return the lowest 2 bits
+  begsample = 1;
+  endsample = 0.5*hdr.nbytesdat/hdr.nchan;
+  getlowbits = 1;
+elseif nargin==5
+  getlowbits = 0;
+end
+
 fid = fopen(filename, 'r');
 
 % set file pointer to where the data starts in the file
@@ -37,18 +47,18 @@ nsamples = endsample - begsample + 1;
 fseek(fid, hdr.nbyteshdr + offset, 'bof');
 
 datorig = fread(fid, [hdr.nchan nsamples], 'uint16');
-
-% the lowest two bits may contain event info
-lowbits = bitand(datorig, 1) + bitand(datorig, 2);
-dat     = datorig - 2*bitand(datorig, 2^15);
-
-% the higher 14 bits contain the waveforms
-dat     = bitshift(dat, -2);
-
 fclose(fid);
 
-% scale the data
-dat     = diag([hdr.chanhdr(1:hdr.nchan).scale]) * dat + ...
-            [hdr.chanhdr(1:hdr.nchan).intercept]' * ones(1,size(dat,2));
-          
-dat     = dat(chanindx, :);
+% the lowest two bits may contain event info
+% the higher 14 bits contain the waveforms
+if getlowbits
+  dat = bitand(datorig, 1) + bitand(datorig, 2);
+else
+  dat = datorig - 2*bitand(datorig, 2^15);
+  dat = bitshift(dat, -2);
+
+  % scale the data
+  dat     = diag([hdr.chanhdr(1:hdr.nchan).scale]) * dat + ...
+              [hdr.chanhdr(1:hdr.nchan).intercept]' * ones(1,size(dat,2));          
+  dat     = dat(chanindx, :);
+end
