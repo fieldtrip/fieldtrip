@@ -157,7 +157,7 @@ switch nfid
     afiducials = [];
     
   case 1
-    % FIXME this behaves inconsistent for eeg sensors, because tra1 happens to be the transformation for the last electrode set
+    tra1  = headcoordinates(sens(1).pnt(ind1, :), sens(1).pnt(ind2, :), sens(1).pnt(ind3, :));
     afiducials = ft_transform_headshape(tra\tra1, fiducials);
     
   case nsens
