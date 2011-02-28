@@ -127,11 +127,21 @@ if ~isfield(cfg, 'eogscale'),        cfg.eogscale = [];                   end
 if ~isfield(cfg, 'ecgscale'),        cfg.ecgscale = [];                   end
 if ~isfield(cfg, 'megscale'),        cfg.megscale = [];                   end
 
+<<<<<<< .mine
+if isfield(data, 'topo') && strmatch(cfg.viewmode, 'component')
+  if ~isfield(cfg, 'comp')
+    cfg.comp = 1:10; % to avoid plotting 274 components topographically
+  end
+  cfg.channel = data.label(cfg.comp);
+end
+
+=======
+>>>>>>> .r2983
 if ischar(cfg.selectfeature)
   % ensure that it is a cell array
   cfg.selectfeature = {cfg.selectfeature};
 end
- 
+
 % get some initial parameters from the data
 if hasdata
   % fetch the header
@@ -146,25 +156,23 @@ if hasdata
   Nchans  = length(chansel);
   
   % this is how the input data is segmented
-  trlorg = [];
-  
-  if isfield(data, 'sampleinfo')
-    if ~isempty(data.sampleinfo)
-      trlorg = [data.sampleinfo data.offset(:)];
-    else
-      error('sampleinfo field is empty!');
-    end
-  else
-    Ntrials  = numel(data.trial);
-    Nsamples = numel(data.time{1});
-    trlorg = [];
-    cfg = checkcfg(Ntrials,Nsamples,hdr,cfg);
-    trlorg = cfg.trl;
-    data.sampleinfo = trlorg;
-  end
+  trlorg = [data.sampleinfo data.offset];
   Ntrials = size(trlorg, 1);
   
+  % this option relates to reading over trial boundaries in a pseudo-continuous dataset
+  if ~isfield(cfg, 'continuous')
+    if Ntrials==1
+      cfg.continuous = 'yes';
+    else
+      cfg.continuous = 'no';
+    end
+  end
+  
+<<<<<<< .mine
+  if strcmp(cfg.viewmode, 'component')
+=======
   if strcmp(cfg.viewmode, 'component') 
+>>>>>>> .r2983
     if ~isfield(cfg, 'layout')
       error('You need to specify a layout-file when browsing through components');
     end
@@ -182,14 +190,14 @@ else
   % read the header
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
   
-% FIXME how is this supposed to work?
-% read the events
+  % FIXME how is this supposed to work?
+  % read the events
   if ~isempty(cfg.event)
     event = ft_read_event(cfg.dataset);
   else
     event = [];
   end
-    
+  
   if strcmp(cfg.viewmode, 'component') 
     if ~isfield(cfg, 'comp')
       cfg.comp = 1:10; % to avoid plotting 274 components topographically
@@ -203,11 +211,18 @@ else
   fsample = hdr.Fs;
   Nchans  = length(chansel);
   
-  cfg = checkcfg(hdr.nTrials,hdr.nSamples,hdr,cfg);
-  
   % this is how the data from file should be segmented
   trlorg = cfg.trl;
   Ntrials = size(trlorg, 1);
+  
+  % this option relates to reading over trial boundaries in a pseudo-continuous dataset
+  if ~isfield(cfg, 'continuous')
+    if Ntrials==1
+      cfg.continuous = 'yes';
+    else
+      cfg.continuous = 'no';
+    end
+  end
   
   if strcmp(cfg.viewmode, 'component')
     if ~isfield(cfg, 'layout')
@@ -435,6 +450,25 @@ redraw_cb(h);
 %     'callback',S,'min',0,'max',0, ...
 %     'visible', 'off'); %'value', xmin
 
+<<<<<<< .mine
+% set initial scrollbar value
+dx = maxtime;
+
+% set scrollbar position
+fig_pos=get(gca,'position');
+scroll_pos=[fig_pos(1) fig_pos(2) fig_pos(3) 0.02];
+
+% define callback
+S=['set(gca,''xlim'',get(gcbo,''value'')+[ ' num2str(mintime) ',' num2str(maxtime) '])'];
+
+% Creating Uicontrol
+s=uicontrol('style','slider',...
+  'units','normalized','position',scroll_pos,...
+  'callback',S,'min',0,'max',0, ...
+  'visible', 'off'); %'value', xmin
+
+=======
+>>>>>>> .r2983
 %initialize postion of plot
 % set(gca,'xlim',[xmin xmin+dx]);
 
@@ -674,57 +708,57 @@ switch key
     opt.ftsel = str2double(key);
     numart = size(opt.artdata.trial{1}, 1);
     if opt.ftsel > numart
-        fprintf('data has no artifact type %i \n', opt.ftsel)
+      fprintf('data has no artifact type %i \n', opt.ftsel)
     else
-        guidata(h, opt);
-        fprintf('switching to the "%s" artifact\n', opt.artdata.label{opt.ftsel});
-        redraw_cb(h, eventdata);
+      guidata(h, opt);
+      fprintf('switching to the "%s" artifact\n', opt.artdata.label{opt.ftsel});
+      redraw_cb(h, eventdata);
     end
   case {'shift+1' 'shift+2' 'shift+3' 'shift+4' 'shift+5' 'shift+6' 'shift+7' 'shift+8' 'shift+9'}
     % go to previous artifact
     opt.ftsel = str2double(key(end));
     numart = size(opt.artdata.trial{1}, 1);
     if opt.ftsel > numart
-        fprintf('data has no artifact type %i \n', opt.ftsel)
-    else        
-        cursam = opt.trlvis(opt.trlop,1);
-        artsam = find(opt.artdata.trial{1}(opt.ftsel,1:cursam-1), 1, 'last');
-        if isempty(artsam)
-            fprintf('no earlier "%s" artifact found\n', opt.artdata.label{opt.ftsel});
+      fprintf('data has no artifact type %i \n', opt.ftsel)
+    else
+      cursam = opt.trlvis(opt.trlop,1);
+      artsam = find(opt.artdata.trial{1}(opt.ftsel,1:cursam-1), 1, 'last');
+      if isempty(artsam)
+        fprintf('no earlier "%s" artifact found\n', opt.artdata.label{opt.ftsel});
+      else
+        fprintf('going to previous "%s" artifact\n', opt.artdata.label{opt.ftsel});
+        if opt.trlvis(nearest(opt.trlvis(:,1),artsam),1) < artsam
+          arttrl = nearest(opt.trlvis(:,1),artsam);
         else
-            fprintf('going to previous "%s" artifact\n', opt.artdata.label{opt.ftsel});
-            if opt.trlvis(nearest(opt.trlvis(:,1),artsam),1) < artsam
-                arttrl = nearest(opt.trlvis(:,1),artsam);
-            else
-                arttrl = nearest(opt.trlvis(:,1),artsam)-1;
-            end
-            opt.trlop = arttrl;
-            guidata(h, opt);
-            redraw_cb(h, eventdata);
+          arttrl = nearest(opt.trlvis(:,1),artsam)-1;
         end
+        opt.trlop = arttrl;
+        guidata(h, opt);
+        redraw_cb(h, eventdata);
+      end
     end
   case {'control+1' 'control+2' 'control+3' 'control+4' 'control+5' 'control+6' 'control+7' 'control+8' 'control+9' 'alt+1' 'alt+2' 'alt+3' 'alt+4' 'alt+5' 'alt+6' 'alt+7' 'alt+8' 'alt+9'}
     % go to next artifact
     opt.ftsel = str2double(key(end));
     numart = size(opt.artdata.trial{1}, 1);
     if opt.ftsel > numart
-        fprintf('data has no artifact type %i \n', opt.ftsel)
+      fprintf('data has no artifact type %i \n', opt.ftsel)
     else
-        cursam = opt.trlvis(opt.trlop,2);
-        artsam = find(opt.artdata.trial{1}(opt.ftsel,cursam+1:end), 1, 'first') + cursam;
-        if isempty(artsam)
-          fprintf('no later "%s" artifact found\n', opt.artdata.label{opt.ftsel});
+      cursam = opt.trlvis(opt.trlop,2);
+      artsam = find(opt.artdata.trial{1}(opt.ftsel,cursam+1:end), 1, 'first') + cursam;
+      if isempty(artsam)
+        fprintf('no later "%s" artifact found\n', opt.artdata.label{opt.ftsel});
+      else
+        fprintf('going to next "%s" artifact\n', opt.artdata.label{opt.ftsel});
+        if opt.trlvis(nearest(opt.trlvis(:,1),artsam),1) < artsam
+          arttrl = nearest(opt.trlvis(:,1),artsam);
         else
-          fprintf('going to next "%s" artifact\n', opt.artdata.label{opt.ftsel});
-          if opt.trlvis(nearest(opt.trlvis(:,1),artsam),1) < artsam
-            arttrl = nearest(opt.trlvis(:,1),artsam);
-          else
-            arttrl = nearest(opt.trlvis(:,1),artsam)-1;
-          end
-          opt.trlop = arttrl;
-          guidata(h, opt);
-          redraw_cb(h, eventdata);
+          arttrl = nearest(opt.trlvis(:,1),artsam)-1;
         end
+        opt.trlop = arttrl;
+        guidata(h, opt);
+        redraw_cb(h, eventdata);
+      end
     end
   case 'leftarrow'
     opt.trlop = max(opt.trlop - 1, 1); % should not be smaller than 1
@@ -987,7 +1021,7 @@ switch opt.cfg.viewmode
     xlabel('time');
     
     % set tags
-
+    
     
   case 'vertical'
     cla;       % clear the content in the current axis
@@ -1053,7 +1087,7 @@ switch opt.cfg.viewmode
     % set tags
     set(h_event, 'tag', 'events');
     set(h_event_txt, 'tag', 'events');
-        
+    
     for i = 1:length(chanindx)
       datsel = i;
       laysel = match_str(laytime.label, opt.hdr.label(chanindx(i)));
@@ -1083,7 +1117,7 @@ switch opt.cfg.viewmode
     else
       % no space for xticks
       yTickLabel = [];
-    end    
+    end
     tmp = yTickLabel;
     for chanloop = 2:length(chanindx)
       yTickLabel = [yTickLabel tmp];
@@ -1130,8 +1164,8 @@ switch opt.cfg.viewmode
     % check if topographies need to be redrawn
     redraw_topo = false;
     if ~isequal(opt.compindx, compindx)
-        redraw_topo = true;
-        cla;
+      redraw_topo = true;
+      cla;
     end
     
     h_act = zeros(1, length(compindx));
@@ -1140,37 +1174,37 @@ switch opt.cfg.viewmode
       datsel = i;
       laysel = match_str(laytime.label,opt.hdr.label(compindx(i)));
       if ~isempty(datsel)
-          % plot the timecourse of this component
-          h_act(i) = ft_plot_vector(tim, dat(datsel, :), 'hpos', laytime.pos(laysel,1), 'vpos', laytime.pos(laysel,2), 'width', laytime.width(laysel), 'height', laytime.height(laysel), 'hlim', hlim, 'vlim', vlim);
+        % plot the timecourse of this component
+        h_act(i) = ft_plot_vector(tim, dat(datsel, :), 'hpos', laytime.pos(laysel,1), 'vpos', laytime.pos(laysel,2), 'width', laytime.width(laysel), 'height', laytime.height(laysel), 'hlim', hlim, 'vlim', vlim);
+        
+        if redraw_topo
+          h_text(i) = ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(compindx(i)));
           
-          if redraw_topo
-              h_text(i) = ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(compindx(i)));
-              
-              % plot the topography of this component
-              chanz = opt.orgdata.topo(sel1,compindx(i));
-              ft_plot_topo(chanx, chany, chanz./max(abs(chanz)), 'hpos', laytopo.pos(laysel,1), ...
-                  'vpos', laytopo.pos(laysel,2), 'mask', laychan.mask, ...
-                  'interplim', 'mask', 'outline', laychan.outline,  ...
-                  'width', laytopo.width(laysel), 'height', laytopo.height(laysel));
-          end
-          
-          axis equal
-          drawnow
+          % plot the topography of this component
+          chanz = opt.orgdata.topo(sel1,compindx(i));
+          ft_plot_topo(chanx, chany, chanz./max(abs(chanz)), 'hpos', laytopo.pos(laysel,1), ...
+            'vpos', laytopo.pos(laysel,2), 'mask', laychan.mask, ...
+            'interplim', 'mask', 'outline', laychan.outline,  ...
+            'width', laytopo.width(laysel), 'height', laytopo.height(laysel));
+        end
+        
+        axis equal
+        drawnow
       end
     end
     % set tags
     set(h_act, 'tag', 'activations');
     
-    h_topo = findobj(h, 'type', 'surface');    
+    h_topo = findobj(h, 'type', 'surface');
     set(h_text, 'tag', 'comptopo')
     set(h_topo, 'tag', 'comptopo')
-
+    
     opt.compindx = compindx;
     
     set(gca, 'xTick', [])
     set(gca, 'yTick', [])
     title(sprintf('%s %d, time from %g to %g s', opt.trialname, opt.trlop, tim(1), tim(end)));
-
+    
     
     
     ax(1) = min(laytopo.pos(:,1) - laytopo.width/2);
@@ -1196,32 +1230,3 @@ fprintf('done\n');
 guidata(h, opt);
 end
 
-
-function cfg = checkcfg(Ntrials,Nsamples,hdr,cfg)
-  % this option relates to reading over trial boundaries in a pseudo-continuous dataset
-  if ~isfield(cfg, 'continuous')
-    if Ntrials==1
-      cfg.continuous = 'yes';
-    else
-      cfg.continuous = 'no';
-    end
-  end
-  
-  if ~isfield(cfg, 'trl')
-    % treat the data as continuous if possible, otherwise define all trials as indicated in the header
-    if strcmp(cfg.continuous, 'yes')
-      trl = zeros(1, 3);
-      trl(1,1) = 1;
-      trl(1,2) = Nsamples*Ntrials;
-      trl(1,3) = 0;
-    else
-      trl = zeros(Ntrials, 3);
-      for i=1:Ntrials
-        trl(i,1) = (i-1)*Nsamples + 1;
-        trl(i,2) = (i  )*Nsamples    ;
-        trl(i,3) = -hdr.nSamplesPre;
-      end
-    end
-    cfg.trl = trl;
-  end
-end
