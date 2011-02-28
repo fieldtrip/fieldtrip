@@ -368,24 +368,6 @@ end
 %technically should not be defined for multiplotER, but can be defined (and
 %use ft_selectdata to average across frequencies
 
-% Get physical y-axis range (ylim / zparam):
-if strcmp(cfg.ylim,'maxmin')
-  % Find maxmin for all varargins:
-  ymin = zeros(1, Ndata );
-  ymax = zeros(1, Ndata );
-  for i=1:Ndata 
-    % Select the channels in the data that match with the layout:
-    dat = varargin{i}.(cfg.zparam);
-    ymin(i) = min(dat(:));
-    ymax(i) = max(dat(:));
-  end
-  ymin = min(ymin);
-  ymax = max(ymax);
-else
-  ymin = cfg.ylim(1);
-  ymax = cfg.ylim(2);
-end
-
 hold on;
 colorLabels = [];
 
@@ -412,6 +394,8 @@ for i=1:Ndata
       dat = nanmean(nanmean(dat, meandir), 3);
       siz = size(dat);
       %FIXMEdat = reshape(dat, [siz(1:2) siz(4)]);
+      dat = reshape(dat, [siz(1) siz(3)]);
+      dat = dat(sellab, :);
     elseif haslabelcmb
       dat = dat(sellab, ymin:ymax, xidmin(i):xidmax(i));
       dat = nanmean(dat, 2);
@@ -427,7 +411,9 @@ for i=1:Ndata
     if isfull
       dat = dat(sel1, sel2, xidmin(i):xidmax(i));
       dat = nanmean(dat, meandir);
-      %FIXME
+      siz = size(dat);
+      dat = reshape(dat, [siz(1) siz(3)]);
+      dat = dat(sellab, :);
     elseif haslabelcmb
       dat = dat(sellab, xidmin(i):xidmax(i));
     else
@@ -457,16 +443,23 @@ for i=1:Ndata
   end
     
   % Update ymin and ymax for the current data set:
-  if strcmp(cfg.ylim, 'maxmin')
-    ind_xmin = nearest(varargin{i}.(cfg.xparam), xmin);
-    ind_xmax = nearest(varargin{i}.(cfg.xparam), xmax);
-    ymin = min([ymin min(datavector(ind_xmin:ind_xmax))]);
-    ymax = max([ymax max(datavector(ind_xmin:ind_xmax))]);
+  if strcmp(cfg.ylim,'maxmin')
+    % Find maxmin for all varargins:
+    ymin = zeros(1, Ndata );
+    ymax = zeros(1, Ndata );
+    for i=1:Ndata 
+      % Select the channels in the data that match with the layout:
+      ymin(i) = min(datavector);
+      ymax(i) = max(datavector);
+    end
+    ymin = min(ymin);
+    ymax = max(ymax);
   else
     ymin = cfg.ylim(1);
     ymax = cfg.ylim(2);
   end
-  
+ 
+
   % only plot the mask once, for the first line (it's the same anyway for
   % all lines, and if plotted multiple times, it will overlay the others
   if i>1 && strcmp(cfg.maskstyle, 'box')
