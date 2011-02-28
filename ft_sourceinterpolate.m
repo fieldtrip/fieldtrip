@@ -255,7 +255,7 @@ elseif ~is2Dana && ~is2Dfun
   end
   
   % select the parameters that should be interpolated
-  cfg.parameter = ft_parameterselection(cfg.parameter, functional);
+  cfg.parameter = parameterselection(cfg.parameter, functional);
   cfg.parameter = setdiff(cfg.parameter, 'inside'); % inside is handled separately
   
   if ~isequal(cfg.downsample, 1)
