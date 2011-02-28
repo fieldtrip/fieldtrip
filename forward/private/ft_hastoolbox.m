@@ -119,6 +119,8 @@ switch toolbox
     status = exist('runica', 'file');
   case 'NWAY'
     status = exist('parafac', 'file');
+  case 'SPM'
+    status = exist('spm.m'); % any version of SPM is fine
   case 'SPM99'
     status = exist('spm.m') && strcmp(spm('ver'),'SPM99');
   case 'SPM2'
