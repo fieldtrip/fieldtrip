@@ -12,7 +12,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 % The configuration can have the following parameters:
 % cfg.xparam        = field to be plotted on x-axis, e.g. 'time' (default depends on data.dimord)
 % cfg.yparam        = field to be plotted on y-axis, e.g. 'freq' (default depends on data.dimord)
-% cfg.zparam        = field to be plotted on y-axis, e.g. 'powspcrtrm' (default depends on data.dimord)
+% cfg.zparam        = field to be plotted on z-axis, e.g. 'powspcrtrm' (default depends on data.dimord)
 % cfg.maskparameter = field in the data to be used for masking of data
 %                     (not possible for mean over multiple channels, or when input contains multiple subjects
 %                     or trials)
