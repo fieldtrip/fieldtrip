@@ -8,18 +8,15 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-needspm = isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no');
-if needspm
-  % check if SPM is in path and if not add
-  hasspm2 = hastoolbox('SPM2');
-  hasspm8 = hastoolbox('SPM8');
-  
-  if ~hasspm2 && ~hasspm8
-    try, hasspm8 = hastoolbox('SPM8', 1); end
-  end
-  
-  if ~hasspm8
-    try, hastoolbox('SPM2', 1); end
+if ~isfield(cfg, 'spmversion'), cfg.spmversion = 'spm8'; end
+
+% smooth functional parameters, excluding anatomy and inside
+if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no'),
+  % check that SPM is on the path, try to add the preferred version
+  if strcmpi(cfg.spmversion, 'spm2'),
+    ft_hastoolbox('SPM2',1);
+  elseif strcmpi(cfg.spmversion, 'spm8'),
+    ft_hastoolbox('SPM8',1);
   end
 end
 

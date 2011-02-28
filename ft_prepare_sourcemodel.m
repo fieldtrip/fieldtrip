@@ -80,6 +80,7 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 % set the defaults
 if ~isfield(cfg, 'symmetry'),         cfg.symmetry    = [];       end
 if ~isfield(cfg, 'grid'),             cfg.grid        = [];       end
+if ~isfield(cfg, 'spmversion'),       cfg.spmversion  = 'spm8';   end
 
 if ~isfield(cfg, 'vol') && nargin>1
   % put it in the configuration structure
@@ -188,20 +189,12 @@ if sum([basedonauto basedongrid basedonpos basedonshape basedonmri basedonvol ba
   error('incorrect cfg specification for constructing a dipole grid');
 end
 
-needspm = isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no');
-if needspm
-  % check if SPM is in path, do not add any of them to the path yet
-  hasspm2 = ft_hastoolbox('SPM2');
-  hasspm8 = ft_hastoolbox('SPM8');
-  
-  if ~hasspm2 && ~hasspm8
-    % is neither is on the path, try adding SPM8
-    try, hasspm8 = ft_hastoolbox('SPM8', 1); end
-  end
-  
-  if ~hasspm8
-    % if SPM8 could not be added, try adding SPM2
-    try, ft_hastoolbox('SPM2', 1); end
+if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no')
+  % check that SPM is on the path, try to add the preferred version
+  if strcmpi(cfg.spmversion, 'spm2'),
+    ft_hastoolbox('SPM2',1);
+  elseif strcmpi(cfg.spmversion, 'spm8'),
+    ft_hastoolbox('SPM8',1);
   end
 end
 
@@ -379,6 +372,7 @@ if basedonmri
   % apply a smoothing of a certain amount of voxels
   if ~strcmp(cfg.smooth, 'no');
     fprintf('smoothing gray matter segmentation with %d voxels\n', cfg.smooth);
+    % check that the required low-level toolbox is available
     spm_smooth(mri.gray, mri.gray, cfg.smooth);
   end
   

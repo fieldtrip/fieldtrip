@@ -7,16 +7,10 @@ function outpoints = tal2mni(inpoints)
 % outpoints is the coordinate matrix with MNI points
 % Matthew Brett 2/2/01
 
-% check if SPM is in path and if not add
-hasspm2 = hastoolbox('SPM2');
-hasspm8 = hastoolbox('SPM8');
-
-if ~hasspm2 && ~hasspm8
-  try, hasspm8 = hastoolbox('SPM8', 1); end
-end
-
-if ~hasspm8
-  try, hastoolbox('SPM2', 1); end
+% ensure that SPM8 (preferred) or SPM2 is available, needed for spm_matrix
+hasspm = ft_hastoolbox('SPM8', 3) || ft_hastoolbox('SPM2', 3);
+if ~hasspm
+  error('this function depends on the SPM toolbox, see see http://www.fil.ion.ucl.ac.uk/spm');
 end
 
 dimdim = find(size(inpoints) == 3);

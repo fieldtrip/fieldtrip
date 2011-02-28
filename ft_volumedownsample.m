@@ -104,14 +104,14 @@ end
 down = grid2transform(down);
 
 % smooth functional parameters, excluding anatomy and inside
-if ~strcmp(cfg.smooth, 'no'),
-  % check if the required spm is in your path:
+if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no'),
+  % check that SPM is on the path, try to add the preferred version
   if strcmpi(cfg.spmversion, 'spm2'),
     ft_hastoolbox('SPM2',1);
   elseif strcmpi(cfg.spmversion, 'spm8'),
     ft_hastoolbox('SPM8',1);
   end
-
+  
   for j = 1:length(cfg.parameter)
     if strcmp(cfg.parameter{j}, 'inside')
       fprintf('not smoothing %s\n', cfg.parameter{j});
