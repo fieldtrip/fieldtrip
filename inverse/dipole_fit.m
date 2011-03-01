@@ -220,8 +220,8 @@ end
 
 % check whether the dipole is inside the source compartment
 if checkinside
-  [inside, outside] = find_inside_vol(pos, vol);
-  if ~isempty(outside)
+  inside = ft_inside_vol(pos, vol);
+  if ~all(inside)
     error('Dipole is outside the source compartment');
   end
 end

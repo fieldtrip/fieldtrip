@@ -107,7 +107,9 @@ end
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside') && ~isfield(dip, 'outside');
-  [dip.inside, dip.outside] = find_inside_vol(dip.pos, vol);
+  insideLogical = ft_inside_vol(dip.pos, vol);
+  dip.inside = find(insideLogical);
+  dip.outside = find(~dip.inside);
 elseif isfield(dip, 'inside') && ~isfield(dip, 'outside');
   dip.outside    = setdiff(1:size(dip.pos,1), dip.inside);
 elseif ~isfield(dip, 'inside') && isfield(dip, 'outside');
