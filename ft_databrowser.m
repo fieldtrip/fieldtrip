@@ -445,22 +445,20 @@ redraw_cb(h);
 %     'visible', 'off'); %'value', xmin
 
 % set initial scrollbar value
-dx = maxtime;
-
-% set scrollbar position
-fig_pos=get(gca,'position');
-scroll_pos=[fig_pos(1) fig_pos(2) fig_pos(3) 0.02];
-
-% define callback
-S=['set(gca,''xlim'',get(gcbo,''value'')+[ ' num2str(mintime) ',' num2str(maxtime) '])'];
-
-% Creating Uicontrol
-s=uicontrol('style','slider',...
-  'units','normalized','position',scroll_pos,...
-  'callback',S,'min',0,'max',0, ...
-  'visible', 'off'); %'value', xmin
-
-
+% dx = maxtime;
+% 
+% % set scrollbar position
+% fig_pos=get(gca,'position');
+% scroll_pos=[fig_pos(1) fig_pos(2) fig_pos(3) 0.02];
+% 
+% % define callback
+% S=['set(gca,''xlim'',get(gcbo,''value'')+[ ' num2str(mintime) ',' num2str(maxtime) '])'];
+% 
+% % Creating Uicontrol
+% s=uicontrol('style','slider',...
+%     'units','normalized','position',scroll_pos,...
+%     'callback',S,'min',0,'max',0, ...
+%     'visible', 'off'); %'value', xmin
 %initialize postion of plot
 % set(gca,'xlim',[xmin xmin+dx]);
 
