@@ -40,8 +40,8 @@ if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'last';  end % first or las
 if ~isfield(cfg, 'dataset') && ~isfield(cfg, 'header') && ~isfield(cfg, 'datafile')
   cfg.dataset = 'buffer://localhost:1972';
 end
-cfg = checkconfig(cfg, 'dataset2files', 'yes');
-cfg = checkconfig(cfg, 'required', {'datafile' 'headerfile'});
+cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
+cfg = ft_checkconfig(cfg, 'required', {'datafile' 'headerfile'});
 
 % ensure that the persistent variables related to caching are cleared
 clear ft_read_header

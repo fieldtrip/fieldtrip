@@ -42,7 +42,7 @@ function ft_realtime_classification(cfg)
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % this makes use of an external classification toolbox
-hastoolbox('prtools', 1);
+ft_hastoolbox('prtools', 1);
 
 % set the default configuration options
 if ~isfield(cfg, 'dataformat'),     cfg.dataformat = [];      end % default is detected automatically
@@ -52,8 +52,8 @@ if ~isfield(cfg, 'channel'),        cfg.channel = 'all';      end
 if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'last';  end % first or last
 
 % translate dataset into datafile+headerfile
-cfg = checkconfig(cfg, 'dataset2files', 'yes');
-cfg = checkconfig(cfg, 'required', {'datafile' 'headerfile'});
+cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
+cfg = ft_checkconfig(cfg, 'required', {'datafile' 'headerfile'});
 
 % ensure that the persistent variables related to caching are cleared
 clear ft_read_header

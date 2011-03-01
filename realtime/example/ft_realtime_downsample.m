@@ -49,10 +49,10 @@ if cfg.decimation < 1 || cfg.decimation~=round(cfg.decimation)
 end
 
 % translate dataset into datafile+headerfile
-cfg.source = checkconfig(cfg.source, 'dataset2files', 'yes');
-cfg.target = checkconfig(cfg.target, 'dataset2files', 'yes');
-checkconfig(cfg.source, 'required', {'datafile' 'headerfile'});
-checkconfig(cfg.target, 'required', {'datafile' 'headerfile'});
+cfg.source = ft_checkconfig(cfg.source, 'dataset2files', 'yes');
+cfg.target = ft_checkconfig(cfg.target, 'dataset2files', 'yes');
+ft_checkconfig(cfg.source, 'required', {'datafile' 'headerfile'});
+ft_checkconfig(cfg.target, 'required', {'datafile' 'headerfile'});
 
 % ensure that the persistent variables related to caching are cleared
 clear ft_read_header
@@ -140,10 +140,10 @@ while true
 
     if count==1
       % flush the file, write the header and subsequently write the data segment
-      write_data(cfg.target.datafile, dat, 'header', targethdr, 'dataformat', cfg.target.dataformat, 'chanindx', chanindx, 'append', false);
+      ft_write_data(cfg.target.datafile, dat, 'header', targethdr, 'dataformat', cfg.target.dataformat, 'chanindx', chanindx, 'append', false);
     else
       % write the data segment
-      write_data(cfg.target.datafile, dat, 'header', targethdr, 'dataformat', cfg.target.dataformat, 'chanindx', chanindx, 'append', true);
+      ft_write_data(cfg.target.datafile, dat, 'header', targethdr, 'dataformat', cfg.target.dataformat, 'chanindx', chanindx, 'append', true);
     end
 
   end % if enough new samples

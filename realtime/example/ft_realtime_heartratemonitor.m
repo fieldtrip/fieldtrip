@@ -39,8 +39,8 @@ if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'last';  end % first or las
 if ~isfield(cfg, 'jumptoeof'),      cfg.jumptoeof = 'no';     end % jump to end of file at initialization
 
 % translate dataset into datafile+headerfile
-cfg = checkconfig(cfg, 'dataset2files', 'yes');
-cfg = checkconfig(cfg, 'required', {'datafile' 'headerfile'});
+cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
+cfg = ft_checkconfig(cfg, 'required', {'datafile' 'headerfile'});
 
 % ensure that the persistent variables related to caching are cleared
 clear ft_read_header

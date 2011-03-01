@@ -61,8 +61,8 @@ if ~isfield(cfg, 'dataset') && ~isfield(cfg, 'header') && ~isfield(cfg, 'datafil
 end
 
 % translate dataset into datafile+headerfile
-cfg = checkconfig(cfg, 'dataset2files', 'yes');
-cfg = checkconfig(cfg, 'required', {'datafile' 'headerfile'});
+cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
+cfg = ft_checkconfig(cfg, 'required', {'datafile' 'headerfile'});
 
 % ensure that the persistent variables related to caching are cleared
 clear ft_read_header
