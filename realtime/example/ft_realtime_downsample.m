@@ -98,7 +98,7 @@ DM = online_downsample_init(cfg.decimation);
 while true
 
   % determine number of samples available in buffer
-  hdr = read_header(cfg.source.headerfile, 'cache', true);
+  hdr = ft_read_header(cfg.source.headerfile, 'cache', true);
 
   % see whether new samples are available
   newsamples = (hdr.nSamples*hdr.nTrials-prevSample);
