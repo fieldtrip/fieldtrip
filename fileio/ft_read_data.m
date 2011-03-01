@@ -535,7 +535,7 @@ switch dataformat
   case 'ctf_read_meg4'
     % check that the required low-level toolbox is available
     ft_hastoolbox('eegsf', 1);
-    % read it using the CTF importer from the NIH and Daren Weber
+    % read it using the CTF importer from the NIH and Darren Weber
     tmp = ctf_read_meg4(filename, hdr.orig, chanindx, 'all', begtrial:endtrial);
     dat = cat(3, tmp.data{:});
     % the data is shaped in a 3-D array
