@@ -145,38 +145,34 @@ if ~isequal(feedback, 'no')
   end
 end % give feedback
 
-if isfreq || istimelock || iscomp || issource || isvolume
-  % ensure consistency between the dimord string and the axes that describe the data dimensions
-  %data = fixdimord(data, strcmp(sourcerepresentation, 'new'));
-  data = fixdimord(data);
-end
-
-if istimelock
-  % remove the unwanted fields
-  if isfield(data, 'numsamples'),       data = rmfield(data, 'numsamples');       end
-  if isfield(data, 'numcovsamples'),    data = rmfield(data, 'numcovsamples');    end
-  if isfield(data, 'numblcovsamples'),  data = rmfield(data, 'numblcovsamples');  end
-end
-
 if issource && isvolume
-  % it should be either one or the other
-  % the choice here is to represent it as volume description since that is simpler to handle
-  % remove the unwanted fields
-  if isfield(data, 'pos'),    data = rmfield(data, 'pos');    end
-  if isfield(data, 'xgrid'),  data = rmfield(data, 'xgrid');  end
-  if isfield(data, 'ygrid'),  data = rmfield(data, 'ygrid');  end
-  if isfield(data, 'zgrid'),  data = rmfield(data, 'zgrid');  end
+  % it should be either one or the other: the choice here is to
+  % represent it as volume description since that is simpler to handle
+  % the conversion is done by remove the grid positions
+  data = rmfield(data, 'pos');
   issource = false;
 end
 
-if issource || isvolume
-  % these don't contain a dimord in the old representation
-  % but in the frequency domain case they could 
-  % contain a .frequency field rather than a .freq field
-  if isfield(data, 'frequency'), 
-    data.freq = data.frequency;
-    data      = rmfield(data, 'frequency');
-  end
+% the ft_datatype_XXX functions ensures the consistency of the XXX datatype
+% and provides a detailled description of the dataformat and its history
+if     israw
+  data = ft_datatype_raw(data);
+elseif isfreq
+  data = ft_datatype_freq(data);
+elseif istimelock 
+  data = ft_datatype_timelock(data);
+elseif iscomp
+  data = ft_datatype_comp(data);
+elseif isspike
+  data = ft_datatype_spike(data);
+elseif isvolume
+  data = ft_datatype_vol(data);
+elseif issource
+  data = ft_datatype_source(data);
+elseif isdip
+  data = ft_datatype_dip(data);
+elseif ismvar || isfreqmvar
+  data = ft_datatype_mvar(data);
 end
 
 if ~isempty(dtype)
@@ -210,7 +206,7 @@ if ~isempty(dtype)
         okflag = okflag + isfreqmvar;
     end % switch dtype
   end % for dtype
-  
+ 
   if ~okflag
     % try to convert the data
     for iCell = 1:length(dtype)
@@ -355,17 +351,12 @@ end
 %  end
 %end
 
-if issource || isvolume,
-  % these are not used any more
-  if isfield(data, 'xgrid'),  data = rmfield(data, 'xgrid');  end
-  if isfield(data, 'ygrid'),  data = rmfield(data, 'ygrid');  end
-  if isfield(data, 'zgrid'),  data = rmfield(data, 'zgrid');  end
+if isequal(hasunits, 'yes') && ~isfield(data, 'units')
+  % calling convert_units with only the input data adds the units without converting
+  data = ft_convert_units(data);
+end
 
-  if isequal(hasunits, 'yes') && ~isfield(data, 'units')
-    % calling convert_units with only the input data adds the units without converting
-    data = ft_convert_units(data);
-  end
-  
+if issource || isvolume,
   % the following section is to make a dimord-consistent representation of
   % volume and source data, taking trials, time and frequency into account
   if isequal(hasdimord, 'yes') && (~isfield(data, 'dimord') || ~strcmp(data.dimord,sourcedimord))
@@ -621,13 +612,6 @@ if isfield(data, 'grad')
   if ~isfield(data.grad, 'balance') || ~isfield(data.grad.balance, 'current')
     data.grad.balance.current = 'none';
   end
-end
-
-% This is necessary to ensure backward compatibility for data processed and stored in July 2010. 
-% We decided to change the field trialdef into sampleinfo.
-if isfield(data, 'trialdef')
-  data.sampleinfo = data.trialdef;
-  data = rmfield(data, 'trialdef');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
