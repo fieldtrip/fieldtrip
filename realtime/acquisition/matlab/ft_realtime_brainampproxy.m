@@ -30,7 +30,7 @@ function ft_realtime_brainampproxy(cfg)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-cfg = checkconfig(cfg);
+cfg = ft_checkconfig(cfg);
 
 % set the defaults
 if ~isfield(cfg, 'host'),               cfg.host = 'eeg002';                              end
@@ -47,7 +47,7 @@ if ~isfield(cfg.target, 'eventformat'), cfg.target.eventformat = [];            
 feedback = strcmp(cfg.feedback, 'yes');
 
 % this requires an external toolbox for the TCP communication
-hastoolbox('tcp_udp_ip', 1);
+ft_hastoolbox('tcp_udp_ip', 1);
 
 % ensure that the persistent variables inside these functions are reinitialized
 clear tcpread

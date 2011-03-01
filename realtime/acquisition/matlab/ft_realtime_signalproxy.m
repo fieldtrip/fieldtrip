@@ -59,8 +59,8 @@ if ~isfield(cfg, 'bpfiltdir'),            cfg.bpfiltdir = 'twopass';            
 if ~isfield(cfg, 'debug'),                cfg.debug = 'no';                                 end
 
 % translate dataset into datafile+headerfile
-cfg.target = checkconfig(cfg.target, 'dataset2files', 'yes');
-checkconfig(cfg.target, 'required', {'datafile' 'headerfile'});
+cfg.target = ft_checkconfig(cfg.target, 'dataset2files', 'yes');
+ft_checkconfig(cfg.target, 'required', {'datafile' 'headerfile'});
 
 hdr = [];
 hdr.Fs = cfg.fsample;

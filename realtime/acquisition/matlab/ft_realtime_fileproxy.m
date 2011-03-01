@@ -55,10 +55,10 @@ if ~isfield(cfg, 'readevent'),            cfg.readevent = 'no';                 
 if ~isfield(cfg, 'speed'),                cfg.speed = inf ;                                 end % inf -> run as fast as possible
 
 % translate dataset into datafile+headerfile
-cfg.source = checkconfig(cfg.source, 'dataset2files', 'yes');
-cfg.target = checkconfig(cfg.target, 'dataset2files', 'yes');
-checkconfig(cfg.source, 'required', {'datafile' 'headerfile'});
-checkconfig(cfg.target, 'required', {'datafile' 'headerfile'});
+cfg.source = ft_checkconfig(cfg.source, 'dataset2files', 'yes');
+cfg.target = ft_checkconfig(cfg.target, 'dataset2files', 'yes');
+ft_checkconfig(cfg.source, 'required', {'datafile' 'headerfile'});
+ft_checkconfig(cfg.target, 'required', {'datafile' 'headerfile'});
 
 if ~isfield(cfg.source,'eventfile') || isempty(cfg.source.eventfile)
     cfg.source.eventfile = cfg.source.datafile;
@@ -147,7 +147,7 @@ while true
             end
         else
             % write the data segment
-            write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'chanindx', chanindx, 'append', true);
+            ft_write_data(cfg.target.datafile, dat, 'header', hdr, 'dataformat', cfg.target.dataformat, 'chanindx', chanindx, 'append', true);
             if ~strcmp(cfg.readevent,'no')
                 for i=1:numel(evt)
                     evt(i).sample = evt(i).sample - offset;
