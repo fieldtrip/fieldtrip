@@ -35,12 +35,17 @@ function [source] = ft_sourcedescriptives(cfg, source)
 % parameters. This is done after applying the optional transformation
 % on the power and projected noise.
 %
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a *.mat
+% file on disk and/or the output data will be written to a *.mat file. These mat
+% files should contain only a single variable, corresponding with the
+% input/output structure.
+%
 % See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS
 
-% Undocumented local options:
-%   cfg.inputfile  = one can specifiy preanalysed saved data as input
-%   cfg.outputfile = one can specify output as file to save to disk
-%
 % Copyright (C) 2004-2007, Robert Oostenveld & Jan-Mathijs Schoffelen
 % Copyright (C) 2010, Jan-Mathijs Schoffelen
 

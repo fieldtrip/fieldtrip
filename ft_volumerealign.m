@@ -53,11 +53,16 @@ function [mri] = ft_volumerealign(cfg, mri)
 %   cfg.landmark.xzpoint = [i j k], point on the midsagittal-plane with positive Z-coordinate,
 %                                     i.e. interhemispheric point above ac and pc
 %
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a *.mat
+% file on disk and/or the output data will be written to a *.mat file. These mat
+% files should contain only a single variable, corresponding with the
+% input/output structure.
+%
 % See also FT_READ_MRI, FT_ELECTRODEREALIGN
-
-% Undocumented local options:
-%   cfg.inputfile  = one can specifiy preanalysed saved data as input
-%   cfg.outputfile = one can specify output as file to save to disk
 
 % Copyright (C) 2006-2009, Robert Oostenveld
 %

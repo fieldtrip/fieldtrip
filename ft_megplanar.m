@@ -42,11 +42,16 @@ function [interp] = ft_megplanar(cfg, data)
 % If no headshape is specified, the dipole layer will be based on the inner compartment
 % of the volume conduction model.
 %
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a *.mat
+% file on disk and/or the output data will be written to a *.mat file. These mat
+% files should contain only a single variable, corresponding with the
+% input/output structure.
+%
 % See also FT_COMBINEPLANAR
-
-% Undocumented local options:
-%   cfg.inputfile        = one can specifiy preanalysed saved data as input
-%   cfg.outputfile       = one can specify output as file to save to disk
 
 % This function depends on FT_PREPARE_BRAIN_SURFACE which has the following options:
 % cfg.headshape  (default set in FT_MEGPLANAR: cfg.headshape = 'headmodel'), documented

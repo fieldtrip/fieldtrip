@@ -37,6 +37,15 @@ function lrp = ft_lateralizedpotential(cfg, avgL, avgR);
 %   Brain symmetry and topographic analysis of lateralized event-related
 %   potentials. Clin Neurophysiol. 114(7):1194-202, 2003.
 %
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a *.mat
+% file on disk and/or the output data will be written to a *.mat file. These mat
+% files should contain only a single variable, corresponding with the
+% input/output structure.
+%
 % See also FT_TIMELOCKANALYSIS, FT_MULTIPLOTER
 
 % Copyright (C) 2004, Robert Oostenveld

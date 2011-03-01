@@ -9,9 +9,15 @@ function [dataout] = ft_channelnormalise(cfg, data);
 % The configuration can contain
 %   cfg.trials = 'all' or a selection given as a 1xN vector (default = 'all')
 %
-% Undocumented local options:
-%   cfg.inputfile        = one can specifiy preanalysed saved data as input
-%   cfg.outputfile       = one can specify output as file to save to disk
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a *.mat
+% file on disk and/or the output data will be written to a *.mat file. These mat
+% files should contain only a single variable, corresponding with the
+% input/output structure.
+%
 % Copyright (C) 2010, Jan-Mathijs Schoffelen
 
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip

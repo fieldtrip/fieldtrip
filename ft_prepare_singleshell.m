@@ -25,14 +25,18 @@ function [vol, cfg] = ft_prepare_singleshell(cfg, mri)
 %   cfg.sourceunits = 'mm' or 'cm' (default is 'cm')
 %   cfg.threshold   = 0.5, relative to the maximum value in the segmentation
 %
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following option:
+%   cfg.inputfile   =  ...
+% If you specify this option the input data will be read from a *.mat
+% file on disk. This mat files should contain only a single variable named 'data',
+% corresponding to the input structure.
+%
 % This function implements
 %   G. Nolte, "The magnetic lead field theorem in the quasi-static
 %   approximation and its use for magnetoencephalography forward calculation
 %   in realistic volume conductors", Phys Med Biol. 2003 Nov 21;48(22):3637-52.
 
-% Undocumented local options:
-%   cfg.inputfile        = one can specifiy preanalysed saved data as input
-%
 % TODO the spheremesh option should be renamed consistently with other mesh generation cfgs
 % TODO shape should contain pnt as subfield and not be equal to pnt (for consistency with other use of shape)
 

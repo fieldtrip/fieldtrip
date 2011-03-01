@@ -35,6 +35,17 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %                 'wpli_debiased'  debiased weighted phase lag index
 %                 'ppc'        pairwise phase consistency
 %                 'wppc'       weighted pairwise phase consistency
+%
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a *.mat
+% file on disk and/or the output data will be written to a *.mat file. These mat
+% files should contain only a single variable, corresponding with the
+% input/output structure.
+%
+
 
 % Copyright (C) 2009, Robert Oostenveld, Jan-Mathijs Schoffelen, Andre Bastos, Martin Vinck
 %

@@ -103,6 +103,16 @@ function [source] = ft_sourceanalysis(cfg, data, baseline);
 %   cfg.keepmom       = 'no' or 'yes'
 %   cfg.feedback      = 'no', 'text', 'textbar', 'gui' (default = 'text')
 %
+%
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a *.mat
+% file on disk and/or the output data will be written to a *.mat file. These mat
+% files should contain only a single variable, corresponding with the
+% input/output structure.
+%
 % See also FT_SOURCEDESCRIPTIVES, FT_SOURCESTATISTICS, FT_PREPARE_LEADFIELD
 
 % Undocumented local options:
@@ -110,8 +120,6 @@ function [source] = ft_sourceanalysis(cfg, data, baseline);
 % cfg.refchannel
 % cfg.trialweight   = 'equal' or 'proportional'
 % cfg.powmethod     = 'lambda1' or 'trace'
-% cfg.inputfile     = one can specifiy preanalysed saved data as input
-% cfg.outputfile    = one can specify output as file to save to disk
 %
 % This function depends on FT_PREPARE_DIPOLE_GRID which has the following options:
 % cfg.grid.xgrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.xgrid = 'auto'), documented

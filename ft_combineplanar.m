@@ -17,14 +17,21 @@ function [data] = ft_combineplanar(cfg, data)
 %   cfg.combinegrad  = 'yes'
 % the function will try to reconstruct the axial gradiometer definition.
 %
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a *.mat
+% file on disk and/or the output data will be written to a *.mat file. These mat
+% files should contain only a single variable, corresponding with the
+% input/output structure.
+%
 % See also FT_MEGPLANAR
 
 % Undocumented local options:
 % cfg.combinemethod
 % cfg.foilim
 % cfg.trials
-% cfg.inputfile     = one can specifiy preanalysed saved data as input
-% cfg.outputfile    = one can specify output as file to save to disk
 
 % Copyright (C) 2004, Ole Jensen, Robert Oostenveld
 %

@@ -27,6 +27,15 @@ function [scd] = ft_scalpcurrentdensity(cfg, data);
 % the SCD values are not scaled correctly. The spatial distribution still
 % will be correct.
 %
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a *.mat
+% file on disk and/or the output data will be written to a *.mat file. These mat
+% files should contain only a single variable, corresponding with the
+% input/output structure.
+%
 % The 'finite' method implements
 %   TF Oostendorp, A van Oosterom; The surface Laplacian of the potential:
 %   theory and application. IEEE Trans Biomed Eng, 43(4): 394-405, 1996.
@@ -47,10 +56,6 @@ function [scd] = ft_scalpcurrentdensity(cfg, data);
 %   B. Hjort; An on-line transformation of EEG ccalp potentials into
 %   orthogonal source derivation. Electroencephalography and Clinical
 %   Neurophysiology 39:526-530, 1975.
-
-% Undocumented local options:
-%   cfg.inputfile  = one can specifiy preanalysed saved data as input
-%   cfg.outputfile = one can specify output as file to save to disk
 
 % Copyright (C) 2004-2006, Robert Oostenveld
 %

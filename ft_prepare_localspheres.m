@@ -26,6 +26,15 @@ function [vol, cfg] = ft_prepare_localspheres(cfg, mri)
 %   cfg.sourceunits = 'mm' or 'cm' (default = 'cm')
 %   cfg.threshold   = 0.5, relative to the maximum value in the segmentation
 %
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a *.mat
+% file on disk and/or the output data will be written to a *.mat file. These mat
+% files should contain only a single variable, corresponding with the
+% input/output structure.
+%
 % This function implements
 %   Huang MX, Mosher JC, Leahy RM.
 %   A sensor-weighted overlapping-sphere head model and exhaustive head model comparison for MEG
@@ -37,7 +46,6 @@ function [vol, cfg] = ft_prepare_localspheres(cfg, mri)
 % Undocumented local options:
 % cfg.spheremesh = number of points that is placed on the brain surface (default 4000)
 % cfg.maxradius
-% cfg.inputfile = one can specifiy preanalysed saved data as input
 
 % Copyright (C) 2005-2006, Jan-Mathijs Schoffelen & Robert Oostenveld
 %

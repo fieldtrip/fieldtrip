@@ -48,11 +48,17 @@ function ft_volumewrite(cfg, volume)
 %   cfg.markorigin    = 'yes' or 'no', mark the origin
 %   cfg.markcorner    = 'yes' or 'no', mark the first corner of the volume
 %
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following option:
+%   cfg.inputfile   =  ...
+% If you specify this option the input data will be read from a *.mat
+% file on disk. This mat files should contain only a single variable named 'data',
+% corresponding to the input structure.
+%
 % See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS, FT_SOURCEINTERPOLATE
 
 % Undocumented local options:
 % cfg.parameter
-% cfg.inputfile  = one can specifiy preanalysed saved data as input
 
 % Copyright (C) 2003-2006, Robert Oostenveld, Markus Siegel
 % Copyright (C) 2011, Jan-Mathijs Schoffelen

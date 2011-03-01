@@ -57,13 +57,20 @@ function [segment] = ft_volumesegment(cfg, mri)
 % As a third and optional step, you can perform a smoothing of the segmented
 % volumes.
 %
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a *.mat
+% file on disk and/or the output data will be written to a *.mat file. These mat
+% files should contain only a single variable, corresponding with the
+% input/output structure.
+%
 % See also FT_READ_MRI
 
 % undocumented options
 %   cfg.keepintermediate = 'yes' or 'no'
 %   cfg.segment          = 'yes' or 'no'
-%   cfg.inputfile        = one can specifiy preanalysed saved data as input
-%   cfg.outputfile       = one can specify output as file to save to disk  
 
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.

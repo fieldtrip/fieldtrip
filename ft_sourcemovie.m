@@ -11,7 +11,14 @@ function cfg = ft_sourcemovie(cfg, source)
 %  cfg.xparam     = string, parameter over which the movie unrolls (default = 'time')
 %  cfg.zparam     = string, parameter that is color coded (default = 'avg.pow')
 %
-% Seee also FT_SOURCEPLOT, FT_SOURCEINTERPOLATE
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following option:
+%   cfg.inputfile   =  ...
+% If you specify this option the input data will be read from a *.mat
+% file on disk. This mat files should contain only a single variable named 'data',
+% corresponding to the input structure.
+%
+% See also FT_SOURCEPLOT, FT_SOURCEINTERPOLATE
 
 % Copyright (C) 2011, Robert Oostenveld
 %

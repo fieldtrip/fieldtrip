@@ -25,12 +25,17 @@ function [data] = ft_appenddata(cfg, varargin)
 % channels in one of the data structures). The function will then return a data
 % structure containing only the channels which are present in all inputs.
 %
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a *.mat
+% file on disk and/or the output data will be written to a *.mat file. These mat
+% files should contain only a single variable, corresponding with the
+% input/output structure. The data structure in the input file should be a
+% cell array for this particular function.
+%
 % See also FT_PREPROCESSING
-
-% Undocumented local options:
-%   cfg.inputfile  = one can specifiy preanalysed saved data as input
-%                     The data should be provided in a cell array
-%   cfg.outputfile = one can specify output as file to save to disk
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 % Copyright (C) 2009, Jan-Mathijs Schoffelen

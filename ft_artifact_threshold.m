@@ -32,12 +32,17 @@ function [cfg, artifact] = ft_artifact_threshold(cfg,data)
 % is used to rate the minimum and maximum values. Furthermore, this
 % function does not support artifact- or filterpadding.
 %
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a *.mat
+% file on disk and/or the output data will be written to a *.mat file. These mat
+% files should contain only a single variable, corresponding with the
+% input/output structure.
+%
 % See also FT_REJECTARTIFACT
 
-% Undocumented local options:
-% cfg.inputfile
-% cfg.outputfile
-%
 % Copyright (c) 2003, Robert Oostenveld, SMI, FCDC
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip

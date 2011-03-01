@@ -27,6 +27,15 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 %       average and covariance computation. Missing values are replaced
 %       by NaN and are not included in the computation.
 %
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a *.mat
+% file on disk and/or the output data will be written to a *.mat file. These mat
+% files should contain only a single variable, corresponding with the
+% input/output structure.
+%
 % See also FT_TIMELOCKGRANDAVERAGE, FT_TIMELOCKSTATISTICS
 
 % FIXME if input is one raw trial, the covariance is not computed correctly
@@ -34,8 +43,6 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 % Undocumented local options:
 % cfg.feedback
 % cfg.preproc
-% cfg.inputfile  = one can specifiy preanalysed saved data as input
-% cfg.outputfile = one can specify output as file to save to disk
 %
 % Deprecated options:
 % cfg.latency

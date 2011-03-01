@@ -59,12 +59,19 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 %                          with another point cloud
 %   cfg.downsample    = integer number (default = 1, i.e. no downsampling)
 %
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a *.mat
+% file on disk and/or the output data will be written to a *.mat file. These mat
+% files should contain only a single variable, corresponding with the
+% input/output structure.
+%
 % See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS, FT_READ_MRI,
 % FT_READ_HEADSHAPE
 
 % Undocumented options
-%   cfg.inputfile  = one can specifiy preanalysed saved data as input
-%   cfg.outputfile = one can specify output as file to save to disk
 %   cfg.voxelcoord = 'yes' (default) or 'no' determines whether the
 %   downsampled output anatomical MRI will have the x/y/zgrid converted or
 %   the homogeneous transformation matrix

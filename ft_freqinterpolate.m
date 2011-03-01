@@ -10,11 +10,15 @@ function [freq] = ft_freqinterpolate(cfg, freq)
 %   cfg.method   = 'nan', 'linear' (default = 'nan')
 %   cfg.foilim   = Nx2 matrix with begin and end of each interval to be
 %                  interpolated (default = [49 51; 99 101; 149 151])
-
-% Undocumented local options:
-%   cfg.inputfile  = one can specifiy preanalysed saved data as input
-%   cfg.outputfile = one can specify output as file to save to disk
-
+%
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a *.mat
+% file on disk and/or the output data will be written to a *.mat file. These mat
+% files should contain only a single variable, corresponding with the
+% input/output structure.
 
 % Copyright (C) 2009, Aldemar Torres Valderama
 %

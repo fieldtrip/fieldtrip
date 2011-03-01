@@ -33,6 +33,13 @@ function [cfg] = ft_rejectartifact(cfg,data)
 %   If cfg is used as the only input parameter, a cfg with a new trl is the output.
 %   If cfg and data are both input parameters, a new raw data structure with only the clean data segments is the output.
 %
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following option:
+%   cfg.inputfile   =  ...
+% If you specify this option the input data will be read from a *.mat
+% file on disk. This mat files should contain only a single variable named 'data',
+% corresponding to the input structure.
+%
 % See also FT_ARTIFACT_EOG, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_JUMP, FT_ARTIFACT_MANUAL,
 % FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG
 
@@ -42,7 +49,6 @@ function [cfg] = ft_rejectartifact(cfg,data)
 % cfg.trl
 % cfg.trlold
 % cfg.version
-% cfg.inputfile = one can specifiy preanalysed saved data as input
 %
 % These old configuration options are still supported
 % cfg.rejectmuscle      = 'no' or 'yes'

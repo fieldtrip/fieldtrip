@@ -16,12 +16,17 @@ function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 %  cfg.keepindividual = 'yes' or 'no' (default = 'no')
 %  cfg.normalizevar   = 'N' or 'N-1' (default = 'N-1')
 %
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a *.mat
+% file on disk and/or the output data will be written to a *.mat file. These mat
+% files should contain only a single variable, corresponding with the
+% input/output structure. For this particular function, the input should be
+% structured as a cell array.
+%
 % See also FT_TIMELOCKANALYSIS, FT_TIMELOCKSTATISTICS
-
-% Undocumented local options:
-%   cfg.inputfile  = one can specifiy preanalysed saved data as input
-%                     The data should be provided in a cell array
-%   cfg.outputfile = one can specify output as file to save to disk
 
 % Copyright (C) 2003-2006, Jens Schwarzbach
 %

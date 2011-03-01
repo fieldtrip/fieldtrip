@@ -27,11 +27,15 @@ function cfg = ft_topoplotCC(cfg, freq)
 %    cfg.arrowoffset  = amount that the arrow is shifted to the side (default = automatic)
 %    cfg.arrowlength  = amount by which the length is reduced (default = 0.8)
 %
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following option:
+%   cfg.inputfile   =  ...
+% If you specify this option the input data will be read from a *.mat
+% file on disk. This mat files should contain only a single variable named 'data',
+% corresponding to the input structure. For this particular function, the input should be
+% structured as a cell array.
+%
 % See also FT_PREPARE_LAYOUT, FT_MULTIPLOTCC
-
-% Undocumented local options:
-%   cfg.inputfile  = one can specifiy preanalysed saved data as input
-%                     The data should be provided in a cell array
 
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.

@@ -64,11 +64,16 @@ function [interp] = ft_megrealign(cfg, data);
 % of whole-head MEG recordings between different sensor positions.
 % Biomed Tech (Berl). 2002 Mar;47(3):59-62.
 %
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a *.mat
+% file on disk and/or the output data will be written to a *.mat file. These mat
+% files should contain only a single variable, corresponding with the
+% input/output structure.
+%
 % See also FT_PREPARE_LOCALSPHERES, FT_PREPARE_SINGLESHELL
-
-% Undocumented local options:
-% cfg.inputfile        = one can specifiy preanalysed saved data as input
-% cfg.outputfile       = one can specify output as file to save to disk
 
 % This function depends on FT_PREPARE_DIPOLE_GRID
 %
