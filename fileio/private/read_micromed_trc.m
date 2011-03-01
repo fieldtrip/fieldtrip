@@ -119,3 +119,4 @@ else
   % FIXME why is this value of -32768 subtracted?
   % FIXME some sort of calibration should be applied to get it into microvolt
 end
+fclose(fid);
