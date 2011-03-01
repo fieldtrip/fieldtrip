@@ -66,6 +66,10 @@ now = toc(stopwatch); % measure time since first function call
 fname = fixname([msgid '_' msgstr]); % make a nice string that is allowed as structure fieldname, copy the subfunction from  ft_hastoolbox
 fname = decomma(fname);
 
+if length(fname) > 63 % MATLAB max name
+    fname = fname(1:63);
+end
+
 if isfield(previous, fname) && now>previous.(fname).timeout
     % it has timed out, give the warning again
     ws = warning(msgid, msgstr);
