@@ -29,7 +29,7 @@ function [segment] = ft_volumesegment(cfg, mri)
 %                     c3, for the csf segmentation
 %                   
 %   cfg.smooth      = 'no' or the FWHM of the gaussian kernel in voxels (default = 'no')
-%   cfg.coordinates = 'spm, 'ctf' or empty for interactive (default = [])
+%   cfg.coordinates = 'spm', 'ctf' or empty for interactive (default = [])
 %
 % As the first step the coordinate frame of the input MRI has to
 % be approximately aligned to the template. For this, a homogeneous
