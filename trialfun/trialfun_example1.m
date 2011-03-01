@@ -1,3 +1,4 @@
+
 function [trl, event] = trialfun_example1(cfg)
 
 % TRIALFUN_EXAMPLE1 is an example trial function. It searches for events
@@ -7,8 +8,8 @@ function [trl, event] = trialfun_example1(cfg)
 % read the header information and the events from the data
 % this should always be done using the generic read_header
 % and read_event functions
-hdr   = read_header(cfg.dataset);
-event = read_event(cfg.dataset);
+hdr   = ft_read_header(cfg.dataset);
+event = ft_read_event(cfg.dataset);
 
 % search for "trigger" events
 trigger = [event(find(strcmp('trigger', {event.type}))).value]';
