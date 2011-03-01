@@ -39,10 +39,10 @@ function spike = ft_datatype_spike(spike, varargin)
 %   - waveform, hdr, cfg
 %
 % Deprecated fields:
-%   - unknown
+%   - <unknown>
 %
 % Obsoleted fields:
-%   - unknown
+%   - <unknown>
 %
 % Revision history:
 %
@@ -85,7 +85,6 @@ switch version
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % there are no changes required
     
-    
   case '2007'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % the 2007 format did not contain these fields
@@ -95,7 +94,6 @@ switch version
     if isfield(spike, 'trialtime')
       spike = rmfield(spike, 'trialtime');
     end
-    
     
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

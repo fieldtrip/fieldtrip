@@ -10,10 +10,8 @@ function vol = ft_datatype_vol(vol, varargin)
 %
 % An example vol structure is
 %           dim: [181 217 181]         the dimensionality of the 3D volume
-%     transform: [4x4 double]          affine transformation matrix for mapping the voxel
-%                                        coordinates to the head coordinate system
+%     transform: [4x4 double]          affine transformation matrix for mapping the voxel coordinates to the head coordinate system
 %       anatomy: [181x217x181 double]  numeric data, in this case anatomical information
-%
 %
 % Required fields:
 %   - transform, dim
@@ -30,7 +28,14 @@ function vol = ft_datatype_vol(vol, varargin)
 %
 % Revision history:
 %
-% (2003/latest) The initial version was defined
+% (2011) The dimord field was deprecated and we agreed that volume
+% data should be 3-dimensional and not N-dimensional with arbitary
+% dimensions. In case time-frequency recolved data has to be represented
+% on a 3-d grid, the source representation should be used.
+%
+% (2010) The dimord field was added by some functions, but not by all
+%
+% (2003) The initial version was defined
 %
 % See also FT_DATATYPE and FT_DATATYPE_xxx
 
@@ -59,10 +64,39 @@ function vol = ft_datatype_vol(vol, varargin)
 version = keyval('version', varargin); if isempty(version), version = 'latest'; end
 
 if strcmp(version, 'latest')
-  version = '2003';
+  version = '2011';
 end
 
-if ~strcmp(version, '2003')
-  error('unsupported version "%s" for vol datatype', version);
+% it should  never have contained these, but they might be present due to an unclear
+% distinction between the volume and the source representation
+if isfield(data, 'xgrid'),     data = rmfield(data, 'xgrid');     end
+if isfield(data, 'ygrid'),     data = rmfield(data, 'ygrid');     end
+if isfield(data, 'zgrid'),     data = rmfield(data, 'zgrid');     end
+if isfield(data, 'freq'),      data = rmfield(data, 'freq');      end
+if isfield(data, 'frequency'), data = rmfield(data, 'frequency'); end
+if isfield(data, 'time'),      data = rmfield(data, 'time');      end
+if isfield(data, 'latency'),   data = rmfield(data, 'latency');   end
+
+switch version
+  case '2011'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isfield(vol, 'dimord')
+      vol = rmfield(vol, 'dimord');
+    end
+
+  case '2010'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % this might have been N-dimensional and contained a dimord, but in general cannot
+    % be reconstructed on the fly
+
+  case '2003'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isfield(vol, 'dimord')
+      vol = rmfield(vol, 'dimord');
+    end
+
+  otherwise
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    error('unsupported version "%s" for freq datatype', version);
 end
 
