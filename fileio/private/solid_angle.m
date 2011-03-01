@@ -97,11 +97,12 @@ try
   cd(mexdir);
 
   if ispc
-    mex -I. -c geometry.c
+    mex -I. -c ../../src/geometry.c
     mex -I. -c solid_angle.c ; mex solid_angle.c solid_angle.obj geometry.obj
   else
-    mex -I. -c geometry.c
-    mex -I. -c solid_angle.c ; mex -o solid_angle solid_angle.o geometry.o
+    mex -I. -c ../../src/geometry.c
+    mex -I. -c ../../src/solid_angle.c 
+    mex -o solid_angle solid_angle.o geometry.o
   end
 
   cd(pwdir);
