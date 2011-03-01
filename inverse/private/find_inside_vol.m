@@ -28,7 +28,7 @@ function [inside, outside] = find_inside_vol(pos, vol);
 %
 % $Id$
 
-
+warning('find_inside_vol is obsolete and will be removed, please use ft_inside_vol');
 inside  = ft_inside_vol(pos, vol);
 % replace boolean vector with indexing vectors
 outside = find(~inside);
