@@ -9,4 +9,13 @@ function savevar(filename, varname, value)
 fprintf('writing ''%s'' to file ''%s''\n', varname, filename);
 
 eval(sprintf('%s = value;', varname));
-save(filename, varname, '-v7.3');
+
+s = whos(varname);
+
+% if variable < ~500 MB, store it in old (uncompressed) format, which is
+% faster
+if (s.bytes < 500000000)
+  save(filename, varname, '-v6');
+else
+  save(filename, varname, '-v7.3');
+end
