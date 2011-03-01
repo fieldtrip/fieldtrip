@@ -115,7 +115,7 @@ while true
     fprintf('processing segment %d from sample %d to %d\n', count, begsample, endsample);
 
     % read data segment
-    dat = read_data(cfg.source.datafile, 'dataformat', cfg.source.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
+    dat = ft_read_data(cfg.source.datafile, 'dataformat', cfg.source.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % from here onward it is specific to the downsampling
