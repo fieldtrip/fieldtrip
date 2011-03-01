@@ -27,75 +27,113 @@ str = which('dipoli.m');
 [p, f, x] = fileparts(str);
 dipoli = fullfile(p, f);  % without the .m extension
 
-skin   = find_outermost_boundary(vol.bnd);
-source = find_innermost_boundary(vol.bnd);
+dipoli = checkplatformbinary(dipoli);
 
-% the first compartment should be the skin, the last the source
-if skin==1 && source==length(vol.bnd)
+if ~isempty(dipoli)
+  
+  skin   = find_outermost_boundary(vol.bnd);
+  source = find_innermost_boundary(vol.bnd);
+  
+  % the first compartment should be the skin, the last the source
+  if skin==1 && source==length(vol.bnd)
     vol.skin   = 1;
     vol.source = length(vol.bnd);
-elseif skin==length(vol.bnd) && source==1
+  elseif skin==length(vol.bnd) && source==1
     % flip the order of the compartments
     vol.bnd    = fliplr(vol.bnd(:)');
     vol.skin   = 1;
     vol.source = length(vol.bnd);
-else
+  else
     error('the first compartment should be the skin, the last  the source');
-end
-
-if isolated
+  end
+  
+  if isolated
     fprintf('using the isolated source approach\n');
-else
+  else
     fprintf('not using isolated source approach\n');
-end
-
-% write the triangulations to file
-bndfile = {};
-for i=1:length(vol.bnd)
+  end
+  
+  % write the triangulations to file
+  bndfile = {};
+  for i=1:length(vol.bnd)
     bndfile{i} = [tempname '.tri'];
     % dipoli has another definition of the direction of the surfaces
     vol.bnd(i).tri = fliplr(vol.bnd(i).tri);
     write_tri(bndfile{i}, vol.bnd(i).pnt, vol.bnd(i).tri);
-end
-
-% these will hold the shell script and the inverted system matrix
-exefile = [tempname '.sh'];
-amafile = [tempname '.ama'];
-
-fid = fopen(exefile, 'w');
-fprintf(fid, '#!/bin/sh\n');
-fprintf(fid, '\n');
-fprintf(fid, '%s -i %s << EOF\n', dipoli, amafile);
-for i=1:length(vol.bnd)
+  end
+  
+  % these will hold the shell script and the inverted system matrix
+  exefile = [tempname '.sh'];
+  amafile = [tempname '.ama'];
+  
+  fid = fopen(exefile, 'w');
+  fprintf(fid, '#!/bin/sh\n');
+  fprintf(fid, '\n');
+  fprintf(fid, '%s -i %s << EOF\n', dipoli, amafile);
+  for i=1:length(vol.bnd)
     if isolated && vol.source==i
-        % the isolated potential approach should be applied using this compartment
-        fprintf(fid, '!%s\n', bndfile{i});
+      % the isolated potential approach should be applied using this compartment
+      fprintf(fid, '!%s\n', bndfile{i});
     else
-        fprintf(fid, '%s\n', bndfile{i});
+      fprintf(fid, '%s\n', bndfile{i});
     end
     fprintf(fid, '%g\n', vol.cond(i));
-end
-fprintf(fid, '\n');
-fprintf(fid, '\n');
-fprintf(fid, 'EOF\n');
-fclose(fid);
-dos(sprintf('chmod +x %s', exefile));
-
-try
+  end
+  fprintf(fid, '\n');
+  fprintf(fid, '\n');
+  fprintf(fid, 'EOF\n');
+  fclose(fid);
+  dos(sprintf('chmod +x %s', exefile));
+  
+  try
     % execute dipoli and read the resulting file
     dos(exefile);
     ama = loadama(amafile);
     vol = ama2vol(ama);
-catch
+  catch
     warning('an error ocurred while running dipoli');
     disp(lasterr);
-end
-
-% delete the temporary files
-for i=1:length(vol.bnd)
+  end
+  
+  % delete the temporary files
+  for i=1:length(vol.bnd)
     delete(bndfile{i})
+  end
+  delete(amafile);
+  delete(exefile);
+else
+  error('Binary file not found or not implemented for this platform!')
 end
-delete(amafile);
-delete(exefile);
 
+function binname = checkplatformbinary(pathname)
 
+binname = [];
+% check for the appropriate platform dependent filename
+c = computer;
+is64 = ismember(lower(c),{'maci64' 'glnxa64' 'sol64' 'pcwin64'});
+is32 = ismember(lower(c),{'maci' 'mac' 'pcwin'});
+
+if ispc
+  binname = [pathname '.exe'];
+elseif ismac
+  if is64
+    allowedbinnames = {[pathname '.maci64'] [pathname '.maci'] [pathname '.mac']};
+  else
+    allowedbinnames = {[pathname '.maci'] [pathname '.mac']};
+  end
+elseif isunix
+  if is64
+    allowedbinnames = {[pathname '.glnxa64'] [pathname '.glnx86']};
+  else
+    allowedbinnames = [pathname '.glnx86'];
+  end
+else
+  [pathname '.sol64'];
+end
+
+for i = 1:length(allowedbinnames)
+  if exist(allowedbinnames{i})
+    binname = allowedbinnames{i};
+    return
+  end
+end
