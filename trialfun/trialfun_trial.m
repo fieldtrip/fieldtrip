@@ -8,7 +8,7 @@ if isfield(cfg, 'event')
   % to prevent reading the same events many times
   event = cfg.event;
 else
-  event = read_event(cfg.dataset);
+  event = ft_read_event(cfg.dataset);
 end
 
 trl = [];
