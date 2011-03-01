@@ -122,6 +122,12 @@ end
 if strcmp(cfg.method, 'interactive')
   basedonfid = 0;
   basedonmrk = 0;
+elseif strcmp(cfg.method, 'fiducial')
+  basedonfid = 1;
+  basedonmrk = 0; 
+elseif strcmp(cfg.method, 'landmark')
+  basedonfid = 0;
+  basedonmrk = 1;  
 end
 
 % select the parameter that should be displayed
