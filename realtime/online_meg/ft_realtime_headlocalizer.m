@@ -37,7 +37,7 @@ if ~isfield(cfg, 'accuracy_green'),       cfg.accuracy_green = .15;        end
 if ~isfield(cfg, 'accuracy_orange'),      cfg.accuracy_orange = .3;        end
 
 % translate dataset into datafile+headerfile
-cfg = checkconfig(cfg, 'dataset2files', 'yes');
+cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
 
 % read the template coil positions
 if ~isempty(cfg.template)
@@ -55,7 +55,7 @@ hdr = ft_read_header(cfg.headerfile, 'cache', true);
 if strcmp(cfg.dataset, 'buffer://odin:1972');
     chanindx = 1:9; % odin buffer specific
 else
-    chanindx = strmatch('headloc', chantype(hdr));
+    chanindx = strmatch('headloc', ft_chantype(hdr));
 end
 
 if isempty(chanindx)
