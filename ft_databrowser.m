@@ -945,21 +945,22 @@ opt.curdat.trial{1} = dat;
 opt.curdat.fsample  = opt.fsample;
 opt.curdat.cfg.trl  = [begsample endsample offset];
 
-% apply scaling to selected channels
+% apply scaling to selected channels 
+% using wildcard to support subselection of channels
 if ~isempty(opt.cfg.megscale)
-  chansel = match_str(lab, ft_channelselection('MEG', lab));
+  chansel = match_str(lab, ft_channelselection('MEG*', lab));
   dat(chansel,:) = dat(chansel,:) .* opt.cfg.megscale;
 end
 if ~isempty(opt.cfg.eegscale)
-  chansel = match_str(lab, ft_channelselection('EEG', lab));
+  chansel = match_str(lab, ft_channelselection('EEG*', lab));
   dat(chansel,:) = dat(chansel,:) .* opt.cfg.eegscale;
 end
 if ~isempty(opt.cfg.eogscale)
-  chansel = match_str(lab, ft_channelselection('EOG', lab));
+  chansel = match_str(lab, ft_channelselection('EOG*', lab));
   dat(chansel,:) = dat(chansel,:) .* opt.cfg.eogscale;
 end
 if ~isempty(opt.cfg.ecgscale)
-  chansel = match_str(lab, ft_channelselection('ECG', lab));
+  chansel = match_str(lab, ft_channelselection('ECG*', lab));
   dat(chansel,:) = dat(chansel,:) .* opt.cfg.ecgscale;
 end
 
