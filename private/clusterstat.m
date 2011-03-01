@@ -247,9 +247,9 @@ else
 end
 
 % do the clustering on the randomized data
-progress('init', cfg.feedback, 'computing clusters in randomization');
+ft_progress('init', cfg.feedback, 'computing clusters in randomization');
 for i=1:Nrand
-    progress(i/Nrand, 'computing clusters in randomization %d from %d\n', i, Nrand);
+    ft_progress(i/Nrand, 'computing clusters in randomization %d from %d\n', i, Nrand);
     if needpos,
         if issource
             tmp = zeros(cfg.dim);
@@ -343,7 +343,7 @@ for i=1:Nrand
         end
     end % needneg
 end % for 1:Nrand
-progress('close');
+ft_progress('close');
 
 % compare the values for the observed clusters with the randomization distribution
 if needpos,
