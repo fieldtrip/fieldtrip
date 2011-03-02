@@ -7,14 +7,20 @@ function [varargout] = ft_qualitycheck(cfg)
 % 2) visualize the quantifications (done by ft_qualitycheck; exported to .PNG and .PDF)
 % 3) a more detailed inspection (user-specific, some examples on the FT wiki)
 %
-% This function is specific for the data recorded with the CTF MEG system
-% at the Donders Centre for Cognitive Neuroimaging, Nijmegen, The
-% Netherlands.
+% This function is specific for MEG data recorded with either a CTF or BTI system
 %
 % Use as:
 %   [output] = ft_qualitycheck(cfg)
 %
-%   with cfg.dataset = 'dir/dataset.ds'
+% The configuration should contain:
+%   cfg.dataset = string pointing to the location of the dataset (e.g.
+%   'dir/dataset.ds')
+%
+% The following parameters can be used:
+%   cfg.analyze = 'yes' or 'no' to analyze the dataset (default = 'yes')
+%   cfg.savemat = 'yes' or 'no' to save the analysis (default = 'yes')
+%   cfg.visualize = 'yes' or 'no' to visualize the analysis (default = 'yes')
+%   cfg.saveplot = 'yes' or 'no' to save the visualization (default = 'yes')
 %
 % Copyright (C) 2010-2011, Arjen Stolk, Bram Daams, Robert Oostenveld
 %
@@ -56,9 +62,10 @@ startdate   = 'unknown';
 starttime   = 'unknown';
 stoptime    = 'unknown';
 
-
-%% READ HISTORY FILE in order to extract date & time
-% this does not work properly for older CTF datasets
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Dataset history file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% does not work properly for older CTF datasets 
 if isctf
   logfile                     = strcat(cfg.datafile(1:end-5),'.hist');
   fileline                    = 0;
@@ -78,9 +85,6 @@ if isctf
     if ~isempty(findstr(fileline,'Dataset name'))
       datasetname = sscanf(fileline(findstr(fileline,'Dataset name'):end),'Dataset name %s');
     end
-    if ~isempty(findstr(fileline,'Sample rate'))
-      fsample = sscanf(fileline(findstr(fileline,'Sample rate:'):end),'Sample rate: %s');
-    end
   end
   try
     [daynr, daystr] = weekday(startdate);
@@ -89,22 +93,23 @@ if isctf
   end
 end
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Dataset analysis
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if strcmp(cfg.analyze,'yes')
   tic
   
-  hdr = ft_read_header(cfg.dataset);
+  hdr = ft_read_header(cfg.dataset);  
   
-  
-  %% DEFINE THE SEGMENTS; 10 second trials
+  % 10 second trials definition
   cfgdef                         = [];
   cfgdef.dataset                 = cfg.dataset;
   cfgdef.trialdef.triallength    = 10;
-  cfgdef.trialdef.ntrials        = 5;
+  %cfgdef.trialdef.ntrials        = 3;
   cfgdef.continuous              = 'yes';
   cfgdef                         = ft_definetrial(cfgdef);
   
-  %% TRIAL LOOP; process trial by trial
+  % process trial by trial
   ntrials = size(cfgdef.trl,1);
   for t = 1:ntrials
     fprintf('analyzing trial %s of %s \n', num2str(t), num2str(ntrials));
@@ -183,7 +188,7 @@ if strcmp(cfg.analyze,'yes')
     cfgfreq.method       = 'mtmfft';
     cfgfreq.taper        = 'hanning';
     cfgfreq.keeptrials   = 'no';
-    cfgfreq.foilim       = [0 min(data.fsample/2, 400)]; % Fr ~ .1 hz
+    cfgfreq.foilim       = [0 min(hdr.Fs/2, 400)]; % Fr ~ .1 hz
     
     freq                 = ft_freqanalysis(cfgfreq, redef);
     
@@ -196,7 +201,7 @@ if strcmp(cfg.analyze,'yes')
     toc
   end % end of trial loop
   
-  %% EXPORT TO .MAT
+  % output variables
   output.datasetname  = datasetname;
   try, output.startrec     = startrec;  end
   try, output.starttime    = starttime; end
@@ -222,16 +227,91 @@ if strcmp(cfg.analyze,'yes')
   if strcmp(cfg.savemat,'yes')
     save(strcat(exportname,'.mat'), 'output');
   end
-end
+end % end of analysis
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Visualization of the analysis
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if strcmp(cfg.visualize,'yes')
   
   if strcmp(cfg.analyze,'no')
     load(strcat(exportname,'.mat'));
   end
   
-  %% VISUALIZE
-  % Parent figure
+  % create GUI-like figure
+  draw_figure(output);
+  
+  % export to .PNG and .PDF
+  if strcmp(cfg.saveplot,'yes')
+    set(gcf, 'PaperType', 'a4');
+    print(gcf, '-dpng', strcat(exportname,'.png'));
+    orient landscape;
+    print(gcf, '-dpdf', strcat(exportname,'.pdf'));
+  end
+end % end of visualization
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Output handling
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if nargout>0
+  mOutputArgs{1} = output;
+  [varargout{1:nargout}] = mOutputArgs{:};
+  clearvars -except varargout
+else
+  clear
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% SUBFUNCTIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [power, freq] = findpower(low, high, freqinput)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% replace value with the index of the nearest bin
+xmin  = nearest(getsubfield(freqinput, 'freq'), low);
+xmax  = nearest(getsubfield(freqinput, 'freq'), high);
+% select the freq range
+power = freqinput.powspctrm(:,xmin:xmax);
+freq  = freqinput.freq(:,xmin:xmax);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function plot_REF(dat, h)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Prepare sensors
+cfgref            = [];
+cfgref.layout     = 'CTFREF.lay';
+cfgref.layout     = ft_prepare_layout(cfgref);
+cfgref.layout     = rmfield(cfgref.layout,'outline');
+
+% Select the channels in the data that match with the layout:
+[seldat, sellay] = match_str(dat.label, cfgref.layout.label);
+if isempty(seldat)
+  error('labels in data and labels in layout do not match');
+end
+datavector = dat.powspctrm(seldat,:);
+labelvector = cfgref.layout.label(sellay);
+
+% Plotting
+imagesc(sum(datavector,2)');
+colormap(hot);
+set(h.TopoREF,'XTick',[1:length(labelvector)]);
+for l = 1:length(labelvector)
+  if sum(datavector(l,:),2) > 0
+    Xlab{l} = labelvector{l};
+  else
+    Xlab{l} = '';
+  end
+end
+set(h.TopoREF,'XTickLabel',Xlab);
+set(h.TopoREF,'YTickLabel',{''});
+title(h.TopoREF,'Reference sensors');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function draw_figure(output)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Parent figure
   h.MainFigure = figure(...
     'MenuBar','none',...
     'Name','ft_qualitycheck',...
@@ -332,7 +412,7 @@ if strcmp(cfg.visualize,'yes')
     'Style','text',...
     'Units','normalized',...
     'FontSize',10,...
-    'String',['fs: ' data.fsample ', nchans: ' num2str(size(output.label,1))],...
+    'String',['fs: ' num2str(output.hdr.Fs) ', nchans: ' num2str(size(output.label,1))],...
     'Backgroundcolor','white',...
     'Position',[.01 .71 .99 .1]);
   
@@ -414,16 +494,16 @@ if strcmp(cfg.visualize,'yes')
     'Units','normalized',...
     'Value',mean(output.linenoise),...
     'Min',0,...
-    'Max',1,...
+    'Max',1e-27,...
     'Position',[.1 .35 .8 .2],...
-    'String','Line noise');
+    'String','');
   
   h.LineNoiseText = uicontrol(...
     'Parent',h.QuantityPanel,...
     'Style','text',...
     'Units','normalized',...
     'FontSize',10,...
-    'String','Line noise [Ratio]',...
+    'String','Line noise [T^2]',...
     'Backgroundcolor','white',...
     'Position',[.2 .55 .6 .07]);
   
@@ -550,7 +630,7 @@ if strcmp(cfg.visualize,'yes')
   set(h.HmotionAxes,'YTick',[1:3]);
   set(h.HmotionAxes,'YTickLabel',{'R','L','N'});
   xlim(h.HmotionAxes, [0 10]);
-  xlabel(h.HmotionAxes, 'Headposition from origin (mm)');
+  xlabel(h.HmotionAxes, 'Headmotion from start (mm)');
   
   % plot powerspectrum
   loglog(h.SpectrumAxes, output.freq, squeeze(mean(mean(output.powspctrm,1),3)),'r','LineWidth',2);
@@ -558,17 +638,20 @@ if strcmp(cfg.visualize,'yes')
   ylabel(h.SpectrumAxes, 'Power [T^2/Hz]');
   
   % plot mean and range of the raw signal
-  plot(h.SignalAxes, output.time, output.avg, output.time, output.range, 'LineWidth',3);
+  plot(h.SignalAxes, output.time, output.range, output.time, output.avg, 'LineWidth',3);
+  avg_min = output.avg + output.minima./10;
+  avg_max = output.avg + output.maxima./10;
+  set(h.SignalAxes,'Nextplot','add');
+  plot(h.SignalAxes, output.time', avg_min, output.time', avg_max, 'LineWidth', 1, 'Color', [255/255 127/255 39/255]);
   grid(h.SignalAxes,'on');
   ylim(h.SignalAxes,[-Inf 4e-10]);
-  legend(h.SignalAxes,'Mean','Range');
+  legend(h.SignalAxes,'Range','Mean','-10% of min','+10% of max');
   set(h.SignalAxes,'XTickLabel','');
   
   % plot linenoise
   plot(h.LinenoiseAxes, output.time, output.linenoise, 'LineWidth',3);
   grid(h.LinenoiseAxes,'on');
-  ylim(h.LinenoiseAxes,[0 1]);
-  legend(h.LinenoiseAxes, 'Line noise ratio');
+  legend(h.LinenoiseAxes, 'Line noise');
   set(h.LinenoiseAxes,'XTickLabel','');
   
   % plot lowfreqnoise
@@ -576,64 +659,3 @@ if strcmp(cfg.visualize,'yes')
   grid(h.LowfreqnoiseAxes,'on');
   legend(h.LowfreqnoiseAxes, 'Low freq power');
   xlabel(h.LowfreqnoiseAxes, 'Time [seconds]');
-  
-  %% EXPORT TO .PNG AND .PDF
-  if strcmp(cfg.saveplot,'yes')
-    set(gcf, 'PaperType', 'a4');
-    print(gcf, '-dpng', strcat(exportname,'.png'));
-    orient landscape;
-    print(gcf, '-dpdf', strcat(exportname,'.pdf'));
-  end
-end
-
-% varargout handler
-if nargout>0
-  mOutputArgs{1} = output;
-  [varargout{1:nargout}] = mOutputArgs{:};
-  clearvars -except varargout
-else
-  clear
-end
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [power, freq] = findpower(low, high, freqinput)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% replace value with the index of the nearest bin
-xmin  = nearest(getsubfield(freqinput, 'freq'), low);
-xmax  = nearest(getsubfield(freqinput, 'freq'), high);
-% select the freq range
-power = freqinput.powspctrm(:,xmin:xmax);
-freq  = freqinput.freq(:,xmin:xmax);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plot_REF(dat, h)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Prepare sensors
-cfgref            = [];
-cfgref.layout     = 'CTFREF.lay';
-cfgref.layout     = ft_prepare_layout(cfgref);
-cfgref.layout     = rmfield(cfgref.layout,'outline');
-
-% Select the channels in the data that match with the layout:
-[seldat, sellay] = match_str(dat.label, cfgref.layout.label);
-if isempty(seldat)
-  error('labels in data and labels in layout do not match');
-end
-datavector = dat.powspctrm(seldat,:);
-labelvector = cfgref.layout.label(sellay);
-
-% Plotting
-imagesc(sum(datavector,2)');
-colormap(hot);
-set(h.TopoREF,'XTick',[1:length(labelvector)]);
-for l = 1:length(labelvector)
-  if sum(datavector(l,:),2) > 0
-    Xlab{l} = labelvector{l};
-  else
-    Xlab{l} = '';
-  end
-end
-set(h.TopoREF,'XTickLabel',Xlab);
-set(h.TopoREF,'YTickLabel',{''});
-title(h.TopoREF,'Reference sensors');
