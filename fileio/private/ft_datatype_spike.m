@@ -88,7 +88,7 @@ switch version
   case '2007'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % the 2007 format did not contain these fields
-    if isfield(data, 'time')
+    if isfield(spike, 'time')
       spike = rmfield(spike, 'time');
     end
     if isfield(spike, 'trialtime')

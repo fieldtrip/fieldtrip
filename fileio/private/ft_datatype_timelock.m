@@ -67,9 +67,9 @@ end
 timelock = fixdimord(timelock);
 
 % remove the unwanted fields, it is unclear when they were precisely used
-if isfield(data, 'numsamples'),       data = rmfield(data, 'numsamples');       end
-if isfield(data, 'numcovsamples'),    data = rmfield(data, 'numcovsamples');    end
-if isfield(data, 'numblcovsamples'),  data = rmfield(data, 'numblcovsamples');  end
+if isfield(timelock, 'numsamples'),       timelock = rmfield(timelock, 'numsamples');       end
+if isfield(timelock, 'numcovsamples'),    timelock = rmfield(timelock, 'numcovsamples');    end
+if isfield(timelock, 'numblcovsamples'),  timelock = rmfield(timelock, 'numblcovsamples');  end
 
 switch version
   case '2003'
