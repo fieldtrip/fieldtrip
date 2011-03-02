@@ -105,6 +105,7 @@ function [norm] = ft_electroderealign(cfg)
 
 ft_defaults
 
+
 %text output
 disp('Close the figure to output new sensor positions');
 
@@ -124,6 +125,7 @@ if ~isfield(cfg, 'label'),         cfg.label = 'off';        end % show labels
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducials', 'fiducial'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducial',  'fiducial'});
 cfg = ft_checkconfig(cfg, 'forbidden', 'outline');
+cfg = ft_checkconfig(cfg, 'renamedval',{'warp', 'rigidbody','homogenous'});
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure
@@ -476,7 +478,7 @@ end
 % electrode labels by their case-sensitive original values
 switch cfg.method
   case {'template' 'fiducial', 'interactive'}
-    norm.pnt   = warp_apply(norm.m, orig.pnt, cfg.warp);
+    norm.pnt   = warp_apply(norm.m, orig.pnt,cfg.warp);
   case 'manual'
     % the positions are already assigned in correspondence with the mesh
     norm = orig;
