@@ -560,8 +560,8 @@ switch headerformat
     orig            = read_wdq_header(filename);
     hdr             = [];
     hdr.Fs          = orig.fsample;
-    hdr.nChans      = orig.nchan; 
-    hdr.nSamples    = orig.nbytesdat/(2*orig.nchan);
+    hdr.nChans      = orig.nchan;
+    hdr.nSamples    = orig.nbytesdat/(2*hdr.nChans);
     hdr.nSamplesPre = 0;
     hdr.nTrials     = 1;
     for k = 1:hdr.nChans

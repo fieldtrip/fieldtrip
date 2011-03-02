@@ -33,6 +33,7 @@ fid = fopen(filename, 'r');
 %tmp = fread(fid, 110); % the first 110 bytes are always interpretable equally
 hdr = [];
 hdr.nchan         = fread(fid, 1, 'uint16');
+hdr.nchan         = hdr.nchan - bitand(hdr.nchan, 32);
 i2                = fread(fid, 1, 'uint16');
 hdr.offset        = fread(fid, 1, 'uint8');
 hdr.nbyteschanhdr = fread(fid, 1, 'uint8');
