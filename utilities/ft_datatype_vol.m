@@ -69,13 +69,13 @@ end
 
 % it should  never have contained these, but they might be present due to an unclear
 % distinction between the volume and the source representation
-if isfield(data, 'xgrid'),     data = rmfield(data, 'xgrid');     end
-if isfield(data, 'ygrid'),     data = rmfield(data, 'ygrid');     end
-if isfield(data, 'zgrid'),     data = rmfield(data, 'zgrid');     end
-if isfield(data, 'freq'),      data = rmfield(data, 'freq');      end
-if isfield(data, 'frequency'), data = rmfield(data, 'frequency'); end
-if isfield(data, 'time'),      data = rmfield(data, 'time');      end
-if isfield(data, 'latency'),   data = rmfield(data, 'latency');   end
+if isfield(vol, 'xgrid'),     vol = rmfield(vol, 'xgrid');     end
+if isfield(vol, 'ygrid'),     vol = rmfield(vol, 'ygrid');     end
+if isfield(vol, 'zgrid'),     vol = rmfield(vol, 'zgrid');     end
+if isfield(vol, 'freq'),      vol = rmfield(vol, 'freq');      end
+if isfield(vol, 'frequency'), vol = rmfield(vol, 'frequency'); end
+if isfield(vol, 'time'),      vol = rmfield(vol, 'time');      end
+if isfield(vol, 'latency'),   vol = rmfield(vol, 'latency');   end
 
 switch version
   case '2011'
