@@ -457,10 +457,19 @@ end
 
 if selectchan,
   %FIXME give selchan according to the order requested in selchan
-  %this does not work 
-  tmp            = ft_channelselection(selchan, data.label);
-  [dum, selchan] = match_str(tmp, data.label);
-end
+  %this does not work
+  
+  if isfield(data, 'label')
+    tmp            = ft_channelselection(selchan, data.label);
+    [dum, selchan] = match_str(tmp, data.label);
+  elseif isfield(data, 'labelcmb')
+    tmp            = ft_channelselection(selchan, unique(data.labelcmb(:)));
+    [dum, selchan1] = match_str(tmp, data.labelcmb(:,1));
+    [dum, selchan2] = match_str(tmp, data.labelcmb(:,2));
+    selchan         = intersect(selchan1, selchan2);
+  end
+  
+  end
 
 if selectfoi,
   if numel(selfoi)==1, selfoi(2) = selfoi; end;
