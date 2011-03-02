@@ -1271,7 +1271,7 @@ switch eventformat
       hdr     = ft_read_header(filename, 'headerformat', 'dataq_wdq');
     end
     trigger  = read_wdq_data(filename, hdr.orig, 'lowbits');
-    [ix, iy] = find(trigger);
+    [ix, iy] = find(trigger>1); %it seems as if the value of 1 is meaningless
     for i=1:numel(ix)
       event(i).type   = num2str(ix(i));
       event(i).value  = trigger(ix(i),iy(i));
