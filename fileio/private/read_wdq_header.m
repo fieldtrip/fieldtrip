@@ -91,7 +91,7 @@ for k = 1:(hdr.nbyteshdr-hdr.offset-2)/hdr.nbyteschanhdr
   fread(fid, 1, 'uint8');
   fread(fid, 1, 'uint8'); % may be relevant for packed files
   chanhdr(k).channr = fread(fid, 1, 'uint8');
-  chanhdr(k).label  = ['chan',num2str(k, '%03d')];
+  chanhdr(k).label  = num2str(k);
 end
 hdr.chanhdr = chanhdr;
 
