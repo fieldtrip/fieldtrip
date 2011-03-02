@@ -45,7 +45,10 @@ elseif ~isempty(trl)
   nsmp = trl(:,2) - trl(:,1) + 1;
 end
 
-if isempty(trl) || ~all(nsmp==trl(:,2)-trl(:,1)+1)
+if size(trl,1)~=numel(nsmp)
+  warning_once('the trial definition in the configuration is inconsistent with the actual data');
+  trl = [];
+elseif isempty(trl) || ~all(nsmp==trl(:,2)-trl(:,1)+1)
   warning_once('the data does not contain a trial definition, assuming that the trials are consecutive segments of a continuous recording');
   % construct a trial definition on the fly, assume that the trials are
   % consecutive segments of a continuous recording
