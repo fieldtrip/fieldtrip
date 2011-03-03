@@ -52,6 +52,7 @@ xlim    = ft_getopt(cfg, 'xlim');
 zlim    = ft_getopt(cfg, 'zlim');
 xparam  = ft_getopt(cfg, 'xparam', 'time');     % use time as default
 zparam  = ft_getopt(cfg, 'zparam', 'avg.pow');  % use power as default
+mask    = ft_getopt(cfg, 'mask',   []);
 
 % update the configuration
 cfg.xparam = xparam;
@@ -132,8 +133,15 @@ opt.cfg = cfg;
 opt.s = s;
 opt.p = p;
 opt.t = t;
+if ~isempty(mask) && ischar(mask)
+  opt.mask = double(getsubfield(source, mask));
+end
 
-hs = ft_plot_mesh(opt, 'edgecolor', 'none', 'vertexcolor', 0*opt.dat(:,1));
+ft_plot_mesh(opt, 'edgecolor', 'none', 'facecolor', [0.5 0.5 0.5]);
+lighting gouraud
+
+hs = ft_plot_mesh(opt, 'edgecolor', 'none', 'vertexcolor', 0*opt.dat(:,1), 'facealpha', 0*opt.mask(:,1));
+caxis(cfg.zlim);
 lighting gouraud
 camlight left
 camlight right
@@ -178,6 +186,9 @@ val = max(val, 1);
 
 text(0, 0, sprintf('%s = %f\n', opt.cfg.xparam, opt.tim(val)));
 set(opt.hs, 'FaceVertexCData', opt.dat(:,val));
+if isfield(opt, 'mask')
+  set(opt.hs, 'FaceVertexAlphaData', opt.mask(:,val));
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
