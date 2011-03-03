@@ -523,7 +523,7 @@ for i=1:length(varargin)
   
   % make datmask structure with one value for each channel
   if ~isempty(cfg.maskparameter)
-    datmask = data.(cfg.maskparameter);
+    datmask = varargin{1}.(cfg.maskparameter); % use first input only for mask
     if min(size(datmask)) ~= 1 || max(size(datmask)) ~= length(data.label)
       error('data in cfg.maskparameter should be vector with one value per channel')
     end

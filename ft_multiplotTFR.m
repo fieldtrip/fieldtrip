@@ -364,6 +364,9 @@ dat = data.(cfg.zparam);
 if isfull
   dat = dat(sel1, sel2, ymin:ymax, xmin:xmax);
   dat = nanmean(dat, meandir);
+  siz = size(dat);
+  dat = reshape(dat, [max(siz(1:2)) siz(3) siz(4)]);
+  dat = dat(sellab, :, :);
 elseif haslabelcmb
   dat = dat(sellab, ymin:ymax, xmin:xmax);
 else
@@ -431,7 +434,7 @@ end
 
 % set colormap
 if isfield(cfg,'colormap')
-  if size(cfg.colormap,2)~=3, error('singleplotTFR(): Colormap must be a n x 3 matrix'); end
+  if size(cfg.colormap,2)~=3, error('multiplotTFR(): Colormap must be a n x 3 matrix'); end
   set(gcf,'colormap',cfg.colormap);
 end;
 
@@ -576,7 +579,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_multiplotTFR(label, cfg, varargin)
 cfg.cohrefchannel = label;
-fprintf('selected cfg.cohrefchannel = ''%s''\n', cfg.cohrefchannel);
+fprintf('selected cfg.cohrefchannel = ''%s''\n', join(',', cfg.cohrefchannel));
 p = get(gcf, 'Position');
 f = figure;
 set(f, 'Position', p);
@@ -601,3 +604,16 @@ if ~isempty(label)
   ft_singleplotTFR(cfg, varargin{:});
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function t = join(separator,cells)
+if isempty(cells)
+  t = '';
+  return;
+end
+t = char(cells{1});
+
+for i=2:length(cells)
+  t = [t separator char(cells{i})];
+end

@@ -393,6 +393,8 @@ for i=1:Ndata
   xparam = varargin{i}.(cfg.xparam);
   
   % Take subselection of channels
+  % this works for bivariate data with labelcmb because at this point the
+  % data has a label-field
   sellab = match_str(varargin{i}.label, selchannel);
   
   if ~isempty(cfg.yparam)

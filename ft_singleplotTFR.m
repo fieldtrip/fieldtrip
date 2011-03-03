@@ -67,48 +67,72 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'unused',      {'cohtargetchannel'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'channelindex',  'channel'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'channelname',   'channel'});
 
 cla
 
-% For backward compatibility with old data structures:
-data = ft_checkdata(data);
-
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});
-
 % Set the defaults:
-if ~isfield(cfg,'baseline'),        cfg.baseline = 'no';               end
-if ~isfield(cfg,'baselinetype'),    cfg.baselinetype = 'absolute';     end
-if ~isfield(cfg,'trials'),          cfg.trials = 'all';                end
-if ~isfield(cfg,'xlim'),            cfg.xlim = 'maxmin';               end
-if ~isfield(cfg,'ylim'),            cfg.ylim = 'maxmin';               end
-if ~isfield(cfg,'zlim'),            cfg.zlim = 'maxmin';               end
-if ~isfield(cfg,'fontsize'),        cfg.fontsize = 8;                  end
-if ~isfield(cfg,'colorbar'),        cfg.colorbar = 'yes';              end
-if ~isfield(cfg,'interactive'),     cfg.interactive = 'no';            end
-if ~isfield(cfg,'renderer'),        cfg.renderer = [];                 end
-if ~isfield(cfg,'masknans'),        cfg.masknans = 'yes';              end
-if ~isfield(cfg,'maskparameter'),   cfg.maskparameter = [];            end
-if ~isfield(cfg,'maskstyle'),       cfg.maskstyle = 'opacity';         end
-if ~isfield(cfg, 'matrixside'),     cfg.matrixside = 'feedforward';    end
+cfg.baseline      = ft_getopt(cfg, 'baseline',     'no');
+cfg.baselinetype  = ft_getopt(cfg, 'baselinetype', 'absolute');
+cfg.trials        = ft_getopt(cfg, 'trials',       'all');
+cfg.xlim          = ft_getopt(cfg, 'xlim',         'maxmin'); 
+cfg.ylim          = ft_getopt(cfg, 'ylim',         'maxmin');
+cfg.zlim          = ft_getopt(cfg, 'zlim',         'maxmin');
+cfg.fontsize      = ft_getopt(cfg, 'fontsize',     8);
+cfg.colorbar      = ft_getopt(cfg, 'colorbar',     'yes');
+cfg.interactive   = ft_getopt(cfg, 'interactive',  'no');
+cfg.renderer      = ft_getopt(cfg, 'renderer',     []);
+cfg.maskparameter = ft_getopt(cfg, 'maskparameter',[]);
+cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',    'opacity');
+cfg.channel       = ft_getopt(cfg, 'channel',      'all');
+cfg.masknans      = ft_getopt(cfg, 'masknans',     'yes');
+cfg.matrixside    = ft_getopt(cfg, 'matrixside',   '');
 
-% Set x/y/zparam defaults according to data.dimord value:
-if strcmp(data.dimord, 'chan_freq_time')
+% for backward compatibility with old data structures
+data   = ft_checkdata(data, 'datatype', 'freq');
+dimord = data.dimord;
+dimtok = tokenize(dimord, '_');
+
+% Set x/y/zparam defaults
+if ~sum(ismember(dimtok, 'time'))
+  error('input data needs a time dimension');
+else
   if ~isfield(cfg, 'xparam'),      cfg.xparam='time';                  end
   if ~isfield(cfg, 'yparam'),      cfg.yparam='freq';                  end
   if ~isfield(cfg, 'zparam'),      cfg.zparam='powspctrm';             end
-elseif strcmp(data.dimord, 'subj_chan_freq_time') || strcmp(data.dimord, 'rpt_chan_freq_time')
-  if isfield(data, 'crsspctrm'),  data = rmfield(data, 'crsspctrm');  end % on the fly computation of coherence spectrum is not supported
-  tmpcfg = [];
-  tmpcfg.trials = cfg.trials;
+end
+
+if isfield(cfg, 'channel') && isfield(data, 'label')
+  cfg.channel = ft_channelselection(cfg.channel, data.label);
+elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
+  cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
+end
+
+if isempty(cfg.channel)
+  error('no channels selected');
+end
+
+% check whether rpt/subj is present and remove if necessary and whether
+hasrpt = sum(ismember(dimtok, {'rpt' 'subj'}));
+if hasrpt,
+  % this also deals with fourier-spectra in the input
+  % or with multiple subjects in a frequency domain stat-structure
+  % on the fly computation of coherence spectrum is not supported
+  if isfield(data, 'crsspctrm'),
+    data = rmfield(data, 'crsspctrm'); 
+  end
+  
+  tmpcfg           = [];
+  tmpcfg.trials    = cfg.trials;
   tmpcfg.jackknife = 'no';
-  if isfield(cfg, 'zparam') && strcmp(cfg.zparam,'cohspctrm')
-    % on the fly computation of coherence spectrum is not supported
-  elseif isfield(cfg, 'zparam') && ~strcmp(cfg.zparam,'powspctrm')
-    % freqdesctiptives will only work on the powspctrm field, hence a temporary copy of the data is needed
+  if isfield(cfg, 'zparam') && ~strcmp(cfg.zparam,'powspctrm')
+    % freqdesctiptives will only work on the powspctrm field
+    % hence a temporary copy of the data is needed
     tempdata.dimord    = data.dimord;
     tempdata.freq      = data.freq;
-    tempdata.time      = data.time;
     tempdata.label     = data.label;
     tempdata.powspctrm = data.(cfg.zparam);
     tempdata.cfg       = data.cfg;
@@ -118,107 +142,95 @@ elseif strcmp(data.dimord, 'subj_chan_freq_time') || strcmp(data.dimord, 'rpt_ch
   else
     data = ft_freqdescriptives(tmpcfg, data);
   end
-  if ~isfield(cfg, 'xparam'),      cfg.xparam='time';                  end
-  if ~isfield(cfg, 'yparam'),      cfg.yparam='freq';                  end
-  if ~isfield(cfg, 'zparam'),      cfg.zparam='powspctrm';             end
-end
+  dimord = data.dimord;
+  dimtok = tokenize(dimord, '_');
+end % if hasrpt
 
-% Pick the channel(s)
-if ~isfield(cfg,'channel')
-  % set the default
-  cfg.channel = 'all';
-  % for backward compatibility
-  cfg = ft_checkconfig(cfg, 'renamed', {'channelindex',  'channel'});
-  cfg = ft_checkconfig(cfg, 'renamed', {'channelname',   'channel'});
-end
+% Handle the bivariate case
 
-cfg.channel = ft_channelselection(cfg.channel, data.label);
-if isempty(cfg.channel)
-  error('no channels selected');
-else
-  chansel = match_str(data.label, cfg.channel);
-end
-
-% Check for unconverted coherence spectrum data or any other bivariate metric:
-dimtok  = tokenize(data.dimord, '_');
+% Check for bivariate metric with 'chan_chan' in the dimord
 selchan = strmatch('chan', dimtok);
 isfull  = length(selchan)>1;
-if (strcmp(cfg.zparam,'cohspctrm')) && (isfield(data, 'labelcmb')) || ...
-    (isfull && isfield(data, cfg.zparam)),
 
+% Check for bivariate metric with a labelcmb
+haslabelcmb = isfield(data, 'labelcmb');
+
+if (isfull || haslabelcmb) && isfield(data, cfg.zparam)
   % A reference channel is required:
-  if ~isfield(cfg,'cohrefchannel'),
-    error('no reference channel specified');
+  if ~isfield(cfg, 'cohrefchannel')
+    error('no reference channel is specified');
   end
-
+  
+  % check for cohrefchannel being part of selection
+  if ~strcmp(cfg.cohrefchannel,'gui')
+    if (isfull      && ~any(ismember(data.label, cfg.cohrefchannel))) || ...
+       (haslabelcmb && ~any(ismember(data.labelcmb(:), cfg.cohrefchannel)))
+      error('cfg.cohrefchannel is a not present in the (selected) channels)')
+    end
+  end
+  
+  % Interactively select the reference channel
   if strcmp(cfg.cohrefchannel, 'gui')
-    % Open a single figure with the channel layout, the user can click on a reference channel
-    h = clf;
-    lay = ft_prepare_layout(cfg, data);
-    cfg.layout = lay;
-    ft_plot_lay(lay, 'box', false);
-    title('Select the reference channel by clicking on it...');
-    % add the channel information to the figure
-    info       = guidata(h);
-    info.x     = lay.pos(:,1);
-    info.y     = lay.pos(:,2);
-    info.label = lay.label;
-    guidata(h, info);
-    set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'callback', {@select_singleplotTFR, cfg, data}});
-    return
+    error('coh.refchannel = ''gui'' is not supported at the moment for ft_singleplotTFR');
+%     
+%     % Open a single figure with the channel layout, the user can click on a reference channel
+%     h = clf;
+%     ft_plot_lay(lay, 'box', false);
+%     title('Select the reference channel by dragging a selection window, more than 1 channel can be selected...');
+%     % add the channel information to the figure
+%     info       = guidata(gcf);
+%     info.x     = lay.pos(:,1);
+%     info.y     = lay.pos(:,2);
+%     info.label = lay.label;
+%     guidata(h, info);
+%     %set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'callback', {@select_topoplotER, cfg, data}});
+%     set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotTFR, cfg, data}, 'event', 'WindowButtonUpFcn'});
+%     set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotTFR, cfg, data}, 'event', 'WindowButtonDownFcn'});
+%     set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotTFR, cfg, data}, 'event', 'WindowButtonMotionFcn'});
+%     return
   end
-
-
+  
   if ~isfull,
-    % only works explicitly with coherence FIXME
     % Convert 2-dimensional channel matrix to a single dimension:
-    sel1           = strmatch(cfg.cohrefchannel, data.labelcmb(:,2));
-    sel2           = strmatch(cfg.cohrefchannel, data.labelcmb(:,1));
-    fprintf('selected %d channels for coherence\n', length(sel1)+length(sel2));
-    data.cohspctrm = data.cohspctrm([sel1;sel2],:,:);
+    if isempty(cfg.matrixside)
+      sel1 = strmatch(cfg.cohrefchannel, data.labelcmb(:,2));
+      sel2 = strmatch(cfg.cohrefchannel, data.labelcmb(:,1));
+    elseif strcmp(cfg.matrixside, 'feedforward')
+      sel1 = [];
+      sel2 = strmatch(cfg.cohrefchannel, data.labelcmb(:,1));
+    elseif strcmp(cfg.matrixside, 'feedback')
+      sel1 = strmatch(cfg.cohrefchannel, data.labelcmb(:,2));
+      sel2 = [];
+    end
+    fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.zparam);
+    data.(cfg.zparam) = data.(cfg.zparam)([sel1;sel2],:,:);
     data.label     = [data.labelcmb(sel1,1);data.labelcmb(sel2,2)];
     data.labelcmb  = data.labelcmb([sel1;sel2],:);
     data           = rmfield(data, 'labelcmb');
-
   else
-    % general solution
-    
-    sel = match_str(data.label, cfg.cohrefchannel);
-    siz = [size(data.(cfg.zparam)) 1];
-    if strcmp(cfg.matrixside, 'feedback')
+    % General case
+    sel               = match_str(data.label, cfg.cohrefchannel);
+    siz               = [size(data.(cfg.zparam)) 1];
+    if strcmp(cfg.matrixside, 'feedback') || isempty(cfg.matrixside)
+      %FIXME the interpretation of 'feedback' and 'feedforward' depend on
+      %the definition in the bivariate representation of the data
       %data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
-      %sel1 = 1:siz(1);
-      sel1 = chansel;
+      sel1 = 1:siz(1);
       sel2 = sel;
       meandir = 2;
     elseif strcmp(cfg.matrixside, 'feedforward')
       %data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
       sel1 = sel;
-      %sel2 = 1:siz(1);
-      sel2 = chansel;
+      sel2 = 1:siz(1);
       meandir = 1;
-    elseif strcmp(cfg.matrixside, 'ff-fd')
-      %FIXME don't know how to handle this
-      data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]) - reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
-    elseif strcmp(cfg.matrixside, 'fd-ff')
-      data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]) - reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
-    end
-  end
-  
-  % FIXME - redo channelselection here to make sure chansel fits the data
-  cfg.channel = ft_channelselection(cfg.channel, data.label);
-  if isempty(cfg.channel)
-      error('no channels selected');
-  else
-      chansel = match_str(data.label, cfg.channel);
-  end
-end
 
-% cfg.maskparameter only possible for single channel
-if length(chansel) > 1 && ~isempty(cfg.maskparameter)
-  warning('no masking possible for average over multiple channels -> cfg.maskparameter cleared')
-  cfg.maskparameter = [];
-end
+    elseif strcmp(cfg.matrixside, 'ff-fd')
+      error('cfg.matrixside = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_topoplotER');
+    elseif strcmp(cfg.matrixside, 'fd-ff')
+      error('cfg.matrixside = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_topoplotER');
+    end %if matrixside
+  end %if ~isfull
+end %handle the bivariate data
 
 % Apply baseline correction:
 if ~strcmp(cfg.baseline, 'no')
@@ -234,12 +246,11 @@ else
   xmax = cfg.xlim(2);
 end
 
-% Find corresponding x-axis bins:
-xidc = find(data.(cfg.xparam) >= xmin & data.(cfg.xparam) <= xmax);
-
-% Align physical x-axis range to the array bins:
-xmin = data.(cfg.xparam)(xidc(1));
-xmax = data.(cfg.xparam)(xidc(end));
+% Replace value with the index of the nearest bin
+if ~isempty(cfg.xparam)
+  xmin = nearest(data.(cfg.xparam), xmin);
+  xmax = nearest(data.(cfg.xparam), xmax);
+end
 
 % Get physical y-axis range:
 if strcmp(cfg.ylim,'maxmin')
@@ -250,42 +261,15 @@ else
   ymax = cfg.ylim(2);
 end
 
-% Find corresponding y-axis bins:
-yidc = find(data.(cfg.yparam) >= ymin & data.(cfg.yparam) <= ymax);
-
-% Align physical y-axis range to the array bins:
-ymin = data.(cfg.yparam)(yidc(1));
-ymax = data.(cfg.yparam)(yidc(end));
-
-% Get TFR data averaged across selected channels, within the selected x/y-range:
-if ~isfull
-  dat = getsubfield(data, cfg.zparam);
-  TFR = squeeze(mean(dat(chansel,yidc,xidc), 1));
-  if ~isempty(cfg.maskparameter)
-    mas = getsubfield(data, cfg.maskparameter);
-    mdata = squeeze(mas(chansel,yidc,xidc));
-  end
-elseif isfull,
-  %siz = size(data.(cfg.zparam));
-  %siz(meandir) = [];
-  TFR = squeeze(mean(mean(data.(cfg.zparam)(sel1,sel2,yidc,xidc),1),2));
-end
-
-% Get physical z-axis range (color axis):
-if strcmp(cfg.zlim,'maxmin')
-  zmin = min(TFR(:));
-  zmax = max(TFR(:));
-elseif strcmp(cfg.zlim,'maxabs')
-  zmin = -max(abs(TFR(:)));
-  zmax = max(abs(TFR(:)));
-else
-  zmin = cfg.zlim(1);
-  zmax = cfg.zlim(2);
+% Replace value with the index of the nearest bin
+if ~isempty(cfg.yparam)
+  ymin = nearest(data.(cfg.yparam), ymin);
+  ymax = nearest(data.(cfg.yparam), ymax);
 end
 
 % test if X and Y are linearly spaced (to within 10^-12): % FROM UIMAGE
-x = data.(cfg.xparam)(xidc);
-y = data.(cfg.yparam)(yidc);
+x = data.(cfg.xparam)(xmin:xmax);
+y = data.(cfg.yparam)(ymin:ymax);
 dx = min(diff(x));  % smallest interval for X
 dy = min(diff(y));  % smallest interval for Y
 evenx = all(abs(diff(x)/dx-1)<1e-12);     % true if X is linearly spaced
@@ -296,9 +280,64 @@ if strcmp(cfg.masknans, 'yes') && (~evenx || ~eveny)
   warning('(one of the) axis are not evenly spaced -> nans cannot be masked out ->  cfg.masknans is set to ''no'';')
   cfg.masknans = 'no';
 end
+
 if ~isempty(cfg.maskparameter) && (~evenx || ~eveny)
   warning('(one of the) axis are not evenly spaced -> no masking possible -> cfg.maskparameter cleared')
   cfg.maskparameter = [];
+end
+
+% perform channel selection
+selchannel = ft_channelselection(cfg.channel, data.label);
+sellab     = match_str(data.label, selchannel);
+
+% cfg.maskparameter only possible for single channel
+if length(sellab) > 1 && ~isempty(cfg.maskparameter)
+  warning('no masking possible for average over multiple channels -> cfg.maskparameter cleared')
+  cfg.maskparameter = [];
+end
+
+dat = data.(cfg.zparam);
+if isfull
+  dat = dat(sel1, sel2, ymin:ymax, xmin:xmax);
+  dat = nanmean(dat, meandir);
+  siz = size(dat);
+  dat = reshape(dat, [max(siz(1:2)) siz(3) siz(4)]);
+  dat = dat(sellab, :, :);
+elseif haslabelcmb
+  dat = dat(sellab, ymin:ymax, xmin:xmax);
+else
+  dat = dat(sellab, ymin:ymax, xmin:xmax);
+end
+
+if ~isempty(cfg.maskparameter)
+  mask = data.(cfg.maskparameter);
+  if isfull
+    mask = mask(sel1, sel2, ymin:ymax, xmin:xmax);
+    mask = nanmean(mask, meandir);
+    siz  = size(mask);
+    mask = reshape(mask, [max(siz(1:2)) siz(3) siz(4)]);
+    mask = reshape(mask(sellab, :, :), [siz(3) siz(4)]);
+  elseif haslabelcmb
+    mask = mask(sellab, ymin:ymax, xmin:xmax);
+  else
+    mask = mask(sellab, ymin:ymax, xmin:xmax);
+  end
+end
+siz        = size(dat);
+datamatrix = reshape(mean(dat, 1), siz(2:end));
+xvector    = data.(cfg.xparam)(xmin:xmax);
+yvector    = data.(cfg.yparam)(ymin:ymax);
+
+% Get physical z-axis range (color axis):
+if strcmp(cfg.zlim,'maxmin')
+  zmin = min(datamatrix(:));
+  zmax = max(datamatrix(:));
+elseif strcmp(cfg.zlim,'maxabs')
+  zmin = -max(abs(datamatrix(:)));
+  zmax = max(abs(datamatrix(:)));
+else
+  zmin = cfg.zlim(1);
+  zmax = cfg.zlim(2);
 end
 
 % set colormap
@@ -309,25 +348,22 @@ end;
 
 % Draw plot (and mask NaN's if requested):
 if isequal(cfg.masknans,'yes') && isempty(cfg.maskparameter)
-  mask = ~isnan(TFR);
+  mask = ~isnan(datamatrix);
   mask = double(mask);
-  ft_plot_matrix(data.(cfg.xparam)(xidc),data.(cfg.yparam)(yidc), TFR, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
+  ft_plot_matrix(xvector, yvector, datamatrix, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
 elseif isequal(cfg.masknans,'yes') && ~isempty(cfg.maskparameter)
-  mask = ~isnan(TFR);
+  mask = ~isnan(datamatrix);
   mask = mask .* mdata;
   mask = double(mask);
-  ft_plot_matrix(data.(cfg.xparam)(xidc),data.(cfg.yparam)(yidc), TFR, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
+  ft_plot_matrix(xvector, yvector, datamatrix, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
 elseif isequal(cfg.masknans,'no') && ~isempty(cfg.maskparameter)
-  mask = mdata;
   mask = double(mask);
-  ft_plot_matrix(data.(cfg.xparam)(xidc),data.(cfg.yparam)(yidc), TFR, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
+  ft_plot_matrix(xvector, yvector, datamatrix, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
 else
-  ft_plot_matrix(data.(cfg.xparam)(xidc),data.(cfg.yparam)(yidc), TFR, 'clim',[zmin,zmax],'tag','cip')
+  ft_plot_matrix(xvector, yvector, datamatrix, 'clim',[zmin,zmax],'tag','cip')
 end
 hold on
 axis xy;
-
-
 
 if isequal(cfg.colorbar,'yes')
   colorbar;
@@ -341,8 +377,8 @@ if strcmp(cfg.interactive, 'yes')
 end
 
 % Create title text containing channel name(s) and channel number(s):
-if length(chansel) == 1
-  t = [char(cfg.channel) ' / ' num2str(chansel) ];
+if length(sellab) == 1
+  t = [char(cfg.channel) ' / ' num2str(sellab) ];
 else
   t = sprintf('mean(%0s)', join(',', cfg.channel));
 end
