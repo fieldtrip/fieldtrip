@@ -71,7 +71,7 @@ end
 rawdata = comp;
 rawdata = rmfield(rawdata, 'topo');
 rawdata = rmfield(rawdata, 'topolabel');
-rawdata = ft_datatype_raw(rawdata, version);
+rawdata = ft_datatype_raw(rawdata, 'version', version);
 
 % add the component specific fields again
 rawdata.topo      = comp.topo;
