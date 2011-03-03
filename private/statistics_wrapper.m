@@ -54,9 +54,9 @@ function [stat, cfg] = statistics_wrapper(cfg, varargin)
 % $Id$
 
 % check if the input cfg is valid for this function
-cfg = checkconfig(cfg, 'renamed',     {'approach',   'method'});
-cfg = checkconfig(cfg, 'required',    {'method'});
-cfg = checkconfig(cfg, 'forbidden',   {'transform'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'approach',   'method'});
+cfg = ft_checkconfig(cfg, 'required',    {'method'});
+cfg = ft_checkconfig(cfg, 'forbidden',   {'transform'});
 
 % set the defaults
 if ~isfield(cfg, 'channel'),              cfg.channel = 'all';                     end
