@@ -309,7 +309,7 @@ if strcmp(cfg.segment, 'yes')
     if strcmp(cfg.keepintermediate,'no'),
       delete([cfg.name,'.img']);
       delete([cfg.name,'.hdr']);
-      delete([cfg.name,'.mat']);
+      try, delete([cfg.name,'.mat']); end %does not always exist
     end
     if strcmp(cfg.write,'no'),
        delete(fullfile(pathstr,['c1',name,'.hdr']));
