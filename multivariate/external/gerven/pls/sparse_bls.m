@@ -86,6 +86,17 @@ else
         % Use elastic net code to fit reconstructed Z given input X
         
         [B,C] = elastic(X,Z,lambda1,lambda2,options,B,C);
+
+%         opts = glmnetSet;
+%         opt.alpha = 1;
+%         opts.lambda = lambda1;
+%         res = glmnet(X',Z','gaussian',opts);
+%         B = res.beta;
+%         C = res.a0;
+%         m = ft_mv_glmnet('validator',ft_mv_crossvalidator('nfolds',0.66,'metric','coefdet'),'alpha',1,'family','gaussian');
+%         m = m.train(X',Z');
+%         B = m.weights(1:(end-1));
+%         C = m.weights(end);
         
         Z = B'*X + C;   % reconstruct Z given B and C
         

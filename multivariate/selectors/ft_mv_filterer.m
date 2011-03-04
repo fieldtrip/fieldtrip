@@ -5,6 +5,10 @@ classdef ft_mv_filterer < ft_mv_selector
 %   and uses that ordering to greedily determine the 'optimal' feature set
 %   or to select the best m features.
 %
+%   If filter is a string then it calls rankfeatures in the bioinformatics
+%   toolbox. If it is a function it will just evaluate that function on
+%   each feature and the output.
+%
 %   EXAMPLE:
 %   ft_mv_filterer('validator',ft_mv_crossvalidator('procedure',ft_mv_naive,'metric','accuracy'))
 %
@@ -57,13 +61,26 @@ classdef ft_mv_filterer < ft_mv_selector
         % compute function values
         nf = size(X,2);
         obj.value = zeros(1,nf);
-        for j=1:nf
+        if ischar(obj.filter)
           
           if obj.verbose
-            fprintf('computing %s filter for feature %d of %d\n',obj.filter,j,nf);
+            fprintf('computing %s filter using rankfeatures\n');
+          end
+          Z = rankfeatures(X',Y','Criterion',obj.filter);
+          for j=1:nf
+            obj.value(j) = Z(j);
           end
           
-          obj.value(j) = obj.filter(X(:,j),Y);
+        else
+          
+          for j=1:nf
+            
+            if obj.verbose
+              fprintf('computing %s filter for feature %d of %d\n',obj.filter,j,nf);
+            end
+            
+            obj.value(j) = obj.filter(X(:,j),Y);
+          end
           
         end
         
@@ -87,13 +104,26 @@ classdef ft_mv_filterer < ft_mv_selector
         % compute function values
         nf = size(X,2);
         obj.value = zeros(1,nf);
-        for j=1:nf
+        if ischar(obj.filter)
           
           if obj.verbose
-            fprintf('computing %s filter for feature %d of %d\n',obj.filter,j,nf);
+            fprintf('computing %s filter using rankfeatures\n');
+          end
+          Z = rankfeatures(X',Y','Criterion',obj.filter);
+          for j=1:nf
+            obj.value(j) = Z(j);
           end
           
-          obj.value(j) = obj.filter(X(:,j),Y);
+        else
+          for j=1:nf
+            
+            if obj.verbose
+              fprintf('computing %s filter for feature %d of %d\n',obj.filter,j,nf);
+            end
+            
+            obj.value(j) = obj.filter(X(:,j),Y);
+          
+          end
           
         end
         

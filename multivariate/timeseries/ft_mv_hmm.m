@@ -32,7 +32,7 @@ classdef ft_mv_hmm < ft_mv_timeseries
     transmat  % transition matrix
     mu        % conditional means
     Sigma     % conditional covariance
-
+    
   end
 
   methods

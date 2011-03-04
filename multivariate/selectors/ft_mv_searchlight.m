@@ -44,6 +44,8 @@ classdef ft_mv_searchlight < ft_mv_selector
     
     vld                   % saved validators if compact = false
     
+    exclude = true;       % if false then only the center within a sphere is required to be part of the optional mask
+    
   end
   
   methods
@@ -286,7 +288,7 @@ classdef ft_mv_searchlight < ft_mv_selector
       end
       
       % make spheres consistent with mask
-      if ~isempty(obj.mask)
+      if obj.exclude && ~isempty(obj.mask)
 
         tmp = spheres;
         for c=1:length(spheres)

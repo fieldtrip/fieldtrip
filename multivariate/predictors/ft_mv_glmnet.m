@@ -50,6 +50,8 @@ classdef ft_mv_glmnet < ft_mv_predictor
     % handled by weighted regression)
     deregularize = 0; 
  
+    adaptive = false;
+    
   end
 
   methods
@@ -118,6 +120,30 @@ classdef ft_mv_glmnet < ft_mv_predictor
           return
           
         end
+        
+      end
+      
+      if obj.adaptive 
+        % adaptive lasso; implemented by using univariate ols regression
+        % estimates as penalty weights
+        
+        obj.penalty_factor = zeros(1,size(X,2));
+        
+         if strcmp(obj.family,'gaussian')
+           
+           for j=1:size(X,2)
+             w = regress(Y,[X(:,j) ones(size(X,1),1)]); % X \ Y
+             obj.penalty_factor(j) = 1/abs(w(1))^obj.adaptive;
+           end     
+           
+         else
+           
+           for j=1:size(X,2)
+             w = -logist2(Y-1,[X(:,j) ones(size(X,1),1)]);
+             obj.penalty_factor(j) = 1/abs(w(1))^obj.adaptive;
+           end
+           
+         end
         
       end
       
@@ -233,8 +259,6 @@ classdef ft_mv_glmnet < ft_mv_predictor
         
       end
       
-      obj.lambda  = res.lambda;
-        
       if obj.deregularize
         W = obj.weights;
         for k=1:size(W,2)
@@ -251,6 +275,8 @@ classdef ft_mv_glmnet < ft_mv_predictor
         obj.weights = W;
       end
       
+      obj.lambda  = res.lambda;
+              
     end
     
     function Y = test(obj,X)

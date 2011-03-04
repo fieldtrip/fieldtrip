@@ -122,30 +122,41 @@ classdef ft_mv_one_against_one < ft_mv_predictor
     
     function [m,desc] = model(obj)
       
-      m=[];
-      desc=[];
-      c=1;
+      m = cell((obj.nclasses*(obj.nclasses-1))/2,1);
+      desc = cell((obj.nclasses*(obj.nclasses-1))/2,1);
+      idx=1;
       for i=1:obj.nclasses
         for j=(i+1):obj.nclasses
-          
-          mtd = obj.mva{c}.mvmethods{end};
-          [mm,dd] = mtd.model();
-          
-          if isempty(m)
-            m = cell(size(mm,1)*length(obj.mva),1);
-            desc = cell(size(mm,1)*length(obj.mva),1);
-          end
-          
-          m((c-1)*size(mm,1)+(1:size(mm,1))) = mm;
-          
-          for k=1:size(mm,1)
-            desc{(c-1)*size(mm,1)+k} = sprintf('class %d against %d; %s\n',i,j,dd{k});
-          end
-          
-          c = c+1;
+          mtd = obj.mva{idx}.mvmethods{end};
+          [m{idx},desc{idx}] = mtd.model;
+          idx = idx + 1;
         end
-        
       end
+      
+%       m=[];
+%       desc=[];
+%       c=1;
+%       for i=1:obj.nclasses
+%         for j=(i+1):obj.nclasses
+%           
+%           mtd = obj.mva{c}.mvmethods{end};
+%           [mm,dd] = mtd.model();
+%           
+%           if isempty(m)
+%             m = cell(size(mm,1)*length(obj.mva),1);
+%             desc = cell(size(mm,1)*length(obj.mva),1);
+%           end
+%           
+%           m((c-1)*size(mm,1)+(1:size(mm,1))) = mm;
+%           
+%           for k=1:size(mm,1)
+%             desc{(c-1)*size(mm,1)+k} = sprintf('class %d against %d; %s\n',i,j,dd{k});
+%           end
+%           
+%           c = c+1;
+%         end
+%         
+%       end
       
       
     end
