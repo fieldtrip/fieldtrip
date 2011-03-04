@@ -368,6 +368,7 @@ if ~all(permutevec == [1 2 3])
   segment.gray = ipermute(segment.gray, permutevec);
   if isfield(segment, 'white'), segment.white = ipermute(segment.white, permutevec); end
   if isfield(segment, 'csf'),   segment.csf   = ipermute(segment.csf,   permutevec); end
+  segment.dim  = ipermute(segment.dim, permutevec);
 end
 
 % accessing this field here is needed for the configuration tracking
