@@ -19,6 +19,11 @@ classdef ft_mv_selector < ft_mv_method
     function obj = ft_mv_selector(varargin)
       
       obj = obj@ft_mv_method(varargin{:});
+      
+      if isempty(obj.validator)
+        fprintf('validator not specified, using 5-fold CV with SVM as classifier and accuracy as performance metric\n');
+        obj.validator = ft_mv_crossvalidator('nfolds',5,'mva',ft_mv_svm,'metric','accuracy');
+      end
                   
     end
     

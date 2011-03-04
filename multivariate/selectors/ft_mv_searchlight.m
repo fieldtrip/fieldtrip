@@ -19,8 +19,8 @@ classdef ft_mv_searchlight < ft_mv_selector
   properties
   
     indims                % dimensions of the input data
-    radius                % radius of the hypersphere in terms of array elements
-    step                  % stepsize in terms of array elements    
+    radius = 3            % radius of the hypersphere in terms of array elements
+    step = 1              % stepsize in terms of array elements    
     mask                  % optional logical mask of size indims (input features are only those in the mask)
     neighbours            % a sparse adjacency matrix specifying the neighbourhood structure for irregular data (don't use in conjunction with mask)
     
@@ -40,7 +40,7 @@ classdef ft_mv_searchlight < ft_mv_selector
     spheres               % the features belonging to each sphere
     original              % in original space
     value                 % evaluation metric
-    pvalue                % significance value
+    pvalue                % significance value (uncorrected for the number of spheres)
     
     vld                   % saved validators if compact = false
     
@@ -183,6 +183,8 @@ classdef ft_mv_searchlight < ft_mv_selector
     
     function [centers,spheres,original] = estimate_spheres(obj)
       
+      assert(~isempty(obj.indims));
+      
       % dimensions are retrieved from mask
       if ~isempty(obj.mask)
         midx = find(obj.mask(:));
@@ -304,6 +306,10 @@ classdef ft_mv_searchlight < ft_mv_selector
         % original sphere indices
         original = tmp;
         
+      else
+        
+        original = spheres;
+       
       end
       
       if obj.verbose
