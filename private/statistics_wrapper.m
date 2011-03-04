@@ -238,7 +238,7 @@ elseif isfreq || istimelock
 
   % add gradiometer/electrode information to the configuration
   if ~isfield(cfg,'neighbours') && isfield(cfg, 'correctm') && strcmp(cfg.correctm, 'cluster')
-    cfg.neighbours = neighbourselection(cfg,varargin{1});
+    cfg.neighbours = ft_neighbourselection(cfg,varargin{1});
   end
 
 end
