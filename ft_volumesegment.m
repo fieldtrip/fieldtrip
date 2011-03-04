@@ -200,7 +200,7 @@ if strcmp(cfg.coordinates, 'ctf')
   mri = align_ctf2spm(mri);
   % also flip and permute the 3D volume itself, so that the voxel and headcoordinates approximately correspond
   % this seems to improve the convergence of the segmentation algorithm
-  [mri,flipflags] = align_ijk2xyz(mri);
+  [mri,permutevec,flipflags] = align_ijk2xyz(mri);
 elseif strcmp(cfg.coordinates, 'spm')
   fprintf('assuming that the input MRI is already approximately aligned with SPM coordinates\n');
   % nothing needs to be done
@@ -309,7 +309,9 @@ if strcmp(cfg.segment, 'yes')
     if strcmp(cfg.keepintermediate,'no'),
       delete([cfg.name,'.img']);
       delete([cfg.name,'.hdr']);
-      try, delete([cfg.name,'.mat']); end %does not always exist
+      if exist([cfg.name,'.mat'], 'file'), 
+        delete([cfg.name,'.mat']);
+      end %does not always exist
     end
     if strcmp(cfg.write,'no'),
        delete(fullfile(pathstr,['c1',name,'.hdr']));
@@ -360,6 +362,12 @@ for k = 1:3
     if isfield(segment, 'white'), segment.white = flipdim(segment.white, k); end
     if isfield(segment, 'csf'),   segment.csf   = flipdim(segment.csf, k);   end
   end
+end
+
+if ~all(permutevec == [1 2 3])
+  segment.gray = ipermute(segment.gray, permutevec);
+  if isfield(segment, 'white'), segment.white = ipermute(segment.white, permutevec); end
+  if isfield(segment, 'csf'),   segment.csf   = ipermute(segment.csf,   permutevec); end
 end
 
 % accessing this field here is needed for the configuration tracking
