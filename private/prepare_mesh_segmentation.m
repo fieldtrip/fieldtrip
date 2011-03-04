@@ -21,7 +21,7 @@ if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no'),
 end
 
 % some initial checks
-cfg = checkconfig(cfg, 'forbidden', 'numcompartments');
+cfg = ft_checkconfig(cfg, 'forbidden', 'numcompartments');
 if ~isfield(mri, 'tissue') && isfield(mri, 'gray'), cfg.tissue = 1; end
 if ~isfield(cfg, 'threshold'), cfg.threshold = 0; end
   
