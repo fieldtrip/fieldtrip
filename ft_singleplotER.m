@@ -132,9 +132,9 @@ cfg.matrixside    = ft_getopt(cfg, 'matrixside',   '');
 Ndata = numel(varargin);
 
 % interactive plotting is not allowed with more than 1 input
-if Ndata >1 && strcmp(cfg.interactive, 'yes')
-  error('interactive plotting is not supported with more than 1 input data set');
-end
+% if Ndata >1 && strcmp(cfg.interactive, 'yes')
+%   error('interactive plotting is not supported with more than 1 input data set');
+% end
 
 %FIXME rename matrixside and cohrefchannel in more meaningful options
 if ischar(cfg.graphcolor)
