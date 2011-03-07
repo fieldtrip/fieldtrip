@@ -28,6 +28,7 @@ end
 header = [];
 header.nChans      = length(vars);
 header.label = {};
+header.orig = {};
 
 fsample = [];
 onsets = [];
@@ -37,6 +38,7 @@ for i = 1:numel(vars)
     onsets(i)  = 1e-3*round(1e3*vars{i}.times(1));
     lengths(i) = vars{i}.length;
     header.label{i} = vars{i}.title;
+    header.orig{i} = rmfield(vars{i}, {'values', 'times'});
 end
 
 if length(unique(fsample))>1 || length(unique(onsets))>1 || length(unique(lengths))>1

@@ -389,6 +389,18 @@ switch eventformat
       'offset',   {orig.events.offset},...
       'duration', {orig.events.duration});
 
+  case  'ced_spike6mat'
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+    
+    for i = 1:numel(hdr.orig)
+        if ~any(isfield(hdr.orig{i}, {'units', 'scale'}))
+            trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', i, 'detectflank', detectflank);
+            event   = appendevent(event, trigger);
+        end
+    end
+  
   case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf_old'}
     % obtain the dataset name
     if ft_filetype(filename, 'ctf_meg4') ||  ft_filetype(filename, 'ctf_res4')
