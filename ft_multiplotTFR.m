@@ -388,7 +388,7 @@ if ~isempty(cfg.maskparameter)
 end
 
 % Select the channels in the data that match with the layout:
-[seldat, sellay] = match_str(data.label, lay.label);
+[seldat, sellay] = match_str(label, lay.label);
 if isempty(seldat)
   error('labels in data and labels in layout do not match'); 
 end
