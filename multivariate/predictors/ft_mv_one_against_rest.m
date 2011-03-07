@@ -4,6 +4,10 @@ classdef ft_mv_one_against_rest < ft_mv_predictor
 %   This class evaluates a binary classifier on all possible pairs of class
 %   labels. Borda count is used as default combfun. Can be overridden.
 %
+%   NOTE:
+%   data is balanced such that if we have N trials for a target class then
+%   we have at most N randomly selected trials for the other classes.
+%
 %   EXAMPLE:
 %   ft_mv_one_against_rest('mva',ft_mv_svm);
 %
@@ -55,9 +59,15 @@ classdef ft_mv_one_against_rest < ft_mv_predictor
         didx = (Y == i);
         
         data{i} = X;
-        design{i} = Y;
-        design{i}(~didx,:) = 1;
+        design{i} = nan(size(Y,1),1);
+        
+        ndidx = find(~didx);
+        prm = randperm(numel(ndidx));
+        design{i}(ndidx(prm(1:min(numel(prm),sum(didx)))),:) = 1;
         design{i}(didx,:)  = 2;
+        
+        data{i} = data{i}(~isnan(design{i}),:);
+        design{i} = design{i}(~isnan(design{i}),:);
         
       end
       
@@ -86,20 +96,14 @@ classdef ft_mv_one_against_rest < ft_mv_predictor
     function Y = test(obj,X)
       
       % get posteriors for all pairs
-      idx = 1;
       for i=1:obj.nclasses
-        for j=(i+1):obj.nclasses
-          
           
           if obj.verbose
-            fprintf('testing class %d against class %d\n',i,j);
+            fprintf('testing class %d against rest\n',i);
           end
           
-          Y{idx} = obj.mva{idx}.test(X);
-                    
-          idx = idx+1;
-          
-        end
+          Y{i} = obj.mva{i}.test(X);
+
       end
       
       % combine the result

@@ -2,9 +2,12 @@ classdef ft_mv_lds < ft_mv_timeseries
 %FT_MV_LDS linear dynamical system 
 %
 % state can be partially observed/unobserved during training.
-% partial observability of multiple observations is supported
+% partial observability of multiple observations is also supported
 % observations are normally distributed conditional on the state.
 % multiple observations sequences are supported
+%
+% bias term is *NOT* automatically added to the model
+%
 %
 % refs
 % Pattern Recognition and Machine Learning, Bishop
@@ -34,9 +37,7 @@ classdef ft_mv_lds < ft_mv_timeseries
 % Q     % K x K state noise covariance
 % 
 %
-% NOTES: 
-% - X and Y are swapped wrt the Kalman filter conventions
-% - obj.A = zeros(K,K) will remove the dynamics from the model
+% NOTE: X and Y are swapped wrt the Kalman filter conventions
 %
 % EXAMPLE:
 %
@@ -46,9 +47,8 @@ classdef ft_mv_lds < ft_mv_timeseries
 % Y = sin(ncycles * 2 * pi * (1:nsamples) ./ nsamples)';
 % 
 % k = ft_mv_lds('inference','smooth','verbose',true);
-% % k.A = 0; % no dynamics
 % X = repmat(Y,[1 ncov]) + randn(size(Y,1),ncov); 
-% k = k.train(zscore(X),zscore(Y)); % everything assumed observed 
+% k = k.train(zscore(X),zscore(Y)); % everything assumed observed
 % X = repmat(Y,[1 ncov]) + randn(size(Y,1),ncov); 
 % Z = k.test(zscore(X));
 % plot(Z,'ko');
@@ -61,8 +61,15 @@ classdef ft_mv_lds < ft_mv_timeseries
 % plot(Z,'ko');
 % disp(mean(abs(Z - Y)));
 % 
+% k = ft_mv_ldsMixed('inference','smooth','verbose',true);
+% X = repmat(Y,[1 ncov]) + randn(size(Y,1),ncov); 
+% k = k.train(zscore(X),[zscore(Y) nan(size(Y))]); %mixture hidden+observed
+% X = repmat(Y,[1 ncov]) + randn(size(Y,1),ncov); 
+% Z = k.test(zscore(X));
+% plot(Z,'ko');
+% disp(mean(abs(Z(:,1) - Y)));
 %
-% Copyright (c) 2010, Marcel van Gerven, Ali Bahramisharif
+% Copyright (c) 2011, Marcel van Gerven and Ali Bahramisharif
   
   properties
     
@@ -88,7 +95,7 @@ classdef ft_mv_lds < ft_mv_timeseries
 
   methods
     
-    function obj = ft_mv_lds(varargin)
+    function obj = ft_mv_ldsMixed(varargin)
       
       obj = obj@ft_mv_timeseries(varargin{:});
     end
@@ -181,7 +188,7 @@ classdef ft_mv_lds < ft_mv_timeseries
             G5 = G5 + G5t;
             G6 = G6 + G6t;
             
-            mu0 = mu0 + mu0t;
+            mu0 = cat(2,mu0,mu0t);
             V0 = V0 + V0t + mu0t*mu0t';
 
             LL = LL + LLt;
@@ -196,7 +203,7 @@ classdef ft_mv_lds < ft_mv_timeseries
           fprintf('EM step: %d; log likelihood: %g\n',iter,LL);
         end
         
-        if LL < oldLL, fprintf('non-decreasing log likelihood!\n'); end
+        if iter && (LL < oldLL), fprintf('non-decreasing log likelihood!\n'); end
   
         % M step
         T = sum(cellfun(@(x)(size(x,2)),X));
@@ -210,9 +217,7 @@ classdef ft_mv_lds < ft_mv_timeseries
           obj.R = (1-obj.diagR) * obj.R + obj.diagR * diag(diag(obj.R));
         end
         
-        if ~all(obj.A==0) 
-          obj.A = G4 / G3;
-        end
+        obj.A = G4 / G3;
         
         obj.Q = (G2 - obj.A * G4') ./ (T-N);
         obj.Q = (obj.Q + obj.Q') ./ 2;
@@ -220,10 +225,9 @@ classdef ft_mv_lds < ft_mv_timeseries
         if obj.diagQ
           obj.Q = (1-obj.diagQ) * obj.Q + obj.diagQ * diag(diag(obj.Q));
         end
-        
-        obj.mu0 = mu0/N;
-        obj.V0 = V0/N - obj.mu0*obj.mu0';      
-        
+        obj.mu0 = mean(mu0,2);
+        obj.V0 = V0 - obj.mu0*obj.mu0'+(mu0-repmat(obj.mu0,[1 N]))*(mu0-repmat(obj.mu0,[1 N]))'/N;      
+
         % symmetricize and make positive semidefinite
         obj.V0 = (obj.V0 + obj.V0') ./ 2;
         obj.V0 = obj.V0 + obj.epsilon*eye(size(obj.V0));
@@ -313,19 +317,22 @@ classdef ft_mv_lds < ft_mv_timeseries
       J = cell(1,T-1); % needed to compute transition matrix A in EM
       for n=T:-1:2
 
-        P = A * V1{n-1} * A' + Q;
-        
+          P = A * V1{n-1} * A' + Q;
         if det(P)<0
-          disp('bad predictive covariance')
-          lambda=max(svd(P));
-          P=P+(lambda+obj.epsilon)*eye(size(P));
+            disp('bad predictive covariance')
+            lambda=max(svd(P));
+            P=P+(lambda+obj.epsilon)*eye(size(P));
         end
-        
         if ~all(V{n}(:)==0)
           
           J{n-1} = (V1{n-1} * A') / P;
           
+        if numel(nandim)>0
+          mu(:,n-1) = mu1(:,n-1) + J{n-1} * (mu(:,n) - A * mu1(:,n-1)-obj.A(nandim,dim)*Y(dim,n-1));
+        else
           mu(:,n-1) = mu1(:,n-1) + J{n-1} * (mu(:,n) - A * mu1(:,n-1));
+        end
+            
           V{n-1} = V1{n-1} + J{n-1} * (V{n} - P)*J{n-1}';
 
           if n<T
@@ -397,6 +404,8 @@ classdef ft_mv_lds < ft_mv_timeseries
 
       Xpred=mu;
       Vpred=V; 
+
+
 
       % take measurements into account
       if isempty(X) || all(isnan(X(:,1)))
@@ -514,13 +523,13 @@ classdef ft_mv_lds < ft_mv_timeseries
 
           [mu1,V1,LL] = obj.filter(X,Y);
           [Y1,V1,J1,VP1] = obj.smooth(mu1,V1,Y);
-               
+   
         
           
           Y(nandim,:)=Y1;
           VP=cell(1,T);
           V = cell(1,T);
-          J = cell(1,T-1);
+          %J = cell(1,T-1);
           for i=1:T
               if i>1
                   VP{i}=zeros(K);
@@ -529,17 +538,17 @@ classdef ft_mv_lds < ft_mv_timeseries
               V{i}=zeros(K);
               V{i}(dim,dim)=V{i}(dim,dim)+obj.epsilon*eye(length(dim));
               V{i}(nandim,nandim)=V1{i};
-              if i<T
-                  J{i}=zeros(K);
-                  J{i}(nandim,nandim)=J1{i};
-              end
+              %if i<T
+              %    J{i}=zeros(K);
+              %    J{i}(nandim,nandim)=J1{i};
+              %end
           end
 
 
       else
       
         V = repmat({0},size(Y));
-        J = repmat({0},[size(Y,1) size(Y,2)-1]);
+        %J = repmat({0},[size(Y,1) size(Y,2)-1]);
         VP = repmat({0},size(Y));
         LL = nan;
         
