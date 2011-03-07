@@ -79,15 +79,15 @@ dat=zeros(hdr.nChans,hdr.nSamples,endtrial-begtrial+1);
 status=fseek(fh,(130+(2*fhdr(18))+(4*fhdr(19))),'bof');
 status=fseek(fh,2,'cof');
 for loop=1:fhdr(18)
-  temp=fread(fh,80,'char');
+  temp=fread(fh,80,'uchar');
   theName=strtok(temp);
   theName=strtok(theName,char(0));
   cnames{loop}=deblank(char(theName))';
   status=fseek(fh,fhdr(24+(loop-1))-80,'cof');
 end
-fcom=fread(fh,fhdr(20),'char');
-ftext=fread(fh,fhdr(21),'char');
-fpad=fread(fh,fhdr(22),'char');
+fcom=fread(fh,fhdr(20),'uchar');
+ftext=fread(fh,fhdr(21),'uchar');
+fpad=fread(fh,fhdr(22),'uchar');
 status=fseek(fh,-2,'cof');
 
 %read to start of desired data
