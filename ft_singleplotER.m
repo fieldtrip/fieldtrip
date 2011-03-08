@@ -456,10 +456,10 @@ for i=1:Ndata
     % Find maxmin for all varargins:
     ymin = zeros(1, Ndata );
     ymax = zeros(1, Ndata );
-    for i=1:Ndata 
+    for k=1:Ndata 
       % Select the channels in the data that match with the layout:
-      ymin(i) = min(datavector);
-      ymax(i) = max(datavector);
+      ymin(k) = min(datavector);
+      ymax(k) = max(datavector);
     end
     ymin = min(ymin);
     ymax = max(ymax);
