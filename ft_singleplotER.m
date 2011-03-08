@@ -453,16 +453,13 @@ for i=1:Ndata
     
   % Update ymin and ymax for the current data set:
   if strcmp(cfg.ylim,'maxmin')
-    % Find maxmin for all varargins:
-    ymin = zeros(1, Ndata );
-    ymax = zeros(1, Ndata );
-    for k=1:Ndata 
+      if i==1
+          ymin = [];
+          ymax = [];
+      end
       % Select the channels in the data that match with the layout:
-      ymin(k) = min(datavector);
-      ymax(k) = max(datavector);
-    end
-    ymin = min(ymin);
-    ymax = max(ymax);
+      ymin = min([ymin min(datavector)]);
+      ymax = max([ymax max(datavector)]);
   else
     ymin = cfg.ylim(1);
     ymax = cfg.ylim(2);
