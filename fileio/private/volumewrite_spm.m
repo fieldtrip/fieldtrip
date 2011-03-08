@@ -41,6 +41,7 @@ dim       = size(data);
 if isnan(typ)
   % convert every unsupported data type into double
   data      = double(data);
+  typ       = spm_type(class(data));
 end
 
 switch lower(spmversion)
