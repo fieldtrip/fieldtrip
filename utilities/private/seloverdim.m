@@ -117,7 +117,13 @@ switch seldim
       for i=1:length(data.cumtapcnt)
         tapers(sumtapcnt(i)+1:sumtapcnt(i+1)) = i;
       end
-      tmpsel = unique(tapers(sel));
+      tmpsel    = [];
+      tmpsel(1) = tapers(sel(1));
+      for i=2:length(sel)
+        if tapers(sel(i))~=tapers(sel(i-1))
+	  tmpsel(end+1) = tapers(sel(i));
+	end
+      end
     else
       tmpsel = sel;
     end
