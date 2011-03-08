@@ -169,10 +169,10 @@ elseif isnumeric(cfg.graphcolor)
   GRAPHCOLOR = [0 0 0; cfg.graphcolor];
 end
 
-% interactive plotting is not allowed with more than 1 input
-if numel(varargin)>1 && strcmp(cfg.interactive, 'yes')
-  error('interactive plotting is not supported with more than 1 input data set');
-end
+% % interactive plotting is not allowed with more than 1 input
+% if numel(varargin)>1 && strcmp(cfg.interactive, 'yes')
+%   error('interactive plotting is not supported with more than 1 input data set');
+% end
 
 % ensure that the input is correct, also backward compatibility with old data structures:
 for i=1:numel(varargin)
