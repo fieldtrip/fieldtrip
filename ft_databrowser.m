@@ -132,7 +132,7 @@ if ~isfield(cfg, 'eogscale'),        cfg.eogscale = [];                   end
 if ~isfield(cfg, 'ecgscale'),        cfg.ecgscale = [];                   end
 if ~isfield(cfg, 'megscale'),        cfg.megscale = [];                   end
 
-if isfield(data, 'topo') && strmatch(cfg.viewmode, 'component')
+if hasdata && isfield(data, 'topo') && strmatch(cfg.viewmode, 'component')
   if ~isfield(cfg, 'comp')
     cfg.comp = 1:10; % to avoid plotting 274 components topographically
   end
@@ -197,39 +197,28 @@ else
     event = [];
   end
   
-  if strcmp(cfg.viewmode, 'component') 
-    if ~isfield(cfg, 'comp')
-      cfg.comp = 1:10; % to avoid plotting 274 components topographically
-    end
-    cfg.channel = hdr.label(cfg.comp);
-  else
-    cfg.channel = ft_channelselection(cfg.channel, hdr.label);
-  end
-  
+  cfg.channel = ft_channelselection(cfg.channel, hdr.label);
   chansel = match_str(hdr.label, cfg.channel);
   fsample = hdr.Fs;
   Nchans  = length(chansel);
+  Ntrials = hdr.nTrials;
   
-  % this is how the data from file should be segmented
-  trlorg = cfg.trl;
-  Ntrials = size(trlorg, 1);
+  % construct trl-matrix for data from file on disk
+  trlorg = zeros(Ntrials,3);
+  for k = 1:Ntrials
+    trlorg(k,[1 2]) = [1 hdr.nSamples] + [hdr.nSamples hdr.nSamples] .* (k-1);
+  end
   
   % this option relates to reading over trial boundaries in a pseudo-continuous dataset
-  if ~isfield(cfg, 'continuous')
-    if Ntrials==1
-      cfg.continuous = 'yes';
-    else
-      cfg.continuous = 'no';
-    end
-  end
-  
-  if strcmp(cfg.viewmode, 'component')
-    if ~isfield(cfg, 'layout')
-      error('You need to specify a layout-file when browsing through components');
-    end
-    % read or create the layout that will be used for the topoplots
-    cfg.layout = ft_prepare_layout(cfg);
-  end
+%   if ~isfield(cfg, 'continuous')
+%     if Ntrials==1
+%       cfg.continuous = 'yes';
+%     else
+%       cfg.continuous = 'no';
+%     end
+%   else
+%     Ntrials = 1;
+%   end
 end
 
 if Nchans == 0
@@ -329,16 +318,19 @@ artdata.cfg.trl        = [1 datendsample 0];
 if ischar(cfg.zscale) && strcmp(cfg.zscale, 'auto')
   if nargin>1
     dat = data.trial{1}(chansel,:);
-    minval = min(dat(:));
-    maxval = max(dat(:));
     time = data.time{1};
-    mintime = min(time(:));
-    maxtime = max(time(:));
-    cfg.zscale = max(abs(minval), abs(maxval));
-    cfg.yscale = max(abs(mintime), abs(maxtime));
   else
-    cfg.zscale = 1; % FIXME
+    % data needs to be read from file
+    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', hdr.nSamples, 'chanindx', chansel, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat, 'headerformat', cfg.headerformat);
+    time = (1:hdr.nSamples) / fsample;
   end
+  
+  minval = min(dat(:));
+  maxval = max(dat(:));
+  mintime = min(time(:));
+  maxtime = max(time(:));
+  cfg.zscale = max(abs(minval), abs(maxval));
+  cfg.yscale = max(abs(mintime), abs(maxtime));
 end
 
 h = figure;
