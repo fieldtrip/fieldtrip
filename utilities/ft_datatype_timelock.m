@@ -28,10 +28,11 @@ function timelock = ft_datatype_timelock(timelock, varargin)
 %   - <none>
 %
 % Obsoleted fields:
-%   - <none>
+%   - fsample
 %
 % Revision history:
 %
+% (2011) The field 'fsample' was removed, as it was redundant.
 % (2003) The initial version was defined.
 %
 % See also FT_DATATYPE and FT_DATATYPE_xxx
