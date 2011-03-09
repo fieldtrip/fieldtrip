@@ -109,7 +109,8 @@ for k=badindx(:)'
     distance = norm(sens.pnt(l,:)-sens.pnt(sensindx,:));
     if distance<cfg.neighbourdist
       % include this channel as neighbour, weigh with inverse distance
-      repair(k,l) = 1/distance;
+      datlabindx = match_str(data.label, sens.label{l});
+      repair(k,datlabindx) = 1/distance;
       fprintf('  using neighbour %s\n', sens.label{l});
     end
   end
