@@ -107,21 +107,28 @@ s = uicontrol('style', 'slider');
 set(s, 'position', [20 20 pos(3)-40 20]);
 
 p = uicontrol('style', 'pushbutton');
-set(p, 'position', [pos(1)-90 80 50 20]);
+set(p, 'position', [20 50 50 20]);
 set(p, 'string', 'play')
 
 button_slower = uicontrol('style', 'pushbutton');
-set(button_slower, 'position', [pos(1)-90 110 20 20]);
+set(button_slower, 'position', [75 50 20 20]);
 set(button_slower, 'string', '-')
 set(button_slower, 'Callback', @cb_slower);
 
 button_faster = uicontrol('style', 'pushbutton');
-set(button_faster, 'position', [pos(1)-60 110 20 20]);
+set(button_faster, 'position', [100 50 20 20]);
 set(button_faster, 'string', '+')
 set(button_faster, 'Callback', @cb_faster);
 
+ht = uicontrol('style', 'text');
+set(ht, 'position', [125 50 pos(3)-145 20]);
+set(ht, 'string', 'time = ');
+set(ht, 'horizontalalignment', 'left');
+
+text(0,0,  sprintf('%s = \n', cfg.xparam));
 t = timer;
 set(t, 'timerfcn', {@cb_timer, h}, 'period', 0.1, 'executionmode', 'fixedSpacing');
+
 
 % collect the data and the options to be used in the figure
 opt.pnt = source.pos;
@@ -148,6 +155,10 @@ camlight right
 
 % add the handle to the mesh
 opt.hs  = hs;
+
+% add the text-handle to the mesh
+opt.ht  = ht;
+
 guidata(h, opt);
 
 % from now it is safe to hand over the control to the callback function
@@ -184,7 +195,8 @@ val = round(val*(size(opt.dat,2)-1))+1;
 val = min(val, size(opt.dat,2));
 val = max(val, 1);
 
-text(0, 0, sprintf('%s = %f\n', opt.cfg.xparam, opt.tim(val)));
+%text(0, 0, sprintf('%s = %f\n', opt.cfg.xparam, opt.tim(val)));
+set(opt.ht, 'string', sprintf('%s = %f\n', opt.cfg.xparam, opt.tim(val)));
 set(opt.hs, 'FaceVertexCData', opt.dat(:,val));
 if isfield(opt, 'mask')
   set(opt.hs, 'FaceVertexAlphaData', opt.mask(:,val));
