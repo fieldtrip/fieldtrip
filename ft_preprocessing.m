@@ -272,6 +272,7 @@ if hasdata
   % do preprocessing of data that has already been read into memory
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+  convert = ft_datatype(data);
   % the input data must be raw
   data = ft_checkdata(data, 'datatype', 'raw', 'hasoffset', 'yes', 'hastrialdef', 'yes');
 
@@ -557,6 +558,15 @@ end
 
 % remember the exact configuration details in the output
 dataout.cfg = cfg;
+
+% convert back to input type if necessary
+switch convert
+    case 'timelock'
+        dataout = ft_checkdata(dataout, 'datatype', 'timelock');
+    otherwise
+        % keep the output as it is
+end
+
 
 % the output data should be saved to a MATLAB file
 if ~isempty(cfg.outputfile)
