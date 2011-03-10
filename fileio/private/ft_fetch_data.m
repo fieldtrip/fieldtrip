@@ -94,7 +94,7 @@ if trlnum>1,
       % skip it to speed up the indexing of the trial and sample numbers
       continue
     end
-    if trlbeg >= begsample && trlend <= endsample 
+    if trlbeg <= begsample && trlend >= endsample 
         % all data is in this trial!
         % get the indices of the current trial and break the loop
         trlidx = trllop;
