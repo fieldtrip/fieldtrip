@@ -27,9 +27,9 @@ function channame = val2nearestchan(data,val)
 %
 % $Id$
 
-fieldtripdefs
+ft_defaults
 
-[data] = checkdata(data, 'datatype', 'raw');
+[data] = ft_checkdata(data, 'datatype', 'raw');
 
 % identify time point nearest to given time
 timevec = [];
