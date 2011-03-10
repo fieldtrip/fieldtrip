@@ -314,8 +314,16 @@ if hasdata
     % do the preprocessing on the selected channels
     [dataout.trial{i}, dataout.label, dataout.time{i}, cfg] = preproc(data.trial{i}(rawindx,:), data.label(rawindx), data.fsample, cfg, data.offset(i));
   end % for all trials
+  
+  % convert back to input type if necessary
+  switch convert
+      case 'timelock'
+          dataout = ft_checkdata(dataout, 'datatype', 'timelock');
+      otherwise
+          % keep the output as it is
+  end
   ft_progress('close');
-
+  
 else
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % read the data from file and do the preprocessing
@@ -558,15 +566,6 @@ end
 
 % remember the exact configuration details in the output
 dataout.cfg = cfg;
-
-% convert back to input type if necessary
-switch convert
-    case 'timelock'
-        dataout = ft_checkdata(dataout, 'datatype', 'timelock');
-    otherwise
-        % keep the output as it is
-end
-
 
 % the output data should be saved to a MATLAB file
 if ~isempty(cfg.outputfile)
