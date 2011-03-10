@@ -42,6 +42,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %                     can be selected by holding down the SHIFT key.
 % cfg.renderer      = 'painters', 'zbuffer',' opengl' or 'none' (default = [])
 % cfg.linestyle     = linestyle/marker type, see options of the matlab PLOT function (default = '-')
+%                     can be a single style for all datasets, or a cell-array containing one style for each dataset
 % cfg.linewidth     = linewidth in points (default = 0.5)
 % cfg.graphcolor    = color(s) used for plotting the dataset(s) (default = 'brgkywrgbkywrgbkywrgbkyw')
 %                     alternatively, colors can be specified as Nx3 matrix of RGB values
@@ -162,11 +163,30 @@ if ~isfield(cfg,'maskstyle'),     cfg.maskstyle     = 'box';                    
 if ~isfield(cfg,'channel'),       cfg.channel       = 'all';                       end
 if ~isfield(cfg, 'matrixside'),   cfg.matrixside    = '';                          end
 
+Ndata = numel(varargin);
+
 %FIXME rename matrixside and cohrefchannel in more meaningful options
 if ischar(cfg.graphcolor)
   GRAPHCOLOR = ['k' cfg.graphcolor];
 elseif isnumeric(cfg.graphcolor)
   GRAPHCOLOR = [0 0 0; cfg.graphcolor];
+end
+
+% check for linestyle being a cell-array, check it's length, and lengthen it if does not have enough styles in it
+if ischar(cfg.linestyle)
+  cfg.linestyle = {cfg.linestyle};
+end
+
+if Ndata  > 1
+  if (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) > 1)
+    error('either specify cfg.linestyle as a cell-array with one cell for each dataset, or only specify one linestyle')
+  elseif (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) == 1)
+    tmpstyle = cfg.linestyle{1};
+    cfg.linestyle = cell(Ndata , 1);
+    for idataset = 1:Ndata 
+      cfg.linestyle{idataset} = tmpstyle;
+    end
+  end
 end
 
 % % interactive plotting is not allowed with more than 1 input
@@ -175,7 +195,7 @@ end
 % end
 
 % ensure that the input is correct, also backward compatibility with old data structures:
-for i=1:numel(varargin)
+for i=1:Ndata
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'freq'});
   dtype{i}    = ft_datatype(varargin{i});
   
@@ -191,7 +211,7 @@ for i=1:numel(varargin)
   end
 end
 
-if numel(varargin)>1,
+if Ndata>1,
   if ~all(strcmp(dtype{1}, dtype))
     error('input data are of different type; this is not supported');
   end
@@ -245,7 +265,7 @@ hasrpt = sum(ismember(dimtok, {'rpt' 'subj'}));
 if strcmp(dtype, 'timelock') && hasrpt,
   tmpcfg        = [];
   tmpcfg.trials = cfg.trials;
-  for i=1:numel(varargin)
+  for i=1:Ndata
     varargin{i} = ft_timelockanalysis(tmpcfg, varargin{i});
   end
   dimord        = varargin{1}.dimord;
@@ -254,7 +274,7 @@ elseif strcmp(dtype, 'freq') && hasrpt,
   % this also deals with fourier-spectra in the input
   % or with multiple subjects in a frequency domain stat-structure
   % on the fly computation of coherence spectrum is not supported
-  for i=1:numel(varargin)
+  for i=1:Ndata
     if isfield(varargin{i}, 'crsspctrm'),
       varargin{i} = rmfield(varargin{i}, 'crsspctrm'); 
     end
@@ -263,7 +283,7 @@ elseif strcmp(dtype, 'freq') && hasrpt,
   tmpcfg           = [];
   tmpcfg.trials    = cfg.trials;
   tmpcfg.jackknife = 'no';
-  for i=1:numel(varargin)
+  for i=1:Ndata
     if isfield(cfg, 'zparam') && ~strcmp(cfg.zparam,'powspctrm')
       % freqdesctiptives will only work on the powspctrm field
       % hence a temporary copy of the data is needed
@@ -289,7 +309,7 @@ cfg.layout = lay;
 
 % Apply baseline correction
 if ~strcmp(cfg.baseline, 'no')
-  for i=1:numel(varargin)
+  for i=1:Ndata
     if strcmp(dtype, 'timelock') && strcmp(cfg.xparam, 'time')
       varargin{i} = ft_timelockbaseline(cfg, varargin{i});
     elseif strcmp(dtype, 'freq') && strcmp(cfg.xparam, 'time')
@@ -344,7 +364,7 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.zparam)
     return
   end
   
-  for i=1:numel(varargin)
+  for i=1:Ndata
     if ~isfull,
       % Convert 2-dimensional channel matrix to a single dimension:
       if isempty(cfg.matrixside)
@@ -403,7 +423,7 @@ else
 end
 
 % Get the index of the nearest bin
-for i=1:numel(varargin)  
+for i=1:Ndata  
   xidmin(i,1) = nearest(varargin{i}.(cfg.xparam), xmin);
   xidmax(i,1) = nearest(varargin{i}.(cfg.xparam), xmax);
 end
@@ -462,7 +482,7 @@ if isfield(lay, 'outline') && strcmp(cfg.showoutline, 'yes')
 end
 
 % Plot each data set:
-for i=1:length(varargin)
+for i=1:Ndata
   % Make vector dat with one value for each channel
   dat    = varargin{i}.(cfg.zparam);
   label  = varargin{i}.label;
@@ -535,7 +555,7 @@ for i=1:length(varargin)
     maskdatavector = [];
   end
 
-  if length(varargin) > 1
+  if Ndata > 1
     if ischar(GRAPHCOLOR);        colorLabels = [colorLabels iname{i+1} '=' GRAPHCOLOR(i+1) '\n'];
     elseif isnumeric(GRAPHCOLOR); colorLabels = [colorLabels iname{i+1} '=' num2str(GRAPHCOLOR(i+1,:)) '\n'];
     end
@@ -553,7 +573,7 @@ for i=1:length(varargin)
     end
     % Plot ER:
     plotWnd(xparam,datamatrix(m,:),[xmin xmax],[ymin ymax], ...
-      layX(m), layY(m), width(m), height(m), layLabels(m), cfg, color, mask); %FIXME shouldn't this be replaced with a call to ft_plot_vector?
+      layX(m), layY(m), width(m), height(m), layLabels(m), cfg, color, cfg.linestyle{i}, mask); %FIXME shouldn't this be replaced with a call to ft_plot_vector?
     
     if i==1,
       % Keep ER plot coordinates (at centre of ER plot), and channel labels (will be stored in the figure's UserData struct):
@@ -642,7 +662,7 @@ ft_plot_text( x2,y2,num2str(ylim(2),3),'HorizontalAlignment','Left','VerticalAli
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plotWnd(x,y,xlim,ylim,xpos,ypos,width,height,label,cfg,color,mask)
+function plotWnd(x,y,xlim,ylim,xpos,ypos,width,height,label,cfg,color,style,mask)
 
 
 % Clip out of bounds y values:
@@ -653,9 +673,9 @@ xs = xpos+width*(x-xlim(1))/(xlim(2)-xlim(1));
 ys = ypos+height*(y-ylim(1))/(ylim(2)-ylim(1));
 
 if isempty(mask) || (~isempty(mask) && strcmp(cfg.maskstyle,'box'))
-  ft_plot_vector(xs, ys, 'color', color, 'style', cfg.linestyle, 'linewidth', cfg.linewidth)
+  ft_plot_vector(xs, ys, 'color', color, 'style', style, 'linewidth', cfg.linewidth)
 elseif ~isempty(mask) && ~strcmp(cfg.maskstyle,'box') % ft_plot_vector doesnt support boxes higher than ydata yet, so a separate option remains below
-  ft_plot_vector(xs, ys, 'color', color, 'style', cfg.linestyle, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth)
+  ft_plot_vector(xs, ys, 'color', color, 'style', style, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth)
 end
 
 if strcmp(cfg.showlabels,'yes')
