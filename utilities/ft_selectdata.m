@@ -65,10 +65,12 @@ hassubj = false(1, length(data));
 for k = 1:length(data)
   data{k} = ft_checkdata(data{k}, 'datatype', {'freq' 'timelock' 'source', 'volume', 'freqmvar', 'raw'});  
   [dtype{k}, dimord{k}]  = ft_datatype(data{k});  
-  if ~strcmp(dtype{k}, 'raw') && ~isempty(strfind(data{1}.dimord, 'subj'))
-    hassubj(k) = true;
-    data{k}.dimord = strrep(data{k}.dimord, 'subj', 'rpt');
-    dimord{k} = data{k}.dimord;
+  if ~strcmp(dtype{k}, 'raw')
+    if ~isempty(strfind(data{1}.dimord, 'subj'))
+      hassubj(k) = true;
+      data{k}.dimord = strrep(data{k}.dimord, 'subj', 'rpt');
+      dimord{k} = data{k}.dimord;
+    end
   end
   if strcmp(dtype{k}, 'raw'),
     %ensure it to have an offset
