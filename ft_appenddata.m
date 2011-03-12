@@ -258,8 +258,10 @@ elseif catlabel
     
     %fill this trial with data
     endchan = Nch(1);
+    %allow some jitter for irregular sample frequencies
+    TOL = 10*eps;
     for i=2:Ndata
-      if ~all(data.time{j}==varargin{i}.time{j})
+      if ~all(data.time{j}-varargin{i}.time{j}<TOL)
         error('there is a difference in the time axes of the input data');
       end
       begchan = endchan+1;
