@@ -65,8 +65,8 @@ hassubj = false(1, length(data));
 for k = 1:length(data)
   data{k} = ft_checkdata(data{k}, 'datatype', {'freq' 'timelock' 'source', 'volume', 'freqmvar', 'raw'});  
   [dtype{k}, dimord{k}]  = ft_datatype(data{k});  
-  if ~strcmp(dtype{k}, 'raw')
-    if ~isempty(strfind(data{1}.dimord, 'subj'))
+  if ~strcmp(dtype{k}, 'raw') && isfield(data{k}, 'dimord')
+    if ~isempty(strfind(data{k}.dimord, 'subj'))
       hassubj(k) = true;
       data{k}.dimord = strrep(data{k}.dimord, 'subj', 'rpt');
       dimord{k} = data{k}.dimord;
