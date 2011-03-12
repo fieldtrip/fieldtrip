@@ -867,7 +867,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'full')
   end   
   
   % remove first singleton dimension
-  if flag, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, siz(2:end)); end
+  if flag || nrpt==1, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, siz(2:end)); end
 
 elseif strcmp(current, 'fourier') && strcmp(desired, 'fullfast'),
 
