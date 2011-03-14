@@ -366,6 +366,10 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
   trialok = [];
   count_complete_reject = 0;
   count_partial_reject  = 0;
+  
+  trlRemovedInd = [];
+  trlPartiallyRemovedInd = [];
+  
   for trial=1:size(trl,1)
     % cut out the part of the rejection-axis corresponding with this trial
     rejecttrial = rejectall(trl(trial,1):trl(trial,2));
@@ -375,9 +379,11 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
     elseif all(rejecttrial)
       % the whole trial is bad
       count_complete_reject = count_complete_reject + 1;
+      trlRemovedInd = [trlRemovedInd trial];
     elseif any(rejecttrial) && strcmp(cfg.artfctdef.reject, 'complete')
       % some part of the trial is bad, reject the whole trial
       count_complete_reject = count_complete_reject + 1;
+       trlRemovedInd = [trlRemovedInd trial];
       continue;
     elseif any(rejecttrial) && strcmp(cfg.artfctdef.reject, 'partial')
       % some part of the trial is bad, reject only the bad part
@@ -396,6 +402,7 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
       trialnew(find(trialnew(:,2)-trialnew(:,1)<minacceptnumsmp),:) = [];
       count_partial_reject = count_partial_reject + 1;
       trialok = [trialok; trialnew];
+      trlPartiallyRemovedInd = [trlPartiallyRemovedInd trial];
     end
   end
   
@@ -404,6 +411,18 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
   fprintf('resulting %3d trials\n', size(trialok,1));
   cfg.trlold = trl;      % return the original trial definition in the configuration
   cfg.trl    = trialok;  % return the cleaned trial definition in the configuration
+  
+  if strcmp(cfg.artfctdef.feedback, 'yes')
+    fprintf('the following trials were completely removed: ');
+    for k = trlRemovedInd
+      fprintf('%d ', k);
+    end
+    fprintf('\nthe following trials were partially removed: ');
+    for k = trlPartiallyRemovedInd
+      fprintf('%d ', k);
+    end
+    fprintf('\n');
+  end
   
 else
   fprintf('not rejecting any data, only marking the artifacts\n');
