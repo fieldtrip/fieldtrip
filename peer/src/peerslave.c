@@ -720,7 +720,7 @@ int main(int argc, char *argv[]) {
 								watchdog.masterid = peerid;        /* keep an eye on the master for which we are working */
 								watchdog.time     = timallow + 10; /* add 10 seconds for copying the variables to and from MATLAB */
 								watchdog.memory   = 0;             /* don't watch the memory of the peerslave executable */
-								watchdog.enabled  = 1;
+								watchdog.enabled  = 0;
 								DEBUG(LOG_CRIT, "watchdog enabled for masterid = %lu, time = %d, memory = %lu\n", watchdog.masterid, watchdog.time, watchdog.memory);
 								pthread_mutex_unlock(&mutexwatchdog);
 
