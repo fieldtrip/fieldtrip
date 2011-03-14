@@ -181,10 +181,10 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 
 		/* enable the watchdog: the expire thread will exit if the master is not seen any more */
 		pthread_mutex_lock(&mutexwatchdog);
-		watchdog.enabled  = 1;
 		watchdog.masterid = masterid;
 		watchdog.time     = time;
 		watchdog.memory   = memory;
+		watchdog.enabled  = 1;
 		mexPrintf("watchdog: enabled for masterid = %lu, time = %d, memory = %lu\n", masterid, time, memory);
 		pthread_mutex_unlock(&mutexwatchdog);
 

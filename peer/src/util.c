@@ -322,7 +322,7 @@ int getmem (uint64_t *rss, uint64_t *vs) {
 int getmem (uint64_t *rss, uint64_t *vs) {
 		FILE *fp;
 		if ((fp = fopen("/proc/self/statm", "r")) == NULL) {
-				mexErrMsgTxt("could not open /proc/self/statm");
+				DEBUG(LOG_ERR, "could not open /proc/self/statm");
 				return -1;
 		}
 		/* read the information from /proc/self/statm
@@ -335,7 +335,7 @@ int getmem (uint64_t *rss, uint64_t *vs) {
 		   dt         dirty pages (unused in Linux 2.6)
 		 */
 		if (fscanf(fp, "%u%u", vs, rss )!=2) {
-				mexWarnMsgTxt("could not read all elements from /proc/self/statm");
+				DEBUG(LOG_WARNING, "could not read all elements from /proc/self/statm");
 		}
 		/* these seem to be in 4096 byte blocks */
 		*vs  = (*vs)  * 4096; 

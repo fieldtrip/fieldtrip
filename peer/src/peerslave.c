@@ -683,6 +683,8 @@ int main(int argc, char *argv[]) {
 								memallow = 1.5*(job->job->memreq);
 								if (host->memavail < memallow)
 										memallow = host->memavail;
+								/* FIXME at the moment this is disabled */
+								memallow = 0;
 
 								pthread_mutex_unlock(&mutexhost);
 
@@ -701,7 +703,7 @@ int main(int argc, char *argv[]) {
 								/* create a copy of the optin cell-array */
 								n = mxGetM(options) * mxGetN(options);
 								mxArray *previous = options;
-								options = mxCreateCellMatrix(1, n+4);
+								options = mxCreateCellMatrix(1, n+6);
 								for (i=0; i<n; i++)
 										mxSetCell(options, i, mxGetCell(previous, i));
 								/* add the masterid and timallow options, these are used by peerexec for the watchdog */
@@ -709,6 +711,18 @@ int main(int argc, char *argv[]) {
 								mxSetCell(options, n+1, mxCreateDoubleScalar(peerid));
 								mxSetCell(options, n+2, mxCreateString("timallow\0"));
 								mxSetCell(options, n+3, mxCreateDoubleScalar(timallow));
+								mxSetCell(options, n+4, mxCreateString("memallow\0"));
+								mxSetCell(options, n+5, mxCreateDoubleScalar(memallow));
+
+								/* the watchdog is running as mex file inside the MATLAB engine */
+								/* also enable the watchdog for the peerslave command-line executable */
+								pthread_mutex_lock(&mutexwatchdog);
+								watchdog.masterid = peerid;        /* keep an eye on the master for which we are working */
+								watchdog.time     = timallow + 10; /* add 10 seconds for copying the variables to and from MATLAB */
+								watchdog.memory   = 0;             /* don't watch the memory of the peerslave executable */
+								watchdog.enabled  = 1;
+								DEBUG(LOG_CRIT, "watchdog enabled for masterid = %lu, time = %d, memory = %lu\n", watchdog.masterid, watchdog.time, watchdog.memory);
+								pthread_mutex_unlock(&mutexwatchdog);
 
 								jobFailed = 0;
 
@@ -732,6 +746,15 @@ int main(int argc, char *argv[]) {
 										jobFailed = 3;
 										engineAborted = 1;
 								}
+
+								/* the job has copleted (either succesful ot not), disable the watchdog */
+								pthread_mutex_lock(&mutexwatchdog);
+								watchdog.masterid = 0;
+								watchdog.time     = 0;
+								watchdog.memory   = 0;
+								watchdog.enabled  = 0;
+								DEBUG(LOG_CRIT, "watchdog disabled\n");
+								pthread_mutex_unlock(&mutexwatchdog);
 
 								/* get the output arguments and options */
 								if (!jobFailed && (argout = engGetVariable(en, "argout")) == NULL) {
