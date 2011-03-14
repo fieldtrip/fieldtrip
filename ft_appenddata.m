@@ -294,7 +294,9 @@ end
 
 if removesampleinfo
     fprintf('removing trial definition from output\n');
-    data            = rmfield(data, 'sampleinfo');
+    if isfield(data, 'sampleinfo')
+        data            = rmfield(data, 'sampleinfo');
+    end
     %cfg.trl(:, 1:2) = nan;
     if isfield(cfg, 'trl'), cfg = rmfield(cfg, 'trl'); end
 end
