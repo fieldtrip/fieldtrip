@@ -5,12 +5,13 @@ function [lf] = leadfield_simbio(dip, elc, vol)
 % [lf] = leadfield_simbio(dip, elc, vol);
 %
 % with input arguments
-%   dip     position dipole (matrix of dimensions NX3)
-%   elc     positions of the electrodes
+%   dip     positions of the dipoles (matrix of dimensions NX3)
+%   elc     positions of the electrodes (matrix of dimensions MX3)
 % 
 % and vol being a structure with the element
 %   vol.meshfile file containing the 3D mesh filename
-
+%
+% The output lf is the leadfields matrix of dimensions M (rows) X N*3 (cols)
 
 % Copyright (C) 2011, Cristiano Micheli
 
