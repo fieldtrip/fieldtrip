@@ -1,0 +1,122 @@
+#Parameter file: FEM for source simulation
+
+[NeuroFEMSimulator]
+# GENERAL PARAMETERS
+# residuum of the forward solution 
+toleranceforwardsolution= .10000E-08
+# degree of Gaussian integration (2 is recommended) 
+degreeofintegration= 2
+# different analytical solutions for the EEG problem 
+analyticalsolution= 1
+
+# should METIS repartition for parallel run?
+metisrepartitioning= 1
+
+# SOLVER (1:Jakobi-CG, 2:IC(0)-CG, 3:AMG-CG, 4:PILUTS(ILDLT)-CG) 
+solvermethod= 2
+# use or use not lead field basis approach
+associativity= 1
+# NeuroFEM Solver
+# parameter file for Pebbles solver 
+pebbles= pebbles.inp
+# ONLY for MultiRHS-Pebbles: number of right-hand-sides which are solved simultaneously
+pebblesnumrhs= 1
+
+# SOURCE SIMULATION
+# threshold (percentage of the greatest dipole strength) of all dipoles to appear in the result files 
+dipolethreshold= .10000E+01
+# blurring single loads to adjacent nodes by means of the Gaussian (normal) distribution 
+sourcesimulationepsilondirac= .10000E-08
+
+# DIPOLE MODELING
+# dipole modeling; weighting of the source distribution with the power of the declared value 
+dipolemodelingsmoothness= 2
+# power of the dipole moments to be considered 
+dipolemodelingorder= 2
+# necessary internal scaling factor; should be larger than twice the element edge length 
+dipolemodelingscale= 20.000
+# Lagrangian multiplier for the (inverse) dipole modeling 
+dipolemodelinglambda= .10000E-05
+# source-sink separation of the analytical dipole model 
+dipolemodelingdistance= 1.0000
+# use rango dipole model 
+dipolemodelingrango= 0
+# dipole model (0 = Blurred, 1 = Zenger, 2 = Rango)
+dipolemodel= 0
+
+# Monopole/Dipole
+# calculation of the potential distribution for spherical, homogeneous  structures by means of a analytical description 
+analyticaldipole= 0
+# forward solution computation with monopoles or dipoles
+dipolesources= 1
+# spread a nodal load to adjacent nodes
+sourcesimulation= 1
+#to compare analytical and numerical solutions, an integral average value of the potential is subtracted
+#from the analytical results because they are not related to a mean potential (in contrast to the numerical solution)
+averagecorrection= 0
+
+[NeuroFEMGridGenerator] 
+# Number of materials 
+nummaterials= 7
+# Conductivities of fem head model
+
+#define EXTRA           3       // tissue codes (see D1.2b)
+#define SKULL           1
+#define CSF             8
+#define GREY_MATTER     7
+#define WHITE_MATTER    6
+
+# Conductivity in S/m 
+# (Following Oostendorp, T., Delbeke, J., Stegeman, D.F., 
+#The conductivity of the Human Skull: Results of In Vivo and In Vitro Measurements
+#IEEEBiomed.Eng, Vol. 47, No.11, 2000), 
+# it is: skin:skull= 1:1/15
+#skin_cond       0.33;
+#skull_cond      0.022;
+#grey_cond       0.33;
+#white_cond_iso  0.14;
+# S.B. Baumann and D.R. Wozny and S.K. Kelly and F.M. Meno,
+# The Electrical Conductivity of Human Cerebrospinal Fluid at Body Temperature,
+#IEEEBiomed.Eng, Vol. 44, No.3, 1997, pp.220--223.
+#csf_cond        1.79;  
+
+# The first value corresponds to the electrode which will be added to the mesh 
+conductivities= 
+1.0 0.33 0.0042 1.79 0.33 0.14
+# Labels in the head model corresponding to the different tissues
+# The first value corresponds to the electrode which will be added to the mesh 
+labels=
+1000 1 2 3 4 5 5
+
+# Tissue labels in the head model for which the tensor valued coductivity 
+# should be used if available
+tensorlabels=
+#0 0 1 0 0 1 0
+0 0 0 0 0 0 0
+
+
+[FileFormats]   
+#ReferenceData file: 1= Vista, 2= ASA, 3= ASCII
+ReferenceDataIn= 2
+#LeadfieldMatrix input file: 1= Vista, 2= ASA 
+LeadfieldIn= 1
+#SensorConfiguration file: 1= Vista, 2= ASA 
+SensorconfigurationIn= 2 
+#Source Space Grid: 1= Vista, 2= ASA, 3= CAUCHY
+SourceSpaceIn= 2
+#FEM HeadGrid: 1= Vista, 2= ASA, 3= CAUCHY
+HeadGridIn= 1
+#Output File; Format: 1= Vista, 2 = ASA, 3 = Vista + ASA, 4 = Vista + Ascii, 5 = Cauchy, 6 = SCIRun 
+ResultOut= 2
+
+[Errors]
+code= 00204
+type= warning
+origin= uif2_sourcesimulation
+code= Could not read source configuration
+
+[Errors]
+code= 00204
+type= warning
+origin= uif2_sourcesimulation
+code= Could not read source configuration
