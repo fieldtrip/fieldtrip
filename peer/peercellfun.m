@@ -12,6 +12,7 @@ function varargout = peercellfun(fname, varargin)
 % function to be evaluated.
 %   UniformOutput  = boolean (default = false)
 %   StopOnError    = boolean (default = true)
+%   RetryOnError   = integer, total number of retries for failed jobs (default = 0)
 %   MaxBusy        = number, amount of slaves allowed to be busy (default = inf)
 %   diary          = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
 %   timreq         = number, initial estimate for the time required to run a single job (default = 3600)
@@ -61,6 +62,7 @@ keyvalcheck(optarg, 'forbidden', {'timcv', 'ResubmitTime'});
 % get the optional input arguments
 UniformOutput = keyval('UniformOutput', optarg); if isempty(UniformOutput), UniformOutput=false; end
 StopOnError   = keyval('StopOnError',   optarg); if isempty(StopOnError),   StopOnError=true;    end
+RetryOnError  = keyval('RetryOnError',  optarg); if isempty(RetryOnError),  RetryOnError=0;      end
 MaxBusy       = keyval('MaxBusy',       optarg); if isempty(MaxBusy),       MaxBusy=inf;         end
 timreq        = keyval('timreq',        optarg); 
 mintimreq     = keyval('mintimreq',     optarg); 
@@ -325,8 +327,30 @@ while ~all(submitted) || ~all(collected)
         collecttime(collect) = inf;
         continue
       else
-	    fprintf('an error was detected during the execution of job %d\n', collect);
-        rethrow(ME);
+        % the returned error is more serious and requires the users attention
+        if RetryOnError>0
+          % dercease the counter for the remaining retries
+          RetryOnError = RetryOnError - 1;
+          % give the user some information
+	      fprintf('an error was detected during the execution of job %d\n', collect);
+          fprintf('??? %s\n', ME.message);
+	      fprintf('resubmitting the failed job (%d retries remaining)\n', RetryOnError);
+          % reset all job information, this will cause it to be automatically resubmitted
+          jobid      (collect) = nan;
+          puttime    (collect) = nan;
+          timused    (collect) = nan;
+          memused    (collect) = nan;
+          submitted  (collect) = false;
+          collected  (collect) = false;
+          busy       (collect) = false;
+          lastseen   (collect) = inf;
+          submittime (collect) = inf;
+          collecttime(collect) = inf;
+          continue
+        else
+	      fprintf('an error was detected during the execution of job %d\n', collect);
+          rethrow(ME);
+        end
       end
     end
     
