@@ -56,9 +56,9 @@ try
   usediary = any(strcmp(usediary, {'always', 'warning', 'error'}));
 
   % check whether a watchdog should be set
-  masterid = keyval('masterid', optin);
-  timallow = keyval('timallow', optin);
-  memallow = []; % FIXME the memory watching does not yet work
+  masterid = []; % FIXME keyval('masterid', optin);
+  timallow = []; % FIXME keyval('timallow', optin);
+  memallow = []; % FIXME keyval('memallow', optin);
   if ~isempty(masterid) || ~isempty(timallow) || ~isempty(memallow)
     watchdog(masterid, time+timallow, memallow);
   end

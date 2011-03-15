@@ -683,8 +683,6 @@ int main(int argc, char *argv[]) {
 								memallow = 1.5*(job->job->memreq);
 								if (host->memavail < memallow)
 										memallow = host->memavail;
-								/* FIXME at the moment this is disabled */
-								memallow = 0;
 
 								pthread_mutex_unlock(&mutexhost);
 
@@ -714,16 +712,6 @@ int main(int argc, char *argv[]) {
 								mxSetCell(options, n+4, mxCreateString("memallow\0"));
 								mxSetCell(options, n+5, mxCreateDoubleScalar(memallow));
 
-								/* the watchdog is running as mex file inside the MATLAB engine */
-								/* also enable the watchdog for the peerslave command-line executable */
-								pthread_mutex_lock(&mutexwatchdog);
-								watchdog.masterid = peerid;        /* keep an eye on the master for which we are working */
-								watchdog.time     = timallow + 10; /* add 10 seconds for copying the variables to and from MATLAB */
-								watchdog.memory   = 0;             /* don't watch the memory of the peerslave executable */
-								watchdog.enabled  = 0;
-								DEBUG(LOG_CRIT, "watchdog enabled for masterid = %lu, time = %d, memory = %lu\n", watchdog.masterid, watchdog.time, watchdog.memory);
-								pthread_mutex_unlock(&mutexwatchdog);
-
 								jobFailed = 0;
 
 								/* copy the input arguments and options over to the engine */
@@ -740,6 +728,16 @@ int main(int argc, char *argv[]) {
 								mxDestroyArray(argin);
 								mxDestroyArray(options);
 
+								/* the watchdog will be running as mex file inside the MATLAB engine */
+								/* also enable the watchdog for the peerslave command-line executable */
+								pthread_mutex_lock(&mutexwatchdog);
+								watchdog.masterid = peerid;        /* keep an eye on the master for which we are working */
+								watchdog.time     = timallow;      /* don't exceed the maximum allowed execution time */
+								watchdog.memory   = 0;             /* don't watch the memory of the peerslave executable */
+								watchdog.enabled  = 0;
+								DEBUG(LOG_NOTICE, "watchdog enabled for masterid = %lu, time = %d, memory = %lu\n", watchdog.masterid, watchdog.time, watchdog.memory);
+								pthread_mutex_unlock(&mutexwatchdog);
+
 								/* execute the job */
 								if (!jobFailed && (engEvalString(en, "[argout, options] = peerexec(argin, options);") != 0)) {
 										DEBUG(LOG_ERR, "error evaluating string in engine");
@@ -753,7 +751,7 @@ int main(int argc, char *argv[]) {
 								watchdog.time     = 0;
 								watchdog.memory   = 0;
 								watchdog.enabled  = 0;
-								DEBUG(LOG_CRIT, "watchdog disabled\n");
+								DEBUG(LOG_NOTICE, "watchdog disabled\n");
 								pthread_mutex_unlock(&mutexwatchdog);
 
 								/* get the output arguments and options */
