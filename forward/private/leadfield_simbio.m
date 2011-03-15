@@ -5,10 +5,12 @@ function [lf] = leadfield_simbio(dip, elc, vol)
 % [lf] = leadfield_simbio(dip, elc, vol);
 %
 % with input arguments
-%   dip     position dipole (vector of length 3)
-%   elc     position electrodes
+%   dip     position dipole (matrix of dimensions NX3)
+%   elc     positions of the electrodes
+% 
 % and vol being a structure with the element
-%   vol.meshfile file containing the 3D mesh
+%   vol.meshfile file containing the 3D mesh filename
+
 
 % Copyright (C) 2011, Cristiano Micheli
 
@@ -32,7 +34,7 @@ try
     sb_write_dip(dip,dipfile);
     
     % Exe file
-    % Does SimBio have a switch for parallel processing to run on more cores?
+    % FIXME: does SimBio have a switch for parallel processing (to run on more cores)?
     efid = fopen(exefile, 'w');
     if ~ispc
       fprintf(efid,'#!/usr/bin/env bash\n');
@@ -45,6 +47,7 @@ try
     dos(['./' exefile]);
     cleaner(dipfile,elcfile,outfile,exefile)
     [lf] = sb_read_msr(outfile);
+    cd(tmpfolder)
   end
 
 catch
