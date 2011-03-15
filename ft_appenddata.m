@@ -292,11 +292,9 @@ if removesens
   if hasgrad, data = rmfield(data, 'grad'); end
 end
 
-if removesampleinfo
+if removesampleinfo && isfield(data, 'sampleinfo')
     fprintf('removing trial definition from output\n');
-    if isfield(data, 'sampleinfo')
-        data            = rmfield(data, 'sampleinfo');
-    end
+    data            = rmfield(data, 'sampleinfo');
     %cfg.trl(:, 1:2) = nan;
     if isfield(cfg, 'trl'), cfg = rmfield(cfg, 'trl'); end
 end
