@@ -111,13 +111,13 @@ if isfield(cfg.grid, 'resolution') && isfield(cfg.grid, 'zgrid') && ~ischar(cfg.
 end
 
 % a grid can be constructed based on a number of ways
-basedonauto   = isfield(cfg.grid, 'resolution');                        % regular 3D grid with specification of the resolution
 basedongrid   = isfield(cfg.grid, 'xgrid') && ~ischar(cfg.grid.xgrid);  % regular 3D grid with explicit specification
 basedonpos    = isfield(cfg.grid, 'pos');                               % using user-supplied grid positions, which can be regular or irregular
 basedonshape  = isfield(cfg, 'headshape') && ~isempty(cfg.headshape);   % surface grid based on inward shifted head surface from external file
 basedonmri    = isfield(cfg, 'mri');                                    % regular 3D grid, based on segmented MRI, restricted to gray matter
 basedonvol    = false;                                                  % surface grid based on inward shifted brain surface from volume conductor
 basedoncortex = isfield(cfg, 'headshape') && (iscell(cfg.headshape) || ft_filetype(cfg.headshape, 'neuromag_fif') || ft_filetype(cfg.headshape, 'freesurfer_triangle_binary')); % cortical sheet from MNE or Freesurfer, also in case of multiple files/hemispheres
+basedonauto   = isfield(cfg.grid, 'resolution') && ~basedonmri;         % regular 3D grid with specification of the resolution
 
 if basedonshape && basedoncortex
   % treating it as cortical sheet has preference
@@ -183,6 +183,7 @@ if basedonvol
   if ~isfield(cfg, 'spheremesh'),       cfg.spheremesh = 642;  end   % FIXME move to cfg.grid
   if ~isfield(cfg.grid, 'tight'),       cfg.grid.tight = 'no'; end
 end
+
 
 % these are mutually exclusive
 if sum([basedonauto basedongrid basedonpos basedonshape basedonmri basedonvol basedoncortex])~=1
