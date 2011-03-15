@@ -188,6 +188,9 @@ int smartmem_update(void) {
 		/* it does not make sense to suggest less than a certain minimum amount */
 		MemSuggested = (MemSuggested > SMARTMEM_MINIMUM ? MemSuggested : SMARTMEM_MINIMUM );
 
+		/* don't exceed the user-specified maximum allowed amount */
+		MemSuggested = (MemSuggested < smartmem.memavail ? MemSuggested : smartmem.memavail );
+
 		host->memavail = MemSuggested;
 		DEBUG(LOG_INFO, "smartmem: host->memavail = %llu", host->memavail);
 		DEBUG(LOG_DEBUG, "smartmem: NumPeers       = %u",   NumPeers);

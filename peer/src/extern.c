@@ -81,6 +81,7 @@ pthread_mutex_t mutexsmartmem = PTHREAD_MUTEX_INITIALIZER;
 struct {
 		int enabled;
 		int freeze;
+		UINT64_T memavail;
 } smartmem;
 
 pthread_mutex_t mutexsmartcpu = PTHREAD_MUTEX_INITIALIZER;

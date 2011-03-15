@@ -66,6 +66,7 @@ extern pthread_mutex_t mutexsmartmem;
 extern struct {
 		int enabled;
 		int freeze;
+        UINT64_T memavail;
 } smartmem;
 
 extern pthread_mutex_t mutexsmartcpu;

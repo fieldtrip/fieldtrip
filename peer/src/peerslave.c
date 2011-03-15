@@ -388,7 +388,7 @@ int main(int argc, char *argv[]) {
 				host->memavail = atol(cconf->memavail);
 				pthread_mutex_unlock(&mutexhost);
 				pthread_mutex_lock(&mutexsmartmem);
-				smartmem.enabled = 0;
+				smartmem.memavail = atol(cconf->memavail);
 				pthread_mutex_unlock(&mutexsmartmem);
 		}
 

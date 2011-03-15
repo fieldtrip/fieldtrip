@@ -148,6 +148,7 @@ void peerinit(void *arg) {
 		pthread_mutex_lock(&mutexsmartmem);
 		smartmem.enabled  = 0;
 		smartmem.freeze   = 0;
+		smartmem.memavail = UINT64_MAX;
 		pthread_mutex_unlock(&mutexsmartmem);
 
 		pthread_mutex_lock(&mutexsmartcpu);
