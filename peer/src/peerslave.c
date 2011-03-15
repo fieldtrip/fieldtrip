@@ -304,7 +304,7 @@ int main(int argc, char *argv[]) {
 		 ************************************************************************************/
 
 #ifndef WIN32
-		DEBUG(LOG_EMERG, "need to start %d children", numpeer);
+		DEBUG(LOG_NOTICE, "need to start %d children", numpeer);
 		cconf = pconf;
 		while (1) {
 
@@ -384,11 +384,31 @@ int main(int argc, char *argv[]) {
 		/* get the values from the configuration structure */
 		if (cconf->memavail)
 		{
+				int multiply;
+				switch (cconf->memavail[strlen(cconf->memavail)-1]) {
+						case 'G':
+								multiply = 1024*1024*1024;
+								cconf->memavail[strlen(cconf->memavail)-1] = '\0';
+								break;
+						case 'M':
+								multiply = 1024*1024;
+								cconf->memavail[strlen(cconf->memavail)-1] = '\0';
+								break;
+						case 'K':
+						case 'k':
+								multiply = 1024;
+								cconf->memavail[strlen(cconf->memavail)-1] = '\0';
+								break;
+						default:
+								multiply = 1;
+				}
+
+
 				pthread_mutex_lock(&mutexhost);
-				host->memavail = atol(cconf->memavail);
+				host->memavail = atol(cconf->memavail) * multiply;
 				pthread_mutex_unlock(&mutexhost);
 				pthread_mutex_lock(&mutexsmartmem);
-				smartmem.memavail = atol(cconf->memavail);
+				smartmem.memavail = atol(cconf->memavail) * multiply;
 				pthread_mutex_unlock(&mutexsmartmem);
 		}
 
