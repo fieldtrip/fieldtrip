@@ -488,7 +488,6 @@ if strcmp('yes',cfg.hotkeys)
     info = guidata(gcf);
     info.ymin = ymin;
     info.ymax = ymax;
-    info.data = datavector;
     guidata(gcf,info);
     set(gcf, 'KeyPressFcn', @key_sub)
 end
