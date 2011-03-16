@@ -952,7 +952,7 @@ elseif strcmp(eventdata.Key,'downarrow')
   caxis([min(caxis)+incr max(caxis)-incr]);
 % resort to minmax of data for colorbar
 elseif strcmp(eventdata.Key,'m')
-  caxis([info.zim info.zmax]);
+  caxis([info.zmin info.zmax]);
 end
 
 
