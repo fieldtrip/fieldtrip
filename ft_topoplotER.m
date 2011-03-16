@@ -811,10 +811,19 @@ if ~strcmp(cfg.marker,'off')
         'pointsize',cfg.markersize,...
         'labelsize',cfg.markerfontsize,...
         'labeloffset',cfg.labeloffset)
-end
+    end						    
 
 % Set colour axis
 caxis([zmin zmax]);
+
+if isfield(cfg,'interactive')
+  %  Attach data and cfg to figure and attach a key listener to the figure
+  info = guidata(gcf);
+  info.cfg = cfg;
+  info.data = datavector;
+  guidata(gcf,info);
+  set(gcf, 'KeyPressFcn', @key_sub)
+end
 
 % Write comment
 if ~strcmp(cfg.comment,'no')
@@ -925,3 +934,28 @@ if ~isempty(label)
     set(f, 'Position', p);
     ft_singleplotTFR(cfg, varargin{:});
 end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION which handles hot keys in the current plot
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function key_sub(h, eventdata, handles, varargin)
+info = guidata(h);
+cfg = info.cfg;
+data = info.data;
+% symmetrically scale color bar down by 10 percent
+if strcmp(eventdata.Key,'uparrow')
+  incr = max(abs(data)) /10;
+  cfg.zlim = [cfg.zlim(1)-incr cfg.zlim(2)+incr];
+% symmetrically scale color bar up by 10 percent
+elseif strcmp(eventdata.Key,'downarrow')
+  incr = max(abs(data)) /10;
+  cfg.zlim = [cfg.zlim(1)+incr cfg.zlim(2)-incr];
+% resort to minmax of data for colorbar
+elseif strcmp(eventdata.Key,'m')
+  cfg.zlim = [min(data) max(data)];
+end
+caxis(cfg.zlim);
+info.cfg = cfg;
+info.data = data;
+guidata(h,info);
