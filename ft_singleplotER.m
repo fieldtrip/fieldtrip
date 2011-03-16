@@ -560,14 +560,14 @@ ft_topoplotER(cfg, varargin{:});
 function key_sub(h, eventdata, varargin)
 info = guidata(h);
 data = info.data;
-ylimits = ylim;
+ylimits = ylim
 % symmetrically scale y-axis down by 10 percent
 if strcmp(eventdata.Key,'uparrow')
-  incr = max(abs(data)) /10;
+  incr = abs(ylimits(2) - ylimits(1)) /10;
   ylim([ylimits(1)-incr ylimits(2)+incr])
 % symmetrically scale y-axis by 10 percent
 elseif strcmp(eventdata.Key,'downarrow')
-  incr = max(abs(data)) /10;
+  incr = abs(ylimits(2) - ylimits(1)) /10;
   ylim([ylimits(1)+incr ylimits(2)-incr])
 % resort to minmax of data for y-axis
 elseif strcmp(eventdata.Key,'m')
