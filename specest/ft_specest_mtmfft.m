@@ -12,31 +12,27 @@ function [spectrum,ntaper,freqoi] = ft_specest_mtmfft(dat, time, varargin)
 %   ntaper   = vector containing number of tapers per element of freqoi
 %   freqoi   = vector of frequencies in spectrum
 %
-%
-%
-%
 % Optional arguments should be specified in key-value pairs and can include:
 %   taper      = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
 %   pad        = number, total length of data after zero padding (in seconds)
 %   freqoi     = vector, containing frequencies of interest                                           
 %   tapsmofrq  = the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
 %
-%
-%
-%
-% 
-% 
-%
-%
 % See also SPECEST_MTMCONVOL, SPECEST_CONVOL, SPECEST_HILBERT, SPECEST_WAVELET
 
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'taper','pad','freqoi','tapsmofrq'});
+keyvalcheck(varargin, 'optional', {'taper','pad','freqoi','tapsmofrq','feedback'});
 taper     = keyval('taper',       varargin); if isempty(taper),  error('You must specify a taper');    end
 pad       = keyval('pad',         varargin);
 freqoi    = keyval('freqoi',      varargin); if isempty(freqoi),   freqoi  = 'all';      end  
 tapsmofrq = keyval('tapsmofrq',   varargin); 
+fbopt     = keyval('feedback',    varargin);
+
+if isempty(fbopt),
+  fbopt.i = 1;
+  fbopt.n = 1;
+end
 
 % throw errors for required input
 if isempty(tapsmofrq) && strcmp(taper, 'dpss')
@@ -64,7 +60,6 @@ endnsample = round(pad * fsample);  % total number of samples of padded data
 endtime    = pad;            % total time in seconds of padded data
 
 
-
 % Set freqboi and freqoi
 if isnumeric(freqoi) % if input is a vector
   freqboi   = round(freqoi ./ (fsample ./ endnsample)) + 1;
@@ -77,8 +72,6 @@ elseif strcmp(freqoi,'all') % if input was 'all'
 end
 nfreqboi   = length(freqboi);
 nfreqoi = length(freqoi);
-
-
 
 
 % create tapers
@@ -94,7 +87,7 @@ switch taper
     if isempty(tap)
       error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',ndatsample/fsample,tapsmofrq,fsample/ndatsample);
     elseif size(tap,1) == 1
-      warning('using only one taper for specified smoothing')
+      warning('using only one taper for specified smoothing');
     end
         
   case 'sine'
@@ -116,6 +109,16 @@ switch taper
 end % switch taper
 ntaper = repmat(size(tap,1),nfreqoi,1);
 
+str = sprintf('nfft: %d samples, datalength: %d samples, %d tapers',endnsample,ndatsample,ntaper(1));
+
+[st, cws] = dbstack;
+if strcmp(st(2).name, 'ft_freqanalysis')
+  % specest_mtmfft has been called by ft_freqanalysis, meaning that
+  % ft_progress has been initialised
+  ft_progress(fbopt.i./fbopt.n, ['processing trial %d/%d ',str,'\n'], fbopt.i, fbopt.n);
+else
+  fprintf([str, '\n']);
+end
 
 % determine phase-shift so that for all frequencies angle(t=0) = 0
 timedelay = time(1); 
@@ -134,7 +137,6 @@ if timedelay ~= 0
 end
 
 
-
 % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
 spectrum = cell(ntaper(1),1);
 for itap = 1:ntaper(1)
@@ -149,12 +151,6 @@ for itap = 1:ntaper(1)
 end
 spectrum = reshape(vertcat(spectrum{:}),[nchan ntaper(1) nfreqboi]);% collecting in a cell-array and later reshaping provides significant speedups
 spectrum = permute(spectrum, [2 1 3]);
-fprintf('nfft: %d samples, taper length: %d samples, %d tapers\n',endnsample,ndatsample,ntaper(1));
-
-
-
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION ensure that the first two input arguments are of double

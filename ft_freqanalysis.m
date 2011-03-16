@@ -167,8 +167,6 @@ ft_defaults
 if ~isfield(cfg, 'inputfile'),  cfg.inputfile               = [];    end
 if ~isfield(cfg, 'outputfile'), cfg.outputfile              = [];    end
 
-
-
 % load optional given inputfile as data
 hasdata = (nargin>1);
 if ~isempty(cfg.inputfile)
@@ -184,7 +182,9 @@ end
 data = ft_checkdata(data, 'datatype', {'raw', 'comp', 'mvar'}, 'feedback', 'yes', 'hasoffset', 'yes', 'hastrialdef', 'yes');
 
 % select trials of interest
-if ~isfield(cfg, 'trials'),   cfg.trials = 'all';  end % set the default
+if ~isfield(cfg, 'trials'),   cfg.trials   = 'all';  end % set the default
+if ~isfield(cfg, 'feedback'), cfg.feedback = 'text'; end
+
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
   data = ft_selectdata(data, 'rpt', cfg.trials);
@@ -206,9 +206,7 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'convol', 'mtmconvol'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'wltconvol', 'wavelet'});
 
 switch cfg.method
-  
-  
-  
+    
   case 'mtmconvol'
     specestflg = 1;
     if ~isfield(cfg, 'taper'),            cfg.taper            =  'dpss';      end
@@ -225,7 +223,6 @@ switch cfg.method
         error('you must specify a smoothing parameter with taper = dpss');
       end
     end
-    
     
   case 'mtmfft'
     specestflg = 1;
@@ -248,8 +245,7 @@ switch cfg.method
     specestflg = 1;
     if ~isfield(cfg, 'width'),         cfg.width      = 7;            end
     if ~isfield(cfg, 'gwidth'),        cfg.gwidth     = 3;            end
-
-     
+   
   case 'hilbert_devel'
     warning('the hilbert implementation is under heavy development, do not use it for analysis purposes')
     specestflg = 1;
@@ -258,7 +254,6 @@ switch cfg.method
     if ~isfield(cfg, 'filtdir'),          cfg.filtdir       = 'twopass';    end
     if ~isfield(cfg, 'width'),            cfg.width         = 1;            end
     cfg.method = 'hilbert';
-
     
   otherwise
     specestflg = 0;
@@ -294,7 +289,8 @@ else
   if ~isfield(cfg, 'foilim'),           cfg.foilim           = [];           end
   if ~isfield(cfg, 'correctt_ftimwin'), cfg.correctt_ftimwin = 'no';         end
   
-  % keeptrials and keeptapers should be conditional on cfg.output, cfg.output = 'fourier' should always output tapers
+  % keeptrials and keeptapers should be conditional on cfg.output,
+  % cfg.output = 'fourier' should always output tapers
   if strcmp(cfg.output, 'fourier')
     if ~isfield(cfg, 'keeptrials'), cfg.keeptrials = 'yes'; end
     if ~isfield(cfg, 'keeptapers'), cfg.keeptapers = 'yes'; end
@@ -420,9 +416,6 @@ else
     end
   end
   
-  
-  
-  
   % tapsmofrq compatibility between functions (make it into a vector if it's not)
   if isfield(cfg,'tapsmofrq')
     if strcmp(cfg.method,'mtmconvol') && length(cfg.tapsmofrq) == 1 && length(cfg.foi) ~= 1
@@ -433,7 +426,6 @@ else
     end
   end
   
-  
   % options that don't change over trials
   if isfield(cfg,'tapsmofrq')
     options = {'pad', cfg.pad, 'freqoi', cfg.foi, 'tapsmofrq', cfg.tapsmofrq};
@@ -442,14 +434,16 @@ else
   end
   
   
-  
-  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% Main loop over trials, inside fourierspectra are obtained and transformed into the appropriate outputs
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % this is done on trial basis to save memory
+  
+  ft_progress('init', cfg.feedback, 'processing trials');
   for itrial = 1:ntrials
-    disp(['processing trial ' num2str(itrial) ': ' num2str(size(data.trial{itrial},2)) ' samples']);
+    %disp(['processing trial ' num2str(itrial) ': ' num2str(size(data.trial{itrial},2)) ' samples']);
+    fbopt.i = itrial;
+    fbopt.n = ntrials;
     
     dat = data.trial{itrial}; % chansel has already been performed
     time = data.time{itrial};
@@ -458,9 +452,14 @@ else
     clear spectrum % in case of very large trials, this lowers peak mem usage a bit
     switch cfg.method
            
-      
       case 'mtmconvol'
-        [spectrum_mtmconvol,ntaper,foi,toi] = ft_specest_mtmconvol(dat, time, 'timeoi', cfg.toi, 'timwin', cfg.t_ftimwin, 'taper', cfg.taper, options{:}, 'dimord', 'chan_time_freqtap');
+        [spectrum_mtmconvol,ntaper,foi,toi] = ft_specest_mtmconvol(dat, time, 'timeoi', cfg.toi, 'timwin', cfg.t_ftimwin, 'taper', ...
+          cfg.taper, options{:}, 'dimord', 'chan_time_freqtap', 'feedback', fbopt);
+ 
+        % the following variable is created to keep track of the number of
+        % trials per time bin
+        if itrial==1, trlcnt = zeros(1, numel(foi), numel(toi)); end  
+        
         hastime = true;
         % error for different number of tapers per trial
         if (keeprpt == 4) && any(ntaper(:) ~= ntaper(1))
@@ -475,10 +474,9 @@ else
      
         
       case 'mtmfft'
-        [spectrum,ntaper,foi] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, options{:});
+        [spectrum,ntaper,foi] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, options{:}, 'feedback', fbopt);
         hastime = false;
      
-        
       case 'wavelet'  
         [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:});
         hastime = true;
@@ -486,8 +484,7 @@ else
         ntaper = ones(1,numel(foi));
         % modify spectrum for same reason as fake ntaper
         spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
-          
-        
+             
       case 'hilbert'  
         [spectrum,foi,toi] = ft_specest_hilbert(dat, time, 'timeoi', cfg.toi, 'filttype', cfg.filttype, 'filtorder', cfg.filtorder, 'filtdir', cfg.filtdir, 'width', cfg.width, options{:});
         hastime = true;
@@ -495,7 +492,6 @@ else
         ntaper = ones(1,numel(foi));
         % modify spectrum for same reason as fake ntaper
         spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
-        
         
       otherwise
         error('method %s is unknown or not yet implemented with new low level functions', cfg.method);
@@ -608,17 +604,18 @@ else
             switch keeprpt
                 
                 case 1 % cfg.keeptrials,'no' &&  cfg.keeptapers,'no'
+                    trlcnt(1, ifoi, :) = trlcnt(1, ifoi, :) + shiftdim(double(acttboi(:)'),-1);
                     if powflg
                         powspctrm(:,ifoi,acttboi) = powspctrm(:,ifoi,acttboi) + (reshape(mean(powdum,1),[nchan 1 nacttboi]) ./ ntrials);
-                        powspctrm(:,ifoi,~acttboi) = NaN;
+                        %powspctrm(:,ifoi,~acttboi) = NaN;
                     end
                     if fftflg
                         fourierspctrm(:,ifoi,acttboi) = fourierspctrm(:,ifoi,acttboi) + (reshape(mean(fourierdum,1),[nchan 1 nacttboi]) ./ ntrials);
-                        fourierspctrm(:,ifoi,~acttboi) = NaN;
+                        %fourierspctrm(:,ifoi,~acttboi) = NaN;
                     end
                     if csdflg
                         crsspctrm(:,ifoi,acttboi) = crsspctrm(:,ifoi,acttboi) + (reshape(mean(csddum,1),[nchancmb 1 nacttboi]) ./ ntrials);
-                        crsspctrm(:,ifoi,~acttboi) = NaN;
+                        %crsspctrm(:,ifoi,~acttboi) = NaN;
                     end
                     
                 case 2 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'no'
@@ -678,21 +675,38 @@ else
     % set cumptapcnt
     switch cfg.method %% IMPORTANT, SHOULD WE KEEP THIS SPLIT UP PER METHOD OR GO FOR A GENERAL SOLUTION NOW THAT WE HAVE SPECEST
       case 'mtmconvol'
-          cumtapcnt(itrial,:) = ntaper;
+        cumtapcnt(itrial,:) = ntaper;
       case 'mtmfft'
         cumtapcnt(itrial) = ntaper(1); % fixed number of tapers? for the moment, yes, as specest_mtmfft computes only one set of tapers
     end
     
   end % for ntrials
+  ft_progress('close');
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% END: Main loop over trials
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
-  
-  
-  
-  
-  
+  % re-normalise the TFRs if keeprpt==1
+  if strcmp(cfg.method, 'mtmconvol') && keeprpt==1 
+    nanmask = trlcnt==0;
+    if powflg
+        powspctrm = powspctrm.*ntrials;
+        powspctrm = powspctrm./trlcnt(ones(size(powspctrm,1),1),:,:);
+        powspctrm(nanmask(ones(size(powspctrm,1),1),:,:)) = nan;
+    end
+    if fftflg
+        fourierspctrm = fourierspctrm.*ntrials;
+        fourierspctrm = fourierspctrm./trlcnt(ones(size(fourierspctrm,1),1),:,:);
+        fourierspctrm(nanmask(ones(size(fourierspctrm,1),1),:,:)) = nan;
+    end
+    if csdflg
+        crsspctrm = crsspctrm.*ntrials;
+        crsspctrm = crsspctrm./trlcnt(ones(size(crsspctrm,1),1),:,:);
+        crsspctrm(nanmask(ones(size(crsspctrm,1),1),:,:)) = nan;
+    end
+    
+  end
   
   % set output variables
   freq = [];
@@ -747,11 +761,7 @@ else
     freq.cumtapcnt = cumtapcnt;
   end
   
-  
-  
-  
-  
-  
+
   % accessing this field here is needed for the configuration tracking
   % by accessing it once, it will not be removed from the output cfg
   cfg.outputfile;
@@ -759,8 +769,12 @@ else
   % get the output cfg
   cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
   
-  try, freq.grad = data.grad; end   % remember the gradiometer array
-  try, freq.elec = data.elec; end   % remember the electrode array
+  if isfield(data, 'grad'),
+    freq.grad = data.grad; 
+  end   % remember the gradiometer array
+  if isfield(data, 'elec'),
+    freq.elec = data.elec;
+  end   % remember the electrode array
   
   % add information about the version of this function to the configuration
   cfg.version.name = mfilename('fullpath');
@@ -770,14 +784,14 @@ else
   cfg.version.matlab = version();
   
   % remember the configuration details of the input data
-  try, cfg.previous = data.cfg; end
+  if isfield(cfg, 'previous'),
+    cfg.previous = data.cfg;
+  end
   
   % remember the exact configuration details in the output
   freq.cfg = cfg;
   
 end % IF OLD OR NEW IMPLEMENTATION
-
-
 
 % copy the trial specific information into the output
 if isfield(data, 'trialinfo'),
@@ -789,13 +803,3 @@ end
 if ~isempty(cfg.outputfile)
   savevar(cfg.outputfile, 'freq', freq); % use the variable name "data" in the output file
 end
-
-
-
-
-
-
-
-
-
-

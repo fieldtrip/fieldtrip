@@ -13,9 +13,6 @@ function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varar
 %   freqoi   = vector of frequencies in spectrum
 %   timeoi   = vector of timebins in spectrum
 %
-%
-%
-%
 % Optional arguments should be specified in key-value pairs and can include:
 %   taper     = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
 %   pad       = number, indicating time-length of data to be padded out to in seconds
@@ -23,19 +20,12 @@ function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varar
 %   timwin    = vector, containing length of time windows (in seconds)
 %   freqoi    = vector, containing frequencies (in Hz)
 %   tapsmofrq = number, the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
-%   dimord    = 'tap_chan_freq_time' (default) or 'chan_time_freqtap' for memory efficiency
-%
-%
-%
-%
-%
-%
-%
+%   dimord    = 'tap_chan_freq_time' (default) or 'chan_time_freqtap' for memory efficiency%
 %
 % See also SPECEST_MTMFFT, SPECEST_CONVOL, SPECEST_HILBERT, SPECEST_WAVELET
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'taper','pad','timeoi','timwin','freqoi','tapsmofrq','dimord'});
+keyvalcheck(varargin, 'optional', {'taper','pad','timeoi','timwin','freqoi','tapsmofrq','dimord','feedback'});
 taper     = keyval('taper',       varargin); if isempty(taper),    taper   = 'dpss';                  end
 pad       = keyval('pad',         varargin);
 timeoi    = keyval('timeoi',      varargin); if isempty(timeoi),   timeoi  = 'all';                   end
@@ -43,6 +33,12 @@ timwin    = keyval('timwin',      varargin);
 freqoi    = keyval('freqoi',      varargin); if isempty(freqoi),   freqoi  = 'all';                   end
 tapsmofrq = keyval('tapsmofrq',   varargin);
 dimord    = keyval('dimord',      varargin); if isempty(dimord),   dimord  = 'tap_chan_freq_time';    end
+fbopt     = keyval('feedback',    varargin);
+
+if isempty(fbopt),
+  fbopt.i = 1;
+  fbopt.n = 1;
+end
 
 % throw errors for required input
 if isempty(tapsmofrq) && strcmp(taper, 'dpss')
@@ -73,9 +69,6 @@ end
 postpad = zeros(1,round((pad - dattime) * fsample));
 endnsample = pad * fsample;  % total number of samples of padded data
 endtime    = pad;            % total time in seconds of padded data
-
-
-
 
 % Set freqboi and freqoi
 if isnumeric(freqoi) % if input is a vector
@@ -207,14 +200,22 @@ end
 
 % Switch between memory efficient representation or intuitive default representation
 switch dimord
-  
-  
+        
   case 'tap_chan_freq_time' % default
     % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
     datspectrum = transpose(fft(transpose([dat repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
     spectrum = cell(max(ntaper), nfreqoi);
     for ifreqoi = 1:nfreqoi
-      fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
+      str = sprintf('frequency %d (%.2f Hz), %d tapers', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
+      [st, cws] = dbstack;
+      if strcmp(st(2).name, 'ft_freqanalysis')
+        % specest_mtmconvol has been called by ft_freqanalysis, meaning that
+        % ft_progress has been initialised
+        ft_progress(fbopt.i./fbopt.n, ['trial %d, ',str,'\n'], fbopt.i);
+      else
+        fprintf([str, '\n']);
+      end
+
       for itap = 1:max(ntaper)
         % compute indices that will be used to extracted the requested fft output
         nsamplefreqoi    = timwin(ifreqoi) .* fsample;
@@ -250,7 +251,15 @@ switch dimord
     datspectrum = transpose(fft(transpose([dat repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
     spectrum = complex(zeros([nchan ntimeboi sum(ntaper)]));
     for ifreqoi = 1:nfreqoi
-      fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
+      str = sprintf('frequency %d (%.2f Hz), %d tapers', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
+      [st, cws] = dbstack;
+      if strcmp(st(2).name, 'ft_freqanalysis')
+        % specest_mtmconvol has been called by ft_freqanalysis, meaning that
+        % ft_progress has been initialised
+        ft_progress(fbopt.i./fbopt.n, ['trial %d, ',str,'\n'], fbopt.i);
+      else
+        fprintf([str, '\n']);
+      end
       for itap = 1:ntaper(ifreqoi)
         % compute indices that will be used to extracted the requested fft output
         nsamplefreqoi    = timwin(ifreqoi) .* fsample;
@@ -265,14 +274,8 @@ switch dimord
         spectrum(:,:,freqtapind{ifreqoi}(itap)) = tmp;
       end
     end
-    
-    
-    
-    
+        
 end
-
-
-
 
 % % below code does the exact same as above, but without the trick of converting to cell-arrays for speed increases. however, when there is a huge variability in number of tapers per freqoi
 % % than this approach can benefit from the fact that the array can be precreated containing nans
