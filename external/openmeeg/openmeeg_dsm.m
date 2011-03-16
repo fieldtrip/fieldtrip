@@ -59,9 +59,9 @@ try
     if ~ispc
       fprintf(efid,'#!/usr/bin/env bash\n');
       fprintf(efid,['export OMP_NUM_THREADS=',num2str(omp_num_threads),'\n']);
-      fprintf(efid,['om_assemble -DSM ./',geomfile,' ./',condfile,' ./',dipfile,' ./',dsmfile,' 2>&1 > /dev/null\n']);
+      fprintf(efid,['om_assemble -DSMNA ./',geomfile,' ./',condfile,' ./',dipfile,' ./',dsmfile,' 2>&1 > /dev/null\n']);
     else
-      fprintf(efid,['om_assemble -DSM ./',geomfile,' ./',condfile,' ./',dipfile,' ./',dsmfile,'\n']);
+      fprintf(efid,['om_assemble -DSMNA ./',geomfile,' ./',condfile,' ./',dipfile,' ./',dsmfile,'\n']);
     end
     fclose(efid);
 
