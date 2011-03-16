@@ -18,6 +18,10 @@ function [lf] = leadfield_fns(dip, elc, vol)
 % store the current path and change folder to the temporary one
 tmpfolder = cd;
 
+if ft_senstype(elc, 'meg')
+  error('FNS solver works for EEG data only!')
+end
+
 try
   if ~ispc
     cd(tempdir)
