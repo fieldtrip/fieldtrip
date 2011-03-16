@@ -689,23 +689,23 @@ elseif isdir(filename) && ~isempty(cell2mat(regexp({ls.name}, '.dap$')))
   content = 'electrophysiological data';
 
   % Frankfurt SPASS format, which uses the Labview Datalog (DTLG) format
-elseif  filetype_check_header(filename, 'DTLG') && filetype_check_extension(filename, '.ana')
+elseif  filetype_check_extension(filename, '.ana') && filetype_check_header(filename, 'DTLG')
   type = 'spass_ana';
   manufacturer = 'MPI Frankfurt';
   content = 'electrophysiological data';
-elseif  filetype_check_header(filename, 'DTLG') && filetype_check_extension(filename, '.swa')
+elseif  filetype_check_extension(filename, '.swa') && filetype_check_header(filename, 'DTLG')
   type = 'spass_swa';
   manufacturer = 'MPI Frankfurt';
   content = 'electrophysiological data';
-elseif  filetype_check_header(filename, 'DTLG') && filetype_check_extension(filename, '.spi')
+elseif  filetype_check_extension(filename, '.spi') && filetype_check_header(filename, 'DTLG')
   type = 'spass_spi';
   manufacturer = 'MPI Frankfurt';
   content = 'electrophysiological data';
-elseif  filetype_check_header(filename, 'DTLG') && filetype_check_extension(filename, '.stm')
+elseif  filetype_check_extension(filename, '.stm') && filetype_check_header(filename, 'DTLG')
   type = 'spass_stm';
   manufacturer = 'MPI Frankfurt';
   content = 'electrophysiological data';
-elseif  filetype_check_header(filename, 'DTLG') && filetype_check_extension(filename, '.bhv')
+elseif  filetype_check_extension(filename, '.bhv') && filetype_check_header(filename, 'DTLG')
   type = 'spass_bhv';
   manufacturer = 'MPI Frankfurt';
   content = 'electrophysiological data';
@@ -881,9 +881,8 @@ elseif filetype_check_extension(filename, '.trl')
   type = 'fcdc_trl';
   manufacturer = 'F.C.Donders';
   content = 'trial definitions';
-elseif filetype_check_header(filename, [255 'BIOSEMI']) % filetype_check_extension(filename, '.bdf')
+elseif filetype_check_extension(filename, '.bdf') && filetype_check_header(filename, [255 'BIOSEMI'])
   type = 'biosemi_bdf';
-  %   type = 'bham_bdf';
   manufacturer = 'Biosemi Data Format';
   content = 'electrophysiological data';
 elseif filetype_check_extension(filename, '.edf')
