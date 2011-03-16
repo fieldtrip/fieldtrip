@@ -606,7 +606,10 @@ else
             switch keeprpt
                 
                 case 1 % cfg.keeptrials,'no' &&  cfg.keeptapers,'no'
-                    trlcnt(1, ifoi, :) = trlcnt(1, ifoi, :) + shiftdim(double(acttboi(:)'),-1);
+                    if strcmp(cfg.method, 'mtmconvol'),
+                      trlcnt(1, ifoi, :) = trlcnt(1, ifoi, :) + shiftdim(double(acttboi(:)'),-1);
+                    end
+
                     if powflg
                         powspctrm(:,ifoi,acttboi) = powspctrm(:,ifoi,acttboi) + (reshape(mean(powdum,1),[nchan 1 nacttboi]) ./ ntrials);
                         %powspctrm(:,ifoi,~acttboi) = NaN;
