@@ -257,11 +257,11 @@ switch cfg.filetype
       data = flipdim(data, 1);
     end
     siz = size(data);
-  case {'analyze_spm', 'nifti', 'mgz'}
+  case {'analyze_spm', 'nifti', 'nifti_img' 'mgz'}
     % this format supports a homogenous transformation matrix
     % nothing needs to be changed
   otherwise
-    fprintf('unknown fileformat\n');
+    warning('unknown fileformat\n');
 end
 
 % write the volume data to file
