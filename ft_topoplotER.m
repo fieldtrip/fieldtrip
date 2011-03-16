@@ -31,6 +31,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 % cfg.highlightcolor     = highlight marker color (default = [0 0 0] (black))
 % cfg.highlightsize      = highlight marker size (default = 6)
 % cfg.highlightfontsize  = highlight marker size (default = 8)
+% cfg.hotkeys            = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
 % cfg.colorbar           = 'yes'
 %                          'no' (default)
 %                          'North'              inside plot box near top
@@ -243,6 +244,7 @@ if ~isfield(cfg, 'fontsize'),         cfg.fontsize = 8;              end
 if ~isfield(cfg, 'baseline'),         cfg.baseline = 'no';           end   %to avoid warning in timelock/freqbaseline
 if ~isfield(cfg, 'trials'),           cfg.trials = 'all';            end
 if ~isfield(cfg, 'interactive'),      cfg.interactive = 'no';        end
+if ~isfield(cfg, 'hotkeys'),          cfg.hotkeys = 'no';            end
 if ~isfield(cfg, 'renderer'),         cfg.renderer = [];             end   % matlab sets the default
 if ~isfield(cfg, 'marker'),           cfg.marker = 'on';             end
 if ~isfield(cfg, 'markersymbol'),     cfg.markersymbol = 'o';        end
@@ -816,7 +818,7 @@ if ~strcmp(cfg.marker,'off')
 % Set colour axis
 caxis([zmin zmax]);
 
-if isfield(cfg,'interactive')
+if strcmp('yes',cfg.hotkeys)
   %  Attach data and cfg to figure and attach a key listener to the figure
   info = guidata(gcf);
   info.cfg = cfg;
