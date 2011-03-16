@@ -821,8 +821,8 @@ caxis([zmin zmax]);
 if strcmp('yes',cfg.hotkeys)
   %  Attach data and cfg to figure and attach a key listener to the figure
   info = guidata(gcf);
-  info.cfg = cfg;
-  info.data = datavector;
+  info.zmin = zmin;
+  info.zmax = zmax;
   guidata(gcf,info);
   set(gcf, 'KeyPressFcn', @key_sub)
 end
@@ -943,21 +943,16 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function key_sub(h, eventdata, handles, varargin)
 info = guidata(h);
-cfg = info.cfg;
-data = info.data;
+incr = (max(caxis)-min(caxis)) /10;
 % symmetrically scale color bar down by 10 percent
 if strcmp(eventdata.Key,'uparrow')
-  incr = max(abs(data)) /10;
-  cfg.zlim = [cfg.zlim(1)-incr cfg.zlim(2)+incr];
+  caxis([min(caxis)-incr max(caxis)+incr]);
 % symmetrically scale color bar up by 10 percent
 elseif strcmp(eventdata.Key,'downarrow')
-  incr = max(abs(data)) /10;
-  cfg.zlim = [cfg.zlim(1)+incr cfg.zlim(2)-incr];
+  caxis([min(caxis)+incr max(caxis)-incr]);
 % resort to minmax of data for colorbar
 elseif strcmp(eventdata.Key,'m')
-  cfg.zlim = [min(data) max(data)];
+  caxis([info.zim info.zmax]);
 end
-caxis(cfg.zlim);
-info.cfg = cfg;
-info.data = data;
-guidata(h,info);
+
+
