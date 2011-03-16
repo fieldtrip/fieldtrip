@@ -40,7 +40,7 @@ ifeq "$(PLATFORM)" "i686-apple-darwin9"
 	MATLABPATH = /Applications/MATLAB_R2009a.app
 	MATLABLIBS = -L$(MATLABPATH)/bin/$(MATLABARCH) -leng -lmx
 	MATLABINC  = -I$(MATLABPATH)/extern/include
-    # override the architecture defaults, required for 32 bit
+    # override the architecture defaults, required for 32 bit compilation on mixed architecture
     CFLAGS	 = $(INCPATH) -Wall -pthread -arch i386
 endif
 
@@ -50,6 +50,8 @@ ifeq "$(PLATFORM)" "i686-apple-darwin10"
 	MATLABPATH = /Applications/MATLAB_R2010a.app
 	MATLABLIBS = -L$(MATLABPATH)/bin/$(MATLABARCH) -leng -lmx
 	MATLABINC  = -I$(MATLABPATH)/extern/include
+    # override the architecture defaults, required for 64 bit compilation on mixed architecture
+    CFLAGS	 = $(INCPATH) -Wall -pthread -arch x86_64
 endif
 
 ifeq "$(PLATFORM)" "mingw32"
