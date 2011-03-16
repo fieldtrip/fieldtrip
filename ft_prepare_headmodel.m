@@ -73,6 +73,16 @@ case 'singleshell'
 case 'singlesphere'
   vol = ft_headmodel_singlesphere()
 
+case 'simbio'
+  cfg = [];
+  cfg.method = 'simbio';
+  [vol, cfg] = ft_prepare_femmodel(cfg,sens);
+  
+case 'fns'
+  cfg = [];
+  cfg.method = 'fns';
+  [vol, cfg] = ft_prepare_femmodel(cfg,sens);  
+
 otherwise
   error('unsupported method "%s"', cfg.method);
 end
