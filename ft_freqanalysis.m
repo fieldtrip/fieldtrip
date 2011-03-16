@@ -294,12 +294,14 @@ else
   if strcmp(cfg.output, 'fourier')
     if ~isfield(cfg, 'keeptrials'), cfg.keeptrials = 'yes'; end
     if ~isfield(cfg, 'keeptapers'), cfg.keeptapers = 'yes'; end
+    if strcmp(cfg.keeptrials, 'no') || strcmp(cfg.keeptapers, 'no'),
+      error('cfg.output = ''fourier'' requires cfg.keeptrials = ''yes'' and cfg.keeptapers = ''yes''');
+    end   
   else
     if ~isfield(cfg, 'keeptrials'), cfg.keeptrials = 'no'; end
     if ~isfield(cfg, 'keeptapers'), cfg.keeptapers = 'no'; end
   end 
  
-  if ~isfield(cfg, 'keeptrials'),       cfg.keeptrials       = 'no';         end
   % set flags for keeping trials and/or tapers
   if strcmp(cfg.keeptrials,'no') &&  strcmp(cfg.keeptapers,'no')
     keeprpt = 1;
