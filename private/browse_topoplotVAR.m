@@ -1,13 +1,12 @@
 function browse_topoplotVAR(cfg, data)
 
-% this is a simple helper function for DATABROWSER
+% BROWSE_TOPOPLOTVAR is a simple helper function for FT_DATABROWSER that
+% computes the variance of band-pass filtered data and makes a topographic
+% plot. It serves to make a quick-and-dirty power topography.
+%
+% See also BROWSE_MOVIEPLOTER, BROWSE_TOPOPLOTER, BROWSE_MULTIPLOTER, BROWSE_TOPOPLOTVAR
 
 % Copyright (C) 2009, Robert Oostenveld
-%
-% $Log: browse_topoplotVAR.m,v $
-% Revision 1.1  2009/10/19 14:19:21  roboos
-% first version, to work with databrowser
-%
 
 % compute the variance, i.e. the broad-band power
 timelock        = [];
@@ -22,4 +21,4 @@ default.interactive = 'no';
 cfg = mergeconfig(cfg, default);
 
 figure;
-topoplotER(cfg, timelock);
+ft_topoplotER(cfg, timelock);

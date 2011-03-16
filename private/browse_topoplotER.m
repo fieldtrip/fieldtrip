@@ -1,13 +1,11 @@
 function browse_topoplotER(cfg, data)
 
-% this is a simple helper function for DATABROWSER
+% BROWSE_TOPOPLOTER is a simple helper function for FT_DATBROWSER and shows
+% the average topography of the selected data.
+%
+% See also BROWSE_MOVIEPLOTER, BROWSE_TOPOPLOTER, BROWSE_MULTIPLOTER, BROWSE_TOPOPLOTVAR
 
 % Copyright (C) 2009, Robert Oostenveld
-%
-% $Log: browse_topoplotER.m,v $
-% Revision 1.1  2009/10/19 14:19:21  roboos
-% first version, to work with databrowser
-%
 
 % convert to an ERP
 timelock = timelockanalysis([], data);
@@ -18,5 +16,5 @@ default.marker      = 'on';
 default.interactive = 'no';
 cfg = mergeconfig(cfg, default);
 
-figure; 
-topoplotER(cfg, timelock);
+figure;
+ft_topoplotER(cfg, timelock);
