@@ -35,6 +35,7 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 % cfg.highlightcolor     = highlight marker color (default = [0 0 0] (black))
 % cfg.highlightsize      = highlight marker size (default = 6)
 % cfg.highlightfontsize  = highlight marker size (default = 8)
+% cfg.hotkeys            = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
 % cfg.colorbar           = 'yes'
 %                          'no' (default)
 %                          'North'              inside plot box near top
