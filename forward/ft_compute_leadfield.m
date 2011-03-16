@@ -15,7 +15,7 @@ function [lf] = ft_compute_leadfield(pos, sens, vol, varargin)
 %
 % The vol structure represents a volume conductor model, its contents
 % depend on the type of model. The sens structure represents a sensor
-% arary, i.e. EEG electrodes or MEG gradiometers.
+% array, i.e. EEG electrodes or MEG gradiometers.
 %
 % It is possible to compute a simultaneous forward solution for EEG and MEG
 % by specifying sens and grad as two cell-arrays, e.g.
@@ -279,7 +279,10 @@ elseif ismeg
         % construct the channels from a linear combination of all magnetometer coils
         lf = sens.tra * lf;
       end
-
+    
+    case 'simbio'
+      error('Not yet implemented for MEG');
+      
     otherwise
       error('unsupported volume conductor model for MEG');
   end % switch voltype for MEG
@@ -425,6 +428,12 @@ elseif iseeg
     case 'halfspace'
       lf = eeg_halfspace_medium_leadfield(pos, sens.pnt, vol);
 
+    case 'simbio'
+      lf = leadfield_simbio(pos, sens, vol);
+    
+    case 'fns'
+      lf = leadfield_fns(pos, sens, vol);      
+      
     otherwise
       error('unsupported volume conductor model for EEG');
   end % switch voltype for EEG
@@ -483,4 +492,3 @@ if ~isempty(weight)
     lf(:,3*(i-1)+3) = lf(:,3*(i-3)+1) * weight(i); % the leadfield for the z-direction
   end
 end
-  
