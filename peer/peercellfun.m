@@ -12,7 +12,7 @@ function varargout = peercellfun(fname, varargin)
 % function to be evaluated.
 %   UniformOutput  = boolean (default = false)
 %   StopOnError    = boolean (default = true)
-%   RetryOnError   = integer, total number of retries for failed jobs (default = 0)
+%   RetryOnError   = number, number of retries for failed jobs expressed as ratio (default = 0.05)
 %   MaxBusy        = number, amount of slaves allowed to be busy (default = inf)
 %   diary          = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
 %   timreq         = number, initial estimate for the time required to run a single job (default = 3600)
@@ -62,7 +62,7 @@ keyvalcheck(optarg, 'forbidden', {'timcv', 'ResubmitTime'});
 % get the optional input arguments
 UniformOutput = keyval('UniformOutput', optarg); if isempty(UniformOutput), UniformOutput=false; end
 StopOnError   = keyval('StopOnError',   optarg); if isempty(StopOnError),   StopOnError=true;    end
-RetryOnError  = keyval('RetryOnError',  optarg); if isempty(RetryOnError),  RetryOnError=0;      end
+RetryOnError  = keyval('RetryOnError',  optarg); if isempty(RetryOnError),  RetryOnError=0.05;   end
 MaxBusy       = keyval('MaxBusy',       optarg); if isempty(MaxBusy),       MaxBusy=inf;         end
 timreq        = keyval('timreq',        optarg); 
 mintimreq     = keyval('mintimreq',     optarg); 
@@ -104,6 +104,9 @@ end
 
 % convert from 'yes'/'no' into boolean value
 UniformOutput = istrue(UniformOutput);
+
+% convert from a fraction into an integer number
+RetryOnError = floor(RetryOnError * numel(varargin{1}));
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -368,36 +371,37 @@ while ~all(submitted) || ~all(collected)
     timused(collect) = keyval('timused', options, nan);
     memused(collect) = keyval('memused', options, nan);
 
-    prev_timreq = timreq;
-    prev_memreq = memreq;
-
-    if any(collected)
-      % update the estimate of the time and memory that will be needed for the next job
-      % note that it cannot be updated if all collected jobs have failed (in case of stoponerror=false)
-      if ~isempty(nanmax(timused))
-        timreq = nanmax(timused);
-        timreq = max(timreq, mintimreq);
-        memreq = nanmax(memused);
-        memreq = max(memreq, minmemreq);
-      end
-    elseif ~any(collected) && any(submitted) && any(busy)
-      % update based on the time spent waiting sofar for the first job to return
-      elapsed = toc(stopwatch) - min(submittime(submitted(busy)));
-      timreq  = max(timreq, elapsed);
-      timreq  = max(timreq, mintimreq);
-    end
-
-    % give some feedback
-    if memreq~=prev_memreq
-      fprintf('updating memreq to %s\n', print_mem(memreq));
-    end
-
-    % give some feedback
-    if timreq~=prev_timreq
-      fprintf('updating timreq to %s\n', print_tim(timreq));
-    end
-
   end % for joblist
+
+  prev_timreq = timreq;
+  prev_memreq = memreq;
+  
+  if any(collected)
+    % update the estimate of the time and memory that will be needed for the next job
+    % note that it cannot be updated if all collected jobs have failed (in case of stoponerror=false)
+    if ~isempty(nanmax(timused))
+      timreq = nanmax(timused);
+      timreq = max(timreq, mintimreq);
+      memreq = nanmax(memused);
+      memreq = max(memreq, minmemreq);
+    end
+  end
+  if any(submitted) && any(busy)
+    % update based on the time already spent on the slowest job
+    elapsed = toc(stopwatch) - min(submittime(submitted(busy)));
+    timreq  = max(timreq, elapsed);
+    timreq  = max(timreq, mintimreq);
+  end
+  
+  % give some feedback
+  if memreq~=prev_memreq
+    fprintf('updating memreq to %s\n', print_mem(memreq));
+  end
+  
+  % give some feedback
+  if timreq~=prev_timreq
+    fprintf('updating timreq to %s\n', print_tim(timreq));
+  end
 
   % get the list of jobs that are busy
   busylist = peerlist('busy');
