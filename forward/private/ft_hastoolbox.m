@@ -96,6 +96,8 @@ url = {
   'BSMART'     'see http://www.brain-smart.org'
   'PEER'       'see http://fieldtrip.fcdonders.nl/development/peer'
   'FREESURFER' 'see http://surfer.nmr.mgh.harvard.edu/fswiki'
+  'SIMBIO'     'see https://www.mrt.uni-jena.de/simbio/index.php/Main_Page'
+  'FNS'        'see http://hhvn.nmsu.edu/wiki/index.php/FNS'
   };
 
 if nargin<2
@@ -215,6 +217,8 @@ switch toolbox
     status  = exist('MRIread', 'file') && exist('vox2ras_0to1', 'file');
   case 'FNS'
     status  = exist('elecsfwd', 'file') && exist('img_get_gray', 'file');
+  case 'SIMBIO'
+    status  = exist('ipm_linux_opt_Venant', 'file');
   otherwise
     if ~silent, warning('cannot determine whether the %s toolbox is present', toolbox); end
     status = 0;
