@@ -1,20 +1,19 @@
 function [varargout] = ft_qualitycheck(cfg)
 
-% FT_QUALITYCHECK facilitates quality inspection of a dataset.
-% There are three likely steps for a user to check his/her dataset;
+% FT_QUALITYCHECK facilitates quality inspection of a dataset. 1) The data is
+% analyzed, quantified, and stored in a .mat file in a timelock- and
+% freq- like fashion. 2) The quantifications are visualized and exported to
+% a .PNG and .PDF file.
 %
-% 1) create an output.mat file with the quantified data (done by ft_qualitycheck)
-% 2) visualize the quantifications (done by ft_qualitycheck; exported to .PNG and .PDF)
-% 3) a more detailed inspection (user-specific, some examples on the FT wiki)
-%
-% This function is specific for MEG data recorded with either a CTF or BTI system
+% This function is specific for MEG data recorded with either a CTF or BTI
+% system. In case of the latter system, the output does not contain the headpos
+% variable.
 %
 % Use as:
-%   [output] = ft_qualitycheck(cfg)
+%   [info, timelock, freq, summary, headpos] = ft_qualitycheck(cfg)
 %
 % The configuration should contain:
-%   cfg.dataset = string pointing to the location of the dataset (e.g.
-%   'dir/dataset.ds')
+%   cfg.dataset = a string (e.g. 'dir/dataset.ds')
 %
 % The following parameters can be used:
 %   cfg.analyze = 'yes' or 'no' to analyze the dataset (default = 'yes')
@@ -43,301 +42,344 @@ function [varargout] = ft_qualitycheck(cfg)
 
 ft_defaults
 
-% set the defaults:
-if ~isfield(cfg,'analyze'),        cfg.analyze = 'yes';                           end
-if ~isfield(cfg,'savemat'),        cfg.savemat = 'yes';                           end
+% defaults
+if ~isfield(cfg,'analyze'),        cfg.analyze   = 'yes';                         end
+if ~isfield(cfg,'savemat'),        cfg.savemat   = 'yes';                         end
 if ~isfield(cfg,'visualize'),      cfg.visualize = 'yes';                         end
-if ~isfield(cfg,'saveplot'),       cfg.saveplot = 'yes';                          end
+if ~isfield(cfg,'saveplot'),       cfg.saveplot  = 'yes';                         end
 
+% checks
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes'); % translate into datafile+headerfile
 isctf = ft_filetype(cfg.dataset, 'ctf_ds');
 is4d  = ft_filetype(cfg.dataset, '4d');
 
 % these will be replaced by more appropriate values
-daystr      = 'unknown';
-datasetname = 'unknown';
-exportname  = 'unknown';
-startrec    = 'unknown';
-startdate   = 'unknown';
-starttime   = 'unknown';
-stoptime    = 'unknown';
+info.datasetname = 'unknown';
+info.daterec     = 'unknown';
+info.startrec    = 'unknown';
+info.stoprec     = 'unknown';
+exportname       = 'unknown';
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Dataset history file
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% does not work properly for older CTF datasets 
-if isctf
-  logfile                     = strcat(cfg.datafile(1:end-5),'.hist');
-  fileline                    = 0;
-  fid                         = fopen(logfile,'r');
-  fileline                    = 0;
-  fid                         = fopen(logfile,'r');
-  while fileline >= 0
-    fileline = fgets(fid);
-    if ~isempty(findstr(fileline,'Collection started'))
-      startdate = sscanf(fileline(findstr(fileline,'Collection started:'):end),'Collection started: %s');
-      starttime = sscanf(fileline(findstr(fileline,startdate):end),strcat(startdate, '%s'));
+%% HISTORY FILE
+if isctf % does not work properly for older CTF datasets
+    logfile                     = strcat(cfg.datafile(1:end-5),'.hist');
+    fileline                    = 0;
+    fid                         = fopen(logfile,'r');
+    while fileline >= 0
+        fileline = fgets(fid);
+        if ~isempty(findstr(fileline,'Collection started'))
+            startdate = sscanf(fileline(findstr(fileline,'Collection started:'):end),'Collection started: %s');
+            info.startrec = sscanf(fileline(findstr(fileline,startdate):end),strcat(startdate, '%s'));
+        end
+        if ~isempty(findstr(fileline,'Collection stopped'))
+            stopdate = sscanf(fileline(findstr(fileline,'Collection stopped:'):end),'Collection stopped: %s');
+            info.stoprec = sscanf(fileline(findstr(fileline,stopdate):end),strcat(stopdate, '%s'));
+        end
+        if ~isempty(findstr(fileline,'Dataset name'))
+            info.datasetname = sscanf(fileline(findstr(fileline,'Dataset name'):end),'Dataset name %s');
+        end
     end
-    if ~isempty(findstr(fileline,'Collection stopped'))
-      stopdate = sscanf(fileline(findstr(fileline,'Collection stopped:'):end),'Collection stopped: %s');
-      stoptime = sscanf(fileline(findstr(fileline,stopdate):end),strcat(stopdate, '%s'));
+    try
+        [daynr, daystr] = weekday(startdate);
+        info.daterec    = strcat(daystr,'-',startdate);
+        exportname      = strcat(info.datasetname(end-10:end-3),'_',info.startrec([1:2 4:5]));
     end
-    if ~isempty(findstr(fileline,'Dataset name'))
-      datasetname = sscanf(fileline(findstr(fileline,'Dataset name'):end),'Dataset name %s');
-    end
-  end
-  try
-    [daynr, daystr] = weekday(startdate);
-    startrec        = strcat(daystr,'-',startdate);
-    exportname      = strcat(datasetname(end-10:end-3),'_',starttime([1:2 4:5]));
-  end
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Dataset analysis
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ANALYSIS
 if strcmp(cfg.analyze,'yes')
-  tic
-  
-  hdr = ft_read_header(cfg.dataset);  
-  
-  % 10 second trials definition
-  cfgdef                         = [];
-  cfgdef.dataset                 = cfg.dataset;
-  cfgdef.trialdef.triallength    = 10;
-  %cfgdef.trialdef.ntrials        = 3;
-  cfgdef.continuous              = 'yes';
-  cfgdef                         = ft_definetrial(cfgdef);
-  
-  % process trial by trial
-  ntrials = size(cfgdef.trl,1);
-  for t = 1:ntrials
-    fprintf('analyzing trial %s of %s \n', num2str(t), num2str(ntrials));
+    tic
     
-    % preproc raw
-    cfgpreproc                  = cfgdef;
-    cfgpreproc.trl              = cfgdef.trl(t,:);
-    data                        = ft_preprocessing(cfgpreproc);
-    clear cfgpreproc;
+    % trial definition
+    cfgdef                      = [];
+    cfgdef.dataset              = cfg.dataset;
+    cfgdef.trialdef.triallength = 10;
+    %cfgdef.trialdef.ntrials     = 5;
+    cfgdef.continuous           = 'yes';
+    cfgdef                      = ft_definetrial(cfgdef);
+    ntrials                     = size(cfgdef.trl,1)-1; % remove last trial
+    timeunit                    = cfgdef.trialdef.triallength;
     
-    if isctf
-      % determine headposition
-      try
-        % this fails for older CTF data sets
-        x1i = strmatch('HLC0011', data.label); % x nasion
-        y1i = strmatch('HLC0012', data.label); % y nasion
-        z1i = strmatch('HLC0013', data.label); % z nasion
-        x2i = strmatch('HLC0021', data.label); % x left
-        y2i = strmatch('HLC0022', data.label); % y left
-        z2i = strmatch('HLC0023', data.label); % z left
-        x3i = strmatch('HLC0031', data.label); % x right
-        y3i = strmatch('HLC0032', data.label); % y right
-        z3i = strmatch('HLC0033', data.label); % z right
-        
-        hpos(1,t) = mean(data.trial{1,1}(x1i,:) * 100);  % convert from meter to cm
-        hpos(2,t) = mean(data.trial{1,1}(y1i,:) * 100);
-        hpos(3,t) = mean(data.trial{1,1}(z1i,:) * 100);
-        hpos(4,t) = mean(data.trial{1,1}(x2i,:) * 100);
-        hpos(5,t) = mean(data.trial{1,1}(y2i,:) * 100);
-        hpos(6,t) = mean(data.trial{1,1}(z2i,:) * 100);
-        hpos(7,t) = mean(data.trial{1,1}(x3i,:) * 100);
-        hpos(8,t) = mean(data.trial{1,1}(y3i,:) * 100);
-        hpos(9,t) = mean(data.trial{1,1}(z3i,:) * 100);
-        
-        % determine headmotion: diffrence from initial trial (in cm)
-        hmotion(1,t) = sqrt((hpos(1,t)-hpos(1,1)).^2 + (hpos(2,t)-hpos(2,1)).^2 + (hpos(3,t)-hpos(3,1)).^2); % Na
-        hmotion(2,t) = sqrt((hpos(4,t)-hpos(4,1)).^2 + (hpos(5,t)-hpos(5,1)).^2 + (hpos(6,t)-hpos(6,1)).^2); % L
-        hmotion(3,t) = sqrt((hpos(7,t)-hpos(7,1)).^2 + (hpos(8,t)-hpos(8,1)).^2 + (hpos(9,t)-hpos(9,1)).^2); % R
-        hasheadpos = true;
-      catch
-        hasheadpos = false;
-      end
-    end
+    % read .res4 file
+    info.hdr                    = ft_read_header(cfg.dataset);
+    chans                       = ft_channelselection({'MEG','MEGREF'}, info.hdr.label);
+    MEGchans                    = ft_channelselection('MEG', info.hdr.label);
+    chanindx                    = match_str(info.hdr.label, chans);
+    MEGchanindx                 = match_str(chans, MEGchans);
     
-    % determine the minima, maxima, range, and average
-    chans                       = ft_channelselection('MEG', data.label);
-    rawindx                     = match_str(data.label, chans);
-    minima(1,t)                 = min(min(data.trial{1,1}(rawindx,:)));
-    maxima(1,t)                 = max(max(data.trial{1,1}(rawindx,:)));
-    range(1,t)                  = abs(maxima(1,t)-minima(1,t));
-    average(1,t)                = mean(mean(data.trial{1,1}(rawindx,:)));
+    % find headcoil channels
+    if isctf % this fails for older CTF data sets
+        try
+            Nx = strmatch('HLC0011', info.hdr.label); % x nasion coil
+            Ny = strmatch('HLC0012', info.hdr.label); % y nasion
+            Nz = strmatch('HLC0013', info.hdr.label); % z nasion
+            Lx = strmatch('HLC0021', info.hdr.label); % x left coil
+            Ly = strmatch('HLC0022', info.hdr.label); % y left
+            Lz = strmatch('HLC0023', info.hdr.label); % z left
+            Rx = strmatch('HLC0031', info.hdr.label); % x right coil
+            Ry = strmatch('HLC0032', info.hdr.label); % y right
+            Rz = strmatch('HLC0033', info.hdr.label); % z right
+            hasheadpos     = true;
+            headpos.dimord = 'chan_time';
+            headpos.time   = [timeunit-timeunit/2:timeunit:timeunit*ntrials-timeunit/2];
+            headpos.label  = {'Nx';'Ny';'Nz';'Lx';'Ly';'Lz';'Rx';'Ry';'Rz'};
+            headpos.avg    = NaN(length(headpos.label), ntrials);
+            headpos.grad   = info.hdr.grad;
+        end % try
+    end % if
     
-    % jump artefact counter
-    jumpthreshold               = 1e-10;
-    nchans                      = length(chans);
-    for c = 1:nchans
-      jumps(c,t)                = length(find(diff(data.trial{1,1}(rawindx(c),:)) > jumpthreshold));
-    end
-    
-    refchans                    = ft_channelselection('MEGREF', data.label);
-    refindx                     = match_str(data.label, refchans);
-    nrefs                       = length(refchans);
-    for c = 1:nrefs
-      refjumps(c,t)             = length(find(diff(data.trial{1,1}(refindx(c),:)) > jumpthreshold));
-    end
-    
-    % determine noise
+    % analysis settings
     cfgredef             = [];
     cfgredef.length      = 1;
     cfgredef.overlap     = 0;
-    redef                = ft_redefinetrial(cfgredef, data);
     
     cfgfreq              = [];
     cfgfreq.output       = 'pow';
-    cfgfreq.channel      = 'MEG';
+    cfgfreq.channel      = chans;
     cfgfreq.method       = 'mtmfft';
     cfgfreq.taper        = 'hanning';
     cfgfreq.keeptrials   = 'no';
-    cfgfreq.foilim       = [0 min(hdr.Fs/2, 400)]; % Fr ~ .1 hz
+    cfgfreq.foilim       = [0 min(info.hdr.Fs/2, 400)];
     
-    freq                 = ft_freqanalysis(cfgfreq, redef);
+    % output variables
+    timelock.dimord = 'chan_time';
+    timelock.label  = chans;
+    timelock.time   = [timeunit-timeunit/2:timeunit:timeunit*ntrials-timeunit/2];
+    timelock.avg    = NaN(length(chans), ntrials); % updated in loop
+    timelock.median = NaN(length(chans), ntrials); % updated in loop
+    timelock.jumps  = NaN(length(chans), ntrials); % updated in loop
+    timelock.range  = NaN(length(chans), ntrials); % updated in loop
+    timelock.min    = NaN(length(chans), ntrials); % updated in loop
+    timelock.max    = NaN(length(chans), ntrials); % updated in loop
+    timelock.grad   = info.hdr.grad;
     
-    linenoise(1,t)              = mean(mean(findpower(49, 51, freq))); % mean over frequencies and channels
-    lowfreqnoise(1,t)           = mean(mean(findpower(0, 2, freq)));   % mean over frequencies and channels
+    freq.dimord     = 'chan_freq_time';
+    freq.label      = chans;
+    freq.freq       = [cfgfreq.foilim(1):cfgfreq.foilim(2)];
+    freq.time       = [timeunit-timeunit/2:timeunit:timeunit*ntrials-timeunit/2];
+    freq.powspctrm  = NaN(length(chans), length(freq.freq), ntrials); % updated in loop
+    freq.grad       = info.hdr.grad;
     
-    spec(:,:,t) = freq.powspctrm;
-    foi         = freq.freq;
+    summary.dimord  = 'chan_time';
+    summary.time    = [timeunit-timeunit/2:timeunit:timeunit*ntrials-timeunit/2];
+    summary.label   = {'Mean';'Median';'Min';'Max';'Range';'HmotionN';'HmotionL';'HmotionR';'LowFreqPower';'LineFreqPower';'Jumps'};
+    summary.avg     = NaN(length(summary.label), ntrials); % updated in loop
+    summary.grad    = info.hdr.grad;
     
-    toc
-  end % end of trial loop
-  
-  % output variables
-  output.datasetname  = datasetname;
-  try, output.startrec     = startrec;  end
-  try, output.starttime    = starttime; end
-  try, output.stoptime     = stoptime;  end
-  output.avg          = average;
-  output.range        = range;
-  output.minima       = minima;
-  output.maxima       = maxima;
-  output.jumps        = jumps;
-  output.label        = chans;
-  output.refjumps     = refjumps;
-  output.reflabel     = refchans;
-  output.linenoise    = linenoise;
-  output.lowfreqnoise = lowfreqnoise;
-  output.freq         = foi;
-  output.powspctrm    = spec; % chan_freq_time where time is avg per 10 sec segments
-  output.time         = mean(cfgdef.trl(:,1:2),2)/hdr.Fs;
-  try, output.hpos         = hpos;     end
-  try, output.hmotion      = hmotion;  end
-  output.hdr          = hdr;
-  
-  % save to .mat
-  if strcmp(cfg.savemat,'yes')
-    save(strcat(exportname,'.mat'), 'output');
-  end
+    % process trial by trial
+    for t = 1:ntrials
+        fprintf('analyzing trial %s of %s \n', num2str(t), num2str(ntrials));
+        
+        % preprocess
+        cfgpreproc                  = cfgdef;
+        cfgpreproc.trl              = cfgdef.trl(t,:);
+        data                        = ft_preprocessing(cfgpreproc); clear cfgpreproc;
+        
+        % determine headposition
+        if isctf && hasheadpos
+            headpos.avg(1,t) = mean(data.trial{1,1}(Nx,:) * 100);  % meter to cm
+            headpos.avg(2,t) = mean(data.trial{1,1}(Ny,:) * 100);
+            headpos.avg(3,t) = mean(data.trial{1,1}(Nz,:) * 100);
+            headpos.avg(4,t) = mean(data.trial{1,1}(Lx,:) * 100);
+            headpos.avg(5,t) = mean(data.trial{1,1}(Ly,:) * 100);
+            headpos.avg(6,t) = mean(data.trial{1,1}(Lz,:) * 100);
+            headpos.avg(7,t) = mean(data.trial{1,1}(Rx,:) * 100);
+            headpos.avg(8,t) = mean(data.trial{1,1}(Ry,:) * 100);
+            headpos.avg(9,t) = mean(data.trial{1,1}(Rz,:) * 100);
+        end
+        
+        % update values
+        timelock.avg(:,t)           = mean(data.trial{1}(chanindx,:),2);
+        timelock.median(:,t)        = median(data.trial{1}(chanindx,:),2);
+        timelock.range(:,t)         = max(data.trial{1}(chanindx,:),[],2) - min(data.trial{1}(chanindx,:),[],2);
+        timelock.min(:,t)           = min(data.trial{1}(chanindx,:),[],2);
+        timelock.max(:,t)           = max(data.trial{1}(chanindx,:),[],2);
+        
+        % detect jumps
+        jumpthreshold               = 1e-10;
+        for c = 1:size(data.trial{1}(chanindx,:),1)
+            timelock.jumps(c,t)     = length(find(diff(data.trial{1,1}(chanindx(c),:)) > jumpthreshold));
+        end
+        
+        % FFT and noise estimation
+        redef                       = ft_redefinetrial(cfgredef, data); clear data;
+        FFT                         = ft_freqanalysis(cfgfreq, redef); clear redef;
+        freq.powspctrm(:,:,t)       = FFT.powspctrm;
+        summary.avg(9,t)            = mean(mean(findpower(0, 2, FFT, MEGchanindx))); % Low Freq Power
+        summary.avg(10,t)           = mean(mean(findpower(49, 51, FFT, MEGchanindx))); clear FFT; % Line Freq Power
+        
+        toc
+    end % end of trial loop
+    
+    % determine headmotion: distance from initial trial (in cm)
+    if isctf && hasheadpos
+        summary.avg(6,:) = sqrt(sum((headpos.avg(1:3,:)-repmat(headpos.avg(1:3,1),1,size(headpos.avg,2))).^2,1)); % N
+        summary.avg(7,:) = sqrt(sum((headpos.avg(4:6,:)-repmat(headpos.avg(4:6,1),1,size(headpos.avg,2))).^2,1)); % L
+        summary.avg(8,:) = sqrt(sum((headpos.avg(7:9,:)-repmat(headpos.avg(7:9,1),1,size(headpos.avg,2))).^2,1)); % R
+    end
+    
+    % summarize/mean and store variables
+    summary.avg(1,:)   = mean(timelock.avg(MEGchanindx,:),1);
+    summary.avg(2,:)   = mean(timelock.median(MEGchanindx,:),1);
+    summary.avg(3,:)   = mean(timelock.min(MEGchanindx,:),1);
+    summary.avg(4,:)   = mean(timelock.max(MEGchanindx,:),1);
+    summary.avg(5,:)   = mean(timelock.range(MEGchanindx,:),1);
+    summary.avg(11,:)  = mean(timelock.jumps(MEGchanindx,:),1);
+    
+    % add the version details of this function call to the configuration
+    cfg.version.name   = mfilename('fullpath');
+    cfg.version.id     = '$Id$';
+    cfg.version.matlab = version(); % Matlab version used
+    
+    % add the cfg to the output variables
+    timelock.cfg       = cfg;
+    freq.cfg           = cfg;
+    summary.cfg        = cfg;
+    
+    % save to .mat
+    if strcmp(cfg.savemat,'yes')
+        if isctf && hasheadpos
+            headpos.cfg        = cfg;
+            save(strcat(exportname,'.mat'), 'info','timelock','freq','summary','headpos');
+        else
+            save(strcat(exportname,'.mat'), 'info','timelock','freq','summary');
+        end
+    end
 end % end of analysis
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Visualization of the analysis
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% VISUALIZATION
 if strcmp(cfg.visualize,'yes')
-  
-  if strcmp(cfg.analyze,'no')
-    load(strcat(exportname,'.mat'));
-  end
-  
-  % create GUI-like figure
-  draw_figure(output);
-  
-  % export to .PNG and .PDF
-  if strcmp(cfg.saveplot,'yes')
-    set(gcf, 'PaperType', 'a4');
-    print(gcf, '-dpng', strcat(exportname,'.png'));
-    orient landscape;
-    print(gcf, '-dpdf', strcat(exportname,'.pdf'));
-  end
+    
+    % load data
+    if strcmp(cfg.analyze,'no')
+        load(strcat(exportname,'.mat'));
+    end
+    
+    % determine number of 1-hour plots to be made
+    nplots = ceil((info.hdr.nTrials-1)/(3600/10));
+    
+    % create GUI-like figure(s)
+    for p = 1:nplots
+        fprintf('visualizing %s of %s \n', num2str(p), num2str(nplots));
+        toi = [nplots*3600-3595 nplots*3600-5]; % select 1-hour chunks
+        
+        if isstruct(headpos)
+            temp_timelock = ft_selectdata(timelock, 'toilim', toi);
+            temp_freq     = ft_selectdata(freq, 'toilim', toi);
+            temp_summary  = ft_selectdata(summary, 'toilim', toi);
+            temp_headpos  = ft_selectdata(headpos, 'toilim', toi);
+            draw_figure(info, temp_timelock, temp_freq, temp_summary, temp_headpos);
+            clear temp_timelock; clear temp_freq; clear temp_summary; clear temp_headpos;
+        else
+            temp_timelock = ft_selectdata(timelock, 'toilim', toi);
+            temp_freq     = ft_selectdata(freq, 'toilim', toi);
+            temp_summary  = ft_selectdata(summary, 'toilim', toi);
+            draw_figure(info, temp_timelock, temp_freq, temp_summary);
+            clear temp_timelock; clear temp_freq; clear temp_summary;
+        end
+        
+        % export to .PNG and .PDF
+        if strcmp(cfg.saveplot,'yes')
+            if p == 1
+                exportfilename = exportname;
+            else
+                exportfilename = strcat(exportname,'_pt',num2str(p));
+            end
+            fprintf('exporting %s of %s \n', num2str(p), num2str(nplots));
+            set(gcf, 'PaperType', 'a4');
+            print(gcf, '-dpng', strcat(exportfilename,'.png'));
+            orient landscape;
+            print(gcf, '-dpdf', strcat(exportfilename,'.pdf'));
+            close
+        end
+    end % end of nplots
 end % end of visualization
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Output handling
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% VARARGOUT
 if nargout>0
-  mOutputArgs{1} = output;
-  [varargout{1:nargout}] = mOutputArgs{:};
-  clearvars -except varargout
+    mOutputArgs{1} = info;
+    mOutputArgs{2} = timelock;
+    mOutputArgs{3} = freq;
+    mOutputArgs{4} = summary;
+    try
+        mOutputArgs{5} = headpos;
+    end
+    [varargout{1:nargout}] = mOutputArgs{:};
+    clearvars -except varargout
 else
-  clear
+    clear
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%% SUBFUNCTIONS %%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% SUBFUNCTIONS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [power, freq] = findpower(low, high, freqinput)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [power, freq] = findpower(low, high, freqinput, chans)
 % replace value with the index of the nearest bin
 xmin  = nearest(getsubfield(freqinput, 'freq'), low);
 xmax  = nearest(getsubfield(freqinput, 'freq'), high);
 % select the freq range
-power = freqinput.powspctrm(:,xmin:xmax);
-freq  = freqinput.freq(:,xmin:xmax);
+power = freqinput.powspctrm(chans, xmin:xmax);
+freq  = freqinput.freq(:, xmin:xmax);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function plot_REF(dat, h)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Prepare sensors
-cfgref            = [];
-cfgref.layout     = 'CTFREF.lay';
-cfgref.layout     = ft_prepare_layout(cfgref);
-cfgref.layout     = rmfield(cfgref.layout,'outline');
-
-% Select the channels in the data that match with the layout:
-[seldat, sellay] = match_str(dat.label, cfgref.layout.label);
-if isempty(seldat)
-  error('labels in data and labels in layout do not match');
-end
-datavector = dat.powspctrm(seldat,:);
-labelvector = cfgref.layout.label(sellay);
-
-% Plotting
-imagesc(sum(datavector,2)');
+imagesc(dat.powspctrm');
 colormap(hot);
-set(h.TopoREF,'XTick',[1:length(labelvector)]);
-for l = 1:length(labelvector)
-  if sum(datavector(l,:),2) > 0
-    Xlab{l} = labelvector{l};
-  else
-    Xlab{l} = '';
-  end
+set(h.TopoREF,'XTick',[1:length(dat.label)]);
+for l = 1:length(dat.label) % plot labels of sensors with jumps
+    if dat.powspctrm(l,:) > 0
+        Xlab{l} = dat.label{l};
+    else
+        Xlab{l} = '';
+    end
 end
 set(h.TopoREF,'XTickLabel',Xlab);
 set(h.TopoREF,'YTickLabel',{''});
 title(h.TopoREF,'Reference sensors');
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function draw_figure(output)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Parent figure
-  h.MainFigure = figure(...
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function draw_figure(varargin)
+% deal with input
+if nargin == 5
+    info     = varargin{1};
+    timelock = varargin{2};
+    freq     = varargin{3};
+    summary  = varargin{4};
+    headpos  = varargin{5};
+elseif nargin == 4
+    info     = varargin{1};
+    timelock = varargin{2};
+    freq     = varargin{3};
+    summary  = varargin{4};
+end
+
+% PARENT FIGURE
+h.MainFigure = figure(...
     'MenuBar','none',...
     'Name','ft_qualitycheck',...
     'Units','normalized',...
     'color','white',...
     'Position',[0.01 0.01 .99 .99]); % nearly fullscreen
-  
-  h.MainText = uicontrol(...
+
+h.MainText = uicontrol(...
     'Parent',h.MainFigure,...
     'Style','text',...
     'Units','normalized',...
     'FontSize',10,...
-    'String',output.startrec,...
+    'String',info.daterec,...
     'Backgroundcolor','white',...
     'Position',[.05 .96 .15 .02]);
-  
-  h.MainText2 = uicontrol(...
+
+h.MainText2 = uicontrol(...
     'Parent',h.MainFigure,...
     'Style','text',...
     'Units','normalized',...
     'FontSize',10,...
-    'String','Topographic artefact distribution',...
+    'String','Artefact distribution',...
     'Backgroundcolor','white',...
-    'Position',[.02 .46 .22 .02]);
-  
-  h.MainText3 = uicontrol(...
+    'Position',[.05 .46 .16 .02]);
+
+h.MainText3 = uicontrol(...
     'Parent',h.MainFigure,...
     'Style','text',...
     'Units','normalized',...
@@ -345,17 +387,17 @@ function draw_figure(output)
     'String','Mean powerspectrum',...
     'Backgroundcolor','white',...
     'Position',[.4 .3 .15 .02]);
-  
-  h.MainText4 = uicontrol(...
+
+h.MainText4 = uicontrol(...
     'Parent',h.MainFigure,...
     'Style','text',...
     'Units','normalized',...
     'FontSize',10,...
-    'String','Timeplots',...
+    'String','Timecourses',...
     'Backgroundcolor','white',...
-    'Position',[.5 .96 .08 .02]);
-  
-  h.MainText5 = uicontrol(...
+    'Position',[.5 .96 .11 .02]);
+
+h.MainText5 = uicontrol(...
     'Parent',h.MainFigure,...
     'Style','text',...
     'Units','normalized',...
@@ -363,62 +405,50 @@ function draw_figure(output)
     'String','Quantification',...
     'Backgroundcolor','white',...
     'Position',[.8 .3 .1 .02]);
-  
-  % plot the top 5 artefact chans
-  [cnts, indx] = sort(sum(output.jumps,2));
-  artchans = output.label(indx(end:-1:end-4));
-  h.MainText6 = uicontrol(...
-    'Parent',h.MainFigure,...
-    'Style','text',...
-    'Units','normalized',...
-    'FontSize',10,...
-    'String',['Top 5'; artchans(1:end)],...
-    'Backgroundcolor','white',...
-    'Position',[.2 .24 .05 .14]);
-  
-  % Headmotion
-  h.HmotionPanel = uipanel(...
+
+% HEADMOTION PANEL
+h.HmotionPanel = uipanel(...
     'Parent',h.MainFigure,...
     'Units','normalized',...
     'Backgroundcolor','white',...
     'Position',[.01 .5 .25 .47]);
-  
-  h.HmotionAxes = axes(...
+
+h.HmotionAxes = axes(...
     'Parent',h.HmotionPanel,...
     'Units','normalized',...
     'color','white',...
     'Position',[.05 .08 .9 .52]);
-  
-  h.DataText = uicontrol(...
+
+h.DataText = uicontrol(...
     'Parent',h.HmotionPanel,...
     'Style','text',...
     'Units','normalized',...
     'FontSize',10,...
-    'String',output.datasetname,...
+    'String',info.datasetname,...
     'Backgroundcolor','white',...
     'Position',[.01 .85 .99 .1]);
-  
-  h.TimeText = uicontrol(...
+
+h.TimeText = uicontrol(...
     'Parent',h.HmotionPanel,...
     'Style','text',...
     'Units','normalized',...
     'FontSize',10,...
-    'String',[output.starttime ' - ' output.stoptime],...
+    'String',[info.startrec ' - ' info.stoprec],...
     'Backgroundcolor','white',...
     'Position',[.01 .78 .99 .1]);
-  
-  h.DataText2 = uicontrol(...
+
+h.DataText2 = uicontrol(...
     'Parent',h.HmotionPanel,...
     'Style','text',...
     'Units','normalized',...
     'FontSize',10,...
-    'String',['fs: ' num2str(output.hdr.Fs) ', nchans: ' num2str(size(output.label,1))],...
+    'String',['fs: ' num2str(info.hdr.Fs) ', nchans: ' num2str(size(ft_channelselection('MEG', info.hdr.label),1))],...
     'Backgroundcolor','white',...
     'Position',[.01 .71 .99 .1]);
-  
-  allchans = ft_senslabel('ctf275');
-  misschans = setdiff(output.label, allchans);
-  h.DataText3 = uicontrol(...
+
+allchans = ft_senslabel('ctf275');
+misschans = setdiff(ft_channelselection('MEG', info.hdr.label), allchans);
+h.DataText3 = uicontrol(...
     'Parent',h.HmotionPanel,...
     'Style','text',...
     'Units','normalized',...
@@ -426,79 +456,178 @@ function draw_figure(output)
     'String',['missing chans: ' misschans'],...
     'Backgroundcolor','white',...
     'Position',[.01 .64 .99 .1]);
-  
-  % Topo artefact plot
-  h.TopoPanel = uipanel(...
+
+% boxplot headmotion (*10; cm-> mm) per coil
+if isstruct(headpos)
+    hmotions = ([summary.avg(8,:)' summary.avg(7,:)' summary.avg(6,:)'])*10;
+    boxplot(h.HmotionAxes, hmotions, 'orientation', 'horizontal', 'notch', 'on');
+    set(h.HmotionAxes,'YTick',[1:3]);
+    set(h.HmotionAxes,'YTickLabel',{'R','L','N'});
+    xlim(h.HmotionAxes, [0 10]);
+    xlabel(h.HmotionAxes, 'Headmotion from start [mm]');
+end
+
+% ARTEFACT PANEL
+MEGchans        = ft_channelselection('MEG', timelock.label);
+MEGchanindx     = match_str(timelock.label, MEGchans);
+MEGREFchans     = ft_channelselection('MEGREF', timelock.label);
+MEGREFchanindx  = match_str(timelock.label, MEGREFchans);
+[cnts, indx]    = sort(sum(timelock.jumps(MEGchanindx,:),2));
+artchans        = timelock.label(MEGchanindx(indx(end:-1:end-4))); % top 5 jump chans
+
+h.MainText6 = uicontrol(...
+    'Parent',h.MainFigure,...
+    'Style','text',...
+    'Units','normalized',...
+    'FontSize',10,...
+    'String',['Top 5'; artchans(1:end)],...
+    'Backgroundcolor','white',...
+    'Position',[.2 .24 .05 .14]);
+
+h.TopoPanel = uipanel(...
     'Parent',h.MainFigure,...
     'Units','normalized',...
     'Backgroundcolor','white',...
     'Position',[.01 .01 .25 .46]);
-  
-  h.TopoREF = axes(...
+
+h.TopoREF = axes(...
     'Parent',h.TopoPanel,...
     'color','white',...
     'Position',[0.05 0.86 0.9 0.06]);
-  
-  h.TopoMEG = axes(...
+
+h.TopoMEG = axes(...
     'Parent',h.TopoPanel,...
     'color','white',...
-    'Position',[0.01 0.01 0.99 0.6]);
-  
-  % Mean spectrum
-  h.SpectrumPanel = uipanel(...
+    'Position',[0.01 0.05 0.95 0.5]);
+
+% plot jumps on the dewar sensors
+cfgtopo               = [];
+cfgtopo.colorbar      = 'WestOutside';
+cfgtopo.commentpos    = 'leftbottom';
+cfgtopo.comment       = '# Jumps';
+cfgtopo.style         = 'straight';
+cfgtopo.layout        = 'CTF275.lay';
+cfgtopo.colormap      = hot;
+cfgtopo.zlim          = 'maxmin';
+cfgtopo.interpolation = 'nearest';
+data.label            = MEGchans;
+data.powspctrm        = sum(timelock.jumps(MEGchanindx,:),2);
+data.dimord           = 'chan_freq';
+data.freq             = 1;
+axes(h.TopoMEG);
+ft_topoplotTFR(cfgtopo, data);
+
+% plot jumps on the reference sensors
+data.label            = MEGREFchans;
+data.powspctrm        = sum(timelock.jumps(MEGREFchanindx,:),2);
+axes(h.TopoREF);
+plot_REF(data, h); clear data;
+
+% POWERSPECTRUM PANEL
+h.SpectrumPanel = uipanel(...
     'Parent',h.MainFigure,...
     'Units','normalized',...
     'Backgroundcolor','white',...
     'Position',[.28 .01 .4 .3]);
-  
-  h.SpectrumAxes = axes(...
+
+h.SpectrumAxes = axes(...
     'Parent',h.SpectrumPanel,...
     'color','white',...
-    'Position',[.13 .17 .85 .73]);
-  
-  % Time plots
-  h.SignalPanel = uipanel(...
+    'Position',[.15 .2 .8 .7]);
+
+% plot powerspectrum
+loglog(h.SpectrumAxes, freq.freq, squeeze(mean(mean(freq.powspctrm,1),3)),'r','LineWidth',2);
+xlabel(h.SpectrumAxes, 'Frequency [Hz]');
+ylabel(h.SpectrumAxes, 'Power [T^2/Hz]');
+
+% TIMECOURSE PANEL
+h.SignalPanel = uipanel(...
     'Parent',h.MainFigure,...
     'Units','normalized',...
     'Backgroundcolor','white',...
     'Position',[.28 .34 .71 .63]);
-  
-  h.SignalAxes = axes(...
+
+h.HmotionTimecourseAxes = axes(...
     'Parent',h.SignalPanel,...
     'Units','normalized',...
     'color','white',...
-    'Position',[.08 .7 .89 .25]);
-  
-  h.LinenoiseAxes = axes(...
+    'Position',[.08 .73 .89 .22]);
+
+h.SignalAxes = axes(...
     'Parent',h.SignalPanel,...
     'Units','normalized',...
     'color','white',...
-    'Position',[.08 .4 .89 .25]);
-  
-  h.LowfreqnoiseAxes = axes(...
+    'Position',[.08 .36 .89 .3]);
+
+h.LinenoiseAxes = axes(...
     'Parent',h.SignalPanel,...
     'Units','normalized',...
     'color','white',...
-    'Position',[.08 .1 .89 .25]);
-  
-  % Quick overview quantification sliders
-  h.QuantityPanel = uipanel(...
+    'Position',[.08 .23 .89 .1]);
+
+h.LowfreqnoiseAxes = axes(...
+    'Parent',h.SignalPanel,...
+    'Units','normalized',...
+    'color','white',...
+    'Position',[.08 .1 .89 .1]);
+
+% plot hmotion timecourses per coil (*10; cm-> mm)
+if isstruct(headpos)
+    plot(h.HmotionTimecourseAxes, summary.time, summary.avg(6,:)*10, summary.time, summary.avg(7,:)*10, summary.time, summary.avg(8,:)*10, 'LineWidth',2);
+    ylim(h.HmotionTimecourseAxes,[0 10]);
+    ylabel(h.HmotionTimecourseAxes, 'Coil distance [mm]');
+    xlim(h.HmotionTimecourseAxes,[0 3600]);
+    grid(h.HmotionTimecourseAxes,'on');
+    legend(h.HmotionTimecourseAxes, 'N','L','R');
+end
+
+% plot mean and range of the raw signal
+plot(h.SignalAxes, summary.time, summary.avg(5,:), summary.time, summary.avg(1,:), 'LineWidth',2);
+avg_min = summary.avg(1,:) + (summary.avg(1,:)-summary.avg(3,:));
+avg_max = summary.avg(1,:) + (summary.avg(1,:)-summary.avg(4,:));
+set(h.SignalAxes,'Nextplot','add');
+plot(h.SignalAxes, summary.time', avg_min, summary.time', avg_max, 'LineWidth', 1, 'Color', [255/255 127/255 39/255]);
+grid(h.SignalAxes,'on');
+%ylim(h.SignalAxes,[-Inf 4e-10]);
+ylabel(h.SignalAxes, 'Amplitude [T]');
+xlim(h.SignalAxes,[0 3600]);
+legend(h.SignalAxes,'Range','Mean','-min','+max');
+set(h.SignalAxes,'XTickLabel','');
+
+% plot linenoise
+semilogy(h.LinenoiseAxes, summary.time, summary.avg(10,:), 'LineWidth',2);
+grid(h.LinenoiseAxes,'on');
+legend(h.LinenoiseAxes, 'LineFreq [T^2/Hz]');
+set(h.LinenoiseAxes,'XTickLabel','');
+xlim(h.LinenoiseAxes,[0 3600]);
+ylim(h.LinenoiseAxes,[0 1e-27]);
+
+% plot lowfreqnoise
+semilogy(h.LowfreqnoiseAxes, summary.time, summary.avg(9,:), 'LineWidth',2);
+grid(h.LowfreqnoiseAxes,'on');
+xlim(h.LowfreqnoiseAxes,[0 3600]);
+ylim(h.LowfreqnoiseAxes,[0 1e-20]);
+legend(h.LowfreqnoiseAxes, 'LowFreq [T^2/Hz]');
+xlabel(h.LowfreqnoiseAxes, 'Time [seconds]');
+
+% QUANTIFICATION PANEL (sliders)
+h.QuantityPanel = uipanel(...
     'Parent',h.MainFigure,...
     'Units','normalized',...
     'Backgroundcolor','white',...
     'Position',[.7 .01 .29 .3]);
-  
-  h.LineNoiseSlider = uicontrol(...
+
+h.LineNoiseSlider = uicontrol(...
     'Parent',h.QuantityPanel,...
     'Style','slider',...
     'Units','normalized',...
-    'Value',mean(output.linenoise),...
+    'Value',mean(summary.avg(10,:)),...
     'Min',0,...
     'Max',1e-27,...
     'Position',[.1 .35 .8 .2],...
     'String','');
-  
-  h.LineNoiseText = uicontrol(...
+
+h.LineNoiseText = uicontrol(...
     'Parent',h.QuantityPanel,...
     'Style','text',...
     'Units','normalized',...
@@ -506,8 +635,8 @@ function draw_figure(output)
     'String','Line noise [T^2]',...
     'Backgroundcolor','white',...
     'Position',[.2 .55 .6 .07]);
-  
-  h.LineNoiseTextMin = uicontrol(...
+
+h.LineNoiseTextMin = uicontrol(...
     'Parent',h.QuantityPanel,...
     'Style','text',...
     'Units','normalized',...
@@ -515,8 +644,8 @@ function draw_figure(output)
     'String',get(h.LineNoiseSlider,'Min'),...
     'Backgroundcolor','white',...
     'Position',[.0 .35 .1 .2]);
-  
-  h.LineNoiseTextMax = uicontrol(...
+
+h.LineNoiseTextMax = uicontrol(...
     'Parent',h.QuantityPanel,...
     'Style','text',...
     'Units','normalized',...
@@ -524,19 +653,19 @@ function draw_figure(output)
     'String',get(h.LineNoiseSlider,'Max'),...
     'Backgroundcolor','white',...
     'Position',[.9 .35 .1 .2]);
-  
-  h.LowFreqSlider = uicontrol(...
+
+h.LowFreqSlider = uicontrol(...
     'Parent',h.QuantityPanel,...
     'Style','slider',...
     'Units','normalized',...
-    'Value',mean(output.lowfreqnoise),...
+    'Value',mean(summary.avg(9,:)),...
     'Min',0,...
     'Max',1e-20,...
     'SliderStep',[1e-23 1e-22],...
     'Position',[.1 .0 .8 .2],...
     'String','Low freq noise');
-  
-  h.LowFreqText = uicontrol(...
+
+h.LowFreqText = uicontrol(...
     'Parent',h.QuantityPanel,...
     'Style','text',...
     'Units','normalized',...
@@ -544,8 +673,8 @@ function draw_figure(output)
     'String','Low freq power [T^2]' ,...
     'Backgroundcolor','white',...
     'Position',[.2 .2 .6 .07]);
-  
-  h.LowFreqTextMin = uicontrol(...
+
+h.LowFreqTextMin = uicontrol(...
     'Parent',h.QuantityPanel,...
     'Style','text',...
     'Units','normalized',...
@@ -553,8 +682,8 @@ function draw_figure(output)
     'String',get(h.LowFreqSlider,'Min'),...
     'Backgroundcolor','white',...
     'Position',[.0 .0 .1 .2]);
-  
-  h.LowFreqTextMax = uicontrol(...
+
+h.LowFreqTextMax = uicontrol(...
     'Parent',h.QuantityPanel,...
     'Style','text',...
     'Units','normalized',...
@@ -562,27 +691,27 @@ function draw_figure(output)
     'String',get(h.LowFreqSlider,'Max'),...
     'Backgroundcolor','white',...
     'Position',[.9 .0 .1 .2]);
-  
-  h.ArtifactSlider = uicontrol(...
+
+h.ArtifactSlider = uicontrol(...
     'Parent',h.QuantityPanel,...
     'Style','slider',...
     'Units','normalized',...
-    'Value',sum(sum(output.jumps,2),1)/10,...
+    'Value',sum(sum(timelock.jumps,2),1)/10,...
     'Min',0,...
-    'Max',50,...
+    'Max',5,...
     'Position',[.1 .7 .8 .2],...
-    'String','Artifacts');
-  
-  h.ArtifactText = uicontrol(...
+    'String','Jumps');
+
+h.ArtifactText = uicontrol(...
     'Parent',h.QuantityPanel,...
     'Style','text',...
     'Units','normalized',...
     'FontSize',10,...
-    'String','Artifacts [#/10seconds]',...
+    'String','Jumps [#/10seconds]',...
     'Backgroundcolor','white',...
     'Position',[.2 .9 .6 .07]);
-  
-  h.ArtifactTextMin = uicontrol(...
+
+h.ArtifactTextMin = uicontrol(...
     'Parent',h.QuantityPanel,...
     'Style','text',...
     'Units','normalized',...
@@ -590,8 +719,8 @@ function draw_figure(output)
     'String',get(h.ArtifactSlider,'Min'),...
     'Backgroundcolor','white',...
     'Position',[.0 .7 .1 .2]);
-  
-  h.ArtifactTextMax = uicontrol(...
+
+h.ArtifactTextMax = uicontrol(...
     'Parent',h.QuantityPanel,...
     'Style','text',...
     'Units','normalized',...
@@ -599,63 +728,3 @@ function draw_figure(output)
     'String',get(h.ArtifactSlider,'Max'),...
     'Backgroundcolor','white',...
     'Position',[.9 .7 .1 .2]);
-  
-  % plot artefacts on the dewar sensors
-  cfgtopo               = [];
-  cfgtopo.colorbar      = 'WestOutside';
-  cfgtopo.commentpos    = 'leftbottom';
-  cfgtopo.comment       = '# Artifacts';
-  cfgtopo.style         = 'straight';
-  cfgtopo.layout        = 'CTF275.lay';
-  cfgtopo.colormap      = hot;
-  cfgtopo.zlim          = 'maxmin';
-  cfgtopo.interpolation = 'nearest';
-  data.label            = output.label;
-  data.powspctrm        = sum(output.jumps,2);
-  data.dimord           = 'chan_freq';
-  data.freq             = 1;
-  axes(h.TopoMEG);
-  ft_topoplotTFR(cfgtopo, data);
-  
-  % plot artefacts on the reference sensors
-  data.label     = output.reflabel;
-  data.powspctrm = output.refjumps;
-  axes(h.TopoREF);
-  plot_REF(data, h); clear data;
-  
-  % boxplot headmotion (*10; cm-> mm) per coil
-  hmotions = ([output.hmotion(3,:)'  output.hmotion(2,:)' output.hmotion(1,:)'])*10;
-  boxplot(h.HmotionAxes, hmotions, 'orientation', 'horizontal', 'notch', 'on');
-  
-  set(h.HmotionAxes,'YTick',[1:3]);
-  set(h.HmotionAxes,'YTickLabel',{'R','L','N'});
-  xlim(h.HmotionAxes, [0 10]);
-  xlabel(h.HmotionAxes, 'Headmotion from start (mm)');
-  
-  % plot powerspectrum
-  loglog(h.SpectrumAxes, output.freq, squeeze(mean(mean(output.powspctrm,1),3)),'r','LineWidth',2);
-  xlabel(h.SpectrumAxes, 'Frequency [Hz]');
-  ylabel(h.SpectrumAxes, 'Power [T^2/Hz]');
-  
-  % plot mean and range of the raw signal
-  plot(h.SignalAxes, output.time, output.range, output.time, output.avg, 'LineWidth',3);
-  avg_min = output.avg + output.minima./10;
-  avg_max = output.avg + output.maxima./10;
-  set(h.SignalAxes,'Nextplot','add');
-  plot(h.SignalAxes, output.time', avg_min, output.time', avg_max, 'LineWidth', 1, 'Color', [255/255 127/255 39/255]);
-  grid(h.SignalAxes,'on');
-  ylim(h.SignalAxes,[-Inf 4e-10]);
-  legend(h.SignalAxes,'Range','Mean','-10% of min','+10% of max');
-  set(h.SignalAxes,'XTickLabel','');
-  
-  % plot linenoise
-  plot(h.LinenoiseAxes, output.time, output.linenoise, 'LineWidth',3);
-  grid(h.LinenoiseAxes,'on');
-  legend(h.LinenoiseAxes, 'Line noise');
-  set(h.LinenoiseAxes,'XTickLabel','');
-  
-  % plot lowfreqnoise
-  semilogy(h.LowfreqnoiseAxes, output.time, output.lowfreqnoise, 'LineWidth',3);
-  grid(h.LowfreqnoiseAxes,'on');
-  legend(h.LowfreqnoiseAxes, 'Low freq power');
-  xlabel(h.LowfreqnoiseAxes, 'Time [seconds]');
