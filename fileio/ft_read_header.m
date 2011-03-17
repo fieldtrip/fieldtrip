@@ -721,6 +721,38 @@ switch headerformat
     hdr.orig.header_array   = header_array;
     hdr.orig.CateNames   = CateNames;
     hdr.orig.CatLengths  = CatLengths;
+    
+  case 'egi_mff_bin'
+    % this is a file contained within a MFF package, which represents the complete dataset
+    % better is to read the MFF package as a complete dataset instead of a single file
+    blockhdr = read_mff_bin(filename);
+    
+    % assume that all channels have the same sampling frequency and number of samples per block
+    hdr             = [];
+    hdr.Fs          = blockhdr(1).fsample(1);
+    hdr.nChans      = blockhdr(1).nsignals;
+    hdr.nSamplesPre = 0;
+    hdr.nTrials     = 1;
+    
+    % the number of samples per block can be different
+    for i=1:length(blockhdr)
+      nsamples(i) = blockhdr(i).nsamples(1);
+    end
+    hdr.nSamples = sum(nsamples);
+    
+    hdr.label       = cell(1,hdr.nChans);
+    if isempty(fakechannelwarning) || ~fakechannelwarning
+      % give this warning only once
+      warning('creating fake channel names');
+      fakechannelwarning = true;
+    end
+    for i=1:hdr.nChans
+      hdr.label{i} = sprintf('%d', i);
+    end
+    % this should be a column vector
+    hdr.label = hdr.label(:);
+    % remember the original header details
+    hdr.orig = blockhdr;
 
   case 'fcdc_buffer'
     % read from a networked buffer for realtime analysis

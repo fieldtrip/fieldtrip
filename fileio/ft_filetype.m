@@ -821,6 +821,11 @@ elseif filetype_check_extension(filename, '.ama') && filetype_check_header(filen
   content = 'BEM volume conduction model';
 
   % Electrical Geodesics Incorporated format
+elseif filetype_check_extension(filename, '.bin') && strncmp(f, 'signal', 6)
+  % this file is contained in a MFF package/folder
+  type = 'egi_mff_bin';
+  manufacturer = 'Electrical Geodesics Incorporated';
+  content = 'raw EEG data';
 elseif (filetype_check_extension(filename, '.egis') || filetype_check_extension(filename, '.ave') || filetype_check_extension(filename, '.gave') || filetype_check_extension(filename, '.raw')) && (filetype_check_header(filename, [char(1) char(2) char(3) char(4) char(255) char(255)]) || filetype_check_header(filename, [char(3) char(4) char(1) char(2) char(255) char(255)]))
   type = 'egi_egia';
   manufacturer = 'Electrical Geodesics Incorporated';

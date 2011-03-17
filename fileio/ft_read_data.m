@@ -669,6 +669,35 @@ switch dataformat
     end
     dimord = 'chans_samples_trials';
 
+  case {'egi_mff_bin'}
+    % this is a file contained within a MFF package, which represents the complete dataset
+    % better is to read the MFF package as a complete dataset instead of a single file
+    blockhdr = hdr.orig;
+
+    % the number of samples per block can be different
+    % assume that all channels have the same sampling frequency and number of samples per block
+    nsamples = zeros(size(blockhdr));
+    for i=1:length(blockhdr)
+      nsamples(i) = blockhdr(i).nsamples(1);
+    end
+    
+    cumsamples = cumsum(nsamples);
+    begblock = find(begsample<=cumsamples, 1, 'first');
+    endblock = find(endsample<=cumsamples, 1, 'first');
+    dat = read_mff_bin(filename, begblock, endblock);
+    % select channels and concatenate in a matrix
+    dat = cell2mat(dat(chanindx,:));
+
+    % select the desired samples from the concatenated blocks
+    if begblock==1
+      firstsample = 1;
+    else
+      firstsample = cumsamples(begblock-1);
+    end
+    begsel = begsample-firstsample+1;
+    endsel = endsample-firstsample+1;
+    dat = dat(:,begsel:endsel);
+
   case 'micromed_trc'
     dat = read_micromed_trc(filename, begsample, endsample);
     if ~isequal(chanindx(:)', 1:hdr.nChans)
