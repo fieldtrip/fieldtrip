@@ -719,38 +719,40 @@ else
   freq.dimord = dimord;
   freq.freq   = foi;
   hasdc       = find(foi==0);
+  hasnyq      = find(foi==data.fsample./2);
+  hasdc_nyq   = [hasdc hasnyq];
   if exist('toi','var')
     freq.time = toi;
   end
   if powflg
-    % correct the 0 Hz bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
-    if ~isempty(hasdc)
+    % correct the 0 Hz or Nyqist bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
+    if ~isempty(hasdc_nyq)
       if keeprpt>1
-        powspctrm(:,:,hasdc,:) = powspctrm(:,:,hasdc,:)./2;
+        powspctrm(:,:,hasdc_nyq,:) = powspctrm(:,:,hasdc_nyq,:)./2;
       else
-        powspctrm(:,hasdc,:) = powspctrm(:,hasdc,:)./2;
+        powspctrm(:,hasdc_nyq,:) = powspctrm(:,hasdc_nyq,:)./2;
       end
     end
     freq.powspctrm = powspctrm;
   end
   if fftflg
-    % correct the 0 Hz bin if present
-    if ~isempty(hasdc)
+    % correct the 0 Hz or Nyqist bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
+    if ~isempty(hasdc_nyq)
       if keeprpt>1
-        fourierspctrm(:,:,hasdc,:) = fourierspctrm(:,:,hasdc,:)./sqrt(2);
+        fourierspctrm(:,:,hasdc_nyq,:) = fourierspctrm(:,:,hasdc_nyq,:)./sqrt(2);
       else
-        fourierspctrm(:,hasdc,:) = fourierspctrm(:,hasdc,:)./sqrt(2);
+        fourierspctrm(:,hasdc_nyq,:) = fourierspctrm(:,hasdc_nyq,:)./sqrt(2);
       end
     end
     freq.fourierspctrm = fourierspctrm;
   end
   if csdflg
-    % correct the 0 Hz bin if present
-    if ~isempty(hasdc)
+    % correct the 0 Hz or Nyqist bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
+    if ~isempty(hasdc_nyq)
       if keeprpt>1
-        crsspctrm(:,:,hasdc,:) = crsspctrm(:,:,hasdc,:)./2;
+        crsspctrm(:,:,hasdc_nyq,:) = crsspctrm(:,:,hasdc_nyq,:)./2;
       else
-        crsspctrm(:,hasdc,:) = crsspctrm(:,hasdc,:)./2;
+        crsspctrm(:,hasdc_nyq,:) = crsspctrm(:,hasdc_nyq,:)./2;
       end
     end
     freq.labelcmb  = cfg.channelcmb;
