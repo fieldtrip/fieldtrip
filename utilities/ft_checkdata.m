@@ -830,18 +830,19 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'full')
   % this is how it is currently and the desired functionality of prepare_freq_matrices
   dimtok = tokenize(data.dimord, '_');
   if ~isempty(strmatch('rpttap',   dimtok)),
-    nrpt = length(data.cumtapcnt);
+    nrpt = size(data.cumtapcnt, 1);
     flag = 0;
   else
     nrpt = 1;
     flag = 1;
   end
-  if ~isempty(strmatch('rpttap',dimtok)), nrpt=length(data.cumtapcnt); else nrpt = 1; end
-  if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq);      else nfrq = 1; end
-  if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time);      else ntim = 1; end
+  if ~isempty(strmatch('rpttap',dimtok)), nrpt=size(data.cumtapcnt, 1); else nrpt = 1; end
+  if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq);       else nfrq = 1; end
+  if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time);       else ntim = 1; end
+  if any(data.cumtapcnt(1,:) ~= data.cumtapcnt(1,1)), error('this only works when all frequencies have the same number of tapers'); end
   nchan     = length(data.label);
   crsspctrm = zeros(nrpt,nchan,nchan,nfrq,ntim);
-  sumtapcnt = [0;cumsum(data.cumtapcnt(:))];
+  sumtapcnt = [0;cumsum(data.cumtapcnt(:,1))];
   for k = 1:ntim
     for m = 1:nfrq
       for p = 1:nrpt

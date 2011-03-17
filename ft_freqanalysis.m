@@ -679,10 +679,10 @@ else
     
     % set cumptapcnt
     switch cfg.method %% IMPORTANT, SHOULD WE KEEP THIS SPLIT UP PER METHOD OR GO FOR A GENERAL SOLUTION NOW THAT WE HAVE SPECEST
-      case 'mtmconvol'
+      case {'mtmconvol' 'wavelet'}
         cumtapcnt(itrial,:) = ntaper;
       case 'mtmfft'
-        cumtapcnt(itrial) = ntaper(1); % fixed number of tapers? for the moment, yes, as specest_mtmfft computes only one set of tapers
+        cumtapcnt(itrial,1) = ntaper(1); % fixed number of tapers? for the moment, yes, as specest_mtmfft computes only one set of tapers
     end
     
   end % for ntrials

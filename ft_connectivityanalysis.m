@@ -101,7 +101,8 @@ if ~isempty(cfg.inputfile)
 end
 
 hasjack = (isfield(data, 'method') && strcmp(data.method, 'jackknife')) || (isfield(data, 'dimord') && strcmp(data.dimord(1:6), 'rptjck'));
-hasrpt  = (isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'rpt'))) || (isfield(data, 'avg') && isfield(data.avg, 'mom')); %FIXME old-fashioned pcc data
+hasrpt  = (isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'rpt'))) || ...
+          (isfield(data, 'avg') && isfield(data.avg, 'mom')); %FIXME old-fashioned pcc data
 dojack  = strcmp(cfg.jackknife, 'yes');
 normrpt = 0; % default, has to be overruled e.g. in plv, because of single replicate normalisation
 normpow = 1; % default, has to be overruled e.g. in csd,
@@ -110,6 +111,7 @@ normpow = 1; % default, has to be overruled e.g. in csd,
 if ~strcmp(cfg.trials, 'all')
   data = ft_selectdata(data, 'rpt', cfg.trials);
 end
+
 
 % FIXME check which methods require hasrpt
 
@@ -228,13 +230,13 @@ end
 % check whether the required inparam is present in the data
 if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inparam) && strcmp(inparam, 'crsspctrm'))),
   switch dtype
-    case 'freq'
+    case {'freq' 'freqmvar'}
       if strcmp(inparam, 'crsspctrm')
         if isfield(data, 'fourierspctrm')
-          [data, powindx, hasrpt] = univariate2bivariate(data, 'fourierspctrm', 'crsspctrm', dtype, 'cmb', cfg.channelcmb);
+          [data, powindx, hasrpt] = univariate2bivariate(data, 'fourierspctrm', 'crsspctrm', dtype, 'cmb', cfg.channelcmb, 'keeprpt', normrpt);
         elseif strcmp(inparam, 'crsspctrm') && isfield(data, 'powspctrm')
           % if input data is old-fashioned, i.e. contains powandcsd
-          [data, powindx, hasrpt] = univariate2bivariate(data, 'powandcsd', 'crsspctrm', dtype, 'cmb', cfg.channelcmb);
+          [data, powindx, hasrpt] = univariate2bivariate(data, 'powandcsd', 'crsspctrm', dtype, 'cmb', cfg.channelcmb, 'keeprpt', normrpt);
         elseif isfield(data, 'labelcmb')
           powindx = labelcmb2indx(data.labelcmb);
         else 
@@ -258,6 +260,8 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
     otherwise
   end
   
+elseif (isfield(data, 'crsspctrm') && (ischar(inparam) && strcmp(inparam, 'crsspctrm')))
+  % this means that there is a sparse crsspctrm in the data
 else
   powindx = [];
 end
