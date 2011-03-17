@@ -690,12 +690,12 @@ switch dataformat
 
     % select the desired samples from the concatenated blocks
     if begblock==1
-      firstsample = 1;
+      prevsamples = 0;
     else
-      firstsample = cumsamples(begblock-1);
+      prevsamples = cumsamples(begblock-1);
     end
-    begsel = begsample-firstsample+1;
-    endsel = endsample-firstsample+1;
+    begsel = begsample-prevsamples;
+    endsel = endsample-prevsamples;
     dat = dat(:,begsel:endsel);
 
   case 'micromed_trc'
