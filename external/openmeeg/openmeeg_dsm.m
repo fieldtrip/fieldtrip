@@ -59,6 +59,8 @@ try
     if ~ispc
       fprintf(efid,'#!/usr/bin/env bash\n');
       fprintf(efid,['export OMP_NUM_THREADS=',num2str(omp_num_threads),'\n']);
+      % the following implements Galerkin method and switch can be -DSM or -DSMNA
+      % (non adaptive), see OMtrunk/src/assembleSourceMat.cpp, operators.cpp
       fprintf(efid,['om_assemble -DSMNA ./',geomfile,' ./',condfile,' ./',dipfile,' ./',dsmfile,' 2>&1 > /dev/null\n']);
     else
       fprintf(efid,['om_assemble -DSMNA ./',geomfile,' ./',condfile,' ./',dipfile,' ./',dsmfile,'\n']);
