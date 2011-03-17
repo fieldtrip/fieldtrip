@@ -559,10 +559,16 @@ elseif isdir(filename) && most(filetype_check_extension({ls.name}, '.nte'))
   manufacturer = 'Neuralynx';
   content = 'spike timestamps';
   
-elseif isdir(filename) && exist(fullfile(filename, ['header'])) && exist(fullfile(filename, ['events']))
+elseif isdir(filename) && exist(fullfile(filename, 'header'), 'file') && exist(fullfile(filename, 'events'), 'file')
   type = 'fcdc_buffer_offline';
   manufacturer = 'F.C. Donders Centre';
   content = 'FieldTrip buffer offline dataset';  
+
+elseif isdir(filename) && exist(fullfile(filename, 'info.xml'), 'file') && exist(fullfile(filename, 'signal1.bin'), 'file')
+  % this is a directory representing a dataset: it contains multiple xml files and one or more signalN.bin files
+  type = 'egi_mff';
+  manufacturer = 'Electrical Geodesics Incorporated';
+  content = 'raw EEG data';
 
   % these are formally not Neuralynx file formats, but at the FCDC we use them together with Neuralynx
 elseif isdir(filename) && any(ft_filetype({ls.name}, 'neuralynx_ds'))
@@ -821,6 +827,7 @@ elseif filetype_check_extension(filename, '.ama') && filetype_check_header(filen
   content = 'BEM volume conduction model';
 
   % Electrical Geodesics Incorporated format
+  % the egi_mff format is checked earlier
 elseif filetype_check_extension(filename, '.bin') && strncmp(f, 'signal', 6)
   % this file is contained in a MFF package/folder
   type = 'egi_mff_bin';
