@@ -313,13 +313,13 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.zparam)
         if ~isfull,
             % Convert 2-dimensional channel matrix to a single dimension:
             if isempty(cfg.matrixside)
-                sel1 = strmatch(cfg.cohrefchannel, varargin{i}.labelcmb(:,2));
-                sel2 = strmatch(cfg.cohrefchannel, varargin{i}.labelcmb(:,1));
+                sel1 = strmatch(cfg.cohrefchannel, varargin{i}.labelcmb(:,2), 'exact');
+                sel2 = strmatch(cfg.cohrefchannel, varargin{i}.labelcmb(:,1), 'exact');
             elseif strcmp(cfg.matrixside, 'feedforward')
                 sel1 = [];
-                sel2 = strmatch(cfg.cohrefchannel, varargin{i}.labelcmb(:,1));
+                sel2 = strmatch(cfg.cohrefchannel, varargin{i}.labelcmb(:,1), 'exact');
             elseif strcmp(cfg.matrixside, 'feedback')
-                sel1 = strmatch(cfg.cohrefchannel, varargin{i}.labelcmb(:,2));
+                sel1 = strmatch(cfg.cohrefchannel, varargin{i}.labelcmb(:,2), 'exact');
                 sel2 = [];
             end
             fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.zparam);
