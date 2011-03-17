@@ -42,7 +42,7 @@ function [s, cfg] = statfun_indepsamplesT(cfg, dat, design)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-% set defaults
+% set the defaults
 if ~isfield(cfg, 'computestat'),    cfg.computestat    = 'yes'; end
 if ~isfield(cfg, 'computecritval'), cfg.computecritval = 'no';  end
 if ~isfield(cfg, 'computeprob'),    cfg.computeprob    = 'no';  end

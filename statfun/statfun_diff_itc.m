@@ -1,25 +1,32 @@
-function [s] = statfun_xxx(cfg, dat, design);
+function [s] = statfun_diff_itc(cfg, dat, design)
 
-% STATFUN_xxx is a function for computing a statistic for the relation
-% between biological data and a design vector containing trial
-% classifications or another independent variable
+% STATFUN_diff_itc computes the difference in the inter-trial
+% coherence (ITC) between two conditions. The input data for this test
+% should consist of complex-values spectral estimates, e.g. computed
+% using FT_FREQANALYSIS with method=mtmfft, wavelet or mtmconvcol.
 %
-% This function is called by STATISTICS_RANDOM, where you can specify
-% cfg.statistic = 'xxx' which will be evaluated as statfun_xxx.
+% The ITC is a measure of phase consistency over trials. By randomlly
+% shuffling the trials  between the two consitions and repeatedly
+% computing the ITC difference, you can test the significance of the
+% two conditions having a different ITC.
 %
-% The external interface of this function has to be
-%   [s] = statfun_xxx(cfg, dat, design);
-% where
-%   dat    contains the biological data, Nvoxels x Nreplications
-%   design contains the independent variable,  1 x Nreplications
+% A difference in the number of trials poer condition will affect the
+% ITC, however since the number of trials remains the same for each
+% random permutation, this bias is reflected in the randomization
+% distribution.
 %
-% Additional settings can be passed through to this function using
-% the cfg structure.
-%   cfg.complex       = 'absdiff', 'diffabs'
+% Use this function by calling 
+%   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
+% with the following configuration options
+%   cfg.statistic = 'diff_itc'
+%   cfg.method    = 'montecarlo'
+% and optionally (for use in the statfun) the option
+%  cfg.complex = 'diffabs' to compute the difference of the absolute ITC values, or
+%  cfg.complex = 'absdiff' to compute the absolute value of the difference in the complex ITC values
+% 
+% See FT_FREQSTATISTICS and STATISTICS_MONTECARLO for more details
 
 % Copyright (C) 2008, Robert Oostenveld
-%
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set the defaults
 if ~isfield(cfg, 'complex'), cfg.complex = 'diffabs';   end
@@ -37,18 +44,21 @@ end
 % normalise the complex data in each trial
 dat = dat./abs(dat);
 
-if strcmp(cfg.complex, 'diffabs')
-  % first compute the absolute, then take teh difference
+switch cfg.complex
+case 'diffabs'
+  % first compute the absolute, then take the difference
   % this is not sensitive to phase differences
   itcA = abs(mean(dat(:,selA), 2)); % ITC is the length of the average complex numbers
   itcB = abs(mean(dat(:,selB), 2)); % ITC is the length of the average complex numbers
   s = itcA - itcB;
-else
-  % first compute the difference, then take teh absolute
+case 'absdiff'
+  % first compute the difference, then take the absolute
   % this is sensitive to phase differences
   itcA = mean(dat(:,selA), 2); % ITC is here the average complex number
   itcB = mean(dat(:,selB), 2); % ITC is here the average complex number
   s = abs(itcA - itcB);
+otherwise
+  error('incorrect specification of cfg.complex');
 end
 
 s.stat = s;

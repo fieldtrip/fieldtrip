@@ -1,8 +1,9 @@
 function [s,cfg] = statfun_indepsamplesregrT(cfg, dat, design)
 
-% STATFUN_indepsamplesregrT calculates independent samples regression coefficient 
-% T-statistics on the biological data in dat (the dependent variable), using the information on 
-% the independent variable (predictor) in design.
+% STATFUN_indepsamplesregrT calculates independent samples regression
+% coefficient T-statistics on the biological data in dat (the dependent
+% variable), using the information on the independent variable
+% (predictor) in design.
 %
 % Use this function by calling one of the high-level statistics functions as:
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
@@ -35,11 +36,8 @@ function [s,cfg] = statfun_indepsamplesregrT(cfg, dat, design)
 %
 % Design specification:
 %   cfg.ivar        = row number of the design that contains the independent variable (default=1)
-%                       
 
 % Copyright (C) 2006, Eric Maris
-%
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % set defaults
 if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end;

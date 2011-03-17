@@ -1,29 +1,34 @@
 function [s, cfg] = statfun_roc(cfg, dat, design)
 
-% STATFUN_ROC computes the ROC (the 'area under the curve') of the separability
-% of the data, which is divided over two conditions, as specified in the
-% design.
-%
-% This function is called by STATISTICS_MONTECARLO, where you can specify
-% cfg.statistic = 'xxx' which will be evaluated as statfun_xxx.
-%
-% The external interface of this function has to be
-%   [s] = statfun_xxx(cfg, dat, design);
-% where
-%   dat    contains the biological data, Nvoxels x Nreplications
-%   design contains the independent variable,  1 x Nreplications
-%
-% Additional settings can be passed through to this function using
-% the cfg structure.
+% STATFUN_roc computes the area under the curve (AUC) of the
+% Receiver Operator Characteristic (ROC). This is a measure of the
+% separability of the data divided over two conditions. The AUC can
+% be used to test statistical significance of being able to predict
+% on a single observation basis to which condition the observation
+% belongs.
 % 
-% Example
+% Use this function by calling one of the high-level statistics
+% functions as
+%   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
+%   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
+%   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
+% with the following configuration option:
+%   cfg.statistic = 'roc'
+%
+% Configuration options that are relevant for this function are
+%   cfg.ivar = number, index into the design matrix with the independent variable
+%   cfg.logtransform = 'yes' or 'no' (default = 'no')
+% 
+% Note that this statfun performs a one sided test in which condition "1"
+% is assumed to be larger than condition "2".
+
+% A low-level example for this function is
 %   a = randn(1,1000) + 1;
 %   b = randn(1,1000);
 %   design = [1*ones(1,1000) 2*ones(1,1000)];
 %   auc = statfun_roc([], [a b], design);
-%
-% Note that this statfun performs a one sided test in which "a" is assumed
-% to be larger than "b".
+
+% Copyright (C) 2008, Robert Oostenveld
 
 if ~isfield(cfg, 'ivar'),         cfg.ivar   =  1;         end
 if ~isfield(cfg, 'logtransform'), cfg.logtransform = 'no'; end
@@ -139,5 +144,4 @@ for i=1:(n-1)
   dy = y(i+1)-y(i);
   z = z + (y0 * dx) + (dy*dx/2);
 end
-
 

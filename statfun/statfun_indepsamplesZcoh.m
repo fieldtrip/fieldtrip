@@ -45,13 +45,10 @@ function [s] = statfun_indepsamplesZcoh(cfg, dat, design)
 % Design specification:
 %   cfg.ivar        = column number of the design that contains the labels of the conditions that must be 
 %                     compared (default=1). The labels are the numbers 1 and 2.
-%
 
 % Copyright (C) 2006, Eric Maris
-%
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-% set defaults
+% set the defaults
 if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end;
 if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end;
 if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end;
