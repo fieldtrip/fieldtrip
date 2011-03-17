@@ -268,14 +268,14 @@ if strcmp(cfg.visualize,'yes')
             temp_freq     = ft_selectdata(freq, 'toilim', toi);
             temp_summary  = ft_selectdata(summary, 'toilim', toi);
             temp_headpos  = ft_selectdata(headpos, 'toilim', toi);
-            draw_figure(info, temp_timelock, temp_freq, temp_summary, temp_headpos);
-            clear temp_timelock; clear temp_freq; clear temp_summary; clear temp_headpos;
+            draw_figure(info, temp_timelock, temp_freq, temp_summary, temp_headpos, toi);
+            clear temp_timelock; clear temp_freq; clear temp_summary; clear temp_headpos; clear toi;
         else
             temp_timelock = ft_selectdata(timelock, 'toilim', toi);
             temp_freq     = ft_selectdata(freq, 'toilim', toi);
             temp_summary  = ft_selectdata(summary, 'toilim', toi);
-            draw_figure(info, temp_timelock, temp_freq, temp_summary);
-            clear temp_timelock; clear temp_freq; clear temp_summary;
+            draw_figure(info, temp_timelock, temp_freq, temp_summary, toi);
+            clear temp_timelock; clear temp_freq; clear temp_summary; clear toi;
         end
         
         % export to .PNG and .PDF
@@ -340,17 +340,19 @@ title(h.TopoREF,'Reference sensors');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function draw_figure(varargin)
 % deal with input
-if nargin == 5
+if nargin == 6
     info     = varargin{1};
     timelock = varargin{2};
     freq     = varargin{3};
     summary  = varargin{4};
     headpos  = varargin{5};
-elseif nargin == 4
+    toi      = varargin{6};
+elseif nargin == 5
     info     = varargin{1};
     timelock = varargin{2};
     freq     = varargin{3};
     summary  = varargin{4};
+    toi      = varargin{5};
 end
 
 % PARENT FIGURE
@@ -576,7 +578,7 @@ if isstruct(headpos)
     plot(h.HmotionTimecourseAxes, summary.time, summary.avg(6,:)*10, summary.time, summary.avg(7,:)*10, summary.time, summary.avg(8,:)*10, 'LineWidth',2);
     ylim(h.HmotionTimecourseAxes,[0 10]);
     ylabel(h.HmotionTimecourseAxes, 'Coil distance [mm]');
-    xlim(h.HmotionTimecourseAxes,[0 3600]);
+    xlim(h.HmotionTimecourseAxes,[toi]);
     grid(h.HmotionTimecourseAxes,'on');
     legend(h.HmotionTimecourseAxes, 'N','L','R');
 end
@@ -590,7 +592,7 @@ plot(h.SignalAxes, summary.time', avg_min, summary.time', avg_max, 'LineWidth', 
 grid(h.SignalAxes,'on');
 %ylim(h.SignalAxes,[-Inf 4e-10]);
 ylabel(h.SignalAxes, 'Amplitude [T]');
-xlim(h.SignalAxes,[0 3600]);
+xlim(h.SignalAxes,[toi]);
 legend(h.SignalAxes,'Range','Mean','-min','+max');
 set(h.SignalAxes,'XTickLabel','');
 
@@ -599,13 +601,13 @@ semilogy(h.LinenoiseAxes, summary.time, summary.avg(10,:), 'LineWidth',2);
 grid(h.LinenoiseAxes,'on');
 legend(h.LinenoiseAxes, 'LineFreq [T^2/Hz]');
 set(h.LinenoiseAxes,'XTickLabel','');
-xlim(h.LinenoiseAxes,[0 3600]);
+xlim(h.LinenoiseAxes,[toi]);
 ylim(h.LinenoiseAxes,[0 1e-27]);
 
 % plot lowfreqnoise
 semilogy(h.LowfreqnoiseAxes, summary.time, summary.avg(9,:), 'LineWidth',2);
 grid(h.LowfreqnoiseAxes,'on');
-xlim(h.LowfreqnoiseAxes,[0 3600]);
+xlim(h.LowfreqnoiseAxes,[toi]);
 ylim(h.LowfreqnoiseAxes,[0 1e-20]);
 legend(h.LowfreqnoiseAxes, 'LowFreq [T^2/Hz]');
 xlabel(h.LowfreqnoiseAxes, 'Time [seconds]');
