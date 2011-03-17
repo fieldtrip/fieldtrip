@@ -222,15 +222,8 @@ elseif cattrial
     data.trial    = cat(2, data.trial,  varargin{i}.trial(:)');
     data.time     = cat(2, data.time,   varargin{i}.time(:)');
     % check if all datasets to merge have the sampleinfo field
-    if hassampleinfo
-      data.sampleinfo = cat(1, data.sampleinfo, varargin{i}.sampleinfo);
-    else
-      if isempty(sampleinfo{i})
-        varargin{i}.sampleinfo = [];
-      end
-      data.sampleinfo = cat(1, data.sampleinfo, varargin{i}.sampleinfo);
-    end
-    if hastrialinfo, data.trialinfo = cat(1, data.trialinfo, varargin{i}.trialinfo); end;
+    if hassampleinfo, data.sampleinfo = cat(1, data.sampleinfo, varargin{i}.sampleinfo); end
+    if hastrialinfo,  data.trialinfo  = cat(1, data.trialinfo, varargin{i}.trialinfo);   end;
     % FIXME is not entirely robust if the different inputs have different
     % number of columns in trialinfo
   end
