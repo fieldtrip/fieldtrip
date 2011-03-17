@@ -59,7 +59,7 @@ if isempty(pad) % if no padding is specified padding is equal to current data le
   pad = dattime;
 end
 postpad = zeros(1,round((pad - dattime) * fsample));
-endnsample = pad * fsample;  % total number of samples of padded data
+endnsample = round(pad * fsample);  % total number of samples of padded data
 endtime    = pad;            % total time in seconds of padded data
 
 
