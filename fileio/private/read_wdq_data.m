@@ -31,34 +31,69 @@ function [dat] = read_wdq_data(filename, hdr, begsample, endsample, chanindx)
 % 'CODAS data storage format'
 
 if nargin==3 && ischar(begsample) && strcmp(begsample, 'lowbits')
+
+  % divide the data into chunks if the number of bytes is big
+  if hdr.nbytesdat > 50000000
+    nchunks = ceil(hdr.nbytesdat./50000000);  
+  else
+    nchunks = 1;
+  end
+
   % read in the whole stretch of data and return the lowest 2 bits
+  % but read it in in chunks if the data file is big
   begsample = 1;
   endsample = 0.5*hdr.nbytesdat/hdr.nchan;
+
+  tmp = round(linspace(begsample, endsample+1, nchunks+1));
+  begsample = tmp(1:end-1)';
+  endsample = tmp(2:end)'-1;
+  
+  % flag specifying the processing of the data read
   getlowbits = 1;
+
 elseif nargin==5
+  % don't divide the data into chunks
+  nchunks    = 1;
+
+  % flag specifying the processing of the data read
   getlowbits = 0;
+  
+end
+
+nsamplestotal = endsample(end) - begsample(1) + 1;
+if getlowbits
+  dat = zeros(hdr.nchan, nsamplestotal, 'int8'); 
+else
+  dat = zeros(hdr.nchan, nsamplestotal);
 end
 
 fid = fopen(filename, 'r');
-
-% set file pointer to where the data starts in the file
-offset   = begsample * hdr.nchan * 2;
-nsamples = endsample - begsample + 1;
-fseek(fid, hdr.nbyteshdr + offset, 'bof');
-
-datorig = fread(fid, [hdr.nchan nsamples], 'uint16');
+for k = 1:nchunks
+  % set file pointer to where the data starts in the file
+  offset   = begsample(k) * hdr.nchan * 2;
+  nsamples = endsample(k) - begsample(k) + 1;
+  fseek(fid, hdr.nbyteshdr + offset, 'bof');
+  datorig = fread(fid, [hdr.nchan nsamples], 'uint16');
+  
+  % the lowest two bits may contain event info
+  % the higher 14 bits contain the waveforms
+  if getlowbits
+      % process the data here and cast to int8 to save memory
+      dat(:, begsample(k):endsample(k)) = int8(bitand(datorig, 1) + bitand(datorig, 2));
+  else
+      dat = datorig;
+  end
+  clear datorig;
+end
 fclose(fid);
 
-% the lowest two bits may contain event info
-% the higher 14 bits contain the waveforms
-if getlowbits
-  dat = bitand(datorig, 1) + bitand(datorig, 2);
-else
-  dat = datorig - 2*bitand(datorig, 2^15);
+if ~getlowbits
+  % process the data  
+  dat = dat - 2*bitand(dat, 2^15);
   dat = bitshift(dat, -2);
 
   % scale the data
   dat     = diag([hdr.chanhdr(1:hdr.nchan).scale]) * dat + ...
-              [hdr.chanhdr(1:hdr.nchan).intercept]' * ones(1,size(dat,2));          
+      [hdr.chanhdr(1:hdr.nchan).intercept]' * ones(1,size(dat,2));
   dat     = dat(chanindx, :);
 end
