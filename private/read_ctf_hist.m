@@ -1,4 +1,4 @@
-function info = read_ctf_hist(filename)
+function hist = read_ctf_hist(filename)
 
 % READ_CTF_HIST
 
@@ -14,20 +14,23 @@ end
 fileline = 0;
 fid      = fopen(filename,'r');
 
+% the hist file is empty sometimes, in which case the actual reading does not return any useful information
+hist = [];
+
 while fileline >= 0
   fileline = fgets(fid);
   if ~isempty(findstr(fileline,'Collection started'))
     startdate = sscanf(fileline(findstr(fileline,'Collection started:'):end),'Collection started: %s');
-    info.starttime = sscanf(fileline(findstr(fileline,startdate):end),strcat(startdate, '%s'));
-    info.startdate = startdate;
+    hist.starttime = sscanf(fileline(findstr(fileline,startdate):end),strcat(startdate, '%s'));
+    hist.startdate = startdate;
   end
   if ~isempty(findstr(fileline,'Collection stopped'))
     stopdate = sscanf(fileline(findstr(fileline,'Collection stopped:'):end),'Collection stopped: %s');
-    info.stoptime = sscanf(fileline(findstr(fileline,stopdate):end),strcat(stopdate, '%s'));
-    info.stopdate = stopdate;
+    hist.stoptime = sscanf(fileline(findstr(fileline,stopdate):end),strcat(stopdate, '%s'));
+    hist.stopdate = stopdate;
   end
   if ~isempty(findstr(fileline,'Dataset name'))
-    info.datasetname = sscanf(fileline(findstr(fileline,'Dataset name'):end),'Dataset name %s');
+    hist.datasetname = sscanf(fileline(findstr(fileline,'Dataset name'):end),'Dataset name %s');
   end
 end
 
