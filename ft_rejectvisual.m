@@ -34,6 +34,7 @@ function [data] = ft_rejectvisual(cfg, data);
 %                     'maxabs'    maximum absolute value in each channel
 %                     'range'     range from min to max in each channel
 %                     'kurtosis'  kurtosis, i.e. measure of peakedness of the amplitude distribution
+%                     'zvalue'    mean and std computed over all time and trials, per channel
 %   cfg.alim        = value that determines the amplitude scaling for the
 %                     channel and trial display, if empty then the amplitude
 %                     scaling is automatic (default = [])

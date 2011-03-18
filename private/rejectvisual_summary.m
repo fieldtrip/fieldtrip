@@ -1,13 +1,13 @@
-function [chansel, trlsel, cfg] = rejectvisual_summary(cfg, data);
+function [chansel, trlsel, cfg] = rejectvisual_summary(cfg, data)
 
-% REJECTVISUAL_SUMMARY
+% REJECTVISUAL_SUMMARY:  subfunction for ft_rejectvisual
 
 % determine the initial selection of trials and channels
 nchan = length(data.label);
 ntrl  = length(data.trial);
 cfg.channel = ft_channelselection(cfg.channel, data.label);
-trlsel  = logical(ones(1,ntrl));
-chansel = logical(zeros(1,nchan));
+trlsel  = true(1,ntrl);
+chansel = false(1,nchan);
 chansel(match_str(data.label, cfg.channel)) = 1;
 
 % compute the sampling frequency from the first two timepoints
@@ -33,6 +33,25 @@ interactive = 1;
 h = figure;
 ft_progress('init', cfg.feedback, 'computing metric');
 level = zeros(sum(chansel), ntrl);
+if strcmp(cfg.metric,'zvalue')
+    % cellmean and cellstd (see ft_denoise_pca) would work instead of for-loops, 
+    % but they were too memory-intensive
+    runsum=zeros(length(find(chansel)),1);
+    runnum=0;
+    for i=1:ntrl
+        [dat] = preproc(data.trial{i}(chansel,:), data.label(chansel), fsample, cfg.preproc, offset(i));
+        runsum=runsum+sum(dat,2);
+        runnum=runnum+size(dat,2);
+    end
+    mval=runsum/runnum;
+    runss=zeros(length(find(chansel)),1);
+    for i=1:ntrl
+        [dat] = preproc(data.trial{i}(chansel,:), data.label(chansel), fsample, cfg.preproc, offset(i));
+        dat=dat-repmat(mval,1,size(dat,2));
+        runss=runss+sum(dat.^2,2);
+    end
+    sd=sqrt(runss/runnum);
+end
 for i=1:ntrl
   ft_progress(i/ntrl, 'computing metric %d of %d\n', i, ntrl);
   [dat, label, time, cfg.preproc] = preproc(data.trial{i}(chansel,:), data.label(chansel), fsample, cfg.preproc, offset(i));
@@ -51,6 +70,8 @@ for i=1:ntrl
       level(:,i) = kurtosis(dat, [], 2);
     case '1/var'
       level(:,i) = 1./(std(dat, [], 2).^2);
+    case 'zvalue'
+      level(:,i) = mean( ( dat-repmat(mval,1,size(dat,2)) )./repmat(sd,1,size(dat,2)) ,2);
     otherwise
       error('unsupported method');
   end
