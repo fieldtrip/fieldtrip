@@ -1,13 +1,13 @@
 function [chansel, trlsel, cfg] = rejectvisual_trial(cfg, data);
 
-% SUBFUNCTION for rejectvisual
+% SUBFUNCTION for ft_rejectvisual
 
 % determine the initial selection of trials and channels
 nchan = length(data.label);
 ntrl  = length(data.trial);
 cfg.channel = ft_channelselection(cfg.channel, data.label);
-trlsel  = logical(ones(1,ntrl));
-chansel = logical(zeros(1,nchan));
+trlsel  = true(1,ntrl);
+chansel = false(1,nchan);
 chansel(match_str(data.label, cfg.channel)) = 1;
 
 % compute the sampling frequency from the first two timepoints
