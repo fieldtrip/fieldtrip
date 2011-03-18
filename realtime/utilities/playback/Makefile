@@ -7,13 +7,13 @@
 
 PLATFORM = $(shell gcc -dumpmachine)
 
-LDFLAGS = -lpthread ../buffer/src/libbuffer.a
-INCPATH = -I../buffer/src -I. 
+LDFLAGS = -lpthread ../../buffer/src/libbuffer.a
+INCPATH = -I../../buffer/src -I. 
 SUFFIX = 
 
 ifeq "$(PLATFORM)" "mingw32"
-   LDFLAGS = pthreadGC2.dll ../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
-   INCPATH = -I../buffer/src -I. -I../buffer/pthreads-win32/include
+   LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
+   INCPATH = -I../../buffer/src -I. -I../../buffer/pthreads-win32/include
    SUFFIX = .exe
 endif
 
@@ -33,5 +33,8 @@ ft_offline.o: ft_offline.c
 playback$(SUFFIX): playback.o
 	gcc -o $@ $^ $(LDFLAGS)
 		
-recording$(SUFFIX): recording.o ft_offline.o ../buffer/src/socketserver.o
+recording$(SUFFIX): recording.o ft_offline.o ../../buffer/src/socketserver.o
 	gcc -o $@ $^ $(LDFLAGS)	
+
+clean:
+	rm *.o
