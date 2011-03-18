@@ -117,14 +117,14 @@ end
 for i=find(strcmp(cfg.trialdef.eventtype, {event.type}))
   if isempty(cfg.trialdef.eventvalue)
     sel = [sel i];
-    if isnumeric(event(i).value)
-      val = [val event(i).value];
-    end
+    %if isnumeric(event(i).value)
+    %  val = [val event(i).value];
+    %end
   elseif ~isempty(intersect(event(i).value, cfg.trialdef.eventvalue))
     sel = [sel i];
-    if isnumeric(event(i).value)
-      val = [val event(i).value];
-    end  
+    %if isnumeric(event(i).value)
+    %  val = [val event(i).value];
+    %end  
   end
 end
 
@@ -182,10 +182,15 @@ for i=sel
   % if all samples are in the dataset
   if trlbeg>0 && trlend<=hdr.nSamples.*hdr.nTrials,
     trl = [trl; [trlbeg trlend trloff]];
+    if isnumeric(event(i).value), 
+      val = [val; event(i).value];
+    end
   end
 end
+
+% append the vector with values
 if ~isempty(val)
-  trl = [trl val(:)];
+  trl = [trl val];
 end
 
 if usegui
