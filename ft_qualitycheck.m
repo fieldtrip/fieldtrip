@@ -55,10 +55,20 @@ is4d  = ft_filetype(cfg.dataset, '4d');
 
 % these will be replaced by more appropriate values
 info.datasetname = 'unknown';
-info.daterec     = 'unknown';
-info.startrec    = 'unknown';
-info.stoprec     = 'unknown';
-exportname       = create_exportname(cfg.dataset);
+info.starttime   = 'unknown';
+info.startdate   = 'unknown';
+info.stoptime    = 'unknown';
+info.stopdate    = 'unknown';
+
+% the exportname is also used in the cron job
+exportname = qualitycheck_exportname(cfg.dataset);
+
+if isctf
+  try
+    % update the info fields
+    info = read_ctf_hist(cfg.dataset);
+  end
+end
 
 %% ANALYSIS
 if strcmp(cfg.analyze,'yes')
@@ -337,12 +347,15 @@ h.MainFigure = figure(...
   'color','white',...
   'Position',[0.01 0.01 .99 .99]); % nearly fullscreen
 
+[d,w] = weekday(info.startdate);
+tmp = [w ' ' info.startdate];
+
 h.MainText = uicontrol(...
   'Parent',h.MainFigure,...
   'Style','text',...
   'Units','normalized',...
   'FontSize',10,...
-  'String',info.daterec,...
+  'String',tmp,...
   'Backgroundcolor','white',...
   'Position',[.05 .96 .15 .02]);
 
@@ -409,7 +422,7 @@ h.TimeText = uicontrol(...
   'Style','text',...
   'Units','normalized',...
   'FontSize',10,...
-  'String',[info.startrec ' - ' info.stoprec],...
+  'String',[info.starttime ' - ' info.stoptime],...
   'Backgroundcolor','white',...
   'Position',[.01 .78 .99 .1]);
 
@@ -512,9 +525,9 @@ h.SpectrumAxes = axes(...
   'Position',[.15 .2 .8 .7]);
 
 % plot powerspectrum
-loglog(h.SpectrumAxes, freq.freq, squeeze(mean(mean(freq.powspctrm,1),3)),'r','LineWidth',2);
+loglog(h.SpectrumAxes, freq.freq, squeeze(mean(mean(freq.powspctrm,1),3))*1e30,'r','LineWidth',2);
 xlabel(h.SpectrumAxes, 'Frequency [Hz]');
-ylabel(h.SpectrumAxes, 'Power [T^2/Hz]');
+ylabel(h.SpectrumAxes, 'Power [fT^2/Hz]');
 
 % TIMECOURSE PANEL
 h.SignalPanel = uipanel(...
@@ -558,32 +571,32 @@ if isstruct(headpos)
 end
 
 % plot mean and range of the raw signal
-plot(h.SignalAxes, summary.time, summary.avg(5,:), summary.time, summary.avg(1,:), 'LineWidth',2);
+plot(h.SignalAxes, summary.time, summary.avg(5,:)*1e15, summary.time, summary.avg(1,:)*1e15, 'LineWidth',2);
 avg_min = summary.avg(1,:) + (summary.avg(1,:)-summary.avg(3,:));
 avg_max = summary.avg(1,:) + (summary.avg(1,:)-summary.avg(4,:));
 set(h.SignalAxes,'Nextplot','add');
-plot(h.SignalAxes, summary.time', avg_min, summary.time', avg_max, 'LineWidth', 1, 'Color', [255/255 127/255 39/255]);
+plot(h.SignalAxes, summary.time', avg_min*1e15, summary.time', avg_max*1e15, 'LineWidth', 1, 'Color', [255/255 127/255 39/255]);
 grid(h.SignalAxes,'on');
 %ylim(h.SignalAxes,[-Inf 4e-10]);
-ylabel(h.SignalAxes, 'Amplitude [T]');
+ylabel(h.SignalAxes, 'Amplitude [fT]');
 xlim(h.SignalAxes,[toi]);
 legend(h.SignalAxes,'Range','Mean','-min','+max');
 set(h.SignalAxes,'XTickLabel','');
 
 % plot linenoise
-semilogy(h.LinenoiseAxes, summary.time, summary.avg(10,:), 'LineWidth',2);
+semilogy(h.LinenoiseAxes, summary.time, summary.avg(10,:)*1e30, 'LineWidth',2);
 grid(h.LinenoiseAxes,'on');
-legend(h.LinenoiseAxes, 'LineFreq [T^2/Hz]');
+legend(h.LinenoiseAxes, 'LineFreq [fT^2/Hz]');
 set(h.LinenoiseAxes,'XTickLabel','');
 xlim(h.LinenoiseAxes,[toi]);
 ylim(h.LinenoiseAxes,[0 1e-27]);
 
 % plot lowfreqnoise
-semilogy(h.LowfreqnoiseAxes, summary.time, summary.avg(9,:), 'LineWidth',2);
+semilogy(h.LowfreqnoiseAxes, summary.time, summary.avg(9,:)*1e30, 'LineWidth',2);
 grid(h.LowfreqnoiseAxes,'on');
 xlim(h.LowfreqnoiseAxes,[toi]);
 ylim(h.LowfreqnoiseAxes,[0 1e-20]);
-legend(h.LowfreqnoiseAxes, 'LowFreq [T^2/Hz]');
+legend(h.LowfreqnoiseAxes, 'LowFreq [fT^2/Hz]');
 xlabel(h.LowfreqnoiseAxes, 'Time [seconds]');
 
 % QUANTIFICATION PANEL (sliders)
@@ -705,20 +718,3 @@ h.ArtifactTextMax = uicontrol(...
   'Backgroundcolor','white',...
   'Position',[.9 .7 .1 .2]);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION note that this one is replicated in the cron job
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function exportname = create_exportname(dataset)
-
-[p, f, x] = fileparts(dataset);
-histfile = fullfile(p, [f x], [f '.hist']); % this only applies to some CTF datasets
-
-if isdir(dataset) && exist(histfile, 'file')
-  info = read_ctf_hist(histfile);
-  c = datevec(info.startdate);
-  % construct something like 20070320_1230, i.e. YYYYMMDD_HHMM
-  exportname = sprintf('%04d%02d%02d_%s%s.mat', c(1), c(2), c(3), info.starttime(1:2), info.starttime(4:5));
-else
-  % just use the dataset name, but exclude the full path
-  exportname = [f, '.mat'];
-end
