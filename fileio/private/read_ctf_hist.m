@@ -4,6 +4,13 @@ function info = read_ctf_hist(filename)
 
 % Copyright (C) 2010, Arjen Stolk
 
+[p, f, x] = fileparts(filename);
+
+if strcmp(x, '.ds')
+  % the filename should point to the hist file, not the ds
+  filename = fullfile(p, [f x], [f '.hist']);
+end
+
 fileline = 0;
 fid      = fopen(filename,'r');
 
