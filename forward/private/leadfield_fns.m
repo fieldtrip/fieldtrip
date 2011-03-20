@@ -13,7 +13,7 @@ function [lf] = leadfield_fns(dip, elc, vol)
 %
 % The output lf is the leadfields matrix of dimensions M (rows) X N*3 (cols)
 
-% Copyright (C) 2011, Cristiano Micheli
+% Copyright (C) 2011, Cristiano Micheli and Hung Dang
 
 % store the current path and change folder to the temporary one
 tmpfolder = cd;
@@ -71,7 +71,7 @@ try
     recipfile    = [tname '.h5'];
     exestr = sprintf('./extract_data --data %s --rgn %s --newdata %s',datafile,regfile,recipfile);
     system(exestr)
-    [data,compress,gridlocs,node_sizes,voxel_sizes] = hh_read_recipdata(recipfile);
+    [data,compress,gridlocs,node_sizes,voxel_sizes] = fns_read_recipdata(recipfile);
     [lf] = fns_leadfield(data,compress,node_sizes,dip);
 
     cd(tmpfolder)
