@@ -1,17 +1,17 @@
-function [cfg] = ft_singleplotER(cfg, varargin)
+function [cfg] = ft_singleploter(cfg, varargin)
 
-% ft_singleplotER plots the event-related fields or potentials of a single channel
-% or the average over multiple channels. Multiple datasets can be overlayed.
+% ft_singleploter plots the event-related fields or potentials of a single channel
+% or the average over multiple channels. multiple datasets can be overlayed.
 %
-% Use as:
-%   ft_sinlgeplotER(cfg, data)
-%   ft_singleplotER(cfg, data1, data2, ..., dataN)
+% use as:
+%   ft_sinlgeploter(cfg, data)
+%   ft_singleploter(cfg, data1, data2, ..., datan)
 %
-% The data can be an ERP/ERF produced by FT_TIMELOCKANALYSIS, a powerspectrum
-% produced by FT_FREQANALYSIS or a coherencespectrum produced by FT_FREQDESCRIPTIVES.
-% If you specify multiple datasets they must contain the same channels, etc.
+% the data can be an erp/erf produced by ft_timelockanalysis, a powerspectrum
+% produced by ft_freqanalysis or a coherencespectrum produced by ft_freqdescriptives.
+% if you specify multiple datasets they must contain the same channels, etc.
 %
-% The configuration can have the following parameters:
+% the configuration can have the following parameters:
 % cfg.xparam        = field to be plotted on x-axis (default depends on data.dimord)
 %                     'time' or 'freq'
 % cfg.zparam        = field to be plotted on y-axis (default depends on data.dimord)
@@ -22,61 +22,61 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 % cfg.maskstyle     = style used for masking of data, 'box', 'thickness' or 'saturation' (default = 'box')
 % cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.ylim          = 'maxmin' or [ymin ymax] (default = 'maxmin')
-% cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'),
-%                     see FT_CHANNELSELECTION for details
+% cfg.channel       = nx1 cell-array with selection of channels (default = 'all'),
+%                     see ft_channelselection for details
 % cfg.cohrefchannel = name of reference channel for visualising coherence, can be 'gui'
-% cfg.baseline      = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE
+% cfg.baseline      = 'yes','no' or [time1 time2] (default = 'no'), see ft_timelockbaseline
 % cfg.baselinetype  = 'absolute' or 'relative' (default = 'absolute')
-% cfg.trials        = 'all' or a selection given as a 1xN vector (default = 'all')
+% cfg.trials        = 'all' or a selection given as a 1xn vector (default = 'all')
 % cfg.fontsize      = font size of title (default = 8)
-% cfg.hotkeys            = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
-% cfg.interactive   = Interactive plot 'yes' or 'no' (default = 'no')
-%                     In a interactive plot you can select areas and produce a new
-%                     interactive plot when a selected area is clicked. Multiple areas
-%                     can be selected by holding down the SHIFT key.
+% cfg.hotkeys       = enables hotkeys (up/down/left/right arrows) for dynamic x/y axis translation (Ctrl+) and zoom adjustment
+% cfg.interactive   = interactive plot 'yes' or 'no' (default = 'no')
+%                     in a interactive plot you can select areas and produce a new
+%                     interactive plot when a selected area is clicked. multiple areas
+%                     can be selected by holding down the shift key.
 % cfg.renderer      = 'painters', 'zbuffer',' opengl' or 'none' (default = [])
-% cfg.linestyle     = linestyle/marker type, see options of the matlab PLOT function (default = '-')
+% cfg.linestyle     = linestyle/marker type, see options of the matlab plot function (default = '-')
 %                     can be a single style for all datasets, or a cell-array containing one style for each dataset
 % cfg.linewidth     = linewidth in points (default = 0.5)
 % cfg.graphcolor    = color(s) used for plotting the dataset(s) (default = 'brgkywrgbkywrgbkywrgbkyw')
-%                     alternatively, colors can be specified as Nx3 matrix of RGB values
+%                     alternatively, colors can be specified as nx3 matrix of rgb values
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
+% to facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following option:
 %   cfg.inputfile   =  ...
-% If you specify this option the input data will be read from a *.mat
-% file on disk. This mat files should contain only a single variable named 'data',
+% if you specify this option the input data will be read from a *.mat
+% file on disk. this mat files should contain only a single variable named 'data',
 % corresponding to the input structure.
 %
-% See also:
-%   FT_SINGLEPLOTTFR, FT_MULTIPLOTER, FT_MULTIPLOTTFR, FT_TOPOPLOTER, FT_TOPOPLOTTFR
+% see also:
+%   ft_singleplottfr, ft_multiploter, ft_multiplottfr, ft_topoploter, ft_topoplottfr
 
-% This function depends on FT_TIMELOCKBASELINE which has the following options:
+% this function depends on ft_timelockbaseline which has the following options:
 % cfg.baseline, documented
 % cfg.channel
 % cfg.baselinewindow
 % cfg.previous
 % cfg.version
 
-% Copyright (C) 2003-2006, Ole Jensen
+% copyright (c) 2003-2006, ole jensen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% this file is part of fieldtrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
 %
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
+%    fieldtrip is free software: you can redistribute it and/or modify
+%    it under the terms of the gnu general public license as published by
+%    the free software foundation, either version 3 of the license, or
 %    (at your option) any later version.
 %
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
+%    fieldtrip is distributed in the hope that it will be useful,
+%    but without any warranty; without even the implied warranty of
+%    merchantability or fitness for a particular purpose.  see the
+%    gnu general public license for more details.
 %
-%    You should have received a copy of the GNU General Public License
-%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%    you should have received a copy of the gnu general public license
+%    along with fieldtrip. if not, see <http://www.gnu.org/licenses/>.
 %
-% $Id$
+% $id: ft_singleploter.m 3147 2011-03-17 12:38:09z jansch $
 
 ft_defaults
 
@@ -131,18 +131,18 @@ cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',    'box');
 cfg.channel       = ft_getopt(cfg, 'channel',      'all');
 cfg.matrixside    = ft_getopt(cfg, 'matrixside',   '');
 
-Ndata = numel(varargin);
+ndata = numel(varargin);
 
 % interactive plotting is not allowed with more than 1 input
-% if Ndata >1 && strcmp(cfg.interactive, 'yes')
+% if ndata >1 && strcmp(cfg.interactive, 'yes')
 %   error('interactive plotting is not supported with more than 1 input data set');
 % end
 
-%FIXME rename matrixside and cohrefchannel in more meaningful options
+%fixme rename matrixside and cohrefchannel in more meaningful options
 if ischar(cfg.graphcolor)
-    GRAPHCOLOR = ['k' cfg.graphcolor];
+    graphcolor = ['k' cfg.graphcolor];
 elseif isnumeric(cfg.graphcolor)
-    GRAPHCOLOR = [0 0 0; cfg.graphcolor];
+    graphcolor = [0 0 0; cfg.graphcolor];
 end
 
 % check for linestyle being a cell-array, check it's length, and lengthen it if does not have enough styles in it
@@ -150,25 +150,25 @@ if ischar(cfg.linestyle)
     cfg.linestyle = {cfg.linestyle};
 end
 
-if Ndata  > 1
-    if (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) > 1)
+if ndata  > 1
+    if (length(cfg.linestyle) < ndata ) && (length(cfg.linestyle) > 1)
         error('either specify cfg.linestyle as a cell-array with one cell for each dataset, or only specify one linestyle')
-    elseif (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) == 1)
+    elseif (length(cfg.linestyle) < ndata ) && (length(cfg.linestyle) == 1)
         tmpstyle = cfg.linestyle{1};
-        cfg.linestyle = cell(Ndata , 1);
-        for idataset = 1:Ndata
+        cfg.linestyle = cell(ndata , 1);
+        for idataset = 1:ndata
             cfg.linestyle{idataset} = tmpstyle;
         end
     end
 end
 
 % ensure that the input is correct, also backward compatibility with old data structures:
-dtype = cell(Ndata , 1);
-for i=1:Ndata
+dtype = cell(ndata , 1);
+for i=1:ndata
     varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'freq'});
     dtype{i}    = ft_datatype(varargin{i});
     
-    % this is needed for correct treatment of GRAPHCOLOR later on
+    % this is needed for correct treatment of graphcolor later on
     if nargin>1,
         if ~isempty(inputname(i+1))
             iname{i+1} = inputname(i+1);
@@ -180,7 +180,7 @@ for i=1:Ndata
     end
 end
 
-if Ndata >1,
+if ndata >1,
     if ~all(strcmp(dtype{1}, dtype))
         error('input data are of different type; this is not supported');
     end
@@ -190,7 +190,7 @@ dimord = varargin{1}.dimord;
 dimtok = tokenize(dimord, '_');
 
 
-% Set x/y/zparam defaults according to datatype and dimord
+% set x/y/zparam defaults according to datatype and dimord
 switch dtype
     case 'timelock'
         cfg.xparam = ft_getopt(cfg,  'xparam', 'time');
@@ -199,7 +199,7 @@ switch dtype
     case 'freq'
         if sum(ismember(dimtok, 'time'))
             cfg.xparam = ft_getopt(cfg,  'xparam', 'time');
-            cfg.yparam = ft_getopt(cfg,  'yparam', 'freq');%FIXME
+            cfg.yparam = ft_getopt(cfg,  'yparam', 'freq');%fixme
             cfg.zparam = ft_getopt(cfg,  'zparam', 'powspctrm');
         else
             cfg.xparam = ft_getopt(cfg,  'xparam', 'freq');
@@ -228,7 +228,7 @@ hasrpt = sum(ismember(dimtok, {'rpt' 'subj'}));
 if strcmp(dtype, 'timelock') && hasrpt,
     tmpcfg        = [];
     tmpcfg.trials = cfg.trials;
-    for i=1:Ndata
+    for i=1:ndata
         varargin{i} = ft_timelockanalysis(tmpcfg, varargin{i});
     end
     dimord        = varargin{1}.dimord;
@@ -237,7 +237,7 @@ elseif strcmp(dtype, 'freq') && hasrpt,
     % this also deals with fourier-spectra in the input
     % or with multiple subjects in a frequency domain stat-structure
     % on the fly computation of coherence spectrum is not supported
-    for i=1:Ndata
+    for i=1:ndata
         if isfield(varargin{i}, 'crsspctrm'),
             varargin{i} = rmfield(varargin{i}, 'crsspctrm');
         end
@@ -246,7 +246,7 @@ elseif strcmp(dtype, 'freq') && hasrpt,
     tmpcfg           = [];
     tmpcfg.trials    = cfg.trials;
     tmpcfg.jackknife = 'no';
-    for i=1:Ndata
+    for i=1:ndata
         if isfield(cfg, 'zparam') && ~strcmp(cfg.zparam,'powspctrm')
             % freqdesctiptives will only work on the powspctrm field
             % hence a temporary copy of the data is needed
@@ -266,32 +266,32 @@ elseif strcmp(dtype, 'freq') && hasrpt,
     dimtok = tokenize(dimord, '_');
 end
 
-% Apply baseline correction
+% apply baseline correction
 if ~strcmp(cfg.baseline, 'no')
-    for i=1:Ndata
+    for i=1:ndata
         if strcmp(dtype, 'timelock') && strcmp(cfg.xparam, 'time')
             varargin{i} = ft_timelockbaseline(cfg, varargin{i});
         elseif strcmp(dtype, 'freq') && strcmp(cfg.xparam, 'time')
             varargin{i} = ft_freqbaseline(cfg, varargin{i});
         elseif strcmp(dtype, 'freq') && strcmp(cfg.xparam, 'freq')
-            error('Baseline correction is not supported for spectra without a time dimension');
+            error('baseline correction is not supported for spectra without a time dimension');
         else
-            warning('Baseline correction not applied, please set cfg.xparam');
+            warning('baseline correction not applied, please set cfg.xparam');
         end
     end
 end
 
-% Handle the bivariate case
+% handle the bivariate case
 
-% Check for bivariate metric with 'chan_chan' in the dimord
+% check for bivariate metric with 'chan_chan' in the dimord
 selchan = strmatch('chan', dimtok);
 isfull  = length(selchan)>1;
 
-% Check for bivariate metric with a labelcmb
+% check for bivariate metric with a labelcmb
 haslabelcmb = isfield(varargin{1}, 'labelcmb');
 
 if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.zparam)
-    % A reference channel is required:
+    % a reference channel is required:
     if ~isfield(cfg, 'cohrefchannel')
         error('no reference channel is specified');
     end
@@ -304,14 +304,14 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.zparam)
         end
     end
     
-    % Interactively select the reference channel
+    % interactively select the reference channel
     if strcmp(cfg.cohrefchannel, 'gui')
-        error('cfg.cohrefchannel = ''gui'' is not supported in ft_singleplotER');
+        error('cfg.cohrefchannel = ''gui'' is not supported in ft_singleploter');
     end
     
-    for i=1:Ndata
+    for i=1:ndata
         if ~isfull,
-            % Convert 2-dimensional channel matrix to a single dimension:
+            % convert 2-dimensional channel matrix to a single dimension:
             if isempty(cfg.matrixside)
                 sel1 = strmatch(cfg.cohrefchannel, varargin{i}.labelcmb(:,2), 'exact');
                 sel2 = strmatch(cfg.cohrefchannel, varargin{i}.labelcmb(:,1), 'exact');
@@ -328,11 +328,11 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.zparam)
             varargin{i}.labelcmb  = varargin{i}.labelcmb([sel1;sel2],:);
             varargin{i}           = rmfield(varargin{i}, 'labelcmb');
         else
-            % General case
+            % general case
             sel               = match_str(varargin{i}.label, cfg.cohrefchannel);
             siz               = [size(varargin{i}.(cfg.zparam)) 1];
             if strcmp(cfg.matrixside, 'feedback') || isempty(cfg.matrixside)
-                %FIXME the interpretation of 'feedback' and 'feedforward' depend on
+                %fixme the interpretation of 'feedback' and 'feedforward' depend on
                 %the definition in the bivariate representation of the data
                 %data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
                 sel1 = 1:siz(1);
@@ -345,20 +345,20 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.zparam)
                 meandir = 1;
                 
             elseif strcmp(cfg.matrixside, 'ff-fd')
-                error('cfg.matrixside = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_topoplotER');
+                error('cfg.matrixside = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_topoploter');
             elseif strcmp(cfg.matrixside, 'fd-ff')
-                error('cfg.matrixside = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_topoplotER');
+                error('cfg.matrixside = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_topoploter');
             end %if matrixside
         end %if ~isfull
     end %for i
 end %handle the bivariate data
 
-% Get physical min/max range of x
+% get physical min/max range of x
 if strcmp(cfg.xlim,'maxmin')
-    % Find maxmin throughout all varargins:
+    % find maxmin throughout all varargins:
     xmin = [];
     xmax = [];
-    for i=1:Ndata
+    for i=1:ndata
         xmin = min([xmin varargin{i}.(cfg.xparam)]);
         xmax = max([xmax varargin{i}.(cfg.xparam)]);
     end
@@ -367,21 +367,21 @@ else
     xmax = cfg.xlim(2);
 end
 
-% Get the index of the nearest bin
-for i=1:Ndata
+% get the index of the nearest bin
+for i=1:ndata
     xidmin(i,1) = nearest(varargin{i}.(cfg.xparam), xmin);
     xidmax(i,1) = nearest(varargin{i}.(cfg.xparam), xmax);
 end
 
-%FIXME do something with yparam here
-%technically should not be defined for multiplotER, but can be defined (and
+%fixme do something with yparam here
+%technically should not be defined for multiploter, but can be defined (and
 %use ft_selectdata to average across frequencies
 
 hold on;
-colorLabels = [];
+colorlabels = [];
 
-% Plot each data set:
-for i=1:Ndata
+% plot each data set:
+for i=1:ndata
     if isfield(varargin{1}, 'label')
         selchannel = ft_channelselection(cfg.channel, varargin{i}.label);
     elseif isfield(varargin{1}, 'labelcmb')
@@ -390,11 +390,11 @@ for i=1:Ndata
         error('the input data does not contain a label or labelcmb-field');
     end
     
-    % Make vector dat with one value for each channel
+    % make vector dat with one value for each channel
     dat    = varargin{i}.(cfg.zparam);
     xparam = varargin{i}.(cfg.xparam);
     
-    % Take subselection of channels
+    % take subselection of channels
     % this works for bivariate data with labelcmb because at this point the
     % data has a label-field
     sellab = match_str(varargin{i}.label, selchannel);
@@ -404,7 +404,7 @@ for i=1:Ndata
             dat = dat(sel1, sel2, ymin:ymax, xidmin(i):xidmax(i));
             dat = nanmean(nanmean(dat, meandir), 3);
             siz = size(dat);
-            %FIXMEdat = reshape(dat, [siz(1:2) siz(4)]);
+            %fixmedat = reshape(dat, [siz(1:2) siz(4)]);
             dat = reshape(dat, [siz(1) siz(3)]);
             dat = dat(sellab, :);
         elseif haslabelcmb
@@ -443,23 +443,23 @@ for i=1:Ndata
         maskdatavector = [];
     end
     
-    if Ndata  > 1
-        if ischar(GRAPHCOLOR);        colorLabels = [colorLabels iname{i+1} '=' GRAPHCOLOR(i+1) '\n'];
-        elseif isnumeric(GRAPHCOLOR); colorLabels = [colorLabels iname{i+1} '=' num2str(GRAPHCOLOR(i+1,:)) '\n'];
+    if ndata  > 1
+        if ischar(graphcolor);        colorlabels = [colorlabels iname{i+1} '=' graphcolor(i+1) '\n'];
+        elseif isnumeric(graphcolor); colorlabels = [colorlabels iname{i+1} '=' num2str(graphcolor(i+1,:)) '\n'];
         end
     end
     
-    if ischar(GRAPHCOLOR);        color = GRAPHCOLOR(i+1);
-    elseif isnumeric(GRAPHCOLOR); color = GRAPHCOLOR(i+1,:);
+    if ischar(graphcolor);        color = graphcolor(i+1);
+    elseif isnumeric(graphcolor); color = graphcolor(i+1,:);
     end
     
-    % Update ymin and ymax for the current data set:
+    % update ymin and ymax for the current data set:
     if strcmp(cfg.ylim,'maxmin')
         if i==1
             ymin = [];
             ymax = [];
         end
-        % Select the channels in the data that match with the layout:
+        % select the channels in the data that match with the layout:
         ymin = min([ymin min(datavector)]);
         ymax = max([ymax max(datavector)]);
     else
@@ -480,22 +480,22 @@ for i=1:Ndata
     end
 end
 
-% Set xlim and ylim:
+% set xlim and ylim:
 xlim([xmin xmax]);
 ylim([ymin ymax]);
 if strcmp('yes',cfg.hotkeys)
-    %  Attach data and cfg to figure and attach a key listener to the figure
-    set(gcf, 'KeyPressFcn', {@key_sub, ymin, ymax})
+    %  attach data and cfg to figure and attach a key listener to the figure
+    set(gcf, 'keypressfcn', {@key_sub, xmin, xmax, ymin, ymax})
 end
 
-% Make the figure interactive
+% make the figure interactive
 if strcmp(cfg.interactive, 'yes')
-    set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg, varargin{:}}, 'event', 'WindowButtonUpFcn'});
-    set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg, varargin{:}}, 'event', 'WindowButtonDownFcn'});
-    set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg, varargin{:}}, 'event', 'WindowButtonMotionFcn'});
+    set(gcf, 'windowbuttonupfcn',     {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoploter, cfg, varargin{:}}, 'event', 'windowbuttonupfcn'});
+    set(gcf, 'windowbuttondownfcn',   {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoploter, cfg, varargin{:}}, 'event', 'windowbuttondownfcn'});
+    set(gcf, 'windowbuttonmotionfcn', {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoploter, cfg, varargin{:}}, 'event', 'windowbuttonmotionfcn'});
 end
 
-% Create title text containing channel name(s) and channel number(s):
+% create title text containing channel name(s) and channel number(s):
 if length(sellab) == 1
     t = [char(cfg.channel) ' / ' num2str(sellab) ];
 else
@@ -503,7 +503,7 @@ else
 end
 h = title(t,'fontsize', cfg.fontsize);
 
-% Set renderer if specified
+% set renderer if specified
 if ~isempty(cfg.renderer)
     set(gcf, 'renderer', cfg.renderer)
 end
@@ -512,7 +512,7 @@ end
 cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
+% subfunction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function t = join(separator,cells)
 if isempty(cells)
@@ -526,44 +526,60 @@ for i=2:length(cells)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION which is called by ft_select_channel in case cfg.cohrefchannel='gui'
+% subfunction which is called by ft_select_channel in case cfg.cohrefchannel='gui'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function select_singleplotER(label, cfg, varargin)
+function select_singleploter(label, cfg, varargin)
 cfg.cohrefchannel = label;
 fprintf('selected cfg.cohrefchannel = ''%s''\n', cfg.cohrefchannel);
-p = get(gcf, 'Position');
+p = get(gcf, 'position');
 f = figure;
-set(f, 'Position', p);
-ft_singleplotER(cfg, varargin{:});
+set(f, 'position', p);
+ft_singleploter(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION which is called after selecting a time range
+% subfunction which is called after selecting a time range
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function select_topoplotER(range, cfg, varargin)
+function select_topoploter(range, cfg, varargin)
 cfg.comment = 'auto';
 cfg.yparam = [];
 cfg.xlim = range(1:2);
 fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
-p = get(gcf, 'Position');
+p = get(gcf, 'position');
 f = figure;
-set(f, 'Position', p);
-ft_topoplotER(cfg, varargin{:});
+set(f, 'position', p);
+ft_topoploter(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION which handles hot keys in the current plot
+% subfunction which handles hot keys in the current plot
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function key_sub(handle, eventdata, varargin)
+xlimits = xlim;
 ylimits = ylim;
-% symmetrically scale y-axis down by 10 percent
-if strcmp(eventdata.Key,'uparrow')
-  incr = abs(ylimits(2) - ylimits(1)) /10;
-  ylim([ylimits(1)-incr ylimits(2)+incr])
-% symmetrically scale y-axis by 10 percent
-elseif strcmp(eventdata.Key,'downarrow')
-  incr = abs(ylimits(2) - ylimits(1)) /10;
-  ylim([ylimits(1)+incr ylimits(2)-incr])
-% resort to minmax of data for y-axis
+incr_x = abs(xlimits(2) - xlimits(1)) /10;
+incr_y = abs(ylimits(2) - ylimits(1)) /10;
+
+% TRANSLATE by 10%
+if length(eventdata.Modifier) == 1 && strcmp(eventdata.Modifier{:},'control') && strcmp(eventdata.Key,'leftarrow') 
+    xlim([xlimits(1)+incr_x xlimits(2)+incr_x])
+elseif length(eventdata.Modifier) == 1 && strcmp(eventdata.Modifier{:},'control') && strcmp(eventdata.Key,'rightarrow')  
+    xlim([xlimits(1)-incr_x xlimits(2)-incr_x])
+elseif length(eventdata.Modifier) == 1 && strcmp(eventdata.Modifier{:},'control') && strcmp(eventdata.Key,'uparrow')
+    ylim([ylimits(1)-incr_y ylimits(2)-incr_y])
+elseif length(eventdata.Modifier) == 1 && strcmp(eventdata.Modifier{:},'control') && strcmp(eventdata.Key,'downarrow')
+   ylim([ylimits(1)+incr_y ylimits(2)+incr_y])
+% ZOOM by 10%
+elseif strcmp(eventdata.Key,'leftarrow') 
+    xlim([xlimits(1)-incr_x xlimits(2)+incr_x])
+elseif strcmp(eventdata.Key,'rightarrow') 
+    xlim([xlimits(1)+incr_x xlimits(2)-incr_x])
+elseif strcmp(eventdata.Key,'uparrow')
+    ylim([ylimits(1)-incr_y ylimits(2)+incr_y])
+elseif strcmp(eventdata.Key,'downarrow') 
+    ylim([ylimits(1)+incr_y ylimits(2)-incr_y])
+% resort to minmax of data for x-axis and y-axis
 elseif strcmp(eventdata.Key,'m')
-  ylim([varargin{1} varargin{2}])
+    xlim([varargin{1} varargin{2}])
+    ylim([varargin{3} varargin{4}])
 end
+
 
