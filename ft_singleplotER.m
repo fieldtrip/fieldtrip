@@ -485,11 +485,7 @@ xlim([xmin xmax]);
 ylim([ymin ymax]);
 if strcmp('yes',cfg.hotkeys)
     %  Attach data and cfg to figure and attach a key listener to the figure
-    info = guidata(gcf);
-    info.ymin = ymin;
-    info.ymax = ymax;
-    guidata(gcf,info);
-    set(gcf, 'KeyPressFcn', @key_sub)
+    set(gcf, 'KeyPressFcn', {@key_sub, ymin, ymax})
 end
 
 % Make the figure interactive
@@ -556,8 +552,7 @@ ft_topoplotER(cfg, varargin{:});
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which handles hot keys in the current plot
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function key_sub(h, eventdata, varargin)
-info = guidata(h);
+function key_sub(handle, eventdata, varargin)
 ylimits = ylim;
 % symmetrically scale y-axis down by 10 percent
 if strcmp(eventdata.Key,'uparrow')
@@ -569,6 +564,6 @@ elseif strcmp(eventdata.Key,'downarrow')
   ylim([ylimits(1)+incr ylimits(2)-incr])
 % resort to minmax of data for y-axis
 elseif strcmp(eventdata.Key,'m')
-  ylim([info.ymin info.ymax])
+  ylim([varargin{1} varargin{2}])
 end
 
