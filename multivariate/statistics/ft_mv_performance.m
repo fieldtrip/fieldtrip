@@ -104,7 +104,7 @@ end
     
     % predicted classes with the maximum posterior probability
     [tmp,pcls] = max(post,[],2);
-    
+        
     res = zeros(numcls);
     for i=1:numcls % true class is in rows
       ii = (design==i);

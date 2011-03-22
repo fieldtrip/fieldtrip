@@ -230,7 +230,15 @@ classdef ft_mv_glmnet < ft_mv_predictor
        else
          
          res = glmnet(X,Y,obj.family,opts);
-         obj.weights = [res.beta(:,end); res.a0(end)]; 
+         
+         if strcmp(obj.family,'multinomial')
+            x = zeros(size(res.beta{1},1),size(res.a0,1));
+            for c=1:size(res.a0,1)
+              obj.weights(:,c) = [res.beta{c}(:,end); res.a0(c,end)];
+            end
+         else
+            obj.weights = [res.beta(:,end); res.a0(end)]; 
+          end
        
        end
        
@@ -254,7 +262,12 @@ classdef ft_mv_glmnet < ft_mv_predictor
           res.lambda = nan;
         else          
           res = glmnet(X,Y,obj.family,opts);
-          obj.weights = [res.beta; res.a0(:)'];
+          if strcmp(obj.family,'multinomial')
+            x = cell2mat(cellfun(@(x)(reshape(x,[1 size(res.beta{1})])),res.beta,'UniformOutput',false)');
+            obj.weights = permute(cat(2,x,reshape(res.a0,[3 1 size(res.a0,2)])),[2 1 3]);
+          else
+            obj.weights = [res.beta; res.a0(:)'];
+          end
         end
         
       end
@@ -283,16 +296,16 @@ classdef ft_mv_glmnet < ft_mv_predictor
 
       X = [X ones(size(X,1),1)];
       
-      if strcmp('gaussian',obj.family)
+      if strcmp(obj.family,'gaussian')
 
         Y = X * obj.weights;
         
-      else
+      elseif strcmp(obj.family,'binomial')
         
-        if size(obj.weights,2) > 1 % regularization path
+        if size(obj.weights,2) > 1% regularization path
           
           Y = [];
-          for j=1:size(obj.weights,2)
+          for j=1:size(obj.weights,ndims(obj.weights))
             Z = exp(X * [obj.weights(:,j) zeros(size(X,2),1)]);
             Z =  1 - bsxfun(@rdivide,Z,sum(Z,2));
             Y = [Y Z];
@@ -303,8 +316,22 @@ classdef ft_mv_glmnet < ft_mv_predictor
           Y = 1 - bsxfun(@rdivide,Y,sum(Y,2));
         end
         
-        % MULTINOMIAL NOT (YET) SUPPORTED
-      
+      else
+        
+        if size(obj.weights,3) > 1% regularization path
+          
+          Y = [];
+          for j=1:size(obj.weights,ndims(obj.weights))
+            Z = exp(X * obj.weights(:,:,j));
+            Z =  bsxfun(@rdivide,Z,sum(Z,2));
+            Y = [Y Z];
+          end
+          
+        else
+          Y = exp(X * obj.weights);
+          Y = bsxfun(@rdivide,Y,sum(Y,2));
+        end
+        
       end
       
     end
@@ -312,9 +339,20 @@ classdef ft_mv_glmnet < ft_mv_predictor
     function [m,desc] = model(obj)
       % return the parameters wrt a class label in some shape
       
-      % weight-vector for class 1 is always zero
-      m =  mat2cell(obj.weights',ones(1,size(obj.weights,2)),size(obj.weights,1));
-      m{length(m)+1,1} = zeros(size(m{1}));
+      m = {};
+      if ~strcmp(obj.family,'multinomial')
+        if size(obj.weights,2)==1 % only return for one model and not for path
+          m =  mat2cell(obj.weights',ones(1,size(obj.weights,2)),size(obj.weights,1));
+          % weight-vector for class 1 is always zero
+          m{length(m)+1,1} = zeros(size(m{1}));
+        end
+      else
+        nclasses = size(obj.weights,2);
+        m = cell(nclasses,1);
+        for c=1:nclasses
+          m{c} = obj.weights(:,c);
+        end
+      end
       
       desc = cell(length(m),1);
       for j=1:length(m)

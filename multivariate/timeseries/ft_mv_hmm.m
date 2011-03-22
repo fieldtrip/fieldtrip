@@ -6,7 +6,10 @@ classdef ft_mv_hmm < ft_mv_timeseries
 % BNT toolbox
 % 
 % NOTE:
-% X and Y as cell-arrays accommodates for multiple trials
+% - X and Y are represented as cell-arrays accommodates for multiple trials
+% - X(t,k) denotes the t-th time point for the k-th observation
+% - nhidden specifies the number of hidden states; this is used only when Y
+%   is absent or NaN
 %
 % EXAMPLE:
 % rand('seed',3); randn('seed',3);
@@ -27,22 +30,21 @@ classdef ft_mv_hmm < ft_mv_timeseries
 % Copyright (c) 2010, Marcel van Gerven
   
   properties
-
+    
     cov_type = 'full';     % covariance type (full, diag, spherical)
     tied_cov =  0;         % tie the covariances
     cov_prior = 0;         % prior on the covariance matrix (diagonal term)
-     
-    hmm; % learned hmm(s)
     
-%     prior     % class prior
-%     transmat  % transition matrix
-%     mu        % conditional means
-%     Sigma     % conditional covariance
+    prior     % class prior
+    transmat  % transition matrix
+    mu        % conditional means
+    Sigma     % conditional covariance
+    mixmat    % mixing matrix
+    LL        % likelihood
     
-    % if hidden > 0 then we learn a separate hmm for each class with nhidden
-    % states. If nhidden = 0 then the state is assumed to be given by the
-    % class variable such that the HMM is fully observed during training
-    nhidden = 0;
+    nhidden   % number of hidden states
+    
+    nmixture  % number of gaussian mixture components
     
   end
 
@@ -57,119 +59,119 @@ classdef ft_mv_hmm < ft_mv_timeseries
 
     function obj = train(obj,X,Y)
 
-      % flip dims
-      if iscell(X)
+      if ~iscell(X), X = {X}; end
+      for c=1:length(X)
+        X{c} = X{c}';
+      end
+      nobs = size(X{1},1);
+      
+      if nargin > 2 
+        
+        if ~iscell(Y), Y = {Y}; end
+
         K = 0;
         for c=1:length(X)
-          sz = size(X);
-          X{c} = X{c}';
           Y{c} = Y{c}';
           K = max(K,max(Y{c}));
         end
-        nobs = size(X{1},1);
+
+        obj.nhidden = 0;
         
-        % in case of equal lengths we re-represent the timeseries
-        % as features x time x repetitions
-        if length(unique(cellfun(@(x)(size(x,2)),X)))==1
-          Xt = zeros([size(X{1}) length(X)]);
-          for j=1:length(X)
-            Xt(:,:,j) = X{j};
-          end
-          X = Xt;
-          Y = cell2mat(Y);
-        end
-        
-      else
-        sz = size(X);
-        X = reshape(X,[sz(1) prod(sz(2:end))])';
-        Y = Y';
-        nobs = size(X,1);
-        K = max(Y);
+      else        
+        Y = {};
       end
+      
+      % in case of equal lengths we re-represent the timeseries
+      % as features x time x repetitions; this is more efficient
+      if length(unique(cellfun(@(x)(size(x,2)),X)))==1
+        Xt = zeros([size(X{1}) length(X)]);
+        for j=1:length(X)
+          Xt(:,:,j) = X{j};
+        end
+        X = Xt;
+        Y = cell2mat(Y);
+      end
+
         
-      if obj.nhidden == 0
+      if isempty(obj.nhidden) % Y assumed observed
         
         % class labels converted to state over time
         if size(Y,2) == 1
          Y = repmat(Y,[1 size(X,2)]);
         end
+
+        nclasses = max(Y(:));
         
         covprior = repmat(obj.cov_prior*eye(nobs,nobs), [1 1 nclasses]);
         
-        [obj.hmm.prior, obj.hmm.transmat, obj.hmm.mu, obj.hmm.Sigma] = gausshmm_train_observed(X, Y, nclasses,'cov_type',obj.cov_type,...
+        [obj.prior, obj.transmat, obj.mu, obj.Sigma] = gausshmm_train_observed(X, Y, nclasses,'cov_type',obj.cov_type,...
           'tied_cov',obj.tied_cov,'cov_prior',covprior);
         
-      else
+      else % Y assumed unobserved
 
         % this could also be implemented with mixtures of gaussians
         % see: http://www.cs.ubc.ca/~murphyk/Software/HMM/hmm_usage.html
         
         Q = obj.nhidden; % number of hidden states
+                
+        prior0 = normalise(rand(Q,1));
+        transmat0 = mk_stochastic(rand(Q,Q));
         
-        obj.hmm = cell(1,K);
-        for j=1:K
-          
-          X1 = X(:,:,Y==j);
-          
-          prior0 = normalise(rand(Q,1));
-          transmat0 = mk_stochastic(rand(Q,Q));
-          
-          sz = size(X1); tmp = reshape(X1,[sz(1) prod(sz(2:end))]);
+        sz = size(X); tmp = reshape(X,[sz(1) prod(sz(2:end))]);
+        if isempty(obj.nmixture)
           mu0 = repmat(mean(tmp,2), [1 Q]);
           Sigma0 = repmat(cov(tmp'), [1 1 Q]);
-          
-          [obj.hmm{j}.LL, obj.hmm{j}.prior, obj.hmm{j}.transmat, obj.hmm{j}.mu, obj.hmm{j}.Sigma obj.hmm{j}.mixmat] = ...
-            mhmm_em(X1, prior0, transmat0, mu0, Sigma0, [],'cov_type',obj.cov_type,'tied_cov');
+          mixture = [];
+        else       
+          % NOTE: mixture of gaussians requires NETLAB
+          % http://www.mathworks.com/matlabcentral/fileexchange/2654-netlab
+          O = size(X,1);
+          [mu0, Sigma0] = mixgauss_init(Q*obj.nmixture, tmp, obj.cov_type);
+          mu0 = reshape(mu0, [O Q obj.nmixture]);
+          Sigma0 = reshape(Sigma0, [O O Q obj.nmixture]);
+          mixture = mk_stochastic(rand(Q,obj.nmixture));
         end
         
+        [obj.LL, obj.prior, obj.transmat, obj.mu, obj.Sigma obj.mixmat] = ...
+          mhmm_em(X, prior0, transmat0, mu0, Sigma0, mixture,'cov_type',obj.cov_type,'max_iter',10);
         
       end
         
     end
         
     function post = test(obj,X)   
-      % Viterbi decoding
+      % Viterbi decoding; outputs most likely path per sequence
+     
+      if ~iscell(X), X={X}; end
       
-      % flip dims
-      if iscell(X)
-        post = cell(size(X));
-        for c=1:length(X)
-          post{c} = obj.test(X{c});
-        end
-        return
-      else
-        sz = size(X);
-        X = reshape(X,[sz(1) prod(sz(2:end))])';
-      end
+      post = cell(size(X));
+      
+      for c=1:size(X)
         
-      if obj.nhidden == 0
-        
-        if ~isempty(X)
-          B = mixgauss_prob(X, obj.hmm.mu, obj.hmm.Sigma);
+        if ~isempty(X{c})
+          B = mixgauss_prob(X{c}', obj.mu, obj.Sigma);
         else
-          B = ones(numel(obj.hmm.prior),size(X,2))/numel(obj.hmm.prior);
+          B = ones(numel(obj.prior),size(X,2))/numel(obj.prior);
         end
         
         % NOTE: viterbi normalise clashes with afni normalise
-        res = viterbi_path(obj.hmm.prior, obj.hmm.transmat, B);
-        res = res';
+        post{c} = viterbi_path(obj.prior, obj.transmat, B);
         
-        K = numel(obj.hmm.prior); % number of states
-        
-        post = zeros(size(res,1),K);
-        
-        for c=1:K
-          post(res == c,c) = 1;
-        end
-        
-      else
-        
-        post = zeros(1,length(obj.hmm));
-        for j=1:length(obj.hmm)
-          post(j) = mhmm_logprob(X, obj.hmm{j}.prior, obj.hmm{j}.transmat, obj.hmm{j}.mu, obj.hmm{j}.Sigma, obj.hmm{j}.mixmat);
-        end      
-        post = (post == max(post));
-        
+      end
+      
+    end
+    
+    function ll = likelihood(obj,X)
+      % return the log likelihood of an observed sequence
+      
+      if ~iscell(X), X={X}; end
+      
+      ll = nan(length(X),1);
+      
+      for c=1:length(X)
+      
+         ll(c) = mhmm_logprob(X{c}', obj.prior, obj.transmat, obj.mu, obj.Sigma, obj.mixmat);
+
       end
       
     end

@@ -91,11 +91,13 @@ classdef ft_mv_lds < ft_mv_timeseries
     
     loglik
     
+    nhidden = 1 % number of hidden states; automatically determined in Y is given
+    
   end
 
   methods
     
-    function obj = ft_mv_ldsMixed(varargin)
+    function obj = ft_mv_lds(varargin)
       
       obj = obj@ft_mv_timeseries(varargin{:});
     end
@@ -114,10 +116,10 @@ classdef ft_mv_lds < ft_mv_timeseries
       
       if nargin < 3
         
-        % assume one signal underlying the observations
+        % assume nhidden signals underlying the observations
         Y = cell(1,length(X));
         for c=1:length(X)
-          Y{c} = nan(1,size(X,2));
+          Y{c} = nan(obj.nhidden,size(X{c},2));
         end
         
       else
@@ -134,7 +136,7 @@ classdef ft_mv_lds < ft_mv_timeseries
       
       % remove empty elements
       eidx = cellfun(@(x)(isempty(x)),X);
-      eidx = eidx & cellfun(@(x)(isempty(x)),Y);
+      eidx = eidx & cellfun(@(x)(isempty(x)),Y(:));
       X = X(~eidx);
       Y = Y(~eidx);
         
@@ -226,7 +228,7 @@ classdef ft_mv_lds < ft_mv_timeseries
           obj.Q = (1-obj.diagQ) * obj.Q + obj.diagQ * diag(diag(obj.Q));
         end
         obj.mu0 = mean(mu0,2);
-        obj.V0 = V0 - obj.mu0*obj.mu0'+(mu0-repmat(obj.mu0,[1 N]))*(mu0-repmat(obj.mu0,[1 N]))'/N;      
+        obj.V0 = V0/N - obj.mu0*obj.mu0'+(mu0-repmat(obj.mu0,[1 N]))*(mu0-repmat(obj.mu0,[1 N]))'/N;      
 
         % symmetricize and make positive semidefinite
         obj.V0 = (obj.V0 + obj.V0') ./ 2;
@@ -405,8 +407,6 @@ classdef ft_mv_lds < ft_mv_timeseries
       Xpred=mu;
       Vpred=V; 
 
-
-
       % take measurements into account
       if isempty(X) || all(isnan(X(:,1)))
        
@@ -494,6 +494,22 @@ classdef ft_mv_lds < ft_mv_timeseries
           end
           LL = obj.compute_loglik(X1,Y1,V1);
       end
+      
+    end
+    
+    function ll = likelihood(obj,X)
+      % returns log likelihood of a sequence of observations
+               
+      if ~iscell(X), X={X}; end
+      
+      ll = nan(length(X),1);
+      
+      for c=1:length(X)
+      
+        [mu,V,ll(c)] = obj.filter(X{c}');
+      
+      end
+      
       
     end
         
