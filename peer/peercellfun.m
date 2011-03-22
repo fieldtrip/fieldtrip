@@ -130,7 +130,9 @@ numjob      = numel(varargin{1});
 % it can be difficult to determine the number of output arguments
 try
   numargout = nargout(fname);
-catch nargout_err
+catch
+  % the "catch me" syntax is broken on MATLAB74, this fixes it
+  nargout_err = lasterror;
   if strcmp(nargout_err.identifier, 'MATLAB:narginout:doesNotApply')
     % e.g. in case of nargin('plus')
     numargout = 1;
@@ -301,7 +303,10 @@ while ~all(submitted) || ~all(collected)
       ws = warning('Off','Backtrace');
       [argout, options] = peerget(joblist(i).jobid, 'timeout', inf, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
       warning(ws);
-    catch ME
+    catch
+      % the "catch me" syntax is broken on MATLAB74, this fixes it
+      peerget_err = lasterror;
+
       % the peerslave command line executable itself can return a number of errors
       %  1) could not start the matlab engine
       %  2) failed to execute the job (argin)
@@ -312,9 +317,9 @@ while ~all(submitted) || ~all(collected)
       %  7) failed to execute the job
       % errors 1-3 are not the users fault and happen prior to execution, therefore they should always result in a resubmission
 
-      if strcmp(ME.message, 'could not start the matlab engine') || ...
-         strcmp(ME.message, 'failed to execute the job (argin)') || ...
-         strcmp(ME.message, 'failed to execute the job (optin)')
+      if strcmp(peerget_err.message, 'could not start the matlab engine') || ...
+         strcmp(peerget_err.message, 'failed to execute the job (argin)') || ...
+         strcmp(peerget_err.message, 'failed to execute the job (optin)')
         % this is due to a license problem
         warning('resubmitting job %d because the matlab engine could not get a license', collect);
         % reset all job information, this will cause it to be automatically resubmitted
@@ -336,7 +341,7 @@ while ~all(submitted) || ~all(collected)
           RetryOnError = RetryOnError - 1;
           % give the user some information
 	      fprintf('an error was detected during the execution of job %d\n', collect);
-          fprintf('??? %s\n', ME.message);
+          fprintf('??? %s\n', peerget_err.message);
 	      fprintf('resubmitting the failed job (%d retries remaining)\n', RetryOnError);
           % reset all job information, this will cause it to be automatically resubmitted
           jobid      (collect) = nan;
@@ -352,7 +357,7 @@ while ~all(submitted) || ~all(collected)
           continue
         else
 	      fprintf('an error was detected during the execution of job %d\n', collect);
-          rethrow(ME);
+          rethrow(peerget_err);
         end
       end
     end

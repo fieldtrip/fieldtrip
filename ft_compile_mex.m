@@ -73,7 +73,9 @@ oldDir = pwd;
 [baseDir, myName] = fileparts(mfilename('fullpath'));
 try
   compile_mex_list(L, baseDir, force);
-catch me
+catch
+  % the "catch me" syntax is broken on MATLAB74, this fixes it
+  me = lasterror;
   cd(oldDir);
   rethrow(me);
 end

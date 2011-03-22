@@ -73,7 +73,9 @@ if ~isempty(cfg.serial)
        set(serPort, 'BaudRate', cfg.baudrate);
        fopen(serPort);
     end
-  catch me
+  catch
+    % the "catch me" syntax is broken on MATLAB74, this fixes it
+    me = lasterror;
     serPort = [];
     disp(me.message);
   end
@@ -191,7 +193,9 @@ while 1
         if any(abs(curPos) > cfg.maxAbs)
           try
             fprintf(serPort, 'A');
-          catch me
+          catch
+            % the "catch me" syntax is broken on MATLAB74, this fixes it
+            me = lasterror;
             disp(me.message);
           end
           fprintf(1, 'A - too much absolute motion');
@@ -199,7 +203,9 @@ while 1
         if any(abs(curPos - lastPos) > cfg.maxRel)
           try
             fprintf(serPort, 'B');
-          catch me
+          catch
+            % the "catch me" syntax is broken on MATLAB74, this fixes it
+            me = lasterror;
             disp(me.message);
           end
           fprintf(1, 'B - too much relative motion');

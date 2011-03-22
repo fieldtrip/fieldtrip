@@ -4,7 +4,9 @@
 
 try
 	dummy = biosemix([0 0]);
-catch me
+catch
+    % the "catch me" syntax is broken on MATLAB74, this fixes it
+    me = lasterror;
 	if strfind(me.message,'BIOSEMI device')
 		clear biosemix
 	else

@@ -194,13 +194,15 @@ if ft_voltype(vol, 'openmeeg')
     try
       lf = ft_compute_leadfield(grid.pos(grid.inside(batch),:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
       ok(batch) = true;
-    catch ME
-      if ~isempty(findstr(ME.message, 'Output argument "dsm" (and maybe others) not assigned during call to'))
+    catch
+      % the "catch me" syntax is broken on MATLAB74, this fixes it
+      me = lasterror;
+      if ~isempty(findstr(me.message, 'Output argument "dsm" (and maybe others) not assigned during call to'))
         % it does not fit in memory, split the problem in two halves and try once more
         batchsize = floor(batchsize/500);
         continue
       else
-        rethrow(ME);
+        rethrow(me);
       end % handling this particular error
     end
     

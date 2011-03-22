@@ -100,7 +100,9 @@ try
   % it can be difficult to determine the number of output arguments
   try
     numargout = nargout(fname);
-  catch nargout_error
+  catch
+    % the "catch me" syntax is broken on MATLAB74, this fixes it
+    nargout_err = lasterror;
     if strcmp(nargout_error.identifier, 'MATLAB:narginout:doesNotApply')
       % e.g. in case of nargin('plus')
       numargout = 1;
@@ -161,7 +163,9 @@ try
   % collect the output options
   optout = {'timused', timused, 'memused', memused, 'lastwarn', lastwarn, 'lasterr', '', 'diary', diarystring, 'release', version('-release')};
 
-catch feval_error
+catch
+  % the "catch me" syntax is broken on MATLAB74, this fixes it
+  feval_error = lasterror;
 
   if usediary && exist(diaryfile, 'file')
     % close the diary and read the contents
