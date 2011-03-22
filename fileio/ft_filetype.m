@@ -340,6 +340,11 @@ elseif length(filename)>=4 && ~isempty(strfind(filename,',rf'))
   type = '4d';
   manufacturer = '4D/BTi';
   content = '';
+elseif length(filename)<=4 && exist([pwd,'/hs_file']) && exist([pwd,'/config'])
+  % this could be a 4D file with non-standard/processed name
+  type = '4d';
+  manufacturer = '4D/BTi';
+  content = '';
 
   % known EEProbe file types
 elseif filetype_check_extension(filename, '.cnt') && filetype_check_header(filename, 'RIFF')
