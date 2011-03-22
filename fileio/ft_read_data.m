@@ -380,7 +380,7 @@ switch dataformat
         error('unsupported data format');
     end
     % calibrate the data
-    dat = calib*dat;
+    dat = sparse(calib)*dat;
 
   case 'bci2000_dat'
     % this requires the load_bcidat mex file to be present on the path
