@@ -31,6 +31,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 % cfg.trials           = 'all' or a selection given as a 1xN vector (default = 'all')
 % cfg.box              = 'yes', 'no' (default = 'no' if maskparameter given default = 'yes')
 %                        Draw a box around each graph
+% cfg.hotkeys          = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
 % cfg.colorbar         = 'yes', 'no' (default = 'no')
 % cfg.colormap         = any sized colormap, see COLORMAP
 % cfg.comment          = string of text (default = date + zlimits)
@@ -142,6 +143,7 @@ if ~isfield(cfg,'showoutline'),     cfg.showoutline = 'no';            end
 if ~isfield(cfg,'channel'),         cfg.channel = 'all';               end
 if ~isfield(cfg,'fontsize'),        cfg.fontsize = 8;                  end
 if ~isfield(cfg,'interactive'),     cfg.interactive = 'no';            end
+if ~isfield(cfg,'hotkeys'),         cfg.hotkeys = 'no';                end
 if ~isfield(cfg,'renderer'),        cfg.renderer = [];                 end % let matlab decide on default
 if ~isfield(cfg,'masknans'),        cfg.masknans = 'yes';              end
 if ~isfield(cfg,'maskparameter'),   cfg.maskparameter = [];            end
@@ -532,6 +534,13 @@ if isfield(cfg, 'colorbar') && (strcmp(cfg.colorbar, 'yes'))
   colorbar;
 end
 
+% Set colour axis
+caxis([zmin zmax]);
+if strcmp('yes',cfg.hotkeys)
+  %  Attach data and cfg to figure and attach a key listener to the figure
+  set(gcf, 'KeyPressFcn', {@key_sub, zmin, zmax})
+end
+
 % Make the figure interactive:
 if strcmp(cfg.interactive, 'yes')
     % add the channel information to the figure
@@ -616,4 +625,20 @@ t = char(cells{1});
 
 for i=2:length(cells)
   t = [t separator char(cells{i})];
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION which handles hot keys in the current plot
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function key_sub(handle, eventdata, varargin)
+incr = (max(caxis)-min(caxis)) /10;
+% symmetrically scale color bar down by 10 percent
+if strcmp(eventdata.Key,'uparrow')
+  caxis([min(caxis)-incr max(caxis)+incr]);
+% symmetrically scale color bar up by 10 percent
+elseif strcmp(eventdata.Key,'downarrow')
+  caxis([min(caxis)+incr max(caxis)-incr]);
+% resort to minmax of data for colorbar
+elseif strcmp(eventdata.Key,'m')
+  caxis([varargin{1} varargin{2}]);
 end
