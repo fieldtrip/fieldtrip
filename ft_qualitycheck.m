@@ -13,11 +13,13 @@ function [varargout] = ft_qualitycheck(cfg)
 %   [info, timelock, freq, summary, headpos] = ft_qualitycheck(cfg)
 %
 % The configuration should contain:
-%   cfg.dataset = a string (e.g. 'dir/dataset.ds')
+%   cfg.dataset = a string (e.g. 'dataset.ds')
 %
 % The following parameters can be used:
 %   cfg.analyze = 'yes' or 'no' to analyze the dataset (default = 'yes')
 %   cfg.savemat = 'yes' or 'no' to save the analysis (default = 'yes')
+%   cfg.matfile = a string (e.g. 'previousoutput.mat'), in combination with
+%                   analyze = 'no' only
 %   cfg.visualize = 'yes' or 'no' to visualize the analysis (default = 'yes')
 %   cfg.saveplot = 'yes' or 'no' to save the visualization (default = 'yes')
 %
@@ -45,37 +47,41 @@ ft_defaults
 % defaults
 if ~isfield(cfg,'analyze'),        cfg.analyze   = 'yes';                         end
 if ~isfield(cfg,'savemat'),        cfg.savemat   = 'yes';                         end
+if ~isfield(cfg,'matfile'),        cfg.matfile   = [];                            end
 if ~isfield(cfg,'visualize'),      cfg.visualize = 'yes';                         end
 if ~isfield(cfg,'saveplot'),       cfg.saveplot  = 'yes';                         end
-
-% checks
-cfg = ft_checkconfig(cfg, 'dataset2files', 'yes'); % translate into datafile+headerfile
-isctf = ft_filetype(cfg.dataset, 'ctf_ds');
-is4d  = ft_filetype(cfg.dataset, '4d');
-
-% these will be replaced by more appropriate values
-info.datasetname = 'unknown';
-info.starttime   = 'unknown';
-info.startdate   = 'unknown';
-info.stoptime    = 'unknown';
-info.stopdate    = 'unknown';
-
-% the exportname is also used in the cron job
-exportname = qualitycheck_exportname(cfg.dataset);
-
-if isctf
-    try
-        % update the info fields
-        info = read_ctf_hist(cfg.dataset);
-    end
-end
-
-% read events
-info.event = ft_read_event(cfg.dataset);
 
 %% ANALYSIS
 if strcmp(cfg.analyze,'yes')
     tic
+    
+    % checks
+    cfg = ft_checkconfig(cfg, 'dataset2files', 'yes'); % translate into datafile+headerfile
+    isctf = ft_filetype(cfg.dataset, 'ctf_ds');
+    is4d  = ft_filetype(cfg.dataset, '4d');
+    
+    % these will be replaced by more appropriate values
+    info.datasetname = 'unknown';
+    info.starttime   = 'unknown';
+    info.startdate   = 'unknown';
+    info.stoptime    = 'unknown';
+    info.stopdate    = 'unknown';
+    
+    % the exportname is also used in the cron job
+    exportname = qualitycheck_exportname(cfg.dataset);
+    
+    if isctf
+        try
+            % update the info fields
+            info = read_ctf_hist(cfg.dataset);
+        end
+    end
+    
+    % read events
+    info.event = ft_read_event(cfg.dataset);
+    
+    % read .res4 file
+    info.hdr                    = ft_read_header(cfg.dataset);
     
     % trial definition
     cfgdef                      = [];
@@ -87,8 +93,7 @@ if strcmp(cfg.analyze,'yes')
     ntrials                     = size(cfgdef.trl,1)-1; % remove last trial
     timeunit                    = cfgdef.trialdef.triallength;
     
-    % read .res4 file
-    info.hdr                    = ft_read_header(cfg.dataset);
+    % channel settings
     chans                       = ft_channelselection({'MEG','MEGREF'}, info.hdr.label);
     MEGchans                    = ft_channelselection('MEG', info.hdr.label);
     chanindx                    = match_str(info.hdr.label, chans);
@@ -239,6 +244,12 @@ if strcmp(cfg.visualize, 'yes')
     
     % load data
     if strcmp(cfg.analyze, 'no')
+        if ~isempty(cfg.matfile)
+            exportname = cfg.matfile;
+        else
+            exportname = qualitycheck_exportname(cfg.dataset);
+        end
+        fprintf('loading %s \n', exportname);
         load(exportname);
     end
     
@@ -248,7 +259,7 @@ if strcmp(cfg.visualize, 'yes')
     % create GUI-like figure(s)
     for p = 1:nplots
         fprintf('visualizing %s of %s \n', num2str(p), num2str(nplots));
-        toi = [nplots*3600-3595 nplots*3600-5]; % select 1-hour chunks
+        toi = [p*3600-3595 p*3600-5]; % select 1-hour chunks
         
         if isstruct(headpos)
             temp_timelock = ft_selectdata(timelock, 'toilim', toi);
@@ -490,16 +501,14 @@ if isstruct(headpos)
 end
 
 % plot mean and range of the raw signal
-plot(h.SignalAxes, summary.time, summary.avg(5,:)*1e15, summary.time, summary.avg(1,:)*1e15, 'LineWidth',2);
-avg_min = summary.avg(1,:) + (summary.avg(1,:)-summary.avg(3,:));
-avg_max = summary.avg(1,:) + (summary.avg(1,:)-summary.avg(4,:));
+plot(h.SignalAxes, summary.time, summary.avg(5,:)*1e15, summary.time, summary.avg(1,:)*1e15, 'LineWidth', 2);
 set(h.SignalAxes,'Nextplot','add');
-plot(h.SignalAxes, summary.time', avg_min*1e15, summary.time', avg_max*1e15, 'LineWidth', 1, 'Color', [255/255 127/255 39/255]);
+plot(h.SignalAxes, summary.time, summary.avg(3,:)*1e15, summary.time, summary.avg(4,:)*1e15, 'LineWidth', 1, 'Color', [255/255 127/255 39/255]);
 grid(h.SignalAxes,'on');
 %ylim(h.SignalAxes,[-Inf 4e-10]);
 ylabel(h.SignalAxes, 'Amplitude [fT]');
 xlim(h.SignalAxes,[toi]);
-legend(h.SignalAxes,'Range','Mean','-min','+max');
+legend(h.SignalAxes,'Range','Mean','Min','Max');
 set(h.SignalAxes,'XTickLabel','');
 
 % plot linenoise
