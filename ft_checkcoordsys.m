@@ -1,12 +1,40 @@
 function [data] = ft_checkcoordsys(cfg, data)
 
-% FT_CHECKCOORDSYS allows the user to perform  a check on the coordinatesystem
-% and units in which the input object is expressed.
+% FT_CHECKCOORDSYS allows the user to perform  a check on 
+% the coordinatesystem and units in which the input object
+% is expressed.
 %
 % Use as
 %   [output] = ft_checkcoordsys(cfg, data)
 %
+% The configuration options are
+%   cfg.interactive  = 'yes' (default) or 'no'
+%
+% The input data can be any of the following:
+% -an MRI structure either containing an anatomy, or gray matter
+% probabilistic mask.
+% -any data structure containing a .pos field, or electrode position
+% information (.grad or .elec)
+%
 % See also FT_VOLUMEREALIGN, FT_VOLUMERESLICE
+
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 if ~isfield(cfg, 'interactive'), cfg.interactive = 'yes'; end
 
@@ -112,7 +140,14 @@ if doplot,
   
   % plot 3 slices
   if hastransform
-    ft_plot_ortho(data.anatomy, 'transform', data.transform, 'resolution', 1, 'style', 'intersect');
+    if isfield(data, 'anatomy')
+      funparam = 'anatomy';
+    elseif isfield(data, 'gray')
+      funparam = 'gray';
+    else
+      error('don''t know what volumetric parameter to plot');
+    end
+    ft_plot_ortho(data.(funparam), 'transform', data.transform, 'resolution', 1, 'style', 'intersect');
     axis vis3d
     view([110 36]);
   end
@@ -161,7 +196,7 @@ if dointeractive,
   % print some feedback to the user
   fprintf('You should now check whether the axes and the origin are consistent with what you expect them to be\n');
   fprintf('Switch on the rotation utility in the figure panel to see the figure from all angles\n');
-  fprintf('For each of the following questions press one of the buttons: r(ight),l(eft),a(nterior),p(osterior),s(uperior),i(nferior)\n');
+  fprintf('For each of the following questions press one of the buttons:\nr(ight),l(eft),a(nterior),p(osterior),s(uperior),i(nferior)\n');
   
   % interactively determine orientation
   str = {'', '', ''};
@@ -179,18 +214,21 @@ if dointeractive,
   str2 = input('Does the origin of the coordinate system look as any of the following?\na(nterior commissure),i(nterauricular),n(ot a landmark)', 's');
   
   % create output
-  str = upper(cat(2, str{:}));
+  str = cat(2, str{:});
   switch str2
     case 'a'
-      if strcmp(str, 'RAS')
-        str = [str,'_TAL'];
+      if strcmp(str, 'ras')
+        %str = [str,'_tal'];
+        str = 'spm';
       else
       end
     case 'i'
-      if strcmp(str, 'ALS')
-        str = [str,'_CTF'];
-      elseif strcmp(str, 'RAS')
-        str = [str,'_Neuromag'];
+      if strcmp(str, 'als')
+        %str = [str,'_ctf'];
+        str = 'ctf';
+      elseif strcmp(str, 'ras')
+        %str = [str,'_Neuromag'];
+        str = neuromag;
       end
     otherwise
   end
