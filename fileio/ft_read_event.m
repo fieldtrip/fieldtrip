@@ -161,7 +161,7 @@ switch eventformat
 
   case {'4d' '4d_pdf', '4d_m4d', '4d_xyz'}
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', '4d');
     end
 
     % read the trigger channel and do flank detection
