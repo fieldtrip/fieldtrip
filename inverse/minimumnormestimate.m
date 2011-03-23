@@ -98,11 +98,12 @@ fprintf('computing MNE source reconstruction, this may take some time...\n');
 % on source and noise covariance would be usefull
 if isempty(noisecov)
   % use an unregularised minimum norm solution, i.e. using the Moore-Penrose pseudoinverse
+  warning('doing a unregularised minimum norm solution. This typically does not work');
   w = pinv(lf);
 else 
   % the noise covariance has been given and can be used to regularise the solution
   if isempty(sourcecov)
-    sourcecov = eye(Nsource);
+    sourcecov = speye(Nsource);
   end
   % rename some variables for consistency with the publications
   A = lf;
