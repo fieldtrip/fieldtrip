@@ -1,24 +1,29 @@
 function [segment] = ft_volumesegment(cfg, mri)
 
 % FT_VOLUMESEGMENT segments an anatomical MRI into gray matter, white matter,
-% and cerebro-spinal fluid compartments.
+% and cerebro-spinal fluid compartments. It can also be used to create a
+% binary mask, either of the segmented volumes, or of the 'raw' anatomical
+% data.
 %
-% This function uses the SPM2 toolbox, see http://www.fil.ion.ucl.ac.uk/spm/
+% This function uses the SPM8 toolbox, see http://www.fil.ion.ucl.ac.uk/spm/
 %
 % Use as
 %   [segment] = ft_volumesegment(cfg, mri)
 %
 % The input arguments are a configuration structure (see below) and an
 % anatomical MRI structure. Instead of an MRI structure, you can also
-% specify a string with a filename of an MRI file.
+% specify a string with a filename of an MRI file. You can also provide an
+% already segmented volume in the input for the purpose of creating a
+% binary mask of the inner surface of the skull.
 %
 % The configuration options are
 %   cfg.spmversion  = 'spm8' (default) or 'spm2'
-%   cfg.template    = filename of the template anatomical MRI (default is the 'T1.mnc' (spm2) or 'T1.nii' (spm8)
-%                     in the (spm-directory)/templates/)
+%   cfg.template    = filename of the template anatomical MRI (default is the 'T1.nii' 
+%                     (spm8) or 'T1.mnc' (spm2) in the (spm-directory)/templates/)
 %   cfg.name        = string for output filename
 %   cfg.write       = 'no' or 'yes' (default = 'no'),
-%                     writes the segmented volumes to SPM compatible analyze-files,
+%                     writes the segmented volumes to SPM compatible analyze (spm2),
+%                     or nifti (spm8) files,
 %                     with the suffix (spm2)
 %                     _seg1, for the gray matter segmentation
 %                     _seg2, for the white matter segmentation
@@ -28,10 +33,35 @@ function [segment] = ft_volumesegment(cfg, mri)
 %                     c2, for the white matter segmentation
 %                     c3, for the csf segmentation
 %                   
-%   cfg.smooth      = 'no' or the FWHM of the gaussian kernel in voxels (default = 'no')
-%   cfg.coordinates = 'spm', 'ctf' or empty for interactive (default = [])
+%   cfg.smooth      = 'no' (default) or the FWHM of the gaussian kernel in voxels
+%   cfg.threshold   = 'no' or a threshold value which is used to threshold
+%                     the data in order to create a volumetric mask (see below). 
+%   cfg.segment     = 'yes' (default) or 'no'
 %
-% As the first step the coordinate frame of the input MRI has to
+% Example use:
+%
+%   segment = ft_volumesegment([], mri) will segment the anatomy and will output
+%               the segmentation result as 3 probabilistic masks in 
+%               segment.gray/.white/.csf
+%
+%   cfg = [];
+%   cfg.smooth    = 5;
+%   cfg.threshold = 0.5;
+%   segment = ft_volumesegment(cfg, mri) will segment the anatomy and will
+%               output not only the probabilistic masks, but also a binary
+%               segment.brainmask, specifying the inside of the skull
+%
+%
+%   cfg = [];
+%   cfg.smooth    = 5;
+%   cfg.threshold = 0.1;
+%   cfg.segment   = 'no';
+%   mri = ft_volumesegment(cfg, mri) will not segment the anatomy but only
+%               smoothes and thresholds the anatomy in order to create a
+%               binary mask mri.scalpmask, specifying the surface of the
+%               scalp
+%
+% For the segmentation to work, the coordinate frame of the input MRI has to
 % be approximately aligned to the template. For this, a homogeneous
 % transformation matrix is used, which makes the assumption that the
 % template mri is defined in SPM/MNI-coordinates:
@@ -70,7 +100,6 @@ function [segment] = ft_volumesegment(cfg, mri)
 
 % undocumented options
 %   cfg.keepintermediate = 'yes' or 'no'
-%   cfg.segment          = 'yes' or 'no'
 
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -93,25 +122,23 @@ function [segment] = ft_volumesegment(cfg, mri)
 ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'deprecated',  'coordinates');
 
 %% ft_checkdata see below!!! %%
 
-
 % set the defaults
-if ~isfield(cfg,'segment'),         cfg.segment     = 'yes';                                     end;
-if ~isfield(cfg,'smooth'),          cfg.smooth      = 'no';                                      end;
-if ~isfield(cfg,'spmversion'),      cfg.spmversion  = 'spm8';                                    end;
-if ~isfield(cfg,'write'),           cfg.write       = 'no';                                      end;
-if ~isfield(cfg,'keepintermediate'),cfg.keepintermediate = 'no';                                 end;
-if ~isfield(cfg,'coordinates'),     cfg.coordinates = [];                                        end;
-if ~isfield(cfg, 'inputfile'),      cfg.inputfile   = [];   end
-if ~isfield(cfg, 'outputfile'),     cfg.outputfile  = [];   end
+cfg.segment          = ft_getopt(cfg, 'segment',          'yes');
+cfg.smooth           = ft_getopt(cfg, 'smooth',           'no');
+cfg.spmversion       = ft_getopt(cfg, 'spmversion',       'spm8');
+cfg.write            = ft_getopt(cfg, 'write',            'no');
+cfg.threshold        = ft_getopt(cfg, 'threshold',        'no');
+cfg.keepintermediate = ft_getopt(cfg, 'keepintermediate', 'no');
+cfg.inputfile        = ft_getopt(cfg, 'inputfile',        []);
+cfg.outputfile       = ft_getopt(cfg, 'outputfile',       []);
 
 if ~isfield(cfg,'name') 
   if ~strcmp(cfg.write,'yes')
     tmp = tempname;
-    %[path,file] = fileparts(tmp);
-    %cfg.name = file;
     cfg.name = tmp;
   else
     error('you must specify the output filename in cfg.name');
@@ -125,23 +152,21 @@ elseif strcmpi(cfg.spmversion, 'spm8'),
   ft_hastoolbox('SPM8',1);
 end
 
+% get the names of the templates for the segmentation
 if ~isfield(cfg, 'template'),
   spmpath      = spm('dir');
   if strcmpi(cfg.spmversion, 'spm8'), cfg.template = [spmpath,filesep,'templates',filesep,'T1.nii']; end
   if strcmpi(cfg.spmversion, 'spm2'), cfg.template = [spmpath,filesep,'templates',filesep,'T1.mnc']; end
 end
 
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
+hasdata      = (nargin>1);
+hasinputfile = ~isempty(cfg.inputfile);
+if hasdata && hasinputfile
+  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+elseif hasinputfile
   % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    mri = loadvar(cfg.inputfile, 'mri');
-  end
-end
-
-if hasdata
+  mri = loadvar(cfg.inputfile, 'mri');
+elseif hasdata
   if ischar(mri),
     % read the anatomical MRI data from file
     filename = mri;
@@ -152,75 +177,67 @@ if hasdata
       cfg.coordinates = 'ctf';
     end
   end
+else
+  error('neither a data structure, nor a cfg.inputfile is provided');
 end
 
 % check if the input data is valid for this function
 mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
 
-% remember the original transformation matrix
-original.transform = mri.transform;
-original.nosedir   = [];
-original.origin    = [];
-
-if isempty(cfg.coordinates)
-  % determine in which direction the nose is pointing
-  while isempty(original.nosedir)
-    response = input('Is the nose pointing in the positive X- or Y-direction? [x/y] ','s');
-    if strcmp(response, 'x'),
-      original.nosedir = 'positivex';
-    elseif strcmp(response, 'y'),
-      original.nosedir = 'positivey';
-    end
-  end
-
-  % determine where the origin is
-  while isempty(original.origin)
-    response = input('Is the origin on the Anterior commissure or between the Ears? [a/e] ','s');
-    if strcmp(response, 'e'),
-      original.origin = 'interauricular';
-    elseif strcmp(response, 'a'),
-      original.origin = 'ant_comm';
-    end
-  end
-
-  % determine the coordinatesystem of the input MRI volume
-  if strcmp(original.origin, 'interauricular') && strcmp(original.nosedir, 'positivex')
-    cfg.coordinates = 'ctf';
-  elseif strcmp(original.origin, 'ant_comm') && strcmp(original.nosedir, 'positivey')
-    cfg.coordinates = 'spm';
-  end
+% check whether the input data contains already segmented data
+hassegment = 0;
+hasanatomy = 0;
+hasbrain   = 0;
+if isfield(mri, 'anatomy'),
+  hasanatomy = 1;
 end
 
-% ensure that the input MRI volume is approximately aligned with the SPM template
-flipflags = zeros(1, 3);
-switch cfg.coordinates
-  case 'ctf'
-    fprintf('assuming CTF coordinates for input, i.e. positive X-axis towards nasion and Y-axis through ears\n');
-    % flip, rotate and translate the CTF mri so that it approximately corresponds with SPM coordinates
-    % this only involves a manipulation of the coordinate tarnsformation matrix
-    mri = align_ctf2spm(mri);
-    % also flip and permute the 3D volume itself, so that the voxel and headcoordinates approximately correspond
-    % this seems to improve the convergence of the segmentation algorithm
-    [mri,permutevec,flipflags] = align_ijk2xyz(mri);
-  case 'spm'
-    % this is actually MNI coordinates
-    fprintf('assuming that the input MRI is already approximately aligned with SPM coordinates\n');
-    % nothing needs to be done
-  case 'itab'
-    % this is for the Chieti system
-    fprintf('assuming ITAB coordinates for input, i.e. positive X-axis towards right and Y-axis towards nasion\n');
-    % flip, rotate and translate the ITAB mri so that it approximately corresponds with SPM coordinates
-    % this only involves a manipulation of the coordinate tarnsformation matrix
-    mri = align_itab2spm(mri);
-    % also flip and permute the 3D volume itself, so that the voxel and headcoordinates approximately correspond
-    % this seems to improve the convergence of the segmentation algorithm
-    [mri,permutevec,flipflags] = align_ijk2xyz(mri);
-  otherwise
-    error('cannot determine the (approximate) alignmenmt of the input MRI with the SPM template');
+if isfield(mri, 'gray') && isfield(mri, 'white') && isfield(mri, 'csf'),
+  hassegment = 1;
+  if strcmp(cfg.segment, 'yes')
+    fprintf('the input data already contains a segmentation of gray/white/csf matter, no segmentation will be performed\n');
+    cfg.segment = 'no';
+  end
 end
 
 if strcmp(cfg.segment, 'yes')
-  % convert and write the volume to an analyze format, so that it can be handled by spm
+  
+  % remember the original transformation matrix
+  original.transform = mri.transform;
+  
+  % interactively determine the head coordinate system in which the data are defined
+  if ~isfield(mri, 'coordsys') || strcmp(mri.coordsys, 'unknown') || isempty(mri.coordsys)
+      mri = ft_checkcoordsys([], mri);
+  end
+  
+  % ensure that the input MRI volume is approximately aligned with the SPM template  
+  switch mri.coordsys
+    case 'spm'
+      % do nothing
+    case 'ctf'
+      % flip, rotate and translate the CTF mri so that it approximately corresponds with SPM coordinates
+      % this only involves a manipulation of the coordinate tarnsformation matrix
+      fprintf('assuming CTF coordinates for input, i.e. positive X-axis towards nasion and Y-axis through ears\n');
+      mri = align_ctf2spm(mri);
+    case {'ras' 'neuromag'}
+      % at least the axes are oriented according to spm convention: worth a
+      % try
+      % FIXME check whether this works
+      warning('assuming that the coordinate system is sufficiently aligned with the spm template');
+    case 'itab'
+      % this is for the Chieti system
+      fprintf('assuming ITAB coordinates for input, i.e. positive X-axis towards right and Y-axis towards nasion\n');
+      % flip, rotate and translate the ITAB mri so that it approximately corresponds with SPM coordinates
+      % this only involves a manipulation of the coordinate tarnsformation matrix
+      mri = align_itab2spm(mri);
+    otherwise
+      error('cannot determine the (approximate) alignment of the input MRI with the SPM template');
+  end
+  
+  % also flip and permute the 3D volume itself, so that the voxel and headcoordinates approximately correspond
+  % this seems to improve the convergence of the segmentation algorithm
+  [mri,permutevec,flipflags] = align_ijk2xyz(mri);
+  
   Va = ft_write_volume([cfg.name,'.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion);
 
   % spm is quite noisy, prevent the warnings from displaying on screen
@@ -324,8 +341,11 @@ if strcmp(cfg.segment, 'yes')
         delete([cfg.name,'.mat']);
       end %does not always exist
     end
+    
+    % keep the files written to disk or remove them
+    % FIXME check whether this works at all
     if strcmp(cfg.write,'no'),
-       delete(fullfile(pathstr,['c1',name,'.hdr']));
+       delete(fullfile(pathstr,['c1',name,'.hdr'])); %FIXME this may not be needed in spm8
        delete(fullfile(pathstr,['c1',name,'.img']));
        delete(fullfile(pathstr,['c2',name,'.hdr']));
        delete(fullfile(pathstr,['c2',name,'.img']));
@@ -344,42 +364,95 @@ if strcmp(cfg.segment, 'yes')
     
   end
 
+  % collect the results
+  segment.dim       = size(V(1).dat);
+  segment.transform = original.transform;           % use the original transformation-matrix
+  segment.coordsys  = mri.coordsys;
+  if isfield(mri, 'unit')
+    segment.unit = mri.unit;
+  end
+  segment.gray      = V(1).dat;
+  if length(V)>1, segment.white     = V(2).dat; end
+  if length(V)>2, segment.csf       = V(3).dat; end
+
+  % flip the volumes back according to the changes introduced by align_ijk2xyz
+  for k = 1:3
+    if flipflags(k)
+      segment.gray = flipdim(segment.gray, k);
+      if isfield(segment, 'white'), segment.white = flipdim(segment.white, k); end
+      if isfield(segment, 'csf'),   segment.csf   = flipdim(segment.csf, k);   end
+    end
+  end
+
+  if ~all(permutevec == [1 2 3])
+    segment.gray = ipermute(segment.gray, permutevec);
+    if isfield(segment, 'white'), segment.white = ipermute(segment.white, permutevec); end
+    if isfield(segment, 'csf'),   segment.csf   = ipermute(segment.csf,   permutevec); end
+    segment.dim  = ipermute(segment.dim, permutevec);
+  end
+
+  hassegment = 1;
 else
-  % the volume is already segmented, put it in an SPM structure
-  V     = mri;
-  V.dat = V.anatomy;
-  V.mat = V.transform;
-  V     = rmfield(V,'anatomy');
+  % rename the data
+  segment = mri;
+  clear mri;  
 end
 
-if ~strcmp(cfg.smooth, 'no'),
-  fprintf('smoothing with a %d-pixel FWHM kernel\n',cfg.smooth);
-                  spm_smooth(V(1).dat, V(1).dat, cfg.smooth);     % smooth the gray matter
-  if length(V)>1, spm_smooth(V(2).dat, V(2).dat, cfg.smooth); end % smooth the white matter
-  if length(V)>2, spm_smooth(V(3).dat, V(3).dat, cfg.smooth); end % smooth the csf
-end
-
-% collect the results
-segment.dim       = size(V(1).dat);
-segment.transform = original.transform;           % use the original transformation-matrix
-segment.gray      = V(1).dat;
-if length(V)>1, segment.white     = V(2).dat; end
-if length(V)>2, segment.csf       = V(3).dat; end
-
-% flip the volumes back according to the changes introduced by align_ijk2xyz
-for k = 1:3
-  if flipflags(k)
-    segment.gray = flipdim(segment.gray, k);
-    if isfield(segment, 'white'), segment.white = flipdim(segment.white, k); end
-    if isfield(segment, 'csf'),   segment.csf   = flipdim(segment.csf, k);   end
+% prepare for optional thresholding
+if ~strcmp(cfg.threshold, 'no'),
+  if hassegment
+    % combine the single image segmentation from the three probabilistic
+    % tissue segmentations for csf, white and gray matter
+    segment.brain = segment.gray + segment.white + segment.csf;
+    hasbrain = 1;
   end
 end
 
-if ~all(permutevec == [1 2 3])
-  segment.gray = ipermute(segment.gray, permutevec);
-  if isfield(segment, 'white'), segment.white = ipermute(segment.white, permutevec); end
-  if isfield(segment, 'csf'),   segment.csf   = ipermute(segment.csf,   permutevec); end
-  segment.dim  = ipermute(segment.dim, permutevec);
+% do optional smoothing
+if ~strcmp(cfg.smooth, 'no'),
+  fprintf('smoothing with a %d-voxel FWHM kernel\n',cfg.smooth);
+
+  if hassegment
+    spm_smooth(segment.gray,  segment.gray,  cfg.smooth); % smooth the gray matter
+    spm_smooth(segment.white, segment.white, cfg.smooth); % smooth the white matter
+    spm_smooth(segment.csf,   segment.csf,   cfg.smooth); % smooth the csf compartment
+  end
+  if hasanatomy
+    spm_smooth(segment.anatomy, segment.anatomy, cfg.smooth); 
+  end
+  if hasbrain
+    spm_smooth(segment.brain, segment.brain, cfg.smooth);
+  end
+end
+
+% do optional thresholding
+if ~strcmp(cfg.threshold, 'no'),
+  fprintf('thresholding the data at a relative threshold of %0.3f\n',cfg.threshold);
+  
+  if hassegment
+  end
+  if hasanatomy
+    % create scalp mask by taking the negative of the brain, thus ensuring
+    % that no holes are within the 'head compartment' and do a two-pass 
+    % approach to eliminate potential vitamin E capsules etc.
+    segment.scalpmask = double(segment.anatomy>(cfg.threshold*max(segment.anatomy(:))));
+    [tmp, N]          = spm_bwlabel(segment.scalpmask, 6);
+    for k = 1:N
+      n(k,1) = sum(tmp(:)==k);
+    end
+    segment.scalpmask = double(tmp~=find(n==max(n))); clear tmp;
+    [tmp, N]          = spm_bwlabel(segment.scalpmask, 6);
+    for k = 1:N
+      m(k,1) = sum(tmp(:)==k);
+    end
+    segment.scalpmask = tmp~=find(m==max(m)); clear tmp;
+  end
+  if hasbrain
+    % create brain mask
+    segment.brainmask = segment.brain>(cfg.threshold*max(segment.brain(:)));
+    segment = rmfield(segment, 'brain');
+  end
+    
 end
 
 % accessing this field here is needed for the configuration tracking
@@ -397,13 +470,15 @@ cfg.version.id = '$Id$';
 cfg.version.matlab = version();
 
 % remember the configuration details of the input data
-try, cfg.previous = mri.cfg; end
+if isfield(segment, 'cfg'),
+  cfg.previous = segment.cfg;
+end
 
 % remember the exact configuration details in the output 
 segment.cfg = cfg;
 
 % the output data should be saved to a MATLAB file
 if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'segment', segment); % use the variable name "data" in the output file
+  savevar(cfg.outputfile, 'segment', segment); % use the variable name "segment" in the output file
 end
 
