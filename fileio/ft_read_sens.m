@@ -138,13 +138,11 @@ switch fileformat
     sens.label = tmp{1};
     sens.pnt   = [tmp{2:4}];
    
-  case 'itab_raw'
-    ft_hastoolbox('fileio');
+  case {'itab_raw' 'itab_mhd'}
     hdr = ft_read_header(filename);
     sens = hdr.grad;
     
   case 'neuromag_mne'
-    ft_hastoolbox('fileio');
     hdr = ft_read_header(filename,'headerformat','neuromag_mne');
     sens = hdr.elec;    
     
@@ -156,16 +154,12 @@ switch fileformat
   case {'ctf_ds', 'ctf_res4', 'neuromag_fif', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
     % check the availability of the required low-level toolbox
     % this is required because the read_sens function is also on itself included in the forwinv toolbox
-    ft_hastoolbox('fileio');
     hdr = ft_read_header(filename, 'headerformat', fileformat);
     sens = hdr.grad;
     
-    
   case 'neuromag_mne_grad'
-    ft_hastoolbox('fileio');
     hdr = ft_read_header(filename,'headerformat','neuromag_mne');
     sens = hdr.grad;
-    
     
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % This is for EEG formats where electrode positions can be stored with the data
@@ -174,7 +168,6 @@ switch fileformat
   case {'spmeeg_mat', 'eeglab_set'}
     % check the availability of the required low-level toolbox
     % this is required because the read_sens function is also on itself included in the forwinv toolbox
-    ft_hastoolbox('fileio');
     hdr = ft_read_header(filename);
     
     if isfield(hdr, 'grad')
