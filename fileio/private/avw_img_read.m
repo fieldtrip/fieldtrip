@@ -85,9 +85,6 @@ function [ avw, machine ] = avw_img_read(fileprefix,IMGorient,machine,verbose)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-% check if SPM2 is in path and if not add
-hastoolbox('SPM2',1);
-
 if ~exist('IMGorient','var'), IMGorient = ''; end
 if ~exist('machine','var'), machine = 'ieee-le'; end
 if ~exist('verbose','var'), verbose = 1; end
