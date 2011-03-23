@@ -8,29 +8,30 @@ function [h, flag] = headcoordinates(nas, lpa, rpa, flag)
 % [h, coordsys] = headcoordinates(pt1, pt2, pt3, flag)
 % [h, coordsys] = headcoordinates(ac,  pc,  zpoint, flag)
 %
-% The optional flag determines how the origin should be specified 
-% according to CTF conventions: flag = 'ALS_CTF', or flag = 0 (default)
-% according to ASA conventions: flag = 'ALS'ASA', or flag = 1 
-% according to FTG conventions: flag = 'FTG', or flag = 2 
+% The optional flag determines how the origin should be specified
+% according to CTF conventions:       flag = 'ALS_CTF' or flag = 0 (default)
+% according to ASA conventions:       flag = 'ALS_ASA' or flag = 1
+% according to FTG conventions:       flag = 'FTG'     or flag = 2
+% according to ITAB conventions:      flag = 'RAS_ITAB'
 % according to Talairach conventions: flag = 'RAS_TAL'
-% 
+%
 % The headcoordinate system in CTF is defined as follows:
 % the origin is exactly between lpa and rpa
 % the X-axis goes towards nas
 % the Y-axis goes approximately towards lpa, orthogonal to X and in the plane spanned by the fiducials
 % the Z-axis goes approximately towards the vertex, orthogonal to X and Y
-% 
+%
 % The headcoordinate system in ASA is defined as follows:
 % the origin is at the orthogonal intersection of the line from rpa-lpa and the line trough nas
 % the X-axis goes towards nas
 % the Y-axis goes through rpa and lpa
 % the Z-axis goes approximately towards the vertex, orthogonal to X and Y
-% 
+%
 % The headcoordinate system in FTG is defined as:
 % the origin corresponds with pt1
 % the x-axis is along the line from pt1 to pt2
 % the z-axis is orthogonal to the plane spanned by pt1, pt2 and pt3
-% 
+%
 % The headcoordinate system in Talairach is defined as:
 % the origin corresponds with the anterior commissure
 % the Y-axis is along the line from the posterior commissure to the anterior commissure
@@ -81,47 +82,55 @@ rpa = rpa(:)';
 nas = nas(:)';
 
 % compute the origin and direction of the coordinate axes in MRI coordinates
-switch flag 
-case 'ALS_CTF'
-  % follow CTF convention
-  origin = (lpa+rpa)/2;
-  dirx = nas-origin;
-  dirx = dirx/norm(dirx);
-  dirz = cross(dirx,lpa-rpa);
-  dirz = dirz/norm(dirz);
-  diry = cross(dirz,dirx);
-case 'ALS_ASA'
-  % follow ASA convention
-  dirz = cross(nas-rpa, lpa-rpa);
-  diry = lpa-rpa;
-  dirx = cross(diry,dirz);
-  dirz = dirz/norm(dirz);
-  diry = diry/norm(diry);
-  dirx = dirx/norm(dirx);
-  origin = rpa + dot(nas-rpa,diry)*diry;
-case 'FTG'
-  % rename the marker points for convenience
-  pt1 = nas; pt2 = lpa; pt3 = rpa;
-  % follow FTG conventions
-  origin = pt1;
-  dirx = pt2-origin;
-  dirx = dirx/norm(dirx);
-  diry = pt3-origin;
-  dirz = cross(dirx,diry);
-  dirz = dirz/norm(dirz);
-  diry = cross(dirz,dirx);
-case 'RAS_TAL'
-  % rename the marker points for convenience
-  ac = nas; pc = lpa; xzpoint = rpa;
-  origin = ac;
-  diry   = ac-pc;
-  diry   = diry/norm(diry);
-  dirz   = xzpoint-ac;
-  dirx   = cross(diry,dirz);
-  dirx   = dirx/norm(dirx);
-  dirz   = cross(dirx,diry);
-otherwise
-  error('unrecognized headcoordinate system requested');
+switch flag
+  case 'ALS_CTF'
+    % follow CTF convention
+    origin = (lpa+rpa)/2;
+    dirx = nas-origin;
+    dirx = dirx/norm(dirx);
+    dirz = cross(dirx,lpa-rpa);
+    dirz = dirz/norm(dirz);
+    diry = cross(dirz,dirx);
+  case 'ALS_ASA'
+    % follow ASA convention
+    dirz = cross(nas-rpa, lpa-rpa);
+    diry = lpa-rpa;
+    dirx = cross(diry,dirz);
+    dirz = dirz/norm(dirz);
+    diry = diry/norm(diry);
+    dirx = dirx/norm(dirx);
+    origin = rpa + dot(nas-rpa,diry)*diry;
+  case 'FTG'
+    % rename the marker points for convenience
+    pt1 = nas; pt2 = lpa; pt3 = rpa;
+    % follow FTG conventions
+    origin = pt1;
+    dirx = pt2-origin;
+    dirx = dirx/norm(dirx);
+    diry = pt3-origin;
+    dirz = cross(dirx,diry);
+    dirz = dirz/norm(dirz);
+    diry = cross(dirz,dirx);
+  case 'RAS_TAL'
+    % rename the marker points for convenience
+    ac = nas; pc = lpa; xzpoint = rpa;
+    origin = ac;
+    diry   = ac-pc;
+    diry   = diry/norm(diry);
+    dirz   = xzpoint-ac;
+    dirx   = cross(diry,dirz);
+    dirx   = dirx/norm(dirx);
+    dirz   = cross(dirx,diry);
+  case 'RAS_ITAB'
+    dirz = cross(rpa-lpa,nas-lpa);
+    dirx = rpa-lpa;
+    diry = cross(dirz,dirx);
+    dirz = dirz/norm(dirz);
+    diry = diry/norm(diry);
+    dirx = dirx/norm(dirx);
+    origin = lpa + dot(nas-lpa,dirx)*dirx;
+  otherwise
+    error('unrecognized headcoordinate system requested');
 end
 
 % compute the rotation matrix
