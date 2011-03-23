@@ -629,7 +629,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'loreta', 'rv
     hascovariance = 1;
   else
     % add a identity covariance matrix, this simplifies the handling of the different source reconstruction methods
-    % since the covariance is only used by some reconstruction methods and might not allways be present in the data
+    % since the covariance is only used by some reconstruction methods and might not always be present in the data
     if Ntrials==1
       data.cov = eye(Nchans);
     else
@@ -871,7 +871,11 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'loreta', 'rv
   elseif strcmp(cfg.method, 'mne')
     for i=1:Nrepetitions
       fprintf('estimating current density distribution for repetition %d\n', i);
-      dip(i) = minimumnormestimate(grid, sens, vol, squeeze(avg(i,:,:)),                     optarg{:});
+      if hascovariance 
+        dip(i) = minimumnormestimate(grid, sens, vol, squeeze(avg(i,:,:)),                     optarg{:}, 'noisecov', squeeze(Cy(i,:,:)));
+      else
+        dip(i) = minimumnormestimate(grid, sens, vol, squeeze(avg(i,:,:)),                     optarg{:});
+      end
     end
   elseif strcmp(cfg.method, 'loreta')
     for i=1:Nrepetitions
