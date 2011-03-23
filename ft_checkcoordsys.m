@@ -245,14 +245,14 @@ if ~isempty(str) && ~strcmp(str, 'unknown'),
   strx = tokenize(str, '_');
   
   switch lower(strx{1})
-    case 'ras'
-      labelx = {'left'      'right'   };
-      labely = {'posterior' 'anterior'};
-      labelz = {'inferior'  'superior'};
-    case 'als'
-      labelx = {'posterior' 'anterior'};
-      labely = {'right'     'left'};
-      labelz = {'inferior'  'superior'};
+    case {'ras' 'itab' 'neuromag'}
+      labelx = {'-X (left)'      'X (right)'   };
+      labely = {'-Y (posterior)' 'Y (anterior)'};
+      labelz = {'-Z (inferior)'  'Z (superior)'};
+    case {'als' 'ctf' '4d'}
+      labelx = {'-X (posterior)' 'X (anterior)'};
+      labely = {'-Y (right)'     'Y (left)'};
+      labelz = {'-Z (inferior)'  'Z (superior)'};
     otherwise
   end
   
