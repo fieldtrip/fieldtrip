@@ -193,19 +193,30 @@ end
 
 % ensure that the input MRI volume is approximately aligned with the SPM template
 flipflags = zeros(1, 3);
-if strcmp(cfg.coordinates, 'ctf')
-  fprintf('assuming CTF coordinates for input, i.e. positive X-axis towards nasion and Y-axis through ears\n');
-  % flip, rotate and translate the CTF mri so that it approximately corresponds with SPM coordinates
-  % this only involves a manipulation of the coordinate tarnsformation matrix
-  mri = align_ctf2spm(mri);
-  % also flip and permute the 3D volume itself, so that the voxel and headcoordinates approximately correspond
-  % this seems to improve the convergence of the segmentation algorithm
-  [mri,permutevec,flipflags] = align_ijk2xyz(mri);
-elseif strcmp(cfg.coordinates, 'spm')
-  fprintf('assuming that the input MRI is already approximately aligned with SPM coordinates\n');
-  % nothing needs to be done
-else
-  error('cannot determine the (approximate) alignmenmt of the input MRI with the SPM template');
+switch cfg.coordinates
+  case 'ctf'
+    fprintf('assuming CTF coordinates for input, i.e. positive X-axis towards nasion and Y-axis through ears\n');
+    % flip, rotate and translate the CTF mri so that it approximately corresponds with SPM coordinates
+    % this only involves a manipulation of the coordinate tarnsformation matrix
+    mri = align_ctf2spm(mri);
+    % also flip and permute the 3D volume itself, so that the voxel and headcoordinates approximately correspond
+    % this seems to improve the convergence of the segmentation algorithm
+    [mri,permutevec,flipflags] = align_ijk2xyz(mri);
+  case 'spm'
+    % this is actually MNI coordinates
+    fprintf('assuming that the input MRI is already approximately aligned with SPM coordinates\n');
+    % nothing needs to be done
+  case 'itab'
+    % this is for the Chieti system
+    fprintf('assuming ITAB coordinates for input, i.e. positive X-axis towards right and Y-axis towards nasion\n');
+    % flip, rotate and translate the ITAB mri so that it approximately corresponds with SPM coordinates
+    % this only involves a manipulation of the coordinate tarnsformation matrix
+    mri = align_itab2spm(mri);
+    % also flip and permute the 3D volume itself, so that the voxel and headcoordinates approximately correspond
+    % this seems to improve the convergence of the segmentation algorithm
+    [mri,permutevec,flipflags] = align_ijk2xyz(mri);
+  otherwise
+    error('cannot determine the (approximate) alignmenmt of the input MRI with the SPM template');
 end
 
 if strcmp(cfg.segment, 'yes')

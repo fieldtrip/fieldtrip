@@ -19,12 +19,12 @@ function [mri] = ft_volumerealign(cfg, mri)
 % The configuration can contain the following options
 %   cfg.clim           = [min max], scaling of the anatomy color (default
 %                        is to adjust to the minimum and maximum)
-%   cfg.method         = different methods for aligning the volume 
+%   cfg.method         = different methods for aligning the volume
 %                        'fiducial' realign the volume to the fiducials,
 %                                     using 'ALS_CTF' convention, i.e.
 %                                     the origin is exactly between lpa and rpa
 %                                     the X-axis goes towards nas
-%                                     the Y-axis goes approximately towards lpa, 
+%                                     the Y-axis goes approximately towards lpa,
 %                                       orthogonal to X and in the plane spanned
 %                                       by the fiducials
 %                                     the Z-axis goes approximately towards the vertex,
@@ -36,7 +36,7 @@ function [mri] = ft_volumerealign(cfg, mri)
 %                                       commissure to the anterior commissure
 %                                     the Z-axis is towards the vertex, in between the
 %                                       hemispheres
-%                                     the X-axis is orthogonal to the YZ-plane, 
+%                                     the X-axis is orthogonal to the YZ-plane,
 %                                       positive to the right
 %                        'interactive'     manually using graphical user interface
 %
@@ -63,6 +63,9 @@ function [mri] = ft_volumerealign(cfg, mri)
 % input/output structure.
 %
 % See also FT_READ_MRI, FT_ELECTRODEREALIGN
+
+% Undocumented option
+%   cfg.coordsys, works for interactive and fiducial
 
 % Copyright (C) 2006-2009, Robert Oostenveld
 %
@@ -96,6 +99,9 @@ if ~isfield(cfg, 'parameter'), cfg.parameter = 'anatomy'; end
 if ~isfield(cfg, 'clim'),      cfg.clim      = [];        end
 if ~isfield(cfg, 'inputfile'), cfg.inputfile = [];        end
 if ~isfield(cfg, 'outputfile'),cfg.outputfile = [];       end
+if ~isfield(cfg, 'coordsys') && (strcmp(cfg.method, 'interactive') || strcmp(cfg.method, 'fiducial'))
+  cfg.coordsys = 'ALS_CTF';
+end
 
 hasdata = (nargin>1);
 if ~isempty(cfg.inputfile)
@@ -129,10 +135,10 @@ if strcmp(cfg.method, 'interactive')
   basedonmrk = 0;
 elseif strcmp(cfg.method, 'fiducial')
   basedonfid = 1;
-  basedonmrk = 0; 
+  basedonmrk = 0;
 elseif strcmp(cfg.method, 'landmark')
   basedonfid = 0;
-  basedonmrk = 1;  
+  basedonmrk = 1;
 end
 
 % select the parameter that should be displayed
@@ -147,7 +153,7 @@ switch cfg.method
     
   case 'landmark'
     % do nothing
-
+    
   case 'interactive'
     showcrosshair = true;
     dat = getsubfield(mri, cfg.parameter);
@@ -255,11 +261,11 @@ switch cfg.method
     cfg.landmark.ac     = antcomm;
     cfg.landmark.pc     = pstcomm;
     cfg.landmark.xzpoint = xzpoint;
-
+    
     if ~isempty(nas) && ~isempty(lpa) && ~isempty(rpa)
       basedonfid = 1;
     end
-
+    
     if ~isempty(antcomm) && ~isempty(pstcomm) && ~isempty(xzpoint)
       basedonmrk = 1;
     end
@@ -278,20 +284,20 @@ if basedonfid
   nas_head = warp_apply(mri.transform, cfg.fiducial.nas);
   lpa_head = warp_apply(mri.transform, cfg.fiducial.lpa);
   rpa_head = warp_apply(mri.transform, cfg.fiducial.rpa);
-
+  
   % compute the homogenous transformation matrix describing the new coordinate system
-  [realign, coordsys] = headcoordinates(nas_head, lpa_head, rpa_head);
-
+  [realign, coordsys] = headcoordinates(nas_head, lpa_head, rpa_head, cfg.coordsys);
+  
 elseif basedonmrk
   % the fiducial locations are now specified in voxels, convert them to head
   % coordinates according to the existing transform matrix
   ac     = warp_apply(mri.transform, cfg.landmark.ac);
   pc     = warp_apply(mri.transform, cfg.landmark.pc);
   xzpoint= warp_apply(mri.transform, cfg.landmark.xzpoint);
-
+  
   % compute the homogenous transformation matrix describing the new coordinate system
   [realign, coordsys] = headcoordinates(ac, pc, xzpoint, 'RAS_TAL');
-
+  
 end
 
 % combine the additional transformation with the original one
