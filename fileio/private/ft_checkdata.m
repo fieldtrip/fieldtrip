@@ -245,6 +245,12 @@ if ~isempty(dtype)
         iscomp = 0;
         israw = 1;
         okflag = 1;
+      elseif isequal(dtype(iCell), {'timelock'}) && iscomp
+        data = comp2raw(data);
+        data = raw2timelock(data);
+        iscomp = 0;
+        istimelock = 1;
+        okflag = 1;
       end
     end % for iCell
   end % if okflag

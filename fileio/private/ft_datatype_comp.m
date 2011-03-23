@@ -63,10 +63,6 @@ function comp = ft_datatype_comp(comp, varargin)
 % get the optional input arguments, which should be specified as key-value pairs
 version = keyval('version', varargin); if isempty(version), version = 'latest'; end
 
-if strcmp(version, 'latest')
-  version = '2003';
-end
-
 % convert it into a raw data structure
 rawdata = comp;
 rawdata = rmfield(rawdata, 'topo');

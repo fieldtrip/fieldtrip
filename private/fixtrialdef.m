@@ -45,7 +45,7 @@ elseif ~isempty(trl)
   nsmp = trl(:,2) - trl(:,1) + 1;
 end
 
-if size(trl,1)~=numel(nsmp)
+if ~isempty(trl) && size(trl,1)~=numel(nsmp)
   warning_once('the trial definition in the configuration is inconsistent with the actual data');
   trl = [];
 elseif isempty(trl) || ~all(nsmp==trl(:,2)-trl(:,1)+1)
