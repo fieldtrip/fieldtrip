@@ -146,6 +146,13 @@ end
 
 % get some initial parameters from the data
 if hasdata
+  
+  % check whether data has been resampled
+  if isfield(data, 'cfg') && isempty(ft_findcfg(data.cfg, 'origfs'))
+    resampled = false;
+  else
+    resampled = true;
+  end
   % fetch the header
   hdr = ft_fetch_header(data);
   
@@ -186,6 +193,8 @@ if hasdata
   end
   
 else
+  % data has not been resampled
+  resampled = false;
   % read the header
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
   
@@ -365,6 +374,7 @@ opt.artcol   = [0.9686 0.7608 0.7686; 0.7529 0.7098 0.9647; 0.7373 0.9725 0.6824
 opt.chan_colors = chan_colors;
 opt.cleanup  = false;      % this is needed for a corrent handling if the figure is closed (either in the corner or by "q")
 opt.compindx = [];         % index of components to be drawn (if viewmode = "component")
+opt.resampled = resampled;
 
 if strcmp(cfg.continuous, 'yes')
   opt.trialname = 'segment';
@@ -979,19 +989,37 @@ switch opt.cfg.viewmode
       end
     end
     
-    % plot a line with text for each event
-    h_event = zeros(1, length(event));
-    h_event_txt = zeros(1, length(event));
-    for i=1:length(event)
-      try
-        eventstr = sprintf('%s=%s', event(i).type, num2str(event(i).value)); %value can be both number and string
-      catch
-        eventstr = 'unknown';
+    h_event = zeros(0, length(event));
+    h_event_txt = zeros(0, length(event));
+    if ~opt.resampled
+      % plot a line with text for each event
+      for k=1:length(event)
+        try
+          eventstr = sprintf('%s=%s', event(k).type, num2str(event(k).value)); %value can be both number and string
+        catch
+          eventstr = 'unknown';
+        end
+        eventtim = (event(k).sample-begsample+offset)/opt.fsample;
+        eventtim = (eventtim - opt.hlim(1)) / (opt.hlim(2) - opt.hlim(1));   % convert to value relative to box, i.e. from 0 to 1
+        eventtim = eventtim * (opt.hpos(2) - opt.hpos(1)) + opt.hpos(1);     % convert from relative to actual value along the horizontal figure axis
+        h_event(k) = ft_plot_line([eventtim eventtim], [0 1]);
+%       h_event(k) = ft_plot_line([eventtim eventtim], [-opt.cfg.zscale opt.cfg.zscale]);
+        h_event_txt(k) = ft_plot_text(eventtim, ax(4)-0.01, eventstr);
       end
-      eventtim = (event(i).sample-begsample+offset)/opt.fsample;
-      h_event(i) = ft_plot_line([eventtim eventtim], [-opt.cfg.zscale opt.cfg.zscale]);
-      h_event_txt(i) = ft_plot_text(eventtim, opt.cfg.zscale, eventstr);
+    else
+      if isfield(opt, 'orgdata') && isfield(opt.orgdata, 'sampleinfo') && isfield(opt.orgdata, 'offset')
+        % find trials within this segment
+        trlindx = find(((opt.orgdata.sampleinfo(:, 1)-opt.orgdata.offset) >= begsample & (opt.orgdata.sampleinfo(:, 1)-opt.orgdata.offset) <= endsample)==1);
+        for t = 1:numel(trlindx)
+          eventtim = (opt.orgdata.sampleinfo(trlindx(t), 1)-opt.orgdata.offset(trlindx(t))-begsample+offset)/opt.fsample;
+          eventtim = (eventtim - opt.hlim(1)) / (opt.hlim(2) - opt.hlim(1));   % convert to value relative to box, i.e. from 0 to 1
+          eventtim = eventtim * (opt.hpos(2) - opt.hpos(1)) + opt.hpos(1);     % convert from relative to actual value along the horizontal figure axis
+          h_event(end+1) = ft_plot_line([eventtim eventtim], [-opt.cfg.zscale 1]);
+          h_event_txt(end+1) = ft_plot_text(eventtim, ax(4)+.01, 'stim');
+        end
+      end
     end
+        
     set(h_event, 'tag', 'events');
     set(h_event_txt, 'tag', 'events');
     set(gca,'ColorOrder',opt.chan_colors(chanindx,:)) % plot vector does not clear axis, therefore this is possible
@@ -1057,20 +1085,35 @@ switch opt.cfg.viewmode
       end
     end % for each of the artifact channels
     
-    % plot a line with text for each event
-    h_event = zeros(1, length(event));
-    h_event_txt = zeros(1, length(event));
-    for k=1:length(event)
-      try
-        eventstr = sprintf('%s=%s', event(k).type, num2str(event(k).value)); %value can be both number and string
-      catch
-        eventstr = 'unknown';
+    h_event = zeros(0, length(event));
+    h_event_txt = zeros(0, length(event));
+    if ~opt.resampled
+      % plot a line with text for each event
+      for k=1:length(event)
+        try
+          eventstr = sprintf('%s=%s', event(k).type, num2str(event(k).value)); %value can be both number and string
+        catch
+          eventstr = 'unknown';
+        end
+        eventtim = (event(k).sample-begsample+offset)/opt.fsample;
+        eventtim = (eventtim - opt.hlim(1)) / (opt.hlim(2) - opt.hlim(1));   % convert to value relative to box, i.e. from 0 to 1
+        eventtim = eventtim * (opt.hpos(2) - opt.hpos(1)) + opt.hpos(1);     % convert from relative to actual value along the horizontal figure axis
+        h_event(k) = ft_plot_line([eventtim eventtim], [0 1]);
+%       h_event(k) = ft_plot_line([eventtim eventtim], [-opt.cfg.zscale opt.cfg.zscale]);
+        h_event_txt(k) = ft_plot_text(eventtim, ax(4)-0.01, eventstr);
       end
-      eventtim = (event(k).sample-begsample+offset)/opt.fsample;
-      eventtim = (eventtim - opt.hlim(1)) / (opt.hlim(2) - opt.hlim(1));   % convert to value relative to box, i.e. from 0 to 1
-      eventtim = eventtim * (opt.hpos(2) - opt.hpos(1)) + opt.hpos(1);     % convert from relative to actual value along the horizontal figure axis
-      ft_plot_line([eventtim eventtim], [-opt.cfg.zscale opt.cfg.zscale]);
-      h_event_txt(k) = ft_plot_text(eventtim, ax(4)-0.01, eventstr);
+    else
+      if isfield(opt, 'orgdata') && isfield(opt.orgdata, 'sampleinfo') && isfield(opt.orgdata, 'offset')
+        % find trials within this segment
+        trlindx = find(((opt.orgdata.sampleinfo(:, 1)-opt.orgdata.offset) >= begsample & (opt.orgdata.sampleinfo(:, 1)-opt.orgdata.offset) <= endsample)==1);
+        for t = 1:numel(trlindx)
+          eventtim = (opt.orgdata.sampleinfo(trlindx(t), 1)-opt.orgdata.offset(trlindx(t))-begsample+offset)/opt.fsample;
+          eventtim = (eventtim - opt.hlim(1)) / (opt.hlim(2) - opt.hlim(1));   % convert to value relative to box, i.e. from 0 to 1
+          eventtim = eventtim * (opt.hpos(2) - opt.hpos(1)) + opt.hpos(1);     % convert from relative to actual value along the horizontal figure axis
+          h_event(end+1) = ft_plot_line([eventtim eventtim], [-opt.cfg.zscale 1]);
+          h_event_txt(end+1) = ft_plot_text(eventtim, ax(4)+.01, 'stim');
+        end
+      end
     end
     % set tags
     set(h_event, 'tag', 'events');
