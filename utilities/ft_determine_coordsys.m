@@ -117,7 +117,7 @@ elseif hastri && issubfield(data, 'bnd.tri')
   tri = data.bnd.tri;
 end
 
-if isfield(data, 'coordsys')
+if isfield(data, 'coordsys') && ~isempty(data.coordsys)
   if length(data.coordsys)==3 && length(intersect(data.coordsys, 'rlasif'))==3
     for i=1:3
       switch data.coordsys(i)

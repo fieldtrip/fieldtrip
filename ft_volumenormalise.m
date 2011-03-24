@@ -73,34 +73,57 @@ function [normalise] = ft_volumenormalise(cfg, interp)
 ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'renamed', {'coordinates', 'coordsys'});
 
 %% ft_checkdata see below!!! %%
 
 % set the defaults
-if ~isfield(cfg,'spmversion'),       cfg.spmversion = 'spm8';                     end
-if ~isfield(cfg,'parameter'),        cfg.parameter = 'all';                       end;
-if ~isfield(cfg,'downsample'),       cfg.downsample = 1;                          end;
-if ~isfield(cfg,'write'),            cfg.write = 'no';                            end;
-if ~isfield(cfg,'keepinside'),       cfg.keepinside = 'yes';                      end;
-if ~isfield(cfg,'keepintermediate'), cfg.keepintermediate = 'no';                 end;
-if ~isfield(cfg,'coordinates'),      cfg.coordinates = [];                        end;
-if ~isfield(cfg,'initial'),          cfg.initial = [];                            end;
-if ~isfield(cfg,'nonlinear'),        cfg.nonlinear = 'yes';                       end;
-if ~isfield(cfg,'smooth'),           cfg.smooth    = 'no';                        end;
-if ~isfield(cfg, 'inputfile'),       cfg.inputfile  = [];                         end;
-if ~isfield(cfg, 'outputfile'),      cfg.outputfile = [];                         end;
+cfg.spmversion       = ft_getopt(cfg, 'spmversion',       'spm8');
+cfg.parameter        = ft_getopt(cfg, 'parameter',        'all'); 
+cfg.downsample       = ft_getopt(cfg, 'downsample',       1); 
+cfg.write            = ft_getopt(cfg, 'write',            'no'); 
+cfg.keepinside       = ft_getopt(cfg, 'keepinside',       'yes');
+cfg.keepintermediate = ft_getopt(cfg, 'keepintermediate', 'no');
+cfg.coordsys         = ft_getopt(cfg, 'coordsys',         '');
+cfg.units            = ft_getopt(cfg, 'units',            'mm');
+cfg.nonlinear        = ft_getopt(cfg, 'nonlinear',        'yes');
+cfg.smooth           = ft_getopt(cfg, 'smooth',           'no');
+cfg.inputfile        = ft_getopt(cfg, 'inputfile',        []);
+cfg.outputfile       = ft_getopt(cfg, 'outputfile',       []);
 
 % load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    interp = loadvar(cfg.inputfile, 'interp');
-    hasdata = true;
+hasdata      = (nargin>1);
+hasinputfile = ~isempty(cfg.inputfile);
+if hasdata && hasinputfile
+  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+elseif hasinputfile
+  interp = loadvar(cfg.inputfile, 'interp');
+end
+
+% load mri if second input is a string
+if ischar(interp),
+  fprintf('reading source MRI from file\n');
+  interp = ft_read_mri(interp);
+  if ~isfield(interp, 'coordsys') && ft_filetype(filename, 'ctf_mri')
+    % based on the filetype assume that the coordinates correspond with CTF convention
+    interp.coordsys = 'ctf';
   end
 end
+
+% check if the input data is valid for this function
+interp = ft_checkdata(interp, 'datatype', 'volume', 'feedback', 'yes');
+
+% check whether the input has an anatomy
+if ~isfield(interp,'anatomy'),
+  error('no anatomical information available, this is required for normalisation');
+end
+
+% ensure that the data has interpretable units and that the coordinate
+% system is in approximate spm space
+if ~isfield(interp, 'unit'),     interp.unit     = cfg.units;    end
+if ~isfield(interp, 'coordsys'), interp.coordsys = cfg.coordsys; end
+interp = ft_convert_units(interp,    'mm');
+interp = ft_convert_coordsys(interp, 'spm');
 
 % check if the required spm is in your path:
 if strcmpi(cfg.spmversion, 'spm2'),
@@ -136,35 +159,14 @@ if isempty(cfg.template),
   error('you must specify a template anatomical MRI');
 end
 
-if ~isfield(interp,'anatomy'),
-  error('no anatomical information available, this is required for normalisation');
-end
-
-if isfield(cfg, 'coordinates')
-  source_coordinates = cfg.coordinates;
-end
-
 % the template anatomy should always be stored in a SPM-compatible file
 template_ftype = ft_filetype(cfg.template);
 if strcmp(template_ftype, 'analyze_hdr') || strcmp(template_ftype, 'analyze_img') || strcmp(template_ftype, 'minc') || strcmp(template_ftype, 'nifti')
   % based on the filetype assume that the coordinates correspond with MNI/SPM convention
-  template_coordinates = 'spm';
+  % this is ok
+else
+  error('the head coordinate system of the template does not seem to be correspond with the mni/spm convention');
 end
-
-% the source anatomy can be in a file that is not understood by SPM (e.g. in the
-% native CTF *.mri format), therefore start by reading it into memory
-if ischar(interp),
-  fprintf('reading source MRI from file\n');
-  filename = interp;
-  interp   = ft_read_mri(filename);
-  if ft_filetype(filename, 'ctf_mri')
-    % based on the filetype assume that the coordinates correspond with CTF convention
-    source_coordinates = 'ctf';
-  end
-end
-
-% check if the input data is valid for this function
-interp = ft_checkdata(interp, 'datatype', 'volume', 'feedback', 'yes');
 
 % select the parameters that should be normalised
 cfg.parameter = parameterselection(cfg.parameter, interp);
@@ -185,31 +187,6 @@ tmpcfg.parameter  = cfg.parameter;
 tmpcfg.smooth     = cfg.smooth;
 tmpcfg.outputfile = cfg.outputfile;
 interp = ft_volumedownsample(tmpcfg, interp);
-
-if isempty(source_coordinates)
-  source_coordinates = determine_coordinates('input');       % use interactive helper-function
-end
-if isempty(template_coordinates)
-  template_coordinates = determine_coordinates('template');  % use interactive helper-function
-end
-
-% ensure that the source volume is approximately aligned with the template
-if strcmp(source_coordinates, 'ctf') && strcmp(template_coordinates, 'spm')
-  fprintf('converting input coordinates from CTF into approximate SPM coordinates\n');
-  initial = [
-    0.0000   -1.0000    0.0000    0.0000
-    0.9987    0.0000   -0.0517  -32.0000
-    0.0517    0.0000    0.9987  -54.0000
-    0.0000    0.0000    0.0000    1.0000 ];
-elseif strcmp(source_coordinates, template_coordinates)
-  fprintf('not converting input coordinates\n');
-  initial = eye(4);
-else
-  error('cannot determine the approximate alignmenmt of the source coordinates with the template');
-end
-
-% apply the approximate transformatino prior to passing it to SPM
-interp.transform = initial * interp.transform;
 
 ws = warning('off');
 
@@ -264,7 +241,7 @@ flags.vox = [cfg.downsample,cfg.downsample,cfg.downsample];
 files     = {};
 
 % determine the affine source->template coordinate transformation
-final = VG.mat * inv(params.Affine) * inv(VF.mat) * initial;
+final = VG.mat * inv(params.Affine) * inv(VF.mat);
 
 % apply the normalisation parameters to each of the volumes
 for parlop=1:length(cfg.parameter)
@@ -325,7 +302,6 @@ cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % remember the normalisation parameters in the configuration
 cfg.spmparams = params;
-cfg.initial   = initial;
 cfg.final     = final;
 
 % add version information to the configuration
@@ -344,36 +320,4 @@ normalise.cfg = cfg;
 % the output data should be saved to a MATLAB file
 if ~isempty(cfg.outputfile)
   savevar(cfg.outputfile, 'data', normalise); % use the variable name "data" in the output file
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% HELPER FUNCTION that asks a few questions to determine the coordinate system
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [coordinates] = determine_coordinates(str);
-fprintf('Please determine the coordinate system of the %s anatomical volume.\n', str);
-% determine in which direction the nose is pointing
-nosedir = [];
-while isempty(nosedir)
-  response = input('Is the nose pointing in the positive X- or Y-direction? [x/y] ','s');
-  if strcmp(response, 'x'),
-    nosedir = 'positivex';
-  elseif strcmp(response, 'y'),
-    nosedir = 'positivey';
-  end
-end
-% determine where the origin is
-origin  = [];
-while isempty(origin)
-  response = input('Is the origin on the Anterior commissure or between the Ears? [a/e] ','s');
-  if strcmp(response, 'e'),
-    origin = 'interauricular';
-  elseif strcmp(response, 'a'),
-    origin = 'ant_comm';
-  end
-end
-% determine the coordinate system of the MRI volume
-if strcmp(origin, 'interauricular') && strcmp(nosedir, 'positivex')
-  coordinates = 'ctf';
-elseif strcmp(origin, 'ant_comm') && strcmp(nosedir, 'positivey')
-  coordinates = 'spm';
 end
