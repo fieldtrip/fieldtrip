@@ -1,37 +1,30 @@
-function [spectrum,freqoi,timeoi] = ft_specest_wavelet(dat, time, varargin) 
+function [spectrum,freqoi,timeoi] = ft_specest_wavelet(dat, time, varargin)
 
-% SPECEST_WAVELET performs time-frequency analysis on any time series trial data using the 'wavelet method' based on Morlet wavelets,
-% doing convolution in the time domain by multiplaction in the frequency domain
-%
+% SPECEST_WAVELET performs time-frequency analysis on any time series trial
+% data using the 'wavelet method' based on Morlet wavelets, doing
+% convolution in the time domain by multiplaction in the frequency domain
 %
 % Use as
-%   [spectrum,freqoi,timeoi] = specest_wavelet(dat,time...)   
-%
-%   dat      = matrix of chan*sample 
+%   [spectrum,freqoi,timeoi] = specest_wavelet(dat,time...)
+% where
+%   dat      = matrix of chan*sample
 %   time     = vector, containing time in seconds for each sample
 %   spectrum = array of chan*freqoi*timeoi of fourier coefficients
 %   freqoi   = vector of frequencies in spectrum
 %   timeoi   = vector of timebins in spectrum
 %
-%
-%
 % Optional arguments should be specified in key-value pairs and can include:
 %   pad        = number, total length of data after zero padding (in seconds)
-%   freqoi     = vector, containing frequencies of interest                                           
+%   freqoi     = vector, containing frequencies of interest
 %   timeoi     = vector, containing time points of interest (in seconds)
 %   width      = number or vector, width of the wavelet, determines the temporal and spectral resolution
 %   gwidth     = number, determines the length of the used wavelets in standard deviations of the implicit Gaussian kernel
 %
-%
-%
-%
-%
-% 
-%
-%
-%
 % See also SPECEST_MTMCONVOL, SPECEST_CONVOL, SPECEST_HILBERT, SPECEST_MTMFFT
 
+% Copyright (C) 2010, Donders Institute for Brain, Cognition and Behaviour
+%
+% $Log$
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'pad','width','gwidth','freqoi','timeoi'});
@@ -41,11 +34,8 @@ width     = keyval('width',       varargin);  if isempty(width),    width    = 7
 gwidth    = keyval('gwidth',      varargin);  if isempty(gwidth),   gwidth   = 3;      end
 pad       = keyval('pad',         varargin);
 
-
-
 % Set n's
 [nchan,ndatsample] = size(dat);
-
 
 % Determine fsample and set total time-length of data
 fsample = round(1/(time(2)-time(1)));
@@ -61,8 +51,6 @@ end
 postpad = zeros(1,round((pad - dattime) * fsample));
 endnsample = round(pad * fsample);  % total number of samples of padded data
 endtime    = pad;            % total time in seconds of padded data
-
-
 
 % Set freqboi and freqoi
 if isnumeric(freqoi) % if input is a vector
@@ -82,7 +70,6 @@ end
 nfreqboi = length(freqboi);
 nfreqoi  = length(freqoi);
 
-
 % Set timeboi and timeoi
 offset = round(time(1)*fsample);
 if isnumeric(timeoi) % if input is a vector
@@ -94,9 +81,6 @@ elseif strcmp(timeoi,'all') % if input was 'all'
   ntimeboi = length(timeboi);
   timeoi   = time;
 end
-
-
-
 
 % Creating wavelets
 % expand width to array if constant width
@@ -121,8 +105,6 @@ for ifreqoi = 1:nfreqoi
   wltspctrm{ifreqoi} = fft(complex(vertcat(prezer,tap.*cos(ind),pstzer), vertcat(prezer,tap.*sin(ind),pstzer)),[],1)';
 end
 
-
-
 % Compute fft
 spectrum = complex(nan(nchan,nfreqoi,ntimeboi),nan(nchan,nfreqoi,ntimeboi));
 datspectrum = transpose(fft(transpose([dat repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
@@ -140,8 +122,3 @@ for ifreqoi = 1:nfreqoi
     spectrum(:,ifreqoi,reqtimeboiind) = dum(:,reqtimeboi);
   end
 end
-
-
-
-
-

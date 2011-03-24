@@ -4,38 +4,32 @@ function [spectrum,freqoi,timeoi] = ft_specest_hilbert(dat, time, varargin)
 % applying a bandpass filter and then doing a hilbert transform.
 %
 % Use as
-%   [spectrum,freqoi,timeoi] = specest_hilbert(dat,time,...)  
-%
+%   [spectrum,freqoi,timeoi] = specest_hilbert(dat,time,...)
+% where
 %   dat      = matrix of chan*sample
 %   time     = vector, containing time in seconds for each sample
 %   spectrum = matrix of chan*freqoi*timeoi of fourier coefficients
 %   freqoi   = vector of frequencies in spectrum
 %   timeoi   = vector of timebins in spectrum
 %
-%
-%
-%
 % Optional arguments should be specified in key-value pairs and can include:
 %   timeoi    = vector, containing time points of interest (in seconds)
 %   freqoi    = vector, containing frequencies (in Hz)
 %   pad       = number, indicating time-length of data to be padded out to in seconds
-%   width     = 
-%   filttype  = 
-%   filtorder = 
-%   filtdir   = 
-%
-%
-%
+%   width     =
+%   filttype  =
+%   filtorder =
+%   filtdir   =
 %
 % See also SPECEST_MTMFFT, SPECEST_CONVOL, SPECEST_MTMCONVOL, SPECEST_WAVELET
 
 % Copyright (C) 2010, Robert Oostenveld
 %
-% $Rev$
+% $Log: 3162 $
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'freqoi','timeoi','width','filttype','filtorder','filtdir','pad'});
-freqoi    = keyval('freqoi',    varargin);   
+freqoi    = keyval('freqoi',    varargin);
 timeoi    = keyval('timeoi',    varargin);   if isempty(timeoi),   timeoi  = 'all';      end
 width     = keyval('width',     varargin);   if isempty(width),    width   = 1;          end
 filttype  = keyval('filttype',  varargin);   if isempty(filttype),  error('you need to specify filter type'),         end
@@ -45,7 +39,6 @@ pad       = keyval('pad',       varargin);
 
 % Set n's
 [nchan,ndatsample] = size(dat);
-
 
 % Determine fsample and set total time-length of data
 fsample = round(1/(time(2)-time(1)));
@@ -60,9 +53,6 @@ if isempty(pad) % if no padding is specified padding is equal to current data le
 end
 prepad  = zeros(1,floor(((pad - dattime) * fsample)./2));
 postpad = zeros(1,ceil(((pad - dattime) * fsample)./2));
-endnsample = round(pad * fsample);  % total number of samples of padded data
-endtime    = pad;            % total time in seconds of padded data
-
 
 % set a default sampling for the frequencies-of-interest
 if isempty(freqoi),
@@ -73,7 +63,6 @@ if any(freqoi==0)
   freqoi(freqoi==0) = [];
 end
 nfreqoi = length(freqoi);
-
 
 % Set timeboi and timeoi
 offset = round(time(1)*fsample);
@@ -91,7 +80,6 @@ end
 if numel(width) == 1
   width = ones(1,nfreqoi) * width;
 end
-
 
 % create filter frequencies and check validity
 filtfreq = [];
@@ -115,10 +103,3 @@ for ifreqoi = 1:nfreqoi
   dum = transpose(hilbert(transpose([repmat(prepad,[nchan, 1]) flt repmat(postpad,[nchan, 1])])));
   spectrum(:,ifreqoi,:) = dum(:,timeboi);
 end
-
-
-
-
-
-
-

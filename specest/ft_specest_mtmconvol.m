@@ -1,11 +1,11 @@
 function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varargin)
 
-% SPECEST_MTMCONVOL performs wavelet convolution in the time domain by multiplication in the frequency domain
-%
+% SPECEST_MTMCONVOL performs wavelet convolution in the time domain 
+% by multiplication in the frequency domain
 %
 % Use as
 %   [spectrum,freqoi,timeoi] = specest_mtmconvol(dat,time,...)
-%
+% where
 %   dat      = matrix of chan*sample
 %   time     = vector, containing time in seconds for each sample
 %   spectrum = matrix of ntaper*chan*freqoi*timeoi of fourier coefficients
@@ -23,6 +23,10 @@ function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varar
 %   dimord    = 'tap_chan_freq_time' (default) or 'chan_time_freqtap' for memory efficiency%
 %
 % See also SPECEST_MTMFFT, SPECEST_CONVOL, SPECEST_HILBERT, SPECEST_WAVELET
+
+% Copyright (C) 2010, Donders Institute for Brain, Cognition and Behaviour
+%
+% $Log$
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'taper','pad','timeoi','timwin','freqoi','tapsmofrq','dimord','feedback'});
@@ -50,10 +54,8 @@ elseif (length(timwin) ~= length(freqoi) && ~strcmp(freqoi,'all'))
   error('timwin should be of equal length as freqoi')
 end
 
-
 % Set n's
 [nchan,ndatsample] = size(dat);
-
 
 % Determine fsample and set total time-length of data
 fsample = round(1/(time(2)-time(1)));
@@ -91,8 +93,6 @@ end
 nfreqboi = length(freqboi);
 nfreqoi  = length(freqoi);
 
-
-
 % Set timeboi and timeoi
 offset = round(time(1)*fsample);
 if isnumeric(timeoi) % if input is a vector
@@ -105,11 +105,8 @@ elseif strcmp(timeoi,'all') % if input was 'all'
   timeoi   = time;
 end
 
-
 % set number of samples per time-window (timwin is in seconds)
 timwinsample = round(timwin .* fsample);
-
-
 
 % Compute tapers per frequency, multiply with wavelets and compute their fft
 wltspctrm = cell(nfreqoi,1);
@@ -129,7 +126,6 @@ for ifreqoi = 1:nfreqoi
       elseif size(tap,1) == 1
         disp([num2str(freqoi(ifreqoi)) ' Hz: WARNING: using only one taper for specified smoothing'])
       end
-      
       
     case 'sine'
       tap = sine_taper(timwinsample(ifreqoi), timwinsample(ifreqoi) .* (tapsmofrq(ifreqoi) ./ fsample))';
@@ -238,7 +234,6 @@ switch dimord
     spectrum = reshape(vertcat(spectrum{:}),[nchan max(ntaper) nfreqoi ntimeboi]); % collecting in a cell-array and later reshaping provides significant speedups
     spectrum = permute(spectrum, [2 1 3 4]);
     
-    
   case 'chan_time_freqtap' % memory efficient representation
     % create tapfreqind
     freqtapind = [];
@@ -273,9 +268,8 @@ switch dimord
         tmp = tmp .* sqrt(2 ./ timwinsample(ifreqoi));
         spectrum(:,:,freqtapind{ifreqoi}(itap)) = tmp;
       end
-    end
-        
-end
+    end % for nfreqoi
+end % switch dimord
 
 % % below code does the exact same as above, but without the trick of converting to cell-arrays for speed increases. however, when there is a huge variability in number of tapers per freqoi
 % % than this approach can benefit from the fact that the array can be precreated containing nans
@@ -343,13 +337,6 @@ end
 % spectrum = reshape(vertcat(spectrum{:}),[numel(tapfreq) nchan ntimeboi]);
 
 
-
-
-
-
-
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION ensure that the first two input arguments are of double
 % precision this prevents an instability (bug) in the computation of the
@@ -357,20 +344,3 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [tap] = double_dpss(a, b, varargin)
 tap = dpss(double(a), double(b), varargin{:});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

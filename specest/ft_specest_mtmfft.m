@@ -1,11 +1,11 @@
 function [spectrum,ntaper,freqoi] = ft_specest_mtmfft(dat, time, varargin) 
 
-% SPECEST_MTMFFT computes a fast Fourier transform using many possible tapers
-%
+% SPECEST_MTMFFT computes a fast Fourier transform using multitapering with
+% the DPSS sequence or using a variety of single tapers
 %
 % Use as
 %   [spectrum,freqoi] = specest_mtmfft(dat,time...)   
-%
+% where
 %   dat      = matrix of chan*sample 
 %   time     = vector, containing time in seconds for each sample
 %   spectrum = matrix of taper*chan*freqoi of fourier coefficients
@@ -20,6 +20,9 @@ function [spectrum,ntaper,freqoi] = ft_specest_mtmfft(dat, time, varargin)
 %
 % See also SPECEST_MTMCONVOL, SPECEST_CONVOL, SPECEST_HILBERT, SPECEST_WAVELET
 
+% Copyright (C) 2010, Donders Institute for Brain, Cognition and Behaviour
+%
+% $Log$
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'taper','pad','freqoi','tapsmofrq','feedback'});
@@ -39,10 +42,8 @@ if isempty(tapsmofrq) && strcmp(taper, 'dpss')
   error('you need to specify tapsmofrq when using dpss tapers')
 end
 
-
 % Set n's
 [nchan,ndatsample] = size(dat);
-
 
 % Determine fsample and set total time-length of data
 fsample = round(1/(time(2)-time(1)));
@@ -55,10 +56,9 @@ end
 if isempty(pad) % if no padding is specified padding is equal to current data length
   pad = dattime;
 end
-postpad = zeros(1,ceil((pad - dattime) * fsample));
+postpad    = zeros(1,ceil((pad - dattime) * fsample));
 endnsample = round(pad * fsample);  % total number of samples of padded data
-endtime    = pad;            % total time in seconds of padded data
-
+endtime    = pad;                   % total time in seconds of padded data
 
 % Set freqboi and freqoi
 if isnumeric(freqoi) % if input is a vector
@@ -70,9 +70,8 @@ elseif strcmp(freqoi,'all') % if input was 'all'
   freqboi    = freqboilim(1):1:freqboilim(2);
   freqoi     = (freqboi-1) ./ endtime;
 end
-nfreqboi   = length(freqboi);
-nfreqoi = length(freqoi);
-
+nfreqboi = length(freqboi);
+nfreqoi  = length(freqoi);
 
 % create tapers
 switch taper
@@ -136,7 +135,6 @@ if timedelay ~= 0
   angletransform = repmat(angletransform,[nchan,1]);
 end
 
-
 % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
 spectrum = cell(ntaper(1),1);
 for itap = 1:ntaper(1)
@@ -159,5 +157,3 @@ spectrum = permute(spectrum, [2 1 3]);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [tap] = double_dpss(a, b, varargin)
 tap = dpss(double(a), double(b), varargin{:});
-
-

@@ -1,37 +1,31 @@
 function [spectrum, freqoi, timeoi] = ft_specest_convol(dat, time, varargin)
 
-% SPECEST_CONVOL performs wavelet convolution in the time domain by convolution with Morlet's wavelets.
-%
+% SPECEST_CONVOL performs wavelet convolution in the time domain by
+% convolution with Morlet's wavelets.
 %
 % Use as
-%   [spectrum,freqoi,timeoi] = specest_convol(dat,time,...)  
-%
+%   [spectrum,freqoi,timeoi] = specest_convol(dat,time,...)
+% where
 %   dat      = matrix of chan*sample
 %   time     = vector, containing time in seconds for each sample
 %   spectrum = matrix of chan*freqoi*timeoi of fourier coefficients
 %   freqoi   = vector of frequencies in spectrum
 %   timeoi   = vector of timebins in spectrum
 %
-%
-%
-%
 % Optional arguments should be specified in key-value pairs and can include:
 %   timeoi        = vector, containing time points of interest (in seconds, analysis window will be centered around these time points)
 %   freqoi        = vector, containing frequencies (in Hz)
-%   waveletwidth  = number, 'width' of wavelets expressed in cycles (default = 7)   
-%
-%
-%
+%   waveletwidth  = number, 'width' of wavelets expressed in cycles (default = 7)
 %
 %  OPTION DOWNSAMPLE: this looks like something that would fit in better in the (freqanalysis) wrapper I think
-%  OPTION LATENCY, WHAT TO DO WITH THIS? 
+%  OPTION LATENCY, WHAT TO DO WITH THIS?
 %  HOW TO MAKE CONSISTENT freqoi'S OVER TRIALS (e.g. multiple runs of this function)? ZERO-PADDING NOT AN OPTION... YET WE SHOULD STILL ONLY HAVE freqoi'S THAT ACTUALLY MATCH THE FREQUENCIES IN OUTPUT
-%
 %
 % See also SPECEST_MTMFFT, SPECEST_MTMCONVOL, SPECEST_HILBERT, SPECEST_NANFFT, SPECEST_MVAR, SPECEST_WAVELET
 
-
-
+% Copyright (C) 2010, Donders Institute for Brain, Cognition and Behaviour
+%
+% $Log$
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'waveletwidth','pad','timeoi','freqoi'});
@@ -39,17 +33,14 @@ timeoi        = keyval('timeoi',        varargin); if isempty(timeoi),       tim
 freqoi        = keyval('freqoi',        varargin); if isempty(freqoi),       freqoi       = 'all';    end
 waveletwidth  = keyval('waveletwidth',  varargin); if isempty(waveletwidth), waveletwidth = 7;        end
 
-
 % Set n's
 [nchan,ndatsample] = size(dat);
-
 
 % Determine fsample and set total time-length of data
 fsample = round(1/(time(2)-time(1)));
 dattime = ndatsample / fsample; % total time in seconds of input data
 endnsample = ndatsample;  % for consistency with mtmconvol and mtmfft
 endtime    = dattime;     % for consistency with mtmconvol and mtmfft
-
 
 % Set freqboi and freqoi
 if isnumeric(freqoi) % if input is a vector
@@ -64,7 +55,6 @@ end
 nfreqboi   = length(freqboi);
 nfreqoi = length(freqoi);
 
-
 % Set timeboi and timeoi
 offset = round(time(1)*fsample);
 if isnumeric(timeoi) % if input is a vector
@@ -77,11 +67,8 @@ elseif strcmp(timeoi,'all') % if input was 'all'
   timeoi   = time;
 end
 
-
-
 % compute wavelet family
 wavfam = waveletfam(freqoi,fsample,waveletwidth);
-
 
 % compute spectrum by convolving the wavelets with the data
 spectrum = zeros(nchan, nfreqoi, nsample);
@@ -104,9 +91,6 @@ end
 spectrum = spectrum(:,:,timeboi);
 
 
-
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for waveletanalysis
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -122,42 +106,28 @@ end
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 % state         = keyval('state',         varargin);
 % waveletwidth  = keyval('waveletwidth',  varargin); if isempty(waveletwidth), waveletwidth = 7; end
 % downsample    = keyval('downsample',    varargin);
 % time          = keyval('time',          varargin);
 % toi           = keyval('toi',           varargin);
-% 
+%
 % % FIXME add width
-% 
+%
 % if ~isempty(downsample) && ~isempty(toi)
 %   error('the downsample and toi options are mutually exclusive');
 % end
-% 
+%
 % nchans   = size(dat,1);
 % nsamples = size(dat,2);
-% 
+%
 % if isempty(time)
 %   if ~isempty(toi)
 %     error('specification of toi without time is not permitted');
 %   end
 %   time = (0:(nsamples-1))/fsample;
 % end
-% 
+%
 % if ~isempty(state) && isequal(state.fsample, fsample)  && isequal(state.foi, foi) && isequal(state.waveletwidth, waveletwidth)
 %   % reuse the wavelet family from the previous state
 %   disp('using previous state');
@@ -170,11 +140,11 @@ end
 %   % recompute the wavelet family
 %   M = waveletfam(foi,fsample,waveletwidth);
 % end
-% 
+%
 % % compute freq by convolving the wavelets with the data
 % nfreq = length(foi);
 % spectrum = zeros(nchans, nsamples, nfreq);
-% 
+%
 % for f=1:nfreq
 %   wavelet = M{f};
 %   for c=1:nchans
@@ -189,7 +159,7 @@ end
 %   spectrum(:,begpad,f) = nan;
 %   spectrum(:,endpad,f) = nan;
 % end
-% 
+%
 % if ~isempty(downsample)
 %   % this would be done in case of downsample
 %   tbin = 1:downsample:nsamples;
@@ -202,16 +172,16 @@ end
 % else
 %   tbin = 1:nsamples;
 % end
-% 
+%
 % % select the samples for the output
 % spectrum = spectrum(:,tbin,:);
-% 
+%
 % % remember the wavelets so that they can be reused in a subsequent call
 % state.fsample = fsample;
 % state.foi     = foi;
 % state.waveletwidth = waveletwidth;
 % state.M       = M;
-% 
+%
 % % %convolves data in chan by time matrix (from one trial) with 1 wavelet for
 % % %each specified frequency of interest
 % % spectrum = zeros(size(data,1),length(foi), size(data,2));
@@ -224,18 +194,5 @@ end
 % %   end
 % %
 % % end
-% 
+%
 % %output should be chan by freq by time
-
-
-
-
-
-
-
-
-
-
-
-
-
