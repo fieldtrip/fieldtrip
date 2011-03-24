@@ -61,7 +61,7 @@ if isfield(cfg, 'event')
 else
   try
     fprintf('reading the events from ''%s''\n', cfg.headerfile);
-    event = ft_read_event(cfg.headerfile, 'headerformat', cfg.headerformat, 'eventformat', cfg.eventformat);
+    event = ft_read_event(cfg.headerfile, 'headerformat', cfg.headerformat, 'eventformat', cfg.eventformat, 'dataformat', cfg.dataformat);
   catch
     event = [];
   end
