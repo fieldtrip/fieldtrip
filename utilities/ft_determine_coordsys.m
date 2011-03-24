@@ -1,6 +1,6 @@
-function [data] = ft_checkcoordsys(cfg, data)
+function [data] = ft_determine_coordsys(cfg, data)
 
-% FT_CHECKCOORDSYS plots a geometrical object, allowing you to perform a visual
+% FT_DETERMINECOORDSYS plots a geometrical object, allowing you to perform a visual
 % check on the coordinatesystem, the units and on the anatomical labels for the
 % coordinate system axes.
 %

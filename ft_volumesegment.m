@@ -133,6 +133,8 @@ cfg.spmversion       = ft_getopt(cfg, 'spmversion',       'spm8');
 cfg.write            = ft_getopt(cfg, 'write',            'no');
 cfg.threshold        = ft_getopt(cfg, 'threshold',        'no');
 cfg.keepintermediate = ft_getopt(cfg, 'keepintermediate', 'no');
+cfg.coordsys         = ft_getopt(cfg, 'coordsys',         '');
+cfg.units            = ft_getopt(cfg, 'units',            '');
 cfg.inputfile        = ft_getopt(cfg, 'inputfile',        []);
 cfg.outputfile       = ft_getopt(cfg, 'outputfile',       []);
 
@@ -172,9 +174,9 @@ elseif hasdata
     filename = mri;
     fprintf('reading MRI from file\n');
     mri = ft_read_mri(filename);
-    if ft_filetype(filename, 'ctf_mri') && isempty(cfg.coordinates)
+    if ft_filetype(filename, 'ctf_mri') && isempty(cfg.coordsys)
       % based on the filetype assume that the coordinates correspond with CTF convention
-      cfg.coordinates = 'ctf';
+      cfg.coordsys = 'ctf';
     end
   end
 else
@@ -201,41 +203,19 @@ if isfield(mri, 'gray') && isfield(mri, 'white') && isfield(mri, 'csf'),
 end
 
 if strcmp(cfg.segment, 'yes')
+  % ensure that the data has interpretable units and that the coordinate
+  % system is in approximate spm space
+  if ~isfield(mri, 'unit'),     mri.unit     = cfg.units;    end
+  if ~isfield(mri, 'coordsys'), mri.coordsys = cfg.coordsys; end
+  mri = ft_convert_units(mri,    'mm');
+  mri = ft_convert_coordsys(mri, 'spm');
   
   % remember the original transformation matrix
   original.transform = mri.transform;
-  
-  % interactively determine the head coordinate system in which the data are defined
-  if ~isfield(mri, 'coordsys') || strcmp(mri.coordsys, 'unknown') || isempty(mri.coordsys)
-      mri = ft_checkcoordsys([], mri);
-  end
-  
-  % ensure that the input MRI volume is approximately aligned with the SPM template  
-  switch mri.coordsys
-    case 'spm'
-      % do nothing
-    case 'ctf'
-      % flip, rotate and translate the CTF mri so that it approximately corresponds with SPM coordinates
-      % this only involves a manipulation of the coordinate tarnsformation matrix
-      fprintf('assuming CTF coordinates for input, i.e. positive X-axis towards nasion and Y-axis through ears\n');
-      mri = align_ctf2spm(mri);
-    case {'ras' 'neuromag'}
-      % at least the axes are oriented according to spm convention: worth a
-      % try
-      % FIXME check whether this works
-      warning('assuming that the coordinate system is sufficiently aligned with the spm template');
-    case 'itab'
-      % this is for the Chieti system
-      fprintf('assuming ITAB coordinates for input, i.e. positive X-axis towards right and Y-axis towards nasion\n');
-      % flip, rotate and translate the ITAB mri so that it approximately corresponds with SPM coordinates
-      % this only involves a manipulation of the coordinate tarnsformation matrix
-      mri = align_itab2spm(mri);
-    otherwise
-      error('cannot determine the (approximate) alignment of the input MRI with the SPM template');
-  end
-  
-  % also flip and permute the 3D volume itself, so that the voxel and headcoordinates approximately correspond
-  % this seems to improve the convergence of the segmentation algorithm
+    
+  % flip and permute the 3D volume itself, so that the voxel and 
+  % headcoordinates approximately correspond this improves the convergence
+  % of the segmentation algorithm
   [mri,permutevec,flipflags] = align_ijk2xyz(mri);
   
   Va = ft_write_volume([cfg.name,'.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion);

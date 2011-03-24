@@ -31,3 +31,4 @@ ctfvox2spmhead =  inv(spmhead2ctfhead) *  ctfvox2ctfhead;
 
 % change the transformation matrix, such that it returns SPM head coordinates
 mri.transform = ctfvox2spmhead;
+mri.coordsys  = 'spm';

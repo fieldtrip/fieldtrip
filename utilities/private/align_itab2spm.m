@@ -1,4 +1,4 @@
-function [mri] = align_itab2spm(mri);
+function [mri] = align_itab2spm(mri)
 
 % ALIGN_ITAB2SPM performs an approximate alignment of the anatomical volume
 % from ITAB towards SPM coordinates. Only the homogenous transformation matrix
@@ -31,3 +31,4 @@ itabvox2spmhead =  inv(spmhead2itabhead) * itabvox2itabhead;
 
 % change the transformation matrix, such that it returns SPM head coordinates
 mri.transform = itabvox2spmhead;
+mri.coordsys  = 'spm';
