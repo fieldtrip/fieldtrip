@@ -132,6 +132,7 @@ for iFrame = 1:floor(size(datavector,2)/cfg.samperframe)
   data_frame = mean(datavector(:,((iFrame-1)*cfg.samperframe)+1:iFrame*cfg.samperframe),2);
   % Draw topoplot:
   ft_plot_topo(chanX, chanY, data_frame, 'mask', lay.mask, 'outline', lay.outline, 'interpmethod', 'cubic');
+  caxis(cfg.zlim);
   %ft_plot_text(chanX, chanY, '.');
   axis off
   % plot comment
