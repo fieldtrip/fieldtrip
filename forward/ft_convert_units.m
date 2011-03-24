@@ -1,4 +1,4 @@
-function [obj] = ft_convert_units(obj, target);
+function [obj] = ft_convert_units(obj, target)
 
 % FT_CONVERT_UNITS changes the geometrical dimension to the specified SI unit.
 % The units of the input object is determined from the structure field
@@ -46,7 +46,7 @@ function [obj] = ft_convert_units(obj, target);
 %   3) try to apply the scaling to the known geometrical elements in the input object
 
 % determine the unit-of-dimension of the input object
-if isfield(obj, 'unit')
+if isfield(obj, 'unit') && ~isempty(obj.unit)
   % use the units specified in the object
   unit = obj.unit;
 else
