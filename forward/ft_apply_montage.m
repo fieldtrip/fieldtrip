@@ -142,18 +142,26 @@ end
 
 % reorder the columns of the montage matrix
 [selsens, selmont] = match_str(sens.label, montage.labelorg);
-montage.tra        = sparse(montage.tra(:,selmont));
+montage.tra        = double(sparse(montage.tra(:,selmont)));
 montage.labelorg   = montage.labelorg(selmont);
 
 if isfield(sens, 'labelorg') && isfield(sens, 'labelnew')
   % apply the montage on top of the other montage
   sens       = rmfield(sens, 'label');
-  sens.tra   = montage.tra * sens.tra;
+  if isa(sens.tra, 'single')
+    sens.tra = full(montage.tra) * sens.tra;
+  else
+    sens.tra = montage.tra * sens.tra;
+  end
   sens.labelnew = montage.labelnew;
 
 elseif isfield(sens, 'tra')
   % apply the montage to the sensor array
-  sens.tra   = montage.tra * sens.tra;
+  if isa(sens.tra, 'single')
+    sens.tra = full(montage.tra) * sens.tra;
+  else
+    sens.tra = montage.tra * sens.tra;
+  end
   sens.label = montage.labelnew;
 
 elseif isfield(sens, 'trial')
