@@ -1,4 +1,4 @@
-function ft_plot_ortho(dat, varargin)
+function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 
 % FT_PLOT_ORTHO plots a 3 orthographic cuts through a 3-D volume
 %
