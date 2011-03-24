@@ -83,6 +83,6 @@ switch class(a)
     % keep as it is
 
   otherwise
-    warning('not converting class %s', class(a))
+    warning_once(sprintf('not converting class %s', class(a)));
     % do nothing
 end

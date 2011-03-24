@@ -80,6 +80,6 @@ switch class(a)
     a = single(a);
 
   otherwise
-     warning('not converting class %s', class(a))
+     warning_once(sprintf('not converting class %s', class(a)));
     % do nothing
 end
