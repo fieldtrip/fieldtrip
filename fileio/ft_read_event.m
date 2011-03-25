@@ -661,32 +661,22 @@ switch eventformat
             event(eventCount).sample   = min(find(eventData(theEvent,((segment-1)*hdr.nSamples +1):segment*hdr.nSamples))) +(segment-1)*hdr.nSamples;
             event(eventCount).offset   = -hdr.nSamplesPre;
             event(eventCount).duration =  length(find(eventData(theEvent,((segment-1)*hdr.nSamples +1):segment*hdr.nSamples )>0))-1;
-            if event(eventCount).duration ~= hdr.nSamples 
-              event(eventCount).type     = 'trigger';
-            else
-              event(eventCount).type     = 'trial';
-            end;
+            event(eventCount).type     = 'trigger';
             event(eventCount).value    =  char(EventCodes(theEvent,:));
           end
         end
       end
     end
-
-    if eventCount > 0
-        if sum(strcmp('trial',{event.type})) ~= hdr.nTrials
-            for segment=1:hdr.nTrials  % cell information
-                eventCount=eventCount+1;
-                event(eventCount).type     = 'trial';
-                event(eventCount).sample   = (segment-1)*hdr.nSamples + 1;
-                event(eventCount).offset   = -hdr.nSamplesPre;
-                event(eventCount).duration =  hdr.nSamples;
-                if unsegmented,
-                    event(eventCount).value    = [];
-                else
-                    event(eventCount).value    =  char([CateNames{segHdr(segment,1)}(1:CatLengths(segHdr(segment,1)))]);
-                end
-            end
-        end;
+    
+    if ~unsegmented
+        for segment=1:hdr.nTrials  % cell information
+            eventCount=eventCount+1;
+            event(eventCount).type     = 'trial';
+            event(eventCount).sample   = (segment-1)*hdr.nSamples + 1;
+            event(eventCount).offset   = -hdr.nSamplesPre;
+            event(eventCount).duration =  hdr.nSamples;
+            event(eventCount).value    =  char([CateNames{segHdr(segment,1)}(1:CatLengths(segHdr(segment,1)))]);
+        end
     end;
 
   case 'eyelink_asc'
