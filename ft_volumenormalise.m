@@ -119,11 +119,14 @@ if ~isfield(interp,'anatomy'),
 end
 
 % ensure that the data has interpretable units and that the coordinate
-% system is in approximate spm space
+% system is in approximate spm space and keep track of an initial transformation
+% matrix that approximately does the co-registration
 if ~isfield(interp, 'unit'),     interp.unit     = cfg.units;    end
 if ~isfield(interp, 'coordsys'), interp.coordsys = cfg.coordsys; end
-interp = ft_convert_units(interp,    'mm');
-interp = ft_convert_coordsys(interp, 'spm');
+interp  = ft_convert_units(interp,    'mm');
+orig    = interp.transform;
+interp  = ft_convert_coordsys(interp, 'spm');
+initial = interp.transform / orig;
 
 % check if the required spm is in your path:
 if strcmpi(cfg.spmversion, 'spm2'),
@@ -241,7 +244,7 @@ flags.vox = [cfg.downsample,cfg.downsample,cfg.downsample];
 files     = {};
 
 % determine the affine source->template coordinate transformation
-final = VG.mat * inv(params.Affine) * inv(VF.mat);
+final = VG.mat * inv(params.Affine) * inv(VF.mat) * initial;
 
 % apply the normalisation parameters to each of the volumes
 for parlop=1:length(cfg.parameter)
