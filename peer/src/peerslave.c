@@ -623,11 +623,11 @@ int main(int argc, char *argv[]) {
 				/* switch the engine off after being idle for a certain time */
 				if ((matlabRunning!=0) && (difftime(time(NULL), matlabFinished)>enginetimeout)) {
 						if (engClose(en)!=0) {
-								DEBUG(LOG_CRIT, "could not stop the MATLAB engine");
+								DEBUG(LOG_ERR, "could not stop the MATLAB engine");
 								matlabRunning = 0;
 						}
 						else {
-								DEBUG(LOG_CRIT, "stopped idle MATLAB engine");
+								DEBUG(LOG_NOTICE, "stopped idle MATLAB engine");
 								matlabRunning = 0;
 						}
 				}
@@ -652,7 +652,7 @@ int main(int argc, char *argv[]) {
 
 						if (matlabRunning==0) {
 								/* start the matlab engine */
-								DEBUG(LOG_CRIT, "starting MATLAB engine");
+								DEBUG(LOG_NOTICE, "starting MATLAB engine");
 								if ((en = engOpen(startcmd)) == NULL) {
 										/* this is probably due to a licensing problem */
 										/* do not start again during the timeout period */
@@ -715,7 +715,7 @@ int main(int argc, char *argv[]) {
 								options = (mxArray *)mxDeserialize(job->opt, job->job->optsize);
 								jobid   = job->job->id;
 								peerid  = job->host->id;
-								DEBUG(LOG_CRIT, "executing job %d from %s@%s (jobid=%u, memreq=%lu, timreq=%lu)", ++jobnum, job->host->user, job->host->name, job->job->id, job->job->memreq, job->job->timreq);
+								DEBUG(LOG_NOTICE, "executing job %d from %s@%s (jobid=%u, memreq=%lu, timreq=%lu)", ++jobnum, job->host->user, job->host->name, job->job->id, job->job->memreq, job->job->timreq);
 								pthread_mutex_unlock(&mutexjoblist);
 
 								/* create a copy of the optin cell-array */
@@ -796,25 +796,25 @@ int main(int argc, char *argv[]) {
 								jobid   = job->job->id;
 								peerid  = job->host->id;
 								if (engineFailed) {
-										DEBUG(LOG_CRIT, "failed to execute job %d from %s@%s (engine)", jobnum, job->host->user, job->host->name);
+										DEBUG(LOG_ERR, "failed to execute job %d from %s@%s (engine)", jobnum, job->host->user, job->host->name);
 								}
 								else if (jobFailed==1) {
-										DEBUG(LOG_CRIT, "failed to execute job %d from %s@%s (argin)", jobnum, job->host->user, job->host->name);
+										DEBUG(LOG_ERR, "failed to execute job %d from %s@%s (argin)", jobnum, job->host->user, job->host->name);
 								}
 								else if (jobFailed==2) {
-										DEBUG(LOG_CRIT, "failed to execute job %d from %s@%s (optin)", jobnum, job->host->user, job->host->name);
+										DEBUG(LOG_ERR, "failed to execute job %d from %s@%s (optin)", jobnum, job->host->user, job->host->name);
 								}
 								else if (jobFailed==3) {
-										DEBUG(LOG_CRIT, "failed to execute job %d from %s@%s (eval)", jobnum, job->host->user, job->host->name);
+										DEBUG(LOG_ERR, "failed to execute job %d from %s@%s (eval)", jobnum, job->host->user, job->host->name);
 								}
 								else if (jobFailed==4) {
-										DEBUG(LOG_CRIT, "failed to execute job %d from %s@%s (argout)", jobnum, job->host->user, job->host->name);
+										DEBUG(LOG_ERR, "failed to execute job %d from %s@%s (argout)", jobnum, job->host->user, job->host->name);
 								}
 								else if (jobFailed==5) {
-										DEBUG(LOG_CRIT, "failed to execute job %d from %s@%s (optout)", jobnum, job->host->user, job->host->name);
+										DEBUG(LOG_ERR, "failed to execute job %d from %s@%s (optout)", jobnum, job->host->user, job->host->name);
 								}
 								else {
-										DEBUG(LOG_CRIT, "failed to execute job %d from %s@%s", jobnum, job->host->user, job->host->name);
+										DEBUG(LOG_ERR, "failed to execute job %d from %s@%s", jobnum, job->host->user, job->host->name);
 								}
 								pthread_mutex_unlock(&mutexjoblist);
 						}
@@ -1032,7 +1032,7 @@ cleanup:
 								announce_once();
 
 								matlabFinished = time(NULL);
-								DEBUG(LOG_CRIT, "executing job %d took %d seconds", jobnum, matlabFinished - matlabStart);
+								DEBUG(LOG_NOTICE, "executing job %d took %d seconds", jobnum, matlabFinished - matlabStart);
 						}
 				}
 				else {
