@@ -890,6 +890,10 @@ elseif filetype_check_extension(filename, '.lay')
   type = 'layout';
   manufacturer = 'Ole Jensen';
   content = 'layout of channels for plotting';
+elseif filetype_check_extension(filename, '.stl')
+  type = 'stl';
+  manufacturer = 'various';
+  content = 'stereo litography file';
 elseif filetype_check_extension(filename, '.dcm') || filetype_check_extension(filename, '.ima') || filetype_check_header(filename, 'DICM', 128)
   type = 'dicom';
   manufacturer = 'Dicom';
