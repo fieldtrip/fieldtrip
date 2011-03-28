@@ -1,22 +1,22 @@
-function [data] = ft_determine_coordsys(cfg, data)
+function [data] = ft_determine_coordsys(data, varargin)
 
 % FT_DETERMINECOORDSYS plots a geometrical object, allowing you to perform a visual
 % check on the coordinatesystem, the units and on the anatomical labels for the
 % coordinate system axes.
 %
 % Use as
-%   [dataout] = ft_checkcoordsys(cfg, datain)
+%   [dataout] = ft_checkcoordsys(datain, varargin)
 % where the input data structure can be
 %  - an anatomical MRI, which can be segmented
 %  - an electrode or gradiometer definition
 %  - a volume conduction model
 % or most other FieldTrip structures that represent geometrical information.
 %
-% The configuration options are
-%   cfg.interactive  = string, 'yes' or 'no' (default = 'yes')
+% The optional key-value pairs are
+%   interactive  = string, 'yes' or 'no' (default = 'yes')
 %
 % This function wil pop up a figure that allows you to check whether the
-% aligntment of the object relative to the coordinate system axes is correct
+% alignment of the object relative to the coordinate system axes is correct
 % and what the anatomical labels of the coordinate system axes are. You should
 % switch on the 3D rotation option in the figure panel to rotate and see the
 % figure from all angles. To change the anatomical labels of the coordinate
@@ -42,7 +42,7 @@ function [data] = ft_determine_coordsys(cfg, data)
 %
 % $Id$
 
-if ~isfield(cfg, 'interactive'), cfg.interactive = 'yes'; end
+dointeractive = ft_getopt(varargin, 'interactive', 'yes');
 
 dtype = ft_datatype(data);
 data  = ft_convert_units(data);
@@ -233,7 +233,7 @@ text(xdat(2,1),ydat(2,1),zdat(2,1),labelx{2},'color','y','fontsize',15,'linewidt
 text(xdat(2,2),ydat(2,2),zdat(2,2),labely{2},'color','y','fontsize',15,'linewidth',2);
 text(xdat(2,3),ydat(2,3),zdat(2,3),labelz{2},'color','y','fontsize',15,'linewidth',2);
 
-if strcmp(cfg.interactive, 'yes')
+if dointeractive,
   
   if ~isfield(data, 'coordsys') || isempty(data.coordsys)
     % default is yes
