@@ -45,7 +45,7 @@ function [obj] = ft_convert_coordsys(obj, target)
 % $Id: ft_convert_coordsys.m 2885 $
 
 if ~isfield(obj, 'coordsys') || isempty(obj.coordsys)
-  obj = ft_determine_coordsys([], obj);
+  obj = ft_determine_coordsys(obj, 'interactive', 'yes');
 end
 
 if strcmpi(target, obj.coordsys)
