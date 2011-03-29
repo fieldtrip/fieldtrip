@@ -452,9 +452,6 @@ elseif iseeg
 end % iseeg or ismeg
 
 % optionally apply leadfield rank reduction
-if strcmpi(reducerank,'yes') || strcmpi(reducerank,'no')
-  reducerank = istrue(reducerank);
-end
 if ~strcmp(reducerank, 'no') && reducerank<size(lf,2) && ~strcmp(ft_voltype(vol),'openmeeg')
   % decompose the leadfield
   [u, s, v] = svd(lf);
