@@ -142,7 +142,7 @@ if usefsample && usetime
 end
 
 % remember the original sampling frequency in the configuration
-cfg.origfs = data.fsample;
+cfg.origfs = double(data.fsample);
 
 if usefsample
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
