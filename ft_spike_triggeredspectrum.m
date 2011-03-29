@@ -150,7 +150,7 @@ for iTrial = 1:nTrials
     if hasSpike 
         % get all the samples at once without using loops
         hasTrial = spike.trial{spikesel} == iTrial;
-        ts       = spike.timestamp{spikesel}(hasTrial);
+        ts       = spike.time{spikesel}(hasTrial);
         spikesmp = nearest_nd(data.time{iTrial},ts); % this gives unique samples back     
 
         % calculate the phase shift based on difference between 'exact' and sample time
