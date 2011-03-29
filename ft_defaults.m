@@ -115,6 +115,11 @@ try
   ft_hastoolbox('connectivity', 1,1);
 end
 
+try 
+  % this can be used for distrubuted/parallel computing
+  ft_hastoolbox('peer', 1,1);
+end
+
 try
   % this contains specific code and examples for realtime processing
   ft_hastoolbox('realtime', 3, 1);             % not required
