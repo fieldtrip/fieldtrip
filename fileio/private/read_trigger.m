@@ -43,13 +43,14 @@ dataformat  = keyval('dataformat',  varargin);
 begsample   = keyval('begsample',   varargin);
 endsample   = keyval('endsample',   varargin);
 chanindx    = keyval('chanindx',    varargin);
-detectflank = keyval('detectflank', varargin);
+detectflank = keyval('detectflank', varargin); % can be up, down, both
 denoise     = keyval('denoise',     varargin); if isempty(denoise),     denoise = 1;      end
 trigshift   = keyval('trigshift',   varargin); if isempty(trigshift),   trigshift = 0;    end
 trigpadding = keyval('trigpadding', varargin); if isempty(trigpadding), trigpadding = 1;  end
 fixctf      = keyval('fixctf',      varargin); if isempty(fixctf),      fixctf = 0;       end
 fixneuromag = keyval('fixneuromag', varargin); if isempty(fixneuromag), fixneuromag = 0;  end
 fix4dglasgow= keyval('fix4dglasgow', varargin); if isempty(fix4dglasgow), fix4dglasgow = 0; end
+fixbiosemi  = keyval('fixbiosemi',   varargin); if isempty(fixbiosemi), fixbiosemi = 0; end
 
 if isempty(hdr)
   hdr = ft_read_header(filename);
@@ -80,6 +81,35 @@ if denoise
       dat(i,:) = 0;
     end
   end
+end
+
+if fixbiosemi
+  % find indices of negative numbers
+  signbit = find(dat < 0);
+  % make number positive and preserve bits 0-22
+  dat(signbit) = bitcmp(abs(dat(signbit))-1,32);
+  % apparently the 24 bits are still shifted by one byte
+  dat(signbit) = bitshift(dat(signbit),-8);
+  % re-insert the sign bit on its original location, i.e. bit24
+  dat(signbit) = dat(signbit)+(2^(24-1));
+  % typecast the data to ensure that the status channel is represented in 32 bits
+  dat = uint32(dat);
+  
+  byte1 = 2^8  - 1;
+  byte2 = 2^16 - 1 - byte1;
+  byte3 = 2^24 - 1 - byte1 - byte2;
+  
+  % get the respective status and trigger bits
+  trigger   = bitand(dat, bitor(byte1, byte2)); %  contained in the lower two bytes
+  
+  % in principle the following bits could also be used, but it would require looking at both flanks for the epoch, cmrange and battery
+  % if this code ever needs to be enabled, then it should be done consistently with the biosemi_bdf section in ft_read_event
+  % epoch   = int8(bitget(dat, 16+1));
+  % cmrange = int8(bitget(dat, 20+1));
+  % battery = int8(bitget(dat, 22+1));
+  
+  % below it will continue with the matrix "dat"
+  dat = trigger;
 end
 
 if fixctf

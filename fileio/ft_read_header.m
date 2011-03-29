@@ -340,6 +340,10 @@ switch headerformat
     % use the biosig toolbox if available
     ft_hastoolbox('BIOSIG', 1);
     hdr = read_biosig_header(filename);
+    % gdf always represents continuous data
+    hdr.nSamples    = hdr.nSamples*hdr.nTrials;
+    hdr.nTrials     = 1;
+    hdr.nSamplesPre = 0;
 
   case {'biosemi_bdf', 'bham_bdf'}
     hdr = read_biosemi_bdf(filename);
@@ -777,7 +781,7 @@ switch headerformat
     hdr.nSamples    = orig.nsamples;
     hdr.nSamplesPre = 0; % since continuous
     hdr.nTrials     = 1; % since continuous
-	hdr.orig        = []; % add chunks if present
+    hdr.orig        = []; % add chunks if present
 	
 	% add the contents of attached .res4 file to the .orig field similar to offline data
 	if isfield(orig, 'ctf_res4')

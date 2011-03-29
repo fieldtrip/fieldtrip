@@ -342,8 +342,18 @@ switch eventformat
   case {'biosig', 'gdf'}
     % FIXME it would be nice to figure out how sopen/sread return events
     % for all possible fileformats that can be processed with biosig
-    warning('BIOSIG does not have a consistent event representation, skipping events')
-    event = [];
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+    % the following applies to Biosemi data that is stored in the gdf format
+    statusindx = find(strcmp(hdr.label, 'STATUS'));
+    if length(statusindx)==1
+      % represent the rising flanks in the STATUS channel as events
+      event = read_trigger(filename, 'header', hdr, 'chanindx', statusindx, 'detectflank', 'up', 'fixbiosemi', true);
+    else
+      warning('BIOSIG does not have a consistent event representation, skipping events')
+      event = [];
+    end
 
   case 'brainvision_vmrk'
     fid=fopen(filename,'rt');
