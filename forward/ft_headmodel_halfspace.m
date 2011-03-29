@@ -8,18 +8,18 @@ function vol = ft_headmodel_halfspace(geom, Pc, varargin)
 %   geom.pnt = Nx3 vector specifying N points through which a plane is fitted 
 %   Pc       = 1x3 vector specifying the spatial position of a point lying in the conductive halfspace 
 %              (this determines the plane normal's direction)
+%   Additional optional arguments include:
+%   'method'   = 'monopole' or 'dipole' (default)
+%   'conductivity' = number ,  conductivity value of the conductive halfspace (default = 1)
+% 
 % Use as
 %   vol = ft_headmodel_halfspace(geom, Pc, varargin)
 %
-% Optional input arguments should be specified in key-value pairs and can
-% include
-%   the non-connductive halfspace)
-%   conductivity  = number,  conductivity value of the conductive halfspace
-%
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-cond  = keyval('conductivity', varargin); 
-if isempty(cond), cond = 1; warning('Unknown conductivity value (set to 1)'), end
+method = keyval('method',   varargin); if isempty(method), method='dipole'; end
+cond   = keyval('conductivity', varargin); 
+if isempty(cond), cond = 1; warning('Unknown conductivity value (set to 1)'); end
 
 % the description of this volume conduction model consists of the
 % description of the plane, and a point in the void halfspace
@@ -46,7 +46,14 @@ vol.cond  = cond;
 vol.pnt   = P(:)'; % a point that lies on the plane that separates the conductive tissue from the air
 vol.ori   = N(:)'; % a unit vector pointing towards the air
 vol.ori   = vol.ori/norm(vol.ori);
-vol.type  = 'halfspace';
+
+if strcmpi(method,'dipole')
+  vol.type  = 'halfspace';    
+elseif strcmpi(method,'monopole')
+  vol.type  = 'halfspace_monopole';    
+else
+  error('unknow method')
+end
 
 function [N,P] = fit_plane(X)
 % Fits a plane through a number of points in 3D cartesian coordinates

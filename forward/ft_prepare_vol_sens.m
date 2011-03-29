@@ -315,9 +315,9 @@ elseif iseeg
     case 'infinite'
       % nothing to do
 
-    case 'halfspace'
+    case {'halfspace', 'halfspace_monopole'}
       pnt    = sens.pnt;
-      if ft_voltype(vol,'halfspace')
+      if ft_voltype(vol,'halfspace') || ft_voltype(vol,'halfspace_monopole')
         d = dist(pnt);
         % scan the electrodes and reposition the ones which are in the
         % wrong halfspace (projected on the plane)
