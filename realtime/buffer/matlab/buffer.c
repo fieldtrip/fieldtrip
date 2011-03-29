@@ -91,6 +91,11 @@ void exitFun(void) {
             pthread_mutex_unlock(&mutexstatus);
     }
 
+	/* free the memory that is used for the header, data and events */
+	free_event();
+	free_data();
+	free_header();
+
 	/* clean up host/address/socket list and close open sockets */
 	while (firstHostPortSock != NULL) {
 		host_port_sock_list_item_t *hpsli = firstHostPortSock;

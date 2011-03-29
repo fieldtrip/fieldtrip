@@ -170,7 +170,6 @@ int open_connection(const char *hostname, int port) {
 		while (retry>0) {
 				if (connect(s, (struct sockaddr *)&sa, sizeof sa)<0) {
 						/* wait 5 miliseconds and try again */
-						perror("open_connection");
 						usleep(5000);
 						retry--;
 				}
@@ -180,6 +179,8 @@ int open_connection(const char *hostname, int port) {
 				}
 		}
 		if (retry==0) {
+				/* close the socket */
+				closesocket(s);
 				/* it failed on mutliple attempts, give up */
 				return -2;
 		}
