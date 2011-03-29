@@ -1,13 +1,13 @@
 classdef ft_mv_hmm < ft_mv_timeseries
 %FT_MV_HMM Hidden Markov Model with discrete state and continuous observations
 % 
+% input X is of size repetitions x features x timepoints
+%
 % refs
 % Pattern Recognition and Machine Learning, Bishop
 % BNT toolbox
 % 
 % NOTE:
-% - X and Y are represented as cell-arrays accommodates for multiple trials
-% - X(t,k) denotes the t-th time point for the k-th observation
 % - nhidden specifies the number of hidden states; this is used only when Y
 %   is absent or NaN
 %
@@ -19,9 +19,10 @@ classdef ft_mv_hmm < ft_mv_timeseries
 % 
 % k = ft_mv_hmm('verbose',true);
 % X = repmat(Y,[1 ncov]); X(X(:)==1) = randn(1,sum(X(:)==1)); X(X(:)==2) = 0.1+3*randn(1,sum(X(:)==2));
-% k = k.train(zscore(X),Y); % everything assumed observed
-% X = repmat(Y,[1 ncov]); X(X(:)==1) = randn(1,sum(X(:)==1)); X(X(:)==2) = 0.1+3*randn(1,sum(X(:)==2));
-% Z = k.predict(zscore(X));
+% X = reshape(X',[1 size(X,2) size(X,1)]);
+% Y = reshape(Y',[1 size(Y,2) size(Y,1)]);
+% k = k.train(X,Y); % everything assumed observed
+% Z = k.predict(X);
 % plot(Y,'k-');
 % hold on;
 % plot(Z,'ro');
@@ -42,9 +43,11 @@ classdef ft_mv_hmm < ft_mv_timeseries
     mixmat    % mixing matrix
     LL        % likelihood
     
-    nhidden   % number of hidden states
+    nhidden = 2  % number of hidden states; state assumed observed if hidden
     
     nmixture  % number of gaussian mixture components
+    
+    maxiter = 100; % max number of em iterations
     
   end
 
@@ -59,53 +62,22 @@ classdef ft_mv_hmm < ft_mv_timeseries
 
     function obj = train(obj,X,Y)
 
-      if ~iscell(X), X = {X}; end
-      for c=1:length(X)
-        X{c} = X{c}';
-      end
-      nobs = size(X{1},1);
+      % data represented as repetitions x features x timepoints
       
-      if nargin > 2 
+      X = permute(X,[2 3 1]);
         
-        if ~iscell(Y), Y = {Y}; end
+      if isempty(obj.nhidden) || (nargin==3 && (~all(isnan(Y(:)))))% Y assumed observed
 
-        K = 0;
-        for c=1:length(X)
-          Y{c} = Y{c}';
-          K = max(K,max(Y{c}));
-        end
-
-        obj.nhidden = 0;
-        
-      else        
-        Y = {};
-      end
-      
-      % in case of equal lengths we re-represent the timeseries
-      % as features x time x repetitions; this is more efficient
-      if length(unique(cellfun(@(x)(size(x,2)),X)))==1
-        Xt = zeros([size(X{1}) length(X)]);
-        for j=1:length(X)
-          Xt(:,:,j) = X{j};
-        end
-        X = Xt;
-        Y = cell2mat(Y);
-      end
-
-        
-      if isempty(obj.nhidden) % Y assumed observed
-        
-        % class labels converted to state over time
-        if size(Y,2) == 1
-         Y = repmat(Y,[1 size(X,2)]);
-        end
+        Y = permute(Y,[2 3 1]);
 
         nclasses = max(Y(:));
+        nobs = size(X,1);
         
         covprior = repmat(obj.cov_prior*eye(nobs,nobs), [1 1 nclasses]);
         
         [obj.prior, obj.transmat, obj.mu, obj.Sigma] = gausshmm_train_observed(X, Y, nclasses,'cov_type',obj.cov_type,...
           'tied_cov',obj.tied_cov,'cov_prior',covprior);
+        obj.mixmat = ones(size(obj.prior,1),1);
         
       else % Y assumed unobserved
 
@@ -133,7 +105,7 @@ classdef ft_mv_hmm < ft_mv_timeseries
         end
         
         [obj.LL, obj.prior, obj.transmat, obj.mu, obj.Sigma obj.mixmat] = ...
-          mhmm_em(X, prior0, transmat0, mu0, Sigma0, mixture,'cov_type',obj.cov_type,'max_iter',10);
+          mhmm_em(X, prior0, transmat0, mu0, Sigma0, mixture,'cov_type',obj.cov_type,'max_iter',obj.maxiter);
         
       end
         
@@ -142,35 +114,29 @@ classdef ft_mv_hmm < ft_mv_timeseries
     function post = test(obj,X)   
       % Viterbi decoding; outputs most likely path per sequence
      
-      if ~iscell(X), X={X}; end
+      post = cell(1,size(X,1));
       
-      post = cell(size(X));
-      
-      for c=1:size(X)
+      for c=1:size(X,1)
         
-        if ~isempty(X{c})
-          B = mixgauss_prob(X{c}', obj.mu, obj.Sigma);
-        else
-          B = ones(numel(obj.prior),size(X,2))/numel(obj.prior);
-        end
+        B = mixgauss_prob(reshape(X(c,:,:),[size(X,2) size(X,3)]), obj.mu, obj.Sigma);
         
         % NOTE: viterbi normalise clashes with afni normalise
         post{c} = viterbi_path(obj.prior, obj.transmat, B);
         
       end
       
+      if length(post)==1, post = post{1}; end
+      
     end
     
     function ll = likelihood(obj,X)
       % return the log likelihood of an observed sequence
       
-      if ~iscell(X), X={X}; end
+      ll = nan(size(X,1),1);
       
-      ll = nan(length(X),1);
+      for c=1:size(X,1)
       
-      for c=1:length(X)
-      
-         ll(c) = mhmm_logprob(X{c}', obj.prior, obj.transmat, obj.mu, obj.Sigma, obj.mixmat);
+         ll(c) = mhmm_logprob(reshape(X(c,:,:),[size(X,2) size(X,3)]), obj.prior, obj.transmat, obj.mu, obj.Sigma, obj.mixmat);
 
       end
       

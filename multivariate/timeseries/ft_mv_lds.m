@@ -1,6 +1,8 @@
 classdef ft_mv_lds < ft_mv_timeseries
 %FT_MV_LDS linear dynamical system 
 %
+% data X is represented as trials x features x timepoints
+%
 % state can be partially observed/unobserved during training.
 % partial observability of multiple observations is also supported
 % observations are normally distributed conditional on the state.
@@ -41,17 +43,18 @@ classdef ft_mv_lds < ft_mv_timeseries
 %
 % EXAMPLE:
 %
-% rand('seed',3); randn('seed',3);
+% rand('seed',2); randn('seed',2);
 % 
-% nsamples = 1000; ncov = 10; ncycles = 10;
-% Y = sin(ncycles * 2 * pi * (1:nsamples) ./ nsamples)';
+% nsamples = 100; ncov = 2; ncycles = 10; ntrials = 2; 
+% Y = sin(ncycles * 2 * pi * (1:nsamples) ./ nsamples);
+% X = repmat(reshape(Y,[1 1 numel(Y)]),[ntrials ncov 1]) + randn(ntrials,ncov,size(Y,2)); 
+% Y = repmat(reshape(Y,[1 1 numel(Y)]),[ntrials 1 1]);
 % 
 % k = ft_mv_lds('inference','smooth','verbose',true);
-% X = repmat(Y,[1 ncov]) + randn(size(Y,1),ncov); 
-% k = k.train(zscore(X),zscore(Y)); % everything assumed observed
-% X = repmat(Y,[1 ncov]) + randn(size(Y,1),ncov); 
-% Z = k.test(zscore(X));
-% plot(Z,'ko');
+% k = k.train(X,Y);
+% Z = k.test(X);
+% figure
+% plot(squeeze(Z(1,:,:))','k');
 % disp(mean(abs(Z - Y)));
 % 
 % k = ft_mv_lds('verbose',true);
@@ -61,7 +64,7 @@ classdef ft_mv_lds < ft_mv_timeseries
 % plot(Z,'ko');
 % disp(mean(abs(Z - Y)));
 % 
-% k = ft_mv_ldsMixed('inference','smooth','verbose',true);
+% k = ft_mv_lds('inference','smooth','verbose',true);
 % X = repmat(Y,[1 ncov]) + randn(size(Y,1),ncov); 
 % k = k.train(zscore(X),[zscore(Y) nan(size(Y))]); %mixture hidden+observed
 % X = repmat(Y,[1 ncov]) + randn(size(Y,1),ncov); 
@@ -107,10 +110,15 @@ classdef ft_mv_lds < ft_mv_timeseries
       % cast to cell array (multiple observation sequences)
       % representation as variables * timepoints
       if ~iscell(X)
-        X = {X'}; 
+        if ndims(X) ~= 3, error('input should be of size trials x features x time'); end
+        Xt = cell(1,size(X,1));
+        for c=1:length(Xt)
+          Xt{c} = reshape(X(c,:,:),[size(X,2) size(X,3)]);
+        end
+        X = Xt; clear Xt;
       else
         for c=1:length(X)
-          X{c} = X{c}';
+          X{c} = X{c};
         end
       end
       
@@ -125,7 +133,12 @@ classdef ft_mv_lds < ft_mv_timeseries
       else
         
         if ~iscell(Y)
-          Y = {Y'};
+          if ndims(Y) ~= 3, error('input should be of size trials x features x time'); end
+          Yt = cell(1,size(Y,1));
+          for c=1:length(Yt)
+            Yt{c} = reshape(Y(c,:,:),[size(Y,2) size(Y,3)]);
+          end
+          Y = Yt; clear Yt;
         else
           for c=1:length(Y)
             Y{c} = Y{c}';
@@ -136,7 +149,7 @@ classdef ft_mv_lds < ft_mv_timeseries
       
       % remove empty elements
       eidx = cellfun(@(x)(isempty(x)),X);
-      eidx = eidx & cellfun(@(x)(isempty(x)),Y(:));
+      eidx = eidx & cellfun(@(x)(isempty(x)),Y);
       X = X(~eidx);
       Y = Y(~eidx);
         
@@ -253,17 +266,21 @@ classdef ft_mv_lds < ft_mv_timeseries
     function [mu,V,loglik] = test(obj,X)   
      % LDS inference
 
-     if ~iscell(X), X = {X}; end
+     if ~iscell(X)
+       if ndims(X) ~= 3, error('input should be of size trials x features x time'); end
+       Xt = cell(1,size(X,1));
+       for c=1:length(Xt)
+         Xt{c} = squeeze(X(c,:,:));
+       end
+       X = Xt; clear Xt;
+     end
      
      nsets = length(X);
       
      mu = cell(1,nsets);
      for c=1:nsets
      
-       % representation as variables * timepoints
-       XX = X{c}';
-       
-       [m,V,loglik] = obj.filter(XX);
+       [m,V,loglik] = obj.filter(X{c});
        
        if strcmp(obj.inference,'smooth')
          [m,V] = obj.smooth(m,V);
@@ -272,9 +289,14 @@ classdef ft_mv_lds < ft_mv_timeseries
        mu{c} = m';
      
      end
-     
-     if length(nsets)==1
-       mu = mu{1};
+
+     % reshape if all sequences are of the same size
+     if numel(unique(cellfun(@(x)(size(x,1)),mu)))==1
+      Z = zeros(length(mu),size(mu{1},2),size(mu{1},1));
+      for z=1:length(mu)
+        Z(z,:,:) = mu{z}';
+      end
+      mu = Z;
      end
      
     end
@@ -500,13 +522,20 @@ classdef ft_mv_lds < ft_mv_timeseries
     function ll = likelihood(obj,X)
       % returns log likelihood of a sequence of observations
                
-      if ~iscell(X), X={X}; end
+      if ~iscell(X)
+        if ndims(X) ~= 3, error('input should be of size trials x features x time'); end
+        Xt = cell(1,size(X,1));
+        for c=1:length(Xt)
+          Xt{c} = squeeze(X(c,:,:));
+        end
+        X = Xt; clear Xt;
+      end
       
       ll = nan(length(X),1);
       
       for c=1:length(X)
       
-        [mu,V,ll(c)] = obj.filter(X{c}');
+        [mu,V,ll(c)] = obj.filter(X{c});
       
       end
       
