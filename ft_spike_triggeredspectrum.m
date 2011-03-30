@@ -28,6 +28,8 @@ function [freq] = ft_spike_triggeredspectrum(cfg, data, spike)
 %                      algorithm is typically 50-100 times faster because it calls FFT only 
 %                      once per trial (instead of nSpikes times).
 %                      In case an lfp segment contains NaNs, we use specest_nanfft.
+%   cfg.borderspikes = 'yes' (default) or 'no'. If 'yes', we process the spikes falling at the
+%                      border using the same taper for the LFP that falls within the trial.
 %
 % If the triggered spike leads a spike in another channel, then the angle
 % of the Fourier spectrum of that other channel will be negative. NOTE that
@@ -45,7 +47,8 @@ if ~isfield(cfg, 'spikechannel'),   cfg.spikechannel   = [];           end
 if ~isfield(cfg, 'feedback'),       cfg.feedback       = 'no';         end
 if ~isfield(cfg, 'algorithm'),      cfg.algorithm      = 'loop';       end
 if ~isfield(cfg, 'taperopt'),       cfg.taperopt       = [];           end
-
+if ~isfield(cfg,'borderspikes'),    cfg.borderspikes   = 'yes';        end
+  
 if strcmp(cfg.taper, 'sine')
   error('sorry, sine taper is not yet implemented');
 end
@@ -58,6 +61,8 @@ elseif strcmp(cfg.algorithm,'vectorized')
 else
   error('unrecognized option for cfg.algorithm')
 end
+
+doBorderSpikes = strcmp(cfg.borderspikes,'yes');
 
 % check whether a third input is specified
 hasSpike = nargin==3;
@@ -164,9 +169,25 @@ for iTrial = 1:nTrials
 
     % determine which spikes do not have their windows at the edges of the data
     nSpikes    = length(begsmp);
-    vldSpikes  = find(begsmp>=1&endsmp<=size(data.trial{iTrial},2)); % determine the valid spikes
+    vldSpikes    = begsmp>=1&endsmp<=size(data.trial{iTrial},2); % determine the valid spikes
+    earlySpikes  = begsmp<1 & spikesmp>=1;
+    lateSpikes   = spikesmp<=size(data.trial{iTrial},2) & endsmp>size(data.trial{iTrial},2);
+    if doBorderSpikes
+      vldSpikes  = find(vldSpikes(:) | earlySpikes(:) | lateSpikes(:));
+      begsmp(earlySpikes) = 1;
+      endsmp(earlySpikes) = numsmp;
+      endsmp(lateSpikes)  = size(data.trial{iTrial},2);
+      begsmp(lateSpikes)  = size(data.trial{iTrial},2)-numsmp+1;
+    else
+      vldSpikes  = find(vldSpikes);
+    end
+      
     nVld       = length(vldSpikes);
 
+    % we want to process the incomplete spikes, also with hann window
+    
+    % determine the new begsmp and endsmp for the spikes that fall around the border, we should not
+    % discard these, esp. not for low frequencies.
     fprintf('processing trial %d of %d (%d spikes)\n', iTrial, nTrials, sum(nSpikes));
 
     % store the spiketimes and spiketrials, constructing a type of SPIKE format
@@ -177,7 +198,33 @@ for iTrial = 1:nTrials
     
     % preallocate the spectrum that we create, also the spikes that will have NaNs
     spectrum{iTrial} = NaN(nSpikes, nchansel, nFreqs); 
-
+    rephaseMat = rephase(:,ones(1,nVld),ones(1,nchansel));
+    if doBorderSpikes && sum(earlySpikes)>0
+      for k = find(earlySpikes)        
+        spk = zeros(numsmp,1);
+        spk(spikesmp(k)) = 1;
+        spike_fft = fft(spk);
+        spike_fft = spike_fft(fbeg:fend);
+        spike_fft = spike_fft./abs(spike_fft);
+        reph   = conj(spike_fft);
+        rephaseMat(:,k,:) = repmat(reph,[1 1 nchansel]);
+      end
+    end
+    if doBorderSpikes && sum(lateSpikes)>0
+      n  = size(data.trial{iTrial},2);
+      bg = n-numsmp; 
+      for k = find(lateSpikes)        
+        spk = zeros(numsmp,1);
+        spk(spikesmp(k)-bg) = 1;
+        spike_fft = fft(spk);
+        spike_fft = spike_fft(fbeg:fend);
+        spike_fft = spike_fft./abs(spike_fft);
+        reph   = conj(spike_fft);
+        rephaseMat(:,k,:) = repmat(reph,[1 1 nchansel]);
+      end
+    end
+    
+    
     if nVld<1,continue,end % continue to the next trial if this one does not contain valid spikes
 
     if ~doLoop
@@ -187,11 +234,10 @@ for iTrial = 1:nTrials
 
       % form the indices to index the LFP at once
       segment = linspacevec(begsmp(vldSpikes),endsmp(vldSpikes),numsmp)';
-
+      
       % cut out all windows at once to form a large 2-D matrix
       segment = lfp(segment,:,:);
       segment = reshape(segment,[numsmp nVld nchansel]);
-
       segmentMean = repmat(nanmean(segment,1),[numsmp 1 1]); % nChan x Numsmp
       segment     = segment - segmentMean; % LFP has average of zero now (no DC)
       segmentMean = []; % remove to save memory
