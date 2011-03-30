@@ -405,4 +405,34 @@ if (sum(szY>1)>1 || length(szY)>2) % in this case we are dealing with a matrix
   indx = reshape(indx,[szY]);
 end
 
+function y = linspacevec(d1, d2, n)
+
+%LINSPACEVEC Linearly spaced matrix with different stop and end values.
+% Example:
+% d1 = 1:10;
+% d2   = 11:2:30;
+% n = 10;
+% indx = linspacevec(d1,d2,n)
+
+%   Copyright 2008 Vinck
+
+if nargin == 2
+    n = 100;
+end
+
+d1 = d1(:);
+d2 = d2(:);
+
+d = d2-d1;
+if numel(d1)==1
+    n = double(n);
+    y = [d1+(0:n-2)*d/(floor(n)-1) d2];
+else    
+    D = d(:,ones(n-1,1));
+    v = (0:n-2)';
+    N = v(:,ones(length(d1),1))';
+    D1 = d1(:,ones(n-1,1));
+    y = [D1+N.*D/(n-1) d2];
+end
+
   
