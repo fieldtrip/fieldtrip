@@ -25,18 +25,18 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 %  and the anatomical data is defined on an irregular point cloud (can be a
 %  2D triangulated mesh).
 %
-% -The functional data is defined on a 3D regular grid of source positions 
-%  and the anatomical data is a volumetric image. 
+% -The functional data is defined on a 3D regular grid of source positions
+%  and the anatomical data is a volumetric image.
 %
-% The functional and anatomical data should be expressed in the same 
+% The functional and anatomical data should be expressed in the same
 % coordinate sytem, i.e. either both in CTF coordinates (NAS/LPA/RPA)
-% or both in SPM coordinates (AC/PC). 
-% 
+% or both in SPM coordinates (AC/PC).
+%
 % The output data will contain a description of the functional data at the
 % locations at which the anatomical data are defined. For example, if the
 % anatomical data was volumetric, the output data is a volume-structure,
 % containing the resliced source and the anatomical volume that can be
-% plotted together, using FT_SOURCEPLOT or FT_SLICEINTERP, 
+% plotted together, using FT_SOURCEPLOT or FT_SLICEINTERP,
 % or that can be written to file using FT_SOURCEWRITE.
 %
 % Use as
@@ -46,9 +46,9 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 %   source is the output of FT_SOURCEANALYSIS
 %   stat   is the output of FT_SOURCESTATISTICS
 %   mri    is the output of FT_READ_MRI or the filename of a MRI,
-%            or 
+%            or
 %          the output of FT_READ_HEADSHAPE or the filename of a file
-%            containing the description of a cortical sheet. 
+%            containing the description of a cortical sheet.
 % and cfg is a structure with any of the following fields
 %   cfg.parameter     = string, default is 'all'
 %   cfg.interpmethod  = 'linear', 'cubic', 'nearest' or 'spline' when
@@ -123,26 +123,37 @@ if hasdata && hasinputfile
   error('cfg.inputfile should not be used in conjunction with giving input data to this function');
 end
 
-% load optional given inputfile as data
+% load optional given *.mat inputfile as data
 if hasinputfile
   functional = loadvar(cfg.inputfile{1});
   anatomical = loadvar(cfg.inputfile{2});
 end
 
+% read the anatomical MRI or cortical mesh from file
 if ischar(anatomical)
-  % read the anatomical MRI data from file
-  fprintf('reading anatomical data\n');
   try
+    fprintf('trying to read anatomical MRI from file\n');
     anatomical = ft_read_mri(anatomical);
   catch
-    warning('anatomical data does not seem to be a 3D volumetric MRI');
-    try
-      anatomical = ft_read_headshape(anatomical);
-    catch
-      error('anatomical data does not seem to be a 3D volumetric MRI, nor does it resemble a cortical mesh');
-    end
+    fprintf('anatomical file does not seem to be an anatomical MRI\n');
   end
-end
+end % if ischar
+
+if ischar(anatomical)
+  try
+    fprintf('trying to read cortical mesh from file\n');
+    anatomical = ft_read_headshape(anatomical);
+    continue
+  catch
+    fprintf('anatomical file does not seem to be a cortical mesh\n');
+  end
+end % if ischar
+
+if ischar(anatomical)
+  % if it ends up here, it means that all previous attempts failed
+  error('the anatomical file does not seem to contain an anatomical MRI, nor a cortical mesh');
+end % if ischar
+
 
 if isfield(anatomical, 'pnt')
   % anatomical data consists of a mesh, but no smudging possible
@@ -187,14 +198,14 @@ if dosmudge && is2Dana && is2Dfun
   end
   interp.inside = (1:size(interp.pos,1))';
   interp.outside = [];
-
+  
   for k = 1:numel(cfg.parameter)
     interp = setsubfield(interp, cfg.parameter{k}, interpmat*getsubfield(functional, cfg.parameter{k}));
   end
-
+  
 elseif is2Dana && is2Dfun
-
-  % 'interp_ungridded' 
+  
+  % 'interp_ungridded'
   error('not yet implemented');
   
 elseif ~is2Dana && is2Dfun
@@ -207,9 +218,9 @@ elseif ~is2Dana && is2Dfun
   % get voxel indices and use interp_ungridded
   dim       = anatomical.dim;
   [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
-
+  
   interpmat = interp_ungridded(functional.pos, warp_apply(anatomical.transform, [X(:) Y(:) Z(:)]), ...
-               'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius); %FIXME include other key-value pairs as well
+    'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius); %FIXME include other key-value pairs as well
   clear X Y Z;
   
   interp = [];
@@ -221,7 +232,7 @@ elseif ~is2Dana && is2Dfun
   for k = 1:numel(cfg.parameter)
     interp = setsubfield(interp, cfg.parameter{k}, reshape(interpmat*getsubfield(functional, cfg.parameter{k}),dim));
   end
-
+  
 elseif is2Dana && ~is2Dfun
   
   % interpolate the 3D volume onto the anatomy
@@ -233,8 +244,8 @@ elseif is2Dana && ~is2Dfun
   dim       = functional.dim;
   [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
   
-  interpmat  = interp_ungridded([X(:) Y(:) Z(:)], warp_apply(inv(functional.transform), anatomical.pnt), ..., 
-                'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius);
+  interpmat  = interp_ungridded([X(:) Y(:) Z(:)], warp_apply(inv(functional.transform), anatomical.pnt), ...,
+    'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius);
   clear X Y Z;
   
   interp = [];
