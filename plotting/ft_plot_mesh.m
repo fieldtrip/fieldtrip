@@ -144,7 +144,7 @@ end
 if size(pnt,1)==numel(facealpha)
   set(hs, 'FaceVertexAlphaData', facealpha);
   set(hs, 'FaceAlpha', 'interp');
-elseif numel(facealpha)==1
+elseif ~isempty(pnt) && numel(facealpha)==1
   set(hs, 'FaceAlpha', facealpha);
 end
 
