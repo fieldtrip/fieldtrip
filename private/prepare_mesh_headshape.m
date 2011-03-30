@@ -33,7 +33,7 @@ elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
   headshape.pnt = cfg.headshape;
 elseif ischar(cfg.headshape)
   % read the headshape from file
-  headshape = read_headshape(cfg.headshape);
+  headshape = ft_read_headshape(cfg.headshape);
 else
   error('cfg.headshape is not specified correctly')
 end
