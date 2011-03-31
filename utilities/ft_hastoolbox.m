@@ -98,6 +98,7 @@ url = {
   'FREESURFER' 'see http://surfer.nmr.mgh.harvard.edu/fswiki'
   'SIMBIO'     'see https://www.mrt.uni-jena.de/simbio/index.php/Main_Page'
   'FNS'        'see http://hhvn.nmsu.edu/wiki/index.php/FNS'
+  'GIFTI'      'see http://www.artefact.tk/software/matlab/gifti'
   };
 
 if nargin<2
@@ -219,6 +220,8 @@ switch toolbox
     status  = exist('elecsfwd', 'file') && exist('img_get_gray', 'file');
   case 'SIMBIO'
     status  = exist('ipm_linux_opt_Venant', 'file');
+  case 'GIFTI'
+    status  = exist('gifti', 'file');
   otherwise
     if ~silent, warning('cannot determine whether the %s toolbox is present', toolbox); end
     status = 0;
