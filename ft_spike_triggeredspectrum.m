@@ -69,19 +69,19 @@ hasSpike = nargin==3;
 
 % do the selection of the spikechannels
 if hasSpike,
-  label = spike.label;
+  spikelabel = spike.label;
 else
-  label = data.label;
+  spikelabel = data.label;
 end
   
 % determine the channels to be averaged
-cfg.channel = ft_channelselection(cfg.channel, label);
-chansel     = match_str(label, cfg.channel); % selected channels
+cfg.channel = ft_channelselection(cfg.channel, data.label);
+chansel     = match_str(data.label, cfg.channel); % selected channels
 nchansel    = length(cfg.channel);                % number of channels
 
 % get the spikechannels
-cfg.spikechannel = ft_channelselection(cfg.spikechannel, label);
-spikesel         = match_str(label, cfg.spikechannel);
+cfg.spikechannel = ft_channelselection(cfg.spikechannel, spikelabel);
+spikesel         = match_str(spikelabel, cfg.spikechannel);
 nspikesel        = length(cfg.spikechannel); % number of spike channels
 if nspikesel~=1, error('MATLAB:ft_spike_triggeredspectrum:cfg:spiketriggeredspectrum:notOneSelected',...
                     'Onle one spike channel can be selected at a time'); 
