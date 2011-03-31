@@ -134,6 +134,12 @@ switch fileformat
 
   case 'itab_asc'
     shape = read_itab_asc(filename);
+    
+  case 'gifti'
+    ft_hastoolbox('gifti', 1);
+    g = gifti(filename);
+    shape.pnt = warp_apply(g.mat, g.vertices);
+    shape.tri = g.faces;
 
   case 'neuromag_mex'
     [co,ki,nu] = hpipoints(filename);
