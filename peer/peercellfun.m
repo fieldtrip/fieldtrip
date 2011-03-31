@@ -393,7 +393,7 @@ while ~all(submitted) || ~all(collected)
   end
   if any(submitted) && any(busy)
     % update based on the time already spent on the slowest job
-    elapsed = toc(stopwatch) - min(submittime(submitted(busy)));
+    elapsed = toc(stopwatch) - min(submittime(submitted & busy));
     timreq  = max(timreq, elapsed);
     timreq  = max(timreq, mintimreq);
   end
