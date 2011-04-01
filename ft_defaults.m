@@ -44,16 +44,16 @@ list = which('spm', '-all');
 if length(list)>1
   [ws warned] = warning_once('multiple versions of SPM on your path will confuse FieldTrip');
   if warned % only throw the warning once
-      for i=1:length(list)
-          warning('one version of SPM is found here: %s', list{i});
-      end
+    for i=1:length(list)
+      warning('one version of SPM is found here: %s', list{i});
+    end
   end
 end
 
 if isempty(which('ft_hastoolbox'))
   % the fieldtrip/utilities directory contains the ft_hastoolbox function
   % which is required for the remainder of this script
-  addpath(fullfile(fileparts(which('ft_defaults')), 'utilities'));
+  path(path, fullfile(fileparts(which('ft_defaults')), 'utilities'));
 end
 
 try
@@ -61,7 +61,7 @@ try
   ft_hastoolbox('compat', 3, 1); % not required
 end
 
-try 
+try
   % this directory contains the backward compatibility wrappers for the fieldtrip/utilities functions
   ft_hastoolbox('utilities/compat', 3, 1);
 end
@@ -110,12 +110,12 @@ try
   ft_hastoolbox('plotting/compat', 1, 1);
 end
 
-try 
+try
   % this contains the functions to compute connecitivy metrics
   ft_hastoolbox('connectivity', 1,1);
 end
 
-try 
+try
   % this can be used for distrubuted/parallel computing
   ft_hastoolbox('peer', 1,1);
 end
@@ -126,7 +126,7 @@ try
   ft_hastoolbox('realtime/datasource', 3, 1);  % not required
 end
 
-try 
+try
   % this contains intermediate-level functions for spectral analysis
   ft_hastoolbox('specest', 1, 1);
 end
