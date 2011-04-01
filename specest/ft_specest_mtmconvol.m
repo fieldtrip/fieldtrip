@@ -204,9 +204,8 @@ switch dimord
     for ifreqoi = 1:nfreqoi
       str = sprintf('frequency %d (%.2f Hz), %d tapers', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
       [st, cws] = dbstack;
-      if strcmp(st(2).name, 'ft_freqanalysis')
-        % specest_mtmconvol has been called by ft_freqanalysis, meaning that
-        % ft_progress has been initialised
+      if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis')
+        % specest_mtmconvol has been called by ft_freqanalysis, meaning that ft_progress has been initialised
         ft_progress(fbopt.i./fbopt.n, ['trial %d, ',str,'\n'], fbopt.i);
       else
         fprintf([str, '\n']);
@@ -248,9 +247,8 @@ switch dimord
     for ifreqoi = 1:nfreqoi
       str = sprintf('frequency %d (%.2f Hz), %d tapers', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
       [st, cws] = dbstack;
-      if strcmp(st(2).name, 'ft_freqanalysis')
-        % specest_mtmconvol has been called by ft_freqanalysis, meaning that
-        % ft_progress has been initialised
+      if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis')
+        % specest_mtmconvol has been called by ft_freqanalysis, meaning that ft_progress has been initialised
         ft_progress(fbopt.i./fbopt.n, ['trial %d, ',str,'\n'], fbopt.i);
       else
         fprintf([str, '\n']);
