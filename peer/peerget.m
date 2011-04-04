@@ -35,7 +35,7 @@ function varargout = peerget(jobid, varargin)
 persistent previous_varargin previous_timeout previous_sleep previous_output previous_diary previous_StopOnError
 
 if isequal(previous_varargin, varargin)
-  % prevent the keyval function from being called, because it is slow
+  % prevent the ft_getopt function from being called, because it is slow
   % reuse the values from the previous call
   timeout     = previous_timeout;
   sleep       = previous_sleep;
@@ -44,11 +44,11 @@ if isequal(previous_varargin, varargin)
   StopOnError = previous_StopOnError;
 else
   % get the optional arguments
-  timeout     = keyval('timeout', varargin); if isempty(timeout), timeout=1;          end
-  sleep       = keyval('sleep',   varargin); if isempty(sleep),   sleep=0.01;         end
-  output      = keyval('output',  varargin); if isempty(output),  output='varargout'; end
-  diary       = keyval('diary',   varargin); if isempty(diary),   diary='error';      end
-  StopOnError = keyval('StopOnError', varargin); if isempty(StopOnError), StopOnError = true; end
+  timeout     = ft_getopt(varargin, 'timeout',     1.000);
+  sleep       = ft_getopt(varargin, 'sleep',       0.010);
+  output      = ft_getopt(varargin, 'output',      'varargout');
+  diary       = ft_getopt(varargin, 'diary',       'error');
+  StopOnError = ft_getopt(varargin, 'StopOnError', true);
 end
 
 % keep track of the time
@@ -76,10 +76,10 @@ end % while
 if success
 
   % look at the optional arguments
-  elapsed     = keyval('elapsed',  options);
-  warn        = keyval('lastwarn', options);
-  err         = keyval('lasterr',  options);
-  diarystring = keyval('diary',    options);
+  elapsed     = ft_getopt(options, 'elapsed');
+  warn        = ft_getopt(options, 'lastwarn');
+  err         = ft_getopt(options, 'lasterr');
+  diarystring = ft_getopt(options, 'diary');
 
   if strcmp(diary, 'error') && ~isempty(err) && ~strcmp(err, 'could not start the matlab engine')
     fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');

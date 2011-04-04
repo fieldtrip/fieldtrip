@@ -52,31 +52,31 @@ try
   end
 
   % check whether a diary file should be created
-  usediary = keyval('diary', optin);
+  usediary = ft_getopt(optin, 'diary');
   usediary = any(strcmp(usediary, {'always', 'warning', 'error'}));
 
   % check whether a watchdog should be set
-  masterid = []; % FIXME keyval('masterid', optin);
-  timallow = []; % FIXME keyval('timallow', optin);
-  memallow = []; % FIXME keyval('memallow', optin);
+  masterid = []; % FIXME ft_getopt(optin, 'masterid');
+  timallow = []; % FIXME ft_getopt(optin, 'timallow');
+  memallow = []; % FIXME ft_getopt(optin, 'memallow');
   if ~isempty(masterid) || ~isempty(timallow) || ~isempty(memallow)
     watchdog(masterid, time+timallow, memallow);
   end
 
   % try setting the same path directory
-  option_path = keyval('path', optin);
+  option_path = ft_getopt(optin, 'path');
   setcustompath(option_path);
 
   % try changing to the same working directory
-  option_pwd = keyval('pwd', optin);
+  option_pwd = ft_getopt(optin, 'pwd');
   setcustompwd(option_pwd);
 
   % try assigning the same global variables
-  option_global = keyval('global', optin);
+  option_global = ft_getopt(optin, 'global');
   setglobal(option_global);
 
   % seed the random number generator
-  option_randomseed = keyval('randomseed', optin);
+  option_randomseed = ft_getopt(optin, 'randomseed');
   if ~isempty(option_randomseed)
     if matlabversion(-inf, '2008a')
       % in older Matlab versions it worked like this

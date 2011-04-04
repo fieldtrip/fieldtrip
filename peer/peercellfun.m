@@ -56,21 +56,18 @@ end
 optbeg = find(cellfun(@ischar, varargin));
 optarg = varargin(optbeg:end);
 
-% assert that the user does not specify obsolete options
-keyvalcheck(optarg, 'forbidden', {'timcv', 'ResubmitTime'});
-
 % get the optional input arguments
-UniformOutput = keyval('UniformOutput', optarg); if isempty(UniformOutput), UniformOutput=false; end
-StopOnError   = keyval('StopOnError',   optarg); if isempty(StopOnError),   StopOnError=true;    end
-RetryOnError  = keyval('RetryOnError',  optarg); if isempty(RetryOnError),  RetryOnError=0.05;   end
-MaxBusy       = keyval('MaxBusy',       optarg); if isempty(MaxBusy),       MaxBusy=inf;         end
-timreq        = keyval('timreq',        optarg); 
-mintimreq     = keyval('mintimreq',     optarg); 
-memreq        = keyval('memreq',        optarg);
-minmemreq     = keyval('minmemreq',     optarg); 
-sleep         = keyval('sleep',         optarg); if isempty(sleep),         sleep=0.05;          end
-diary         = keyval('diary',         optarg); if isempty(diary),         diary='error';       end % 'always', 'never', 'warning', 'error'
-order         = keyval('order',         optarg); if isempty(order),         order='random';      end % 'random', 'original'
+UniformOutput = ft_getopt(optarg, 'UniformOutput', false   );
+StopOnError   = ft_getopt(optarg, 'StopOnError',   true    );
+MaxBusy       = ft_getopt(optarg, 'MaxBusy',       inf     );
+RetryOnError  = ft_getopt(optarg, 'RetryOnError',  0.050   ); % ratio, fraction of the total jobs
+sleep         = ft_getopt(optarg, 'sleep',         0.050   ); % time in seconds
+diary         = ft_getopt(optarg, 'diary',         'error' ); % 'always', 'never', 'warning', 'error'
+order         = ft_getopt(optarg, 'order',         'random'); % 'random', 'original'
+timreq        = ft_getopt(optarg, 'timreq',        []      ); 
+mintimreq     = ft_getopt(optarg, 'mintimreq',     []      ); 
+memreq        = ft_getopt(optarg, 'memreq',        []      );
+minmemreq     = ft_getopt(optarg, 'minmemreq',     []      ); 
 
 if isempty(timreq) && isempty(mintimreq)
   % assume an initial job duration of 1 hour
@@ -373,8 +370,8 @@ while ~all(submitted) || ~all(collected)
 
     % gather the job statistics
     % these are empty in case an error happened during remote evaluation, therefore the default value of NaN is specified
-    timused(collect) = keyval('timused', options, nan);
-    memused(collect) = keyval('memused', options, nan);
+    timused(collect) = ft_getopt(options, 'timused', nan);
+    memused(collect) = ft_getopt(options, 'memused', nan);
 
   end % for joblist
 

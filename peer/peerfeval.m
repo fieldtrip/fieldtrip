@@ -94,13 +94,13 @@ optbeg = find(optbeg);
 optarg = varargin(optbeg:end);
 
 % get the optional input arguments
-timeout = keyval('timeout', optarg); if isempty(timeout), timeout = inf; end
-sleep   = keyval('sleep',   optarg); if isempty(sleep), sleep=0.05; end
-memreq  = keyval('memreq',  optarg); if isempty(memreq), memreq=0; end
-cpureq  = keyval('cpureq',  optarg); if isempty(cpureq), cpureq=0; end
-timreq  = keyval('timreq',  optarg); if isempty(timreq), timreq=0; end
-hostid  = keyval('hostid',  optarg);
-diary   = keyval('diary',   optarg);
+timeout = ft_getopt(optarg, 'timeout', inf);
+sleep   = ft_getopt(optarg, 'sleep',   0.05);
+memreq  = ft_getopt(optarg, 'memreq',  0);
+cpureq  = ft_getopt(optarg, 'cpureq',  0);
+timreq  = ft_getopt(optarg, 'timreq',  0);
+hostid  = ft_getopt(optarg, 'hostid',  []);
+diary   = ft_getopt(optarg, 'diary',   []);
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
