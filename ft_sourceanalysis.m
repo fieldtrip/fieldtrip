@@ -919,15 +919,14 @@ end % if freq or timelock data
 % clean up and collect the results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if isfield(grid, 'xgrid')
-  % the dipoles are placed on a regular grid that is aligned with the carthesian axes
-  % copy the description of the grid axes
-  source.xgrid = grid.xgrid;
-  source.ygrid = grid.ygrid;
-  source.zgrid = grid.zgrid;
-  source.dim   = [length(source.xgrid) length(source.ygrid) length(source.zgrid)];
-else
-  source.dim   = [size(grid.pos,1) 1];
+if isfield(grid, 'dim')
+  % the source reconstruction was perfomed on a regular 3d volume, remember the dimensions of the volume
+  source.dim = grid.dim;
+end
+
+if isfield(grid, 'tri')
+  % the source reconstruction was perfomed on a tesselated cortical sheet, remember the triangles
+  source.tri = grid.tri;
 end
 
 if istimelock

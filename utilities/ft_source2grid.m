@@ -43,6 +43,11 @@ try, grid.xgrid   = source.xgrid; end
 try, grid.ygrid   = source.ygrid; end
 try, grid.zgrid   = source.zgrid; end
 try, grid.dim     = source.dim;   end
+try, grid.tri     = source.tri;   end % only in case of a tesselated/triangulated cortical sheet source model
+
+if ~isfield(grid, 'dim') && isfield(grid, 'xgrid') && isfield(grid, 'ygrid') && isfield(grid, 'zgrid') 
+  grid.dim = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
+end
 
 if issubfield(source, 'filter')
   grid.filter = source.filter;
