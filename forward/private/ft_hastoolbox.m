@@ -39,7 +39,7 @@ function [status] = ft_hastoolbox(toolbox, autoadd, silent)
 % use efficient handling if the same toolbox has been investigated before
 persistent previous previouspath
 
-if ~isequal(previouspath, matlabpath)
+if ~isequal(previouspath, path)
   previous = [];
 end
 
@@ -295,7 +295,7 @@ end
 
 % remember the previous path, allows us to determine on the next call
 % whether the path has been modified outise of this function
-previouspath = matlabpath;
+previouspath = path;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function
