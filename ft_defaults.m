@@ -53,7 +53,7 @@ end
 if isempty(which('ft_hastoolbox'))
   % the fieldtrip/utilities directory contains the ft_hastoolbox function
   % which is required for the remainder of this script
-  path(path, fullfile(fileparts(which('ft_defaults')), 'utilities'));
+  addpath(fullfile(fileparts(which('ft_defaults')), 'utilities'));
 end
 
 try
