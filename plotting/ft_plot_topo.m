@@ -1,4 +1,4 @@
-function Zi = ft_plot_topo(chanX, chanY, dat, varargin)
+function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 
 % FT_PLOT_TOPO interpolates and plots the 2-D spatial topography of the
 % potential or field distribution over the head
