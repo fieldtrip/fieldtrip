@@ -189,6 +189,11 @@ if voxflag == 0 && sensflag == 0
     Cval = [];
 end
 
+% add the version details of this function call to the configuration
+Cval.cfg.version.name   = mfilename('fullpath');
+Cval.cfg.version.id     = '$Id$';
+Cval.cfg.version.matlab = version(); % Matlab version used
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [minstat] = minimumstatistics(variable1, variable2)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
