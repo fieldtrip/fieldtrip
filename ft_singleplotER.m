@@ -1,11 +1,11 @@
-function [cfg] = ft_singleploter(cfg, varargin)
+function [cfg] = ft_singleplotER(cfg, varargin)
 
-% ft_singleploter plots the event-related fields or potentials of a single channel
+% ft_singleplotER plots the event-related fields or potentials of a single channel
 % or the average over multiple channels. multiple datasets can be overlayed.
 %
 % use as:
-%   ft_sinlgeploter(cfg, data)
-%   ft_singleploter(cfg, data1, data2, ..., datan)
+%   ft_singleplotER(cfg, data)
+%   ft_singleplotER(cfg, data1, data2, ..., datan)
 %
 % the data can be an erp/erf produced by ft_timelockanalysis, a powerspectrum
 % produced by ft_freqanalysis or a coherencespectrum produced by ft_freqdescriptives.
@@ -49,7 +49,7 @@ function [cfg] = ft_singleploter(cfg, varargin)
 % corresponding to the input structure.
 %
 % see also:
-%   ft_singleplottfr, ft_multiploter, ft_multiplottfr, ft_topoploter, ft_topoplottfr
+%   ft_singleplotTFR, ft_multiplotER, ft_multiplotTFR, ft_topoplotER, ft_topoplotTFR
 
 % this function depends on ft_timelockbaseline which has the following options:
 % cfg.baseline, documented
@@ -76,7 +76,7 @@ function [cfg] = ft_singleploter(cfg, varargin)
 %    you should have received a copy of the gnu general public license
 %    along with fieldtrip. if not, see <http://www.gnu.org/licenses/>.
 %
-% $id: ft_singleploter.m 3147 2011-03-17 12:38:09z jansch $
+% $id: ft_singleplotER.m 3147 2011-03-17 12:38:09z jansch $
 
 ft_defaults
 
@@ -306,7 +306,7 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.zparam)
     
     % interactively select the reference channel
     if strcmp(cfg.cohrefchannel, 'gui')
-        error('cfg.cohrefchannel = ''gui'' is not supported in ft_singleploter');
+        error('cfg.cohrefchannel = ''gui'' is not supported in ft_singleplotER');
     end
     
     for i=1:ndata
@@ -345,9 +345,9 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.zparam)
                 meandir = 1;
                 
             elseif strcmp(cfg.matrixside, 'ff-fd')
-                error('cfg.matrixside = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_topoploter');
+                error('cfg.matrixside = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_topoplotER');
             elseif strcmp(cfg.matrixside, 'fd-ff')
-                error('cfg.matrixside = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_topoploter');
+                error('cfg.matrixside = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_topoplotER');
             end %if matrixside
         end %if ~isfull
     end %for i
@@ -374,7 +374,7 @@ for i=1:ndata
 end
 
 %fixme do something with yparam here
-%technically should not be defined for multiploter, but can be defined (and
+%technically should not be defined for multiplotER, but can be defined (and
 %use ft_selectdata to average across frequencies
 
 hold on;
@@ -490,9 +490,9 @@ end
 
 % make the figure interactive
 if strcmp(cfg.interactive, 'yes')
-    set(gcf, 'windowbuttonupfcn',     {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoploter, cfg, varargin{:}}, 'event', 'windowbuttonupfcn'});
-    set(gcf, 'windowbuttondownfcn',   {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoploter, cfg, varargin{:}}, 'event', 'windowbuttondownfcn'});
-    set(gcf, 'windowbuttonmotionfcn', {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoploter, cfg, varargin{:}}, 'event', 'windowbuttonmotionfcn'});
+    set(gcf, 'windowbuttonupfcn',     {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg, varargin{:}}, 'event', 'windowbuttonupfcn'});
+    set(gcf, 'windowbuttondownfcn',   {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg, varargin{:}}, 'event', 'windowbuttondownfcn'});
+    set(gcf, 'windowbuttonmotionfcn', {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg, varargin{:}}, 'event', 'windowbuttonmotionfcn'});
 end
 
 % create title text containing channel name(s) and channel number(s):
@@ -528,18 +528,18 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunction which is called by ft_select_channel in case cfg.cohrefchannel='gui'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function select_singleploter(label, cfg, varargin)
+function select_singleplotER(label, cfg, varargin)
 cfg.cohrefchannel = label;
 fprintf('selected cfg.cohrefchannel = ''%s''\n', cfg.cohrefchannel);
 p = get(gcf, 'position');
 f = figure;
 set(f, 'position', p);
-ft_singleploter(cfg, varargin{:});
+ft_singleplotER(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunction which is called after selecting a time range
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function select_topoploter(range, cfg, varargin)
+function select_topoplotER(range, cfg, varargin)
 cfg.comment = 'auto';
 cfg.yparam = [];
 cfg.xlim = range(1:2);
@@ -547,7 +547,7 @@ fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
 p = get(gcf, 'position');
 f = figure;
 set(f, 'position', p);
-ft_topoploter(cfg, varargin{:});
+ft_topoplotER(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunction which handles hot keys in the current plot
