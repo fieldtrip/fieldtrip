@@ -346,6 +346,7 @@ if strcmp(cfg.segment, 'yes')
 
   % collect the results
   segment.dim       = size(V(1).dat);
+  segment.dim       = segment.dim(:)';              % other fieldtrip functions expect a row vector
   segment.transform = original.transform;           % use the original transformation-matrix
   segment.coordsys  = mri.coordsys;
   if isfield(mri, 'unit')
