@@ -143,7 +143,6 @@ if ischar(anatomical)
   try
     fprintf('trying to read cortical mesh from file\n');
     anatomical = ft_read_headshape(anatomical);
-    continue
   catch
     fprintf('anatomical file does not seem to be a cortical mesh\n');
   end
