@@ -81,6 +81,7 @@ if isempty(distmat)
       dpntinsq  = sum(pntin.^2,2); % squared distance to origin
       dpntoutsq  = sum(pntout.^2,2); % squared distance to origin
       maxnpnt = double(npntout*ceil(4/3*pi*(sphereradius/max(dimres))^3)); % initial estimate of nonzero entries
+      maxnpnt = min(maxnpnt, npntout*npntin);
       %ft_progress('init', 'none', 'computing distance matrix');
       val = nan+zeros(maxnpnt, 1);
       indx1 = nan+zeros(maxnpnt, 1);
@@ -93,8 +94,8 @@ if isempty(distmat)
         
         % the following lines are equivalent to the previous 2 but use
         % fewer flops
-        d    = dpntinsq - 2 * pntin * pntout(j,:)';
-        sel  = find(d < sphereradius.^2 - dpntoutsq(j));
+        d    = sqrt(dpntinsq - 2 * pntin * pntout(j,:)' + dpntoutsq(j));
+        sel  = find(d < sphereradius);
         
         nsel = numel(sel);
         if nsel>0
