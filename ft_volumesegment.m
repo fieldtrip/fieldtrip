@@ -204,13 +204,15 @@ end
 
 if strcmp(cfg.segment, 'yes')
   
-  % remember the original transformation matrix
-  original.transform = mri.transform;
-    
   % ensure that the data has interpretable units and that the coordinate
   % system is in approximate spm space
   if ~isfield(mri, 'unit'),     mri.unit     = cfg.units;    end
   if ~isfield(mri, 'coordsys'), mri.coordsys = cfg.coordsys; end
+  
+  % remember the original transformation matrix coordinate system
+  original.transform = mri.transform;
+  original.coordsys  = mri.coordsys; 
+  
   mri = ft_convert_units(mri,    'mm');
   mri = ft_convert_coordsys(mri, 'spm');
   
@@ -347,9 +349,9 @@ if strcmp(cfg.segment, 'yes')
 
   % collect the results
   segment.dim       = size(V(1).dat);
-  segment.dim       = segment.dim(:)';              % other fieldtrip functions expect a row vector
-  segment.transform = original.transform;           % use the original transformation-matrix
-  segment.coordsys  = mri.coordsys;
+  segment.dim       = segment.dim(:)';    % enforce a row vector
+  segment.transform = original.transform; % use the original transform
+  segment.coordsys  = original.coordsys;  % use the original coordsys
   if isfield(mri, 'unit')
     segment.unit = mri.unit;
   end
