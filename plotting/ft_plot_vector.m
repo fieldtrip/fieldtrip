@@ -17,7 +17,7 @@ function [varargout] = ft_plot_vector(varargin)
 %   'style'
 %   'label'
 %   'fontsize'
-%   'axis'          can be 'yes' or 'no'
+%   'axis'          can be 'yes', 'no', 'xy', 'x' or 'y'
 %   'box'           can be 'yes' or 'no'
 %   'highlight'
 %   'highlightstyle'
@@ -29,7 +29,7 @@ function [varargout] = ft_plot_vector(varargin)
 % Example use
 %   ft_plot_vector(randn(1,100), 'width', 1, 'height', 1, 'hpos', 0, 'vpos', 0)
 
-% Copyrights (C) 2009, Robert Oostenveld
+% Copyrights (C) 2009-2011, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -85,9 +85,16 @@ highlight       = keyval('highlight',          varargin);
 highlightstyle  = keyval('highlightstyle',     varargin); if isempty(highlightstyle),  highlightstyle = 'box';     end
 markersize      = keyval('markersize',         varargin); if isempty(markersize),      markersize = 6;             end
 markerfacecolor = keyval('markerfacecolor',    varargin); if isempty(markerfacecolor), markerfacecolor = 'none';   end
+
 % convert the yes/no strings into boolean values
-axis = istrue(axis);
 box  = istrue(box);
+
+% this should be a string, because valid options include yes, no, xy, x, y
+if isequal(axis, true)
+  axis = 'yes';
+elseif isequal(axis, false)
+  axis = 'no';
+end
 
 % everything is added to the current figure
 holdflag = ishold;
@@ -272,22 +279,40 @@ if box
   % ft_plot_box(boxposition, 'hpos', hpos, 'vpos', vpos, 'width', width, 'height', height, 'hlim', hlim, 'vlim', vlim);
 end
 
-if axis
+if ~isempty(axis) && ~strcmp(axis, 'no')
+  switch axis
+    case {'yes' 'xy'}
+      xaxis = true;
+      yaxis = true;
+    case {'x'}
+      xaxis = true;
+      yaxis = false;
+    case {'y'}
+      xaxis = false;
+      yaxis = true;
+    otherwise
+      error('invalid specification of the "axis" option')
+  end
+
   % determine where the original [0, 0] in the data is located in the scaled and shifted axes
   x0 = interp1(hlim, hpos + [-width/2  width/2 ], 0, 'linear', 'extrap');
   y0 = interp1(vlim, vpos + [-height/2 height/2], 0, 'linear', 'extrap');
 
-  X = [hpos-width/2  hpos+width/2];
-  Y = [y0 y0];
-  ft_plot_line(X, Y);
-  % str = sprintf('%g', hlim(1)); ft_plot_text(X(1), Y(1), str);
-  % str = sprintf('%g', hlim(2)); ft_plot_text(X(2), Y(2), str);
+  if xaxis
+    X = [hpos-width/2  hpos+width/2];
+    Y = [y0 y0];
+    ft_plot_line(X, Y);
+    % str = sprintf('%g', hlim(1)); ft_plot_text(X(1), Y(1), str);
+    % str = sprintf('%g', hlim(2)); ft_plot_text(X(2), Y(2), str);
+  end
 
-  X = [x0 x0];
-  Y = [vpos-height/2 vpos+height/2];
-  ft_plot_line(X, Y);
-  % str = sprintf('%g', vlim(1)); ft_plot_text(X(1), Y(1), str);
-  % str = sprintf('%g', vlim(2)); ft_plot_text(X(2), Y(2), str);
+  if yaxis
+    X = [x0 x0];
+    Y = [vpos-height/2 vpos+height/2];
+    ft_plot_line(X, Y);
+    % str = sprintf('%g', vlim(1)); ft_plot_text(X(1), Y(1), str);
+    % str = sprintf('%g', vlim(2)); ft_plot_text(X(2), Y(2), str);
+  end
 end
 
 % the (optional) output is the handle
