@@ -24,8 +24,8 @@ function ft_uilayout(h, varargin)
 % $Id$
 
 % these are used to make a selection of uicontrol elements
-tag    = keyval('tag', varargin{:});
-style  = keyval('style', varargin{:});
+tag    = keyval('tag',   varargin);
+style  = keyval('style', varargin);
 
 % determine all children
 if ~isempty(tag) && ~isempty(style)
@@ -41,27 +41,27 @@ c = flipud(c);
 % fprintf('selected %d elements\n', numel(c));
 
 % these are the normal features of an uicontrol
-BackgroundColor         = keyval('BackgroundColor',     varargin{:});
-CallBack                = keyval('CallBack',            varargin{:});
-Clipping                = keyval('Clipping',            varargin{:});
-Enable                  = keyval('Enable',              varargin{:});
-FontAngle               = keyval('FontAngle',           varargin{:});
-FontName                = keyval('FontName',            varargin{:});
-FontSize                = keyval('FontSize',            varargin{:});
-FontUnits               = keyval('FontUnits',           varargin{:});
-FontWeight              = keyval('FontWeight',          varargin{:});
-ForegroundColor         = keyval('ForegroundColor',     varargin{:});
-HorizontalAlignment     = keyval('HorizontalAlignment', varargin{:});
-Max                     = keyval('Max',                 varargin{:});
-Min                     = keyval('Min',                 varargin{:});
-Position                = keyval('Position',            varargin{:});
-Selected                = keyval('Selected',            varargin{:});
-String                  = keyval('String',              varargin{:});
-Units                   = keyval('Units',               varargin{:});
-Value                   = keyval('Value',               varargin{:});
-Visible                 = keyval('Visible',             varargin{:});
-Tag                     = keyval('retag',               varargin{:}); % this is to change the tag   on the selected items
-Style                   = keyval('restyle',             varargin{:}); % this is to change the style on the selected items
+BackgroundColor         = keyval('BackgroundColor',     varargin);
+CallBack                = keyval('CallBack',            varargin);
+Clipping                = keyval('Clipping',            varargin);
+Enable                  = keyval('Enable',              varargin);
+FontAngle               = keyval('FontAngle',           varargin);
+FontName                = keyval('FontName',            varargin);
+FontSize                = keyval('FontSize',            varargin);
+FontUnits               = keyval('FontUnits',           varargin);
+FontWeight              = keyval('FontWeight',          varargin);
+ForegroundColor         = keyval('ForegroundColor',     varargin);
+HorizontalAlignment     = keyval('HorizontalAlignment', varargin);
+Max                     = keyval('Max',                 varargin);
+Min                     = keyval('Min',                 varargin);
+Position                = keyval('Position',            varargin);
+Selected                = keyval('Selected',            varargin);
+String                  = keyval('String',              varargin);
+Units                   = keyval('Units',               varargin);
+Value                   = keyval('Value',               varargin);
+Visible                 = keyval('Visible',             varargin);
+Tag                     = keyval('retag',               varargin); % this is to change the tag   on the selected items
+Style                   = keyval('restyle',             varargin); % this is to change the style on the selected items
 
 feature = {
   'BackgroundColor'
@@ -98,10 +98,10 @@ for i=1:length(feature)
 end
 
 % these are special features to help with the positioning of the elements
-hpos   = keyval('hpos', varargin{:});
-vpos   = keyval('vpos', varargin{:});
-width  = keyval('width', varargin{:});
-height = keyval('height', varargin{:});
+hpos   = keyval('hpos',   varargin);
+vpos   = keyval('vpos',   varargin);
+width  = keyval('width',  varargin);
+height = keyval('height', varargin);
 
 if isempty(hpos) && isempty(vpos) && isempty(width) && isempty(height)
   % re-positioning of the elements is not needed

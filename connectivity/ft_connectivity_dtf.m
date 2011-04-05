@@ -1,7 +1,7 @@
 function [dtf, dtfvar, n] = ft_connectivity_dtf(input, varargin)
 
-hasjack = keyval('hasjack', varargin{:}); if isempty(hasjack), hasjack = 0; end
-powindx = keyval('powindx', varargin{:});
+hasjack = keyval('hasjack', varargin); if isempty(hasjack), hasjack = 0; end
+powindx = keyval('powindx', varargin);
 % FIXME build in feedback
 % FIXME build in proper documentation
 % FIXME build in dDTF etc

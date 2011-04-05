@@ -49,9 +49,9 @@ function [c, v, n] = ft_connectivity_ppc(input, varargin)
 %
 % $Id$
 
-feedback    = keyval('feedback', varargin{:}); if isempty(feedback), feedback = 'none'; end
-weighted    = keyval('weighted',   varargin{:});
-dojack      = keyval('dojack',   varargin{:});
+feedback    = keyval('feedback', varargin); if isempty(feedback), feedback = 'none'; end
+weighted    = keyval('weighted', varargin);
+dojack      = keyval('dojack',   varargin);
 
 siz = size(input);
 n = siz(1);

@@ -53,12 +53,12 @@ function [c, v, n] = ft_connectivity_psi(input, varargin)
 %
 % $Id$
 
-hasjack   = keyval('hasjack',   varargin{:}); if isempty(hasjack),  hasjack = 0; end
-feedback  = keyval('feedback',  varargin{:}); if isempty(feedback), feedback = 'none'; end
-dimord    = keyval('dimord',    varargin{:});
-powindx   = keyval('powindx',   varargin{:});
-normalize = keyval('normalize', varargin{:}); if isempty(normalize), normalize = 'no'; end
-nbin      = keyval('nbin',      varargin{:});
+hasjack   = keyval('hasjack',   varargin); if isempty(hasjack),  hasjack = 0; end
+feedback  = keyval('feedback',  varargin); if isempty(feedback), feedback = 'none'; end
+dimord    = keyval('dimord',    varargin);
+powindx   = keyval('powindx',   varargin);
+normalize = keyval('normalize', varargin); if isempty(normalize), normalize = 'no'; end
+nbin      = keyval('nbin',      varargin);
 
 if isempty(dimord)
   error('input parameters should contain a dimord');

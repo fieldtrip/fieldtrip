@@ -1169,8 +1169,8 @@ function [output] = fixsource(input, varargin)
 %     e.g. source.leadfield = cell(1,Npos), source.leadfielddimord = '{pos}_chan_ori'
 %          source.mom       = cell(1,Npos), source.momdimord       = '{pos}_ori_rpttap'
 
-type   = keyval('type',   varargin{:});
-haspow = keyval('haspow', varargin{:});
+type   = keyval('type',   varargin);
+haspow = keyval('haspow', varargin);
 
 if isempty(type),   type   = 'old'; end
 if isempty(haspow), haspow = 'no';  end

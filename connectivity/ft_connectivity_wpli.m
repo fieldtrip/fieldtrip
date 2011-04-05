@@ -47,9 +47,9 @@ function [wpli, v, n] = ft_connectivity_wpli(input, varargin)
 %
 % $Id$
 
-feedback    = keyval('feedback', varargin{:}); if isempty(feedback), feedback = 'none'; end
-debias      = keyval('debias',   varargin{:});
-dojack      = keyval('dojack',   varargin{:});
+feedback    = keyval('feedback', varargin); if isempty(feedback), feedback = 'none'; end
+debias      = keyval('debias',   varargin);
+dojack      = keyval('dojack',   varargin);
 
 siz = size(input);
 n = siz(1);

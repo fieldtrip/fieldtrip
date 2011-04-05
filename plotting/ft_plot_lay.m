@@ -43,19 +43,19 @@ warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'point', 'box', 'label','labelsize','labeloffset', 'mask', 'outline', 'verbose','pointsymbol','pointcolor','pointsize'});
-hpos         = keyval('hpos',        varargin{:}); if isempty(hpos),       hpos = 0;            end
-vpos         = keyval('vpos',        varargin{:}); if isempty(vpos),       vpos = 0;            end
-point        = keyval('point',       varargin{:}); if isempty(point),      point = true;        end
-box          = keyval('box',         varargin{:}); if isempty(box),        box = true;          end
-label        = keyval('label',       varargin{:}); if isempty(label),      label = true;        end
-labelsize    = keyval('labelsize',   varargin{:}); if isempty(labelsize),  labelsize = 10;      end
-labeloffset  = keyval('labeloffset', varargin{:}); if isempty(labeloffset),labeloffset = 0;     end
-mask         = keyval('mask',        varargin{:}); if isempty(mask),       mask = true;         end
-outline      = keyval('outline',     varargin{:}); if isempty(outline),    outline = true;      end
-verbose      = keyval('verbose',     varargin{:}); if isempty(verbose),    verbose = false;     end
-pointsymbol  = keyval('pointsymbol', varargin{:});
-pointcolor   = keyval('pointcolor',  varargin{:});
-pointsize    = keyval('pointsize',   varargin{:});
+hpos         = keyval('hpos',        varargin); if isempty(hpos),       hpos = 0;            end
+vpos         = keyval('vpos',        varargin); if isempty(vpos),       vpos = 0;            end
+point        = keyval('point',       varargin); if isempty(point),      point = true;        end
+box          = keyval('box',         varargin); if isempty(box),        box = true;          end
+label        = keyval('label',       varargin); if isempty(label),      label = true;        end
+labelsize    = keyval('labelsize',   varargin); if isempty(labelsize),  labelsize = 10;      end
+labeloffset  = keyval('labeloffset', varargin); if isempty(labeloffset),labeloffset = 0;     end
+mask         = keyval('mask',        varargin); if isempty(mask),       mask = true;         end
+outline      = keyval('outline',     varargin); if isempty(outline),    outline = true;      end
+verbose      = keyval('verbose',     varargin); if isempty(verbose),    verbose = false;     end
+pointsymbol  = keyval('pointsymbol', varargin);
+pointcolor   = keyval('pointcolor',  varargin);
+pointsize    = keyval('pointsize',   varargin);
 
 % convert between true/false/yes/no etc. statements
 point   = istrue(point);

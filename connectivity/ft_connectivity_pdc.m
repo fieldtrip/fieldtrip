@@ -1,8 +1,8 @@
 function [pdc, pdcvar, n] = ft_connectivity_pdc(input, varargin)
 
-hasjack  = keyval('hasjack', varargin{:}); if isempty(hasjack), hasjack = 0; end
-powindx  = keyval('powindx', varargin{:});
-feedback = keyval('feedback', varargin{:}); if isempty(feedback), feedback = 'none'; end
+hasjack  = keyval('hasjack',  varargin); if isempty(hasjack), hasjack = 0; end
+powindx  = keyval('powindx',  varargin);
+feedback = keyval('feedback', varargin); if isempty(feedback), feedback = 'none'; end
 % FIXME build in proper documentation
 
 % crossterms are described by chan_chan_therest

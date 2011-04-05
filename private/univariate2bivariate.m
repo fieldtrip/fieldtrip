@@ -5,10 +5,10 @@ function [data, powindx, hasrpt] = univariate2bivariate(data, inparam, outparam,
 %if nargin<6, cmb        = []; end
 %if nargin<5, demeanflag = 0;  end
 
-demeanflag = keyval('demeanflag', varargin{:}); if isempty(demeanflag), demeanflag = 0; end
-cmb        = keyval('cmb',     varargin{:});
-sqrtflag   = keyval('sqrtflag', varargin{:}); if isempty(sqrtflag), sqrtflag = 0;       end
-keeprpt    = keyval('keeprpt',  varargin{:});  if isempty(keeprpt),  keeprpt  = 1;       end
+demeanflag = keyval('demeanflag', varargin); if isempty(demeanflag), demeanflag = 0; end
+cmb        = keyval('cmb',        varargin);
+sqrtflag   = keyval('sqrtflag',   varargin); if isempty(sqrtflag), sqrtflag = 0;       end
+keeprpt    = keyval('keeprpt',    varargin); if isempty(keeprpt),  keeprpt  = 1;       end
 
 switch dtype
   case 'freq'
