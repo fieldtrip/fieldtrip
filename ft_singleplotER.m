@@ -436,9 +436,8 @@ for i=1:ndata
     
     % make mask
     if ~isempty(cfg.maskparameter)
-        datmask = varargin{1}.(cfg.maskparameter);
-        
-        maskdatavector = reshape(mean(datmask(sellab,:),1), [1 numel(xvector)]);
+        datmask = varargin{1}.(cfg.maskparameter)(sellab,:);
+        maskdatavector = reshape(mean(datmask,1), [1 numel(xvector)]);
     else
         maskdatavector = [];
     end

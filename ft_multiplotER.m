@@ -485,7 +485,6 @@ end
 for i=1:Ndata
   % Make vector dat with one value for each channel
   dat    = varargin{i}.(cfg.zparam);
-  label  = varargin{i}.label;
   xparam = varargin{i}.(cfg.xparam);
   
   % Take subselection of channels, this only works

@@ -628,7 +628,7 @@ chanLabels = cfg.layout.label(sellay);
 % make datmask structure with one value for each channel
 if ~isempty(cfg.maskparameter)
     datmask = data.(cfg.maskparameter);
-    if min(size(datmask)) ~= 1 || max(size(datmask)) ~= length(data.label)
+    if numel(datmask) ~= length(data.label)
         error('data in cfg.maskparameter should be vector with one value per channel')
     end
     datmask = datmask(:);
