@@ -46,7 +46,7 @@ end
 [nchan,ndatsample] = size(dat);
 
 % Determine fsample and set total time-length of data
-fsample = 1/(time(2)-time(1)))
+fsample = 1/(time(2)-time(1));
 dattime = ndatsample / fsample; % total time in seconds of input data
 
 % Zero padding
