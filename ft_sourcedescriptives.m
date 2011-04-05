@@ -523,7 +523,7 @@ elseif ismneavg
       smom = std(mom(begsmp:endsmp));
       pow  = sum(((mom-mmom)./smom).^2,1); 
       source.avg.pow(source.inside(diplop),:) = pow;
-      source.avg.absmom(source.inside(diplop),:) = sum((mom-mmom)./smom),1);
+      source.avg.absmom(source.inside(diplop),:) = sum((mom-mmom)./smom,1);
     end
     ft_progress('close');
     
