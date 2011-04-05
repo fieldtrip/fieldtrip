@@ -134,7 +134,7 @@ elseif hasinputfile
   if ~ischar(cfg.inputfile)
     cfg.inputfile = {cfg.inputfile};
   end
-  for i = 1:numel(cfg.inputfile)  
+  for i = 1:numel(cfg.inputfile)
     varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets
   end
   if isfield(cfg, 'interactive') && strcmp(cfg.interactive, 'yes'),
@@ -183,7 +183,7 @@ if Ndata  > 1
   elseif (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) == 1)
     tmpstyle = cfg.linestyle{1};
     cfg.linestyle = cell(Ndata , 1);
-    for idataset = 1:Ndata 
+    for idataset = 1:Ndata
       cfg.linestyle{idataset} = tmpstyle;
     end
   end
@@ -206,7 +206,7 @@ for i=1:Ndata
     else
       iname{i+1} = ['input',num2str(i,'%02d')];
     end
-  else 
+  else
     iname{i+1} = cfg.inputfile{i};
   end
 end
@@ -238,8 +238,8 @@ switch dtype
     end
   case 'comp'
     % not supported
-    otherwise
-      % not supported
+  otherwise
+    % not supported
 end
 
 % user specified own fields, but no yparam (which is not asked in help)
@@ -276,7 +276,7 @@ elseif strcmp(dtype, 'freq') && hasrpt,
   % on the fly computation of coherence spectrum is not supported
   for i=1:Ndata
     if isfield(varargin{i}, 'crsspctrm'),
-      varargin{i} = rmfield(varargin{i}, 'crsspctrm'); 
+      varargin{i} = rmfield(varargin{i}, 'crsspctrm');
     end
   end
   
@@ -340,7 +340,7 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.zparam)
   % check for cohrefchannel being part of selection
   if ~strcmp(cfg.cohrefchannel,'gui')
     if (isfull      && ~any(ismember(varargin{1}.label, cfg.cohrefchannel))) || ...
-       (haslabelcmb && ~any(ismember(varargin{1}.labelcmb(:), cfg.cohrefchannel)))
+        (haslabelcmb && ~any(ismember(varargin{1}.labelcmb(:), cfg.cohrefchannel)))
       error('cfg.cohrefchannel is a not present in the (selected) channels)')
     end
   end
@@ -423,7 +423,7 @@ else
 end
 
 % Get the index of the nearest bin
-for i=1:Ndata  
+for i=1:Ndata
   xidmin(i,1) = nearest(varargin{i}.(cfg.xparam), xmin);
   xidmax(i,1) = nearest(varargin{i}.(cfg.xparam), xmax);
 end
@@ -497,7 +497,7 @@ for i=1:Ndata
     sellab = 1:numel(varargin{i}.label);
     label  = varargin{i}.label;
   end
-
+  
   if ~isempty(cfg.yparam)
     if isfull
       dat = dat(sel1, sel2, ymin:ymax, xidmin(i):xidmax(i));
@@ -541,20 +541,14 @@ for i=1:Ndata
   layY = cfg.layout.pos(sellay,2);
   layLabels = cfg.layout.label(sellay);
   
-  % make datmask structure with one value for each channel
   if ~isempty(cfg.maskparameter)
-    datmask = varargin{1}.(cfg.maskparameter); % use first input only for mask
-    if min(size(datmask)) ~= 1 || max(size(datmask)) ~= length(data.label)
-      error('data in cfg.maskparameter should be vector with one value per channel')
-    end
-    datmask = datmask(:);
-    % Select the channels in the maskdata that match with the layout:
-    maskdatavector = datmask(sellab(seldat));
-    %maskdatavector = datmask(seldat);
+    % one value for each channel, or one value for each channel-time point
+    maskmatrix = varargin{1}.(cfg.maskparameter)(seldat,:);
   else
-    maskdatavector = [];
+    % create an Nx0 matrix
+    maskmatrix = zeros(length(seldat), 0);
   end
-
+  
   if Ndata > 1
     if ischar(GRAPHCOLOR);        colorLabels = [colorLabels iname{i+1} '=' GRAPHCOLOR(i+1) '\n'];
     elseif isnumeric(GRAPHCOLOR); colorLabels = [colorLabels iname{i+1} '=' num2str(GRAPHCOLOR(i+1,:)) '\n'];
@@ -566,14 +560,8 @@ for i=1:Ndata
   end
   
   for m=1:length(layLabels)
-    if ~isempty(cfg.maskparameter)
-      mask = varargin{1}.(cfg.maskparameter)(seldat(m),:);
-    else
-      mask = [];
-    end
-    % Plot ER:
-    plotWnd(xparam,datamatrix(m,:),[xmin xmax],[ymin ymax], ...
-      layX(m), layY(m), width(m), height(m), layLabels(m), cfg, color, cfg.linestyle{i}, mask); %FIXME shouldn't this be replaced with a call to ft_plot_vector?
+    % Plot ER
+    plotWnd(xparam, datamatrix(m,:),[xmin xmax],[ymin ymax], layX(m), layY(m), width(m), height(m), layLabels(m), cfg, color, cfg.linestyle{i}, maskmatrix(m,:)); %FIXME shouldn't this be replaced with a call to ft_plot_vector?
     
     if i==1,
       % Keep ER plot coordinates (at centre of ER plot), and channel labels (will be stored in the figure's UserData struct):
@@ -672,46 +660,6 @@ y(y < ylim(1)) = ylim(1);
 xs = xpos+width*(x-xlim(1))/(xlim(2)-xlim(1));
 ys = ypos+height*(y-ylim(1))/(ylim(2)-ylim(1));
 
-if isempty(mask) || (~isempty(mask) && strcmp(cfg.maskstyle,'box'))
-  ft_plot_vector(xs, ys, 'color', color, 'style', style, 'linewidth', cfg.linewidth)
-elseif ~isempty(mask) && ~strcmp(cfg.maskstyle,'box') % ft_plot_vector doesnt support boxes higher than ydata yet, so a separate option remains below
-  ft_plot_vector(xs, ys, 'color', color, 'style', style, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth)
-end
-
-if strcmp(cfg.showlabels,'yes')
-  ft_plot_text(xpos,ypos+1.0*height,label,'Fontsize',cfg.fontsize)
-end
-
-% Draw axes:
-if strcmp(cfg.axes,'yes') || strcmp(cfg.axes, 'xy')
-  % Draw y axis
-  xs =  xpos+width*([0 0]-xlim(1))/(xlim(2)-xlim(1));
-  ys =  ypos+height*(ylim-ylim(1))/(ylim(2)-ylim(1));
-  ft_plot_vector(xs,ys,'color','k')
-  % Draw x axis
-  xs =  xpos+width*(xlim-xlim(1))/(xlim(2)-xlim(1));
-  ys =  ypos+height*([0 0]-ylim(1))/(ylim(2)-ylim(1));
-  ft_plot_vector(xs,ys,'color','k')
-  
-elseif strcmp(cfg.axes,'x')
-  % Draw x axis
-  xs =  xpos+width*(xlim-xlim(1))/(xlim(2)-xlim(1));
-  ys =  ypos+height*([0 0]-ylim(1))/(ylim(2)-ylim(1));
-  ft_plot_vector(xs,ys,'color','k')
-  
-elseif strcmp(cfg.axes,'y')
-  % Draw y axis
-  xs =  xpos+width*([0 0]-xlim(1))/(xlim(2)-xlim(1));
-  ys =  ypos+height*(ylim-ylim(1))/(ylim(2)-ylim(1));
-  ft_plot_vector(xs,ys,'color','k')
-end
-
-
-% Draw box around plot:
-if strcmp(cfg.box,'yes')
-  ft_plot_box([xpos xpos+width ypos ypos+height],'edgecolor','k')
-end
-
 % Add boxes when masktyle is box, ft_plot_vector doesnt support boxes higher than ydata yet, so this code is left here
 if ~isempty(mask) && strcmp(cfg.maskstyle, 'box')
   % determine how many boxes
@@ -745,6 +693,45 @@ if ~isempty(mask) && strcmp(cfg.maskstyle, 'box')
     hs = patch([xmaskmin xmaskmax xmaskmax xmaskmin xmaskmin],[ypos ypos ypos+height ypos+height ypos], [.6 .6 .6]);
     set(hs, 'EdgeColor', 'none');
   end
+end
+
+if isempty(mask) || (~isempty(mask) && strcmp(cfg.maskstyle,'box'))
+  ft_plot_vector(xs, ys, 'color', color, 'style', style, 'linewidth', cfg.linewidth);
+elseif ~isempty(mask) && ~strcmp(cfg.maskstyle,'box') % ft_plot_vector does not support boxes higher than ydata yet, so a separate option remains below
+  ft_plot_vector(xs, ys, 'color', color, 'style', style, 'linewidth', cfg.linewidth, 'highlight', mask, 'highlightstyle', cfg.maskstyle);
+end
+
+if strcmp(cfg.showlabels,'yes')
+  ft_plot_text(xpos,ypos+1.0*height,label,'Fontsize',cfg.fontsize);
+end
+
+% Draw axes:
+if strcmp(cfg.axes,'yes') || strcmp(cfg.axes, 'xy')
+  % Draw y axis
+  xs =  xpos+width*([0 0]-xlim(1))/(xlim(2)-xlim(1));
+  ys =  ypos+height*(ylim-ylim(1))/(ylim(2)-ylim(1));
+  ft_plot_vector(xs,ys,'color','k');
+  % Draw x axis
+  xs =  xpos+width*(xlim-xlim(1))/(xlim(2)-xlim(1));
+  ys =  ypos+height*([0 0]-ylim(1))/(ylim(2)-ylim(1));
+  ft_plot_vector(xs,ys,'color','k');
+  
+elseif strcmp(cfg.axes,'x')
+  % Draw x axis
+  xs =  xpos+width*(xlim-xlim(1))/(xlim(2)-xlim(1));
+  ys =  ypos+height*([0 0]-ylim(1))/(ylim(2)-ylim(1));
+  ft_plot_vector(xs,ys,'color','k');
+  
+elseif strcmp(cfg.axes,'y')
+  % Draw y axis
+  xs =  xpos+width*([0 0]-xlim(1))/(xlim(2)-xlim(1));
+  ys =  ypos+height*(ylim-ylim(1))/(ylim(2)-ylim(1));
+  ft_plot_vector(xs,ys,'color','k');
+end
+
+% Draw box around plot:
+if strcmp(cfg.box,'yes')
+  ft_plot_box([xpos xpos+width ypos ypos+height],'edgecolor','k');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
