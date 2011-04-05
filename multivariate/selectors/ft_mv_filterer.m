@@ -140,9 +140,9 @@ classdef ft_mv_filterer < ft_mv_selector
             fprintf('evaluating %d out of %d features; ',f,maxf);
           end
           
-          cv = obj.validator.validate(X(:,obj.order(1:f)),Y);
+          cv = obj.validator.train(X(:,obj.order(1:f)),Y);
           
-          m = cv.evaluate;
+          m = cv.performance;
           
           if obj.verbose, fprintf('criterion: %.2g\n',m); end
           
