@@ -183,13 +183,17 @@ end
 
 
 if ~isempty(highlight)
+  if ~islogical(highlight)
+    if ~all(highlight==0 | highlight==1)
+      % only warn if really different from 0/1
+      warning('converting mask to logical values')
+    end
+    highlight=logical(highlight);
+  end
+  
   switch highlightstyle
     case 'box'
       % find the sample number where the highlight begins and ends
-      if ~islogical(highlight)
-        highlight=logical(highlight);
-        warning('converting mask to logical values')
-      end
       begsample = find(diff([0 highlight 0])== 1);
       endsample = find(diff([0 highlight 0])==-1)-1;
       for i=1:length(begsample)
@@ -205,10 +209,6 @@ if ~isempty(highlight)
       end
     case 'thickness'
       % find the sample number where the highligh begins and ends
-      if ~islogical(highlight)
-        highlight=logical(highlight);
-        warning('converting mask to logical values')
-      end
       begsample = find(diff([0 highlight 0])== 1);
       endsample = find(diff([0 highlight 0])==-1)-1;
       linecolor = get(h,'Color'); % get current line color
@@ -219,10 +219,6 @@ if ~isempty(highlight)
       end  
     case 'saturation'
       % find the sample number where the highligh begins and ends
-      if ~islogical(highlight)
-        highlight=logical(highlight);
-        warning('converting mask to logical values')
-      end
       highlight = ~highlight; % invert the mask
       begsample = find(diff([0 highlight 0])== 1);
       endsample = find(diff([0 highlight 0])==-1)-1;

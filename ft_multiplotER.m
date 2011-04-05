@@ -651,7 +651,6 @@ ft_plot_text( x2,y2,num2str(ylim(2),3),'HorizontalAlignment','Left','VerticalAli
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function plotWnd(x,y,xlim,ylim,xpos,ypos,width,height,label,cfg,color,style,mask)
 
-
 % Clip out of bounds y values:
 y(y > ylim(2)) = ylim(2);
 y(y < ylim(1)) = ylim(1);
@@ -662,32 +661,16 @@ ys = ypos+height*(y-ylim(1))/(ylim(2)-ylim(1));
 % Add boxes when masktyle is box, ft_plot_vector doesnt support boxes higher than ydata yet, so this code is left here
 if ~isempty(mask) && strcmp(cfg.maskstyle, 'box')
   % determine how many boxes
-  foundbeg = 0;
-  foundend = 0;
-  beg  = [];
-  eind = [];
-  for i = 1:length(mask)
-    if ~foundbeg  && mask(i) == 1
-      beg(length(beg)+1) = i;
-      foundbeg = 1;
-      foundend = 0;
-    elseif ~foundbeg  && mask(i) == 0
-      %next
-    elseif ~foundend  && mask(i) == 1
-      %next
-    elseif ~foundend  && mask(i) == 0
-      eind(length(eind)+1) = i-1;
-      foundend = 1;
-      foundbeg = 0;
-    end
-  end
-  if length(eind) == length(beg)-1
-    eind(length(eind)+1) = length(mask);
-  end
-  numbox = length(beg);
+  mask = mask(:)';
+  mask = mask~=0;
+  mask = diff([0 mask 0]);
+  boxbeg = find(mask== 1);
+  boxend = find(mask==-1)-1;
+  
+  numbox = length(boxbeg);
   for i = 1:numbox
-    xmaskmin = xpos+width*(x(beg(i))-xlim(1))/(xlim(2)-xlim(1));
-    xmaskmax = xpos+width*(x(eind(i))-xlim(1))/(xlim(2)-xlim(1));
+    xmaskmin = xpos+width*(x(boxbeg(i))-xlim(1))/(xlim(2)-xlim(1));
+    xmaskmax = xpos+width*(x(boxend(i))-xlim(1))/(xlim(2)-xlim(1));
     %plot([xmaskmin xmaskmax xmaskmax xmaskmin xmaskmin],[ypos ypos ypos+height ypos+height ypos],'r');
     hs = patch([xmaskmin xmaskmax xmaskmax xmaskmin xmaskmin],[ypos ypos ypos+height ypos+height ypos], [.6 .6 .6]);
     set(hs, 'EdgeColor', 'none');
