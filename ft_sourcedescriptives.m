@@ -515,6 +515,7 @@ elseif ismneavg
     endsmp = nearest(source.time, cfg.baselinewindow(2));
     % zscore using baselinewindow for power
     ft_progress('init', cfg.feedback, 'computing power');
+    source.avg.absmom = source.avg.pow;
     for diplop=1:length(source.inside)
       ft_progress(diplop/length(source.inside), 'computing power %d/%d\n', diplop, length(source.inside));
       mom = source.avg.mom{source.inside(diplop)};
@@ -522,17 +523,20 @@ elseif ismneavg
       smom = std(mom(begsmp:endsmp));
       pow  = sum(((mom-mmom)./smom).^2,1); 
       source.avg.pow(source.inside(diplop),:) = pow;
+      source.avg.absmom(source.inside(diplop),:) = sum((mom-mmom)./smom),1);
     end
     ft_progress('close');
     
   else
     % just square for power
     ft_progress('init', cfg.feedback, 'computing power');
+    source.avg.absmom = source.avg.pow;
     for diplop=1:length(source.inside)
       ft_progress(diplop/length(source.inside), 'computing power %d/%d\n', diplop, length(source.inside));
       mom = source.avg.mom{source.inside(diplop)};
       pow = sum(mom.^2,1); 
       source.avg.pow(source.inside(diplop),:) = pow;
+      source.avg.absmom(source.inside(diplop),:) = sum(mom,1);
     end
     ft_progress('close');
     
