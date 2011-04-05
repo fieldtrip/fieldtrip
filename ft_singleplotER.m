@@ -543,6 +543,10 @@ function select_topoplotER(range, cfg, varargin)
 cfg.comment = 'auto';
 cfg.yparam = [];
 cfg.xlim = range(1:2);
+if isfield(cfg, 'showlabels')
+  % this is not allowed in topoplotER
+  cfg = rmfield(cfg, 'showlabels');
+end
 fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
 p = get(gcf, 'position');
 f = figure;
