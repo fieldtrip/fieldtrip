@@ -203,6 +203,10 @@ if isfield(mri, 'gray') && isfield(mri, 'white') && isfield(mri, 'csf'),
 end
 
 if strcmp(cfg.segment, 'yes')
+  
+  % remember the original transformation matrix
+  original.transform = mri.transform;
+    
   % ensure that the data has interpretable units and that the coordinate
   % system is in approximate spm space
   if ~isfield(mri, 'unit'),     mri.unit     = cfg.units;    end
@@ -210,9 +214,6 @@ if strcmp(cfg.segment, 'yes')
   mri = ft_convert_units(mri,    'mm');
   mri = ft_convert_coordsys(mri, 'spm');
   
-  % remember the original transformation matrix
-  original.transform = mri.transform;
-    
   % flip and permute the 3D volume itself, so that the voxel and 
   % headcoordinates approximately correspond this improves the convergence
   % of the segmentation algorithm

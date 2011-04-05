@@ -100,7 +100,7 @@ if ~isfield(cfg, 'clim'),      cfg.clim      = [];        end
 if ~isfield(cfg, 'inputfile'), cfg.inputfile = [];        end
 if ~isfield(cfg, 'outputfile'),cfg.outputfile = [];       end
 if ~isfield(cfg, 'coordsys') && (strcmp(cfg.method, 'interactive') || strcmp(cfg.method, 'fiducial'))
-  cfg.coordsys = 'ALS_CTF';
+  cfg.coordsys = 'ctf';
 end
 
 hasdata = (nargin>1);
@@ -296,7 +296,7 @@ elseif basedonmrk
   xzpoint= warp_apply(mri.transform, cfg.landmark.xzpoint);
   
   % compute the homogenous transformation matrix describing the new coordinate system
-  [realign, coordsys] = headcoordinates(ac, pc, xzpoint, 'RAS_TAL');
+  [realign, coordsys] = headcoordinates(ac, pc, xzpoint, 'spm');
   
 end
 

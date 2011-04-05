@@ -82,8 +82,8 @@ rpa = rpa(:)';
 nas = nas(:)';
 
 % compute the origin and direction of the coordinate axes in MRI coordinates
-switch flag
-  case 'ALS_CTF'
+switch lower(flag)
+  case {'ALS_CTF' 'ctf' 'bti' '4d' 'yokogawa'}
     % follow CTF convention
     origin = (lpa+rpa)/2;
     dirx = nas-origin;
@@ -111,7 +111,7 @@ switch flag
     dirz = cross(dirx,diry);
     dirz = dirz/norm(dirz);
     diry = cross(dirz,dirx);
-  case 'RAS_TAL'
+  case {'RAS_TAL' 'tal' 'spm'}
     % rename the marker points for convenience
     ac = nas; pc = lpa; xzpoint = rpa;
     origin = ac;
@@ -121,7 +121,7 @@ switch flag
     dirx   = cross(diry,dirz);
     dirx   = dirx/norm(dirx);
     dirz   = cross(dirx,diry);
-  case 'RAS_ITAB'
+  case {'RAS_ITAB' 'itab' 'neuromag'}
     dirz = cross(rpa-lpa,nas-lpa);
     dirx = rpa-lpa;
     diry = cross(dirz,dirx);
