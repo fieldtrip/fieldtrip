@@ -9,11 +9,11 @@ function [h, flag] = headcoordinates(nas, lpa, rpa, flag)
 % [h, coordsys] = headcoordinates(ac,  pc,  zpoint, flag)
 %
 % The optional flag determines how the origin should be specified
-% according to CTF conventions:       flag = 'ALS_CTF' or flag = 0 (default)
-% according to ASA conventions:       flag = 'ALS_ASA' or flag = 1
-% according to FTG conventions:       flag = 'FTG'     or flag = 2
-% according to ITAB conventions:      flag = 'RAS_ITAB'
-% according to Talairach conventions: flag = 'RAS_TAL'
+% according to CTF conventions:       flag = 'als_ctf' or flag = 0 (default)
+% according to ASA conventions:       flag = 'als_asa' or flag = 1
+% according to FTG conventions:       flag = 'ftg'     or flag = 2
+% according to ITAB conventions:      flag = 'ras_itab'
+% according to Talairach conventions: flag = 'ras_tal'
 %
 % The headcoordinate system in CTF is defined as follows:
 % the origin is exactly between lpa and rpa
@@ -83,7 +83,7 @@ nas = nas(:)';
 
 % compute the origin and direction of the coordinate axes in MRI coordinates
 switch lower(flag)
-  case {'ALS_CTF' 'ctf' 'bti' '4d' 'yokogawa'}
+  case {'als_ctf' 'ctf' 'bti' '4d' 'yokogawa'}
     % follow CTF convention
     origin = (lpa+rpa)/2;
     dirx = nas-origin;
@@ -91,7 +91,7 @@ switch lower(flag)
     dirz = cross(dirx,lpa-rpa);
     dirz = dirz/norm(dirz);
     diry = cross(dirz,dirx);
-  case 'ALS_ASA'
+  case 'als_asa'
     % follow ASA convention
     dirz = cross(nas-rpa, lpa-rpa);
     diry = lpa-rpa;
@@ -100,7 +100,7 @@ switch lower(flag)
     diry = diry/norm(diry);
     dirx = dirx/norm(dirx);
     origin = rpa + dot(nas-rpa,diry)*diry;
-  case 'FTG'
+  case 'ftg'
     % rename the marker points for convenience
     pt1 = nas; pt2 = lpa; pt3 = rpa;
     % follow FTG conventions
@@ -111,7 +111,7 @@ switch lower(flag)
     dirz = cross(dirx,diry);
     dirz = dirz/norm(dirz);
     diry = cross(dirz,dirx);
-  case {'RAS_TAL' 'tal' 'spm'}
+  case {'ras_tal' 'tal' 'spm'}
     % rename the marker points for convenience
     ac = nas; pc = lpa; xzpoint = rpa;
     origin = ac;
@@ -121,7 +121,7 @@ switch lower(flag)
     dirx   = cross(diry,dirz);
     dirx   = dirx/norm(dirx);
     dirz   = cross(dirx,diry);
-  case {'RAS_ITAB' 'itab' 'neuromag'}
+  case {'ras_itab' 'itab' 'neuromag'}
     dirz = cross(rpa-lpa,nas-lpa);
     dirx = rpa-lpa;
     diry = cross(dirz,dirx);
