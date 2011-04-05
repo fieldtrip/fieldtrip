@@ -48,7 +48,9 @@ coil = istrue(coil);
 
 % everything is added to the current figure
 holdflag = ishold;
-hold on
+if ~holdflag
+  hold on
+end
 
 if coil
   % simply plot the position of all coils

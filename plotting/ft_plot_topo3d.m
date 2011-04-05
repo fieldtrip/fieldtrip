@@ -42,7 +42,9 @@ isocontour    = keyval('isocontour',    varargin); if isempty(isocontour),    is
 
 % everything is added to the current figure
 holdflag = ishold;
-hold on
+if ~holdflag
+  hold on
+end
 
 % the interpolation requires a triangulation
 tri = projecttri(pnt, 'delaunay');

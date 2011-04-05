@@ -86,7 +86,9 @@ end
 
 % everything is added to the current figure
 holdflag = ishold;
-hold on
+if ~holdflag
+  hold on
+end
 
 for i=1:size(pos,1)
   amplitude = norm(ori(:,i));

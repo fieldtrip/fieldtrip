@@ -68,7 +68,9 @@ verbose = istrue(verbose);
 
 % everything is added to the current figure
 holdflag = ishold;
-hold on
+if ~holdflag
+  hold on
+end
 
 X      = lay.pos(:,1) + hpos;
 Y      = lay.pos(:,2) + vpos;

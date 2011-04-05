@@ -85,7 +85,10 @@ case 'subplot'
   axis equal;axis tight;axis off
   
 case 'intersect'
-  hold on;
+  holdflag = ishold;
+  if ~holdflag
+    hold on
+  end
   
   varargin{sel+1} = ori(1,:);
   hx = ft_plot_slice(dat, varargin{:});
@@ -98,7 +101,12 @@ case 'intersect'
   axis equal; axis tight; axis off;axis vis3d
   view(3);
 
+  if ~holdflag
+    hold off
+  end
+
 otherwise
+
 end
 
 % if strcmp(interactive, 'yes')

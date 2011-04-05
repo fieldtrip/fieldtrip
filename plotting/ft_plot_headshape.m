@@ -56,7 +56,9 @@ hs      = [];
 
 % everything is added to the current figure
 holdflag = ishold;
-hold on
+if ~holdflag
+  hold on
+end
 
 pnt = headshape.pnt;
 bnd.pnt = pnt;

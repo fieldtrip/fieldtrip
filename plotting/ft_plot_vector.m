@@ -91,7 +91,9 @@ box  = istrue(box);
 
 % everything is added to the current figure
 holdflag = ishold;
-hold on
+if ~holdflag
+  hold on
+end
 
 if ischar(hlim)
   switch hlim

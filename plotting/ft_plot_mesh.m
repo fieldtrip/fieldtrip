@@ -113,7 +113,9 @@ end
 
 % everything is added to the current figure
 holdflag = ishold;
-hold on
+if ~holdflag
+  hold on
+end
 
 if ~isfield(bnd, 'tri')
   bnd.tri = [];

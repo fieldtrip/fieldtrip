@@ -64,7 +64,9 @@ datmask       = keyval('datmask',      varargin);
 
 % everything is added to the current figure
 holdflag = ishold;
-hold on
+if ~holdflag
+  hold on
+end
 
 chanX = chanX(:) * width  + hpos;
 chanY = chanY(:) * height + vpos;
