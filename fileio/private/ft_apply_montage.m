@@ -49,9 +49,9 @@ function [sens] = ft_apply_montage(sens, montage, varargin)
 % $Id$
 
 % get optional input arguments
-keepunused = keyval('keepunused', varargin{:}); if isempty(keepunused), keepunused = 'no';  end
-inverse    = keyval('inverse',    varargin{:}); if isempty(inverse),    inverse    = 'no';  end
-feedback   = keyval('feedback',   varargin{:}); if isempty(feedback),   feedback   = 'text'; end
+keepunused = keyval('keepunused', varargin); if isempty(keepunused), keepunused = 'no';  end
+inverse    = keyval('inverse',    varargin); if isempty(inverse),    inverse    = 'no';  end
+feedback   = keyval('feedback',   varargin); if isempty(feedback),   feedback   = 'text'; end
 
 % check the consistency of the input sensor array or data
 if isfield(sens, 'labelorg') && isfield(sens, 'labelnew')
