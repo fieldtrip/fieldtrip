@@ -68,8 +68,6 @@ else
 end
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'style', 'label', ...
-  'fontsize', 'axis', 'box','highlight','highlightstyle','color', 'linewidth','markersize','markerfacecolor'});
 hpos            = keyval('hpos',               varargin);
 vpos            = keyval('vpos',               varargin);
 width           = keyval('width',              varargin);
