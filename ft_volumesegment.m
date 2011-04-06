@@ -402,6 +402,7 @@ if ~strcmp(cfg.smooth, 'no'),
     spm_smooth(segment.csf,   segment.csf,   cfg.smooth); % smooth the csf compartment
   end
   if hasanatomy
+    segment.anatomy = mri.anatomy;
     spm_smooth(segment.anatomy, segment.anatomy, cfg.smooth); 
   end
   if hasbrain
