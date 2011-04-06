@@ -787,6 +787,12 @@ int main(int argc, char *argv[]) {
 										engineAborted = 1;
 								}
 
+								if (!jobFailed && (engEvalString(en, "clear all") != 0)) {
+										DEBUG(LOG_ERR, "error clearing workspace");
+										jobFailed = 6;
+										engineAborted = 1;
+								}
+
 						} /* if matlabRunning */
 
 						if (engineFailed || jobFailed) {
@@ -812,6 +818,9 @@ int main(int argc, char *argv[]) {
 								}
 								else if (jobFailed==5) {
 										DEBUG(LOG_ERR, "failed to execute job %d from %s@%s (optout)", jobnum, job->host->user, job->host->name);
+}
+								else if (jobFailed==6) {
+										DEBUG(LOG_ERR, "failed to execute job %d from %s@%s (clear)", jobnum, job->host->user, job->host->name);
 								}
 								else {
 										DEBUG(LOG_ERR, "failed to execute job %d from %s@%s", jobnum, job->host->user, job->host->name);
@@ -843,6 +852,8 @@ int main(int argc, char *argv[]) {
 										mxSetCell(options, 1, mxCreateString("failed to execute the job (argout)\0"));
 								else if (jobFailed==5)
 										mxSetCell(options, 1, mxCreateString("failed to execute the job (optout)\0"));
+								else if (jobFailed==6)
+										mxSetCell(options, 1, mxCreateString("failed to execute the job (clear)\0"));
 								else
 										mxSetCell(options, 1, mxCreateString("failed to execute the job\0"));
 						}
@@ -1012,6 +1023,16 @@ cleanup:
 						if (opt) {
 								mxDestroyArray(opt);
 								opt = NULL;
+						}
+
+						if (argout) {
+								mxDestroyArray(argout);
+								argout = NULL;
+						}
+
+						if (options) {
+								mxDestroyArray(options);
+								options = NULL;
 						}
 
 						FREE(def);

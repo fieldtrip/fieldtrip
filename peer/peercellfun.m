@@ -396,12 +396,12 @@ while ~all(submitted) || ~all(collected)
   end
   
   % give some feedback
-  if memreq~=prev_memreq
+  if abs(memreq-prev_memreq)>1000
     fprintf('updating memreq to %s\n', print_mem(memreq));
   end
   
   % give some feedback
-  if timreq~=prev_timreq
+  if abs(timreq-prev_timreq)>1
     fprintf('updating timreq to %s\n', print_tim(timreq));
   end
 

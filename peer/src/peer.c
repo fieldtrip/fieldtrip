@@ -144,6 +144,7 @@ void exitFun(void) {
 void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) {
 		char command[STRLEN];
 		char argument[STRLEN];
+		char *ptr;
 		int i, j, n, rc, t, found, handshake, success, count, server, status;
 		UINT64_T peerid, jobid, memreq, cpureq, timreq;
 
@@ -167,8 +168,153 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		if (mxGetString(prhs[0], command, STRLEN-1))
 				mexErrMsgTxt ("invalid input argument #1");
 
+		/* convert to lower case */
+		ptr = command;
+		while (*ptr) {
+				*ptr = tolower(*ptr);
+				ptr++;
+		}
+
+		ptr = argument;
+		while (*ptr) {
+				*ptr = tolower(*ptr);
+				ptr++;
+		}
+
 		/****************************************************************************/
-		if (strcasecmp(command, "udsserver")==0) {
+		if (strcmp(command, "announce")==0) {
+				/* the input arguments should be "tcpserver <start|stop|status>" */
+				if (nrhs<2)
+						mexErrMsgTxt ("invalid number of input arguments");
+				if (!mxIsChar(prhs[1]))
+						mexErrMsgTxt ("invalid input argument #2");
+				if (mxGetString(prhs[1], argument, STRLEN-1))
+						mexErrMsgTxt ("invalid input argument #2");
+				if (strcmp(argument, "start")==0) {
+						if (announceStatus) {
+								mexWarnMsgTxt("thread is already running");
+								return;
+						}
+						mexPrintf("peer: spawning announce thread\n");
+						rc = pthread_create(&announceThread, NULL, announce, (void *)NULL);
+						if (rc)
+								mexErrMsgTxt("problem with return code from pthread_create()");
+						else {
+								/* wait until the thread has properly started */
+								pthread_mutex_lock(&mutexstatus);
+								if (!announceStatus)
+										pthread_cond_wait(&condstatus, &mutexstatus);
+								pthread_mutex_unlock(&mutexstatus);
+						}
+				}
+				else if (strcmp(argument, "stop")==0) {
+						if (!announceStatus) {
+								mexWarnMsgTxt("thread is not running");
+								return;
+						}
+						mexPrintf("peer: requesting cancelation of announce thread\n");
+						rc = pthread_cancel(announceThread);
+						if (rc)
+								mexErrMsgTxt("problem with return code from pthread_cancel()");
+				}
+				else if (strcmp(argument, "status")==0) {
+						plhs[0] = mxCreateDoubleScalar(announceStatus);
+				}
+				else
+						mexErrMsgTxt ("invalid input argument #2");
+				return;
+		}
+
+		/****************************************************************************/
+		else if (strcmp(command, "discover")==0) {
+				/* the input arguments should be "discover <start|stop|status>" */
+				if (nrhs<2)
+						mexErrMsgTxt ("invalid number of input arguments");
+				if (!mxIsChar(prhs[1]))
+						mexErrMsgTxt ("invalid input argument #2");
+				if (mxGetString(prhs[1], argument, STRLEN-1))
+						mexErrMsgTxt ("invalid input argument #2");
+				if (strcmp(argument, "start")==0) {
+						if (discoverStatus) {
+								mexWarnMsgTxt("thread is already running");
+								return;
+						}
+						mexPrintf("peer: spawning discover thread\n");
+						rc = pthread_create(&discoverThread, NULL, discover, (void *)NULL);
+						if (rc)
+								mexErrMsgTxt("problem with return code from pthread_create()");
+						else {
+								/* wait until the thread has properly started */
+								pthread_mutex_lock(&mutexstatus);
+								if (!discoverStatus)
+										pthread_cond_wait(&condstatus, &mutexstatus);
+								pthread_mutex_unlock(&mutexstatus);
+						}
+				}
+				else if (strcmp(argument, "stop")==0) {
+						if (!discoverStatus) {
+								mexWarnMsgTxt("thread is not running");
+								return;
+						}
+						mexPrintf("peer: requesting cancelation of discover thread\n");
+						rc = pthread_cancel(discoverThread);
+						if (rc)
+								mexErrMsgTxt("problem with return code from pthread_cancel()");
+				}
+				else if (strcmp(argument, "status")==0) {
+						plhs[0] = mxCreateDoubleScalar(discoverStatus);
+				}
+				else
+						mexErrMsgTxt ("invalid input argument #2");
+				return;
+		}
+
+		/****************************************************************************/
+		else if (strcmp(command, "expire")==0) {
+				/* the input arguments should be "expire <start|stop|status>" */
+				if (nrhs<2)
+						mexErrMsgTxt ("invalid number of input arguments");
+				if (!mxIsChar(prhs[1]))
+						mexErrMsgTxt ("invalid input argument #2");
+				if (mxGetString(prhs[1], argument, STRLEN-1))
+						mexErrMsgTxt ("invalid input argument #2");
+				if (strcmp(argument, "start")==0) {
+						if (expireStatus) {
+								mexWarnMsgTxt("thread is already running");
+								return;
+						}
+						mexPrintf("peer: spawning expire thread\n");
+						rc = pthread_create(&expireThread, NULL, expire, (void *)NULL);
+						if (rc)
+								mexErrMsgTxt("problem with return code from pthread_create()");
+						else {
+								/* wait until the thread has properly started */
+								pthread_mutex_lock(&mutexstatus);
+								if (!expireStatus)
+										pthread_cond_wait(&condstatus, &mutexstatus);
+								pthread_mutex_unlock(&mutexstatus);
+						}
+				}
+				else if (strcmp(argument, "stop")==0) {
+						if (!expireStatus) {
+								mexWarnMsgTxt("thread is not running");
+								return;
+						}
+						mexPrintf("peer: requesting cancelation of expire thread\n");
+						rc = pthread_cancel(expireThread);
+						if (rc)
+								mexErrMsgTxt("problem with return code from pthread_cancel()");
+				}
+				else if (strcmp(argument, "status")==0) {
+						plhs[0] = mxCreateDoubleScalar(expireStatus);
+				}
+				else
+						mexErrMsgTxt ("invalid input argument #2");
+				return;
+		}
+
+		/****************************************************************************/
+		else if (strcmp(command, "udsserver")==0) {
 				/* the input arguments should be "udsserver <start|stop|status>" */
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
@@ -176,7 +322,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mexErrMsgTxt ("invalid input argument #2");
 				if (mxGetString(prhs[1], argument, STRLEN-1))
 						mexErrMsgTxt ("invalid input argument #2");
-				if (strcasecmp(argument, "start")==0) {
+				if (strcmp(argument, "start")==0) {
 						if (udsserverStatus) {
 								mexWarnMsgTxt("thread is already running");
 								return;
@@ -195,7 +341,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 								announce_once();
 						}
 				}
-				else if (strcasecmp(argument, "stop")==0) {
+				else if (strcmp(argument, "stop")==0) {
 						if (!udsserverStatus) {
 								mexWarnMsgTxt("thread is not running");
 								return;
@@ -208,7 +354,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 								/* inform the other peers of the updated unix domain socket */
 								announce_once();
 				}
-				else if (strcasecmp(argument, "status")==0) {
+				else if (strcmp(argument, "status")==0) {
 						plhs[0] = mxCreateDoubleScalar(udsserverStatus);
 				}
 				else
@@ -217,7 +363,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		if (strcasecmp(command, "tcpserver")==0) {
+		if (strcmp(command, "tcpserver")==0) {
 				/* the input arguments should be "tcpserver <start|stop|status>" */
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
@@ -225,7 +371,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mexErrMsgTxt ("invalid input argument #2");
 				if (mxGetString(prhs[1], argument, STRLEN-1))
 						mexErrMsgTxt ("invalid input argument #2");
-				if (strcasecmp(argument, "start")==0) {
+				if (strcmp(argument, "start")==0) {
 						if (tcpserverStatus) {
 								mexWarnMsgTxt("thread is already running");
 								return;
@@ -242,7 +388,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 								pthread_mutex_unlock(&mutexstatus);
 						}
 				}
-				else if (strcasecmp(argument, "stop")==0) {
+				else if (strcmp(argument, "stop")==0) {
 						if (!tcpserverStatus) {
 								mexWarnMsgTxt("thread is not running");
 								return;
@@ -252,7 +398,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						if (rc)
 								mexErrMsgTxt("problem with return code from pthread_cancel()");
 				}
-				else if (strcasecmp(argument, "status")==0) {
+				else if (strcmp(argument, "status")==0) {
 						plhs[0] = mxCreateDoubleScalar(tcpserverStatus);
 				}
 				else
@@ -261,144 +407,124 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "announce")==0) {
-				/* the input arguments should be "tcpserver <start|stop|status>" */
-				if (nrhs<2)
-						mexErrMsgTxt ("invalid number of input arguments");
-				if (!mxIsChar(prhs[1]))
-						mexErrMsgTxt ("invalid input argument #2");
-				if (mxGetString(prhs[1], argument, STRLEN-1))
-						mexErrMsgTxt ("invalid input argument #2");
-				if (strcasecmp(argument, "start")==0) {
-						if (announceStatus) {
-								mexWarnMsgTxt("thread is already running");
-								return;
-						}
-						mexPrintf("peer: spawning announce thread\n");
-						rc = pthread_create(&announceThread, NULL, announce, (void *)NULL);
-						if (rc)
-								mexErrMsgTxt("problem with return code from pthread_create()");
-						else {
-								/* wait until the thread has properly started */
-								pthread_mutex_lock(&mutexstatus);
-								if (!announceStatus)
-										pthread_cond_wait(&condstatus, &mutexstatus);
-								pthread_mutex_unlock(&mutexstatus);
-						}
+		else if (strcmp(command, "peerlist")==0) {
+				/* it can be followed by an optional input argument "peerlist <status>" */
+				if (nrhs>1) {
+						/* only return the list for the desired status */
+						if (!mxIsNumeric(prhs[1]))
+								mexErrMsgTxt ("invalid input argument #2");
+						else
+								status = (UINT32_T)mxGetScalar(prhs[1]);
 				}
-				else if (strcasecmp(argument, "stop")==0) {
-						if (!announceStatus) {
-								mexWarnMsgTxt("thread is not running");
-								return;
+				else {
+						/* this is to be interpreted as "any status" */
+						status = -1;
+				}
+
+				pthread_mutex_lock(&mutexpeerlist);
+				/* count the number of peers */
+				i = 0;
+				peer = peerlist;
+				while(peer) {
+						i += (status==-1 ? 1 : (peer->host->status==status));
+						peer = peer->next ;
+				}
+				plhs[0] = mxCreateStructMatrix(i, 1, PEERLIST_FIELDNUMBER, peerlist_fieldnames);
+				i = 0;
+				peer = peerlist;
+				while(peer) {
+						if (status!=-1 && peer->host->status!=status) {
+								peer = peer->next;
+								continue;
 						}
-						mexPrintf("peer: requesting cancelation of announce thread\n");
-						rc = pthread_cancel(announceThread);
-						if (rc)
-								mexErrMsgTxt("problem with return code from pthread_cancel()");
+						j = 0;
+						mxSetFieldByNumber(plhs[0], i, j++, mxCreateDoubleScalar((UINT32_T)(peer->host->id)));
+						mxSetFieldByNumber(plhs[0], i, j++, mxCreateString(peer->host->name));
+						mxSetFieldByNumber(plhs[0], i, j++, mxCreateString(peer->host->user));
+						mxSetFieldByNumber(plhs[0], i, j++, mxCreateString(peer->host->group));
+						mxSetFieldByNumber(plhs[0], i, j++, mxCreateString(peer->host->socket));
+						mxSetFieldByNumber(plhs[0], i, j++, mxCreateDoubleScalar((UINT32_T)(peer->host->port)));
+						mxSetFieldByNumber(plhs[0], i, j++, mxCreateDoubleScalar((UINT32_T)(peer->host->status)));
+						mxSetFieldByNumber(plhs[0], i, j++, mxCreateDoubleScalar((UINT64_T)(peer->host->timavail)));
+						mxSetFieldByNumber(plhs[0], i, j++, mxCreateDoubleScalar((UINT64_T)(peer->host->memavail)));
+						mxSetFieldByNumber(plhs[0], i, j++, mxCreateDoubleScalar((UINT64_T)(peer->host->cpuavail)));
+
+						current = mxCreateStructMatrix(1, 1, CURRENT_FIELDNUMBER, current_fieldnames);
+						mxSetFieldByNumber(current, 0, 0, mxCreateDoubleScalar(peer->host->current.hostid));
+						mxSetFieldByNumber(current, 0, 1, mxCreateDoubleScalar(peer->host->current.jobid));
+						mxSetFieldByNumber(current, 0, 2, mxCreateString(peer->host->current.name));
+						mxSetFieldByNumber(current, 0, 3, mxCreateString(peer->host->current.user));
+						mxSetFieldByNumber(current, 0, 4, mxCreateString(peer->host->current.group));
+						mxSetFieldByNumber(current, 0, 5, mxCreateDoubleScalar(peer->host->current.timreq));
+						mxSetFieldByNumber(current, 0, 6, mxCreateDoubleScalar(peer->host->current.memreq));
+						mxSetFieldByNumber(current, 0, 7, mxCreateDoubleScalar(peer->host->current.cpureq));
+						mxSetFieldByNumber(plhs[0], i, j++, current);
+
+						i++;
+						peer = peer->next ;
 				}
-				else if (strcasecmp(argument, "status")==0) {
-						plhs[0] = mxCreateDoubleScalar(announceStatus);
-				}
-				else
-						mexErrMsgTxt ("invalid input argument #2");
+				pthread_mutex_unlock(&mutexpeerlist);
 				return;
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "discover")==0) {
-				/* the input arguments should be "discover <start|stop|status>" */
-				if (nrhs<2)
-						mexErrMsgTxt ("invalid number of input arguments");
-				if (!mxIsChar(prhs[1]))
-						mexErrMsgTxt ("invalid input argument #2");
-				if (mxGetString(prhs[1], argument, STRLEN-1))
-						mexErrMsgTxt ("invalid input argument #2");
-				if (strcasecmp(argument, "start")==0) {
-						if (discoverStatus) {
-								mexWarnMsgTxt("thread is already running");
-								return;
-						}
-						mexPrintf("peer: spawning discover thread\n");
-						rc = pthread_create(&discoverThread, NULL, discover, (void *)NULL);
-						if (rc)
-								mexErrMsgTxt("problem with return code from pthread_create()");
-						else {
-								/* wait until the thread has properly started */
-								pthread_mutex_lock(&mutexstatus);
-								if (!discoverStatus)
-										pthread_cond_wait(&condstatus, &mutexstatus);
-								pthread_mutex_unlock(&mutexstatus);
-						}
+		else if (strcmp(command, "joblist")==0) {
+				pthread_mutex_lock(&mutexjoblist);
+				/* count the number of jobs */
+				i = 0;
+				job = joblist;
+				while(job) {
+						i++;
+						job = job->next ;
 				}
-				else if (strcasecmp(argument, "stop")==0) {
-						if (!discoverStatus) {
-								mexWarnMsgTxt("thread is not running");
-								return;
-						}
-						mexPrintf("peer: requesting cancelation of discover thread\n");
-						rc = pthread_cancel(discoverThread);
-						if (rc)
-								mexErrMsgTxt("problem with return code from pthread_cancel()");
+				plhs[0] = mxCreateStructMatrix(i, 1, JOBLIST_FIELDNUMBER, joblist_fieldnames);
+				i = 0;
+				job = joblist;
+				while(job) {
+						mxSetFieldByNumber(plhs[0], i, 0, mxCreateDoubleScalar((UINT32_T)(job->job->version)));
+						mxSetFieldByNumber(plhs[0], i, 1, mxCreateDoubleScalar((UINT32_T)(job->job->id)));
+						mxSetFieldByNumber(plhs[0], i, 2, mxCreateDoubleScalar((UINT32_T)(job->job->argsize)));
+						mxSetFieldByNumber(plhs[0], i, 3, mxCreateDoubleScalar((UINT32_T)(job->job->optsize)));
+						mxSetFieldByNumber(plhs[0], i, 4, mxCreateDoubleScalar((UINT32_T)(job->host->id)));
+						mxSetFieldByNumber(plhs[0], i, 5, mxCreateString(job->host->name));
+						mxSetFieldByNumber(plhs[0], i, 6, mxCreateString(job->host->user));
+						mxSetFieldByNumber(plhs[0], i, 7, mxCreateDoubleScalar((UINT64_T)(job->job->memreq)));
+						mxSetFieldByNumber(plhs[0], i, 8, mxCreateDoubleScalar((UINT64_T)(job->job->timreq)));
+						job = job->next;
+						i++;
 				}
-				else if (strcasecmp(argument, "status")==0) {
-						plhs[0] = mxCreateDoubleScalar(discoverStatus);
-				}
-				else
-						mexErrMsgTxt ("invalid input argument #2");
+				pthread_mutex_unlock(&mutexjoblist);
 				return;
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "expire")==0) {
-				/* the input arguments should be "expire <start|stop|status>" */
-				if (nrhs<2)
+		else if (strcmp(command, "status")==0) {
+				/* the input arguments should be "status <number>" */
+				if (nrhs<2) {
 						mexErrMsgTxt ("invalid number of input arguments");
-				if (!mxIsChar(prhs[1]))
-						mexErrMsgTxt ("invalid input argument #2");
-				if (mxGetString(prhs[1], argument, STRLEN-1))
-						mexErrMsgTxt ("invalid input argument #2");
-				if (strcasecmp(argument, "start")==0) {
-						if (expireStatus) {
-								mexWarnMsgTxt("thread is already running");
-								return;
-						}
-						mexPrintf("peer: spawning expire thread\n");
-						rc = pthread_create(&expireThread, NULL, expire, (void *)NULL);
-						if (rc)
-								mexErrMsgTxt("problem with return code from pthread_create()");
-						else {
-								/* wait until the thread has properly started */
-								pthread_mutex_lock(&mutexstatus);
-								if (!expireStatus)
-										pthread_cond_wait(&condstatus, &mutexstatus);
-								pthread_mutex_unlock(&mutexstatus);
-						}
 				}
-				else if (strcasecmp(argument, "stop")==0) {
-						if (!expireStatus) {
-								mexWarnMsgTxt("thread is not running");
-								return;
-						}
-						mexPrintf("peer: requesting cancelation of expire thread\n");
-						rc = pthread_cancel(expireThread);
-						if (rc)
-								mexErrMsgTxt("problem with return code from pthread_cancel()");
+				else {
+						if (!mxIsNumeric(prhs[1]))
+								mexErrMsgTxt ("invalid input argument #2");
+						if (!mxIsScalar(prhs[1]))
+								mexErrMsgTxt ("invalid input argument #2");
+
+						pthread_mutex_lock(&mutexhost);
+						host->status = (UINT32_T)mxGetScalar(prhs[1]);
+						pthread_mutex_unlock(&mutexhost);
+						/* inform the other peers of the updated status */
+						announce_once();
 				}
-				else if (strcasecmp(argument, "status")==0) {
-						plhs[0] = mxCreateDoubleScalar(expireStatus);
-				}
-				else
-						mexErrMsgTxt ("invalid input argument #2");
-				return;
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "info")==0) {
+		else if (strcmp(command, "info")==0) {
 				/* the input arguments should be "info" */
 
 				/* display  all possible information on screen */
 				pthread_mutex_lock(&mutexstatus);
 				mexPrintf("tcpserverStatus = %d\n", tcpserverStatus);
+				mexPrintf("udsserverStatus = %d\n", udsserverStatus);
 				mexPrintf("announceStatus  = %d\n", announceStatus);
 				mexPrintf("discoverStatus  = %d\n", discoverStatus);
 				mexPrintf("expireStatus    = %d\n", expireStatus);
@@ -518,27 +644,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "status")==0) {
-				/* the input arguments should be "status <number>" */
-				if (nrhs<2) {
-						mexErrMsgTxt ("invalid number of input arguments");
-				}
-				else {
-						if (!mxIsNumeric(prhs[1]))
-								mexErrMsgTxt ("invalid input argument #2");
-						if (!mxIsScalar(prhs[1]))
-								mexErrMsgTxt ("invalid input argument #2");
-
-						pthread_mutex_lock(&mutexhost);
-						host->status = (UINT32_T)mxGetScalar(prhs[1]);
-						pthread_mutex_unlock(&mutexhost);
-						/* inform the other peers of the updated status */
-						announce_once();
-				}
-		}
-
-		/****************************************************************************/
-		else if (strcasecmp(command, "smartmem")==0) {
+		else if (strcmp(command, "smartmem")==0) {
 				/* the input arguments should be "smartmem <0|1> */
 				if (nrhs<2) {
 						mexErrMsgTxt ("invalid number of input arguments");
@@ -557,7 +663,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "smartcpu")==0) {
+		else if (strcmp(command, "smartcpu")==0) {
 				/* the input arguments should be "smartcpu <0|1> */
 				if (nrhs<2) {
 						mexErrMsgTxt ("invalid number of input arguments");
@@ -576,7 +682,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "smartshare")==0) {
+		else if (strcmp(command, "smartshare")==0) {
 				/* the input arguments should be "smartshare <0|1> */
 				if (nrhs<2) {
 						mexErrMsgTxt ("invalid number of input arguments");
@@ -595,7 +701,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "memavail")==0) {
+		else if (strcmp(command, "memavail")==0) {
 				/* the input arguments should be "memavail <number>" */
 				if (nrhs<2) {
 						mexErrMsgTxt ("invalid number of input arguments");
@@ -613,7 +719,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "cpuavail")==0) {
+		else if (strcmp(command, "cpuavail")==0) {
 				/* the input arguments should be "cpuavail <number>" */
 				if (nrhs<2) {
 						mexErrMsgTxt ("invalid number of input arguments");
@@ -631,7 +737,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "timavail")==0) {
+		else if (strcmp(command, "timavail")==0) {
 				/* the input arguments should be "timavail <number>" */
 				if (nrhs<2) {
 						mexErrMsgTxt ("invalid number of input arguments");
@@ -649,7 +755,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "tcpport")==0) {
+		else if (strcmp(command, "tcpport")==0) {
 				/* the input arguments should be "tcpport <number>" */
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
@@ -665,7 +771,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "group")==0) {
+		else if (strcmp(command, "group")==0) {
 				/* the input arguments should be "group <string>" */
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
@@ -687,7 +793,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "hostname")==0) {
+		else if (strcmp(command, "hostname")==0) {
 				/* the input arguments should be "group <string>" */
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
@@ -712,7 +818,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "allowuser")==0) {
+		else if (strcmp(command, "allowuser")==0) {
 				/* the input arguments should be "allowuser {<string>, <string>, ...}" */
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
@@ -746,7 +852,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "allowgroup")==0) {
+		else if (strcmp(command, "allowgroup")==0) {
 				/* the input arguments should be "allowgroup {<string>, <string>, ...}" */
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
@@ -780,7 +886,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "allowhost")==0) {
+		else if (strcmp(command, "allowhost")==0) {
 				/* the input arguments should be "allowhost {<string>, <string>, ...}" */
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
@@ -814,7 +920,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "refuseuser")==0) {
+		else if (strcmp(command, "refuseuser")==0) {
 				/* the input arguments should be "refuseuser {<string>, <string>, ...}" */
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
@@ -848,7 +954,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "refusegroup")==0) {
+		else if (strcmp(command, "refusegroup")==0) {
 				/* the input arguments should be "refusegroup {<string>, <string>, ...}" */
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
@@ -882,7 +988,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "refusehost")==0) {
+		else if (strcmp(command, "refusehost")==0) {
 				/* the input arguments should be "refusehost {<string>, <string>, ...}" */
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
@@ -916,7 +1022,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "put")==0) {
+		else if (strcmp(command, "put")==0) {
 				int hasuds, hastcp;
 				/* the input arguments should be "put <peerid> <arg> <opt> ... "   */
 				/* where additional options should be specified as key-value pairs */
@@ -949,13 +1055,13 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 								mexErrMsgTxt ("optional arguments should come in key-value pairs");
 
 						/* use the optional parameter value */
-						if      (strcasecmp(argument, "jobid")==0)
+						if      (strcmp(argument, "jobid")==0)
 								jobid = (UINT32_T)mxGetScalar(val);
-						else if (strcasecmp(argument, "memreq")==0)
+						else if (strcmp(argument, "memreq")==0)
 								memreq = (UINT32_T)(mxGetScalar(val)+0.5);
-						else if (strcasecmp(argument, "cpureq")==0)
+						else if (strcmp(argument, "cpureq")==0)
 								cpureq = (UINT32_T)(mxGetScalar(val)+0.5);
-						else if (strcasecmp(argument, "timreq")==0)
+						else if (strcmp(argument, "timreq")==0)
 								timreq = (UINT32_T)(mxGetScalar(val)+0.5);
 				}
 
@@ -1128,7 +1234,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "get")==0) {
+		else if (strcmp(command, "get")==0) {
 				/* the input arguments should be "get <jobid>" */
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
@@ -1161,7 +1267,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "clear")==0) {
+		else if (strcmp(command, "clear")==0) {
 				/* the input arguments should be "clear <jobid>" */
 				if (nrhs<2)
 						mexErrMsgTxt ("invalid number of input arguments");
@@ -1223,7 +1329,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		}
 
 		/****************************************************************************/
-		else if (strcasecmp(command, "peerinfo")==0) {
+		else if (strcmp(command, "peerinfo")==0) {
 				pthread_mutex_lock(&mutexhost);
 				plhs[0] = mxCreateStructMatrix(1, 1, PEERINFO_FIELDNUMBER, peerinfo_fieldnames);
 				j = 0;
@@ -1377,97 +1483,6 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				mxSetFieldByNumber(plhs[0], 0, j++, val);
 				pthread_mutex_unlock(&mutexrefusehostlist);
 
-				return;
-		}
-
-		/****************************************************************************/
-		else if (strcasecmp(command, "peerlist")==0) {
-				/* it can be followed by an optional input argument "peerlist <status>" */
-				if (nrhs>1) {
-						/* only return the list for the desired status */
-						if (!mxIsNumeric(prhs[1]))
-								mexErrMsgTxt ("invalid input argument #2");
-						else
-								status = (UINT32_T)mxGetScalar(prhs[1]);
-				}
-				else {
-						/* this is to be interpreted as "any status" */
-						status = -1;
-				}
-
-				pthread_mutex_lock(&mutexpeerlist);
-				/* count the number of peers */
-				i = 0;
-				peer = peerlist;
-				while(peer) {
-						i += (status==-1 ? 1 : (peer->host->status==status));
-						peer = peer->next ;
-				}
-				plhs[0] = mxCreateStructMatrix(i, 1, PEERLIST_FIELDNUMBER, peerlist_fieldnames);
-				i = 0;
-				peer = peerlist;
-				while(peer) {
-						if (status!=-1 && peer->host->status!=status) {
-								peer = peer->next;
-								continue;
-						}
-						j = 0;
-						mxSetFieldByNumber(plhs[0], i, j++, mxCreateDoubleScalar((UINT32_T)(peer->host->id)));
-						mxSetFieldByNumber(plhs[0], i, j++, mxCreateString(peer->host->name));
-						mxSetFieldByNumber(plhs[0], i, j++, mxCreateString(peer->host->user));
-						mxSetFieldByNumber(plhs[0], i, j++, mxCreateString(peer->host->group));
-						mxSetFieldByNumber(plhs[0], i, j++, mxCreateString(peer->host->socket));
-						mxSetFieldByNumber(plhs[0], i, j++, mxCreateDoubleScalar((UINT32_T)(peer->host->port)));
-						mxSetFieldByNumber(plhs[0], i, j++, mxCreateDoubleScalar((UINT32_T)(peer->host->status)));
-						mxSetFieldByNumber(plhs[0], i, j++, mxCreateDoubleScalar((UINT64_T)(peer->host->timavail)));
-						mxSetFieldByNumber(plhs[0], i, j++, mxCreateDoubleScalar((UINT64_T)(peer->host->memavail)));
-						mxSetFieldByNumber(plhs[0], i, j++, mxCreateDoubleScalar((UINT64_T)(peer->host->cpuavail)));
-
-						current = mxCreateStructMatrix(1, 1, CURRENT_FIELDNUMBER, current_fieldnames);
-						mxSetFieldByNumber(current, 0, 0, mxCreateDoubleScalar(peer->host->current.hostid));
-						mxSetFieldByNumber(current, 0, 1, mxCreateDoubleScalar(peer->host->current.jobid));
-						mxSetFieldByNumber(current, 0, 2, mxCreateString(peer->host->current.name));
-						mxSetFieldByNumber(current, 0, 3, mxCreateString(peer->host->current.user));
-						mxSetFieldByNumber(current, 0, 4, mxCreateString(peer->host->current.group));
-						mxSetFieldByNumber(current, 0, 5, mxCreateDoubleScalar(peer->host->current.timreq));
-						mxSetFieldByNumber(current, 0, 6, mxCreateDoubleScalar(peer->host->current.memreq));
-						mxSetFieldByNumber(current, 0, 7, mxCreateDoubleScalar(peer->host->current.cpureq));
-						mxSetFieldByNumber(plhs[0], i, j++, current);
-
-						i++;
-						peer = peer->next ;
-				}
-				pthread_mutex_unlock(&mutexpeerlist);
-				return;
-		}
-
-		/****************************************************************************/
-		else if (strcasecmp(command, "joblist")==0) {
-				pthread_mutex_lock(&mutexjoblist);
-				/* count the number of jobs */
-				i = 0;
-				job = joblist;
-				while(job) {
-						i++;
-						job = job->next ;
-				}
-				plhs[0] = mxCreateStructMatrix(i, 1, JOBLIST_FIELDNUMBER, joblist_fieldnames);
-				i = 0;
-				job = joblist;
-				while(job) {
-						mxSetFieldByNumber(plhs[0], i, 0, mxCreateDoubleScalar((UINT32_T)(job->job->version)));
-						mxSetFieldByNumber(plhs[0], i, 1, mxCreateDoubleScalar((UINT32_T)(job->job->id)));
-						mxSetFieldByNumber(plhs[0], i, 2, mxCreateDoubleScalar((UINT32_T)(job->job->argsize)));
-						mxSetFieldByNumber(plhs[0], i, 3, mxCreateDoubleScalar((UINT32_T)(job->job->optsize)));
-						mxSetFieldByNumber(plhs[0], i, 4, mxCreateDoubleScalar((UINT32_T)(job->host->id)));
-						mxSetFieldByNumber(plhs[0], i, 5, mxCreateString(job->host->name));
-						mxSetFieldByNumber(plhs[0], i, 6, mxCreateString(job->host->user));
-						mxSetFieldByNumber(plhs[0], i, 7, mxCreateDoubleScalar((UINT64_T)(job->job->memreq)));
-						mxSetFieldByNumber(plhs[0], i, 8, mxCreateDoubleScalar((UINT64_T)(job->job->timreq)));
-						job = job->next;
-						i++;
-				}
-				pthread_mutex_unlock(&mutexjoblist);
 				return;
 		}
 
