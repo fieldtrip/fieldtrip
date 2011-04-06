@@ -16,6 +16,10 @@ function mri = ft_volumereslice(cfg, mri)
 % or alternatively with
 %   cfg.dim        = [nx ny nz], size of the volume in each direction
 %
+% If the input mri has a coordsys-field, the centre of the volume will be
+% shifted (with respect to the origin of the coordinate system), for the
+% brain to fit nicely in the box. 
+%
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
 %   cfg.inputfile   =  ...
@@ -56,33 +60,62 @@ ft_defaults
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the defaults
-if ~isfield(cfg, 'resolution');   cfg.resolution   = 1;         end % in physical units
-if ~isfield(cfg, 'downsample');   cfg.downsample   = 1;         end
-if ~isfield(cfg, 'inputfile'),    cfg.inputfile    = [];        end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile   = [];        end
-
-if isfield(cfg, 'dim')
-  % a dimension of 2 should result in voxels at -0.5 and 0.5, i.e. two voxels centered at zero
-  cfg.xrange = [-cfg.dim(1)/2+0.5 cfg.dim(1)/2-0.5] * cfg.resolution;
-  cfg.yrange = [-cfg.dim(2)/2+0.5 cfg.dim(2)/2-0.5] * cfg.resolution;
-  cfg.zrange = [-cfg.dim(3)/2+0.5 cfg.dim(3)/2-0.5] * cfg.resolution;
-end
+cfg.resolution = ft_getopt(cfg, 'resolution', 1);
+cfg.downsample = ft_getopt(cfg, 'downsample', 1);
+cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
+cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
+cfg.xrange     = ft_getopt(cfg, 'xrange', []);
+cfg.yrange     = ft_getopt(cfg, 'yrange', []);
+cfg.zrange     = ft_getopt(cfg, 'zrange', []);
 
 % load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    mri = loadvar(cfg.inputfile, 'mri');
+hasdata      = (nargin>1);
+hasinputfile = ~isempty(cfg.inputfile);
+
+if hasdata && hasinputfile
+  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+elseif hasinputfile
+  mri = loadvar(cfg.inputfile, 'mri');
+elseif hasdata
+  % nothing to be done
+end
+
+if isfield(mri, 'coordsys')
+  % use some prior knowledge to optimize the location of the bounding box
+  % with respect to the origin of the coordinate system
+  switch mri.coordsys
+    case {'ctf' '4d' 'bti'}
+      xshift = 30./cfg.resolution;
+      yshift = 0;
+      zshift = 40./cfg.resolution;
+    case {'itab' 'neuromag'}
+      xshift = 0;
+      yshift = 30./cfg.resolution;
+      zshift = 40./cfg.resolution;
+    otherwise
+      xshift = 0;
+      yshift = 0;
+      zshift = 0;
   end
+else
+  xshift = 0;
+  yshift = 0;
+  zshift = 0;
+end
+
+cfg.dim = ft_getopt(cfg, 'dim',    ceil(mri.dim./cfg.resolution));
+if isempty(cfg.xrange), 
+  cfg.xrange = [-cfg.dim(1)/2+0.5 cfg.dim(1)/2-0.5] * cfg.resolution + xshift;
+end
+if isempty(cfg.yrange),
+  cfg.yrange = [-cfg.dim(2)/2+0.5 cfg.dim(2)/2-0.5] * cfg.resolution + yshift;
+end
+if isempty(cfg.zrange),
+  cfg.zrange = [-cfg.dim(3)/2+0.5 cfg.dim(3)/2-0.5] * cfg.resolution + zshift;
 end
 
 % check if the input data is valid for this function and ensure that the structures correctly describes a volume
 mri = ft_checkdata(mri, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
-
-cfg = ft_checkconfig(cfg, 'required', {'xrange', 'yrange', 'zrange'});
 
 if ~isequal(cfg.downsample, 1)
   % downsample the anatomical volume
@@ -120,7 +153,9 @@ cfg.version.id = '$Id$';
 cfg.version.matlab = version();
 
 % remember the configuration details of the input data
-try cfg.previous = mri.cfg; end
+if isfield(cfg, 'previous'),
+  cfg.previous = mri.cfg;
+end
 
 % remember the exact configuration details in the output
 mri.cfg = cfg;
