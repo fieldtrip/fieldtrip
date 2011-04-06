@@ -84,7 +84,7 @@ deprecated      = keyval('deprecated',      varargin);
 unused          = keyval('unused',          varargin);
 forbidden       = keyval('forbidden',       varargin);
 createsubcfg    = keyval('createsubcfg',    varargin);
-dataset2files   = keyval('dataset2files',   varargin);
+ckeckfilenames  = keyval('dataset2files',   varargin);
 checksize       = keyval('checksize',       varargin); if isempty(checksize), checksize = 'off';  end
 trackconfig     = keyval('trackconfig',     varargin);
 
@@ -384,11 +384,11 @@ end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% dataset2files
+% ckeckfilenames, i.e. dataset2files
 %
 % Converts cfg.dataset into cfg.headerfile and cfg.datafile if neccessary.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isempty(dataset2files) && strcmp(dataset2files, 'yes')
+if ~isempty(ckeckfilenames) && strcmp(ckeckfilenames, 'yes')
 
   % start with empty fields if they are not present
   if ~isfield(cfg, 'dataset')
@@ -412,125 +412,18 @@ if ~isempty(dataset2files) && strcmp(dataset2files, 'yes')
       cfg.dataset = d;
     end
 
-    % the following code is shared with fileio read_header/read_data
-    % therefore the three local variables are used outside of the cfg
-    filename   = cfg.dataset;
-    datafile   = [];
-    headerfile = [];
-    switch ft_filetype(filename)
-      case '4d_pdf'
-        datafile   = filename;
-        headerfile = [datafile '.m4d'];
-        sensorfile = [datafile '.xyz'];
-      case {'4d_m4d', '4d_xyz'}
-        datafile   = filename(1:(end-4)); % remove the extension
-        headerfile = [datafile '.m4d'];
-        sensorfile = [datafile '.xyz'];
-      case '4d'
-        [path, file, ext] = fileparts(filename);
-        datafile   = fullfile(path, [file,ext]);
-        headerfile = fullfile(path, [file,ext]);
-        configfile = fullfile(path, 'config');
-      case {'ctf_ds', 'ctf_old'}
-        % convert CTF filename into filenames
-        [path, file, ext] = fileparts(filename);
-        if any(strcmp(ext, {'.res4' '.meg4', '.1_meg4' '.2_meg4' '.3_meg4' '.4_meg4' '.5_meg4' '.6_meg4' '.7_meg4' '.8_meg4' '.9_meg4'}))
-          filename = path;
-          [path, file, ext] = fileparts(filename);
-        end
-        if isempty(path) && isempty(file)
-          % this means that the dataset was specified as the present working directory, i.e. only with '.'
-          filename = pwd;
-          [path, file, ext] = fileparts(filename);
-        end
-        headerfile = fullfile(filename, [file '.res4']);
-        datafile   = fullfile(filename, [file '.meg4']);
-        if length(path)>3 && strcmp(path(end-2:end), '.ds')
-          filename = path; % this is the *.ds directory
-        end
-      case 'ctf_meg4'
-        [path, file, ext] = fileparts(filename);
-        if isempty(path)
-          path = pwd;
-        end
-        headerfile = fullfile(path, [file '.res4']);
-        datafile   = fullfile(path, [file '.meg4']);
-        if length(path)>3 && strcmp(path(end-2:end), '.ds')
-          filename = path; % this is the *.ds directory
-        end
-      case 'ctf_res4'
-        [path, file, ext] = fileparts(filename);
-        if isempty(path)
-          path = pwd;
-        end
-        headerfile = fullfile(path, [file '.res4']);
-        datafile   = fullfile(path, [file '.meg4']);
-        if length(path)>3 && strcmp(path(end-2:end), '.ds')
-          filename = path; % this is the *.ds directory
-        end
-      case 'brainvision_vhdr'
-        [path, file, ext] = fileparts(filename);
-        headerfile = fullfile(path, [file '.vhdr']);
-        if exist(fullfile(path, [file '.eeg']))
-          datafile   = fullfile(path, [file '.eeg']);
-        elseif exist(fullfile(path, [file '.seg']))
-          datafile   = fullfile(path, [file '.seg']);
-        elseif exist(fullfile(path, [file '.dat']))
-          datafile   = fullfile(path, [file '.dat']);
-        end
-      case 'brainvision_eeg'
-        [path, file, ext] = fileparts(filename);
-        headerfile = fullfile(path, [file '.vhdr']);
-        datafile   = fullfile(path, [file '.eeg']);
-      case 'brainvision_seg'
-        [path, file, ext] = fileparts(filename);
-        headerfile = fullfile(path, [file '.vhdr']);
-        datafile   = fullfile(path, [file '.seg']);
-      case 'brainvision_dat'
-        [path, file, ext] = fileparts(filename);
-        headerfile = fullfile(path, [file '.vhdr']);
-        datafile   = fullfile(path, [file '.dat']);
-      case 'itab_raw'
-        [path, file, ext] = fileparts(filename);
-        headerfile = fullfile(path, [file '.raw.mhd']);
-        datafile   = fullfile(path, [file '.raw']);
-      case 'fcdc_matbin'
-        [path, file, ext] = fileparts(filename);
-        headerfile = fullfile(path, [file '.mat']);
-        datafile   = fullfile(path, [file '.bin']);
-      case {'tdt_tsq' 'tdt_tev'}
-        [path, file, ext] = fileparts(filename);
-        headerfile = fullfile(path, [file '.tsq']);
-        datafile   = fullfile(path, [file '.tev']);
-      case 'nmc_archive_k'
-        [path, file, ext] = fileparts(filename);
-        headerfile = [path '/' file 'newparams.txt'];
-        if isempty(headerformat)
-          headerformat = 'nmc_archive_k';
-        end
-        if isempty(hdr)
-          hdr = ft_read_header(headerfile, 'headerformat', headerformat);
-        end
-        datafile = filename;
-      otherwise
-        % convert filename into filenames, assume that the header and data are the same
-        datafile   = filename;
-        headerfile = filename;
-    end
-    % end sharing with fileio read_header/read_data
-    % put everything back into the cfg
-    cfg.dataset    = filename;
-    cfg.datafile   = datafile;
-    cfg.headerfile = headerfile;
+    % ensure that the headerfile and datafile are defined, which are sometimes different than the name of the dataset
+    % this requires correct autodetection of the format
+    [cfg.dataset, cfg.headerfile, cfg.datafile] = dataset2files(cfg.dataset, []);
 
     % fill dataformat if unspecified
     if ~isfield(cfg,'dataformat') || isempty(cfg.dataformat)
-      cfg.dataformat = ft_filetype(datafile);
+      cfg.dataformat = ft_filetype(cfg.datafile);
     end
 
     % fill dataformat if unspecified
     if ~isfield(cfg,'headerformat') || isempty(cfg.headerformat)
-      cfg.headerformat = ft_filetype(headerfile);
+      cfg.headerformat = ft_filetype(cfg.headerfile);
     end
 
   elseif ~isempty(cfg.datafile) && isempty(cfg.headerfile);
