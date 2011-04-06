@@ -365,7 +365,7 @@ switch cfg.method
     if exist('powindx', 'var'), tmpcfg.powindx     = powindx; end
     optarg             = ft_cfg2keyval(tmpcfg);
     
-    [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg);
+    [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     outparam = 'cohspctrm';
     
   case 'csd'
@@ -382,7 +382,7 @@ switch cfg.method
     if exist('powindx', 'var'), tmpcfg.powindx     = powindx; end
     optarg             = ft_cfg2keyval(tmpcfg);
     
-    [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg);
+    [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     outparam = 'crsspctrm';
   case {'wpli' 'wpli_debiased'}
     % weighted pli or debiased weighted phase lag index.
@@ -391,7 +391,7 @@ switch cfg.method
     tmpcfg.dojack          = dojack;
     tmpcfg.debias          = debiaswpli;
     optarg                 = ft_cfg2keyval(tmpcfg);    
-    [datout, varout, nrpt] = ft_connectivity_wpli(data.(inparam), optarg);
+    [datout, varout, nrpt] = ft_connectivity_wpli(data.(inparam), optarg{:});
     if debiaswpli
       outparam = 'wpli_debiasedspctrm'; 
     else
@@ -404,7 +404,7 @@ switch cfg.method
     tmpcfg.dojack          = dojack;
     tmpcfg.weighted        = weightppc;
     optarg                 = ft_cfg2keyval(tmpcfg);    
-    [datout, varout, nrpt] = ft_connectivity_ppc(data.(inparam), optarg);
+    [datout, varout, nrpt] = ft_connectivity_ppc(data.(inparam), optarg{:});
     if weightppc
       outparam = 'wppcspctrm';     
     else
@@ -424,7 +424,7 @@ switch cfg.method
     if exist('powindx', 'var'), tmpcfg.powindx     = powindx; end
     optarg             = ft_cfg2keyval(tmpcfg);
     
-    [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg);
+    [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     outparam         = 'plvspctrm';
     
   case 'corr'
@@ -450,7 +450,7 @@ switch cfg.method
     if exist('powindx', 'var'), tmpcfg.powindx = powindx; end
     optarg             = ft_cfg2keyval(tmpcfg);
     
-    [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg);
+    [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     outparam        = 'amplcorrspctrm';
     
   case 'powcorr'
@@ -470,7 +470,7 @@ switch cfg.method
     if exist('powindx', 'var'), tmpcfg.powindx = powindx; end
     optarg             = ft_cfg2keyval(tmpcfg);
     
-    [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg);
+    [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     outparam        = 'powcorrspctrm';
     
   case 'granger'
@@ -579,7 +579,7 @@ switch cfg.method
       nrpt  = 1;
       datin = reshape(data.(inparam), [1 size(data.(inparam))]);
     end
-    [datout, varout, nrpt] = ft_connectivity_dtf(datin, optarg);
+    [datout, varout, nrpt] = ft_connectivity_dtf(datin, optarg{:});
     outparam = 'dtfspctrm';
     
   case 'pdc'
@@ -606,7 +606,7 @@ switch cfg.method
       datin = reshape(data.(inparam), [1 size(data.(inparam))]);
     end
     
-    [datout, varout, nrpt] = ft_connectivity_pdc(datin, optarg);
+    [datout, varout, nrpt] = ft_connectivity_pdc(datin, optarg{:});
     outparam = 'pdcspctrm';
     
   case 'psi'
@@ -622,7 +622,7 @@ switch cfg.method
     if exist('powindx', 'var'), tmpcfg.powindx     = powindx; end
     optarg             = ft_cfg2keyval(tmpcfg);
     
-    [datout, varout, nrpt] = ft_connectivity_psi(data.(inparam), optarg);
+    [datout, varout, nrpt] = ft_connectivity_psi(data.(inparam), optarg{:});
     outparam         = 'psispctrm';
     
   case 'di'
@@ -741,7 +741,7 @@ cfg.hasrpt  = hasrpt;
 cfg.hasjack = hasjack;
 optarg = ft_cfg2keyval(cfg);
 
-[c, v, n] = ft_connectivity_corr(input, optarg);
+[c, v, n] = ft_connectivity_corr(input, optarg{:});
 c = -log(1-c.^2);
 v = -log(1-v.^2); %FIXME this is probably not correct
 
