@@ -266,10 +266,9 @@ elseif ~is2Dana && ~is2Dfun
   functional = ft_checkdata(functional, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
   anatomical = ft_checkdata(anatomical, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
   
-  if ~strcmp(functional.unit, anatomical.unit)
-    fprintf('converting functional data from %s into %s\n', functional.unit, anatomical.unit);
-    functional = ft_convert_units(functional, anatomical.unit);
-  end
+  % ensure that the functional data has the same unit as the anatomical
+  % data
+  functional = ft_convert_units(functional, anatomical.unit);
   
   % select the parameters that should be interpolated
   cfg.parameter = parameterselection(cfg.parameter, functional);
