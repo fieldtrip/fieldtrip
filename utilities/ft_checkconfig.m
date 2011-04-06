@@ -341,6 +341,7 @@ if ~isempty(createsubcfg)
       case {'mne', 'loreta', 'rv'}
         fieldname = {
           'feedback'
+          'lambda'
           };
 
       case 'music'
