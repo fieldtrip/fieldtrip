@@ -487,7 +487,7 @@ if issource || isvolume,
     dim = [prod(data.dim) 1];
   elseif issource && any(~cellfun('isempty',strfind(fieldnames(data), 'dimord')))
     dim = [size(data.pos,1) 1]; %sparsely represented source structure new style
-  elseif issource && isfield(data, 'dim'),
+  elseif isfield(data, 'dim'),
     dim = [data.dim 1];
   elseif issource
     dim = [size(data.pos,1) 1];
