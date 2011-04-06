@@ -483,12 +483,14 @@ if issource || isvolume,
   
   % ensure consistent dimensions of the source reconstructed data
   % reshape each of the source reconstructed parameters
-  if issource && prod(data.dim)==size(data.pos,1)
+  if issource && isfield(data, 'dim') && prod(data.dim)==size(data.pos,1)
     dim = [prod(data.dim) 1];
   elseif issource && any(~cellfun('isempty',strfind(fieldnames(data), 'dimord')))
     dim = [size(data.pos,1) 1]; %sparsely represented source structure new style
-  elseif isfield(data, 'dim'),
+  elseif issource && isfield(data, 'dim'),
     dim = [data.dim 1];
+  elseif issource
+    dim = [size(data.pos,1) 1];
   elseif isfield(data, 'dimord'),
     %HACK
     dimtok = tokenize(data.dimord, '_');
