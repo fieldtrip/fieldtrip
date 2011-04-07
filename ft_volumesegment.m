@@ -401,7 +401,9 @@ if ~strcmp(cfg.smooth, 'no'),
     spm_smooth(segment.white, segment.white, cfg.smooth); % smooth the white matter
     spm_smooth(segment.csf,   segment.csf,   cfg.smooth); % smooth the csf compartment
   end
-  if hasanatomy
+  if hasanatomy & strcmp(cfg.segment,'no')
+    spm_smooth(segment.anatomy, segment.anatomy, cfg.smooth); 
+  else
     segment.anatomy = mri.anatomy;
     spm_smooth(segment.anatomy, segment.anatomy, cfg.smooth); 
   end
