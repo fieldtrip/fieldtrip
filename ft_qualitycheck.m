@@ -6,7 +6,7 @@ function [varargout] = ft_qualitycheck(cfg)
 % a .PNG and .PDF file.
 %
 % In case the data is MEG data recorded with a CTF system, the output contains
-% the headpos variable.
+% the headpositions.
 %
 % Use as:
 %   [info, timelock, freq, summary, headpos] = ft_qualitycheck(cfg)
@@ -55,9 +55,7 @@ if strcmp(cfg.analyze,'yes')
     tic
     
     % checks
-    iseeg = ft_filetype(cfg.dataset,'brainvision_eeg','ns_eeg','bci2000_dat','neuroprax_eeg','egi_sbin','biosemi_bdf');
-    ismeg = ft_filetype(cfg.dataset,'ctf_ds','4d','neuromag_fif','itab_raw');
-    isctf = ft_filetype(cfg.dataset, 'ctf_ds');
+    [iseeg, ismeg, isctf, fltp] = filetyper(cfg.dataset);
     cfg   = ft_checkconfig(cfg, 'dataset2files', 'yes'); % translate into datafile+headerfile
     
     % these will be replaced by more appropriate values
@@ -239,7 +237,6 @@ if strcmp(cfg.analyze,'yes')
     cfg.version.matlab = version(); % Matlab version used
     
     % add the cfg to the output variables
-    info.cfg           = cfg;
     timelock.cfg       = cfg;
     freq.cfg           = cfg;
     summary.cfg        = cfg;
@@ -326,10 +323,22 @@ else
 end
 
 
-%%%%%%%%%%%%%%%%%%%%%%%% SUBFUNCTIONS %%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%% SUBFUNCTION %%%%%%%%%%%%%%%%%%%%%%%%%
+function [iseeg, ismeg, isctf, fltp] = filetyper(dataset)
+fltp = ft_filetype(dataset);
+iseeg = ft_filetype(dataset,'brainvision_eeg') | ...
+    ft_filetype(dataset,'ns_eeg') | ...
+    ft_filetype(dataset,'bci2000_dat') | ...
+    ft_filetype(dataset,'neuroprax_eeg') | ...
+    ft_filetype(dataset,'egi_sbin') | ...
+    ft_filetype(dataset,'biosemi_bdf');
+ismeg = ft_filetype(dataset,'ctf_ds') | ...
+    ft_filetype(dataset,'4d') | ...
+    ft_filetype(dataset,'neuromag_fif') | ...
+    ft_filetype(dataset,'itab_raw');
+isctf = ft_filetype(dataset, 'ctf_ds');
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%% SUBFUNCTION %%%%%%%%%%%%%%%%%%%%%%%%%
 function [power, freq] = findpower(low, high, freqinput, chans)
 % replace value with the index of the nearest bin
 xmin  = nearest(getsubfield(freqinput, 'freq'), low);
@@ -338,7 +347,7 @@ xmax  = nearest(getsubfield(freqinput, 'freq'), high);
 power = freqinput.powspctrm(chans, xmin:xmax);
 freq  = freqinput.freq(:, xmin:xmax);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%% SUBFUNCTION %%%%%%%%%%%%%%%%%%%%%%%%%
 function draw_figure(varargin)
 % deal with input
 if nargin == 6
@@ -357,15 +366,14 @@ elseif nargin == 5
 end
 
 % determine whether it is EEG or MEG
-iseeg = ft_filetype(timelock.cfg.dataset,'brainvision_eeg','ns_eeg','bci2000_dat','neuroprax_eeg','egi_sbin','biosemi_bdf');
-ismeg = ft_filetype(timelock.cfg.dataset,'ctf_ds','4d','neuromag_fif','itab_raw');
+[iseeg, ismeg, isctf, fltp] = filetyper(timelock.cfg.dataset);
 if ismeg
-    scaling = 1e15;
-    powscaling = 1e30;
+    scaling = 1e15; % assuming data is in T and needs to become fT
+    powscaling = scaling^2;
     ylab = 'fT';
 elseif iseeg
-    scaling = 1e1;
-    powscaling = 1e2;
+    scaling = 1e0; % assuming data is in muV already
+    powscaling = scaling^2;
     ylab = '\muV';
 end
 
@@ -436,12 +444,6 @@ h.HmotionPanel = uipanel(...
     'Backgroundcolor','white',...
     'Position',[.01 .5 .25 .47]);
 
-h.HmotionAxes = axes(...
-    'Parent',h.HmotionPanel,...
-    'Units','normalized',...
-    'color','white',...
-    'Position',[.05 .08 .9 .52]);
-
 h.DataText = uicontrol(...
     'Parent',h.HmotionPanel,...
     'Style','text',...
@@ -474,7 +476,7 @@ h.DataText2 = uicontrol(...
     'Style','text',...
     'Units','normalized',...
     'FontSize',10,...
-    'String',['fs: ' num2str(info.hdr.Fs) ', nchans: ' nchans],...
+    'String',[fltp ', fs: ' num2str(info.hdr.Fs) ', nchans: ' nchans],...
     'Backgroundcolor','white',...
     'Position',[.01 .71 .99 .1]);
 
@@ -489,6 +491,12 @@ h.DataText3 = uicontrol(...
 
 % boxplot headmotion (*10; cm-> mm) per coil
 if exist('headpos','var')
+    h.HmotionAxes = axes(...
+        'Parent',h.HmotionPanel,...
+        'Units','normalized',...
+        'color','white',...
+        'Position',[.05 .08 .9 .52]);
+    
     hmotions = ([summary.avg(8,:)' summary.avg(7,:)' summary.avg(6,:)'])*10;
     boxplot(h.HmotionAxes, hmotions, 'orientation', 'horizontal', 'notch', 'on');
     set(h.HmotionAxes,'YTick',[1:3]);
@@ -503,12 +511,6 @@ h.SignalPanel = uipanel(...
     'Units','normalized',...
     'Backgroundcolor','white',...
     'Position',[.28 .34 .71 .63]);
-
-h.HmotionTimecourseAxes = axes(...
-    'Parent',h.SignalPanel,...
-    'Units','normalized',...
-    'color','white',...
-    'Position',[.08 .73 .89 .22]);
 
 h.SignalAxes = axes(...
     'Parent',h.SignalPanel,...
@@ -530,6 +532,12 @@ h.LowfreqnoiseAxes = axes(...
 
 % plot hmotion timecourses per coil (*10; cm-> mm)
 if exist('headpos','var')
+    h.HmotionTimecourseAxes = axes(...
+        'Parent',h.SignalPanel,...
+        'Units','normalized',...
+        'color','white',...
+        'Position',[.08 .73 .89 .22]);
+    
     plot(h.HmotionTimecourseAxes, summary.time, summary.avg(6,:)*10, summary.time, summary.avg(7,:)*10, summary.time, summary.avg(8,:)*10, 'LineWidth',2);
     ylim(h.HmotionTimecourseAxes,[0 10]);
     ylabel(h.HmotionTimecourseAxes, 'Coil distance [mm]');
@@ -582,7 +590,7 @@ for j=1:length(a)
     eventvalues{j,1}   = length(unique([info.event(c==j).value]));
 end
 if isempty(eventtypes)
-    eventtypes{1,1} = 'no events found';
+    eventtypes{1,1} = 'no triggers found';
 end
 
 h.EventText = uicontrol(...
@@ -647,7 +655,7 @@ for j=1:length(a)
     jumpcounts{j,1} = sum(c==j);
 end
 if isempty(jumpchans)
-    jumpchans{1,1} = 'no jumps found';
+    jumpchans{1,1} = 'no jumps detected';
 end
 
 h.JumpText = uicontrol(...
@@ -668,14 +676,14 @@ h.JumpText2 = uicontrol(...
     'Backgroundcolor','white',...
     'Position',[.65 .5 .2 .4]);
 
-h.TopoMEG = axes(...
-    'Parent',h.JumpPanel,...
-    'color','white',...
-    'Units','normalized',...
-    'Position',[0.4 0.05 0.55 0.4]);
-
 % plot jumps on the dewar sensors
-if exist('headpos','var')
+if ismeg
+    h.TopoMEG = axes(...
+        'Parent',h.JumpPanel,...
+        'color','white',...
+        'Units','normalized',...
+        'Position',[0.4 0.05 0.55 0.4]);
+    
     MEGchans                 = ft_channelselection('MEG', timelock.label);
     MEGchanindx              = match_str(timelock.label, MEGchans);
     cfgtopo                  = [];
@@ -683,7 +691,7 @@ if exist('headpos','var')
     cfgtopo.colorbar         = 'no';
     cfgtopo.comment          = 'no';
     cfgtopo.style            = 'blank';
-    cfgtopo.layout           = 'CTF275.lay';
+    cfgtopo.layout           = ft_prepare_layout(timelock);
     cfgtopo.highlight        = 'on';
     cfgtopo.highlightsymbol  = '.';
     cfgtopo.highlightsize    = [14];
