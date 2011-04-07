@@ -28,6 +28,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %                     see FT_CHANNELSELECTION for details
 % cfg.cohrefchannel = name of reference channel for visualising coherence, can be 'gui'
 % cfg.fontsize      = font size of title (default = 8)
+% cfg.hotkeys          = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
 % cfg.colormap      = any sized colormap, see COLORMAP
 % cfg.colorbar      = 'yes', 'no' (default = 'yes')
 % cfg.interactive   = Interactive plot 'yes' or 'no' (default = 'no')
@@ -84,6 +85,7 @@ cfg.zlim          = ft_getopt(cfg, 'zlim',         'maxmin');
 cfg.fontsize      = ft_getopt(cfg, 'fontsize',     8);
 cfg.colorbar      = ft_getopt(cfg, 'colorbar',     'yes');
 cfg.interactive   = ft_getopt(cfg, 'interactive',  'no');
+cfg.hotkeys       = ft_getopt(cfg, 'hotkeys',      'no');
 cfg.renderer      = ft_getopt(cfg, 'renderer',     []);
 cfg.maskparameter = ft_getopt(cfg, 'maskparameter',[]);
 cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',    'opacity');
@@ -369,6 +371,12 @@ if isequal(cfg.colorbar,'yes')
   colorbar;
 end
 
+% Set adjust color axis
+if strcmp('yes',cfg.hotkeys)
+  %  Attach data and cfg to figure and attach a key listener to the figure
+  set(gcf, 'KeyPressFcn', {@key_sub, zmin, zmax})
+end
+
 % Make the figure interactive:
 if strcmp(cfg.interactive, 'yes')
   set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'callback', {@select_topoplotTFR, cfg, data}, 'event', 'WindowButtonUpFcn'});
@@ -443,3 +451,19 @@ p = get(gcf, 'Position');
 f = figure;
 set(f, 'Position', p);
 ft_topoplotER(cfg, varargin{:});
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION which handles hot keys in the current plot
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function key_sub(handle, eventdata, varargin)
+incr = (max(caxis)-min(caxis)) /10;
+% symmetrically scale color bar down by 10 percent
+if strcmp(eventdata.Key,'uparrow')
+  caxis([min(caxis)-incr max(caxis)+incr]);
+% symmetrically scale color bar up by 10 percent
+elseif strcmp(eventdata.Key,'downarrow')
+  caxis([min(caxis)+incr max(caxis)-incr]);
+% resort to minmax of data for colorbar
+elseif strcmp(eventdata.Key,'m')
+  caxis([varargin{1} varargin{2}]);
+end
