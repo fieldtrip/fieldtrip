@@ -349,6 +349,7 @@ if strcmp(cfg.segment, 'yes')
 
   % collect the results
   segment.dim       = size(V(1).dat);
+  
   segment.dim       = segment.dim(:)';    % enforce a row vector
   segment.transform = original.transform; % use the original transform
   segment.coordsys  = original.coordsys;  % use the original coordsys
@@ -372,7 +373,7 @@ if strcmp(cfg.segment, 'yes')
     segment.gray = ipermute(segment.gray, permutevec);
     if isfield(segment, 'white'), segment.white = ipermute(segment.white, permutevec); end
     if isfield(segment, 'csf'),   segment.csf   = ipermute(segment.csf,   permutevec); end
-    segment.dim  = ipermute(segment.dim, permutevec);
+    segment.dim  = size(segment.gray);
   end
 
   hassegment = 1;
