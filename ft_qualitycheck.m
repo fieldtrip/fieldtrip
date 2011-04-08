@@ -137,7 +137,7 @@ if strcmp(cfg.analyze,'yes')
     
     cfgfreq              = [];
     cfgfreq.output       = 'pow';
-    cfgfreq.channel      = chans;
+    cfgfreq.channel      = allchans;
     cfgfreq.method       = 'mtmfft';
     cfgfreq.taper        = 'hanning';
     cfgfreq.keeptrials   = 'no';
@@ -145,20 +145,20 @@ if strcmp(cfg.analyze,'yes')
     
     % output variables
     timelock.dimord = 'chan_time';
-    timelock.label  = chans;
+    timelock.label  = allchans;
     timelock.time   = [timeunit-timeunit/2:timeunit:timeunit*ntrials-timeunit/2];
-    timelock.avg    = NaN(length(chans), ntrials); % updated in loop
-    timelock.median = NaN(length(chans), ntrials); % updated in loop
-    timelock.jumps  = NaN(length(chans), ntrials); % updated in loop
-    timelock.range  = NaN(length(chans), ntrials); % updated in loop
-    timelock.min    = NaN(length(chans), ntrials); % updated in loop
-    timelock.max    = NaN(length(chans), ntrials); % updated in loop
+    timelock.avg    = NaN(length(allchans), ntrials); % updated in loop
+    timelock.median = NaN(length(allchans), ntrials); % updated in loop
+    timelock.jumps  = NaN(length(allchans), ntrials); % updated in loop
+    timelock.range  = NaN(length(allchans), ntrials); % updated in loop
+    timelock.min    = NaN(length(allchans), ntrials); % updated in loop
+    timelock.max    = NaN(length(allchans), ntrials); % updated in loop
     
     freq.dimord     = 'chan_freq_time';
-    freq.label      = chans;
+    freq.label      = allchans;
     freq.freq       = [cfgfreq.foilim(1):cfgfreq.foilim(2)];
     freq.time       = [timeunit-timeunit/2:timeunit:timeunit*ntrials-timeunit/2];
-    freq.powspctrm  = NaN(length(chans), length(freq.freq), ntrials); % updated in loop
+    freq.powspctrm  = NaN(length(allchans), length(freq.freq), ntrials); % updated in loop
     
     summary.dimord  = 'chan_time';
     summary.time    = [timeunit-timeunit/2:timeunit:timeunit*ntrials-timeunit/2];
@@ -223,7 +223,7 @@ if strcmp(cfg.analyze,'yes')
         summary.avg(8,:) = sqrt(sum((headpos.avg(7:9,:)-repmat(headpos.avg(7:9,1),1,size(headpos.avg,2))).^2,1)); % R
     end
     
-    % summarize/mean and store variables
+    % summarize/mean and store variables of brain info only
     summary.avg(1,:)   = mean(timelock.avg(chanindx,:),1);
     summary.avg(2,:)   = mean(timelock.median(chanindx,:),1);
     summary.avg(3,:)   = mean(timelock.min(chanindx,:),1);
