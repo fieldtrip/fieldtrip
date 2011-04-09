@@ -64,6 +64,11 @@ ft_defaults
 if ~isfield(cfg, 'feedback'),       cfg.feedback = 'no';         end
 if ~isfield(cfg, 'method'),         cfg.method   = 'distance';   end
 
+% FIXME: ugly temporary solution by sashae, see bugreport 575
+if ~ismember(cfg.method, {'distance', 'triangulation'})
+   cfg.method = 'distance';
+end
+
 % the default value for this is set later
 % if ~isfield(cfg, 'neighbourdist'),  cfg.neighbourdist = 4; end
 
