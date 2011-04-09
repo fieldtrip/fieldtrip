@@ -31,7 +31,7 @@ if nargin == 5
   dat.hdr          = ft_read_header(cfg.headerfile);
 elseif nargin == 6
   % data is given
-  dat.hdr          = fetch_header(inputdata); % used name inputdata iso data, because data is already used later in this function
+  dat.hdr          = ft_fetch_header(inputdata); % used name inputdata iso data, because data is already used later in this function
   dat.inputdata    = inputdata; % to be able to get inputdata into h (by guidata)
 end
 dat.trlop   = 1;
@@ -90,9 +90,9 @@ trlpadsmp = round(artcfg.trlpadding*hdr.Fs);
 sgnind = zindx(indx);
 iscontinuous = 1;
 if isfield(dat, 'inputdata')
-  data = fetch_data(dat.inputdata, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
+  data = ft_fetch_data(dat.inputdata, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
 else
-  data = read_data(cfg.datafile,   'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
+  data = ft_read_data(cfg.datafile,   'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
 end
 % data = preproc(data, channel, hdr.Fs, artfctdef, [], fltpadding, fltpadding);
 str = sprintf('trial %3d, channel %s', dat.trlop, hdr.label{sgnind});
