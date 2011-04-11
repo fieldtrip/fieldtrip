@@ -332,8 +332,20 @@ ismeg = ft_filetype(dataset,'ctf_ds') | ...
     ft_filetype(dataset,'neuromag_fif') | ...
     ft_filetype(dataset,'itab_raw');
 isctf = ft_filetype(dataset, 'ctf_ds');
-if ~ismeg && ~iseeg % if none found, use meg settings
-    ismeg = 1;
+if ~ismeg && ~iseeg % if none found, try less strict checks
+    [p, f, ext] = fileparts(dataset);
+    if strcmp(ext, '.eeg')
+        fltp = 'brainvision_eeg';
+        iseeg = 1;
+    elseif strcmp(ext, '.bdf')
+        fltp = 'biosemi_bdf';
+        iseeg = 1;
+    elseif strcmp(ext, '.ds')
+        fltp = 'ctf_ds';
+        ismeg = 1;
+    else % otherwise use eeg settings for stability reasons
+        iseeg = 1;
+    end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%% SUBFUNCTION %%%%%%%%%%%%%%%%%%%%%%%%%
