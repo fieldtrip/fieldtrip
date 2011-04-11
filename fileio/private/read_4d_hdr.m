@@ -29,7 +29,8 @@ function [header] = read_4d_hdr(datafile, configfile)
 
 %read header
 if nargin ~= 2
-  error('Wrong number of input arguments');
+  [path, file, ext] = fileparts(datafile);
+  configfile        = fullfile(path, 'config');
 end
 
 if ~isempty(datafile),

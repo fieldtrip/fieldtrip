@@ -150,7 +150,7 @@ end % if cache
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 switch headerformat
   case '4d'
-    orig            = read_4d_hdr(datafile, configfile);
+    orig            = read_4d_hdr(datafile);
     hdr.Fs          = orig.header_data.SampleFrequency;
     hdr.nChans      = orig.header_data.TotalChannels;
     hdr.nSamples    = orig.header_data.SlicesPerEpoch;
