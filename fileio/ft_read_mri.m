@@ -50,11 +50,13 @@ end
 if ft_filetype(filename, 'ctf_mri')
   [img, hdr] = read_ctf_mri(filename);
   transform = hdr.transformMRI2Head;
+  coordsys  = 'ctf';
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif ft_filetype(filename, 'ctf_mri4')
   [img, hdr] = read_ctf_mri4(filename);
   transform = hdr.transformMRI2Head;
+  coordsys  = 'ctf';
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif ft_filetype(filename, 'ctf_svl')
@@ -262,4 +264,7 @@ end
 try
   % try to add units
   mri = ft_convert_units(mri);
+end
+try
+  mri.coordsys = coordsys;
 end
