@@ -55,7 +55,6 @@ if strcmp(cfg.analyze,'yes')
     tic
     
     % checks
-    [iseeg, ismeg, isctf, fltp] = filetyper(cfg.dataset);
     cfg   = ft_checkconfig(cfg, 'dataset2files', 'yes'); % translate into datafile+headerfile
     
     % these will be replaced by more appropriate values
@@ -67,7 +66,7 @@ if strcmp(cfg.analyze,'yes')
     
     % the exportname is also used in the cron job
     exportname = qualitycheck_exportname(cfg.dataset);
-    
+    [iseeg, ismeg, isctf, fltp] = filetyper(cfg.dataset);
     if isctf
         try
             % update the info fields
@@ -75,15 +74,11 @@ if strcmp(cfg.analyze,'yes')
         end
     end
     
-    % read events
+    % add info
     info.event                  = ft_read_event(cfg.dataset);
-    
-    % read header file
     info.hdr                    = ft_read_header(cfg.dataset);
-    
-    % add filetype
-    info.filetype               = ft_filetype(cfg.dataset);
-    
+    info.filetype               = fltp;    
+        
     % trial definition
     cfgdef                      = [];
     cfgdef.dataset              = cfg.dataset;
@@ -337,6 +332,9 @@ ismeg = ft_filetype(dataset,'ctf_ds') | ...
     ft_filetype(dataset,'neuromag_fif') | ...
     ft_filetype(dataset,'itab_raw');
 isctf = ft_filetype(dataset, 'ctf_ds');
+if ~ismeg && ~iseeg % if none found, use meg settings
+    ismeg = 1;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%% SUBFUNCTION %%%%%%%%%%%%%%%%%%%%%%%%%
 function [power, freq] = findpower(low, high, freqinput, chans)
