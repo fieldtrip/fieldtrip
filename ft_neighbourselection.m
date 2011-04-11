@@ -78,7 +78,7 @@ if isfield(cfg, 'grad')
   fprintf('Obtaining the gradiometer configuration from the configuration.\n');
   sens = cfg.grad;
   % extract true channelposition
-  [sens.pnt, sens.ori, sens.label] = channelposition(sens);
+  [sens.pnt,sens.label] = channelposition(sens);
 elseif isfield(cfg, 'elec')
   fprintf('Obtaining the electrode configuration from the configuration.\n');
   sens = cfg.elec;
@@ -86,7 +86,7 @@ elseif isfield(cfg, 'gradfile')
   fprintf('Obtaining the gradiometer configuration from a file.\n');
   sens = ft_read_sens(cfg.gradfile);
   % extract true channelposition
-  [sens.pnt, sens.ori, sens.label] = channelposition(sens);
+  [sens.pnt, sens.label] = channelposition(sens);
 elseif isfield(cfg, 'elecfile')
   fprintf('Obtaining the electrode configuration from a file.\n');
   sens = ft_read_sens(cfg.elecfile);
@@ -101,7 +101,7 @@ elseif isfield(data, 'grad')
   fprintf('Using the gradiometer configuration from the dataset.\n');
   sens = data.grad;
   % extract true channelposition
-    [sens.pnt, sens.ori, sens.label] = channelposition(sens);
+    [sens.pnt, sens.label] = channelposition(sens);
 elseif isfield(data, 'elec')
   fprintf('Using the electrode configuration from the dataset.\n');
   sens = data.elec;
