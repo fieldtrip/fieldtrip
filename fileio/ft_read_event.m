@@ -1228,11 +1228,27 @@ switch eventformat
     end
     % translate the event table into known FieldTrip event types
     for i=1:numel(hdr.orig.event)
-      event(i).type     = 'trigger';
-      event(i).sample   = hdr.orig.event(i).offset + 1; % +1 was in EEGLAB pop_loadcnt
-      event(i).value    = hdr.orig.event(i).stimtype;
-      event(i).offset   = 0;
-      event(i).duration = 0;
+      event(end+1).type     = 'trigger';
+      event(end  ).sample   = hdr.orig.event(i).offset + 1; % +1 was in EEGLAB pop_loadcnt
+      event(end  ).value    = hdr.orig.event(i).stimtype;
+      event(end  ).offset   = 0;
+      event(end  ).duration = 0;
+      
+      % the code above assumes that all events are stimulus triggers
+      % howevere, there are also interesting events possible, such as responses
+      if hdr.orig.event(i).stimtype~=0
+        event(end+1).type     = 'stimtype';
+        event(end  ).sample   = hdr.orig.event(i).offset + 1; % +1 was in EEGLAB pop_loadcnt
+        event(end  ).value    = hdr.orig.event(i).stimtype;
+        event(end  ).offset   = 0;
+        event(end ).duration  = 0;
+      elseif hdr.orig.event(i).keypad_accept~=0
+        event(end+1).type     = 'keypad_accept';
+        event(end  ).sample   = hdr.orig.event(i).offset + 1; % +1 was in EEGLAB pop_loadcnt
+        event(end  ).value    = hdr.orig.event(i).keypad_accept;
+        event(end  ).offset   = 0;
+        event(end  ).duration = 0;
+      end
     end
 
   case 'ns_eeg'
@@ -1241,7 +1257,8 @@ switch eventformat
     end
     for i=1:hdr.nTrials
       % the *.eeg file has a fixed trigger value for each trial
-      % furthermore each trial has the label 'accept' or 'reject'
+      % furthermore each trial has additional fields like accept, correct, response and rt
+      
       tmp = read_ns_eeg(filename, i);
       % create an event with the trigger value
       event(end+1).type     = 'trial';
@@ -1249,10 +1266,32 @@ switch eventformat
       event(end  ).value    = tmp.sweep.type;  % trigger value
       event(end  ).offset   = -hdr.nSamplesPre;
       event(end  ).duration =  hdr.nSamples;
+      
       % create an event with the boolean accept/reject code
       event(end+1).type     = 'accept';
       event(end  ).sample   = (i-1)*hdr.nSamples + 1;
       event(end  ).value    = tmp.sweep.accept;  % boolean value indicating accept/reject
+      event(end  ).offset   = -hdr.nSamplesPre;
+      event(end  ).duration =  hdr.nSamples;
+      
+      % create an event with the boolean accept/reject code
+      event(end+1).type     = 'correct';
+      event(end  ).sample   = (i-1)*hdr.nSamples + 1;
+      event(end  ).value    = tmp.sweep.correct;  % boolean value
+      event(end  ).offset   = -hdr.nSamplesPre;
+      event(end  ).duration =  hdr.nSamples;
+      
+      % create an event with the boolean accept/reject code
+      event(end+1).type     = 'response';
+      event(end  ).sample   = (i-1)*hdr.nSamples + 1;
+      event(end  ).value    = tmp.sweep.response;  % probably a boolean value
+      event(end  ).offset   = -hdr.nSamplesPre;
+      event(end  ).duration =  hdr.nSamples;
+      
+      % create an event with the boolean accept/reject code
+      event(end+1).type     = 'rt';
+      event(end  ).sample   = (i-1)*hdr.nSamples + 1;
+      event(end  ).value    = tmp.sweep.rt;  % time in seconds
       event(end  ).offset   = -hdr.nSamplesPre;
       event(end  ).duration =  hdr.nSamples;
     end
