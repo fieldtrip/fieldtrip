@@ -161,9 +161,9 @@ switch eventformat
 
   case {'4d' '4d_pdf', '4d_m4d', '4d_xyz'}
     if isempty(hdr)
-      hdr = ft_read_header(filename, 'headerformat', '4d');
+      hdr = ft_read_header(filename, 'headerformat', eventformat);
     end
-
+    
     % read the trigger channel and do flank detection
     trgindx = match_str(hdr.label, 'TRIGGER');
     if isfield(hdr, 'orig') && isfield(hdr.orig, 'config_data') && strcmp(hdr.orig.config_data.site_name, 'Glasgow'),
