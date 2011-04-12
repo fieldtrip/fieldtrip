@@ -1,7 +1,7 @@
 function [data] = selfromraw(data, varargin)
 
-selrpt  = keyval('rpt',  varargin{:}); selectrpt  = ~isempty(strmatch(varargin(cellfun(@ischar, varargin)), 'rpt'));
-selchan = keyval('chan', varargin{:}); selectchan = ~isempty(strmatch(varargin(cellfun(@ischar, varargin)), 'chan'));
+selrpt  = keyval('rpt',  varargin); selectrpt  = ~isempty(strmatch(varargin(cellfun(@ischar, varargin)), 'rpt'));
+selchan = keyval('chan', varargin); selectchan = ~isempty(strmatch(varargin(cellfun(@ischar, varargin)), 'chan'));
 
 if selectrpt,
   fprintf('selecting %d trials\n', numel(selrpt));
