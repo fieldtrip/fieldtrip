@@ -381,7 +381,7 @@ if issource || isvolume,
     if isfield(data, 'avg') && isfield(data.avg, 'mom') && (isfield(data, 'freq') || isfield(data, 'frequency')) && strcmp(sourcedimord, 'rpt_pos'),
       %frequency domain source representation convert to single trial power
       Npos   = size(data.pos,1);
-      Nrpt   = length(data.cumtapcnt);
+      Nrpt   = size(data.cumtapcnt,1);
       tmpmom = zeros(Npos, size(data.avg.mom{data.inside(1)},2));
       tmpmom(data.inside,:) = cat(1,data.avg.mom{data.inside});
       tmppow = zeros(Npos, Nrpt);
@@ -675,7 +675,7 @@ if strcmp(current, 'fourier') && strcmp(desired, 'fourier')
 elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
   dimtok = tokenize(data.dimord, '_');
   if ~isempty(strmatch('rpttap',   dimtok)),
-    nrpt = length(data.cumtapcnt);
+    nrpt = size(data.cumtapcnt,1);
     flag = 0;
   else
     nrpt = 1;
@@ -758,7 +758,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
   if isempty(channelcmb), error('no channel combinations are specified'); end
   dimtok = tokenize(data.dimord, '_');
   if ~isempty(strmatch('rpttap',   dimtok)),
-    nrpt = length(data.cumtapcnt);
+    nrpt = size(data.cumtapcnt,1);
     flag = 0;
   else
     nrpt = 1;
@@ -939,7 +939,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'sparsewithpow')
   
 elseif strcmp(current, 'full') && strcmp(desired, 'sparse')
   dimtok = tokenize(data.dimord, '_');
-  if ~isempty(strmatch('rpt',   dimtok)), nrpt=numel(data.cumtapcnt); else nrpt = 1; end
+  if ~isempty(strmatch('rpt',   dimtok)), nrpt=size(data.cumtapcnt,1); else nrpt = 1; end
   if ~isempty(strmatch('freq',  dimtok)), nfrq=numel(data.freq);      else nfrq = 1; end
   if ~isempty(strmatch('time',  dimtok)), ntim=numel(data.time);      else ntim = 1; end
   nchan    = length(data.label);
@@ -1001,7 +1001,7 @@ elseif strcmp(current, 'sparsewithpow') && strcmp(desired, 'sparse')
 
 elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
   dimtok = tokenize(data.dimord, '_');
-  if ~isempty(strmatch('rpt',   dimtok)), nrpt=numel(data.cumtapcnt); else nrpt = 1; end
+  if ~isempty(strmatch('rpt',   dimtok)), nrpt=size(data.cumtapcnt,1); else nrpt = 1; end
   if ~isempty(strmatch('freq',  dimtok)), nfrq=numel(data.freq);      else nfrq = 1; end
   if ~isempty(strmatch('time',  dimtok)), ntim=numel(data.time);      else ntim = 1; end
   
@@ -1075,7 +1075,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
 
 elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
   dimtok = tokenize(data.dimord, '_');
-  if ~isempty(strmatch('rpt',   dimtok)), nrpt=numel(data.cumtapcnt); else nrpt = 1; end
+  if ~isempty(strmatch('rpt',   dimtok)), nrpt=size(data.cumtapcnt,1); else nrpt = 1; end
   if ~isempty(strmatch('freq',  dimtok)), nfrq=numel(data.freq);      else nfrq = 1; end
   if ~isempty(strmatch('time',  dimtok)), ntim=numel(data.time);      else ntim = 1; end
   
@@ -1375,7 +1375,7 @@ if strcmp(current, 'new') && strcmp(haspow, 'yes'),
     
   if convert,  
     npos = size(output.pos,1);
-    nrpt = numel(output.cumtapcnt);
+    nrpt = size(output.cumtapcnt,1);
     tmpmom = cat(2,output.mom{output.inside});
     tmppow = zeros(npos, nrpt);
     tapcnt = [0;cumsum(output.cumtapcnt(:))];
@@ -1460,7 +1460,7 @@ switch fname
   case 'ori'
     dimord = '';
   case 'pow'
-    if isfield(output, 'cumtapcnt') && numel(output.cumtapcnt)==size(tmp,dimnum)
+    if isfield(output, 'cumtapcnt') && size(output.cumtapcnt,1)==size(tmp,dimnum)
       dimord = [dimord,'_rpt'];
       dimnum = dimnum + 1;
     end
