@@ -81,12 +81,19 @@ if success
   err         = ft_getopt(options, 'lasterr');
   diarystring = ft_getopt(options, 'diary');
 
-  if strcmp(diary, 'error') && ~isempty(err) && ~strcmp(err, 'could not start the matlab engine')
-    fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
-    fprintf('%% an error was detected, the diary output of the remote execution follows \n');
-    fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
-    fprintf('%s', diarystring);
-    closeline = true;
+  if strcmp(diary, 'error') && ~isempty(err)
+    if ~isempty(strfind(err, 'could not start the matlab engine')) || ...
+       ~isempty(strfind(err, 'failed to execute the job (argin)')) || ...
+       ~isempty(strfind(err, 'failed to execute the job (optin)'))
+      % this is due to a license or a memory problem, and is dealt with in peercellfun
+      closeline = false;
+    else
+      fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
+      fprintf('%% an error was detected, the diary output of the remote execution follows \n');
+      fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
+      fprintf('%s', diarystring);
+      closeline = true;
+    end
   elseif strcmp(diary, 'warning') && ~isempty(warn)
     fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
     fprintf('%% a warning was detected, the diary output of the remote execution follows\n');

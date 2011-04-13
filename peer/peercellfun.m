@@ -317,8 +317,10 @@ while ~all(submitted) || ~all(collected)
       if ~isempty(strfind(peerget_err.message, 'could not start the matlab engine')) || ...
          ~isempty(strfind(peerget_err.message, 'failed to execute the job (argin)')) || ...
          ~isempty(strfind(peerget_err.message, 'failed to execute the job (optin)'))
-        % this is due to a license problem
-        warning('resubmitting job %d because the matlab engine could not get a license', collect);
+        % this is due to a license problem or a memory problem
+        if ~isempty(strfind(peerget_err.message, 'could not start the matlab engine'))
+          warning('resubmitting job %d because the matlab engine could not get a license', collect);
+        end
         % reset all job information, this will cause it to be automatically resubmitted
         jobid      (collect) = nan;
         puttime    (collect) = nan;
