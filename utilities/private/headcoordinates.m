@@ -9,38 +9,38 @@ function [h, flag] = headcoordinates(nas, lpa, rpa, flag)
 % [h, coordsys] = headcoordinates(ac,  pc,  zpoint, flag)
 %
 % The optional flag determines how the origin should be specified
-% according to CTF conventions:       flag = 'als_ctf' or flag = 0 (default)
-% according to ASA conventions:       flag = 'als_asa' or flag = 1
+% according to CTF conventions:       flag = 'ctf' or flag = 0 (default)
+% according to ASA conventions:       flag = 'asa' or flag = 1
 % according to FTG conventions:       flag = 'ftg'     or flag = 2
-% according to ITAB conventions:      flag = 'ras_itab'
-% according to Talairach conventions: flag = 'ras_tal'
+% according to ITAB conventions:      flag = 'itab'
+% according to Talairach conventions: flag = 'tal'
 %
-% The headcoordinate system in CTF is defined as follows:
-% the origin is exactly between lpa and rpa
-% the X-axis goes towards nas
-% the Y-axis goes approximately towards lpa, orthogonal to X and in the plane spanned by the fiducials
-% the Z-axis goes approximately towards the vertex, orthogonal to X and Y
+% The CTF headcoordinate system defined as follows:
+%   the origin is exactly between lpa and rpa
+%   the X-axis goes towards nas
+%   the Y-axis goes approximately towards lpa, orthogonal to X and in the plane spanned by the fiducials
+%   the Z-axis goes approximately towards the vertex, orthogonal to X and Y
 %
-% The headcoordinate system in ASA is defined as follows:
-% the origin is at the orthogonal intersection of the line from rpa-lpa and the line trough nas
-% the X-axis goes towards nas
-% the Y-axis goes through rpa and lpa
-% the Z-axis goes approximately towards the vertex, orthogonal to X and Y
+% The ASA headcoordinate system is defined as follows:
+%   the origin is at the orthogonal intersection of the line from rpa-lpa and the line trough nas
+%   the X-axis goes towards nas
+%   the Y-axis goes through rpa and lpa
+%   the Z-axis goes approximately towards the vertex, orthogonal to X and Y
 %
-% The headcoordinate system in FTG is defined as:
-% the origin corresponds with pt1
-% the x-axis is along the line from pt1 to pt2
-% the z-axis is orthogonal to the plane spanned by pt1, pt2 and pt3
+% The FTG headcoordinate system is defined as:
+%   the origin corresponds with pt1
+%   the x-axis is along the line from pt1 to pt2
+%   the z-axis is orthogonal to the plane spanned by pt1, pt2 and pt3
 %
-% The headcoordinate system in Talairach is defined as:
-% the origin corresponds with the anterior commissure
-% the Y-axis is along the line from the posterior commissure to the anterior commissure
-% the Z-axis is towards the vertex, in between the hemispheres
-% the X-axis is orthogonal to the midsagittal-plane, positive to the right
+% The Talairach headcoordinate system is defined as:
+%   the origin corresponds with the anterior commissure
+%   the Y-axis is along the line from the posterior commissure to the anterior commissure
+%   the Z-axis is towards the vertex, in between the hemispheres
+%   the X-axis is orthogonal to the midsagittal-plane, positive to the right
 %
 % See also WARPING, WARP3D
 
-% Copyright (C) 2003 Robert Oostenveld
+% Copyright (C) 2003-2011 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -66,9 +66,9 @@ end
 
 if isnumeric(flag)
   if flag==0,
-    flag = 'ALS_CTF';
+    flag = 'CTF';
   elseif flag==1,
-    flag = 'ALS_ASA';
+    flag = 'ASA';
   elseif flag==2,
     flag = 'FTG';
   else
