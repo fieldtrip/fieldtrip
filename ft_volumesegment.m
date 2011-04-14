@@ -122,7 +122,7 @@ function [segment] = ft_volumesegment(cfg, mri)
 ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-cfg = ft_checkconfig(cfg, 'deprecated',  'coordinates');
+cfg = ft_checkconfig(cfg, 'renamed',  {'coordinates', 'coordsys'});
 
 %% ft_checkdata see below!!! %%
 
