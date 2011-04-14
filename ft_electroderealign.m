@@ -9,27 +9,28 @@ function [norm] = ft_electroderealign(cfg)
 % Use as
 %   [elec] = ft_electroderealign(cfg)
 %
-% Three different methods for aligning the input electrodes are implemented:
-% based on a warping method, based on the fiducials or interactive with a
-% graphical user interface. Each of these approaches is described below.
+% Different methods for aligning the input electrodes to the subjects head
+% are implemented, which are described in detail below:
 %
-% 1) You can apply a spatial transformation/deformation (i.e. 'warp')
-% that automatically minimizes the distance between the electrodes
-% and the template or standard electrode set. The warping methods use
-% a non-linear search to optimize the error between input and template
-% electrodes or the head surface.
+% TEMPLATE - You can apply a spatial transformation/deformation that
+% automatically minimizes the distance between the electrodes and the
+% template or standard electrode set. The warping methods use a non-linear
+% search to minimize the error between the input electrodes and
+% corresponding template electrodes or between the input electrodes and a
+% head surface.
 %
-% 2) You can apply a rigid body realignment based on three fiducial locations.
-% Realigning using the fiducials only ensures that the fiducials (typically
-% nose, left and right ear) are along the same axes in the input eectrode
-% set as in the template electrode set.
+% FIDUCIAL - You can apply a rigid body realignment based on three fiducial
+% locations. Realigning using the fiducials only ensures that the fiducials
+% (typically nose, left and right ear) are along the same axes in the input
+% eectrode set as in the template electrode set.
 %
-% 3) You can display the electrode positions together with the skin surface,
-% and manually (using the graphical user interface) adjust the rotation,
-% translation and scaling parameters, so that the two match.
+% INTERACTIVE - You can display the skin surface together with the
+% electrode position, and manually (using the graphical user interface)
+% adjust the rotation, translation and scaling parameters, so that the
+% electrodes correspond with the skin.
 %
-% 4) You can display the skin surface and manually position the electrodes by
-% clicking.
+% MANUAL - You can display the skin surface and manually determine the
+% electrode positions by clicking on the skin surface.
 %
 % The configuration can contain the following options
 %   cfg.method         = string representing the method for aligning or placing the electrodes
@@ -81,9 +82,9 @@ function [norm] = ft_electroderealign(cfg)
 %                        single triangulated boundary, or a Nx3 matrix with surface
 %                        points
 %
-% See also FT_READ_SENS,  FT_VOLUMEREALIGN
+% See also FT_READ_SENS, FT_VOLUMEREALIGN
 
-% Copyright (C) 2005-2010, Robert Oostenveld
+% Copyright (C) 2005-2011, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -105,10 +106,8 @@ function [norm] = ft_electroderealign(cfg)
 
 ft_defaults
 
-
 %text output
 disp('Close the figure to output new sensor positions');
-
 
 % this is used for feedback of the lower-level functions
 global fb
@@ -169,7 +168,7 @@ if usetemplate
       template(i) = ft_read_sens(cfg.template{i});
     end
   end
-
+  
   clear tmp
   for i=1:Ntemplate
     tmp(i) = ft_convert_units(template(i), elec.unit); % ensure that the units are consistent with the electrodes
@@ -228,15 +227,15 @@ if strcmp(cfg.feedback, 'yes')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if usetemplate && strcmp(cfg.method, 'template')
+if strcmp(cfg.method, 'template') && usetemplate
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
   % determine electrode selection and overlapping subset for warping
   cfg.channel = ft_channelselection(cfg.channel, elec.label);
   for i=1:Ntemplate
     cfg.channel = ft_channelselection(cfg.channel, template(i).label);
   end
-
+  
   % make subselection of electrodes
   [cfgsel, datsel] = match_str(cfg.channel, elec.label);
   elec.label = elec.label(datsel);
@@ -246,7 +245,7 @@ if usetemplate && strcmp(cfg.method, 'template')
     template(i).label = template(i).label(datsel);
     template(i).pnt   = template(i).pnt(datsel,:);
   end
-
+  
   % compute the average of the template electrode positions
   all = [];
   for i=1:Ntemplate
@@ -254,15 +253,15 @@ if usetemplate && strcmp(cfg.method, 'template')
   end
   avg    = mean(all,3);
   stderr = std(all, [], 3);
-
+  
   fprintf('warping electrodes to template... '); % the newline comes later
   [norm.pnt, norm.m] = warp_optim(elec.pnt, avg, cfg.warp);
   norm.label = elec.label;
-
+  
   dpre  = mean(sqrt(sum((avg - elec.pnt).^2, 2)));
   dpost = mean(sqrt(sum((avg - norm.pnt).^2, 2)));
   fprintf('mean distance prior to warping %f, after warping %f\n', dpre, dpost);
-
+  
   if strcmp(cfg.feedback, 'yes')
     % plot all electrodes before warping
     my_plot3(elec.pnt, 'r.');
@@ -272,7 +271,7 @@ if usetemplate && strcmp(cfg.method, 'template')
     my_text3(elec.pnt(1,:), elec.label{1}, 'color', 'r');
     my_text3(elec.pnt(2,:), elec.label{2}, 'color', 'r');
     my_text3(elec.pnt(3,:), elec.label{3}, 'color', 'r');
-
+    
     % plot all electrodes after warping
     my_plot3(norm.pnt, 'm.');
     my_plot3(norm.pnt(1,:), 'm*');
@@ -281,7 +280,7 @@ if usetemplate && strcmp(cfg.method, 'template')
     my_text3(norm.pnt(1,:), norm.label{1}, 'color', 'm');
     my_text3(norm.pnt(2,:), norm.label{2}, 'color', 'm');
     my_text3(norm.pnt(3,:), norm.label{3}, 'color', 'm');
-
+    
     % plot the template electrode locations
     my_plot3(avg,      'b.');
     my_plot3(avg(1,:), 'b*');
@@ -290,36 +289,36 @@ if usetemplate && strcmp(cfg.method, 'template')
     my_text3(avg(1,:), norm.label{1}, 'color', 'b');
     my_text3(avg(2,:), norm.label{2}, 'color', 'b');
     my_text3(avg(3,:), norm.label{3}, 'color', 'b');
-
+    
     % plot lines connecting the input/warped electrode locations with the template locations
     my_line3(elec.pnt, avg, 'color', 'r');
     my_line3(norm.pnt, avg, 'color', 'm');
   end
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif useheadshape && strcmp(cfg.method, 'template')
+elseif strcmp(cfg.method, 'template') && useheadshape
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
   % determine electrode selection and overlapping subset for warping
   cfg.channel = ft_channelselection(cfg.channel, elec.label);
-
+  
   % make subselection of electrodes
   [cfgsel, datsel] = match_str(cfg.channel, elec.label);
   elec.label = elec.label(datsel);
   elec.pnt   = elec.pnt(datsel,:);
-
+  
   fprintf('warping electrodes to head shape... '); % the newline comes later
   [norm.pnt, norm.m] = warp_optim(elec.pnt, headshape, cfg.warp);
   norm.label = elec.label;
-
+  
   dpre  = warp_error([],     elec.pnt, headshape, cfg.warp);
   dpost = warp_error(norm.m, elec.pnt, headshape, cfg.warp);
   fprintf('mean distance prior to warping %f, after warping %f\n', dpre, dpost);
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(cfg.method, 'fiducial')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
   % try to determine the fiducials automatically if not specified
   if ~isfield(cfg, 'fiducial')
     option1 = {'nasion' 'left' 'right'};
@@ -336,17 +335,17 @@ elseif strcmp(cfg.method, 'fiducial')
     end
   end
   fprintf('using fiducials {''%s'', ''%s'', ''%s''}\n', cfg.fiducial{1}, cfg.fiducial{2}, cfg.fiducial{3});
-
+  
   % determine electrode selection
   cfg.channel = ft_channelselection(cfg.channel, elec.label);
   [cfgsel, datsel] = match_str(cfg.channel, elec.label);
   elec.label = elec.label(datsel);
   elec.pnt   = elec.pnt(datsel,:);
-
+  
   if length(cfg.fiducial)~=3
     error('you must specify three fiducials');
   end
-
+  
   % do case-insensitive search for fiducial locations
   nas_indx = match_str(lower(elec.label), lower(cfg.fiducial{1}));
   lpa_indx = match_str(lower(elec.label), lower(cfg.fiducial{2}));
@@ -357,11 +356,11 @@ elseif strcmp(cfg.method, 'fiducial')
   elec_nas = elec.pnt(nas_indx,:);
   elec_lpa = elec.pnt(lpa_indx,:);
   elec_rpa = elec.pnt(rpa_indx,:);
-
+  
   % FIXME change the flow in the remainder
-  % if one or more template electrode sets are specified, then align to the average of those 
+  % if one or more template electrode sets are specified, then align to the average of those
   % if no template is specified, then align so that the fiducials are along the axis
-
+  
   % find the matching fiducials in the template and average them
   templ_nas = [];
   templ_lpa = [];
@@ -380,17 +379,17 @@ elseif strcmp(cfg.method, 'fiducial')
   templ_nas = mean(templ_nas,1);
   templ_lpa = mean(templ_lpa,1);
   templ_rpa = mean(templ_rpa,1);
-
+  
   % realign both to a common coordinate system
   elec2common  = headcoordinates(elec_nas, elec_lpa, elec_rpa);
   templ2common = headcoordinates(templ_nas, templ_lpa, templ_rpa);
-
+  
   % compute the combined transform and realign the electrodes to the template
   norm       = [];
   norm.m     = elec2common * inv(templ2common);
   norm.pnt   = warp_apply(norm.m, elec.pnt, 'homogeneous');
   norm.label = elec.label;
-
+  
   nas_indx = match_str(lower(elec.label), lower(cfg.fiducial{1}));
   lpa_indx = match_str(lower(elec.label), lower(cfg.fiducial{2}));
   rpa_indx = match_str(lower(elec.label), lower(cfg.fiducial{3}));
@@ -400,7 +399,7 @@ elseif strcmp(cfg.method, 'fiducial')
   rpa_indx = match_str(lower(norm.label), lower(cfg.fiducial{3}));
   dpost = mean(sqrt(sum((norm.pnt([nas_indx lpa_indx rpa_indx],:) - [templ_nas; templ_lpa; templ_rpa]).^2, 2)));
   fprintf('mean distance between fiducials prior to realignment %f, after realignment %f\n', dpre, dpost);
-
+  
   if strcmp(cfg.feedback, 'yes')
     % plot the first three electrodes before transformation
     my_plot3(elec.pnt(1,:), 'r*');
@@ -409,7 +408,7 @@ elseif strcmp(cfg.method, 'fiducial')
     my_text3(elec.pnt(1,:), elec.label{1}, 'color', 'r');
     my_text3(elec.pnt(2,:), elec.label{2}, 'color', 'r');
     my_text3(elec.pnt(3,:), elec.label{3}, 'color', 'r');
-
+    
     % plot the template fiducials
     my_plot3(templ_nas, 'b*');
     my_plot3(templ_lpa, 'b*');
@@ -417,7 +416,7 @@ elseif strcmp(cfg.method, 'fiducial')
     my_text3(templ_nas, ' nas', 'color', 'b');
     my_text3(templ_lpa, ' lpa', 'color', 'b');
     my_text3(templ_rpa, ' rpa', 'color', 'b');
-
+    
     % plot all electrodes after transformation
     my_plot3(norm.pnt, 'm.');
     my_plot3(norm.pnt(1,:), 'm*');
@@ -427,7 +426,7 @@ elseif strcmp(cfg.method, 'fiducial')
     my_text3(norm.pnt(2,:), norm.label{2}, 'color', 'm');
     my_text3(norm.pnt(3,:), norm.label{3}, 'color', 'm');
   end
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(cfg.method, 'interactive')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -456,7 +455,7 @@ elseif strcmp(cfg.method, 'interactive')
   clear global norm
   norm = tmp;
   clear tmp
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(cfg.method, 'manual')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -469,7 +468,7 @@ elseif strcmp(cfg.method, 'manual')
   for i=1:size(orig.pnt,1)
     orig.label{i,1} = 'unknown';
   end
-
+  
 else
   error('unknown method');
 end
@@ -659,23 +658,23 @@ zlabel('z')
 
 
 
-if ~isempty(headshape)    
-    % plot the faces of the 2D or 3D triangulation
-    skin   = [255 213 119]/255;
-    brain  = [202 100 100]/255;
-    cortex = [255 213 119]/255;
-    ft_plot_mesh(bnd,'facecolor', skin,'EdgeColor','none','facealpha',0.7);
-    lighting gouraud
-    material shiny
-    camlight
+if ~isempty(headshape)
+  % plot the faces of the 2D or 3D triangulation
+  skin   = [255 213 119]/255;
+  brain  = [202 100 100]/255;
+  cortex = [255 213 119]/255;
+  ft_plot_mesh(bnd,'facecolor', skin,'EdgeColor','none','facealpha',0.7);
+  lighting gouraud
+  material shiny
+  camlight
 end
 
-if ~isempty(template)   
-    if size(template.pnt, 2)==2
-        hs = plot(template.pnt(:,1), template.pnt(:,2), 'b.', 'MarkerSize', 20);
-    else
-        hs = plot3(template.pnt(:,1), template.pnt(:,2), template.pnt(:,3), 'b.', 'MarkerSize', 20);
-    end
+if ~isempty(template)
+  if size(template.pnt, 2)==2
+    hs = plot(template.pnt(:,1), template.pnt(:,2), 'b.', 'MarkerSize', 20);
+  else
+    hs = plot3(template.pnt(:,1), template.pnt(:,2), template.pnt(:,3), 'b.', 'MarkerSize', 20);
+  end
 end
 
 if isfield(elec, 'fid') && ~isempty(elec.fid.pnt)
@@ -690,9 +689,9 @@ else
 end
 
 if get(findobj(fig, 'tag', 'toggle labels'), 'value')
-    cfg.label = 'on';
+  cfg.label = 'on';
 else
-    cfg.label = 'off';
+  cfg.label = 'off';
 end
 hold on
 ft_plot_sens(elec,'label',cfg.label);
