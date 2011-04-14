@@ -364,6 +364,17 @@ if ~isempty(createsubcfg)
       case 'mvl'
         fieldname = {};
 
+      case 'npsf'
+        % non-parametric spectral factorization -> csd2transfer
+        fieldname = {
+          'block'
+          'blockindx'
+          'channelcmb'
+          'feedback'
+          'numiteration'
+          'tol'
+          };
+        
       otherwise
         error('unexpected name of the subfunction');
         fieldname = {};

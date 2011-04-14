@@ -48,6 +48,8 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %
 %                 'xcorr',     cross correlation function
 %                 'di',        directionality index
+%                 'spearman'   spearman's rank correlation
+%                 'corr'       pearson correlation
 %
 % Copyright (C) 2009, Robert Oostenveld, Jan-Mathijs Schoffelen, Andre Bastos, Martin Vinck
 %
@@ -231,6 +233,12 @@ end
 
 % check whether the required inparam is present in the data
 if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inparam) && strcmp(inparam, 'crsspctrm'))),
+  if iscell(inparam)
+    % in the case of multiple inparams, use the first one to check the
+    % input data (e.g. checking for 'transfer' for requested granger)
+    inparam    = inparam{1};
+  end
+  
   switch dtype
     case {'freq' 'freqmvar'}
       if strcmp(inparam, 'crsspctrm')
@@ -250,6 +258,31 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
         elseif isfield(data, 'fourierspctrm'),
           [data, powindx] = univariate2bivariate(data, 'fourierspctrm', 'powcovspctrm', dtype, 'demeanflag', strcmp(cfg.removemean,'yes'), 'cmb', cfg.channelcmb, 'sqrtflag', strcmp(cfg.method,'amplcorr'));
         end
+      elseif strcmp(inparam, 'transfer')
+        if isfield(data, 'fourierspctrm')
+          %FIXME this is fast but throws away the trial dimension, consider
+          %a way to keep trial information if needed, but use the fast way
+          %if possible
+          data = ft_checkdata(data, 'cmbrepresentation', 'fullfast');
+        elseif isfield(data, 'powspctrm')
+          data = ft_checkdata(data, 'cmbrepresentation', 'full');
+        end
+        cfg    = ft_checkconfig(cfg, 'createsubcfg',  {'npsf'});
+        
+        % check whether multiple pairwise decomposition is required (this
+        % can most conveniently be handled at this level
+        if size(cfg.npsf.channelcmb,1) == numel(data.label)*(numel(data.label)+1)/2
+          cfg.channelcmb = cfg.npsf.channelcmb;
+          cfg.block      = cfg.npsf.block;
+          cfg.blockindx  = cfg.npsf.blockindx;
+          % FIXME 
+          cfg.npsf = rmfield(cfg.npsf, 'channelcmb');
+          cfg.npsf = rmfield(cfg.npsf, 'block');
+          cfg.npsf = rmfield(cfg.npsf, 'blockindx');
+        end
+        optarg = ft_cfg2keyval(cfg.npsf);
+        data   = csd2transfer(data, optarg{:});
+        inparam = {'transfer' 'noisecov' 'crsspctrm'};
       end
     case 'source'
       if strcmp(inparam, 'crsspctrm')
@@ -384,6 +417,7 @@ switch cfg.method
     
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     outparam = 'crsspctrm';
+    
   case {'wpli' 'wpli_debiased'}
     % weighted pli or debiased weighted phase lag index.
     tmpcfg                 = [];
@@ -397,6 +431,7 @@ switch cfg.method
     else
       outparam = 'wplispctrm';    
     end
+    
   case {'wppc' 'ppc'}
     % weighted pairwise phase consistency or pairwise phase consistency
     tmpcfg                 = [];
@@ -410,6 +445,7 @@ switch cfg.method
     else
       outparam = 'ppcspctrm';
     end
+    
   case 'plv'
     % phase locking value
     
