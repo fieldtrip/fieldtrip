@@ -230,10 +230,15 @@ switch submethod
         Cf    = dip.subspace{i} * Cf_pre_subspace * dip.subspace{i}';
         invCf = pinv(dip.subspace{i} * (Cf_pre_subspace + lambda * eye(size(Cf))) * dip.subspace{i}');
       end
-      if fixedori
+      if fixedori 
         % compute the leadfield for the optimal dipole orientation
-        % subsequently the leadfield for only that dipole orientation will be used for the final filter computation
-        filt = pinv(lf' * invCf * lf) * lf' * invCf;
+        % subsequently the leadfield for only that dipole orientation will
+        % be used for the final filter computation
+        if isfield(dip, 'filter') && size(dip.filter{i},1)~=1
+          filt = dip.filter{i};
+        else 
+          filt = pinv(lf' * invCf * lf) * lf' * invCf;
+        end
         [u, s, v] = svd(real(filt * Cf * ctranspose(filt)));
         maxpowori = u(:,1);
         eta = s(1,1)./s(2,2);
