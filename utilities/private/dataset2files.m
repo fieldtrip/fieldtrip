@@ -110,10 +110,6 @@ switch format
     [path, file, ext] = fileparts(filename);
     headerfile = fullfile(path, [file '.tsq']);
     datafile   = fullfile(path, [file '.tev']);
-  case 'nmc_archive_k'
-    headerfile = filename;
-    datafile   = filename;
-    headerfile = filename;
   otherwise
     % convert filename into filenames, assume that the header and data are the same
     datafile   = filename;
