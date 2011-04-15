@@ -386,6 +386,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 								if (!tcpserverStatus)
 										pthread_cond_wait(&condstatus, &mutexstatus);
 								pthread_mutex_unlock(&mutexstatus);
+								/* inform the other peers of the tcp server status */
+								announce_once();
 						}
 				}
 				else if (strcmp(argument, "stop")==0) {
@@ -397,6 +399,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						rc = pthread_cancel(tcpserverThread);
 						if (rc)
 								mexErrMsgTxt("problem with return code from pthread_cancel()");
+						else
+								/* inform the other peers of the updated tcp server status */
+								announce_once();
 				}
 				else if (strcmp(argument, "status")==0) {
 						plhs[0] = mxCreateDoubleScalar(tcpserverStatus);
@@ -421,9 +426,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						status = -1;
 				}
 
-				pthread_mutex_lock(&mutexpeerlist);
 				/* count the number of peers */
 				i = 0;
+				pthread_mutex_lock(&mutexpeerlist);
 				peer = peerlist;
 				while(peer) {
 						i += (status==-1 ? 1 : (peer->host->status==status));
@@ -469,9 +474,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 
 		/****************************************************************************/
 		else if (strcmp(command, "joblist")==0) {
-				pthread_mutex_lock(&mutexjoblist);
 				/* count the number of jobs */
 				i = 0;
+				pthread_mutex_lock(&mutexjoblist);
 				job = joblist;
 				while(job) {
 						i++;
@@ -546,9 +551,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				mexPrintf("smartmem.enabled = %d\n", smartmem.enabled);
 				pthread_mutex_unlock(&mutexsmartmem);
 
-				pthread_mutex_lock(&mutexsmartmem);
+				pthread_mutex_lock(&mutexsmartcpu);
 				mexPrintf("smartcpu.enabled = %d\n", smartcpu.enabled);
-				pthread_mutex_unlock(&mutexsmartmem);
+				pthread_mutex_unlock(&mutexsmartcpu);
 
 				pthread_mutex_lock(&mutexsmartshare);
 				mexPrintf("smartshare.enabled = %d\n", smartshare.enabled);
@@ -602,8 +607,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				}
 				pthread_mutex_unlock(&mutexrefusehostlist);
 
-				pthread_mutex_lock(&mutexpeerlist);
 				i = 0;
+				pthread_mutex_lock(&mutexpeerlist);
 				peer = peerlist;
 				while(peer) {
 						mexPrintf("peerlist[%d] = \n", i);
@@ -623,8 +628,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				}
 				pthread_mutex_unlock(&mutexpeerlist);
 
-				pthread_mutex_lock(&mutexjoblist);
 				i = 0;
+				pthread_mutex_lock(&mutexjoblist);
 				job = joblist;
 				while(job) {
 						mexPrintf("joblist[%d] = \n", i);
@@ -801,19 +806,23 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				pthread_mutex_lock(&mutexhost);
 				if (mxIsEmpty(prhs[1])) {
 						/* set the default, i.e. the hostname of this computer */
-						if (gethostname(host->name, STRLEN))
-								/* FIXME this causes a deadlock */
-								mexErrMsgTxt("FIXME: could not get hostname");
+						if (gethostname(host->name, STRLEN)) {
+								pthread_mutex_unlock(&mutexhost);
+								mexErrMsgTxt("could not get hostname");
+						}
 				}
 				else {
 						/* use the hostname specified by the user, e.g. localhost */
-						if (!mxIsChar(prhs[1]))
-								/* FIXME this causes a deadlock */
-								mexErrMsgTxt ("invalid input argument #2");
-						if (mxGetString(prhs[1], host->name, STRLEN))
-								/* FIXME this causes a deadlock */
-								mexErrMsgTxt("could not copy string");
+						if (!mxIsChar(prhs[1])) {
+								pthread_mutex_unlock(&mutexhost);
+								mexErrMsgTxt ("invalid input argument #2 for hostname");
+						}
+						if (mxGetString(prhs[1], host->name, STRLEN)) {
+								pthread_mutex_unlock(&mutexhost);
+								mexErrMsgTxt("could not copy string for hostname");
+						}
 				}
+				/* the hostname was correctly updated */
 				pthread_mutex_unlock(&mutexhost);
 		}
 
@@ -1039,7 +1048,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				if (nrhs<4)
 						mexErrMsgTxt("invalid argument #4");
 
-				jobid = rand();	/* assign a random jobid by default */
+				jobid = rand();		/* assign a random jobid by default */
 				memreq = 0; 		/* default assumption */
 				cpureq = 0; 		/* default assumption */
 				timreq = 0; 		/* default assumption */
@@ -1065,9 +1074,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 								timreq = (UINT32_T)(mxGetScalar(val)+0.5);
 				}
 
-				pthread_mutex_lock(&mutexpeerlist);
 				found = 0;
-
+				pthread_mutex_lock(&mutexpeerlist);
 				peer = peerlist;
 				while(peer) {
 						if (peer->host->id==peerid) {
@@ -1080,6 +1088,27 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				if (!found) {
 						pthread_mutex_unlock(&mutexpeerlist);
 						mexErrMsgTxt("failed to locate specified peer\n");
+				}
+
+				arg = (mxArray *) mxSerialize(prhs[2]);
+				if (!arg) {
+						mexErrMsgTxt("could not serialize job arguments");
+				}
+
+				opt = (mxArray *) mxSerialize(prhs[3]);
+				if (!opt) {
+						mxDestroyArray(arg);
+						arg = NULL;
+						mexErrMsgTxt("could not serialize job options");
+				}
+
+				def = (jobdef_t *)malloc(sizeof(jobdef_t));
+				if (!def) {
+						mxDestroyArray(arg);
+						arg = NULL;
+						mxDestroyArray(opt);
+						opt = NULL;
+						mexErrMsgTxt("could not allocate memory");
 				}
 
 				pthread_mutex_lock(&mutexhost);
@@ -1125,25 +1154,6 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				   message->arg
 				   message->opt
 				 */
-
-				arg = (mxArray *) mxSerialize(prhs[2]);
-				opt = (mxArray *) mxSerialize(prhs[3]);
-				def = (jobdef_t *)malloc(sizeof(jobdef_t));
-
-				if (!arg) {
-						close_connection(server);
-						mexErrMsgTxt("could not serialize job arguments");
-				}
-
-				if (!opt) {
-						close_connection(server);
-						mexErrMsgTxt("could not serialize job options");
-				}
-
-				if (!def) {
-						close_connection(server);
-						mexErrMsgTxt("could not allocate memory");
-				}
 
 				def->version  = VERSION;
 				def->id       = jobid;
@@ -1214,7 +1224,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				close_connection(server);
 
 				mxDestroyArray(arg);
+				arg = NULL;
 				mxDestroyArray(opt);
+				opt = NULL;
 
 				if (success) {
 						/* return the job details */
@@ -1244,8 +1256,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mexErrMsgTxt ("invalid input argument #2");
 				jobid = (UINT32_T)mxGetScalar(prhs[1]);
 
-				pthread_mutex_lock(&mutexjoblist);
 				found = 0;
+				pthread_mutex_lock(&mutexjoblist);
 				job = joblist;
 				while(job) {
 						found = (job->job->id==jobid);
@@ -1277,8 +1289,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mexErrMsgTxt ("invalid input argument #2");
 				jobid = (UINT32_T)mxGetScalar(prhs[1]);
 
-				pthread_mutex_lock(&mutexjoblist);
 				found = 0;
+				pthread_mutex_lock(&mutexjoblist);
 
 				/* test the first item on the list */
 				if (joblist)
@@ -1318,13 +1330,12 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						job = job->next;
 				}
 
+				pthread_mutex_unlock(&mutexjoblist);
+
 				if (!found) {
 						mexWarnMsgTxt("failed to locate specified job\n");
 				}
 
-				smartshare_reset();
-
-				pthread_mutex_unlock(&mutexjoblist);
 				return;
 		}
 
@@ -1346,8 +1357,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				pthread_mutex_unlock(&mutexhost);
 
 				/* create a cell-array for allowuser */
-				pthread_mutex_lock(&mutexallowuserlist);
 				i = 0;
+				pthread_mutex_lock(&mutexallowuserlist);
 				allowuser = allowuserlist;
 				while (allowuser) {
 						/* count the number of items */
@@ -1369,8 +1380,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				pthread_mutex_unlock(&mutexallowuserlist);
 
 				/* create a cell-array for allowgroup */
-				pthread_mutex_lock(&mutexallowgrouplist);
 				i = 0;
+				pthread_mutex_lock(&mutexallowgrouplist);
 				allowgroup = allowgrouplist;
 				while (allowgroup) {
 						/* count the number of items */
@@ -1392,8 +1403,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				pthread_mutex_unlock(&mutexallowgrouplist);
 
 				/* create a cell-array for allowhost */
-				pthread_mutex_lock(&mutexallowhostlist);
 				i = 0;
+				pthread_mutex_lock(&mutexallowhostlist);
 				allowhost = allowhostlist;
 				while (allowhost) {
 						/* count the number of items */
@@ -1415,8 +1426,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				pthread_mutex_unlock(&mutexallowhostlist);
 
 				/* create a cell-array for refuseuser */
-				pthread_mutex_lock(&mutexrefuseuserlist);
 				i = 0;
+				pthread_mutex_lock(&mutexrefuseuserlist);
 				refuseuser = refuseuserlist;
 				while (refuseuser) {
 						/* count the number of items */
@@ -1438,8 +1449,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				pthread_mutex_unlock(&mutexrefuseuserlist);
 
 				/* create a cell-array for refusegroup */
-				pthread_mutex_lock(&mutexrefusegrouplist);
 				i = 0;
+				pthread_mutex_lock(&mutexrefusegrouplist);
 				refusegroup = refusegrouplist;
 				while (refusegroup) {
 						/* count the number of items */
@@ -1461,8 +1472,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				pthread_mutex_unlock(&mutexrefusegrouplist);
 
 				/* create a cell-array for refusehost */
-				pthread_mutex_lock(&mutexrefusehostlist);
 				i = 0;
+				pthread_mutex_lock(&mutexrefusehostlist);
 				refusehost = refusehostlist;
 				while (refusehost) {
 						/* count the number of items */

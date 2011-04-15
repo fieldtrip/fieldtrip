@@ -183,18 +183,7 @@ while isempty(jobid)
     continue;
   end
 
-  % FIXME the heuristic rule for finding the best match needs to be improved
-  memavail = [list.memavail];
-  % the first penalty measure is based on the excess memory
-  penalty = memavail - memreq;
-  % increase the penalty for slaves with less than 1GB
-  penalty = penalty + (memavail<1e9)*1e9;
-
-  % select the slave peer that has the best match with the job requirements
-  [penalty, indx] = sort(penalty);
-
-  % sort the list according to the penalty
-  list = list(indx);
+list = peerschedule(list, memreq, timreq, cpureq);
 
   for i=1:length(list)
     try

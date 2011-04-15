@@ -98,8 +98,8 @@ void *memprofile(void *arg) {
 
 		while (1) {
 				/* count the number of items on the list */
-				pthread_mutex_lock(&mutexmemlist);
 				count = 0;
+				pthread_mutex_lock(&mutexmemlist);
 				memitem = memlist;
 				while (memitem) {
 						count++;
@@ -136,10 +136,15 @@ void *memprofile(void *arg) {
 
 /* this function will be called upon unloading of the mex file */
 void exitFun(void) {
+		pthread_mutex_lock(&mutexmemprofile);	
 		if (memprofileStatus) {
 				memprofileStatus = 0;
+				pthread_mutex_unlock(&mutexmemprofile);	
 				pthread_cancel(memprofileThread);
 				pthread_join(memprofileThread, NULL);
+		}
+		else {
+				pthread_mutex_unlock(&mutexmemprofile);	
 		}
 }
 

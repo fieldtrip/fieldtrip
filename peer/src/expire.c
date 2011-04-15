@@ -121,25 +121,6 @@ void *expire(void *arg) {
 				   fprintf(stderr, "watchdog: masterid = %d\n", watchdog.masterid);
 				 */
 
-				/* check whether the watchdog should be triggered for the time */
-				if (watchdog.enabled && watchdog.time) {
-						if (difftime(time(NULL), watchdog.time)>0) {
-								/* the maximum allowed time has elapsed */
-								DEBUG(LOG_CRIT, "expire: watchdog triggered (time)");
-								exit(0);
-						}
-				}
-
-				/* check whether the watchdog should be triggered for the memory */
-				if (watchdog.enabled && watchdog.memory) {
-						getmem (&rss, &vs);
-						if (rss>watchdog.memory) {
-								/* the maximum allowed memory has been exceeded */
-								DEBUG(LOG_CRIT, "expire: watchdog triggered (memory)");
-								exit(0);
-						}
-				}
-
 				/* check whether the watchdog should be triggered for the masterid */
 				if (watchdog.enabled && watchdog.masterid) {
 						found = 0;
@@ -166,8 +147,28 @@ void *expire(void *arg) {
 
 				} /* if watchdog enabled */
 
-				pthread_mutex_unlock(&mutexwatchdog);
 				pthread_mutex_unlock(&mutexpeerlist);
+
+				/* check whether the watchdog should be triggered for the time */
+				if (watchdog.enabled && watchdog.time) {
+						if (difftime(time(NULL), watchdog.time)>0) {
+								/* the maximum allowed time has elapsed */
+								DEBUG(LOG_CRIT, "expire: watchdog triggered (time)");
+								exit(0);
+						}
+				}
+
+				/* check whether the watchdog should be triggered for the memory */
+				if (watchdog.enabled && watchdog.memory) {
+						getmem (&rss, &vs);
+						if (rss>watchdog.memory) {
+								/* the maximum allowed memory has been exceeded */
+								DEBUG(LOG_CRIT, "expire: watchdog triggered (memory)");
+								exit(0);
+						}
+				}
+
+				pthread_mutex_unlock(&mutexwatchdog);
 
 				/* note that this is a thread cancelation point */
 				pthread_testcancel();

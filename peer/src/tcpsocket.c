@@ -278,14 +278,14 @@ void *tcpsocket(void *arg) {
 				goto cleanup;
 		}
 
-		pthread_mutex_lock(&mutexjoblist);
-
 		/* create a new list item */
 		job = (joblist_t *)malloc(sizeof(joblist_t));
 		job->job  = message->job;
 		job->host = message->host;
 		job->arg  = message->arg;
 		job->opt  = message->opt;
+
+		pthread_mutex_lock(&mutexjoblist);
 		/* add the item to the beginning of the list */
 		job->next = joblist;
 		joblist = job;

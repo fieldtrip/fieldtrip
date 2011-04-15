@@ -407,6 +407,7 @@ int main(int argc, char *argv[]) {
 				pthread_mutex_lock(&mutexhost);
 				host->memavail = atol(cconf->memavail) * multiply;
 				pthread_mutex_unlock(&mutexhost);
+
 				pthread_mutex_lock(&mutexsmartmem);
 				smartmem.memavail = atol(cconf->memavail) * multiply;
 				pthread_mutex_unlock(&mutexsmartmem);
@@ -862,9 +863,8 @@ int main(int argc, char *argv[]) {
 						 * send the results back to the master
 						 * the following code is largely shared with the put-option in the peer mex file
 						 *****************************************************************************/
-						pthread_mutex_lock(&mutexpeerlist);
 						found = 0;
-
+						pthread_mutex_lock(&mutexpeerlist);
 						peer = peerlist;
 						while(peer) {
 								if (peer->host->id==peerid) {
@@ -880,16 +880,31 @@ int main(int argc, char *argv[]) {
 								goto cleanup;
 						}
 
-						pthread_mutex_lock(&mutexhost);
-						int hasuds = (strlen(peer->host->socket)>0 && strcmp(peer->host->name, host->name)==0);
-						int hastcp = (peer->host->port>0);
-						pthread_mutex_unlock(&mutexhost);
-
 						/* these have to be initialized to NULL to ensure that the cleanup works */
 						server = 0;
 						def = NULL;
 						arg = NULL;
 						opt = NULL;
+
+						if ((arg = (mxArray *) mxSerialize(argout))==NULL) {
+								DEBUG(LOG_ERR, "could not serialize job arguments");
+								goto cleanup;
+						}
+
+						if ((opt = (mxArray *) mxSerialize(options))==NULL) {
+								DEBUG(LOG_ERR, "could not serialize job options");
+								goto cleanup;
+						}
+
+						if ((def = (jobdef_t *)malloc(sizeof(jobdef_t)))==NULL) {
+								DEBUG(LOG_ERR, "could not allocate memory");
+								goto cleanup;
+						}
+
+						pthread_mutex_lock(&mutexhost);
+						int hasuds = (strlen(peer->host->socket)>0 && strcmp(peer->host->name, host->name)==0);
+						int hastcp = (peer->host->port>0);
+						pthread_mutex_unlock(&mutexhost);
 
 						if (hasuds) {
 								/* open the UDS socket */
@@ -931,21 +946,6 @@ int main(int argc, char *argv[]) {
 						   message->arg
 						   message->opt
 						 */
-
-						if ((arg = (mxArray *) mxSerialize(argout))==NULL) {
-								DEBUG(LOG_ERR, "could not serialize job arguments");
-								goto cleanup;
-						}
-
-						if ((opt = (mxArray *) mxSerialize(options))==NULL) {
-								DEBUG(LOG_ERR, "could not serialize job options");
-								goto cleanup;
-						}
-
-						if ((def = (jobdef_t *)malloc(sizeof(jobdef_t)))==NULL) {
-								DEBUG(LOG_ERR, "could not allocate memory");
-								goto cleanup;
-						}
 
 						def->version  = VERSION;
 						def->id       = jobid;
