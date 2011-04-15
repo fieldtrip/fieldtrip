@@ -901,6 +901,9 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'fullfast'),
   else
     data.dimord = 'chan_chan_freq';
   end
+  
+  if isfield(data, 'trialinfo'),  data = rmfield(data, 'trialinfo'); end;
+  if isfield(data, 'sampleinfo'), data = rmfield(data, 'sampleinfo'); end;
 
 end % convert to the requested bivariate representation
 
