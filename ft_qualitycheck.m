@@ -15,12 +15,12 @@ function [varargout] = ft_qualitycheck(cfg)
 %   cfg.dataset = a string (e.g. 'dataset.ds')
 %
 % The following parameters can be used:
-%   cfg.analyze = 'yes' or 'no' to analyze the dataset (default = 'yes')
-%   cfg.savemat = 'yes' or 'no' to save the analysis (default = 'yes')
-%   cfg.matfile = a string (e.g. 'previousoutput.mat'), in combination with
-%                   analyze = 'no' only
+%   cfg.analyze   = 'yes' or 'no' to analyze the dataset (default = 'yes')
+%   cfg.savemat   = 'yes' or 'no' to save the analysis (default = 'yes')
+%   cfg.matfile   = a string (e.g. 'previousoutput.mat'), preferably in combination
+%                    with analyze = 'no'
 %   cfg.visualize = 'yes' or 'no' to visualize the analysis (default = 'yes')
-%   cfg.saveplot = 'yes' or 'no' to save the visualization (default = 'yes')
+%   cfg.saveplot  = 'yes' or 'no' to save the visualization (default = 'yes')
 %
 % Copyright (C) 2010-2011, Arjen Stolk, Bram Daams, Robert Oostenveld
 %
@@ -317,7 +317,16 @@ else
     clear
 end
 
-
+%%%%%%%%%%%%%%%%%%%%%%%% SUBFUNCTION %%%%%%%%%%%%%%%%%%%%%%%%%
+function [x] = clipat(x, v, v2)
+v = [v v2]; % clip between value v and v2
+if length(v) == 1
+    x(find(x>v)) = v;
+elseif length(v) == 2 
+    x(find(x<v(1))) = v(1);
+    x(find(x>v(2))) = v(2);
+end
+    
 %%%%%%%%%%%%%%%%%%%%%%%% SUBFUNCTION %%%%%%%%%%%%%%%%%%%%%%%%%
 function [iseeg, ismeg, isctf, fltp] = filetyper(dataset)
 fltp = ft_filetype(dataset);
@@ -548,7 +557,9 @@ if exist('headpos','var')
         'color','white',...
         'Position',[.08 .73 .89 .22]);
     
-    plot(h.HmotionTimecourseAxes, summary.time, summary.avg(6,:)*10, summary.time, summary.avg(7,:)*10, summary.time, summary.avg(8,:)*10, 'LineWidth',2);
+    plot(h.HmotionTimecourseAxes, summary.time, clipat(summary.avg(6,:)*10, 0, 10), ...
+                                summary.time, clipat(summary.avg(7,:)*10, 0, 10), ...
+                                summary.time, clipat(summary.avg(8,:)*10, 0, 10), 'LineWidth',2);
     ylim(h.HmotionTimecourseAxes,[0 10]);
     ylabel(h.HmotionTimecourseAxes, 'Coil distance [mm]');
     xlim(h.HmotionTimecourseAxes,[toi]);
@@ -567,7 +578,7 @@ legend(h.SignalAxes,'Range','Mean','Min','Max');
 set(h.SignalAxes,'XTickLabel','');
 
 % plot linenoise
-semilogy(h.LinenoiseAxes, summary.time, summary.avg(10,:)*powscaling, 'LineWidth',2);
+semilogy(h.LinenoiseAxes, summary.time, clipat(summary.avg(10,:)*powscaling, 0, 1e3), 'LineWidth',2);
 grid(h.LinenoiseAxes,'on');
 legend(h.LinenoiseAxes, ['LineFreq [' ylab '^2/Hz]']);
 set(h.LinenoiseAxes,'XTickLabel','');
@@ -575,7 +586,7 @@ xlim(h.LinenoiseAxes,[toi]);
 ylim(h.LinenoiseAxes,[0 1e3]);
 
 % plot lowfreqnoise
-semilogy(h.LowfreqnoiseAxes, summary.time, summary.avg(9,:)*powscaling, 'LineWidth',2);
+semilogy(h.LowfreqnoiseAxes, summary.time, clipat(summary.avg(9,:)*powscaling, 0, 1e10), 'LineWidth',2);
 grid(h.LowfreqnoiseAxes,'on');
 xlim(h.LowfreqnoiseAxes,[toi]);
 ylim(h.LowfreqnoiseAxes,[0 1e10]);
