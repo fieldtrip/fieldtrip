@@ -54,7 +54,7 @@ function [output] = csd2transfer(freq, varargin)
 numiteration = ft_getopt(varargin, 'numiteration', 100);
 channelcmb   = ft_getopt(varargin, 'channelcmb',   {});
 block        = ft_getopt(varargin, 'block',        {});
-blockindx    = ft_getopt(varargin, 'blockindx',    cell(1,2));
+blockindx    = ft_getopt(varargin, 'blockindx',    cell(0,2));
 tol          = ft_getopt(varargin, 'tol',          1e-18);
 fb           = ft_getopt(varargin, 'feedback',     'textbar');
 
@@ -143,10 +143,23 @@ elseif nrpt>1 && ~isempty(block),
 elseif ~isempty(channelcmb)
   %pairwise factorization resulting in linearly indexed transfer functions
 
+  %convert list of channel labels into indices
   cmbindx     = zeros(size(channelcmb));
+  ok          = true(size(cmbindx,1), 1);
   for k = 1:size(cmbindx,1)
     [tmp, cmbindx(k,:)] = match_str(channelcmb(k,:)', freq.label);
+    if ~isempty(intersect(cmbindx(1:(k-1),:), cmbindx(k,:), 'rows'))
+      ok(k) = false;
+    elseif cmbindx(k,1)==cmbindx(k,2)
+      ok(k) = false;
+    end
   end
+  
+  %remove auto-combinations and double occurrences
+  cmbindx    = cmbindx(ok,:);
+  channelcmb = channelcmb(ok,:);
+  
+ 
   %do multiple 2x2 factorization efficiently
   if ntim>1,
     for kk = 1:ntim
@@ -178,17 +191,17 @@ elseif ~isempty(channelcmb)
   end
   freq.crsspctrm = reshape(tmpcrsspctrm, siz);
   
-  labelcmb = cell(0,2);
-  cmb      = channelcmb;
+  labelcmb = cell(size(cmbindx,1)*4, 2);
   for k = 1:size(cmbindx,1)
-    labelcmb{end+1,1} = [cmb{k,1},'[',cmb{k,1},cmb{k,2},']'];
-    labelcmb{end  ,2} = [cmb{k,1},'[',cmb{k,1},cmb{k,2},']'];
-    labelcmb{end+1,1} = [cmb{k,2},'[',cmb{k,1},cmb{k,2},']'];
-    labelcmb{end  ,2} = [cmb{k,1},'[',cmb{k,1},cmb{k,2},']'];
-    labelcmb{end+1,1} = [cmb{k,1},'[',cmb{k,1},cmb{k,2},']'];
-    labelcmb{end  ,2} = [cmb{k,2},'[',cmb{k,1},cmb{k,2},']'];
-    labelcmb{end+1,1} = [cmb{k,2},'[',cmb{k,1},cmb{k,2},']'];
-    labelcmb{end  ,2} = [cmb{k,2},'[',cmb{k,1},cmb{k,2},']'];
+    indx = (k-1)*4 + (1:4);
+    labelcmb{indx(1),1} = [channelcmb{k,1},'[',channelcmb{k,1},channelcmb{k,2},']'];
+    labelcmb{indx(1),2} = [channelcmb{k,1},'[',channelcmb{k,1},channelcmb{k,2},']'];
+    labelcmb{indx(2),1} = [channelcmb{k,2},'[',channelcmb{k,1},channelcmb{k,2},']'];
+    labelcmb{indx(2),2} = [channelcmb{k,1},'[',channelcmb{k,1},channelcmb{k,2},']'];
+    labelcmb{indx(3),1} = [channelcmb{k,1},'[',channelcmb{k,1},channelcmb{k,2},']'];
+    labelcmb{indx(3),2} = [channelcmb{k,2},'[',channelcmb{k,1},channelcmb{k,2},']'];
+    labelcmb{indx(4),1} = [channelcmb{k,2},'[',channelcmb{k,1},channelcmb{k,2},']'];
+    labelcmb{indx(4),2} = [channelcmb{k,2},'[',channelcmb{k,1},channelcmb{k,2},']'];
   end
 elseif ~isempty(block)
   if ntim>1,
@@ -388,6 +401,7 @@ Z     = A0*A0.'; %Noise covariance matrix not multiplied by sampling frequency
 %FIXME check this; at least not multiplying it removes the need to correct later on
 %this also makes it more equivalent to the noisecov estimated by biosig's mvar-function
 
+H = zeros(m,m,N+1) + 1i*zeros(m,m,N+1);
 for k = 1:N+1
   H(:,:,k) = psi(:,:,k)*A0inv;       %Transfer function
   S(:,:,k) = psi(:,:,k)*psi(:,:,k)'; %Updated cross-spectral density
@@ -480,6 +494,7 @@ for k = 1:m
 end
 
 H = complex(zeros(2,2,m,N+1));
+S = complex(zeros(2,2,m,N+1));
 for k = 1:(N+1)
   for kk = 1:m
     H(:,:,kk,k) = psi(:,:,kk,k)*A0inv(:,:,kk);  % Transfer function
