@@ -191,6 +191,25 @@ stopwatch = tic;
 prevnumsubmitted = 0;
 prevnumcollected = 0;
 prevnumbusy      = 0;
+prevtimreq       = timreq;
+prevmemreq       = memreq;
+  
+  if any(collected)
+    % update the estimate of the time and memory that will be needed for the next job
+    % note that it cannot be updated if all collected jobs have failed (in case of stoponerror=false)
+    if ~isempty(nanmax(timused))
+      timreq = nanmax(timused);
+      timreq = max(timreq, mintimreq);
+      memreq = nanmax(memused);
+      memreq = max(memreq, minmemreq);
+    end
+  end
+  if any(submitted) && any(busy)
+    % update based on the time already spent on the slowest job
+    elapsed = toc(stopwatch) - min(submittime(submitted & busy));
+    timreq  = max(timreq, elapsed);
+    timreq  = max(timreq, mintimreq);
+  end
 
 % determine the initial job order, small numbers are submitted first
 if strcmp(order, 'random')
@@ -236,6 +255,16 @@ while ~all(submitted) || ~all(collected)
       submitted(submit)  = true;
       submittime(submit) = toc(stopwatch);
       clear curjobid curputtime
+
+      % give some feedback
+      if abs(memreq-prevmemreq)>1000
+        fprintf('updating memreq to %s\n', print_mem(memreq));
+      end
+
+      % give some feedback
+      if abs(timreq-prevtimreq)>1
+        fprintf('updating timreq to %s\n', print_tim(timreq));
+      end
     end
 
     clear argin
@@ -377,8 +406,8 @@ while ~all(submitted) || ~all(collected)
 
   end % for joblist
 
-  prev_timreq = timreq;
-  prev_memreq = memreq;
+  prevtimreq = timreq;
+  prevmemreq = memreq;
   
   if any(collected)
     % update the estimate of the time and memory that will be needed for the next job
@@ -395,16 +424,6 @@ while ~all(submitted) || ~all(collected)
     elapsed = toc(stopwatch) - min(submittime(submitted & busy));
     timreq  = max(timreq, elapsed);
     timreq  = max(timreq, mintimreq);
-  end
-  
-  % give some feedback
-  if abs(memreq-prev_memreq)>1000
-    fprintf('updating memreq to %s\n', print_mem(memreq));
-  end
-  
-  % give some feedback
-  if abs(timreq-prev_timreq)>1
-    fprintf('updating timreq to %s\n', print_tim(timreq));
   end
 
   % get the list of jobs that are busy
