@@ -619,7 +619,7 @@ ft_multiplotTFR(cfg, varargin{:});
 function select_singleplotTFR(label, cfg, varargin)
 if ~isempty(label)
   %cfg.xlim = 'maxmin';
-  %cfg.ylim = 'maxmin';
+  cfg.ylim = 'maxmin';
   cfg.channel = label;
   fprintf('selected cfg.channel = {');
   for i=1:(length(cfg.channel)-1)
