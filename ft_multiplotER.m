@@ -746,7 +746,7 @@ ft_multiplotER(cfg, varargin{:});
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_singleplotER(label, cfg, varargin)
 if ~isempty(label)
-  cfg.xlim = 'maxmin';
+  %cfg.xlim = 'maxmin';
   cfg.channel = label;
   fprintf('selected cfg.channel = {');
   for i=1:(length(cfg.channel)-1)
