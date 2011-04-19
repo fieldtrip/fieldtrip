@@ -799,9 +799,7 @@ else
   cfg.version.matlab = version();
   
   % remember the configuration details of the input data
-  if isfield(cfg, 'previous'),
-    cfg.previous = data.cfg;
-  end
+  try cfg.previous = data.cfg; end
   
   % remember the exact configuration details in the output
   freq.cfg = cfg;
