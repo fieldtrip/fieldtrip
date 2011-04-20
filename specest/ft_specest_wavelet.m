@@ -100,9 +100,40 @@ for ifreqoi = 1:nfreqoi
   ins = ceil(endnsample./2) - floor(acttapnumsmp./2);
   prezer = zeros(ins,1);
   pstzer = zeros(endnsample - ((ins-1) + acttapnumsmp)-1,1);
-  ind = (0:acttapnumsmp-1)' .* ((2.*pi./fsample) .* freqoi(ifreqoi));
+  
+  % produce angle with convention: cos must always be 1  and sin must always be centered in upgoing flank, so the centre of the wavelet (untapered) has angle = 0
+  ind  = (-(acttapnumsmp-1)/2 : (acttapnumsmp-1)/2)'   .*  ((2.*pi./fsample) .* freqoi(ifreqoi));
+  
+  % create wavelet and fft it
+  wavelet = complex(vertcat(prezer,tap.*cos(ind),pstzer), vertcat(prezer,tap.*sin(ind),pstzer));
   wltspctrm{ifreqoi} = complex(zeros(1,endnsample));
-  wltspctrm{ifreqoi} = fft(complex(vertcat(prezer,tap.*cos(ind),pstzer), vertcat(prezer,tap.*sin(ind),pstzer)),[],1)';
+  wltspctrm{ifreqoi} = fft(wavelet,[],1)';
+  
+  
+  %%%% debug plotting
+%   figure('name',['wavelet @ ' num2str(freqoi(ifreqoi)) 'Hz' ],'NumberTitle','off');
+%   subplot(2,1,1);
+%   hold on;
+%   plot(real(wavelet));
+%   plot(imag(wavelet),'color','r');
+%   legend('real','imag');
+%   tline = length(wavelet)/2;
+%   if mod(tline,2)==0
+%     line([tline tline],[-max(abs(wavelet)) max(abs(wavelet))],'color','g','linestyle','--')
+%   else
+%     line([ceil(tline) ceil(tline)],[-max(abs(wavelet)) max(abs(wavelet))],'color','g','linestyle','--');
+%     line([floor(tline) floor(tline)],[-max(abs(wavelet)) max(abs(wavelet))],'color','g','linestyle','--');
+%   end;
+%   subplot(2,1,2);
+%   plot(angle(wavelet),'color','g');
+%   if mod(tline,2)==0,
+%     line([tline tline],[-pi pi],'color','r','linestyle','--')
+%   else
+%     line([ceil(tline) ceil(tline)],[-pi pi],'color','r','linestyle','--')
+%     line([floor(tline) floor(tline)],[-pi pi],'color','r','linestyle','--')
+%   end
+  %%%% debug plotting
+  
 end
 
 % Compute fft
