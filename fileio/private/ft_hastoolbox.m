@@ -99,6 +99,7 @@ url = {
   'SIMBIO'     'see https://www.mrt.uni-jena.de/simbio/index.php/Main_Page'
   'FNS'        'see http://hhvn.nmsu.edu/wiki/index.php/FNS'
   'GIFTI'      'see http://www.artefact.tk/software/matlab/gifti'
+  'XML4MATV2'  'see http://www.mathworks.com/matlabcentral/fileexchange/6268-xml4mat-v2-0'
   };
 
 if nargin<2
@@ -222,6 +223,8 @@ switch toolbox
     status  = exist('ipm_linux_opt_Venant', 'file');
   case 'GIFTI'
     status  = exist('gifti', 'file');
+  case 'XML4MATV2'
+    status  = exist('xml2struct.m', 'file');
   otherwise
     if ~silent, warning('cannot determine whether the %s toolbox is present', toolbox); end
     status = 0;

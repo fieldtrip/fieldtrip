@@ -568,25 +568,17 @@ switch dataformat
     dimord = 'chans_samples_trials';
 
   case {'egi_mff'}
-    % check if requested data contains multiple epochs. If so, only take
-    % largest epoch and give warning. %FIXME this screws up time axis, and sampleinfo :(
+    % check if requested data contains multiple epochs. If so, give error
     if isfield(hdr.orig.xml,'epoch') && length(hdr.orig.xml.epoch) > 1
       data_in_epoch = zeros(1,length(hdr.orig.xml.epoch));
-      epoch_def = zeros(length(hdr.orig.xml.epoch),2);
       for iEpoch = 1:length(hdr.orig.xml.epoch)
         begsamp_epoch = round(str2double(hdr.orig.xml.epoch(iEpoch).epoch.beginTime)./1000./hdr.Fs);
         endsamp_epoch = round(str2double(hdr.orig.xml.epoch(iEpoch).epoch.endTime)./1000./hdr.Fs);
         data_in_epoch(iEpoch) = length(intersect(begsamp_epoch:endsamp_epoch,begsample:endsample));
-        epoch_def(iEpoch,1) = begsamp_epoch;
-        epoch_def(iEpoch,2) = endsamp_epoch;
       end
       if sum(data_in_epoch>1) > 1
-        warning('requested data is spread out over multiple epochs with possibly discontinuous boundaries, only data in largest epoch is read in');
-        [dum, selEpoch] = max(data_in_epoch);
-        origbegsample = begsample; origendsample = endsample; 
-        begsample = min(intersect(epoch_def(selEpoch,1):epoch_def(selEpoch,2),origbegsample:origendsample));
-        endsample = max(intersect(epoch_def(selEpoch,1):epoch_def(selEpoch,2),origbegsample:origendsample));
-        fprintf('Originally requested sample %i to %i. Now reading sample %i to %i\n', origbegsample, origendsample, begsample, endsample);
+        fprintf('Requested sample %i to %i. \n', begsample, endsample);
+        error('The requested data is spread out over multiple epochs with possibly discontinuous boundaries. This is not allowed. Adjust trl to request only data within a single epoch.');
       end
     end
     
