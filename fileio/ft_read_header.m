@@ -649,7 +649,7 @@ switch headerformat
     end
 
     % get hdr info from xml files
-    ft_hastoolbox('XML4MATv2', 1, 0);
+    ft_hastoolbox('XML4MATV2', 1, 0);
     warning('off', 'MATLAB:REGEXP:deprecated') % due to some small code xml2struct
     xmlfiles = dir( fullfile(filename, '*.xml'));
     disp('reading xml files to obtain header info...')
