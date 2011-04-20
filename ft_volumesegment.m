@@ -120,7 +120,7 @@ function [segment] = ft_volumesegment(cfg, mri)
 % $Id$
 
 ft_defaults
-global px
+% global px
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'renamed',  {'coordinates', 'coordsys'});
