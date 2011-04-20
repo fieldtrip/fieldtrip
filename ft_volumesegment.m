@@ -120,6 +120,7 @@ function [segment] = ft_volumesegment(cfg, mri)
 % $Id$
 
 ft_defaults
+global px
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'renamed',  {'coordinates', 'coordsys'});
@@ -439,6 +440,9 @@ if ~strcmp(cfg.threshold, 'no'),
     % create brain mask
     segment.brainmask = segment.brain>(cfg.threshold*max(segment.brain(:)));
     segment = rmfield(segment, 'brain');
+    % create skull from brain mask
+    braindil = imdilate(segment.brainmask,strel_bol(6));
+    segment.skull =  (braindil & ~segment.brainmask);
   end
     
 end
