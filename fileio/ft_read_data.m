@@ -567,35 +567,77 @@ switch dataformat
     end
     dimord = 'chans_samples_trials';
 
-  case {'egi_mff_bin'}
-    % this is a file contained within a MFF package, which represents the complete dataset
-    % better is to read the MFF package as a complete dataset instead of a single file
-    blockhdr = hdr.orig;
-
-    % the number of samples per block can be different
-    % assume that all channels have the same sampling frequency and number of samples per block
-    nsamples = zeros(size(blockhdr));
-    for i=1:length(blockhdr)
-      nsamples(i) = blockhdr(i).nsamples(1);
+  case {'egi_mff'}
+    % check if requested data contains multiple epochs. If so, only take
+    % largest epoch and give warning. %FIXME this screws up time axis, and sampleinfo :(
+    if isfield(hdr.orig.xml,'epoch') && length(hdr.orig.xml.epoch) > 1
+      data_in_epoch = zeros(1,length(hdr.orig.xml.epoch));
+      epoch_def = zeros(length(hdr.orig.xml.epoch),2);
+      for iEpoch = 1:length(hdr.orig.xml.epoch)
+        begsamp_epoch = round(str2double(hdr.orig.xml.epoch(iEpoch).epoch.beginTime)./1000./hdr.Fs);
+        endsamp_epoch = round(str2double(hdr.orig.xml.epoch(iEpoch).epoch.endTime)./1000./hdr.Fs);
+        data_in_epoch(iEpoch) = length(intersect(begsamp_epoch:endsamp_epoch,begsample:endsample));
+        epoch_def(iEpoch,1) = begsamp_epoch;
+        epoch_def(iEpoch,2) = endsamp_epoch;
+      end
+      if sum(data_in_epoch>1) > 1
+        warning('requested data is spread out over multiple epochs with possibly discontinuous boundaries, only data in largest epoch is read in');
+        [dum, selEpoch] = max(data_in_epoch);
+        origbegsample = begsample; origendsample = endsample; 
+        begsample = min(intersect(epoch_def(selEpoch,1):epoch_def(selEpoch,2),origbegsample:origendsample));
+        endsample = max(intersect(epoch_def(selEpoch,1):epoch_def(selEpoch,2),origbegsample:origendsample));
+        fprintf('Originally requested sample %i to %i. Now reading sample %i to %i\n', origbegsample, origendsample, begsample, endsample);
+      end
     end
     
-    cumsamples = cumsum(nsamples);
-    begblock = find(begsample<=cumsamples, 1, 'first');
-    endblock = find(endsample<=cumsamples, 1, 'first');
-    dat = read_mff_bin(filename, begblock, endblock);
-    % select channels and concatenate in a matrix
-    dat = cell2mat(dat(chanindx,:));
-
-    % select the desired samples from the concatenated blocks
-    if begblock==1
-      prevsamples = 0;
-    else
-      prevsamples = cumsamples(begblock-1);
+    %read in data in different signals
+    binfiles = dir(fullfile(filename, 'signal*.bin'));
+    if isempty(binfiles)
+      error('FieldTrip:read_mff_header:nobin', ['could not find any signal.bin in ' filename_mff ])
     end
-    begsel = begsample-prevsamples;
-    endsel = endsample-prevsamples;
-    dat = dat(:,begsel:endsel);
+    %determine which channels are in which signal
+    for iSig = 1:length(hdr.orig.signal)
+      if iSig == 1
+        chan2sig_ind(1:hdr.orig.signal(iSig).blockhdr(1).nsignals(1)) = iSig;
+      else
+        chan2sig_ind(end+1:end+1+hdr.orig.signal(iSig).blockhdr(1).nsignals(1)) = iSig;
+      end
+    end
+    for iSig = 1:length(hdr.orig.signal)
+      % adjust chanindx to match with current signal
+      [dum1, dum2, chanind_sig] = intersect(chanindx, find(chan2sig_ind==iSig));
+      
+      blockhdr = hdr.orig.signal(iSig).blockhdr;
+      signalname = binfiles(iSig).name;
+      fullsignalname = fullfile(filename, signalname);
 
+      % the number of samples per block can be different
+      % assume that all channels have the same sampling frequency and number of samples per block
+      nsamples = zeros(size(blockhdr));
+      for i=1:length(blockhdr)
+        nsamples(i) = blockhdr(i).nsamples(1);
+      end
+
+      cumsamples = cumsum(nsamples);
+      begblock = find(begsample<=cumsamples, 1, 'first');
+      endblock = find(endsample<=cumsamples, 1, 'first');
+      datsig = read_mff_bin(fullsignalname, begblock, endblock);
+      
+      % select channels and concatenate in a matrix
+      dat{iSig} = cell2mat(datsig(chanind_sig,:));
+      % select the desired samples from the concatenated blocks
+      if begblock==1
+        prevsamples = 0;
+      else
+        prevsamples = cumsamples(begblock-1);
+      end
+      begsel = begsample-prevsamples;
+      endsel = endsample-prevsamples;
+      dat{iSig} = dat{iSig}(:,begsel:endsel);
+    end
+    %concat signals
+    dat = cat(1,dat{:});
+    
   case 'micromed_trc'
     dat = read_micromed_trc(filename, begsample, endsample);
     if ~isequal(chanindx(:)', 1:hdr.nChans)
