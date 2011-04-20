@@ -1034,6 +1034,11 @@ if (strcmp(cfg.jackknife, 'yes') || strcmp(cfg.bootstrap, 'yes') || strcmp(cfg.p
   source.trial  = dip;
 end
 
+% remember the trialinfo
+if strcmp(cfg.keeptrials, 'yes') && isfield(data, 'trialinfo')
+  source.trialinfo = data.trialinfo;
+end
+
 % accessing this field here is needed for the configuration tracking
 % by accessing it once, it will not be removed from the output cfg
 cfg.outputfile;
