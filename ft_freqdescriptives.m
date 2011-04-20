@@ -199,6 +199,11 @@ try, output.cumsumcnt = freq.cumsumcnt; end;
 output.powspctrm      = powspctrm;
 try, output.powspctrmsem = powspctrmsem; end;
 
+% remember the trialinfo
+if strcmp(cfg.keeptrials, 'yes') && isfield(freq, 'trialinfo')
+  output.trialinfo = freq.trialinfo;
+end
+
 % accessing this field here is needed for the configuration tracking
 % by accessing it once, it will not be removed from the output cfg
 cfg.outputfile;
