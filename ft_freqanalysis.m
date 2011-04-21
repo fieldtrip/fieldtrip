@@ -807,9 +807,8 @@ else
 end % IF OLD OR NEW IMPLEMENTATION
 
 % copy the trial specific information into the output
-if isfield(data, 'trialinfo'),
+if strcmp(cfg.keeptrials, 'yes') && isfield(data, 'trialinfo'),
   freq.trialinfo = data.trialinfo;
-  % FIXME this strictly only allowed for frequency data with repetitions
 end
 
 % the output data should be saved to a MATLAB file
