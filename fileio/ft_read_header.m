@@ -36,7 +36,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   ANT - Advanced Neuro Technology, EEProbe (*.avr, *.eeg, *.cnt)
 %   Biosemi (*.bdf)
 %   CED - Cambridge Electronic Design (*. smr)
-%   Electrical Geodesics, Inc. (*.egis, *.ave, *.gave, *.ses, *.raw, *.sbin)
+%   Electrical Geodesics, Inc. (*.egis, *.ave, *.gave, *.ses, *.raw, *.sbin, MFF fileformat)
 %   Megis/BESA (*.avr, *.swf)
 %   NeuroScan (*.eeg, *.cnt, *.avg)
 %   Nexstim (*.nxe)
@@ -786,8 +786,8 @@ switch headerformat
       if epochdef(end,2) ~= hdr.nSamples
         error('number of samples in all epochs do not add up to total number of samples')
       end      
+      orig.epochdef = epochdef;
     end
-    orig.epochdef = epochdef;
     hdr.orig      = orig;
     
   case 'fcdc_buffer'

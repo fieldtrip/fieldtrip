@@ -36,6 +36,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.eegscale                = number, scaling to apply to the EEG channels prior to display
 %   cfg.eogscale                = number, scaling to apply to the EOG channels prior to display
 %   cfg.ecgscale                = number, scaling to apply to the ECG channels prior to display
+%   cfg.emgscale                = number, scaling to apply to the EMG channels prior to display
 %   cfg.megscale                = number, scaling to apply to the MEG channels prior to display
 %
 % The "artifact" field in the output cfg is a Nx2 matrix comparable to the
@@ -130,6 +131,7 @@ if ~isfield(cfg, 'channelcolormap'), cfg.channelcolormap = lines_color;   end
 if ~isfield(cfg, 'eegscale'),        cfg.eegscale = [];                   end
 if ~isfield(cfg, 'eogscale'),        cfg.eogscale = [];                   end
 if ~isfield(cfg, 'ecgscale'),        cfg.ecgscale = [];                   end
+if ~isfield(cfg, 'emgscale'),        cfg.emgscale = [];                   end
 if ~isfield(cfg, 'megscale'),        cfg.megscale = [];                   end
 
 if hasdata && isfield(data, 'topo') && strmatch(cfg.viewmode, 'component')
@@ -198,12 +200,11 @@ else
   % read the header
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
   
-  % FIXME how is this supposed to work?
   % read the events
-  if ~isempty(cfg.event)
+  if isempty(cfg.event)
     event = ft_read_event(cfg.dataset);
   else
-    event = [];
+    event = cfg.event;
   end
   
   cfg.channel = ft_channelselection(cfg.channel, hdr.label);
@@ -969,6 +970,10 @@ end
 if ~isempty(opt.cfg.ecgscale)
   chansel = match_str(lab, ft_channelselection('ECG*', lab));
   dat(chansel,:) = dat(chansel,:) .* opt.cfg.ecgscale;
+end
+if ~isempty(opt.cfg.emgscale)
+  chansel = match_str(lab, ft_channelselection('EMG*', lab));
+  dat(chansel,:) = dat(chansel,:) .* opt.cfg.emgscale;
 end
 
 fprintf('plotting data... ');

@@ -688,6 +688,73 @@ switch eventformat
             event(eventCount).value    =  char([CateNames{segHdr(segment,1)}(1:CatLengths(segHdr(segment,1)))]);
         end
     end;
+    
+  case 'egi_mff'
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+
+    % get event info from xml files
+    ft_hastoolbox('XML4MATV2', 1, 0);
+    warning('off', 'MATLAB:REGEXP:deprecated') % due to some small code xml2struct
+    xmlfiles = dir( fullfile(filename, '*.xml'));
+    disp('reading xml files to obtain event info... This might take a while if many events/triggers are present')
+    for i = 1:numel(xmlfiles)
+      if strcmpi(xmlfiles(i).name(1:6), 'Events')
+        fieldname = xmlfiles(i).name(1:end-4);
+        filename_xml  = fullfile(filename, xmlfiles(i).name);
+        xml.(fieldname) = xml2struct(filename_xml);
+      end
+    end
+    warning('on', 'MATLAB:REGEXP:deprecated')
+
+    % construct info needed for FieldTrip Event
+    eventNames = fieldnames(xml);
+    begTime = hdr.orig.xml.info.recordTime;
+    begTime(11) = ' '; begTime(end-6:end) = [];
+    begSDV = datenum(begTime);
+    % find out if there are epochs in this dataset
+    if isfield(hdr.orig.xml,'epoch') && length(hdr.orig.xml.epoch) > 1
+      Msamp2offset = zeros(2,size(hdr.orig.epochdef,1),1+max(hdr.orig.epochdef(:,2)-hdr.orig.epochdef(:,1)));
+      Msamp2offset(:) = NaN;
+      for iEpoch = 1:size(hdr.orig.epochdef,1)
+        nSampEpoch = hdr.orig.epochdef(iEpoch,2)-hdr.orig.epochdef(iEpoch,1)+1;
+        Msamp2offset(1,iEpoch,1:nSampEpoch) = hdr.orig.epochdef(iEpoch,1):hdr.orig.epochdef(iEpoch,2); %sample number in samples
+        Msamp2offset(2,iEpoch,1:nSampEpoch) = hdr.orig.epochdef(iEpoch,3):hdr.orig.epochdef(iEpoch,3)+nSampEpoch-1; %offset in samples
+      end
+    end
+
+    % construct event according to FieldTrip rules
+    eventCount = 0;
+    for iXml = 1:length(eventNames)
+      for iEvent = 1:length(xml.(eventNames{iXml}))
+        eventCount = eventCount+1;
+        eventTime  = xml.(eventNames{iXml})(iEvent).event.beginTime;
+        eventTime(11) = ' '; eventTime(end-6:end) = [];
+        eventSDV = datenum(eventTime);
+        eventOffset = round((eventSDV - begSDV)*24*60*60*hdr.Fs); %in samples
+        % eventSample   
+        if isfield(hdr.orig.xml,'epoch') && length(hdr.orig.xml.epoch) > 1
+          for iEpoch = 1:size(hdr.orig.epochdef,1)
+            [dum,dum2,dum3] = intersect(squeeze(Msamp2offset(2,iEpoch,:)), eventOffset);
+            if ~isempty(dum2)
+              EpochNum = iEpoch;
+              SampIndex = dum2;
+            end
+          end
+          eventSample = Msamp2offset(1,EpochNum,SampIndex);
+        else
+          eventSample = eventOffset+1;
+        end
+
+        event(eventCount).type     = eventNames{iXml}(8:end);
+        event(eventCount).sample   = eventSample;
+        event(eventCount).offset   = eventOffset;
+        event(eventCount).duration = str2double(xml.(eventNames{iXml})(iEvent).event.duration)./1000000000*hdr.Fs;
+        event(eventCount).value    = xml.(eventNames{iXml})(iEvent).event.code;
+      end
+    end
+
 
   case 'eyelink_asc'
     if isempty(hdr)
