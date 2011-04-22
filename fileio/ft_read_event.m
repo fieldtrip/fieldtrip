@@ -13,8 +13,10 @@ function [event] = ft_read_event(filename, varargin)
 %   'headerformat'  string
 %   'eventformat'   string
 %   'header'        structure, see FT_READ_HEADER
-%   'detectflank'   string, can be 'up', 'down' or 'both' (default = 'up')
+%   'detectflank'   string, can be 'up', 'down', 'both' or 'auto' (default is system specific)
 %   'trigshift'     integer, number of samples to shift from flank to detect trigger value (default = 0)
+%   'trigindx'      list with channel numbers for the trigger detection, only for Yokogawa (default is automatic)
+%   'threshold'     threshold for analog trigger channels (default is system specific)
 %
 % Furthermore, you can specify optional arguments as key-value pairs
 % for filtering the events, e.g. to select only events of a specific
@@ -105,9 +107,10 @@ eventformat      = keyval('eventformat',  varargin);
 hdr              = keyval('header',       varargin);
 detectflank      = keyval('detectflank',  varargin); % up, down or both
 trigshift        = keyval('trigshift',    varargin); % default is assigned in subfunction
-trigindx         = keyval('trigindx',     varargin); % default is based on chantype helper function
+trigindx         = keyval('trigindx',     varargin); % this allows to override the automatic trigger channel detection and is useful for Yokogawa
 headerformat     = keyval('headerformat', varargin);
 dataformat       = keyval('dataformat',   varargin);
+threshold        = keyval('threshold',    varargin); % this is used for analog channels
 
 % this allows to read only events in a certain range, supported for selected data formats only
 flt_type         = keyval('type',         varargin);
@@ -1369,8 +1372,13 @@ switch eventformat
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
     % check that the required low-level toolbox is available
     ft_hastoolbox('yokogawa', 1);
-    % allow the user to specify custom trigger channels
-    event = read_yokogawa_event(filename, 'trigindx', trigindx);
+    % the user should be able to specify the analog threshold
+    % the user should be able to specify the trigger channels
+    % the user should be able to specify the flank, but the code falls back to 'auto' as default
+    if isempty(detectflank)
+      detectflank = 'auto';
+    end
+    event = read_yokogawa_event(filename, 'detectflank', detectflank, 'trigindx', trigindx, 'threshold', threshold);
 
   case 'nmc_archive_k'
     event = read_nmc_archive_k_event(filename);

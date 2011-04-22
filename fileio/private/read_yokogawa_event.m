@@ -30,18 +30,24 @@ function [event] = read_yokogawa_event(filename, varargin)
 %
 % $Id$
 
-if ~ft_hastoolbox('yokogawa')
-    error('cannot determine whether Yokogawa toolbox is present');
-end
-
-% get the options
-trigindx = keyval('trigindx', varargin); % default is based on chantype helper function
+% ensure that the required toolbox is on the path
+ft_hastoolbox('yokogawa', 1);
 
 event   = [];
 handles = definehandles;
 
+% get the options, the default is set below
+trigindx    = keyval('trigindx', varargin);
+threshold   = keyval('threshold', varargin);
+detectflank = keyval('detectflank', varargin);
+
 % read the dataset header
 hdr = read_yokogawa_header(filename);
+
+% determine the trigger channels (if not specified by the user)
+if isempty(trigindx)
+  trigindx = find(hdr.orig.channel_info(:,2)==handles.TriggerChannel);
+end
 
 if hdr.orig.acq_type==handles.AcqTypeEvokedRaw
   % read the trigger id from all trials
@@ -55,26 +61,33 @@ if hdr.orig.acq_type==handles.AcqTypeEvokedRaw
     event(end  ).sample   = (i-1)*hdr.nSamples + 1;
     event(end  ).offset   = -hdr.nSamplesPre;
     event(end  ).duration =  hdr.nSamples;
-
+    
     if ~isempty(value)
       event(end  ).value    =  value(i);
     end
   end
-
+  
 elseif hdr.orig.acq_type==handles.AcqTypeEvokedAve
   % make an event for the average
   event(1).type     = 'average';
   event(1).sample   = 1;
   event(1).offset   = -hdr.nSamplesPre;
   event(1).duration =  hdr.nSamples;
-
+  
 elseif hdr.orig.acq_type==handles.AcqTypeContinuousRaw
-  % read the trigger channel and detect the flanks
-  if isempty(trigindx)
-    trigindx = find(hdr.orig.channel_info(:,2)==handles.TriggerChannel);
-  end
-  event = read_trigger(filename, 'header', hdr, 'chanindx', trigindx, 'detectflank', 'both');
+  % the data structure does not contain events, but flank detection on the trigger channel might reveal them
+  % this is done below for all formats
+end
 
+% read the trigger channels and detect the flanks
+if ~isempty(trigindx)
+  trigger = read_trigger(filename, 'header', hdr, 'denoise', false, 'chanindx', trigindx, 'detectflank', detectflank, 'threshold', threshold);
+  % combine the triggers and the other events
+  event = appendevent(event, trigger);
+end
+
+if isempty(event)
+  warning('no triggers were detected, please specify the "trigindx" option');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

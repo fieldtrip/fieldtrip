@@ -895,10 +895,16 @@ switch dataformat
     end
 
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
-    % check that the required low-level toolbox is available
-    ft_hastoolbox('yokogawa', 1);
-    dat = read_yokogawa_data(filename, hdr, begsample, endsample, chanindx);
-
+    % the data can be read with two toolboxes, iether the one from Yokogawa or the one from Maryland
+    if false % ft_hastoolbox('sqdproject')
+      % chgannels are counted 0-based, samples are counted 1-based
+      [dat, info] = sqdread(filename, 'channels', chanindx-1, 'samples', [begsample endsample]);
+      dat = dat';
+    else
+      ft_hastoolbox('yokogawa', 1);
+      dat = read_yokogawa_data(filename, hdr, begsample, endsample, chanindx);
+    end
+    
   case 'nmc_archive_k'
     dat = read_nmc_archive_k_data(filename, hdr, begsample, endsample, chanindx);
 

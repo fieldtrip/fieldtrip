@@ -38,19 +38,20 @@ function [event] = read_trigger(filename, varargin)
 event = [];
 
 % get the optional input arguments
-hdr         = keyval('header',      varargin);
-dataformat  = keyval('dataformat',  varargin);
-begsample   = keyval('begsample',   varargin);
-endsample   = keyval('endsample',   varargin);
-chanindx    = keyval('chanindx',    varargin);
-detectflank = keyval('detectflank', varargin); % can be up, down, both
-denoise     = keyval('denoise',     varargin); if isempty(denoise),     denoise = 1;      end
-trigshift   = keyval('trigshift',   varargin); if isempty(trigshift),   trigshift = 0;    end
-trigpadding = keyval('trigpadding', varargin); if isempty(trigpadding), trigpadding = 1;  end
-fixctf      = keyval('fixctf',      varargin); if isempty(fixctf),      fixctf = 0;       end
-fixneuromag = keyval('fixneuromag', varargin); if isempty(fixneuromag), fixneuromag = 0;  end
-fix4dglasgow= keyval('fix4dglasgow', varargin); if isempty(fix4dglasgow), fix4dglasgow = 0; end
-fixbiosemi  = keyval('fixbiosemi',   varargin); if isempty(fixbiosemi), fixbiosemi = 0; end
+hdr         = keyval('header',        varargin);
+dataformat  = keyval('dataformat',    varargin);
+begsample   = keyval('begsample',     varargin);
+endsample   = keyval('endsample',     varargin);
+chanindx    = keyval('chanindx',      varargin);
+detectflank = keyval('detectflank',   varargin); % can be up, down, both, auto
+denoise     = keyval('denoise',       varargin); if isempty(denoise),     denoise = true;       end
+trigshift   = keyval('trigshift',     varargin); if isempty(trigshift),   trigshift = false;    end
+trigpadding = keyval('trigpadding',   varargin); if isempty(trigpadding), trigpadding = true;   end
+fixctf      = keyval('fixctf',        varargin); if isempty(fixctf),      fixctf = false;       end
+fixneuromag = keyval('fixneuromag',   varargin); if isempty(fixneuromag), fixneuromag = false;  end
+fix4dglasgow= keyval('fix4dglasgow',  varargin); if isempty(fix4dglasgow),fix4dglasgow = false; end
+fixbiosemi  = keyval('fixbiosemi',    varargin); if isempty(fixbiosemi),  fixbiosemi = false;   end
+threshold   = keyval('threshold',     varargin); 
 
 if isempty(hdr)
   hdr = ft_read_header(filename);
@@ -128,9 +129,24 @@ end
 if fix4dglasgow
   % synchronization pulses have a value of 8192 and are set to 0
   dat = dat - bitand(dat, 8192);
-  %% triggers containing the first bit assume a value of 4096 when sent by presentation
-  %% this does not seem to hold for matlab; check this
-  %dat = dat - bitand(dat, 4096)*4095/4096;
+  % triggers containing the first bit assume a value of 4096 when sent by presentation
+  % this does not seem to hold for matlab; check this
+  % dat = dat - bitand(dat, 4096)*4095/4096;
+end
+
+if ~isempty(threshold)
+  % the trigger channels contain an analog (and hence noisy) TTL signal and should be thresholded
+  dat = (dat>threshold);
+end
+
+if strcmp(detectflank, 'auto')
+  % look at the first value in the trigger channel to determine whether the trigger is pulled up or down
+  % this fails if the first sample is zero and if the trigger values are negative
+  if all(dat(:,1)==0)
+    detectflank = 'up';
+  else
+    detectflank = 'down';
+  end
 end
 
 for i=1:length(chanindx)
