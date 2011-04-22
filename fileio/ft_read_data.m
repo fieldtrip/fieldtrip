@@ -896,7 +896,7 @@ switch dataformat
 
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
     % the data can be read with two toolboxes, iether the one from Yokogawa or the one from Maryland
-    if false % ft_hastoolbox('sqdproject')
+    if ft_hastoolbox('sqdproject')
       % chgannels are counted 0-based, samples are counted 1-based
       [dat, info] = sqdread(filename, 'channels', chanindx-1, 'samples', [begsample endsample]);
       dat = dat';
