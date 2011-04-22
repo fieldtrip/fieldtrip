@@ -49,9 +49,10 @@ function [sens] = ft_apply_montage(sens, montage, varargin)
 % $Id$
 
 % get optional input arguments
-keepunused = keyval('keepunused', varargin); if isempty(keepunused), keepunused = 'no';  end
-inverse    = keyval('inverse',    varargin); if isempty(inverse),    inverse    = 'no';  end
-feedback   = keyval('feedback',   varargin); if isempty(feedback),   feedback   = 'text'; end
+keepunused = keyval('keepunused', varargin);  if isempty(keepunused), keepunused   = 'no';   end
+inverse    = keyval('inverse',    varargin);  if isempty(inverse),    inverse      = 'no';   end
+feedback   = keyval('feedback',   varargin);  if isempty(feedback),   feedback     = 'text'; end
+bname      = keyval('balancename', varargin); if isempty(bname),      bname        = '';     end
 
 % check the consistency of the input sensor array or data
 if isfield(sens, 'labelorg') && isfield(sens, 'labelnew')
@@ -164,6 +165,30 @@ elseif isfield(sens, 'tra')
   end
   sens.label = montage.labelnew;
 
+  % keep track of the order of the balancing and which one is the current
+  % one
+  if strcmp(inverse, 'yes')
+    if isfield(sens, 'balance') && isfield(sens.balance, 'previous')
+      if numel(sens.balance.previous)>=1
+        sens.balance.current  = sens.balance.previous{1};
+      else
+        sens.balance.current  = 'none';
+      end
+      sens.balance.previous = sens.balance.previous(2:end);
+    end
+  elseif ~strcmp(inverse, 'yes') && ~isempty(bname)
+    if isfield(sens, 'balance') && isfield(sens.balance, 'current')
+      if ~isfield(sens.balance, 'previous')
+        sens.balance.previous = {};
+      end
+      sens.balance.previous = [{sens.balance.current} sens.balance.previous];
+      sens.balance.current  = bname;
+      sens.balance.(bname)  = montage;
+    end
+  end
+
+  
+  
 elseif isfield(sens, 'trial')
   % apply the montage to the raw data that was preprocessed using fieldtrip
   data = sens;

@@ -154,9 +154,7 @@ if isfield(data, 'grad') || (isfield(data, 'elec') && isfield(data.elec, 'tra'))
   else
     sensfield = 'elec';
   end
-  data.(sensfield).balance.component = montage;
-  data.(sensfield).balance.current   = 'component';
-  data.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'keepunused', keepunused);
+  data.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'keepunused', keepunused, 'balancename', 'invcomp');
 else
   %warning('the gradiometer description does not match the data anymore');
 end

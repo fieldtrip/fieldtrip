@@ -438,7 +438,7 @@ if isfield(data, 'grad') || (isfield(data, 'elec') && isfield(data.elec, 'tra'))
   montage.labelorg = data.label;
   montage.labelnew = comp.label;
   montage.tra      = weights * sphere;
-  comp.(sensfield) = ft_apply_montage(data.(sensfield), montage);
+  comp.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'balancename', 'comp');
 end
 
 % accessing this field here is needed for the configuration tracking
