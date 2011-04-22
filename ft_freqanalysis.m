@@ -536,9 +536,11 @@ else
       % prepare calcdof
       if strcmp(cfg.calcdof,'yes')
         if hastime
-          dof = zeros(ntrials,nfoi,ntoi);
+          dof = zeros(nfoi,ntoi);
+          %dof = zeros(ntrials,nfoi,ntoi);
         else
-          dof = zeros(ntrials,nfoi);
+          dof = zeros(nfoi);
+          %dof = zeros(ntrials,nfoi);
         end
       end
       
@@ -643,12 +645,12 @@ else
             
             % do calcdof  dof = zeros(numper,numfoi,numtoi);
             if strcmp(cfg.calcdof,'yes')
-                if hastime
-                    acttimboiind = ~isnan(squeeze(spectrum(1,1,foiind(ifoi),:)));
-                    dof(itrial,ifoi,acttimboiind) = ntaper(ifoi);
-                else % hastime = false
-                    dof(itrial,ifoi) = ntaper(ifoi);
-                end
+              if hastime
+                acttimboiind = ~isnan(squeeze(spectrum(1,1,foiind(ifoi),:)));
+                dof(ifoi,acttimboiind) = ntaper(ifoi) + dof(ifoi,acttimboiind);
+              else % hastime = false
+                dof(ifoi) = ntaper(ifoi) + dof(ifoi);
+              end
             end
             
             
