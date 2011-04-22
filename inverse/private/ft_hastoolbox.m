@@ -100,6 +100,7 @@ url = {
   'FNS'        'see http://hhvn.nmsu.edu/wiki/index.php/FNS'
   'GIFTI'      'see http://www.artefact.tk/software/matlab/gifti'
   'XML4MATV2'  'see http://www.mathworks.com/matlabcentral/fileexchange/6268-xml4mat-v2-0'
+  'SQDPROJECT' 'see http://www.isr.umd.edu/Labs/CSSL/simonlab'
   };
 
 if nargin<2
@@ -225,6 +226,8 @@ switch toolbox
     status  = exist('gifti', 'file');
   case 'XML4MATV2'
     status  = exist('xml2struct.m', 'file');
+  case 'SQDPROJECT'
+    status = exist('sqdread.m', 'file') && exist('sqdwrite.m', 'file');
   otherwise
     if ~silent, warning('cannot determine whether the %s toolbox is present', toolbox); end
     status = 0;
@@ -305,7 +308,11 @@ previouspath = path;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = myaddpath(toolbox, silent)
 if exist(toolbox, 'dir')
-  if ~silent, warning('adding %s toolbox to your Matlab path', toolbox); end
+  if ~silent, 
+    ws = warning('backtrace', 'off');
+    warning('adding %s toolbox to your Matlab path', toolbox); 
+    warning(ws); % return to the previous warning level
+  end
   addpath(toolbox);
   status = 1;
 else
