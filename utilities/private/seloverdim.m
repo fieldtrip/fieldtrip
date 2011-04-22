@@ -30,11 +30,11 @@ for k = 1:numel(fn)
   end
 end
 
-if sum(~cellfun('isempty', seldimnum))<1
-  error('the "%s" dimension is not present in the data', seldim)
-elseif any(cellfun(@numel, seldimnum)>1)
-  error('cannot select over multiple dimensions at the same time')
-end
+% if sum(~cellfun('isempty', seldimnum))<1
+%   error('the "%s" dimension is not present in the data', seldim)
+% elseif any(cellfun(@numel, seldimnum)>1)
+%   error('cannot select over multiple dimensions at the same time')
+% end
 
 [reduceddim, fntmp] = dimlength(data);
 selx       = find(ismember(fntmp, fn));
@@ -55,8 +55,12 @@ end
 
 % make the subselection
 for i = 1:numel(param)
-  if fb, fprintf('selection %s along dimension %d\n', param{i}, seldimnum{i}); end
-  
+  if numel(seldimnum{i})==1,
+    if fb, fprintf('selection %s along dimension %d\n', param{i}, seldimnum{i}); end
+  else
+    if fb, fprintf('selection %s along dimensions %d and %d\n', param{i}, seldimnum{i}(1), seldimnum{i}(2)); end
+  end
+    
   reduceddim{i}(seldimnum{i}) = numel(sel);
   tmp       = data.(param{i});
   iscelltmp = iscell(tmp);
@@ -72,7 +76,7 @@ for i = 1:numel(param)
   if seldimnum{i}>0,
     % subselection from each of the cells
     for j = 1:numel(tmp)
-      if ~isempty(tmp{j}),
+      if ~isempty(tmp{j}) && numel(seldimnum{i})==1,
         switch seldimnum{i}
           case 1
             tmp{j} = tmp{j}(sel,:,:,:,:,:,:,:,:);
@@ -94,6 +98,16 @@ for i = 1:numel(param)
             tmp{j} = tmp{j}(:,:,:,:,:,:,:,:,sel);
           otherwise
             error('the number of dimensions is too high');
+        end
+        tmp{j} = reshape(tmp{j}, reduceddim{i});
+        
+      elseif ~isempty(tmp{j}) && numel(seldimnum{i})>1,
+        if all(seldimnum{i}==[1 2])
+          tmp{j} = tmp{j}(sel,sel,:,:,:,:,:,:,:,:);
+        elseif all(seldimnum{i}==[2 3])
+          tmp{j} = tmp{j}(:,sel,sel,:,:,:,:,:,:,:);      
+        else
+          error('selection of 2 dimensions simultaneously only works for [1 2] or [2 3] at present'); 
         end
         tmp{j} = reshape(tmp{j}, reduceddim{i});
       end

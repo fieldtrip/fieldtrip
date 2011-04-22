@@ -483,7 +483,8 @@ if selectfoi,
   if numel(selfoi)==1, selfoi(2) = selfoi; end;
   if numel(selfoi)==2,
     %treat selfoi as lower limit and upper limit
-    selfoi = nearest(data.freq, selfoi(1)):nearest(data.freq, selfoi(2));
+    %selfoi = nearest(data.freq, selfoi(1)):nearest(data.freq, selfoi(2));
+    selfoi = find(data.freq>=selfoi(1) & data.freq<=selfoi(2));
   else
     %treat selfoi as a list of frequencies
     tmpfoi = zeros(1,numel(selfoi));
@@ -496,7 +497,8 @@ end
 
 if selecttoi,
   if length(seltoi)==1, seltoi(2) = seltoi; end;
-  seltoi = nearest(data.time, seltoi(1)):nearest(data.time, seltoi(2));
+  %seltoi = nearest(data.time, seltoi(1)):nearest(data.time, seltoi(2));
+  seltoi = find(data.time>=seltoi(1) & data.time<=seltoi(2));
 end
 
 if selectroi,
