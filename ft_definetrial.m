@@ -131,7 +131,7 @@ else
   error('no trialfunction specified, see DEFINETRIAL for help');
 end
 
-if isfield(cfg, 'trialdef') && isfield(cfg.trialdef, 'eventtype') && strcmp(cfg.trialdef.eventtype, '?')
+if isfield(cfg, 'trialdef') && isfield(cfg.trialdef, 'eventtype') && isequal(cfg.trialdef.eventtype, '?')
   % give a gentle message instead of an error
   fprintf('no trials have been defined yet, see DEFINETRIAL for further help\n');
 elseif size(trl,1)<1
