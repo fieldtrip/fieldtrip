@@ -27,17 +27,17 @@ function [pnt, ori, lab] = channelposition(sens, varargin)
 %
 % $Id$
 
-if isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(sens.balance.current, 'none')
+while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(sens.balance.current, 'none')
   fnames = setdiff(fieldnames(sens.balance), 'current');
   indx   = find(ismember(fnames, sens.balance.current));
 
   if length(indx)==1,
     %  undo the synthetic gradient balancing
     fprintf('undoing the %s balancing\n', sens.balance.current);
-    sens = ft_apply_montage(sens, getfield(sens.balance, sens.balance.current), 'inverse', 'yes');
-    sens.balance.current = 'none';
+    sens = ft_apply_montage(sens, getfield(sens.balance, sens.balance.current), 'inverse', 'yes', 'keepunused', 'yes');
   else
     warning('cannot undo %s balancing\n', sens.balance.current);
+    break
   end
 end
 
