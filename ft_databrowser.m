@@ -313,7 +313,7 @@ if ischar(cfg.zscale) && strcmp(cfg.zscale, 'auto')
     time = data.time{1};
   else
     % one second of data is read from file to determine the vertical scaling
-    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', hdr.nSamples, 'chanindx', chansel, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat, 'headerformat', cfg.headerformat);
+    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', round(hdr.Fs), 'chanindx', chansel, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat, 'headerformat', cfg.headerformat);
     time = (1:hdr.nSamples) / fsample;
   end
   
