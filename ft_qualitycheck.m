@@ -583,13 +583,13 @@ grid(h.LinenoiseAxes,'on');
 legend(h.LinenoiseAxes, ['LineFreq [' ylab '^2/Hz]']);
 set(h.LinenoiseAxes,'XTickLabel','');
 xlim(h.LinenoiseAxes,[toi]);
-ylim(h.LinenoiseAxes,[0 1e3]);
+ylim(h.LinenoiseAxes,[1e0 1e3]);
 
 % plot lowfreqnoise
 semilogy(h.LowfreqnoiseAxes, summary.time, clipat(summary.avg(9,:)*powscaling, 0, 1e10), 'LineWidth',2);
 grid(h.LowfreqnoiseAxes,'on');
 xlim(h.LowfreqnoiseAxes,[toi]);
-ylim(h.LowfreqnoiseAxes,[0 1e10]);
+ylim(h.LowfreqnoiseAxes,[1e0 1e10]);
 legend(h.LowfreqnoiseAxes, ['LowFreq [' ylab '^2/Hz]']);
 xlabel(h.LowfreqnoiseAxes, 'Time [seconds]');
 
