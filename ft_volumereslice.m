@@ -34,7 +34,7 @@ function mri = ft_volumereslice(cfg, mri)
 % Undocumented local options:
 %   cfg.downsample
 
-% Copyright (C) 2010-2011, Robert Oostenveld
+% Copyright (C) 2010-2011, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
