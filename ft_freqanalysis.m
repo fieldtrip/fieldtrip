@@ -163,28 +163,28 @@ function [freq] = ft_freqanalysis(cfg, data)
 
 ft_defaults
 
-% defaults for optional input/ouputfile
-if ~isfield(cfg, 'inputfile'),  cfg.inputfile               = [];    end
-if ~isfield(cfg, 'outputfile'), cfg.outputfile              = [];    end
+% defaults for optional input/ouputfile and feedback
+cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
+cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
+cfg.feedback   = ft_getopt(cfg, 'feedback',   'text');
 
 % load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-  end
+hasdata      = (nargin>1);
+hasinputfile = ~isempty(cfg.inputfile);
+
+if hasdata && hasinputfile
+  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+elseif hasdata
+  % nothing needs to be done
+elseif hasinputfile
+  data = loadvar(cfg.inputfile, 'data');
 end
 
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', {'raw', 'comp', 'mvar'}, 'feedback', 'yes', 'hasoffset', 'yes', 'hastrialdef', 'yes');
 
 % select trials of interest
-if ~isfield(cfg, 'trials'),   cfg.trials   = 'all';  end % set the default
-if ~isfield(cfg, 'feedback'), cfg.feedback = 'text'; end
-
+cfg.trials = ft_getopt(cfg, 'trials', 'all');
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
   data = ft_selectdata(data, 'rpt', cfg.trials);
@@ -200,18 +200,19 @@ cfg = ft_checkconfig(cfg, 'required',    {'method'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'fft',    'mtmfft'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'convol', 'mtmconvol'});
 
-
-% NEW OR OLD - switch for selecting which function to call and when to do it - this will change when the development of specest proceeds
+% NEW OR OLD - switch for selecting which function to call and when to do it 
+% this will change when the development of specest proceeds
 % ALSO: Check for all cfg options that are defaulted in the old functions
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'wltconvol', 'wavelet'});
+
+if ~isfield(cfg, 'method'), error('you must specify a method in cfg.method'); end
 
 switch cfg.method
     
   case 'mtmconvol'
     specestflg = 1;
-    if ~isfield(cfg, 'taper'),            cfg.taper            =  'dpss';      end
-    if ~isfield(cfg, 'method'), error('you must specify a method in cfg.method'); end
-    if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))
+    cfg.taper = ft_getopt(cfg, 'taper', 'dpss');    
+    if isequal(cfg.taper, 'dpss') && ~isfield(cfg, 'tapsmofrq')
       error('you must specify a smoothing parameter with taper = dpss');
     end
     % check for foi above Nyquist
@@ -226,8 +227,7 @@ switch cfg.method
     
   case 'mtmfft'
     specestflg = 1;
-    if ~isfield(cfg, 'taper'),            cfg.taper            =  'dpss';      end
-    if ~isfield(cfg, 'method'), error('you must specify a method in cfg.method'); end
+    cfg.taper = ft_getopt(cfg, 'taper', 'dpss');    
     if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))
       error('you must specify a smoothing parameter with taper = dpss');
     end
@@ -243,8 +243,8 @@ switch cfg.method
     
   case 'wavelet'
     specestflg = 1;
-    if ~isfield(cfg, 'width'),         cfg.width      = 7;            end
-    if ~isfield(cfg, 'gwidth'),        cfg.gwidth     = 3;            end
+    cfg.width  = ft_getopt(cfg, 'width',  7);
+    cfg.gwidth = ft_getopt(cfg, 'gwidth', 3);
    
   case 'hilbert_devel'
     warning('the hilbert implementation is under heavy development, do not use it for analysis purposes')
@@ -264,8 +264,6 @@ switch cfg.method
     end
 end
 
-
-
 if ~specestflg
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % HERE THE OLD IMPLEMENTATION STARTS
@@ -278,28 +276,26 @@ else
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   % set all the defaults
-  if ~isfield(cfg, 'pad'),              cfg.pad              = 'maxperlen';  end
-  if ~isfield(cfg, 'output'),           cfg.output           = 'pow';        end
-  if ~isfield(cfg, 'calcdof'),          cfg.calcdof          = 'no';         end
-  
-  if ~isfield(cfg, 'channel'),          cfg.channel          = 'all';        end
-  if ~isfield(cfg, 'precision'),        cfg.precision        = 'double';     end
-  if ~isfield(cfg, 'output'),           cfg.output           = 'powandcsd';  end
-  if ~isfield(cfg, 'foi'),              cfg.foi              = [];           end
-  if ~isfield(cfg, 'foilim'),           cfg.foilim           = [];           end
-  if ~isfield(cfg, 'correctt_ftimwin'), cfg.correctt_ftimwin = 'no';         end
+  cfg.pad       = ft_getopt(cfg, 'pad',       'maxperlen');
+  cfg.output    = ft_getopt(cfg, 'output',    'pow');
+  cfg.calcdof   = ft_getopt(cfg, 'calcdof',   'no');
+  cfg.channel   = ft_getopt(cfg, 'channel',   'all');
+  cfg.precision = ft_getopt(cfg, 'precision', 'double');
+  cfg.foi       = ft_getopt(cfg, 'foi',       []);
+  cfg.foilim    = ft_getopt(cfg, 'foilim',    []);
+  cfg.correctt_ftimwin = ft_getopt(cfg, 'correctt_ftimwin', 'no');
   
   % keeptrials and keeptapers should be conditional on cfg.output,
   % cfg.output = 'fourier' should always output tapers
   if strcmp(cfg.output, 'fourier')
-    if ~isfield(cfg, 'keeptrials'), cfg.keeptrials = 'yes'; end
-    if ~isfield(cfg, 'keeptapers'), cfg.keeptapers = 'yes'; end
+    cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 'yes');
+    cfg.keeptapers = ft_getopt(cfg, 'keeptapers', 'yes');
     if strcmp(cfg.keeptrials, 'no') || strcmp(cfg.keeptapers, 'no'),
       error('cfg.output = ''fourier'' requires cfg.keeptrials = ''yes'' and cfg.keeptapers = ''yes''');
     end   
   else
-    if ~isfield(cfg, 'keeptrials'), cfg.keeptrials = 'no'; end
-    if ~isfield(cfg, 'keeptapers'), cfg.keeptapers = 'no'; end
+    cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 'no');
+    cfg.keeptapers = ft_getopt(cfg, 'keeptapers', 'no');
   end 
  
   % set flags for keeping trials and/or tapers
@@ -459,7 +455,8 @@ else
           cfg.taper, options{:}, 'dimord', 'chan_time_freqtap', 'feedback', fbopt);
  
         % the following variable is created to keep track of the number of
-        % trials per time bin
+        % trials per time bin and is needed for proper normalization if
+        % keeprpt==1 and the triallength is variable
         if itrial==1, trlcnt = zeros(1, numel(foi), numel(toi)); end  
         
         hastime = true;
@@ -474,13 +471,18 @@ else
           freqtapind{iindfoi} = tempntaper(iindfoi)+1:tempntaper(iindfoi+1);
         end
      
-        
       case 'mtmfft'
         [spectrum,ntaper,foi] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, options{:}, 'feedback', fbopt);
         hastime = false;
      
       case 'wavelet'  
         [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:});
+        
+        % the following variable is created to keep track of the number of
+        % trials per time bin and is needed for proper normalization if
+        % keeprpt==1 and the triallength is variable
+        if itrial==1, trlcnt = zeros(1, numel(foi), numel(toi)); end  
+        
         hastime = true;
         % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
         ntaper = ones(1,numel(foi));
@@ -555,8 +557,6 @@ else
     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    
-    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% Create output
     if keeprpt~=4
@@ -608,7 +608,7 @@ else
         switch keeprpt
               
           case 1 % cfg.keeptrials,'no' &&  cfg.keeptapers,'no'
-            if strcmp(cfg.method, 'mtmconvol'),
+            if exist('trlcnt', 'var'),
               trlcnt(1, ifoi, :) = trlcnt(1, ifoi, :) + shiftdim(double(acttboi(:)'),-1);
             end
 
@@ -689,24 +689,23 @@ else
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   % re-normalise the TFRs if keeprpt==1
-  if strcmp(cfg.method, 'mtmconvol') && keeprpt==1 
+  if (strcmp(cfg.method, 'mtmconvol') || strcmp(cfg.method, 'wavelet')) && keeprpt==1 
     nanmask = trlcnt==0;
     if powflg
-        powspctrm = powspctrm.*ntrials;
-        powspctrm = powspctrm./trlcnt(ones(size(powspctrm,1),1),:,:);
-        powspctrm(nanmask(ones(size(powspctrm,1),1),:,:)) = nan;
+      powspctrm = powspctrm.*ntrials;
+      powspctrm = powspctrm./trlcnt(ones(size(powspctrm,1),1),:,:);
+      powspctrm(nanmask(ones(size(powspctrm,1),1),:,:)) = nan;
     end
     if fftflg
-        fourierspctrm = fourierspctrm.*ntrials;
-        fourierspctrm = fourierspctrm./trlcnt(ones(size(fourierspctrm,1),1),:,:);
-        fourierspctrm(nanmask(ones(size(fourierspctrm,1),1),:,:)) = nan;
+      fourierspctrm = fourierspctrm.*ntrials;
+      fourierspctrm = fourierspctrm./trlcnt(ones(size(fourierspctrm,1),1),:,:);
+      fourierspctrm(nanmask(ones(size(fourierspctrm,1),1),:,:)) = nan;
     end
     if csdflg
-        crsspctrm = crsspctrm.*ntrials;
-        crsspctrm = crsspctrm./trlcnt(ones(size(crsspctrm,1),1),:,:);
-        crsspctrm(nanmask(ones(size(crsspctrm,1),1),:,:)) = nan;
+      crsspctrm = crsspctrm.*ntrials;
+      crsspctrm = crsspctrm./trlcnt(ones(size(crsspctrm,1),1),:,:);
+      crsspctrm(nanmask(ones(size(crsspctrm,1),1),:,:)) = nan;
     end
-    
   end
   
   % set output variables
@@ -770,8 +769,6 @@ else
   else
     cfg = rmfield(cfg,'foilim');
   end
-  
-  
   
   % accessing this field here is needed for the configuration tracking
   % by accessing it once, it will not be removed from the output cfg
