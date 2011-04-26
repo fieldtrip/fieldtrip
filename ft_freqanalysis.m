@@ -539,7 +539,7 @@ else
           dof = zeros(nfoi,ntoi);
           %dof = zeros(ntrials,nfoi,ntoi);
         else
-          dof = zeros(nfoi);
+          dof = zeros(nfoi,1);
           %dof = zeros(ntrials,nfoi);
         end
       end
