@@ -21,7 +21,7 @@ function [varargout] = ft_qualitycheck(cfg)
 %                    with analyze = 'no'
 %   cfg.visualize = 'yes' or 'no' to visualize the analysis (default = 'yes')
 %   cfg.saveplot  = 'yes' or 'no' to save the visualization (default = 'yes')
-%
+
 % Copyright (C) 2010-2011, Arjen Stolk, Bram Daams, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -578,20 +578,20 @@ legend(h.SignalAxes,'Range','Mean','Min','Max');
 set(h.SignalAxes,'XTickLabel','');
 
 % plot linenoise
-semilogy(h.LinenoiseAxes, summary.time, clipat(summary.avg(10,:)*powscaling, 0, 1e3), 'LineWidth',2);
+semilogy(h.LinenoiseAxes, summary.time, clipat(summary.avg(10,:)*powscaling, 1e2, 1e4), 'LineWidth',2);
 grid(h.LinenoiseAxes,'on');
 legend(h.LinenoiseAxes, ['LineFreq [' ylab '^2/Hz]']);
 set(h.LinenoiseAxes,'XTickLabel','');
 xlim(h.LinenoiseAxes,[toi]);
-ylim(h.LinenoiseAxes,[1e0 1e3]);
+ylim(h.LinenoiseAxes,[1e2 1e4]); % before april 28th this was 1e0 - 1e3
 
 % plot lowfreqnoise
-semilogy(h.LowfreqnoiseAxes, summary.time, clipat(summary.avg(9,:)*powscaling, 0, 1e10), 'LineWidth',2);
+semilogy(h.LowfreqnoiseAxes, summary.time, clipat(summary.avg(9,:)*powscaling, 1e10, 1e12), 'LineWidth',2);
 grid(h.LowfreqnoiseAxes,'on');
 xlim(h.LowfreqnoiseAxes,[toi]);
-ylim(h.LowfreqnoiseAxes,[1e0 1e10]);
+ylim(h.LowfreqnoiseAxes,[1e10 1e12]);
 legend(h.LowfreqnoiseAxes, ['LowFreq [' ylab '^2/Hz]']);
-xlabel(h.LowfreqnoiseAxes, 'Time [seconds]');
+xlabel(h.LowfreqnoiseAxes, 'Time [seconds]'); % before april 28th this was 1e0 - 1e10
 
 % EVENT PANEL
 h.EventPanel = uipanel(...
