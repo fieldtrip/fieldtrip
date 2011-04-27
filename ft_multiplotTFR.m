@@ -21,7 +21,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 % cfg.maskstyle        = style used to mask nans, 'opacity' or 'saturation' (default = 'opacity')
 %                        use 'saturation' when saving to vector-format (like *.eps) to avoid all 
 %                        sorts of image-problems (currently only possible with a white backgroud)
-% cfg.statalpha        = alpha value used to mask non-significant areas (0 - 1, default = 1)
+% cfg.maskalpha        = alpha value used for masking areas dictated by cfg.maskparameter (0 - 1, default = 1)
 % cfg.xlim             = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.ylim             = 'maxmin' or [ymin ymax] (default = 'maxmin')
 % cfg.zlim             = 'maxmin','maxabs' or [zmin zmax] (default = 'maxmin')
@@ -146,8 +146,8 @@ if ~isfield(cfg,'fontsize'),        cfg.fontsize = 8;                  end
 if ~isfield(cfg,'interactive'),     cfg.interactive = 'no';            end
 if ~isfield(cfg,'hotkeys'),         cfg.hotkeys = 'no';                end
 if ~isfield(cfg,'renderer'),        cfg.renderer = [];                 end % let matlab decide on default
-if ~isfield(cfg,'statalpha'),       cfg.statalpha = 1;                 end
-if ~isfield(cfg,'masknans'),        cfg.masknans = 'yes';              end
+if ~isfield(cfg,'maskalpha'),       cfg.maskalpha = 1;                 end
+if ~isfield(cfg,'masknans'),        cfg.masknans = 'no';              end
 if ~isfield(cfg,'maskparameter'),   cfg.maskparameter = [];            end
 if ~isfield(cfg,'maskstyle'),       cfg.maskstyle = 'opacity';         end
 if ~isfield(cfg,'matrixside'),      cfg.matrixside = 'feedforward';    end
@@ -379,30 +379,30 @@ end
 
 if ~isempty(cfg.maskparameter)
   mask = data.(cfg.maskparameter);
-  if isfull && cfg.statalpha == 1
+  if isfull && cfg.maskalpha == 1
     mask = mask(sel1, sel2, ymin:ymax, xmin:xmax);
     mask = nanmean(nanmean(nanmean(mask, meandir), 4), 3);
-  elseif haslabelcmb && cfg.statalpha == 1
+  elseif haslabelcmb && cfg.maskalpha == 1
     mask = mask(sellab, ymin:ymax, xmin:xmax);
     mask = nanmean(nanmean(mask, 3), 2);
-  elseif cfg.statalpha == 1
+  elseif cfg.maskalpha == 1
     mask = mask(sellab, ymin:ymax, xmin:xmax);
     mask = nanmean(nanmean(mask, 3), 2);
-  elseif isfull && cfg.statalpha ~= 1
+  elseif isfull && cfg.maskalpha ~= 1
     maskl = mask(sel1, sel2, ymin:ymax, xmin:xmax); %% check this for full representation
     mask = zeros(size(maskl));
     mask(maskl) = 1;
-    mask(~maskl) = cfg.statalpha;
-  elseif haslabelcmb && cfg.statalpha ~= 1
+    mask(~maskl) = cfg.maskalpha;
+  elseif haslabelcmb && cfg.maskalpha ~= 1
     maskl = mask(sellab, ymin:ymax, xmin:xmax);
     mask = zeros(size(maskl));
     mask(maskl) = 1;
-    mask(~maskl) = cfg.statalpha;
-  elseif cfg.statalpha ~= 1
+    mask(~maskl) = cfg.maskalpha;
+  elseif cfg.maskalpha ~= 1
     maskl = mask(sellab, ymin:ymax, xmin:xmax);
     mask = zeros(size(maskl));
     mask(maskl) = 1;
-    mask(~maskl) = cfg.statalpha;
+    mask(~maskl) = cfg.maskalpha;
   end
 end
 
@@ -471,12 +471,13 @@ for k=1:length(seldat)
   
   % Draw plot (and mask Nan's with maskfield if requested)
   if isequal(cfg.masknans,'yes') && isempty(cfg.maskparameter)
-    mask = ~isnan(cdata);
-    mask = double(mask);
+    nans_mask = ~isnan(cdata);
+    mask = double(nans_mask);
+    patch([min(xas) min(xas) max(xas) max(xas)],[min(yas) max(yas) max(yas) min(yas)],'k');
     ft_plot_matrix(xas, yas, cdata,'clim',[zmin zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
   elseif isequal(cfg.masknans,'yes') && ~isempty(cfg.maskparameter)
-    mask = ~isnan(cdata);
-    mask = mask .* mdata;
+    nans_mask = ~isnan(cdata);
+    mask = nans_mask .* mdata;
     mask = double(mask);
     patch([min(xas) min(xas) max(xas) max(xas)],[min(yas) max(yas) max(yas) min(yas)],'k');
     ft_plot_matrix(xas, yas, cdata,'clim',[zmin zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
