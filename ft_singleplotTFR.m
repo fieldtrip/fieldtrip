@@ -18,7 +18,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %                     or trials)
 % cfg.maskstyle     = style used to mask nans, 'opacity' or 'saturation' (default = 'opacity')
 %                     use 'saturation' when saving to vector-format (like *.eps) to avoid all sorts of image-problems
-% cfg.statalpha        = alpha value used to mask non-significant areas (0 - 1, default = 1)
+% cfg.maskalpha     = alpha value used for masking areas dictated by cfg.maskparameter (0 - 1, default = 1)
 % cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.ylim          = 'maxmin' or [ymin ymax] (default = 'maxmin')
 % cfg.zlim          = 'maxmin','maxabs' or [zmin zmax] (default = 'maxmin')
@@ -88,7 +88,7 @@ cfg.colorbar      = ft_getopt(cfg, 'colorbar',     'yes');
 cfg.interactive   = ft_getopt(cfg, 'interactive',  'no');
 cfg.hotkeys       = ft_getopt(cfg, 'hotkeys',      'no');
 cfg.renderer      = ft_getopt(cfg, 'renderer',     []);
-cfg.statalpha     = ft_getopt(cfg, 'statalpha',     1);
+cfg.maskalpha     = ft_getopt(cfg, 'maskalpha',     1);
 cfg.maskparameter = ft_getopt(cfg, 'maskparameter',[]);
 cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',    'opacity');
 cfg.channel       = ft_getopt(cfg, 'channel',      'all');
@@ -315,17 +315,17 @@ end
 
 if ~isempty(cfg.maskparameter)
   mask = data.(cfg.maskparameter);
-  if isfull && cfg.statalpha == 1
+  if isfull && cfg.maskalpha == 1
     mask = mask(sel1, sel2, ymin:ymax, xmin:xmax);
     mask = nanmean(mask, meandir);
     siz  = size(mask);
     mask = reshape(mask, [max(siz(1:2)) siz(3) siz(4)]);
     mask = reshape(mask(sellab, :, :), [siz(3) siz(4)]);
-  elseif haslabelcmb && cfg.statalpha == 1
+  elseif haslabelcmb && cfg.maskalpha == 1
     mask = mask(sellab, ymin:ymax, xmin:xmax);
-  elseif cfg.statalpha == 1
+  elseif cfg.maskalpha == 1
     mask = mask(sellab, ymin:ymax, xmin:xmax);
-  elseif isfull && cfg.statalpha ~= 1 %% check me
+  elseif isfull && cfg.maskalpha ~= 1 %% check me
     maskl = mask(sel1, sel2, ymin:ymax, xmin:xmax);
     maskl = nanmean(maskl, meandir);
     siz  = size(maskl);
@@ -333,17 +333,17 @@ if ~isempty(cfg.maskparameter)
     maskl = squeeze(reshape(maskl(sellab, :, :), [siz(3) siz(4)]));
     mask = zeros(size(maskl));
     mask(maskl) = 1;
-    mask(~maskl) = cfg.statalpha;
-  elseif haslabelcmb && cfg.statalpha ~= 1
+    mask(~maskl) = cfg.maskalpha;
+  elseif haslabelcmb && cfg.maskalpha ~= 1
     maskl = squeeze(mask(sellab, ymin:ymax, xmin:xmax));
     mask = zeros(size(maskl));
     mask(maskl) = 1;
-    mask(~maskl) = cfg.statalpha;
-  elseif cfg.statalpha ~= 1
+    mask(~maskl) = cfg.maskalpha;
+  elseif cfg.maskalpha ~= 1
     maskl = squeeze(mask(sellab, ymin:ymax, xmin:xmax));
     mask = zeros(size(maskl));
     mask(maskl) = 1;
-    mask(~maskl) = cfg.statalpha;
+    mask(~maskl) = cfg.maskalpha;
   end
 end
 siz        = size(dat);
@@ -371,12 +371,12 @@ end;
 
 % Draw plot (and mask NaN's if requested):
 if isequal(cfg.masknans,'yes') && isempty(cfg.maskparameter)
-  mask = ~isnan(datamatrix);
-  mask = double(mask);
+  nans_mask = ~isnan(datamatrix);
+  mask = double(nans_mask);
   ft_plot_matrix(xvector, yvector, datamatrix, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
 elseif isequal(cfg.masknans,'yes') && ~isempty(cfg.maskparameter)
-  mask = ~isnan(datamatrix);
-  mask = mask .* mdata;
+  nans_mask = ~isnan(datamatrix);
+  mask = mask .* nans_mask;
   mask = double(mask);
   ft_plot_matrix(xvector, yvector, datamatrix, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
 elseif isequal(cfg.masknans,'no') && ~isempty(cfg.maskparameter)
