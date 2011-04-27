@@ -168,13 +168,16 @@ elseif isfield(sens, 'tra')
   % keep track of the order of the balancing and which one is the current
   % one
   if strcmp(inverse, 'yes')
-    if isfield(sens, 'balance') && isfield(sens.balance, 'previous')
-      if numel(sens.balance.previous)>=1
+    if isfield(sens, 'balance')% && isfield(sens.balance, 'previous')
+      if isfield(sens.balance, 'previous') && numel(sens.balance.previous)>=1
         sens.balance.current  = sens.balance.previous{1};
+        sens.balance.previous = sens.balance.previous(2:end);
+      elseif isfield(sens.balance, 'previous')
+        sens.balance.current  = 'none';
+        sens.balance          = rmfield(sens.balance, 'previous');
       else
         sens.balance.current  = 'none';
       end
-      sens.balance.previous = sens.balance.previous(2:end);
     end
   elseif ~strcmp(inverse, 'yes') && ~isempty(bname)
     if isfield(sens, 'balance') && isfield(sens.balance, 'current')
