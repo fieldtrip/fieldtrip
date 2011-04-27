@@ -25,6 +25,7 @@ function [data] = ft_checkdata(data, varargin)
 %   hastrialdef        = yes, no
 %   hasoffset          = yes, no (only applies to raw data)
 %   hascumtapcnt       = yes, no (only applies to freq data)
+%   hasdim             = yes, no
 %   hasdof             = yes, no
 %   cmbrepresentation  = sparse, full (applies to covariance and cross-spectral density)
 %
@@ -87,6 +88,7 @@ hasunits      = keyval('hasunits',      varargin);
 hastrialdef   = keyval('hastrialdef',   varargin); if isempty(hastrialdef), hastrialdef = 'no'; end
 hasoffset     = keyval('hasoffset',     varargin); if isempty(hasoffset), hasoffset = 'no'; end
 hasdimord     = keyval('hasdimord',     varargin); if isempty(hasdimord), hasdimord = 'no'; end
+hasdim        = keyval('hasdim',  varargin);
 hascumtapcnt  = keyval('hascumtapcnt',  varargin);
 hasdof        = keyval('hasdof',        varargin); if isempty(hasdof), hasdof = 'no'; end
 haspow        = keyval('haspow',        varargin); if isempty(haspow), haspow = 'no'; end
@@ -582,6 +584,12 @@ if isequal(hasoffset, 'yes')
 elseif isequal(hasoffset, 'no') && isfield(data, 'offset')
   data = rmfield(data, 'offset');
 end % if hasoffset
+
+if isequal(hasdim, 'yes') && ~isfield(data, 'dim')
+  data.dim = pos2dim3d(data.pos);
+elseif isequal(hasdim, 'no') && isfield(data, 'dim')
+    data = rmfield(data, 'dim');
+end % if hasdim
 
 if isequal(hascumtapcnt, 'yes') && ~isfield(data, 'cumtapcnt')
   error('This function requires data with a ''cumtapcnt'' field');
