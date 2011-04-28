@@ -598,34 +598,41 @@ switch dataformat
     for iSig = 1:length(hdr.orig.signal)
       % adjust chanindx to match with current signal
       [dum1, dum2, chanind_sig] = intersect(chanindx, find(chan2sig_ind==iSig));
-      
-      blockhdr = hdr.orig.signal(iSig).blockhdr;
-      signalname = binfiles(iSig).name;
-      fullsignalname = fullfile(filename, signalname);
-
-      % the number of samples per block can be different
-      % assume that all channels have the same sampling frequency and number of samples per block
-      nsamples = zeros(size(blockhdr));
-      for i=1:length(blockhdr)
-        nsamples(i) = blockhdr(i).nsamples(1);
-      end
-
-      cumsamples = cumsum(nsamples);
-      begblock = find(begsample<=cumsamples, 1, 'first');
-      endblock = find(endsample<=cumsamples, 1, 'first');
-      datsig = read_mff_bin(fullsignalname, begblock, endblock);
-      
-      % select channels and concatenate in a matrix
-      dat{iSig} = cell2mat(datsig(chanind_sig,:));
-      % select the desired samples from the concatenated blocks
-      if begblock==1
-        prevsamples = 0;
+      if isempty(chanind_sig)
+        % no channels requested from current signal
       else
-        prevsamples = cumsamples(begblock-1);
+        blockhdr = hdr.orig.signal(iSig).blockhdr;
+        signalname = binfiles(iSig).name;
+        fullsignalname = fullfile(filename, signalname);
+
+        % the number of samples per block can be different
+        % assume that all channels have the same sampling frequency and number of samples per block
+        nsamples = zeros(size(blockhdr));
+        for i=1:length(blockhdr)
+          nsamples(i) = blockhdr(i).nsamples(1);
+        end
+
+        cumsamples = cumsum(nsamples);
+        begblock = find(begsample<=cumsamples, 1, 'first');
+        endblock = find(endsample<=cumsamples, 1, 'first');
+        datsig = read_mff_bin(fullsignalname, begblock, endblock);
+
+        % select channels and concatenate in a matrix
+        if exist('dat', 'var')
+          dat{length(dat)+1} = cell2mat(datsig(chanind_sig,:));
+        else
+          dat{1} = cell2mat(datsig(chanind_sig,:));
+        end
+        % select the desired samples from the concatenated blocks
+        if begblock==1
+          prevsamples = 0;
+        else
+          prevsamples = cumsamples(begblock-1);
+        end
+        begsel = begsample-prevsamples;
+        endsel = endsample-prevsamples;
+        dat{end} = dat{end}(:,begsel:endsel);
       end
-      begsel = begsample-prevsamples;
-      endsel = endsample-prevsamples;
-      dat{iSig} = dat{iSig}(:,begsel:endsel);
     end
     %concat signals
     dat = cat(1,dat{:});
