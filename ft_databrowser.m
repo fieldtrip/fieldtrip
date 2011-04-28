@@ -122,6 +122,8 @@ if hasdata
   hdr = ft_fetch_header(data);
   if ~isfield(cfg, 'continuous') && length(data.trial) == 1
     cfg.continuous = 'yes';
+  elseif ~isfield(cfg, 'continuous') && length(data.trial) > 1
+    cfg.continuous = 'no';
   end
 else
   % check if the input cfg is valid for this function
