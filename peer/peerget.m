@@ -56,10 +56,10 @@ stopwatch = tic;
 
 success = false;
 while ~success && toc(stopwatch)<timeout
-
+  
   joblist = peer('joblist');
   sel = find([joblist.jobid]==jobid);
-
+  
   if ~isempty(sel)
     [argout, options] = peer('get', jobid);
     peer('clear', jobid);
@@ -70,21 +70,37 @@ while ~success && toc(stopwatch)<timeout
     pause(sleep);
     continue
   end
-
-end % while 
+  
+end % while
 
 if success
-
+  
   % look at the optional arguments
   elapsed     = ft_getopt(options, 'elapsed');
   warn        = ft_getopt(options, 'lastwarn');
   err         = ft_getopt(options, 'lasterr');
   diarystring = ft_getopt(options, 'diary');
-
+  
+  % if there is an error, it needs to be represented as a message string
+  % and optionally also as a strucure for rethrowing
+  if ~isempty(err)
+    if ischar(err)
+      errmsg = err;
+    elseif isstruct(err)
+      errmsg = err.message;
+    else
+      errmsg = err.message;
+      % convert the MEexception object into a structure to allow a rethrow further down in the code
+      ws = warning('off', 'MATLAB:structOnObject');
+      err = struct(err);
+      warning(ws);
+    end
+  end
+  
   if strcmp(diary, 'error') && ~isempty(err)
-    if ~isempty(strfind(err, 'could not start the matlab engine')) || ...
-       ~isempty(strfind(err, 'failed to execute the job (argin)')) || ...
-       ~isempty(strfind(err, 'failed to execute the job (optin)'))
+    if ~isempty(strfind(errmsg, 'could not start the matlab engine')) || ...
+       ~isempty(strfind(errmsg, 'failed to execute the job (argin)')) || ...
+       ~isempty(strfind(errmsg, 'failed to execute the job (optin)'))
       % this is due to a license or a memory problem, and is dealt with in peercellfun
       closeline = false;
     else
@@ -113,53 +129,44 @@ if success
     warning(warn);
   end
   if ~isempty(err)
-    if ischar(err)
-      % it only contains the description
-      if StopOnError
+    if StopOnError
+      if ischar(err)
         error(err);
       else
-        warning('error during remote execution: %s', err);
+        rethrow(err);
       end
     else
-      ws = warning('off', 'MATLAB:structOnObject');
-      err = struct(err);
-      warning(ws);
-      if StopOnError
-        % it contains the full details
-        rethrow(err);
-      else
-        warning('error during remote execution: %s', err.message);
-      end
+      warning('error during remote execution: %s', errmsg);
     end
   end % ~isempty(err)
   if closeline
     fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
   end
-
+  
   switch output
-  case 'varargout'
-    % return the output arguments, the options cannot be returned
-    varargout = argout;
-  case 'cell'
-    % return the output arguments and the options
-    varargout{1} = argout;
-    varargout{2} = options;
-  otherwise
-    error('invalid output option');
+    case 'varargout'
+      % return the output arguments, the options cannot be returned
+      varargout = argout;
+    case 'cell'
+      % return the output arguments and the options
+      varargout{1} = argout;
+      varargout{2} = options;
+    otherwise
+      error('invalid output option');
   end
-
-else 
+  
+else
   warning('the job results are not yet available');
   switch output
-  case 'varargout'
-    % return empty output arguments
-    varargout = cell(1, nargout);
-  case 'cell'
-    % return the output arguments and the options as empty cells
-    varargout{1} = {};
-    varargout{2} = {};
-  otherwise
-    error('invalid output option');
+    case 'varargout'
+      % return empty output arguments
+      varargout = cell(1, nargout);
+    case 'cell'
+      % return the output arguments and the options as empty cells
+      varargout{1} = {};
+      varargout{2} = {};
+    otherwise
+      error('invalid output option');
   end
 end
 
