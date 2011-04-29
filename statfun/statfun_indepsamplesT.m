@@ -62,7 +62,7 @@ nreplc1 = sum(~isnan(dat(:,sel1)), 2);
 nreplc2 = sum(~isnan(dat(:,sel2)), 2);
 nrepl   = nreplc1 + nreplc2;
 if any(nrepl<size(design,2)),
-  warning('Not all replications are used for the computation of the statistic.');
+  warning_once('Not all replications are used for the computation of the statistic.');
 end;
 %if nrepl<3
 %    error('The data must contain at least three trials/subjects.');
