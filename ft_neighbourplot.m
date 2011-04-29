@@ -6,27 +6,37 @@ function ft_neighbourplot(cfg, data, neighbours)
 % channels are obtained by ft_neighbourselection.
 %
 % Use as
-%   ft_neighbourplot(cfg, data, neighbours)
+%  ft_neighbourplot(cfg)
+% or as
+%  ft_neighbourplot(cfg, data)
 %
 % where
 %
+%   cfg.neighbours    = neighbour structure from ft_neighbourselection
+%   (optional)
 %   cfg.elec          = structure with EEG electrode positions
 %   cfg.grad          = structure with MEG gradiometer positions
 %   cfg.elecfile      = filename containing EEG electrode positions
 %   cfg.gradfile      = filename containing MEG gradiometer positions
-%   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
+%   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT%
 %
 % The following data fields may also be used by FT_NEIGHBOURSELECTION:
 %   data.elec     = structure with EEG electrode positions
 %   data.grad     = structure with MEG gradiometer positions
 %
+% or as
+%   ft_neighbourplot(cfg, data, neighbours)
+%
+% where
+%   neighbours        = neighbour structure from ft_neighbourselection
+%
+%
 % Can alternatively be used as
 %   ft_neighbourplot(cfg, data)
 %
-% The function then calls ft_neighbourselection itself, and returns the
-% neighbouring channels (equally to ft_neighbourselection) in addition to
-% visualizing them. For any further information on this, please consult
-% ft_neighbourselection
+% If cfg.neighbours is empty, the function calls ft_neighbourselection 
+% to compute channel neighbours. For any further information on this, 
+% please consult ft_neighbourselection
 
 % Copyright (C) 2011, Jörn M. Horschig, Robert Oostenveld
 %
@@ -48,7 +58,9 @@ function ft_neighbourplot(cfg, data, neighbours)
 
 
 if nargin < 3
-    if nargin < 2
+    if isfield(cfg, 'neighbours')
+        neighbours = cfg.neighbours;
+    elseif nargin < 2
         neighbours = ft_neighbourselection(cfg);
     else
         neighbours = ft_neighbourselection(cfg, data);
