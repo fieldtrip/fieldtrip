@@ -1,4 +1,4 @@
-function [resample] = resampedesign(cfg, design);
+function [resample] = resampledesign(cfg, design)
 
 % RESAMPLEDESIGN returns a resampling matrix, in which each row can be
 % used to resample either the original design matrix or the original data.
@@ -43,11 +43,11 @@ if ~isfield(cfg, 'uvar'), cfg.uvar = []; end
 if ~isfield(cfg, 'wvar'), cfg.wvar = []; end  % within-cell variable, to keep repetitions together
 if ~isfield(cfg, 'cvar'), cfg.cvar = []; end
 
-if size(design,1)>size(design,2)
-  % this function wants the replications in the column direction
-  % the matrix seems to be transposed
-  design = transpose(design);
-end
+% if size(design,1)>size(design,2)
+%   % this function wants the replications in the column direction
+%   % the matrix seems to be transposed
+%   design = transpose(design);
+% end
 
 Nvar  = size(design,1);   % number of factors or regressors
 Nrepl = size(design,2);   % number of replications
@@ -97,7 +97,7 @@ if isnumeric(cfg.numrandomization) && cfg.numrandomization==0
   return;
 end
 
-if length(cfg.wvar)>0
+if ~isempty(cfg.wvar)
   % keep the elements within a cell together, e.g. multiple tapers in a trial
   % this is realized by replacing the design matrix temporarily with a smaller version
   blkmeas = unique(design(cfg.wvar,:)', 'rows')';
@@ -121,11 +121,11 @@ if length(cfg.wvar)>0
 end
 
 % do some validity checks
-if Nvar==1 && length(cfg.uvar)>0
+if Nvar==1 && ~isempty(cfg.uvar)
   error('A within-units shuffling requires a at least one unit variable and at least one independent variable');
 end
 
-if length(cfg.uvar)==0 && strcmp(cfg.resampling, 'permutation')
+if isempty(cfg.uvar) && strcmp(cfg.resampling, 'permutation')
   % reshuffle the colums of the design matrix
   if ischar(cfg.numrandomization) && strcmp(cfg.numrandomization, 'all')
     % systematically shuffle the columns in the design matrix
@@ -134,12 +134,13 @@ if length(cfg.uvar)==0 && strcmp(cfg.resampling, 'permutation')
     resample = perms(1:Nrepl);
   elseif ~ischar(cfg.numrandomization)
     % randomly shuffle the columns in the design matrix the specified number of times
+    resample = zeros(cfg.numrandomization, Nrepl);
     for i=1:cfg.numrandomization
       resample(i,:) = randperm(Nrepl);
     end
   end
 
-elseif length(cfg.uvar)==0 && strcmp(cfg.resampling, 'bootstrap')
+elseif isempty(cfg.uvar) && strcmp(cfg.resampling, 'bootstrap')
   % randomly draw with replacement, keeping the number of elements the same in each class
   % only the test under the null-hypothesis (h0) is explicitely implemented here
   % but the h1 test can be achieved using a control variable
@@ -148,7 +149,7 @@ elseif length(cfg.uvar)==0 && strcmp(cfg.resampling, 'bootstrap')
     resample(i,:) = randsample(1:Nrepl, Nrepl);
   end
 
-elseif length(cfg.uvar)>0 && strcmp(cfg.resampling, 'permutation')
+elseif ~isempty(cfg.uvar) && strcmp(cfg.resampling, 'permutation')
   % reshuffle the colums of the design matrix, keep the rows of the design matrix with the unit variable intact
   unitlevel = unique(design(cfg.uvar,:)', 'rows')';
   for i=1:size(unitlevel,2)
@@ -194,7 +195,7 @@ elseif length(cfg.uvar)>0 && strcmp(cfg.resampling, 'permutation')
     end
   end
   
-elseif length(cfg.uvar)==1 && strcmp(cfg.resampling, 'bootstrap') && length(cfg.cvar)==0,
+elseif length(cfg.uvar)==1 && strcmp(cfg.resampling, 'bootstrap') && isempty(cfg.cvar),
   % randomly draw with replacement, keeping the number of elements the same in each class
   % only the test under the null-hypothesis (h0) is explicitely implemented here
   % but the h1 test can be achieved using a control variable
@@ -256,7 +257,7 @@ else
   error('Unsupported configuration for resampling.');
 end
 
-if length(cfg.wvar)>0
+if ~isempty(cfg.wvar)
   % switch back to the original design matrix and expand the resample ordering
   % matrix so that it reorders all elements within a cell together
   design = orig_design;
