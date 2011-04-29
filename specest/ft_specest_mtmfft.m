@@ -93,6 +93,13 @@ switch taper
     tap = sine_taper(ndatsample, ndatsample*(tapsmofrq./fsample))';
     tap = tap(1:(end-1), :); % remove the last taper
   
+  case 'sine_old'
+    % to provide compatibility with the tapers being scaled (which was default 
+    % behavior prior to 29apr2011) yet this gave different magnitude of power 
+    % when comparing with slepian multi tapers
+    tap = sine_taper_scaled(ndatsample, ndatsample*(tapsmofrq./fsample))';
+    tap = tap(1:(end-1), :); % remove the last taper
+  
   case 'alpha'
     error('not yet implemented');
     

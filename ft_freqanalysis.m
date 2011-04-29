@@ -584,17 +584,19 @@ else
         acttap = logical([ones(ntaper(ifoi),1);zeros(size(spectrum,1)-ntaper(ifoi),1)]);
         if powflg
           powdum = abs(spectrum(acttap,:,foiind(ifoi),acttboi)) .^2;
-          % sinetaper scaling, not checked whether it works if hastime = 0
-          % FIXME why does the scaling only has to be done for power?
-          if isfield(cfg,'taper') && strcmp(cfg.taper, 'sine')
-            %sinetapscale = zeros(ntaper(ifoi),nfoi);  % assumes fixed number of tapers
-            sinetapscale = zeros(ntaper(ifoi),1);  % assumes fixed number of tapers
-            for isinetap = 1:ntaper(ifoi)  % assumes fixed number of tapers
-              sinetapscale(isinetap,:) = (1 - (((isinetap - 1) ./ ntaper(ifoi)) .^ 2));
-            end
-            sinetapscale = reshape(repmat(sinetapscale,[1 1 nchan ntoi]),[ntaper(ifoi) nchan 1 ntoi]);
-            powdum = powdum .* sinetapscale;
-          end
+          % sinetaper scaling is disabled, because it is not consistent with the other
+          % tapers. if scaling is required, please specify cfg.taper =
+          % 'sine_old'
+          
+%         if isfield(cfg,'taper') && strcmp(cfg.taper, 'sine')
+%             %sinetapscale = zeros(ntaper(ifoi),nfoi);  % assumes fixed number of tapers
+%             sinetapscale = zeros(ntaper(ifoi),1);  % assumes fixed number of tapers
+%             for isinetap = 1:ntaper(ifoi)  % assumes fixed number of tapers
+%               sinetapscale(isinetap,:) = (1 - (((isinetap - 1) ./ ntaper(ifoi)) .^ 2));
+%             end
+%             sinetapscale = reshape(repmat(sinetapscale,[1 1 nchan ntoi]),[ntaper(ifoi) nchan 1 ntoi]);
+%             powdum = powdum .* sinetapscale;
+%           end
         end
         if fftflg
           fourierdum = spectrum(acttap,:,foiind(ifoi),acttboi);
