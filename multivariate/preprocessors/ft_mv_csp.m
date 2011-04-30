@@ -20,7 +20,6 @@ classdef ft_mv_csp < ft_mv_preprocessor
 %      'logpowcsp' is log10(powcsp) - the output is a feature matrix with observations in rows
 %
 % 
-% PARAMETERS:
 %  filters;      % extracted filters
 %  eigenvalues;  % corresponding eigenvalues (or singular values)
 %
@@ -142,6 +141,12 @@ classdef ft_mv_csp < ft_mv_preprocessor
         else
           error('Output data type is not specified - it can be rawcsp,powcsp or logpowcsp');
         end
+        
+      end
+      
+      function [m,desc] = model(obj)
+        
+        1;
         
       end
       

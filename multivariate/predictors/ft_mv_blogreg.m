@@ -1,4 +1,5 @@
 classdef ft_mv_blogreg < ft_mv_predictor
+%
 %FT_MV_BLOGREG Bayesian logistic regression with spatiotemporal interactions and
 %possibility for transfer learning
 %
@@ -14,17 +15,49 @@ classdef ft_mv_blogreg < ft_mv_predictor
 % represented by X. This still allows us to use the above approach to
 % specify the coupling.
 %
-% Transfer learning is implemented by augmenting the data matrix as
+% Multitask learning (ntasks > 1) is implemented by augmenting the data matrix as
 % [ subject1data      0       ]
 % [      0       subject2data ]
-% etc.
+% etc. Data will be given by a cell-array.
 %
+% ft_mv_blogreg now also supports a mixed effects model (mixed = true) 
+% of the form
+% [ X1 X1 0 ]
+% [ X2 0 X2 ]
+% where the first column contains the fixed effects and the remaining
+% columns the random effects. The basic idea is that if prediction is
+% supported by a fixed effect then it will be chosen since this incurs the
+% smallest penalty in terms of sparseness. If a coupling is specified then
+% this coupling will only operate on the fixed effects using mixed=1 and on 
+% both the fixed and random effects using mixed=2. Data should be given by a
+% cell-array.
+%
+% EXAMPLE:
+%
+% X1 = rand(100,1)-0.5;
+% X2 = rand(100,1)-0.5;
+% Y1 = 1+((1./(1+exp(-X1))) > 0.5);
+% Y2 = 1+((1./(1+exp(-X2))) > 0.5);
+% m = ft_mv_blogreg('mixed',true);
+% m = m.train({X1 X2}',{Y1 Y2}');
+% 
+% If the input data is a cell-array of cell-arrays then we assume a mixed
+% effects model for multiple tasks. The output will have the same
+% structure. E.g. model{i}{j,k} will be the j-th model for the k-th mixed
+% effect in the i-th subject. Note that k=1 is the fixed effect and k>1 are
+% the random effects.
+% 
 % NOTE: 
 %   a bias term is added to the model and should not be included explicitly
+%
+% TO DO: 
+% - allow different number of samples for different datasets
+% - properly handle ntasks and nmixed at the end of test function
 %
 % Refs:
 % van Gerven et al. Efficient Bayesian multivariate fMRI analysis using a sparsifying
 % spatio-temporal prior. Neuroimage, 2010
+% 
 % van Gerven & Simanova. Concept classification with Bayesian multitask
 % learning, NAACL, 2010
 %
@@ -33,15 +66,11 @@ classdef ft_mv_blogreg < ft_mv_predictor
 
     properties
 
-      % number of features
+      % number of features; constant over tasks
       nfeatures
       
-      % coupling strength for individual tasks; each feature is coupled to
-      % its corresponding feature in the other tasks
-      taskcoupling=100; % strong coupling by default
-      ntasks = 1; % no transfer learning by default
-
       % input dimensions of the data; is used to generate prior
+      % constant over tasks
       indims = [];
      
        % prior precision matrix of the auxiliary variables
@@ -89,8 +118,16 @@ classdef ft_mv_blogreg < ft_mv_predictor
       convergence; % whether or not EP converged
       logp; % approximate log model evidence
      
-      % mixed effects model
-      mixed = false;
+      % coupling strength for individual tasks; each feature is coupled to
+      % its corresponding feature in the other tasks
+      multitask = 0;
+      ntasks = 1; % number of multitask components
+      taskcoupling=100; % strong task coupling by default
+
+      % mixed effects model (mixed=1 only couples fixed effects with
+      % coupling; mixed=2 couples fixed and random effects with coupling)
+      mixed = 0;    
+      nmixed = 1; % number of mixed effects components
       
     end
 
@@ -125,19 +162,32 @@ classdef ft_mv_blogreg < ft_mv_predictor
            return;
          end
          
-         % transfer learning
-         transfer = iscell(X);
+         % multitask learning
+         if iscell(X) && (~obj.mixed || iscell(X{1}))
+           obj.multitask = 1;
+         end
+         if obj.multitask, obj.ntasks = length(X); end
          
-         if transfer
-           obj.ntasks = length(X);
-           obj.nfeatures = size(X{1},2);
-           nsamples = size(X{1},1);
-          
-         else
-           obj.nfeatures = size(X,2);
-           nsamples = size(X,1);
+         % mixed effects
+         if obj.mixed
+           if obj.multitask
+             obj.nmixed = length(X{1});
+           else
+            obj.nmixed = length(X);
+           end
          end
 
+         if ~obj.multitask && ~obj.mixed
+           obj.nfeatures = size(X,2);
+           nsamples = size(X,1);
+         elseif (obj.multitask && ~obj.mixed) || (~obj.multitask && obj.mixed)
+           obj.nfeatures = size(X{1},2);
+           nsamples = mean(cellfun(@(x)(size(x,1)),X));
+         elseif obj.multitask && obj.mixed
+           obj.nfeatures = size(X{1}{1},2);
+           nsamples = mean(cellfun(@(x)(size(x,1)),X{1})); % just an indication
+         end
+           
          if isempty(obj.degenerate)
            obj.degenerate = nsamples < obj.nfeatures;
          end
@@ -149,16 +199,18 @@ classdef ft_mv_blogreg < ft_mv_predictor
            end
          end
          
+         % create prior; bias terms are added
          if isempty(obj.prior)
            obj.prior = obj.create_prior();
          elseif obj.verbose
-           fprintf('using prespecified prior\n');
+           fprintf('using prespecified prior; bias term should be included in prior\n');
          end
          
-         if transfer % transfer learning
+         if obj.multitask || obj.mixed
            obj.prior = obj.transform_prior();
          end
          
+         % change representation of the data
          [X,Y] = obj.transform_data(X,Y);
            
          % run the algorithm
@@ -169,26 +221,8 @@ classdef ft_mv_blogreg < ft_mv_predictor
              fprintf('scaling prior with scale %g and bias scale %g\n',obj.scale,obj.precbias);
            end
            
-           obj.prior = scale_prior(obj.prior,'lambda',obj.scale);
-           
-           % add bias term if not yet done
-           if transfer
-             
-              if obj.mixed % no bias for fixed effects
-                 offset = obj.nfeatures;
-               else
-                 offset = 0;
-               end
-               
-               for j=1:obj.ntasks
-                 obj.prior(offset + j*(obj.nfeatures+1),offset + j*(obj.nfeatures+1)) = 1/obj.precbias;
-               end
-             
-           elseif size(obj.prior,1)~=size(X,2)
-             
-             obj.prior(size(X,2),size(X,2)) = 1/obj.precbias;
-           
-           end
+           % scale prior local + bias term scaling 
+           obj.prior = obj.scale_prior(obj.scale);
            
            if obj.niter
              [obj.Gauss,terms,obj.logp,obj.convergence] = laplacedegenerate_ep(Y,X,obj.prior, ...
@@ -204,25 +238,8 @@ classdef ft_mv_blogreg < ft_mv_predictor
              if obj.verbose
                fprintf('scaling prior with scale %g and bias scale %g\n',obj.scale(j),obj.precbias);
              end
-             tprior = scale_prior(obj.prior,'lambda',obj.scale(j));
+             tprior = obj.scale_prior(obj.scale(j));
              
-             if transfer
-
-               if obj.mixed % no bias for fixed effects
-                 offset = obj.nfeatures;
-               else
-                 offset = 0;
-               end
-               
-               for j=1:obj.ntasks
-                 tprior(offset + j*(obj.nfeatures+1),offset + j*(obj.nfeatures+1)) = 1/obj.precbias;
-               end
-               
-             elseif size(tprior,1)~=size(X,2)
-               % add bias term if not yet done
-               tprior(size(X,2),size(X,2)) = 1/obj.precbias;
-             end
- 
              try
                  
                if obj.niter
@@ -242,6 +259,7 @@ classdef ft_mv_blogreg < ft_mv_predictor
                  
              catch
                lgp(j) = -inf; % some error occurred
+               disp(lasterr);
              end
                
            end
@@ -280,12 +298,14 @@ classdef ft_mv_blogreg < ft_mv_predictor
          % compute univariate variances on the fly
          % also add the covariance for the betas to the output.
          
+         %          nsamples = size(G.A,1);
+         %          if obj.ntasks > 1
+         %            totsamples = sum(cellfun(@(x)(size(x,1)),X));
+         %          else
+         %            totsamples = size(X,1);
+         %          end
          nsamples = size(G.A,1);
-         if obj.ntasks > 1
-           totsamples = sum(cellfun(@(x)(size(x,1)),X));
-         else
-           totsamples = size(X,1);
-         end
+         totsamples = size(D,1);
          
          scaledA = G.A .* (repmat(1./G.diagK',nsamples,1));
          W1 = G.A*scaledA';
@@ -337,9 +357,12 @@ classdef ft_mv_blogreg < ft_mv_predictor
          
          post = [y 1 - y];
          
-         if obj.ntasks == 1
+         if ~obj.multitask && ~obj.mixed
+
            Y = post;
-         else
+        
+         elseif obj.multitask && ~obj.mixed
+         
            Y = cell(1,obj.ntasks);
            nidx = 0;
            for j=1:obj.ntasks
@@ -348,110 +371,34 @@ classdef ft_mv_blogreg < ft_mv_predictor
              nidx = nidx + size(X{j},1);
              
            end
-         end
-         
-       end
-       
-       function [tdata,tdesign] = transform_data(obj,X,Y)
-         % recreate dataset and design matrix
-         
-         if obj.ntasks == 1
            
-           % add bias term
-           tdata = [X ones(size(X,1),1)];
+         elseif ~obj.multitask && obj.mixed
            
-           % transform design to +1/-1 representation
-           if nargin==3, tdesign = 3-2*Y; end
+           Y = cell(1,obj.nmixed);
+           nidx = 0;
+           for j=1:obj.nmixed
+             
+             Y{j} = post((nidx+1):(nidx+size(X{j},1)),:);
+             nidx = nidx + size(X{j},1);
+             
+           end
            
-         else 
+         elseif obj.multitask && obj.mixed
            
-           % add bias term
+           Y = cell(1,obj.ntasks);
+           nidx = 0;
            for j=1:obj.ntasks
-             X{j} = [X{j} ones(size(X{j},1),1)];
-           end
-           
-           if nargin==3,
-             tdesign = cell2mat(Y);
-             tdesign = 3-2*tdesign(:,1);
-           end
-           
-           if ~obj.mixed % transfer learning
              
-             tdata = blkdiag(X{:});
+             Y{j} = cell(1,obj.nmixed);
+             for m=1:obj.nmixed
              
-%                 nf = obj.nfeatures;
-%            totsamples = sum(cellfun(@(x)(size(x,1)),X));    
-%         
-%              % sparse might be faster for many tasks...
-%              tdata = zeros(totsamples,obj.ntasks*(nf+1));
-%              if nargin==3, tdesign = zeros(totsamples,1); end
-%              
-%              nidx = 0; fidx = 0;
-%              for j=1:obj.ntasks
-%                
-%                tdata((nidx+1):(nidx+size(X{j},1)),(fidx+1):(fidx+nf+1)) = [X{j} ones(size(X{j},1),1)];
-%                if nargin==3
-%                  tdesign((nidx+1):(nidx+size(X{j},1))) = 3-2*Y{j}(:,1);
-%                end
-%                
-%                nidx = nidx + size(X{j},1);
-%                fidx = fidx + nf + 1;
-%                
-%              end
+               Y{j}{m} = post((nidx+1):(nidx+size(X{j}{m},1)),:);
+               nidx = nidx + size(X{j}{m},1);
              
-           else % mixed effects model
-             
-             % fixed effects without bias
-             fixed = cell2mat(X(:));
-             fixed = fixed(:,1:(end-1));
-             
-             tdata = [fixed blkdiag(X{:})];
-
-           end
-           
-         end
-         
-       end
-       
-       function prior = transform_prior(obj)
-         % recreate prior for transfer learning
-         
-         nf = obj.nfeatures;
-         
-         % recreate prior
-         prior = obj.prior;
-         
-         if size(prior,1)==nf
-           % add bias term if not yet done
-           prior(nf+1,nf+1) = 1;
-         end
-         
-         if ~obj.mixed
-           
-           pp = repmat({prior},[1 obj.ntasks]);
-           prior = blkdiag(pp{:});
-         
-           % add task coupling for transfer learning
-           if obj.taskcoupling
-             blk = obj.ntasks*(nf+1)^2;
-             didx = (1:(size(prior,1)+1):(size(prior,1)*(nf)));
-             cc = repmat(obj.taskcoupling,[1 length(didx)]);
-             for j=1:obj.ntasks
-               for k=(j+1):obj.ntasks
-                 prior(((j-1)*blk+(k-1)*(nf+1))+didx) = cc;
-                 prior(((k-1)*blk+(j-1)*(nf+1))+didx) = cc;
-               end
              end
+             
            end
-        
-         else
-         
-           P = zeros(nf+1,nf+1);
-           P(1:(nf+2):end) = prior(1:(nf+2):end);
            
-           pp = cat(2,{prior(1:nf,1:nf)},repmat({P},[1 obj.ntasks]));
-           prior = blkdiag(pp{:});
-         
          end
          
        end
@@ -468,21 +415,83 @@ classdef ft_mv_blogreg < ft_mv_predictor
          % variance of the betas
          %
          
+         desc = { ...
+           'importance values (posterior  - prior variance of auxiliary variables)' ...
+           'posterior variance of auxiliary variables' ...
+           'prior variance of auxiliary variables' ...
+           'means of the regression coefficients; positive values indicate condition one' ...
+           'variance of the regression coefficients' }';
+         
          G = obj.Gauss;
 
-         % take fixed effects into account
-         if obj.mixed
-           ntasks = obj.ntasks + 1;
-           N = (numel(G.auxC) - ntasks + 1) / ntasks; % number of features
-           offset = [0 N N + ((N+1):(N+1):((ntasks-2)*(N+1)))];
-         else
+         if ~obj.multitask && ~obj.mixed
+           
            ntasks = obj.ntasks;
            N = (numel(G.auxC) - ntasks) / ntasks; % number of features
            offset = 0:(N+1):((ntasks-1)*(N+1));
+           
+         elseif obj.multitask && ~obj.mixed
+           
+           ntasks = obj.ntasks;
+           N = (numel(G.auxC) - ntasks) / ntasks; % number of features
+           offset = 0:(N+1):((ntasks-1)*(N+1));
+           
+         elseif ~obj.multitask && obj.mixed
+           
+           ntasks = obj.nmixed + 1;
+           N = (numel(G.auxC) - ntasks + 1) / ntasks; % number of features
+           offset = [0 N N + ((N+1):(N+1):((ntasks-2)*(N+1)))];
+         
+         else % obj.multitask && obj.mixed
+           
+           N1 = numel(G.auxC)./obj.ntasks;
+           N = (N1-obj.nmixed) ./ (obj.nmixed+1);
+           
+           m = cell(1,obj.ntasks);
+           for j=1:obj.ntasks
+             
+             m{j} = cell(5,1+obj.nmixed);
+             
+             for k=1:(1+obj.nmixed)
+             
+               offset = (j-1)*N1 + (k-1)*(N+1);
+               if k>1, offset = offset-1; end
+               
+               varaux = G.auxC(offset + (1:N)); % ignore bias term
+               
+               [L,dummy,S] = chol(sparse(obj.prior),'lower');
+               invA = fastinvc(L);
+               varprior = full(diag(S*invA*S'));
+               varprior = varprior(offset + (1:N));
+               meanbeta = G.m(offset + (1:N));
+               varbeta = G.diagC(offset + (1:N));
+               
+               m{j}{1,k} = (varaux - varprior);
+               m{j}{2,k} = varaux;
+               m{j}{3,k} = varprior;
+               m{j}{4,k} = meanbeta;
+               m{j}{5,k} = varbeta;
+               
+               if ~isempty(obj.mask)
+                 
+                 msk = obj.mask(:) ~= 0;
+                 mm = nan(obj.indims);
+                 for r=1:5
+                   mm(msk) = m{j}{r,k};
+                   m{j}{r,k} = mm;
+                 end
+                 
+               end
+               
+             end
+             
+           end
+           
+           return;
+           
          end
          
-         m = cell(5,ntasks);
-         
+         m = cell(5,ntasks);         
          for j=1:ntasks
          
            % Note: bias term must be included in prior
@@ -529,13 +538,6 @@ classdef ft_mv_blogreg < ft_mv_predictor
          
          end
          
-         desc = { ...
-           'importance values (posterior  - prior variance of auxiliary variables)' ...
-           'posterior variance of auxiliary variables' ...
-           'prior variance of auxiliary variables' ...
-           'means of the regression coefficients; positive values indicate condition one' ...
-           'variance of the regression coefficients' }';
-         
          % for mixed effects models, the first model is the fixed effects
          % model!
          
@@ -562,10 +564,10 @@ classdef ft_mv_blogreg < ft_mv_predictor
            fprintf('sampling betas from auxiliary variables using scaled prior\n');
          end
          
-         if ~isfield(obj.params,'prior')
+         if ~isfield(obj,'prior')
            % create univariate prior with a given scale
-           pri = obj.create_prior(1);
-           pri = scale_prior(pri,'lambda',obj.scale);
+           obj.prior = obj.create_prior();
+           pri = obj.scale_prior(obj.scale);
          else
            pri = obj.prior;
          end
@@ -599,11 +601,84 @@ classdef ft_mv_blogreg < ft_mv_predictor
     
     methods(Access=protected)
       
+      function [tdata,tdesign] = transform_data(obj,X,Y)
+         % recreate dataset and design matrix
+         
+         if ~obj.multitask && ~obj.mixed
+           
+           % add bias term
+           tdata = [X ones(size(X,1),1)];
+           
+           % transform design to +1/-1 representation
+           if nargin==3, tdesign = 3-2*Y; end
+           
+         elseif obj.multitask && ~obj.mixed
+
+           if nargin==3,
+             tdesign = cell2mat(Y);
+             tdesign = 3-2*tdesign(:,1);
+           end
+           
+           % add bias term
+           for j=1:obj.ntasks, X{j} = [X{j} ones(size(X{j},1),1)]; end
+           
+           tdata = blkdiag(X{:});
+           
+         elseif ~obj.multitask && obj.mixed
+
+           if nargin==3,
+             tdesign = cell2mat(Y);
+             tdesign = 3-2*tdesign(:,1);
+           end
+           
+           % add bias term
+           for j=1:obj.nmixed, X{j} = [X{j} ones(size(X{j},1),1)]; end
+           
+           % fixed effects without bias
+           fixed = cell2mat(X(:));
+           fixed = fixed(:,1:(end-1));
+           
+           tdata = [fixed blkdiag(X{:})];
+           
+         else % obj.multitask && obj.mixed           
+           
+           % CHECK!
+           
+           if nargin==3,
+             tdesign = [];
+             for k=1:length(Y)
+               td = cell2mat(Y{k});
+               td = 3-2*td(:,1);
+               tdesign = cat(1,tdesign,td);
+             end             
+           end
+           
+           tdata = cell(1,length(X));
+           for k=1:length(X)
+             
+             % add bias term
+             XX = cell(size(X));
+             for j=1:obj.nmixed, XX{j} = [X{k}{j} ones(size(X{k}{j},1),1)]; end
+             
+             % fixed effects without bias
+             fixed = cell2mat(XX(:));
+             fixed = fixed(:,1:(end-1));
+             
+             tdata{k} = [fixed blkdiag(XX{:})];
+             
+           end
+           
+           tdata = blkdiag(tdata{:});
+           
+         end
+           
+      end
+       
       function prior = create_prior(obj)
         
         nf = obj.nfeatures;
         
-        if isempty(obj.coupling) || isempty(obj.indims) || ~any(obj.coupling)
+        if isempty(obj.coupling) || ~any(obj.coupling)
           
           if obj.verbose
             fprintf('using decoupled prior\n');
@@ -617,6 +692,8 @@ classdef ft_mv_blogreg < ft_mv_predictor
           end
           
         else
+          
+          assert(~isempty(obj.indims));
           
           if numel(obj.coupling)==1 && numel(obj.indims) > 1
             obj.coupling = obj.coupling*ones(1,numel(obj.indims));
@@ -633,6 +710,161 @@ classdef ft_mv_blogreg < ft_mv_predictor
           end
           
           prior = construct_prior(obj.indims,obj.coupling,'mask',find(obj.mask(:)),'circulant',[0 0 0 0]);
+          
+        end
+        
+        prior(nf+1,nf+1) = 1;
+        
+      end
+      
+      function prior = transform_prior(obj)
+        % redefine prior for multitask and/or mixed effects models
+        
+        nf = obj.nfeatures;
+        
+        % recreate prior
+        prior = obj.prior;
+        
+        if obj.multitask && ~obj.mixed
+          
+          pp = repmat({prior},[1 obj.ntasks]);
+          prior = blkdiag(pp{:});
+          
+          % add task coupling for multitask learning
+          if obj.taskcoupling
+            
+            blk = obj.ntasks*(nf+1)^2;
+            didx = (1:(size(prior,1)+1):(size(prior,1)*(nf)));
+            cc = repmat(obj.taskcoupling,[1 length(didx)]);
+            for j=1:obj.ntasks
+              for k=(j+1):obj.ntasks
+                prior(((j-1)*blk+(k-1)*(nf+1))+didx) = cc;
+                prior(((k-1)*blk+(j-1)*(nf+1))+didx) = cc;
+              end
+            end
+          end
+          
+        elseif ~obj.multitask && obj.mixed
+          
+          if obj.mixed==2 % couple fixed and random effects
+            
+            P = prior;
+            pp = cat(2,{prior(1:nf,1:nf)},repmat({P},[1 obj.nmixed]));
+            prior = blkdiag(pp{:});
+            
+          else % couple fixed effects only
+            
+            P = zeros(nf+1,nf+1);
+            P(1:(nf+2):end) = prior(1:(nf+2):end);
+            
+            pp = cat(2,{prior(1:nf,1:nf)},repmat({P},[1 obj.nmixed]));
+            prior = blkdiag(pp{:});
+            
+          end
+          
+        else % obj.multitask && obj.mixed
+          
+          if obj.mixed==2 % couple fixed and random effects
+            
+            P = prior;
+            pp = cat(2,{prior(1:nf,1:nf)},repmat({P},[1 obj.nmixed]));
+            prior = blkdiag(pp{:});
+            
+          else % couple fixed effects only
+            
+            P = zeros(nf+1,nf+1);
+            P(1:(nf+2):end) = prior(1:(nf+2):end);
+            
+            pp = cat(2,{prior(1:nf,1:nf)},repmat({P},[1 obj.nmixed]));
+            prior = blkdiag(pp{:});
+            
+          end
+          
+          pp = repmat({prior},[1 obj.ntasks]);
+          prior = blkdiag(pp{:});
+          
+          % add task coupling for multitask learning
+          if obj.taskcoupling
+            
+            nf2 = (nf+1)*(obj.nmixed+1)-1;
+            
+            blk = obj.ntasks*nf2^2;
+            didx = (1:(size(prior,1)+1):(size(prior,1)*nf2));
+            cc = repmat(obj.taskcoupling,[1 length(didx)]);
+            for j=1:obj.ntasks
+              for k=(j+1):obj.ntasks
+                prior(((j-1)*blk+(k-1)*nf2)+didx) = cc;
+                prior(((k-1)*blk+(j-1)*nf2)+didx) = cc;
+              end
+            end
+          end
+          
+          % remove coupling of bias term
+          for j=1:obj.ntasks
+            for k=(j+1):obj.ntasks
+              for m=1:obj.nmixed
+                prior((j-1)*nf2 + nf + m*(nf+1),(k-1)*nf2 + nf + m*(nf+1)) = 0;
+                prior((k-1)*nf2 + nf + m*(nf+1),(j-1)*nf2 + nf + m*(nf+1)) = 0;
+              end
+            end
+          end
+          
+        end
+        
+      end
+      
+      function KK = scale_prior(obj,scale)
+        % SCALE_PRIOR scales a prior precision matrix
+
+        nfeatures = size(obj.prior,1);
+        
+        obj.prior(1:(nfeatures+1):numel(obj.prior)) = 0;
+        obj.prior(1:(nfeatures+1):numel(obj.prior)) = 1 - sum(obj.prior,2);
+        
+        [L,d1,d2] = chol(obj.prior,'lower');
+        
+        if d1
+          error('matrix not p.d.!');
+        else
+          C = speye(nfeatures) .* fastinvc(L); % only get diagonal elements
+          C     = d2*C*d2'; % reorder
+        end
+        
+        Csqrt = sqrt(C);
+
+        KK = (Csqrt*obj.prior*Csqrt)./sqrt(scale(:)*scale(:)'); % suitable for mixed effects
+        
+        % add bias term scaling
+        if ~obj.multitask && ~obj.mixed
+          
+          KK(end,end) = 1/obj.precbias;
+          
+        elseif obj.multitask && ~obj.mixed
+         
+          for j=1:obj.ntasks
+            KK(j*(obj.nfeatures+1),j*(obj.nfeatures+1)) = 1/obj.precbias;
+          end
+          
+        elseif ~obj.multitask && obj.mixed
+          
+          % no bias for fixed effects
+          for j=1:obj.ntasks
+            KK(obj.nfeatures + j*(obj.nfeatures+1),obj.nfeatures + j*(obj.nfeatures+1)) = 1/obj.precbias;
+          end
+          
+        elseif obj.multitask && obj.mixed
+          
+          nf = obj.nfeatures;
+          nf2 = (nf+1)*(obj.nmixed+1)-1;
+          
+          for j=1:obj.ntasks
+            for k=(j+1):obj.ntasks
+              for m=1:obj.nmixed
+                KK((j-1)*nf2 + nf + m*(nf+1),(k-1)*nf2 + nf + m*(nf+1)) = 1/obj.precbias;
+                KK((k-1)*nf2 + nf + m*(nf+1),(j-1)*nf2 + nf + m*(nf+1)) = 1/obj.precbias;
+              end
+            end
+          end
           
         end
         
