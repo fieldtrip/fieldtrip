@@ -20,8 +20,8 @@ function pvalue = ft_mv_binomial(design,post1,post2,varargin)
   s = sum(p1 & ~p2); % successes w.r.t. 1
   f = sum(~p1 & p2); % failures w.r.t. 1
   
-  % compute one sided p-value
-  if (s+f) && s > f % if there's a difference and it's in favor of p1 over p2
+  % compute one-tailed binomial test
+  if s+f > 0 && s > f % if there's a difference and it's in favor of p1 over p2
     pvalue = 1 - binocdf(s-1,s+f,0.5);
   else
     pvalue = 1;

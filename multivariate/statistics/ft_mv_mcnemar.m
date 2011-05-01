@@ -23,10 +23,11 @@ function pvalue = ft_mv_mcnemar(design,post1,post2)
   s = sum(p1 & ~p2); % successes w.r.t. 1
   f = sum(~p1 & p2); % failures w.r.t. 1
   
-  % compute one sided p-value
-  if (s+f) && s > f % if there's a difference and it's in favor of p1 over p2
+  % compute one-tailed mcnemar test
+  if s+f > 0 && s > f
     mcnemarstat = (abs(s - f) - 1).^2 / (s+f);
-    pvalue = 1 - chi2cdf(mcnemarstat,1);  
+    pvalue = 1 - chi2cdf(mcnemarstat,1); % two-tailed
+    pvalue = pvalue / 2; % one-tailed
   else
     pvalue = 1;
   end
