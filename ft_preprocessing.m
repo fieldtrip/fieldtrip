@@ -351,6 +351,24 @@ else
     end
   end
 
+  if ~isfield(cfg, 'trl')
+    % treat the data as continuous if possible, otherwise define all trials as indicated in the header
+    if strcmp(cfg.continuous, 'yes')
+      trl = zeros(1, 3);
+      trl(1,1) = 1;
+      trl(1,2) = hdr.nSamples*hdr.nTrials;
+      trl(1,3) = -hdr.nSamplesPre;
+    else
+      trl = zeros(hdr.nTrials, 3);
+      for i=1:hdr.nTrials
+        trl(i,1) = (i-1)*hdr.nSamples + 1;
+        trl(i,2) = (i  )*hdr.nSamples    ;
+        trl(i,3) = -hdr.nSamplesPre;
+      end
+    end
+    cfg.trl = trl;
+  end
+
   % this should be a cell array
   if ~iscell(cfg.channel) && ischar(cfg.channel)
     cfg.channel = {cfg.channel};
@@ -395,24 +413,6 @@ else
   else
     % no padding was requested
     padding = 0;
-  end
-
-  if ~isfield(cfg, 'trl')
-    % treat the data as continuous if possible, otherwise define all trials as indicated in the header
-    if strcmp(cfg.continuous, 'yes')
-      trl = zeros(1, 3);
-      trl(1,1) = 1;
-      trl(1,2) = hdr.nSamples*hdr.nTrials;
-      trl(1,3) = -hdr.nSamplesPre;
-    else
-      trl = zeros(hdr.nTrials, 3);
-      for i=1:hdr.nTrials
-        trl(i,1) = (i-1)*hdr.nSamples + 1;
-        trl(i,2) = (i  )*hdr.nSamples    ;
-        trl(i,3) = -hdr.nSamplesPre;
-      end
-    end
-    cfg.trl = trl;
   end
 
   if any(strmatch('reject',       fieldnames(cfg))) || ...
