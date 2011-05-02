@@ -176,6 +176,7 @@ while isempty(jobid)
   % only the idle slaves are interesting from now on
   % the busy slaves may again become relevant on the next attempt
   list = list([list.status] == 2);
+
   if isempty(list)
     % at the moment all the appropriate slaves are busy
     % give the peer network some time to recover
@@ -183,7 +184,7 @@ while isempty(jobid)
     continue;
   end
 
-list = peerschedule(list, memreq, timreq, cpureq);
+  list = peerschedule(list, memreq, timreq, cpureq);
 
   for i=1:length(list)
     try
