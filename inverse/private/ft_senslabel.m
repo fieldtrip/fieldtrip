@@ -2735,27 +2735,31 @@ switch type
       };
 
   case 'egi32'
+    % this should be lowercase for consistency with ft_read_header
     label = cell(32, 1);
     for i = 1:32
-      label{i} = sprintf('E%d', i);
+      label{i} = sprintf('e%d', i);
     end
 
   case 'egi64'
+    % this should be lowercase for consistency with ft_read_header
     label = cell(64, 1);
     for i = 1:64
-      label{i} = sprintf('E%d', i);
+      label{i} = sprintf('e%d', i);
     end
 
   case 'egi128'
+    % this should be lowercase for consistency with ft_read_header
     label = cell(128, 1);
     for i = 1:128
-      label{i} = sprintf('E%d', i);
+      label{i} = sprintf('e%d', i);
     end
 
   case 'egi256'
+    % this should be lowercase for consistency with ft_read_header
     label = cell(256, 1);
     for i = 1:256
-      label{i} = sprintf('E%d', i);
+      label{i} = sprintf('e%d', i);
     end
 
   case 'itab153'
