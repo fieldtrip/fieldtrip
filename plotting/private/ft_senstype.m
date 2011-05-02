@@ -58,7 +58,7 @@ function [type] = ft_senstype(input, desired)
 %
 % See also FT_SENSLABEL, FT_CHANTYPE, FT_READ_SENS, FT_COMPUTE_LEADFIELD
 
-% Copyright (C) 2007-2009, Robert Oostenveld
+% Copyright (C) 2007-2011, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -80,6 +80,12 @@ function [type] = ft_senstype(input, desired)
 
 % these are for remembering the type on subsequent calls with the same input arguments
 persistent previous_argin previous_argout
+
+% this is to avoid a recursion loop
+persistent recursion 
+if isempty(recursion)
+  recursion = false;
+end
 
 if iscell(input) && numel(input)<4 && ~all(cellfun(@ischar, input))
   % this might represent combined EEG, ECoG and/or MEG
@@ -323,6 +329,26 @@ else
   end % look at label, ori and/or pnt
 end % if isfield(sens, 'type')
 
+if strcmp(type, 'unknown') && ~recursion
+  % try whether only lowercase channel labels makes a difference
+  if islabel
+    type = ft_senstype(lower(input));
+  elseif isfield(input, 'label')
+    input.label = lower(input.label);
+    type = ft_senstype(input);
+  end
+end
+
+if strcmp(type, 'unknown') && ~recursion
+  % try whether only uppercase channel labels makes a difference
+  if islabel
+    type = ft_senstype(upper(input));
+  elseif isfield(input, 'label')
+    input.label = upper(input.label);
+    type = ft_senstype(input);
+  end
+end  
+  
 if ~isempty(desired)
   % return a boolean flag
   switch desired
