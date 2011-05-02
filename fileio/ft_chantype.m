@@ -11,7 +11,7 @@ function type = ft_chantype(input, desired)
 %   type = ft_chantype(sens,  desired)
 %   type = ft_chantype(label, desired)
 
-% Copyright (C) 2008, Robert Oostenveld
+% Copyright (C) 2008-2011, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -31,8 +31,13 @@ function type = ft_chantype(input, desired)
 %
 % $Id$
 
-% determine the type of input
+% this is to avoid a recursion loop
+persistent recursion 
+if isempty(recursion)
+  recursion = false;
+end
 
+% determine the type of input
 isheader = isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'Fs');
 isgrad   = isa(input, 'struct') && isfield(input, 'pnt') && isfield(input, 'ori');
 islabel  = isa(input, 'cell')   && isa(input{1}, 'char');
@@ -394,6 +399,26 @@ for i = 1:numel(label2type)
       strmatch('unknown', type, 'exact'))) = label2type{i}(1);
   end
 end
+
+if all(strcmp(type, 'unknown')) && ~recursion
+  % try whether only lowercase channel labels makes a difference
+  if islabel
+    type = ft_chantype(lower(input));
+  elseif isfield(input, 'label')
+    input.label = lower(input.label);
+    type = ft_chantype(input);
+  end
+end
+
+if all(strcmp(type, 'unknown')) && ~recursion
+  % try whether only uppercase channel labels makes a difference
+  if islabel
+    type = ft_chantype(upper(input));
+  elseif isfield(input, 'label')
+    input.label = upper(input.label);
+    type = ft_chantype(input);
+  end
+end  
 
 if nargin>1
   % return a boolean vector
