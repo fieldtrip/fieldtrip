@@ -1,17 +1,17 @@
-function vol = ft_datatype_vol(vol, varargin)
+function volume = ft_datatype_volume(volume, varargin)
 
-% FT_DATATYPE_SOURCE describes the FieldTrip MATLAB structure for volume data
+% FT_DATATYPE_VOLUME describes the FieldTrip MATLAB structure for volumetric data.
 %
-% The vol data structure represents data on a regular volumetric 3-D grid, like
-% an anatomical MRI, a functional MRI, etc. It can also represent a source
-% reconstructed estimate of the activity measured with MEG. In this case the
-% source reconstruction is estimated or interpolated on the regular 3-D dipole
-% grid (like a box).
+% The volume data structure represents data on a regular volumetric
+% 3-D grid, like an anatomical MRI, a functional MRI, etc. It can
+% also represent a source reconstructed estimate of the activity
+% measured with MEG. In this case the source reconstruction is estimated
+% or interpolated on the regular 3-D dipole grid (like a box).
 %
-% An example vol structure is
+% An example volume structure is
 %           dim: [181 217 181]         the dimensionality of the 3D volume
 %     transform: [4x4 double]          affine transformation matrix for mapping the voxel coordinates to the head coordinate system
-%       anatomy: [181x217x181 double]  numeric data, in this case anatomical information
+%       anatomy: [181x217x181 double]  the numeric data, in this case anatomical information
 %
 % Required fields:
 %   - transform, dim
@@ -21,7 +21,7 @@ function vol = ft_datatype_vol(vol, varargin)
 %     dimensions that are consistent with dim
 %
 % Deprecated fields:
-%   - none
+%   - dimord
 %
 % Obsoleted fields:
 %   - none
@@ -59,7 +59,6 @@ function vol = ft_datatype_vol(vol, varargin)
 %
 % $Id$
 
-
 % get the optional input arguments, which should be specified as key-value pairs
 version = keyval('version', varargin); if isempty(version), version = 'latest'; end
 
@@ -69,19 +68,19 @@ end
 
 % it should  never have contained these, but they might be present due to an unclear
 % distinction between the volume and the source representation
-if isfield(vol, 'xgrid'),     vol = rmfield(vol, 'xgrid');     end
-if isfield(vol, 'ygrid'),     vol = rmfield(vol, 'ygrid');     end
-if isfield(vol, 'zgrid'),     vol = rmfield(vol, 'zgrid');     end
-if isfield(vol, 'freq'),      vol = rmfield(vol, 'freq');      end
-if isfield(vol, 'frequency'), vol = rmfield(vol, 'frequency'); end
-if isfield(vol, 'time'),      vol = rmfield(vol, 'time');      end
-if isfield(vol, 'latency'),   vol = rmfield(vol, 'latency');   end
+if isfield(volume, 'xgrid'),     volume = rmfield(volume, 'xgrid');     end
+if isfield(volume, 'ygrid'),     volume = rmfield(volume, 'ygrid');     end
+if isfield(volume, 'zgrid'),     volume = rmfield(volume, 'zgrid');     end
+if isfield(volume, 'freq'),      volume = rmfield(volume, 'freq');      end
+if isfield(volume, 'frequency'), volume = rmfield(volume, 'frequency'); end
+if isfield(volume, 'time'),      volume = rmfield(volume, 'time');      end
+if isfield(volume, 'latency'),   volume = rmfield(volume, 'latency');   end
 
 switch version
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if isfield(vol, 'dimord')
-      vol = rmfield(vol, 'dimord');
+    if isfield(volume, 'dimord')
+      volume = rmfield(volume, 'dimord');
     end
 
   case '2010'
@@ -91,8 +90,8 @@ switch version
 
   case '2003'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if isfield(vol, 'dimord')
-      vol = rmfield(vol, 'dimord');
+    if isfield(volume, 'dimord')
+      volume = rmfield(volume, 'dimord');
     end
 
   otherwise

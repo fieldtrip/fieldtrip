@@ -168,7 +168,7 @@ elseif iscomp
 elseif isspike
   data = ft_datatype_spike(data);
 elseif isvolume
-  data = ft_datatype_vol(data);
+  data = ft_datatype_volume(data);
 elseif issource
   data = ft_datatype_source(data);
 elseif isdip
