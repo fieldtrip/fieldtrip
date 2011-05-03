@@ -1,6 +1,7 @@
 function label = ft_senslabel(type)
 
-% FT_SENSLABEL returns a list of sensor labels given the MEEG system type
+% FT_SENSLABEL returns a list of predefined sensor labels given the
+% EEG or MEG system type which can be used to detect the type of data.
 %
 % Use as
 %    label = ft_senslabel(type)
@@ -40,9 +41,7 @@ function label = ft_senslabel(type)
 %
 % See also FT_SENSTYPE, FT_CHANNELSELECTION
 
-% FIXME one channel is missing for ctf275
-
-% Copyright (C) 2007-2008, Robert Oostenveld
+% Copyright (C) 2007-2011, Robert Oostenveld
 % Copyright (C) 2008, Vladimir Litvak
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -787,6 +786,7 @@ switch type
       'MRP21'
       'MRP22'
       'MRP23'
+      'MRP31'
       'MRP32'
       'MRP33'
       'MRP34'
@@ -2735,31 +2735,31 @@ switch type
       };
 
   case 'egi32'
-    % this should be lowercase for consistency with ft_read_header
+    % this should be  uppercase for consistency with ft_read_header
     label = cell(32, 1);
     for i = 1:32
-      label{i} = sprintf('e%d', i);
+      label{i} = sprintf('E%d', i);
     end
 
   case 'egi64'
-    % this should be lowercase for consistency with ft_read_header
+    % this should be  uppercase for consistency with ft_read_header
     label = cell(64, 1);
     for i = 1:64
-      label{i} = sprintf('e%d', i);
+      label{i} = sprintf('E%d', i);
     end
 
   case 'egi128'
-    % this should be lowercase for consistency with ft_read_header
+    % this should be  uppercase for consistency with ft_read_header
     label = cell(128, 1);
     for i = 1:128
-      label{i} = sprintf('e%d', i);
+      label{i} = sprintf('E%d', i);
     end
 
   case 'egi256'
-    % this should be lowercase for consistency with ft_read_header
+    % this should be  uppercase for consistency with ft_read_header
     label = cell(256, 1);
     for i = 1:256
-      label{i} = sprintf('e%d', i);
+      label{i} = sprintf('E%d', i);
     end
 
   case 'itab153'
@@ -2795,7 +2795,8 @@ switch type
     end
 
   case 'electrode'
-    % there is no default set of electrode labels, by input type 'electrode' should not result in an error
+    % there is no default set of electrode labels for all possible EEG systems
+    % but nevertheless the requested input type 'electrode' should not result in an error
     label = {};
 
   otherwise
