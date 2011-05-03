@@ -399,5 +399,5 @@ if isempty(channel) && ~recursion
 end
 
 % undo the sorting, make the order identical to that of the data channels
-[~, indx] = match_str(datachannel, channel);
+[tmp, indx] = match_str(datachannel, channel);
 channel = channel(indx);
