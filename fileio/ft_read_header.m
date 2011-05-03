@@ -697,9 +697,10 @@ switch headerformat
     if isfield(orig.xml, 'sensorLayout') % asuming that signal1 is hdEEG sensornet, and channels are in xml file sensorLayout
       for iSens = 1:numel(orig.xml.sensorLayout.sensors)
         if strcmp(orig.xml.sensorLayout.sensors(iSens).sensor.type, '0') %EEG chans
-          hdr.label{iSens} = num2str(orig.xml.sensorLayout.sensors(iSens).sensor.number);
+          % this should be consistent with ft_senslabel
+          hdr.label{iSens} = ['E' num2str(orig.xml.sensorLayout.sensors(iSens).sensor.number)];
         elseif strcmp(orig.xml.sensorLayout.sensors(iSens).sensor.type, '1') %REF;
-          hdr.label{iSens} = orig.xml.sensorLayout.sensors(iSens).sensor.name;
+          hdr.label{iSens} = ['E' num2str(iSens)]; % to be consistent with other egi formats
         else
           %non interesting channels like place holders and COM
         end
@@ -708,13 +709,15 @@ switch headerformat
       if length(hdr.label) == orig.signal(1).blockhdr(1).nsignals
         %good
       elseif length(hdr.label) > orig.signal(1).blockhdr(1).nsignals
-        warning('found more lables in xml.sensorLayout than channels in signal 1, thus can not use info in sensorLayout, and labeling with s1_eN instead')
+        warning('found more lables in xml.sensorLayout than channels in signal 1, thus can not use info in sensorLayout, creating labels on the fly')
         for iSens = 1:orig.signal(1).blockhdr(1).nsignals
-          hdr.label{iSens} = sprintf('s1_e%03.f', iSens);
+          % this should be consistent with ft_senslabel
+          hdr.label{iSens} = ['E' num2str(iSens)];
         end
-      else warning('found less lables in xml.sensorLayout than channels in signal 1, thus can not use info in sensorLayout, and labeling with s1_eN instead')
+      else warning('found less lables in xml.sensorLayout than channels in signal 1, thus can not use info in sensorLayout, creating labels on the fly')
         for iSens = 1:orig.signal(1).blockhdr(1).nsignals
-          hdr.label{iSens} = sprintf('s1_e%03.f', iSens);
+          % this should be consistent with ft_senslabel
+          hdr.label{iSens} = ['E' num2str(iSens)];
         end
       end
       % get lables for other signals
@@ -729,17 +732,17 @@ switch headerformat
           elseif length(hdr.label) < orig.signal(1).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
             warning('found less lables in xml.pnsSet than channels in signal 2, labeling with s2_unknownN instead')
             for iSens = length(hdr.label)+1 : orig.signal(1).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
-              hdr.label{iSens} = sprintf('s2_unknown%03.f', iSens);
+              hdr.label{iSens} = ['s2_unknown', num2str(iSens)];
             end
           else warning('found more lables in xml.pnsSet than channels in signal 2, thus can not use info in pnsSet, and labeling with s2_eN instead')
             for iSens = orig.signal(1).blockhdr(1).nsignals+1 : orig.signal(1).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
-              hdr.label{iSens} = sprintf('s2_e%03.f', iSens);
+              hdr.label{iSens} = ['s2_E', num2str(iSens)];
             end
           end
         else % signal2 is not PIBbox
           warning('creating channel labels for signal 2 on the fly')
           for iSens = 1:orig.signal(2).blockhdr(1).nsignals
-            hdr.label{end+1} = sprintf('s2_e%03.f', iSens);
+            hdr.label{end+1} = ['s2_E', num2str(iSens)];
           end
         end
       elseif length(orig.signal) > 2
@@ -748,9 +751,9 @@ switch headerformat
         for iSig = 2:length(orig.signal)
           for iSens = 1:orig.signal(iSig).blockhdr(1).nsignals
             if iSig == 1 && iSens == 1
-              hdr.label{1} = sprintf('s%03.f_e%03.f', iSig, iSens);
+              hdr.label{1} = ['s',num2str(iSig),'_E', num2str(iSens)];
             else
-              hdr.label{end+1} = sprintf('s%03.f_e%03.f', iSig, iSens);
+              hdr.label{end+1} = ['s',num2str(iSig),'_E', num2str(iSens)];
             end
           end
         end
@@ -760,9 +763,9 @@ switch headerformat
       for iSig = 1:length(orig.signal)
         for iSens = 1:orig.signal(iSig).blockhdr(1).nsignals
           if iSig == 1 && iSens == 1
-            hdr.label{1} = sprintf('s%03.f_e%03.f', iSig, iSens);
+            hdr.label{1} = ['s',num2str(iSig),'_E', num2str(iSens)];
           else
-            hdr.label{end+1} = sprintf('s%03.f_e%03.f', iSig, iSens);
+            hdr.label{end+1} = ['s',num2str(iSig),'_E', num2str(iSens)];
           end
         end
       end
