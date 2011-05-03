@@ -24,7 +24,7 @@ function pvalue = ft_mv_mcnemar(design,post1,post2)
   f = sum(~p1 & p2); % failures w.r.t. 1
   
   % compute one-tailed mcnemar test
-  if s+f > 0 && s > f
+  if (s+f) > 0 && s > f
     mcnemarstat = (abs(s - f) - 1).^2 / (s+f);
     pvalue = 1 - chi2cdf(mcnemarstat,1); % two-tailed
     pvalue = pvalue / 2; % one-tailed
