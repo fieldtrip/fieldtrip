@@ -48,7 +48,9 @@ function freq = ft_datatype_freq(freq, varargin)
 %
 % (2003) The initial version was defined.
 %
-% See also FT_DATATYPE and FT_DATATYPE_xxx
+% See also FT_DATATYPE, FT_DATATYPE_COMP, FT_DATATYPE_DIP, FT_DATATYPE_FREQ,
+% FT_DATATYPE_MVAR, FT_DATATYPE_RAW, FT_DATATYPE_SOURCE, FT_DATATYPE_SPIKE,
+% FT_DATATYPE_TIMELOCK, FT_DATATYPE_VOLUME
 
 % Copyright (C) 2011, Robert Oostenveld
 %
