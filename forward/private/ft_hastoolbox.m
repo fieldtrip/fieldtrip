@@ -225,7 +225,7 @@ switch toolbox
   case 'GIFTI'
     status  = exist('gifti', 'file');
   case 'XML4MATV2'
-    status  = exist('xml2struct.m', 'file');
+    status  = exist('xml2struct.m', 'file') && exist('xml2whos.m', 'file');
   case 'SQDPROJECT'
     status = exist('sqdread.m', 'file') && exist('sqdwrite.m', 'file');
   otherwise
