@@ -68,7 +68,7 @@ try
     
     stopwatch = tic;
     dos(['./' exefile]);
-    disp(['elapsed time: ' toc(stopwatch)])
+    disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
     
     [lf] = sb_read_msr(outfile);
     cleaner(dipfile,elcfile,outfile,exefile)
