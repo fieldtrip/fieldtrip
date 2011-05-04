@@ -107,7 +107,7 @@ opt.sourcesimulation          = 1;
 % # (1 = correction yes?) 
 opt.averagecorrection         = 0;
 % # Number of materials (par #22)
-opt.nummaterials              = numel(cond);
+opt.nummaterials              = 7; %numel(cond);
 % # Conductivities (par #23)
 opt.conductivities            = cond;  
 % # Labels (par #24)
@@ -179,7 +179,7 @@ str = sprintf(['#Parameter file: FEM for source simulation\n\n', ...
   options{26},options{27},options{28},options{29},options{30},options{31}); 
 
   % write the par file on disk
-  fid = fopen([file_name '.par'],'w');
+  fid = fopen(file_name,'w');
   fprintf(fid,str);
   fclose(fid);
 
