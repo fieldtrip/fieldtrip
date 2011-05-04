@@ -37,6 +37,7 @@ try
     outfile  = [tname];
     
     % write the electrodes and dipoles positions in the temporary folder
+    disp('Writing the accessory files on disk...')
     sb_write_elc(elc.pnt,elc.label,elcfile);
     sb_write_dip(dip,dipfile);
     % writes the parameters file
@@ -63,9 +64,14 @@ try
     fclose(efid);
     
     dos(sprintf('chmod +x %s', exefile));
+    disp('SimBio is calculating the LeadFields, this may take some time ...')
+    
+    stopwatch = tic;
     dos(['./' exefile]);
-    cleaner(dipfile,elcfile,outfile,exefile)
+    disp(['elapsed time: ' toc(stopwatch)])
+    
     [lf] = sb_read_msr(outfile);
+    cleaner(dipfile,elcfile,outfile,exefile)
     cd(tmpfolder)
   end
 
