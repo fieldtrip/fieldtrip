@@ -83,6 +83,14 @@ for c=1:length(design)
       tmp(isnan(tmp)) = 0;
       res{c} = tmp;
       
+    case 'bac'
+      
+      %returns the balanced acurracy
+      
+      tmp = contingency(design{c},post{c});
+      %divide each diagonal element through the sum of the row
+      res{c} = mean(diag(tmp) ./ sum(tmp,2));
+
     otherwise
       
       error('unknown performance metric');

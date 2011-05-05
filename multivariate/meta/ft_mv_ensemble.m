@@ -3,7 +3,7 @@ classdef ft_mv_ensemble < ft_mv_meta
 %results using the combfun function
 %
 % EXAMPLE:
-%    m = ft_mv_ensemble('mva',{ft_mv_naive ft_mv_svm},,'combfun',@(x)(cell2mat(x)))
+%    m = ft_mv_ensemble('mva',{ft_mv_naive ft_mv_svm},'combfun',@(x)(cell2mat(x)))
 % creates an ensemble method that combines the results of naive Bayes and
 % a support vector machine and puts it in one big array.
 %
