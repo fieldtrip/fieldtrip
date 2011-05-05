@@ -1,5 +1,8 @@
 classdef ft_mv_method
-% FT_MV_METHOD abstract handle class for multivariate methods
+% FT_MV_METHOD abstract class for multivariate methods
+%
+% The ft_mv_methods class should not be called directly but forms the basis
+% for most objects in the module.
 %
 %   Copyright (c) 2009, Marcel van Gerven
 

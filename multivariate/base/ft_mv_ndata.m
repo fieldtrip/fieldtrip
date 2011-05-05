@@ -1,6 +1,6 @@
 classdef ft_mv_ndata < ft_mv_method
-%FT_MV_NDATA wrapper class to make mvmethods handle multiple datasets
-%i.e., iscell(X) || iscell(Y) is true.
+%FT_MV_NDATA wrapper class to make ft_mv_methods handle multiple datasets
+%i.e., when iscell(X) || iscell(Y) is true.
 %
 % Copyright (c) 2010, Marcel van Gerven
     

@@ -2,10 +2,9 @@ classdef ft_mv_analysis
 %FT_MV_ANALYSIS multivariate analysis class
 %   
 %   A multivariate analysis is just a sequence of multivariate methods 
-%   {method1 method2 method3 ...} that are
-%   called in this order and where the output of the previous method acts
-%   as input to the next method. individual methods can be called with obj(i) or
-%   obj{i}
+%   {method1 method2 method3 ...} that are called in this order and where 
+%   the output of the previous method acts
+%   as input to the next method.
 %
 %   Copyright (c) 2008, Marcel van Gerven
 
