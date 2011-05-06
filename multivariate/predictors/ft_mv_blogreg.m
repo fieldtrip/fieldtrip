@@ -110,7 +110,7 @@ classdef ft_mv_blogreg < ft_mv_predictor
 % the fixed effects part. For mixed = 2, also the random effects will be coupled.
 % 
 % mask = rand(5,10)>0.3;
-% f = ft_mv_blogreg('mixed',1,'multitask',1,'coupling',[100 100],'indims',[10 10],'mask',mask);
+% f = ft_mv_blogreg('mixed',1,'multitask',1,'coupling',[100 100],'indims',[5 10],'mask',mask);
 % f = f.train({ {X1 X2} {X1 X2} },{ {Y1 Y2} {Y1 Y2} });
 % f.test({{X1 X2} {X1 X2}}) 
 % 
