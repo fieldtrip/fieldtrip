@@ -70,7 +70,7 @@ opt.solvermethod              = 2;
 opt.associativity             = 1; 
 % # NeuroFEM Solver
 % # parameter file for Pebbles solver
-opt.pebbles                   = 'pebbles.inp';
+opt.pebbles                   = 'pebbles.inp'; % only for 3:AMG-CG method
 % ONLY for MultiRHS-Pebbles: number of right-hand-sides which are solved simultaneously
 opt.pebblesnumrhs             = 1;
 % # SOURCE SIMULATION'
