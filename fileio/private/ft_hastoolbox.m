@@ -99,7 +99,7 @@ url = {
   'SIMBIO'     'see https://www.mrt.uni-jena.de/simbio/index.php/Main_Page'
   'FNS'        'see http://hhvn.nmsu.edu/wiki/index.php/FNS'
   'GIFTI'      'see http://www.artefact.tk/software/matlab/gifti'
-  'XML4MATV2'  'see http://www.mathworks.com/matlabcentral/fileexchange/6268-xml4mat-v2-0'
+  'XML4MAT'    'see http://www.mathworks.com/matlabcentral/fileexchange/6268-xml4mat-v2-0'
   'SQDPROJECT' 'see http://www.isr.umd.edu/Labs/CSSL/simonlab'
   };
 
