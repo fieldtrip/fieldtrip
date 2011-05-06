@@ -152,7 +152,18 @@ for trlop = 1:numtrl
   % compute the min, max and range over all channels and samples
   minval   = min(dat(:));
   maxval   = max(dat(:));
-  rangeval = maxval-minval;
+
+  % compute the range as the maximum of the peak-to-peak values for each
+  % channel
+  ptpval = max(dat, [], 2) - min(dat, [], 2);
+  
+  % track for bad trials for each channel
+  badChnInd = find(ptpval > artfctdef.range);
+  
+  % determine range and index of 'worst' channel
+  worstChanRange = max(ptpval);
+  worstChanInd = find(worstChanRange == ptpval);
+  
   % test the min, max and range against the specified thresholds
   if ~isempty(artfctdef.min) && minval<artfctdef.min
     fprintf('threshold artifact scanning: trial %d from %d exceeds min-threshold\n', trlop, numtrl);
@@ -160,8 +171,8 @@ for trlop = 1:numtrl
   elseif ~isempty(artfctdef.max) && maxval>artfctdef.max
     fprintf('threshold artifact scanning: trial %d from %d exceeds max-threshold\n', trlop, numtrl);
     artifact(end+1,1:2) = cfg.trl(trlop,1:2);
-  elseif ~isempty(artfctdef.range) && rangeval>artfctdef.range
-    fprintf('threshold artifact scanning: trial %d from %d exceeds range-threshold\n', trlop, numtrl);
+  elseif ~isempty(artfctdef.range) && worstChanRange>artfctdef.range
+    fprintf('threshold artifact scanning: trial %d from %d exceeds range-threshold; max-range channel = %s\n', trlop, numtrl, hdr.label{channelindx(worstChanInd)});
     artifact(end+1,1:2) = cfg.trl(trlop,1:2);
   else
     fprintf('threshold artifact scanning: trial %d from %d is ok\n', trlop, numtrl);
