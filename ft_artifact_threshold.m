@@ -32,6 +32,10 @@ function [cfg, artifact] = ft_artifact_threshold(cfg,data)
 % is used to rate the minimum and maximum values. Furthermore, this
 % function does not support artifact- or filterpadding.
 %
+% When cfg.artfctdef.threshold.range is used, the within-channel
+% peak-to-peak range is checked against the specified maximum range (so not
+% the overall range across channels).
+%
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
 %   cfg.inputfile   =  ...
