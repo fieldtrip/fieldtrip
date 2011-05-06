@@ -19,7 +19,7 @@ classdef ft_mv_searchlight < ft_mv_selector
   properties
   
     indims                % dimensions of the input data
-    radius = 3            % radius of the hypersphere in terms of array elements
+    radius = 3            % radius of the hypersphere in terms of array elements (diameter will be 1 + 2 * radius).
     step = 1              % stepsize in terms of array elements    
     mask                  % optional logical mask of size indims (input features are only those in the mask)
     neighbours            % a sparse adjacency matrix specifying the neighbourhood structure for irregular data (don't use in conjunction with mask)
@@ -266,7 +266,6 @@ classdef ft_mv_searchlight < ft_mv_selector
           if obj.verbose
             fprintf('estimating sphere %d of %d\n',c,size(centers,1));
           end
-          
           
           % generate potential points (the cube)
           v = cell(1,numel(obj.indims));

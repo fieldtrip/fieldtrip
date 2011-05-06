@@ -19,7 +19,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
 %
 % EXAMPLE:
 %
-% [a,b,c,d] = ft_mv_test('mva',{ft_mv_glmnet('validator',ft_mv_crossvalidator('nfolds',5,'metric','logprob'))})
+% [a,b,c] = ft_mv_test('mva',{ft_mv_glmnet('validator',ft_mv_crossvalidator('nfolds',5,'metric','logprob'))})
 %
 %   Copyright (c) 2010, Marcel van Gerven
 
@@ -75,7 +75,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
       if any(isnan(X(:))) || any(isnan(Y(:))), error('method does not handle missing data'); end
      
       % convert logical data to double (otherwise we get numerical problems)
-      if islogical(X), X = double(X); end
+      if ~isa(X(1),'double'), X = double(X); end
       
       % multiple outputs
       if size(Y,2) > 1
@@ -127,6 +127,10 @@ classdef ft_mv_glmnet < ft_mv_predictor
         % adaptive lasso; implemented by using univariate ols regression
         % estimates as penalty weights
         
+        if obj.verbose
+          fprintf('estimating penalty factor for adaptive method\n');
+        end
+        
         obj.penalty_factor = zeros(1,size(X,2));
         
          if strcmp(obj.family,'gaussian')
@@ -136,11 +140,22 @@ classdef ft_mv_glmnet < ft_mv_predictor
              obj.penalty_factor(j) = 1/abs(w(1))^obj.adaptive;
            end     
            
-         else
+         elseif strcmp(obj.family,'binomial')
            
            for j=1:size(X,2)
              w = -logist2(Y-1,[X(:,j) ones(size(X,1),1)]);
              obj.penalty_factor(j) = 1/abs(w(1))^obj.adaptive;
+           end
+           
+         else % multinomial
+
+           YY = zeros(size(X,1),nclasses);
+           for j=1:size(X,1)
+             YY(j,Y(j)) = 1;
+           end
+           for j=1:size(X,2)
+             w = -logistK(YY',[X(:,j) ones(size(X,1),1)]');
+             obj.penalty_factor(j) = 1/mean(abs(w(:,1)))^obj.adaptive; % mean absolute coefficient
            end
            
          end
@@ -350,7 +365,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
         nclasses = size(obj.weights,2);
         m = cell(nclasses,1);
         for c=1:nclasses
-          m{c} = obj.weights(:,c);
+          m{c} = obj.weights(:,c)';
         end
       end
       

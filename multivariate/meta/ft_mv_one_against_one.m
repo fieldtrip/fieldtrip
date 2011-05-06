@@ -25,6 +25,10 @@ classdef ft_mv_one_against_one < ft_mv_meta
       
       obj = obj@ft_mv_meta(varargin{:});
             
+      if isempty(obj.mva), error('mva not specified'); end
+      
+      if ~isa(obj.mva,'ft_mv_analysis'), obj.mva = ft_mv_analysis(obj.mva); end
+      
     end
     
     function obj = train(obj,X,Y)

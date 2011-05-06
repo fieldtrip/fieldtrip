@@ -1,51 +1,118 @@
 classdef ft_mv_blogreg < ft_mv_predictor
-%
 %FT_MV_BLOGREG Bayesian logistic regression with spatiotemporal interactions and
-%possibility for transfer learning
+%support for multitask and mixed effects models
 %
 % The scale property specifies the regularization. The bigger the scale,
 % the less the regression coefficients will be regularized towards zero.
+% If multiple scales are used then the optimal one will be selected based
+% on the log model evidence (recorded by the logp property).
 %
-% ft_mv_blogreg allows feature to become coupled. This is done through the
+% In the following examples we work with the following input data:
+%
+% rand('seed',1); randn('seed',1);
+% X1 = rand(10,5,10); X2 = X1 + 0.1*randn(size(X1));
+% Y1 = [1 1 1 1 1 2 2 2 2 2]'; Y2 = [1 1 1 1 2 1 2 2 2 2]';
+%
+% In the examples use spy(f.prior) to look at the structure of the coupling 
+% matrix 
+%
+% EXAMPLE:
+%
+% f = ft_mv_blogreg('scale',logspace(-3,0,4));
+% f = f.train(X1,Y1);
+% f.test(X1)
+%
+% ft_mv_blogreg allows features to become coupled. This is done through the
 % coupling property, which specifies for each input dimension the coupling
-% strength in that dimension. Also, the input dimensions of the original
-% data must be specified through the indims property.
+% strength in that dimension. E.g. coupling = [100 0 100] will strongly couple
+% neighboring features in the first and second input dimension. Also, 
+% the input dimensions of the original data must be specified through the indims property.
+%
+% ExAMPLE:
+%
+% f = ft_mv_blogreg('indims',[5 10],'coupling',[100 100]);
+% f = f.train(X1,Y1);
+% f.test(X1)
+%
 % In case the input data X is just a region of interest then we can use a
 % mask to indicate which features from the original volume of data are
 % represented by X. This still allows us to use the above approach to
 % specify the coupling.
 %
-% Multitask learning (ntasks > 1) is implemented by augmenting the data matrix as
-% [ subject1data      0       ]
-% [      0       subject2data ]
-% etc. Data will be given by a cell-array.
+% EXAMPLE:
 %
-% ft_mv_blogreg now also supports a mixed effects model (mixed = true) 
+% mask = rand(5,10)>0.3;
+% f = ft_mv_blogreg('indims',[5 10],'coupling',[100 100],'mask',mask);
+% f = f.train(X1,Y1);
+% f.test(X1)
+% 
+% Multitask learning (multitask = true) is implemented by augmenting the data matrix as
+% [ T1     0   ]
+% [ 0      T2  ]
+% etc and coupling the tasks through the taskcoupling property. Data X and Y must be given by a cell-array.
+%
+% EXAMPLE:
+%
+% f = ft_mv_blogreg('multitask',1);
+% f = f.train({X1 X2},{Y1 Y2});
+% f.test({X1 X2})
+%
+% This can also be combined with coupling of the features themselves.
+%
+% EXAMPLE:
+%
+% mask = rand(5,10)>0.3;
+% f = ft_mv_blogreg('multitask',1,'indims',[5 10],'coupling',[100 100],'mask',mask);
+% f = f.train({X1 X2},{Y1 Y2});
+% f.test({X1 X2})
+%
+% ft_mv_blogreg also supports a mixed effects model (mixed = true) 
 % of the form
-% [ X1 X1 0 ]
-% [ X2 0 X2 ]
+% [ M1 M1 0 ]
+% [ M2 0 M2 ]
 % where the first column contains the fixed effects and the remaining
 % columns the random effects. The basic idea is that if prediction is
 % supported by a fixed effect then it will be chosen since this incurs the
-% smallest penalty in terms of sparseness. If a coupling is specified then
-% this coupling will only operate on the fixed effects using mixed=1 and on 
-% both the fixed and random effects using mixed=2. Data should be given by a
+% smallest penalty in terms of sparseness. Data should be given by a
 % cell-array.
 %
 % EXAMPLE:
 %
-% X1 = rand(100,1)-0.5;
-% X2 = rand(100,1)-0.5;
-% Y1 = 1+((1./(1+exp(-X1))) > 0.5);
-% Y2 = 1+((1./(1+exp(-X2))) > 0.5);
-% m = ft_mv_blogreg('mixed',true);
-% m = m.train({X1 X2}',{Y1 Y2}');
-% 
+% f = ft_mv_blogreg('mixed',1);
+% f = f.train({X1 X2}',{Y1 Y2}');
+% f.test({X1 X2}) 
+%
+% This can also be combined with coupling of the features themselves. 
+% If a coupling is specified then this coupling will only operate on the 
+% fixed effects using mixed=1 and on both the fixed and random effects 
+% using mixed=2.
+%
+% EXAMPLE:
+%
+% mask = rand(5,10)>0.3;
+% f = ft_mv_blogreg('mixed',1,'indims',[5 10],'coupling',[100 100],'mask',mask);
+% f = f.train({X1 X2}',{Y1 Y2}');
+% f.test({X1 X2}) 
+%
 % If the input data is a cell-array of cell-arrays then we assume a mixed
 % effects model for multiple tasks. The output will have the same
 % structure. E.g. model{i}{j,k} will be the j-th model for the k-th mixed
 % effect in the i-th subject. Note that k=1 is the fixed effect and k>1 are
-% the random effects.
+% the random effects. 
+%
+% EXAMPLE:
+%
+% f = ft_mv_blogreg('mixed',1,'multitask',1);
+% f = f.train({{X1 X2} {X1 X2}},{{Y1 Y2} {Y1 Y2}});
+% f.test({{X1 X2} {X1 X2}}) 
+%
+% If mixed = 1 then the only coupling  (spatial or multitask) will be for 
+% the fixed effects part. For mixed = 2, also the random effects will be coupled.
+% 
+% mask = rand(5,10)>0.3;
+% f = ft_mv_blogreg('mixed',1,'multitask',1,'coupling',[100 100],'indims',[10 10],'mask',mask);
+% f = f.train({ {X1 X2} {X1 X2} },{ {Y1 Y2} {Y1 Y2} });
+% f.test({{X1 X2} {X1 X2}}) 
 % 
 % NOTE: 
 %   a bias term is added to the model and should not be included explicitly
@@ -178,13 +245,16 @@ classdef ft_mv_blogreg < ft_mv_predictor
          end
 
          if ~obj.multitask && ~obj.mixed
-           obj.nfeatures = size(X,2);
+           sz  = size(X);
+           obj.nfeatures = prod(sz(2:end));
            nsamples = size(X,1);
          elseif (obj.multitask && ~obj.mixed) || (~obj.multitask && obj.mixed)
-           obj.nfeatures = size(X{1},2);
+           sz  = size(X{1});
+           obj.nfeatures = prod(sz(2:end));
            nsamples = mean(cellfun(@(x)(size(x,1)),X));
          elseif obj.multitask && obj.mixed
-           obj.nfeatures = size(X{1}{1},2);
+           sz  = size(X{1}{1});
+           obj.nfeatures = prod(sz(2:end));
            nsamples = mean(cellfun(@(x)(size(x,1)),X{1})); % just an indication
          end
            
@@ -298,12 +368,6 @@ classdef ft_mv_blogreg < ft_mv_predictor
          % compute univariate variances on the fly
          % also add the covariance for the betas to the output.
          
-         %          nsamples = size(G.A,1);
-         %          if obj.ntasks > 1
-         %            totsamples = sum(cellfun(@(x)(size(x,1)),X));
-         %          else
-         %            totsamples = size(X,1);
-         %          end
          nsamples = size(G.A,1);
          totsamples = size(D,1);
          
@@ -607,7 +671,7 @@ classdef ft_mv_blogreg < ft_mv_predictor
          if ~obj.multitask && ~obj.mixed
            
            % add bias term
-           tdata = [X ones(size(X,1),1)];
+           tdata = [X(1:size(X,1),:) ones(size(X,1),1)];
            
            % transform design to +1/-1 representation
            if nargin==3, tdesign = 3-2*Y; end
@@ -615,24 +679,24 @@ classdef ft_mv_blogreg < ft_mv_predictor
          elseif obj.multitask && ~obj.mixed
 
            if nargin==3,
-             tdesign = cell2mat(Y);
+             tdesign = cell2mat(Y(:));
              tdesign = 3-2*tdesign(:,1);
            end
            
            % add bias term
-           for j=1:obj.ntasks, X{j} = [X{j} ones(size(X{j},1),1)]; end
+           for j=1:obj.ntasks, X{j} = [X{j}(1:size(X{j},1),:) ones(size(X{j},1),1)]; end
            
            tdata = blkdiag(X{:});
            
          elseif ~obj.multitask && obj.mixed
 
            if nargin==3,
-             tdesign = cell2mat(Y);
+             tdesign = cell2mat(Y(:));
              tdesign = 3-2*tdesign(:,1);
            end
            
            % add bias term
-           for j=1:obj.nmixed, X{j} = [X{j} ones(size(X{j},1),1)]; end
+           for j=1:obj.nmixed, X{j} = [X{j}(1:size(X{j},1),:) ones(size(X{j},1),1)]; end
            
            % fixed effects without bias
            fixed = cell2mat(X(:));
@@ -642,12 +706,10 @@ classdef ft_mv_blogreg < ft_mv_predictor
            
          else % obj.multitask && obj.mixed           
            
-           % CHECK!
-           
            if nargin==3,
              tdesign = [];
              for k=1:length(Y)
-               td = cell2mat(Y{k});
+               td = cell2mat(Y{k}(:));
                td = 3-2*td(:,1);
                tdesign = cat(1,tdesign,td);
              end             
@@ -658,7 +720,7 @@ classdef ft_mv_blogreg < ft_mv_predictor
              
              % add bias term
              XX = cell(size(X));
-             for j=1:obj.nmixed, XX{j} = [X{k}{j} ones(size(X{k}{j},1),1)]; end
+             for j=1:obj.nmixed, XX{j} = [X{k}{j}(1:size(X{k}{j},1),:) ones(size(X{k}{j},1),1)]; end
              
              % fixed effects without bias
              fixed = cell2mat(XX(:));
@@ -789,7 +851,11 @@ classdef ft_mv_blogreg < ft_mv_predictor
             nf2 = (nf+1)*(obj.nmixed+1)-1;
             
             blk = obj.ntasks*nf2^2;
-            didx = (1:(size(prior,1)+1):(size(prior,1)*nf2));
+            if obj.mixed==1 % couple fixed effects only
+              didx = (1:(size(prior,1)+1):(size(prior,1)*nf));
+            else % couple fixed and random effects
+              didx = (1:(size(prior,1)+1):(size(prior,1)*nf2));
+            end
             cc = repmat(obj.taskcoupling,[1 length(didx)]);
             for j=1:obj.ntasks
               for k=(j+1):obj.ntasks
@@ -858,13 +924,19 @@ classdef ft_mv_blogreg < ft_mv_predictor
           nf2 = (nf+1)*(obj.nmixed+1)-1;
           
           for j=1:obj.ntasks
-            for k=(j+1):obj.ntasks
-              for m=1:obj.nmixed
-                KK((j-1)*nf2 + nf + m*(nf+1),(k-1)*nf2 + nf + m*(nf+1)) = 1/obj.precbias;
-                KK((k-1)*nf2 + nf + m*(nf+1),(j-1)*nf2 + nf + m*(nf+1)) = 1/obj.precbias;
-              end
+            for m=1:obj.nmixed
+              KK((j-1)*nf2 + nf + m*(nf+1),(j-1)*nf2 + nf + m*(nf+1)) = 1/obj.precbias;
             end
           end
+          
+%           for j=1:obj.ntasks
+%             for k=(j+1):obj.ntasks
+%               for m=1:obj.nmixed
+%                 KK((j-1)*nf2 + nf + m*(nf+1),(k-1)*nf2 + nf + m*(nf+1)) = 1/obj.precbias;
+%                 KK((k-1)*nf2 + nf + m*(nf+1),(j-1)*nf2 + nf + m*(nf+1)) = 1/obj.precbias;
+%               end
+%             end
+%           end
           
         end
         
