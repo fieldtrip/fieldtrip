@@ -46,6 +46,8 @@ L = add_mex_source(L,'@config/private','deepcopy');
 L = add_mex_source(L,'@config/private','increment');
 L = add_mex_source(L,'@config/private','reset');
 
+L = add_mex_source(L,'src','ft_getopt');
+L = add_mex_source(L,'src','keyval');
 L = add_mex_source(L,'src','read_16bit');
 L = add_mex_source(L,'src','read_24bit');
 L = add_mex_source(L,'src','mxSerialize');
