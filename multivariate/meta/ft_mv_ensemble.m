@@ -27,6 +27,18 @@ classdef ft_mv_ensemble < ft_mv_meta
          
          if ~iscell(obj.mva), obj.mva = {obj.mva}; end
          
+         if iscell(obj.mva)
+           for c=1:length(obj.mva)
+             if ~isa(obj.mva{c},'ft_mv_analysis')
+               obj.mva{c} = ft_mv_analysis(obj.mva{c});
+             end
+           end
+         else
+           if ~isa(obj.mva,'ft_mv_analysis')
+             obj.mva = ft_mv_analysis(obj.mva);
+           end
+         end
+         
        end
        
        function obj = train(obj,X,Y)

@@ -107,6 +107,10 @@ classdef ft_mv_lds < ft_mv_timeseries
     
     function obj = train(obj,X,Y)
                
+      if ~isempty(obj.indims)
+        X = reshape(X,[size(X,1) obj.indims]);
+      end
+      
       % cast to cell array (multiple observation sequences)
       % representation as variables * timepoints
       if ~iscell(X)

@@ -63,7 +63,11 @@ classdef ft_mv_hmm < ft_mv_timeseries
     function obj = train(obj,X,Y)
 
       % data represented as repetitions x features x timepoints
-      
+
+      if ~isempty(obj.indims)
+        X = reshape(X,[size(X,1) obj.indims]);
+      end
+            
       X = permute(X,[2 3 1]);
         
       if isempty(obj.nhidden) || (nargin==3 && (~all(isnan(Y(:)))))% Y assumed observed

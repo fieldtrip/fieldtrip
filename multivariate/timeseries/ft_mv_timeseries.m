@@ -3,6 +3,12 @@ classdef ft_mv_timeseries < ft_mv_method
 %
 % Copyright (c) 2009, Marcel van Gerven
     
+  properties
+
+   indims % input dimensions; required to retrieve the trials x features x time structure
+   
+  end
+
   methods
 
     function obj = ft_mv_timeseries(varargin)
