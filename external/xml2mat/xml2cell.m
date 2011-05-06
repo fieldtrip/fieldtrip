@@ -30,4 +30,4 @@ else
 end
 
 % convert first to MbML compliant string and then onto an m-variable
-[y,varname]=xml2mat(mbmling(y,1));
+[y,varname]=xml2mat(mbmling(y,0)); %ingnie: switched off displaying by making 0 of last argument

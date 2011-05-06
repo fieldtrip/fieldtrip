@@ -698,7 +698,7 @@ switch eventformat
     end
 
     % get event info from xml files
-    ft_hastoolbox('XML4MATV2', 1, 0);
+    ft_hastoolbox('XML4MAT', 1, 0);
     warning('off', 'MATLAB:REGEXP:deprecated') % due to some small code xml2struct
     xmlfiles = dir( fullfile(filename, '*.xml'));
     disp('reading xml files to obtain event info... This might take a while if many events/triggers are present')
