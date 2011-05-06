@@ -1,0 +1,34 @@
+May 6th 2011.
+Downloaded from http://www.mathworks.com/matlabcentral/fileexchange/6268-xml4mat-v2-0
+
+More info see:
+
+XML4MAT: Inter-conversion between MatlabTM
+structured variables and the markup language MbML
+Jonas S Almeida*, Shuyuan Wu, Eberhard O. Voit
+Department of Biometry & Epidemiology, Medical University of South Carolina
+135 Cannon Street, Suite 303, P.O. Box 250835, Charleston, SC 29425, USA
+* corresponding author, almeidaj@musc.edu
+
+Abstract
+The MatlabTM programming environment and related public license environments
+such as Octave are gaining in popularity for the identification of algorithms and the
+rapid prototyping of applications in bioinformatics. At the same time, there is a
+strong push to standardize the identification of extended modelling languages (XML)
+and their underlying ontologies, to facilitate bioinformatic integration of data and
+methods. We hereby introduce a new m-file library, XML4MAT, that supports the
+inter-conversion between any MatlabTM structured variable and a specialized extended
+markup language (XML), designated as MbML. The library developed also includes
+functions to import non-MbML compliant XML structures. The functionality
+described is achieved without object-oriented programming, which makes it ideal for
+inclusion in declarative programming and implicitly turns m-structures into generalpurpose
+object models for data structures. The new library is made freely available at
+http://bioinformatics.musc.edu/xml4mat. It is ideally suited for 1) computation of
+XML structures in Matlab programming environments and 2) its inter-conversion to
+and from a specialized markup language, MbML. This also enables using Matlab
+structures as a format to identify new markup languages that are MbML compliant,
+with the corresponding gain in clarity and computability for bioinformatic
+applications in that environment.
+
+Keywords
+XML, Matlab, data structures, ontology, XML4MAT, MbML
