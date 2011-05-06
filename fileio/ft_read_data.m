@@ -615,13 +615,13 @@ switch dataformat
         cumsamples = cumsum(nsamples);
         begblock = find(begsample<=cumsamples, 1, 'first');
         endblock = find(endsample<=cumsamples, 1, 'first');
-        datsig = read_mff_bin(fullsignalname, begblock, endblock);
+        datsig = read_mff_bin(fullsignalname, begblock, endblock, chanind_sig);
 
-        % select channels and concatenate in a matrix
+        % concatenate in a matrix
         if exist('dat', 'var')
-          dat{length(dat)+1} = cell2mat(datsig(chanind_sig,:));
+          dat{length(dat)+1} = cell2mat(datsig(:,:));
         else
-          dat{1} = cell2mat(datsig(chanind_sig,:));
+          dat{1} = cell2mat(datsig(:,:));
         end
         % select the desired samples from the concatenated blocks
         if begblock==1

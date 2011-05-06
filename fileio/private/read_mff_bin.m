@@ -1,4 +1,4 @@
-function [output] = read_mff_bin(filename, begblock, endblock)
+function [output] = read_mff_bin(filename, begblock, endblock, chanindx)
 
 % READ_MFF_BIN
 %
@@ -14,14 +14,14 @@ if fid == -1
 end
 
 needhdr = (nargin==1);
-needdat = (nargin==3);
+needdat = (nargin==4);
 
 
 if needhdr
-  hdr = read_mff_block(fid, [], 'skip');
+  hdr = read_mff_block(fid, [], [], 'skip');
   prevhdr = hdr(end);
   for i=2:hdr.opthdr.nblocks
-    hdr(i) = read_mff_block(fid, prevhdr, 'skip');
+    hdr(i) = read_mff_block(fid, prevhdr, [], 'skip');
     prevhdr = hdr(end);
   end
   % assign the output variable
@@ -35,19 +35,19 @@ elseif needdat
     block = block+1;
     
     if block<begblock
-      [hdr] = read_mff_block(fid, prevhdr, 'skip');
+      [hdr] = read_mff_block(fid, prevhdr, chanindx, 'skip');
       prevhdr = hdr;
       continue % with the next block
     end
     
     if block==begblock
-      [hdr, dat] = read_mff_block(fid, prevhdr, 'read');
+      [hdr, dat] = read_mff_block(fid, prevhdr, chanindx, 'read');
       prevhdr = hdr;
       continue % with the next block
     end
     
     if block<=endblock
-      [hdr, dat(:,end+1)] = read_mff_block(fid, prevhdr, 'read');
+      [hdr, dat(:,end+1)] = read_mff_block(fid, prevhdr, chanindx, 'read');
       prevhdr = hdr;
       continue % with the next block
     end
@@ -67,13 +67,13 @@ fclose(fid);
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [hdr, dat] = read_mff_block(fid, prevhdr, action)
+function [hdr, dat] = read_mff_block(fid, prevhdr, chanindx, action)
 
-if nargin<2
+if nargin<3
   prevhdr = [];
 end
 
-if nargin<3
+if nargin<4
   action = 'none';
 end
 
@@ -126,7 +126,8 @@ end % reading the rest of the header
 
 switch action
   case 'read'
-    dat = cell(hdr.nsignals, 1);
+    dat = cell(length(chanindx), 1);
+    currchan = 1;
     for i = 1:hdr.nsignals
       switch hdr.depth(i) % length in bit
         case 16
@@ -140,7 +141,11 @@ switch action
           datatype = 'double';
       end % case
       
-      dat{i} = fread(fid, [1 hdr.nsamples(i)], datatype);
+      tmp = fread(fid, [1 hdr.nsamples(i)], datatype);
+      if ~isempty(intersect(chanindx,i)) %only keep channels that are requested
+        dat{currchan} = tmp;
+        currchan = currchan + 1;
+      end
     end % for
     
   case 'skip'
