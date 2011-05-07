@@ -74,8 +74,9 @@ classdef ft_mv_glmnet < ft_mv_predictor
       % missing data
       if any(isnan(X(:))) || any(isnan(Y(:))), error('method does not handle missing data'); end
      
-      % convert logical data to double (otherwise we get numerical problems)
+      % convert data to double (otherwise we get numerical problems)
       if ~isa(X(1),'double'), X = double(X); end
+      if ~isa(Y(1),'double'), Y = double(Y); end
       
       % multiple outputs
       if size(Y,2) > 1
@@ -211,9 +212,19 @@ classdef ft_mv_glmnet < ft_mv_predictor
           
         end
         
-       % find best lambda
-       [a,b] = max(obj.performance,[],2);
-
+       % find best lambda; smallest lambda whose performance is within one standard
+       % error from the best performance (Hastie's one standard error rule)
+       %[a,b] = max(obj.performance,[],2);
+       if size(obj.performance,1)==1
+         [a,b] = max(obj.performance);
+       else
+         mp = mean(obj.performance);
+         [maxp,midx] = max(mp);
+         ep = std(obj.performance) ./ size(obj.performance,1);
+         b = find(mp >= (maxp - ep(midx)),1,'first');
+         if isempty(b), b=1; end
+       end
+       
        % create lambda path with the best lambda (mean(lbest)) at the end
        % in order to ensure proper convergence to the correct solution
        lbest = zeros(1,length(b));
@@ -279,7 +290,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
           res = glmnet(X,Y,obj.family,opts);
           if strcmp(obj.family,'multinomial')
             x = cell2mat(cellfun(@(x)(reshape(x,[1 size(res.beta{1})])),res.beta,'UniformOutput',false)');
-            obj.weights = permute(cat(2,x,reshape(res.a0,[3 1 size(res.a0,2)])),[2 1 3]);
+            obj.weights = permute(cat(2,x,reshape(res.a0,[size(x,1) 1 size(x,3)])),[2 1 3]);
           else
             obj.weights = [res.beta; res.a0(:)'];
           end

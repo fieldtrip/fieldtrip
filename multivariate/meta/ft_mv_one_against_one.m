@@ -105,6 +105,9 @@ classdef ft_mv_one_against_one < ft_mv_meta
       if ~isempty(obj.combfun)
       
         Y = obj.combfun(Y);
+        
+        % a better combination rule might be voting (to avoid influences of
+        % spuriously high probabilities
       
       else
         % sum and normalize probabilities

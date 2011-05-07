@@ -733,6 +733,9 @@ classdef ft_mv_blogreg < ft_mv_predictor
            tdata = blkdiag(tdata{:});
            
          end
+         
+         tdata = double(tdata);
+         if nargin==3, tdesign = double(tdesign); end
            
       end
        

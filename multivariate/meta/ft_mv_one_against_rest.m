@@ -52,7 +52,6 @@ classdef ft_mv_one_against_rest < ft_mv_meta
       design = cell(1,obj.nclasses);
       
       % create new data representation
-      
       for i=1:obj.nclasses
         
         didx = (Y == i);
@@ -69,6 +68,9 @@ classdef ft_mv_one_against_rest < ft_mv_meta
         design{i} = design{i}(~isnan(design{i}),:);
         
       end
+      
+      % alternative would be to resample the target class such that it is
+      % balanced against the rest...
       
       % replicate the classifier
       if ~iscell(obj.mva)

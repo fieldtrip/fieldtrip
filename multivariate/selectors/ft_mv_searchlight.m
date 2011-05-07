@@ -8,7 +8,7 @@ classdef ft_mv_searchlight < ft_mv_selector
 % cross-validation with the specified validator.
 %
 % EXAMPLE:
-% [a,b,c] = ft_mv_test('mva',{ft_mv_searchlight('step',5,'radius',5,'mask',masks{1},'validator',ft_mv_crossvalidator('sigtest','mcnemar','metric','accuracy','mva',ft_mv_svm,'nfolds',5),'verbose',true) ft_mv_svm},'nfolds',5)
+% [a,b,c] = ft_mv_test('mva',{ft_mv_searchlight('step',5,'radius',5,'mask',masks{1},'validator',ft_mv_crossvalidator('sigtest','binomial','metric','accuracy','mva',ft_mv_svm,'nfolds',5),'verbose',true) ft_mv_svm},'nfolds',5)
 %
 % NOTE:
 % A searchlight only returns the feature subset. Subsequently a predictor

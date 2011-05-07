@@ -40,6 +40,10 @@ classdef ft_mv_kernelmethod < ft_mv_predictor
         return;
       end
       
+      % convert data to double
+      if ~isa(X(1),'double'), X = double(X); end
+      if ~isa(Y(1),'double'), Y = double(Y); end
+     
       % missing data
       if any(isnan(X(:))) || any(isnan(Y(:))), error('method does not handle missing data'); end
      
