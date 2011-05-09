@@ -482,6 +482,16 @@ end
 % set xlim and ylim:
 xlim([xmin xmax]);
 ylim([ymin ymax]);
+
+% adjust mask box extents to ymin/ymax
+ptchs = findobj('type','patch');
+for i = 1:length(ptchs)
+    YData = get(ptchs(i),'YData');
+    YData(YData == min(YData)) = ymin;
+    YData(YData == max(YData)) = ymax;
+    set(ptchs(i),'YData',YData);
+end
+
 if strcmp('yes',cfg.hotkeys)
     %  attach data and cfg to figure and attach a key listener to the figure
     set(gcf, 'keypressfcn', {@key_sub, xmin, xmax, ymin, ymax})
