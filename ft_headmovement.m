@@ -141,7 +141,7 @@ end
 %compute transformation matrix from dewar to head coordinates
 transform = zeros(4, 4, size(nas,1));
 for k = 1:size(transform, 3)
-  transform(:,:,k) = headcoordinates(nas(k,:), lpa(k,:), rpa(k,:), 0);
+  transform(:,:,k) = headcoordinates(nas(k,:), lpa(k,:), rpa(k,:), 'ctf');
 end
 
 npos        = size(transform, 3);
