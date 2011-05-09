@@ -360,7 +360,7 @@ elseif filetype_check_extension(filename, '.rej')
   content = 'rejection marks';
 
   % the yokogawa_mri has to be checked prior to asa_mri, because this one is more strict
-elseif filetype_check_extension(filename, '.mri') && filetype_check_header(filename, char([0 0 0 0])) % FIXME, this detection should possibly be improved
+elseif filetype_check_extension(filename, '.mri') && filetype_check_header(filename, char(0)) % FIXME, this detection should possibly be improved
   type = 'yokogawa_mri';
   manufacturer = 'Yokogawa';
   content = 'anatomical MRI';
