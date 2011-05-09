@@ -483,6 +483,9 @@ end
 
 % Plot each data set:
 for i=1:Ndata
+  if i > 1
+      cfg.maskparameter = []; % stops mask from being drawn multiple times
+  end
   % Make vector dat with one value for each channel
   dat    = varargin{i}.(cfg.zparam);
   xparam = varargin{i}.(cfg.xparam);
@@ -649,7 +652,7 @@ ft_plot_text( x2,y2,num2str(ylim(2),3),'HorizontalAlignment','Left','VerticalAli
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plotWnd(x,y,xlim,ylim,xpos,ypos,width,height,label,cfg,color,style,mask)
+function plotWnd(x,y,xlim,ylim,xpos,ypos,width,height,label,cfg,color,style,mask,maskflag)
 
 % Clip out of bounds y values:
 y(y > ylim(2)) = ylim(2);
