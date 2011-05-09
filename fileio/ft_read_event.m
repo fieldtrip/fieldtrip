@@ -1179,17 +1179,21 @@ switch eventformat
     % read the events, apply filter is applicable
     nev = read_neuralynx_nev(filename, 'type', flt_type, 'value', flt_value, 'mintimestamp', flt_mintimestamp, 'maxtimestamp', flt_maxtimestamp, 'minnumber', flt_minnumber, 'maxnumber', flt_maxnumber);
 
-    % now get the values as cell array, since the struct function can work with those
-    value     = {nev.TTLValue};
-    timestamp = {nev.TimeStamp};
-    number    = {nev.EventNumber};
-    type      = repmat({'trigger'},size(value));
-    duration  = repmat({[]},size(value));
-    offset    = repmat({[]},size(value));
-    sample    = num2cell(round(double(cell2mat(timestamp) - hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1));
-    % convert it into a structure array
-    event = struct('type', type, 'value', value, 'sample', sample, 'timestamp', timestamp, 'duration', duration, 'offset', offset, 'number', number);
-
+    % the following code should only be executed if there are events,
+    % otherwise there will be an error subtracting an uint64 from an []
+    if ~isempty(nev)
+      % now get the values as cell array, since the struct function can work with those
+      value     = {nev.TTLValue};
+      timestamp = {nev.TimeStamp};
+      number    = {nev.EventNumber};
+      type      = repmat({'trigger'},size(value));
+      duration  = repmat({[]},size(value));
+      offset    = repmat({[]},size(value));
+      sample    = num2cell(round(double(cell2mat(timestamp) - hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1));
+      % convert it into a structure array
+      event = struct('type', type, 'value', value, 'sample', sample, 'timestamp', timestamp, 'duration', duration, 'offset', offset, 'number', number);
+    end
+    
   case 'neuralynx_cds'
     % this is a combined Neuralynx dataset with seperate subdirectories for the LFP, MUA and spike channels
     dirlist   = dir(filename);
