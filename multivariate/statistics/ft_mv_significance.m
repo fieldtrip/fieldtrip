@@ -2,6 +2,8 @@ function res = ft_mv_significance(design,post,sigtest)
 % FT_MV_SIGNIFICANCE signficance tests for a real outcome (design) and predicted
 % outcome (post) and returns a p-value
 %
+% res = ft_mv_significance(design,post,sigtest)
+%
 % NOTE: Bonferroni correction is not performed here!
 %
 % Copyright (c) 2010, Marcel van Gerven

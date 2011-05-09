@@ -261,10 +261,30 @@ classdef ft_mv_glmnet < ft_mv_predictor
           
        else
          
-         res = glmnet(X,Y,obj.family,opts);
+         try
+           res = glmnet(X,Y,obj.family,opts);
+         catch
+           
+           % probably returned the empty model
+           warning('empty model returned');
+           
+           res.lambda = obj.lambda(1);
+           nclasses = max(Y);
+           if nclasses>2
+             res.beta = cell(1,nclasses);
+             for c=1:nclasses
+               res.beta{c} = zeros(size(X,2),1);
+               res.a0 = zeros(nclasses,1);
+             end
+           else
+             res.beta = zeros(size(X,2),1);
+             res.a0   = 0;
+           end
+           
+         end
          
          if strcmp(obj.family,'multinomial')
-            x = zeros(size(res.beta{1},1),size(res.a0,1));
+            obj.weights = zeros(size(res.beta{1},1)+1,size(res.a0,1));
             for c=1:size(res.a0,1)
               obj.weights(:,c) = [res.beta{c}(:,end); res.a0(c,end)];
             end
@@ -292,8 +312,28 @@ classdef ft_mv_glmnet < ft_mv_predictor
           end
            
           res.lambda = nan;
-        else          
-          res = glmnet(X,Y,obj.family,opts);
+        else
+          
+          try
+            res = glmnet(X,Y,obj.family,opts);
+          catch
+         
+            % probably returned the empty model
+           res.lambda = obj.lambda(1);
+           nclasses = max(Y);
+           if nclasses>2
+             res.beta = cell(1,nclasses);
+             for c=1:nclasses
+               res.beta{c} = zeros(size(X,2),1);
+               res.a0 = zeros(nclasses,1);
+             end
+           else
+             res.beta = zeros(size(X,2),1);
+             res.a0   = 0;
+           end
+            
+          end
+          
           if strcmp(obj.family,'multinomial')
             x = cell2mat(cellfun(@(x)(reshape(x,[1 size(res.beta{1})])),res.beta,'UniformOutput',false)');
             obj.weights = permute(cat(2,x,reshape(res.a0,[size(x,1) 1 size(x,3)])),[2 1 3]);
