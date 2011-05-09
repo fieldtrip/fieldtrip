@@ -239,7 +239,8 @@ classdef ft_mv_glmnet < ft_mv_predictor
        opts.lambda = linspace(max(lmax),mean(lbest),50);
        
        % create unique path (1 element if lbest=lmax)
-       obj.lambda = sort(unique(opts.lambda),'descend');
+       opts.lambda = sort(unique(opts.lambda),'descend');
+       obj.lambda  = opts.lambda;
        
        u = unique(Y);
        
