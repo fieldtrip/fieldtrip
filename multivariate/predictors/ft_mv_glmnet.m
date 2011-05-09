@@ -184,6 +184,9 @@ classdef ft_mv_glmnet < ft_mv_predictor
         % use dummy classifier to determine the lambda path for all folds
         % otherwise we get different lambdas for different folds which
         % makes everything hard to compare
+        
+        if obj.verbose, fprintf('determining lambda path\n'); end
+        
         dum = obj;
         dum.validator = [];
         dum = dum.train(X,Y);
@@ -234,7 +237,9 @@ classdef ft_mv_glmnet < ft_mv_predictor
          lmax(j) = obj.validator.mva{j}.mvmethods{end}.lambda(1);
        end
        opts.lambda = linspace(max(lmax),mean(lbest),50);
-       obj.lambda = opts.lambda;
+       
+       % create unique path (1 element if lbest=lmax)
+       obj.lambda = sort(unique(opts.lambda),'descend');
        
        u = unique(Y);
        
