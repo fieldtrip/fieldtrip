@@ -67,8 +67,11 @@ try
 end
 
 try
-  % this contains layouts and cortical meshes
-  ft_hastoolbox('template', 1, 1);
+  % these contains template layouts, MRIs and cortical meshes
+  ft_hastoolbox('template/layout', 1, 1);
+  ft_hastoolbox('template/anatomy', 1, 1);
+  ft_hastoolbox('template/headmodel', 1, 1);
+  ft_hastoolbox('template/electrode', 1, 1);
 end
 
 try

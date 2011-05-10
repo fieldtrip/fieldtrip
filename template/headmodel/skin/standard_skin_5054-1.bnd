@@ -1,0 +1,11 @@
+# Boundary with 5054 vertices and 10104 polygons with 3 vertices each
+Type= Scalp
+NumberPositions=	5054
+UnitPosition	mm
+Positions	standard_skin_5054-1.bps
+NumberSlices=	65
+Slices
+1	6	13	19	25	31	37	43	49	55	60	66	71	76	81	86	90	94	99	102	106	109	112	115	117	119	121	123	124	125	126	126	126	126	125	124	123	121	119	117	115	112	109	106	102	99	94	90	86	81	76	71	66	60	55	49	43	37	31	25	19	13	6	0	1	
+NumberPolygons=	10104
+TypePolygons=	3
+Polygons	standard_skin_5054-1.bpl

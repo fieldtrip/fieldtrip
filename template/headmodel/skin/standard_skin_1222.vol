@@ -1,0 +1,8 @@
+# Volume conductor with 1 boundaries
+NumberBoundaries=	1
+UnitConduct	S/m
+Conductivities
+0.33	
+WhereInside
+0	
+Boundary1	standard_skin_1222-1.bnd

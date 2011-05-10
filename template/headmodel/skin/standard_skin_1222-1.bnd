@@ -1,0 +1,11 @@
+# Boundary with 1222 vertices and 2440 polygons with 3 vertices each
+Type= Scalp
+NumberPositions=	1222
+UnitPosition	mm
+Positions	standard_skin_1222-1.bps
+NumberSlices=	32
+Slices
+1	6	12	19	24	30	35	40	45	49	53	56	58	60	61	62	62	61	60	58	56	53	49	45	40	35	30	24	19	12	6	1	
+NumberPolygons=	2440
+TypePolygons=	3
+Polygons	standard_skin_1222-1.bpl
