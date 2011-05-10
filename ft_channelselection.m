@@ -22,6 +22,7 @@ function [channel] = ft_channelselection(desired, datachannel)
 %  'EEG'     is replaced by all recognized EEG channels (this is system dependent)
 %  'EEG1020' is replaced by 'Fp1', 'Fpz', 'Fp2', 'F7', 'F3', ...
 %  'EOG'     is replaced by all recognized EOG channels
+%  'ECG'     is replaced by all recognized ECG channels
 %  'EMG'     is replaced by all channels in the datafile starting with 'EMG'
 %  'lfp'     is replaced by all channels in the datafile starting with
 %  'lfp'
@@ -130,6 +131,7 @@ labelbham = {'P9', 'PPO9h', 'PO7', 'PPO5h', 'PPO3h', 'PO5h', 'POO9h', 'PO9', 'I1
 labelref  = {'M1', 'M2', 'LM', 'RM', 'A1', 'A2'}';
 labeleog  = datachannel(strncmp('EOG', datachannel, length('EOG')));               % anything that starts with EOG
 labeleog  = {labeleog{:} 'HEOG', 'VEOG', 'VEOG-L', 'VEOG-R', 'hEOG', 'vEOG', 'Eye_Ver', 'Eye_Hor'}';     % or any of these
+labelecg  = datachannel(strncmp('ECG', datachannel, length('ECG')));
 labelemg  = datachannel(strncmp('EMG', datachannel, length('EMG')));
 labellfp  = datachannel(strncmp('lfp', datachannel, length('lfp')));
 labelmua  = datachannel(strncmp('mua', datachannel, length('mua')));
@@ -247,6 +249,7 @@ findall        = find(strcmp(channel, 'all'));
 % findreg (for the wildcards) is dealt with in the channel group specification above
 findmeg        = find(strcmp(channel, 'MEG'));
 findemg        = find(strcmp(channel, 'EMG'));
+findecg        = find(strcmp(channel, 'ECG'));
 findeeg        = find(strcmp(channel, 'EEG'));
 findeeg1020    = find(strcmp(channel, 'EEG1020'));
 findeeg1010    = find(strcmp(channel, 'EEG1010'));
@@ -289,6 +292,7 @@ channel([
   findreg
   findmeg
   findemg
+  findecg
   findeeg
   findeeg1020
   findeeg1010
@@ -325,6 +329,7 @@ channel([
 if findall,        channel = [channel; labelall]; end
 if findreg,        channel = [channel; labelreg]; end
 if findmeg,        channel = [channel; labelmeg]; end
+if findecg,        channel = [channel; labelecg]; end
 if findemg,        channel = [channel; labelemg]; end
 if findeeg,        channel = [channel; labeleeg]; end
 if findeeg1020,    channel = [channel; label1020]; end
