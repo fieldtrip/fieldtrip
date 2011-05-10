@@ -44,6 +44,7 @@ issource   =  isfield(data, 'pos');
 isdip      =  isfield(data, 'dip');
 ismvar     =  isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag'));
 isfreqmvar =  isfield(data, 'freq') && isfield(data, 'transfer');
+isheadshape = isfield(data, 'pnt') && isfield(data, 'fid');
 
 if iscomp
   type = 'comp';  
@@ -69,6 +70,8 @@ elseif issource
   type = 'source';
 elseif isdip
   type = 'dip';
+elseif isheadshape
+  type = 'headshape';
 else
   type = 'unknown';
 end
