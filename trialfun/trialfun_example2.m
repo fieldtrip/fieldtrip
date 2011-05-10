@@ -15,7 +15,7 @@ function [dat] = trialfun_example2(cfg)
 % processing that is done on the EMG channel data, which are hardcoded in
 % this trial function. You should change these parameters if neccessary.
 %
-% See also DEFINETRIAL, PREPROCESSING
+% See also FT_DEFINETRIAL, FT_PREPROCESSING
  
 % read the header and determine the channel number corresponding with the EMG
 hdr         = ft_read_header(cfg.headerfile);

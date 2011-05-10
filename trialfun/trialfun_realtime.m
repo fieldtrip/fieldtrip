@@ -1,8 +1,9 @@
 function trl = trialfun_realtime(cfg)
 
-% TRIALFUN_REALTIME can be used in conjunction with rt_process to read realtime
-% data. Trials are defined as [begsample endsample offset condition]
-%
+% TRIALFUN_REALTIME can be used to segment a continuous stream of
+% data in real-time. Trials are defined as [begsample endsample offset
+% condition]
+% 
 % The configuration structure can contain the following specifications
 %   cfg.minsample  = the last sample number that was already considered (passed from rt_process)
 %   cfg.blocksize  = in seconds. In case of events, offset is
@@ -33,8 +34,11 @@ function trl = trialfun_realtime(cfg)
   else % synchronous mode
     trl = trialfun_synchronous(cfg);
   end
-end
+end % function
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function trl = trialfun_asynchronous(cfg)
   
   trl = [];
@@ -80,8 +84,11 @@ function trl = trialfun_asynchronous(cfg)
       end
     end
   end
-end
+end % function
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function trl = trialfun_synchronous(cfg)
 
   trl = [];
@@ -108,4 +115,4 @@ function trl = trialfun_synchronous(cfg)
 
     end
   end
-end
+end % function
