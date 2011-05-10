@@ -1,4 +1,4 @@
-function [warped] = warp_apply(M, input, method, tol);
+function [warped] = warp_apply(M, input, method, tol)
 
 % WARP_APPLY performs a 3D linear or nonlinear transformation on the input
 % coordinates, similar to those in AIR 3.08. You can find technical
