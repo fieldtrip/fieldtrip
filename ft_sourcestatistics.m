@@ -39,9 +39,6 @@ function [stat] = ft_sourcestatistics(cfg, varargin)
 %
 % See also FT_SOURCEANALYSIS, FT_SOURCEDESCRIPTIVES, FT_SOURCEGRANDAVERAGE
 
-% Undocumented local options:
-%   cfg.statistic
-
 % Copyright (C) 2005-2008, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -138,24 +135,6 @@ elseif strcmp(cfg.implementation, 'new')
     end
   end
   
-  if isfield(cfg, 'method')
-    % call the appropriate subfunction
-    if (strcmp(cfg.method, 'zero-baseline') || ...
-        strcmp(cfg.method, 'nai')           || ...
-        strcmp(cfg.method, 'pseudo-t')      || ...
-        strcmp(cfg.method, 'difference')    || ...
-        strcmp(cfg.method, 'anova1')        || ...
-        strcmp(cfg.method, 'kruskalwallis'))
-      % these are all statistical methods that are implemented in the old SOURCESTATISTICS_PARAMETRIC subfunction
-      cfg.statistic = cfg.method;
-      cfg.method    = 'parametric';
-    elseif strcmp(cfg.method, 'randomization')
-      cfg.method = 'randomization';
-    elseif strcmp(cfg.method, 'randcluster')
-      cfg.method = 'randcluster';
-    end
-  end
-
   if ismember('cfg.method', {'parametric' 'randomization' 'randcluster'}),
     % FIXME only supported for old-style source representation
     for i = 1:numel(varargin)
