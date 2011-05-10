@@ -34,7 +34,7 @@ tmp.ModelName	= setstr(tmp.ModelName(1:...
     min(find(tmp.ModelName==0)))');
 if ~isempty(tmp.ModelName)
     newindx = findstr(tmp.ModelName,newline);
-    tmp.ModelName(newindx(end):end) = '';
+    if size(newindx) > 0, tmp.ModelName(newindx(end):end) = ''; end;
 end;
 tmp.ChannelCount	= fread(fid,1,'int');
 tmp.Comment	= fread(fid,256,'uchar');
