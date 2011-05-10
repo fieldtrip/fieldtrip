@@ -483,9 +483,6 @@ end
 
 % Plot each data set:
 for i=1:Ndata
-  if i > 1
-      cfg.maskparameter = []; % stops mask from being drawn multiple times
-  end
   % Make vector dat with one value for each channel
   dat    = varargin{i}.(cfg.zparam);
   xparam = varargin{i}.(cfg.xparam);
@@ -546,6 +543,7 @@ for i=1:Ndata
   if ~isempty(cfg.maskparameter)
     % one value for each channel, or one value for each channel-time point
     maskmatrix = varargin{1}.(cfg.maskparameter)(seldat,:);
+    maskmatrix = maskmatrix(:,xidmin:xidmax);
   else
     % create an Nx0 matrix
     maskmatrix = zeros(length(seldat), 0);
@@ -563,7 +561,7 @@ for i=1:Ndata
   
   for m=1:length(layLabels)
     % Plot ER
-    plotWnd(xparam, datamatrix(m,:),[xmin xmax],[ymin ymax], layX(m), layY(m), width(m), height(m), layLabels(m), cfg, color, cfg.linestyle{i}, maskmatrix(m,:)); %FIXME shouldn't this be replaced with a call to ft_plot_vector?
+    plotWnd(xparam, datamatrix(m,:),[xmin xmax],[ymin ymax], layX(m), layY(m), width(m), height(m), layLabels(m), cfg, color, cfg.linestyle{i}, maskmatrix(m,:),i); %FIXME shouldn't this be replaced with a call to ft_plot_vector?
     
     if i==1,
       % Keep ER plot coordinates (at centre of ER plot), and channel labels (will be stored in the figure's UserData struct):
@@ -652,7 +650,7 @@ ft_plot_text( x2,y2,num2str(ylim(2),3),'HorizontalAlignment','Left','VerticalAli
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plotWnd(x,y,xlim,ylim,xpos,ypos,width,height,label,cfg,color,style,mask,maskflag)
+function plotWnd(x,y,xlim,ylim,xpos,ypos,width,height,label,cfg,color,style,mask,i)
 
 % Clip out of bounds y values:
 y(y > ylim(2)) = ylim(2);
@@ -662,7 +660,7 @@ xs = xpos+width*(x-xlim(1))/(xlim(2)-xlim(1));
 ys = ypos+height*(y-ylim(1))/(ylim(2)-ylim(1));
 
 % Add boxes when masktyle is box, ft_plot_vector doesnt support boxes higher than ydata yet, so this code is left here
-if ~isempty(mask) && strcmp(cfg.maskstyle, 'box')
+if i<2 && ~isempty(mask) && strcmp(cfg.maskstyle, 'box') % i stops box from being plotted more than once
   % determine how many boxes
   mask = mask(:)';
   mask = mask~=0;
