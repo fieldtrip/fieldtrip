@@ -34,7 +34,7 @@ function [cfg] = ft_sourceplot(cfg, data)
 %   cfg.downsample    = downsampling for resolution reduction, integer value (default = 1) (orig: from surface)
 %   cfg.atlas         = string, filename of atlas to use (default = []) SEE FT_PREPARE_ATLAS
 %                        for ROI masking (see "masking" below) or in interactive mode (see "ortho-plotting" below)
-%   cfg.inputcoord    = 'mni' or 'tal', coordinate system of data used to lookup the label from the atlas
+%   cfg.coordsys      = 'mni' or 'tal', coordinate system of the input data, used to lookup the label from the atlas
 %
 % The following parameters can be used for the functional data:
 %   cfg.funcolormap   = colormap for functional data, see COLORMAP (default = 'auto')
@@ -162,6 +162,7 @@ function [cfg] = ft_sourceplot(cfg, data)
 ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'renamed', {'inputcoordsys', 'coordsys'});
 
 %%% ft_checkdata see below!!! %%%
 
@@ -217,7 +218,9 @@ if ~isfield(cfg, 'colorbar'),            cfg.colorbar  = 'yes';              end
 if ~isfield(cfg, 'axis'),                cfg.axis = 'on';                    end
 if ~isfield(cfg, 'interactive'),         cfg.interactive = 'no';             end
 if ~isfield(cfg, 'queryrange');          cfg.queryrange = 3;                 end
-if ~isfield(cfg, 'inputcoord');          cfg.inputcoord = [];                end
+if ~isfield(cfg, 'coordsys');            cfg.coordsys = [];                  end
+if ~isfield(cfg, 'units');               cfg.units = [];                     end
+
 if isfield(cfg, 'TTlookup'),
   error('TTlookup is old; now specify cfg.atlas, see help!');
 end
@@ -259,6 +262,30 @@ end
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', 'volume', 'feedback', 'yes');
 
+% ensure that the data has interpretable spatial units
+if     ~isfield(data, 'unit') && ~isempty(cfg.units)
+  data.unit = cfg.units;
+elseif ~isfield(data, 'unit') &&  isempty(cfg.units)
+  data = ft_convert_units(data);
+elseif  isfield(data, 'unit') && ~isempty(cfg.units)
+  data = ft_convert_units(data, cfg.units);
+elseif  isfield(data, 'unit') &&  isempty(cfg.units)
+  % nothing to do
+end
+
+% ensure that the data has an interpretable coordinate system
+if     ~isfield(data, 'coordsys') && ~isempty(cfg.coordsys)
+  data.coordsys = cfg.coordsys;
+elseif ~isfield(data, 'coordsys') &&  isempty(cfg.coordsys) && ~isempty(cfg.atlas)
+  % only needed if an atlas was specified for volumelookup
+  data = ft_convert_coordsys(data);
+elseif  isfield(data, 'coordsys') && ~isempty(cfg.coordsys) && ~isempty(cfg.atlas)
+  % only needed if an atlas was specified for volumelookup
+  data = ft_convert_coordsys(data, cfg.units);
+elseif  isfield(data, 'coordsys') &&  isempty(cfg.coordsys)
+  % nothing to do
+end
+
 % select the functional and the mask parameter
 cfg.funparameter  = parameterselection(cfg.funparameter, data);
 cfg.maskparameter = parameterselection(cfg.maskparameter, data);
@@ -275,25 +302,24 @@ data = ft_volumedownsample(tmpcfg, data);
 %%% make the local variables:
 dim = data.dim;
 
-hasatlas = 0;
-if ~isempty(cfg.atlas)
+hasatlas = ~isempty(cfg.atlas);
+if hasatlas
   % initialize the atlas
-  hasatlas = 1;
   [p, f, x] = fileparts(cfg.atlas);
   fprintf(['reading ', f,' atlas coordinates and labels\n']);
   atlas = ft_prepare_atlas(cfg.atlas);
 end
 
-hasroi = 0;
-if ~isempty(cfg.roi)
+hasroi = ~isempty(cfg.roi);
+if hasroi
   if ~hasatlas
     error('specify cfg.atlas which belongs to cfg.roi')
   else
-    % get mask
-    hasroi = 1;
-    tmpcfg.roi = cfg.roi;
-    tmpcfg.atlas = cfg.atlas;
-    tmpcfg.inputcoord = cfg.inputcoord;
+    % get the mask
+    tmpcfg          = [];
+    tmpcfg.roi      = cfg.roi;
+    tmpcfg.atlas    = cfg.atlas;
+    tmpcfg.coordsys = cfg.coordsys;
     roi = ft_volumelookup(tmpcfg,data);
   end
 end
@@ -630,33 +656,49 @@ if isequal(cfg.method,'ortho')
       fprintf('press n/l/r on keyboard to record a fiducial position\n');
       fprintf('press q on keyboard to quit interactive mode\n');
     end
-
+    
     ijk = [xi yi zi 1]';
     xyz = data.transform * ijk;
-    if hasfun && ~hasatlas
-      val = fun(xi, yi, zi, qi);
-      if ~hasfreq && ~hastime,
-        fprintf('voxel %d, indices [%d %d %d], location [%.1f %.1f %.1f], value %f\n', sub2ind(dim, xi, yi, zi), ijk(1:3), xyz(1:3), val);
-      elseif hastime && hasfreq,
-        val = fun(xi, yi, zi, qi(1), qi(2));
-        fprintf('voxel %d, indices [%d %d %d %d %d], %s coordinates [%.1f %.1f %.1f %.1f %.1f], value %f\n', [sub2ind(dim(1:3), xi, yi, zi), ijk(1:3)', qi], cfg.inputcoord, [xyz(1:3)' data.freq(qi(1)) data.time(qi(2))], val);
-      elseif hastime,
-        fprintf('voxel %d, indices [%d %d %d %d], %s coordinates [%.1f %.1f %.1f %.1f], value %f\n', [sub2ind(dim(1:3), xi, yi, zi), ijk(1:3)', qi], cfg.inputcoord, [xyz(1:3)', data.time(qi(1))], val);
-      elseif hasfreq,
-        fprintf('voxel %d, indices [%d %d %d %d], %s coordinates [%.1f %.1f %.1f %.1f], value %f\n', [sub2ind(dim(1:3), xi, yi, zi), ijk(1:3)', qi], cfg.inputcoord, [xyz(1:3)', data.freq(qi)], val);
-      end
-    elseif hasfun && hasatlas
-      val = fun(xi, yi, zi, qi);
-      fprintf('voxel %d, indices [%d %d %d], %s coordinates [%.1f %.1f %.1f], value %f\n', sub2ind(dim, xi, yi, zi), ijk(1:3), cfg.inputcoord, xyz(1:3), val);
-    elseif ~hasfun && ~hasatlas
-      fprintf('voxel %d, indices [%d %d %d], location [%.1f %.1f %.1f]\n', sub2ind(dim, xi, yi, zi), ijk(1:3), xyz(1:3));
-    elseif ~hasfun && hasatlas
-      fprintf('voxel %d, indices [%d %d %d], %s coordinates [%.1f %.1f %.1f]\n', sub2ind(dim, xi, yi, zi), ijk(1:3), cfg.inputcoord, xyz(1:3));
+    
+    % construct a string with user feedback
+    str = sprintf('voxel %d, indices [%d %d %d]', sub2ind(dim(1:3), xi, yi, zi), ijk(1:3));
+
+    if isfield(data, 'coordsys') && isfield(data, 'unit')
+      str = sprintf('%s, %s coordinates [%.1f %.1f %.1f] %s', str, data.coordsys, xyz(1:3), data.unit);
+    elseif ~isfield(data, 'coordsys') && isfield(data, 'unit')
+      str = sprintf('%s, location [%.1f %.1f %.1f] %s', str, xyz(1:3), data.unit);
+    elseif isfield(data, 'coordsys') && ~isfield(data, 'unit')
+      str = sprintf('%s, %s coordinates [%.1f %.1f %.1f]', str, data.coordsys, xyz(1:3));
+    elseif ~isfield(data, 'coordsys') && ~isfield(data, 'unis')
+      str = sprintf('%s, location [%.1f %.1f %.1f]', str, xyz(1:3));
     end
+    
+    if hasfreq && hastime,
+      str = sprintf('%s, %.1f s, %.1f Hz', str, qi(1), qi(2));
+    elseif ~hasfreq && hastime,
+      str = sprintf('%s, %.1f s', str, qi(1));
+    elseif hasfreq && ~hastime,
+      str = sprintf('%s, %.1f Hz', str, qi(1));
+    end
+    
+    if hasfun
+      if ~hasfreq && ~hastime
+        val = fun(xi, yi, zi);
+      elseif ~hasfreq && hastime
+        val = fun(xi, yi, zi, qi);
+      elseif hasfreq && ~hastime
+        val = fun(xi, yi, zi, qi);
+      elseif hasfreq && hastime
+        val = fun(xi, yi, zi, qi(1), qi(2));
+      end
+      str = sprintf('%s, value %f', str, val);
+    end
+    
+    fprintf('%s\n', str);
 
     if hasatlas
       % determine the anatomical label of the current position
-      lab = atlas_lookup(atlas, (xyz(1:3)), 'inputcoord', cfg.inputcoord, 'queryrange', cfg.queryrange);
+      lab = atlas_lookup(atlas, (xyz(1:3)), 'inputcoord', data.coordsys, 'queryrange', cfg.queryrange);
       if isempty(lab)
         fprintf([f,' labels: not found\n']);
       else
