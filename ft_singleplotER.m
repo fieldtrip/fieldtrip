@@ -437,6 +437,7 @@ for i=1:ndata
     % make mask
     if ~isempty(cfg.maskparameter)
         datmask = varargin{1}.(cfg.maskparameter)(sellab,:);
+        datmask = datmask(xidmin(i):xidmax(i));
         maskdatavector = reshape(mean(datmask,1), [1 numel(xvector)]);
     else
         maskdatavector = [];
@@ -484,7 +485,7 @@ xlim([xmin xmax]);
 ylim([ymin ymax]);
 
 % adjust mask box extents to ymin/ymax
-ptchs = findobj('type','patch');
+ptchs = findobj(gcf,'type','patch');
 for i = 1:length(ptchs)
     YData = get(ptchs(i),'YData');
     YData(YData == min(YData)) = ymin;
