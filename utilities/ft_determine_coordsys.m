@@ -67,6 +67,7 @@ end
 haspos        = false;
 hastri        = false;
 hastransform  = false;
+hasfid        = false;
 
 % do some checks on the geometrical object
 switch dtype
@@ -81,6 +82,11 @@ switch dtype
     % contains pos
     haspos       = true;
     hastri       = false; % FIXME may need to be supported in the future
+  case 'headshape'
+    % contains pos
+    haspos       = true;
+    hastri       = isfield(data, 'tri');
+    hasfid       = isfield(data, 'fid');
   case {'freq', 'raw', 'timelock', 'spike', 'mvar', 'freqmvar'}
     % these may contain geometrical objects in grad or elec fields
     if isfield(data, 'grad')
@@ -178,6 +184,13 @@ if haspos && ~hastri
   shape.pnt = pos;
   ft_plot_headshape(shape);
   camlight
+end
+
+if hasfid
+  shape = [];
+  shape.pnt = zeros(0,3);
+  shape.fid = data.fid;
+  ft_plot_headshape(shape);
 end
 
 % plot 3 slices
