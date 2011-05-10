@@ -83,24 +83,6 @@ if strcmp(cfg.implementation, 'old'),
     end
   end
   
-  if isfield(cfg, 'method')
-    % call the appropriate subfunction
-    if (strcmp(cfg.method, 'zero-baseline') || ...
-        strcmp(cfg.method, 'nai')           || ...
-        strcmp(cfg.method, 'pseudo-t')      || ...
-        strcmp(cfg.method, 'difference')    || ...
-        strcmp(cfg.method, 'anova1')        || ...
-        strcmp(cfg.method, 'kruskalwallis'))
-      % these are all statistical methods that are implemented in the old SOURCESTATISTICS_PARAMETRIC subfunction
-      cfg.statistic = cfg.method;
-      cfg.method    = 'parametric';
-    elseif strcmp(cfg.method, 'randomization')
-      cfg.method = 'randomization';
-    elseif strcmp(cfg.method, 'randcluster')
-      cfg.method = 'randcluster';
-    end
-  end
-  
   if strcmp(cfg.method, 'parametric')
     % use the source-specific statistical subfunction
     stat = sourcestatistics_parametric(cfg, varargin{:});
