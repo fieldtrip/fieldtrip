@@ -309,6 +309,9 @@ elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'-Te
 elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'-FLL')) == 1
   type = 'yokogawa_fll';
   manufacturer = 'Yokogawa';
+elseif filetype_check_extension(filename, '.hsp')
+  type = 'yokogawa_hsp';
+  manufacturer = 'Yokogawa';
   
   % known 4D/BTI file types
 elseif filetype_check_extension(filename, '.pdf') && filetype_check_header(filename, 'E|lk') % I am not sure whether this header always applies

@@ -232,7 +232,6 @@ switch fileformat
     end
 
   case {'yokogawa_mrk', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw' }
-
     hdr = read_yokogawa_header(filename);
     marker = hdr.orig.matching_info.marker;
 
@@ -284,6 +283,57 @@ switch fileformat
     shape.fid.pnt(1:3,:)= shape.fid.pnt(sw_ind, :);
     shape.fid.label(1:3)= {'nas', 'lpa', 'rpa'};
 
+  case 'yokogawa_hsp'
+    fid = fopen(filename, 'rt');
+    
+    fidstart = false;
+    hspstart = false;
+    
+    % try to locate the fiducial positions
+    while ~fidstart && ~feof(fid)
+      line = fgetl(fid);
+      if ~isempty(strmatch('//Position of fiducials', line))
+        fidstart = true;
+      end
+    end
+    if fidstart
+      line_xpos = fgetl(fid);
+      line_ypos = fgetl(fid);
+      line_yneg = fgetl(fid);
+      xpos = sscanf(line_xpos(3:end), '%f');
+      ypos = sscanf(line_ypos(3:end), '%f');
+      yneg = sscanf(line_yneg(3:end), '%f');
+      shape.fid.pnt = [
+        xpos(:)'
+        ypos(:)'
+        yneg(:)'
+        ];
+      shape.fid.label = {
+        'X+'
+        'Y+'
+        'Y-'
+        };
+    end
+    
+    % try to locate the fiducial positions
+    while ~hspstart && ~feof(fid)
+      line = fgetl(fid);
+      if ~isempty(strmatch('//No of rows', line))
+        hspstart = true;
+      end
+    end
+    if hspstart
+      line = fgetl(fid);
+      siz = sscanf(line, '%f');
+      shape.pnt = zeros(siz(:)');
+      for i=1:siz(1)
+      line = fgetl(fid);
+      shape.pnt(i,:) = sscanf(line, '%f');
+      end
+    end
+    
+    fclose(fid);
+    
   case 'polhemus_fil'
     [shape.fid.pnt, shape.pnt, shape.fid.label] = read_polhemus_fil(filename, 0);
 

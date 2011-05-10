@@ -903,12 +903,12 @@ switch dataformat
 
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
     % the data can be read with two toolboxes, iether the one from Yokogawa or the one from Maryland
-    if ft_hastoolbox('sqdproject')
-      % chgannels are counted 0-based, samples are counted 1-based
+    if ft_hastoolbox('sqdproject', 3) % don't error if it cannot be added
+      % channels are counted 0-based, samples are counted 1-based
       [dat, info] = sqdread(filename, 'channels', chanindx-1, 'samples', [begsample endsample]);
       dat = dat';
     else
-      ft_hastoolbox('yokogawa', 1);
+      ft_hastoolbox('yokogawa', 1); % error if it cannot be added
       dat = read_yokogawa_data(filename, hdr, begsample, endsample, chanindx);
     end
     
