@@ -7,7 +7,6 @@ function data = fixtrialdef(data)
 % Copyright (C) 2009-2010, Robert Oostenveld and Jan-Mathijs Schoffelen
 
 if isfield(data, 'sampleinfo')
-  data.trl = [data.sampleinfo data.offset(:)];
   return;
 end
 

@@ -556,6 +556,10 @@ if isequal(hastrials, 'yes')
   end % if okflag
 end
 
+if isequal(hastrialdef, 'yes')
+  data = fixtrialdef(data);
+end
+
 if isequal(hasoffset, 'yes')
   okflag = isfield(data, 'offset');
 
@@ -580,10 +584,6 @@ if isequal(hasoffset, 'yes')
 elseif isequal(hasoffset, 'no') && isfield(data, 'offset')
   data = rmfield(data, 'offset');
 end % if hasoffset
-
-if isequal(hastrialdef, 'yes')
-  data = fixtrialdef(data);
-end % if hastrialdef
 
 if isequal(hasdim, 'yes') && ~isfield(data, 'dim')
   data.dim = pos2dim3d(data.pos);
