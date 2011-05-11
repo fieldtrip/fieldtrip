@@ -10,7 +10,7 @@ function [sens] = ft_transform_sens(transform, sens)
 %
 % See also FT_READ_SENS, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-% Copyright (C) 2008, Robert Oostenveld
+% Copyright (C) 2008-2011, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -30,7 +30,7 @@ function [sens] = ft_transform_sens(transform, sens)
 %
 % $Id$
 
-if any(transform(4,:) ~= [0 0 0 1])
+if ~all(size(transform)==4) || any(transform(4,:) ~= [0 0 0 1])
   error('invalid transformation matrix');
 end
 
@@ -57,6 +57,11 @@ elseif ft_senstype(sens, 'meg')
 
 else
   error('unsupported or unrecognized type of sensors');
+end
+
+if isfield(sens, 'fid') && isfield(sens.fid, 'pnt')
+  % also apply the translation, rotation and scaling to the fiducial points
+  sens.fid.pnt = apply(transform, sens.pnt);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
