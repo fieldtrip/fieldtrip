@@ -14,6 +14,7 @@ function ft_realtime_signalproxy(cfg)
 %   cfg.channel              = cell-array with channel names
 %   cfg.fsample              = sampling frequency
 %   cfg.speed                = relative speed at which data is written (default = 1)
+%   cfg.precision            = numeric representation, can be double, single, int32, int16 (default = 'double')
 %
 % The target to write the data to is configured as
 %   cfg.target.datafile      = string, target destination for the data (default = 'buffer://localhost:1972')
@@ -30,7 +31,7 @@ function ft_realtime_signalproxy(cfg)
 %
 % To stop this realtime function, you have to press Ctrl-C
 
-% Copyright (C) 2009, Robert Oostenveld
+% Copyright (C) 2009/2011, Robert Oostenveld
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
@@ -57,6 +58,7 @@ if ~isfield(cfg, 'lpfiltdir'),            cfg.lpfiltdir = 'twopass';            
 if ~isfield(cfg, 'hpfiltdir'),            cfg.hpfiltdir = 'twopass';                        end
 if ~isfield(cfg, 'bpfiltdir'),            cfg.bpfiltdir = 'twopass';                        end
 if ~isfield(cfg, 'debug'),                cfg.debug = 'no';                                 end
+if ~isfield(cfg, 'precision'),            cfg.precision = 'double';                         end
 
 % translate dataset into datafile+headerfile
 cfg.target = ft_checkconfig(cfg.target, 'dataset2files', 'yes');
@@ -94,6 +96,19 @@ while true
 
   % create a random data segment
   dat = randn(hdr.nChans, blocksmp);
+
+  switch cfg.precision
+    case 'double'
+      % keep the data as it is
+    case 'single'
+      dat = single(dat);
+    case 'int32'
+      dat = int32(dat);
+    case 'int16'
+      dat = int16(dat);
+    otherwise
+      error('unsupported value for cfg.precision');
+  end
 
   % wait for a realistic amount of time
   pause(((endsample-begsample+1)/hdr.Fs)/cfg.speed);
