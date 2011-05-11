@@ -71,6 +71,7 @@ keepleadfield  = keyval('keepleadfield', varargin); if isempty(keepleadfield), k
 lambda         = keyval('lambda',        varargin); if isempty(lambda  ),      lambda = 0;                   end
 projectnoise   = keyval('projectnoise',  varargin); if isempty(projectnoise),  projectnoise = 'yes';         end
 fixedori       = keyval('fixedori',      varargin); if isempty(fixedori),      fixedori = 'no';              end
+subspace       = keyval('subspace',      varargin); 
 
 % convert the yes/no arguments to the corresponding logical values
 keepcsd        = strcmp(keepcsd,       'yes');
@@ -191,12 +192,54 @@ else
 end
 
 if isfield(dip, 'subspace')
-  fprintf('using subspace projection\n');
-  % remember the original data prior to the voxel-dependant subspace projection
+  fprintf('using source-specific subspace projection\n');
+  % remember the original data prior to the voxel dependent subspace projection
+  dat_pre_subspace = dat;
   Cf_pre_subspace = Cf;
   if strcmp(submethod, 'dics_refchan')
     Cr_pre_subspace = Cr;
     Pr_pre_subspace = Pr;
+  end
+elseif ~isempty(subspace)
+  fprintf('using data-specific subspace projection\n');
+  % TODO implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
+  if numel(subspace)==1,
+    % interpret this as a truncation of the eigenvalue-spectrum
+    % if <1 it is a fraction of the largest eigenvalue
+    % if >=1 it is the number of largest eigenvalues
+    dat_pre_subspace = dat;
+    Cf_pre_subspace  = Cf;
+    [u, s, v] = svd(real(Cf));
+    if subspace<1,
+      sel      = find(diag(s)./s(1,1) > subspace);
+      subspace = max(sel);
+    end
+    
+    Cf       = s(1:subspace,1:subspace);
+    % this is equivalent to subspace*Cf*subspace' but behaves well numerically
+    % by construction.
+    invCf    = diag(1./diag(Cf));
+    subspace = u(:,1:subspace)';
+    dat      = subspace*dat;
+
+    if strcmp(submethod, 'dics_refchan')
+      Cr = subspace*Cr;
+    end
+    
+  else
+    Cf_pre_subspace  = Cf;
+    Cf    = subspace*Cf*subspace'; % here the subspace can be different from
+    % the singular vectors of Cy, so we have to do the sandwiching as opposed
+    % to line 216
+    if strcmp(realfilter, 'yes')
+      invCf = pinv(real(Cf));
+    else
+      invCf = pinv(Cf);
+    end
+  
+    if strcmp(submethod, 'dics_refchan')
+      Cr = subspace*Cr;
+    end
   end
 end
 
@@ -228,7 +271,23 @@ switch submethod
         lf = dip.subspace{i} * lf;
         % the cross-spectral density becomes voxel dependent due to the projection
         Cf    = dip.subspace{i} * Cf_pre_subspace * dip.subspace{i}';
-        invCf = pinv(dip.subspace{i} * (Cf_pre_subspace + lambda * eye(size(Cf))) * dip.subspace{i}');
+        if strcmp(realfilter, 'yes')
+          invCf = pinv(dip.subspace{i} * (real(Cf_pre_subspace) + lambda * eye(size(Cf_pre_subspace))) * dip.subspace{i}');
+        else
+          invCf = pinv(dip.subspace{i} * (Cf_pre_subspace + lambda * eye(size(Cf_pre_subspace))) * dip.subspace{i}');
+        end
+      elseif ~isempty(subspace)
+        % do subspace projection of the forward model only
+        lforig = lf;
+        lf     = subspace * lf;
+    
+        % according to Kensuke's paper, the eigenspace bf boils down to projecting
+        % the 'traditional' filter onto the subspace
+        % spanned by the first k eigenvectors [u,s,v] = svd(Cy); filt = ESES*filt; 
+        % ESES = u(:,1:k)*u(:,1:k)';
+        % however, even though it seems that the shape of the filter is identical to
+        % the shape it is obtained with the following code, the w*lf=I does not
+        % hold.
       end
       if fixedori 
         % compute the leadfield for the optimal dipole orientation
@@ -245,6 +304,7 @@ switch submethod
         lf  = lf * maxpowori;
         dipout.ori{i} = maxpowori;
         dipout.eta{i} = eta;
+        if ~isempty(subspace), lforig = lforig * maxpowori; end
       end
       if isfield(dip, 'filter')
         % use the provided filter
@@ -273,10 +333,18 @@ switch submethod
         end
       end
       if keepfilter
-        dipout.filter{i} = filt;
+        if ~isempty(subspace)
+          dipout.filter{i} = filt*subspace; %FIXME should this be subspace, or pinv(subspace)?
+        else
+          dipout.filter{i} = filt;
+        end
       end
       if keepleadfield
-        dipout.leadfield{i} = lf;
+        if ~isempty(subspace)
+          dipout.leadfield{i} = lforig;
+        else
+          dipout.leadfield{i} = lf;
+        end
       end
       ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
     end
@@ -296,11 +364,25 @@ switch submethod
       end
       if isfield(dip, 'subspace')
         % do subspace projection of the forward model
+        lforig = lf;
         lf = dip.subspace{i} * lf;
         % the cross-spectral density becomes voxel dependent due to the projection
         Cf    = dip.subspace{i} * Cf_pre_subspace * dip.subspace{i}';
         invCf = pinv(dip.subspace{i} * (Cf_pre_subspace + lambda * eye(size(Cf))) * dip.subspace{i}');
+      elseif ~isempty(subspace)
+        % do subspace projection of the forward model only
+        lforig = lf;
+        lf     = subspace * lf;
+    
+        % according to Kensuke's paper, the eigenspace bf boils down to projecting
+        % the 'traditional' filter onto the subspace
+        % spanned by the first k eigenvectors [u,s,v] = svd(Cy); filt = ESES*filt; 
+        % ESES = u(:,1:k)*u(:,1:k)';
+        % however, even though it seems that the shape of the filter is identical to
+        % the shape it is obtained with the following code, the w*lf=I does not
+        % hold.
       end
+      
       if fixedori
         % compute the leadfield for the optimal dipole orientation
         % subsequently the leadfield for only that dipole orientation will be used for the final filter computation
@@ -348,13 +430,17 @@ switch submethod
         dipout.filter{i} = filt;
       end
       if keepleadfield
-        dipout.leadfield{i} = lf;
+        if ~isempty(subspace)
+          dipout.leadfield{i} = lforig;
+        else
+          dipout.leadfield{i} = lf;
+        end
       end
       ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
     end
 
   case 'dics_refdip'
-    if isfield(dip, 'subspace')
+    if isfield(dip, 'subspace') || ~isempty(subspace)
       error('subspace projections are not supported for beaming cortico-cortical coherence');
     end
     if fixedori
