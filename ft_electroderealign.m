@@ -124,7 +124,7 @@ if ~isfield(cfg, 'label'),         cfg.label = 'off';        end % show labels
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducials', 'fiducial'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducial',  'fiducial'});
 cfg = ft_checkconfig(cfg, 'forbidden', 'outline');
-cfg = ft_checkconfig(cfg, 'renamedval',{'warp', 'rigidbody','homogenous'});
+cfg = ft_checkconfig(cfg, 'renamedval',{'warp', 'homogenous', 'rigidbody'});
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure
