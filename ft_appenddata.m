@@ -298,8 +298,9 @@ cfg.version.id = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.version.matlab = version();
+
 % remember the configuration details of the input data
-cfg.previous = [];
+cfg.previous = cell(1,length(varargin));
 for i=1:Ndata
   try, cfg.previous{i} = varargin{i}.cfg; end
 end
