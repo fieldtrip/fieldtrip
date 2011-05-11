@@ -120,11 +120,11 @@ sel = true(size(event));
 if ~isempty(cfg.trialdef.eventtype)
   sel = sel & ismember({event.type}, cfg.trialdef.eventtype);
 end
+
 if ~isempty(cfg.trialdef.eventvalue)
-  if iscell()
-    sel = sel & ismember({event.value}, cfg.trialdef.eventvalue);
-  else
-    sel = sel & ismember([event.value], cfg.trialdef.eventvalue);
+  % this cannot be done robustly in a single line of code
+  for i=1:numel(event)
+    sel(i) = sel(i) & ~isempty(intersect(event(i).value, cfg.trialdef.eventvalue));
   end
 end
 
