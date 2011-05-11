@@ -46,7 +46,19 @@ dointeractive = ft_getopt(varargin, 'interactive', 'yes');
 
 dtype = ft_datatype(data);
 data  = ft_convert_units(data);
-unit  = data.unit;
+unit  = data.unit
+
+% the high-level data structures are detected with ft_datatype, but there are
+% also some low-level data structures that need to be supproted here
+if strcmp(dtype, 'unknown')
+  if isfield(data, 'fid')
+    dtype = 'headshape';
+  elseif ~strcmp(ft_voltype(data), 'unknown')
+    dtype = 'headmodel';
+  elseif ~strcmp(ft_senstype(data), 'unknown')
+    dtype = 'sens';
+  end
+end
 
 % determine the size of the "unit" sphere in the origin and the length of the axes
 switch unit
@@ -61,66 +73,6 @@ switch unit
     rbol  = 0.005;
   otherwise
     error('unknown units (%s)', unit);
-end
-
-% the plotting style depends on the data content
-haspos        = false;
-hastri        = false;
-hastransform  = false;
-hasfid        = false;
-
-% do some checks on the geometrical object
-switch dtype
-  case 'volume'
-    % contains transform
-    hastransform = true;
-  case 'source'
-    % contains pos
-    haspos       = true;
-    hastri       = false; % FIXME may need to be supported in the future
-  case 'dip'
-    % contains pos
-    haspos       = true;
-    hastri       = false; % FIXME may need to be supported in the future
-  case 'headshape'
-    % contains pos
-    haspos       = true;
-    hastri       = isfield(data, 'tri');
-    hasfid       = isfield(data, 'fid');
-  case {'freq', 'raw', 'timelock', 'spike', 'mvar', 'freqmvar'}
-    % these may contain geometrical objects in grad or elec fields
-    if isfield(data, 'grad')
-      data = data.grad;
-      haspos = true;
-    elseif isfield(data, 'elec')
-      data = data.elec;
-      haspos = true;
-    end
-  case 'unknown'
-    % other geometrical objects typically contain geometric information in the bnd.pnt or pnt field
-    if isfield(data, 'bnd')
-      data = data.bnd;
-    end
-    if isfield(data, 'pnt')
-      haspos = true;
-    end
-    if isfield(data, 'tri')
-      hastri = true;
-    end
-end % switch dtype{k}
-
-if haspos && isfield(data, 'pos')
-  pos = data.pos;
-elseif haspos && isfield(data, 'pnt')
-  pos = data.pnt;
-elseif haspos && issubfield(data, 'bnd.pnt')
-  pos = data.bnd.pnt;
-end
-
-if hastri && isfield(data, 'tri')
-  tri = data.tri;
-elseif hastri && issubfield(data, 'bnd.tri')
-  tri = data.bnd.tri;
 end
 
 if isfield(data, 'coordsys') && ~isempty(data.coordsys)
@@ -171,41 +123,51 @@ else
   [labelx, labely, labelz] = xyz2label('unknown');
 end
 
-% plot the mesh
-if haspos && hastri
-  mesh.pnt = pos;
-  mesh.tri = tri;
-  ft_plot_mesh(mesh, 'edgecolor','none', 'facecolor', [0.6 0.8 0.6], 'facealpha', 0.6);
-  camlight;
-end
-
-% plot the points
-if haspos && ~hastri
-  shape.pnt = pos;
-  ft_plot_headshape(shape);
-  camlight
-end
-
-if hasfid
-  shape = [];
-  shape.pnt = zeros(0,3);
-  shape.fid = data.fid;
-  ft_plot_headshape(shape);
-end
-
-% plot 3 slices
-if hastransform
-  if isfield(data, 'anatomy')
-    funparam = 'anatomy';
-  elseif isfield(data, 'gray')
-    funparam = 'gray';
-  else
-    error('don''t know what volumetric parameter to plot');
-  end
-  ft_plot_ortho(data.(funparam), 'transform', data.transform, 'resolution', 1, 'style', 'intersect');
-  axis vis3d
-  view([110 36]);
-end
+% plot the geometrical object
+% the plotting style depends on the data content
+switch dtype
+  case 'volume'
+    if isfield(data, 'anatomy')
+      funparam = data.anatomy;
+    elseif isfield(data, 'gray')
+      funparam = data.gray;
+    else
+      error('don''t know which volumetric parameter to plot');
+    end
+    ft_plot_ortho(funparam, 'transform', data.transform, 'resolution', 1, 'style', 'intersect');
+    axis vis3d
+    view([110 36]);
+    
+  case 'source'
+    ft_plot_mesh(data, 'edgecolor','none', 'facecolor', [0.6 0.8 0.6], 'facealpha', 0.6);
+    camlight;
+    
+  case 'dip'
+    ft_plot_mesh(data, 'edgecolor','none', 'facecolor', 'none');
+    camlight;
+    
+  case 'headshape'
+    ft_plot_headshape(data);
+    camlight;
+    
+  case 'headmodel'
+    ft_plot_vol(data);
+    camlight;
+    
+  case 'sens'
+    ft_plot_sens(data);
+    camlight;
+    
+  case {'raw', 'timelock', 'freq', 'mvar', 'freqmvar', 'comp'}
+    % the data may contain a gradiometer or electrode definition
+    if isfield(data, 'grad')
+      ft_plot_sens(data.grad);
+    elseif isfield(data, 'elec')
+      ft_plot_sens(data.elec);
+    end
+    
+  case 'unknown'
+end % switch dtype{k}
 
 % get the xyz-axes
 xdat  = [-axmax 0 0; axmax 0 0];
