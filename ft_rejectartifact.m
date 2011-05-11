@@ -190,7 +190,14 @@ end
 
 if hasdata
   data = ft_checkdata(data, 'hastrialdef', 'yes', 'hasoffset', 'yes');
-  trl = cfg.trl; % ft_checkdata will have added the trl field
+  if isfield(data, 'sampleinfo')
+    trl = [data.sampleinfo data.offset(:)];
+    if isfield(data, 'trialinfo')
+      trl(:, 3+(1:size(data.trialinfo,2))) = data.trialinfo;
+    end
+  else
+    trl = [];
+  end
 elseif isfield(cfg, 'trl')
   trl = cfg.trl;
 end
