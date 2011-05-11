@@ -10,6 +10,7 @@ function hs = ft_plot_sens(sens, varargin)
 % Optional input arguments should come in key-value pairs and can include
 %   'style'    plotting style for the points representing the channels, see plot3 (default = 'k.')
 %   'coil'     true/false, plot each individual coil or the channelposition (default = false)
+%   'label'    show the label, can be 'off', 'label', 'number' (default = 'off')
 %
 % Example
 %   sens = ft_read_sens('Subject01.ds');
@@ -35,7 +36,7 @@ function hs = ft_plot_sens(sens, varargin)
 %
 % $Id$
 
-warning('on', 'MATLAB:divideByZero');
+ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'style', 'coil', 'label'});
@@ -91,4 +92,4 @@ if ~holdflag
   hold off
 end
 
-
+warning(ws); %revert to original state

@@ -1,7 +1,9 @@
 function hs = ft_plot_headshape(headshape,varargin)
 
-% FT_PLOT_HEADSHAPE visualizes the shape of a head generated from a variety of files 
-% (like CTF and Polhemus). The headshape and fiducials can for example be used for coregistration.
+% FT_PLOT_HEADSHAPE visualizes the shape of a head generated from a variety
+% of files that are usually obtained using a Polhemus tracker and some
+% proprietary software (e.g. from CTF, BTi or Yokogawa). The headshape and
+% fiducials can be used for coregistration.
 %
 % Use as
 %   hs = ft_plot_headshape(shape, varargin)
@@ -18,7 +20,7 @@ function hs = ft_plot_headshape(headshape,varargin)
 %
 % Example
 %  [shape] = ft_read_headshape(filename);
-%   ft_plot_headshape(shape)
+%  ft_plot_headshape(shape)
 
 % Copyright (C) 2009, Cristiano Micheli
 %
@@ -40,15 +42,21 @@ function hs = ft_plot_headshape(headshape,varargin)
 %
 % $Id$
 
-warning('on', 'MATLAB:divideByZero');
+ws = warning('on', 'MATLAB:divideByZero');
+
+if ~isstruct(headshape) && isnumeric(headshape) && size(headshape,2)==3
+  % the input seems like a list of points, convert into something that resembles a headshape
+  warning('off', 'MATLAB:warn_r14_stucture_assignment');
+  headshape.pnt = headshape;
+end
 
 % get the optional input arguments
 vertexcolor = keyval('vertexcolor', varargin); if isempty(vertexcolor), vertexcolor='r'; end
 facecolor   = keyval('facecolor',   varargin); if isempty(facecolor),   facecolor='none'; end
 edgecolor   = keyval('edgecolor',   varargin); if isempty(edgecolor),   edgecolor='none'; end
 fidcolor    = keyval('fidcolor',    varargin); if isempty(fidcolor), fidcolor='g'; end
-fidmarker   = keyval('fidmarker',   varargin); if isempty(fidmarker), fidmarker='.'; end
-fidlabel    = keyval('fidlabel',    varargin); if isempty(fidlabel), fidlabel='no'; end
+fidmarker   = keyval('fidmarker',   varargin); if isempty(fidmarker), fidmarker='*'; end
+fidlabel    = keyval('fidlabel',    varargin); if isempty(fidlabel), fidlabel='yes'; end
 transform   = keyval('transform',    varargin); if isempty(transform), transform=[]; end
 
 % start with empty return values
@@ -69,27 +77,28 @@ ft_plot_mesh(bnd, 'vertexcolor',vertexcolor,'vertexsize',10);
 if isfield(headshape, 'fid')
   fid = headshape.fid;
   if ~isempty(transform)
-    % plot the fiducials
-    fidc = fid.pnt;
-    try
-      fidc = warp_apply(transform, fidc);
-    end
-    hs = plot3(fidc(:,1), fidc(:,2), fidc(:,3), 'Marker',fidmarker,'MarkerEdgeColor',fidcolor);
-    % show the fiducial labels
-    if isfield(fid,'label') && istrue(fidlabel)
-      for node_indx=1:size(fidc,1)
-        str = sprintf('%s', fid.label{node_indx});
-        h   = text(fidc(node_indx, 1), fidc(node_indx, 2), fidc(node_indx, 3), str, ...
-                  'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle','Interpreter','none');
-        hs  = [hs; h];
-      end
-    end    
+    % spatially transform the fiducials
+    % FIXME what is the reason for this?
+    fid.pnt = warp_apply(transform, fid.pnt);
   end
-   
+  
+  % show the fiducial labels
+  for i=1:size(fid.pnt,1)
+    hs = plot3(fid.pnt(i,1), fid.pnt(i,2), fid.pnt(i,3), 'Marker',fidmarker,'MarkerEdgeColor',fidcolor);
+    if isfield(fid,'label') && istrue(fidlabel)
+      str = sprintf('%s', fid.label{i});
+      h   = text(fid.pnt(i, 1), fid.pnt(i, 2), fid.pnt(i, 3), str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle','Interpreter','none');
+      hs  = [hs; h];
+    end
+  end
 end
+
 if nargout==0
   clear hs
 end
 if ~holdflag
   hold off
 end
+
+warning(ws); %revert to original state
+

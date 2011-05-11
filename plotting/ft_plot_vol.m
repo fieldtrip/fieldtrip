@@ -40,7 +40,7 @@ function ft_plot_vol(vol, varargin)
 %
 % $Id$
 
-warning('on', 'MATLAB:divideByZero');
+ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 keyvalcheck(varargin, 'forbidden', {'faces', 'edges', 'vertices'});
@@ -87,7 +87,6 @@ switch ft_voltype(vol)
   otherwise
     error('unsupported voltype')
 end
-
  
 % plot the triangulated surfaces of the volume conduction model
 for i=1:length(bnd)
@@ -95,4 +94,7 @@ for i=1:length(bnd)
     'vertexsize',vertexsize,'facecolor',facecolor,'edgecolor',edgecolor, ...
     'vertexcolor',vertexcolor,'facealpha',facealpha);
 end
+
+warning(ws); %revert to original state
+
 
