@@ -281,22 +281,12 @@ end
 fprintf('%d trials marked as GOOD, %d trials marked as BAD\n', sum(trlsel), sum(~trlsel));
 fprintf('%d channels marked as GOOD, %d channels marked as BAD\n', sum(chansel), sum(~chansel));
 
-% trl is not specified in the function call, but the data is given ->
-% try to locate the trial definition (trl) in the nested configuration
-if isfield(data, 'sampleinfo')
-   trl  = [data.sampleinfo data.offset(:)];
-else
-  % a trial definition is expected in each continuous data set
-  trl  = [];
-  warning('could not locate the trial definition ''trl'' in the data structure');
-end
-
 % construct an artifact matrix from the trl matrix
-if ~isempty(trl)
+if ~isempty(data.trl)
   % remember the sample numbers (begin and end) of each trial and each artifact
   % updating the trl and creating a trlold makes it compatible with FT_REJECTARTIFACT
-  cfg.artifact = trl(~trlsel,1:2);
-  cfg.trl      = trl( trlsel,:);
+  cfg.artifact = data.trl(~trlsel,1:2);
+  cfg.trl      = data.trl( trlsel,:);
 else
   % since sample numbers are unknown, it is not possible to remember them here
   cfg.artifact = [];

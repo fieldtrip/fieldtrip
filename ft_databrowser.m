@@ -173,7 +173,7 @@ if hasdata
   Nchans  = length(chansel);
   
   % this is how the input data is segmented
-  trlorg = [data.sampleinfo data.offset];
+  trlorg = data.trl; % should have been added to the data by ft_checkdata
   Ntrials = size(trlorg, 1);
   
   if strcmp(cfg.viewmode, 'component')
