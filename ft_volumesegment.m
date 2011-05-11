@@ -37,6 +37,8 @@ function [segment] = ft_volumesegment(cfg, mri)
 %   cfg.threshold   = 'no' or a threshold value which is used to threshold
 %                     the data in order to create a volumetric mask (see below). 
 %   cfg.segment     = 'yes' (default) or 'no'
+%   cfg.downsample  = integer, amount of downsampling before segmentation
+%                     (default = 1; i.e., no downsampling)
 %
 % Example use:
 %
@@ -130,6 +132,7 @@ cfg = ft_checkconfig(cfg, 'renamed',  {'coordinates', 'coordsys'});
 % set the defaults
 cfg.segment          = ft_getopt(cfg, 'segment',          'yes');
 cfg.smooth           = ft_getopt(cfg, 'smooth',           'no');
+cfg.downsample       = ft_getopt(cfg, 'downsample',       1);
 cfg.spmversion       = ft_getopt(cfg, 'spmversion',       'spm8');
 cfg.write            = ft_getopt(cfg, 'write',            'no');
 cfg.threshold        = ft_getopt(cfg, 'threshold',        'no');
@@ -201,6 +204,14 @@ if isfield(mri, 'gray') && isfield(mri, 'white') && isfield(mri, 'csf'),
     fprintf('the input data already contains a segmentation of gray/white/csf matter, no segmentation will be performed\n');
     cfg.segment = 'no';
   end
+end
+
+% perform optional downsampling before segmentation
+if (cfg.downsample ~= 1)
+  downsampleCfg = [];
+  downsampleCfg.downsample = cfg.downsample;
+  downsampleCfg.smooth = 'no'; % smoothing is done in ft_volumesegment itself
+  mri = ft_volumedownsample(downsampleCfg, mri);
 end
 
 if strcmp(cfg.segment, 'yes')
