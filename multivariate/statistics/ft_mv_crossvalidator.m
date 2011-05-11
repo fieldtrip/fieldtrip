@@ -60,7 +60,7 @@ classdef ft_mv_crossvalidator
           if ismember(varargin{i},fieldnames(obj))
             obj.(varargin{i}) = varargin{i+1};
           else
-            error(sprintf('unrecognized fieldname %s',varargin{i}));
+            error('unrecognized fieldname %s',varargin{i});
           end
         end
         

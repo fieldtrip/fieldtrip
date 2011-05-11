@@ -59,7 +59,7 @@ classdef ft_mv_one_against_one < ft_mv_meta
         for j=(i+1):obj.nclasses
           
           if obj.verbose
-            fprintf('training class %d against class %d\n',i,j);
+            fprintf('training class %d against class %d (pair %d of %d)\n',i,j,idx,floor(0.5*obj.nclasses*(obj.nclasses-1)));
           end
           
           didx = (Y == i | Y == j);
