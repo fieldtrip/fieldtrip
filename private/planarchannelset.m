@@ -1,4 +1,4 @@
-function [planar] = planarchannelset(data);
+function [planar] = planarchannelset(data)
 
 % FUNCTION that defines the planar gradiometer channel combinations
 % The output cell-array contains the horizontal label, vertical label
@@ -772,9 +772,28 @@ switch lower(ft_senstype(data))
       planar{k,2} = sprintf('MAG_%03d_dV', k-1);
       planar{k,3} = sprintf('MAG_%03d',    k-1);
     end
+    
+  case 'yokogawa160_planar'
+    % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
+    % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad, ft_senslabel
+    planar = cell(160,3);
+    for k = 1:160
+      planar{k,1} = sprintf('AG%03d_dH', k);
+      planar{k,2} = sprintf('AG%03d_dV', k);
+      planar{k,3} = sprintf('AG%03d',    k);
+    end
+
+  case 'yokogawa64_planar'
+    % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
+    % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad, ft_senslabel
+    planar = cell(64,3);
+    for k = 1:64
+      planar{k,1} = sprintf('AG%03d_dH', k);
+      planar{k,2} = sprintf('AG%03d_dV', k);
+      planar{k,3} = sprintf('AG%03d',    k);
+    end
 
   otherwise
-
     % try to define the horizontal, vertical and combined channel based on the input data 
     islabel = isa(data, 'cell') && ~isempty(data) && isa(data{1}, 'char');
     if islabel
