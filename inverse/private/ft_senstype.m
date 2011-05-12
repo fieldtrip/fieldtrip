@@ -51,6 +51,7 @@ function [type] = ft_senstype(input, desired)
 % giving a data structure containing a grad or elec field, or giving a list
 % of channel names (as cell-arrray). I.e. assuming a FieldTrip data
 % structure, all of the following calls would be correct.
+%   ft_senstype(hdr)
 %   ft_senstype(data)
 %   ft_senstype(data.label)
 %   ft_senstype(data.grad)
@@ -183,8 +184,12 @@ elseif issubfield(input, 'orig.stname')
 
 elseif issubfield(input, 'orig.sys_name')
   % this is a complete header that was read from a Yokogawa dataset
-  type = 'yokogawa160';
-
+  if input.orig.channel_count<160
+    type = 'yokogawa64';
+  else
+    type = 'yokogawa160';
+  end
+  
 elseif issubfield(input, 'orig.FILE.Ext') && strcmp(input.orig.FILE.Ext, 'edf')
   % this is a complete header that was read from an EDF or EDF+ dataset
   type = 'electrode';
@@ -224,6 +229,10 @@ else
       type = 'yokogawa160';
     elseif (mean(ismember(ft_senslabel('yokogawa160_planar'), sens.label)) > 0.4)
       type = 'yokogawa160_planar';
+    elseif (mean(ismember(ft_senslabel('yokogawa64'),    sens.label)) > 0.4)
+      type = 'yokogawa64';
+    elseif (mean(ismember(ft_senslabel('yokogawa64_planar'), sens.label)) > 0.4)
+      type = 'yokogawa64_planar';
     elseif (mean(ismember(ft_senslabel('neuromag306'),   sens.label)) > 0.8)
       type = 'neuromag306';
     elseif (mean(ismember(ft_senslabel('neuromag306alt'),sens.label)) > 0.8)  % an alternative set without spaces in the name
@@ -296,6 +305,10 @@ else
       type = 'yokogawa160';
     elseif (mean(ismember(ft_senslabel('yokogawa160_planar'), sens.label)) > 0.4)
       type = 'yokogawa160_planar';
+    elseif (mean(ismember(ft_senslabel('yokogawa64'),    sens.label)) > 0.4)
+      type = 'yokogawa64';
+    elseif (mean(ismember(ft_senslabel('yokogawa64_planar'), sens.label)) > 0.4)
+      type = 'yokogawa64_planar';
     elseif any(mean(ismember(ft_senslabel('neuromag306'),   sens.label)) > 0.8)
       type = 'neuromag306';
     elseif any(mean(ismember(ft_senslabel('neuromag306alt'),sens.label)) > 0.8)  % an alternative set without spaces in the name

@@ -42,7 +42,9 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
 end
 
 switch ft_senstype(sens)
-  case {'ctf151', 'ctf275' 'bti148', 'bti248', 'itab153', 'yokogawa160'}
+  case {'ctf151', 'ctf275' 'bti148', 'bti248', 'itab153', 'yokogawa160', 'yokogawa64'}
+    % the following code is for all axial gradiometer systems
+    
     % remove the non-MEG channels altogether
     sel = ft_chantype(sens, 'meg');
     sens.label = sens.label(sel);
