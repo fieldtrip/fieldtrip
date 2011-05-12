@@ -72,7 +72,7 @@ switch ft_senstype(sens)
     pnt = sens.pnt(ind, :);
     ori = sens.ori(ind, :);
 
-  case {'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'itab153_planar', 'yokogawa160_planar'}
+  case {'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'itab153_planar', 'yokogawa160_planar', 'yokogawa64_planar'}
     % create a list with planar channel names
     chan = {};
     for i=1:length(sens.label)
