@@ -403,20 +403,28 @@ end
 if all(strcmp(type, 'unknown')) && ~recursion
   % try whether only lowercase channel labels makes a difference
   if islabel
+    recursion = true;
     type = ft_chantype(lower(input));
+    recursion = false;
   elseif isfield(input, 'label')
     input.label = lower(input.label);
+    recursion = true;
     type = ft_chantype(input);
+    recursion = false;
   end
 end
 
 if all(strcmp(type, 'unknown')) && ~recursion
   % try whether only uppercase channel labels makes a difference
   if islabel
+    recursion = true;
     type = ft_chantype(upper(input));
+    recursion = false;
   elseif isfield(input, 'label')
     input.label = upper(input.label);
+    recursion = true;
     type = ft_chantype(input);
+    recursion = false;
   end
 end  
 
