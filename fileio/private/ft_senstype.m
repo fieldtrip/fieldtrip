@@ -22,6 +22,8 @@ function [type] = ft_senstype(input, desired)
 %   'itab153_planar'
 %   'yokogawa160'
 %   'yokogawa160_planar'
+%   'yokogawa64'
+%   'yokogawa64_planar'
 %   'neuromag122'
 %   'neuromag306'
 %   'egi32'
@@ -393,7 +395,7 @@ if ~isempty(desired)
       type = any(strcmp(type, {'itab' 'itab153' 'itab153_planar'}));
     case 'meg_axial'
       % note that neuromag306 is mixed planar and axial
-      type = any(strcmp(type, {'magnetometer' 'neuromag306' 'ctf151' 'ctf275' 'bti148' 'bti248' 'yokogawa160'}));
+      type = any(strcmp(type, {'magnetometer' 'neuromag306' 'ctf151' 'ctf275' 'bti148' 'bti248' 'yokogawa160' 'yokogawa64'}));
     case 'meg_planar'
       % note that neuromag306 is mixed planar and axial
       type = any(strcmp(type, {'neuromag122' 'neuromag306' 'ctf151_planar' 'ctf275_planar' 'bti148_planar' 'bti248_planar' 'yokogawa160_planar', 'yokogawa64_planar'}));
