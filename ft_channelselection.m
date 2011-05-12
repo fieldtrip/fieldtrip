@@ -167,7 +167,7 @@ labeleeg   = [];
 
 switch ft_senstype(datachannel)
 
-  case {'yokogawa', 'yokogawa160', 'yokogawa160_planar'}
+  case {'yokogawa', 'yokogawa160', 'yokogawa160_planar', 'yokogawa64', 'yokogawa64_planar'}
     % Yokogawa axial gradiometers channels start with AG, hardware planar gradiometer 
     % channels start with PG, magnetometers start with M
     megax    = strncmp('AG', datachannel, length('AG'));
