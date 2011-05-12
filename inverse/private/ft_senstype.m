@@ -124,7 +124,7 @@ if ~isdata && ~isheader
   % timelock or freq structures don't have the header structure
   % the header is also removed from raw data after megrealign
   % the gradiometer definition is lost after megplanar+combineplanar
-  isdata = isa(input, 'struct') && (isfield(input, 'grad') || isfield(input, 'elec') || isfield(input, 'label'));
+  isdata = isa(input, 'struct') && (isfield(input, 'grad') || isfield(input, 'elec'));
 end
 
 % the input may be a data structure which then contains a grad/elec structure, a header or only the labels
@@ -380,7 +380,7 @@ if ~isempty(desired)
     case 'egi'
       type = any(strcmp(type, {'egi64' 'egi128' 'egi256'}));
     case 'meg'
-      type = any(strcmp(type, {'meg' 'magnetometer' 'ctf' 'bti' 'ctf151' 'ctf275' 'ctf151_planar' 'ctf275_planar' 'neuromag122' 'neuromag306' 'bti148' 'bti148_planar' 'bti248' 'bti248_planar' 'yokogawa160' 'yokogawa160_planar' 'itab' 'itab153' 'itab153_planar'}));
+      type = any(strcmp(type, {'meg' 'magnetometer' 'ctf' 'bti' 'ctf151' 'ctf275' 'ctf151_planar' 'ctf275_planar' 'neuromag122' 'neuromag306' 'bti148' 'bti148_planar' 'bti248' 'bti248_planar' 'yokogawa160' 'yokogawa160_planar' 'yokogawa64' 'yokogawa64_planar' 'itab' 'itab153' 'itab153_planar'}));
     case 'ctf'
       type = any(strcmp(type, {'ctf' 'ctf151' 'ctf275' 'ctf151_planar' 'ctf275_planar'}));
     case 'bti'
@@ -388,7 +388,7 @@ if ~isempty(desired)
     case 'neuromag'
       type = any(strcmp(type, {'neuromag122' 'neuromag306'}));
     case 'yokogawa'
-      type = any(strcmp(type, {'yokogawa160' 'yokogawa160_planar'}));
+      type = any(strcmp(type, {'yokogawa160' 'yokogawa160_planar' 'yokogawa64' 'yokogawa64_planar'}));
     case 'itab'
       type = any(strcmp(type, {'itab' 'itab153' 'itab153_planar'}));
     case 'meg_axial'
@@ -396,7 +396,7 @@ if ~isempty(desired)
       type = any(strcmp(type, {'magnetometer' 'neuromag306' 'ctf151' 'ctf275' 'bti148' 'bti248' 'yokogawa160'}));
     case 'meg_planar'
       % note that neuromag306 is mixed planar and axial
-      type = any(strcmp(type, {'neuromag122' 'neuromag306' 'ctf151_planar' 'ctf275_planar' 'bti148_planar' 'bti248_planar' 'yokogawa160_planar'}));
+      type = any(strcmp(type, {'neuromag122' 'neuromag306' 'ctf151_planar' 'ctf275_planar' 'bti148_planar' 'bti248_planar' 'yokogawa160_planar', 'yokogawa64_planar'}));
     otherwise
       type = any(strcmp(type, desired));
   end % switch desired
