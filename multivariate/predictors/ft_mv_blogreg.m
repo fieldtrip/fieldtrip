@@ -13,6 +13,17 @@ classdef ft_mv_blogreg < ft_mv_predictor
 % X1 = rand(10,5,10); X2 = X1 + 0.1*randn(size(X1));
 % Y1 = [1 1 1 1 1 2 2 2 2 2]'; Y2 = [1 1 1 1 2 1 2 2 2 2]';
 %
+% Sometimes we assume the input data is just a region of interest that is
+% specified by some mask. E.g.
+%
+% rand('seed',1); randn('seed',1);
+% mask = rand(5,10)>0.3;
+% X1m = rand(10,sum(mask(:))); X2m = X1m + 0.1*randn(size(X1m)); % create a subset of the data
+%
+% creates data X1 (and X2) whose columns stand for those elements in the
+% mask that are equal to one. The representation for the output stays the
+% same.
+%
 % In the examples use spy(f.prior) to look at the structure of the coupling 
 % matrix 
 %
@@ -41,10 +52,9 @@ classdef ft_mv_blogreg < ft_mv_predictor
 %
 % EXAMPLE:
 %
-% mask = rand(5,10)>0.3;
 % f = ft_mv_blogreg('indims',[5 10],'coupling',[100 100],'mask',mask);
-% f = f.train(X1,Y1);
-% f.test(X1)
+% f = f.train(X1m,Y1);
+% f.test(X1m)
 % 
 % Multitask learning (multitask = true) is implemented by augmenting the data matrix as
 % [ T1     0   ]
@@ -61,10 +71,9 @@ classdef ft_mv_blogreg < ft_mv_predictor
 %
 % EXAMPLE:
 %
-% mask = rand(5,10)>0.3;
 % f = ft_mv_blogreg('multitask',1,'indims',[5 10],'coupling',[100 100],'mask',mask);
-% f = f.train({X1 X2},{Y1 Y2});
-% f.test({X1 X2})
+% f = f.train({X1m X2m},{Y1 Y2});
+% f.test({X1m X2m})
 %
 % ft_mv_blogreg also supports a mixed effects model (mixed = true) 
 % of the form
@@ -89,10 +98,9 @@ classdef ft_mv_blogreg < ft_mv_predictor
 %
 % EXAMPLE:
 %
-% mask = rand(5,10)>0.3;
 % f = ft_mv_blogreg('mixed',1,'indims',[5 10],'coupling',[100 100],'mask',mask);
-% f = f.train({X1 X2}',{Y1 Y2}');
-% f.test({X1 X2}) 
+% f = f.train({X1m X2m}',{Y1 Y2}');
+% f.test({X1m X2m}) 
 %
 % If the input data is a cell-array of cell-arrays then we assume a mixed
 % effects model for multiple tasks. The output will have the same
@@ -109,10 +117,9 @@ classdef ft_mv_blogreg < ft_mv_predictor
 % If mixed = 1 then the only coupling  (spatial or multitask) will be for 
 % the fixed effects part. For mixed = 2, also the random effects will be coupled.
 % 
-% mask = rand(5,10)>0.3;
 % f = ft_mv_blogreg('mixed',1,'multitask',1,'coupling',[100 100],'indims',[5 10],'mask',mask);
-% f = f.train({ {X1 X2} {X1 X2} },{ {Y1 Y2} {Y1 Y2} });
-% f.test({{X1 X2} {X1 X2}}) 
+% f = f.train({ {X1m X2m} {X1m X2m} },{ {Y1 Y2} {Y1 Y2} });
+% f.test({{X1m X2m} {X1m X2m}}) 
 % 
 % NOTE: 
 %   a bias term is added to the model and should not be included explicitly

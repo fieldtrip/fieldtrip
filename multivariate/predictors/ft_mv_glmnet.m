@@ -1,7 +1,8 @@
 classdef ft_mv_glmnet < ft_mv_predictor
 % FT_MV_GLMNET wrapper class for Friedman's glmnet package
 %
-% data is standardized inside the algorithm
+% data is standardized inside the algorithm and bias term is handled
+% automatically.
 %
 % If obj.lambda is empty then a whole regularization path is estimated.
 % Optimal performance is computed using a crossvalidator.

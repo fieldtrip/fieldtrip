@@ -16,7 +16,10 @@ classdef ft_mv_one_against_one < ft_mv_meta
     combfun = [];     % by default sums probabilities; can be overridden
     parallel = false; % run train function in parallel mode?
 
-
+    % balance the data such that both classes are evenly represented during
+    % training (note that there may still be an imbalance during testing!)
+    balance = false;
+    
   end
   
   methods
@@ -62,7 +65,29 @@ classdef ft_mv_one_against_one < ft_mv_meta
             fprintf('training class %d against class %d (pair %d of %d)\n',i,j,idx,floor(0.5*obj.nclasses*(obj.nclasses-1)));
           end
           
-          didx = (Y == i | Y == j);
+          if obj.balance % balance the data between classes
+
+            didx1 = find(Y==i);
+            didx2 = find(Y==j);
+            
+            ntrials = min([numel(didx1) numel(didx2)]);
+            
+            prm = randperm(numel(didx1));
+            didx1 = didx1(prm(1:ntrials));
+            
+            prm = randperm(numel(didx2));
+            didx2 = didx2(prm(1:ntrials));
+            
+            didx = [didx1; didx2];
+            
+            if obj.verbose
+              fprintf('balancing data using %d trials per class\n',ntrials);
+            end
+            
+          else
+            
+            didx = (Y == i | Y == j);          
+          end
           
           design = Y(didx,:);
           design(design == i) = 1;
