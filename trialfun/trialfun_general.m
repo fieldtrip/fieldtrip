@@ -113,12 +113,11 @@ elseif ischar(cfg.trialdef.eventvalue)
   cfg.trialdef.eventvalue = {cfg.trialdef.eventvalue};
 end
 
-
 % select all events of the specified type and with the specified value
-sel = true(size(event));
-
 if ~isempty(cfg.trialdef.eventtype)
-  sel = sel & ismember({event.type}, cfg.trialdef.eventtype);
+  sel = ismember({event.type}, cfg.trialdef.eventtype);
+else
+  sel = true(size(event));
 end
 
 if ~isempty(cfg.trialdef.eventvalue)
