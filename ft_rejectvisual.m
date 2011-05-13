@@ -63,7 +63,7 @@ function [data] = ft_rejectvisual(cfg, data);
 % The following settings are usefull for identifying muscle artifacts:
 %   cfg.bpfilter    = 'yes'
 %   cfg.bpfreq      = [110 140]
-%   cfg.bpfiltord   = 10
+%   cfg.bpfiltord   =  8
 %   cfg.bpfilttype  = 'but'
 %   cfg.rectify     = 'yes'
 %   cfg.boxcar      = 0.2

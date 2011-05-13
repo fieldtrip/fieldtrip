@@ -20,7 +20,7 @@ function [cfg, artifact] = ft_artifact_muscle(cfg,data)
 % which are optimal for identifying muscle artifacts:
 %   cfg.artfctdef.muscle.bpfilter    = 'yes'
 %   cfg.artfctdef.muscle.bpfreq      = [110 140]
-%   cfg.artfctdef.muscle.bpfiltord   = 10
+%   cfg.artfctdef.muscle.bpfiltord   = 8
 %   cfg.artfctdef.muscle.bpfilttype  = 'but'
 %   cfg.artfctdef.muscle.hilbert     = 'yes'
 %   cfg.artfctdef.muscle.boxcar      = 0.2
@@ -122,7 +122,7 @@ if strcmp(cfg.artfctdef.muscle.method, 'zvalue')
   % settings for preprocessing
   if ~isfield(cfg.artfctdef.muscle,'bpfilter'),   cfg.artfctdef.muscle.bpfilter    = 'yes';     end
   if ~isfield(cfg.artfctdef.muscle,'bpfreq'),     cfg.artfctdef.muscle.bpfreq      = [110 140]; end
-  if ~isfield(cfg.artfctdef.muscle,'bpfiltord'),  cfg.artfctdef.muscle.bpfiltord   = 10;        end
+  if ~isfield(cfg.artfctdef.muscle,'bpfiltord'),  cfg.artfctdef.muscle.bpfiltord   = 8;         end
   if ~isfield(cfg.artfctdef.muscle,'bpfilttype'), cfg.artfctdef.muscle.bpfilttype  = 'but';     end
   if ~isfield(cfg.artfctdef.muscle,'hilbert'),    cfg.artfctdef.muscle.hilbert     = 'yes';     end
   if ~isfield(cfg.artfctdef.muscle,'boxcar'),     cfg.artfctdef.muscle.boxcar      = 0.2;       end
