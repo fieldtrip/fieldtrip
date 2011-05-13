@@ -35,7 +35,7 @@ if ~isfield(cfg, 'keeptapers'), cfg.keeptapers = 'yes';          end
 if ~isfield(cfg, 'feedback'),   cfg.feedback   = 'none';         end
 
 if strcmp(cfg.foi, 'all'),
-  cfg.foi = (0:1:data.fsampleorig./2);
+  cfg.foi = (0:1:data.fsampleorig/2);
 end
 
 cfg.channel    = ft_channelselection(cfg.channel,      data.label);
@@ -97,7 +97,7 @@ else
   freq.dimord = 'chan_chan_freq';
 end
 freq.transfer  = h;
-freq.itransfer = a;
+%freq.itransfer = a;
 freq.noisecov  = data.noisecov;
 freq.crsspctrm = crsspctrm;
 freq.dof       = data.dof;
@@ -115,7 +115,7 @@ ncmb  = nchan*nchan;
 nfoi  = length(foi);
 
 %---z-transform frequency axis
-zfoi  = exp(-2.*pi.*i.*(foi./fsample));
+zfoi  = exp(-2.*pi.*1i.*(foi./fsample));
 
 %---reorganize the ar-parameters
 ar  = reshape(ar, [ncmb size(ar,2)./nchan]);
