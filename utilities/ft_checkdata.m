@@ -586,7 +586,7 @@ elseif isequal(hasoffset, 'no') && isfield(data, 'offset')
 end % if hasoffset
 
 if isequal(hasdim, 'yes') && ~isfield(data, 'dim')
-  data.dim = pos2dim3d(data.pos);
+  data.dim = pos2dim(data.pos);
 elseif isequal(hasdim, 'no') && isfield(data, 'dim')
     data = rmfield(data, 'dim');
 end % if hasdim
@@ -1527,9 +1527,9 @@ if isfield(data, 'dimord')
   %i.e. slice by slice
   try,
     if isfield(data, 'dim'),
-      data.dim = pos2dim3d(data.pos, data.dim);
+      data.dim = pos2dim(data.pos, data.dim);
     else
-      data.dim = pos2dim3d(data);
+      data.dim = pos2dim(data);
     end
   catch
   end
