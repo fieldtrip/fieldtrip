@@ -216,8 +216,13 @@ if length(data)>1 && ~israw,
   % FIXME this works for source data, does this also work for volume data?
   for k = 1:length(param)
     tmp = cell(1,length(data));
-    for m = 1:length(tmp)
-      tmp{m} = data{m}.(param{k});
+    % try to get the numeric data 'param{k}' if present
+    try
+      for m = 1:length(tmp)
+        tmp{m} = data{m}.(param{k});
+      end
+    catch
+      continue;
     end
     if ~iscell(tmp{1}),
       % this is for the 'normal' case
@@ -323,9 +328,12 @@ if length(data)>1 && ~israw,
 	  tmpinside = [tmpinside; data{k}.inside(:)+tmpnvox];
 	  tmpnvox   = tmpnvox+numel(data{k}.inside)+numel(data{k}.outside);
 	  sortflag  = 0;
-        else
-          tmp       = [tmp       getsubfield(data{k}, dimtok{catdim})'];
+        elseif strcmp(dimtok{catdim}, 'time') || strcmp(dimtok{catdim}, 'freq')
+          tmp       = [tmp(:)' data{k}.(dimtok{catdim})];
           sortflag  = 1;
+        else 
+          tmp       = [tmp(:); data{k}.(dimtok{catdim})];
+          sortflag  = 0;
 	end
       end
     end
@@ -370,7 +378,11 @@ if length(data)>1 && ~israw,
     [srt, ind] = sort(tmp, 2);
     data{1}.(dimtok{catdim}) = tmp(ind);
     for k = 1:length(param)
-      tmp     = getsubfield(data{1}, param{k});
+      try
+        tmp     = data{1}.(param{k});
+      catch
+        continue;
+      end
       tmp     = permute(tmp, [catdim setdiff(1:length(size(tmp)), catdim)]);
       tmp     = ipermute(tmp(ind,:,:,:,:), [catdim setdiff(1:length(size(tmp)), catdim)]);
       data{1}.(param{k}) = tmp;
@@ -380,7 +392,8 @@ if length(data)>1 && ~israw,
   end
   % remove unspecified parameters
   if ~issource,
-    rmparam = setdiff(parameterselection('all',data{1}),[param 'pos' 'inside' 'outside' 'freq' 'time']);
+    %rmparam = setdiff(parameterselection('all',data{1}),[param 'pos' 'inside' 'outside' 'freq' 'time']);
+    rmparam = {};
   else
     rmparam = setdiff(fieldnames(data{1}), [param(:)' paramdimord(:)' 'pos' 'inside' 'outside' 'dim' 'cfg' 'vol' 'cumtapcnt' 'orilabel' 'time' 'freq']);
   end
