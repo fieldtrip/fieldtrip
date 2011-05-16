@@ -8,10 +8,16 @@
 #include <ConsoleInput.h>
 #include <StringServer.h>
 
-#define NUMCHANS    7
-#define FSAMPLE     256.0
-#define MAXBLOCK    20
+/**
+ThinkCap is a 7 channel dry-sensor EEG device. It is basically using
+similar communication protocol with the rest of the other NeuroSky
+devices.  They differ only in the number of channels available and
+sampling rate, i.e. Thinkcap: 7ch/250Hz; Mindset: 1ch/512Hz.
+*/
 
+#define NUMCHANS    7
+#define FSAMPLE     250.0
+#define MAXBLOCK    20
 
 unsigned char packet[170];
 
