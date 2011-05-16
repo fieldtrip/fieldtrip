@@ -4,7 +4,7 @@
 #include <StringServer.h>
 #include <GDF_BackgroundWriter.h>
 #include <SignalConfiguration.h>
-
+#include <assert.h>
 
 /** To is type of original data, e.g. as coming out of the AD-converter
     Ts is the data type used for streaming, e.g. float

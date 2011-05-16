@@ -209,7 +209,8 @@ int SignalConfiguration::parseFile(const char *filename) {
 	int lineCount = 0;
 	int errorCount = 0;
 	int addSave = 1, addStream = 1;
-	
+    int numTok = 0;
+
 	std::vector<TokenAndSep> TS;
 
 	chanSelSave.clear();
@@ -230,7 +231,7 @@ int SignalConfiguration::parseFile(const char *filename) {
 		
 		if (!tokenizeString(sizeof(line), line, TS)) goto reportError;
 		
-		int numTok = TS.size();
+		numTok = TS.size();
 		
 		if (numTok == 0) goto reportError;
 		if (TS[numTok-1].separator != 0) goto reportError;
