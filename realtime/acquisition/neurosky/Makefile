@@ -9,7 +9,7 @@ PLATFORM = $(shell gcc -dumpmachine)
 CPPDIR   = ../../buffer/cpp
 
 ifeq "$(PLATFORM)" "mingw32"
-   LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
+   LDFLAGS = ../../buffer/pthreads-win32/lib/pthreadGC2.dll ../../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
    INCPATH = -I../../buffer/src -I. -I$(CPPDIR) -I../../buffer/pthreads-win32/include
    SUFFIX = .exe
 else 
