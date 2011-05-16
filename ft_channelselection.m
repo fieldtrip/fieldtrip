@@ -141,15 +141,22 @@ labelspike  = datachannel(strncmp('spike', datachannel, length('spike')));
 labelreg = false(size(datachannel));
 findreg = [];
 for i=1:length(channel)
+  
+  if length(channel{i})>1 && channel{i}(1)=='-'
+    % skip channels to be excluded
+    continue;
+  end
   if length(channel{i})>1 && channel{i}(1)=='*'
     % the wildcard is at the start
     labelreg = labelreg | ~cellfun(@isempty, regexp(datachannel, ['.*' channel{i}(2:end) '$'], 'once'));
     findreg  = [findreg i];
-  elseif length(channel{i})>1 && channel{i}(end)=='*'
+  end
+  if length(channel{i})>1 && channel{i}(end)=='*'
     % the wildcard is at the end
     labelreg = labelreg | ~cellfun(@isempty, regexp(datachannel, ['^' channel{i}(1:end-1) '.*'], 'once'));
     findreg  = [findreg i];
-  elseif length(channel{i})>1 && any(channel{i}=='*')
+  end
+  if length(channel{i})>1 && ~channel{i}(1)=='*' && ~channel{i}(end)=='*' && any(channel{i}=='*') 
     % the wildcard is in the middle
     sel  = strfind(channel{i}, '*');
     str1 = channel{i}(1:(sel-1));
@@ -158,6 +165,7 @@ for i=1:length(channel)
     findreg  = [findreg i];
   end
 end
+findreg  = unique(findreg); % remove multiple occurances due to multiple wildcards
 labelreg = datachannel(labelreg);
 
 % initialize all the system-specific variables to empty
