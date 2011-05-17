@@ -62,7 +62,7 @@ for i=1:length(varargin)
 end
 
 % use a helper function to select the consistent parts of the data and to concatenate it
-source = ft_selectdata(varargin{:});
+source = ft_selectdata(varargin{:}, 'param',{'pow'});
 
 % add version information to the configuration
 cfg.version.name = mfilename('fullpath');
@@ -73,7 +73,7 @@ cfg.version.matlab = version();
 
 % remember the configuration details of the input data
 cfg.previous = cell(1,length(varargin));
-for i=1:Ndata
+for i=1:numel(varargin)
   try, cfg.previous{i} = varargin{i}.cfg; end
 end
 
