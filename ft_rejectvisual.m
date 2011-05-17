@@ -42,6 +42,10 @@ function [data] = ft_rejectvisual(cfg, data);
 %   cfg.eogscale    = number, scaling to apply to the EOG channels prior to display
 %   cfg.ecgscale    = number, scaling to apply to the ECG channels prior to display
 %   cfg.megscale    = number, scaling to apply to the MEG channels prior to display
+%   cfg.gradscale    = number, scaling to apply to the MEG gradiometer channels prior to display (in addition
+%                     to the cfg.megscale factor)
+%   cfg.magscale    = number, scaling to apply to the MEG magnetometer channels prior to display (in addition
+%                     to the cfg.megscale factor)
 %
 % The scaling to the EEG, EOG, ECG and MEG channels is optional and can
 % be used to bring the absolute numbers of the different channel types in
@@ -251,6 +255,20 @@ if ~isempty(cfg.megscale)
   chansel = match_str(tmpdata.label, ft_channelselection('MEG', tmpdata.label));
   for i=1:length(tmpdata.trial)
     tmpdata.trial{i}(chansel,:) = tmpdata.trial{i}(chansel,:) .* cfg.megscale;
+  end
+end
+if ~isempty(cfg.gradscale)
+  scaled = 1;
+  chansel = match_str(tmpdata.label, ft_channelselection('MEGGRAD', tmpdata.label));
+  for i=1:length(tmpdata.trial)
+    tmpdata.trial{i}(chansel,:) = tmpdata.trial{i}(chansel,:) .* cfg.gradscale;
+  end
+end
+if ~isempty(cfg.magscale)
+  scaled = 1;
+  chansel = match_str(tmpdata.label, ft_channelselection('MEGMAG', tmpdata.label));
+  for i=1:length(tmpdata.trial)
+    tmpdata.trial{i}(chansel,:) = tmpdata.trial{i}(chansel,:) .* cfg.magscale;
   end
 end
 
