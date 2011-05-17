@@ -1,4 +1,4 @@
-function ft_neighbourplot(cfg, data, neighbours)
+function ft_neighbourplot(cfg, data)
 
 % FT_NEIGHBOURPLOT visualizes neighbouring channels in a particular channel
 % configuration. The positions of the channel are specified in a
@@ -24,15 +24,6 @@ function ft_neighbourplot(cfg, data, neighbours)
 %   data.elec     = structure with EEG electrode positions
 %   data.grad     = structure with MEG gradiometer positions
 %
-% or as
-%   ft_neighbourplot(cfg, data, neighbours)
-%
-% where
-%   neighbours        = neighbour structure from ft_neighbourselection
-%
-%
-% Can alternatively be used as
-%   ft_neighbourplot(cfg, data)
 %
 % If cfg.neighbours is empty, the function calls ft_neighbourselection 
 % to compute channel neighbours. For any further information on this, 
@@ -118,6 +109,15 @@ axis off
 hold on;
 for i=1:length(neighbours)
     this = neighbours{i};
+    
+    if size(proj, 2) == 2
+        plot(proj(i, 1), proj(i, 2), 'k.', 'MarkerSize', .5*(2+numel(neighbours{i}.neighblabel)^2))
+    elseif size(proj, 2) == 3
+        plot3(proj(i, 1), proj(i, 2), proj(i, 3), 'k.', 'MarkerSize', .5*(2+numel(neighbours{i}.neighblabel)^2))
+    else
+        error('Channel coordinates are too high dimensional');
+    end
+    
     sel1 = match_str(sens.label, this.label);
     sel2 = match_str(sens.label, this.neighblabel);
     
@@ -138,15 +138,42 @@ for i=1:length(neighbours)
         end
     end
 end
+
+% this is for putting the channels on top of the connections
+set(gcf, 'UserData', []);
 for i=1:length(neighbours)
     if size(proj, 2) == 2
-        plot(proj(i, 1), proj(i, 2), 'k.', 'MarkerSize', .5*(2+numel(neighbours{i}.neighblabel)^2))
+        hs(i) = line(proj(i, 1), proj(i, 2),                                            ...     
+                        'MarkerEdgeColor',  'k',                                        ...
+                        'MarkerFaceColor',  'k',                                        ...
+                        'Marker',           'o',                                        ...
+                        'MarkerSize',       .25*(2+numel(neighbours{i}.neighblabel)^2), ...
+                        'UserData',         i,                                          ...
+                        'ButtonDownFcn',    @showLabelInTitle);
+                    
     elseif size(proj, 2) == 3
-        plot3(proj(i, 1), proj(i, 2), proj(i, 3), 'k.', 'MarkerSize', .5*(2+numel(neighbours{i}.neighblabel)^2))
+        hs(i) = line(proj(i, 1), proj(i, 2), proj(i, 3),                                ...
+                        'MarkerEdgeColor',  'k',                                        ...
+                        'MarkerFaceColor',  'k',                                        ...
+                        'Marker',           'o',                                        ...
+                        'MarkerSize',       .25*(2+numel(neighbours{i}.neighblabel)^2), ...
+                        'UserData',         i,                        ...
+                        'ButtonDownFcn',    @showLabelInTitle);
     else
         error('Channel coordinates are too high dimensional');
     end
 end
 hold off;
+title('[Click on a sensor to see its label]');
 
+    function showLabelInTitle(gcbo, EventData, handles)
+        lastSensId  = get(gcf,  'UserData');
+        curSensId   = get(gcbo, 'UserData');
+        
+        title(['Selected channel: ' neighbours{curSensId}.label]);
+        set(hs(curSensId), 'MarkerFaceColor', 'g');
+        set(hs(lastSensId), 'MarkerFaceColor', 'k');
+        
+        set(gcf, 'UserData', curSensId');
+    end
 end
