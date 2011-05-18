@@ -76,6 +76,9 @@ end;
 if strcmp(cfg.computeprob,'yes') & strcmp(cfg.computestat,'no')
     error('P-values can only be calculated if the test statistics are calculated.');
 end;
+if ~isfield(cfg,'uvar') || isempty(cfg.uvar)
+    error('uvar must be specified for dependent samples statistics');
+end
 
 % perform some checks on the design
 nuospercond=zeros(nconds,1);

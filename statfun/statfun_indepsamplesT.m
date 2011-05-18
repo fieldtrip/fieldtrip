@@ -54,6 +54,9 @@ if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
   % probabilities can only be calculated if the test statistics are calculated
   cfg.computestat = 'yes';
 end;
+if isfield(cfg,'uvar') && ~isempty(cfg.uvar)
+    error('cfg.uvar should not exist for an independent samples statistic');
+end
 
 % perform some checks on the design
 sel1 = find(design(cfg.ivar,:)==1);

@@ -59,6 +59,9 @@ if ~isfield(cfg, 'tail'),              cfg.tail=1;                end;
 if strcmp(cfg.computeprob,'yes') & strcmp(cfg.computestat,'no')
     error('P-values can only be calculated if the test statistics are calculated.');
 end;
+if isfield(cfg,'uvar') && ~isempty(cfg.uvar)
+    error('cfg.uvar should not exist for an independent samples statistic');
+end
 
 % perform some checks on the design
 selc1 = find(design(cfg.ivar,:)==1);
