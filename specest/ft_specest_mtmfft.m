@@ -86,7 +86,7 @@ switch taper
     if isempty(tap)
       error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',ndatsample/fsample,tapsmofrq,fsample/ndatsample);
     elseif size(tap,1) == 1
-      warning('using only one taper for specified smoothing');
+      warning_once('using only one taper for specified smoothing');
     end
         
   case 'sine'
