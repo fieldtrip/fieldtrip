@@ -225,7 +225,7 @@ reshapevec = [prod(siz(permutevec(1:end-1))) siz(rptdim)]; % reshape vector to r
 dat        = reshape(permute(dat, permutevec), reshapevec);% actually reshape the data
 
 reduceddim = setdiff(1:numel(siz), rptdim);
-cfg.dim    = siz(reduceddim);   % store dimensions of the output of the statistics function in the cfg
+cfg.dim    = [siz(reduceddim) 1];   % store dimensions of the output of the statistics function in the cfg
 cfg.dimord = '';
 for k = 1:numel(reduceddim)
   cfg.dimord = [cfg.dimord, '_', dimtok{reduceddim(k)}];
