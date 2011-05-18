@@ -803,7 +803,7 @@ classdef ft_mv_blogreg < ft_mv_predictor
           prior = blkdiag(pp{:});
           
           % add task coupling for multitask learning
-          if obj.taskcoupling
+          if obj.multitask
             
             blk = obj.ntasks*(nf+1)^2;
             didx = (1:(size(prior,1)+1):(size(prior,1)*(nf)));
@@ -856,7 +856,7 @@ classdef ft_mv_blogreg < ft_mv_predictor
           prior = blkdiag(pp{:});
           
           % add task coupling for multitask learning
-          if obj.taskcoupling
+          if obj.multitask
             
             nf2 = (nf+1)*(obj.nmixed+1)-1;
             

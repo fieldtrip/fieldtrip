@@ -4,8 +4,11 @@ classdef ft_mv_glmnet < ft_mv_predictor
 % data is standardized inside the algorithm and bias term is handled
 % automatically.
 %
-% If obj.lambda is empty then a whole regularization path is estimated.
-% Optimal performance is computed using a crossvalidator.
+% If obj.lambda is empty then a whole regularization path is estimated. 
+% Optimal performance can be computed using a crossvalidator.
+%
+% If obj.lambda is non-empty then the solution for obj.lambda(end) is returned.
+% Specifying a decreasing path is more stable than specifying one solution.
 %
 % 'family' can be 'gaussian' (linear regression), 'binomial' or 'multinomial' (logistic regression)
 %
@@ -35,7 +38,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
     weights
     alpha = 0.99
     nlambda = 100
-    lambda_min = 0
+    lambda_min = 0  % minimal lambda as fraction of lambda_max
     lambda = [];
     standardize = 1
     thresh = 1.0000e-04
@@ -188,10 +191,13 @@ classdef ft_mv_glmnet < ft_mv_predictor
         
         if obj.verbose, fprintf('determining lambda path\n'); end
         
-        dum = obj;
-        dum.validator = [];
-        dum = dum.train(X,Y);
-        obj.lambda = dum.lambda;
+        % explicit computation of lambda_path by glmnet
+%         dum = obj;
+%         dum.validator = [];
+%         dum = dum.train(X,Y);
+%         obj.lambda = dum.lambda;
+
+        obj.lambda = obj.lambda_path(X,Y);
         
         obj.validator.mva = obj;
         obj.validator.mva.validator = [];
@@ -316,22 +322,36 @@ classdef ft_mv_glmnet < ft_mv_predictor
         else
           
           try
+          
             res = glmnet(X,Y,obj.family,opts);
+
+            %  can't be used since the validator part requires the full
+            %  path!
+%             if strcmp(obj.family,'multinomial')
+%               for c=1:length(res.beta)
+%                 res.beta{c} = res.beta{c}(:,end);
+%               end
+%               res.a0 = res.a0(:,end);
+%             else
+%               res.beta = res.beta(:,end);
+%               res.a0 = res.a0(end);
+%             end
+            
           catch
-         
+            
             % probably returned the empty model
-           res.lambda = obj.lambda(1);
-           nclasses = max(Y);
-           if nclasses>2
-             res.beta = cell(1,nclasses);
-             for c=1:nclasses
-               res.beta{c} = zeros(size(X,2),1);
-               res.a0 = zeros(nclasses,1);
-             end
-           else
-             res.beta = zeros(size(X,2),1);
-             res.a0   = 0;
-           end
+            res.lambda = obj.lambda(1);
+            nclasses = max(Y);
+            if strcmp(obj.family,'multinomial')
+              res.beta = cell(1,nclasses);
+              for c=1:nclasses
+                res.beta{c} = zeros(size(X,2),1);
+                res.a0 = zeros(nclasses,1);
+              end
+            else
+              res.beta = zeros(size(X,2),1);
+              res.a0   = 0;
+            end
             
           end
           
@@ -437,5 +457,37 @@ classdef ft_mv_glmnet < ft_mv_predictor
       
     end
     
+    function p = lambda_path(obj,X,Y)
+      % compute lambda values that are used when computing the lambda path
+      % only valid for binomial and gaussian case
+      
+      sz = size(X);
+      
+      N = sz(1);
+      M = prod(sz(2:end));
+      
+      epsilon = obj.lambda_min;
+      if isempty(epsilon) || epsilon==0
+        if N > M
+          epsilon = 0.0001;
+        else
+          epsilon = 0.05;
+        end
+      end
+      
+      X = zscore(X);
+      Y = zscore(Y);
+    
+      lmax = -inf;
+      for j=1:size(X)
+        lmax = max(lmax, abs(sum(X(:,j).*Y)));
+      end
+      lmax = lmax / (obj.alpha*N);
+      
+      p = exp(linspace(log(lmax),log(epsilon*lmax),obj.nlambda));
+      
+    end
+    
   end
+  
 end
