@@ -463,6 +463,8 @@ classdef ft_mv_glmnet < ft_mv_predictor
       
       sz = size(X);
       
+      assert(numel(sz)==2);
+      
       N = sz(1);
       M = prod(sz(2:end));
       
@@ -479,7 +481,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
       Y = zscore(Y);
     
       lmax = -inf;
-      for j=1:size(X)
+      for j=1:sz(2)
         lmax = max(lmax, abs(sum(X(:,j).*Y)));
       end
       lmax = lmax / (obj.alpha*N);
