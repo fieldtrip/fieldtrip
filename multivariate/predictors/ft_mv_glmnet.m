@@ -480,11 +480,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
       X = zscore(X);
       Y = zscore(Y);
     
-      lmax = -inf;
-      for j=1:sz(2)
-        lmax = max(lmax, abs(sum(X(:,j).*Y)));
-      end
-      lmax = lmax / (obj.alpha*N);
+      lmax = max(abs(sum(bsxfun(@times,X,Y))))./(obj.alpha*N);
       
       p = exp(linspace(log(lmax),log(epsilon*lmax),obj.nlambda));
       
