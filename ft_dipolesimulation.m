@@ -32,6 +32,7 @@ function [simulated] = ft_dipolesimulation(cfg)
 % or by specifying a sine-wave signal
 %   cfg.dip.frequency    in Hz
 %   cfg.dip.phase        in radians
+%   cfg.dip.amplitude    per dipole
 %   cfg.ntrials          number of trials
 %   cfg.triallength      time in seconds
 %   cfg.fsample          sampling frequency in Hz
