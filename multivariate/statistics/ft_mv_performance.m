@@ -12,6 +12,7 @@ function res = ft_mv_performance(design,post,metric)
 % 'coefdet'
 % 'contingency'
 % 'cfmatrix'
+% 'bac'
 %
 %   Copyright (c) 2010, Marcel van Gerven
 %
