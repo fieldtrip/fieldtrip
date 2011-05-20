@@ -31,7 +31,7 @@ function bnd = ft_prepare_mesh(cfg, mri)
 %   cfg            = [];
 %   cfg.method     = 'manual';
 %   cfg.downsample = 2;
-%   bnd = prepare_mesh(cfg, mri);
+%   bnd = ft_prepare_mesh(cfg, mri);
 
 % Copyrights (C) 2009, Cristiano Micheli & Robert Oostenveld
 %
@@ -61,6 +61,7 @@ if ~isfield(cfg, 'tissue'),          cfg.tissue = [];            end
 if ~isfield(cfg, 'numvertices'),     cfg.numvertices = [];       end
 if ~isfield(cfg, 'inputfile'),       cfg.inputfile = [];         end
 if ~isfield(cfg, 'outputfile'),      cfg.outputfile = [];        end
+if ~isfield(cfg, 'interactive'),     cfg.interactive = 'no';     end
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested cmethodonfig-object back into a normal structure
@@ -82,7 +83,7 @@ end
 
 if ~isfield(cfg,'headshape') || isempty(cfg.headshape)
   basedonseg        = isfield(mri, 'transform') && any(isfield(mri, {'seg', 'csf', 'white', 'gray'}));
-  basedonmri        = isfield(mri, 'transform') && ~basedonseg;
+  basedonmri        = isfield(mri, 'transform') && ~basedonseg && any(isfield(mri, {'brain' 'scalp'}));
   basedonvol        = isfield(mri, 'bnd');
   basedonsphere     = isfield(mri,'r') && isfield(mri,'o');
   basedonheadshape  = 0;
@@ -104,13 +105,13 @@ if basedonseg || basedonmri
   mri = ft_volumedownsample(tmpcfg, mri);
 end
 
-if basedonseg
-  fprintf('using the segmentation approach\n');
-  bnd = prepare_mesh_segmentation(cfg, mri);
-  
-elseif basedonmri
+if strcmp(cfg.interactive, 'yes')
   fprintf('using the manual approach\n');
   bnd = prepare_mesh_manual(cfg, mri);
+  
+elseif basedonseg || basedonmri
+  fprintf('using the segmentation approach\n');
+  bnd = prepare_mesh_segmentation(cfg, mri);
   
 elseif basedonheadshape
   fprintf('using the head shape to construct a triangulated mesh\n');
