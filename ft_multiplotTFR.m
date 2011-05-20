@@ -510,8 +510,8 @@ end
 k = cellstrmatch('COMNT',lay.label);
 if ~isempty(k)
   comment = cfg.comment;
-  comment = sprintf('%0s\nxlim=[%.3g %.3g]', comment, xmin, xmax);
-  comment = sprintf('%0s\nylim=[%.3g %.3g]', comment, ymin, ymax);
+  comment = sprintf('%0s\nxlim=[%.3g %.3g]', comment, data.(cfg.xparam)(xmin), data.(cfg.xparam)(xmax));
+  comment = sprintf('%0s\nylim=[%.3g %.3g]', comment, data.(cfg.yparam)(ymin), data.(cfg.yparam)(ymax));
   comment = sprintf('%0s\nzlim=[%.3g %.3g]', comment, zmin, zmax);
   ft_plot_text(lay.pos(k,1), lay.pos(k,2), sprintf(comment), 'Fontsize', cfg.fontsize);
 end
