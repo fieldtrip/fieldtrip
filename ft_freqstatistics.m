@@ -65,6 +65,10 @@ function [stat] = ft_freqstatistics(cfg, varargin)
 
 ft_defaults
 
+% record start time and total processing time
+ftFuncTimer = tic();
+ftFuncClock = clock();
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',     {'approach',   'method'});
 cfg = ft_checkconfig(cfg, 'required',    {'method'});
@@ -313,6 +317,11 @@ cfg.version.id = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.version.matlab = version();
+  
+% add information about the function call to the configuration
+cfg.callinfo.proctime = toc(ftFuncTimer);
+cfg.callinfo.calltime = ftFuncClock;
+cfg.callinfo.user = getusername();
 
 % remember the configuration of the input data
 if exist('previous', 'var')

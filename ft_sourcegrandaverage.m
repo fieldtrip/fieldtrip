@@ -72,6 +72,10 @@ if 1,
 
   ft_defaults
 
+  % record start time and total processing time
+  ftFuncTimer = tic();
+  ftFuncClock = clock();
+
   cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
   % set the defaults
@@ -282,6 +286,11 @@ if 1,
   
   % add information about the Matlab version used to the configuration
   cfg.version.matlab = version();
+  
+  % add information about the function call to the configuration
+  cfg.callinfo.proctime = toc(ftFuncTimer);
+  cfg.callinfo.calltime = ftFuncClock;
+  cfg.callinfo.user = getusername();
 
   % remember the configuration details of the input data
   cfg.previous = [];
@@ -301,6 +310,10 @@ else
   % new implementation (with restricted functionality)
 
   ft_defaults
+
+% record start time and total processing time
+ftFuncTimer = tic();
+ftFuncClock = clock();
 
   cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
   cfg = ft_checkconfig(cfg, 'deprecated', {'concatenate', 'randomization', 'permutation', 'c1', 'c2'});
@@ -367,6 +380,11 @@ else
   
   % add information about the Matlab version used to the configuration
   cfg.version.matlab = version();
+  
+  % add information about the function call to the configuration
+  cfg.callinfo.proctime = toc(ftFuncTimer);
+  cfg.callinfo.calltime = ftFuncClock;
+  cfg.callinfo.user = getusername();
 
   % remember the configuration details of the input data
   cfg.previous = [];

@@ -192,7 +192,12 @@ end
 % add the version details of this function call to the configuration
 Cval.cfg.version.name   = mfilename('fullpath');
 Cval.cfg.version.id     = '$Id$';
-Cval.cfg.version.matlab = version(); % Matlab version used
+Cval.cfg.version.matlab = version();
+  
+% add information about the function call to the configuration
+cfg.callinfo.proctime = toc(ftFuncTimer);
+cfg.callinfo.calltime = ftFuncClock;
+cfg.callinfo.user = getusername(); % Matlab version used
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [minstat] = minimumstatistics(variable1, variable2)

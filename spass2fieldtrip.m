@@ -31,7 +31,11 @@ function [lfp, spike, stm, bhv] = spass2fieldtrip(dirname);
 %
 % $Log: spass2fieldtrip.m,v $
 % Revision 1.3  2008/09/22 20:17:44  roboos
-% added call to ft_defaults to the begin of the function
+% added call to ft_defaults
+
+% record start time and total processing time
+ftFuncTimer = tic();
+ftFuncClock = clock(); to the begin of the function
 %
 % Revision 1.2  2007/10/08 13:01:12  roboos
 % added glue to link spike timestamps and lfp continuous channels
@@ -42,6 +46,10 @@ function [lfp, spike, stm, bhv] = spass2fieldtrip(dirname);
 %
 
 ft_defaults
+
+% record start time and total processing time
+ftFuncTimer = tic();
+ftFuncClock = clock();
 
 fsample_ana = 1000;
 fsample_swa = 32000;
@@ -139,6 +147,11 @@ cfg.version.id   = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.version.matlab = version();
+  
+% add information about the function call to the configuration
+cfg.callinfo.proctime = toc(ftFuncTimer);
+cfg.callinfo.calltime = ftFuncClock;
+cfg.callinfo.user = getusername();
 
 % remember the exact configuration details in the output
 lfp.cfg   = cfg;

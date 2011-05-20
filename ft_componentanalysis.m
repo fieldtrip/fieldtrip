@@ -65,6 +65,10 @@ function [comp] = ft_componentanalysis(cfg, data)
 
 ft_defaults
 
+% record start time and total processing time
+ftFuncTimer = tic();
+ftFuncClock = clock();
+
 % set a timer to determine how long this function takes
 stopwatch=tic;
 
@@ -454,6 +458,11 @@ cfg.version.id   = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.version.matlab = version();
+  
+% add information about the function call to the configuration
+cfg.callinfo.proctime = toc(ftFuncTimer);
+cfg.callinfo.calltime = ftFuncClock;
+cfg.callinfo.user = getusername();
 
 % remember the configuration details of the input data
 if isfield(data, 'cfg'), cfg.previous = data.cfg; end

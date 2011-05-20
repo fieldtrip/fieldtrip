@@ -53,6 +53,10 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 
 ft_defaults
 
+% record start time and total processing time
+ftFuncTimer = tic();
+ftFuncClock = clock();
+
 % set defaults
 if ~isfield(cfg, 'component'), cfg.component = [];      end
 if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];           end
@@ -172,6 +176,11 @@ cfg.version.id = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.version.matlab = version();
+  
+% add information about the function call to the configuration
+cfg.callinfo.proctime = toc(ftFuncTimer);
+cfg.callinfo.calltime = ftFuncClock;
+cfg.callinfo.user = getusername();
 
 if ~hasdata 
   % remember the configuration details of the input data

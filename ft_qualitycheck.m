@@ -43,6 +43,10 @@ function [varargout] = ft_qualitycheck(cfg)
 
 ft_defaults
 
+% record start time and total processing time
+ftFuncTimer = tic();
+ftFuncClock = clock();
+
 % defaults
 if ~isfield(cfg,'analyze'),        cfg.analyze   = 'yes';                         end
 if ~isfield(cfg,'savemat'),        cfg.savemat   = 'yes';                         end
@@ -229,7 +233,12 @@ if strcmp(cfg.analyze,'yes')
     % add the version details of this function call to the configuration
     cfg.version.name   = mfilename('fullpath');
     cfg.version.id     = '$Id$';
-    cfg.version.matlab = version(); % Matlab version used
+    cfg.version.matlab = version();
+  
+% add information about the function call to the configuration
+cfg.callinfo.proctime = toc(ftFuncTimer);
+cfg.callinfo.calltime = ftFuncClock;
+cfg.callinfo.user = getusername(); % Matlab version used
     
     % add the cfg to the output variables
     timelock.cfg       = cfg;

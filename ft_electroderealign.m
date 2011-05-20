@@ -106,6 +106,10 @@ function [norm] = ft_electroderealign(cfg)
 
 ft_defaults
 
+% record start time and total processing time
+ftFuncTimer = tic();
+ftFuncClock = clock();
+
 %text output
 disp('Close the figure to output new sensor positions');
 
@@ -496,6 +500,11 @@ cfg.version.id = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.version.matlab = version();
+  
+% add information about the function call to the configuration
+cfg.callinfo.proctime = toc(ftFuncTimer);
+cfg.callinfo.calltime = ftFuncClock;
+cfg.callinfo.user = getusername();
 
 % remember the exact configuration details in the output
 norm.cfg = cfg;

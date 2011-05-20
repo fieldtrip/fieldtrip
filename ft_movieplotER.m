@@ -56,7 +56,11 @@ function ft_movieplotER(cfg, timelock)
 %
 % $Id$
 
-ft_defaults;
+ft_defaults
+
+% record start time and total processing time
+ftFuncTimer = tic();
+ftFuncClock = clock();;
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});
@@ -273,7 +277,12 @@ cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
 cfg.version.id   = '$Id$'; % this will be auto-updated by the revision control system
 
 % add information about the Matlab version used to the configuration
-cfg.version.matlab = version(); % this is helpful for debugging
+cfg.version.matlab = version();
+  
+% add information about the function call to the configuration
+cfg.callinfo.proctime = toc(ftFuncTimer);
+cfg.callinfo.calltime = ftFuncClock;
+cfg.callinfo.user = getusername(); % this is helpful for debugging
 
 if isfield(timelock, 'cfg')
   % remember the configuration details of the input data

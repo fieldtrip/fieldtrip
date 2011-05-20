@@ -90,6 +90,10 @@ function [interp] = ft_megplanar(cfg, data)
 
 ft_defaults
 
+% record start time and total processing time
+ftFuncTimer = tic();
+ftFuncClock = clock();
+
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set defaults
@@ -229,7 +233,6 @@ elseif strcmp(cfg.planarmethod, 'sourceproject')
   transform = lfnew * prunedinv(lfold, cfg.pruneratio);
   
   % interpolate the data towards the planar gradiometers
-  dataindx = match_str(data.label, axial.grad.label);
   for i=1:Ntrials
     fprintf('interpolating trial %d to planar gradiometer\n', i);
     interp.trial{i} = transform * data.trial{i}(dataindx,:);
@@ -283,6 +286,11 @@ cfg.version.id   = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.version.matlab = version();
+  
+% add information about the function call to the configuration
+cfg.callinfo.proctime = toc(ftFuncTimer);
+cfg.callinfo.calltime = ftFuncClock;
+cfg.callinfo.user = getusername();
 
 % remember the configuration details of the input data
 try cfg.previous = data.cfg; end

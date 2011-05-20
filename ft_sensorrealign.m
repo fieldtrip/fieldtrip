@@ -115,6 +115,10 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 
 ft_defaults
 
+% record start time and total processing time
+ftFuncTimer = tic();
+ftFuncClock = clock();
+
 % this is used for feedback of the lower-level functions
 global fb
 
@@ -566,6 +570,11 @@ cfg.version.id = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.version.matlab = version();
+  
+% add information about the function call to the configuration
+cfg.callinfo.proctime = toc(ftFuncTimer);
+cfg.callinfo.calltime = ftFuncClock;
+cfg.callinfo.user = getusername();
 
 % remember the exact configuration details in the output
 elec_realigned.cfg = cfg;

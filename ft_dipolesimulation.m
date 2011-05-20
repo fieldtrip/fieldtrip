@@ -79,6 +79,10 @@ function [simulated] = ft_dipolesimulation(cfg)
 
 ft_defaults
 
+% record start time and total processing time
+ftFuncTimer = tic();
+ftFuncClock = clock();
+
 % set the defaults
 if ~isfield(cfg, 'dip'),        cfg.dip = [];             end
 if ~isfield(cfg.dip, 'pos'),    cfg.dip.pos = [-5 0 15];  end
@@ -229,6 +233,11 @@ cfg.version.id   = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.version.matlab = version();
+  
+% add information about the function call to the configuration
+cfg.callinfo.proctime = toc(ftFuncTimer);
+cfg.callinfo.calltime = ftFuncClock;
+cfg.callinfo.user = getusername();
 
 % remember the configuration details of the input data
 try, cfg.previous = data.cfg; end
