@@ -229,6 +229,7 @@ elseif strcmp(cfg.planarmethod, 'sourceproject')
   transform = lfnew * prunedinv(lfold, cfg.pruneratio);
   
   % interpolate the data towards the planar gradiometers
+  dataindx = match_str(data.label, axial.grad.label);
   for i=1:Ntrials
     fprintf('interpolating trial %d to planar gradiometer\n', i);
     interp.trial{i} = transform * data.trial{i}(dataindx,:);
