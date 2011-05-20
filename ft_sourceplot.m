@@ -377,8 +377,13 @@ if hasfun && issubfield(data, 'dimord') && strcmp(data.dimord(end-2:end),'rgb')
   fcolmax = 1;
 elseif hasfun
   % determine scaling min and max (fcolmin fcolmax) and funcolormap
-  funmin = min(fun(:));
-  funmax = max(fun(:));
+  if ~isa(fun, 'logical')
+    funmin = min(fun(:));
+    funmax = max(fun(:));
+  else
+    funmin = 0;
+    funmax = 1;
+  end
   % smart lims: make from auto other string
   if isequal(cfg.funcolorlim,'auto')
     if sign(funmin)>-1 && sign(funmax)>-1
