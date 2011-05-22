@@ -105,9 +105,9 @@ classdef ft_mv_glmnet < ft_mv_predictor
         
         if obj.lambda == 0 && strcmp(obj.family,'gaussian')
         
-        obj.weights = regress(Y,[X ones(size(X,1),1)]); % X \ Y
-       
-        return
+          obj.weights = regress(Y,[X ones(size(X,1),1)]); % X \ Y
+          
+          return
         
         elseif obj.alpha == 0 && strcmp(obj.family,'gaussian')
           
@@ -197,7 +197,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
 %         dum = dum.train(X,Y);
 %         obj.lambda = dum.lambda;
 
-        obj.lambda = obj.lambda_path(X,Y);
+        obj.lambda = obj.lambda_path(X,Y)';
         
         obj.validator.mva = obj;
         obj.validator.mva.validator = [];
