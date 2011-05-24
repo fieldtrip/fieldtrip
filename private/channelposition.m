@@ -60,7 +60,7 @@ switch ft_senstype(sens)
     dist = sqrt(sum((sens.pnt - repmat(mean(sens.pnt), size(sens.pnt, 1), 1)).^2, 2));
 
     % put the corresponding distances instead of non-zero tra entries
-    dist = (abs(sens.tra)>0.5).*repmat(dist', size(sens.tra, 1), 1);
+    dist = (abs(sens.tra)>0.4).*repmat(dist', size(sens.tra, 1), 1);
 
     % put nans instead of the zero entries
     dist(~dist) = inf;
