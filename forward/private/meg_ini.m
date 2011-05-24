@@ -108,8 +108,10 @@ b=dotproduct(n1rep,bt);
 
 
 ctc=gradbas'*gradbas;
-coeffs=inv(ctc)*gradbas'*b;
 
+warning('OFF', 'MATLAB:nearlySingularMatrix');
+coeffs=inv(ctc)*gradbas'*b;
+warning('ON', 'MATLAB:nearlySingularMatrix');
 
 
 return
