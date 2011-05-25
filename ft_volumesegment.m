@@ -1,9 +1,9 @@
 function [segment] = ft_volumesegment(cfg, mri)
 
-% FT_VOLUMESEGMENT segments an anatomical MRI into gray matter, white matter,
-% and cerebro-spinal fluid compartments. It can also be used to create a
-% binary mask, either of the segmented volumes, or of the 'raw' anatomical
-% data.
+% FT_VOLUMESEGMENT segments an anatomical MRI. The behaviour depends on the
+% output requested. It can return probabilistic tissue maps of
+% gray/white/csf compartments, a skull-stripped anatomy, or binary masks
+% representing the brain surface, skull, or scalp surface.
 %
 % This function uses the SPM8 toolbox, see http://www.fil.ion.ucl.ac.uk/spm/
 %
@@ -14,7 +14,7 @@ function [segment] = ft_volumesegment(cfg, mri)
 % anatomical MRI structure. Instead of an MRI structure, you can also
 % specify a string with a filename of an MRI file. You can also provide an
 % already segmented volume in the input for the purpose of creating a
-% binary mask of the inner surface of the skull.
+% binary mask.
 %
 % The configuration options are
 %   cfg.output      = 'tpm' (default), 'brain', 'skull', 'skullstrip', 'scalp', or any
@@ -35,13 +35,21 @@ function [segment] = ft_volumesegment(cfg, mri)
 %                     c2, for the white matter segmentation
 %                     c3, for the csf segmentation
 %                   
-%   cfg.smooth      = the FWHM of the gaussian kernel in voxels, default depends on
-%                       the requested output
-%   cfg.threshold   = relative threshold value which is used to threshold
-%                       the data in order to create a volumetric mask (see below).
+%   cfg.smooth      = 'no', or scalar, the FWHM of the gaussian kernel in
+%                       voxels, default depends on the requested output
+%   cfg.threshold   = 'no', or scalar, relative threshold value which is
+%                       used to threshold the data in order to create a
+%                       volumetric mask (see below).
 %                       the default depends on the requested output 
 %   cfg.downsample  = integer, amount of downsampling before segmentation
-%                     (default = 1; i.e., no downsampling)
+%                       (default = 1; i.e., no downsampling)
+%   cfg.coordsys    = string, specifying the coordinate system in which the
+%                       anatomical data is defined. This will be used if
+%                       the input mri does not contain a coordsys-field.
+%                       (default = '', which results in the user being
+%                       forced to evaluate the coordinate system)
+%   cfg.units       = the physical units in which the output will be
+%                       expressed. (default = 'mm')
 %
 % Example use:
 %
@@ -58,10 +66,16 @@ function [segment] = ft_volumesegment(cfg, mri)
 %   segment    = ft_volumesegment(cfg, mri) will produce a volume with 3 binary
 %                  masks, representing the brain surface, scalp surface, and skull
 %
-% For the segmentation to work, the coordinate frame of the input MRI has to
-% be approximately aligned to the template. For this, a homogeneous
-% transformation matrix is used, which makes the assumption that the
-% template mri is defined in SPM/MNI-coordinates:
+% For the SPM-based segmentation to work, the coordinate frame of the input
+% MRI needs to be approximately coregistered to the templates of the
+% probabilistic tissue maps. The templates are defined in SPM/MNI-space.
+% FieldTrip attempts to do an automatic alignment based on the
+% coordsys-field in the mri, and if this is not present, based on the
+% coordsys-field in the cfg. If none of them is specified the
+% FT_DETERMINE_COORDSYS function is used to interactively assess the
+% coordinate system in which the MRI is expressed.
+%
+% The template mri is defined in SPM/MNI-coordinates:
 %   x-axis pointing to the right ear
 %   y-axis along the acpc-line
 %   z-axis pointing to the top of the head
@@ -71,19 +85,9 @@ function [segment] = ft_volumesegment(cfg, mri)
 % 
 % If the input mri is a string pointing to a CTF *.mri file, the
 % x-axis is assumed to point to the nose, and the origin is assumed
-% to be on the interauricular line.
-%
-% If the input mri is a string pointing to another fileformat, or a
-% structure containing an anatomical MRI in Matlab memory, the user will
-% be asked about the axis-definition and the origin of the coordinate system.
-%
-% As a second step, the segmentation is performed, using the
-% default parameters from SPM. The output volume is in the original
-% coordinate-frame.
-% 
-% As a third and optional step, you can perform a smoothing of the segmented
-% volumes.
-%
+% to be on the interauricular line. In this specific case, when ft_read_mri
+% is used to read in the mri, the coordsys field is automatically attached.
+%%
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
 %   cfg.inputfile   =  ...
@@ -93,7 +97,7 @@ function [segment] = ft_volumesegment(cfg, mri)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_READ_MRI
+% See also FT_READ_MRI FT_DETERMINE_COORDSYS
 
 % undocumented options
 %   cfg.keepintermediate = 'yes' or 'no'
