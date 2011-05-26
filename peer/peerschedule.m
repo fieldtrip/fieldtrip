@@ -33,8 +33,10 @@ penalty = mempenalty + timpenalty;
 
 % the following is specific to the Donders Centre "mentat" linux cluster
 if ~isempty(regexp(getenv('HOSTNAME'), 'mentat'))
+  % identify the big nodes in the mentat cluster
   mentat005 = find(~cellfun(@isempty, regexp({list.hostname}, 'mentat005')));
   mentat006 = find(~cellfun(@isempty, regexp({list.hostname}, 'mentat006')));
+  mentat007 = find(~cellfun(@isempty, regexp({list.hostname}, 'mentat007')));
   % this should be the preferred machine, even if jobs are 60 minutes longer or 4GB larger
   penalty(mentat005) = penalty(mentat005) - 4;
   % this should be the preferred machine, even if jobs are 90 minutes longer or 6GB larger
