@@ -185,7 +185,7 @@ cfg.channel = ft_channelselection(cfg.channel, chan);
 
 previous = cell(1,Ndata);
 for i=1:Ndata
-  varargin{i} = ft_selectdata(varargin{i}, 'channel',          chan, 'avgoverchan', cfg.avgoverchan);
+  varargin{i} = ft_selectdata(varargin{i}, 'channel', cfg.channel,   'avgoverchan', cfg.avgoverchan);
   varargin{i} = ft_selectdata(varargin{i}, 'foilim',  cfg.frequency, 'avgoverfreq', cfg.avgoverfreq);
   if hastime,
     varargin{i} = ft_selectdata(varargin{i}, 'toilim', cfg.latency, 'avgovertime', cfg.avgovertime);
