@@ -59,7 +59,9 @@ function [segment] = ft_volumesegment(cfg, mri)
 %
 %   cfg.output = 'skullstrip';
 %   segment    = ft_volumesegment(cfg, mri) will generate a skullstripped anatomy
-%                  based
+%                  based on a brainmask generated from the probabilistic
+%                  tissue maps. The skull-stripped anatomy is be stored in
+%                  the field segment.anatomy.
 %
 %
 %   cfg.output = {'brain' 'scalp' 'skull'};
@@ -87,7 +89,7 @@ function [segment] = ft_volumesegment(cfg, mri)
 % x-axis is assumed to point to the nose, and the origin is assumed
 % to be on the interauricular line. In this specific case, when ft_read_mri
 % is used to read in the mri, the coordsys field is automatically attached.
-%%
+%
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
 %   cfg.inputfile   =  ...
@@ -214,7 +216,7 @@ hastpm     = isfield(mri, 'gray') && isfield(mri, 'white') && isfield(mri, 'csf'
 
 if needtpm && ~hastpm
   % spm needs to be used for the creation of the tissue probability maps  
-  dotpm   = 1;
+  dotpm = 1;
 else
   dotpm = 0;
 end
@@ -412,7 +414,6 @@ if dotpm
     segment.dim  = size(segment.gray);
   end
 
-  hastpm = 1;
 else
   % rename the data
   segment = mri;
@@ -422,50 +423,57 @@ end
 % now the data contains the tissue probability maps
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-dosmooth = isnumeric(cfg.smooth);
-dothresh = isnumeric(cfg.threshold);
-
 % create the requested output fields
 removefields = {'anatomy' 'csf' 'gray' 'white'};
 for k = 1:numel(cfg.output)
+  dosmooth = isfinite(cfg.smooth(k));
+  dothresh = isfinite(cfg.threshold(k));
   switch cfg.output{k}
     case 'tpm'
       % do nothing
-      if dosmooth, warning_once('You requested the tpms to be smoothed. This is not possible because does not make sense');      end
-      if dothresh, warning_once('You requested the tpms to be thresholded. This is not possible because it does not make sense');end
+      if dosmooth, warning_once('You requested the tpms to be smoothed, which is not possible because does not make sense');      end
+      if dothresh, warning_once('You requested the tpms to be thresholded, which is not possible because it does not make sense');end
       removefields = intersect(removefields, {'anatomy'});
 
     case 'skullstrip'
       % create brain surface from tissue probability maps
+      fprintf('creating brainmask\n');
       brain = segment.gray + segment.white + segment.csf;
-      if dosmooth, brain = dosmoothing(brain,  cfg.smooth(k)); end
-      if dothresh, brain = threshold(brain, cfg.threshold(k)); end
+      if dosmooth, brain = dosmoothing(brain,  cfg.smooth(k), 'brainmask'); end
+      if dothresh, brain = threshold(brain, cfg.threshold(k), 'brainmask'); end
+      
+      fprintf('creating skullstripped anatomy\n');
+      brain = cast(brain, class(segment.anatomy));
       segment.anatomy = segment.anatomy.*brain;
-      removefields  = intersect(removefields, {'gray' 'white' 'csf'});
+      removefields    = intersect(removefields, {'gray' 'white' 'csf'});
         
     case 'brain'
       % create brain surface from tissue probability maps
+      fprintf('creating brainmask\n');
       brain = segment.gray + segment.white + segment.csf;
-      if dosmooth, brain = dosmoothing(brain,  cfg.smooth(k)); end
-      if dothresh, brain = threshold(brain, cfg.threshold(k)); end
+      if dosmooth, brain = dosmoothing(brain,  cfg.smooth(k), 'brainmask'); end
+      if dothresh, brain = threshold(brain, cfg.threshold(k), 'brainmask'); end
       segment.brain = brain>0;
       removefields  = intersect(removefields, {'gray' 'white' 'csf' 'anatomy'});
       
     case 'skull'
       % create brain surface from tissue probability maps
+      fprintf('creating brainmask\n');
       brain = segment.gray + segment.white + segment.csf;
-      if dosmooth, brain = dosmoothing(brain,  cfg.smooth(k)); end
-      if dothresh, brain = threshold(brain, cfg.threshold(k)); end
+      if dosmooth, brain = dosmoothing(brain,  cfg.smooth(k), 'brainmask'); end
+      if dothresh, brain = threshold(brain, cfg.threshold(k), 'brainmask'); end
       
       % create skull from brain mask FIXME check this (e.g. strel_bol) 
+      fprintf('creating skullmask\n');
       braindil      = imdilate(brain>0, strel_bol(6));
       segment.skull = braindil & ~brain;
       removefields  = intersect(removefields, {'gray' 'white' 'csf' 'anatomy'});
  
     case 'scalp'
       % create scalp surface from anatomy
-      if dosmooth, segment.scalp = dosmoothing(segment.anatomy, cfg.smooth(k)); end
-      if dothresh, segment.scalp = threshold(segment.scalp,  cfg.threshold(k)); end
+      fprintf('creating scalpmask\n');
+      if dosmooth, segment.scalp = dosmoothing(segment.anatomy, cfg.smooth(k), 'anatomy'); end
+      if dothresh, segment.scalp = threshold(segment.scalp,  cfg.threshold(k), 'anatomy'); end
       segment.scalp = segment.scalp>0;
       removefields  = intersect(removefields, {'gray' 'white' 'csf' 'anatomy'});
     
@@ -507,16 +515,16 @@ if ~isempty(cfg.outputfile)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [output] = dosmoothing(input, fwhm)
+function [output] = dosmoothing(input, fwhm, str)
 
-fprintf('smoothing with a %d-voxel FWHM kernel\n', fwhm);
+fprintf('smoothing %s with a %d-voxel FWHM kernel\n', str, fwhm);
 spm_smooth(input, input, fwhm);
 output = input;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [output] = threshold(input, thresh)
+function [output] = threshold(input, thresh, str)
   
-fprintf('thresholding the data at a relative threshold of %0.3f\n', thresh);
+fprintf('thresholding %s at a relative threshold of %0.3f\n', str, thresh);
     
 % mask by taking the negative of the brain, thus ensuring
 % that no holes are within the compartment and do a two-pass 
