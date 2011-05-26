@@ -146,7 +146,8 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		char argument[STRLEN];
 		char *ptr;
 		int i, j, n, rc, t, found, handshake, success, count, server, status;
-		UINT64_T peerid, jobid, memreq, cpureq, timreq;
+		UINT32_T peerid, jobid;
+		UINT64_T memreq, cpureq, timreq;
 
 		jobdef_t    *def;
 		joblist_t   *job, *nextjob;
@@ -1063,15 +1064,15 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						if (mxGetString(key, argument, STRLEN-1))
 								mexErrMsgTxt ("optional arguments should come in key-value pairs");
 
-						/* use the optional parameter value */
+						/* use the optional parameter value, beware of the typecasting to 32 and 64 bit integers */
 						if      (strcmp(argument, "jobid")==0)
 								jobid = (UINT32_T)mxGetScalar(val);
 						else if (strcmp(argument, "memreq")==0)
-								memreq = (UINT32_T)(mxGetScalar(val)+0.5);
+								memreq = (UINT64_T)(mxGetScalar(val)+0.5);
 						else if (strcmp(argument, "cpureq")==0)
-								cpureq = (UINT32_T)(mxGetScalar(val)+0.5);
+								cpureq = (UINT64_T)(mxGetScalar(val)+0.5);
 						else if (strcmp(argument, "timreq")==0)
-								timreq = (UINT32_T)(mxGetScalar(val)+0.5);
+								timreq = (UINT64_T)(mxGetScalar(val)+0.5);
 				}
 
 				found = 0;
