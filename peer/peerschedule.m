@@ -1,7 +1,7 @@
 function list = peerschedule(list, memreq, timreq, cpureq)
 
 % PEERSCHEDULE sorts the list of avaialble peers according to a number of heuristic 
-% reules that try to optimize the use of the available resources.
+% rules that try to optimize the use of the available resources.
 %
 % Use as
 %   list = peerschedule(list, memreq, timreq, cpureq)
@@ -39,6 +39,8 @@ if ~isempty(regexp(getenv('HOSTNAME'), 'mentat'))
   penalty(mentat005) = penalty(mentat005) - 4;
   % this should be the preferred machine, even if jobs are 90 minutes longer or 6GB larger
   penalty(mentat006) = penalty(mentat006) - 6;
+  % this should be the preferred machine, even if jobs are 90 minutes longer or 6GB larger
+  penalty(mentat007) = penalty(mentat007) - 6;
 end
 
 % select the slave peer that has the best match with the job requirements
