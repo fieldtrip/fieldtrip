@@ -89,6 +89,10 @@ function [mvardata] = ft_mvaranalysis(cfg, data)
 %
 % $Id$
 
+% record start time and total processing time
+ftFuncTimer = tic();
+ftFuncClock = clock();
+
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed', {'blcwindow', 'baselinewindow'});
