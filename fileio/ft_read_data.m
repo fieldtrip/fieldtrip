@@ -712,7 +712,6 @@ switch dataformat
     % Neuroscan continuous data
     sample1    = begsample-1;
     ldnsamples = endsample-begsample+1; % number of samples to read
-    chanoi     = chanindx(:)';          % channels of interest
     if sample1<0
       error('begin sample cannot be for the beginning of the file');
     end
@@ -730,7 +729,7 @@ switch dataformat
     elseif strcmp(dataformat, 'ns_cnt32')
       tmp = loadcnt(filename, 'sample1', sample1, 'ldnsamples', ldnsamples, 'blockread', 1, 'dataformat', 'int32');
     end
-    dat = tmp.data(chanoi,:);
+    dat = tmp.data(chanindx,:);
 
   case 'ns_eeg'
     % Neuroscan epoched file
