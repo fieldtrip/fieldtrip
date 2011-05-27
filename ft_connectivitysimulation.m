@@ -106,6 +106,10 @@ function [data] = ft_connectivitysimulation(cfg)
 cfg = ft_checkconfig(cfg, 'required', {'nsignal' 'ntrials' 'triallength' 'fsample' 'method'});
 cfg = ft_checkconfig(cfg, 'rename',   {'blc', 'demean'});
 
+% record start time and total processing time
+ftFuncTimer = tic();
+ftFuncClock = clock();
+
 % method specific defaults
 switch cfg.method
 case {'ar'}
