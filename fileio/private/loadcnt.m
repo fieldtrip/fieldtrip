@@ -1,7 +1,7 @@
 % loadcnt() - Load a Neuroscan continuous signal file.
 %
 % Usage:
-%   >> cnt = loadcnt(file, varargin) 
+%   >> cnt = loadcnt(file, varargin)
 %
 % Inputs:
 %   filename - name of the file with extension
@@ -10,17 +10,17 @@
 %  't1'         - start at time t1, default 0
 %  'sample1'    - start at sample1, default 0, overrides t1
 %  'lddur'      - duration of segment to load, default = whole file
-%  'ldnsamples' - number of samples to load, default = whole file, 
+%  'ldnsamples' - number of samples to load, default = whole file,
 %                 overrides lddur
 %  'scale'      - ['on'|'off'] scale data to microvolt (default:'on')
 %  'dataformat' - ['int16'|'int32'] default is 'int16' for 16-bit data.
 %                 Use 'int32' for 32-bit data.
-%  'blockread'  - [integer] by default it is automatically determined 
-%                 from the file header, though sometimes it finds an 
-%                 incorect value, so you may want to enter a value manually 
+%  'blockread'  - [integer] by default it is automatically determined
+%                 from the file header, though sometimes it finds an
+%                 incorect value, so you may want to enter a value manually
 %                 here (1 is the most standard value).
 %  'memmapfile' - ['memmapfile_name'] use this option if the .cnt file
-%                 is too large to read in conventially.  The suffix of 
+%                 is too large to read in conventially.  The suffix of
 %                 the memmapfile_name must be .fdt.  The memmapfile
 %                 functions process files based on their suffix, and an
 %                 error will occur if you use a different suffix.
@@ -36,8 +36,8 @@
 %
 % Note: function original name was load_scan41.m
 %
-% Known limitations: 
-%  For more see http://www.cnl.salk.edu/~arno/cntload/index.html    
+% Known limitations:
+%  For more see http://www.cnl.salk.edu/~arno/cntload/index.html
 
 %123456789012345678901234567890123456789012345678901234567890123456789012
 
@@ -62,8 +62,8 @@
 function [f,lab,ev2p] = loadcnt(filename,varargin)
 
 if ~isempty(varargin)
-         r=struct(varargin{:});
-else r = []; 
+  r=struct(varargin{:});
+else r = [];
 end;
 
 try, r.t1;         catch, r.t1=0; end
@@ -76,14 +76,14 @@ try, r.dataformat; catch, r.dataformat = 'int16'; end
 try, r.memmapfile; catch, r.memmapfile = ''; end
 
 
-sizeEvent1 = 8  ; %%% 8  bytes for Event1  
-sizeEvent2 = 19 ; %%% 19 bytes for Event2 
-sizeEvent3 = 19 ; %%% 19 bytes for Event3 
+sizeEvent1 = 8  ; %%% 8  bytes for Event1
+sizeEvent2 = 19 ; %%% 19 bytes for Event2
+sizeEvent3 = 19 ; %%% 19 bytes for Event3
 
 type='cnt';
-if nargin ==1 
-    scan=0;
-end     
+if nargin ==1
+  scan=0;
+end
 
 fid = fopen(filename,'r', 'l');
 disp(['Loading file ' filename ' ...'])
@@ -128,8 +128,8 @@ h.nchannels         = fread(fid,1,'ushort');
 h.avgupdate         = fread(fid,1,'ushort');
 h.domain            = fread(fid,1,'char');
 h.variance          = fread(fid,1,'char');
-h.rate              = fread(fid,1,'ushort'); % A USER CLAIMS THAT SAMPLING RATE CAN BE 
-h.scale             = fread(fid,1,'double'); % FRACTIONAL IN NEUROSCAN WHICH IS 
+h.rate              = fread(fid,1,'ushort'); % A USER CLAIMS THAT SAMPLING RATE CAN BE
+h.scale             = fread(fid,1,'double'); % FRACTIONAL IN NEUROSCAN WHICH IS
 h.veogcorrect       = fread(fid,1,'char');   % OBVIOUSLY NOT POSSIBLE HERE (BUG 606)
 h.heogcorrect       = fread(fid,1,'char');
 h.aux1correct       = fread(fid,1,'char');
@@ -275,37 +275,37 @@ h.autocorrectflag   = fread(fid,1,'char');
 h.dcthreshold       = fread(fid,1,'uchar');
 
 for n = 1:h.nchannels
-    e(n).lab            = deblank(char(fread(fid,10,'char')'));
-    e(n).reference      = fread(fid,1,'char');
-    e(n).skip           = fread(fid,1,'char');
-    e(n).reject         = fread(fid,1,'char');
-    e(n).display        = fread(fid,1,'char');
-    e(n).bad            = fread(fid,1,'char');
-    e(n).n              = fread(fid,1,'ushort');
-    e(n).avg_reference  = fread(fid,1,'char');
-    e(n).clipadd        = fread(fid,1,'char');
-    e(n).x_coord        = fread(fid,1,'float');
-    e(n).y_coord        = fread(fid,1,'float');
-    e(n).veog_wt        = fread(fid,1,'float');
-    e(n).veog_std       = fread(fid,1,'float');
-    e(n).snr            = fread(fid,1,'float');
-    e(n).heog_wt        = fread(fid,1,'float');
-    e(n).heog_std       = fread(fid,1,'float');
-    e(n).baseline       = fread(fid,1,'short');
-    e(n).filtered       = fread(fid,1,'char');
-    e(n).fsp            = fread(fid,1,'char');
-    e(n).aux1_wt        = fread(fid,1,'float');
-    e(n).aux1_std       = fread(fid,1,'float');
-    e(n).senstivity     = fread(fid,1,'float');
-    e(n).gain           = fread(fid,1,'char');
-    e(n).hipass         = fread(fid,1,'char');
-    e(n).lopass         = fread(fid,1,'char');
-    e(n).page           = fread(fid,1,'uchar');
-    e(n).size           = fread(fid,1,'uchar');
-    e(n).impedance      = fread(fid,1,'uchar');
-    e(n).physicalchnl   = fread(fid,1,'uchar');
-    e(n).rectify        = fread(fid,1,'char');
-    e(n).calib          = fread(fid,1,'float');
+  e(n).lab            = deblank(char(fread(fid,10,'char')'));
+  e(n).reference      = fread(fid,1,'char');
+  e(n).skip           = fread(fid,1,'char');
+  e(n).reject         = fread(fid,1,'char');
+  e(n).display        = fread(fid,1,'char');
+  e(n).bad            = fread(fid,1,'char');
+  e(n).n              = fread(fid,1,'ushort');
+  e(n).avg_reference  = fread(fid,1,'char');
+  e(n).clipadd        = fread(fid,1,'char');
+  e(n).x_coord        = fread(fid,1,'float');
+  e(n).y_coord        = fread(fid,1,'float');
+  e(n).veog_wt        = fread(fid,1,'float');
+  e(n).veog_std       = fread(fid,1,'float');
+  e(n).snr            = fread(fid,1,'float');
+  e(n).heog_wt        = fread(fid,1,'float');
+  e(n).heog_std       = fread(fid,1,'float');
+  e(n).baseline       = fread(fid,1,'short');
+  e(n).filtered       = fread(fid,1,'char');
+  e(n).fsp            = fread(fid,1,'char');
+  e(n).aux1_wt        = fread(fid,1,'float');
+  e(n).aux1_std       = fread(fid,1,'float');
+  e(n).senstivity     = fread(fid,1,'float');
+  e(n).gain           = fread(fid,1,'char');
+  e(n).hipass         = fread(fid,1,'char');
+  e(n).lopass         = fread(fid,1,'char');
+  e(n).page           = fread(fid,1,'uchar');
+  e(n).size           = fread(fid,1,'uchar');
+  e(n).impedance      = fread(fid,1,'uchar');
+  e(n).physicalchnl   = fread(fid,1,'uchar');
+  e(n).rectify        = fread(fid,1,'char');
+  e(n).calib          = fread(fid,1,'float');
 end
 
 % finding if 32-bits of 16-bits file
@@ -313,26 +313,26 @@ end
 begdata = ftell(fid);
 enddata = h.eventtablepos;   % after data
 if strcmpi(r.dataformat, 'int16')
-     nums    = (enddata-begdata)/h.nchannels/2;
+  nums    = (enddata-begdata)/h.nchannels/2;
 else nums    = (enddata-begdata)/h.nchannels/4;
 end;
 
 % number of sample to read
 % ------------------------
 if ~isempty(r.sample1)
-   r.t1      = r.sample1/h.rate;
-else 
-   r.sample1 = r.t1*h.rate;
+  r.t1      = r.sample1/h.rate;
+else
+  r.sample1 = r.t1*h.rate;
 end;
 if strcmpi(r.dataformat, 'int16')
-     startpos = r.t1*h.rate*2*h.nchannels;
-else startpos = r.t1*h.rate*4*h.nchannels;
+  startpos = round(r.t1*h.rate*2*h.nchannels);
+else startpos = round(r.t1*h.rate*4*h.nchannels);
 end;
 if isempty(r.ldnsamples)
-     if ~isempty(r.lddur)
-          r.ldnsamples = round(r.lddur*h.rate); 
-     else r.ldnsamples = nums; 
-     end;
+  if ~isempty(r.lddur)
+    r.ldnsamples = round(r.lddur*h.rate);
+  else r.ldnsamples = nums;
+  end;
 end;
 
 % VL modification 1 =========================
@@ -341,256 +341,260 @@ h.nums = nums;
 % channel offset
 % --------------
 if ~isempty(r.blockread)
-    h.channeloffset = r.blockread;
+  h.channeloffset = r.blockread;
 end;
 if h.channeloffset > 1
-    fprintf('WARNING: reading data in blocks of %d, if this fails, try using option "''blockread'', 1"\n', ...
-            h.channeloffset);
+  fprintf('WARNING: reading data in blocks of %d, if this fails, try using option "''blockread'', 1"\n', ...
+    h.channeloffset);
 end;
 
 disp('Reading data .....')
-if type == 'cnt' 
+if type == 'cnt'
   
-      % while (ftell(fid) +1 < h.eventtablepos)
-      %d(:,i)=fread(fid,h.nchannels,'int16');
-      %end      
-      fseek(fid, startpos, 0);
-      % **** This marks the beginning of the code modified for reading 
-      % large .cnt files
+  % while (ftell(fid) +1 < h.eventtablepos)
+  %d(:,i)=fread(fid,h.nchannels,'int16');
+  %end
+  if fseek(fid, startpos, 'cof')<0
+    fclose(fid);
+    error('fseek failed');
+  end
+  % **** This marks the beginning of the code modified for reading
+  % large .cnt files
+  
+  % Switched to r.memmapfile for continuity.  Check to see if the
+  % variable exists.  If it does, then the user has indicated the
+  % file is too large to be processed in memory.  If the variable
+  % is blank, the file is processed in memory.
+  if (~isempty(r.memmapfile))
+    % open a file for writing
+    foutid = fopen(r.memmapfile, 'w') ;
+    
+    % This portion of the routine reads in a section of the EEG file
+    % and then writes it out to the harddisk.
+    samples_left = h.nchannels * r.ldnsamples ;
+    
+    % the size of the data block to be read is limited to 4M
+    % samples.  This equates to 16MB and 32MB of memory for
+    % 16 and 32 bit files, respectively.
+    data_block = 4000000 ;
+    max_rows =  data_block / h.nchannels ;
+    
+    ws = warning('off');
+    max_written = h.nchannels * uint32(max_rows) ;
+    warning(ws);
+    
+    % This while look tracks the remaining samples.  The
+    % data is processed in chunks rather than put into
+    % memory whole.
+    while (samples_left > 0)
       
-      % Switched to r.memmapfile for continuity.  Check to see if the
-      % variable exists.  If it does, then the user has indicated the 
-      % file is too large to be processed in memory.  If the variable
-      % is blank, the file is processed in memory.
-      if (~isempty(r.memmapfile))
-          % open a file for writing
-          foutid = fopen(r.memmapfile, 'w') ;
-
-          % This portion of the routine reads in a section of the EEG file
-          % and then writes it out to the harddisk.
-          samples_left = h.nchannels * r.ldnsamples ;
-
-          % the size of the data block to be read is limited to 4M
-          % samples.  This equates to 16MB and 32MB of memory for
-          % 16 and 32 bit files, respectively.
-          data_block = 4000000 ;
-          max_rows =  data_block / h.nchannels ;
-
-          ws = warning('off');
-          max_written = h.nchannels * uint32(max_rows) ;
-          warning(ws);
-
-          % This while look tracks the remaining samples.  The 
-          % data is processed in chunks rather than put into 
-          % memory whole.
-          while (samples_left > 0)
-
-              % Check to see if the remaining data is smaller than 
-              % the general processing block by looking at the
-              % remaining number of rows.
-              to_read = max_rows ;
-              if (data_block > samples_left)
-                  to_read = samples_left / h.nchannels ;                 
-              end ;              
-
-              % Read data in a relatively small chunk
-              temp_dat = fread(fid, [h.nchannels to_read], r.dataformat) ;
-
-              % The data is then scaled using the original routine.
-              % In the original routine, the entire data set was scaled
-              % after being read in.  For this version, scaling occurs
-              % after every chunk is read.
-              if strcmpi(r.scale, 'on')
-                  disp('Scaling data .....')
-                  %%% scaling to microvolts
-                  for i=1:h.nchannels
-                      bas=e(i).baseline;sen=e(i).senstivity;cal=e(i).calib;
-                      mf=sen*(cal/204.8);
-                      temp_dat(i,:)=(temp_dat(i,:)-bas).*mf;
-                  end
-              end         
-
-              % Write out data in float32 form to the file name
-              % supplied by the user.
-              written = fwrite (foutid, temp_dat, 'float32') ;
-
-              if (written ~= max_written) 
-                  samples_left = 0 ;
-              else
-                  samples_left = samples_left - written ;
-              end ;
-
-          end ;
-
-          fclose (foutid) ;
-          % Set the dat variable.  This gets used later by other 
-          % EEGLAB functions.
-          dat = r.memmapfile ;
-
-          % This variable tracks how the data should be read.
-          bReadIntoMemory = false ;
-      else
-          % The memmapfile variable is empty, read into memory.
-          bReadIntoMemory = true ;
+      % Check to see if the remaining data is smaller than
+      % the general processing block by looking at the
+      % remaining number of rows.
+      to_read = max_rows ;
+      if (data_block > samples_left)
+        to_read = samples_left / h.nchannels ;
+      end ;
+      
+      % Read data in a relatively small chunk
+      temp_dat = fread(fid, [h.nchannels to_read], r.dataformat) ;
+      
+      % The data is then scaled using the original routine.
+      % In the original routine, the entire data set was scaled
+      % after being read in.  For this version, scaling occurs
+      % after every chunk is read.
+      if strcmpi(r.scale, 'on')
+        disp('Scaling data .....')
+        %%% scaling to microvolts
+        for i=1:h.nchannels
+          bas=e(i).baseline;sen=e(i).senstivity;cal=e(i).calib;
+          mf=sen*(cal/204.8);
+          temp_dat(i,:)=(temp_dat(i,:)-bas).*mf;
+        end
       end
       
-      % This ends the modifications made to read large files.
-      % Everything contained within the following if statement is the 
-      % original code.
-      if (bReadIntoMemory == true)
-          if h.channeloffset <= 1
-                dat=fread(fid, [h.nchannels r.ldnsamples], r.dataformat);
-          else
-              h.channeloffset = h.channeloffset/2;
-              % reading data in blocks
-              dat = zeros( h.nchannels, r.ldnsamples);
-              dat(:, 1:h.channeloffset) = fread(fid, [h.channeloffset h.nchannels], r.dataformat)';
-
-              counter = 1;      
-              while counter*h.channeloffset < r.ldnsamples
-                  dat(:, counter*h.channeloffset+1:counter*h.channeloffset+h.channeloffset) = ...
-                      fread(fid, [h.channeloffset h.nchannels], r.dataformat)';
-                  counter = counter + 1;
-              end;
-          end ;
-          
-          % ftell(fid)
-          if strcmpi(r.scale, 'on')
-            disp('Scaling data .....')
-            %%% scaling to microvolts
-            for i=1:h.nchannels
-                bas=e(i).baseline;sen=e(i).senstivity;cal=e(i).calib;
-                mf=sen*(cal/204.8);
-                dat(i,:)=(dat(i,:)-bas).*mf;
-            end % end for i=1:h.nchannels
-          end;  % end if (strcmpi(r.scale, 'on')
-      end ;
-   
-      ET_offset = (double(h.prevfile) * (2^32)) + double(h.eventtablepos);    % prevfile contains high order bits of event table offset, eventtablepos contains the low order bits
-      fseek(fid, ET_offset, 'bof'); 
-
-      disp('Reading Event Table...')
-      eT.teeg   = fread(fid,1,'uchar');
-      eT.size   = fread(fid,1,'ulong');
-      eT.offset = fread(fid,1,'ulong');
+      % Write out data in float32 form to the file name
+      % supplied by the user.
+      written = fwrite (foutid, temp_dat, 'float32') ;
       
-      if eT.teeg==2
-          nevents=eT.size/sizeEvent2;
-          if nevents > 0
-              ev2(nevents).stimtype  = [];
-              for i=1:nevents
-                  ev2(i).stimtype      = fread(fid,1,'ushort');
-                  ev2(i).keyboard      = fread(fid,1,'char');
-                  temp                 = fread(fid,1,'uint8');
-                  ev2(i).keypad_accept = bitand(15,temp);
-                  ev2(i).accept_ev1    = bitshift(temp,-4);
-                  ev2(i).offset        = fread(fid,1,'long');
-                  ev2(i).type          = fread(fid,1,'short'); 
-                  ev2(i).code          = fread(fid,1,'short');
-                  ev2(i).latency       = fread(fid,1,'float');
-                  ev2(i).epochevent    = fread(fid,1,'char');
-                  ev2(i).accept        = fread(fid,1,'char');
-                  ev2(i).accuracy      = fread(fid,1,'char');
-              end     
-          else
-              ev2 = [];
-          end;
-      elseif eT.teeg==3  % type 3 is similar to type 2 except the offset field encodes the global sample frame
-          nevents=eT.size/sizeEvent3;
-          if nevents > 0
-              ev2(nevents).stimtype  = [];
-              if r.dataformat == 'int32'
-                  bytes_per_samp = 4;   % I only have 32 bit data, unable to check whether this is necessary,
-              else                      % perhaps there is no type 3 file with 16 bit data
-                  bytes_per_samp = 2;
-              end
-              for i=1:nevents
-                  ev2(i).stimtype      = fread(fid,1,'ushort');
-                  ev2(i).keyboard      = fread(fid,1,'char');
-                  temp                 = fread(fid,1,'uint8');
-                  ev2(i).keypad_accept = bitand(15,temp);
-                  ev2(i).accept_ev1    = bitshift(temp,-4);
-                  os                   = fread(fid,1,'ulong');
-                  ev2(i).offset = os * bytes_per_samp * h.nchannels;
-                  ev2(i).type          = fread(fid,1,'short'); 
-                  ev2(i).code          = fread(fid,1,'short');
-                  ev2(i).latency       = fread(fid,1,'float');
-                  ev2(i).epochevent    = fread(fid,1,'char');
-                  ev2(i).accept        = fread(fid,1,'char');
-                  ev2(i).accuracy      = fread(fid,1,'char');
-              end     
-          else
-              ev2 = [];
-          end;
-      elseif eT.teeg==1
-          nevents=eT.size/sizeEvent1;
-          if nevents > 0
-              ev2(nevents).stimtype  = [];
-              for i=1:nevents
-                  ev2(i).stimtype      = fread(fid,1,'ushort');
-                  ev2(i).keyboard      = fread(fid,1,'char');
-
-% modified by Andreas Widmann  2005/05/12  14:15:00
-                  %ev2(i).keypad_accept = fread(fid,1,'char');
-                  temp                 = fread(fid,1,'uint8');
-                  ev2(i).keypad_accept = bitand(15,temp);
-                  ev2(i).accept_ev1    = bitshift(temp,-4);
-% end modification
-
-                  ev2(i).offset        = fread(fid,1,'long');
-              end;
-          else
-              ev2 = [];
-          end;
+      if (written ~= max_written)
+        samples_left = 0 ;
       else
-          disp('Skipping event table (tag != 1,2,3 ; theoritically impossible)');
-          ev2 = [];
-      end     
-
+        samples_left = samples_left - written ;
+      end ;
       
-fseek(fid, -1, 'eof');
-t = fread(fid,'char');
-
-f.header   = h;
-f.electloc = e;
-f.data     = dat;
-f.Teeg     = eT;
-f.event    = ev2;
-f.tag=t;
-% Surgical addition of number of samples
-f.ldnsamples = r.ldnsamples ;
-
-%%%% channels labels
-for i=1:h.nchannels
-  plab=sprintf('%c',f.electloc(i).lab);
-  if i>1 
-   lab=str2mat(lab,plab);
-  else 
-   lab=plab;  
-  end  
-end  
-
-%%%% to change offest in bytes to points 
-if ~isempty(ev2)
-    if r.sample1 ~= 0
-       % VL modification 2 =========================
-       % fprintf(2,'Warning: events imported with a time shift might be innacurate (bug 661)\n');
+    end ;
+    
+    fclose (foutid) ;
+    % Set the dat variable.  This gets used later by other
+    % EEGLAB functions.
+    dat = r.memmapfile ;
+    
+    % This variable tracks how the data should be read.
+    bReadIntoMemory = false ;
+  else
+    % The memmapfile variable is empty, read into memory.
+    bReadIntoMemory = true ;
+  end
+  
+  % This ends the modifications made to read large files.
+  % Everything contained within the following if statement is the
+  % original code.
+  if (bReadIntoMemory == true)
+    if h.channeloffset <= 1
+      dat=fread(fid, [h.nchannels r.ldnsamples], r.dataformat);
+    else
+      h.channeloffset = h.channeloffset/2;
+      % reading data in blocks
+      dat = zeros( h.nchannels, r.ldnsamples);
+      dat(:, 1:h.channeloffset) = fread(fid, [h.channeloffset h.nchannels], r.dataformat)';
+      
+      counter = 1;
+      while counter*h.channeloffset < r.ldnsamples
+        dat(:, counter*h.channeloffset+1:counter*h.channeloffset+h.channeloffset) = ...
+          fread(fid, [h.channeloffset h.nchannels], r.dataformat)';
+        counter = counter + 1;
+      end;
+    end ;
+    
+    % ftell(fid)
+    if strcmpi(r.scale, 'on')
+      disp('Scaling data .....')
+      %%% scaling to microvolts
+      for i=1:h.nchannels
+        bas=e(i).baseline;sen=e(i).senstivity;cal=e(i).calib;
+        mf=sen*(cal/204.8);
+        dat(i,:)=(dat(i,:)-bas).*mf;
+      end % end for i=1:h.nchannels
+    end;  % end if (strcmpi(r.scale, 'on')
+  end ;
+  
+  ET_offset = (double(h.prevfile) * (2^32)) + double(h.eventtablepos);    % prevfile contains high order bits of event table offset, eventtablepos contains the low order bits
+  if fseek(fid, ET_offset, 'bof')<0
+    error('fseek failed');
+  end
+  
+  disp('Reading Event Table...')
+  eT.teeg   = fread(fid,1,'uchar');
+  eT.size   = fread(fid,1,'ulong');
+  eT.offset = fread(fid,1,'ulong');
+  
+  if eT.teeg==2
+    nevents=eT.size/sizeEvent2;
+    if nevents > 0
+      ev2(nevents).stimtype  = [];
+      for i=1:nevents
+        ev2(i).stimtype      = fread(fid,1,'ushort');
+        ev2(i).keyboard      = fread(fid,1,'char');
+        temp                 = fread(fid,1,'uint8');
+        ev2(i).keypad_accept = bitand(15,temp);
+        ev2(i).accept_ev1    = bitshift(temp,-4);
+        ev2(i).offset        = fread(fid,1,'long');
+        ev2(i).type          = fread(fid,1,'short');
+        ev2(i).code          = fread(fid,1,'short');
+        ev2(i).latency       = fread(fid,1,'float');
+        ev2(i).epochevent    = fread(fid,1,'char');
+        ev2(i).accept        = fread(fid,1,'char');
+        ev2(i).accuracy      = fread(fid,1,'char');
+      end
+    else
+      ev2 = [];
     end;
-    ev2p=ev2; 
-    ioff=900+(h.nchannels*75); %% initial offset : header + electordes desc 
+  elseif eT.teeg==3  % type 3 is similar to type 2 except the offset field encodes the global sample frame
+    nevents=eT.size/sizeEvent3;
+    if nevents > 0
+      ev2(nevents).stimtype  = [];
+      if r.dataformat == 'int32'
+        bytes_per_samp = 4;   % I only have 32 bit data, unable to check whether this is necessary,
+      else                      % perhaps there is no type 3 file with 16 bit data
+        bytes_per_samp = 2;
+      end
+      for i=1:nevents
+        ev2(i).stimtype      = fread(fid,1,'ushort');
+        ev2(i).keyboard      = fread(fid,1,'char');
+        temp                 = fread(fid,1,'uint8');
+        ev2(i).keypad_accept = bitand(15,temp);
+        ev2(i).accept_ev1    = bitshift(temp,-4);
+        os                   = fread(fid,1,'ulong');
+        ev2(i).offset = os * bytes_per_samp * h.nchannels;
+        ev2(i).type          = fread(fid,1,'short');
+        ev2(i).code          = fread(fid,1,'short');
+        ev2(i).latency       = fread(fid,1,'float');
+        ev2(i).epochevent    = fread(fid,1,'char');
+        ev2(i).accept        = fread(fid,1,'char');
+        ev2(i).accuracy      = fread(fid,1,'char');
+      end
+    else
+      ev2 = [];
+    end;
+  elseif eT.teeg==1
+    nevents=eT.size/sizeEvent1;
+    if nevents > 0
+      ev2(nevents).stimtype  = [];
+      for i=1:nevents
+        ev2(i).stimtype      = fread(fid,1,'ushort');
+        ev2(i).keyboard      = fread(fid,1,'char');
+        
+        % modified by Andreas Widmann  2005/05/12  14:15:00
+        %ev2(i).keypad_accept = fread(fid,1,'char');
+        temp                 = fread(fid,1,'uint8');
+        ev2(i).keypad_accept = bitand(15,temp);
+        ev2(i).accept_ev1    = bitshift(temp,-4);
+        % end modification
+        
+        ev2(i).offset        = fread(fid,1,'long');
+      end;
+    else
+      ev2 = [];
+    end;
+  else
+    disp('Skipping event table (tag != 1,2,3 ; theoritically impossible)');
+    ev2 = [];
+  end
+  
+  
+  fseek(fid, -1, 'eof');
+  t = fread(fid,'char');
+  
+  f.header   = h;
+  f.electloc = e;
+  f.data     = dat;
+  f.Teeg     = eT;
+  f.event    = ev2;
+  f.tag=t;
+  % Surgical addition of number of samples
+  f.ldnsamples = r.ldnsamples ;
+  
+  %%%% channels labels
+  for i=1:h.nchannels
+    plab=sprintf('%c',f.electloc(i).lab);
+    if i>1
+      lab=str2mat(lab,plab);
+    else
+      lab=plab;
+    end
+  end
+  
+  %%%% to change offest in bytes to points
+  if ~isempty(ev2)
+    if r.sample1 ~= 0
+      % VL modification 2 =========================
+      % fprintf(2,'Warning: events imported with a time shift might be innacurate (bug 661)\n');
+    end;
+    ev2p=ev2;
+    ioff=900+(h.nchannels*75); %% initial offset : header + electordes desc
     if strcmpi(r.dataformat, 'int16')
-        for i=1:nevents 
-            ev2p(i).offset=(ev2p(i).offset-ioff)/(2*h.nchannels) - r.sample1; %% 2 short int end 
-        end     
+      for i=1:nevents
+        ev2p(i).offset=(ev2p(i).offset-ioff)/(2*h.nchannels) - r.sample1; %% 2 short int end
+      end
     else % 32 bits
-        for i=1:nevents 
-            ev2p(i).offset=(ev2p(i).offset-ioff)/(4*h.nchannels) - r.sample1; %% 4 short int end 
-        end     
-    end;        
+      for i=1:nevents
+        ev2p(i).offset=(ev2p(i).offset-ioff)/(4*h.nchannels) - r.sample1; %% 4 short int end
+      end
+    end;
     f.event = ev2p;
-end;
-
-frewind(fid);
-fclose(fid);
-
+  end;
+  
+  fclose(fid);
+  
 end
