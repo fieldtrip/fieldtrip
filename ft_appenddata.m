@@ -38,7 +38,7 @@ function [data] = ft_appenddata(cfg, varargin)
 % See also FT_PREPROCESSING
 
 % Copyright (C) 2005-2008, Robert Oostenveld
-% Copyright (C) 2009, Jan-Mathijs Schoffelen
+% Copyright (C) 2009-2011, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -68,20 +68,21 @@ ftFuncClock = clock();
 if ~isfield(cfg, 'inputfile'),    cfg.inputfile  = [];          end
 if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end
 
-hasdata = nargin>1;
-if ~isempty(cfg.inputfile) % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    for i=1:numel(cfg.inputfile)
-      varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets from array inputfile
-      Ndata       = numel(cfg.inputfile); % use Ndata as if separate datafiles were specified
-    end
+hasdata      = nargin>1;
+hasinputfile = ~isempty(cfg.inputfile);
+if hasdata  && hasinputfile
+  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+elseif hasinputfile
+  for i=1:numel(cfg.inputfile)
+    varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets from array inputfile
+    Ndata       = numel(cfg.inputfile); % use Ndata as if separate datafiles were specified
   end
-else Ndata = nargin-1; % use old implementation of Ndata if no inputfile is specified
-  if Ndata<2
-    error('you must give at least two datasets to append');
-  end
+elseif hasdata
+  Ndata = nargin-1;
+end
+
+if Ndata<2
+  error('you must give at least two datasets to append');
 end
 
 % check if the input data is valid for this function
@@ -103,6 +104,7 @@ end
 % try to locate the trial definition (trl) in the nested configuration and
 % check whether the input data contains trialinfo
 hastrialinfo = 0;
+trl = cell(1, Ndata);
 for i=1:Ndata
   if isfield(varargin{i}, 'cfg')
     trl{i} = ft_findcfg(varargin{i}.cfg, 'trl');
@@ -118,6 +120,7 @@ end
 hastrialinfo = hastrialinfo==Ndata;
 
 hassampleinfo = 0;
+sampleinfo = cell(1, Ndata);
 for i=1:Ndata
   if isfield(varargin{i}, 'sampleinfo')
      sampleinfo{i} = varargin{i}.sampleinfo;
@@ -133,18 +136,8 @@ end
 hassampleinfo = hassampleinfo==Ndata;
 
 % check the consistency of the labels across the input-structures
-[alllabel, indx1, indx2] = unique(label, 'first');
+alllabel = unique(label, 'first');
 order    = zeros(length(alllabel),Ndata);
-%for i=1:length(alllabel)
-%  for j=1:Ndata
-%    tmp = strmatch(alllabel{i}, varargin{j}.label, 'exact');
-%    if ~isempty(tmp)
-%      order(i,j) = tmp;
-%    end
-%  end
-%end
-
-% replace the nested for-loops with something faster
 for j=1:Ndata
   tmplabel = varargin{j}.label;
   [ix,iy]  = match_str(alllabel, tmplabel);
@@ -152,15 +145,19 @@ for j=1:Ndata
 end
 
 % check consistency of sensor positions across inputs
+haselec = 1;
+hasgrad = 1;
 for j=1:Ndata
-  haselec(j) = isfield(varargin{j}, 'elec');
-  hasgrad(j) = isfield(varargin{j}, 'grad');
+  haselec = isfield(varargin{j}, 'elec') && haselec;
+  hasgrad = isfield(varargin{j}, 'grad') && hasgrad;
 end
+
 removesens = 0;
-if all(haselec==1) || all(hasgrad==1),
+if haselec || hasgrad,
+  sens = cell(1, Ndata);
   for j=1:Ndata
-    if haselec, sens{j} = getfield(varargin{j}, 'elec'); end
-    if hasgrad, sens{j} = getfield(varargin{j}, 'grad'); end
+    if haselec, sens{j} = varargin{j}.elec; end
+    if hasgrad, sens{j} = varargin{j}.grad; end
     if j>1,
       if numel(sens{j}.pnt) ~= numel(sens{1}.pnt) || any(sens{j}.pnt(:) ~= sens{1}.pnt(:)),
         removesens = 1;
@@ -169,22 +166,18 @@ if all(haselec==1) || all(hasgrad==1),
       end
     end
   end
-elseif haselec(1)==1 || hasgrad(1)==1,
-  % apparently the first input has a grad or elec, but not all the other
-  % ones. because the output data will be initialized to be the first input
-  % data structure, this should be removed
-  removesens = 1;   
 end
 
 % check whether the data are obtained from the same datafile
 origfile1      = ft_findcfg(varargin{1}.cfg, 'datafile');
 removesampleinfo = 0;
+removetrialinfo  = 0;
 for j=2:Ndata
-    if ~strcmp(origfile1, ft_findcfg(varargin{j}.cfg, 'datafile')),
-        removesampleinfo = 1;
-        warning('input data comes from different datafiles');
-        break;
-    end
+  if ~isempty(origfile1) && ~strcmp(origfile1, ft_findcfg(varargin{j}.cfg, 'datafile')),
+    removesampleinfo = 1;
+    warning('input data comes from different datafiles');
+    break;
+  end
 end
 
 catlabel   = all(sum(order~=0,2)==1);
@@ -243,18 +236,26 @@ elseif catlabel
   else
     Ntrial = Ntrial(1);
   end
-  Nch(1) = numel(data.label);
+  
   for i=2:Ndata
-    Nch(i,1)   = numel(varargin{i}.label);
+    % concatenate the labels
     data.label = cat(1, data.label(:), varargin{i}.label(:));
+    
+    % check whether the trialinfo and sampleinfo fields are consistent
+    if hassampleinfo && ~all(data.sampleinfo(:)==varargin{i}.sampleinfo(:))
+      removesampleinfo = 1;
+    end
+    if hastrialinfo && ~all(data.trialinfo(:)==varargin{i}.trialinfo(:))
+      removetrialinfo = 1;
+    end
   end
   
   for j=1:Ntrial
     %pre-allocate memory for this trial
-    data.trial{j} = [data.trial{j}; zeros(sum(Nch(2:end)), size(data.trial{j},2))];
+    data.trial{j} = [data.trial{j}; zeros(sum(Nchan(2:end)), size(data.trial{j},2))];
     
     %fill this trial with data
-    endchan = Nch(1);
+    endchan = Nchan(1);
     %allow some jitter for irregular sample frequencies
     TOL = 10*eps;
     for i=2:Ndata
@@ -262,7 +263,7 @@ elseif catlabel
         error('there is a difference in the time axes of the input data');
       end
       begchan = endchan+1;
-      endchan = endchan+Nch(i);
+      endchan = endchan+Nchan(i);
       data.trial{j}(begchan:endchan,:) = varargin{i}.trial{j};
     end
   end
@@ -290,10 +291,15 @@ if removesens
 end
 
 if removesampleinfo && isfield(data, 'sampleinfo')
-    fprintf('removing trial definition from output\n');
-    data            = rmfield(data, 'sampleinfo');
-    %cfg.trl(:, 1:2) = nan;
-    if isfield(cfg, 'trl'), cfg = rmfield(cfg, 'trl'); end
+  fprintf('removing sampleinfo field from output\n');
+  data = rmfield(data, 'sampleinfo');
+  %cfg.trl(:, 1:2) = nan;
+  if isfield(cfg, 'trl'), cfg = rmfield(cfg, 'trl'); end
+end
+
+if removetrialinfo && isfield(data, 'trialinfo')
+  fprintf('removing trialinfo field from output\n');
+  data = rmfield(data, 'trialinfo');
 end
 
 % add version information to the configuration
@@ -311,7 +317,9 @@ cfg.callinfo.user = getusername();
 % remember the configuration details of the input data
 cfg.previous = cell(1,length(varargin));
 for i=1:Ndata
-  try, cfg.previous{i} = varargin{i}.cfg; end
+  if isfield(varargin{i}, 'cfg')
+    cfg.previous{i} = varargin{i}.cfg;
+  end
 end
 
 % remember the exact configuration details in the output
