@@ -40,36 +40,14 @@ function [output] = ft_transform_geometry(transform, input)
 %
 % $Id: ft_transform_geometry.m$
 
-stype = ft_senstype(input);
-vtype = ft_voltype(input);
-
-issens        = 0;
-checkrotation = 0;
-if strcmp(stype, 'unknown') && strcmp(vtype, 'unknown')
-  % input is not recognized as sensor array, nor as volume conductor
-elseif ~strcmp(stype, 'unknown') && strcmp(vtype, 'unknown')
-  % sensor array
-  issens = 1;
-elseif ~strcmp(vtype, 'unknown') && strcmp(stype, 'unknown')
-  % volume conductor geometry
-  checkrotation = 1; % any scaling is not allowed, so the vol.r can stay as it is
-else
-  % both recognized as volume conductor geometry and sensor array
-  checkrotation = 1;
-end
-
-if issens,
-  if ft_senstype(input, 'meg')
-    checkrotation = 1;
-  end
-end
+checkrotation = ~strcmp(ft_voltype(input), 'unknown') || ft_senstype(input, 'meg'); 
 
 % determine the rotation matrix
 rotation = eye(4);
 rotation(1:3,1:3) = transform(1:3,1:3);
 
 % FIXME insert check for nonuniform scaling, should give an error
-if any(transform(4,:) ~= [0 0 0 1])
+if any(abs(transform(4,:)-[0 0 0 1])>100*eps)
   error('invalid transformation matrix');
 end
 
@@ -83,6 +61,8 @@ end
 tfields   = {'pos' 'pnt' 'o'}; % apply rotation plus translation
 rfields   = {'ori' 'nrm'};     % only apply rotation
 recfields = {'fid' 'bnd'};     % recurse into these fields
+% the field 'r' is not included here, because it applies to a volume
+% conductor model, and scaling is not allowed, so r will not change.
 
 fnames    = fieldnames(input);
 for k = 1:numel(fnames)
