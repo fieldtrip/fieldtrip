@@ -688,26 +688,16 @@ if strcmp(cfg.showlabels,'yes')
   ft_plot_text(xpos,ypos+1.0*height,label,'Fontsize',cfg.fontsize);
 end
 
-% Draw axes:
-if strcmp(cfg.axes,'yes') || strcmp(cfg.axes, 'xy')
-  % Draw y axis
-  xs =  xpos+width*([0 0]-xlim(1))/(xlim(2)-xlim(1));
-  ys =  ypos+height*(ylim-ylim(1))/(ylim(2)-ylim(1));
-  ft_plot_vector(xs,ys,'color','k');
-  % Draw x axis
+% Draw x axis
+if strcmp(cfg.axes,'yes') || strcmp(cfg.axes, 'xy') || strcmp(cfg.axes,'x')
   xs =  xpos+width*(xlim-xlim(1))/(xlim(2)-xlim(1));
-  ys =  ypos+height*([0 0]-ylim(1))/(ylim(2)-ylim(1));
+  ys =  [ypos ypos];
   ft_plot_vector(xs,ys,'color','k');
-  
-elseif strcmp(cfg.axes,'x')
-  % Draw x axis
-  xs =  xpos+width*(xlim-xlim(1))/(xlim(2)-xlim(1));
-  ys =  ypos+height*([0 0]-ylim(1))/(ylim(2)-ylim(1));
-  ft_plot_vector(xs,ys,'color','k');
-  
-elseif strcmp(cfg.axes,'y')
-  % Draw y axis
-  xs =  xpos+width*([0 0]-xlim(1))/(xlim(2)-xlim(1));
+end
+
+% Draw y axis
+if strcmp(cfg.axes,'yes') || strcmp(cfg.axes, 'xy') || strcmp(cfg.axes,'y')
+  xs =  [xpos xpos];
   ys =  ypos+height*(ylim-ylim(1))/(ylim(2)-ylim(1));
   ft_plot_vector(xs,ys,'color','k');
 end
