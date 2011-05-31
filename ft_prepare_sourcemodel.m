@@ -129,8 +129,8 @@ if basedongrid && basedonpos
   basedongrid = false;
 end
 
-if ~any([basedonauto basedongrid basedonpos basedonshape basedonmri basedoncortex]) && nargin>1 && ~isempty(cfg.vol)
-  % fall back to default behaviour, which is to create a surface grid (e.g. used in MEGRELIGN)
+if ~any([basedonauto basedongrid basedonpos basedonshape basedonmri basedoncortex]) && ~isempty(cfg.vol)
+  % fall back to default behaviour, which is to create a surface grid (e.g. used in MEGREALIGN)
   basedonvol = 1;
 end
 
