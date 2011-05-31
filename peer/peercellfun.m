@@ -17,7 +17,7 @@ function varargout = peercellfun(fname, varargin)
 %   diary          = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
 %   timreq         = number, initial estimate for the time required to run a single job (default = 3600)
 %   mintimreq      = number, minimum time required to run a single job (default is automatic)
-%   memreq         = number, initial estimate for the memory required to run a single job (default = 1e9)
+%   memreq         = number, initial estimate for the memory required to run a single job (default = 2*1024^3)
 %   minmemreq      = number, minimum memory required to run a single job (default is automatic)
 %   order          = string, can be 'random' or 'original' (default = 'random')
 %
@@ -66,8 +66,8 @@ diary         = ft_getopt(optarg, 'diary',         'error' ); % 'always', 'never
 order         = ft_getopt(optarg, 'order',         'random'); % 'random', 'original'
 timreq        = ft_getopt(optarg, 'timreq',        []      ); 
 mintimreq     = ft_getopt(optarg, 'mintimreq',     []      ); 
-memreq        = ft_getopt(optarg, 'memreq',        []      );
-minmemreq     = ft_getopt(optarg, 'minmemreq',     []      ); 
+memreq        = ft_getopt(optarg, 'memreq',        []      ); % see below
+minmemreq     = ft_getopt(optarg, 'minmemreq',     []      ); % see below
 
 if isempty(timreq) && isempty(mintimreq)
   % assume an initial job duration of 1 hour
@@ -87,7 +87,7 @@ end
 if isempty(memreq) && isempty(minmemreq)
   % assume an initial memory requirement of 1 GB
   % the memory required by the jobs will be estimated and memreq will be auto-adjusted
-  memreq    = 1024^3;
+  memreq    = 2*1024^3;
   minmemreq = 0;
 elseif isempty(memreq)
   % use the specified mimimum as the initial value that a job required

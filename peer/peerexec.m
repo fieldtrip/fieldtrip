@@ -56,8 +56,8 @@ try
   usediary = any(strcmp(usediary, {'always', 'warning', 'error'}));
 
   % check whether a watchdog should be set
-  masterid = []; % FIXME ft_getopt(optin, 'masterid');
-  timallow = []; % FIXME ft_getopt(optin, 'timallow');
+  masterid = ft_getopt(optin, 'masterid');
+  timallow = ft_getopt(optin, 'timallow');
   memallow = []; % FIXME ft_getopt(optin, 'memallow');
   if ~isempty(masterid) || ~isempty(timallow) || ~isempty(memallow)
     watchdog(masterid, time+timallow, memallow);
