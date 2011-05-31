@@ -14,6 +14,7 @@ function h = ft_connectivityplot(cfg, data)
 % The cfg can have the following options:
 %   cfg.zparam  = string (default = 'cohspctrm'), the functional parameter
 %                  to be plotted.
+%   cfg.zlim    = [lower upper];
 %   cfg.channel = list of channels to be included for the plotting (default
 %                   = 'all');
 %
@@ -42,6 +43,7 @@ function h = ft_connectivityplot(cfg, data)
 
 cfg.channel = ft_getopt(cfg, 'channel', 'all');
 cfg.zparam  = ft_getopt(cfg, 'zparam', 'cohspctrm');
+cfg.zlim    = ft_getopt(cfg, 'zlim', []);
 
 if ~strcmp(data.dimord, 'chan_chan_freq')
   error('the data should have a dimord of %s', 'chan_chan_freq');
@@ -58,22 +60,27 @@ dat   = data.(cfg.zparam);
 nchan = numel(data.label);
 nfreq = numel(data.freq);
 
+if isempty(cfg.zlim)
+  cfg.zlim = [min(dat(:)) max(dat(:))];
+end
+
 h = figure;hold on;
 for k = 1:nchan
   for m = 1:nchan
     if k~=m
       ix  = k;
       iy  = nchan - m + 1;
-      tmp = reshape(dat(k,m,:), [nfreq 1]);
+      % use the convention of the row-channel causing the column-channel
+      tmp = reshape(dat(m,k,:), [nfreq 1]);
       ft_plot_vector(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'vlim', cfg.zlim, 'box', 'yes');
     end
   end
 end
 
 for k = 1:nchan
-  ft_plot_text(0, (nchan - k + 1).*1.2, data.label{k});
-  ft_plot_text(k.*1.2,  (nchan + 1).*1.2, data.label{k});
+  ft_plot_text(0,       (nchan + 1 - k).*1.2, data.label{k});
+  ft_plot_text(k.*1.2,  (nchan + 1)    .*1.2, data.label{k});
 end
 
-axis equal;
+axis([-0.2 (nchan+1).*1.2+0.2 0 (nchan+1).*1.2+0.2]);
 axis off;
