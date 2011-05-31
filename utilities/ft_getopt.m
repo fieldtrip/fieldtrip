@@ -59,5 +59,9 @@ elseif isa(opt, 'cell')
   else
     error('multiple input arguments with the same name');
   end
-  
-end % isstruct or iscell
+
+elseif isempty(opt)
+  % input can be an empty variable (e.g. when calling a ft-function with
+  % ft_XXX([], data)
+  val = default;
+end % isstruct or iscell or isempty
