@@ -39,6 +39,8 @@ function [varargout] = ft_componentbrowser(cfg, comp)
 %
 % $Id$
 
+warning('FT_COMPONENTBROWSER is deprecated, please use FT_DATABROWSER with cfg.viewmode = ''component'' instead.')
+
 ft_defaults
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
