@@ -376,6 +376,11 @@ switch fileformat
     [pnt, tri, nrm] = read_stl(filename);
     shape.pnt = pnt;
     shape.tri = tri;
+    
+  case 'off'
+    [pnt, plc] = read_off(filename);
+    shape.pnt  = pnt;
+    shape.tri  = plc;
 
   case 'mne_tri'
     % FIXME this should be implemented, consistent with ft_write_headshape
