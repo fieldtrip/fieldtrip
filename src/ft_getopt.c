@@ -59,7 +59,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 						}
 				}
 		}
-		else {
+		else if (mxIsEmpty(prhs[0])) {
+                                /* do nothing */
+                }
+                else {
 				mexErrMsgTxt("the first input argument should be a cell-array or structure");
 		}
 
