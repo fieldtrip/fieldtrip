@@ -387,7 +387,7 @@ if strcmp(cfg.gridsearch, 'yes')
       % find the grid point(s) with the minimum error
       [err, indx] = min(grid.error(grid.inside));
       dip.pos = grid.pos(grid.inside(indx),:);          % note that for a symmetric dipole pair this results in a vector
-      dip.pos = reshape(dip.pos, cfg.numdipoles, 3);    % convert to a Nx3 array
+      dip.pos = reshape(dip.pos,3,cfg.numdipoles)';    % convert to a Nx3 array
       dip.mom = zeros(cfg.numdipoles*3,1);              % set the dipole moment to zero
       if cfg.numdipoles==1
         fprintf('found minimum after scanning on grid point [%g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3));
@@ -399,7 +399,7 @@ if strcmp(cfg.gridsearch, 'yes')
         % find the grid point(s) with the minimum error
         [err, indx] = min(grid.error(grid.inside,t));
         dip(t).pos = grid.pos(grid.inside(indx),:);           % note that for a symmetric dipole pair this results in a vector
-        dip(t).pos = reshape(dip(t).pos, cfg.numdipoles, 3);  % convert to a Nx3 array
+        dip(t).pos = reshape(dip(t).pos,3,cfg.numdipoles)';  % convert to a Nx3 array
         dip(t).mom = zeros(cfg.numdipoles*3,1);               % set the dipole moment to zero
         if cfg.numdipoles==1
           fprintf('found minimum after scanning for topography %d on grid point [%g %g %g]\n', t, dip(t).pos(1), dip(t).pos(2), dip(t).pos(3));
