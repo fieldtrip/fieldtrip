@@ -285,6 +285,11 @@ try, cfg.previous = data.cfg; end
 
 % remember the exact configuration details in the output
 data.cfg = cfg;
+   
+% convert back to input type if necessary
+if istimelock
+   data = ft_checkdata(data, 'datatype', 'timelock');
+end
 
 % the output data should be saved to a MATLAB file
 if ~isempty(cfg.outputfile)

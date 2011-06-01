@@ -138,6 +138,9 @@ if ~isempty(cfg.inputfile)
   end
 end
 
+% store original datatype
+dtype = ft_datatype(data);
+
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hastrialdef', 'yes', 'ismeg', 'yes');
 
@@ -422,6 +425,14 @@ end
 % copy the sampleinfo field as well
 if isfield(data, 'sampleinfo')
   interp.sampleinfo = data.sampleinfo;
+end
+
+% convert back to input type if necessary
+switch dtype 
+    case 'timelock'
+        interp = ft_checkdata(interp, 'datatype', 'timelock');
+    otherwise
+        % keep the output as it is
 end
 
 % the output data should be saved to a MATLAB file

@@ -101,10 +101,14 @@ if ~isempty(cfg.inputfile)
   end
 end
 
+% store original datatype
+convert = ft_datatype(data);
+  
 % check if the input data is valid for this function
 % ensure sampleinfo and trialinfo (if present) to be in the data
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hastrialdef', 'yes');
 
+  
 if isempty(cfg.detrend)
   error('The previous default to apply detrending has been changed. Recommended is to apply a baseline correction instead of detrending. See the help of this function for more details.');
 end
@@ -275,3 +279,10 @@ if ~isempty(cfg.outputfile)
   savevar(cfg.outputfile, 'data', data); % use the variable name "data" in the output file
 end
 
+% convert back to input type if necessary
+switch convert
+    case 'timelock'
+        data = ft_checkdata(data, 'datatype', 'timelock');
+    otherwise
+        % keep the output as it is
+end

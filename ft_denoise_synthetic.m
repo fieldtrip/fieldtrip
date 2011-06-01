@@ -65,6 +65,8 @@ if ~isempty(cfg.inputfile)
   end
 end
 
+% store original datatype
+dtype = ft_datatype(data);
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hastrialdef', 'yes');
 
 if ~ft_senstype(data, 'ctf')
@@ -138,6 +140,14 @@ try, cfg.previous = data.cfg; end
 
 % remember the exact configuration details in the output
 data.cfg = cfg;
+
+% convert back to input type if necessary
+switch dtype 
+    case 'timelock'
+        data = ft_checkdata(data, 'datatype', 'timelock');
+    otherwise
+        % keep the output as it is
+end
 
 % the output data should be saved to a MATLAB file
 if ~isempty(cfg.outputfile)
