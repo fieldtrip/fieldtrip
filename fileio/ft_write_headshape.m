@@ -72,6 +72,9 @@ switch fileformat
       fprintf(fid, '%-1.0f\n',num);
     end
     
+  case 'off'
+    write_off(filename,bnd.pnt,bnd.tri);
+
   case []
     error('you must specify the output format');
     
