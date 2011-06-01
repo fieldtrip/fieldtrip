@@ -42,12 +42,24 @@ function vol = ft_prepare_headmodel(cfg, mri)
 %   singleshell
 %   infinite
 
+% Copyright (C) 2011, Cristiano Micheli
+%
+% %Log$
+
+% get the optional arguments
+hdmfile         = keyval('hdmfile', varargin);
+conductivity    = keyval('conductivity', varargin);
+
+if isempty(cfg.method)
+  error('The method to create the head model should be specified')
+end
+
 switch cfg.method
 case 'bem_asa'
-  vol = ft_headmodel_bem_asa()
+  vol = ft_headmodel_bem_asa(hdmfile);
 
 case 'bem_cp'
-  vol = ft_headmodel_bem_cp()
+  vol = ft_headmodel_bem_cp(bnd,'hdmfile',hdmfile,'conductivity',conductivity);
 
 case 'bem_dipoli'
   vol = ft_headmodel_bem_dipoli()
@@ -74,14 +86,15 @@ case 'singlesphere'
   vol = ft_headmodel_singlesphere()
 
 case 'simbio'
-  cfg = [];
-  cfg.method = 'simbio';
-  [vol, cfg] = ft_prepare_femmodel(cfg,sens);
+  % FIXME: rewrite using ft_headmodel_fem_simbio/fns
+%   cfg = [];
+%   cfg.method = 'simbio';
+%   [vol, cfg] = ft_prepare_femmodel(cfg,sens);
   
 case 'fns'
-  cfg = [];
-  cfg.method = 'fns';
-  [vol, cfg] = ft_prepare_femmodel(cfg,sens);  
+%   cfg = [];
+%   cfg.method = 'fns';
+%   [vol, cfg] = ft_prepare_femmodel(cfg,sens);  
 
 otherwise
   error('unsupported method "%s"', cfg.method);
