@@ -33,6 +33,11 @@ fid  = fopen(filename, 'wb');
 npnt = size(pnt,1);
 nplc = size(plc,1);
 
+% check that the indexes of plc are correct (0 convention)
+if ~sum(any(plc==0))
+  plc = plc - 1;
+end
+
 fprintf(fid, 'OFF\n');
 fprintf(fid, '%d %d %d\n',npnt,nplc,nedges);
 for i=1:npnt
