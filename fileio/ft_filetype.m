@@ -954,7 +954,7 @@ elseif filetype_check_extension(filename, '.gii') && filetype_check_header(filen
   manufacturer = 'Neuroimaging Informatics Technology Initiative';
   content = 'tesselated surface description';
 elseif filetype_check_extension(filename, '.v')
-  type = 'Vista'; 
+  type = 'vista_vol'; 
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
