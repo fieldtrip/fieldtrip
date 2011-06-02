@@ -31,7 +31,7 @@ function [output] = csd2transfer(freq, varargin)
 %   blockindx
 %  
 %
-% Copyright (C) 2009, Jan-Mathijs Schoffelen
+% Copyright (C) 2009-2011, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -57,6 +57,7 @@ block        = ft_getopt(varargin, 'block',        {});
 blockindx    = ft_getopt(varargin, 'blockindx',    cell(0,2));
 tol          = ft_getopt(varargin, 'tol',          1e-18);
 fb           = ft_getopt(varargin, 'feedback',     'textbar');
+sfmethod     = ft_getopt(varargin, 'sfmethod',     'multivariate');
 
 % check whether input data is valid
 freq = ft_checkdata(freq, 'datatype', 'freq');
@@ -71,14 +72,23 @@ else
   nrpt = 1;
 end
 
+% if bivariate is requested without channelcmb, do all versus all pairwise
+if isempty(channelcmb) && strcmp(sfmethod, 'bivariate')
+  channelcmb = {'all' 'all'};
+end
+  
 if ~isempty(channelcmb)
   channelcmb = ft_channelcombination(channelcmb, freq.label);
 end
 
 if ~isempty(block)
-  %sanity check
+  % sanity check 1
   if ~iscell(block) 
-    error('cfg.block should be a cell-array containing 3 cells');
+    error('block should be a cell-array containing 3 cells');
+  end
+  % sanity check 2
+  if strcmp(sfmethod, 'bivariate')
+    error('when block is specified, it is not OK to do bivariate decomposition');
   end
 end
 
@@ -96,8 +106,23 @@ if ntim==1,
   siz = [siz 1]; %add dummy dimensionality for time axis
 end
 
-if nrpt>1 && isempty(channelcmb) && isempty(block),
+if strcmp(sfmethod, 'bivariate')
+  fprintf('computing pairwise non-parametric spectral factorization on %d channel pairs\n', size(channelcmb,1) - numel(unique(channelcmb(:))));
+elseif strcmp(sfmethod, 'multivariate')
+  fprintf('computing multivariate non-parametric spectral factorization on %d channels\n', numel(freq.label));
+else
+  error('unknown sfmethod %s', sfmethod);
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% the actual computations start here
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if strcmp(sfmethod, 'multivariate') && isempty(block) && nrpt>1,
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % multiple repetitions, loop over repetitions
+  % multivariate decomposition
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   H = zeros(siz) + 1i.*zeros(siz);
   S = zeros(siz) + 1i.*zeros(siz);
@@ -112,9 +137,12 @@ if nrpt>1 && isempty(channelcmb) && isempty(block),
       S(k,:,:,:,m) = Stmp;
     end 
   end
-elseif isempty(channelcmb) && isempty(block)
-  %standard code
-
+elseif strcmp(sfmethod, 'multivariate') && isempty(block),
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % standard code
+  % multivariate decomposition
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
   H   = zeros(siz) + 1i.*zeros(siz);
   S   = zeros(siz) + 1i.*zeros(siz);
   Z   = zeros([siz(1:2) siz(end)]);
@@ -122,6 +150,17 @@ elseif isempty(channelcmb) && isempty(block)
   % only do decomposition once
   for m = 1:ntim
     tmp = freq.crsspctrm(:,:,:,m);
+
+    % do PCA to avoid zigzags due to numerical issues
+    dopca = 1;
+    if dopca
+      dat     = sum(tmp,3);
+      [u,s,v] = svd(real(dat));
+      for k = 1:size(tmp,3)
+        tmp(:,:,k) = u'*tmp(:,:,k)*u;
+      end
+    end
+    
     if any(isnan(tmp(:))),
       Htmp = nan;
       Ztmp = nan;
@@ -130,19 +169,31 @@ elseif isempty(channelcmb) && isempty(block)
       [Htmp, Ztmp, Stmp] = sfactorization_wilson(tmp, fsample, freq.freq, ...
                                                    numiteration, tol, fb);
     end
+    
+    % undo PCA
+    if dopca
+      for k = 1:size(tmp,3)
+        Htmp(:,:,k) = u*Htmp(:,:,k)*u';
+        Stmp(:,:,k) = u*Stmp(:,:,k)*u';
+      end
+      Ztmp = u*Ztmp*u';
+    end
+    
     H(:,:,:,m) = Htmp;
     Z(:,:,m)   = Ztmp;
     S(:,:,:,m) = Stmp;
   end
-elseif nrpt>1 && ~isempty(channelcmb),
-  %error 
+elseif strcmp(sfmethod, 'bivariate') && nrpt>1,
+  % error 
   error('single trial estimates and linear combination indexing is not implemented');
 elseif nrpt>1 && ~isempty(block),
-  %error 
+  % error 
   error('single trial estimates and blockwise factorisation is not yet implemented');
-elseif ~isempty(channelcmb)
-  %pairwise factorization resulting in linearly indexed transfer functions
-
+elseif strcmp(sfmethod, 'bivariate')
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % pairwise factorization resulting in linearly indexed transfer functions
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
   %convert list of channel labels into indices
   cmbindx     = zeros(size(channelcmb));
   ok          = true(size(cmbindx,1), 1);
@@ -204,6 +255,10 @@ elseif ~isempty(channelcmb)
     labelcmb{indx(4),2} = [channelcmb{k,2},'[',channelcmb{k,1},channelcmb{k,2},']'];
   end
 elseif ~isempty(block)
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % blockwise multivariate stuff
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
   if ntim>1,
     error('blockwise factorization of tfrs is not yet possible');
   end
@@ -222,15 +277,35 @@ elseif ~isempty(block)
   for k = 1:numel(block)
     sel  = find(ismember(bindx, block{k}));
     Stmp = freq.crsspctrm(sel,sel,:);
+    
+    % do PCA to avoid zigzags due to numerical issues
+    dopca = 1;
+    if dopca
+      dat     = sum(Stmp,3);
+      [u,s,v] = svd(real(dat));
+      for m = 1:size(Stmp,3)
+        Stmp(:,:,m) = u'*Stmp(:,:,m)*u;
+      end
+    end
+    
     [Htmp, Ztmp, Stmp] = sfactorization_wilson(Stmp, fsample, freq.freq, ...
                                                  numiteration, tol, fb);  
+    
+    % undo PCA
+    if dopca
+      for m = 1:size(Stmp,3)
+        Htmp(:,:,m) = u*Htmp(:,:,m)*u';
+        Stmp(:,:,m) = u*Stmp(:,:,m)*u';
+      end
+      Ztmp = u*Ztmp*u';
+    end
+                                               
     siz  = [size(Htmp) 1]; siz = [siz(1)*siz(2) siz(3:end)];
     Htmp = reshape(Htmp, siz);
     siz  = [size(Ztmp) 1]; siz = [siz(1)*siz(2) siz(3:end)];
     Ztmp = reshape(Ztmp, siz);
     siz  = [size(Stmp) 1]; siz = [siz(1)*siz(2) siz(3:end)];
     Stmp = reshape(Stmp, siz);
-    siz  = [size(psitmp) 1]; siz = [siz(1)*siz(2) siz(3:end)];
     
     tmpindx = [];
     cmbtmp  = cell(siz(1), 2);
@@ -364,9 +439,9 @@ end
 %Step 4: Iterating to get spectral factors
 ft_progress('init', fb, 'computing spectral factorization');
 for iter = 1:Niterations
-  ft_progress(iter./Niterations, 'computing iteration %d/%d', iter, Niterations);
+  ft_progress(iter./Niterations, 'computing iteration %d/%d\n', iter, Niterations);
   for ind = 1:N2
-    invpsi     = inv(psi(:,:,ind)); 
+    invpsi     = inv(psi(:,:,ind));% + I*eps(psi(:,:,ind))); 
     g(:,:,ind) = invpsi*Sarr(:,:,ind)*invpsi'+I;%Eq 3.1
   end
   gp = PlusOperator(g,m,N+1); %gp constitutes positive and half of zero lags 
@@ -461,7 +536,7 @@ psi  = repmat(h, [1 1 1 N2]);
 %Step 4: Iterating to get spectral factors
 ft_progress('init', fb, 'computing spectral factorization');
 for iter = 1:Niterations
-  ft_progress(iter./Niterations, 'computing iteration %d/%d', iter, Niterations);
+  ft_progress(iter./Niterations, 'computing iteration %d/%d\n', iter, Niterations);
   invpsi = inv2x2(psi);
   g      = sandwich2x2(invpsi, Sarr) + I;
   gp     = PlusOperator2x2(g,m,N+1); %gp constitutes positive and half of zero lags 
