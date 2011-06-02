@@ -1,4 +1,4 @@
-function h = ft_connectivityplot(cfg, data)
+function h = ft_connectivityplot(cfg, varargin)
 
 % ft_connectivityplot plots frequency domain connectivity with dimord
 % 'chan_chan_freq'. The data are rendered in a square matrix of 'subplots'
@@ -44,9 +44,32 @@ function h = ft_connectivityplot(cfg, data)
 cfg.channel = ft_getopt(cfg, 'channel', 'all');
 cfg.zparam  = ft_getopt(cfg, 'zparam', 'cohspctrm');
 cfg.zlim    = ft_getopt(cfg, 'zlim', []);
+cfg.color   = ft_getopt(cfg, 'color', 'brgkywrgbkywrgbkywrgbkyw');
 
-if ~strcmp(data.dimord, 'chan_chan_freq')
-  error('the data should have a dimord of %s', 'chan_chan_freq');
+% make the function recursive if numel(varargin)>1
+% FIXME check explicitly which channels belong together
+if numel(varargin)>1
+  data = varargin{1};
+  ft_connectivityplot(cfg, data);
+  tmpcfg = cfg;
+  for k = 2:numel(varargin)
+    tmpcfg.color   = tmpcfg.color(2:end);
+    tmpcfg.holdfig = 1;
+    ft_connectivityplot(tmpcfg, varargin{k});
+  end
+  return;
+else
+  data = varargin{1};
+end
+
+if strcmp(data.dimord, 'chan_chan_freq')
+  % that's ok
+elseif strcmp(data.dimord, 'chancmb_freq')
+  % convert into 'chan_chan_freq'
+  x=1;
+  
+else
+  error('the data should have a dimord of %s or %s', 'chan_chan_freq', 'chancmb_freq');
 end
 
 if ~isfield(data, cfg.zparam)
@@ -64,7 +87,10 @@ if isempty(cfg.zlim)
   cfg.zlim = [min(dat(:)) max(dat(:))];
 end
 
-h = figure;hold on;
+if (isfield(cfg, 'holdfig') && cfg.holdfig==0) || ~isfield(cfg, 'holdfig')
+  h = figure;hold on;
+end
+
 for k = 1:nchan
   for m = 1:nchan
     if k~=m
@@ -72,7 +98,7 @@ for k = 1:nchan
       iy  = nchan - m + 1;
       % use the convention of the row-channel causing the column-channel
       tmp = reshape(dat(m,k,:), [nfreq 1]);
-      ft_plot_vector(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'vlim', cfg.zlim, 'box', 'yes');
+      ft_plot_vector(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'vlim', cfg.zlim, 'box', 'yes', 'color', cfg.color(1));
     end
   end
 end
