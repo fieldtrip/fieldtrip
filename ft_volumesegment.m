@@ -170,13 +170,34 @@ for k = 1:numel(cfg.output)
   % set defaults for the smoothing and thresholding if needed
   switch cfg.output{k}
     case 'tpm'
-      cfgsmooth(k)    = ft_getopt(cfg, 'smooth',    nan);
+      tmp = ft_getopt(cfg, 'smooth',    nan);
+      if ischar(tmp) && strcmp(tmp, 'no')
+        cfgsmooth(k)    = nan;
+      elseif ischar(tmp)
+        error('invalid value %s for cfg.smooth', tmp);
+      else
+        cfgsmooth(k)   = tmp;
+      end
       cfgthreshold(k) = ft_getopt(cfg, 'threshold', nan); 
     case {'skullstrip' 'brain' 'skull'}
-      cfgsmooth(k)    = ft_getopt(cfg, 'smooth',    5);
+      tmp = ft_getopt(cfg, 'smooth',    5);
+      if ischar(tmp) && strcmp(tmp, 'no')
+        cfgsmooth(k)    = nan;
+      elseif ischar(tmp)
+        error('invalid value %s for cfg.smooth', tmp);
+      else
+        cfgsmooth(k)   = tmp;
+      end
       cfgthreshold(k) = ft_getopt(cfg, 'threshold', 0.5); 
     case 'scalp'
-      cfgsmooth (k)   = ft_getopt(cfg, 'smooth',    5);     
+      tmp = ft_getopt(cfg, 'smooth',    5);     
+      if ischar(tmp) && strcmp(tmp, 'no')
+        cfgsmooth(k)    = nan;
+      elseif ischar(tmp)
+        error('invalid value %s for cfg.smooth', tmp);
+      else
+        cfgsmooth(k)   = tmp;
+      end
       cfgthreshold(k) = ft_getopt(cfg, 'threshold', 0.1);
     otherwise
       error('unknown output %s requested', cfg.output);
@@ -446,7 +467,8 @@ for k = 1:numel(cfg.output)
       brain = cast(brain, class(segment.anatomy));
       segment.anatomy = segment.anatomy.*brain;
       removefields    = intersect(removefields, {'gray' 'white' 'csf'});
-        
+      clear brain;      
+  
     case 'brain'
       % create brain surface from tissue probability maps
       fprintf('creating brainmask\n');
@@ -455,7 +477,8 @@ for k = 1:numel(cfg.output)
       if dothresh, brain = threshold(brain, cfg.threshold(k), 'brainmask'); end
       segment.brain = brain>0;
       removefields  = intersect(removefields, {'gray' 'white' 'csf' 'anatomy'});
-      
+      clear brain;      
+
     case 'skull'
       % create brain surface from tissue probability maps
       fprintf('creating brainmask\n');
@@ -468,15 +491,18 @@ for k = 1:numel(cfg.output)
       braindil      = imdilate(brain>0, strel_bol(6));
       segment.skull = braindil & ~brain;
       removefields  = intersect(removefields, {'gray' 'white' 'csf' 'anatomy'});
- 
+      clear brain braindil; 
+
     case 'scalp'
       % create scalp surface from anatomy
       fprintf('creating scalpmask\n');
-      if dosmooth, segment.scalp = dosmoothing(segment.anatomy, cfg.smooth(k), 'anatomy'); end
-      if dothresh, segment.scalp = threshold(segment.scalp,  cfg.threshold(k), 'anatomy'); end
-      segment.scalp = segment.scalp>0;
+      anatomy = segment.anatomy;
+      if dosmooth, anatomy = dosmoothing(anatomy, cfg.smooth(k), 'anatomy'); end
+      if dothresh, anatomy = threshold(anatomy,  cfg.threshold(k), 'anatomy'); end
+      segment.scalp = anatomy>0;
       removefields  = intersect(removefields, {'gray' 'white' 'csf' 'anatomy'});
-    
+      clear anatomy;    
+
     otherwise
       error('unknown output %s requested', cfg.output);
   end
