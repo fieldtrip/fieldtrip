@@ -666,13 +666,8 @@ classdef ft_mv_blogreg < ft_mv_predictor
          Y = Y';
          
        end
-       
-       
-    end
-    
-    methods(Access=protected)
-      
-      function [tdata,tdesign] = transform_data(obj,X,Y)
+   
+          function [tdata,tdesign] = transform_data(obj,X,Y)
          % recreate dataset and design matrix
          
          if ~obj.multitask && ~obj.mixed
@@ -745,6 +740,11 @@ classdef ft_mv_blogreg < ft_mv_predictor
          if nargin==3, tdesign = double(tdesign); end
            
       end
+       
+    end
+    
+    methods(Access=protected)
+      
        
       function prior = create_prior(obj)
         

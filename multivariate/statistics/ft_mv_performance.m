@@ -10,6 +10,7 @@ function res = ft_mv_performance(design,post,metric)
 % 'correlation'
 % 'invresvar'
 % 'coefdet'
+% 'press'
 % 'contingency'
 % 'cfmatrix'
 % 'bac'
@@ -67,9 +68,22 @@ for c=1:length(design)
       % coefficient of determination. In case of linear regression this
       % equals the squared correlation coefficient. It can be interpreted
       % as the proportion of explained variance
+            
+      x = post{c};
+      y = design{c};
       
-      resvar = mean((design{c} - post{c}).^2);      
-      res{c} = 1 - resvar ./ var(design{c});
+      coeff = polyfit(x,y,1);     % fit with first-order polynomial
+      ypred = polyval(coeff,x);   % predictions
+      dev = y - mean(y);          % deviations - measure of spread
+      SST = sum(dev.^2);          % total variation to be accounted for
+      resid = y - ypred;          % residuals - measure of mismatch
+      SSE = sum(resid.^2);        % variation NOT accounted for
+      res{c} = 1 - SSE/SST;       % percent of error explained
+      
+    case 'press'
+      % PRESS: the sum of the squared differences between predicted and observed values
+
+      res{c} = sum((design{c} - post{c}).^2);
       
     case 'contingency'
       
