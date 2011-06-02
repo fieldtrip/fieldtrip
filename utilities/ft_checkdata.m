@@ -1017,6 +1017,13 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
   if ~isempty(strmatch('time',  dimtok)), ntim=numel(data.time);      else ntim = 1; end
   
   if ~isfield(data, 'label')
+    % ensure that the bivariate spectral factorization results can be
+    % processed. FIXME this is experimental and will not work if the user
+    % did something weird before
+    for k = 1:numel(data.labelcmb)
+      tmp = tokenize(data.labelcmb{k}, '[');
+      data.labelcmb{k} = tmp{1};
+    end
     data.label = unique(data.labelcmb(:));
   end
 

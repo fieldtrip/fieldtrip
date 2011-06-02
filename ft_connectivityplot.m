@@ -66,8 +66,7 @@ if strcmp(data.dimord, 'chan_chan_freq')
   % that's ok
 elseif strcmp(data.dimord, 'chancmb_freq')
   % convert into 'chan_chan_freq'
-  x=1;
-  
+  data = ft_checkdata(data, 'cmbrepresentation', 'full');
 else
   error('the data should have a dimord of %s or %s', 'chan_chan_freq', 'chancmb_freq');
 end
