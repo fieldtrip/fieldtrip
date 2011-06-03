@@ -423,7 +423,8 @@ for i=1:ndata
             dat = dat(sel1, sel2, xidmin(i):xidmax(i));
             dat = nanmean(dat, meandir);
             siz = size(dat);
-            dat = reshape(dat, [siz(1) siz(3)]);
+            siz(find(siz(1:2)==1)) = [];            
+            dat = reshape(dat, siz);
             dat = dat(sellab, :);
         elseif haslabelcmb
             dat = dat(sellab, xidmin(i):xidmax(i));
