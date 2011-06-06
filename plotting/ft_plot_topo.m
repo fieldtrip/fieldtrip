@@ -139,7 +139,7 @@ if ~isempty(datmask)
     maskimage = maskimagetmp;
   else
     maskimagetmp2 = maskimage + maskimagetmp;
-    maskimage = maskimagetmp2 > 1;
+    maskimage = maskimagetmp2 > 1.01;
   end
 end
   
