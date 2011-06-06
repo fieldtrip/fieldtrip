@@ -38,6 +38,12 @@ function [Cval] = ft_conjunctionanalysis(cfg, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 
+ft_defaults
+
+% record start time and total processing time
+ftFuncTimer = tic();
+ftFuncClock = clock();
+
 % input check
 if nargin < 3
     error('not enough input arguments; there should be at least two');

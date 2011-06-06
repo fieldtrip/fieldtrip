@@ -33,18 +33,6 @@ function [lfp, spike, stm, bhv] = spass2fieldtrip(dirname);
 % Revision 1.3  2008/09/22 20:17:44  roboos
 % added call to ft_defaults
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock(); to the begin of the function
-%
-% Revision 1.2  2007/10/08 13:01:12  roboos
-% added glue to link spike timestamps and lfp continuous channels
-% made change to reflect the transposed input data
-%
-% Revision 1.1  2007/10/04 11:58:28  roboos
-% first implementation
-%
-
 ft_defaults
 
 % record start time and total processing time
