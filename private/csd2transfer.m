@@ -29,7 +29,7 @@ function [output] = csd2transfer(freq, varargin)
 %
 %   block
 %   blockindx
-%  
+%   svd
 %
 % Copyright (C) 2009-2011, Jan-Mathijs Schoffelen
 %
@@ -58,6 +58,9 @@ blockindx    = ft_getopt(varargin, 'blockindx',    cell(0,2));
 tol          = ft_getopt(varargin, 'tol',          1e-18);
 fb           = ft_getopt(varargin, 'feedback',     'textbar');
 sfmethod     = ft_getopt(varargin, 'sfmethod',     'multivariate');
+dosvd        = ft_getopt(varargin, 'svd',          'no');
+
+dosvd = istrue(dosvd);
 
 % check whether input data is valid
 freq = ft_checkdata(freq, 'datatype', 'freq');
@@ -151,9 +154,8 @@ elseif strcmp(sfmethod, 'multivariate') && isempty(block),
   for m = 1:ntim
     tmp = freq.crsspctrm(:,:,:,m);
 
-    % do PCA to avoid zigzags due to numerical issues
-    dopca = 1;
-    if dopca
+    % do SVD to avoid zigzags due to numerical issues
+    if dosvd
       dat     = sum(tmp,3);
       [u,s,v] = svd(real(dat));
       for k = 1:size(tmp,3)
@@ -170,8 +172,8 @@ elseif strcmp(sfmethod, 'multivariate') && isempty(block),
                                                    numiteration, tol, fb);
     end
     
-    % undo PCA
-    if dopca
+    % undo SVD
+    if dosvd
       for k = 1:size(tmp,3)
         Htmp(:,:,k) = u*Htmp(:,:,k)*u';
         Stmp(:,:,k) = u*Stmp(:,:,k)*u';
@@ -230,8 +232,30 @@ elseif strcmp(sfmethod, 'bivariate')
       end
     end
   else
-    [H, Z, S] = sfactorization_wilson2x2(freq.crsspctrm, fsample, freq.freq, ...
-                                           numiteration, tol, cmbindx, fb);
+    % if the number of pairs becomes too big, it seems to slow down quite a
+    % bit. try to chunk
+    if size(cmbindx,1)>1000
+      begchunk = 1:1000:size(cmbindx,1);
+      endchunk = [1000:1000:size(cmbindx,1) size(cmbindx,1)];
+      H = zeros(4*size(cmbindx,1), numel(freq.freq));
+      S = zeros(4*size(cmbindx,1), numel(freq.freq));
+      Z = zeros(4*size(cmbindx,1), 1);
+      for k = 1:numel(begchunk)
+        fprintf('computing factorization of chunck %d/%d\n', k, numel(begchunk));
+        [Htmp, Ztmp, Stmp] = sfactorization_wilson2x2(freq.crsspctrm, fsample, freq.freq, ...
+                                             numiteration, tol, cmbindx(begchunk(k):endchunk(k),:), fb);
+                                           
+        begix = (k-1)*4000+1;
+        endix = min(k*4000, size(cmbindx,1)*4);
+        H(begix:endix, :) = Htmp;
+        S(begix:endix, :) = Stmp;
+        Z(begix:endix, :) = Ztmp;
+                                           
+      end
+    else
+      [H, Z, S] = sfactorization_wilson2x2(freq.crsspctrm, fsample, freq.freq, ...
+                                             numiteration, tol, cmbindx, fb);
+    end
   end
   
   %convert crsspctrm accordingly
@@ -510,13 +534,14 @@ Sarr   = zeros(2,2,m,N2) + 1i.*zeros(2,2,m,N2);
 I      = repmat(eye(2),[1 1 m N2]); % Defining 2 x 2 identity matrix
 
 %Step 1: Forming 2-sided spectral densities for ifft routine in matlab
-f_ind = 0;
-for f = freq
-  f_ind           = f_ind+1;
-  for c = 1:m
-    Sarr(:,:,c,f_ind) = S(cmbindx(c,:),cmbindx(c,:),f_ind);
+for c = 1:m
+  f_ind = 0;
+  Stmp  = S(cmbindx(c,:),cmbindx(c,:),:);
+  for f = freq
+    f_ind             = f_ind+1;
+    Sarr(:,:,c,f_ind) = Stmp(:,:,f_ind);
     if(f_ind>1)
-      Sarr(:,:,c,2*N+2-f_ind) = S(cmbindx(c,:),cmbindx(c,:),f_ind).';
+      Sarr(:,:,c,2*N+2-f_ind) = Stmp(:,:,f_ind).';
     end
   end
 end
@@ -529,7 +554,14 @@ gam0 = gam(:,:,:,1);
 
 h    = complex(zeros(size(gam0)));
 for k = 1:m
-  h(:,:,k) = chol(gam0(:,:,k));
+  [tmp, dum] = chol(gam0(:,:,k));
+  if dum
+    warning('initialization for iterations did not work well, using arbitrary starting condition');
+    tmp = rand(2,2); h(:,:,k) = triu(tmp); %arbitrary initial condition
+  else
+    h(:,:,k) = tmp;
+  end
+  %h(:,:,k) = chol(gam0(:,:,k));
 end
 psi  = repmat(h, [1 1 1 N2]);
 
