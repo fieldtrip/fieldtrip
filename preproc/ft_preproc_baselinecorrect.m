@@ -54,6 +54,9 @@ end
 % estimate the baseline and subtract it
 baseline = mean(dat(:,begsample:endsample), 2);
 
+% ensure that the data is not represented as integer, otherwise "minus" fails
+dat = double(dat);
+
 if hasbsxfun
   % it is even faster to do this
   dat = bsxfun(@minus,dat,baseline);
