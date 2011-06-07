@@ -7,7 +7,8 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 % Use as:
 %   ft_multiplotTFR(cfg, data)
 %
-% The data can be a time-frequency representation of power or coherence that 
+% The data can be a time-frequency representation of power or coherence
+% that 
 % was computed using the FT_FREQANALYSIS or FT_FREQDESCRIPTIVES functions.
 %
 % The configuration can have the following parameters:
@@ -222,6 +223,7 @@ end % if hasrpt
 % Read or create the layout that will be used for plotting:
 lay = ft_prepare_layout(cfg, data);
 cfg.layout = lay;
+ft_plot_lay(lay, 'box', false);
 
 % Apply baseline correction:
 if ~strcmp(cfg.baseline, 'no')
