@@ -57,7 +57,7 @@ normalizeparam    = keyval('normalizeparam',    varargin);
 
 % determine the mean sphere origin, required for spinning
 if isempty(meansphereorigin)
-  switch voltype(vol)
+  switch ft_voltype(vol)
     case 'singlesphere'
       meansphereorigin = vol.o;
     case 'multisphere'
