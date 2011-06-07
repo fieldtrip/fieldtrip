@@ -1,6 +1,8 @@
 function ft_plot_matrix(varargin)
 
-% FT_PLOT_MATRIX
+% FT_PLOT_MATRIX visualizes a matrix as an image, similar to IMAGESC.
+% The position, width and height can be controlled to allow multiple
+% matrices (i.e. channels) to be plotted in a topographic arrangement.
 %
 % Use as
 %   ft_plot_matrix(C, ...)
@@ -10,17 +12,17 @@ function ft_plot_matrix(varargin)
 % respectively.
 %
 % Additional options should be specified in key-value pairs and can be
-%   'hpos'
-%   'vpos'
-%   'width'
-%   'height'
-%   'hlim'
-%   'vlim'
-%   'clim'
-%   'box'                can be 'yes' or 'no'
-%   'highlight' 
-%   'highlightstlyle'    can be 'saturation' or 'opacity'
-%   'tag'
+%   'hpos'            =
+%   'vpos'            =
+%   'width'           =
+%   'height'          =
+%   'hlim'            =
+%   'vlim'            =
+%   'clim'            =
+%   'box'             =  can be 'yes' or 'no'
+%   'highlight'       = 
+%   'highlightstlyle' =  can be 'saturation' or 'opacity'
+%   'tag'             = 
 %
 % Example use
 %   ft_plot_matrix(randn(30,50), 'width', 1, 'height', 1, 'hpos', 0, 'vpos', 0)

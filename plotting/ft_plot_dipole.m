@@ -4,7 +4,7 @@ function ft_plot_dipole(pos, ori, varargin)
 % and a stick pointing along the dipole orientation
 %
 % Use as
-%   plot_dipole(pos, mom, ...)
+%   ft_plot_dipole(pos, mom, ...)
 % where pos and mom are the dipole mosition and moment. Optional
 % input arguments should be specified in key-value pairs and can
 % include

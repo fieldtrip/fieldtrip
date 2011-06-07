@@ -5,17 +5,16 @@ function h = ft_plot_line(X, Y, varargin)
 %
 % Use as
 %   ft_plot_line(X, Y, ...)
-% where optional input arguments should come in key-value pairs and may
-% include
-%   hpos
-%   vpos
-%   width
-%   height
-%   hlim
-%   vlim
-%   color
-%   linestyle
-%   linewidth
+% where optional input arguments should come in key-value pairs and can include
+%   'hpos'       = 
+%   'vpos'       = 
+%   'width'      =
+%   'height'     = 
+%   'hlim'       = 
+%   'vlim'       = 
+%   'color'      = 
+%   'linestyle'  = 
+%   'linewidth'  = 
 
 % Copyrights (C) 2009, Robert Oostenveld
 %

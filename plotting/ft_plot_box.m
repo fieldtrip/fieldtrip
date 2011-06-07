@@ -4,8 +4,9 @@ function [varargout] = ft_plot_box(position, varargin);
 % left and upper right corner
 %
 % Use as
-%    plot_box(position, ...)
+%   ft_plot_box(position, ...)
 % where the position of the box is specified as is [x1, x2, y1, y2].
+%
 % Optional arguments should come in key-value pairs and can include
 %   'facealpha'   = transparency value between 0 and 1
 %   'facecolor'   = color specification as [r g b] values or a string, for example 'brain', 'cortex', 'skin', 'red', 'r'
@@ -67,35 +68,35 @@ Y = [y1 y1 y2 y2 y1];
 if isempty(hlim) && isempty(vlim) && isempty(hpos) && isempty(vpos) && isempty(height) && isempty(width)
   % no scaling is needed, the input X and Y are already fine
   % use a shortcut to speed up the plotting
-
+  
 else
   % use the full implementation
   abc = axis;
-
+  
   if isempty(hlim)
     hlim = abc([1 2]);
   end
-
+  
   if isempty(vlim)
     vlim = abc([3 4]);
   end
-
+  
   if isempty(hpos);
     hpos = (hlim(1)+hlim(2))/2;
   end
-
+  
   if isempty(vpos);
     vpos = (vlim(1)+vlim(2))/2;
   end
-
+  
   if isempty(width),
     width = hlim(2)-hlim(1);
   end
-
+  
   if isempty(height),
     height = vlim(2)-vlim(1);
   end
-
+  
   % first shift the horizontal axis to zero
   X = X - (hlim(1)+hlim(2))/2;
   % then scale to length 1
@@ -104,7 +105,7 @@ else
   X = X .* width;
   % then shift to the new horizontal position
   X = X + hpos;
-
+  
   % first shift the vertical axis to zero
   Y = Y - (vlim(1)+vlim(2))/2;
   % then scale to length 1
@@ -113,7 +114,7 @@ else
   Y = Y .* height;
   % then shift to the new vertical position
   Y = Y + vpos;
-
+  
 end % shortcut
 
 % use an arbitrary color, which will be replaced by the correct color a few lines down

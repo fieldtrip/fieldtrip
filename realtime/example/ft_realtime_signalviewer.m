@@ -9,6 +9,7 @@ function ft_realtime_signalviewer(cfg)
 %   cfg.blocksize  = number, size of the blocks/chuncks that are processed (default = 1 second)
 %   cfg.channel    = cell-array, see FT_CHANNELSELECTION (default = 'all')
 %   cfg.bufferdata = whether to start on the 'first or 'last' data that is available (default = 'last')
+%   cfg.jumptoeof  = whether to skip to the end of the stream/file at startup (default = 'yes')
 %   cfg.readevent  = whether or not to copy events (default = 'no')
 %   cfg.demean     = 'no' or 'yes', whether to apply baseline correction (default = 'yes')
 %
@@ -26,10 +27,10 @@ function ft_realtime_signalviewer(cfg)
 %
 % cfg.jumptoeof='yes' causes the realtime function to jump to the end
 % when the function _starts_. It causes all data acquired prior to
-% starting the RT function to be skipped.
+% starting the realtime function to be skipped.
 % 
 % cfg.bufferdata=last causes the realtime function to jump to the last
-% available data while _running_. If the RT loop is not fast enough,
+% available data while _running_. If the realtime loop is not fast enough,
 % it causes some data to be dropped.
 % 
 % If you want to skip all data that was acquired before you start the
@@ -38,7 +39,7 @@ function ft_realtime_signalviewer(cfg)
 % bufferdata=first. If you want to analyse data from a file, then you
 % should use jumptoeof=no and bufferdata=first.
 %
-% To stop the realtime function, you have to press Ctrl-C
+% To stop this realtime function, you have to press Ctrl-C
 
 % Copyright (C) 2008, Robert Oostenveld
 %
@@ -66,6 +67,7 @@ cfg = ft_checkconfig(cfg, 'required', {'datafile' 'headerfile'});
 
 % ensure that the persistent variables related to caching are cleared
 clear ft_read_header
+
 % start by reading the header from the realtime buffer
 hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', true, 'retry', true);
 

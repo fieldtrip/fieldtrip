@@ -1,26 +1,27 @@
 function hs = ft_plot_headshape(headshape,varargin)
 
-% FT_PLOT_HEADSHAPE visualizes the shape of a head generated from a variety
-% of files that are usually obtained using a Polhemus tracker and some
-% proprietary software (e.g. from CTF, BTi or Yokogawa). The headshape and
-% fiducials can be used for coregistration.
+% FT_PLOT_HEADSHAPE visualizes the shape of a head from a variety of
+% acquisition system. Usually the head shape is measured with a
+% Polhemus tracker and some proprietary software (e.g. from CTF, BTi
+% or Yokogawa). The headshape and fiducials can be used for coregistration.
+% If present in the headshape, the location of the fiducials will also
+% be shown.
 %
 % Use as
-%   hs = ft_plot_headshape(shape, varargin)
+%   hs = ft_plot_headshape(shape, ...)
+% where the shape is a structure obtained from FT_READ_HEADSHAPE.
 %
-% Graphic facilities are available for vertices and fiducials (Nasion, Left, Right ...). A list of
-% the arguments is given below with the correspondent admitted choices.
-%
-%     'vertexcolor'   ['brain', 'cortex', 'skin', 'black', 'red', 'r', ..., [0.5 1 0], ...]
-%     'fidcolor'      ['brain', 'cortex', 'skin', 'black', 'red', 'r', ..., [0.5 1 0], ...]
-%     'fidmarker'     ['.', '*', '+',  ...]
-%     'fidlabel'      ['yes', 'no', 1, 0, 'true', 'false']
-%     'transform'     transformation matrix for the fiducials, converts MRI
-%                       voxels into head shape coordinates
+% Optional arguments should come in key-value pairs and can include
+%   'vertexcolor' = color specification as [r g b] values or a string, for example 'brain', 'cortex', 'skin', 'red', 'r'
+%   'fidcolor'    = color specification as [r g b] values or a string, for example 'brain', 'cortex', 'skin', 'red', 'r'
+%   'fidmarker'   = ['.', '*', '+',  ...]
+%   'fidlabel'    = ['yes', 'no', 1, 0, 'true', 'false']
+%   'transform'   = transformation matrix for the fiducials, converts MRI
+%                   voxels into head shape coordinates
 %
 % Example
-%  [shape] = ft_read_headshape(filename);
-%  ft_plot_headshape(shape)
+%   shape = ft_read_headshape(filename);
+%   ft_plot_headshape(shape)
 
 % Copyright (C) 2009, Cristiano Micheli
 %
