@@ -62,11 +62,9 @@ maxtimestamp = ft_getopt(varargin, 'maxtimestamp');
 minnumber    = ft_getopt(varargin, 'minnumber');
 maxnumber    = ft_getopt(varargin, 'maxnumber');
 
-if ~isempty(type)
+if ~isempty(type) && ~iscell(type)
   % this can be specified as string or as cell-array, convert to cell-array
-  if ~iscell(type)
-    type = {type};
-  end
+  type = {type};
 end
 
 % determine which filters to apply
