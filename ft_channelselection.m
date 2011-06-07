@@ -161,7 +161,7 @@ for i=1:length(channel)
     labelreg = labelreg | ~cellfun(@isempty, regexp(datachannel, ['^' channel{i}(1:end-1) '.*'], 'once'));
     findreg  = [findreg i];
   end
-  if ~strcmp((channel{i}(1)),'*') && ~strcmp((channel{i}(end)),'*') && strfind(channel{i},'*') 
+  if ~strcmp((channel{i}(1)),'*') && ~strcmp((channel{i}(end)),'*') && any(strfind(channel{i},'*') )
     % the wildcard is in the middle
     sel  = strfind(channel{i}, '*');
     str1 = channel{i}(1:(sel-1));
