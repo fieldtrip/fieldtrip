@@ -45,22 +45,22 @@ function event = ft_filter_event(event, varargin)
 % $Id$
 
 % get the optional input arguments
-type         = keyval('type', varargin);
-value        = keyval('value', varargin);
-sample       = keyval('sample', varargin);
-timestamp    = keyval('timestamp', varargin);
-offset       = keyval('offset', varargin);
-duration     = keyval('duration', varargin);
+type         = ft_getopt(varargin, 'type');
+value        = ft_getopt(varargin, 'value');
+sample       = ft_getopt(varargin, 'sample');
+timestamp    = ft_getopt(varargin, 'timestamp');
+offset       = ft_getopt(varargin, 'offset');
+duration     = ft_getopt(varargin, 'duration');
 
 % the numeric fields can also be filtered on a range
-minsample    = keyval('minsample', varargin);
-maxsample    = keyval('maxsample', varargin);
-minduration  = keyval('minduration', varargin);
-maxduration  = keyval('maxduration', varargin);
-mintimestamp = keyval('mintimestamp', varargin);
-maxtimestamp = keyval('maxtimestamp', varargin);
-minnumber    = keyval('minnumber', varargin);
-maxnumber    = keyval('maxnumber', varargin);
+minsample    = ft_getopt(varargin, 'minsample');
+maxsample    = ft_getopt(varargin, 'maxsample');
+minduration  = ft_getopt(varargin, 'minduration');
+maxduration  = ft_getopt(varargin, 'maxduration');
+mintimestamp = ft_getopt(varargin, 'mintimestamp');
+maxtimestamp = ft_getopt(varargin, 'maxtimestamp');
+minnumber    = ft_getopt(varargin, 'minnumber');
+maxnumber    = ft_getopt(varargin, 'maxnumber');
 
 if ~isempty(type)
   % this can be specified as string or as cell-array, convert to cell-array

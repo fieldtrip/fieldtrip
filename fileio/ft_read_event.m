@@ -132,8 +132,8 @@ if isempty(detectflank)
   detectflank = 'up';
 end
 
-if ismember(eventformat, {'brainvision_eeg', 'brainvision_dat'})
-  [p, f, e] = fileparts(filename);
+if any(strcmp(eventformat, {'brainvision_eeg', 'brainvision_dat'}))
+  [p, f] = fileparts(filename);
   filename = fullfile(p, [f '.vhdr']);
   eventformat = 'brainvision_vhdr';
 end
@@ -146,7 +146,7 @@ if strcmp(eventformat, 'brainvision_vhdr')
   if ~isfield(hdr, 'MarkerFile') || isempty(hdr.MarkerFile)
     filename = [];
   else
-    [p, f, e] = fileparts(filename);
+    [p, f] = fileparts(filename);
     filename = fullfile(p, hdr.MarkerFile);
   end
 end
