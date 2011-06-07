@@ -266,3 +266,8 @@ else
   end
 end
 
+if ~isreal(err)
+  % this happens for complex valued data, i.e. when fitting a dipole to spectrally decomposed data
+  % the error function should return a positive valued real number, otherwise fminunc fails
+  err = abs(err);
+end
