@@ -15,7 +15,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 % cfg.xlim               = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.zlim               = 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
 % cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
-% cfg.cohrefchannel      = name of reference channel for visualising coherence, can be 'gui'
+% cfg.refchannel         = name of reference channel for visualising connectivity, can be 'gui'
 % cfg.baseline           = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
 % cfg.baselinetype       = 'absolute' or 'relative' (default = 'absolute')
 % cfg.trials             = 'all' or a selection given as a 1xN vector (default = 'all')
@@ -147,6 +147,7 @@ ft_defaults
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'unused',  {'cohtargetchannel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel' 'refchannel'}); 
 
 cla
 
@@ -467,20 +468,20 @@ haslabelcmb = isfield(data, 'labelcmb');
 
 if (isfull || haslabelcmb) && isfield(data, cfg.zparam)
     % A reference channel is required:
-    if ~isfield(cfg, 'cohrefchannel')
+    if ~isfield(cfg, 'refchannel')
         error('no reference channel is specified');
     end
 
-    % check for cohrefchannel being part of selection
-    if ~strcmp(cfg.cohrefchannel,'gui')
-        if (isfull      && ~any(ismember(data.label, cfg.cohrefchannel))) || ...
-                (haslabelcmb && ~any(ismember(data.labelcmb(:), cfg.cohrefchannel)))
-            error('cfg.cohrefchannel is a not present in the (selected) channels)')
+    % check for refchannel being part of selection
+    if ~strcmp(cfg.refchannel,'gui')
+        if (isfull      && ~any(ismember(data.label, cfg.refchannel))) || ...
+                (haslabelcmb && ~any(ismember(data.labelcmb(:), cfg.refchannel)))
+            error('cfg.refchannel is a not present in the (selected) channels)')
         end
     end
 
     % Interactively select the reference channel
-    if strcmp(cfg.cohrefchannel, 'gui')
+    if strcmp(cfg.refchannel, 'gui')
         % Open a single figure with the channel layout, the user can click on a reference channel
         h = clf;
         ft_plot_lay(lay, 'box', false);
@@ -501,13 +502,13 @@ if (isfull || haslabelcmb) && isfield(data, cfg.zparam)
     if ~isfull,
         % Convert 2-dimensional channel matrix to a single dimension:
         if isempty(cfg.matrixside)
-            sel1 = strmatch(cfg.cohrefchannel, data.labelcmb(:,2), 'exact');
-            sel2 = strmatch(cfg.cohrefchannel, data.labelcmb(:,1), 'exact');
+            sel1 = strmatch(cfg.refchannel, data.labelcmb(:,2), 'exact');
+            sel2 = strmatch(cfg.refchannel, data.labelcmb(:,1), 'exact');
         elseif strcmp(cfg.matrixside, 'feedforward')
             sel1 = [];
-            sel2 = strmatch(cfg.cohrefchannel, data.labelcmb(:,1), 'exact');
+            sel2 = strmatch(cfg.refchannel, data.labelcmb(:,1), 'exact');
         elseif strcmp(cfg.matrixside, 'feedback')
-            sel1 = strmatch(cfg.cohrefchannel, data.labelcmb(:,2), 'exact');
+            sel1 = strmatch(cfg.refchannel, data.labelcmb(:,2), 'exact');
             sel2 = [];
         end
         fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.zparam);
@@ -517,7 +518,7 @@ if (isfull || haslabelcmb) && isfield(data, cfg.zparam)
         data           = rmfield(data, 'labelcmb');
     else
         % General case
-        sel               = match_str(data.label, cfg.cohrefchannel);
+        sel               = match_str(data.label, cfg.refchannel);
         siz               = [size(data.(cfg.zparam)) 1];
         if strcmp(cfg.matrixside, 'feedback') || isempty(cfg.matrixside)
             %FIXME the interpretation of 'feedback' and 'feedforward' depend on
@@ -682,11 +683,11 @@ elseif strcmp(cfg.comment, 'xlim')
 elseif ~ischar(cfg.comment)
     error('cfg.comment must be string');
 end
-if isfield(cfg,'cohrefchannel')
-    if iscell(cfg.cohrefchannel)
-        cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.cohrefchannel{:});
+if isfield(cfg,'refchannel')
+    if iscell(cfg.refchannel)
+        cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel{:});
     else
-        cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.cohrefchannel);
+        cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel);
     end
 end
 
@@ -879,12 +880,12 @@ axis equal;
 cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION which is called after selecting channels in case of cfg.cohrefchannel='gui'
+% SUBFUNCTION which is called after selecting channels in case of cfg.refchannel='gui'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_topoplotER(label, cfg, varargin)
 
-cfg.cohrefchannel = label;
-fprintf('selected cfg.cohrefchannel = ''%s''\n', cfg.cohrefchannel{:});
+cfg.refchannel = label;
+fprintf('selected cfg.refchannel = ''%s''\n', cfg.refchannel{:});
 p = get(gcf, 'Position');
 f = figure;
 set(f, 'Position', p);
@@ -892,7 +893,7 @@ cfg.highlight = 'on';
 cfg.highlightsymbol  = '.';
 cfg.highlightcolor   = 'r';
 cfg.highlightsize = 20;
-cfg.highlightchannel =  cfg.cohrefchannel;
+cfg.highlightchannel =  cfg.refchannel;
 ft_topoplotER(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

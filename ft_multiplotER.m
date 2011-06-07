@@ -23,7 +23,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 % cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.ylim          = 'maxmin' or [ymin ymax] (default = 'maxmin')
 % cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
-% cfg.cohrefchannel = name of reference channel for visualising coherence, can be 'gui'
+% cfg.refchannel    = name of reference channel for visualising connectivity, can be 'gui'
 % cfg.baseline      = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
 % cfg.baselinetype  = 'absolute' or 'relative' (default = 'absolute')
 % cfg.trials        = 'all' or a selection given as a 1xN vector (default = 'all')
@@ -115,6 +115,7 @@ ft_defaults
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'unused',  {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
+cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel', 'refchannel'});
 
 cla
 
@@ -165,7 +166,7 @@ if ~isfield(cfg, 'matrixside'),   cfg.matrixside    = '';                       
 
 Ndata = numel(varargin);
 
-%FIXME rename matrixside and cohrefchannel in more meaningful options
+%FIXME rename matrixside and refchannel in more meaningful options
 if ischar(cfg.graphcolor)
   GRAPHCOLOR = ['k' cfg.graphcolor];
 elseif isnumeric(cfg.graphcolor)
@@ -333,20 +334,20 @@ haslabelcmb = isfield(varargin{1}, 'labelcmb');
 
 if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.zparam)
   % A reference channel is required:
-  if ~isfield(cfg, 'cohrefchannel')
+  if ~isfield(cfg, 'refchannel')
     error('no reference channel is specified');
   end
   
-  % check for cohrefchannel being part of selection
-  if ~strcmp(cfg.cohrefchannel,'gui')
-    if (isfull      && ~any(ismember(varargin{1}.label, cfg.cohrefchannel))) || ...
-        (haslabelcmb && ~any(ismember(varargin{1}.labelcmb(:), cfg.cohrefchannel)))
-      error('cfg.cohrefchannel is a not present in the (selected) channels)')
+  % check for refchannel being part of selection
+  if ~strcmp(cfg.refchannel,'gui')
+    if (isfull      && ~any(ismember(varargin{1}.label, cfg.refchannel))) || ...
+        (haslabelcmb && ~any(ismember(varargin{1}.labelcmb(:), cfg.refchannel)))
+      error('cfg.refchannel is a not present in the (selected) channels)')
     end
   end
   
   % Interactively select the reference channel
-  if strcmp(cfg.cohrefchannel, 'gui')
+  if strcmp(cfg.refchannel, 'gui')
     % Open a single figure with the channel layout, the user can click on a reference channel
     h = clf;
     ft_plot_lay(lay, 'box', false);
@@ -368,13 +369,13 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.zparam)
     if ~isfull,
       % Convert 2-dimensional channel matrix to a single dimension:
       if isempty(cfg.matrixside)
-        sel1 = strmatch(cfg.cohrefchannel, varargin{i}.labelcmb(:,2), 'exact');
-        sel2 = strmatch(cfg.cohrefchannel, varargin{i}.labelcmb(:,1), 'exact');
+        sel1 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,2), 'exact');
+        sel2 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,1), 'exact');
       elseif strcmp(cfg.matrixside, 'feedforward')
         sel1 = [];
-        sel2 = strmatch(cfg.cohrefchannel, varargin{i}.labelcmb(:,1), 'exact');
+        sel2 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,1), 'exact');
       elseif strcmp(cfg.matrixside, 'feedback')
-        sel1 = strmatch(cfg.cohrefchannel, varargin{i}.labelcmb(:,2), 'exact');
+        sel1 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,2), 'exact');
         sel2 = [];
       end
       fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.zparam);
@@ -384,7 +385,7 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.zparam)
       varargin{i}           = rmfield(varargin{i}, 'labelcmb');
     else
       % General case
-      sel               = match_str(varargin{i}.label, cfg.cohrefchannel);
+      sel               = match_str(varargin{i}.label, cfg.refchannel);
       siz               = [size(varargin{i}.(cfg.zparam)) 1];
       if strcmp(cfg.matrixside, 'feedback') || isempty(cfg.matrixside)
         %FIXME the interpretation of 'feedback' and 'feedforward' depend on
@@ -719,14 +720,14 @@ for k=1:length(strlist)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION which is called after selecting channels in case of cfg.cohrefchannel='gui'
+% SUBFUNCTION which is called after selecting channels in case of cfg.refchannel='gui'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_multiplotER(label, cfg, varargin)
 if iscell(label)
   label = label{1};
 end
-cfg.cohrefchannel = label; %FIXME this only works with label being a string
-fprintf('selected cfg.cohrefchannel = ''%s''\n', cfg.cohrefchannel);
+cfg.refchannel = label; %FIXME this only works with label being a string
+fprintf('selected cfg.refchannel = ''%s''\n', cfg.refchannel);
 p = get(gcf, 'Position');
 f = figure;
 set(f, 'Position', p);

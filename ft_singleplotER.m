@@ -24,7 +24,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 % cfg.ylim          = 'maxmin' or [ymin ymax] (default = 'maxmin')
 % cfg.channel       = nx1 cell-array with selection of channels (default = 'all'),
 %                     see ft_channelselection for details
-% cfg.cohrefchannel = name of reference channel for visualising coherence, can be 'gui'
+% cfg.refchannel    = name of reference channel for visualising connectivity, can be 'gui'
 % cfg.baseline      = 'yes','no' or [time1 time2] (default = 'no'), see ft_timelockbaseline
 % cfg.baselinetype  = 'absolute' or 'relative' (default = 'absolute')
 % cfg.trials        = 'all' or a selection given as a 1xn vector (default = 'all')
@@ -85,6 +85,7 @@ cfg = ft_checkconfig(cfg, 'unused',  {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
 cfg = ft_checkconfig(cfg, 'renamed', {'channelindex',  'channel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'channelname',   'channel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel', 'refchannel'});
 
 cla
 
@@ -292,34 +293,34 @@ haslabelcmb = isfield(varargin{1}, 'labelcmb');
 
 if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.zparam)
     % a reference channel is required:
-    if ~isfield(cfg, 'cohrefchannel')
+    if ~isfield(cfg, 'refchannel')
         error('no reference channel is specified');
     end
     
-    % check for cohrefchannel being part of selection
-    if ~strcmp(cfg.cohrefchannel,'gui')
-        if (isfull      && ~any(ismember(varargin{1}.label, cfg.cohrefchannel))) || ...
-                (haslabelcmb && ~any(ismember(varargin{1}.labelcmb(:), cfg.cohrefchannel)))
-            error('cfg.cohrefchannel is a not present in the (selected) channels)')
+    % check for refchannel being part of selection
+    if ~strcmp(cfg.refchannel,'gui')
+        if (isfull      && ~any(ismember(varargin{1}.label, cfg.refchannel))) || ...
+                (haslabelcmb && ~any(ismember(varargin{1}.labelcmb(:), cfg.refchannel)))
+            error('cfg.refchannel is a not present in the (selected) channels)')
         end
     end
     
     % interactively select the reference channel
-    if strcmp(cfg.cohrefchannel, 'gui')
-        error('cfg.cohrefchannel = ''gui'' is not supported in ft_singleplotER');
+    if strcmp(cfg.refchannel, 'gui')
+        error('cfg.refchannel = ''gui'' is not supported in ft_singleplotER');
     end
     
     for i=1:ndata
         if ~isfull,
             % convert 2-dimensional channel matrix to a single dimension:
             if isempty(cfg.matrixside)
-                sel1 = strmatch(cfg.cohrefchannel, varargin{i}.labelcmb(:,2), 'exact');
-                sel2 = strmatch(cfg.cohrefchannel, varargin{i}.labelcmb(:,1), 'exact');
+                sel1 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,2), 'exact');
+                sel2 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,1), 'exact');
             elseif strcmp(cfg.matrixside, 'feedforward')
                 sel1 = [];
-                sel2 = strmatch(cfg.cohrefchannel, varargin{i}.labelcmb(:,1), 'exact');
+                sel2 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,1), 'exact');
             elseif strcmp(cfg.matrixside, 'feedback')
-                sel1 = strmatch(cfg.cohrefchannel, varargin{i}.labelcmb(:,2), 'exact');
+                sel1 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,2), 'exact');
                 sel2 = [];
             end
             fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.zparam);
@@ -329,7 +330,7 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.zparam)
             varargin{i}           = rmfield(varargin{i}, 'labelcmb');
         else
             % general case
-            sel               = match_str(varargin{i}.label, cfg.cohrefchannel);
+            sel               = match_str(varargin{i}.label, cfg.refchannel);
             siz               = [size(varargin{i}.(cfg.zparam)) 1];
             if strcmp(cfg.matrixside, 'feedback') || isempty(cfg.matrixside)
                 %fixme the interpretation of 'feedback' and 'feedforward' depend on
@@ -537,11 +538,11 @@ for i=2:length(cells)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% subfunction which is called by ft_select_channel in case cfg.cohrefchannel='gui'
+% subfunction which is called by ft_select_channel in case cfg.refchannel='gui'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_singleplotER(label, cfg, varargin)
-cfg.cohrefchannel = label;
-fprintf('selected cfg.cohrefchannel = ''%s''\n', cfg.cohrefchannel);
+cfg.refchannel = label;
+fprintf('selected cfg.refchannel = ''%s''\n', cfg.refchannel);
 p = get(gcf, 'position');
 f = figure;
 set(f, 'position', p);

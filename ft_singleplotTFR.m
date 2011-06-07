@@ -27,7 +27,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 % cfg.trials        = 'all' or a selection given as a 1xN vector (default = 'all')
 % cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'),
 %                     see FT_CHANNELSELECTION for details
-% cfg.cohrefchannel = name of reference channel for visualising coherence, can be 'gui'
+% cfg.refchannel    = name of reference channel for visualising connectivity, can be 'gui'
 % cfg.fontsize      = font size of title (default = 8)
 % cfg.hotkeys          = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
 % cfg.colormap      = any sized colormap, see COLORMAP
@@ -73,6 +73,7 @@ cfg = ft_checkconfig(cfg, 'unused',      {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'channelindex',  'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'channelname',   'channel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel', 'refchannel'});
 
 cla
 
@@ -161,20 +162,20 @@ haslabelcmb = isfield(data, 'labelcmb');
 
 if (isfull || haslabelcmb) && isfield(data, cfg.zparam)
   % A reference channel is required:
-  if ~isfield(cfg, 'cohrefchannel')
+  if ~isfield(cfg, 'refchannel')
     error('no reference channel is specified');
   end
   
-  % check for cohrefchannel being part of selection
-  if ~strcmp(cfg.cohrefchannel,'gui')
-    if (isfull      && ~any(ismember(data.label, cfg.cohrefchannel))) || ...
-       (haslabelcmb && ~any(ismember(data.labelcmb(:), cfg.cohrefchannel)))
-      error('cfg.cohrefchannel is a not present in the (selected) channels)')
+  % check for refchannel being part of selection
+  if ~strcmp(cfg.refchannel,'gui')
+    if (isfull      && ~any(ismember(data.label, cfg.refchannel))) || ...
+       (haslabelcmb && ~any(ismember(data.labelcmb(:), cfg.refchannel)))
+      error('cfg.refchannel is a not present in the (selected) channels)')
     end
   end
   
   % Interactively select the reference channel
-  if strcmp(cfg.cohrefchannel, 'gui')
+  if strcmp(cfg.refchannel, 'gui')
     error('coh.refchannel = ''gui'' is not supported at the moment for ft_singleplotTFR');
 %     
 %     % Open a single figure with the channel layout, the user can click on a reference channel
@@ -197,13 +198,13 @@ if (isfull || haslabelcmb) && isfield(data, cfg.zparam)
   if ~isfull,
     % Convert 2-dimensional channel matrix to a single dimension:
     if isempty(cfg.matrixside)
-      sel1 = strmatch(cfg.cohrefchannel, data.labelcmb(:,2), 'exact');
-      sel2 = strmatch(cfg.cohrefchannel, data.labelcmb(:,1), 'exact');
+      sel1 = strmatch(cfg.refchannel, data.labelcmb(:,2), 'exact');
+      sel2 = strmatch(cfg.refchannel, data.labelcmb(:,1), 'exact');
     elseif strcmp(cfg.matrixside, 'feedforward')
       sel1 = [];
-      sel2 = strmatch(cfg.cohrefchannel, data.labelcmb(:,1), 'exact');
+      sel2 = strmatch(cfg.refchannel, data.labelcmb(:,1), 'exact');
     elseif strcmp(cfg.matrixside, 'feedback')
-      sel1 = strmatch(cfg.cohrefchannel, data.labelcmb(:,2), 'exact');
+      sel1 = strmatch(cfg.refchannel, data.labelcmb(:,2), 'exact');
       sel2 = [];
     end
     fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.zparam);
@@ -213,7 +214,7 @@ if (isfull || haslabelcmb) && isfield(data, cfg.zparam)
     data           = rmfield(data, 'labelcmb');
   else
     % General case
-    sel               = match_str(data.label, cfg.cohrefchannel);
+    sel               = match_str(data.label, cfg.refchannel);
     siz               = [size(data.(cfg.zparam)) 1];
     if strcmp(cfg.matrixside, 'feedback') || isempty(cfg.matrixside)
       %FIXME the interpretation of 'feedback' and 'feedforward' depend on
@@ -442,11 +443,11 @@ for i=2:length(cells)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION which is called by ft_select_channel in case cfg.cohrefchannel='gui'
+% SUBFUNCTION which is called by ft_select_channel in case cfg.refchannel='gui'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_singleplotTFR(label, cfg, varargin)
-cfg.cohrefchannel = label;
-fprintf('selected cfg.cohrefchannel = ''%s''\n', cfg.cohrefchannel);
+cfg.refchannel = label;
+fprintf('selected cfg.refchannel = ''%s''\n', cfg.refchannel);
 p = get(gcf, 'Position');
 f = figure;
 set(f, 'Position', p);

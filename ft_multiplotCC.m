@@ -106,7 +106,7 @@ for k=1:length(chNum) - 2
       config.xlim   = [k-0.5 k+0.5];
     end
     config.zparam = cfg.zparam;
-    config.cohrefchannel = Lbl(k);
+    config.refchannel = Lbl(k);
     config.colorbar = 'no';
     config.zlim     = scale;
     config.grid_scale = 30;
