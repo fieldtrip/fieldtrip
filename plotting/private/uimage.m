@@ -117,12 +117,12 @@ elseif ~evenx && ~eveny   % X and Y both uneven
     ye = linspace(y(1), y(end), ny);
 
     ce = zeros(ny,nx);
-
+    
     for i=1:nx
         for j=1:ny
             indi = find(x<=xe(i));
             indj = find(y<=ye(j));
-            ce(j,i) = c(indi(end), indj(end));
+            ce(j,i) = c(indj(end),indi(end));
         end;
     end;
 
