@@ -692,13 +692,13 @@ end
 % Draw x axis
 if strcmp(cfg.axes,'yes') || strcmp(cfg.axes, 'xy') || strcmp(cfg.axes,'x')
   xs =  xpos+width*(xlim-xlim(1))/(xlim(2)-xlim(1));
-  ys =  [ypos ypos];
+  ys =  ypos+height*([0 0]-ylim(1))/(ylim(2)-ylim(1));
   ft_plot_vector(xs,ys,'color','k');
 end
 
 % Draw y axis
 if strcmp(cfg.axes,'yes') || strcmp(cfg.axes, 'xy') || strcmp(cfg.axes,'y')
-  xs =  [xpos xpos];
+  xs =  xpos+width*([0 0]-xlim(1))/(xlim(2)-xlim(1));
   ys =  ypos+height*(ylim-ylim(1))/(ylim(2)-ylim(1));
   ft_plot_vector(xs,ys,'color','k');
 end
