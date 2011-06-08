@@ -39,7 +39,7 @@ function ft_plot_lay(lay, varargin)
 %
 % $Id$
 
-warning('on', 'MATLAB:divideByZero');
+ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'point', 'box', 'label','labelsize','labeloffset', 'mask', 'outline', 'verbose','pointsymbol','pointcolor','pointsize'});
@@ -136,3 +136,5 @@ axis off
 if ~holdflag
   hold off
 end
+
+warning(ws); %revert to original state

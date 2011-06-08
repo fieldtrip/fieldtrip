@@ -33,7 +33,7 @@ function ft_plot_topo3d(pnt, val, varargin)
 %
 % $Id$
 
-warning('on', 'MATLAB:divideByZero');
+ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 topostyle     = keyval('topostyle',     varargin); if isempty(topostyle),     topostyle = 'color';    end
@@ -180,3 +180,5 @@ axis equal
 if ~holdflag
   hold off
 end
+
+warning(ws); %revert to original state

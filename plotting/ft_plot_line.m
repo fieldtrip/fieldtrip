@@ -36,7 +36,7 @@ function h = ft_plot_line(X, Y, varargin)
 %
 % $Id$
 
-warning('on', 'MATLAB:divideByZero');
+ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'color', 'linestyle', 'linewidth'});
@@ -103,3 +103,5 @@ else
 end % shortcut
 
 h = line(X, Y, 'Color', color, 'LineStyle', linestyle, 'LineWidth', linewidth);
+
+warning(ws); %revert to original state

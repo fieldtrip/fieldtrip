@@ -47,7 +47,7 @@ function ft_plot_matrix(varargin)
 %
 % $Id$
 
-warning('on', 'MATLAB:divideByZero');
+ws = warning('on', 'MATLAB:divideByZero');
 
 if nargin>2 && all(cellfun(@isnumeric, varargin(1:3)))
   % the function was called like imagesc(x, y, c, ...)
@@ -242,3 +242,5 @@ if box
   boxposition(4) = vpos + height/2;
   ft_plot_box(boxposition);
 end
+
+warning(ws); %revert to original state

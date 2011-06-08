@@ -49,7 +49,7 @@ function [varargout] = ft_plot_vector(varargin)
 %
 % $Id$
 
-warning('on', 'MATLAB:divideByZero');
+ws = warning('on', 'MATLAB:divideByZero');
 
 if nargin>1 && all(cellfun(@isnumeric, varargin(1:2)))
   % the function was called like plot(x, y, ...)
@@ -324,3 +324,5 @@ end
 if ~holdflag
   hold off
 end
+
+warning(ws); %revert to original state

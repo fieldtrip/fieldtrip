@@ -44,7 +44,7 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 % these are for speeding up the plotting on subsequent calls
 persistent previous_argin previous_maskimage
 
-warning('on', 'MATLAB:divideByZero');
+ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'gridscale', 'shading', 'mask', 'outline', 'interplim', 'interpmethod','isolines','style', 'datmask'});
@@ -199,3 +199,4 @@ if ~holdflag
   hold off
 end
 
+warning(ws); %revert to original state

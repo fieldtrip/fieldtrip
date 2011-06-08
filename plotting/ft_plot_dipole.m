@@ -37,7 +37,7 @@ function ft_plot_dipole(pos, ori, varargin)
 %
 % $Id$
 
-warning('on', 'MATLAB:divideByZero');
+ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 units       = keyval('units', varargin);       if isempty(units),         units = 'cm';        end
@@ -159,3 +159,4 @@ if ~holdflag
   hold off
 end
 
+warning(ws); %revert to original state

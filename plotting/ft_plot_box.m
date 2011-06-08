@@ -42,7 +42,7 @@ function [varargout] = ft_plot_box(position, varargin);
 %
 % $Id$
 
-warning('on', 'MATLAB:divideByZero');
+ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'facealpha', 'facecolor', 'edgecolor'});
@@ -129,3 +129,5 @@ set(h, 'EdgeColor', edgecolor)
 if nargout == 1
   varargout{1} = h;
 end
+
+warning(ws); %revert to original state

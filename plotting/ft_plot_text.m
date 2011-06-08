@@ -38,7 +38,7 @@ function [varargout] = ft_plot_text(X, Y, str, varargin)
 %
 % $Id$
 
-warning('on', 'MATLAB:divideByZero');
+ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'Color', ....
@@ -119,3 +119,5 @@ if ~isempty(FontName), set(h, 'FontName', FontName); end
 if nargout == 1;
   varargout{1} = h;
 end
+
+warning(ws); %revert to original state
