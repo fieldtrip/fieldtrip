@@ -20,7 +20,6 @@ function [stat, cfg] = statistics_montecarlo(cfg, dat, design, varargin)
 % cfg.randomfactor, cfg.voxelthreshold, cfg.voxelstatistic
 %
 % Configuration options that can be specified:
-%   cfg.design           = design matrix
 %   cfg.numrandomization = number of randomizations, can be 'all'
 %   cfg.correctm         = apply multiple-comparison correction, 'no', 'max', cluster', 'bonferoni', 'holms', 'fdr' (default = 'no')
 %   cfg.alpha            = critical value for rejecting the null-hypothesis per tail (default = 0.05) 
@@ -203,7 +202,6 @@ if strcmp(cfg.correctm, 'cluster')
     tmpcfg.dim            = cfg.dim;
     tmpcfg.alpha          = cfg.clusteralpha;
     tmpcfg.tail           = cfg.clustertail;
-    tmpcfg.design         = cfg.design;
     tmpcfg.ivar           = cfg.ivar;
     tmpcfg.uvar           = cfg.uvar;
     tmpcfg.cvar           = cfg.cvar;
