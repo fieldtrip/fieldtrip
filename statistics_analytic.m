@@ -16,7 +16,6 @@ function [stat, cfg] = statistics_analytic(cfg, dat, design);
 % 
 % The configuration can contain
 %   cfg.statistic        = string, statistic to compute for each sample or voxel (see below)
-%   cfg.design           = design matrix
 %   cfg.correctm         = apply multiple-comparison correction, 'no', 'bonferoni', 'holms', 'fdr' (default = 'no')
 %   cfg.alpha            = critical value for rejecting the null-hypothesis (default = 0.05)
 %   cfg.tail             = -1, 1 or 0 (default = 0)

@@ -2,7 +2,7 @@ function [s,cfg] = statfun_actvsblT(cfg, dat, design)
 
 % STATFUN_actvsblT calculates the activation-versus-baseline T-statistic 
 % on the biological data in dat (the dependent variable), using the information on 
-% the independent variable (iv) in cfg.design. 
+% the independent variable (iv) in design. 
 %
 % Note: It does not make sense to use this test statistic when
 % baseline-correction was performed by subtracting the time average of the
