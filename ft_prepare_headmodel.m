@@ -48,9 +48,10 @@ function vol = ft_prepare_headmodel(cfg, mri)
 
 % set the defaults
 if ~isfield(cfg, 'hdmfile'),         cfg.hdmfile    = [];  end
-if ~isfield(cfg, 'conductivity'),    cfg.conductivity  = 1;  end
-if ~isfield(cfg, 'geom'),    cfg.geom  = [];  end
-
+if ~isfield(cfg, 'conductivity'),    cfg.conductivity  = [];  end
+if ~isfield(cfg, 'geom'),            cfg.geom  = [];  end
+if ~isfield(cfg, 'isolatedsource'),  cfg.isolatedsource = [];  end
+  
 if isempty(cfg.method)
   error('The method to create the head model should be specified')
 end
@@ -85,7 +86,11 @@ if basedonhaedshape
       end
       
     case 'bem_dipoli'
-      vol = ft_headmodel_bem_dipoli()
+      if ~isempty(cfg.hdmfile)
+        vol = ft_headmodel_bem_dipoli([],'hdmfile',cfg.hdmfile,'conductivity',cfg.conductivity,'isolatedsource',cfg.isolatedsource);
+      else
+        vol = ft_headmodel_bem_dipoli(cfg.geom,'conductivity',cfg.conductivity,'isolatedsource',cfg.isolatedsource);
+      end
       
     case 'bem_openmeeg'
       vol = ft_headmodel_bem_openmeeg()
