@@ -272,8 +272,10 @@ if ~specestflg
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % HERE THE OLD IMPLEMENTATION STARTS
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
   [freq] = feval(sprintf('ft_freqanalysis_%s',lower(cfg.method)), cfg, data);
   
+   
 else
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % HERE THE NEW IMPLEMENTATION STARTS
@@ -811,7 +813,7 @@ else
 end % IF OLD OR NEW IMPLEMENTATION
 
 % copy the trial specific information into the output
-if strcmp(cfg.keeptrials, 'yes') && isfield(data, 'trialinfo'),
+if isfield(cfg, 'keeptrials') && strcmp(cfg.keeptrials, 'yes') && isfield(data, 'trialinfo'),
   freq.trialinfo = data.trialinfo;
 end
 
