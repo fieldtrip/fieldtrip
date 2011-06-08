@@ -68,7 +68,7 @@ if isempty(cfg.geom) & isempty(cfg.hdmfile) & ~basedonmri
   error('Either cfg.geom or cfg.hdmfile should be specified')
 end
 
-if basedonhaedshape
+if basedonheadshape
   
   switch cfg.method
     case 'bem_asa'
