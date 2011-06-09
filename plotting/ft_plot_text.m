@@ -5,20 +5,23 @@ function [varargout] = ft_plot_text(X, Y, str, varargin)
 %
 % Use as
 %   ft_plot_text(X, Y, ...)
-% where optional input arguments should come in key-value pairs and may
-% include
-%   hpos
-%   vpos
-%   width
-%   height
-%   hlim
-%   vlim
-%   Color
-%   FontSize
-%   FontName
-%   HorizontalAlignment
+%
+% Optional arguments should come in key-value pairs and can include
+%   Color               =
+%   FontSize            =
+%   FontName            =
+%   HorizontalAlignment =
+%   tag                 =
+%
+% It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
+%   hpos        = horizontal position of the center of the local axes
+%   vpos        = vertical position of the center of the local axes
+%   width       = width of the local axes
+%   height      = height of the local axes
+%   hlim        = horizontal scaling limits within the local axes
+%   vlim        = vertical scaling limits within the local axes
 
-% Copyrights (C) 2009, Robert Oostenveld
+% Copyrights (C) 2009-2011, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -41,8 +44,8 @@ function [varargout] = ft_plot_text(X, Y, str, varargin)
 ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'Color', ....
-  'FontSize', 'FontName', 'HorizontalAlignment','rotation','VerticalAlignment'});
+keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'tag', ...
+  'Color', 'FontSize', 'FontName', 'HorizontalAlignment','rotation','VerticalAlignment'});
 hpos        = keyval('hpos',      varargin);
 vpos        = keyval('vpos',      varargin);
 width       = keyval('width',     varargin);
@@ -55,6 +58,7 @@ FontName    = keyval('FontName',  varargin);
 HorizontalAlignment = keyval('HorizontalAlignment',  varargin); if isempty(HorizontalAlignment), HorizontalAlignment = 'center'; end
 rotation    = keyval('rotation',  varargin);  if isempty(rotation), rotation = 0; end
 VerticalAlignment = keyval('VerticalAlignment',  varargin); if isempty(VerticalAlignment), VerticalAlignment = 'middle'; end
+tag            = keyval('tag', varargin);                 if isempty(tag),               tag='';                         end
 
 if isempty(hlim) && isempty(vlim) && isempty(hpos) && isempty(vpos) && isempty(height) && isempty(width)
   % no scaling is needed, the input X and Y are already fine
@@ -114,6 +118,7 @@ set(h, 'rotation', rotation);
 set(h, 'VerticalAlignment',VerticalAlignment);
 if ~isempty(FontSize), set(h, 'FontSize', FontSize); end
 if ~isempty(FontName), set(h, 'FontName', FontName); end
+set(h, 'tag', tag);
 
 % the (optional) output is the handle
 if nargout == 1;

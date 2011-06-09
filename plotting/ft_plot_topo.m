@@ -6,22 +6,27 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 % Use as
 %   ft_plot_topo(x, y, val, ...)
 %
-% Additional options should be specified in key-value pairs and can be
-%   'hpos'
-%   'vpos'
-%   'width'
-%   'height'
-%   'shading'
-%   'gridscale'
-%   'mask'
-%   'outline'
-%   'isolines'
-%   'interplim'
-%   'interpmethod'
-%   'style'
-%   'datmask'
+% Optional arguments should come in key-value pairs and can include
+%   shading       =
+%   gridscale     =
+%   mask          =
+%   outline       =
+%   isolines      =
+%   interplim     =
+%   interpmethod  =
+%   style         = can be 'surf', 'iso', 'isofill', 'surfiso'
+%   datmask       =
+%   tag           =
+%
+% It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
+%   hpos        = horizontal position of the center of the local axes
+%   vpos        = vertical position of the center of the local axes
+%   width       = width of the local axes
+%   height      = height of the local axes
+%   hlim        = horizontal scaling limits within the local axes
+%   vlim        = vertical scaling limits within the local axes
 
-% Copyrights (C) 2009, Giovanni Piantoni
+% Copyrights (C) 2009-2011, Giovanni Piantoni, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -47,7 +52,7 @@ persistent previous_argin previous_maskimage
 ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'gridscale', 'shading', 'mask', 'outline', 'interplim', 'interpmethod','isolines','style', 'datmask'});
+keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'gridscale', 'shading', 'mask', 'outline', 'interplim', 'interpmethod','isolines','style', 'datmask', 'tag'});
 hpos          = keyval('hpos',         varargin);    if isempty(hpos);         hpos = 0;                 end
 vpos          = keyval('vpos',         varargin);    if isempty(vpos);         vpos = 0;                 end
 width         = keyval('width',        varargin);    if isempty(width);        width = 1;                end
@@ -58,9 +63,10 @@ mask          = keyval('mask',         varargin);
 outline       = keyval('outline',      varargin);
 interplim     = keyval('interplim',    varargin);    if isempty(interplim);    interplim = 'electrodes'; end
 interpmethod  = keyval('interpmethod', varargin);    if isempty(interpmethod); interpmethod = 'v4';      end
-isolines      = keyval('isolines',     varargin);      
+isolines      = keyval('isolines',     varargin);
 style         = keyval('style',        varargin);    if isempty(style);        style = 'surfiso';       end % can be 'surf', 'iso', 'isofill', 'surfiso'
 datmask       = keyval('datmask',      varargin);
+tag            = keyval('tag', varargin);                 if isempty(tag),               tag='';                         end
 
 % everything is added to the current figure
 holdflag = ishold;
@@ -112,20 +118,20 @@ elseif ~isempty(mask)
   [Xi,Yi]   = meshgrid(xi', yi);
   if ~isempty(newpoints) && (hpos == 0 || vpos == 0)
     warning('Some points fall outside the outline, please consider using another layout')
-% FIXME: I am not sure about it, to be tested!
-%     tmp = [mask{1};newpoints];
-%     indx = convhull(tmp(:,1),tmp(:,2));
-%     mask{1} = tmp(indx,:);
-% NOTE: if you set hpos and/or vpos, newpoints is not empty, but nothing
-% needs to be fixed (this fixme screws up things, then)
-  end 
+    % FIXME: I am not sure about it, to be tested!
+    %     tmp = [mask{1};newpoints];
+    %     indx = convhull(tmp(:,1),tmp(:,2));
+    %     mask{1} = tmp(indx,:);
+    % NOTE: if you set hpos and/or vpos, newpoints is not empty, but nothing
+    % needs to be fixed (this fixme screws up things, then)
+  end
   for i=1:length(mask)
     mask{i}(:,1) = mask{i}(:,1)*width+hpos;
     mask{i}(:,2) = mask{i}(:,2)*height+vpos;
     mask{i}(end+1,:) = mask{i}(1,:);                   % force them to be closed
     maskimage(inside_contour([Xi(:) Yi(:)], mask{i})) = true;
   end
-
+  
 else
   maskimage = [];
 end
@@ -142,7 +148,7 @@ if ~isempty(datmask)
     maskimage = maskimagetmp2 > 1.01;
   end
 end
-  
+
 xi         = linspace(hlim(1), hlim(2), gridscale);       % x-axis for interpolation (row vector)
 yi         = linspace(vlim(1), vlim(2), gridscale);       % y-axis for interpolation (row vector)
 [Xi,Yi,Zi] = griddata(chanX', chanY, dat, xi', yi, interpmethod); % interpolate the topographic data
@@ -175,6 +181,7 @@ if strcmp(style,'surf') || strcmp(style,'surfiso')
   deltax = xi(2)-xi(1); % length of grid entry
   deltay = yi(2)-yi(1); % length of grid entry
   h = surf(Xi-deltax/2,Yi-deltay/2,zeros(size(Zi)), Zi, 'EdgeColor', 'none', 'FaceColor', shading);
+  set(h, 'tag', tag);
   
   %if exist('maskimagetmp')
   %  set(h, 'facealpha', 'flat');
@@ -185,10 +192,9 @@ end
 
 % Plot filled contours
 if strcmp(style,'isofill') && ~isempty(isolines)
-  contourf(Xi,Yi,Zi,isolines,'k');
+  h = contourf(Xi,Yi,Zi,isolines,'k');
+  set(h, 'tag', tag);
 end
-
-
 
 % remember the current input arguments, so that they can be
 % reused on a subsequent call in case the same input argument is given

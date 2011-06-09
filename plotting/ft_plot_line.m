@@ -5,18 +5,22 @@ function h = ft_plot_line(X, Y, varargin)
 %
 % Use as
 %   ft_plot_line(X, Y, ...)
-% where optional input arguments should come in key-value pairs and can include
-%   'hpos'       = 
-%   'vpos'       = 
-%   'width'      =
-%   'height'     = 
-%   'hlim'       = 
-%   'vlim'       = 
-%   'color'      = 
-%   'linestyle'  = 
-%   'linewidth'  = 
+%
+% Optional arguments should come in key-value pairs and can include
+%   color      =
+%   linestyle  =
+%   linewidth  =
+%   tag        =
+%
+% It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
+%   hpos        = horizontal position of the center of the local axes
+%   vpos        = vertical position of the center of the local axes
+%   width       = width of the local axes
+%   height      = height of the local axes
+%   hlim        = horizontal scaling limits within the local axes
+%   vlim        = vertical scaling limits within the local axes
 
-% Copyrights (C) 2009, Robert Oostenveld
+% Copyrights (C) 2009-2011, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -39,7 +43,7 @@ function h = ft_plot_line(X, Y, varargin)
 ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'color', 'linestyle', 'linewidth'});
+keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'color', 'linestyle', 'linewidth', 'tag'});
 hpos        = keyval('hpos',      varargin);
 vpos        = keyval('vpos',      varargin);
 width       = keyval('width',     varargin);
@@ -49,39 +53,40 @@ vlim        = keyval('vlim',      varargin);
 color       = keyval('color',     varargin); if isempty(color), color = 'k'; end
 linestyle   = keyval('linestyle', varargin); if isempty(linestyle), linestyle = '-'; end
 linewidth   = keyval('linewidth', varargin); if isempty(linewidth), linewidth = 0.5; end
+tag            = keyval('tag', varargin);                 if isempty(tag),               tag='';                         end
 
 if isempty(hlim) && isempty(vlim) && isempty(hpos) && isempty(vpos) && isempty(height) && isempty(width)
   % no scaling is needed, the input X and Y are already fine
   % use a shortcut to speed up the plotting
-
+  
 else
   % use the full implementation
   abc = axis;
-
+  
   if isempty(hlim)
     hlim = abc([1 2]);
   end
-
+  
   if isempty(vlim)
     vlim = abc([3 4]);
   end
-
+  
   if isempty(hpos);
     hpos = (hlim(1)+hlim(2))/2;
   end
-
+  
   if isempty(vpos);
     vpos = (vlim(1)+vlim(2))/2;
   end
-
+  
   if isempty(width),
     width = hlim(2)-hlim(1);
   end
-
+  
   if isempty(height),
     height = vlim(2)-vlim(1);
   end
-
+  
   % first shift the horizontal axis to zero
   X = X - (hlim(1)+hlim(2))/2;
   % then scale to length 1
@@ -90,7 +95,7 @@ else
   X = X .* width;
   % then shift to the new horizontal position
   X = X + hpos;
-
+  
   % first shift the vertical axis to zero
   Y = Y - (vlim(1)+vlim(2))/2;
   % then scale to length 1
@@ -99,7 +104,7 @@ else
   Y = Y .* height;
   % then shift to the new vertical position
   Y = Y + vpos;
-
+  
 end % shortcut
 
 h = line(X, Y, 'Color', color, 'LineStyle', linestyle, 'LineWidth', linewidth);

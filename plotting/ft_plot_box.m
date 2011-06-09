@@ -8,21 +8,24 @@ function [varargout] = ft_plot_box(position, varargin);
 % where the position of the box is specified as is [x1, x2, y1, y2].
 %
 % Optional arguments should come in key-value pairs and can include
-%   'facealpha'   = transparency value between 0 and 1
-%   'facecolor'   = color specification as [r g b] values or a string, for example 'brain', 'cortex', 'skin', 'red', 'r'
-%   'edgecolor'   = color specification as [r g b] values or a string, for example 'brain', 'cortex', 'skin', 'red', 'r'
-%   'hpos'        =
-%   'vpos'        =
-%   'width'       =
-%   'height'      =
-%   'hlim'        =
-%   'vlim'        =
+%   facealpha   = transparency value between 0 and 1
+%   facecolor   = color specification as [r g b] values or a string, for example 'brain', 'cortex', 'skin', 'red', 'r'
+%   edgecolor   = color specification as [r g b] values or a string, for example 'brain', 'cortex', 'skin', 'red', 'r'
+%   tag         =
+%
+% It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
+%   hpos        = horizontal position of the center of the local axes
+%   vpos        = vertical position of the center of the local axes
+%   width       = width of the local axes
+%   height      = height of the local axes
+%   hlim        = horizontal scaling limits within the local axes
+%   vlim        = vertical scaling limits within the local axes
 %
 % Example
 %   ft_plot_box([-1 1 2 3], 'facecolor', 'b')
 %   axis([-4 4 -4 4])
 
-% Copyrights (C) 2009, Robert Oostenveld
+% Copyrights (C) 2009-2011, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -45,7 +48,7 @@ function [varargout] = ft_plot_box(position, varargin);
 ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'facealpha', 'facecolor', 'edgecolor'});
+keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'facealpha', 'facecolor', 'edgecolor', 'tag'});
 hpos        = keyval('hpos',      varargin);
 vpos        = keyval('vpos',      varargin);
 width       = keyval('width',     varargin);
@@ -55,6 +58,7 @@ vlim        = keyval('vlim',      varargin);
 facealpha   = keyval('facealpha', varargin); if isempty(facealpha), facealpha = 1; end
 facecolor   = keyval('facecolor', varargin); if isempty(facecolor), facecolor = 'none'; end
 edgecolor   = keyval('edgecolor', varargin); if isempty(edgecolor), edgecolor = 'k'; end
+tag            = keyval('tag', varargin);                 if isempty(tag),               tag='';                         end
 
 % convert the two cornerpoints into something that the patch function understands
 % the box position is represented just like the argument to the AXIS function
@@ -124,6 +128,7 @@ h = patch(X, Y, C);
 set(h, 'FaceAlpha', facealpha)
 set(h, 'FaceColor', facecolor)
 set(h, 'EdgeColor', edgecolor)
+set(h, 'tag', tag);
 
 % the (optional) output is the handle
 if nargout == 1
@@ -131,3 +136,4 @@ if nargout == 1
 end
 
 warning(ws); %revert to original state
+
