@@ -41,13 +41,12 @@ function [data] = ft_rejectvisual(cfg, data);
 %   cfg.eegscale    = number, scaling to apply to the EEG channels prior to display
 %   cfg.eogscale    = number, scaling to apply to the EOG channels prior to display
 %   cfg.ecgscale    = number, scaling to apply to the ECG channels prior to display
+%   cfg.emgscale    = number, scaling to apply to the EMG channels prior to display
 %   cfg.megscale    = number, scaling to apply to the MEG channels prior to display
-%   cfg.gradscale    = number, scaling to apply to the MEG gradiometer channels prior to display (in addition
-%                     to the cfg.megscale factor)
-%   cfg.magscale    = number, scaling to apply to the MEG magnetometer channels prior to display (in addition
-%                     to the cfg.megscale factor)
+%   cfg.gradscale   = number, scaling to apply to the MEG gradiometer channels prior to display (in addition to the cfg.megscale factor)
+%   cfg.magscale    = number, scaling to apply to the MEG magnetometer channels prior to display (in addition to the cfg.megscale factor)
 %
-% The scaling to the EEG, EOG, ECG and MEG channels is optional and can
+% The scaling to the EEG, EOG, ECG, EMG and MEG channels is optional and can
 % be used to bring the absolute numbers of the different channel types in
 % the same range (e.g. fT and uV). The channel types are determined from
 % the input data using FT_CHANNELSELECTION.
@@ -159,6 +158,7 @@ if ~isfield(cfg, 'alim'),        cfg.alim = [];                end
 if ~isfield(cfg, 'eegscale'),    cfg.eegscale = [];            end
 if ~isfield(cfg, 'eogscale'),    cfg.eogscale = [];            end
 if ~isfield(cfg, 'ecgscale'),    cfg.ecgscale = [];            end
+if ~isfield(cfg, 'emgscale'),    cfg.emgscale = [];            end
 if ~isfield(cfg, 'megscale'),    cfg.megscale = [];            end
 if ~isfield(cfg, 'gradscale'),   cfg.gradscale = [];           end
 if ~isfield(cfg, 'magscale'),    cfg.magscale = [];            end
@@ -257,6 +257,13 @@ if ~isempty(cfg.ecgscale)
   chansel = match_str(tmpdata.label, ft_channelselection('ECG', tmpdata.label));
   for i=1:length(tmpdata.trial)
     tmpdata.trial{i}(chansel,:) = tmpdata.trial{i}(chansel,:) .* cfg.ecgscale;
+  end
+end
+if ~isempty(cfg.emgscale)
+  scaled = 1;
+  chansel = match_str(tmpdata.label, ft_channelselection('EMG', tmpdata.label));
+  for i=1:length(tmpdata.trial)
+    tmpdata.trial{i}(chansel,:) = tmpdata.trial{i}(chansel,:) .* cfg.emgscale;
   end
 end
 if ~isempty(cfg.megscale)
