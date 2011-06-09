@@ -132,6 +132,12 @@ int smartmem_update(void) {
 				return -1;
 		}
 
+		DEBUG(LOG_INFO, "smartmem: host->memavail = %llu", host->memavail);
+		DEBUG(LOG_DEBUG, "smartmem: MemTotal       = %llu (%f GB)", MemTotal    , ((float)MemTotal    )/(1024*1024*1024));
+		DEBUG(LOG_DEBUG, "smartmem: MemFree        = %llu (%f GB)", MemFree     , ((float)MemFree     )/(1024*1024*1024));
+		DEBUG(LOG_DEBUG, "smartmem: Buffers        = %llu (%f GB)", Buffers     , ((float)Buffers     )/(1024*1024*1024));
+		DEBUG(LOG_DEBUG, "smartmem: Cached         = %llu (%f GB)", Cached      , ((float)Cached      )/(1024*1024*1024));
+
 		pthread_mutex_lock(&mutexpeerlist);
 		/* determine the amount of memory that is reserved by the idle slaves on this computer */
 		peer = peerlist;
@@ -191,12 +197,11 @@ int smartmem_update(void) {
 		/* don't exceed the user-specified maximum allowed amount */
 		MemSuggested = (MemSuggested < smartmem.memavail ? MemSuggested : smartmem.memavail );
 
-		host->memavail = MemSuggested;
-		DEBUG(LOG_INFO, "smartmem: host->memavail = %llu", host->memavail);
 		DEBUG(LOG_DEBUG, "smartmem: NumPeers       = %u",   NumPeers);
-		DEBUG(LOG_DEBUG, "smartmem: MemFree        = %llu (%f GB)", MemFree     , ((float)MemFree     )/(1024*1024*1024));
 		DEBUG(LOG_DEBUG, "smartmem: MemReserved    = %llu (%f GB)", MemReserved , ((float)MemReserved )/(1024*1024*1024));
 		DEBUG(LOG_DEBUG, "smartmem: MemSuggested   = %llu (%f GB)", MemSuggested, ((float)MemSuggested)/(1024*1024*1024));
+
+		host->memavail = MemSuggested;
 
 		pthread_mutex_unlock(&mutexhost);
 		pthread_mutex_unlock(&mutexsmartmem);

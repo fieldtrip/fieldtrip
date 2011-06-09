@@ -42,37 +42,6 @@ mxArray *mxDeserialize(const void*, size_t);
 
 #define STARTCMD "matlab -nosplash"
 
-void print_help(char *argv[]) {
-		printf("\n");
-		printf("This starts a FieldTrip peer-to-peer distributed computing peer, which\n");
-		printf("will wait for an incoming job and subsequently start the MATLAB engine and\n");
-		printf("evaluate the job. Use as\n");
-		printf("  %s [options]\n", argv[0]);
-		printf("where the options can include\n");
-		printf("  --number      = number, number of slaves to start        (default = 1)\n");
-		printf("  --memavail    = number, amount of memory available       (default = inf)\n");
-		printf("  --cpuavail    = number, speed of the CPU                 (default = inf)\n");
-		printf("  --timavail    = number, maximum duration of a single job (default = inf)\n");
-		printf("  --allowuser   = {...}\n");
-		printf("  --allowgroup  = {...}\n");
-		printf("  --allowhost   = {...}\n");
-		printf("  --group       = string\n");
-		printf("  --hostname    = string\n");
-		printf("  --matlab      = string\n");
-		printf("  --timeout     = number, time to keep the engine running after the job finished\n");
-		printf("  --smartshare  = 0|1\n");
-		printf("  --smartmem    = 0|1\n");
-		printf("  --smartcpu    = 0|1\n");
-		printf("  --verbose     = number, between 0 and 7 (default = 4)\n");
-		printf("  --help\n");
-		printf("\n");
-}
-
-int help_flag;
-int tcpserver_flag = 1;
-int udpserver_flag = 0;
-int udsserver_flag = 0;
-
 int main(int argc, char *argv[]) {
 		Engine *en;
 		mxArray *argin, *argout, *options, *arg, *opt;
@@ -106,28 +75,100 @@ int main(int argc, char *argv[]) {
 		/* this corresponds to verbose level 4 */
 		setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT) | LOG_MASK(LOG_ERR));
 #endif
-		peerinit(NULL);
+
 
 		if (argc==2)
 		{
-				/* read the options from the configuration file */
-				numpeer = parsefile(argv[1], &pconf);
-				if (numpeer<1)
-						PANIC("cannot read the configuration file");
-
+				if (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h"))
+				{
+						/* display the help message and return to the command line */
+						printf("\n");
+						printf("PEERSLAVE starts a FieldTrip peer-to-peer distributed computing peer.\n");
+						printf("The peer will announce itself over the network and automatically discover\n");
+						printf("all other peers. The peerslave starts the TCP and UDS servers and waits\n");
+						printf("for a job from a peermaster. Once an incoming job arrives, it starts\n");
+						printf("the MATLAB engine and evaluates the job.\n");
+						printf("\n");
+						printf("Use as\n");
+						printf("  %s --option1=value --option2=value ...\n", argv[0]);
+						printf("or with a configuration file as\n");
+						printf("  %s <filename>\n", argv[0]); 
+						printf("\n");
+						printf("The command line options can include\n");
+						printf("  --memavail    = number, amount of memory available       (default = inf)\n");
+						printf("  --cpuavail    = number, speed of the CPU                 (default = inf)\n");
+						printf("  --timavail    = number, maximum duration of a single job (default = inf)\n");
+						printf("  --allowuser   = {...}\n");
+						printf("  --allowgroup  = {...}\n");
+						printf("  --allowhost   = {...}\n");
+						printf("  --group       = string\n");
+						printf("  --hostname    = string\n");
+						printf("  --matlab      = string\n");
+						printf("  --timeout     = number, time to keep the engine running after the job finished\n");
+						printf("  --smartshare  = 0|1\n");
+						printf("  --smartmem    = 0|1\n");
+						printf("  --smartcpu    = 0|1\n");
+						printf("  --verbose     = number, between 0 and 7 (default = 4)\n");
+						printf("\n");
+						printf("Using the configuration file, you can start multiple peerslaves at once.\n");
+						printf("The peerslaves will be forked where the parent will ensure that the\n");
+						printf("forked children keep running or restart them if they exit (which happens\n");
+						printf("upon a MATLAB engine error). The configuration file contains the same\n");
+						printf("options as on the command line and should be formatted like the following\n");
+						printf("example, which starts 4 slaves on a quad-core computer.\n");
+						printf("\n");
+						printf("  [peer]\n");
+						printf("  # allow jobs of up to 12 hours with a memory requirement not greater than 1GB\n");
+						printf("  matlab=/opt/cluster/matlab2010b -nodisplay -singleCompThread\n");
+						printf("  timavail=43200\n");
+						printf("  memavail=1024MB\n");
+						printf("  smartmem=0\n");
+						printf("  \n");
+						printf("  [peer]\n");
+						printf("  # allow jobs of up to 10 minutes and a memory requirement not greater than 6GB\n");
+						printf("  matlab=/opt/cluster/matlab2010b -nodisplay -singleCompThread\n");
+						printf("  timavail=600\n");
+						printf("  memavail=6GB\n");
+						printf("  smartmem=0\n");
+						printf("  \n");
+						printf("  [peer]\n");
+						printf("  # allow jobs of up to 1 hour, the memory will adjust itself to what is available\n");
+						printf("  matlab=/opt/cluster/matlab2010b -nodisplay -singleCompThread\n");
+						printf("  timavail=3600\n");
+						printf("  smartmem=1\n");
+						printf("  \n");
+						printf("  [peer]\n");
+						printf("  # allow jobs of up to 1 hour, the memory will adjust itself to what is available\n");
+						printf("  matlab=/opt/cluster/matlab2010b -nodisplay -singleCompThread\n");
+						printf("  timavail=3600\n");
+						printf("  smartmem=1\n");
+						printf("\n");
+						exit(0);
+				}
+				else
+				{
+						/* read the options from the configuration file */
+						numpeer = parsefile(argv[1], &pconf);
+						if (numpeer<1)
+								PANIC("cannot read the configuration file");
+						/* initialize this peer, the pconf options have been read from the config file */
+						peerinit(NULL);
+				}
 		}
 		else
 		{
+				/* initialize this peer, the pconf options will be filled from the command line */
+				peerinit(NULL);
 				pconf = (config_t *)malloc(sizeof(config_t));
 				initconfig(pconf);
 				numpeer = 1;
 
 				/* use GNU getopt_long for the command-line options */
+				/* all options should take an argument for consistency with the parsed config file */
 				while (1)
 				{
 						static struct option long_options[] =
 						{
-								{"help",        no_argument, &help_flag, 1},
 								{"memavail",    required_argument, 0,  1}, /* numeric argument */
 								{"cpuavail",    required_argument, 0,  2}, /* numeric argument */
 								{"timavail",    required_argument, 0,  3}, /* numeric argument */
@@ -136,15 +177,15 @@ int main(int argc, char *argv[]) {
 								{"allowuser",   required_argument, 0,  6}, /* single or multiple string argument */
 								{"allowhost",   required_argument, 0,  7}, /* single or multiple string argument */
 								{"allowgroup",  required_argument, 0,  8}, /* single or multiple string argument */
-								{"refuseuser",  required_argument, 0, 15}, /* single or multiple string argument */
-								{"refusehost",  required_argument, 0, 16}, /* single or multiple string argument */
-								{"refusegroup", required_argument, 0, 17}, /* single or multiple string argument */
 								{"matlab",      required_argument, 0,  9}, /* single string argument */
 								{"smartmem",    required_argument, 0, 10}, /* boolean, 0 or 1 */
 								{"smartcpu",    required_argument, 0, 11}, /* boolean, 0 or 1 */
 								{"smartshare",  required_argument, 0, 12}, /* boolean, 0 or 1 */
 								{"timeout",     required_argument, 0, 13}, /* numeric argument */
 								{"verbose",     required_argument, 0, 14}, /* numeric argument */
+								{"refuseuser",  required_argument, 0, 15}, /* single or multiple string argument */
+								{"refusehost",  required_argument, 0, 16}, /* single or multiple string argument */
+								{"refusegroup", required_argument, 0, 17}, /* single or multiple string argument */
 								{0, 0, 0, 0}
 						};
 
@@ -256,12 +297,6 @@ int main(int argc, char *argv[]) {
 						}
 				} /* while(1) for getopt */
 		} /* if config file or getopt */
-
-		if (help_flag) {
-				/* display the help message and return to the command line */
-				print_help(argv);
-				exit(0);
-		}
 
 		/* although the configuration file allows setting the verbose for each peer */
 		/* the first ocurrence determines what will be used the parent and all children */
@@ -569,22 +604,18 @@ int main(int argc, char *argv[]) {
 				enginetimeout = atol(cconf->timeout);
 		}
 
-		if (udsserver_flag) {
-				if ((rc = pthread_create(&udsserverThread, NULL, udsserver, (void *)NULL))>0) {
-						PANIC("failed to start udsserver thread\n");
-				}
-				else {
-						DEBUG(LOG_NOTICE, "started udsserver thread");
-				}
+		if ((rc = pthread_create(&tcpserverThread, NULL, tcpserver, (void *)NULL))>0) {
+				PANIC("failed to start tcpserver thread\n");
+		}
+		else {
+				DEBUG(LOG_NOTICE, "started tcpserver thread");
 		}
 
-		if (tcpserver_flag) {
-				if ((rc = pthread_create(&tcpserverThread, NULL, tcpserver, (void *)NULL))>0) {
-						PANIC("failed to start tcpserver thread\n");
-				}
-				else {
-						DEBUG(LOG_NOTICE, "started tcpserver thread");
-				}
+		if ((rc = pthread_create(&udsserverThread, NULL, udsserver, (void *)NULL))>0) {
+				PANIC("failed to start udsserver thread\n");
+		}
+		else {
+				DEBUG(LOG_NOTICE, "started udsserver thread");
 		}
 
 		if ((rc = pthread_create(&announceThread, NULL, announce, (void *)NULL))>0) {
