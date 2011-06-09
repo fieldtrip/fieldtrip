@@ -691,7 +691,11 @@ return % function readlay
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function lay = sens2lay(sens, rz, method, style)
 
+% remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
+sens = undobalancing(sens);
+
 fprintf('creating layout for %s system\n', ft_senstype(sens));
+
 % apply rotation
 if isempty(rz)
   switch ft_senstype(sens)
