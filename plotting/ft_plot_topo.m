@@ -166,13 +166,14 @@ end
 for i=1:length(outline)
   xval = outline{i}(:,1) * width  + hpos;
   yval = outline{i}(:,2) * height + vpos;
-  ft_plot_vector(xval, yval, 'Color','k', 'LineWidth',2)
+  ft_plot_vector(xval, yval, 'Color','k', 'LineWidth',2, 'tag', tag)
 end
 
 % Create isolines
 if strcmp(style,'iso') || strcmp(style,'surfiso')
   if ~isempty(isolines)
-    contour(Xi,Yi,Zi,isolines,'k');
+    h = contour(Xi,Yi,Zi,isolines,'k');
+    set(h, 'tag', tag);
   end
 end
 
