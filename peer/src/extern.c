@@ -18,7 +18,7 @@
 
 #include "peer.h"
 
-#if SYSLOG == 1 || SYSLOG == 3
+#if SYSLOG == 0 || SYSLOG == 1 || SYSLOG == 3
 int syslog_level = LOG_CRIT;
 #endif
 

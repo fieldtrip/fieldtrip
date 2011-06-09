@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
 		pid_t childpid;
 
 		int matlabRunning = 0, matlabStart, matlabFinished, engineFailed = 0;
-		int i, n, c, rc, status, found, handshake, success, server, jobnum = 0, engineAborted = 0, jobFailed = 0, timallow, memallow;
+		int i, n, c, rc, status, found, handshake, success, server, engineAborted = 0, jobFailed = 0, timallow, memallow;
 		unsigned int enginetimeout = ENGINETIMEOUT;
 		unsigned int zombietimeout = ZOMBIETIMEOUT;
 		unsigned int peerid, jobid, numpeer;

@@ -50,9 +50,9 @@ if ispc
     % or you can add your own compiler flags.
     
     if strcmp(computer, 'PCWIN')
-        extra_cflags = '-I../pthreads-win32/include -DSYSLOG=2';
+        extra_cflags = '-I../pthreads-win32/include -DSYSLOG=3';
     elseif strcmp(computer, 'PCWIN64')
-        extra_cflags = '-I../pthreads-win64/include -DSYSLOG=2';
+        extra_cflags = '-I../pthreads-win64/include -DSYSLOG=3';
     end
     suffix = 'obj';
     

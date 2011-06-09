@@ -83,7 +83,7 @@
 #define STRLEN			 		 128
 
 #ifndef SYSLOG
-#define SYSLOG 1 /* should be 1 for command-line peerslave, 0 or 3 for MATLAB */
+#define SYSLOG 1 /* should be 0 for silent, 1 for background peerslave, 2 for foreground peerslave, 3 for matlab */
 #endif
 
 #if   SYSLOG == 0
@@ -100,7 +100,7 @@
 #define DEBUG(level, format, ...)	{if (level<=syslog_level) mexPrintf(format"\n", ## __VA_ARGS__);}
 #endif
 
-#define FREE(x)							{if (x) {free(x); x=NULL;}}
+#define FREE(x)						{if (x) {free(x); x=NULL;}}
 
 /* FIXME these are obvious at the moment, but should be formally defined */
 typedef char      CHAR_T;
