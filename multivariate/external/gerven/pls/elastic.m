@@ -147,7 +147,7 @@ if nargin < 1,
 end
 
 fnames = {'offset','maxiter','tol'};
-defaults = {1,1e5,1e-4};
+defaults = {1,1e4,1e-3};
 
 for i=1:length(fnames),
     if ~isfield(options,fnames{i}),

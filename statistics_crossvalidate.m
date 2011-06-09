@@ -72,7 +72,7 @@ end
 assert(isfield(cfg,'design'));
 
 if ~isfield(cfg,'metric'), cv.metric = 'accuracy'; end
-if ~isfield(cfg,'sigtest'), cv.sigtest = 'mcnemar'; end
+if ~isfield(cfg,'sigtest'), cv.sigtest = 'binomial'; end
 
 % check for transfer learning; this is implemented by cfg.dataset,
 % indicating the dataset number for each element in the design matrix

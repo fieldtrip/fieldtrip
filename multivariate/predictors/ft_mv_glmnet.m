@@ -56,6 +56,14 @@ classdef ft_mv_glmnet < ft_mv_predictor
  
     adaptive = false;
     
+    % 'glmnet' or 'native' (latter only for 'gaussian' and with limited
+    % parameters. 'native' is useful when we want lambda and alpha to
+    % represent the L1 and L2 penalty separately and if we want alpha to
+    % implement spatial smoothing. alpha = 0 then means no L2 regularization
+    % opposite to the normal case. Also requires smaller lambda values in
+    % the lambda path. Currently, using 'glmnet' is recommended.
+    method = 'glmnet'; 
+    
   end
 
   methods
@@ -166,7 +174,7 @@ classdef ft_mv_glmnet < ft_mv_predictor
          end
         
       end
-      
+              
       opts = [];
       opts.weights = obj.weights;
       opts.alpha = obj.alpha;
@@ -182,7 +190,11 @@ classdef ft_mv_glmnet < ft_mv_predictor
       opts.maxit = obj.maxit;
       opts.HessianExact = obj.HessianExact;
       opts.type = obj.type;
-     
+      
+      if strcmp(obj.method,'native') && isscalar(opts.alpha)
+        opts.alpha = opts.alpha*diag(ones(size(X,2),1));
+      end
+
       if isempty(opts.lambda) && ~isempty(obj.validator)
 
         % use dummy classifier to determine the lambda path for all folds
@@ -269,11 +281,37 @@ classdef ft_mv_glmnet < ft_mv_predictor
        else
          
          try
-           res = glmnet(X,Y,obj.family,opts);
+           
+           if strcmp(obj.method,'glmnet')
+           
+             res = glmnet(X,Y,obj.family,opts);
+
+           else % native implementation
+             
+             % implemented for gaussian only at the moment
+             assert(strcmp(obj.family,'gaussian')); 
+             
+             beta = zeros(size(X,2),1);
+             beta0 = 0;
+             for j=1:numel(opts.lambda)
+               if obj.verbose
+                 fprintf('estimating model %d of %d with lambda = %.2f\n',j,numel(opts.lambda),opts.lambda(j));
+               end
+               [beta,beta0] = elastic(X',Y',opts.lambda(j),opts.alpha,opts,beta,beta0);
+               obj.weights = cat(2,obj.weights,[beta; beta0]);
+             end
+             res.lambda = opts.lambda;
+             res.beta = obj.weights(1:(end-1),:);
+             res.a0 = obj.weights(end,:);
+
+             
+           end
+           
+         
          catch
            
            % probably returned the empty model
-           warning('empty model returned');
+           warning(lasterr);
            
            res.lambda = obj.lambda(1);
            nclasses = max(Y);
@@ -319,12 +357,35 @@ classdef ft_mv_glmnet < ft_mv_predictor
           end
            
           res.lambda = nan;
+       
         else
           
           try
           
-            res = glmnet(X,Y,obj.family,opts);
+            if strcmp(obj.method,'glmnet')
 
+              res = glmnet(X,Y,obj.family,opts);
+
+            else % native implementation
+              
+              % implemented for gaussian only at the moment
+              assert(strcmp(obj.family,'gaussian'));
+              
+              beta = zeros(size(X,2),1);
+              beta0 = 0;
+              for j=1:numel(opts.lambda)
+                if obj.verbose
+                 fprintf('estimating model %d of %d with lambda = %.2f\n',j,numel(opts.lambda),opts.lambda(j));
+                end
+                [beta,beta0] = elastic(X',Y',opts.lambda(j),opts.alpha,opts,beta,beta0);
+                obj.weights = cat(2,obj.weights,[beta; beta0]);
+              end
+              res.lambda = opts.lambda;
+              res.beta = obj.weights(1:(end-1),:);
+              res.a0 = obj.weights(end,:);
+              
+            end
+              
             %  can't be used since the validator part requires the full
             %  path!
 %             if strcmp(obj.family,'multinomial')
@@ -338,6 +399,8 @@ classdef ft_mv_glmnet < ft_mv_predictor
 %             end
             
           catch
+            
+            warning(lasterr);
             
             % probably returned the empty model
             res.lambda = obj.lambda(1);
@@ -479,8 +542,12 @@ classdef ft_mv_glmnet < ft_mv_predictor
       
       X = zscore(X);
       Y = zscore(Y);
-    
-      lmax = max(abs(sum(bsxfun(@times,X,Y))))./(obj.alpha*N);
+      
+      if strcmp(obj.method,'glmnet')
+        lmax = max(abs(sum(bsxfun(@times,X,Y))))./(obj.alpha*N);
+      else
+        lmax = max(abs(sum(bsxfun(@times,X,Y))))/N; % choose solution independent of alpha
+      end
       
       p = exp(linspace(log(lmax),log(epsilon*lmax),obj.nlambda));
       

@@ -20,9 +20,10 @@ function [stat] = ft_freqstatistics(cfg, varargin)
 %
 % Furthermore, the configuration should contain
 %   cfg.method       = different methods for calculating the significance probability and/or critical value
-%                    'montecarlo' get Monte-Carlo estimates of the significance probabilities and/or critical values from the permutation distribution,
-%                    'analytic'   get significance probabilities and/or critical values from the analytic reference distribution (typically, the sampling distribution under the null hypothesis),
-%                    'stats'      use a parametric test from the Matlab statistics toolbox,
+%                    'montecarlo'    get Monte-Carlo estimates of the significance probabilities and/or critical values from the permutation distribution,
+%                    'analytic'      get significance probabilities and/or critical values from the analytic reference distribution (typically, the sampling distribution under the null hypothesis),
+%                    'stats'         use a parametric test from the Matlab statistics toolbox,
+%                    'crossvalidate' use crossvalidation to compute predictive performance
 %
 % The other cfg options depend on the method that you select. You
 % should read the help of the respective subfunction STATISTICS_XXX
