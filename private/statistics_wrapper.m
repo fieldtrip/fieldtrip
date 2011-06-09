@@ -245,6 +245,7 @@ end
 
 % get the design from the information in cfg and data.
 if ~isfield(cfg,'design')
+  warning('Please think about how you would create cfg.design.  Soon the call to prepare_design will be deprecated')
   cfg.design = data.design;
   [cfg] = prepare_design(cfg);
 end
