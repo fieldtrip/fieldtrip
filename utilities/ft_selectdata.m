@@ -508,7 +508,7 @@ if selectfoi,
   end
 end
 
-if selecttoi,
+if selecttoi && ~israw,
   if length(seltoi)==1, seltoi(2) = seltoi; end;
   %seltoi = nearest(data.time, seltoi(1)):nearest(data.time, seltoi(2));
   seltoi = find(data.time>=seltoi(1) & data.time<=seltoi(2));
@@ -525,6 +525,10 @@ if israw,
 
   if selectchan,
     data = selfromraw(data, 'chan', selchan); 
+  end
+ 
+  if selecttoi,
+    data = selfromraw(data, 'latency', seltoi);
   end
 
 elseif isfreq,
