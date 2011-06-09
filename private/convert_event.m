@@ -1,26 +1,26 @@
 function [obj] = convert_event(obj, target, varargin)
 
-% CONVERT_EVENT converts between the different representations of events.
-% The representations are:
-%   event structure (see READ_EVENT)
-%   matrix representation as in trl (Nx3) or artifact (Nx2), with
-%   [begsample endsample] (see DEFINETRIAL, ARTIFACT_xxx functions)
-%   boolean vector representation with 1 for samples containing trial/artifact
+% CONVERT_EVENT converts between the different representations of events, 
+% which can be
+%   1) event structure, see FT_READ_EVENT
+%   2) matrix representation as in trl (Nx3), see FT_DEFINETRIAL
+%   3) matrix representation as in artifact (Nx2), see FT_ARTIFACT_xxx
+%   4) boolean vector representation with 1 for samples containing trial/artifact
 %
 % Use as
 %   [object] = convert_event(object, target, ....)
 %
-% The following input objects are supported:
+% Possible input objects types are
 %   event structure
-%   trl (or cell array of multiple trl definitions)
-%   artifact (or cell array of multiple artifact definitions)
-%   boolean vector (or matrix of multiple vectors)
+%   Nx3 trl matrix, or cell array of multiple trl definitions
+%   Nx2 artifact matrix, or cell array of multiple artifact definitions
+%   boolean vector, or matrix with multiple vectors as rows
 %
 % Possible targets are 'event', 'trl', 'artifact', 'boolvec'
 %
 % Additional options should be specified in key-value pairs and can be
-%   'endsample'
-%   'typenames'
+%   'endsample' = 
+%   'typenames' = 
 %
 % See READ_EVENT, DEFINETRIAL, REJECTARTIFACT, ARTIFACT_xxx
 
