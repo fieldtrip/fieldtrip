@@ -373,6 +373,8 @@ if ~isempty(createsubcfg)
           'feedback'
           'numiteration'
           'tol'
+          'sfmethod'
+          'svd'
           };
         
       otherwise
