@@ -167,21 +167,21 @@ cfg = ft_checkconfig(cfg, 'renamed', {'inputcoordsys', 'coordsys'});
 %%% ft_checkdata see below!!! %%%
 
 % set default for inputfile
-if ~isfield(cfg, 'inputfile'), cfg.inputfile                  = [];    end
+cfg.inputfile = ft_getopt(cfg, 'inputfile', []);
 
 % load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-  end
-end
+hasdata      = (nargin>1);
+hasinputfile = ~isempty(cfg.inputfile);
+if hasdata && hasinputfile
+  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+elseif hasdata
+  % do nothing
+elseif hasinputfile
+  data = loadvar(cfg.inputfile, 'data');
+end 
 
 % set the common defaults
-if ~isfield(cfg, 'method'),              cfg.method = 'ortho';              end
+cfg.method = ft_getopt(cfg, 'method', 'ortho');
 if ~isfield(cfg, 'anaparameter'),
   if isfield(data, 'anatomy'),
     cfg.anaparameter = 'anatomy';
@@ -191,58 +191,61 @@ if ~isfield(cfg, 'anaparameter'),
 end
 
 % all methods
-if ~isfield(cfg, 'funparameter'),        cfg.funparameter = [];             end
-if ~isfield(cfg, 'maskparameter'),       cfg.maskparameter = [];            end
-if ~isfield(cfg, 'downsample'),          cfg.downsample = 1;                end
-if ~isfield(cfg, 'title'),               cfg.title = '';                    end
-if ~isfield(cfg, 'atlas'),               cfg.atlas = [];                    end
-if ~isfield(cfg, 'marker'),              cfg.marker = [];                   end %TODO implement marker
-if ~isfield(cfg, 'markersize'),          cfg.markersize = 5;                end
-if ~isfield(cfg, 'markercolor'),         cfg.markercolor = [1,1,1];         end
+cfg.funparameter  = ft_getopt(cfg, 'funparameter',  []);
+cfg.maskparameter = ft_getopt(cfg, 'maskparameter', []);
+cfg.downsample    = ft_getopt(cfg, 'downsample',    1);
+cfg.title         = ft_getopt(cfg, 'title',         '');
+cfg.atlas         = ft_getopt(cfg, 'atlas',         []);
+cfg.marker        = ft_getopt(cfg, 'marker',        []);
+cfg.markersize    = ft_getopt(cfg, 'markersize',    5);
+cfg.markercolor   = ft_getopt(cfg, 'markercolor',   [1 1 1]);
 
 % set the common defaults for the functional data
-if ~isfield(cfg, 'funcolormap'),         cfg.funcolormap = 'auto';          end
-if ~isfield(cfg, 'funcolorlim'),         cfg.funcolorlim = 'auto';          end;
+cfg.funcolormap   = ft_getopt(cfg, 'funcolormap',   'auto');
+cfg.funcolrolim   = ft_getopt(cfg, 'funcolorlim',   'auto');
 
 % set the common defaults for the statistical data
-if ~isfield(cfg, 'opacitymap'),         cfg.opacitymap = 'auto';            end;
-if ~isfield(cfg, 'opacitylim'),         cfg.opacitylim = 'auto';            end;
-if ~isfield(cfg, 'roi'),                cfg.roi = [];                       end;
+cfg.opacitymap    = ft_getopt(cfg, 'opacitymap',    'auto');
+cfg.opacitylim    = ft_getopt(cfg, 'opacitylim',    'auto');
+cfg.roi           = ft_getopt(cfg, 'roi',           []);
 
 % set the defaults per method
+
 % ortho
-if ~isfield(cfg, 'location'),            cfg.location = 'auto';              end
-if ~isfield(cfg, 'locationcoordinates'), cfg.locationcoordinates = 'head';   end
-if ~isfield(cfg, 'crosshair'),           cfg.crosshair = 'yes';              end
-if ~isfield(cfg, 'colorbar'),            cfg.colorbar  = 'yes';              end
-if ~isfield(cfg, 'axis'),                cfg.axis = 'on';                    end
-if ~isfield(cfg, 'interactive'),         cfg.interactive = 'no';             end
-if ~isfield(cfg, 'queryrange');          cfg.queryrange = 3;                 end
-if ~isfield(cfg, 'coordsys');            cfg.coordsys = [];                  end
-if ~isfield(cfg, 'units');               cfg.units = [];                     end
+cfg.location            = ft_getopt(cfg, 'location',            'auto');
+cfg.locationcoordinates = ft_getopt(cfg, 'locationcoordinates', 'head');
+cfg.crosshair           = ft_getopt(cfg, 'crosshair',           'yes'); 
+cfg.colorbar            = ft_getopt(cfg, 'colorbar',            'yes'); 
+cfg.axis                = ft_getopt(cfg, 'axis',                'on');  
+cfg.interactive         = ft_getopt(cfg, 'interactive',         'no');  
+cfg.queryrange          = ft_getopt(cfg, 'queryrange',          3);     
+cfg.coordsys            = ft_getopt(cfg, 'coordsys',            []);    
+cfg.units               = ft_getopt(cfg, 'units',               []);    
 
 if isfield(cfg, 'TTlookup'),
   error('TTlookup is old; now specify cfg.atlas, see help!');
 end
+
 % slice
-if ~isfield(cfg, 'nslices');            cfg.nslices = 20;                    end
-if ~isfield(cfg, 'slicedim');           cfg.slicedim = 3;                    end
-if ~isfield(cfg, 'slicerange');         cfg.slicerange = 'auto';             end
+cfg.nslices    = ft_getopt(cfg, 'nslices',    20);
+cfg.slicedim   = ft_getopt(cfg, 'slicedim',   3);
+cfg.slicerange = ft_getopt(cfg, 'slicerange', 'auto');
+
 % surface
-if ~isfield(cfg, 'downsample'),         cfg.downsample     = 1;              end
-if ~isfield(cfg, 'surfdownsample'),     cfg.surfdownsample = 1;              end
-if ~isfield(cfg, 'surffile'),           cfg.surffile = 'single_subj_T1.mat'; end % use a triangulation that corresponds with the collin27 anatomical template in MNI coordinates
-if ~isfield(cfg, 'surfinflated'),       cfg.surfinflated = [];               end
-if ~isfield(cfg, 'sphereradius'),       cfg.sphereradius = [];               end
-if ~isfield(cfg, 'projvec'),            cfg.projvec = [1];               end
-if ~isfield(cfg, 'projweight'),         cfg.projweight = ones(size(cfg.projvec));               end
-if ~isfield(cfg, 'projcomb'),           cfg.projcomb = 'mean';               end %or max
-if ~isfield(cfg, 'projthresh'),         cfg.projthresh = [];                 end 
-if ~isfield(cfg, 'distmat'),            cfg.distmat = [];                    end
-if ~isfield(cfg, 'camlight'),           cfg.camlight = 'yes';                end
-if ~isfield(cfg, 'renderer'),           cfg.renderer = 'opengl';             end
+cfg.downsample     = ft_getopt(cfg, 'downsample',     1);
+cfg.surfdownsample = ft_getopt(cfg, 'surfdownsample', 1);
+cfg.surffile       = ft_getopt(cfg, 'surffile',       'single_subj_T1.mat');% use a triangulation that corresponds with the collin27 anatomical template in MNI coordinates
+cfg.surfinflate    = ft_getopt(cfg, 'surfinflated',  []);
+cfg.sphereradius   = ft_getopt(cfg, 'sphereradius',  []);
+cfg.projvec        = ft_getopt(cfg, 'projvec',       1); 
+cfg.projweight     = ft_getopt(cfg, 'projweight',    ones(size(cfg.projvec)));
+cfg.projcomb       = ft_getopt(cfg, 'projcomb',      'mean'); %or max
+cfg.projthresh     = ft_getopt(cfg, 'projthresh',    []);                 
+cfg.distmat        = ft_getopt(cfg, 'distmat',       []);
+cfg.camlight       = ft_getopt(cfg, 'camlight',      'yes');
+cfg.renderer       = ft_getopt(cfg, 'renderer',      'opengl');
 if isequal(cfg.method,'surface')
-  if ~isfield(cfg, 'projmethod'),       error('specify cfg.projmethod');     end
+  if ~isfield(cfg, 'projmethod'), error('specify cfg.projmethod'); end 
 end
 
 % for backward compatibility
