@@ -172,7 +172,7 @@ end
 % Create isolines
 if strcmp(style,'iso') || strcmp(style,'surfiso')
   if ~isempty(isolines)
-    h = contour(Xi,Yi,Zi,isolines,'k');
+    [cont, h] = contour(Xi,Yi,Zi,isolines,'k');
     set(h, 'tag', tag);
   end
 end
