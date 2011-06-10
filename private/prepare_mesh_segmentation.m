@@ -24,6 +24,7 @@ end
 cfg = ft_checkconfig(cfg, 'forbidden', 'numcompartments');
 if ~isfield(mri, 'tissue') && any(ismember(fieldnames(mri), {'gray' 'brain' 'scalp'})), cfg.tissue = 1; end
 if ~isfield(cfg, 'threshold'), cfg.threshold = 0; end
+if ~isfield(mri, 'unit'), mri = ft_convert_units(mri); end
   
 fprintf('using the segmented MRI\n');
 
@@ -88,7 +89,7 @@ for i=1:length(cfg.tissue)
     otherwise
       error('unknown physical dimension in cfg.sourceunits');
   end
-  switch cfg.mriunits
+  switch mri.unit
     case 'mm'
       scale = scale / 1000;
     case 'cm'
@@ -98,10 +99,10 @@ for i=1:length(cfg.tissue)
     case 'm'
       scale = scale / 1;
     otherwise
-      error('unknown physical dimension in cfg.mriunits');
+      error('unknown physical dimension in mri.unit');
   end
   if scale~=1
-    fprintf('converting MRI surface points from %s into %s\n', cfg.sourceunits, cfg.mriunits);
+    fprintf('converting MRI surface points from %s into %s\n', cfg.sourceunits, mri.unit);
     pnt = pnt* scale;
   end
   
