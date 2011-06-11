@@ -284,19 +284,19 @@ void clear_refusehostlist(void) {
 
 void check_datatypes() {
 		/* check datatypes */
-		if (WORDSIZE_CHAR    !=1) { PANIC("invalid size of CHAR    (%d)", WORDSIZE_CHAR   );  }
-		if (WORDSIZE_UINT8   !=1) { PANIC("invalid size of UINT8   (%d)", WORDSIZE_UINT8  );  }
-		if (WORDSIZE_UINT16  !=2) { PANIC("invalid size of UINT16  (%d)", WORDSIZE_UINT16 );  }
-		if (WORDSIZE_UINT32  !=4) { PANIC("invalid size of UINT32  (%d)", WORDSIZE_UINT32 );  }
-		if (WORDSIZE_UINT64  !=8) { PANIC("invalid size of UINT64  (%d)", WORDSIZE_UINT64 );  }
-		if (WORDSIZE_INT8    !=1) { PANIC("invalid size of INT8    (%d)", WORDSIZE_INT8   );  }
-		if (WORDSIZE_INT16   !=2) { PANIC("invalid size of INT16   (%d)", WORDSIZE_INT16  );  }
-		if (WORDSIZE_INT32   !=4) { PANIC("invalid size of INT32   (%d)", WORDSIZE_INT32  );  }
-		if (WORDSIZE_INT64   !=8) { PANIC("invalid size of INT64   (%d)", WORDSIZE_INT64  );  }
-		if (WORDSIZE_FLOAT32 !=4) { PANIC("invalid size of FLOAT32 (%d)", WORDSIZE_FLOAT32);  }
-		if (WORDSIZE_FLOAT64 !=8) { PANIC("invalid size of FLOAT64 (%d)", WORDSIZE_FLOAT64);  }
-		if (sizeof(current_t)!=(416)) { PANIC("invalid size of current_t (%d)", sizeof(current_t) );  }
-		if (sizeof(hostdef_t)!=(552+416)) { PANIC("invalid size of hostdef_t (%d)", sizeof(hostdef_t) );  }
+		if (WORDSIZE_CHAR    !=1) { PANIC("invalid size of CHAR    (%lu)", WORDSIZE_CHAR   );  }
+		if (WORDSIZE_UINT8   !=1) { PANIC("invalid size of UINT8   (%lu)", WORDSIZE_UINT8  );  }
+		if (WORDSIZE_UINT16  !=2) { PANIC("invalid size of UINT16  (%lu)", WORDSIZE_UINT16 );  }
+		if (WORDSIZE_UINT32  !=4) { PANIC("invalid size of UINT32  (%lu)", WORDSIZE_UINT32 );  }
+		if (WORDSIZE_UINT64  !=8) { PANIC("invalid size of UINT64  (%lu)", WORDSIZE_UINT64 );  }
+		if (WORDSIZE_INT8    !=1) { PANIC("invalid size of INT8    (%lu)", WORDSIZE_INT8   );  }
+		if (WORDSIZE_INT16   !=2) { PANIC("invalid size of INT16   (%lu)", WORDSIZE_INT16  );  }
+		if (WORDSIZE_INT32   !=4) { PANIC("invalid size of INT32   (%lu)", WORDSIZE_INT32  );  }
+		if (WORDSIZE_INT64   !=8) { PANIC("invalid size of INT64   (%lu)", WORDSIZE_INT64  );  }
+		if (WORDSIZE_FLOAT32 !=4) { PANIC("invalid size of FLOAT32 (%lu)", WORDSIZE_FLOAT32);  }
+		if (WORDSIZE_FLOAT64 !=8) { PANIC("invalid size of FLOAT64 (%lu)", WORDSIZE_FLOAT64);  }
+		if (sizeof(current_t)!=(416)) { PANIC("invalid size of current_t (%lu)", sizeof(current_t) );  }
+		if (sizeof(hostdef_t)!=(552+416)) { PANIC("invalid size of hostdef_t (%lu)", sizeof(hostdef_t) );  }
 }
 
 #if defined (PLATFORM_OSX)

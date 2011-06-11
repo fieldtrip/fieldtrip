@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
 		pid_t childpid;
 
 		int matlabRunning = 0, matlabStart, matlabFinished, engineFailed = 0;
-		int i, n, c, rc, status, found, handshake, success, server, engineAborted = 0, jobFailed = 0, timallow, memallow;
+		int i, n, c, rc, status, found, handshake, success, server, jobnum = 0, engineAborted = 0, jobFailed = 0, timallow, memallow;
 		unsigned int enginetimeout = ENGINETIMEOUT;
 		unsigned int zombietimeout = ZOMBIETIMEOUT;
 		unsigned int peerid, jobid, numpeer;
@@ -786,8 +786,8 @@ int main(int argc, char *argv[]) {
 								watchdog.masterid = peerid;        /* keep an eye on the master for which we are working */
 								watchdog.time     = timallow;      /* don't exceed the maximum allowed execution time */
 								watchdog.memory   = 0;             /* don't watch the memory of the peerslave executable */
-								watchdog.enabled  = 0;
-								DEBUG(LOG_NOTICE, "watchdog enabled for masterid = %lu, time = %d, memory = %lu\n", watchdog.masterid, watchdog.time, watchdog.memory);
+								watchdog.enabled  = 1;
+								DEBUG(LOG_NOTICE, "watchdog enabled for masterid = %u, time = %d, memory = %lu\n", watchdog.masterid, watchdog.time, watchdog.memory);
 								pthread_mutex_unlock(&mutexwatchdog);
 
 								/* execute the job */

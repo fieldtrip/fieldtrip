@@ -131,7 +131,7 @@ void peerinit(void *arg) {
 		host->id += host->port;
 		host->id += host->port;
 
-		DEBUG(LOG_CRIT, "peerinit: %s@%s, id = %llu", host->user, host->name, host->id);
+		DEBUG(LOG_CRIT, "peerinit: %s@%s, id = %lu", host->user, host->name, host->id);
 		DEBUG(LOG_INFO, "peerinit: host.name =  %s", host->name);
 		DEBUG(LOG_INFO, "peerinit: host.port =  %u", host->port);
 		DEBUG(LOG_INFO, "peerinit: host.id   =  %u", host->id);
