@@ -66,7 +66,7 @@ interpmethod  = keyval('interpmethod', varargin);    if isempty(interpmethod); i
 isolines      = keyval('isolines',     varargin);
 style         = keyval('style',        varargin);    if isempty(style);        style = 'surfiso';       end % can be 'surf', 'iso', 'isofill', 'surfiso'
 datmask       = keyval('datmask',      varargin);
-tag            = keyval('tag', varargin);                 if isempty(tag),               tag='';                         end
+tag            = keyval('tag', varargin);                 if isempty(tag);               tag='';                         end
 
 % everything is added to the current figure
 holdflag = ishold;
