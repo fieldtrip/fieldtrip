@@ -497,6 +497,8 @@ for k = 1:numel(cfg.output)
       % create scalp surface from anatomy
       fprintf('creating scalpmask\n');
       anatomy = segment.anatomy;
+      anatomy(1) = anatomy(1)+1-1; % ensure that spm's smoothing does not affect
+      % the original segment.anatomy
       if dosmooth, anatomy = dosmoothing(anatomy, cfg.smooth(k), 'anatomy'); end
       if dothresh, anatomy = threshold(anatomy,  cfg.threshold(k), 'anatomy'); end
       segment.scalp = anatomy>0;
