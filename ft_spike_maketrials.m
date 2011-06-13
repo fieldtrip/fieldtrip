@@ -88,19 +88,12 @@ for iUnit = 1:nUnits
     end        
 
     % make the timestamps relative, use different algorithm when overlapping (fast & slow)
-    if issorted(events(:))
-      [N,trialNum] = histc(ts,events(:));        
-      validNum = 1:2:(length(events(:))-1);
-      sel = ismember(trialNum,validNum);
-      trialNum = (trialNum(sel)+1)/2; % since for the histogram, we discard the iti
-    else
-      trialNum = [];
-      sel       = [];
-      for iTrial = 1:nTrials
-          isVld = find(ts>=events(1,iTrial) & double(ts)<=events(2,iTrial));
-          trialNum = [trialNum ones(length(isVld),1)];
-          sel   = [sel; isVld(:)];
-      end
+    trialNum = [];
+    sel       = [];
+    for iTrial = 1:nTrials
+      isVld = find(ts>=events(1,iTrial) & double(ts)<=events(2,iTrial));
+      trialNum = [trialNum ones(length(isVld),1)];
+      sel   = [sel; isVld(:)];
     end
     ts  	 = ts(sel);
 
