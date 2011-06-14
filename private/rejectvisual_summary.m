@@ -84,14 +84,30 @@ level     = dum;
 origlevel = dum;
 clear dum
 
-% start the interactive display of the data
-while interactive
+if strcmp(cfg.viewmode, 'toggle')
   % determine the maximum value
   level = origlevel;
   level(~chansel,:) = nan;
   level(:,~trlsel)  = nan;
   maxperchan = max(level,[],2);
   maxpertrl  = max(level,[],1);
+elseif strcmp(cfg.viewmode, 'remove')
+  % do nothing here
+else
+  error('unknown cfg.viewmode %s', cfg.viewmode);
+end
+
+% start the interactive display of the data
+while interactive
+  % determine the maximum value
+  level = origlevel;
+  level(~chansel,:) = nan;
+  level(:,~trlsel)  = nan;
+
+  if strcmp(cfg.viewmode, 'remove')
+    maxperchan = max(level,[],2);
+    maxpertrl  = max(level,[],1);
+  end
 
   % make the three figures
   if gcf~=h, figure(h); end
@@ -109,12 +125,26 @@ while interactive
   xlabel('trial number');
 
   subplot(2,2,2);
-  plot(maxperchan,1:nchan, '.');
+  if strcmp(cfg.viewmode, 'remove')
+    plot(maxperchan,1:nchan, '.');
+  elseif strcmp(cfg.viewmode, 'toggle')
+    hold on;
+    plot(maxperchan(chansel==1),find(chansel==1), '.');
+    plot(maxperchan(chansel==0),find(chansel==0), 'o');
+    hold off;
+  end
   abc = axis; axis([abc(1:2) 1 nchan]);
   ylabel('channel number');
 
   subplot(2,2,3);
-  plot(1:ntrl, maxpertrl, '.');
+  if strcmp(cfg.viewmode, 'remove')
+    plot(1:ntrl, maxpertrl, '.');
+  elseif strcmp(cfg.viewmode, 'toggle')
+    hold on;
+    plot(find(trlsel==1), maxpertrl(trlsel==1), '.');
+    plot(find(trlsel==0), maxpertrl(trlsel==0), 'o');
+    hold off;
+  end
   abc = axis; axis([1 ntrl abc(3:4)]);
   xlabel('trial number');
 

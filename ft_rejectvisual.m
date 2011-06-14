@@ -139,6 +139,7 @@ function [data] = ft_rejectvisual(cfg, data);
 
 % Undocumented options
 % cfg.plotlayout = 'square' (default) or '1col', plotting every channel/trial under each other
+% cfg.viewmode   = 'remove' (default) or 'toggle', remove the data points from the plot, or mark them (summary mode), which allows for getting them back
 
 ft_defaults
 
@@ -165,7 +166,7 @@ if ~isfield(cfg, 'magscale'),    cfg.magscale = [];            end
 if ~isfield(cfg, 'inputfile'),   cfg.inputfile = [];           end
 if ~isfield(cfg, 'outputfile'),  cfg.outputfile = [];          end
 if ~isfield(cfg, 'plotlayout'),  cfg.plotlayout = 'square';    end
-
+if ~isfield(cfg, 'viewmode'),    cfg.viewmode   = 'remove';    end
 
 % load optional given inputfile as data
 hasdata = (nargin>1);
