@@ -563,11 +563,16 @@ if numargout>0 && UniformOutput
       end
     end
   end
-
+  
   % convert the output to a uniform one
   for i=1:numargout
     varargout{i} = [varargout{i}{:}];
   end
+end
+
+% ensure the output to have the same size/dimensions as the input
+for i=1:numargout
+  varargout{i} = reshape(varargout{i}, size(varargin{1}));
 end
 
 % compare the time used inside this function with the total execution time
