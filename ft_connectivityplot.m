@@ -50,11 +50,22 @@ cfg.color   = ft_getopt(cfg, 'color', 'brgkywrgbkywrgbkywrgbkyw');
 % FIXME check explicitly which channels belong together
 if numel(varargin)>1
   data = varargin{1};
-  ft_connectivityplot(cfg, data);
+  tmpcfg = cfg;
+  if ischar(cfg.zparam)
+    % do nothing
+  elseif iscell(cfg.zparam)
+    tmpcfg.zparam = cfg.zparam{1};
+  end
+  ft_connectivityplot(tmpcfg, data);
   tmpcfg = cfg;
   for k = 2:numel(varargin)
     tmpcfg.color   = tmpcfg.color(2:end);
     tmpcfg.holdfig = 1;
+    if ischar(cfg.zparam)
+      % do nothing
+    elseif iscell(cfg.zparam)
+      tmpcfg.zparam = cfg.zparam{k};
+    end
     ft_connectivityplot(tmpcfg, varargin{k});
   end
   return;
