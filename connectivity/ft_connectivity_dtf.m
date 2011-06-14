@@ -6,7 +6,7 @@ powindx = keyval('powindx', varargin);
 % FIXME build in proper documentation
 % FIXME build in dDTF etc
 
-siz    = size(input);
+siz    = [size(input) 1];
 n      = siz(1);
 ncmb   = siz(2);
 outsum = zeros(siz(2:end));
@@ -26,28 +26,32 @@ if isempty(powindx)
     % labelcmb {'a' 'b'} represents: a->b
   end
 else
-  % data are linearly indexed
-  sortindx = [0 0 0 0];
-  for k = 1:ncmb
-    iauto1  = find(sum(cfg.powindx==cfg.powindx(k,1),2)==2);
-    iauto2  = find(sum(cfg.powindx==cfg.powindx(k,2),2)==2);
-    icross1 = k;
-    icross2 = find(sum(cfg.powindx==cfg.powindx(ones(ncmb,1)*k,[2 1]),2)==2);
-    indx    = [iauto1 icross2 icross1 iauto2];
-    
-    if isempty(intersect(sortindx, sort(indx), 'rows')),
-      sortindx = [sortindx; sort(indx)];
-      for j = 1:n
-        tmph    = reshape(input(j,indx,:,:), [2 2 siz(3:end)]);
-        den     = sum(abs(tmph).^2,2);
-        tmpdtf  = reshape(abs(tmph)./sqrt(repmat(den, [1 2 1 1])), [4 siz(3:end)]);
-        outsum(indx,:) = outsum(indx,:) + tmpdtf([1 3 2 4],:);
-        outssq(indx,:) = outssq(indx,:) + tmpdtf([1 3 2 4],:).^2;
-        % FIXME swap the order of the cross-terms to achieve the convention such that
-        % labelcmb {'a' 'b'} represents: a->b
-      end
-    end
-  end
+  error('linearly indexed data for dtf computation is at the moment not supported');
+%FIXME this needs to be thought through -> also, as a multivariate measure
+%a pairwise decomposition does not make sense, should this be dealt with by
+%ft_connectivityanalysis?
+  %   % data are linearly indexed
+%   sortindx = [0 0 0 0];
+%   for k = 1:ncmb
+%     iauto1  = find(sum(cfg.powindx==cfg.powindx(k,1),2)==2);
+%     iauto2  = find(sum(cfg.powindx==cfg.powindx(k,2),2)==2);
+%     icross1 = k;
+%     icross2 = find(sum(cfg.powindx==cfg.powindx(ones(ncmb,1)*k,[2 1]),2)==2);
+%     indx    = [iauto1 icross2 icross1 iauto2];
+%     
+%     if isempty(intersect(sortindx, sort(indx), 'rows')),
+%       sortindx = [sortindx; sort(indx)];
+%       for j = 1:n
+%         tmph    = reshape(input(j,indx,:,:), [2 2 siz(3:end)]);
+%         den     = sum(abs(tmph).^2,2);
+%         tmpdtf  = reshape(abs(tmph)./sqrt(repmat(den, [1 2 1 1])), [4 siz(3:end)]);
+%         outsum(indx,:) = outsum(indx,:) + tmpdtf([1 3 2 4],:);
+%         outssq(indx,:) = outssq(indx,:) + tmpdtf([1 3 2 4],:).^2;
+%         % FIXME swap the order of the cross-terms to achieve the convention such that
+%         % labelcmb {'a' 'b'} represents: a->b
+%       end
+%     end
+%   end
 end
 dtf = outsum./n;
 
@@ -60,4 +64,13 @@ if n>1, %FIXME this is strictly only true for jackknife, otherwise other bias is
   dtfvar = bias.*(outssq - (outsum.^2)/n)./(n-1);
 else
   dtfvar = [];
+end
+
+% this is to achieve the same convention for all connectivity metrics:
+% row -> column
+for k = 1:prod(siz(4:end))
+  dtf(:,:,k)    = transpose(dtf(:,:,k));
+  if ~isempty(dtfvar)
+    dtfvar(:,:,k) = transpose(dtfvar(:,:,k));
+  end
 end

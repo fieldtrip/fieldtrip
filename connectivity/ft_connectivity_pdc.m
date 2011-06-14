@@ -6,7 +6,7 @@ feedback = keyval('feedback', varargin); if isempty(feedback), feedback = 'none'
 % FIXME build in proper documentation
 
 % crossterms are described by chan_chan_therest
-siz = size(input);
+siz = [size(input) 1];
 n   = siz(1);
 
 outsum = zeros(siz(2:end));
@@ -50,4 +50,13 @@ if n>1,
   pdcvar = bias*(outssq - (outsum.^2)./n)./(n - 1);
 else
   pdcvar = [];
+end
+
+% this is to achieve the same convention for all connectivity metrics:
+% row -> column
+for k = 1:prod(siz(4:end))
+  pdc(:,:,k)    = transpose(pdc(:,:,k));
+  if ~isempty(pdcvar)
+    pdcvar(:,:,k) = transpose(pdcvar(:,:,k));
+  end
 end
