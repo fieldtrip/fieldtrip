@@ -20,7 +20,7 @@ function ft_volumewrite(cfg, volume)
 %   cfg.filetype      = 'analyze', 'nifti', 'nifti_img', 'analyze_spm', 'mgz', 
 %                         'vmp' or 'vmr'
 %   cfg.vmpversion    = 1 or 2 (default) version of the vmp-format to use
-%   cfg.coordinates   = 'spm' or 'ctf', this will only affect the
+%   cfg.coordsys      = 'spm' or 'ctf', this will only affect the
 %                          functionality in case filetype = 'analyze', 'vmp',
 %                          or 'vmr'
 %
@@ -87,6 +87,7 @@ ft_defaults
 
 % check the input cfg
 cfg = ft_checkconfig(cfg, 'required', {'filename', 'parameter'});
+cfg = ft_checkconfig(cfg, 'renamed',  {'coordinates', 'coordsys'});
 
 % set the defaults
 cfg.filetype     = ft_getopt(cfg, 'filetype',     'nifti');
@@ -100,11 +101,6 @@ cfg.scaling      = ft_getopt(cfg, 'scaling',      'no');
 
 if any(strmatch(cfg.datatype, {'int8', 'int16', 'int32'}))
   cfg.scaling = 'yes';
-end
-
-if ~isfield(cfg, 'coordinates')
-  fprintf('assuming CTF coordinates\n');
-  cfg.coordinates = 'ctf';
 end
 
 if ~isfield(cfg, 'vmpversion') && strcmp(cfg.filetype, 'vmp');
@@ -241,9 +237,9 @@ end
 switch cfg.filetype
   case {'vmp', 'vmr'}
     % the reordering for BrainVoyager has been figured out by Markus Siegel
-    if strcmp(cfg.coordinates, 'ctf')
+    if strcmp(cfg.coordsys, 'ctf')
       data = permute(data, [2 3 1]);
-    elseif strcmp(cfg.coordinates, 'spm')
+    elseif strcmp(cfg.coordsys, 'spm')
       data = permute(data, [2 3 1]);
       data = flipdim(data, 1);
       data = flipdim(data, 2);
@@ -251,9 +247,9 @@ switch cfg.filetype
     siz = size(data);
   case 'analyze'
     % the reordering of the Analyze format is according to documentation from Darren Webber
-    if strcmp(cfg.coordinates, 'ctf')
+    if strcmp(cfg.coordsys, 'ctf')
       data = permute(data, [2 1 3]);
-    elseif strcmp(cfg.coordinates, 'spm')
+    elseif strcmp(cfg.coordsys, 'spm')
       data = flipdim(data, 1);
     end
     siz = size(data);
