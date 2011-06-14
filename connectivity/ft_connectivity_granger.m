@@ -40,12 +40,22 @@ if isempty(powindx),
   end
 elseif ~iscell(powindx) && ~isstruct(powindx)
   % data are linearly indexed
-  for k = 1:Nc
-    for j = 1:n
-      iauto1  = find(sum(powindx==powindx(k,1),2)==2);
-      iauto2  = find(sum(powindx==powindx(k,2),2)==2);
-      icross1 = k;
-      icross2 = find(sum(powindx==powindx(ones(Nc,1)*k,[2 1]),2)==2);
+  for j = 1:n
+    for k = 1:Nc
+      %iauto1  = sum(powindx==powindx(k,1),2)==2;
+      %iauto2  = sum(powindx==powindx(k,2),2)==2;
+      %icross1 = k;
+      %icross2 = sum(powindx==powindx(ones(Nc,1)*k,[2 1]),2)==2;
+      if mod(k-1, 4)==0
+        iauto1=k;iauto2=k;icross1=k;icross2=k;
+      elseif mod(k-1, 4)==1
+        iauto1=k+2;iauto2=k-1;icross1=k;icross2=k+1;
+      elseif mod(k-1, 4)==2
+        iauto1=k-2;iauto2=k+1;icross1=k;icross2=k-1;
+      elseif mod(k-1, 4)==3
+        iauto1=k;iauto2=k;icross1=k;icross2=k;
+      end
+      
       zc      = Z(j,iauto2,:,:) - Z(j,icross1,:,:).^2./Z(j,iauto1,:,:);
       numer   = abs(S(j,iauto1,:,:));
       denom   = abs(S(j,iauto1,:,:)-zc(:,:,ones(1,size(H,3)),:).*abs(H(j,icross1,:,:)).^2./fs);
@@ -115,8 +125,8 @@ elseif iscell(powindx)
       %iH2 = imag(H2(indx2,indx2));
       %h1 = rH1*Zj(indx1,indx1)*rH1' + iH1*Zj(indx1,indx1)*iH1';
       %h2 = rH2*Zj(indx2,indx2)*rH2' + iH2*Zj(indx2,indx2)*iH2';
-      %denom1 = det(h1);
-      %denom2 = det(h2);
+      %denom1 = abs(det(h1));
+      %denom2 = abs(det(h2));
       
       outsum(2,1,jj) = log( num1./denom1 )    + outsum(2,1,jj);
       outsum(1,2,jj) = log( num2./denom2 )    + outsum(1,2,jj);
