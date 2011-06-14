@@ -110,7 +110,7 @@ if 1,
   end
 
   Nsubject = length(varargin);
-  Nvoxel   = prod(varargin{1}.dim);
+  Nvoxel   = size(varargin{1}.pos,1);
   dat      = zeros(Nvoxel, Nsubject);
   inside   = zeros(Nvoxel, Nsubject);
 
