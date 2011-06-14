@@ -92,7 +92,7 @@ for iUnit = 1:nUnits
     sel       = [];
     for iTrial = 1:nTrials
       isVld = find(ts>=events(1,iTrial) & double(ts)<=events(2,iTrial));
-      trialNum = [trialNum ones(length(isVld),1)];
+      trialNum = [trialNum; ones(length(isVld),1)];
       sel   = [sel; isVld(:)];
     end
     ts  	 = ts(sel);
