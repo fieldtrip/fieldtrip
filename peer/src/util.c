@@ -321,6 +321,7 @@ int getmem (uint64_t *rss, uint64_t *vs) {
 #elif defined(PLATFORM_LINUX)
 int getmem (uint64_t *rss, uint64_t *vs) {
 		FILE *fp;
+		uint64_t val1 = 0, val2 = 0;
 		if ((fp = fopen("/proc/self/statm", "r")) == NULL) {
 				DEBUG(LOG_ERR, "could not open /proc/self/statm");
 				return -1;
@@ -334,12 +335,14 @@ int getmem (uint64_t *rss, uint64_t *vs) {
 		   data       data/stack
 		   dt         dirty pages (unused in Linux 2.6)
 		 */
-		if (fscanf(fp, "%u%u", vs, rss )!=2) {
+		if (fscanf(fp, "%u%u", &val1, &val2 )!=2) {
 				DEBUG(LOG_WARNING, "could not read all elements from /proc/self/statm");
+				val1 = 0;
+				val2 = 0;
 		}
 		/* these seem to be in 4096 byte blocks */
-		*vs  = (*vs)  * 4096; 
-		*rss = (*rss) * 4096; 
+		*vs  = val1 * 4096; 
+		*rss = val2 * 4096; 
 		fclose(fp);
 		return 0;
 }
