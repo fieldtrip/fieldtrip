@@ -2738,29 +2738,29 @@ switch type
 
   case 'egi32'
     % this should be  uppercase for consistency with ft_read_header
-    label = cell(32, 1);
-    for i = 1:32
+    label = cell(33, 1);
+    for i = 1:33
       label{i} = sprintf('E%d', i);
     end
 
   case 'egi64'
     % this should be  uppercase for consistency with ft_read_header
-    label = cell(64, 1);
-    for i = 1:64
+    label = cell(65, 1);
+    for i = 1:65
       label{i} = sprintf('E%d', i);
     end
 
   case 'egi128'
     % this should be  uppercase for consistency with ft_read_header
-    label = cell(128, 1);
-    for i = 1:128
+    label = cell(129, 1);
+    for i = 1:129
       label{i} = sprintf('E%d', i);
     end
 
   case 'egi256'
     % this should be  uppercase for consistency with ft_read_header
-    label = cell(256, 1);
-    for i = 1:256
+    label = cell(257, 1);
+    for i = 1:257
       label{i} = sprintf('E%d', i);
     end
 
