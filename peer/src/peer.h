@@ -42,7 +42,9 @@
 #endif
 
 /* this is UNIX only, and may not work on all flavours */
+#if defined(PLATFORM_LINUX)
 #define USE_ABSTRACT_UDS_NAMES
+#endif
 
 #define STATUS_ZOMBIE            0			/* status = 0 means zombie mode, don't accept anything   */
 #define STATUS_MASTER            1			/* status = 1 means master mode, accept everything       */
@@ -94,7 +96,7 @@
 #define DEBUG(level, format, ...)	{syslog(level, format, ## __VA_ARGS__);}
 #elif SYSLOG == 2
 #define PANIC(format, ...)			{fprintf(stderr, format"\n", ## __VA_ARGS__); exit(-1);}
-#define DEBUG(level, format, ...)	{fprintf(stderr, format"\n", ## __VA_ARGS__);}
+#define DEBUG(level, format, ...)	{if (level<=syslog_level) fprintf(stderr, format"\n", ## __VA_ARGS__);}
 #elif SYSLOG == 3
 #define PANIC(format, ...)			{mexPrintf(format"\n", ## __VA_ARGS__); exit(-1);}
 #define DEBUG(level, format, ...)	{if (level<=syslog_level) mexPrintf(format"\n", ## __VA_ARGS__);}

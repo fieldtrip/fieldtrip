@@ -76,84 +76,80 @@ int main(int argc, char *argv[]) {
 		setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT) | LOG_MASK(LOG_ERR));
 #endif
 
-
-		if (argc==2)
+		if (argc==2 && (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h")))
 		{
-				if (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h"))
-				{
-						/* display the help message and return to the command line */
-						printf("\n");
-						printf("PEERSLAVE starts a FieldTrip peer-to-peer distributed computing peer.\n");
-						printf("The peer will announce itself over the network and automatically discover\n");
-						printf("all other peers. The peerslave starts the TCP and UDS servers and waits\n");
-						printf("for a job from a peermaster. Once an incoming job arrives, it starts\n");
-						printf("the MATLAB engine and evaluates the job.\n");
-						printf("\n");
-						printf("Use as\n");
-						printf("  %s --option1=value --option2=value ...\n", argv[0]);
-						printf("or with a configuration file as\n");
-						printf("  %s <filename>\n", argv[0]); 
-						printf("\n");
-						printf("The command line options can include\n");
-						printf("  --memavail    = number, amount of memory available       (default = inf)\n");
-						printf("  --cpuavail    = number, speed of the CPU                 (default = inf)\n");
-						printf("  --timavail    = number, maximum duration of a single job (default = inf)\n");
-						printf("  --allowuser   = {...}\n");
-						printf("  --allowgroup  = {...}\n");
-						printf("  --allowhost   = {...}\n");
-						printf("  --group       = string\n");
-						printf("  --hostname    = string\n");
-						printf("  --matlab      = string\n");
-						printf("  --timeout     = number, time to keep the engine running after the job finished\n");
-						printf("  --smartshare  = 0|1\n");
-						printf("  --smartmem    = 0|1\n");
-						printf("  --smartcpu    = 0|1\n");
-						printf("  --verbose     = number, between 0 and 7 (default = 4)\n");
-						printf("\n");
-						printf("Using the configuration file, you can start multiple peerslaves at once.\n");
-						printf("The peerslaves will be forked where the parent will ensure that the\n");
-						printf("forked children keep running or restart them if they exit (which happens\n");
-						printf("upon a MATLAB engine error). The configuration file contains the same\n");
-						printf("options as on the command line and should be formatted like the following\n");
-						printf("example, which starts 4 slaves on a quad-core computer.\n");
-						printf("\n");
-						printf("  [peer]\n");
-						printf("  # allow jobs of up to 12 hours with no more than 1GB memory required\n");
-						printf("  matlab=/opt/cluster/matlab2010b -nodisplay -singleCompThread\n");
-						printf("  timavail=43200\n");
-						printf("  memavail=1024MB\n");
-						printf("  smartmem=0\n");
-						printf("  \n");
-						printf("  [peer]\n");
-						printf("  # allow jobs of up to 10 minutes and no more than 6GB memory required\n");
-						printf("  matlab=/opt/cluster/matlab2010b -nodisplay -singleCompThread\n");
-						printf("  timavail=600\n");
-						printf("  memavail=6GB\n");
-						printf("  smartmem=0\n");
-						printf("  \n");
-						printf("  [peer]\n");
-						printf("  # allow jobs of up to 1 hour, available memory will be automatically set\n");
-						printf("  matlab=/opt/cluster/matlab2010b -nodisplay -singleCompThread\n");
-						printf("  timavail=3600\n");
-						printf("  smartmem=1\n");
-						printf("  \n");
-						printf("  [peer]\n");
-						printf("  # allow jobs of up to 1 hour, available memory will be automatically set\n");
-						printf("  matlab=/opt/cluster/matlab2010b -nodisplay -singleCompThread\n");
-						printf("  timavail=3600\n");
-						printf("  smartmem=1\n");
-						printf("\n");
-						exit(0);
-				}
-				else
-				{
-						/* read the options from the configuration file */
-						numpeer = parsefile(argv[1], &pconf);
-						if (numpeer<1)
-								PANIC("cannot read the configuration file");
-						/* initialize this peer, the pconf options have been read from the config file */
-						peerinit(NULL);
-				}
+				/* display the help message and return to the command line */
+				printf("\n");
+				printf("PEERSLAVE starts a FieldTrip peer-to-peer distributed computing peer.\n");
+				printf("The peer will announce itself over the network and automatically discover\n");
+				printf("all other peers. The peerslave starts the TCP and UDS servers and waits\n");
+				printf("for a job from a peermaster. Once an incoming job arrives, it starts\n");
+				printf("the MATLAB engine and evaluates the job.\n");
+				printf("\n");
+				printf("Use as\n");
+				printf("  %s --option1=value --option2=value ...\n", argv[0]);
+				printf("or with a configuration file as\n");
+				printf("  %s <filename>\n", argv[0]); 
+				printf("\n");
+				printf("The command line options can include\n");
+				printf("  --memavail    = number, amount of memory available       (default = inf)\n");
+				printf("  --cpuavail    = number, speed of the CPU                 (default = inf)\n");
+				printf("  --timavail    = number, maximum duration of a single job (default = inf)\n");
+				printf("  --allowuser   = {...}\n");
+				printf("  --allowgroup  = {...}\n");
+				printf("  --allowhost   = {...}\n");
+				printf("  --group       = string\n");
+				printf("  --hostname    = string\n");
+				printf("  --matlab      = string\n");
+				printf("  --timeout     = number, time to keep the engine running after the job finished\n");
+				printf("  --smartshare  = 0|1\n");
+				printf("  --smartmem    = 0|1\n");
+				printf("  --smartcpu    = 0|1\n");
+				printf("  --verbose     = number, between 0 and 7 (default = 4)\n");
+				printf("\n");
+				printf("Using the configuration file, you can start multiple peerslaves at once.\n");
+				printf("The peerslaves will be forked where the parent will ensure that the\n");
+				printf("forked children keep running or restart them if they exit (which happens\n");
+				printf("upon a MATLAB engine error). The configuration file contains the same\n");
+				printf("options as on the command line and should be formatted like the following\n");
+				printf("example, which starts 4 slaves on a quad-core computer.\n");
+				printf("\n");
+				printf("  [peer]\n");
+				printf("  # allow jobs of up to 12 hours with no more than 1GB memory required\n");
+				printf("  matlab=/opt/cluster/matlab2010b -nodisplay -singleCompThread\n");
+				printf("  timavail=43200\n");
+				printf("  memavail=1024MB\n");
+				printf("  smartmem=0\n");
+				printf("  \n");
+				printf("  [peer]\n");
+				printf("  # allow jobs of up to 10 minutes and no more than 6GB memory required\n");
+				printf("  matlab=/opt/cluster/matlab2010b -nodisplay -singleCompThread\n");
+				printf("  timavail=600\n");
+				printf("  memavail=6GB\n");
+				printf("  smartmem=0\n");
+				printf("  \n");
+				printf("  [peer]\n");
+				printf("  # allow jobs of up to 1 hour, available memory will be automatically set\n");
+				printf("  matlab=/opt/cluster/matlab2010b -nodisplay -singleCompThread\n");
+				printf("  timavail=3600\n");
+				printf("  smartmem=1\n");
+				printf("  \n");
+				printf("  [peer]\n");
+				printf("  # allow jobs of up to 1 hour, available memory will be automatically set\n");
+				printf("  matlab=/opt/cluster/matlab2010b -nodisplay -singleCompThread\n");
+				printf("  timavail=3600\n");
+				printf("  smartmem=1\n");
+				printf("\n");
+				exit(0);
+		}
+		else if (argc==2 && access(argv[1], F_OK)!=-1)
+		{
+				/* read the options from the configuration file */
+				numpeer = parsefile(argv[1], &pconf);
+				if (numpeer<1)
+						PANIC("cannot read the configuration file");
+				/* initialize this peer, the pconf options have been read from the config file */
+				peerinit(NULL);
 		}
 		else
 		{
@@ -300,10 +296,20 @@ int main(int argc, char *argv[]) {
 
 		/* although the configuration file allows setting the verbose for each peer */
 		/* the first ocurrence determines what will be used the parent and all children */
+		syslog_level = atol(pconf->verbose);
+
+		DEBUG(LOG_EMERG,  "LOG_EMERG");
+		DEBUG(LOG_ALERT,  "LOG_ALERT");
+		DEBUG(LOG_CRIT,   "LOG_CRIT");
+		DEBUG(LOG_ERR,    "LOG_ERR");
+		DEBUG(LOG_WARNING,"LOG_WARNING");
+		DEBUG(LOG_NOTICE, "LOG_NOTICE");
+		DEBUG(LOG_INFO,   "LOG_INFO");
+		DEBUG(LOG_DEBUG,  "LOG_DEBUG");
+
+#if SYSLOG == 1
 		if (pconf->verbose)
 		{
-				syslog_level = atol(pconf->verbose);
-#if SYSLOG == 1
 				switch (syslog_level) {
 						case 0:
 								setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT) | LOG_MASK(LOG_ERR) | LOG_MASK(LOG_WARNING) | LOG_MASK(LOG_NOTICE) | LOG_MASK(LOG_INFO) | LOG_MASK(LOG_DEBUG));
@@ -330,8 +336,8 @@ int main(int argc, char *argv[]) {
 								setlogmask(LOG_MASK(LOG_EMERG));
 								break;
 				}
-#endif
 		}
+#endif
 
 		/*************************************************************************************
 		 * the following section deals with starting multiple peerslaves
@@ -611,12 +617,14 @@ int main(int argc, char *argv[]) {
 				DEBUG(LOG_NOTICE, "started tcpserver thread");
 		}
 
+#if defined (PLATFORM_LINUX)
 		if ((rc = pthread_create(&udsserverThread, NULL, udsserver, (void *)NULL))>0) {
 				PANIC("failed to start udsserver thread\n");
 		}
 		else {
 				DEBUG(LOG_NOTICE, "started udsserver thread");
 		}
+#endif
 
 		if ((rc = pthread_create(&announceThread, NULL, announce, (void *)NULL))>0) {
 				PANIC("failed to start announce thread\n");
@@ -783,11 +791,11 @@ int main(int argc, char *argv[]) {
 								/* the watchdog will be running as mex file inside the MATLAB engine */
 								/* also enable the watchdog for the peerslave command-line executable */
 								pthread_mutex_lock(&mutexwatchdog);
-								watchdog.masterid = peerid;        /* keep an eye on the master for which we are working */
-								watchdog.time     = timallow;      /* don't exceed the maximum allowed execution time */
-								watchdog.memory   = 0;             /* don't watch the memory of the peerslave executable */
+								watchdog.masterid = peerid;              /* keep an eye on the master for which we are working */
+								watchdog.time     = time(NULL)+timallow; /* don't exceed the maximum allowed execution time */
+								watchdog.memory   = 0;                   /* don't watch the memory of the peerslave executable */
 								watchdog.enabled  = 0;
-								DEBUG(LOG_NOTICE, "watchdog enabled for masterid = %u, time = %d, memory = %lu\n", watchdog.masterid, watchdog.time, watchdog.memory);
+								DEBUG(LOG_ERR, "watchdog enabled for masterid = %u, time = %d, memory = %lu\n", watchdog.masterid, watchdog.time, watchdog.memory);
 								pthread_mutex_unlock(&mutexwatchdog);
 
 								/* execute the job */
@@ -850,7 +858,7 @@ int main(int argc, char *argv[]) {
 								}
 								else if (jobFailed==5) {
 										DEBUG(LOG_ERR, "failed to execute job %d from %s@%s (optout)", jobnum, job->host->user, job->host->name);
-}
+								}
 								else if (jobFailed==6) {
 										DEBUG(LOG_ERR, "failed to execute job %d from %s@%s (clear)", jobnum, job->host->user, job->host->name);
 								}

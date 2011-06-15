@@ -212,7 +212,7 @@ close all hidden;
 clear global
 
 % clear the optional watchdog, which is loaded into memory as a mex file
-if ~isempty(masterid) || ~isempty(timallow)
+if ~isempty(masterid) || ~isempty(timallow) || ~isempty(memallow)
   watchdog(0,0,0); % this is required to unlock it from memory
   clear watchdog
 end

@@ -125,12 +125,13 @@ void *udsserver(void *arg) {
 		local.sun_family = AF_UNIX;
 		sprintf(local.sun_path, "%s-%s.%d", SOCK_PATH, host->user, getpid());  /* for example "/tmp/peer-roboos.1436" */
 		strncpy(host->socket, local.sun_path, STRLEN);
+		DEBUG(LOG_NOTICE, "socket = %s\n", local.sun_path);
 		pthread_mutex_unlock(&mutexhost);
 
 		/* remove the file if it already exists */
 		unlink(local.sun_path);
 
-		len = strlen(local.sun_path) + sizeof(local.sun_family);
+		len = sizeof(local.sun_path) + sizeof(local.sun_family);
 #ifdef USE_ABSTRACT_UDS_NAMES
 		/* abstract unix domain socket namea do not show up in the file system */
 		local.sun_path[0] = 0;
@@ -144,8 +145,7 @@ void *udsserver(void *arg) {
 #ifndef USE_ABSTRACT_UDS_NAMES
 		/* this is required to allow other users to read and write to the socket through the file system*/
 		if (chmod(local.sun_path, 0777)!=0)
-				perror("chmod");
-		DEBUG(LOG_ERR, "error: chmod");
+				DEBUG(LOG_ERR, "error: chmod %s", local.sun_path);
 #endif
 
 		if (listen(fd, BACKLOG)<0) {
