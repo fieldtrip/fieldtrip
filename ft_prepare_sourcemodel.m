@@ -25,6 +25,8 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 %   cfg.grid.ygrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.grid.zgrid      = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
 %   cfg.grid.resolution = number (e.g. 1 cm) for automatic grid generation
+%   cfg.sourceunits     = 'auto' (in which case the sourceunits default to the unit in the 
+%                          sensor description), or 'mm'/'cm'/'dm'/'m'
 %
 % Configuration options for a predefined grid
 %   cfg.grid.pos        = N*3 matrix with position of each source
@@ -39,8 +41,8 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 %
 % Configuration options for cortex segmentation, i.e. for placing dipoles in grey matter
 %   cfg.mri           = can be filename, MRI structure or segmented MRI structure
-%   cfg.sourceunits   = 'mm' or 'cm' (default is 'cm')
-%   cfg.mriunits      = 'mm' or 'cm' (default is 'mm')
+%   cfg.sourceunits   = 'auto' (in which case the sourceunits default to the unit in the 
+%                          sensor description, if provided). otherwise it defaults to 'cm'
 %   cfg.threshold     = 0.1, relative to the maximum value in the segmentation
 %   cfg.smooth        = 5, smoothing in voxels
 %
@@ -70,12 +72,13 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 % cfg.threshold
 % cfg.spheremesh
 % cfg.inwardshift
-% cfg.mriunits
 % cfg.sourceunits
 
 % Copyright (C) 2004-2011, Robert Oostenveld
 %
 % %Log$
+
+cfg = ft_checkconfig(cfg, 'deprecated', 'mriunits');
 
 % set the defaults
 if ~isfield(cfg, 'symmetry'),         cfg.symmetry    = [];       end
@@ -88,7 +91,7 @@ if ~isfield(cfg, 'vol') && nargin>1
   cfg.vol = vol;
 end
 
-if ~isfield(cfg, 'sens') && nargin>2
+if ~isfield(cfg, 'grad') && ~isfield(cfg, 'elec') && nargin>2
   % put it in the configuration structure
   % this is for backward compatibility, 13 Januari 2011
   cfg.grad = sens;
@@ -139,51 +142,52 @@ end
 % keep the overview
 if basedonauto
   fprintf('creating dipole grid based on automatic 3D grid with specified resolution\n');
-  if ~isfield(cfg.grid, 'xgrid'),       cfg.grid.xgrid = 'auto';    end
-  if ~isfield(cfg.grid, 'ygrid'),       cfg.grid.ygrid = 'auto';    end
-  if ~isfield(cfg.grid, 'zgrid'),       cfg.grid.zgrid = 'auto';    end
-  if ~isfield(cfg, 'inwardshift'),      cfg.inwardshift = 0;        end % in this case for inside detection, % FIXME move to cfg.grid
-  if ~isfield(cfg.grid, 'tight'),       cfg.grid.tight = 'yes';     end
+  cfg.grid.xgrid  = ft_getopt(cfg.grid, 'xgrid', 'auto');
+  cfg.grid.ygrid  = ft_getopt(cfg.grid, 'ygrid', 'auto');
+  cfg.grid.zgrid  = ft_getopt(cfg.grid, 'zgrid', 'auto');
+  cfg.inwardshift = ft_getopt(cfg,      'inwardshift', 0); %in this case for inside detection, FIXME move to cfg.grid
+  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight', 'yes'); 
+  cfg.sourceunits = ft_getopt(cfg,      'sourceunits', 'auto');
 end
 
 if basedongrid
   fprintf('creating dipole grid based on user specified 3D grid\n');
-  if ~isfield(cfg, 'inwardshift'),      cfg.inwardshift = 0;        end % in this case for inside detection, % FIXME move to cfg.grid
-  if ~isfield(cfg.grid, 'tight'),       cfg.grid.tight = 'no';      end
+  cfg.inwardshift = ft_getopt(cfg,      'inwardshift', 0); %in this case for inside detection, FIXME move to cfg.grid
+  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight', 'yes'); 
 end
 
 if basedonpos
   fprintf('creating dipole grid based on user specified dipole positions\n');
-  if ~isfield(cfg, 'inwardshift'),      cfg.inwardshift = 0;        end % in this case for inside detection, % FIXME move to cfg.grid
-  if ~isfield(cfg.grid, 'tight'),       cfg.grid.tight = 'no';      end
+  cfg.inwardshift = ft_getopt(cfg,      'inwardshift', 0); %in this case for inside detection, FIXME move to cfg.grid
+  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight', 'yes'); 
 end
 
 if basedonshape
   fprintf('creating dipole grid based on inward-shifted head shape\n');
-  if ~isfield(cfg, 'spheremesh'),       cfg.spheremesh = 642;  end  % FIXME move spheremesh to cfg.grid
-  if ~isfield(cfg.grid, 'tight'),       cfg.grid.tight = 'no'; end
+  cfg.inwardshift = ft_getopt(cfg,      'inwardshift', 0); %in this case for inside detection, FIXME move to cfg.grid
+  cfg.spheremesh  = ft_getopt(cfg,      'spheremesh', 642); % FIXME move spheremesh to cfg.grid
+  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight',      'yes'); 
 end
 
 if basedoncortex
-  if ~isfield(cfg, 'sourceunits');      cfg.sourceunits = 'cm';     end
-  if ~isfield(cfg.grid, 'tight'),       cfg.grid.tight = 'no'; end
+  cfg.sourceunits       = ft_getopt(cfg,      'sourceunits', 'auto');
+  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight', 'yes'); 
 end
 
 if basedonmri
   fprintf('creating dipole grid based on grey matter from segmented MRI\n');
-  if ~isfield(cfg, 'threshold'),        cfg.threshold = 0.1;        end % relative
-  if ~isfield(cfg, 'smooth');           cfg.smooth    = 5;          end % in voxels
-  if ~isfield(cfg, 'sourceunits');      cfg.sourceunits = 'cm';     end
-  if ~isfield(cfg, 'mriunits');         cfg.mriunits = 'mm';        end
-  if ~isfield(cfg.grid, 'tight'),       cfg.grid.tight = 'yes';     end
+  cfg.threshold   = ft_getopt(cfg,      'threshold', 0.1); % relative
+  cfg.smooth      = ft_getopt(cfg,      'smooth',    5);   % in voxels
+  cfg.sourceunits       = ft_getopt(cfg,      'sourceunits',     'auto');
+  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight',     'yes'); 
 end
 
 if basedonvol
   fprintf('creating dipole grid based on inward-shifted brain surface from volume conductor model\n');
-  if ~isfield(cfg, 'spheremesh'),       cfg.spheremesh = 642;  end   % FIXME move to cfg.grid
-  if ~isfield(cfg.grid, 'tight'),       cfg.grid.tight = 'no'; end
+  cfg.inwardshift = ft_getopt(cfg,      'inwardshift', 0); %in this case for inside detection, FIXME move to cfg.grid
+  cfg.spheremesh  = ft_getopt(cfg,      'spheremesh', 642); % FIXME move spheremesh to cfg.grid
+  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight',      'no'); 
 end
-
 
 % these are mutually exclusive
 if sum([basedonauto basedongrid basedonpos basedonshape basedonmri basedonvol basedoncortex])~=1
@@ -218,11 +222,36 @@ else
   sens = [];
 end
 
+% ensure cfg.sourceunits to have a value and/or enforce the units in the sensors
+% to conform to this value
+if isfield(cfg, 'sourceunits') && ~isempty(sens)
+  if strcmp(cfg.sourceunits, 'auto') && ~isfield(sens, 'unit')
+    sens      = ft_convert_units(sens);
+    cfg.sourceunits = sens.unit;
+  elseif strcmp(cfg.sourceunits, 'auto') && isfield(sens, 'unit')
+    cfg.sourceunits = sens.unit;
+  elseif ~strcmp(cfg.sourceunits, 'auto')
+    sens      = ft_convert_units(sens, cfg.sourceunits);
+  end
+elseif isfield(cfg, 'sourceunits') && isempty(sens)
+  if strcmp(cfg.sourceunits, 'auto')
+    cfg.sourceunits = 'cm';
+  end
+end  
+
+% ensure the vol to have the same units as cfg.sourceunits
+if isfield(cfg, 'sourceunits') && ~isempty(vol)
+  vol = ft_convert_units(vol, cfg.sourceunits);
+end
+
 if basedonauto
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % construct a regular 3D grid that spans a box encompassing all electrode
   % or gradiometer coils, this will typically also cover the complete brain
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  if isempty(sens)
+    error('creating a 3D-grid sourcemodel based on automatic detection requires sensor position information');
+  end 
   if ischar(cfg.grid.xgrid) && strcmp(cfg.grid.xgrid, 'auto')
     grid.xgrid = floor(min(sens.pnt(:,1))):cfg.grid.resolution:ceil(max(sens.pnt(:,1)));
   end
@@ -235,11 +264,12 @@ if basedonauto
   grid.dim   = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
   [X, Y, Z]  = ndgrid(grid.xgrid, grid.ygrid, grid.zgrid);
   grid.pos   = [X(:) Y(:) Z(:)];
+  grid.unit  = sens.unit;
 end
 
 if basedongrid
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % a detailled xgrid/ygrid/zgrid has been specified, the other details
+  % a detailed xgrid/ygrid/zgrid has been specified, the other details
   % still need to be determined
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   grid.xgrid = cfg.grid.xgrid;
@@ -248,6 +278,7 @@ if basedongrid
   grid.dim   = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
   [X, Y, Z]  = ndgrid(grid.xgrid, grid.ygrid, grid.zgrid);
   grid.pos   = [X(:) Y(:) Z(:)];
+  %FIXME how to determine grid.unit here?
 end
 
 if basedonpos
@@ -302,6 +333,9 @@ if basedonpos
   if isfield(cfg.grid, 'tight')
     grid.tight = cfg.grid.tight;
   end
+  if isfield(cfg.grid, 'unit')
+    grid.unit  = cfg.grid.unit;
+  end
   % this is not supported any more
   if isfield(cfg.grid, 'avg') && isfield(cfg.grid.avg, 'filter')
     error('please put your filters in cfg.grid instead of cfg.grid.avg');
@@ -313,7 +347,18 @@ if basedonmri
   % construct a grid based on the segmented MRI that is provided in the
   % configuration, only voxels in gray matter will be used
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
+  if ischar(cfg.mri)
+    mri = ft_read_mri(cfg.mri);
+  else
+    mri = cfg.mri; 
+  end
+
+  % ensure the mri to have units
+  if ~isfield(mri, 'unit')
+    mri = ft_convert_units(mri);
+  end 
+ 
   % convert the source/functional data into the same units as the anatomical MRI
   scale = 1;
   switch cfg.sourceunits
@@ -328,7 +373,7 @@ if basedonmri
     otherwise
       error('unknown physical dimension in cfg.sourceunits');
   end
-  switch cfg.mriunits
+  switch mri.unit
     case 'mm'
       scale = scale * 1000;
     case 'cm'
@@ -338,7 +383,7 @@ if basedonmri
     case 'm'
       scale = scale * 1;
     otherwise
-      error('unknown physical dimension in cfg.mriunits');
+      error('unknown physical dimension in mri.unit');
   end
   
   if ~isfield(cfg.grid, 'resolution')
@@ -354,17 +399,10 @@ if basedonmri
     end
   end
   
-  if ischar(cfg.mri)
-    % read the segmentation from file
-    mri      = ft_read_mri(cfg.mri);
+  if ~isfield(mri, 'gray')
     mri.gray = double(mri.anatomy);
-  elseif isstruct(cfg.mri) && ~isfield(cfg.mri, 'gray')
-    % looks like a segmentation that has already been loaded in memory
-    mri      = cfg.mri;
-    mri.gray = double(mri.anatomy);
-  elseif isstruct(cfg.mri) && isfield(cfg.mri, 'gray')
+  elseif isfield(cfg.mri, 'gray')
     % looks like a complete segmentation from VOLUMESEGMENT
-    mri      = cfg.mri;
     mri.gray = double(mri.gray);
   else
     error('cannot determine the format of the segmentation in cfg.mri');
@@ -425,7 +463,8 @@ if basedonmri
   grid.dim            = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
   grid.inside         = inside(:);
   grid.outside        = setdiff(1:size(grid.pos,1),grid.inside)';
-  
+  grid.unit           = cfg.sourceunits;
+   
   fprintf('the regular 3D grid encompassing the cortex contains %d grid points\n', size(grid.pos,1));
   fprintf('%d grid points inside gray matter\n', length(grid.inside));
   fprintf('%d grid points outside gray matter\n', length(grid.outside));
@@ -446,14 +485,13 @@ if basedoncortex
     case 'neuromag_fif'
       % fif files can contain a variety of objects
       % here we assume that it contains a cortical sheet which was created by the MNE software
-      shape = ft_read_headshape(cfg.headshape, 'format', 'mne_source');
     otherwise
       % use autodetection
       shape = ft_read_headshape(cfg.headshape);
   end
   grid.pos = shape.pnt;
   grid.tri = shape.tri;
-  grid = ft_convert_units(grid, cfg.sourceunits);
+  grid     = ft_convert_units(grid, cfg.sourceunits);
 end
 
 if basedonshape
@@ -474,14 +512,20 @@ if basedonshape
   else
     error('cfg.headshape is not specified correctly')
   end
+  if ~isfield(headshape, 'unit')
+    % backward compatibility; it is expected that after ft_read_headshape there's a unit
+    headshape = ft_convert_units(headshape);
+  end
   if ~isfield(headshape, 'tri')
     % generate a closed triangulation from the surface points
     headshape.pnt = unique(headshape.pnt, 'rows');
     headshape.tri = projecttri(headshape.pnt);
   end
-  grid.pos = headsurface([], [], 'headshape', headshape, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
+  grid.pos     = headsurface([], [], 'headshape', headshape, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
+  grid.tri     = headshape.tri;
   grid.inside  = 1:size(grid.pos,1);
   grid.outside = [];
+  grid.unit    = headshape.unit;
 end
 
 if basedonvol
@@ -489,9 +533,10 @@ if basedonvol
   % use the volume conduction model to make a superficial dipole layer (e.g.
   % for megrealign). Assume that all points are inside the volume.
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  grid.pos = headsurface(vol, sens, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
+  grid.pos     = headsurface(vol, sens, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
   grid.inside  = 1:size(grid.pos,1);
   grid.outside = [];
+  grid.unit    = vol.unit;
 end
 
 % FIXME use inside_vol instead of this replication of code
