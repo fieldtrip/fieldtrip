@@ -223,7 +223,7 @@ end % if hasrpt
 % Read or create the layout that will be used for plotting:
 lay = ft_prepare_layout(cfg, data);
 cfg.layout = lay;
-ft_plot_lay(lay, 'box', false);
+ft_plot_lay(lay, 'box', false,'label','no','point','no');
 
 % Apply baseline correction:
 if ~strcmp(cfg.baseline, 'no')

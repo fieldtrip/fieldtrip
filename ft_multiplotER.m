@@ -307,6 +307,7 @@ end
 % Read or create the layout that will be used for plotting
 lay = ft_prepare_layout(cfg, varargin{1});
 cfg.layout = lay;
+ft_plot_lay(lay, 'box', false,'label','no','point','no');
 
 % Apply baseline correction
 if ~strcmp(cfg.baseline, 'no')
