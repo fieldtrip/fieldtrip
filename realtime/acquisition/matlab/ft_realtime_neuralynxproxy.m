@@ -35,7 +35,7 @@ if ~isfield(cfg.target, 'eventfile'),   cfg.target.eventfile = 'buffer://localho
 if ~isfield(cfg.target, 'eventformat'), cfg.target.eventformat = [];                      end % default is to use autodetection of the output format
 
 % this requires an external Neuralynx toolbox for the communication with Cheetah
-hastoolbox('nlxnetcom', 1);
+ft_hastoolbox('nlxnetcom', 1);
 
 %% the record pool is used to collect the fragments while they become available
 recordPool        = [];
