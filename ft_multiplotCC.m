@@ -39,7 +39,7 @@ function ft_multiplotCC(cfg, data)
 
 ft_defaults
 
-if ~isfield(cfg, 'layout'),    cfg.layout = 'CTF151s.lay';       end;
+% if ~isfield(cfg, 'layout'),    cfg.layout = 'CTF151s.lay';       end;
 if ~isfield(cfg, 'xparam'),    cfg.xparam = 'foi';               end;
 if ~isfield(cfg, 'xlim'),      cfg.xlim   = 'all';               end;
 if ~isfield(cfg, 'zparam'),    cfg.zparam = 'avg.icohspctrm';    end;
@@ -78,6 +78,11 @@ if isfield(cfg, 'xparam'),
     fbin = [xparam(1) xparam(end)];
   end
 end
+
+% Read or create the layout that will be used for plotting
+lay = ft_prepare_layout(cfg, varargin{1});
+cfg.layout = lay;
+ft_plot_lay(lay, 'box', false,'label','no','point','no');
 
 [chNum,X,Y,Width,Height,Lbl] = textread(cfg.layout,'%f %f %f %f %f %s');
 
