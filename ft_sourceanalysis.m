@@ -131,7 +131,6 @@ function [source] = ft_sourceanalysis(cfg, data, baseline);
 % cfg.grid.inside, documented
 % cfg.grid.outside, documented
 % cfg.mri
-% cfg.mriunits
 % cfg.smooth
 % cfg.sourceunits
 % cfg.threshold
@@ -380,7 +379,6 @@ else
   try, tmpcfg.threshold   = cfg.threshold;    end
   try, tmpcfg.spheremesh  = cfg.spheremesh;   end
   try, tmpcfg.inwardshift = cfg.inwardshift;  end
-  try, tmpcfg.mriunits    = cfg.mriunits;     end
   try, tmpcfg.sourceunits = cfg.sourceunits;  end
   [grid, tmpcfg] = ft_prepare_sourcemodel(tmpcfg);
 end
@@ -1039,7 +1037,7 @@ if (strcmp(cfg.jackknife, 'yes') || strcmp(cfg.bootstrap, 'yes') || strcmp(cfg.p
 end
 
 % remember the trialinfo
-if strcmp(cfg.keeptrials, 'yes') && isfield(data, 'trialinfo')
+if (strcmp(cfg.keeptrials, 'yes') || strcmp(cfg.method, 'pcc')) && isfield(data, 'trialinfo')
   source.trialinfo = data.trialinfo;
 end
 

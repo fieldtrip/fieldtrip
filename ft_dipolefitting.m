@@ -114,7 +114,6 @@ function [source] = ft_dipolefitting(cfg, data)
 % cfg.grid.outside, documented
 % cfg.symmetry, documented
 % cfg.mri
-% cfg.mriunits
 % cfg.smooth
 % cfg.sourceunits
 % cfg.threshold
@@ -347,7 +346,6 @@ if strcmp(cfg.gridsearch, 'yes')
   try, tmpcfg.threshold   = cfg.threshold;    end
   try, tmpcfg.spheremesh  = cfg.spheremesh;   end
   try, tmpcfg.inwardshift = cfg.inwardshift;  end
-  try, tmpcfg.mriunits    = cfg.mriunits;     end
   try, tmpcfg.sourceunits = cfg.sourceunits;  end
   [grid, tmpcfg] = ft_prepare_sourcemodel(tmpcfg);
 

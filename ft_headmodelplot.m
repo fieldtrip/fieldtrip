@@ -166,7 +166,6 @@ if strcmp(cfg.plotgrid, 'yes')
     try, tmpcfg.threshold   = cfg.threshold;    end
     try, tmpcfg.spheremesh  = cfg.spheremesh;   end
     try, tmpcfg.inwardshift = cfg.inwardshift;  end
-    try, tmpcfg.mriunits    = cfg.mriunits;     end
     try, tmpcfg.sourceunits = cfg.sourceunits;  end
     [sourcegrid, tmpcfg] = ft_prepare_sourcemodel(tmpcfg);
   end
