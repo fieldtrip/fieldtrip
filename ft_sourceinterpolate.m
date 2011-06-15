@@ -390,6 +390,14 @@ elseif ~is2Dana && ~is2Dfun
   end
 end
 
+% these stay the same as the input anatomical MRI
+if isfield(anatomical, 'coordsys')
+  interp.coordsys = anatomical.coordsys;
+end
+if isfield(anatomical, 'unit')
+  interp.unit = anatomical.unit;
+end
+
 % accessing this field here is needed for the configuration tracking
 % by accessing it once, it will not be removed from the output cfg
 cfg.outputfile;

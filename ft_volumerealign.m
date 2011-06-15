@@ -95,6 +95,7 @@ ftFuncClock = clock();
 
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducial', 'fiducial'});
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'required', 'method');
 
 % set the defaults
 if ~isfield(cfg, 'fiducial'),  cfg.fiducial = [];         end
@@ -175,7 +176,6 @@ switch cfg.method
     zc = round(mri.dim(3)/2);
     
     while true % break when 'q' is pressed
-      fprintf('============================================================\n');
       fprintf('click with mouse button to reslice the display to a new position\n');
       fprintf('press n/l/r on keyboard to record the current position as fiducial location\n');
       fprintf('press a/p/z on keyboard to record the current position as anatomical landmark\n');
@@ -240,7 +240,22 @@ switch cfg.method
         end
       end
       
-      fprintf('cur_voxel = [%f %f %f], cur_head = [%f %f %f]\n', [xc yc zc], warp_apply(mri.transform, [xc yc zc]));
+      fprintf('============================================================\n');
+      
+      str = sprintf('voxel %d, indices [%d %d %d]', sub2ind(mri.dim(1:3), round(xc), round(yc), round(zc)), round([xc yc zc]));
+      
+      if isfield(mri, 'coordsys') && isfield(mri, 'unit')
+        str = sprintf('%s, %s coordinates [%.1f %.1f %.1f] %s', str, mri.coordsys, warp_apply(mri.transform, [xc yc zc]), mri.unit);
+      elseif ~isfield(mri, 'coordsys') && isfield(mri, 'unit')
+        str = sprintf('%s, location [%.1f %.1f %.1f] %s', str, warp_apply(mri.transform, [xc yc zc]), mri.unit);
+      elseif isfield(mri, 'coordsys') && ~isfield(mri, 'unit')
+        str = sprintf('%s, %s coordinates [%.1f %.1f %.1f]', str, mri.coordsys, warp_apply(mri.transform, [xc yc zc]));
+      elseif ~isfield(mri, 'coordsys') && ~isfield(mri, 'unis')
+        str = sprintf('%s, location [%.1f %.1f %.1f]', str, warp_apply(mri.transform, [xc yc zc]));
+      end
+      fprintf('%s\n', str);
+      % fprintf('cur_voxel = [%f %f %f], cur_head = [%f %f %f]\n', [xc yc zc], warp_apply(mri.transform, [xc yc zc]));
+
       if ~isempty(nas),
         fprintf('nas_voxel = [%f %f %f], nas_head = [%f %f %f]\n', nas, warp_apply(mri.transform, nas));
       else
@@ -273,6 +288,7 @@ switch cfg.method
     if ~isempty(antcomm) && ~isempty(pstcomm) && ~isempty(xzpoint)
       basedonmrk = 1;
     end
+
   otherwise
     error('unsupported method');
 end
@@ -302,12 +318,19 @@ elseif basedonmrk
   % compute the homogenous transformation matrix describing the new coordinate system
   [realign, coordsys] = headcoordinates(ac, pc, xzpoint, 'spm');
   
+else
+  realign = [];
+  
 end
 
-% combine the additional transformation with the original one
-mri.transformorig = mri.transform;
-mri.transform = realign * mri.transform;
-mri.coordsys  = coordsys;
+if ~isempty(realign)
+  % combine the additional transformation with the original one
+  mri.transformorig = mri.transform;
+  mri.transform = realign * mri.transform;
+  mri.coordsys  = coordsys;
+else
+  warning('no coordinate system reallignment has been done');
+end
 
 % accessing this field here is needed for the configuration tracking
 % by accessing it once, it will not be removed from the output cfg

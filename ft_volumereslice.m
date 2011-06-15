@@ -1,4 +1,4 @@
-function mri = ft_volumereslice(cfg, mri)
+function resliced = ft_volumereslice(cfg, mri)
 
 % FT_VOLUMERESLICE interpolates and reslices a volume along the
 % principal axes of the coordinate system according to a specified
@@ -18,7 +18,7 @@ function mri = ft_volumereslice(cfg, mri)
 %
 % If the input mri has a coordsys-field, the centre of the volume will be
 % shifted (with respect to the origin of the coordinate system), for the
-% brain to fit nicely in the box. 
+% brain to fit nicely in the box.
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
@@ -108,7 +108,7 @@ else
 end
 
 cfg.dim = ft_getopt(cfg, 'dim',    ceil(mri.dim./cfg.resolution));
-if isempty(cfg.xrange), 
+if isempty(cfg.xrange),
   cfg.xrange = [-cfg.dim(1)/2+0.5 cfg.dim(1)/2-0.5] * cfg.resolution + xshift;
 end
 if isempty(cfg.yrange),
@@ -133,17 +133,25 @@ xgrid = cfg.xrange(1):cfg.resolution:cfg.xrange(2);
 ygrid = cfg.yrange(1):cfg.resolution:cfg.yrange(2);
 zgrid = cfg.zrange(1):cfg.resolution:cfg.zrange(2);
 
-pseudomri           = [];
-pseudomri.dim       = [length(xgrid) length(ygrid) length(zgrid)];
-pseudomri.transform = translate([cfg.xrange(1) cfg.yrange(1) cfg.zrange(1)]) * scale([cfg.resolution cfg.resolution cfg.resolution]) * translate([-1 -1 -1]);
-pseudomri.anatomy   = zeros(pseudomri.dim, 'int8');
+resliced           = [];
+resliced.dim       = [length(xgrid) length(ygrid) length(zgrid)];
+resliced.transform = translate([cfg.xrange(1) cfg.yrange(1) cfg.zrange(1)]) * scale([cfg.resolution cfg.resolution cfg.resolution]) * translate([-1 -1 -1]);
+resliced.anatomy   = zeros(resliced.dim, 'int8');
+
+% these are the same in the resliced as in the input anatomical MRI
+if isfield(mri, 'coordsys')
+  resliced.coordsys = mri.coordsys;
+end
+if isfield(mri, 'unit')
+  resliced.unit = mri.unit;
+end
 
 clear xgrid ygrid zgrid
 
-fprintf('reslicing from [%d %d %d] to [%d %d %d]\n', mri.dim(1), mri.dim(2), mri.dim(3), pseudomri.dim(1), pseudomri.dim(2), pseudomri.dim(3));
+fprintf('reslicing from [%d %d %d] to [%d %d %d]\n', mri.dim(1), mri.dim(2), mri.dim(3), resliced.dim(1), resliced.dim(2), resliced.dim(3));
 
 tmpcfg = [];
-mri = ft_sourceinterpolate(tmpcfg, mri, pseudomri);
+resliced = ft_sourceinterpolate(tmpcfg, mri, resliced);
 
 % accessing this field here is needed for the configuration tracking
 % by accessing it once, it will not be removed from the output cfg
@@ -155,7 +163,7 @@ cfg.version.id = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.version.matlab = version();
-  
+
 % add information about the function call to the configuration
 cfg.callinfo.proctime = toc(ftFuncTimer);
 cfg.callinfo.calltime = ftFuncClock;
@@ -167,10 +175,10 @@ if isfield(cfg, 'previous'),
 end
 
 % remember the exact configuration details in the output
-mri.cfg = cfg;
+resliced.cfg = cfg;
 
 % the output data should be saved to a MATLAB file
 if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'mri', mri); % use the variable name "data" in the output file
+  savevar(cfg.outputfile, 'mri', resliced); % use the variable name "mri" in the output file
 end
 
