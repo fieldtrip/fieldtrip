@@ -338,7 +338,7 @@ elseif length(filename)>=4 && ~isempty(strfind(filename,',rf'))
   type = '4d';
   manufacturer = '4D/BTi';
   content = '';
-elseif length(filename)<=4 && exist([pwd,'/config']) %&& exist([pwd,'/hs_file'])
+elseif length(filename)<=4 && exist(fullfile(p,'config'), 'file') %&& exist(fullfile(p,'hs_file'), 'file')
   % this could be a 4D file with non-standard/processed name
   type = '4d';
   manufacturer = '4D/BTi';

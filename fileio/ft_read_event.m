@@ -17,6 +17,8 @@ function [event] = ft_read_event(filename, varargin)
 %   'trigshift'     integer, number of samples to shift from flank to detect trigger value (default = 0)
 %   'trigindx'      list with channel numbers for the trigger detection, only for Yokogawa (default is automatic)
 %   'threshold'     threshold for analog trigger channels (default is system specific)
+%   'blocking'      wait for the selected number of events (default = 'no')
+%   'timeout'       amount of time in seconds to wait when blocking (default = 5)
 %
 % Furthermore, you can specify optional arguments as key-value pairs
 % for filtering the events, e.g. to select only events of a specific
@@ -61,7 +63,7 @@ function [event] = ft_read_event(filename, varargin)
 %   t=26; samples_trials = [event(find(strcmp('trial', {event.type}))).sample];
 %   find([event.sample]>samples_trials(t) & [event.sample]<samples_trials(t+1))
 %
-% See also: 
+% See also:
 %   FT_READ_HEADER, FT_READ_DATA, FT_WRITE_DATA, FT_WRITE_EVENT, FT_FILTER_EVENT
 
 % Copyright (C) 2004-2010 Robert Oostenveld
@@ -103,24 +105,31 @@ if iscell(filename)
 end
 
 % get the options
-eventformat      = keyval('eventformat',  varargin);
-hdr              = keyval('header',       varargin);
-detectflank      = keyval('detectflank',  varargin); % up, down or both
-trigshift        = keyval('trigshift',    varargin); % default is assigned in subfunction
-trigindx         = keyval('trigindx',     varargin); % this allows to override the automatic trigger channel detection and is useful for Yokogawa
-headerformat     = keyval('headerformat', varargin);
-dataformat       = keyval('dataformat',   varargin);
-threshold        = keyval('threshold',    varargin); % this is used for analog channels
+eventformat      = ft_getopt(varargin, 'eventformat');
+hdr              = ft_getopt(varargin, 'header');
+detectflank      = ft_getopt(varargin, 'detectflank');   % up, down or both
+trigshift        = ft_getopt(varargin, 'trigshift');     % default is assigned in subfunction
+trigindx         = ft_getopt(varargin, 'trigindx');      % this allows to override the automatic trigger channel detection and is useful for Yokogawa
+headerformat     = ft_getopt(varargin, 'headerformat');
+dataformat       = ft_getopt(varargin, 'dataformat');
+threshold        = ft_getopt(varargin, 'threshold');   % this is used for analog channels
 
 % this allows to read only events in a certain range, supported for selected data formats only
-flt_type         = keyval('type',         varargin);
-flt_value        = keyval('value',        varargin);
-flt_minsample    = keyval('minsample',    varargin);
-flt_maxsample    = keyval('maxsample',    varargin);
-flt_mintimestamp = keyval('mintimestamp', varargin);
-flt_maxtimestamp = keyval('maxtimestamp', varargin);
-flt_minnumber    = keyval('minnumber', varargin);
-flt_maxnumber    = keyval('maxnumber', varargin);
+flt_type         = ft_getopt(varargin, 'type');
+flt_value        = ft_getopt(varargin, 'value');
+flt_minsample    = ft_getopt(varargin, 'minsample');
+flt_maxsample    = ft_getopt(varargin, 'maxsample');
+flt_mintimestamp = ft_getopt(varargin, 'mintimestamp');
+flt_maxtimestamp = ft_getopt(varargin, 'maxtimestamp');
+flt_minnumber    = ft_getopt(varargin, 'minnumber');
+flt_maxnumber    = ft_getopt(varargin, 'maxnumber');
+
+% thie allows blocking reads to avoid having to poll many times for online processing
+blocking         = ft_getopt(varargin, 'blocking', false); % true or false
+timeout          = ft_getopt(varargin, 'timeout', 5); % seconds
+
+% convert from 'yes'/'no' into boolean
+blocking = istrue(blocking);
 
 % determine the filetype
 if isempty(eventformat)
@@ -158,10 +167,10 @@ event = [];
 % read the events with the low-level reading function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 switch eventformat
-
+  
   case 'fcdc_global'
     event = event_queue;
-
+    
   case {'4d' '4d_pdf', '4d_m4d', '4d_xyz'}
     if isempty(hdr)
       hdr = ft_read_header(filename, 'headerformat', eventformat);
@@ -175,21 +184,21 @@ switch eventformat
       trigger = read_trigger(filename, 'header', hdr, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift,'fix4dglasgow',0, 'dataformat', '4d');
     end
     event   = appendevent(event, trigger);
-
+    
     respindx = match_str(hdr.label, 'RESPONSE');
     if ~isempty(respindx)
       response = read_trigger(filename, 'header', hdr, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', respindx, 'detectflank', detectflank, 'trigshift', trigshift, 'dataformat', '4d');
       event    = appendevent(event, response);
     end
-
+    
   case 'bci2000_dat'
     % this requires the load_bcidat mex file to be present on the path
     ft_hastoolbox('BCI2000', 1);
-
+    
     if isempty(hdr)
       hdr = ft_read_header(filename);
     end
-
+    
     if isfield(hdr.orig, 'signal') && isfield(hdr.orig, 'states')
       % assume that the complete data is stored in the header, this speeds up subsequent read operations
       signal        = hdr.orig.signal;
@@ -199,7 +208,7 @@ switch eventformat
     else
       [signal, states, parameters, total_samples] = load_bcidat(filename);
     end
-
+    
     list = fieldnames(states);
     % loop over all states and detect the flanks, the following code was taken from read_trigger
     for i=1:length(list)
@@ -208,7 +217,7 @@ switch eventformat
       pad       = trig(1);
       trigshift = 0;
       begsample = 1;
-
+      
       switch detectflank
         case 'up'
           % convert the trigger into an event with a value at a specific sample
@@ -241,7 +250,7 @@ switch eventformat
           error('incorrect specification of ''detectflank''');
       end
     end
-
+    
   case {'besa_avr', 'besa_swf'}
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -251,13 +260,13 @@ switch eventformat
     event(end  ).duration = hdr.nSamples;
     event(end  ).offset   = -hdr.nSamplesPre;
     event(end  ).value    = [];
-
+    
   case {'biosemi_bdf', 'bham_bdf'}
     % read the header, required to determine the stimulus channels and trial specification
     if isempty(hdr)
       hdr = ft_read_header(filename);
     end
-
+    
     % specify the range to search for triggers, default is the complete file
     if ~isempty(flt_minsample)
       begsample = flt_minsample;
@@ -269,7 +278,7 @@ switch eventformat
     else
       endsample = hdr.nSamples*hdr.nTrials;
     end
-
+    
     if ~strcmp(detectflank, 'up')
       if strcmp(detectflank, 'both')
         warning('only up-going flanks are supported for Biosemi');
@@ -281,11 +290,11 @@ switch eventformat
         % READ_TRIGGER function
       end
     end
-
+    
     % find the STATUS channel and read the values from it
     schan = find(strcmpi(hdr.label,'STATUS'));
     sdata = ft_read_data(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', schan);
-
+    
     % find indices of negative numbers
     bit24i = find(sdata < 0);
     % make number positive and preserve bits 0-22
@@ -294,54 +303,54 @@ switch eventformat
     sdata(bit24i) = sdata(bit24i)+(2^(24-1));
     % typecast the data to ensure that the status channel is represented in 32 bits
     sdata = uint32(sdata);
-
+    
     byte1 = 2^8  - 1;
     byte2 = 2^16 - 1 - byte1;
     byte3 = 2^24 - 1 - byte1 - byte2;
-
+    
     % get the respective status and trigger bits
     trigger = bitand(sdata, bitor(byte1, byte2)); %  contained in the lower two bytes
     epoch   = int8(bitget(sdata, 16+1));
     cmrange = int8(bitget(sdata, 20+1));
     battery = int8(bitget(sdata, 22+1));
-
+    
     % determine when the respective status bits go up or down
     flank_trigger = diff([0 trigger]);
     flank_epoch   = diff([0 epoch ]);
     flank_cmrange = diff([0 cmrange]);
     flank_battery = diff([0 battery]);
-
+    
     for i=find(flank_trigger>0)
       event(end+1).type   = 'STATUS';
       event(end  ).sample = i + begsample - 1;
       event(end  ).value  = double(trigger(i));
     end
-
+    
     for i=find(flank_epoch==1)
       event(end+1).type   = 'Epoch';
       event(end  ).sample = i;
     end
-
+    
     for i=find(flank_cmrange==1)
       event(end+1).type   = 'CM_in_range';
       event(end  ).sample = i;
     end
-
+    
     for i=find(flank_cmrange==-1)
       event(end+1).type   = 'CM_out_of_range';
       event(end  ).sample = i;
     end
-
+    
     for i=find(flank_battery==1)
       event(end+1).type   = 'Battery_low';
       event(end  ).sample = i;
     end
-
+    
     for i=find(flank_battery==-1)
       event(end+1).type   = 'Battery_ok';
       event(end  ).sample = i;
     end
-
+    
   case {'biosig', 'gdf'}
     % FIXME it would be nice to figure out how sopen/sread return events
     % for all possible fileformats that can be processed with biosig
@@ -357,7 +366,7 @@ switch eventformat
       warning('BIOSIG does not have a consistent event representation, skipping events')
       event = [];
     end
-
+    
   case 'brainvision_vmrk'
     fid=fopen(filename,'rt');
     if fid==-1,
@@ -391,7 +400,7 @@ switch eventformat
       end
     end
     fclose(fid);
-
+    
   case 'ced_son'
     % check that the required low-level toolbox is available
     ft_hastoolbox('neuroshare', 1);
@@ -401,16 +410,16 @@ switch eventformat
       'value',    {orig.events.value},...
       'offset',   {orig.events.offset},...
       'duration', {orig.events.duration});
-
+    
   case  'ced_spike6mat'
     if isempty(hdr)
-        hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename);
     end
-     
+    
     chanindx = [];
     for i = 1:numel(hdr.orig)
       if ~any(isfield(hdr.orig{i}, {'units', 'scale'}))
-        chanindx = [chanindx i];                            
+        chanindx = [chanindx i];
       end
     end
     if ~isempty(chanindx)
@@ -427,18 +436,18 @@ switch eventformat
     datafile   = fullfile(path, [name ext], [name '.meg4']);
     classfile  = fullfile(path, [name ext], 'ClassFile.cls');
     markerfile = fullfile(path, [name ext], 'MarkerFile.mrk');
-
+    
     % in case ctf_old was specified as eventformat, the other reading functions should also know about that
     if strcmp(eventformat, 'ctf_old')
       dataformat   = 'ctf_old';
       headerformat = 'ctf_old';
     end
-
+    
     % read the header, required to determine the stimulus channels and trial specification
     if isempty(hdr)
       hdr = ft_read_header(headerfile, 'headerformat', headerformat);
     end
-
+    
     try
       % read the trigger codes from the STIM channel, usefull for (pseudo) continuous data
       % this splits the trigger channel into the lowers and highest 16 bits,
@@ -455,7 +464,7 @@ switch eventformat
         event(end  ).value  = frontpanel(i);
       end
     end
-
+    
     % determine the trigger channels from the header
     if isfield(hdr, 'orig') && isfield(hdr.orig, 'sensType')
       origSensType = hdr.orig.sensType;
@@ -471,7 +480,7 @@ switch eventformat
       trigger = read_trigger(filename, 'header', hdr, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigchanindx, 'dataformat', dataformat, 'detectflank', detectflank, 'trigshift', trigshift, 'fixctf', 1);
       event   = appendevent(event, trigger);
     end
-
+    
     % read the classification file and make an event for each classified trial
     [condNumbers,condLabels] = read_ctf_cls(classfile);
     if ~isempty(condNumbers)
@@ -486,7 +495,7 @@ switch eventformat
         end
       end
     end
-
+    
     if exist(markerfile,'file')
       % read the marker file and make an event for each marker
       % this depends on the readmarkerfile function that I got from Tom Holroyd
@@ -511,7 +520,7 @@ switch eventformat
         end
       end
     end
-
+    
   case 'ctf_shm'
     % contact Robert Oostenveld if you are interested in real-time acquisition on the CTF system
     % read the events from shared memory
@@ -554,16 +563,16 @@ switch eventformat
     
   case 'eeglab_set'
     if isempty(hdr)
-       hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename);
     end
     event = read_eeglabevent(filename, 'header', hdr);
-
+    
   case 'spmeeg_mat'
     if isempty(hdr)
-       hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename);
     end
     event = read_spmeeg_event(filename, 'header', hdr);
-
+    
   case 'eep_avr'
     % check that the required low-level toolbox is available
     ft_hastoolbox('eeprobe', 1);
@@ -576,7 +585,7 @@ switch eventformat
     event(end  ).duration = hdr.nSamples;
     event(end  ).offset   = -hdr.nSamplesPre;
     event(end  ).value    = [];
-
+    
   case 'eep_cnt'
     % check that the required low-level toolbox is available
     ft_hastoolbox('eeprobe', 1);
@@ -598,7 +607,7 @@ switch eventformat
     else
       warning('no triggerfile was found');
     end
-
+    
   case 'egi_egis'
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -620,7 +629,7 @@ switch eventformat
         event(eventCount).value    =  cnames{cel};
       end
     end
-
+    
   case 'egi_egia'
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -642,7 +651,7 @@ switch eventformat
         event(eventCount).value    =  ['Sub' sprintf('%03d',subject) cnames{cel}];
       end
     end
-
+    
   case 'egi_sbin'
     if ~exist('segHdr','var')
       [EventCodes, segHdr, eventData] = read_sbin_events(filename);
@@ -655,7 +664,7 @@ switch eventformat
     end
     version     = header_array(1);
     unsegmented = ~mod(version, 2);
-
+    
     eventCount=0;
     if unsegmented
       [evType,sampNum] = find(eventData);
@@ -682,21 +691,21 @@ switch eventformat
     end
     
     if ~unsegmented
-        for segment=1:hdr.nTrials  % cell information
-            eventCount=eventCount+1;
-            event(eventCount).type     = 'trial';
-            event(eventCount).sample   = (segment-1)*hdr.nSamples + 1;
-            event(eventCount).offset   = -hdr.nSamplesPre;
-            event(eventCount).duration =  hdr.nSamples;
-            event(eventCount).value    =  char([CateNames{segHdr(segment,1)}(1:CatLengths(segHdr(segment,1)))]);
-        end
+      for segment=1:hdr.nTrials  % cell information
+        eventCount=eventCount+1;
+        event(eventCount).type     = 'trial';
+        event(eventCount).sample   = (segment-1)*hdr.nSamples + 1;
+        event(eventCount).offset   = -hdr.nSamplesPre;
+        event(eventCount).duration =  hdr.nSamples;
+        event(eventCount).value    =  char([CateNames{segHdr(segment,1)}(1:CatLengths(segHdr(segment,1)))]);
+      end
     end;
     
   case 'egi_mff'
     if isempty(hdr)
       hdr = ft_read_header(filename);
     end
-
+    
     % get event info from xml files
     ft_hastoolbox('XML4MAT', 1, 0);
     warning('off', 'MATLAB:REGEXP:deprecated') % due to some small code xml2struct
@@ -710,7 +719,7 @@ switch eventformat
       end
     end
     warning('on', 'MATLAB:REGEXP:deprecated')
-
+    
     % construct info needed for FieldTrip Event
     eventNames = fieldnames(xml);
     begTime = hdr.orig.xml.info.recordTime;
@@ -726,7 +735,7 @@ switch eventformat
         Msamp2offset(2,iEpoch,1:nSampEpoch) = hdr.orig.epochdef(iEpoch,3):hdr.orig.epochdef(iEpoch,3)+nSampEpoch-1; %offset in samples
       end
     end
-
+    
     % construct event according to FieldTrip rules
     eventCount = 0;
     for iXml = 1:length(eventNames)
@@ -755,7 +764,7 @@ switch eventformat
             else
               eventSample = eventOffset+1;
             end
-
+            
             event(eventCount).type     = eventNames{iXml}(8:end);
             event(eventCount).sample   = eventSample;
             event(eventCount).offset   = 0;
@@ -765,8 +774,8 @@ switch eventformat
         end %if that takes care of "-" events, which are out of range
       end %iEvent
     end
-
-
+    
+    
   case 'eyelink_asc'
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -791,17 +800,17 @@ switch eventformat
       event(end  ).duration   = 1;
       event(end  ).offset     = 0;
     end
-
+    
   case 'fcdc_buffer'
     % read from a networked buffer for realtime analysis
     [host, port] = filetype_check_uri(filename);
-
+    
     % SK: the following was intended to speed up, but does not work
     % the buffer server will try to return exact indices, even
     % if the intend here is to filter based on a maximum range.
     % We could change the definition of GET_EVT to comply
     % with filtering, but that might break other existing code.
-
+    
     %if isempty(flt_minnumber) && isempty(flt_maxnumber)
     %   evtsel = [];
     %else
@@ -813,26 +822,48 @@ switch eventformat
     %       evtsel(2) = flt_maxnumber-1;
     %   end
     %end
-
+    
+    if blocking && isempty(flt_minnumber) && isempty(flt_maxnumber)
+      warning('disabling blocking because no selection was specified');
+      blocking = false;
+    end
+    
+    if blocking
+      nsamples  = -1; % disable waiting for samples
+      if isempty(flt_minnumber)
+        nevents = flt_maxnumber;
+      elseif isempty(flt_maxnumber)
+        nevents = flt_minnumber;
+      else
+        nevents = max(flt_minnumber, flt_maxnumber);
+      end
+      available = buffer_wait_dat([nsamples nevents timeout*1000], host, port);
+      if available.nevents<nevents
+        error('buffer timed out while waiting for %d events', nevents);
+      end
+    end
+    
     try
       event = buffer('get_evt', [], host, port);
     catch
       if strfind(lasterr, 'the buffer returned an error')
+        % this happens if the buffer contains no events
+        % which in itself is not a problem and should not result in an error
         event = [];
       else
         rethrow(lasterr);
       end
     end
-
+    
   case 'fcdc_buffer_offline'
     [path, file, ext] = fileparts(filename);
     if isempty(hdr)
-      headerfile = fullfile(path, [file '/header']);    
+      headerfile = fullfile(path, [file '/header']);
       hdr = read_buffer_offline_header(headerfile);
     end
     eventfile  = fullfile(path, [file '/events']);
     event = read_buffer_offline_events(eventfile, hdr);
-
+    
   case 'fcdc_matbin'
     % this is multiplexed data in a *.bin file, accompanied by a matlab file containing the header and event
     [path, file, ext] = fileparts(filename);
@@ -840,26 +871,26 @@ switch eventformat
     % read the events from the Matlab file
     tmp   = load(filename, 'event');
     event = tmp.event;
-
-
+    
+    
   case 'fcdc_fifo'
     fifo = filetype_check_uri(filename);
-
+    
     if ~exist(fifo,'file')
       warning('the FIFO %s does not exist; attempting to create it', fifo);
       system(sprintf('mkfifo -m 0666 %s',fifo));
     end
-
+    
     fid = fopen(fifo, 'r');
     msg = fread(fid, inf, 'uint8');
     fclose(fid);
-
+    
     try
       event = mxDeserialize(uint8(msg));
     catch
       warning(lasterr);
     end
-
+    
   case 'fcdc_tcp'
     % requires tcp/udp/ip-toolbox
     ft_hastoolbox('TCP_UDP_IP', 1);
@@ -882,7 +913,7 @@ switch eventformat
       pnet(con,'close');
     end
     con = [];
-
+    
   case 'fcdc_udp'
     % requires tcp/udp/ip-toolbox
     ft_hastoolbox('TCP_UDP_IP', 1);
@@ -904,11 +935,11 @@ switch eventformat
     end
     % On break or error close connection
     pnet(udp,'close');
-
+    
   case 'fcdc_serial'
     % this code is moved to a seperate file
     event = read_serial_event(filename);
-
+    
   case 'fcdc_mysql'
     % read from a MySQL server listening somewhere else on the network
     db_open(filename);
@@ -917,7 +948,7 @@ switch eventformat
     else
       event = db_select('fieldtrip.event', {'type', 'value', 'sample', 'offset', 'duration'});
     end
-
+    
   case {'itab_raw' 'itab_mhd'}
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -935,12 +966,12 @@ switch eventformat
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigsel, 'detectflank', detectflank, 'trigshift', trigshift);
       event   = appendevent(event, trigger);
     end
-
+    
   case 'matlab'
     % read the events from a normal Matlab file
     tmp   = load(filename, 'event');
     event = tmp.event;
-
+    
   case {'mpi_ds', 'mpi_dap'}
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -975,8 +1006,7 @@ switch eventformat
       event(i).offset   = 0;                      % expressed in samples
       event(i).duration = hdr.nSamples;           % expressed in samples
     end
-
-
+    
   case {'neuromag_fif' 'neuromag_mne' 'neuromag_mex'}
     if strcmp(eventformat, 'neuromag_fif')
       % the default is to use the MNE reader for fif files
@@ -993,17 +1023,17 @@ switch eventformat
       if isempty(headerformat), headerformat = eventformat; end
       if isempty(dataformat),   dataformat   = eventformat; end
     end
-
+    
     if isempty(hdr)
       hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
-
+    
     % note below we've had to include some chunks of code that are only
     % called if the file is an averaged file, or if the file is continuous.
     % These are defined in hdr by read_header for neuromag_mne, but do not
     % exist for neuromag_fif, hence we run the code anyway if the fields do
     % not exist (this is what happened previously anyway).
-
+    
     if strcmp(eventformat, 'neuromag_mex')
       iscontinuous    = 1;
       isaverage       = 0;
@@ -1013,21 +1043,18 @@ switch eventformat
       isaverage       = hdr.orig.isaverage;
       isepoched       = hdr.orig.isepoched;
     end
-
-
-
+    
     if iscontinuous
       analogindx = find(strcmp(ft_chantype(hdr), 'analog trigger'));
       binaryindx = find(strcmp(ft_chantype(hdr), 'digital trigger'));
-
-
+      
       if isempty(binaryindx)&&isempty(analogindx)
         % included in case of problems with older systems and MNE reader:
         % use a predefined set of channel names
         binary     = {'STI 014', 'STI 015', 'STI 016'};
         binaryindx = match_str(hdr.label, binary);
       end
-
+      
       if ~isempty(binaryindx)
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', binaryindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', 0);
         event   = appendevent(event, trigger);
@@ -1040,7 +1067,7 @@ switch eventformat
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', analogindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', 1);
         event   = appendevent(event, trigger);
       end
-
+      
     elseif isaverage
       % the length of each average can be variable
       nsamples = zeros(1, length(hdr.orig.evoked));
@@ -1055,17 +1082,17 @@ switch eventformat
         event(end  ).offset   = hdr.orig.evoked(i).first;
         event(end  ).duration = hdr.orig.evoked(i).last - hdr.orig.evoked(i).first + 1;
       end
-
+      
     elseif isepoched
       error('Support for epoched *.fif data is not yet implemented.')
     end
-
-
+    
+    
   case {'neuralynx_ttl' 'neuralynx_bin' 'neuralynx_dma' 'neuralynx_sdma'}
     if isempty(hdr)
       hdr = ft_read_header(filename);
     end
-
+    
     % specify the range to search for triggers, default is the complete file
     if ~isempty(flt_minsample)
       begsample = flt_minsample;
@@ -1077,7 +1104,7 @@ switch eventformat
     else
       endsample = hdr.nSamples*hdr.nTrials;
     end
-
+    
     if strcmp(eventformat, 'neuralynx_dma')
       % read the Parallel_in channel from the DMA log file
       ttl = read_neuralynx_dma(filename, begsample, endsample, 'ttl');
@@ -1112,7 +1139,7 @@ switch eventformat
       % read the triggers from a seperate *.ttl.bin file
       ttl = read_neuralynx_bin(filename, begsample, endsample);
     end
-
+    
     ttl = int32(ttl / (2^16));    % parallel port provides int32, but word resolution is int16. Shift the bits and typecast to signed integer.
     d1  = (diff(ttl)~=0);         % determine the flanks, which can be multiple samples long (this looses one sample)
     d2  = (diff(d1)==1);          % determine the onset of the flanks (this looses one sample)
@@ -1122,7 +1149,7 @@ switch eventformat
     ind = find(val~=0);           % look for triggers tith a non-zero value, this avoids downgoing flanks going to zero
     smp = smp(ind);               % discard triggers with a value of zero
     val = val(ind);               % discard triggers with a value of zero
-
+    
     if ~isempty(smp)
       % try reading the timestamps
       if strcmp(eventformat, 'neuralynx_dma')
@@ -1140,7 +1167,7 @@ switch eventformat
       else
         ts = [];
       end
-
+      
       % reformat the values as cell array, since the struct function can work with those
       type      = repmat({'trigger'},size(smp));
       value     = num2cell(val);
@@ -1156,7 +1183,7 @@ switch eventformat
       event = struct('type', type, 'value', value, 'sample', sample, 'timestamp', timestamp, 'offset', offset, 'duration', duration);
       clear type value sample timestamp offset duration
     end
-
+    
     if (strcmp(eventformat, 'neuralynx_bin') || strcmp(eventformat, 'neuralynx_ttl')) && isfield(hdr, 'FirstTimeStamp')
       % the header was obtained from an external dataset which could be at a different sampling rate
       % use the timestamps to redetermine the sample numbers
@@ -1168,7 +1195,7 @@ switch eventformat
         event(i).sample = smp(i);
       end
     end
-
+    
   case 'neuralynx_ds'
     % read the header of the dataset
     if isempty(hdr)
@@ -1186,7 +1213,7 @@ switch eventformat
     end
     % read the events, apply filter is applicable
     nev = read_neuralynx_nev(filename, 'type', flt_type, 'value', flt_value, 'mintimestamp', flt_mintimestamp, 'maxtimestamp', flt_maxtimestamp, 'minnumber', flt_minnumber, 'maxnumber', flt_maxnumber);
-
+    
     % the following code should only be executed if there are events,
     % otherwise there will be an error subtracting an uint64 from an []
     if ~isempty(nev)
@@ -1233,7 +1260,7 @@ switch eventformat
     else
       error('no event file found');
     end
-
+    
     %   The sample number is missingin the code below, since it is not available
     %   without looking in the continuously sampled data files. Therefore
     %   sorting the events (later in this function) based on the sample number
@@ -1255,8 +1282,8 @@ switch eventformat
     %       event(i).duration = [];
     %       event(i).sample   = [];
     %     end
-
-
+    
+    
   case {'neuroprax_eeg', 'neuroprax_mrk'}
     tmp = np_readmarker (filename, 0, inf, 'samples');
     event = [];
@@ -1268,10 +1295,10 @@ switch eventformat
         'sample', num2cell(tmp.marker{i}),...
         'value', {tmp.markertyp(i)})];
     end
-
+    
   case 'nexstim_nxe'
     event = read_nexstim_event(filename);
-
+    
   case 'nimh_cortex'
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -1292,7 +1319,7 @@ switch eventformat
         event(end  ).value    = cortex(i).event(j);
       end
     end
-
+    
   case 'ns_avg'
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -1302,7 +1329,7 @@ switch eventformat
     event(end  ).duration = hdr.nSamples;
     event(end  ).offset   = -hdr.nSamplesPre;
     event(end  ).value    = [];
-
+    
   case {'ns_cnt', 'ns_cnt16', 'ns_cnt32'}
     % read the header, the original header includes the event table
     if isempty(hdr)
@@ -1332,7 +1359,7 @@ switch eventformat
         event(end  ).duration = 0;
       end
     end
-
+    
   case 'ns_eeg'
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -1377,10 +1404,10 @@ switch eventformat
       event(end  ).offset   = -hdr.nSamplesPre;
       event(end  ).duration =  hdr.nSamples;
     end
-
+    
   case 'plexon_nex'
     event = read_nex_event(filename);
-
+    
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
     % check that the required low-level toolbox is available
     ft_hastoolbox('yokogawa', 1);
@@ -1391,14 +1418,14 @@ switch eventformat
       detectflank = 'auto';
     end
     event = read_yokogawa_event(filename, 'detectflank', detectflank, 'trigindx', trigindx, 'threshold', threshold);
-
+    
   case 'nmc_archive_k'
     event = read_nmc_archive_k_event(filename);
-
+    
   case 'neuroshare' % NOTE: still under development
     % check that the required neuroshare toolbox is available
     ft_hastoolbox('neuroshare', 1);
-
+    
     tmp = read_neuroshare(filename, 'readevent', 'yes');
     for i=1:length(tmp.hdr.eventinfo)
       event(i).type      = tmp.hdr.eventinfo(i).EventType;
@@ -1406,7 +1433,7 @@ switch eventformat
       event(i).timestamp = tmp.event.timestamp(i);
       event(i).sample    = tmp.event.sample(i);
     end
-
+    
   case 'dataq_wdq'
     if isempty(hdr)
       hdr     = ft_read_header(filename, 'headerformat', 'dataq_wdq');
@@ -1416,7 +1443,7 @@ switch eventformat
     for i=1:numel(ix)
       event(i).type   = num2str(ix(i));
       event(i).value  = trigger(ix(i),iy(i));
-      event(i).sample = iy(i); 
+      event(i).sample = iy(i);
     end
     
   otherwise
@@ -1467,3 +1494,49 @@ end
 
 % apply the optional filters
 event = ft_filter_event(event, varargin{:});
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% poll implementation for backwards compatibility with ft buffer version 1
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function available = buffer_wait_dat(selection, host, port)
+% selection(1) nsamples
+% selection(2) nevents
+% selection(3) timeout in msec
+
+% check if backwards compatibilty mode is required
+try
+  % the WAIT_DAT request waits until it has more samples or events
+  selection(1) = selection(1)-1;
+  selection(2) = selection(2)-1;
+  % the following should work for buffer version 2
+  available = buffer('WAIT_DAT', selection, host, port);
+  
+catch
+  % the error means that the buffer is version 1, which does not support the WAIT_DAT request
+  % the wait_dat can be implemented by polling the buffer
+  nsamples = selection(1);
+  nevents  = selection(2);
+  timeout  = selection(3)/1000; % in seconds
+  
+  stopwatch = tic;
+  
+  % results are retrieved in the order written to the buffer
+  orig = buffer('GET_HDR', [], host, port);
+  
+  if timeout > 0
+    % wait maximal timeout seconds until more than nsamples samples or nevents events have been received
+    while toc(stopwatch)<timeout
+      if nsamples == -1 && nevents == -1,             break, end
+      if nsamples ~= -1 && orig.nsamples >= nsamples, break, end
+      if nevents  ~= -1 && orig.nevents  >= nevents,  break, end
+      orig = buffer('GET_HDR', [], host, port);
+      pause(0.001);
+    end
+  else
+    % no reason to wait
+  end
+  
+  available.nsamples = orig.nsamples;
+  available.nevents  = orig.nevents;
+end % try buffer v1 or v2
