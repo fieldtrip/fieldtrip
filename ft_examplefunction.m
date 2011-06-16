@@ -101,7 +101,7 @@ cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
 cfg.version.id   = '$Id$'; % this will be auto-updated by the revision control system
 
 % add information about the Matlab version used to the configuration
-cfg.version.matlab = version();
+cfg.callinfo.matlab = version();
   
 % add information about the function call to the configuration
 cfg.callinfo.proctime = toc(ftFuncTimer);

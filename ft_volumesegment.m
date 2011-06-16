@@ -527,7 +527,7 @@ cfg.version.name = mfilename('fullpath');
 cfg.version.id = '$Id$';
 
 % add information about the Matlab version used to the configuration
-cfg.version.matlab = version();
+cfg.callinfo.matlab = version();
 
 % remember the configuration details of the input data
 if isfield(segment, 'cfg'),

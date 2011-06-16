@@ -233,7 +233,7 @@ if strcmp(cfg.analyze,'yes')
     % add the version details of this function call to the configuration
     cfg.version.name   = mfilename('fullpath');
     cfg.version.id     = '$Id$';
-    cfg.version.matlab = version();
+    cfg.callinfo.matlab = version();
   
 % add information about the function call to the configuration
 cfg.callinfo.proctime = toc(ftFuncTimer);

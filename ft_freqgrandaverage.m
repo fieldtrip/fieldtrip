@@ -268,7 +268,7 @@ cfg.version.name = mfilename('fullpath');
 cfg.version.id = '$Id$';
 
 % add information about the Matlab version used to the configuration
-cfg.version.matlab = version();
+cfg.callinfo.matlab = version();
   
 % add information about the function call to the configuration
 cfg.callinfo.proctime = toc(ftFuncTimer);
