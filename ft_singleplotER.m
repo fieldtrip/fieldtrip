@@ -83,6 +83,8 @@ ft_defaults
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'unused',  {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'matrixside',   'feedforward', 'outflow'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'matrixside',   'feedback',    'inflow'});
 cfg = ft_checkconfig(cfg, 'renamed', {'channelindex',  'channel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'channelname',   'channel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel', 'refchannel'});
@@ -130,7 +132,7 @@ cfg.linestyle     = ft_getopt(cfg, 'linestyle',    '-');
 cfg.linewidth     = ft_getopt(cfg, 'linewidth',    0.5);
 cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',    'box');
 cfg.channel       = ft_getopt(cfg, 'channel',      'all');
-cfg.matrixside    = ft_getopt(cfg, 'matrixside',   '');
+cfg.matrixside    = ft_getopt(cfg, 'matrixside',   'outflow');
 
 ndata = numel(varargin);
 
@@ -316,10 +318,10 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.zparam)
             if isempty(cfg.matrixside)
                 sel1 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,2), 'exact');
                 sel2 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,1), 'exact');
-            elseif strcmp(cfg.matrixside, 'feedforward')
+            elseif strcmp(cfg.matrixside, 'outflow')
                 sel1 = [];
                 sel2 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,1), 'exact');
-            elseif strcmp(cfg.matrixside, 'feedback')
+            elseif strcmp(cfg.matrixside, 'inflow')
                 sel1 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,2), 'exact');
                 sel2 = [];
             end
@@ -332,14 +334,14 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.zparam)
             % general case
             sel               = match_str(varargin{i}.label, cfg.refchannel);
             siz               = [size(varargin{i}.(cfg.zparam)) 1];
-            if strcmp(cfg.matrixside, 'feedback') || isempty(cfg.matrixside)
-                %fixme the interpretation of 'feedback' and 'feedforward' depend on
-                %the definition in the bivariate representation of the data
+            if strcmp(cfg.matrixside, 'inflow') || isempty(cfg.matrixside)
+                %the interpretation of 'inflow' and 'outflow' depend on
+                %the definition in the bivariate representation of the data  
                 %data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
                 sel1 = 1:siz(1);
                 sel2 = sel;
                 meandir = 2;
-            elseif strcmp(cfg.matrixside, 'feedforward')
+            elseif strcmp(cfg.matrixside, 'outflow')
                 %data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
                 sel1 = sel;
                 sel2 = 1:siz(1);

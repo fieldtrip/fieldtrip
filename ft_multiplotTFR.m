@@ -112,6 +112,8 @@ ft_defaults
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'unused', {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'matrixside',   'feedforward', 'outflow'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'matrixside',   'feedback',    'inflow'});
 cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel', 'refchannel'});
 
 clf
@@ -149,10 +151,10 @@ if ~isfield(cfg,'interactive'),     cfg.interactive = 'no';            end
 if ~isfield(cfg,'hotkeys'),         cfg.hotkeys = 'no';                end
 if ~isfield(cfg,'renderer'),        cfg.renderer = [];                 end % let matlab decide on default
 if ~isfield(cfg,'maskalpha'),       cfg.maskalpha = 1;                 end
-if ~isfield(cfg,'masknans'),        cfg.masknans = 'no';              end
+if ~isfield(cfg,'masknans'),        cfg.masknans = 'no';               end
 if ~isfield(cfg,'maskparameter'),   cfg.maskparameter = [];            end
 if ~isfield(cfg,'maskstyle'),       cfg.maskstyle = 'opacity';         end
-if ~isfield(cfg,'matrixside'),      cfg.matrixside = 'feedforward';    end
+if ~isfield(cfg,'matrixside'),      cfg.matrixside = 'outflow';        end
 if ~isfield(cfg,'channel'),         cfg.channel       = 'all';         end
 if ~isfield(cfg,'box')             
   if ~isempty(cfg.maskparameter)
@@ -277,10 +279,10 @@ if (isfull || haslabelcmb) && isfield(data, cfg.zparam)
     if isempty(cfg.matrixside)
       sel1 = strmatch(cfg.refchannel, data.labelcmb(:,2), 'exact');
       sel2 = strmatch(cfg.refchannel, data.labelcmb(:,1), 'exact');
-    elseif strcmp(cfg.matrixside, 'feedforward')
+    elseif strcmp(cfg.matrixside, 'outflow')
       sel1 = [];
       sel2 = strmatch(cfg.refchannel, data.labelcmb(:,1), 'exact');
-    elseif strcmp(cfg.matrixside, 'feedback')
+    elseif strcmp(cfg.matrixside, 'inflow')
       sel1 = strmatch(cfg.refchannel, data.labelcmb(:,2), 'exact');
       sel2 = [];
     end
@@ -293,14 +295,15 @@ if (isfull || haslabelcmb) && isfield(data, cfg.zparam)
     % General case
     sel               = match_str(data.label, cfg.refchannel);
     siz               = [size(data.(cfg.zparam)) 1];
-    if strcmp(cfg.matrixside, 'feedback') || isempty(cfg.matrixside)
-      %FIXME the interpretation of 'feedback' and 'feedforward' depend on
+    if strcmp(cfg.matrixside, 'inflow') || isempty(cfg.matrixside)
+      %the interpretation of 'inflow' and 'outflow' depend on
       %the definition in the bivariate representation of the data
+      %in FieldTrip the row index 'causes' the column index channel
       %data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
       sel1 = 1:siz(1);
       sel2 = sel;
       meandir = 2;
-    elseif strcmp(cfg.matrixside, 'feedforward')
+    elseif strcmp(cfg.matrixside, 'outflow')
       %data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
       sel1 = sel;
       sel2 = 1:siz(1);
