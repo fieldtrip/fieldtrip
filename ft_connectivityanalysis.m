@@ -296,28 +296,26 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
           %FIXME this is fast but throws away the trial dimension, consider
           %a way to keep trial information if needed, but use the fast way
           %if possible
-          data = ft_checkdata(data, 'cmbrepresentation', 'fullfast');
+          data   = ft_checkdata(data, 'cmbrepresentation', 'fullfast');
+          hasrpt = 0;
           hasrpt = 0;
         elseif isfield(data, 'powspctrm')
           data = ft_checkdata(data, 'cmbrepresentation', 'full');
         end
-        cfg = ft_checkconfig(cfg, 'createsubcfg',  {'npsf'});
-        cfg.npsf.sfmethod = ft_getopt(cfg.npsf, 'sfmethod', 'multivariate'); 
-        cfg.feedback = cfg.npsf.feedback; 
+        
+        tmpcfg = ft_checkconfig(cfg, 'createsubcfg',  {'npsf'});
+        
         % check whether multiple pairwise decomposition is required (this
         % can most conveniently be handled at this level
-        if strcmp(cfg.npsf.sfmethod, 'multivariate')
-          cfg.channelcmb = cfg.npsf.channelcmb;
-          try, cfg.block      = cfg.npsf.block;     end
-          try, cfg.blockindx  = cfg.npsf.blockindx; end
-          % FIXME 
-          cfg.npsf = rmfield(cfg.npsf, 'channelcmb');
-          try, cfg.npsf = rmfield(cfg.npsf, 'block');     end
-          try, cfg.npsf = rmfield(cfg.npsf, 'blockindx'); end
-        end
-        optarg = ft_cfg2keyval(cfg.npsf);
+           tmpcfg.npsf = rmfield(tmpcfg.npsf, 'channelcmb');
+           try,tmpcfg.npsf = rmfield(tmpcfg.npsf, 'block');     end
+           try,tmpcfg.npsf = rmfield(tmpcfg.npsf, 'blockindx'); end
+%         end
+        optarg = ft_cfg2keyval(tmpcfg.npsf);
         data   = csd2transfer(data, optarg{:});
-        if strcmp(cfg.method, 'granger') 
+        
+        % convert the inparam back to cell array in the case of granger
+        if strcmp(cfg.method, 'granger')
           inparam = {'transfer' 'noisecov' 'crsspctrm'};
         end
       end
@@ -569,6 +567,7 @@ switch cfg.method
           ix = ((k-1)*4+1):k*4;
           powindx(ix,:) = [1 1;4 1;1 4;4 4] + (k-1)*4;
         end
+      
       elseif isfield(data, 'labelcmb')
         % conditional (blockwise) needs linearly represented cross-spectra
         for k = 1:size(cfg.conditional,1)
@@ -586,7 +585,7 @@ switch cfg.method
         end
         data.label = newlabel;
       else
-        % do nothing
+        powindx = [];
       end
       
       %fs = cfg.fsample; %FIXME do we really need this, or is this related to how
@@ -812,7 +811,7 @@ cfg.version.name = mfilename('fullpath');
 cfg.version.id   = '$Id$';
 
 % add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
+cfg.version.matlab = version();
   
 % add information about the function call to the configuration
 cfg.callinfo.proctime = toc(ftFuncTimer);
