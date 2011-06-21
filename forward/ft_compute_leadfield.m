@@ -456,15 +456,18 @@ if strcmpi(reducerank,'yes')
   reducerank = size(lf,2) - 1;
 end
 if ~strcmp(reducerank, 'no') && reducerank<size(lf,2) && ~strcmp(ft_voltype(vol),'openmeeg')
-  % decompose the leadfield
-  [u, s, v] = svd(lf);
-  r = diag(s);
-  s(:) = 0;
-  for j=1:reducerank
-    s(j,j) = r(j);
-  end
-  % recompose the leadfield with reduced rank
-  lf = u * s * v';
+    % decompose the leadfield
+    for ii=1:Ndipoles
+        lftmp=lf(:,(3*ii-2):(3*ii));
+        [u, s, v] = svd(lftmp);
+        r = diag(s);
+        s(:) = 0;
+        for j=1:reducerank
+            s(j,j) = r(j);
+        end
+        % recompose the leadfield with reduced rank
+        lf(:,(3*ii-2):(3*ii)) = u * s * v';
+    end
 end
 
 % optionally apply leadfield normaliziation
