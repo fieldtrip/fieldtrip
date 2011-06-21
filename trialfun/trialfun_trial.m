@@ -16,11 +16,25 @@ end
 sel = find(strcmp({event.type}, 'trial'));
 trl = zeros(length(sel),3);
 
+smp = [event.sample];
+
 for i=1:length(sel)
   % determine the begin, end and offset for each trial and add it to the Nx3 matrix
   begsample = event(sel(i)).sample;
   endsample = begsample + event(sel(i)).duration - 1;
   offset    = event(sel(i)).offset;
-  trl(i,:)  = [begsample endsample offset];
+
+  tmpsel    = find(smp==smp(sel(i))-offset);
+  tmpval    = zeros(1,0);
+  for k=1:length(tmpsel)
+    if ~isempty(event(tmpsel(k)).value)
+      % this assumes per trial that the triggers occur in a standardised
+      % order, otherwise the entries per column will have different
+      % meanings
+      tmpval = [tmpval event(tmpsel(k)).value];
+    end
+  end
+  
+  trl(i,1:(length(tmpval)+3))  = [begsample endsample offset tmpval];
 end
 
