@@ -159,7 +159,7 @@ end
 if basedonpos
   fprintf('creating dipole grid based on user specified dipole positions\n');
   cfg.inwardshift = ft_getopt(cfg,      'inwardshift', 0); %in this case for inside detection, FIXME move to cfg.grid
-  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight', 'yes'); 
+  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight', 'no'); 
 end
 
 if basedonshape
