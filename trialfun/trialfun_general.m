@@ -174,7 +174,7 @@ for i=sel
   end
   % determine the number of samples that has to be read (excluding the begin sample)
   if ~isfield(cfg.trialdef, 'poststim')
-    trldur = max(event(i).duration - 1, 0);
+    trldur = max(event(i).duration - 1, 0) - trloff;
   else
     % this will not work if prestim was not defined, the code will then crash
     trldur = round((cfg.trialdef.poststim+cfg.trialdef.prestim)*hdr.Fs) - 1;
