@@ -501,6 +501,9 @@ for k = 1:numel(cfg.output)
       % the original segment.anatomy
       if dosmooth, anatomy = dosmoothing(anatomy, cfg.smooth(k), 'anatomy'); end
       if dothresh, anatomy = threshold(anatomy,  cfg.threshold(k), 'anatomy'); end
+      % fill in the holes
+      anatomy = fill(anatomy); 
+
       segment.scalp = anatomy>0;
       removefields  = intersect(removefields, {'gray' 'white' 'csf' 'anatomy'});
       clear anatomy;    
@@ -569,3 +572,13 @@ for k = 1:N
   m(k,1) = sum(tmp(:)==k);
 end
 output   = double(tmp~=find(m==max(m))); clear tmp;
+
+function [output] = fill(input)
+  output = input;
+  dim = size(input);
+  for i=1:dim(2)
+    slice=squeeze(input(:,i,:));
+    im = imfill(slice,8,'holes');
+    output(:,i,:) = im;
+  end
+  
