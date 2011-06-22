@@ -6,52 +6,91 @@
 #
 ##############################################################################
 
-PLATFORM = $(shell gcc -dumpmachine)
+# locate the MATLAB command line executable, which will help to determine the path and architecture
+
+ifeq ($(MATLABCMD),)
+MATLABCMD := $(shell which matlab)
+endif
+
+ifeq ($(MATLABCMD),)
+MATLABCMD := $(shell which matlab2011a)
+endif
+
+ifeq ($(MATLABCMD),)
+MATLABCMD := $(shell which matlab2010b)
+endif
+
+ifeq ($(MATLABCMD),)
+MATLABCMD := $(shell which matlab2010a)
+endif
+
+ifeq ($(MATLABCMD),)
+MATLABCMD := $(shell which matlab2009b)
+endif
+
+ifeq ($(MATLABCMD),)
+MATLABCMD := $(shell which matlab2009a)
+endif
+
+ifeq ($(MATLABCMD),)
+MATLABCMD := $(shell which matlab2008b)
+endif
+
+ifeq ($(MATLABCMD),)
+MATLABCMD := $(shell which matlab2008a)
+endif
+
+ifeq ($(MATLABCMD),)
+MATLABCMD := $(shell which matlab79)
+endif
+
+ifeq ($(MATLABCMD),)
+MATLABCMD := $(shell which matlab78)
+endif
+
+ifeq ($(MATLABCMD),)
+MATLABCMD := $(shell which matlab77)
+endif
+
+ifeq ($(MATLABCMD),)
+$(error Cannot locate your MATLAB installation, you should specify MATLABCMD=xxx)
+endif
+
+# determine the MATLAB architecture and path
+MATLABARCH := $(shell $(MATLABCMD) -e | grep ARCH= | cut -f 2 -d =)
+MATLABPATH := $(shell $(MATLABCMD) -e | grep MATLAB= | cut -f 2 -d =)
+MATLABLIBS = -L$(MATLABPATH)/bin/$(MATLABARCH) -leng -lmx
+MATLABINC  = -I$(MATLABPATH)/extern/include
 
 CC		 = gcc
 BINDIR	 = ../bin
-INCPATH  = -I.
-LIBPATH  = -L.
+INCPATH  = -I. $(MATLABINC)
+LIBPATH  = -L. $(MATLABLIBS)
 LIBS 	 = -lm -lpthread -lpeer
 # CFLAGS   = $(INCPATH) -fPIC -Wall -pedantic -O1 -fpack-struct
 # CXXFLAGS = $(INCPATH) -fPIC -Wunused -pedantic -O1
 CFLAGS	 = $(INCPATH) -fPIC -Wall -pthread
 
+# determine the operating system
+PLATFORM := $(shell gcc -dumpmachine)
+
+# override the defaults, required for cross compilation (e.g. 32 bit MATLAB on 64 bit OS)
 ifeq "$(PLATFORM)" "i386-redhat-linux"
-	# this is only for the peerslave command line executable -> mentat068
-	MATLABARCH = glnx86
-	MATLABPATH = /opt/matlab75
-	MATLABLIBS = -L$(MATLABPATH)/bin/$(MATLABARCH) -leng -lmx
-	MATLABINC  = -I$(MATLABPATH)/extern/include
 endif
 
 ifeq "$(PLATFORM)" "x86_64-redhat-linux"
-	# this is only for the peerslave command line executable -> mentat001
-	MATLABARCH = glnxa64
-	MATLABPATH = /opt/matlab77
-	MATLABLIBS = -L$(MATLABPATH)/bin/$(MATLABARCH) -leng -lmx
-	MATLABINC  = -I$(MATLABPATH)/extern/include
 endif
 
 ifeq "$(PLATFORM)" "i686-apple-darwin9"
-	# this is only for the peerslave command line executable -> manzana
-	MATLABARCH = maci
-	# matlab version 2009a is a 32 bit application
-	MATLABPATH = /Applications/MATLAB_R2009a.app
-	MATLABLIBS = -L$(MATLABPATH)/bin/$(MATLABARCH) -leng -lmx
-	MATLABINC  = -I$(MATLABPATH)/extern/include
-    # override the architecture defaults, required for 32 bit compilation on mixed architecture
-    CFLAGS	 = $(INCPATH) -Wall -pthread -arch i386
+ifeq "$(MATLABARCH)" "maci"
+    CFLAGS := $(CFLAGS) -arch i386
+endif
 endif
 
 ifeq "$(PLATFORM)" "i686-apple-darwin10"
-	# this is only for the peerslave command line executable -> macbook
-	MATLABARCH = maci64
-	MATLABPATH = /Applications/MATLAB_R2010a.app
-	MATLABLIBS = -L$(MATLABPATH)/bin/$(MATLABARCH) -leng -lmx
-	MATLABINC  = -I$(MATLABPATH)/extern/include
-    # override the architecture defaults, required for 64 bit compilation on mixed architecture
-    CFLAGS	 = $(INCPATH) -Wall -pthread -arch x86_64
+ifeq "$(MATLABARCH)" "maci"
+    CFLAGS := $(CFLAGS) -arch i386
+endif
 endif
 
 ifeq "$(PLATFORM)" "mingw32"
@@ -61,7 +100,6 @@ ifeq "$(PLATFORM)" "mingw32"
 	MATLABLIBS = $(MATLABPATH)/bin/win32/libeng.dll $(MATLABPATH)/bin/win32/libmx.dll
 	MATLABINC  = -I$(MATLABPATH)/extern/include
 	LIBS 	 = -lm -lpeer ../pthreadGC2.dll -lws2_32 -lwininet
-    # override the architecture defaults
     CFLAGS	 = $(INCPATH) -Wall -I../pthreads-win32/include -DSYSLOG=2 -DLOG_DEBUG=0 -DLOG_ERR=0
 endif
 
@@ -72,18 +110,8 @@ ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
 	MATLABLIBS = $(MATLABPATH)/bin/win64/libeng.dll $(MATLABPATH)/bin/win64/libmx.dll
 	MATLABINC  = -I$(MATLABPATH)/extern/include
 	LIBS 	 = -lm -lpeer ../pthreadGC2-w64.dll -lws2_32 -lwininet
-    # override the architecture defaults
     CFLAGS	 = $(INCPATH) -Wall -I../pthreads-win64/include -DSYSLOG=2 -DLOG_DEBUG=0 -DLOG_ERR=0
 endif
-
-## to override the compilation defaults, please specify below where
-## your MATLAB is installed and the architecture details
-# MATLABARCH = --- string with your matlab platform architecture ---
-# MATLABPATH = --- location of your matlab installation ---
-# MATLABLIBS = -L$(MATLABPATH)/bin/$(MATLABARCH) -leng -lmx
-# MATLABINC  = -I$(MATLABPATH)/extern/include
-## to compile the 32-bit version with a 64-bit compiler, you will have to add the following
-# CFLAGS += -arch i386
 
 LD_LIBRARY_PATH := $(MATLABPATH)/bin/$(MATLABARCH)
 export LD_LIBRARY_PATH
