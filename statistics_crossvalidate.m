@@ -69,8 +69,6 @@ else
 
 end
 
-assert(isfield(cfg,'design'));
-
 if ~isfield(cfg,'metric'), cv.metric = 'accuracy'; end
 if ~isfield(cfg,'sigtest'), cv.sigtest = 'binomial'; end
 
