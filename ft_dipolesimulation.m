@@ -23,8 +23,8 @@ function [simulated] = ft_dipolesimulation(cfg)
 %                    see FT_CHANNELSELECTION for details
 %
 % The dipoles position and orientation have to be specified with
-%   cfg.dip.pos     = [Rx Ry Rz]
-%   cfg.dip.mom     = [Qx Qy Qz]
+%   cfg.dip.pos     = [Rx Ry Rz] (size Nx3)
+%   cfg.dip.mom     = [Qx Qy Qz] (size 3xN)
 %
 % The timecourse of the dipole activity is given as a single vector or as a
 % cell-array with one vectors per trial
