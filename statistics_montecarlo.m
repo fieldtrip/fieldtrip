@@ -352,15 +352,18 @@ end
 % Below both options are realized
 if strcmp(cfg.correcttail, 'prob') && cfg.tail==0
   stat.prob = stat.prob .* 2;
+  stat.prob(stat.prob>1) = 1; % clip at p=1
   % also correct the probabilities in the pos/negcluster fields
   if isfield(stat, 'posclusters')
     for i=1:length(stat.posclusters)
       stat.posclusters(i).prob = stat.posclusters(i).prob*2;
+      if stat.posclusters(i).prob>1; stat.posclusters(i).prob = 1; end
     end
   end
   if isfield(stat, 'negclusters')
     for i=1:length(stat.negclusters)
       stat.negclusters(i).prob = stat.negclusters(i).prob*2;
+      if stat.negclusters(i).prob>1; stat.negclusters(i).prob = 1; end
     end
   end
 elseif strcmp(cfg.correcttail, 'alpha') && cfg.tail==0
