@@ -20,7 +20,9 @@ function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varar
 %   timwin    = vector, containing length of time windows (in seconds)
 %   freqoi    = vector, containing frequencies (in Hz)
 %   tapsmofrq = number, the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
-%   dimord    = 'tap_chan_freq_time' (default) or 'chan_time_freqtap' for memory efficiency%
+%   dimord    = 'tap_chan_freq_time' (default) or 'chan_time_freqtap' for
+%                memory efficiency
+%   verbose   = output progress to console (0 or 1, default 1)
 %
 % See also SPECEST_MTMFFT, SPECEST_CONVOL, SPECEST_HILBERT, SPECEST_WAVELET
 
@@ -29,7 +31,7 @@ function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varar
 % $Log$
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'taper','pad','timeoi','timwin','freqoi','tapsmofrq','dimord','feedback'});
+keyvalcheck(varargin, 'optional', {'taper','pad','timeoi','timwin','freqoi','tapsmofrq','dimord','feedback','verbose'});
 taper     = keyval('taper',       varargin); if isempty(taper),    taper   = 'dpss';                  end
 pad       = keyval('pad',         varargin);
 timeoi    = keyval('timeoi',      varargin); if isempty(timeoi),   timeoi  = 'all';                   end
@@ -38,6 +40,7 @@ freqoi    = keyval('freqoi',      varargin); if isempty(freqoi),   freqoi  = 'al
 tapsmofrq = keyval('tapsmofrq',   varargin);
 dimord    = keyval('dimord',      varargin); if isempty(dimord),   dimord  = 'tap_chan_freq_time';    end
 fbopt     = keyval('feedback',    varargin);
+verbose   = keyval('verbose',     varargin); if isempty(verbose),  verbose = 1;                       end
 
 if isempty(fbopt),
   fbopt.i = 1;
@@ -210,10 +213,10 @@ switch dimord
     for ifreqoi = 1:nfreqoi
       str = sprintf('frequency %d (%.2f Hz), %d tapers', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
       [st, cws] = dbstack;
-      if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis')
+      if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis') && verbose
         % specest_mtmconvol has been called by ft_freqanalysis, meaning that ft_progress has been initialised
         ft_progress(fbopt.i./fbopt.n, ['trial %d, ',str,'\n'], fbopt.i);
-      else
+      elseif verbose
         fprintf([str, '\n']);
       end
 
@@ -253,10 +256,10 @@ switch dimord
     for ifreqoi = 1:nfreqoi
       str = sprintf('frequency %d (%.2f Hz), %d tapers', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
       [st, cws] = dbstack;
-      if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis')
+      if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis') && verbose
         % specest_mtmconvol has been called by ft_freqanalysis, meaning that ft_progress has been initialised
         ft_progress(fbopt.i./fbopt.n, ['trial %d, ',str,'\n'], fbopt.i);
-      else
+      elseif verbose
         fprintf([str, '\n']);
       end
       for itap = 1:ntaper(ifreqoi)
