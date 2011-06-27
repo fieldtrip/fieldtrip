@@ -23,7 +23,12 @@ function [output] = csd2transfer(freq, varargin)
 %                    the iterations
 %
 % The code for the Wilson-Burg algorithm has been very generously provided by 
-% Prof. Mingzhou Ding and his group. 
+% Dr. Mukesh Dhamala, and Prof. Mingzhou Ding and his group. 
+%
+% If you use this code for studying directed interactions, please cite from
+% the following references:
+% -M.Dhamala, R.Rangarajan, M.Ding, Physical Review Letters 100, 018701 (2008)
+% -M.Dhamala, R.rangarajan, M.Ding, Neuroimage 41, 354 (2008)
 
 % Undocumented options:
 %
