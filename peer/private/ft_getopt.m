@@ -61,7 +61,15 @@ elseif isa(opt, 'cell')
   end
 
 elseif isempty(opt)
-  % input can be an empty variable (e.g. when calling a ft-function with
-  % ft_XXX([], data)
+  % the input might be empty, in which case the default applies
   val = default;
 end % isstruct or iscell or isempty
+
+if isempty(val) && ~isempty(default)
+  % use the default value instead of the empty input that was specified:
+  % this applies for example if you do functionname('key', []), where
+  % the empty is meant to indicate that the user does not know or care
+  % what the value is
+  val = default;
+end
+
