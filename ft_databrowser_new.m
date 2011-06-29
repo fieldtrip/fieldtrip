@@ -1112,7 +1112,7 @@ for k=1:length(event)
   catch
     eventstr = 'unknown';
   end
-  eventtim = (event(k).sample-begsample)/opt.fsample;
+  eventtim = (event(k).sample-begsample)/opt.fsample + opt.hlim(1);
   ft_plot_line([eventtim eventtim], [-1 1], 'tag', 'event', ...
     'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
   ft_plot_text(eventtim, 0.9, eventstr, 'tag', 'event', ...
@@ -1128,7 +1128,7 @@ if strcmp(cfg.viewmode, 'butterfly')
   set(gca,'ColorOrder',opt.chancolors(chanindx,:)) % plot vector does not clear axis, therefore this is possible
   ft_plot_vector(tim, dat, 'box', false, 'tag', 'timecourse', ...
     'hpos', laytime.pos(1,1), 'vpos', laytime.pos(1,2), 'width', laytime.width(1), 'height', laytime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim);
-  
+   
 elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
   for i = 1:length(chanindx)
     if strcmp(cfg.viewmode, 'component')
@@ -1144,12 +1144,7 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
         'hpos', laytime.pos(laysel,1), 'vpos', laytime.pos(laysel,2), 'width', laytime.width(laysel), 'height', laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
     end
   end
-  
-  nticks = 11;
-  xTickLabel = cellstr(num2str( linspace(tim(1), tim(end), nticks)' , '%1.2f'))';
-  set(gca, 'xTick', linspace(ax(1), ax(2), nticks))
-  set(gca, 'xTickLabel', xTickLabel)
-  
+
   if length(chanindx)>19
     % no space for xticks
     yTickLabel = [];
@@ -1171,6 +1166,11 @@ else
   error('unknown viewmode "%s"', cfg.viewmode);
 end % if strcmp viewmode
 
+  nticks = 11;
+  xTickLabel = cellstr(num2str( linspace(tim(1), tim(end), nticks)' , '%1.2f'))';
+  set(gca, 'xTick', linspace(ax(1), ax(2), nticks))
+  set(gca, 'xTickLabel', xTickLabel)
+  
 if strcmp(cfg.viewmode, 'component')
   
   % determine the position of each of the original channels for the topgraphy

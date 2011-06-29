@@ -108,5 +108,6 @@ else
 end % shortcut
 
 h = line(X, Y, 'Color', color, 'LineStyle', linestyle, 'LineWidth', linewidth);
+set(h, 'tag', tag);
 
 warning(ws); %revert to original state
