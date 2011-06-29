@@ -232,7 +232,7 @@ end
 mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
 
 % check whether spm is needed to generate tissue probability maps
-needtpm    = any(strcmp(cfg.output, {'tpm' 'brain' 'skullstrip'}));
+needtpm    = any(ismember(cfg.output, {'tpm' 'brain' 'skullstrip'}));
 hastpm     = isfield(mri, 'gray') && isfield(mri, 'white') && isfield(mri, 'csf');
 
 if needtpm && ~hastpm
@@ -242,7 +242,7 @@ else
   dotpm = 0;
 end
 
-needana    = any(strcmp(cfg.output, {'scalp' 'skullstrip'})) || dotpm;
+needana    = any(ismember(cfg.output, {'scalp' 'skullstrip'})) || dotpm;
 hasanatomy = isfield(mri, 'anatomy');
 if needana && ~hasanatomy
   error('the input volume needs an anatomy-field');
