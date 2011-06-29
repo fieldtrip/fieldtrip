@@ -256,11 +256,15 @@ for i=1:ntrial
     case 1
       % include this trial only if the data are complete in all specified windows
       usetrial = 1;
+      if strcmp(cfg.covariance, 'yes')
+          error('Please call ft_selectdata to get all trial lengths equal prior to calling this function if computing covariance window.')
+      end
       if (begsamplatency(i)>latency(1) || endsamplatency(i)<latency(2))
         usetrial = 0;
       elseif strcmp(cfg.covariance,'yes') && (begsamplatency(i)>cfg.covariancewindow(1) || endsamplatency(i)<cfg.covariancewindow(2))
         usetrial = 0;
       end
+      warning('Only longest trial will be used to compute avg. Please use vartrllength=2 to use all trials');
     case 2
       % include this trial if any data points are present in any of the specified windows
       % this is handled automatically by the code below
