@@ -66,11 +66,11 @@ recfields = {'fid' 'bnd'};     % recurse into these fields
 
 fnames    = fieldnames(input);
 for k = 1:numel(fnames)
-  if ismember(fnames{k}, tfields)
+  if any(strcmp(fnames{k}, tfields))
     input.(fnames{k}) = apply(transform, input.(fnames{k}));
-  elseif ismember(fnames{k}, rfields)
+  elseif any(strcmp(fnames{k}, rfields))
     input.(fnames{k}) = apply(rotation, input.(fnames{k}));
-  elseif ismember(fnames{k}, recfields)
+  elseif any(strcmp(fnames{k}, recfields))
     for j = 1:numel(input.(fnames{k}))
       input.(fnames{k})(j) = ft_transform_geometry(transform, input.(fnames{k})(j));
     end

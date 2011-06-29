@@ -230,7 +230,7 @@ switch dtype
     if ~isfield(cfg, 'yparam'),      cfg.yparam = '';             end
     if ~isfield(cfg, 'zparam'),      cfg.zparam = 'avg';          end
   case 'freq'
-    if sum(ismember(dimtok, 'time'))
+    if any(strcmp(dimtok, 'time'))
       if ~isfield(cfg, 'xparam'),    cfg.xparam = 'time';         end
       if ~isfield(cfg, 'yparam'),    cfg.yparam = 'freq';         end %FIXME
       if ~isfield(cfg, 'zparam'),    cfg.zparam = 'powspctrm';    end

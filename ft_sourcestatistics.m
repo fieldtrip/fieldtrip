@@ -144,7 +144,7 @@ elseif strcmp(cfg.implementation, 'new')
     end
   end
   
-  if ismember('cfg.method', {'parametric' 'randomization' 'randcluster'}),
+  if any(strcmp(cfg.method, {'parametric' 'randomization' 'randcluster'}))
     % FIXME only supported for old-style source representation
     for i = 1:numel(varargin)
       varargin{i} = ft_checkdata(varargin{i}, 'sourcerepresentation', 'old');

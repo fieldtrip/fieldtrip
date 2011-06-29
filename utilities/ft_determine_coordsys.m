@@ -224,19 +224,19 @@ if dointeractive,
   
   % interactively determine orientation
   orientation = '   ';
-  while ~ismember(orientation(1), {'r', 'l', 'a', 'p', 's', 'i'})
+  while ~any(strcmp(orientation(1), {'r', 'l', 'a', 'p', 's', 'i'}))
     orientation(1) = smartinput('What is the anatomical label for the positive X-axis [r, l, a, p, s, i]? ', '');
   end
-  while ~ismember(orientation(2), {'r', 'l', 'a', 'p', 's', 'i'})
+  while ~any(strcmp(orientation(2), {'r', 'l', 'a', 'p', 's', 'i'}))
     orientation(2) = smartinput('What is the anatomical label for the positive Y-axis [r, l, a, p, s, i]? ', '');
   end
-  while ~ismember(orientation(3), {'r', 'l', 'a', 'p', 's', 'i'})
+  while ~any(strcmp(orientation(3), {'r', 'l', 'a', 'p', 's', 'i'}))
     orientation(3) = smartinput('What is the anatomical label for the positive Z-axis [r, l, a, p, s, i]? ', '');
   end
   
   % interactively determine origin
   origin = ' ';
-  while ~ismember(origin, {'a', 'i', 'n'})
+  while ~any(strcmp(origin, {'a', 'i', 'n'}))
     origin = input('Is the origin of the coordinate system at the a(nterior commissure), i(nterauricular), n(ot a landmark)? ', 's');
   end
   

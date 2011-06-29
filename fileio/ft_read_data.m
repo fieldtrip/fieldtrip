@@ -106,7 +106,7 @@ end
 % ensure that the headerfile and datafile are defined, which are sometimes different than the name of the dataset
 [filename, headerfile, datafile] = dataset2files(filename, dataformat);
 
-if ~strcmp(filename, datafile) && ~ismember(dataformat, {'ctf_ds', 'ctf_old', 'fcdc_buffer_offline'})
+if ~strcmp(filename, datafile) && ~any(strcmp(dataformat, {'ctf_ds', 'ctf_old', 'fcdc_buffer_offline'}))
   filename   = datafile;                % this function will read the data
   dataformat = ft_filetype(filename);   % update the filetype
 end
@@ -368,10 +368,10 @@ switch dataformat
     dat = cell2mat(tmp.data');
 
   case  'itab_raw'
-    if ismember(hdr.orig.data_type, [0 1 2])
+    if any(hdr.orig.data_type==[0 1 2])
       % big endian
       fid = fopen(datafile, 'rb', 'ieee-be');
-    elseif ismember(hdr.orig.data_type, [3 4 5])
+    elseif any(hdr.orig.data_type==[3 4 5]))
       % little endian
       fid = fopen(datafile, 'rb', 'ieee-le');
     else
@@ -381,15 +381,15 @@ switch dataformat
     % skip the ascii header
     fseek(fid, hdr.orig.start_data, 'bof');
 
-    if ismember(hdr.orig.data_type, [0 3])
+    if any(hdr.orig.data_type==[0 3])
       % short
       fseek(fid, (begsample-1)*hdr.orig.nchan*2, 'cof');
       dat = fread(fid, [hdr.orig.nchan endsample-begsample+1], 'int16');
-    elseif ismember(hdr.orig.data_type, [1 4])
+    elseif any(hdr.orig.data_type==[1 4])
       % long
       fseek(fid, (begsample-1)*hdr.orig.nchan*4, 'cof');
       dat = fread(fid, [hdr.orig.nchan endsample-begsample+1], 'int32');
-    elseif ismember(hdr.orig.data_type, [2 5])
+    elseif any(hdr.orig.data_type==[2 5])
       % float
       fseek(fid, (begsample-1)*hdr.orig.nchan*4, 'cof');
       dat = fread(fid, [hdr.orig.nchan endsample-begsample+1], 'float');
