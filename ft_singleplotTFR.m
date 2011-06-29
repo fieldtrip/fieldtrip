@@ -77,7 +77,7 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'channelindex',  'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'channelname',   'channel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel', 'refchannel'});
 
-cla
+
 
 % Set the defaults:
 cfg.baseline      = ft_getopt(cfg, 'baseline',     'no');
@@ -104,7 +104,7 @@ dimord = data.dimord;
 dimtok = tokenize(dimord, '_');
 
 % Set x/y/zparam defaults
-if ~any(strcmp(dimtok, 'time'))
+if ~any(ismember(dimtok, 'time'))
   error('input data needs a time dimension');
 else
   if ~isfield(cfg, 'xparam'),      cfg.xparam='time';                  end
@@ -123,7 +123,7 @@ if isempty(cfg.channel)
 end
 
 % check whether rpt/subj is present and remove if necessary and whether
-hasrpt = any(strcmp(dimtok, {'rpt' 'subj'}));
+hasrpt = any(ismember(dimtok, {'rpt' 'subj'}));
 if hasrpt,
   % this also deals with fourier-spectra in the input
   % or with multiple subjects in a frequency domain stat-structure
@@ -373,6 +373,7 @@ if isfield(cfg,'colormap')
 end;
 
 % Draw plot (and mask NaN's if requested):
+cla
 if isequal(cfg.masknans,'yes') && isempty(cfg.maskparameter)
   nans_mask = ~isnan(datamatrix);
   mask = double(nans_mask);

@@ -371,7 +371,7 @@ switch dataformat
     if any(hdr.orig.data_type==[0 1 2])
       % big endian
       fid = fopen(datafile, 'rb', 'ieee-be');
-    elseif any(hdr.orig.data_type==[3 4 5]))
+    elseif any(hdr.orig.data_type==[3 4 5])
       % little endian
       fid = fopen(datafile, 'rb', 'ieee-le');
     else

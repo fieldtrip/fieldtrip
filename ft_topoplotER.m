@@ -344,7 +344,7 @@ switch dtype
         cfg.yparam = ft_getopt(cfg, 'yparam', '');
         cfg.zparam = ft_getopt(cfg, 'zparam', 'avg');
     case 'freq'
-        if any(strcmp(dimtok, 'time'))
+        if any(ismember(dimtok, 'time'))
             cfg.xparam = ft_getopt(cfg, 'xparam', 'time');
             cfg.yparam = ft_getopt(cfg, 'yparam', 'freq');
             cfg.zparam = ft_getopt(cfg, 'zparam', 'powspctrm');
@@ -385,7 +385,7 @@ if isfield(cfg, 'xparam') && isfield(cfg, 'zparam') && ~isfield(cfg, 'yparam')
 end
 
 % check whether rpt/subj is present and remove if necessary and whether
-hasrpt = any(strcmp(dimtok, {'rpt' 'subj'}));
+hasrpt = any(ismember(dimtok, {'rpt' 'subj'}));
 if strcmp(dtype, 'timelock') && hasrpt,
     tmpcfg        = [];
     tmpcfg.trials = cfg.trials;

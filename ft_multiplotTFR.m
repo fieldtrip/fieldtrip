@@ -170,7 +170,7 @@ dimord = data.dimord;
 dimtok = tokenize(dimord, '_');
 
 % Set x/y/zparam defaults
-if ~any(strcmp(dimtok, 'time'))
+if ~any(ismember(dimtok, 'time'))
   error('input data needs a time dimension');
 else
   if ~isfield(cfg, 'xparam'),      cfg.xparam='time';                  end
@@ -192,7 +192,7 @@ elseif isfield(data, 'labelcmb') && strcmp(cfg.interactive, 'no')
 end
 
 % check whether rpt/subj is present and remove if necessary and whether
-hasrpt = any(strcmp(dimtok, {'rpt' 'subj'}));
+hasrpt = any(ismember(dimtok, {'rpt' 'subj'}));
 if hasrpt,
   % this also deals with fourier-spectra in the input
   % or with multiple subjects in a frequency domain stat-structure
