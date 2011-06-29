@@ -119,8 +119,6 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'matrixside',   'feedforward', 'outflow
 cfg = ft_checkconfig(cfg, 'renamedval', {'matrixside',   'feedback',    'inflow'});
 cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel', 'refchannel'});
 
-cla
-
 % set default for inputfile
 if ~isfield(cfg, 'inputfile'),  cfg.inputfile = [];    end
 
@@ -307,6 +305,7 @@ elseif strcmp(dtype, 'freq') && hasrpt,
 end
 
 % Read or create the layout that will be used for plotting
+cla
 lay = ft_prepare_layout(cfg, varargin{1});
 cfg.layout = lay;
 ft_plot_lay(lay, 'box', false,'label','no','point','no');

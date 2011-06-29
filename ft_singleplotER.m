@@ -89,7 +89,6 @@ cfg = ft_checkconfig(cfg, 'renamed', {'channelindex',  'channel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'channelname',   'channel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel', 'refchannel'});
 
-cla
 
 % set default for inputfile
 cfg.inputfile = ft_getopt(cfg, 'inputfile', []);
@@ -380,6 +379,7 @@ end
 %technically should not be defined for multiplotER, but can be defined (and
 %use ft_selectdata to average across frequencies
 
+cla
 hold on;
 colorlabels = [];
 

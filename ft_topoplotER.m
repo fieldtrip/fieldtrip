@@ -149,8 +149,6 @@ cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'unused',  {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel' 'refchannel'}); 
 
-cla
-
 % set default for inputfile
 if ~isfield(cfg, 'inputfile'),  cfg.inputfile = [];    end
 
@@ -738,6 +736,7 @@ elseif isnumeric(cfg.commentpos)
 end
 
 % Draw topoplot
+cla
 hold on
 % Set ft_plot_topo specific options
 if strcmp(cfg.interplimits,'head'),  interplimits = 'mask';

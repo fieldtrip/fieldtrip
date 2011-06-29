@@ -12,7 +12,8 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 % was computed using the FT_FREQANALYSIS or FT_FREQDESCRIPTIVES functions.
 %
 % The configuration can have the following parameters:
-% cfg.xparam           = field to be plotted on x-axis (default depends on data.dimord)
+% cfg.xparam           = field to be plotted on x-axis (default depends on
+% data.dimord)
 %                        'time'
 % cfg.yparam           = field to be plotted on y-axis (default depends on data.dimord)
 %                        'freq'
@@ -115,8 +116,6 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'matrixside',   'feedforward', 'outflow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'matrixside',   'feedback',    'inflow'});
 cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel', 'refchannel'});
-
-clf
 
 % set default for inputfile
 if ~isfield(cfg, 'inputfile'),      cfg.inputfile = [];                end
@@ -223,6 +222,7 @@ if hasrpt,
 end % if hasrpt
 
 % Read or create the layout that will be used for plotting:
+clf; 
 lay = ft_prepare_layout(cfg, data);
 cfg.layout = lay;
 ft_plot_lay(lay, 'box', false,'label','no','point','no');
