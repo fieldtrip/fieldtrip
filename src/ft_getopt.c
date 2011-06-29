@@ -60,10 +60,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 				}
 		}
 		else if (mxIsEmpty(prhs[0])) {
-                                /* do nothing */
-                }
-                else {
+				/* do nothing, the default value will be assigned below */
+		}
+		else {
 				mexErrMsgTxt("the first input argument should be a cell-array or structure");
+		}
+
+		if (plhs[0]!=NULL && mxIsEmpty(plhs[0])) {
+				/* use the default value instead of the empty input that was specified:
+				   this applies for example if you do functionname('key', []), where
+				   the empty is meant to indicate that the user does not know or care
+				   what the value is */
+				mxDestroyArray(plhs[0]);
+				plhs[0] = NULL;
 		}
 
 		if (plhs[0]==NULL) {
