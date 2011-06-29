@@ -323,12 +323,17 @@ switch cfg.method
     % start the decomposition
     % state   = dss(state);  % this is for the DSS toolbox version 0.6 beta
     state   = denss(state);  % this is for the DSS toolbox version 1.0
-    weights = state.W;
-    sphere  = state.V;
+    %weights = state.W;
+    %sphere  = state.V;
+    if size(state.A,1)==size(state.A,2)
+      weights  = inv(state.A);
+    else
+      weights  = pinv(state.A);
+    end
+    sphere   = eye(size(weights, 2));
     % remember the updated configuration details
     cfg.dss.denf      = state.denf;
     cfg.numcomponent  = state.sdim;
-    
   case 'sobi'
     % check for additional options, see SOBI for details
     if ~isfield(cfg, 'sobi')
