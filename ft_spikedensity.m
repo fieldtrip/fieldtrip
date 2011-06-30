@@ -249,7 +249,7 @@ for iTrial = 1:nTrials
            sdfdata.time{iTrial}(iUnit,:)  = trialTime; % write back original time axis
         end
         
-        dofsel = true(1,length(y));
+        dofsel = ~isnan(y);%true(1,length(y));
         if strcmp(cfg.vartriallen,'yes')     
             padLeft  = zeros(1, samplesShift(iTrial));
             padRight = zeros(1,(maxNumSamples - nSamples - samplesShift(iTrial)));
