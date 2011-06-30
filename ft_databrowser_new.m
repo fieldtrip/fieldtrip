@@ -1212,7 +1212,6 @@ if strcmp(cfg.viewmode, 'component')
     
   end % if redraw_topo
   
-  set(gca, 'xTick', [])
   set(gca, 'yTick', [])
   
   ax(1) = min(laytopo.pos(:,1) - laytopo.width/2);
@@ -1221,10 +1220,6 @@ if strcmp(cfg.viewmode, 'component')
   ax(4) = max(laytime.pos(:,2) + laytime.height/2);
   axis(ax)
   
-  % remember the scaling of the horizontal axis, this is needed for mouse input
-  opt.hpos(1) = laytime.pos(1,1) - laytime.width(1)/2; % the position of the left  side of the timecourse box
-  opt.hpos(2) = laytime.pos(1,1) + laytime.width(1)/2; % the position of the right side of the timecourse box
-  opt.hlim = hlim;
   
 end % plotting topographies
 
