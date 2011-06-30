@@ -213,7 +213,7 @@ cfg.latency(2) = time(end);   % this is the used latency that should be stored i
 maxNumSamples  = length(time);
 
 % preallocate the sum, squared sum and degrees of freedom
-[s,ss]   = deal(zeros(nUnits, maxNumSamples)); % sum and sum of squares
+[s,ss]   = deal(NaN(nUnits, maxNumSamples)); % sum and sum of squares
 dof      = zeros(nUnits, length(s)); 
 
 if (strcmp(cfg.keeptrials,'yes')), singleTrials = zeros(nTrials,nUnits,size(s,2)); end
