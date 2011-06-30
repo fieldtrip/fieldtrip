@@ -202,7 +202,7 @@ cfg.markercolor   = ft_getopt(cfg, 'markercolor',   [1 1 1]);
 
 % set the common defaults for the functional data
 cfg.funcolormap   = ft_getopt(cfg, 'funcolormap',   'auto');
-cfg.funcolrolim   = ft_getopt(cfg, 'funcolorlim',   'auto');
+cfg.funcolorlim   = ft_getopt(cfg, 'funcolorlim',   'auto');
 
 % set the common defaults for the statistical data
 cfg.opacitymap    = ft_getopt(cfg, 'opacitymap',    'auto');
