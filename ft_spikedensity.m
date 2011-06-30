@@ -147,7 +147,7 @@ if cfg.timwin(1)>0 || cfg.timwin(2)<0 || cfg.timwin(1)>=cfg.timwin(2)
   error('MATLAB:spikestation:density:cfg:timwin:noInclusionTimeZero',...
         'Please specify cfg.timwin(1)<=0 and cfg.timwin(2)>=0 and cfg.timwin(2)>cfg.timwin(1)')
 end
-fsample       = 1/data.fsample; % PLEASE DO NOT MESS WITH THIS LINE!
+fsample       = data.fsample; % PLEASE DO NOT MESS WITH THIS LINE!
 sampleTime    = 1/fsample;
 winTime       = [fliplr(0:-sampleTime:cfg.timwin(1)) (sampleTime):sampleTime:cfg.timwin(2)];
 nLeftSamples  = length(find(winTime<0));  
