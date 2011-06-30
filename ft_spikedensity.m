@@ -257,8 +257,8 @@ for iTrial = 1:nTrials
             y        = [padLeft y padRight];            
             dofsel   = logical([padLeft dofsel padRight]);
         end
-        s(iUnit,:)        = s(iUnit,:)  + y;            % compute the sum
-        ss(iUnit,:)       = ss(iUnit,:) + y.^2;         % compute the squared sum
+        s(iUnit,:)        = nansum([s(iUnit,:);y]);            % compute the sum
+        ss(iUnit,:)       = nansum([ss(iUnit,:);y.^2]);         % compute the squared sum
         
         % count the number of samples that went into the sum
         dof(iUnit,dofsel) = dof(iUnit,dofsel) + 1;        
