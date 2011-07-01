@@ -44,6 +44,11 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                    specify cfg.pad as maxperlen AND the number of samples turns out to have
 %                    a large prime factor sum. This is because the FFTs will then be computed
 %                    very inefficiently.
+%   cfg.polyremoval = number (default = 1), specifying the order of the polynome which is fitted and subtracted from
+%                       time domain data prior to the spectral analysis. A value of 1 corresponds to a linear trend.
+%                       If just mean subtraction is requested, use a value of 0. If no removal is requested, specify -1.
+%                       see FT_PREPROC_POLYREMOVAL for details
+%                 
 %
 %  METHOD SPECIFIC OPTIONS AND DESCRIPTIONS
 %
