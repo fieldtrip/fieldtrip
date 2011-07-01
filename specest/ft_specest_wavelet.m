@@ -27,15 +27,22 @@ function [spectrum,freqoi,timeoi] = ft_specest_wavelet(dat, time, varargin)
 % $Log$
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'pad','width','gwidth','freqoi','timeoi'});
+keyvalcheck(varargin, 'optional', {'pad','width','gwidth','freqoi','timeoi','polyremoval'});
 freqoi    = keyval('freqoi',      varargin);  if isempty(freqoi),   freqoi  = 'all';   end
 timeoi    = keyval('timeoi',      varargin);  if isempty(timeoi),   timeoi  = 'all';   end
 width     = keyval('width',       varargin);  if isempty(width),    width    = 7;      end
 gwidth    = keyval('gwidth',      varargin);  if isempty(gwidth),   gwidth   = 3;      end
 pad       = keyval('pad',         varargin);
+polyorder = keyval('polyremoval', varargin); if isempty(polyorder), polyorder = 1; end
+
 
 % Set n's
 [nchan,ndatsample] = size(dat);
+
+% Remove polynomial fit from the data -> default is demeaning
+if polyorder >= 0
+  dat = ft_preproc_polyremoval(dat, polyorder, 1, ndatsample);
+end
 
 % Determine fsample and set total time-length of data
 fsample = 1/(time(2)-time(1));

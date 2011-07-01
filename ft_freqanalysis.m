@@ -231,7 +231,7 @@ switch cfg.method
     
   case 'mtmfft'
     specestflg = 1;
-    cfg.taper = ft_getopt(cfg, 'taper', 'dpss');    
+    cfg.taper       = ft_getopt(cfg, 'taper', 'dpss');    
     if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))
       error('you must specify a smoothing parameter with taper = dpss');
     end
@@ -290,6 +290,7 @@ else
   cfg.foi       = ft_getopt(cfg, 'foi',       []);
   cfg.foilim    = ft_getopt(cfg, 'foilim',    []);
   cfg.correctt_ftimwin = ft_getopt(cfg, 'correctt_ftimwin', 'no');
+  cfg.polyremoval = ft_getopt(cfg, 'polyremoval', 1);  
   
   % keeptrials and keeptapers should be conditional on cfg.output,
   % cfg.output = 'fourier' should always output tapers
@@ -432,9 +433,9 @@ else
   
   % options that don't change over trials
   if isfield(cfg,'tapsmofrq')
-    options = {'pad', cfg.pad, 'freqoi', cfg.foi, 'tapsmofrq', cfg.tapsmofrq};
+    options = {'pad', cfg.pad, 'freqoi', cfg.foi, 'tapsmofrq', cfg.tapsmofrq, 'polyremoval', cfg.polyremoval};
   else
-    options = {'pad', cfg.pad, 'freqoi', cfg.foi};
+    options = {'pad', cfg.pad, 'freqoi', cfg.foi, 'polyremoval', cfg.polyremoval};
   end
   
   

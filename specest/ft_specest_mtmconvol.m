@@ -31,7 +31,7 @@ function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varar
 % $Log$
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'taper','pad','timeoi','timwin','freqoi','tapsmofrq','dimord','feedback','verbose'});
+keyvalcheck(varargin, 'optional', {'taper','pad','timeoi','timwin','freqoi','tapsmofrq','dimord','feedback','verbose','polyremoval'});
 taper     = keyval('taper',       varargin); if isempty(taper),    taper   = 'dpss';                  end
 pad       = keyval('pad',         varargin);
 timeoi    = keyval('timeoi',      varargin); if isempty(timeoi),   timeoi  = 'all';                   end
@@ -41,6 +41,7 @@ tapsmofrq = keyval('tapsmofrq',   varargin);
 dimord    = keyval('dimord',      varargin); if isempty(dimord),   dimord  = 'tap_chan_freq_time';    end
 fbopt     = keyval('feedback',    varargin);
 verbose   = keyval('verbose',     varargin); if isempty(verbose),  verbose = 1;                       end
+polyorder = keyval('polyremoval', varargin); if isempty(polyorder), polyorder = 1; end
 
 if isempty(fbopt),
   fbopt.i = 1;
@@ -59,6 +60,11 @@ end
 
 % Set n's
 [nchan,ndatsample] = size(dat);
+
+% Remove polynomial fit from the data -> default is demeaning
+if polyorder >= 0
+  dat = ft_preproc_polyremoval(dat, polyorder, 1, ndatsample);
+end
 
 % Determine fsample and set total time-length of data
 fsample = 1/(time(2)-time(1));

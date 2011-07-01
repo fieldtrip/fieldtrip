@@ -28,7 +28,7 @@ function [spectrum,freqoi,timeoi] = ft_specest_hilbert(dat, time, varargin)
 % $Log: 3162 $
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'freqoi','timeoi','width','filttype','filtorder','filtdir','pad'});
+keyvalcheck(varargin, 'optional', {'freqoi','timeoi','width','filttype','filtorder','filtdir','pad','polyremoval'});
 freqoi    = keyval('freqoi',    varargin);
 timeoi    = keyval('timeoi',    varargin);   if isempty(timeoi),   timeoi  = 'all';      end
 width     = keyval('width',     varargin);   if isempty(width),    width   = 1;          end
@@ -36,9 +36,15 @@ filttype  = keyval('filttype',  varargin);   if isempty(filttype),  error('you n
 filtorder = keyval('filtorder', varargin);   if isempty(filtorder), error('you need to specify filter order'),        end
 filtdir   = keyval('filtdir',   varargin);   if isempty(filtdir),   error('you need to specify filter direction'),    end
 pad       = keyval('pad',       varargin);
+polyorder = keyval('polyremoval', varargin); if isempty(polyorder), polyorder = 1; end
 
 % Set n's
 [nchan,ndatsample] = size(dat);
+
+% Remove polynomial fit from the data -> default is demeaning
+if polyorder >= 0
+  dat = ft_preproc_polyremoval(dat, polyorder, 1, ndatsample);
+end
 
 % Determine fsample and set total time-length of data
 fsample = 1/(time(2)-time(1));

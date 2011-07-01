@@ -25,12 +25,13 @@ function [spectrum,ntaper,freqoi] = ft_specest_mtmfft(dat, time, varargin)
 % $Log$
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'taper','pad','freqoi','tapsmofrq','feedback'});
+keyvalcheck(varargin, 'optional', {'taper','pad','freqoi','tapsmofrq','feedback','polyremoval'});
 taper     = keyval('taper',       varargin); if isempty(taper),  error('You must specify a taper');    end
 pad       = keyval('pad',         varargin);
 freqoi    = keyval('freqoi',      varargin); if isempty(freqoi),   freqoi  = 'all';      end  
 tapsmofrq = keyval('tapsmofrq',   varargin); 
 fbopt     = keyval('feedback',    varargin);
+polyorder = keyval('polyremoval', varargin); if isempty(polyorder), polyorder = 1; end
 
 if isempty(fbopt),
   fbopt.i = 1;
@@ -44,6 +45,11 @@ end
 
 % Set n's
 [nchan,ndatsample] = size(dat);
+
+% Remove polynomial fit from the data -> default is demeaning
+if polyorder >= 0
+  dat = ft_preproc_polyremoval(dat, polyorder, 1, ndatsample);
+end
 
 % Determine fsample and set total time-length of data
 fsample = 1/(time(2)-time(1));
