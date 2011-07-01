@@ -39,7 +39,7 @@ function dat = ft_preproc_polyremoval(dat, order, begsample, endsample)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id$
+% $Id: ft_preproc_polyremoval.m$
 
 % take the whole segment if begsample and endsample are not specified
 if nargin==2,
@@ -49,7 +49,7 @@ end
 
 % construct a "time" axis
 nsamples = size(dat,2);
-basis    = [1:nsamples];
+basis    = (1:nsamples)-1;
 
 % create a set of basis functions that will be fitted to the data
 x = zeros(order+1,nsamples);
@@ -58,7 +58,10 @@ for i = 0:order
 end
 
 % estimate the contribution of the basis functions
-a = dat(:,begsample:endsample)/x(:,begsample:endsample);
+%a = dat(:,begsample:endsample)/x(:,begsample:endsample); <-this leads to
+%numerical issues, even in simple examples
+invxcov = inv(x(:,begsample:endsample)*x(:,begsample:endsample)');
+a       = dat(:,begsample:endsample)*x(:,begsample:endsample)'*invxcov; 
 
 % remove the estimated basis functions
 dat = dat - a*x;
