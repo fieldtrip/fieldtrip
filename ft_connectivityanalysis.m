@@ -787,7 +787,7 @@ switch dtype
     stat.outside = data.outside;
     stat.(outparam) = datout;
     if ~isempty(varout),
-      stat.([outparam,'sem']) = (varout/nrpt).^0.5;
+      stat.([outparam,'sem']) = (varout./nrpt).^0.5;
     end
 end
 
