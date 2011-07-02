@@ -29,8 +29,13 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %                 'dtf',       directed transfer function, support for freq and freqmvar data
 %                 'pdc',       partial directed coherence, support for freq and freqmvar data
 %                 'psi',       phaseslope index, support for freq and freqmvar data
-%                 'wpli',          weighted phase lag index
+%                 'wpli',      weighted phase lag index (signed one,
+%                              still have to take absolute value to get indication of
+%                              strength of interaction. Note: measure has
+%                              positive bias. Use wpli_debiased to avoid
+%                              this.
 %                 'wpli_debiased'  debiased weighted phase lag index
+%                                 (estimates squared wpli)
 %                 'ppc'        pairwise phase consistency
 %                 'wppc'       weighted pairwise phase consistency
 %
