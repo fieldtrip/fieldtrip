@@ -99,4 +99,3 @@ else
   v = [];
 end
 ft_progress('close');
-n = reshape(n,siz(2:end));
