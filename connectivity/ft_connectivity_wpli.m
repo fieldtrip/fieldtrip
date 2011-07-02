@@ -56,10 +56,10 @@ n = siz(1);
 ft_progress('init', feedback, 'computing metric...');
 if n>1
   input    = imag(input);        % make everything imaginary  
-  outsum   = nansum(input);      % compute the sum; this is 1 x size(2:end)
-  outsumW  = nansum(abs(input)); % normalization of the WPLI
+  outsum   = nansum(input,1);      % compute the sum; this is 1 x size(2:end)
+  outsumW  = nansum(abs(input),1); % normalization of the WPLI
   if debias
-    outssq   = nansum(input.^2);
+    outssq   = nansum(input.^2,1);
     wpli     = (outsum.^2 - outssq)./(outsumW.^2 - outssq); % do the pairwise thing in a handy way
   else
     wpli     = outsum./outsumW; % estimator of E(Im(X))/E(|Im(X)|)
@@ -89,7 +89,7 @@ if dojack && n>2 % n needs to be larger than 2 to get a meaningful variance
     leave1outssq = leave1outssq + tmp.^2; % added this for nan support                              
   end  
   % compute the sem here 
-  n = nansum(~isnan(input)); % this is the actual df when nans are found in the input matrix
+  n = nansum(~isnan(input),1); % this is the actual df when nans are found in the input matrix
   v = (n-1).^2.*(leave1outssq - (leave1outsum.^2)./n)./(n - 1); % 11.5 efron, sqrt and 1/n done in ft_connectivityanalysis
   v = reshape(v,siz(2:end)); % remove the first singular dimension   
   n = reshape(n,siz(2:end));  
