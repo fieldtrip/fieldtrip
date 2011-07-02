@@ -777,7 +777,7 @@ switch dtype
     stat.dimord = dimord(2:end);
     stat.(outparam) = datout;
     if ~isempty(varout),
-      stat.([outparam,'sem']) = (varout/nrpt).^0.5;
+      stat.([outparam,'sem']) = (varout./nrpt).^0.5;
     end
   case 'source'
     stat         = [];
@@ -787,7 +787,7 @@ switch dtype
     stat.outside = data.outside;
     stat.(outparam) = datout;
     if ~isempty(varout),
-      stat.([outparam,'sem']) = (varout./nrpt).^0.5;
+      stat.([outparam,'sem']) = (varout/nrpt).^0.5;
     end
 end
 
