@@ -54,6 +54,8 @@ function [c, v, n] = ft_connectivity_corr(input, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
+% FiXME: If output is angle, then jack-knifing should be done differently
+% since it's circular variable
 % $Id$
 
 hasjack     = keyval('hasjack',     varargin); if isempty(hasjack),  hasjack  = 0;      end
@@ -125,7 +127,6 @@ if (length(strfind(dimord, 'chan'))~=2 || length(strfind(dimord, 'pos'))>0) && ~
   
 elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2,
   % crossterms are described by chan_chan_therest
-  
   outsum = zeros(siz(2:end));
   outssq = zeros(siz(2:end));
   ft_progress('init', feedback, 'computing metric...');
@@ -144,23 +145,26 @@ elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2,
     else
       denom = 1;
     end
-    outsum = outsum + complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./denom, cmplx);
-    outssq = outssq + complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./denom, cmplx).^2;
+    tmp    = complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./denom, cmplx); % added this for nan support marvin
+    tmp(isnan(tmp)) = 0; % added for nan support
+    outsum = outsum + tmp;
+    outssq = outssq + tmp.^2;
   end
   ft_progress('close');
   
 end
-n = siz(1);
-c = outsum./n;
+n  = siz(1);
+n1 = shiftdim(sum(~isnan(input),1),1);
+c  = outsum./n1; % added this for nan support marvin
 
 % correct the variance estimate for the under-estimation introduced by the jackknifing
 if n>1,
   if hasjack
-    bias = (n-1).^2;
+    bias = (n1-1).^2; % added this for nan support marvin
   else
     bias = 1;
   end
-  v = bias*(outssq - (outsum.^2)./n)./(n - 1);
+  v = bias.*(outssq - (outsum.^2)./n1)./(n1 - 1); % added this for nan support marvin
 else
   v = [];
 end
@@ -173,7 +177,7 @@ switch str
   case 'abs'
     c = abs(c);
   case 'angle'
-    c = angle(c);
+    c = angle(c); % negative angle means first row leads second row
   case 'imag'
     c = imag(c);
   case 'real'
