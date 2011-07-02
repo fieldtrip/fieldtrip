@@ -50,7 +50,7 @@ disp('there')
 feedback    = keyval('feedback', varargin); if isempty(feedback), feedback = 'none'; end
 debias      = keyval('debias',   varargin);
 dojack      = keyval('dojack',   varargin);
-keyboard
+
 siz = size(input);
 n = siz(1);
 ft_progress('init', feedback, 'computing metric...');
