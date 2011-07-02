@@ -83,11 +83,13 @@ if dojack && n>2 % n needs to be larger than 2 to get a meaningful variance
       num   = s; % this is estimator of E(Im(X))
       denom = sw; % estimator of E(|Im(X)|)
     end        
-    leave1outsum = nansum([leave1outsum;num./denom]);
-    leave1outssq = nansum([leave1outssq;(num./denom).^2]);                              
+    tmp          = num./denom; % avoids doing the division twice
+    tmp(isnan(tmp)) = 0; % added for nan support
+    leave1outsum = leave1outsum + tmp;% added this for nan support
+    leave1outssq = leave1outssq + tmp.^2; % added this for nan support                              
   end  
   % compute the sem here 
-  n = nansum(~isnan(input));
+  n = nansum(~isnan(input)); % this is the actual df when nans are found in the input matrix
   v = (n-1).^2.*(leave1outssq - (leave1outsum.^2)./n)./(n - 1); % 11.5 efron, sqrt and 1/n done in ft_connectivityanalysis
   v = reshape(v,siz(2:end)); % remove the first singular dimension   
   n = reshape(n,siz(2:end));  
