@@ -70,7 +70,7 @@ else
   warning('ft_connectivity_wpli:nTrials', 'computation wpli requires >1 trial, returning NaNs');
 end
 
-[leave1outsum, leave1outssq] = deal(zeros(size(outsum)));
+[leave1outsum, leave1outssq] = deal(zeros([1 siz(2:end)]));
 if dojack && n>2 % n needs to be larger than 2 to get a meaningful variance
   for k = 1:n
     s  = outsum  - input(k,:,:,:,:,:,:); % works for any array up to 7-D
