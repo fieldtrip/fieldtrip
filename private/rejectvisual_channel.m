@@ -67,6 +67,7 @@ if strcmp(cfg.plotlayout,'1col') % hidden config option for plotting trials diff
   info.nrows   = ntrl;
   info.trlop   = 1;
   info.chanlop = 1;
+  info.lchanlop= 0;
   info.quit    = 0;
   info.ntrl    = ntrl;
   info.nchan   = nchan;
@@ -93,6 +94,7 @@ elseif strcmp(cfg.plotlayout,'square')
   info.nrows   = ceil(sqrt(ntrl));
   info.trlop   = 1;
   info.chanlop = 1;
+  info.lchanlop= 0;
   info.quit    = 0;
   info.ntrl    = ntrl;
   info.nchan   = nchan;
@@ -115,19 +117,19 @@ elseif strcmp(cfg.plotlayout,'square')
   end
 end
 
-guidata(h,info);
-
-uicontrol(h,'units','pixels','position',[5 5 40 18],'String','quit','Callback',@stop);
-uicontrol(h,'units','pixels','position',[50 5 25 18],'String','<','Callback',@prev);
-uicontrol(h,'units','pixels','position',[75 5 25 18],'String','>','Callback',@next);
-uicontrol(h,'units','pixels','position',[105 5 25 18],'String','<<','Callback',@prev10);
-uicontrol(h,'units','pixels','position',[130 5 25 18],'String','>>','Callback',@next10);
-uicontrol(h,'units','pixels','position',[160 5 50 18],'String','bad','Callback',@markbad);
-uicontrol(h,'units','pixels','position',[210 5 50 18],'String','good','Callback',@markgood);
-uicontrol(h,'units','pixels','position',[270 5 50 18],'String','bad>','Callback',@markbad_next);
-uicontrol(h,'units','pixels','position',[320 5 50 18],'String','good>','Callback',@markgood_next);
+info.ui.quit        = uicontrol(h,'units','pixels','position',[  5 5 40 18],'String','quit','Callback',@stop);
+info.ui.prev        = uicontrol(h,'units','pixels','position',[ 50 5 25 18],'String','<','Callback',@prev);
+info.ui.next        = uicontrol(h,'units','pixels','position',[ 75 5 25 18],'String','>','Callback',@next);
+info.ui.prev10      = uicontrol(h,'units','pixels','position',[105 5 25 18],'String','<<','Callback',@prev10);
+info.ui.next10      = uicontrol(h,'units','pixels','position',[130 5 25 18],'String','>>','Callback',@next10);
+info.ui.bad         = uicontrol(h,'units','pixels','position',[160 5 50 18],'String','bad','Callback',@markbad);
+info.ui.good        = uicontrol(h,'units','pixels','position',[210 5 50 18],'String','good','Callback',@markgood);
+info.ui.badnext     = uicontrol(h,'units','pixels','position',[270 5 50 18],'String','bad>','Callback',@markbad_next);
+info.ui.goodnext    = uicontrol(h,'units','pixels','position',[320 5 50 18],'String','good>','Callback',@markgood_next);
 set(gcf, 'WindowButtonUpFcn', @button);
 set(gcf, 'KeyPressFcn', @key);
+
+guidata(h,info);
 
 interactive = 1;
 while interactive && ishandle(h)
@@ -157,6 +159,7 @@ next(varargin{:});
 
 function varargout = next(h, eventdata, handles, varargin)
 info = guidata(h);
+info.lchanlop = info.chanlop;
 if info.chanlop < info.nchan,
   info.chanlop = info.chanlop + 1;
 end;
@@ -165,6 +168,7 @@ uiresume;
 
 function varargout = prev(h, eventdata, handles, varargin)
 info = guidata(h);
+info.lchanlop = info.chanlop;
 if info.chanlop > 1,
   info.chanlop = info.chanlop - 1;
 end;
@@ -173,6 +177,7 @@ uiresume;
 
 function varargout = next10(h, eventdata, handles, varargin)
 info = guidata(h);
+info.lchanlop = info.chanlop;
 if info.chanlop < info.nchan - 10,
   info.chanlop = info.chanlop + 10;
 else
@@ -183,6 +188,7 @@ uiresume;
 
 function varargout = prev10(h, eventdata, handles, varargin)
 info = guidata(h);
+info.lchanlop = info.chanlop;
 if info.chanlop > 10,
   info.chanlop = info.chanlop - 10;
 else
@@ -208,11 +214,20 @@ guidata(h,info);
 % uiresume;
 
 function varargout = key(h, eventdata, handles, varargin)
+info = guidata(h);
 switch lower(eventdata.Key)
   case 'rightarrow'
-    next(h);
+    if info.chanlop ~= info.nchan
+      next(h);
+    else
+      fprintf('at last channel\n');
+    end
   case 'leftarrow'
-    prev(h);
+    if info.chanlop ~= 1
+      prev(h);
+    else
+      fprintf('at last channel\n');
+    end
   case 'g'
     markgood(h);
   case 'b'
@@ -304,6 +319,28 @@ for row=1:info.nrows
     amp = dat./info.nrows + 1 - row/(info.nrows+1);
     plot(tim, amp, 'k')
   end
+end
+% enable or disable buttons as appropriate
+if info.chanlop == 1
+    set(info.ui.prev,   'Enable', 'off');
+    set(info.ui.prev10, 'Enable', 'off');
+else
+    set(info.ui.prev,   'Enable', 'on');
+    set(info.ui.prev10, 'Enable', 'on');
+end
+if info.chanlop == info.nchan
+    set(info.ui.next,   'Enable', 'off');
+    set(info.ui.next10, 'Enable', 'off');
+else
+    set(info.ui.next,   'Enable', 'on');
+    set(info.ui.next10, 'Enable', 'on');
+end
+if info.lchanlop == info.chanlop && info.chanlop == info.nchan
+    set(info.ui.badnext,'Enable', 'off');
+    set(info.ui.goodnext,'Enable', 'off');
+else
+    set(info.ui.badnext,'Enable', 'on');
+    set(info.ui.goodnext,'Enable', 'on');
 end
 text(info.x, info.y, info.label);
 title(description_channel(info));
