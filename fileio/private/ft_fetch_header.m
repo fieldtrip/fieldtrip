@@ -29,7 +29,7 @@ function [hdr] = ft_fetch_header(data)
 % $Id$
 
 % check whether input is data
-data = ft_checkdata(data, 'datatype', 'raw', 'hastrialdef', 'yes');
+data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
 
 trlnum = length(data.trial);
 trllen = zeros(trlnum,1);
