@@ -316,7 +316,7 @@ if hasdata
   for i=1:ntrl
     ft_progress(i/ntrl, 'preprocessing trial %d from %d\n', i, ntrl);
     % do the preprocessing on the selected channels
-    [dataout.trial{i}, dataout.label, dataout.time{i}, cfg] = preproc(data.trial{i}(rawindx,:), data.label(rawindx), data.fsample, cfg, data.offset(i));
+    [dataout.trial{i}, dataout.label, dataout.time{i}, cfg] = preproc(data.trial{i}(rawindx,:), data.label(rawindx), data.fsample, cfg, time2offset(data.time{i},data.fsample));
   end % for all trials
   
   % convert back to input type if necessary
