@@ -56,7 +56,7 @@ end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'freq', 'feedback', 'yes', 'hastrialdef', 'ifmakessense');
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'freq', 'feedback', 'yes', 'hassampleinfo', 'ifmakessense');
 end
 
 % use a helper function to select the consistent parts of the data and to concatenate it

@@ -121,7 +121,7 @@ if ~isempty(cfg.inputfile)
 end
 
 if hasdata
-  data = ft_checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hastrialdef', 'yes', 'hasoffset', 'yes');
+  data = ft_checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
   % fetch the header from memory
   hdr = ft_fetch_header(data);
   if ~isfield(cfg, 'continuous') && length(data.trial) == 1
@@ -177,7 +177,13 @@ if hasdata
   Nchans  = length(chansel);
   
   % this is how the input data is segmented
-  trlorg = [data.sampleinfo data.offset];
+  trlorg = zeros(numel(data.trial), 3);
+  trlorg(:,[1 2]) = data.sampleinfo;
+
+  % recreate offset vector (databrowser depends on this for visualisation)
+  for ntrl = 1:numel(data.trial)
+    trlorg(ntrl,3) = time2offset(data.time{ntrl}, data.fsample);
+  end
   Ntrials = size(trlorg, 1);
   
   if strcmp(cfg.viewmode, 'component')

@@ -105,9 +105,7 @@ end
 convert = ft_datatype(data);
   
 % check if the input data is valid for this function
-% ensure sampleinfo and trialinfo (if present) to be in the data
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hastrialdef', 'yes');
-
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
   
 if isempty(cfg.detrend)
   error('The previous default to apply detrending has been changed. Recommended is to apply a baseline correction instead of detrending. See the help of this function for more details.');
@@ -124,20 +122,7 @@ if ~strcmp(cfg.trials, 'all')
   data       = ft_selectdata(data, 'rpt', cfg.trials);
 end
 
-% trl is not specified in the function call, but the data is given ->
-% recreate trl-matrix from sampleinfo and time axes, or
-% try to locate the trial definition (trl) in the nested configuration
-% if isfield(data, 'sampleinfo')
-%   trl = data.sampleinfo;
-%   trl(:, 3) = 0;
-%   for k = 1:numel(data.trial)
-%     trl(k, 3) = time2offset(data.time{k}, data.fsample);
-%   end
-% else
-%   trl = [];
-% end
-
-% this should be removed
+% sampleinfo, if present, becomes invalid because of the resampling
 if isfield(data, 'sampleinfo'),
   data = rmfield(data, 'sampleinfo');
 end

@@ -22,8 +22,7 @@ function [data] = ft_checkdata(data, varargin)
 %   ismeg              = yes, no
 %   hastrials          = yes, no
 %   hasunits           = yes, no
-%   hastrialdef        = yes, no
-%   hasoffset          = yes, no (only applies to raw data)
+%   hassampleinfo      = yes, no, ifmakessense
 %   hascumtapcnt       = yes, no (only applies to freq data)
 %   hasdim             = yes, no
 %   hasdof             = yes, no
@@ -85,8 +84,7 @@ ismeg         = keyval('ismeg',         varargin);
 inside        = keyval('inside',        varargin); % can be logical or index
 hastrials     = keyval('hastrials',     varargin);
 hasunits      = keyval('hasunits',      varargin);
-hastrialdef   = keyval('hastrialdef',   varargin); if isempty(hastrialdef), hastrialdef = 'no'; end
-hasoffset     = keyval('hasoffset',     varargin); if isempty(hasoffset), hasoffset = 'no'; end
+hassampleinfo = keyval('hassampleinfo', varargin); if isempty(hassampleinfo), hassampleinfo = 'no'; end
 hasdimord     = keyval('hasdimord',     varargin); if isempty(hasdimord), hasdimord = 'no'; end
 hasdim        = keyval('hasdim',  varargin);
 hascumtapcnt  = keyval('hascumtapcnt',  varargin);
@@ -96,6 +94,16 @@ cmbrepresentation = keyval('cmbrepresentation',  varargin);
 channelcmb    = keyval('channelcmb',   varargin);
 sourcedimord  = keyval('sourcedimord', varargin);
 sourcerepresentation = keyval('sourcerepresentation', varargin);
+
+% check whether people are using deprecated stuff
+depHastrialdef = keyval('hastrialdef', varargin);
+if (~isempty(depHastrialdef))
+  warning_once('ft_checkdata option ''hastrialdef'' is deprecated; use ''hassampleinfo'' instead');
+  hassampleinfo = depHastrialdef;
+end
+if (~isempty(keyval('hasoffset', varargin)))
+  warning_once('ft_checkdata option ''hasoffset'' has been removed and will be ignored');
+end
 
 % determine the type of input data
 % this can be raw, freq, timelock, comp, spike, source, volume, dip
@@ -556,34 +564,9 @@ if isequal(hastrials, 'yes')
   end % if okflag
 end
 
-if isequal(hastrialdef, 'yes')
-  data = fixtrialdef(data);
+if isequal(hassampleinfo, 'yes') || isequal(hassampleinfo, 'ifmakessense')
+  data = fixsampleinfo(data);
 end
-
-if isequal(hasoffset, 'yes')
-  okflag = isfield(data, 'offset');
-
-  if ~okflag && isfield(data, 'time') && isa(data.time, 'cell')
-    if ~isfield(data, 'fsample')
-      data.fsample = 1/(data.time{1}(2)-data.time{1}(1));
-    end
-    for i=1:length(data.time);
-      data.offset(i) = time2offset(data.time{i}, data.fsample);
-    end
-    data.offset = data.offset(:); % ensure that it is a column vector
-    okflag = 1;
-  elseif ~okflag && ft_datatype(data, 'mvar')
-    data.offset = 0;
-    okflag = 1;
-  end
-
-  if ~okflag
-    error('This function requires data with an ''offset'' field');
-  end % if okflag
-
-elseif isequal(hasoffset, 'no') && isfield(data, 'offset')
-  data = rmfield(data, 'offset');
-end % if hasoffset
 
 if isequal(hasdim, 'yes') && ~isfield(data, 'dim')
   data.dim = pos2dim(data.pos);
@@ -1618,7 +1601,7 @@ if isfield(freq, 'trialinfo'), data.trialinfo = freq.trialinfo; end;
 function [data] = raw2timelock(data)
 
 nsmp = cellfun('size',data.time,2);
-data   = ft_checkdata(data, 'hastrialdef', 'yes');
+data   = ft_checkdata(data, 'hassampleinfo', 'yes');
 ntrial = numel(data.trial);
 nchan  = numel(data.label);
 if ntrial==1

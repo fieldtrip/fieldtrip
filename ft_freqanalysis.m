@@ -190,7 +190,7 @@ elseif hasinputfile
 end
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', {'raw', 'comp', 'mvar'}, 'feedback', cfg.feedback, 'hasoffset', 'yes', 'hastrialdef', 'yes');
+data = ft_checkdata(data, 'datatype', {'raw', 'comp', 'mvar'}, 'feedback', cfg.feedback, 'hassampleinfo', 'yes');
 
 % select trials of interest
 cfg.trials = ft_getopt(cfg, 'trials', 'all');

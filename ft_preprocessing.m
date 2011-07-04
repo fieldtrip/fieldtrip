@@ -278,7 +278,7 @@ if hasdata
 
   convert = ft_datatype(data);
   % the input data must be raw
-  data = ft_checkdata(data, 'datatype', 'raw', 'hasoffset', 'yes', 'hastrialdef', 'yes');
+  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
 
   % check if the input cfg is valid for this function
   cfg = ft_checkconfig(cfg, 'forbidden',   {'trl', 'dataset', 'datafile', 'headerfile'});

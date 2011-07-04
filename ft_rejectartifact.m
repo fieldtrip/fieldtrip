@@ -193,9 +193,19 @@ if ~isempty(cfg.inputfile)
 end
 
 if hasdata
-  data = ft_checkdata(data, 'hastrialdef', 'yes', 'hasoffset', 'yes');
+  data = ft_checkdata(data, 'hassampleinfo', 'yes');
   if isfield(data, 'sampleinfo')
-    trl = [data.sampleinfo data.offset(:)];
+    
+    trl = zeros(numel(data.trial), 3);
+    trl(:,[1 2]) = data.sampleinfo;
+    
+    % recreate offset vector (artifact functions depend on this)
+    % TODO: the artifact rejection stuff should be rewritten to avoid
+    % needing this workaround
+    for ntrl = 1:numel(data.trial)
+      trl(ntrl,3) = time2offset(data.time{ntrl}, data.fsample);
+    end
+    
     if isfield(data, 'trialinfo')
       trl(:, 3+(1:size(data.trialinfo,2))) = data.trialinfo;
     end

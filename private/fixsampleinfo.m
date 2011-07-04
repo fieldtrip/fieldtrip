@@ -1,8 +1,10 @@
-function data = fixtrialdef(data)
+function data = fixsampleinfo(data)
 
-% FIXTRIALDEF adds a trl matrix to the raw data configuration
-% which is constructed on the fly, assuming that the trials are
-% consecutive segments of a continuous recording
+% FIXSAMPLEINFO checks for the existence of a sampleinfo field in the
+% provided data structure. If present, nothing is done; if absent,
+% fixsampleinfo attempts to reconstruct a sampleinfo based on either an
+% trl-matrix present in the cfg-tree, or by just assuming the trials are
+% segments of a continuous recording.
 
 % Copyright (C) 2009-2010, Robert Oostenveld and Jan-Mathijs Schoffelen
 

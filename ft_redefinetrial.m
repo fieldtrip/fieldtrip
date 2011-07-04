@@ -211,7 +211,7 @@ elseif ~isempty(cfg.trl)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   % ensure that sampleinfo is present, if this fails ft_fetch_data will crash
-  data = ft_checkdata(data, 'hastrialdef', 'yes');  
+  data = ft_checkdata(data, 'hassampleinfo', 'yes');  
 
   dataold = data;   % make a copy of the old data
   clear data        % this line is very important, we want to completely reconstruct the data from the old data!

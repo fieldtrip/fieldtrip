@@ -71,8 +71,7 @@ for k = 1:length(data)
     dimord{k} = data{k}.dimord;
   end
   if strcmp(dtype{k}, 'raw'),
-    %ensure it to have an offset
-    data{k} = ft_checkdata(data{k}, 'datatype', 'raw', 'hasoffset', 'yes');
+    data{k} = ft_checkdata(data{k}, 'datatype', 'raw');
   end
   if strcmp(dtype{k}, 'source'),
     data{k} = ft_checkdata(data{k}, 'sourcerepresentation', 'new');

@@ -87,7 +87,7 @@ end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'raw', 'feedback', 'no', 'hastrialdef', 'yes');
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'raw', 'feedback', 'no', 'hassampleinfo', 'yes');
 end
 
 % determine the dimensions of the data
@@ -103,21 +103,22 @@ end
 
 % try to locate the trial definition (trl) in the nested configuration and
 % check whether the input data contains trialinfo
-hastrialinfo = 0;
-trl = cell(1, Ndata);
-for i=1:Ndata
-  if isfield(varargin{i}, 'cfg')
-    trl{i} = ft_findcfg(varargin{i}.cfg, 'trl');
-  else
-    trl{i} = [];
-  end
-  if isempty(trl{i})
-    % a trial definition is expected in each continuous data set
-    warning('could not locate the trial definition ''trl'' in data structure %d', i);
-  end
-  hastrialinfo = isfield(varargin{i}, 'trialinfo') + hastrialinfo;
-end
-hastrialinfo = hastrialinfo==Ndata;
+% this is DEPRECATED - don't look in cfg-tree for stuff anymore
+% hastrialinfo = 0;
+% trl = cell(1, Ndata);
+% for i=1:Ndata
+%   if isfield(varargin{i}, 'cfg')
+%     trl{i} = ft_findcfg(varargin{i}.cfg, 'trl');
+%   else
+%     trl{i} = [];
+%   end
+%   if isempty(trl{i})
+%     % a trial definition is expected in each continuous data set
+%     warning('could not locate the trial definition ''trl'' in data structure %d', i);
+%   end
+%   hastrialinfo = isfield(varargin{i}, 'trialinfo') + hastrialinfo;
+% end
+% hastrialinfo = hastrialinfo==Ndata;
 
 hassampleinfo = 0;
 sampleinfo = cell(1, Ndata);
@@ -225,7 +226,7 @@ elseif cattrial
     % number of columns in trialinfo
   end
   % also concatenate the trial specification
-  cfg.trl = cat(1, trl{:});
+  %cfg.trl = cat(1, trl{:});
   
 elseif catlabel
   % concatenate the channels in each trial

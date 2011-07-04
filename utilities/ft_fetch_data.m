@@ -30,7 +30,7 @@ function [dat] = ft_fetch_data(data, varargin)
 % $Id$
     
 % check whether input is data
-data = ft_checkdata(data, 'datatype', 'raw', 'hastrialdef', 'yes');
+data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
     
 % get the options
 hdr           = keyval('header',        varargin);

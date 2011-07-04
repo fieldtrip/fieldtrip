@@ -151,7 +151,7 @@ end
 
 if hasdata
   % check if the input data is valid for this function
-  data = ft_checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hastrialdef', 'yes', 'hasoffset', 'yes');
+  data = ft_checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
   % fetch the header from the data structure in memory
   hdr = ft_fetch_header(data);
   
@@ -179,7 +179,13 @@ if hasdata
   end
   
   % this is how the input data is segmented
-  trlorg = [data.sampleinfo data.offset];
+  trlorg = zeros(numel(data.trial), 3);
+  trlorg(:,[1 2]) = data.sampleinfo;
+
+  % recreate offset vector (databrowser depends on this for visualisation)
+  for ntrl = 1:numel(data.trial)
+    trlorg(ntrl,3) = time2offset(data.time{ntrl}, data.fsample);
+  end
   Ntrials = size(trlorg, 1);
   
 else

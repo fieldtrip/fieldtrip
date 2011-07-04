@@ -67,7 +67,7 @@ end
 
 % store original datatype
 dtype = ft_datatype(data);
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hastrialdef', 'yes');
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 if ~ft_senstype(data, 'ctf')
   error('synthetic gradients can only be computed for CTF data');

@@ -91,7 +91,7 @@ if nargin == 1,
   hdr = ft_read_header(cfg.headerfile,'headerformat', cfg.headerformat);
   trl = cfg.trl;
 elseif nargin == 2,
-  data = ft_checkdata(data, 'hastrialdef', 'yes');
+  data = ft_checkdata(data, 'hassampleinfo', 'yes');
   cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
   hdr  = ft_fetch_header(data);
   if isfield(data, 'sampleinfo'), 

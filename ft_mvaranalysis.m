@@ -144,7 +144,7 @@ if ~isempty(cfg.inputfile)
 end
 
 %check the input-data
-data = ft_checkdata(data, 'datatype', 'raw', 'hastrialdef', 'yes');
+data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
 
 %check configurations
 switch cfg.toolbox
