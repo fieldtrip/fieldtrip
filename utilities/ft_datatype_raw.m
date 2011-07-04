@@ -88,7 +88,7 @@ switch version
 
     if ~isfield(data, 'sampleinfo') || ~isfield(data, 'trialinfo')
       % reconstruct it on the fly
-      data = fixtrialdef(data);
+      data = fixsampleinfo(data);
     end
 
     % the trialdef field should be renamed into sampleinfo
