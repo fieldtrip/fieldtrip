@@ -120,6 +120,7 @@ end
 % end
 % hastrialinfo = hastrialinfo==Ndata;
 
+hastrialinfo = 0;
 hassampleinfo = 0;
 sampleinfo = cell(1, Ndata);
 for i=1:Ndata
@@ -133,8 +134,10 @@ for i=1:Ndata
     warning('no ''sampleinfo'' field in data structure %d', i);
   end
   hassampleinfo = isfield(varargin{i}, 'sampleinfo') + hassampleinfo;
+  hastrialinfo = isfield(varargin{i}, 'trialinfo') + hastrialinfo;
 end
 hassampleinfo = hassampleinfo==Ndata;
+hastrialinfo = hastrialinfo==Ndata;
 
 % check the consistency of the labels across the input-structures
 alllabel = unique(label, 'first');
