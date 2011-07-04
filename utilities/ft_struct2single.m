@@ -77,7 +77,9 @@ switch class(a)
 
   case {'double' 'int32' 'uint32' 'int16' 'uint16'}
     % convert the values to single precision
-    a = single(a);
+    if ~issparse(a)
+      a = single(a);
+    end
 
   otherwise
      warning_once(sprintf('not converting class %s', class(a)));
