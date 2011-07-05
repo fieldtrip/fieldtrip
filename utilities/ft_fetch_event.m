@@ -32,5 +32,9 @@ function [event]=ft_fetch_event(data)
 data = ft_checkdata(data, 'datatype', 'raw');
 
 % locate the event structure
-event = ft_findcfg(data.cfg, 'event');
+if (isfield(data, 'cfg'))
+  event = ft_findcfg(data.cfg, 'event');
+else
+  event = [];
+end
 
