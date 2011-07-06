@@ -44,15 +44,14 @@ issource   =  isfield(data, 'pos');
 isdip      =  isfield(data, 'dip');
 ismvar     =  isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag'));
 isfreqmvar =  isfield(data, 'freq') && isfield(data, 'transfer');
+ischan     =  isfield(data, 'dimord') && strcmp(data.dimord, 'chan') && ~isfield(data, 'time') && ~isfield(data, 'freq'); 
 
 if iscomp
+  % comp should conditionally go before raw, otherwise the returned ft_datatype will be raw
   type = 'comp';  
-  %comp should conditionally go before raw, otherwise the returned ft_datatype
-  %will be raw
 elseif isfreqmvar
+  % freqmvar should conditionally go before freq, otherwise the returned ft_datatype will be freq in the case of frequency mvar data
   type = 'freqmvar';
-  %freqmvar should conditionally go before freq, otherwise the returned ft_datatype
-  %will be freq in the case of frequency mvar data
 elseif ismvar
   type = 'mvar';
 elseif israw
@@ -69,6 +68,9 @@ elseif issource
   type = 'source';
 elseif isdip
   type = 'dip';
+elseif ischan
+  % this results from avgovertime/avgoverfreq after timelockstatistics or freqstatistics
+  type = 'chan';
 else
   type = 'unknown';
 end
