@@ -176,6 +176,8 @@ ftFuncClock = clock();
 cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
 cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'text');
+cfg.inputlock  = ft_getopt(cfg, 'inputlock',  []);  % this can be used as mutex when doing peercellfun or another distributed computation
+cfg.outputlock = ft_getopt(cfg, 'outputlock', []);  % this can be used as mutex when doing peercellfun or another distributed computation
 
 % load optional given inputfile as data
 hasdata      = (nargin>1);
@@ -186,7 +188,9 @@ if hasdata && hasinputfile
 elseif hasdata
   % nothing needs to be done
 elseif hasinputfile
+  mutexlock(cfg.inputlock);
   data = loadvar(cfg.inputfile, 'data');
+  mutexunlock(cfg.inputlock);
 end
 
 % check if the input data is valid for this function
@@ -825,5 +829,7 @@ end
 
 % the output data should be saved to a MATLAB file
 if ~isempty(cfg.outputfile)
+  mutexlock(cfg.outputlock);
   savevar(cfg.outputfile, 'freq', freq); % use the variable name "data" in the output file
+  mutexunlock(cfg.outputlock);
 end
