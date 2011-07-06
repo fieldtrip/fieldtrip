@@ -719,7 +719,13 @@ else
     key = [eventdata.Modifier{1} '+' key];
   end
 end
-
+% get focus back to figure
+if ~strcmp(get(h, 'type'), 'figure')
+    set(h, 'enable', 'off');
+    drawnow;
+    set(h, 'enable', 'on');
+end
+  
 h = getparent(h);
 opt = getappdata(h, 'opt');
 cfg = getappdata(h, 'cfg');
