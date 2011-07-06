@@ -39,6 +39,10 @@ function label = ft_senslabel(type)
 %   'yokogawa160_planar'
 %   'yokogawa64'
 %   'yokogawa64_planar'
+%   'yokogawa440'
+%   'yokogawa440_planar'
+%   'yokogawa440_old'
+%   'yokogawa440_old_planar'
 %   'electrode'
 %
 % See also FT_SENSTYPE, FT_CHANNELSELECTION
@@ -2811,6 +2815,54 @@ switch type
     for i=1:64
       label{i,1} = sprintf('AG%03d_dH', i);
       label{i,2} = sprintf('AG%03d_dV', i);
+    end
+
+  case 'yokogawa440_old'
+    % this should be consistent with read_yokogawa_header, with
+    % ft_channelselection and with yokogawa2grad
+    label = cell(440,1);
+    for i=1:440
+        label{i} = sprintf('%03d',    i-1);
+    end
+
+  case 'yokogawa440'
+    % this should be consistent with read_yokogawa_header, with
+    % ft_channelselection and with yokogawa2grad
+    label = cell(440,1);
+    for i=1:440
+        if size(find(meg_zaxis+1==i),2)
+            label{i} = sprintf('AG%03d',    i);
+        else
+            label{i} = sprintf('PG%03d',    i);
+        end
+    end
+
+  case 'yokogawa440_old_planar'
+    % this should be consistent with read_yokogawa_header, with
+    % ft_channelselection and with yokogawa2grad
+    label = cell(440,2);
+    for i=1:440
+        if size(find(meg_zaxis+1==i),2)
+            label{i,1} = sprintf('%03d_dH',    i-1);
+            label{i,2} = sprintf('%03d_dV',    i-1);
+        else
+            label{i,1} = sprintf('%03d_dH',    i-1);
+            label{i,2} = sprintf('%03d_dV',    i-1);
+        end
+    end
+
+  case 'yokogawa440_planar'
+    % this should be consistent with read_yokogawa_header, with
+    % ft_channelselection and with yokogawa2grad
+    label = cell(440,2);
+    for i=1:440
+        if size(find(meg_zaxis+1==i),2)
+            label{i,1} = sprintf('AG%03d_dH',    i);
+            label{i,2} = sprintf('AG%03d_dV',    i);
+        else
+            label{i,1} = sprintf('PG%03d_dH',    i);
+            label{i,2} = sprintf('PG%03d_dV',    i);
+        end
     end
 
   case 'electrode'
