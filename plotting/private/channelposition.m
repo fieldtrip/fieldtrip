@@ -51,6 +51,7 @@ switch ft_senstype(sens)
     % put the corresponding distances instead of non-zero tra entries
     
     maxval = repmat(max(abs(sens.tra),[],2), [1 size(sens.tra,2)]);
+    maxval = min(maxval, ones(size(maxval))); %a value > 1 sometimes leads to problems; this is an empirical fix
     dist = (abs(sens.tra)>0.95.*maxval).*repmat(dist', size(sens.tra, 1), 1);
     
     % put nans instead of the zero entries
