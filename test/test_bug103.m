@@ -1,0 +1,16 @@
+freq.freq       = 1:1:100;
+freq.powspctrm  = randn(size(freq.freq)).^2;
+freq.label      = {'chan1'};
+freq.dimord     = 'chan_freq';
+
+save test_bug103.mat freq
+
+cfg = [];
+figure; ft_singleplotER(cfg, freq);
+
+
+% the following does not work on purpose, because plotting does not work with cfg.inputfile
+cfg = [];
+cfg.inputfile = 'freq_bug103.mat';
+figure; ft_singleplotER(cfg);
+
