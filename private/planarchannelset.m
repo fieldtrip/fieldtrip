@@ -793,6 +793,38 @@ switch lower(ft_senstype(data))
       planar{k,3} = sprintf('AG%03d',    k);
     end
 
+  case 'yokogawa440_old_planar'
+    % this should be consistent with read_yokogawa_header, with
+    % ft_channelselection and with yokogawa2grad
+    planar = cell(440,3);
+    for i=1:440
+        if size(find(meg_zaxis+1==i),2)
+            planar{i,1} = sprintf('%03d_dH',    i-1);
+            planar{i,2} = sprintf('%03d_dV',    i-1);
+            planar{i,3} = sprintf('%03d',    i-1);
+        else
+            planar{i,1} = sprintf('%03d_dH',    i-1);
+            planar{i,2} = sprintf('%03d_dV',    i-1);
+            planar{i,3} = sprintf('%03d',    i-1);
+        end
+    end
+
+  case 'yokogawa440_planar'
+    % this should be consistent with read_yokogawa_header, with
+    % ft_channelselection and with yokogawa2grad
+    planar = cell(440,3);
+    for i=1:440
+        if size(find(meg_zaxis+1==i),2)
+            planar{i,1} = sprintf('AG%03d_dH',    i);
+            planar{i,2} = sprintf('AG%03d_dV',    i);
+            planar{i,3} = sprintf('AG%03d',    i);
+        else
+            planar{i,1} = sprintf('PG%03d_dH',    i);
+            planar{i,2} = sprintf('PG%03d_dV',    i);
+            planar{i,3} = sprintf('PG%03d',    i);
+        end
+    end
+
   otherwise
     % try to define the horizontal, vertical and combined channel based on the input data 
     islabel = isa(data, 'cell') && ~isempty(data) && isa(data{1}, 'char');
