@@ -117,6 +117,7 @@ issource   = ft_datatype(data, 'source');
 isdip      = ft_datatype(data, 'dip');
 ismvar     = ft_datatype(data, 'mvar');
 isfreqmvar = ft_datatype(data, 'freqmvar');
+ischan     = ft_datatype(data, 'chan');
 
 % FIXME use the istrue function on ismeg and hasxxx options
 
@@ -260,6 +261,16 @@ if ~isempty(dtype)
         data = raw2timelock(data);
         iscomp = 0;
         istimelock = 1;
+        okflag = 1;
+      elseif isequal(dtype(iCell), {'timelock'}) && ischan
+        data = chan2timelock(data);
+        ischan = 0;
+        istimelock = 1;
+        okflag = 1;
+      elseif isequal(dtype(iCell), {'freq'}) && ischan
+        data = chan2freq(data);
+        ischan = 0;
+        isfreq = 1;
         okflag = 1;
       end
     end % for iCell
@@ -1696,3 +1707,17 @@ if isfield(data, 'cov'),        data = rmfield(data, 'cov'); end
 if isfield(data, 'dimord'),     data = rmfield(data, 'dimord'); end
 if isfield(data, 'numsamples'), data = rmfield(data, 'numsamples'); end
 if isfield(data, 'dof'),        data = rmfield(data, 'dof'); end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% convert between datatypes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [data] = chan2freq(data)
+data.dimord = [data.dimord '_freq'];
+data.freq   = nan;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% convert between datatypes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [data] = chan2timelock(data)
+data.dimord = [data.dimord '_time'];
+data.time   = nan;
