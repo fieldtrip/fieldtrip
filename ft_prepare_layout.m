@@ -699,7 +699,7 @@ fprintf('creating layout for %s system\n', ft_senstype(sens));
 % apply rotation
 if isempty(rz)
   switch ft_senstype(sens)
-    case {'ctf151', 'ctf275', 'bti148', 'bti248', 'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'yokogawa160', 'yokogawa160_planar', 'yokogawa64', 'yokogawa64_planar', 'magnetometer', 'meg'}
+    case {'ctf151', 'ctf275', 'bti148', 'bti248', 'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'yokogawa160', 'yokogawa160_planar', 'yokogawa64', 'yokogawa64_planar', 'yokogawa440', 'yokogawa440_old', 'yokogawa440_planar', 'yokogawa440_old_planar', 'magnetometer', 'meg'}
       rz = 90;
     case {'neuromag122', 'neuromag306'}
       rz = 0; 
