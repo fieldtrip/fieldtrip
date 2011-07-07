@@ -78,13 +78,13 @@ cfg = ft_checkconfig(cfg, 'forbidden', {'detrend'});
 cfg = ft_checkconfig(cfg, 'renamed',   {'blc', 'demean'});
 
 % set the defaults
-if ~isfield(cfg, 'method'),        cfg.method  = 'runica';     end
-if ~isfield(cfg, 'demean'),        cfg.demean  = 'yes';        end
-if ~isfield(cfg, 'trials'),        cfg.trials  = 'all';        end
-if ~isfield(cfg, 'channel'),       cfg.channel = 'all';        end
-if ~isfield(cfg, 'numcomponent'),  cfg.numcomponent = 'all';   end
-if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];          end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];         end
+cfg.method       = ft_getopt(cfg, 'method',       'runica');
+cfg.demean       = ft_getopt(cfg, 'demean',       'yes');
+cfg.trials       = ft_getopt(cfg, 'trials',       'all');
+cfg.channel      = ft_getopt(cfg, 'channel',      'all');
+cfg.numcomponent = ft_getopt(cfg, 'numcomponent', 'all');
+cfg.inputfile    = ft_getopt(cfg, 'inputfile',    []);
+cfg.outputfile   = ft_getopt(cfg, 'outputfile',   []);
 
 % load optional given inputfile as data
 hasdata = (nargin>1);
@@ -130,21 +130,21 @@ if isfield(cfg, 'topo') && isfield(cfg, 'topolabel')
 end
 
 % additional options, see FASTICA for details
-if ~isfield(cfg, 'fastica'),        cfg.fastica = [];          end;
+cfg.fastica = ft_getopt(cfg, 'fastica', []);
 
 % additional options, see RUNICA for details
-if ~isfield(cfg, 'runica'),        cfg.runica = [];            end
-if ~isfield(cfg.runica, 'lrate'),  cfg.runica.lrate = 0.001;   end
+cfg.runica       = ft_getopt(cfg,        'runica',  []);
+cfg.runica.lrate = ft_getopt(cfg.runica, 'lrate',   0.001);
 
 % additional options, see BINICA for details
-if ~isfield(cfg, 'binica'),        cfg.binica = [];            end
-if ~isfield(cfg.binica, 'lrate'),  cfg.binica.lrate = 0.001;   end
+cfg.binica       = ft_getopt(cfg,        'binica',  []);
+cfg.binica.lrate = ft_getopt(cfg.binica, 'lrate',   0.001);
 
 % additional options, see DSS for details
-if ~isfield(cfg, 'dss'),                  cfg.dss      = [];                           end
-if ~isfield(cfg.dss, 'denf'),             cfg.dss.denf = [];                           end
-if ~isfield(cfg.dss.denf, 'function'),    cfg.dss.denf.function = 'denoise_fica_tanh'; end
-if ~isfield(cfg.dss.denf, 'params'),      cfg.dss.denf.params   = [];                  end
+cfg.dss               = ft_getopt(cfg,          'dss',      []);
+cfg.dss.denf          = ft_getopt(cfg.dss,      'denf',     []);
+cfg.dss.denf.function = ft_getopt(cfg.dss.denf, 'function', 'denoise_fica_tanh');
+cfg.dss.denf.params   = ft_getopt(cfg.dss.denf, 'params',   []);
 
 % check whether the required low-level toolboxes are installed
 switch cfg.method
@@ -157,11 +157,6 @@ switch cfg.method
   case 'dss'
     ft_hastoolbox('dss', 1);           % see http://www.cis.hut.fi/projects/dss
 end % cfg.method
-
-% default is to compute just as many components as there are channels in the data
-if strcmp(cfg.numcomponent, 'all')
-  cfg.numcomponent = length(data.label);
-end
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
@@ -178,6 +173,11 @@ for trial=1:Ntrials
 end
 data.label = data.label(chansel);
 Nchans     = length(chansel);
+
+% default is to compute just as many components as there are channels in the data
+if strcmp(cfg.numcomponent, 'all')
+  cfg.numcomponent = length(data.label);
+end
 
 % determine the size of each trial, they can be variable length
 Nsamples = zeros(1,Ntrials);
