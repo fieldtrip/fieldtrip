@@ -41,8 +41,6 @@ function label = ft_senslabel(type)
 %   'yokogawa64_planar'
 %   'yokogawa440'
 %   'yokogawa440_planar'
-%   'yokogawa440_old'
-%   'yokogawa440_old_planar'
 %   'electrode'
 %
 % See also FT_SENSTYPE, FT_CHANNELSELECTION
@@ -84,7 +82,7 @@ if isequal(current_argin, previous_argin)
 end
 
 switch type
-  
+
   case 'btiref'
     label = {
       'MRxA'
@@ -111,33 +109,33 @@ switch type
       'GyyA'
       'GzyA'
       };
-    
+
   case 'bti148'
     label = cell(148,1);
     for i=1:148
       label{i,1} = sprintf('A%d', i);
     end
-    
+
   case 'bti148_planar'
     label = cell(148,2);
     for i=1:148
       label{i,1} = sprintf('A%d_dH', i);
       label{i,2} = sprintf('A%d_dV', i);
     end
-    
+
   case 'bti248'
     label = cell(248,1);
     for i=1:248
       label{i,1} = sprintf('A%d', i);
     end
-    
+
   case 'bti248_planar'
     label = cell(248,2);
     for i=1:248
       label{i,1} = sprintf('A%d_dH', i);
       label{i,2} = sprintf('A%d_dV', i);
     end
-    
+
   case 'ctfref'
     label = {
       'BG1'
@@ -170,7 +168,7 @@ switch type
       'R22'
       'R23'
       };
-    
+
   case 'ctfheadloc'
     label = {
       'HLC0011'
@@ -198,7 +196,7 @@ switch type
       'HLC0036'
       'HLC0037'
       };
-    
+
   case 'ctf64'
     label = {
       'SL11'
@@ -266,7 +264,7 @@ switch type
       'SR51'
       'SR52'
       };
-    
+
   case 'ctf151'
     label = {
       'MLC11'
@@ -421,7 +419,7 @@ switch type
       'MZP01'
       'MZP02'
       };
-    
+
   case 'ctf151_planar'
     label = {
       'MLC11_dH'  'MLC11_dV'
@@ -576,7 +574,7 @@ switch type
       'MZP01_dH'  'MZP01_dV'
       'MZP02_dH'  'MZP02_dV'
       };
-    
+
   case 'ctf275'
     label = {
       'MLC11'
@@ -855,7 +853,7 @@ switch type
       'MZO03'
       'MZP01'
       };
-    
+
   case 'ctf275_planar'
     % FIXME one channel seems to be missing
     label = {
@@ -1134,8 +1132,8 @@ switch type
       'MZO03_dH'  'MZO03_dV'
       'MZP01_dH'  'MZP01_dV'
       };
-    
-    
+
+
   case 'neuromag122'
     label = {
       'MEG 001'    'MEG 002'
@@ -1200,7 +1198,7 @@ switch type
       'MEG 119'    'MEG 120'
       'MEG 121'    'MEG 122'
       };
-    
+
   case 'neuromag122alt'
     % this is an alternative set of labels without a space in them
     label = {
@@ -1266,7 +1264,7 @@ switch type
       'MEG119'    'MEG120'
       'MEG121'    'MEG122'
       };
-    
+
   case 'neuromag306'
     label = {
       'MEG 0113'    'MEG 0112'   'MEG 0111'
@@ -1372,7 +1370,7 @@ switch type
       'MEG 2633'    'MEG 2632'   'MEG 2631'
       'MEG 2642'    'MEG 2643'   'MEG 2641'
       };
-    
+
   case 'neuromag306alt'
     % this is an alternative set of labels without a space in them
     label = {
@@ -1479,8 +1477,8 @@ switch type
       'MEG2633'    'MEG2632'   'MEG2631'
       'MEG2642'    'MEG2643'   'MEG2641'
       };
-    
-    
+
+
   case 'eeg1020'
     label = {
       'Fp1'
@@ -1504,7 +1502,7 @@ switch type
       'O1'
       'Oz'
       'O2'};
-    
+
   case 'eeg1010'
     label = {
       'Fp1'
@@ -1594,7 +1592,7 @@ switch type
       'Iz'
       'I2'
       };
-    
+
   case 'eeg1005'
     label = {
       'Fp1'
@@ -1933,7 +1931,7 @@ switch type
       'OIz'
       'OI2'
       };
-    
+
   case 'ext1020'
     % start with the eeg1005 list
     label = {
@@ -2273,13 +2271,13 @@ switch type
       'OIz'
       'OI2'
       };
-    
+
     % Add also alternative labels that are used in some systems
     label = cat(1, label, {'A1' 'A2' 'M1' 'M2' 'T3' 'T4' 'T5' 'T6'}');
-    
+
     % This is to account for all variants of case in 1020 systems
     label = unique(cat(1, label, upper(label), lower(label)));
-    
+
   case 'biosemi64'
     label = {
       'A1'
@@ -2347,7 +2345,7 @@ switch type
       'B31'
       'B32'
       };
-    
+
   case 'biosemi128'
     label = {
       'A1'
@@ -2479,7 +2477,7 @@ switch type
       'D31'
       'D32'
       };
-    
+
   case 'biosemi256'
     label = {
       'A1'
@@ -2739,42 +2737,42 @@ switch type
       'H31'
       'H32'
       };
-    
+
   case 'egi32'
     % this should be  uppercase for consistency with ft_read_header
     label = cell(33, 1);
     for i = 1:33
       label{i} = sprintf('E%d', i);
     end
-    
+
   case 'egi64'
     % this should be  uppercase for consistency with ft_read_header
     label = cell(65, 1);
     for i = 1:65
       label{i} = sprintf('E%d', i);
     end
-    
+
   case 'egi128'
     % this should be  uppercase for consistency with ft_read_header
     label = cell(129, 1);
     for i = 1:129
       label{i} = sprintf('E%d', i);
     end
-    
+
   case 'egi256'
     % this should be  uppercase for consistency with ft_read_header
     label = cell(257, 1);
     for i = 1:257
       label{i} = sprintf('E%d', i);
     end
-    
+
   case 'itab153'
     label        = cell(153,1);
     for i=1:153
       % channel names start counting at zero
       label{i} = sprintf('MAG_%03d',    i-1);
     end
-    
+
   case 'itab153_planar'
     label = cell(153,2);
     for i=1:153
@@ -2782,7 +2780,7 @@ switch type
       label{i,1} = sprintf('MAG_%03d_dH', i-1);
       label{i,2} = sprintf('MAG_%03d_dV', i-1);
     end
-    
+
   case 'yokogawa160'
     % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
     % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad, planarchannelset
@@ -2790,7 +2788,7 @@ switch type
     for i=1:160
       label{i} = sprintf('AG%03d',    i);
     end
-    
+
   case 'yokogawa160_planar'
     % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
     % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad, planarchannelset
@@ -2799,7 +2797,7 @@ switch type
       label{i,1} = sprintf('AG%03d_dH', i);
       label{i,2} = sprintf('AG%03d_dV', i);
     end
-    
+
   case 'yokogawa64'
     % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
     % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad, planarchannelset
@@ -2807,7 +2805,7 @@ switch type
     for i=1:64
       label{i} = sprintf('AG%03d',    i);
     end
-    
+
   case 'yokogawa64_planar'
     % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
     % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad, planarchannelset
@@ -2816,7 +2814,7 @@ switch type
       label{i,1} = sprintf('AG%03d_dH', i);
       label{i,2} = sprintf('AG%03d_dV', i);
     end
-    
+
   case 'yokogawa440'
     % this should be consistent with read_yokogawa_header, with
     % ft_channelselection and with yokogawa2grad
@@ -3234,7 +3232,7 @@ switch type
       'RM411'
       'RM412'
       };
-    
+
   case 'yokogawa440_planar'
     % this should be consistent with read_yokogawa_header, with
     % ft_channelselection and with yokogawa2grad
@@ -3451,12 +3449,12 @@ switch type
       'AG392_dH'   'AG392_dV'
       };
     label = label(:);
-    
+
   case 'electrode'
     % there is no default set of electrode labels for all possible EEG systems
     % but nevertheless the requested input type 'electrode' should not result in an error
     label = {};
-    
+
   otherwise
     error('the requested sensor type is not supported');
 end
