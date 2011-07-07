@@ -58,9 +58,9 @@ ftFuncTimer = tic();
 ftFuncClock = clock();
 
 % set defaults
-if ~isfield(cfg, 'component'), cfg.component = [];      end
-if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];           end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end
+cfg.component  = ft_getopt(cfg, 'component',  []);
+cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
+cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
 
 if nargin==3 
   %ntrials = length(data.trial);
