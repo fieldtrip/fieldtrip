@@ -89,7 +89,7 @@ function [type] = ft_senstype(input, desired)
 persistent previous_argin previous_argout
 
 % this is to avoid a recursion loop
-persistent recursion 
+persistent recursion
 if isempty(recursion)
   recursion = false;
 end
@@ -179,15 +179,15 @@ end
 if isfield(input, 'type')
   % preferably the structure specifies its own type
   type = input.type;
-
+  
 elseif issubfield(input, 'orig.FileHeader') &&  issubfield(input, 'orig.VarHeader')
   % this is a complete header that was read from a Plexon *.nex file using read_plexon_nex
   type = 'plexon';
-
+  
 elseif issubfield(input, 'orig.stname')
   % this is a complete header that was read from an ITAB dataset
   type = 'itab';
-
+  
 elseif issubfield(input, 'orig.sys_name')
   % this is a complete header that was read from a Yokogawa dataset
   if input.orig.channel_count<160
@@ -198,15 +198,15 @@ elseif issubfield(input, 'orig.sys_name')
     % FIXME this might fail if there are many bad channels
     type = 'yokogawa440';
   end
-
+  
 elseif issubfield(input, 'orig.FILE.Ext') && strcmp(input.orig.FILE.Ext, 'edf')
   % this is a complete header that was read from an EDF or EDF+ dataset
   type = 'electrode';
-
+  
 else
   % start with unknown, then try to determine the proper type by looking at the labels
   type = 'unknown';
-
+  
   if isgrad
     % probably this is MEG, determine the type of magnetometer/gradiometer system
     % note that the order here is important: first check whether it matches a 275 channel system, then a 151 channel system, since the 151 channels are a subset of the 275
@@ -234,12 +234,8 @@ else
       type = 'itab153';
     elseif (mean(ismember(ft_senslabel('itab153_planar'), sens.label)) > 0.8)
       type = 'itab153_planar';
-
-    % the order is important for the different yokogawa systems, because they all share the same channel names
-    elseif (mean(ismember(ft_senslabel('yokogawa440_old'),    sens.label)) > 0.8)
-      type = 'yokogawa440_old';
-    elseif (mean(ismember(ft_senslabel('yokogawa440_old_planar'),    sens.label)) > 0.8)
-      type = 'yokogawa440_old_planar';
+      
+      % the order is important for the different yokogawa systems, because they all share the same channel names
     elseif (mean(ismember(ft_senslabel('yokogawa440'),    sens.label)) > 0.8)
       type = 'yokogawa440';
     elseif (mean(ismember(ft_senslabel('yokogawa440_planar'),    sens.label)) > 0.8)
@@ -252,7 +248,7 @@ else
       type = 'yokogawa64';
     elseif (mean(ismember(ft_senslabel('yokogawa64_planar'), sens.label)) > 0.4)
       type = 'yokogawa64_planar';
-
+      
     elseif (mean(ismember(ft_senslabel('neuromag306'),   sens.label)) > 0.8)
       type = 'neuromag306';
     elseif (mean(ismember(ft_senslabel('neuromag306alt'),sens.label)) > 0.8)  % an alternative set without spaces in the name
@@ -272,7 +268,7 @@ else
       warning('could be Yokogawa system');
       type = 'meg';
     end
-
+    
   elseif iselec
     % probably this is EEG
     if     (mean(ismember(ft_senslabel('biosemi256'),    sens.label)) > 0.8)
@@ -294,7 +290,7 @@ else
     else
       type = 'electrode';
     end
-
+    
   elseif islabel
     % look only at the channel labels
     if     (mean(ismember(ft_senslabel('ctf275'),        sens.label)) > 0.8)
@@ -321,6 +317,12 @@ else
       type = 'itab153';
     elseif (mean(ismember(ft_senslabel('itab153_planar'), sens.label)) > 0.8)
       type = 'itab153_planar';
+      
+      % the order is important for the different yokogawa systems, because they all share the same channel names
+    elseif (mean(ismember(ft_senslabel('yokogawa440'),    sens.label)) > 0.8)
+      type = 'yokogawa440';
+    elseif (mean(ismember(ft_senslabel('yokogawa440_planar'),    sens.label)) > 0.8)
+      type = 'yokogawa440_planar';
     elseif (mean(ismember(ft_senslabel('yokogawa160'),    sens.label)) > 0.4)
       type = 'yokogawa160';
     elseif (mean(ismember(ft_senslabel('yokogawa160_planar'), sens.label)) > 0.4)
@@ -329,6 +331,7 @@ else
       type = 'yokogawa64';
     elseif (mean(ismember(ft_senslabel('yokogawa64_planar'), sens.label)) > 0.4)
       type = 'yokogawa64_planar';
+      
     elseif any(mean(ismember(ft_senslabel('neuromag306'),   sens.label)) > 0.8)
       type = 'neuromag306';
     elseif any(mean(ismember(ft_senslabel('neuromag306alt'),sens.label)) > 0.8)  % an alternative set without spaces in the name
@@ -358,7 +361,7 @@ else
     elseif any(ismember(ft_senslabel('ctfref'), sens.label))
       type = 'ctf'; % it might be 151 or 275 channels
     end
-
+    
   end % look at label, ori and/or pnt
 end % if isfield(sens, 'type')
 
@@ -388,8 +391,8 @@ if strcmp(type, 'unknown') && ~recursion
     type = ft_senstype(input);
     recursion = false;
   end
-end  
-  
+end
+
 if ~isempty(desired)
   % return a boolean flag
   switch desired

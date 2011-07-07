@@ -84,7 +84,7 @@ if isequal(current_argin, previous_argin)
 end
 
 switch type
-
+  
   case 'btiref'
     label = {
       'MRxA'
@@ -111,33 +111,33 @@ switch type
       'GyyA'
       'GzyA'
       };
-
+    
   case 'bti148'
     label = cell(148,1);
     for i=1:148
       label{i,1} = sprintf('A%d', i);
     end
-
+    
   case 'bti148_planar'
     label = cell(148,2);
     for i=1:148
       label{i,1} = sprintf('A%d_dH', i);
       label{i,2} = sprintf('A%d_dV', i);
     end
-
+    
   case 'bti248'
     label = cell(248,1);
     for i=1:248
       label{i,1} = sprintf('A%d', i);
     end
-
+    
   case 'bti248_planar'
     label = cell(248,2);
     for i=1:248
       label{i,1} = sprintf('A%d_dH', i);
       label{i,2} = sprintf('A%d_dV', i);
     end
-
+    
   case 'ctfref'
     label = {
       'BG1'
@@ -170,7 +170,7 @@ switch type
       'R22'
       'R23'
       };
-
+    
   case 'ctfheadloc'
     label = {
       'HLC0011'
@@ -198,7 +198,7 @@ switch type
       'HLC0036'
       'HLC0037'
       };
-
+    
   case 'ctf64'
     label = {
       'SL11'
@@ -266,7 +266,7 @@ switch type
       'SR51'
       'SR52'
       };
-
+    
   case 'ctf151'
     label = {
       'MLC11'
@@ -421,7 +421,7 @@ switch type
       'MZP01'
       'MZP02'
       };
-
+    
   case 'ctf151_planar'
     label = {
       'MLC11_dH'  'MLC11_dV'
@@ -576,7 +576,7 @@ switch type
       'MZP01_dH'  'MZP01_dV'
       'MZP02_dH'  'MZP02_dV'
       };
-
+    
   case 'ctf275'
     label = {
       'MLC11'
@@ -855,7 +855,7 @@ switch type
       'MZO03'
       'MZP01'
       };
-
+    
   case 'ctf275_planar'
     % FIXME one channel seems to be missing
     label = {
@@ -1134,8 +1134,8 @@ switch type
       'MZO03_dH'  'MZO03_dV'
       'MZP01_dH'  'MZP01_dV'
       };
-
-
+    
+    
   case 'neuromag122'
     label = {
       'MEG 001'    'MEG 002'
@@ -1200,7 +1200,7 @@ switch type
       'MEG 119'    'MEG 120'
       'MEG 121'    'MEG 122'
       };
-
+    
   case 'neuromag122alt'
     % this is an alternative set of labels without a space in them
     label = {
@@ -1266,7 +1266,7 @@ switch type
       'MEG119'    'MEG120'
       'MEG121'    'MEG122'
       };
-
+    
   case 'neuromag306'
     label = {
       'MEG 0113'    'MEG 0112'   'MEG 0111'
@@ -1372,7 +1372,7 @@ switch type
       'MEG 2633'    'MEG 2632'   'MEG 2631'
       'MEG 2642'    'MEG 2643'   'MEG 2641'
       };
-
+    
   case 'neuromag306alt'
     % this is an alternative set of labels without a space in them
     label = {
@@ -1479,8 +1479,8 @@ switch type
       'MEG2633'    'MEG2632'   'MEG2631'
       'MEG2642'    'MEG2643'   'MEG2641'
       };
-
-
+    
+    
   case 'eeg1020'
     label = {
       'Fp1'
@@ -1504,7 +1504,7 @@ switch type
       'O1'
       'Oz'
       'O2'};
-
+    
   case 'eeg1010'
     label = {
       'Fp1'
@@ -1594,7 +1594,7 @@ switch type
       'Iz'
       'I2'
       };
-
+    
   case 'eeg1005'
     label = {
       'Fp1'
@@ -1933,7 +1933,7 @@ switch type
       'OIz'
       'OI2'
       };
-
+    
   case 'ext1020'
     % start with the eeg1005 list
     label = {
@@ -2273,13 +2273,13 @@ switch type
       'OIz'
       'OI2'
       };
-
+    
     % Add also alternative labels that are used in some systems
     label = cat(1, label, {'A1' 'A2' 'M1' 'M2' 'T3' 'T4' 'T5' 'T6'}');
-
+    
     % This is to account for all variants of case in 1020 systems
     label = unique(cat(1, label, upper(label), lower(label)));
-
+    
   case 'biosemi64'
     label = {
       'A1'
@@ -2347,7 +2347,7 @@ switch type
       'B31'
       'B32'
       };
-
+    
   case 'biosemi128'
     label = {
       'A1'
@@ -2479,7 +2479,7 @@ switch type
       'D31'
       'D32'
       };
-
+    
   case 'biosemi256'
     label = {
       'A1'
@@ -2739,42 +2739,42 @@ switch type
       'H31'
       'H32'
       };
-
+    
   case 'egi32'
     % this should be  uppercase for consistency with ft_read_header
     label = cell(33, 1);
     for i = 1:33
       label{i} = sprintf('E%d', i);
     end
-
+    
   case 'egi64'
     % this should be  uppercase for consistency with ft_read_header
     label = cell(65, 1);
     for i = 1:65
       label{i} = sprintf('E%d', i);
     end
-
+    
   case 'egi128'
     % this should be  uppercase for consistency with ft_read_header
     label = cell(129, 1);
     for i = 1:129
       label{i} = sprintf('E%d', i);
     end
-
+    
   case 'egi256'
     % this should be  uppercase for consistency with ft_read_header
     label = cell(257, 1);
     for i = 1:257
       label{i} = sprintf('E%d', i);
     end
-
+    
   case 'itab153'
     label        = cell(153,1);
     for i=1:153
       % channel names start counting at zero
       label{i} = sprintf('MAG_%03d',    i-1);
     end
-
+    
   case 'itab153_planar'
     label = cell(153,2);
     for i=1:153
@@ -2782,7 +2782,7 @@ switch type
       label{i,1} = sprintf('MAG_%03d_dH', i-1);
       label{i,2} = sprintf('MAG_%03d_dV', i-1);
     end
-
+    
   case 'yokogawa160'
     % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
     % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad, planarchannelset
@@ -2790,7 +2790,7 @@ switch type
     for i=1:160
       label{i} = sprintf('AG%03d',    i);
     end
-
+    
   case 'yokogawa160_planar'
     % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
     % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad, planarchannelset
@@ -2799,7 +2799,7 @@ switch type
       label{i,1} = sprintf('AG%03d_dH', i);
       label{i,2} = sprintf('AG%03d_dV', i);
     end
-
+    
   case 'yokogawa64'
     % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
     % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad, planarchannelset
@@ -2807,7 +2807,7 @@ switch type
     for i=1:64
       label{i} = sprintf('AG%03d',    i);
     end
-
+    
   case 'yokogawa64_planar'
     % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
     % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad, planarchannelset
@@ -2816,60 +2816,647 @@ switch type
       label{i,1} = sprintf('AG%03d_dH', i);
       label{i,2} = sprintf('AG%03d_dV', i);
     end
-
-  case 'yokogawa440_old'
-    % this should be consistent with read_yokogawa_header, with
-    % ft_channelselection and with yokogawa2grad
-    label = cell(440,1);
-    for i=1:440
-        label{i} = sprintf('%03d',    i-1);
-    end
-
+    
   case 'yokogawa440'
     % this should be consistent with read_yokogawa_header, with
     % ft_channelselection and with yokogawa2grad
-    label = cell(440,1);
-    for i=1:440
-        if size(find(meg_zaxis+1==i),2)
-            label{i} = sprintf('AG%03d',    i);
-        else
-            label{i} = sprintf('PG%03d',    i);
-        end
-    end
-
-  case 'yokogawa440_old_planar'
-    % this should be consistent with read_yokogawa_header, with
-    % ft_channelselection and with yokogawa2grad
-    label = cell(440,2);
-    for i=1:440
-        if size(find(meg_zaxis+1==i),2)
-            label{i,1} = sprintf('%03d_dH',    i-1);
-            label{i,2} = sprintf('%03d_dV',    i-1);
-        else
-            label{i,1} = sprintf('%03d_dH',    i-1);
-            label{i,2} = sprintf('%03d_dV',    i-1);
-        end
-    end
-
+    label = {
+      'AG001'
+      'AG002'
+      'AG003'
+      'AG004'
+      'AG005'
+      'AG006'
+      'AG007'
+      'AG008'
+      'AG009'
+      'AG010'
+      'AG011'
+      'AG012'
+      'AG013'
+      'AG014'
+      'AG015'
+      'AG016'
+      'AG017'
+      'AG018'
+      'AG019'
+      'AG020'
+      'AG021'
+      'AG022'
+      'AG023'
+      'AG024'
+      'AG025'
+      'AG026'
+      'AG027'
+      'AG028'
+      'AG029'
+      'AG030'
+      'AG031'
+      'AG032'
+      'PG033'
+      'PG034'
+      'PG035'
+      'PG036'
+      'PG037'
+      'PG038'
+      'PG039'
+      'PG040'
+      'PG041'
+      'PG042'
+      'PG043'
+      'PG044'
+      'PG045'
+      'PG046'
+      'PG047'
+      'PG048'
+      'PG049'
+      'PG050'
+      'PG051'
+      'PG052'
+      'PG053'
+      'PG054'
+      'PG055'
+      'PG056'
+      'PG057'
+      'PG058'
+      'PG059'
+      'PG060'
+      'PG061'
+      'PG062'
+      'PG063'
+      'PG064'
+      'AG065'
+      'AG066'
+      'AG067'
+      'AG068'
+      'AG069'
+      'AG070'
+      'AG071'
+      'AG072'
+      'AG073'
+      'AG074'
+      'AG075'
+      'AG076'
+      'AG077'
+      'AG078'
+      'AG079'
+      'AG080'
+      'AG081'
+      'AG082'
+      'AG083'
+      'AG084'
+      'AG085'
+      'AG086'
+      'AG087'
+      'AG088'
+      'AG089'
+      'AG090'
+      'AG091'
+      'AG092'
+      'AG093'
+      'AG094'
+      'AG095'
+      'AG096'
+      'PG097'
+      'PG098'
+      'PG099'
+      'PG100'
+      'PG101'
+      'PG102'
+      'PG103'
+      'PG104'
+      'PG105'
+      'PG106'
+      'PG107'
+      'PG108'
+      'PG109'
+      'PG110'
+      'PG111'
+      'PG112'
+      'PG113'
+      'PG114'
+      'PG115'
+      'PG116'
+      'PG117'
+      'PG118'
+      'PG119'
+      'PG120'
+      'PG121'
+      'AG122'
+      'PG123'
+      'PG124'
+      'PG125'
+      'PG126'
+      'PG127'
+      'PG128'
+      'AG129'
+      'AG130'
+      'AG131'
+      'AG132'
+      'AG133'
+      'AG134'
+      'AG135'
+      'AG136'
+      'AG137'
+      'AG138'
+      'AG139'
+      'AG140'
+      'AG141'
+      'AG142'
+      'AG143'
+      'AG144'
+      'AG145'
+      'AG146'
+      'AG147'
+      'AG148'
+      'AG149'
+      'AG150'
+      'AG151'
+      'AG152'
+      'AG153'
+      'AG154'
+      'AG155'
+      'AG156'
+      'AG157'
+      'AG158'
+      'AG159'
+      'AG160'
+      'AG161'
+      'AG162'
+      'AG163'
+      'AG164'
+      'AG165'
+      'PG166'
+      'PG167'
+      'PG168'
+      'PG169'
+      'PG170'
+      'PG171'
+      'PG172'
+      'PG173'
+      'PG174'
+      'PG175'
+      'PG176'
+      'PG177'
+      'PG178'
+      'PG179'
+      'PG180'
+      'PG181'
+      'PG182'
+      'PG183'
+      'PG184'
+      'PG185'
+      'PG186'
+      'PG187'
+      'PG188'
+      'PG189'
+      'PG190'
+      'PG191'
+      'PG192'
+      'AG193'
+      'AG194'
+      'AG195'
+      'AG196'
+      'AG197'
+      'AG198'
+      'AG199'
+      'AG200'
+      'AG201'
+      'AG202'
+      'AG203'
+      'AG204'
+      'AG205'
+      'AG206'
+      'AG207'
+      'AG208'
+      'AG209'
+      'AG210'
+      'AG211'
+      'AG212'
+      'AG213'
+      'AG214'
+      'AG215'
+      'AG216'
+      'AG217'
+      'AG218'
+      'AG219'
+      'AG220'
+      'AG221'
+      'AG222'
+      'AG223'
+      'AG224'
+      'AG225'
+      'AG226'
+      'AG227'
+      'PG228'
+      'PG229'
+      'PG230'
+      'PG231'
+      'PG232'
+      'PG233'
+      'PG234'
+      'PG235'
+      'PG236'
+      'PG237'
+      'PG238'
+      'PG239'
+      'PG240'
+      'PG241'
+      'PG242'
+      'PG243'
+      'PG244'
+      'PG245'
+      'PG246'
+      'PG247'
+      'PG248'
+      'PG249'
+      'PG250'
+      'PG251'
+      'PG252'
+      'PG253'
+      'PG254'
+      'PG255'
+      'PG256'
+      'AG257'
+      'AG258'
+      'AG259'
+      'AG260'
+      'AG261'
+      'AG262'
+      'AG263'
+      'AG264'
+      'AG265'
+      'AG266'
+      'AG267'
+      'AG268'
+      'AG269'
+      'AG270'
+      'AG271'
+      'AG272'
+      'AG273'
+      'AG274'
+      'AG275'
+      'AG276'
+      'AG277'
+      'AG278'
+      'AG279'
+      'AG280'
+      'AG281'
+      'AG282'
+      'AG283'
+      'AG284'
+      'AG285'
+      'AG286'
+      'AG287'
+      'AG288'
+      'PG289'
+      'PG290'
+      'PG291'
+      'PG292'
+      'PG293'
+      'PG294'
+      'PG295'
+      'PG296'
+      'PG297'
+      'PG298'
+      'PG299'
+      'PG300'
+      'PG301'
+      'PG302'
+      'PG303'
+      'PG304'
+      'PG305'
+      'PG306'
+      'PG307'
+      'PG308'
+      'PG309'
+      'PG310'
+      'PG311'
+      'PG312'
+      'PG313'
+      'PG314'
+      'PG315'
+      'PG316'
+      'PG317'
+      'PG318'
+      'PG319'
+      'PG320'
+      'AG321'
+      'AG322'
+      'AG323'
+      'AG324'
+      'AG325'
+      'AG326'
+      'AG327'
+      'AG328'
+      'AG329'
+      'AG330'
+      'AG331'
+      'AG332'
+      'AG333'
+      'AG334'
+      'AG335'
+      'AG336'
+      'AG337'
+      'AG338'
+      'AG339'
+      'AG340'
+      'AG341'
+      'AG342'
+      'AG343'
+      'AG344'
+      'AG345'
+      'AG346'
+      'AG347'
+      'AG348'
+      'AG349'
+      'AG350'
+      'AG351'
+      'AG352'
+      'PG353'
+      'PG354'
+      'PG355'
+      'PG356'
+      'PG357'
+      'PG358'
+      'PG359'
+      'PG360'
+      'PG361'
+      'PG362'
+      'PG363'
+      'PG364'
+      'PG365'
+      'PG366'
+      'PG367'
+      'PG368'
+      'PG369'
+      'PG370'
+      'PG371'
+      'PG372'
+      'PG373'
+      'PG374'
+      'PG375'
+      'PG376'
+      'PG377'
+      'AG378'
+      'PG379'
+      'PG380'
+      'PG381'
+      'PG382'
+      'PG383'
+      'PG384'
+      'AG385'
+      'AG386'
+      'AG387'
+      'AG388'
+      'AG389'
+      'AG390'
+      'AG391'
+      'AG392'
+      'PG393'
+      'PG394'
+      'PG395'
+      'PG396'
+      'PG397'
+      'PG398'
+      'PG399'
+      'PG400'
+      'RM401'
+      'RM402'
+      'RM403'
+      'RM404'
+      'RM405'
+      'RM406'
+      'RM407'
+      'RM408'
+      'RM409'
+      'RM410'
+      'RM411'
+      'RM412'
+      };
+    
   case 'yokogawa440_planar'
     % this should be consistent with read_yokogawa_header, with
     % ft_channelselection and with yokogawa2grad
-    label = cell(440,2);
-    for i=1:440
-        if size(find(meg_zaxis+1==i),2)
-            label{i,1} = sprintf('AG%03d_dH',    i);
-            label{i,2} = sprintf('AG%03d_dV',    i);
-        else
-            label{i,1} = sprintf('PG%03d_dH',    i);
-            label{i,2} = sprintf('PG%03d_dV',    i);
-        end
-    end
-
+    label = {
+      'AG001_dH'   'AG001_dV'
+      'AG002_dH'   'AG002_dV'
+      'AG003_dH'   'AG003_dV'
+      'AG004_dH'   'AG004_dV'
+      'AG005_dH'   'AG005_dV'
+      'AG006_dH'   'AG006_dV'
+      'AG007_dH'   'AG007_dV'
+      'AG008_dH'   'AG008_dV'
+      'AG009_dH'   'AG009_dV'
+      'AG010_dH'   'AG010_dV'
+      'AG011_dH'   'AG011_dV'
+      'AG012_dH'   'AG012_dV'
+      'AG013_dH'   'AG013_dV'
+      'AG014_dH'   'AG014_dV'
+      'AG015_dH'   'AG015_dV'
+      'AG016_dH'   'AG016_dV'
+      'AG017_dH'   'AG017_dV'
+      'AG018_dH'   'AG018_dV'
+      'AG019_dH'   'AG019_dV'
+      'AG020_dH'   'AG020_dV'
+      'AG021_dH'   'AG021_dV'
+      'AG022_dH'   'AG022_dV'
+      'AG023_dH'   'AG023_dV'
+      'AG024_dH'   'AG024_dV'
+      'AG025_dH'   'AG025_dV'
+      'AG026_dH'   'AG026_dV'
+      'AG027_dH'   'AG027_dV'
+      'AG028_dH'   'AG028_dV'
+      'AG029_dH'   'AG029_dV'
+      'AG030_dH'   'AG030_dV'
+      'AG031_dH'   'AG031_dV'
+      'AG032_dH'   'AG032_dV'
+      'AG065_dH'   'AG065_dV'
+      'AG066_dH'   'AG066_dV'
+      'AG067_dH'   'AG067_dV'
+      'AG068_dH'   'AG068_dV'
+      'AG069_dH'   'AG069_dV'
+      'AG070_dH'   'AG070_dV'
+      'AG071_dH'   'AG071_dV'
+      'AG072_dH'   'AG072_dV'
+      'AG073_dH'   'AG073_dV'
+      'AG074_dH'   'AG074_dV'
+      'AG075_dH'   'AG075_dV'
+      'AG076_dH'   'AG076_dV'
+      'AG077_dH'   'AG077_dV'
+      'AG078_dH'   'AG078_dV'
+      'AG079_dH'   'AG079_dV'
+      'AG080_dH'   'AG080_dV'
+      'AG081_dH'   'AG081_dV'
+      'AG082_dH'   'AG082_dV'
+      'AG083_dH'   'AG083_dV'
+      'AG084_dH'   'AG084_dV'
+      'AG085_dH'   'AG085_dV'
+      'AG086_dH'   'AG086_dV'
+      'AG087_dH'   'AG087_dV'
+      'AG088_dH'   'AG088_dV'
+      'AG089_dH'   'AG089_dV'
+      'AG090_dH'   'AG090_dV'
+      'AG091_dH'   'AG091_dV'
+      'AG092_dH'   'AG092_dV'
+      'AG093_dH'   'AG093_dV'
+      'AG094_dH'   'AG094_dV'
+      'AG095_dH'   'AG095_dV'
+      'AG096_dH'   'AG096_dV'
+      'AG122_dH'   'AG122_dV'
+      'AG129_dH'   'AG129_dV'
+      'AG130_dH'   'AG130_dV'
+      'AG131_dH'   'AG131_dV'
+      'AG132_dH'   'AG132_dV'
+      'AG133_dH'   'AG133_dV'
+      'AG134_dH'   'AG134_dV'
+      'AG135_dH'   'AG135_dV'
+      'AG136_dH'   'AG136_dV'
+      'AG137_dH'   'AG137_dV'
+      'AG138_dH'   'AG138_dV'
+      'AG139_dH'   'AG139_dV'
+      'AG140_dH'   'AG140_dV'
+      'AG141_dH'   'AG141_dV'
+      'AG142_dH'   'AG142_dV'
+      'AG143_dH'   'AG143_dV'
+      'AG144_dH'   'AG144_dV'
+      'AG145_dH'   'AG145_dV'
+      'AG146_dH'   'AG146_dV'
+      'AG147_dH'   'AG147_dV'
+      'AG148_dH'   'AG148_dV'
+      'AG149_dH'   'AG149_dV'
+      'AG150_dH'   'AG150_dV'
+      'AG151_dH'   'AG151_dV'
+      'AG152_dH'   'AG152_dV'
+      'AG153_dH'   'AG153_dV'
+      'AG154_dH'   'AG154_dV'
+      'AG155_dH'   'AG155_dV'
+      'AG156_dH'   'AG156_dV'
+      'AG157_dH'   'AG157_dV'
+      'AG158_dH'   'AG158_dV'
+      'AG159_dH'   'AG159_dV'
+      'AG160_dH'   'AG160_dV'
+      'AG161_dH'   'AG161_dV'
+      'AG162_dH'   'AG162_dV'
+      'AG163_dH'   'AG163_dV'
+      'AG164_dH'   'AG164_dV'
+      'AG165_dH'   'AG165_dV'
+      'AG193_dH'   'AG193_dV'
+      'AG194_dH'   'AG194_dV'
+      'AG195_dH'   'AG195_dV'
+      'AG196_dH'   'AG196_dV'
+      'AG197_dH'   'AG197_dV'
+      'AG198_dH'   'AG198_dV'
+      'AG199_dH'   'AG199_dV'
+      'AG200_dH'   'AG200_dV'
+      'AG201_dH'   'AG201_dV'
+      'AG202_dH'   'AG202_dV'
+      'AG203_dH'   'AG203_dV'
+      'AG204_dH'   'AG204_dV'
+      'AG205_dH'   'AG205_dV'
+      'AG206_dH'   'AG206_dV'
+      'AG207_dH'   'AG207_dV'
+      'AG208_dH'   'AG208_dV'
+      'AG209_dH'   'AG209_dV'
+      'AG210_dH'   'AG210_dV'
+      'AG211_dH'   'AG211_dV'
+      'AG212_dH'   'AG212_dV'
+      'AG213_dH'   'AG213_dV'
+      'AG214_dH'   'AG214_dV'
+      'AG215_dH'   'AG215_dV'
+      'AG216_dH'   'AG216_dV'
+      'AG217_dH'   'AG217_dV'
+      'AG218_dH'   'AG218_dV'
+      'AG219_dH'   'AG219_dV'
+      'AG220_dH'   'AG220_dV'
+      'AG221_dH'   'AG221_dV'
+      'AG222_dH'   'AG222_dV'
+      'AG223_dH'   'AG223_dV'
+      'AG224_dH'   'AG224_dV'
+      'AG225_dH'   'AG225_dV'
+      'AG226_dH'   'AG226_dV'
+      'AG227_dH'   'AG227_dV'
+      'AG257_dH'   'AG257_dV'
+      'AG258_dH'   'AG258_dV'
+      'AG259_dH'   'AG259_dV'
+      'AG260_dH'   'AG260_dV'
+      'AG261_dH'   'AG261_dV'
+      'AG262_dH'   'AG262_dV'
+      'AG263_dH'   'AG263_dV'
+      'AG264_dH'   'AG264_dV'
+      'AG265_dH'   'AG265_dV'
+      'AG266_dH'   'AG266_dV'
+      'AG267_dH'   'AG267_dV'
+      'AG268_dH'   'AG268_dV'
+      'AG269_dH'   'AG269_dV'
+      'AG270_dH'   'AG270_dV'
+      'AG271_dH'   'AG271_dV'
+      'AG272_dH'   'AG272_dV'
+      'AG273_dH'   'AG273_dV'
+      'AG274_dH'   'AG274_dV'
+      'AG275_dH'   'AG275_dV'
+      'AG276_dH'   'AG276_dV'
+      'AG277_dH'   'AG277_dV'
+      'AG278_dH'   'AG278_dV'
+      'AG279_dH'   'AG279_dV'
+      'AG280_dH'   'AG280_dV'
+      'AG281_dH'   'AG281_dV'
+      'AG282_dH'   'AG282_dV'
+      'AG283_dH'   'AG283_dV'
+      'AG284_dH'   'AG284_dV'
+      'AG285_dH'   'AG285_dV'
+      'AG286_dH'   'AG286_dV'
+      'AG287_dH'   'AG287_dV'
+      'AG288_dH'   'AG288_dV'
+      'AG321_dH'   'AG321_dV'
+      'AG322_dH'   'AG322_dV'
+      'AG323_dH'   'AG323_dV'
+      'AG324_dH'   'AG324_dV'
+      'AG325_dH'   'AG325_dV'
+      'AG326_dH'   'AG326_dV'
+      'AG327_dH'   'AG327_dV'
+      'AG328_dH'   'AG328_dV'
+      'AG329_dH'   'AG329_dV'
+      'AG330_dH'   'AG330_dV'
+      'AG331_dH'   'AG331_dV'
+      'AG332_dH'   'AG332_dV'
+      'AG333_dH'   'AG333_dV'
+      'AG334_dH'   'AG334_dV'
+      'AG335_dH'   'AG335_dV'
+      'AG336_dH'   'AG336_dV'
+      'AG337_dH'   'AG337_dV'
+      'AG338_dH'   'AG338_dV'
+      'AG339_dH'   'AG339_dV'
+      'AG340_dH'   'AG340_dV'
+      'AG341_dH'   'AG341_dV'
+      'AG342_dH'   'AG342_dV'
+      'AG343_dH'   'AG343_dV'
+      'AG344_dH'   'AG344_dV'
+      'AG345_dH'   'AG345_dV'
+      'AG346_dH'   'AG346_dV'
+      'AG347_dH'   'AG347_dV'
+      'AG348_dH'   'AG348_dV'
+      'AG349_dH'   'AG349_dV'
+      'AG350_dH'   'AG350_dV'
+      'AG351_dH'   'AG351_dV'
+      'AG352_dH'   'AG352_dV'
+      'AG378_dH'   'AG378_dV'
+      'AG385_dH'   'AG385_dV'
+      'AG386_dH'   'AG386_dV'
+      'AG387_dH'   'AG387_dV'
+      'AG388_dH'   'AG388_dV'
+      'AG389_dH'   'AG389_dV'
+      'AG390_dH'   'AG390_dV'
+      'AG391_dH'   'AG391_dV'
+      'AG392_dH'   'AG392_dV'
+      };
+    label = label(:);
+    
   case 'electrode'
     % there is no default set of electrode labels for all possible EEG systems
     % but nevertheless the requested input type 'electrode' should not result in an error
     label = {};
-
+    
   otherwise
     error('the requested sensor type is not supported');
 end
