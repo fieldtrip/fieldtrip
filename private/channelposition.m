@@ -45,14 +45,14 @@ switch ft_senstype(sens)
     sens.ori = sens.ori(used,:);
     sens.tra = sens.tra(:,used);
 
-    % compute distances from the center
-    dist = sqrt(sum((sens.pnt - repmat(mean(sens.pnt), size(sens.pnt, 1), 1)).^2, 2));
+    % compute distances from the center of the helmet
+    center = mean(sens.pnt(sel,:));
+    dist   = sqrt(sum((sens.pnt - repmat(center, size(sens.pnt, 1), 1)).^2, 2));
 
-    % put the corresponding distances instead of non-zero tra entries
-    
+    % put the corresponding distances instead of non-zero tra entries    
     maxval = repmat(max(abs(sens.tra),[],2), [1 size(sens.tra,2)]);
     maxval = min(maxval, ones(size(maxval))); %a value > 1 sometimes leads to problems; this is an empirical fix
-    dist = (abs(sens.tra)>0.95.*maxval).*repmat(dist', size(sens.tra, 1), 1);
+    dist = (abs(sens.tra)>0.9.*maxval).*repmat(dist', size(sens.tra, 1), 1);
     
     % put nans instead of the zero entries
     dist(~dist) = inf;
