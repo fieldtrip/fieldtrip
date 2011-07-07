@@ -1,4 +1,4 @@
-function [c, v, n] = ft_connectivity_corr(input, varargin)
+function [c, v, n1] = ft_connectivity_corr(input, varargin)
 
 % FT_CONNECTIVITY_CORR computes correlation or coherence from a data-matrix
 % containing a covariance or cross-spectral density
