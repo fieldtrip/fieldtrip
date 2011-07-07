@@ -158,7 +158,20 @@ if isfield(data, 'grad') || (isfield(data, 'elec') && isfield(data.elec, 'tra'))
   else
     sensfield = 'elec';
   end
-  data.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'keepunused', keepunused, 'balancename', 'invcomp');
+  % keepunused = 'yes' is required to get back e.g. reference or otherwise
+  % unused sensors in the sensor description. the unused components need to
+  % be removed in a second step
+  tmp = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'yes', 'balancename', 'invcomp');
+  
+  % remove the unused components from the balancing and from the tra
+  [junk, remove]    = match_str(comp.label, tmp.label);
+  tmp.tra(remove,:) = [];
+  tmp.label(remove) = [];
+  [junk, remove]    = match_str(comp.label, tmp.balance.invcomp.labelnew);
+  tmp.balance.invcomp.tra(remove, :)   = [];
+  tmp.balance.invcomp.labelnew(remove) = [];
+  data.(sensfield)  = tmp;
+  %data.(sensfield)  = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'no', 'balancename', 'invcomp');
 else
   %warning('the gradiometer description does not match the data anymore');
 end
