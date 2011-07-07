@@ -173,7 +173,11 @@ fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbour
 if strcmp(cfg.feedback, 'yes')
     % give some graphical feedback
     cfg.neighbours = neighbours;
-    ft_neighbourplot(cfg);
+    if exist('data', 'var')
+        ft_neighbourplot(cfg, data);
+    else
+        ft_neighbourplot(cfg);
+    end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
