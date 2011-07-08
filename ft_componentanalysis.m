@@ -85,6 +85,7 @@ cfg.channel      = ft_getopt(cfg, 'channel',      'all');
 cfg.numcomponent = ft_getopt(cfg, 'numcomponent', 'all');
 cfg.inputfile    = ft_getopt(cfg, 'inputfile',    []);
 cfg.outputfile   = ft_getopt(cfg, 'outputfile',   []);
+cfg.normalisesphere = ft_getopt(cfg, 'normalisesphere', 'yes');
 
 % load optional given inputfile as data
 hasdata = (nargin>1);
@@ -263,11 +264,21 @@ switch cfg.method
     % construct key-value pairs for the optional arguments
     optarg = ft_cfg2keyval(cfg.runica);
     [weights, sphere] = runica(dat, optarg{:});
+
+    % scale the sphering matrix to unit norm
+    if strcmp(cfg.normalisesphere, 'yes'),
+      sphere = sphere./norm(sphere);
+    end
     
   case 'binica'
     % construct key-value pairs for the optional arguments
     optarg = ft_cfg2keyval(cfg.binica);
     [weights, sphere] = binica(dat, optarg{:});
+    
+    % scale the sphering matrix to unit norm
+    if strcmp(cfg.normalisesphere, 'yes'),
+      sphere = sphere./norm(sphere);
+    end
     
   case 'jader'
     weights = jader(dat);
