@@ -33,7 +33,10 @@ vol.orig = ascii;
 if isfield(ascii, 'MultiSphere_Data')
   chans = fieldnames(ascii.MultiSphere_Data);
   % remove the fields SEARCH_RADIUS and HEADSHAPE_FILE
-  chans = chans(~(strcmp(chans, 'SEARCH_RADIUS') | strcmp(chans, 'HEADSHAPE_FILE')));
+  chans = chans(~strcmp(chans, 'SEARCH_RADIUS'));
+  chans = chans(~strcmp(chans, 'HEADSHAPE_FILE'));
+  chans = chans(~strcmp(chans, 'SURFACE_TYPE'));
+  chans = chans(~strcmp(chans, 'HEADPOS'));
   for i=1:length(chans)
     tmp = getfield(ascii.MultiSphere_Data, chans{i});
     vol.label{i} = chans{i};
