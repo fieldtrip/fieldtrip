@@ -87,7 +87,7 @@ if ~isempty(pchanindx),
   A  = zeros(newsiz);
   
   % FIXME this only works for data without time dimension
-  if numel(siz)>4, error('this only works for data without time'); end
+  if numel(siz)==5 && siz(5)>1, error('this only works for data without time'); end
   for j = 1:siz(1) %rpt loop
     AA = reshape(input(j, chan,  chan, : ), [nchan  nchan  siz(4:end)]);
     AB = reshape(input(j, chan,  pchan,: ), [nchan  npchan siz(4:end)]);
@@ -109,7 +109,7 @@ if (length(strfind(dimord, 'chan'))~=2 || length(strfind(dimord, 'pos'))>0) && ~
   
   outsum = zeros(siz(2:end));
   outssq = zeros(siz(2:end));
-  
+  outcnt = zeros(siz(2:end));
   ft_progress('init', feedback, 'computing metric...');
   for j = 1:siz(1)
     ft_progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
@@ -120,8 +120,10 @@ if (length(strfind(dimord, 'chan'))~=2 || length(strfind(dimord, 'pos'))>0) && ~
     else
       denom = 1;
     end
-    outsum = outsum + complexeval(reshape(input(j,:,:,:,:), siz(2:end))./denom, cmplx);
-    outssq = outssq + complexeval(reshape(input(j,:,:,:,:), siz(2:end))./denom, cmplx).^2;
+    tmp    = complexeval(reshape(input(j,:,:,:,:), siz(2:end))./denom, cmplx);
+    outsum = outsum + tmp;
+    outssq = outssq + tmp.^2;
+    outcnt = outcnt + double(~isnan(tmp)); 
   end
   ft_progress('close');
   
@@ -129,6 +131,7 @@ elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2,
   % crossterms are described by chan_chan_therest
   outsum = zeros(siz(2:end));
   outssq = zeros(siz(2:end));
+  outcnt = zeros(siz(2:end));
   ft_progress('init', feedback, 'computing metric...');
   for j = 1:siz(1)
     ft_progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
@@ -146,25 +149,29 @@ elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2,
       denom = 1;
     end
     tmp    = complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./denom, cmplx); % added this for nan support marvin
-    tmp(isnan(tmp)) = 0; % added for nan support
+    %tmp(isnan(tmp)) = 0; % added for nan support
     outsum = outsum + tmp;
     outssq = outssq + tmp.^2;
+    outcnt = outcnt + double(~isnan(tmp)); 
   end
   ft_progress('close');
   
 end
-n  = siz(1);
-n1 = shiftdim(sum(~isnan(input),1),1);
-c  = outsum./n1; % added this for nan support marvin
+%n  = siz(1);
+%n1 = shiftdim(sum(~isnan(input),1),1);
+%c  = outsum./n1; % added this for nan support marvin
+c = outsum./outcnt;
 
 % correct the variance estimate for the under-estimation introduced by the jackknifing
 if n>1,
   if hasjack
-    bias = (n1-1).^2; % added this for nan support marvin
+    %bias = (n1-1).^2; % added this for nan support marvin
+    bias = (outcnt-1).^2;
   else
     bias = 1;
   end
-  v = bias.*(outssq - (outsum.^2)./n1)./(n1 - 1); % added this for nan support marvin
+  %v = bias.*(outssq - (outsum.^2)./n1)./(n1 - 1); % added this for nan support marvin
+  v = bias.*(outssq - (outsum.^2)./outcnt)./(outcnt-1);
 else
   v = [];
 end
