@@ -75,12 +75,6 @@ CFLAGS	 = $(INCPATH) -fPIC -Wall -pthread
 PLATFORM := $(shell gcc -dumpmachine)
 
 # override the defaults, required for cross compilation (e.g. 32 bit MATLAB on 64 bit OS)
-ifeq "$(PLATFORM)" "i386-redhat-linux"
-endif
-
-ifeq "$(PLATFORM)" "x86_64-redhat-linux"
-endif
-
 ifeq "$(PLATFORM)" "i686-apple-darwin9"
 ifeq "$(MATLABARCH)" "maci"
     CFLAGS := $(CFLAGS) -arch i386

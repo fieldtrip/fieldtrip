@@ -1,3 +1,6 @@
+#ifndef PLATFORM_INCLUDES_H
+#define PLATFORM_INCLUDES_H
+
 #include "platform.h"
 #include "compiler.h"
 
@@ -68,5 +71,17 @@ typedef unsigned __int64  uint64_t;
 #include <windows.h>
 
 #endif /* compiler */
-
 #endif /* platform */
+
+#if defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64)
+#if defined(COMPILER_MINGW)
+	#include "stdint.h"
+#else
+	#include "win32/stdint.h"
+#endif
+#else
+	#include <stdint.h>
+	#include <syslog.h>
+#endif
+
+#endif /* PLATFORM_INCLUDES_H */

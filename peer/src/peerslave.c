@@ -294,22 +294,23 @@ int main(int argc, char *argv[]) {
 				} /* while(1) for getopt */
 		} /* if config file or getopt */
 
-		/* although the configuration file allows setting the verbose for each peer */
-		/* the first ocurrence determines what will be used the parent and all children */
-		syslog_level = atol(pconf->verbose);
-
-		DEBUG(LOG_EMERG,  "LOG_EMERG");
-		DEBUG(LOG_ALERT,  "LOG_ALERT");
-		DEBUG(LOG_CRIT,   "LOG_CRIT");
-		DEBUG(LOG_ERR,    "LOG_ERR");
-		DEBUG(LOG_WARNING,"LOG_WARNING");
-		DEBUG(LOG_NOTICE, "LOG_NOTICE");
-		DEBUG(LOG_INFO,   "LOG_INFO");
-		DEBUG(LOG_DEBUG,  "LOG_DEBUG");
-
 #if SYSLOG == 1
 		if (pconf->verbose)
 		{
+
+				/* although the configuration file allows setting the verbose for each peer */
+				/* the first ocurrence determines what will be used the parent and all children */
+				syslog_level = atol(pconf->verbose);
+
+				DEBUG(LOG_EMERG,  "LOG_EMERG");
+				DEBUG(LOG_ALERT,  "LOG_ALERT");
+				DEBUG(LOG_CRIT,   "LOG_CRIT");
+				DEBUG(LOG_ERR,    "LOG_ERR");
+				DEBUG(LOG_WARNING,"LOG_WARNING");
+				DEBUG(LOG_NOTICE, "LOG_NOTICE");
+				DEBUG(LOG_INFO,   "LOG_INFO");
+				DEBUG(LOG_DEBUG,  "LOG_DEBUG");
+
 				switch (syslog_level) {
 						case 0:
 								setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT) | LOG_MASK(LOG_ERR) | LOG_MASK(LOG_WARNING) | LOG_MASK(LOG_NOTICE) | LOG_MASK(LOG_INFO) | LOG_MASK(LOG_DEBUG));
@@ -617,6 +618,7 @@ int main(int argc, char *argv[]) {
 				DEBUG(LOG_NOTICE, "started tcpserver thread");
 		}
 
+/*
 #if defined (PLATFORM_LINUX)
 		if ((rc = pthread_create(&udsserverThread, NULL, udsserver, (void *)NULL))>0) {
 				PANIC("failed to start udsserver thread\n");
@@ -625,6 +627,7 @@ int main(int argc, char *argv[]) {
 				DEBUG(LOG_NOTICE, "started udsserver thread");
 		}
 #endif
+*/
 
 		if ((rc = pthread_create(&announceThread, NULL, announce, (void *)NULL))>0) {
 				PANIC("failed to start announce thread\n");

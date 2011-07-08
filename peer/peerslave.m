@@ -151,7 +151,7 @@ threads = true;
 threads = threads && peer('announce', 'status');
 threads = threads && peer('discover', 'status');
 threads = threads && peer('expire',   'status');
-% threads = threads && peer('tcpserver', 'status');
+threads = threads && peer('tcpserver', 'status');
 % threads = threads && peer('udsserver', 'status');
 
 if ~threads

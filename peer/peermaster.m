@@ -117,7 +117,7 @@ threads = threads && peer('announce', 'status');
 threads = threads && peer('discover', 'status');
 threads = threads && peer('expire',   'status');
 threads = threads && peer('tcpserver', 'status');
-threads = threads && peer('udsserver', 'status');
+% threads = threads && peer('udsserver', 'status');
 
 if ~threads
   % start the maintenance threads
@@ -126,7 +126,7 @@ if ~threads
   peer('discover',  'start');
   peer('expire',    'start');
   peer('tcpserver', 'start');
-  peer('udsserver', 'start');
+  % peer('udsserver', 'start');
   warning(ws);
 end
 

@@ -3,21 +3,10 @@
 #define PEER_H
 
 #include <pthread.h>
-#include "platform_includes.h"
-#if defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64)
-
-	#if defined(COMPILER_MINGW)
-		#include "stdint.h"
-	#else
-		#include "win32/stdint.h"
-	#endif
-#else
-#include <stdint.h>
-#include <syslog.h>
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "platform_includes.h"
 
 #ifndef POLLRDNORM
 #define POLLRDNORM POLLIN

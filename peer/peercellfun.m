@@ -450,18 +450,18 @@ while ~all(submitted) || ~all(collected)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   % this is only a warning, no action is taken here
-  % sel = find((toc(stopwatch)-lastseen)>30);
+  % sel = find((toc(stopwatch)-lastseen)>60);
   % for i=1:length(sel)
-  %   warning('job %d has not been seen for 30 seconds\n', sel(i));
+  %   warning('job %d has not been seen for 60 seconds\n', sel(i));
   % end
 
-  % search for jobs that were submitted but that are still not busy after 30 seconds
+  % search for jobs that were submitted but that are still not busy after 60 seconds
   % this happens if the peerslave is not able to get a matlab license
   elapsed = toc(stopwatch) - submittime;
   elapsed(~submitted)       = 0;
   elapsed(collected)        = 0;
   elapsed(~isinf(lastseen)) = 0; % once started there is no reason to resubmit "because it takes too long to get started"
-  sel = find(elapsed>30);
+  sel = find(elapsed>60);
 
   for i=1:length(sel)
     warning('resubmitting job %d because it takes too long to get started', sel(i));
@@ -496,7 +496,7 @@ while ~all(submitted) || ~all(collected)
   estimated = 3*timreq;
 
   % add some time to allow the matlab engine to start
-  estimated = estimated + 30;
+  estimated = estimated + 60;
 
   % test whether one of the submitted jobs should be resubmitted
   elapsed = toc(stopwatch) - submittime;
