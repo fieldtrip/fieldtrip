@@ -1,4 +1,4 @@
-function [c, v, n1] = ft_connectivity_corr(input, varargin)
+function [c, v, outcnt] = ft_connectivity_corr(input, varargin)
 
 % FT_CONNECTIVITY_CORR computes correlation or coherence from a data-matrix
 % containing a covariance or cross-spectral density
@@ -157,7 +157,12 @@ elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2,
   ft_progress('close');
   
 end
-%n  = siz(1);
+
+n  = siz(1);
+if all(outcnt(:)==n)
+  outcnt = n;
+end
+
 %n1 = shiftdim(sum(~isnan(input),1),1);
 %c  = outsum./n1; % added this for nan support marvin
 c = outsum./outcnt;
