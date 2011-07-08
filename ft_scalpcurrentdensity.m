@@ -90,6 +90,8 @@ if ~isfield(cfg, 'trials'),        cfg.trials = 'all';       end
 if ~isfield(cfg, 'inputfile'),     cfg.inputfile = [];       end
 if ~isfield(cfg, 'outputfile'),    cfg.outputfile = [];      end
 
+if strcmp(cfg.method, 'hjorth'),   cfg = ft_checkconfig(cfg, 'required', {'neighbours'}); end
+
 % load optional given inputfile as data
 hasdata = (nargin>1);
 if ~isempty(cfg.inputfile)
@@ -123,9 +125,7 @@ elseif isfield(data, 'elec')
   fprintf('using electrodes specified in the data\n');
   elec = data.elec;
 elseif isfield(cfg, 'layout')
-  fprintf('using the 2-D layout to determine the neighbours\n');
-  cfg.layout = ft_prepare_layout(cfg);
-  cfg.neighbours = ft_neighbourselection(cfg, data);
+  fprintf('using the 2-D layout to determine electrode position\n');   
   % create a dummy electrode structure, this is needed for channel selection
   elec = [];
   elec.label  = cfg.layout.label;
@@ -134,6 +134,7 @@ elseif isfield(cfg, 'layout')
 else
   error('electrode positions were not specified');
 end
+
 
 % remove all junk fields from the electrode array
 tmp = elec;
@@ -175,12 +176,6 @@ elseif strcmp(cfg.method, 'finite')
   elec = ft_apply_montage(elec, montage);
   
 elseif strcmp(cfg.method, 'hjorth')
-  % the Hjorth filter requires a specification of the neighbours
-  if ~isfield(cfg, 'neighbours')
-    tmpcfg      = [];
-    tmpcfg.elec = elec;
-    cfg.neighbours = ft_neighbourselection(tmpcfg, data);
-  end
   % convert the neighbourhood structure into a montage
   labelnew = {};
   labelorg = {};

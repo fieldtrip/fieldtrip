@@ -18,16 +18,20 @@ function ft_neighbourplot(cfg, data)
 %   cfg.grad          = structure with MEG gradiometer positions
 %   cfg.elecfile      = filename containing EEG electrode positions
 %   cfg.gradfile      = filename containing MEG gradiometer positions
-%   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT%
+%   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
+%   cfg.verbose       = 'yes' or 'no', if 'yes' then the plot callback will
+%                       include text output
 %
 % The following data fields may also be used by FT_NEIGHBOURSELECTION:
 %   data.elec     = structure with EEG electrode positions
 %   data.grad     = structure with MEG gradiometer positions
 %
 %
-% If cfg.neighbours is empty, the function calls ft_neighbourselection 
-% to compute channel neighbours. For any further information on this, 
-% please consult ft_neighbourselection
+% If cfg.neighbours is no defined or empty, the function calls 
+% ft_neighbourselection to compute channel neighbours. 
+%
+% See also FT_NEIGHBOURSELECTION
+
 
 % Copyright (C) 2011, Jörn M. Horschig, Robert Oostenveld
 %
@@ -56,6 +60,12 @@ if nargin < 3
     else
         neighbours = ft_neighbourselection(cfg, data);
     end
+end
+
+if ~isfield(cfg, 'verbose')
+    cfg.verbose = 'no';
+elseif strcmp(cfg.verbose, 'yes')    
+    cfg.verbose = true;
 end
 
 % get the the grad or elec if not present in the data
@@ -163,6 +173,10 @@ title('[Click on a sensor to see its label]');
         curSensId   = get(gcbo, 'UserData');
         
         title(['Selected channel: ' neighbours{curSensId}.label]);
+        if cfg.verbose 
+            fprintf('Selected channel: %s\n', neighbours{curSensId}.label); 
+        end
+        
         set(hs(curSensId), 'MarkerFaceColor', 'g');
         set(hs(lastSensId), 'MarkerFaceColor', 'k');
         

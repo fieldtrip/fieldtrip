@@ -1,8 +1,15 @@
 function neighbours = ft_neighbourselection(cfg,data)
 
-% FT_NEIGHBOURSELECTION finds the neighbours of the channels on the basis of a
-% minimum neighbourhood distance (in cfg.neighbourdist). The positions of
-% the channel are specified in a gradiometer or electrode configuration or
+% FT_NEIGHBOURSELECTION finds the neighbours of the channels based on three 
+% different methods. Using the 'distance'-method, neighbourselection is
+% based on a minimum neighbourhood distance (in cfg.neighbourdist). The
+% 'triangulation'-method calculates a triangulation based on a
+% two-dimenstional projection of the sensor position. The 'template'-method
+% loads a default template for the given data type. Neighbourselection
+% should be verified using cfg.feedback ='yes' or by calling
+% ft_neighbourplot
+%
+% The positions of the channel are specified in a gradiometer or electrode configuration or
 % from a layout.
 % This configuration can be passed in three ways:
 %  (1) in a configuration field,
@@ -13,7 +20,7 @@ function neighbours = ft_neighbourselection(cfg,data)
 %   neighbours = ft_neighbourselection(cfg, data)
 %
 % The configuration can contain
-%   cfg.method        = 'distance' or 'triangulation' (default = 'distance')
+%   cfg.method        = 'distance', 'triangulation' or 'template' (default = 'distance')
 %   cfg.neighbourdist = number, maximum distance between neighbouring sensors (only for 'distance')
 %   cfg.elec          = structure with EEG electrode positions
 %   cfg.grad          = structure with MEG gradiometer positions
@@ -37,8 +44,11 @@ function neighbours = ft_neighbourselection(cfg,data)
 %        neighbours{3}.neighblabel = {'Cz', 'P4', 'P4P', 'Oz', 'P3P', 'P3'};
 %        etc.
 %        (Note that a channel is not considered to be a neighbour of itself.)
+%
+% See also FT_NEIGHBOURPLOT
 
-% Copyright (C) 2006-2008, Eric Maris, Robert Oostenveld
+
+% Copyright (C) 2006-2011, Eric Maris, Jörn M. Horschig, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -82,7 +92,7 @@ if strcmp(cfg.method, 'template')
         cfg.template = [strtok(cfg.layout, '.') '_neighb.mat'];
     end
     if ~exist(cfg.template, 'file')
-        error('Template file could not be found!');
+        error('Template file could not be found - please check spelling or contact jm.horschig(at)donders.ru.nl if you want to create and share your own template!');
     end
     load(cfg.template);
     fprintf('Successfully loaded neighbour structure from %s\n', cfg.template);
