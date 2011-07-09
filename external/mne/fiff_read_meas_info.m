@@ -223,8 +223,9 @@ if length(isotrak) == 1
     end
 end
 for k = 1:length(dig)
-    dig(p).coord_frame = coord_frame;
+    dig(k).coord_frame = coord_frame;
 end
+
 if exist('dig_trans','var')
     if (dig_trans.from ~= coord_frame && dig_trans.to ~= coord_frame)
         clear('dig_trans');

@@ -4,9 +4,9 @@ function [res] = mne_transform_source_space_to(src,dest,trans)
 %
 % Transform source space data to the desired coordinate system
 %
-% fname      - The name of the file
-% include    - Include these channels (optional)
-% exclude    - Exclude these channels (optional)
+% src        - The source space to transform
+% dest       - The id of the destination coordinate system (FIFFV_COORD_...)
+% trans      - The coordinate transformation structure to use
 %
 
 %

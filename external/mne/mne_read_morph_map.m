@@ -35,14 +35,12 @@ end
 %
 %  Does the file exist
 %
-reverse=false;
 name = sprintf('%s/morph-maps/%s-%s-morph.fif',subjects_dir,from,to);
 if ~exist(name,'file')
     name = sprintf('%s/morph-maps/%s-%s-morph.fif',subjects_dir,to,from);
     if ~exist(name,'file')
         error(me,'The requested morph map does not exist');
     end
-    reverse=true;
 end
 %
 %    Open it

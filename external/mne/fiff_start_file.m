@@ -27,10 +27,10 @@ function [fid] = fiff_start_file(name)
 
 me='MNE:fiff_start_file';
 if nargin ~= 1
-        error(me,'File name required as an argument');
+    error(me,'File name required as an argument');
 end
 
-[fid,message] = fopen(name,'w','ieee-be');
+[fid,message] = fopen(name,'w+','ieee-be');
 if fid < 0
     error(me,message);
 end
