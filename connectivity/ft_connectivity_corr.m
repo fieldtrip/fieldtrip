@@ -94,7 +94,8 @@ if ~isempty(pchanindx),
     BA = reshape(input(j, pchan, chan, : ), [npchan nchan  siz(4:end)]);
     BB = reshape(input(j, pchan, pchan, :), [npchan npchan siz(4:end)]);
     for k = 1:siz(4) %freq loop
-      A(j,:,:,k) = AA(:,:,k) - AB(:,:,k)*pinv(BB(:,:,k))*BA(:,:,k);
+      %A(j,:,:,k) = AA(:,:,k) - AB(:,:,k)*pinv(BB(:,:,k))*BA(:,:,k);
+      A(j,:,:,k) = AA(:,:,k) - AB(:,:,k)/(BB(:,:,k))*BA(:,:,k);
     end
   end
   input = A;
