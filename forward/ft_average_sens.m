@@ -160,11 +160,15 @@ switch nfid
     afiducials = ft_transform_headshape(tra\tra1, fiducials);
     
   case nsens    
+    hspnt = [];
       
     for i=1:nsens
       hs = strmatch('headshape', fiducials(i).fid.label);
-      fiducials(i).fid.label(hs)  = [];
-      fiducials(i).fid.pnt(hs, :) = [];
+      fiducials(i).fid.label(hs)  = [];      
+      
+      fiducials(i).pnt = [fiducials(i).pnt; fiducials(i).fid.pnt(hs, :)];
+      
+      fiducials(i).fid.pnt(hs, :) = [];      
       
       if i == 1
           fidpnt = zeros(size(fiducials(1).fid.pnt));
@@ -179,11 +183,32 @@ switch nfid
       cfiducials = ft_transform_headshape(tra1, fiducials(i));
       
       fidpnt = fidpnt + weights(i).*cfiducials.fid.pnt;
+      
+      hspnt = [hspnt; cfiducials.pnt];
     end
     
-    cfiducials.pnt = [];
+    cfiducials.pnt = hspnt;
     cfiducials.fid.pnt = fidpnt;
     afiducials = ft_transform_headshape(inv(tra), cfiducials);
+    
+    afiducials = ft_convert_units(afiducials);
+    
+    % remove redundant headshape points (3 cm precision)
+    tolerance = 3;
+    switch afiducials.unit
+        case 'mm'
+            c = 0.1;
+        case 'cm';
+            c = 1;
+        case 'dm';
+            c = 10;
+        case 'm'
+            c = 100;
+    end
+    
+    [upnt, ind] = unique(round(c*afiducials.pnt/tolerance), 'rows');
+    
+    afiducials.pnt = afiducials.pnt(ind, :);
     
   otherwise
     error('there should be either one set of fiducials or a set per sensor array');
