@@ -109,7 +109,7 @@ Nsens  = length(sens.label);
 repair = eye(Nchans,Nchans);
 [badindx] = match_str(data.label, cfg.badchannel);
 
-for k=badindx
+for k=badindx'
     fprintf('repairing channel %s\n', data.label{k});
     repair(k,k) = 0;
     l = connectivityMatrix(k, :);
