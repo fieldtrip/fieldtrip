@@ -13,7 +13,17 @@
 
 #include "mex.h"
 #include "matrix.h"
+#include "compiler.h"
+
+#if defined (COMPILER_LCC)
+#include <string.h>
+#define strcasecmp strcmpi
+#elif defined (COMPILER_MSVC)
+#include <string.h>
+#define strcasecmp stricmp
+#else
 #include <strings.h>
+#endif
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		int num, i;
