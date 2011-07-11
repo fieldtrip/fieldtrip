@@ -4,6 +4,8 @@
 % apart from using FT_CONNECTIVITYANALYSIS
 % it also relies on FT_CONNECTIVITYSIMULATION, FT_FREQANALYSIS, FT_MVARANALYSIS
 
+clear all;
+
 % first create some data
 %--------------------------------------------------------
 % make 3 channels with no direct link between 1 and 2
@@ -77,18 +79,13 @@ cfgc.method    = 'total_interdependence';
 c9             = ft_connectivityanalysis(cfgc, freq);
 c9m            = ft_connectivityanalysis(cfgc, mfreq);
 
-
+cfgc             = [];
+cfgc.partchannel = 'signal003'; % this should destroy coherence between 1 and 2
+cfgc.method      = 'coh';
+c10              = ft_connectivityanalysis(cfgc, freq);
 
 cfgc             = [];
-cfgc.partchannel = 'signal003';
-cfgc.method      = 'csd';
-cfgc.complex     = 'complex';
-freqp            = ft_connectivityanalysis(cfgc, freqx);
-freqxp           = freq2transfer([], freqp);
-cfgc.method      = 'granger';
-c5p              = ft_connectivityanalysis(cfgc, freqxp);
-cfgc.method      = 'instantaneous_causality';
-c8p              = ft_connectivityanalysis(cfgc, freqxp);
-
-
+cfgc.method      = 'coh';
+cfgc.channelcmb  = {'signal001' 'signal002'};
+c11              = ft_connectivityanalysis(cfgc, freq);
 

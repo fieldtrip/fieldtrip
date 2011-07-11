@@ -12,8 +12,12 @@ keeprpt    = keyval('keeprpt',    varargin); if isempty(keeprpt),  keeprpt  = 1;
 
 switch dtype
   case 'freq'
-    ncmb  = size(cmb,1);
     nchan = numel(data.label);
+    if isequal(cmb, {'all' 'all'})
+      ncmb = nchan^2;
+    else
+      ncmb = size(cmb,1);
+    end
     getpowindx = 0;
     if ncmb==0,
       error('no channel combinations are specified');
@@ -29,6 +33,7 @@ switch dtype
         data    = ft_checkdata(data, 'cmbrepresentation', 'full');
       else
         data    = ft_checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
+        getpowindx = 1;
       end
     elseif strcmp(inparam, 'powandcsd') && strcmp(outparam, 'crsspctrm'),
       if ~isempty(cmb),

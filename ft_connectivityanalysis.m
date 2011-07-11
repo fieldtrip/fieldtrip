@@ -66,6 +66,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %                 'corr'       pearson correlation
 %
 % Copyright (C) 2009, Jan-Mathijs Schoffelen, Andre Bastos, Martin Vinck, Robert Oostenveld
+% Copyright (C) 2010-2011, Jan-Mathijs Schoffelen, Martin Vinck
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -97,20 +98,20 @@ cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 % set the defaults
 
 %FIXME do method specific calls to ft_checkconfig
-if ~isfield(cfg, 'feedback'),   cfg.feedback   = 'none'; end
-if ~isfield(cfg, 'channel'),    cfg.channel    = 'all'; end
-if ~isfield(cfg, 'channelcmb'), cfg.channelcmb = {'all' 'all'};    end
-if ~isfield(cfg, 'refindx'),    cfg.refindx    = [];    end
-if ~isfield(cfg, 'trials'),     cfg.trials     = 'all'; end
-if ~isfield(cfg, 'complex'),    cfg.complex    = 'abs'; end
-if ~isfield(cfg, 'jackknife'),  cfg.jackknife  = 'no';  end
-if ~isfield(cfg, 'removemean'), cfg.removemean = 'yes'; end
-if ~isfield(cfg, 'partchannel'), cfg.partchannel = '';  end
-if ~isfield(cfg, 'conditional'), cfg.conditional = [];  end
-if ~isfield(cfg, 'blockindx'),   cfg.blockindx   = {};  end
-if ~isfield(cfg, 'inputfile'),  cfg.inputfile = [];     end
-if ~isfield(cfg, 'outputfile'), cfg.outputfile = [];    end
-if ~isfield(cfg, 'parameter'),  cfg.parameter  = [];    end
+cfg.feedback    = ft_getopt(cfg, 'feedback',    'none');
+cfg.channel     = ft_getopt(cfg, 'channel',     'all');
+cfg.channelcmb  = ft_getopt(cfg, 'channelcmb',  {'all' 'all'});
+cfg.refindx     = ft_getopt(cfg, 'refindx',     'all');
+cfg.trials      = ft_getopt(cfg, 'trials',      'all');
+cfg.complex     = ft_getopt(cfg, 'complex',     'abs');
+cfg.jackknife   = ft_getopt(cfg, 'jackknife',   'no');
+cfg.removemean  = ft_getopt(cfg, 'removemean',  'yes');
+cfg.partchannel = ft_getopt(cfg, 'partchannel', '');
+cfg.conditional = ft_getopt(cfg, 'conditional', []);
+cfg.blockindx   = ft_getopt(cfg, 'blockindx',   {});
+cfg.inputfile   = ft_getopt(cfg, 'inputfile',   []);
+cfg.outputfile  = ft_getopt(cfg, 'outputfile',  []);
+cfg.parameter   = ft_getopt(cfg, 'parameter',   []);
 
 % load optional given inputfile as data
 hasdata = (nargin>1);
@@ -135,6 +136,34 @@ if ~strcmp(cfg.trials, 'all')
   data = ft_selectdata(data, 'rpt', cfg.trials);
 end
 
+% select channels/channelcombination of interest and set the cfg-options accordingly
+if isfield(data, 'label'),
+  selchan = cell(0,1);
+  if ~isempty(cfg.channelcmb) && ~isequal(cfg.channelcmb, {'all' 'all'}),
+    tmpcmb         = ft_channelcombination(cfg.channelcmb, data.label);
+    tmpchan        = unique(tmpcmb(:));
+    cfg.channelcmb = ft_channelcombination(cfg.channelcmb, tmpchan, 1);
+    selchan        = [selchan;unique(cfg.channelcmb(:))];
+  end
+  
+  cfg.channel = ft_channelselection(cfg.channel, data.label);
+  selchan     = [selchan;cfg.channel];
+  if ~isempty(cfg.partchannel)
+    cfg.partchannel = ft_channelselection(cfg.partchannel, data.label);
+    selchan         = [selchan; cfg.partchannel];
+  end
+  data = ft_selectdata(data, 'channel', unique(selchan));
+
+elseif isfield(data, 'labelcmb')
+  cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
+  if ~isempty(cfg.partchannel)
+    error('partialisation is only possible without linearly indexed bivariate data');
+  end
+  if ~isempty(cfg.channelcmb),
+    %FIXME do something extra here
+  end
+  %FIXME call selectdata  
+end
 
 % FIXME check which methods require hasrpt
 
@@ -148,13 +177,21 @@ switch cfg.method
   case {'coh' 'csd'}
     if ~isempty(cfg.partchannel)
       if hasrpt && ~hasjack,
-        error('partialisation on single trial observations is not supported');
-      end
-      try
-        data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbrepresentation', 'full');
-        inparam = 'crsspctrm';
-      catch
-        error('partial coherence/csd is only supported for input allowing for a all-to-all csd representation');
+        warning('partialisation on single trial observations is not supported, removing trial dimension');
+        try
+          data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbrepresentation', 'fullfast');
+          inparam = 'crsspctrm';
+          hasrpt  = 0;
+        catch
+          error('partial coherence/csd is only supported for input allowing for a all-to-all csd representation');
+        end
+      else
+        try
+          data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbrepresentation', 'full');
+          inparam = 'crsspctrm';
+        catch
+          error('partial coherence/csd is only supported for input allowing for a all-to-all csd representation');
+        end
       end
     else
       data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
@@ -255,16 +292,6 @@ end
 % FIXME throw an error if no replicates and cfg.method='plv'
 % FIXME trial selection has to be implemented still
 
-if isfield(data, 'label'),
-  cfg.channel = ft_channelselection(cfg.channel, data.label);
-  if ~isempty(cfg.partchannel)
-    cfg.partchannel = ft_channelselection(cfg.partchannel, data.label);
-  end
-end
-
-if isfield(data, 'label') && ~isempty(cfg.channelcmb),
-  cfg.channelcmb = ft_channelcombination(cfg.channelcmb, cfg.channel, 1);
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % data bookkeeping:
@@ -431,33 +458,29 @@ switch cfg.method
     % coherence (unsquared), if cfg.complex = 'imag' imaginary part of
     % coherency
     
-    tmpcfg             = [];
-    tmpcfg.complex     = cfg.complex;
-    tmpcfg.feedback    = cfg.feedback;
-    tmpcfg.dimord      = data.dimord;
-    tmpcfg.pownorm     = normpow;
-    tmpcfg.pchanindx   = cfg.pchanindx;
-    tmpcfg.allchanindx = cfg.allchanindx;
-    tmpcfg.hasjack     = hasjack;
-    if exist('powindx', 'var'), tmpcfg.powindx     = powindx; end
-    optarg             = ft_cfg2keyval(tmpcfg);
+    optarg = {'complex',  cfg.complex, 'dimord',  data.dimord, 'feedback', cfg.feedback, ...
+              'pownorm',  normpow,     'hasjack', hasjack};
+    if ~isempty(cfg.pchanindx),
+      optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx, 'allchanindx', cfg.allchanindx});
+    end
+    if exist('powindx', 'var'),
+      optarg = cat(2, optarg, {'powindx', powindx});
+    end
     
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     outparam = 'cohspctrm';
     
   case 'csd'
-    % cross-spectral density (only useful if partialisation is required)
+    % cross-spectral density (e.g. useful if partialisation is required)
     
-    tmpcfg             = [];
-    tmpcfg.complex     = cfg.complex;
-    tmpcfg.feedback    = cfg.feedback;
-    tmpcfg.dimord      = data.dimord;
-    tmpcfg.pownorm     = normpow;
-    tmpcfg.pchanindx   = cfg.pchanindx;
-    tmpcfg.allchanindx = cfg.allchanindx;
-    tmpcfg.hasjack     = hasjack;
-    if exist('powindx', 'var'), tmpcfg.powindx     = powindx; end
-    optarg             = ft_cfg2keyval(tmpcfg);
+    optarg = {'complex',  cfg.complex, 'dimord',  data.dimord, 'feedback', cfg.feedback, ...
+              'pownorm',  normpow,     'hasjack', hasjack};
+    if ~isempty(cfg.pchanindx), 
+      optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx, 'allchanindx', cfg.allchanindx}); 
+    end
+    if exist('powindx', 'var'), 
+      optarg = cat(2, optarg, {'powindx', powindx}); 
+    end
     
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     outparam = 'crsspctrm';
@@ -493,16 +516,14 @@ switch cfg.method
   case 'plv'
     % phase locking value
     
-    tmpcfg           = [];
-    tmpcfg.complex   = cfg.complex;
-    tmpcfg.feedback  = cfg.feedback;
-    tmpcfg.dimord    = data.dimord;
-    tmpcfg.pownorm     = normpow;
-    tmpcfg.pchanindx   = cfg.pchanindx;
-    tmpcfg.allchanindx = cfg.allchanindx;
-    tmpcfg.hasjack     = hasjack;
-    if exist('powindx', 'var'), tmpcfg.powindx     = powindx; end
-    optarg             = ft_cfg2keyval(tmpcfg);
+    optarg = {'complex',  cfg.complex, 'dimord',  data.dimord, 'feedback', cfg.feedback, ...
+              'pownorm',  normpow,     'hasjack', hasjack};
+    if ~isempty(cfg.pchanindx), 
+      optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx, 'allchanindx', cfg.allchanindx}); 
+    end
+    if exist('powindx', 'var'), 
+      optarg = cat(2, optarg, {'powindx', powindx}); 
+    end
     
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     outparam         = 'plvspctrm';
