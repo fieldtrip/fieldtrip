@@ -88,4 +88,15 @@ cfgc             = [];
 cfgc.method      = 'coh';
 cfgc.channelcmb  = {'signal001' 'signal002'};
 c11              = ft_connectivityanalysis(cfgc, freq);
+cfgc.channelcmb  = {{'signal001'} {'signal002';'signal003'}};
+c12              = ft_connectivityanalysis(cfgc, freq);
+
+cfgc             = [];
+cfgc.method      = 'granger';
+cfgc.channelcmb  = {'signal001' 'signal002'};
+c13              = ft_connectivityanalysis(cfgc, freq); %gives a 'chan_chan_freq' matrix
+cfgc.sfmethod    = 'bivariate';
+c14              = ft_connectivityanalysis(cfgc, freq); %gives a 'chan_freq' matrix
+cfgc.channelcmb  = {{'signal001'} {'signal002';'signal003'}};
+c15              = ft_connectivityanalysis(cfgc, freq); %gives a 'chan_freq' matrix (4 x nfreq)
 

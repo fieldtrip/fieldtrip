@@ -69,10 +69,14 @@ if numel(channelcmb)==2 && iscell(channelcmb{1}) && iscell(channelcmb{2})
   channelcmb{2} = ft_channelselection(channelcmb{2}, datachannel);
   n1  = numel(channelcmb{1});
   n2  = numel(channelcmb{2});
-  tmp = cell(n1*n2,2);
+  tmp = cell(n1*n2+n1+n2,2);
   for k = 1:n1
     tmp((k-1)*n2+(1:n2), 1) = channelcmb{1}(k);
     tmp((k-1)*n2+(1:n2), 2) = channelcmb{2};
+    tmp(n2*k+(1:n1),     1) = channelcmb{1};
+    tmp(n2*k+(1:n1),     2) = channelcmb{1};
+    tmp(n2*k+n1+(1:n2),  1) = channelcmb{2};
+    tmp(n2*k+n1+(1:n2),  2) = channelcmb{2};
   end
   collect = tmp;
   return;

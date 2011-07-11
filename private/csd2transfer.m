@@ -117,7 +117,7 @@ end
 if strcmp(sfmethod, 'bivariate')
   fprintf('computing pairwise non-parametric spectral factorization on %d channel pairs\n', size(channelcmb,1) - numel(unique(channelcmb(:))));
 elseif strcmp(sfmethod, 'multivariate')
-  fprintf('computing multivariate non-parametric spectral factorization on %d channels\n', numel(freq.label));
+  fprintf('computing multivariate non-parametric spectral factorization on %d channels\n', numel(freq.label));   
 else
   error('unknown sfmethod %s', sfmethod);
 end
@@ -365,7 +365,7 @@ end
 
 % create output
 output           = [];
-if isempty(channelcmb),
+if strcmp(sfmethod, 'multivariate')
   output.dimord    = freq.dimord;
 else
   ix = strfind(freq.dimord, 'chan_chan');

@@ -144,9 +144,11 @@ if isfield(data, 'label'),
     tmpchan        = unique(tmpcmb(:));
     cfg.channelcmb = ft_channelcombination(cfg.channelcmb, tmpchan, 1);
     selchan        = [selchan;unique(cfg.channelcmb(:))];
+  else
+    tmpchan        = data.label;
   end
   
-  cfg.channel = ft_channelselection(cfg.channel, data.label);
+  cfg.channel = ft_channelselection(cfg.channel, tmpchan);
   selchan     = [selchan;cfg.channel];
   if ~isempty(cfg.partchannel)
     cfg.partchannel = ft_channelselection(cfg.partchannel, data.label);
@@ -330,7 +332,6 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
           %if possible
           data   = ft_checkdata(data, 'cmbrepresentation', 'fullfast');
           hasrpt = 0;
-          hasrpt = 0;
         elseif isfield(data, 'powspctrm')
           data = ft_checkdata(data, 'cmbrepresentation', 'full');
         end
@@ -339,7 +340,7 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
         
         % check whether multiple pairwise decomposition is required (this
         % can most conveniently be handled at this level
-           tmpcfg.npsf = rmfield(tmpcfg.npsf, 'channelcmb');
+          % tmpcfg.npsf = rmfield(tmpcfg.npsf, 'channelcmb');
            try,tmpcfg.npsf = rmfield(tmpcfg.npsf, 'block');     end
            try,tmpcfg.npsf = rmfield(tmpcfg.npsf, 'blockindx'); end
 %         end
