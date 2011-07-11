@@ -112,7 +112,11 @@ repair = eye(Nchans,Nchans);
 for k=badindx'
     fprintf('repairing channel %s\n', data.label{k});
     repair(k,k) = 0;
-    l = connectivityMatrix(k, :);
+    l = find(connectivityMatrix(k, :));
+    % get bad channels out
+    [a, b] = setdiff(data.label(l), data.label(badindx));
+    l(~ismember(find(l), b)) = [];    
+    % get corresponding ids for sens structure
     [a, b] = match_str(sens.label, data.label(l));
     goodsensindx = a(b);
     [a, b] = match_str(sens.label, data.label(k));
