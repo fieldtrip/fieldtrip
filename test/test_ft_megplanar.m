@@ -36,7 +36,7 @@ i = 0;
 while it < i
     [a, b] = nanmin(nanmin(avgFICplanarComb.avg, [], 2))
     if b~=21|| b~=33 || b~=133 || b~=92 || b~=144
-        error('the global maxima has moved location');
+        error('the global minima has moved location');
     else
         avgFICplanarComb.avg(b, :) = nan;
     end
