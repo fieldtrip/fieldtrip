@@ -256,6 +256,10 @@ switch ft_senstype(datachannel)
   case {'biosemi64', 'biosemi128', 'biosemi256', 'egi64', 'egi128', 'egi256', 'ext1020'}
     % use an external helper function to define the list with EEG channel names
     labeleeg = ft_senslabel(ft_senstype(datachannel));
+  
+  case {'itab153'}
+    % all itab MEG channels start with MAG
+    labelmeg = datachannel(strncmp('MAG', datachannel, length('MAG')));
 
 end % switch ft_senstype
 
