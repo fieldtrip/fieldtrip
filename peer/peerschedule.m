@@ -37,9 +37,12 @@ if ~isempty(regexp(getenv('HOSTNAME'), 'mentat'))
   mentat006 = find(~cellfun(@isempty, regexp({list.hostname}, 'mentat006')));
   mentat007 = find(~cellfun(@isempty, regexp({list.hostname}, 'mentat007')));
   % this should be the preferred machine, even if jobs are 90 minutes longer or 6GB larger
-  penalty(mentat006) = penalty(mentat006) - 6;
+  % penalty(mentat006) = penalty(mentat006) - 6;
   % this should be the preferred machine, even if jobs are 90 minutes longer or 6GB larger
-  penalty(mentat007) = penalty(mentat007) - 6;
+  % penalty(mentat007) = penalty(mentat007) - 6;
+  % these should be the preferred machines, no matter what
+  penalty(mentat006) = 0;
+  penalty(mentat007) = 0;
 end
 
 % select the slave peer that has the best match with the job requirements
