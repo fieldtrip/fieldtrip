@@ -273,7 +273,7 @@ elseif ~isempty(cfg.trl)
   end
 elseif ~isempty(cfg.length)
   
-  data = ft_checkdata(data, 'hastrialdef', 'yes');
+  data = ft_checkdata(data, 'hassampleinfo', 'yes');
   
   %create dummy trl-matrix and recursively call ft_redefinetrial
   nsmp    = round(cfg.length*data.fsample);
