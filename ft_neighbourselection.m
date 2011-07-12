@@ -178,6 +178,7 @@ k = 0;
 for i=1:length(neighbours)
     k = k + length(neighbours{i}.neighblabel);
 end
+if k==0, error('No neighbours were found!'); end;
 fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbours));
 
 if strcmp(cfg.feedback, 'yes')
