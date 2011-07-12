@@ -12,6 +12,7 @@ function [stat] = ft_freqstatistics(cfg, varargin)
 %   cfg.channel     = Nx1 cell-array with selection of channels (default = 'all'),
 %                     see FT_CHANNELSELECTION for details
 %   cfg.latency     = [begin end] in seconds or 'all' (default = 'all')
+%   cfg.trials      = trials to be included or 'all'  (default = 'all')
 %   cfg.frequency   = [begin end], can be 'all'       (default = 'all')
 %   cfg.avgoverchan = 'yes' or 'no'                   (default = 'no')
 %   cfg.avgovertime = 'yes' or 'no'                   (default = 'no')
@@ -81,6 +82,7 @@ cfg.outputfile  = ft_getopt(cfg, 'outputfile',  []);
 cfg.parameter   = ft_getopt(cfg, 'parameter',   'powspctrm');
 cfg.channel     = ft_getopt(cfg, 'channel',     'all');
 cfg.latency     = ft_getopt(cfg, 'latency',     'all');
+cfg.trials      = ft_getopt(cfg, 'trials',      'all');
 cfg.frequency   = ft_getopt(cfg, 'frequency',   'all');
 cfg.avgoverchan = ft_getopt(cfg, 'avgoverchan', 'no');
 cfg.avgoverfreq = ft_getopt(cfg, 'avgoverfreq', 'no');
@@ -188,6 +190,11 @@ previous = cell(1,Ndata);
 for i=1:Ndata
   varargin{i} = ft_selectdata(varargin{i}, 'channel', cfg.channel,   'avgoverchan', cfg.avgoverchan);
   varargin{i} = ft_selectdata(varargin{i}, 'foilim',  cfg.frequency, 'avgoverfreq', cfg.avgoverfreq);
+  if Ndata==1 && ~ischar(cfg.trials)
+    varargin{i} = ft_selectdata(varargin{i}, 'rpt',     cfg.trials);
+  elseif Ndata>1 && ~ischar(cfg.trials)
+    error('subselection of trials is only allowed with a single data structure as input');
+  end
   if hastime,
     varargin{i} = ft_selectdata(varargin{i}, 'toilim', cfg.latency, 'avgovertime', cfg.avgovertime);
   end
