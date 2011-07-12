@@ -335,7 +335,7 @@ int getmem (uint64_t *rss, uint64_t *vs) {
 		   data       data/stack
 		   dt         dirty pages (unused in Linux 2.6)
 		 */
-		if (fscanf(fp, "%u%u", &val1, &val2 )!=2) {
+		if (fscanf(fp, "%llu%llu", &val1, &val2 )!=2) {
 				DEBUG(LOG_WARNING, "could not read all elements from /proc/self/statm");
 				val1 = 0;
 				val2 = 0;
