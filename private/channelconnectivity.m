@@ -23,8 +23,7 @@ else
                 connectivity(seld, seln) = true;
             end
         end
-    else
-        
+    else        
         nchan = length(data.label);
         connectivity = false(nchan,nchan);
         for chan=1:length(cfg.neighbours)
