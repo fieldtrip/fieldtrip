@@ -142,6 +142,7 @@ void peerinit(void *arg) {
 		watchdog.enabled  = 0;
 		watchdog.evidence = 0;
 		watchdog.masterid = 0;
+		watchdog.memory   = 0;
 		watchdog.time     = 0;
 		pthread_mutex_unlock(&mutexwatchdog);
 
@@ -197,6 +198,51 @@ void peerexit(void *arg) {
 		clear_refusegrouplist();
 		clear_refusehostlist();
 		clear_smartsharelist();
+
+		pthread_mutex_lock(&mutexwatchdog);
+		watchdog.enabled  = 0;
+		watchdog.evidence = 0;
+		watchdog.masterid = 0;
+		watchdog.memory   = 0;
+		watchdog.time     = 0;
+		pthread_mutex_unlock(&mutexwatchdog);
+
+		pthread_mutex_lock(&mutexsmartmem);
+		smartmem.enabled  = 0;
+		smartmem.freeze   = 0;
+		smartmem.memavail = UINT64_MAX;
+		pthread_mutex_unlock(&mutexsmartmem);
+
+		pthread_mutex_lock(&mutexsmartcpu);
+		smartcpu.enabled    = 0;
+		smartcpu.freeze     = 0;
+		smartcpu.prevstatus = STATUS_ZOMBIE;
+		smartcpu.evidence   = 0;
+		pthread_mutex_unlock(&mutexsmartcpu);
+
+		pthread_mutex_lock(&mutexprevcpu);
+		prevcpu.user    = 0;
+		prevcpu.nice    = 0;
+		prevcpu.system  = 0;
+		prevcpu.idle    = 0;
+		prevcpu.iowait  = 0;
+		prevcpu.irq     = 0;
+		prevcpu.softirq = 0;
+		prevcpu.unknown = 0;
+		pthread_mutex_unlock(&mutexprevcpu);
+
+		pthread_mutex_lock(&mutexsmartshare);
+		smartshare.enabled       = 1;
+		smartshare.prevhostid    = 0;
+		smartshare.prevhostcount = 0;
+		smartshare.n             = 0;
+		smartshare.time          = time(NULL);
+		pthread_mutex_unlock(&mutexsmartshare);
+
+		/*
+		   pthread_cond_destroy(&condstatus);
+		   pthread_mutex_destroy(&mutexstatus);
+		 */
 
 		DEBUG(LOG_CRIT, "peerexit: cleaning up");
 

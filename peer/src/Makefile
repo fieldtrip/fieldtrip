@@ -69,7 +69,7 @@ LIBPATH  = -L. $(MATLABLIBS)
 LIBS 	 = -lm -lpthread -lpeer
 # CFLAGS   = $(INCPATH) -fPIC -Wall -pedantic -O1 -fpack-struct
 # CXXFLAGS = $(INCPATH) -fPIC -Wunused -pedantic -O1
-CFLAGS	 = $(INCPATH) -fPIC -Wall -pthread
+CFLAGS	 = $(INCPATH) -fPIC -Wall -pthread -DSYSLOG=2
 
 # determine the operating system
 PLATFORM := $(shell gcc -dumpmachine)

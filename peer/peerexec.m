@@ -60,7 +60,7 @@ try
   timallow = ft_getopt(optin, 'timallow');
   memallow = []; % ft_getopt(optin, 'memallow');
   if ~isempty(masterid) || ~isempty(timallow) || ~isempty(memallow)
-    watchdog(masterid, time+timallow, memallow);
+    watchdog(masterid, timallow, memallow);
   end
 
   % try setting the same path directory
@@ -214,7 +214,6 @@ clear global
 % clear the optional watchdog, which is loaded into memory as a mex file
 if ~isempty(masterid) || ~isempty(timallow) || ~isempty(memallow)
   watchdog(0,0,0); % this is required to unlock it from memory
-  clear watchdog
 end
 
 % clear the previous warning and error messages

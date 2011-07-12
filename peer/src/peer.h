@@ -270,7 +270,7 @@ int  open_tcp_connection(const char *hostname, int port);
 int  open_uds_connection(const char *socketname);
 int  peercount(void);
 int  check_localhost(const char *ipaddr);
-int  check_watchdog(void);
+void  check_watchdog(void);
 void check_datatypes(void);
 void clear_allowuserlist(void);
 void clear_allowgrouplist(void);

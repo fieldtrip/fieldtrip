@@ -22,6 +22,7 @@ int syslog_level = LOG_CRIT;
 
 pthread_cond_t condstatus = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutexstatus = PTHREAD_MUTEX_INITIALIZER;
+/* these boolean flags are set upon starting/stopping the respective threads */
 int udsserverStatus = 0;
 int tcpserverStatus = 0;
 int announceStatus  = 0;

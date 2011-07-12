@@ -86,15 +86,15 @@ void cleanup_discover(void *arg) {
 }
 
 void *discover(void *arg) {
-		int i = 0;
+		int accept = 1;
 		int fd = 0;
-		unsigned int addrlen;
+		int i = 0;
+		int localhost = 0;
 		int nbytes, found = 0;
 		int one = 1;
-		int accept = 1;
-		int localhost = 0;
-		peerlist_t *peer = NULL, *next = NULL;
 		hostdef_t  *discovery = NULL;
+		peerlist_t *peer = NULL, *next = NULL;
+		unsigned int addrlen;
 
 		/* these variables are for the socket */
 		struct sockaddr_in addr;

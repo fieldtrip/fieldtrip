@@ -44,7 +44,7 @@ mxArray *mxDeserialize(const void*, size_t);
 
 int main(int argc, char *argv[]) {
 		Engine *en;
-		mxArray *argin, *argout, *options, *arg, *opt;
+		mxArray *argin = NULL, *argout = NULL, *optin = NULL, *optout = NULL, *arg = NULL, *opt = NULL, *previous;
 		joblist_t  *job  = NULL;
 		peerlist_t *peer = NULL;
 		jobdef_t   *def  = NULL;
@@ -294,13 +294,12 @@ int main(int argc, char *argv[]) {
 				} /* while(1) for getopt */
 		} /* if config file or getopt */
 
-#if SYSLOG == 1
-		if (pconf->verbose)
-		{
-
+		if (pconf->verbose) {
 				/* although the configuration file allows setting the verbose for each peer */
 				/* the first ocurrence determines what will be used the parent and all children */
 				syslog_level = atol(pconf->verbose);
+
+#if (SYSLOG == 1) || (SYSLOG == 2)
 
 				DEBUG(LOG_EMERG,  "LOG_EMERG");
 				DEBUG(LOG_ALERT,  "LOG_ALERT");
@@ -337,8 +336,8 @@ int main(int argc, char *argv[]) {
 								setlogmask(LOG_MASK(LOG_EMERG));
 								break;
 				}
-		}
 #endif
+		}
 
 		/*************************************************************************************
 		 * the following section deals with starting multiple peerslaves
@@ -755,25 +754,25 @@ int main(int argc, char *argv[]) {
 								matlabStart = time(NULL);
 
 								argin   = (mxArray *)mxDeserialize(job->arg, job->job->argsize);
-								options = (mxArray *)mxDeserialize(job->opt, job->job->optsize);
+								optin   = (mxArray *)mxDeserialize(job->opt, job->job->optsize);
 								jobid   = job->job->id;
 								peerid  = job->host->id;
 								DEBUG(LOG_NOTICE, "executing job %d from %s@%s (jobid=%u, memreq=%lu, timreq=%lu)", ++jobnum, job->host->user, job->host->name, job->job->id, job->job->memreq, job->job->timreq);
 								pthread_mutex_unlock(&mutexjoblist);
 
 								/* create a copy of the optin cell-array */
-								n = mxGetM(options) * mxGetN(options);
-								mxArray *previous = options;
-								options = mxCreateCellMatrix(1, n+6);
+								n = mxGetM(optin) * mxGetN(optin);
+								previous = optin;
+								optin    = mxCreateCellMatrix(1, n+6);
 								for (i=0; i<n; i++)
-										mxSetCell(options, i, mxGetCell(previous, i));
-								/* add the masterid and timallow options, these are used by peerexec for the watchdog */
-								mxSetCell(options, n+0, mxCreateString("masterid\0"));
-								mxSetCell(options, n+1, mxCreateDoubleScalar(peerid));
-								mxSetCell(options, n+2, mxCreateString("timallow\0"));
-								mxSetCell(options, n+3, mxCreateDoubleScalar(timallow));
-								mxSetCell(options, n+4, mxCreateString("memallow\0"));
-								mxSetCell(options, n+5, mxCreateDoubleScalar(memallow));
+										mxSetCell(optin, i, mxGetCell(previous, i));
+								/* add the masterid, timallow and memallow options, these are used for the watchdog */
+								mxSetCell(optin, n+0, mxCreateString("masterid\0"));
+								mxSetCell(optin, n+1, mxCreateDoubleScalar(peerid));
+								mxSetCell(optin, n+2, mxCreateString("timallow\0"));
+								mxSetCell(optin, n+3, mxCreateDoubleScalar(timallow));
+								mxSetCell(optin, n+4, mxCreateString("memallow\0"));
+								mxSetCell(optin, n+5, mxCreateDoubleScalar(memallow));
 
 								jobFailed = 0;
 
@@ -783,39 +782,46 @@ int main(int argc, char *argv[]) {
 										jobFailed = 1;
 								}
 
-								if (!jobFailed && (engPutVariable(en, "options", options) != 0)) {
+								mxDestroyArray(argin);
+								argin = NULL;
+
+								if (!jobFailed && (engPutVariable(en, "optin", optin) != 0)) {
 										DEBUG(LOG_ERR, "error copying options variable to engine");
 										jobFailed = 2;
 								}
 
-								mxDestroyArray(argin);
-								mxDestroyArray(options);
+								mxDestroyArray(optin);
+								optin = NULL;
 
-								/* the watchdog will be running as mex file inside the MATLAB engine */
-								/* also enable the watchdog for the peerslave command-line executable */
+#ifdef WATCHDOG
+								/* enable the watchdog for the peerslave command-line executable */
+								/* the watchdog also will be running as mex file inside the MATLAB engine */
 								pthread_mutex_lock(&mutexwatchdog);
 								watchdog.masterid = peerid;              /* keep an eye on the master for which we are working */
 								watchdog.time     = time(NULL)+timallow; /* don't exceed the maximum allowed execution time */
 								watchdog.memory   = 0;                   /* don't watch the memory of the peerslave executable */
 								watchdog.enabled  = 0;
-								DEBUG(LOG_ERR, "watchdog enabled for masterid = %u, time = %d, memory = %lu\n", watchdog.masterid, watchdog.time, watchdog.memory);
+								DEBUG(LOG_ERR, "watchdog enabled for masterid = %u, time = %d, memory = %lu", watchdog.masterid, watchdog.time, watchdog.memory);
 								pthread_mutex_unlock(&mutexwatchdog);
+#endif
 
 								/* execute the job */
-								if (!jobFailed && (engEvalString(en, "[argout, options] = peerexec(argin, options);") != 0)) {
+								if (!jobFailed && (engEvalString(en, "[argout, optout] = peerexec(argin, optin);") != 0)) {
 										DEBUG(LOG_ERR, "error evaluating string in engine");
 										jobFailed = 3;
 										engineAborted = 1;
 								}
 
+#ifdef WATCHDOG
 								/* the job has copleted (either succesful ot not), disable the watchdog */
 								pthread_mutex_lock(&mutexwatchdog);
 								watchdog.masterid = 0;
 								watchdog.time     = 0;
 								watchdog.memory   = 0;
 								watchdog.enabled  = 0;
-								DEBUG(LOG_NOTICE, "watchdog disabled\n");
+								DEBUG(LOG_NOTICE, "watchdog disabled");
 								pthread_mutex_unlock(&mutexwatchdog);
+#endif
 
 								/* get the output arguments and options */
 								if (!jobFailed && (argout = engGetVariable(en, "argout")) == NULL) {
@@ -824,7 +830,7 @@ int main(int argc, char *argv[]) {
 										engineAborted = 1;
 								}
 
-								if (!jobFailed && (options = engGetVariable(en, "options")) == NULL) {
+								if (!jobFailed && (optout = engGetVariable(en, "optout")) == NULL) {
 										DEBUG(LOG_ERR, "error getting options");
 										jobFailed = 5;
 										engineAborted = 1;
@@ -875,30 +881,30 @@ int main(int argc, char *argv[]) {
 								/* create the ouptut argument containing an error */
 								argout = mxCreateCellMatrix(1,1);
 								/* specify the error in the options */
-								options = mxCreateCellMatrix(1,2);
-								mxSetCell(options, 0, mxCreateString("lasterr\0"));
-								mxSetCell(options, 1, mxCreateString("could not start the matlab engine\0"));
+								optout = mxCreateCellMatrix(1,2);
+								mxSetCell(optout, 0, mxCreateString("lasterr\0"));
+								mxSetCell(optout, 1, mxCreateString("could not start the matlab engine\0"));
 						}
 						else if (jobFailed) {
 								/* create the ouptut argument containing an error */
 								argout = mxCreateCellMatrix(1,1);
 								/* specify the error in the options */
-								options = mxCreateCellMatrix(1,2);
-								mxSetCell(options, 0, mxCreateString("lasterr\0"));
+								optout = mxCreateCellMatrix(1,2);
+								mxSetCell(optout, 0, mxCreateString("lasterr\0"));
 								if (jobFailed==1)
-										mxSetCell(options, 1, mxCreateString("failed to execute the job (argin)\0"));
+										mxSetCell(optout, 1, mxCreateString("failed to execute the job (argin)\0"));
 								else if (jobFailed==2)
-										mxSetCell(options, 1, mxCreateString("failed to execute the job (optin)\0"));
+										mxSetCell(optout, 1, mxCreateString("failed to execute the job (optin)\0"));
 								else if (jobFailed==3)
-										mxSetCell(options, 1, mxCreateString("failed to execute the job (eval)\0"));
+										mxSetCell(optout, 1, mxCreateString("failed to execute the job (eval)\0"));
 								else if (jobFailed==4)
-										mxSetCell(options, 1, mxCreateString("failed to execute the job (argout)\0"));
+										mxSetCell(optout, 1, mxCreateString("failed to execute the job (argout)\0"));
 								else if (jobFailed==5)
-										mxSetCell(options, 1, mxCreateString("failed to execute the job (optout)\0"));
+										mxSetCell(optout, 1, mxCreateString("failed to execute the job (optout)\0"));
 								else if (jobFailed==6)
-										mxSetCell(options, 1, mxCreateString("failed to execute the job (clear)\0"));
+										mxSetCell(optout, 1, mxCreateString("failed to execute the job (clear)\0"));
 								else
-										mxSetCell(options, 1, mxCreateString("failed to execute the job\0"));
+										mxSetCell(optout, 1, mxCreateString("failed to execute the job\0"));
 						}
 
 						/*****************************************************************************
@@ -933,7 +939,7 @@ int main(int argc, char *argv[]) {
 								goto cleanup;
 						}
 
-						if ((opt = (mxArray *) mxSerialize(options))==NULL) {
+						if ((opt = (mxArray *) mxSerialize(optout))==NULL) {
 								DEBUG(LOG_ERR, "could not serialize job options");
 								goto cleanup;
 						}
@@ -1057,6 +1063,26 @@ cleanup:
 								server = 0;
 						}
 
+						if (argin) {
+								mxDestroyArray(argin);
+								argin = NULL;
+						}
+
+						if (optin) {
+								mxDestroyArray(optin);
+								optin = NULL;
+						}
+
+						if (argout) {
+								mxDestroyArray(argout);
+								argout = NULL;
+						}
+
+						if (optout) {
+								mxDestroyArray(optout);
+								optout = NULL;
+						}
+
 						if (arg) {
 								mxDestroyArray(arg);
 								arg = NULL;
@@ -1065,16 +1091,6 @@ cleanup:
 						if (opt) {
 								mxDestroyArray(opt);
 								opt = NULL;
-						}
-
-						if (argout) {
-								mxDestroyArray(argout);
-								argout = NULL;
-						}
-
-						if (options) {
-								mxDestroyArray(options);
-								options = NULL;
 						}
 
 						FREE(def);

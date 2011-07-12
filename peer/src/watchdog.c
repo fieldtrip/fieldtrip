@@ -42,7 +42,9 @@ void exitFun(void) {
 		/* disable the watchdog */
 		pthread_mutex_lock(&mutexwatchdog);
 		watchdog.enabled  = 0;
+		watchdog.evidence = 0;
 		watchdog.masterid = 0;
+		watchdog.memory   = 0;
 		watchdog.time     = 0;
 		mexPrintf("watchdog: disabled\n");
 		pthread_mutex_unlock(&mutexwatchdog);
@@ -75,17 +77,15 @@ void exitFun(void) {
 		peerexit(NULL);
 		peerInitialized = 0;
 
-		pthread_cond_destroy(&condstatus);
-		pthread_mutex_destroy(&mutexstatus);
 		return;
 
 } /* exitFun */
 
 void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) {
-		int rc;
+		int rc, enabled;
 		UINT32_T masterid = 0;
-		time_t time = 0;
-		UINT64_T memory = 0;
+		time_t timallow = 0;
+		UINT64_T memallow = 0;
 		UINT64_T rss, vs;
 
 		/* this function will be called upon unloading of the mex file */
@@ -102,35 +102,33 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				mexErrMsgTxt ("invalid input argument #1");
 
 		if (mxIsScalar(prhs[1]))
-				time = mxGetScalar(prhs[1]);
+				timallow = mxGetScalar(prhs[1]);
 		else if (mxIsEmpty(prhs[1]))
-				time = 0;
+				timallow = 0;
 		else
 				mexErrMsgTxt ("invalid input argument #2");
 
 		if (mxIsScalar(prhs[2]))
-				memory = mxGetScalar(prhs[2]);
+				memallow = mxGetScalar(prhs[2]);
 		else if (mxIsEmpty(prhs[2]))
-				memory = 0;
+				memallow = 0;
 		else
 				mexErrMsgTxt ("invalid input argument #3");
 
-		if (memory>0) {
-				/* memory should be in absolute numbers, add the current memory footprint */
-				getmem(&rss, &vs);
-				memory += rss;
-		}
-
-		if (masterid!=0 || time!=0 || memory==0) {
+		if (masterid!=0 || timallow!=0 || memallow!=0) {
+				enabled = 1;
 				/* in this case the mex file is not allowed to be cleared from memory */
 				if (!mexIsLocked())
 						mexLock(); 
 		}
 
-		if (masterid==0 && time==0 && memory==0) {
-				/* in this case the mex file is again allowed to be cleared from memory */
+		if (masterid==0 && timallow==0 && memallow==0) {
+				enabled = 0;
+				/* in this case the mex file is allowed to be cleared from memory */
+#ifdef SOLUTION_FOR_UNEXPLAINED_CRASH
 				if (mexIsLocked())
 						mexUnlock(); 
+#endif
 		}
 
 		if (!peerInitialized) {
@@ -179,14 +177,30 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				pthread_mutex_unlock(&mutexstatus);
 		}
 
+		if (timallow>0) {
+				/* timallow should be relative to now */
+				timallow += time(NULL);
+		}
+
+		if (memallow>0) {
+				/* memallow should be in absolute numbers, add the current memory footprint */
+				getmem(&rss, &vs);
+				memallow += rss;
+		}
+
 		/* enable the watchdog: the expire thread will exit if the master is not seen any more */
 		pthread_mutex_lock(&mutexwatchdog);
+		watchdog.enabled  = enabled;
+		watchdog.evidence = 0;
 		watchdog.masterid = masterid;
-		watchdog.time     = time;
-		watchdog.memory   = memory;
-		watchdog.enabled  = 1;
-		mexPrintf("watchdog: enabled for masterid = %lu, time = %d, memory = %lu\n", masterid, time, memory);
+		watchdog.memory   = memallow;
+		watchdog.time     = timallow;
 		pthread_mutex_unlock(&mutexwatchdog);
+
+		if (enabled)
+				mexPrintf("watchdog: enabled for masterid = %lu, time = %d, memory = %lu\n", masterid, timallow, memallow);
+		else
+				mexPrintf("watchdog: disabled for masterid = %lu, time = %d, memory = %lu\n", masterid, timallow, memallow);
 
 		return;
 } /* main */
