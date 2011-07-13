@@ -75,9 +75,7 @@ if ~isempty(previous_argin) && ~isequal(varargin{1}, previous_argin{1})
   end
 end
 
-% start with empty return values
-jobid   = [];
-puttime = [];
+jobid = round(rand(1)*1e8);
 
 % each job should have a different random number sequence
 randomseed = rand(1)*double(intmax);
@@ -86,14 +84,34 @@ randomseed = rand(1)*double(intmax);
 options = {'pwd', getcustompwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq, 'randomseed', randomseed};
 
 p = getenv('HOME');
-f = sprintf('job_%d_input.mat', jobid);
-inputfile = fullfile(p, f);
+inputfile    = fullfile(p, sprintf('job_%08d_input.mat', jobid));
+shellscript  = fullfile(p, sprintf('job_%08d_script.sh', jobid));
+matlabscript = fullfile(p, sprintf('job_%08d_script.m', jobid));
 
+% rename and save the variables
+argin = varargin;
+optin = options;
+save(inputfile, 'argin', 'optin');
 
-save(inputfile, 'varargin', 'optout');
-[p, f] = fileparts(which('qsubexec.m'));
-cmdline = sprintf('qsub matlab2010b -r "restoredefaultpath; addpath(%s); qsubexec(%d); exit"', p, jobid);
+% create the shell script
+fid = fopen(shellscript, 'wt');
+fprintf(fid, '#!/bin/sh\n');
+fprintf(fid, 'cd "%s"\n', p);
+fprintf(fid, 'matlab2010b -nosplash -nodisplay -r job_%d_script\n', jobid);
+fclose(fid);
+
+% create the matlab script
+fid = fopen(matlabscript, 'wt');
+fprintf(fid, 'restoredefaultpath\n');
+fprintf(fid, 'addpath %s\n', fileparts(mfilename('fullpath')));
+fprintf(fid, 'qsubexec(%d)\n', jobid);
+fprintf(fid, 'exit\n');
+fclose(fid);
+
+cmdline = sprintf('qsub %s', shellscript);
+% fprintf('submitting job %08d\n', jobid); 
 system(cmdline);
+puttime = toc(stopwatch);
 
 % remember the input arguments to speed up subsequent calls
 previous_argin  = varargin;

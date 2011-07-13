@@ -77,16 +77,23 @@ while ~success && toc(stopwatch)<timeout
   elseif strcmp(engine, 'qsub')
     
     p = getenv('HOME');
-    f = sprintf('job_%d_output.mat', jobid);
-    outputfile = fullfile(p, f);
+    shellscript  = fullfile(p, sprintf('job_%08d_script.sh', jobid));
+    matlabscript = fullfile(p, sprintf('job_%08d_script.m', jobid));
+    outputfile   = fullfile(p, sprintf('job_%08d_output.mat', jobid));
     
     if exist(outputfile, 'file')
-      tmp     = load(outputfile);
+      tmp = load(outputfile);
       argout  = tmp.argout;
-      options = tmp.options;
+      options = tmp.optout;
       success = true;
+      % clean up the temporary files
+      delete(outputfile);
+      delete(shellscript);
+      delete(matlabscript);
+    else
+      pause(1);
     end
-
+    
   else
     error('unrecognized parallel engine')
   end % if engine
@@ -176,7 +183,7 @@ if success
   end
   
 else
-  warning('the job results are not yet available');
+  warning('FieldTrip:peer:jobNotAvailable', 'the job results are not yet available');
   switch output
     case 'varargout'
       % return empty output arguments
@@ -197,3 +204,4 @@ previous_sleep       = sleep;
 previous_output      = output;
 previous_diary       = diary;
 previous_StopOnError = StopOnError;
+previous_engine      = engine;

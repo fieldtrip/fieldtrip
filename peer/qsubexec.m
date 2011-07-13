@@ -16,7 +16,7 @@ function retval = qsubexec(jobid)
 %   qsub /opt/bin/matlab -r "qsubexec(jobid); exit"
 % which starts the MATLAB executable, executes this function and exits
 % MATLAB to leave your batch job in a clean state. The jobid is
-% automatically translated into the input and output file names, which 
+% automatically translated into the input and output file names, which
 % have to reside on a shared network file system.
 %
 % See also QSUBCELLFUN, QSUBFEVAL, QSUBGET
@@ -41,18 +41,19 @@ function retval = qsubexec(jobid)
 try
   
   p = getenv('HOME');
-  f = sprintf('job_%d_input.mat', jobid);
-  inputfile = fullfile(p, f);
-  f = sprintf('job_%d_output.mat', jobid);
-  outputfile = fullfile(p, f);
+  inputfile  = fullfile(p, sprintf('job_%08d_input.mat', jobid));
+  outputfile = fullfile(p, sprintf('job_%08d_output.mat_', jobid)); % note the _ at the end
   
   tmp = load(inputfile);
+  delete(inputfile);
+  
   argin = tmp.argin; % this includes the function name and the input arguments
-  optin = tmp.argin; % this includes the path setting, the pwd, the global variables, etc.
+  optin = tmp.optin; % this includes the path setting, the pwd, the global variables, etc.
   
   % instead of reimplementing the whole try-catch execution, use the peerexec function to do the actual work
   [argout, optout] = peerexec(argin, optin);
   save(outputfile, 'argout', 'optout');
+  rename(outputfile, outputfile(1:(end-1))); % remove the _ at the end
   
 catch
   

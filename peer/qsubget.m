@@ -1,4 +1,4 @@
-function varargout = qsubget(jobid, varargin)
+function [argout, optout] = qsubget(jobid, varargin)
 
 % QSUBGET get the output arguments after the remote job has been executed
 % using the Torque or SGE batch queue system.
@@ -14,9 +14,9 @@ function varargout = qsubget(jobid, varargin)
 %   output         = string, 'varargout' or 'cell' (default = 'varargout')
 %   diary          = string, can be 'always', 'warning', 'error' (default = 'error')
 %
-% See also QSUBEVAL, QSUBCELLFUN
+% See also QSUBFEVAL, QSUBCELLFUN
 
-% -----------------------------------------------------------------------
+% ---------------------------------s--------------------------------------
 % Copyright (C) 2011, Robert Oostenveld
 %
 % This program is free software: you can redistribute it and/or modify
@@ -34,4 +34,5 @@ function varargout = qsubget(jobid, varargin)
 % -----------------------------------------------------------------------
 
 % instead of reimplementing the whole error handling, just use peerget to do the actual work
-varargout = peerget(jobid, varargin);
+[argout, optout] = peerget(jobid, varargin{:}, 'engine', 'qsub');
+
