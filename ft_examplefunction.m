@@ -106,7 +106,7 @@ cfg.callinfo.matlab = version();
 % add information about the function call to the configuration
 cfg.callinfo.proctime = toc(ftFuncTimer);
 cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername(); % this is helpful for debugging
+cfg.callinfo.user = getusername();  % this is helpful for debugging
 
 if hasdata && isfield(data, 'cfg')
   % remember the configuration details of the input data
