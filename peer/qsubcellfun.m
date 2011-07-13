@@ -12,13 +12,9 @@ function varargout = qsubcellfun(fname, varargin)
 % function to be evaluated.
 %   UniformOutput  = boolean (default = false)
 %   StopOnError    = boolean (default = true)
-%   RetryOnError   = number, number of retries for failed jobs expressed as ratio (default = 0.05)
 %   diary          = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
 %   timreq         = number, initial estimate for the time required to run a single job (default = 3600)
-%   mintimreq      = number, minimum time required to run a single job (default is automatic)
 %   memreq         = number, initial estimate for the memory required to run a single job (default = 2*1024^3)
-%   minmemreq      = number, minimum memory required to run a single job (default is automatic)
-%   order          = string, can be 'random' or 'original' (default = 'random')
 %
 % Example
 %   fname = 'power';

@@ -4,10 +4,7 @@ function retval = qsubexec(jobid)
 % queue system. Normally you should not start this function yourself, but
 % rather use QSUBCELLFUN or QSUBFEVAL.
 %
-% The QSUBCELLUN, QSUBFEVAL, QSUBGET and QSUBEXEC functions provide an
-% alternative to the peer distributed computing system.
-%
-% The QSUBEXEC function performs the following tasks
+% This function performs the following tasks
 % - load the function name, input arguments and further options from the input file
 % - evaluate the desired function on the input arguments using PEEREXEC
 % - save the output arguments to an output file
