@@ -1,23 +1,58 @@
-README file for neuromag2ft
-by Gustavo Sudre and Lauri Parkkonen
+README file for neuromag2ft by Gustavo Sudre and Lauri Parkkonen
 gsudre@cmu.edu, lauri@neuro.hut.fi
 
+
 The neuromag2ft relays the MEG data being acquired in the acquisition
-computer to any computer in the network that hosts a Fieldtrip
-buffer TCP server. Then, the user can read from this server using any
-tools he/she wants. For more information on how to read from a
-Fieldtrip buffer server, please check
-http://fieldtrip.fcdonders.nl/tutorial/realtime and
+computer to a Fieldtrip buffer TCP server, which can be hosted by
+neuromag2ft or by a different computer in the network.
+
+Then, the user can read from this server using any tools he/she
+wants. For more information on how to read from a Fieldtrip buffer
+server, please check http://fieldtrip.fcdonders.nl/tutorial/realtime
+and
 http://www.bci2000.org/wiki/index.php/Programming_Tutorial:Working_with_the_FieldTrip_buffer.
 
-You'll need to download the open-source software Fieldtrip to run the
-buffer server and to read from it. The software can be downloaded from
-http://fieldtrip.fcdonders.nl/download or, if you prefer to use a
-subversion repository, get a local copy of the Fieldtrip repository
-using
-
-svn checkout http://fieldtrip.googlecode.com/svn/trunk/ fieldtrip-read-only
-
-More information on how to run and compile neuromag2ft can be found at:
-
+More information about neuromag2ft can be found at
 http://fieldtrip.fcdonders.nl/development/realtime/neuromag
+
+== Running the neuromag2ft ==
+
+Use one of the pre-compiled binaries (Linux or HP-UX, depending on
+your acquisition system) located under bin/ARCH.  If you run
+neuromag2ft without parameters (./neuromag2ft), the program will host
+the fieldtrip buffer, which can be read on port 1972 of the
+acquisition computer.
+
+Use ./neuromag2ft --help for a list of the arguments the program can
+take.
+
+
+== Compiling the neuromag2ft ==
+
+Binaries have been provided for the HP-UX PA-RISC2.0 and Linux x86_64
+architectures. But, if you need to re-compile the software, you will
+need gmake and gcc installed in your machine, as well as a few
+libraries provided by Elekta Oy. 
+
+You'll also need the fieldtrip buffer source code, and a pre-compiled 
+version of libbuffer.a. If you are compiling this code from the 
+Fieldtrip directory structure, then all the paths to the source code 
+should be set, so all you will need to do is compile libbuffer.a 
+(under FIELDTRIP_HOME/realtime/buffer/src).
+
+Then, to compile neuromag2ft, do:
+
+    gmake clean
+
+and then
+
+    gmake
+
+and it should create the binary file neuromag2ft under bin/ARCH, where
+ARCH corresponds to the architecture in which you are compiling the
+program.
+
+
+
+
+

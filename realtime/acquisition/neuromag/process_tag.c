@@ -54,20 +54,47 @@ static void catch_data(fiffTag tag,     /* Our data tag */
 		       int nsamp)       /* Number of samples in data buffer */
 {
   int ch, ns;
+  float a;
 
   if (tag->type == FIFFT_DAU_PACK16) {
     fiff_dau_pack16_t *data16 = (fiff_dau_pack16_t *)tag->data;
-    for (ch = 0; ch < nchan; ch++)
-      for (ns = 0; ns < nsamp; ns++) 
-	ch_data[ch][ns] = ch_info[ch]->cal * ch_info[ch]->range * 
-	  data16[nchan*ns+ch];
+    for (ch = 0; ch < nchan; ch++) {
+      switch(ch_info[ch]->kind) {
+      case FIFFV_MAGN_CH:
+	if (ch_info[ch]->unit == FIFF_UNIT_T_M)
+	  a = meg_grad_multiplier;
+	else
+	  a = meg_mag_multiplier;
+	break;
+      case FIFFV_EL_CH:
+	a = eeg_multiplier;
+	break;
+      default:
+	a = 1.0;
+      }
+      for (ns = 0; ns < nsamp; ns++)
+	ch_data[ch][ns] = a * ch_info[ch]->cal * ch_info[ch]->range * data16[nchan*ns+ch];
+    }
   }
   else {
     fiff_int_t *data32 = (fiff_int_t *)tag->data;
-    for (ch = 0; ch < nchan; ch++)
+    for (ch = 0; ch < nchan; ch++) {
+      switch(ch_info[ch]->kind) {
+      case FIFFV_MAGN_CH:
+	if (ch_info[ch]->unit == FIFF_UNIT_T_M)
+	  a = meg_grad_multiplier;
+	else
+	  a = meg_mag_multiplier;
+	break;
+      case FIFFV_EL_CH:
+	a = eeg_multiplier;
+	break;
+      default:
+	a = 1.0;
+      }
       for (ns = 0; ns < nsamp; ns++) 
-	ch_data[ch][ns] = ch_info[ch]->cal * ch_info[ch]->range * 
-	  data32[nchan*ns+ch];
+	ch_data[ch][ns] = a * ch_info[ch]->cal * ch_info[ch]->range * data32[nchan*ns+ch];
+    }
   }
 }
 
@@ -84,62 +111,61 @@ int send_header_to_FT()
   message_t     *response = NULL;
   header_t      *header   = NULL;
   ft_chunk_t    *chunk    = NULL;
+
+  dacq_log("Creating a header: %d channels, sampling rate %g Hz\n", nchan, sfreq);
   
-  // collect the channel names
-/*  for (c = 0; c < nchan; c++) {
+  // Construct the channel name chunk
+  for (c = 0; c < nchan; c++) {
     name = ch_info[c]->ch_name;
-    printf("Found channel name '%s'\n", name);
     namevec = realloc(namevec, namelen + strlen(name) + 1);
     strcpy(namevec + namelen, name);
     namelen = namelen + strlen(name) + 1;
   }
-  chunk = malloc(sizeof(ft_chunk_t));
+  chunk = malloc(sizeof(ft_chunkdef_t) + namelen * sizeof(char));
   chunk->def.type = FT_CHUNK_CHANNEL_NAMES;
   chunk->def.size = namelen;
-  memcpy(chunk->data, namevec, namelen);
-*/
-  // allocate the elements that will be used in the communication 
-  request      = malloc(sizeof(message_t));
-  request->def = malloc(sizeof(messagedef_t));
-  request->buf = NULL;
-  request->def->version = VERSION;
-  request->def->bufsize = 0;
-  
+  memcpy(chunk->data, namevec, namelen);  // I don't like this kind of assumptions on how structures are laid out in memory
+  FREE(namevec);
+
+  // Construct the header with the channel name chunk
   header      = malloc(sizeof(header_t));
   header->def = malloc(sizeof(headerdef_t));
-  header->buf = NULL;
-	
-  dacq_log("Creating a header for %d channels and sampling rate of %g Hz\n", nchan, sfreq);
   header->def->nchans    = nchan;
   header->def->nsamples  = 0;
   header->def->nevents   = 0;
   header->def->fsample   = sfreq;
   header->def->data_type = DATATYPE_FLOAT32;
-  header->def->bufsize   = 0;
-  FREE(header->buf);
+  header->def->bufsize   = sizeof(ft_chunkdef_t) + namelen * sizeof(char);
+  header->buf = chunk;
 
-  // initialization phase, send the header 
+  // Construct the message with the header
+  request      = malloc(sizeof(message_t));
+  request->def = malloc(sizeof(messagedef_t));
+  request->buf = NULL;
+  request->def->version = VERSION;
+  request->def->bufsize = 0;
   request->def->command = PUT_HDR;
   request->def->bufsize = append(&request->buf, request->def->bufsize, header->def, sizeof(headerdef_t));
   request->def->bufsize = append(&request->buf, request->def->bufsize, header->buf, header->def->bufsize);
-	
+
+  // Send the message to the buffer
   status = clientrequest(fieldtrip_sock, request, &response);
   if (status) {
-    dacq_log("Something wrong with FieldTrip buffer during initialization, status %d. Quiting.\n", status);
+    dacq_log("Something wrong with FieldTrip buffer during initialization, status %d. Exiting.\n", status);
     clean_up();
     exit(1);
   }
+  dacq_log("Header sent to the FieldTrip buffer\n");
   
-  // How to send the channel name "chunk"?
+  // FIXME: Do someting with the response, i.e. check that it is OK 
 
-  dacq_log("Header sent\n");
-  
-  // FIXME do someting with the response, i.e. check that it is OK 
+  FREE(request->def);
   FREE(request);
-  FREE(response);
-  FREE(namevec);
+  FREE(header->def);
+  FREE(header);
   FREE(chunk);
-
+  FREE(response->def);
+  FREE(response);
   return(0);
 }
 
@@ -149,116 +175,115 @@ int send_header_to_FT()
 
 int process_tag (fiffTag tag)
 {
-	int block_kind;
-	int c;
-	fiffChInfo ch = NULL;
+  int block_kind;
+  int c;
+  fiffChInfo ch = NULL;
 	
-	switch (tag->kind) {
+  switch (tag->kind) {
 			
-		case FIFF_NCHAN:               /* Number of channels */
-			nchan = *(int *)tag->data;
-			ch_info = calloc(nchan, sizeof(fiffChInfo));
-			break;
+  case FIFF_NCHAN:               /* Number of channels */
+    nchan = *(int *)tag->data;
+    ch_info = calloc(nchan, sizeof(fiffChInfo));
+    break;
 			
-		case FIFF_CH_INFO:             /* Information about one channel */
-			ch = (fiffChInfo)(tag->data);
-			ch_info[ch_count] = malloc(sizeof(fiffChInfoRec));
-			memcpy(ch_info[ch_count], ch, sizeof(fiffChInfoRec));
-			ch_count++;
-			break;
+  case FIFF_CH_INFO:             /* Information about one channel */
+    ch = (fiffChInfo)(tag->data);
+    ch_info[ch_count] = malloc(sizeof(fiffChInfoRec));
+    memcpy(ch_info[ch_count], ch, sizeof(fiffChInfoRec));
+    ch_count++;
+    break;
 			
-		case FIFF_DATA_BUFFER:         /* One buffer of data */
-			if (tag->type == FIFFT_DAU_PACK16)
-				nsamp = nchan > 0 ? tag->size / (nchan * sizeof(fiff_dau_pack16_t)) : 0;
-			else  /* FIFFT_INT */
-				nsamp = nchan > 0 ? tag->size / (nchan * sizeof(fiff_int_t)) : 0;
-			bufcnt++;
+  case FIFF_DATA_BUFFER:         /* One buffer of data */
+    if (tag->type == FIFFT_DAU_PACK16)
+      nsamp = nchan > 0 ? tag->size / (nchan * sizeof(fiff_dau_pack16_t)) : 0;
+    else  /* FIFFT_INT */
+      nsamp = nchan > 0 ? tag->size / (nchan * sizeof(fiff_int_t)) : 0;
+    bufcnt++;
 			
-			if (collect_data) {
+    if (collect_data) {
 				
-				if (databuf == NULL) {
-					databuf = calloc(nchan, sizeof(float *));
-					for (c = 0; c < nchan; c++)
-						databuf[c] = calloc(nsamp, sizeof(float));
-				}
+      if (databuf == NULL) {
+	databuf = calloc(nchan, sizeof(float *));
+	for (c = 0; c < nchan; c++)
+	  databuf[c] = calloc(nsamp, sizeof(float));
+      }
 				
-				catch_data(tag,databuf,nchan,nsamp);
-				process_data(databuf,nchan,nsamp,ch_info);
+      catch_data(tag,databuf,nchan,nsamp);
+      process_data(databuf,nchan,nsamp,ch_info);
 				
-			} else
-				printf("Data buffer not sent\n");
+    } else
+      printf("Data buffer not sent\n");
 			
-			break;
+    break;
 			
-		case FIFF_ERROR_MESSAGE : /* Message from the front-end */
-			dacq_log ("Error message: %s\n",tag->data);
-			break;
+  case FIFF_ERROR_MESSAGE : /* Message from the front-end */
+    dacq_log("Error message from the data acquisition system: %s\n",tag->data);
+    break;
 			
-		case FIFF_SFREQ :         /* Sampling frequency */
-			if (tag->data)
-				sfreq = *(float *)tag->data;
-			break;
+  case FIFF_SFREQ :         /* Sampling frequency */
+    if (tag->data)
+      sfreq = *(float *)tag->data;
+    break;
 			
-		case FIFF_BLOCK_START :
-			block_kind = *(int *)(tag->data);
-			switch (block_kind) {
+  case FIFF_BLOCK_START :
+    block_kind = *(int *)(tag->data);
+    switch (block_kind) {
 					
-				case FIFFB_MEAS :       /* Every file starts with this */
-					dacq_log ("New measurement is starting...\n");
-					nchan = 0;
-					sfreq = -1.0;
-					/* set_data_filter (TRUE); */
+    case FIFFB_MEAS :       /* Every file starts with this */
+      dacq_log("New measurement is starting...\n");
+      nchan = 0;
+      sfreq = -1.0;
+      /* set_data_filter (TRUE); */
+      break;
 					
-					break;
-					
-				case FIFFB_RAW_DATA :   /* The data buffers start */
-					dacq_log ("Data buffers coming soon...\n");
-					bufcnt = 0;
-					send_header_to_FT();
-					break;
-			}
-			break;
+    case FIFFB_RAW_DATA :   /* The data buffers start */
+      dacq_log("Data buffers coming soon...\n");
+      bufcnt = 0;
+      send_header_to_FT();
+      break;
+    }
+    break;
 			
-		case FIFF_BLOCK_END : 
-			block_kind = *(int *)(tag->data);
-			switch (block_kind) {
+  case FIFF_BLOCK_END : 
+    block_kind = *(int *)(tag->data);
+    switch (block_kind) {
 					
-				case FIFFB_MEAS :
-					dacq_log("Measurement ended (%d buffers).\n", bufcnt);
+    case FIFFB_MEAS :
+      dacq_log("Measurement ended (%d buffers).\n", bufcnt);
 					
-					// data was acquired, so we need to clear the data and the channel info
-					if (databuf != NULL) {
-						for (c = 0; c < nchan; c++) {
-							free(databuf[c]);
-							free(ch_info[c]);
-						}
-						free(databuf); databuf = NULL;
-						free(ch_info); ch_info = NULL;
-					}
-					// channel info was created, but data was not acquired
-					if (ch_info != NULL) {
-						for (c = 0; c < nchan; c++)
-							free(ch_info[c]);
-						free(ch_info); ch_info = NULL;
-					}
-					
-					nchan = 0;
-					nsamp = 0;
-					bufcnt = 0;
-					ch_count = 0;
-					sfreq = -1.0;
-					break;
-			}
-			break;
-			
-		case FIFF_CLOSE_FILE :
-			dacq_log("File closed.\n");
-			break;
-			
-		default:                  /* An unknown tag but it doesn't harm */
-			break;
+      // data was acquired, so we need to clear the data and the channel info
+      if (databuf != NULL) {
+	for (c = 0; c < nchan; c++) {
+	  free(databuf[c]);
+	  free(ch_info[c]);
 	}
+	free(databuf); databuf = NULL;
+	free(ch_info); ch_info = NULL;
+      }
+      // channel info was created, but data was not acquired
+      if (ch_info != NULL) {
+	for (c = 0; c < nchan; c++)
+	  free(ch_info[c]);
+	free(ch_info); ch_info = NULL;
+      }
+					
+      nchan = 0;
+      nsamp = 0;
+      bufcnt = 0;
+      ch_count = 0;
+      sfreq = -1.0;
+      break;
+    }
+    break;
+			
+  case FIFF_CLOSE_FILE :
+    dacq_log("File closed.\n");
+    break;
+			
+  default:                  /* An unknown tag but it doesn't harm */
+    break;
+  }
 	
-	fflush(stdout);
-	return(0);
+  fflush(stdout);
+  return(0);
 }

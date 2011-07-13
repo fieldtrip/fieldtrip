@@ -1,0 +1,4 @@
+=== Version 1.1 ===
+. Compiles in both Linux and HP-UX
+. Outputs current maxBuflen to the screen during normal program execution
+. Possible to change maxBuflen to a given value and quit the program (--fixchunksize)
