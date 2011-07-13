@@ -16,7 +16,7 @@ function sb_write_materials(filename,values,labels,weights)
 if nargin<3 & length(values)==3
   weights = [1. 1. 1.];
   labels  = {'skin', 'skull', 'brain'}; % it assumes this order
-else
+elseif nargin<3 & length(values)~=3
   error('You should specify the labels for models with more (or less) than 3 compartments')
 end
 
@@ -31,7 +31,7 @@ try
   for i=1:numel(values)
     fprintf(fid,'%s%s %d %d %d %d %0.1f\n','material ',labels{i},1,values(i),values(i),1,weights(i));
   end
-  fclose(fid)
+  fclose(fid);
 catch
   disp('Error in writing the file')
   rethrow(ME)
