@@ -1,6 +1,6 @@
 function varargout = peercellfun(fname, varargin)
 
-% PEERCELLFUN apply a function to each element of a cell-array. The
+% PEERCELLFUN applies a function to each element of a cell-array. The
 % function execution is done in parallel on all avaialble peers.
 %
 % Use as

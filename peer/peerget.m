@@ -3,6 +3,7 @@ function varargout = peerget(jobid, varargin)
 % PEERGET get the output arguments after the remote job has been executed.
 %
 % Use as
+%   jobid  = peerfeval(fname, arg1, arg2, ...)
 %   argout = peerget(jobid, ...)
 %
 % Optional arguments can be specified in key-value pairs and can include
@@ -32,7 +33,7 @@ function varargout = peerget(jobid, varargin)
 % -----------------------------------------------------------------------
 
 % the following are to speed up subsequent calls
-persistent previous_varargin previous_timeout previous_sleep previous_output previous_diary previous_StopOnError
+persistent previous_varargin previous_timeout previous_sleep previous_output previous_diary previous_StopOnError previous_engine
 
 if isequal(previous_varargin, varargin)
   % prevent the ft_getopt function from being called, because it is slow
@@ -42,6 +43,7 @@ if isequal(previous_varargin, varargin)
   output      = previous_output;
   diary       = previous_diary;
   StopOnError = previous_StopOnError;
+  engine      = previous_engine;
 else
   % get the optional arguments
   timeout     = ft_getopt(varargin, 'timeout',     1.000);
@@ -49,6 +51,7 @@ else
   output      = ft_getopt(varargin, 'output',      'varargout');
   diary       = ft_getopt(varargin, 'diary',       'error');
   StopOnError = ft_getopt(varargin, 'StopOnError', true);
+  engine      = ft_getopt(varargin, 'engine',      'peer');
 end
 
 % keep track of the time
@@ -57,19 +60,36 @@ stopwatch = tic;
 success = false;
 while ~success && toc(stopwatch)<timeout
   
-  joblist = peer('joblist');
-  sel = find([joblist.jobid]==jobid);
-  
-  if ~isempty(sel)
-    [argout, options] = peer('get', jobid);
-    peer('clear', jobid);
-    success = true;
+  if strcmp(engine, 'peer')
+    
+    joblist = peer('joblist');
+    if any([joblist.jobid]==jobid)
+      [argout, options] = peer('get', jobid);
+      peer('clear', jobid);
+      success = true;
+    else
+      % the job results have not arrived yet
+      % wait a little bit and try again
+      pause(sleep);
+      continue
+    end
+    
+  elseif strcmp(engine, 'qsub')
+    
+    p = getenv('HOME');
+    f = sprintf('job_%d_output.mat', jobid);
+    outputfile = fullfile(p, f);
+    
+    if exist(outputfile, 'file')
+      tmp     = load(outputfile);
+      argout  = tmp.argout;
+      options = tmp.options;
+      success = true;
+    end
+
   else
-    % the job results have not arrived yet
-    % wait a little bit and try again
-    pause(sleep);
-    continue
-  end
+    error('unrecognized parallel engine')
+  end % if engine
   
 end % while
 
@@ -99,8 +119,8 @@ if success
   
   if strcmp(diary, 'error') && ~isempty(err)
     if ~isempty(strfind(errmsg, 'could not start the matlab engine')) || ...
-       ~isempty(strfind(errmsg, 'failed to execute the job (argin)')) || ...
-       ~isempty(strfind(errmsg, 'failed to execute the job (optin)'))
+        ~isempty(strfind(errmsg, 'failed to execute the job (argin)')) || ...
+        ~isempty(strfind(errmsg, 'failed to execute the job (optin)'))
       % this is due to a license or a memory problem, and is dealt with in peercellfun
       closeline = false;
     else
