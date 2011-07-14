@@ -33,7 +33,7 @@ function varargout = peerget(jobid, varargin)
 % -----------------------------------------------------------------------
 
 % the following are to speed up subsequent calls
-persistent previous_varargin previous_timeout previous_sleep previous_output previous_diary previous_StopOnError previous_engine
+persistent previous_varargin previous_timeout previous_sleep previous_output previous_diary previous_StopOnError
 
 if isequal(previous_varargin, varargin)
   % prevent the ft_getopt function from being called, because it is slow
@@ -43,7 +43,6 @@ if isequal(previous_varargin, varargin)
   output      = previous_output;
   diary       = previous_diary;
   StopOnError = previous_StopOnError;
-  engine      = previous_engine;
 else
   % get the optional arguments
   timeout     = ft_getopt(varargin, 'timeout',     1.000);
@@ -51,7 +50,6 @@ else
   output      = ft_getopt(varargin, 'output',      'varargout');
   diary       = ft_getopt(varargin, 'diary',       'error');
   StopOnError = ft_getopt(varargin, 'StopOnError', true);
-  engine      = ft_getopt(varargin, 'engine',      'peer');
 end
 
 % keep track of the time
@@ -60,50 +58,26 @@ stopwatch = tic;
 success = false;
 while ~success && toc(stopwatch)<timeout
   
-  if strcmp(engine, 'peer')
-    
-    joblist = peer('joblist');
-    if any([joblist.jobid]==jobid)
-      [argout, options] = peer('get', jobid);
-      peer('clear', jobid);
-      success = true;
-    else
-      % the job results have not arrived yet
-      % wait a little bit and try again
-      pause(sleep);
-      continue
-    end
-    
-  elseif strcmp(engine, 'qsub')
-    
-    p = getenv('HOME');
-    shellscript  = fullfile(p, sprintf('job_%08d_script.sh', jobid));
-    matlabscript = fullfile(p, sprintf('job_%08d_script.m', jobid));
-    outputfile   = fullfile(p, sprintf('job_%08d_output.mat', jobid));
-    
-    if exist(outputfile, 'file')
-      tmp = load(outputfile);
-      argout  = tmp.argout;
-      options = tmp.optout;
-      success = true;
-      % clean up the temporary files
-      delete(outputfile);
-      delete(shellscript);
-      delete(matlabscript);
-    else
-      pause(1);
-    end
-    
+  % the code is largely shared with fieldtrip/qsub/qsubget.m
+  % this section is the only part where it is different between peer and qsub
+
+  joblist = peer('joblist');
+  if any([joblist.jobid]==jobid)
+    [argout, options] = peer('get', jobid);
+    peer('clear', jobid);
+    success = true;
   else
-    error('unrecognized parallel engine')
-  end % if engine
+    % the job results have not arrived yet
+    % wait a little bit and try again
+    pause(sleep);
+    continue
+  end
   
 end % while
 
 if success
   
   % look at the optional arguments
-  elapsed     = ft_getopt(options, 'elapsed');
   warn        = ft_getopt(options, 'lastwarn');
   err         = ft_getopt(options, 'lasterr');
   diarystring = ft_getopt(options, 'diary');
@@ -204,4 +178,3 @@ previous_sleep       = sleep;
 previous_output      = output;
 previous_diary       = diary;
 previous_StopOnError = StopOnError;
-previous_engine      = engine;
