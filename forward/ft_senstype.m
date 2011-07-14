@@ -134,7 +134,10 @@ end
 % the input may be a data structure which then contains a grad/elec structure, a header or only the labels
 if isdata
   % preferably look at the data and not the header for the grad, because it might be re-balanced and/or planar
-  if isfield(input, 'grad')
+  if isfield(input, 'hdr')
+    input = input.hdr;
+    isheader = true;
+  elseif isfield(input, 'grad')
     sens = input.grad;
     isgrad = true;
   elseif issubfield(input, 'hdr.grad')
@@ -234,9 +237,9 @@ else
       type = 'itab153_planar';
       
       % the order is important for the different yokogawa systems, because they all share the same channel names
-    elseif (mean(ismember(ft_senslabel('yokogawa440'),    sens.label)) > 0.8)
+    elseif (mean(ismember(ft_senslabel('yokogawa440'),    sens.label)) > 0.7)
       type = 'yokogawa440';
-    elseif (mean(ismember(ft_senslabel('yokogawa440_planar'),    sens.label)) > 0.8)
+    elseif (mean(ismember(ft_senslabel('yokogawa440_planar'),    sens.label)) > 0.7)
       type = 'yokogawa440_planar';
     elseif (mean(ismember(ft_senslabel('yokogawa160'),    sens.label)) > 0.4)
       type = 'yokogawa160';
@@ -317,9 +320,9 @@ else
       type = 'itab153_planar';
       
       % the order is important for the different yokogawa systems, because they all share the same channel names
-    elseif (mean(ismember(ft_senslabel('yokogawa440'),    sens.label)) > 0.8)
+    elseif (mean(ismember(ft_senslabel('yokogawa440'),    sens.label)) > 0.7)
       type = 'yokogawa440';
-    elseif (mean(ismember(ft_senslabel('yokogawa440_planar'),    sens.label)) > 0.8)
+    elseif (mean(ismember(ft_senslabel('yokogawa440_planar'),    sens.label)) > 0.7)
       type = 'yokogawa440_planar';
     elseif (mean(ismember(ft_senslabel('yokogawa160'),    sens.label)) > 0.4)
       type = 'yokogawa160';
