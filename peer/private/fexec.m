@@ -32,6 +32,9 @@ stopwatch = tic;
 usediary  = false;
 diaryfile = '';
 
+argout = {};
+optout = {};
+
 % there are many reasons why the execution may fail, hence the elaborate try-catch
 try
 
