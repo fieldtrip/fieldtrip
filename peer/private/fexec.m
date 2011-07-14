@@ -1,4 +1,4 @@
-function [argout, optout] = peerexec(argin, optin)
+function [argout, optout] = fexec(argin, optin)
 
 % FEXEC is the low-level function that executes the job on the engine or
 % slave. It also tries to change the path and pwd to those on the master
