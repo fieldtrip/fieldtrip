@@ -85,8 +85,8 @@ options = {'pwd', getcustompwd, 'path', getcustompath, 'global', getglobal, 'dia
 
 p = getenv('HOME');
 inputfile    = fullfile(p, sprintf('job_%08d_input.mat', jobid));
-shellscript  = fullfile(p, sprintf('job_%08d_script.sh', jobid));
-matlabscript = fullfile(p, sprintf('job_%08d_script.m', jobid));
+shellscript  = fullfile(p, sprintf('job_%08d.sh', jobid));
+matlabscript = fullfile(p, sprintf('job_%08d.m', jobid));
 
 % rename and save the variables
 argin = varargin;
@@ -97,7 +97,7 @@ save(inputfile, 'argin', 'optin');
 fid = fopen(shellscript, 'wt');
 fprintf(fid, '#!/bin/sh\n');
 fprintf(fid, 'cd "%s"\n', p);
-fprintf(fid, 'matlab2010b -nosplash -nodisplay -r job_%d_script\n', jobid);
+fprintf(fid, 'matlab2010b -nosplash -nodisplay -r job_%08d\n', jobid);
 fclose(fid);
 
 % create the matlab script

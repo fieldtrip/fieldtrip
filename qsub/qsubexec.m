@@ -1,4 +1,4 @@
-function retval = qsubexec(jobid)
+function [argout, optout] = qsubexec(jobid)
 
 % QSUBEXEC is a helper function to execute a job on the Torque or SGE batch
 % queue system. Normally you should not start this function yourself, but
@@ -36,25 +36,23 @@ function retval = qsubexec(jobid)
 % -----------------------------------------------------------------------
 
 try
-  
   p = getenv('HOME');
   inputfile  = fullfile(p, sprintf('job_%08d_input.mat', jobid));
   outputfile = fullfile(p, sprintf('job_%08d_output.mat_', jobid)); % note the _ at the end
-  
+
   tmp = load(inputfile);
-  delete(inputfile);
-  
+  % delete(inputfile);
+
   argin = tmp.argin; % this includes the function name and the input arguments
   optin = tmp.optin; % this includes the path setting, the pwd, the global variables, etc.
-  
-  % instead of reimplementing the whole try-catch execution, use the peerexec function to do the actual work
-  [argout, optout] = peerexec(argin, optin);
+
+  [argout, optout] = fexec(argin, optin);
   save(outputfile, 'argout', 'optout');
   rename(outputfile, outputfile(1:(end-1))); % remove the _ at the end
-  
+
 catch
-  
-  % this is to avoid MATLAB from hanging
+  % this is to avoid MATLAB from hanging in case fexec fails, since
+  % after the job execution we want MATLAB to exit
   warning('an error was caught');
-  
 end % try-catch
+

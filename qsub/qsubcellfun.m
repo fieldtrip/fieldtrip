@@ -118,10 +118,10 @@ for submit=1:numjob
   for j=1:numargin
     argin{j} = varargin{j}{submit};
   end
-  
+
   % submit the job
   [curjobid curputtime] = qsubfeval(fname, argin{:}, 'timeout', 5, 'memreq', memreq, 'timreq', timreq, 'diary', diary);
-  
+
   % fprintf('submitted job %d\n', submit);
   jobid(submit)      = curjobid;
   puttime(submit)    = curputtime;
@@ -135,28 +135,28 @@ while (~all(collected))
 
   for collect=find(~collected)
     % this will return empty arguments if the job has not finished
-    ws = warning('off', 'FieldTrip:peer:jobNotAvailable');
+    ws = warning('off', 'FieldTrip:qsub:jobNotAvailable');
     [argout, options] = qsubget(jobid(collect), 'timeout', 3, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
     warning(ws);
-    
+
     if ~isempty(argout) || ~isempty(options)
       % fprintf('collected job %d\n', collect);
       collected(collect)   = true;
       collecttime(collect) = toc(stopwatch);
-      
+
       % redistribute the output arguments
       for j=1:numargout
         varargout{j}{collect} = argout{j};
       end
-      
+
       % gather the job statistics
       % these are empty in case an error happened during remote evaluation, therefore the default value of NaN is specified
       timused(collect) = ft_getopt(options, 'timused', nan);
       memused(collect) = ft_getopt(options, 'memused', nan);
-      
+
     end  % if
   end % for
-  
+
   pause(0.1);
 end % while
 
@@ -170,7 +170,7 @@ if numargout>0 && UniformOutput
       end
     end
   end
-  
+
   % convert the output to a uniform one
   for i=1:numargout
     varargout{i} = [varargout{i}{:}];
