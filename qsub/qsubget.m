@@ -73,9 +73,9 @@ while ~success && toc(stopwatch)<timeout
     options = tmp.optout;
     success = true;
     % clean up the temporary files
-    % delete(outputfile);
-    % delete(shellscript);
-    % delete(matlabscript);
+    delete(outputfile);
+    delete(shellscript);
+    delete(matlabscript);
   else
     % the job results have not arrived yet
     % wait a little bit and try again
