@@ -66,6 +66,9 @@ while ~success && toc(stopwatch)<timeout
   shellscript  = fullfile(p, sprintf('job_%08d.sh', jobid));
   matlabscript = fullfile(p, sprintf('job_%08d.m', jobid));
   outputfile   = fullfile(p, sprintf('job_%08d_output.mat', jobid));
+  % these are cerated by qsub the present working directory
+  logfile_e    = fullfile(pwd, sprintf('job_%08d.sh.e*', jobid)); % note the wildcard
+  logfile_o    = fullfile(pwd, sprintf('job_%08d.sh.o*', jobid)); % note the wildcard
 
   if exist(outputfile, 'file')
     tmp = load(outputfile);
@@ -73,9 +76,15 @@ while ~success && toc(stopwatch)<timeout
     options = tmp.optout;
     success = true;
     % clean up the temporary files
-    delete(outputfile);
     delete(shellscript);
     delete(matlabscript);
+    delete(outputfile);
+    ws = warning('off', 'MATLAB:DELETE:FileNotFound');
+    % the files cannot be deleted if the user changes the present working
+    % directory between the qsubfeval and the qsubget calls
+    delete(logfile_e);
+    delete(logfile_o);
+    warning(ws);
   else
     % the job results have not arrived yet
     % wait a little bit and try again
