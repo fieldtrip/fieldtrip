@@ -1,3 +1,5 @@
+function test_ft_getopt
+
 % TEST: ft_getopt
 
 success = true;
