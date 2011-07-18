@@ -90,7 +90,7 @@ y     = info.y;
 label = info.label;
 
 % compute a tolerance measure
-distance = dist([x y]');
+distance = sqrt(abs(sum([x y]'.*[x y]',1))); 
 distance = triu(distance, 1);
 distance = distance(:);
 distance = distance(distance>0);
