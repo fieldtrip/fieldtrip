@@ -145,7 +145,7 @@ if needdat
 
   for i=1:nchans
     thischan = chanindx(i);
-    tmp = read_data(fname{thischan}, 'header', filehdr(thischan), 'dataformat', ftype{thischan}, 'begsample', begsample, 'endsample', endsample);
+    tmp = ft_read_data(fname{thischan}, 'header', filehdr(thischan), 'dataformat', ftype{thischan}, 'begsample', begsample, 'endsample', endsample);
     dat(i,:) = tmp;
   end
 end
