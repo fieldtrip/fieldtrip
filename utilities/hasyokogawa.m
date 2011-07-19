@@ -7,7 +7,8 @@ function [version] = hasyokogawa(desired)
 % Use as
 %   [string]  = hasyokogawa;
 % which returns a string describing the toolbox version, e.g. "12bitBeta3",
-% "16bitBeta3", or "16bitBeta6". An empty string is returned if the toolbox
+% "16bitBeta3", or "16bitBeta6" for preliminary versions, or '1.4' for the 
+% official Yokogawa MEG Reader Toolbox. An empty string is returned if the toolbox
 % is not installed. The string "unknown" is returned if it is installed but
 % the version is unknown.
 %
@@ -65,10 +66,12 @@ try
     version = 'unknown';
   end
   if nargin>0
-    version = strcmpi(version, desired);
-    if ~version
-        warning('The required version of the Yokogawa input toolbox (%s) is not installed.', desired);
-    end
+      if ~strcmp(desired, '1.4') 
+	version = strcmpi(version, desired);
+	if ~version
+	  warning('The required version of the Yokogawa input toolbox (%s) is not installed.', desired);
+	end
+      end
   end
   warning('on', 'MATLAB:pfileOlderThanMfile');
 catch
@@ -86,4 +89,28 @@ catch
     version = 0; % logical output
   end
   
+end
+
+% the official Yokogawa input toolbox takes precedence over the
+% preliminary versions
+try
+    warning('off', 'MATLAB:pfileOlderThanMfile');
+    res = getYkgwVersion();
+    if nargin == 0
+     	if strcmp(res.version, '1.4'), version = '1.4'; else version = 'unknown'; end            
+    else
+        if strcmp(desired, '1.4') 
+            if strcmp(res.version, '1.4'), version = '1.4'; else version = 'unknown'; end            
+            version = strcmpi(version, desired);
+            if ~version
+                warning('The required version of the Yokogawa input toolbox (%s) is not installed.', desired);
+            end
+        end
+    end
+    warning('on', 'MATLAB:pfileOlderThanMfile');
+catch 
+    warning('on', 'MATLAB:pfileOlderThanMfile');
+    if nargin>0 && strcmp(desired, '1.4')
+	version = 0; % logical output
+    end
 end
