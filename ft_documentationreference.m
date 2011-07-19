@@ -66,7 +66,7 @@ f12 = {f12.name}';
 f13 = dir(fullfile(p, 'connectivity', '*.m'));
 f13 = {f13.name}';
 
-funname = cat(1, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11);
+funname = cat(1, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13);
 
 for i=1:length(funname)
   [p, funname{i}, x] = fileparts(funname{i});
