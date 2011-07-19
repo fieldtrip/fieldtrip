@@ -70,6 +70,7 @@ url = {
   'BESA'       'see http://www.megis.de, or contact Karsten Hoechstetter'
   'EEPROBE'    'see http://www.ant-neuro.com, or contact Maarten van der Velde'
   'YOKOGAWA'   'see http://www.yokogawa.co.jp, or contact Nobuhiko Takahashi'
+  'YOKOGAWA_MEG_READER' 'contact Masayuki dot Mochiduki at jp.yokogawa.com'
   'BEOWULF'    'see http://oostenveld.net, or contact Robert Oostenveld'
   'MENTAT'     'see http://oostenveld.net, or contact Robert Oostenveld'
   'SON2'       'see http://www.kcl.ac.uk/depsta/biomedical/cfnr/lidierth.html, or contact Malcolm Lidierth'
@@ -154,11 +155,13 @@ switch toolbox
   case 'EEPROBE'
     status  = (exist('read_eep_avr') && exist('read_eep_cnt'));
   case 'YOKOGAWA'
-      status = (exist('hasyokogawa') && strcmp(hasyokogawa, '16bitBeta6'));
-  case 'YOKOGAWA16bitBeta3'
-    status = (exist('hasyokogawa') && strcmp(hasyokogawa, '16bitBeta3'));
-  case 'YOKOGAWA16bitBeta6'
-    status = (exist('hasyokogawa') && strcmp(hasyokogawa, '16bitBeta6'));
+    status = (exist('hasyokogawa') && hasyokogawa('16bitBeta6'));
+ case 'YOKOGAWA16BITBETA3'
+    status = (exist('hasyokogawa') && hasyokogawa('16bitBeta3'));
+  case 'YOKOGAWA16BITBETA6'
+    status = (exist('hasyokogawa') && hasyokogawa('16bitBeta6'));
+  case 'YOKOGAWA_MEG_READER' 
+    status = (exist('hasyokogawa') && hasyokogawa('1.4')); 
   case 'BEOWULF'
     status = (exist('evalwulf') && exist('evalwulf') && exist('evalwulf'));
   case 'MENTAT'
