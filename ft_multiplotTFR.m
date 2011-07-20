@@ -27,6 +27,8 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 % cfg.xlim             = 'maxmin' or [xmin xmax] (default = 'maxmin')
 % cfg.ylim             = 'maxmin' or [ymin ymax] (default = 'maxmin')
 % cfg.zlim             = 'maxmin','maxabs' or [zmin zmax] (default = 'maxmin')
+% cfg.gradscale        = number, scaling to apply to the MEG gradiometer channels prior to display
+% cfg.magscale         = number, scaling to apply to the MEG magnetometer channels prior to display
 % cfg.channel          = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 % cfg.refchannel       = name of reference channel for visualising connectivity, can be 'gui'
 % cfg.baseline         = 'yes','no' or [time1 time2] (default = 'no'), see FT_FREQBASELINE
@@ -140,6 +142,8 @@ if ~isfield(cfg,'trials'),          cfg.trials = 'all';                end
 if ~isfield(cfg,'xlim'),            cfg.xlim = 'maxmin';               end
 if ~isfield(cfg,'ylim'),            cfg.ylim = 'maxmin';               end
 if ~isfield(cfg,'zlim'),            cfg.zlim = 'maxmin';               end
+if ~isfield(cfg,'magscale'),        cfg.magscale = 1;                  end
+if ~isfield(cfg,'gradscale'),       cfg.gradscale = 1;                 end
 if ~isfield(cfg,'colorbar'),        cfg.colorbar = 'no';               end
 if ~isfield(cfg,'comment'),         cfg.comment = date;                end
 if ~isfield(cfg,'showlabels'),      cfg.showlabels = 'no';             end
@@ -418,6 +422,15 @@ if isempty(seldat)
   error('labels in data and labels in layout do not match'); 
 end
 
+% if magnetometer/gradiometer scaling is requested, get indices for
+% channels
+if (cfg.magscale ~= 1)
+  magInd = match_str(label, ft_channelselection('MEGMAG', label));
+end
+if (cfg.gradscale ~= 1)
+  gradInd = match_str(label, ft_channelselection('MEGGRAD', label));
+end
+
 datavector = dat(seldat,:,:);
 if ~isempty(cfg.maskparameter)
   maskvector = mask(seldat,:,:);
@@ -469,6 +482,14 @@ for k=1:length(seldat)
   cdata = squeeze(datavector(k,:,:));
   if ~isempty(cfg.maskparameter)
     mdata = squeeze(maskvector(k,:,:));
+  end
+  
+  % scale if needed
+  if (cfg.magscale ~= 1 && any(magInd == seldat(k)))
+    cdata = cdata .* cfg.magscale;
+  end
+  if (cfg.gradscale ~= 1 && any(gradInd == seldat(k)))
+    cdata = cdata .* cfg.gradscale;
   end
   
   % Get axes for this panel
