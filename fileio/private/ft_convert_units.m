@@ -187,6 +187,11 @@ if isfield(obj, 'transform'),
   obj.transform = H * obj.transform;
 end
 
+if isfield(obj, 'transformorig'),
+  H = diag([scale scale scale 1]);
+  obj.transformorig = H * obj.transformorig;
+end
+    
 % remember the unit
 obj.unit = target;
 
