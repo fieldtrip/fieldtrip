@@ -41,12 +41,12 @@ function [output] = ft_transform_geometry(transform, input)
 % $Id: ft_transform_geometry.m$
 
 checkrotation = ~strcmp(ft_voltype(input), 'unknown') || ft_senstype(input, 'meg'); 
+checkscaling  = ~strcmp(ft_voltype(input), 'unknown');
 
 % determine the rotation matrix
 rotation = eye(4);
 rotation(1:3,1:3) = transform(1:3,1:3);
 
-% FIXME insert check for nonuniform scaling, should give an error
 if any(abs(transform(4,:)-[0 0 0 1])>100*eps)
   error('invalid transformation matrix');
 end
@@ -58,8 +58,14 @@ if checkrotation
   end
 end
 
+if checkscaling
+  % FIXME build in a check for uniform rescaling probably do svd or so
+  % FIXME insert check for nonuniform scaling, should give an error
+end
+
 tfields   = {'pos' 'pnt' 'o'}; % apply rotation plus translation
 rfields   = {'ori' 'nrm'};     % only apply rotation
+mfields   = {'transform'};     % plain matrix multiplication
 recfields = {'fid' 'bnd'};     % recurse into these fields
 % the field 'r' is not included here, because it applies to a volume
 % conductor model, and scaling is not allowed, so r will not change.
@@ -70,6 +76,8 @@ for k = 1:numel(fnames)
     input.(fnames{k}) = apply(transform, input.(fnames{k}));
   elseif any(strcmp(fnames{k}, rfields))
     input.(fnames{k}) = apply(rotation, input.(fnames{k}));
+  elseif any(strcmp(fnames{k}, mfields))
+    input.(fnames{k}) = transform*input.(fnames{k});
   elseif any(strcmp(fnames{k}, recfields))
     for j = 1:numel(input.(fnames{k}))
       input.(fnames{k})(j) = ft_transform_geometry(transform, input.(fnames{k})(j));
