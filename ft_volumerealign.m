@@ -462,7 +462,7 @@ if ~isempty(realign)
   mri.transform = realign * mri.transform;
   mri.coordsys  = coordsys;
 else
-  warning('no coordinate system reallignment has been done');
+  warning('no coordinate system realignment has been done');
 end
 
 if exist('pnt', 'var')
@@ -487,6 +487,8 @@ cfg.version.matlab = version();
 cfg.callinfo.proctime = toc(ftFuncTimer);
 cfg.callinfo.calltime = ftFuncClock;
 cfg.callinfo.user = getusername();
+
+if isfield(mri, 'cfg'), cfg.previous = mri.cfg; end
 
 % remember the configuration
 mri.cfg = cfg;
