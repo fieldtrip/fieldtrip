@@ -144,18 +144,15 @@ if isfield(data, 'label'),
     tmpchan        = unique(tmpcmb(:));
     cfg.channelcmb = ft_channelcombination(cfg.channelcmb, tmpchan, 1);
     selchan        = [selchan;unique(cfg.channelcmb(:))];
-  else
-    tmpchan        = data.label;
   end
   
-  cfg.channel = ft_channelselection(cfg.channel, tmpchan);
+  cfg.channel = ft_channelselection(cfg.channel, data.label);
   selchan     = [selchan;cfg.channel];
   if ~isempty(cfg.partchannel)
     cfg.partchannel = ft_channelselection(cfg.partchannel, data.label);
     selchan         = [selchan; cfg.partchannel];
   end
   data = ft_selectdata(data, 'channel', unique(selchan));
-
 elseif isfield(data, 'labelcmb')
   cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
   if ~isempty(cfg.partchannel)
@@ -294,7 +291,6 @@ end
 % FIXME throw an error if no replicates and cfg.method='plv'
 % FIXME trial selection has to be implemented still
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % data bookkeeping:
 % check whether the required inparam is present in the data
@@ -340,7 +336,7 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
         
         % check whether multiple pairwise decomposition is required (this
         % can most conveniently be handled at this level
-          % tmpcfg.npsf = rmfield(tmpcfg.npsf, 'channelcmb');
+           %tmpcfg.npsf = rmfield(tmpcfg.npsf, 'channelcmb');
            try,tmpcfg.npsf = rmfield(tmpcfg.npsf, 'block');     end
            try,tmpcfg.npsf = rmfield(tmpcfg.npsf, 'blockindx'); end
 %         end
@@ -458,7 +454,6 @@ switch cfg.method
   case 'coh'
     % coherence (unsquared), if cfg.complex = 'imag' imaginary part of
     % coherency
-    
     optarg = {'complex',  cfg.complex, 'dimord',  data.dimord, 'feedback', cfg.feedback, ...
               'pownorm',  normpow,     'hasjack', hasjack};
     if ~isempty(cfg.pchanindx),
@@ -645,6 +640,7 @@ switch cfg.method
       end
       %fs = cfg.fsample; %FIXME do we really need this, or is this related to how
       %noisecov is defined and normalised?
+      if ~exist('powindx', 'var'), powindx = []; end
       fs = 1;
       [datout, varout, nrpt] = ft_connectivity_instantaneous(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack, powindx);
       outparam = 'instantspctrm';
