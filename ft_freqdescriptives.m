@@ -89,16 +89,16 @@ cfg = ft_checkconfig(cfg, 'deprecated', 'partchan');
 cfg = ft_checkconfig(cfg, 'deprecated', 'pseudovalue');
 
 % set the defaults
-if ~isfield(cfg, 'feedback'),    cfg.feedback      = 'textbar'; end
-if ~isfield(cfg, 'jackknife'),   cfg.jackknife     = 'no';      end
-if ~isfield(cfg, 'variance'),    cfg.variance      = 'no';      end
-if ~isfield(cfg, 'trials'),      cfg.trials        = 'all';     end
-if ~isfield(cfg, 'channel'),     cfg.channel       = 'all';     end
-if ~isfield(cfg, 'foilim'),      cfg.foilim        = 'all';     end
-if ~isfield(cfg, 'toilim'),      cfg.toilim        = 'all';     end
-if ~isfield(cfg, 'keeptrials'),  cfg.keeptrials    = 'no';      end
-if ~isfield(cfg, 'inputfile'),   cfg.inputfile     = [];        end
-if ~isfield(cfg, 'outputfile'),  cfg.outputfile    = [];        end
+cfg.feedback   = ft_getopt(cfg, 'feedback',  'textbar');
+cfg.jackknife  = ft_getopt(cfg, 'jackknife', 'no');
+cfg.variance   = ft_getopt(cfg, 'variance',  'no');
+cfg.trials     = ft_getopt(cfg, 'trials',    'all');
+cfg.channel    = ft_getopt(cfg, 'channel',   'all');
+cfg.foilim     = ft_getopt(cfg, 'foilim',    'all');
+cfg.toilim     = ft_getopt(cfg, 'toilim',    'all');
+cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 'no');
+cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
+cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
 
 % load optional given inputfile as data
 hasdata = (nargin>1);
@@ -126,7 +126,7 @@ keepflg  = strcmp(cfg.keeptrials, 'yes');
 if sum([varflg keepflg]>1),               error('you should specify only one of cfg.keeptrials or cfg.variance');                                             end
 if ~hasrpt && (varflg || keepflg),        error('a variance-estimate or a single trial estimate without repeated observations in the input is not possible'); end
 if ~hasrpt && ~strcmp(cfg.trials, 'all'), error('trial selection requires input data with repeated observations');                                            end
-if ~varflg && jckflg,                     warning('you specified cfg.jackknife = ''yes'' and cfg.variance = ''no'': no variance will be computed');           end
+if ~varflg && jckflg,                     varflg = 1; end
 
 % select data of interest
 if            ~strcmp(cfg.foilim,  'all'), freq = ft_selectdata(freq, 'foilim', cfg.foilim); end
@@ -163,7 +163,7 @@ if varflg,
   
   if jckflg,
     bias = (n-1).^2;
-  else,
+  else
     bias = 1;
   end
   
@@ -175,7 +175,7 @@ elseif keepflg
 elseif hasrpt
   %compute average only
   siz       = [size(freq.powspctrm) 1];
-  powspctrm = reshape(nanmean(freq.powspctrm,1), [siz(2:end)]);
+  powspctrm = reshape(nanmean(freq.powspctrm,1), siz(2:end));
 else
   %nothing to do
   powspctrm = freq.powspctrm;
@@ -196,12 +196,12 @@ output                = [];
 output.dimord         = newdimord;
 output.freq           = freq.freq;
 output.label          = freq.label;
-try, output.time      = freq.time;      end;
-try, output.grad      = freq.grad;      end;
-try, output.cumtapcnt = freq.cumtapcnt; end;
-try, output.cumsumcnt = freq.cumsumcnt; end;
+if isfield(freq, 'time'), output.time      = freq.time;      end;
+if isfield(freq, 'grad'), output.grad      = freq.grad;      end;
+if isfield(freq, 'cumtapcnt'), output.cumtapcnt = freq.cumtapcnt; end;
+if isfield(freq, 'cumsumcnt'), output.cumsumcnt = freq.cumsumcnt; end;
 output.powspctrm      = powspctrm;
-try, output.powspctrmsem = powspctrmsem; end;
+if exist('powspctrmsem', 'var'), output.powspctrmsem = powspctrmsem; end;
 
 % remember the trialinfo
 if strcmp(cfg.keeptrials, 'yes') && isfield(freq, 'trialinfo')
@@ -227,7 +227,7 @@ cfg.callinfo.proctime = toc(ftFuncTimer);
 cfg.callinfo.calltime = ftFuncClock;
 cfg.callinfo.user = getusername();
 
-try, cfg.previous = freq.cfg; end
+if isfield(freq, 'cfg'), cfg.previous = freq.cfg; end
 
 % remember the configuration details
 output.cfg = cfg;
