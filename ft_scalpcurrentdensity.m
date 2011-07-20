@@ -90,7 +90,13 @@ if ~isfield(cfg, 'trials'),        cfg.trials = 'all';       end
 if ~isfield(cfg, 'inputfile'),     cfg.inputfile = [];       end
 if ~isfield(cfg, 'outputfile'),    cfg.outputfile = [];      end
 
-if strcmp(cfg.method, 'hjorth'),   cfg = ft_checkconfig(cfg, 'required', {'neighbours'}); end
+if strcmp(cfg.method, 'hjorth')
+    cfg = ft_checkconfig(cfg, 'required', {'neighbours'});    
+    if iscell(cfg.neighbours)
+        warning('Neighbourstructure is in old format - converting to structure array');
+        cfg.neighbours = fixneighbours(cfg.neighbours);
+    end
+end
 
 % load optional given inputfile as data
 hasdata = (nargin>1);
@@ -180,15 +186,15 @@ elseif strcmp(cfg.method, 'hjorth')
   labelnew = {};
   labelorg = {};
   for i=1:length(cfg.neighbours)
-    labelnew  = cat(2, labelnew, cfg.neighbours{i}.label);
-    labelorg = cat(2, labelorg, cfg.neighbours{i}.neighblabel(:)');
+    labelnew  = cat(2, labelnew, cfg.neighbours(i).label);
+    labelorg = cat(2, labelorg, cfg.neighbours(i).neighblabel(:)');
   end
   labelorg = cat(2, labelnew, labelorg);
   labelorg = unique(labelorg);
   tra = zeros(length(labelnew), length(labelorg));
   for i=1:length(cfg.neighbours)
-    thischan   = match_str(labelorg, cfg.neighbours{i}.label);
-    thisneighb = match_str(labelorg, cfg.neighbours{i}.neighblabel);
+    thischan   = match_str(labelorg, cfg.neighbours(i).label);
+    thisneighb = match_str(labelorg, cfg.neighbours(i).neighblabel);
     tra(i, thischan) = 1;
     tra(i, thisneighb) = -1/length(thisneighb);
   end

@@ -62,6 +62,12 @@ if nargin < 3
     end
 end
 
+
+if iscell(cfg.neighbours)
+    warning('Neighbourstructure is in old format - converting to structure array');
+    cfg.neighbours = fixneighbours(cfg.neighbours);
+end
+
 if ~isfield(cfg, 'verbose')
     cfg.verbose = 'no';
 elseif strcmp(cfg.verbose, 'yes')    
@@ -69,7 +75,15 @@ elseif strcmp(cfg.verbose, 'yes')
 end
 
 % get the the grad or elec if not present in the data
-if isfield(cfg, 'grad')
+if isfield(data, 'grad')
+    fprintf('Using the gradiometer configuration from the dataset.\n');
+    sens = data.grad;
+    % extract true channelposition
+    [sens.pnt, sens.ori, sens.label] = channelposition(sens);
+elseif isfield(data, 'elec')
+    fprintf('Using the electrode configuration from the dataset.\n');
+    sens = data.elec;
+elseif isfield(cfg, 'grad')
     fprintf('Obtaining the gradiometer configuration from the configuration.\n');
     sens = cfg.grad;
     % extract true channelposition
@@ -92,16 +106,7 @@ elseif isfield(cfg, 'layout')
     sens.label = lay.label;
     sens.pnt = lay.pos;
     sens.pnt(:,3) = 0;
-elseif isfield(data, 'grad')
-    fprintf('Using the gradiometer configuration from the dataset.\n');
-    sens = data.grad;
-    % extract true channelposition
-    [sens.pnt, sens.ori, sens.label] = channelposition(sens);
-elseif isfield(data, 'elec')
-    fprintf('Using the electrode configuration from the dataset.\n');
-    sens = data.elec;
-end
-if ~isstruct(sens)
+else
     error('Did not find gradiometer or electrode information.');
 end;
 
@@ -118,7 +123,7 @@ axis equal
 axis off
 hold on;
 for i=1:length(neighbours)
-    this = neighbours{i};    
+    this = neighbours(i);    
     
     sel1 = match_str(sens.label, this.label);
     sel2 = match_str(sens.label, this.neighblabel);
@@ -149,7 +154,7 @@ for i=1:length(neighbours)
                         'MarkerEdgeColor',  'k',                                        ...
                         'MarkerFaceColor',  'k',                                        ...
                         'Marker',           'o',                                        ...
-                        'MarkerSize',       .125*(2+numel(neighbours{i}.neighblabel)^2), ...
+                        'MarkerSize',       .125*(2+numel(neighbours(i).neighblabel)^2), ...
                         'UserData',         i,                                          ...
                         'ButtonDownFcn',    @showLabelInTitle);
                     
@@ -158,7 +163,7 @@ for i=1:length(neighbours)
                         'MarkerEdgeColor',  'k',                                        ...
                         'MarkerFaceColor',  'k',                                        ...
                         'Marker',           'o',                                        ...
-                        'MarkerSize',       .125*(2+numel(neighbours{i}.neighblabel)^2), ...
+                        'MarkerSize',       .125*(2+numel(neighbours(i).neighblabel)^2), ...
                         'UserData',         i,                        ...
                         'ButtonDownFcn',    @showLabelInTitle);
     else

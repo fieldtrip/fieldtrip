@@ -16,8 +16,8 @@ function [interp] = ft_megplanar(cfg, data)
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
 %
 % The methods orig, sincos and fitplane are all based on a neighbourhood
-% interpolation. For these methods you can specify
-%   cfg.neighbourdist  = default is 4 cm
+% interpolation. For these methods you need to specify
+%   cfg.neighbours     = neighbourhood structure, see FT_NEIGHBOURSELECTION
 %
 % In the 'sourceproject' method a minumum current estimate is done using a
 % large number of dipoles that are placed in the upper layer of the brain
@@ -51,7 +51,7 @@ function [interp] = ft_megplanar(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_COMBINEPLANAR
+% See also FT_COMBINEPLANAR, FT_NEIGHBOURSELECTION
 
 % This function depends on FT_PREPARE_BRAIN_SURFACE which has the following options:
 % cfg.headshape  (default set in FT_MEGPLANAR: cfg.headshape = 'headmodel'), documented
@@ -100,6 +100,11 @@ cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 if ~isfield(cfg, 'inputfile'),      cfg.inputfile  = [];          end
 if ~isfield(cfg, 'outputfile'),     cfg.outputfile = [];          end
 cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
+
+if iscell(cfg.neighbours)
+    warning('Neighbourstructure is in old format - converting to structure array');
+    cfg.neighbours = fixneighbours(cfg.neighbours);
+end
 
 % load optional given inputfile as data
 hasdata = (nargin>1);

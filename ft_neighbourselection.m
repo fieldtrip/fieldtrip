@@ -22,11 +22,13 @@ function neighbours = ft_neighbourselection(cfg,data)
 % The configuration can contain
 %   cfg.method        = 'distance', 'triangulation' or 'template' (default = 'distance')
 %   cfg.neighbourdist = number, maximum distance between neighbouring sensors (only for 'distance')
+%   cfg.template      = name of the template file, e.g. CTF275_neighb.mat
+%   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
 %   cfg.elec          = structure with EEG electrode positions
 %   cfg.grad          = structure with MEG gradiometer positions
 %   cfg.elecfile      = filename containing EEG electrode positions
 %   cfg.gradfile      = filename containing MEG gradiometer positions
-%   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
+
 %   cfg.feedback      = 'yes' or 'no' (default = 'no')
 %
 % The following data fields may also be used by FT_NEIGHBOURSELECTION:
@@ -36,12 +38,12 @@ function neighbours = ft_neighbourselection(cfg,data)
 % The output:
 %   neighbours     = definition of neighbours for each channel,
 %     which is structured like this:
-%        neighbours{1}.label = 'Fz';
-%        neighbours{1}.neighblabel = {'Cz', 'F3', 'F3A', 'FzA', 'F4A', 'F4'};
-%        neighbours{2}.label = 'Cz';
-%        neighbours{2}.neighblabel = {'Fz', 'F4', 'RT', 'RTP', 'P4', 'Pz', 'P3', 'LTP', 'LT', 'F3'};
-%        neighbours{3}.label = 'Pz';
-%        neighbours{3}.neighblabel = {'Cz', 'P4', 'P4P', 'Oz', 'P3P', 'P3'};
+%        neighbours(1).label = 'Fz';
+%        neighbours(1).neighblabel = {'Cz', 'F3', 'F3A', 'FzA', 'F4A', 'F4'};
+%        neighbours(2).label = 'Cz';
+%        neighbours(2).neighblabel = {'Fz', 'F4', 'RT', 'RTP', 'P4', 'Pz', 'P3', 'LTP', 'LT', 'F3'};
+%        neighbours(3).label = 'Pz';
+%        neighbours(3).neighblabel = {'Cz', 'P4', 'P4P', 'Oz', 'P3P', 'P3'};
 %        etc.
 %        (Note that a channel is not considered to be a neighbour of itself.)
 %
@@ -72,34 +74,44 @@ ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'feedback'),       cfg.feedback = 'no';         end
-if ~isfield(cfg, 'method'),         cfg.method   = 'distance';   end
+cfg = ft_checkconfig(cfg, 'required',    {'method'});
 
-
-% FIXME: ugly temporary solution by sashae, see bugreport 575
-% TODO: remove this as users will be obliged to call this function manually
-if ~ismember(cfg.method, {'distance', 'triangulation', 'tri', 'template'})
-    cfg.method = 'distance';
-end
-
-% TODO: estimate sensor type
+hasdata = nargin>1;
 if strcmp(cfg.method, 'template')
     fprintf('Trying to load sensor neighbours from a template\n');
     if ~isfield(cfg, 'template')
+        if hasdata
+            fprintf('Estimating sensor type of data to determine the layout filename\n');
+            senstype = upper(ft_senstype(data));
+            fprintf('Data is of sensor type ''%s''\n', senstype);
+            if exist([senstype '.lay'], 'file')
+                cfg.layout = [senstype '.lay'];
+            else
+                fprintf('Name of sensor type does not match name of layout- and template-file\n');
+            end
+        end    
         if ~isfield(cfg, 'layout')
-            error('You need to define a template or layout when ft_neighbourselection is called with cfg.method=''template''');
+            error('You need to define a template or layout or give data as an input argument when ft_neighbourselection is called with cfg.method=''template''');
         end
         fprintf('Using the 2-D layout filename to determine the template filename\n');
         cfg.template = [strtok(cfg.layout, '.') '_neighb.mat'];
     end
-    if ~exist(cfg.template, 'file')
-        error('Template file could not be found - please check spelling or contact jm.horschig(at)donders.ru.nl if you want to create and share your own template!');
+    if ~exist(cfg.template, 'file') 
+        error('Template file could not be found - please check spelling or contact jm.horschig(at)donders.ru.nl if you want to create and share your own template! See also http://fieldtrip.fcdonders.nl/faq/how_can_i_define_my_own_neighbourhood_template');
     end
-    load(cfg.template);
+    load(cfg.template);    
     fprintf('Successfully loaded neighbour structure from %s\n', cfg.template);
 else
     % get the the grad or elec if not present in the data
-    sens = [];
-    if isfield(cfg, 'grad')
+    if hasdata && isfield(data, 'grad')
+        fprintf('Using the gradiometer configuration from the dataset.\n');
+        sens = data.grad;
+        % extract true channelposition
+        [sens.pnt, sens.label] = channelposition(sens);
+    elseif hasdata && isfield(data, 'elec')
+        fprintf('Using the electrode configuration from the dataset.\n');
+        sens = data.elec;
+    elseif isfield(cfg, 'grad')
         fprintf('Obtaining the gradiometer configuration from the configuration.\n');
         sens = cfg.grad;
         % extract true channelposition
@@ -122,16 +134,7 @@ else
         sens.label = lay.label;
         sens.pnt = lay.pos;
         sens.pnt(:,3) = 0;
-    elseif isfield(data, 'grad')
-        fprintf('Using the gradiometer configuration from the dataset.\n');
-        sens = data.grad;
-        % extract true channelposition
-        [sens.pnt, sens.label] = channelposition(sens);
-    elseif isfield(data, 'elec')
-        fprintf('Using the electrode configuration from the dataset.\n');
-        sens = data.elec;
-    end
-    if ~isstruct(sens)
+    else
         error('Did not find gradiometer or electrode information or a layout.');
     end;
     
@@ -174,12 +177,20 @@ else
             error('Method ''%s'' not known', cfg.method);
     end
 end
+
+if iscell(neighbours)
+    warning('Neighbourstructure is in old format - converting to structure array');
+    neighbours = fixneighbours(neighbours);
+end
+
 k = 0;
 for i=1:length(neighbours)
-    k = k + length(neighbours{i}.neighblabel);
+    k = k + length(neighbours(i).neighblabel);
 end
 if k==0, error('No neighbours were found!'); end;
 fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbours));
+
+
 
 if strcmp(cfg.feedback, 'yes')
     % give some graphical feedback
@@ -215,8 +226,8 @@ channeighbstructmat = (channeighbstructmat .* ~eye(nsensors));
 % construct a structured cell array with all neighbours
 neighbours=cell(1,nsensors);
 for i=1:nsensors
-    neighbours{i}.label       = sens.label{i};
-    neighbours{i}.neighblabel = sens.label(find(channeighbstructmat(i,:)));
+    neighbours(i).label       = sens.label{i};
+    neighbours(i).neighblabel = sens.label(find(channeighbstructmat(i,:)));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -239,16 +250,16 @@ for i=1:size(tri, 1)
 end
 
 % construct a structured cell array with all neighbours
-neighbours=cell(1,nsensors);
+neighbours=struct;
 alldist = [];
 noneighb = 0;
 for i=1:nsensors
-    neighbours{i}.label       = sens.label{i};
+    neighbours(i).label       = sens.label{i};
     neighbidx                 = find(channeighbstructmat(i,:));
-    neighbours{i}.dist        = sqrt(sum((repmat(sens.pnt(i, :), numel(neighbidx), 1) - sens.pnt(neighbidx, :)).^2, 2));
-    alldist                   = [alldist; neighbours{i}.dist];
-    neighbours{i}.neighblabel = sens.label(neighbidx);
-    neighbours{i}.neighbidx   = neighbidx;
+    neighbours(i).dist        = sqrt(sum((repmat(sens.pnt(i, :), numel(neighbidx), 1) - sens.pnt(neighbidx, :)).^2, 2));
+    alldist                   = [alldist; neighbours(i).dist];
+    neighbours(i).neighblabel = sens.label(neighbidx);
+    neighbours(i).neighbidx   = neighbidx;
 end
 
 neighbdist = mean(alldist)+3*std(alldist);
@@ -256,9 +267,11 @@ neighbdist = mean(alldist)+3*std(alldist);
 dismissedneighb = 0;
 alldist = [];
 for i=1:nsensors
-    idx                     = neighbours{i}.dist > neighbdist;
+    idx                     = neighbours(i).dist > neighbdist;
     dismissedneighb = dismissedneighb + sum(idx);
-    neighbours{i}.dist(idx) = [];
-    neighbours{i}.neighblabel(idx) = [];
-    alldist                   = [alldist; neighbours{i}.dist];
+    neighbours(i).dist(idx) = [];
+    neighbours(i).neighblabel(idx) = [];
+    alldist                   = [alldist; neighbours(i).dist];
 end
+neighbours = rmfield(neighbours, 'dist');
+neighbours = rmfield(neighbours, 'neighbidx');

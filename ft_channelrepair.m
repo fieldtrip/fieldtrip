@@ -7,9 +7,9 @@ function [interp] = ft_channelrepair(cfg, data);
 % Use as
 %   [interp] = ft_channelrepair(cfg, data)
 %
-% The configuration can contain
+% The configuration must contain
 %   cfg.badchannel     = cell-array, see FT_CHANNELSELECTION for details
-%   cfg.neighbourdist  = default is 4 cm
+%   cfg.neighbours     = neighbourhoodstructure, see also FT_NEIGHBOURSELECTION
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
 %
 % Since a nearest neighbour average is used, the input should contain
@@ -24,7 +24,7 @@ function [interp] = ft_channelrepair(cfg, data);
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_MEGREALIGN, FT_MEGPLANAR
+% See also FT_MEGREALIGN, FT_MEGPLANAR, FT_NEIGHBOURSELECTION
 
 % Copyright (C) 2004-2009, Robert Oostenveld
 
@@ -55,12 +55,16 @@ ftFuncClock = clock();
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the default configuration
-cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
-
 if ~isfield(cfg, 'badchannel'),    cfg.badchannel = {};           end
 if ~isfield(cfg, 'trials'),        cfg.trials = 'all';            end
 if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];           end
 if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end
+
+cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
+if iscell(cfg.neighbours)
+    warning('Neighbourstructure is in old format - converting to structure array');
+    cfg.neighbours = fixneighbours(cfg.neighbours);
+end
 
 hasdata = (nargin>1);
 if ~isempty(cfg.inputfile)

@@ -18,6 +18,7 @@ function [stat] = ft_freqstatistics(cfg, varargin)
 %   cfg.avgovertime = 'yes' or 'no'                   (default = 'no')
 %   cfg.avgoverfreq = 'yes' or 'no'                   (default = 'no')
 %   cfg.parameter   = string                          (default = 'powspctrm')
+%   cfg.neighbours  = see FT_NEIGHBOURSELECTION       (no default, required if cfg.correctm='cluster')
 %
 % Furthermore, the configuration should contain
 %   cfg.method       = different methods for calculating the significance probability and/or critical value
@@ -96,8 +97,13 @@ end
 
 % check whether channel neighbourhood information is needed and whether
 % this is present
-if isfield(cfg, 'correctm') && strcmp(cfg.correctm, 'cluster') && ~isfield(cfg,'neighbours')
-  error('if you want to use clustering for multiple comparison correction you have to specify the spatial neighbourhood structure of your channels. See ft_neighbourselection');
+if isfield(cfg, 'correctm') && strcmp(cfg.correctm, 'cluster') 
+    if ~isfield(cfg,'neighbours')
+        error('if you want to use clustering for multiple comparison correction you have to specify the spatial neighbourhood structure of your channels. See ft_neighbourselection');
+    elseif iscell(cfg.neighbours)
+        warning('Neighbourstructure is in old format - converting to structure array');
+        cfg.neighbours = fixneighbours(cfg.neighbours);
+    end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

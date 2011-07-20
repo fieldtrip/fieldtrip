@@ -517,8 +517,8 @@ elseif strcmp(cfg.avgoverchan, 'yes')
 end
 channeighbstructmat = false(nchan,nchan);
 for chan=1:length(cfg.neighbours)
-    [seld] = match_str(cfg.channel, cfg.neighbours{chan}.label);
-    [seln] = match_str(cfg.channel, cfg.neighbours{chan}.neighblabel);
+    [seld] = match_str(cfg.channel, cfg.neighbours(chan).label);
+    [seln] = match_str(cfg.channel, cfg.neighbours(chan).neighblabel);
     if isempty(seld)
         % this channel was not present in the data
         continue;
