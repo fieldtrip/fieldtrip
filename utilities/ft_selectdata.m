@@ -531,50 +531,59 @@ if israw,
   end
 
 elseif isfreq,
-  if isfield(data, 'labelcmb') && isfield(data, 'label') && (selectchan || avgoverchan)
-    error('selection of or averaging across channels in the presence of both label and labelcmb is not possible');
-  end
-  
+%   if isfield(data, 'labelcmb') && isfield(data, 'label') && (selectchan || avgoverchan)
+%     error('selection of or averaging across channels in the presence of both label and labelcmb is not possible');
+%   end
+  tmpdata = [];
   if isfield(data, 'labelcmb'),
-    %there is a crsspctrm or powcovspctrm field, 
-    %this will only be selectdimmed
-    %if we apply a trick
+    % there is a crsspctrm or powcovspctrm field, 
+    % this will only be selectdimmed
+    % if we apply a trick
     tmpdata = data;
     tmpdata.label = data.labelcmb;
+    try, tmpdata = rmfield(tmpdata, 'powspctrm'); end
+    
+    % selection of combinations
+    if selectchan && isfield(data, 'label')
+      selcmb = find(sum(ismember(tmpdata.label, data.label(selchan)),2)==2);
+    elseif selectchan
+      error('this is not yet implemented');
+    end
+    
+    % make the subselection
     if selectrpt,  tmpdata = seloverdim(tmpdata, 'rpt',  selrpt,  fb); end
-    if selectchan, tmpdata = seloverdim(tmpdata, 'chan', selchan, fb); end
+    if selectchan, tmpdata = seloverdim(tmpdata, 'chan', selcmb,  fb); end
     if selectfoi,  tmpdata = seloverdim(tmpdata, 'freq', selfoi,  fb); end
     if selecttoi,  tmpdata = seloverdim(tmpdata, 'time', seltoi,  fb); end
     % average over dimensions
     if avgoverrpt,  tmpdata = avgoverdim(tmpdata, 'rpt',  fb);  end
     if avgoverfreq, tmpdata = avgoverdim(tmpdata, 'freq', fb);  end
     if avgovertime, tmpdata = avgoverdim(tmpdata, 'time', fb);  end
-    if avgoverchan, error('avgoverchan not yet implemented in this case'); end
+    if avgoverchan, tmpdata = avgoverdim(tmpdata, 'chan', fb);  end
     if dojack,      tmpdata = leaveoneout(tmpdata);         end    
-
-    if isfield(tmpdata, 'crsspctrm'),    crsspctrm = tmpdata.crsspctrm;    end
-    if isfield(tmpdata, 'powcovspctrm'), crsspctrm = tmpdata.powcovspctrm; end
-    if isfield(tmpdata, 'crsspctrm') || isfield(tmpdata, 'powcovspctrm'), clear tmpdata; end 
-  else
-    crsspctrm = [];
   end
-  % make the subselection
-  if selectrpt,  data = seloverdim(data, 'rpt',  selrpt,  fb); end
-  if selectchan, data = seloverdim(data, 'chan', selchan, fb); end
-  if selectfoi,  data = seloverdim(data, 'freq', selfoi,  fb); end
-  if selecttoi,  data = seloverdim(data, 'time', seltoi,  fb); end
-  % average over dimensions
-  if avgoverrpt,  data = avgoverdim(data, 'rpt',  fb);  end
-  if avgoverchan, data = avgoverdim(data, 'chan', fb);  end
-  if avgoverfreq, data = avgoverdim(data, 'freq', fb);  end
-  if avgovertime, data = avgoverdim(data, 'time', fb);  end
-  if dojack,      data = leaveoneout(data);             end    
   
-  if ~isempty(crsspctrm),
-    if isfield(data, 'crsspctrm'),    data.crsspctrm    = crsspctrm; end
-    if isfield(data, 'powcovspctrm'), data.powcovspctrm = crsspctrm; end
+  if isfield(data, 'label'),
+    % make the subselection
+    if selectrpt,  data = seloverdim(data, 'rpt',  selrpt,  fb); end
+    if selectchan, data = seloverdim(data, 'chan', selchan, fb); end
+    if selectfoi,  data = seloverdim(data, 'freq', selfoi,  fb); end
+    if selecttoi,  data = seloverdim(data, 'time', seltoi,  fb); end
+    % average over dimensions
+    if avgoverrpt,  data = avgoverdim(data, 'rpt',  fb);  end
+    if avgoverfreq, data = avgoverdim(data, 'freq', fb);  end
+    if avgovertime, data = avgoverdim(data, 'time', fb);  end
+    if avgoverchan, data = avgoverdim(data, 'chan', fb); end
+    if dojack,      data = leaveoneout(data);            end    
   end
 
+  if isstruct(tmpdata)
+    param = selparam(tmpdata);
+    for k = 1:numel(param)
+      data.(param{k}) = tmpdata.(param{k});
+    end    
+  end
+  
 elseif istlck,
   % make the subselection
   if selectrpt,  data = seloverdim(data, 'rpt',  selrpt,  fb); end
