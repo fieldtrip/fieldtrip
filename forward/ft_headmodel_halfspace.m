@@ -9,7 +9,7 @@ function vol = ft_headmodel_halfspace(geom, Pc, varargin)
 %   Pc       = 1x3 vector specifying the spatial position of a point lying in the conductive halfspace 
 %              (this determines the plane normal's direction)
 %   Additional optional arguments include:
-%   'method'   = 'monopole' or 'dipole' (default)
+%   'sourcemodel'  = 'monopole' or 'dipole' (default)
 %   'conductivity' = number ,  conductivity value of the conductive halfspace (default = 1)
 % 
 % Use as
@@ -17,7 +17,7 @@ function vol = ft_headmodel_halfspace(geom, Pc, varargin)
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-method = keyval('method',   varargin); if isempty(method), method='dipole'; end
+model = keyval('sourcemodel',   varargin); if isempty(model), model='dipole'; end
 cond   = keyval('conductivity', varargin); 
 if isempty(cond), cond = 1; warning('Unknown conductivity value (set to 1)'); end
 
@@ -47,9 +47,9 @@ vol.pnt   = P(:)'; % a point that lies on the plane that separates the conductiv
 vol.ori   = N(:)'; % a unit vector pointing towards the air
 vol.ori   = vol.ori/norm(vol.ori);
 
-if strcmpi(method,'dipole')
+if strcmpi(model,'dipole')
   vol.type  = 'halfspace';    
-elseif strcmpi(method,'monopole')
+elseif strcmpi(model,'monopole')
   vol.type  = 'halfspace_monopole';    
 else
   error('unknow method')
