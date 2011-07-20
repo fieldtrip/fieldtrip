@@ -224,7 +224,7 @@ channeighbstructmat = (dist<neighbourdist);
 channeighbstructmat = (channeighbstructmat .* ~eye(nsensors));
 
 % construct a structured cell array with all neighbours
-neighbours=cell(1,nsensors);
+neighbours=struct;
 for i=1:nsensors
     neighbours(i).label       = sens.label{i};
     neighbours(i).neighblabel = sens.label(find(channeighbstructmat(i,:)));
