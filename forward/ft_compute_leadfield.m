@@ -429,7 +429,10 @@ elseif iseeg
       lf = eeg_halfspace_medium_leadfield(pos, sens.pnt, vol);
       
     case 'halfspace_monopole'
-      lf = eeg_halfspace_monopole(pos, sens.pnt, vol);      
+      lf = eeg_halfspace_monopole(pos, sens.pnt, vol);  
+      
+    case 'strip_monopole'
+      lf = eeg_strip_monopole(pos, sens.pnt, vol);          
 
     case 'simbio'
       lf = leadfield_simbio(pos, sens, vol);
