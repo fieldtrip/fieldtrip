@@ -52,6 +52,6 @@ else
   d = -dot(ori, plane(:,1:3)-P1(:,1:3), 2);
 
   % symmetric point
-  P2 = P1 + 2*d*ori;
+  P2 = P1 - 2*d*ori;
 end
 
