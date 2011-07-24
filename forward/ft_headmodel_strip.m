@@ -1,4 +1,4 @@
-function vol = ft_headmodel_strip(geom, geom2, Pc, varargin)
+function vol = ft_headmodel_strip(geom1, geom2, Pc, varargin)
 
 % FT_HEADMODEL_STRIP creates an EEG volume conduction model that
 % is described with an infinite conductive strip. You can think
@@ -15,7 +15,7 @@ function vol = ft_headmodel_strip(geom, geom2, Pc, varargin)
 %   'conductivity' = number ,  conductivity value of the conductive halfspace (default = 1)
 % 
 % Use as
-%   vol = ft_headmodel_strip(geom, geom2, Pc, varargin)
+%   vol = ft_headmodel_strip(geom1, geom2, Pc, varargin)
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
@@ -26,10 +26,10 @@ if isempty(cond), cond = 1; warning('Unknown conductivity value (set to 1)'); en
 % the description of this volume conduction model consists of the
 % description of the plane, and a point in the void halfspace
 
-if isstruct(geom) && isfield(geom,'pnt')
+if isstruct(geom1) && isfield(geom1,'pnt')
   pnt1 = geom1.pnt;
   pnt2 = geom2.pnt;
-elseif size(geom,2)==3
+elseif size(geom1,2)==3
   pnt1 = geom1;
   pnt2 = geom2;
 else
