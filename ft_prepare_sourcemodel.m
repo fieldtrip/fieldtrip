@@ -542,23 +542,48 @@ end
 % FIXME use inside_vol instead of this replication of code
 % determine the dipole locations inside the brain volume
 if ~isfield(grid, 'inside') && ~isfield(grid, 'outside')
-  if ft_voltype(vol, 'infinite') || ft_voltype(vol, 'halfspace') || ft_voltype(vol, 'halfspace_monopole')
+  if ft_voltype(vol, 'infinite')
     % an empty vol in combination with gradiometers indicates a magnetic dipole
     % in an infinite vacuum, i.e. all dipoles can be considered to be inside
+    grid.inside = 1:size(grid.pos,1);
+    grid.outside = [];
+    outside = zeros(1,size(grid.pos,1));
+    grid.outside = find(outside);
+    grid.inside  = find(~outside);
+  elseif ft_voltype(vol, 'halfspace') || ft_voltype(vol, 'halfspace_monopole')
     grid.inside = 1:size(grid.pos,1);
     grid.outside = [];
     outside = zeros(1,size(grid.pos,1));
     for i =1:size(grid.pos,1);
       invacuum = false;
       dip1 = grid.pos(i,:);
-      % condition of dipoles falling in the non conductive halfspace
+      % condition of dipoles/monopoles falling in the non conductive halfspace
       invacuum = acos(dot(vol.ori,(dip1-vol.pnt)./norm(dip1-vol.pnt))) < pi/2;
       if invacuum
         outside(i) = 1;
       end
     end
     grid.outside = find(outside);
-    grid.inside  = find(~outside);
+    grid.inside  = find(~outside);   
+  elseif ft_voltype(vol, 'strip_monopole')
+    grid.inside = 1:size(grid.pos,1);
+    grid.outside = [];
+    outside = zeros(1,size(grid.pos,1));    
+    for i =1:size(grid.pos,1);
+      invacuum = false;
+      pol = grid.pos(i,:);
+      % condition of dipoles/monopoles falling in the non conductive halfspace
+      % Attention: voxels on the boundary are automatically considered
+      % outside the strip!
+      instrip1 = acos(dot(vol.ori1,(pol-vol.pnt1)./norm(pol-vol.pnt1))) > pi/2;
+      instrip2 = acos(dot(vol.ori2,(pol-vol.pnt2)./norm(pol-vol.pnt2))) > pi/2;
+      instrip = instrip1&instrip2;
+      if ~instrip
+        outside(i) = 1;
+      end
+    end
+    grid.outside = find(outside);
+    grid.inside  = find(~outside);      
   else
     if isfield(sens, 'ori') && isfield(sens, 'pnt') && isfield(sens, 'tra')
       % in case of MEG, make a triangulation of the outermost surface

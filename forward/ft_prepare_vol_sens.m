@@ -316,39 +316,63 @@ elseif iseeg
       % nothing to do
 
     case {'halfspace', 'halfspace_monopole'}
-      pnt    = sens.pnt;
-      if ft_voltype(vol,'halfspace') || ft_voltype(vol,'halfspace_monopole')
-        d = dist(pnt);
-        % scan the electrodes and reposition the ones which are in the
-        % wrong halfspace (projected on the plane)
-        for i=1:size(pnt,1)
-          P = pnt(i,:);
-          is_in_empty = acos(dot(vol.ori,(P-vol.pnt)./norm(P-vol.pnt))) < pi/2;
-          if is_in_empty
-            d = dist(P); 
-            dPplane = -dot(vol.ori, vol.pnt-P, 2);
-            if dPplane>median(d(:))
-              error('Some electrodes are too distant from the plane: consider repositioning them')
-            else
-              % project point on plane
-              Ppr  = [0 0 0];
-              line = [P vol.ori];
-              % get indices of line and plane which are parallel
-              par = abs(dot(vol.ori, line(:,4:6), 2))<1e-14;
-              % difference between origins of plane and line
-              dp = vol.pnt - line(:, 1:3);
-              % Divide only for non parallel vectors (DL)
-              t = dot(vol.ori(~par,:), dp(~par,:), 2)./dot(vol.ori(~par,:), line(~par,4:6), 2);
-              % compute coord of intersection point
-              Ppr(~par, :) = line(~par,1:3) + repmat(t,1,3).*line(~par,4:6);
-              pnt(i,:) = Ppr;
-            end
+      % electrodes' all-to-all distances
+      numel = size(sens.pnt,1);
+      ref_el = sens.pnt(1,:);
+      md = dist( (sens.pnt-repmat(ref_el,[numel 1]))' );
+      % take the min distance as reference
+      md = min(md(1,2:end));
+      pnt = sens.pnt;
+      % scan the electrodes and reposition the ones which are in the
+      % wrong halfspace (projected on the plane)... if not too far away!
+      for i=1:size(pnt,1)
+        P = pnt(i,:);
+        is_in_empty = acos(dot(vol.ori,(P-vol.pnt)./norm(P-vol.pnt))) < pi/2;
+        if is_in_empty
+          dPplane = abs(dot(vol.ori, vol.pnt-P, 2));
+          if dPplane>md
+            error('Some electrodes are too distant from the plane: consider repositioning them')
+          else
+            % project point on plane
+            Ppr = pointproj(P,[vol.pnt vol.ori]);
+            pnt(i,:) = Ppr;
           end
         end
-        sens.pnt = pnt;
-      else
-        error('Wrong volume type')
       end
+      sens.pnt = pnt;
+
+    case {'strip_monopole'}
+      % electrodes' all-to-all distances
+      numel  = size(sens.pnt,1);
+      ref_el = sens.pnt(1,:);
+      md  = dist( (sens.pnt-repmat(ref_el,[numel 1]))' );
+      % choose min distance between electrodes
+      md  = min(md(1,2:end));
+      pnt = sens.pnt;
+      % looks for contacts outside the strip which are not too far away
+      % and projects them on the nearest plane
+      for i=1:size(pnt,1)
+        P = pnt(i,:);
+        instrip1 = acos(dot(vol.ori1,(P-vol.pnt1)./norm(P-vol.pnt1))) > pi/2;
+        instrip2 = acos(dot(vol.ori2,(P-vol.pnt2)./norm(P-vol.pnt2))) > pi/2;
+        is_in_empty = ~(instrip1&instrip2);
+        if is_in_empty
+          dPplane1 = abs(dot(vol.ori1, vol.pnt1-P, 2));
+          dPplane2 = abs(dot(vol.ori2, vol.pnt2-P, 2));
+          if dPplane1>md || dPplane2>md
+            error('Some electrodes are too distant from the plane: consider repositioning them')
+          elseif dPplane2>dPplane1
+            % project point on nearest plane
+            Ppr = pointproj(P,[vol.pnt1 vol.ori1]);
+            pnt(i,:) = Ppr;
+          else
+            % project point on nearest plane
+            Ppr = pointproj(P,[vol.pnt2 vol.ori2]);
+            pnt(i,:) = Ppr;            
+          end
+        end
+      end
+      sens.pnt = pnt;
       
     case {'singlesphere', 'concentric'}
       % ensure that the electrodes ly on the skin surface
@@ -446,3 +470,18 @@ elseif iseeg
 
 end % if iseeg or ismeg
 
+function Ppr = pointproj(P,plane)
+% projects a point on a plane
+% plane(1:3) is a point on the plane
+% plane(4:6) is the ori of the plane
+Ppr  = [];
+ori  = plane(4:6);
+line = [P ori];
+% get indices of line and plane which are parallel
+par = abs(dot(plane(4:6), line(:,4:6), 2))<1e-14;
+% difference between origins of plane and line
+dp = plane(1:3) - line(:, 1:3);
+% Divide only for non parallel vectors (DL)
+t = dot(ori(~par,:), dp(~par,:), 2)./dot(ori(~par,:), line(~par,4:6), 2);
+% compute coord of intersection point
+Ppr(~par, :) = line(~par,1:3) + repmat(t,1,3).*line(~par,4:6);

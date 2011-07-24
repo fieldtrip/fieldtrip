@@ -73,12 +73,14 @@ for i=1:Npoles
   R4 =  (4*pi*vol.cond) * (sum(r4' .^2 ) )';    
   
   % condition of poles falling in the non conductive halfspace    
-  invacuum = acos(dot(vol.ori,(pole1-vol.pnt)./norm(pole1-vol.pnt))) < pi/2;
+  instrip1 = acos(dot(vol.ori1,(pole1-vol.pnt1)./norm(pole1-vol.pnt1))) > pi/2;
+  instrip2 = acos(dot(vol.ori2,(pole1-vol.pnt2)./norm(pole1-vol.pnt2))) > pi/2;
+  invacuum = ~(instrip1&instrip2);
   
   if invacuum
     warning('a pole lies on the vacuum side of the plane');
     lf(:,i) = NaN(Nelc,1);
-  elseif any(R1)==0
+  elseif any(R1)==0 
     warning('a pole coincides with one of the electrodes');
     lf(:,i) = NaN(Nelc,1);
   else
@@ -98,8 +100,8 @@ ori1 = vol.ori1;
 pnt2 = vol.pnt2;
 ori2 = vol.ori2;
 
-if abs(dot(P1-pnt1,ori1))<eps
-  warning(sprintf ('point %f %f %f lies in the symmetry plane',P1(1),P1(2),P1(3)))
+if abs(dot(P1-pnt1,ori1))<eps || abs(dot(P1-pnt2,ori2))<eps
+  warning(sprintf ('point %f %f %f lies on the plane',P1(1),P1(2),P1(3)))
   P2 = P1;
 else
   
@@ -108,19 +110,19 @@ else
   plane2 = def_plane(pnt2,ori2);
   
   % distance plane1-point P1
-  d = -dot(ori1, plane1(:,1:3)-P1(:,1:3), 2);
+  d = abs(dot(ori1, plane1(:,1:3)-P1(:,1:3), 2));
   % symmetric point
-  P2 = P1 - 2*d*ori1;
+  P2 = P1 + 2*d*ori1;
   
   % distance plane2-point P1
-  d = -dot(ori2, plane2(:,1:3)-P1(:,1:3), 2);  
+  d = abs(dot(ori2, plane2(:,1:3)-P1(:,1:3), 2));  
   % symmetric point
-  P3 = P1 - 2*d*ori2;  
+  P3 = P1 + 2*d*ori2;  
   
   % distance plane2-point P2
-  d = -dot(ori2, plane2(:,1:3)-P2(:,1:3), 2);  
+  d = abs(dot(ori2, plane2(:,1:3)-P2(:,1:3), 2));  
   % symmetric point
-  P3 = P2 - 2*d*ori2;    
+  P4 = P2 + 2*d*ori2;    
 end
 
 function plane = def_plane(pnt,ori)

@@ -102,8 +102,8 @@ else
   plane = [pnt v1 v2];
  
   % distance plane-point P1
-  d = -dot(ori, plane(:,1:3)-P1(:,1:3), 2);
+  d = abs(dot(ori, plane(:,1:3)-P1(:,1:3), 2));
 
   % symmetric point
-  P2 = P1 - 2*d*ori;
+  P2 = P1 + 2*d*ori;
 end
