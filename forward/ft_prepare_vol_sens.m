@@ -359,8 +359,8 @@ elseif iseeg
         if is_in_empty
           dPplane1 = abs(dot(vol.ori1, vol.pnt1-P, 2));
           dPplane2 = abs(dot(vol.ori2, vol.pnt2-P, 2));
-          if dPplane1>md || dPplane2>md
-            error('Some electrodes are too distant from the plane: consider repositioning them')
+          if dPplane1>md && dPplane2>md
+            error('Some electrodes are too distant from the planes: consider repositioning them')
           elseif dPplane2>dPplane1
             % project point on nearest plane
             Ppr = pointproj(P,[vol.pnt1 vol.ori1]);
