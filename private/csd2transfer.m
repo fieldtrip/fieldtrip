@@ -80,11 +80,17 @@ else
   nrpt = 1;
 end
 
+if ~isempty(channelcmb) && ~strcmp(sfmethod, 'bivariate')
+  % enforce sfmethod to be bivariate
+  sfmethod = 'bivariate';
+end
+
 % if bivariate is requested without channelcmb, do all versus all pairwise
 if isempty(channelcmb) && strcmp(sfmethod, 'bivariate')
   channelcmb = {'all' 'all'};
 end
-  
+
+
 if ~isempty(channelcmb)
   channelcmb = ft_channelcombination(channelcmb, freq.label);
 end
