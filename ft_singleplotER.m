@@ -58,6 +58,10 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 % cfg.previous
 % cfg.version
 
+% Undocumented local options:
+% cfg.zlim (set to a specific frequency range [zmax zmin] for an average
+% over the frequency bins for TFR data.  Use in conjunction with e.g. cfg.xparam = 'time', and cfg.zparam = 'powspctrm'). 
+
 % copyright (c) 2003-2006, ole jensen
 %
 % this file is part of fieldtrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -119,6 +123,7 @@ cfg.baseline      = ft_getopt(cfg, 'baseline',    'no');
 cfg.trials        = ft_getopt(cfg, 'trials',      'all');
 cfg.xlim          = ft_getopt(cfg, 'xlim',        'maxmin');
 cfg.ylim          = ft_getopt(cfg, 'ylim',        'maxmin');
+cfg.zlim          = ft_getopt(cfg, 'zlim',        'maxmin');
 cfg.comment       = ft_getopt(cfg, 'comment',     strcat([date '\n']));
 cfg.axes          = ft_getopt(cfg,' axes',        'yes');
 cfg.fontsize      = ft_getopt(cfg, 'fontsize',    8);
@@ -375,9 +380,12 @@ for i=1:ndata
     xidmax(i,1) = nearest(varargin{i}.(cfg.xparam), xmax);
 end
 
-%fixme do something with yparam here
-%technically should not be defined for multiplotER, but can be defined (and
-%use ft_selectdata to average across frequencies
+if strcmp('freq',cfg.yparam) && strcmp('freq',dtype)
+    for i=1:ndata
+        varargin{i} = ft_selectdata(varargin{i},'param',cfg.zparam,'foilim',cfg.zlim,'avgoverfreq','yes');
+        varargin{i}.(cfg.zparam) = squeeze(varargin{i}.(cfg.zparam));
+    end
+end
 
 cla
 hold on;
@@ -402,26 +410,26 @@ for i=1:ndata
     % data has a label-field
     sellab = match_str(varargin{i}.label, selchannel);
     
-    if ~isempty(cfg.yparam)
-        if isfull
-            dat = dat(sel1, sel2, ymin:ymax, xidmin(i):xidmax(i));
-            dat = nanmean(nanmean(dat, meandir), 3);
-            siz = size(dat);
-            %fixmedat = reshape(dat, [siz(1:2) siz(4)]);
-            dat = reshape(dat, [siz(1) siz(3)]);
-            dat = dat(sellab, :);
-        elseif haslabelcmb
-            dat = dat(sellab, ymin:ymax, xidmin(i):xidmax(i));
-            dat = nanmean(dat, 2);
-            siz = size(dat);
-            dat = reshape(dat, [siz(1) siz(3)]);
-        else
-            dat = dat(sellab, ymin:ymax, xidmin(i):xidmax(i));
-            dat = nanmean(nanmean(dat, 3), 2);
-            siz = size(dat);
-            dat = reshape(dat, [siz(1) siz(3)]);
-        end
-    else
+%     if ~isempty(cfg.yparam)
+%         if isfull
+%             dat = dat(sel1, sel2, ymin:ymax, xidmin(i):xidmax(i));
+%             dat = nanmean(nanmean(dat, meandir), 3);
+%             siz = size(dat);
+%             %fixmedat = reshape(dat, [siz(1:2) siz(4)]);
+%             dat = reshape(dat, [siz(1) siz(3)]);
+%             dat = dat(sellab, :);
+%         elseif haslabelcmb
+%             dat = dat(sellab, ymin:ymax, xidmin(i):xidmax(i));
+%             dat = nanmean(dat, 2);
+%             siz = size(dat);
+%             dat = reshape(dat, [siz(1) siz(3)]);
+%         else
+%             dat = dat(sellab, ymin:ymax, xidmin(i):xidmax(i));
+%             dat = nanmean(nanmean(dat, 3), 2);
+%             siz = size(dat);
+%             dat = reshape(dat, [siz(1) siz(3)]);
+%         end
+%     else
         if isfull
             dat = dat(sel1, sel2, xidmin(i):xidmax(i));
             dat = nanmean(dat, meandir);
@@ -434,7 +442,7 @@ for i=1:ndata
         else
             dat = dat(sellab, xidmin(i):xidmax(i));
         end
-    end
+%     end
     xvector    = xparam(xidmin(i):xidmax(i));
     datavector = reshape(mean(dat, 1), [1 numel(xvector)]); % average over channels
     
