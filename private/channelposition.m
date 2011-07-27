@@ -153,7 +153,7 @@ switch ft_senstype(sens)
   otherwise
     % compute the position for each electrode
 
-    if isfield(sens, 'tra')
+    if isfield(sens, 'tra') & isfield(sens, 'ori')
       % each channel depends on multiple sensors (electrodes or coils)
       % compute a weighted position for the channel
       [nchan, ncoil] = size(sens.tra);
