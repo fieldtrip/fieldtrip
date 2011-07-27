@@ -76,6 +76,9 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 
 % Undocumented local options:
 % cfg.layoutname
+% cfg.zlim (set to a specific frequency range [zmax zmin] for an average
+% over the frequency bins for TFR data.  Use in conjunction with e.g. cfg.xparam = 'time', and cfg.zparam = 'powspctrm'). 
+
 
 %
 % This function depends on FT_TIMELOCKBASELINE which has the following options:
@@ -432,9 +435,12 @@ for i=1:Ndata
   xidmax(i,1) = nearest(varargin{i}.(cfg.xparam), xmax);
 end
 
-%FIXME do something with yparam here
-%technically should not be defined for multiplotER, but can be defined (and
-%use ft_selectdata to average across frequencies
+if strcmp('freq',cfg.yparam) && strcmp('freq',dtype)
+    for i=1:Ndata
+        varargin{i} = ft_selectdata(varargin{i},'param',cfg.zparam,'foilim',cfg.zlim,'avgoverfreq','yes');
+        varargin{i}.(cfg.zparam) = squeeze(varargin{i}.(cfg.zparam));
+    end
+end
 
 % Get physical y-axis range (ylim / zparam):
 if strcmp(cfg.ylim,'maxmin')
@@ -501,24 +507,24 @@ for i=1:Ndata
     label  = varargin{i}.label;
   end
   
-  if ~isempty(cfg.yparam)
-    if isfull
-      dat = dat(sel1, sel2, ymin:ymax, xidmin(i):xidmax(i));
-      dat = nanmean(nanmean(dat, meandir), 3);
-      siz = size(dat);
-      %FIXMEdat = reshape(dat, [siz(1:2) siz(4)]);
-    elseif haslabelcmb
-      dat = dat(sellab, ymin:ymax, xidmin(i):xidmax(i));
-      dat = nanmean(dat, 2);
-      siz = size(dat);
-      dat = reshape(dat, [siz(1) siz(3)]);
-    else
-      dat = dat(sellab, ymin:ymax, xidmin(i):xidmax(i));
-      dat = nanmean(nanmean(dat, 3), 2);
-      siz = size(dat);
-      dat = reshape(dat, [siz(1) siz(3)]);
-    end
-  else
+%   if ~isempty(cfg.yparam)
+%     if isfull
+%       dat = dat(sel1, sel2, ymin:ymax, xidmin(i):xidmax(i));
+%       dat = nanmean(nanmean(dat, meandir), 3);
+%       siz = size(dat);
+%       %FIXMEdat = reshape(dat, [siz(1:2) siz(4)]);
+%     elseif haslabelcmb
+%       dat = dat(sellab, ymin:ymax, xidmin(i):xidmax(i));
+%       dat = nanmean(dat, 2);
+%       siz = size(dat);
+%       dat = reshape(dat, [siz(1) siz(3)]);
+%     else
+%       dat = dat(sellab, ymin:ymax, xidmin(i):xidmax(i));
+%       dat = nanmean(nanmean(dat, 3), 2);
+%       siz = size(dat);
+%       dat = reshape(dat, [siz(1) siz(3)]);
+%     end
+%   else
     if isfull
       dat = dat(sel1, sel2, xidmin(i):xidmax(i));
       dat = nanmean(dat, meandir);
@@ -528,7 +534,7 @@ for i=1:Ndata
     else
       dat = dat(sellab, xidmin(i):xidmax(i));
     end
-  end
+%   end
   xparam = xparam(xidmin(i):xidmax(i));
   
   % Select the channels in the data that match with the layout:
