@@ -34,4 +34,4 @@ end
 param = fn(sel);
 
 % some fields should be excluded
-param = setdiff(param, {'time', 'freq', 'channel','inside'});
+param = setdiff(param, {'time', 'freq', 'channel','inside','label'});
