@@ -129,15 +129,19 @@ if ~isfield(cfg, 'inputfile'),        cfg.inputfile  = [];            end
 % if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';          end  % the default for this depends on EEG/MEG and is set below
 
 hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-  end
+if isfield(cfg,'grad')
+    data = []; % clear for memory reasons and because we won't use it
+    % need to check if data.grad and cfg.grad are same?
+    % need to warn/error user that we use cfg.grad and not data.grad?
 else
-  data = [];
+    if ~isempty(cfg.inputfile) && hasdata
+        error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+    elseif ~isempty(cfg.inputfile)
+        % the input data should be read from file
+        data = loadvar(cfg.inputfile, 'data');
+    elseif ~hasdata
+        error('Either data, cfg.inputfile, or cfg.grad must be specified');
+    end
 end
 
 % put the low-level options pertaining to the dipole grid in their own field
