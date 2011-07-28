@@ -27,6 +27,9 @@ function [stat] = ft_freqstatistics(cfg, varargin)
 %                    'stats'         use a parametric test from the Matlab statistics toolbox,
 %                    'crossvalidate' use crossvalidation to compute predictive performance
 %
+%   cfg.design       = Nxnumobservations: design matrix (for examples/advice, please see the Fieldtrip wiki, 
+%                      especially cluster-permutation tutorial and the 'walkthrough' design-matrix section)
+%
 % The other cfg options depend on the method that you select. You
 % should read the help of the respective subfunction STATISTICS_XXX
 % for the corresponding configuration options and for a detailed
