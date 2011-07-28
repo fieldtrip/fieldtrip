@@ -61,15 +61,16 @@ info.axes(3) = axes('position',[0.100 0.250 0.375 0.300]);  % trials
 % plots
 
 % set up radio buttons for choosing metric
-g = uibuttongroup('Position',[0.525 0.275 0.375 0.250 ],'bordertype','none','backgroundcolor',get(h,'color'));
-r(1) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 7/7 0.40 0.15 ],'Style','radio','string','var','HandleVisibility','off');
-r(2) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 6/7 0.40 0.15 ],'Style','radio','String','min','HandleVisibility','off');
-r(3) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 5/7 0.40 0.15 ],'Style','Radio','String','max','HandleVisibility','off');
-r(4) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 4/7 0.40 0.15 ],'Style','Radio','String','maxabs','HandleVisibility','off');
-r(5) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 3/7 0.40 0.15 ],'Style','Radio','String','range','HandleVisibility','off');
-r(6) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 2/7 0.40 0.15 ],'Style','Radio','String','kurtosis','HandleVisibility','off');
-r(7) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 1/7 0.40 0.15 ],'Style','Radio','String','1/var','HandleVisibility','off');
-r(8) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 0/7 0.40 0.15 ],'Style','Radio','String','zvalue','HandleVisibility','off');
+bgcolor = get(h,'color');
+g = uibuttongroup('Position',[0.525 0.275 0.375 0.250 ],'bordertype','none','backgroundcolor',bgcolor);
+r(1) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 7/7 0.40 0.15 ],'Style','radio','backgroundcolor',bgcolor,'string','var','HandleVisibility','off');
+r(2) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 6/7 0.40 0.15 ],'Style','radio','backgroundcolor',bgcolor,'String','min','HandleVisibility','off');
+r(3) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 5/7 0.40 0.15 ],'Style','Radio','backgroundcolor',bgcolor,'String','max','HandleVisibility','off');
+r(4) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 4/7 0.40 0.15 ],'Style','Radio','backgroundcolor',bgcolor,'String','maxabs','HandleVisibility','off');
+r(5) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 3/7 0.40 0.15 ],'Style','Radio','backgroundcolor',bgcolor,'String','range','HandleVisibility','off');
+r(6) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 2/7 0.40 0.15 ],'Style','Radio','backgroundcolor',bgcolor,'String','kurtosis','HandleVisibility','off');
+r(7) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 1/7 0.40 0.15 ],'Style','Radio','backgroundcolor',bgcolor,'String','1/var','HandleVisibility','off');
+r(8) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 0/7 0.40 0.15 ],'Style','Radio','backgroundcolor',bgcolor,'String','zvalue','HandleVisibility','off');
 % pre-select appropriate metric, if defined
 set(g,'SelectionChangeFcn',@change_metric);
 for i=1:length(r)
@@ -83,8 +84,10 @@ uicontrol(h,'Units','normalized','position',[0.64 0.44 0.14 0.05],'Style','text'
 uicontrol(h,'Units','normalized','position',[0.64 0.40 0.12 0.05],'Style','edit','HorizontalAlignment','left','backgroundcolor',[1 1 1],'callback',@toggle_trials);
 uicontrol(h,'Units','normalized','position',[0.64 0.31 0.14 0.05],'Style','text','HorizontalAlignment','left','backgroundcolor',get(h,'color'),'string','Toggle channel:');
 uicontrol(h,'Units','normalized','position',[0.64 0.27 0.12 0.05],'Style','edit','HorizontalAlignment','left','backgroundcolor',[1 1 1],'callback',@toggle_channels);
-%uicontrol(h,'Units','normalized','position',[0.65 0.34 0.20 0.05],'Style','text','HorizontalAlignment','left','backgroundcolor',get(h,'color'),'string','Plot trial #:');
-%uicontrol(h,'Units','normalized','position',[0.65 0.30 0.15 0.05],'Style','edit','HorizontalAlignment','left','backgroundcolor',[1 1 1],'callback',@display_trial);
+
+% editbox for trial plotting
+                  uicontrol(h,'Units','normalized','position',[0.500 0.165 0.10 0.05],'Style','text','HorizontalAlignment','left','backgroundcolor',get(h,'color'),'string','Plot trial:');
+info.plottrltxt = uicontrol(h,'Units','normalized','position',[0.580 0.170 0.12 0.05],'Style','edit','HorizontalAlignment','left','backgroundcolor',[1 1 1],'callback',@display_trial);
 
 info.badtrllbl  = uicontrol(h,'Units','normalized','position',[0.795 0.44 0.195 0.05],'Style','text','HorizontalAlignment','left','backgroundcolor',get(h,'color'),'string',sprintf('Rejected trials: %i/%i',sum(info.trlsel==0),info.ntrl));
 info.badtrltxt  = uicontrol(h,'Units','normalized','position',[0.795 0.3975 0.23 0.05],'Style','text','HorizontalAlignment','left','backgroundcolor',get(h,'color'));
@@ -108,6 +111,12 @@ info.output_box = uicontrol(h,'Units','normalized','position',[0.00 0.00 1.00 0.
 uicontrol(h,'Units','normalized','position',[0.80 0.175 0.10 0.05],'string','quit','callback',@quit);
 
 guidata(h, info);
+
+% disable trial plotting if cfg.layout not present
+if ~isfield(info.cfg,'layout')
+  set(info.plottrltxt,'Enable','off');
+  update_log(info.output_box,sprintf('NOTE: "cfg.layout" parameter required for trial plotting!'));
+end
 
 % Compute initial metric...
 compute_metric(h);
@@ -303,7 +312,8 @@ if ~isempty(rawchans)
   splchans = regexp(rawchans,'\s+','split');
   chans = zeros(1,length(splchans));
   % determine whether identifying channels via number or label
-  [~,~,~,procchans] = regexp(rawchans,'([A-Za-z]+|[0-9]{4,})');
+  [junk junk junk procchans] = regexp(rawchans,'([A-Za-z]+|[0-9]{4,})');
+  clear junk;
   if isempty(procchans)
     % if using channel numbers
     for n = 1:length(splchans)
@@ -479,3 +489,28 @@ maxperchan_all = max(level_all,[],2);
 maxpertrl_all  = max(level_all,[],1);
 varargout(1) = {maxperchan_all};
 varargout(2) = {maxpertrl_all};
+
+function display_trial(h, eventdata)
+info = guidata(h);
+rawtrls = get(h,'string');
+if isempty(rawtrls)
+  return;
+else
+  spltrls = regexp(rawtrls,'\s+','split');
+  trls = [];
+  for n = 1:length(spltrls)
+    trls(n) = str2num(cell2mat(spltrls(n)));
+  end
+end
+cfg_mp = [];
+cfg_mp.layout  = info.cfg.layout;
+cfg_mp.channel = info.data.label(info.chansel);
+currfig = gcf;
+for n = 1:length(trls)
+  figure()
+  cfg_mp.trials = trls(n);
+  ft_multiplotER(cfg_mp, info.data);
+  title(sprintf('Trial %i',trls(n)));
+end
+figure(currfig);
+return;
