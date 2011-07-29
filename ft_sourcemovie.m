@@ -8,8 +8,7 @@ function cfg = ft_sourcemovie(cfg, source)
 % where indata is obtained from FT_SOURCEANALYSIS
 % and cfg is a configuratioun structure that should contain
 %
-%  cfg.xparam     = string, parameter over which the movie unrolls (default = 'time')
-%  cfg.zparam     = string, parameter that is color coded (default = 'avg.pow')
+%  cfg.parameter    = string, parameter that is color coded (default = 'avg.pow')
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following option:
@@ -50,31 +49,33 @@ source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
+cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam'});
 
 % get the options
 xlim    = ft_getopt(cfg, 'xlim');
 zlim    = ft_getopt(cfg, 'zlim');
 xparam  = ft_getopt(cfg, 'xparam', 'time');     % use time as default
-zparam  = ft_getopt(cfg, 'zparam', 'avg.pow');  % use power as default
+parameter  = ft_getopt(cfg, 'parameter', 'avg.pow');  % use power as default
 mask    = ft_getopt(cfg, 'mask',   []);
 
 % update the configuration
 cfg.xparam = xparam;
-cfg.zparam = zparam;
+cfg.parameter = parameter;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 xparam = source.(xparam);
-zparam = getsubfield(source, zparam); % might be avg.pow
+parameter = getsubfield(source, parameter); % might be avg.pow
 
-if length(xparam)~=size(zparam,2)
-  error('inconsistent size of "%s" compared to "%s"', cfg.zparam, cfg.xparam);
+if length(xparam)~=size(parameter,2)
+  error('inconsistent size of "%s" compared to "%s"', cfg.parameter, cfg.xparam);
 end
 
-if size(source.pos)~=size(zparam,1)
-  error('inconsistent number of vertices in the cortical mesh', cfg.zparam, cfg.xparam);
+if size(source.pos)~=size(parameter,1)
+  error('inconsistent number of vertices in the cortical mesh', cfg.parameter, cfg.xparam);
 end
 
 if ~isfield(source, 'tri')
@@ -93,12 +94,12 @@ cfg.xlim = xparam([xbeg xend]);
 
 % make a subselection of the data
 xparam = xparam(xbeg:xend);
-zparam = zparam(:,xbeg:xend);
+parameter = parameter(:,xbeg:xend);
 clear xbeg xend
 
 if isempty(zlim)
-  zlim(1) = min(zparam(:));
-  zlim(2) = max(zparam(:));
+  zlim(1) = min(parameter(:));
+  zlim(2) = max(parameter(:));
   % update the configuration
   cfg.zlim = zlim;
 end
@@ -138,7 +139,7 @@ set(t, 'timerfcn', {@cb_timer, h}, 'period', 0.1, 'executionmode', 'fixedSpacing
 opt.pnt = source.pos;
 opt.tri = source.tri;
 opt.tim = xparam;
-opt.dat = zparam;
+opt.dat = parameter;
 opt.speed = 1;
 opt.cfg = cfg;
 opt.s = s;

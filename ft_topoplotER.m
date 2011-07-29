@@ -8,12 +8,11 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 % Use as:
 %   ft_topoplotER(cfg, data)
 %
-% cfg.xparam             = first dimension in data in which a selection is made
-%                         'time' or 'freq' (default depends on data.dimord)
-% cfg.zparam             = field that contains the data to be plotted as color
+% cfg.parameter          = field that contains the data to be plotted as color
 %                         'avg', 'powspctrm' or 'cohspctrm' (default depends on data.dimord)
-% cfg.xlim               = 'maxmin' or [xmin xmax] (default = 'maxmin')
-% cfg.zlim               = 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
+% cfg.xlim               = selection boundaries over first dimension in data (e.g., time)
+%                          'maxmin' or [xmin xmax] (default = 'maxmin')
+% cfg.zlim               = plotting limits for color dimension, 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
 % cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 % cfg.refchannel         = name of reference channel for visualising connectivity, can be 'gui'
 % cfg.baseline           = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
@@ -56,7 +55,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %                          determines resolution of figure
 % cfg.shading            = 'flat' 'interp' (default = 'flat')
 % cfg.comment            = string 'no' 'auto' or 'xlim' (default = 'auto')
-%                          'auto': date, xparam and zparam limits are printed
+%                          'auto': date, xparam and parameter limits are printed
 %                          'xlim': only xparam limits are printed
 % cfg.commentpos         = string or two numbers, position of comment (default 'leftbottom')
 %                          'lefttop' 'leftbottom' 'middletop' 'middlebottom' 'righttop' 'rightbottom'
@@ -148,6 +147,9 @@ ft_defaults
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'unused',  {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel' 'refchannel'}); 
+
+cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
+cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam'});
 
 % set default for inputfile
 if ~isfield(cfg, 'inputfile'),  cfg.inputfile = [];    end
@@ -335,21 +337,21 @@ switch dtype
 end
 dimtok = tokenize(dimord, '_');
 
-% Set x/y/zparam defaults according to datatype and dimord
+% Set x/y/parameter defaults according to datatype and dimord
 switch dtype
     case 'timelock'
         cfg.xparam = ft_getopt(cfg, 'xparam', 'time');
         cfg.yparam = ft_getopt(cfg, 'yparam', '');
-        cfg.zparam = ft_getopt(cfg, 'zparam', 'avg');
+        cfg.parameter = ft_getopt(cfg, 'parameter', 'avg');
     case 'freq'
         if any(ismember(dimtok, 'time'))
             cfg.xparam = ft_getopt(cfg, 'xparam', 'time');
             cfg.yparam = ft_getopt(cfg, 'yparam', 'freq');
-            cfg.zparam = ft_getopt(cfg, 'zparam', 'powspctrm');
+            cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
         else
             cfg.xparam = ft_getopt(cfg, 'xparam', 'freq');
             cfg.yparam = ft_getopt(cfg, 'yparam', '');
-            cfg.zparam = ft_getopt(cfg, 'zparam', 'powspctrm');
+            cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
         end
     case 'comp'
         % Add a pseudo-axis with the component numbers:
@@ -363,14 +365,14 @@ switch dtype
         data.label = data.topolabel;
         cfg.xparam = ft_getopt(cfg, 'xparam', 'comp');
         cfg.yparam = ft_getopt(cfg, 'yparam', '');
-        cfg.zparam = ft_getopt(cfg, 'zparam', 'topo');
+        cfg.parameter = ft_getopt(cfg, 'parameter', 'topo');
     otherwise
         % if the input data is not one of the standard data types, or if
         % the functional data is just one value per channel
         % in this case xparam, yparam are not defined
-        % and the user should define the zparam
+        % and the user should define the parameter
         if ~isfield(data, 'label'), error('the input data should at least contain a label-field'); end
-        if ~isfield(cfg, 'zparam'), error('the configuration should at least contain a ''zparam'' field'); end
+        if ~isfield(cfg, 'parameter'), error('the configuration should at least contain a ''parameter'' field'); end
         if ~isfield(cfg, 'xparam'),
             cfg.xlim   = [1 1];
             cfg.xparam = '';
@@ -378,7 +380,7 @@ switch dtype
 end
 
 % user specified own fields, but no yparam (which is not asked in help)
-if isfield(cfg, 'xparam') && isfield(cfg, 'zparam') && ~isfield(cfg, 'yparam')
+if isfield(cfg, 'xparam') && isfield(cfg, 'parameter') && ~isfield(cfg, 'yparam')
     cfg.yparam = '';
 end
 
@@ -398,16 +400,16 @@ elseif strcmp(dtype, 'freq') && hasrpt,
     tmpcfg           = [];
     tmpcfg.trials    = cfg.trials;
     tmpcfg.jackknife = 'no';
-    if isfield(cfg, 'zparam') && ~strcmp(cfg.zparam,'powspctrm')
+    if isfield(cfg, 'parameter') && ~strcmp(cfg.parameter,'powspctrm')
         % freqdesctiptives will only work on the powspctrm field
         % hence a temporary copy of the data is needed
         tempdata.dimord    = data.dimord;
         tempdata.freq      = data.freq;
         tempdata.label     = data.label;
-        tempdata.powspctrm = data.(cfg.zparam);
+        tempdata.powspctrm = data.(cfg.parameter);
         tempdata.cfg       = data.cfg;
         tempdata           = ft_freqdescriptives(tmpcfg, tempdata);
-        data.(cfg.zparam)  = tempdata.powspctrm;
+        data.(cfg.parameter)  = tempdata.powspctrm;
         clear tempdata
     else
         data = ft_freqdescriptives(tmpcfg, data);
@@ -465,7 +467,7 @@ isfull  = length(selchan)>1;
 % Check for bivariate metric with a labelcmb field:
 haslabelcmb = isfield(data, 'labelcmb');
 
-if (isfull || haslabelcmb) && isfield(data, cfg.zparam)
+if (isfull || haslabelcmb) && isfield(data, cfg.parameter)
     % A reference channel is required:
     if ~isfield(cfg, 'refchannel')
         error('no reference channel is specified');
@@ -510,25 +512,25 @@ if (isfull || haslabelcmb) && isfield(data, cfg.zparam)
             sel1 = strmatch(cfg.refchannel, data.labelcmb(:,2), 'exact');
             sel2 = [];
         end
-        fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.zparam);
-        data.(cfg.zparam) = data.(cfg.zparam)([sel1;sel2],:,:);
+        fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.parameter);
+        data.(cfg.parameter) = data.(cfg.parameter)([sel1;sel2],:,:);
         data.label     = [data.labelcmb(sel1,1);data.labelcmb(sel2,2)];
         data.labelcmb  = data.labelcmb([sel1;sel2],:);
         data           = rmfield(data, 'labelcmb');
     else
         % General case
         sel               = match_str(data.label, cfg.refchannel);
-        siz               = [size(data.(cfg.zparam)) 1];
+        siz               = [size(data.(cfg.parameter)) 1];
         if strcmp(cfg.matrixside, 'inflow') || isempty(cfg.matrixside)
             %the interpretation of 'inflow' and 'outflow' depend on
             %the definition in the bivariate representation of the data
             %in FieldTrip the row index 'causes' the column index channel
-            %data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
+            %data.(cfg.parameter) = reshape(mean(data.(cfg.parameter)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
             sel1 = 1:siz(1);
             sel2 = sel;
             meandir = 2;
         elseif strcmp(cfg.matrixside, 'outflow')
-            %data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
+            %data.(cfg.parameter) = reshape(mean(data.(cfg.parameter)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
             sel1 = sel;
             sel2 = 1:siz(1);
             meandir = 1;
@@ -587,7 +589,7 @@ if isfull
 end
 
 % Make vector dat with one value for each channel
-dat    = data.(cfg.zparam);
+dat    = data.(cfg.parameter);
 if ~isempty(cfg.yparam)
     if isfull
         dat = dat(sel1, sel2, ymin:ymax, xmin:xmax);
@@ -669,8 +671,8 @@ if strcmp(cfg.comment, 'auto')
             comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.yparam, cfg.ylim(1), cfg.ylim(2));
         end
     end
-    if ~isempty(cfg.zparam)
-        comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.zparam, zmin, zmax);
+    if ~isempty(cfg.parameter)
+        comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.parameter, zmin, zmax);
     end
     cfg.comment = comment;
 elseif strcmp(cfg.comment, 'xlim')

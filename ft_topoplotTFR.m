@@ -9,15 +9,13 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %   ft_topoplotTFR(cfg, data)
 %
 % The configuration can have the following parameters:
-% cfg.xparam             = first dimension in data in which a selection is made
-%                         'time' or 'freq' (default depends on data.dimord)
-% cfg.yparam             = second dimension in data in which a selection is made
-%                         'freq' (default depends on data.dimord)
-% cfg.zparam             = field that contains the data to be plotted as color 
+% cfg.parameter          = field that contains the data to be plotted as color 
 %                         'avg', 'powspctrm' or 'cohspctrm' (default depends on data.dimord)
-% cfg.xlim               = 'maxmin' or [xmin xmax] (default = 'maxmin')
-% cfg.ylim               = 'maxmin' or [ymin ymax] (default = 'maxmin')
-% cfg.zlim               = 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
+% cfg.xlim               = selection boundaries over first dimension in data (e.g., time)
+%                          'maxmin' or [xmin xmax] (default = 'maxmin')
+% cfg.ylim               = selection boundaries over second dimension in data (e.g., freq)
+%                          'maxmin' or [xmin xmax] (default = 'maxmin')
+% cfg.zlim               = plotting limits for color dimension, 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
 % cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 % cfg.refchannel         = name of reference channel for visualising connectivity, can be 'gui'
 % cfg.baseline           = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE

@@ -12,9 +12,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 % if you specify multiple datasets they must contain the same channels, etc.
 %
 % the configuration can have the following parameters:
-% cfg.xparam        = field to be plotted on x-axis (default depends on data.dimord)
-%                     'time' or 'freq'
-% cfg.zparam        = field to be plotted on y-axis (default depends on data.dimord)
+% cfg.parameter     = field to be plotted on y-axis (default depends on data.dimord)
 %                     'avg', 'powspctrm' or 'cohspctrm'
 % cfg.maskparameter = field in the first dataset to be used for masking of data
 %                     (not possible for mean over multiple channels, or when input contains multiple subjects
@@ -60,7 +58,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 
 % Undocumented local options:
 % cfg.zlim (set to a specific frequency range [zmax zmin] for an average
-% over the frequency bins for TFR data.  Use in conjunction with e.g. cfg.xparam = 'time', and cfg.zparam = 'powspctrm'). 
+% over the frequency bins for TFR data.  Use in conjunction with e.g. cfg.xparam = 'time', and cfg.parameter = 'powspctrm'). 
 
 % copyright (c) 2003-2006, ole jensen
 %
@@ -92,6 +90,8 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'matrixside',   'feedback',    'inflow'
 cfg = ft_checkconfig(cfg, 'renamed', {'channelindex',  'channel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'channelname',   'channel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel', 'refchannel'});
+cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
+cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam'});
 
 
 % set default for inputfile
@@ -197,21 +197,21 @@ dimord = varargin{1}.dimord;
 dimtok = tokenize(dimord, '_');
 
 
-% set x/y/zparam defaults according to datatype and dimord
+% set x/y/parameter defaults according to datatype and dimord
 switch dtype
     case 'timelock'
         cfg.xparam = ft_getopt(cfg,  'xparam', 'time');
         cfg.yparam = ft_getopt(cfg,  'yparam', '');
-        cfg.zparam = ft_getopt(cfg,  'zparam', 'avg');
+        cfg.parameter = ft_getopt(cfg,  'parameter', 'avg');
     case 'freq'
         if sum(ismember(dimtok, 'time'))
             cfg.xparam = ft_getopt(cfg,  'xparam', 'time');
             cfg.yparam = ft_getopt(cfg,  'yparam', 'freq');%fixme
-            cfg.zparam = ft_getopt(cfg,  'zparam', 'powspctrm');
+            cfg.parameter = ft_getopt(cfg,  'parameter', 'powspctrm');
         else
             cfg.xparam = ft_getopt(cfg,  'xparam', 'freq');
             cfg.yparam = ft_getopt(cfg,  'yparam', '');
-            cfg.zparam = ft_getopt(cfg,  'zparam', 'powspctrm');
+            cfg.parameter = ft_getopt(cfg,  'parameter', 'powspctrm');
         end
     case 'comp'
         % not supported
@@ -220,7 +220,7 @@ switch dtype
 end
 
 % user specified own fields, but no yparam (which is not asked in help)
-if isfield(cfg, 'xparam') && isfield(cfg, 'zparam') && ~isfield(cfg, 'yparam')
+if isfield(cfg, 'xparam') && isfield(cfg, 'parameter') && ~isfield(cfg, 'yparam')
     cfg.yparam = '';
 end
 
@@ -254,16 +254,16 @@ elseif strcmp(dtype, 'freq') && hasrpt,
     tmpcfg.trials    = cfg.trials;
     tmpcfg.jackknife = 'no';
     for i=1:ndata
-        if isfield(cfg, 'zparam') && ~strcmp(cfg.zparam,'powspctrm')
+        if isfield(cfg, 'parameter') && ~strcmp(cfg.parameter,'powspctrm')
             % freqdesctiptives will only work on the powspctrm field
             % hence a temporary copy of the data is needed
             tempdata.dimord    = varargin{i}.dimord;
             tempdata.freq      = varargin{i}.freq;
             tempdata.label     = varargin{i}.label;
-            tempdata.powspctrm = varargin{i}.(cfg.zparam);
+            tempdata.powspctrm = varargin{i}.(cfg.parameter);
             tempdata.cfg       = varargin{i}.cfg;
             tempdata           = ft_freqdescriptives(tmpcfg, tempdata);
-            varargin{i}.(cfg.zparam)  = tempdata.powspctrm;
+            varargin{i}.(cfg.parameter)  = tempdata.powspctrm;
             clear tempdata
         else
             varargin{i} = ft_freqdescriptives(tmpcfg, varargin{i});
@@ -297,7 +297,7 @@ isfull  = length(selchan)>1;
 % check for bivariate metric with a labelcmb
 haslabelcmb = isfield(varargin{1}, 'labelcmb');
 
-if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.zparam)
+if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.parameter)
     % a reference channel is required:
     if ~isfield(cfg, 'refchannel')
         error('no reference channel is specified');
@@ -329,24 +329,24 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.zparam)
                 sel1 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,2), 'exact');
                 sel2 = [];
             end
-            fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.zparam);
-            varargin{i}.(cfg.zparam) = varargin{i}.(cfg.zparam)([sel1;sel2],:,:);
+            fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.parameter);
+            varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)([sel1;sel2],:,:);
             varargin{i}.label     = [varargin{i}.labelcmb(sel1,1);varargin{i}.labelcmb(sel2,2)];
             varargin{i}.labelcmb  = varargin{i}.labelcmb([sel1;sel2],:);
             varargin{i}           = rmfield(varargin{i}, 'labelcmb');
         else
             % general case
             sel               = match_str(varargin{i}.label, cfg.refchannel);
-            siz               = [size(varargin{i}.(cfg.zparam)) 1];
+            siz               = [size(varargin{i}.(cfg.parameter)) 1];
             if strcmp(cfg.matrixside, 'inflow') || isempty(cfg.matrixside)
                 %the interpretation of 'inflow' and 'outflow' depend on
                 %the definition in the bivariate representation of the data  
-                %data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
+                %data.(cfg.parameter) = reshape(mean(data.(cfg.parameter)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
                 sel1 = 1:siz(1);
                 sel2 = sel;
                 meandir = 2;
             elseif strcmp(cfg.matrixside, 'outflow')
-                %data.(cfg.zparam) = reshape(mean(data.(cfg.zparam)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
+                %data.(cfg.parameter) = reshape(mean(data.(cfg.parameter)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
                 sel1 = sel;
                 sel2 = 1:siz(1);
                 meandir = 1;
@@ -382,8 +382,8 @@ end
 
 if strcmp('freq',cfg.yparam) && strcmp('freq',dtype)
     for i=1:ndata
-        varargin{i} = ft_selectdata(varargin{i},'param',cfg.zparam,'foilim',cfg.zlim,'avgoverfreq','yes');
-        varargin{i}.(cfg.zparam) = squeeze(varargin{i}.(cfg.zparam));
+        varargin{i} = ft_selectdata(varargin{i},'param',cfg.parameter,'foilim',cfg.zlim,'avgoverfreq','yes');
+        varargin{i}.(cfg.parameter) = squeeze(varargin{i}.(cfg.parameter));
     end
 end
 
@@ -402,7 +402,7 @@ for i=1:ndata
     end
     
     % make vector dat with one value for each channel
-    dat    = varargin{i}.(cfg.zparam);
+    dat    = varargin{i}.(cfg.parameter);
     xparam = varargin{i}.(cfg.xparam);
     
     % take subselection of channels

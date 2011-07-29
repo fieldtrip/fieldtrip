@@ -12,11 +12,11 @@ function h = ft_connectivityplot(cfg, varargin)
 % 'chan_chan_freq'.
 %
 % The cfg can have the following options:
-%   cfg.zparam  = string (default = 'cohspctrm'), the functional parameter
-%                  to be plotted.
-%   cfg.zlim    = [lower upper];
-%   cfg.channel = list of channels to be included for the plotting (default
-%                   = 'all');
+%   cfg.parameter   = string (default = 'cohspctrm'), the functional parameter
+%                     to be plotted.
+%   cfg.zlim        = [lower upper];
+%   cfg.channel     = list of channels to be included for the plotting (default
+%                      = 'all');
 %
 % See also:
 %   FT_CONNECTIVITYANALYSIS, FT_PLOT_VECTOR, FT_CHANNELSELECTION
@@ -41,8 +41,10 @@ function h = ft_connectivityplot(cfg, varargin)
 %
 % $Id: ft_connectivityplot$
 
+cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
+
 cfg.channel = ft_getopt(cfg, 'channel', 'all');
-cfg.zparam  = ft_getopt(cfg, 'zparam', 'cohspctrm');
+cfg.parameter  = ft_getopt(cfg, 'parameter', 'cohspctrm');
 cfg.zlim    = ft_getopt(cfg, 'zlim', []);
 cfg.color   = ft_getopt(cfg, 'color', 'brgkywrgbkywrgbkywrgbkyw');
 
@@ -51,20 +53,20 @@ cfg.color   = ft_getopt(cfg, 'color', 'brgkywrgbkywrgbkywrgbkyw');
 if numel(varargin)>1
   data = varargin{1};
   tmpcfg = cfg;
-  if ischar(cfg.zparam)
+  if ischar(cfg.parameter)
     % do nothing
-  elseif iscell(cfg.zparam)
-    tmpcfg.zparam = cfg.zparam{1};
+  elseif iscell(cfg.parameter)
+    tmpcfg.parameter = cfg.parameter{1};
   end
   ft_connectivityplot(tmpcfg, data);
   tmpcfg = cfg;
   for k = 2:numel(varargin)
     tmpcfg.color   = tmpcfg.color(2:end);
     tmpcfg.holdfig = 1;
-    if ischar(cfg.zparam)
+    if ischar(cfg.parameter)
       % do nothing
-    elseif iscell(cfg.zparam)
-      tmpcfg.zparam = cfg.zparam{k};
+    elseif iscell(cfg.parameter)
+      tmpcfg.parameter = cfg.parameter{k};
     end
     ft_connectivityplot(tmpcfg, varargin{k});
   end
@@ -82,14 +84,14 @@ else
   error('the data should have a dimord of %s or %s', 'chan_chan_freq', 'chancmb_freq');
 end
 
-if ~isfield(data, cfg.zparam)
-  error('the data does not contain the requested zparam %s', cfg.zparam);
+if ~isfield(data, cfg.parameter)
+  error('the data does not contain the requested parameter %s', cfg.parameter);
 end
 
 cfg.channel = ft_channelselection(cfg.channel, data.label);
 data        = ft_selectdata(data, 'channel', cfg.channel);
 
-dat   = data.(cfg.zparam);
+dat   = data.(cfg.parameter);
 nchan = numel(data.label);
 nfreq = numel(data.freq);
 

@@ -86,6 +86,9 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'hlcolorpos',           'highlightcolo
 cfg = ft_checkconfig(cfg, 'renamed',     {'hlcolorneg',           'highlightcolorneg'});
 cfg = ft_checkconfig(cfg, 'deprecated',  {'hllinewidthseries'});
 
+cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
+cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam', 'yparam'});
+
 % added several forbidden options  
 cfg = ft_checkconfig(cfg, 'forbidden',  {'highlight'});
 cfg = ft_checkconfig(cfg, 'forbidden',  {'highlightchannel'});
@@ -106,7 +109,7 @@ if ~isfield(cfg,'highlightsizeseries'),    cfg.highlightsizeseries = [6 6 6 6 6]
 if ~isfield(cfg,'hllinewidthseries'),      cfg.hllinewidthseries = [1 1 1 1 1];                 end;
 if ~isfield(cfg,'highlightcolorpos'),      cfg.highlightcolorpos = [0 0 0];                     end;
 if ~isfield(cfg,'highlightcolorneg'),      cfg.highlightcolorneg = [0 0 0];                     end;
-if ~isfield(cfg,'zparam'),                 cfg.zparam = 'stat';                                 end;
+if ~isfield(cfg,'parameter'),              cfg.parameter = 'parameter';                         end;
 if ~isfield(cfg,'saveaspng'),              cfg.saveaspng = 'no';                                end;
 
 % error if cfg.highlightseries is not a cell, for possible confusion with cfg-options
@@ -129,7 +132,7 @@ if isfield(cfg, 'contournum'),            cfgtopo.contournum     = cfg.contournu
 if isfield(cfg, 'colorbar'),              cfgtopo.colorbar       = cfg.colorbar;        end
 if isfield(cfg, 'shading'),               cfgtopo.shading        = cfg.shading';        end
 if isfield(cfg, 'zlim'),                  cfgtopo.zlim           = cfg.zlim;            end
-cfgtopo.zparam = cfg.zparam;
+cfgtopo.parameter = cfg.parameter;
 
 % prepare the layout, this only has to be done once
 cfgtopo.layout = ft_prepare_layout(cfg, stat);
