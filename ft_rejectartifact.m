@@ -17,7 +17,12 @@ function [cfg] = ft_rejectartifact(cfg,data)
 %
 % The following configuration options are supported:
 %   cfg.artfctdef.reject          = 'none', 'partial' or 'complete' (default = 'complete')
-%   cfg.artfctdef.minaccepttim    = length in seconds (default = 0.1)
+%   cfg.artfctdef.minaccepttim    = when using partial rejection, minimum length
+%                                   in seconds of remaining trial (default = 0.1)
+%   cfg.artfctdef.crittoilim      = when using complete rejection, reject
+%                                   trial only when artifacts occur within
+%                                   this time window (default = whole trial)
+%                                   (only works with in-memory data, since trial time axes are unknown for data on disk)
 %   cfg.artfctdef.feedback        = 'yes' or 'no' (default = 'no')
 %   cfg.artfctdef.eog.artifact    = Nx2 matrix with artifact segments, this is added to the cfg by using FT_ARTIFACT_EOG
 %   cfg.artfctdef.jump.artifact   = Nx2 matrix with artifact segments, this is added to the cfg by using FT_ARTIFACT_JUMP
@@ -105,6 +110,7 @@ if ~isfield(cfg, 'artfctdef'),              cfg.artfctdef        = [];         e
 if ~isfield(cfg.artfctdef,'type'),          cfg.artfctdef.type   = {};         end
 if ~isfield(cfg.artfctdef,'reject'),        cfg.artfctdef.reject = 'complete'; end
 if ~isfield(cfg.artfctdef,'minaccepttim'),  cfg.artfctdef.minaccepttim = 0.1;  end
+if ~isfield(cfg.artfctdef,'crittoilim'),    cfg.artfctdef.crittoilim = [];  end
 if ~isfield(cfg.artfctdef,'feedback'),      cfg.artfctdef.feedback = 'no';     end
 if ~isfield(cfg, 'inputfile'),              cfg.inputfile        = [];         end
 
@@ -214,6 +220,25 @@ if hasdata
   end
 elseif isfield(cfg, 'trl')
   trl = cfg.trl;
+end
+
+% ensure the crittoilim input argument is valid
+if ~isempty(cfg.artfctdef.crittoilim)
+  
+  if (size(cfg.artfctdef.crittoilim,2) ~= 2 ...
+    || (size(cfg.artfctdef.crittoilim,1) ~= size(trl,1) ...
+        && size(cfg.artfctdef.crittoilim,1) ~= 1))
+    error('if specified, cfg.artfctdef.crittoilim should be a 1x2 or Nx2 vector');  
+  end
+  
+  % if specified as 1x2 vector, expand into Nx2
+  if (size(cfg.artfctdef.crittoilim,1) == 1)
+    cfg.artfctdef.crittoilim = repmat(cfg.artfctdef.crittoilim,size(trl,1),1);
+  end
+  
+  checkCritToi = 1; % flag for convenience
+else
+  checkCritToi = 0;
 end
 
 % ensure that there are trials that can be scanned for artifacts and/or rejected
@@ -376,10 +401,11 @@ end
 % remove the trials that (partially) coincide with a rejection mark
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'complete')
-  trl = trl;
   trialok = [];
+  
   count_complete_reject = 0;
   count_partial_reject  = 0;
+  count_outsidecrit = 0;
   
   trlRemovedInd = [];
   trlPartiallyRemovedInd = [];
@@ -395,10 +421,25 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
       count_complete_reject = count_complete_reject + 1;
       trlRemovedInd = [trlRemovedInd trial];
     elseif any(rejecttrial) && strcmp(cfg.artfctdef.reject, 'complete')
-      % some part of the trial is bad, reject the whole trial
-      count_complete_reject = count_complete_reject + 1;
-       trlRemovedInd = [trlRemovedInd trial];
-      continue;
+      
+      % some part of the trial is bad, check if within crittoilim?
+      if (checkCritToi)
+        critInd = (data.time{trial} >= cfg.artfctdef.crittoilim(trial,1) ...
+          & data.time{trial} <= cfg.artfctdef.crittoilim(trial,2));
+        if (any(critInd & rejecttrial))
+          count_complete_reject = count_complete_reject + 1;
+          trlRemovedInd = [trlRemovedInd trial];
+          continue;
+        else
+          trialok = [trialok; trl(trial,:)];
+          count_outsidecrit = count_outsidecrit + 1;
+        end
+      else % no crittoilim checking required
+        count_complete_reject = count_complete_reject + 1;
+        trlRemovedInd = [trlRemovedInd trial];
+        continue;
+      end
+      
     elseif any(rejecttrial) && strcmp(cfg.artfctdef.reject, 'partial')
       % some part of the trial is bad, reject only the bad part
       trialnew = [];
@@ -422,6 +463,9 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
   
   fprintf('rejected  %3d trials completely\n', count_complete_reject);
   fprintf('rejected  %3d trials partially\n', count_partial_reject);
+  if (checkCritToi)
+    fprintf('retained  %3d trials with artifacts outside critical window\n', count_outsidecrit);
+  end
   fprintf('resulting %3d trials\n', size(trialok,1));
   cfg.trlold = trl;      % return the original trial definition in the configuration
   cfg.trl    = trialok;  % return the cleaned trial definition in the configuration
