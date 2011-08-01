@@ -1083,14 +1083,14 @@ end
 
 % determine the position of the channel/component labels relative to the real axes
 % FIXME needs a shift to the left for components
-labelx = laytime.pos(:,1) - laytime.width/2 - 0.01;
-labely = laytime.pos(:,2);
+labelx = opt.laytime.pos(:,1) - opt.laytime.width/2 - 0.01;
+labely = opt.laytime.pos(:,2);
 
 % determine the total extent of all virtual axes relative to the real axes
-ax(1) = min(laytime.pos(:,1) - laytime.width/2);
-ax(2) = max(laytime.pos(:,1) + laytime.width/2);
-ax(3) = min(laytime.pos(:,2) - laytime.height/2);
-ax(4) = max(laytime.pos(:,2) + laytime.height/2);
+ax(1) = min(opt.laytime.pos(:,1) - opt.laytime.width/2);
+ax(2) = max(opt.laytime.pos(:,1) + opt.laytime.width/2);
+ax(3) = min(opt.laytime.pos(:,2) - opt.laytime.height/2);
+ax(4) = max(opt.laytime.pos(:,2) + opt.laytime.height/2);
 axis(ax)
 
 % determine a single local axis that encompasses all channels
@@ -1149,7 +1149,7 @@ delete(findobj(h,'tag', 'identify'));
 if strcmp(cfg.viewmode, 'butterfly')
   set(gca,'ColorOrder',opt.chancolors(chanindx,:)) % plot vector does not clear axis, therefore this is possible
   ft_plot_vector(tim, dat, 'box', false, 'tag', 'timecourse', ...
-    'hpos', laytime.pos(1,1), 'vpos', laytime.pos(1,2), 'width', laytime.width(1), 'height', laytime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim);
+    'hpos', opt.laytime.pos(1,1), 'vpos', opt.laytime.pos(1,2), 'width', opt.laytime.width(1), 'height', opt.laytime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim);
    
 elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
   for i = 1:length(chanindx)
@@ -1159,11 +1159,11 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
       color = opt.chancolors(chanindx(i),:);
     end
     datsel = i;
-    laysel = match_str(laytime.label, opt.hdr.label(chanindx(i)));
+    laysel = match_str(opt.laytime.label, opt.hdr.label(chanindx(i)));
     if ~isempty(datsel) && ~isempty(laysel)
       ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'timecourse', 'HorizontalAlignment', 'right');
       ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', color, 'tag', 'timecourse', ...
-        'hpos', laytime.pos(laysel,1), 'vpos', laytime.pos(laysel,2), 'width', laytime.width(laysel), 'height', laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
+        'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
     end
   end
 
@@ -1172,11 +1172,11 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
     yTickLabel = [];
   elseif length(chanindx)> 6
     % one tick per channel
-    set(gca, 'yTick', sort([laytime.pos(:,2)+(laytime.height(laysel)/4); laytime.pos(:,2)-(laytime.height(laysel)/4)]))
+    set(gca, 'yTick', sort([opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4); opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4)]))
     yTickLabel = {num2str(-opt.vlim(2)/2), num2str(opt.vlim(2)/2)};
   else
     % two ticks per channel
-    set(gca, 'yTick', sort([laytime.pos(:,2)+(laytime.height(laysel)/2); laytime.pos(:,2)+(laytime.height(laysel)/4); laytime.pos(:,2)-(laytime.height(laysel)/4); laytime.pos(:,2)-(laytime.height(laysel)/2)]))
+    set(gca, 'yTick', sort([opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/2); opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4); opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4); opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/2)]))
     yTickLabel = {num2str(-opt.vlim(2)), num2str(-opt.vlim(2)/2), num2str(opt.vlim(2)/2), num2str(opt.vlim(2))};
   end
   
@@ -1201,11 +1201,11 @@ if strcmp(cfg.viewmode, 'component')
   laychan = ft_prepare_layout(tmpcfg, opt.orgdata);
   
   % determine the position of each of the topographies
-  laytopo.pos(:,1)  = laytime.pos(:,1) - laytime.width/2 - laytime.height*2;
-  laytopo.pos(:,2)  = laytime.pos(:,2);
-  laytopo.width     = laytime.height;
-  laytopo.height    = laytime.height;
-  laytopo.label     = laytime.label;
+  laytopo.pos(:,1)  = opt.laytime.pos(:,1) - opt.laytime.width/2 - opt.laytime.height*2;
+  laytopo.pos(:,2)  = opt.laytime.pos(:,2);
+  laytopo.width     = opt.laytime.height;
+  laytopo.height    = opt.laytime.height;
+  laytopo.label     = opt.laytime.label;
   
   if ~isequal(opt.chanindx, chanindx)
     opt.chanindx = chanindx;
@@ -1221,7 +1221,7 @@ if strcmp(cfg.viewmode, 'component')
     
     for i=1:length(chanindx)
       % plot the topography of this component
-      laysel = match_str(laytime.label, opt.hdr.label(chanindx(i)));
+      laysel = match_str(opt.laytime.label, opt.hdr.label(chanindx(i)));
       chanz = opt.orgdata.topo(sel1,chanindx(i));
       chanz = chanz./max(abs(chanz));
       
@@ -1237,9 +1237,9 @@ if strcmp(cfg.viewmode, 'component')
   set(gca, 'yTick', [])
   
   ax(1) = min(laytopo.pos(:,1) - laytopo.width/2);
-  ax(2) = max(laytime.pos(:,1) + laytime.width/2);
-  ax(3) = min(laytime.pos(:,2) - laytime.height/2);
-  ax(4) = max(laytime.pos(:,2) + laytime.height/2);
+  ax(2) = max(opt.laytime.pos(:,1) + opt.laytime.width/2);
+  ax(3) = min(opt.laytime.pos(:,2) - opt.laytime.height/2);
+  ax(4) = max(opt.laytime.pos(:,2) + opt.laytime.height/2);
   axis(ax)
   
   
