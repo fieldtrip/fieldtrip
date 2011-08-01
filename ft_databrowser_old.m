@@ -575,6 +575,7 @@ fprintf('-----------------------------------------------------------------------
 fprintf('You can use the following buttons in the data viewer\n')
 fprintf('1-9                : select artifact type 1-9\n');
 fprintf('shift 1-9          : select previous artifact of type 1-9\n');
+fprintf('                     (does not work with numpad keys on UNIX systems)\n');
 fprintf('control 1-9        : select next artifact of type 1-9\n');
 fprintf('alt 1-9            : select next artifact of type 1-9\n');
 fprintf('arrow-left         : previous trial\n');
@@ -583,7 +584,7 @@ fprintf('shift arrow-up     : increase vertical scaling\n');
 fprintf('shift arrow-down   : decrease vertical scaling\n');
 fprintf('shift arrow-left   : increase horizontal scaling\n');
 fprintf('shift arrow-down   : decrease horizontal scaling\n');
-fprintf('q            : quit\n');
+fprintf('q                  : quit\n');
 fprintf('------------------------------------------------------------------------------------\n')
 fprintf('\n')
 end
@@ -694,10 +695,7 @@ if isempty(eventdata)
   h = getparent(h);
 else
   % determine the key that was pressed on the keyboard
-  key = eventdata.Key;
-  if ~isempty(eventdata.Modifier)
-    key = [eventdata.Modifier{1} '+' key];
-  end
+  key = parseKeyboardEvent(eventdata);
 end
 
 switch key
@@ -1340,5 +1338,32 @@ end % switch viewmode
 fprintf('done\n');
 
 guidata(h, opt);
+end
+
+function key = parseKeyboardEvent(eventdata)
+
+  key = eventdata.Key;
+  
+  % handle possible numpad events (different for Windows and UNIX systems)
+  % NOTE: shift+numpad number does not work on UNIX, since the shift
+  % modifier is always sent for numpad events
+  if isunix()
+    shiftInd = match_str(eventdata.Modifier, 'shift');
+    if ~isnan(str2double(eventdata.Character)) && ~isempty(shiftInd)
+      % now we now it was a numpad keystroke (numeric character sent AND
+      % shift modifier present)
+      key = eventdata.Character;
+      eventdata.Modifier(shiftInd) = []; % strip the shift modifier
+    end
+  elseif ispc()
+    if strfind(eventdata.Key, 'numpad')
+      key = eventdata.Character;
+    end
+  end
+    
+  if ~isempty(eventdata.Modifier)
+    key = [eventdata.Modifier{1} '+' key];
+  end
+  
 end
 
