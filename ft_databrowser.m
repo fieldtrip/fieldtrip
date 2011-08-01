@@ -912,20 +912,29 @@ switch key
     redraw_cb(h, eventdata);
   case 'i'
     if strcmp(cfg.viewmode, 'butterfly')
+        delete(findobj(h,'tag', 'identify'));
       % click in data and get name of nearest channel
       fprintf('click in the figure to identify the name of the closest channel\n');
       val = ginput(1);
+      pos = val(1);
+      % transform 'val' to match data
+      val(1) = val(1) * range(opt.hlim) + opt.hlim(1);
+      val(2) = val(2) * range(opt.vlim) + opt.vlim(1);
       channame = val2nearestchan(opt.curdat,val);
       channb = match_str(opt.curdat.label,channame);
       fprintf('channel name: %s\n',channame);
       redraw_cb(h, eventdata);
-      ft_plot_text(val(1), 0.9*cfg.ylim(2), channame, 'FontSize', 16);
+      ft_plot_text(pos, 0.9, channame, 'FontSize', 16, 'tag', 'identify');      
       if ~ishold
         hold on
-        plot(opt.curdat.time{1}, opt.curdat.trial{1}(channb,:),'k','LineWidth',2)
+        ft_plot_vector(opt.curdat.time{1}, opt.curdat.trial{1}(channb,:), 'box', false, 'tag', 'identify', ...
+            'hpos', opt.laytime.pos(1,1), 'vpos', opt.laytime.pos(1,2), 'width', opt.laytime.width(1), 'height', opt.laytime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim, ...
+            'color', 'k', 'linewidth', 2);        
         hold off
       else
-        plot(opt.curdat.time{1}, opt.curdat.trial{1}(channb,:),'k','LineWidth',2)
+        ft_plot_vector(opt.curdat.time{1}, opt.curdat.trial{1}(channb,:), 'box', false, 'tag', 'identify', ...
+            'hpos', opt.laytime.pos(1,1), 'vpos', opt.laytime.pos(1,2), 'width', opt.laytime.width(1), 'height', opt.laytime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim, ...
+            'color', 'k', 'linewidth', 2);
       end
     else
       warning('only supported with cfg.viewmode=''butterfly''');
@@ -1061,6 +1070,7 @@ if strcmp(cfg.viewmode, 'butterfly')
   laytime.pos = [0.5 0.5];
   laytime.width = 1;
   laytime.height = 1;
+  opt.laytime = laytime;
 else
   % this needs to be reconstructed if the channel selection changes
   tmpcfg = [];
@@ -1068,7 +1078,7 @@ else
   tmpcfg.channel = cfg.channel;
   tmpcfg.skipcomnt = 'yes';
   tmpcfg.skipscale = 'yes';
-  laytime = ft_prepare_layout(tmpcfg, opt.orgdata);
+  opt.laytime = ft_prepare_layout(tmpcfg, opt.orgdata);
 end
 
 % determine the position of the channel/component labels relative to the real axes
@@ -1134,6 +1144,7 @@ end
 fprintf('plotting data...\n');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 delete(findobj(h,'tag', 'timecourse'));
+delete(findobj(h,'tag', 'identify'));
 
 if strcmp(cfg.viewmode, 'butterfly')
   set(gca,'ColorOrder',opt.chancolors(chanindx,:)) % plot vector does not clear axis, therefore this is possible
