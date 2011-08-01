@@ -119,6 +119,7 @@ if nargin > 1
   % data given as input
   isfetch = 1;
   hdr = ft_fetch_header(data);
+  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
 elseif nargin == 1
   % only cfg given
   isfetch = 0;
@@ -134,7 +135,11 @@ if ~isfield(cfg, 'continuous')
   end
 end
 
-trl           = cfg.trl;
+if isfield(cfg,'trl')
+  trl           = cfg.trl;
+else
+  trl = data.sampleinfo;
+end
 trlpadding    = round(cfg.artfctdef.zvalue.trlpadding*hdr.Fs);
 fltpadding    = round(cfg.artfctdef.zvalue.fltpadding*hdr.Fs);
 artpadding    = round(cfg.artfctdef.zvalue.artpadding*hdr.Fs);
@@ -296,13 +301,15 @@ if strcmp(cfg.artfctdef.zvalue.feedback, 'yes')
     end
     % show the z-values, the artifacts and a selection of the original data
     if interactiveloop
+      tmpcfg = cfg;
+      tmpcfg.trl = trl;
       if nargin==1,
         if ~thresholdsum, zsum = zmax; end;
-        artifact_viewer(cfg, cfg.artfctdef.zvalue, zsum, artval, zindx);
+        artifact_viewer(tmpcfg, cfg.artfctdef.zvalue, zsum, artval, zindx);
         cfg.artfctdef.zvalue.cutoff = smartinput(sprintf('\ngive new cutoff value, or press enter to accept current value [%g]: ', cfg.artfctdef.zvalue.cutoff), cfg.artfctdef.zvalue.cutoff);
       else
         if ~thresholdsum, zsum = zmax; end;
-        artifact_viewer(cfg, cfg.artfctdef.zvalue, zsum, artval, zindx, data);
+        artifact_viewer(tmpcfg, cfg.artfctdef.zvalue, zsum, artval, zindx, data);
         cfg.artfctdef.zvalue.cutoff = smartinput(sprintf('\ngive new cutoff value, or press enter to accept current value [%g]: ', cfg.artfctdef.zvalue.cutoff), cfg.artfctdef.zvalue.cutoff);
       end
     end
