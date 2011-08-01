@@ -575,7 +575,7 @@ fprintf('-----------------------------------------------------------------------
 fprintf('You can use the following buttons in the data viewer\n')
 fprintf('1-9                : select artifact type 1-9\n');
 fprintf('shift 1-9          : select previous artifact of type 1-9\n');
-fprintf('                     (does not work with numpad keys on UNIX systems)\n');
+fprintf('                     (does not work with numpad keys)\n');
 fprintf('control 1-9        : select next artifact of type 1-9\n');
 fprintf('alt 1-9            : select next artifact of type 1-9\n');
 fprintf('arrow-left         : previous trial\n');
