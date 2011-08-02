@@ -1157,7 +1157,7 @@ if strcmp(cfg.viewmode, 'butterfly')
                             opt.laytime.pos(:,2)-(opt.laytime.height/4); ...
                             opt.laytime.pos(:,2)-(opt.laytime.height/2)]);
                         
-    yTickLabel = {num2str(yTick.*range(opt.vlim) - opt.vlim(2))};
+    yTickLabel = {num2str(yTick.*range(opt.vlim) + opt.vlim(1))};
     
     set(gca, 'yTick', yTick);
     set(gca, 'yTickLabel', yTickLabel)
@@ -1193,14 +1193,16 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
       % one tick per channel
       yTick = sort([opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4); ...
                     opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4)]);
+      yTickLabel = {[.25 .75] .* range(opt.vlim) + opt.vlim(1)};
   else
       % two ticks per channel
       yTick = sort([opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/2); ...
                     opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4); ...
                     opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4); ...
                     opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/2)]);
+      yTickLabel = {[.0 .25 .75 1] .* range(opt.vlim) + opt.vlim(1)};
   end
-  yTickLabel = {num2str(opt.vlim(1)); num2str(opt.vlim(2))};  
+ 
   yTickLabel = repmat(yTickLabel, 1, length(chanindx));
   set(gca, 'yTick', yTick);  
   set(gca, 'yTickLabel', yTickLabel);
