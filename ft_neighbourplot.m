@@ -75,12 +75,12 @@ elseif strcmp(cfg.verbose, 'yes')
 end
 
 % get the the grad or elec if not present in the data
-if isfield(data, 'grad')
+if exist('data', 'var') && isfield(data, 'grad')
     fprintf('Using the gradiometer configuration from the dataset.\n');
     sens = data.grad;
     % extract true channelposition
     [sens.pnt, sens.ori, sens.label] = channelposition(sens);
-elseif isfield(data, 'elec')
+elseif exist('data', 'var') && isfield(data, 'elec')
     fprintf('Using the electrode configuration from the dataset.\n');
     sens = data.elec;
 elseif isfield(cfg, 'grad')
@@ -127,7 +127,8 @@ for i=1:length(neighbours)
     
     sel1 = match_str(sens.label, this.label);
     sel2 = match_str(sens.label, this.neighblabel);
-    
+    % account for missing sensors
+    this.neighblabel = sens.label(sel2); 
     for j=1:length(this.neighblabel)
         x1 = proj(sel1,1);
         y1 = proj(sel1,2);
@@ -177,9 +178,9 @@ title('[Click on a sensor to see its label]');
         lastSensId  = get(gcf,  'UserData');
         curSensId   = get(gcbo, 'UserData');
         
-        title(['Selected channel: ' neighbours{curSensId}.label]);
+        title(['Selected channel: ' neighbours(curSensId).label]);
         if cfg.verbose 
-            fprintf('Selected channel: %s\n', neighbours{curSensId}.label); 
+            fprintf('Selected channel: %s\n', neighbours(curSensId).label); 
         end
         
         set(hs(curSensId), 'MarkerFaceColor', 'g');
