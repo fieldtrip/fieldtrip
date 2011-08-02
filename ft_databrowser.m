@@ -28,7 +28,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %                                 'mark': artfctdef field is updated, 'eval': the function defined in
 %                                 cfg.selfun is evaluated f.i. browse_movieplotER calls movieplotER which makes
 %                                 a movie of the selected data
-%   cfg.colorgroups             = 'sequential' 'labelcharx' (x = xth character in label), 'chantype' or
+%   cfg.colorgroups             = 'sequential' 'allblack' 'labelcharx' (x = xth character in label), 'chantype' or
 %                                  vector with length(data/hdr.label) defining groups (default = 'sequential')
 %   cfg.channelcolormap         = COLORMAP (default = customized lines map with 15 colors)
 %   cfg.selfun                  = string, name of function which is evaluated if selectmode is set to 'eval'.
@@ -292,6 +292,7 @@ end
 if size(cfg.channelcolormap,2) ~= 3
   error('cfg.channelcolormap is not valid, size should be Nx3')
 end
+
 if isnumeric(cfg.colorgroups)
   % groups defined by user
   if length(labels_all) ~= length(cfg.colorgroups)
@@ -301,6 +302,10 @@ if isnumeric(cfg.colorgroups)
   G = cfg.channelcolormap(:,2);
   B = cfg.channelcolormap(:,3);
   chancolors = [R(cfg.colorgroups(:)) G(cfg.colorgroups(:)) B(cfg.colorgroups(:))];
+  
+elseif strcmp(cfg.colorgroups, 'allblack')
+  chancolors = zeros(length(labels_all),3);
+  
 elseif strcmp(cfg.colorgroups, 'chantype')
   type = ft_chantype(labels_all);
   [tmp1 tmp2 cfg.colorgroups] = unique(type);
@@ -309,6 +314,7 @@ elseif strcmp(cfg.colorgroups, 'chantype')
   G = cfg.channelcolormap(:,2);
   B = cfg.channelcolormap(:,3);
   chancolors = [R(cfg.colorgroups(:)) G(cfg.colorgroups(:)) B(cfg.colorgroups(:))];
+  
 elseif strcmp(cfg.colorgroups(1:9), 'labelchar')
   % groups determined by xth letter of label
   labelchar_num = str2double(cfg.colorgroups(10));
@@ -322,9 +328,11 @@ elseif strcmp(cfg.colorgroups(1:9), 'labelchar')
   G = cfg.channelcolormap(:,2);
   B = cfg.channelcolormap(:,3);
   chancolors = [R(cfg.colorgroups(:)) G(cfg.colorgroups(:)) B(cfg.colorgroups(:))];
+  
 elseif strcmp(cfg.colorgroups, 'sequential')
   % no grouping
   chancolors = lines(length(labels_all));
+  
 else
   error('do not understand cfg.colorgroups')
 end
