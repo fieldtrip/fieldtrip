@@ -638,63 +638,39 @@ function select_range_cb(range, h) %range 1X4 in sec relative to current trial
 opt = getappdata(h, 'opt');
 cfg = getappdata(h, 'cfg');
 
-% FIXME this is broken at the moment
+% the range should be in the displayed box
+range(1) = max(opt.hpos-opt.width/2, range(1));
+range(2) = max(opt.hpos-opt.width/2, range(2));
+range(1) = min(opt.hpos+opt.width/2, range(1));
+range(2) = min(opt.hpos+opt.width/2, range(2));
+range = (range-(opt.hpos-opt.width/2)) / opt.width; % left side of the box becomes 0, right side becomes 1
+range = range * (opt.hlim(2) - opt.hlim(1)) + opt.hlim(1);   % 0 becomes hlim(1), 1 becomes hlim(2)
 
-switch cfg.viewmode
-  case 'butterfly'
-    begsample = opt.trlvis(opt.trlop,1);
-    endsample = opt.trlvis(opt.trlop,2);
-    offset    = opt.trlvis(opt.trlop,3);
-    % determine the selection
-    if strcmp(opt.trialname, 'trial')
-      % this is appropriate when the offset is defined according to a
-      % different trigger in each trial, which is usually the case in trial data
-      begsel = round(range(1)*opt.fsample+begsample-offset-1);
-      endsel = round(range(2)*opt.fsample+begsample-offset);
-    elseif strcmp(opt.trialname, 'segment')
-      % this is appropriate when the offset is defined according to a
-      % one trigger, which is always the case in segment data [I think ingnie]
-      begsel = round(range(1)*opt.fsample+1);
-      endsel = round(range(2)*opt.fsample+1);
-    end
-    % the selection should always be confined to the current trial
-    begsel = max(begsample, begsel);
-    endsel = min(endsample, endsel);
-    
-  case {'vertical', 'component'}
-    % the range should be in the displayed box
-    range(1) = max(opt.hpos-opt.width/2, range(1));
-    range(2) = max(opt.hpos-opt.width/2, range(2));
-    range(1) = min(opt.hpos+opt.width/2, range(1));
-    range(2) = min(opt.hpos+opt.width/2, range(2));
-    range = (range-(opt.hpos-opt.width/2)) / opt.width; % left side of the box becomes 0, right side becomes 1
-    range = range * (opt.hlim(2) - opt.hlim(1)) + opt.hlim(1);   % 0 becomes hlim(1), 1 becomes hlim(2)
-    
-    begsample = opt.trlvis(opt.trlop,1);
-    endsample = opt.trlvis(opt.trlop,2);
-    offset    = opt.trlvis(opt.trlop,3);
-    % determine the selection
-    if strcmp(opt.trialname, 'trial')
-      % this is appropriate when the offset is defined according to a
-      % different trigger in each trial, which is usually the case in trial data
-      begsel = round(range(1)*opt.fsample+begsample-offset-1);
-      endsel = round(range(2)*opt.fsample+begsample-offset);
-    elseif strcmp(opt.trialname, 'segment')
-      % this is appropriate when the offset is defined according to
-      % one trigger, which is always the case in segment data [I think ingnie]
-      begsel = round(range(1)*opt.fsample+1);
-      endsel = round(range(2)*opt.fsample+1);
-    end
-    % the selection should always be confined to the current trial
-    begsel = max(begsample, begsel);
-    endsel = min(endsample, endsel);
-    
-  otherwise
-    error('unknown cfg.viewmode "%s"', cfg.viewmode);
-end % switch
+begsample = opt.trlvis(opt.trlop,1);
+endsample = opt.trlvis(opt.trlop,2);
+offset    = opt.trlvis(opt.trlop,3);
+% determine the selection
+if strcmp(opt.trialname, 'trial')
+  % this is appropriate when the offset is defined according to a
+  % different trigger in each trial, which is usually the case in trial data
+  begsel = round(range(1)*opt.fsample+begsample-offset-1);
+  endsel = round(range(2)*opt.fsample+begsample-offset);
+elseif strcmp(opt.trialname, 'segment')
+  % this is appropriate when the offset is defined according to
+  % one trigger, which is always the case in segment data [I think ingnie]
+  begsel = round(range(1)*opt.fsample+1);
+  endsel = round(range(2)*opt.fsample+1);
+end
+% the selection should always be confined to the current trial
+begsel = max(begsample, begsel);
+endsel = min(endsample, endsel);
+
 
 if strcmp(cfg.selectmode, 'disp')
-  % FIXME this is only for debugging
+  % FIXME this is on    
+%   otherwise
+%     error('unknown cfg.viewmode "%s"', cfg.viewmode);
+% end % switchly for debugging
   disp([begsel endsel])
   
 elseif strcmp(cfg.selectmode, 'mark')
@@ -1169,10 +1145,23 @@ delete(findobj(h,'tag', 'timecourse'));
 delete(findobj(h,'tag', 'identify'));
 
 if strcmp(cfg.viewmode, 'butterfly')
-  set(gca,'ColorOrder',opt.chancolors(chanindx,:)) % plot vector does not clear axis, therefore this is possible
-  ft_plot_vector(tim, dat, 'box', false, 'tag', 'timecourse', ...
-    'hpos', opt.laytime.pos(1,1), 'vpos', opt.laytime.pos(1,2), 'width', opt.laytime.width(1), 'height', opt.laytime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim);
-   
+    set(gca,'ColorOrder',opt.chancolors(chanindx,:)) % plot vector does not clear axis, therefore this is possible
+    ft_plot_vector(tim, dat, 'box', false, 'tag', 'timecourse', ...
+        'hpos', opt.laytime.pos(1,1), 'vpos', opt.laytime.pos(1,2), 'width', opt.laytime.width(1), 'height', opt.laytime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim);
+    
+    
+    % two ticks per channel
+    yTick = sort([opt.laytime.pos(:,2)+(opt.laytime.height/2); ...
+                            opt.laytime.pos(:,2)+(opt.laytime.height/4); ...
+                            opt.laytime.pos(:,2);                        ...
+                            opt.laytime.pos(:,2)-(opt.laytime.height/4); ...
+                            opt.laytime.pos(:,2)-(opt.laytime.height/2)]);
+                        
+    yTickLabel = {num2str(yTick.*range(opt.vlim) - opt.vlim(2))};
+    
+    set(gca, 'yTick', yTick);
+    set(gca, 'yTickLabel', yTickLabel)
+    
 elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
   
   % determine channel indices into data outside of loop
@@ -1196,26 +1185,28 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
         'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
     end
   end
-
-  if length(chanindx)>19
-    % no space for xticks
-    yTickLabel = [];
-  elseif length(chanindx)> 6
-    % one tick per channel
-    set(gca, 'yTick', sort([opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4); opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4)]))
-    yTickLabel = {num2str(-opt.vlim(2)/2), num2str(opt.vlim(2)/2)};
-  else
-    % two ticks per channel
-    set(gca, 'yTick', sort([opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/2); opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4); opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4); opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/2)]))
-    yTickLabel = {num2str(-opt.vlim(2)), num2str(-opt.vlim(2)/2), num2str(opt.vlim(2)/2), num2str(opt.vlim(2))};
-  end
   
+  if length(chanindx)>19
+      % no space for yticks
+      yTick = [];
+  elseif length(chanindx)> 6
+      % one tick per channel
+      yTick = sort([opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4); ...
+                    opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4)]);
+  else
+      % two ticks per channel
+      yTick = sort([opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/2); ...
+                    opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4); ...
+                    opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4); ...
+                    opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/2)]);
+  end
+  yTickLabel = {num2str(opt.vlim(1)); num2str(opt.vlim(2))};  
   yTickLabel = repmat(yTickLabel, 1, length(chanindx));
-  set(gca, 'yTick', []);
-  set(gca, 'yTickLabel', yTickLabel)
+  set(gca, 'yTick', yTick);  
+  set(gca, 'yTickLabel', yTickLabel);
   
 else
-  error('unknown viewmode "%s"', cfg.viewmode);
+    error('unknown viewmode "%s"', cfg.viewmode);
 end % if strcmp viewmode
 
   nticks = 11;
