@@ -18,6 +18,8 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.trl                     = structure that defines the data segments of interest, only applicable for trial-based data
 %   cfg.continuous              = 'yes' or 'no' whether the data should be interpreted as continuous or trial-based
 %   cfg.channel                 = cell-array with channel labels, see FT_CHANNELSELECTION
+%   cfg.plotlabels              = 'yes' (default), 'no', 'some'; whether
+%                                 to plot channel labels in vertical viewmode
 %   cfg.viewmode                = string, 'butterfly', 'vertical', 'component' for visualizing components e.g. from an ICA (default is 'butterfly')
 %   cfg.artfctdef.xxx.artifact  = Nx2 matrix with artifact segments see FT_ARTIFACT_xxx functions
 %   cfg.selectfeature           = string, name of feature to be selected/added (default = 'visual')
@@ -114,6 +116,7 @@ if ~isfield(cfg, 'megscale'),        cfg.megscale = [];                   end
 if ~isfield(cfg, 'magscale'),        cfg.magscale = [];                   end
 if ~isfield(cfg, 'gradscale'),       cfg.gradscale = [];                  end
 if ~isfield(cfg, 'layout'),          cfg.layout = [];                     end
+if ~isfield(cfg, 'plotlabels'),      cfg.plotlabels = 'yes';              end
 if ~isfield(cfg, 'event'),           cfg.event = [];                      end % this only exists for backward compatibility and should not be documented
 if ~isfield(cfg, 'continuous'),      cfg.continuous = [];                 end % the default is set further down in the code, conditional on the input data
 
@@ -389,6 +392,16 @@ opt.artcolors   = [0.9686 0.7608 0.7686; 0.7529 0.7098 0.9647; 0.7373 0.9725 0.6
 opt.chancolors  = chancolors;
 opt.cleanup     = false;      % this is needed for a corrent handling if the figure is closed (either in the corner or by "q")
 opt.chanindx    = [];         % this is used to check whether the component topographies need to be redrawn
+
+
+% determine labelling of channels
+if strcmp(cfg.plotlabels, 'yes')
+  opt.plotLabelFlag = 1;
+elseif strcmp(cfg.plotlabels, 'some')
+  opt.plotLabelFlag = 2;
+else
+  opt.plotLabelFlag = 0;
+end
 
 h = figure;
 setappdata(h, 'opt', opt);
@@ -1152,6 +1165,10 @@ if strcmp(cfg.viewmode, 'butterfly')
     'hpos', opt.laytime.pos(1,1), 'vpos', opt.laytime.pos(1,2), 'width', opt.laytime.width(1), 'height', opt.laytime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim);
    
 elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
+  
+  % determine channel indices into data outside of loop
+  laysels = match_str(opt.laytime.label, opt.hdr.label);
+  
   for i = 1:length(chanindx)
     if strcmp(cfg.viewmode, 'component')
       color = 'k';
@@ -1159,9 +1176,13 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
       color = opt.chancolors(chanindx(i),:);
     end
     datsel = i;
-    laysel = match_str(opt.laytime.label, opt.hdr.label(chanindx(i)));
+    laysel = laysels(i);
     if ~isempty(datsel) && ~isempty(laysel)
-      ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'timecourse', 'HorizontalAlignment', 'right');
+      
+      if opt.plotLabelFlag == 1 || (opt.plotLabelFlag == 2 && mod(i,10)==0)
+        ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'timecourse', 'HorizontalAlignment', 'right');
+      end
+      
       ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', color, 'tag', 'timecourse', ...
         'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
     end

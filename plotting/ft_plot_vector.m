@@ -72,24 +72,24 @@ else
 end
 
 % get the optional input arguments
-hpos            = keyval('hpos',               varargin);
-vpos            = keyval('vpos',               varargin);
-width           = keyval('width',              varargin);
-height          = keyval('height',             varargin);
-hlim            = keyval('hlim',               varargin); if isempty(hlim),            hlim = 'maxmin';            end
-vlim            = keyval('vlim',               varargin); if isempty(vlim),            vlim = 'maxmin';            end
-style           = keyval('style',              varargin); if isempty(style),           style = '-';                end
-label           = keyval('label',              varargin);
-fontsize        = keyval('fontsize',           varargin);
-axis            = keyval('axis',               varargin); if isempty(axis),            axis = false;               end
-box             = keyval('box',                varargin); if isempty(box),             box = false;                end
-color           = keyval('color',              varargin);
-linewidth       = keyval('linewidth',          varargin); if isempty(linewidth),       linewidth = 0.5;            end
-highlight       = keyval('highlight',          varargin);
-highlightstyle  = keyval('highlightstyle',     varargin); if isempty(highlightstyle),  highlightstyle = 'box';     end
-markersize      = keyval('markersize',         varargin); if isempty(markersize),      markersize = 6;             end
-markerfacecolor = keyval('markerfacecolor',    varargin); if isempty(markerfacecolor), markerfacecolor = 'none';   end
-tag            = keyval('tag', varargin);                 if isempty(tag),               tag='';                         end
+hpos            = ft_getopt(varargin, 'hpos');
+vpos            = ft_getopt(varargin, 'vpos');
+width           = ft_getopt(varargin, 'width');
+height          = ft_getopt(varargin, 'height');
+hlim            = ft_getopt(varargin, 'hlim', 'maxmin');
+vlim            = ft_getopt(varargin, 'vlim', 'maxmin');
+style           = ft_getopt(varargin, 'style', '-');
+label           = ft_getopt(varargin, 'label');
+fontsize        = ft_getopt(varargin, 'fontsize');
+axis            = ft_getopt(varargin, 'axis', false);
+box             = ft_getopt(varargin, 'box', false);
+color           = ft_getopt(varargin, 'color');
+linewidth       = ft_getopt(varargin, 'linewidth', 0.5);
+highlight       = ft_getopt(varargin, 'highlight');
+highlightstyle  = ft_getopt(varargin, 'highlightstyle', 'box');
+markersize      = ft_getopt(varargin, 'markersize', 6);
+markerfacecolor = ft_getopt(varargin, 'markerfacecolor', 'none');
+tag            = ft_getopt(varargin, 'tag', '');
 
 % convert the yes/no strings into boolean values
 box  = istrue(box);
