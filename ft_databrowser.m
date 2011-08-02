@@ -19,7 +19,8 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.continuous              = 'yes' or 'no' whether the data should be interpreted as continuous or trial-based
 %   cfg.channel                 = cell-array with channel labels, see FT_CHANNELSELECTION
 %   cfg.plotlabels              = 'yes' (default), 'no', 'some'; whether
-%                                 to plot channel labels in vertical viewmode
+%                                 to plot channel labels in vertical viewmode ('some' plots one in every ten
+%                                 labels; useful when plotting a large number of channels at a time)
 %   cfg.viewmode                = string, 'butterfly', 'vertical', 'component' for visualizing components e.g. from an ICA (default is 'butterfly')
 %   cfg.artfctdef.xxx.artifact  = Nx2 matrix with artifact segments see FT_ARTIFACT_xxx functions
 %   cfg.selectfeature           = string, name of feature to be selected/added (default = 'visual')
