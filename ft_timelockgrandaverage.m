@@ -86,10 +86,10 @@ if ~isfield(cfg, 'normalizevar'),   cfg.normalizevar   = 'N-1'; end
 Nsubj = length(varargin);
 
 if isfield(varargin{1}, 'grad')
-  warning('discarding gradiometer information because it cannot be averaged');
+  warning('discarding gradiometer position information because it cannot be averaged');
 end
 if isfield(varargin{1}, 'elec')
-  warning('discarding electrode information because it cannot be averaged');
+  warning('discarding electrode position information because it cannot be averaged');
 end
 
 % replace string latency selection by a timerange based on the range of all subjects
