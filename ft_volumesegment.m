@@ -334,8 +334,8 @@ if dotpm
        delete([cfg.name,'_seg3.mat']);
     elseif strcmp(cfg.write,'yes'),
       for j = 1:3
-        % put the original transformation-matrix in the headers
-        V(j).mat = original.transform;
+        % put the transformation-matrix in the headers
+        V(j).mat = mri.transform;
         % write the updated header information back to file ???????
         V(j) = spm_create_vol(V(j));
       end
@@ -395,8 +395,8 @@ if dotpm
        delete(fullfile(pathstr,['m',name,'.img']));
     elseif strcmp(cfg.write,'yes'),
       for j = 1:3
-        % put the original transformation-matrix in the headers
-        V(j).mat = original.transform;
+        % put the transformation-matrix in the headers
+        V(j).mat = mri.transform;
         % write the updated header information back to file ???????
         V(j) = spm_create_vol(V(j));
       end
