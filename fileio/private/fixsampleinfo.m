@@ -47,11 +47,21 @@ elseif ~isempty(trl)
   nsmp = trl(:,2) - trl(:,1) + 1;
 end
 
-if ~isempty(trl) && size(trl,1)~=numel(nsmp)
+if isempty(trl)
+  warning_once('the data does not contain a trial definition');
+elseif ~isempty(trl) && size(trl,1)~=numel(nsmp)
   warning_once('the trial definition in the configuration is inconsistent with the actual data');
   trl = [];
-elseif isempty(trl) || ~all(nsmp==trl(:,2)-trl(:,1)+1)
-  warning_once('the data does not contain a trial definition, assuming that the trials are consecutive segments of a continuous recording');
+elseif size(trl,1)~=ntrial
+  warning_once('the trial definition in the configuration is inconsistent with the actual data');
+  trl = [];
+elseif nsmp~=(trl(:,2)-trl(:,1)+1)
+  warning_once('the trial definition in the configuration is inconsistent with the actual data');
+  trl = [];
+end
+
+if isempty(trl) || ~all(nsmp==trl(:,2)-trl(:,1)+1)
+  warning_once('reconstructing sampleinfo by assuming that the trials are consecutive segments of a continuous recording');
   % construct a trial definition on the fly, assume that the trials are
   % consecutive segments of a continuous recording
   if ntrial==1,
@@ -68,13 +78,6 @@ elseif isempty(trl) || ~all(nsmp==trl(:,2)-trl(:,1)+1)
     end
   end
   trl = [begsample endsample offset];
-
-elseif size(trl,1)~=ntrial
-  warning_once('the trial definition in the configuration is inconsistent with the actual data');
-  trl = [];
-elseif nsmp~=(trl(:,2)-trl(:,1)+1)
-  warning_once('the trial definition in the configuration is inconsistent with the actual data');
-  trl = [];
 end
 
 if ~isfield(data, 'sampleinfo') && ~isempty(trl)
