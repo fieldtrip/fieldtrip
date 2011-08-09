@@ -1189,6 +1189,7 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
   if length(chanindx)>19
       % no space for yticks
       yTick = [];
+      yTickLabel = [];
   elseif length(chanindx)> 6
       % one tick per channel
       yTick = sort([opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4); ...
