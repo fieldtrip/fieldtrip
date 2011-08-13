@@ -1,4 +1,4 @@
-function [cfg] = prepare_design(cfg);
+function [cfg] = prepare_design(cfg)
 
 % PREPARE_DESIGN makes a design matrix on the basis of the information in
 % cfg (i.c., cfg.statistic, cfg.ext, and an initial design in cfg.design) 
@@ -137,7 +137,7 @@ elseif strcmp(designtype,'within')  % within-units conditions
       error('The number of rows in cfg.ext must be equal to the number of conditions or the number of replications (number of conditions times number of units-of-observation).');
     end;
     cfg.design(:,dimext(2)+1)=initialdesign(:,(end-1));
-    cfg.uvar = size(design,2)
+    cfg.uvar = size(design,2);
   end;
 end;
 
