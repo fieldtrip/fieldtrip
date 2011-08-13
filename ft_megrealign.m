@@ -1,4 +1,4 @@
-function [interp] = ft_megrealign(cfg, data);
+function [interp] = ft_megrealign(cfg, data)
 
 % FT_MEGREALIGN interpolates MEG data towards standard gradiometer locations
 % by projecting the individual timelocked data towards a coarse source
@@ -18,7 +18,7 @@ function [interp] = ft_megrealign(cfg, data);
 %   cfg.template       = single dataset that serves as template
 %   cfg.template(1..N) = datasets that are averaged into the standard
 %
-% The realignment is done by computing a minumum current estimate using a
+% The realignment is done by computing a minumum norm estimate using a
 % large number of dipoles that are placed in the upper layer of the brain
 % surface, followed by a forward computation towards the template
 % gradiometer array. This requires the specification of a volume conduction
