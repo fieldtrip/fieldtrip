@@ -564,4 +564,39 @@ elseif strcmp(cfg.method, 'equatespike')
   end % for ntrl
   varargout{1} = {outA, outB};
 
+elseif strcmp(cfg.method, 'lohi')
+  %%%%%%%%%%%%%%%%%
+  %experimental code working on single channel inputs (2) selecting the
+  %lowest amplitude for input 1 and highest for input 2
+  %%%%%%%%%%%%%%%%%
+  if nargin ~=3,
+    error('two input arguments with data required');
+  end
+  if size(varargin{1},1)~=1 || size(varargin{2},1)~=1
+    error('only one channel per input is allowed');
+  end
+  if size(varargin{1},2)~=size(varargin{2},2)
+    error('the number of observations should be equal');
+  end
+  
+  [srt1, ix1] = sort(input{1},'ascend');
+  [srt2, ix2] = sort(input{2},'descend');
+  mx1 = -inf;
+  mx2 = inf;
+  cnt = 0;
+  sel = [];
+  while mx2>mx1 && cnt<numel(srt1)
+    cnt = cnt+1;
+    sel = unique([sel ix1(cnt) ix2(cnt)]);
+    mx1 = mean(input{1}(sel));
+    mx2 = mean(input{2}(sel));
+  end
+  
+  varargout{1} = input{1};
+  varargout{2} = input{2};
+  
+  sel = setdiff(1:numel(srt1), sel);
+  varargout{1}(sel) = nan;
+  varargout{2}(sel) = nan;
+  
 end % cfg.method
