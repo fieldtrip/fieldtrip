@@ -26,7 +26,8 @@ function [Sts] = ft_spike_triggeredspectrum(cfg, data, spike)
 % of the Fourier spectrum of that other channel will be negative. 
 % % $Id$
 
-% Copyright (C) 2008-2011, Robert Oostenveld & Martin Vinck
+% Copyright (C) 2008-2011, Martin Vinck, Robert Oostenveld 
+% thanks to Henrique Cabral and Thilo Womelsdorf for testing.
 
 ft_defaults
 
