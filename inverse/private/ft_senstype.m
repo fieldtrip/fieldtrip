@@ -134,12 +134,12 @@ end
 % the input may be a data structure which then contains a grad/elec structure, a header or only the labels
 if isdata
   % preferably look at the data and not the header for the grad, because it might be re-balanced and/or planar
-  if isfield(input, 'hdr')
-    input = input.hdr;
-    isheader = true;
-  elseif isfield(input, 'grad')
+  if isfield(input, 'grad')
     sens = input.grad;
     isgrad = true;
+  elseif isfield(input, 'hdr')
+    input = input.hdr;
+    isheader = true;
   elseif issubfield(input, 'hdr.grad')
     sens = input.hdr.grad;
     isgrad = true;
