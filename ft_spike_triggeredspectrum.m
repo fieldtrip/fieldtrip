@@ -34,7 +34,7 @@ ft_defaults
 ftFuncTimer = tic();
 ftFuncClock = clock();
 
-%data = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes');
+data = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
