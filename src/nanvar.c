@@ -32,10 +32,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /*if (nrhs==2 || nrhs==1)*/
     /*figure out the first non-singleton dimension below*/
   else if (nrhs<1)
-    mexErrMsgTxt("Nanvar needs at least 1 input argument");
+    return;
  
-  if (!mxIsNumeric(prhs[0]))
-    mexErrMsgTxt("Input argument 1 should be numeric");
+  if (mxIsEmpty(prhs[0]))
+    {
+    plhs[0] = mxCreateDoubleScalar(0.0/0.0);
+    return;
+    }
+  else if (!mxIsNumeric(prhs[0]))
+    mexErrMsgTxt ("Input argument 1 should be numeric");
 
   /*figure out dimension info and number of elements*/
   dims    = mxGetDimensions(prhs[0]);
