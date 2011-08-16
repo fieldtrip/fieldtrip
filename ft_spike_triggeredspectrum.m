@@ -130,7 +130,6 @@ for iTrial = 1:nTrials
     unitshift{iUnit}    = ts(:) - smptime(:); % shift induced by shifting to sample times, important for high-frequency oscillations
     nSpikes(iUnit)   = length(unitsmp{iUnit});
   end
-  
   if ~any(nSpikes),continue,end % continue to the next trial if this one does not contain valid spikes
 
   % compute the lfp spectrum for all the timepoints and do the selection afterwards
@@ -170,11 +169,11 @@ for iTrial = 1:nTrials
         lateSpikes   = unitsmp{iUnit}>ed;
         if any(earlySpikes)
             rephaseMat(earlySpikes,1,iFreq) = exp(1i*2*pi*freq * (unittime{iUnit}(earlySpikes) - timeoi(beg)) );                    
-            spectrum{iTrial}(earlySpikes,:,:) = repmat(spec(:,:,:,beg),[sum(earlySpikes) 1 1]);                    
+            spectrum{iUnit,iTrial}(earlySpikes,:,:) = repmat(spec(:,:,:,beg),[sum(earlySpikes) 1 1]);                    
         end
         if any(lateSpikes) 
             rephaseMat(lateSpikes,1,iFreq)  = exp(1i*2*pi*freq * (unittime{iUnit}(lateSpikes) - timeoi(ed)) );
-            spectrum{iTrial}(lateSpikes,:,:) = repmat(spec(:,:,:,ed),[sum(lateSpikes) 1 1]);                
+            spectrum{iUnit,iTrial}(lateSpikes,:,:) = repmat(spec(:,:,:,ed),[sum(lateSpikes) 1 1]);                
         end
         if any(vldSpikes)
             rephaseMat(vldSpikes,1,iFreq)   = exp(1i*2*pi*freq*unitshift{iUnit}(vldSpikes));
