@@ -115,6 +115,7 @@ nSpikes = zeros(1,nspikesel);
 
 
 % compute the spectra
+
 for iTrial = 1:nTrials
   for iUnit = 1:nspikesel
     unitindx = spikesel(iUnit);        
@@ -136,13 +137,13 @@ for iTrial = 1:nTrials
   % compute the lfp spectrum for all the timepoints and do the selection afterwards
   tmpcfg.timeoi    = 'all';
   keys = ft_cfg2keyval(tmpcfg);
-  [spec,ntapers,freqoi,timeoi] = ft_specest_mtmconvol(data.trial{iTrial},data.time{iTrial},keys{:}); 
+  [spec,ntapers,freqoi,timeoi] = ft_specest_mtmconvol(data.trial{iTrial}(chansel,:),data.time{iTrial},keys{:}); 
   spec = nanmean(spec,1); % for averaging across tapers
   
   % do the DC removal now - this is critical not to introduce peak at low frequencies
   fsel  = find(numsmp<length(data.time{iTrial}));% the frequencies that we can process given the length of the LFP            
   for iFreq = fsel(:)'
-      mva = zeros(size(data.trial{iTrial})); % moving average to compute the DC
+      mva = zeros(nchansel,size(data.trial{iTrial},2)); % moving average to compute the DC
       for iChan = chansel(:)' 
         % we concove with a kernel that sums to 1 to get the moving average, this is the DC at any time-point
           mva(iChan,:)    = conv(data.trial{iTrial}(iChan,:), ones(1,numsmp(iFreq))./numsmp(iFreq),'same');
@@ -171,11 +172,11 @@ for iTrial = 1:nTrials
         lateSpikes   = unitsmp{iUnit}>ed;
         if any(earlySpikes)
             rephaseMat(earlySpikes,1,iFreq) = exp(1i*2*pi*freq * (unittime{iUnit}(earlySpikes) - timeoi(beg)) );                    
-            spectrum{iUnit,iTrial}(earlySpikes,:,:) = repmat(spec(:,:,:,beg),[sum(earlySpikes) 1 1]);                    
+            spectrum{iUnit,iTrial}(earlySpikes,:,iFreq) = repmat(spec(:,:,iFreq,beg),[sum(earlySpikes) 1 1]);                    
         end
         if any(lateSpikes) 
             rephaseMat(lateSpikes,1,iFreq)  = exp(1i*2*pi*freq * (unittime{iUnit}(lateSpikes) - timeoi(ed)) );
-            spectrum{iUnit,iTrial}(lateSpikes,:,:) = repmat(spec(:,:,:,ed),[sum(lateSpikes) 1 1]);                
+            spectrum{iUnit,iTrial}(lateSpikes,:,iFreq) = repmat(spec(:,:,iFreq,ed),[sum(lateSpikes) 1 1]);                
         end
         if any(vldSpikes)
             rephaseMat(vldSpikes,1,iFreq)   = exp(1i*2*pi*freq*unitshift{iUnit}(vldSpikes));
