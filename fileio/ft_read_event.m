@@ -972,6 +972,29 @@ switch eventformat
     tmp   = load(filename, 'event');
     event = tmp.event;
     
+  case 'micromed_trc'
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+    if isfield(hdr, 'orig') && isfield(hdr.orig, 'Trigger_Area') && isfield(hdr.orig, 'Tigger_Area_Length')
+      if ~isempty(trigindx)
+        trigger = read_trigger(filename, 'header', hdr, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift,'dataformat', 'micromed_trc');
+      else
+        % routine that reads analog triggers in case no index is specified
+        trigger = read_micromed_event(filename);
+        if ~isempty(trigger)
+          for E=1:length(trigger)
+            event(E).type    = 'MARKER';
+            event(E).sample  = trigger(1,E)+1;
+            event(E).urevent = E;
+            event(E).value   = trigger(2,E);
+          end
+        end
+      end
+    else
+      error('Not a correct event format')
+    end
+    
   case {'mpi_ds', 'mpi_dap'}
     if isempty(hdr)
       hdr = ft_read_header(filename);
