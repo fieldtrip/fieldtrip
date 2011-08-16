@@ -113,6 +113,7 @@ nTrials    = length(data.trial); % number of trials
 [unitsmp,unittime,unitshift]        = deal(cell(1,nspikesel));
 nSpikes = zeros(1,nspikesel);
 
+
 % compute the spectra
 for iTrial = 1:nTrials
   for iUnit = 1:nspikesel
@@ -133,7 +134,7 @@ for iTrial = 1:nTrials
   if ~any(nSpikes),continue,end % continue to the next trial if this one does not contain valid spikes
 
   % compute the lfp spectrum for all the timepoints and do the selection afterwards
-  tmpcfg.timeoi    = data.time{iTrial};
+  tmpcfg.timeoi    = 'all';
   keys = ft_cfg2keyval(tmpcfg);
   [spec,ntapers,freqoi,timeoi] = ft_specest_mtmconvol(data.trial{iTrial},data.time{iTrial},keys{:}); 
   spec = nanmean(spec,1); % for averaging across tapers
@@ -147,7 +148,7 @@ for iTrial = 1:nTrials
           mva(iChan,:)    = conv(data.trial{iTrial}(iChan,:), ones(1,numsmp(iFreq))./numsmp(iFreq),'same');
       end
       % now simply subtract the DC spectrum from the computed LFP spectrum
-      newspec = reshape(spec(1,:,iFreq,:),[nchansel,length(tmpcfg.timeoi)]) - mva.*spec_dc(1,1,iFreq); %subtract DC spec
+      newspec = reshape(spec(1,:,iFreq,:),[nchansel,length(timeoi)]) - mva.*spec_dc(1,1,iFreq); %subtract DC spec
       spec(1,:,iFreq,:) = reshape(newspec,[1 nchansel 1 length(timeoi)]);
   end
 
@@ -161,7 +162,8 @@ for iTrial = 1:nTrials
       freq = freqoi(iFreq);
 
       if strcmp(cfg.borderspikes,'yes') % if yes, we use an LFP window not centered around the spike
-        beg = 1+(numsmp(iFreq)-1)/2; % this is the border
+         
+        beg = 1+(numsmp(iFreq)-1)/2; % find the borders empirically
         ed  = length(timeoi) - beg;
 
         vldSpikes    = unitsmp{iUnit}>=beg & unitsmp{iUnit}<=ed; % determine the valid spikes
