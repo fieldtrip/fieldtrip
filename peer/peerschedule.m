@@ -10,9 +10,22 @@ function list = peerschedule(list, memreq, timreq, cpureq)
 %
 % $Id$
 
+if nargin<2
+  memreq = 0;
+end
+
+if nargin<3
+  timreq = 0;
+end
+
+if nargin<4
+  cpureq = 0;
+end
+
 % ensure that all peers meet the minimum requirements
-list = list([list.memavail]>memreq);
-list = list([list.timavail]>timreq);
+list = list([list.memavail]>=memreq);
+list = list([list.timavail]>=timreq);
+list = list([list.cpuavail]>=cpureq);
 
 % create two vectors with the available memory and time
 memavail = [list.memavail];
@@ -36,10 +49,12 @@ if ~isempty(regexp(getenv('HOSTNAME'), 'mentat'))
   % identify the big nodes in the mentat cluster
   mentat006 = find(~cellfun(@isempty, regexp({list.hostname}, 'mentat006')));
   mentat007 = find(~cellfun(@isempty, regexp({list.hostname}, 'mentat007')));
+  
   % this should be the preferred machine, even if jobs are 90 minutes longer or 6GB larger
   % penalty(mentat006) = penalty(mentat006) - 6;
   % this should be the preferred machine, even if jobs are 90 minutes longer or 6GB larger
   % penalty(mentat007) = penalty(mentat007) - 6;
+
   % these should be the preferred machines, no matter what
   penalty(mentat006) = 0;
   penalty(mentat007) = 0;
