@@ -40,7 +40,7 @@ switch ft_senstype(sens)
     sens.tra   = sens.tra(sel,:);
 
     % subsequently remove the unused coils
-    used = any(abs(sens.tra)<0.5, 1);  % allow a little bit of rounding-off error
+    used = any(abs(sens.tra)>0.0001, 1);  % allow a little bit of rounding-off error
     sens.pnt = sens.pnt(used,:);
     sens.ori = sens.ori(used,:);
     sens.tra = sens.tra(:,used);
@@ -52,14 +52,33 @@ switch ft_senstype(sens)
     % put the corresponding distances instead of non-zero tra entries    
     maxval = repmat(max(abs(sens.tra),[],2), [1 size(sens.tra,2)]);
     maxval = min(maxval, ones(size(maxval))); %a value > 1 sometimes leads to problems; this is an empirical fix
-    dist = (abs(sens.tra)>0.9.*maxval).*repmat(dist', size(sens.tra, 1), 1);
+    dist = (abs(sens.tra)>0.7.*maxval).*repmat(dist', size(sens.tra, 1), 1);
     
     % put nans instead of the zero entries
     dist(~dist) = inf;
 
-    % use the matrix to find coils with minimal distance to the center, i.e. the bottom coil
+    % use the matrix to find coils with minimal distance to the center,
+    % i.e. the bottom coil in the case of axial gradiometers
+    % this only works for a full-rank unbalanced tra-matrix
+    
+    % add the additional constraint that coils cannot be used twice,
+    % i.e. for the position of 2 channels. A row of the dist matrix can end
+    % up with more than 1 (magnetometer array) or 2 (axial gradiometer array)
+    % non-zero entries when the input grad structure is rank-reduced
+    % FIXME: I don't know whether this works for a vector-gradiometer
+    % system. I t also does not work when the system has mixed gradiometers
+    % and magnetometers
+    numcoils = sum(isfinite(dist),2);
+    tmp      = mode(numcoils);
+    while ~all(numcoils==tmp)
+      selmode  = find(numcoils==tmp);
+      selrest  = setdiff((1:size(dist,1))', selmode);
+      dist(selrest,sum(~isinf(dist(selmode,:)))>0) = inf;
+      numcoils = sum(isfinite(dist),2);
+    end
+    
     [junk, ind] = min(dist, [], 2);
-
+    
     lab = sens.label;
     pnt = sens.pnt(ind, :);
     ori = sens.ori(ind, :);
@@ -153,7 +172,7 @@ switch ft_senstype(sens)
   otherwise
     % compute the position for each electrode
 
-    if isfield(sens, 'tra') & isfield(sens, 'ori')
+    if isfield(sens, 'tra') && isfield(sens, 'ori')
       % each channel depends on multiple sensors (electrodes or coils)
       % compute a weighted position for the channel
       [nchan, ncoil] = size(sens.tra);
