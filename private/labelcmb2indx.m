@@ -55,16 +55,19 @@ ncmb = size(labelcmb,1);
 indx = zeros(ncmb,2);
 
 nchan    = numel(label);
-autoindx = zeros(nchan,1);
 for k = 1:nchan
-  sel1 = strcmp(label{k}, labelcmb(:,1));
-  sel2 = strcmp(label{k}, labelcmb(:,2));
+  %sel1 = strcmp(label{k}, labelcmb(:,1));
+  %sel2 = strcmp(label{k}, labelcmb(:,2));
+  sel = strcmp(label{k}, labelcmb);
   if nargin==1,
-    autoindx = find(sel1 & sel2);
+    %autoindx = find(sel1 & sel2);
+    autoindx = find(sel(:,1) & sel(:,2), 1, 'first');
     if isempty(autoindx), error('the required autocombination is not found in the input'); end
   else
     autoindx = k;
   end
-  indx(sel1,1) = autoindx;
-  indx(sel2,2) = autoindx;
+  %indx(sel1,1) = autoindx;
+  %indx(sel2,2) = autoindx;
+  indx(sel(:,1),1) = autoindx;
+  indx(sel(:,2),2) = autoindx;
 end
