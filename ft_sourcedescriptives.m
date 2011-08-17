@@ -251,7 +251,7 @@ if ispccdata
       end
       
       % compute voxel-level csd-matrix
-      source.avg.csd{i}      = rotmat * source.avg.csd{i} * rotmat';
+      if isfield(source.avg, 'csd'), source.avg.csd{i}      = rotmat * source.avg.csd{i} * rotmat'; end
       % compute voxel-level noisecsd-matrix
       if isfield(source.avg, 'noisecsd'), source.avg.noisecsd{i} = rotmat * source.avg.noisecsd{i} * rotmat'; end
       % compute rotated filter
