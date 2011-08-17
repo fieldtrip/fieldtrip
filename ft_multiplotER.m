@@ -597,7 +597,7 @@ cfg.comment = [cfg.comment colorLabels];
 % Write comment text:
 l = cellstrmatch('COMNT',Lbl);
 if ~isempty(l)
-    ft_plot_text(X(l),Y(l),sprintf(cfg.comment),'Fontsize',cfg.fontsize);
+    ft_plot_text(X(l),Y(l),sprintf(cfg.comment),'Fontsize',cfg.fontsize,'interpreter','none');
 end
 
 % Plot scales:
