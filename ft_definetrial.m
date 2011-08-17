@@ -1,22 +1,28 @@
 function [cfg] = ft_definetrial(cfg);
 
-% FT_DEFINETRIAL defines the trials, i.e. the pieces of data that will be read
-% in for preprocessing. Trials are defined by their begin and end sample
-% in the data file and each trial has an offset that defines where the
-% relative t=0 point (usually the point of the trigger) is for that trial.
+% FT_DEFINETRIAL defines the segments of data that will be used for
+% further processing and analysis, i.e. the pieces of data that will
+% be read in by FT_PREPROCESSING. Trials are defined by their begin
+% and end sample in the data file and each trial has an offset that
+% defines where the relative t=0 point (usually the sample at which
+% the trigger is detected) is for that trial.
 %
 % Use as
 %   [cfg] = ft_definetrial(cfg)
 % where the configuration structure should contain either
 %   cfg.trialdef   = structure with details of trial definition, see below
-%   cfg.trialfun   = function name, see below
+%   cfg.trialfun   = function name, see below (default = 'trialfun_general')
 % and also
-%   cfg.dataset    = pathname to dataset
-%
-% A call to FT_DEFINETRIAL results in the trial definition "trl" being added
-% to the output configuration structure. The trials are defined according
-% to the triggers, trials or other events in the data, or from a
-% user-specified Matlab function which returns "trl".
+%   cfg.dataset    = pathname to dataset from which to read the events
+% 
+% A call to FT_DEFINETRIAL results in the trial definition "trl" being
+% added to the output configuration structure. The trials are defined
+% according to the triggers, trials or other events in the data, or
+% from a user-specified Matlab function (subsequently referred to as
+% the trial function) which returns "trl". The user can specify the
+% name of his/her custom trial function that is tailored to the
+% experimental paradigm, or use the default trial function
+% TRIALFUN_GENERAL.
 %
 % The trial definition "trl" is an Nx3 matrix, N is the number of trials.
 % The first column contains the sample-indices of the begin of each trial 
@@ -27,34 +33,44 @@ function [cfg] = ft_definetrial(cfg);
 % positive offset indicates that the first sample is later than the trigger, 
 % a negative offset indicates that the trial begins before the trigger.
 %
-% Simple trial definitions (e.g. based on a trigger alone) are supported by
-% FT_DEFINETRIAL itself. For this, the general and data format independent way
-% of handling trials is by relying on the FT_READ_EVENT function to
-% collect all event information (such as triggers) from your dataset and
-% select trials based on those events. This is implemented in FT_DEFINETRIAL as
+% The trial definition "trl" can contain additional columns besides the
+% required three that represend begin, end and offset. These additional
+% columns can be used by a custom trialfun to provide numeric information
+% about each trial such as trigger codes, response latencies, trial
+% type and response correctness. The additional columns of the "trl"
+% matrix will be represented in data.trialinfo after FT_PREPROCESSING.
+%
+% Both the default trial function and your own supplied custom trial
+% functions in general will call FT_READ_EVENT to collect all event
+% information (such as triggers) from your dataset and to select
+% pieces of data according to this information.
+%
+% Simple trial definitions (e.g. based on a single trigger) are supported by
+% the default trial function, which supports the following options
 %   cfg.trialdef.eventtype  = 'string'
 %   cfg.trialdef.eventvalue = number, string or list with numbers or strings
 %   cfg.trialdef.prestim    = number, latency in seconds (optional)
 %   cfg.trialdef.poststim   = number, latency in seconds (optional)
-%
 % If you specify cfg.trialdef.eventtype  = '?' a list with the events in your 
 % data file will be displayed on screen.
 %
 % However, there are also many other complex ways in which you can define
-% data pieces of interest, for example based on a conditional sequence of
-% events (e.g. stimulus trigger followed by a correct response). For those
-% cases, a general mechanism has been implemented through which you can
-% supply your own trial-defining function, the 'trialfun'.
+% data pieces of interest, for example based on a conditional sequence
+% of events (e.g. stimulus trigger followed by a correct response).
+% For those cases, you have to supply your own trial function and
+% specify that as cfg.trialfun. See belor for pointers to some examples.
+% 
+% The cfg.trialfun option is a string containing the name of a function
+% that you wrote yourself and that FT_DEFINETRIAL will call. The
+% function should take the cfg-structure as input and should give a
+% NxM matrix with M equal to or larger than 3) in the same format as
+% "trl" as the output. You can add extra custom fields to the
+% configuration structure to pass as arguments to your own trialfun.
+% Furthermore, inside the trialfun you can use the FT_READ_EVENT
+% function to get the event information from your data file.
 %
-% This 'trialfun' is a string containing the name of a function that you
-% have to write yourself. The function should take the cfg-structure as
-% input and should give a Nx3 matrix in the same format as "trl" as the
-% output. You can add extra custom fields to the configuration structure to
-% pass as arguments to your own trialfun. Furthermore, inside the trialfun
-% you can use the FT_READ_EVENT function to get the event information
-% from your data file.
-%
-% See also FT_PREPROCESSING, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT
+% See also FT_PREPROCESSING, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT,
+% TRIALFUN_GENERAL, TRIALFUN_EXAMPLE1, TRIALFUN_EXAMPLE2
 
 % Undocumented local options:
 % cfg.datafile
