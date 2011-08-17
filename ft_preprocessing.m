@@ -115,6 +115,8 @@ function [dataout] = ft_preprocessing(cfg, data)
 % cfg.paddir = direction of padding, 'left'/'right'/'both' (default = 'both')
 % cfg.artfctdef
 % cfg.removemcg
+% cfg.montage (in combination with meg-data in the input) applies montage
+%              to both data and grad-structure)
 % You can use this function to read data from one format, filter it, and
 % write it to disk in another format. The reading is done either as one
 % long continuous segment or in multiple trials. This is achieved by
@@ -318,6 +320,16 @@ if hasdata
     % do the preprocessing on the selected channels
     [dataout.trial{i}, dataout.label, dataout.time{i}, cfg] = preproc(data.trial{i}(rawindx,:), data.label(rawindx), data.fsample, cfg, time2offset(data.time{i},data.fsample));
   end % for all trials
+  
+  if isfield(dataout, 'grad') && isfield(cfg, 'montage') && ~strcmp(cfg.montage, 'no') && isstruct(cfg.montage)
+    % apply the montage also to the MEG-sensor description
+    if isfield(cfg.montage, 'type'),
+      bname = cfg.montage.type;
+    else
+      bname = 'comp1';
+    end
+    dataout.grad = ft_apply_montage(dataout.grad, cfg.montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
+  end
   
   % convert back to input type if necessary
   switch convert
