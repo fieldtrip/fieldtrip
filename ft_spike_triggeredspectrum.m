@@ -137,7 +137,7 @@ for iTrial = 1:nTrials
   % compute the lfp spectrum for all the timepoints and do the selection afterwards
   tmpcfg.timeoi    = 'all';
   keys = ft_cfg2keyval(tmpcfg);
-  [spec,ntapers,freqoi,timeoi] = ft_specest_mtmconvol(data.trial{iTrial}(chansel,:),data.time{iTrial},keys{:}); 
+ spec ft_specest_mtmconvol(data.trial{iTrial}(chansel,:),data.time{iTrial},keys{:}); 
   spec = nanmean(spec,1); % for averaging across tapers
   
   % do the DC removal now - this is critical not to introduce peak at low frequencies
