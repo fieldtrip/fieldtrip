@@ -190,8 +190,8 @@ if checkboundary && hdr.nTrials>1
   end
 end
 
-if strcmp(dataformat, 'bci2000_dat')
-  % caching for BCI2000 is handled in the main section and in read_header
+if strcmp(dataformat, 'bci2000_dat') || strcmp(dataformat, 'eyelink_asc') || strcmp(dataformat, 'gtec_mat')
+  % caching for these formats is handled in the main section and in read_header
 else
   % implement the caching in a data-format independent way
   if cache && (isempty(cachedata) || ~isequal(cachedata.label,hdr.label(chanindx)))
@@ -367,7 +367,21 @@ switch dataformat
       'channels',chanindx);
     dat = cell2mat(tmp.data');
 
-  case  'itab_raw'
+  case 'gtec_mat'
+    if isfield(hdr, 'orig')
+      % these are remembered in the hdr.orig field for fast reading of subsequent segments
+      log   = hdr.orig.log;
+      names = hdr.orig.names;
+    else
+      % this is a simple MATLAB format, it contains a log and a names variable
+      tmp = load(headerfile);
+      log   = tmp.log;
+      names = tmp.names;
+    end
+    dat = log(chanindx, begsample:endsample);
+    dimord = 'chans_samples';
+
+  case 'itab_raw'
     if any(hdr.orig.data_type==[0 1 2])
       % big endian
       fid = fopen(datafile, 'rb', 'ieee-be');

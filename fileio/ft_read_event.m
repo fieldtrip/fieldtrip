@@ -949,6 +949,18 @@ switch eventformat
       event = db_select('fieldtrip.event', {'type', 'value', 'sample', 'offset', 'duration'});
     end
     
+  case 'gtec_mat'
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+    if isempty(trigindx)
+      % these are probably trigger channels
+      trigindx = match_str(hdr.label, {'Display', 'Target'});
+    end
+    % use a helper function to read the trigger channels and detect the flanks
+    % pass all the other users options to the read_trigger function
+    event = read_trigger(filename, 'header', hdr, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'dataformat', dataformat, 'detectflank', detectflank, 'trigshift', trigshift);
+    
   case {'itab_raw' 'itab_mhd'}
     if isempty(hdr)
       hdr = ft_read_header(filename);

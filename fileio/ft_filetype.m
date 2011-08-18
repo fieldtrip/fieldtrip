@@ -917,6 +917,10 @@ elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filen
   type = 'spmeeg_mat';
   manufacturer = 'Wellcome Trust Centre for Neuroimaging, UCL, UK';
   content = 'electrophysiological data';
+elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB') && filetype_check_gtec_mat(filename)
+  type = 'gtec_mat';
+  manufacturer = 'Guger Technologies, http://www.gtec.at';
+  content = 'electrophysiological data';
 elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB') && filetype_check_ced_spike6mat(filename)
   type = 'ced_spike6mat';
   manufacturer = 'Cambridge Electronic Design Limited';
@@ -1047,3 +1051,10 @@ res = res && numel(var)==1;
 res = res && strcmp('D', getfield(var, {1}, 'name'));
 res = res && strcmp('struct', getfield(var, {1}, 'class'));
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that checks for a GTEC mat file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function res = filetype_check_gtec_mat(filename)
+% check the content of the *.mat file
+var = whos('-file', filename);
+res = length(intersect({'log', 'names'}, {var.name}))==2;
