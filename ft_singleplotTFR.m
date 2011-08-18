@@ -122,6 +122,10 @@ if isempty(cfg.channel)
   error('no channels selected');
 end
 
+if ~isfield(data, cfg.parameter)
+  error('data has no field ''%s''', cfg.parameter);
+end
+
 % check whether rpt/subj is present and remove if necessary and whether
 hasrpt = any(ismember(dimtok, {'rpt' 'subj'}));
 if hasrpt,
@@ -162,7 +166,15 @@ isfull  = length(selchan)>1;
 % Check for bivariate metric with a labelcmb
 haslabelcmb = isfield(data, 'labelcmb');
 
-if (isfull || haslabelcmb) && isfield(data, cfg.parameter)
+% check whether the bivariate metric is the one requested to plot
+shouldPlotCmb = (haslabelcmb && ...
+  size(data.(cfg.parameter),selchan(1)) == size(data.labelcmb,1)) ...
+  || isfull; % this should work because if dimord has multiple chans (so isfull=1)
+             % then we can never plot anything without reference channel
+             % this is different when haslabelcmb=1; then the parameter
+             % requested to plot might well be a simple powspctrm
+
+if (isfull || haslabelcmb) && shouldPlotCmb
   % A reference channel is required:
   if ~isfield(cfg, 'refchannel')
     error('no reference channel is specified');
