@@ -32,9 +32,14 @@ sens = undobalancing(sens);
 
 switch ft_senstype(sens)
   case {'ctf151', 'ctf275' 'bti148', 'bti248', 'itab153', 'yokogawa160', 'yokogawa64'}
-    % the following code is for all axial gradiometer systems
+    % the following code is for all axial gradiometer systems or
+    % magnetometer systems
+    getref = keyval('channel', varargin); if isempty(getref), getref = 0; end 
     
-    % remove the non-MEG channels altogether
+    %%%%%%%%%%%%%%%%%%%%%%%%%%
+    % do the MEG sensors first
+    %%%%%%%%%%%%%%%%%%%%%%%%%%
+    sensorig   = sens;
     sel = ft_chantype(sens, 'meg');
     sens.label = sens.label(sel);
     sens.tra   = sens.tra(sel,:);
@@ -70,19 +75,56 @@ switch ft_senstype(sens)
     % and magnetometers
     numcoils = sum(isfinite(dist),2);
     tmp      = mode(numcoils);
+    niter    = 0;
     while ~all(numcoils==tmp)
+      niter    = niter + 1;
       selmode  = find(numcoils==tmp);
       selrest  = setdiff((1:size(dist,1))', selmode);
       dist(selrest,sum(~isinf(dist(selmode,:)))>0) = inf;
       numcoils = sum(isfinite(dist),2);
+      if niter>500
+          error('Failed to extract the positions of the channels. This is most likely due to the balancing matrix being rank deficient. Please replace data.grad with the original grad-structure obtained after reading the header.');
+      end
     end
     
     [junk, ind] = min(dist, [], 2);
     
-    lab = sens.label;
-    pnt = sens.pnt(ind, :);
-    ori = sens.ori(ind, :);
+    lab(sel) = sens.label;
+    pnt(sel,:) = sens.pnt(ind, :);
+    ori(sel,:) = sens.ori(ind, :);
 
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % then do the references if needed
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if getref
+        sens = sensorig;
+        sel  = ft_chantype(sens, 'ref');
+        
+        sens.label = sens.label(sel);
+        sens.tra   = sens.tra(sel,:);
+        
+        % subsequently remove the unused coils
+        used = any(abs(sens.tra)>0.0001, 1);  % allow a little bit of rounding-off error
+        sens.pnt = sens.pnt(used,:);
+        sens.ori = sens.ori(used,:);
+        sens.tra = sens.tra(:,used);
+        
+        [nchan, ncoil] = size(sens.tra);
+        refpnt = zeros(nchan,3);
+        refori = zeros(nchan,3); % FIXME not sure whether this will work
+        for i=1:nchan
+            weight = abs(sens.tra(i,:));
+            weight = weight ./ norm(weight);
+            refpnt(i,:) = weight * sens.pnt;
+            refori(i,:) = weight * sens.ori;
+        end
+        reflab = sens.label;
+        
+        lab(sel) = reflab;
+        pnt(sel,:) = refpnt;
+        ori(sel,:) = refori;
+    end
+    
   case {'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'itab153_planar', 'yokogawa160_planar', 'yokogawa64_planar'}
     % create a list with planar channel names
     chan = {};
