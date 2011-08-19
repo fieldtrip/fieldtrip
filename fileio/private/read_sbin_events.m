@@ -34,6 +34,10 @@ function [EventCodes, segHdr, eventData] = read_sbin_events(filename)
 %
 % $Id$
 
+EventCodes = [];
+segHdr = [];
+eventData = [];
+
 fid=fopen([filename],'r');
 if fid==-1
     error('wrong filename')
@@ -112,6 +116,8 @@ else
         EventCodes(j,1:4)   = char(fread(fid,[1,4],'char',endian));
     end
 end
+
+if NEvent == 0, return; end
 
 %read the actual events
 if unsegmented
