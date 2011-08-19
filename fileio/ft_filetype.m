@@ -1036,7 +1036,7 @@ fnames = {
   'times'
   };
 
-res = (numel(intersect(fieldnames(var{1}), fnames)) == 10);
+res = (numel(intersect(fieldnames(var{1}), fnames)) >= 5);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that checks for a SPM eeg/meg mat file
