@@ -43,7 +43,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		/* the default output will be dealt with later */
 		plhs[0] = NULL;
 
+		if (mxIsClass(prhs[0], "config")) {
+				/* the config object has to be converted to a struct object */
+                /* this fixes bug 885 */
+				mexPutVariable("caller", "bcks4i37yr3_cwb", prhs[0]);
+				mexEvalString("bcks4i37yr3_cwb = struct(bcks4i37yr3_cwb);");
+				prhs[0] = mexGetVariable("caller", "bcks4i37yr3_cwb");
+				mexEvalString("clear bcks4i37yr3_cwb;");
+		}
+
 		if (mxIsStruct(prhs[0])) {
+				/* it will also end up here if the input is an object, in which case this code fails */
 				if (num!=1)
 						mexErrMsgTxt("the first input should be a single structure");
 
