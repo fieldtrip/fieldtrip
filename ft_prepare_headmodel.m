@@ -139,8 +139,13 @@ switch cfg.method
       cfgmesh.numvertices = ft_getopt(cfg, 'numvertices', 4000);
       cfgmesh             = ft_checkconfig(cfgmesh, 'renamed', {'spheremesh', 'numvertices'});
       cfgmesh             = ft_checkconfig(cfgmesh, 'deprecated', 'mriunits');
-    else
-      cfg                 = ft_checkconfig(cfg, 'required', 'geom');
+    elseif exist('geometry', 'var')
+      % create a cfg for the creation of the triangulation
+      cfgmesh             = [];
+      cfgmesh.numvertices = ft_getopt(cfg, 'numvertices', 4000);
+      cfgmesh.headshape   = geometry.pnt;
+      cfgmesh             = ft_checkconfig(cfgmesh, 'renamed', {'spheremesh', 'numvertices'});
+      geometry            = ft_prepare_mesh(cfgmesh);
     end
   case 'singlesphere'
     if basedonmri
@@ -207,9 +212,6 @@ switch cfg.method
     vol = ft_headmodel_localspheres(geometry,cfg.grad,'feedback',cfg.feedback,'radius',cfg.radius,'maxradius',cfg.maxradius,'baseline',cfg.baseline);
     
   case 'singleshell'
-    tmp          = geometry;
-    geometry.bnd = tmp;
-    clear tmp;
     vol = ft_headmodel_singleshell(geometry);
     
   case 'singlesphere'

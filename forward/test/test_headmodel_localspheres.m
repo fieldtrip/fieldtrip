@@ -6,6 +6,8 @@
 % hdmfile (string) that specifies which file to read
 % in addition, it needs a description of the sensor array
 
+curdir = pwd;
+
 % read in the gradiometer information
 cd('/home/common/matlab/fieldtrip/data/');
 %cd('/Volumes/home/common/matlab/fieldtrip/data/');
@@ -31,3 +33,14 @@ cfg.method  = 'localspheres';
 cfg.grad    = grad;
 cfg.hdmfile = hdmfile;
 vol2        = ft_prepare_headmodel(cfg);
+
+% read in the headshape
+shape = ft_read_headshape(cfg.hdmfile);
+
+cfg         = [];
+cfg.method  = 'localspheres';
+cfg.grad    = grad;
+cfg.geom    = shape;
+vol3        = ft_prepare_headmodel(cfg);
+
+cd(curdir);
