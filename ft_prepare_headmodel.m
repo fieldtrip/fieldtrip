@@ -23,8 +23,9 @@ function vol = ft_prepare_headmodel(cfg, mri)
 % The configuration structure should contain
 %   cfg.method = string that specifies the forward solution, see below
 %
-% FieldTrip implementes a variety of forward solutions, some of
-% them using external toolboxes or executables. Each of the forward solutions requires a set of configuration options which are listed below.
+% FieldTrip implements a variety of forward solutions, some of
+% them using external toolboxes or executables. Each of the forward
+% solutions requires a set of configuration options which are listed below.
 %
 % For EEG the following methods are available
 %   singlesphere
@@ -42,108 +43,195 @@ function vol = ft_prepare_headmodel(cfg, mri)
 %   singleshell
 %   infinite
 
-% Copyright (C) 2011, Cristiano Micheli
+% Copyright (C) 2011, Cristiano Micheli, Jan-Mathijs Schoffelen
 %
 % $Log$
 
-% set the defaults
+% FIXME list the options in the documentation to the function
 
-if ~isfield(cfg, 'hdmfile'),         cfg.hdmfile    = [];  end
-if ~isfield(cfg, 'conductivity'),    cfg.conductivity  = [];  end
-if ~isfield(cfg, 'geom'),            cfg.geom  = [];  end
-if ~isfield(cfg, 'isolatedsource'),  cfg.isolatedsource = [];  end
+ft_defaults
 
-if ~isfield(cfg, 'fitind'),          cfg.fitind = 1;  end      % for the concentric spheres function
-if ~isfield(cfg, 'submethod'),       cfg.submethod = [];  end  % for the halfspace function
-if ~isfield(cfg, 'point'),           cfg.point = [];  end      % for the halfspace function
-if ~isfield(cfg, 'grad'),            cfg.grad = [];  end       % for the localspheres function
-if ~isfield(cfg, 'feedback'),        cfg.feedback = [];  end   % for the localspheres function
-if ~isfield(cfg, 'radius'),          cfg.radius = [];  end     % for the localspheres function
-if ~isfield(cfg, 'maxradius'),       cfg.maxradius = [];  end  % for the localspheres function
-if ~isfield(cfg, 'baseline'),        cfg.baseline = [];  end   % for the localspheres function
-
-if isempty(cfg.method)
-  error('The method to create the head model should be specified')
-end
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'required', 'method');
 
 if nargin > 1
-  basedonmri = true;
+  basedonmri       = true;
   basedonheadshape = false;
 else
-  basedonmri = false;
+  basedonmri       = false;
+  basedonheadshape = true;
+  mri              = [];
+end
+
+% method specific configuration / input requirements
+switch cfg.method
+  case 'bem_asa'
+    cfg         = ft_checkconfig(cfg, 'required', 'hdmfile');
+    cfg.hdmfile = ft_getopt(cfg, 'hdmfile', []);
+  case 'bem_cp'
+    cfg.hdmfile = ft_getopt(cfg, 'hdmfile', []);
+    cfg.geom    = ft_getopt(cfg, 'geom',    []);
+    cfg.conductivity = ft_getopt(cfg, 'conductivity', []);
+    if isempty(cfg.hdmfile) && isempty(cfg.geom)
+      error('for cfg.method = %s, you need to supply a cfg.geom or a cfg.hdmfile', cfg.method);
+    end    
+  case 'bem_dipoli'
+    cfg.hdmfile = ft_getopt(cfg, 'hdmfile', []);
+    cfg.geom    = ft_getopt(cfg, 'geom',    []);
+    cfg.conductivity   = ft_getopt(cfg, 'conductivity',   []);
+    cfg.isolatedsource = ft_getopt(cfg, 'isolatedsource', []);
+    if isempty(cfg.hdmfile) && isempty(cfg.geom)
+      error('for cfg.method = %s, you need to supply a cfg.geom or a cfg.hdmfile', cfg.method);
+    end    
+  case 'bem_openmeeg'
+    cfg.hdmfile = ft_getopt(cfg, 'hdmfile', []);
+    cfg.geom    = ft_getopt(cfg, 'geom',    []);
+    cfg.conductivity   = ft_getopt(cfg, 'conductivity',   []);
+    cfg.isolatedsource = ft_getopt(cfg, 'isolatedsource', []);
+    if isempty(cfg.hdmfile) && isempty(cfg.geom)
+      error('for cfg.method = %s, you need to supply a cfg.geom or a cfg.hdmfile', cfg.method);
+    end
+  case 'concentricspheres'
+    cfg.geom    = ft_getopt(cfg, 'geom',   []);
+    cfg.conductivity   = ft_getopt(cfg, 'conductivity',   []);
+    cfg.fitind  = ft_getopt(cfg, 'fitind', 1);
+  case 'halfspace'
+    cfg.geom      = ft_getopt(cfg, 'geom',      []);
+    cfg.point     = ft_getopt(cfg, 'point',     []);
+    cfg.submethod = ft_getopt(cfg, 'submethod', []);
+    cfg.conductivity = ft_getopt(cfg, 'conductivity',   []);
+  case 'infinite'
+    % nothing to do
+  case 'localspheres'
+    % FIXME input data with a gradiometer description should also be
+    % supported?
+    if basedonmri
+      % create a cfg and set the defaults for the mesh creation
+      cfgmesh             = [];
+      cfgmesh.smooth      = ft_getopt(cfg, 'smooth',      5);
+      cfgmesh.sourceunits = ft_getopt(cfg, 'sourceunits', 'cm');
+      cfgmesh.threshold   = ft_getopt(cfg, 'threshold',   0.5);
+      cfgmesh.numvertices = ft_getopt(cfg, 'numvertices', 4000);
+      cfgmesh             = ft_checkconfig(cfgmesh, 'renamed', {'spheremesh', 'numvertices'});
+      cfgmesh             = ft_checkconfig(cfgmesh, 'deprecated', 'mriunits');
+    else
+      cfg                 = ft_checkconfig(cfg, 'required', 'geom');  
+    end
+    cfg.grad      = ft_getopt(cfg, 'grad',      []);
+    cfg.feedback  = ft_getopt(cfg, 'feedback',  true);
+    cfg.radius    = ft_getopt(cfg, 'radius',    8.5);
+    cfg.maxradius = ft_getopt(cfg, 'maxradius', 20);
+    cfg.baseline  = ft_getopt(cfg, 'baseline',  5);
+  case 'singleshell'
+    if basedonmri
+      % create a cfg and set the defaults for the mesh creation
+      cfgmesh             = [];
+      cfgmesh.smooth      = ft_getopt(cfg, 'smooth',      5);
+      cfgmesh.sourceunits = ft_getopt(cfg, 'sourceunits', 'cm');
+      cfgmesh.threshold   = ft_getopt(cfg, 'threshold',   0.5);
+      cfgmesh.numvertices = ft_getopt(cfg, 'numvertices', 4000);
+      cfgmesh             = ft_checkconfig(cfgmesh, 'renamed', {'spheremesh', 'numvertices'});
+      cfgmesh             = ft_checkconfig(cfgmesh, 'deprecated', 'mriunits');
+    else
+      cfg                 = ft_checkconfig(cfg, 'required', 'geom');
+    end
+  case 'singlesphere'
+    cfg.hdmfile = ft_getopt(cfg, 'hdmfile', []);
+    cfg.geom    = ft_getopt(cfg, 'geom',    []);
+    cfg.conductivity   = ft_getopt(cfg, 'conductivity',   []);
+  case 'simbio'
+    % does not yet seem to be implemented  
+  case 'fns'
+    % does not yet seem to be implemented
+  otherwise
+    error('unsupported method "%s"', cfg.method);
+end
+
+
+if basedonmri
+  % create mesh from mri -> this prevails, even if the configuration
+  % contains a headshape
+  geometry.bnd = ft_prepare_mesh(cfgmesh, mri);
+  
+  % once this is done, switch the value for basedonheadshape
   basedonheadshape = true;
 end
 
-if isempty(cfg.geom) & isempty(cfg.hdmfile) & ~basedonmri
-  error('Either cfg.geom or cfg.hdmfile should be specified')
-end
-
-
 if basedonheadshape
-  switch cfg.method
-    case 'bem_asa'
-      if ~isempty(cfg.hdmfile)
-          vol = ft_headmodel_bem_asa(cfg.hdmfile);
-      else
-        error('Please use a valid head model file')
-      end
-      
-    case 'bem_cp'
-      if ~isempty(cfg.hdmfile)
-        vol = ft_headmodel_bem_cp([],'hdmfile',cfg.hdmfile,'conductivity',cfg.conductivity);
-      else
-        vol = ft_headmodel_bem_cp(cfg.geom,'conductivity',cfg.conductivity);
-      end
-      
-    case 'bem_dipoli'
-      if ~isempty(cfg.hdmfile)
-        vol = ft_headmodel_bem_dipoli([],'hdmfile',cfg.hdmfile,'conductivity',cfg.conductivity,'isolatedsource',cfg.isolatedsource);
-      else
-        vol = ft_headmodel_bem_dipoli(cfg.geom,'conductivity',cfg.conductivity,'isolatedsource',cfg.isolatedsource);
-      end
-      
-    case 'bem_openmeeg'
-      if ~isempty(cfg.hdmfile)
-        vol = ft_headmodel_bem_dipoli([],'hdmfile',cfg.hdmfile,'conductivity',cfg.conductivity,'isolatedsource',cfg.isolatedsource);
-      else
-        vol = ft_headmodel_bem_dipoli(cfg.geom,'conductivity',cfg.conductivity,'isolatedsource',cfg.isolatedsource);
-      end
-      
-    case 'concentricspheres'
-      vol = ft_headmodel_concentricspheres(cfg.geom,'conductivity',cfg.conductivity,'fitind',cfg.fitind);
-      
-    case 'halfspace'
-      vol = ft_headmodel_halfspace(cfg.geom, cfg.point, 'conductivity',cfg.conductivity,'submethod',cfg.submethod);
-      
-    case 'infinite'
-      vol = ft_headmodel_infinite;
-      
-    case 'localspheres'
-      vol = ft_headmodel_localspheres(cfg.geom,cfg.grad,'feedback',cfg.feedback,'radius',cfg.radius,'maxradius',cfg.maxradius,'baseline',cfg.baseline);
-      
-    case 'singleshell'
-      vol = ft_headmodel_singleshell(cfg.geom);
-      
-    case 'singlesphere'
-      if isfield(cfg.geom,'pnt')
-        pnt = cfg.geom.pnt;
-      end
-      vol = ft_headmodel_singlesphere(pnt,'headshape',cfg.hdmfile,'conductivity',cfg.conductivity);
-      
-    case 'simbio'
-      vol = ft_headmodel_fem_simbio();
-      
-    case 'fns'
-      vol = ft_headmodel_fem_fns();
-      
-    otherwise
-      error('unsupported method "%s"', cfg.method);
+  % get the geometric description
+  if ~exist('geometry', 'var')
+    if ~isempty(cfg.geom)
+      geometry = cfg.geom;
+    else
+      % what to do here?
+    end
+  else
+    % the geometry was constructed from the mri
   end
 end
 
-if basedonmri
-  % geometry is based on mri
-  % FIXME: add code here
-  error('not yet implemented')
+if ~basedonmri && ~basedonheadshape
+  error('the construction of the volume conduction model of the head needs either a headhape, or a volumetric mri'); 
 end
 
+%
+switch cfg.method
+  case 'bem_asa'
+    vol = ft_headmodel_bem_asa(cfg.hdmfile);
+  
+  case 'bem_cp'
+    if ~isempty(cfg.hdmfile)
+      vol = ft_headmodel_bem_cp([],'hdmfile',cfg.hdmfile,'conductivity',cfg.conductivity);
+    else
+      vol = ft_headmodel_bem_cp(geometry,'conductivity',cfg.conductivity);
+    end
+    
+  case 'bem_dipoli'
+    if ~isempty(cfg.hdmfile)
+      vol = ft_headmodel_bem_dipoli([],'hdmfile',cfg.hdmfile,'conductivity',cfg.conductivity,'isolatedsource',cfg.isolatedsource);
+    else
+      vol = ft_headmodel_bem_dipoli(geometry,'conductivity',cfg.conductivity,'isolatedsource',cfg.isolatedsource);
+    end
+    
+  case 'bem_openmeeg'
+    if ~isempty(cfg.hdmfile)
+      vol = ft_headmodel_bem_dipoli([],'hdmfile',cfg.hdmfile,'conductivity',cfg.conductivity,'isolatedsource',cfg.isolatedsource);
+    else
+      vol = ft_headmodel_bem_dipoli(geometry,'conductivity',cfg.conductivity,'isolatedsource',cfg.isolatedsource);
+    end
+    
+  case 'concentricspheres'
+    vol = ft_headmodel_concentricspheres(geometry,'conductivity',cfg.conductivity,'fitind',cfg.fitind);
+    
+  case 'halfspace'
+    vol = ft_headmodel_halfspace(geometry, cfg.point, 'conductivity',cfg.conductivity,'submethod',cfg.submethod);
+    
+  case 'infinite'
+    vol = ft_headmodel_infinite;
+    
+  case 'localspheres'
+    vol = ft_headmodel_localspheres(geometry,cfg.grad,'feedback',cfg.feedback,'radius',cfg.radius,'maxradius',cfg.maxradius,'baseline',cfg.baseline);
+    
+  case 'singleshell'
+    vol = ft_headmodel_singleshell(geometry);
+    
+  case 'singlesphere'
+    if isfield(geometry,'pnt')
+      pnt = geometry.pnt;
+    end
+    vol = ft_headmodel_singlesphere(pnt,'headshape',cfg.hdmfile,'conductivity',cfg.conductivity);
+    
+  case 'simbio'
+    vol = ft_headmodel_fem_simbio();
+    
+  case 'fns'
+    vol = ft_headmodel_fem_fns();
+    
+  otherwise
+    error('unsupported method "%s"', cfg.method);
+end
+
+% get the output cfg
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+
+% FIXME should the output vol get a cfg?
