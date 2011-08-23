@@ -213,12 +213,7 @@ switch cfg.method
     vol = ft_headmodel_singleshell(geometry);
     
   case 'singlesphere'
-    if isfield(geometry,'pnt')
-      pnt = geometry.pnt;
-    elseif isfield(geometry, 'bnd') && isfield(geometry.bnd, 'pnt')
-      pnt = geometry.bnd.pnt;
-    end
-    vol = ft_headmodel_singlesphere(pnt,'conductivity',cfg.conductivity);
+    vol = ft_headmodel_singlesphere(geometry.pnt,'conductivity',cfg.conductivity);
     
   case 'simbio'
     vol = ft_headmodel_fem_simbio();

@@ -47,7 +47,7 @@ if isfield(geometry, 'unit')
   vol.unit = geometry.unit;
 end
 
-Nshape = size(geometry.bnd.pnt,1);
+Nshape = size(geometry.pnt,1);
 Nchan  = numel(grad.label);
 
 % set up an empty figure
@@ -64,12 +64,12 @@ end
 if istrue(feedback)
   cla
   ft_plot_sens(grad);
-  ft_plot_mesh(geometry.bnd, 'vertexcolor', 'g', 'facecolor', 'none', 'edgecolor', 'none');
+  ft_plot_mesh(geometry, 'vertexcolor', 'g', 'facecolor', 'none', 'edgecolor', 'none');
   drawnow
 end
 
 % fit a single sphere to all headshape points
-[single_o, single_r] = fitsphere(geometry.bnd.pnt);
+[single_o, single_r] = fitsphere(geometry.pnt);
 fprintf('single sphere,   %5d surface points, center = [%4.1f %4.1f %4.1f], radius = %4.1f\n', Nshape, single_o(1), single_o(2), single_o(3), single_r);
 
 
@@ -113,16 +113,16 @@ for chan=1:Nchan
   end
   
   % find the headshape points that are close to this channel
-  dist = sqrt(sum((geometry.bnd.pnt-repmat(thispnt,Nshape,1)).^2, 2));
+  dist = sqrt(sum((geometry.pnt-repmat(thispnt,Nshape,1)).^2, 2));
   shapesel = find(dist<radius);
   if feedback
-    ft_plot_mesh(geometry.bnd.pnt(shapesel,:), 'vertexcolor', 'g');
+    ft_plot_mesh(geometry.pnt(shapesel,:), 'vertexcolor', 'g');
     drawnow
   end
   
   % fit a sphere to these headshape points
   if length(shapesel)>10
-    [o, r] = fitsphere(geometry.bnd.pnt(shapesel,:));
+    [o, r] = fitsphere(geometry.pnt(shapesel,:));
     fprintf('channel = %s, %5d surface points, center = [%4.1f %4.1f %4.1f], radius = %4.1f\n', grad.label{chan}, length(shapesel), o(1), o(2), o(3), r);
   else
     fprintf('channel = %s, not enough surface points, using all points\n', grad.label{chan});
