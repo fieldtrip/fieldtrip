@@ -55,12 +55,21 @@ cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'required', 'method');
 
 if nargin > 1
-  basedonmri       = true;
-  basedonheadshape = false;
+  fprintf('Computing the geometrical description from an MRI volume.\n');
+  % compute the mesh based on the input mri, this is computed below
+  basedonmri = true;
+elseif isfield(cfg, 'geom') && ~isempty(cfg.geom) && isfield(cfg, 'hdmfile') && ~isempty(cfg.hdmfile)
+  error('you can only provide either a geometrical description in the configuration, or the name of the file where to find the geometry');
+elseif isfield(cfg, 'geom') && ~isempty(cfg.geom) && ~strcmp(cfg.method, 'infinite')
+  fprintf('Using the geometrical description provided in the configuration.\n');
+  geometry   = cfg.geom;
+  basedonmri = false;
+elseif isfield(cfg, 'hdmfile') && ~isempty(cfg.hdmfile) && ~strcmp(cfg.method, 'infinite')
+  fprintf('Loading the geometrical description from file.\n');
+  geometry   = ft_read_headshape(cfg.hdmfile);
+  basedonmri = false;
 else
-  basedonmri       = false;
-  basedonheadshape = true;
-  mri              = [];
+  error('the construction of the volume conduction model of the head needs either a headhape, or a volumetric mri'); 
 end
 
 % method specific configuration / input requirements
@@ -114,8 +123,6 @@ switch cfg.method
       cfgmesh.numvertices = ft_getopt(cfg, 'numvertices', 4000);
       cfgmesh             = ft_checkconfig(cfgmesh, 'renamed', {'spheremesh', 'numvertices'});
       cfgmesh             = ft_checkconfig(cfgmesh, 'deprecated', 'mriunits');
-    else
-      cfg                 = ft_checkconfig(cfg, 'required', 'geom');  
     end
     cfg.grad      = ft_getopt(cfg, 'grad',      []);
     cfg.feedback  = ft_getopt(cfg, 'feedback',  true);
@@ -136,8 +143,16 @@ switch cfg.method
       cfg                 = ft_checkconfig(cfg, 'required', 'geom');
     end
   case 'singlesphere'
-    cfg.hdmfile = ft_getopt(cfg, 'hdmfile', []);
-    cfg.geom    = ft_getopt(cfg, 'geom',    []);
+    if basedonmri
+      % create a cfg and set the defaults for the mesh creation
+      cfgmesh             = [];
+      cfgmesh.smooth      = ft_getopt(cfg, 'smooth',      5);
+      cfgmesh.sourceunits = ft_getopt(cfg, 'sourceunits', 'cm');
+      cfgmesh.threshold   = ft_getopt(cfg, 'threshold',   0.5);
+      cfgmesh.numvertices = ft_getopt(cfg, 'numvertices', 4000);
+      cfgmesh             = ft_checkconfig(cfgmesh, 'renamed', {'spheremesh', 'numvertices'});
+      cfgmesh             = ft_checkconfig(cfgmesh, 'deprecated', 'mriunits');
+    end
     cfg.conductivity   = ft_getopt(cfg, 'conductivity',   []);
   case 'simbio'
     % does not yet seem to be implemented  
@@ -147,34 +162,13 @@ switch cfg.method
     error('unsupported method "%s"', cfg.method);
 end
 
-
 if basedonmri
   % create mesh from mri -> this prevails, even if the configuration
   % contains a headshape
-  geometry.bnd = ft_prepare_mesh(cfgmesh, mri);
-  
-  % once this is done, switch the value for basedonheadshape
-  basedonheadshape = true;
+  geometry = ft_prepare_mesh(cfgmesh, mri);
 end
 
-if basedonheadshape
-  % get the geometric description
-  if ~exist('geometry', 'var')
-    if ~isempty(cfg.geom)
-      geometry = cfg.geom;
-    else
-      % what to do here?
-    end
-  else
-    % the geometry was constructed from the mri
-  end
-end
-
-if ~basedonmri && ~basedonheadshape
-  error('the construction of the volume conduction model of the head needs either a headhape, or a volumetric mri'); 
-end
-
-%
+% the construction of the volume conductor model is performed below
 switch cfg.method
   case 'bem_asa'
     vol = ft_headmodel_bem_asa(cfg.hdmfile);
@@ -213,13 +207,18 @@ switch cfg.method
     vol = ft_headmodel_localspheres(geometry,cfg.grad,'feedback',cfg.feedback,'radius',cfg.radius,'maxradius',cfg.maxradius,'baseline',cfg.baseline);
     
   case 'singleshell'
+    tmp          = geometry;
+    geometry.bnd = tmp;
+    clear tmp;
     vol = ft_headmodel_singleshell(geometry);
     
   case 'singlesphere'
     if isfield(geometry,'pnt')
       pnt = geometry.pnt;
+    elseif isfield(geometry, 'bnd') && isfield(geometry.bnd, 'pnt')
+      pnt = geometry.bnd.pnt;
     end
-    vol = ft_headmodel_singlesphere(pnt,'headshape',cfg.hdmfile,'conductivity',cfg.conductivity);
+    vol = ft_headmodel_singlesphere(pnt,'conductivity',cfg.conductivity);
     
   case 'simbio'
     vol = ft_headmodel_fem_simbio();
