@@ -68,7 +68,7 @@ elseif isfield(cfg, 'hdmfile') && ~isempty(cfg.hdmfile) && ~strcmp(cfg.method, '
   fprintf('Loading the geometrical description from file.\n');
   geometry   = ft_read_headshape(cfg.hdmfile);
   basedonmri = false;
-else
+elseif ~strcmp(cfg.method, 'infinite')
   error('the construction of the volume conduction model of the head needs either a headhape, or a volumetric mri'); 
 end
 

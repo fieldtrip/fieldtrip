@@ -8,8 +8,8 @@
 curdir = pwd;
 
 % read in the segmented mri
-%cd('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer');
-cd('/Volumes/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer');
+cd('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer');
+%cd('/Volumes/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer');
 load segmentedmri
 mri = segmentedmri; clear segmentedmri;
 
@@ -17,8 +17,8 @@ cfg         = [];
 cfg.method  = 'singlesphere';
 vol1        = ft_prepare_headmodel(cfg, mri);
 
-%cd('/home/common/matlab/fieldtrip/data/');
-cd('/Volumes/home/common/matlab/fieldtrip/data/');
+cd('/home/common/matlab/fieldtrip/data/');
+%cd('/Volumes/home/common/matlab/fieldtrip/data/');
 hdmfile     = 'Subject01.shape';
 
 cfg         = [];
