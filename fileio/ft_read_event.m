@@ -998,7 +998,6 @@ switch eventformat
           for E=1:length(trigger)
             event(E).type    = 'MARKER';
             event(E).sample  = trigger(1,E)+1;
-            event(E).urevent = E;
             event(E).value   = trigger(2,E);
           end
         end
