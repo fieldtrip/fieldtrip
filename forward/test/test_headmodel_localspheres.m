@@ -1,6 +1,7 @@
-function test_ft_headmodel_localspheres
+function test_headmodel_localspheres
 
-% TEST: ft_headmodel_localspheres ft_prepare_headmodel ft_prepare_localspheres
+% TEST: ft_headmodel_localspheres ft_prepare_headmodel
+% ft_prepare_localspheres test_headmodel_localspheres
 
 % function to test ft_headmodel_localspheres. this function is called by
 % ft_prepare_headmodel
@@ -25,6 +26,12 @@ cd('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer');
 load segmentedmri
 mri = segmentedmri; clear segmentedmri;
 
+% specify the file for the headshape
+hdmfile  = '/home/common/matlab/fieldtrip/data/Subject01.shape';
+
+% read in the headshape
+shape = ft_read_headshape(hdmfile);
+
 %%%%%%%%%%%%%%%%%%%%%
 % do the computations
 
@@ -33,12 +40,14 @@ cfg         = [];
 cfg.method  = 'localspheres';
 cfg.grad    = grad;
 vol1        = ft_prepare_headmodel(cfg, mri);
-cfg         = rmfield(cfg, 'method');
+% the following needs to be done to be able to make the comparison
+vol1 = rmfield(vol1, 'unit');
+
+cfg         = [];
+cfg.grad    = grad;
 vol1b       = ft_prepare_localspheres(cfg, mri);
 success     = success && isequal(vol1, vol1b);
 
-cd('/home/common/matlab/fieldtrip/data/');
-hdmfile     = 'Subject01.shape';
 
 % with a filename in the input
 cfg         = [];
@@ -46,6 +55,8 @@ cfg.method  = 'localspheres';
 cfg.grad    = grad;
 cfg.hdmfile = hdmfile;
 vol2        = ft_prepare_headmodel(cfg);
+% the following needs to be done to be able to make the comparison
+vol2        = rmfield(vol2, 'unit');
 
 cfg         = [];
 cfg.grad    = grad;
@@ -53,8 +64,6 @@ cfg.headshape = hdmfile;
 vol2b       = ft_prepare_localspheres(cfg);
 success     = success && isequal(vol2, vol2b);
 
-% read in the headshape
-shape = ft_read_headshape(hdmfile);
 
 % with a point cloud in the input
 cfg         = [];
@@ -62,12 +71,15 @@ cfg.method  = 'localspheres';
 cfg.grad    = grad;
 cfg.geom    = shape;
 vol3        = ft_prepare_headmodel(cfg);
+% the following needs to be done to be able to make the comparison
+vol3        = rmfield(vol3, 'unit');
 
 cfg         = [];
 cfg.headshape = shape;
 cfg.grad    = grad;
 vol3b       = ft_prepare_localspheres(cfg);
 success     = success && isequal(vol3, vol3b);
+
 
 if ~success
   error('there is a problem in test_headmodel_localspheres');
