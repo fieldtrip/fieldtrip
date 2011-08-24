@@ -1,4 +1,4 @@
-function trigger = read_micromed_event(trcfile)
+function event = read_micromed_event(trcfile)
 
 % reads the events of the Micromed TRC format files
 
@@ -114,3 +114,10 @@ end
 
 fclose(fid);
 
+if ~isempty(trigger)
+  for E=1:length(trigger)
+    event(E).type    = 'MARKER';
+    event(E).sample  = trigger(1,E)+1;
+    event(E).value   = trigger(2,E);
+  end
+end
