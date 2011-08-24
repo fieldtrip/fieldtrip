@@ -1,17 +1,29 @@
-function fns_contable_write(cond,filename)
-% Writes the values of conductivity on disk in a csv fashion
-% Takes a conductivity matrix as input and if not present defines a standard conductivity matrix
+function cond = fns_contable_write
+% Creates the default conductivity table
 %
 % Use as
-%   fns_contable_write(cond)
-% These values are calculated according to:
-% Saleheen HI, Ng KT. New finite difference formulations for general
-% inhomogeneous anisotropic bioelectric problems. IEEE Trans Biomed Eng. 1997
-% Sep;44(9):800-9
+%   cond = fns_contable_write
+% 
+% The FNS convention for tissue types is the following:
+%     0     "Clear Label"
+%     1     "CSF"
+%     2     "Gray Matter"
+%     3     "White Matter"
+%     4     "Fat"
+%     5     "Muscle"
+%     6     "Muscle/Skin"
+%     7     "Skull"
+%     8     "Vessels"
+%     9     "Around Fat"
+%    10     "Dura Matter"
+%    11     "Bone Marrow"
+%    12     "Eyes"
+% 
 
 % Copyright (C) 2009, Hung Dang
 
-if isempty(cond) || (size(cond,1)~=9 && size(cond,2)~=12)
+cond = zeros(9,13);
+% if isempty(cond) || (size(cond,1)~=9 && size(cond,2)~=12)
   
   % Brain tissues index
   HH_OUTSIDE        = 0;
@@ -46,7 +58,6 @@ if isempty(cond) || (size(cond,1)~=9 && size(cond,2)~=12)
   HH_EYES_CON         = 0.5;
   
   % $$$ Create the conductivity table
-  cond = zeros(9,12);
   cond([1,5,9],HH_OUTSIDE + 1)      = HH_OUTSIDE_CON;
   cond([1,5,9],HH_CSF + 1)          = HH_CSF_CON;
   cond([1,5,9],HH_WHITE_MATTER + 1) = HH_WHITE_MATTER_CON;
@@ -60,6 +71,6 @@ if isempty(cond) || (size(cond,1)~=9 && size(cond,2)~=12)
   cond([1,5,9],HH_DURA + 1)         = HH_DURA_CON;
   cond([1,5,9],HH_BONE_MARROW + 1)  = HH_BONE_MARROW_CON;
   cond([1,5,9],HH_EYES + 1)         = HH_EYES_CON;
-end
+% end
 
-csvwrite(filename,cond);
+% csvwrite(filename,cond);
