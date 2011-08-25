@@ -20,7 +20,8 @@ function vol = ft_headmodel_singleshell(geometry, varargin)
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-vol      = geometry;
+vol      = [];
+vol.bnd  = geometry;
 vol.type = 'nolte';
 if ~isfield(vol, 'unit')
   vol = ft_convert_units(vol);
