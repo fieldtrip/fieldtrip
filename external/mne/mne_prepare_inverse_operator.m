@@ -1,6 +1,6 @@
-function [inv] = mne_prepare_inverse_operator(orig,nave,lambda2,dSPM)
+function [inv] = mne_prepare_inverse_operator(orig,nave,lambda2,dSPM,sLORETA)
 %
-% [inv] = mne_prepare_inverse_operator(orig,nave,lambda2,dSPM)
+% [inv] = mne_prepare_inverse_operator(orig,nave,lambda2,dSPM,sLORETA)
 %
 % Prepare for actually computing the inverse
 %
@@ -8,6 +8,7 @@ function [inv] = mne_prepare_inverse_operator(orig,nave,lambda2,dSPM)
 % nave        - Number of averages (scales the noise covariance)
 % lambda2     - The regularization factor
 % dSPM        - Compute the noise-normalization factors for dSPM?
+% sLORETA     - Compute the noise-normalization factors for sLORETA?
 %
 
 %
@@ -40,8 +41,12 @@ if isempty(FIFF)
     FIFF = fiff_define_constants();
 end
 
-if nargin ~= 4
+if nargin ~= 4 && nargin ~=5
     error(me,'Wrong number of arguments');
+ end
+
+if nargin == 4
+   sLORETA = false;
 end
 
 if nave <= 0
@@ -109,19 +114,25 @@ end
 %
 %   Finally, compute the noise-normalization factors
 %
-if dSPM
-    fprintf(1,'\tComputing noise-normalization factors...');
+if dSPM || sLORETA
     noise_norm = zeros(inv.eigen_leads.nrow,1);
-    if inv.eigen_leads_weighted
-        for k = 1:inv.eigen_leads.nrow
-            one = inv.eigen_leads.data(k,:).*inv.reginv';
-            noise_norm(k) = sqrt(one*one');
-        end
+    if dSPM
+       fprintf(1,'\tComputing noise-normalization factors (dSPM)...');
+       noise_weight = inv.reginv;
     else
-        for k = 1:inv.eigen_leads.nrow
-            one = sqrt(inv.source_cov.data(k))*(inv.eigen_leads.data(k,:).*inv.reginv');
-            noise_norm(k) = sqrt(one*one');
-        end
+       fprintf(1,'\tComputing noise-normalization factors (sLORETA)...');
+       noise_weight = inv.reginv.*sqrt((1 + inv.sing.*inv.sing/lambda2));
+    end
+    if inv.eigen_leads_weighted
+       for k = 1:inv.eigen_leads.nrow
+          one = inv.eigen_leads.data(k,:).*noise_weight';
+          noise_norm(k) = sqrt(one*one');
+       end
+    else
+       for k = 1:inv.eigen_leads.nrow
+          one = sqrt(inv.source_cov.data(k))*(inv.eigen_leads.data(k,:).*noise_weight');
+          noise_norm(k) = sqrt(one*one');
+       end
     end
     %
     %   Compute the final result

@@ -1,6 +1,6 @@
-function [res] = mne_ex_compute_inverse(fname_data,setno,fname_inv,nave,lambda2,dSPM)
+function [res] = mne_ex_compute_inverse(fname_data,setno,fname_inv,nave,lambda2,dSPM,sLORETA)
 %
-% [res] = mne_ex_compute_inverse(fname_data,setno,fname_inv,nave,lambda2,dSPM)
+% [res] = mne_ex_compute_inverse(fname_data,setno,fname_inv,nave,lambda2,dSPM,sLORETA)
 %
 % An example on how to compute a L2-norm inverse solution
 % Actual code using these principles might be different because 
@@ -15,6 +15,7 @@ function [res] = mne_ex_compute_inverse(fname_data,setno,fname_inv,nave,lambda2,
 %               used
 % lambda2     - The regularization factor
 % dSPM        - do dSPM?
+% sLORETA     - do sLORETA?
 %
 
 %
@@ -39,8 +40,12 @@ if isempty(FIFF)
    FIFF = fiff_define_constants();
 end
 
-if nargin ~= 6
+if nargin ~= 6 && nargin ~= 7
    error(me,'Incorrect number of arguments'); 
+end
+
+if nargin == 6
+   sLORETA = false;
 end
 %
 %   Read the data first
@@ -56,7 +61,7 @@ inv = mne_read_inverse_operator(fname_inv);
 if nave < 0
     nave = data.evoked.nave;
 end
-inv = mne_prepare_inverse_operator(inv,nave,lambda2,dSPM);
+inv = mne_prepare_inverse_operator(inv,nave,lambda2,dSPM,sLORETA);
 %
 %   Pick the correct channels from the data
 %
@@ -99,6 +104,9 @@ if inv.source_ori == FIFF.FIFFV_MNE_FREE_ORI
 end
 if dSPM
     fprintf(1,'(dSPM)...');
+    sol = inv.noisenorm*sol;
+elseif sLORETA
+    fprintf(1,'(sLORETA)...');
     sol = inv.noisenorm*sol;
 end
 res.inv   = inv;
