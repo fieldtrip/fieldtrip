@@ -136,7 +136,7 @@ cfg.linestyle     = ft_getopt(cfg, 'linestyle',    '-');
 cfg.linewidth     = ft_getopt(cfg, 'linewidth',    0.5);
 cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',    'box');
 cfg.channel       = ft_getopt(cfg, 'channel',      'all');
-cfg.matrixside    = ft_getopt(cfg, 'matrixside',   'outflow');
+cfg.matrixside    = ft_getopt(cfg, 'matrixside',   []);
 
 Ndata = numel(varargin);
 
@@ -309,11 +309,15 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.parameter)
     
     % check for refchannel being part of selection
     if ~strcmp(cfg.refchannel,'gui')
+      if haslabelcmb
+        cfg.refchannel = ft_channelselection(cfg.refchannel, unique(data.labelcmb(:)));
+      else
         cfg.refchannel = ft_channelselection(cfg.refchannel, data.label);
-        if (isfull      && ~any(ismember(varargin{1}.label, cfg.refchannel))) || ...
-                (haslabelcmb && ~any(ismember(varargin{1}.labelcmb(:), cfg.refchannel)))
-            error('cfg.refchannel is a not present in the (selected) channels)')
-        end
+      end
+      if (isfull      && ~any(ismember(varargin{1}.label, cfg.refchannel))) || ...
+             (haslabelcmb && ~any(ismember(varargin{1}.labelcmb(:), cfg.refchannel)))
+        error('cfg.refchannel is a not present in the (selected) channels)')
+      end
     end
     
     % interactively select the reference channel

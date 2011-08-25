@@ -152,7 +152,7 @@ if ~isfield(cfg,'maskalpha'),       cfg.maskalpha = 1;                 end
 if ~isfield(cfg,'masknans'),        cfg.masknans = 'no';               end
 if ~isfield(cfg,'maskparameter'),   cfg.maskparameter = [];            end
 if ~isfield(cfg,'maskstyle'),       cfg.maskstyle = 'opacity';         end
-if ~isfield(cfg,'matrixside'),      cfg.matrixside = 'outflow';        end
+if ~isfield(cfg,'matrixside'),      cfg.matrixside = '';               end
 if ~isfield(cfg,'channel'),         cfg.channel       = 'all';         end
 if ~isfield(cfg,'box')             
   if ~isempty(cfg.maskparameter)
@@ -248,7 +248,11 @@ if (isfull || haslabelcmb) && isfield(data, cfg.parameter)
   
   % check for refchannel being part of selection
   if ~strcmp(cfg.refchannel,'gui')
-    cfg.refchannel = ft_channelselection(cfg.refchannel, data.label);
+    if haslabelcmb
+      cfg.refchannel = ft_channelselection(cfg.refchannel, unique(data.labelcmb(:)));
+    else
+      cfg.refchannel = ft_channelselection(cfg.refchannel, data.label);
+    end
     if (isfull      && ~any(ismember(data.label, cfg.refchannel))) || ...
        (haslabelcmb && ~any(ismember(data.labelcmb(:), cfg.refchannel)))
       error('cfg.refchannel is a not present in the (selected) channels)')

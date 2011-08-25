@@ -165,7 +165,7 @@ if ~isfield(cfg,'linestyle'),     cfg.linestyle     = '-';                      
 if ~isfield(cfg,'linewidth'),     cfg.linewidth     = 0.5;                         end
 if ~isfield(cfg,'maskstyle'),     cfg.maskstyle     = 'box';                       end
 if ~isfield(cfg,'channel'),       cfg.channel       = 'all';                       end
-if ~isfield(cfg, 'matrixside'),   cfg.matrixside    = 'outflow';                   end
+if ~isfield(cfg, 'matrixside'),   cfg.matrixside    = '';                          end
 
 Ndata = numel(varargin);
 
@@ -349,7 +349,11 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.parameter)
     
     % check for refchannel being part of selection
     if ~strcmp(cfg.refchannel,'gui')
-      cfg.refchannel = ft_channelselection(cfg.refchannel, data.label);  
+      if haslabelcmb
+        cfg.refchannel = ft_channelselection(cfg.refchannel, unique(data.labelcmb(:)));
+      else
+        cfg.refchannel = ft_channelselection(cfg.refchannel, data.label);
+      end
       if (isfull      && ~any(ismember(varargin{1}.label, cfg.refchannel))) || ...
                 (haslabelcmb && ~any(ismember(varargin{1}.labelcmb(:), cfg.refchannel)))
             error('cfg.refchannel is a not present in the (selected) channels)')

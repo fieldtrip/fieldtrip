@@ -264,7 +264,7 @@ cfg.highlightfontsize = ft_getopt(cfg, 'highlightfontsize', 8);
 cfg.labeloffset       = ft_getopt(cfg, 'labeloffset',       0.005);
 cfg.maskparameter     = ft_getopt(cfg, 'maskparameter',     []);
 cfg.component         = ft_getopt(cfg, 'component',         []);
-cfg.matrixside        = ft_getopt(cfg, 'matrixside',        'outflow');
+cfg.matrixside        = ft_getopt(cfg, 'matrixside',        []);
 cfg.channel           = ft_getopt(cfg, 'channel',           'all');
 
 % compatibility for previous highlighting option
@@ -475,7 +475,11 @@ if (isfull || haslabelcmb) && isfield(data, cfg.parameter)
 
     % check for refchannel being part of selection
     if ~strcmp(cfg.refchannel,'gui')
-        cfg.refchannel = ft_channelselection(cfg.refchannel, data.label);
+        if haslabelcmb
+          cfg.refchannel = ft_channelselection(cfg.refchannel, unique(data.labelcmb(:)));
+        else
+          cfg.refchannel = ft_channelselection(cfg.refchannel, data.label);
+        end
         if (isfull      && ~any(ismember(data.label, cfg.refchannel))) || ...
                 (haslabelcmb && ~any(ismember(data.labelcmb(:), cfg.refchannel)))
             error('cfg.refchannel is a not present in the (selected) channels)')

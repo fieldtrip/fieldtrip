@@ -96,7 +96,7 @@ cfg.maskparameter = ft_getopt(cfg, 'maskparameter',[]);
 cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',    'opacity');
 cfg.channel       = ft_getopt(cfg, 'channel',      'all');
 cfg.masknans      = ft_getopt(cfg, 'masknans',     'yes');
-cfg.matrixside    = ft_getopt(cfg, 'matrixside',   'outflow');
+cfg.matrixside    = ft_getopt(cfg, 'matrixside',   []);
 
 % for backward compatibility with old data structures
 data   = ft_checkdata(data, 'datatype', 'freq');
@@ -182,7 +182,11 @@ if (isfull || haslabelcmb) && shouldPlotCmb
   
   % check for refchannel being part of selection
   if ~strcmp(cfg.refchannel,'gui')
-    cfg.refchannel = ft_channelselection(cfg.refchannel, data.label);
+    if haslabelcmb
+      cfg.refchannel = ft_channelselection(cfg.refchannel, unique(data.labelcmb(:)));
+    else
+      cfg.refchannel = ft_channelselection(cfg.refchannel, data.label);
+    end
     if (isfull      && ~any(ismember(data.label, cfg.refchannel))) || ...
        (haslabelcmb && ~any(ismember(data.labelcmb(:), cfg.refchannel)))
       error('cfg.refchannel is a not present in the (selected) channels)')

@@ -108,6 +108,12 @@ if isa(cfg.layout, 'config')
   cfg.layout = struct(cfg.layout);
 end
 
+% ensure that there is a label field in the data, which is needed for
+% ordered/vertical/butterfly modes
+if nargin>1 && ~isfield(data, 'label') && isfield(data, 'labelcmb')
+  data.label = unique(data.labelcmb(:));
+end
+
 % check whether cfg.layout already contains a valid layout structure (this can
 % happen when higher level plotting functions are called with cfg.layout set to
 % a lay structure)
