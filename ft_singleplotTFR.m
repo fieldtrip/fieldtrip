@@ -182,6 +182,7 @@ if (isfull || haslabelcmb) && shouldPlotCmb
   
   % check for refchannel being part of selection
   if ~strcmp(cfg.refchannel,'gui')
+    cfg.refchannel = ft_channelselection(cfg.refchannel, data.label);
     if (isfull      && ~any(ismember(data.label, cfg.refchannel))) || ...
        (haslabelcmb && ~any(ismember(data.labelcmb(:), cfg.refchannel)))
       error('cfg.refchannel is a not present in the (selected) channels)')
