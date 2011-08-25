@@ -1,26 +1,24 @@
-function [lf] = leadfield_fns(dip, elc, vol)
+function [lf] = leadfield_fns(vx, vol, tol)
 
-% LEADFIELD_FNS leadfields for a set of dipoles
+% LEADFIELD_FNS calculates the FDM forward solution for a set of voxels positions
 %
-% [lf] = leadfield_fns(dip, elc, vol);
+% [lf] = leadfield_fns(vx, elc, vol);
 %
 % with input arguments
-%   dip     positions of the dipoles (matrix of dimensions NX3)
-%   elc     positions of the electrodes (matrix of dimensions MX3)
+%   vx     positions of the output voxels (matrix of dimensions NX3)
+%   vol    strucure of the volume conductor
+%   tol    tolerance
 % 
-% and vol being a structure with the element
-%   vol.meshfile file containing the 3D mesh filename
+% The important elements of the vol structure are:
+%   vol.condmatrix: a 9XT (T tissues) matrix containing the conductivities
+%   vol.seg: a segmented/labelled MRI
 %
-% The output lf is the leadfields matrix of dimensions M (rows) X N*3 (cols)
+% The output lf is the leadfields matrix of dimensions M (rows) X N voxels
 
 % Copyright (C) 2011, Cristiano Micheli and Hung Dang
 
 % store the current path and change folder to the temporary one
 tmpfolder = cd;
-
-if ft_senstype(elc, 'meg')
-  error('FNS solver works for EEG data only!')
-end
 
 try
   if ~ispc
@@ -28,66 +26,81 @@ try
     [junk,tname] = fileparts(tempname);
     exefile = [tname '.sh'];   
     [junk,tname] = fileparts(tempname);
-    elecfile   = [tname '.h5'];
-    [junk,tname] = fileparts(tempname);
     confile   = [tname '.csv'];
     [junk,tname] = fileparts(tempname);
     datafile  = [tname '.h5'];
+    [junk,tname] = fileparts(tempname);
+    segfile  = [tname];    
+    [junk,tname] = fileparts(tempname);
+    vxfile  = [tname '.csv'];
     
-    tolerance = 1e-8; % FIXME: initialize as input argument
+    if isempty(tol)
+      tolerance = 1e-8;
+    else
+      tolerance = tol;
+    end
+    
+    % creat a fake mri structure
+    mri = [];
+    mri.dim = size(vol.seg);
+    mri.transform = eye(4);
+    mri.seg = vol.seg;
+    % write the segmentation on disk
+    cfg = [];
+    cfg.coordsys  = 'ctf';
+    cfg.parameter = 'seg';
+    cfg.filename  = segfile;
+    cfg.filetype  = 'analyze';
+    ft_volumewrite(cfg, mri);
 
-    % write the electrodes positions and the conductivity file in the temporary folder
-    fns_elec_write(elc.pnt,vsize,dimpos,elecfile); % FIXME: this does not work yet
-    fns_contable_write(vol.cond,confile);
-    % fns_write_dip(dip,dipfile); % FNS ideally this should work like this!
+    % write the cond matrix on disk
+    csvwrite(confile,vol.condmatrix);
     
-    % Exe file
-    % FIXME: does FNS have a switch for parallel processing (to run on more cores)?
+    % write the positions of the voxels on disk
+    csvwrite(vxfile,vx); 
+    
+    % Exe file (waiting for the parallel processing version of the binary)
     efid = fopen(exefile, 'w');
     if ~ispc
       fprintf(efid,'#!/usr/bin/env bash\n');
-      fprintf(efid,['elecsfwd --img ' vol.segfile ' --electrodes ./' elecfile ' --data ./', ...
+      fprintf(efid,['elecsfwd --img ' segfile ' --electrodes ./' vxfile ' --data ./', ...
                    datafile ' --contable ./' confile ' --TOL ' num2str(tolerance) ' 2>&1 > /dev/null\n']);
     end
     fclose(efid);
     
+    % run the shell instructions
     dos(sprintf('chmod +x %s', exefile));
     dos(['./' exefile]);
+    cleaner(segfile,vxfile,datafile,confile,exefile)
     
-    cleaner(elecfile,datafile,confile,exefile)
-    
-    % FNS calculates all solutions in all nodes (=voxels) at a time
-    % the following operations extract the system matrix solution for gray
-    % matter (FIXME: this code needs revision from FNS party)
-    [junk,tname] = fileparts(tempname);
-    regfile      = [tname '.h5'];
-    exestr = sprintf('./img_get_gray --img %s --rgn %s',vol.segfile,regfile);
-    system(exestr)
-    
-    % The following code extracts the matrix and uses it to calculate the
-    % leadfields
-    % FIXME: this code needs revision
-    [junk,tname] = fileparts(tempname);
-    recipfile    = [tname '.h5'];
-    exestr = sprintf('./extract_data --data %s --rgn %s --newdata %s',datafile,regfile,recipfile);
-    system(exestr)
-    [data,compress,gridlocs,node_sizes,voxel_sizes] = fns_read_recipdata(recipfile);
-    [lf] = fns_leadfield(data,compress,node_sizes,dip);
+% NOTE: this wont be necessary in the new version
+%       % extract the system matrix solution for gray matter 
+%       [junk,tname] = fileparts(tempname);
+%       regfile      = [tname '.h5'];
+%       [junk,tname] = fileparts(tempname);
+%       recipfile    = [tname '.h5'];    
+%       exestr = sprintf('./img_get_gray --img %s --rgn %s',vol.segfile,regfile);
+%       system(exestr)
+% 
+%       % extract the matrix and uses it to calculate the leadfields
+%       exestr = sprintf('./extract_data --data %s --rgn %s --newdata %s',datafile,regfile,recipfile);
+%       system(exestr)
+%       [data,compress,gridlocs,node_sizes,voxel_sizes] = fns_read_recipdata(recipfile);
+%       [lf] = fns_leadfield(data,compress,node_sizes,dip);
 
     cd(tmpfolder)
   end
 
 catch
   warning('an error occurred while running FNS');
+  cleaner(segfile,vxfile,datafile,confile,exefile)
   rethrow(lasterror)
-  cleaner(dipfile,elcfile,outfile,exefile)
   cd(tmpfolder)
 end
 
-function cleaner(elecfile,datafile,confile,exefile,regfile,recipfile)
-delete(elecfile);
+function cleaner(segfile,vxfile,datafile,confile,exefile)
+delete(segfile);
+delete(vxfile);
 delete(datafile);
 delete(confile);
 delete(exefile);
-delete(regfile);
-delete(recipfile);

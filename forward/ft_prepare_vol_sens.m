@@ -457,6 +457,12 @@ elseif iseeg
         end
       end
       
+    case 'fns'
+      if isfield(vol,'bnd')
+        [el, prj] = project_elec(sens.pnt, vol.bnd.pnt, vol.bnd.tri);
+      end
+      sens.tra = transfer_elec(vol.bnd.pnt, vol.bnd.tri, el);
+      
     otherwise
       error('unsupported volume conductor model for EEG');
   end
