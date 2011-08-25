@@ -54,6 +54,7 @@ ft_defaults
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'required', 'method');
 
+basedonmri = false;
 if nargin > 1
   fprintf('Computing the geometrical description from an MRI volume.\n');
   % compute the mesh based on the input mri, this is computed below
@@ -63,11 +64,9 @@ elseif isfield(cfg, 'geom') && ~isempty(cfg.geom) && isfield(cfg, 'hdmfile') && 
 elseif isfield(cfg, 'geom') && ~isempty(cfg.geom) && ~strcmp(cfg.method, 'infinite')
   fprintf('Using the geometrical description provided in the configuration.\n');
   geometry   = cfg.geom;
-  basedonmri = false;
 elseif isfield(cfg, 'hdmfile') && ~isempty(cfg.hdmfile) && ~strcmp(cfg.method, 'infinite')
   fprintf('Loading the geometrical description from file.\n');
   geometry   = ft_read_headshape(cfg.hdmfile);
-  basedonmri = false;
 elseif ~strcmp(cfg.method, 'infinite')
   error('the construction of the volume conduction model of the head needs either a headhape, or a volumetric mri'); 
 end
