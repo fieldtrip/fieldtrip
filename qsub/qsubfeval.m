@@ -52,9 +52,9 @@ optarg = varargin(optbeg:end);
 % get the optional input arguments
 timeout = ft_getopt(optarg, 'timeout', inf);
 sleep   = ft_getopt(optarg, 'sleep',   0.05);
-memreq  = ft_getopt(optarg, 'memreq',  0);
-cpureq  = ft_getopt(optarg, 'cpureq',  0);
-timreq  = ft_getopt(optarg, 'timreq',  0);
+memreq  = ft_getopt(optarg, 'memreq',  []);
+cpureq  = ft_getopt(optarg, 'cpureq',  []);
+timreq  = ft_getopt(optarg, 'timreq',  []);
 hostid  = ft_getopt(optarg, 'hostid',  []);
 diary   = ft_getopt(optarg, 'diary',   []);
 
@@ -108,7 +108,25 @@ fprintf(fid, 'qsubexec(%d)\n', jobid);
 fprintf(fid, 'exit\n');
 fclose(fid);
 
-cmdline = sprintf('qsub %s', shellscript);
+% set the job requirements according to the users specification
+requirements = '';
+if ~isempty(timreq)
+  requirements = [requirements sprintf('walltime=%d:', timreq)];
+end
+if ~isempty(memreq)
+  % don't know the difference
+  requirements = [requirements sprintf('mem=%d:',   memreq)];
+  requirements = [requirements sprintf('vmem=%d:',  memreq)];
+  requirements = [requirements sprintf('pmem=%d:',  memreq)];
+  requirements = [requirements sprintf('pvmem=%d:', memreq)];
+end
+
+if isempty(requirements)
+  cmdline = ['qsub ' shellscript];
+else
+  cmdline = ['qsub -l ' requirements(1:end-1) ' ' shellscript];  % strip the last ':' from the requirements
+end
+
 % fprintf('submitting job %08d\n', jobid); 
 system(cmdline);
 puttime = toc(stopwatch);

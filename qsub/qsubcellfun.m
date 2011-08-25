@@ -52,7 +52,7 @@ UniformOutput = ft_getopt(optarg, 'UniformOutput', false   );
 StopOnError   = ft_getopt(optarg, 'StopOnError',   true    );
 diary         = ft_getopt(optarg, 'diary',         'error' ); % 'always', 'never', 'warning', 'error'
 timreq        = ft_getopt(optarg, 'timreq',        []      );
-memreq        = ft_getopt(optarg, 'memreq',        []      ); % see below
+memreq        = ft_getopt(optarg, 'memreq',        []      ); 
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
