@@ -24,13 +24,37 @@ function vol = ft_headmodel_fdm_fns(varargin)
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
 % get the optional arguments
-conductivity = keyval('conductivity', varargin);
+condmatrix   = ft_getopt(varargin, 'condmatrix', []);
+segmentation = ft_getopt(varargin, 'segmentation', []);
+tissue       = ft_getopt(varargin, 'tissue', []);
+tissueval    = ft_getopt(varargin, 'tissueval', []);
+tissuecond   = ft_getopt(varargin, 'tissuecond', []);
 
-if isempty(conductivity)
-  conductivity = fns_contable_write;
+% load the default cond matrix in case not specified
+if isempty(condmatrix)
+  if max(tissueval)<=12
+    condmatrix = fns_contable_write;
+  else
+    % all tissue not listed as defaults (This is a bit rigid!!)
+    sel = find(tissueval>12);
+    newtissue     = tissue(sel);
+    newtissueval  = tissueval(sel);
+    newtissuecond = tissuecond(sel);    
+    condmatrix = fns_contable_write('newtissue',newtissue,'newtissueval',newtissueval,'newtissuecond',newtissuecond);
+  end
+end
+
+% check the consistency between tissue values and the segmentation
+vecval = ismember(tissueval,unique(segmentation(:)));
+if any(vecval)==0
+  warning('Some of the tissue values are not in the segmentation')
 end
 
 % start with an empty volume conductor
 vol = [];
-vol.cond = conductivity;
-vol.type = 'fns';
+vol.condmatrix = condmatrix;
+vol.seg        = segmentation; 
+vol.tissue     = tissue;
+vol.tissueval  = tissueval;
+vol.type       = 'fns';
+

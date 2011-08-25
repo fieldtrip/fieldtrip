@@ -166,14 +166,52 @@ switch cfg.method
     end
     cfg.conductivity   = ft_getopt(cfg, 'conductivity',   []);
   case 'simbio'
-    % does not yet seem to be implemented  
+    % not yet implemented  
   case 'fns'
-    % does not yet seem to be implemented
+    if basedonmri
+      % FIXME: this will be done in ft_prepare_fdmmodel
+      if isfield(mri,'seg') & isfield(mri,'tissue')
+        cfg.seg        = mri.seg;
+        cfg.tissue     = mri.tissue;
+        cfg.tissueval  = mri.tissueval;
+        cfg.tissuecond = mri.tissuecond;
+      elseif isfield(mri,'gray') & isfield(mri,'white')
+        % create the necessary fields in compliance with FNS convention
+        cfg.tissue    = {'Gray Matter' 'White Matter' 'CSF'};
+        cfg.tissueval = [1 2 3];
+        cfg.tissuecond = [];
+        gray  = mri.gray>0;
+        white = mri.white>0;
+        csf   = mri.csf>0;
+        cfg.seg = zeros(size(gray));
+        cfg.seg(gray)  = gray(gray);
+        cfg.seg(white) = 2*white(white);        
+        cfg.seg(csf)   = 3*csf(csf);
+      elseif isfield(mri,'scalp') & isfield(mri,'skull') & isfield(mri,'brain')
+        cfg.tissue     = {'Muscle/Skin' 'Skull' 'Brain'};
+        cfg.tissueval  = [6 7 13];       
+        cfg.tissuecond = [NaN NaN mean([0.14 0.33])]; % a mean of wm and gm (resp.) conductivities
+        scalp = mri.scalp>0;
+        skull = mri.skull>0;
+        brain = mri.brain>0;
+        cfg.seg = zeros(size(scalp));
+        cfg.seg(scalp)  = 6*scalp(scalp);
+        cfg.seg(skull)  = 7*skull(skull);
+        cfg.seg(brain)  = 13*brain(brain);
+      else
+        error('the anatomy does not contain the necessary information')
+      end
+      
+      cfg.condmatrix   = ft_getopt(cfg, 'condmatrix',   []);
+      
+    else
+      error('FNS requires a segmented head anatomy as input')
+    end
   otherwise
     error('unsupported method "%s"', cfg.method);
 end
 
-if basedonmri
+if basedonmri & ~strcmp(cfg.method,'fns')
   % create mesh from mri -> this prevails, even if the configuration
   % contains a headshape
   geometry = ft_prepare_mesh(cfgmesh, mri);
@@ -227,7 +265,8 @@ switch cfg.method
     vol = ft_headmodel_fem_simbio();
     
   case 'fns'
-    vol = ft_headmodel_fem_fns();
+    vol = ft_headmodel_fdm_fns('condmatrix',cfg.condmatrix,'segmentation',cfg.seg, ...
+                               'tissue',cfg.tissue,'tissueval',cfg.tissueval,'tissuecond',cfg.tissuecond);
     
   otherwise
     error('unsupported method "%s"', cfg.method);
