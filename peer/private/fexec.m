@@ -88,8 +88,9 @@ try
     else
       % this is according to http://www.mathworks.com/help/techdoc/math/bsn94u0-1.html
       % and is needed to avoid a warning about Using 'seed' to set RAND's internal state causes RAND, RANDI, and RANDN to use legacy random number generators. 
-      % s = RandStream('mt19937ar','Seed', option_randomseed);
-      s = RandStream('mcg16807', 'Seed', option_randomseed);
+      s = RandStream('mt19937ar','Seed', option_randomseed);
+      RandStream.setDefaultStream(s);
+      s = RandStream('mcg16807', 'Seed',0);
       RandStream.setDefaultStream(s);
     end
   end
@@ -104,7 +105,7 @@ try
     numargout = nargout(fname);
   catch
     % the "catch me" syntax is broken on MATLAB74, this fixes it
-    nargout_err = lasterror;
+    nargout_error = lasterror;
     if strcmp(nargout_error.identifier, 'MATLAB:narginout:doesNotApply')
       % e.g. in case of nargin('plus')
       numargout = 1;
