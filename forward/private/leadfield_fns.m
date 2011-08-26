@@ -1,19 +1,24 @@
-function [lf] = leadfield_fns(vx, vol, tol)
+function [lf] = leadfield_fns(posin, vol, tol)
 
-% LEADFIELD_FNS calculates the FDM forward solution for a set of voxels positions
+% LEADFIELD_FNS calculates the FDM forward solution for a set of given
+% dipolar sources
 %
-% [lf] = leadfield_fns(vx, elc, vol);
+% [lf] = leadfield_fns(posin, vol, tol);
 %
 % with input arguments
-%   vx     positions of the output voxels (matrix of dimensions NX3)
-%   vol    strucure of the volume conductor
+%   posin  positions of the voxels containing the dipolar sources (MX3 matrix)
+%   vol    structure of the volume conductor
 %   tol    tolerance
 % 
-% The important elements of the vol structure are:
-%   vol.condmatrix: a 9XT (T tissues) matrix containing the conductivities
-%   vol.seg: a segmented/labelled MRI
+% The output argument lf 
+% 
+% The key elements of the vol structure are:
+%   vol.condmatrix a 9XT (T tissues) matrix containing the conductivities
+%   vol.seg        a segmented/labelled MRI
+%   vol.posout     positions of the output voxels (NX3 matrix)
 %
-% The output lf is the leadfields matrix of dimensions M (rows) X N voxels
+% The output lf is the forward solution matrix and contains the leadfields, calculated in 
+% the output voxels (vol.posout) positions (a NXM matrix)
 
 % Copyright (C) 2011, Cristiano Micheli and Hung Dang
 
@@ -23,16 +28,22 @@ tmpfolder = cd;
 try
   if ~ispc
     cd(tempdir)
-    [junk,tname] = fileparts(tempname);
-    exefile = [tname '.sh'];   
-    [junk,tname] = fileparts(tempname);
+    [~,tname] = fileparts(tempname);
+    exefile   = [tname '.sh'];   
+    [~,tname] = fileparts(tempname);
     confile   = [tname '.csv'];
-    [junk,tname] = fileparts(tempname);
+    [~,tname] = fileparts(tempname);
     datafile  = [tname '.h5'];
-    [junk,tname] = fileparts(tempname);
-    segfile  = [tname];    
-    [junk,tname] = fileparts(tempname);
-    vxfile  = [tname '.csv'];
+    [~,tname] = fileparts(tempname);
+    segfile   = [tname];    
+    [~,tname] = fileparts(tempname);
+    vxinfile  = [tname '.h5'];
+    [~,tname] = fileparts(tempname);
+    vxoutfile = [tname '.h5'];
+    [~,tname] = fileparts(tempname);
+    regfile   = [tname '.h5'];
+    [~,tname] = fileparts(tempname);
+    recipfile = [tname '.h5'];  
     
     if isempty(tol)
       tolerance = 1e-8;
@@ -40,7 +51,7 @@ try
       tolerance = tol;
     end
     
-    % creat a fake mri structure
+    % create a fake mri structure
     mri = [];
     mri.dim = size(vol.seg);
     mri.transform = eye(4);
@@ -56,51 +67,52 @@ try
     % write the cond matrix on disk
     csvwrite(confile,vol.condmatrix);
     
-    % write the positions of the voxels on disk
-    csvwrite(vxfile,vx); 
+    % write the positions of the output voxels on disk
+    fns_elec_write(vol.posout,[1 1 1],size(mri.seg),vxoutfile); 
     
-    % Exe file (waiting for the parallel processing version of the binary)
+    % Exe file (the parallel processing version of the binary will soon be available)
     efid = fopen(exefile, 'w');
     if ~ispc
       fprintf(efid,'#!/usr/bin/env bash\n');
-      fprintf(efid,['elecsfwd --img ' segfile ' --electrodes ./' vxfile ' --data ./', ...
+      fprintf(efid,['elecsfwd --img ' segfile ' --electrodes ./' vxoutfile ' --data ./', ...
                    datafile ' --contable ./' confile ' --TOL ' num2str(tolerance) ' 2>&1 > /dev/null\n']);
     end
     fclose(efid);
     
     % run the shell instructions
+    % NOTE: This requires FNS to be compiled/installed and the binaries folder to be already present in the 
+    % linux PATH
     dos(sprintf('chmod +x %s', exefile));
+    sprintf('Calculating the reciprocity matrix for %d nodes...\n (this may take some time)',size(vol.posout,1))
     dos(['./' exefile]);
-    cleaner(segfile,vxfile,datafile,confile,exefile)
+    lf   = fns_leadfield(datafile,posin);
     
-% NOTE: this wont be necessary in the new version
-%       % extract the system matrix solution for gray matter 
-%       [junk,tname] = fileparts(tempname);
-%       regfile      = [tname '.h5'];
-%       [junk,tname] = fileparts(tempname);
-%       recipfile    = [tname '.h5'];    
-%       exestr = sprintf('./img_get_gray --img %s --rgn %s',vol.segfile,regfile);
-%       system(exestr)
-% 
-%       % extract the matrix and uses it to calculate the leadfields
-%       exestr = sprintf('./extract_data --data %s --rgn %s --newdata %s',datafile,regfile,recipfile);
-%       system(exestr)
-%       [data,compress,gridlocs,node_sizes,voxel_sizes] = fns_read_recipdata(recipfile);
-%       [lf] = fns_leadfield(data,compress,node_sizes,dip);
+%     % extract the forward solution for the given dipoles (posin)
+%     % write posin positions in XXX
+%     exestr = sprintf('./img_getvoxels --img %s --rgn %s --arg XXX',segfile,regfile); % FIXME: fix this!
+%     system(exestr)
+%     exestr = sprintf('./extract_data --data %s --rgn %s --newdata %s',datafile,regfile,recipfile);
+%     system(exestr)
+%     lf   = fns_leadfield(recipfile,posin);
+
+    cleaner(segfile,vxinfile,vxoutfile,datafile,confile,exefile,regfile,recipfile) 
 
     cd(tmpfolder)
   end
 
 catch
   warning('an error occurred while running FNS');
-  cleaner(segfile,vxfile,datafile,confile,exefile)
+  cleaner(segfile,vxinfile,vxoutfile,datafile,confile,exefile,regfile,recipfile) 
   rethrow(lasterror)
   cd(tmpfolder)
 end
 
-function cleaner(segfile,vxfile,datafile,confile,exefile)
+function cleaner(segfile,vxinfile,vxoutfile,datafile,confile,exefile,regfile,recipfile) 
 delete(segfile);
-delete(vxfile);
+delete(vxinfile);
+delete(vxoutfile);
 delete(datafile);
 delete(confile);
 delete(exefile);
+delete(regfile);
+delete(recipfile);
