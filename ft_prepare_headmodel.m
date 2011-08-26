@@ -169,6 +169,11 @@ switch cfg.method
     % not yet implemented  
   case 'fns'
     if basedonmri
+      % this works only if the ouput voxels are given
+      cfg.posout = ft_getopt(cfg, 'posout',   []);
+      if isempty(cfg.posout)
+        error('The cfg.posout field is required. It should contain the positions of the output voxels')
+      end
       % FIXME: this will be done in ft_prepare_fdmmodel
       if isfield(mri,'seg') & isfield(mri,'tissue')
         cfg.seg        = mri.seg;
@@ -266,7 +271,8 @@ switch cfg.method
     
   case 'fns'
     vol = ft_headmodel_fdm_fns('condmatrix',cfg.condmatrix,'segmentation',cfg.seg, ...
-                               'tissue',cfg.tissue,'tissueval',cfg.tissueval,'tissuecond',cfg.tissuecond);
+                               'tissue',cfg.tissue,'tissueval',cfg.tissueval, ...
+                               'tissuecond',cfg.tissuecond,'posout',cfg.posout);
     
   otherwise
     error('unsupported method "%s"', cfg.method);

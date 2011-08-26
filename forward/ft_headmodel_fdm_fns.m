@@ -29,6 +29,7 @@ segmentation = ft_getopt(varargin, 'segmentation', []);
 tissue       = ft_getopt(varargin, 'tissue', []);
 tissueval    = ft_getopt(varargin, 'tissueval', []);
 tissuecond   = ft_getopt(varargin, 'tissuecond', []);
+posout       = ft_getopt(varargin, 'posout', []);
 
 % load the default cond matrix in case not specified
 if isempty(condmatrix)
@@ -53,6 +54,7 @@ end
 % start with an empty volume conductor
 vol = [];
 vol.condmatrix = condmatrix;
+vol.posout     = posout;
 vol.seg        = segmentation; 
 vol.tissue     = tissue;
 vol.tissueval  = tissueval;
