@@ -76,9 +76,11 @@ nTrials = size(cfg.trl,1);
 nUnits  = length(spike.label);
 cfg.trl = double(cfg.trl);
 for iUnit = 1:nUnits
-      
     ts = spike.timestamp{iUnit}(:);
-    ts = sort(double(ts)); % just sort for safety
+    [ts,indx] = sort(double(ts)); % just sort for safety
+    if isfield(spike, 'waveform')
+      waveform  = spike.waveform{iUnit}(indx);
+    end
     
     % check if the events are overlapping or not
     events = double(cfg.trl(:,1:2))'; %2-by-nTrials now
@@ -112,7 +114,10 @@ for iUnit = 1:nUnits
     % gather the results
     spike.time{iUnit}   = dt;
     spike.trial{iUnit}  = trialNum;
-    spike.trialtime     = time;  
+    spike.trialtime     = time;
+    if isfield(spike, 'waveform')  
+      spike.waveform{iUnit} = waveform(sel);
+    end
 end
 spike.trl = cfg.trl;
 
