@@ -78,8 +78,22 @@ cfg.trl = double(cfg.trl);
 for iUnit = 1:nUnits
     ts = spike.timestamp{iUnit}(:);
     [ts,indx] = sort(double(ts)); % just sort for safety
+    ignoreWave = 0; 
     if isfield(spike, 'waveform')
-      waveform  = spike.waveform{iUnit}(indx);
+      % find the dimension where we have to select
+      sz        = size(spike.waveform{iUnit});
+      N         = length(ts);
+      if sz(1)==N
+        waveform  = spike.waveform{iUnit}(indx,:);
+      elseif sz(2)==N
+        waveform  = spike.waveform{iUnit}(:,indx)'; % first dim must be spikes
+        fprintf('forcing first dimension of .waveform to be spikes/n')
+      else
+        ignoreWave = 1;
+        fprintf('Number of waveforms does not match number of spikes/n')          
+      end
+    else
+      ignoreWave = 1;
     end
     
     % check if the events are overlapping or not
@@ -115,8 +129,8 @@ for iUnit = 1:nUnits
     spike.time{iUnit}   = dt;
     spike.trial{iUnit}  = trialNum;
     spike.trialtime     = time;
-    if isfield(spike, 'waveform')  
-      spike.waveform{iUnit} = waveform(sel);
+    if isfield(spike, 'waveform') && ~ignoreWave 
+      spike.waveform{iUnit} = waveform(sel,:);
     end
 end
 spike.trl = cfg.trl;
