@@ -5,7 +5,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 % in the EEG/MEG data.
 %
 % Use as
-%   [comp] =ft_componentanalysis(cfg, data)
+%   [comp] = ft_componentanalysis(cfg, data)
 %
 % where the data comes from FT_PREPROCESSING or FT_TIMELOCKANALYSIS and the
 % configuration structure can contain
@@ -14,13 +14,83 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.numcomponent = 'all' or number (default = 'all')
 %   cfg.demean       = 'no' or 'yes' (default = 'yes')
-%   cfg.runica       = substructure with additional low-level options for this method
-%   cfg.binica       = substructure with additional low-level options for
-%   this method
-%   cfg.dss          = substructure with additional low-level options for this method
-%   cfg.fastica      = substructure with additional low-level options for this method
 %
-% forbidden configuration option: cfg.detrend
+% The runica method supports the following method-specific options. The values that 
+% these options can take can be found with HELP RUNICA.
+%   cfg.runica.extended
+%   cfg.runica.pca
+%   cfg.runica.sphering
+%   cfg.runica.weights
+%   cfg.runica.lrate
+%   cfg.runica.block
+%   cfg.runica.anneal
+%   cfg.runica.annealdeg
+%   cfg.runica.stop
+%   cfg.runica.maxsteps
+%   cfg.runica.bias
+%   cfg.runica.momentum
+%   cfg.runica.specgram
+%   cfg.runica.posact
+%   cfg.runica.verbose
+%   cfg.runica.logfile
+%   cfg.runica.interput
+%
+% The fastica method supports the following method-specific options. The values that 
+% these options can take can be found with HELP FASTICA.
+%   cfg.fastica.approach
+%   cfg.fastica.numOfIC
+%   cfg.fastica.g
+%   cfg.fastica.finetune
+%   cfg.fastica.a1
+%   cfg.fastica.a2
+%   cfg.fastica.mu
+%   cfg.fastica.stabilization
+%   cfg.fastica.epsilon
+%   cfg.fastica.maxNumIterations
+%   cfg.fastica.maxFinetune
+%   cfg.fastica.sampleSize
+%   cfg.fastica.initGuess
+%   cfg.fastica.verbose
+%   cfg.fastica.displayMode
+%   cfg.fastica.displayInterval
+%   cfg.fastica.firstEig
+%   cfg.fastica.lastEig
+%   cfg.fastica.interactivePCA
+%   cfg.fastica.pcaE
+%   cfg.fastica.pcaD
+%   cfg.fastica.whiteSig
+%   cfg.fastica.whiteMat
+%   cfg.fastica.dewhiteMat
+%   cfg.fastica.only
+%
+% The binica method supports the following method-specific options. The values that 
+% these options can take can be found with HELP BINICA.
+%   cfg.binica.extended
+%   cfg.binica.pca
+%   cfg.binica.sphering
+%   cfg.binica.lrate
+%   cfg.binica.blocksize
+%   cfg.binica.maxsteps
+%   cfg.binica.stop
+%   cfg.binica.weightsin
+%   cfg.binica.verbose
+%   cfg.binica.filenum
+%   cfg.binica.posact
+%   cfg.binica.annealstep
+%   cfg.binica.annealdeg
+%   cfg.binica.bias
+%   cfg.binica.momentum
+%
+% The dss method requires the following method-specific option and supports 
+% a whole lot of other options. The values that these options can take can be 
+% found with HELP DSS_CREATE_STATE.
+%   cfg.dss.denf.function
+%   cfg.dss.denf.params
+%
+% The sobi method supports the following method-specific options. The values that 
+% these options can take can be found with HELP SOBI.
+%   cfg.sobi.n_sources
+%   cfg.sobi.p_correlations
 %
 % Instead of specifying a component analysis method, you can also specify
 % a previously computed mixing matrix, which will be used to estimate the
@@ -37,13 +107,13 @@ function [comp] = ft_componentanalysis(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FASTICA, RUNICA, SVD, JADER, VARIMAX, DSS, CCA, SOBI
+% See also FASTICA, RUNICA, BINICA, SVD, JADER, VARIMAX, DSS, CCA, SOBI
 
 % NOTE parafac is also implemented, but that does not fit into the
 % structure of 2D decompositions very well. Probably I should implement it
 % in a separate function for N-D decompositions
 
-% Copyright (C) 2003-2007, Robert Oostenveld
+% Copyright (C) 2003-2011, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -345,6 +415,7 @@ switch cfg.method
     % remember the updated configuration details
     cfg.dss.denf      = state.denf;
     cfg.numcomponent  = state.sdim;
+
   case 'sobi'
     % check for additional options, see SOBI for details
     if ~isfield(cfg, 'sobi')
