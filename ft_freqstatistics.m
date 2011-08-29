@@ -83,7 +83,7 @@ cfg = ft_checkconfig(cfg, 'forbidden',   {'transform'});
 % set the defaults
 cfg.inputfile   = ft_getopt(cfg, 'inputfile',   []);
 cfg.outputfile  = ft_getopt(cfg, 'outputfile',  []);
-cfg.parameter   = ft_getopt(cfg, 'parameter',   'powspctrm');
+cfg.parameter   = ft_getopt(cfg, 'parameter',   []);
 cfg.channel     = ft_getopt(cfg, 'channel',     'all');
 cfg.latency     = ft_getopt(cfg, 'latency',     'all');
 cfg.trials      = ft_getopt(cfg, 'trials',      'all');
@@ -127,6 +127,13 @@ elseif hasinputfile
 end
 
 Ndata = numel(varargin);
+
+% set the parameter to default powspctrm only if present in the data
+if isempty(cfg.parameter) && isfield(varargin{1}, 'powspctrm')
+  cfg.parameter = 'powspctrm';
+elseif isempty(cfg.parameter)
+  error('You need to specify a cfg.parameter, because the otherwise assigned default (powspctrm) is not present in the input data');
+end
 
 % check if the input data is valid for this function
 hastime  = false(Ndata,1);
