@@ -78,7 +78,8 @@ elseif strcmp(fileformat, 'asa_mri')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(fileformat, 'minc')
   if ~(hasspm2 || hasspm5)
-    error('the SPM2 or SPM5 toolbox is required to read *.mnc files');
+    fprintf('the SPM2 or SPM5 toolbox is required to read *.mnc files\n');
+    ft_hastoolbox('spm2',1);
   end
   % use the functions from SPM
   hdr = spm_vol_minc(filename);
@@ -88,7 +89,8 @@ elseif strcmp(fileformat, 'minc')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(fileformat, 'nifti')
   if ~(hasspm5 || hasspm8)
-    error('the SPM5 or SPM8 toolbox is required to read *.nii files');
+    fprintf('the SPM5 or SPM8 toolbox is required to read *.nii files\n');
+    ft_hastoolbox('spm8',1);
   end
   % use the functions from SPM
   hdr = spm_vol_nifti(filename);
