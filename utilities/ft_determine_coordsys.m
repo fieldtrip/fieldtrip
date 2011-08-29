@@ -1,18 +1,18 @@
 function [data] = ft_determine_coordsys(data, varargin)
 
-% FT_DETERMINECOORDSYS plots a geometrical object, allowing you to perform a visual
-% check on the coordinatesystem, the units and on the anatomical labels for the
-% coordinate system axes.
+% FT_DETERMINE_COORDSYS plots a geometrical object, allowing you to perform
+% a visual check on the coordinatesystem, the units and on the anatomical
+% labels for the coordinate system axes.
 %
 % Use as
-%   [dataout] = ft_checkcoordsys(datain, varargin)
+%   [dataout] = ft_determine_coordsys(datain, 'key1', value1, ...)
 % where the input data structure can be
 %  - an anatomical MRI, which can be segmented
 %  - an electrode or gradiometer definition
 %  - a volume conduction model
 % or most other FieldTrip structures that represent geometrical information.
 %
-% The optional key-value pairs are
+% Additional optional input arguments come as key-value pairs. 
 %   interactive  = string, 'yes' or 'no' (default = 'yes')
 %
 % This function wil pop up a figure that allows you to check whether the
