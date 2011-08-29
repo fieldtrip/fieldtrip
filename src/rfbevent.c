@@ -49,6 +49,15 @@
  *
  */
 
+#include "platform.h"
+#include "compiler.h"
+
+#if defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64)
+#error The source code for this mex file has not yet been made compatible with Windows
+/* the networking include files differ on windows and some of the functions are different */
+/* a possibility to fix this would be to look into the fieldtrip buffer c-code, which is both unix and windows compatible */
+#endif
+
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
