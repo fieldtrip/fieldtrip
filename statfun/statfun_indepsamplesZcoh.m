@@ -21,8 +21,9 @@ function [s] = statfun_indepsamplesZcoh(cfg, dat, design)
 %
 % The samples-dimension of the dat-variable must be the result of a
 % reshaping-operation applied to a data structure with dimord
-% chan_freq_time. The configuration must contain channel labels in
-% cfg.label. This information is used to determine the number of channels. 
+% chan_(freq_time) or pos_(freq_time). The configuration must contain
+% channel labels in cfg.label or position information in cfg.pos. This
+% information is used to determine the number of channels. 
 % The dimord of the output fields is [prod(nchancmb,nfreq,ntime),1]. The
 % channel combinations are the elements of the lower diagonal of the
 % cross-spectral density matrix.
@@ -56,11 +57,20 @@ if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end;
 if ~isfield(cfg, 'tail'),              cfg.tail=1;                end;
 
 % perform some checks on the configuration
-if strcmp(cfg.computeprob,'yes') & strcmp(cfg.computestat,'no')
+if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
     error('P-values can only be calculated if the test statistics are calculated.');
 end;
 if isfield(cfg,'uvar') && ~isempty(cfg.uvar)
     error('cfg.uvar should not exist for an independent samples statistic');
+end
+if ~isfield(cfg, 'label') && ~isfield(cfg, 'pos')
+  error('the configuration needs to contain either a label or a pos field');
+elseif isfield(cfg, 'label') && isfield(cfg, 'pos') && ~isempty(cfg.label) && ~isempty(cfg.pos)
+  error('the configuration needs to contain either a non-empty label or a non-empty pos field');
+elseif isfield(cfg, 'label') && ~isempty(cfg.label)
+  nchan = length(cfg.label);
+elseif isfield(cfg, 'pos') && ~isempty(cfg.pos)
+  nchan = size(cfg.pos,1);
 end
 
 % perform some checks on the design
@@ -72,7 +82,7 @@ nrepl = nreplc1 + nreplc2;
 if nrepl<size(design,1)
   error('Invalid specification of the independent variable in the design array.');
 end;
-if nreplc1<2 | nreplc2<2
+if nreplc1<2 || nreplc2<2
     error('Every condition must contain at least two trials/tapers.');
 end;
 dfc1 = nreplc1*2;
@@ -81,7 +91,7 @@ dfc2 = nreplc2*2;
 if strcmp(cfg.computestat, 'yes')
   % compute the statistic
   nsamples = size(dat,1);
-  nchan = length(cfg.label);
+  %nchan = length(cfg.label); %this is computed earlier
   chancmbsel = find(tril(ones(nchan),-1));
   nfreqtim = nsamples/nchan;
   nchancmb = length(chancmbsel);
