@@ -25,8 +25,13 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg,data)
 %   cfg.ft_datatype
 %
 % If you are calling FT_ARTIFACT_ZVALUE with also the second input argument
-% "data", then that should contain data that was already read from file in
+% "data", then that should contain data that was already read from file
+% inmarti
 % a call to FT_PREPROCESSING.
+%
+% In order to save memory, you can call the function with cfg.memory =
+% 'low' which will cause the function to not store as much data in memory
+% but  execution time will be around twice as high.
 %
 % The required configuration settings are:
 %   cfg.trl
@@ -91,6 +96,7 @@ if ~isfield(cfg,'artfctdef'),                   cfg.artfctdef                   
 if ~isfield(cfg.artfctdef,'zvalue'),            cfg.artfctdef.zvalue             = [];       end
 if ~isfield(cfg, 'headerformat'),               cfg.headerformat                 = [];       end
 if ~isfield(cfg, 'dataformat'),                 cfg.dataformat                   = [];       end
+if ~isfield(cfg, 'memory'),                     cfg.memory                       = 'high';   end
 
 % for backward compatibility
 if isfield(cfg.artfctdef.zvalue,'sgn')
@@ -166,34 +172,71 @@ numsmp = zeros(numsgn, 1);
 fprintf('searching trials');
 for trlop = 1:numtrl
   fprintf('.');
-  if isfetch
-    dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
-  else
-    dat{trlop} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
+  if strcmp(cfg.memory, 'low') % store nothing in memory
+      if isfetch
+        dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
+      else
+        dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
+      end
+      dat = preproc(dat, cfg.artfctdef.zvalue.channel, hdr.Fs, cfg.artfctdef.zvalue, [], fltpadding, fltpadding);
+
+      % accumulate the sum and the sum-of-squares
+      sumval = sumval + sum(dat,2);
+      sumsqr = sumsqr + sum(dat.^2,2);
+      numsmp = numsmp + size(dat,2);
+  else % store all data in memory, saves computation time
+      if isfetch
+        dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
+      else
+        dat{trlop} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
+      end
+      dat{trlop} = preproc(dat{trlop}, cfg.artfctdef.zvalue.channel, hdr.Fs, cfg.artfctdef.zvalue, [], fltpadding, fltpadding);
+
+      % accumulate the sum and the sum-of-squares
+      sumval = sumval + sum(dat{trlop},2);
+      sumsqr = sumsqr + sum(dat{trlop}.^2,2);
+      numsmp = numsmp + size(dat{trlop},2);
   end
-  dat{trlop} = preproc(dat{trlop}, cfg.artfctdef.zvalue.channel, hdr.Fs, cfg.artfctdef.zvalue, [], fltpadding, fltpadding);
-  % accumulate the sum and the sum-of-squares
-  sumval = sumval + sum(dat{trlop},2);
-  sumsqr = sumsqr + sum(dat{trlop}.^2,2);
-  numsmp = numsmp + size(dat{trlop},2);
 end % for trlop
 
 % compute the average and the standard deviation
 datavg = sumval./numsmp;
 datstd = sqrt(sumsqr./numsmp - (sumval./numsmp).^2);
 
-for trlop = 1:numtrl
-  % initialize some matrices
-  zmax{trlop}  = -inf + zeros(1,size(dat{trlop},2));
-  zsum{trlop}  = zeros(1,size(dat{trlop},2));
-  zindx{trlop} = zeros(1,size(dat{trlop},2));
-  
-  nsmp          = size(dat{trlop},2);
-  zdata         = (dat{trlop} - datavg(:,ones(1,nsmp)))./datstd(:,ones(1,nsmp));  % convert the filtered data to z-values
-  zsum{trlop}   = sum(zdata,1);                   % accumulate the z-values over channels
-  [zmax{trlop},ind] = max(zdata,[],1);            % find the maximum z-value and remember it
-  zindx{trlop}      = sgnind(ind);                % also remember the channel number that has the largest z-value
+if strcmp(cfg.memory, 'low')
+    fprintf('\n');
+end
 
+for trlop = 1:numtrl
+    if strcmp(cfg.memory, 'low') % store nothing in memory (note that we need to preproc AGAIN... *yawn*        
+        fprintf('.');
+        if isfetch
+            dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
+        else
+            dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
+        end
+        dat = preproc(dat, cfg.artfctdef.zvalue.channel, hdr.Fs, cfg.artfctdef.zvalue, [], fltpadding, fltpadding);
+        zmax{trlop}  = -inf + zeros(1,size(dat,2));
+        zsum{trlop}  = zeros(1,size(dat,2));
+        zindx{trlop} = zeros(1,size(dat,2));
+        
+        nsmp          = size(dat,2);
+        zdata         = (dat - datavg(:,ones(1,nsmp)))./datstd(:,ones(1,nsmp));  % convert the filtered data to z-values
+        zsum{trlop}   = sum(zdata,1);                   % accumulate the z-values over channels
+        [zmax{trlop},ind] = max(zdata,[],1);            % find the maximum z-value and remember it
+        zindx{trlop}      = sgnind(ind);                % also remember the channel number that has the largest z-value
+    else
+        % initialize some matrices
+        zmax{trlop}  = -inf + zeros(1,size(dat{trlop},2));
+        zsum{trlop}  = zeros(1,size(dat{trlop},2));
+        zindx{trlop} = zeros(1,size(dat{trlop},2));
+        
+        nsmp          = size(dat{trlop},2);
+        zdata         = (dat{trlop} - datavg(:,ones(1,nsmp)))./datstd(:,ones(1,nsmp));  % convert the filtered data to z-values
+        zsum{trlop}   = sum(zdata,1);                   % accumulate the z-values over channels
+        [zmax{trlop},ind] = max(zdata,[],1);            % find the maximum z-value and remember it
+        zindx{trlop}      = sgnind(ind);                % also remember the channel number that has the largest z-value
+    end
   % This alternative code does the same, but it is much slower
   %   for i=1:size(zmax{trlop},2)
   %       if zdata{trlop}(i)>zmax{trlop}(i)
