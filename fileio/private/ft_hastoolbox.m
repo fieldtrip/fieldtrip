@@ -103,6 +103,7 @@ url = {
   'XML4MAT'    'see http://www.mathworks.com/matlabcentral/fileexchange/6268-xml4mat-v2-0'
   'SQDPROJECT' 'see http://www.isr.umd.edu/Labs/CSSL/simonlab'
   'BCT'        'see http://www.brain-connectivity-toolbox.net/'
+  'CCA'        'see http://www.imt.liu.se/~magnus/cca or contact Magnus Borga'
   };
 
 if nargin<2
@@ -234,6 +235,8 @@ switch toolbox
     status = exist('sqdread.m', 'file') && exist('sqdwrite.m', 'file');
   case 'BCT'
     status = exist('macaque71.mat', 'file') && exist('motif4funct_wei.m', 'file');
+  case 'CCA'
+    status = exist('ccabss.m', 'file');
   otherwise
     if ~silent, warning('cannot determine whether the %s toolbox is present', toolbox); end
     status = 0;
