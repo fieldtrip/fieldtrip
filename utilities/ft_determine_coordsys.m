@@ -76,6 +76,7 @@ switch unit
 end
 
 if isfield(data, 'coordsys') && ~isempty(data.coordsys)
+  label = cell(3,1);
   if length(data.coordsys)==3 && length(intersect(data.coordsys, 'rlasif'))==3
     for i=1:3
       switch data.coordsys(i)
@@ -265,7 +266,7 @@ if ~isempty(str) && ~strcmp(str, 'unknown')
   strx = tokenize(str, '_');
   
   switch lower(strx{1})
-    case {'ras' 'itab' 'neuromag'}
+    case {'ras' 'itab' 'neuromag' 'spm' 'mni'}
       labelx = {'-X (left)'      '+X (right)'   };
       labely = {'-Y (posterior)' '+Y (anterior)'};
       labelz = {'-Z (inferior)'  '+Z (superior)'};
