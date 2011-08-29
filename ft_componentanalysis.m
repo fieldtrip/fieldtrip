@@ -9,13 +9,13 @@ function [comp] = ft_componentanalysis(cfg, data)
 %
 % where the data comes from FT_PREPROCESSING or FT_TIMELOCKANALYSIS and the
 % configuration structure can contain
-%   cfg.method       = 'runica', 'fastica', 'binica', 'pca', 'jader', 'varimax', 'dss', 'cca', 'sobi' (default = 'runica')
+%   cfg.method       = 'runica', 'fastica', 'binica', 'pca', 'svd', 'jader', 'varimax', 'dss', 'cca', 'sobi' (default = 'runica')
 %   cfg.channel      = cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.numcomponent = 'all' or number (default = 'all')
 %   cfg.demean       = 'no' or 'yes' (default = 'yes')
 %
-% The runica method supports the following method-specific options. The values that 
+% The runica method supports the following method-specific options. The values that
 % these options can take can be found with HELP RUNICA.
 %   cfg.runica.extended
 %   cfg.runica.pca
@@ -35,7 +35,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.runica.logfile
 %   cfg.runica.interput
 %
-% The fastica method supports the following method-specific options. The values that 
+% The fastica method supports the following method-specific options. The values that
 % these options can take can be found with HELP FASTICA.
 %   cfg.fastica.approach
 %   cfg.fastica.numOfIC
@@ -63,7 +63,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.fastica.dewhiteMat
 %   cfg.fastica.only
 %
-% The binica method supports the following method-specific options. The values that 
+% The binica method supports the following method-specific options. The values that
 % these options can take can be found with HELP BINICA.
 %   cfg.binica.extended
 %   cfg.binica.pca
@@ -81,13 +81,13 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.binica.bias
 %   cfg.binica.momentum
 %
-% The dss method requires the following method-specific option and supports 
-% a whole lot of other options. The values that these options can take can be 
+% The dss method requires the following method-specific option and supports
+% a whole lot of other options. The values that these options can take can be
 % found with HELP DSS_CREATE_STATE.
 %   cfg.dss.denf.function
 %   cfg.dss.denf.params
 %
-% The sobi method supports the following method-specific options. The values that 
+% The sobi method supports the following method-specific options. The values that
 % these options can take can be found with HELP SOBI.
 %   cfg.sobi.n_sources
 %   cfg.sobi.p_correlations
@@ -107,7 +107,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FASTICA, RUNICA, BINICA, SVD, JADER, VARIMAX, DSS, CCA, SOBI
+% See also FT_REJECTCOMPONENT, FASTICA, RUNICA, BINICA, SVD, JADER, VARIMAX, DSS, CCA, SOBI
 
 % NOTE parafac is also implemented, but that does not fit into the
 % structure of 2D decompositions very well. Probably I should implement it
@@ -148,13 +148,13 @@ cfg = ft_checkconfig(cfg, 'forbidden', {'detrend'});
 cfg = ft_checkconfig(cfg, 'renamed',   {'blc', 'demean'});
 
 % set the defaults
-cfg.method       = ft_getopt(cfg, 'method',       'runica');
-cfg.demean       = ft_getopt(cfg, 'demean',       'yes');
-cfg.trials       = ft_getopt(cfg, 'trials',       'all');
-cfg.channel      = ft_getopt(cfg, 'channel',      'all');
-cfg.numcomponent = ft_getopt(cfg, 'numcomponent', 'all');
-cfg.inputfile    = ft_getopt(cfg, 'inputfile',    []);
-cfg.outputfile   = ft_getopt(cfg, 'outputfile',   []);
+cfg.method          = ft_getopt(cfg, 'method',       'runica');
+cfg.demean          = ft_getopt(cfg, 'demean',       'yes');
+cfg.trials          = ft_getopt(cfg, 'trials',       'all');
+cfg.channel         = ft_getopt(cfg, 'channel',      'all');
+cfg.numcomponent    = ft_getopt(cfg, 'numcomponent', 'all');
+cfg.inputfile       = ft_getopt(cfg, 'inputfile',    []);
+cfg.outputfile      = ft_getopt(cfg, 'outputfile',   []);
 cfg.normalisesphere = ft_getopt(cfg, 'normalisesphere', 'yes');
 
 % load optional given inputfile as data
@@ -217,18 +217,6 @@ cfg.dss.denf          = ft_getopt(cfg.dss,      'denf',     []);
 cfg.dss.denf.function = ft_getopt(cfg.dss.denf, 'function', 'denoise_fica_tanh');
 cfg.dss.denf.params   = ft_getopt(cfg.dss.denf, 'params',   []);
 
-% check whether the required low-level toolboxes are installed
-switch cfg.method
-  case 'fastica'
-    ft_hastoolbox('fastica', 1);       % see http://www.cis.hut.fi/projects/ica/fastica
-  case {'runica', 'jader', 'varimax', 'binica', 'sobi'}
-    ft_hastoolbox('eeglab', 1);        % see http://www.sccn.ucsd.edu/eeglab
-  case 'parafac'
-    ft_hastoolbox('nway', 1);          % see http://www.models.kvl.dk/source/nwaytoolbox
-  case 'dss'
-    ft_hastoolbox('dss', 1);           % see http://www.cis.hut.fi/projects/dss
-end % cfg.method
-
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
@@ -267,7 +255,7 @@ end
 if strcmp(cfg.method, 'predetermined mixing matrix')
   % the single trial data does not have to be concatenated
 elseif strcmp(cfg.method, 'parafac') || strcmp(cfg.method, 'sobi')
-  % concatenate all the data into a 3D matrix respectively 2D (sobi) 
+  % concatenate all the data into a 3D matrix respectively 2D (sobi)
   fprintf('concatenating data');
   Nsamples = Nsamples(1);
   dat = zeros(Ntrials, Nchans, Nsamples);
@@ -283,12 +271,12 @@ elseif strcmp(cfg.method, 'parafac') || strcmp(cfg.method, 'sobi')
     % sobi wants Nchans, Nsamples, Ntrials matrix and for Ntrials = 1 remove
     % trial dimension
     if Ntrials == 1
-        dummy = 0;
-        [dat, dummy] = shiftdim(dat);
+      dummy = 0;
+      [dat, dummy] = shiftdim(dat);
     else
-        dat = shiftdim(dat,1); 
+      dat = shiftdim(dat,1);
     end
-  end 
+  end
 else
   % concatenate all the data into a 2D matrix
   fprintf('concatenating data');
@@ -310,6 +298,8 @@ fprintf('starting decomposition using %s\n', cfg.method);
 switch cfg.method
   
   case 'fastica'
+    % check whether the required low-level toolboxes are installed
+    ft_hastoolbox('fastica', 1);       % see http://www.cis.hut.fi/projects/ica/fastica
     
     try
       % construct key-value pairs for the optional arguments
@@ -331,16 +321,25 @@ switch cfg.method
     end
     
   case 'runica'
+    % check whether the required low-level toolboxes are installed
+    % see http://www.sccn.ucsd.edu/eeglab
+    ft_hastoolbox('eeglab', 1);
+    
     % construct key-value pairs for the optional arguments
     optarg = ft_cfg2keyval(cfg.runica);
     [weights, sphere] = runica(dat, optarg{:});
-
+    
     % scale the sphering matrix to unit norm
     if strcmp(cfg.normalisesphere, 'yes'),
       sphere = sphere./norm(sphere);
     end
     
   case 'binica'
+    % check whether the required low-level toolboxes are installed
+    % see http://www.sccn.ucsd.edu/eeglab
+    ft_hastoolbox('eeglab', 1);
+    
+    
     % construct key-value pairs for the optional arguments
     optarg = ft_cfg2keyval(cfg.binica);
     [weights, sphere] = binica(dat, optarg{:});
@@ -351,14 +350,26 @@ switch cfg.method
     end
     
   case 'jader'
+    % check whether the required low-level toolboxes are installed
+    % see http://www.sccn.ucsd.edu/eeglab
+    ft_hastoolbox('eeglab', 1);
+    
     weights = jader(dat);
     sphere  = eye(size(weights, 2));
     
   case 'varimax'
+    % check whether the required low-level toolboxes are installed
+    % see http://www.sccn.ucsd.edu/eeglab
+    ft_hastoolbox('eeglab', 1);
+    
     weights = varimax(dat);
     sphere  = eye(size(weights, 2));
     
   case 'cca'
+    % check whether the required low-level toolboxes are installed
+    % see http://www.sccn.ucsd.edu/eeglab
+    ft_hastoolbox('cca', 1);
+    
     [y, w] = ccabss(dat);
     weights = w';
     sphere  = eye(size(weights, 2));
@@ -389,9 +400,16 @@ switch cfg.method
     sphere  = eye(size(weights, 2));
     
   case 'parafac'
+    % check whether the required low-level toolboxes are installed
+    % see http://www.models.kvl.dk/source/nwaytoolbox
+    ft_hastoolbox('nway', 1);
     f = parafac(dat, cfg.numcomponent);
     
   case 'dss'
+    % check whether the required low-level toolboxes are installed
+    % see http://www.cis.hut.fi/projects/dss
+    ft_hastoolbox('dss', 1);
+    
     params         = struct(cfg.dss);
     params.denf.h  = str2func(cfg.dss.denf.function);
     if ~ischar(cfg.numcomponent)
@@ -415,21 +433,25 @@ switch cfg.method
     % remember the updated configuration details
     cfg.dss.denf      = state.denf;
     cfg.numcomponent  = state.sdim;
-
+    
   case 'sobi'
+    % check whether the required low-level toolboxes are installed
+    % see http://www.sccn.ucsd.edu/eeglab
+    ft_hastoolbox('eeglab', 1);
+    
     % check for additional options, see SOBI for details
     if ~isfield(cfg, 'sobi')
-        mixm = sobi(dat);
+      mixm = sobi(dat);
     elseif isfield(cfg.sobi, 'n_sources') && isfield(cfg.sobi, 'p_correlations')
-        mixm = sobi(dat, cfg.sobi.n_sources, cfg.sobi.p_correlations);
+      mixm = sobi(dat, cfg.sobi.n_sources, cfg.sobi.p_correlations);
     elseif isfield(cfg.sobi, 'n_sources')
-        mixm = sobi(dat,cfg.sobi.n_sources);
+      mixm = sobi(dat,cfg.sobi.n_sources);
     else
-        error('unknown options for SOBI component analysis');      
+      error('unknown options for SOBI component analysis');
     end
     weights = pinv(mixm);
     sphere  = eye(size(weights, 2));
-
+    
   case 'predetermined mixing matrix'
     % check which labels from the cfg are identical to those of the data
     % this gives us the rows of cfg.topo (the channels) and of
@@ -545,7 +567,7 @@ cfg.version.id   = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.callinfo.matlab = version();
-  
+
 % add information about the function call to the configuration
 cfg.callinfo.proctime = toc(ftFuncTimer);
 cfg.callinfo.calltime = ftFuncClock;
