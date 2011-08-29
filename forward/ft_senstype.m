@@ -137,6 +137,9 @@ if isdata
   if isfield(input, 'grad')
     sens = input.grad;
     isgrad = true;
+  elseif isfield(input, 'elec')
+    sens = input.elec;
+    iselec = true;
   elseif isfield(input, 'hdr')
     input = input.hdr;
     isheader = true;
@@ -145,9 +148,6 @@ if isdata
     isgrad = true;
   elseif issubfield(input, 'hdr.elec')
     sens = input.hdr.elec;
-    iselec = true;
-  elseif isfield(input, 'elec')
-    sens = input.elec;
     iselec = true;
   elseif issubfield(input, 'hdr.label')
     sens.label = input.hdr.label;
