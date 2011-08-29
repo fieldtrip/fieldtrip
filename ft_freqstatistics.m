@@ -240,7 +240,7 @@ end
 dat        = data.(cfg.parameter);
 siz        = size(dat);
 dimtok     = tokenize(data.dimord, '_');
-rptdim     = find(ismember(dimtok, {'rpt' 'subj'}));
+rptdim     = find(ismember(dimtok, {'rpt' 'subj' 'rpttap'}));
 permutevec = [setdiff(1:numel(siz), rptdim) rptdim];       % permutation vector to put the repetition dimension as last dimension
 reshapevec = [prod(siz(permutevec(1:end-1))) siz(rptdim)]; % reshape vector to reshape into 2D
 dat        = reshape(permute(dat, permutevec), reshapevec);% actually reshape the data
