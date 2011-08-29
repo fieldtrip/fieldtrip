@@ -126,6 +126,7 @@ end
 
 % plot the geometrical object
 % the plotting style depends on the data content
+figure;
 switch dtype
   case 'volume'
     if isfield(data, 'anatomy')
