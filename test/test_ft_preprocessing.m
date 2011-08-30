@@ -1,0 +1,58 @@
+function test_ft_preprocessing(datainfo, writeflag)
+
+% TEST: test_ft_preprocessing ft_preprocessing
+
+% the optional writeflag determines whether the output for the 
+% existing raw datafiles
+
+if nargin<2
+  writeflag = 0;
+end
+if nargin<1
+  datainfo = test_datasets;
+end
+for k = 1:numel(datainfo)
+  datanew = preprocessing10trials(datainfo(k), writeflag);
+
+  fname = [datainfo(k).origdir,'raw/',datainfo(k).type,'preproc_',datainfo(k).datatype];
+  load(fname);
+  datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
+  data    = rmfield(data,    'cfg');
+  assert(isequal(data, datanew));
+end
+
+
+%----------------------------------------------------------
+% subfunction to read in 10 trials of data
+%----------------------------------------------------------
+function [data] = preprocessing10trials(dataset, writeflag)
+
+cfg            = [];
+cfg.dataset    = [dataset.origdir,'original/',dataset.type,dataset.datatype,'/',dataset.filename];
+if writeflag,
+  cfg.outputfile = [dataset.origdir,'raw/',dataset.type,'preproc_',dataset.datatype];
+end
+
+% get header and event information
+if ~isempty(dataset.dataformat)
+  hdr   = ft_read_header(cfg.dataset, 'headerformat', dataset.dataformat);
+  event = ft_read_event(cfg.dataset, 'eventformat', dataset.dataformat);
+  
+  cfg.dataformat   = dataset.dataformat;
+  cfg.headerformat = dataset.dataformat;
+else
+  hdr   = ft_read_header(cfg.dataset);
+  event = ft_read_event(cfg.dataset);
+end
+
+% create 10 1-second trials to be used as test-case 
+begsample = ((1:10)-1)*round(hdr.Fs) + 1;
+endsample = ((1:10)  )*round(hdr.Fs);
+offset    = zeros(1,10);
+
+cfg.trl   = [begsample(:) endsample(:) offset(:)];
+sel       = cfg.trl(:,2)<=hdr.nSamples*hdr.nTrials;
+cfg.trl   = cfg.trl(sel,:);
+
+cfg.continuous = 'yes';
+data           = ft_preprocessing(cfg);
