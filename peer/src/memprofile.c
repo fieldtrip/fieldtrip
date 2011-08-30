@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "mex.h"
 #include "matrix.h"
@@ -33,7 +34,10 @@
 
 #define FREE(x) {if (x) {free(x); x=NULL;}}
 
-/* the list will be thinned out with a factor 2x if it exceeds this length */
+/* how often to record a sample, start with 10x per second */
+#define SAMPLINGDELAY 100000
+
+/* the list will be thinned out with a factor 2x if it exceeds this length and the sampling delay will be doubled */
 #define MAXLISTLENGTH 3600  
 
 typedef struct memlist_s {
@@ -80,7 +84,7 @@ void memprofile_sample(void) {
 /* this is the thread that records the memory usage in a linked list */
 void *memprofile(void *arg) {
 		int count;
-		int pause = 1;
+		int pause = SAMPLINGDELAY;
 		memlist_t *memitem, *next;
 
 		pthread_mutex_lock(&mutexmemprofile);	
@@ -120,14 +124,14 @@ void *memprofile(void *arg) {
 						}
 						pthread_mutex_unlock(&mutexmemlist);
 						/* wait an extra delay before taking the next sample */
-						sleep(pause);
+						usleep(pause);
 						/* increment the subsequent sampling delay with a factor 2x */
 						pause = pause*2;
 				}
 
 				memprofile_sample();
 				pthread_testcancel();
-				sleep(pause);
+				usleep(pause);
 		}
 
 		pthread_cleanup_pop(1);
@@ -282,6 +286,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		/****************************************************************************/
 		else if (strcasecmp(command, "report")==0) {
 				uint64_t begmem, endmem, minmem, maxmem;
+				time_t mintime, maxtime;
 				int  num = 0;
 				float summem = 0;
 				memprofile_sample();
@@ -298,15 +303,20 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				endmem = memitem->rss;
 				minmem = memitem->rss;
 				maxmem = memitem->rss;
+				mintime = memitem->time;
+				maxtime = memitem->time;
 				while (memitem) {
-						begmem = memitem->rss; /* this will eventually contain the latest value on the list */
-						minmem = (memitem->rss < minmem ? memitem->rss : minmem);
-						maxmem = (memitem->rss > maxmem ? memitem->rss : maxmem);
+						begmem  = memitem->rss; /* this will eventually contain the latest value on the list */
+						minmem  = (memitem->rss < minmem ? memitem->rss : minmem);
+						maxmem  = (memitem->rss > maxmem ? memitem->rss : maxmem);
+						mintime = (memitem->time < mintime ? memitem->time : mintime);
+						maxtime = (memitem->time > maxtime ? memitem->time : maxtime);
 						summem += memitem->rss;
 						num++;
 						memitem = memitem->next ;
 				}
 				pthread_mutex_unlock(&mutexmemlist);
+				mexPrintf("duration of the recording  = %6u s\n", (int)(maxtime-mintime+1));
 				mexPrintf("memory in use at the begin = %6u MB\n", begmem/1048576);
 				mexPrintf("memory in use at the end   = %6u MB\n", endmem/1048576);
 				mexPrintf("minimum memory in use      = %6u MB\n", minmem/1048576);
