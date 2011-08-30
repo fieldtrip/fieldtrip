@@ -17,11 +17,20 @@ function output = memtic(action, counter)
 %   M = MEMTOC(C)
 % to specifically estimate the memory use between a well-defined tic/toc pair.
 %
-% Example: measure the memory increase due to allocating a lot of memory
+% Note that MATLAB uses internal memory allocation, garbage collection, shallow
+% copies of variables, and virtual memory. Due to the advanced handling of
+% memory for its variables, it is not easy and in certain cases not possible to
+% make a reliable and reproducible estimate based on the memory information
+% provided by the operating system.
+%
+% Example: measure the memory increase due to allocating a lot of memory.
+% Doing a "clear x" following the allocation and priot to MEMTOC does not
+% affect the memory that is reported.
+%
 %   memtic
 %   n = 125; x = cell(1,n);
 %   for i=1:n
-%     x{i} = zeros(1000,1000); % 8kB per item
+%     x{i} = randn(1000,1000); % 8kB per item
 %     disp(i);
 %   end
 %   whos x
@@ -35,13 +44,31 @@ if nargin<1
   action = 'tic';
 end
 
+% the memtic/memtoc functions make use of a low-level mex file that interacts directly with the operating system
+% do not fail if the mex file does not exist
+if isempty(strfind(which('memprofile'), mexext))
+  switch action
+    case 'tic'
+      if nargout
+        output = nan;
+      end
+    case 'toc'
+      if nargout
+        output = nan;
+      end
+    otherwise
+      error('invalid input argument #1');
+  end % switch
+  return
+end % if mex file does not exist
+
 % get the current usage, this will start memprofile if needed
 memstat = memprofile('info');
 
 switch action
   case 'tic'
     if nargin>1
-      error('you cannot specify the counter');
+      error('the counter cannot be specified as imput argument');
     end
     
     counter = length(state)+1;
@@ -57,6 +84,8 @@ switch action
     if nargin<2
       % take the latest
       counter = length(state);
+    elseif counter<1 || counter>numel(state)
+      error('invalid counter');
     end
     
     if counter==0
@@ -71,6 +100,6 @@ switch action
       output = memused;
     end
     
+  otherwise
+    error('invalid input argument #1');
 end % switch
-
-
