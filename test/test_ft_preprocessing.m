@@ -1,9 +1,9 @@
 function test_ft_preprocessing(datainfo, writeflag)
 
-% TEST: test_ft_preprocessing ft_preprocessing
+% TEST: test_ft_preprocessing ft_preprocessing test_datasets
 
-% the optional writeflag determines whether the output for the 
-% existing raw datafiles
+% the optional writeflag determines whether the output 
+% should be saved to disk
 
 if nargin<2
   writeflag = 0;
