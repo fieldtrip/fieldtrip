@@ -69,7 +69,11 @@ function data = ft_datatype_raw(data, varargin)
 % $Id$
 
 % get the optional input arguments, which should be specified as key-value pairs
-version = keyval('version', varargin); if isempty(version), version = 'latest'; end
+version       = ft_getopt(varargin, 'version', 'latest');
+hassampleinfo = ft_getopt(varargin, 'hassampleinfo', true);
+
+% convert from yes/no into true/false
+hassampleinfo = istrue(hassampleinfo);
 
 if strcmp(version, 'latest')
   version = '2010v2';
@@ -86,7 +90,7 @@ switch version
       data = rmfield(data, 'offset');
     end
 
-    if ~isfield(data, 'sampleinfo') || ~isfield(data, 'trialinfo')
+    if hassampleinfo && (~isfield(data, 'sampleinfo') || ~isfield(data, 'trialinfo'))
       % reconstruct it on the fly
       data = fixsampleinfo(data);
     end
