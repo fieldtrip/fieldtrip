@@ -167,7 +167,7 @@ end
 % the ft_datatype_XXX functions ensures the consistency of the XXX datatype
 % and provides a detailled description of the dataformat and its history
 if     israw
-  data = ft_datatype_raw(data);
+  data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
 elseif isfreq
   data = ft_datatype_freq(data);
 elseif istimelock 
