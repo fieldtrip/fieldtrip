@@ -391,7 +391,7 @@ switch cfg.method
     if cfg.numcomponent<Nchans
       % compute only the first components
       [u, s, v] = svds(dat, cfg.numcomponent);
-      u(Nchans, Nchans) = 0;
+      %u(Nchans, Nchans) = 0;
     else
       % compute all components
       [u, s, v] = svd(dat, 0);
