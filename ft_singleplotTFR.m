@@ -408,7 +408,7 @@ else
 end
 hold on
 axis xy;
-set(gca,'Color','k')
+% set(gca,'Color','k')
 
 if isequal(cfg.colorbar,'yes')
   colorbar;
