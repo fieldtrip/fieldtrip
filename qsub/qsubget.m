@@ -101,6 +101,8 @@ if success
   err         = ft_getopt(options, 'lasterr');
   diarystring = ft_getopt(options, 'diary');
 
+  fprintf('jobid %d returned, it required %s and %s\n', jobid, print_tim(ft_getopt(options, 'timused', nan)), print_mem(ft_getopt(options, 'memused', nan)));
+
   % if there is an error, it needs to be represented as a message string
   % and optionally also as a strucure for rethrowing
   if ~isempty(err)
@@ -118,18 +120,11 @@ if success
   end
 
   if strcmp(diary, 'error') && ~isempty(err)
-    if ~isempty(strfind(errmsg, 'could not start the matlab engine')) || ...
-        ~isempty(strfind(errmsg, 'failed to execute the job (argin)')) || ...
-        ~isempty(strfind(errmsg, 'failed to execute the job (optin)'))
-      % this is due to a license or a memory problem, and is dealt with in qsubcellfun
-      closeline = false;
-    else
-      fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
-      fprintf('%% an error was detected, the diary output of the remote execution follows \n');
-      fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
-      fprintf('%s', diarystring);
-      closeline = true;
-    end
+    fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
+    fprintf('%% an error was detected, the diary output of the remote execution follows \n');
+    fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
+    fprintf('%s', diarystring);
+    closeline = true;
   elseif strcmp(diary, 'warning') && ~isempty(warn)
     fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
     fprintf('%% a warning was detected, the diary output of the remote execution follows\n');

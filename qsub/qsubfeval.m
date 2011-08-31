@@ -39,7 +39,6 @@ strargin(~cellfun(@ischar, strargin)) = {''};
 
 % locate the begin of the optional key-value arguments
 optbeg = false(size(strargin));
-optbeg = optbeg | strcmp('timeout', strargin);
 optbeg = optbeg | strcmp('sleep',   strargin);
 optbeg = optbeg | strcmp('memreq',  strargin);
 optbeg = optbeg | strcmp('cpureq',  strargin);
@@ -50,7 +49,6 @@ optbeg = find(optbeg);
 optarg = varargin(optbeg:end);
 
 % get the optional input arguments
-timeout = ft_getopt(optarg, 'timeout', inf);
 sleep   = ft_getopt(optarg, 'sleep',   0.05);
 memreq  = ft_getopt(optarg, 'memreq',  []);
 cpureq  = ft_getopt(optarg, 'cpureq',  []);

@@ -120,7 +120,7 @@ for submit=1:numjob
   end
 
   % submit the job
-  [curjobid curputtime] = qsubfeval(fname, argin{:}, 'timeout', 5, 'memreq', memreq, 'timreq', timreq, 'diary', diary);
+  [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary);
 
   % fprintf('submitted job %d\n', submit);
   jobid(submit)      = curjobid;
@@ -136,7 +136,7 @@ while (~all(collected))
   for collect=find(~collected)
     % this will return empty arguments if the job has not finished
     ws = warning('off', 'FieldTrip:qsub:jobNotAvailable');
-    [argout, options] = qsubget(jobid(collect), 'timeout', 3, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
+    [argout, options] = qsubget(jobid(collect), 'timeout', 0.1, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
     warning(ws);
 
     if ~isempty(argout) || ~isempty(options)
