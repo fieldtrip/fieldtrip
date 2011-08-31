@@ -327,7 +327,7 @@ if hasdata
     if isfield(cfg.montage, 'type'),
       bname = cfg.montage.type;
     else
-      bname = 'comp1';
+      bname = 'preproc';
     end
     dataout.grad = ft_apply_montage(dataout.grad, cfg.montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
   end

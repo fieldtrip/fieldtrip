@@ -180,6 +180,34 @@ elseif isfield(sens, 'tra')
       end
     end
   elseif ~strcmp(inverse, 'yes') && ~isempty(bname)
+    
+    if isfield(sens, 'balance'),
+      % check whether a balancing montage with name bname already exist,
+      % and if so, how many
+      mnt = fieldnames(sens.balance);
+      sel = strmatch(bname, mnt);
+      if numel(sel)==0,
+        % bname can stay the same
+      elseif numel(sel)==1
+        % the original should be renamed to 'bname1' and the new one should
+        % be 'bname2'
+        sens.balance.([bname, '1']) = sens.balance.(bname);
+        sens.balance                = rmfield(sens.balance, bname);
+        if isfield(sens.balance, 'current') && strcmp(sens.balance.current, bname)
+          sens.balance.current = [bname, '1'];
+        end
+        if isfield(sens.balance, 'previous') 
+          sel2 = strmatch(bname, sens.balance.previous);
+          if ~isempty(sel2)
+            sens.balance.previous{sel2} = [bname, '1'];
+          end
+        end
+        bname = [bname, '2'];        
+      else
+        bname = [bname, num2str(length(sel)+1)];
+      end
+    end
+    
     if isfield(sens, 'balance') && isfield(sens.balance, 'current')
       if ~isfield(sens.balance, 'previous')
         sens.balance.previous = {};

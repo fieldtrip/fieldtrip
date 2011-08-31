@@ -241,19 +241,8 @@ if isfield(data, 'grad')
   montage.tra(i3,i1) = montage.tra(i3,i1) - pca.w(i4,i2);
   montage.labelorg  = labelorg;
   montage.labelnew  = labelorg;
-  
-  if isfield(data.grad, 'balance'),
-    mnt = fieldnames(data.grad.balance);
-    sel = strmatch('pca', mnt);
-    if isempty(sel),
-      sel = zeros(0,1);
-    end  
-    bname = ['pca',num2str(length(sel)+1)];
-  else
-    bname = 'pca1';
-  end
-  
-  data.grad = ft_apply_montage(data.grad, montage, 'keepunused', 'yes', 'balancename', bname);
+   
+  data.grad = ft_apply_montage(data.grad, montage, 'keepunused', 'yes', 'balancename', 'pca');
 
   % order the fields
   fnames = fieldnames(data.grad.balance);
