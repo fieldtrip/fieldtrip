@@ -93,11 +93,46 @@ argin = varargin;
 optin = options;
 save(inputfile, 'argin', 'optin');
 
+if matlabversion(7.1)
+  matlabcmd = 'matlab71';
+elseif matlabversion(7.2)
+  matlabcmd = 'matlab72';
+elseif matlabversion(7.3)
+  matlabcmd = 'matlab73';
+elseif matlabversion(7.4)
+  matlabcmd = 'matlab74';
+elseif matlabversion(7.5)
+  matlabcmd = 'matlab75';
+elseif matlabversion(7.6)
+  matlabcmd = 'matlab76';
+elseif matlabversion(7.7)
+  matlabcmd = 'matlab77';
+elseif matlabversion(7.8) % 2009a
+  matlabcmd = 'matlab78 -singleCompThread';
+elseif matlabversion(7.9) % 2009b
+  matlabcmd = 'matlab79 -singleCompThread';
+elseif matlabversion('2010a')
+  matlabcmd = 'matlab2010a -singleCompThread';
+elseif matlabversion('2010b')
+  matlabcmd = 'matlab2010b -singleCompThread';
+elseif matlabversion('2011a')
+  matlabcmd = 'matlab2011a -singleCompThread';
+elseif matlabversion('2011b')
+  matlabcmd = 'matlab2011b -singleCompThread';
+elseif matlabversion('2012a')
+  matlabcmd = 'matlab2012a -singleCompThread';
+elseif matlabversion('2012b')
+  matlabcmd = 'matlab2012b -singleCompThread';
+else
+  % use whatever is avaialble as default
+  matlabcmd = 'matlab';
+end
+
 % create the shell script
 fid = fopen(shellscript, 'wt');
 fprintf(fid, '#!/bin/sh\n');
 fprintf(fid, 'cd "%s"\n', p);
-fprintf(fid, 'matlab2010b -nosplash -nodisplay -r job_%08d\n', jobid);
+fprintf(fid, '%s -nosplash -nodisplay -r job_%08d\n', matlabcmd, jobid);
 fclose(fid);
 
 % create the matlab script
