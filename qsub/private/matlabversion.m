@@ -39,6 +39,10 @@ function [inInterval] = matlabversion(min, max)
 %
 % $Id$
 
+if nargin<2
+  max = min;
+end
+
 curVer = version();
 
 if ((ischar(min) && isempty(str2num(min))) || (ischar(max) && isempty(str2num(max))))
