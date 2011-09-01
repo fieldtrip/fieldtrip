@@ -74,7 +74,7 @@ numargin    = numel(varargin);
 numjob      = numel(varargin{1});
 
 % prepare some arrays that are used for bookkeeping
-jobid       = nan(1, numjob);
+jobid       = cell(1, numjob);
 puttime     = nan(1, numjob);
 timused     = nan(1, numjob);
 memused     = nan(1, numjob);
@@ -82,6 +82,15 @@ submitted   = false(1, numjob);
 collected   = false(1, numjob);
 submittime  = inf(1, numjob);
 collecttime = inf(1, numjob);
+
+% keep a record of how many calls to this function have been made (useful
+% for creating meaningful job IDs)
+persistent qnum;
+if isempty(qnum)
+  qnum = 1;
+else
+  qnum = qnum+1;
+end
 
 % it can be difficult to determine the number of output arguments
 try
@@ -120,10 +129,10 @@ for submit=1:numjob
   end
 
   % submit the job
-  [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary);
+  [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'qnum', qnum);
 
   % fprintf('submitted job %d\n', submit);
-  jobid(submit)      = curjobid;
+  jobid{submit}      = curjobid;
   puttime(submit)    = curputtime;
   submitted(submit)  = true;
   submittime(submit) = toc(stopwatch);
@@ -136,7 +145,7 @@ while (~all(collected))
   for collect=find(~collected)
     % this will return empty arguments if the job has not finished
     ws = warning('off', 'FieldTrip:qsub:jobNotAvailable');
-    [argout, options] = qsubget(jobid(collect), 'timeout', 0.1, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
+    [argout, options] = qsubget(jobid{collect}, 'timeout', 0.1, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
     warning(ws);
 
     if ~isempty(argout) || ~isempty(options)

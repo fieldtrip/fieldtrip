@@ -36,9 +36,9 @@ function [argout, optout] = qsubexec(jobid)
 % -----------------------------------------------------------------------
 
 try
-  p = getenv('HOME');
-  inputfile  = fullfile(p, sprintf('job_%08d_input.mat', jobid));
-  outputfile = fullfile(p, sprintf('job_%08d_output.mat_', jobid)); % note the _ at the end
+  p = pwd();
+  inputfile  = fullfile(p, sprintf('%s_input.mat', jobid));
+  outputfile = fullfile(p, sprintf('%s_output.mat_', jobid)); % note the _ at the end
 
   tmp = load(inputfile);
   delete(inputfile);
@@ -50,9 +50,10 @@ try
   save(outputfile, 'argout', 'optout');
   rename(outputfile, outputfile(1:(end-1))); % remove the _ at the end
 
-catch
+catch err
   % this is to avoid MATLAB from hanging in case fexec fails, since
   % after the job execution we want MATLAB to exit
   warning('an error was caught');
+  
 end % try-catch
 

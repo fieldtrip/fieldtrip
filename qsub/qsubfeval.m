@@ -45,6 +45,7 @@ optbeg = optbeg | strcmp('cpureq',  strargin);
 optbeg = optbeg | strcmp('timreq',  strargin);
 optbeg = optbeg | strcmp('hostid',  strargin);
 optbeg = optbeg | strcmp('diary',   strargin);
+optbeg = optbeg | strcmp('qnum',    strargin);
 optbeg = find(optbeg);
 optarg = varargin(optbeg:end);
 
@@ -55,6 +56,7 @@ cpureq  = ft_getopt(optarg, 'cpureq',  []);
 timreq  = ft_getopt(optarg, 'timreq',  []);
 hostid  = ft_getopt(optarg, 'hostid',  []);
 diary   = ft_getopt(optarg, 'diary',   []);
+qnum    = ft_getopt(optarg, 'qnum',    1);
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -73,18 +75,21 @@ if ~isempty(previous_argin) && ~isequal(varargin{1}, previous_argin{1})
   end
 end
 
-jobid = round(rand(1)*1e8);
+% a unique identifier for the job (string)
+jobid = generatejobid(qnum);
+
+% get the current working directory to store the temp files in
+curPwd = getcustompwd();
 
 % each job should have a different random number sequence
 randomseed = rand(1)*double(intmax);
 
 % pass some options that influence the remote execution
-options = {'pwd', getcustompwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq, 'randomseed', randomseed};
+options = {'pwd', curPwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq, 'randomseed', randomseed};
 
-p = getenv('HOME');
-inputfile    = fullfile(p, sprintf('job_%08d_input.mat', jobid));
-shellscript  = fullfile(p, sprintf('job_%08d.sh', jobid));
-matlabscript = fullfile(p, sprintf('job_%08d.m', jobid));
+inputfile    = fullfile(curPwd, sprintf('%s_input.mat', jobid));
+shellscript  = fullfile(curPwd, sprintf('%s.sh', jobid));
+matlabscript = fullfile(curPwd, sprintf('%s.m', jobid));
 
 % rename and save the variables
 argin = varargin;
@@ -122,22 +127,22 @@ elseif matlabversion('2012a')
 elseif matlabversion('2012b')
   matlabcmd = 'matlab2012b -singleCompThread';
 else
-  % use whatever is avaialble as default
+  % use whatever is available as default
   matlabcmd = 'matlab';
 end
 
 % create the shell script
 fid = fopen(shellscript, 'wt');
 fprintf(fid, '#!/bin/sh\n');
-fprintf(fid, 'cd "%s"\n', p);
-fprintf(fid, '%s -nosplash -nodisplay -r job_%08d\n', matlabcmd, jobid);
+fprintf(fid, 'cd "%s"\n', curPwd);
+fprintf(fid, '%s -nosplash -nodisplay -r "run(''%s/%s.m'')" \n', matlabcmd, curPwd, jobid);
 fclose(fid);
 
 % create the matlab script
 fid = fopen(matlabscript, 'wt');
 fprintf(fid, 'restoredefaultpath\n');
 fprintf(fid, 'addpath %s\n', fileparts(mfilename('fullpath')));
-fprintf(fid, 'qsubexec(%d)\n', jobid);
+fprintf(fid, 'qsubexec(''%s'')\n', jobid);
 fprintf(fid, 'exit\n');
 fclose(fid);
 
@@ -154,14 +159,20 @@ if ~isempty(memreq)
   requirements = [requirements sprintf('pvmem=%d:', memreq)];
 end
 
+% generate qsub command
+% Note that both stderr and stout are redirected to /dev/null, so any
+% output information will not be available for inspection. However, any
+% matlab errors will be reported back by fexec.
 if isempty(requirements)
-  cmdline = ['qsub ' shellscript];
+  cmdline = ['qsub -e /dev/null -o /dev/null -N ' jobid ' ' shellscript];
 else
-  cmdline = ['qsub -l ' requirements(1:end-1) ' ' shellscript];  % strip the last ':' from the requirements
+  cmdline = ['qsub -e /dev/null -o /dev/null -N ' jobid ' -l ' requirements(1:end-1) ' ' shellscript];  % strip the last ':' from the requirements
 end
 
-% fprintf('submitting job %08d\n', jobid); 
-system(cmdline);
+fprintf('submitting job %s...', jobid); 
+[~,result] = system(cmdline);
+fprintf(' corresponding qsub ID %s\n', strtrim(result));
+
 puttime = toc(stopwatch);
 
 % remember the input arguments to speed up subsequent calls
