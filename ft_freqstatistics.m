@@ -233,7 +233,11 @@ if exist('sensfield', 'var')
 end
 
 if Ndata>1,
-  data = ft_selectdata(varargin{:}, 'param', cfg.parameter);
+  %data = ft_selectdata(varargin{:}, 'param', cfg.parameter);
+  tmpcfg = [];
+  tmpcfg.appenddim = 'rpt';
+  tmpcfg.parameter = cfg.parameter;
+  data = ft_appendfreq(tmpcfg, varargin{:});
 else
   data = varargin{1};
 end
@@ -249,7 +253,7 @@ siz        = size(dat);
 dimtok     = tokenize(data.dimord, '_');
 rptdim     = find(ismember(dimtok, {'rpt' 'subj' 'rpttap'}));
 permutevec = [setdiff(1:numel(siz), rptdim) rptdim];       % permutation vector to put the repetition dimension as last dimension
-reshapevec = [prod(siz(permutevec(1:end-1))) siz(rptdim)]; % reshape vector to reshape into 2D
+reshapevec = [prod(siz(permutevec(1:end-1))) siz(rptdim) 1]; % reshape vector to reshape into 2D
 dat        = reshape(permute(dat, permutevec), reshapevec);% actually reshape the data
 
 reduceddim = setdiff(1:numel(siz), rptdim);

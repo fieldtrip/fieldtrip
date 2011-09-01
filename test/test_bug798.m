@@ -54,11 +54,14 @@ argin{4} = ft_checkdata(t2_subj2_null, 'datatype', 'freq');
 % and
 data = ft_selectdata(argin{:}, 'param', 'powspctrm');
 % after which the prob and stat are not removed, and dimord not updated
-assert(strcmp(data.dimord, 'rpt_chan_freq'));
-
 % FIXME the following tests fail, see bug  
 % assert(~isfield(data, 'stat'));
 % assert(~isfield(data, 'prob'));
+assert(strcmp(data.dimord, 'rpt_chan_freq'));
 
-
+% but this should now work
+cfg = [];
+cfg.parameter = 'powspctrm';
+cfg.appenddim = 'rpt';
+data2 = ft_appendfreq(cfg, argin{:});
 
