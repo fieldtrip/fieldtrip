@@ -33,7 +33,7 @@ function varargout = qsubget(jobid, varargin)
 % -----------------------------------------------------------------------
 
 % the following are to speed up subsequent calls
-persistent previous_varargin previous_timeout previous_sleep previous_output previous_diary previous_StopOnError previous_engine
+persistent previous_varargin previous_timeout previous_sleep previous_output previous_diary previous_StopOnError
 
 if isequal(previous_varargin, varargin)
   % prevent the ft_getopt function from being called, because it is slow
@@ -43,7 +43,6 @@ if isequal(previous_varargin, varargin)
   output      = previous_output;
   diary       = previous_diary;
   StopOnError = previous_StopOnError;
-  engine      = previous_engine;
 else
   % get the optional arguments
   timeout     = ft_getopt(varargin, 'timeout',     0);
@@ -67,6 +66,9 @@ while ~success && (timeout == 0 || toc(stopwatch)<timeout)
   matlabscript = fullfile(curPwd, sprintf('%s.m', jobid));
   outputfile   = fullfile(curPwd, sprintf('%s_output.mat', jobid));
 
+  % the clear of the exist function seems to make it more responsive
+  % perhaps it has some internal caching
+  clear exist
   if exist(outputfile, 'file')
     tmp = load(outputfile);
     argout  = tmp.argout;
