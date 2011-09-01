@@ -145,7 +145,7 @@ while (~all(collected))
   for collect=find(~collected)
     % this will return empty arguments if the job has not finished
     ws = warning('off', 'FieldTrip:qsub:jobNotAvailable');
-    [argout, options] = qsubget(jobid{collect}, 'timeout', 0.1, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
+    [argout, options] = qsubget(jobid{collect}, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
     warning(ws);
 
     if ~isempty(argout) || ~isempty(options)

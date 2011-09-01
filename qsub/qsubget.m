@@ -8,7 +8,7 @@ function varargout = qsubget(jobid, varargin)
 %
 % Optional arguments can be specified in key-value pairs and can include
 %   StopOnError    = boolean (default = true)
-%   timeout        = number, in seconds (default = 1)
+%   timeout        = number, in seconds (default = 0; return immediately if output cannot be gotten)
 %   sleep          = number, in seconds (default = 0.01)
 %   output         = string, 'varargout' or 'cell' (default = 'varargout')
 %   diary          = string, can be 'always', 'warning', 'error' (default = 'error')
@@ -46,7 +46,7 @@ if isequal(previous_varargin, varargin)
   engine      = previous_engine;
 else
   % get the optional arguments
-  timeout     = ft_getopt(varargin, 'timeout',     1.000);
+  timeout     = ft_getopt(varargin, 'timeout',     0);
   sleep       = ft_getopt(varargin, 'sleep',       0.010);
   output      = ft_getopt(varargin, 'output',      'varargout');
   diary       = ft_getopt(varargin, 'diary',       'error');
@@ -57,7 +57,7 @@ end
 stopwatch = tic;
 
 success = false;
-while ~success && toc(stopwatch)<timeout
+while ~success && (timeout == 0 || toc(stopwatch)<timeout)
 
   % the code is largely shared with fieldtrip/peer/peerget.m
   % this section is the only part where it is different between peer and qsub
@@ -76,6 +76,8 @@ while ~success && toc(stopwatch)<timeout
     delete(shellscript);
     delete(matlabscript);
     delete(outputfile);
+  elseif timeout == 0
+    break; % only check once, no waiting here
   else
     % the job results have not arrived yet
     % wait a little bit and try again
