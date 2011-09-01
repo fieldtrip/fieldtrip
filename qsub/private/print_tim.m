@@ -3,8 +3,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function str = print_tim(tim)
 % partition the time in seconds into years, months, etc.
-year   = 60*60*24*7*356.25;
-month  = 60*60*24*356.25/12;
+year   = 60*60*24*7*365.25;
+month  = 60*60*24*365.25/12;
 week   = 60*60*24*7;
 day    = 60*60*24;
 hour   = 60*60;
