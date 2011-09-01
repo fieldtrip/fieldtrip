@@ -1715,11 +1715,11 @@ if isfield(data, 'dof'),        data = rmfield(data, 'dof'); end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [data] = chan2freq(data)
 data.dimord = [data.dimord '_freq'];
-data.freq   = nan;
+data.freq   = 0;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [data] = chan2timelock(data)
 data.dimord = [data.dimord '_time'];
-data.time   = nan;
+data.time   = 0;
