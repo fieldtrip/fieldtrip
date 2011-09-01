@@ -27,8 +27,8 @@ function ft_neighbourplot(cfg, data)
 %   data.grad     = structure with MEG gradiometer positions
 %
 %
-% If cfg.neighbours is no defined or empty, the function calls 
-% ft_neighbourselection to compute channel neighbours. 
+% If cfg.neighbours is no defined or empty, the function calls
+% ft_neighbourselection to compute channel neighbours.
 %
 % See also FT_NEIGHBOURSELECTION
 
@@ -53,147 +53,152 @@ function ft_neighbourplot(cfg, data)
 
 
 if nargin < 3
-    if isfield(cfg, 'neighbours')
-        neighbours = cfg.neighbours;
-    elseif nargin < 2
-        neighbours = ft_neighbourselection(cfg);
-    else
-        neighbours = ft_neighbourselection(cfg, data);
-    end
+  if isfield(cfg, 'neighbours')
+    neighbours = cfg.neighbours;
+  elseif nargin < 2
+    neighbours = ft_neighbourselection(cfg);
+  else
+    neighbours = ft_neighbourselection(cfg, data);
+  end
 end
 
 
 if iscell(cfg.neighbours)
-    warning('Neighbourstructure is in old format - converting to structure array');
-    cfg.neighbours = fixneighbours(cfg.neighbours);
+  warning('Neighbourstructure is in old format - converting to structure array');
+  cfg.neighbours = fixneighbours(cfg.neighbours);
 end
 
 if ~isfield(cfg, 'verbose')
-    cfg.verbose = 'no';
-elseif strcmp(cfg.verbose, 'yes')    
-    cfg.verbose = true;
+  cfg.verbose = 'no';
+elseif strcmp(cfg.verbose, 'yes')
+  cfg.verbose = true;
 end
 
 % get the the grad or elec if not present in the data
 if exist('data', 'var') && isfield(data, 'grad')
-    fprintf('Using the gradiometer configuration from the dataset.\n');
-    sens = data.grad;
-    % extract true channelposition
-    [sens.pnt, sens.ori, sens.label] = channelposition(sens);
+  fprintf('Using the gradiometer configuration from the dataset.\n');
+  sens = data.grad;
+  % extract true channelposition
+  [sens.pnt, sens.ori, sens.label] = channelposition(sens);
 elseif exist('data', 'var') && isfield(data, 'elec')
-    fprintf('Using the electrode configuration from the dataset.\n');
-    sens = data.elec;
+  fprintf('Using the electrode configuration from the dataset.\n');
+  sens = data.elec;
 elseif isfield(cfg, 'grad')
-    fprintf('Obtaining the gradiometer configuration from the configuration.\n');
-    sens = cfg.grad;
-    % extract true channelposition
-    [sens.pnt, sens.ori, sens.label] = channelposition(sens);
+  fprintf('Obtaining the gradiometer configuration from the configuration.\n');
+  sens = cfg.grad;
+  % extract true channelposition
+  [sens.pnt, sens.ori, sens.label] = channelposition(sens);
 elseif isfield(cfg, 'elec')
-    fprintf('Obtaining the electrode configuration from the configuration.\n');
-    sens = cfg.elec;
+  fprintf('Obtaining the electrode configuration from the configuration.\n');
+  sens = cfg.elec;
 elseif isfield(cfg, 'gradfile')
-    fprintf('Obtaining the gradiometer configuration from a file.\n');
-    sens = ft_read_sens(cfg.gradfile);
-    % extract true channelposition
-    [sens.pnt, sens.ori, sens.label] = channelposition(sens);
+  fprintf('Obtaining the gradiometer configuration from a file.\n');
+  sens = ft_read_sens(cfg.gradfile);
+  % extract true channelposition
+  [sens.pnt, sens.ori, sens.label] = channelposition(sens);
 elseif isfield(cfg, 'elecfile')
-    fprintf('Obtaining the electrode configuration from a file.\n');
-    sens = ft_read_sens(cfg.elecfile);
+  fprintf('Obtaining the electrode configuration from a file.\n');
+  sens = ft_read_sens(cfg.elecfile);
 elseif isfield(cfg, 'layout')
-    fprintf('Using the 2-D layout to determine the neighbours\n');
-    lay = ft_prepare_layout(cfg);
-    sens = [];
-    sens.label = lay.label;
-    sens.pnt = lay.pos;
-    sens.pnt(:,3) = 0;
+  fprintf('Using the 2-D layout to determine the neighbours\n');
+  lay = ft_prepare_layout(cfg);
+  sens = [];
+  sens.label = lay.label;
+  sens.pnt = lay.pos;
+  sens.pnt(:,3) = 0;
 else
-    error('Did not find gradiometer or electrode information.');
+  error('Did not find gradiometer or electrode information.');
 end;
 
 % give some graphical feedback
 if all(sens.pnt(:,3)==0)
-    % the sensor positions are already projected on a 2D plane
-    proj = sens.pnt(:,1:2);
+  % the sensor positions are already projected on a 2D plane
+  proj = sens.pnt(:,1:2);
 else
-    % use 3-dimensional data for plotting
-    proj = sens.pnt;
+  % use 3-dimensional data for plotting
+  proj = sens.pnt;
 end
 figure
 axis equal
 axis off
 hold on;
 for i=1:length(neighbours)
-    this = neighbours(i);    
-    
-    sel1 = match_str(sens.label, this.label);
-    sel2 = match_str(sens.label, this.neighblabel);
-    % account for missing sensors
-    this.neighblabel = sens.label(sel2); 
-    for j=1:length(this.neighblabel)
-        x1 = proj(sel1,1);
-        y1 = proj(sel1,2);
-        x2 = proj(sel2(j),1);
-        y2 = proj(sel2(j),2);
-        X = [x1 x2];
-        Y = [y1 y2];
-        if size(proj, 2) == 2
-            line(X, Y, 'color', 'r');
-        elseif size(proj, 2) == 3
-            z1 = proj(sel1,3);
-            z2 = proj(sel2(j),3);
-            Z = [z1 z2];
-            line(X, Y, Z, 'color', 'r');
-        end
+  this = neighbours(i);
+  
+  sel1 = match_str(sens.label, this.label);
+  sel2 = match_str(sens.label, this.neighblabel);
+  % account for missing sensors
+  this.neighblabel = sens.label(sel2);
+  for j=1:length(this.neighblabel)
+    x1 = proj(sel1,1);
+    y1 = proj(sel1,2);
+    x2 = proj(sel2(j),1);
+    y2 = proj(sel2(j),2);
+    X = [x1 x2];
+    Y = [y1 y2];
+    if size(proj, 2) == 2
+      line(X, Y, 'color', 'r');
+    elseif size(proj, 2) == 3
+      z1 = proj(sel1,3);
+      z2 = proj(sel2(j),3);
+      Z = [z1 z2];
+      line(X, Y, Z, 'color', 'r');
     end
+  end
 end
 
 % this is for putting the channels on top of the connections
 set(gcf, 'UserData', []);
 for i=1:length(neighbours)
-    this = neighbours(i);
-    sel1 = match_str(sens.label, this.label);
-    sel2 = match_str(sens.label, this.neighblabel);
-    % account for missing sensors
-    this.neighblabel = sens.label(sel2);
-    if isempty(sel1)
-        continue;
-    end
-    if size(proj, 2) == 2
-        hs(i) = line(proj(sel1, 1), proj(sel1, 2),                                            ...     
-                        'MarkerEdgeColor',  'k',                                        ...
-                        'MarkerFaceColor',  'k',                                        ...
-                        'Marker',           'o',                                        ...
-                        'MarkerSize',       .125*(2+numel(neighbours(i).neighblabel)^2), ...
-                        'UserData',         i,                                          ...
-                        'ButtonDownFcn',    @showLabelInTitle);
-                    
-    elseif size(proj, 2) == 3
-        hs(i) = line(proj(sel1, 1), proj(sel1, 2), proj(sel1, 3),                                ...
-                        'MarkerEdgeColor',  'k',                                        ...
-                        'MarkerFaceColor',  'k',                                        ...
-                        'Marker',           'o',                                        ...
-                        'MarkerSize',       .125*(2+numel(neighbours(i).neighblabel)^2), ...
-                        'UserData',         i,                        ...
-                        'ButtonDownFcn',    @showLabelInTitle);
-    else
-        error('Channel coordinates are too high dimensional');
-    end
+  this = neighbours(i);
+  sel1 = match_str(sens.label, this.label);
+  sel2 = match_str(sens.label, this.neighblabel);
+  % account for missing sensors
+  this.neighblabel = sens.label(sel2);
+  if isempty(sel1)
+    continue;
+  end
+  if size(proj, 2) == 2
+    hs(i) = line(proj(sel1, 1), proj(sel1, 2),                                            ...
+      'MarkerEdgeColor',  'k',                                        ...
+      'MarkerFaceColor',  'k',                                        ...
+      'Marker',           'o',                                        ...
+      'MarkerSize',       .125*(2+numel(neighbours(i).neighblabel)^2), ...
+      'UserData',         i,                                          ...
+      'ButtonDownFcn',    @showLabelInTitle);
+    
+  elseif size(proj, 2) == 3
+    hs(i) = line(proj(sel1, 1), proj(sel1, 2), proj(sel1, 3),                                ...
+      'MarkerEdgeColor',  'k',                                        ...
+      'MarkerFaceColor',  'k',                                        ...
+      'Marker',           'o',                                        ...
+      'MarkerSize',       .125*(2+numel(neighbours(i).neighblabel)^2), ...
+      'UserData',         i,                        ...
+      'ButtonDownFcn',    @showLabelInTitle);
+  else
+    error('Channel coordinates are too high dimensional');
+  end
 end
 hold off;
 title('[Click on a sensor to see its label]');
 
-    function showLabelInTitle(gcbo, EventData, handles)
-        lastSensId  = get(gcf,  'UserData');
-        curSensId   = get(gcbo, 'UserData');
-        
-        title(['Selected channel: ' neighbours(curSensId).label]);
-        if cfg.verbose 
-            fprintf('Selected channel: %s\n', neighbours(curSensId).label); 
-        end
-        
-        set(hs(curSensId), 'MarkerFaceColor', 'g');
-        set(hs(lastSensId), 'MarkerFaceColor', 'k');
-        
-        set(gcf, 'UserData', curSensId');
+  function showLabelInTitle(gcbo, EventData, handles)
+    lastSensId  = get(gcf,  'UserData');
+    curSensId   = get(gcbo, 'UserData');
+    
+    title(['Selected channel: ' neighbours(curSensId).label]);
+    if cfg.verbose
+      str = sprintf('%s, ', cfg.neighbours(1).neighblabel{:});
+      if length(str)>2
+        % remove the last comma and space
+        str = str(1:end-2);
+      end
+      fprintf('Selected channel %s, which has %d neighbours: %s\n', neighbours(curSensId).label, length(neighbours(curSensId).neighblabel), str);
     end
+    
+    set(hs(curSensId), 'MarkerFaceColor', 'g');
+    set(hs(lastSensId), 'MarkerFaceColor', 'k');
+    
+    set(gcf, 'UserData', curSensId');
+  end
 end
