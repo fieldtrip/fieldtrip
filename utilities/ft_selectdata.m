@@ -495,13 +495,8 @@ if selectfoi,
   if numel(selfoi)==1, selfoi(2) = selfoi; end;
   if numel(selfoi)==2,
     %treat selfoi as lower limit and upper limit
-    if selfoi(1)==-inf && selfoi(2)==inf && all(isnan(data.freq))
-      %the data contains a fake frequency axis, select all bins
-      selfoi = 1:numel(data.freq);
-    else
-      %selfoi = nearest(data.freq, selfoi(1)):nearest(data.freq, selfoi(2));
-      selfoi = find(data.freq>=selfoi(1) & data.freq<=selfoi(2));
-    end
+    %selfoi = nearest(data.freq, selfoi(1)):nearest(data.freq, selfoi(2));
+    selfoi = find(data.freq>=selfoi(1) & data.freq<=selfoi(2));
   else
     %treat selfoi as a list of frequencies
     tmpfoi = zeros(1,numel(selfoi));
@@ -516,13 +511,8 @@ if selecttoi && ~israw,
   if length(seltoi)==1, seltoi(2) = seltoi; end;
   if numel(seltoi)==2,
     %treat seltoi as lower limit and upper limit
-    if seltoi(1)==-inf && seltoi(2)==inf && all(isnan(data.time))
-      %the data contains a fake time axis, select all bins
-      seltoi = 1:numel(data.time);
-    else
-      %seltoi = nearest(data.time, seltoi(1)):nearest(data.time, seltoi(2));
-      seltoi = find(data.time>=seltoi(1) & data.time<=seltoi(2));
-    end
+    %seltoi = nearest(data.time, seltoi(1)):nearest(data.time, seltoi(2));
+    seltoi = find(data.time>=seltoi(1) & data.time<=seltoi(2));
   else
     %treat seltoi as a list of timepoints
     tmptoi = zeros(1,numel(seltoi));
