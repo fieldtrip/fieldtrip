@@ -1,4 +1,4 @@
-% TEST: ft_freqstatistics ft_selectdata ft_datatype_freq
+% TEST: ft_freqstatistics ft_selectdata ft_datatype_freq ft_appendfreq test_bug798
 
 cd /home/common/matlab/fieldtrip/data/test/bug798
 load t2_subj1.mat
@@ -64,4 +64,6 @@ cfg = [];
 cfg.parameter = 'powspctrm';
 cfg.appenddim = 'rpt';
 data2 = ft_appendfreq(cfg, argin{:});
-
+assert(~isfield(data2, 'stat'));
+assert(~isfield(data2, 'prob'));
+assert(strcmp(data2.dimord, 'rpt_chan_freq'));
