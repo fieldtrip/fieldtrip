@@ -12,24 +12,24 @@ function [data] = ft_selectdata(varargin)
 % Supported input data:
 %   freq
 %   timelock
-%   source  
+%   source
 %   volume   (not yet)
 %   raw      only for subselection of channels and replicates. this is the
 %              same functionality as ft_preprocessing
 %
 % Supported keys:
-%   foilim        [begin end]  edges of frequency band to be retained 
+%   foilim        [begin end]  edges of frequency band to be retained
 %   toilim        [begin end]  edges of time window to be retained
 %   roi           [Nx1]        indices of voxels of region-of-interest
 %   rpt           [Nx1]        indices of replicates to be retained
-%   channel       {Nx1}        list of channels labels to be retained 
+%   channel       {Nx1}        list of channels labels to be retained
 %   avgoverchan   'no' ('yes') average across channels
 %   avgoverfreq   'no' ('yes') average across frequency bins
 %   avgovertime   'no' ('yes') average across time points
 %   avgoverroi    'no' ('yes') average across voxels in ROI
 %   avgoverrpt    'no' ('yes') average across replicates
 
-% Copyright (C) 2009-2010, Jan-Mathijs Schoffelen
+% Copyright (C) 2009-2011, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -63,8 +63,8 @@ dimord = cell(1,length(data));
 % keep track whether data contains subjects as repetitions
 hassubj = false(1, length(data));
 for k = 1:length(data)
-  data{k} = ft_checkdata(data{k}, 'datatype', {'freq' 'timelock' 'source', 'volume', 'freqmvar', 'raw', 'comp'});  
-  [dtype{k}, dimord{k}]  = ft_datatype(data{k});  
+  data{k} = ft_checkdata(data{k}, 'datatype', {'freq' 'timelock' 'source', 'volume', 'freqmvar', 'raw', 'comp'});
+  [dtype{k}, dimord{k}]  = ft_datatype(data{k});
   if isfield(data{k}, 'dimord') && ~isempty(strfind(data{k}.dimord, 'subj'))
     hassubj(k) = true;
     data{k}.dimord = strrep(data{k}.dimord, 'subj', 'rpt');
@@ -111,7 +111,7 @@ avgoverrpt   = keyval('avgoverrpt',   kvp); if isempty(avgoverrpt),  avgoverrpt 
 dojack       = keyval('jackknife',    kvp); if isempty(dojack),      dojack      = false; end
 
 fb       = keyval('feedback', kvp); if isempty(fb), fb = 'yes'; end
-if ischar(fb) && strcmp(fb, 'yes'), 
+if ischar(fb) && strcmp(fb, 'yes'),
   fb = 1;
 elseif ischar(fb) && strcmp(fb, 'no'),
   fb = 0;
@@ -146,7 +146,7 @@ if length(data)>1 && ~israw,
   % force inside field for source data to be indices
   if issource,
     if isfield(data{1}, 'inside')
-      isboolean = islogical(data{1}.inside); 
+      isboolean = islogical(data{1}.inside);
       if isboolean,
         for k = 1:numel(data)
           data{k} = fixinside(data{k}, 'index');
@@ -176,7 +176,7 @@ if length(data)>1 && ~israw,
     if isempty(strfind(dimtok{k},'rpt')) && isempty(strfind(dimtok{k},'{pos}')) && isempty(strfind(dimtok{k},'ori')),
       dimdat = data{1}.(dimtok{k});
     elseif ~isempty(strfind(dimtok{k},'{pos}')),
-      dimdat = data{1}.(dimtok{k}(2:end-1)); 
+      dimdat = data{1}.(dimtok{k}(2:end-1));
     elseif isempty(strfind(dimtok{k},'ori')),
       % dimtok is 'rpt' or 'rpttap'
       dimdat = size(data{1}.(param{1}),1);
@@ -210,7 +210,7 @@ if length(data)>1 && ~israw,
   elseif isempty(catdim)
     error('don''t know how to concatenate the data');
   end
-
+  
   % concatenate the data
   % FIXME this works for source data, does this also work for volume data?
   for k = 1:length(param)
@@ -244,14 +244,14 @@ if length(data)>1 && ~israw,
           if ~all(tmpsiz==0)
             for kkk = 1:numel(data)
               tmp2{kkk} = tmp{kkk}{kk};
-            end          
+            end
             data{1}.(param{k}){kk} = cat(catdim-1, tmp2{:});
           else
             %keep empty
           end
         end %for kk = 1:npos
       end %if catdim==0
-    end %if ~iscell(tmp{1}) 
+    end %if ~iscell(tmp{1})
     paramdimord{k} = [param{k},'dimord'];
   end %for k = 1:numel(param)
   
@@ -265,7 +265,7 @@ if length(data)>1 && ~israw,
     if issubfield(data{1}, 'dim'),
       dim       = [length(data) data{1}.dim];
     end
-
+    
     % adjust inside-field according to intersection
     if isfield(data{1}, 'inside')
       isboolean = islogical(data{1}.inside);
@@ -285,9 +285,9 @@ if length(data)>1 && ~israw,
           end
         end
       end
-
+      
       % determine which sources were inside or outside the brain in all subjects
-      nalloutside = sum(inside(:)==0);  
+      nalloutside = sum(inside(:)==0);
       nsomeinside = sum(inside(:)>0 & inside(:)~=numel(data));
       inside      = inside==numel(data);
       nallinside  = sum(inside(:));
@@ -305,7 +305,7 @@ if length(data)>1 && ~israw,
       end
       
     end
-   
+    
   else
     if issubfield(data{1}, 'dim'),
       dim       = data{1}.dim;
@@ -317,37 +317,37 @@ if length(data)>1 && ~israw,
     for k = 1:length(data)
       if k==1,
         tmp = getsubfield(data{k}, dimtok{catdim})';
-	if isfield(data{k}, 'inside'),
-	  tmpnvox   = numel(data{k}.inside)+numel(data{k}.outside);
-	  tmpinside = data{k}.inside(:);
-	end
+        if isfield(data{k}, 'inside'),
+          tmpnvox   = numel(data{k}.inside)+numel(data{k}.outside);
+          tmpinside = data{k}.inside(:);
+        end
       else
         if strcmp(dimtok{catdim},'pos')
-	  tmp       = [tmp;       getsubfield(data{k}, dimtok{catdim})];
-	  tmpinside = [tmpinside; data{k}.inside(:)+tmpnvox];
-	  tmpnvox   = tmpnvox+numel(data{k}.inside)+numel(data{k}.outside);
-	  sortflag  = 0;
+          tmp       = [tmp;       getsubfield(data{k}, dimtok{catdim})];
+          tmpinside = [tmpinside; data{k}.inside(:)+tmpnvox];
+          tmpnvox   = tmpnvox+numel(data{k}.inside)+numel(data{k}.outside);
+          sortflag  = 0;
         elseif strcmp(dimtok{catdim}, 'time') || strcmp(dimtok{catdim}, 'freq')
           tmp       = [tmp(:)' data{k}.(dimtok{catdim})];
           sortflag  = 1;
-        else 
+        else
           tmp       = [tmp(:); data{k}.(dimtok{catdim})];
           sortflag  = 0;
-	end
+        end
       end
     end
     data{1} = setsubfield(data{1}, dimtok{catdim}, tmp);
     if isfield(data{1}, 'inside'),
       data{1} = setsubfield(data{1}, 'inside',  tmpinside);
-      data{1} = setsubfield(data{1}, 'outside', setdiff(1:size(data{1}.pos,1)', tmpinside));  
+      data{1} = setsubfield(data{1}, 'outside', setdiff(1:size(data{1}.pos,1)', tmpinside));
     end
-
+    
     %FIXME think about this
     tryfields = {'dof'};
   else
     % no such field as {'label','time','freq','pos'} has to be concatenated
     sortflag  = 0;
-    tryfields = {'cumsumcnt','cumtapcnt','trialinfo'}; 
+    tryfields = {'cumsumcnt','cumtapcnt','trialinfo'};
   end
   
   % concatenate the relevant descriptive fields in the data-structure (continued)
@@ -365,7 +365,7 @@ if length(data)>1 && ~israw,
     end
   end
   % FIXME handle inside in previous loop
-
+  
   % FIXME this is ugly: solve it
   %if issource || isvolume,
   %  data{1}.dim(catdim) = max(size(tmp));
@@ -416,7 +416,7 @@ if length(data)>1 && ~israw,
     %FIXME this should be handled by ft_checkdata once the source structure is
     %unequivocally defined
   end
-
+  
 elseif length(data)>1 && israw
   error('concatenation of several raw data-structures is done by ''ft_appenddata''');
 else
@@ -438,8 +438,8 @@ if selectrpt && ~israw
   end
   
   if ~issource
-    rpttapflag = ~isempty(strfind(data.dimord, 'rpttap')); 
-    rptflag    = ~isempty(strfind(data.dimord, 'rpt')) && ~rpttapflag; 
+    rpttapflag = ~isempty(strfind(data.dimord, 'rpttap'));
+    rptflag    = ~isempty(strfind(data.dimord, 'rpt')) && ~rpttapflag;
   else
     fn    = fieldnames(data);
     selfn = find(~cellfun('isempty', strfind(fn, 'dimord')));
@@ -448,7 +448,7 @@ if selectrpt && ~israw
       rpttapflag(k,1) = ~isempty(strfind(data.(fn{k}), 'rpttap'));
       rptflag(k,1)    = ~isempty(strfind(data.(fn{k}), 'rpt')) && ~rpttapflag(k,1);
     end
-  end    
+  end
   
   if any(rpttapflag),
     %account for the tapers
@@ -489,14 +489,19 @@ if selectchan,
     selchan         = intersect(selchan1, selchan2);
   end
   
-  end
+end
 
 if selectfoi,
   if numel(selfoi)==1, selfoi(2) = selfoi; end;
   if numel(selfoi)==2,
     %treat selfoi as lower limit and upper limit
-    %selfoi = nearest(data.freq, selfoi(1)):nearest(data.freq, selfoi(2));
-    selfoi = find(data.freq>=selfoi(1) & data.freq<=selfoi(2));
+    if selfoi(1)==-inf && selfoi(2)==inf && all(isnan(data.freq))
+      %the data contains a fake frequency axis, select all bins
+      selfoi = 1:numel(data.freq);
+    else
+      %selfoi = nearest(data.freq, selfoi(1)):nearest(data.freq, selfoi(2));
+      selfoi = find(data.freq>=selfoi(1) & data.freq<=selfoi(2));
+    end
   else
     %treat selfoi as a list of frequencies
     tmpfoi = zeros(1,numel(selfoi));
@@ -504,13 +509,28 @@ if selectfoi,
       tmpfoi(k) = nearest(data.freq, selfoi(k));
     end
     selfoi = tmpfoi;
-  end
+  end % numel
 end
 
 if selecttoi && ~israw,
   if length(seltoi)==1, seltoi(2) = seltoi; end;
-  %seltoi = nearest(data.time, seltoi(1)):nearest(data.time, seltoi(2));
-  seltoi = find(data.time>=seltoi(1) & data.time<=seltoi(2));
+  if numel(seltoi)==2,
+    %treat seltoi as lower limit and upper limit
+    if seltoi(1)==-inf && seltoi(2)==inf && all(isnan(data.time))
+      %the data contains a fake time axis, select all bins
+      seltoi = 1:numel(data.time);
+    else
+      %seltoi = nearest(data.time, seltoi(1)):nearest(data.time, seltoi(2));
+      seltoi = find(data.time>=seltoi(1) & data.time<=seltoi(2));
+    end
+  else
+    %treat seltoi as a list of timepoints
+    tmptoi = zeros(1,numel(seltoi));
+    for k=1:length(seltoi)
+      tmptoi(k) = nearest(data.time, seltoi(k));
+    end
+    seltoi = tmptoi;
+  end % numel
 end
 
 if selectroi,
@@ -521,22 +541,22 @@ if israw,
   if selectrpt,
     data = selfromraw(data, 'rpt', selrpt);
   end
-
+  
   if selectchan,
-    data = selfromraw(data, 'chan', selchan); 
+    data = selfromraw(data, 'chan', selchan);
   end
- 
+  
   if selecttoi,
     data = selfromraw(data, 'latency', seltoi);
   end
-
+  
 elseif isfreq,
-%   if isfield(data, 'labelcmb') && isfield(data, 'label') && (selectchan || avgoverchan)
-%     error('selection of or averaging across channels in the presence of both label and labelcmb is not possible');
-%   end
+  %   if isfield(data, 'labelcmb') && isfield(data, 'label') && (selectchan || avgoverchan)
+  %     error('selection of or averaging across channels in the presence of both label and labelcmb is not possible');
+  %   end
   tmpdata = [];
   if isfield(data, 'labelcmb'),
-    % there is a crsspctrm or powcovspctrm field, 
+    % there is a crsspctrm or powcovspctrm field,
     % this will only be selectdimmed
     % if we apply a trick
     tmpdata = data;
@@ -560,7 +580,7 @@ elseif isfreq,
     if avgoverfreq, tmpdata = avgoverdim(tmpdata, 'freq', fb);  end
     if avgovertime, tmpdata = avgoverdim(tmpdata, 'time', fb);  end
     if avgoverchan, tmpdata = avgoverdim(tmpdata, 'chan', fb);  end
-    if dojack,      tmpdata = leaveoneout(tmpdata);         end    
+    if dojack,      tmpdata = leaveoneout(tmpdata);         end
   end
   
   if isfield(data, 'label'),
@@ -574,14 +594,14 @@ elseif isfreq,
     if avgoverfreq, data = avgoverdim(data, 'freq', fb);  end
     if avgovertime, data = avgoverdim(data, 'time', fb);  end
     if avgoverchan, data = avgoverdim(data, 'chan', fb); end
-    if dojack,      data = leaveoneout(data);            end    
+    if dojack,      data = leaveoneout(data);            end
   end
-
+  
   if isstruct(tmpdata)
     param = selparam(tmpdata);
     for k = 1:numel(param)
       data.(param{k}) = tmpdata.(param{k});
-    end    
+    end
   end
   
 elseif istlck,
@@ -595,8 +615,8 @@ elseif istlck,
   if avgoverchan, data = avgoverdim(data, 'chan', fb); end
   if avgoverfreq, data = avgoverdim(data, 'freq', fb); end
   if avgovertime, data = avgoverdim(data, 'time', fb); end
-  if dojack,      data = leaveoneout(data);         end    
-
+  if dojack,      data = leaveoneout(data);         end
+  
 elseif issource,
   %FIXME fill in everything
   if selectrpt,  data = seloverdim(data, 'rpt',  selrpt, fb); end
@@ -604,7 +624,7 @@ elseif issource,
   if selectpos,  data = seloverdim(data, 'pos',  selpos, fb); end
   if avgoverrpt,  data = avgoverdim(data, 'rpt'); end
   if avgoverfreq, data = avgoverdim(data, 'freq'); end
-
+  
 elseif isvolume,
   error('this is not yet implemented');
 elseif isfreqmvar,
@@ -618,9 +638,9 @@ elseif isfreqmvar,
   if avgoverchan, data = avgoverdim(data, 'chan', fb); end
   if avgoverfreq, data = avgoverdim(data, 'freq', fb); end
   if avgovertime, data = avgoverdim(data, 'time', fb); end
-  if dojack,      data = leaveoneout(data);            end    
+  if dojack,      data = leaveoneout(data);            end
 end
 
-if hassubj(1)    
-	data.dimord = strrep(data.dimord, 'rpt', 'subj');
+if hassubj(1)
+  data.dimord = strrep(data.dimord, 'rpt', 'subj');
 end
