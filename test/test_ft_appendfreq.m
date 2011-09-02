@@ -8,22 +8,32 @@ freq1.dimord = 'chan_freq_time';
 freq1.powspctrm = randn(2,10,5);
 
 cfg = [];
+cfg.parameter = 'powspctrm';
 
 freq2         = freq1;
 cfg.appenddim = 'rpt';
 freqrpt       = ft_appendfreq(cfg, freq1, freq2);
+cfg.appenddim = 'auto';
+freqrptauto   = ft_appendfreq(cfg, freq1, freq2);
 
 freq2         = freq1;
 freq2.label   = {'3';'4'};
 cfg.appenddim = 'chan';
 freqchan      = ft_appendfreq(cfg, freq1, freq2);
+cfg.appenddim = 'auto';
+freqchanauto   = ft_appendfreq(cfg, freq1, freq2);
 
 freq2         = freq1;
 freq2.freq    = 11:20;
 cfg.appenddim = 'freq';
 freqfreq      = ft_appendfreq(cfg, freq1, freq2);
+cfg.appenddim = 'auto';
+freqfreqauto   = ft_appendfreq(cfg, freq1, freq2);
 
 freq2         = freq1;
 freq2.time    = 6:10;
 cfg.appenddim = 'time';
 freqtime      = ft_appendfreq(cfg, freq1, freq2);
+cfg.appenddim = 'auto';
+freqtimeauto   = ft_appendfreq(cfg, freq1, freq2);
+
