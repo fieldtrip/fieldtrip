@@ -140,6 +140,7 @@ else
 end
 
 vol.type = 'concentric';
+vol=ft_convert_units(vol);
 
 % get the output cfg
 cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
