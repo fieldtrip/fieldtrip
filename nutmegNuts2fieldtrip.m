@@ -1,6 +1,6 @@
 function [raw,grid,mri]=nutmegNuts2fieldtrip(nuts)
 
-% NUTMEGBEAM2FIELDTRIP converts the sensor data structure in NUTMEG called
+% NUTMEGNUTS2FIELDTRIP converts the sensor data structure in NUTMEG called
 % 'nuts' to a valid FieldTrip 'raw' structure
 %
 % [raw,grid,mri]=nutmegNuts2fieldtrip(nuts)
@@ -39,7 +39,10 @@ elseif ~isstruct(nuts)
 end
 
 mri=ft_read_mri(nuts.coreg.mripath);
-mri.transform=0.1*nuts.coreg.meg2mri_tfm*mri.transform; % now .transform goes from MRI voxel to MEG cm, and matches .pos
+if isfield(mri,'transform')
+    mri.transform=0.1*nuts.coreg.meg2mri_tfm*mri.transform; % now .transform goes from MRI voxel to MEG cm, and matches .pos
+else
+end
 
 grid.pos=0.1*nuts.voxels; % NM in CTF mm, FT in cm
 grid.unit='cm';
