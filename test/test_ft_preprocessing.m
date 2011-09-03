@@ -16,8 +16,12 @@ for k = 1:numel(datainfo)
 
   fname = [datainfo(k).origdir,'raw/',datainfo(k).type,'preproc_',datainfo(k).datatype];
   load(fname);
-  datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
+  % these are per construction different if writeflag = 0;
+  datanew = rmfield(datanew, 'cfg');
   data    = rmfield(data,    'cfg');
+  % these can have subtle differences eg. in hdr.orig.FID
+  data.hdr = [];
+  datanew.hdr = [];
   assert(isequal(data, datanew));
 end
 
