@@ -138,9 +138,7 @@ ft_defaults
 % record start time and total processing time
 ftFuncTimer = tic();
 ftFuncClock = clock();
-
-% set a timer to determine how long this function takes
-stopwatch=tic;
+ftFuncMem   = memtic();
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
@@ -570,8 +568,10 @@ cfg.callinfo.matlab = version();
 
 % add information about the function call to the configuration
 cfg.callinfo.proctime = toc(ftFuncTimer);
+cfg.callinfo.procmem  = memtoc(ftFuncMem);
 cfg.callinfo.calltime = ftFuncClock;
 cfg.callinfo.user = getusername();
+fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
 
 % remember the configuration details of the input data
 if isfield(data, 'cfg'), cfg.previous = data.cfg; end
@@ -588,9 +588,8 @@ if isfield(data, 'trialinfo')
   comp.trialinfo = data.trialinfo;
 end
 
-fprintf('total time in componentanalysis %.1f seconds\n', toc(stopwatch));
-
 % the output data should be saved to a MATLAB file
 if ~isempty(cfg.outputfile)
   savevar(cfg.outputfile, 'comp', comp); % use the variable name "data" in the output file
 end
+

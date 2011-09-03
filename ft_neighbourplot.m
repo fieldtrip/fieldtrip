@@ -32,7 +32,6 @@ function ft_neighbourplot(cfg, data)
 %
 % See also FT_NEIGHBOURSELECTION
 
-
 % Copyright (C) 2011, Jörn M. Horschig, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip

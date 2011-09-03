@@ -75,6 +75,7 @@ if 1,
   % record start time and total processing time
   ftFuncTimer = tic();
   ftFuncClock = clock();
+  ftFuncMem   = memtic();
 
   cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
@@ -289,8 +290,10 @@ if 1,
   
   % add information about the function call to the configuration
   cfg.callinfo.proctime = toc(ftFuncTimer);
+  cfg.callinfo.procmem  = memtoc(ftFuncMem);
   cfg.callinfo.calltime = ftFuncClock;
   cfg.callinfo.user = getusername();
+  fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
 
   % remember the configuration details of the input data
   cfg.previous = [];
@@ -314,6 +317,7 @@ else
 % record start time and total processing time
 ftFuncTimer = tic();
 ftFuncClock = clock();
+ftFuncMem   = memtic();
 
   cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
   cfg = ft_checkconfig(cfg, 'deprecated', {'concatenate', 'randomization', 'permutation', 'c1', 'c2'});
@@ -383,8 +387,10 @@ ftFuncClock = clock();
   
   % add information about the function call to the configuration
   cfg.callinfo.proctime = toc(ftFuncTimer);
+  cfg.callinfo.procmem  = memtoc(ftFuncMem);
   cfg.callinfo.calltime = ftFuncClock;
   cfg.callinfo.user = getusername();
+  fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
 
   % remember the configuration details of the input data
   cfg.previous = [];

@@ -34,6 +34,7 @@ ft_defaults
 % record start time and total processing time
 ftFuncTimer = tic();
 ftFuncClock = clock();
+ftFuncMem   = memtic();
 
 data = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes');
 
@@ -208,6 +209,16 @@ for iUnit = 1:nspikesel
 end
 Sts.trialtime = spike.trialtime;
 
+% add information about the Matlab version used to the configuration
+cfg.callinfo.matlab = version();
+
+% add information about the function call to the configuration
+cfg.callinfo.proctime = toc(ftFuncTimer);
+cfg.callinfo.procmem  = memtoc(ftFuncMem);
+cfg.callinfo.calltime = ftFuncClock;
+cfg.callinfo.user     = getusername();
+fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
+
 % add version information to the configuration
 try
   % get the full name of the function
@@ -222,4 +233,3 @@ try, cfg.previous = data.cfg; end
 % remember the exact configuration details in the output
 Sts.cfg = cfg;
 
-  

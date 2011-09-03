@@ -36,7 +36,6 @@ function source = nutmegBeam2fieldtripSource(cfg,beam)
 
 cfg.ftsource='old';
 
-
 if ~isstruct(beam) && exist(beam,'file')
     beam=load(beam);
 elseif ~isstruct(beam)
