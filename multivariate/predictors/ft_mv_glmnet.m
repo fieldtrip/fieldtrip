@@ -100,6 +100,9 @@ classdef ft_mv_glmnet < ft_mv_predictor
       if strcmp(obj.family,'gaussian')
         nclasses = 1;
       else
+        if any(rem(Y(:),1))
+          error('expecting class labels for logistic regression');
+        end
         nclasses = max(2,max(Y(:)));
         if nclasses > 2
           obj.family = 'multinomial';

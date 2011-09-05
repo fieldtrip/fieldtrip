@@ -1,6 +1,8 @@
 function pvalue = ft_mv_binomial(design,post1,post2,varargin)
 % FT_MV_BINOMIAL performs a binomial test. It compares if post1 is significantly better than post2 given the real outcome (design). 
 %
+% pvalue = ft_mv_binomial(design,post1,post2,varargin)
+%
 % RETURNS
 % pvalue      estimated pvalue
 %
