@@ -89,12 +89,18 @@ end
 
 % create filter frequencies and check validity
 filtfreq = [];
+invalidind = [];
 for ifreqoi = 1:nfreqoi
   tmpfreq = [freqoi(ifreqoi)+width(ifreqoi) freqoi(ifreqoi)-width(ifreqoi)];
   if all((sign(tmpfreq) == 1))
     filtfreq(end+1,:) = tmpfreq;
+  else
+      invalidind = [invalidind ifreqoi];
+      warning(sprintf('frequency %.2f Hz cannot be estimated with resilution %.2f Hz', freqoi(ifreqoi), width(ifreqoi)));
   end
 end
+
+freqoi(invalidind) = [];
 nfreqoi = size(filtfreq,1);
 
 % preallocate the result and perform the transform
