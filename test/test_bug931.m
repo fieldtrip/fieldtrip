@@ -1,6 +1,6 @@
 % test_bug931
 
-% the following line ensures that this script is automatically triggered 
+% the following line ensures that this script is automatically triggered
 % when one of the relevant functions is changed on the SVN server
 %
 % TEST ft_appendfreq
@@ -19,9 +19,13 @@ freq2.powspctrm = randn(1,3,2);
 
 cfg = [];
 cfg.parameter = 'powspctrm';
-%ft_appendfreq(cfg, freq1, freq2);
 
-% if you increase the tolerance against non-equal axis then it should work
-cfg.tolerance = 1.01;
-ft_appendfreq(cfg, freq1, freq2);
+try
+  % since the time axis are different, it will try to append over the time dimension (and fail)
+  ft_appendfreq(cfg, freq1, freq2);
+catch
+  disp('it produced the expected error');
+end
+
+
 
