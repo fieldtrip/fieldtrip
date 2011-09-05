@@ -1,25 +1,19 @@
-function test_headmodel_localspheres
+function test_headmodel_singleshell
 
-% TEST: ft_headmodel_localspheres ft_prepare_headmodel
-% ft_prepare_localspheres test_headmodel_localspheres
+% TEST: ft_headmodel_singleshell ft_prepare_headmodel
+% ft_prepare_singleshell test_headmodel_singleshell
 
-% function to test ft_headmodel_localspheres. this function is called by
+% function to test ft_headmodel_singleshell. this function is called by
 % ft_prepare_headmodel
 %
 % the function should work either on an input (segmented) mri, or it should
 % have a description of the geometry in the input, or it should have a
 % hdmfile (string) that specifies which file to read
-% in addition, it needs a description of the sensor array
 
 success = true;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % get the data which is needed
-
-% read in the gradiometer information
-cd('/home/common/matlab/fieldtrip/data/');
-hdr  = ft_read_header('Subject01.ds');
-grad = hdr.grad;
 
 % read in the segmented mri
 cd('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer');
@@ -37,38 +31,37 @@ shape = ft_read_headshape(hdmfile);
 
 % with an MRI in the input
 cfg         = [];
-cfg.method  = 'localspheres';
-cfg.grad    = grad;
+cfg.method  = 'singleshell';
 vol1        = ft_prepare_headmodel(cfg, mri);
 % the following needs to be done to be able to make the comparison
 vol1 = rmfield(vol1, 'unit');
 
 cfg         = [];
-cfg.grad    = grad;
-vol1b       = ft_prepare_localspheres(cfg, mri);
+vol1b       = ft_prepare_singleshell(cfg, mri);
 success     = success && isequal(vol1, vol1b);
-
+if ~success
+  error('ft_prepare_singleshell and ft_prepare_headmodel gave different outputs');
+end
 
 % with a filename in the input
 cfg         = [];
-cfg.method  = 'localspheres';
-cfg.grad    = grad;
+cfg.method  = 'singleshell';
 cfg.hdmfile = hdmfile;
 vol2        = ft_prepare_headmodel(cfg);
 % the following needs to be done to be able to make the comparison
 vol2        = rmfield(vol2, 'unit');
 
 cfg         = [];
-cfg.grad    = grad;
 cfg.headshape = hdmfile;
-vol2b       = ft_prepare_localspheres(cfg);
+vol2b       = ft_prepare_singleshell(cfg);
 success     = success && isequal(vol2, vol2b);
-
+if ~success
+  error('ft_prepare_singleshell and ft_prepare_headmodel gave different outputs');
+end
 
 % with a point cloud in the input
 cfg         = [];
-cfg.method  = 'localspheres';
-cfg.grad    = grad;
+cfg.method  = 'singleshell';
 cfg.geom    = shape;
 vol3        = ft_prepare_headmodel(cfg);
 % the following needs to be done to be able to make the comparison
@@ -76,11 +69,8 @@ vol3        = rmfield(vol3, 'unit');
 
 cfg         = [];
 cfg.headshape = shape;
-cfg.grad    = grad;
-vol3b       = ft_prepare_localspheres(cfg);
+vol3b       = ft_prepare_singleshell(cfg);
 success     = success && isequal(vol3, vol3b);
-
-
 if ~success
-  error('there is a problem in test_headmodel_localspheres');
+  error('ft_prepare_singleshell and ft_prepare_headmodel gave different outputs');
 end
