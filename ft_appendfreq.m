@@ -72,14 +72,11 @@ for i=1:Ndata
 end
 
 % do a basic check to see whether the dimords match
-dimordmatch = true;
 dimord      = cell(1,Ndata);
 for i=1:Ndata
   dimord{i} = varargin{i}.dimord;
-  if i>1
-    dimordmatch = strcmp(dimord{1}, dimord{i}) && dimordmatch;
-  end
 end
+dimordmatch = all(strcmp(dimord{1}, dimord));
 
 if ~dimordmatch
   error('the dimords of the input data structures are not equal');
@@ -93,16 +90,50 @@ dimtok = tokenize(dimord{1}, '_');
 switch cfg.appenddim
   case 'auto'
     % determine the appenddim and recursively call ft_appendfreq
-    
-    % only allow to append across observations if these are present in the
-    % data
     tmpcfg = cfg;
     
-    if ~isempty(match_str(dimtok, {'rpt' 'rpttap' 'subj'}))
+    % only allow to append across observations if these are present in the data
+    if any(strcmp(dimtok, 'rpt'))
       tmpcfg.appenddim = 'rpt';
+      
+    elseif any(strcmp(dimtok, 'rpttap'))
+      tmpcfg.appenddim = 'rpttap';
+      
+    elseif any(strcmp(dimtok, 'subj'))
+      tmpcfg.appenddim = 'subj';
+      
+    else
+      % we need to check whether the other dimensions are the same.
+      % if not, consider some tolerance.
+      boolval1 = checkchan(varargin{:}, 'identical');
+      boolval2 = checkfreq(varargin{:}, 'identical');
+      
+      if isfield(varargin{1}, 'time'),
+        boolval3 = checktime(varargin{:}, 'identical');
+        if boolval1 && boolval2 && boolval3
+          % each of the input datasets contains a single repetition (perhaps an average), these can be concatenated
+          tmpcfg.appenddim = 'rpt';
+        elseif ~boolval1 && boolval2 && boolval3
+          tmpcfg.appenddim = 'chan';
+        elseif boolval1 && ~boolval2 && boolval3
+          tmpcfg.appenddim = 'freq';
+        elseif boolval1 && boolval2 && ~boolval3
+          tmpcfg.appenddim = 'time';
+        end
+      else
+        if boolval1 && boolval2
+          % each of the input datasets contains a single repetition (perhaps an average), these can be concatenated
+          tmpcfg.appenddim = 'rpt';
+        elseif ~boolval1 && boolval2
+          tmpcfg.appenddim = 'chan';
+        elseif boolval1 && ~boolval2
+          tmpcfg.appenddim = 'freq';
+        end
+      end
+      
       freq = ft_appendfreq(tmpcfg, varargin{:});
       return;
-    end
+    end % determining the dimension for appending
     
     % otherwise we need to check whether the other dimensions are the same. if
     % not, consider some tolerance.
@@ -118,7 +149,7 @@ switch cfg.appenddim
         tmpcfg.appenddim = 'freq';
       elseif boolval1 && boolval2 && ~boolval3
         tmpcfg.appenddim = 'time';
-      end    
+      end
     else
       if boolval1 && boolval2
         tmpcfg.appenddim = 'rpt';
@@ -150,7 +181,7 @@ switch cfg.appenddim
     boolval2 = checkfreq(varargin{:}, 'identical', tol);
     if isfield(varargin{1}, 'time'),
       boolval3 = checktime(varargin{:}, 'identical', tol);
-    else 
+    else
       boolval3 = true;
     end
     
@@ -215,7 +246,7 @@ switch cfg.appenddim
   case 'time'
     catdim = strmatch('time', dimtok);
     
-    % check whether all time points are unique and throw an error if not 
+    % check whether all time points are unique and throw an error if not
     [boolval, list] = checktime(varargin{:}, 'unique', tol);
     if ~boolval
       error('the input data structures have non-unique time bins, concatenation across time is not possible');
@@ -258,7 +289,7 @@ cfg.version.id = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.callinfo.matlab = version();
-  
+
 % add information about the function call to the configuration
 cfg.callinfo.proctime = toc(ftFuncTimer);
 cfg.callinfo.procmem  = memtoc(ftFuncMem);
@@ -313,7 +344,7 @@ elseif strcmp(required, 'identical')
     faxis   = faxis(:,1);
   end
 end
-  
+
 %---------------------------------------------
 % subfunction to check uniqueness of time bins
 function [boolval, taxis] = checktime(varargin)

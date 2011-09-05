@@ -18,6 +18,7 @@ function [data] = ft_selectdata(varargin)
 %              same functionality as ft_preprocessing
 %
 % Supported keys:
+%   param         string
 %   foilim        [begin end]  edges of frequency band to be retained
 %   toilim        [begin end]  edges of time window to be retained
 %   roi           [Nx1]        indices of voxels of region-of-interest
@@ -78,14 +79,13 @@ for k = 1:length(data)
   end
 end
 
-
 if any(~strmatch(dtype{1},dtype))
-  error('different types of input data is not supported');
+  error('the data type is not consistent for all inputs');
 end
 
 % check consistency of input data
 if any(~strmatch(dimord{1},dimord))
-  error('a different dimord in the input data is not supported');
+  error('the dimord is not consistent for all inputs');
 end
 
 israw    = strcmp(dtype{1},'raw') || strcmp(dtype{1},'comp');
@@ -170,37 +170,47 @@ if length(data)>1 && ~israw,
   dimtok                           = tokenize(dimord{1}, '_');
   dimtok(strmatch('chan', dimtok)) = {'label'}; % data.chan does not exist
   
-  dimmat      = zeros(length(dimtok), length(data));
-  dimmat(:,1) = 1;
-  for k = 1:length(dimtok)
-    if isempty(strfind(dimtok{k},'rpt')) && isempty(strfind(dimtok{k},'{pos}')) && isempty(strfind(dimtok{k},'ori')),
-      dimdat = data{1}.(dimtok{k});
-    elseif ~isempty(strfind(dimtok{k},'{pos}')),
-      dimdat = data{1}.(dimtok{k}(2:end-1));
-    elseif isempty(strfind(dimtok{k},'ori')),
-      % dimtok is 'rpt' or 'rpttap'
-      dimdat = size(data{1}.(param{1}),1);
-    end
-    for m = 2:length(data)
-      if isempty(strfind(dimtok{k},'rpt')) && isempty(strfind(dimtok{k}, '{pos}')) && isempty(strfind(dimtok{k},'ori')),
-        dimdat2 = data{m}.(dimtok{k});
-      elseif ~isempty(strfind(dimtok{k},'{pos}')),
-        dimdat2 = data{m}.(dimtok{k}(2:end-1));
-      elseif isempty(strfind(dimtok{k},'ori')),
-        % dimtok is 'rpt' or 'rpttap'
-        dimdat2 = size(data{m}.(param{1}),1);
-      end
-      try, dimmat(k,m) = all(dimdat(:)==dimdat2(:));            catch end;
-      try, dimmat(k,m) = all(cellfun(@isequal,dimdat,dimdat2)); catch end;
-    end
+  %   dimmat      = zeros(length(dimtok), length(data));
+  %   dimmat(:,1) = 1;
+  %   for k = 1:length(dimtok)
+  %     if isempty(strfind(dimtok{k},'rpt')) && isempty(strfind(dimtok{k},'{pos}')) && isempty(strfind(dimtok{k},'ori')),
+  %       dimdat = data{1}.(dimtok{k});
+  %     elseif ~isempty(strfind(dimtok{k},'{pos}')),
+  %       dimdat = data{1}.(dimtok{k}(2:end-1));
+  %     elseif isempty(strfind(dimtok{k},'ori')),
+  %       % dimtok is 'rpt' or 'rpttap'
+  %       dimdat = size(data{1}.(param{1}),1);
+  %     end
+  %     for m = 2:length(data)
+  %       if isempty(strfind(dimtok{k},'rpt')) && isempty(strfind(dimtok{k}, '{pos}')) && isempty(strfind(dimtok{k},'ori')),
+  %         dimdat2 = data{m}.(dimtok{k});
+  %       elseif ~isempty(strfind(dimtok{k},'{pos}')),
+  %         dimdat2 = data{m}.(dimtok{k}(2:end-1));
+  %       elseif isempty(strfind(dimtok{k},'ori')),
+  %         % dimtok is 'rpt' or 'rpttap'
+  %         dimdat2 = size(data{m}.(param{1}),1);
+  %       end
+  %       try, dimmat(k,m) = all(dimdat(:)==dimdat2(:));            catch end;
+  %       try, dimmat(k,m) = all(cellfun(@isequal,dimdat,dimdat2)); catch end;
+  %     end
+  %   end
+  %  catdim = find(sum(dimmat,2)<length(data));
+  
+  if any(strcmp(dimtok, 'rpt'))
+    catdim = find(strcmp(dimtok, 'rpt'));
+  elseif any(strcmp(dimtok, 'rpttap'))
+    catdim = find(strcmp(dimtok, 'rpttap'));
+  elseif any(strcmp(dimtok, 'subj'))
+    catdim = find(strcmp(dimtok, 'subj'));
+  else
+    catdim = [];
   end
-  catdim = find(sum(dimmat,2)<length(data));
   
   if length(catdim)>1,
     error('ambiguous dimensions for concatenation');
-  elseif isempty(catdim) && isempty(strmatch('rpt',dimtok)) && isempty(strmatch('rpttap',dimtok)),
-    %treat as individual observations: prepend a first dimension 'rpt'
-    %(so this part should be able to cover the functionality of ...grandaverage)
+  elseif isempty(catdim) && isempty(intersect(dimtok, {'rpt', 'rpttap', 'subj'}))
+    % treat as individual observations: prepend a first dimension 'rpt'
+    % (so this part should be able to cover the functionality of ...grandaverage)
     catdim = 0;
   elseif isempty(catdim) && (~isempty(strmatch('rpt',dimtok)) || ~isempty(strmatch('rpttap',dimtok)))
     %append observations
@@ -494,11 +504,11 @@ end
 if selectfoi,
   if numel(selfoi)==1, selfoi(2) = selfoi; end;
   if numel(selfoi)==2,
-    %treat selfoi as lower limit and upper limit
-    %selfoi = nearest(data.freq, selfoi(1)):nearest(data.freq, selfoi(2));
-    selfoi = find(data.freq>=selfoi(1) & data.freq<=selfoi(2));
+    % treat selfoi as lower limit and upper limit
+    selfoi = nearest(data.freq, selfoi(1)):nearest(data.freq, selfoi(2));
+    % selfoi = find(data.freq>=selfoi(1) & data.freq<=selfoi(2));
   else
-    %treat selfoi as a list of frequencies
+    % treat selfoi as a list of frequencies
     tmpfoi = zeros(1,numel(selfoi));
     for k=1:length(selfoi)
       tmpfoi(k) = nearest(data.freq, selfoi(k));
@@ -510,11 +520,11 @@ end
 if selecttoi && ~israw,
   if length(seltoi)==1, seltoi(2) = seltoi; end;
   if numel(seltoi)==2,
-    %treat seltoi as lower limit and upper limit
-    %seltoi = nearest(data.time, seltoi(1)):nearest(data.time, seltoi(2));
-    seltoi = find(data.time>=seltoi(1) & data.time<=seltoi(2));
+    % treat seltoi as lower limit and upper limit
+    seltoi = nearest(data.time, seltoi(1)):nearest(data.time, seltoi(2));
+    % seltoi = find(data.time>=seltoi(1) & data.time<=seltoi(2));
   else
-    %treat seltoi as a list of timepoints
+    % treat seltoi as a list of timepoints
     tmptoi = zeros(1,numel(seltoi));
     for k=1:length(seltoi)
       tmptoi(k) = nearest(data.time, seltoi(k));
