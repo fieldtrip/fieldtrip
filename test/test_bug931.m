@@ -1,0 +1,23 @@
+% test_bug931
+
+% the following line ensures that this script is automatically triggered 
+% when one of the relevant functions is changed on the SVN server
+%
+% TEST ft_appendfreq
+
+freq1.label = {'1'};
+freq1.time = [1 2];
+freq1.freq = [1 2 3];
+freq1.dimord = 'chan_freq_time';
+freq1.powspctrm = randn(1,3,2);
+
+freq2.label = {'1'};
+freq2.time = [1 2];
+freq2.freq = [1 2 3] + 1; % shifted by one
+freq2.dimord = 'chan_freq_time';
+freq2.powspctrm = randn(1,3,2);
+
+cfg = [];
+cfg.parameter = 'powspctrm';
+ft_appendfreq(cfg, freq1, freq2);
+
