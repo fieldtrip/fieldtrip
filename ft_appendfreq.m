@@ -44,7 +44,7 @@ cfg = ft_checkconfig(cfg, 'required', 'parameter');
 cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
 cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
 cfg.appenddim  = ft_getopt(cfg, 'appenddim',  'auto');
-
+cfg.tolerance  = ft_getopt(cfg, 'tolerance',  1e-5);
 
 hasdata = nargin>1;
 if ~isempty(cfg.inputfile) % the input data should be read from file
@@ -88,6 +88,7 @@ end
 % create the output structure from scratch
 freq   = [];
 
+tol    = cfg.tolerance;
 dimtok = tokenize(dimord{1}, '_');
 switch cfg.appenddim
   case 'auto'
@@ -106,9 +107,9 @@ switch cfg.appenddim
     % otherwise we need to check whether the other dimensions are the same. if
     % not, consider some tolerance.
     boolval1 = checkchan(varargin{:}, 'identical');
-    boolval2 = checkfreq(varargin{:}, 'identical');
+    boolval2 = checkfreq(varargin{:}, 'identical', tol);
     if isfield(varargin{1}, 'time'),
-      boolval3 = checktime(varargin{:}, 'identical');
+      boolval3 = checktime(varargin{:}, 'identical', tol);
       if boolval1 && boolval2 && boolval3
         tmpcfg.appenddim = 'rpt';
       elseif ~boolval1 && boolval2 && boolval3
@@ -146,9 +147,9 @@ switch cfg.appenddim
     % here we need to check whether the other dimensions are the same. if
     % not, consider some tolerance.
     boolval1 = checkchan(varargin{:}, 'identical');
-    boolval2 = checkfreq(varargin{:}, 'identical');
+    boolval2 = checkfreq(varargin{:}, 'identical', tol);
     if isfield(varargin{1}, 'time'),
-      boolval3 = checktime(varargin{:}, 'identical');
+      boolval3 = checktime(varargin{:}, 'identical', tol);
     else 
       boolval3 = true;
     end
@@ -169,7 +170,7 @@ switch cfg.appenddim
     % fill in the rest of the descriptive fields
     freq.label = varargin{1}.label;
     freq.freq  = varargin{1}.freq;
-    if isfield(freq, 'time'), freq.time = varargin{1}.time; end
+    if isfield(varargin{1}, 'time'), freq.time = varargin{1}.time; end
     
   case 'chan'
     catdim = strmatch('chan', dimtok);
@@ -191,37 +192,37 @@ switch cfg.appenddim
     
     % fill in the rest of the descriptive fields
     freq.freq  = varargin{1}.freq;
-    if isfield(freq, 'time'), freq.time = varargin{1}.time; end
+    if isfield(varargin{1}, 'time'), freq.time = varargin{1}.time; end
     freq.dimord = varargin{1}.dimord;
     
   case 'freq'
     catdim = strmatch('freq', dimtok);
     
     % check whether all frequencies are unique and throw an error if not
-    [boolval, list] = checkfreq(varargin{:}, 'unique');
+    [boolval, list] = checkfreq(varargin{:}, 'unique', tol);
     if ~boolval
       error('the input data structures have non-unique frequency bins, concatenation across frequency is not possible');
     end
     
     % update the frequency description
-    varargin{1}.freq = list(:)';
+    freq.freq = list(:)';
     
     % fill in the rest of the descriptive fields
     freq.label  = varargin{1}.label;
     freq.dimord = varargin{1}.dimord;
-    if isfield(freq, 'time'), freq.time = varargin{1}.time; end
+    if isfield(varargin{1}, 'time'), freq.time = varargin{1}.time; end
     
   case 'time'
     catdim = strmatch('time', dimtok);
     
     % check whether all time points are unique and throw an error if not 
-    [boolval, list] = checktime(varargin{:}, 'unique');
+    [boolval, list] = checktime(varargin{:}, 'unique', tol);
     if ~boolval
       error('the input data structures have non-unique time bins, concatenation across time is not possible');
     end
     
     % update the time description
-    varargin{1}.time = list(:)';
+    freq.time = list(:)';
     
     % fill in the rest of the descriptive fields
     freq.label  = varargin{1}.label;
@@ -286,8 +287,9 @@ end
 function [boolval, faxis] = checkfreq(varargin)
 
 % last input is always the required string
-required = varargin{end};
-varargin = varargin(1:end-1);
+tol      = varargin{end};
+required = varargin{end-1};
+varargin = varargin(1:end-2);
 
 Ndata = numel(varargin);
 Nfreq = zeros(1,Ndata);
@@ -307,7 +309,7 @@ elseif strcmp(required, 'identical')
   if boolval
     % then check whether the axes are equal
     faxis   = reshape(faxis, Nfreq(1), []);
-    boolval = all(all(faxis - repmat(faxis(:,1), 1, Ndata)==0)==1);
+    boolval = all(all(abs(faxis - repmat(faxis(:,1), 1, Ndata))<tol)==1);
     faxis   = faxis(:,1);
   end
 end
@@ -317,8 +319,9 @@ end
 function [boolval, taxis] = checktime(varargin)
 
 % last input is always the required string
-required = varargin{end};
-varargin = varargin(1:end-1);
+tol      = varargin{end};
+required = varargin{end-1};
+varargin = varargin(1:end-2);
 
 Ndata = numel(varargin);
 Ntime = zeros(1,Ndata);
@@ -338,7 +341,7 @@ elseif strcmp(required, 'identical')
   if boolval
     % then check whether the axes are equal
     taxis   = reshape(taxis, Ntime(1), []);
-    boolval = all(all(taxis - repmat(taxis(:,1), 1, Ndata)==0)==1);
+    boolval = all(all(abs(taxis - repmat(taxis(:,1), 1, Ndata))<tol)==1);
     taxis   = taxis(:,1);
   end
 end

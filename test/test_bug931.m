@@ -19,5 +19,9 @@ freq2.powspctrm = randn(1,3,2);
 
 cfg = [];
 cfg.parameter = 'powspctrm';
+%ft_appendfreq(cfg, freq1, freq2);
+
+% if you increase the tolerance against non-equal axis then it should work
+cfg.tolerance = 1.01;
 ft_appendfreq(cfg, freq1, freq2);
 
