@@ -41,7 +41,6 @@ try
   outputfile = fullfile(p, sprintf('%s_output.mat_', jobid)); % note the _ at the end
 
   tmp = load(inputfile);
-  delete(inputfile);
 
   argin = tmp.argin; % this includes the function name and the input arguments
   optin = tmp.optin; % this includes the path setting, the pwd, the global variables, etc.
@@ -49,6 +48,8 @@ try
   [argout, optout] = fexec(argin, optin);
   save(outputfile, 'argout', 'optout');
   rename(outputfile, outputfile(1:(end-1))); % remove the _ at the end
+
+  % the scripts, input and output files will be deleted by qsubget
 
 catch err
   % this is to avoid MATLAB from hanging in case fexec fails, since

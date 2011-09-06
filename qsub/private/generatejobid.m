@@ -1,56 +1,36 @@
-function id = generatejobid(qnum)
+function id = generatejobid(batch)
+
 % GENERATEJOBID generates a unique identifier for a job to be submitted to
-% a batch queue. It consists of:
+% the batch queueing system. It consists of:
 %
-%   user_host_pN_qM_jobL
+%   user_host_pN_bM_jL
 %
-% where N,M,L are the calling matlab's process ID, queue number (to be provided
-% as an argument), and sequential job number (per queue), respectively.
+% where N,M,L are the calling matlab's process ID, batch number (to be provided
+% as an argument) and the sequential job number (per batch), respectively.
 %
 % generatejobid() without any arguments generates just the first part of a
 % possible job ID, so user_host_pN.
 
-user = getusername();
-if strcmp(user,'<unknown>')
-  user = 'unknownuser'; % don't want <> in filenames
-end
-
-host = gethostname();
-
 persistent jobNum; % jobnum will be numQueues X 1 vector
 
-if (nargin>0 && qnum > 0)
+user = getusername();
+host = gethostname();
+
+if (nargin>0 && batch > 0)
   
   if isempty(jobNum)
-    jobNum = zeros(qnum,1);
-    jobNum(qnum) = 1;
-  elseif numel(jobNum)<qnum
-    jobNum(qnum) = 1;
+    jobNum = zeros(batch,1);
+    jobNum(batch) = 1;
+  elseif numel(jobNum)<batch
+    jobNum(batch) = 1;
   else
-    jobNum(qnum) = jobNum(qnum)+1;
+    jobNum(batch) = jobNum(batch)+1;
   end
 
-  % matlab does not like an @ in filenames
-  id = [user '_' host '_p' num2str(getpid()) '_q' num2str(qnum) '_job' num2str(jobNum(qnum))];
+  id = sprintf('%s_%s_p%d_b%d_j%03d', user, host, getpid(), batch, jobNum(batch));
   
 else
-  % qnum<0 (or qnum=NaN) is used to generate not a real job ID, but just
+  % batch<0 (or batch=NaN) is used to generate not a real job ID, but just
   % the first part of it (see qsublisten)
   id = [user '_' host '_p' num2str(getpid())];
-end
-
-function host = gethostname()
-  if (ispc())
-    host = getenv('ComputerName');
-  else
-    host = getenv('HOSTNAME');
-  end
-  
-  host = strtok(host, '.'); % dots in filenames are not allowed by matlab
-  
-  if (isempty(host))
-    host = 'unknownhost';
-  end
-end
-
 end

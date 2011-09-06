@@ -41,6 +41,9 @@ function varargout = qsubcellfun(fname, varargin)
 % along with this program.  If not, see <http://www.gnu.org/licenses/
 % -----------------------------------------------------------------------
 
+% this persistent variable is used to assign unique names to the jobs in each subsequent batch
+persistent batch;
+
 stopwatch = tic;
 
 % locate the begin of the optional key-value arguments
@@ -83,13 +86,12 @@ collected   = false(1, numjob);
 submittime  = inf(1, numjob);
 collecttime = inf(1, numjob);
 
-% keep a record of how many calls to this function have been made (useful
-% for creating meaningful job IDs)
-persistent qnum;
-if isempty(qnum)
-  qnum = 1;
+% keep a record of how many calls to this function have been made (useful for creating meaningful job IDs)
+% subsequent batches of jobs will have different names
+if isempty(batch)
+  batch = 1;
 else
-  qnum = qnum+1;
+  batch = batch+1;
 end
 
 % it can be difficult to determine the number of output arguments
@@ -129,7 +131,7 @@ for submit=1:numjob
   end
 
   % submit the job
-  [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'qnum', qnum);
+  [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch);
 
   % fprintf('submitted job %d\n', submit);
   jobid{submit}      = curjobid;

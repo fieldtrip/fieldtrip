@@ -45,7 +45,7 @@ optbeg = optbeg | strcmp('cpureq',  strargin);
 optbeg = optbeg | strcmp('timreq',  strargin);
 optbeg = optbeg | strcmp('hostid',  strargin);
 optbeg = optbeg | strcmp('diary',   strargin);
-optbeg = optbeg | strcmp('qnum',    strargin);
+optbeg = optbeg | strcmp('batch',    strargin);
 optbeg = find(optbeg);
 optarg = varargin(optbeg:end);
 
@@ -56,7 +56,7 @@ cpureq  = ft_getopt(optarg, 'cpureq',  []);
 timreq  = ft_getopt(optarg, 'timreq',  []);
 hostid  = ft_getopt(optarg, 'hostid',  []);
 diary   = ft_getopt(optarg, 'diary',   []);
-qnum    = ft_getopt(optarg, 'qnum',    1);
+batch   = ft_getopt(optarg, 'batch',    1);
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -75,8 +75,8 @@ if ~isempty(previous_argin) && ~isequal(varargin{1}, previous_argin{1})
   end
 end
 
-% a unique identifier for the job (string)
-jobid = generatejobid(qnum);
+% create a unique identifier for the job (string)
+jobid = generatejobid(batch);
 
 % get the current working directory to store the temp files in
 curPwd = getcustompwd();
@@ -87,7 +87,7 @@ randomseed = rand(1)*double(intmax);
 % pass some options that influence the remote execution
 options = {'pwd', curPwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq, 'randomseed', randomseed};
 
-inputfile    = fullfile(curPwd, sprintf('%s_input.mat', jobid));
+inputfile    = fullfile(curPwd, sprintf('%s_input.mat_', jobid)); % note the _ at the end
 shellscript  = fullfile(curPwd, sprintf('%s.sh', jobid));
 matlabscript = fullfile(curPwd, sprintf('%s.m', jobid));
 
@@ -95,6 +95,7 @@ matlabscript = fullfile(curPwd, sprintf('%s.m', jobid));
 argin = varargin;
 optin = options;
 save(inputfile, 'argin', 'optin');
+rename(inputfile, inputfile(1:(end-1))); % remove the _ at the end
 
 if matlabversion(7.1)
   matlabcmd = 'matlab71';
@@ -169,9 +170,9 @@ else
   cmdline = ['qsub -e /dev/null -o /dev/null -N ' jobid ' -l ' requirements(1:end-1) ' ' shellscript];  % strip the last ':' from the requirements
 end
 
-fprintf('submitting job %s...', jobid); 
+fprintf('submitting script %s...', jobid); 
 [~,result] = system(cmdline);
-fprintf(' corresponding qsub ID %s\n', strtrim(result));
+fprintf(' qstat job id %s\n', strtrim(result));
 
 puttime = toc(stopwatch);
 

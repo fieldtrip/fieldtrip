@@ -64,6 +64,7 @@ while ~success && (timeout == 0 || toc(stopwatch)<timeout)
   curPwd = getcustompwd();
   shellscript  = fullfile(curPwd, sprintf('%s.sh', jobid));
   matlabscript = fullfile(curPwd, sprintf('%s.m', jobid));
+  inputfile    = fullfile(curPwd, sprintf('%s_input.mat', jobid));
   outputfile   = fullfile(curPwd, sprintf('%s_output.mat', jobid));
 
   % the clear of the exist function seems to make it more responsive
@@ -77,6 +78,7 @@ while ~success && (timeout == 0 || toc(stopwatch)<timeout)
     % clean up the temporary files
     delete(shellscript);
     delete(matlabscript);
+    delete(inputfile);
     delete(outputfile);
   elseif timeout == 0
     break; % only check once, no waiting here
