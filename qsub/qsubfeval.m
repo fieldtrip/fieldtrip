@@ -87,7 +87,7 @@ randomseed = rand(1)*double(intmax);
 % pass some options that influence the remote execution
 options = {'pwd', curPwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq, 'randomseed', randomseed};
 
-inputfile    = fullfile(curPwd, sprintf('%s_input.mat_', jobid)); % note the _ at the end
+inputfile    = fullfile(curPwd, sprintf('%s_input.mat', jobid));
 shellscript  = fullfile(curPwd, sprintf('%s.sh', jobid));
 matlabscript = fullfile(curPwd, sprintf('%s.m', jobid));
 
@@ -95,7 +95,6 @@ matlabscript = fullfile(curPwd, sprintf('%s.m', jobid));
 argin = varargin;
 optin = options;
 save(inputfile, 'argin', 'optin');
-rename(inputfile, inputfile(1:(end-1))); % remove the _ at the end
 
 if matlabversion(7.1)
   matlabcmd = 'matlab71';
