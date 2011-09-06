@@ -28,7 +28,7 @@ function [spectrum,freqoi,timeoi] = ft_specest_hilbert(dat, time, varargin)
 % $Log: 3162 $
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'freqoi','timeoi','width','filttype','filtorder','filtdir','pad','polyremoval'});
+keyvalcheck(varargin, 'optional', {'freqoi','timeoi','width','filttype','filtorder','filtdir','pad','polyremoval','verbose'});
 freqoi    = keyval('freqoi',    varargin);
 timeoi    = keyval('timeoi',    varargin);   if isempty(timeoi),   timeoi  = 'all';      end
 width     = keyval('width',     varargin);   if isempty(width),    width   = 1;          end
@@ -37,7 +37,7 @@ filtorder = keyval('filtorder', varargin);   if isempty(filtorder), error('you n
 filtdir   = keyval('filtdir',   varargin);   if isempty(filtdir),   error('you need to specify filter direction'),    end
 pad       = keyval('pad',       varargin);
 polyorder = keyval('polyremoval', varargin); if isempty(polyorder), polyorder = 1; end
-
+verbose   = keyval('verbose',     varargin); if isempty(verbose),  verbose = 1;                                       end
 % Set n's
 [nchan,ndatsample] = size(dat);
 
@@ -96,7 +96,7 @@ for ifreqoi = 1:nfreqoi
     filtfreq(end+1,:) = tmpfreq;
   else
       invalidind = [invalidind ifreqoi];
-      warning(sprintf('frequency %.2f Hz cannot be estimated with resilution %.2f Hz', freqoi(ifreqoi), width(ifreqoi)));
+      warning_once(sprintf('frequency %.2f Hz cannot be estimated with resolution %.2f Hz', freqoi(ifreqoi), width(ifreqoi)));
   end
 end
 
@@ -106,8 +106,9 @@ nfreqoi = size(filtfreq,1);
 % preallocate the result and perform the transform
 spectrum = complex(nan(nchan, nfreqoi, ntimeboi), nan(nchan, nfreqoi, ntimeboi));
 for ifreqoi = 1:nfreqoi
-  fprintf('processing frequency %d (%.2f Hz)\n', ifreqoi,freqoi(ifreqoi));
-  
+  if verbose
+    fprintf('processing frequency %d (%.2f Hz)\n', ifreqoi,freqoi(ifreqoi));
+  end
   % filter
   flt = ft_preproc_bandpassfilter(dat, fsample, filtfreq(ifreqoi,:), filtorder, filttype, filtdir);
   
