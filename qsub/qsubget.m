@@ -66,20 +66,30 @@ while ~success && (timeout == 0 || toc(stopwatch)<timeout)
   matlabscript = fullfile(curPwd, sprintf('%s.m', jobid));
   inputfile    = fullfile(curPwd, sprintf('%s_input.mat', jobid));
   outputfile   = fullfile(curPwd, sprintf('%s_output.mat', jobid));
+  logout       = fullfile(curPwd, sprintf('%s.o*', jobid)); % note the wildcard in the file name
+  logerr       = fullfile(curPwd, sprintf('%s.e*', jobid)); % note the wildcard in the file name
 
-  % the clear of the exist function seems to make it more responsive
-  % perhaps it has some internal caching
-  clear exist
+  % the STDERR output log file should be empty, otherwise it indicates an error
+  tmp = dir(logerr);
+  if ~isempty(tmp) && tmp.bytes>0
+    % show the error that was printed on STDERR
+    type(fullfile(curPwd, tmp.name));
+    error('the batch queue system returned an error');
+  end
+
   if exist(outputfile, 'file')
+    % load the results from the output file
     tmp = load(outputfile);
     argout  = tmp.argout;
     options = tmp.optout;
     success = true;
-    % clean up the temporary files
+    % clean up all temporary files
     delete(shellscript);
     delete(matlabscript);
     delete(inputfile);
     delete(outputfile);
+    delete(logout);
+    delete(logerr);
   elseif timeout == 0
     break; % only check once, no waiting here
   else
@@ -189,3 +199,4 @@ previous_sleep       = sleep;
 previous_output      = output;
 previous_diary       = diary;
 previous_StopOnError = StopOnError;
+

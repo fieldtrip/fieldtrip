@@ -38,7 +38,8 @@ function [argout, optout] = qsubexec(jobid)
 try
   p = pwd();
   inputfile  = fullfile(p, sprintf('%s_input.mat', jobid));
-  outputfile = fullfile(p, sprintf('%s_output.mat_', jobid)); % note the _ at the end
+  outputfile = fullfile(p, sprintf('%s_output.mat_', jobid));
+  lockfile   = fullfile(p, sprintf('%s.lock', jobid));
 
   tmp = load(inputfile);
 
@@ -47,16 +48,12 @@ try
 
   [argout, optout] = fexec(argin, optin);
   save(outputfile, 'argout', 'optout');
-  
-  % remove the _ at the end
-  % can't use matlab's rename() since that is not atomic
-  if ispc()
-    system(['rename ' outputfile ' ' outputfile(1:(end-1))]);
-  else
-    system(['mv ' outputfile ' ' outputfile(1:(end-1))]);
+
+  % remove the _ at the end, note that the rename command here is a private mex file
+  retval = rename(outputfile, outputfile(1:end-1));
+  if retval~=0
+    error('problem renaming output file %s', outputfile);
   end
-  
-  % the scripts, input and output files will be deleted by qsubget
 
 catch err
   % this is to avoid MATLAB from hanging in case fexec fails, since

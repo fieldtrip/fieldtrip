@@ -159,14 +159,13 @@ if ~isempty(memreq)
 %   requirements = [requirements sprintf('-l pvmem=%d ', memreq)];
 end
 
-% generate qsub command
-% Note that both stderr and stout are redirected to /dev/null, so any
+% In the command below both stderr and stout are redirected to /dev/null, so any
 % output information will not be available for inspection. However, any
 % matlab errors will be reported back by fexec.
-cmdline = ['qsub -e /dev/null -o /dev/null -N ' jobid ' ' requirements shellscript];
+% cmdline = ['qsub -e /dev/null -o /dev/null -N ' jobid ' ' requirements shellscript];
 
-% uncomment this command line to enable shell output to be saved
-%cmdline = ['qsub -N ' jobid ' ' requirements shellscript];
+% qsubfget will check the stderr output log file for errors, e.g. MATLAB crashes 
+cmdline = ['qsub -N ' jobid ' ' requirements shellscript];
 
 fprintf('submitting script %s...', jobid); 
 [~,result] = system(cmdline);
