@@ -98,6 +98,7 @@ out(out=='-') = '_'; % fix dashes
 out(out==' ') = '_'; % fix spaces
 out(out=='/') = '_'; % fix forward slashes
 out(out=='\') = '_'; % fix backward slashes
+out(out=='.') = '_'; % fix full stops
 
 while(out(1) == '_'), out = out(2:end); end; % remove preceding underscore
 while(out(end) == '_'), out = out(1:end-1); end; % remove subsequent underscore
