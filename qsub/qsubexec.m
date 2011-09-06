@@ -47,8 +47,15 @@ try
 
   [argout, optout] = fexec(argin, optin);
   save(outputfile, 'argout', 'optout');
-  rename(outputfile, outputfile(1:(end-1))); % remove the _ at the end
-
+  
+  % remove the _ at the end
+  % can't use matlab's rename() since that is not atomic
+  if ispc()
+    system(['rename ' outputfile ' ' outputfile(1:(end-1))]);
+  else
+    system(['mv ' outputfile ' ' outputfile(1:(end-1))]);
+  end
+  
   % the scripts, input and output files will be deleted by qsubget
 
 catch err
