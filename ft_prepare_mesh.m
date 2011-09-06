@@ -11,11 +11,13 @@ function bnd = ft_prepare_mesh(cfg, mri)
 %   bnd = ft_prepare_mesh(cfg, mri)
 %
 % Configuration options:
-%   cfg.method          = 'segmentation' or 'manual'
+%   cfg.interactive     = 'no' (default) or 'yes' (manual interaction)
 %   cfg.tissue          = list with segmentation values corresponding with each compartment
+%   cfg.numvertices     = vector, length equal cfg.tissue.  e.g. [2000 1000 800];
 %   cfg.downsample      = integer (1,2, ...) defines the level of refinement of the mri data
-%   cfg.headshape     = a filename containing headshape, a Nx3 matrix with surface
-%                       points, or a structure with a single or multiple boundaries
+%   cfg.sourceunits     = e.g. 'mm'
+%   cfg.headshape       = (optional) a filename containing headshape, a Nx3 matrix with surface
+%                         points, or a structure with a single or multiple boundaries
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
@@ -27,11 +29,19 @@ function bnd = ft_prepare_mesh(cfg, mri)
 % input/output structure.
 %
 % Example use:
-%   mri            = ft_read_mri('Subject01.mri');
-%   cfg            = [];
-%   cfg.method     = 'manual';
-%   cfg.downsample = 2;
-%   bnd = ft_prepare_mesh(cfg, mri);
+%   mri=ft_read_mri('Subject01.mri');
+%   cfg=[];
+%   cfg.output={'scalp', 'skull', 'brain'};
+%   segment=ft_volumesegment(cfg, mri);
+%   scalp=(segment.scalp)&~(segment.skull | segment.brain);
+%   skull=2*(segment.skull);
+%   brain=3*(segment.brain);
+%   segment.seg=scalp+skull+brain;
+%   cfg=[];
+%   cfg.tissue=[1 2 3];
+%   cfg.numvertices=[2000 1000 800];
+%   cfg.sourceunits=segment.unit;
+%   bnd = ft_prepare_mesh(cfg, segment);
 
 % Copyrights (C) 2009, Cristiano Micheli & Robert Oostenveld
 %
