@@ -150,25 +150,24 @@ fclose(fid);
 % set the job requirements according to the users specification
 requirements = '';
 if ~isempty(timreq)
-  requirements = [requirements sprintf('walltime=%d:', timreq)];
+  requirements = [requirements sprintf('-l walltime=%s ', formattim(timreq))];
 end
 if ~isempty(memreq)
   % don't know the difference
-  requirements = [requirements sprintf('mem=%d:',   memreq)];
-  requirements = [requirements sprintf('vmem=%d:',  memreq)];
-  requirements = [requirements sprintf('pmem=%d:',  memreq)];
-  requirements = [requirements sprintf('pvmem=%d:', memreq)];
+  requirements = [requirements sprintf('-l mem=%d ',   memreq)];
+%   requirements = [requirements sprintf('-l vmem=%d ',  memreq)];
+%   requirements = [requirements sprintf('-l pmem=%d ',  memreq)];
+%   requirements = [requirements sprintf('-l pvmem=%d ', memreq)];
 end
 
 % generate qsub command
 % Note that both stderr and stout are redirected to /dev/null, so any
 % output information will not be available for inspection. However, any
 % matlab errors will be reported back by fexec.
-if isempty(requirements)
-  cmdline = ['qsub -e /dev/null -o /dev/null -N ' jobid ' ' shellscript];
-else
-  cmdline = ['qsub -e /dev/null -o /dev/null -N ' jobid ' -l ' requirements(1:end-1) ' ' shellscript];  % strip the last ':' from the requirements
-end
+cmdline = ['qsub -e /dev/null -o /dev/null -N ' jobid ' ' requirements shellscript];
+
+% uncomment this command line to enable shell output to be saved
+%cmdline = ['qsub -N ' jobid ' ' requirements shellscript];
 
 fprintf('submitting script %s...', jobid); 
 [~,result] = system(cmdline);
