@@ -229,9 +229,9 @@ switch cfg.method
   
   case 'bem_cp'
     if ~isempty(cfg.hdmfile)
-      vol = ft_headmodel_bem_cp([],'hdmfile',cfg.hdmfile,'conductivity',cfg.conductivity);
+      vol = ft_headmodel_bemcp([],'hdmfile',cfg.hdmfile,'conductivity',cfg.conductivity);
     else
-      vol = ft_headmodel_bem_cp(geometry,'conductivity',cfg.conductivity);
+      vol = ft_headmodel_bemcp(geometry,'conductivity',cfg.conductivity);
     end
     
   case 'bem_dipoli'
