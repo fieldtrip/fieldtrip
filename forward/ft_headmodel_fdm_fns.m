@@ -1,4 +1,4 @@
-function vol = ft_headmodel_fdm_fns(varargin)
+function vol = ft_headmodel_fdm_fns(seg,varargin)
 
 % FT_HEADMODEL_FDM_FNS creates the volume conduction structure to be used 
 % in the FNS forward solver.
@@ -25,28 +25,23 @@ function vol = ft_headmodel_fdm_fns(varargin)
 
 % get the optional arguments
 condmatrix   = ft_getopt(varargin, 'condmatrix', []);
-segmentation = ft_getopt(varargin, 'segmentation', []);
 tissue       = ft_getopt(varargin, 'tissue', []);
 tissueval    = ft_getopt(varargin, 'tissueval', []);
 tissuecond   = ft_getopt(varargin, 'tissuecond', []);
-posout       = ft_getopt(varargin, 'posout', []);
+bnd          = ft_getopt(varargin, 'bnd', []);
+transform    = ft_getopt(varargin, 'transform', eye(4));
+units        = ft_getopt(varargin, 'units', 'cm');
+deepelec     = ft_getopt(varargin, 'deepelec', []); % used in the case of deep voxel solution
 
-% load the default cond matrix in case not specified
-if isempty(condmatrix)
-  if max(tissueval)<=12
-    condmatrix = fns_contable_write;
-  else
-    % all tissue not listed as defaults (This is a bit rigid!!)
-    sel = find(tissueval>12);
-    newtissue     = tissue(sel);
-    newtissueval  = tissueval(sel);
-    newtissuecond = tissuecond(sel);    
-    condmatrix = fns_contable_write('newtissue',newtissue,'newtissueval',newtissueval,'newtissuecond',newtissuecond);
-  end
+if isempty(deepvoxel) && isempty(bnd)
+  error('Either a deep electrode or a boundary have to be given')
 end
 
+% load the default cond matrix in case not specified
+condmatrix = fns_contable_write('tissue',tissue,'tissueval',tissueval,'tissuecond',tissuecond);
+
 % check the consistency between tissue values and the segmentation
-vecval = ismember(tissueval,unique(segmentation(:)));
+vecval = ismember(tissueval,unique(seg(:)));
 if any(vecval)==0
   warning('Some of the tissue values are not in the segmentation')
 end
@@ -54,9 +49,16 @@ end
 % start with an empty volume conductor
 vol = [];
 vol.condmatrix = condmatrix;
-vol.posout     = posout;
-vol.seg        = segmentation; 
+vol.seg        = seg; 
 vol.tissue     = tissue;
 vol.tissueval  = tissueval;
+vol.transform  = transform;
+vol.units      = units;
 vol.type       = 'fns';
 
+% bnd has always the precedence
+if ~isempty(bnd)
+  vol.bnd        = bnd;
+else
+  vol.deepelec  = deepelec;
+end

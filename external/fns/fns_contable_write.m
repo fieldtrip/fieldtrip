@@ -3,7 +3,7 @@ function cond = fns_contable_write(varargin)
 %
 % Use as
 %   cond = fns_contable_write
-% 
+%
 % The FNS convention for tissue types is the following:
 %     0     "Clear Label"
 %     1     "CSF"
@@ -18,19 +18,26 @@ function cond = fns_contable_write(varargin)
 %    10     "Dura Matter"
 %    11     "Bone Marrow"
 %    12     "Eyes"
-% 
+%
 
 % Copyright (C) 2011, Hung Dang, Cristiano Micheli
-newtissue     = ft_getopt(varargin, 'newtissue', []); % not used yet
-newtissueval  = ft_getopt(varargin, 'newtissueval', []);
-newtissuecond = ft_getopt(varargin, 'newtissuecond', []);
+tissue     = ft_getopt(varargin, 'tissue', []);
+tissueval  = ft_getopt(varargin, 'tissueval', []);
+tissuecond = ft_getopt(varargin, 'tissuecond', []);
 
-if ~isempty(newtissueval)
-  cond = zeros(9,max(newtissueval));
+if isempty(tissue) && isempty(tissueval) && isempty(tissuecond)
+  cond = createCondMat;
+elseif isempty(tissueval) || isempty(tissuecond)
+  error('Both tissue value and conductivity inputs are necessary')
 else
-  cond = zeros(9,13);
+  cond = zeros(9,numel(tissueval));
+  for i=1:numel(tissueval)
+    cond([1,5,9],i) = tissuecond(i);
+  end
 end
 
+function cond = createCondMat
+cond = zeros(9,13);
 % Brain tissues index
 HH_OUTSIDE        = 0;
 HH_CSF            = 1;
@@ -75,7 +82,3 @@ cond([1,5,9],HH_AROUND_FAT + 1)   = HH_AROUND_FAT_CON;
 cond([1,5,9],HH_DURA + 1)         = HH_DURA_CON;
 cond([1,5,9],HH_BONE_MARROW + 1)  = HH_BONE_MARROW_CON;
 cond([1,5,9],HH_EYES + 1)         = HH_EYES_CON;
-
-for i=1:numel(newtissueval)
-  cond([1,5,9],newtissueval(i) + 1) = newtissuecond(i);
-end

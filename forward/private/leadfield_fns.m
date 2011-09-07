@@ -1,4 +1,4 @@
-function [lf] = leadfield_fns(posin, vol, tol)
+function [lf] = leadfield_fns(dip, vol, tol)
 
 % LEADFIELD_FNS calculates the FDM forward solution for a set of given
 % dipolar sources
@@ -6,7 +6,7 @@ function [lf] = leadfield_fns(posin, vol, tol)
 % [lf] = leadfield_fns(posin, vol, tol);
 %
 % with input arguments
-%   posin  positions of the voxels containing the dipolar sources (MX3 matrix)
+%   dip    positions of the dipolar sources (MX3 matrix)
 %   vol    structure of the volume conductor
 %   tol    tolerance
 % 
@@ -15,10 +15,12 @@ function [lf] = leadfield_fns(posin, vol, tol)
 % The key elements of the vol structure are:
 %   vol.condmatrix a 9XT (T tissues) matrix containing the conductivities
 %   vol.seg        a segmented/labelled MRI
-%   vol.posout     positions of the output voxels (NX3 matrix)
-%
+%   vol.deepelec   positions of the deep electrodes (NX3 matrix)
+%    or
+%   vol.bnd        positions of the external surface vertices
+
 % The output lf is the forward solution matrix and contains the leadfields, calculated in 
-% the output voxels (vol.posout) positions (a NXM matrix)
+% the N output voxels (vol.bnd or vol.deepelec) positions (a NXM matrix)
 
 % Copyright (C) 2011, Cristiano Micheli and Hung Dang
 
@@ -37,9 +39,9 @@ try
     [~,tname] = fileparts(tempname);
     segfile   = [tname];    
     [~,tname] = fileparts(tempname);
-    vxinfile  = [tname '.h5'];
+    dipfile  = [tname '.h5'];
     [~,tname] = fileparts(tempname);
-    vxoutfile = [tname '.h5'];
+    elecfile = [tname '.h5'];
     [~,tname] = fileparts(tempname);
     regfile   = [tname '.h5'];
     [~,tname] = fileparts(tempname);
@@ -68,13 +70,20 @@ try
     csvwrite(confile,vol.condmatrix);
     
     % write the positions of the output voxels on disk
-    fns_elec_write(vol.posout,[1 1 1],size(mri.seg),vxoutfile); 
+    if isfield(vol,'deepelec')
+      pos = warp_apply(inv(vol.transform),vol.deepelec);
+    elseif isfield(vol,'bnd')
+      pos = warp_apply(round(inv(vol.transform)),vol.bnd.pnt);
+    else
+      error('dunno where the electrodes are!')
+    end
+    fns_elec_write(pos,[1 1 1],size(mri.seg),elecfile);  
     
     % Exe file (the parallel processing version of the binary will soon be available)
     efid = fopen(exefile, 'w');
     if ~ispc
       fprintf(efid,'#!/usr/bin/env bash\n');
-      fprintf(efid,['elecsfwd --img ' segfile ' --electrodes ./' vxoutfile ' --data ./', ...
+      fprintf(efid,['elecsfwd --img ' segfile ' --electrodes ./' elecfile ' --data ./', ...
                    datafile ' --contable ./' confile ' --TOL ' num2str(tolerance) ' 2>&1 > /dev/null\n']);
     end
     fclose(efid);
@@ -83,9 +92,16 @@ try
     % NOTE: This requires FNS to be compiled/installed and the binaries folder to be already present in the 
     % linux PATH
     dos(sprintf('chmod +x %s', exefile));
-    sprintf('Calculating the reciprocity matrix for %d nodes...\n (this may take some time)',size(vol.posout,1))
+    if isfield(vol,'deepvoxel')
+      posout = size(vol.posout,1);
+    else
+      posout = size(vol.bnd.pnt,1);
+    end
+    sprintf('Calculating the reciprocity matrix for %d nodes...\n (this may take some time)',posout)
     dos(['./' exefile]);
-    lf   = fns_leadfield(datafile,posin);
+    % convert in voxel coordinates
+    dipvx = warp_apply(inv(vol.transform),dip);
+    lf    = fns_leadfield(datafile,dipvx);
     
 %     % extract the forward solution for the given dipoles (posin)
 %     % write posin positions in XXX
@@ -95,14 +111,14 @@ try
 %     system(exestr)
 %     lf   = fns_leadfield(recipfile,posin);
 
-    cleaner(segfile,vxinfile,vxoutfile,datafile,confile,exefile,regfile,recipfile) 
+    cleaner(segfile,dipfile,elecfile,datafile,confile,exefile,regfile,recipfile) 
 
     cd(tmpfolder)
   end
 
 catch
   warning('an error occurred while running FNS');
-  cleaner(segfile,vxinfile,vxoutfile,datafile,confile,exefile,regfile,recipfile) 
+  cleaner(segfile,dipfile,elecfile,datafile,confile,exefile,regfile,recipfile) 
   rethrow(lasterror)
   cd(tmpfolder)
 end
