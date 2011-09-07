@@ -121,7 +121,11 @@ if ntim==1,
 end
 
 if strcmp(sfmethod, 'bivariate')
-  fprintf('computing pairwise non-parametric spectral factorization on %d channel pairs\n', size(channelcmb,1) - numel(unique(channelcmb(:))));
+  list1 = char(channelcmb(:,1)); siz1 = size(list1,2);
+  list2 = char(channelcmb(:,2)); siz2 = size(list2,2);
+  ix    = 1:min(siz1,siz2);
+  npair = sum(sum(list1(:,ix)~=list2(:,ix),2)~=0);
+  fprintf('computing pairwise non-parametric spectral factorization on %d channel pairs\n', npair);%size(channelcmb,1) - numel(unique(channelcmb(:))));
 elseif strcmp(sfmethod, 'multivariate')
   fprintf('computing multivariate non-parametric spectral factorization on %d channels\n', numel(freq.label));   
 else
