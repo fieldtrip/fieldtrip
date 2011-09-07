@@ -1,16 +1,21 @@
 function [freq] = ft_freqcomparison(cfg, varargin)
 
-% FT_FREQCOMPARISON performs a baseline-like comparison for channel-frequency data
+% FT_FREQCOMPARISON performs a comparison between two (rpt-/subj-) 
+% chan-freq datasets. 
+% 
+% Differently from ft_freqbaseline, ft_freqcomparison requires two datasets 
+% for input arguments (n==2) where the first dataset is considered the norm. 
+% The output contains the difference of the second dataset to this norm, 
+% expressed in units as determined by cfg.comparisontype.
 %
 % Use as
 %   [freq] = ft_freqcomparison(cfg, dataset1, dataset2);
 %
-% where the freq data comes from FREQANALYSIS_MTMFFT and the configuration
+% where the freq data comes from FT_SPECEST_MTMFFT and the configuration
 % should contain
-%   cfg.baselinetype = 'absolute' 'relchange' 'relative' (default =
-%   'absolute')
 %
-% where the first dataset is seen as baseline
+%   cfg.comparisontype = 'absolute' 'relchange' 'relative' (default =
+%   'absolute')
 %
 % See also FT_FREQBASELINE, FT_FREQANALYSIS, FT_TIMELOCKBASELINE
 %
@@ -49,7 +54,7 @@ varargin{1} = ft_checkdata(varargin{1}, 'datatype', 'freq', 'feedback', 'yes');
 varargin{2} = ft_checkdata(varargin{2}, 'datatype', 'freq', 'feedback', 'yes');
 
 % set the defaults
-if ~isfield(cfg, 'baselinetype'), cfg.baselinetype = 'absolute';     end
+if ~isfield(cfg, 'comparisontype'), cfg.comparisontype = 'absolute';     end
 
 % we have to ensure that we don't end up with an inconsistent dataset
 % remove cross-spectral densities since coherence cannot be computed any more
@@ -72,6 +77,9 @@ if isfield(varargin{2}, 'powspctrmsem')
   varargin{2} = rmfield(varargin{2}, 'powspctrmsem');
 end
 
+% initiate output variable
+freq = varargin{1};
+
 % frequency comparison for multiple trials/subjects
 if strcmp(varargin{1}.dimord, 'rpt_chan_freq') || strcmp(varargin{1}.dimord, 'subj_chan_freq')
     
@@ -79,20 +87,20 @@ if strcmp(varargin{1}.dimord, 'rpt_chan_freq') || strcmp(varargin{1}.dimord, 'su
         error('input conditions have different sizes');
     end
     
-    if strcmp(cfg.baselinetype, 'absolute')
+    if strcmp(cfg.comparisontype, 'absolute')
         for j = 1:size(varargin{2}.powspctrm,1)
             freq.powspctrm(j,:,:) = varargin{2}.powspctrm(j,:,:) - mean(varargin{1}.powspctrm,1);
         end
-    elseif strcmp(cfg.baselinetype, 'relchange')
+    elseif strcmp(cfg.comparisontype, 'relchange')
         for j = 1:size(varargin{2}.powspctrm,1)
             freq.powspctrm(j,:,:) = (varargin{2}.powspctrm(j,:,:) - mean(varargin{1}.powspctrm,1)) ./ mean(varargin{1}.powspctrm,1);
         end
-    elseif strcmp(cfg.baselinetype, 'relative')
+    elseif strcmp(cfg.comparisontype, 'relative')
         for j = 1:size(varargin{2}.powspctrm,1)
             freq.powspctrm(j,:,:) = varargin{2}.powspctrm(j,:,:) ./ mean(varargin{1}.powspctrm,1);
         end
     else
-        error('unsupported baselinetype');
+        error('unsupported comparisontype');
     end
   
 % frequency comparison for averages 
@@ -102,39 +110,16 @@ elseif strcmp(varargin{1}.dimord, 'chan_freq')
         error('input conditions have different sizes');
     end
     
-    if strcmp(cfg.baselinetype, 'absolute')
+    if strcmp(cfg.comparisontype, 'absolute')
         freq.powspctrm = varargin{2}.powspctrm - varargin{1}.powspctrm;
-    elseif strcmp(cfg.baselinetype, 'relchange')
+    elseif strcmp(cfg.comparisontype, 'relchange')
         freq.powspctrm = (varargin{2}.powspctrm - varargin{1}.powspctrm) ./ varargin{1}.powspctrm;
-    elseif strcmp(cfg.baselinetype, 'relative')
+    elseif strcmp(cfg.comparisontype, 'relative')
         freq.powspctrm = varargin{2}.powspctrm ./ varargin{1}.powspctrm;
     else
-        error('unsupported baselinetype');
+        error('unsupported comparisontype');
     end
 end
 
 % user update
-fprintf('performing %s comparison \n', cfg.baselinetype);
-
-% add the remaining parameters
-if isfield(varargin{1}, 'label')
-    freq.label = varargin{1}.label;
-end
-if isfield(varargin{1}, 'dimord')
-    freq.dimord = varargin{1}.dimord;
-end
-if isfield(varargin{1}, 'freq')
-    freq.freq = varargin{1}.freq;
-end
-if isfield(varargin{1}, 'cumsumcnt')
-    freq.cumsumcnt = varargin{1}.cumsumcnt;
-end
-if isfield(varargin{1}, 'cumtapcnt')
-    freq.cumtapcnt = varargin{1}.cumtapcnt;
-end
-if isfield(varargin{1}, 'grad')
-    freq.grad = varargin{1}.grad;
-end
-if isfield(varargin{1}, 'cfg')
-    freq.cfg = varargin{1}.cfg;
-end
+fprintf('performing %s comparison \n', cfg.comparisontype);
