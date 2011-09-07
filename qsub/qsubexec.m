@@ -39,7 +39,6 @@ try
   p = pwd();
   inputfile  = fullfile(p, sprintf('%s_input.mat', jobid));
   outputfile = fullfile(p, sprintf('%s_output.mat_', jobid));
-  lockfile   = fullfile(p, sprintf('%s.lock', jobid));
 
   tmp = load(inputfile);
 

@@ -149,7 +149,7 @@ fclose(fid);
 % set the job requirements according to the users specification
 requirements = '';
 if ~isempty(timreq)
-  requirements = [requirements sprintf('-l walltime=%s ', formattim(timreq))];
+  requirements = [requirements sprintf('-l walltime=%d ', timreq)];
 end
 if ~isempty(memreq)
   % don't know the difference
