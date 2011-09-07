@@ -22,7 +22,7 @@ for k = 1:numel(datainfo)
   % these can have subtle differences eg. in hdr.orig.FID
   data.hdr = [];
   datanew.hdr = [];
-  assert(isequal(data, datanew));
+  assert(isequalwithequalnans(data, datanew));
 end
 
 
