@@ -46,17 +46,21 @@ optbeg = optbeg | strcmp('timreq',  strargin);
 optbeg = optbeg | strcmp('hostid',  strargin);
 optbeg = optbeg | strcmp('diary',   strargin);
 optbeg = optbeg | strcmp('batch',    strargin);
+optbeg = optbeg | strcmp('timoverhead', strargin);
+optbeg = optbeg | strcmp('memoverhead', strargin);
 optbeg = find(optbeg);
 optarg = varargin(optbeg:end);
 
 % get the optional input arguments
-sleep   = ft_getopt(optarg, 'sleep',   0.05);
-memreq  = ft_getopt(optarg, 'memreq',  []);
-cpureq  = ft_getopt(optarg, 'cpureq',  []);
-timreq  = ft_getopt(optarg, 'timreq',  []);
-hostid  = ft_getopt(optarg, 'hostid',  []);
-diary   = ft_getopt(optarg, 'diary',   []);
-batch   = ft_getopt(optarg, 'batch',    1);
+sleep       = ft_getopt(optarg, 'sleep',   0.05);
+memreq      = ft_getopt(optarg, 'memreq',  []);
+cpureq      = ft_getopt(optarg, 'cpureq',  []);
+timreq      = ft_getopt(optarg, 'timreq',  []);
+hostid      = ft_getopt(optarg, 'hostid',  []);
+diary       = ft_getopt(optarg, 'diary',   []);
+batch       = ft_getopt(optarg, 'batch',    1);
+timoverhead = ft_getopt(optarg, 'timoverhead', 180);            % allow some overhead to start up the MATLAB executable
+memoverhead = ft_getopt(optarg, 'memoverhead', 1024*1024*1024); % allow some overhead for the MATLAB executable in memory
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -149,14 +153,14 @@ fclose(fid);
 % set the job requirements according to the users specification
 requirements = '';
 if ~isempty(timreq)
-  requirements = [requirements sprintf('-l walltime=%d ', timreq)];
+  requirements = [requirements sprintf('-l walltime=%d ', timreq+timoverhead)];
 end
 if ~isempty(memreq)
   % don't know the difference
-  requirements = [requirements sprintf('-l mem=%d ',   memreq)];
-%   requirements = [requirements sprintf('-l vmem=%d ',  memreq)];
-%   requirements = [requirements sprintf('-l pmem=%d ',  memreq)];
-%   requirements = [requirements sprintf('-l pvmem=%d ', memreq)];
+  requirements = [requirements sprintf('-l mem=%d ',   memreq+memoverhead)];
+%   requirements = [requirements sprintf('-l vmem=%d ',  memreq+memoverhead)];
+%   requirements = [requirements sprintf('-l pmem=%d ',  memreq+memoverhead)];
+%   requirements = [requirements sprintf('-l pvmem=%d ', memreq+memoverhead)];
 end
 
 % In the command below both stderr and stout are redirected to /dev/null, so any
