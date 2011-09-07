@@ -77,7 +77,9 @@ while ~success && (timeout == 0 || toc(stopwatch)<timeout)
     error('the batch queue system returned an error');
   end
 
-  if exist(outputfile, 'file')
+  % the stdout and stderr log files are the last ones created
+  % wait until they exist prior to reading the results
+  if exist(outputfile, 'file') && isfile(logout) && isfile(logerr)
     % load the results from the output file
     tmp = load(outputfile);
     argout  = tmp.argout;
@@ -199,4 +201,13 @@ previous_sleep       = sleep;
 previous_output      = output;
 previous_diary       = diary;
 previous_StopOnError = StopOnError;
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% helper function that detects a file, even with a wildcard in the filename
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function status = isfile(name)
+tmp = dir(name);
+status = length(tmp)==1 && ~tmp.isdir;
+
 
