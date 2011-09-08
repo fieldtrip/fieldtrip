@@ -56,6 +56,11 @@ if strcmp(cfg.dataset, 'buffer://odin:1972');
     chanindx = 1:9; % odin buffer specific
 else
     chanindx = strmatch('headloc', ft_chantype(hdr));
+    % this is a mere hack for the Donders MEG system, I assume a bug in
+    % chantype - Jörn
+    if isempty(chanindx) 
+        chanindx = strmatch('HLC', ft_chantype(hdr));
+    end
 end
 
 if isempty(chanindx)
