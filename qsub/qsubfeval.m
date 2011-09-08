@@ -157,10 +157,10 @@ if ~isempty(timreq)
 end
 if ~isempty(memreq)
   % don't know the difference
-  requirements = [requirements sprintf('-l mem=%d ',   memreq+memoverhead)];
-%   requirements = [requirements sprintf('-l vmem=%d ',  memreq+memoverhead)];
-%   requirements = [requirements sprintf('-l pmem=%d ',  memreq+memoverhead)];
-%   requirements = [requirements sprintf('-l pvmem=%d ', memreq+memoverhead)];
+  requirements = [requirements sprintf('-l mem=%.0f ',   memreq+memoverhead)];
+%   requirements = [requirements sprintf('-l vmem=%.0f ',  memreq+memoverhead)];
+%   requirements = [requirements sprintf('-l pmem=%.0f ',  memreq+memoverhead)];
+%   requirements = [requirements sprintf('-l pvmem=%.0f ', memreq+memoverhead)];
 end
 
 % In the command below both stderr and stout are redirected to /dev/null, so any
@@ -172,7 +172,7 @@ end
 cmdline = ['qsub -N ' jobid ' ' requirements shellscript];
 
 fprintf('submitting script %s...', jobid); 
-[~,result] = system(cmdline);
+[status,result] = system(cmdline);
 fprintf(' qstat job id %s\n', strtrim(result));
 
 puttime = toc(stopwatch);
