@@ -19,8 +19,8 @@ function [spike] = ft_spike_maketrials(cfg,spike)
 % Configurations:
 %   cfg.trl                     = is an nTrials-by-3 matrix.
 %                                Every row contains start (col 1), end (col 2) and offset of the event 
-%                                trigger in the trial. For example, an offset of -1 sec means that trigger 
-%                                (t = 0 sec) occurred 1 second after the trial start.
+%                                trigger in the trial. For example, an offset of -1000 means that the trigger 
+%                                (t = 0 sec) occurred 1000 timestamps after the trial start.
 %   cfg.timestampspersecond     = number of timestaps per second. cfg.timestampspersecond should always 
 %                                 be explicitly specified.
 %
@@ -118,12 +118,12 @@ for iUnit = 1:nUnits
     if ~isempty(trialNum)  
         ts  	 = ts(sel);        
         dt = ts - cfg.trl(trialNum,1); % error if empty
-        dt = dt/cfg.timestampspersecond + cfg.trl(trialNum,3);    
+        dt = dt/cfg.timestampspersecond + cfg.trl(trialNum,3)/cfg.timestampspersecond;    
     else
         dt = [];
     end
     trialDur = double(cfg.trl(:,2)-cfg.trl(:,1))/cfg.timestampspersecond;
-    time = [cfg.trl(:,3) (cfg.trl(:,3) + trialDur)]; % make the time-axis                
+    time = [cfg.trl(:,3)/cfg.timestampspersecond (cfg.trl(:,3)/cfg.timestampspersecond + trialDur)]; % make the time-axis                
     
     % gather the results
     spike.time{iUnit}   = dt;
