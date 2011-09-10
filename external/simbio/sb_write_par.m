@@ -1,4 +1,4 @@
-function sb_write_par(cfg,file_name)
+function sb_write_par(fname,varargin)
 
 % sb_write_par writes a parameter file for SimBio on disk
 %
@@ -6,11 +6,11 @@ function sb_write_par(cfg,file_name)
 %   sb_write_dip(cfg,file_name)
 % 
 % file_name is the name of the parameter file (without extension)
-% The resuired field are:
-%   cfg.cond        conductivities file
-%   cfg.labels      labels, an array of integers relative to the tissue
+% The required arguments are:
+%   cond         tissues conductivities 
+%   labels       tissue integer labels, an array of integers relative to the tissue
 %                    types derived from the segmented MRI
-%   cfg.tensorlabel [optional] labels, an array of integers to map
+%   tensorlabels [optional] labels, an array of integers to map
 %                   conductivity anisotropy to the different tissues
 %                   (not implemented yet)
 %
@@ -23,34 +23,18 @@ function sb_write_par(cfg,file_name)
 % The Electrical Conductivity of Human Cerebrospinal Fluid at Body
 % Temperature. IEEE Biomed.Eng, Vol. 44, No.3, 1997, pp.220-223
 % 
-% Default labels, conductivities are as following:
-% skull 1 , 0.022
-% extra 3
-% white 6 , 0.14
-% grey  7 , 0.33
-% csf   8 , 1.79
-% skin  ? , 0.33 
-% 
 % Copyright (C) 2011, Felix Lucka and Cristiano Micheli
 
 ft_defaults
 
-% # Labels in the head model corresponding to the different tissues
-% # The first value corresponds to the electrode which will be added to the mesh
-% Here, the labels from the MR image are used to assign the conductivities
-% given above to the compartments
-cfg.labels = ft_getopt(cfg,'labels');
-labels = [1000 cfg.labels(:)'];
+labels     = ft_getopt(varargin,'labels',[]); % integer labels in the head model corresponding to the different tissues
+cond       = ft_getopt(varargin,'cond',[]);   % conductivities of the FEM head model
+tenslabels = ft_getopt(varargin,'cond',zeros(1,length(cond)+1)); % tissue integer labels in the head model for 
+% which the tensor valued conductivity should be used if available
 
-% # Conductivities of fem head model
-% # The first value corresponds to the electrodes which will be
-% # added to the mesh 
-cfg.cond   = ft_getopt(cfg,'cond');
-cond = [1.0 cfg.cond(:)'];
-
-% # Tissue labels in the head model for which the tensor valued coductivity
-% # should be used if available
-tenslabels = zeros(1,length(cfg.cond)+1);
+% The first labels/cond value corresponds to the electrodes 
+labels = [1000 labels(:)']; 
+cond   = [1.0 cond(:)'];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SimBio general parameters:
@@ -182,4 +166,3 @@ str = sprintf(['#Parameter file: FEM for source simulation\n\n', ...
   fid = fopen(file_name,'w');
   fprintf(fid,str);
   fclose(fid);
-
