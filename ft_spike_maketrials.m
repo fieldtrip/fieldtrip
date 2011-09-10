@@ -87,10 +87,10 @@ for iUnit = 1:nUnits
         waveform  = spike.waveform{iUnit}(indx,:);
       elseif sz(2)==N
         waveform  = spike.waveform{iUnit}(:,indx)'; % first dim must be spikes
-        fprintf('forcing first dimension of .waveform to be spikes/n')
+        fprintf('forcing first dimension of .waveform to be spikes\n')
       else
         ignoreWave = 1;
-        fprintf('Number of waveforms does not match number of spikes/n')          
+        fprintf('Number of waveforms does not match number of spikes\n')          
       end
     else
       ignoreWave = 1;
