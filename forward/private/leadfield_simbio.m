@@ -1,4 +1,4 @@
-function [lf] = leadfield_simbio(elc, vol, dip)
+function [lf] = leadfield_simbio(dip, elc, vol)
 
 % LEADFIELD_SIMBIO leadfields for a set of dipoles
 %
@@ -37,28 +37,26 @@ try
     % write the electrodes and dipoles positions in the temporary folder
     disp('Writing the accessory files on disk...')
     
+    % FIXME:  see hastoolbox, add the Simbio folder to the path
+    addpath('~/fieldtrip-dev/external/simbio') 
     % FIXME: distinguish between surface and deep electrodes 
     sb_write_elc(elc.pnt,elc.label,elcfile);
     sb_write_dip(dip,dipfile);
     
-    % write the parameters file, contains tissue/conductivities match
-    % and Simbio call details, mixed together
-    sb_write_par(parfile,'cond',vol.cond,'labels',vol.labels);
+    % write the parameters file, contains tissues conductivities, the FE
+    % grid and Simbio call details, mixed together
+    sb_write_par(parfile,'cond',vol.cond,'labels',unique(vol.wf.labels));
 
     % write the vol.wf in a Vista format .v file
     [~,tname] = fileparts(tempname);
     wffile = [tname '.v'];
     % write a vista wireframe file
-    write_vista_mesh(wffile,vol.wf.nd,vol.wf.el,vol.labels);
-  
+    ft_write_headshape(meshfile,vol.wf,'format','vista');
+    
     % Exe file
-    % FIXME: does SimBio have a switch for parallel processing (to run on more cores)?
     efid = fopen(exefile, 'w');
     if ~ispc
       fprintf(efid,'#!/usr/bin/env bash\n');
-%       fprintf(efid,['ipm_linux_opt_Venant -i leadfieldmatrix_onbrainsurface -h ' vol.headmesh ' -s ./' elcfile, ...
-%         ' -g ' vol.brainmesh ' -leadfieldfile ' outfile ' -p ' parfile ' -fwd FEM -sens EEG 2>&1 > /dev/null\n']);
-
       fprintf(efid,['ipm_linux_opt_Venant -i sourcesimulation -h ' wffile ' -s ./' elcfile, ...
                     ' -dip ' dipfile ' -o ' outfile ' -p ' parfile ' -fwd FEM -sens EEG 2>&1 > /dev/null\n']);
     end

@@ -11,8 +11,8 @@ function vol = ft_headmodel_fem_simbio(seg,varargin)
 % Copyright (C) 2011, Cristiano Micheli
 
 wfmethod     = ft_getopt(varargin, 'wfmethod', 'cubes'); % wireframe method (default: cubes)
-transform    = ft_getopt(varargin, 'transform', []);
-unit         = ft_getopt(varargin, 'unit', 'mm');     % contins the units of the head model (mm, cm, ...)
+transform    = ft_getopt(varargin, 'transform', []);  % contains the tr. matrix from voxels to head coordinates
+unit         = ft_getopt(varargin, 'unit', 'cm');     % contains the units of the transformation matrix (mm, cm, ...)
 tissue       = ft_getopt(varargin, 'tissue', []);     % contains the labels of the tissues
 tissueval    = ft_getopt(varargin, 'tissueval', []);  % contains the tissue values (an integer for each compartment)
 tissuecond   = ft_getopt(varargin, 'tissuecond', []); % contains the tissue conductivities
@@ -21,9 +21,6 @@ tissueweight = ft_getopt(varargin, 'tissueweight', ones(1,numel(tissueval))); % 
 
 % start with an empty structure
 labels = []; % used to write the .par file (integers like 101,102,...)
-
-% add the Simbio folder to the path
-addpath('~/fieldtrip-dev/external/simbio') %FIXME:  see hastoolbox
 
 % define a wireframe for each compartment (FEM grid)
 wf = [];
@@ -39,7 +36,7 @@ if strcmp(wfmethod,'cubes')
   % see tutorial: http://www.rheinahrcampus.de/~medsim/vgrid/manual.html
   [~,tname] = fileparts(tempname);
   materialsfile = [tname '.mat'];
-  sb_write_materials(materialsfile,tissueval,tissue,tissueweight);
+  write_materials(materialsfile,tissueval,tissue,tissueweight);
   
   % Use vgrid to get the wireframe
   [~,tname] = fileparts(tempname);
@@ -50,7 +47,7 @@ if strcmp(wfmethod,'cubes')
   vroot = '/home/coherence/crimic/test/SimBio/fromJohannes/vgrid1.3.1/program/';
   efid  = fopen(shfile, 'w');
   fprintf(efid,'#!/usr/bin/env bash\n');
-  % FIXME: implicitly assimes to work with mm, see ft_read/write_headshape
+  % works with voxels
   fprintf(efid,[vroot 'vgrid -in ' MRfile ' -out ' meshfile ' -min 1 -max 1 -elem cube', ...
     ' -material ' materialsfile ' -smooth shift -shift 0.49 2>&1 > /dev/null\n']);
   fclose(efid);
@@ -63,14 +60,14 @@ if strcmp(wfmethod,'cubes')
   
   % read the mesh points
   [shape] = ft_read_headshape(meshfile,'format','vista','unit',unit); % calls [nodes,elements,labels] = read_vista_mesh(meshfile);
-  nodes    = shape.nd;
+  nodes    = shape.nd; % in voxel coordinates
   elements = shape.el;
   labels   = shape.labels;
-  labels   = unique(shape.labels);
   
   % assign wireframe (or FEM grid, or 3d mesh)
-  wf.nd = nodes;
+  wf.nd = nodes; 
   wf.el = elements;
+  wf.labels = labels;
   
 elseif strcmp(wfmethod,'tetra')
   % not yet impementes

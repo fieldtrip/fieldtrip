@@ -959,6 +959,8 @@ elseif filetype_check_extension(filename, '.gii') && filetype_check_header(filen
   content = 'tesselated surface description';
 elseif filetype_check_extension(filename, '.v')
   type = 'vista'; 
+  manufacturer = 'University of British Columbia, Canada, http://www.cs.ubc.ca/nest/lci/vista/vista.html';
+  content = 'A format for computer vision research, contains meshes or volumes';  
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
