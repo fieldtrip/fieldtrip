@@ -21,59 +21,65 @@ function [lf] = leadfield_simbio(dip, elc, vol)
 tmpfolder = cd;
 
 try
-  if ~ispc
-    cd(tempdir)
-    [~,tname] = fileparts(tempname);
-    exefile = [tname '.sh'];
-    [~,tname] = fileparts(tempname);
-    elcfile  = [tname '.elc'];
-    [~,tname] = fileparts(tempname);
-    dipfile  = [tname '.dip'];    
-    [~,tname] = fileparts(tempname);
-    parfile  = [tname '.par'];
-    [~,tname] = fileparts(tempname);
-    outfile  = [tname];
-    
-    % write the electrodes and dipoles positions in the temporary folder
-    disp('Writing the accessory files on disk...')
-    
-    % FIXME:  see hastoolbox, add the Simbio folder to the path
-    addpath('~/fieldtrip-dev/external/simbio') 
-    % FIXME: distinguish between surface and deep electrodes 
-    sb_write_elc(elc.pnt,elc.label,elcfile);
-    sb_write_dip(dip,dipfile);
-    
-    % write the parameters file, contains tissues conductivities, the FE
-    % grid and Simbio call details, mixed together
-    sb_write_par(parfile,'cond',vol.cond,'labels',unique(vol.wf.labels));
-
-    % write the vol.wf in a Vista format .v file
-    [~,tname] = fileparts(tempname);
-    wffile = [tname '.v'];
-    % write a vista wireframe file
-    ft_write_headshape(meshfile,vol.wf,'format','vista');
-    
-    % Exe file
-    efid = fopen(exefile, 'w');
+  
+  % add the Simbio folder to the path
+  if ft_hastoolbox('simbio',1,0)
     if ~ispc
-      fprintf(efid,'#!/usr/bin/env bash\n');
-      fprintf(efid,['ipm_linux_opt_Venant -i sourcesimulation -h ' wffile ' -s ./' elcfile, ...
-                    ' -dip ' dipfile ' -o ' outfile ' -p ' parfile ' -fwd FEM -sens EEG 2>&1 > /dev/null\n']);
+      
+      cd(tempdir)
+      [~,tname] = fileparts(tempname);
+      exefile = [tname '.sh'];
+      [~,tname] = fileparts(tempname);
+      elcfile  = [tname '.elc'];
+      [~,tname] = fileparts(tempname);
+      dipfile  = [tname '.dip'];
+      [~,tname] = fileparts(tempname);
+      parfile  = [tname '.par'];
+      [~,tname] = fileparts(tempname);
+      meshfile  = [tname '.v'];
+      [~,tname] = fileparts(tempname);
+      outfile  = [tname];
+      
+      % write the electrodes and dipoles positions in the temporary folder
+      % FIXME: distinguish between surface and deep electrodes
+      disp('Writing the electrodes file on disk...')
+      sb_write_elc(elc.pnt,elc.label,elcfile);
+      disp('Writing the dipoles file on disk...')
+      sb_write_dip(dip,dipfile);
+      
+      % write the parameters file, contains tissues conductivities, the FE
+      % grid and Simbio call details, mixed together
+      disp('Writing the parameters file on disk...')
+      sb_write_par(parfile,'cond',vol.cond,'labels',unique(vol.wf.labels));
+      
+      % write the vol.wf in a Vista format .v file
+      [~,tname] = fileparts(tempname);
+      wffile = [tname '.v'];
+      % write a vista wireframe file
+      ft_write_headshape(meshfile,vol.wf,'format','vista');
+      
+      % Exe file
+      efid = fopen(exefile, 'w');
+      if ~ispc
+        fprintf(efid,'#!/usr/bin/env bash\n');
+        fprintf(efid,['ipm_linux_opt_Venant -i sourcesimulation -h ' wffile ' -s ./' elcfile, ...
+          ' -dip ' dipfile ' -o ' outfile ' -p ' parfile ' -fwd FEM -sens EEG 2>&1 > /dev/null\n']);
+      end
+      fclose(efid);
+      
+      dos(sprintf('chmod +x %s', exefile));
+      disp('SimBio is calculating the LeadFields, this may take some time ...')
+      
+      stopwatch = tic;
+      dos(['./' exefile]);
+      disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
+      
+      [lf] = sb_read_msr(outfile);
+      cleaner(dipfile,elcfile,outfile,exefile)
+      cd(tmpfolder)
     end
-    fclose(efid);
-    
-    dos(sprintf('chmod +x %s', exefile));
-    disp('SimBio is calculating the LeadFields, this may take some time ...')
-    
-    stopwatch = tic;
-    dos(['./' exefile]);
-    disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
-    
-    [lf] = sb_read_msr(outfile);
-    cleaner(dipfile,elcfile,outfile,exefile)
-    cd(tmpfolder)
   end
-
+  
 catch
   warning('an error occurred while running SimBio');
   rethrow(lasterror)
@@ -81,11 +87,13 @@ catch
   cd(tmpfolder)
 end
 
-function cleaner(dipfile,elcfile,outfile,exefile)
-delete(dipfile);
-delete(elcfile);
-delete(outfile);
+function cleaner(exefile,elcfile,dipfile,parfile,meshfile,outfile)
 delete(exefile);
+delete(elcfile);
+delete(dipfile);
+delete(parfile);
+delete(meshfile);
+delete(outfile);
 delete([outfile '.fld']);
 delete([outfile '.hex']);
 delete([outfile '.pot']);

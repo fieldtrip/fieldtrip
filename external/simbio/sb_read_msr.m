@@ -1,4 +1,6 @@
-function b_all = read_msr(filename)
+function b_all = sb_read_msr(filename)
+% reads in the output file of the simbio FEM calculation and extracts the
+% leadfields
 
 fid = fopen(filename,'r');
 ValuesTransposed_flag = 1;
@@ -28,4 +30,3 @@ for i = 1:N_sources
 end
 
 fclose(fid);
-end

@@ -460,10 +460,18 @@ elseif iseeg
     case 'fns'
       if isfield(vol,'bnd')
         [el, prj] = project_elec(sens.pnt, vol.bnd.pnt, vol.bnd.tri);
+        sens.tra = transfer_elec(vol.bnd.pnt, vol.bnd.tri, el);
+        % replace the original electrode positions by the projected positions
+        sens.pnt = prj;        
       end
-      sens.tra = transfer_elec(vol.bnd.pnt, vol.bnd.tri, el);
-      % replace the original electrode positions by the projected positions
-      sens.pnt = prj;
+
+    case 'simbio'
+      if isfield(vol,'bnd')
+        [el, prj] = project_elec(sens.pnt, vol.bnd.pnt, vol.bnd.tri);
+        sens.tra = transfer_elec(vol.bnd.pnt, vol.bnd.tri, el);
+        % replace the original electrode positions by the projected positions
+        sens.pnt = prj;         
+      end
       
     otherwise
       error('unsupported volume conductor model for EEG');

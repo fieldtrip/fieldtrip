@@ -26,7 +26,7 @@ function ft_write_headshape(filename, bnd, varargin)
 %
 % $Rev$
 
-fileformat = ft_get_opt(varargin,'format','unknown');
+fileformat = ft_getopt(varargin,'format','unknown');
 
 if ~isstruct(bnd)
   bnd.pnt = bnd;

@@ -163,6 +163,6 @@ str = sprintf(['#Parameter file: FEM for source simulation\n\n', ...
   options{26},options{27},options{28},options{29},options{30},options{31}); 
 
   % write the par file on disk
-  fid = fopen(file_name,'w');
+  fid = fopen(fname,'w');
   fprintf(fid,str);
   fclose(fid);
