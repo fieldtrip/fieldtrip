@@ -9,12 +9,19 @@ bnd.tri = tri;
 
 % concentric spheres volume (~/test/SimBio/test_algo.m)
 load('~crimic/test/SimBio/spheres','bkgrnd')
-transform = [0.1 0 0 -7.5; 0 0.1 0 -7.5; 0 0 0.1 -7.5; 0 0 0 1];
+transform = [0.1 0 0 -7.5; 0 0.1 0 -7.5; 0 0 0.1 -7.5; 0 0 0 1]; % voxels to cm
 
 % generates the head model for FNS (conductivities and segmentation)
+% FIXME: do i need a bnd to represent the surface of the head here?
+
+% FIXME: take care that the units here should be specified and be
+% consistent with the wireframe (ft_write_headshape + conversion)
+
+% FIXME: add vgrid to the forward/private path and commit it
 vol  = ft_headmodel_fem_simbio(bkgrnd,'tissue',{'sph1','sph2','sph3'}, ...
                                    'tissueval',[1 2 3],'tissuecond',[0.022 0.33 0.33], ...
-                                   'bnd',bnd,'transform',transform); 
+                                   'transform',transform,'unit','cm', ...
+                                   'bnd',bnd); 
 
 % create a set of electrodes
 sel = find(pnt(:,3)>0);
