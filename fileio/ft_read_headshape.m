@@ -57,8 +57,9 @@ if ~exist(filename)
 end
 
 % get the options
-fileformat  = keyval('format',      varargin);
-coordinates = keyval('coordinates', varargin); if isempty(coordinates), coordinates = 'head'; end
+fileformat  = ft_getopt(varargin,'format','unknown');
+coordinates = ft_getopt(varargin,'coordinates', 'head');
+unit        = ft_getopt(varargin,'unit', 'cm');
 
 if isempty(fileformat)
   fileformat = ft_filetype(filename);
@@ -389,7 +390,14 @@ switch fileformat
   case 'mne_pos'
     % FIXME this should be implemented, consistent with ft_write_headshape
     keyboard
-
+    
+  case 'vista'
+    [nodes,elements,labels] = read_vista_mesh(filename);
+    shape.nd     = nodes;
+    shape.el     = elements;
+    shape.labels = labels;
+    shape.unit   = unit;
+    
   otherwise
     % try reading it from an electrode of volume conduction model file
     success = false;

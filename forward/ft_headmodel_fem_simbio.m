@@ -12,7 +12,7 @@ function vol = ft_headmodel_fem_simbio(seg,varargin)
 
 wfmethod     = ft_getopt(varargin, 'wfmethod', 'cubes'); % wireframe method (default: cubes)
 transform    = ft_getopt(varargin, 'transform', []);
-unit         = ft_getopt(varargin, 'unit', 'mm');
+unit         = ft_getopt(varargin, 'unit', 'mm');     % contins the units of the head model (mm, cm, ...)
 tissue       = ft_getopt(varargin, 'tissue', []);     % contains the labels of the tissues
 tissueval    = ft_getopt(varargin, 'tissueval', []);  % contains the tissue values (an integer for each compartment)
 tissuecond   = ft_getopt(varargin, 'tissuecond', []); % contains the tissue conductivities
@@ -33,13 +33,13 @@ if strcmp(wfmethod,'cubes')
   [~,tname] = fileparts(tempname);
   MRfile = [tname '.v'];
   % write a vista volumetric file
-  write_vista_vol(size(seg), seg, MRfile);
+  ft_write_volume(MRfile, seg,'dataformat', 'vista'); % calls write_vista_vol(size(seg), seg, MRfile);
 
   % write the materials file (assign tissue values to the elements of the FEM grid)
   % see tutorial: http://www.rheinahrcampus.de/~medsim/vgrid/manual.html
   [~,tname] = fileparts(tempname);
   materialsfile = [tname '.mat'];
-  sb_write_materials(materialsfile,tissueval,tissue,weights);
+  sb_write_materials(materialsfile,tissueval,tissue,tissueweight);
   
   % Use vgrid to get the wireframe
   [~,tname] = fileparts(tempname);
@@ -50,6 +50,7 @@ if strcmp(wfmethod,'cubes')
   vroot = '/home/coherence/crimic/test/SimBio/fromJohannes/vgrid1.3.1/program/';
   efid  = fopen(shfile, 'w');
   fprintf(efid,'#!/usr/bin/env bash\n');
+  % FIXME: implicitly assimes to work with mm, see ft_read/write_headshape
   fprintf(efid,[vroot 'vgrid -in ' MRfile ' -out ' meshfile ' -min 1 -max 1 -elem cube', ...
     ' -material ' materialsfile ' -smooth shift -shift 0.49 2>&1 > /dev/null\n']);
   fclose(efid);
@@ -61,8 +62,11 @@ if strcmp(wfmethod,'cubes')
   disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
   
   % read the mesh points
-  [nodes,elements,labels] = read_vista_mesh(meshfile);
-  labels = unique(labels);
+  [shape] = ft_read_headshape(meshfile,'format','vista','unit',unit); % calls [nodes,elements,labels] = read_vista_mesh(meshfile);
+  nodes    = shape.nd;
+  elements = shape.el;
+  labels   = shape.labels;
+  labels   = unique(shape.labels);
   
   % assign wireframe (or FEM grid, or 3d mesh)
   wf.nd = nodes;

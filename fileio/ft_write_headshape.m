@@ -27,6 +27,8 @@ function ft_write_headshape(filename, bnd, varargin)
 % $Rev$
 
 fileformat = keyval('format', varargin);
+labels  = ft_getopt(varargin,'labels',[]); % for vista format only
+tensors = ft_getopt(varargin,'tensors',[]);% for vista format only
 
 if ~isstruct(bnd)
   bnd.pnt = bnd;
@@ -74,7 +76,10 @@ switch fileformat
     
   case 'off'
     write_off(filename,bnd.pnt,bnd.tri);
-
+    
+  case 'vista'
+    write_vista_mesh(filename,bnd.nd,bnd.el,labels,tensors);
+    
   case []
     error('you must specify the output format');
     

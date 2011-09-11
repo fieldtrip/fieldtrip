@@ -74,6 +74,9 @@ switch dataformat
     %nifti data, using SPM
     V = volumewrite_spm(filename, dat, transform, spmversion); 
   
+  case {'vista'}
+    write_vista_vol(size(dat), dat, filename);
+  
   otherwise
     error('unsupported data format');
 end % switch dataformat
