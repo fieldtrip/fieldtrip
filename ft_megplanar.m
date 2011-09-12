@@ -220,25 +220,40 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   % compute the interpolation matrix
   transform = lfnew * prunedinv(lfold, cfg.pruneratio);
   
-  % interpolate the data towards the planar gradiometers
-  for i=1:Ntrials
-    fprintf('interpolating trial %d to planar gradiometer\n', i);
-    interp.trial{i} = transform * data.trial{i}(dataindx,:);
-  end % for Ntrials
-  
-  % all planar gradiometer channels are included in the output
-  interp.grad  = planar.grad;
-  interp.label = planar.grad.label;
-  
-  % copy the non-gradiometer channels back into the output data
-  other = setdiff(1:Nchan, dataindx);
-  for i=other
-    interp.label{end+1} = data.label{i};
-    for j=1:Ntrials
-      interp.trial{j}(end+1,:) = data.trial{j}(i,:);
-    end
+  planarmontage = [];
+  planarmontage.tra = transform;
+  planarmontage.labelorg = axial.grad.label;
+  planarmontage.labelnew = planar.grad.label;
+ 
+  % apply the linear transformation to the data
+  interp  = ft_apply_montage(data, planarmontage, 'keepunused', 'yes');
+  % also apply the linear transformation to the gradiometer definition
+  interp.grad = ft_apply_montage(data.grad, planarmontage, 'balancename', 'planar', 'keepunused', 'yes');
+  % ensure that the old sensor type does not stick around, because it is now invalid
+  % the sensor type is added in FT_PREPARE_VOL_SENS but is not used in external fieldtrip code
+  if isfield(interp.grad, 'type')
+    interp.grad = rmfield(interp.grad, 'type');
   end
-  
+
+%   % interpolate the data towards the planar gradiometers
+%   for i=1:Ntrials
+%     fprintf('interpolating trial %d to planar gradiometer\n', i);
+%     interp.trial{i} = transform * data.trial{i}(dataindx,:);
+%   end % for Ntrials
+%   
+%   % all planar gradiometer channels are included in the output
+%   interp.grad  = planar.grad;
+%   interp.label = planar.grad.label;
+%   
+%   % copy the non-gradiometer channels back into the output data
+%   other = setdiff(1:Nchan, dataindx);
+%   for i=other
+%     interp.label{end+1} = data.label{i};
+%     for j=1:Ntrials
+%       interp.trial{j}(end+1,:) = data.trial{j}(i,:);
+%     end
+%   end
+%   
 else
     % generically call megplanar_orig megplanar_sincos or megplanar_fitplante
     fun = ['megplanar_'  cfg.planarmethod];
@@ -246,6 +261,7 @@ else
         error('unknown method for computation of planar gradient');
     end
     
+    sens = ft_convert_units(data.grad);
     [sens.pnt, sens.ori, sens.label] = channelposition(data.grad);
     cfg.channel = ft_channelselection(cfg.channel, sens.label);
     
@@ -264,15 +280,15 @@ else
         cfg.distance(j,i) = d;
     end
     
-    fprintf('minimum distance between neighbours is %6.2f %s\n', min(cfg.distance(cfg.distance~=0)), data.grad.unit);
-    fprintf('maximum distance between gradiometers is %6.2f %s\n', max(cfg.distance(cfg.distance~=0)), data.grad.unit);
+    fprintf('minimum distance between neighbours is %6.2f %s\n', min(cfg.distance(cfg.distance~=0)), sens.unit);
+    fprintf('maximum distance between gradiometers is %6.2f %s\n', max(cfg.distance(cfg.distance~=0)), sens.unit);
  
-    montage = eval([fun '(cfg, data.grad)']);
+    planarmontage = eval([fun '(cfg, data.grad)']);
     
     % apply the linear transformation to the data
-    interp  = ft_apply_montage(data, montage, 'keepunused', 'yes');
+    interp  = ft_apply_montage(data, planarmontage, 'keepunused', 'yes');
     % also apply the linear transformation to the gradiometer definition
-    interp.grad = ft_apply_montage(data.grad, montage, 'balancename', 'planar', 'keepunused', 'yes');
+    interp.grad = ft_apply_montage(data.grad, planarmontage, 'balancename', 'planar', 'keepunused', 'yes');
     % ensure that the old sensor type does not stick around, because it is now invalid
     % the sensor type is added in FT_PREPARE_VOL_SENS but is not used in external fieldtrip code
     if isfield(interp.grad, 'type')
