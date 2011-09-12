@@ -59,7 +59,7 @@ else
     % this is a mere hack for the Donders MEG system, I assume a bug in
     % chantype - Jörn
     if isempty(chanindx) 
-        chanindx = strmatch('HLC', ft_chantype(hdr));
+        chanindx = strmatch('HLC', hdr.label);
     end
 end
 
