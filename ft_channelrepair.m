@@ -104,6 +104,7 @@ end
 % get the selection of channels that are bad
 cfg.badchannel = ft_channelselection(cfg.badchannel, data.label);
 [goodchanlabels,goodchanindcs] = setdiff(data.label,cfg.badchannel);
+goodchanindcs = sort(goodchanindcs); % undo automatical sorting by setdiff
 connectivityMatrix = channelconnectivity(cfg, data);
 connectivityMatrix = connectivityMatrix(:, goodchanindcs); % all chans x good chans
 
@@ -117,9 +118,10 @@ repair = eye(Nchans,Nchans);
 for k=badindx'
     fprintf('repairing channel %s\n', data.label{k});
     repair(k,k) = 0;
-    l = find(connectivityMatrix(k, :));
+    l = goodchanindcs(find(connectivityMatrix(k, :)));
     % get bad channels out
     [a, b] = setdiff(data.label(l), data.label(badindx));
+    b = sort(b); % undo automatical sorting by setdiff
     l(~ismember(find(l), b)) = [];    
     % get corresponding ids for sens structure
     [a, b] = match_str(sens.label, data.label(l));
