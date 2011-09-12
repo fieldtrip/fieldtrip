@@ -1,10 +1,10 @@
 function h = ft_connectivityplot(cfg, varargin)
 
-% ft_connectivityplot plots frequency domain connectivity with dimord
+% FT_CONNECTIVITYPLOT plots frequency domain connectivity with dimord
 % 'chan_chan_freq'. The data are rendered in a square matrix of 'subplots'
 % using fast ft_plot_vector for rendering.
 %
-% Use as:
+% Use as
 %   ft_connectivityplot(cfg, data)
 %
 % The data is a structure containing the output to FT_CONNECTIVITYANALYSIS
@@ -12,14 +12,11 @@ function h = ft_connectivityplot(cfg, varargin)
 % 'chan_chan_freq'.
 %
 % The cfg can have the following options:
-%   cfg.parameter   = string (default = 'cohspctrm'), the functional parameter
-%                     to be plotted.
-%   cfg.zlim        = [lower upper];
-%   cfg.channel     = list of channels to be included for the plotting (default
-%                      = 'all');
+%   cfg.parameter   = string, the functional parameter to be plotted (default = 'cohspctrm')
+%   cfg.zlim        = [lower upper]
+%   cfg.channel     = list of channels to be included for the plotting (default = 'all')
 %
-% See also:
-%   FT_CONNECTIVITYANALYSIS, FT_PLOT_VECTOR, FT_CHANNELSELECTION
+% See also FT_CONNECTIVITYANALYSIS, FT_PLOT_VECTOR, FT_CHANNELSELECTION
 
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
 %
@@ -41,12 +38,21 @@ function h = ft_connectivityplot(cfg, varargin)
 %
 % $Id: ft_connectivityplot$
 
+ft_defaults
+
+% record start time and total processing time
+ftFuncTimer = tic();
+ftFuncClock = clock();;
+ftFuncMem   = memtic();
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
 
-cfg.channel = ft_getopt(cfg, 'channel', 'all');
-cfg.parameter  = ft_getopt(cfg, 'parameter', 'cohspctrm');
-cfg.zlim    = ft_getopt(cfg, 'zlim', []);
-cfg.color   = ft_getopt(cfg, 'color', 'brgkywrgbkywrgbkywrgbkyw');
+cfg.channel   = ft_getopt(cfg, 'channel', 'all');
+cfg.parameter = ft_getopt(cfg, 'parameter', 'cohspctrm');
+cfg.zlim      = ft_getopt(cfg, 'zlim', []);
+cfg.color     = ft_getopt(cfg, 'color', 'brgkywrgbkywrgbkywrgbkyw');
 
 % make the function recursive if numel(varargin)>1
 % FIXME check explicitly which channels belong together
@@ -122,3 +128,25 @@ end
 
 axis([-0.2 (nchan+1).*1.2+0.2 0 (nchan+1).*1.2+0.2]);
 axis off;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% deal with the output
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% get the output cfg
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+
+% add the version details of this function call to the configuration
+cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
+cfg.version.id   = '$Id: ft_movieplotER.m 4096 2011-09-03 15:49:40Z roboos $'; % this will be auto-updated by the revision control system
+
+% add information about the Matlab version used to the configuration
+cfg.callinfo.matlab = version();
+
+% add information about the function call to the configuration
+cfg.callinfo.proctime = toc(ftFuncTimer);
+cfg.callinfo.procmem  = memtoc(ftFuncMem);
+cfg.callinfo.calltime = ftFuncClock;
+cfg.callinfo.user = getusername(); % this is helpful for debugging
+fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
+

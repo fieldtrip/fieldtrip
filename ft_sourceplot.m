@@ -159,8 +159,12 @@ function [cfg] = ft_sourceplot(cfg, data)
 %
 % $Id$
 
-ft_defaults
+% record start time and total processing time
+ftFuncTimer = tic();
+ftFuncClock = clock();;
+ftFuncMem   = memtic();
 
+% check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'renamed', {'inputcoordsys', 'coordsys'});
 
@@ -1140,11 +1144,29 @@ end
 title(cfg.title);
 set(gcf, 'renderer', cfg.renderer);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% deal with the output
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % get the output cfg
 cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
+% add the version details of this function call to the configuration
+cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
+cfg.version.id   = '$Id$'; % this will be auto-updated by the revision control system
+
+% add information about the Matlab version used to the configuration
+cfg.callinfo.matlab = version();
+
+% add information about the function call to the configuration
+cfg.callinfo.proctime = toc(ftFuncTimer);
+cfg.callinfo.procmem  = memtoc(ftFuncMem);
+cfg.callinfo.calltime = ftFuncClock;
+cfg.callinfo.user = getusername(); % this is helpful for debugging
+fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% handle_ortho makes an overlay of 3D anatomical, functional and probability
+% SUBFUNCTION makes an overlay of 3D anatomical, functional and probability
 % volumes. The three volumes must be scaled between 0 and 1.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [vols2D] = handle_ortho(vols, indx, slicedir, dim, doimage)
@@ -1202,7 +1224,7 @@ if hasfun; vols2D{2} = fun; end;
 if hasmsk; vols2D{3} = msk; end;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% plot2D plots a two dimensional plot, used in ortho and slice
+% SUBFUNCTION plots a two dimensional plot, used in ortho and slice
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function plot2D(vols2D, scales, doimage);
 cla;

@@ -102,12 +102,14 @@ freq.noisecov  = data.noisecov;
 freq.crsspctrm = crsspctrm;
 freq.dof       = data.dof;
 
-try
-  cfg.previous = data.cfg;
-end
-freq.cfg     = cfg; 
+% remember the configuration details of the input data
+try, cfg.previous = data.cfg; end
+% remember the exact configuration details in the output
+freq.cfg = cfg;
 
-%---SUBFUNCTION to compute transfer-function from ar-parameters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION to compute transfer-function from ar-parameters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [h, zar] = ar2h(ar, foi, fsample)
 
 nchan = size(ar,1);
@@ -134,3 +136,4 @@ h   = sqrt(2).*h; %account for the negative frequencies, normalization necessary
 %comparison with non-parametric (fft based) results in fieldtrip
 %FIXME probably the normalization for the zero Hz bin is incorrect
 zar = zar./sqrt(2);
+

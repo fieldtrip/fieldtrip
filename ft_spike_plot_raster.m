@@ -43,6 +43,16 @@ function [hdl] = ft_spike_plot_raster(cfg, spike)
 
 % Martin Vinck (C) 2010 F.C. Donders Centre for Neuroimaging, University of Amsterdam
 
+ft_defaults
+
+% record start time and total processing time
+ftFuncTimer = tic();
+ftFuncClock = clock();;
+ftFuncMem   = memtic();
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 if nargin<2, error('MATLAB:ft_spike_plot_raster:nargin','>=2 input arguments required'), end
 
 % check the configuration inputs and enter the defaults
@@ -281,6 +291,30 @@ set(zoom,'ActionPostCallback',{@mypostcallback,ax,limX,limY});
 set(pan,'ActionPostCallback',{@mypostcallback,ax,limX,limY});
 hdl.cfg = cfg;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% deal with the output
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% get the output cfg
+cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+
+% add the version details of this function call to the configuration
+cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
+cfg.version.id   = '$Id$'; % this will be auto-updated by the revision control system
+
+% add information about the Matlab version used to the configuration
+cfg.callinfo.matlab = version();
+
+% add information about the function call to the configuration
+cfg.callinfo.proctime = toc(ftFuncTimer);
+cfg.callinfo.procmem  = memtoc(ftFuncMem);
+cfg.callinfo.calltime = ftFuncClock;
+cfg.callinfo.user = getusername(); % this is helpful for debugging
+fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [] = mypostcallback(fig,evd,ax,lim,ylim)
 currentAxes = evd.Axes;
 indx = find(currentAxes==ax);  
@@ -298,8 +332,10 @@ if lim(1)>xlim(1), xlim(1) = lim(1); end
 if lim(2)<xlim(2), xlim(2) = lim(2); end      
 set(ax,'XLim', xlim)
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [X,Y] = polygon(x,mn,sm,multiplier)
-
 if nargin < 4
     multiplier = 1;
 end
@@ -309,6 +345,9 @@ down = mn - multiplier*sm;
 Y = [down up(end:-1:1) down(1)];
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [colorspace] = colormap_cgbprb(N)
 % COLORMAP_SEPARATION returns a color map with well separated colors that does not include
 % white, yellow or orange since these are not well visible in white plots.

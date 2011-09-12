@@ -137,3 +137,4 @@ end
 % only update the method and trials fields
 freq.cfg.method = cfg.method;
 freq.cfg.trials = cfg.trials;
+

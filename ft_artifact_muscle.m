@@ -74,7 +74,7 @@ function [cfg, artifact] = ft_artifact_muscle(cfg,data)
 
 ft_defaults
 
-% this is just a wrapper function around ft_artifact_zvalue, therefore it does not neet to 
+% this is just a wrapper function around ft_artifact_zvalue, therefore it does not need to 
 % measure the time spent in this function with tic/toc
 % measure the memory usage with memtic/memtoc
 
