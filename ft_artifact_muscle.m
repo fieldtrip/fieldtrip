@@ -5,19 +5,20 @@ function [cfg, artifact] = ft_artifact_muscle(cfg,data)
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_muscle(cfg)
-%   required configuration options: 
-%   cfg.dataset or both cfg.headerfile and cfg.datafile
-% or
-%   [cfg, artifact] = ft_artifact_muscle(cfg, data)
-%   forbidden configuration options: 
-%   cfg.dataset, cfg.headerfile and cfg.datafile
+% with the configuration options
+%   cfg.dataset 
+%   cfg.headerfile 
+%   cfg.datafile
 %
-% In both cases the configuration should also contain:
+% Alternatively you can use it as
+%   [cfg, artifact] = ft_artifact_muscle(cfg, data)
+%
+% In both cases the configuration should also contain
 %   cfg.trl        = structure that defines the data segments of interest. See FT_DEFINETRIAL
 %   cfg.continuous = 'yes' or 'no' whether the file contains continuous data
 %
 % The data is preprocessed (again) with the following configuration parameters,
-% which are optimal for identifying muscle artifacts:
+% which are optimal for identifying muscle artifacts.
 %   cfg.artfctdef.muscle.bpfilter    = 'yes'
 %   cfg.artfctdef.muscle.bpfreq      = [110 140]
 %   cfg.artfctdef.muscle.bpfiltord   = 8
@@ -28,7 +29,7 @@ function [cfg, artifact] = ft_artifact_muscle(cfg,data)
 % Artifacts are identified by means of thresholding the z-transformed value
 % of the preprocessed data.
 %   cfg.artfctdef.muscle.channel     = Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details
-%   cfg.artfctdef.muscle.cutoff      = 4       z-value at which to threshold
+%   cfg.artfctdef.muscle.cutoff      = z-value at which to threshold (default = 4)
 %   cfg.artfctdef.muscle.trlpadding  = 0.1
 %   cfg.artfctdef.muscle.fltpadding  = 0.1
 %   cfg.artfctdef.muscle.artpadding  = 0.1
@@ -45,12 +46,13 @@ function [cfg, artifact] = ft_artifact_muscle(cfg,data)
 % file on disk. This mat files should contain only a single variable named 'data',
 % corresponding to the input structure.
 %
-% See also FT_ARTIFACT_ZVALUE, FT_REJECTARTIFACT
+% See also FT_REJECTARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG, FT_ARTIFACT_EOG,
+% FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_ZVALUE
 
 % Undocumented local options:
 % cfg.method
 
-% Copyright (c) 2003-2006, Jan-Mathijs Schoffelen & Robert Oostenveld
+% Copyright (C) 2003-2011, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -71,6 +73,10 @@ function [cfg, artifact] = ft_artifact_muscle(cfg,data)
 % $Id$
 
 ft_defaults
+
+% this is just a wrapper function around ft_artifact_zvalue, therefore it does not neet to 
+% measure the time spent in this function with tic/toc
+% measure the memory usage with memtic/memtoc
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');

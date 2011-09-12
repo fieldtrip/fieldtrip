@@ -18,29 +18,28 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg,data)
 %
 % If you are calling FT_ARTIFACT_ZVALUE with only the configuration as first
 % input argument and the data still has to be read from file, you should
-% specify:
-%   cfg.headerfile
+% specify
 %   cfg.headerfile
 %   cfg.datafile
-%   cfg.ft_datatype
+% and optionally
+%   cfg.headerformat
+%   cfg.dataformat
 %
 % If you are calling FT_ARTIFACT_ZVALUE with also the second input argument
 % "data", then that should contain data that was already read from file
-% inmarti
 % a call to FT_PREPROCESSING.
 %
-% In order to save memory, you can call the function with cfg.memory =
-% 'low' which will cause the function to not store as much data in memory
-% but  execution time will be around twice as high.
+% If you encounter difficulties with memory usage, you can use
+%   cfg.memory = 'low' or 'high', whether to be computationally or memory efficient (default = 'high')
 %
 % The required configuration settings are:
 %   cfg.trl
+%   cfg.continuous
 %   cfg.artfctdef.zvalue.channel
 %   cfg.artfctdef.zvalue.cutoff
 %   cfg.artfctdef.zvalue.trlpadding
 %   cfg.artfctdef.zvalue.fltpadding
 %   cfg.artfctdef.zvalue.artpadding
-%   cfg.continuous
 %
 % Configuration settings related to the preprocessing of the data are
 %   cfg.artfctdef.zvalue.lpfilter      = 'no' or 'yes'  lowpass filter
@@ -67,9 +66,10 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg,data)
 %   cfg.artfctdef.zvalue.hilbert       = 'no' or 'yes'
 %   cfg.artfctdef.zvalue.rectify       = 'no' or 'yes'
 %
-% See also FT_REJECTARTIFACT
+% See also FT_REJECTARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG, FT_ARTIFACT_EOG,
+% FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_ZVALUE
 
-% Copyright (c) 2003-2005, Jan-Mathijs Schoffelen, Robert Oostenveld
+% Copyright (C) 2003-2011, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -90,6 +90,11 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg,data)
 % $Id$
 
 ft_defaults
+
+% record start time and total processing time
+ftFuncTimer = tic();
+ftFuncClock = clock();
+ftFuncMem   = memtic();
 
 % set default rejection parameters
 if ~isfield(cfg,'artfctdef'),                   cfg.artfctdef                    = [];       end
@@ -399,7 +404,15 @@ cfg.artfctdef.zvalue.artifact = artifact;
 
 fprintf('detected %d artifacts\n', size(artifact,1));
 
-% add version information to the configuration
+% add the version details of this function call to the configuration
 cfg.artfctdef.zvalue.version.name = mfilename('fullpath');
 cfg.artfctdef.zvalue.version.id = '$Id$';
+
+% add information about the function call to the configuration
+cfg.artfctdef.zvalue.callinfo.matlab   = version();
+cfg.artfctdef.zvalue.callinfo.proctime = toc(ftFuncTimer);
+cfg.artfctdef.zvalue.callinfo.procmem  = memtoc(ftFuncMem);
+cfg.artfctdef.zvalue.callinfo.calltime = ftFuncClock;
+cfg.artfctdef.zvalue.callinfo.user     = getusername();
+fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.artfctdef.zvalue.callinfo.proctime), round(cfg.artfctdef.zvalue.callinfo.procmem/(1024*1024)));
 
