@@ -215,6 +215,12 @@ elseif isfield(cfg, 'vol')
 end
 volcfg.grad    = data.grad;
 volcfg.channel = data.label; % this might be a subset of the MEG channels
+gradorig       = data.grad; % this is needed later on for plotting. As of
+% yet the next step is not entirely correct, because it does not keep track
+% of the balancing of the gradiometer array. FIXME this may require some
+% thought because the leadfields are computed with low level functions and
+% do not easily accommodate for matching the correct channels with each
+% other (in order to compute the projection matrix).
 [volold, data.grad] = prepare_headmodel(volcfg);
 
 % note that it is neccessary to keep the two volume conduction models
@@ -341,7 +347,7 @@ if strcmp(cfg.feedback, 'yes')
   figure
   tmpcfg = [];
   tmpcfg.vol = volold;
-  tmpcfg.grad = data.grad;
+  tmpcfg.grad = gradorig;
   tmpcfg.grid = grid;
   tmpcfg.plotsensors = 'no';  % these are plotted seperately below
   ft_headmodelplot(tmpcfg);
