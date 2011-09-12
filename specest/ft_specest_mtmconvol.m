@@ -137,7 +137,8 @@ for ifreqoi = 1:nfreqoi
       end
       
     case 'sine'
-      % remove the last taper
+      % create and remove the last taper
+      tap = sine_taper(timwinsample(ifreqoi), timwinsample(ifreqoi) .* (tapsmofrq(ifreqoi) ./ fsample))'; 
       tap = tap(1:(end-1), :);
       
     case 'sine_old'
