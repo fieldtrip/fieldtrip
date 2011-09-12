@@ -1,4 +1,4 @@
-function [data] = spm2ft(D)
+function [data] = spm2fieldtrip(D)
 
 % SPM2FIELDTRIP converts an SPM8 meeg object into a FieldTrip raw data structure
 %
@@ -26,19 +26,7 @@ if ~isa(D, 'meeg')
 end
 
 % this is how SPM8 represents it
-spmdata = D.ftraw;
-
-% convert it into a normal MATLAB structure, i.e. get rid of all the SPM8 objects
-data = [];
-data.fsample = spmdata.fsample;
-data.label   = spmdata.label(:);
-data.time    = spmdata.time;
-
-ntrials = numel(spmdata.trial);
-for i=1:ntrials
-  % this converts it from a file_array (on disk) into a normal array (in memory)
-  data.trial{i} = spmdata.trial{i}(:,:);
-end
+data = D.ftraw(0);
 
 clist      = D.condlist;
 conditions = D.conditions;
