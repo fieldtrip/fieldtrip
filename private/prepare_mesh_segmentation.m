@@ -22,7 +22,7 @@ end
 
 % some initial checks
 cfg = ft_checkconfig(cfg, 'forbidden', 'numcompartments');
-% if ~isfield(mri, 'tissue') && any(ismember(fieldnames(mri), {'gray' 'brain' 'scalp'})), cfg.tissue = 1; end
+if ~isfield(mri, 'tissue') && any(ismember(fieldnames(mri), {'gray' 'brain' 'scalp'})) && (~isfield(cfg,'tissue') || length(cfg.tissue)==1), cfg.tissue = 1; end
 if ~isfield(cfg, 'threshold'), cfg.threshold = 0; end
 if ~isfield(mri, 'unit'), mri = ft_convert_units(mri); end
   
