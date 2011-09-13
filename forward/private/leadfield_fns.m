@@ -59,6 +59,10 @@ try
     mri.transform = eye(4);
     mri.seg = vol.seg;
     % write the segmentation on disk
+    
+    if ~ft_hastoolbox('fileio')
+      error('You must have the fileio module to go on')
+    end
     cfg = [];
     cfg.coordsys  = 'ctf';
     cfg.parameter = 'seg';
