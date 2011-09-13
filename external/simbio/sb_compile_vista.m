@@ -1,4 +1,4 @@
-function ft_compile_vista(force)
+function sb_compile_vista(force)
 
 % FT_COMPILE_VISTA is used for compiling most of the Vista MEX files that are used in FieldTrip
 %
@@ -22,15 +22,13 @@ function ft_compile_vista(force)
 
 % ft_compile_vista compiles the files belonging to the fileio Vista format library
 % 
-% private/libvista.a
-% private/read_vista_mesh.cpp
-% private/write_vista_mesh.cpp
-% private/write_vista_vol.cpp
-% private/vistaprimitive.h
-% private/vistaprimitive.cpp
-% private/write_vista_vol.m
-% private/vista
-
+% vista/libvista.a
+% vista/read_vista_mesh.cpp
+% vista/write_vista_mesh.cpp
+% vista/write_vista_vol.cpp
+% vista/vistaprimitive.h
+% vista/vistaprimitive.cpp
+% vista/write_vista_vol.m
 
 if nargin<1
    force=false;
@@ -46,14 +44,14 @@ end
 % MACI64
 
 % At the moment this works only for Linux 32-64 bit
-% Vista folder has to be in the same folder as ft_compile_vista
-% FIXME: compile the libvista.a shared library for all platforms
+% Vista folder has to be in the same folder as sb_compile_vista
 
 L = [];
-L = add_mex_source(L,'private','vistaprimitive',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o vistaprimitive.o');
-L = add_mex_source(L,'private','read_vista_mesh',{'GLNX86', 'GLNXA64'},[],'vistaprimitive.o libvista.a');
-L = add_mex_source(L,'private','write_vista_mesh',{'GLNX86', 'GLNXA64'},[],'libvista.a');
-L = add_mex_source(L,'private','write_vista_vol',{'GLNX86', 'GLNXA64'},[],'libvista.a');
+L = add_mex_source(L,'vista','vistaprimitive',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o vistaprimitive.o');
+% FIXME: compile the libvista.a shared library for all platforms
+L = add_mex_source(L,'vista','read_vista_mesh',{'GLNX86', 'GLNXA64'},[],'vistaprimitive.o libvista.a');
+L = add_mex_source(L,'vista','write_vista_mesh',{'GLNX86', 'GLNXA64'},[],'libvista.a');
+L = add_mex_source(L,'vista','write_vista_vol',{'GLNX86', 'GLNXA64'},[],'libvista.a');
 
 oldDir = pwd;
 [baseDir, myName] = fileparts(mfilename('fullpath'));
