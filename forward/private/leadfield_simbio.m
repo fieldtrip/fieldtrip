@@ -28,24 +28,29 @@ try
       
       cd(tempdir)
       [~,tname] = fileparts(tempname);
-      exefile = [tname '.sh'];
+      exefile   = [tname '.sh'];
       [~,tname] = fileparts(tempname);
-      elcfile  = [tname '.elc'];
+      elcfile   = [tname '.elc'];
       [~,tname] = fileparts(tempname);
-      dipfile  = [tname '.dip'];
+      dipfile   = [tname '.dip'];
       [~,tname] = fileparts(tempname);
-      parfile  = [tname '.par'];
+      parfile   = [tname '.par'];
       [~,tname] = fileparts(tempname);
       meshfile  = [tname '.v'];
       [~,tname] = fileparts(tempname);
-      outfile  = [tname];
+      transfermatrix = [tname];
+      [~,tname] = fileparts(tempname);
+      outfile   = [tname];      
       
       % write the electrodes and dipoles positions in the temporary folder
-      % FIXME: distinguish between surface and deep electrodes
       disp('Writing the electrodes file on disk...')
-      sb_write_elc(elc.pnt,elc.label,elcfile);
+      if ~isfield(vol,'deepelec')
+        sb_write_elc(warp_apply(inv(vol.transform),elc.pnt),elc.label,elcfile);
+      else
+        sb_write_elc(warp_apply(inv(vol.transform),elc.pnt),elc.label,elcfile,1);
+      end
       disp('Writing the dipoles file on disk...')
-      sb_write_dip(dip,dipfile);
+      sb_write_dip(warp_apply(inv(vol.transform),dip),dipfile);
       
       % write the parameters file, contains tissues conductivities, the FE
       % grid and Simbio call details, mixed together
@@ -53,17 +58,18 @@ try
       sb_write_par(parfile,'cond',vol.cond,'labels',unique(vol.wf.labels));
       
       % write the vol.wf in a Vista format .v file
-      [~,tname] = fileparts(tempname);
-      wffile = [tname '.v'];
-      % write a vista wireframe file
       ft_write_headshape(meshfile,vol.wf,'format','vista');
       
       % Exe file
       efid = fopen(exefile, 'w');
       if ~ispc
         fprintf(efid,'#!/usr/bin/env bash\n');
-        fprintf(efid,['ipm_linux_opt_Venant -i sourcesimulation -h ' wffile ' -s ./' elcfile, ...
-          ' -dip ' dipfile ' -o ' outfile ' -p ' parfile ' -fwd FEM -sens EEG 2>&1 > /dev/null\n']);
+%         fprintf(efid,['ipm_linux_opt_Venant -i FEtransfermatrix -h ./' meshfile ' -s ./' elcfile, ...
+%           ' -o ./' transfermatrix ' -p ./' parfile ' -sens EEG 2>&1 > /dev/null\n']); 
+%         fprintf(efid,['ipm_linux_opt_Venant -i sourcesimulation -s ./' elcfile ' -t ./' transfermatrix, ...
+%           ' -dip ./' dipfile ' -o ./' outfile ' -p ./' parfile ' -fwd FEM -sens EEG 2>&1 > /dev/null\n']);         
+        fprintf(efid,['ipm_linux_opt_Venant -i sourcesimulation -h ./' meshfile ' -s ./' elcfile, ...
+          ' -dip ./' dipfile ' -o ./' outfile ' -p ./' parfile ' -fwd FEM -sens EEG 2>&1 > /dev/null\n']);
       end
       fclose(efid);
       
@@ -75,7 +81,7 @@ try
       disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
       
       [lf] = sb_read_msr(outfile);
-      cleaner(dipfile,elcfile,outfile,exefile)
+      cleaner(exefile,elcfile,dipfile,parfile,meshfile,outfile)
       cd(tmpfolder)
     end
   end

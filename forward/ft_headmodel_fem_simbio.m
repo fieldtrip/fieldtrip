@@ -34,14 +34,19 @@ if strcmp(wfmethod,'cubes')
   % see tutorial: http://www.rheinahrcampus.de/~medsim/vgrid/manual.html
   [~,tname] = fileparts(tempname);
   materialsfile = [tname '.mat'];
-  write_materials(materialsfile,tissueval,tissue,tissueweight);
+  
+  if ft_hastoolbox('simbio')
+    sb_write_materials(materialsfile,tissueval,tissue,tissueweight);
+  else
+    error('Cannot write a materials file without the Vista/Simbio toolbox')
+  end
   
   % Use vgrid to get the wireframe
   [~,tname] = fileparts(tempname);
   meshfile  = [tname '.v'];
   [~,tname] = fileparts(tempname);
   shfile    = [tname '.sh'];
-  %FIXME:  use hastoolbox, change this in the future
+  %FIXME:  use ft_hastoolbox, change this in the future
   vroot = '/home/coherence/crimic/test/SimBio/fromJohannes/vgrid1.3.1/program/';
   efid  = fopen(shfile, 'w');
   fprintf(efid,'#!/usr/bin/env bash\n');
