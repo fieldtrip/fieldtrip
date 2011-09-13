@@ -28,7 +28,7 @@ if strcmp(wfmethod,'cubes')
   [~,tname] = fileparts(tempname);
   MRfile = [tname '.v'];
   % write a vista volumetric file
-  ft_write_volume(MRfile, seg,'dataformat', 'vista'); % calls write_vista_vol(size(seg), seg, MRfile);
+  ft_write_volume(MRfile, seg,'dataformat', 'vista');
   
   % write the materials file (assign tissue values to the elements of the FEM grid)
   % see tutorial: http://www.rheinahrcampus.de/~medsim/vgrid/manual.html
@@ -46,12 +46,14 @@ if strcmp(wfmethod,'cubes')
   meshfile  = [tname '.v'];
   [~,tname] = fileparts(tempname);
   shfile    = [tname '.sh'];
-  %FIXME:  use ft_hastoolbox, change this in the future
-  vroot = '/home/coherence/crimic/test/SimBio/fromJohannes/vgrid1.3.1/program/';
+  if ~ft_hastoolbox('simbio')
+    error('To run vgrid you should install the simbio toolbox first')
+  end
+  %   vroot = '/home/coherence/crimic/test/SimBio/fromJohannes/vgrid1.3.1/program/';
   efid  = fopen(shfile, 'w');
   fprintf(efid,'#!/usr/bin/env bash\n');
   % works with voxels
-  fprintf(efid,[vroot 'vgrid -in ' MRfile ' -out ' meshfile ' -min 1 -max 1 -elem cube', ...
+  fprintf(efid,['vgrid -in ' MRfile ' -out ' meshfile ' -min 1 -max 1 -elem cube', ...
     ' -material ' materialsfile ' -smooth shift -shift 0.49 2>&1 > /dev/null\n']);
   fclose(efid);
   % execute command
@@ -69,7 +71,7 @@ if strcmp(wfmethod,'cubes')
   end
   
   % read the mesh points
-  [shape] = ft_read_headshape(meshfile,'format','vista','unit',unit); % calls [nodes,elements,labels] = read_vista_mesh(meshfile);
+  [shape] = ft_read_headshape(meshfile,'format','vista','unit',unit); 
   nodes    = shape.nd; % in voxel coordinates
   elements = shape.el;
   labels   = shape.labels;

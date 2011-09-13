@@ -47,8 +47,8 @@ end
 % Vista folder has to be in the same folder as sb_compile_vista
 
 L = [];
+
 % compile the libvista.a shared library for UNIX/LINUX
-add_mex_source(L,'vista','vistaprimitive.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o vistaprimitive.o');
 add_mex_source(L,'vista','FIL_Vista_Attr.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Attr.o');
 add_mex_source(L,'vista','FIL_Vista_Basic.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Basic.o');
 add_mex_source(L,'vista','FIL_Vista_File.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_File.o');
@@ -57,7 +57,8 @@ add_mex_source(L,'vista','FIL_Vista_Image.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -
 if isunix
   system('ar rcs libvista.a FIL_Vista_Attr.o FIL_Vista_Basic.o FIL_Vista_File.o FIL_Vista_Graph.o FIL_Vista_Image.o');
 end
-
+% compile the mesh/vol functions
+add_mex_source(L,'vista','vistaprimitive.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o vistaprimitive.o');
 L = add_mex_source(L,'vista','read_vista_mesh.cpp',{'GLNX86', 'GLNXA64'},[],'vistaprimitive.o libvista.a');
 L = add_mex_source(L,'vista','write_vista_mesh.cpp',{'GLNX86', 'GLNXA64'},[],'libvista.a');
 L = add_mex_source(L,'vista','write_vista_vol.cpp',{'GLNX86', 'GLNXA64'},[],'libvista.a');
@@ -65,9 +66,8 @@ L = add_mex_source(L,'vista','write_vista_vol.cpp',{'GLNX86', 'GLNXA64'},[],'lib
 oldDir = pwd;
 [baseDir, myName] = fileparts(mfilename('fullpath'));
 try
-  compile_mex_list_vista(L, baseDir, force); % for .cpp functions only
+  compile_mex_list_vista(L, baseDir, force); 
 catch
-  % the "catch me" syntax is broken on MATLAB74, this fixes it
   me = lasterror;
   cd(oldDir);
   rethrow(me);
@@ -84,10 +84,10 @@ function compile_mex_list_vista(L, baseDir, force)
 %
 % See also ft_compile_mex, add_mex_source.
 
-% (C) 2010 S. Klanke
+% (C) 2010 S. Klanke, 2011, Cristiano Micheli
 
 for i=1:length(L)
-   [relDir, name] = fileparts(L(i).relName);
+   [~, name] = fileparts(L(i).relName);
 
    sfname = [baseDir filesep L(i).dir filesep L(i).relName ];
    SF = dir(sfname);
