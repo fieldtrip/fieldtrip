@@ -226,7 +226,7 @@ switch toolbox
   case 'FNS'
     status  = exist('elecsfwd', 'file') && exist('img_get_gray', 'file');
   case 'SIMBIO'
-    status  = exist('ipm_linux_opt_Venant', 'file');
+    status  = exist('ipm_linux_opt_Venant', 'file') && exist('sb_write_dip.m','file');
   case 'GIFTI'
     status  = exist('gifti', 'file');
   case 'XML4MAT'
