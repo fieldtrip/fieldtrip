@@ -49,19 +49,20 @@ end
 L = [];
 
 % compile the libvista.a shared library for UNIX/LINUX
-add_mex_source(L,'vista','FIL_Vista_Attr.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Attr.o');
-add_mex_source(L,'vista','FIL_Vista_Basic.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Basic.o');
-add_mex_source(L,'vista','FIL_Vista_File.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_File.o');
-add_mex_source(L,'vista','FIL_Vista_Graph.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Graph.o');
-add_mex_source(L,'vista','FIL_Vista_Image.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Image.o');
+L =add_mex_source(L,'vista','FIL_Vista_Attr.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Attr.o');
+L =add_mex_source(L,'vista','FIL_Vista_Basic.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Basic.o');
+L =add_mex_source(L,'vista','FIL_Vista_File.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_File.o');
+L =add_mex_source(L,'vista','FIL_Vista_Graph.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Graph.o');
+L =add_mex_source(L,'vista','FIL_Vista_Image.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Image.o');
+% FIXME: the following should be done inside a function called add_shared_library
 if isunix
-  system('ar rcs libvista.a FIL_Vista_Attr.o FIL_Vista_Basic.o FIL_Vista_File.o FIL_Vista_Graph.o FIL_Vista_Image.o');
+  system('ar rcs libvista.a vista/FIL_Vista_Attr.o vista/FIL_Vista_Basic.o vista/FIL_Vista_File.o vista/FIL_Vista_Graph.o vista/FIL_Vista_Image.o');
 end
 % compile the mesh/vol functions
-add_mex_source(L,'vista','vistaprimitive.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o vistaprimitive.o');
-L = add_mex_source(L,'vista','read_vista_mesh.cpp',{'GLNX86', 'GLNXA64'},[],'vistaprimitive.o libvista.a');
-L = add_mex_source(L,'vista','write_vista_mesh.cpp',{'GLNX86', 'GLNXA64'},[],'libvista.a');
-L = add_mex_source(L,'vista','write_vista_vol.cpp',{'GLNX86', 'GLNXA64'},[],'libvista.a');
+L =add_mex_source(L,'.','vistaprimitive.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o vistaprimitive.o');
+L = add_mex_source(L,'.','read_vista_mesh.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista vistaprimitive.o libvista.a');
+L = add_mex_source(L,'.','write_vista_mesh.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista libvista.a');
+L = add_mex_source(L,'.','write_vista_vol.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista libvista.a');
 
 oldDir = pwd;
 [baseDir, myName] = fileparts(mfilename('fullpath'));
