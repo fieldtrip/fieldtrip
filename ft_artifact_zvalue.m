@@ -130,7 +130,7 @@ if nargin > 1
   % data given as input
   isfetch = 1;
   hdr = ft_fetch_header(data);
-  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
+  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleopt', 'yes');
 elseif nargin == 1
   % only cfg given
   isfetch = 0;
@@ -149,15 +149,14 @@ end
 if isfield(cfg,'trl')
   trl           = cfg.trl;
 else
-  trl = data.sampleinfo;
+  trl = data.sampleopt;
 end
 trlpadding    = round(cfg.artfctdef.zvalue.trlpadding*hdr.Fs);
 fltpadding    = round(cfg.artfctdef.zvalue.fltpadding*hdr.Fs);
 artpadding    = round(cfg.artfctdef.zvalue.artpadding*hdr.Fs);
 trl(:,1)      = trl(:,1) - trlpadding;       % pad the trial with some samples, in order to detect
 trl(:,2)      = trl(:,2) + trlpadding;       % artifacts at the edges of the relevant trials.
-trl(:,3)      = nan;                         % the offset is not correct any more
-trllength     = trl(:,2) - trl(:,1) + 1;     % length of each trial
+trl(:,3)      = nan;                         % the offset is not correct any moretrllength     = trl(:,2) - trl(:,1) + 1;     % length of each trial
 numtrl        = size(trl,1);
 cfg.artfctdef.zvalue.trl = trl;              % remember where we are going to look for artifacts
 cfg.artfctdef.zvalue.channel = ft_channelselection(cfg.artfctdef.zvalue.channel, hdr.label);
@@ -212,36 +211,39 @@ if strcmp(cfg.memory, 'low')
     fprintf('\n');
 end
 
+zmax = cell(1, numtrl);
+zsum = cell(1, numtrl);
+zindx = cell(1, numtrl);
 for trlop = 1:numtrl
-    if strcmp(cfg.memory, 'low') % store nothing in memory (note that we need to preproc AGAIN... *yawn*        
-        fprintf('.');
-        if isfetch
-            dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
-        else
-            dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
-        end
-        dat = preproc(dat, cfg.artfctdef.zvalue.channel, hdr.Fs, cfg.artfctdef.zvalue, [], fltpadding, fltpadding);
-        zmax{trlop}  = -inf + zeros(1,size(dat,2));
-        zsum{trlop}  = zeros(1,size(dat,2));
-        zindx{trlop} = zeros(1,size(dat,2));
-        
-        nsmp          = size(dat,2);
-        zdata         = (dat - datavg(:,ones(1,nsmp)))./datstd(:,ones(1,nsmp));  % convert the filtered data to z-values
-        zsum{trlop}   = sum(zdata,1);                   % accumulate the z-values over channels
-        [zmax{trlop},ind] = max(zdata,[],1);            % find the maximum z-value and remember it
-        zindx{trlop}      = sgnind(ind);                % also remember the channel number that has the largest z-value
+  if strcmp(cfg.memory, 'low') % store nothing in memory (note that we need to preproc AGAIN... *yawn*        
+    fprintf('.');
+    if isfetch
+      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
     else
-        % initialize some matrices
-        zmax{trlop}  = -inf + zeros(1,size(dat{trlop},2));
-        zsum{trlop}  = zeros(1,size(dat{trlop},2));
-        zindx{trlop} = zeros(1,size(dat{trlop},2));
-        
-        nsmp          = size(dat{trlop},2);
-        zdata         = (dat{trlop} - datavg(:,ones(1,nsmp)))./datstd(:,ones(1,nsmp));  % convert the filtered data to z-values
-        zsum{trlop}   = sum(zdata,1);                   % accumulate the z-values over channels
-        [zmax{trlop},ind] = max(zdata,[],1);            % find the maximum z-value and remember it
-        zindx{trlop}      = sgnind(ind);                % also remember the channel number that has the largest z-value
+      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
     end
+    dat = preproc(dat, cfg.artfctdef.zvalue.channel, hdr.Fs, cfg.artfctdef.zvalue, [], fltpadding, fltpadding);
+    zmax{trlop}  = -inf + zeros(1,size(dat,2));
+    zsum{trlop}  = zeros(1,size(dat,2));
+    zindx{trlop} = zeros(1,size(dat,2));
+    
+    nsmp          = size(dat,2);
+    zdata         = (dat - datavg(:,ones(1,nsmp)))./datstd(:,ones(1,nsmp));  % convert the filtered data to z-values
+    zsum{trlop}   = sum(zdata,1);                   % accumulate the z-values over channels
+    [zmax{trlop},ind] = max(zdata,[],1);            % find the maximum z-value and remember it
+    zindx{trlop}      = sgnind(ind);                % also remember the channel number that has the largest z-value
+  else
+    % initialize some matrices
+    zmax{trlop}  = -inf + zeros(1,size(dat{trlop},2));
+    zsum{trlop}  = zeros(1,size(dat{trlop},2));
+    zindx{trlop} = zeros(1,size(dat{trlop},2));
+    
+    nsmp          = size(dat{trlop},2);
+    zdata         = (dat{trlop} - datavg(:,ones(1,nsmp)))./datstd(:,ones(1,nsmp));  % convert the filtered data to z-values
+    zsum{trlop}   = sum(zdata,1);                   % accumulate the z-values over channels
+    [zmax{trlop},ind] = max(zdata,[],1);            % find the maximum z-value and remember it
+    zindx{trlop}      = sgnind(ind);                % also remember the channel number that has the largest z-value
+  end
   % This alternative code does the same, but it is much slower
   %   for i=1:size(zmax{trlop},2)
   %       if zdata{trlop}(i)>zmax{trlop}(i)
@@ -305,92 +307,107 @@ for trlop = 1:numtrl
   zsum{trlop} = zsum{trlop} ./ sqrt(numsgn);
 end
 
-if strcmp(cfg.artfctdef.zvalue.feedback, 'yes')
-  % give graphical feedback and allow the user to modify the threshold
-  interactiveloop = 1;
-  while interactiveloop
-    h = figure;
-    hold on
-    for trlop=1:numtrl
-      xval = trl(trlop,1):trl(trlop,2);
-      if thresholdsum,
-        yval = zsum{trlop};
-      else
-        yval = zmax{trlop};
-      end
-      plot(xval, yval, 'b-');
-      dum = yval<=cfg.artfctdef.zvalue.cutoff;
-      yval(dum) = nan;
-      plot(xval, yval, 'r-');
-    end
-    hline(cfg.artfctdef.zvalue.cutoff, 'color', 'r', 'linestyle', ':');
-    xlabel('sample number');
-    ylabel('cumulative z-value');
-    [response, interactiveloop] = smartinput('\nwould you like to page through the data [y/N]? ', 'n');
-    artval = {};
-    for trlop=1:numtrl
-      if thresholdsum,
-        % threshold the accumulated z-values
-        artval{trlop} = zsum{trlop}>cfg.artfctdef.zvalue.cutoff;
-      else
-        % threshold the max z-values
-        artval{trlop} = zmax{trlop}>cfg.artfctdef.zvalue.cutoff;
-      end
-      % pad the artifacts
-      artbeg = find(diff([0 artval{trlop}])== 1);
-      artend = find(diff([artval{trlop} 0])==-1);
-      artbeg = artbeg - artpadding;
-      artend = artend + artpadding;
-      artbeg(artbeg<1) = 1;
-      artend(artend>length(artval{trlop})) = length(artval{trlop});
-      for artlop=1:length(artbeg)
-        artval{trlop}(artbeg(artlop):artend(artlop)) = 1;
-      end
-    end
-    % show the z-values, the artifacts and a selection of the original data
-    if interactiveloop
-      tmpcfg = cfg;
-      tmpcfg.trl = trl;
-      if nargin==1,
-        if ~thresholdsum, zsum = zmax; end;
-        artifact_viewer(tmpcfg, cfg.artfctdef.zvalue, zsum, artval, zindx);
-        cfg.artfctdef.zvalue.cutoff = smartinput(sprintf('\ngive new cutoff value, or press enter to accept current value [%g]: ', cfg.artfctdef.zvalue.cutoff), cfg.artfctdef.zvalue.cutoff);
-      else
-        if ~thresholdsum, zsum = zmax; end;
-        artifact_viewer(tmpcfg, cfg.artfctdef.zvalue, zsum, artval, zindx, data);
-        cfg.artfctdef.zvalue.cutoff = smartinput(sprintf('\ngive new cutoff value, or press enter to accept current value [%g]: ', cfg.artfctdef.zvalue.cutoff), cfg.artfctdef.zvalue.cutoff);
-      end
-    end
-    if ishandle(h), close(h), end;
-  end % interactiveloop
+% always create figure 
+h = figure;
+set(h, 'visible', 'off');
+
+opt.artcfg       = cfg.artfctdef.zvalue;
+opt.artval       = {};
+opt.artpadding   = artpadding;
+opt.cfg          = cfg;
+opt.channel      = 'artifact';
+opt.hdr          = hdr;
+opt.numtrl       = size(trl,1);
+opt.quit         = 0;
+opt.threshold    = cfg.artfctdef.zvalue.cutoff;
+opt.thresholdsum = thresholdsum;
+opt.trialok      = []; % OK by means of objective criterion
+opt.keep         = []; % OK overruled by user
+opt.trl          = trl;
+opt.trlop        = 1;
+opt.updatethreshold = true;
+opt.zmax         = zmax;
+opt.zsum         = zsum;
+
+if ~thresholdsum
+  opt.zval = zmax;
 else
-  % this code snippet is the same as above, but without the plotting
-  artval = {};
-  for trlop=1:numtrl
-    if thresholdsum,
-      % threshold the accumulated z-values
-      artval{trlop} = zsum{trlop}>cfg.artfctdef.zvalue.cutoff;
-    else
-      % threshold the max z-values
-      artval{trlop} = zmax{trlop}>cfg.artfctdef.zvalue.cutoff;
-    end
-    % pad the artifacts
-    artbeg = find(diff([0 artval{trlop}])== 1);
-    artend = find(diff([artval{trlop} 0])==-1);
-    artbeg = artbeg - artpadding;
-    artend = artend + artpadding;
-    artbeg(artbeg<1) = 1;
-    artend(artend>length(artval{trlop})) = length(artval{trlop});
-    for artlop=1:length(artbeg)
-      artval{trlop}(artbeg(artlop):artend(artlop)) = 1;
-    end
+  opt.zval = zsum;
+end
+opt.zindx = zindx;
+if nargin==1
+  opt.data = {};
+else
+  opt.data = data;
+end
+
+if strcmp(cfg.artfctdef.zvalue.feedback, 'yes')
+  set(h, 'visible', 'on');
+  
+  % give graphical feedback and allow the user to modify the threshold
+  set(h, 'position', [100 200 900 400]);
+  h1 = axes('position', [0.05 0.15 0.4 0.8]);
+  h2 = axes('position', [0.5  0.57  0.45 0.38]);
+  h3 = axes('position', [0.5  0.15  0.45 0.32]);
+  opt.h1           = h1;
+  opt.h2           = h2;
+  opt.h3           = h3;
+  
+  setappdata(h, 'opt', opt);
+  artval_cb(h);
+  redraw_cb(h);
+  
+  % make the user interface elements for the data view
+  uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'stop', 'userdata', 'q')
+  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'downarrow')
+  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'threshold', 'userdata', 'z')
+  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'uparrow')
+  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'shift+downarrow')
+  uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'artifact','userdata', 'a')
+  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'shift+uparrow')
+  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'keep trial',   'userdata', 'k')
+  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'reject trial', 'userdata', 'r')
+  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<<', 'userdata', 'shift+leftarrow')
+  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'leftarrow')
+  uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'trial', 'userdata', 't')
+  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'rightarrow')
+  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>>', 'userdata', 'shift+rightarrow')
+  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'ctrl+uparrow')
+  uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'channel','userdata', 'c')
+  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'ctrl+downarrow')
+
+  ft_uilayout(h, 'tag', 'group1', 'width', 0.10, 'height', 0.05);
+  ft_uilayout(h, 'tag', 'group2', 'width', 0.05, 'height', 0.05);
+  ft_uilayout(h, 'tag', 'group3', 'width', 0.12, 'height', 0.05);
+
+  ft_uilayout(h, 'tag', 'group1', 'style', 'pushbutton', 'callback', @keyboard_cb);
+  ft_uilayout(h, 'tag', 'group2', 'style', 'pushbutton', 'callback', @keyboard_cb);
+  ft_uilayout(h, 'tag', 'group3', 'style', 'pushbutton', 'callback', @keyboard_cb);
+  
+  ft_uilayout(h, 'tag', 'group1', 'retag', 'viewui');
+  ft_uilayout(h, 'tag', 'group2', 'retag', 'viewui');
+  ft_uilayout(h, 'tag', 'group3', 'retag', 'viewui');
+  ft_uilayout(h, 'tag', 'viewui', 'BackgroundColor', [0.8 0.8 0.8], 'hpos', 'auto', 'vpos', 0.005);
+
+  while opt.quit==0
+    uiwait(h);
+    opt = getappdata(h, 'opt');
   end
-end % feedback
+  
+else
+  % compute the artifacts given the settings in the cfg
+  setappdata(h, 'opt', opt);
+end
+
+artval_cb(h);
+
+h   = getparent(h);
+opt = getappdata(h, 'opt');
 
 % convert to one long vector
-dum = zeros(1,max(trl(:,2)));
-for trlop=1:numtrl
-  dum(trl(trlop,1):trl(trlop,2)) = artval{trlop};
+dum = zeros(1,max(opt.trl(:,2)));
+for trlop=1:opt.numtrl
+  dum(opt.trl(trlop,1):opt.trl(trlop,2)) = opt.artval{trlop};
 end
 artval = dum;
 
@@ -416,3 +433,472 @@ cfg.artfctdef.zvalue.callinfo.calltime = ftFuncClock;
 cfg.artfctdef.zvalue.callinfo.user     = getusername();
 fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.artfctdef.zvalue.callinfo.proctime), round(cfg.artfctdef.zvalue.callinfo.procmem/(1024*1024)));
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function artval_cb(h, eventdata)
+
+opt = getappdata(h, 'opt');
+
+artval = cell(1,opt.numtrl);
+for trlop=1:opt.numtrl
+  if opt.thresholdsum,
+    % threshold the accumulated z-values
+    artval{trlop} = opt.zsum{trlop}>opt.threshold;
+  else
+    % threshold the max z-values
+    artval{trlop} = opt.zmax{trlop}>opt.threshold;
+  end
+  % pad the artifacts
+  artbeg = find(diff([0 artval{trlop}])== 1);
+  artend = find(diff([artval{trlop} 0])==-1);
+  artbeg = artbeg - opt.artpadding;
+  artend = artend + opt.artpadding;
+  artbeg(artbeg<1) = 1;
+  artend(artend>length(artval{trlop})) = length(artval{trlop});
+  for artlop=1:length(artbeg)
+    artval{trlop}(artbeg(artlop):artend(artlop)) = 1;
+  end
+  opt.trialok(trlop) = isempty(artbeg);
+end
+
+if isempty(opt.keep)
+  opt.keep = opt.trialok;
+end
+
+for trlop = find(opt.keep & ~opt.trialok)
+  % overrule the objective criterion, i.e. keep the trial when the user
+  % wants to keep it
+  artval{trlop}(:) = 0;
+end
+
+for trlop = find(~opt.keep & opt.trialok)
+  % if the user specifies that the trial is not OK
+  % reject the whole trial if there is no extra-threshold data,
+  % otherwise use the artifact as found by the thresholding
+  if opt.thresholdsum,
+    % threshold the accumulated z-values
+    artval{trlop} = opt.zsum{trlop}>opt.threshold;
+  else
+    % threshold the max z-values
+    artval{trlop} = opt.zmax{trlop}>opt.threshold;
+  end
+  % pad the artifacts
+  artbeg = find(diff([0 artval{trlop}])== 1);
+  artend = find(diff([artval{trlop} 0])==-1);
+  artbeg = artbeg - opt.artpadding;
+  artend = artend + opt.artpadding;
+  artbeg(artbeg<1) = 1;
+  artend(artend>length(artval{trlop})) = length(artval{trlop});
+  if ~isempty(artbeg)
+    for artlop=1:length(artbeg)
+      artval{trlop}(artbeg(artlop):artend(artlop)) = 1;
+    end
+  else
+    artval{trlop}(:) = 1;
+  end
+end
+
+opt.artval = artval;
+setappdata(h, 'opt', opt);
+uiresume;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function keyboard_cb(h, eventdata)
+
+if isempty(eventdata)
+  % determine the key that corresponds to the uicontrol element that was activated
+  key = get(h, 'userdata');
+else
+  % determine the key that was pressed on the keyboard
+  key = parseKeyboardEvent(eventdata);
+end
+% get focus back to figure
+if ~strcmp(get(h, 'type'), 'figure')
+    set(h, 'enable', 'off');
+    drawnow;
+    set(h, 'enable', 'on');
+end
+  
+h = getparent(h);
+opt = getappdata(h, 'opt');
+
+switch key
+  case 'leftarrow' % change trials
+    opt.trlop = max(opt.trlop - 1, 1); % should not be smaller than 1
+    setappdata(h, 'opt', opt);
+    redraw_cb(h, eventdata);
+  case 'shift+leftarrow'
+    opt.trlop = max(opt.trlop - 10, 1); % should not be smaller than 1
+    setappdata(h, 'opt', opt);
+    redraw_cb(h, eventdata);
+  case 'rightarrow'
+    opt.trlop = min(opt.trlop + 1, opt.numtrl); % should not be larger than the number of trials
+    setappdata(h, 'opt', opt);
+    redraw_cb(h, eventdata);
+  case 'shift+rightarrow'
+    opt.trlop = min(opt.trlop + 10, opt.numtrl); % should not be larger than the number of trials
+    setappdata(h, 'opt', opt);
+    redraw_cb(h, eventdata);
+  case 'uparrow' % change threshold
+    opt.threshold = opt.threshold+0.5;
+    opt.updatethreshold = true;
+    setappdata(h, 'opt', opt);
+    artval_cb(h, eventdata);
+    redraw_cb(h, eventdata);
+    opt.updatethreshold = false;
+    setappdata(h, 'opt', opt);
+  case 'downarrow'
+    opt.threshold = opt.threshold-0.5;
+    opt.updatethreshold = true;
+    setappdata(h, 'opt', opt);
+    artval_cb(h, eventdata);
+    redraw_cb(h, eventdata);
+    opt.updatethreshold = false;
+    setappdata(h, 'opt', opt);
+  case 'shift+uparrow' % change artifact
+    artfctindx = find(opt.trialok == 0);
+    sel        = find(artfctindx>opt.trlop);
+    if ~isempty(sel)
+      opt.trlop = artfctindx(sel(1));
+    end
+    setappdata(h, 'opt', opt);
+    redraw_cb(h, eventdata);
+  case 'shift+downarrow'
+    artfctindx = find(opt.trialok == 0);
+    sel        = find(artfctindx<opt.trlop);
+    if ~isempty(sel)
+      opt.trlop = artfctindx(sel(end));
+    end
+    setappdata(h, 'opt', opt);
+    redraw_cb(h, eventdata);
+  case 'ctrl+uparrow' % change channel
+    tmpchan = [opt.artcfg.channel;{'artifact'}]; % append the 'artifact' channel
+    numchan = numel(tmpchan);
+    chansel = match_str(tmpchan, opt.channel);
+    chansel = min(chansel+1, numchan);
+    % convert numeric array into cell-array with channel labels
+    opt.channel = tmpchan(chansel);
+    setappdata(h, 'opt', opt);
+    redraw_cb(h, eventdata);
+  case 'ctrl+downarrow' 
+    tmpchan = [opt.artcfg.channel;{'artifact'}]; % append the 'artifact' channel
+    chansel = match_str(tmpchan, opt.channel);
+    chansel = max(chansel-1, 1);
+    % convert numeric array into cell-array with channel labels
+    opt.channel = tmpchan(chansel);
+    redraw_cb(h, eventdata);
+  case 'a'
+    % select the artifact to display
+    response = inputdlg(sprintf('artifact trial to display'), 'specify', 1, {num2str(opt.trlop)});
+    if ~isempty(response)
+      artfctindx = find(opt.trialok == 0);
+      sel        = str2double(response);
+      sel        = min(numel(artfctindx), sel);
+      sel        = max(1,                 sel);
+      opt.trlop  = artfctindx(sel);
+      setappdata(h, 'opt', opt);
+      redraw_cb(h, eventdata);
+    end
+  case 'c'
+    % select channels
+    select = match_str([opt.artcfg.channel;{'artifact'}], opt.channel);
+    opt.channel = select_channel_list([opt.artcfg.channel;{'artifact'}], select);
+    setappdata(h, 'opt', opt);
+    redraw_cb(h, eventdata);
+  case 'q'
+    setappdata(h, 'opt', opt);
+    cleanup_cb(h);
+  case 't'
+    % select the trial to display
+    response = inputdlg(sprintf('trial to display'), 'specify', 1, {num2str(opt.trlop)});
+    if ~isempty(response)
+      opt.trlop = str2double(response);
+      opt.trlop = min(opt.trlop, size(opt.numtrl,1)); % should not be larger than the number of trials
+      opt.trlop = max(opt.trlop, 1); % should not be smaller than 1
+      setappdata(h, 'opt', opt);
+      redraw_cb(h, eventdata);
+    end
+  case 'z'
+    % select the threshold
+    response = inputdlg('z-threshold', 'specify', 1, {num2str(opt.threshold)});
+    if ~isempty(response)
+      opt.threshold = str2double(response);
+      opt.updatethreshold = true;
+      setappdata(h, 'opt', opt);
+      artval_cb(h, eventdata);
+      redraw_cb(h, eventdata);
+      opt.updatethreshold = false;
+      setappdata(h, 'opt', opt);
+    end
+  case 'k'
+    opt.keep(opt.trlop) = true;
+    setappdata(h, 'opt', opt);
+    artval_cb(h);
+    redraw_cb(h);
+  case 'r'
+    opt.keep(opt.trlop) = false;
+    setappdata(h, 'opt', opt);
+    artval_cb(h);
+    redraw_cb(h);
+  case 'control+control'
+    % do nothing
+  case 'shift+shift'
+    % do nothing
+  case 'alt+alt'
+    % do nothing
+  otherwise
+    setappdata(h, 'opt', opt);
+    help_cb(h);
+end
+uiresume(h);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function redraw_cb(h, eventdata)
+
+h   = getparent(h);
+opt = getappdata(h, 'opt');
+
+% make a local copy of the relevant variables
+trlop     = opt.trlop;
+artval    = opt.artval{trlop};
+zindx     = opt.zindx{trlop};
+zval      = opt.zval{trlop};
+cfg       = opt.cfg;
+artcfg    = opt.artcfg;
+hdr       = opt.hdr;
+trl       = opt.trl;
+trlpadsmp = round(artcfg.trlpadding*hdr.Fs);
+channel   = opt.channel;
+
+% determine the channel with the highest z-value to be displayed
+% this is default behaviour but can be overruled in the gui
+if strcmp(channel, 'artifact')
+  [dum, indx] = max(zval);
+  sgnind      = zindx(indx);
+else
+  if ~isempty(opt.data)
+    sgnind = match_str(channel, opt.data.label);
+  else
+    sgnind = match_str(channel, hdr.label); 
+  end
+end
+
+if isfield(opt, 'data')
+  data = ft_fetch_data(opt.data, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
+else
+  data = ft_read_data(cfg.datafile,   'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
+end
+%data = preproc(data, '', hdr.Fs, artcfg, [], artcfg.fltpadding, artcfg.fltpadding);
+str  = sprintf('trial %3d, channel %s', opt.trlop, hdr.label{sgnind});
+fprintf('showing %s\n', str);
+
+%-----------------------------
+% plot summary in left subplot
+subplot(opt.h1);hold on;
+
+% plot as a blue line only once
+if isempty(get(opt.h1, 'children'))
+  for trlop=1:opt.numtrl
+    xval = opt.trl(trlop,1):opt.trl(trlop,2);
+    if opt.thresholdsum,
+      yval = opt.zsum{trlop};
+    else
+      yval = opt.zmax{trlop};
+    end
+    plot(opt.h1, xval, yval, 'linestyle', '-', 'color', 'b', 'displayname', 'data');
+  end
+end
+h1children = get(opt.h1, 'children');
+
+% plot trial box
+boxhandle = findall(h1children, 'displayname', 'highlight');
+if isempty(boxhandle)
+  % draw it
+  xval = trl(opt.trlop,1):trl(opt.trlop,2);
+  if opt.thresholdsum,
+    yval = opt.zsum{opt.trlop};
+  else
+    yval = opt.zmax{opt.trlop};
+  end
+  plot(opt.h1, xval, yval, 'linestyle', '-', 'color', 'm', 'linewidth', 2, 'displayname', 'highlight');
+else
+  % update it
+  xval = trl(opt.trlop,1):trl(opt.trlop,2);
+  if opt.thresholdsum,
+    yval = opt.zsum{opt.trlop};
+  else
+    yval = opt.zmax{opt.trlop};
+  end
+  set(boxhandle,  'XData', xval);
+  set(boxhandle,  'YData', yval);
+end
+
+% plot as red lines the suprathreshold data points
+thrhandle = findall(h1children, 'displayname', 'reddata');
+if isempty(thrhandle)
+  % they have to be drawn
+  for trlop=1:opt.numtrl
+    xval = opt.trl(trlop,1):opt.trl(trlop,2);
+    if opt.thresholdsum,
+      yval = opt.zsum{trlop};
+    else
+      yval = opt.zmax{trlop};
+    end
+    dum = yval<=opt.threshold;
+    yval(dum) = nan;
+    plot(opt.h1, xval, yval, 'linestyle', '-', 'color', [1 0 0], 'displayname', 'reddata');
+  end
+  hline(opt.threshold, 'color', 'r', 'linestyle', ':', 'displayname', 'threshline');
+  ylabel('zscore');
+elseif ~isempty(thrhandle) && opt.updatethreshold
+  % they can be updated
+  for trlop=1:opt.numtrl
+    xval = opt.trl(trlop,1):opt.trl(trlop,2);
+    if opt.thresholdsum,
+      yval = opt.zsum{trlop};
+    else
+      yval = opt.zmax{trlop};
+    end
+    dum = yval<=opt.threshold;
+    yval(dum) = nan;
+    set(thrhandle(trlop), 'XData', xval);
+    set(thrhandle(trlop), 'YData', yval);
+  end
+  set(findall(h1children, 'displayname', 'threshline'), 'YData', [1 1].*opt.threshold);  
+end
+
+%--------------------------------------------------
+% get trial specific x-axis values and padding info
+xval = trl(trlop,1):trl(trlop,2);
+if trlpadsmp
+  sel    = trlpadsmp:(size(data,2)-trlpadsmp);
+  selpad = 1:size(data,2); 
+else
+  sel    = 1:size(data,2);
+  selpad = sel;
+end
+
+% plot data of most aberrant channel in upper subplot
+subplot(opt.h2); hold on
+if isempty(get(opt.h2, 'children'))
+  % do the plotting
+  plot(xval(selpad), data(selpad), 'color', [0.5 0.5 1], 'displayname', 'line1');
+  plot(xval(sel),    data(sel),    'color', [0 0 1],     'displayname', 'line2');
+  vline(xval(  1)+trlpadsmp-1,     'color', [0 0 0],     'displayname', 'vline1');
+  vline(xval(end)-trlpadsmp,       'color', [0 0 0],     'displayname', 'vline2');
+  data(~artval) = nan;
+  plot(xval, data, 'r-', 'displayname', 'line3');
+  xlabel('samples');
+  ylabel('uV or Tesla');
+  title(str);
+else
+  % update in the existing handles
+  h2children = get(opt.h2, 'children');
+  
+  set(findall(h2children, 'displayname', 'vline1'), 'visible', 'off');
+  set(findall(h2children, 'displayname', 'vline2'), 'visible', 'off');
+  set(findall(h2children, 'displayname', 'line1'), 'XData', xval(selpad));
+  set(findall(h2children, 'displayname', 'line1'), 'YData', data(selpad));
+  set(findall(h2children, 'displayname', 'line2'), 'XData', xval(sel));
+  set(findall(h2children, 'displayname', 'line2'), 'YData', data(sel));
+  data(~artval) = nan;
+  set(findall(h2children, 'displayname', 'line3'),  'XData', xval);
+  set(findall(h2children, 'displayname', 'line3'),  'YData', data);
+  abc2 = axis(opt.h2);
+  set(findall(h2children, 'displayname', 'vline1'), 'XData', [1 1]*xval(  1)+trlpadsmp-1);
+  set(findall(h2children, 'displayname', 'vline1'), 'YData', abc2(3:4));
+  set(findall(h2children, 'displayname', 'vline2'), 'XData', [1 1]*xval(end)-trlpadsmp  );
+  set(findall(h2children, 'displayname', 'vline2'), 'YData', abc2(3:4));
+  set(findall(h2children, 'displayname', 'vline1'), 'visible', 'on');
+  set(findall(h2children, 'displayname', 'vline2'), 'visible', 'on');
+  str = sprintf('trial %3d, channel %s', opt.trlop, hdr.label{sgnind});
+  title(str);
+end
+
+% plot z-values in lower subplot
+subplot(opt.h3); hold on;
+if isempty(get(opt.h3, 'children'))
+  % do the plotting
+  plot(xval(selpad), zval(selpad), 'color', [0.5 0.5 1], 'displayname', 'line1b');
+  plot(xval(sel),    zval(sel),    'color', [0 0 1],     'displayname', 'line2b');
+  hline(opt.threshold, 'color', 'r', 'linestyle', ':', 'displayname', 'threshline');
+  vline(xval(  1)+trlpadsmp-1,     'color', [0 0 0],     'displayname', 'vline1b');
+  vline(xval(end)-trlpadsmp,       'color', [0 0 0],     'displayname', 'vline2b');
+  zval(~artval) = nan;
+  plot(xval, zval, 'r-', 'displayname', 'line3b');
+  xlabel('samples');
+  ylabel('uV or Tesla');
+else
+  % update in the existing handles
+  h3children = get(opt.h3, 'children');
+  set(findall(h3children, 'displayname', 'vline1b'), 'visible', 'off');
+  set(findall(h3children, 'displayname', 'vline2b'), 'visible', 'off');
+  set(findall(h3children, 'displayname', 'line1b'), 'XData', xval(selpad));
+  set(findall(h3children, 'displayname', 'line1b'), 'YData', zval(selpad));
+  set(findall(h3children, 'displayname', 'line2b'), 'XData', xval(sel));
+  set(findall(h3children, 'displayname', 'line2b'), 'YData', zval(sel));
+  zval(~artval) = nan;
+  set(findall(h3children, 'displayname', 'line3b'),  'XData', xval);
+  set(findall(h3children, 'displayname', 'line3b'),  'YData', zval);
+  set(findall(h3children, 'displayname', 'threshline'), 'YData', [1 1].*opt.threshold);
+  set(findall(h3children, 'displayname', 'threshline'), 'XData', xval([1 end]));  
+  abc = axis(opt.h3);
+  set(findall(h3children, 'displayname', 'vline1b'), 'XData', [1 1]*xval(  1)+trlpadsmp-1);
+  set(findall(h3children, 'displayname', 'vline1b'), 'YData', abc(3:4));
+  set(findall(h3children, 'displayname', 'vline2b'), 'XData', [1 1]*xval(end)-trlpadsmp  );
+  set(findall(h3children, 'displayname', 'vline2b'), 'YData', abc(3:4));
+  set(findall(h3children, 'displayname', 'vline1b'), 'visible', 'on');
+  set(findall(h3children, 'displayname', 'vline2b'), 'visible', 'on');
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cleanup_cb(h, eventdata)
+opt = getappdata(h, 'opt');
+opt.quit = true;
+setappdata(h, 'opt', opt);
+uiresume
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function h = getparent(h)
+p = h;
+while p~=0
+  h = p;
+  p = get(h, 'parent');
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function key = parseKeyboardEvent(eventdata)
+
+key = eventdata.Key;
+
+% handle possible numpad events (different for Windows and UNIX systems)
+% NOTE: shift+numpad number does not work on UNIX, since the shift
+% modifier is always sent for numpad events
+if isunix()
+  shiftInd = match_str(eventdata.Modifier, 'shift');
+  if ~isnan(str2double(eventdata.Character)) && ~isempty(shiftInd)
+    % now we now it was a numpad keystroke (numeric character sent AND
+    % shift modifier present)
+    key = eventdata.Character;
+    eventdata.Modifier(shiftInd) = []; % strip the shift modifier
+  end
+elseif ispc()
+  if strfind(eventdata.Key, 'numpad')
+    key = eventdata.Character;
+  end
+end
+
+if ~isempty(eventdata.Modifier)
+  key = [eventdata.Modifier{1} '+' key];
+end
