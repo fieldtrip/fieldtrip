@@ -76,8 +76,12 @@ switch fileformat
     write_off(filename,bnd.pnt,bnd.tri);
     
   case 'vista'
-    % no conversion needed (works in voxel coordinates)
-    write_vista_mesh(filename,bnd.nd,bnd.el,bnd.labels); % bnd.tensor
+    if ft_hastoolbox('simbio')
+      % no conversion needed (works in voxel coordinates)
+      write_vista_mesh(filename,bnd.nd,bnd.el,bnd.labels); % bnd.tensor
+    else
+      error('You need Simbio/Vista toolbox to write a .v file')
+    end
     
   case []
     error('you must specify the output format');

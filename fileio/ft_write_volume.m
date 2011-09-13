@@ -75,8 +75,12 @@ switch dataformat
     V = volumewrite_spm(filename, dat, transform, spmversion); 
   
   case {'vista'}
-    write_vista_vol(size(dat), dat, filename);
-  
+    if ft_hastoolbox('simbio')
+      write_vista_vol(size(dat), dat, filename);
+    else
+      error('You need Simbio/Vista toolbox to write a .v file')
+    end
+    
   otherwise
     error('unsupported data format');
 end % switch dataformat

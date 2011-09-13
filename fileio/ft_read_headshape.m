@@ -392,11 +392,15 @@ switch fileformat
     keyboard
     
   case 'vista'
-    [nodes,elements,labels] = read_vista_mesh(filename);
-    shape.nd     = nodes;
-    shape.el     = elements;
-    shape.labels = labels;
-    shape.unit   = unit;
+    if ft_hastoolbox('simbio')
+      [nodes,elements,labels] = read_vista_mesh(filename);
+      shape.nd     = nodes;
+      shape.el     = elements;
+      shape.labels = labels;
+      shape.unit   = unit;
+    else
+      error('You need Simbio/Vista toolbox to read the .v files')
+    end
     
   otherwise
     % try reading it from an electrode of volume conduction model file
