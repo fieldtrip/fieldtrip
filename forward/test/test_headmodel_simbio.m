@@ -1,6 +1,6 @@
 % create 3 spherical meshes and the corresponding volumes
+ft_hastoolbox('simbio', 1);
 
-addpath /home/common/matlab/fieldtrip_private/
 [pnt, tri] = icosahedron642;
 
 % radiuses and origins are defined in cm
