@@ -1,0 +1,257 @@
+ --- VGrid --- 
+ element type = cube 
+WARNING: gridGenerator: Changing grid generation to 'tetra5' 
+min_maxdim = 1, max_maxdim = 4
+Voxel 1 occurs 63 	 times (98.437500 %)
+Voxel 2 occurs 1 	 times (1.562500 %)
+Materials specified in file :
+voxel 	 internal no.: 0 	 maxdim: 4 	 voxel range: [1, 1] 	 meshing type: default
+voxel 	 internal no.: 1 	 maxdim: 4 	 voxel range: [2, 2] 	 meshing type: default
+generating cells ...  nx=4 ny=4 nz=4
+subsampling cells ...  ... done subsampling cells
+Number of octree cells: 15
+ dim 1: 8 cells
+ dim 2: 7 cells
+Number of octree nodes: 46
+octnodes:
+z = 0
+y = 0	:1 1 1 0 1 
+y = 1	:1 1 1 0 0 
+y = 2	:1 1 1 0 1 
+y = 3	:0 0 0 0 0 
+y = 4	:1 0 1 0 1 
+
+z = 1
+y = 0	:1 1 1 0 0 
+y = 1	:1 1 1 0 0 
+y = 2	:1 1 1 0 0 
+y = 3	:0 0 0 0 0 
+y = 4	:0 0 0 0 0 
+
+z = 2
+y = 0	:1 1 1 0 1 
+y = 1	:1 1 1 0 0 
+y = 2	:1 1 1 0 1 
+y = 3	:0 0 0 0 0 
+y = 4	:1 0 1 0 1 
+
+z = 3
+y = 0	:0 0 0 0 0 
+y = 1	:0 0 0 0 0 
+y = 2	:0 0 0 0 0 
+y = 3	:0 0 0 0 0 
+y = 4	:0 0 0 0 0 
+
+z = 4
+y = 0	:1 0 1 0 1 
+y = 1	:0 0 0 0 0 
+y = 2	:1 0 1 0 1 
+y = 3	:0 0 0 0 0 
+y = 4	:1 0 1 0 1 
+
+
+ done generating cells
+generating grid ...   (4 slices)
+tesselateCell:  ox=0 oy=0 oz=0 
+adding vertex 1 (0.000000,0.000000,0.000000)
+adding vertex 2 (1.000000,0.000000,0.000000)
+adding vertex 3 (0.000000,1.000000,0.000000)
+adding vertex 4 (1.000000,1.000000,0.000000)
+adding vertex 5 (0.000000,0.000000,1.000000)
+adding vertex 6 (1.000000,0.000000,1.000000)
+adding vertex 7 (0.000000,1.000000,1.000000)
+adding vertex 8 (1.000000,1.000000,1.000000)
+tesselateCell:  ox=1 oy=0 oz=0 
+adding vertex 9 (2.000000,0.000000,0.000000)
+adding vertex 10 (2.000000,1.000000,0.000000)
+adding vertex 11 (2.000000,0.000000,1.000000)
+adding vertex 12 (2.000000,1.000000,1.000000)
+tesselateCell:  ox=2 oy=0 oz=0 
+adding vertex 13 (4.000000,0.000000,0.000000)
+adding vertex 14 (2.000000,2.000000,0.000000)
+adding vertex 15 (4.000000,2.000000,0.000000)
+adding vertex 16 (2.000000,2.000000,1.000000)
+adding vertex 17 (2.000000,0.000000,2.000000)
+adding vertex 18 (4.000000,0.000000,2.000000)
+adding vertex 19 (2.000000,1.000000,2.000000)
+adding vertex 20 (2.000000,2.000000,2.000000)
+adding vertex 21 (4.000000,2.000000,2.000000)
+get_facet_triang(x0=2,y0=0,z0=0,x1=2,y1=2,z1=2,d=2,dir=0
+get_facet_triang(x0=2,y0=0,z0=0,x1=2,y1=1,z1=1,d=1,dir=0
+get_diag_triang (x0=2,y0=0,z0=0,x1=2,y1=1,z1=1,d=1,dir=0
+get_facet_triang(x0=2,y0=1,z0=0,x1=2,y1=2,z1=1,d=1,dir=0
+get_diag_triang (x0=2,y0=1,z0=0,x1=2,y1=2,z1=1,d=1,dir=0
+get_facet_triang(x0=2,y0=0,z0=1,x1=2,y1=1,z1=2,d=1,dir=0
+get_diag_triang (x0=2,y0=0,z0=1,x1=2,y1=1,z1=2,d=1,dir=0
+get_facet_triang(x0=2,y0=1,z0=1,x1=2,y1=2,z1=2,d=1,dir=0
+get_diag_triang (x0=2,y0=1,z0=1,x1=2,y1=2,z1=2,d=1,dir=0
+get_facet_triang(x0=4,y0=0,z0=0,x1=4,y1=2,z1=2,d=2,dir=0
+get_diag_triang (x0=4,y0=0,z0=0,x1=4,y1=2,z1=2,d=2,dir=0
+get_facet_triang(x0=2,y0=0,z0=0,x1=4,y1=0,z1=2,d=2,dir=1
+adding vertex 22 (3.000000,0.000000,1.000000)
+get_facet_triang(x0=2,y0=2,z0=0,x1=4,y1=2,z1=2,d=2,dir=1
+adding vertex 23 (3.000000,2.000000,1.000000)
+get_facet_triang(x0=2,y0=0,z0=0,x1=4,y1=2,z1=0,d=2,dir=2
+adding vertex 24 (3.000000,1.000000,0.000000)
+get_facet_triang(x0=2,y0=0,z0=2,x1=4,y1=2,z1=2,d=2,dir=2
+adding vertex 25 (3.000000,1.000000,2.000000)
+adding vertex 26 (3.000000,1.000000,1.000000)
+[9,10,11] [10,11,12] [10,14,16] [10,12,16] [11,12,19] [11,17,19] [12,16,19] [16,19,20] [13,15,18] [15,18,21] [22,13,9] [22,13,18] [22,18,17] [22,17,11] [22,11,9] [23,15,14] [23,15,21] [23,21,20] [23,20,16] [23,16,14] [24,13,9] [24,13,15] [24,15,14] [24,14,10] [24,10,9] [25,18,17] [25,18,21] [25,21,20] [25,20,19] [25,19,17] tesselateCell:  ox=0 oy=1 oz=0 
+adding vertex 27 (0.000000,2.000000,0.000000)
+adding vertex 28 (1.000000,2.000000,0.000000)
+adding vertex 29 (0.000000,2.000000,1.000000)
+adding vertex 30 (1.000000,2.000000,1.000000)
+tesselateCell:  ox=1 oy=1 oz=0 
+tesselateCell:  ox=0 oy=2 oz=0 
+adding vertex 31 (0.000000,4.000000,0.000000)
+adding vertex 32 (2.000000,4.000000,0.000000)
+adding vertex 33 (0.000000,2.000000,2.000000)
+adding vertex 34 (1.000000,2.000000,2.000000)
+adding vertex 35 (0.000000,4.000000,2.000000)
+adding vertex 36 (2.000000,4.000000,2.000000)
+get_facet_triang(x0=0,y0=2,z0=0,x1=0,y1=4,z1=2,d=2,dir=0
+adding vertex 37 (0.000000,3.000000,1.000000)
+get_facet_triang(x0=2,y0=2,z0=0,x1=2,y1=4,z1=2,d=2,dir=0
+adding vertex 38 (2.000000,3.000000,1.000000)
+get_facet_triang(x0=0,y0=2,z0=0,x1=2,y1=2,z1=2,d=2,dir=1
+get_facet_triang(x0=0,y0=2,z0=0,x1=1,y1=2,z1=1,d=1,dir=1
+get_diag_triang (x0=0,y0=2,z0=0,x1=1,y1=2,z1=1,d=1,dir=1
+get_facet_triang(x0=1,y0=2,z0=0,x1=2,y1=2,z1=1,d=1,dir=1
+get_diag_triang (x0=1,y0=2,z0=0,x1=2,y1=2,z1=1,d=1,dir=1
+get_facet_triang(x0=0,y0=2,z0=1,x1=1,y1=2,z1=2,d=1,dir=1
+get_diag_triang (x0=0,y0=2,z0=1,x1=1,y1=2,z1=2,d=1,dir=1
+get_facet_triang(x0=1,y0=2,z0=1,x1=2,y1=2,z1=2,d=1,dir=1
+get_diag_triang (x0=1,y0=2,z0=1,x1=2,y1=2,z1=2,d=1,dir=1
+get_facet_triang(x0=0,y0=4,z0=0,x1=2,y1=4,z1=2,d=2,dir=1
+get_diag_triang (x0=0,y0=4,z0=0,x1=2,y1=4,z1=2,d=2,dir=1
+get_facet_triang(x0=0,y0=2,z0=0,x1=2,y1=4,z1=0,d=2,dir=2
+adding vertex 39 (1.000000,3.000000,0.000000)
+get_facet_triang(x0=0,y0=2,z0=2,x1=2,y1=4,z1=2,d=2,dir=2
+adding vertex 40 (1.000000,3.000000,2.000000)
+adding vertex 41 (1.000000,3.000000,1.000000)
+[37,31,27] [37,31,35] [37,35,33] [37,33,29] [37,29,27] [38,32,14] [38,32,36] [38,36,20] [38,20,16] [38,16,14] [27,28,29] [28,29,30] [28,14,16] [28,30,16] [29,30,34] [29,33,34] [30,16,34] [16,34,20] [31,32,35] [32,35,36] [39,28,27] [39,28,14] [39,14,32] [39,32,31] [39,31,27] [40,34,33] [40,34,20] [40,20,36] [40,36,35] [40,35,33] tesselateCell:  ox=2 oy=2 oz=0 
+adding vertex 42 (4.000000,4.000000,0.000000)
+adding vertex 43 (4.000000,4.000000,2.000000)
+get_facet_triang(x0=2,y0=2,z0=0,x1=2,y1=4,z1=2,d=2,dir=0
+get_facet_triang(x0=4,y0=2,z0=0,x1=4,y1=4,z1=2,d=2,dir=0
+get_diag_triang (x0=4,y0=2,z0=0,x1=4,y1=4,z1=2,d=2,dir=0
+get_facet_triang(x0=2,y0=2,z0=0,x1=4,y1=2,z1=2,d=2,dir=1
+get_facet_triang(x0=2,y0=4,z0=0,x1=4,y1=4,z1=2,d=2,dir=1
+get_diag_triang (x0=2,y0=4,z0=0,x1=4,y1=4,z1=2,d=2,dir=1
+get_facet_triang(x0=2,y0=2,z0=0,x1=4,y1=4,z1=0,d=2,dir=2
+get_diag_triang (x0=2,y0=2,z0=0,x1=4,y1=4,z1=0,d=2,dir=2
+get_facet_triang(x0=2,y0=2,z0=2,x1=4,y1=4,z1=2,d=2,dir=2
+get_diag_triang (x0=2,y0=2,z0=2,x1=4,y1=4,z1=2,d=2,dir=2
+adding vertex 44 (3.000000,3.000000,1.000000)
+[38,32,14] [38,32,36] [38,36,20] [38,20,16] [38,16,14] [15,42,43] [15,21,43] [23,15,14] [23,15,21] [23,21,20] [23,20,16] [23,16,14] [32,42,43] [32,36,43] [14,15,32] [15,32,42] [20,21,43] [20,36,43] tesselateCell:  ox=0 oy=0 oz=1 
+adding vertex 45 (0.000000,0.000000,2.000000)
+adding vertex 46 (1.000000,0.000000,2.000000)
+adding vertex 47 (0.000000,1.000000,2.000000)
+adding vertex 48 (1.000000,1.000000,2.000000)
+tesselateCell:  ox=1 oy=0 oz=1 
+tesselateCell:  ox=0 oy=1 oz=1 
+tesselateCell:  ox=1 oy=1 oz=1 
+tesselateCell:  ox=0 oy=0 oz=2 
+adding vertex 49 (0.000000,0.000000,4.000000)
+adding vertex 50 (2.000000,0.000000,4.000000)
+adding vertex 51 (0.000000,2.000000,4.000000)
+adding vertex 52 (2.000000,2.000000,4.000000)
+get_facet_triang(x0=0,y0=0,z0=2,x1=0,y1=2,z1=4,d=2,dir=0
+adding vertex 53 (0.000000,1.000000,3.000000)
+get_facet_triang(x0=2,y0=0,z0=2,x1=2,y1=2,z1=4,d=2,dir=0
+adding vertex 54 (2.000000,1.000000,3.000000)
+get_facet_triang(x0=0,y0=0,z0=2,x1=2,y1=0,z1=4,d=2,dir=1
+adding vertex 55 (1.000000,0.000000,3.000000)
+get_facet_triang(x0=0,y0=2,z0=2,x1=2,y1=2,z1=4,d=2,dir=1
+adding vertex 56 (1.000000,2.000000,3.000000)
+get_facet_triang(x0=0,y0=0,z0=2,x1=2,y1=2,z1=2,d=2,dir=2
+get_facet_triang(x0=0,y0=0,z0=2,x1=1,y1=1,z1=2,d=1,dir=2
+get_diag_triang (x0=0,y0=0,z0=2,x1=1,y1=1,z1=2,d=1,dir=2
+get_facet_triang(x0=1,y0=0,z0=2,x1=2,y1=1,z1=2,d=1,dir=2
+get_diag_triang (x0=1,y0=0,z0=2,x1=2,y1=1,z1=2,d=1,dir=2
+get_facet_triang(x0=0,y0=1,z0=2,x1=1,y1=2,z1=2,d=1,dir=2
+get_diag_triang (x0=0,y0=1,z0=2,x1=1,y1=2,z1=2,d=1,dir=2
+get_facet_triang(x0=1,y0=1,z0=2,x1=2,y1=2,z1=2,d=1,dir=2
+get_diag_triang (x0=1,y0=1,z0=2,x1=2,y1=2,z1=2,d=1,dir=2
+get_facet_triang(x0=0,y0=0,z0=4,x1=2,y1=2,z1=4,d=2,dir=2
+get_diag_triang (x0=0,y0=0,z0=4,x1=2,y1=2,z1=4,d=2,dir=2
+adding vertex 57 (1.000000,1.000000,3.000000)
+[53,47,45] [53,47,33] [53,33,51] [53,51,49] [53,49,45] [54,19,17] [54,19,20] [54,20,52] [54,52,50] [54,50,17] [55,46,45] [55,46,17] [55,17,50] [55,50,49] [55,49,45] [56,34,33] [56,34,20] [56,20,52] [56,52,51] [56,51,33] [45,46,47] [46,47,48] [46,17,19] [46,48,19] [47,48,34] [47,33,34] [48,19,34] [19,34,20] [49,50,51] [50,51,52] tesselateCell:  ox=2 oy=0 oz=2 
+adding vertex 58 (4.000000,0.000000,4.000000)
+adding vertex 59 (4.000000,2.000000,4.000000)
+get_facet_triang(x0=2,y0=0,z0=2,x1=2,y1=2,z1=4,d=2,dir=0
+get_facet_triang(x0=4,y0=0,z0=2,x1=4,y1=2,z1=4,d=2,dir=0
+get_diag_triang (x0=4,y0=0,z0=2,x1=4,y1=2,z1=4,d=2,dir=0
+get_facet_triang(x0=2,y0=0,z0=2,x1=4,y1=0,z1=4,d=2,dir=1
+get_diag_triang (x0=2,y0=0,z0=2,x1=4,y1=0,z1=4,d=2,dir=1
+get_facet_triang(x0=2,y0=2,z0=2,x1=4,y1=2,z1=4,d=2,dir=1
+get_diag_triang (x0=2,y0=2,z0=2,x1=4,y1=2,z1=4,d=2,dir=1
+get_facet_triang(x0=2,y0=0,z0=2,x1=4,y1=2,z1=2,d=2,dir=2
+get_facet_triang(x0=2,y0=0,z0=4,x1=4,y1=2,z1=4,d=2,dir=2
+get_diag_triang (x0=2,y0=0,z0=4,x1=4,y1=2,z1=4,d=2,dir=2
+adding vertex 60 (3.000000,1.000000,3.000000)
+[54,19,17] [54,19,20] [54,20,52] [54,52,50] [54,50,17] [18,21,59] [18,58,59] [17,18,50] [18,50,58] [20,21,59] [20,52,59] [25,18,17] [25,18,21] [25,21,20] [25,20,19] [25,19,17] [50,58,59] [50,52,59] tesselateCell:  ox=0 oy=2 oz=2 
+adding vertex 61 (0.000000,4.000000,4.000000)
+adding vertex 62 (2.000000,4.000000,4.000000)
+get_facet_triang(x0=0,y0=2,z0=2,x1=0,y1=4,z1=4,d=2,dir=0
+get_diag_triang (x0=0,y0=2,z0=2,x1=0,y1=4,z1=4,d=2,dir=0
+get_facet_triang(x0=2,y0=2,z0=2,x1=2,y1=4,z1=4,d=2,dir=0
+get_diag_triang (x0=2,y0=2,z0=2,x1=2,y1=4,z1=4,d=2,dir=0
+get_facet_triang(x0=0,y0=2,z0=2,x1=2,y1=2,z1=4,d=2,dir=1
+get_facet_triang(x0=0,y0=4,z0=2,x1=2,y1=4,z1=4,d=2,dir=1
+get_diag_triang (x0=0,y0=4,z0=2,x1=2,y1=4,z1=4,d=2,dir=1
+get_facet_triang(x0=0,y0=2,z0=2,x1=2,y1=4,z1=2,d=2,dir=2
+get_facet_triang(x0=0,y0=2,z0=4,x1=2,y1=4,z1=4,d=2,dir=2
+get_diag_triang (x0=0,y0=2,z0=4,x1=2,y1=4,z1=4,d=2,dir=2
+adding vertex 63 (1.000000,3.000000,3.000000)
+[33,35,51] [35,51,61] [20,36,62] [20,52,62] [56,34,33] [56,34,20] [56,20,52] [56,52,51] [56,51,33] [35,36,62] [35,61,62] [40,34,33] [40,34,20] [40,20,36] [40,36,35] [40,35,33] [51,52,62] [51,61,62] tesselateCell:  ox=2 oy=2 oz=2 
+adding vertex 64 (4.000000,4.000000,4.000000)
+
+ ... done generating grid.
+Generating primitives ...
+done generating primitives.
+final grid contains 64 vertices and 189 primitives.
+saving grid ...
+WriteMaterialPid ...
+WriteMaterialPid: histogram:
+ Material No. 0 ("voxel", id 0): 184 elements
+ Material No. 1 ("voxel", id 1): 5 elements
+ Total number: 189 elements
+Set attributes   ...
+WriteTagImage    ...
+WriteForceImage  ...
+WriteSourceNodes ...
+WriteInitialPart ...
+Attributes of vertices graph:
+ name = <>
+ name = <patient>
+ name = <date>
+ name = <convention>
+ name = <voxel>
+ name = <component_interp>
+ name = <partition(s)>
+ name = <image>
+ name = <forceimage>
+ name = <srcnodes>
+ name = <partnode>
+Attributes of primitives graph:
+ name = <>
+ name = <matprops>
+ name = <component_interp>
+ name = <primitive_interp>
+ name = <implicit_links>
+ name = <partelem>
+vertices  ->lastUsed  =64
+vertices  ->size      =73
+vertices  ->nnodes    =73
+countNodes(vertices)  =64
+primitives  ->lastUsed  =189
+primitives  ->size      =244
+primitives  ->nnodes    =244
+countNodes(primitives)  =189
+ entering vtoa ... 
+ 64 nodes ... 
+ 189 elements ... 
+ ... done vtoa 
+... done saving grid
+ --- done VGrid  --- 

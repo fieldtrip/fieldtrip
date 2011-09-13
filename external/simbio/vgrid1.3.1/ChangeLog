@@ -1,0 +1,25 @@
+Vgrid version 1.3.1, 2010-05-25
+
+* changed License to GPL
+
+* fixed small problems with mesh.C (HUGE) and materialDB.C (stdlib.h)
+	
+Vgrid version 1.3
+
+* added support for 3D OpenDX output
+
+* lowered memory consumption
+	
+Vgrid version 1.2
+
+* fixed bug in marching tets when more than 2 nom-background 
+  materials are involved: Spurious cells of the meshed material
+  occured outside this material region.
+
+* Added 2D output formats for surface meshes: GMV, OpenDX
+
+* Fixed bug in  gridGenerator::removeNonSurfaceVertices()
+  The new vertex graph now contains vertex links, thus 
+  enabling smoothing of surface meshes.
+
+	

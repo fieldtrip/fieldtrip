@@ -1,0 +1,90 @@
+ --- VGrid --- 
+ element type = cube 
+WARNING: gridGenerator: Changing grid generation to 'tetra5' 
+min_maxdim = 2, max_maxdim = 4
+Voxel 1 occurs 63 	 times (98.437500 %)
+Voxel 2 occurs 1 	 times (1.562500 %)
+Materials specified in file :
+voxel 	 internal no.: 0 	 maxdim: 4 	 voxel range: [1, 1] 	 meshing type: default
+voxel 	 internal no.: 1 	 maxdim: 4 	 voxel range: [2, 2] 	 meshing type: default
+generating cells ...  nx=4 ny=4 nz=4
+subsampling cells ...  ... done subsampling cells
+Number of octree cells: 1
+ dim 4: 1 cells
+Number of octree nodes: 8
+octnodes:
+z = 0
+y = 0	:1 0 1 
+y = 2	:0 0 0 
+y = 4	:1 0 1 
+
+z = 2
+y = 0	:0 0 0 
+y = 2	:0 0 0 
+y = 4	:0 0 0 
+
+z = 4
+y = 0	:1 0 1 
+y = 2	:0 0 0 
+y = 4	:1 0 1 
+
+
+ done generating cells
+generating grid ...   (4 slices)
+tesselateCell:  ox=0 oy=0 oz=0 
+adding vertex 1 (0.000000,0.000000,0.000000)
+adding vertex 2 (4.000000,0.000000,0.000000)
+adding vertex 3 (0.000000,4.000000,0.000000)
+adding vertex 4 (4.000000,4.000000,0.000000)
+adding vertex 5 (0.000000,0.000000,4.000000)
+adding vertex 6 (4.000000,0.000000,4.000000)
+adding vertex 7 (0.000000,4.000000,4.000000)
+adding vertex 8 (4.000000,4.000000,4.000000)
+
+ ... done generating grid.
+Generating primitives ...
+done generating primitives.
+final grid contains 8 vertices and 5 primitives.
+saving grid ...
+WriteMaterialPid ...
+WriteMaterialPid: histogram:
+ Material No. 0 ("voxel", id 0): 5 elements
+ Total number: 5 elements
+Set attributes   ...
+WriteTagImage    ...
+WriteForceImage  ...
+WriteSourceNodes ...
+WriteInitialPart ...
+Attributes of vertices graph:
+ name = <>
+ name = <patient>
+ name = <date>
+ name = <convention>
+ name = <voxel>
+ name = <component_interp>
+ name = <partition(s)>
+ name = <image>
+ name = <forceimage>
+ name = <srcnodes>
+ name = <partnode>
+Attributes of primitives graph:
+ name = <>
+ name = <matprops>
+ name = <component_interp>
+ name = <primitive_interp>
+ name = <implicit_links>
+ name = <partelem>
+vertices  ->lastUsed  =8
+vertices  ->size      =10
+vertices  ->nnodes    =0
+countNodes(vertices)  =8
+primitives  ->lastUsed  =5
+primitives  ->size      =10
+primitives  ->nnodes    =0
+countNodes(primitives)  =5
+ entering vtoa ... 
+ 8 nodes ... 
+ 5 elements ... 
+ ... done vtoa 
+... done saving grid
+ --- done VGrid  --- 

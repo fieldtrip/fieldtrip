@@ -39,6 +39,8 @@ try
   % write the points' locations (cartesian coordinates)
   for i=1:N_sl
     fprintf(fid,'%.6f\t%.6f\t%.6f\n',pos(i,1),pos(i,2),pos(i,3));
+    fprintf(fid,'%.6f\t%.6f\t%.6f\n',pos(i,1),pos(i,2),pos(i,3));
+    fprintf(fid,'%.6f\t%.6f\t%.6f\n',pos(i,1),pos(i,2),pos(i,3));   
   end
   
   % write the orientations components

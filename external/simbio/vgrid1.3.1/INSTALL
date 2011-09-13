@@ -1,0 +1,8 @@
+
+Edit ./Makefile according to your preferred compilers and compiler options.
+The type 'make'.
+
+The vgrid executable will be created in the program/ directory.
+
+There is no automatic installation of the vgrid binary. 
+You have to link or copy it to a place on your path.

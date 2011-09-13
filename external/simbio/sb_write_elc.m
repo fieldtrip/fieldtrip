@@ -1,4 +1,4 @@
-function sb_write_elc(pnt,labels,file_name)
+function sb_write_elc(pnt,labels,file_name,flag)
 %
 % sb_write_elc writes a set of electrodes on disk
 %
@@ -6,8 +6,9 @@ function sb_write_elc(pnt,labels,file_name)
 %   sb_write_elc(pnt,labels,file_name)
 % 
 % where:
-%   pnt are the positions of the electrodes in cartesian coordinates and millimiters
-%   labels is a cellstr of labels containing the names of the electrodes
+%   pnt       are the positions of the electrodes in cartesian coordinates and millimiters
+%   labels    is a cellstr of labels containing the names of the electrodes
+%   flag      is 1 for DEEP electrodes
 
 % Copyright (C) 2011, Felix Lucka
 
@@ -15,7 +16,9 @@ function sb_write_elc(pnt,labels,file_name)
 
 
 % pnt units have to be in millimiters, cartesian coordinates
-
+if nargin==3
+  flag = 0;
+end
 N_sens = size(pnt,1);
 
 % open the file and write the header
@@ -41,7 +44,13 @@ try
   % write the labels
   fprintf(fid,'%s\n','Labels');
   for i=1:N_sens
-    fprintf(fid,'%s\t',labels{i});
+    % true for depth electrodes
+    if flag
+      str = ['DEPTH ' labels{i}];
+    else
+      str = labels{i};
+    end
+    fprintf(fid,'%s\t',str);
   end
   
   % close the file
