@@ -16,11 +16,9 @@ unit         = ft_getopt(varargin, 'unit', 'cm');     % contains the units of th
 tissue       = ft_getopt(varargin, 'tissue', []);     % contains the labels of the tissues
 tissueval    = ft_getopt(varargin, 'tissueval', []);  % contains the tissue values (an integer for each compartment)
 tissuecond   = ft_getopt(varargin, 'tissuecond', []); % contains the tissue conductivities
-tissueweight = ft_getopt(varargin, 'tissueweight', ones(1,numel(tissueval))); % contains the weigths for vgrid
-% (how dense the wireframe of each tissue conpartment should be done)
-
-% start with an empty structure
-labels = []; % used to write the .par file (integers like 101,102,...)
+tissueweight = ft_getopt(varargin, 'tissueweight', ones(1,numel(tissueval))); % contains the weigths for vgrid (how dense the wireframe of each tissue conpartment should be done)
+deepelec     = ft_getopt(varargin, 'deepelec', []);   % used in the case of deep voxel solution
+bnd          = ft_getopt(varargin, 'bnd', []);        % used in the case the solution has to be calculated on a triangulated surface (typically the scalp)
 
 % define a wireframe for each compartment (FEM grid)
 wf = [];
@@ -31,7 +29,7 @@ if strcmp(wfmethod,'cubes')
   MRfile = [tname '.v'];
   % write a vista volumetric file
   ft_write_volume(MRfile, seg,'dataformat', 'vista'); % calls write_vista_vol(size(seg), seg, MRfile);
-
+  
   % write the materials file (assign tissue values to the elements of the FEM grid)
   % see tutorial: http://www.rheinahrcampus.de/~medsim/vgrid/manual.html
   [~,tname] = fileparts(tempname);
@@ -53,10 +51,17 @@ if strcmp(wfmethod,'cubes')
   fclose(efid);
   % execute command
   dos(sprintf('chmod +x %s', shfile));
-  disp('Vgrid is writing the mesh file, this may take some time ...')
+  disp('Vgrid is writing the wireframe mesh file, this may take some time ...')
   stopwatch = tic;
-  dos(['./' shfile]);
-  disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
+  
+  try
+    dos(['./' shfile]);
+    disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
+  catch
+    disp('Error in writing the wireframe mesh file')
+    cleaner(MRfile,materialsfile,meshfile,shfile)
+    rethrow(ME)
+  end
   
   % read the mesh points
   [shape] = ft_read_headshape(meshfile,'format','vista','unit',unit); % calls [nodes,elements,labels] = read_vista_mesh(meshfile);
@@ -64,13 +69,14 @@ if strcmp(wfmethod,'cubes')
   elements = shape.el;
   labels   = shape.labels;
   
-  % assign wireframe (or FEM grid, or 3d mesh)
-  wf.nd = nodes; 
+  % assign wireframe (also called 'FEM grid', or '3d mesh')
+  wf.nd = nodes;
   wf.el = elements;
   wf.labels = labels;
+  cleaner(MRfile,materialsfile,meshfile,shfile)
   
 elseif strcmp(wfmethod,'tetra')
-  % not yet impementes
+  % not yet implemented
 else
   error('Unsupported method')
 end
@@ -78,7 +84,19 @@ end
 vol = [];
 vol.wf        = wf;
 vol.cond      = tissuecond;
-vol.labels    = labels;
 vol.transform = transform;
 vol.unit      = unit;
 vol.type      = 'simbio';
+
+% bnd has always the precedence
+if ~isempty(bnd)
+  vol.bnd        = bnd;
+else
+  vol.deepelec  = deepelec;
+end
+
+function cleaner(MRfile,materialsfile,meshfile,shfile)
+delete(MRfile);
+delete(materialsfile);
+delete(meshfile);
+delete(shfile);
