@@ -9,6 +9,7 @@ function vol = ft_headmodel_fem_simbio(seg,varargin)
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD, TEST_HEADMODEL_SIMBIO
 
 % Copyright (C) 2011, Cristiano Micheli
+ft_hastoolbox('simbio', 1);
 
 wfmethod     = ft_getopt(varargin, 'wfmethod', 'cubes'); % wireframe method (default: cubes)
 transform    = ft_getopt(varargin, 'transform', []);  % contains the tr. matrix from voxels to head coordinates
@@ -29,9 +30,9 @@ if strcmp(wfmethod,'cubes')
   MRfile = [tname '.v'];
   % write a vista volumetric file
   %   ft_write_volume(MRfile, seg,'dataformat', 'vista');
-  write_vista_vol(size(seg), seg, filename);
+  write_vista_vol(size(seg), seg, MRfile);
   
-  if ft_hastoolbox('simbio')
+  if ~ft_hastoolbox('simbio')
     error('Cannot write a materials file without the Vista/Simbio toolbox')
   end
   % write the materials file (assign tissue values to the elements of the FEM grid)
@@ -66,15 +67,24 @@ if strcmp(wfmethod,'cubes')
     rethrow(ME)
   end
   
-  % read the mesh points
-  %   [shape] = ft_read_headshape(meshfile,'format','vista','unit',unit); 
-  [nodes,elements,labels] = read_vista_mesh(filename);
-  
-  % assign wireframe (also called 'FEM grid', or '3d mesh')
-  wf.nd = nodes;
-  wf.el = elements;
-  wf.labels = labels;
-  cleaner(MRfile,materialsfile,meshfile,shfile)
+  try
+    % read the mesh points
+    [nodes,elements,labels] = read_vista_mesh(meshfile);
+    % assign wireframe (also called 'FEM grid', or '3d mesh')
+    wf.nd = nodes;
+    wf.el = elements;
+    wf.labels = labels;
+    
+    % FIXME: generate the transfer matrix HERE
+    %         fprintf(efid,['ipm_linux_opt_venant -i FEtransfermatrix -h ./' meshfile ' -s ./' elcfile, ...
+    %           ' -o ./' transfermatrix ' -p ./' parfile ' -sens eeg 2>&1 >
+    %           /dev/null\n']);
+    
+    cleaner(MRfile,materialsfile,meshfile,shfile)
+  catch
+    disp('mesh was not written, check the presence of vgrid in the path')
+    rethrow(ME)
+  end
   
 elseif strcmp(wfmethod,'tetra')
   % not yet implemented
