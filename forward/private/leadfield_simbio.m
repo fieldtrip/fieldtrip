@@ -62,13 +62,14 @@ try
   sb_write_par(parfile,'cond',vol.cond,'labels',unique(vol.wf.labels));
   
   % write the vol.wf in a vista format .v file
-  ft_write_headshape(meshfile,vol.wf,'format','vista');
+%   ft_write_headshape(meshfile,vol.wf,'format','vista');
+  write_vista_mesh(meshfile,vol.wf.nd,vol.wf.el,vol.wf.labels);
   
   % exe file
   efid = fopen(exefile, 'w');
   if ~ispc
     fprintf(efid,'#!/usr/bin/env bash\n');
-    %         fprintf(efid,['ipm_linux_opt_venant -i fetransfermatrix -h ./' meshfile ' -s ./' elcfile, ...
+    %         fprintf(efid,['ipm_linux_opt_venant -i FEtransfermatrix -h ./' meshfile ' -s ./' elcfile, ...
     %           ' -o ./' transfermatrix ' -p ./' parfile ' -sens eeg 2>&1 > /dev/null\n']);
     %         fprintf(efid,['ipm_linux_opt_venant -i sourcesimulation -s ./' elcfile ' -t ./' transfermatrix, ...
     %           ' -dip ./' dipfile ' -o ./' outfile ' -p ./' parfile ' -fwd fem -sens eeg 2>&1 > /dev/null\n']);
