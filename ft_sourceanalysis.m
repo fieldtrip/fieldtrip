@@ -200,7 +200,7 @@ ftFuncTimer = tic();
 ftFuncClock = clock();
 ftFuncMem   = memtic();
 
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on'); 
 
 % set defaults for optional cfg.inputfile, cfg.outputfile
 if ~isfield(cfg, 'inputfile'),  cfg.inputfile                   = [];    end
