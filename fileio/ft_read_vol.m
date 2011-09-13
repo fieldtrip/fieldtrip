@@ -79,7 +79,7 @@ switch fileformat
     % read the triangulated boundary from the neuromag BEM model
     [vol.bnd.pnt, vol.bnd.tri, vol.bnd.nrm] = loadtri(vol.filename);
     vol.bnd.pnt = vol.bnd.pnt*100;  % convert to cm
-
+    
   otherwise
     error('unknown fileformat for volume conductor model');
 end
