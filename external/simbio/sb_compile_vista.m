@@ -47,11 +47,20 @@ end
 % Vista folder has to be in the same folder as sb_compile_vista
 
 L = [];
-L = add_mex_source(L,'vista','vistaprimitive',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o vistaprimitive.o');
-% FIXME: compile the libvista.a shared library for all platforms
-L = add_mex_source(L,'vista','read_vista_mesh',{'GLNX86', 'GLNXA64'},[],'vistaprimitive.o libvista.a');
-L = add_mex_source(L,'vista','write_vista_mesh',{'GLNX86', 'GLNXA64'},[],'libvista.a');
-L = add_mex_source(L,'vista','write_vista_vol',{'GLNX86', 'GLNXA64'},[],'libvista.a');
+% compile the libvista.a shared library for UNIX/LINUX
+add_mex_source(L,'vista','vistaprimitive.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o vistaprimitive.o');
+add_mex_source(L,'vista','FIL_Vista_Attr.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Attr.o');
+add_mex_source(L,'vista','FIL_Vista_Basic.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Basic.o');
+add_mex_source(L,'vista','FIL_Vista_File.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_File.o');
+add_mex_source(L,'vista','FIL_Vista_Graph.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Graph.o');
+add_mex_source(L,'vista','FIL_Vista_Image.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Image.o');
+if isunix
+  system('ar rcs libvista.a FIL_Vista_Attr.o FIL_Vista_Basic.o FIL_Vista_File.o FIL_Vista_Graph.o FIL_Vista_Image.o');
+end
+
+L = add_mex_source(L,'vista','read_vista_mesh.cpp',{'GLNX86', 'GLNXA64'},[],'vistaprimitive.o libvista.a');
+L = add_mex_source(L,'vista','write_vista_mesh.cpp',{'GLNX86', 'GLNXA64'},[],'libvista.a');
+L = add_mex_source(L,'vista','write_vista_vol.cpp',{'GLNX86', 'GLNXA64'},[],'libvista.a');
 
 oldDir = pwd;
 [baseDir, myName] = fileparts(mfilename('fullpath'));
@@ -80,7 +89,7 @@ function compile_mex_list_vista(L, baseDir, force)
 for i=1:length(L)
    [relDir, name] = fileparts(L(i).relName);
 
-   sfname = [baseDir filesep L(i).dir filesep L(i).relName '.cpp'];
+   sfname = [baseDir filesep L(i).dir filesep L(i).relName ];
    SF = dir(sfname);
    if numel(SF)<1
       fprintf(1,'Error: source file %s cannot be found.', sfname);
@@ -97,7 +106,7 @@ for i=1:length(L)
    end
    fprintf(1,'Compiling MEX file %s/%s ...\n', L(i).dir, name);
    cd([baseDir '/' L(i).dir]);
-   cmd = sprintf('mex %s.cpp %s', L(i). relName, L(i).extras);
+   cmd = sprintf('mex %s %s', L(i). relName, L(i).extras);
    eval(cmd);
 end
 
