@@ -54,6 +54,17 @@ L =add_mex_source(L,'vista','FIL_Vista_Basic.c',{'GLNX86', 'GLNXA64'},[],'-Ivist
 L =add_mex_source(L,'vista','FIL_Vista_File.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_File.o');
 L =add_mex_source(L,'vista','FIL_Vista_Graph.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Graph.o');
 L =add_mex_source(L,'vista','FIL_Vista_Image.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Image.o');
+oldDir = pwd
+[baseDir, myName] = fileparts(mfilename('fullpath'));
+try
+  compile_mex_list_vista(L, baseDir, force); 
+catch
+  me = lasterror;
+  cd(oldDir);
+  rethrow(me);
+end
+cd(baseDir);
+L = [];
 % FIXME: the following should be done inside a function called add_shared_library
 if isunix
   system('ar rcs libvista.a vista/FIL_Vista_Attr.o vista/FIL_Vista_Basic.o vista/FIL_Vista_File.o vista/FIL_Vista_Graph.o vista/FIL_Vista_Image.o');
@@ -64,8 +75,6 @@ L = add_mex_source(L,'.','read_vista_mesh.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista
 L = add_mex_source(L,'.','write_vista_mesh.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista libvista.a');
 L = add_mex_source(L,'.','write_vista_vol.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista libvista.a');
 
-oldDir = pwd;
-[baseDir, myName] = fileparts(mfilename('fullpath'));
 try
   compile_mex_list_vista(L, baseDir, force); 
 catch
