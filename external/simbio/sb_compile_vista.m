@@ -46,15 +46,16 @@ end
 % At the moment this works only for Linux 32-64 bit
 % Vista folder has to be in the same folder as sb_compile_vista
 
-L = [];
-
+% Step 1
 % compile the libvista.a shared library for UNIX/LINUX
-L =add_mex_source(L,'vista','FIL_Vista_Attr.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Attr.o');
-L =add_mex_source(L,'vista','FIL_Vista_Basic.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Basic.o');
-L =add_mex_source(L,'vista','FIL_Vista_File.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_File.o');
-L =add_mex_source(L,'vista','FIL_Vista_Graph.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Graph.o');
-L =add_mex_source(L,'vista','FIL_Vista_Image.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Image.o');
-oldDir = pwd
+L = [];
+L = add_mex_source(L,'vista','FIL_Vista_Attr.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Attr.o');
+L = add_mex_source(L,'vista','FIL_Vista_Basic.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Basic.o');
+L = add_mex_source(L,'vista','FIL_Vista_File.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_File.o');
+L = add_mex_source(L,'vista','FIL_Vista_Graph.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Graph.o');
+L = add_mex_source(L,'vista','FIL_Vista_Image.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Image.o');
+
+oldDir = pwd;
 [baseDir, myName] = fileparts(mfilename('fullpath'));
 try
   compile_mex_list_vista(L, baseDir, force); 
@@ -64,13 +65,15 @@ catch
   rethrow(me);
 end
 cd(baseDir);
-L = [];
 % FIXME: the following should be done inside a function called add_shared_library
 if isunix
   system('ar rcs libvista.a vista/FIL_Vista_Attr.o vista/FIL_Vista_Basic.o vista/FIL_Vista_File.o vista/FIL_Vista_Graph.o vista/FIL_Vista_Image.o');
 end
+
+% Step 2
 % compile the mesh/vol functions
-L =add_mex_source(L,'.','vistaprimitive.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o vistaprimitive.o');
+L = [];
+L = add_mex_source(L,'.','vistaprimitive.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o vistaprimitive.o');
 L = add_mex_source(L,'.','read_vista_mesh.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista vistaprimitive.o libvista.a');
 L = add_mex_source(L,'.','write_vista_mesh.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista libvista.a');
 L = add_mex_source(L,'.','write_vista_vol.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista libvista.a');
