@@ -57,6 +57,8 @@ if strcmp(wfmethod,'cubes')
   dos(sprintf('chmod +x %s', shfile));
   disp('Vgrid is writing the wireframe mesh file, this may take some time ...')
   stopwatch = tic;
+  % FIXME: think about: add a translation due to conversion between inices and vertices'
+  % worlds coordinates?
   
   try
     dos(['./' shfile]);
@@ -75,14 +77,31 @@ if strcmp(wfmethod,'cubes')
     wf.el = elements;
     wf.labels = labels;
     
-    % FIXME: generate the transfer matrix HERE
-    %         fprintf(efid,['ipm_linux_opt_venant -i FEtransfermatrix -h ./' meshfile ' -s ./' elcfile, ...
-    %           ' -o ./' transfermatrix ' -p ./' parfile ' -sens eeg 2>&1 >
-    %           /dev/null\n']);
-    
-    cleaner(MRfile,materialsfile,meshfile,shfile)
+%     % exe file
+%     if ~ispc
+%       [~,tname] = fileparts(tempname);
+%       exefile    = [tname '.sh'];
+%       efid = fopen(exefile, 'w');
+%       fprintf(efid,'#!/usr/bin/env bash\n');
+%       % generate the transfer matrix 
+%       fprintf(efid,['ipm_linux_opt_venant -i FEtransfermatrix -h ./' meshfile ' -s ./' meshfile, ...
+%         ' -o ./' transfermatrix ' -p ./' parfile ' -sens eeg 2>&1 > /dev/null\n']);
+%       fclose(efid);
+%       
+%       dos(sprintf('chmod +x %s', exefile));
+%       disp('simbio is calculating the transfer matrix, this may take some time ...')
+% 
+%       stopwatch = tic;
+%       dos(['./' exefile]);
+%       disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
+%       % FIXME: put something to read the tr matrix and add a filed to wf
+%       % (how big is it?)
+%     end
+        
+    cleaner(MRfile,materialsfile,meshfile,shfile) %exefile
   catch
     disp('mesh was not written, check the presence of vgrid in the path')
+    cleaner(MRfile,materialsfile,meshfile,shfile)
     rethrow(ME)
   end
   

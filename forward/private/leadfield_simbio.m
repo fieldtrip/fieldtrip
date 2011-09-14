@@ -62,33 +62,42 @@ try
   sb_write_par(parfile,'cond',vol.cond,'labels',unique(vol.wf.labels));
   
   % write the vol.wf in a vista format .v file
-%   ft_write_headshape(meshfile,vol.wf,'format','vista');
+  disp('writing the mesh file on disk...')
   write_vista_mesh(meshfile,vol.wf.nd,vol.wf.el,vol.wf.labels);
-  
+
   % exe file
-  efid = fopen(exefile, 'w');
+  
   if ~ispc
+    efid = fopen(exefile, 'w');
     fprintf(efid,'#!/usr/bin/env bash\n');
-    %         fprintf(efid,['ipm_linux_opt_venant -i FEtransfermatrix -h ./' meshfile ' -s ./' elcfile, ...
-    %           ' -o ./' transfermatrix ' -p ./' parfile ' -sens eeg 2>&1 > /dev/null\n']);
-    %         fprintf(efid,['ipm_linux_opt_venant -i sourcesimulation -s ./' elcfile ' -t ./' transfermatrix, ...
-    %           ' -dip ./' dipfile ' -o ./' outfile ' -p ./' parfile ' -fwd fem -sens eeg 2>&1 > /dev/null\n']);
-    fprintf(efid,['ipm_linux_opt_venant -i sourcesimulation -h ./' meshfile ' -s ./' elcfile, ...
-      ' -dip ./' dipfile ' -o ./' outfile ' -p ./' parfile ' -fwd fem -sens eeg 2>&1 > /dev/null\n']);
+    
+%             fprintf(efid,['ipm_linux_opt -i FEtransfermatrix -h ./' meshfile ' -s ./' elcfile, ...
+%               ' -o ./' transfermatrix ' -p ./' parfile ' -sens EEG 2>&1 > /dev/null\n']);
+%             fprintf(efid,['ipm_linux_opt -i sourcesimulation -s ./' elcfile ' -t ./' vol.transfermatrix, ...
+%               ' -dip ./' dipfile ' -o ./' outfile ' -p ./' parfile ' -fwd FEM -sens EEG 2>&1 > /dev/null\n']);
+
+    fprintf(efid,['ipm_linux_opt_Venant -i sourcesimulation -h ./' meshfile ' -s ./' elcfile, ...
+      ' -dip ./' dipfile ' -o ./' outfile ' -p ./' parfile ' -fwd FEM -sens EEG 2>&1 > /dev/null\n']);
+    
+    fclose(efid);
+    
+    dos(sprintf('chmod +x %s', exefile));
+    disp('simbio is calculating the leadfields, this may take some time ...')
+
+    stopwatch = tic;
+    dos(['./' exefile]);
+    disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
+
+    try
+      [lf] = sb_read_msr(outfile);
+      cleaner(exefile,elcfile,dipfile,parfile,meshfile,outfile)
+      cd(tmpfolder)
+    catch
+      disp('Unable to read the solution')
+      cleaner(exefile,elcfile,dipfile,parfile,meshfile,outfile)
+      cd(tmpfolder)      
+    end
   end
-  fclose(efid);
-  
-  dos(sprintf('chmod +x %s', exefile));
-  disp('simbio is calculating the leadfields, this may take some time ...')
-  
-  stopwatch = tic;
-  dos(['./' exefile]);
-  disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
-  
-  [lf] = sb_read_msr(outfile);
-  cleaner(exefile,elcfile,dipfile,parfile,meshfile,outfile)
-  cd(tmpfolder)
-  
 catch
   warning('an error occurred while running simbio');
   rethrow(lasterror)
