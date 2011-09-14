@@ -308,7 +308,8 @@ if ~isempty(cfg.wvar)
   end
   resample = expand;
   % replace the blocked version of the design by the original one
-  design = design_orig;
+  design = orig_design;
+  Nrepl  = orig_Nrepl;
 end
 
 % in some cases it is possible to reduce the number of permutations by taking only the ones that result in unique condition sequences
