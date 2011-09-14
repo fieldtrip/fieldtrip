@@ -41,6 +41,10 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg,data)
 %   cfg.artfctdef.zvalue.fltpadding
 %   cfg.artfctdef.zvalue.artpadding
 %
+% If you specify
+%   cfg.artfctdef.zvalue.interactive = 'yes', a GUI will be started and you
+%     can manually accept/reject detected artifacts, and/or change the threshold
+%
 % Configuration settings related to the preprocessing of the data are
 %   cfg.artfctdef.zvalue.lpfilter      = 'no' or 'yes'  lowpass filter
 %   cfg.artfctdef.zvalue.hpfilter      = 'no' or 'yes'  highpass filter
@@ -97,34 +101,29 @@ ftFuncClock = clock();
 ftFuncMem   = memtic();
 
 % set default rejection parameters
-if ~isfield(cfg,'artfctdef'),                   cfg.artfctdef                    = [];       end
-if ~isfield(cfg.artfctdef,'zvalue'),            cfg.artfctdef.zvalue             = [];       end
-if ~isfield(cfg, 'headerformat'),               cfg.headerformat                 = [];       end
-if ~isfield(cfg, 'dataformat'),                 cfg.dataformat                   = [];       end
-if ~isfield(cfg, 'memory'),                     cfg.memory                       = 'high';   end
+cfg.headerformat = ft_getopt(cfg, 'headerformat', []);
+cfg.dataformat   = ft_getopt(cfg, 'dataformat',   []);
+cfg.memory       = ft_getopt(cfg, 'memory',       'high');
+cfg.artfctdef    = ft_getopt(cfg, 'artfctdef',    []);
+cfg.artfctdef.zvalue = ft_getopt(cfg.artfctdef, 'zvalue', []);
+cfg.artfctdef.zvalue.channel     = ft_getopt(cfg.artfctdef.zvalue, 'channel', {});
+cfg.artfctdef.zvalue.trlpadding  = ft_getopt(cfg.artfctdef.zvalue, 'trlpadding', 0);
+cfg.artfctdef.zvalue.fltpadding  = ft_getopt(cfg.artfctdef.zvalue, 'fltpadding', 0);
+cfg.artfctdef.zvalue.artpadding  = ft_getopt(cfg.artfctdef.zvalue, 'artpadding', 0);
+cfg.artfctdef.zvalue.interactive = ft_getopt(cfg.artfctdef.zvalue, 'interactive', 'no');
+cfg.artfctdef.zvalue.cumulative  = ft_getopt(cfg.artfctdef.zvalue, 'cumulative', 'yes');
 
 % for backward compatibility
-if isfield(cfg.artfctdef.zvalue,'sgn')
-  cfg.artfctdef.zvalue.channel = cfg.artfctdef.zvalue.sgn;
-  cfg.artfctdef.zvalue         = rmfield(cfg.artfctdef.zvalue, 'sgn');
-end
-cfg.artfctdef = ft_checkconfig(cfg.artfctdef, 'renamed',    {'blc', 'demean'});
-cfg.artfctdef = ft_checkconfig(cfg.artfctdef, 'renamed',    {'blcwindow' 'baselinewindow'});
+cfg.artfctdef        = ft_checkconfig(cfg.artfctdef, 'renamed',    {'blc', 'demean'});
+cfg.artfctdef        = ft_checkconfig(cfg.artfctdef, 'renamed',    {'blcwindow' 'baselinewindow'});
+cfg.artfctdef.zvalue = ft_checkconfig(cfg.artfctdef.zvalue, 'renamed', {'sgn', 'channel'});
+cfg.artfctdef.zvalue = ft_checkconfig(cfg.artfctdef.zvalue, 'renamed', {'feedback', 'interactive'});
 
 if isfield(cfg.artfctdef.zvalue, 'artifact')
   fprintf('zvalue artifact detection has already been done, retaining artifacts\n');
   artifact = cfg.artfctdef.zvalue.artifact;
   return
 end
-
-if ~isfield(cfg.artfctdef.zvalue,'channel'),    cfg.artfctdef.zvalue.channel     = {};       end
-if ~isfield(cfg.artfctdef.zvalue,'trlpadding'), cfg.artfctdef.zvalue.trlpadding  = 0;        end
-if ~isfield(cfg.artfctdef.zvalue,'artpadding'), cfg.artfctdef.zvalue.artpadding  = 0;        end
-if ~isfield(cfg.artfctdef.zvalue,'fltpadding'), cfg.artfctdef.zvalue.fltpadding  = 0;        end
-if ~isfield(cfg.artfctdef.zvalue,'feedback'),   cfg.artfctdef.zvalue.feedback    = 'no';     end
-if ~isfield(cfg.artfctdef.zvalue,'cumulative'), cfg.artfctdef.zvalue.cumulative  = 'yes';    end
-
-thresholdsum = strcmp(cfg.artfctdef.zvalue.cumulative, 'yes');
 
 if nargin > 1
   % data given as input
@@ -147,9 +146,9 @@ if ~isfield(cfg, 'continuous')
 end
 
 if isfield(cfg,'trl')
-  trl           = cfg.trl;
+  trl = cfg.trl;
 else
-  trl = data.sampleopt;
+  trl = data.sampleinfo;
 end
 trlpadding    = round(cfg.artfctdef.zvalue.trlpadding*hdr.Fs);
 fltpadding    = round(cfg.artfctdef.zvalue.fltpadding*hdr.Fs);
@@ -162,6 +161,7 @@ cfg.artfctdef.zvalue.trl = trl;              % remember where we are going to lo
 cfg.artfctdef.zvalue.channel = ft_channelselection(cfg.artfctdef.zvalue.channel, hdr.label);
 sgnind        = match_str(hdr.label, cfg.artfctdef.zvalue.channel);
 numsgn        = length(sgnind);
+thresholdsum  = strcmp(cfg.artfctdef.zvalue.cumulative, 'yes');
 
 if numsgn<1
   error('no channels selected');
@@ -341,7 +341,7 @@ else
   opt.data = data;
 end
 
-if strcmp(cfg.artfctdef.zvalue.feedback, 'yes')
+if strcmp(cfg.artfctdef.zvalue.interactive, 'yes')
   set(h, 'visible', 'on');
   
   % give graphical feedback and allow the user to modify the threshold
@@ -372,9 +372,9 @@ if strcmp(cfg.artfctdef.zvalue.feedback, 'yes')
   uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'trial', 'userdata', 't')
   uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'rightarrow')
   uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>>', 'userdata', 'shift+rightarrow')
-  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'ctrl+uparrow')
-  uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'channel','userdata', 'c')
-  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'ctrl+downarrow')
+  %uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'ctrl+uparrow')
+  %uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'channel','userdata', 'c')
+  %uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'ctrl+downarrow')
 
   ft_uilayout(h, 'tag', 'group1', 'width', 0.10, 'height', 0.05);
   ft_uilayout(h, 'tag', 'group2', 'width', 0.05, 'height', 0.05);
@@ -432,6 +432,8 @@ cfg.artfctdef.zvalue.callinfo.procmem  = memtoc(ftFuncMem);
 cfg.artfctdef.zvalue.callinfo.calltime = ftFuncClock;
 cfg.artfctdef.zvalue.callinfo.user     = getusername();
 fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.artfctdef.zvalue.callinfo.proctime), round(cfg.artfctdef.zvalue.callinfo.procmem/(1024*1024)));
+
+delete(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -575,10 +577,20 @@ switch key
     setappdata(h, 'opt', opt);
     redraw_cb(h, eventdata);
   case 'ctrl+uparrow' % change channel
-    tmpchan = [opt.artcfg.channel;{'artifact'}]; % append the 'artifact' channel
-    numchan = numel(tmpchan);
-    chansel = match_str(tmpchan, opt.channel);
-    chansel = min(chansel+1, numchan);
+    if strcmp(opt.channel, 'artifact')
+      [dum, indx] = max(opt.zval);
+      sgnind      = opt.zindx(indx);
+    else
+      if ~isempty(opt.data)
+        sgnind  = match_str(opt.channel, opt.data.label);
+        selchan = match_str(opt.artcfg.channel, opt.channel);
+      else
+        sgnind  = match_str(opt.channel,   opt.hdr.label); 
+        selchan = match_str(opt.artcfg.channel, opt.channel);
+      end
+    end
+    numchan = numel(opt.artcfg.channel);
+    chansel = min(selchan+1, numchan);
     % convert numeric array into cell-array with channel labels
     opt.channel = tmpchan(chansel);
     setappdata(h, 'opt', opt);
@@ -589,6 +601,7 @@ switch key
     chansel = max(chansel-1, 1);
     % convert numeric array into cell-array with channel labels
     opt.channel = tmpchan(chansel);
+    setappdata(h, 'opt', opt);
     redraw_cb(h, eventdata);
   case 'a'
     % select the artifact to display
@@ -604,10 +617,10 @@ switch key
     end
   case 'c'
     % select channels
-    select = match_str([opt.artcfg.channel;{'artifact'}], opt.channel);
-    opt.channel = select_channel_list([opt.artcfg.channel;{'artifact'}], select);
-    setappdata(h, 'opt', opt);
-    redraw_cb(h, eventdata);
+%     select = match_str([opt.artcfg.channel;{'artifact'}], opt.channel);
+%     opt.channel = select_channel_list([opt.artcfg.channel;{'artifact'}], select);
+%     setappdata(h, 'opt', opt);
+%     redraw_cb(h, eventdata);
   case 'q'
     setappdata(h, 'opt', opt);
     cleanup_cb(h);
