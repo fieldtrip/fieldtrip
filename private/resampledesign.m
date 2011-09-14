@@ -307,6 +307,8 @@ if ~isempty(cfg.wvar)
     expand(i,:) = cat(2, blksel{resample(i,:)});
   end
   resample = expand;
+  % replace the blocked version of the design by the original one
+  design = design_orig;
 end
 
 % in some cases it is possible to reduce the number of permutations by taking only the ones that result in unique condition sequences
