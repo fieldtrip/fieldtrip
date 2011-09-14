@@ -22,7 +22,9 @@ end
 
 % some initial checks
 cfg = ft_checkconfig(cfg, 'forbidden', 'numcompartments');
-if ~isfield(mri, 'tissue') && any(ismember(fieldnames(mri), {'gray' 'brain' 'scalp'})) && (~isfield(cfg,'tissue') || length(cfg.tissue)==1), cfg.tissue = 1; end
+
+% FIXME: this part needs reorganization
+%if ~isfield(mri, 'tissue') && any(ismember(fieldnames(mri), {'gray' 'brain' 'scalp'})) && (~isfield(cfg,'tissue') || length(cfg.tissue)==1), cfg.tissue = 1; end
 if ~isfield(cfg, 'threshold'), cfg.threshold = 0; end
 if ~isfield(mri, 'unit'), mri = ft_convert_units(mri); end
   
@@ -70,6 +72,8 @@ for i=1:length(cfg.tissue)
   ori(2) = mean(mriy(seg(:)));
   ori(3) = mean(mriz(seg(:)));
   [pnt, tri] = triangulate_seg(seg, cfg.numvertices(i), ori);
+  % FIXME: corrects the original tri because is weird
+  tri = projecttri(pnt);
   % apply the coordinate transformation from voxel to head coordinates
   pnt(:,4) = 1;
   pnt = (mri.transform * (pnt'))';
