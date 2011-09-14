@@ -570,6 +570,12 @@ end
 
 if isequal(hastrials, 'yes')
   okflag = isfield(data, 'trial');
+  if ~okflag && isfield(data, 'dimord')
+    % instead look in the dimord for rpt or subj
+    okflag = ~isempty(strfind(data.dimord, 'rpt')) || ...
+      ~isempty(strfind(data.dimord, 'rpttap')) || ...
+      ~isempty(strfind(data.dimord, 'subj'));
+  end
   if ~okflag
     error('This function requires data with a ''trial'' field');
   end % if okflag
