@@ -345,7 +345,7 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
         data   = csd2transfer(data, optarg{:});
         
         % convert the inparam back to cell array in the case of granger
-        if strcmp(cfg.method, 'granger')
+        if strcmp(cfg.method, 'granger') || strcmp(cfg.method, 'instantaneous_causality') || strcmp(cfg.method, 'total_interdependence')
           inparam = {'transfer' 'noisecov' 'crsspctrm'};
         end
       end
