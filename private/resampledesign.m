@@ -16,9 +16,37 @@ function [resample] = resampledesign(cfg, design)
 %   cfg.wvar             = number or list with indices, within-cell variable(s)
 %   cfg.cvar             = number or list with indices, control variable(s)
 %
+% The "Independent variable" codes the condition number. Since the data is
+% assumed to be independent from the condition number any reshuffeling of
+% the condition number is allowed and ivar does NOT affect the resampling
+% outcome.
+%
+% The "Unit of observation variable" corresponds to the subject number (in a
+% within-subject manipulation) or the trial number (in a within-trial
+% manipulation). It is best understood by considering that it corresponds
+% to the "pairing" of the data in a paired T-test or repeared measures
+% ANOVA. The uvar affects the resampling outcome in the way that only
+% resamplings within one unit of observation are returned (e.g. swap
+% conditions within a subject, not over subjects).
+%
+% The "Within-cell variable" corresponds to the grouping of the data in
+% cells, where the multiple observations in a groups should not be broken
+% apart. This for example applies to multiple tapers in a spectral estimate
+% of a single trial of data (the "rpttap" dimension), where different
+% tapers should not be shuffled seperately. Another example is a blocked
+% fMRI design, with a different condition in each block and multiple
+% repetitions of the same condition within a block. Assuming that there is
+% a slow HRF that convolutes the trials within a block, you can shuffle the
+% blocks but not the individual trials in a block.
+%
+% The "Control variable" can be seen as the opposite from the within-cell
+% variable: it allows you to specify blocks in which the resampling should
+% be done, at the same time controlling that repetitions are not shuffled
+% between different control blocks.
+%
 % See also STATISTICS_MONTECARLO
 
-% Copyright (C) 2005-2007, Robert Oostenveld
+% Copyright (C) 2005-2011, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -38,10 +66,17 @@ function [resample] = resampledesign(cfg, design)
 %
 % $Id$
 
-if ~isfield(cfg, 'ivar'), cfg.ivar = []; end
-if ~isfield(cfg, 'uvar'), cfg.uvar = []; end
-if ~isfield(cfg, 'wvar'), cfg.wvar = []; end  % within-cell variable, to keep repetitions together
-if ~isfield(cfg, 'cvar'), cfg.cvar = []; end
+ft_checkopt(cfg, 'ivar', {'numericscalar', 'numericvector', 'empty'});
+ft_checkopt(cfg, 'uvar', {'numericscalar', 'numericvector', 'empty'});
+ft_checkopt(cfg, 'wvar', {'numericscalar', 'numericvector', 'empty'});
+ft_checkopt(cfg, 'cvar', {'numericscalar', 'numericvector', 'empty'});
+ft_checkopt(cfg, 'numrandomization', {'numericscalar', 'char'});
+ft_checkopt(cfg, 'resampling', {'char'});
+
+cfg.ivar = ft_getopt(cfg, 'ivar'); % the default is empty
+cfg.uvar = ft_getopt(cfg, 'uvar'); % the default is empty
+cfg.wvar = ft_getopt(cfg, 'wvar'); % the default is empty
+cfg.cvar = ft_getopt(cfg, 'cvar'); % the default is empty
 
 % if size(design,1)>size(design,2)
 %   % this function wants the replications in the column direction
@@ -63,13 +98,13 @@ fprintf('total number of measurements     = %d\n', Nrepl);
 fprintf('total number of variables        = %d\n', Nvar);
 fprintf('number of independent variables  = %d\n', length(cfg.ivar));
 fprintf('number of unit variables         = %d\n', length(cfg.uvar));
-fprintf('number of within-cell variables = %d\n', length(cfg.wvar));
+fprintf('number of within-cell variables  = %d\n', length(cfg.wvar));
 fprintf('number of control variables      = %d\n', length(cfg.cvar));
 fprintf('using a %s resampling approach\n', cfg.resampling);
 
 if ~isempty(cfg.cvar)
-  % do the resampling for each sub-block
-  % the different levels of the control variable indicate the sub-blocks in which the resampling can be done
+  % the different levels of the control variable indicate the blocks in which the resampling can be done
+  % the replications should not be resampled over the blocks
   blocklevel = unique(design(cfg.cvar,:)', 'rows')';
   for i=1:size(blocklevel,2)
     blocksel{i} = find(all(design(cfg.cvar,:)==repmat(blocklevel(:,i), 1, Nrepl), 1));
@@ -82,6 +117,7 @@ if ~isempty(cfg.cvar)
     else
       fprintf('resampling the subset where the control variable level is %s\n', num2str(blocklevel(:,i)));
     end
+    % use recursion to resample the replications within each block
     tmpcfg = cfg;
     tmpcfg.cvar = [];
     blockres{i} = blocksel{i}(resampledesign(tmpcfg, design(:, blocksel{i})));
@@ -114,7 +150,7 @@ if ~isempty(cfg.wvar)
   orig_Nrepl  = Nrepl;
   % replace the design matrix by a blocked version
   design = zeros(size(design,1), size(blkmeas,2));
-  Nrepl  = size(blkmeas,2); 
+  Nrepl  = size(blkmeas,2);
   for i=1:size(blkmeas,2)
     design(:,i) = orig_design(:, blksel{i}(1));
   end
@@ -139,7 +175,7 @@ if isempty(cfg.uvar) && strcmp(cfg.resampling, 'permutation')
       resample(i,:) = randperm(Nrepl);
     end
   end
-
+  
 elseif isempty(cfg.uvar) && strcmp(cfg.resampling, 'bootstrap')
   % randomly draw with replacement, keeping the number of elements the same in each class
   % only the test under the null-hypothesis (h0) is explicitely implemented here
@@ -148,7 +184,7 @@ elseif isempty(cfg.uvar) && strcmp(cfg.resampling, 'bootstrap')
   for i=1:cfg.numrandomization
     resample(i,:) = randsample(1:Nrepl, Nrepl);
   end
-
+  
 elseif ~isempty(cfg.uvar) && strcmp(cfg.resampling, 'permutation')
   % reshuffle the colums of the design matrix, keep the rows of the design matrix with the unit variable intact
   unitlevel = unique(design(cfg.uvar,:)', 'rows')';
@@ -199,9 +235,9 @@ elseif length(cfg.uvar)==1 && strcmp(cfg.resampling, 'bootstrap') && isempty(cfg
   % randomly draw with replacement, keeping the number of elements the same in each class
   % only the test under the null-hypothesis (h0) is explicitely implemented here
   % but the h1 test can be achieved using a control variable
- 
+  
   % FIXME allow for length(cfg.uvar)>1, does it make sense in the first place
-  % bootstrap the units of observation 
+  % bootstrap the units of observation
   units = design(cfg.uvar,:);
   for k = 1:length(unique(units))
     sel = find(units==k);
@@ -212,14 +248,14 @@ elseif length(cfg.uvar)==1 && strcmp(cfg.resampling, 'bootstrap') && isempty(cfg
   
   %sanity check on number of repetitions
   if any(Nrep~=Nrep(1)), error('all units of observation should have an equal number of repetitions'); end
-
-  if max(units(:))<20, 
+  
+  if max(units(:))<20,
     warning('fewer than 20 units warrants explicit checking of double occurrences of ''bootstraps''');
     checkunique = 1;
   else
     checkunique = 0;
   end
-
+  
   if ~checkunique,
     for i=1:cfg.numrandomization
       tmp           = randsample(1:Nrepl/Nrep(1), Nrepl/Nrep(1));
@@ -251,8 +287,9 @@ elseif length(cfg.uvar)==1 && strcmp(cfg.resampling, 'bootstrap') && isempty(cfg
         resample(i,indx(k,:)) = indx(k,tmp(i,:));
       end
     end
-  
+    
   end
+  
 else
   error('Unsupported configuration for resampling.');
 end
@@ -260,7 +297,6 @@ end
 if ~isempty(cfg.wvar)
   % switch back to the original design matrix and expand the resample ordering
   % matrix so that it reorders all elements within a cell together
-  design = orig_design;
   Nrepl  = orig_Nrepl;
   expand = zeros(size(resample,1), Nrepl);
   for i=1:size(resample,1)
@@ -268,3 +304,5 @@ if ~isempty(cfg.wvar)
   end
   resample = expand;
 end
+
+
