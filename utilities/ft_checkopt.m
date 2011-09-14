@@ -21,6 +21,9 @@ function opt = ft_checkopt(opt, key, allowedtype, allowedval)
 %   'doublescalar'
 %   'doublevector'
 %   'doublematrix'
+%   'numericscalar'
+%   'numericvector'
+%   'numericmatrix'
 %   'charcell'
 %
 % For allowedval you can specify a single value or a cell-array
@@ -53,7 +56,13 @@ if ~iscell(allowedval)
 end
 
 % get the value that belongs to this key
-val = ft_getopt(opt, key);
+val  = ft_getopt(opt, key);       % the default will be []
+
+if isempty(val) && ~any(strcmp(allowedtype, 'empty'))
+  if isnan(ft_getopt(opt, key, nan))
+    error('the option "%s" was not specified or was empty', key);
+  end
+end
 
 % check that the type of the option is allowed
 ok = isempty(allowedtype);
@@ -61,14 +70,20 @@ for i=1:length(allowedtype)
   switch allowedtype{i}
     case 'empty'
       ok = isempty(val);
+    case 'charcell'
+      ok = isa(val, 'cell') && all(cellfun(@ischar, val(:)));
     case 'doublescalar'
-      ok = isa(val, 'double') && all(size(val)==1);
+      ok = isa(val, 'double') && numel(val)==1;
     case 'doublevector'
       ok = isa(val, 'double') && sum(size(val)>1)==1;
     case 'doublematrix'
       ok = isa(val, 'double') && sum(size(val)>1)>1;
-    case 'charcell'
-      ok = isa(val, 'cell') && all(cellfun(@ischar, val(:)));
+    case 'numericscalar'
+      ok = isnumeric(val) && numel(val)==1;
+    case 'numericvector'
+      ok = isnumeric(val) && sum(size(val)>1)==1;
+    case 'numericmatrix'
+      ok = isnumeric(val) && sum(size(val)>1)>1;
     otherwise
       ok = isa(val, allowedtype{i});
   end
