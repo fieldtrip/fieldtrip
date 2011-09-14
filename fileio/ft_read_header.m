@@ -1421,26 +1421,29 @@ switch headerformat
     hdr.nChans = length(hdr.label);
 
   case {'tdt_tsq', 'tdt_tev'}
-    tsq = read_tdt_tsq(headerfile);
-    k = 0;
-    chan = unique([tsq.channel]);
-    % loop over the physical channels
-    for i=1:length(chan)
-      chansel = [tsq.channel]==chan(i);
-      code = unique([tsq(chansel).code]);
-      % loop over the logical channels
-      for j=1:length(code)
-        codesel = [tsq.code]==code(j);
-        % find the first instance of this logical channel
-        this = find(chansel & codesel, 1);
-        % add it to the list of channels
-        k = k + 1;
-        frequency(k) = tsq(this).frequency;
-        label{k}     = [char(typecast(tsq(this).code, 'uint8')) num2str(tsq(this).channel)];
-        tsqorig(k)   = tsq(this);
-      end
-    end
-    % the above code is not complete
+    % FIXME the code below is not yet functional, it requires more input from the ESI in Frankfurt
+    %     tsq = read_tdt_tsq(headerfile);
+    %     k = 0;
+    %     chan = unique([tsq.channel]);
+    %     % loop over the physical channels
+    %     for i=1:length(chan)
+    %       chansel = [tsq.channel]==chan(i);
+    %       code = unique({tsq(chansel).code});
+    %       % loop over the logical channels
+    %       for j=1:length(code)
+    %         codesel = false(size(tsq));
+    %         for k=1:numel(codesel)
+    %           codesel(k) = identical(tsq(k).code, code{j});
+    %         end
+    %         % find the first instance of this logical channel
+    %         this = find(chansel(:) & codesel(:), 1);
+    %         % add it to the list of channels
+    %         k = k + 1;
+    %         frequency(k) = tsq(this).frequency;
+    %         label{k}     = [char(typecast(tsq(this).code, 'uint8')) num2str(tsq(this).channel)];
+    %         tsqorig(k)   = tsq(this);
+    %       end
+    %     end
     error('not yet implemented');
 
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'yokogawa_mrk'}

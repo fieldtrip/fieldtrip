@@ -100,8 +100,3 @@ dataset(end+1).origdir  = origdir;
 dataset(end).type     = 'lfp/';
 dataset(end).datatype = 'plexon';
 dataset(end).filename = 'p213parall.nex';
-
-dataset(end+1).origdir  = origdir; 
-dataset(end).type     = 'lfp/';
-dataset(end).datatype = 'tdt';
-dataset(end).filename = 'smalltank_test2.tsq';
