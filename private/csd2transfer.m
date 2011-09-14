@@ -92,6 +92,10 @@ end
 
 
 if ~isempty(channelcmb)
+  if numel(channelcmb)==2 && strcmp(channelcmb{1},'all') && strcmp(channelcmb{2}, 'all')
+    [cmbindx(:,1), cmbindx(:,2)] = find(tril(ones(numel(freq.label)),-1));
+    ok = true(size(cmbindx,1),1);
+  end
   channelcmb = ft_channelcombination(channelcmb, freq.label);
 end
 
@@ -212,14 +216,16 @@ elseif strcmp(sfmethod, 'bivariate')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   %convert list of channel labels into indices
-  cmbindx     = zeros(size(channelcmb));
-  ok          = true(size(cmbindx,1), 1);
-  for k = 1:size(cmbindx,1)
-    [tmp, cmbindx(k,:)] = match_str(channelcmb(k,:)', freq.label);
-    if ~isempty(intersect(cmbindx(1:(k-1),:), cmbindx(k,:), 'rows'))
-      ok(k) = false;
-    elseif cmbindx(k,1)==cmbindx(k,2)
-      ok(k) = false;
+  if ~exist('cmbindx', 'var')
+    cmbindx     = zeros(size(channelcmb));
+    ok          = true(size(cmbindx,1), 1);
+    for k = 1:size(cmbindx,1)
+      [tmp, cmbindx(k,:)] = match_str(channelcmb(k,:)', freq.label);
+      if ~isempty(intersect(cmbindx(1:(k-1),:), cmbindx(k,:), 'rows'))
+        ok(k) = false;
+      elseif cmbindx(k,1)==cmbindx(k,2)
+        ok(k) = false;
+      end
     end
   end
   
@@ -550,13 +556,15 @@ I      = repmat(eye(2),[1 1 m N2]); % Defining 2 x 2 identity matrix
 
 %Step 1: Forming 2-sided spectral densities for ifft routine in matlab
 for c = 1:m
-  f_ind = 0;
+  % f_ind = 0;
   Stmp  = S(cmbindx(c,:),cmbindx(c,:),:);
-  for f = freq
-    f_ind             = f_ind+1;
+  for f_ind = 1:(N+1)
+  % for f = freq
+    % f_ind             = f_ind+1;
     Sarr(:,:,c,f_ind) = Stmp(:,:,f_ind);
     if(f_ind>1)
-      Sarr(:,:,c,2*N+2-f_ind) = Stmp(:,:,f_ind).';
+      %Sarr(:,:,c,2*N+2-f_ind) = Stmp(:,:,f_ind).';
+      Sarr(:,:,c,2*N+2-f_ind) = Stmp([2 1],[2 1],f_ind);
     end
   end
 end
@@ -590,7 +598,8 @@ for iter = 1:Niterations
   
   psi_old = psi;
   psi     = mtimes2x2(psi, gp);
-  psierr  = max(sum(abs(psi-psi_old)));
+  %psierr  = sum(sum(abs(psi-psi_old)));
+  psierr  = abs(psi-psi_old);
   
   psierrf = mean(psierr(:));
   if(psierrf<tol), 
@@ -668,9 +677,11 @@ gam = ifft(g);
 gamp  = gam;
 beta0 = 0.5*gam(1,:);
 
-for k = 1:ncmb
-  gamp(1,(k-1)*4+1:k*4) = reshape(triu(reshape(beta0(1,(k-1)*4+1:k*4),[2 2])),[1 4]);
-end
+%for k = 1:ncmb
+%  gamp(1,(k-1)*4+1:k*4) = reshape(triu(reshape(beta0(1,(k-1)*4+1:k*4),[2 2])),[1 4]);
+%end
+beta0(2:4:4*ncmb)   = 0;
+gamp(1,:)           = beta0;
 gamp(nfreq+1:end,:) = 0;
 
 % reconstituting
@@ -703,104 +714,104 @@ gp = reshape(transpose(gp), [2 2 ncmb 2*(nfreq-1)]);
 %subfunctions for the 2x2 functionality
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%determinant of a 2x2 matrix
-function [d] = det2x2(x)
-
-%computes determinant of matrix x, using explicit analytic definition if
-%size(x,1) < 4, otherwise use matlab det-function
-
-siz = size(x);
-if all(siz(1:2)==2),
-  d = x(1,1,:,:).*x(2,2,:,:) - x(1,2,:,:).*x(2,1,:,:);
-elseif all(siz(1:2)==3),
-  d = x(1,1,:,:).*x(2,2,:,:).*x(3,3,:,:) - ...
-      x(1,1,:,:).*x(2,3,:,:).*x(3,2,:,:) - ...
-      x(1,2,:,:).*x(2,1,:,:).*x(3,3,:,:) + ...
-      x(1,2,:,:).*x(2,3,:,:).*x(3,1,:,:) + ...
-      x(1,3,:,:).*x(2,1,:,:).*x(3,2,:,:) - ...
-      x(1,3,:,:).*x(2,2,:,:).*x(3,1,:,:);
-elseif numel(siz)==2,
-  d = det(x);
-else
-  %error   
-  %write for loop
-  %for
-  %end
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%
-% inverse of a 2x2 matrix
-function [d] = inv2x2(x)
-
-%computes inverse of matrix x, using explicit analytic definition if
-%size(x,1) < 4, otherwise use matlab inv-function
-
-siz = size(x);
-if all(siz(1:2)==2),
-  adjx  = [x(2,2,:,:) -x(1,2,:,:); -x(2,1,:,:) x(1,1,:,:)];
-  denom = det2x2(x);
-  d     = adjx./denom([1 1],[1 1],:,:);
-elseif all(siz(1:2)==3),
-  adjx = [ det2x2(x([2 3],[2 3],:,:)) -det2x2(x([1 3],[2 3],:,:))  det2x2(x([1 2],[2 3],:,:)); ...
-          -det2x2(x([2 3],[1 3],:,:))  det2x2(x([1 3],[1 3],:,:)) -det2x2(x([1 2],[1 3],:,:)); ...
-	   det2x2(x([2 3],[1 2],:,:)) -det2x2(x([1 3],[1 2],:,:))  det2x2(x([1 2],[1 2],:,:))];
-  denom = det2x2(x);
-  d     = adjx./denom([1 1 1],[1 1 1],:,:);
-elseif numel(siz)==2,
-  d = inv(x);
-else
-  error('cannot compute slicewise inverse');
-  %write for loop for the higher dimensions, using normal inv
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% matrix multiplication 2x2
-function [z] = mtimes2x2(x, y)
-
-% compute x*y 
-% and dimensionatity is 2x2xN
-
-z     = complex(zeros(size(x)));
-xconj = conj(x);
-
-z(1,1,:,:) = x(1,1,:,:).*y(1,1,:,:) + x(1,2,:,:).*y(2,1,:,:);
-z(1,2,:,:) = x(1,1,:,:).*y(1,2,:,:) + x(1,2,:,:).*y(2,2,:,:);
-z(2,1,:,:) = x(2,1,:,:).*y(1,1,:,:) + x(2,2,:,:).*y(2,1,:,:);
-z(2,2,:,:) = x(2,1,:,:).*y(1,2,:,:) + x(2,2,:,:).*y(2,2,:,:);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% quadratic multiplication 2x2 matrix,  sandwiched matrix assumed hermitian
-function [z] = sandwich2x2(x, y)
-
-% compute x*y*x' provided y = hermitian
-% and dimensionatity is 2x2xN
-
-%FIXME build in check for hermitianity
-z     = complex(zeros(size(x)));
-xconj = conj(x);
-xabs2 = abs(x).^2;
-
-z(1,1,:,:) = xabs2(1,1,:,:) .* y(1,1,:,:) + ...
-             xabs2(1,2,:,:) .* y(2,2,:,:) + ...
-           2.*real(y(2,1,:,:).*xconj(1,1,:,:).*x(1,2,:,:));
-z(2,1,:,:) = y(1,1,:,:).*xconj(1,1,:,:).*x(2,1,:,:) + ...
-           y(2,1,:,:).*xconj(1,1,:,:).*x(2,2,:,:) + ...
-           y(1,2,:,:).*xconj(1,2,:,:).*x(2,1,:,:) + ...
-           y(2,2,:,:).*xconj(1,2,:,:).*x(2,2,:,:);
-z(1,2,:,:) = conj(z(2,1,:,:));
-z(2,2,:,:) = xabs2(2,1,:,:) .* y(1,1,:,:) + ...
-             xabs2(2,2,:,:) .* y(2,2,:,:) + ...
-           2.*real(y(1,2,:,:).*xconj(2,2,:,:).*x(2,1,:,:));
-
-%b1 b2     a1 a2'   b1' b3'
-%b3 b4     a2 a3    b2' b4'
-%
-%b1*a1+b2*a2  b1*a2'+b2*a3  b1' b3'
-%b3*a1+b4*a2  b3*a2'+b4*a3  b2' b4'
-%
-%b1*a1*b1'+b2*a2*b1'+b1*a2'*b2'+b2*a3*b2' b1*a1*b3'+b2*a2*b3'+b1*a2'*b4'+b2*a3*b4'
-%b3*a1*b1'+b4*a2*b1'+b3*a2'*b2'+b4*a3*b2' b3*a1*b3'+b4*a2*b3'+b3*a2'*b4'+b4*a3*b4'
-%
-%a1*abs(b1)^2 + a2*(b1'*b2) + a2'*(b1*b2') + a3*abs(b2)^2    a1*b1*b3'    + a2*b2*b3'   + a2'*b1*b4'   + a3*b2*b4'
-%a1*b1'*b3    + a2*b1'*b4   + a2'*b2'*b3   + a3*b2'*b4       a1*abs(b3)^2 + a2*(b3'*b4) + a2'*(b3*b4') + a3*abs(b4)^2
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %determinant of a 2x2 matrix
+% function [d] = det2x2(x)
+% 
+% %computes determinant of matrix x, using explicit analytic definition if
+% %size(x,1) < 4, otherwise use matlab det-function
+% 
+% siz = size(x);
+% if all(siz(1:2)==2),
+%   d = x(1,1,:,:).*x(2,2,:,:) - x(1,2,:,:).*x(2,1,:,:);
+% elseif all(siz(1:2)==3),
+%   d = x(1,1,:,:).*x(2,2,:,:).*x(3,3,:,:) - ...
+%       x(1,1,:,:).*x(2,3,:,:).*x(3,2,:,:) - ...
+%       x(1,2,:,:).*x(2,1,:,:).*x(3,3,:,:) + ...
+%       x(1,2,:,:).*x(2,3,:,:).*x(3,1,:,:) + ...
+%       x(1,3,:,:).*x(2,1,:,:).*x(3,2,:,:) - ...
+%       x(1,3,:,:).*x(2,2,:,:).*x(3,1,:,:);
+% elseif numel(siz)==2,
+%   d = det(x);
+% else
+%   %error   
+%   %write for loop
+%   %for
+%   %end
+% end
+% 
+% %%%%%%%%%%%%%%%%%%%%%%%%%
+% % inverse of a 2x2 matrix
+% function [d] = inv2x2(x)
+% 
+% %computes inverse of matrix x, using explicit analytic definition if
+% %size(x,1) < 4, otherwise use matlab inv-function
+% 
+% siz = size(x);
+% if all(siz(1:2)==2),
+%   adjx  = [x(2,2,:,:) -x(1,2,:,:); -x(2,1,:,:) x(1,1,:,:)];
+%   denom = det2x2(x);
+%   d     = adjx./denom([1 1],[1 1],:,:);
+% elseif all(siz(1:2)==3),
+%   adjx = [ det2x2(x([2 3],[2 3],:,:)) -det2x2(x([1 3],[2 3],:,:))  det2x2(x([1 2],[2 3],:,:)); ...
+%           -det2x2(x([2 3],[1 3],:,:))  det2x2(x([1 3],[1 3],:,:)) -det2x2(x([1 2],[1 3],:,:)); ...
+% 	   det2x2(x([2 3],[1 2],:,:)) -det2x2(x([1 3],[1 2],:,:))  det2x2(x([1 2],[1 2],:,:))];
+%   denom = det2x2(x);
+%   d     = adjx./denom([1 1 1],[1 1 1],:,:);
+% elseif numel(siz)==2,
+%   d = inv(x);
+% else
+%   error('cannot compute slicewise inverse');
+%   %write for loop for the higher dimensions, using normal inv
+% end
+% 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % matrix multiplication 2x2
+% function [z] = mtimes2x2(x, y)
+% 
+% % compute x*y 
+% % and dimensionatity is 2x2xN
+% 
+% z     = complex(zeros(size(x)));
+% xconj = conj(x);
+% 
+% z(1,1,:,:) = x(1,1,:,:).*y(1,1,:,:) + x(1,2,:,:).*y(2,1,:,:);
+% z(1,2,:,:) = x(1,1,:,:).*y(1,2,:,:) + x(1,2,:,:).*y(2,2,:,:);
+% z(2,1,:,:) = x(2,1,:,:).*y(1,1,:,:) + x(2,2,:,:).*y(2,1,:,:);
+% z(2,2,:,:) = x(2,1,:,:).*y(1,2,:,:) + x(2,2,:,:).*y(2,2,:,:);
+% 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % quadratic multiplication 2x2 matrix,  sandwiched matrix assumed hermitian
+% function [z] = sandwich2x2(x, y)
+% 
+% % compute x*y*x' provided y = hermitian
+% % and dimensionatity is 2x2xN
+% 
+% %FIXME build in check for hermitianity
+% z     = complex(zeros(size(x)));
+% xconj = conj(x);
+% xabs2 = abs(x).^2;
+% 
+% z(1,1,:,:) = xabs2(1,1,:,:) .* y(1,1,:,:) + ...
+%              xabs2(1,2,:,:) .* y(2,2,:,:) + ...
+%            2.*real(y(2,1,:,:).*xconj(1,1,:,:).*x(1,2,:,:));
+% z(2,1,:,:) = y(1,1,:,:).*xconj(1,1,:,:).*x(2,1,:,:) + ...
+%            y(2,1,:,:).*xconj(1,1,:,:).*x(2,2,:,:) + ...
+%            y(1,2,:,:).*xconj(1,2,:,:).*x(2,1,:,:) + ...
+%            y(2,2,:,:).*xconj(1,2,:,:).*x(2,2,:,:);
+% z(1,2,:,:) = conj(z(2,1,:,:));
+% z(2,2,:,:) = xabs2(2,1,:,:) .* y(1,1,:,:) + ...
+%              xabs2(2,2,:,:) .* y(2,2,:,:) + ...
+%            2.*real(y(1,2,:,:).*xconj(2,2,:,:).*x(2,1,:,:));
+% 
+% %b1 b2     a1 a2'   b1' b3'
+% %b3 b4     a2 a3    b2' b4'
+% %
+% %b1*a1+b2*a2  b1*a2'+b2*a3  b1' b3'
+% %b3*a1+b4*a2  b3*a2'+b4*a3  b2' b4'
+% %
+% %b1*a1*b1'+b2*a2*b1'+b1*a2'*b2'+b2*a3*b2' b1*a1*b3'+b2*a2*b3'+b1*a2'*b4'+b2*a3*b4'
+% %b3*a1*b1'+b4*a2*b1'+b3*a2'*b2'+b4*a3*b2' b3*a1*b3'+b4*a2*b3'+b3*a2'*b4'+b4*a3*b4'
+% %
+% %a1*abs(b1)^2 + a2*(b1'*b2) + a2'*(b1*b2') + a3*abs(b2)^2    a1*b1*b3'    + a2*b2*b3'   + a2'*b1*b4'   + a3*b2*b4'
+% %a1*b1'*b3    + a2*b1'*b4   + a2'*b2'*b3   + a3*b2'*b4       a1*abs(b3)^2 + a2*(b3'*b4) + a2'*(b3*b4') + a3*abs(b4)^2
