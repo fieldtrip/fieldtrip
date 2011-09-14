@@ -78,6 +78,10 @@ cfg.uvar = ft_getopt(cfg, 'uvar'); % the default is empty
 cfg.wvar = ft_getopt(cfg, 'wvar'); % the default is empty
 cfg.cvar = ft_getopt(cfg, 'cvar'); % the default is empty
 
+% the default is 'no', consistent with the situation prior to 14 Sept 2011
+% FIXME this needs finalization
+efficient = ft_getopt(cfg, 'efficient', 'no');
+
 % if size(design,1)>size(design,2)
 %   % this function wants the replications in the column direction
 %   % the matrix seems to be transposed
@@ -305,4 +309,42 @@ if ~isempty(cfg.wvar)
   resample = expand;
 end
 
+% in some cases it is possible to reduce the number of permutations by taking only the ones that result in unique condition sequences
+% but important is that the relative requencies of the condition sequences remains the same
+if strcmp(efficient, 'yes')
+  if numel(cfg.ivar)<1
+    error('this reqiures at least one independent variable to be specified (ivar)');
+  end
+  if numel(cfg.uvar)>0
+    error('this is not yet supported in combination with a unit of observation (uvar)');
+  end
+  
+  original = zeros(size(resample,1), numel(cfg.ivar)*size(resample,2));
+  for i=1:size(resample,1)
+    for j=1:numel(cfg.ivar)
+      sel = (1:Nrepl) + (j-1)*Nrepl;
+      original(i,sel) = design(cfg.ivar(j), resample(i,:));
+    end
+  end
+  
+  [reduced, indx1, indx2] = unique(original, 'rows');
+  % this returns the reduced condition sequences, where
+  % indx1 contains for the reduced row number the original (last) row number
+  % indx2 contains for the original condition sequences the reduced row number
+  frequency = zeros(size(reduced,1),1);
+  for i=1:size(reduced,1)
+    frequency(i) = sum(indx2==i);
+  end
+  
+  if all(frequency==frequency(1))
+    % the relative frequency of the reduced condition sequences is the same
+    % as the relative frequency of the original condition sequences, which
+    % means that the reduced set of permutations is appropriate
+    fprintf('using the reduced set of permutations (%d) instead of the original permutations (%d)\n', size(reduced,1), size(resample,1));
+    resample = reduced;
+  else
+    % don't use the reduced set of permutations
+    fprintf('the reduced set has different relative frequencies of the conditions, retaining the original permutations\n')
+  end
+end % if efficient
 

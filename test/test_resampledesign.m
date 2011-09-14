@@ -1,5 +1,8 @@
 % TEST test_resampledesign resampledesign
 
+% since the resampledesign is in a private directory, we explicitely have to cd into that directory
+[p, f, x] = fileparts(which('ft_defaults'));
+cd(fullfile(p, 'private'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % check that there are fac(N) permutations
@@ -44,7 +47,6 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
 clear design
 design = [
   1 1 2 2
@@ -60,9 +62,8 @@ res = resampledesign(cfg, design);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
 design = [
-  1 2 1 2 1 2 1 2 
+  1 2 1 2 1 2 1 2
   1 2 3 4 5 6 7 8
   ];
 cfg = [];
@@ -71,5 +72,42 @@ cfg.wvar = 2;
 cfg.numrandomization = 'all';
 cfg.resampling = 'permutation';
 res = resampledesign(cfg, design);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+design = [
+  1 2 3 4 5 6 7 8
+  ];
+
+cfg = [];
+cfg.resampling = 'bootstrap';
+cfg.numrandomization = 100;
+res = resampledesign(cfg, design);
+
+if ~all(size(res)==[100 8])
+  error('incorrect bootstrap resampling');
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+design = [
+  1 2 2   % condition number
+  1 2 3   % trial number
+  ];
+cfg = [];
+cfg.ivar = 1;
+cfg.numrandomization = 'all';
+cfg.resampling = 'permutation';
+cfg.efficient = 'no';  % NOTE THIS ONE
+res = resampledesign(cfg, design);
+if size(res,1)~=6
+  error('incorrect number of permutations');
+end
+
+cfg.efficient = 'yes';  % NOTE THIS ONE
+res = resampledesign(cfg, design);
+if size(res,1)~=3
+  error('incorrect number of permutations');
+end
 
 
