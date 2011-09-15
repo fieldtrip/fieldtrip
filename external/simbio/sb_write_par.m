@@ -32,7 +32,11 @@ cond       = ft_getopt(varargin,'cond',[]);   % conductivities of the FEM head m
 tenslabels = ft_getopt(varargin,'cond',zeros(1,length(cond)+1)); % tissue integer labels in the head model for 
 % which the tensor valued conductivity should be used if available
 
-% The first labels/cond value corresponds to the electrodes 
+% The first labels/cond value corresponds to the electrodes
+% in the mesh the labels are in the format 101, 102, ... while they should
+% be 1, 2, 3, ... in the .par file.
+% FIXME: is this the right place for this correction?
+labels = labels - 100;
 labels = [1000 labels(:)']; 
 cond   = [1.0 cond(:)'];
 
