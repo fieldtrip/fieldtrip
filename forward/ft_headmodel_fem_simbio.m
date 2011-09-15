@@ -24,7 +24,8 @@ bnd          = ft_getopt(varargin, 'bnd', []);        % used in the case the sol
 % define a wireframe for each compartment (FEM grid)
 wf = [];
 if strcmp(wfmethod,'cubes')
-  
+  tmpfolder = cd;
+  cd(tempdir)
   % write the segmented volume in a Vista format .v file
   [~,tname] = fileparts(tempname);
   MRfile = [tname '.v'];
@@ -38,7 +39,7 @@ if strcmp(wfmethod,'cubes')
   % write the materials file (assign tissue values to the elements of the FEM grid)
   % see tutorial: http://www.rheinahrcampus.de/~medsim/vgrid/manual.html
   [~,tname] = fileparts(tempname);
-  materialsfile = [tname '.mat'];
+  materialsfile = [tname '.mtr'];
   sb_write_materials(materialsfile,tissueval,tissue,tissueweight);
 
   % Use vgrid to get the wireframe
@@ -57,7 +58,7 @@ if strcmp(wfmethod,'cubes')
   dos(sprintf('chmod +x %s', shfile));
   disp('Vgrid is writing the wireframe mesh file, this may take some time ...')
   stopwatch = tic;
-  % FIXME: think about: add a translation due to conversion between inices and vertices'
+  % FIXME: think about: add a translation due to conversion between indices and vertices'
   % worlds coordinates?
   
   try
@@ -77,33 +78,42 @@ if strcmp(wfmethod,'cubes')
     wf.el = elements;
     wf.labels = labels;
     
-%     % exe file
-%     if ~ispc
-%       [~,tname] = fileparts(tempname);
-%       exefile    = [tname '.sh'];
-%       efid = fopen(exefile, 'w');
-%       fprintf(efid,'#!/usr/bin/env bash\n');
-%       % generate the transfer matrix 
-%       fprintf(efid,['ipm_linux_opt_venant -i FEtransfermatrix -h ./' meshfile ' -s ./' meshfile, ...
-%         ' -o ./' transfermatrix ' -p ./' parfile ' -sens eeg 2>&1 > /dev/null\n']);
-%       fclose(efid);
-%       
-%       dos(sprintf('chmod +x %s', exefile));
-%       disp('simbio is calculating the transfer matrix, this may take some time ...')
-% 
-%       stopwatch = tic;
-%       dos(['./' exefile]);
-%       disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
-%       % FIXME: put something to read the tr matrix and add a filed to wf
-%       % (how big is it?)
-%     end
-        
-    cleaner(MRfile,materialsfile,meshfile,shfile) %exefile
+    % exe file
+    if ~ispc
+      [~,tname] = fileparts(tempname);
+      exefile   = [tname '.sh'];
+      [~,tname] = fileparts(tempname);
+      transfermatrix = [tname];
+      [~,tname] = fileparts(tempname);
+      parfile   = [tname '.par'];
+      
+      % write parfile
+      disp('writing the parameters file on disk...')
+      sb_write_par(parfile,'cond',tissuecond,'labels',tissueval); %unique(vol.wf.labels)
+      
+      efid = fopen(exefile, 'w');
+      fprintf(efid,'#!/usr/bin/env bash\n');
+      % generate the transfer matrix 
+      fprintf(efid,['ipm_linux_opt -i FEtransfermatrix -h ./' meshfile ' -s ./' meshfile, ...
+        ' -o ./' transfermatrix ' -p ./' parfile ' -sens EEG 2>&1 > /dev/null\n']);
+      fclose(efid);
+      
+      dos(sprintf('chmod +x %s', exefile));
+      disp('simbio is calculating the transfer matrix, this may take some time ...')
+
+      stopwatch = tic;
+      dos(['./' exefile]);
+      disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
+      % FIXME: put something to read the tr matrix and add a filed to wf
+    end
+    
+    cleaner(MRfile,materialsfile,meshfile,shfile,exefile,parfile) %transfermatrix
   catch
     disp('mesh was not written, check the presence of vgrid in the path')
-    cleaner(MRfile,materialsfile,meshfile,shfile)
+    cleaner(MRfile,materialsfile,meshfile,shfile,exefile,parfile) %transfermatrix
     rethrow(ME)
   end
+  cd(tmpfolder)
   
 elseif strcmp(wfmethod,'tetra')
   % not yet implemented
@@ -124,8 +134,10 @@ elseif ~isempty(deepelec)
   vol.deepelec  = deepelec;
 end
 
-function cleaner(MRfile,materialsfile,meshfile,shfile)
+function cleaner(MRfile,materialsfile,meshfile,shfile,exefile,parfile)
 delete(MRfile);
 delete(materialsfile);
 delete(meshfile);
 delete(shfile);
+delete(exefile);
+delete(parfile);
