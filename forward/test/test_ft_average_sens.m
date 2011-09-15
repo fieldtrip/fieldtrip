@@ -1,9 +1,6 @@
-function test_ft_average_sens
+% TEST: test_ft_average_sens ft_average_sens ft_transform_sens ft_transform_geometry
 
-% TEST: test_ft_average_sens ft_average_sens ft_transform_sens
-% ft_transform_geometry
-
-% this function so far only tests whether it runs through for a set of eeg
+% this script so far only tests whether it runs through for a set of eeg
 % or meg sensor arrays
 
 % create a set of dummy sensor arrays
