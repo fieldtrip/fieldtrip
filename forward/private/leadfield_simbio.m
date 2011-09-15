@@ -15,7 +15,7 @@ function [lf] = leadfield_simbio(dip, elc, vol)
 %
 % the output lf is the leadfields matrix of dimensions m (rows) x n*3 (cols)
 
-% copyright (c) 2011, cristiano micheli
+% copyright (c) 2011, Cristiano Micheli
 
 % store the current path and change folder to the temporary one
 tmpfolder = cd;

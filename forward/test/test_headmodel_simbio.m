@@ -58,8 +58,7 @@ bnd.tri = tri;
 % FIXME: add vgrid to the forward/private path and commit it
 vol  = ft_headmodel_fem_simbio(bkgrnd,'tissue',{'sph1','sph2','sph3'}, ...
                                    'tissueval',[1 2 3],'tissuecond',[0.022 0.33 0.33], ...
-                                   'transform',transform,'unit','cm', ...
-                                   'bnd',bnd); 
+                                   'transform',transform,'unit','cm'); 
 
 % create a set of electrodes
 clear sens

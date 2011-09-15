@@ -118,10 +118,9 @@ vol.transform = transform;
 vol.unit      = unit;
 vol.type      = 'simbio';
 
-% bnd has always the precedence
 if ~isempty(bnd)
   vol.bnd        = bnd;
-else
+elseif ~isempty(deepelec)
   vol.deepelec  = deepelec;
 end
 
