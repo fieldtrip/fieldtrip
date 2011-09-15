@@ -22,7 +22,7 @@ deepelec     = ft_getopt(varargin, 'deepelec', []);   % used in the case of deep
 bnd          = ft_getopt(varargin, 'bnd', []);        % used in the case the solution has to be calculated on a triangulated surface (typically the scalp)
 
 % define a wireframe for each compartment (FEM grid)
-wf = [];
+wf = []; tMat = [];
 if strcmp(wfmethod,'cubes')
   tmpfolder = cd;
   cd(tempdir)
@@ -104,13 +104,15 @@ if strcmp(wfmethod,'cubes')
       stopwatch = tic;
       dos(['./' exefile]);
       disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
-      % FIXME: put something to read the tr matrix and add a filed to wf
+      % read the tr matrix 
+      tMat = sb_read_transfer(transfermatrix);
+      tMat = tMat.mat;
     end
     
-    cleaner(MRfile,materialsfile,meshfile,shfile,exefile,parfile) %transfermatrix
+    cleaner(MRfile,materialsfile,meshfile,shfile,exefile,parfile,transfermatrix) 
   catch
     disp('mesh was not written, check the presence of vgrid in the path')
-    cleaner(MRfile,materialsfile,meshfile,shfile,exefile,parfile) %transfermatrix
+    cleaner(MRfile,materialsfile,meshfile,shfile,exefile,parfile,transfermatrix)
     rethrow(ME)
   end
   cd(tmpfolder)
@@ -127,6 +129,7 @@ vol.cond      = tissuecond;
 vol.transform = transform;
 vol.unit      = unit;
 vol.type      = 'simbio';
+vol.mat       = tMat;
 
 if ~isempty(bnd)
   vol.bnd        = bnd;
@@ -134,10 +137,11 @@ elseif ~isempty(deepelec)
   vol.deepelec  = deepelec;
 end
 
-function cleaner(MRfile,materialsfile,meshfile,shfile,exefile,parfile)
+function cleaner(MRfile,materialsfile,meshfile,shfile,exefile,parfile,transfermatrix)
 delete(MRfile);
 delete(materialsfile);
 delete(meshfile);
 delete(shfile);
 delete(exefile);
 delete(parfile);
+delete(transfermatrix);

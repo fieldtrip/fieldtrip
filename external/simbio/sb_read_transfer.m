@@ -1,4 +1,4 @@
-function L = read_Leadfield(filename)
+function L = sb_read_transfer(filename)
 %reads transfer matrix
 mat_filename = [filename,'.mat'];
 fid = fopen(mat_filename);
