@@ -344,7 +344,7 @@ if strcmp(efficient, 'yes')
     % as the relative frequency of the original condition sequences, which
     % means that the reduced set of permutations is appropriate
     fprintf('using the reduced set of permutations (%d) instead of the original permutations (%d)\n', size(reduced,1), size(resample,1));
-    resample = reduced;
+    resample = resample(indx1,:);
   else
     % don't use the reduced set of permutations
     fprintf('the reduced set has different relative frequencies of the conditions, retaining the original permutations\n')
