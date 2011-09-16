@@ -159,6 +159,7 @@ function cleaner(shfile,meshfile,MRfile,materialsfile,exefile,transfermatrix,par
   delete(MRfile);
   delete(materialsfile);
   delete(exefile);
-  delete(transfermatrix);
+  delete([transfermatrix '.bin']);
+  delete([transfermatrix '.mat']);  
   delete(parfile);
   delete(elcfile);
