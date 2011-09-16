@@ -41,8 +41,8 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	{
 		if(pclFEMesh->_ReadMesh(filename) != 0)
 			bError = true;
-		else
-			mexPrintf("Successfully read FE mesh.\n");
+		//else
+		//	mexPrintf("Successfully read FE mesh.\n");
 	}
 
 	// query mesh

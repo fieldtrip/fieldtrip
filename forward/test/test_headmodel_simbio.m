@@ -55,11 +55,6 @@ bnd.tri = tri;
 % FIXME: take care that the units here should be specified and be
 % consistent with the wireframe (ft_write_headshape + conversion)
 
-% FIXME: add vgrid to the forward/private path and commit it
-vol  = ft_headmodel_fem_simbio(bkgrnd,'tissue',{'sph1','sph2','sph3'}, ...
-                                   'tissueval',[1 2 3],'tissuecond',[0.022 0.33 0.33], ...
-                                   'transform',transform,'unit','cm'); 
-
 % create a set of electrodes
 clear sens
 sel = find(bnd.pnt(:,3)>0);
@@ -68,6 +63,13 @@ for i=1:length(sel)
   sens.label{i} = sprintf('chan%03d', i);
 end
 sens.type = 'eeg';
+
+% FIXME: add vgrid to the forward/private path and commit it
+vol  = ft_headmodel_fem_simbio(bkgrnd,'tissue',{'sph1','sph2','sph3'}, ...
+                                      'tissueval',[1 2 3], ...
+                                      'tissuecond',[0.022 0.33 0.33], ...
+                                      'sens',sens, ...
+                                      'transform',transform,'unit','cm'); 
 
 % project the electrodes on the volume conduction model
 [vol, sens] = ft_prepare_vol_sens(vol, sens);
