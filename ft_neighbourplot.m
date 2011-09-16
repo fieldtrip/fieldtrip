@@ -206,7 +206,6 @@ title('[Click on a sensor to see its label]');
     
     set(gcf, 'UserData', curSensId');
   end
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % deal with the output
@@ -229,3 +228,4 @@ cfg.callinfo.calltime = ftFuncClock;
 cfg.callinfo.user = getusername(); % this is helpful for debugging
 fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
 
+end
