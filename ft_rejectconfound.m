@@ -110,7 +110,7 @@ if istimelock
       Yc   = dat - regr * beta;                                               % Yclean = Y - X * X\Y
       
       % put the clean data back into place
-      dataout.trial = reshape(Yc, [nrpt, nchan, ntime]); 
+      dataout.trial = reshape(Yc, [nrpt, nchan, ntime]); clear Yc;
       dataout.beta  = reshape(beta, [nconf, nchan, ntime]); 
       
       % beta statistics
@@ -158,8 +158,8 @@ elseif isfreq
       Yc   = dat - regr * beta;                                               % Yclean = Y - X * X\Y
       
       % put the clean data back into place
-      dataout.powspctrm = reshape(Yc, [nrpt, nchan, nfreq, ntime]); clear Yc; 
-      dataout.beta      = reshape(beta, [nconf, nchan, nfreq, ntime]); clear beta;
+      dataout.powspctrm = reshape(Yc, [nrpt, nchan, nfreq, ntime]); clear Yc;
+      dataout.beta      = reshape(beta, [nconf, nchan, nfreq, ntime]); 
       
       % beta statistics
       fprintf('performing statistics on the regression weights \n');
