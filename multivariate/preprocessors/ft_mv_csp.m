@@ -36,11 +36,20 @@ classdef ft_mv_csp < ft_mv_preprocessor
 %                   design  = [1*ones(size(tlcond1.trial,1),1); 2*ones(size(tlcond2.trial,1),1)];
 %
 %
-%   EXAMPLE
-%    Linear classification with CSP feature extraction 
+%   EXAMPLES:
 %
-%    myproc = mva({cspprocessor('numchan',151,'numpatterns',3,'outputdatatype','logpowcsp','filttype','CSP0')...
-%                      da()});
+%    Look at CSP output
+%
+%    X = randn(100,10,20);
+%    Y = [ones(50,1); 2*ones(50,1)];
+%    X = reshape(X,[100 200]);
+%    m = ft_mv_csp('numchan',10,'numpatterns',1,'outputdatatype','rawcsp','filttype','CSP0')
+%    m = m.train(X,Y)
+%
+%    Linear SVM classification with CSP feature extraction (logpowcsp changes data representation) 
+%
+%    m = ft_mv_analysis({ft_mv_csp('numchan',10,'numpatterns',1,'outputdatatype','logpowcsp','filttype','CSP0') ft_mv_svm});
+%    m = m.train(X,Y)
 %
 %   SEE ALSO
 %   csp_train.m
