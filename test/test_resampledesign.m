@@ -110,4 +110,30 @@ if size(res,1)~=3
   error('incorrect number of permutations');
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% here it is invalid to swap the condition for blocks, because the actual 
+% replications in the data would get scattered over blocks.
+
+design = [
+  1 1 1 2 2 1 1 1 2 2   % condition/ivar
+  1 1 1 2 2 3 3 3 4 4   % block/wvar
+  ];
+cfg = [];
+cfg.ivar = 1;
+cfg.wvar = 2;
+cfg.numrandomization = 'all';
+cfg.resampling = 'permutation';
+try
+  % this should result in an error
+  res = resampledesign(cfg, design);
+  error_detected = false;
+catch
+  % this is ok
+  error_detected = true;
+end
+if ~error_detected
+  error('unequal block length with wvar should be caught as error');
+end
+
+
 

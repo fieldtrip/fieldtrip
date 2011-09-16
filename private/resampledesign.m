@@ -145,6 +145,9 @@ if ~isempty(cfg.wvar)
     blksel{i} = find(all(design(cfg.wvar,:)==repmat(blkmeas(:,i), 1, Nrepl), 1));
     blklen(i) = length(blksel{i});
   end
+  if any(blklen~=blklen(1))
+    error('the number of repetitions per block should be constant');
+  end
   for i=1:size(blkmeas,2)
     if any(diff(design(:, blksel{i}), 1, 2)~=0)
       error('the design matrix variables should be constant within a block');
