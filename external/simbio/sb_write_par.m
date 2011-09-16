@@ -26,17 +26,19 @@ function sb_write_par(fname,varargin)
 % Copyright (C) 2011, Felix Lucka and Cristiano Micheli
 
 ft_defaults
-
+disp('correct sb_write_par')
 labels     = ft_getopt(varargin,'labels',[]); % integer labels in the head model corresponding to the different tissues
 cond       = ft_getopt(varargin,'cond',[]);   % conductivities of the FEM head model
-tenslabels = ft_getopt(varargin,'cond',zeros(1,length(cond)+1)); % tissue integer labels in the head model for 
+%FIXME: tenslabel has to be zero if no anisotropy information is
+%given/shouldbe used and value of its label if anisotropy information
+%should be used.
+%tenslabels = ft_getopt(varargin,'cond',zeros(1,length(cond)+1)) % tissue integer labels in the head model for 
+tenslabels = zeros(1,length(cond)+1);
 % which the tensor valued conductivity should be used if available
 
 % The first labels/cond value corresponds to the electrodes
 % in the mesh the labels are in the format 101, 102, ... while they should
 % be 1, 2, 3, ... in the .par file.
-% FIXME: is this the right place for this correction?
-labels = labels - 100;
 labels = [1000 labels(:)']; 
 cond   = [1.0 cond(:)'];
 
