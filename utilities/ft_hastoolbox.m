@@ -104,6 +104,7 @@ url = {
   'SQDPROJECT' 'see http://www.isr.umd.edu/Labs/CSSL/simonlab'
   'BCT'        'see http://www.brain-connectivity-toolbox.net/'
   'CCA'        'see http://www.imt.liu.se/~magnus/cca or contact Magnus Borga'
+  'COMPAT'     'this is part of FieldTrip and is used for backward compatibility'
   };
 
 if nargin<2
@@ -237,11 +238,37 @@ switch toolbox
     status = exist('macaque71.mat', 'file') && exist('motif4funct_wei.m', 'file');
   case 'CCA'
     status = exist('ccabss.m', 'file');
+
+    % the following are not proper toolboxes, but only subdirectories in the fieldtrip toolbox
+    % these are added in ft_defaults and are specified with unix-style forward slashes
+  case 'COMPAT'
+    status = ~isempty(regexp(unixpath(path), 'fieldtrip/compat',              'once'));
+  case 'UTILITIES/COMPAT'
+    status = ~isempty(regexp(unixpath(path), 'fieldtrip/utilities/compat',    'once'));
+  case 'FILEIO/COMPAT'
+    status = ~isempty(regexp(unixpath(path), 'fieldtrip/fileio/compat',       'once'));
+  case 'PREPROC/COMPAT'
+    status = ~isempty(regexp(unixpath(path), 'fieldtrip/preproc/compat',      'once'));
+  case 'FORWARD/COMPAT'
+    status = ~isempty(regexp(unixpath(path), 'fieldtrip/forward/compat',      'once'));
+  case 'PLOTTING/COMPAT'
+    status = ~isempty(regexp(unixpath(path), 'fieldtrip/plotting/compat',     'once'));
+  case 'TEMPLATE/LAYOUT'
+    status = ~isempty(regexp(unixpath(path), 'fieldtrip/template/layout',     'once'));
+  case 'TEMPLATE/ANATOMY'
+    status = ~isempty(regexp(unixpath(path), 'fieldtrip/template/anatomy',    'once'));
+  case 'TEMPLATE/HEADMODEL'
+    status = ~isempty(regexp(unixpath(path), 'fieldtrip/template/headmodel',  'once'));
+  case 'TEMPLATE/ELECTRODE'
+    status = ~isempty(regexp(unixpath(path), 'fieldtrip/template/electrode',  'once'));
+  case 'TEMPLATE/NEIGHBOURS'
+    status = ~isempty(regexp(unixpath(path), 'fieldtrip/template/neighbours', 'once'));
+    
   otherwise
     if ~silent, warning('cannot determine whether the %s toolbox is present', toolbox); end
     status = 0;
 end
-
+  
 % it should be a boolean value
 status = (status~=0);
 
@@ -332,11 +359,18 @@ end
 % helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function out = fixname(toolbox)
+% FIXME this fails in case the toolbox directory name would start with a digit, e.g. "99luftballons"
 out = lower(toolbox);
 out(out=='-') = '_'; % fix dashes
 out(out==' ') = '_'; % fix spaces
 out(out=='/') = '_'; % fix forward slashes
 out(out=='\') = '_'; % fix backward slashes
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% helper function
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function path = unixpath(path)
+path(path=='\') = '/'; % replace backward slashes with forward slashes
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function
