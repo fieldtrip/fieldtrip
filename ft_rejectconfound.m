@@ -1,16 +1,18 @@
 function dataout = ft_rejectconfound(cfg, datain)
 
-% FT_REGRESSCONFOUND estimates the regression weight of a set of confounds
-% and removes the estimated contribution from the single-trial data
+% FT_REJECTCONFOUND estimates the regression weight of a set of confounds
+% (GLM) and removes the estimated contribution from the single-trial data
 %
 % Use as
 %  timelock = ft_rejectconfound(cfg, timelock)
 % or
 %  freq = ft_rejectconfound(cfg, freq)
+%
 % where datain comes from FT_TIMELOCKANALYSIS or FT_FREQANALYSIS with
 % keeptrials = 'yes' and cfg is a configuratioun structure that should
 % contain
-%   cfg.confound    = matrix, Ntrials X Nconfounds
+%
+%   cfg.confound    = matrix, [Ntrials X Nconfounds]
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
@@ -23,7 +25,7 @@ function dataout = ft_rejectconfound(cfg, datain)
 %
 % See also FT_REJECTCOMPONENT, FT_REJECTARTIFACT
 
-% Copyrights (C) 2011, Robert Oostenveld
+% Copyrights (C) 2011, Robert Oostenveld, Arjen Stolk, Lennart Verhagen
 %
 % $Id$
 
@@ -64,10 +66,19 @@ cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'required', {'confound'});
 
 % get the options
-confound = ft_getopt(cfg, 'confound');  % there is no default value
+regr = ft_getopt(cfg, 'confound');  % there is no default value
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% the actual computation is done in the middle part
+% GLM MODEL
+%   Y = X * B + err, where Y is data, X is the model, and B are beta's
+% which means
+%   Best = X\Y ('matrix division', which is similar to B = inv(X)*Y)
+% or when presented differently
+%   Yest = X * Best
+%   Yest = X * X\Y
+%   Yclean = Y - Yest (the true 'clean' data is the recorded data 'Y' -
+%   the data containing confounds 'Yest')
+%   Yclean = Y - X * X\Y
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 isfreq     = ft_datatype(datain, 'freq');
@@ -76,66 +87,93 @@ istimelock = ft_datatype(datain, 'timelock');
 if istimelock
   switch datain.dimord
     case {'rpt_chan_time', 'subj_chan_time'}
+      
+      % descriptives
       nrpt  = size(datain.trial, 1);
       nchan = size(datain.trial, 2);
       ntime = size(datain.trial, 3);
+      nconf = size(regr,2);
       
-      if nrpt~=size(confound,1)
+      % initialize output variable
+      dataout       = datain;
+      
+      if nrpt~=size(regr,1)
         error('the size of your confound matrix does not match with the number of trials/subjects');
       end
       
       % get the data on which the contribution of the confounds has to be estimated
-      dat = reshape(datain.trial, [nrpt, nchan*ntime]);
-      
-      % the model is
-      %   Y = X*B + err
-      % which means
-      %   Best = X\Y
-      %   Yest = X * Best
-      %   Yclean = Y - Yest = Y - X * X\Y
+      dat = reshape(datain.trial, [nrpt, nchan*ntime]);              
       
       % estimate and remove the confounds
-      fprintf('estimating the regression weight and removing the confounds \n');
-      dat = dat - confound * (confound \ dat);
-      
-      if false
-        % FIXME, the definition of beta and B is not clear to me
-        B = confound \ dat;
-        dataout.B = B;
-      end
+      fprintf('estimating the regression weights and removing the confounds \n');
+      beta = regr\dat;                                                        % B = X\Y
+      Yc   = dat - regr * beta;                                               % Yclean = Y - X * X\Y
       
       % put the clean data back into place
-      dataout = datain;
-      dataout.trial = reshape(dat, [nrpt, nchan, ntime]);
+      dataout.trial = reshape(Yc, [nrpt, nchan, ntime]); 
+      dataout.beta  = reshape(beta, [nconf, nchan, ntime]); 
       
+      % beta statistics
+      fprintf('performing statistics on the regression weights \n');
+      dfe        = nrpt - nconf;                                              % degrees of freedom 
+      err        = dat - regr * beta;                                         % err = Y - X * B
+      mse        = sum((err).^2)/dfe;                                         % mean squared error
+      covar      = diag(regr'*regr)';                                         % regressor covariance
+      bvar       = repmat(mse',1,size(covar,2))./repmat(covar,size(mse,2),1); % beta variance
+      tval       = (beta'./sqrt(bvar))';                                      % betas -> t-values
+      prob       = (1-tcdf(tval,dfe))*2;                                      % p-values
+      clear err; clear mse; clear dat; clear regr; clear beta; clear bvar;
+      dataout.stat     = reshape(tval, [nconf, nchan, ntime]); clear tval;
+      dataout.prob     = reshape(prob, [nconf, nchan, ntime]); clear prob;
+            
     otherwise
       error('unsupported dimord "%s"', datain.dimord);
   end % switch
   
-elseif isfreq
+elseif isfreq 
   
   switch datain.dimord
     case {'rpt_chan_freq_time', 'subj_chan_freq_time', 'rpttap_chan_freq_time', 'rpt_chan_freq', 'subj_chan_freq', 'rpttap_chan_freq'}
+
+      % descriptives
       nrpt  = size(datain.powspctrm, 1);
       nchan = size(datain.powspctrm, 2);
       nfreq = size(datain.powspctrm, 3);
-      ntime = size(datain.powspctrm, 4); % this will be a singleton dimension in case there is no time
+      ntime = size(datain.powspctrm, 3); % this will be a singleton dimension in case there is no time
+      nconf = size(regr,2);
+      
+      % initialize output variable
+      dataout       = datain;
       
       if nrpt~=size(confound,1)
         error('the size of your confound matrix does not match with the number of trials/subjects');
       end
       
       % get the data on which the contribution of the confounds has to be estimated
-      dat = reshape(datain.powspctrm, [nrpt, nchan*nfreq*ntime]);
+      dat = reshape(datain.powspctrm, [nrpt, nchan*nfreq*ntime]); 
       
       % estimate and remove the confounds
-      fprintf('estimating the regression weight and removing the confounds \n');
-      dat = dat - confound * (confound \ dat);
+      fprintf('estimating the regression weights and removing the confounds \n');
+      beta = regr\dat;                                                        % B = X\Y
+      Yc   = dat - regr * beta;                                               % Yclean = Y - X * X\Y
       
       % put the clean data back into place
-      dataout = datain;
-      dataout.powspctrm = reshape(dat, [nrpt, nchan, nfreq, ntime]);
+      dataout.powspctrm = reshape(Yc, [nrpt, nchan, nfreq, ntime]); clear Yc; 
+      dataout.beta      = reshape(beta, [nconf, nchan, nfreq, ntime]); clear beta;
       
+      % beta statistics
+      fprintf('performing statistics on the regression weights \n');
+      dfe        = nrpt - nconf;                                              % degrees of freedom 
+      err        = dat - regr * beta;                                         % err = Y - X * B
+      mse        = sum((err).^2)/dfe;                                         % mean squared error
+      covar      = diag(regr'*regr)';                                         % regressor covariance
+      bvar       = repmat(mse',1,size(covar,2))./repmat(covar,size(mse,2),1); % beta variance
+      tval       = (beta'./sqrt(bvar))';                                      % betas -> t-values
+      prob       = (1-tcdf(tval,dfe))*2;                                      % p-values
+      clear err; clear mse; clear bvar; clear dat; clear regr; clear beta;
+      dataout.stat  = reshape(tval, [nconf, nchan, nfreq, ntime]); clear tval;
+      dataout.prob  = reshape(prob, [nconf, nchan, nfreq, ntime]); clear prob;
+            
     otherwise
       error('unsupported dimord "%s"', datain.dimord);
   end % switch
@@ -174,6 +212,7 @@ if hasdata && isfield(datain, 'cfg')
   % remember the configuration details of the input data
   cfg.previous = datain.cfg;
 end
+clear datain;
 
 % remember the exact configuration details in the output
 dataout.cfg = cfg;
