@@ -25,6 +25,7 @@ cfg = ft_checkconfig(cfg, 'forbidden', 'numcompartments');
 
 % FIXME: this part needs reorganization
 %if ~isfield(mri, 'tissue') && any(ismember(fieldnames(mri), {'gray' 'brain' 'scalp'})) && (~isfield(cfg,'tissue') || length(cfg.tissue)==1), cfg.tissue = 1; end
+if ~isfield(mri, 'seg') && isempty(cfg.tissue), cfg.tissue = 1; end %FIXME Please make some decent code here
 if ~isfield(cfg, 'threshold'), cfg.threshold = 0; end
 if ~isfield(mri, 'unit'), mri = ft_convert_units(mri); end
   
