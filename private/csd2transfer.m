@@ -80,7 +80,7 @@ else
   nrpt = 1;
 end
 
-if ~isempty(channelcmb) && ~strcmp(sfmethod, 'bivariate')
+if ~isempty(channelcmb) && ~(strcmp(channelcmb{1}, 'all') && strcmp(channelcmb{2}, 'all')) && ~strcmp(sfmethod, 'bivariate')
   % enforce sfmethod to be bivariate
   sfmethod = 'bivariate';
 end

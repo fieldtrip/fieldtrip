@@ -1,3 +1,6 @@
+% TEST: test_ft_connectivityanalysis ft_connectivityanalysis ft_connectivity_granger ft_connectivity_corr ft_connectivity_psi ft_mvaranalysis ft_connectivitysimulation ft_freqanalysis ft_connectivity_pdc ft_connectivity_dtf
+
+
 % this script tests the functionality of FT_CONNECTIVITYANALYSIS
 % on frequency domain channel data
 
@@ -72,9 +75,9 @@ c6m            = ft_connectivityanalysis(cfgc, mfreq);
 cfgc.method    = 'dtf';
 c7             = ft_connectivityanalysis(cfgc, freq);
 c7m            = ft_connectivityanalysis(cfgc, mfreq);
-%cfgc.method    = 'instantaneous_causality';
-%c8             = ft_connectivityanalysis(cfgc, freq);
-%c8m            = ft_connectivityanalysis(cfgc, mfreq);
+cfgc.method    = 'instantaneous_causality';
+c8             = ft_connectivityanalysis(cfgc, freq);
+c8m            = ft_connectivityanalysis(cfgc, mfreq);
 cfgc.method    = 'total_interdependence';
 c9             = ft_connectivityanalysis(cfgc, freq);
 c9m            = ft_connectivityanalysis(cfgc, mfreq);

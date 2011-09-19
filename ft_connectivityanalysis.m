@@ -257,7 +257,7 @@ switch cfg.method
     inparam = {'transfer', 'noisecov', 'crsspctrm'};
   case {'total_interdependence'}
     data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
-    inparam = 'crsspctrm';
+    inparam = {'transfer', 'noisecov', 'crsspctrm'};
   case {'dtf' 'pdc'}
     data    = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'transfer';
@@ -615,7 +615,7 @@ switch cfg.method
       %noisecov is defined and normalised?
       fs = 1;
       if ~exist('powindx', 'var'), powindx = []; end
-      [datout, varout, nrpt] = ft_connectivity_granger(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack, powindx);
+      [datout, varout, nrpt] = ft_connectivity_granger(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack, powindx, 'granger');
       outparam = 'grangerspctrm';
     else
       error('granger for time domain data is not yet implemented');
@@ -623,12 +623,33 @@ switch cfg.method
     
   case 'instantaneous_causality'
     % instantaneous ft_connectivity between the series, requires the same elements as granger
+    
     if sum(ft_datatype(data, {'freq' 'freqmvar'})),
-      
-      if isfield(data, 'labelcmb'),
+    
+      if isfield(data, 'labelcmb') && isempty(cfg.conditional),
         % multiple pairwise non-parametric transfer functions
-        % linearly indexed
-        powindx = labelcmb2indx(data.labelcmb);
+        % linearly indexed 
+        
+        % The following is very slow, one may make assumptions regarding
+        % the order of the channels -> csd2transfer gives combinations in
+        % quadruplets, where the first and fourth are auto-combinations,
+        % and the second and third are cross-combinations
+        %powindx = labelcmb2indx(data.labelcmb);
+        powindx = zeros(size(data.labelcmb));
+        for k = 1:size(powindx,1)/4
+          ix = ((k-1)*4+1):k*4;
+          powindx(ix,:) = [1 1;4 1;1 4;4 4] + (k-1)*4;
+        end
+      
+      elseif isfield(data, 'labelcmb')
+        % conditional (blockwise) needs linearly represented cross-spectra
+        for k = 1:size(cfg.conditional,1)
+          tmp{k,1} = cfg.conditional(k,:);
+          tmp{k,2} = cfg.conditional(k,[1 3]);
+        end
+        [cmbindx, n] = blockindx2cmbindx(data.labelcmb, cfg.blockindx, tmp);
+        powindx.cmbindx = cmbindx;
+        powindx.n       = n;
       elseif isfield(cfg, 'block') && ~isempty(cfg.block)
         % blockwise granger
         powindx = cfg.block;
@@ -637,36 +658,68 @@ switch cfg.method
         end
         data.label = newlabel;
       else
-        % do nothing
+        powindx = [];
       end
+      
       %fs = cfg.fsample; %FIXME do we really need this, or is this related to how
       %noisecov is defined and normalised?
-      if ~exist('powindx', 'var'), powindx = []; end
       fs = 1;
-      [datout, varout, nrpt] = ft_connectivity_instantaneous(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack, powindx);
+      if ~exist('powindx', 'var'), powindx = []; end
+      [datout, varout, nrpt] = ft_connectivity_granger(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack, powindx, 'instantaneous');
       outparam = 'instantspctrm';
     else
-      error('instantaneous causality for time domain data is not yet implemented');
+      error('granger for time domain data is not yet implemented');
     end
     
   case 'total_interdependence'
     %total interdependence
+    if sum(ft_datatype(data, {'freq' 'freqmvar'})),
     
-    tmpcfg           = [];
-    tmpcfg.complex   = 'abs';
-    tmpcfg.feedback  = cfg.feedback;
-    tmpcfg.dimord    = data.dimord;
-    tmpcfg.pownorm   = normpow;
-    tmpcfg.pchanindx = cfg.pchanindx;
-    tmpcfg.allchanindx = cfg.allchanindx;
-    tmpcfg.hasrpt      = hasrpt;
-    tmpcfg.hasjack     = hasjack;
-    if exist('powindx', 'var'), tmpcfg.powindx     = powindx; end
-    optarg             = ft_cfg2keyval(tmpcfg);
-    
-    [datout, varout, nrpt] = ft_connectivity_toti(tmpcfg, data.(inparam), hasrpt, hasjack);
-    outparam         = 'totispctrm';
-    
+      if isfield(data, 'labelcmb') && isempty(cfg.conditional),
+        % multiple pairwise non-parametric transfer functions
+        % linearly indexed 
+        
+        % The following is very slow, one may make assumptions regarding
+        % the order of the channels -> csd2transfer gives combinations in
+        % quadruplets, where the first and fourth are auto-combinations,
+        % and the second and third are cross-combinations
+        %powindx = labelcmb2indx(data.labelcmb);
+        powindx = zeros(size(data.labelcmb));
+        for k = 1:size(powindx,1)/4
+          ix = ((k-1)*4+1):k*4;
+          powindx(ix,:) = [1 1;4 1;1 4;4 4] + (k-1)*4;
+        end
+      
+      elseif isfield(data, 'labelcmb')
+        % conditional (blockwise) needs linearly represented cross-spectra
+        for k = 1:size(cfg.conditional,1)
+          tmp{k,1} = cfg.conditional(k,:);
+          tmp{k,2} = cfg.conditional(k,[1 3]);
+        end
+        [cmbindx, n] = blockindx2cmbindx(data.labelcmb, cfg.blockindx, tmp);
+        powindx.cmbindx = cmbindx;
+        powindx.n       = n;
+      elseif isfield(cfg, 'block') && ~isempty(cfg.block)
+        % blockwise granger
+        powindx = cfg.block;
+        for k = 1:2
+          newlabel{k,1} = cat(2,powindx{k});
+        end
+        data.label = newlabel;
+      else
+        powindx = [];
+      end
+      
+      %fs = cfg.fsample; %FIXME do we really need this, or is this related to how
+      %noisecov is defined and normalised?
+      fs = 1;
+      if ~exist('powindx', 'var'), powindx = []; end
+      [datout, varout, nrpt] = ft_connectivity_granger(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack, powindx, 'total');
+      outparam = 'totispctrm';
+    else
+      error('granger for time domain data is not yet implemented');
+    end
+
   case 'dtf'
     % directed transfer function
     
@@ -852,106 +905,4 @@ stat.cfg = cfg;
 % the output data should be saved to a MATLAB file
 if ~isempty(cfg.outputfile)
   savevar(cfg.outputfile, 'data', stat); % use the variable name "data" in the output file
-end
-
-%-------------------------------------------------------------
-function [c, v, n] = ft_connectivity_toti(cfg, input, hasrpt, hasjack)
-
-% FIXME move functionality into ft_connectivity_granger
-
-cfg.hasrpt  = hasrpt;
-cfg.hasjack = hasjack;
-optarg = ft_cfg2keyval(cfg);
-
-[c, v, n] = ft_connectivity_corr(input, optarg{:});
-c = -log(1-c.^2);
-v = -log(1-v.^2); %FIXME this is probably not correct
-
-%----------------------------------------------------------------
-function [instc, v, n] = ft_connectivity_instantaneous(H, Z, S, fs, hasjack,powindx)
-
-% FIXME move functionality into ft_connectivity_granger
-
-%Usage: causality = hz2causality(H,S,Z,fs);
-%Inputs: transfer  = transfer function,
-%        crsspctrm = 3-D spectral matrix;
-%        noisecov  = noise covariance,
-%        fs        = sampling rate
-%Outputs: instantaneous causality spectrum between the channels.
-%Total Interdependence = Granger (X->Y) + Granger (Y->X) + Instantaneous Causality
-%               : auto-causality spectra are set to zero
-% Reference: Brovelli, et. al., PNAS 101, 9849-9854 (2004), Rajagovindan
-% and Ding, PLoS One Vol. 3, 11, 1-8 (2008)
-%M. Dhamala, UF, August 2006.
-
-%FIXME speed up code and check
-siz = size(H);
-if numel(siz)==4,
-  siz(5) = 1;
-end
-n   = siz(1);
-Nc  = siz(2);
-
-outsum = zeros(siz(2:end));
-outssq = zeros(siz(2:end));
-if isempty(powindx)
-  
-  %clear S; for k = 1:size(H,3), h = squeeze(H(:,:,k)); S(:,:,k) = h*Z*h'/fs; end;
-  for kk = 1:n
-    for ii = 1:Nc
-      for jj = 1:Nc
-        if ii ~=jj,
-          zc1     = reshape(Z(kk,jj,jj,:) - Z(kk,ii,jj,:).^2./Z(kk,ii,ii,:),[1 1 1 1 siz(5)]);
-          zc1     = repmat(zc1,[1 1 1 siz(4) 1]);
-          zc2     = reshape(Z(kk,ii,ii,:) - Z(kk,jj,ii,:).^2./Z(kk,jj,jj,:),[1 1 1 1 siz(5)]);
-          zc2     = repmat(zc2,[1 1 1 siz(4) 1]);
-          CTH1    = reshape(ctranspose(squeeze(H(kk,ii,jj,:,:))),1,1,1,siz(4));
-          CTH2    = reshape(ctranspose(squeeze(H(kk,jj,ii,:,:))),1,1,1,siz(4));
-          term1   = (S(kk,ii,ii,:,:) - H(kk,ii,jj,:,:).*zc1.*CTH1);
-          term2   = (S(kk,jj,jj,:,:) - H(kk,jj,ii,:,:).*zc2.*CTH2);
-          Sdet      = (S(kk,ii,ii,:,:).*S(kk,jj,jj,:,:)) - (S(kk,ii,jj,:,:).*S(kk,jj,ii,:,:));
-          outsum(jj,ii,:) = outsum(jj,ii) + log((term1.*term2)./Sdet(kk,:,:,:));
-          outssq(jj,ii,:) = outssq(jj,ii) + log((term1.*term2)./Sdet(kk,:,:,:)).^2;
-        end
-      end
-      outsum(ii,ii,:,:) = 0;%self-granger set to zero
-    end
-  end
-elseif ~iscell(powindx)
-  % data are linearly indexed
-  for k = 1:Nc
-    for j = 1:n
-      iauto1  = find(sum(powindx==powindx(k,1),2)==2);
-      iauto2  = find(sum(powindx==powindx(k,2),2)==2);
-      icross1 = k;
-      icross2 = find(sum(powindx==powindx(ones(Nc,1)*k,[2 1]),2)==2);
-      if iauto1 ~= iauto2
-        zc1     = Z(j,iauto1) - Z(j,icross2).^2./Z(j,iauto2);
-        zc1     = repmat(zc1,[1 1 siz(3)]);
-        zc2     = Z(j,iauto2) - Z(j,icross1).^2./Z(j,iauto1);
-        zc2     = repmat(zc2,[1 1 siz(3)]);
-        CTH1    = reshape(ctranspose(squeeze(H(j,icross2,:))),1,1,siz(3));
-        CTH2    = reshape(ctranspose(squeeze(H(j,icross1,:))),1,1,siz(3));
-        term1   = (S(j,iauto2,:) - H(j,icross2,:).*zc1.*CTH1);
-        term2   = (S(j,iauto1,:) - H(j,icross1,:).*zc2.*CTH2);
-        Sdet      = (S(j,iauto2,:).*S(j,iauto1,:)) - (S(j,icross2,:).*S(j,icross1,:));
-        outsum(k,:) = outsum(k) + log((term1.*term2)./Sdet(j,:,:));
-        outssq(k,:) = outssq(k) + log((term1.*term2)./Sdet(j,:,:)).^2;
-      end
-    end
-  end
-  
-  
-end
-instc = outsum./n;
-
-if n>1,
-  if hasjack
-    bias = (n-1).^2;
-  else
-    bias = 1;
-  end
-  v = bias*(outssq - (outsum.^2)./n)./(n - 1);
-else
-  v = [];
 end
