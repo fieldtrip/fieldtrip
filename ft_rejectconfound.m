@@ -14,6 +14,10 @@ function dataout = ft_rejectconfound(cfg, datain)
 %
 %   cfg.confound    = matrix, [Ntrials X Nconfounds]
 %
+% The following configuration options are supported:
+%   cfg.reject      = vector, [1 X Nconfounds], listing the confounds that
+%                     are to be rejected (default == 'all')
+%
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
 %   cfg.inputfile   =  ...
@@ -65,8 +69,17 @@ cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'confound'});
 
-% get the options
+% confound stuff
 regr = ft_getopt(cfg, 'confound');  % there is no default value
+nconf = size(regr,2);
+conflist = 1:nconf;
+if ~isfield(cfg, 'reject') || strcmp(cfg.reject, 'all') % default
+  cfg.reject = conflist(1:end); % to be removed  
+else
+  cfg.reject = intersect(conflist, cfg.reject); % to be removed
+end
+kprs = setdiff(conflist, cfg.reject); % to be kept
+fprintf('confounds to be removed: %s, and kept: %s \n', num2str(cfg.reject), num2str(kprs));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % GLM MODEL
@@ -92,7 +105,6 @@ if istimelock
       nrpt  = size(datain.trial, 1);
       nchan = size(datain.trial, 2);
       ntime = size(datain.trial, 3);
-      nconf = size(regr,2);
       
       % initialize output variable
       dataout       = datain;
@@ -107,7 +119,7 @@ if istimelock
       % estimate and remove the confounds
       fprintf('estimating the regression weights and removing the confounds \n');
       beta = regr\dat;                                                        % B = X\Y
-      Yc   = dat - regr * beta;                                               % Yclean = Y - X * X\Y
+      Yc   = dat - regr(:, cfg.reject) * beta(cfg.reject, :);                 % Yclean = Y - X * X\Y
       
       % put the clean data back into place
       dataout.trial = reshape(Yc, [nrpt, nchan, ntime]); clear Yc;
@@ -140,7 +152,6 @@ elseif isfreq
       nchan = size(datain.powspctrm, 2);
       nfreq = size(datain.powspctrm, 3);
       ntime = size(datain.powspctrm, 3); % this will be a singleton dimension in case there is no time
-      nconf = size(regr,2);
       
       % initialize output variable
       dataout       = datain;
@@ -155,7 +166,7 @@ elseif isfreq
       % estimate and remove the confounds
       fprintf('estimating the regression weights and removing the confounds \n');
       beta = regr\dat;                                                        % B = X\Y
-      Yc   = dat - regr * beta;                                               % Yclean = Y - X * X\Y
+      Yc   = dat - regr(:, cfg.reject) * beta(cfg.reject, :);                 % Yclean = Y - X * X\Y
       
       % put the clean data back into place
       dataout.powspctrm = reshape(Yc, [nrpt, nchan, nfreq, ntime]); clear Yc;
