@@ -138,7 +138,6 @@ end
 % create the shell script
 fid = fopen(shellscript, 'wt');
 fprintf(fid, '#!/bin/sh\n');
-fprintf(fid, 'cd "%s"\n', curPwd);
 fprintf(fid, '%s -nosplash -nodisplay -r "run(''%s/%s.m'')" \n', matlabcmd, curPwd, jobid);
 fclose(fid);
 
