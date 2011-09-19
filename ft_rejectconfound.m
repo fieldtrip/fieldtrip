@@ -16,7 +16,9 @@ function dataout = ft_rejectconfound(cfg, datain)
 %
 % The following configuration options are supported:
 %   cfg.reject      = vector, [1 X Nconfounds], listing the confounds that
-%                     are to be rejected (default == 'all')
+%                     are to be rejected (default = 'all')
+%   cfg.normalize   = string, 'yes' or 'no' (default = 'yes'), normalization to 
+%                     make the confounds orthogonal  
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
@@ -69,7 +71,7 @@ cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'confound'});
 
-% confound stuff
+% confound specification
 regr = ft_getopt(cfg, 'confound');  % there is no default value
 nconf = size(regr,2);
 conflist = 1:nconf;
@@ -78,8 +80,25 @@ if ~isfield(cfg, 'reject') || strcmp(cfg.reject, 'all') % default
 else
   cfg.reject = intersect(conflist, cfg.reject); % to be removed
 end
+fprintf('removing confound %s \n', num2str(cfg.reject));
 kprs = setdiff(conflist, cfg.reject); % to be kept
-fprintf('confounds to be removed: %s, and kept: %s \n', num2str(cfg.reject), num2str(kprs));
+fprintf('keeping confound %s \n', num2str(kprs));
+
+% confound normalization for orthogonality
+if ~isfield(cfg, 'normalize') || stcrmp(cfg.normalize, 'yes')
+  fprintf('normalizing the confounds, except the constant \n');
+  for c = 1:nconf
+    SD = std(regr(:,c),0,1);
+    if SD == 0
+      fprintf('confound %s is a constant \n', num2str(c));
+    else
+      regr(:,c) = (regr(:,c) - mean(regr(:,c))) / SD;
+    end
+    clear SD;
+  end
+elseif stcrmp(cfg.normalize, 'no')
+  fprintf('skipping normalization procedure \n');
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % GLM MODEL
