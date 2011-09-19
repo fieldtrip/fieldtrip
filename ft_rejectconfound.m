@@ -17,8 +17,8 @@ function dataout = ft_rejectconfound(cfg, datain)
 % The following configuration options are supported:
 %   cfg.reject      = vector, [1 X Nconfounds], listing the confounds that
 %                     are to be rejected (default = 'all')
-%   cfg.normalize   = string, 'yes' or 'no' (default = 'yes'), normalization to 
-%                     make the confounds orthogonal  
+%   cfg.normalize   = string, 'yes' or 'no', normalization to 
+%                     make the confounds orthogonal (default = 'yes') 
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
