@@ -18,7 +18,7 @@ function [obj] = ft_convert_units(obj, target)
 %
 % Possible target units are 'm', 'dm', 'cm ' or 'mm'.
 %
-% See FT_READ_VOL, FT_READ_SENS
+% See FT_ESTIMATE_UNITS, FT_READ_VOL, FT_READ_SENS
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 %
