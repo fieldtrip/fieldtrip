@@ -12,6 +12,8 @@ function unit = ft_estimate_units(size)
 %   'dm'
 %   'cm'
 %   'mm'
+%
+% See also FT_CONVERT_UNITS
 
 % Copyright (C) 2009, Robert Oostenveld
 %
