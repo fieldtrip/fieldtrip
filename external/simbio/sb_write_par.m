@@ -29,12 +29,9 @@ ft_defaults
 disp('correct sb_write_par')
 labels     = ft_getopt(varargin,'labels',[]); % integer labels in the head model corresponding to the different tissues
 cond       = ft_getopt(varargin,'cond',[]);   % conductivities of the FEM head model
-%FIXME: tenslabel has to be zero if no anisotropy information is
-%given/shouldbe used and value of its label if anisotropy information
-%should be used.
-%tenslabels = ft_getopt(varargin,'cond',zeros(1,length(cond)+1)) % tissue integer labels in the head model for 
-tenslabels = zeros(1,length(cond)+1);
-% which the tensor valued conductivity should be used if available
+tenslabels = ft_getopt(varargin,'tenslabels',zeros(1,length(cond)+1));
+% 'tenslabels' are zeros if no anisotropy information is given.
+% If anisotropy information is used, tenslabels values are non-zeros
 
 % The first labels/cond value corresponds to the electrodes
 % in the mesh the labels are in the format 101, 102, ... while they should
