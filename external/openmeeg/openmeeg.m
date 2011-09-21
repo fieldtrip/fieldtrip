@@ -37,23 +37,23 @@ else
     error('the first compartment should be the skin, the last the source');
 end
 
-% Flip faces for openmeeg convention
-for ii=1:length(vol.bnd)
-    vol.bnd(ii).tri = fliplr(vol.bnd(ii).tri);
-end
-
 % store the current path and change folder to the temporary one
 tmpfolder = cd;
 
 try
     cd(tempdir)
-
-    % write the triangulations to file
+    % initialize OM boundaries
     bndfile = {};
+    bndom = vol.bnd;
+    % Flip faces for openmeeg convention (inwards normals)
+    for ii=1:length(bndom)
+        bndom(ii).tri = fliplr(bndom(ii).tri);
+    end
+    % write triangulation files on disk
     for ii=1:length(vol.bnd)
         [junk,tname] = fileparts(tempname);
         bndfile{ii} = [tname '.tri'];
-        om_save_tri(bndfile{ii}, vol.bnd(ii).pnt, vol.bnd(ii).tri);
+        om_save_tri(bndfile{ii}, bndom(ii).pnt, bndom(ii).tri);
     end
 
     % these will hold the shell script and the inverted system matrix
