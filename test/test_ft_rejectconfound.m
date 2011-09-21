@@ -1,5 +1,7 @@
-% TEST test_ft_rejectconfound ft_rejectconfound
+function test_ft_rejectconfound
 
+% TEST test_ft_rejectconfound
+% TEST ft_rejectconfound
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

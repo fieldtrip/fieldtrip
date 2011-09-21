@@ -1,4 +1,7 @@
-%TEST: test_ft_appendfreq ft_appendfreq
+function test_ft_appendfreq
+
+% TEST test_ft_appendfreq
+% TEST ft_appendfreq
 
 % make some dummy frequency structures
 freq1.label = {'1';'2'};

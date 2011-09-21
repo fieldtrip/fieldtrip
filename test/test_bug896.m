@@ -1,4 +1,7 @@
-% TEST: ft_multiplotTFR, ft_prepare_layout, ft_datatype, ft_datatype_freq
+function test_bug896
+
+% TEST test_bug896
+% TEST ft_multiplotTFR ft_prepare_layout ft_datatype ft_datatype_freq
 
 load /home/common/matlab/fieldtrip/data/test/bug896.mat
 
@@ -15,7 +18,6 @@ if ~ft_datatype(stat_coh_full, 'freq')
   error('ft_datatype failed on the "stat_coh_full" input data');
 end
 
-
 figure
 ft_multiplotTFR(cfg, stat_coh);
 close
@@ -23,3 +25,4 @@ close
 figure
 ft_multiplotTFR(cfg, stat_coh_full);
 close
+

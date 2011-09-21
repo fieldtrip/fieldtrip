@@ -1,3 +1,8 @@
+function test_bug182
+
+% TEST test_bug182
+% TEST ft_preprocessing ft_componentanalysis ft_componentbrowser 
+
 % this script addresses bug 182.
 % applying ft_componentanalysis and reconstructing the data with
 % ft_rejectcomponent should have the possibility to contain a

@@ -1,4 +1,7 @@
-% TEST test_ft_selectdata ft_selectdata
+function test_ft_selectdata
+
+% TEST test_ft_selectdata
+% TEST ft_selectdata
 
 clear freq*
 

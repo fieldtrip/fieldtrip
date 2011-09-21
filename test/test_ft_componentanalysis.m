@@ -1,4 +1,8 @@
-% TEST: ft_componentanalysis, ft_rejectcomponent, ft_checkdata, runica, fastica, sobi, jader, dss, parafac
+function test_ft_componentanalysis
+
+% TEST test_ft_componentanalysis
+% TEST ft_componentanalysis, ft_rejectcomponent, ft_checkdata
+% TEST runica, fastica, sobi, jader, dss, parafac
 
 % note 3) binica does not run on all computers, which is why it is disabled
 % note 9) parafac depends on an external toolbox, which I don't have access to at the moment 

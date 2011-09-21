@@ -1,4 +1,7 @@
-% TEST: ft_channelrepair fixsens test_ft_channelrepair
+function test_ft_channelrepair
+
+% TEST test_ft_channelrepair
+% TEST ft_channelrepair fixsens
 
 datainfo = test_datasets;
 
@@ -33,6 +36,4 @@ newdata = ft_channelrepair(cfg, data);
 % cfg.badchannel = data.label(10);
 % cfg.neighbours = neighbours;
 % newdata = ft_channelrepair(cfg, data);
-% 
-% 
 

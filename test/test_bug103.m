@@ -1,3 +1,8 @@
+function test_bug103
+
+% TEST test_bug103
+% TEST ft_singleplotER
+
 freq.freq       = 1:1:100;
 freq.powspctrm  = randn(size(freq.freq)).^2;
 freq.label      = {'chan1'};

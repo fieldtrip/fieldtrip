@@ -1,6 +1,10 @@
+function test_bug272
+
+% TEST test_bug272
+% TEST ft_timelockanalysis ft_prepare_layout ft_multiplotER ft_topoplotER 
+
 % this script tests bug 272, i.e. incompatibility of ft_multiplotER with
 % cfg.inputfile and tests the fix.
-
 
 % create some ERP-data
 cfg = [];

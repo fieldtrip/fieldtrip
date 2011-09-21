@@ -1,4 +1,7 @@
-% TEST: ft_freqstatistics ft_selectdata ft_datatype_freq ft_appendfreq test_bug798
+function test_bug798
+
+% TEST test_bug798
+% TEST ft_freqstatistics ft_selectdata ft_datatype_freq ft_appendfreq
 
 cd /home/common/matlab/fieldtrip/data/test/bug798
 load t2_subj1.mat

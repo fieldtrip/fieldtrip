@@ -1,6 +1,7 @@
-% test_bug932
+function test_bug932
 
-% TEST: ft_channelrepair ft_databrowser
+% TEST test_bug932
+% TEST ft_channelrepair ft_databrowser
 
 % load data
 if ispc
@@ -38,4 +39,3 @@ for tr=1:numel(data_eeg_repaired.trial)
     end    
 end
 
-        
