@@ -35,49 +35,48 @@ if ~isfield(mri, 'unit'), mri = ft_convert_units(mri); end
   if isfield(mri, 'gray') || isfield(mri, 'white') || isfield(mri, 'csf')
     % construct the single image segmentation from the three probabilistic
     % tissue segmentations for csf, white and gray matter
-    mri.seg = zeros(size(mri.gray ));
+    mri.seg = zeros(size(mri.gray )); % FIXME
     if isfield(mri, 'gray')
       fprintf('including gray matter in segmentation for brain compartment\n')
-      mri.seg = mri.seg | (mri.gray>(threshold*max(mri.gray(:))));
+      mri.seg = mri.seg | (mri.gray>(threshold*max(mri.gray(:)))); % FIXME
     end
     if isfield(mri, 'white')
       fprintf('including white matter in segmentation for brain compartment\n')
-      mri.seg = mri.seg | (mri.white>(threshold*max(mri.white(:))));
+      mri.seg = mri.seg | (mri.white>(threshold*max(mri.white(:)))); % FIXME
     end
     if isfield(mri, 'csf')
       fprintf('including CSF in segmentation for brain compartment\n')
-      mri.seg = mri.seg | (mri.csf>(threshold*max(mri.csf(:))));
+      mri.seg = mri.seg | (mri.csf>(threshold*max(mri.csf(:)))); % FIXME
     end
     if ~strcmp(cfg.smooth, 'no'),
       fprintf('smoothing the segmentation with a %d-pixel FWHM kernel\n',cfg.smooth);
       mri.seg = double(mri.seg);
-      spm_smooth(mri.seg, mri.seg, smooth);
+      spm_smooth(mri.seg, mri.seg, smooth); % FIXME
     end
     % threshold for the last time
-    mri.seg = (mri.seg>(cfg.threshold*max(mri.seg(:))));
+    mri.seg = (mri.seg>(cfg.threshold*max(mri.seg(:)))); % FIXME
   elseif isfield(mri, 'brain')
-    mri.seg = mri.brain;
+    mri.seg = mri.brain; % FIXME
   elseif isfield(mri, 'scalp')
-    mri.seg = mri.scalp;
+    mri.seg = mri.scalp; % FIXME
   end
 
   [mrix, mriy, mriz] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
 
   % construct the triangulations of the boundaries from the segmented MRI
-  for i=1:length(cfg.tissuetype)
+  for i=1:length(cfg.tissuetype) % FIXME
     fprintf('triangulating the boundary of compartment %d\n', i);
-    seg = imfill((mri.seg==tissueval(i)), 'holes');
+    seg = imfill((mri.seg==tissueval(i)), 'holes'); % FIXME
     ori(1) = mean(mrix(seg(:)));
     ori(2) = mean(mriy(seg(:)));
     ori(3) = mean(mriz(seg(:)));
-    [pnt, tri] = triangulate_seg(seg, numvertices(i), ori);
-    % FIXME: corrects the original tri because is weird (?)
-    tri = projecttri(pnt);
+    [pnt, tri] = triangulate_seg(seg, numvertices(i), ori); % is tri okay?
+    %     tri = projecttri(pnt);
     % apply the coordinate transformation from voxel to head coordinates
-    pnt(:,4) = 1;
-    pnt = (mri.transform * (pnt'))';
-    pnt = pnt(:,1:3);
+    pnt = warp_apply(mri.transform,pnt);
+    % rescale
     pnt = scaleunit(unit,pnt);
+    % output
     bnd(i).pnt = pnt;
     bnd(i).tri = tri;
     fprintf(['segmentation compartment %d of ' num2str(length(cfg.tissue)) ' completed\n'],i);
