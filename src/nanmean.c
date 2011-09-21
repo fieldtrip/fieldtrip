@@ -1,4 +1,3 @@
-#include <math.h>
 #include <matrix.h>
 #include <mex.h>
 #include <stdlib.h>
@@ -6,12 +5,16 @@
 #include "compiler.h"
 
 #if defined (COMPILER_MSVC)
+#include <math.h>
 #define isnan _isnan
-#define INFINITY (DBL_MAX+DBL_MAX)
-#define NAN (INFINITY-INFINITY)
+#define INFINITY (HUGE_VAL+HUGE_VAL)
+#define NAN (INFINITY - INFINITY)
 #elif defined(COMPILER_LCC)
+#include <math.h>
 #define INFINITY (DBL_MAX+DBL_MAX)
-#define NAN (INFINITY-INFINITY)
+#define NAN (INFINITY - INFINITY)
+#else
+#include <math.h>
 #endif
 
 

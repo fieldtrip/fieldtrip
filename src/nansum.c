@@ -1,8 +1,21 @@
-#include <math.h>
 #include <matrix.h>
 #include <mex.h>
 #include <stdlib.h>
 #include <string.h>
+#include "compiler.h"
+
+#if defined (COMPILER_MSVC)
+#include <math.h>
+#define isnan _isnan
+#define INFINITY (HUGE_VAL+HUGE_VAL)
+#define NAN (INFINITY - INFINITY)
+#elif defined(COMPILER_LCC)
+#include <math.h>
+#define INFINITY (DBL_MAX+DBL_MAX)
+#define NAN (INFINITY - INFINITY)
+#else
+#include <math.h>
+#endif
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
@@ -36,7 +49,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
  
   if (mxIsEmpty(prhs[0]))
     {
-    plhs[0] = mxCreateDoubleScalar(0.0/0.0);
+    plhs[0] = mxCreateDoubleScalar(NAN);
     return;
     }
   else if (!mxIsNumeric(prhs[0]))
