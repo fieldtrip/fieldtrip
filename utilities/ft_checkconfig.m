@@ -336,6 +336,7 @@ if ~isempty(createsubcfg)
           'reducerank'
           'keepcsd'
           'realfilter'
+          'fixedori'
           };
 
       case {'mne', 'loreta', 'rv'}
