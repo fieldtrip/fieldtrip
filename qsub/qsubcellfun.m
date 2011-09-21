@@ -22,6 +22,19 @@ function varargout = qsubcellfun(fname, varargin)
 %   x2    = {2, 2, 2, 2, 2};
 %   y     = qsubcellfun(fname, x1, x2);
 %
+% In case you abort your call to qsubcellfun by pressing ctrl-C, the
+% already submitted jobs will continue to run. You will also notice that
+% a lot of temporary files remain in your working directory. To check the
+% status and healthy execution of the jobs in the batch queuing system,
+% you can use
+%   qstat
+%   qstat -an1
+%   qstat -Q
+% comands on the linux command line. To delete jobs from the queue  and
+% to abort already running jobs, you can use
+%   qdel <jobnumber>
+%   qdel all
+%
 % See also QSUBFEVAL, CELLFUN, FEVAL, DFEVAL, DFEVALASYNC
 
 % -----------------------------------------------------------------------
