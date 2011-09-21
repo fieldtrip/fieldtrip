@@ -33,6 +33,8 @@ keepmom        = keyval('keepmom',       varargin); if isempty(keepmom),       k
 lambda         = keyval('lambda',        varargin); if isempty(lambda  ),      lambda = 0;                   end
 projectnoise   = keyval('projectnoise',  varargin); if isempty(projectnoise),  projectnoise = 'yes';         end
 realfilter     = keyval('realfilter',    varargin); if isempty(realfilter),    realfilter = 'yes';           end
+fixedori       = ft_getopt(varargin,'fixedori','no');
+fixedori       = strcmp(fixedori,      'yes');
 
 % convert the yes/no arguments to the corresponding logical values
 keepcsd        = strcmp(keepcsd,       'yes');  % see below
@@ -158,6 +160,25 @@ for i=1:size(dip.pos,1)
   % concatenate scandip, refdip and supdip
   lfa = [lf rf sf];
 
+  if fixedori && isempty(refdip) && isempty(supdip) && isempty(refchan) && isempty(supchan)
+    % compute the leadfield for the optimal dipole orientation
+    % subsequently the leadfield for only that dipole orientation will
+    % be used for the final filter computation
+    if isfield(dip, 'filter') && size(dip.filter{i},1)~=1
+      filt = dip.filter{i};
+    else
+      filt = pinv(lfa' * invCmeg * lfa) * lfa' * invCmeg;
+    end
+    [u, s, v] = svd(real(filt * Cmeg * ctranspose(filt)));
+    maxpowori = u(:,1);
+    eta = s(1,1)./s(2,2);
+    lfa  = lfa * maxpowori;
+    dipout.ori{i} = maxpowori;
+    dipout.eta{i} = eta;
+  else
+    warning('Ignoring ''fixedori''. The fixedori option is supported only if there is ONE dipole for location.')
+  end
+  
   if isfield(dip, 'filter')
     % use the provided filter
     filt = dip.filter{i};
