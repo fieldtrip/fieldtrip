@@ -160,7 +160,7 @@ for i=1:size(dip.pos,1)
   % concatenate scandip, refdip and supdip
   lfa = [lf rf sf];
 
-  if fixedori && isempty(refdip) && isempty(supdip) && isempty(refchan) && isempty(supchan)
+  if fixedori && isempty(refdip) && isempty(supdip) && isempty(refchan) && isempty(supchan) && (size(lf,2)==3)
     % compute the leadfield for the optimal dipole orientation
     % subsequently the leadfield for only that dipole orientation will
     % be used for the final filter computation
