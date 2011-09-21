@@ -115,20 +115,6 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   cfg.downsample    = ratio for downsampling, which occurs after convolution (default = 1)
 %
 %
-%  MTMWELCH
-%   MTMWELCH performs frequency analysis on any time series
-%    trial data using the 'multitaper method' (MTM) based on discrete
-%    prolate spheroidal sequences (Slepian sequences) as tapers. Alternatively,
-%    you can use conventional tapers (e.g. Hanning).
-%    Besides multitapering, this function uses Welch's averaged, modified
-%    periodogram method. The data is divided into a number of sections with
-%    overlap, each section is windowed with the specified taper(s) and the
-%    powerspectra are computed and averaged over the sections in each trial.
-%    cfg.taper      = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
-%    cfg.foilim     = [begin end], frequency band of interest
-%    cfg.tapsmofrq  = number, the amount of spectral smoothing through
-%                     multi-tapering. Note that 4 Hz smoothing means
-%                     plus-minus 4 Hz, i.e. a 8 Hz smoothing box.
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
@@ -139,7 +125,7 @@ function [freq] = ft_freqanalysis(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_FREQANALYSIS_OLD, FT_FREQANALYSIS_MTMWELCH, FT_FREQANALYSIS_TFR
+% See also FT_FREQANALYSIS_OLD, FT_FREQANALYSIS_TFR
 
 % Undocumented local options:
 % cfg.correctt_ftimwin (set to yes to try to determine new t_ftimwins based
@@ -268,6 +254,9 @@ switch cfg.method
     if ~isfield(cfg, 'filtdir'),          cfg.filtdir       = 'twopass';    end
     if ~isfield(cfg, 'width'),            cfg.width         = 1;            end
     cfg.method = 'hilbert';
+    
+  case 'mtmwelch' % mtmwelch is a special case, it is no longer maintained, and no specest function is intended for it
+    error('ft_freqanalysis_mtmwelch is deprecated, and is no longer maintained. You can still use this method by calling ft_freqanalysis_old')
     
   otherwise
     specestflg = 0;

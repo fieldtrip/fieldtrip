@@ -1,4 +1,4 @@
-function [freq] = ft_freqanalysis_mtmwelch(cfg, data);
+function [freq] = ft_freqanalysis_mtmwelch(cfg, data)
 
 % FT_FREQANALYSIS_MTMWELCH performs frequency analysis on any time series
 % trial data using the 'multitaper method' (MTM) based on discrete
@@ -72,6 +72,8 @@ function [freq] = ft_freqanalysis_mtmwelch(cfg, data);
 % $Id$
 
 ft_defaults
+warning('ft_freqanalysis_mtmwelch is deprecated, it is no longer being maintained')
+
 
 % ensure that this function is started as a subfunction of the FT_FREQANALYSIS wrapper
 if ~exist('OCTAVE_VERSION')
