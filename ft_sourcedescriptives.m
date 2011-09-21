@@ -94,6 +94,7 @@ if ~isfield(cfg, 'keepcsd'),          cfg.keepcsd          = 'no';          end
 if ~isfield(cfg, 'fixedori'),         cfg.fixedori = 'over_trials';         end
 if ~isfield(cfg, 'inputfile'),        cfg.inputfile        = [];            end
 if ~isfield(cfg, 'outputfile'),       cfg.outputfile       = [];            end
+source.method = ft_getopt(source,'method',[]);
 
 % only works for minimumnormestimate
 if ~isfield(cfg, 'demean'),         cfg.demean         = 'yes';    end
