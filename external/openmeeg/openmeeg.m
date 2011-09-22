@@ -45,10 +45,17 @@ try
     % initialize OM boundaries
     bndfile = {};
     bndom = vol.bnd;
+    
+    % check if normals are outward oriented (as they should be)
+    ok = checknormals(bndom);
+    
     % Flip faces for openmeeg convention (inwards normals)
-    for ii=1:length(bndom)
-        bndom(ii).tri = fliplr(bndom(ii).tri);
+    if ~ok
+      for ii=1:length(bndom)
+          bndom(ii).tri = fliplr(bndom(ii).tri);
+      end
     end
+    
     % write triangulation files on disk
     for ii=1:length(vol.bnd)
         [junk,tname] = fileparts(tempname);
@@ -137,3 +144,26 @@ delete(hmfile);
 delete(hminvfile);
 delete(exefile);
 return
+
+function ok = checknormals(bnd)
+ok = 0;
+pnt = bnd.pnt;
+tri = bnd.tri;
+% translate to the center
+org = mean(pnt,1);
+pnt(:,1) = pnt(:,1) - org(1);
+pnt(:,2) = pnt(:,2) - org(2);
+pnt(:,3) = pnt(:,3) - org(3);
+
+w = sum(solid_angle(pnt, tri));
+
+if w<0 && abs(w-4*pi)<1000*eps
+  % FIXME: this method is rigorous only for star shaped surfaces
+  warning('your normals are not oriented correctly')
+  ok = 0;
+elseif w>0 && abs(w-4*pi)<1000*eps
+  ok = 1;
+else
+  error('your surface probably is irregular')
+  ok = 0;
+end
