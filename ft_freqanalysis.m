@@ -661,12 +661,19 @@ else
       end %ifoi
         
     else
+      % keep tapers
+      if ~exist('tapcounter', 'var')
+        tapcounter = 0;
+      end
+      
       if strcmp(cfg.method,'mtmconvol')
         spectrum = permute(reshape(spectrum_mtmconvol,[nchan ntoi ntaper(1) nfoi]),[3 1 4 2]);
       end
-        
-      rptind = reshape(1:ntrials .* maxtap,[maxtap ntrials]);
-      currrptind = rptind(:,itrial);
+      
+      currrptind  = tapcounter + (1:maxtap);
+      tapcounter  = currrptind(end);
+      %rptind = reshape(1:ntrials .* maxtap,[maxtap ntrials]);
+      %currrptind = rptind(:,itrial);
       if powflg
         powspctrm(currrptind,:,:) = abs(spectrum).^2;
       end
