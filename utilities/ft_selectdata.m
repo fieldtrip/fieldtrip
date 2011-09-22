@@ -64,7 +64,7 @@ dimord = cell(1,length(data));
 % keep track whether data contains subjects as repetitions
 hassubj = false(1, length(data));
 for k = 1:length(data)
-  data{k} = ft_checkdata(data{k}, 'datatype', {'freq' 'timelock' 'source', 'volume', 'freqmvar', 'raw', 'comp'});
+  data{k} = ft_checkdata(data{k}, 'datatype', {'freq' 'timelock' 'source', 'volume', 'freqmvar', 'raw', 'comp', 'chan'});
   [dtype{k}, dimord{k}]  = ft_datatype(data{k});
   if isfield(data{k}, 'dimord') && ~isempty(strfind(data{k}.dimord, 'subj'))
     hassubj(k) = true;
