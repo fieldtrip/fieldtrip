@@ -104,7 +104,7 @@ else
     % get the the grad or elec if not present in the data
     if hasdata && isfield(data, 'grad')
         fprintf('Using the gradiometer configuration from the dataset.\n');
-        sens = data.hdr.grad;
+        sens = data.grad;
         % extract true channelposition
         [sens.pnt, sens.label] = channelposition(sens);
     elseif hasdata && isfield(data, 'elec')
