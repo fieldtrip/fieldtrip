@@ -1,7 +1,8 @@
 function varargout = qsubcellfun(fname, varargin)
 
 % QSUBCELLFUN applies a function to each element of a cell-array. The
-% function execution is done in parallel using the Torque or SGE batch queue system.
+% function execution is done in parallel using the Torque, SGE or PBS 
+% batch queue system.
 %
 % Use as
 %   argout = qsubcellfun(fname, x1, x2, ...)
@@ -13,14 +14,26 @@ function varargout = qsubcellfun(fname, varargin)
 %   UniformOutput  = boolean (default = false)
 %   StopOnError    = boolean (default = true)
 %   diary          = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
-%   timreq         = number, initial estimate for the time required to run a single job (default = 3600)
-%   memreq         = number, initial estimate for the memory required to run a single job (default = 2*1024^3)
+%   timreq         = number, the time in seconds required to run a single job
+%   memreq         = number, the memory in bytes required to run a single job
+%
+% It is required to give an estimate of the time and memory requirements of
+% the individual jobs. The memory requirement of the MATLAB executible
+% itself will automatically be added, just as the time requirement to start
+% up a new MATLAB process. If you don't know what the memory and time
+% requirements of your job are, you can get an estimate for them using
+% TIC/TOC and MEMTIC/MEMTOC around a single execution of one of the jobs in
+% your interactive MATLAB session. You can also start with very large
+% estimates, e.g. 4*1024^3 bytes for the memory (which is 4GB) and 28800
+% seconds for the time (which is 8 hours) and then run a single job through
+% qsubcellfun. When the job returns, it will print the memory and time it
+% required.
 %
 % Example
 %   fname = 'power';
 %   x1    = {1, 2, 3, 4, 5};
 %   x2    = {2, 2, 2, 2, 2};
-%   y     = qsubcellfun(fname, x1, x2);
+%   y     = qsubcellfun(fname, x1, x2, 'memreq', 1024^3, 'timreq', 60);
 %
 % In case you abort your call to qsubcellfun by pressing ctrl-C, the
 % already submitted jobs will continue to run. You will also notice that
@@ -35,7 +48,7 @@ function varargout = qsubcellfun(fname, varargin)
 %   qdel <jobnumber>
 %   qdel all
 %
-% See also QSUBFEVAL, CELLFUN, FEVAL, DFEVAL, DFEVALASYNC
+% See also QSUBFEVAL, CELLFUN, PEERCELLFUN, FEVAL, DFEVAL, DFEVALASYNC
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2011, Robert Oostenveld
@@ -67,8 +80,8 @@ optarg = varargin(optbeg:end);
 UniformOutput = ft_getopt(optarg, 'UniformOutput', false   );
 StopOnError   = ft_getopt(optarg, 'StopOnError',   true    );
 diary         = ft_getopt(optarg, 'diary',         'error' ); % 'always', 'never', 'warning', 'error'
-timreq        = ft_getopt(optarg, 'timreq',        []      );
-memreq        = ft_getopt(optarg, 'memreq',        []      ); 
+timreq        = ft_getopt(optarg, 'timreq');
+memreq        = ft_getopt(optarg, 'memreq'); 
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)

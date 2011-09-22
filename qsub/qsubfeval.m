@@ -39,11 +39,8 @@ strargin(~cellfun(@ischar, strargin)) = {''};
 
 % locate the begin of the optional key-value arguments
 optbeg = false(size(strargin));
-optbeg = optbeg | strcmp('sleep',   strargin);
 optbeg = optbeg | strcmp('memreq',  strargin);
-optbeg = optbeg | strcmp('cpureq',  strargin);
 optbeg = optbeg | strcmp('timreq',  strargin);
-optbeg = optbeg | strcmp('hostid',  strargin);
 optbeg = optbeg | strcmp('diary',   strargin);
 optbeg = optbeg | strcmp('batch',    strargin);
 optbeg = optbeg | strcmp('timoverhead', strargin);
@@ -51,12 +48,13 @@ optbeg = optbeg | strcmp('memoverhead', strargin);
 optbeg = find(optbeg);
 optarg = varargin(optbeg:end);
 
+% check the required input arguments
+ft_checkopt(optarg, 'memreq', 'numericscalar');
+ft_checkopt(optarg, 'timreq', 'numericscalar');
+
 % get the optional input arguments
-sleep       = ft_getopt(optarg, 'sleep',   0.05);
-memreq      = ft_getopt(optarg, 'memreq',  []);
-cpureq      = ft_getopt(optarg, 'cpureq',  []);
-timreq      = ft_getopt(optarg, 'timreq',  []);
-hostid      = ft_getopt(optarg, 'hostid',  []);
+memreq      = ft_getopt(optarg, 'memreq');
+timreq      = ft_getopt(optarg, 'timreq');
 diary       = ft_getopt(optarg, 'diary',   []);
 batch       = ft_getopt(optarg, 'batch',    1);
 timoverhead = ft_getopt(optarg, 'timoverhead', 180);            % allow some overhead to start up the MATLAB executable
@@ -89,7 +87,7 @@ curPwd = getcustompwd();
 randomseed = rand(1)*double(intmax);
 
 % pass some options that influence the remote execution
-options = {'pwd', curPwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq, 'randomseed', randomseed};
+options = {'pwd', curPwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'timreq', timreq, 'randomseed', randomseed};
 
 inputfile    = fullfile(curPwd, sprintf('%s_input.mat', jobid));
 shellscript  = fullfile(curPwd, sprintf('%s.sh', jobid));

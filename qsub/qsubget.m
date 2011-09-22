@@ -74,7 +74,7 @@ while ~success && (timeout == 0 || toc(stopwatch)<timeout)
   if ~isempty(tmp) && tmp.bytes>0
     % show the error that was printed on STDERR
     type(fullfile(curPwd, tmp.name));
-    error('the batch queue system returned an error');
+    error('the batch queue system returned an error for job %s, now aborting', jobid);
   end
 
   % the stdout and stderr log files are the last ones created
@@ -130,13 +130,13 @@ if success
 
   if strcmp(diary, 'error') && ~isempty(err)
     fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
-    fprintf('%% an error was detected, the diary output of the remote execution follows \n');
+    fprintf('%% an error was detected inside MATLAB, the diary output of the remote execution follows \n');
     fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
     fprintf('%s', diarystring);
     closeline = true;
   elseif strcmp(diary, 'warning') && ~isempty(warn)
     fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
-    fprintf('%% a warning was detected, the diary output of the remote execution follows\n');
+    fprintf('%% a warning was detected inside MATLAB, the diary output of the remote execution follows\n');
     fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
     fprintf('%s', diarystring);
     closeline = true;
