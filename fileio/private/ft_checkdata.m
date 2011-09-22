@@ -153,6 +153,9 @@ if ~isequal(feedback, 'no')
     fprintf('the input is mvar data\n');
   elseif isfreqmvar
     fprintf('the input is freqmvar data\n');
+  elseif ischan
+    nchan = length(data.label);
+    fprintf('the input is chan data\n');
   end
 end % give feedback
 
@@ -215,6 +218,8 @@ if ~isempty(dtype)
         okflag = okflag + ismvar;
       case 'freqmvar'
         okflag = okflag + isfreqmvar;
+      case 'chan'
+        okflag = okflag + ischan;
     end % switch dtype
   end % for dtype
  

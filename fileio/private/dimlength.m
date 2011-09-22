@@ -113,6 +113,7 @@ else
         if isfield(data, 'trial'),         n = [n size(data.trial,         1)]; end
         if isfield(data, 'fourierspctrm'), n = [n size(data.fourierspctrm, 1)]; end
         if isfield(data, 'individual'),    n = [n size(data.individual,    1)]; end
+        if isfield(data, 'stat'),          n = [n size(data.stat,          1)]; end
         if ~all(n==n(1))
           error('inconsistent number of repetitions for dim "%s"', seldim);
         end
