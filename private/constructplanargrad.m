@@ -21,8 +21,8 @@ function [planar] = constructplanargrad(cfg, grad)
 % The input grad can be a CTF type axial gradiometer definition, but
 % just as well be a magnetometer definition. This function only assumes
 % that
-%   grad.pnt
-%   grad.ori
+%   grad.coilpos
+%   grad.coilori
 %   grad.label
 % exist and that the first Nlabel channels in pnt and ori should be
 % used to compute the position of the coils in the planar gradiometer
@@ -94,7 +94,7 @@ end
 
 if strcmp(cfg.planaraxial, 'yes')
   % combine all the 8 coils into a single sensor
-  planar.pnt = [
+  planar.coilpos = [
     lo_posx
     lo_negx
     lo_posy
@@ -106,15 +106,15 @@ if strcmp(cfg.planaraxial, 'yes')
   ];
 
   % the orientation of all the coils of a single sensor should be the same
-  planar.ori = [
-    grad.chanori(1:Nchan,:)
-    grad.chanori(1:Nchan,:)
-    grad.chanori(1:Nchan,:)
-    grad.chanori(1:Nchan,:)
-    grad.chanori(1:Nchan,:)
-    grad.chanori(1:Nchan,:)
-    grad.chanori(1:Nchan,:)
-    grad.chanori(1:Nchan,:)
+  planar.coilori = [
+    grad.coilori(1:Nchan,:)
+    grad.coilori(1:Nchan,:)
+    grad.coilori(1:Nchan,:)
+    grad.coilori(1:Nchan,:)
+    grad.coilori(1:Nchan,:)
+    grad.coilori(1:Nchan,:)
+    grad.coilori(1:Nchan,:)
+    grad.coilori(1:Nchan,:)
   ];
 
   e = eye(Nchan);
@@ -128,7 +128,7 @@ if strcmp(cfg.planaraxial, 'yes')
 
 else
   % combine only the 4 lower coils into a single sensor
-  planar.pnt = [
+  planar.coilpos = [
     posx
     negx
     posy
@@ -136,11 +136,11 @@ else
   ];
 
   % the orientation of all the coils of a single gradiometer should be the same
-  planar.ori = [
-    grad.ori(1:Nchan,:)
-    grad.ori(1:Nchan,:)
-    grad.ori(1:Nchan,:)
-    grad.ori(1:Nchan,:)
+  planar.coilori = [
+    grad.coilori(1:Nchan,:)
+    grad.coilori(1:Nchan,:)
+    grad.coilori(1:Nchan,:)
+    grad.coilori(1:Nchan,:)
   ];
 
   e = eye(Nchan);
@@ -161,6 +161,8 @@ end
 
 planar.label = planar.label(:);
 planar.tra   = planar.tra / cfg.baseline_planar;
+planar.chanpos = grad.chanpos;
+planar.chanori = grad.chanori;
 
 try
   planar.unit  = grad.unit;
