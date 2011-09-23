@@ -69,6 +69,8 @@ function [data] = ft_checkdata(data, varargin)
 %   sensortype
 %   time2offset
 %   offset2time
+%   fixsens -> this is kept a separate function because it should also be
+%              called from other modules
 %
 % other potential uses for this function:
 %   time -> offset in freqanalysis
@@ -627,13 +629,6 @@ end
 if issource && ~strcmp(haspow, 'no')
  data = fixsource(data, 'type', sourcerepresentation, 'haspow', haspow);
 end 
-
-if isfield(data, 'grad')
-  % ensure that the gradiometer balancing is specified
-  if ~isfield(data.grad, 'balance') || ~isfield(data.grad.balance, 'current')
-    data.grad.balance.current = 'none';
-  end
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % represent the covariance matrix in a particular manner

@@ -120,8 +120,10 @@ end
 % FIXME the detection of the type of input structure should perhaps be done using the datatype function
 isdata   = isa(input, 'struct') && isfield(input, 'hdr');
 isheader = isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'Fs');
-isgrad   = isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'pnt')  &&  isfield(input, 'ori');
-iselec   = isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'pnt')  && ~isfield(input, 'ori');
+isgrad   = isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'pnt')  &&  isfield(input, 'ori'); % old style
+isgrad   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'coilpos')) || isgrad; % new style 
+iselec   = isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'pnt')  && ~isfield(input, 'ori'); % old style
+iselec   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'elecpos')) || iselec; % new style 
 islabel  = isa(input, 'cell')   && ~isempty(input) && isa(input{1}, 'char');
 
 if ~isdata && ~isheader

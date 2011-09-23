@@ -85,6 +85,9 @@ end
 if isfield(sens, 'pnt') && ~isfield(sens, 'tra')
   nchan = size(sens.pnt,1);
   sens.tra = sparse(eye(nchan));
+elseif isfield(sens, 'chanpos') && ~isfield(sens, 'tra')
+  nchan = size(sens.chanpos,1);
+  sens.tra = sparse(eye(nchan));
 end
 
 % select and keep the columns that are non-empty, i.e. remove the empty columns

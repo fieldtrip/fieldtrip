@@ -120,8 +120,10 @@ end
 % FIXME the detection of the type of input structure should perhaps be done using the datatype function
 isdata   = isa(input, 'struct') && isfield(input, 'hdr');
 isheader = isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'Fs');
-isgrad   = isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'pnt')  &&  isfield(input, 'ori');
-iselec   = isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'pnt')  && ~isfield(input, 'ori');
+isgrad   = isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'pnt')  &&  isfield(input, 'ori'); % old style
+isgrad   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'coilpos')) || isgrad; % new style 
+iselec   = isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'pnt')  && ~isfield(input, 'ori'); % old style
+iselec   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'elecpos')) || iselec; % new style 
 islabel  = isa(input, 'cell')   && ~isempty(input) && isa(input{1}, 'char');
 
 if ~isdata && ~isheader
@@ -176,7 +178,6 @@ elseif islabel
 else
   sens = [];
 end
-sens = fixsens(sens); % to ensure up-to-date sensor array description (Aug 2011)
 
 if isfield(input, 'type')
   % preferably the structure specifies its own type
@@ -263,7 +264,7 @@ else
       type = 'bti'; % it might be 148 or 248 channels
     elseif any(ismember(ft_senslabel('ctfref'), sens.label))
       type = 'ctf'; % it might be 151 or 275 channels
-    elseif isfield(sens, 'coilpos') && isfield(sens, 'coilori') && numel(sens.label)==size(sens.coilpos,1)
+    elseif isfield(sens, 'pnt') && isfield(sens, 'ori') && numel(sens.label)==size(sens.pnt,1)
       warning('could be Yokogawa system');
       type = 'magnetometer';
     else

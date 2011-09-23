@@ -82,7 +82,10 @@ if strcmp(inverse, 'yes')
 end
 
 % use default transfer from sensors to channels if not specified
-if isfield(sens, 'chanpos') && ~isfield(sens, 'tra')
+if isfield(sens, 'pnt') && ~isfield(sens, 'tra')
+  nchan = size(sens.pnt,1);
+  sens.tra = sparse(eye(nchan));
+elseif isfield(sens, 'chanpos') && ~isfield(sens, 'tra')
   nchan = size(sens.chanpos,1);
   sens.tra = sparse(eye(nchan));
 end
