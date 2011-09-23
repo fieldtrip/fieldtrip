@@ -262,7 +262,6 @@ else
     end
     
     sens = ft_convert_units(data.grad);
-    [sens.pnt, sens.ori, sens.label] = channelposition(data.grad);
     cfg.channel = ft_channelselection(cfg.channel, sens.label);
     
     cfg.neighbsel = channelconnectivity(cfg);
@@ -273,9 +272,9 @@ else
     Ngrad = length(sens.label);
     cfg.distance = zeros(Ngrad,Ngrad);
     
-    for i=1:Ngrad
+    for i=1:size(cfg.neighbsel,1)
         j=find(cfg.neighbsel(i, :));
-        d = sqrt(sum((sens.pnt(j,:) - repmat(sens.pnt(i, :), numel(j), 1)).^2, 2));
+        d = sqrt(sum((sens.chanpos(j,:) - repmat(sens.chanpos(i, :), numel(j), 1)).^2, 2));
         cfg.distance(i,j) = d;
         cfg.distance(j,i) = d;
     end

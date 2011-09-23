@@ -24,9 +24,14 @@ function montage = megplanar_orig(cfg, grad)
 % $Id$
 
 neighbsel = cfg.neighbsel;
-distance = cfg.distance;
+distance  = cfg.distance;
 
-[pnt, ori, lab] = channelposition(grad);
+lab   = grad.label;
+tmp   = ft_channelselection('MEG', lab);
+sel   = match_str(lab, tmp);
+pnt   = grad.chanpos(sel,:);
+ori   = grad.chanori(sel,:);
+lab   = lab(sel);
 Ngrad = length(lab);
 
 gradH = zeros(Ngrad, Ngrad);
@@ -79,7 +84,7 @@ for k=1:Ngrad
   Zc  = -X*sin(PhiY) + Z*cos(PhiY);
   X2c = X2*cos(PhiY) + Z2*sin(PhiY);
   Y2c = Y2;
-  Z2c = -X2*sin(PhiY) + Z2*cos(PhiY);;
+  Z2c = -X2*sin(PhiY) + Z2*cos(PhiY);
 
   X = Xc;
   Y = Yc;

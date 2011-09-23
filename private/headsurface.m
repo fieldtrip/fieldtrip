@@ -46,6 +46,10 @@ if nargin<2
   sens = [];
 end
 
+if ~isempty(sens)
+  sens = fixsens(sens);
+end
+
 if nargin<3
   varargin = {};
 end
@@ -124,7 +128,7 @@ elseif ~isempty(vol) && isfield(vol, 'r') && length(vol.r)<5
 elseif ft_voltype(vol, 'multisphere')
   % local spheres MEG model, this also requires a gradiometer structure
   grad = sens;
-  if ~isfield(grad, 'tra') || ~isfield(grad, 'pnt')
+  if ~isfield(grad, 'tra') || ~isfield(grad, 'coilpos')
     error('incorrect specification for the gradiometer array');
   end
   Nchans   = size(grad.tra, 1);
@@ -134,7 +138,7 @@ elseif ft_voltype(vol, 'multisphere')
     error('there should be just as many spheres as coils');
   end
   % for each coil, determine a surface point using the corresponding sphere
-  vec = grad.pnt - vol.o;
+  vec = grad.coilpos - vol.o;
   nrm = sqrt(sum(vec.^2,2));
   vec = vec ./ [nrm nrm nrm];
   pnt = vol.o + vec .* [vol.r vol.r vol.r];

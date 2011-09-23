@@ -16,7 +16,6 @@ function [sens] = fixsens(sens)
 %		   sens.label -> channel labels
 %		   sens.balance -> additional structure containing info about the balancing
 %		   sens.chanpos -> channel positions
-%                  sens.chanori -> orientation of channel, needed for synthetic planar gradient
 %          sens.unit
 %
 % Old style (EEG/ECoG): sens.pnt -> electrode positions
@@ -49,11 +48,10 @@ end
 if isgrad && doconvert
   % sensor description is a MEG sensor-array, containing oriented coils
   
-  [chanpos, chanori, dum] = channelposition(sens, 'channel', 'all'); % needs 3 inputs to get the ori
+  chanpos      = channelposition(sens, 'channel', 'all');
   sens.coilori = sens.ori; sens = rmfield(sens, 'ori');
   sens.coilpos = sens.pnt; sens = rmfield(sens, 'pnt');
-  sens.chanpos = chanpos;
-  sens.chanori = chanori;  
+  sens.chanpos = chanpos;  
 elseif doconvert
   % sensor description is something else, EEG/ECoG etc
   

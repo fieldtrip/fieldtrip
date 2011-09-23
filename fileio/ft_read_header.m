@@ -41,7 +41,6 @@ function [hdr] = ft_read_header(filename, varargin)
 %   NeuroScan (*.eeg, *.cnt, *.avg)
 %   Nexstim (*.nxe)
 %   BrainVision (*.eeg, *.seg, *.dat, *.vhdr, *.vmrk)
-%   GTec (*.mat)
 %
 % The following spike and LFP dataformats are supported (with some limitations)
 %   Plextor (*.nex, *.plx, *.ddt)
@@ -103,7 +102,7 @@ if isempty(headerformat)
 end
 
 if isempty(cache),
-  if strcmp(headerformat, 'bci2000_dat') || strcmp(headerformat, 'eyelink_asc') || strcmp(headerformat, 'gtec_mat')
+  if strcmp(headerformat, 'bci2000_dat') || strcmp(headerformat, 'eyelink_asc')
     cache = true;
   else
     cache = false;
@@ -940,30 +939,6 @@ switch headerformat
       hdr.label = mxDeserialize(hdr.label);
     end
 
-  case 'gtec_mat'
-    % this is a simple MATLAB format, it contains a log and a names variable
-    tmp = load(headerfile);
-    log   = tmp.log;
-    names = tmp.names;
-    
-    hdr.label = cellstr(names);
-    hdr.nChans = size(log,1);
-    hdr.nSamples = size(log,2);
-    hdr.nSamplesPre = 0;
-    hdr.nTrials = 1; % assume continuous data, not epoched
-
-    % compute the sampling frequency from the time channel
-    sel = strcmp(hdr.label, 'Time');
-    time = log(sel,:);
-    
-    hdr.Fs = 1./(time(2)-time(1));
-    
-    % also remember the complete data upon request
-    if cache
-      hdr.orig.log = log;
-      hdr.orig.names = names;
-    end
-
   case {'itab_raw' 'itab_mhd'}
     % read the full header information frtom the binary header structure
     header_info = read_itab_mhd(headerfile);
@@ -1491,7 +1466,14 @@ if checkUniqueLabels
     end
   end
 end
-  
+
+% ensure that the sensor description is up-to-date
+if isfield(hdr, 'grad')
+  hdr.grad = fixsens(hdr.grad);
+elseif isfield(hdr, 'elec')
+  hdr.elec = fixsens(hdr.elec);
+end
+
 % ensure that these are double precision and not integers, otherwise
 % subsequent computations that depend on these might be messed up
 hdr.Fs          = double(hdr.Fs);

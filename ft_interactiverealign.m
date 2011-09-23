@@ -297,34 +297,34 @@ if ~isempty(individual.headshape)
 end
 
 if ~isempty(template.elec)
-  hs = triplot(template.elec.pnt, [], [], 'nodes');
+  hs = triplot(template.elec.chanpos, [], [], 'nodes');
   set(hs, 'MarkerSize', 10);
   set(hs, 'Color', 'b');
   if isfield(template.elec, 'line')
-    hs = triplot(template.elec.pnt, template.elec.line, [], 'edges');
+    hs = triplot(template.elec.chanpos, template.elec.line, [], 'edges');
     try, set(hs, 'MarkerEdgeColor', 'b'); end
   end
 end
 
 if ~isempty(individual.elec)
-  hs = triplot(individual.elec.pnt, [], [], 'nodes');
+  hs = triplot(individual.elec.chanpos, [], [], 'nodes');
   set(hs, 'MarkerSize', 10);
   set(hs, 'Color', 'r');
   if isfield(individual.elec, 'line')
-    hs = triplot(individual.elec.pnt, elec.line, [], 'edges');
+    hs = triplot(individual.elec.chanpos, elec.line, [], 'edges');
     try, set(hs, 'MarkerEdgeColor', 'r'); end
   end
 end
 
 if ~isempty(template.grad)
-  hs = triplot(template.grad.pnt, [], [], 'nodes');
+  hs = triplot(template.grad.chanpos, [], [], 'nodes');
   set(hs, 'MarkerSize', 10);
   set(hs, 'Color', 'b');
   % FIXME also plot lines?
 end
 
 if ~isempty(individual.grad)
-  hs = triplot(individual.grad.pnt, [], [], 'nodes');
+  hs = triplot(individual.grad.chanpos, [], [], 'nodes');
   set(hs, 'MarkerSize', 10);
   set(hs, 'Color', 'r');
   % FIXME also plot lines?

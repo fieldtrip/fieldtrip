@@ -19,6 +19,7 @@ for k = 1:numel(datainfo)
   
   cfg = [];
   cfg.method = 'triangulation';
+  cfg.channel = 'MEG';
   neighbours = ft_neighbourselection(cfg, data);
 
   cfg = [];

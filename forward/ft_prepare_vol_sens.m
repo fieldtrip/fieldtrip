@@ -66,6 +66,9 @@ order   = keyval('order',    varargin);  % order of expansion for Nolte method; 
 if isempty(channel),  channel = sens.label;   end
 if isempty(order),    order = 10;             end
 
+% ensure that the sensor description is up-to-date
+sens = fixsens(sens);
+
 % determine whether the input contains EEG or MEG sensors
 iseeg = ft_senstype(sens, 'eeg');
 ismeg = ft_senstype(sens, 'meg');
@@ -97,7 +100,6 @@ end
 sens.type = ft_senstype(sens);
 vol.type  = ft_voltype(vol);
 
-
 if isfield(vol, 'unit') && isfield(sens, 'unit') && ~strcmp(vol.unit, sens.unit)
   error('inconsistency in the units of the volume conductor and the sensor array');
 end
@@ -117,7 +119,7 @@ elseif ismeg
   % always ensure that there is a linear transfer matrix for combining the coils into gradiometers
   if ~isfield(sens, 'tra');
     Nchans = length(sens.label);
-    Ncoils = size(sens.pnt,1);
+    Ncoils = size(sens.coilpos,1);
     if Nchans~=Ncoils
       error('inconsistent number of channels and coils');
     end
@@ -129,13 +131,14 @@ elseif ismeg
   [selchan, selsens] = match_str(channel, sens.label);
 
   % first only modify the linear combination of coils into channels
-  sens.label = sens.label(selsens);
-  sens.tra   = sens.tra(selsens,:);
+  sens.chanpos = sens.chanpos(selsens,:);
+  sens.label   = sens.label(selsens);
+  sens.tra     = sens.tra(selsens,:);
   % subsequently remove the coils that do not contribute to any sensor output
-  selcoil  = find(sum(sens.tra,1)~=0);
-  sens.pnt = sens.pnt(selcoil,:);
-  sens.ori = sens.ori(selcoil,:);
-  sens.tra = sens.tra(:,selcoil);
+  selcoil      = find(sum(sens.tra,1)~=0);
+  sens.coilpos = sens.coilpos(selcoil,:);
+  sens.coilori = sens.coilori(selcoil,:);
+  sens.tra     = sens.tra(:,selcoil);
 
   switch ft_voltype(vol)
     case 'infinite'
@@ -169,19 +172,19 @@ elseif ismeg
       
       % remove the coils that do not contribute to any channel output
       % since these do not have a corresponding sphere
-      selcoil  = find(sum(sens.tra,1)~=0);
-      sens.pnt = sens.pnt(selcoil,:);
-      sens.ori = sens.ori(selcoil,:);
-      sens.tra = sens.tra(:,selcoil);
+      selcoil      = find(sum(sens.tra,1)~=0);
+      sens.coilpos = sens.coilpos(selcoil,:);
+      sens.coilori = sens.coilori(selcoil,:);
+      sens.tra     = sens.tra(:,selcoil);
 
       % the initial multisphere volume conductor has a local sphere per
       % channel, whereas it should have a local sphere for each coil
-      if size(vol.r,1)==size(sens.pnt,1) && ~isfield(vol, 'label')
+      if size(vol.r,1)==size(sens.coilpos,1) && ~isfield(vol, 'label')
         % it appears that each coil already has a sphere, which suggests
         % that the volume conductor already has been prepared to match the
         % sensor array
         return
-      elseif size(vol.r,1)==size(sens.pnt,1) && isfield(vol, 'label')
+      elseif size(vol.r,1)==size(sens.coilpos,1) && isfield(vol, 'label')
         if ~isequal(vol.label(:), sens.label(:))
           % if only the order is different, it would be possible to reorder them
           error('the coils in the volume conduction model do not correspond to the sensor array');
@@ -243,13 +246,14 @@ elseif ismeg
       [selchan, selsens] = match_str(channel, sens.label);
       
       % first only modify the linear combination of coils into channels
-      sens.label = sens.label(selsens);
-      sens.tra   = sens.tra(selsens,:);
+      sens.chanpos = sens.chanpos(selsens,:);
+      sens.label   = sens.label(selsens);
+      sens.tra     = sens.tra(selsens,:);
       % subsequently remove the coils that do not contribute to any sensor output
-      selcoil  = find(sum(sens.tra,1)~=0);
-      sens.pnt = sens.pnt(selcoil,:);
-      sens.ori = sens.ori(selcoil,:);
-      sens.tra = sens.tra(:,selcoil);
+      selcoil      = find(sum(sens.tra,1)~=0);
+      sens.coilpos = sens.coilpos(selcoil,:);
+      sens.coilori = sens.coilori(selcoil,:);
+      sens.tra     = sens.tra(:,selcoil);
       % make the same selection of coils in the multisphere model
       vol.r = vol.r(selcoil);
       vol.o = vol.o(selcoil,:);
@@ -271,8 +275,8 @@ elseif ismeg
       [center,radius] = fitsphere(vol.bnd.pnt);
 
       % initialize the forward calculation (only if gradiometer coils are available)
-      if size(sens.pnt,1)>0
-        vol.forwpar = meg_ini([vol.bnd.pnt vol.bnd.nrm], center', order, [sens.pnt sens.ori]);
+      if size(sens.coilpos,1)>0
+        vol.forwpar = meg_ini([vol.bnd.pnt vol.bnd.nrm], center', order, [sens.coilpos sens.coilori]);
       end
 
     case 'openmeeg'
@@ -297,15 +301,15 @@ elseif iseeg
   % how to deal with contacts positions (keep the original positions)
   if Nchans == Ncontacts
     [selchan, selsens] = match_str(channel, sens.label);
-    sens.label = sens.label(selsens);
-    sens.pnt = sens.pnt(selsens,:);
+    sens.chanpos = sens.chanpos(selsens,:);
+    sens.label   = sens.label(selsens);
   else
     warning('A sub-selection of channels will not be taken into account')
   end
   
   % create a 2D projection and triangulation
   try 
-    sens.prj   = elproj(sens.pnt);
+    sens.prj   = elproj(sens.elecpos);
     sens.tri   = delaunay(sens.prj(:,1), sens.prj(:,2));
   catch
     warning('2D projection not done')
@@ -317,12 +321,12 @@ elseif iseeg
 
     case {'halfspace', 'halfspace_monopole'}
       % electrodes' all-to-all distances
-      numel = size(sens.pnt,1);
-      ref_el = sens.pnt(1,:);
-      md = dist( (sens.pnt-repmat(ref_el,[numel 1]))' );
+      numel = size(sens.elecpos,1);
+      ref_el = sens.elecpos(1,:);
+      md = dist( (sens.elecpos-repmat(ref_el,[numel 1]))' );
       % take the min distance as reference
       md = min(md(1,2:end));
-      pnt = sens.pnt;
+      pnt = sens.elecpos;
       % scan the electrodes and reposition the ones which are in the
       % wrong halfspace (projected on the plane)... if not too far away!
       for i=1:size(pnt,1)
@@ -339,16 +343,16 @@ elseif iseeg
           end
         end
       end
-      sens.pnt = pnt;
+      sens.elecpos = pnt;
 
     case {'strip_monopole'}
       % electrodes' all-to-all distances
-      numel  = size(sens.pnt,1);
-      ref_el = sens.pnt(1,:);
-      md  = dist( (sens.pnt-repmat(ref_el,[numel 1]))' );
+      numel  = size(sens.elecpos,1);
+      ref_el = sens.elecpos(1,:);
+      md  = dist( (sens.elecpos-repmat(ref_el,[numel 1]))' );
       % choose min distance between electrodes
       md  = min(md(1,2:end));
-      pnt = sens.pnt;
+      pnt = sens.elecpos;
       % looks for contacts outside the strip which are not too far away
       % and projects them on the nearest plane
       for i=1:size(pnt,1)
@@ -372,12 +376,12 @@ elseif iseeg
           end
         end
       end
-      sens.pnt = pnt;
+      sens.elecpos = pnt;
       
     case {'singlesphere', 'concentric'}
       % ensure that the electrodes ly on the skin surface
       radius = max(vol.r);
-      pnt    = sens.pnt;
+      pnt    = sens.elecpos;
       if isfield(vol, 'o')
         % shift the the centre of the sphere to the origin
         pnt(:,1) = pnt(:,1) - vol.o(1);
@@ -395,7 +399,7 @@ elseif iseeg
         pnt(:,2) = pnt(:,2) + vol.o(2);
         pnt(:,3) = pnt(:,3) + vol.o(3);
       end
-      sens.pnt = pnt;
+      sens.elecpos = pnt;
 
     case {'bem', 'dipoli', 'asa', 'avo', 'bemcp', 'openmeeg'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -413,16 +417,16 @@ elseif iseeg
           vol.source = find_innermost_boundary(vol.bnd);
           fprintf('determining source compartment (%d)\n', vol.source);
         end
-        if size(vol.mat,1)~=size(vol.mat,2) && size(vol.mat,1)==length(sens.pnt)
+        if size(vol.mat,1)~=size(vol.mat,2) && size(vol.mat,1)==length(sens.elecpos)
           fprintf('electrode transfer and system matrix were already combined\n');
         else
           fprintf('projecting electrodes on skin surface\n');
           % compute linear interpolation from triangle vertices towards electrodes
-          [el, prj] = project_elec(sens.pnt, vol.bnd(vol.skin_surface).pnt, vol.bnd(vol.skin_surface).tri);
+          [el, prj] = project_elec(sens.elecpos, vol.bnd(vol.skin_surface).pnt, vol.bnd(vol.skin_surface).tri);
           tra       = transfer_elec(vol.bnd(vol.skin_surface).pnt, vol.bnd(vol.skin_surface).tri, el);
           
           % replace the original electrode positions by the projected positions
-          sens.pnt = prj;
+          sens.elecpos = prj;
 
           if size(vol.mat,1)==size(vol.bnd(vol.skin_surface).pnt,1)
             % construct the transfer from only the skin vertices towards electrodes
@@ -459,25 +463,25 @@ elseif iseeg
       
     case 'fns'
       if isfield(vol,'bnd')
-        [el, prj] = project_elec(sens.pnt, vol.bnd.pnt, vol.bnd.tri);
+        [el, prj] = project_elec(sens.elecpos, vol.bnd.pnt, vol.bnd.tri);
         sens.tra = transfer_elec(vol.bnd.pnt, vol.bnd.tri, el);
         % replace the original electrode positions by the projected positions
-        sens.pnt = prj;        
+        sens.elecpos = prj;        
       end
 
     case 'simbio'
       if isfield(vol,'bnd')
-        [el, prj] = project_elec(sens.pnt, vol.bnd.pnt, vol.bnd.tri);
+        [el, prj] = project_elec(sens.elecpos, vol.bnd.pnt, vol.bnd.tri);
         sens.tra = transfer_elec(vol.bnd.pnt, vol.bnd.tri, el);
         % replace the original electrode positions by the projected positions
-        sens.pnt = prj;         
+        sens.elecpos = prj;         
       end
       
     otherwise
       error('unsupported volume conductor model for EEG');
   end
 
-  % FIXME this needs carefull thought to ensure that the average referencing which is now done here and there, and that the linear interpolation in case of BEM are all dealt with consistently
+  % FIXME this needs careful thought to ensure that the average referencing which is now done here and there, and that the linear interpolation in case of BEM are all dealt with consistently
   % % always ensure that there is a linear transfer matrix for
   % % rereferencing the EEG potential
   % if ~isfield(sens, 'tra');

@@ -97,6 +97,9 @@ if ~isstruct(sens) && size(sens,2)==3
   sens = struct('pnt', sens);
 end
 
+% ensure that the description of the sensors is up-to-date (Oct 2011)
+sens = fixsens(sens);
+
 % determine whether it is EEG or MEG
 iseeg = ft_senstype(sens, 'eeg');
 ismeg = ft_senstype(sens, 'meg');
@@ -133,8 +136,8 @@ elseif ismeg
       % MEG single-sphere volume conductor model
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      pnt = sens.pnt; % position of each coil
-      ori = sens.ori; % orientation of each coil
+      pnt = sens.coilpos; % position of each coil
+      ori = sens.coilori; % orientation of each coil
 
       if isfield(vol, 'o')
         % shift dipole and magnetometers to origin of sphere
@@ -163,7 +166,7 @@ elseif ismeg
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % MEG multi-sphere volume conductor model
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      ncoils = length(sens.pnt);
+      ncoils = length(sens.coilpos);
 
       if size(vol.r, 1)~=ncoils
         error('number of spheres is not equal to the number of coils')
@@ -177,9 +180,9 @@ elseif ismeg
       for chan=1:ncoils
         for dip=1:Ndipoles
           % shift dipole and magnetometer coil to origin of sphere
-          dippos = pos(dip,:)       - vol.o(chan,:);
-          chnpos = sens.pnt(chan,:) - vol.o(chan,:);
-          tmp = meg_leadfield1(dippos, chnpos, sens.ori(chan,:));
+          dippos = pos(dip,:)           - vol.o(chan,:);
+          chnpos = sens.coilpos(chan,:) - vol.o(chan,:);
+          tmp = meg_leadfield1(dippos, chnpos, sens.coilori(chan,:));
           lf(chan,(3*dip-2):(3*dip)) = tmp;
         end
       end
@@ -261,8 +264,8 @@ elseif ismeg
         warning_issued = 1;
       end
 
-      pnt = sens.pnt; % position of each coil
-      ori = sens.ori; % orientation of each coil
+      pnt = sens.coilpos; % position of each coil
+      ori = sens.coilori; % orientation of each coil
 
       if Ndipoles>1
         % loop over multiple dipoles
@@ -295,7 +298,7 @@ elseif iseeg
       % a multishell sphere by three dipoles in a homogeneous sphere, code
       % contributed by Punita Christopher
 
-      Nelec = size(sens.pnt,1);
+      Nelec = size(sens.elecpos,1);
       Nspheres = length(vol.r);
 
       % the center of the spherical volume conduction model does not have
@@ -311,7 +314,7 @@ elseif iseeg
       % furthermore, the radius should be one (?)
       [radii, indx] = sort(vol.r/max(vol.r));
       sigma = vol.c(indx);
-      r   = (sens.pnt-repmat(center, Nelec, 1))./max(vol.r);
+      r   = (sens.elecpos-repmat(center, Nelec, 1))./max(vol.r);
       pos = pos./max(vol.r);
 
       if Ndipoles>1
@@ -353,7 +356,7 @@ elseif iseeg
 
       if isfield(vol, 'o')
         % shift the origin of the spheres, electrodes and dipole
-        sens.pnt = sens.pnt - repmat(vol.o, size(sens.pnt,1), 1);
+        sens.elecpos = sens.elecpos - repmat(vol.o, size(sens.elecpos,1), 1);
         pos = pos - repmat(vol.o, Ndipoles, 1);
       end
 
@@ -376,16 +379,16 @@ elseif iseeg
           error('more than 4 concentric spheres are not supported')
       end
       
-      lf = zeros(size(sens.pnt,1),3*Ndipoles);
+      lf = zeros(size(sens.elecpos,1),3*Ndipoles);
       for i=1:Ndipoles
-        lf(:,(3*i-2):(3*i)) = feval(funnam,pos(i,:), sens.pnt, vol);
+        lf(:,(3*i-2):(3*i)) = feval(funnam,pos(i,:), sens.elecpos, vol);
       end
 
     case {'bem', 'dipoli', 'asa', 'avo', 'bemcp'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % EEG boundary element method volume conductor model
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      lf = eeg_leadfieldb(pos, sens.pnt, vol);
+      lf = eeg_leadfieldb(pos, sens.elecpos, vol);
     
     case 'openmeeg'
       if ft_hastoolbox('openmeeg', 1);
@@ -423,16 +426,16 @@ elseif iseeg
         warning('assuming electric dipole in an infinite medium with unit conductivity');
         warning_issued = 1;
       end
-      lf = inf_medium_leadfield(pos, sens.pnt, 1);
+      lf = inf_medium_leadfield(pos, sens.elecpos, 1);
   
     case 'halfspace'
-      lf = eeg_halfspace_medium_leadfield(pos, sens.pnt, vol);
+      lf = eeg_halfspace_medium_leadfield(pos, sens.elecpos, vol);
       
     case 'halfspace_monopole'
-      lf = eeg_halfspace_monopole(pos, sens.pnt, vol);  
+      lf = eeg_halfspace_monopole(pos, sens.elecpos, vol);  
       
     case 'strip_monopole'
-      lf = eeg_strip_monopole(pos, sens.pnt, vol);          
+      lf = eeg_strip_monopole(pos, sens.elecpos, vol);          
 
     case 'simbio'
       lf = leadfield_simbio(pos, sens, vol);

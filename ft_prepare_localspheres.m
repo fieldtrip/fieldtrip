@@ -108,6 +108,7 @@ if isfield(cfg, 'gradfile')
 else
   grad = cfg.grad;
 end
+grad = fixsens(grad); % ensure up-to-date sensor description (Oct 2011)
 
 Nshape = size(headshape.pnt,1);
 Nchan  = size(grad.tra, 1);
@@ -150,12 +151,12 @@ vol.label = cell(Nchan,1); % corresponding gradiometer channel label for every s
 
 for chan=1:Nchan
   coilsel = find(grad.tra(chan,:)~=0);
-  allpnt  = grad.pnt(coilsel, :);   % position of all coils belonging to this channel
-  allori  = grad.ori(coilsel, :);   % orientation of all coils belonging to this channel
+  allpnt  = grad.coilpos(coilsel, :);   % position of all coils belonging to this channel
+  allori  = grad.coilori(coilsel, :);   % orientation of all coils belonging to this channel
   
   if strcmp(cfg.feedback, 'yes')
     cla
-    plot3(grad.pnt(:,1), grad.pnt(:,2), grad.pnt(:,3), 'b.');   % all coils
+    plot3(grad.coilpos(:,1), grad.coilpos(:,2), grad.coilpos(:,3), 'b.');   % all coils
     plot3(allpnt(:,1), allpnt(:,2), allpnt(:,3), 'r*');     % this channel in red
   end
   

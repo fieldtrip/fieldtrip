@@ -31,7 +31,10 @@ function data = ft_datatype_raw(data, varargin)
 %
 % Revision history:
 %
-% (2010v2/latest) The trialdef field has been replaced by the sampleinfo and
+% (2011/latest) The description of the sensors has changed: see FIXSENS for
+% information
+%
+% (2010v2) The trialdef field has been replaced by the sampleinfo and
 % trialinfo fields. The sampleinfo corresponds to trl(:,1:2), the trialinfo
 % to trl(4:end).
 %
@@ -76,10 +79,45 @@ hassampleinfo = ft_getopt(varargin, 'hassampleinfo', true);
 hassampleinfo = istrue(hassampleinfo);
 
 if strcmp(version, 'latest')
-  version = '2010v2';
+  version = '2011';
 end
 
 switch version
+  case '2011'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isfield(data, 'grad')
+      % ensure that the gradiometer balancing is specified
+      if ~isfield(data.grad, 'balance') || ~isfield(data.grad.balance, 'current')
+        data.grad.balance.current = 'none';
+      end
+      
+      % ensure the new style sensor description
+      data.grad = fixsens(data.grad);
+    end
+    
+    if isfield(data, 'elec')
+      data.grad = fixsens(data.grad);
+    end
+    
+    if ~isfield(data, 'fsample')
+      data.fsample = 1/(data.time{1}(2) - data.time{1}(1));
+    end
+
+    if isfield(data, 'offset')
+      data = rmfield(data, 'offset');
+    end
+
+    if hassampleinfo && (~isfield(data, 'sampleinfo') || ~isfield(data, 'trialinfo'))
+      % reconstruct it on the fly
+      data = fixsampleinfo(data);
+    end
+
+    % the trialdef field should be renamed into sampleinfo
+    if isfield(data, 'trialdef')
+      data.sampleinfo = data.trialdef;
+      data = rmfield(data, 'trialdef');
+    end
+
   case '2010v2'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if ~isfield(data, 'fsample')

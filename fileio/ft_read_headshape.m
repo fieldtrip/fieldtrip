@@ -355,7 +355,8 @@ switch fileformat
       % sort
       shape = tmp.bnd;
     elseif isfield(tmp, 'elec')
-      shape.fid.pnt   = tmp.elec.pnt;
+      tmp.elec        = fixsens(tmp.elec);
+      shape.fid.pnt   = tmp.elec.chanpos;
       shape.fid.label = tmp.elec.label;
     else
       error('no headshape found in Matlab file');
@@ -414,7 +415,7 @@ switch fileformat
         if ~ft_senstype(elec, 'eeg')
           error('headshape information can not be read from MEG gradiometer file');
         else
-          shape.fid.pnt   = elec.pnt;
+          shape.fid.pnt   = elec.chanpos;
           shape.fid.label = elec.label;
           success = 1;
         end

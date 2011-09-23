@@ -36,6 +36,9 @@ function comp = ft_datatype_comp(comp, varargin)
 %
 % Revision history:
 %
+% (2011/latest) The description of the sensors has changed: see FIXSENS for
+% information
+%
 % (2003/latest) The initial version was defined
 %
 % See also FT_DATATYPE, FT_DATATYPE_COMP, FT_DATATYPE_DIP, FT_DATATYPE_FREQ,

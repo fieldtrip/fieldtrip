@@ -32,6 +32,9 @@ function timelock = ft_datatype_timelock(timelock, varargin)
 %
 % Revision history:
 %
+% (2011v2/latest) The description of the sensors has changed: see FIXSENS for
+% information
+%
 % (2011) The field 'fsample' was removed, as it was redundant.
 % (2003) The initial version was defined.
 %
@@ -63,7 +66,7 @@ function timelock = ft_datatype_timelock(timelock, varargin)
 version = keyval('version', varargin); if isempty(version), version = 'latest'; end
 
 if strcmp(version, 'latest')
-  version = '2003';
+  version = '2011v2';
 end
 
 % ensure consistency between the dimord string and the axes that describe the data dimensions
@@ -75,6 +78,22 @@ if isfield(timelock, 'numcovsamples'),    timelock = rmfield(timelock, 'numcovsa
 if isfield(timelock, 'numblcovsamples'),  timelock = rmfield(timelock, 'numblcovsamples');  end
 
 switch version
+  case '2011v2'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isfield(timelock, 'grad')
+      % ensure that the gradiometer balancing is specified
+      if ~isfield(timelock.grad, 'balance') || ~isfield(timelock.grad.balance, 'current')
+        timelock.grad.balance.current = 'none';
+      end
+      
+      % ensure the new style sensor description
+      timelock.grad = fixsens(timelock.grad);
+    end
+    
+    if isfield(timelock, 'elec')
+      timelock.grad = fixsens(timelock.grad);
+    end
+
   case '2003'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % there are no known conversions for backward or forward compatibility support

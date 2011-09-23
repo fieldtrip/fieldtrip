@@ -70,8 +70,8 @@ for chan=1:Nchan
   %   the z-axis pointing outwards from the head
   %   the x-axis pointing horizontal w.r.t. the head
   %   the y-axis pointing vertical, i.e. approximately towards the vertex
-  this_o = grad.pnt(chan,:);
-  this_z = grad.ori(chan,:);          
+  this_o = grad.chanpos(chan,:);
+  this_z = grad.chanori(chan,:);          
   this_z = this_z / norm(this_z);
   this_x = cross([0 0 1], this_z);
   if all(this_x==0)
@@ -107,14 +107,14 @@ if strcmp(cfg.planaraxial, 'yes')
 
   % the orientation of all the coils of a single sensor should be the same
   planar.ori = [
-    grad.ori(1:Nchan,:)
-    grad.ori(1:Nchan,:)
-    grad.ori(1:Nchan,:)
-    grad.ori(1:Nchan,:)
-    grad.ori(1:Nchan,:)
-    grad.ori(1:Nchan,:)
-    grad.ori(1:Nchan,:)
-    grad.ori(1:Nchan,:)
+    grad.chanori(1:Nchan,:)
+    grad.chanori(1:Nchan,:)
+    grad.chanori(1:Nchan,:)
+    grad.chanori(1:Nchan,:)
+    grad.chanori(1:Nchan,:)
+    grad.chanori(1:Nchan,:)
+    grad.chanori(1:Nchan,:)
+    grad.chanori(1:Nchan,:)
   ];
 
   e = eye(Nchan);

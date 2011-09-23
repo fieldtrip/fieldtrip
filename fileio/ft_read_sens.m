@@ -12,8 +12,10 @@ function [sens] = ft_read_sens(filename, varargin)
 %   'fileformat'   string
 %
 % An electrode definition contain the following fields
-%   elec.pnt     Nx3 matrix with carthesian (x,y,z) coordinates of each electrodes
+%   elec.elecpos Nx3 matrix with carthesian (x,y,z) coordinates of each
+%                electrode
 %   elec.label   cell-array of length N with the label of each electrode
+%   elec.chanpos Nx3 matrix with coordinates of each sensor
 %
 % A gradiometer definition generally consists of multiple coils per
 % channel, e.g.two coils for a 1st order gradiometer in which the
@@ -22,12 +24,14 @@ function [sens] = ft_read_sens(filename, varargin)
 % given that defines how the forward computed field is combined over
 % the coils to generate the output of each channel. The gradiometer
 % definition constsis of the following fields
-%   grad.pnt     Mx3 matrix with the position of each coil
-%   grad.ori     Mx3 matrix with the orientation of each coil
+%   grad.coilpos Mx3 matrix with the position of each coil
+%   grad.coilori Mx3 matrix with the orientation of each coil
 %   grad.tra     NxM matrix with the weight of each coil into each channel
 %   grad.label   cell-array of length N with the label of each of the channels
+%   grad.chanpos Nx3 matrix with the positions of each sensor
 %
-% See also FT_TRANSFORM_SENS, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
+% See also FT_TRANSFORM_SENS, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD,
+% FIXSENS
 
 % Copyright (C) 2005-2010 Robert Oostenveld
 %
@@ -88,7 +92,7 @@ switch fileformat
     el = tmp{4}(sel) * pi/180;
     r  = ones(size(el));
     [x, y, z] = sph2cart(az, el, r);
-    sens.pnt  = [x y z];
+    sens.pnt = [x y z];
     
   case 'besa_pos'
     tmp = importdata(filename);
@@ -201,13 +205,13 @@ switch fileformat
     tmp = load(matfile, 'elec', 'grad', 'sens', 'elc');
     warning(ws);
     if isfield(tmp, 'grad')
-      sens = getfield(tmp, 'grad');
+      sens = tmp.grad;
     elseif isfield(tmp, 'elec')
-      sens = getfield(tmp, 'elec');
+      sens = tmp.elec;
     elseif isfield(tmp, 'sens')
-      sens = getfield(tmp, 'sens');
+      sens = tmp.sens;
     elseif isfield(tmp, 'elc')
-      sens = getfield(tmp, 'elc');
+      sens = tmp.elc;
     else
       error('no electrodes or gradiometers found in Matlab file');
     end
@@ -217,18 +221,22 @@ switch fileformat
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   case 'zebris_sfp'
-    [sens.fid, sens.pnt, sens.fid_label, sens.label] = read_zebris(filename, 0);
+    [sens.fid, sens.chanpos, sens.fid_label, sens.label] = read_zebris(filename, 0);
 
   otherwise
     error('unknown fileformat for electrodes or gradiometers');
 end
 
+% ensure the description to be in the new convention
+sens = fixsens(sens);
+
 if ft_senstype(sens, 'eeg')
   % only keep positions and labels in case of EEG electrodes
   dum  = sens;
   sens = [];
-  sens.pnt   = dum.pnt;
-  sens.label = dum.label;
+  sens.chanpos = dum.chanpos;
+  sens.elecpos = dum.elecpos;
+  sens.label   = dum.label;
 end
 
 % this will add the units to the sensor array

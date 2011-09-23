@@ -76,7 +76,7 @@ function field=getfield_sphere(source,device,center);
 [nchan,ndum]=size(device);
 x1=source(:,1:3)-repmat(center',ndip,1);
 n1=source(:,4:6);
-x2=device(:,1:3)-repmat(center',nchan,1);;
+x2=device(:,1:3)-repmat(center',nchan,1);
 n2=device(:,4:6); 
 
 

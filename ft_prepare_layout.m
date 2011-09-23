@@ -237,10 +237,16 @@ elseif ischar(cfg.elecfile)
   lay = sens2lay(ft_read_sens(cfg.elecfile), cfg.rotate, cfg.projection, cfg.style);
 
 elseif ~isempty(cfg.elec) && isstruct(cfg.elec)
+  % ensure the sensor description to be according to latest convention
+  [cfg.elec] = fixsens(cfg.elec);
+  
   fprintf('creating layout from cfg.elec\n');
   lay = sens2lay(cfg.elec, cfg.rotate, cfg.projection, cfg.style);
 
 elseif isfield(data, 'elec') && isstruct(data.elec)
+  % ensure the sensor description to be according to latest convention
+  [data.elec] = fixsens(data.elec);
+  
   fprintf('creating layout from data.elec\n');
   lay = sens2lay(data.elec, cfg.rotate, cfg.projection, cfg.style);
 
@@ -249,10 +255,16 @@ elseif ischar(cfg.gradfile)
   lay = sens2lay(ft_read_sens(cfg.gradfile), cfg.rotate, cfg.projection, cfg.style);
 
 elseif ~isempty(cfg.grad) && isstruct(cfg.grad)
+  % ensure the sensor description to be according to latest convention
+  [data.grad] = fixsens(data.grad);
+  
   fprintf('creating layout from cfg.grad\n');
   lay = sens2lay(cfg.grad, cfg.rotate, cfg.projection, cfg.style);
 
 elseif isfield(data, 'grad') && isstruct(data.grad)
+  % ensure the sensor description to be according to latest convention
+  [data.grad] = fixsens(data.grad);
+  
   fprintf('creating layout from data.grad\n');
   lay = sens2lay(data.grad, cfg.rotate, cfg.projection, cfg.style);
 
@@ -698,7 +710,10 @@ return % function readlay
 function lay = sens2lay(sens, rz, method, style)
 
 % remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
-sens = undobalancing(sens);
+% this should not be necessary anymore, because the sensor description is
+% up-to-date, i.e. explicit information with respect to the channel
+% positions is present
+%sens = undobalancing(sens);
 
 fprintf('creating layout for %s system\n', ft_senstype(sens));
 
@@ -715,10 +730,12 @@ if isempty(rz)
       rz = 0;
   end
 end
-sens.pnt = warp_apply(rotate([0 0 rz]), sens.pnt, 'homogenous');
+sens.chanpos = warp_apply(rotate([0 0 rz]), sens.chanpos, 'homogenous');
 
 % use helper function for 3D layout
-[pnt, label] = channelposition(sens);
+%[pnt, label] = channelposition(sens);
+pnt   = sens.chanpos;
+label = sens.label;
 
 if strcmpi(style, '3d')
   lay.pos   = pnt;

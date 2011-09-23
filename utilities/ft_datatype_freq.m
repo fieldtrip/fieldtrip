@@ -40,6 +40,9 @@ function freq = ft_datatype_freq(freq, varargin)
 %
 % Revision history:
 %
+% (2011/latest) The description of the sensors has changed: see FIXSENS for
+% information
+%
 % (2008/latest) The presence of labelcmb in case of crsspctrm became optional,
 % from now on the crsspctrm can also be represented as Nchan * Nchan.
 %
@@ -76,13 +79,29 @@ function freq = ft_datatype_freq(freq, varargin)
 version = keyval('version', varargin); if isempty(version), version = 'latest'; end
 
 if strcmp(version, 'latest')
-  version = '2008';
+  version = '2011';
 end
 
 % ensure consistency between the dimord string and the axes that describe the data dimensions
 freq = fixdimord(freq);
 
 switch version
+  case '2011'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isfield(freq, 'grad')
+      % ensure that the gradiometer balancing is specified
+      if ~isfield(freq.grad, 'balance') || ~isfield(freq.grad.balance, 'current')
+        freq.grad.balance.current = 'none';
+      end
+      
+      % ensure the new style sensor description
+      freq.grad = fixsens(freq.grad);
+    end
+    
+    if isfield(freq, 'elec')
+      freq.grad = fixsens(freq.grad);
+    end
+  
   case '2008'
     % there are no known conversions for backward or forward compatibility support
 

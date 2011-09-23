@@ -63,10 +63,10 @@ if checkscaling
   % FIXME insert check for nonuniform scaling, should give an error
 end
 
-tfields   = {'pos' 'pnt' 'o'}; % apply rotation plus translation
-rfields   = {'ori' 'nrm'};     % only apply rotation
-mfields   = {'transform'};     % plain matrix multiplication
-recfields = {'fid' 'bnd'};     % recurse into these fields
+tfields   = {'pos' 'pnt' 'o' 'chanpos' 'coilpos' 'elecpos'}; % apply rotation plus translation
+rfields   = {'ori' 'nrm' 'coilori'}; % only apply rotation
+mfields   = {'transform'};           % plain matrix multiplication
+recfields = {'fid' 'bnd'};           % recurse into these fields
 % the field 'r' is not included here, because it applies to a volume
 % conductor model, and scaling is not allowed, so r will not change.
 
@@ -96,4 +96,3 @@ function [new] = apply(transform, old)
 old(:,4) = 1;
 new = old * transform';
 new = new(:,1:3);
-

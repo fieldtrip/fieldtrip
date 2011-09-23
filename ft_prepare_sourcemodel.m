@@ -222,6 +222,10 @@ else
   sens = [];
 end
 
+% ensure that the sensor description is up-to-date, for backward
+% compatibility Oct 2011
+sens = fixsens(sens);
+
 % ensure cfg.sourceunits to have a value and/or enforce the units in the sensors
 % to conform to this value
 if isfield(cfg, 'sourceunits') && ~isempty(sens)
@@ -253,13 +257,13 @@ if basedonauto
     error('creating a 3D-grid sourcemodel based on automatic detection requires sensor position information');
   end 
   if ischar(cfg.grid.xgrid) && strcmp(cfg.grid.xgrid, 'auto')
-    grid.xgrid = floor(min(sens.pnt(:,1))):cfg.grid.resolution:ceil(max(sens.pnt(:,1)));
+    grid.xgrid = floor(min(sens.chanpos(:,1))):cfg.grid.resolution:ceil(max(sens.chanpos(:,1)));
   end
   if ischar(cfg.grid.ygrid) && strcmp(cfg.grid.ygrid, 'auto')
-    grid.ygrid = floor(min(sens.pnt(:,2))):cfg.grid.resolution:ceil(max(sens.pnt(:,2)));
+    grid.ygrid = floor(min(sens.chanpos(:,2))):cfg.grid.resolution:ceil(max(sens.chanpos(:,2)));
   end
   if ischar(cfg.grid.zgrid) && strcmp(cfg.grid.zgrid, 'auto')
-    grid.zgrid = floor(min(sens.pnt(:,3))):cfg.grid.resolution:ceil(max(sens.pnt(:,3)));
+    grid.zgrid = floor(min(sens.chanpos(:,3))):cfg.grid.resolution:ceil(max(sens.chanpos(:,3)));
   end
   grid.dim   = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
   [X, Y, Z]  = ndgrid(grid.xgrid, grid.ygrid, grid.zgrid);
@@ -525,7 +529,7 @@ if basedonshape
   grid.tri     = headshape.tri;
   grid.inside  = 1:size(grid.pos,1);
   grid.outside = [];
-  grid.unit    = headshape.unit;
+  if isfield(headshape, 'unit'), grid.unit = headshape.unit; end
 end
 
 if basedonvol
@@ -536,7 +540,7 @@ if basedonvol
   grid.pos     = headsurface(vol, sens, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
   grid.inside  = 1:size(grid.pos,1);
   grid.outside = [];
-  grid.unit    = vol.unit;
+  if isfield(vol, 'unit'), grid.unit    = vol.unit; end
 end
 
 % FIXME use inside_vol instead of this replication of code
@@ -585,7 +589,7 @@ if ~isfield(grid, 'inside') && ~isfield(grid, 'outside')
     grid.outside = find(outside);
     grid.inside  = find(~outside);      
   else
-    if isfield(sens, 'ori') && isfield(sens, 'pnt') && isfield(sens, 'tra')
+    if isfield(sens, 'coilori') && isfield(sens, 'coilpos') && isfield(sens, 'tra')
       % in case of MEG, make a triangulation of the outermost surface
       if isfield(cfg, 'headshape')
         % use the specified headshape to construct the bounding triangulation

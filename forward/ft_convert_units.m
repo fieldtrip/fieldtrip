@@ -81,11 +81,11 @@ else
     unit = ft_estimate_units(size);
 
   elseif ft_senstype(obj, 'meg')
-    size = norm(range(obj.pnt));
+    size = norm(range(obj.chanpos));
     unit = ft_estimate_units(size);
 
   elseif ft_senstype(obj, 'eeg')
-    size = norm(range(obj.pnt));
+    size = norm(range(obj.chanpos));
     unit = ft_estimate_units(size);
 
   elseif isfield(obj, 'pnt') && ~isempty(obj.pnt)
@@ -95,7 +95,11 @@ else
   elseif isfield(obj, 'pos') && ~isempty(obj.pos)
     size = norm(range(obj.pos));
     unit = ft_estimate_units(size);
-
+  
+  elseif isfield(obj, 'chanpos') && ~isempty(obj.chanpos)
+    size = norm(range(obj.chanpos));
+    unit = ft_estimate_units(size);
+    
   elseif isfield(obj, 'transform') && ~isempty(obj.transform)
     % construct the corner points of the voxel grid in head coordinates
     xi = 1:obj.dim(1);
@@ -174,6 +178,9 @@ if isfield(obj, 'prj'),  obj.prj  = scale * obj.prj;  end
 
 % gradiometer array, electrode array, head shape or dipole grid
 if isfield(obj, 'pnt'), obj.pnt = scale * obj.pnt; end
+if isfield(obj, 'chanpos'), obj.chanpos = scale * obj.chanpos; end
+if isfield(obj, 'coilpos'), obj.coilpos = scale * obj.coilpos; end
+if isfield(obj, 'elecpos'), obj.elecpos = scale * obj.elecpos; end
 
 % fiducials
 if isfield(obj, 'fid') && isfield(obj.fid, 'pnt'), obj.fid.pnt = scale * obj.fid.pnt; end

@@ -190,7 +190,7 @@ for i=1:Ntemplate
   if ischar(cfg.template{i}),
     fprintf('reading template sensor position from %s\n', cfg.template{i});
     template(i) = ft_read_sens(cfg.template{i});
-  elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'pnt') && isfield(cfg.template{i}, 'ori') && isfield(cfg.template{i}, 'tra'),
+  elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'coilpos') && isfield(cfg.template{i}, 'coilori') && isfield(cfg.template{i}, 'tra'),
     template(i) = cfg.template{i};
   end
 end
@@ -233,7 +233,7 @@ volcfg.channel = 'MEG'; % include all MEG channels
 
 if strcmp(ft_senstype(data.grad), ft_senstype(template.grad))
   [id, it] = match_str(data.grad.label, template.grad.label);
-  fprintf('mean distance towards template gradiometers is %.2f %s\n', mean(sum((data.grad.pnt(id,:)-template.grad.pnt(it,:)).^2, 2).^0.5), template.grad.unit);
+  fprintf('mean distance towards template gradiometers is %.2f %s\n', mean(sum((data.grad.chanpos(id,:)-template.grad.chanpos(it,:)).^2, 2).^0.5), template.grad.unit);
 else
   % the projection is from one MEG system to another MEG system, which makes a comparison of the data difficult
   cfg.feedback = 'no';
@@ -323,8 +323,8 @@ if strcmp(cfg.feedback, 'yes')
   warning('showing MEG topography (RMS value over time) in the first trial only');
   Nchan = length(data.grad.label);
   [id,it]   = match_str(data.grad.label, template.grad.label);
-  pnt1 = data.grad.pnt(id,:);
-  pnt2 = template.grad.pnt(it,:);
+  pnt1 = data.grad.chanpos(id,:);
+  pnt2 = template.grad.chanpos(it,:);
   prj1 = elproj(pnt1); tri1 = delaunay(prj1(:,1), prj1(:,2));
   prj2 = elproj(pnt2); tri2 = delaunay(prj2(:,1), prj2(:,2));
   

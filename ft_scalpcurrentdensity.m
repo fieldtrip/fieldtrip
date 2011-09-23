@@ -144,16 +144,18 @@ end
 
 
 % remove all junk fields from the electrode array
-tmp = elec;
+elec = fixsens(elec); % ensure up-to-date sensor description
+tmp  = elec;
 elec = [];
-elec.pnt = tmp.pnt;
-elec.label = tmp.label;
+elec.chanpos = tmp.chanpos;
+elec.label   = tmp.label;
+elec.elecpos = tmp.elecpos;
 
 % find matching electrode positions and channels in the data
 [dataindx, elecindx] = match_str(data.label, elec.label);
-data.label = data.label(dataindx);
-elec.label = elec.label(elecindx);
-elec.pnt   = elec.pnt(elecindx, :);
+data.label   = data.label(dataindx);
+elec.label   = elec.label(elecindx);
+elec.chanpos = elec.chanpos(elecindx, :);
 Ntrials = length(data.trial);
 for trlop=1:Ntrials
   data.trial{trlop} = data.trial{trlop}(dataindx,:);
@@ -166,16 +168,16 @@ if strcmp(cfg.method, 'spline')
     % this also gives L1, the laplacian of the original data in which we
     % are interested here
     fprintf('computing SCD for trial %d\n', trlop);
-    [V2, L2, L1] = splint(elec.pnt, data.trial{trlop}, [0 0 1]);
+    [V2, L2, L1] = splint(elec.chanpos, data.trial{trlop}, [0 0 1]);
     scd.trial{trlop} = L1;
   end
   
 elseif strcmp(cfg.method, 'finite')
   % the finite difference approach requires a triangulation
-  prj = elproj(elec.pnt);
+  prj = elproj(elec.chanpos);
   tri = delaunay(prj(:,1), prj(:,2));
   % the new electrode montage only needs to be computed once for all trials
-  montage.tra = lapcal(elec.pnt, tri);
+  montage.tra = lapcal(elec.chanpos, tri);
   montage.labelorg = data.label;
   montage.labelnew = data.label;
   % apply the montage to the data, also update the electrode definition

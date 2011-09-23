@@ -26,7 +26,12 @@ function montage = megplanar_sincos(cfg, grad)
 neighbsel = cfg.neighbsel;
 distance = cfg.distance;
 
-[pnt, ori, lab] = channelposition(grad);
+lab   = grad.label;
+tmp   = ft_channelselection('MEG', lab);
+sel   = match_str(lab, tmp);
+pnt   = grad.chanpos(sel,:);
+ori   = grad.chanori(sel,:);
+lab   = lab(sel);
 Ngrad = length(lab);
 
 gradH = zeros(Ngrad, Ngrad);

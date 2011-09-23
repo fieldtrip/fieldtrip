@@ -80,13 +80,13 @@ vol.label = cell(Nchan,1); % corresponding gradiometer channel label for every s
 
 for chan=1:Nchan
   coilsel = find(grad.tra(chan,:)~=0);
-  allpnt  = grad.pnt(coilsel, :);   % position of all coils belonging to this channel
-  allori  = grad.ori(coilsel, :);   % orientation of all coils belonging to this channel
+  allpnt  = grad.coilpos(coilsel, :);   % position of all coils belonging to this channel
+  allori  = grad.coilori(coilsel, :);   % orientation of all coils belonging to this channel
   
   if istrue(feedback)
     cla
-    plot3(grad.pnt(:,1), grad.pnt(:,2), grad.pnt(:,3), 'b.');   % all coils
-    plot3(allpnt(:,1), allpnt(:,2), allpnt(:,3), 'r*');     % this channel in red
+    plot3(grad.coilpos(:,1), grad.coilpos(:,2), grad.coilpos(:,3), 'b.');   % all coils
+    plot3(      allpnt(:,1),       allpnt(:,2),       allpnt(:,3), 'r*');     % this channel in red
   end
   
   % determine the average position and orientation of this channel

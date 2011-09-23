@@ -105,8 +105,6 @@ else
     if hasdata && isfield(data, 'grad')
         fprintf('Using the gradiometer configuration from the dataset.\n');
         sens = data.grad;
-        % extract true channelposition
-        [sens.pnt, sens.label] = channelposition(sens);
     elseif hasdata && isfield(data, 'elec')
         fprintf('Using the electrode configuration from the dataset.\n');
         sens = data.elec;
@@ -114,23 +112,19 @@ else
         % could be a sensor description
         fprintf('Using the sensor positions in the data.\n');
         sens = data;
-        if isfield(sens, 'ori') && isfield(sens, 'tra')
-            % looks like a MEG sensor array
-            [sens.pnt,sens.label] = channelposition(sens);
-        end
+    elseif hasdata && isfield(data, 'chanpos') && isfield(data, 'label')
+        % could be a sensor description
+        fprintf('Using the sensor positions in the data.\n');
+        sens = data;
     elseif isfield(cfg, 'grad')
         fprintf('Obtaining the gradiometer configuration from the configuration.\n');
         sens = cfg.grad;
-        % extract true channelposition
-        [sens.pnt,sens.label] = channelposition(sens);
     elseif isfield(cfg, 'elec')
         fprintf('Obtaining the electrode configuration from the configuration.\n');
         sens = cfg.elec;
     elseif isfield(cfg, 'gradfile')
         fprintf('Obtaining the gradiometer configuration from a file.\n');
         sens = ft_read_sens(cfg.gradfile);
-        % extract true channelposition
-        [sens.pnt, sens.label] = channelposition(sens);
     elseif isfield(cfg, 'elecfile')
         fprintf('Obtaining the electrode configuration from a file.\n');
         sens = ft_read_sens(cfg.elecfile);
@@ -144,7 +138,7 @@ else
     else
         error('Did not find gradiometer or electrode information or a layout.');
     end;
-    
+    sens = fixsens(sens); 
     
     switch lower(cfg.method)
         case 'distance'
@@ -167,12 +161,12 @@ else
             
             neighbours = compneighbstructfromgradelec(sens, cfg.neighbourdist);
         case {'triangulation', 'tri'} % the latter for reasons of simplicity
-            if size(sens.pnt, 2)==2 || all(sens.pnt(:,3)==0)
+            if size(sens.chanpos, 2)==2 || all(sens.chanpos(:,3)==0)
                 % the sensor positions are already on a 2D plane
-                prj = sens.pnt(:,1:2);
+                prj = sens.chanpos(:,1:2);
             else
                 % project sensor on a 2D plane
-                prj = elproj(sens.pnt);
+                prj = elproj(sens.chanpos);
             end
             % make a 2d delaunay triangulation of the projected points
             tri = delaunay(prj(:,1), prj(:,2));
@@ -220,7 +214,7 @@ nsensors = length(sens.label);
 % compute the distance between all sensors
 dist = zeros(nsensors,nsensors);
 for i=1:nsensors
-    dist(i,:) = sqrt(sum((sens.pnt(1:nsensors,:) - repmat(sens.pnt(i,:), nsensors, 1)).^2,2))';
+    dist(i,:) = sqrt(sum((sens.chanpos(1:nsensors,:) - repmat(sens.chanpos(i,:), nsensors, 1)).^2,2))';
 end;
 
 % find the neighbouring electrodes based on distance
@@ -263,7 +257,7 @@ noneighb = 0;
 for i=1:nsensors
     neighbours(i).label       = sens.label{i};
     neighbidx                 = find(channeighbstructmat(i,:));
-    neighbours(i).dist        = sqrt(sum((repmat(sens.pnt(i, :), numel(neighbidx), 1) - sens.pnt(neighbidx, :)).^2, 2));
+    neighbours(i).dist        = sqrt(sum((repmat(sens.chanpos(i, :), numel(neighbidx), 1) - sens.chanpos(neighbidx, :)).^2, 2));
     alldist                   = [alldist; neighbours(i).dist];
     neighbours(i).neighblabel = sens.label(neighbidx);
     neighbours(i).neighbidx   = neighbidx;

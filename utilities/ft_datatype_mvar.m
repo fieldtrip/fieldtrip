@@ -42,7 +42,10 @@ function mvar = ft_datatype_mvar(mvar, varargin)
 %
 % Revision history:
 %
-% (2008/latest) The initial version was defined.
+% (2011/latest) The description of the sensors has changed: see FIXSENS for
+% information
+%
+% (2008) The initial version was defined.
 %
 % See also FT_DATATYPE, FT_DATATYPE_COMP, FT_DATATYPE_DIP, FT_DATATYPE_FREQ,
 % FT_DATATYPE_MVAR, FT_DATATYPE_RAW, FT_DATATYPE_SOURCE, FT_DATATYPE_SPIKE,
@@ -72,10 +75,26 @@ function mvar = ft_datatype_mvar(mvar, varargin)
 version = keyval('version', varargin); if isempty(version), version = 'latest'; end
 
 if strcmp(version, 'latest')
-  version = '2008';
+  version = '2011';
 end
 
 switch version
+  case '2011'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isfield(mvar, 'grad')
+      % ensure that the gradiometer balancing is specified
+      if ~isfield(mvar.grad, 'balance') || ~isfield(mvar.grad.balance, 'current')
+        mvar.grad.balance.current = 'none';
+      end
+      
+      % ensure the new style sensor description
+      mvar.grad = fixsens(mvar.grad);
+    end
+    
+    if isfield(mvar, 'elec')
+      mvar.grad = fixsens(mvar.grad);
+    end
+  
   case '2008'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % there are no known conversions for backward or forward compatibility support

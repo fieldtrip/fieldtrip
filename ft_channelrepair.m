@@ -129,7 +129,7 @@ for k=badindx'
     [a, b] = match_str(sens.label, data.label(k));
     badsensindx = a(b);
     fprintf('\tusing neighbour %s\n', sens.label{goodsensindx});
-    distance = sqrt(sum((sens.pnt(goodsensindx,:) - repmat(sens.pnt(badsensindx, :), numel(goodsensindx), 1)).^2, 2));
+    distance = sqrt(sum((sens.chanpos(goodsensindx,:) - repmat(sens.chanpos(badsensindx, :), numel(goodsensindx), 1)).^2, 2));
     repair(k,l) = (1./distance);
     repair(k,l) = repair(k,l) ./ sum(repair(k,l));
 end

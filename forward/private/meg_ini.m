@@ -1,4 +1,4 @@
-function forwpar=meg_ini(vc,center,order,sens,refs,gradlocs,weights); 
+function forwpar=meg_ini(vc,center,order,sens,refs,gradlocs,weights)
 % initializes MEG-forward calculation
 % usage: forwpar=meg_ini(vc,center,order,sens,refs,gradlocs,weights); 
 % 
@@ -92,7 +92,7 @@ function coeffs=getcoeffs(device,vc,center,order)
 [nchan,ndum]=size(device);
 x1=vc(:,1:3)-repmat(center',ndip,1);
 n1=vc(:,4:6);
-x2=device(:,1:3)-repmat(center',nchan,1);;
+x2=device(:,1:3)-repmat(center',nchan,1);
 n2=device(:,4:6); 
 
 scale=10;
@@ -117,13 +117,13 @@ warning('ON', 'MATLAB:nearlySingularMatrix');
 return
 
 
-function field=getfield(source,device,coeffs,center,order);
+function field=getfield(source,device,coeffs,center,order)
 
 [ndip,ndum]=size(source);
 [nchan,ndum]=size(device);
 x1=source(:,1:3)-repmat(center',ndip,1);
 n1=source(:,4:6);
-x2=device(:,1:3)-repmat(center',nchan,1);;
+x2=device(:,1:3)-repmat(center',nchan,1);
 n2=device(:,4:6); 
 
 
@@ -175,7 +175,7 @@ out=reshape(outb,m,k);
 return; 
 
 
-function result=norms(x);
+function result=norms(x)
 
 [n,m,k]=size(x);
 

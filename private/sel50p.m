@@ -16,12 +16,12 @@ if isfield(sens, 'tra')
   % weigh each magnetometer coil position with its absolute contribution to
   % the field
   tra = abs(sens.tra);
-  sumx = tra * sens.pnt(:,1);
-  sumy = tra * sens.pnt(:,2);
-  sumz = tra * sens.pnt(:,3);
+  sumx = tra * sens.coilpos(:,1);
+  sumy = tra * sens.coilpos(:,2);
+  sumz = tra * sens.coilpos(:,3);
   pnt = [sumx./sum(tra,2) sumy./sum(tra,2) sumz./sum(tra,2)];
 else
-  pnt = sens.pnt;
+  pnt = sens.coilpos;
 end
 
 % make a selection matrix for all channels

@@ -208,8 +208,9 @@ elseif iseeg
   if ~isfield(cfg, 'plotlines'),        cfg.plotlines = 'yes';         end
 end
 
-chan = [];
-[chan.pnt, chan.label] = channelposition(sens);
+chan       = [];
+chan.pnt   = sens.chanpos;
+chan.label = sens.label;
 
 if issphere
   % determine the number of spheres in the volume model
@@ -316,7 +317,7 @@ if iseeg
   if strcmp(cfg.plotlines, 'yes') && ~isempty(vol)
     if isbem
       % project the electrodes on the skin surface, on the nearest triangle
-      [el] = project_elec(sens.pnt, vol.bnd(vol.skin_surface).pnt, vol.bnd(vol.skin_surface).tri);
+      [el] = project_elec(sens.chanpos, vol.bnd(vol.skin_surface).pnt, vol.bnd(vol.skin_surface).tri);
       % this returns [tri, la, mu]
       tri = el(:,1);
       la  = el(:,2);
@@ -329,15 +330,15 @@ if iseeg
       end
     elseif issphere
       % project the electrodes onto the sphere surface, towards the origin
-      nrm = sqrt(sum(sens.pnt.^2,2));
-      prj = vol.r(vol.skin_surface) * sens.pnt ./ [nrm nrm nrm];
+      nrm = sqrt(sum(sens.chanpos.^2,2));
+      prj = vol.r(vol.skin_surface) * sens.chanpos ./ [nrm nrm nrm];
     else
       % in case that no known volume conductor is specified
-      prj = sens.pnt;
+      prj = sens.chanpos;
     end
-    x = [sens.pnt(:,1) prj(:,1)]';
-    y = [sens.pnt(:,2) prj(:,2)]';
-    z = [sens.pnt(:,3) prj(:,3)]';
+    x = [sens.chanpos(:,1) prj(:,1)]';
+    y = [sens.chanpos(:,2) prj(:,2)]';
+    z = [sens.chanpos(:,3) prj(:,3)]';
     line(x, y, z, 'color', 'm');
   end % plotlines
   
@@ -360,8 +361,8 @@ elseif ismeg
   end % plotsensors
   
   if strcmp(cfg.plotcoil, 'yes')
-    pnt = sens.pnt;
-    ori = sens.ori;
+    pnt = sens.coilpos;
+    ori = sens.coilori;
     x = [pnt(:,1) pnt(:,1)+ori(:,1)]';
     y = [pnt(:,2) pnt(:,2)+ori(:,2)]';
     z = [pnt(:,3) pnt(:,3)+ori(:,3)]';
@@ -405,7 +406,7 @@ elseif ismeg
       % scale and shift the unit sphere to the proper location
       pnt = pnt0*vol.r(i) + repmat(vol.o(i,:),Nvertices,1);
       if Nspheres>4
-        distance = sqrt(sum((pnt - repmat(sens.pnt(i,:),Nvertices,1)).^2, 2));
+        distance = sqrt(sum((pnt - repmat(sens.chanpos(i,:),Nvertices,1)).^2, 2));
         distance = (distance-min(distance))/range(distance);
       else
         distance = zeros(Nvertices, 1);

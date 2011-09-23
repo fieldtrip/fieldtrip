@@ -32,7 +32,7 @@ function ft_neighbourplot(cfg, data)
 %
 % See also FT_NEIGHBOURSELECTION
 
-% Copyright (C) 2011, Jörn M. Horschig, Robert Oostenveld
+% Copyright (C) 2011, J?rn M. Horschig, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -68,7 +68,7 @@ else
   neighbours = ft_neighbourselection(cfg, data);
 end
 
-if iscell(cfg.neighbours)
+if iscell(neighbours)
   warning('Neighbourstructure is in old format - converting to structure array');
   cfg.neighbours = fixneighbours(cfg.neighbours);
 end
@@ -83,16 +83,12 @@ end
 if exist('data', 'var') && isfield(data, 'grad')
   fprintf('Using the gradiometer configuration from the dataset.\n');
   sens = data.grad;
-  % extract true channelposition
-  [sens.pnt, sens.ori, sens.label] = channelposition(sens);
 elseif exist('data', 'var') && isfield(data, 'elec')
   fprintf('Using the electrode configuration from the dataset.\n');
   sens = data.elec;
 elseif isfield(cfg, 'grad')
   fprintf('Obtaining the gradiometer configuration from the configuration.\n');
   sens = cfg.grad;
-  % extract true channelposition
-  [sens.pnt, sens.ori, sens.label] = channelposition(sens);
 elseif isfield(cfg, 'elec')
   fprintf('Obtaining the electrode configuration from the configuration.\n');
   sens = cfg.elec;
@@ -100,7 +96,6 @@ elseif isfield(cfg, 'gradfile')
   fprintf('Obtaining the gradiometer configuration from a file.\n');
   sens = ft_read_sens(cfg.gradfile);
   % extract true channelposition
-  [sens.pnt, sens.ori, sens.label] = channelposition(sens);
 elseif isfield(cfg, 'elecfile')
   fprintf('Obtaining the electrode configuration from a file.\n');
   sens = ft_read_sens(cfg.elecfile);
@@ -114,14 +109,15 @@ elseif isfield(cfg, 'layout')
 else
   error('Did not find gradiometer or electrode information.');
 end;
+sens = fixsens(sens); % ensure up-to-date description of sensor-array (Oct 2011)
 
 % give some graphical feedback
-if all(sens.pnt(:,3)==0)
+if all(sens.chanpos(:,3)==0)
   % the sensor positions are already projected on a 2D plane
-  proj = sens.pnt(:,1:2);
+  proj = sens.chanpos(:,1:2);
 else
   % use 3-dimensional data for plotting
-  proj = sens.pnt;
+  proj = sens.chanpos;
 end
 figure
 axis equal
@@ -229,3 +225,4 @@ cfg.callinfo.user = getusername(); % this is helpful for debugging
 fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
 
 end
+

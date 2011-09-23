@@ -42,11 +42,13 @@ if nargin<3
   flag = 1;
 end
 
+grad = fixsens(grad);
+
 Nchans = size(grad.tra, 1);
 Ncoils = size(grad.tra, 2);
 
 % for each coil, determine a surface point using the corresponding sphere
-vec = grad.pnt - vol.o;
+vec = grad.coilpos - vol.o;
 nrm = sqrt(sum(vec.^2,2));
 vec = vec ./ [nrm nrm nrm];
 pnt = vol.o + vec .* [vol.r vol.r vol.r];

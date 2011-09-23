@@ -38,6 +38,9 @@ function hs = ft_plot_sens(sens, varargin)
 
 ws = warning('on', 'MATLAB:divideByZero');
 
+% ensure up-to-date description of sensors (Aug 2011)
+sens = fixsens(sens);
+
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'style', 'coil', 'label'});
 style = keyval('style', varargin); if isempty(style), style = 'k.'; end
@@ -54,29 +57,34 @@ if ~holdflag
 end
 
 if coil
-  % simply plot the position of all coils
-  hs = plot3(sens.pnt(:,1), sens.pnt(:,2), sens.pnt(:,3), style);
+  % simply plot the position of all coils or electrodes
+  if isfield(sens, 'coilpos')
+    pnt = sens.coilpos;
+  elseif isfield(sens, 'elecpos')
+    pnt = sens.elecpos;
+  end
+  
+  hs = plot3(pnt(:,1), pnt(:,2), pnt(:,3), style);
 else
   % determine the position of each channel, which is for example the mean of
   % two bipolar electrodes, or the bottom coil of a axial gradiometer
-  [chan.pnt, chan.label] = channelposition(sens);
-  hs = plot3(chan.pnt(:,1), chan.pnt(:,2), chan.pnt(:,3), style);
+  hs = plot3(sens.chanpos(:,1), sens.chanpos(:,2), sens.chanpos(:,3), style);
   
   if ~isempty(label)
-    for i=1:length(chan.label)
+    for i=1:length(sens.label)
       switch label
         case {'on', 'yes'}
-          str = chan.label{i};
+          str = sens.label{i};
         case {'off', 'no'}
           str = '';
         case {'label' 'labels'}
-          str = chan.label{i};
+          str = sens.label{i};
         case {'number' 'numbers'}
           str = num2str(i);
         otherwise
           error('unsupported value for option ''label''');
       end % switch
-      text(chan.pnt(i,1), chan.pnt(i,2), chan.pnt(i,3), str);
+      text(sens.chanpos(i,1), sens.chanpos(i,2), sens.chanpos(i,3), str);
     end % for
   end % if     
   
