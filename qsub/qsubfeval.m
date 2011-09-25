@@ -172,6 +172,9 @@ fprintf('submitting script %s...', jobid);
 [status,result] = system(cmdline);
 fprintf(' qstat job id %s\n', strtrim(result));
 
+% add the job to the persistent list, this is used for cleanup in case of ctrl-C
+qsublist('add', jobid, strtrim(result));
+
 puttime = toc(stopwatch);
 
 % remember the input arguments to speed up subsequent calls

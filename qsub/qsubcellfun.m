@@ -70,6 +70,15 @@ function varargout = qsubcellfun(fname, varargin)
 % this persistent variable is used to assign unique names to the jobs in each subsequent batch
 persistent batch;
 
+if matlabversion(7.8, Inf)
+  % switch to zombie when finished or when ctrl-c gets pressed
+  % the onCleanup function does not exist for older versions
+  onCleanup(@cleanupfun);
+end
+
+% remove the persistent lists with job and pbs identifiers
+clear qsublist
+
 stopwatch = tic;
 
 % locate the begin of the optional key-value arguments
@@ -260,3 +269,12 @@ y = std(x);
 function y = nansum(x)
 x = x(~isnan(x(:)));
 y = sum(x);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cleanupfun
+% the qsublist function maintains a persistent list with all jobs
+% request it to kill all the jobs and to cleanup all the files
+qsublist('killall');
+

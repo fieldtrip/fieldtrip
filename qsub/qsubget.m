@@ -92,6 +92,8 @@ while ~success && (timeout == 0 || toc(stopwatch)<timeout)
     delete(outputfile);
     delete(logout);
     delete(logerr);
+    % remove the job from the persistent list
+	qsublist('del', jobid);
   elseif timeout == 0
     break; % only check once, no waiting here
   else
@@ -209,5 +211,4 @@ previous_StopOnError = StopOnError;
 function status = isfile(name)
 tmp = dir(name);
 status = length(tmp)==1 && ~tmp.isdir;
-
 
