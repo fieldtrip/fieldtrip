@@ -276,5 +276,6 @@ y = sum(x);
 function cleanupfun
 % the qsublist function maintains a persistent list with all jobs
 % request it to kill all the jobs and to cleanup all the files
+warning('cleaning up all scheduled and running jobs, don''t worry if you see warnings from "qdel"');
 qsublist('killall');
 
