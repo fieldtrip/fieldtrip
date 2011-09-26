@@ -101,6 +101,11 @@ case 'kill'
   end
 
 case 'killall'
+  if length(list_jobid)>0
+    % give an explicit warning, because chances are that the user will see messages from qdel
+    % about jobs that have just completed and hence cannot be deleted any more
+    warning('cleaning up all scheduled and running jobs, don''t worry if you see warnings from "qdel"');
+  end
   % start at the end, work towards the begin of the list
   for i=length(list_jobid):-1:1
     qsublist('kill', list_jobid{i}, list_pbsid{i});
