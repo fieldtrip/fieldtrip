@@ -91,7 +91,7 @@ switch version
     end
     
     if isfield(timelock, 'elec')
-      timelock.grad = fixsens(timelock.grad);
+      timelock.elec = fixsens(timelock.elec);
     end
 
   case '2003'

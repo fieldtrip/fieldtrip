@@ -92,7 +92,7 @@ switch version
     end
     
     if isfield(mvar, 'elec')
-      mvar.grad = fixsens(mvar.grad);
+      mvar.elec = fixsens(mvar.elec);
     end
   
   case '2008'
