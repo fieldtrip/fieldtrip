@@ -131,6 +131,7 @@ switch cfg.appenddim
         end
       end
       
+      if ~isempty(tmpcfg.inputfile), tmpcfg = rmfield(tmpcfg, 'inputfile'); end;
       freq = ft_appendfreq(tmpcfg, varargin{:});
       return;
     end % determining the dimension for appending
@@ -159,6 +160,7 @@ switch cfg.appenddim
         tmpcfg.appenddim = 'freq';
       end
     end
+    if ~isempty(tmpcfg.inputfile), tmpcfg = rmfield(tmpcfg, 'inputfile'); end;
     freq = ft_appendfreq(tmpcfg, varargin{:});
     return;
     
