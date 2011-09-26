@@ -106,10 +106,10 @@ switch cfg.appenddim
       % we need to check whether the other dimensions are the same.
       % if not, consider some tolerance.
       boolval1 = checkchan(varargin{:}, 'identical');
-      boolval2 = checkfreq(varargin{:}, 'identical');
+      boolval2 = checkfreq(varargin{:}, 'identical', tol);
       
       if isfield(varargin{1}, 'time'),
-        boolval3 = checktime(varargin{:}, 'identical');
+        boolval3 = checktime(varargin{:}, 'identical', tol);
         if boolval1 && boolval2 && boolval3
           % each of the input datasets contains a single repetition (perhaps an average), these can be concatenated
           tmpcfg.appenddim = 'rpt';
