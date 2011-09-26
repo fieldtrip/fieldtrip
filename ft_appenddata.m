@@ -174,14 +174,26 @@ if haselec || hasgrad,
 end
 
 % check whether the data are obtained from the same datafile
-origfile1      = ft_findcfg(varargin{1}.cfg, 'datafile');
+
 removesampleinfo = 0;
 removetrialinfo  = 0;
-for j=2:Ndata
-  if ~isempty(origfile1) && ~strcmp(origfile1, ft_findcfg(varargin{j}.cfg, 'datafile')),
-    removesampleinfo = 1;
-    warning('input data comes from different datafiles');
-    break;
+try
+  origfile1      = ft_findcfg(varargin{1}.cfg, 'datafile');
+  for j=2:Ndata
+    if ~isempty(origfile1) && ~strcmp(origfile1, ft_findcfg(varargin{j}.cfg, 'datafile')),
+      removesampleinfo = 1;
+      warning('input data comes from different datafiles; removing sampleinfo field');
+      break;
+    end
+  end
+catch err
+  if strcmp(err.identifier, 'MATLAB:nonExistentField')
+    % this means no data.cfg is present; should not be treated as a fatal
+    % error, so throw warning instead
+    warning('cannot determine from which datafiles the data is taken');
+  else
+    % not sure which error, probably a bigger problem
+    throw(err); 
   end
 end
 
