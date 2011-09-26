@@ -99,7 +99,7 @@ switch version
     end
     
     if isfield(freq, 'elec')
-      freq.grad = fixsens(freq.grad);
+      freq.elec = fixsens(freq.elec);
     end
   
   case '2008'

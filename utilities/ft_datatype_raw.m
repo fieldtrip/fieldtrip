@@ -96,7 +96,7 @@ switch version
     end
     
     if isfield(data, 'elec')
-      data.grad = fixsens(data.grad);
+      data.elec = fixsens(data.elec);
     end
     
     if ~isfield(data, 'fsample')
