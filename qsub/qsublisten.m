@@ -2,8 +2,11 @@
 
 % QSUBLISTEN checks whether jobs, submitted by qsubfeval, have been
 % completed. Whenever a job returns, it executes the provided callback function
-% (should be a function handle), with the job ID as its only argument. Results
-% can then be retrieved by calling QSUBGET.
+% (should be a function handle), with the job ID as an input argument. Results
+% can then be retrieved by calling QSUBGET. If a cell array is provided as
+% a the 'filter' option (see below), the second input argument passed to the
+% callback function will be an index into this cell array (to facilitate
+% checking which job returned in the callback function).
 %
 % Note that this function is blocking; i.e., it only returns after a
 % certain criterion has been met.
