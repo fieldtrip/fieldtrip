@@ -49,6 +49,9 @@ ftFuncTimer = tic();
 ftFuncClock = clock();
 ftFuncMem   = memtic();
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % set the defaults
 if ~isfield(cfg, 'gradient'),   error('cfg.gradient must be specified'); end
 if ~isfield(cfg, 'trials'),     cfg.trials                      = 'all'; end
