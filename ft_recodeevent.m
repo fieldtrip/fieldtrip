@@ -71,6 +71,9 @@ function [ev] = ft_recodeevent(cfg, event, trl)
 
 ft_defaults
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % set the defaults
 if ~isfield(cfg, 'eventtype'),  cfg.eventtype   = [];             end
 if ~isfield(cfg, 'eventvalue'), cfg.eventvalue  = [];             end

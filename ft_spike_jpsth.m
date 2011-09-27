@@ -48,6 +48,9 @@ defaults.keeptrials     = {'no' 'yes'};
 defaults.channelcmb     = {{'all','all'}};              
 cfg = ft_spike_sub_defaultcfg(cfg,defaults);
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % check whether PSTH contains single trials
 if ~all(isfield(psth,{'trial' 'time'})), 
   error('MATLAB:ft_spike_jpsth:psth:missingFields',...

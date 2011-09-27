@@ -33,6 +33,9 @@ function [isih] = ft_spike_isihist(cfg,spike)
 
 if nargin~=2, error('MATLAB:ft_spike_isihist:nargin','Two input arguments required'), end
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % check the configuration inputs and enter the defaults
 defaults.spikechannel   = {'all'};  
 defaults.trials         = {'all'}; 

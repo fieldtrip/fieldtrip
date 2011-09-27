@@ -36,6 +36,9 @@ function [spike] = ft_spike_maketrials(cfg,spike)
 
 %   Martin Vinck (C) 2010, F.C. Donders Centre Nijmegen, University of Amsterdam
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 if nargin<2, 
   error('MATLAB:ft_spike_maketrials:nargin','I can not work with less than 2 inputs'), 
 end

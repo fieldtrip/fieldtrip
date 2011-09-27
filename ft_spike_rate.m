@@ -46,6 +46,9 @@ function [rate] = ft_spike_rate(cfg,spike)
 
 if nargin~=2, error('ft:spike_rate:nargin','Two input arguments required'), end
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % defaults
 defaults.outputunit         = {'rate' 'spikecount'};             
 defaults.spikechannel       = {'all'}; 

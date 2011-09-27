@@ -14,6 +14,9 @@ function [spike] = ft_spike_data2spike(cfg,data)
 
 if nargin~=2, error('MATLAB:ft_spike_data2spike:data2spike:nargin','Two input arguments required'), end
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % put the defaults and check whether there are ununsed fields
 defaults.spikechannel   = {'all'};
 cfg = ft_spike_sub_defaultcfg(cfg,defaults);

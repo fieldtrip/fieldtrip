@@ -57,6 +57,9 @@ ftFuncTimer = tic();
 ftFuncClock = clock();
 ftFuncMem   = memtic();
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % set the defaults
 if ~isfield(cfg, 'feedback'),       cfg.feedback = 'textbar';    end
 if ~isfield(cfg, 'method'),         cfg.method = 'ward';         end

@@ -57,6 +57,8 @@ function [sdf sdfdata] = density(cfg,data)
 % Copyright (C) 2010, Martin Vinck
 % TODO: check that SDFDATA is indeed completely compatible!
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the defaults
 defaults.timwin         = {[-0.05 0.05]};          

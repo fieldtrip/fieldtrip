@@ -48,6 +48,9 @@ function [vol, cfg] = ft_prepare_bemmodel(cfg, mri)
 
 ft_defaults
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 if ~isfield(cfg, 'tissue'),         cfg.tissue = [8 12 14];                  end
 if ~isfield(cfg, 'numvertices'),    cfg.numvertices = [1 2 3] * 500;         end
 if ~isfield(cfg, 'hdmfile'),        cfg.hdmfile = [];                        end

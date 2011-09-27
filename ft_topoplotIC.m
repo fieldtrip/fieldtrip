@@ -97,6 +97,9 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 
 ft_defaults
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % this is just a wrapper function around ft_topoplotER, therefore it does not need to 
 % measure the time spent in this function with tic/toc
 % measure the memory usage with memtic/memtoc

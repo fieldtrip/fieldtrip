@@ -73,6 +73,9 @@ persistent info
 
 ft_defaults
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % set the defaults
 if ~isfield(cfg, 'filename'),    cfg.filename    = [];   end
 if ~isfield(cfg, 'keepremoved'), cfg.keepremoved = 'no'; end

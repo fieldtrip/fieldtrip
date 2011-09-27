@@ -13,11 +13,14 @@ function [Tune] = ft_spike_rate_condition(cfg,Rate)
 
 % Martin Vinck (C) 2010
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % check whether trials were kept in the rate function
 if ~isfield(Rate, 'trial'), error('MATLAB:ft_spike_rate_condition:noFieldTrial',...
     'RATE should contain the field trial (use cfg.keeptrials = "yes" in spike_rate)'); 
 end
-if ~isfield(cfg,'design'), error('MATLAB:ft_spike_rate_condition:cfg:designMissing'), end
+if ~isfield(cfg,'design'), error('MATLAB:ft_spike_rate_condition:cfg:designMissing','design is missing'), end
 design = cfg.design(:);
 if ~isrealvec(design)
   error('MATLAB:ft_spike_rate_condition:design',...

@@ -38,6 +38,9 @@ function [sts_tfr] = ft_spiketriggeredspectrum_ppc_tfr(cfg,freq)
 % general way. getting cfg.spikesel from a given set of trials is rather easy - so I think we should
 % let users do this themselves
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % defaults business
 defaults.channel      = {'all'};             
 defaults.latency      = {'maxperiod'};              

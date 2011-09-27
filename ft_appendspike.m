@@ -43,6 +43,9 @@ ftFuncTimer = tic();
 ftFuncClock = clock();
 ftFuncMem   = memtic();
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 isspike = zeros(size(varargin));
 for i=1:length(varargin)
   % this is a quick test, more rigourous checking is done later

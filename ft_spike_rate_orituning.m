@@ -13,14 +13,16 @@ function [Stat] = ft_spike_rate_orituning(cfg,Tune)
 
 % Martin Vinck (C) 2010
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % check whether trials were kept in the rate function
 
 if ~isfield(Tune, 'avg'), error('MATLAB:ft_spike_rate_tuning:noFieldTrial',...
     'TUNE should contain the field avg'); 
 end
-if ~isfield(cfg,'stimuli'), error('MATLAB:ft_spike_rate_tuning:cfg:stimuliMissing'), end
-if ~isfield(cfg,'method'), error('MATLAB:ft_spike_rate_tuning:cfg:stimuliMissing'),...
+if ~isfield(cfg,'stimuli'), error('MATLAB:ft_spike_rate_tuning:cfg:stimuliMissing','stimuli missing'), end
+if ~isfield(cfg,'method'), error('MATLAB:ft_spike_rate_tuning:cfg:stimuliMissing','stimuli missing'),...
   'Please choose a method, "orientation", or "direction"', end
 stimuli = cfg.stimuli(:);
 if ~isrealvec(stimuli)

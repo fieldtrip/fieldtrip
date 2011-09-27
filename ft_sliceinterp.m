@@ -103,6 +103,9 @@ function [outim]=ft_sliceinterp(cfg, ininterp)
 
 ft_defaults
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % check if the input data is valid for this function
 ininterp = ft_checkdata(ininterp, 'datatype', 'volume', 'feedback', 'yes');
 

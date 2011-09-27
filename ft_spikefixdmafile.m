@@ -36,6 +36,9 @@ function ft_spikefixdmafile(cfg)
 
 ft_defaults
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % set the general defaults
 if ~isfield(cfg, 'dataset'),  cfg.dataset = [];           end
 if ~isfield(cfg, 'output'),   cfg.output = [];            end

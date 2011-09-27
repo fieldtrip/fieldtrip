@@ -38,6 +38,9 @@ ftFuncTimer = tic();
 ftFuncClock = clock();
 ftFuncMem   = memtic();
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % set the defaults
 if ~isfield(cfg, 'inputfile'),    cfg.inputfile  = [];          end
 if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end

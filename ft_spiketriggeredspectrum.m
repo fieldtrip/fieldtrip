@@ -58,6 +58,9 @@ ftFuncTimer = tic();
 ftFuncClock = clock();
 ftFuncMem   = memtic();
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % set the defaults
 if ~isfield(cfg, 'timwin'),       cfg.timwin = [-0.1 0.1];    end
 if ~isfield(cfg, 'foilim'),       cfg.foilim = [0 150];       end

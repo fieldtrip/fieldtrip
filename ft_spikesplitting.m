@@ -50,6 +50,9 @@ ftFuncTimer = tic();
 ftFuncClock = clock();
 ftFuncMem   = memtic();
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % set the general defaults
 if ~isfield(cfg, 'dataset'),          cfg.dataset = [];                 end
 if ~isfield(cfg, 'channel'),          cfg.channel = 'all';              end

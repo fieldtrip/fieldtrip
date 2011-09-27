@@ -51,7 +51,10 @@ function [psth] = ft_spike_psth(cfg,spike)
 %  standard techniques to compute binsize based on bandwidth. Same for FT_SPIKE_DENSITY
 
 if nargin~=2, error('ft:spike_psth:nargin','Two input arguments required'), end
-   
+
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % check configuration inputs and enter the defaults, should be standardized within fieldtrip
 defaults.binsize           = {0.025};      % sec              
 defaults.outputunit        = {'rate' 'spikecount'};             

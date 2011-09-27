@@ -71,6 +71,9 @@ function [Xcorr] = ft_spike_xcorr(cfg,spike)
 
 if nargin~=2, error('MATLAB:fieldtrip:spike_xcorr:nargin','Two input arguments required'), end
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % default correlogram configurations: 
 defaults.maxlag             = {0.01};         
 defaults.biased             = {'no' 'yes'};         

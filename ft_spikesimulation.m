@@ -30,6 +30,9 @@ function data = ft_spikesimulation(cfg)
 
 ft_defaults
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % record start time and total processing time
 ftFuncTimer = tic();
 ftFuncClock = clock();

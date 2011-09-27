@@ -1,5 +1,8 @@
 function [cfg] = ft_spikestation_sub_defaultcfg(cfg,defaults)
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % check if the cfg is empty or not, if empty, we can skip the lengthy error checking
 if isempty(cfg), % set all to defaults
   cfg           = defaults; 

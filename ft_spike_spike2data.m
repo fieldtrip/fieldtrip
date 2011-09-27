@@ -32,6 +32,9 @@ function [spikedata] = ft_spikestation_ets2data(cfg,spike,data)
 
 if nargin<2, error('MATLAB:ft_spike_spike2data','Minimal twoinputs required'), end
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % set the defaults
 try 
     defaults.fsample   = {data.fsample};

@@ -71,6 +71,9 @@ function [varargout] = ft_stratify(cfg, varargin)
 
 ft_defaults
 
+% enable configuration tracking
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+
 % input1 and input2 are the to be stratified with respect to each other
 % dimensionality of input1 (2) = chan x rpt. if nchan>1, do a "double"
 % stratification
