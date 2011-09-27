@@ -133,19 +133,17 @@ else
   matlabcmd = 'matlab';
 end
 
-% create the shell script
-fid = fopen(shellscript, 'wt');
-fprintf(fid, '#!/bin/sh\n');
-fprintf(fid, '%s -nosplash -nodisplay -r "run(''%s/%s.m'')" \n', matlabcmd, curPwd, jobid);
-fclose(fid);
+% create the matlab script commands (one entry per line)
+matlabScript = [...
+  'restoredefaultpath;',...
+  sprintf('addpath(''%s'');', fileparts(mfilename('fullpath'))),...
+  sprintf('qsubexec(''%s'');', jobid),...
+  sprintf('exit')];
 
-% create the matlab script
-fid = fopen(matlabscript, 'wt');
-fprintf(fid, 'restoredefaultpath\n');
-fprintf(fid, 'addpath %s\n', fileparts(mfilename('fullpath')));
-fprintf(fid, 'qsubexec(''%s'')\n', jobid);
-fprintf(fid, 'exit\n');
-fclose(fid);
+% create the shell commands to execute matlab (one entry per line)
+shellCmd = [...
+  sprintf('cd \\"%s\\"\n', curPwd),...
+  sprintf('%s -nosplash -nodisplay -r \\"%s\\"\n', matlabcmd, matlabScript)];
 
 % set the job requirements according to the users specification
 requirements = '';
@@ -166,9 +164,10 @@ end
 % cmdline = ['qsub -e /dev/null -o /dev/null -N ' jobid ' ' requirements shellscript];
 
 % qsubfget will check the stderr output log file for errors, e.g. MATLAB crashes 
-cmdline = ['qsub -N ' jobid ' ' requirements shellscript];
+cmdline = sprintf('echo "%s" | qsub -N %s %s -o %s -e %s', ...
+  shellCmd, jobid, requirements, curPwd, curPwd);
 
-fprintf('submitting script %s...', jobid); 
+fprintf('submitting job %s...', jobid); 
 [status,result] = system(cmdline);
 fprintf(' qstat job id %s\n', strtrim(result));
 

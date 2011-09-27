@@ -62,8 +62,6 @@ while ~success && (timeout == 0 || toc(stopwatch)<timeout)
   % this section is the only part where it is different between peer and qsub
 
   curPwd = getcustompwd();
-  shellscript  = fullfile(curPwd, sprintf('%s.sh', jobid));
-  matlabscript = fullfile(curPwd, sprintf('%s.m', jobid));
   inputfile    = fullfile(curPwd, sprintf('%s_input.mat', jobid));
   outputfile   = fullfile(curPwd, sprintf('%s_output.mat', jobid));
   logout       = fullfile(curPwd, sprintf('%s.o*', jobid)); % note the wildcard in the file name
@@ -86,8 +84,6 @@ while ~success && (timeout == 0 || toc(stopwatch)<timeout)
     options = tmp.optout;
     success = true;
     % clean up all temporary files
-    delete(shellscript);
-    delete(matlabscript);
     delete(inputfile);
     delete(outputfile);
     delete(logout);
