@@ -3,6 +3,7 @@ function [mri] = ft_volumerealign(cfg, mri)
 % FT_VOLUMEREALIGN spatially aligns an anatomical MRI with head coordinates based on
 % external fiducials or anatomical landmarks. This function does not change the
 % volume itself, but adjusts the homogeneous transformation matrix that describes
+% the coordinate system. It also appends a coordsys-field to the mri, which specifies
 % the coordinate system.
 %
 % This function only changes the coordinate system of an anatomical
@@ -13,32 +14,39 @@ function [mri] = ft_volumerealign(cfg, mri)
 % Use as
 %   [mri] = ft_volumerealign(cfg, mri)
 % where mri is an anatomical volume (i.e. MRI) or a functional
-% volume (i.e. source recunstruction that has been interpolated on
+% volume (i.e. source reconstruction that has been interpolated on
 % an MRI).
 %
 % The configuration can contain the following options
-%   cfg.clim           = [min max], scaling of the anatomy color (default
-%                        is to adjust to the minimum and maximum)
 %   cfg.method         = different methods for aligning the volume
+%                        'interactive' manually using graphical user interface
 %                        'fiducial' realign the volume to the fiducials,
-%                                     using 'ALS_CTF' convention, i.e.
-%                                     the origin is exactly between lpa and rpa
-%                                     the X-axis goes towards nas
-%                                     the Y-axis goes approximately towards lpa,
-%                                       orthogonal to X and in the plane spanned
-%                                       by the fiducials
-%                                     the Z-axis goes approximately towards the vertex,
-%                                       orthogonal to X and Y
+%                                     which are assumed to specify the positions of
+%                                     the nasion, left and right pre-auricular points.  
 %                        'landmark' realign the volume to anatomical landmarks,
-%                                     using RAS_Tal convention, i.e.
-%                                     the origin corresponds with the anterior commissure
+%                                     which are assumed to specify the positions of     
+%                                       the anterior and posterior commissures, and a 
+%                                       point in the XZ-plane.
+%                                     this leads to a head coordinate system using
+%                                     RAS_Tal convention, i.e. the origin corresponds
+%                                       with the anterior commissure
 %                                     the Y-axis is along the line from the posterior
 %                                       commissure to the anterior commissure
 %                                     the Z-axis is towards the vertex, in between the
 %                                       hemispheres
 %                                     the X-axis is orthogonal to the YZ-plane,
 %                                       positive to the right
-%                        'interactive'     manually using graphical user interface
+%   cfg.coordsys       = 'ctf' (default when specifying cfg.method = 'interactive' or
+%                                 'fiducial') or 'spm' (default when specifying 
+%                                 cfg.method = 'landmark'). Specifies the coordinate
+%                                     system of the head. This string
+%                                     specifies the origin and the axes of the
+%                                     coordinate system. supported coordinate systems 
+%                                     are, 'ctf', '4d', 'yokogawa', 'neuromag', 'itab'
+%                                     'spm', 'tal'. 
+%   cfg.clim           = [min max], scaling of the anatomy color (default
+%                        is to adjust to the minimum and maximum)
+%   cfg.parameter      = 'anatomy' the parameter which is used for the visualization
 %
 % For realigning to the fiducials, you should specify the position of the
 % fiducials in voxel indices.
@@ -62,13 +70,10 @@ function [mri] = ft_volumerealign(cfg, mri)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_READ_MRI, FT_ELECTRODEREALIGN
+% See also FT_READ_MRI, FT_ELECTRODEREALIGN HEADCOORDINATES
 
-% Undocumented option
-%   cfg.coordsys, works for interactive and fiducial
-
-% Copyright (C) 2006-2009, Robert Oostenveld
-%
+% Copyright (C) 2006-2011, Robert Oostenveld, Jan-Mathijs Schoffelen
+% 
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
 %
@@ -96,17 +101,35 @@ ftFuncMem   = memtic();
 
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducial', 'fiducial'});
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-cfg = ft_checkconfig(cfg, 'required', 'method');
 
 % set the defaults
-if ~isfield(cfg, 'fiducial'),  cfg.fiducial = [];         end
-if ~isfield(cfg, 'landmark'),  cfg.landmark = [];         end
-if ~isfield(cfg, 'parameter'), cfg.parameter = 'anatomy'; end
-if ~isfield(cfg, 'clim'),      cfg.clim      = [];        end
-if ~isfield(cfg, 'inputfile'), cfg.inputfile = [];        end
-if ~isfield(cfg, 'outputfile'),cfg.outputfile = [];       end
-if ~isfield(cfg, 'coordsys') && (strcmp(cfg.method, 'interactive') || strcmp(cfg.method, 'fiducial'))
-  cfg.coordsys = 'ctf';
+cfg.coordsys   = ft_getopt(cfg, 'coordsys',  '');
+cfg.method     = ft_getopt(cfg, 'method',    ''); % deal with this below
+cfg.fiducial   = ft_getopt(cfg, 'fiducial',  []);
+cfg.landmark   = ft_getopt(cfg, 'landmark',  []);
+cfg.parameter  = ft_getopt(cfg, 'parameter', 'anatomy');
+cfg.clim       = ft_getopt(cfg, 'clim',      []);
+cfg.inputfile  = ft_getopt(cfg, 'inputfile', '');
+cfg.outputfile = ft_getopt(cfg, 'outputfile', '');
+
+if strcmp(cfg.method, '')
+  if isempty(cfg.landmark) && isempty(cfg.fiducial)
+    cfg.method = 'interactive';
+  elseif ~isempty(cfg.fiducial)
+    cfg.method = 'fiducial';
+  elseif ~isempty(cfg.landmark)
+    cfg.method = 'landmark';
+  end
+end
+
+if strcmp(cfg.coordsys, '')
+  if strcmp(cfg.method, 'landmark')
+    cfg.coordsys = 'spm';
+  elseif strcmp(cfg.method, 'fiducial')
+    cfg.coordsys = 'ctf';
+  else
+    cfg.coordsys = '';
+  end
 end
 
 hasdata = (nargin>1);
@@ -122,30 +145,8 @@ end
 % check if the input data is valid for this function
 mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
 
-if ~isfield(cfg, 'method')
-  if ~isempty(cfg.fiducial)
-    cfg.method = 'fiducial';
-    basedonfid = 1;
-    basedonmrk = 0;
-  elseif ~isempty(cfg.landmark)
-    cfg.method = 'landmark';
-    basedonfid = 0;
-    basedonmrk = 1;
-  else
-    cfg.method = 'interactive';
-  end
-end
-
-if strcmp(cfg.method, 'interactive')
-  basedonfid = 0;
-  basedonmrk = 0;
-elseif strcmp(cfg.method, 'fiducial')
-  basedonfid = 1;
-  basedonmrk = 0;
-elseif strcmp(cfg.method, 'landmark')
-  basedonfid = 0;
-  basedonmrk = 1;
-end
+basedonmrk = strcmp(cfg.method, 'landmark');
+basedonfid = strcmp(cfg.method, 'fiducial');
 
 % select the parameter that should be displayed
 cfg.parameter = parameterselection(cfg.parameter, mri);
@@ -424,6 +425,9 @@ switch cfg.method
     
     if ~isempty(nas) && ~isempty(lpa) && ~isempty(rpa)
       basedonfid = 1;
+      if isempty(cfg.coordsys)
+        cfg.coordsys = 'ctf';
+      end
     end
     
     if ~isempty(antcomm) && ~isempty(pstcomm) && ~isempty(xzpoint)
