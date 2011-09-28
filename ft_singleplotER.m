@@ -316,9 +316,9 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.parameter)
     % check for refchannel being part of selection
     if ~strcmp(cfg.refchannel,'gui')
       if haslabelcmb
-        cfg.refchannel = ft_channelselection(cfg.refchannel, unique(data.labelcmb(:)));
+        cfg.refchannel = ft_channelselection(cfg.refchannel, unique(varargin{1}.labelcmb(:)));
       else
-        cfg.refchannel = ft_channelselection(cfg.refchannel, data.label);
+        cfg.refchannel = ft_channelselection(cfg.refchannel, varargin{1}.label);
       end
       if (isfull      && ~any(ismember(varargin{1}.label, cfg.refchannel))) || ...
              (haslabelcmb && ~any(ismember(varargin{1}.labelcmb(:), cfg.refchannel)))
