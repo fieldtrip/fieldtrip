@@ -10,13 +10,17 @@ function [h, flag] = headcoordinates(nas, lpa, rpa, flag)
 %
 % The optional flag determines how the direction of the axes and the
 % location of the origin should be specified
-%   according to CTF conventions:       flag = 'ctf' (default)
-%   according to ASA conventions:       flag = 'asa'
-%   according to ITAB conventions:      flag = 'itab'
-%   according to FTG conventions:       flag = 'ftg'
-%   according to Talairach conventions: flag = 'tal'
+%   according to CTF conventions:             flag = 'ctf' (default)
+%   according to 4D-neuroimaging conventions: flag = '4d' or 'bti'
+%   according to YOKOGAWA conventions:        flag = 'yokogawa'
+%   according to ASA conventions:             flag = 'asa'
+%   according to NEUROMAG conventions:        flag = 'itab'
+%   according to ITAB conventions:            flag = 'neuromag'
+%   according to FTG conventions:             flag = 'ftg'
+%   according to Talairach conventions:       flag = 'tal'
+%   according to SPM conventions:             flag = 'spm'
 %
-% The CTF coordinate system defined as follows:
+% The CTF/4D/YOKOGAWA coordinate system defined as follows:
 %   the origin is exactly between lpa and rpa
 %   the X-axis goes towards nas
 %   the Y-axis goes approximately towards lpa, orthogonal to X and in the plane spanned by the fiducials
@@ -28,7 +32,7 @@ function [h, flag] = headcoordinates(nas, lpa, rpa, flag)
 %   the Y-axis goes through rpa and lpa
 %   the Z-axis goes approximately towards the vertex, orthogonal to X and Y
 %
-% The ITAB coordinate system is defined as follows:
+% The ITAB/NEUROMAG coordinate system is defined as follows:
 %   the X-axis is from the origin towards the RPA point (exactly through)
 %   the Y-axis is from the origin towards the nasion (exactly through)
 %   the Z-axis is from the origin upwards orthogonal to the XY-plane
@@ -39,7 +43,7 @@ function [h, flag] = headcoordinates(nas, lpa, rpa, flag)
 %   the x-axis is along the line from pt1 to pt2
 %   the z-axis is orthogonal to the plane spanned by pt1, pt2 and pt3
 %
-% The Talairach headcoordinate system is defined as:
+% The Talairach/SPM headcoordinate system is defined as:
 %   the origin corresponds with the anterior commissure
 %   the Y-axis is along the line from the posterior commissure to the anterior commissure
 %   the Z-axis is towards the vertex, in between the hemispheres
