@@ -147,10 +147,14 @@ switch ft_senstype(sens)
         meanpnt1 = mean(sens.pnt(abs(sens.tra(sel(1),:))>0.5, :), 1);
         meanpnt2 = mean(sens.pnt(abs(sens.tra(sel(2),:))>0.5, :), 1);
         pnt(i,:) = mean([meanpnt1; meanpnt2], 1);
+        meanori1 = mean(sens.ori(abs(sens.tra(sel(1),:))>0.5, :), 1);
+        meanori2 = mean(sens.ori(abs(sens.tra(sel(2),:))>0.5, :), 1);
+        ori(i,:) = mean([meanori1; meanori2], 1);
       end
     end
     lab = lab(ind,:);
     pnt = pnt(ind,:);
+    ori = ori(ind,:);
 
   case 'neuromag122'
     % find the matching channel-duplets
@@ -174,10 +178,14 @@ switch ft_senstype(sens)
         meanpnt1 = mean(sens.pnt(abs(sens.tra(sel(1),:))>0.5,:), 1);
         meanpnt2 = mean(sens.pnt(abs(sens.tra(sel(2),:))>0.5,:), 1);
         pnt(i,:) = mean([meanpnt1; meanpnt2], 1);
+        meanori1 = mean(sens.ori(abs(sens.tra(sel(1),:))>0.5,:), 1);
+        meanori2 = mean(sens.ori(abs(sens.tra(sel(2),:))>0.5,:), 1);
+        ori(i,:) = mean([meanori1; meanori2], 1);
       end
     end
     lab = lab(ind,:);
     pnt = pnt(ind,:);
+    ori = ori(ind,:);
 
   case 'neuromag306'
     % find the matching channel-triplets
@@ -201,15 +209,18 @@ switch ft_senstype(sens)
         ind = [ind; i];
         lab(i,sel2) = sens.label(sel1)';
         meanpnt  = [];
+        meanori  = [];
         for j = 1:length(sel1)
            meanpnt  = [meanpnt; mean(sens.pnt(abs(sens.tra(sel1(j),:))>0.5,:), 1)];
+           meanori  = [meanori; mean(sens.ori(abs(sens.tra(sel1(j),:))>0.5,:), 1)];
         end
         pnt(i,:) = mean(meanpnt, 1);
+        ori(i,:) = mean(meanori, 1);
       end
     end
     lab = lab(ind,:);
     pnt = pnt(ind,:);
-
+    ori = ori(ind,:);
 
   otherwise
     % compute the position for each electrode
@@ -241,6 +252,7 @@ n   = size(lab,2);
 % this is to fix the planar layouts, which cannot be plotted anyway
 if n>1 && size(lab, 1)>1 %this is to prevent confusion when lab happens to be a row array
   pnt = repmat(pnt, n, 1);
+  ori = repmat(ori, n, 1);
 end
 
 % ensure that it is a row vector
