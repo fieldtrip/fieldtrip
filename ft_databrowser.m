@@ -810,16 +810,19 @@ xaxis = freqoi;
 % make figure window for fft
 ffth = figure('name',['fft trial ' num2str(opt.trlop) ': ' num2str(time(1)) '-' num2str(time(end)) 'ms'],'numbertitle','off','units','normalized');
 % set button
-butth = uicontrol('tag', 'simplefft_l2', 'parent', ffth, 'units', 'normalized', 'style', 'togglebutton', 'string','log of power','position', [0.91, 0.6 , 0.08, 0.04], 'value',1,'callback',{@draw_simple_fft_cb});
-ft_uilayout(ffth, 'tag', 'simplefft_l2', 'width', 0.075, 'height', 0.10);
+butth = uicontrol('tag', 'simplefft_l2', 'parent', ffth, 'units', 'normalized', 'style', 'togglebutton', 'string','log of power','position', [0.87, 0.6 , 0.12, 0.10],  'value',1,'callback',{@draw_simple_fft_cb});
+uicontrol('tag', 'simplefft_l2_chansel', 'parent', ffth, 'units', 'normalized', 'style', 'pushbutton', 'string','select channels','position', [0.87, 0.45 , 0.12, 0.10],'callback',{@selectchan_fft_cb});
 
 % put data in fig (sparse)
 fftopt = [];
 fftopt.cfg.viewmode = cfg.viewmode;
 fftopt.chancolors = opt.chancolors;
-fftopt.xaxis  = xaxis;
-fftopt.xaxis  = xaxis;
-fftopt.fftdat = fftdat(:,freqboi);
+fftopt.xaxis      = xaxis;
+fftopt.xaxis      = xaxis;
+fftopt.chanlabel  = opt.curdat.label;
+fftopt.chansel    = 1:size(fftdat,1);
+fftopt.fftdat     = fftdat(:,freqboi);
+fftopt.butth      = butth;
 setappdata(ffth, 'fftopt', fftopt);
 
 
@@ -828,6 +831,24 @@ setappdata(ffth, 'fftopt', fftopt);
 draw_simple_fft_cb(butth)
 end % function
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function selectchan_fft_cb(h,eventdata)
+ffth = get(h,'parent');
+fftopt = getappdata(ffth, 'fftopt');
+
+% open chansel dialog (PRIVATE FUNCTION!)
+chansel = select_channel_list(fftopt.chanlabel, fftopt.chansel, 'select channels for viewing power');
+
+% output data
+fftopt.chansel = chansel;
+setappdata(ffth, 'fftopt', fftopt);
+draw_simple_fft_cb(fftopt.butth)
+
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -848,13 +869,17 @@ elseif togglestate == 1
   set(h,'backgroundColor','g')
 end
 
+% select data and chanel colors
+chancolors = fftopt.chancolors(fftopt.chansel,:);
+dat        = dat(fftopt.chansel,:);
+
 % plot using specified colors
 set(0,'currentFigure',ffth)
-for ichan = 1:size(fftopt.fftdat,1)
+for ichan = 1:size(dat,1)
   if strcmp(cfg.viewmode, 'component')
     color = 'k';
   else
-    color = fftopt.chancolors(ichan,:);
+    color = chancolors(ichan,:);
   end
   ft_plot_vector(fftopt.xaxis, dat(ichan,:), 'box', false, 'color', color)
 end
@@ -871,7 +896,7 @@ elseif togglestate == 1
   ylabel('log(power)')
   axis([fftopt.xaxis(1) fftopt.xaxis(end) (min(min(dat)) - yrange.*.1) (max(max(dat)) + yrange*.1)]) 
 end
-
+set(gca,'Position', [0.13 0.11 0.725 0.815])
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
