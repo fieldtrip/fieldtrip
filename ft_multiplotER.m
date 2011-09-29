@@ -74,8 +74,8 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 
 % Undocumented local options:
 % cfg.layoutname
-% cfg.zlim/cfg.xparam (set to a specific frequency range or time range [zmax zmin] for an average
-% over the frequency/time bins for TFR data.  Use in conjunction with e.g. cfg.xparam = 'time', and cfg.parameter = 'powspctrm').
+% cfg.zlim/xparam (set to a specific frequency range or time range [zmax zmin] for an average
+% over the frequency/time bins for TFR data.  Use in conjunction with e.g. xparam = 'time', and cfg.parameter = 'powspctrm').
 
 
 %
@@ -233,22 +233,18 @@ dimtok = tokenize(dimord, '_');
 % Set x/y/parameter defaults according to datatype and dimord
 switch dtype
   case 'timelock'
-    if ~isfield(cfg, 'xparam'),      cfg.xparam = 'time';         end
-    if ~isfield(cfg, 'yparam'),      cfg.yparam = '';             end
-    if ~isfield(cfg, 'parameter'),      cfg.parameter = 'avg';          end
+    xparam = 'time';
+    yparam = '';
+    cfg.parameter = ft_getopt(cfg, 'parameter', 'avg');
   case 'freq'
-    if sum(ismember(dimtok, 'time')) && strcmp('time',cfg.xparam)
-      cfg.xparam = ft_getopt(cfg,  'xparam', 'time');
-      cfg.yparam = ft_getopt(cfg,  'yparam', 'freq');
-      if ~isfield(cfg,'parameter'); cfg.parameter = ft_getopt(cfg,  'parameter', 'powspctrm'); end
-    elseif sum(ismember(dimtok, 'time')) && strcmp('freq',cfg.xparam)
-      cfg.xparam = ft_getopt(cfg,  'xparam', 'freq');
-      cfg.yparam = ft_getopt(cfg,  'yparam', 'time');
-      if ~isfield(cfg,'parameter'); cfg.parameter = ft_getopt(cfg,  'parameter', 'powspctrm'); end
+    if any(ismember(dimtok, 'time'))
+      xparam = 'time';
+      yparam = 'freq';
+      cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
     else
-      cfg.xparam = ft_getopt(cfg,  'xparam', 'freq');
-      cfg.yparam = ft_getopt(cfg,  'yparam', '');
-      cfg.parameter = ft_getopt(cfg,  'parameter', 'powspctrm');
+      xparam = 'freq';
+      yparam = '';
+      cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
     end
   case 'comp'
     % not supported
@@ -257,8 +253,8 @@ switch dtype
 end
 
 % user specified own fields, but no yparam (which is not asked in help)
-if isfield(cfg, 'xparam') && isfield(cfg, 'parameter') && ~isfield(cfg, 'yparam')
-  cfg.yparam = '';
+if exist('xparam', 'var') && isfield(cfg, 'parameter') && ~exist('yparam', 'var')
+  yparam = '';
 end
 
 if isfield(cfg, 'channel') && isfield(varargin{1}, 'label')
@@ -326,14 +322,14 @@ ft_plot_lay(lay, 'box', false,'label','no','point','no');
 % Apply baseline correction
 if ~strcmp(cfg.baseline, 'no')
   for i=1:Ndata
-    if strcmp(dtype, 'timelock') && strcmp(cfg.xparam, 'time')
+    if strcmp(dtype, 'timelock') && strcmp(xparam, 'time')
       varargin{i} = ft_timelockbaseline(cfg, varargin{i});
-    elseif strcmp(dtype, 'freq') && strcmp(cfg.xparam, 'time')
+    elseif strcmp(dtype, 'freq') && strcmp(xparam, 'time')
       varargin{i} = ft_freqbaseline(cfg, varargin{i});
-    elseif strcmp(dtype, 'freq') && strcmp(cfg.xparam, 'freq')
+    elseif strcmp(dtype, 'freq') && strcmp(xparam, 'freq')
       error('Baseline correction is not supported for spectra without a time dimension');
     else
-      warning('Baseline correction not applied, please set cfg.xparam');
+      warning('Baseline correction not applied, please set xparam');
     end
   end
 end
@@ -436,8 +432,8 @@ if strcmp(cfg.xlim,'maxmin')
   xmin = [];
   xmax = [];
   for i=1:length(varargin)
-    xmin = min([xmin varargin{i}.(cfg.xparam)]);
-    xmax = max([xmax varargin{i}.(cfg.xparam)]);
+    xmin = min([xmin varargin{i}.(xparam)]);
+    xmax = max([xmax varargin{i}.(xparam)]);
   end
 else
   xmin = cfg.xlim(1);
@@ -446,16 +442,16 @@ end
 
 % Get the index of the nearest bin
 for i=1:Ndata
-  xidmin(i,1) = nearest(varargin{i}.(cfg.xparam), xmin);
-  xidmax(i,1) = nearest(varargin{i}.(cfg.xparam), xmax);
+  xidmin(i,1) = nearest(varargin{i}.(xparam), xmin);
+  xidmax(i,1) = nearest(varargin{i}.(xparam), xmax);
 end
 
-if strcmp('freq',cfg.yparam) && strcmp('freq',dtype)
+if strcmp('freq',yparam) && strcmp('freq',dtype)
   for i=1:Ndata
     varargin{i} = ft_selectdata(varargin{i},'param',cfg.parameter,'foilim',cfg.zlim,'avgoverfreq','yes');
     varargin{i}.(cfg.parameter) = squeeze(varargin{i}.(cfg.parameter));
   end
-elseif strcmp('time',cfg.yparam) && strcmp('freq',dtype)
+elseif strcmp('time',yparam) && strcmp('freq',dtype)
   for i=1:Ndata
     varargin{i} = ft_selectdata(varargin{i},'param',cfg.parameter,'toilim',cfg.zlim,'avgovertime','yes');
     varargin{i}.(cfg.parameter) = squeeze(varargin{i}.(cfg.parameter));
@@ -515,7 +511,7 @@ end
 for i=1:Ndata
   % Make vector dat with one value for each channel
   dat    = varargin{i}.(cfg.parameter);
-  xparam = varargin{i}.(cfg.xparam);
+  xparam = varargin{i}.(xparam);
   
   % Take subselection of channels, this only works
   % in the interactive mode
@@ -527,7 +523,7 @@ for i=1:Ndata
     label  = varargin{i}.label;
   end
   
-  %   if ~isempty(cfg.yparam)
+  %   if ~isempty(yparam)
   %     if isfull
   %       dat = dat(sel1, sel2, ymin:ymax, xidmin(i):xidmax(i));
   %       dat = nanmean(nanmean(dat, meandir), 3);

@@ -177,9 +177,9 @@ dimtok = tokenize(dimord, '_');
 if ~any(ismember(dimtok, 'time'))
   error('input data needs a time dimension');
 else
-  if ~isfield(cfg, 'xparam'),      cfg.xparam='time';                  end
-  if ~isfield(cfg, 'yparam'),      cfg.yparam='freq';                  end
-  if ~isfield(cfg, 'parameter'),      cfg.parameter='powspctrm';             end
+  xparam = 'time';
+  yparam = 'freq';
+  cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');  
 end
 
 if isfield(cfg, 'channel') && isfield(data, 'label')
@@ -330,37 +330,37 @@ end %handle the bivariate data
 
 % Get physical x-axis range:
 if strcmp(cfg.xlim,'maxmin')
-  xmin = min(data.(cfg.xparam));
-  xmax = max(data.(cfg.xparam));
+  xmin = min(data.(xparam));
+  xmax = max(data.(xparam));
 else
   xmin = cfg.xlim(1);
   xmax = cfg.xlim(2);
 end
 
 % Replace value with the index of the nearest bin
-if ~isempty(cfg.xparam)
-  xmin = nearest(data.(cfg.xparam), xmin);
-  xmax = nearest(data.(cfg.xparam), xmax);
+if ~isempty(xparam)
+  xmin = nearest(data.(xparam), xmin);
+  xmax = nearest(data.(xparam), xmax);
 end
 
 % Get physical y-axis range:
 if strcmp(cfg.ylim,'maxmin')
-  ymin = min(data.(cfg.yparam));
-  ymax = max(data.(cfg.yparam));
+  ymin = min(data.(yparam));
+  ymax = max(data.(yparam));
 else
   ymin = cfg.ylim(1);
   ymax = cfg.ylim(2);
 end
 
 % Replace value with the index of the nearest bin
-if ~isempty(cfg.yparam)
-  ymin = nearest(data.(cfg.yparam), ymin);
-  ymax = nearest(data.(cfg.yparam), ymax);
+if ~isempty(yparam)
+  ymin = nearest(data.(yparam), ymin);
+  ymax = nearest(data.(yparam), ymax);
 end
 
 % test if X and Y are linearly spaced (to within 10^-12): % FROM UIMAGE
-x = data.(cfg.xparam)(xmin:xmax);
-y = data.(cfg.yparam)(ymin:ymax);
+x = data.(xparam)(xmin:xmax);
+y = data.(yparam)(ymin:ymax);
 dx = min(diff(x));  % smallest interval for X
 dy = min(diff(y));  % smallest interval for Y
 evenx = all(abs(diff(x)/dx-1)<1e-12);     % true if X is linearly spaced
@@ -543,8 +543,8 @@ end
 k = cellstrmatch('COMNT',lay.label);
 if ~isempty(k)
   comment = cfg.comment;
-  comment = sprintf('%0s\nxlim=[%.3g %.3g]', comment, data.(cfg.xparam)(xmin), data.(cfg.xparam)(xmax));
-  comment = sprintf('%0s\nylim=[%.3g %.3g]', comment, data.(cfg.yparam)(ymin), data.(cfg.yparam)(ymax));
+  comment = sprintf('%0s\nxlim=[%.3g %.3g]', comment, data.(xparam)(xmin), data.(xparam)(xmax));
+  comment = sprintf('%0s\nylim=[%.3g %.3g]', comment, data.(yparam)(ymin), data.(yparam)(ymax));
   comment = sprintf('%0s\nzlim=[%.3g %.3g]', comment, zmin, zmax);
   ft_plot_text(lay.pos(k,1), lay.pos(k,2), sprintf(comment), 'Fontsize', cfg.fontsize);
 end
