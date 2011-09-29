@@ -760,7 +760,6 @@ end
 function select_fftrange_cb(range,h) %range 1X4 in sec relative to current trial
 opt = getappdata(h, 'opt');
 cfg = getappdata(h, 'cfg');
-% create fft window
 
 % the range should be in the displayed box
 range(1) = max(opt.hpos-opt.width/2, range(1));
@@ -806,25 +805,74 @@ freqboi    = freqboilim(1):1:freqboilim(2);
 freqoi     = (freqboi-1) ./ (nsample * (1/fsample));
 xaxis = freqoi;
 
+
+
 % make figure window for fft
-ffth = figure('name',['fft trial ' num2str(opt.trlop) ': ' num2str(time(1)) '-' num2str(time(end)) 'ms'],'numbertitle','off');
-hold on
+ffth = figure('name',['fft trial ' num2str(opt.trlop) ': ' num2str(time(1)) '-' num2str(time(end)) 'ms'],'numbertitle','off','units','normalized');
+% set button
+butth = uicontrol('tag', 'simplefft_l2', 'parent', ffth, 'units', 'normalized', 'style', 'togglebutton', 'string','log of power','position', [0.91, 0.6 , 0.08, 0.04], 'value',1,'callback',{@draw_simple_fft_cb});
+ft_uilayout(ffth, 'tag', 'simplefft_l2', 'width', 0.075, 'height', 0.10);
+
+% put data in fig (sparse)
+fftopt = [];
+fftopt.cfg.viewmode = cfg.viewmode;
+fftopt.chancolors = opt.chancolors;
+fftopt.xaxis  = xaxis;
+fftopt.xaxis  = xaxis;
+fftopt.fftdat = fftdat(:,freqboi);
+setappdata(ffth, 'fftopt', fftopt);
+
+
+
+% draw fig
+draw_simple_fft_cb(butth)
+end % function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function draw_simple_fft_cb(h,eventdata)
+togglestate = get(h,'value');
+ffth        = get(h,'parent');
+fftopt = getappdata(ffth, 'fftopt');
+cfg    = fftopt.cfg;
+% clear axis (for switching)
+cla
+
+% switch log or nonlog
+if togglestate == 0
+  dat = fftopt.fftdat;
+  set(h,'backgroundColor',[0.8 0.8 0.8])
+elseif togglestate == 1
+  dat = log(fftopt.fftdat);
+  set(h,'backgroundColor','g')
+end
+
 % plot using specified colors
-dat = log(fftdat(:,freqboi));
-for ichan = 1:size(fftdat,1)
+set(0,'currentFigure',ffth)
+for ichan = 1:size(fftopt.fftdat,1)
   if strcmp(cfg.viewmode, 'component')
     color = 'k';
   else
-    color = opt.chancolors(ichan,:);
+    color = fftopt.chancolors(ichan,:);
   end
-  ft_plot_vector(xaxis, dat(ichan,:), 'box', false, 'color', color);
+  ft_plot_vector(fftopt.xaxis, dat(ichan,:), 'box', false, 'color', color)
 end
 ylabel('log(power)')
 xlabel('frequency (hz)')
 yrange = abs(max(max(dat)) - min(min(dat)));
-axis([xaxis(1) xaxis(end) (min(min(dat)) - yrange.*.1) (max(max(dat)) + yrange*.1)]) 
+axis([fftopt.xaxis(1) fftopt.xaxis(end) (min(min(dat)) - yrange.*.1) (max(max(dat)) + yrange*.1)]) 
 
-end % function
+% switch log or nonlog
+if togglestate == 0
+  ylabel('power')
+  axis([fftopt.xaxis(1) fftopt.xaxis(end) 0 (max(max(dat)) + yrange*.1)]) 
+elseif togglestate == 1
+  ylabel('log(power)')
+  axis([fftopt.xaxis(1) fftopt.xaxis(end) (min(min(dat)) - yrange.*.1) (max(max(dat)) + yrange*.1)]) 
+end
+
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
