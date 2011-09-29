@@ -820,7 +820,7 @@ for ichan = 1:size(fftdat,1)
   ft_plot_vector(xaxis, dat(ichan,:), 'box', false, 'color', color);
 end
 ylabel('log(power)')
-xlabel('time(ms)')
+xlabel('frequency (hz)')
 yrange = abs(max(max(dat)) - min(min(dat)));
 axis([xaxis(1) xaxis(end) (min(min(dat)) - yrange.*.1) (max(max(dat)) + yrange*.1)]) 
 
