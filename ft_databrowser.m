@@ -81,7 +81,7 @@ function [cfg] = ft_databrowser(cfg, data)
 
 % Undocumented options
 % cfg.enablefftbutton = 'yes'/'no' - roevdmei
-% 
+% cfg.enablepreprocedit = 'yes'/'no' - roevdmei
 % 
 % 
 
@@ -131,6 +131,8 @@ if ~isfield(cfg, 'event'),           cfg.event = [];                      end % 
 if ~isfield(cfg, 'continuous'),      cfg.continuous = [];                 end % the default is set further down in the code, conditional on the input data
 if ~isfield(cfg, 'ploteventlabels'), cfg.ploteventlabels = 'type=value';  end
 if ~isfield(cfg, 'enablefftbutton'), cfg.enablefftbutton = 'no';          end 
+if ~isfield(cfg, 'enablepreprocedit'), cfg.enablepreprocedit = 'no';      end 
+
 
 if ~isfield(cfg, 'viewmode')
   % butterfly, vertical, component
@@ -486,6 +488,10 @@ end
 if strcmp(cfg.enablefftbutton,'yes')
   uicontrol('tag', 'simplefft', 'parent', h, 'units', 'normalized', 'style', 'togglebutton', 'string','simple fft','position', [0.91, 0.6 - ((iArt-1)*0.09), 0.08, 0.04],'callback',@simplefft_toggle_cb, 'value',0)
 end
+% implement devel 'edit preproc'-button
+if strcmp(cfg.enablepreprocedit,'yes')
+  uicontrol('tag', 'preproccfg', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string','preproc cfg','position', [0.91, 0.55 - ((iArt-1)*0.09), 0.08, 0.04],'callback',@preproc_cfg1_cb)
+end
 
 
 ft_uilayout(h, 'tag', 'group1', 'width', 0.10, 'height', 0.05);
@@ -557,6 +563,13 @@ if nargout
   for i=1:length(opt.artdata.label)
     cfg.artfctdef.(opt.artdata.label{i}).artifact = convert_event(opt.artdata.trial{1}(i,:), 'artifact');
   end
+  
+  if strcmp(cfg.enablepreprocedit,'yes')
+    % add the updated preproc to the output
+    browsecfg = getappdata(h, 'cfg');
+    cfg.preproc = browsecfg.preproc;
+  end
+  
 end % if nargout
 
 % add version information to the configuration
@@ -738,6 +751,83 @@ end % function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function preproc_cfg1_cb(h,eventdata)
+parent = get(h,'parent');
+cfg = getappdata(parent, 'cfg');
+
+% parse cfg.preproc
+if ~isempty(cfg.preproc)
+  code = printstruct('cfg', cfg.preproc);
+else
+  code = [];
+end
+  
+% add descriptive lines
+nl      = sprintf('\n');
+sep     = sprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
+descrip = sprintf('%% Add/change config options for preprocessing\n%% (similar to in the script editor)\n');
+code    = [sep descrip sep code];
+
+
+% make figure displaying the edit box
+pph = figure;
+% add save button
+uicontrol('tag', 'preproccfg_l2', 'parent', pph, 'units', 'normalized', 'style', 'pushbutton', 'string','save and close','position', [0.81, 0.6 , 0.18, 0.10],'callback',@preproc_cfg2_cb);
+% add edit box
+ppeh = uicontrol('style', 'edit');
+set(pph, 'toolBar', 'none')
+set(pph, 'menuBar', 'none')
+set(pph, 'Name', 'cfg editor')
+set(pph, 'NumberTitle', 'off')
+set(ppeh, 'Units', 'normalized');
+set(ppeh, 'Position', [0 0 .8 1]);
+set(ppeh, 'backgroundColor', [1 1 1]);
+set(ppeh, 'horizontalAlign', 'left');
+set(ppeh, 'max', 2);
+set(ppeh, 'min', 0);
+set(ppeh, 'FontName', 'Courier');
+set(ppeh, 'FontSize', 12);
+set(ppeh, 'string', code);
+
+
+% add handle for the edit style to figure
+setappdata(pph,'superparent', parent); % superparent is the main ft_databrowser window
+setappdata(pph,'ppeh', ppeh);
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function preproc_cfg2_cb(h,eventdata)
+parent = get(h,'parent');
+ppeh   = getappdata(parent,'ppeh');
+code = get(ppeh, 'string');
+
+% remove descriptive lines (so they don't display on command line)
+code = code(4:end,:);
+
+% eval the code
+for iline = 1:size(code,1)
+  eval([code(iline,:) ';']);
+end
+
+% check for cfg and output into the original appdata-window
+if ~exist('cfg','var')
+  cfg = [];
+end
+superparent = getappdata(parent,'superparent');
+maincfg = getappdata(superparent,'cfg');
+maincfg.preproc = cfg;
+setappdata(superparent,'cfg',maincfg)
+close(parent)
+redraw_cb(superparent)
+uiresume(superparent)
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function simplefft_toggle_cb(h,eventdata)
 togglestate = get(h,'value');
 parent      = get(h,'parent');
@@ -824,8 +914,6 @@ fftopt.chansel    = 1:size(fftdat,1);
 fftopt.fftdat     = fftdat(:,freqboi);
 fftopt.butth      = butth;
 setappdata(ffth, 'fftopt', fftopt);
-
-
 
 % draw fig
 draw_simple_fft_cb(butth)
