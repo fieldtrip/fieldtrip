@@ -555,6 +555,8 @@ else
   end
 end
 cfg.dim     = varargin{1}.dim;
-cfg.inside  = varargin{1}.inside; %FIXME take the intersection between all inputs
+%cfg.inside  = varargin{1}.inside; %FIXME take the intersection between all inputs
+%FIXME don't do the previous line in order to take the unfolded inside
+%across the dimensions in the input
 cfg.dimord  = 'voxel';
 cfg.origdim = [cfg.dim siz(2:end-1)];
