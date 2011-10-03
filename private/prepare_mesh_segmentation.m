@@ -74,7 +74,7 @@ for i=1:length(cfg.tissue)
   ori(3) = mean(mriz(seg(:)));
   [pnt, tri] = triangulate_seg(seg, cfg.numvertices(i), ori);
   % FIXME: corrects the original tri because is weird
-  tri = projecttri(pnt);
+  %tri = projecttri(pnt);
   % apply the coordinate transformation from voxel to head coordinates
   pnt(:,4) = 1;
   pnt = (mri.transform * (pnt'))';
