@@ -184,8 +184,8 @@ for i=1:ncmb
   ft_progress(i/ncmb, 'plotting connection %d from %d (%s -> %s)\n', i, ncmb, beglabel{i}, endlabel{i});
 
   if widthparam(i)>0
-    begindx = strmatch(beglabel{i}, lay.label);
-    endindx = strmatch(endlabel{i}, lay.label);
+    begindx = strcmp(beglabel{i}, lay.label);
+    endindx = strcmp(endlabel{i}, lay.label);
     xbeg = lay.pos(begindx,1);
     ybeg = lay.pos(begindx,2);
     xend = lay.pos(endindx,1);
