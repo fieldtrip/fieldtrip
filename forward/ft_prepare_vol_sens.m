@@ -67,7 +67,9 @@ if isempty(channel),  channel = sens.label;   end
 if isempty(order),    order = 10;             end
 
 % ensure that the sensor description is up-to-date
-sens = fixsens(sens);
+if isfield(sens,'pnt')
+  sens = fixsens(sens);
+end
 
 % determine whether the input contains EEG or MEG sensors
 iseeg = ft_senstype(sens, 'eeg');
