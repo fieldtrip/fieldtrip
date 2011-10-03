@@ -22,10 +22,10 @@ function [mri] = ft_volumerealign(cfg, mri)
 %                        'interactive' manually using graphical user interface
 %                        'fiducial' realign the volume to the fiducials,
 %                                     which are assumed to specify the positions of
-%                                     the nasion, left and right pre-auricular points.  
+%                                     the nasion, left and right pre-auricular points.
 %                        'landmark' realign the volume to anatomical landmarks,
-%                                     which are assumed to specify the positions of     
-%                                       the anterior and posterior commissures, and a 
+%                                     which are assumed to specify the positions of
+%                                       the anterior and posterior commissures, and a
 %                                       point in the XZ-plane.
 %                                     this leads to a head coordinate system using
 %                                     RAS_Tal convention, i.e. the origin corresponds
@@ -37,13 +37,13 @@ function [mri] = ft_volumerealign(cfg, mri)
 %                                     the X-axis is orthogonal to the YZ-plane,
 %                                       positive to the right
 %   cfg.coordsys       = 'ctf' (default when specifying cfg.method = 'interactive' or
-%                                 'fiducial') or 'spm' (default when specifying 
+%                                 'fiducial') or 'spm' (default when specifying
 %                                 cfg.method = 'landmark'). Specifies the coordinate
 %                                     system of the head. This string
 %                                     specifies the origin and the axes of the
-%                                     coordinate system. supported coordinate systems 
+%                                     coordinate system. supported coordinate systems
 %                                     are, 'ctf', '4d', 'yokogawa', 'neuromag', 'itab'
-%                                     'spm', 'tal'. 
+%                                     'spm', 'tal'.
 %   cfg.clim           = [min max], scaling of the anatomy color (default
 %                        is to adjust to the minimum and maximum)
 %   cfg.parameter      = 'anatomy' the parameter which is used for the visualization
@@ -73,7 +73,7 @@ function [mri] = ft_volumerealign(cfg, mri)
 % See also FT_READ_MRI, FT_ELECTRODEREALIGN HEADCOORDINATES
 
 % Copyright (C) 2006-2011, Robert Oostenveld, Jan-Mathijs Schoffelen
-% 
+%
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
 %
@@ -154,6 +154,7 @@ if iscell(cfg.parameter)
   cfg.parameter = cfg.parameter{1};
 end
 
+h  = figure;
 h1 = subplot('position',[0.02 0.55 0.44 0.44]);%subplot(2,2,1);
 h2 = subplot('position',[0.52 0.55 0.44 0.44]);%subplot(2,2,2);
 h3 = subplot('position',[0.02 0.05 0.44 0.44]);%subplot(2,2,3);
@@ -187,16 +188,40 @@ switch cfg.method
     markerpos   = zeros(0,3);
     markerlabel = {};
     markercolor = {};
+
+    fprintf(strcat(...
+        '1. To change the slice viewed in one plane, either:\n',...
+        '   a. click (left mouse) in the image on a different plane. Eg, to view a more\n',...
+        '      superior slice in the horizontal plane, click on a superior position in the\n',...
+        '      coronal plane, or\n',...
+        '   b. use the arrow keys to increase or decrease the slice number by one\n',...
+        '2. To mark a fiducial position or anatomical landmark, do BOTH:\n',...
+        '   (this can be done multiple times, until you are satisfied with the positions.\n',...
+        '    for each type of point, the most recent selection is stored.)\n',...
+        '   a. select the position by clicking on it in any slice with the left mouse\n',...
+        '      button\n',...
+        '   b. identify it by pressing either n/l/r for fiducials, or a/p/z for\n',...
+        '      anatomical landmarks\n',...
+        '3. To change the display:\n',...
+        '   a. press c or C on keyboard to show/hide crosshair\n',...
+        '   b. press m or M on keyboard to show/hide marked positions\n',...
+        '4. To finalize markers and quit interactive mode, press q on keyboard\n'));
+        
+        %'3. To unmark or remark a location\n',...
+        %'   a. click with the middle mouse button to unmark last position\n',...
+        %'   b. select new position with right mouse button and identify it using the\n',...
+        %'      keyboard\n',...
     while true % break when 'q' is pressed
-      fprintf('click with the left mouse button to reslice the display to a new position\n');
-      fprintf('click with the right mouse button to mark a position\n');
-      fprintf('click with the middle mouse button to unmark the last marked position\n');
-      fprintf('press n/l/r on keyboard to record the current position as fiducial location\n');
-      fprintf('press a/p/z on keyboard to record the current position as anatomical landmark\n');
-      fprintf('press the arrow keys on the keyboard to increment or decrement the slice number by one\n');
-      fprintf('press c or C on the keyboard to show or hide the crosshair\n');
-      fprintf('press m or M on the keyboard to show or hide the marked positions\n');
-      fprintf('press q on keyboard to quit interactive mode\n');
+      %       fprintf('click with the left mouse button to reslice the display to a new position\n');
+      %       fprintf('click with the right mouse button to mark a position\n');
+      %       fprintf('click with the middle mouse button to unmark the last marked position\n');
+      %       fprintf('press n/l/r on keyboard to record the current position as fiducial location\n');
+      %       fprintf('press a/p/z on keyboard to record the current position as anatomical landmark\n');
+      %       fprintf('press the arrow keys on the keyboard to increment or decrement the slice number by one\n');
+      %       fprintf('press c or C on the keyboard to show or hide the crosshair\n');
+      %       fprintf('press m or M on the keyboard to show or hide the marked positions\n');
+      %       fprintf('press q on keyboard to quit interactive mode\n');
+      
       
       xc = round(xc); xc = max(1,xc); xc = min(mri.dim(1),xc);
       yc = round(yc); yc = max(1,yc); yc = min(mri.dim(2),yc);
@@ -206,155 +231,156 @@ switch cfg.method
       drawnow;
       try, [d1, d2, key] = ginput(1); catch, key='q'; end
       switch key
-      case 113 % 'q'
-        break;
-      case 108 % 'l'
-        lpa = [xc yc zc];
-      case 114 % 'r'
-        rpa = [xc yc zc];
-      case 110 % 'n'
-        nas = [xc yc zc];
-      case 97  % 'a'
-        antcomm = [xc yc zc];
-      case 112 % 'p'
-        pstcomm = [xc yc zc];
-      case 122 % 'z'
-        xzpoint = [xc yc zc];
-      case 99  % 'c'
-        showcrosshair = true;
-      case 67  % 'C'
-        showcrosshair = false;
-      case 109 % 'm'
-        showmarkers = 2;
-      case 77 % 'M'
-        showmarkers = 0;
-      case 1 % left mouse click
-        % update the view to a new position
-        l1 = get(get(gca, 'xlabel'), 'string');
-        l2 = get(get(gca, 'ylabel'), 'string');
-        switch l1,
-          case 'i'
-            xc = d1;
-          case 'j'
-            yc = d1;
-          case 'k'
-            zc = d1;
-          otherwise
-            continue;
-        end
-        switch l2,
-          case 'i'
-            xc = d2;
-          case 'j'
-            yc = d2;
-          case 'k'
-            zc = d2;
-          otherwise
-            continue;
-        end
-        if l1=='i' && l2=='j'
-          updatepanel = [1 2 3];
-        elseif l1=='i' && l2=='k'
-          updatepanel = [2 3 1];
-        elseif l1=='j' && l2=='k'
-          updatepanel = [3 1 2];
-        end
-      case 3 % right mouse click  
-        % add point to a list
-        l1 = get(get(gca, 'xlabel'), 'string');
-        l2 = get(get(gca, 'ylabel'), 'string');
-        switch l1,
-          case 'i'
-            xc = d1;
-          case 'j'
-            yc = d1;
-          case 'k'
-            zc = d1;
-        end
-        switch l2,
-          case 'i'
-            xc = d2;
-          case 'j'
-            yc = d2;
-          case 'k'
-            zc = d2;
-        end
-        pnt = [pnt; xc yc zc];
-        if l1=='i' && l2=='j'
-          updatepanel = [1 2 3];
-        elseif l1=='i' && l2=='k'
-          updatepanel = [2 3 1];
-        elseif l1=='j' && l2=='k'
-          updatepanel = [3 1 2];
-        end
-      case 2 % middle mouse click
-        l1 = get(get(gca, 'xlabel'), 'string');
-        l2 = get(get(gca, 'ylabel'), 'string');
-        
-        % remove the previous point
-        if size(pnt,1)>0
-          pnt(end,:) = [];
-        end
-        
-        if l1=='i' && l2=='j'
-          updatepanel = [1 2 3];
-        elseif l1=='i' && l2=='k'
-          updatepanel = [2 3 1];
-        elseif l1=='j' && l2=='k'
-          updatepanel = [3 1 2];
-        end
-      case 28 % arrow left
-        % update the coordinates
-        l1 = get(get(gca, 'xlabel'), 'string');
-        l2 = get(get(gca, 'ylabel'), 'string');
-        if l1=='i' && l2=='j'
-          xc = xc-1; updatepanel = [1 2 3];
-        elseif l1=='i' && l2=='k'
-          xc = xc-1; updatepanel = [2 3 1];
-        elseif l1=='j' && l2=='k'
-          yc = yc-1; updatepanel = [3 1 2];
-        end
-      case 30 % arrow up
-        % update the coordinates
-        l1 = get(get(gca, 'xlabel'), 'string');
-        l2 = get(get(gca, 'ylabel'), 'string');
-        if l1=='i' && l2=='j'
-          yc = yc+1; updatepanel = [1 2 3];
-        elseif l1=='i' && l2=='k'
-          zc = zc+1; updatepanel = [2 3 1];
-        elseif l1=='j' && l2=='k'
-          zc = zc+1; updatepanel = [3 1 2];
-        end
-      case 29 % arrow right
-        % update the coordinates
-        l1 = get(get(gca, 'xlabel'), 'string');
-        l2 = get(get(gca, 'ylabel'), 'string');
-        if l1=='i' && l2=='j'
-          xc = xc+1; updatepanel = [1 2 3];
-        elseif l1=='i' && l2=='k'
-          xc = xc+1; updatepanel = [2 3 1];
-        elseif l1=='j' && l2=='k'
-          yc = yc+1; updatepanel = [3 1 2];
-        end
-      case 31 % arrow down
-        % update the coordinates
-        l1 = get(get(gca, 'xlabel'), 'string');
-        l2 = get(get(gca, 'ylabel'), 'string');
-        if l1=='i' && l2=='j'
-          yc = yc-1; updatepanel = [1 2 3];
-        elseif l1=='i' && l2=='k'
-          zc = zc-1; updatepanel = [2 3 1];
-        elseif l1=='j' && l2=='k'
-          zc = zc-1; updatepanel = [3 1 2];
-        end
-      otherwise
-        % do nothing
+        case 113 % 'q'
+          delete(h);
+          break;
+        case 108 % 'l'
+          lpa = [xc yc zc];
+        case 114 % 'r'
+          rpa = [xc yc zc];
+        case 110 % 'n'
+          nas = [xc yc zc];
+        case 97  % 'a'
+          antcomm = [xc yc zc];
+        case 112 % 'p'
+          pstcomm = [xc yc zc];
+        case 122 % 'z'
+          xzpoint = [xc yc zc];
+        case 99  % 'c'
+          showcrosshair = true;
+        case 67  % 'C'
+          showcrosshair = false;
+        case 109 % 'm'
+          showmarkers = 2;
+        case 77 % 'M'
+          showmarkers = 0;
+        case 1 % left mouse click
+          % update the view to a new position
+          l1 = get(get(gca, 'xlabel'), 'string');
+          l2 = get(get(gca, 'ylabel'), 'string');
+          switch l1,
+            case 'i'
+              xc = d1;
+            case 'j'
+              yc = d1;
+            case 'k'
+              zc = d1;
+            otherwise
+              continue;
+          end
+          switch l2,
+            case 'i'
+              xc = d2;
+            case 'j'
+              yc = d2;
+            case 'k'
+              zc = d2;
+            otherwise
+              continue;
+          end
+          if l1=='i' && l2=='j'
+            updatepanel = [1 2 3];
+          elseif l1=='i' && l2=='k'
+            updatepanel = [2 3 1];
+          elseif l1=='j' && l2=='k'
+            updatepanel = [3 1 2];
+          end
+        case 3 % right mouse click
+          % add point to a list
+          l1 = get(get(gca, 'xlabel'), 'string');
+          l2 = get(get(gca, 'ylabel'), 'string');
+          switch l1,
+            case 'i'
+              xc = d1;
+            case 'j'
+              yc = d1;
+            case 'k'
+              zc = d1;
+          end
+          switch l2,
+            case 'i'
+              xc = d2;
+            case 'j'
+              yc = d2;
+            case 'k'
+              zc = d2;
+          end
+          pnt = [pnt; xc yc zc];
+          if l1=='i' && l2=='j'
+            updatepanel = [1 2 3];
+          elseif l1=='i' && l2=='k'
+            updatepanel = [2 3 1];
+          elseif l1=='j' && l2=='k'
+            updatepanel = [3 1 2];
+          end
+        case 2 % middle mouse click
+          l1 = get(get(gca, 'xlabel'), 'string');
+          l2 = get(get(gca, 'ylabel'), 'string');
+          
+          % remove the previous point
+          if size(pnt,1)>0
+            pnt(end,:) = [];
+          end
+          
+          if l1=='i' && l2=='j'
+            updatepanel = [1 2 3];
+          elseif l1=='i' && l2=='k'
+            updatepanel = [2 3 1];
+          elseif l1=='j' && l2=='k'
+            updatepanel = [3 1 2];
+          end
+        case 28 % arrow left
+          % update the coordinates
+          l1 = get(get(gca, 'xlabel'), 'string');
+          l2 = get(get(gca, 'ylabel'), 'string');
+          if l1=='i' && l2=='j'
+            xc = xc-1; updatepanel = [1 2 3];
+          elseif l1=='i' && l2=='k'
+            xc = xc-1; updatepanel = [2 3 1];
+          elseif l1=='j' && l2=='k'
+            yc = yc-1; updatepanel = [3 1 2];
+          end
+        case 30 % arrow up
+          % update the coordinates
+          l1 = get(get(gca, 'xlabel'), 'string');
+          l2 = get(get(gca, 'ylabel'), 'string');
+          if l1=='i' && l2=='j'
+            yc = yc+1; updatepanel = [1 2 3];
+          elseif l1=='i' && l2=='k'
+            zc = zc+1; updatepanel = [2 3 1];
+          elseif l1=='j' && l2=='k'
+            zc = zc+1; updatepanel = [3 1 2];
+          end
+        case 29 % arrow right
+          % update the coordinates
+          l1 = get(get(gca, 'xlabel'), 'string');
+          l2 = get(get(gca, 'ylabel'), 'string');
+          if l1=='i' && l2=='j'
+            xc = xc+1; updatepanel = [1 2 3];
+          elseif l1=='i' && l2=='k'
+            xc = xc+1; updatepanel = [2 3 1];
+          elseif l1=='j' && l2=='k'
+            yc = yc+1; updatepanel = [3 1 2];
+          end
+        case 31 % arrow down
+          % update the coordinates
+          l1 = get(get(gca, 'xlabel'), 'string');
+          l2 = get(get(gca, 'ylabel'), 'string');
+          if l1=='i' && l2=='j'
+            yc = yc-1; updatepanel = [1 2 3];
+          elseif l1=='i' && l2=='k'
+            zc = zc-1; updatepanel = [2 3 1];
+          elseif l1=='j' && l2=='k'
+            zc = zc-1; updatepanel = [3 1 2];
+          end
+        otherwise
+          % do nothing
       end
-      fprintf('============================================================\n');
+      fprintf('=========================================================================\n');
       
       if all(round([xc yc zc])<=mri.dim)
         str = sprintf('voxel %d, indices [%d %d %d]', sub2ind(mri.dim(1:3), round(xc), round(yc), round(zc)), round([xc yc zc]));
-            
+        
         if isfield(mri, 'coordsys') && isfield(mri, 'unit')
           str = sprintf('%s, %s coordinates [%.1f %.1f %.1f] %s', str, mri.coordsys, warp_apply(mri.transform, [xc yc zc]), mri.unit);
         elseif ~isfield(mri, 'coordsys') && isfield(mri, 'unit')
@@ -433,7 +459,7 @@ switch cfg.method
     if ~isempty(antcomm) && ~isempty(pstcomm) && ~isempty(xzpoint)
       basedonmrk = 1;
     end
-
+    
   otherwise
     error('unsupported method');
 end
@@ -494,7 +520,7 @@ cfg.version.id = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.version.matlab = version();
-  
+
 % add information about the function call to the configuration
 cfg.callinfo.proctime = toc(ftFuncTimer);
 cfg.callinfo.procmem  = memtoc(ftFuncMem);
@@ -559,7 +585,7 @@ elseif showmarkers==2
 end
 
 for k = 1:numel(updatepanel)
-
+  
   update = updatepanel(k);
   if update==1
     subplot(h1);
@@ -593,12 +619,12 @@ for k = 1:numel(updatepanel)
         plot(markerpos(sel2(kk),2), markerpos(sel2(kk),3), 'marker', '.', 'color', markercolor{sel2(kk)});
       end
       hold off;
-    end  
+    end
     axis equal; axis tight;
   end
   
   if update==3
-    subplot(h3); 
+    subplot(h3);
     imagesc(x, y, squeeze(dat(:,:,zi))'); set(gca, 'ydir', 'normal')
     xlabel('i'); ylabel('j');
     caxis([cmin cmax]);
@@ -614,7 +640,7 @@ for k = 1:numel(updatepanel)
     end
     axis equal; axis tight;
   end
-
+  
 end
 
 colormap gray
