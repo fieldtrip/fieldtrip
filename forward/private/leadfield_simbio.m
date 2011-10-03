@@ -25,10 +25,6 @@ if ~isunix
   error('this only works on linux and osx')
 end
 
-if ~ft_hastoolbox('simbio',1,0)
-  error('you must install the simbio toolbox first')
-end
-  
 try 
   cd(tempdir)
   [~,tname] = fileparts(tempname);
@@ -49,9 +45,9 @@ try
   % write the electrodes and dipoles positions in the temporary folder
   disp('writing the electrodes file on disk...')
   if ~isfield(vol,'deepelec')
-    sb_write_elc(warp_apply(inv(vol.transform),elc.pnt),elc.label,elcfile);
+    sb_write_elc(warp_apply(inv(vol.transform),elc.chanpos),elc.label,elcfile);
   else
-    sb_write_elc(warp_apply(inv(vol.transform),elc.pnt),elc.label,elcfile,1);
+    sb_write_elc(warp_apply(inv(vol.transform),elc.chanpos),elc.label,elcfile,1);
   end
   disp('writing the dipoles file on disk...')
   sb_write_dip(warp_apply(inv(vol.transform),dip),dipfile);
@@ -59,28 +55,26 @@ try
   % write the parameters file, contains tissues conductivities, the fe
   % grid and simbio call details, mixed together
   disp('writing the parameters file on disk...')
-  sb_write_par(parfile,'cond',vol.cond,'labels',unique(vol.wf.labels));
+  sb_write_par(parfile,'cond',vol.cond,'labels',unique(vol.wf.labels)-100);
   
   % write the vol.wf in a vista format .v file
   disp('writing the mesh file on disk...')
   write_vista_mesh(meshfile,vol.wf.nd,vol.wf.el,vol.wf.labels);
 
-  % exe file
+  % write the transfer matrix on disk
+  disp('writing the transfer matrix on disk...')
+  sb_write_transfer(vol.transfer,transfermatrix);
   
   if ~ispc
     efid = fopen(exefile, 'w');
     fprintf(efid,'#!/usr/bin/env bash\n');
-    
-%             fprintf(efid,['ipm_linux_opt -i FEtransfermatrix -h ./' meshfile ' -s ./' elcfile, ...
-%               ' -o ./' transfermatrix ' -p ./' parfile ' -sens EEG 2>&1 > /dev/null\n']);
-%             fprintf(efid,['ipm_linux_opt -i sourcesimulation -s ./' elcfile ' -t ./' vol.transfermatrix, ...
-%               ' -dip ./' dipfile ' -o ./' outfile ' -p ./' parfile ' -fwd FEM -sens EEG 2>&1 > /dev/null\n']);
-
-    fprintf(efid,['ipm_linux_opt_Venant -i sourcesimulation -h ./' meshfile ' -s ./' elcfile, ...
-      ' -dip ./' dipfile ' -o ./' outfile ' -p ./' parfile ' -fwd FEM -sens EEG 2>&1 > /dev/null\n']);
-    
+    fprintf(efid,['ipm_linux_opt -i sourcesimulation  -h ./' meshfile ' -s ./' elcfile ' -t ./' transfermatrix, ...
+      ' -dip ./' dipfile ' -o ./' outfile ' -p ./' parfile ' -fwd FEM -sens EEG\n']);
     fclose(efid);
     
+%     fprintf(efid,['ipm_linux_opt_Venant -i sourcesimulation -h ./' meshfile ' -s ./' elcfile, ...
+%       ' -dip ./' dipfile ' -o ./' outfile ' -p ./' parfile ' -fwd FEM -sens EEG 2>&1 > /dev/null\n']);
+
     dos(sprintf('chmod +x %s', exefile));
     disp('simbio is calculating the leadfields, this may take some time ...')
 
@@ -88,30 +82,27 @@ try
     dos(['./' exefile]);
     disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
 
-    try
-      [lf] = sb_read_msr(outfile);
-      cleaner(exefile,elcfile,dipfile,parfile,meshfile,outfile)
-      cd(tmpfolder)
-    catch
-      disp('Unable to read the solution')
-      cleaner(exefile,elcfile,dipfile,parfile,meshfile,outfile)
-      cd(tmpfolder)      
-    end
+    % extract the lead-fields
+    [lf] = sb_read_msr(outfile);
+    cleaner(exefile,elcfile,dipfile,parfile,meshfile,outfile,transfermatrix)
+    cd(tmpfolder)
   end
+  
 catch
   warning('an error occurred while running simbio');
   rethrow(lasterror)
-  cleaner(dipfile,elcfile,outfile,exefile)
+  cleaner(exefile,elcfile,dipfile,parfile,meshfile,outfile,transfermatrix)
   cd(tmpfolder)
 end
 
-function cleaner(exefile,elcfile,dipfile,parfile,meshfile,outfile)
+function cleaner(exefile,elcfile,dipfile,parfile,meshfile,outfile,transfermatrix)
 delete(exefile);
 delete(elcfile);
 delete(dipfile);
 delete(parfile);
 delete(meshfile);
 delete(outfile);
+delete(transfermatrix);
 delete([outfile '.fld']);
 delete([outfile '.hex']);
 delete([outfile '.pot']);

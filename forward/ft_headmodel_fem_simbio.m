@@ -13,7 +13,7 @@ ft_hastoolbox('simbio', 1);
 
 wfmethod     = ft_getopt(varargin, 'wfmethod', 'cubes'); % wireframe method (default: cubes)
 transform    = ft_getopt(varargin, 'transform', []);  % contains the tr. matrix from voxels to head coordinates
-unit         = ft_getopt(varargin, 'unit', 'cm');     % contains the units of the transformation matrix (mm, cm, ...)
+unit         = ft_getopt(varargin, 'unit', 'mm');     % contains the units of the transformation matrix (mm, cm, ...)
 tissue       = ft_getopt(varargin, 'tissue', []);     % contains the labels of the tissues
 tissueval    = ft_getopt(varargin, 'tissueval', []);  % contains the tissue values (an integer for each compartment)
 tissuecond   = ft_getopt(varargin, 'tissuecond', []); % contains the tissue conductivities
@@ -54,8 +54,8 @@ if strcmp(wfmethod,'cubes')
       [~,tname] = fileparts(tempname);
       elcfile   = [tname '.elc'];
       
-      if ~ft_hastoolbox('simbio')
-        error('Cannot write a materials file without the Vista/Simbio toolbox')
+      if ~ft_hastoolbox('simbio',1,0) || ~ft_hastoolbox('vgrid',1,0)
+        error('Cannot proceed without Simbio and Vgrid toolboxes')
       end
       
       % write the segmented volume in a Vista format .v file
@@ -79,37 +79,31 @@ if strcmp(wfmethod,'cubes')
       dos(['./' shfile]);
       disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
       % FIXME: think about adding a translation due to conversion between indices and vertices' world coordinates
-    catch
-      disp('Error in writing the wireframe mesh file')
-      cleaner(MRfile,materialsfile,meshfile,shfile)
-      rethrow(ME)
-    end
-    
-    try % calculate the FE transfer matrix
       
-      % FIXME: is this really necessary?
+      
+      % calculate the FE transfer matrix
       % read the mesh points
       [nodes,elements,labels] = read_vista_mesh(meshfile);
       % assign wireframe (also called 'FEM grid', or '3d mesh')
       wf.nd = nodes;
       wf.el = elements;
       wf.labels = labels;
-
+      
       if deepelec
-        sb_write_elc(warp_apply(inv(transform),sens.pnt),sens.label,elcfile,1);
+        sb_write_elc(warp_apply(inv(transform),sens.chanpos),sens.label,elcfile,1);
       else
-        sb_write_elc(warp_apply(inv(transform),sens.pnt),sens.label,elcfile);
+        sb_write_elc(warp_apply(inv(transform),sens.chanpos),sens.label,elcfile);
       end
-  
+      
       % write parfile
       disp('writing the parameters file on disk...')
       sb_write_par(parfile,'cond',tissuecond,'labels',tissueval); %unique(vol.wf.labels)
       
-       % write exefile
+      % write exefile
       efid = fopen(exefile, 'w');
       fprintf(efid,'#!/usr/bin/env bash\n');
       fprintf(efid,['ipm_linux_opt -i FEtransfermatrix -h ./' meshfile ' -s ./' elcfile, ...
-        ' -o ./' transfermatrix ' -p ./' parfile ' -sens EEG 2>&1 > /dev/null\n']);
+        ' -o ./' transfermatrix ' -p ./' parfile ' -sens EEG \n']); %2>&1 > /dev/null
       fclose(efid);
       dos(sprintf('chmod +x %s', exefile));
       disp('simbio is calculating the transfer matrix, this may take some time ...')
@@ -120,18 +114,17 @@ if strcmp(wfmethod,'cubes')
       disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
       
       % read the transfer matrix
-      tMat = sb_read_transfer(transfermatrix);
-      tMat = tMat.mat;
+      transfer = sb_read_transfer(transfermatrix);
       cleaner(shfile,meshfile,MRfile,materialsfile,exefile,transfermatrix,parfile,elcfile)
-    catch
-      disp('mesh was not written, check the presence of vgrid in the path')
+    catch ME
+      disp('The transfer matrix was not written')
       cleaner(shfile,meshfile,MRfile,materialsfile,exefile,transfermatrix,parfile,elcfile)
       cd(tmpfolder)
       rethrow(ME)
     end
     
   end %  if isunix
-
+  
 elseif strcmp(wfmethod,'tetra')
   % not yet implemented
 else
@@ -144,7 +137,7 @@ vol.cond      = tissuecond;
 vol.transform = transform;
 vol.unit      = unit;
 vol.type      = 'simbio';
-vol.mat       = tMat;
+vol.transfer  = transfer;
 
 % if ~isempty(bnd)
 %   vol.bnd        = bnd;
@@ -154,12 +147,12 @@ if ~isempty(deepelec)
 end
 
 function cleaner(shfile,meshfile,MRfile,materialsfile,exefile,transfermatrix,parfile,elcfile)
-  delete(shfile);
-  delete(meshfile);
-  delete(MRfile);
-  delete(materialsfile);
-  delete(exefile);
-  delete([transfermatrix '.bin']);
-  delete([transfermatrix '.mat']);  
-  delete(parfile);
-  delete(elcfile);
+delete(shfile);
+delete(meshfile);
+delete(MRfile);
+delete(materialsfile);
+delete(exefile);
+delete([transfermatrix '.bin']);
+delete([transfermatrix '.mat']);
+delete(parfile);
+delete(elcfile);
