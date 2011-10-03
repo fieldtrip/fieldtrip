@@ -513,8 +513,8 @@ if issource || isvolume,
   % reshape each of the source reconstructed parameters
   if issource && isfield(data, 'dim') && prod(data.dim)==size(data.pos,1)
     dim = [prod(data.dim) 1];
-  elseif issource && any(~cellfun('isempty',strfind(fieldnames(data), 'dimord')))
-    dim = [size(data.pos,1) 1]; %sparsely represented source structure new style
+  %elseif issource && any(~cellfun('isempty',strfind(fieldnames(data), 'dimord')))
+  %  dim = [size(data.pos,1) 1]; %sparsely represented source structure new style
   elseif isfield(data, 'dim'),
     dim = [data.dim 1];
   elseif issource
