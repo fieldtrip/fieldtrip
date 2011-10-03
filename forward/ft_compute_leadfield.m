@@ -98,7 +98,9 @@ if ~isstruct(sens) && size(sens,2)==3
 end
 
 % ensure that the description of the sensors is up-to-date (Oct 2011)
-sens = fixsens(sens);
+if isfield(sens,'pnt')
+  sens = fixsens(sens);
+end
 
 % determine whether it is EEG or MEG
 iseeg = ft_senstype(sens, 'eeg');
