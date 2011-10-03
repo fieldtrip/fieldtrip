@@ -39,7 +39,9 @@ function hs = ft_plot_sens(sens, varargin)
 ws = warning('on', 'MATLAB:divideByZero');
 
 % ensure up-to-date description of sensors (Aug 2011)
-sens = fixsens(sens);
+if isfield(sens,'pnt')
+  sens = fixsens(sens);
+end
 
 % get the optional input arguments
 keyvalcheck(varargin, 'optional', {'style', 'coil', 'label'});
