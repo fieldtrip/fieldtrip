@@ -422,8 +422,8 @@ for i=1:Ndata
   end
   
   % make vector dat with one value for each channel
-  dat    = varargin{i}.(cfg.parameter);
-  xparam = varargin{i}.(xparam);
+  dat  = varargin{i}.(cfg.parameter);
+  xval = varargin{i}.(xparam);
   
   % take subselection of channels
   % this works for bivariate data with labelcmb because at this point the
@@ -463,8 +463,8 @@ for i=1:Ndata
     dat = dat(sellab, xidmin(i):xidmax(i));
   end
   %     end
-  xvector    = xparam(xidmin(i):xidmax(i));
-  datavector = reshape(mean(dat, 1), [1 numel(xvector)]); % average over channels
+  xval       = xval(xidmin(i):xidmax(i));
+  datavector = reshape(mean(dat, 1), [1 numel(xval)]); % average over channels
   
   % make mask
   if ~isempty(cfg.maskparameter)
@@ -503,10 +503,10 @@ for i=1:Ndata
   % only plot the mask once, for the first line (it's the same anyway for
   % all lines, and if plotted multiple times, it will overlay the others
   if i>1 && strcmp(cfg.maskstyle, 'box')
-    ft_plot_vector(xvector, datavector, 'style', cfg.linestyle{i}, 'color', color, ...
+    ft_plot_vector(xval, datavector, 'style', cfg.linestyle{i}, 'color', color, ...
       'linewidth', cfg.linewidth, 'hlim', cfg.xlim, 'vlim', cfg.ylim);
   else
-    ft_plot_vector(xvector, datavector, 'style', cfg.linestyle{i}, 'color', color, ...
+    ft_plot_vector(xval, datavector, 'style', cfg.linestyle{i}, 'color', color, ...
       'highlight', maskdatavector, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, ...
       'hlim', cfg.xlim, 'vlim', cfg.ylim);
   end

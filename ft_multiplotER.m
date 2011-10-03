@@ -510,8 +510,8 @@ end
 % Plot each data set:
 for i=1:Ndata
   % Make vector dat with one value for each channel
-  dat    = varargin{i}.(cfg.parameter);
-  xparam = varargin{i}.(xparam);
+  dat  = varargin{i}.(cfg.parameter);
+  xval = varargin{i}.(xparam);
   
   % Take subselection of channels, this only works
   % in the interactive mode
@@ -551,7 +551,7 @@ for i=1:Ndata
     dat = dat(sellab, xidmin(i):xidmax(i));
   end
   %   end
-  xparam = xparam(xidmin(i):xidmax(i));
+  xval = xval(xidmin(i):xidmax(i));
   
   % Select the channels in the data that match with the layout:
   [seldat, sellay] = match_str(label, cfg.layout.label);
@@ -587,7 +587,7 @@ for i=1:Ndata
   
   for m=1:length(layLabels)
     % Plot ER
-    plotWnd(xparam, datamatrix(m,:),[xmin xmax],[ymin ymax], layX(m), layY(m), width(m), height(m), layLabels(m), cfg, color, cfg.linestyle{i}, maskmatrix(m,:),i); %FIXME shouldn't this be replaced with a call to ft_plot_vector?
+    plotWnd(xval, datamatrix(m,:),[xmin xmax],[ymin ymax], layX(m), layY(m), width(m), height(m), layLabels(m), cfg, color, cfg.linestyle{i}, maskmatrix(m,:),i); %FIXME shouldn't this be replaced with a call to ft_plot_vector?
     
     if i==1,
       % Keep ER plot coordinates (at centre of ER plot), and channel labels (will be stored in the figure's UserData struct):
