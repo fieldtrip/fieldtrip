@@ -554,9 +554,10 @@ else
     dat(:,k) = tmp(:);
   end
 end
-cfg.dim     = varargin{1}.dim;
+%cfg.dim     = varargin{1}.dim;
 %cfg.inside  = varargin{1}.inside; %FIXME take the intersection between all inputs
-%FIXME don't do the previous line in order to take the unfolded inside
-%across the dimensions in the input
+%FIXME don't do the previous lines in order to take the unfolded inside
+%across the dimensions in the input and to get the 4D dimensionality
+%correct
 cfg.dimord  = 'voxel';
 cfg.origdim = [cfg.dim siz(2:end-1)];
