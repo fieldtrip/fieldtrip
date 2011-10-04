@@ -65,7 +65,10 @@ L = add_mex_source(L,'src','rfbevent',[],{'PCWIN', 'PCWIN64'},'d3des.c -I.'); % 
 L = add_mex_source(L,'src','meg_leadfield1');
 L = add_mex_source(L,'src','splint_gh');
 L = add_mex_source(L,'src','plgndr');
+
 L = add_mex_source(L,'src','ft_spike_sub_crossx');
+L = add_mex_source(L,'src','rename');
+L = add_mex_source(L,'src','getpid');
 
 L = add_mex_source(L,'realtime/online_mri','ft_omri_smooth_volume');
 L = add_mex_source(L,'realtime/acquisition/siemens', 'sap2matlab',[],[],'siemensap.c -I.');
