@@ -57,16 +57,16 @@ stopwatch = tic;
 
 success = false;
 while ~success && (timeout == 0 || toc(stopwatch)<timeout)
-
+  
   % the code is largely shared with fieldtrip/peer/peerget.m
   % this section is the only part where it is different between peer and qsub
-
+  
   curPwd = getcustompwd();
   inputfile    = fullfile(curPwd, sprintf('%s_input.mat', jobid));
   outputfile   = fullfile(curPwd, sprintf('%s_output.mat', jobid));
   logout       = fullfile(curPwd, sprintf('%s.o*', jobid)); % note the wildcard in the file name
   logerr       = fullfile(curPwd, sprintf('%s.e*', jobid)); % note the wildcard in the file name
-
+  
   % the STDERR output log file should be empty, otherwise it indicates an error
   tmp = dir(logerr);
   if ~isempty(tmp) && tmp.bytes>0
@@ -74,7 +74,7 @@ while ~success && (timeout == 0 || toc(stopwatch)<timeout)
     type(fullfile(curPwd, tmp.name));
     error('the batch queue system returned an error for job %s, now aborting', jobid);
   end
-
+  
   % the stdout and stderr log files are the last ones created
   % wait until they exist prior to reading the results
   if exist(outputfile, 'file') && isfile(logout) && isfile(logerr)
@@ -89,7 +89,7 @@ while ~success && (timeout == 0 || toc(stopwatch)<timeout)
     delete(logout);
     delete(logerr);
     % remove the job from the persistent list
-	qsublist('del', jobid);
+    qsublist('del', jobid);
   elseif timeout == 0
     break; % only check once, no waiting here
   else
@@ -98,18 +98,18 @@ while ~success && (timeout == 0 || toc(stopwatch)<timeout)
     pause(sleep);
     continue
   end
-
+  
 end % while
 
 if success
-
+  
   % look at the optional arguments
   warn        = ft_getopt(options, 'lastwarn');
   err         = ft_getopt(options, 'lasterr');
   diarystring = ft_getopt(options, 'diary');
-
+  
   fprintf('job %s returned, it required %s and %s\n', jobid, print_tim(ft_getopt(options, 'timused', nan)), print_mem(ft_getopt(options, 'memused', nan)));
-
+  
   % if there is an error, it needs to be represented as a message string
   % and optionally also as a strucure for rethrowing
   if ~isempty(err)
@@ -125,7 +125,7 @@ if success
       warning(ws);
     end
   end
-
+  
   if strcmp(diary, 'error') && ~isempty(err)
     fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
     fprintf('%% an error was detected inside MATLAB, the diary output of the remote execution follows \n');
@@ -164,7 +164,7 @@ if success
   if closeline
     fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
   end
-
+  
   switch output
     case 'varargout'
       % return the output arguments, the options cannot be returned
@@ -176,7 +176,7 @@ if success
     otherwise
       error('invalid output option');
   end
-
+  
 else
   warning('FieldTrip:qsub:jobNotAvailable', 'the job results are not yet available');
   switch output

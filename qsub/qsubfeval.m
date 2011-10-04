@@ -45,6 +45,7 @@ optbeg = optbeg | strcmp('diary',   strargin);
 optbeg = optbeg | strcmp('batch',    strargin);
 optbeg = optbeg | strcmp('timoverhead', strargin);
 optbeg = optbeg | strcmp('memoverhead', strargin);
+optbeg = optbeg | strcmp('backend', strargin);
 optbeg = find(optbeg);
 optarg = varargin(optbeg:end);
 
@@ -59,6 +60,7 @@ diary       = ft_getopt(optarg, 'diary',   []);
 batch       = ft_getopt(optarg, 'batch',    1);
 timoverhead = ft_getopt(optarg, 'timoverhead', 180);            % allow some overhead to start up the MATLAB executable
 memoverhead = ft_getopt(optarg, 'memoverhead', 1024*1024*1024); % allow some overhead for the MATLAB executable in memory
+backend     = ft_getopt(optarg, 'backend', 'torque');           % can be torque, local, sge
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -134,42 +136,71 @@ else
 end
 
 % create the matlab script commands (one entry per line)
-matlabScript = [...
+matlabscript = [...
   'restoredefaultpath;',...
   sprintf('addpath(''%s'');', fileparts(mfilename('fullpath'))),...
   sprintf('qsubexec(''%s'');', jobid),...
   sprintf('exit')];
 
-% create the shell commands to execute matlab (one entry per line)
-shellCmd = [...
-  sprintf('cd \\"%s\\"\n', curPwd),...
-  sprintf('%s -nosplash -nodisplay -r \\"%s\\"\n', matlabcmd, matlabScript)];
 
 % set the job requirements according to the users specification
-requirements = '';
-if ~isempty(timreq)
-  requirements = [requirements sprintf('-l walltime=%d ', timreq+timoverhead)];
-end
-if ~isempty(memreq)
-  % don't know the difference
-  requirements = [requirements sprintf('-l mem=%.0f ',   memreq+memoverhead)];
-%   requirements = [requirements sprintf('-l vmem=%.0f ',  memreq+memoverhead)];
-%   requirements = [requirements sprintf('-l pmem=%.0f ',  memreq+memoverhead)];
-%   requirements = [requirements sprintf('-l pvmem=%.0f ', memreq+memoverhead)];
-end
+switch backend
+  case 'local'
+    % this is for testing the execution in case no cluster is available
+    % for example when on the road with a laptop
+    cmdline = sprintf('%s -nosplash -nodisplay -r "%s"\n', matlabcmd, matlabscript);
+    
+  case 'sge'
+    % FIXME don't know how to pass the requirements to the SGE qsub command
+    requirements = '';
+    
+    % create the shell commands to execute matlab (one entry per line)
+    cmdline = [...
+      sprintf('cd \\"%s\\"\n', curPwd),...
+      sprintf('%s -nosplash -nodisplay -r \\"%s\\"\n', matlabcmd, matlabscript)];
+    
+    % pass the command to qsub with all requirements
+    cmdline = sprintf('echo "%s" | qsub -N %s %s -o %s -e %s', cmdline, jobid, requirements, curPwd, curPwd);
+    
+  case 'torque'
+    requirements = '';
+    if ~isempty(timreq)
+      requirements = [requirements sprintf('-l walltime=%d ', timreq+timoverhead)];
+    end
+    if ~isempty(memreq)
+      % don't know the difference
+      requirements = [requirements sprintf('-l mem=%.0f ',   memreq+memoverhead)];
+      %   requirements = [requirements sprintf('-l vmem=%.0f ',  memreq+memoverhead)];
+      %   requirements = [requirements sprintf('-l pmem=%.0f ',  memreq+memoverhead)];
+      %   requirements = [requirements sprintf('-l pvmem=%.0f ', memreq+memoverhead)];
+    end
+    
+    % In the command below both stderr and stout are redirected to /dev/null, so any
+    % output information will not be available for inspection. However, any
+    % matlab errors will be reported back by fexec.
+    % cmdline = ['qsub -e /dev/null -o /dev/null -N ' jobid ' ' requirements shellscript];
+    
+    % create the shell commands to execute matlab (one entry per line)
+    cmdline = [...
+      sprintf('cd \\"%s\\"\n', curPwd),...
+      sprintf('%s -nosplash -nodisplay -r \\"%s\\"\n', matlabcmd, matlabscript)];
+    
+    % pass the command to qsub with all requirements
+    cmdline = sprintf('echo "%s" | qsub -N %s %s -o %s -e %s', cmdline, jobid, requirements, curPwd, curPwd);
+end % switch
 
-% In the command below both stderr and stout are redirected to /dev/null, so any
-% output information will not be available for inspection. However, any
-% matlab errors will be reported back by fexec.
-% cmdline = ['qsub -e /dev/null -o /dev/null -N ' jobid ' ' requirements shellscript];
-
-% qsubfget will check the stderr output log file for errors, e.g. MATLAB crashes 
-cmdline = sprintf('echo "%s" | qsub -N %s %s -o %s -e %s', ...
-  shellCmd, jobid, requirements, curPwd, curPwd);
-
-fprintf('submitting job %s...', jobid); 
+fprintf('submitting job %s...', jobid);
 [status,result] = system(cmdline);
 fprintf(' qstat job id %s\n', strtrim(result));
+
+% both Torque and SGE will return a log file with stdout and stderr information
+% for local execution we have to emulate these files, because qsubget expects them
+if strcmp(backend, 'local')
+  logout       = fullfile(curPwd, sprintf('%s.o', jobid));
+  logerr       = fullfile(curPwd, sprintf('%s.e', jobid));
+  fclose(fopen(logout, 'w'));
+  fclose(fopen(logerr, 'w'));
+end
 
 % add the job to the persistent list, this is used for cleanup in case of ctrl-C
 qsublist('add', jobid, strtrim(result));
@@ -178,4 +209,3 @@ puttime = toc(stopwatch);
 
 % remember the input arguments to speed up subsequent calls
 previous_argin  = varargin;
-
