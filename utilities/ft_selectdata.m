@@ -65,12 +65,11 @@ dimord = cell(1,length(data));
 hassubj = false(1, length(data));
 for k = 1:length(data)
   data{k} = ft_checkdata(data{k}, 'datatype', {'freq' 'timelock' 'source', 'volume', 'freqmvar', 'raw', 'comp', 'chan'});
-  [dtype{k}, dimord{k}]  = ft_datatype(data{k});
   if isfield(data{k}, 'dimord') && ~isempty(strfind(data{k}.dimord, 'subj'))
-    hassubj(k) = true;
+    hassubj(k)     = true;
     data{k}.dimord = strrep(data{k}.dimord, 'subj', 'rpt');
-    dimord{k} = data{k}.dimord;
   end
+  [dtype{k}, dimord{k}]  = ft_datatype(data{k});
   if strcmp(dtype{k}, 'raw'),
     data{k} = ft_checkdata(data{k}, 'datatype', 'raw');
   end
@@ -79,12 +78,12 @@ for k = 1:length(data)
   end
 end
 
-if any(~strmatch(dtype{1},dtype))
+if ~all(strcmp(dtype{1},dtype))
   error('the data type is not consistent for all inputs');
 end
 
 % check consistency of input data
-if any(~strmatch(dimord{1},dimord))
+if ~all(strcmp(dimord{1},dimord))
   error('the dimord is not consistent for all inputs');
 end
 
@@ -95,12 +94,12 @@ issource = strcmp(dtype{1},'source');
 isvolume = strcmp(dtype{1},'volume');
 isfreqmvar = strcmp(dtype{1},'freqmvar');
 
-selchan  = keyval('channel', kvp); selectchan = ~isempty(strmatch('channel', kvp(cellfun(@ischar, kvp))));
-selfoi   = keyval('foilim',  kvp); selectfoi  = ~isempty(strmatch('foilim',  kvp(cellfun(@ischar, kvp))));
-seltoi   = keyval('toilim',  kvp); selecttoi  = ~isempty(strmatch('toilim',  kvp(cellfun(@ischar, kvp))));
-selroi   = keyval('roi',     kvp); selectroi  = ~isempty(strmatch('roi', kvp(cellfun(@ischar, kvp))));
-selrpt   = keyval('rpt',     kvp); selectrpt  = ~isempty(strmatch('rpt', kvp(cellfun(@ischar, kvp))));
-selpos   = keyval('pos',     kvp); selectpos  = ~isempty(strmatch('pos', kvp(cellfun(@ischar, kvp))));
+selchan  = keyval('channel', kvp); selectchan = ~isempty(strmatch('channel',  kvp(cellfun(@ischar, kvp))));
+selfoi   = keyval('foilim',  kvp); selectfoi  = ~isempty(strmatch('foilim',   kvp(cellfun(@ischar, kvp))));
+seltoi   = keyval('toilim',  kvp); selecttoi  = ~isempty(strmatch('toilim',   kvp(cellfun(@ischar, kvp))));
+selroi   = keyval('roi',     kvp); selectroi  = ~isempty(strmatch('roi',      kvp(cellfun(@ischar, kvp))));
+selrpt   = keyval('rpt',     kvp); selectrpt  = ~isempty(strmatch('rpt',      kvp(cellfun(@ischar, kvp))));
+selpos   = keyval('pos',     kvp); selectpos  = ~isempty(strmatch('pos',      kvp(cellfun(@ischar, kvp))));
 param    = keyval('param',   kvp); if isempty(param), param = 'all'; end % FIXME think about this
 
 avgoverchan  = keyval('avgoverchan',  kvp); if isempty(avgoverchan), avgoverchan = false; end
