@@ -137,13 +137,39 @@ if istimelock
       
       % estimate and remove the confounds
       fprintf('estimating the regression weights and removing the confounds \n');
-      beta = regr\dat;                                                        % B = X\Y
-      Yc   = dat - regr(:, cfg.reject) * beta(cfg.reject, :);                 % Yclean = Y - X * X\Y
+      beta = regr\dat;                                                        % B = X\Y    
+      model = regr(:, cfg.reject) * beta(cfg.reject, :);                      % model = confounds * weights = X * X\Y
+      Yc = dat - model;                                                       % Yclean = Y - X * X\Y
       
       % put the clean data back into place
       dataout.trial = reshape(Yc, [nrpt, nchan, ntime]); clear Yc;
-      dataout.beta  = reshape(beta, [nconf, nchan, ntime]); 
       
+      % update descriptives when already present
+      if isfield(dataout, 'var') % remove (old) var
+        dataout = rmfield(dataout, 'var');
+      end
+      if isfield(dataout, 'dof') % remove (old) degrees of freedom
+        dataout = rmfield(dataout, 'dof');
+      end
+      if isfield(dataout, 'avg') % remove (old) avg and reaverage
+        dataout = rmfield(dataout, 'avg');
+        tempcfg            = [];
+        tempcfg.keeptrials = 'yes';
+        dataout = ft_timelockanalysis(tempcfg, dataout); % reaveraging
+      end
+      
+      % make a nested timelock structure that contains the model
+      dataout.model.trial   = reshape(model, [nrpt, nchan, ntime]); clear model;
+      dataout.model.dimord  = dataout.dimord;
+      dataout.model.time    = dataout.time;
+      dataout.model.label   = dataout.label;
+      if isfield(dataout, 'avg')
+        % also average the model
+        tempcfg            = [];
+        tempcfg.keeptrials = 'yes';
+        dataout.model      = ft_timelockanalysis(tempcfg, dataout.model); % reaveraging
+      end
+ 
       % beta statistics
       fprintf('performing statistics on the regression weights \n');
       dfe        = nrpt - nconf;                                              % degrees of freedom 
@@ -153,9 +179,12 @@ if istimelock
       bvar       = repmat(mse',1,size(covar,2))./repmat(covar,size(mse,2),1); % beta variance
       tval       = (beta'./sqrt(bvar))';                                      % betas -> t-values
       prob       = (1-tcdf(tval,dfe))*2;                                      % p-values
-      clear err; clear mse; clear dat; clear regr; clear beta; clear bvar;
+      clear err; clear mse; clear dat; clear regr; clear bvar;
       dataout.stat     = reshape(tval, [nconf, nchan, ntime]); clear tval;
       dataout.prob     = reshape(prob, [nconf, nchan, ntime]); clear prob;
+      dataout.beta     = reshape(beta, [nconf, nchan, ntime]);  clear beta;
+       
+      % FIXME: drop in replace tcdf from the statfun/private dir
             
     otherwise
       error('unsupported dimord "%s"', datain.dimord);
