@@ -242,7 +242,7 @@ switch ft_senstype(sens)
     else
       % there is one sensor per channel, which means that the channel position
       % is identical to the sensor position
-      pnt = sens.chanpos;
+      pnt = sens.pnt;
       lab = sens.label;
     end
 
