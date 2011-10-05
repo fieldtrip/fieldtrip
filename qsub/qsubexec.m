@@ -41,6 +41,7 @@ try
   outputfile = fullfile(p, sprintf('%s_output.mat_', jobid));
 
   tmp = load(inputfile);
+  delete(inputfile);
 
   argin = tmp.argin; % this includes the function name and the input arguments
   optin = tmp.optin; % this includes the path setting, the pwd, the global variables, etc.

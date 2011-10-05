@@ -18,8 +18,8 @@ function varargout = qsubcellfun(fname, varargin)
 %   memreq         = number, the memory in bytes required to run a single job
 %
 % It is required to give an estimate of the time and memory requirements of
-% the individual jobs. The memory requirement of the MATLAB executible
-% itself will automatically be added, just as the time requirement to start
+% the individual jobs. The memory requirement of the MATLAB executable
+% itself will automatically be added, just as the time required to start
 % up a new MATLAB process. If you don't know what the memory and time
 % requirements of your job are, you can get an estimate for them using
 % TIC/TOC and MEMTIC/MEMTOC around a single execution of one of the jobs in

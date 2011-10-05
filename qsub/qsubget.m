@@ -84,7 +84,7 @@ while ~success && (timeout == 0 || toc(stopwatch)<timeout)
     options = tmp.optout;
     success = true;
     % clean up all temporary files
-    delete(inputfile);
+    % delete(inputfile); % this one has already been deleted in qsubexec immediately after loading it
     delete(outputfile);
     delete(logout);
     delete(logerr);
