@@ -138,6 +138,7 @@ end
 % create the matlab script commands (one entry per line)
 matlabscript = [...
   'restoredefaultpath;',...
+  sprintf('cd(''%s'');', curPwd),...
   sprintf('addpath(''%s'');', fileparts(mfilename('fullpath'))),...
   sprintf('qsubexec(''%s'');', jobid),...
   sprintf('exit')];
@@ -154,10 +155,8 @@ switch backend
     % FIXME don't know how to pass the requirements to the SGE qsub command
     requirements = '';
     
-    % create the shell commands to execute matlab (one entry per line)
-    cmdline = [...
-      sprintf('cd \\"%s\\"\n', curPwd),...
-      sprintf('%s -nosplash -nodisplay -r \\"%s\\"\n', matlabcmd, matlabscript)];
+    % create the shell commands to execute matlab
+    cmdline = sprintf('%s -nosplash -nodisplay -r \\"%s\\"\n', matlabcmd, matlabscript);
     
     % pass the command to qsub with all requirements
     cmdline = sprintf('echo "%s" | qsub -N %s %s -o %s -e %s', cmdline, jobid, requirements, curPwd, curPwd);
@@ -168,7 +167,7 @@ switch backend
       requirements = [requirements sprintf('-l walltime=%d ', timreq+timoverhead)];
     end
     if ~isempty(memreq)
-      % don't know the difference
+      % mem is the real memory, vmem is the virtual, pmem and pvmem relate to the memory per process in case of an MPI job with multiple processes
       requirements = [requirements sprintf('-l mem=%.0f ',   memreq+memoverhead)];
       %   requirements = [requirements sprintf('-l vmem=%.0f ',  memreq+memoverhead)];
       %   requirements = [requirements sprintf('-l pmem=%.0f ',  memreq+memoverhead)];
@@ -180,10 +179,8 @@ switch backend
     % matlab errors will be reported back by fexec.
     % cmdline = ['qsub -e /dev/null -o /dev/null -N ' jobid ' ' requirements shellscript];
     
-    % create the shell commands to execute matlab (one entry per line)
-    cmdline = [...
-      sprintf('cd \\"%s\\"\n', curPwd),...
-      sprintf('%s -nosplash -nodisplay -r \\"%s\\"\n', matlabcmd, matlabscript)];
+    % create the shell commands to execute matlab
+    cmdline = sprintf('%s -nosplash -nodisplay -r \\"%s\\"\n', matlabcmd, matlabscript);
     
     % pass the command to qsub with all requirements
     cmdline = sprintf('echo "%s" | qsub -N %s %s -o %s -e %s', cmdline, jobid, requirements, curPwd, curPwd);
