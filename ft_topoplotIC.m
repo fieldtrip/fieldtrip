@@ -119,8 +119,11 @@ varargin{:}.dimord = 'chan_comp';
 selcomp = cfg.component;
 
 % allow multiplotting
+nplots = numel(selcomp);
+nyplot = ceil(sqrt(nplots));
+nxplot = ceil(nplots./nyplot);
 for i = 1:length(selcomp)
-  subplot(ceil(sqrt(length(selcomp))), ceil(sqrt(length(selcomp))), i);
+  subplot(nxplot, nyplot, i);
   cfg.component = selcomp(i);
   ft_topoplotER(cfg, varargin{:});
   title(['component ' num2str(selcomp(i))]);

@@ -447,8 +447,11 @@ if ~ischar(cfg.xlim) && length(cfg.xlim)>2
   cfg.interactive = 'no';
   xlims = cfg.xlim;
   % Iteratively call topoplotER with different xlim values:
+  nplots = numel(xlims)-1;
+  nyplot = ceil(sqrt(nplots));
+  nxplot = ceil(nplots./nyplot);
   for i=1:length(xlims)-1
-    subplot(ceil(sqrt(length(xlims)-1)), ceil(sqrt(length(xlims)-1)), i);
+    subplot(nxplot, nyplot, i);
     cfg.xlim = xlims(i:i+1);
     ft_topoplotER(cfg, data);
   end
