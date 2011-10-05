@@ -33,6 +33,15 @@ persistent previous_argin
 % keep track of the time
 stopwatch = tic;
 
+% check if torque or sge is present and running
+if ~isempty(getenv('SGE_ROOT'))
+ defaultbackend = 'sge';
+elseif ~isempty(getenv('TORQUEHOME'))
+ defaultbackend = 'torque';
+else
+ defaultbackend = 'local';
+end
+
 % convert the input arguments into something that strmatch can work with
 strargin = varargin;
 strargin(~cellfun(@ischar, strargin)) = {''};
@@ -60,7 +69,7 @@ diary       = ft_getopt(optarg, 'diary',   []);
 batch       = ft_getopt(optarg, 'batch',    1);
 timoverhead = ft_getopt(optarg, 'timoverhead', 180);            % allow some overhead to start up the MATLAB executable
 memoverhead = ft_getopt(optarg, 'memoverhead', 1024*1024*1024); % allow some overhead for the MATLAB executable in memory
-backend     = ft_getopt(optarg, 'backend', 'torque');           % can be torque, local, sge
+backend     = ft_getopt(optarg, 'backend', defaultbackend);     % can be torque, local, sge
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -152,8 +161,13 @@ switch backend
     cmdline = sprintf('%s -nosplash -nodisplay -r "%s"\n', matlabcmd, matlabscript);
     
   case 'sge'
-    % FIXME don't know how to pass the requirements to the SGE qsub command
     requirements = '';
+    if ~isempty(timreq)
+      requirements = [requirements sprintf('-l h_rt=%d ', timreq+timoverhead)];
+    end
+    if ~isempty(memreq)
+      requirements = [requirements sprintf('-l h_vmem=%.0f ',   memreq+memoverhead)];
+    end
     
     % create the shell commands to execute matlab
     cmdline = sprintf('%s -nosplash -nodisplay -r \\"%s\\"\n', matlabcmd, matlabscript);
