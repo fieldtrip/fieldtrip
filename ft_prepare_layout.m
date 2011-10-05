@@ -260,7 +260,7 @@ elseif ischar(cfg.gradfile)
 
 elseif ~isempty(cfg.grad) && isstruct(cfg.grad)
   % ensure the sensor description to be according to latest convention
-  [data.grad] = fixsens(data.grad);
+  [cfg.grad] = fixsens(cfg.grad);
   
   fprintf('creating layout from cfg.grad\n');
   lay = sens2lay(cfg.grad, cfg.rotate, cfg.projection, cfg.style);
