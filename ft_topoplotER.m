@@ -173,9 +173,13 @@ end
 
 if Ndata>1 && ~isnumeric(varargin{end})
   for k=1:Ndata
+    
     if k>1
       % create a new figure for the additional input arguments
-      figure
+      % ensure new figures are all in the same size/position
+      p = get(gcf, 'Position');
+      f = figure();
+      set(f, 'Position', p);
     end
     ft_topoplotER(cfg, varargin{1:Ndata}, indx);
     indx = indx + 1;
