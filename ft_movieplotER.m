@@ -184,9 +184,9 @@ if dointeractive,
   set(ht, 'string', 'time = ');
   set(ht, 'horizontalalignment', 'left');
 
-  %text(0,0,  sprintf('%s = \n', cfg.xparam));
-  %t = timer;
-  %set(t, 'timerfcn', {@cb_timer, h}, 'period', 0.1, 'executionmode', 'fixedSpacing');
+  text(0,0,  sprintf('%s = \n', cfg.xparam));
+  t = timer;
+  set(t, 'timerfcn', {@cb_timer, h}, 'period', 0.1, 'executionmode', 'fixedSpacing');
 
   % collect the data and the options to be used in the figure
   opt.lay   = layout;
