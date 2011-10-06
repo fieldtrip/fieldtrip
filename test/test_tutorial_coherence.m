@@ -1,9 +1,14 @@
 function test_tutorial_coherence
 
+% TEST: test_tutorial_coherence ft_freqanalysis ft_connectivityanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_sourceanalysis ft_sourceinterpolate
+
+addpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/coherence');
+addpath('/home/common/matlab/fieldtrip/data/');
+
 % find the interesting epochs of data
 cfg = [];
 cfg.trialfun                  = 'trialfun_left';
-cfg.dataset                   = 'SubjectCMC.ds';
+cfg.dataset                   = '/home/common/matlab/fieldtrip/data/SubjectCMC.ds';
 cfg = ft_definetrial(cfg);
 
 % detect EOG artifacts in the MEG data
@@ -213,7 +218,7 @@ interp         = ft_sourceinterpolate(cfg, source, mri);
 
 cfg              = [];
 cfg.method       = 'ortho';
-cfg.interactive  = 'yes';
+%cfg.interactive  = 'yes';
 cfg.funparameter = 'coh';
 figure; ft_sourceplot(cfg, interp);
 
