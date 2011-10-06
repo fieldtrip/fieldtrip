@@ -54,12 +54,15 @@ if ~isempty(dipoli)
   end
   
   % write the triangulations to file
+  bnddip = vol.bnd;
   bndfile = {};
-  for i=1:length(vol.bnd)
+
+  for i=1:length(bnddip)
     bndfile{i} = [tempname '.tri'];
-    % dipoli has another definition of the direction of the surfaces
-    vol.bnd(i).tri = fliplr(vol.bnd(i).tri);
-    write_tri(bndfile{i}, vol.bnd(i).pnt, vol.bnd(i).tri);
+    % make sure that normals on the vertices point outwards
+    ok = checknormals(bnddip(i));
+    if ~ok,  bnddip(i).tri = fliplr(bnddip(i).tri);end
+    write_tri(bndfile{i}, bnddip(i).pnt, bnddip(i).tri);
   end
   
   % these will hold the shell script and the inverted system matrix
@@ -136,4 +139,27 @@ for i = 1:length(allowedbinnames)
     binname = allowedbinnames{i};
     return
   end
+end
+
+function ok = checknormals(bnd)
+ok = 0;
+pnt = bnd.pnt;
+tri = bnd.tri;
+% translate to the center
+org = mean(pnt,1);
+pnt(:,1) = pnt(:,1) - org(1);
+pnt(:,2) = pnt(:,2) - org(2);
+pnt(:,3) = pnt(:,3) - org(3);
+
+w = sum(solid_angle(pnt, tri));
+
+if w<0 && (abs(w)-4*pi)<1000*eps
+  % FIXME: this method is rigorous only for star shaped surfaces
+  warning('your normals are not oriented correctly')
+  ok = 0;
+elseif w>0 && abs(w-4*pi)<1000*eps
+  ok = 1;
+else
+  error('your surface probably is irregular')
+  ok = 0;
 end

@@ -157,7 +157,7 @@ pnt(:,3) = pnt(:,3) - org(3);
 
 w = sum(solid_angle(pnt, tri));
 
-if w<0 && abs(w-4*pi)<1000*eps
+if w<0 && (abs(w)-4*pi)<1000*eps
   % FIXME: this method is rigorous only for star shaped surfaces
   warning('your normals are not oriented correctly')
   ok = 0;
