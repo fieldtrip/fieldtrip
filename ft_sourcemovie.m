@@ -222,12 +222,12 @@ set(p, 'string', 'play')
 % note that "p" is needed further down
 
 hx = uicontrol('style', 'text');
-set(hx, 'position', [pos(3)-130 20 100 20]);
+set(hx, 'position', [pos(3)-140 20 120 20]);
 set(hx, 'string', sprintf('%s = ', cfg.xparam));
 set(hx, 'horizontalalignment', 'left');
 
 hy = uicontrol('style', 'text');
-set(hy, 'position', [pos(3)-130 45 100 20]);
+set(hy, 'position', [pos(3)-140 45 120 20]);
 set(hy, 'string', sprintf('%s = ', cfg.yparam));
 set(hy, 'horizontalalignment', 'left');
 
