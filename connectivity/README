@@ -1,0 +1,11 @@
+This is the FieldTrip CONNECTIVITY module. It contains functions for
+the computation of various connectivity metrics.
+
+For more information please visit http://www.ru.nl/neuroimaging/fieldtrip
+
+The FieldTrip software is free but copyrighted software, distributed
+under the terms of the GNU General Public Licence as published by
+the Free Software Foundation (either version 2, or at your option
+any later version). See the file COPYING for more details.
+
+Copyright (C) 2009-2011, Donders Institute for Brain, Cognition and Behaviour, The Netherlands (DCCN, DCC, DCN)
