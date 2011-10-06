@@ -164,7 +164,7 @@ hasdata      = nargin>1;
 hasinputfile = ~isempty(cfg.inputfile);
 
 Ndata = numel(varargin);
-if isnumeric(varargin{end})
+if ~isempty(varargin) && isnumeric(varargin{end})
   Ndata = Ndata - 1;
   indx  = varargin{end};
 else

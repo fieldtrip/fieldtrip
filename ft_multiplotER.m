@@ -141,7 +141,7 @@ end
 if hasdata
   % do nothing
 elseif hasinputfile
-  if ~ischar(cfg.inputfile)
+  if ischar(cfg.inputfile)
     cfg.inputfile = {cfg.inputfile};
   end
   for i = 1:numel(cfg.inputfile)
