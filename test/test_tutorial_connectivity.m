@@ -47,17 +47,16 @@ cfg           = [];
 cfg.method    = 'coh';
 coh           = ft_connectivityanalysis(cfg, freq);
 cohm          = ft_connectivityanalysis(cfg, mfreq);
-Subsequently, the data can be visualized using ft_connectivityplot.
 
 % visualisation
-cfg        = [];
-cfg.zparam = 'cohspctrm';
+cfg           = [];
+cfg.parameter = 'cohspctrm';
 ft_connectivityplot(cfg, coh, cohm);
 
 cfg           = [];
 cfg.method    = 'granger';
 granger       = ft_connectivityanalysis(cfg, mfreq);
 
-cfg        = [];
-cfg.zparam = 'grangerspctrm';
+cfg          = [];
+cfg.parameter = 'grangerspctrm';
 ft_connectivityplot(cfg, granger);
