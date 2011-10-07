@@ -1,4 +1,4 @@
-function [granger, v, n] = ft_connectivity_granger(H, Z, S, fs, hasjack, powindx, outputstr)
+function [granger, v, n] = ft_connectivity_granger(H, Z, S, hasjack, powindx, outputstr)
 
 %Usage: causality = hz2causality(H,S,Z,fs);
 %Inputs: transfer  = transfer function,
@@ -37,7 +37,7 @@ case 'granger'
             zc     = reshape(Z(kk,jj,jj,:) - Z(kk,ii,jj,:).^2./Z(kk,ii,ii,:),[1 1 1 1 siz(5)]);
             zc     = repmat(zc,[1 1 1 siz(4) 1]);
             numer  = reshape(abs(S(kk,ii,ii,:,:)),[1 1 siz(4:end)]);
-            denom  = reshape(abs(S(kk,ii,ii,:,:)-zc.*abs(H(kk,ii,jj,:,:)).^2./fs),[1 1 siz(4:end)]);
+            denom  = reshape(abs(S(kk,ii,ii,:,:)-zc.*abs(H(kk,ii,jj,:,:)).^2),[1 1 siz(4:end)]);
             outsum(jj,ii,:,:) = outsum(jj,ii,:,:) + log(numer./denom);
             outssq(jj,ii,:,:) = outssq(jj,ii,:,:) + (log(numer./denom)).^2;
           end
@@ -65,7 +65,7 @@ case 'granger'
         
         zc      = Z(j,iauto2,:,:) - Z(j,icross1,:,:).^2./Z(j,iauto1,:,:);
         numer   = abs(S(j,iauto1,:,:));
-        denom   = abs(S(j,iauto1,:,:)-zc(:,:,ones(1,size(H,3)),:).*abs(H(j,icross1,:,:)).^2./fs);
+        denom   = abs(S(j,iauto1,:,:)-zc(:,:,ones(1,size(H,3)),:).*abs(H(j,icross1,:,:)).^2);
         outsum(icross2,:,:) = outsum(icross2,:,:) + reshape(log(numer./denom), [1 siz(3:end)]);
         outssq(icross2,:,:) = outssq(icross2,:,:) + reshape((log(numer./denom)).^2, [1 siz(3:end)]);
       end

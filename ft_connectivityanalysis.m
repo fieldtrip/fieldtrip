@@ -613,9 +613,8 @@ switch cfg.method
       
       %fs = cfg.fsample; %FIXME do we really need this, or is this related to how
       %noisecov is defined and normalised?
-      fs = 1;
       if ~exist('powindx', 'var'), powindx = []; end
-      [datout, varout, nrpt] = ft_connectivity_granger(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack, powindx, 'granger');
+      [datout, varout, nrpt] = ft_connectivity_granger(data.transfer, data.noisecov, data.crsspctrm, hasjack, powindx, 'granger');
       outparam = 'grangerspctrm';
     else
       error('granger for time domain data is not yet implemented');
@@ -665,7 +664,7 @@ switch cfg.method
       %noisecov is defined and normalised?
       fs = 1;
       if ~exist('powindx', 'var'), powindx = []; end
-      [datout, varout, nrpt] = ft_connectivity_granger(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack, powindx, 'instantaneous');
+      [datout, varout, nrpt] = ft_connectivity_granger(data.transfer, data.noisecov, data.crsspctrm, hasjack, powindx, 'instantaneous');
       outparam = 'instantspctrm';
     else
       error('granger for time domain data is not yet implemented');
@@ -712,9 +711,8 @@ switch cfg.method
       
       %fs = cfg.fsample; %FIXME do we really need this, or is this related to how
       %noisecov is defined and normalised?
-      fs = 1;
       if ~exist('powindx', 'var'), powindx = []; end
-      [datout, varout, nrpt] = ft_connectivity_granger(data.transfer, data.noisecov, data.crsspctrm, fs, hasjack, powindx, 'total');
+      [datout, varout, nrpt] = ft_connectivity_granger(data.transfer, data.noisecov, data.crsspctrm, hasjack, powindx, 'total');
       outparam = 'totispctrm';
     else
       error('granger for time domain data is not yet implemented');
@@ -729,12 +727,7 @@ switch cfg.method
       powindx = [];
     end
     
-    tmpcfg          = [];
-    tmpcfg.feedback = cfg.feedback;
-    tmpcfg.powindx  = powindx;
-    tmpcfg.hasjack  = hasjack;
-    optarg          = ft_cfg2keyval(tmpcfg);
-    
+    optarg = {'feedback', cfg.feedback, 'powindx', powindx, 'hasjack', hasjack};
     hasrpt = ~isempty(strfind(data.dimord, 'rpt'));
     if hasrpt,
       nrpt  = size(data.(inparam),1);
