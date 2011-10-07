@@ -1,7 +1,7 @@
 function [c, v, outcnt] = ft_connectivity_corr(input, varargin)
 
 % FT_CONNECTIVITY_CORR computes correlation or coherence from a data-matrix
-% containing a covariance or cross-spectral density
+% containing a covariance or cross-spectral density.
 %
 % Use as
 %   [c, v, n] = ft_connectivity_corr(input, varargin)
@@ -12,21 +12,35 @@ function [c, v, outcnt] = ft_connectivity_corr(input, varargin)
 %   Repetitions x Channelcombination (x Frequency) (x Time)
 % 
 % The first dimension should be singleton if the input already contains
-% an average
+% an average. Furthermore, the input data can be complex-valued cross
+% spectral densities, or real-valued covariance estimates. If the former
+% is the case, the output will be coherence (or a derived metric), if the
+% latter is the case, the output will be the correlation coefficient.
 %
 % Additional input arguments come as key-value pairs:
 %
 % hasjack  0 or 1 specifying whether the Repetitions represent
 %                   leave-one-out samples
-% complex  'abs', 'angle', 'real', 'imag', 'complex' for post-processing of
-%                   coherency
+% complex  'abs', 'angle', 'real', 'imag', 'complex', 'logabs' for 
+%                   post-processing of coherency
 % feedback 'none', 'text', 'textbar' type of feedback showing progress of
 %                   computation
 % dimord          specifying how the input matrix should be interpreted
-% powindx
-% pownorm
-% pchanindx
-% allchanindx
+% powindx         required if the input data contain linearly indexed 
+%                   channel pairs. should be an Nx2 matrix indexing on each 
+%                   row for the respective channel pair the indices of the 
+%                   corresponding auto-spectra
+% pownorm         flag that specifies whether normalisation with the product
+%                   of the power should be performed (thus should be true when
+%                   correlation/coherence is requested, and false when covariance
+%                   or cross-spectral density is requested).
+%
+% Partialisation can be performed when the input data is (chan x chan).
+% The following options need to be specified: 
+% 
+% pchanindx       index-vector to the channels that need to be partialised 
+% allchanindx     index-vector to all channels that are used (including the 
+%                  "to-be-partialised" ones).
 %
 % The output c contains the correlation/coherence, v is a variance estimate
 % which only can be computed if the data contains leave-one-out samples,
