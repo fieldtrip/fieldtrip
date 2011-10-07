@@ -376,9 +376,9 @@ switch cfg.method
         otherwise
           % do nothing
       end
-      fprintf('=========================================================================\n');
       
-      if all(round([xc yc zc])<=mri.dim)
+      if all(round([xc yc zc])<=mri.dim) && all(round([xc yc zc])>0)
+        fprintf('============================================================================\n');
         str = sprintf('voxel %d, indices [%d %d %d]', sub2ind(mri.dim(1:3), round(xc), round(yc), round(zc)), round([xc yc zc]));
         
         if isfield(mri, 'coordsys') && isfield(mri, 'unit')
