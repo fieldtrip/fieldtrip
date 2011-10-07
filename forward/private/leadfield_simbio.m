@@ -69,7 +69,7 @@ try
     efid = fopen(exefile, 'w');
     fprintf(efid,'#!/usr/bin/env bash\n');
     fprintf(efid,['ipm_linux_opt -i sourcesimulation  -h ./' meshfile ' -s ./' elcfile ' -t ./' transfermatrix, ...
-      ' -dip ./' dipfile ' -o ./' outfile ' -p ./' parfile ' -fwd FEM -sens EEG\n']);
+      ' -dip ./' dipfile ' -o ./' outfile ' -p ./' parfile ' -fwd FEM -sens EEG 2>&1 > /dev/null\n']);
     fclose(efid);
     
 %     fprintf(efid,['ipm_linux_opt_Venant -i sourcesimulation -h ./' meshfile ' -s ./' elcfile, ...
