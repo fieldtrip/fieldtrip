@@ -71,6 +71,7 @@ r(5) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 3/7 0.40 0.15 
 r(6) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 2/7 0.40 0.15 ],'Style','Radio','backgroundcolor',bgcolor,'String','kurtosis','HandleVisibility','off');
 r(7) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 1/7 0.40 0.15 ],'Style','Radio','backgroundcolor',bgcolor,'String','1/var','HandleVisibility','off');
 r(8) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 0/7 0.40 0.15 ],'Style','Radio','backgroundcolor',bgcolor,'String','zvalue','HandleVisibility','off');
+r(9) = uicontrol('Units','normalized','parent',g,'position',[ 0.0 -1/7 0.40 0.15 ],'Style','Radio','backgroundcolor',bgcolor,'String','maxzvalue','HandleVisibility','off');
 % pre-select appropriate metric, if defined
 set(g,'SelectionChangeFcn',@change_metric);
 for i=1:length(r)
@@ -144,26 +145,21 @@ info = guidata(h);
 update_log(info.output_box,'Computing metric...');
 ft_progress('init', info.cfg.feedback, 'computing metric');
 level = zeros(info.nchan, info.ntrl);
-if strcmp(info.metric,'zvalue')
+if strcmp(info.metric,'zvalue') || strcmp(info.metric, 'maxzvalue')
     % cellmean and cellstd (see ft_denoise_pca) would work instead of for-loops, 
     % but they were too memory-intensive
     runsum=zeros(info.nchan, 1);
+    runss=zeros(info.nchan,1);
     runnum=0;
     for i=1:info.ntrl
         [dat] = preproc(info.data.trial{i}, info.data.label, info.fsample, info.cfg.preproc, info.offset(i));
         dat(info.chansel==0,:) = nan;
         runsum=runsum+sum(dat,2);
+        runss=runss+sum(dat.^2,2);
         runnum=runnum+size(dat,2);
     end
     mval=runsum/runnum;
-    runss=zeros(info.nchan,1);
-    for i=1:info.ntrl
-        [dat] = preproc(info.data.trial{i}, info.data.label, info.fsample, info.cfg.preproc, info.offset(i));
-        dat(info.chansel==0,:) = nan;
-        dat=dat-repmat(mval,1,size(dat,2));
-        runss=runss+sum(dat.^2,2);
-    end
-    sd=sqrt(runss/runnum);
+    sd=sqrt(runss/runnum - (runsum./runnum).^2);
 end
 for i=1:info.ntrl
   ft_progress(i/info.ntrl, 'computing metric %d of %d\n', i, info.ntrl);
@@ -186,6 +182,8 @@ for i=1:info.ntrl
       level(:,i) = 1./(std(dat, [], 2).^2);
     case 'zvalue'
       level(:,i) = mean( ( dat-repmat(mval,1,size(dat,2)) )./repmat(sd,1,size(dat,2)) ,2);
+    case 'maxzvalue'
+      level(:,i) = max( ( dat-repmat(mval,1,size(dat,2)) )./repmat(sd,1,size(dat,2)) , [], 2);
     otherwise
       error('unsupported method');
   end
