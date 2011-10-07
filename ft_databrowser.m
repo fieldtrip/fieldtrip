@@ -438,6 +438,10 @@ h = figure;
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
 
+% set zoom option to on
+% zoom(h,'on')
+% set(zoom(h),'actionPostCallback',@zoom_drawlabels_cb)
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set up the figure and callbacks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -566,8 +570,10 @@ if nargout
   
   if strcmp(cfg.enablepreprocedit,'yes')
     % add the updated preproc to the output
-    browsecfg = getappdata(h, 'cfg');
-    cfg.preproc = browsecfg.preproc;
+    try
+      browsecfg = getappdata(h, 'cfg');
+      cfg.preproc = browsecfg.preproc;
+    end
   end
   
 end % if nargout
@@ -592,6 +598,7 @@ if hasdata && isfield(data, 'cfg')
 end
 
 end % main function
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
