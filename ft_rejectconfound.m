@@ -289,6 +289,13 @@ clear datain;
 % remember the exact configuration details in the output
 dataout.cfg = cfg;
 
+% discard the gradiometer information because the weightings have been
+% changed
+if isfield(dataout, 'grad')
+  warning('discarding gradiometer information because the weightings have been changed');
+  dataout = rmfield(dataout, 'grad');
+end
+
 % the output data should be saved to a MATLAB file
 if ~isempty(cfg.outputfile)
   savevar(cfg.outputfile, 'data', dataout); % use the variable name "data" in the output file
