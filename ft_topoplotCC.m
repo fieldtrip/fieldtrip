@@ -256,8 +256,8 @@ fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, 
 % SUBFUNCTION for plotting arrows, see also fieldtrip/private/arrow
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function h = arrow(arrowbeg, arrowend, varargin)
-ends   = keyval('ends',   varargin);
-length = keyval('length', varargin); % the length of the arrow head, in figure units
+ends   = ft_getopt(varargin, 'ends');
+length = ft_getopt(varargin, 'length'); % the length of the arrow head, in figure units
 color  = [0 0 0]; % in RGB
 
 direction = (arrowend - arrowbeg);

@@ -149,9 +149,8 @@ if strcmp(cfg.correcttail,'no') && cfg.tail==0 && cfg.alpha==0.05
   warning('doing a two-sided test without correcting p-values or alpha-level, p-values and alpha-level will reflect one-sided tests per tail')
 end
 
-% get the single keyval for issource out
-issource = keyval('issource', varargin); if isempty(issource), issource = 0; end
-
+% get the issource out flag
+issource = ft_getopt(varargin, 'issource', false);
 
 % for backward compatibility
 if size(design,2)~=size(dat,2)

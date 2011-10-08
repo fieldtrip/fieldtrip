@@ -41,7 +41,7 @@ ftFuncClock = clock();
 ftFuncMem   = memtic();
 
 % get the optional input arguments
-timeframe  =  keyval('timeframe', varargin); % will be empty if not specified
+timeframe = ft_getopt(varargin, 'timeframe'); % will be empty if not specified
 
 % start with an empty source structure
 source  =  [];
