@@ -97,11 +97,11 @@ else
   for i=1:siz(1)
     dum = '';
     for j=1:siz(2)
-      dum = [dum ' ' printval(val{i,j})];
+      dum = [dum ' ' printval(val{i,j}) ','];
     end
     str = sprintf('%s%s\n', str, dum);
   end
-  str = sprintf('%s};\n', str);
+  str = sprintf('%s};\n', str(1:end-2)); % remove the last comma and space
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -139,14 +139,37 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function str = printval(val)
-str = [];
+str = '';
+siz = size(val);
 switch class(val)
   case 'char'
     str = sprintf('''%s''', val);
-  case 'double'
-    str = sprintf('%g', val);
+
+  case {'single' 'double'}
+    if all(siz==1)
+      str = sprintf('%g', val);
+    elseif length(siz)==2
+      for i=1:siz(1);
+        str = [ str sprintf('%g ', val(i,:)) '; ' ];
+      end
+      str = sprintf('[ %s ]', str(1:end-3));
+    else
+      error('multidimensional arrays are not supported');
+    end
+    
   case {'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64'}
-    str = sprintf('%d', val);
+    % this is the same as for double, except for the %d instead of %g
+    if all(siz==1)
+      str = sprintf('%d', val);
+    elseif length(siz)==2
+      for i=1:siz(1);
+        str = [ str sprintf('%d ', val(i,:)) '; ' ];
+      end
+      str = sprintf('[ %s ]', str(1:end-3));
+    else
+      error('multidimensional arrays are not supported');
+    end
+    
   case 'struct'
     str = '''FIXME''';
 end
