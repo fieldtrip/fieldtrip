@@ -5,11 +5,10 @@ function y = ft_preproc_slidingrange(dat, width, varargin)
 % Use as
 %   y = ft_preproc_slidingrange(dat, width, ...)
 
-normalize = keyval('normalize', varargin); if isempty(normalize), normalize = 'no'; end
-normalize = istrue(normalize); % convert yes/no string into boolean
+normalize = ft_getopt(varargin, 'normalize', false);
 
 if mod(width+1, 2)
-    error('width should be an odd number');
+  error('width should be an odd number');
 end
 
 % compute half width
@@ -20,20 +19,20 @@ minval = zeros(size(dat));
 maxval = zeros(size(dat));
 
 for i=1:n
-    begsample = i-h;
-    endsample = i+h;
-    if begsample<1
-        begsample = 1;
-    end
-    if endsample>n
-        endsample=n;
-    end
-    minval(:,i) = min(dat(:,begsample:endsample),[],2);
-    maxval(:,i) = max(dat(:,begsample:endsample),[],2);
+  begsample = i-h;
+  endsample = i+h;
+  if begsample<1
+    begsample = 1;
+  end
+  if endsample>n
+    endsample=n;
+  end
+  minval(:,i) = min(dat(:,begsample:endsample),[],2);
+  maxval(:,i) = max(dat(:,begsample:endsample),[],2);
 end
 
 y = maxval - minval;
 
-if normalize
-    y = y ./ sqrt(width);
+if istrue(normalize)
+  y = y ./ sqrt(width);
 end
