@@ -52,21 +52,20 @@ persistent previous_argin previous_maskimage
 ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'gridscale', 'shading', 'mask', 'outline', 'interplim', 'interpmethod','isolines','style', 'datmask', 'tag'});
-hpos          = keyval('hpos',         varargin);    if isempty(hpos);         hpos = 0;                 end
-vpos          = keyval('vpos',         varargin);    if isempty(vpos);         vpos = 0;                 end
-width         = keyval('width',        varargin);    if isempty(width);        width = 1;                end
-height        = keyval('height',       varargin);    if isempty(height);       height = 1;               end
-gridscale     = keyval('gridscale',    varargin);    if isempty(gridscale);    gridscale = 67;           end; % 67 in original
-shading       = keyval('shading',      varargin);    if isempty(shading);      shading = 'flat';         end;
-mask          = keyval('mask',         varargin);
-outline       = keyval('outline',      varargin);
-interplim     = keyval('interplim',    varargin);    if isempty(interplim);    interplim = 'electrodes'; end
-interpmethod  = keyval('interpmethod', varargin);    if isempty(interpmethod); interpmethod = 'v4';      end
-isolines      = keyval('isolines',     varargin);
-style         = keyval('style',        varargin);    if isempty(style);        style = 'surfiso';       end % can be 'surf', 'iso', 'isofill', 'surfiso'
-datmask       = keyval('datmask',      varargin);
-tag            = keyval('tag', varargin);                 if isempty(tag);               tag='';                         end
+hpos          = ft_getopt(varargin, 'hpos',           0);
+vpos          = ft_getopt(varargin, 'vpos',           0);
+width         = ft_getopt(varargin, 'width',          1);
+height        = ft_getopt(varargin, 'height',         1);
+gridscale     = ft_getopt(varargin, 'gridscale',      67); % 67 in original
+shading       = ft_getopt(varargin, 'shading',        'flat');
+interplim     = ft_getopt(varargin, 'interplim',      'electrodes');
+interpmethod  = ft_getopt(varargin, 'interpmethod',   'v4');
+style         = ft_getopt(varargin, 'style',          'surfiso'); % can be 'surf', 'iso', 'isofill', 'surfiso'
+tag           = ft_getopt(varargin, 'tag',            '');
+isolines      = ft_getopt(varargin, 'isolines');
+datmask       = ft_getopt(varargin, 'datmask');
+mask          = ft_getopt(varargin, 'mask');
+outline       = ft_getopt(varargin, 'outline');
 
 % everything is added to the current figure
 holdflag = ishold;

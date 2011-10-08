@@ -52,13 +52,13 @@ if ~isstruct(headshape) && isnumeric(headshape) && size(headshape,2)==3
 end
 
 % get the optional input arguments
-vertexcolor = keyval('vertexcolor', varargin); if isempty(vertexcolor), vertexcolor='r'; end
-facecolor   = keyval('facecolor',   varargin); if isempty(facecolor),   facecolor='none'; end
-edgecolor   = keyval('edgecolor',   varargin); if isempty(edgecolor),   edgecolor='none'; end
-fidcolor    = keyval('fidcolor',    varargin); if isempty(fidcolor), fidcolor='g'; end
-fidmarker   = keyval('fidmarker',   varargin); if isempty(fidmarker), fidmarker='*'; end
-fidlabel    = keyval('fidlabel',    varargin); if isempty(fidlabel), fidlabel='yes'; end
-transform   = keyval('transform',    varargin); if isempty(transform), transform=[]; end
+vertexcolor = ft_getopt(varargin, 'vertexcolor',  'r');
+facecolor   = ft_getopt(varargin, 'facecolor',    'none');
+edgecolor   = ft_getopt(varargin, 'edgecolor',    'none');
+fidcolor    = ft_getopt(varargin, 'fidcolor',     'g');
+fidmarker   = ft_getopt(varargin, 'fidmarker',    '*');
+fidlabel    = ft_getopt(varargin, 'fidlabel',     true);
+transform   = ft_getopt(varargin, 'transform');
 
 % start with empty return values
 hs      = [];

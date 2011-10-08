@@ -36,9 +36,9 @@ function ft_plot_topo3d(pnt, val, varargin)
 ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
-topostyle     = keyval('topostyle',     varargin); if isempty(topostyle),     topostyle = 'color';    end
-contourstyle  = keyval('contourstyle',  varargin); if isempty(contourstyle),  contourstyle = false;   end
-isocontour    = keyval('isocontour',    varargin); if isempty(isocontour),    isocontour = 'auto';    end
+contourstyle  = ft_getopt(varargin, 'contourstyle', false);
+isocontour    = ft_getopt(varargin, 'isocontour',   'auto');
+topostyle     = ft_getopt(varargin, 'topostyle',    'color');
 
 % everything is added to the current figure
 holdflag = ishold;
@@ -67,7 +67,7 @@ end % plot the interpolated topography
 
 
 if ~isequal(contourstyle, false)
-
+  
   if isequal(isocontour, 'auto')
     minval = min(val);
     maxval = max(val);
@@ -77,18 +77,18 @@ if ~isequal(contourstyle, false)
     maxval = ceil(maxval/scale)*scale;
     isocontour = minval:scale:maxval;
   end
-
+  
   triangle_val = val(tri);
   triangle_min = min(triangle_val, [], 2);
   triangle_max = max(triangle_val, [], 2);
-
+  
   for cnt_indx=1:length(isocontour)
     cnt = isocontour(cnt_indx);
     use = cnt>=triangle_min & cnt<=triangle_max;
     counter = 0;
     intersect1 = [];
     intersect2 = [];
-
+    
     for tri_indx=find(use)'
       pos  = pnt(tri(tri_indx,:), :);
       v(1) = triangle_val(tri_indx,1);
@@ -105,14 +105,14 @@ if ~isequal(contourstyle, false)
       intersect1(counter, :) = abc(sel(1),:);
       intersect2(counter, :) = abc(sel(2),:);
     end
-
+    
     % remember the details for external reference
     contour(cnt_indx).level = cnt;
     contour(cnt_indx).n     = counter;
     contour(cnt_indx).intersect1 = intersect1;
     contour(cnt_indx).intersect2 = intersect2;
   end
-
+  
   % collect all different contour isocontour for plotting
   intersect1 = [];
   intersect2 = [];
@@ -122,17 +122,17 @@ if ~isequal(contourstyle, false)
     intersect2 = [intersect2; contour(cnt_indx).intersect2];
     cntlevel   = [cntlevel; ones(contour(cnt_indx).n,1) * isocontour(cnt_indx)];
   end
-
+  
   X = [intersect1(:,1) intersect2(:,1)]';
   Y = [intersect1(:,2) intersect2(:,2)]';
   C = [cntlevel(:)     cntlevel(:)]';
-
+  
   if size(pnt,2)>2
     Z = [intersect1(:,3) intersect2(:,3)]';
   else
     Z = zeros(2, length(cntlevel));
   end
-
+  
   switch contourstyle
     case 'black'
       % make black-white contours
@@ -155,7 +155,7 @@ if ~isequal(contourstyle, false)
           'userdata',cntlevel(i));
         hc = [hc; h1];
       end
-
+      
     case 'color'
       % make full-color contours
       hc = [];
@@ -166,11 +166,11 @@ if ~isequal(contourstyle, false)
           'userdata',cntlevel(i));
         hc = [hc; h1];
       end
-
+      
     otherwise
       error('unsupported contourstyle');
   end % switch contourstyle
-
+  
 end % plot the contours
 
 axis off

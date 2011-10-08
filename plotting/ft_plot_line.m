@@ -43,17 +43,16 @@ function h = ft_plot_line(X, Y, varargin)
 ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'color', 'linestyle', 'linewidth', 'tag'});
-hpos        = keyval('hpos',      varargin);
-vpos        = keyval('vpos',      varargin);
-width       = keyval('width',     varargin);
-height      = keyval('height',    varargin);
-hlim        = keyval('hlim',      varargin);
-vlim        = keyval('vlim',      varargin);
-color       = keyval('color',     varargin); if isempty(color), color = 'k'; end
-linestyle   = keyval('linestyle', varargin); if isempty(linestyle), linestyle = '-'; end
-linewidth   = keyval('linewidth', varargin); if isempty(linewidth), linewidth = 0.5; end
-tag            = keyval('tag', varargin);                 if isempty(tag),               tag='';                         end
+hpos        = ft_getopt(varargin, 'hpos');
+vpos        = ft_getopt(varargin, 'vpos');
+width       = ft_getopt(varargin, 'width');
+height      = ft_getopt(varargin, 'height');
+hlim        = ft_getopt(varargin, 'hlim');
+vlim        = ft_getopt(varargin, 'vlim');
+color       = ft_getopt(varargin, 'color',      'k');
+linestyle   = ft_getopt(varargin, 'linestyle',  '-');
+linewidth   = ft_getopt(varargin, 'linewidth',  0.5);
+tag         = ft_getopt(varargin, 'tag',        '');
 
 if isempty(hlim) && isempty(vlim) && isempty(hpos) && isempty(vpos) && isempty(height) && isempty(width)
   % no scaling is needed, the input X and Y are already fine

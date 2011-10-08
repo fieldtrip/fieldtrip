@@ -38,11 +38,11 @@ function [selected] = ft_select_point(pos, varargin)
 
 
 % get optional input arguments
-nearest  = keyval('nearest', varargin); if isempty(nearest), nearest = true; end
-multiple = keyval('multiple', varargin); if isempty(multiple), multiple = false; end
+nearest  = ft_getopt(varargin, 'nearest',   true);
+multiple = ft_getopt(varargin, 'multiple',  false);
 
 % ensure that it is boolean
-nearest = istrue(nearest);
+nearest  = istrue(nearest);
 multiple = istrue(multiple);
 
 if multiple
@@ -70,7 +70,7 @@ while ~done
     x(end+1) = point(1,1);
     y(end+1) = point(1,2);
   end
-
+  
   if ~multiple
     done = true;
   end
@@ -79,7 +79,7 @@ end
 if nearest && ~isempty(pos)
   % determine the points that are the nearest to the displayed points
   selected = [];
-
+  
   % compute the distance between the points to get an estimate of the tolerance
   dp = dist(pos');
   dp = triu(dp, 1);
@@ -88,7 +88,7 @@ if nearest && ~isempty(pos)
   % allow for some tolerance in the clicking
   dp = median(dp);
   tolerance = 0.3*dp;
-
+  
   for i=1:length(x)
     % compute the distance between the clicked position and all points
     dx = pos(:,1) - x(i);
@@ -99,7 +99,7 @@ if nearest && ~isempty(pos)
       selected(end+1,:) = pos(i,:);
     end
   end
-
+  
 else
   selected = [x(:) y(:)];
 end % if nearest

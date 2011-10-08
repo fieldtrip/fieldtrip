@@ -48,17 +48,16 @@ function [varargout] = ft_plot_box(position, varargin);
 ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'facealpha', 'facecolor', 'edgecolor', 'tag'});
-hpos        = keyval('hpos',      varargin);
-vpos        = keyval('vpos',      varargin);
-width       = keyval('width',     varargin);
-height      = keyval('height',    varargin);
-hlim        = keyval('hlim',      varargin);
-vlim        = keyval('vlim',      varargin);
-facealpha   = keyval('facealpha', varargin); if isempty(facealpha), facealpha = 1; end
-facecolor   = keyval('facecolor', varargin); if isempty(facecolor), facecolor = 'none'; end
-edgecolor   = keyval('edgecolor', varargin); if isempty(edgecolor), edgecolor = 'k'; end
-tag            = keyval('tag', varargin);                 if isempty(tag),               tag='';                         end
+hpos        = ft_getopt(varargin, 'hpos');
+vpos        = ft_getopt(varargin, 'vpos');
+width       = ft_getopt(varargin, 'width');
+height      = ft_getopt(varargin, 'height');
+hlim        = ft_getopt(varargin, 'hlim');
+vlim        = ft_getopt(varargin, 'vlim');
+facealpha   = ft_getopt(varargin, 'facealpha', 1);
+facecolor   = ft_getopt(varargin, 'facecolor', 'none');
+edgecolor   = ft_getopt(varargin, 'edgecolor', 'k');
+tag         = ft_getopt(varargin, 'tag',       '');
 
 % convert the two cornerpoints into something that the patch function understands
 % the box position is represented just like the argument to the AXIS function
@@ -135,5 +134,5 @@ if nargout == 1
   varargout{1} = h;
 end
 
-warning(ws); %revert to original state
+warning(ws); % revert to original state
 

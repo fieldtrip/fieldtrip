@@ -34,9 +34,9 @@ function [x, y] = ft_select_box(handle, eventdata, varargin)
 % $Id$
 
 % get the optional arguments
-multiple = keyval('multiple', varargin); if isempty(multiple), multiple = false; end
+multiple = ft_getopt(varargin, 'multiple', false);
 
-if multiple
+if istrue(multiple)
   error('not yet implemented');
 else
   k = waitforbuttonpress;

@@ -42,20 +42,19 @@ function ft_plot_lay(lay, varargin)
 ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'point', 'box', 'label','labelsize','labeloffset', 'mask', 'outline', 'verbose','pointsymbol','pointcolor','pointsize'});
-hpos         = keyval('hpos',        varargin); if isempty(hpos),       hpos = 0;            end
-vpos         = keyval('vpos',        varargin); if isempty(vpos),       vpos = 0;            end
-point        = keyval('point',       varargin); if isempty(point),      point = true;        end
-box          = keyval('box',         varargin); if isempty(box),        box = true;          end
-label        = keyval('label',       varargin); if isempty(label),      label = true;        end
-labelsize    = keyval('labelsize',   varargin); if isempty(labelsize),  labelsize = 10;      end
-labeloffset  = keyval('labeloffset', varargin); if isempty(labeloffset),labeloffset = 0;     end
-mask         = keyval('mask',        varargin); if isempty(mask),       mask = true;         end
-outline      = keyval('outline',     varargin); if isempty(outline),    outline = true;      end
-verbose      = keyval('verbose',     varargin); if isempty(verbose),    verbose = false;     end
-pointsymbol  = keyval('pointsymbol', varargin);
-pointcolor   = keyval('pointcolor',  varargin);
-pointsize    = keyval('pointsize',   varargin);
+hpos         = ft_getopt(varargin, 'hpos',         0);
+vpos         = ft_getopt(varargin, 'vpos',         0);
+point        = ft_getopt(varargin, 'point',        true);
+box          = ft_getopt(varargin, 'box',          true);
+label        = ft_getopt(varargin, 'label',        true);
+labelsize    = ft_getopt(varargin, 'labelsize',    10);
+labeloffset  = ft_getopt(varargin, 'labeloffset',  0);
+mask         = ft_getopt(varargin, 'mask',         true);
+outline      = ft_getopt(varargin, 'outline',      true);
+verbose      = ft_getopt(varargin, 'verbose',      false);
+pointsymbol  = ft_getopt(varargin, 'pointsymbol');
+pointcolor   = ft_getopt(varargin, 'pointcolor');
+pointsize    = ft_getopt(varargin, 'pointsize');
 
 % convert between true/false/yes/no etc. statements
 point   = istrue(point);
@@ -96,7 +95,7 @@ if box
 end
 
 if outline && isfield(lay, 'outline')
-  if verbose  
+  if verbose
     fprintf('solid lines indicate the outline, e.g. head shape or sulci\n');
   end
   for i=1:length(lay.outline)
@@ -113,7 +112,7 @@ end
 if mask && isfield(lay, 'mask')
   if verbose
     fprintf('dashed lines indicate the mask for topograpic interpolation\n');
-  end  
+  end
   for i=1:length(lay.mask)
     if ~isempty(lay.mask{i})
       X = lay.mask{i}(:,1) + hpos;

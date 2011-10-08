@@ -10,18 +10,18 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 %   'transform'    a 4x4 homogeneous transformation matrix specifying the mapping from
 %                    voxel space to the coordinate system in which the data are plotted.
 %   'location'     a 1x3 vector specifying a point on the plane which will be plotted
-%                    the coordinates are expressed in the coordinate system in which the 
-%                    data will be plotted. location defines the origin of the plane 
+%                    the coordinates are expressed in the coordinate system in which the
+%                    data will be plotted. location defines the origin of the plane
 %   'orientation'  a 3x3 matrix specifying the directions orthogonal through the planes
 %                    which will be plotted.
 %   'datmask'      a 3D-matrix with the same size as the matrix dat, serving as opacitymap
-%   'interpmethod' a string specifying the method for the interpolation, default = 'nearest' 
+%   'interpmethod' a string specifying the method for the interpolation, default = 'nearest'
 %                    see INTERPN
-%   'colormap'    
+%   'colormap'
 %
 %   'interplim'
 %
-% This function uses FT_PLOT_SLICE 
+% This function uses FT_PLOT_SLICE
 
 % Copyrights (C) 2010, Jan-Mathijs Schoffelen
 %
@@ -43,16 +43,15 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 %
 % $Id$
 
-style     = keyval('style',       varargin); if isempty(style),      style      = 'subplot'; end
-loc       = keyval('location',    varargin); if isempty(loc),        loc        = [0 0 0];   end
-ori       = keyval('orientation', varargin); if isempty(ori),        ori        = eye(3);    end   
-transform = keyval('transform',   varargin); if isempty(transform),  transform  = eye(4);    end
-if ~strcmp(class(dat), 'double'),
-  dat       = cast(dat, 'double');
-end
+% get the optional input arguments
+style     = ft_getopt(varargin, 'style',       'subplot');
+loc       = ft_getopt(varargin, 'location',    [0 0 0]);
+ori       = ft_getopt(varargin, 'orientation', eye(3));
+transform = ft_getopt(varargin, 'transform',   eye(4));
 
-%clear ft_plot_slice FIXME this has to be cleared in the higher level
-%function calling ft_plot_ortho
+if ~isa(dat, 'double')
+  dat = cast(dat, 'double');
+end
 
 % add orientation key-value pair if it does not exist
 keys = varargin(1:2:end);
@@ -64,54 +63,54 @@ if isempty(sel)
 end
 
 switch style
-case 'subplot'
-  
-  Hx = subplot(2,2,1);
-  varargin{sel+1} = ori(1,:);
-  hx = ft_plot_slice(dat, varargin{:});
-  view([90 0]);
-  axis equal;axis tight;axis off
-  
-  Hy = subplot(2,2,2);
-  varargin{sel+1} = ori(2,:);
-  hy = ft_plot_slice(dat, varargin{:});
-  view([0 0]);
-  axis equal;axis tight;axis off
-  
-  Hz = subplot(2,2,4);
-  varargin{sel+1} = ori(3,:);
-  hz = ft_plot_slice(dat, varargin{:});
-  view([0 90]);
-  axis equal;axis tight;axis off
-  
-case 'intersect'
-  holdflag = ishold;
-  if ~holdflag
-    hold on
-  end
-  
-  varargin{sel+1} = ori(1,:);
-  hx = ft_plot_slice(dat, varargin{:});
-  
-  varargin{sel+1} = ori(2,:);
-  hy = ft_plot_slice(dat, varargin{:});
-  
-  varargin{sel+1} = ori(3,:);
-  hz = ft_plot_slice(dat, varargin{:});
-  axis equal; axis tight; axis off;axis vis3d
-  view(3);
-
-  if ~holdflag
-    hold off
-  end
-
-otherwise
-
+  case 'subplot'
+    
+    Hx = subplot(2,2,1);
+    varargin{sel+1} = ori(1,:);
+    hx = ft_plot_slice(dat, varargin{:});
+    view([90 0]);
+    axis equal;axis tight;axis off
+    
+    Hy = subplot(2,2,2);
+    varargin{sel+1} = ori(2,:);
+    hy = ft_plot_slice(dat, varargin{:});
+    view([0 0]);
+    axis equal;axis tight;axis off
+    
+    Hz = subplot(2,2,4);
+    varargin{sel+1} = ori(3,:);
+    hz = ft_plot_slice(dat, varargin{:});
+    view([0 90]);
+    axis equal;axis tight;axis off
+    
+  case 'intersect'
+    holdflag = ishold;
+    if ~holdflag
+      hold on
+    end
+    
+    varargin{sel+1} = ori(1,:);
+    hx = ft_plot_slice(dat, varargin{:});
+    
+    varargin{sel+1} = ori(2,:);
+    hy = ft_plot_slice(dat, varargin{:});
+    
+    varargin{sel+1} = ori(3,:);
+    hz = ft_plot_slice(dat, varargin{:});
+    axis equal; axis tight; axis off;axis vis3d
+    view(3);
+    
+    if ~holdflag
+      hold off
+    end
+    
+  otherwise
+    
 end
 
 % if strcmp(interactive, 'yes')
 %   flag = 1;
 %   while flag
-%   
-%   end   
+%
+%   end
 % end

@@ -5,7 +5,7 @@ function hs = ft_plot_sens(sens, varargin)
 % Use as
 %   ft_plot_sens(sens, ...)
 % where the first argument is the sensor array as returned by READ_SENS
-% or PREPARE_VOL_SENS. 
+% or PREPARE_VOL_SENS.
 %
 % Optional input arguments should come in key-value pairs and can include
 %   'style'    plotting style for the points representing the channels, see plot3 (default = 'k.')
@@ -44,13 +44,9 @@ if isfield(sens,'pnt')
 end
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'style', 'coil', 'label'});
-style = keyval('style', varargin); if isempty(style), style = 'k.'; end
-coil  = keyval('coil',  varargin); if isempty(coil), coil = false; end
-label = keyval('label', varargin); if isempty(label), label = 'off'; end
-
-% convert yes/no string into boolean value
-coil = istrue(coil);
+style = ft_getopt(varargin, 'style',  'k.');
+coil  = ft_getopt(varargin, 'coil',   false);
+label = ft_getopt(varargin, 'label',  'off');
 
 % everything is added to the current figure
 holdflag = ishold;
@@ -58,7 +54,7 @@ if ~holdflag
   hold on
 end
 
-if coil
+if istrue(coil)
   % simply plot the position of all coils or electrodes
   if isfield(sens, 'coilpos')
     pnt = sens.coilpos;
@@ -88,7 +84,7 @@ else
       end % switch
       text(sens.chanpos(i,1), sens.chanpos(i,2), sens.chanpos(i,3), str);
     end % for
-  end % if     
+  end % if
   
 end
 

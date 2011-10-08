@@ -52,8 +52,6 @@ function [hs] = ft_plot_mesh(bnd, varargin)
 
 ws = warning('on', 'MATLAB:divideByZero');
 
-keyvalcheck(varargin, 'forbidden', {'faces', 'edges', 'vertices'});
-
 if ~isstruct(bnd) && isnumeric(bnd) && size(bnd,2)==3
   % the input seems like a list of points, convert into something that resembles a mesh
   warning('off', 'MATLAB:warn_r14_stucture_assignment');
@@ -64,14 +62,14 @@ elseif isfield(bnd, 'pos')
 end
 
 % get the optional input arguments
-facecolor   = keyval('facecolor',   varargin); if isempty(facecolor),   facecolor='white';end
-vertexcolor = keyval('vertexcolor', varargin); 
-edgecolor   = keyval('edgecolor',   varargin); if isempty(edgecolor),   edgecolor='k';end
-faceindex   = keyval('faceindex',   varargin); if isempty(faceindex),   faceindex=false;end
-vertexindex = keyval('vertexindex', varargin); if isempty(vertexindex), vertexindex=false;end
-vertexsize  = keyval('vertexsize',  varargin); if isempty(vertexsize),  vertexsize=10;end
-facealpha   = keyval('facealpha',   varargin); if isempty(facealpha),   facealpha=1;end
-tag         = keyval('tag',         varargin); if isempty(tag),         tag='';end
+vertexcolor = ft_getopt(varargin, 'vertexcolor');
+facecolor   = ft_getopt(varargin, 'facecolor',   'white');
+edgecolor   = ft_getopt(varargin, 'edgecolor',   'k');
+faceindex   = ft_getopt(varargin, 'faceindex',   false);
+vertexindex = ft_getopt(varargin, 'vertexindex', false);
+vertexsize  = ft_getopt(varargin, 'vertexsize',  10);
+facealpha   = ft_getopt(varargin, 'facealpha',   1);
+tag         = ft_getopt(varargin, 'tag',         '');
 
 haspnt = isfield(bnd, 'pnt');
 hastri = isfield(bnd, 'tri');
@@ -91,7 +89,7 @@ vertexindex = istrue(vertexindex);
 skin   = [255 213 119]/255;
 brain  = [202 100 100]/255;
 cortex = [255 213 119]/255;
-    
+
 % there a various ways of disabling the plotting
 if isequal(vertexcolor, 'false') || isequal(vertexcolor, 'no') || isequal(vertexcolor, 'off') || isequal(vertexcolor, false)
   vertexcolor = 'none';
@@ -134,7 +132,7 @@ end
 
 % if vertexcolor is an array with number of elements equal to the number of vertices
 if size(pnt,1)==numel(vertexcolor)
-  set(hs, 'FaceVertexCData', vertexcolor, 'FaceColor', 'interp'); 
+  set(hs, 'FaceVertexCData', vertexcolor, 'FaceColor', 'interp');
 end
 
 % if facealpha is an array with number of elements equal to the number of vertices

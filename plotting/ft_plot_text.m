@@ -4,7 +4,7 @@ function [varargout] = ft_plot_text(X, Y, str, varargin)
 % combination with the multiple channel layout display in FieldTrip.
 %
 % Use as
-%   ft_plot_text(X, Y, ...)
+%   ft_plot_text(X, Y, str, ...)
 %
 % Optional arguments should come in key-value pairs and can include
 %   Color               =
@@ -44,32 +44,20 @@ function [varargout] = ft_plot_text(X, Y, str, varargin)
 ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'tag', ...
-  'Color', 'FontSize', 'FontName', 'HorizontalAlignment','rotation','VerticalAlignment','interpreter'});
-hpos        = keyval('hpos',      varargin);
-vpos        = keyval('vpos',      varargin);
-width       = keyval('width',     varargin);
-height      = keyval('height',    varargin);
-hlim        = keyval('hlim',      varargin);
-vlim        = keyval('vlim',      varargin);
-Color       = keyval('Color',     varargin);  if isempty(Color), Color = 'k'; end
-FontSize    = keyval('FontSize',  varargin);
-FontName    = keyval('FontName',  varargin);
-
-HorizontalAlignment = keyval('HorizontalAlignment', varargin);
-if isempty(HorizontalAlignment), HorizontalAlignment = 'center'; end
-
-rotation  = keyval('rotation',  varargin);
-if isempty(rotation), rotation = 0; end
-
-VerticalAlignment = keyval('VerticalAlignment',  varargin);
-if isempty(VerticalAlignment), VerticalAlignment = 'middle'; end
-
-tag = keyval('tag', varargin); 
-if isempty(tag), tag= ''; end
-
-interpreter = keyval('interpreter', varargin);
-if isempty(interpreter), interpreter = 'tex'; end
+hpos                = ft_getopt(varargin, 'hpos');
+vpos                = ft_getopt(varargin, 'vpos');
+width               = ft_getopt(varargin, 'width');
+height              = ft_getopt(varargin, 'height');
+hlim                = ft_getopt(varargin, 'hlim');
+vlim                = ft_getopt(varargin, 'vlim');
+Color               = ft_getopt(varargin, 'Color', 'k');
+FontSize            = ft_getopt(varargin, 'FontSize');
+FontName            = ft_getopt(varargin, 'FontName');
+HorizontalAlignment = ft_getopt(varargin, 'HorizontalAlignment', 'center');
+rotation            = ft_getopt(varargin, 'rotation', 0);
+VerticalAlignment   = ft_getopt(varargin, 'VerticalAlignment', 'middle');
+tag                 = ft_getopt(varargin, 'tag', '');
+interpreter         = ft_getopt(varargin, 'interpreter', 'tex');
 
 if isempty(hlim) && isempty(vlim) && isempty(hpos) && isempty(vpos) && isempty(height) && isempty(width)
   % no scaling is needed, the input X and Y are already fine

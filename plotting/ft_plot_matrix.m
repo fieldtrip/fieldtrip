@@ -66,22 +66,21 @@ else
 end
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'hpos', 'vpos', 'width', 'height', 'hlim', 'vlim', 'clim', 'box','highlight','highlightstyle','tag'});
-hpos           = keyval('hpos',   varargin);
-vpos           = keyval('vpos',   varargin);
-width          = keyval('width',  varargin);
-height         = keyval('height', varargin);
-hlim           = keyval('hlim',   varargin);
-vlim           = keyval('vlim',   varargin);
-clim           = keyval('clim',   varargin);
-box            = keyval('box',    varargin);              if isempty(box),               box = false;                    end
-highlight      = keyval('highlight',       varargin);
-highlightstyle = keyval('highlightstyle',  varargin);     if isempty(highlightstyle),    highlightstyle = 'opacity';     end
-tag            = keyval('tag', varargin);                 if isempty(tag),               tag='';                         end
+hpos           = ft_getopt(varargin, 'hpos');
+vpos           = ft_getopt(varargin, 'vpos');
+width          = ft_getopt(varargin, 'width');
+height         = ft_getopt(varargin, 'height');
+hlim           = ft_getopt(varargin, 'hlim');
+vlim           = ft_getopt(varargin, 'vlim');
+clim           = ft_getopt(varargin, 'clim');
+highlight      = ft_getopt(varargin, 'highlight');
+highlightstyle = ft_getopt(varargin, 'highlightstyle', 'opacity');
+box            = ft_getopt(varargin, 'box',            false);
+tag            = ft_getopt(varargin, 'tag',            '');
 
-% axis   = keyval('axis',   varargin); if isempty(axis), axis = false; end
-% label  = keyval('label',  varargin); % FIXME
-% style  = keyval('style',  varargin); % FIXME
+% axis   = ft_getopt(varargin, 'axis', false);
+% label  = ft_getopt(varargin, 'label'); % FIXME
+% style  = ft_getopt(varargin, 'style'); % FIXME
 
 % convert the yes/no strings into boolean values
 box  = istrue(box);

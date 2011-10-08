@@ -52,8 +52,8 @@ function ft_select_voxel(handle, eventdata, varargin)
 % $Id$
 
 % get optional input arguments
-callback = keyval('callback', varargin);
-event    = keyval('event', varargin);
+callback = ft_getopt(varargin, 'callback');
+event    = ft_getopt(varargin, 'event');
 
 % get the clicked position from the figure
 % voxel = get(gca, 'CurrentPoint');

@@ -1,7 +1,6 @@
 function [h, T2] = ft_plot_slice(dat, varargin)
 
-% FT_PLOT_SLICE cuts a 2-D slice from a 3-D volume and interpolates
-% if necessary
+% FT_PLOT_SLICE cuts a 2-D slice from a 3-D volume and interpolates if needed
 %
 % Use as
 %   ft_plot_slice(dat, ...)
@@ -10,14 +9,14 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %   'transform'    a 4x4 homogeneous transformation matrix specifying the mapping from
 %                    voxel space to the coordinate system in which the data are plotted.
 %   'location'     a 1x3 vector specifying a point on the plane which will be plotted
-%                    the coordinates are expressed in the coordinate system in which the 
-%                    data will be plotted. location defines the origin of the plane 
+%                    the coordinates are expressed in the coordinate system in which the
+%                    data will be plotted. location defines the origin of the plane
 %   'orientation'  a 1x3 vector specifying the direction orthogonal through the plane
 %                    which will be plotted.
 %   'datmask'      a 3D-matrix with the same size as the matrix dat, serving as opacitymap
-%   'interpmethod' a string specifying the method for the interpolation, default = 'nearest' 
+%   'interpmethod' a string specifying the method for the interpolation, default = 'nearest'
 %                    see INTERPN
-%   'colormap'    
+%   'colormap'
 %   'style'        'flat' or '3D'
 %
 %   'interplim'
@@ -44,16 +43,17 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 
 persistent previous_dim X Y Z;
 
-transform = keyval('transform',   varargin);
-loc       = keyval('location',    varargin); 
-ori       = keyval('orientation', varargin); if isempty(ori),        ori        = [0 0 1];   end;
-resolution = keyval('resolution', varargin); if isempty(resolution), resolution = 1;         end;
-mask       = keyval('datmask',    varargin);
-interpmethod = keyval('interpmethod', varargin); if isempty(interpmethod), interpmethod = 'nearest'; end
-cmap       = keyval('colormap',   varargin); 
+% get the optional input arguments
+transform    = ft_getopt(varargin, 'transform');
+loc          = ft_getopt(varargin, 'location');
+ori          = ft_getopt(varargin, 'orientation',  [0 0 1]);
+resolution   = ft_getopt(varargin, 'resolution',   1);
+mask         = ft_getopt(varargin, 'datmask');
+interpmethod = ft_getopt(varargin, 'interpmethod', 'nearest');
+cmap         = ft_getopt(varargin, 'colormap');
 
-if ~strcmp(class(dat), 'double'),
-  dat       = cast(dat, 'double');
+if ~isa(dat, 'double')
+  dat = cast(dat, 'double');
 end
 
 % norm normalise the ori vector
@@ -112,7 +112,7 @@ if dointerp
   % define 'x' and 'y' axis in projection plane.
   % this is more or less arbitrary
   [x, y] = projplane(ori);
-  m      = max(dim)./1; 
+  m      = max(dim)./1;
   xplane = -m:resolution:m;
   yplane = -m:resolution:m;
   zplane = 0;
@@ -123,13 +123,13 @@ if dointerp
   
   % get the transformation matrix from plotting space to voxel space
   T1 = inv(transform);
-
+  
   % get the transformation matrix from to get the projection plane at the right location and orientation into plotting space.
   T2  = [x(:) y(:) ori(:) loc(:); 0 0 0 1];
- 
+  
   % get the transformation matrix from projection plane to voxel space
   M   = T1*T2;
-
+  
   pos = warp_apply(M, pos);   % gives the positions of the required plane in voxel space
   
   Xi         = reshape(pos(:,1), siz);
@@ -142,7 +142,7 @@ if dointerp
   if domask,
     Vmask    = tight(interpn(X,Y,Z,mask,Xi,Yi,Zi,interpmethod));
   end
-
+  
 else
   %-------cut a slice without interpolation
   [x, y] = projplane(ori);
@@ -161,7 +161,7 @@ else
   if domask,
     Vmask    = mask(xplane, yplane, zplane);
   end
-
+  
 end
 
 % get positions of the plane in plotting space

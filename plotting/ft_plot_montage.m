@@ -1,12 +1,14 @@
 function ft_plot_montage(dat, varargin)
 
-transform = keyval('transform',   varargin);
-loc       = keyval('location',    varargin);
-ori       = keyval('orientation', varargin);
-mask      = keyval('datmask',     varargin);
-cmap      = keyval('colormap',    varargin);
-srange    = keyval('slicerange',  varargin);
-nslice    = keyval('nslice',      varargin);
+% FT_PLOT_MONTAGE
+
+transform = ft_getopt(varargin, 'transform');
+loc       = ft_getopt(varargin, 'location');
+ori       = ft_getopt(varargin, 'orientation');
+mask      = ft_getopt(varargin, 'datmask');
+cmap      = ft_getopt(varargin, 'colormap');
+srange    = ft_getopt(varargin, 'slicerange');
+nslice    = ft_getopt(varargin, 'nslice');
 
 % set the location if empty
 if isempty(loc) && (isempty(transform) || all(all(transform-eye(4)==0)==1))
@@ -52,7 +54,7 @@ if size(loc, 1) == 1 && nslice > 1,
     srange = [-50 70];
   else
   end
-  loc = repmat(loc, [nslice 1]) + linspace(srange(1),srange(2),nslice)'*ori;    
+  loc = repmat(loc, [nslice 1]) + linspace(srange(1),srange(2),nslice)'*ori;
 end
 
 % ensure that the ori has the same size as the loc
@@ -65,11 +67,11 @@ for k = 1:nslice
   ix     = mod(k-1, div(1));
   iy     = floor((k-1)/div(1));
   h(k)   = ft_plot_slice(dat, 'transform', transform, 'location', loc(k,:), ...
-                              'orientation', ori(k,:), 'colormap', cmap, 'datmask', mask);
+    'orientation', ori(k,:), 'colormap', cmap, 'datmask', mask);
   siz    = size(get(h(k), 'xdata'));
   set(h(k), 'xdata', ix*(siz(1) -1) + repmat((0:siz(1)-1)', [1 siz(2)]));
   set(h(k), 'ydata', iy*(siz(2) -1) + repmat((0:siz(2)-1) , [siz(1) 1]));
-  set(h(k), 'zdata', zeros(siz));   
+  set(h(k), 'zdata', zeros(siz));
 end
 axis equal;
 axis tight;
