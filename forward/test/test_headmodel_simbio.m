@@ -10,7 +10,7 @@ ft_hastoolbox('simbio', 1);
 % create 3 spherical meshes and the corresponding volumes
 [pnt, tri] = icosahedron162;
 
-% radiuses and origins are defined in cm
+% radiuses and origins are defined in mm
 svol(1).o = [0,0,0];
 svol(1).r = 30;
 svol(1).bnd.pnt = pnt;
@@ -69,6 +69,8 @@ transform = eye(4);
 transform(1:3,4) = [-76 -76 -76]'; % voxels to mm
 % ATTENTION: simbio wants the coordinates in voxel units,
 % conductivity in S/m, sensors in voxels, dipoles in voxels
+% FIXME: actually sens shouldnt be required, generate fake sens def inside
+% this function?
 vol  = ft_headmodel_fem_simbio(bkgrnd,'tissue',{'sph1','sph2','sph3'}, ...
                                       'tissueval',[1 2 3], ...
                                       'tissuecond',[0.022 0.33 0.33], ...

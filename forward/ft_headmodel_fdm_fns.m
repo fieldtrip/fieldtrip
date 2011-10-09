@@ -23,22 +23,28 @@ function vol = ft_headmodel_fdm_fns(seg,varargin)
 % 
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
+% Copyright (C) 2011, Cristiano Micheli and Hung Dang
+
+ft_hastoolbox('fns', 1);
+
 % get the optional arguments
-condmatrix   = ft_getopt(varargin, 'condmatrix', []);
 tissue       = ft_getopt(varargin, 'tissue', []);
 tissueval    = ft_getopt(varargin, 'tissueval', []);
 tissuecond   = ft_getopt(varargin, 'tissuecond', []);
-bnd          = ft_getopt(varargin, 'bnd', []);
 transform    = ft_getopt(varargin, 'transform', eye(4));
 units        = ft_getopt(varargin, 'units', 'cm');
+% bnd          = ft_getopt(varargin, 'bnd', []);
+sens         = ft_getopt(varargin, 'sens', []);
 deepelec     = ft_getopt(varargin, 'deepelec', []); % used in the case of deep voxel solution
+tolerance    = ft_getopt(varargin, 'tolerance', 1e-8);
 
-if isempty(deepvoxel) && isempty(bnd)
-  error('Either a deep electrode or a boundary have to be given')
+if isempty(sens)
+  error('A set of sensors is required')
 end
 
-% load the default cond matrix in case not specified
-condmatrix = fns_contable_write('tissue',tissue,'tissueval',tissueval,'tissuecond',tissuecond);
+if ~isunix
+  error('this only works on linux and osx')
+end
 
 % check the consistency between tissue values and the segmentation
 vecval = ismember(tissueval,unique(seg(:)));
@@ -46,19 +52,86 @@ if any(vecval)==0
   warning('Some of the tissue values are not in the segmentation')
 end
 
+% create the files to be written
+try
+    cd(tempdir)
+    [~,tname] = fileparts(tempname);
+    segfile   = [tname];     
+    [~,tname] = fileparts(tempname);
+    confile   = [tname '.csv'];
+    [~,tname] = fileparts(tempname);
+    elecfile = [tname '.h5']; 
+    [~,tname] = fileparts(tempname);
+    exefile   = [tname '.sh'];     
+    [~,tname] = fileparts(tempname);
+    datafile  = [tname '.h5'];
+       
+    % create a fake mri structure and write the segmentation on disk
+    disp('writing the segmentation file...')
+    if ~ft_hastoolbox('fileio')
+      error('You must have the fileio module to go on')
+    end    
+    mri = [];
+    mri.dim = size(seg);
+    mri.transform = eye(4);
+    mri.seg = seg;
+    cfg = [];
+    cfg.coordsys  = 'ctf';
+    cfg.parameter = 'seg';
+    cfg.filename  = segfile;
+    cfg.filetype  = 'analyze';
+    ft_volumewrite(cfg, mri);     
+    
+    % write the cond matrix on disk, load the default cond matrix in case not specified
+    disp('writing the conductivity file...')
+    condmatrix = fns_contable_write('tissue',tissue,'tissueval',tissueval,'tissuecond',tissuecond);
+    csvwrite(confile,condmatrix);
+
+    % write the positions of the electrodes on disk
+    disp('writing the electrodes file...')
+    pos = warp_apply(inv(transform),sens.chanpos); % in voxel coordinates!
+    fns_elec_write(pos,[1 1 1],size(seg),elecfile);  
+
+    % Exe file 
+    efid = fopen(exefile, 'w');
+    if ~ispc
+      fprintf(efid,'#!/usr/bin/env bash\n');
+      fprintf(efid,['elecsfwd --img ' segfile ' --electrodes ./' elecfile ' --data ./', ...
+                   datafile ' --contable ./' confile ' --TOL ' num2str(tolerance) ' 2>&1 > /dev/null\n']);
+    end
+    fclose(efid);
+    % run the shell instructions
+    dos(sprintf('chmod +x %s', exefile));
+    dos(['./' exefile]);
+    
+    transfer = fns_read_transfer(datafile);
+    % FIXME : the result of elecsfwd has to be read in a transfer matrix
+    % (has to be implemented!)
+    cleaner(segfile,confile,elecfile,exefile,datafile)
+    
+catch ME
+    disp('The transfer matrix was not written')
+    cleaner(segfile,confile,elecfile,exefile,datafile)
+    cd(tmpfolder)
+    rethrow(ME)
+end
+
 % start with an empty volume conductor
 vol = [];
-vol.condmatrix = condmatrix;
-vol.seg        = seg; 
 vol.tissue     = tissue;
 vol.tissueval  = tissueval;
 vol.transform  = transform;
 vol.units      = units;
 vol.type       = 'fns';
+vol.transfer   = transfer;
 
-% bnd has always the precedence
-if ~isempty(bnd)
-  vol.bnd        = bnd;
-else
+if ~isempty(deepelec)
   vol.deepelec  = deepelec;
 end
+
+function cleaner(segfile,confile,elecfile,exefile,datafile)
+delete(segfile);
+delete(confile);
+delete(elecfile);
+delete(exefile);
+delete(datafile);
