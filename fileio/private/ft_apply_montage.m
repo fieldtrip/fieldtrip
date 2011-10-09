@@ -49,10 +49,10 @@ function [sens] = ft_apply_montage(sens, montage, varargin)
 % $Id$
 
 % get optional input arguments
-keepunused = keyval('keepunused', varargin);  if isempty(keepunused), keepunused   = 'no';   end
-inverse    = keyval('inverse',    varargin);  if isempty(inverse),    inverse      = 'no';   end
-feedback   = keyval('feedback',   varargin);  if isempty(feedback),   feedback     = 'text'; end
-bname      = keyval('balancename', varargin); if isempty(bname),      bname        = '';     end
+keepunused = ft_getopt(varargin, 'keepunused',  'no');
+inverse    = ft_getopt(varargin, 'inverse',     'no');
+feedback   = ft_getopt(varargin, 'feedback',    'text'); 
+bname      = ft_getopt(varargin, 'balancename', '');
 
 % check the consistency of the input sensor array or data
 if isfield(sens, 'labelorg') && isfield(sens, 'labelnew')
@@ -74,11 +74,11 @@ if strcmp(inverse, 'yes')
   tmp.tra      = full(montage.tra);
   if rank(tmp.tra) < length(tmp.tra)
     warning('the linear projection for the montage is not full-rank, the resulting data will have reduced dimensionality');
-    tmp.tra      = pinv(tmp.tra);
+    tmp.tra = pinv(tmp.tra);
   else
-    tmp.tra      = inv(tmp.tra);
+    tmp.tra = inv(tmp.tra);
   end
-  montage      = tmp;
+  montage = tmp;
 end
 
 % use default transfer from sensors to channels if not specified
@@ -221,8 +221,6 @@ elseif isfield(sens, 'tra')
     end
   end
 
-  
-  
 elseif isfield(sens, 'trial')
   % apply the montage to the raw data that was preprocessed using fieldtrip
   data = sens;
@@ -295,3 +293,4 @@ end
 function y = indx2logical(x, n)
 y = false(1,n);
 y(x) = true;
+
