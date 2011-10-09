@@ -75,7 +75,7 @@ function source = ft_datatype_source(source, varargin)
 % was really in 2007
 
 % get the optional input arguments, which should be specified as key-value pairs
-version = keyval('version', varargin); if isempty(version), version = 'latest'; end
+version = ft_getopt(varargin, 'version', 'latest');
 
 if strcmp(version, 'latest')
   version = '2011';

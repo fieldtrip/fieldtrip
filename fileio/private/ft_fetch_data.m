@@ -33,10 +33,10 @@ function [dat] = ft_fetch_data(data, varargin)
 data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
     
 % get the options
-hdr           = keyval('header',        varargin);
-begsample     = keyval('begsample',     varargin);
-endsample     = keyval('endsample',     varargin);
-chanindx      = keyval('chanindx',      varargin);
+hdr           = ft_getopt(varargin, 'header');
+begsample     = ft_getopt(varargin, 'begsample');
+endsample     = ft_getopt(varargin, 'endsample');
+chanindx      = ft_getopt(varargin, 'chanindx');
     
 if isempty(hdr)
   hdr = ft_fetch_header(data);
