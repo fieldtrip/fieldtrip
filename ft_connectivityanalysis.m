@@ -457,38 +457,25 @@ switch cfg.method
     % coherency
     optarg = {'complex',  cfg.complex, 'dimord',  data.dimord, 'feedback', cfg.feedback, ...
               'pownorm',  normpow,     'hasjack', hasjack};
-    if ~isempty(cfg.pchanindx),
-      optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx, 'allchanindx', cfg.allchanindx});
-    end
-    if exist('powindx', 'var'),
-      optarg = cat(2, optarg, {'powindx', powindx});
-    end
+    if ~isempty(cfg.pchanindx), optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx, 'allchanindx', cfg.allchanindx}); end
+    if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx', powindx}); end
     
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     outparam = 'cohspctrm';
     
   case 'csd'
     % cross-spectral density (e.g. useful if partialisation is required)
-    
     optarg = {'complex',  cfg.complex, 'dimord',  data.dimord, 'feedback', cfg.feedback, ...
               'pownorm',  normpow,     'hasjack', hasjack};
-    if ~isempty(cfg.pchanindx), 
-      optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx, 'allchanindx', cfg.allchanindx}); 
-    end
-    if exist('powindx', 'var'), 
-      optarg = cat(2, optarg, {'powindx', powindx}); 
-    end
+    if ~isempty(cfg.pchanindx), optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx, 'allchanindx', cfg.allchanindx}); end
+    if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx', powindx}); end
     
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     outparam = 'crsspctrm';
     
   case {'wpli' 'wpli_debiased'}
     % weighted pli or debiased weighted phase lag index.
-    tmpcfg                 = [];
-    tmpcfg.feedback        = cfg.feedback;
-    tmpcfg.dojack          = dojack;
-    tmpcfg.debias          = debiaswpli;
-    optarg                 = ft_cfg2keyval(tmpcfg);    
+    optarg = {'feedback', cfg.feedback, 'dojack', dojack, 'debias', debiaswpli};
     [datout, varout, nrpt] = ft_connectivity_wpli(data.(inparam), optarg{:});
     if debiaswpli
       outparam = 'wpli_debiasedspctrm'; 
@@ -498,11 +485,7 @@ switch cfg.method
     
   case {'wppc' 'ppc'}
     % weighted pairwise phase consistency or pairwise phase consistency
-    tmpcfg                 = [];
-    tmpcfg.feedback        = cfg.feedback;
-    tmpcfg.dojack          = dojack;
-    tmpcfg.weighted        = weightppc;
-    optarg                 = ft_cfg2keyval(tmpcfg);    
+    optarg = {'feedback', cfg.feedback, 'dojack', dojack, 'weighted', weightppc};
     [datout, varout, nrpt] = ft_connectivity_ppc(data.(inparam), optarg{:});
     if weightppc
       outparam = 'wppcspctrm';     
@@ -534,42 +517,32 @@ switch cfg.method
   case 'amplcorr'
     % amplitude correlation
     
-    tmpcfg             = [];
-    tmpcfg.feedback    = cfg.feedback;
     if isfield(data, 'dimord'),
-      tmpcfg.dimord = data.dimord;
+      dimord = data.dimord;
     else
-      tmpcfg.dimord = data.([inparam,'dimord']); 
+      dimord = data.([inparam,'dimord']); 
     end
-    tmpcfg.complex     = 'real';
-    tmpcfg.pownorm     = 1;
-    tmpcfg.pchanindx   = [];
-    tmpcfg.hasjack     = hasjack;
-    if exist('powindx', 'var'), tmpcfg.powindx = powindx; end
-    optarg             = ft_cfg2keyval(tmpcfg);
+    optarg = {'feedback', cfg.feedback, 'dimord',    dimord, 'complex', 'real', ...
+              'pownorm',  1,            'pchanindx', [],     'hasjack', hasjack};
+    if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx', powindx}); end
     
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
-    outparam        = 'amplcorrspctrm';
+    outparam = 'amplcorrspctrm';
     
   case 'powcorr'
     % power correlation
     
-    tmpcfg             = [];
-    tmpcfg.feedback    = cfg.feedback;
     if isfield(data, 'dimord'),
-      tmpcfg.dimord = data.dimord;
+      dimord = data.dimord;
     else
-      tmpcfg.dimord = data.([inparam,'dimord']); 
+      dimord = data.([inparam,'dimord']); 
     end
-    tmpcfg.complex     = 'real';
-    tmpcfg.pownorm     = 1;
-    tmpcfg.pchanindx   = [];
-    tmpcfg.hasjack     = hasjack;
-    if exist('powindx', 'var'), tmpcfg.powindx = powindx; end
-    optarg             = ft_cfg2keyval(tmpcfg);
+    optarg = {'feedback', cfg.feedback, 'dimord',    dimord, 'complex', 'real', ...
+              'pownorm',  1,            'pchanindx', [],     'hasjack', hasjack};
+    if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx', powindx}); end
     
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
-    outparam        = 'powcorrspctrm';
+    outparam = 'powcorrspctrm';
     
   case 'granger'
     % granger causality
@@ -748,12 +721,7 @@ switch cfg.method
       powindx = [];
     end
     
-    tmpcfg          = [];
-    tmpcfg.feedback = cfg.feedback;
-    tmpcfg.powindx  = powindx;
-    tmpcfg.hasjack  = hasjack;
-    optarg          = ft_cfg2keyval(tmpcfg);
-    
+    optarg = {'feedback', cfg.feedback, 'powindx', powindx, 'hasjack', hasjack};
     hasrpt = ~isempty(strfind(data.dimord, 'rpt'));
     if hasrpt,
       nrpt  = size(data.(inparam),1);
@@ -769,22 +737,18 @@ switch cfg.method
   case 'psi'
     % phase slope index
     
-    tmpcfg           = [];
-    tmpcfg.feedback  = cfg.feedback;
-    tmpcfg.dimord    = data.dimord;
-    tmpcfg.nbin      = nearest(data.freq, data.freq(1)+cfg.bandwidth)-1;
-    tmpcfg.normalize = cfg.normalize;
-    tmpcfg.hasrpt      = hasrpt;
-    tmpcfg.hasjack     = hasjack;
-    if exist('powindx', 'var'), tmpcfg.powindx     = powindx; end
-    optarg             = ft_cfg2keyval(tmpcfg);
-    
+    nbin   = nearest(data.freq, data.freq(1)+cfg.bandwidth)-1;
+    optarg = {'feedback',  cfg.feedback,  'dimord', data.dimord, 'nbin',    nbin, ...
+              'normalize', cfg.normalize, 'hasrpt', hasrpt,      'hasjack', hasjack};
+    if exist('powindx', 'var'), cat(2, optarg, {'powindx', powindx}); end        
     [datout, varout, nrpt] = ft_connectivity_psi(data.(inparam), optarg{:});
-    outparam         = 'psispctrm';
+    outparam = 'psispctrm';
     
   case 'di'
     % directionality index
   case {'clustering_coef' 'degrees'}
+    % gateway function to the brain connectivity toolbox
+    
     [datout, outdimord] = ft_connectivity_bct(data.(inparam), 'method', cfg.method);  
     varout   = [];
     outparam = [cfg.method,'spctrm'];
