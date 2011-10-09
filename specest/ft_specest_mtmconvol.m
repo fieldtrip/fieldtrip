@@ -1,6 +1,6 @@
 function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varargin)
 
-% SPECEST_MTMCONVOL performs wavelet convolution in the time domain 
+% FT_SPECEST_MTMCONVOL performs wavelet convolution in the time domain 
 % by multiplication in the frequency domain
 %
 % Use as
@@ -24,24 +24,23 @@ function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varar
 %                memory efficiency
 %   verbose   = output progress to console (0 or 1, default 1)
 %
-% See also SPECEST_MTMFFT, SPECEST_CONVOL, SPECEST_HILBERT, SPECEST_WAVELET
+% See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_CONVOL, FT_SPECEST_HILBERT, FT_SPECEST_WAVELET
 
 % Copyright (C) 2010, Donders Institute for Brain, Cognition and Behaviour
 %
 % $Log$
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'taper','pad','timeoi','timwin','freqoi','tapsmofrq','dimord','feedback','verbose','polyremoval'});
-taper     = keyval('taper',       varargin); if isempty(taper),    taper   = 'dpss';                  end
-pad       = keyval('pad',         varargin);
-timeoi    = keyval('timeoi',      varargin); if isempty(timeoi),   timeoi  = 'all';                   end
-timwin    = keyval('timwin',      varargin);
-freqoi    = keyval('freqoi',      varargin); if isempty(freqoi),   freqoi  = 'all';                   end
-tapsmofrq = keyval('tapsmofrq',   varargin);
-dimord    = keyval('dimord',      varargin); if isempty(dimord),   dimord  = 'tap_chan_freq_time';    end
-fbopt     = keyval('feedback',    varargin);
-verbose   = keyval('verbose',     varargin); if isempty(verbose),  verbose = 1;                       end
-polyorder = keyval('polyremoval', varargin); if isempty(polyorder), polyorder = 1; end
+taper     = ft_getopt(varargin, 'taper', 'dpss');
+pad       = ft_getopt(varargin, 'pad');
+timeoi    = ft_getopt(varargin, 'timeoi', 'all');
+timwin    = ft_getopt(varargin, 'timwin');
+freqoi    = ft_getopt(varargin, 'freqoi', 'all');
+tapsmofrq = ft_getopt(varargin, 'tapsmofrq');
+dimord    = ft_getopt(varargin, 'dimord', 'tap_chan_freq_time');
+fbopt     = ft_getopt(varargin, 'feedback');
+verbose   = ft_getopt(varargin, 'verbose', true);
+polyorder = ft_getopt(varargin, 'polyorder', 1);
 
 if isempty(fbopt),
   fbopt.i = 1;

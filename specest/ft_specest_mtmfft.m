@@ -1,6 +1,6 @@
 function [spectrum,ntaper,freqoi] = ft_specest_mtmfft(dat, time, varargin) 
 
-% SPECEST_MTMFFT computes a fast Fourier transform using multitapering with
+% FT_SPECEST_MTMFFT computes a fast Fourier transform using multitapering with
 % the DPSS sequence or using a variety of single tapers
 %
 % Use as
@@ -18,20 +18,19 @@ function [spectrum,ntaper,freqoi] = ft_specest_mtmfft(dat, time, varargin)
 %   freqoi     = vector, containing frequencies of interest                                           
 %   tapsmofrq  = the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
 %
-% See also SPECEST_MTMCONVOL, SPECEST_CONVOL, SPECEST_HILBERT, SPECEST_WAVELET
+% See also FT_FREQANALYSIS, FT_SPECEST_MTMCONVOL, FT_SPECEST_CONVOL, FT_SPECEST_HILBERT, FT_SPECEST_WAVELET
 
 % Copyright (C) 2010, Donders Institute for Brain, Cognition and Behaviour
 %
 % $Log$
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'taper','pad','freqoi','tapsmofrq','feedback','polyremoval'});
-taper     = keyval('taper',       varargin); if isempty(taper),  error('You must specify a taper');    end
-pad       = keyval('pad',         varargin);
-freqoi    = keyval('freqoi',      varargin); if isempty(freqoi),   freqoi  = 'all';      end  
-tapsmofrq = keyval('tapsmofrq',   varargin); 
-fbopt     = keyval('feedback',    varargin);
-polyorder = keyval('polyremoval', varargin); if isempty(polyorder), polyorder = 1; end
+taper     = ft_getopt(varargin, 'taper'); if isempty(taper), error('You must specify a taper'); end
+pad       = ft_getopt(varargin, 'pad');
+freqoi    = ft_getopt(varargin, 'freqoi', 'all');
+tapsmofrq = ft_getopt(varargin, 'tapsmofrq'); 
+fbopt     = ft_getopt(varargin, 'feedback');
+polyorder = ft_getopt(varargin, 'polyorder', 1);
 
 if isempty(fbopt),
   fbopt.i = 1;

@@ -1,6 +1,6 @@
 function [spectrum,freqoi,timeoi] = ft_specest_wavelet(dat, time, varargin)
 
-% SPECEST_WAVELET performs time-frequency analysis on any time series trial
+% FT_SPECEST_WAVELET performs time-frequency analysis on any time series trial
 % data using the 'wavelet method' based on Morlet wavelets, doing
 % convolution in the time domain by multiplaction in the frequency domain
 %
@@ -20,21 +20,19 @@ function [spectrum,freqoi,timeoi] = ft_specest_wavelet(dat, time, varargin)
 %   width      = number or vector, width of the wavelet, determines the temporal and spectral resolution
 %   gwidth     = number, determines the length of the used wavelets in standard deviations of the implicit Gaussian kernel
 %
-% See also SPECEST_MTMCONVOL, SPECEST_CONVOL, SPECEST_HILBERT, SPECEST_MTMFFT
+% See also FT_FREQANALYSIS, FT_SPECEST_MTMCONVOL, FT_SPECEST_CONVOL, FT_SPECEST_HILBERT, FT_SPECEST_MTMFFT
 
 % Copyright (C) 2010, Donders Institute for Brain, Cognition and Behaviour
 %
 % $Log$
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'pad','width','gwidth','freqoi','timeoi','polyremoval'});
-freqoi    = keyval('freqoi',      varargin);  if isempty(freqoi),   freqoi  = 'all';   end
-timeoi    = keyval('timeoi',      varargin);  if isempty(timeoi),   timeoi  = 'all';   end
-width     = keyval('width',       varargin);  if isempty(width),    width    = 7;      end
-gwidth    = keyval('gwidth',      varargin);  if isempty(gwidth),   gwidth   = 3;      end
-pad       = keyval('pad',         varargin);
-polyorder = keyval('polyremoval', varargin); if isempty(polyorder), polyorder = 1; end
-
+freqoi    = ft_getopt(varargin, 'freqoi', 'all');
+timeoi    = ft_getopt(varargin, 'timeoi', 'all');
+width     = ft_getopt(varargin, 'width', 7);
+gwidth    = ft_getopt(varargin, 'gwidth', 3);
+pad       = ft_getopt(varargin, 'pad');
+polyorder = ft_getopt(varargin, 'polyorder', 1);
 
 % Set n's
 [nchan,ndatsample] = size(dat);

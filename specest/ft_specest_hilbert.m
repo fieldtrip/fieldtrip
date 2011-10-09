@@ -1,6 +1,6 @@
 function [spectrum,freqoi,timeoi] = ft_specest_hilbert(dat, time, varargin)
 
-% SPECEST_HILBERT performs a spectral estimation of data by repeatedly
+% FT_SPECEST_HILBERT performs a spectral estimation of data by repeatedly
 % applying a bandpass filter and then doing a hilbert transform.
 %
 % Use as
@@ -21,23 +21,23 @@ function [spectrum,freqoi,timeoi] = ft_specest_hilbert(dat, time, varargin)
 %   filtorder =
 %   filtdir   =
 %
-% See also SPECEST_MTMFFT, SPECEST_CONVOL, SPECEST_MTMCONVOL, SPECEST_WAVELET
+% See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_CONVOL, FT_SPECEST_MTMCONVOL, FT_SPECEST_WAVELET
 
 % Copyright (C) 2010, Robert Oostenveld
 %
 % $Log: 3162 $
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'freqoi','timeoi','width','filttype','filtorder','filtdir','pad','polyremoval','verbose'});
-freqoi    = keyval('freqoi',    varargin);
-timeoi    = keyval('timeoi',    varargin);   if isempty(timeoi),   timeoi  = 'all';      end
-width     = keyval('width',     varargin);   if isempty(width),    width   = 1;          end
-filttype  = keyval('filttype',  varargin);   if isempty(filttype),  error('you need to specify filter type'),         end
-filtorder = keyval('filtorder', varargin);   if isempty(filtorder), error('you need to specify filter order'),        end
-filtdir   = keyval('filtdir',   varargin);   if isempty(filtdir),   error('you need to specify filter direction'),    end
-pad       = keyval('pad',       varargin);
-polyorder = keyval('polyremoval', varargin); if isempty(polyorder), polyorder = 1; end
-verbose   = keyval('verbose',     varargin); if isempty(verbose),  verbose = 1;                                       end
+freqoi    = ft_getopt(varargin, 'freqoi');
+timeoi    = ft_getopt(varargin, 'timeoi', 'all');
+width     = ft_getopt(varargin, 'width', 1);
+filttype  = ft_getopt(varargin, 'filttype');    if isempty(filttype),  error('you need to specify filter type'),         end
+filtorder = ft_getopt(varargin, 'filtorder');   if isempty(filtorder), error('you need to specify filter order'),        end
+filtdir   = ft_getopt(varargin, 'filtdir');     if isempty(filtdir),   error('you need to specify filter direction'),    end
+pad       = ft_getopt(varargin, 'pad');
+polyorder = ft_getopt(varargin, 'polyorder', 1);
+verbose   = ft_getopt(varargin, 'verbose', true);
+
 % Set n's
 [nchan,ndatsample] = size(dat);
 

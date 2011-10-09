@@ -1,6 +1,6 @@
 function [spectrum, freqoi, timeoi] = ft_specest_convol(dat, time, varargin)
 
-% SPECEST_CONVOL performs wavelet convolution in the time domain by
+% FT_SPECEST_CONVOL performs wavelet convolution in the time domain by
 % convolution with Morlet's wavelets.
 %
 % Use as
@@ -12,25 +12,22 @@ function [spectrum, freqoi, timeoi] = ft_specest_convol(dat, time, varargin)
 %   freqoi   = vector of frequencies in spectrum
 %   timeoi   = vector of timebins in spectrum
 %
-% Optional arguments should be specified in key-value pairs and can include:
+% Optional arguments should be specified in key-value pairs and can include
 %   timeoi        = vector, containing time points of interest (in seconds, analysis window will be centered around these time points)
 %   freqoi        = vector, containing frequencies (in Hz)
 %   waveletwidth  = number, 'width' of wavelets expressed in cycles (default = 7)
 %
-% 
-%
-% See also SPECEST_MTMFFT, SPECEST_MTMCONVOL, SPECEST_HILBERT, SPECEST_NANFFT, SPECEST_WAVELET
+% See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_MTMCONVOL, FT_SPECEST_HILBERT, FT_SPECEST_NANFFT, FT_SPECEST_WAVELET
 
 % Copyright (C) 2010, Donders Institute for Brain, Cognition and Behaviour
 %
 % $Log$
 
 % get the optional input arguments
-keyvalcheck(varargin, 'optional', {'waveletwidth','pad','timeoi','freqoi','polyremoval'});
-timeoi        = keyval('timeoi',        varargin); if isempty(timeoi),       timeoi       = 'all';    end
-freqoi        = keyval('freqoi',        varargin); if isempty(freqoi),       freqoi       = 'all';    end
-waveletwidth  = keyval('waveletwidth',  varargin); if isempty(waveletwidth), waveletwidth = 7;        end
-polyorder     = keyval('polyremoval', varargin); if isempty(polyorder), polyorder = 1; end
+timeoi        = ft_getopt(varargin, 'timeoi', 'all');
+freqoi        = ft_getopt(varargin, 'freqoi', 'all');
+waveletwidth  = ft_getopt(varargin, 'waveletwidth', 7);
+polyorder     = ft_getopt(varargin, 'polyorder', 1);
 
 if isempty(fbopt),
   fbopt.i = 1;
