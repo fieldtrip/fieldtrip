@@ -1,10 +1,14 @@
-%reported problem
-%ft_connectivityanalysis crashes with input is freq-data containing fourierspectra and two channels
-%crash occurs in subfunction univariate2bivariate, because checkdata is called with cmbrepresentation 'sparse'
-%whereas probably it should be 'cmbrepresentation is 'full', or a cmbindx should be given.
-%error was reported for coh and psi as a method. unknown whether it also occurs for other metrics
+function test_bug46
 
-%try to reproduce
+% TEST test_bug46
+% TEST ft_connectivityanalysis univariate2bivariate ft_checkdata
+
+% the problem reported was that ft_connectivityanalysis crashes with input is freq-data containing fourierspectra and two channels
+% crash occurs in subfunction univariate2bivariate, because checkdata is called with cmbrepresentation 'sparse'
+% whereas probably it should be 'cmbrepresentation is 'full', or a cmbindx should be given.
+% error was reported for coh and psi as a method. unknown whether it also occurs for other metrics
+
+% try to reproduce
 rand('twister', 20070425);
 
 freq       = [];

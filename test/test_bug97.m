@@ -1,3 +1,8 @@
+function test_bug97
+
+% TEST test_bug97
+% TEST ft_preprocessing ft_selectdata
+
 % this script tests the solution to bug 97:
 % Selectdata is working in an unexpected way. If the user explicitly states
 % cfg.trials = [], no trials are to be processed. The current functionality is
@@ -27,3 +32,4 @@ datax      = ft_preprocessing(cfg, data); % this reproduces the behaviour
 
 % after adjusting selectdata
 datay      = ft_preprocessing(cfg, data);
+

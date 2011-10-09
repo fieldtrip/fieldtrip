@@ -1,10 +1,16 @@
-function testft
+function test_bug472
+
+% TEST test_bug472
+
 % start without a buffer
 ft_destroy_buffer
+
 % number of attempts
 cnt = 1; 
+
 % use default url
 url = 'buffer://localhost:1972';
+
 % dummy header
 hdr.Fs = 256;
 hdr.nChans = 100;
@@ -17,3 +23,4 @@ while(1)
     ft_destroy_buffer
     pause(0.1); % probably meaningless
 end
+

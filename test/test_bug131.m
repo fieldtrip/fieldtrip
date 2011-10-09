@@ -1,5 +1,10 @@
-% this script tests the issue related to the scaling of the leadfields in the different implementations
+function test_bug131
 
+% TEST test_bug131
+% TEST ft_prepare_leadfield
+
+% test the issue related to the scaling of the leadfields in the
+% different implementations
 
 % create volume conductor models
 vol = [];
@@ -53,3 +58,4 @@ lf2 = grid2.leadfield{2};
 % yet, this in my understanding then only holds for geometrical objects
 % defined in SI-units, i.e. in meters. This should then be enforced by the
 % higher level function to be able to interpret the units correctly
+
