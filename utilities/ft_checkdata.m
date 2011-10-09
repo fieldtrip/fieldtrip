@@ -78,32 +78,32 @@ function [data] = ft_checkdata(data, varargin)
 %   csd as matrix
 
 % get the optional input arguments
-feedback      = keyval('feedback',      varargin); if isempty(feedback), feedback = 'no'; end
-dtype         = keyval('datatype',      varargin); % should not conflict with the ft_datatype function
-dimord        = keyval('dimord',        varargin);
-stype         = keyval('senstype',      varargin); % senstype is a function name which should not be masked
-ismeg         = keyval('ismeg',         varargin);
-inside        = keyval('inside',        varargin); % can be logical or index
-hastrials     = keyval('hastrials',     varargin);
-hasunits      = keyval('hasunits',      varargin);
-hassampleinfo = keyval('hassampleinfo', varargin); if isempty(hassampleinfo), hassampleinfo = 'no'; end
-hasdimord     = keyval('hasdimord',     varargin); if isempty(hasdimord), hasdimord = 'no'; end
-hasdim        = keyval('hasdim',  varargin);
-hascumtapcnt  = keyval('hascumtapcnt',  varargin);
-hasdof        = keyval('hasdof',        varargin); if isempty(hasdof), hasdof = 'no'; end
-haspow        = keyval('haspow',        varargin); if isempty(haspow), haspow = 'no'; end
-cmbrepresentation = keyval('cmbrepresentation',  varargin);
-channelcmb    = keyval('channelcmb',   varargin);
-sourcedimord  = keyval('sourcedimord', varargin);
-sourcerepresentation = keyval('sourcerepresentation', varargin);
+feedback             = ft_getopt(varargin, 'feedback', 'no');
+dtype                = ft_getopt(varargin, 'datatype'); % should not conflict with the ft_datatype function
+dimord               = ft_getopt(varargin, 'dimord');
+stype                = ft_getopt(varargin, 'senstype'); % senstype is a function name which should not be masked
+ismeg                = ft_getopt(varargin, 'ismeg');
+inside               = ft_getopt(varargin, 'inside'); % can be 'logical' or 'index'
+hastrials            = ft_getopt(varargin, 'hastrials');
+hasunits             = ft_getopt(varargin, 'hasunits');
+hassampleinfo        = ft_getopt(varargin, 'hassampleinfo', 'no');
+hasdimord            = ft_getopt(varargin, 'hasdimord', 'no');
+hasdim               = ft_getopt(varargin, 'hasdim');
+hascumtapcnt         = ft_getopt(varargin, 'hascumtapcnt');
+hasdof               = ft_getopt(varargin, 'hasdof', 'no');
+haspow               = ft_getopt(varargin, 'haspow', 'no');
+cmbrepresentation    = ft_getopt(varargin, 'cmbrepresentation');
+channelcmb           = ft_getopt(varargin, 'channelcmb');
+sourcedimord         = ft_getopt(varargin, 'sourcedimord');
+sourcerepresentation = ft_getopt(varargin, 'sourcerepresentation');
 
 % check whether people are using deprecated stuff
-depHastrialdef = keyval('hastrialdef', varargin);
+depHastrialdef = ft_getopt(varargin, 'hastrialdef');
 if (~isempty(depHastrialdef))
   warning_once('ft_checkdata option ''hastrialdef'' is deprecated; use ''hassampleinfo'' instead');
   hassampleinfo = depHastrialdef;
 end
-if (~isempty(keyval('hasoffset', varargin)))
+if (~isempty(ft_getopt(varargin, 'hasoffset')))
   warning_once('ft_checkdata option ''hasoffset'' has been removed and will be ignored');
 end
 
@@ -1191,8 +1191,8 @@ function [output] = fixsource(input, varargin)
 %     e.g. source.leadfield = cell(1,Npos), source.leadfielddimord = '{pos}_chan_ori'
 %          source.mom       = cell(1,Npos), source.momdimord       = '{pos}_ori_rpttap'
 
-type   = keyval('type',   varargin);
-haspow = keyval('haspow', varargin);
+type   = ft_getopt(varargin, 'type');
+haspow = ft_getopt(varargin, 'haspow');
 
 if isempty(type),   type   = 'old'; end
 if isempty(haspow), haspow = 'no';  end

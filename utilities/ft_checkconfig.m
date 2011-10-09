@@ -69,6 +69,7 @@ global ft_default
 if isempty(ft_default)
   ft_default = struct;
 end
+
 fieldsused = fieldnames(ft_default);
 for i=1:length(fieldsused)
   fn = fieldsused{i};
@@ -77,16 +78,16 @@ for i=1:length(fieldsused)
   end
 end
 
-renamed         = keyval('renamed',         varargin);
-renamedval      = keyval('renamedval',      varargin);
-required        = keyval('required',        varargin);
-deprecated      = keyval('deprecated',      varargin);
-unused          = keyval('unused',          varargin);
-forbidden       = keyval('forbidden',       varargin);
-createsubcfg    = keyval('createsubcfg',    varargin);
-ckeckfilenames  = keyval('dataset2files',   varargin);
-checksize       = keyval('checksize',       varargin); if isempty(checksize), checksize = 'off';  end
-trackconfig     = keyval('trackconfig',     varargin);
+renamed         = ft_getopt(varargin, 'renamed');
+renamedval      = ft_getopt(varargin, 'renamedval');
+required        = ft_getopt(varargin, 'required');
+deprecated      = ft_getopt(varargin, 'deprecated');
+unused          = ft_getopt(varargin, 'unused');
+forbidden       = ft_getopt(varargin, 'forbidden');
+createsubcfg    = ft_getopt(varargin, 'createsubcfg');
+ckeckfilenames  = ft_getopt(varargin, 'dataset2files');
+checksize       = ft_getopt(varargin, 'checksize', 'off');
+trackconfig     = ft_getopt(varargin, 'trackconfig');
 
 if ~isempty(trackconfig) && strcmp(trackconfig, 'on')
   % infer from the user configuration whether tracking should be enabled

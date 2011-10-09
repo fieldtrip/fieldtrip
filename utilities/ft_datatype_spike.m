@@ -76,7 +76,7 @@ function spike = ft_datatype_spike(spike, varargin)
 
 
 % get the optional input arguments, which should be specified as key-value pairs
-version = keyval('version', varargin); if isempty(version), version = 'latest'; end
+version = ft_getopt(varargin, 'version', 'latest');
 
 if strcmp(version, 'latest')
   version = '2007';

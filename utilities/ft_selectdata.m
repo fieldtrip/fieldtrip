@@ -17,7 +17,7 @@ function [data] = ft_selectdata(varargin)
 %   raw      only for subselection of channels and replicates. this is the
 %              same functionality as ft_preprocessing
 %
-% Supported keys:
+% Optional input arguments should be specified as key-value pairs and may include
 %   param         string
 %   foilim        [begin end]  edges of frequency band to be retained
 %   toilim        [begin end]  edges of time window to be retained
@@ -52,16 +52,15 @@ function [data] = ft_selectdata(varargin)
 
 % FIXME ROI selection is not yet implemented
 
-% check the input data and options
-isdata  = find(cellfun(@isstruct,varargin));
-keyvals = setdiff(1:length(varargin),isdata);
+% the input consists of one or multiple data structures, followed by the optional key-value pairs
+isdata   = find(cellfun(@isstruct,varargin));  % FIXME this fails in case one of the key-value pairs contains a structure
+iskeyval = setdiff(1:length(varargin),isdata);
+data     = varargin(isdata);
+varargin = varargin(iskeyval);
 
-data   = varargin(isdata);
-kvp    = varargin(keyvals);
-dtype  = cell(1,length(data));
-dimord = cell(1,length(data));
-
-% keep track whether data contains subjects as repetitions
+% go over all input data structures
+dtype   = cell(1,length(data));
+dimord  = cell(1,length(data));
 hassubj = false(1, length(data));
 for k = 1:length(data)
   data{k} = ft_checkdata(data{k}, 'datatype', {'freq' 'timelock' 'source', 'volume', 'freqmvar', 'raw', 'comp', 'chan'});
@@ -87,39 +86,32 @@ if ~all(strcmp(dimord{1},dimord))
   error('the dimord is not consistent for all inputs');
 end
 
-israw    = strcmp(dtype{1},'raw') || strcmp(dtype{1},'comp');
-isfreq   = strcmp(dtype{1},'freq');
-istlck   = strcmp(dtype{1},'timelock');
-issource = strcmp(dtype{1},'source');
-isvolume = strcmp(dtype{1},'volume');
+israw      = strcmp(dtype{1},'raw') || strcmp(dtype{1},'comp'); % comp can be treated as raw
+isfreq     = strcmp(dtype{1},'freq');
+istlck     = strcmp(dtype{1},'timelock');
+issource   = strcmp(dtype{1},'source');
+isvolume   = strcmp(dtype{1},'volume');
 isfreqmvar = strcmp(dtype{1},'freqmvar');
 
-selchan  = keyval('channel', kvp); selectchan = ~isempty(strmatch('channel',  kvp(cellfun(@ischar, kvp))));
-selfoi   = keyval('foilim',  kvp); selectfoi  = ~isempty(strmatch('foilim',   kvp(cellfun(@ischar, kvp))));
-seltoi   = keyval('toilim',  kvp); selecttoi  = ~isempty(strmatch('toilim',   kvp(cellfun(@ischar, kvp))));
-selroi   = keyval('roi',     kvp); selectroi  = ~isempty(strmatch('roi',      kvp(cellfun(@ischar, kvp))));
-selrpt   = keyval('rpt',     kvp); selectrpt  = ~isempty(strmatch('rpt',      kvp(cellfun(@ischar, kvp))));
-selpos   = keyval('pos',     kvp); selectpos  = ~isempty(strmatch('pos',      kvp(cellfun(@ischar, kvp))));
-param    = keyval('param',   kvp); if isempty(param), param = 'all'; end % FIXME think about this
-
-avgoverchan  = keyval('avgoverchan',  kvp); if isempty(avgoverchan), avgoverchan = false; end
-avgoverfreq  = keyval('avgoverfreq',  kvp); if isempty(avgoverfreq), avgoverfreq = false; end
-avgovertime  = keyval('avgovertime',  kvp); if isempty(avgovertime), avgovertime = false; end
-avgoverroi   = keyval('avgoverroi',   kvp); if isempty(avgoverroi),  avgoverroi  = false; end
-avgoverrpt   = keyval('avgoverrpt',   kvp); if isempty(avgoverrpt),  avgoverrpt  = false; end
-dojack       = keyval('jackknife',    kvp); if isempty(dojack),      dojack      = false; end
-
-fb       = keyval('feedback', kvp); if isempty(fb), fb = 'yes'; end
-if ischar(fb) && strcmp(fb, 'yes'),
-  fb = 1;
-elseif ischar(fb) && strcmp(fb, 'no'),
-  fb = 0;
-end
-
-% create anonymous function and apply it to the boolean input arguments
-istrue = @(x)(ischar(x) && (strcmpi(x, 'yes') || strcmpi(x, 'true')) || (~isempty(x) && numel(x)==1 && x==1));
+% get the optional arguments
+selchan      = ft_getopt(varargin, 'channel',      []); selectchan = ~isempty(selchan);
+selfoi       = ft_getopt(varargin, 'foilim',       []); selectfoi  = ~isempty(selfoi);
+seltoi       = ft_getopt(varargin, 'toilim',       []); selecttoi  = ~isempty(seltoi);
+selroi       = ft_getopt(varargin, 'roi',          []); selectroi  = ~isempty(selroi);
+selrpt       = ft_getopt(varargin, 'rpt',          []); selectrpt  = ~isempty(selrpt);
+selpos       = ft_getopt(varargin, 'pos',          []); selectpos  = ~isempty(selpos);
+param        = ft_getopt(varargin, 'param',        'all'); % FIXME think about this
+avgoverchan  = ft_getopt(varargin, 'avgoverchan',  false);
+avgoverfreq  = ft_getopt(varargin, 'avgoverfreq',  false);
+avgovertime  = ft_getopt(varargin, 'avgovertime',  false);
+avgoverroi   = ft_getopt(varargin, 'avgoverroi',   false);
+avgoverrpt   = ft_getopt(varargin, 'avgoverrpt',   false);
+dojack       = ft_getopt(varargin, 'jackknife',    false);
+fb           = ft_getopt(varargin, 'feedback',     true);
+% FIXME implement toi and foi
 
 % ensure that these are boolean arguments, optionally convert from "yes"/"no" to true/false
+fb          = istrue(fb);
 avgoverchan = istrue(avgoverchan);
 avgoverfreq = istrue(avgoverfreq);
 avgovertime = istrue(avgovertime);

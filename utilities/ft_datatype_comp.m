@@ -66,7 +66,7 @@ function comp = ft_datatype_comp(comp, varargin)
 % $Id$
 
 % get the optional input arguments, which should be specified as key-value pairs
-version = keyval('version', varargin); if isempty(version), version = 'latest'; end
+version = ft_getopt(varargin, 'version', 'latest');
 
 % convert it into a raw data structure
 rawdata = comp;
