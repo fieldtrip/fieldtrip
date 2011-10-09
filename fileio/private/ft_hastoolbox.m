@@ -226,7 +226,7 @@ switch toolbox
   case 'FREESURFER'
     status  = exist('MRIread', 'file') && exist('vox2ras_0to1', 'file');
   case 'FNS'
-    status  = exist('elecsfwd', 'file') && exist('img_get_gray', 'file');
+    status  = exist('elecsfwd', 'file');
   case 'SIMBIO'
     status  = exist('ipm_linux_opt', 'file') && exist('sb_write_dip.m','file');
   case 'VGRID'
