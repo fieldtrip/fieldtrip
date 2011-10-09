@@ -46,8 +46,6 @@ function [c, v, outcnt] = ft_connectivity_corr(input, varargin)
 % which only can be computed if the data contains leave-one-out samples,
 % and n is the number of repetitions in the input data.
 % 
-% This is a helper function to FT_CONNECTIVITYANALYSIS
-% 
 % See also FT_CONNECTIVITYANALYSIS
 
 % Copyright (C) 2009-2010 Donders Institute, Jan-Mathijs Schoffelen
@@ -68,18 +66,19 @@ function [c, v, outcnt] = ft_connectivity_corr(input, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% FiXME: If output is angle, then jack-knifing should be done differently
-% since it's circular variable
 % $Id$
 
-hasjack     = keyval('hasjack',     varargin); if isempty(hasjack),  hasjack  = 0;      end
-cmplx       = keyval('complex',     varargin); if isempty(cmplx),    cmplx    = 'abs';  end
-feedback    = keyval('feedback',    varargin); if isempty(feedback), feedback = 'none'; end
-dimord      = keyval('dimord',      varargin);
-powindx     = keyval('powindx',     varargin);
-pownorm     = keyval('pownorm',     varargin); if isempty(pownorm),  pownorm  = 0;      end
-pchanindx   = keyval('pchanindx',   varargin);
-allchanindx = keyval('allchanindx', varargin);
+% FiXME: If output is angle, then jack-knifing should be done
+% differently since it is a circular variable
+
+hasjack     = ft_getopt(varargin, 'hasjack', 0);
+cmplx       = ft_getopt(varargin, 'complex', 'abs');
+feedback    = ft_getopt(varargin, 'feedback', 'none');
+dimord      = ft_getopt(varargin, 'dimord');
+powindx     = ft_getopt(varargin, 'powindx');
+pownorm     = ft_getopt(varargin, 'pownorm', 0);
+pchanindx   = ft_getopt(varargin, 'pchanindx');
+allchanindx = ft_getopt(varargin, 'allchanindx');
 
 if isempty(dimord)
   error('input parameters should contain a dimord'); 

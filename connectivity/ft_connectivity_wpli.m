@@ -23,8 +23,6 @@ function [wpli, v, n] = ft_connectivity_wpli(input, varargin)
 % The output wpli contains the wpli, v is a leave-one-out variance estimate
 % which is only computed if dojack = 1,and n is the number of repetitions in the input data.
 % 
-% This is a helper function to FT_CONNECTIVITYANALYSIS
-% 
 % See also FT_CONNECTIVITYANALYSIS
 
 % Copyright (C) 2011, Martin Vinck 
@@ -46,16 +44,16 @@ function [wpli, v, n] = ft_connectivity_wpli(input, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-disp('there')
-feedback    = keyval('feedback', varargin); if isempty(feedback), feedback = 'none'; end
-debias      = keyval('debias',   varargin);
-dojack      = keyval('dojack',   varargin);
+
+feedback    = ft_getopt(varargin, 'feedback', 'none');
+debias      = ft_getopt(varargin, 'debias');
+dojack      = ft_getopt(varargin, 'dojack');
 
 siz = size(input);
 n = siz(1);
 ft_progress('init', feedback, 'computing metric...');
 if n>1
-  input    = imag(input);        % make everything imaginary  
+  input    = imag(input);          % make everything imaginary  
   outsum   = nansum(input,1);      % compute the sum; this is 1 x size(2:end)
   outsumW  = nansum(abs(input),1); % normalization of the WPLI
   if debias

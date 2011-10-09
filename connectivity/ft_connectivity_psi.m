@@ -32,8 +32,6 @@ function [c, v, n] = ft_connectivity_psi(input, varargin)
 % more lagged (or less leading) with higher frequency, indicating that it
 % is causally driven by the second channel (2nd dim)
 %
-% This is a helper function to FT_CONNECTIVITYANALYSIS
-%
 % See also FT_CONNECTIVITYANALYSIS
 
 % Copyright (C) 2009-2010 Donders Institute, Jan-Mathijs Schoffelen
@@ -54,15 +52,16 @@ function [c, v, n] = ft_connectivity_psi(input, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% FIXME: interpretation of the slope
 % $Id$
 
-hasjack   = keyval('hasjack',   varargin); if isempty(hasjack),  hasjack = 0; end
-feedback  = keyval('feedback',  varargin); if isempty(feedback), feedback = 'none'; end
-dimord    = keyval('dimord',    varargin);
-powindx   = keyval('powindx',   varargin);
-normalize = keyval('normalize', varargin); if isempty(normalize), normalize = 'no'; end
-nbin      = keyval('nbin',      varargin);
+% FIXME: interpretation of the slope
+
+hasjack   = ft_getopt(varargin, 'hasjack', 0);
+feedback  = ft_getopt(varargin, 'feedback', 'none');
+dimord    = ft_getopt(varargin, 'dimord');
+powindx   = ft_getopt(varargin, 'powindx');
+normalize = ft_getopt(varargin, 'normalize', 'no');
+nbin      = ft_getopt(varargin, 'nbin');
 
 if isempty(dimord)
   error('input parameters should contain a dimord');
