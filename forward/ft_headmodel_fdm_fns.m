@@ -90,7 +90,8 @@ try
     % write the positions of the electrodes on disk
     disp('writing the electrodes file...')
     pos = warp_apply(inv(transform),sens.chanpos); % in voxel coordinates!
-    fns_elec_write(pos,[1 1 1],size(seg),elecfile);  
+    
+    fns_elec_write(int32(pos), [1 1 1], size(seg), elecfile); % Hung: convert pos to int32 datatype. 
 
     % Exe file 
     efid = fopen(exefile, 'w');
@@ -100,6 +101,7 @@ try
                    datafile ' --contable ./' confile ' --TOL ' num2str(tolerance) ' 2>&1 > /dev/null\n']);
     end
     fclose(efid);
+    
     % run the shell instructions
     dos(sprintf('chmod +x %s', exefile));
     dos(['./' exefile]);
