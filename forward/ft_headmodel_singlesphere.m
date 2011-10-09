@@ -11,15 +11,16 @@ function vol = ft_headmodel_singlesphere(pnt, varargin)
 % Use as
 %   vol = ft_headmodel_singlesphere(pnt, ...)
 %
-% Optional input arguments should be specified in key-value pairs and can
-% include
+% Optional arguments should be specified in key-value pairs and can include
 %   headshape        = string, filename with headshape
 %   conductivity     = number, conductivity of the sphere
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
+% FIXME document the EEG case
+
 % get the optional arguments
-conductivity = keyval('conductivity', varargin);
+conductivity = ft_getopt(varargin, 'conductivity');
 
 % start with an empty volume conductor
 vol = [];
@@ -32,3 +33,4 @@ vol.o = single_o;
 vol.c = conductivity;
 vol.type = 'singlesphere';
 vol   = ft_convert_units(vol);
+

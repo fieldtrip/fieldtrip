@@ -33,14 +33,14 @@ function [asens, afiducials] = ft_average_sens(sens, varargin)
 %
 % $Id$
 
-% get the options
-% fileformat = keyval('fileformat',  varargin);
-weights       = keyval('weights',   varargin);
-fiducials     = keyval('fiducials', varargin);
-fb            = keyval('feedback',  varargin);
+% get the optional input arguments
+% fileformat = ft_getopt(varargin, 'fileformat');
+weights       = ft_getopt(varargin, 'weights');
+fiducials     = ft_getopt(varargin, 'fiducials');
+fb            = ft_getopt(varargin, 'feedback');
 
-toplot     = ~isempty(fb);
-nsens      = numel(sens);
+toplot = ~isempty(fb);
+nsens  = numel(sens);
 
 % ensure the correct representation
 for i=1:nsens

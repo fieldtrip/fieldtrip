@@ -16,9 +16,9 @@ function vol = ft_headmodel_bemcp(geom, varargin)
 
 ft_hastoolbox('bemcp', 1);
 
-% get the optional arguments
-hdmfile         = keyval('hdmfile', varargin);
-conductivity    = keyval('conductivity', varargin);
+% get the optional input arguments
+hdmfile         = ft_getopt(varargin, 'hdmfile');
+conductivity    = ft_getopt(varargin, 'conductivity');
 
 % start with an empty volume conductor
 vol = [];

@@ -38,9 +38,9 @@ ft_hastoolbox('openmeeg', 1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % get the optional arguments
-isolatedsource  = keyval('isolatedsource', varargin);
-hdmfile         = keyval('hdmfile', varargin);
-conductivity    = keyval('conductivity', varargin);
+isolatedsource  = ft_getopt(varargin, 'isolatedsource');
+hdmfile         = ft_getopt(varargin, 'hdmfile');
+conductivity    = ft_getopt(varargin, 'conductivity');
 
 % start with an empty volume conductor
 vol = [];

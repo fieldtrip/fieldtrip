@@ -5,23 +5,28 @@ function vol = ft_headmodel_strip(geom1, geom2, Pc, varargin)
 % of this as two parallel planes containing a mass of conductive
 % material (e.g. water) and externally to them a non-conductive material
 % (e.g. air).
+%
+% Use as
+%   vol = ft_headmodel_strip(geom1, geom2, Pc, varargin)
+% where
 %   geom1.pnt = Nx3 vector specifying N points through which the 'upper' plane is fitted 
 %   D         = distance of the parallel planes
 %   Pc        = 1x3 vector specifying the spatial position of a point lying in the conductive strip 
 %              (this determines the plane's normal's direction)
 % 
-%   Additional optional arguments include:
-%   'sourcemodel'  = 'monopole' or 'dipole' (default)
+% Optional arguments should be specified in key-value pairs and can include
+%   'sourcemodel'  = 'monopole' or 'dipole' (default = 'monopole')
 %   'conductivity' = number ,  conductivity value of the conductive halfspace (default = 1)
 % 
-% Use as
-%   vol = ft_headmodel_strip(geom1, geom2, Pc, varargin)
-%
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-model = keyval('sourcemodel',  varargin); if isempty(model), model='monopole'; end
-cond  = keyval('conductivity', varargin); 
-if isempty(cond), cond = 1; warning('Unknown conductivity value (set to 1)'); end
+model = ft_getopt(varargin, 'sourcemodel', 'monopole');
+cond  = ft_getopt(varargin, 'conductivity'); 
+
+if isempty(cond)
+  warning('Conductivity was not specified, using 1');
+  cond = 1;
+end
 
 % the description of this volume conduction model consists of the
 % description of the plane, and a point in the void halfspace

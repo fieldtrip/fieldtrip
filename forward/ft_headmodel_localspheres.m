@@ -12,32 +12,26 @@ function vol = ft_headmodel_localspheres(geometry, grad, varargin)
 % Use as
 %   vol = ft_headmodel_localspheres(geom, grad, ...)
 %
-% Optional input arguments should be specified in key-value pairs and can
-% include
-%   feedback = boolean, true or false
-%   radius   = number, radius of sphere within which headshape points will
-%     be included for the fitting algorithm
+% Optional arguments should be specified in key-value pairs and can include
+%   radius    = number, radius of sphere within which headshape points will
+%               be included for the fitting algorithm
 %   maxradius = number, if for a given sensor the fitted radius exceeds
-%     this value, the radius and origin will be replaced witht the single
-%     sphere fit
+%               this value, the radius and origin will be replaced with the
+%               single sphere fit
 %   baseline  = number
+%   feedback  = boolean, true or false
 %
 % See also FT_PREPARE_HEADMODEL, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
 % get the additional inputs and set the defaults
-% headshape    = keyval('headshape', varargin);
-feedback     = keyval('feedback',  varargin); if isempty(feedback), feedback = true; end
-radius       = keyval('radius',    varargin); if isempty(radius),   radius   = 8.5;  end
-maxradius    = keyval('maxradius', varargin); if isempty(maxradius),maxradius = 20;  end
-baseline     = keyval('baseline',  varargin); if isempty(baseline), baseline  = 5;   end
+% headshape    = ft_getopt(varargin, 'headshape');
+feedback     = ft_getopt(varargin, 'feedback', true);
+radius       = ft_getopt(varargin, 'radius', 8.5);
+maxradius    = ft_getopt(varargin, 'maxradius', 20);
+baseline     = ft_getopt(varargin, 'baseline', 5);
 
-if ischar(feedback)
-  if strcmp(feedback, 'yes') 
-    feedback = true;
-  else 
-    feedback = false;
-  end
-end
+% convert from 'yes'/'no' string into boolean value
+feedback = istrue(feedback);
 
 % start with an empty volume conductor
 vol = [];

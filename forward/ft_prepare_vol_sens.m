@@ -57,14 +57,10 @@ function [vol, sens] = ft_prepare_vol_sens(vol, sens, varargin)
 %
 % $Id$
 
-% get the options
-% fileformat = keyval('fileformat',  varargin);
-channel = keyval('channel',  varargin);  % cell-array with channel labels
-order   = keyval('order',    varargin);  % order of expansion for Nolte method; 10 should be enough for real applications; in simulations it makes sense to go higher
-
-% set the defaults
-if isempty(channel),  channel = sens.label;   end
-if isempty(order),    order = 10;             end
+% get the optional input arguments
+% fileformat = ft_getopt(varargin, 'fileformat');
+channel = ft_getopt(varargin, 'channel', sens.label);   % cell-array with channel labels, default is all
+order   = ft_getopt(varargin, 'order', 10);             % order of expansion for Nolte method; 10 should be enough for real applications; in simulations it makes sense to go higher
 
 % ensure that the sensor description is up-to-date
 if isfield(sens,'pnt')

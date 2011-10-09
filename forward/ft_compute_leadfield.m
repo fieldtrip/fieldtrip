@@ -92,6 +92,12 @@ if iscell(sens) && iscell(vol) && numel(sens)==numel(vol)
   return;
 end
 
+% get the optional input arguments
+reducerank     = ft_getopt(varargin, 'reducerank', 'no');
+normalize      = ft_getopt(varargin, 'normalize' , 'no');
+normalizeparam = ft_getopt(varargin, 'normalizeparam', 0.5);
+weight         = ft_getopt(varargin, 'weight');
+
 if ~isstruct(sens) && size(sens,2)==3
   % definition of electrode positions only, restructure it
   sens = struct('pnt', sens);
@@ -105,12 +111,6 @@ end
 % determine whether it is EEG or MEG
 iseeg = ft_senstype(sens, 'eeg');
 ismeg = ft_senstype(sens, 'meg');
-
-% get the optional input arguments
-reducerank     = keyval('reducerank', varargin); if isempty(reducerank), reducerank = 'no'; end
-normalize      = keyval('normalize' , varargin); if isempty(normalize ), normalize  = 'no'; end
-normalizeparam = keyval('normalizeparam', varargin); if isempty(normalizeparam ), normalizeparam = 0.5; end
-weight         = keyval('weight', varargin);
 
 % multiple dipoles can be represented either as a 1x(N*3) vector or as a
 % as a Nx3 matrix, i.e. [x1 y1 z1 x2 y2 z2] or [x1 y1 z1; x2 y2 z2]

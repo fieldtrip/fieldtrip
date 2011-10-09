@@ -25,9 +25,9 @@ function vol = ft_headmodel_concentricspheres(geom, varargin)
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-% get the optional arguments
-conductivity = keyval('conductivity', varargin);
-fitind       = keyval('fitind',       varargin); if isempty(fitind), fitind = 'all'; end
+% get the optional input arguments
+conductivity = ft_getopt(varargin, 'conductivity');
+fitind       = ft_getopt(varargin, 'fitind', 'all');
 
 if isequal(fitind, 'all')
   fitind = 1:numel(geom);
