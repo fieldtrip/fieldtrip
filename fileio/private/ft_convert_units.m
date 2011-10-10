@@ -70,7 +70,7 @@ else
       case 'nolte'
         size = norm(range(obj.bnd.pnt));
 
-      case {'bem' 'dipoli' 'bemcp' 'asa' 'avo'}
+      case {'bem' 'dipoli' 'bemcp' 'asa' 'avo' 'openmeeg'}
         size = norm(range(obj.bnd(1).pnt));
 
       otherwise
