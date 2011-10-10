@@ -245,13 +245,18 @@ elseif strcmp(fileformat, 'dicom')
   end
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif strcmp(fileformat, 'freesurfer_mgz')
+elseif strcmp(fileformat, 'freesurfer_mgz') || strcmp(fileformat, 'nifti_fsl')
   ft_hastoolbox('freesurfer', 1);
   tmp = MRIread(filename);
-  img = permute(tmp.vol, [2 1 3]); %FIXME although this is probably correct
-  %see the help of MRIread, anecdotally columns and rows seem to need a swap
-  %in order to match the transform matrix (alternatively a row switch of the
-  %latter can be done)
+  ndims = numel(size(tmp.vol));
+  if ndims==3
+    img = permute(tmp.vol, [2 1 3]); %FIXME although this is probably correct
+    %see the help of MRIread, anecdotally columns and rows seem to need a swap
+    %in order to match the transform matrix (alternatively a row switch of the
+    %latter can be done)
+  elseif ndims==4
+    img = permute(tmp.vol, [2 1 3 4]);
+  end
   hdr = rmfield(tmp, 'vol');
   transform = tmp.vox2ras1;
 

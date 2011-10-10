@@ -448,6 +448,11 @@ elseif filetype_check_extension(filename, '.nii')
   type = 'nifti';
   content = 'MRI image data';
   
+  % known FSL file types
+elseif filetype_check_extension(filename, '.nii.gz')
+  type = 'nifti_fsl';
+  content = 'MRI image data';
+  
   % known LORETA file types
 elseif filetype_check_extension(filename, '.lorb')
   type = 'loreta_lorb';
