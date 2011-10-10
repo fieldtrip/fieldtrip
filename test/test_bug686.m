@@ -544,6 +544,7 @@ eegvol_concentricspheres = ft_prepare_headmodel(cfg);
 bnd.pnt = pnt;
 bnd.tri = tri;
 
+cfg=[];
 cfg.geom(1) = bnd;
 cfg.geom(2) = bnd;
 cfg.geom(3) = bnd;
@@ -599,6 +600,7 @@ cfg.grad = grad_cm;
 cfg.method = 'localspheres';
 megvol_localspheres = ft_prepare_headmodel(cfg);
 
+cfg.geom.tri = tri;
 cfg.method = 'singleshell';
 megvol_singleshell = ft_prepare_headmodel(cfg);
 
@@ -657,7 +659,7 @@ for i=1:length(eegvol)
 end
 
 meg_leadfield = {};
-for i=1:length(eegvol)
+for i=1:length(megvol)
   for j=1:length(units)
     cfg      = [];
     cfg.vol  = eval(sprintf('%s_%s', megvol{j}, units{j}));
