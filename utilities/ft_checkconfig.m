@@ -583,7 +583,9 @@ for i=1:numel(fieldsorig)
     elseif iscell(cfg(k).(fieldsorig{i})) && strcmp(fieldsorig{i}, 'previous')
       % run recursively on 'previous' fields that are cells
       for j=1:numel(cfg(k).(fieldsorig{i}))
-        cfg(k).(fieldsorig{i}){j} = checksizefun(cfg(k).(fieldsorig{i}){j}, max_size);
+        if isstruct(cfg(k).(fieldsorig{i}){j}) 
+          cfg(k).(fieldsorig{i}){j} = checksizefun(cfg(k).(fieldsorig{i}){j}, max_size);
+        end
       end
     end
   end
