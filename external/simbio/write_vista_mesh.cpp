@@ -47,7 +47,7 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
    
    // check number of arguments
    int nargin = nrhs;
-   if((nargin != 4)&(nargin != 5))
+   /*if((nargin != 4)&(nargin != 5))
    {
        mexErrMsgTxt("Not enough arguments. Usage: <filename>, <nodes>, <elements> (,<labels)\n");
    }
@@ -70,7 +70,7 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
    else if((!mxIsDouble(prhs[4]))&(nargin==5))
    {
        mexErrMsgTxt("Wrong type of argument. <tensors> must be of type 'double'.");
-   }
+   }*/
    
    const mxArray *mxelements = prhs[2];
    const mxArray *mxnodes = prhs[1];

@@ -26,7 +26,7 @@ function sb_write_par(fname,varargin)
 % Copyright (C) 2011, Felix Lucka and Cristiano Micheli
 
 ft_defaults
-disp('correct sb_write_par')
+% disp('correct sb_write_par')
 labels     = ft_getopt(varargin,'labels',[]); % integer labels in the head model corresponding to the different tissues
 cond       = ft_getopt(varargin,'cond',[]);   % conductivities of the FEM head model
 tenslabels = ft_getopt(varargin,'tenslabels',zeros(1,length(cond)+1));
