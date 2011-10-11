@@ -677,69 +677,67 @@ end
 % EEG
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
-% let's pick the fourth method for EEG and the second for MEG
-eeg_method = 4;
-
-ori = 1;
-sprintf('Component 1')
-tt=[eeg_leadfield{eeg_method,1}(:,ori) eeg_leadfield{eeg_method,2}(:,ori) eeg_leadfield{eeg_method,3}(:,ori)];
-tt(:,3) = 1;
-disp(['first/second unit median ratio for EEG:'])
-median((tt(:,1)./tt(:,3))./(tt(:,2)./tt(:,3)))
-tt=[eeg_leadfield{eeg_method,1}(:,ori) eeg_leadfield{eeg_method,2}(:,ori) eeg_leadfield{eeg_method,3}(:,ori)];
-tt(:,1) = 1;
-disp(['second/third unit median ratio for EEG:'])
-median((tt(:,2)./tt(:,1))./(tt(:,3)./tt(:,1)))
-
-ori = 2;
-sprintf('Component 2')
-tt=[eeg_leadfield{eeg_method,1}(:,ori) eeg_leadfield{eeg_method,2}(:,ori) eeg_leadfield{eeg_method,3}(:,ori)];
-tt(:,3) = 1;
-disp(['first/second unit median ratio for EEG:'])
-median((tt(:,1)./tt(:,3))./(tt(:,2)./tt(:,3)))
-tt=[eeg_leadfield{eeg_method,1}(:,ori) eeg_leadfield{eeg_method,2}(:,ori) eeg_leadfield{eeg_method,3}(:,ori)];
-tt(:,1) = 1;
-disp(['second/third unit median ratio for EEG:'])
-median((tt(:,2)./tt(:,1))./(tt(:,3)./tt(:,1)))
-
-ori = 3;
-sprintf('Component 3')
-tt=[eeg_leadfield{eeg_method,1}(:,ori) eeg_leadfield{eeg_method,2}(:,ori) eeg_leadfield{eeg_method,3}(:,ori)];
-tt(:,3) = 1;
-disp(['first/second unit median ratio for EEG:'])
-median((tt(:,1)./tt(:,3))./(tt(:,2)./tt(:,3)))
-tt=[eeg_leadfield{eeg_method,1}(:,ori) eeg_leadfield{eeg_method,2}(:,ori) eeg_leadfield{eeg_method,3}(:,ori)];
-tt(:,1) = 1;
-disp(['second/third unit median ratio for EEG:'])
-median((tt(:,2)./tt(:,1))./(tt(:,3)./tt(:,1)))
-
+for eeg_method =1:size(eeg_leadfield,1)
+  ori = 1;
+  sprintf('Component 1')
+  tt=[eeg_leadfield{eeg_method,1}(:,ori) eeg_leadfield{eeg_method,2}(:,ori) eeg_leadfield{eeg_method,3}(:,ori)];
+  tt(:,3) = 1;
+  disp(['first/second unit median ratio for EEG:'])
+  median((tt(:,1)./tt(:,3))./(tt(:,2)./tt(:,3)))
+  tt=[eeg_leadfield{eeg_method,1}(:,ori) eeg_leadfield{eeg_method,2}(:,ori) eeg_leadfield{eeg_method,3}(:,ori)];
+  tt(:,1) = 1;
+  disp(['second/third unit median ratio for EEG:'])
+  median((tt(:,2)./tt(:,1))./(tt(:,3)./tt(:,1)))
+  
+  ori = 2;
+  sprintf('Component 2')
+  tt=[eeg_leadfield{eeg_method,1}(:,ori) eeg_leadfield{eeg_method,2}(:,ori) eeg_leadfield{eeg_method,3}(:,ori)];
+  tt(:,3) = 1;
+  disp(['first/second unit median ratio for EEG:'])
+  median((tt(:,1)./tt(:,3))./(tt(:,2)./tt(:,3)))
+  tt=[eeg_leadfield{eeg_method,1}(:,ori) eeg_leadfield{eeg_method,2}(:,ori) eeg_leadfield{eeg_method,3}(:,ori)];
+  tt(:,1) = 1;
+  disp(['second/third unit median ratio for EEG:'])
+  median((tt(:,2)./tt(:,1))./(tt(:,3)./tt(:,1)))
+  
+  ori = 3;
+  sprintf('Component 3')
+  tt=[eeg_leadfield{eeg_method,1}(:,ori) eeg_leadfield{eeg_method,2}(:,ori) eeg_leadfield{eeg_method,3}(:,ori)];
+  tt(:,3) = 1;
+  disp(['first/second unit median ratio for EEG:'])
+  median((tt(:,1)./tt(:,3))./(tt(:,2)./tt(:,3)))
+  tt=[eeg_leadfield{eeg_method,1}(:,ori) eeg_leadfield{eeg_method,2}(:,ori) eeg_leadfield{eeg_method,3}(:,ori)];
+  tt(:,1) = 1;
+  disp(['second/third unit median ratio for EEG:'])
+  median((tt(:,2)./tt(:,1))./(tt(:,3)./tt(:,1)))
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%
 % MEG
 %%%%%%%%%%%%%%%%%%%%%%%%%
-meg_method = 2;
 
-% the third component for MEG is not reliable, so we test only ori=1 and ori=2
-ori = 1; 
-sprintf('Component 1')
-tt=[meg_leadfield{meg_method,1}(:,ori) meg_leadfield{meg_method,2}(:,ori) meg_leadfield{meg_method,3}(:,ori)];
-tt(:,3) = 1;
-disp(['first/second unit median ratio for MEG:'])
-median((tt(:,1)./tt(:,3))./(tt(:,2)./tt(:,3)))
+for meg_method =1:size(meg_leadfield,1)
+  % the third component for MEG is not reliable, so we test only ori=1 and ori=2
+  ori = 1; 
+  sprintf('Component 1')
+  tt=[meg_leadfield{meg_method,1}(:,ori) meg_leadfield{meg_method,2}(:,ori) meg_leadfield{meg_method,3}(:,ori)];
+  tt(:,3) = 1;
+  disp(['first/second unit median ratio for MEG:'])
+  median((tt(:,1)./tt(:,3))./(tt(:,2)./tt(:,3)))
 
-tt=[meg_leadfield{meg_method,1}(:,ori) meg_leadfield{meg_method,2}(:,ori) meg_leadfield{meg_method,3}(:,ori)];
-tt(:,1) = 1;
-disp(['second/third unit median ratio for MEG:'])
-median((tt(:,2)./tt(:,1))./(tt(:,3)./tt(:,1)))
+  tt=[meg_leadfield{meg_method,1}(:,ori) meg_leadfield{meg_method,2}(:,ori) meg_leadfield{meg_method,3}(:,ori)];
+  tt(:,1) = 1;
+  disp(['second/third unit median ratio for MEG:'])
+  median((tt(:,2)./tt(:,1))./(tt(:,3)./tt(:,1)))
 
-ori = 2; 
-sprintf('Component 2')
-tt=[meg_leadfield{meg_method,1}(:,ori) meg_leadfield{meg_method,2}(:,ori) meg_leadfield{meg_method,3}(:,ori)];
-tt(:,3) = 1;
-disp(['first/second unit median ratio for MEG:'])
-median((tt(:,1)./tt(:,3))./(tt(:,2)./tt(:,3)))
+  ori = 2; 
+  sprintf('Component 2')
+  tt=[meg_leadfield{meg_method,1}(:,ori) meg_leadfield{meg_method,2}(:,ori) meg_leadfield{meg_method,3}(:,ori)];
+  tt(:,3) = 1;
+  disp(['first/second unit median ratio for MEG:'])
+  median((tt(:,1)./tt(:,3))./(tt(:,2)./tt(:,3)))
 
-tt=[meg_leadfield{meg_method,1}(:,ori) meg_leadfield{meg_method,2}(:,ori) meg_leadfield{meg_method,3}(:,ori)];
-tt(:,1) = 1;
-disp(['second/third unit median ratio for MEG:'])
-median((tt(:,2)./tt(:,1))./(tt(:,3)./tt(:,1)))
-
+  tt=[meg_leadfield{meg_method,1}(:,ori) meg_leadfield{meg_method,2}(:,ori) meg_leadfield{meg_method,3}(:,ori)];
+  tt(:,1) = 1;
+  disp(['second/third unit median ratio for MEG:'])
+  median((tt(:,2)./tt(:,1))./(tt(:,3)./tt(:,1)))
+end
