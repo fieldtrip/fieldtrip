@@ -528,7 +528,7 @@ else
                                                                                    % I do have the feeling a round would be 100% accurate, but atm I cannot check this in Percival and Walden
                                                                                    % - roevdmei
     else
-      ntaptrl = ntrial .* maxtap; % the way it used to be in all cases (before bug #1025)
+      ntaptrl = ntrials .* maxtap; % the way it used to be in all cases (before bug #1025)
     end
     
     % by default, everything is has the time dimension, if not, some specifics are performed
