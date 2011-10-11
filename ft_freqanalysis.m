@@ -531,10 +531,10 @@ else
         if csdflg, crsspctrm     = complex(nan+zeros(ntrials,nchancmb,nfoi,ntoi,cfg.precision),nan+zeros(ntrials,nchancmb,nfoi,ntoi,cfg.precision)); end
         if fftflg, fourierspctrm = complex(nan+zeros(ntrials,nchan,nfoi,ntoi,cfg.precision),nan+zeros(ntrials,nchan,nfoi,ntoi,cfg.precision));       end
         dimord    = 'rpt_chan_freq_time';
-      elseif keeprpt == 4 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'yes'         % FIXME this works only if all frequencies have the same number of tapers (ancient fixme)
-        if powflg, powspctrm     = zeros(ntrials*maxtap,nchan,nfoi,ntoi,cfg.precision);             end
-        if csdflg, crsspctrm     = complex(zeros(ntrials*maxtap,nchancmb,nfoi,ntoi,cfg.precision)); end
-        if fftflg, fourierspctrm = complex(zeros(ntrials*maxtap,nchan,nfoi,ntoi,cfg.precision));    end
+      elseif keeprpt == 4 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'yes'         
+        if powflg, powspctrm     = zeros(ntrials*1,nchan,nfoi,ntoi,cfg.precision);        end % TEMPORARY: all set to 1, instead of maxtap to fix bug # 1025
+        if csdflg, crsspctrm     = complex(zeros(ntrials*1,nchancmb,nfoi,ntoi,cfg.precision)); end
+        if fftflg, fourierspctrm = complex(zeros(ntrials*1,nchan,nfoi,ntoi,cfg.precision));    end
         dimord    = 'rpttap_chan_freq_time';
       end
       if ~hastime
