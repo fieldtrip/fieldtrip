@@ -80,8 +80,6 @@ function [lf] = ft_compute_leadfield(pos, sens, vol, varargin)
 %
 % $Id$
 
-persistent warning_issued;
-
 if iscell(sens) && iscell(vol) && numel(sens)==numel(vol)
   % this represents combined EEG and MEG sensors, where each modality has its own volume conduction model
   lf = cell(1,numel(sens));
@@ -260,11 +258,8 @@ elseif ismeg
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % magnetic dipole instead of electric (current) dipole in an infinite vacuum
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      if isempty(warning_issued)
-        % give the warning only once
-        warning('assuming magnetic dipole in an infinite vacuum');
-        warning_issued = 1;
-      end
+      % give the warning only once
+      warning_once('assuming magnetic dipole in an infinite vacuum');
 
       pnt = sens.coilpos; % position of each coil
       ori = sens.coilori; % orientation of each coil
@@ -423,11 +418,7 @@ elseif iseeg
 
     case 'infinite'
       % the conductivity of the medium is not known
-      if isempty(warning_issued)
-        % give the warning only once
-        warning('assuming electric dipole in an infinite medium with unit conductivity');
-        warning_issued = 1;
-      end
+      warning_once('assuming electric dipole in an infinite medium with unit conductivity');
       lf = inf_medium_leadfield(pos, sens.elecpos, 1);
   
     case 'halfspace'
