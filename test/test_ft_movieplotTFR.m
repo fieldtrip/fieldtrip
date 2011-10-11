@@ -1,4 +1,4 @@
-function test_ft_movieplotTFR
+% function test_ft_movieplotTFR
 
 % TEST test_ft_movieplotTFR
 % TEST ft_movieplotTFR ft_movieplotER
@@ -20,13 +20,43 @@ cfg.t_ftimwin    = ones(length(cfg.foi),1).*0.5;   % length of time window = 0.5
 cfg.toi          = -0.5:0.2:1.5;                   % changed from original
 freqFIC          = ft_freqanalysis(cfg, dataFIC);
 
+% non interactive timelock movie
 figure
 cfg = [];
-cfg.layout = 'CTF151.lay';
-ft_movieplotER(cfg, timelockFIC);
+cfg.samperframe  = 30;
+cfg.framespersec = 7;
+cfg.movierpt     = 3;
+cfg.layout       = 'CTF151.lay';
+ft_movieplotER_new(cfg, timelockFIC);
 
+% interactive timelock movie
+figure
+cfg = [];
+cfg.interactive = 'yes';
+cfg.layout      = 'CTF151.lay';
+ft_movieplotER_new(cfg, timelockFIC);
+
+% interactive TFR movie
 figure
 cfg = [];
 cfg.layout = 'CTF151.lay';
-ft_movieplotTFR(cfg, freqFIC);
+ft_movieplotTFR_new(cfg, freqFIC);
+
+% non interactive TFR movie along frequencies
+figure
+cfg = [];
+cfg.interactive = 'no';
+cfg.movietime   = 1;
+cfg.movierpt    = 3;
+cfg.layout      = 'CTF151.lay';
+ft_movieplotTFR_new(cfg, freqFIC);
+
+% non interactive TFR movie along frequencies
+figure
+cfg = [];
+cfg.interactive = 'no';
+cfg.moviefreq   = 2;
+cfg.movierpt    = 3;
+cfg.layout = 'CTF151.lay';
+ft_movieplotTFR_new(cfg, freqFIC);
 
