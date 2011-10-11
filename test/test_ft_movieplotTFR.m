@@ -1,4 +1,4 @@
-% function test_ft_movieplotTFR
+function test_ft_movieplotTFR
 
 % TEST test_ft_movieplotTFR
 % TEST ft_movieplotTFR ft_movieplotER
