@@ -1,18 +1,73 @@
-function [granger, v, n] = ft_connectivity_granger(H, Z, S, hasjack, powindx, outputstr)
+function [granger, v, n] = ft_connectivity_granger(H, Z, S, varargin)
 
-%Usage: causality = hz2causality(H,S,Z,fs);
-%Inputs: transfer  = transfer function,
-%        crsspctrm = 3-D spectral matrix;
-%        noisecov  = noise covariance,
-%        fs        = sampling rate
-%Outputs: granger (Granger causality between all channels)
-%               : auto-causality spectra are set to zero
-% Reference: Brovelli, et. al., PNAS 101, 9849-9854 (2004).
-%M. Dhamala, UF, August 2006.
+% FT_CONNECTIVITY_GRANGER computes spectrally resolved granger causality.
+% 
+% Use as
+%   [GRANGER, V, N] = FT_CONNECTIVITY_GRANGER(H, Z, S, key1, value1, ...)
+%
+% where 
+%   H is the spectral transfer matrix, Nrpt x Nchan x Nchan x Nfreq (x Ntime),
+%      or Nrpt x Nchancmb x Nfreq (x Ntime). Nrpt can be 1.
+%   Z is the covariance matrix of the noise, Nrpt x Nchan x Nchan (x Ntime),
+%      or Nrpt x Nchancmb (x Ntime).
+%   S is the cross-spectral density matrix, same dimensionality as H
+%
+% additional options need to be specified as key-value pairs and are:
+%   'dimord'  = required string specifying how to interpret the input data
+%               supported values are 'rpt_chan_chan_freq(_time) and
+%               'rpt_chan_freq(_time), 'rpt_pos_pos_XXX' and 'rpt_pos_XXX'
+%   'method'  = 'granger' (default), or 'instantaneous', or 'total'.
+%   'hasjack' = 0 (default) is a boolean specifying whether the input
+%               contains leave-one-outs, required for correct variance
+%               estimate
+%   'powindx' = is a variable determining the exact computation, see below
+%
+% If the inputdata is such that the channel-pairs are linearly indexed,
+% granger causality is computed per quadruplet of consecutive entries,
+% where the convention is as follows: 
+%
+%  H(:, (k-1)*4 + 1, :, :, :) -> 'chan1-chan1' 
+%  H(:, (k-1)*4 + 2, :, :, :) -> 'chan1->chan2'
+%  H(:, (k-1)*4 + 3, :, :, :) -> 'chan2->chan1'
+%  H(:, (k-1)*4 + 4, :, :, :) -> 'chan2->chan2'
+%
+% The same holds for the Z and S matrices.
+%
+% Pairwise block-granger causality can be computed when the inputdata has
+% dimensionality Nchan x Nchan. In that case powindx should be specified,
+% as a 1x2 cell-array indexing the individual channels that go into each
+% 'block'.
 
-if nargin<7
-  outputstr = 'granger';
-end
+% Undocumented option: powindx can be a struct. In that case, blockwise
+% conditional granger can be computed.
+%
+% The code is loosely based on the code used in:
+% Brovelli, et. al., PNAS 101, 9849-9854 (2004).
+%
+% Copyright (C) 2009-2011, Jan-Mathijs Schoffelen
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
+
+method  = ft_getopt(varargin, 'method',  'granger');
+hasjack = ft_getopt(varargin, 'hasjack', 0);
+powindx = ft_getopt(varargin, 'powindx', []);
+dimord  = ft_getopt(varargin, 'dimord',  []);
 
 %FIXME speed up code and check
 siz = size(H);
@@ -25,10 +80,13 @@ Nc  = siz(2);
 outsum = zeros(siz(2:end));
 outssq = zeros(siz(2:end));
 
-switch outputstr
+% crossterms are described by chan_chan_therest
+issquare = length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2;
+  
+switch method
 case 'granger'
 
-  if isempty(powindx),
+  if issquare && isempty(powindx),
     % data are chan_chan_therest
     for kk = 1:n
       for ii = 1:Nc
@@ -45,14 +103,16 @@ case 'granger'
         outsum(ii,ii,:,:) = 0;%self-granger set to zero
       end
     end
-  elseif ~iscell(powindx) && ~isstruct(powindx)
+  elseif ~issquare && isempty(powindx)
     % data are linearly indexed
     for j = 1:n
       for k = 1:Nc
+        %FIXME powindx is not used here anymore
         %iauto1  = sum(powindx==powindx(k,1),2)==2;
         %iauto2  = sum(powindx==powindx(k,2),2)==2;
         %icross1 = k;
         %icross2 = sum(powindx==powindx(ones(Nc,1)*k,[2 1]),2)==2;
+        % The following is based on hard-coded assumptions
         if mod(k-1, 4)==0
           iauto1=k;iauto2=k;icross1=k;icross2=k;
         elseif mod(k-1, 4)==1
@@ -70,7 +130,7 @@ case 'granger'
         outssq(icross2,:,:) = outssq(icross2,:,:) + reshape((log(numer./denom)).^2, [1 siz(3:end)]);
       end
     end
-  elseif iscell(powindx)
+  elseif issquare && iscell(powindx)
     % blockwise granger
     % H = transfer function nchan x nchan x nfreq
     % Z = noise covariance  nchan x nchan
@@ -141,7 +201,7 @@ case 'granger'
         outssq(1,2,jj) = log( num2./denom2 ).^2 + outssq(1,2,jj);
       end
     end
-  elseif isstruct(powindx)
+  elseif issquare && isstruct(powindx)
     %blockwise conditional
     
     n     = size(H,1);
@@ -164,7 +224,7 @@ case 'granger'
   
 case 'instantaneous'
   
-  if isempty(powindx),
+  if issquare && isempty(powindx),
     % data are chan_chan_therest
     for kk = 1:n
       for ii = 1:Nc
@@ -185,7 +245,7 @@ case 'instantaneous'
         outsum(ii,ii,:,:) = 0;%self-granger set to zero
       end
     end
-  elseif ~iscell(powindx) && ~isstruct(powindx)
+  elseif ~issquare && isempty(powindx)
     % data are linearly indexed
     for j = 1:n
       for k = 1:Nc
@@ -229,7 +289,7 @@ case 'instantaneous'
   
 case 'total'
   
-  if isempty(powindx),
+  if issquare && isempty(powindx),
     % data are chan_chan_therest
     for kk = 1:n
       for ii = 1:Nc
@@ -244,7 +304,7 @@ case 'total'
         outsum(ii,ii,:,:) = 0;%self-granger set to zero
       end
     end
-  elseif ~iscell(powindx) && ~isstruct(powindx)
+  elseif ~issquare && isempty(powindx)
     % data are linearly indexed
     for j = 1:n
       for k = 1:Nc
@@ -268,10 +328,10 @@ case 'total'
         outssq(icross2,:,:) = outssq(icross2,:,:) + reshape((log(numer./denom)).^2, [1 siz(3:end)]);
       end
     end
-  elseif iscell(powindx)
+  elseif issquare && iscell(powindx)
     % blockwise granger
     error('total interdependence is not implemented for blockwise factorizations');
-  elseif isstruct(powindx)
+  elseif issquare && isstruct(powindx)
     %blockwise conditional
     error('blockwise conditional total interdependence is not implemented'); 
   end
