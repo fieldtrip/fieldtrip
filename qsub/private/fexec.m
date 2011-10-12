@@ -101,7 +101,11 @@ try
 
   % it can be difficult to determine the number of output arguments
   try
-    numargout = nargout(fname);
+    if isequal(fname, 'cellfun') || isequal(fname, @cellfun)
+      numargout = nargout(argin{1});
+    else
+      numargout = nargout(fname);
+    end
   catch
     % the "catch me" syntax is broken on MATLAB74, this fixes it
     nargout_error = lasterror;

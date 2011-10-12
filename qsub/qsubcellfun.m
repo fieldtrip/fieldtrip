@@ -16,6 +16,7 @@ function varargout = qsubcellfun(fname, varargin)
 %   diary          = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
 %   timreq         = number, the time in seconds required to run a single job
 %   memreq         = number, the memory in bytes required to run a single job
+%   stack          = number, stack multiple jobs in a single qsub job (default = 'auto')
 %
 % It is required to give an estimate of the time and memory requirements of
 % the individual jobs. The memory requirement of the MATLAB executable
@@ -91,6 +92,7 @@ StopOnError   = ft_getopt(optarg, 'StopOnError',   true    );
 diary         = ft_getopt(optarg, 'diary',         'error' ); % 'always', 'never', 'warning', 'error'
 timreq        = ft_getopt(optarg, 'timreq');
 memreq        = ft_getopt(optarg, 'memreq'); 
+stack         = ft_getopt(optarg, 'stack', 'auto'); % 'auto' or a number
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -110,6 +112,23 @@ end
 % determine the number of input arguments and the number of jobs
 numargin    = numel(varargin);
 numjob      = numel(varargin{1});
+
+% determine the number of MATLAB jobs to "stack" together into seperate qsub jobs
+if isequal(stack, 'auto')
+  if ~isempty(timreq)
+    stack = floor(180/timreq);
+  else
+    stack = 1;
+  end
+end
+
+% ensure that the stacking is not too high
+stack = min(stack, numjob);
+
+% give some feedback about the stacking
+if stack>1
+  fprintf('stacking %d matlab jobs in each qsub job\n', stack);
+end
 
 % prepare some arrays that are used for bookkeeping
 jobid       = cell(1, numjob);
@@ -131,7 +150,11 @@ end
 
 % it can be difficult to determine the number of output arguments
 try
-  numargout = nargout(fname);
+  if isequal(fname, 'cellfun') || isequal(fname, @cellfun)
+    numargout = nargout(varargin{1}{1});
+  else
+    numargout = nargout(fname);
+  end
 catch
   % the "catch me" syntax is broken on MATLAB74, this fixes it
   nargout_err = lasterror;
@@ -146,6 +169,69 @@ end
 if numargout<0
   % the nargout function returns -1 in case of a variable number of output arguments
   numargout = 1;
+end
+
+if stack>1
+  % combine multiple jobs in one, the idea is to use recursion like this
+  % a = {{@plus, @plus}, {{1}, {2}}, {{3}, {4}}}
+  % b = cellfun(@cellfun, a{:})
+  
+  % these options will be passed to the recursive call after being modified further down
+  if ~any(strcmpi(optarg, 'timreq'))
+    optarg{end+1} = 'timreq';
+    optarg{end+1} = timreq;
+  end  
+  if ~any(strcmpi(optarg, 'stack'))
+    optarg{end+1} = 'stack';
+    optarg{end+1} = stack;
+  end
+  if ~any(strcmpi(optarg, 'UniformOutput'))
+    optarg{end+1} = 'UniformOutput';
+    optarg{end+1} = UniformOutput;
+  end
+
+  % update these settings for the recursive call
+  optarg{find(strcmpi(optarg, 'timreq'))+1}        = timreq*stack;
+  optarg{find(strcmpi(optarg, 'stack'))+1}         = 1;
+  optarg{find(strcmpi(optarg, 'UniformOutput'))+1} = false;
+
+  % FIXME the partitioning can be further perfected
+  partition     = floor((0:numjob-1)/stack)+1;
+  numpartition  = partition(end);
+  
+  stackargin        = cell(1,numargin+3); % include the fname, uniformoutput, false
+  stackargin{1}     = repmat({str2func(fname)},1,numpartition);  % fname
+  stackargin{end-1} = repmat({'uniformoutput'},1,numpartition);  % uniformoutput
+  stackargin{end}   = repmat({false},1,numpartition);            % false
+
+  % reorganise the original input into the stacked format
+  for i=1:numargin
+    tmp = cell(1,numpartition);
+    for j=1:numpartition
+      tmp{j} = {varargin{i}{partition==j}};
+    end
+    stackargin{i+1} = tmp; % note that the first element is the fname
+	clear tmp
+  end
+  
+  stackargout = cell(1,numargout);
+  [stackargout{:}] = qsubcellfun(@cellfun, stackargin{:}, optarg{:});
+
+  % reorganise the stacked output into the original format
+  for i=1:numargout
+    tmp = cell(size(varargin{1}));
+    for j=1:numpartition
+      tmp(partition==j) = stackargout{i}{j};
+    end
+    varargout{i} = tmp;
+    clear tmp
+  end
+
+  if numargout>0 && UniformOutput
+    [varargout{:}] = makeuniform(varargout{:});
+  end
+
+  return;
 end
 
 % check the input arguments
@@ -206,26 +292,13 @@ while (~all(collected))
   pause(0.1);
 end % while
 
-if numargout>0 && UniformOutput
-  % check whether the output can be converted to a uniform one
-  for i=1:numel(varargout)
-    for j=1:numel(varargout{i})
-      if numel(varargout{i}{j})~=1
-        % this error message is consistent with the one from cellfun
-        error('Non-scalar in Uniform output, at index %d, output %d. Set ''UniformOutput'' to false.', j, i);
-      end
-    end
-  end
-
-  % convert the output to a uniform one
-  for i=1:numargout
-    varargout{i} = [varargout{i}{:}];
-  end
-end
-
 % ensure the output to have the same size/dimensions as the input
 for i=1:numargout
   varargout{i} = reshape(varargout{i}, size(varargin{1}));
+end
+
+if numargout>0 && UniformOutput
+  [varargout{:}] = makeuniform(varargout{:});
 end
 
 % compare the time used inside this function with the total execution time
@@ -235,6 +308,26 @@ if all(puttime>timused)
   % FIXME this could be detected in the loop above, and the strategy could automatically
   % be adjusted from using the peers to local execution
   warning('copying the jobs over the network took more time than their execution');
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function varargout = makeuniform(varargin)
+varargout = varargin;
+numargout = numel(varargin);
+% check whether the output can be converted to a uniform one
+for i=1:numel(varargout)
+  for j=1:numel(varargout{i})
+    if numel(varargout{i}{j})~=1
+      % this error message is consistent with the one from cellfun
+      error('Non-scalar in Uniform output, at index %d, output %d. Set ''UniformOutput'' to false.', j, i);
+    end
+  end
+end
+% convert the output to a uniform one
+for i=1:numargout
+  varargout{i} = [varargout{i}{:}];
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

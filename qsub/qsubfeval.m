@@ -41,7 +41,7 @@ elseif ~isempty(getenv('TORQUEHOME'))
 else
  defaultbackend = 'local';
 end
-
+ 
 % convert the input arguments into something that strmatch can work with
 strargin = varargin;
 strargin(~cellfun(@ischar, strargin)) = {''};
