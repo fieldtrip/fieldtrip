@@ -1,10 +1,12 @@
 function [data] = selfromraw(data, varargin)
 
-selrpt  = keyval('rpt',  varargin); selectrpt  = ~isempty(strmatch(varargin(cellfun(@ischar, varargin)), 'rpt'));
-selchan = keyval('chan', varargin); selectchan = ~isempty(strmatch(varargin(cellfun(@ischar, varargin)), 'chan'));
-seltim  = keyval('latency', varargin);
+% FIXME this function is not documented
 
-if selectrpt,
+selrpt  = ft_getopt(varargin, 'rpt');
+selchan = ft_getopt(varargin, 'chan');
+seltim  = ft_getopt(varargin, 'latency');
+
+if ~isempty(selrpt)
   fprintf('selecting %d trials\n', numel(selrpt));
   data.trial  = data.trial(selrpt);
   data.time   = data.time(selrpt);
@@ -16,7 +18,7 @@ if selectrpt,
 
 end
 
-if selectchan,
+if ~isempty(selchan)
   for k = 1:numel(data.trial)
     data.trial{k} = data.trial{k}(selchan, :);
   end
