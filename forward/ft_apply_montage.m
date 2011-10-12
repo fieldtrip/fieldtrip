@@ -26,9 +26,18 @@ function [sens] = ft_apply_montage(sens, montage, varargin)
 % applied to the first. In effect the resulting montage will first do
 % montage1, then montage2.
 %
+% As an example, a bipolar montage could look like this
+%   bipolar.labelorg  = {'1', '2', '3', '4'}
+%   bipolar.labelnew  = {'1-2', '2-3', '3-4'}
+%   bipolar.tra       = [
+%     +1 -1  0  0 
+%      0 +1 -1  0 
+%      0  0 +1 -1
+%   ];
+%
 % See also FT_READ_SENS, FT_TRANSFORM_SENS
 
-% Copyright (C) 2008, Robert Oostenveld
+% Copyright (C) 2008-2011, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
