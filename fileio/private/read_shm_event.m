@@ -24,13 +24,13 @@ function [event] = read_shm_event(filename, varargin);
 % $Id$
 
 % get the optional input arguments
-hdr       = keyval('header',    varargin);
-type      = keyval('type',      varargin);
-minsample = keyval('minsample', varargin);
-maxsample = keyval('maxsample', varargin);
+hdr       = ft_getopt(varargin, 'header');
+type      = ft_getopt(varargin, 'type');
+minsample = ft_getopt(varargin, 'minsample');
+maxsample = ft_getopt(varargin, 'maxsample');
 
 if isempty(hdr)
-  hdr = read_header(filename);
+  hdr = ft_read_header(filename);
 end
 
 % Acq is writing the data to shared memory in real-time

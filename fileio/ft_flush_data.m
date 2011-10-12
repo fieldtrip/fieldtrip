@@ -28,7 +28,7 @@ function ft_flush_data(filename, varargin)
 % $Id$
 
 % set the defaults
-dataformat = keyval('dataformat', varargin); if isempty(dataformat), dataformat = ft_filetype(filename); end
+dataformat = ft_getopt(varargin, 'dataformat', ft_filetype(filename));
 
 switch dataformat
   case 'disp'

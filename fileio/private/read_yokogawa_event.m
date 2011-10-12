@@ -37,9 +37,9 @@ event   = [];
 handles = definehandles;
 
 % get the options, the default is set below
-trigindx    = keyval('trigindx', varargin);
-threshold   = keyval('threshold', varargin);
-detectflank = keyval('detectflank', varargin);
+trigindx    = ft_getopt(varargin, 'trigindx');
+threshold   = ft_getopt(varargin, 'threshold');
+detectflank = ft_getopt(varargin, 'detectflank');
 
 % read the dataset header
 hdr = read_yokogawa_header(filename);

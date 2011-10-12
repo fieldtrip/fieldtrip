@@ -42,16 +42,16 @@ if nargin < 1
   return;
 end;
 
-header    = keyval('header',     varargin);
-begsample = keyval('begsample',  varargin);
-endsample = keyval('endsample',  varargin);
-begtrial  = keyval('begtrial',   varargin);
-endtrial  = keyval('endtrial',   varargin);
-chanindx  = keyval('chanindx',   varargin);
+header    = ft_getopt(varargin, 'header');
+begsample = ft_getopt(varargin, 'begsample');
+endsample = ft_getopt(varargin, 'endsample');
+begtrial  = ft_getopt(varargin, 'begtrial');
+endtrial  = ft_getopt(varargin, 'endtrial');
+chanindx  = ft_getopt(varargin, 'chanindx');
 
-if isempty(header)
-  header = read_eeglabheader(filename);
-end;
+if isempty(hdr)
+  hdr = read_eeglabheader(filename);
+end
 
 if ischar(header.orig.data)
   if strcmpi(header.orig.data(end-2:end), 'set'),

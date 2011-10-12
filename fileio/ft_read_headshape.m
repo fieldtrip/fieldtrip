@@ -57,13 +57,9 @@ if ~exist(filename)
 end
 
 % get the options
-fileformat  = ft_getopt(varargin,'format','unknown');
+fileformat  = ft_getopt(varargin,'format',  ft_filetype(filename));
 coordinates = ft_getopt(varargin,'coordinates', 'head');
 unit        = ft_getopt(varargin,'unit', 'cm');
-
-if isempty(fileformat)
-  fileformat = ft_filetype(filename);
-end
 
 % start with an empty structure
 shape           = [];

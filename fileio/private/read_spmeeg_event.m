@@ -19,7 +19,7 @@ if nargin < 1
     return;
 end;
 
-header    = keyval('header',     varargin);
+header = ft_getopt(varargin, 'header');
 
 if isempty(header)
     header = read_spmeeg_header(filename);

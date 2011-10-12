@@ -29,7 +29,7 @@ function ft_flush_header(filename, varargin)
 % $Id$
 
 % set the defaults
-headerformat = keyval('headerformat', varargin); if isempty(headerformat), headerformat = ft_filetype(filename); end
+headerformat = ft_getopt(varargin, 'headerformat', headerformat = ft_filetype(filename));
 
 switch headerformat
   case 'disp'

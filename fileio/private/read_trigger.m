@@ -38,20 +38,20 @@ function [event] = read_trigger(filename, varargin)
 event = [];
 
 % get the optional input arguments
-hdr         = keyval('header',        varargin);
-dataformat  = keyval('dataformat',    varargin);
-begsample   = keyval('begsample',     varargin);
-endsample   = keyval('endsample',     varargin);
-chanindx    = keyval('chanindx',      varargin);
-detectflank = keyval('detectflank',   varargin); % can be up, down, both, auto
-denoise     = keyval('denoise',       varargin); if isempty(denoise),     denoise = true;       end
-trigshift   = keyval('trigshift',     varargin); if isempty(trigshift),   trigshift = false;    end
-trigpadding = keyval('trigpadding',   varargin); if isempty(trigpadding), trigpadding = true;   end
-fixctf      = keyval('fixctf',        varargin); if isempty(fixctf),      fixctf = false;       end
-fixneuromag = keyval('fixneuromag',   varargin); if isempty(fixneuromag), fixneuromag = false;  end
-fix4dglasgow= keyval('fix4dglasgow',  varargin); if isempty(fix4dglasgow),fix4dglasgow = false; end
-fixbiosemi  = keyval('fixbiosemi',    varargin); if isempty(fixbiosemi),  fixbiosemi = false;   end
-threshold   = keyval('threshold',     varargin); 
+hdr         = ft_getopt(varargin, 'header');
+dataformat  = ft_getopt(varargin, 'dataformat');
+begsample   = ft_getopt(varargin, 'begsample');
+endsample   = ft_getopt(varargin, 'endsample');
+chanindx    = ft_getopt(varargin, 'chanindx');
+detectflank = ft_getopt(varargin, 'detectflank'); % can be up, down, both, auto
+denoise     = ft_getopt(varargin, 'denoise',      true);
+trigshift   = ft_getopt(varargin, 'trigshift',    false);
+trigpadding = ft_getopt(varargin, 'trigpadding',  true);
+fixctf      = ft_getopt(varargin, 'fixctf',       false);
+fixneuromag = ft_getopt(varargin, 'fixneuromag',  false);
+fix4dglasgow= ft_getopt(varargin, 'fix4dglasgow', false);
+fixbiosemi  = ft_getopt(varargin, 'fixbiosemi',   false);
+threshold   = ft_getopt(varargin, 'threshold'); 
 
 if isempty(hdr)
   hdr = ft_read_header(filename);

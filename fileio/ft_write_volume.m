@@ -43,14 +43,12 @@ function [V] = ft_write_volume(filename, dat, varargin)
 % $Id$
 
 % get the options
-dataformat    = keyval('dataformat',    varargin); if isempty(dataformat), dataformat = ft_filetype(filename); end
-transform     = keyval('transform',     varargin); if isempty(transform),  transform  = eye(4);                end
-spmversion    = keyval('spmversion',    varargin);
-
-if isempty(spmversion), spmversion = 'SPM8'; end
+dataformat    = ft_getopt(varargin, 'dataformat', ft_filetype(filename));
+transform     = ft_getopt(varargin, 'transform', eye(4));
+spmversion    = ft_getopt(varargin, 'spmversion', 'SPM8');
 
 if strcmp(dataformat, 'nifti') && strcmp(spmversion, 'SPM2') 
-  error('nifti can only be written by spm versions newer than spm2');
+  error('nifti can only be written by SPM5 or later');
 end
 
 switch dataformat

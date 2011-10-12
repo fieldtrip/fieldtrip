@@ -85,20 +85,10 @@ if ~exist(filename, 'file') && ~strcmp(ft_filetype(filename), 'ctf_shm') && ~str
 end
 
 % get the options
-headerformat = keyval('headerformat', varargin);
-fallback     = keyval('fallback',     varargin);
-cache        = keyval('cache',        varargin);
-retry        = keyval('retry',        varargin); if isempty(retry), retry = false; end % for fcdc_buffer
-
-% SK: I added this as a temporary fix to prevent 1000000 voxel names
-% to be checked for uniqueness. fMRI users will probably never use
-% channel names for anything.
-checkUniqueLabels = true;
-
-% determine the filetype
-if isempty(headerformat)
-  headerformat = ft_filetype(filename);
-end
+headerformat = ft_getopt(varargin, 'headerformat', ft_filetype(filename));
+fallback     = ft_getopt(varargin, 'fallback');
+cache        = ft_getopt(varargin, 'cache');
+retry        = ft_getopt(varargin, 'retry', false); % for fcdc_buffer
 
 if isempty(cache),
   if strcmp(headerformat, 'bci2000_dat') || strcmp(headerformat, 'eyelink_asc')
@@ -107,6 +97,11 @@ if isempty(cache),
     cache = false;
   end
 end
+
+% SK: I added this as a temporary fix to prevent 1000000 voxel names
+% to be checked for uniqueness. fMRI users will probably never use
+% channel names for anything.
+checkUniqueLabels = true;
 
 % start with an empty header
 hdr = [];

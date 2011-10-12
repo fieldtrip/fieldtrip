@@ -30,7 +30,7 @@ function ft_flush_event(filename, varargin)
 % TODO implement filtering
 
 % set the defaults
-eventformat = keyval('eventformat', varargin); if isempty(eventformat), eventformat = ft_filetype(filename); end
+eventformat = ft_getopt(varargin, 'eventformat',  ft_filetype(filename));
 
 switch eventformat
   case 'disp'

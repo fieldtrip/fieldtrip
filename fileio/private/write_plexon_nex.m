@@ -39,8 +39,8 @@ function write_plexon_nex(filename, nex)
 % $Id$
 
 % get the optional arguments, these are all required
-% FirstTimeStamp = keyval('FirstTimeStamp', varargin);
-% TimeStampFreq  = keyval('TimeStampFreq', varargin);
+% FirstTimeStamp = ft_getopt(varargin, 'FirstTimeStamp');
+% TimeStampFreq  = ft_getopt(varargin, 'TimeStampFreq');
 
 hdr = nex.hdr;
 

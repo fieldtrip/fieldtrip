@@ -39,11 +39,11 @@ if nargin < 1
   return;
 end;
 
-hdr = keyval('header', varargin);
+hdr = ft_getopt(varargin, 'header');
 
 if isempty(hdr)
   hdr = read_eeglabheader(filename);
-end;
+end
 
 event    = [];                % these will be the output in FieldTrip format
 oldevent = hdr.orig.event;    % these are in EEGLAB format

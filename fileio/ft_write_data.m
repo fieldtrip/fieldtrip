@@ -58,11 +58,11 @@ if isempty(db_blob)
 end
 
 % get the options
-dataformat    = keyval('dataformat',    varargin); if isempty(dataformat), dataformat = ft_filetype(filename); end
-append        = keyval('append',        varargin); if isempty(append), append = false; end
-nbits         = keyval('nbits',         varargin); % for riff_wave
-chanindx      = keyval('chanindx',      varargin);
-hdr           = keyval('header',        varargin);
+dataformat    = ft_getopt(varargin, 'dataformat', ft_filetype(filename));
+append        = ft_getopt(varargin, 'append', false);
+nbits         = ft_getopt(varargin, 'nbits'); % for riff_wave
+chanindx      = ft_getopt(varargin, 'chanindx');
+hdr           = ft_getopt(varargin, 'header');
 
 % determine the data size
 [nchans, nsamples] = size(dat);

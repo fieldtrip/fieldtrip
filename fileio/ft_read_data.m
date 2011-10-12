@@ -50,32 +50,25 @@ function [dat] = ft_read_data(filename, varargin)
 
 persistent cachedata     % for caching
 persistent db_blob       % for fcdc_mysql
-
 if isempty(db_blob)
   db_blob = 0;
 end
 
 % get the optional input arguments
-hdr           = keyval('header',        varargin);
-begsample     = keyval('begsample',     varargin);
-endsample     = keyval('endsample',     varargin);
-begtrial      = keyval('begtrial',      varargin);
-endtrial      = keyval('endtrial',      varargin);
-chanindx      = keyval('chanindx',      varargin);
-checkboundary = keyval('checkboundary', varargin);
-dataformat    = keyval('dataformat',    varargin);
-headerformat  = keyval('headerformat',  varargin);
-fallback      = keyval('fallback',      varargin);
-cache         = keyval('cache',         varargin); if isempty(cache), cache = 0; end
-
-% determine the filetype
-if isempty(dataformat)
-  dataformat = ft_filetype(filename);
-end
+hdr           = ft_getopt(varargin, 'header');
+begsample     = ft_getopt(varargin, 'begsample');
+endsample     = ft_getopt(varargin, 'endsample');
+begtrial      = ft_getopt(varargin, 'begtrial');
+endtrial      = ft_getopt(varargin, 'endtrial');
+chanindx      = ft_getopt(varargin, 'chanindx');
+checkboundary = ft_getopt(varargin, 'checkboundary');
+dataformat    = ft_getopt(varargin, 'dataformat', ft_filetype(filename));
+headerformat  = ft_getopt(varargin, 'headerformat');
+fallback      = ft_getopt(varargin, 'fallback');
+cache         = ft_getopt(varargin, 'cache', false);
 
 % test whether the file or directory exists
-if ~exist(filename, 'file') && ~strcmp(dataformat, 'ctf_shm') && ~strcmp(dataformat, 'fcdc_mysql') && ...
-    ~strcmp(dataformat, 'fcdc_buffer')
+if ~exist(filename, 'file') && ~strcmp(dataformat, 'ctf_shm') && ~strcmp(dataformat, 'fcdc_mysql') && ~strcmp(dataformat, 'fcdc_buffer')
   error('FILEIO:InvalidFileName', 'file or directory ''%s'' does not exist', filename);
 end
 
@@ -113,7 +106,7 @@ end
 
 % for backward compatibility, default is to check when it is not continous
 if isempty(checkboundary)
-  checkboundary = ~keyval('continuous', varargin);
+  checkboundary = ~ft_getopt(varargin, 'continuous');
 end
 
 % read the header if it is not provided

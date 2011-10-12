@@ -28,10 +28,10 @@ end;
 typenames = {'uint8','int16','int32','float32','float64','int8','uint16','uint32'};
 typesizes   = [1  2  4  4 8 1 2 4];
 
-header    = keyval('header',     varargin);
-begsample = keyval('begsample',  varargin);
-endsample = keyval('endsample',  varargin);
-chanindx  = keyval('chanindx',   varargin);
+header    = ft_getopt(varargin, 'header');
+begsample = ft_getopt(varargin, 'begsample');
+endsample = ft_getopt(varargin, 'endsample');
+chanindx  = ft_getopt(varargin, 'chanindx');
 
 if isempty(header)
     header = read_spmeeg_header([filename(1:(end-3)) 'mat']);
@@ -39,8 +39,6 @@ end
 
 if isempty(begsample), begsample = 1; end;
 if isempty(endsample), endsample = header.nSamples; end;
-
-
 
 datatype = 'float32-le';
 scale = [];

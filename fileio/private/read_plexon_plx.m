@@ -38,20 +38,12 @@ function [varargout] = read_plexon_plx(filename, varargin)
 % $Id$
 
 % parse the optional input arguments
-hdr              = keyval('header', varargin);
-memmap           = keyval('memmap', varargin);
-feedback         = keyval('feedback', varargin);
-ChannelIndex     = keyval('ChannelIndex', varargin);
-SlowChannelIndex = keyval('SlowChannelIndex', varargin);
-EventIndex       = keyval('EventIndex', varargin);  % not yet used
-
-% set the defaults
-if isempty(memmap)
-  memmap=0;
-end
-if isempty(feedback)
-  feedback=1;
-end
+hdr              = ft_getopt(varargin, 'header');
+memmap           = ft_getopt(varargin, 'memmap', false);
+feedback         = ft_getopt(varargin, 'feedback', true);
+ChannelIndex     = ft_getopt(varargin, 'ChannelIndex');
+SlowChannelIndex = ft_getopt(varargin, 'SlowChannelIndex');
+EventIndex       = ft_getopt(varargin, 'EventIndex');  % not yet used
 
 needhdr = isempty(hdr);
 

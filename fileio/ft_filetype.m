@@ -95,7 +95,7 @@ if strcmp(class(filename), 'memmapfile'),
 end
 
 % % get the optional arguments
-% checkheader = keyval('checkheader', varargin); if isempty(checkheader), checkheader=1; end
+% checkheader = ft_getopt(varargin, 'checkheader', true);
 %
 % if ~checkheader
 %   % assume that the header is always ok, e.g when the file does not yet exist

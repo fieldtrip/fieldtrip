@@ -67,10 +67,10 @@ if iscell(filename)
 end
 
 % set the defaults
-eventformat = keyval('eventformat', varargin); if isempty(eventformat), eventformat = ft_filetype(filename); end
-swapping    = keyval('swapping',    varargin); if isempty(swapping),    swapping = 'native';              end
-append      = keyval('append',      varargin); if isempty(append),      append = 'yes';                   end
-maxqlength  = keyval('maxqlength',  varargin); if isempty(maxqlength),  maxqlength = Inf;                 end
+eventformat = ft_getopt(varargin, 'eventformat', ft_filetype(filename));
+swapping    = ft_getopt(varargin, 'swapping', 'native');
+append      = ft_getopt(varargin, 'append', 'yes');
+maxqlength  = ft_getopt(varargin, 'maxqlength', inf);
 
 switch eventformat
 

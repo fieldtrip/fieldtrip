@@ -25,11 +25,10 @@ if nargin < 1
     return;
 end;
 
-header    = keyval('header',     varargin);
-begsample = keyval('begsample',  varargin);
-endsample = keyval('endsample',  varargin);
-chanindx  = keyval('chanindx',   varargin);
-
+header    = ft_getopt(varargin, 'header');
+begsample = ft_getopt(varargin, 'begsample');
+endsample = ft_getopt(varargin, 'endsample');
+chanindx  = ft_getopt(varargin, 'chanindx');
 
 if isempty(header)
     header = read_spike6mat_header(filename);

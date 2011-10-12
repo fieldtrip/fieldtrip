@@ -1,4 +1,4 @@
-function [spike] = ft_read_spike(filename, varargin);
+function [spike] = ft_read_spike(filename, varargin)
 
 % FT_READ_SPIKE reads spike timestamps and waveforms from various data
 % formats.
@@ -38,12 +38,7 @@ function [spike] = ft_read_spike(filename, varargin);
 % $Id$
 
 % get the options
-spikeformat   = keyval('spikeformat',   varargin);
-
-% determine the filetype
-if isempty(spikeformat)
-  spikeformat = ft_filetype(filename);
-end
+spikeformat = ft_getopt(varargin, 'spikeformat', ft_filetype(filename));
 
 switch spikeformat
   case {'neuralynx_ncs' 'plexon_ddt'}

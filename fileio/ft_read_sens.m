@@ -59,12 +59,7 @@ if ~exist(filename)
 end
 
 % get the options
-fileformat = keyval('fileformat',  varargin);
-
-% determine the filetype
-if isempty(fileformat)
-  fileformat = ft_filetype(filename);
-end
+fileformat = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
 
 switch fileformat
 

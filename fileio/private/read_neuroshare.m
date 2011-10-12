@@ -48,18 +48,13 @@ function [nsout] = read_neuroshare(filename, varargin)
 hastoolbox('neuroshare', 1);
 
 % get the optional input arguments
-dataformat    = keyval('dataformat',    varargin);
-begsample     = keyval('begsample',     varargin);
-endsample     = keyval('endsample',     varargin);
-chanindx      = keyval('chanindx',      varargin);
-readevent     = keyval('readevent',     varargin);
-readspike     = keyval('readspike',     varargin);
-readanalog    = keyval('readanalog',    varargin);
-
-% set defaults
-if isempty(readevent);  readevent  = 'no'; end
-if isempty(readspike);  readspike  = 'no'; end
-if isempty(readanalog); readanalog = 'no'; end
+dataformat    = ft_getopt(varargin, 'dataformat');
+begsample     = ft_getopt(varargin, 'begsample');
+endsample     = ft_getopt(varargin, 'endsample');
+chanindx      = ft_getopt(varargin, 'chanindx');
+readevent     = ft_getopt(varargin, 'readevent', 'no');
+readspike     = ft_getopt(varargin, 'readspike', 'no');
+readanalog    = ft_getopt(varargin, 'readanalog', 'no');
 
 % determine the filetype
 if isempty(dataformat)
