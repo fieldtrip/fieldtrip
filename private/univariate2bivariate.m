@@ -1,14 +1,16 @@
 function [data, powindx, hasrpt] = univariate2bivariate(data, inparam, outparam, dtype, varargin)
 
+% FIXME this function is not documented
+
 %if nargin<8, keeprpt    = 1;  end
 %if nargin<7, sqrtflag   = 0;  end
 %if nargin<6, cmb        = []; end
 %if nargin<5, demeanflag = 0;  end
 
-demeanflag = keyval('demeanflag', varargin); if isempty(demeanflag), demeanflag = 0; end
-cmb        = keyval('cmb',        varargin);
-sqrtflag   = keyval('sqrtflag',   varargin); if isempty(sqrtflag), sqrtflag = 0;       end
-keeprpt    = keyval('keeprpt',    varargin); if isempty(keeprpt),  keeprpt  = 1;       end
+cmb        = ft_getopt(varargin, 'cmb');
+demeanflag = ft_getopt(varargin, 'demeanflag', false);
+keeprpt    = ft_getopt(varargin, 'keeprpt', true);
+sqrtflag   = ft_getopt(varargin, 'sqrtflag', false);
 
 switch dtype
   case 'freq'

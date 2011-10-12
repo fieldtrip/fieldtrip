@@ -50,8 +50,8 @@ if sum(strcmp(target, {'event', 'trl', 'artifact', 'boolvec'})) < 1
 end
 
 % Get the options
-endsample = keyval('endsample',  varargin);
-typenames = keyval('typenames',  varargin);
+endsample = ft_getopt(varargin, 'endsample');
+typenames = ft_getopt(varargin, 'typenames');
 
 % Determine what the input object is
 if isempty(obj)

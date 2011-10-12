@@ -43,10 +43,10 @@ if nargin<3
 end
 
 % get the optional arguments
-projmethod   = keyval('projmethod',    varargin);   % required
-sphereradius = keyval('sphereradius',  varargin);   % required for some projection methods
-distmat      = keyval('distmat',       varargin);   % will be computed if not present
-inside       = keyval('inside',        varargin);
+projmethod   = ft_getopt(varargin, 'projmethod');    % required
+sphereradius = ft_getopt(varargin, 'sphereradius');  % required for some projection methods
+distmat      = ft_getopt(varargin, 'distmat');       % will be computed if not present
+inside       = ft_getopt(varargin, 'inside');
 
 dim = size(val);
 dimres = svd(transform(1:3,1:3)); % to reduce the number of elements in the distance matrix

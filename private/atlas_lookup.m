@@ -37,8 +37,12 @@ function [label] = atlas_lookup(atlas, pos, varargin)
 % $Id$
 
 % get the optional input arguments
-queryrange  = keyval('queryrange', varargin);  if isempty(queryrange),  queryrange = 3;                end
-inputcoord  = keyval('inputcoord', varargin);  if isempty(inputcoord),  error('specify inputcoord');   end
+queryrange  = ft_getopt(varargin, 'queryrange', 3);
+inputcoord  = ft_getopt(varargin, 'inputcoord');
+
+if isempty(inputcoord)
+  error('you must specify inputcoord');
+end
 
 if isempty(intersect(queryrange, [1 3 5 7 9 11]))
   error('incorrect query range, should be one of [1 3 5 7 9 11]');

@@ -55,15 +55,11 @@ if nargin<3
 end
 
 % parse the optional input arguments
-surface       = keyval('surface', varargin);            % skin or brain
-downwardshift = keyval('downwardshift', varargin);      % boolean (0 or 1)
-inwardshift   = keyval('inwardshift', varargin);        % number
-headshape     = keyval('headshape', varargin);          % CTF *.shape file
-npnt          = keyval('npnt', varargin);               % number of vertices
-
-% set the defaults if neccessary
-if isempty(surface),       surface = 'skin';  end
-if isempty(downwardshift), downwardshift = 1; end
+surface       = ft_getopt(varargin, 'surface', 'skin');     % skin or brain
+downwardshift = ft_getopt(varargin, 'downwardshift', true); % boolean
+inwardshift   = ft_getopt(varargin, 'inwardshift');         % number
+headshape     = ft_getopt(varargin, 'headshape');           % CTF *.shape file
+npnt          = ft_getopt(varargin, 'npnt');                % number of vertices
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(headshape)

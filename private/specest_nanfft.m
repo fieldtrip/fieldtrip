@@ -40,8 +40,8 @@ function [spectrum] = specest_nanfft(dat, time, varargin)
 % $Id$
 
 % get the optional arguments
-basis     = keyval('basis',     varargin);
-datatype  = keyval('datatype',  varargin);
+basis     = ft_getopt(varargin, 'basis');
+datatype  = ft_getopt(varargin, 'datatype');
 
 % datatype = 0, no missing data
 % datatype = 1, the missing data is at the same location for all channels

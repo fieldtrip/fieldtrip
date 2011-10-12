@@ -37,7 +37,11 @@ function [mask] = atlas_mask(atlas, mri, label, varargin)
 % $Id$
 
 % get the optional input arguments
-inputcoord = keyval('inputcoord', varargin); if isempty(inputcoord),  error('specify inputcoord');   end
+inputcoord = ft_getopt(varargin, 'inputcoord');
+
+if isempty(inputcoord)
+  error('you must specify inputcoord');
+end
 
 if ischar(label)
   label = {label};

@@ -48,7 +48,6 @@ function [numA, numB, indA, indB] = spikesort(numA, numB, varargin);
 %
 % $Id$
 
-
 % use global flag for debugging
 global fb
 if isempty(fb)
@@ -56,7 +55,7 @@ if isempty(fb)
 end
 
 % get the options
-presort = keyval('presort', varargin);
+presort = ft_getopt(varargin, 'presort');
 
 if any(size(numA)~=size(numB))
   error('input dimensions should be the same');
