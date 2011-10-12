@@ -27,14 +27,17 @@ function [pnt, ori, lab] = channelposition(sens, varargin)
 %
 % $Id$
 
+% FIXME varargin is not documented
+
+% get the optional input arguments
+getref = ft_getopt(varargin, 'channel', false);
+
 % remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
 sens = undobalancing(sens);
 
 switch ft_senstype(sens)
   case {'ctf151', 'ctf275' 'bti148', 'bti248', 'itab153', 'yokogawa160', 'yokogawa64'}
-    % the following code is for all axial gradiometer systems or
-    % magnetometer systems
-    getref = keyval('channel', varargin); if isempty(getref), getref = 0; end 
+    % the following code is for all axial gradiometer systems or magnetometer systems
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%
     % do the MEG sensors first
