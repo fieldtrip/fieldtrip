@@ -1,6 +1,7 @@
 function test_ft_read_header
 
-% TEST: test_ft_read_header ft_read_header
+% TEST test_ft_read_header
+% TEST ft_read_header
 
 addpath('/home/common/matlab/fieldtrip/data/test/mfiles/');
 datainfo = datasets;

@@ -1,3 +1,8 @@
+function test_yokogawa
+
+% TEST test_yokogawa
+% TEST hasyokogawa read_yokogawa_data read_yokogawa_event read_yokogawa_header yokogawa2grad yokogawa2vol
+
 % this script tests some files from the three different types of yokogawa MEG systems
 % it tests the general reading and whether the system type and channel selection all work
 

@@ -1,6 +1,7 @@
 function test_ft_read_sens
 
-% TEST: test_ft_read_sens ft_read_sens
+% TEST test_ft_read_sens
+% TEST ft_read_sens
 
 addpath('/home/common/matlab/fieldtrip/data/test/mfiles/');
 datainfo = datasets;
