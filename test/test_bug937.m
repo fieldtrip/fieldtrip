@@ -1,4 +1,4 @@
-% function test_bug937
+function test_bug937
 
 % TEST test_bug937
 % TEST
