@@ -1,115 +1,138 @@
-function bnd = prepare_mesh_segmentation(mri,varargin)
+function bnd = prepare_mesh_segmentation(cfg,mri)
 
 % PREPARE_MESH_SEGMENTATION
-%
+% Calculates the surfaces of each compartment from a segmentation or from
+% an MRI volume structure to be segmented. As such the input always
+% contains volumetric information.
+% 
+% The segmentation can be of two different types:
+% - a raw segmentation: given as a 3D data matrix 
+%   Requires the cfg.tissue option to be a set of numbers (intensity value of the
+%   compartments)
+% 
+% - a mri segmentation: given as a mri volume with the segmented compartments as fields
+%   Requires the cfg.tissue option to be a set of strings (the names of the
+%   fields of actual input structure)
+% 
+% Required options:
+% 
+% cfg.tissue                  the tissue number/string
+% cfg.numvertices             the desired number of vertices
+% 
 % See also PREPARE_MESH_MANUAL,PREPARE_MESH_HEADSHAPE
 
 % Copyrights (C) 2009, Robert Oostenveld
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-if ~isfield(cfg, 'spmversion'), cfg.spmversion = 'spm8'; end
+% process the inputs
+tissue      = ft_getopt(cfg,'tissue');
+numvertices = ft_getopt(cfg,'numvertices');
+smoothseg   = ft_getopt(cfg,'smoothseg',0);
+threshseg   = ft_getopt(cfg,'thresholdseg',0);
 
-% smooth functional parameters, excluding anatomy and inside
-if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no'),
-  % check that SPM is on the path, try to add the preferred version
-  if strcmpi(cfg.spmversion, 'spm2'),
-    ft_hastoolbox('SPM2',1);
-  elseif strcmpi(cfg.spmversion, 'spm8'),
-    ft_hastoolbox('SPM8',1);
+% check options consistency
+ntissues = numel(tissue);
+if ntissues>1
+  % assign one single parameter to each tissue if more than one tissue
+  if numel(numvertices)==1
+    numvertices(1:ntissues) = numvertices(1);
+  elseif numel(numvertices)~=ntissues
+    error('tissues and vertices do not match')
   end
+  if numel(smoothseg)==1
+    smoothseg(1:ntissues) = smoothseg(1);
+  elseif numel(smoothseg)~=ntissues
+    error('tissues and smooth parameter do not match')
+  end  
+  if numel(threshseg)==1
+    threshseg(1:ntissues) = threshseg(1);
+  elseif numel(threshseg)~=ntissues
+    error('tissues and threshold parameter do not match')
+  end
+else % only one tissue, choose the first parameter
+  numvertices = numvertices(1);
+  smoothseg   = smoothseg(1);
+  threshseg   = threshseg(1);
 end
 
-% process the inputs
-dim = mri.dim;
-tissuelabels = ft_getopt('tissuelabels',varargin,[]);
-threshold    = ft_getopt('threshold',varargin,0);
-smooth       = ft_getopt('smooth',varargin,'no');
-numvertices  = ft_getopt('smooth',varargin,[]);
-tissuetype   = ft_getopt('tissuetype',varargin,[]);
-unit         = ft_getopt('unit',varargin,'mm');
-if ~isfield(mri, 'unit'), mri = ft_convert_units(mri); end
-% tissueval    = ft_getopt('smooth',varargin,[]);% not sure about it
+% do the mesh extrapolation
+for i =1:numel(tissue)
+  if ~isnumeric(tissue(i))
+    comp = tissue{i};
+    seg = mri.(comp);
+  else
+    seg = mri==tissue(i);
+  end
+  seg = dosmoothing(seg, smoothseg(i), num2str(i));
+  seg = threshold(seg, threshseg(i), num2str(i));
+  seg = fill(seg, num2str(i)); %FIXME: try fixhollow
+  bnd(i) = dotriangulate(seg, numvertices(i), num2str(i));
+end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function bnd = dotriangulate(seg, nvert, str)
+% n is just a placeholder for messages
+dim = size(seg);
+[mrix, mriy, mriz] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
 
-  if isfield(mri, 'gray') || isfield(mri, 'white') || isfield(mri, 'csf')
-    % construct the single image segmentation from the three probabilistic
-    % tissue segmentations for csf, white and gray matter
-    mri.seg = zeros(size(mri.gray )); % FIXME
-    if isfield(mri, 'gray')
-      fprintf('including gray matter in segmentation for brain compartment\n')
-      mri.seg = mri.seg | (mri.gray>(threshold*max(mri.gray(:)))); % FIXME
-    end
-    if isfield(mri, 'white')
-      fprintf('including white matter in segmentation for brain compartment\n')
-      mri.seg = mri.seg | (mri.white>(threshold*max(mri.white(:)))); % FIXME
-    end
-    if isfield(mri, 'csf')
-      fprintf('including CSF in segmentation for brain compartment\n')
-      mri.seg = mri.seg | (mri.csf>(threshold*max(mri.csf(:)))); % FIXME
-    end
-    if ~strcmp(cfg.smooth, 'no'),
-      fprintf('smoothing the segmentation with a %d-pixel FWHM kernel\n',cfg.smooth);
-      mri.seg = double(mri.seg);
-      spm_smooth(mri.seg, mri.seg, smooth); % FIXME
-    end
-    % threshold for the last time
-    mri.seg = (mri.seg>(cfg.threshold*max(mri.seg(:)))); % FIXME
-  elseif isfield(mri, 'brain')
-    mri.seg = mri.brain; % FIXME
-  elseif isfield(mri, 'scalp')
-    mri.seg = mri.scalp; % FIXME
+% construct the triangulations of the boundaries from the segmented MRI
+fprintf('triangulating the boundary of compartment %s\n', str);
+ori(1) = mean(mrix(seg(:)));
+ori(2) = mean(mriy(seg(:)));
+ori(3) = mean(mriz(seg(:)));
+[pnt, tri] = triangulate_seg(seg, nvert, ori); % is tri okay? tri = projecttri(pnt);
+
+% output
+bnd.pnt = pnt;
+bnd.tri = tri;
+fprintf(['segmentation compartment %s completed\n'],str);
+
+function [output] = threshold(input, thresh, str)
+
+if thresh>0 && thresh<1
+  fprintf('thresholding %s at a relative threshold of %0.3f\n', str, thresh);
+
+  % mask by taking the negative of the brain, thus ensuring
+  % that no holes are within the compartment and do a two-pass 
+  % approach to eliminate potential vitamin E capsules etc.
+
+  output   = double(input>(thresh*max(input(:))));
+  [tmp, N] = spm_bwlabel(output, 6);
+  for k = 1:N
+    n(k,1) = sum(tmp(:)==k);
+  end
+  output   = double(tmp~=find(n==max(n))); clear tmp;
+  [tmp, N] = spm_bwlabel(output, 6);
+  for k = 1:N
+    m(k,1) = sum(tmp(:)==k);
+  end
+  output   = double(tmp~=find(m==max(m))); clear tmp;
+else
+  output = input;
+end
+
+function [output] = fill(input, str)
+fprintf('filling %s\n', str);
+  output = input;
+  dim = size(input);
+  for i=1:dim(2)
+    slice=squeeze(input(:,i,:));
+    im = imfill(slice,8,'holes');
+    output(:,i,:) = im;
   end
 
-  [mrix, mriy, mriz] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+function [output] = dosmoothing(input, fwhm, str)
+if fwhm>0
+  fprintf('smoothing %s with a %d-voxel FWHM kernel\n', str, fwhm);
+  spm_smooth(input, input, fwhm);
+end
+output = input;
 
-  % construct the triangulations of the boundaries from the segmented MRI
-  for i=1:length(cfg.tissuetype) % FIXME
-    fprintf('triangulating the boundary of compartment %d\n', i);
-    seg = imfill((mri.seg==tissueval(i)), 'holes'); % FIXME
-    ori(1) = mean(mrix(seg(:)));
-    ori(2) = mean(mriy(seg(:)));
-    ori(3) = mean(mriz(seg(:)));
-    [pnt, tri] = triangulate_seg(seg, numvertices(i), ori); % is tri okay?
-    %     tri = projecttri(pnt);
-    % apply the coordinate transformation from voxel to head coordinates
-    pnt = warp_apply(mri.transform,pnt);
-    % rescale
-    pnt = scaleunit(unit,pnt);
-    % output
-    bnd(i).pnt = pnt;
-    bnd(i).tri = tri;
-    fprintf(['segmentation compartment %d of ' num2str(length(cfg.tissue)) ' completed\n'],i);
-  end
-
-function pnt = scaleunit(unit,pnt)
-  % convert the MRI surface points into the same units as the source/gradiometer
-  scale = 1;
-  switch unit
-    case 'mm'
-      scale = scale * 1000;
-    case 'cm'
-      scale = scale * 100;
-    case 'dm'
-      scale = scale * 10;
-    case 'm'
-      scale = scale * 1;
-    otherwise
-      error('unknown physical dimension in input ''unit''');
-  end
-  switch mri.unit
-    case 'mm'
-      scale = scale / 1000;
-    case 'cm'
-      scale = scale / 100;
-    case 'dm'
-      scale = scale / 10;
-    case 'm'
-      scale = scale / 1;
-    otherwise
-      error('unknown physical dimension in mri.unit');
-  end
-  if scale~=1
-    fprintf('converting MRI surface points from %s into %s\n', cfg.sourceunits, mri.unit);
-    pnt = pnt* scale;
-  end
+% function cmprtmnt = fixhollow(cmprtmnt)
+% % checks if the compartment is hollow
+% [~,N] = bwlabeln(cmprtmnt);
+% if N>2
+% % ...and tries to fix it
+%   cmprtmnt = imfill(cmprtmnt,'holes');
+% end  

@@ -1,23 +1,23 @@
-function bnd = ft_prepare_mesh(cfg, mri)
+function bnd = ft_prepare_mesh(cfg, data)
 
 % FT_PREPARE_MESH creates a triangulated surface mesh for the volume
 % conduction model. The mesh can either be selected manually from raw
 % mri data or can be generated starting from a segmented volume
 % information stored in the mri structure. The result is a bnd
 % structure which contains the information about all segmented surfaces
-% related to mri and are expressed in world coordinates.
+% related to mri and are expressed in head coordinates.
 %
 % Use as
-%   bnd = ft_prepare_mesh(cfg, mri)
+%   bnd = ft_prepare_mesh(cfg, data)
 %
 % Configuration options:
 %   cfg.interactive     = 'no' (default) or 'yes' (manual interaction)
-%   cfg.tissue          = list with segmentation values corresponding with each compartment
+%   cfg.tissue          = list with segmentation values/names corresponding with each compartment
 %   cfg.numvertices     = vector, length equal cfg.tissue.  e.g. [2000 1000 800];
-%   cfg.downsample      = integer (1,2, ...) defines the level of refinement of the mri data
-%   cfg.unit            = e.g. 'mm'
-%   cfg.headshape       = (optional) a filename containing headshape, a Nx3 matrix with surface
+%   cfg.downsample      = (optional) integer (1,2, ...) defines the level of refinement of the mri data
+%   cfg.headshape       = a filename containing headshape, a Nx3 matrix with surface
 %                         points, or a structure with a single or multiple boundaries
+%   cfg.unit            = e.g. 'mm'
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
@@ -29,18 +29,11 @@ function bnd = ft_prepare_mesh(cfg, mri)
 % input/output structure.
 %
 % Example use:
-%   mri=ft_read_mri('Subject01.mri');
-%   cfg=[];
+% 
+%   mri = ft_read_mri('Subject01.mri');
+%   cfg = [];
 %   cfg.output = {'scalp', 'skull', 'brain'};
-%   segment    = ft_volumesegment(cfg, mri);
-%   scalp = (segment.scalp);
-%   skull = 2*(segment.skull);
-%   brain = 3*(segment.brain);
-%   segment.seg=scalp+skull+brain;
-%   cfg=[];
-%   cfg.tissue      = [1 2 3];
 %   cfg.numvertices = [2000 1000 800];
-%   cfg.unit        = segment.unit;
 %   bnd = ft_prepare_mesh(cfg, segment);
 
 % Copyrights (C) 2009, Cristiano Micheli & Robert Oostenveld
@@ -63,120 +56,190 @@ function bnd = ft_prepare_mesh(cfg, mri)
 %
 % $Id: ft_prepare_mesh.m 4119 2011-09-06 14:05:57Z johzum $
 
+ft_defaults
+
+cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'forbidden', 'numcompartments');
+cfg = ft_checkconfig(cfg, 'forbidden', 'method');
 
-% set the defaults
-downsample   = ft_getopt('downsample',cfg,1);
-resolution   = ft_getopt('resolution',cfg,[]);
-tissue       = ft_getopt('tissue',cfg,[]);
-numvertices  = ft_getopt('numvertices',cfg,[]);
-interactive  = ft_getopt('interactive',cfg,'no');
-headshape    = ft_getopt('headshape',cfg,[]);
-inputfile    = ft_getopt('inputfile',cfg,[]);
-outputfile   = ft_getopt('outputfile',cfg,[]);
-unit         = ft_getopt('unit',cfg,'mm');
+% mri defaults
+resolution   = ft_getopt(cfg, 'resolution');  % for mri reslice
+resdim       = ft_getopt(cfg, 'resdim');      % for mri reslice
+downsample   = ft_getopt(cfg, 'downsample');  % for mri downsample
+output       = ft_getopt(cfg, 'output');      % for mri segment
+smooth       = ft_getopt(cfg, 'smooth');      % for mri segment
+threshold    = ft_getopt(cfg, 'threshold');   % for mri segment
 
+% ft_prepare_mesh specific options
+headshape    = ft_getopt(cfg, 'headshape');   % input option
+inputfile    = ft_getopt(cfg, 'inputfile');   % input option
+outputfile   = ft_getopt(cfg, 'outputfile');  % output option
+interactive  = ft_getopt(cfg, 'interactive', 'no'); % to interact with the volume
+smoothseg    = ft_getopt(cfg, 'smoothseg', 0);    % to smooth the seg compartment
+thresholdseg = ft_getopt(cfg, 'thresholdseg', 0); % to threshold the seg compartment
+tissue       = ft_getopt(cfg, 'tissue');      % to perform the meshing on a specific tissue
+numvertices  = ft_getopt(cfg, 'numvertices'); % resolution of the mesh
+interactive  = istrue(interactive);
+
+% mesh points' unit options
+transform    = ft_getopt(cfg, 'transform',eye(4));
+unit         = ft_getopt(cfg, 'unit');      % target units
+
+% load optional given inputfile as data
+hasdata      = (nargin>1);
+hasinputfile = ~isempty(inputfile);
+if hasinputfile && hasdata
+  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+elseif hasinputfile
+  data = loadvar(inputfile, 'data');
+elseif hasdata
+  % nothing to be done
+end
+
+if hasdata
+  % if the target units are not explicitly given, try to estimate the data
+  % units and use them for the meshes 
+  if ft_datatype(data,'volume')
+    if ~isfield(data, 'unit'), data = ft_convert_units(data); end
+  end
+  if isempty(unit) 
+    if ft_datatype(data,'volume')
+      mriunits    = data.unit;
+      sourceunits = mriunits;
+    else
+      sourceunits = 'mm';
+      mriunits    = 'mm';
+    end
+  end
+else
+  % this is a trick not to reascale in case of boundary input
+  sourceunits   = 'mm';
+  mriunits      = 'mm';
+end
+
+% load optional given inputfile as data
+hasdata      = (nargin>1);
+hasinputfile = ~isempty(inputfile);
+
+if hasinputfile && hasdata
+  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
+elseif hasinputfile
+  data = loadvar(inputfile, 'data');
+elseif hasdata
+  % nothing to be done
+end
+if isempty(headshape) && ~hasdata && ~hasinputfile
+  error('no input data available')  
+end
 if ~isempty(headshape) && isa(headshape, 'config')
-  % convert the nested cmethodonfig-object back into a normal structure
+  % convert the nested config-object back into a normal structure
   headshape = struct(headshape);
 end
 
-% load optional given inputfile like already segmented volume 
-hasdata = (nargin>1);
-if      hasdata && ~isempty(inputfile)
-  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-elseif  hasdata &&  isempty(inputfile)
-  % this is ok
-elseif ~hasdata && ~isempty(inputfile)
-  % the input data should be read from file
-  mri = loadvar(inputfile, 'mri');
-elseif ~hasdata &&  isempty(inputfile)
-  mri = [];
-end
-
-if isempty(headshape) && hasdata
-  basedonseg        = isfield(mri, 'transform') && issegmentation(mri);
-  basedonmri        = isfield(mri, 'transform') && ~basedonseg && isfield(mri, {'anatomy', 'dim'});
-  basedonvol        = isfield(mri, 'bnd');
-  basedonsphere     = isfield(mri,'r') && isfield(mri,'o');
-  basedonheadshape  = 0;
-  if ~(basedonseg+basedonmri+basedonvol+basedonsphere+basedonheadshape)
-    error('unknown input type')
-  end
-elseif ~isempty(headshape) && ~hasdata
-  basedonseg        = 0;
-  basedonmri        = 0;
-  basedonvol        = 0;
-  basedonsphere     = 0;
-  basedonheadshape  = 1;
-elseif isempty(headshape) && ~hasdata
-  error('no data available')  
+if hasdata
+  basedonmri    = ft_datatype(data,'volume') && ~issegmentation(data,cfg);
+  basedonrawseg = (~isstruct(data) && numel(size(data))==3);
+  basedonmriseg = ~basedonrawseg && issegmentation(data,cfg);
+  basedonvol    = isfield(data, 'bnd');
+  basedonsphere = isfield(data,'r') && isfield(data,'o');
+  basedonheadshape = 0;
 else
-  error('inconsistent configuration, cfg.headshape should not be used in combination with an mri input')
+  % in absence of data input
+  basedonmri    = 0;
+  basedonrawseg = 0;
+  basedonmriseg = 0;
+  basedonvol    = 0;
+  basedonsphere = 0;
+  basedonheadshape = ~isempty(headshape);
 end
 
-if basedonseg || basedonmri
-  if downsample~=1
-    % optionally downsample the anatomical MRI and/or the tissue segmentation
-    fprintf('downsampling the volume by a factor of %d\n',downsample);
-    cfg = [];
-    cfg.outputfile = outputfile;
-    cfg.downsample = downsample;
-    mri = ft_volumedownsample(cfg, mri);
+if ~interactive
+  if (basedonmri+basedonrawseg+basedonmriseg+basedonvol+basedonsphere+basedonheadshape)>1
+    error('inconsistent configuration, input data is ambiguous')
+  end
+else
+  if hasdata || hasinputfile
+    bnd = prepare_mesh_manual(cfg, data);
+    return
+  else
+    error('you need a data structure')
   end
 end
 
-if strcmp(interactive, 'yes')
-  fprintf('using the manual approach\n');
-  bnd = prepare_mesh_manual(cfg, mri);
-  
-elseif basedonmri
+if basedonmri
   fprintf('using the mri approach\n');
-  mri = ft_datatype_volume(mri);
+  mri = ft_datatype(data,'volume');
+  if isempty(resdim)
+    resdim = mri.dim;
+  end
+  
+  if ~isfield(mri, 'unit'), mri = ft_convert_units(mri); end
+  
   % reslicing if necessary
   if ~isempty(resolution)
     fprintf('reslicing with homogeneous voxel resolution of %d %s\n',resolution,unit);
     cfg = [];
-    cfg.resolution = resolution; 
-    cfg.dim = mri.dim;
-    mri_r   = ft_volumereslice(cfg, mri);
-  end
+    cfg.resolution = resolution; % FIXME: what happens if this is in cm
+    cfg.dim        = resdim;
+    mri = ft_volumereslice(cfg, mri);
+  end 
+  
   % segmenting the volume
-  fprintf('segmenting into scalp/skull/brain compartments, this may take a while...\n');
   cfg = [];
-  cfg.output = {'scalp','skull','brain'};
-  [mri_s] = ft_volumesegment(cfg, mri_r);
+  cfg.smooth     = smooth;
+  cfg.threshold  = threshold;
+  cfg.output     = output;
+  cfg.downsample = downsample;
+  mri = ft_volumesegment(cfg,mri);
   
-  % A check/fix on the segmented volumes. It requires the image processing toolbox!
-  fprintf('checking volumes\n');
-  [mri_s.scalp] = fixhollow(mri_s.scalp);
-  [mri_s.skull] = fixhollow(mri_s.skull);
-  [mri_s.skull] = fixhollow(mri_s.skull);
-  
-  % preparing the meshes from the segmented compartments
-  fprintf('preparing the meshes\n');
-  tissuelabel = {'scalp','skull','brain'};
-  bnd = prepare_mesh_segmentation_new(mri,'tissuelabel',tissuelabel);
-  
-elseif basedonseg 
-  fprintf('using the segmentation approach\n');
   cfg = [];
-  cfg.tissuelabel = cfg.segment;
-  bnd = prepare_mesh_segmentation(cfg, mri);
+  cfg.tissue = output;
+  bnd = ft_prepare_mesh_new(cfg, mri);
   
+elseif basedonmriseg 
+  if isnumeric(cfg.tissue)
+    error('tissue type should be a string')
+  end
+  fprintf('using the mri segmentation approach\n');
+  cfg = [];
+  cfg.tissue       = tissue;
+  cfg.thresholdseg = thresholdseg;
+  cfg.smoothseg    = smoothseg;
+  cfg.numvertices  = numvertices;
+  bnd = prepare_mesh_segmentation_new(cfg, data);
+
+elseif basedonrawseg 
+  if ~isnumeric(cfg.tissue)
+    error('tissue type should be a number')
+  end
+  fprintf('using the raw segmentation approach\n');
+  cfg = [];
+  cfg.tissue       = tissue;
+  cfg.thresholdseg = thresholdseg;
+  cfg.smoothseg    = smoothseg;
+  cfg.numvertices  = numvertices;  
+  bnd = prepare_mesh_segmentation_new(cfg, data);
+
 elseif basedonheadshape
   fprintf('using the head shape to construct a triangulated mesh\n');
   cfg = [];
-  cfg.headshape = headshape;
+  cfg.headshape   = headshape;
+  cfg.numvertices = numvertices;
   bnd = prepare_mesh_headshape(cfg);
- 
+
 elseif basedonvol
+  vol = data;
   fprintf('using the mesh specified in the input volume conductor\n');
-  bnd = mri.bnd;
+  for i=1:numel(vol)
+    tmpbnd(i) = vol(i).bnd;
+  end
+  cfg = [];
+  cfg.headshape   = tmpbnd;
+  cfg.numvertices = numvertices;
+  bnd = prepare_mesh_headshape(cfg);
   
 elseif basedonsphere
-  vol = mri;
-  
+  vol = data;
   if isempty(numvertices)
     fprintf('using the mesh specified by icosaedron162\n');
     [pnt,tri] = icosahedron162;
@@ -193,9 +256,9 @@ elseif basedonsphere
       vol.r = sort(vol.r);
       bnd = [];
       for i=1:length(vol.r)
-        bnd(i).pnt(:,1) = pnt(:,1)*vol.r(i) + vol.o(1);
-        bnd(i).pnt(:,2) = pnt(:,2)*vol.r(i) + vol.o(2);
-        bnd(i).pnt(:,3) = pnt(:,3)*vol.r(i) + vol.o(3);
+        bnd(i).pnt(:,1) = pnt(:,1)*vol.r(i) + vol.o(i,1);
+        bnd(i).pnt(:,2) = pnt(:,2)*vol.r(i) + vol.o(i,2);
+        bnd(i).pnt(:,3) = pnt(:,3)*vol.r(i) + vol.o(i,3);
         bnd(i).tri = tri;
       end
     case 'multisphere'
@@ -208,27 +271,23 @@ elseif basedonsphere
       end
   end
   
-else
-  error('unsupported cfg.method and/or input')
 end
 
-% ensure that the vertices and triangles are double precision, otherwise the bemcp mex files will crash
+% voxel to head coordinates transformation
 for i=1:length(bnd)
+  % ensure that the vertices and triangles are double precision, otherwise
+  % the bemcp mex files will crash
   bnd(i).pnt = double(bnd(i).pnt);
   bnd(i).tri = double(bnd(i).tri);
+  % apply the coordinate transformation from voxel to head coordinates
+  bnd(i).pnt = warp_apply(transform,bnd(i).pnt);
+  % rescale
+  bnd(i).pnt = scaleunit(sourceunits,mriunits,bnd(i).pnt);
 end
 
 % the output data should be saved to a MATLAB file
 if ~isempty(outputfile)
   savevar(outputfile, 'data', bnd); % use the variable name "data" in the output file
-end
-
-function cmprtmnt = fixhollow(cmprtmnt)
-% checks if the compartment is hollow
-[~,N] = bwlabeln(cmprtmnt);
-if N>2
-% ...and tries to fix it
-  cmprtmnt = imfill(cmprtmnt,'holes');
 end
 
 function res = issegmentation(mri,cfg)
@@ -239,4 +298,41 @@ if isfield(cfg,'segment')
   for i=1:numel(cfg.segment)
     res = res || isfield(mri,cfg.segment{i});
   end
+elseif isfield(cfg,'tissue')
+  if ~isnumeric(cfg.tissue)
+    res = true;
+  end
 end
+
+function pnt = scaleunit(sourceunits, mriunits, pnt)
+  % convert the MRI surface points into the same units as the source/gradiometer
+  scale = 1;
+  switch sourceunits
+    case 'mm'
+      scale = scale * 1000;
+    case 'cm'
+      scale = scale * 100;
+    case 'dm'
+      scale = scale * 10;
+    case 'm'
+      scale = scale * 1;
+    otherwise
+      error('unknown physical dimension in input ''unit''');
+  end
+  switch mriunits
+    case 'mm'
+      scale = scale / 1000;
+    case 'cm'
+      scale = scale / 100;
+    case 'dm'
+      scale = scale / 10;
+    case 'm'
+      scale = scale / 1;
+    otherwise
+      error('unknown physical dimension in mri.unit');
+  end
+  if scale~=1
+    fprintf('converting MRI surface points from %s into %s\n', sourceunits, mriunits);
+    pnt = pnt*(scale);
+  end
+  
