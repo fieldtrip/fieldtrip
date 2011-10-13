@@ -1,3 +1,8 @@
+function test_headmodel_asa
+
+% TEST test_headmodel_asa
+% TEST ft_headmodel_asa ft_prepare_vol_sens ft_compute_leadfield
+
 % the standard BEM model that is supplied on the fieldtrip ftp server 
 % and included in EEGLAB was originally constructed in ASA version 2
 

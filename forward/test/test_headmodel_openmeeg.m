@@ -1,3 +1,8 @@
+function test_headmodel_openmeeg
+
+% TEST test_headmodel_openmeeg
+% TEST ft_headmodel_bem_openmeeg ft_prepare_vol_sens ft_compute_leadfield
+
 % generate a unit sphere
 [pnt, tri] = icosahedron162;
 

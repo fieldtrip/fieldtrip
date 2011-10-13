@@ -1,7 +1,7 @@
 function test_headmodel_singlesphere
 
-% TEST: ft_prepare_headmodel ft_headmodel_singlesphere
-% test_headmodel_singlesphere ft_prepare_vol_sens ft_compute_leadfield
+% TEST test_headmodel_singlesphere
+% TEST ft_prepare_vol_sens ft_compute_leadfield ft_prepare_headmodel ft_headmodel_singlesphere
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % first part serves to test basic functionality i.e. is a sphere produced

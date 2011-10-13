@@ -1,6 +1,7 @@
-function [type, fname] =test_ft_senstype
+function [type, fname] = test_ft_senstype
 
-% TEST: test_ft_senstype ft_senstype
+% TEST test_ft_senstype
+% TEST ft_senstype
 
 % ft_senstype can work on different input data structures. Here, use the
 % preprocessed data on /home/common/matlab/fieldtrip/test/raw/

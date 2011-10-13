@@ -1,3 +1,8 @@
+function test_headmodel_concentricspheres
+
+% TEST test_headmodel_concentricspheres
+% TEST ft_headmodel_concentricspheres ft_prepare_vol_sens ft_compute_leadfield
+
 % generate some random points
 pnt = randn(100,3);
 for i=1:length(pnt)

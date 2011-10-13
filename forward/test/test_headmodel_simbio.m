@@ -1,6 +1,7 @@
 function test_headmodel_simbio
 
-% TEST: test_ft_compute_leadfield ft_compute_leadfield 
+% TEST test_headmodel_simbio
+% TEST ft_headmodel_fem_simbio ft_prepare_vol_sens ft_compute_leadfield ft_headmodel_concentricspheres
 
 % this function tests that simbio forward model works, comparing the results with a 3 concentric
 % spheres model

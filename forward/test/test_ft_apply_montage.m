@@ -1,6 +1,10 @@
-%TEST: test_ft_apply_montage ft_apply_montage
+function test_ft_apply_montage
+
+% TEST test_ft_apply_montage
+% TEST ft_apply_montage
 
 pwdir = pwd;
+
 cd('/home/common/matlab/fieldtrip/data/');
 cfg = [];
 cfg.dataset = 'Subject01.ds';

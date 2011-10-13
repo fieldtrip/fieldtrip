@@ -1,6 +1,7 @@
-% function test_headmodel_fns
+function test_headmodel_fns
 
-% TEST: test_ft_compute_leadfield ft_compute_leadfield 
+% TEST test_ft_compute_leadfield
+% TEST ft_compute_leadfield ft_headmodel_fdm_fns ft_prepare_vol_sens ft_compute_leadfield
 
 % this function tests that FNS forward model works, comparing the results with a 3 concentric
 % spheres model
