@@ -509,26 +509,30 @@ svol(3).r = 60;
 svol(3).bnd.pnt = svol(3).r*pnt;
 svol(3).bnd.tri = tri;
 
-% generate a volume of 3 concentric spheres (works if number of voxels is odd)
-sprintf('Generating a volume with a number N = %d of compartments ... ', numel(svol))
-res = 1; % in mm
-for i=3:-1:1
-  tmp2 = zeros(151,151,151);
-  xgrid = -svol(i).r:res:svol(i).r;
-  ygrid = xgrid;
-  zgrid = xgrid;
-  [X, Y, Z]  = ndgrid(xgrid, ygrid, zgrid);
-  pos = [X(:) Y(:) Z(:)];
-  [inside] = bounding_mesh(pos, svol(i).bnd.pnt, svol(i).bnd.tri);
-  l = length(xgrid)
-  c = 76; sel = (l-1)./2; % in voxel
-  tmp = reshape(inside,[l l l]); 
-  tmp2(c-sel:c+sel,c-sel:c+sel,c-sel:c+sel) = tmp;
-  MR{i} = tmp2;
-end
-bkgrnd = zeros(151,151,151);
-bkgrnd = MR{1}+MR{2}+MR{3};
-% load('~crimic/test/SimBio/spheres','bkgrnd')
+% To generate a volume of 3 concentric spheres (works if number of voxels is odd)
+% use this code:
+% 
+% addpath /home/common/matlab/fieldtrip_private/
+% res = 1; % in mm
+% for i=3:-1:1
+%   tmp2 = zeros(151,151,151);
+%   xgrid = -svol(i).r:res:svol(i).r;
+%   ygrid = xgrid;
+%   zgrid = xgrid;
+%   [X, Y, Z]  = ndgrid(xgrid, ygrid, zgrid);
+%   pos = [X(:) Y(:) Z(:)];
+%   [inside] = bounding_mesh(pos, svol(i).bnd.pnt, svol(i).bnd.tri);
+%   l = length(xgrid)
+%   c = 76; sel = (l-1)./2; % in voxel
+%   tmp = reshape(inside,[l l l]); 
+%   tmp2(c-sel:c+sel,c-sel:c+sel,c-sel:c+sel) = tmp;
+%   MR{i} = tmp2;
+% end
+% bkgrnd = zeros(151,151,151);
+% bkgrnd = MR{1}+MR{2}+MR{3};
+
+sprintf('Loading a volume with a number N = %d of compartments ... ', numel(svol))
+bkgrnd=loadvar('~/fieldtrip-dev/test/test_bug937.mat','bkgrnd');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % start the different methods 
