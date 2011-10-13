@@ -1,4 +1,4 @@
-function [data, pca, stdpre, stdpst] = ft_denoise_pca(cfg, varargin)
+function varargout = ft_denoise_pca(cfg, varargin)
 
 % DENOISE_PCA performs a pca on specified reference channels and subtracts
 % the projection of the data of interest onto this orthogonal basis from 
@@ -18,8 +18,12 @@ function [data, pca, stdpre, stdpst] = ft_denoise_pca(cfg, varargin)
 %     fraction cfg.truncate of the largest singular value.
 %     (default = 'no');
 
+% Undocumented cfg-option: cfg.pca the output structure of an earlier call
+% to the function. Can be used regress out the reference channels from
+% another data set.
+%
 % Copyright (c) 2008-2009, Jan-Mathijs Schoffelen, CCNi Glasgow
-% Copyright (c) 2010, Jan-Mathijs Schoffelen, DCCN Nijmegen
+% Copyright (c) 2010-2011, Jan-Mathijs Schoffelen, DCCN Nijmegen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -47,15 +51,13 @@ ftFuncClock = clock();
 ftFuncMem   = memtic();
 
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
 
-if ~isfield(cfg, 'truncate'),    cfg.truncate   = 'no';     end;
-if ~isfield(cfg, 'channel'),     cfg.channel    = 'MEG';    end;
-if ~isfield(cfg, 'refchannel'),  cfg.refchannel = 'MEGREF'; end;
-if ~isfield(cfg, 'trials'),      cfg.trials     = 'all';    end;
-if ~isfield(cfg, 'zscore'),      cfg.zscore     = 'no';     end;
-if ~isfield(cfg, 'demean'),      cfg.demean     = 'yes';    end;
-if ~isfield(cfg, 'pertrial'),    cfg.pertrial   = 'no';     end
+cfg.truncate   = ft_getopt(cfg, 'truncate',   'no');
+cfg.channel    = ft_getopt(cfg, 'channel',    'MEG');
+cfg.refchannel = ft_getopt(cfg, 'refchannel', 'MEGREF');
+cfg.trials     = ft_getopt(cfg, 'trials',     'all');
+cfg.zscore     = ft_getopt(cfg, 'zscore',     'no');
+cfg.pertrial   = ft_getopt(cfg, 'pertrial',   'no');
 
 if strcmp(cfg.pertrial, 'yes'),
   tmpcfg          = cfg;
@@ -71,29 +73,26 @@ end
 
 computeweights = ~isfield(cfg, 'pca');
 
-%overrule insensible user specifications
-if ~strcmp(cfg.demean, 'yes'),
-  cfg.demean = 'yes';
-end
-
 if length(varargin)==1,
+  % channel data and reference channel data are in 1 data structure
   data    = varargin{1};
   megchan = ft_channelselection(cfg.channel, data.label);
   refchan = ft_channelselection(cfg.refchannel, data.label);
    
-  %split data into data and refdata
+  % split data into data and refdata
   tmpcfg  = [];
   tmpcfg.channel = refchan;
   refdata = ft_preprocessing(tmpcfg, data);
   tmpcfg.channel = megchan;
   data    = ft_preprocessing(tmpcfg, data);
 else
+  % channel data and reference channel data are in 2 data structures
   data    = varargin{1};
   refdata = varargin{2};
   megchan = ft_channelselection(cfg.channel, data.label);
   refchan = ft_channelselection(cfg.refchannel, refdata.label);
    
-  %split data into data and refdata
+  % split data into data and refdata
   tmpcfg  = [];
   tmpcfg.channel = refchan;
   refdata = ft_preprocessing(tmpcfg, refdata);
@@ -116,9 +115,84 @@ refindx = match_str(refdata.label, refchan);
 megchan = ft_channelselection(cfg.channel, data.label);
 megindx = match_str(data.label, megchan);
 if ~computeweights
-  %check whether the weight table contains the specified references
-  %ensure the ordering of the meg-data to be consistent with the weights
-  %ensure the ordering of the ref-data to be consistent with the weights
+
+else
+  % do nothing
+end
+nref = length(refindx);
+ntrl = length(data.trial);
+
+if ischar(cfg.truncate) && strcmp(cfg.truncate, 'no'),
+  cfg.truncate = length(refindx);
+elseif ischar(cfg.truncate) || (cfg.truncate>1 && cfg.truncate/round(cfg.truncate)~=1) || ...
+       cfg.truncate>length(refindx),
+  error('cfg.truncate should be either ''no'', an integer number <= the number of references, or a number between 0 and 1');
+  %FIXME the default truncation applied by 4D is 1x10^-8
+end
+
+% compute and remove mean from data
+fprintf('removing the mean from the channel data and reference channel data\n');
+m             = cellmean(data.trial,    2);
+data.trial    = cellvecadd(data.trial, -m);
+m             = cellmean(refdata.trial,    2);
+refdata.trial = cellvecadd(refdata.trial, -m);
+
+% compute std of data before the regression
+stdpre = cellstd(data.trial, 2);
+
+if computeweights,
+  
+  % zscore
+  if strcmp(cfg.zscore, 'yes'),
+    fprintf('zscoring the reference channel data\n');
+    [refdata.trial, sdref] = cellzscore(refdata.trial, 2, 0); %forced demeaned already
+  else
+    sdref = ones(nref,1);
+  end
+  
+  % compute covariance of refchannels and do svd
+  fprintf('performing pca on the reference channel data\n');
+  crefdat = cellcov(refdata.trial, [], 2, 0);
+  [u,s,v] = svd(crefdat);
+  
+  % determine the truncation and rotation
+  if cfg.truncate<1
+    % keep all singular vectors with singular values >= cfg.truncate*s(1,1)
+    s1   = s./max(s(:));
+    keep = find(diag(s1)>cfg.truncate);
+  else
+    keep = 1:cfg.truncate;
+  end
+  fprintf('keeping %d out of %d components\n',numel(keep),size(u,2));
+  rotmat = u(:, keep)';
+  
+  % rotate the refdata
+  fprintf('projecting the reference data onto the pca-subspace\n');
+  refdata.trial = cellfun(@mtimes, repmat({rotmat}, 1, ntrl), refdata.trial, 'UniformOutput', 0);
+  
+  % project megdata onto the orthogonal basis
+  fprintf('computing the regression weights\n');
+  nom   = cellcov(data.trial, refdata.trial, 2, 0);
+  denom = cellcov(refdata.trial, [],         2, 0);
+  rw    = (pinv(denom)*nom')';
+  
+  %subtract projected data
+  fprintf('subtracting the reference channel data from the channel data\n');
+  for k = 1:ntrl
+    data.trial{k} = data.trial{k} - rw*refdata.trial{k};
+  end
+  
+  %rotate back and 'unscale'
+  pca.w        = rw*rotmat*diag(1./sdref);
+  pca.label    = data.label;
+  pca.reflabel = refdata.label;
+  pca.rotmat   = rotmat;
+  cfg.pca      = pca;
+else
+  fprintf('applying precomputed weights to the data\n');
+    % check whether the weight table contains the specified references
+  % ensure the ordering of the meg-data to be consistent with the weights
+  % ensure the ordering of the ref-data to be consistent with the weights
   
   [i1,i2] = match_str(refchan, cfg.pca.reflabel);
   [i3,i4] = match_str(megchan, cfg.pca.label);
@@ -132,97 +206,26 @@ if ~computeweights
   cfg.pca.label   = cfg.pca.label(i4);
   cfg.pca.reflabel= cfg.pca.reflabel(i2);
   if isfield(cfg.pca, 'rotmat'),
-    cfg.pca = rmfield(cfg.pca, 'rotmat'); %dont know
-  end
-else
-  %do nothing
-end
-nmeg    = length(megindx);
-nref    = length(refindx);
-
-if ischar(cfg.truncate) && strcmp(cfg.truncate, 'no'),
-  cfg.truncate = length(refindx);
-elseif ischar(cfg.truncate) || (cfg.truncate>1 && cfg.truncate/round(cfg.truncate)~=1) || ...
-       cfg.truncate>length(refindx),
-  error('cfg.truncate should be either ''no'', an integer number <= the number of references, or a number between 0 and 1');
-  %FIXME the default truncation applied by 4D is 1x10^-8
-end
-
-ntrl   = length(data.trial);
-nchan  = length(data.label);
-nsmp   = cellfun('size', data.trial, 2);
-
-%compute and remove mean from data
-if strcmp(cfg.demean, 'yes'),
-  m             = cellmean(data.trial,    2);
-  data.trial    = cellvecadd(data.trial, -m);
-  m             = cellmean(refdata.trial,    2);
-  refdata.trial = cellvecadd(refdata.trial, -m);
-end
-
-%compute std of data before
-stdpre = cellstd(data.trial, 2);
-
-if computeweights,
-  %zscore
-  if strcmp(cfg.zscore, 'yes'),
-    [refdata.trial, sdref] = cellzscore(refdata.trial, 2, 0); %forced demeaned already
-  else
-    sdref = ones(nref,1);
+    cfg.pca = rmfield(cfg.pca, 'rotmat'); % dont know
   end
   
-  %compute covariance of refchannels and do svd
-  crefdat = cellcov(refdata.trial, [], 2, 0);
-  [u,s,v] = svd(crefdat);
-  
-  %determine the truncation and rotation
-  if cfg.truncate<1
-    %keep all singular vectors with singular values >= cfg.truncate*s(1,1)
-    s1   = s./max(s(:));
-    keep = find(diag(s1)>cfg.truncate);
-  else
-    keep = 1:cfg.truncate;
-  end
-  rotmat = u(:, keep)';
-  
-  %rotate the refdata
-  refdata.trial = cellfun(@mtimes, repmat({rotmat}, 1, ntrl), refdata.trial, 'UniformOutput', 0);
-  
-  %project megdata onto the orthogonal basis
-  nom   = cellcov(data.trial, refdata.trial, 2, 0);
-  denom = cellcov(refdata.trial, [],         2, 0);
-  rw    = (pinv(denom)*nom')';
-  
-  %subtract projected data
   for k = 1:ntrl
-    data.trial{k} = data.trial{k} - rw*refdata.trial{k};
+    data.trial{k} = data.trial{k} - cfg.pca.w*refdata.trial{k};
   end
-  
-  %rotate back and 'unscale'
-  pca.w  = rw*rotmat*diag(1./sdref);
-  pca.label    = data.label;
-  pca.reflabel = refdata.label;
-  pca.rotmat   = rotmat;
-  cfg.pca      = pca;
-else
-  fprintf('applying precomputed weights to the data\n');
   pca = cfg.pca;
-  for k = 1:ntrl
-    data.trial{k} = data.trial{k} - pca.w*refdata.trial{k};
-  end
+  
 end
 
-%compute std of data after
+% compute std of data after
 stdpst = cellstd(data.trial, 2);
 
-%demean
-if strcmp(cfg.demean, 'yes'),
-  m          = cellmean(data.trial, 2);
-  data.trial = cellvecadd(data.trial, -m);
-end
+% demean FIXME is this needed
+m          = cellmean(data.trial, 2);
+data.trial = cellvecadd(data.trial, -m);
 
-%apply weights to the gradiometer-array
+% apply weights to the gradiometer-array
 if isfield(data, 'grad')
+  fprintf('applying the weights to the gradiometer balancing matrix\n');
   montage     = [];
   labelnew    = pca.label;
   nlabelnew   = length(labelnew);
@@ -247,14 +250,15 @@ if isfield(data, 'grad')
 
   % order the fields
   fnames = fieldnames(data.grad.balance);
+  tmp    = false(1,numel(fnames));
   for k = 1:numel(fnames)
     tmp(k) = isstruct(data.grad.balance.(fnames{k}));
   end
-  [srt, ix] = sort(tmp,'descend');
+  [~, ix] = sort(tmp,'descend');
   data.grad.balance = orderfields(data.grad.balance, fnames(ix));
 
 else
-  warning('weights have been applied to the data only, not to the sensors');
+  warning('fieldtrip:ft_denoise_pca:WeightsNotAppliedToSensors', 'weights have been applied to the data only, not to the sensors');
 end
 
 % get the output cfg
@@ -277,8 +281,20 @@ fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, 
 % remember the configuration details of the input data
 cfg.previous = [];
 for i=1:numel(varargin)
-  try, cfg.previous{i} = varargin{i}.cfg; end
+  if isfield(varargin{i}, 'cfg'), cfg.previous{i} = varargin{i}.cfg; end
 end
+
+% put the data back in the output
+data.cfg = cfg;
+
+if nargout>=1, varargout(1) = {data}; end
+if nargout>=2, varargout(2) = {pca};  end
+if nargout>=3, varargout(3) = {stdpre}; end
+if nargout>=4, varargout(4) = {stdpst}; end
+
+%%%%%%%%%%%%%%%%%
+% SUBFUNCTIONS
+%%%%%%%%%%%%%%%%%
 
 %-----cellcov
 function [c] = cellcov(x, y, dim, flag)
@@ -422,7 +438,7 @@ function [y] = cellvecadd(x, v)
 % check once and for all to save time
 persistent bsxfun_exists;
 if isempty(bsxfun_exists); 
-    bsxfun_exists=(exist('bsxfun')==5); 
+    bsxfun_exists=exist('bsxfun','builtin'); 
     if ~bsxfun_exists; 
         error('bsxfun not found.');
     end
@@ -437,25 +453,7 @@ if ~iscell(v),
   v = repmat({v}, nx);
 end
 
-sx1 = cellfun('size', x, 1);
-sx2 = cellfun('size', x, 2);
-sv1 = cellfun('size', v, 1);
-sv2 = cellfun('size', v, 2);
-if all(sx1==sv1) && all(sv2==1),    
-  dim = mat2cell([ones(length(sx2),1) sx2(:)]', repmat(2,nx(1),1), repmat(1,nx(2),1)); 
-elseif all(sx2==sv2) && all(sv1==1),
-  dim = mat2cell([sx1(:) ones(length(sx1),1)]', repmat(2,nx(1),1), repmat(1,nx(2),1));
-elseif all(sv1==1) && all(sv2==1),
-  dim = mat2cell([sx1(:) sx2(:)]'', nx(1), nx(2));
-else   error('inconsistent input');
-end  
-
 y  = cellfun(@bsxfun, repmat({@plus}, nx), x, v, 'UniformOutput', 0);
-%y = cellfun(@vplus, x, v, dim, 'UniformOutput', 0);
-
-function y = vplus(x, v, dim)
-
-y = x + repmat(v, dim);
 
 %-----cellvecmult
 function [y] = cellvecmult(x, v)
@@ -467,7 +465,7 @@ function [y] = cellvecmult(x, v)
 % check once and for all to save time
 persistent bsxfun_exists;
 if isempty(bsxfun_exists); 
-    bsxfun_exists=(exist('bsxfun')==5); 
+    bsxfun_exists=exist('bsxfun','builtin'); 
     if ~bsxfun_exists; 
         error('bsxfun not found.');
     end
