@@ -531,7 +531,7 @@ svol(3).bnd.tri = tri;
 % bkgrnd = zeros(151,151,151);
 % bkgrnd = MR{1}+MR{2}+MR{3};
 
-sprintf('Loading a volume with a number N = %d of compartments ... ', numel(svol))
+fprintf('Loading a volume with a number N = %d of compartments ... ', numel(svol))
 bkgrnd=loadvar('~/fieldtrip-dev/test/test_bug937.mat','bkgrnd');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
