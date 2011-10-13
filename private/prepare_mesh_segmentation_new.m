@@ -21,9 +21,9 @@ function bnd = prepare_mesh_segmentation(cfg,mri)
 % 
 % See also PREPARE_MESH_MANUAL,PREPARE_MESH_HEADSHAPE
 
-% Copyrights (C) 2009, Robert Oostenveld
+% Copyrights (C) 2009, Robert Oostenveld, 2011, Cristiano Micheli
 %
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
+% $Log$
 
 % process the inputs
 tissue      = ft_getopt(cfg,'tissue');
@@ -72,7 +72,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function bnd = dotriangulate(seg, nvert, str)
-% n is just a placeholder for messages
+% str is just a placeholder for messages
 dim = size(seg);
 [mrix, mriy, mriz] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
 
