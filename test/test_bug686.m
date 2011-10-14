@@ -1,7 +1,9 @@
 function test_bug686
 
 % TEST test_bug686
-% TEST ft_compute_leadfield ft_prepare_vol_sens
+% TEST 
+
+% $Id$
 
 % this is the output of icosahedron162, including it like this
 % makes the test script independent of that function
@@ -533,13 +535,17 @@ cfg = [];
 
 % FIXME this uses an undocumented option of ft_prepare_headmodel, which is due to change in the future
 cfg.geom.pnt = pnt;
-cfg.conductivity = 1;
+cfg.conductivity = 3;
 
 cfg.method = 'singlesphere';
 eegvol_singlesphere = ft_prepare_headmodel(cfg);
 
 cfg.method = 'concentricspheres';
 eegvol_concentricspheres = ft_prepare_headmodel(cfg);
+% HACK otherwise it will call eeg_leadfield1 instead of eeg_leadfield4
+eegvol_concentricspheres.r = repmat(eegvol_concentricspheres.r, 1, 4);
+eegvol_concentricspheres.c = repmat(eegvol_concentricspheres.c, 1, 4);
+
 
 bnd.pnt = pnt;
 bnd.tri = tri;
@@ -646,11 +652,12 @@ pos = {
   [0 0 70]
   };
 
+%%
 eeg_leadfield = {};
 for i=1:length(eegvol)
   for j=1:length(units)
     cfg = [];
-    cfg.vol  = eval(sprintf('%s_%s', eegvol{j}, units{j}));
+    cfg.vol  = eval(sprintf('%s_%s', eegvol{i}, units{j}));
     cfg.elec = eval(sprintf('elec_%s', units{j}));
     cfg.grid.pos = pos{j};
     grid = ft_prepare_leadfield(cfg);
@@ -658,11 +665,12 @@ for i=1:length(eegvol)
   end
 end
 
+%%
 meg_leadfield = {};
 for i=1:length(megvol)
   for j=1:length(units)
     cfg      = [];
-    cfg.vol  = eval(sprintf('%s_%s', megvol{j}, units{j}));
+    cfg.vol  = eval(sprintf('%s_%s', megvol{i}, units{j}));
     cfg.grad = eval(sprintf('grad_%s', units{j}));
     cfg.grid.pos = pos{j};
     grid = ft_prepare_leadfield(cfg);
@@ -670,8 +678,17 @@ for i=1:length(megvol)
   end
 end
 
-% In the table with scaling factors the columns correspond to m, cm, mm, 
+%% In the table with scaling factors the columns correspond to m, cm, mm, 
 % the rows correspond to the different volume conduction models
+
+eeg_table = cellfun(@norm, eeg_leadfield);
+meg_table = cellfun(@norm, meg_leadfield);
+
+log10(eeg_table ./ eeg_table(1,1))
+log10(meg_table ./ meg_table(1,1))
+
+return
+% FIXME the rest is not used
 % 
 % Loop over all the methods and express the median ratio of first/second and
 % second/third units leadfields, for all components
