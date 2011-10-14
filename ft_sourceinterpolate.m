@@ -192,6 +192,11 @@ if dosmudge && is2Dana && is2Dfun
   if ~isfield(anatomical, 'orig')
     error('this is not yet implemented');
   end
+  
+  % select the parameters that should be interpolated
+  cfg.parameter = parameterselection(cfg.parameter, functional);
+  cfg.parameter = setdiff(cfg.parameter, 'inside'); % inside is handled separately
+  
   interpmat = interp_ungridded(anatomical.pnt, anatomical.orig.pnt, 'projmethod', 'smudge', 'triout', anatomical.orig.tri);
   
   interp     = [];
@@ -219,6 +224,10 @@ elseif ~is2Dana && is2Dfun
   anatomical = ft_checkdata(anatomical, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
   functional = ft_convert_units(functional, anatomical.unit);
   
+  % select the parameters that should be interpolated
+  cfg.parameter = parameterselection(cfg.parameter, functional);
+  cfg.parameter = setdiff(cfg.parameter, 'inside'); % inside is handled separately
+  
   % get voxel indices and use interp_ungridded
   dim       = anatomical.dim;
   [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
@@ -243,6 +252,10 @@ elseif is2Dana && ~is2Dfun
   anatomical = ft_convert_units(anatomical);
   functional = ft_checkdata(functional, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
   functional = ft_convert_units(functional, anatomical.unit);
+  
+  % select the parameters that should be interpolated
+  cfg.parameter = parameterselection(cfg.parameter, functional);
+  cfg.parameter = setdiff(cfg.parameter, 'inside'); % inside is handled separately
   
   % get voxel indices and use interp_ungridded
   dim       = functional.dim;
