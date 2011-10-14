@@ -113,7 +113,7 @@ cfg = ft_checkconfig(cfg, 'deprecated', {'sourceunits', 'mriunits'});
 
 % set the defaults
 if ~isfield(cfg, 'parameter'),    cfg.parameter    = 'all';     end
-if ~isfield(cfg, 'interpmethod'), cfg.interpmethod = 'linear';  end
+if ~isfield(cfg, 'interpmethod'), cfg.interpmethod = 'nearest';  end
 if ~isfield(cfg, 'sphereradius'), cfg.sphereradius = [];        end
 if ~isfield(cfg, 'downsample');   cfg.downsample   = 1;         end
 if ~isfield(cfg, 'voxelcoord'),   cfg.voxelcoord   = 'yes';     end
