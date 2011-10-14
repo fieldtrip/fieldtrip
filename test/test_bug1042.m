@@ -1,4 +1,4 @@
-% function test_bug1042
+function test_bug1042
 
 % TEST test_bug1042 testbug686
 % TEST 
@@ -698,6 +698,8 @@ end
 eeg_table = cellfun(@norm, eeg_leadfield);
 meg_table = cellfun(@norm, meg_leadfield);
 
-log10(eeg_table ./ eeg_table(1,1))
-log10(meg_table ./ meg_table(1,1))
+format long
+(eeg_table ./ eeg_table(1,1))
+(meg_table ./ meg_table(1,1))
+format short
 

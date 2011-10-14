@@ -500,3 +500,13 @@ if ~isempty(weight)
     lf(:,3*(i-1)+3) = lf(:,3*(i-3)+1) * weight(i); % the leadfield for the z-direction
   end
 end
+
+% add a comment about the output units (head model geometrical points and conductivity)
+if isfield(vol,'unit')
+  gunit = vol.unit;
+else
+  gunit = 'unknown';
+end
+cunit = sprintf('S/%s',gunit);
+str = sprintf('The input units are %s for points and %s for conductivity',gunit,cunit);
+warning_once(str)
