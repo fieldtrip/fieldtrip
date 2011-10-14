@@ -51,10 +51,12 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 %            containing the description of a cortical sheet.
 % and cfg is a structure with any of the following fields
 %   cfg.parameter     = string, default is 'all'
+%   cfg.interpmethod  = 'linear', 'cubic', 'nearest' or 'spline' when
+%                          interpolating two 3D volumes onto each other
 %   cfg.interpmethod  = 'nearest', 'sphere_avg' or 'smudge' when
 %                          interpolating a point cloud onto a 3D volume, a
 %                          3D volume onto a point cloud, or a point cloud
-%                          with another point cloud (default 'nearest')
+%                          with another point cloud
 %   cfg.downsample    = integer number (default = 1, i.e. no downsampling)
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
@@ -111,7 +113,7 @@ cfg = ft_checkconfig(cfg, 'deprecated', {'sourceunits', 'mriunits'});
 
 % set the defaults
 if ~isfield(cfg, 'parameter'),    cfg.parameter    = 'all';     end
-if ~isfield(cfg, 'interpmethod'), cfg.interpmethod = 'nearest';  end
+if ~isfield(cfg, 'interpmethod'), cfg.interpmethod = 'linear';  end
 if ~isfield(cfg, 'sphereradius'), cfg.sphereradius = [];        end
 if ~isfield(cfg, 'downsample');   cfg.downsample   = 1;         end
 if ~isfield(cfg, 'voxelcoord'),   cfg.voxelcoord   = 'yes';     end
