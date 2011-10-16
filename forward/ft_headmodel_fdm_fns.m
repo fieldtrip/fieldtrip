@@ -54,6 +54,8 @@ end
 
 % create the files to be written
 try
+    tmpfolder = pwd;
+    
     cd(tempdir)
     [~,tname] = fileparts(tempname);
     segfile   = [tname];     
@@ -96,7 +98,7 @@ try
     efid = fopen(exefile, 'w');
     if ~ispc
       fprintf(efid,'#!/usr/bin/env bash\n');
-      fprintf(efid,['elecsfwd -img ' segfile ' -electrodes ./' elecfile ' -data ./', ...
+      fprintf(efid,['elecsfwd1 -img ' segfile ' -electrodes ./' elecfile ' -data ./', ...
                    datafile ' -contable ./' confile ' -TOL ' num2str(tolerance) ' \n']);%2>&1 > /dev/null
     end
     fclose(efid);
@@ -131,7 +133,8 @@ if ~isempty(deepelec)
 end
 
 function cleaner(segfile,confile,elecfile,exefile,datafile)
-delete(segfile);
+delete([segfile '.hdr']);
+delete([segfile '.img']);
 delete(confile);
 delete(elecfile);
 delete(exefile);

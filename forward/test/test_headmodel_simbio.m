@@ -1,4 +1,4 @@
-function test_headmodel_simbio
+% function test_headmodel_simbio
 
 % TEST test_headmodel_simbio
 % TEST ft_headmodel_fem_simbio ft_prepare_vol_sens ft_compute_leadfield ft_headmodel_concentricspheres
@@ -27,25 +27,27 @@ svol(3).r = 60;
 svol(3).bnd.pnt = svol(3).r*pnt;
 svol(3).bnd.tri = tri;
 
-% generate a volume of 3 concentric spheres (works if number of voxels is odd)
-res = 1; % in mm
-for i=3:-1:1
-  tmp2 = zeros(151,151,151);
-  xgrid = -svol(i).r:res:svol(i).r;
-  ygrid = xgrid;
-  zgrid = xgrid;
-  [X, Y, Z]  = ndgrid(xgrid, ygrid, zgrid);
-  pos = [X(:) Y(:) Z(:)];
-  [inside] = bounding_mesh(pos, svol(i).bnd.pnt, svol(i).bnd.tri);
-  l = length(xgrid)
-  c = 76; sel = (l-1)./2; % in voxel
-  tmp = reshape(inside,[l l l]); 
-  tmp2(c-sel:c+sel,c-sel:c+sel,c-sel:c+sel) = tmp;
-  MR{i} = tmp2;
-end
-bkgrnd = zeros(151,151,151);
-bkgrnd = MR{1}+MR{2}+MR{3};
-% save('~crimic/test/SimBio/spheres','bkgrnd')
+% % generate a volume of 3 concentric spheres (works if number of voxels is odd)
+% res = 1; % in mm
+% for i=3:-1:1
+%   tmp2 = zeros(151,151,151);
+%   xgrid = -svol(i).r:res:svol(i).r;
+%   ygrid = xgrid;
+%   zgrid = xgrid;
+%   [X, Y, Z]  = ndgrid(xgrid, ygrid, zgrid);
+%   pos = [X(:) Y(:) Z(:)];
+%   [inside] = bounding_mesh(pos, svol(i).bnd.pnt, svol(i).bnd.tri);
+%   l = length(xgrid)
+%   c = 76; sel = (l-1)./2; % in voxel
+%   tmp = reshape(inside,[l l l]); 
+%   tmp2(c-sel:c+sel,c-sel:c+sel,c-sel:c+sel) = tmp;
+%   MR{i} = tmp2;
+% end
+% bkgrnd = zeros(151,151,151);
+% bkgrnd = MR{1}+MR{2}+MR{3};
+% % save('~crimic/test/SimBio/spheres','bkgrnd')
+fprintf('Loading a volume with a number N = %d of compartments ... ', numel(svol))
+bkgrnd=loadvar('~crimic/fieldtrip-dev/forward/test/spheres.mat','bkgrnd');
 
 
 % generate volume's external surface (mm)
