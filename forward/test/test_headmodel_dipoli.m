@@ -1,4 +1,4 @@
-function test_headmodel_dipoli
+%function test_headmodel_dipoli
 
 % TEST test_headmodel_dipoli
 % TEST ft_headmodel_dipoli ft_prepare_vol_sens ft_compute_leadfield
@@ -15,7 +15,7 @@ geom.bnd(2).tri = tri;
 geom.bnd(3).pnt = pnt * 80;
 geom.bnd(3).tri = tri;
 
-vol = ft_headmodel_dipoli(geom, 'conductivity', [1 1/20 1]);
+vol = ft_headmodel_bem_dipoli(geom, 'conductivity', [1 1/20 1]);
 
 % create a set of electrodes
 sel = find(pnt(:,3)>0);
@@ -35,9 +35,9 @@ if any(mean(lf)./mean(abs(lf)) > 100*eps)
 end
 
 figure;
-subplot(2,2,1); ft_plot_topo3d(sens.pnt, lf(:,1))
-subplot(2,2,2); ft_plot_topo3d(sens.pnt, lf(:,2))
-subplot(2,2,3); ft_plot_topo3d(sens.pnt, lf(:,3))
+subplot(2,2,1); ft_plot_topo3d(sens.chanpos, lf(:,1))
+subplot(2,2,2); ft_plot_topo3d(sens.chanpos, lf(:,2))
+subplot(2,2,3); ft_plot_topo3d(sens.chanpos, lf(:,3))
 
 vol2 = [];
 vol2.o = [0 0 0];
@@ -54,9 +54,9 @@ if any(mean(lf2)./mean(abs(lf2)) > 100*eps)
 end
 
 figure;
-subplot(2,2,1); ft_plot_topo3d(sens.pnt, lf2(:,1))
-subplot(2,2,2); ft_plot_topo3d(sens.pnt, lf2(:,2))
-subplot(2,2,3); ft_plot_topo3d(sens.pnt, lf2(:,3))
+subplot(2,2,1); ft_plot_topo3d(sens.chanpos, lf2(:,1))
+subplot(2,2,2); ft_plot_topo3d(sens.chanpos, lf2(:,2))
+subplot(2,2,3); ft_plot_topo3d(sens.chanpos, lf2(:,3))
 
 figure;
 subplot(2,2,1); plot(lf2(:,1), lf(:,1), '.')
@@ -73,7 +73,7 @@ geom = [];
 geom.bnd(1).pnt = pnt * 100;
 geom.bnd(1).tri = tri;
 
-vol = ft_headmodel_dipoli(geom, 'conductivity', [1/80]);
+vol = ft_headmodel_bem_dipoli(geom, 'conductivity', [1/80]);
 
 % project the electrodes on the volume conduction model
 [vol, sens] = ft_prepare_vol_sens(vol, sens);
@@ -86,9 +86,9 @@ if any(mean(lf)./mean(abs(lf)) > 100*eps)
 end
 
 figure;
-subplot(2,2,1); ft_plot_topo3d(sens.pnt, lf(:,1))
-subplot(2,2,2); ft_plot_topo3d(sens.pnt, lf(:,2))
-subplot(2,2,3); ft_plot_topo3d(sens.pnt, lf(:,3))
+subplot(2,2,1); ft_plot_topo3d(sens.chanpos, lf(:,1))
+subplot(2,2,2); ft_plot_topo3d(sens.chanpos, lf(:,2))
+subplot(2,2,3); ft_plot_topo3d(sens.chanpos, lf(:,3))
 
 vol2 = [];
 vol2.o = [0 0 0];
@@ -105,9 +105,9 @@ if any(mean(lf2)./mean(abs(lf2)) > 100*eps)
 end
 
 figure;
-subplot(2,2,1); ft_plot_topo3d(sens.pnt, lf2(:,1))
-subplot(2,2,2); ft_plot_topo3d(sens.pnt, lf2(:,2))
-subplot(2,2,3); ft_plot_topo3d(sens.pnt, lf2(:,3))
+subplot(2,2,1); ft_plot_topo3d(sens.chanpos, lf2(:,1))
+subplot(2,2,2); ft_plot_topo3d(sens.chanpos, lf2(:,2))
+subplot(2,2,3); ft_plot_topo3d(sens.chanpos, lf2(:,3))
 
 figure;
 subplot(2,2,1); plot(lf2(:,1), lf(:,1), '.')
