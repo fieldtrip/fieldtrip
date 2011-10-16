@@ -535,7 +535,7 @@ cfg = [];
 
 % FIXME this uses an undocumented option of ft_prepare_headmodel, which is due to change in the future
 cfg.geom.pnt = pnt;
-cfg.conductivity = 3;
+cfg.conductivity = 1;
 
 cfg.method = 'singlesphere';
 eegvol_singlesphere = ft_prepare_headmodel(cfg);
