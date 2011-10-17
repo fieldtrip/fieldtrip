@@ -8,7 +8,7 @@ function test_bug62
 % if cfg.nonlinear = 'yes';
  
 % reproduce bug
-mrifile = '/home/common/meg_mri/schoffelen_jm/schoffelen_jm.mri';
+mrifile = '/home/common/matlab/fieldtrip/data/Subject01.mri';
 mri     = ft_read_mri(mrifile);
 
 cfg           = [];
