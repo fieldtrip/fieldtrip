@@ -62,10 +62,8 @@ function [vol, sens] = ft_prepare_vol_sens(vol, sens, varargin)
 channel = ft_getopt(varargin, 'channel', sens.label);   % cell-array with channel labels, default is all
 order   = ft_getopt(varargin, 'order', 10);             % order of expansion for Nolte method; 10 should be enough for real applications; in simulations it makes sense to go higher
 
-% ensure that the sensor description is up-to-date
-if isfield(sens,'pnt')
-  sens = fixsens(sens);
-end
+% ensure that the sensor description is up-to-date (Aug 2011)
+sens = fixsens(sens);
 
 % determine whether the input contains EEG or MEG sensors
 iseeg = ft_senstype(sens, 'eeg');

@@ -38,10 +38,8 @@ function hs = ft_plot_sens(sens, varargin)
 
 ws = warning('on', 'MATLAB:divideByZero');
 
-% ensure up-to-date description of sensors (Aug 2011)
-if isfield(sens,'pnt')
-  sens = fixsens(sens);
-end
+% ensure that the sensor description is up-to-date (Aug 2011)
+sens = fixsens(sens);
 
 % get the optional input arguments
 style = ft_getopt(varargin, 'style',  'k.');
