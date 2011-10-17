@@ -1,3 +1,4 @@
+%% TODO: Need to remove this routine.
 function fns_region_write(rgnfile,rgn)
 % 
 % This routine write the region information to the HDF5 file

@@ -1,24 +1,24 @@
-function fns_elec_write(pnt,vsize,dimpos,elecfile)
-% 
+function fns_elec_write(pnt, vsize, dimpos, elecfile)
+%
 % This function write the electrodes locations on disk and other
 % information
-% The rgn structure contains the following fields:
-%   locations is the location of the electrodes
-%   gridlocs is the location of the electrodes again
-%   voxel_sizes is the dimension of a voxel in the cartesian coordinates in mm [3X1]
-%   nodes_sizes is the dimension of the dipoles grid [NX NY NZ]
-%   status is the electrodes status
-%   values is spare
-%   info is spare
+%   1. pnt is the location of the electrodes [NX3]
+%   3. voxel_sizes is the dimension of a voxel in the cartesian coordinates in mm [3X1]
+%   4. nodes_sizes is the dimension of the dipoles grid [NX NY NZ]
 
 % $Copyright (C) 2010 by Hung Dang$
 
-% initialize a region structure rgn
-rgn = struct('locations',pnt, ...
-             'gridlocs',pnt, ...
-             'voxel_sizes',vsize, ... 
-             'node_sizes',dimpos, ...
-             'status',ones(size(pnt,1),1), ...
-             'values',[],'info',[]);
+hdf5write(elecfile, '/electrodes/locations', pnt);
 
-fns_region_write(elecfile,rgn);
+hdf5write(elecfile, '/electrodes/gridlocs', int32(pnt), ...
+          'WriteMode', 'append');       % Assume the electrodes
+                                        % locations are mm and the
+                                        % voxel sizes is 1mm x 1mm
+                                        % x 1mm.
+
+hdf5write(elecfile, '/electrodes/voxel_sizes', vsize, ...
+          'WriteMode','append');
+
+hdf5write(elecfile, '/electrodes/node_sizes', int32(dimpos), ...
+          'WriteMode', 'append');
+
