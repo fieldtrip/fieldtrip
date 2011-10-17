@@ -175,10 +175,48 @@ elseif isfield(sens, 'tra')
   else
     sens.tra = montage.tra * sens.tra;
   end
+
+  % The montage operates on the coil weights in sens.tra, but the output
+  % channels can be different. If possible, we want to keep the original
+  % channel specific information.
+  [sel1, sel2] = match_str(montage.labelnew, sens.label);
+  keepchans = size(sel1,1)==numel(montage.labelnew);
+
+  if isfield(sens, 'chanpos')
+    if keepchans
+      sens.chanpos = sens.chanpos(sel2,:);
+    else
+      sens = rmfield(sens, 'chanpos');
+    end
+  end
+
+  if isfield(sens, 'chanori')
+    if keepchans
+      sens.chanori = sens.chanori(sel2,:);
+    else
+      sens = rmfield(sens, 'chanori');
+    end
+  end
+
+  if isfield(sens, 'chantype')
+    if keepchans
+      sens.chantype = sens.chantype(sel2,:);
+    else
+      sens = rmfield(sens, 'chantype');
+    end
+  end
+
+  if isfield(sens, 'chanunit')
+    if keepchans
+      sens.chanunit = sens.chanunit(sel2,:);
+    else
+      sens = rmfield(sens, 'chanunit');
+    end
+  end
+
   sens.label = montage.labelnew;
 
-  % keep track of the order of the balancing and which one is the current
-  % one
+  % keep track of the order of the balancing and which one is the current one
   if strcmp(inverse, 'yes')
     if isfield(sens, 'balance')% && isfield(sens.balance, 'previous')
       if isfield(sens.balance, 'previous') && numel(sens.balance.previous)>=1
@@ -219,7 +257,7 @@ elseif isfield(sens, 'tra')
         bname = [bname, num2str(length(sel)+1)];
       end
     end
-    
+
     if isfield(sens, 'balance') && isfield(sens.balance, 'current')
       if ~isfield(sens.balance, 'previous')
         sens.balance.previous = {};
