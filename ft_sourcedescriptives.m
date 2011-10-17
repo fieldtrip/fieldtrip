@@ -94,7 +94,6 @@ if ~isfield(cfg, 'keepcsd'),          cfg.keepcsd          = 'no';          end
 if ~isfield(cfg, 'fixedori'),         cfg.fixedori = 'over_trials';         end
 if ~isfield(cfg, 'inputfile'),        cfg.inputfile        = [];            end
 if ~isfield(cfg, 'outputfile'),       cfg.outputfile       = [];            end
-source.method = ft_getopt(source,'method',[]);
 
 % only works for minimumnormestimate
 if ~isfield(cfg, 'demean'),         cfg.demean         = 'yes';    end
@@ -110,12 +109,15 @@ if ~isempty(cfg.inputfile)
   if hasdata
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
-    data = loadvar(cfg.inputfile, 'source');
+    source = loadvar(cfg.inputfile, 'source');
   end
 end
 
 % check if the input data is valid for this function
 source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
+
+% get desired method from source structure
+source.method = ft_getopt(source,'method',[]);
 
 % this is required for backward compatibility with the old sourceanalysis
 if isfield(source, 'method') && strcmp(source.method, 'randomized')
