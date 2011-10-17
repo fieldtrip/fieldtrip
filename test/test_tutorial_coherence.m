@@ -40,6 +40,7 @@ cfg = ft_rejectartifact(cfg);
 cfg.demean                    = 'yes';
 cfg.dftfilter                 = 'yes';
 cfg.channel                   = {'MEG'};
+cfg.continuous                = 'yes';
 meg = ft_preprocessing(cfg);
 
 % preprocess the EMG data
