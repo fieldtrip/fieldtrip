@@ -68,17 +68,19 @@ function [grandavg] = ft_sourcegrandaverage(cfg, varargin);
 % $Id$
 
 if 1,
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % original implementation
-
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
   ft_defaults
-
+  
   % record start time and total processing time
   ftFuncTimer = tic();
   ftFuncClock = clock();
   ftFuncMem   = memtic();
-
+  
   cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-
+  
   % set the defaults
   if ~isfield(cfg, 'parameter'),      cfg.parameter = 'pow';     end
   if ~isfield(cfg, 'keepindividual'), cfg.keepindividual = 'no'; end
@@ -89,11 +91,11 @@ if 1,
   if ~isfield(cfg, 'c2'),             cfg.c2 = [];               end
   if ~isfield(cfg, 'inputfile'),      cfg.inputfile = [];        end
   if ~isfield(cfg, 'outputfile'),     cfg.outputfile = [];       end
-
+  
   if strcmp(cfg.concatenate, 'yes') && strcmp(cfg.keepindividual, 'yes'),
-    error('you can either specify cfg.keepindividual or cfg.concatenate to be yes');
+    error('you can specify either cfg.keepindividual or cfg.concatenate to be yes, but not both');
   end
-
+  
   hasdata = nargin>2;
   if ~isempty(cfg.inputfile) % the input data should be read from file
     if hasdata
@@ -104,17 +106,17 @@ if 1,
       end
     end
   end
-
+  
   % check if the input data is valid for this function
   for i=1:length(varargin)
-    varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'source', 'volume'}, 'feedback', 'no');
+    varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'source', 'feedback', 'no');
   end
-
+  
   Nsubject = length(varargin);
   Nvoxel   = size(varargin{1}.pos,1);
   dat      = zeros(Nvoxel, Nsubject);
   inside   = zeros(Nvoxel, Nsubject);
-
+  
   if isfield(varargin{1}, 'pos')
     % check that the source locations of each input source reconstruction are the same
     for i=2:Nsubject
@@ -124,7 +126,7 @@ if 1,
     end
     grandavg.pos = varargin{1}.pos;
   end
-
+  
   if isfield(varargin{1}, 'dim')
     % check that the dimensions of each input volume is the same
     for i=2:Nsubject
@@ -134,7 +136,7 @@ if 1,
     end
     grandavg.dim = varargin{1}.dim;
   end
-
+  
   if isfield(varargin{1}, 'xgrid') && isfield(varargin{1}, 'ygrid') && isfield(varargin{1}, 'zgrid')
     % check that the grid locations of each input volume are the same
     for i=2:Nsubject
@@ -150,7 +152,7 @@ if 1,
     grandavg.ygrid = varargin{1}.ygrid;
     grandavg.zgrid = varargin{1}.zgrid;
   end
-
+  
   if isfield(varargin{1}, 'transform')
     % check that the homogenous transformation matrix of each input volume is the same
     for i=2:Nsubject
@@ -160,7 +162,7 @@ if 1,
     end
     grandavg.transform = varargin{1}.transform;
   end
-
+  
   % get the source parameter from each input source reconstruction
   %  get the inside parameter from each input source reconstruction
   for i=1:Nsubject
@@ -176,12 +178,12 @@ if 1,
   end
   % ensure that voxels that are not in the scanned brain region are excluded from the averaging
   dat(~inside) = nan;
-
+  
   if strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 'yes')
     if strcmp(cfg.keepindividual, 'yes')
       error('you cannot keep individual data in combination with randomization or permutation');
     end
-  
+    
     % construct a design vector that contains the condition number 1 or 2
     design = zeros(1,Nsubject);
     design(cfg.c1) = 1;
@@ -191,7 +193,7 @@ if 1,
     elseif length(design)~=Nsubject
       error('not enough input source structures given cfg.c1 and cfg.c2');
     end
-  
+    
     % create a matrix with all randomized assignments to the two conditions
     if strcmp(cfg.randomization, 'yes')
       res = zeros(cfg.numrandomization, Nsubject);
@@ -203,7 +205,7 @@ if 1,
       sel2 = find(design==2);
       if length(sel1)~=length(sel2)
         error('permutation requires that there is an equal number of replications in each conditions')
-      end 
+      end
       res = zeros(cfg.numpermutation, Nsubject);
       for i=1:cfg.numpermutation
         flip = randn(1,length(sel1))>0;
@@ -213,7 +215,7 @@ if 1,
         res(i,sel2(find(flip))) = 1;
       end
     end % randomization or permutation
-  
+    
     % randomize the input source parameter between the two conditions
     clear trialA
     clear trialB
@@ -229,13 +231,13 @@ if 1,
     selB = find(design==2);
     avgA = setsubfield([], cfg.parameter, nanmean(dat(:,selA),2));
     avgB = setsubfield([], cfg.parameter, nanmean(dat(:,selB),2));
-  
+    
     % construct a source structure that can be fed into SOURCESTATISTICS_RANDOMIZATION or SOURCESTATISTICS_RANDCLUSTER
     grandavg.trialA  = trialA;
     grandavg.trialB  = trialB;
     grandavg.avgA    = avgA;
     grandavg.avgB    = avgB;
-  
+    
   else
     if strcmp(cfg.concatenate, 'no'),
       % compute a plain average and variance over all input source structures
@@ -247,7 +249,7 @@ if 1,
       grandavg.dimord = 'voxel_freq';
       grandavg.dim    = [grandavg.dim size(dat,2)];
     end
-  
+    
     if strcmp(cfg.keepindividual, 'yes')
       clear trial
       for i=1:Nsubject
@@ -256,7 +258,7 @@ if 1,
       grandavg.trial = trial;
     end
   end
-
+  
   % determine which sources were inside or outside the brain in all subjects
   allinside  = find(all( inside,2));
   alloutside = find(all(~inside,2));
@@ -273,14 +275,14 @@ if 1,
     grandavg.inside  = find(inside(:));
     grandavg.outside = setdiff([1:prod(size(dat))]', grandavg.inside);
   end
-
+  
   % accessing this field here is needed for the configuration tracking
   % by accessing it once, it will not be removed from the output cfg
   cfg.outputfile;
-
+  
   % get the output cfg
   cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
+  
   % add version information to the configuration
   cfg.version.name = mfilename('fullpath');
   cfg.version.id = '$Id$';
@@ -294,31 +296,33 @@ if 1,
   cfg.callinfo.calltime = ftFuncClock;
   cfg.callinfo.user = getusername();
   fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
+  
   % remember the configuration details of the input data
   cfg.previous = [];
   for i=1:Nsubject
     try, cfg.previous{i} = varargin{i}.cfg; end
   end
-
+  
   % remember the exact configuration details in the output
   grandavg.cfg = cfg;
-
+  
   % the output data should be saved to a MATLAB file
   if ~isempty(cfg.outputfile)
     savevar(cfg.outputfile, 'source', grandavg); % use the variable name "data" in the output file
   end
-
+  
 else
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % new implementation (with restricted functionality)
-
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
   ft_defaults
-
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
+  
+  % record start time and total processing time
+  ftFuncTimer = tic();
+  ftFuncClock = clock();
+  ftFuncMem   = memtic();
+  
   cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
   cfg = ft_checkconfig(cfg, 'deprecated', {'concatenate', 'randomization', 'permutation', 'c1', 'c2'});
   
@@ -327,7 +331,7 @@ ftFuncMem   = memtic();
   if ~isfield(cfg, 'keepindividual'), cfg.keepindividual = 'no'; end
   if ~isfield(cfg, 'inputfile'),      cfg.inputfile = [];        end
   if ~isfield(cfg, 'outputfile'),     cfg.outputfile = [];       end
-
+  
   hasdata = nargin>2;
   if ~isempty(cfg.inputfile) % the input data should be read from file
     if hasdata
@@ -338,17 +342,17 @@ ftFuncMem   = memtic();
       end
     end
   end
-
+  
   % check if the input data is valid for this function
   for i=1:length(varargin)
     varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'source'}, 'feedback', 'no', ...
-                                         'sourcerepresentation', 'new');
+      'sourcerepresentation', 'new');
     %FIXME also allow volume structures to be used
   end
-
+  
   Nsubject = length(varargin);
-
-  % check that these fields are identical for each input source    
+  
+  % check that these fields are identical for each input source
   checkfields = {'pos' 'dim' 'xgrid' 'ygrid' 'zgrid' 'transform'};
   for k = 1:numel(checkfields)
     tmpstr = checkfields{k};
@@ -363,17 +367,17 @@ ftFuncMem   = memtic();
       grandavg.(tmpstr) = varargin{1}.(tmpstr);
     end
   end
-
+  
   if strcmp(cfg.keepindividual, 'yes')
     grandavg = ft_selectdata(varargin{:}, 'param', cfg.parameter);
   else
-    grandavg = ft_selectdata(varargin{:}, 'param', cfg.parameter, 'avgoverrpt', 'yes');  
+    grandavg = ft_selectdata(varargin{:}, 'param', cfg.parameter, 'avgoverrpt', 'yes');
   end
- 
+  
   cfg.outputfile;
   % get the output cfg
   cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
+  
   % add version information to the configuration
   try
     % get the full name of the function
@@ -391,21 +395,20 @@ ftFuncMem   = memtic();
   cfg.callinfo.calltime = ftFuncClock;
   cfg.callinfo.user = getusername();
   fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
+  
   % remember the configuration details of the input data
   cfg.previous = [];
   for i=1:Nsubject
     try
       cfg.previous{i} = varargin{i}.cfg;
-    catch
     end
   end
   % remember the exact configuration details in the output
   grandavg.cfg = cfg;
-
+  
   % the output data should be saved to a MATLAB file
   if ~isempty(cfg.outputfile)
-    savevar(cfg.outputfile, 'source', grandavg); % use the variable name "data" in the output file
+    savevar(cfg.outputfile, 'source', grandavg); % use the variable name "source" in the output file
   end
-
+  
 end
