@@ -27,20 +27,20 @@ cfg.samperframe  = 30;
 cfg.framespersec = 7;
 cfg.movierpt     = 3;
 cfg.layout       = 'CTF151.lay';
-ft_movieplotER_new(cfg, timelockFIC);
+ft_movieplotER(cfg, timelockFIC);
 
 % interactive timelock movie
 figure
 cfg = [];
 cfg.interactive = 'yes';
 cfg.layout      = 'CTF151.lay';
-ft_movieplotER_new(cfg, timelockFIC);
+ft_movieplotER(cfg, timelockFIC);
 
 % interactive TFR movie
 figure
 cfg = [];
 cfg.layout = 'CTF151.lay';
-ft_movieplotTFR_new(cfg, freqFIC);
+ft_movieplotTFR(cfg, freqFIC);
 
 % non interactive TFR movie along frequencies
 figure
@@ -49,7 +49,7 @@ cfg.interactive = 'no';
 cfg.movietime   = 1;
 cfg.movierpt    = 3;
 cfg.layout      = 'CTF151.lay';
-ft_movieplotTFR_new(cfg, freqFIC);
+ft_movieplotTFR(cfg, freqFIC);
 
 % non interactive TFR movie along frequencies
 figure
@@ -58,5 +58,5 @@ cfg.interactive = 'no';
 cfg.moviefreq   = 2;
 cfg.movierpt    = 3;
 cfg.layout = 'CTF151.lay';
-ft_movieplotTFR_new(cfg, freqFIC);
+ft_movieplotTFR(cfg, freqFIC);
 
