@@ -6,14 +6,15 @@ function [grad] = bti2grad(hdr, balanceflag)
 % read using the READ_4D_HDR function.
 %
 % Use as:
-%   [hdr]  = read_4d_hdr(filename);
-%   [grad] = bti2grad(hdr);
+%   [hdr]  = read_4d_hdr(filename)
+%   [grad] = bti2grad(hdr)
 %
-% This function only computes the hardware magnetometer
-% definition for the 4D system. This function is based on ctf2grad and
-% Gavin Paterson's code, which was adapted from Eugene Kronberg's code
+% This function only computes the hardware magnetometer definition
+% for the 4D system. This function is based on ctf2grad and Gavin
+% Paterson's code, which was adapted from Eugene Kronberg's code
 %
-% See also FIF2GRAD, CTF2GRAD
+% See also CTF2GRAD, FIF2GRAD, MNE2GRAD, ITAB2GRAD, YOKOGAWA2GRAD,
+% FT_READ_SENS, FT_READ_HEADER
 
 % Copyright (C) 2008, Jan-Mathijs Schoffelen 
 %

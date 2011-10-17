@@ -1,13 +1,14 @@
-function grad = fif2grad(filename);
+function grad = fif2grad(filename)
 
 % FIF2GRAD constructs a gradiometer definition from a Neuromag *.fif file
 % The resulting gradiometer definition can be used by Fieldtrip for forward
 % and inverse computations.
 %
 % Use as
-%   grad = fif2grad(filename);
+%   grad = fif2grad(filename)
 %
-% See also READ_HEADER, CTF2GRAD, BTI2GRAD
+% See also CTF2GRAD, BTI2GRAD, MNE2GRAD, ITAB2GRAD, YOKOGAWA2GRAD,
+% FT_READ_SENS, FT_READ_HEADER
 
 % Copyright (C) 2004, Joachim Gross
 %

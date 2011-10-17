@@ -69,7 +69,7 @@ for i=1:length(type)
 end
 
 if ft_senstype(input, 'neuromag')
-  % channames-KI is the channel kind, 1=meg, 202=eog, 2=eeg, 3=trigger (I am nut sure, but have inferred this from a single test file)
+  % channames-KI is the channel kind, 1=meg, 202=eog, 2=eeg, 3=trigger (I am not sure, but have inferred this from a single test file)
   % chaninfo-TY is the Coil type (0=magnetometer, 1=planar gradiometer)
   if isfield(hdr, 'orig') && isfield(hdr.orig, 'channames')
     for sel=find(hdr.orig.channames.KI(:)==202)'

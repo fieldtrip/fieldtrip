@@ -222,7 +222,7 @@ switch fileformat
     error('unknown fileformat for electrodes or gradiometers');
 end
 
-% ensure the description to be in the new convention
+% ensure that the sensor description is up-to-date
 sens = fixsens(sens);
 
 if ft_senstype(sens, 'eeg')

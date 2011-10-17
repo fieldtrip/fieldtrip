@@ -4,7 +4,8 @@ function grad = yokogawa2grad(hdr)
 % compromise a gradiometer system into a structure that can be used
 % by FieldTrip.
 %
-% See also FT_READ_HEADER, CTF2GRAD, BTI2GRAD, FIF2GRAD
+% See also CTF2GRAD, BTI2GRAD, FIF2GRAD, MNE2GRAD, ITAB2GRAD,
+% FT_READ_SENS, FT_READ_HEADER
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 %
