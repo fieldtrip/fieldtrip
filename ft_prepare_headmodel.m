@@ -91,8 +91,8 @@ cfg = ft_checkconfig(cfg, 'deprecated', 'geom');
 geometry = [];
 if nargin>1 && ft_datatype(mri, 'volume') && ~strcmp(cfg.method,'fns')
   fprintf('computing the geometrical description from the segmented MRI\n');
-  mri = geometry;
-  clear geometry;
+%   mri = geometry;
+%   clear geometry;
 
   % defaults
   cfg.smooth      = ft_getopt(cfg, 'smooth',      5);
@@ -180,7 +180,15 @@ switch cfg.method
     
   case 'singlesphere'
     cfg.conductivity   = ft_getopt(cfg, 'conductivity',   []);
+    if ~isempty(geometry)
     geometry = geometry.pnt;
+    elseif ~isempty(cfg.hdmfile)
+      geometry = ft_read_headshape(cfg.hdmfile);
+      geometry = geometry.pnt;
+    else
+      error('no input available')
+    end
+    
     vol = ft_headmodel_singlesphere(geometry,'conductivity',cfg.conductivity);
     
   case {'simbio' 'fns'}
