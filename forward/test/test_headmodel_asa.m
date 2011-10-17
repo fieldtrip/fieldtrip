@@ -12,7 +12,7 @@ function test_headmodel_asa
 hdmfile = 'volume/standard.vol';
 elcfile = 'elec/standard_1020.elc';
 
-vol = ft_headmodel_asa(hdmfile);
+vol = ft_headmodel_bem_asa(hdmfile);
 figure
 ft_plot_vol(vol, 'facecolor', 'none')
 

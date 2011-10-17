@@ -1,4 +1,4 @@
-% function test_headmodel_singlesphere
+function test_headmodel_singlesphere
 
 % TEST test_headmodel_singlesphere
 % TEST ft_prepare_vol_sens ft_compute_leadfield ft_prepare_headmodel ft_headmodel_singlesphere
