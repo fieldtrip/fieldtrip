@@ -109,6 +109,8 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'yes', 'max'});
 cfg = ft_checkconfig(cfg, 'required',    {'statistic'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'ztransform', 'removemarginalmeans', 'randomfactor'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'voxelthreshold', 'voxelstatistic'});
+cfg = ft_checkconfig(cfg, 'forbidden',   {'voxelthreshold', 'voxelstatistic'});
+
 
 % set the defaults for the main function
 if ~isfield(cfg, 'alpha'),               cfg.alpha    = 0.05;            end
@@ -123,6 +125,11 @@ if ~isfield(cfg, 'wvar'),                cfg.wvar     = [];              end
 if ~isfield(cfg, 'correcttail'),         cfg.correcttail = 'no';         end % for the number of tails in a two-sided test
 if ~isfield(cfg, 'randomseed'),          cfg.randomseed = 'yes';         end
 if ~isfield(cfg, 'precondition'),        cfg.precondition = [];          end
+
+% explicit check for option 'yes' in cfg.correctail.
+if strcmp(cfg.correcttail,'yes')
+  error('cfg.correcttail = ''yes'' is not allowed, use either ''prob'', ''alpha'' or ''no''')
+end
 
 if strcmp(cfg.correctm, 'cluster')
   % set the defaults for clustering
