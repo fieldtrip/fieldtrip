@@ -1,4 +1,4 @@
-function test_bug686
+% function test_bug686
 
 % TEST test_bug686
 % TEST 
@@ -560,11 +560,21 @@ cfg.conductivity = [1 1 1];
 cfg.method = 'bem_cp';
 eegvol_bem_cp = ft_prepare_headmodel(cfg);
 
-cfg.method = 'bem_dipoli';
-eegvol_bem_dipoli = ft_prepare_headmodel(cfg);
+% some of the fwd solutions require the external toolbox, not always
+% downloaded
+try
+  cfg.method = 'bem_dipoli';
+  eegvol_bem_dipoli = ft_prepare_headmodel(cfg);
+catch
+  eegvol_bem_dipoli = [];
+end
 
-cfg.method = 'bem_openmeeg';
-eegvol_bem_openmeeg = ft_prepare_headmodel(cfg);
+try 
+  cfg.method = 'bem_openmeeg';
+  eegvol_bem_openmeeg = ft_prepare_headmodel(cfg);
+catch
+  eegvol_bem_openmeeg = [];
+end
 
 % construct them for the different geometrical units
 eegvol_singlesphere_m  = ft_convert_units(eegvol_singlesphere, 'm');
@@ -579,14 +589,27 @@ eegvol_bem_cp_m  = ft_convert_units(eegvol_bem_cp, 'm');
 eegvol_bem_cp_cm = ft_convert_units(eegvol_bem_cp, 'cm');
 eegvol_bem_cp_mm = ft_convert_units(eegvol_bem_cp, 'mm');
 
-eegvol_bem_dipoli_m  = ft_convert_units(eegvol_bem_dipoli, 'm');
-eegvol_bem_dipoli_cm = ft_convert_units(eegvol_bem_dipoli, 'cm');
-eegvol_bem_dipoli_mm = ft_convert_units(eegvol_bem_dipoli, 'mm');
+try
+  eegvol_bem_dipoli_m  = ft_convert_units(eegvol_bem_dipoli, 'm');
+  eegvol_bem_dipoli_cm = ft_convert_units(eegvol_bem_dipoli, 'cm');
+  eegvol_bem_dipoli_mm = ft_convert_units(eegvol_bem_dipoli, 'mm');
+catch
+  fprintf('Please install Dipoli')
+  eegvol_bem_dipoli_m  = [];
+  eegvol_bem_dipoli_cm = [];
+  eegvol_bem_dipoli_mm = [];  
+end
 
-eegvol_bem_openmeeg_m  = ft_convert_units(eegvol_bem_openmeeg, 'm');
-eegvol_bem_openmeeg_cm = ft_convert_units(eegvol_bem_openmeeg, 'cm');
-eegvol_bem_openmeeg_mm = ft_convert_units(eegvol_bem_openmeeg, 'mm');
-
+try 
+  eegvol_bem_openmeeg_m  = ft_convert_units(eegvol_bem_openmeeg, 'm');
+  eegvol_bem_openmeeg_cm = ft_convert_units(eegvol_bem_openmeeg, 'cm');
+  eegvol_bem_openmeeg_mm = ft_convert_units(eegvol_bem_openmeeg, 'mm');  
+catch
+  fprintf('Please install OpenMEEG')
+  eegvol_bem_openmeeg_m  = [];
+  eegvol_bem_openmeeg_cm = [];
+  eegvol_bem_openmeeg_mm = [];
+end
 
 %% For MEG the following methods are available
 

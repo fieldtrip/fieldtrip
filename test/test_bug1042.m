@@ -565,12 +565,20 @@ for k = 1:numel(conductivity)
   cfg.method = 'bem_cp';
   eegvol_bem_cp = ft_prepare_headmodel(cfg);
 
-  cfg.method = 'bem_dipoli';
-  eegvol_bem_dipoli = ft_prepare_headmodel(cfg);
-
-  cfg.method = 'bem_openmeeg';
-  eegvol_bem_openmeeg = ft_prepare_headmodel(cfg);
-
+  try
+    cfg.method = 'bem_dipoli';
+    eegvol_bem_dipoli = ft_prepare_headmodel(cfg);
+  catch
+    eegvol_bem_dipoli = [];
+  end
+  
+  try 
+    cfg.method = 'bem_openmeeg';
+    eegvol_bem_openmeeg = ft_prepare_headmodel(cfg);
+  catch
+    eegvol_bem_openmeeg = [];
+  end
+  
   % construct them for the different geometrical units
   eegvol_singlesphere_m(k)  = ft_convert_units(eegvol_singlesphere, 'm');
   eegvol_singlesphere_cm(k) = ft_convert_units(eegvol_singlesphere, 'cm');
@@ -584,13 +592,26 @@ for k = 1:numel(conductivity)
   eegvol_bem_cp_cm(k) = ft_convert_units(eegvol_bem_cp, 'cm');
   eegvol_bem_cp_mm(k) = ft_convert_units(eegvol_bem_cp, 'mm');
 
-  eegvol_bem_dipoli_m(k)  = ft_convert_units(eegvol_bem_dipoli, 'm');
-  eegvol_bem_dipoli_cm(k) = ft_convert_units(eegvol_bem_dipoli, 'cm');
-  eegvol_bem_dipoli_mm(k) = ft_convert_units(eegvol_bem_dipoli, 'mm');
-
-  eegvol_bem_openmeeg_m(k)  = ft_convert_units(eegvol_bem_openmeeg, 'm');
-  eegvol_bem_openmeeg_cm(k) = ft_convert_units(eegvol_bem_openmeeg, 'cm');
-  eegvol_bem_openmeeg_mm(k) = ft_convert_units(eegvol_bem_openmeeg, 'mm');
+  try
+    eegvol_bem_dipoli_m(k)  = ft_convert_units(eegvol_bem_dipoli, 'm');
+    eegvol_bem_dipoli_cm(k) = ft_convert_units(eegvol_bem_dipoli, 'cm');
+    eegvol_bem_dipoli_mm(k) = ft_convert_units(eegvol_bem_dipoli, 'mm');
+  catch
+    eegvol_bem_dipoli_m(k)  = [];
+    eegvol_bem_dipoli_cm(k) = [];
+    eegvol_bem_dipoli_mm(k) = [];
+  end
+  
+  try
+    eegvol_bem_openmeeg_m(k)  = ft_convert_units(eegvol_bem_openmeeg, 'm');
+    eegvol_bem_openmeeg_cm(k) = ft_convert_units(eegvol_bem_openmeeg, 'cm');
+    eegvol_bem_openmeeg_mm(k) = ft_convert_units(eegvol_bem_openmeeg, 'mm');
+  catch
+    eegvol_bem_openmeeg_m(k)  = [];
+    eegvol_bem_openmeeg_cm(k) = [];
+    eegvol_bem_openmeeg_mm(k) = [];
+  end
+  
 end
 
 %% For MEG the following methods are available
