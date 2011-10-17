@@ -19,17 +19,17 @@ cfg.artfctdef.eog.detrend     = 'yes';
 cfg.artfctdef.eog.hilbert     = 'no';
 cfg.artfctdef.eog.rectify     = 'yes';
 cfg.artfctdef.eog.cutoff      = 2.5;
-cfg.artfctdef.eog.feedback    = 'no';
+cfg.artfctdef.eog.interactive = 'no';
 cfg = ft_artifact_eog(cfg);
 
 % detect jump artifacts in the MEG data
-cfg.artfctdef.jump.feedback   = 'no';
-cfg.padding                   = 5;
+cfg.artfctdef.jump.interactive = 'no';
+cfg.padding                    = 5;
 cfg = ft_artifact_jump(cfg);
 
 % detect muscle artifacts in the MEG data
 cfg.artfctdef.muscle.cutoff   = 8;
-cfg.artfctdef.muscle.feedback = 'no';
+cfg.artfctdef.muscle.interactive = 'no';
 cfg = ft_artifact_muscle(cfg);
 
 % reject the epochs that contain artifacts
