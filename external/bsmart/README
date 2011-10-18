@@ -1,0 +1,6 @@
+BSMART is an open-source software package for analyzing brain circuits.
+It is available under the GPL.
+
+When using the toolbox please refer to the paper:
+
+Jie Cui, Lei Xu, Steven L. Bressler, Mingzhou Ding, Hualou Liang, BSMART: a Matlab/C toolbox for analysis of multichannel neural time series, Neural Networks, Special Issue on Neuroinformatics, 21: 1094-1104.2008
