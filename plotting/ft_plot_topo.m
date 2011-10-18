@@ -192,7 +192,7 @@ end
 
 % Plot filled contours
 if strcmp(style,'isofill') && ~isempty(isolines)
-  h = contourf(Xi,Yi,Zi,isolines,'k');
+  [~,h] = contourf(Xi,Yi,Zi,isolines,'k'); 
   set(h, 'tag', tag);
 end
 
