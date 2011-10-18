@@ -36,10 +36,10 @@ function [sens] = fixsens(sens)
 if isfield(sens, 'ori')
   isgrad    = 1;
   doconvert = 1;
-elseif (isfield(sens, 'coilori') && isfield(sens, 'coilpos') && isfield(sens, 'chanpos'))
+elseif (isfield(sens, 'coilori') && isfield(sens, 'coilpos')) % && isfield(sens, 'chanpos'))
   isgrad    = 1;
   doconvert = 0;
-elseif (isfield(sens, 'elecpos') && isfield(sens, 'chanpos'))
+elseif (isfield(sens, 'elecpos')) % && isfield(sens, 'chanpos'))
   isgrad    = 0;
   doconvert = 0;
 else
