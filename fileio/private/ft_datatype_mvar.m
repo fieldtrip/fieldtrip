@@ -88,11 +88,11 @@ switch version
       end
       
       % ensure the new style sensor description
-      mvar.grad = fixsens(mvar.grad);
+      mvar.grad = ft_datatype_sens(mvar.grad);
     end
     
     if isfield(mvar, 'elec')
-      mvar.elec = fixsens(mvar.elec);
+      mvar.elec = ft_datatype_sens(mvar.elec);
     end
   
   case '2008'

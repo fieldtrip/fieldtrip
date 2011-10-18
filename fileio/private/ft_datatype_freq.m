@@ -95,11 +95,11 @@ switch version
       end
       
       % ensure the new style sensor description
-      freq.grad = fixsens(freq.grad);
+      freq.grad = ft_datatype_sens(freq.grad);
     end
     
     if isfield(freq, 'elec')
-      freq.elec = fixsens(freq.elec);
+      freq.elec = ft_datatype_sens(freq.elec);
     end
   
   case '2008'
