@@ -56,6 +56,10 @@ function vol = ft_prepare_headmodel(cfg, mri)
 %     cfg.transform   
 %     cfg.unit      
 % 
+% 'infinite_slab'
+%     cfg.samplepoint
+%     cfg.conductivity
+% 
 % FieldTrip implements a variety of forward solutions, some of
 % them using external toolboxes or executables. Each of the forward
 % solutions requires a set of configuration options which are listed below.
@@ -69,6 +73,7 @@ function vol = ft_prepare_headmodel(cfg, mri)
 %   concentricspheres
 %   halfspace
 %   infinite
+%   infinite_slab
 %
 % For MEG the following methods are available
 %   singlesphere
@@ -209,7 +214,16 @@ switch cfg.method
     vol = feval(funname,'tissue',cfg.tissue,'tissueval',cfg.tissueval, ...
                                'tissuecond',cfg.tissuecond,'sens',cfg.elec, ...
                                'transform',cfg.transform,'unit',cfg.unit); 
- 
+  case 'slab_monopole'
+    if numel(geometry)==2
+      geom1 = geometry(1);
+      geom2 = geometry(2);
+      P = ft_getopt(cfg, 'samplepoint');
+      vol = ft_headmodel_slab(geom1,geom2,P,'sourcemodel','monopole');
+    else
+      error('geometry should be described by exactly 2 sets of points')
+    end
+    
   otherwise
     error('unsupported method "%s"', cfg.method);
 end

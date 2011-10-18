@@ -1,21 +1,21 @@
-function vol = ft_headmodel_strip(geom1, geom2, Pc, varargin)
+function vol = ft_headmodel_slab(geom1, geom2, Pc, varargin)
 
-% FT_HEADMODEL_STRIP creates an EEG volume conduction model that
-% is described with an infinite conductive strip. You can think
+% FT_HEADMODEL_SLAB creates an EEG volume conduction model that
+% is described with an infinite conductive slab. You can think
 % of this as two parallel planes containing a mass of conductive
 % material (e.g. water) and externally to them a non-conductive material
 % (e.g. air).
 %
 % Use as
-%   vol = ft_headmodel_strip(geom1, geom2, Pc, varargin)
+%   vol = ft_headmodel_slab(geom1, geom2, Pc, varargin)
 % where
 %   geom1.pnt = Nx3 vector specifying N points through which the 'upper' plane is fitted 
-%   D         = distance of the parallel planes
-%   Pc        = 1x3 vector specifying the spatial position of a point lying in the conductive strip 
+%   geom2.pnt = Nx3 vector specifying N points through which the 'lower' plane is fitted 
+%   Pc        = 1x3 vector specifying the spatial position of a point lying in the conductive slab 
 %              (this determines the plane's normal's direction)
 % 
 % Optional arguments should be specified in key-value pairs and can include
-%   'sourcemodel'  = 'monopole' or 'dipole' (default = 'monopole')
+%   'sourcemodel'  = 'monopole' 
 %   'conductivity' = number ,  conductivity value of the conductive halfspace (default = 1)
 % 
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
