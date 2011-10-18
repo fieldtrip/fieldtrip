@@ -1,7 +1,7 @@
 function test_ft_channelrepair
 
 % TEST test_ft_channelrepair
-% TEST ft_channelrepair fixsens
+% TEST ft_channelrepair ft_datatype_sens fixsens
 
 datainfo = test_datasets;
 

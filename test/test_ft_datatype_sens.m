@@ -1,10 +1,8 @@
-% function test_fixsens
+function test_ft_datatype_sens
 
-% TEST test_fixsens
-% TEST fixsens ft_read_sens ft_read_header ctf2grad bti2grad itab2grad fif2grad yokogawa2grad
+% TEST test_ft_datatype_sens
+% TEST ft_datatype_sens ft_read_sens ft_read_header ctf2grad bti2grad itab2grad fif2grad yokogawa2grad
 
-% the fixsens function is in fieldtrip/private
-cd(fullfile(fileparts(fileparts(mfilename('fullpath'))), 'private'));
 
 path1 = '/home/common/matlab/fieldtrip/data/test/original/meg';
 path2 = '/Users/robert/Manzana/data/dataformat/testdata';
@@ -69,7 +67,7 @@ for i=1:length(filename)
   
   % reconstruct the representation with chanpos and coilpos
   % this should also add the chantype and chanunit fields
-  sens2 = fixsens(sens2);
+  sens2 = ft_datatype_sens(sens2);
   
   disp(dataset);
   disp('');
