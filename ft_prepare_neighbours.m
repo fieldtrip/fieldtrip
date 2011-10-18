@@ -81,14 +81,20 @@ if strcmp(cfg.method, 'template')
     if ~isfield(cfg, 'template')
         if hasdata
             fprintf('Estimating sensor type of data to determine the layout filename\n');
-            senstype = upper(ft_senstype(data));
+            senstype = ft_senstype(data.label);
             fprintf('Data is of sensor type ''%s''\n', senstype);
-            if exist([senstype '.lay'], 'file')
-                cfg.layout = [senstype '.lay'];
+            if ~exist([senstype '_neighb.mat'], 'file')
+                if exist([senstype '.lay'], 'file')
+                    cfg.layout = [senstype '.lay'];
+                else
+                    fprintf('Name of sensor type does not match name of layout- and template-file\n');
+                end
             else
-                fprintf('Name of sensor type does not match name of layout- and template-file\n');
+                cfg.template = [senstype '_neighb.mat'];
             end
         end    
+    end
+    if ~isfield(cfg, 'template')
         if ~isfield(cfg, 'layout')
             error('You need to define a template or layout or give data as an input argument when ft_prepare_neighbours is called with cfg.method=''template''');
         end
