@@ -45,10 +45,10 @@ hdr = ft_read_header(cfg.headerfile);
 % in dewar coords. at present I did not find the nas, lpa, rpa channels,
 % which according to ctf's documentation should contain the positions
 % of these channels directly (HDAC channels). FIXME
-grad_head       = ctf2grad(hdr.orig, 0);
-grad_dewar      = ctf2grad(hdr.orig, 1);
-grad_head       = fixsens(grad_head);  % ensure up-to-date sensor description (Oct 2011)
-grad_dewar      = fixsens(grad_dewar); % ensure up-to-date sensor description (Oct 2011)
+grad_head    = ctf2grad(hdr.orig, 0);
+grad_dewar   = ctf2grad(hdr.orig, 1);
+grad_head    = ft_datatype_sens(grad_head);  % ensure up-to-date sensor description (Oct 2011)
+grad_dewar   = ft_datatype_sens(grad_dewar); % ensure up-to-date sensor description (Oct 2011)
 
 grad         = grad_dewar;        % we want to work with dewar coordinates, ...
 grad.chanpos = grad_head.chanpos; % except the chanpos, which should remain in head coordinates

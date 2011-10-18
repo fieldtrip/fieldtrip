@@ -109,7 +109,10 @@ elseif isfield(cfg, 'layout')
 else
   error('Did not find gradiometer or electrode information.');
 end;
-sens = fixsens(sens); % ensure up-to-date description of sensor-array (Oct 2011)
+
+% FIXME replaced fixsens with this, but should not be needed
+% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1055
+sens = ft_datatype_sens(sens); % ensure up-to-date description of sensor-array (Oct 2011)
 
 % give some graphical feedback
 if all(sens.chanpos(:,3)==0)

@@ -202,7 +202,7 @@ end
 
 % ensure that the units are specified
 elec_original = ft_convert_units(elec_original);
-elec_original = fixsens(elec_original); % ensure up-to-date sensor description (Oct 2011)
+elec_original = ft_datatype_sens(elec_original); % ensure up-to-date sensor description (Oct 2011)
 
 % remember the original electrode locations and labels and do all the work
 % with a temporary copy, this involves channel selection and changing to
@@ -236,8 +236,8 @@ if usetemplate
   
   clear tmp
   for i=1:Ntemplate
+    tmp(i) = ft_datatype_sens(template(i));            % ensure up-to-date sensor description
     tmp(i) = ft_convert_units(template(i), elec.unit); % ensure that the units are consistent with the electrodes
-    tmp(i) = fixsens(template(i)); % ensure up-to-date sensor description
   end
   template = tmp;
 end

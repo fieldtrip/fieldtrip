@@ -108,7 +108,9 @@ if isfield(cfg, 'gradfile')
 else
   grad = cfg.grad;
 end
-grad = fixsens(grad); % ensure up-to-date sensor description (Oct 2011)
+
+% FIXME, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1055
+grad = ft_datatype_sens(grad); % ensure up-to-date sensor description (Oct 2011)
 
 Nshape = size(headshape.pnt,1);
 Nchan  = size(grad.tra, 1);

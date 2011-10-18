@@ -18,11 +18,10 @@ function [freq] = ft_freqcomparison(cfg, varargin)
 %   'absolute')
 %
 % See also FT_FREQBASELINE, FT_FREQANALYSIS, FT_TIMELOCKBASELINE
-%
+
 % Copyright (C) 2010-2011, Arjen Stolk, DCCN, Donders Institute
-% A.Stolk@donders.ru.nl
 % 
-% not yet supported: cohspctrm
+% FIXME add support for cohspctrm
 
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.

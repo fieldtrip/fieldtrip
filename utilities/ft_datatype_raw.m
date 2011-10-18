@@ -92,11 +92,11 @@ switch version
       end
       
       % ensure the new style sensor description
-      data.grad = fixsens(data.grad);
+      data.grad = ft_datatype_sens(data.grad);
     end
     
     if isfield(data, 'elec')
-      data.elec = fixsens(data.elec);
+      data.elec = ft_datatype_sens(data.elec);
     end
     
     if ~isfield(data, 'fsample')

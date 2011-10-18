@@ -223,7 +223,7 @@ switch fileformat
 end
 
 % ensure that the sensor description is up-to-date
-sens = fixsens(sens);
+sens = ft_datatype_sens(sens);
 
 if ft_senstype(sens, 'eeg')
   % only keep positions and labels in case of EEG electrodes

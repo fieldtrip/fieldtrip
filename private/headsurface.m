@@ -47,7 +47,7 @@ if nargin<2
 end
 
 if ~isempty(sens)
-  sens = fixsens(sens);
+  sens = ft_datatype_sens(sens);
 end
 
 if nargin<3

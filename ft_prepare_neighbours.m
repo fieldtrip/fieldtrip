@@ -144,7 +144,9 @@ else
     else
         error('Did not find gradiometer or electrode information or a layout.');
     end;
-    sens = fixsens(sens); 
+
+    % FIXME see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1055
+    sens = ft_datatype_sens(sens); 
     
     switch lower(cfg.method)
         case 'distance'

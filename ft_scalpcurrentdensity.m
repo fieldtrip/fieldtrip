@@ -144,7 +144,8 @@ end
 
 
 % remove all junk fields from the electrode array
-elec = fixsens(elec); % ensure up-to-date sensor description
+% FIXME see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1055
+elec = ft_datatype_sens(elec); % ensure up-to-date sensor description
 tmp  = elec;
 elec = [];
 elec.chanpos = tmp.chanpos;

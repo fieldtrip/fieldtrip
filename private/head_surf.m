@@ -42,7 +42,7 @@ if nargin<3
   flag = 1;
 end
 
-grad = fixsens(grad);
+grad = ft_datatype_sens(grad);
 
 Nchans = size(grad.tra, 1);
 Ncoils = size(grad.tra, 2);

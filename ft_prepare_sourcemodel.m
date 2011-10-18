@@ -222,9 +222,9 @@ else
   sens = [];
 end
 
-% ensure that the sensor description is up-to-date, for backward
-% compatibility Oct 2011
-sens = fixsens(sens);
+% ensure that the sensor description is up-to-date, for backward compatibility Oct 2011
+% FIXME see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1055
+sens = ft_datatype_sens(sens);
 
 % ensure cfg.sourceunits to have a value and/or enforce the units in the sensors
 % to conform to this value

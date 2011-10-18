@@ -351,7 +351,7 @@ switch fileformat
       % sort
       shape = tmp.bnd;
     elseif isfield(tmp, 'elec')
-      tmp.elec        = fixsens(tmp.elec);
+      tmp.elec        = ft_datatype_sens(tmp.elec);
       shape.fid.pnt   = tmp.elec.chanpos;
       shape.fid.label = tmp.elec.label;
     else

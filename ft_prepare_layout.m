@@ -242,14 +242,16 @@ elseif ischar(cfg.elecfile)
 
 elseif ~isempty(cfg.elec) && isstruct(cfg.elec)
   % ensure the sensor description to be according to latest convention
-  [cfg.elec] = fixsens(cfg.elec);
+  % FIXME, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1055
+  [cfg.elec] = ft_datatype_sens(cfg.elec);
   
   fprintf('creating layout from cfg.elec\n');
   lay = sens2lay(cfg.elec, cfg.rotate, cfg.projection, cfg.style);
 
 elseif isfield(data, 'elec') && isstruct(data.elec)
   % ensure the sensor description to be according to latest convention
-  [data.elec] = fixsens(data.elec);
+  % FIXME, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1055
+  [data.elec] = ft_datatype_sens(data.elec);
   
   fprintf('creating layout from data.elec\n');
   lay = sens2lay(data.elec, cfg.rotate, cfg.projection, cfg.style);
@@ -260,14 +262,16 @@ elseif ischar(cfg.gradfile)
 
 elseif ~isempty(cfg.grad) && isstruct(cfg.grad)
   % ensure the sensor description to be according to latest convention
-  [cfg.grad] = fixsens(cfg.grad);
+  % FIXME see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1055
+  [cfg.grad] = ft_datatype_sens(cfg.grad);
   
   fprintf('creating layout from cfg.grad\n');
   lay = sens2lay(cfg.grad, cfg.rotate, cfg.projection, cfg.style);
 
 elseif isfield(data, 'grad') && isstruct(data.grad)
   % ensure the sensor description to be according to latest convention
-  [data.grad] = fixsens(data.grad);
+  % FIXME see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1055
+  [data.grad] = ft_datatype_sens(data.grad);
   
   fprintf('creating layout from data.grad\n');
   lay = sens2lay(data.grad, cfg.rotate, cfg.projection, cfg.style);
@@ -736,8 +740,7 @@ if isempty(rz)
 end
 sens.chanpos = warp_apply(rotate([0 0 rz]), sens.chanpos, 'homogenous');
 
-% use helper function for 3D layout
-%[pnt, label] = channelposition(sens);
+% determine the 3D channel positions
 pnt   = sens.chanpos;
 label = sens.label;
 

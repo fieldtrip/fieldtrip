@@ -87,11 +87,11 @@ switch version
       end
       
       % ensure the new style sensor description
-      timelock.grad = fixsens(timelock.grad);
+      timelock.grad = ft_datatype_sens(timelock.grad);
     end
     
     if isfield(timelock, 'elec')
-      timelock.elec = fixsens(timelock.elec);
+      timelock.elec = ft_datatype_sens(timelock.elec);
     end
 
   case '2003'

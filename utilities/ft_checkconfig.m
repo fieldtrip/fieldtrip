@@ -210,10 +210,13 @@ if ~isempty(forbidden)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% backward compatibility for the changed gradiometer definition
+% backward compatibility for the gradiometer and electrode definition
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isfield(cfg, 'grad')
-  cfg.grad = fixsens(cfg.grad);
+  cfg.grad = ft_datatype_sens(cfg.grad);
+end
+if isfield(cfg, 'elec')
+  cfg.elec = ft_datatype_sens(cfg.elec);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

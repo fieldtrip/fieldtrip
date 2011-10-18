@@ -2,14 +2,15 @@ function [pnt, ori, lab] = channelposition(sens, varargin)
 
 % CHANNELPOSITION
 %
-% Use either as
-%   [pos]           = channelposition(sens, ...)
-%   [pos, lab]      = channelposition(sens, ...)
+% Use as
 %   [pos, ori, lab] = channelposition(sens, ...)
+% where sens is a '2010' or older version electrode or gradiometer
+% array and the optional input arguments should be specified as key
+% value pairs.
 %
-% See also FIXSENS
+% See also FIXSENS, FT_DATATYPE_SENS
 
-% Copyright (C) 2009, Robert Oostenveld & Vladimir Litvak
+% Copyright (C) 2009-2011, Robert Oostenveld & Vladimir Litvak
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -37,25 +38,9 @@ getref = ft_getopt(varargin, 'channel', false);
 % remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
 sens = undobalancing(sens);
 
-if isfield(sens, 'chanpos')
-  % the input is new-style (after Aug 2011)
-  pnt = sens.chanpos;
-  ori = sens.chanori; % this is used for constructing planar gradiometers
-  lab = sens.label;
-  return
-end
-
-if isfield(sens, 'pnt')
-  % the input is old-style (before Aug 2011)
-  if ft_senstype(sens, 'meg')
-    sens.coilpos = sens.pnt;
-    sens.coilori = sens.ori;
-    sens = rmfield(sens, 'pnt');
-    sens = rmfield(sens, 'ori');
-  else
-    sens.coilpos = sens.pnt;
-    sens = rmfield(sens, 'pnt');
-  end
+if ~isfield(sens, 'ori')
+  % treat all sensor arrays similar, i.e. as gradiometer systems
+  sens.ori = nan(size(sens.pnt));
 end
 
 switch ft_senstype(sens)
@@ -72,13 +57,13 @@ switch ft_senstype(sens)
     
     % subsequently remove the unused coils
     used = any(abs(sens.tra)>0.0001, 1);  % allow a little bit of rounding-off error
-    sens.coilpos = sens.coilpos(used,:);
-    sens.coilori = sens.coilori(used,:);
+    sens.pnt = sens.pnt(used,:);
+    sens.ori = sens.ori(used,:);
     sens.tra = sens.tra(:,used);
     
     % compute distances from the center of the helmet
-    center = mean(sens.coilpos(sel,:));
-    dist   = sqrt(sum((sens.coilpos - repmat(center, size(sens.coilpos, 1), 1)).^2, 2));
+    center = mean(sens.pnt(sel,:));
+    dist   = sqrt(sum((sens.pnt - repmat(center, size(sens.pnt, 1), 1)).^2, 2));
     
     % put the corresponding distances instead of non-zero tra entries
     maxval = repmat(max(abs(sens.tra),[],2), [1 size(sens.tra,2)]);
@@ -116,8 +101,8 @@ switch ft_senstype(sens)
     [junk, ind] = min(dist, [], 2);
     
     lab(sel) = sens.label;
-    pnt(sel,:) = sens.coilpos(ind, :);
-    ori(sel,:) = sens.coilori(ind, :);
+    pnt(sel,:) = sens.pnt(ind, :);
+    ori(sel,:) = sens.ori(ind, :);
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % then do the references if needed
@@ -131,8 +116,8 @@ switch ft_senstype(sens)
       
       % subsequently remove the unused coils
       used = any(abs(sens.tra)>0.0001, 1);  % allow a little bit of rounding-off error
-      sens.coilpos = sens.coilpos(used,:);
-      sens.coilori = sens.coilori(used,:);
+      sens.pnt = sens.pnt(used,:);
+      sens.ori = sens.ori(used,:);
       sens.tra = sens.tra(:,used);
       
       [nchan, ncoil] = size(sens.tra);
@@ -141,8 +126,8 @@ switch ft_senstype(sens)
       for i=1:nchan
         weight = abs(sens.tra(i,:));
         weight = weight ./ norm(weight);
-        refpnt(i,:) = weight * sens.coilpos;
-        refori(i,:) = weight * sens.coilori;
+        refpnt(i,:) = weight * sens.pnt;
+        refori(i,:) = weight * sens.ori;
       end
       reflab = sens.label;
       
@@ -170,11 +155,11 @@ switch ft_senstype(sens)
       if length(sel)==2
         ind = [ind; i];
         lab(i,:) = {ch1, ch2};
-        meanpnt1 = mean(sens.coilpos(abs(sens.tra(sel(1),:))>0.5, :), 1);
-        meanpnt2 = mean(sens.coilpos(abs(sens.tra(sel(2),:))>0.5, :), 1);
+        meanpnt1 = mean(sens.pnt(abs(sens.tra(sel(1),:))>0.5, :), 1);
+        meanpnt2 = mean(sens.pnt(abs(sens.tra(sel(2),:))>0.5, :), 1);
         pnt(i,:) = mean([meanpnt1; meanpnt2], 1);
-        meanori1 = mean(sens.coilori(abs(sens.tra(sel(1),:))>0.5, :), 1);
-        meanori2 = mean(sens.coilori(abs(sens.tra(sel(2),:))>0.5, :), 1);
+        meanori1 = mean(sens.ori(abs(sens.tra(sel(1),:))>0.5, :), 1);
+        meanori2 = mean(sens.ori(abs(sens.tra(sel(2),:))>0.5, :), 1);
         ori(i,:) = mean([meanori1; meanori2], 1);
       end
     end
@@ -201,11 +186,11 @@ switch ft_senstype(sens)
       if (length(sel)==2)
         ind = [ind; i];
         lab(i,:) = {ch1, ch2};
-        meanpnt1 = mean(sens.coilpos(abs(sens.tra(sel(1),:))>0.5,:), 1);
-        meanpnt2 = mean(sens.coilpos(abs(sens.tra(sel(2),:))>0.5,:), 1);
+        meanpnt1 = mean(sens.pnt(abs(sens.tra(sel(1),:))>0.5,:), 1);
+        meanpnt2 = mean(sens.pnt(abs(sens.tra(sel(2),:))>0.5,:), 1);
         pnt(i,:) = mean([meanpnt1; meanpnt2], 1);
-        meanori1 = mean(sens.coilori(abs(sens.tra(sel(1),:))>0.5,:), 1);
-        meanori2 = mean(sens.coilori(abs(sens.tra(sel(2),:))>0.5,:), 1);
+        meanori1 = mean(sens.ori(abs(sens.tra(sel(1),:))>0.5,:), 1);
+        meanori2 = mean(sens.ori(abs(sens.tra(sel(2),:))>0.5,:), 1);
         ori(i,:) = mean([meanori1; meanori2], 1);
       end
     end
@@ -237,8 +222,8 @@ switch ft_senstype(sens)
         meanpnt  = [];
         meanori  = [];
         for j = 1:length(sel1)
-          meanpnt  = [meanpnt; mean(sens.coilpos(abs(sens.tra(sel1(j),:))>0.5,:), 1)];
-          meanori  = [meanori; mean(sens.coilori(abs(sens.tra(sel1(j),:))>0.5,:), 1)];
+          meanpnt  = [meanpnt; mean(sens.pnt(abs(sens.tra(sel1(j),:))>0.5,:), 1)];
+          meanori  = [meanori; mean(sens.ori(abs(sens.tra(sel1(j),:))>0.5,:), 1)];
         end
         pnt(i,:) = mean(meanpnt, 1);
         ori(i,:) = mean(meanori, 1);
@@ -249,9 +234,9 @@ switch ft_senstype(sens)
     ori = ori(ind,:);
     
   otherwise
-    % compute the position for each electrode
+    % compute the position for each gradiometer or electrode
     
-    if isfield(sens, 'tra') && isfield(sens, 'ori')
+    if isfield(sens, 'tra')
       % each channel depends on multiple sensors (electrodes or coils)
       % compute a weighted position for the channel
       [nchan, ncoil] = size(sens.tra);
@@ -260,15 +245,16 @@ switch ft_senstype(sens)
       for i=1:nchan
         weight = abs(sens.tra(i,:));
         weight = weight ./ norm(weight);
-        pnt(i,:) = weight * sens.coilpos;
-        ori(i,:) = weight * sens.coilori;
+        pnt(i,:) = weight * sens.pnt;
+        ori(i,:) = weight * sens.ori;
       end
       lab = sens.label;
       
     else
       % there is one sensor per channel, which means that the channel position
       % is identical to the sensor position
-      pnt = sens.coilpos;
+      pnt = sens.pnt;
+      ori = sens.ori;
       lab = sens.label;
     end
     
@@ -276,7 +262,7 @@ end % switch senstype
 
 n   = size(lab,2);
 % this is to fix the planar layouts, which cannot be plotted anyway
-if n>1 && size(lab, 1)>1 %this is to prevent confusion when lab happens to be a row array
+if n>1 && size(lab, 1)>1 % this is to prevent confusion when lab happens to be a row array
   pnt = repmat(pnt, n, 1);
   ori = repmat(ori, n, 1);
 end
@@ -298,3 +284,4 @@ elseif nargout==3
   ori = ori;  % second output argument
   lab = lab;  % third output argument
 end
+

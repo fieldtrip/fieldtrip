@@ -156,7 +156,7 @@ else
   elec.unit   = 'mm';
 end
 elec = ft_convert_units(elec); % ensure that the units are specified
-elec = fixsens(elec); % ensure an up-to-date sensor description (Oct 2011)
+elec = ft_datatype_sens(elec); % ensure an up-to-date sensor description (Oct 2011)
 
 usetemplate  = isfield(cfg, 'template')  && ~isempty(cfg.template);
 useheadshape = isfield(cfg, 'headshape') && ~isempty(cfg.headshape);
@@ -178,7 +178,7 @@ if usetemplate
   clear tmp
   for i=1:Ntemplate
     tmp(i) = ft_convert_units(template(i), elec.unit); % ensure that the units are consistent with the electrodes
-    tmp(i) = fixsens(template(i)); % ensure up-to-date sensor descriptions (Oct 2011)
+    tmp(i) = ft_datatype_sens(template(i)); % ensure up-to-date sensor descriptions (Oct 2011)
   end
   template = tmp;
 end
