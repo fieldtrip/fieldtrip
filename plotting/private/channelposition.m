@@ -53,7 +53,7 @@ if isfield(sens, 'pnt')
     sens = rmfield(sens, 'pnt');
     sens = rmfield(sens, 'ori');
   else
-    sens.elecpos = sens.pnt;
+    sens.coilpos = sens.pnt;
     sens = rmfield(sens, 'pnt');
   end
 end
