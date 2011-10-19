@@ -25,26 +25,61 @@ function [x,mx,sx] = standardise(x,dim,lim)
 
 if nargin == 1, 
   dim = find(size(x)>1,1,'first');
-  lim = [1 size(x,dim)];
-elseif nargin == 2,
-  lim = [1 size(x,dim)];
 end
 
-ndim   = numel(size(x));
-ix     = cell(1,6);
-for k = 1:numel(ix)
-  if k>ndim
-    ix{k} = 1;
-  else
-    ix{k} = 1:size(x,k);
-  end
+if nargin == 3,
+  error('third input argument is not used');
 end
-ix{dim} = lim(1):lim(2);
 
-n      = numel(ix{dim});
-mx     = mean(x(ix{1},ix{2},ix{3},ix{4},ix{5},ix{6}),dim);
-%sx     = std(x,0,dim);
-sx     = std(x(ix{1},ix{2},ix{3},ix{4},ix{5},ix{6}),1,dim);
-repvec = ones(1,ndim);
-repvec(dim) = size(x,dim); 
-x      = (x - repmat(mx,repvec))./repmat(sx,repvec);
+switch dim
+case 1
+  n  = size(x,dim);
+  mx = mean(x,dim);
+  x  = x-mx(ones(1,n),:,:,:,:,:,:,:);
+  sx = sqrt(sum(abs(x).^2,dim)./n);
+  x  = x./sx(ones(1,n),:,:,:,:,:,:,:);
+case 2
+  n  = size(x,dim);
+  mx = mean(x,dim);
+  x  = x-mx(:,ones(1,n),:,:,:,:,:,:);
+  sx = sqrt(sum(abs(x).^2,dim)./n);
+  x  = x./sx(:,ones(1,n),:,:,:,:,:,:);
+case 3
+  n  = size(x,dim);
+  mx = mean(x,dim);
+  x  = x-mx(:,:,ones(1,n),:,:,:,:,:);
+  sx = sqrt(sum(abs(x).^2,dim)./n);
+  x  = x./sx(:,:,ones(1,n),:,:,:,:,:);
+case 4
+  n  = size(x,dim);
+  mx = mean(x,dim);
+  x  = x-mx(:,:,:,ones(1,n),:,:,:,:);
+  sx = sqrt(sum(abs(x).^2,dim)./n);
+  x  = x./sx(:,:,:,ones(1,n),:,:,:,:);
+case 5
+  n  = size(x,dim);
+  mx = mean(x,dim);
+  x  = x-mx(:,:,:,:,ones(1,n),:,:,:);
+  sx = sqrt(sum(abs(x).^2,dim)./n);
+  x  = x./sx(:,:,:,:,ones(1,n),:,:,:);
+case 6
+  n  = size(x,dim);
+  mx = mean(x,dim);
+  x  = x-mx(:,:,:,:,:,ones(1,n),:,:);
+  sx = sqrt(sum(abs(x).^2,dim)./n);
+  x  = x./sx(:,:,:,:,:,ones(1,n),:,:);
+case 7
+  n  = size(x,dim);
+  mx = mean(x,dim);
+  x  = x-mx(:,:,:,:,:,:,ones(1,n),:);
+  sx = sqrt(sum(abs(x).^2,dim)./n);
+  x  = x./sx(:,:,:,:,:,:,ones(1,n),:);
+case 8
+  n  = size(x,dim);
+  mx = mean(x,dim);
+  x  = x-mx(:,:,:,:,:,:,:,ones(1,n));
+  sx = sqrt(sum(abs(x).^2,dim)./n);
+  x  = x./sx(:,:,:,:,:,:,:,ones(1,n));
+otherwise
+  error('dim too large, standardise currently supports dimensionality up to 8');
+end
