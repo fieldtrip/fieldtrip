@@ -7,8 +7,8 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   [freq] = ft_freqanalysis(cfg, data)
 %
 % The input data should be organised in a structure as obtained from
-% the FT_PREPROCESSING function. The configuration depends on the type
-% of computation that you want to perform.
+% the FT_PREPROCESSING or the FT_MVARANALYSIS function. The configuration
+% depends on the type of computation that you want to perform.
 %
 % The configuration should contain:
 %   cfg.method     = different methods of calculating the spectra
@@ -22,6 +22,9 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                       (using Morlet wavelets) based on multiplication in the frequency domain
 %                   'tfr', implements wavelet time frequency transformation
 %                       (using Morlet wavelets) based on convolution in the time domain
+%                   'mvar', does a fourier transform on the coefficients of
+%                       an estimated multivariate autoregressive model,
+%                       obtained with FT_MVARANALYSIS
 %                   OR, if you want to use the old implementation (not from the specest module)
 %                   'mtmfft_old' 
 %                   'mtmconvol_old'
