@@ -186,7 +186,8 @@ elseif isfield(sens, 'tra')
     if keepchans
       sens.chanpos = sens.chanpos(sel2,:);
     else
-      sens = rmfield(sens, 'chanpos');
+      sens.chanpos = nan + zeros(numel(montage.labelnew),3);
+      %sens = rmfield(sens, 'chanpos');
     end
   end
 
@@ -194,7 +195,8 @@ elseif isfield(sens, 'tra')
     if keepchans
       sens.chanori = sens.chanori(sel2,:);
     else
-      sens = rmfield(sens, 'chanori');
+      %sens = rmfield(sens, 'chanori');
+      sens.chanori = nan + zeros(numel(montage.labelnew),3);
     end
   end
 
