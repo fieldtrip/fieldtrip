@@ -1,6 +1,7 @@
 function test_ft_freqanalysis(datainfo, writeflag)
 
-% TEST: test_ft_preprocessing ft_preprocessing test_datasets
+% TEST test_ft_freqanalysis 
+% TEST ft_freqanalysis test_datasets
 
 % the optional writeflag determines whether the output 
 % should be saved to disk
@@ -8,9 +9,11 @@ function test_ft_freqanalysis(datainfo, writeflag)
 if nargin<2
   writeflag = 0;
 end
+
 if nargin<1
   datainfo = test_datasets;
 end
+
 for k = 1:numel(datainfo)
   datanew = freqanalysisMtmfft(datainfo(k), writeflag);
 
