@@ -98,13 +98,13 @@ ftFuncMem   = memtic();
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set defaults
-if ~isfield(cfg, 'inputfile'),      cfg.inputfile  = [];          end
-if ~isfield(cfg, 'outputfile'),     cfg.outputfile = [];          end
+cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
+cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
 cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
 
 if iscell(cfg.neighbours)
-    warning('Neighbourstructure is in old format - converting to structure array');
-    cfg.neighbours = fixneighbours(cfg.neighbours);
+  warning('Neighbourstructure is in old format - converting to structure array');
+  cfg.neighbours = fixneighbours(cfg.neighbours);
 end
 
 % load optional given inputfile as data
@@ -136,15 +136,9 @@ if isfreq,
 end
 
 % set the default configuration
-if ~isfield(cfg, 'channel'),       cfg.channel = 'MEG';             end
-if ~isfield(cfg, 'trials'),        cfg.trials = 'all';              end
-if ~isfield(cfg, 'planarmethod'),  cfg.planarmethod = 'sincos';     end
-if strcmp(cfg.planarmethod, 'sourceproject')
-  if ~isfield(cfg, 'headshape'),     cfg.headshape = [];            end % empty will result in the vol being used
-  if ~isfield(cfg, 'inwardshift'),   cfg.inwardshift = 2.5;         end
-  if ~isfield(cfg, 'pruneratio'),    cfg.pruneratio = 1e-3;         end
-  if ~isfield(cfg, 'spheremesh'),    cfg.spheremesh = 642;          end
-end
+cfg.channel      = ft_getopt(cfg, 'channel', 'MEG');
+cfg.trials       = ft_getopt(cfg, 'trials',  'all');
+cfg.planarmethod = ft_getopt(cfg, 'planarmethod', 'sincos');
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure
@@ -167,6 +161,12 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   % and compute forward again with the axial gradiometer array replaced by
   % a planar one.
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  % method specific configuration options
+  cfg.headshape   = ft_getopt(cfg, 'headshape',   []);
+  cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 2.5);
+  cfg.pruneratio  = ft_getopt(cfg, 'pruneratio',  1e-3);
+  cfg.spheremesh  = ft_getopt(cfg, 'spheremesh',  642);
   
   if isfreq
     error('the method ''sourceproject'' is not supported for frequency data as input');
@@ -224,7 +224,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   planarmontage.tra = transform;
   planarmontage.labelorg = axial.grad.label;
   planarmontage.labelnew = planar.grad.label;
- 
+  
   % apply the linear transformation to the data
   interp  = ft_apply_montage(data, planarmontage, 'keepunused', 'yes');
   % also apply the linear transformation to the gradiometer definition
@@ -234,65 +234,77 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   if isfield(interp.grad, 'type')
     interp.grad = rmfield(interp.grad, 'type');
   end
-
-%   % interpolate the data towards the planar gradiometers
-%   for i=1:Ntrials
-%     fprintf('interpolating trial %d to planar gradiometer\n', i);
-%     interp.trial{i} = transform * data.trial{i}(dataindx,:);
-%   end % for Ntrials
-%   
-%   % all planar gradiometer channels are included in the output
-%   interp.grad  = planar.grad;
-%   interp.label = planar.grad.label;
-%   
-%   % copy the non-gradiometer channels back into the output data
-%   other = setdiff(1:Nchan, dataindx);
-%   for i=other
-%     interp.label{end+1} = data.label{i};
-%     for j=1:Ntrials
-%       interp.trial{j}(end+1,:) = data.trial{j}(i,:);
-%     end
-%   end
-%   
+  
+  %   % interpolate the data towards the planar gradiometers
+  %   for i=1:Ntrials
+  %     fprintf('interpolating trial %d to planar gradiometer\n', i);
+  %     interp.trial{i} = transform * data.trial{i}(dataindx,:);
+  %   end % for Ntrials
+  %
+  %   % all planar gradiometer channels are included in the output
+  %   interp.grad  = planar.grad;
+  %   interp.label = planar.grad.label;
+  %
+  %   % copy the non-gradiometer channels back into the output data
+  %   other = setdiff(1:Nchan, dataindx);
+  %   for i=other
+  %     interp.label{end+1} = data.label{i};
+  %     for j=1:Ntrials
+  %       interp.trial{j}(end+1,:) = data.trial{j}(i,:);
+  %     end
+  %   end
+  %
 else
-    % generically call megplanar_orig megplanar_sincos or megplanar_fitplante
-    fun = ['megplanar_'  cfg.planarmethod];
-    if ~exist(fun, 'file')
-        error('unknown method for computation of planar gradient');
+  % generically call megplanar_orig megplanar_sincos or megplanar_fitplante
+  fun = ['megplanar_'  cfg.planarmethod];
+  if ~exist(fun, 'file')
+    error('unknown method for computation of planar gradient');
+  end
+  
+  sens = ft_convert_units(data.grad);
+  cfg.channel = ft_channelselection(cfg.channel, sens.label);
+  
+  cfg.neighbsel = channelconnectivity(cfg);
+  
+  % determine
+  fprintf('average number of neighbours is %.2f\n', mean(sum(cfg.neighbsel)));
+  
+  Ngrad = length(sens.label);
+  cfg.distance = zeros(Ngrad,Ngrad);
+  
+  for i=1:size(cfg.neighbsel,1)
+    j=find(cfg.neighbsel(i, :));
+    d = sqrt(sum((sens.chanpos(j,:) - repmat(sens.chanpos(i, :), numel(j), 1)).^2, 2));
+    cfg.distance(i,j) = d;
+    cfg.distance(j,i) = d;
+  end
+  
+  fprintf('minimum distance between neighbours is %6.2f %s\n', min(cfg.distance(cfg.distance~=0)), sens.unit);
+  fprintf('maximum distance between gradiometers is %6.2f %s\n', max(cfg.distance(cfg.distance~=0)), sens.unit);
+  
+  planarmontage = eval([fun '(cfg, data.grad)']);
+  
+  % apply the linear transformation to the data
+  interp  = ft_apply_montage(data, planarmontage, 'keepunused', 'yes');
+  
+  % also apply the linear transformation to the gradiometer definition
+  interp.grad = ft_apply_montage(data.grad, planarmontage, 'balancename', 'planar', 'keepunused', 'yes');
+  
+  % ensure that the old sensor type does not stick around, because it is now invalid
+  % the sensor type is added in FT_PREPARE_VOL_SENS but is not used in external fieldtrip code
+  if isfield(interp.grad, 'type')
+    interp.grad = rmfield(interp.grad, 'type');
+  end
+  
+  % add the chanpos info back into the gradiometer description
+  tmplabel = interp.grad.label;
+  for k = 1:numel(tmplabel)
+    if strcmp(tmplabel{k}(end-2:end), '_dV') || strcmp(tmplabel{k}(end-2:end), '_dH')
+      tmplabel{k} = tmplabel{k}(1:end-3);
     end
-    
-    sens = ft_convert_units(data.grad);
-    cfg.channel = ft_channelselection(cfg.channel, sens.label);
-    
-    cfg.neighbsel = channelconnectivity(cfg);
-    
-    % determine
-    fprintf('average number of neighbours is %.2f\n', mean(sum(cfg.neighbsel)));
-    
-    Ngrad = length(sens.label);
-    cfg.distance = zeros(Ngrad,Ngrad);
-    
-    for i=1:size(cfg.neighbsel,1)
-        j=find(cfg.neighbsel(i, :));
-        d = sqrt(sum((sens.chanpos(j,:) - repmat(sens.chanpos(i, :), numel(j), 1)).^2, 2));
-        cfg.distance(i,j) = d;
-        cfg.distance(j,i) = d;
-    end
-    
-    fprintf('minimum distance between neighbours is %6.2f %s\n', min(cfg.distance(cfg.distance~=0)), sens.unit);
-    fprintf('maximum distance between gradiometers is %6.2f %s\n', max(cfg.distance(cfg.distance~=0)), sens.unit);
- 
-    planarmontage = eval([fun '(cfg, data.grad)']);
-    
-    % apply the linear transformation to the data
-    interp  = ft_apply_montage(data, planarmontage, 'keepunused', 'yes');
-    % also apply the linear transformation to the gradiometer definition
-    interp.grad = ft_apply_montage(data.grad, planarmontage, 'balancename', 'planar', 'keepunused', 'yes');
-    % ensure that the old sensor type does not stick around, because it is now invalid
-    % the sensor type is added in FT_PREPARE_VOL_SENS but is not used in external fieldtrip code
-    if isfield(interp.grad, 'type')
-        interp.grad = rmfield(interp.grad, 'type');
-    end
+  end
+  [ix,iy] = match_str(tmplabel, data.grad.label);
+  interp.grad.chanpos(ix,:) = data.grad.chanpos(iy,:);
 end
 
 if istlck
@@ -314,7 +326,7 @@ cfg.version.id   = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.callinfo.matlab = version();
-  
+
 % add information about the function call to the configuration
 cfg.callinfo.proctime = toc(ftFuncTimer);
 cfg.callinfo.procmem  = memtoc(ftFuncMem);
@@ -323,7 +335,7 @@ cfg.callinfo.user = getusername();
 fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
 
 % remember the configuration details of the input data
-try cfg.previous = data.cfg; end
+if isfield(data, 'cfg'), cfg.previous = data.cfg; end
 
 % remember the exact configuration details in the output
 interp.cfg = cfg;

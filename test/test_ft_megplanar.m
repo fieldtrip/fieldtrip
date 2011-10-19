@@ -1,6 +1,6 @@
 %function test_ft_megplanar
 
-% TEST: ft_megplanar test_ft_megplanar ft_neighbourselection
+% TEST: ft_megplanar test_ft_megplanar ft_prepare_neighbours
 
 datainfo = test_datasets;
 sel      = match_str({datainfo.datatype}',{'bti148' 'bti248' 'ctf151' 'ctf275' 'itab153' 'yokogawa160'}');
@@ -20,7 +20,7 @@ for k = 1:numel(datainfo)
   cfg = [];
   cfg.method = 'triangulation';
   cfg.channel = 'MEG';
-  neighbours = ft_neighbourselection(cfg, data);
+  neighbours = ft_prepare_neighbours(cfg, data);
 
   cfg = [];
   cfg.neighbours   = neighbours;
@@ -100,7 +100,7 @@ end
 % % compute neighbours
 % cfg = [];
 % cfg.method =  'distance';
-% cfg.neighbours = ft_neighbourselection(cfg, avgFIC);
+% cfg.neighbours = ft_prepare_neighbours(cfg, avgFIC);
 % 
 % % megplanar
 % cfg.planarmethod = 'sincos';
@@ -162,7 +162,7 @@ end
 % % compute neighbours
 % cfg = [];
 % cfg.method =  'distance';
-% cfg.neighbours = ft_neighbourselection(cfg, data);
+% cfg.neighbours = ft_prepare_neighbours(cfg, data);
 % 
 % % megplanar
 % % cfg.planarmethod = 'orig';
