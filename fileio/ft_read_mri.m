@@ -116,9 +116,10 @@ elseif (strcmp(mriformat, 'analyze_hdr') || strcmp(mriformat, 'analyze_img')) &&
   % the coordinate system comparable to SPM
   warning('flipping 1st dimension (L-R) to obtain volume in neurological convention');
   img = flipdim(img, 1);
-  % FIXME: here I should also implement a homogenous transformation matrix,
-  % using the voxel dimensions that are specified in hdr.dime.pixdim
-
+   
+  transform      = diag(hdr.dime.pixdim(2:4));
+  transform(4,4) = 1;
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif (strcmp(mriformat, 'afni_brik') || strcmp(mriformat, 'afni_head')) && hasafni
   [err, img, hdr, ErrMessage] = BrikLoad(filename);
