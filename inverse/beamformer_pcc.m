@@ -160,23 +160,25 @@ for i=1:size(dip.pos,1)
   % concatenate scandip, refdip and supdip
   lfa = [lf rf sf];
 
-  if fixedori && isempty(refdip) && isempty(supdip) && isempty(refchan) && isempty(supchan) && (size(lf,2)==3)
-    % compute the leadfield for the optimal dipole orientation
-    % subsequently the leadfield for only that dipole orientation will
-    % be used for the final filter computation
-    if isfield(dip, 'filter') && size(dip.filter{i},1)~=1
-      filt = dip.filter{i};
+  if fixedori
+    if isempty(refdip) && isempty(supdip) && isempty(refchan) && isempty(supchan) && (size(lf,2)==3)
+      % compute the leadfield for the optimal dipole orientation
+      % subsequently the leadfield for only that dipole orientation will
+      % be used for the final filter computation
+      if isfield(dip, 'filter') && size(dip.filter{i},1)~=1
+        filt = dip.filter{i};
+      else
+        filt = pinv(lfa' * invCmeg * lfa) * lfa' * invCmeg;
+      end
+      [u, s, v] = svd(real(filt * Cmeg * ctranspose(filt)));
+      maxpowori = u(:,1);
+      eta = s(1,1)./s(2,2);
+      lfa  = lfa * maxpowori;
+      dipout.ori{i} = maxpowori;
+      dipout.eta{i} = eta;
     else
-      filt = pinv(lfa' * invCmeg * lfa) * lfa' * invCmeg;
+      warning_once('Ignoring ''fixedori''. The fixedori option is supported only if there is ONE dipole for location.')
     end
-    [u, s, v] = svd(real(filt * Cmeg * ctranspose(filt)));
-    maxpowori = u(:,1);
-    eta = s(1,1)./s(2,2);
-    lfa  = lfa * maxpowori;
-    dipout.ori{i} = maxpowori;
-    dipout.eta{i} = eta;
-  else
-    warning('Ignoring ''fixedori''. The fixedori option is supported only if there is ONE dipole for location.')
   end
   
   if isfield(dip, 'filter')
