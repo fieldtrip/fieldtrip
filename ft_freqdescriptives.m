@@ -69,7 +69,6 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_preamble defaults
-ft_preamble background freq
 ft_preamble callinfo
 ft_preamble trackconfig
 ft_preamble loadvar freq
@@ -197,6 +196,7 @@ if strcmp(cfg.keeptrials, 'yes') && isfield(freq, 'trialinfo')
   output.trialinfo = freq.trialinfo;
 end
 
+% do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
 ft_postamble previous freq

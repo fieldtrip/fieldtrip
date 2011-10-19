@@ -9,6 +9,9 @@ ft_default = rmfield(ft_default, 'postamble');
 if isfield(cfg, 'outputfile')
   cfg.outputfile;
 end
+if isfield(cfg, 'outputlock')
+  cfg.outputlock;
+end
 
 % get the output cfg
 cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
