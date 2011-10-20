@@ -24,8 +24,8 @@ function ft_clusterplot(cfg, stat)
 % cfg.saveaspng                 = string, path where figure has to be saved to (default = 'no')
 %                                 When multiple figures figure gets extension with fignum
 %
-% It is also possible to specify other cfg options that apply to FT_TOPOPLOTER.
-% You CANNOT specify cfg.xlim, any of the FT_TOPOPLOTER highlight
+% It is also possible to specify other cfg options that apply to FT_TOPOPLOTTFR.
+% You CANNOT specify cfg.xlim, any of the FT_TOPOPLOTTFR highlight
 % options, cfg.comment and cfg.commentpos.
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
@@ -36,7 +36,7 @@ function ft_clusterplot(cfg, stat)
 % corresponding to the input structure.
 %
 % See also:
-%   FT_TOPOPLOTER, FT_SINGLEPLOTER
+%   FT_TOPOPLOTTFR, FT_TOPOPLOTER, FT_SINGLEPLOTER
 
 % Copyright (C) 2007, Ingrid Nieuwenhuis, F.C. Donders Centre
 %
@@ -336,7 +336,7 @@ else
           cfgtopo.comment = strcat('time: ',num2str(stat.time(ind_timewin_min+PlN-1)), ' s');
           cfgtopo.commentpos = 'title';
           subplot(3,5,iT);
-          ft_topoplotER(cfgtopo, stat);
+          ft_topoplotTFR(cfgtopo, stat);
         end
       elseif iPl == Nfig
         for iT = 1:Npl-(15*(Nfig-1))
@@ -346,7 +346,7 @@ else
           cfgtopo.comment = strcat('time: ',num2str(stat.time(ind_timewin_min+PlN-1)), ' s');
           cfgtopo.commentpos = 'title';
           subplot(3,5,iT);
-          ft_topoplotER(cfgtopo, stat);
+          ft_topoplotTFR(cfgtopo, stat);
         end
       end
     else
@@ -355,7 +355,7 @@ else
       cfgtopo.yparam = '';
       cfgtopo.comment = strcat(compos,comneg);
       cfgtopo.commentpos = 'title';
-      ft_topoplotER(cfgtopo, stat);
+      ft_topoplotTFR(cfgtopo, stat);
     end
     % save figure
     if isequal(cfg.saveaspng,'no');

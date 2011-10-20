@@ -320,9 +320,9 @@ if (isfull || haslabelcmb) && isfield(data, cfg.parameter)
       meandir = 1;
 
     elseif strcmp(cfg.matrixside, 'ff-fd')
-      error('cfg.matrixside = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_topoplotER');
+      error('cfg.matrixside = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_multiplotTFR');
     elseif strcmp(cfg.matrixside, 'fd-ff')
-      error('cfg.matrixside = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_topoplotER');
+      error('cfg.matrixside = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_multiplotTFR');
     end %if matrixside
   end %if ~isfull
 end %handle the bivariate data

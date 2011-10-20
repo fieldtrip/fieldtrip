@@ -61,7 +61,7 @@ if strcmp(cfg.parameter, 'avg.icohspctrm') && ~issubfield(data, 'avg.icohspctrm'
 end
 
 if strcmp(data.dimord, 'refchan_chan_freq'),
-  %reshape input-data, such that ft_topoplotER will take it
+  %reshape input-data, such that ft_topoplotTFR will take it
   cnt = 1;
   siz = size(data.prob);
   data.labelcmb = cell(siz(1)*siz(2),2);
@@ -124,7 +124,7 @@ for k=1:length(chNum) - 2
     config.colorbar = 'no';
     config.zlim     = scale;
     config.grid_scale = 30;
-    ft_topoplotER(config, data);
+    ft_topoplotTFR(config, data);
     drawnow;
   end
 end

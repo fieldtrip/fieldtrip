@@ -367,9 +367,9 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.parameter)
         meandir = 1;
         
       elseif strcmp(cfg.matrixside, 'ff-fd')
-        error('cfg.matrixside = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_topoplotER');
+        error('cfg.matrixside = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotER');
       elseif strcmp(cfg.matrixside, 'fd-ff')
-        error('cfg.matrixside = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_topoplotER');
+        error('cfg.matrixside = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotER');
       end %if matrixside
     end %if ~isfull
   end %for i

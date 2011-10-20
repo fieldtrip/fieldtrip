@@ -70,7 +70,7 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 % of the subplots, you should create your own layout file.
 %
 % See also:
-%   FT_TOPOPLOTER, FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR, FT_PREPARE_LAYOUT
+%   FT_TOPOPLOTTFR, FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR, FT_PREPARE_LAYOUT
 
 % Undocumented local options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)
@@ -100,7 +100,7 @@ ft_defaults
 % enable configuration tracking
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
-% this is just a wrapper function around ft_topoplotER, therefore it does not need to 
+% this is just a wrapper function around ft_topoplotTFR, therefore it does not need to 
 % measure the time spent in this function with tic/toc
 % measure the memory usage with memtic/memtoc
 
@@ -125,7 +125,7 @@ nxplot = ceil(nplots./nyplot);
 for i = 1:length(selcomp)
   subplot(nxplot, nyplot, i);
   cfg.component = selcomp(i);
-  ft_topoplotER(cfg, varargin{:});
+  ft_topoplotTFR(cfg, varargin{:});
   title(['component ' num2str(selcomp(i))]);
 end
 

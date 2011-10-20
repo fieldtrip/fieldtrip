@@ -255,9 +255,9 @@ if (isfull || haslabelcmb) && shouldPlotCmb
       meandir = 1;
 
     elseif strcmp(cfg.matrixside, 'ff-fd')
-      error('cfg.matrixside = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_topoplotER');
+      error('cfg.matrixside = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotTFR');
     elseif strcmp(cfg.matrixside, 'fd-ff')
-      error('cfg.matrixside = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_topoplotER');
+      error('cfg.matrixside = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotTFR');
     end %if matrixside
   end %if ~isfull
 end %handle the bivariate data
